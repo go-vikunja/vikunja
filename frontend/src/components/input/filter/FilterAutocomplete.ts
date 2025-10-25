@@ -258,7 +258,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 				const match = pattern.exec(textUpToCursor)
 
 				if (match) {
-					const [, prefix, , , keyword = ''] = match
+					const [, prefix = '', , , keyword = ''] = match
 
 					let search = keyword.trim()
 					const operator = match[0].match(new RegExp(FILTER_OPERATORS_REGEX))?.[0] || ''
@@ -271,14 +271,16 @@ export default Extension.create<FilterAutocompleteOptions>({
 					const textAfterExpression = text.substring(from)
 					const isComplete = isFilterExpressionComplete(textAfterExpression, keyword, operator)
 
+					const matchIndex = match.index ?? 0
+
 					autocompleteContext = {
 						field,
 						prefix,
 						keyword,
 						search,
 						operator,
-						startPos: match.index + prefix.length,
-						endPos: match.index + prefix.length + keyword.length,
+						startPos: matchIndex + prefix.length,
+						endPos: matchIndex + prefix.length + keyword.length,
 						isComplete,
 					}
 
