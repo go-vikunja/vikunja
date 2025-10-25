@@ -18,11 +18,15 @@ package services
 
 import (
 	"fmt"
+	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
@@ -30,10 +34,14 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 	"dario.cat/mergo"
+	"github.com/ganigeorgiev/fexpr"
 	"github.com/google/uuid"
+	"github.com/iancoleman/strcase"
 	"github.com/jinzhu/copier"
+	"github.com/jszwedko/go-datemath"
 	"xorm.io/builder"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 // Task Read All related types and constants
@@ -183,6 +191,369 @@ func getSortOrderFromString(s string) sortOrder {
 	}
 }
 
+// Filter parsing constants
+const (
+	safariDateAndTime = "2006-01-02 15:04"
+	safariDate        = "2006-01-02"
+
+	taskPropertyAssignees = "assignees"
+	taskPropertyLabels    = "labels"
+	taskPropertyReminders = "reminders"
+)
+
+// parseTimeFromUserInput parses various time formats from user input
+func (ts *TaskService) parseTimeFromUserInput(timeString string, loc *time.Location) (value time.Time, err error) {
+	value, err = time.ParseInLocation(time.RFC3339, timeString, loc)
+	if err != nil {
+		value, err = time.ParseInLocation(safariDateAndTime, timeString, loc)
+	}
+	if err != nil {
+		value, err = time.ParseInLocation(safariDate, timeString, loc)
+	}
+	if err != nil {
+		// Here we assume a date like 2022-11-1 and try to parse it manually
+		parts := strings.Split(timeString, "-")
+		if len(parts) < 3 {
+			return
+		}
+		year, err := strconv.Atoi(parts[0])
+		if err != nil {
+			return value, err
+		}
+		month, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return value, err
+		}
+		day, err := strconv.Atoi(parts[2])
+		if err != nil {
+			return value, err
+		}
+		value = time.Date(year, time.Month(month), day, 0, 0, 0, 0, loc)
+		return value.In(config.GetTimeZone()), nil
+	}
+	return value.In(config.GetTimeZone()), err
+}
+
+// validateTaskFieldComparator validates a task filter comparator
+func (ts *TaskService) validateTaskFieldComparator(comparator taskFilterComparator) error {
+	switch comparator {
+	case
+		taskFilterComparatorEquals,
+		taskFilterComparatorNotEquals,
+		taskFilterComparatorGreater,
+		taskFilterComparatorGreaterEquals,
+		taskFilterComparatorLess,
+		taskFilterComparatorLessEquals,
+		taskFilterComparatorLike,
+		taskFilterComparatorIn,
+		taskFilterComparatorNotIn:
+		return nil
+	default:
+		// Since models.taskFilterComparator is not exported, we return a generic error
+		return fmt.Errorf("invalid task filter comparator: %s", comparator)
+	}
+}
+
+// getFilterComparatorFromOp converts fexpr operator to taskFilterComparator
+func (ts *TaskService) getFilterComparatorFromOp(op fexpr.SignOp) (taskFilterComparator, error) {
+	switch op {
+	case fexpr.SignEq:
+		return taskFilterComparatorEquals, nil
+	case fexpr.SignGt:
+		return taskFilterComparatorGreater, nil
+	case fexpr.SignGte:
+		return taskFilterComparatorGreaterEquals, nil
+	case fexpr.SignLt:
+		return taskFilterComparatorLess, nil
+	case fexpr.SignLte:
+		return taskFilterComparatorLessEquals, nil
+	case fexpr.SignNeq:
+		return taskFilterComparatorNotEquals, nil
+	case fexpr.SignLike:
+		return taskFilterComparatorLike, nil
+	case fexpr.SignAnyEq:
+		fallthrough
+	case "in":
+		return taskFilterComparatorIn, nil
+	case fexpr.SignAnyNeq:
+		fallthrough
+	case "not in":
+		return taskFilterComparatorNotIn, nil
+	default:
+		return taskFilterComparatorEquals, fmt.Errorf("invalid task filter comparator operator: %s", op)
+	}
+}
+
+// validateTaskField validates that a field name is valid for task filtering
+func (ts *TaskService) validateTaskField(fieldName string) error {
+	switch fieldName {
+	case
+		taskPropertyAssignees,
+		taskPropertyLabels,
+		taskPropertyReminders:
+		return nil
+	}
+	return ts.validateTaskFieldForSorting(fieldName)
+}
+
+// validateTaskFieldForSorting validates that a field name is valid for task sorting
+func (ts *TaskService) validateTaskFieldForSorting(fieldName string) error {
+	switch fieldName {
+	case
+		taskPropertyID,
+		taskPropertyTitle,
+		taskPropertyDescription,
+		taskPropertyDone,
+		taskPropertyDoneAt,
+		taskPropertyDueDate,
+		taskPropertyCreatedByID,
+		taskPropertyProjectID,
+		taskPropertyRepeatAfter,
+		taskPropertyPriority,
+		taskPropertyStartDate,
+		taskPropertyEndDate,
+		taskPropertyHexColor,
+		taskPropertyPercentDone,
+		taskPropertyUID,
+		taskPropertyCreated,
+		taskPropertyUpdated,
+		taskPropertyPosition,
+		taskPropertyBucketID,
+		taskPropertyIndex,
+		taskPropertyProjectViewID,
+		"project",           // Alias for project_id
+		"parent_project",    // Special field
+		"parent_project_id": // Special field
+		return nil
+	}
+	return models.ErrInvalidTaskField{TaskField: fieldName}
+}
+
+// getValueForField converts a string value to the appropriate type for a reflect field
+func (ts *TaskService) getValueForField(field reflect.StructField, rawValue string, loc *time.Location) (value interface{}, err error) {
+	if loc == nil {
+		loc = config.GetTimeZone()
+	}
+
+	rawValue = strings.TrimSpace(rawValue)
+
+	switch field.Type.Kind() {
+	case reflect.Int64:
+		value, err = strconv.ParseInt(rawValue, 10, 64)
+	case reflect.Float64:
+		value, err = strconv.ParseFloat(rawValue, 64)
+	case reflect.String:
+		value = rawValue
+	case reflect.Bool:
+		value, err = strconv.ParseBool(rawValue)
+	case reflect.Struct:
+		if field.Type == schemas.TimeType {
+			var t datemath.Expression
+			var tt time.Time
+			t, err = datemath.Parse(rawValue)
+			if err == nil {
+				tt = t.Time(datemath.WithLocation(loc)).In(config.GetTimeZone())
+			} else {
+				tt, err = ts.parseTimeFromUserInput(rawValue, loc)
+			}
+			if err != nil {
+				return
+			}
+			// Mysql/Mariadb does not support date values where the year < 1. To make this edge-case work,
+			// we're setting the year to 1 in that case.
+			if db.GetDialect() == builder.MYSQL && tt.Year() < 1 {
+				tt = tt.AddDate(1-tt.Year(), 0, 0)
+			}
+			value = tt
+		}
+	case reflect.Slice:
+		// If this is a slice of pointers we're dealing with some property which is a relation
+		// In that case we don't really care about what the actual type is, we just cast the value to an
+		// int64 since we need the id - yes, this assumes we only ever have int64 IDs, but this is fine.
+		if field.Type.Elem().Kind() == reflect.Ptr {
+			value, err = strconv.ParseInt(strings.TrimSpace(rawValue), 10, 64)
+			return
+		}
+
+		// There are probably better ways to do this - please let me know if you have one.
+		if field.Type.Elem().String() == "time.Time" {
+			value, err = time.Parse(time.RFC3339, rawValue)
+			value = value.(time.Time).In(config.GetTimeZone())
+			return
+		}
+		fallthrough
+	default:
+		panic(fmt.Errorf("unrecognized filter type %s for field %s, value %s", field.Type.String(), field.Name, value))
+	}
+
+	return
+}
+
+// getNativeValueForTaskField gets the native value for a task field based on its type
+func (ts *TaskService) getNativeValueForTaskField(fieldName string, comparator taskFilterComparator, value string, loc *time.Location) (reflectField *reflect.StructField, nativeValue interface{}, err error) {
+	realFieldName := strings.ReplaceAll(strcase.ToCamel(fieldName), "Id", "ID")
+
+	if realFieldName == "Assignees" {
+		vals := strings.Split(value, ",")
+		valueSlice := append([]string{}, vals...)
+		return nil, valueSlice, nil
+	}
+
+	field, ok := reflect.TypeOf(&models.Task{}).Elem().FieldByName(realFieldName)
+	if !ok {
+		return nil, nil, models.ErrInvalidTaskField{TaskField: fieldName}
+	}
+
+	if realFieldName == "Reminders" {
+		field, ok = reflect.TypeOf(&models.TaskReminder{}).Elem().FieldByName("Reminder")
+		if !ok {
+			return nil, nil, models.ErrInvalidTaskField{TaskField: fieldName}
+		}
+	}
+
+	if comparator == taskFilterComparatorIn || comparator == taskFilterComparatorNotIn {
+		vals := strings.Split(value, ",")
+		valueSlice := []interface{}{}
+		for _, val := range vals {
+			v, err := ts.getValueForField(field, val, loc)
+			if err != nil {
+				return nil, nil, err
+			}
+			valueSlice = append(valueSlice, v)
+		}
+		return nil, valueSlice, nil
+	}
+
+	val, err := ts.getValueForField(field, value, loc)
+	return &field, val, err
+}
+
+// parseFilterFromExpression parses a single filter expression
+func (ts *TaskService) parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *taskFilter, err error) {
+	filter = &taskFilter{
+		concatenator: taskFilterConcatAnd,
+	}
+	if f.Join == fexpr.JoinOr {
+		filter.concatenator = taskFilterConcatOr
+	}
+
+	var value string
+	switch v := f.Item.(type) {
+	case fexpr.Expr:
+		filter.field = v.Left.Literal
+		value = v.Right.Literal
+		filter.comparator, err = ts.getFilterComparatorFromOp(v.Op)
+		if err != nil {
+			return
+		}
+	case []fexpr.ExprGroup:
+		values := make([]*taskFilter, 0, len(v))
+		for _, expression := range v {
+			subfilter, err := ts.parseFilterFromExpression(expression, loc)
+			if err != nil {
+				return nil, err
+			}
+			values = append(values, subfilter)
+		}
+		filter.value = values
+		return
+	}
+
+	err = ts.validateTaskFieldComparator(filter.comparator)
+	if err != nil {
+		return
+	}
+
+	// Cast the field value to its native type
+	var reflectValue *reflect.StructField
+	if filter.field == "project" {
+		filter.field = "project_id"
+	}
+
+	err = ts.validateTaskField(filter.field)
+	if err != nil {
+		return nil, err
+	}
+
+	reflectValue, filter.value, err = ts.getNativeValueForTaskField(filter.field, filter.comparator, value, loc)
+	if err != nil {
+		return nil, models.ErrInvalidTaskFilterValue{
+			Field: filter.field,
+			Value: value,
+		}
+	}
+	if reflectValue != nil {
+		filter.isNumeric = reflectValue.Type.Kind() == reflect.Int64
+	}
+
+	return filter, nil
+}
+
+// getTaskFiltersFromFilterString parses a filter string into a list of filter objects
+func (ts *TaskService) getTaskFiltersFromFilterString(filter string, filterTimezone string) (filters []*taskFilter, err error) {
+	if filter == "" {
+		return
+	}
+
+	filter = strings.ReplaceAll(filter, " not in ", " "+string(fexpr.SignAnyNeq)+" ")
+	filter = strings.ReplaceAll(filter, " in ", " ?= ")
+	filter = strings.ReplaceAll(filter, " like ", " ~ ")
+
+	// Regex pattern to match filter expressions
+	re := regexp.MustCompile(`(\w+)\s*(>=|<=|!=|~|\?=|\?!=|=|>|<)\s*([^&|()]+)`)
+
+	filter = re.ReplaceAllStringFunc(filter, func(match string) string {
+		parts := re.FindStringSubmatch(match)
+		if len(parts) != 4 {
+			return match
+		}
+
+		field := parts[1]
+		comparator := parts[2]
+		value := strings.TrimSpace(parts[3])
+
+		// Check if the value is already quoted
+		if (strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'")) ||
+			(strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"")) {
+			return field + " " + comparator + " " + value
+		}
+
+		// Quote the value
+		quotedValue := "'" + strings.ReplaceAll(value, "'", "\\'") + "'"
+		return field + " " + comparator + " " + quotedValue
+	})
+
+	parsedFilter, err := fexpr.Parse(filter)
+	if err != nil {
+		return nil, &models.ErrInvalidFilterExpression{
+			Expression:      filter,
+			ExpressionError: err,
+		}
+	}
+
+	var loc *time.Location
+	if filterTimezone != "" {
+		loc, err = time.LoadLocation(filterTimezone)
+		if err != nil {
+			return nil, &models.ErrInvalidTimezone{
+				Name:      filterTimezone,
+				LoadError: err,
+			}
+		}
+	}
+
+	filters = make([]*taskFilter, 0, len(parsedFilter))
+	for _, f := range parsedFilter {
+		parsedFilter, err := ts.parseFilterFromExpression(f, loc)
+		if err != nil {
+			return nil, err
+		}
+		filters = append(filters, parsedFilter)
+	}
+
+	return
+}
+
 // getTaskFilterOptsFromCollection converts a TaskCollection to taskSearchOptions
 func (ts *TaskService) getTaskFilterOptsFromCollection(tf *models.TaskCollection, projectView *models.ProjectView) (opts *taskSearchOptions, err error) {
 	var finalSortBy []string
@@ -245,9 +616,15 @@ func (ts *TaskService) getTaskFilterOptsFromCollection(tf *models.TaskCollection
 		opts.projectViewID = tf.ProjectViewID
 	}
 
-	// For now, skip filter parsing - we'll add this later
-	// opts.parsedFilters, err = ts.getTaskFiltersFromFilterString(tf.Filter, tf.FilterTimezone)
-	return opts, err
+	// Parse filter string if provided
+	if tf.Filter != "" {
+		opts.parsedFilters, err = ts.getTaskFiltersFromFilterString(tf.Filter, tf.FilterTimezone)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return opts, nil
 }
 
 // getRelevantProjectsFromCollection determines which projects are relevant for the collection
