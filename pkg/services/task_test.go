@@ -2291,3 +2291,1071 @@ func TestTaskService_GetAllWithMultipleSortParameters(t *testing.T) {
 		})
 	}
 }
+
+// T010: Test basic equality filter conversion
+func TestTaskService_ConvertFiltersToDBFilterCond_SimpleEquality(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filters      []*taskFilter
+		includeNulls bool
+		expectErr    bool
+	}{
+		{
+			name: "Single equality filter on done field",
+			filters: []*taskFilter{
+				{
+					field:      "done",
+					value:      false,
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  false,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Single equality filter on priority field",
+			filters: []*taskFilter{
+				{
+					field:      "priority",
+					value:      int64(3),
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Single not-equals filter",
+			filters: []*taskFilter{
+				{
+					field:      "done",
+					value:      true,
+					comparator: taskFilterComparatorNotEquals,
+					isNumeric:  false,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.convertFiltersToDBFilterCond(tt.filters, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated condition SQL: %v", cond)
+			}
+		})
+	}
+}
+
+// T011: Test boolean AND concatenation
+func TestTaskService_ConvertFiltersToDBFilterCond_BooleanAnd(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filters      []*taskFilter
+		includeNulls bool
+		expectErr    bool
+	}{
+		{
+			name: "Two filters with AND concatenation",
+			filters: []*taskFilter{
+				{
+					field:      "done",
+					value:      false,
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  false,
+				},
+				{
+					field:        "priority",
+					value:        int64(3),
+					comparator:   taskFilterComparatorGreater,
+					concatenator: taskFilterConcatAnd,
+					isNumeric:    true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Three filters with AND concatenation",
+			filters: []*taskFilter{
+				{
+					field:      "done",
+					value:      false,
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  false,
+				},
+				{
+					field:        "priority",
+					value:        int64(2),
+					comparator:   taskFilterComparatorGreaterEquals,
+					concatenator: taskFilterConcatAnd,
+					isNumeric:    true,
+				},
+				{
+					field:        "percent_done",
+					value:        int64(50),
+					comparator:   taskFilterComparatorLess,
+					concatenator: taskFilterConcatAnd,
+					isNumeric:    true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.convertFiltersToDBFilterCond(tt.filters, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated AND condition SQL: %v", cond)
+			}
+		})
+	}
+}
+
+// T012: Test labels subtable EXISTS subquery
+func TestTaskService_ConvertFiltersToDBFilterCond_LabelsSubtable(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filters      []*taskFilter
+		includeNulls bool
+		expectErr    bool
+	}{
+		{
+			name: "Single label filter with ID 5",
+			filters: []*taskFilter{
+				{
+					field:      "labels",
+					value:      int64(5),
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Label filter with IN operator",
+			filters: []*taskFilter{
+				{
+					field:      "labels",
+					value:      []int64{5, 6, 7},
+					comparator: taskFilterComparatorIn,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Label filter with NOT IN operator",
+			filters: []*taskFilter{
+				{
+					field:      "labels",
+					value:      []int64{5},
+					comparator: taskFilterComparatorNotIn,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Label filter with includeNulls (tasks without any labels)",
+			filters: []*taskFilter{
+				{
+					field:      "labels",
+					value:      int64(5),
+					comparator: taskFilterComparatorEquals,
+					isNumeric:  true,
+				},
+			},
+			includeNulls: true,
+			expectErr:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.convertFiltersToDBFilterCond(tt.filters, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated subtable EXISTS condition SQL: %v", cond)
+			}
+		})
+	}
+}
+
+// T013: Test all comparator types in getFilterCond
+func TestTaskService_GetFilterCond_AllComparators(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	ts := NewTaskService(db.GetEngine())
+
+	tests := []struct {
+		name         string
+		filter       *taskFilter
+		includeNulls bool
+		expectErr    bool
+	}{
+		{
+			name: "Equals comparator",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      int64(3),
+				comparator: taskFilterComparatorEquals,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Not equals comparator",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      int64(0),
+				comparator: taskFilterComparatorNotEquals,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Greater than comparator",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      int64(2),
+				comparator: taskFilterComparatorGreater,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Less than comparator",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      int64(4),
+				comparator: taskFilterComparatorLess,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Greater than or equals comparator",
+			filter: &taskFilter{
+				field:      "percent_done",
+				value:      int64(50),
+				comparator: taskFilterComparatorGreaterEquals,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Less than or equals comparator",
+			filter: &taskFilter{
+				field:      "percent_done",
+				value:      int64(75),
+				comparator: taskFilterComparatorLessEquals,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "Like comparator",
+			filter: &taskFilter{
+				field:      "title",
+				value:      "test",
+				comparator: taskFilterComparatorLike,
+				isNumeric:  false,
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "IN comparator with array",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      []int64{1, 2, 3},
+				comparator: taskFilterComparatorIn,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+		{
+			name: "NOT IN comparator with array",
+			filter: &taskFilter{
+				field:      "priority",
+				value:      []int64{0, 5},
+				comparator: taskFilterComparatorNotIn,
+				isNumeric:  true,
+			},
+			includeNulls: false,
+			expectErr:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cond, err := ts.getFilterCond(tt.filter, tt.includeNulls)
+
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cond)
+				t.Logf("Generated condition for %s: %v", tt.filter.comparator, cond)
+			}
+		})
+	}
+}
+
+// Integration test for saved filter execution (reproduces the bug)
+// Integration test: Test saved filter execution end-to-end
+// This test reproduces and fixes the bug where saved filters return all tasks instead of filtered tasks
+func TestTaskService_SavedFilter_Integration(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(db.GetEngine())
+	u := &user.User{ID: 1}
+
+	t.Run("Saved filter should return only matching tasks", func(t *testing.T) {
+		// First, create a saved filter with the filter criteria
+		// Filter: "done = false && labels = 4" (label 4 exists in fixtures)
+		savedFilter := &models.SavedFilter{
+			Title:       "Test Filter",
+			Description: "Test saved filter for bug reproduction",
+			OwnerID:     u.ID,
+			Filters: &models.TaskCollection{
+				Filter:             "done = false && labels = 4",
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+			},
+		}
+
+		_, err := s.Insert(savedFilter)
+		require.NoError(t, err)
+		t.Logf("Created saved filter ID: %d", savedFilter.ID)
+
+		// Calculate the project ID for this saved filter
+		// Project ID = -(FilterID + 1)
+		projectID := -(savedFilter.ID + 1)
+
+		// Now test accessing this saved filter
+		collection := &models.TaskCollection{
+			ProjectID: projectID,
+			Expand:    []models.TaskCollectionExpandable{},
+		}
+
+		result, resultCount, totalItems, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Saved filter returned %d tasks (total: %d)", resultCount, totalItems)
+
+		// Log returned tasks to see what we're getting
+		for i, task := range tasks {
+			hasLabel4 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 {
+					hasLabel4 = true
+					break
+				}
+			}
+			t.Logf("Task %d: ID=%d, Title=%s, Done=%v, HasLabel4=%v", i+1, task.ID, task.Title, task.Done, hasLabel4)
+		}
+
+		// The filter is "done = false && labels = 4"
+		// Should only return tasks that are NOT done AND have label 4
+		// Verify all returned tasks match the criteria
+		for _, task := range tasks {
+			assert.False(t, task.Done, "Task %d should not be done", task.ID)
+
+			// Check that task has label 4
+			hasLabel4 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 {
+					hasLabel4 = true
+					break
+				}
+			}
+			assert.True(t, hasLabel4, "Task %d should have label 4", task.ID)
+		}
+
+		// Should return at least 1 task (fixtures have tasks with label 4)
+		assert.Greater(t, resultCount, 0, "Should return at least one task matching the filter")
+	})
+}
+
+// T019: Integration test reproducing the exact frontend scenario
+// Frontend calls: GET /api/v1/projects/-2/views/21/tasks with saved filter ID 1
+// Expected: Returns only filtered tasks
+// Actual (bug): Returns ALL tasks
+func TestTaskService_SavedFilter_WithView_T019(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(db.GetEngine())
+	u := &user.User{ID: 1}
+
+	t.Run("T019: Saved filter with view should return filtered tasks (not all tasks)", func(t *testing.T) {
+		// Step 1: Create a saved filter with specific criteria
+		// Using label 4 because it exists in fixtures and is attached to some tasks
+		savedFilter := &models.SavedFilter{
+			Title:       "T019 Test Filter",
+			Description: "Reproducing T019 bug with view",
+			OwnerID:     u.ID,
+			Filters: &models.TaskCollection{
+				Filter:             "done = false && labels = 4",
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+				SortBy:             []string{"done", "id"},
+				OrderBy:            []string{"asc", "desc"},
+			},
+		}
+
+		_, err := s.Insert(savedFilter)
+		require.NoError(t, err)
+		t.Logf("[T019] Created saved filter ID: %d", savedFilter.ID)
+
+		// Step 2: Calculate the pseudo-project ID for this saved filter
+		// Formula: project_id = -(filter_id + 1)
+		projectID := -(savedFilter.ID + 1)
+		t.Logf("[T019] Calculated project ID: %d (from filter ID %d)", projectID, savedFilter.ID)
+
+		// Step 3: Create a view for this saved filter (like the frontend has)
+		view := &models.ProjectView{
+			Title:     "List",
+			ProjectID: projectID,
+			ViewKind:  models.ProjectViewKindList,
+			Position:  1,
+			Filter:    nil, // IMPORTANT: View filter is empty for saved filters
+		}
+
+		_, err = s.Insert(view)
+		require.NoError(t, err)
+		t.Logf("[T019] Created view ID: %d for project %d", view.ID, projectID)
+
+		// Step 4: Get all tasks WITHOUT specifying the view (baseline test)
+		t.Run("Without view ID (baseline)", func(t *testing.T) {
+			collection := &models.TaskCollection{
+				ProjectID:          projectID,
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+				Expand:             []models.TaskCollectionExpandable{},
+			}
+
+			result, resultCount, totalItems, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+			require.NoError(t, err)
+
+			tasks, ok := result.([]*models.Task)
+			require.True(t, ok, "Result should be a task array")
+
+			t.Logf("[T019] WITHOUT view: returned %d tasks (total: %d)", resultCount, totalItems)
+
+			// Log returned tasks for debugging
+			for i, task := range tasks {
+				hasLabel4 := false
+				for _, label := range task.Labels {
+					if label.ID == 4 {
+						hasLabel4 = true
+						break
+					}
+				}
+				t.Logf("  Task %d: ID=%d, Title=%s, Done=%v, HasLabel4=%v", i+1, task.ID, task.Title, task.Done, hasLabel4)
+			}
+
+			// Verify all returned tasks match the filter criteria
+			for _, task := range tasks {
+				assert.False(t, task.Done, "Task %d should not be done", task.ID)
+				hasLabel4 := false
+				for _, label := range task.Labels {
+					if label.ID == 4 {
+						hasLabel4 = true
+						break
+					}
+				}
+				assert.True(t, hasLabel4, "Task %d should have label 4", task.ID)
+			}
+
+			assert.Greater(t, resultCount, 0, "Should return at least one filtered task")
+		})
+
+		// Step 5: Get all tasks WITH the view ID (reproducing T019 bug)
+		t.Run("WITH view ID (T019 bug reproduction)", func(t *testing.T) {
+			collection := &models.TaskCollection{
+				ProjectID:          projectID,
+				ProjectViewID:      view.ID,
+				FilterIncludeNulls: false,
+				FilterTimezone:     "GMT",
+				SortByArr:          []string{"position"},
+				OrderByArr:         []string{"asc"},
+				Expand:             []models.TaskCollectionExpandable{},
+			}
+
+			result, resultCount, totalItems, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+			require.NoError(t, err)
+
+			tasks, ok := result.([]*models.Task)
+			require.True(t, ok, "Result should be a task array")
+
+			t.Logf("[T019] WITH view: returned %d tasks (total: %d)", resultCount, totalItems)
+
+			// Log ALL returned tasks to see if we're getting unfiltered results
+			for i, task := range tasks {
+				hasLabel4 := false
+				for _, label := range task.Labels {
+					if label.ID == 4 {
+						hasLabel4 = true
+						break
+					}
+				}
+				t.Logf("  Task %d: ID=%d, Title=%s, Done=%v, HasLabel4=%v", i+1, task.ID, task.Title, task.Done, hasLabel4)
+			}
+
+			// Count how many tasks match vs don't match the filter
+			matchingTasks := 0
+			nonMatchingTasks := 0
+			for _, task := range tasks {
+				hasLabel4 := false
+				for _, label := range task.Labels {
+					if label.ID == 4 {
+						hasLabel4 = true
+						break
+					}
+				}
+
+				if !task.Done && hasLabel4 {
+					matchingTasks++
+				} else {
+					nonMatchingTasks++
+					t.Logf("  [BUG] Task %d does NOT match filter: Done=%v, HasLabel4=%v", task.ID, task.Done, hasLabel4)
+				}
+			}
+
+			t.Logf("[T019] Summary: %d matching tasks, %d non-matching tasks", matchingTasks, nonMatchingTasks)
+
+			// This is the T019 bug: ALL tasks are returned instead of just filtered ones
+			// If this assertion fails, it means we're getting unfiltered results
+			assert.Equal(t, 0, nonMatchingTasks, "BUG DETECTED: Non-matching tasks were returned! Saved filter not being applied.")
+
+			// Verify all returned tasks match the filter criteria
+			for _, task := range tasks {
+				assert.False(t, task.Done, "Task %d should not be done (filter: done = false)", task.ID)
+				hasLabel4 := false
+				for _, label := range task.Labels {
+					if label.ID == 4 {
+						hasLabel4 = true
+						break
+					}
+				}
+				assert.True(t, hasLabel4, "Task %d should have label 4 (filter: labels = 4)", task.ID)
+			}
+
+			assert.Greater(t, resultCount, 0, "Should return at least one filtered task")
+		})
+	})
+}
+
+// T027: CRITICAL tests for AllowNullCheck: false with FilterIncludeNulls: true
+// These tests validate the actual bug fix - the T019 test above uses FilterIncludeNulls: false,
+// but the real bug manifests when FilterIncludeNulls: true (the frontend default).
+//
+// The bug was: When FilterIncludeNulls: true, subtable filters like "labels = 4" would incorrectly
+// add "OR NOT EXISTS (SELECT ... FROM task_labels)" which returned tasks WITH label 4 OR WITHOUT any labels.
+// The fix: Set AllowNullCheck: false for subtable filters to prevent this OR NOT EXISTS clause.
+
+func TestTaskService_SubtableFilter_WithFilterIncludeNulls_True(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(db.GetEngine())
+	u := &user.User{ID: 1}
+
+	t.Run("Labels filter with FilterIncludeNulls=true should NOT return tasks without labels", func(t *testing.T) {
+		// This is the core bug: "labels = 4" with FilterIncludeNulls: true
+		// should return ONLY tasks with label 4, NOT tasks without any labels
+		collection := &models.TaskCollection{
+			Filter:             "labels = 4",
+			FilterIncludeNulls: true, // This is what the frontend sends by default
+			FilterTimezone:     "GMT",
+		}
+
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Returned %d tasks with filter 'labels = 4' and FilterIncludeNulls: true", resultCount)
+
+		// Verify: ALL returned tasks must have label 4
+		for i, task := range tasks {
+			hasLabel4 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 {
+					hasLabel4 = true
+					break
+				}
+			}
+			t.Logf("  Task %d: ID=%d, Title=%s, Labels=%v", i+1, task.ID, task.Title, len(task.Labels))
+			assert.True(t, hasLabel4, "Task %d (%s) should have label 4 (bug: returned task without label)", task.ID, task.Title)
+		}
+
+		// Verify: Should NOT return tasks without ANY labels (this was the bug)
+		for _, task := range tasks {
+			assert.NotEmpty(t, task.Labels, "Task %d (%s) should have at least one label (bug: returned task with no labels)", task.ID, task.Title)
+		}
+	})
+
+	t.Run("Assignees filter with FilterIncludeNulls=true should NOT return unassigned tasks", func(t *testing.T) {
+		// Same bug pattern for assignees: "assignees = 1" should return ONLY tasks assigned to user 1
+		collection := &models.TaskCollection{
+			Filter:             "assignees = 1",
+			FilterIncludeNulls: true,
+			FilterTimezone:     "GMT",
+		}
+
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Returned %d tasks with filter 'assignees = 1' and FilterIncludeNulls: true", resultCount)
+
+		// Verify: ALL returned tasks must have assignee 1
+		for i, task := range tasks {
+			hasAssignee1 := false
+			for _, assignee := range task.Assignees {
+				if assignee.ID == 1 {
+					hasAssignee1 = true
+					break
+				}
+			}
+			t.Logf("  Task %d: ID=%d, Title=%s, Assignees=%v", i+1, task.ID, task.Title, len(task.Assignees))
+			assert.True(t, hasAssignee1, "Task %d (%s) should have assignee 1 (bug: returned task without assignee)", task.ID, task.Title)
+		}
+
+		// Verify: Should NOT return unassigned tasks (this was the bug)
+		for _, task := range tasks {
+			assert.NotEmpty(t, task.Assignees, "Task %d (%s) should have at least one assignee (bug: returned unassigned task)", task.ID, task.Title)
+		}
+	})
+
+	t.Run("Reminders filter with FilterIncludeNulls=true should NOT return tasks without reminders", func(t *testing.T) {
+		// Same bug pattern for reminders
+		// Note: This might not return any tasks if fixtures don't have tasks with reminders,
+		// but the important part is it should NOT return tasks WITHOUT reminders
+		collection := &models.TaskCollection{
+			Filter:             "reminders > 0", // Check for any reminder
+			FilterIncludeNulls: true,
+			FilterTimezone:     "GMT",
+		}
+
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Returned %d tasks with filter 'reminders > 0' and FilterIncludeNulls: true", resultCount)
+
+		// Verify: Should NOT return tasks without reminders (this was the bug)
+		for i, task := range tasks {
+			t.Logf("  Task %d: ID=%d, Title=%s, Reminders=%v", i+1, task.ID, task.Title, len(task.Reminders))
+			// If the filter returns any tasks, they should have reminders
+			// (It's okay if resultCount is 0 - means no tasks have reminders)
+			if resultCount > 0 {
+				assert.NotEmpty(t, task.Reminders, "Task %d (%s) should have at least one reminder (bug: returned task with no reminders)", task.ID, task.Title)
+			}
+		}
+	})
+}
+
+func TestTaskService_MultipleSubtableFilters_WithFilterIncludeNulls_True(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(db.GetEngine())
+	u := &user.User{ID: 1}
+
+	t.Run("Combined labels AND assignees with FilterIncludeNulls=true", func(t *testing.T) {
+		// Test: "labels = 4 && assignees = 1" should return ONLY tasks with BOTH
+		// Bug would return: tasks with (label 4 OR no labels) AND (assignee 1 OR no assignees)
+		collection := &models.TaskCollection{
+			Filter:             "labels = 4 && assignees = 1",
+			FilterIncludeNulls: true,
+			FilterTimezone:     "GMT",
+		}
+
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Returned %d tasks with filter 'labels = 4 && assignees = 1' and FilterIncludeNulls: true", resultCount)
+
+		// Verify: ALL returned tasks must have BOTH label 4 AND assignee 1
+		for i, task := range tasks {
+			hasLabel4 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 {
+					hasLabel4 = true
+					break
+				}
+			}
+
+			hasAssignee1 := false
+			for _, assignee := range task.Assignees {
+				if assignee.ID == 1 {
+					hasAssignee1 = true
+					break
+				}
+			}
+
+			t.Logf("  Task %d: ID=%d, Title=%s, HasLabel4=%v, HasAssignee1=%v", i+1, task.ID, task.Title, hasLabel4, hasAssignee1)
+
+			assert.True(t, hasLabel4, "Task %d (%s) should have label 4", task.ID, task.Title)
+			assert.True(t, hasAssignee1, "Task %d (%s) should have assignee 1", task.ID, task.Title)
+		}
+	})
+
+	t.Run("Labels with regular field filter with FilterIncludeNulls=true", func(t *testing.T) {
+		// Test: "done = false && labels = 4" (combination of regular field + subtable)
+		// This is the exact scenario from the saved filter bug
+		collection := &models.TaskCollection{
+			Filter:             "done = false && labels = 4",
+			FilterIncludeNulls: true,
+			FilterTimezone:     "GMT",
+		}
+
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Returned %d tasks with filter 'done = false && labels = 4' and FilterIncludeNulls: true", resultCount)
+
+		// Verify: ALL returned tasks must be NOT done AND have label 4
+		for i, task := range tasks {
+			hasLabel4 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 {
+					hasLabel4 = true
+					break
+				}
+			}
+
+			t.Logf("  Task %d: ID=%d, Title=%s, Done=%v, HasLabel4=%v", i+1, task.ID, task.Title, task.Done, hasLabel4)
+
+			assert.False(t, task.Done, "Task %d (%s) should not be done", task.ID, task.Title)
+			assert.True(t, hasLabel4, "Task %d (%s) should have label 4", task.ID, task.Title)
+		}
+	})
+}
+
+func TestTaskService_SubtableFilter_ComparisonOperators_WithFilterIncludeNulls_True(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(db.GetEngine())
+	u := &user.User{ID: 1}
+
+	t.Run("Labels IN operator with FilterIncludeNulls=true", func(t *testing.T) {
+		// Test: "labels in [4, 5]" should return ONLY tasks with label 4 OR label 5
+		// Bug would add: OR tasks without any labels
+		collection := &models.TaskCollection{
+			Filter:             "labels in [4, 5]",
+			FilterIncludeNulls: true,
+			FilterTimezone:     "GMT",
+		}
+
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Returned %d tasks with filter 'labels in [4, 5]' and FilterIncludeNulls: true", resultCount)
+
+		// Verify: ALL returned tasks must have label 4 OR label 5
+		for i, task := range tasks {
+			hasLabel4or5 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 || label.ID == 5 {
+					hasLabel4or5 = true
+					break
+				}
+			}
+
+			t.Logf("  Task %d: ID=%d, Title=%s, Labels=%v", i+1, task.ID, task.Title, len(task.Labels))
+			assert.True(t, hasLabel4or5, "Task %d (%s) should have label 4 or 5", task.ID, task.Title)
+			assert.NotEmpty(t, task.Labels, "Task %d (%s) should have at least one label (bug: returned task with no labels)", task.ID, task.Title)
+		}
+	})
+
+	t.Run("Labels != operator with FilterIncludeNulls=true", func(t *testing.T) {
+		// Test: "labels != 4" should return tasks WITHOUT label 4
+		// This should include tasks with OTHER labels AND tasks with NO labels
+		// (because NULL != 4 is true in SQL semantics with FilterIncludeNulls: true)
+		collection := &models.TaskCollection{
+			Filter:             "labels != 4",
+			FilterIncludeNulls: true,
+			FilterTimezone:     "GMT",
+		}
+
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Returned %d tasks with filter 'labels != 4' and FilterIncludeNulls: true", resultCount)
+
+		// Verify: NO returned task should have label 4
+		for i, task := range tasks {
+			hasLabel4 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 {
+					hasLabel4 = true
+					break
+				}
+			}
+
+			t.Logf("  Task %d: ID=%d, Title=%s, HasLabel4=%v, Labels=%v", i+1, task.ID, task.Title, hasLabel4, len(task.Labels))
+			assert.False(t, hasLabel4, "Task %d (%s) should NOT have label 4", task.ID, task.Title)
+		}
+
+		// For != operator with FilterIncludeNulls: true, tasks without labels ARE expected
+		// (because NULL != 4 is considered true with includeNulls)
+		// So we don't assert NotEmpty(task.Labels) here
+	})
+}
+
+func TestTaskService_SavedFilter_WithFilterIncludeNulls_True_Integration(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(db.GetEngine())
+	u := &user.User{ID: 1}
+
+	t.Run("Full saved filter flow with FilterIncludeNulls: true", func(t *testing.T) {
+		// Create a saved filter that uses FilterIncludeNulls: true (frontend default)
+		savedFilter := &models.SavedFilter{
+			Title:       "T027 Test Filter (FilterIncludeNulls: true)",
+			Description: "Testing the actual bug condition",
+			OwnerID:     u.ID,
+			Filters: &models.TaskCollection{
+				Filter:             "done = false && labels = 4",
+				FilterIncludeNulls: true, // THIS IS THE CRITICAL DIFFERENCE from T019 test
+				FilterTimezone:     "GMT",
+				SortBy:             []string{"done", "id"},
+				OrderBy:            []string{"asc", "desc"},
+			},
+		}
+
+		_, err := s.Insert(savedFilter)
+		require.NoError(t, err)
+		t.Logf("Created saved filter ID: %d with FilterIncludeNulls: true", savedFilter.ID)
+
+		// Calculate pseudo-project ID
+		projectID := -(savedFilter.ID + 1)
+
+		// Create view
+		view := &models.ProjectView{
+			Title:     "List",
+			ProjectID: projectID,
+			ViewKind:  models.ProjectViewKindList,
+			Position:  1,
+			Filter:    nil,
+		}
+
+		_, err = s.Insert(view)
+		require.NoError(t, err)
+		t.Logf("Created view ID: %d for project %d", view.ID, projectID)
+
+		// Execute the saved filter through the full GetAllWithFullFiltering flow
+		collection := &models.TaskCollection{
+			ProjectID:          projectID,
+			ProjectViewID:      view.ID,
+			FilterIncludeNulls: true, // Frontend default
+			FilterTimezone:     "GMT",
+			SortByArr:          []string{"position"},
+			OrderByArr:         []string{"asc"},
+		}
+
+		result, resultCount, totalItems, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Returned %d tasks (total: %d) with saved filter", resultCount, totalItems)
+
+		// THE CRITICAL ASSERTIONS: With FilterIncludeNulls: true, the filter should still work correctly
+		// Bug would return: All tasks (filter ignored) or tasks WITH label 4 OR WITHOUT any labels
+		// Fix ensures: ONLY tasks matching "done = false && labels = 4"
+
+		for i, task := range tasks {
+			hasLabel4 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 {
+					hasLabel4 = true
+					break
+				}
+			}
+
+			t.Logf("  Task %d: ID=%d, Title=%s, Done=%v, HasLabel4=%v, TotalLabels=%d",
+				i+1, task.ID, task.Title, task.Done, hasLabel4, len(task.Labels))
+
+			// CRITICAL: Must be not done AND have label 4
+			assert.False(t, task.Done, "Task %d (%s) should not be done (filter not applied)", task.ID, task.Title)
+			assert.True(t, hasLabel4, "Task %d (%s) should have label 4 (filter not applied)", task.ID, task.Title)
+			assert.NotEmpty(t, task.Labels, "Task %d (%s) should have at least one label (bug: returned task with no labels)", task.ID, task.Title)
+		}
+
+		// Should return filtered results, not all tasks
+		assert.Greater(t, resultCount, 0, "Should return at least one filtered task")
+
+		// Verify we're not returning ALL tasks (which would be the bug)
+		// Get total task count to compare
+		allTasksCollection := &models.TaskCollection{}
+		_, allCount, _, err := ts.GetAllWithFullFiltering(s, allTasksCollection, u, "", 1, 1000)
+		require.NoError(t, err)
+
+		assert.Less(t, resultCount, allCount, "Filtered result should return fewer tasks than total (bug: filter not applied)")
+	})
+}
+
+func TestTaskService_SubtableFilter_EdgeCases_WithFilterIncludeNulls_True(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	ts := NewTaskService(db.GetEngine())
+	u := &user.User{ID: 1}
+
+	t.Run("Negation with subtable filter and FilterIncludeNulls=true", func(t *testing.T) {
+		// Test: "!(labels = 4)" should be equivalent to "labels != 4"
+		// With FilterIncludeNulls: true, should include tasks without labels
+		collection := &models.TaskCollection{
+			Filter:             "!(labels = 4)",
+			FilterIncludeNulls: true,
+			FilterTimezone:     "GMT",
+		}
+
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Returned %d tasks with filter '!(labels = 4)' and FilterIncludeNulls: true", resultCount)
+
+		// Verify: NO returned task should have label 4
+		for i, task := range tasks {
+			hasLabel4 := false
+			for _, label := range task.Labels {
+				if label.ID == 4 {
+					hasLabel4 = true
+					break
+				}
+			}
+
+			t.Logf("  Task %d: ID=%d, Title=%s, HasLabel4=%v", i+1, task.ID, task.Title, hasLabel4)
+			assert.False(t, hasLabel4, "Task %d (%s) should NOT have label 4", task.ID, task.Title)
+		}
+	})
+
+	t.Run("Empty array with IN operator and FilterIncludeNulls=true", func(t *testing.T) {
+		// Edge case: "labels in []" should return no tasks
+		collection := &models.TaskCollection{
+			Filter:             "labels in []",
+			FilterIncludeNulls: true,
+			FilterTimezone:     "GMT",
+		}
+
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*models.Task)
+		require.True(t, ok, "Result should be a task array")
+
+		t.Logf("Returned %d tasks with filter 'labels in []' and FilterIncludeNulls: true", resultCount)
+
+		// Should return 0 tasks (no label is in an empty set)
+		assert.Equal(t, 0, resultCount, "Empty IN clause should return no tasks")
+		assert.Empty(t, tasks, "Empty IN clause should return no tasks")
+	})
+
+	t.Run("Comparison with NULL value and FilterIncludeNulls=true", func(t *testing.T) {
+		// Edge case: Comparing subtable field to NULL
+		// "labels = null" doesn't make sense for subtable filters (labels table has no null IDs)
+		// But the system should handle it gracefully
+		collection := &models.TaskCollection{
+			Filter:             "labels = null",
+			FilterIncludeNulls: true,
+			FilterTimezone:     "GMT",
+		}
+
+		// This might error (invalid value) or return 0 tasks - either is acceptable
+		result, resultCount, _, err := ts.GetAllWithFullFiltering(s, collection, u, "", 1, 50)
+
+		if err != nil {
+			t.Logf("Filter 'labels = null' returned error (expected): %v", err)
+			// Error is acceptable for this edge case
+		} else {
+			tasks, ok := result.([]*models.Task)
+			require.True(t, ok, "Result should be a task array")
+
+			t.Logf("Returned %d tasks with filter 'labels = null' and FilterIncludeNulls: true", resultCount)
+
+			// Should return 0 tasks (no label has ID null)
+			assert.Equal(t, 0, resultCount, "Comparing subtable to null should return no tasks")
+			assert.Empty(t, tasks, "Comparing subtable to null should return no tasks")
+		}
+	})
+}

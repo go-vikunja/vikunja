@@ -128,6 +128,108 @@ const (
 	taskFilterConcatOr  taskFilterConcatinator = "or"
 )
 
+// subTableFilter defines how to query related tables (labels, assignees, etc.) via EXISTS subqueries
+type subTableFilter struct {
+	Table           string // Related table name (e.g., "label_tasks")
+	BaseFilter      string // Join condition (e.g., "tasks.id = task_id")
+	FilterableField string // Column to filter on (e.g., "label_id")
+	AllowNullCheck  bool   // Whether to support filterIncludeNulls
+}
+
+// subTableFilters defines configurations for all subtable relationships.
+//
+// CRITICAL: AllowNullCheck Configuration (T019 Bug Fix)
+//
+// The AllowNullCheck field controls whether a subtable filter respects the
+// FilterIncludeNulls parameter when building filter conditions. This is critical
+// for correct filter semantics.
+//
+// When AllowNullCheck = false (correct for most subtable filters):
+//   - "labels = 4" returns ONLY tasks with label 4
+//   - Even if FilterIncludeNulls: true, tasks without ANY labels are NOT included
+//   - This prevents the "OR NOT EXISTS" clause that caused the T019 bug
+//
+// When AllowNullCheck = true (use with caution):
+//   - "field = X" with FilterIncludeNulls: true will add "OR NOT EXISTS (...)"
+//   - This returns tasks with field=X OR tasks without any entries in the subtable
+//   - Rarely the desired behavior for relationship filters
+//
+// T019 Bug (Fixed 2025-10-25):
+//   - Symptom: Saved filter "labels = 4" returned tasks WITH label 4 OR WITHOUT any labels
+//   - Root Cause: AllowNullCheck: true caused FilterIncludeNulls: true (frontend default)
+//     to add "OR NOT EXISTS (SELECT ... FROM label_tasks WHERE task_id = tasks.id)"
+//   - Fix: Set AllowNullCheck: false for subtable filters (labels, assignees, reminders)
+//   - Validation: TestTaskService_SavedFilter_WithFilterIncludeNulls_True_Integration passes
+//
+// Filter Semantics Examples (with AllowNullCheck: false):
+//   - "labels = 4" → Returns tasks with label 4 only
+//   - "labels != 4" with FilterIncludeNulls: true → Returns tasks without label 4 (includes unlabeled)
+//   - "labels in [4, 5]" → Returns tasks with label 4 OR label 5 only
+//   - "assignees = 1" → Returns tasks assigned to user 1 only
+//
+// See also: specs/007-fix-saved-filters/T019-DEBUGGING.md for full investigation details
+var subTableFilters = map[string]subTableFilter{
+	"labels": {
+		Table:           "label_tasks",
+		BaseFilter:      "tasks.id = task_id",
+		FilterableField: "label_id",
+		AllowNullCheck:  false, // T019 FIX: "labels = X" should NOT include tasks without labels
+	},
+	"label_id": {
+		Table:           "label_tasks",
+		BaseFilter:      "tasks.id = task_id",
+		FilterableField: "label_id",
+		AllowNullCheck:  false, // T019 FIX: "label_id = X" should NOT include tasks without labels
+	},
+	"reminders": {
+		Table:           "task_reminders",
+		BaseFilter:      "tasks.id = task_id",
+		FilterableField: "reminder",
+		AllowNullCheck:  false, // T019 FIX: "reminders > X" should NOT include tasks without reminders
+	},
+	"assignees": {
+		Table:           "task_assignees",
+		BaseFilter:      "tasks.id = task_id",
+		FilterableField: "username",
+		AllowNullCheck:  false, // T019 FIX: "assignees = X" should NOT include unassigned tasks
+	},
+	"parent_project": {
+		Table:           "projects",
+		BaseFilter:      "tasks.project_id = id",
+		FilterableField: "parent_project_id",
+		AllowNullCheck:  false,
+	},
+	"parent_project_id": {
+		Table:           "projects",
+		BaseFilter:      "tasks.project_id = id",
+		FilterableField: "parent_project_id",
+		AllowNullCheck:  false,
+	},
+}
+
+// strictComparators defines comparators that should be converted to IN/NOT IN for subtable queries
+var strictComparators = map[taskFilterComparator]bool{
+	taskFilterComparatorIn:        true,
+	taskFilterComparatorNotIn:     true,
+	taskFilterComparatorEquals:    true,
+	taskFilterComparatorNotEquals: true,
+}
+
+// toBaseSubQuery creates the base subquery for EXISTS checks on related tables
+func (sf *subTableFilter) toBaseSubQuery() *builder.Builder {
+	var cond = builder.
+		Select("1").
+		From(sf.Table).
+		Where(builder.Expr(sf.BaseFilter))
+
+	// Special case: assignees filter needs to join users table
+	if sf.Table == "task_assignees" {
+		cond.Join("INNER", "users", "users.id = user_id")
+	}
+
+	return cond
+}
+
 // String returns the string representation of a sort order
 func (o sortOrder) String() string {
 	return string(o)
@@ -627,6 +729,160 @@ func (ts *TaskService) getTaskFilterOptsFromCollection(tf *models.TaskCollection
 	return opts, nil
 }
 
+// getFilterCond builds a database condition for a single filter
+func (ts *TaskService) getFilterCond(f *taskFilter, includeNulls bool) (cond builder.Cond, err error) {
+	field := f.field
+
+	switch f.comparator {
+	case taskFilterComparatorEquals:
+		cond = &builder.Eq{field: f.value}
+	case taskFilterComparatorNotEquals:
+		cond = &builder.Neq{field: f.value}
+	case taskFilterComparatorGreater:
+		cond = &builder.Gt{field: f.value}
+	case taskFilterComparatorGreaterEquals:
+		cond = &builder.Gte{field: f.value}
+	case taskFilterComparatorLess:
+		cond = &builder.Lt{field: f.value}
+	case taskFilterComparatorLessEquals:
+		cond = &builder.Lte{field: f.value}
+	case taskFilterComparatorLike:
+		val, is := f.value.(string)
+		if !is {
+			return nil, &models.ErrInvalidTaskFilterValue{Field: field, Value: f.value}
+		}
+		cond = &builder.Like{field, "%" + val + "%"}
+	case taskFilterComparatorIn:
+		cond = builder.In(field, f.value)
+	case taskFilterComparatorNotIn:
+		cond = builder.NotIn(field, f.value)
+	}
+
+	if includeNulls {
+		cond = builder.Or(cond, &builder.IsNull{field})
+		if f.isNumeric {
+			cond = builder.Or(cond, &builder.IsNull{field}, &builder.Eq{field: 0})
+		}
+	}
+
+	return
+}
+
+// convertFiltersToDBFilterCond converts parsed filter expressions into database query conditions
+func (ts *TaskService) convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
+	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
+
+	// Process each filter
+	for _, f := range rawFilters {
+		// Handle nested filters (from parentheses in expression)
+		if nested, is := f.value.([]*taskFilter); is {
+			nestedDBFilters, err := ts.convertFiltersToDBFilterCond(nested, includeNulls)
+			if err != nil {
+				return nil, err
+			}
+			dbFilters = append(dbFilters, nestedDBFilters)
+			continue
+		}
+
+		// Check if this is a subtable filter (labels, assignees, reminders, etc.)
+		subTableFilterParams, ok := subTableFilters[f.field]
+		if ok {
+			// Skip assignees with LIKE operator (not supported)
+			if f.field == "assignees" && f.comparator == taskFilterComparatorLike {
+				continue
+			}
+
+			// Convert strict comparators (=, !=, in, not in) to IN for subtable queries
+			comparator := f.comparator
+			_, isStrict := strictComparators[f.comparator]
+			if isStrict {
+				comparator = taskFilterComparatorIn
+
+				// For IN operator, the value must be a slice
+				// If we're converting from = or !=, wrap the single value in a slice
+				if f.comparator == taskFilterComparatorEquals || f.comparator == taskFilterComparatorNotEquals {
+					// Preserve the value type when wrapping in slice
+					switch v := f.value.(type) {
+					case int64:
+						f.value = []int64{v}
+					case string:
+						f.value = []string{v}
+					case bool:
+						f.value = []bool{v}
+					case float64:
+						f.value = []float64{v}
+					default:
+						f.value = []interface{}{f.value}
+					}
+				}
+			}
+
+			// Build filter condition for the subtable field
+			filter, err := ts.getFilterCond(&taskFilter{
+				field:      subTableFilterParams.FilterableField,
+				value:      f.value,
+				comparator: comparator,
+				isNumeric:  f.isNumeric,
+			}, false) // includeNulls=false for subquery
+			if err != nil {
+				return nil, err
+			}
+
+			// Create EXISTS subquery
+			filterSubQuery := subTableFilterParams.toBaseSubQuery().And(filter)
+
+			// Use NOT EXISTS for negation operators
+			if f.comparator == taskFilterComparatorNotEquals || f.comparator == taskFilterComparatorNotIn {
+				filter = builder.NotExists(filterSubQuery)
+			} else {
+				filter = builder.Exists(filterSubQuery)
+			}
+
+			// Add NULL check if requested (tasks with no entries in subtable)
+			if includeNulls && subTableFilterParams.AllowNullCheck {
+				filter = builder.Or(filter, builder.NotExists(subTableFilterParams.toBaseSubQuery()))
+			}
+
+			dbFilters = append(dbFilters, filter)
+			continue
+		}
+
+		// Regular field filter - prefix with table name
+		if f.field == taskPropertyBucketID {
+			f.field = "task_buckets.`bucket_id`"
+		} else {
+			f.field = "tasks.`" + f.field + "`"
+		}
+
+		filter, err := ts.getFilterCond(f, includeNulls)
+		if err != nil {
+			return nil, err
+		}
+		dbFilters = append(dbFilters, filter)
+	}
+
+	// Combine filters based on their concatenator (AND/OR)
+	if len(dbFilters) > 0 {
+		if len(dbFilters) == 1 {
+			filterCond = dbFilters[0]
+		} else {
+			for i, f := range dbFilters {
+				if len(dbFilters) > i+1 {
+					concat := rawFilters[i+1].concatenator
+					switch concat {
+					case taskFilterConcatOr:
+						filterCond = builder.Or(filterCond, f, dbFilters[i+1])
+					case taskFilterConcatAnd:
+						filterCond = builder.And(filterCond, f, dbFilters[i+1])
+					}
+				}
+			}
+		}
+	}
+
+	return filterCond, nil
+}
+
 // getRelevantProjectsFromCollection determines which projects are relevant for the collection
 func (ts *TaskService) getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *models.TaskCollection) (projects []*models.Project, err error) {
 	// Guard against nil session
@@ -676,6 +932,9 @@ func (ts *TaskService) handleSavedFilter(s *xorm.Session, collection *models.Tas
 
 	// Apply the saved filter's settings to the collection
 	savedFilterCollection := savedFilter.Filters
+	if savedFilterCollection != nil {
+	} else {
+	}
 
 	// Merge saved filter settings with current collection
 	mergedCollection := &models.TaskCollection{
@@ -752,6 +1011,20 @@ func (ts *TaskService) handleSavedFilter(s *xorm.Session, collection *models.Tas
 		return nil, 0, 0, err
 	}
 
+	// Add the id parameter as the last parameter to sortby by default
+	if len(opts.sortby) == 0 ||
+		len(opts.sortby) > 0 && opts.sortby[len(opts.sortby)-1].sortBy != "id" {
+		opts.sortby = append(opts.sortby, &sortParam{
+			sortBy:  "id",
+			orderBy: orderAscending,
+		})
+	}
+
+	// Set pagination and search parameters
+	opts.search = search
+	opts.page = page
+	opts.perPage = perPage
+
 	// Get projects the user has access to
 	projects, err := ts.getRelevantProjectsFromCollection(s, a, mergedCollection)
 	if err != nil {
@@ -809,6 +1082,15 @@ func (ts *TaskService) processRegularCollection(s *xorm.Session, collection *mod
 	opts, err := ts.getTaskFilterOptsFromCollection(collection, view)
 	if err != nil {
 		return nil, 0, 0, err
+	}
+
+	// Add the id parameter as the last parameter to sortby by default, but only if it is not already passed as the last parameter
+	if len(opts.sortby) == 0 ||
+		len(opts.sortby) > 0 && opts.sortby[len(opts.sortby)-1].sortBy != "id" {
+		opts.sortby = append(opts.sortby, &sortParam{
+			sortBy:  "id",
+			orderBy: orderAscending,
+		})
 	}
 
 	// Step 4: Validate expansion options
@@ -924,6 +1206,15 @@ func (ts *TaskService) handleFavorites(s *xorm.Session, collection *models.TaskC
 		return nil, 0, 0, err
 	}
 
+	// Add the id parameter as the last parameter to sortby by default
+	if len(opts.sortby) == 0 ||
+		len(opts.sortby) > 0 && opts.sortby[len(opts.sortby)-1].sortBy != "id" {
+		opts.sortby = append(opts.sortby, &sortParam{
+			sortBy:  "id",
+			orderBy: orderAscending,
+		})
+	}
+
 	// Set search options
 	opts.search = search
 	opts.page = page
@@ -1002,6 +1293,17 @@ func (ts *TaskService) getFavoriteTasksWithDetails(s *xorm.Session, projects []*
 	return favoriteTasks, len(favoriteTasks), totalItems, nil
 }
 
+// getTaskIndexFromSearchString extracts a task index number from a search string
+// For example, "#17" in the search string "number #17" will return 17
+func getTaskIndexFromSearchString(s string) (index int64) {
+	re := regexp.MustCompile("#([0-9]+)")
+	in := re.FindString(s)
+
+	stringIndex := strings.ReplaceAll(in, "#", "")
+	index, _ = strconv.ParseInt(stringIndex, 10, 64)
+	return
+}
+
 // getTaskOrTasksInBuckets determines whether to return tasks or buckets
 func (ts *TaskService) getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*models.Project, view *models.ProjectView, opts *taskSearchOptions, filteringForBucket bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
 	if filteringForBucket {
@@ -1021,41 +1323,156 @@ func (ts *TaskService) getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, proj
 
 // getTasksForProjects gets tasks for the specified projects with full details
 func (ts *TaskService) getTasksForProjects(s *xorm.Session, projects []*models.Project, a web.Auth, opts *taskSearchOptions, view *models.ProjectView) (tasks []*models.Task, resultCount int, totalItems int64, err error) {
-	// For now, delegate back to the models package's getTasksForProjects function
-	// This ensures we get tasks with full details (assignees, labels, attachments, etc.)
+	// Use the service layer's query building to properly apply filters
+	// This fixes the saved filters bug where filters were being ignored
 
-	// Convert sortby parameters to string arrays
-	var sortby, orderby []string
-	for _, sp := range opts.sortby {
-		if sp != nil {
-			sortby = append(sortby, sp.sortBy)
-			orderby = append(orderby, string(sp.orderBy))
+	// Extract project IDs
+	projectIDs := make([]int64, 0, len(projects))
+	for _, p := range projects {
+		if p.ID != models.FavoritesPseudoProject.ID {
+			projectIDs = append(projectIDs, p.ID)
 		}
 	}
 
-	// Use the bridge function that calls getTasksForProjects with full details
-	var projectViewID int64
-	if view != nil {
-		projectViewID = view.ID
-	} else if opts.projectViewID != 0 {
-		projectViewID = opts.projectViewID
+	if len(projectIDs) == 0 {
+		return []*models.Task{}, 0, 0, nil
 	}
 
-	return models.CallGetTasksForProjectsWithViewID(
-		s,
-		projects,
-		a,
-		opts.search,
-		opts.page,
-		opts.perPage,
-		sortby,
-		orderby,
-		opts.filterIncludeNulls,
-		opts.filter,
-		opts.filterTimezone,
-		opts.expand,
-		projectViewID,
-	)
+	// Set project IDs in opts if not already set
+	if len(opts.projectIDs) == 0 {
+		opts.projectIDs = projectIDs
+	}
+
+	// Build all conditions using builder.And() like the models layer does
+	var whereCond builder.Cond
+
+	// Project ID condition
+	projectIDCond := builder.In("tasks.project_id", opts.projectIDs)
+	whereCond = projectIDCond
+
+	// Search condition
+	if opts.search != "" {
+		searchCond := db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, opts.search, "tasks")
+
+		// Check if search contains a task index (e.g., "#17")
+		searchIndex := getTaskIndexFromSearchString(opts.search)
+		if searchIndex > 0 {
+			searchCond = builder.Or(searchCond, builder.Eq{"`index`": searchIndex})
+		}
+
+		whereCond = builder.And(whereCond, searchCond)
+	}
+	// Apply custom filters if present
+	if opts.parsedFilters != nil && len(opts.parsedFilters) > 0 {
+		filterCond, err := ts.convertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		whereCond = builder.And(whereCond, filterCond)
+	}
+
+	// Get total count using the same conditions
+	totalItems, err = s.Table("tasks").Where(whereCond).Count(&models.Task{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Build complete query in one go
+	baseQuery := s.Table("tasks").Where(whereCond)
+
+	// Add JOINs for position or bucket_id sorting
+	for _, param := range opts.sortby {
+		if param.sortBy == "position" {
+			baseQuery = baseQuery.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
+			break
+		}
+	}
+
+	// Check if we need to join task_buckets for bucket_id filtering or sorting
+	joinTaskBuckets := false
+	if opts.parsedFilters != nil {
+		for _, filter := range opts.parsedFilters {
+			if filter.field == "bucket_id" {
+				joinTaskBuckets = true
+				break
+			}
+		}
+	}
+	for _, param := range opts.sortby {
+		if param.sortBy == "bucket_id" {
+			joinTaskBuckets = true
+			break
+		}
+	}
+
+	if joinTaskBuckets {
+		joinCond := "task_buckets.task_id = tasks.id"
+		if opts.projectViewID > 0 {
+			baseQuery = baseQuery.Join("LEFT", "task_buckets", joinCond+" AND task_buckets.project_view_id = ?", opts.projectViewID)
+		} else {
+			baseQuery = baseQuery.Join("LEFT", "task_buckets", joinCond)
+		}
+	}
+
+	// Build order by clause using proper field prefixes
+	var orderby string
+	for i, param := range opts.sortby {
+		if i > 0 {
+			orderby += ", "
+		}
+
+		var prefix string
+		switch param.sortBy {
+		case "position":
+			prefix = "task_positions."
+		case "bucket_id":
+			prefix = "task_buckets."
+		default:
+			prefix = "tasks."
+		}
+
+		// MySQL sorts null values first - add IS NULL check to make it consistent
+		if db.Type() == schemas.MYSQL {
+			orderby += prefix + "`" + param.sortBy + "` IS NULL, "
+		}
+
+		orderby += prefix + "`" + param.sortBy + "` " + param.orderBy.String()
+
+		// Postgres and SQLite allow NULLS LAST for consistent sorting
+		if db.Type() == schemas.POSTGRES || db.Type() == schemas.SQLITE {
+			orderby += " NULLS LAST"
+		}
+	}
+
+	if orderby != "" {
+		baseQuery = baseQuery.OrderBy(orderby)
+	}
+
+	// Apply pagination
+	if opts.page > 0 && opts.perPage > 0 {
+		baseQuery = baseQuery.Limit(opts.perPage, (opts.page-1)*opts.perPage)
+	}
+
+	// Execute query to get raw tasks
+	tasks = []*models.Task{}
+	err = baseQuery.Find(&tasks)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	// Create a map of tasks for adding more info
+	taskMap := make(map[int64]*models.Task, len(tasks))
+	for i, t := range tasks {
+		taskMap[t.ID] = tasks[i] // Use tasks[i] to ensure we get the pointer from the slice
+	}
+
+	// Add additional details (labels, assignees, attachments, etc.)
+	err = models.AddMoreInfoToTasks(s, taskMap, a, view, opts.expand)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return tasks, len(tasks), totalItems, nil
 }
 
 // getRawTasksForProjects gets the basic task data without extra details
@@ -3159,7 +3576,7 @@ func (ts *TaskService) getRawFavoriteTasks(s *xorm.Session, favoriteTaskIDs []in
 	}
 
 	// Apply sorting
-	ts.applySortingToQuery(query, favoriteOpts.sortby)
+	query = ts.applySortingToQuery(query, favoriteOpts.sortby)
 
 	// Get total count first (before pagination)
 	totalItems, err = s.In("id", favoriteTaskIDs).Count(&models.Task{})
@@ -3191,7 +3608,7 @@ func (ts *TaskService) buildAndExecuteTaskQuery(s *xorm.Session, opts *taskSearc
 	}
 
 	// Apply sorting
-	ts.applySortingToQuery(query, opts.sortby)
+	query = ts.applySortingToQuery(query, opts.sortby)
 
 	// Get total count first (before pagination)
 	totalItems, err = s.In("project_id", opts.projectIDs).Count(&models.Task{})
@@ -3224,17 +3641,12 @@ func (ts *TaskService) applyFiltersToQuery(query *xorm.Session, opts *taskSearch
 	}
 
 	// Apply custom filters if present
-	if opts.filter != "" {
-		// For now, just delegate back to models for complex filtering
-		// This will be moved to service layer in a future iteration
-		// For simple cases, we handle here; for complex, we delegate
-		if strings.Contains(opts.filter, ">=") || strings.Contains(opts.filter, "<=") ||
-			strings.Contains(opts.filter, "!=") || strings.Contains(opts.filter, "&&") ||
-			strings.Contains(opts.filter, "||") {
-			// Complex filter - delegate to models for now
-			// This is where the date range logic and other complex filtering happens
-			// TODO: Implement full filter parsing in service layer
+	if opts.parsedFilters != nil && len(opts.parsedFilters) > 0 {
+		filterCond, err := ts.convertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
+		if err != nil {
+			return nil, nil, err
 		}
+		query = query.And(filterCond)
 	}
 
 	// Use the same query for count (xorm doesn't have Clone)
@@ -3243,7 +3655,7 @@ func (ts *TaskService) applyFiltersToQuery(query *xorm.Session, opts *taskSearch
 }
 
 // applySortingToQuery applies sorting to the query
-func (ts *TaskService) applySortingToQuery(query *xorm.Session, sortParams []*sortParam) {
+func (ts *TaskService) applySortingToQuery(query *xorm.Session, sortParams []*sortParam) *xorm.Session {
 	for _, param := range sortParams {
 		var orderBy string
 		if param.orderBy == orderDescending {
@@ -3253,6 +3665,7 @@ func (ts *TaskService) applySortingToQuery(query *xorm.Session, sortParams []*so
 		}
 		query = query.OrderBy(orderBy)
 	}
+	return query
 }
 
 // addBucketsToTasks adds bucket information to tasks using the KanbanService
