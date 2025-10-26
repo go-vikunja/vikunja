@@ -488,7 +488,7 @@
                 {
                     "key": "type",
                     "default_value": "local",
-                    "comment": "The type of file storage backend. Supported values are 'local' and 's3'."
+                    "comment": "The type of file storage backend. Supported values are `local` and `s3`."
                 },
                 {
                     "key": "s3",

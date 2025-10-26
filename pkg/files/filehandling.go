@@ -101,21 +101,15 @@ func initLocalFileHandler() {
 func InitFileHandler() error {
 	fileType := config.FilesType.GetString()
 
-	var err error
 	switch fileType {
 	case "s3":
-		err = initS3FileHandler()
+		return initS3FileHandler()
 	case "local":
 		initLocalFileHandler()
+		return nil
 	default:
-		initLocalFileHandler()
+		return fmt.Errorf("invalid file storage type '%s': must be 'local' or 's3'", fileType)
 	}
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // InitTestFileHandler initializes a new memory file system for testing
