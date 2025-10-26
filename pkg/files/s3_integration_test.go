@@ -81,7 +81,7 @@ func TestFileStorageIntegration(t *testing.T) {
 		createdFile, err := Create(fileReader, testFileName, uint64(len(testContent)), testAuth)
 		require.NoError(t, err, "Failed to create file")
 		require.NotNil(t, createdFile, "Created file should not be nil")
-		assert.Greater(t, createdFile.ID, int64(0), "File ID should be assigned")
+		assert.Positive(t, createdFile.ID, "File ID should be assigned")
 		assert.Equal(t, testFileName, createdFile.Name, "File name should match")
 		assert.Equal(t, uint64(len(testContent)), createdFile.Size, "File size should match")
 		assert.Equal(t, int64(1), createdFile.CreatedByID, "Creator ID should match")
@@ -117,7 +117,7 @@ func TestFileStorageIntegration(t *testing.T) {
 
 		// Verify file is deleted from storage
 		_, err = FileStat(loadedFile)
-		assert.Error(t, err, "File should not exist after deletion")
+		require.Error(t, err, "File should not exist after deletion")
 		assert.True(t, os.IsNotExist(err), "Error should indicate file does not exist")
 	})
 
@@ -180,7 +180,7 @@ func TestFileStorageIntegration(t *testing.T) {
 
 		retrievedContent, err := io.ReadAll(loadedFile.File)
 		require.NoError(t, err, "Failed to read large file")
-		assert.Equal(t, len(largeContent), len(retrievedContent), "Retrieved file size should match")
+		assert.Len(t, retrievedContent, len(largeContent), "Retrieved file size should match")
 		assert.Equal(t, largeContent, retrievedContent, "Large file content should match")
 
 		_ = loadedFile.File.Close()
@@ -198,12 +198,12 @@ func TestFileStorageIntegration(t *testing.T) {
 		// Try to load a file that doesn't exist
 		nonExistentFile := &File{ID: 999999}
 		err := nonExistentFile.LoadFileByID()
-		assert.Error(t, err, "Loading non-existent file should error")
+		require.Error(t, err, "Loading non-existent file should error")
 		assert.True(t, os.IsNotExist(err), "Error should indicate file does not exist")
 
 		// Try to load metadata for non-existent file
 		err = nonExistentFile.LoadFileMetaByID()
-		assert.Error(t, err, "Loading metadata for non-existent file should error")
+		require.Error(t, err, "Loading metadata for non-existent file should error")
 		assert.True(t, IsErrFileDoesNotExist(err), "Error should be ErrFileDoesNotExist")
 	})
 }
