@@ -204,6 +204,14 @@ jobs:
         image: gitea/test-openldap@sha256:b66527e298d6062d5289dc411d1b8da1c593f8140a3d1f863e8d9d021234122f
         ports:
           - 389:389
+      test-minio:
+        image: bitnami/minio:latest
+        env:
+          MINIO_ROOT_USER: vikunja
+          MINIO_ROOT_PASSWORD: vikunjatest
+          MINIO_DEFAULT_BUCKETS: vikunja-test
+        ports:
+          - 9000:9000
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Download Mage Binary
@@ -240,6 +248,13 @@ jobs:
           VIKUNJA_AUTH_LDAP_BINDPASSWORD: password
           VIKUNJA_AUTH_LDAP_USERFILTER: "(&(objectclass=inetorgperson)(uid=%s))"
           VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
+          VIKUNJA_FILES_TYPE: s3
+          VIKUNJA_FILES_S3_ENDPOINT: http://localhost:9000
+          VIKUNJA_FILES_S3_BUCKET: vikunja-test
+          VIKUNJA_FILES_S3_REGION: us-east-1
+          VIKUNJA_FILES_S3_ACCESSKEY: vikunja
+          VIKUNJA_FILES_S3_SECRETKEY: vikunjatest
+          VIKUNJA_FILES_S3_USEPATHSTYLE: true
         run: |
           mkdir -p frontend/dist
           touch frontend/dist/index.html

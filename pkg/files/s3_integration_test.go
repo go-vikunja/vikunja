@@ -17,14 +17,198 @@
 package files
 
 import (
+	"bytes"
+	"io"
+	"os"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+// TestFileStorageIntegration tests end-to-end file storage and retrieval
+// with both S3/MinIO and local filesystem backends based on configuration
+func TestFileStorageIntegration(t *testing.T) {
+	if os.Getenv("VIKUNJA_TESTS_USE_CONFIG") != "1" {
+		t.Skip("Skipping integration tests - set VIKUNJA_TESTS_USE_CONFIG=1 to run")
+	}
+
+	// Save original config values
+	originalType := config.FilesType.GetString()
+	originalBasePath := config.FilesBasePath.GetString()
+	originalEndpoint := config.FilesS3Endpoint.GetString()
+	originalBucket := config.FilesS3Bucket.GetString()
+	originalRegion := config.FilesS3Region.GetString()
+	originalAccessKey := config.FilesS3AccessKey.GetString()
+	originalSecretKey := config.FilesS3SecretKey.GetString()
+	originalUsePathStyle := config.FilesS3UsePathStyle.GetBool()
+
+	// Restore config after test
+	defer func() {
+		config.FilesType.Set(originalType)
+		config.FilesBasePath.Set(originalBasePath)
+		config.FilesS3Endpoint.Set(originalEndpoint)
+		config.FilesS3Bucket.Set(originalBucket)
+		config.FilesS3Region.Set(originalRegion)
+		config.FilesS3AccessKey.Set(originalAccessKey)
+		config.FilesS3SecretKey.Set(originalSecretKey)
+		config.FilesS3UsePathStyle.Set(originalUsePathStyle)
+		// Reinitialize with original settings
+		_ = InitFileHandler()
+	}()
+
+	storageType := config.FilesType.GetString()
+
+	t.Run("Initialize file handler with "+storageType, func(t *testing.T) {
+		err := InitFileHandler()
+		require.NoError(t, err, "Failed to initialize file handler with type: %s", storageType)
+		assert.NotNil(t, afs, "File system should be initialized")
+	})
+
+	t.Run("Create and retrieve file with "+storageType, func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		// Test data
+		testContent := []byte("This is a test file for storage integration testing with " + storageType)
+		testFileName := "integration-test-file.txt"
+		testAuth := &testauth{id: 1}
+
+		// Create file
+		fileReader := bytes.NewReader(testContent)
+		createdFile, err := Create(fileReader, testFileName, uint64(len(testContent)), testAuth)
+		require.NoError(t, err, "Failed to create file")
+		require.NotNil(t, createdFile, "Created file should not be nil")
+		assert.Greater(t, createdFile.ID, int64(0), "File ID should be assigned")
+		assert.Equal(t, testFileName, createdFile.Name, "File name should match")
+		assert.Equal(t, uint64(len(testContent)), createdFile.Size, "File size should match")
+		assert.Equal(t, int64(1), createdFile.CreatedByID, "Creator ID should match")
+
+		// Load file metadata from database
+		loadedFile := &File{ID: createdFile.ID}
+		err = loadedFile.LoadFileMetaByID()
+		require.NoError(t, err, "Failed to load file metadata")
+		assert.Equal(t, testFileName, loadedFile.Name, "Loaded file name should match")
+		assert.Equal(t, uint64(len(testContent)), loadedFile.Size, "Loaded file size should match")
+
+		// Load and verify file content
+		err = loadedFile.LoadFileByID()
+		require.NoError(t, err, "Failed to load file content")
+		require.NotNil(t, loadedFile.File, "File handle should not be nil")
+
+		retrievedContent, err := io.ReadAll(loadedFile.File)
+		require.NoError(t, err, "Failed to read file content")
+		assert.Equal(t, testContent, retrievedContent, "Retrieved content should match original")
+
+		_ = loadedFile.File.Close()
+
+		// Verify file exists in storage
+		fileInfo, err := FileStat(loadedFile)
+		require.NoError(t, err, "File should exist in storage")
+		assert.NotNil(t, fileInfo, "File info should not be nil")
+
+		// Delete file
+		s := db.NewSession()
+		defer s.Close()
+		err = loadedFile.Delete(s)
+		require.NoError(t, err, "Failed to delete file")
+
+		// Verify file is deleted from storage
+		_, err = FileStat(loadedFile)
+		assert.Error(t, err, "File should not exist after deletion")
+		assert.True(t, os.IsNotExist(err), "Error should indicate file does not exist")
+	})
+
+	t.Run("Create multiple files with "+storageType, func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		testAuth := &testauth{id: 1}
+		fileIDs := make([]int64, 0, 3)
+
+		// Create multiple files
+		for i := 1; i <= 3; i++ {
+			content := []byte("Test file content number " + string(rune('0'+i)))
+			fileName := "test-file-" + string(rune('0'+i)) + ".txt"
+
+			file, err := Create(bytes.NewReader(content), fileName, uint64(len(content)), testAuth)
+			require.NoError(t, err, "Failed to create file %d", i)
+			fileIDs = append(fileIDs, file.ID)
+		}
+
+		// Verify all files exist and can be retrieved
+		for i, fileID := range fileIDs {
+			file := &File{ID: fileID}
+			err := file.LoadFileByID()
+			require.NoError(t, err, "Failed to load file %d", i+1)
+
+			content, err := io.ReadAll(file.File)
+			require.NoError(t, err, "Failed to read file %d", i+1)
+			expectedContent := "Test file content number " + string(rune('0'+i+1))
+			assert.Equal(t, []byte(expectedContent), content, "Content should match for file %d", i+1)
+
+			_ = file.File.Close()
+		}
+
+		// Clean up: delete all files
+		s := db.NewSession()
+		defer s.Close()
+		for _, fileID := range fileIDs {
+			file := &File{ID: fileID}
+			err := file.Delete(s)
+			require.NoError(t, err, "Failed to delete file")
+		}
+	})
+
+	t.Run("Handle large file with "+storageType, func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		testAuth := &testauth{id: 1}
+		// Create a 1MB file
+		largeContent := bytes.Repeat([]byte("X"), 1024*1024)
+		fileName := "large-test-file.bin"
+
+		file, err := Create(bytes.NewReader(largeContent), fileName, uint64(len(largeContent)), testAuth)
+		require.NoError(t, err, "Failed to create large file")
+		assert.Equal(t, uint64(len(largeContent)), file.Size, "File size should match")
+
+		// Retrieve and verify
+		loadedFile := &File{ID: file.ID}
+		err = loadedFile.LoadFileByID()
+		require.NoError(t, err, "Failed to load large file")
+
+		retrievedContent, err := io.ReadAll(loadedFile.File)
+		require.NoError(t, err, "Failed to read large file")
+		assert.Equal(t, len(largeContent), len(retrievedContent), "Retrieved file size should match")
+		assert.Equal(t, largeContent, retrievedContent, "Large file content should match")
+
+		_ = loadedFile.File.Close()
+
+		// Clean up
+		s := db.NewSession()
+		defer s.Close()
+		err = loadedFile.Delete(s)
+		require.NoError(t, err, "Failed to delete large file")
+	})
+
+	t.Run("File not found with "+storageType, func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		// Try to load a file that doesn't exist
+		nonExistentFile := &File{ID: 999999}
+		err := nonExistentFile.LoadFileByID()
+		assert.Error(t, err, "Loading non-existent file should error")
+		assert.True(t, os.IsNotExist(err), "Error should indicate file does not exist")
+
+		// Try to load metadata for non-existent file
+		err = nonExistentFile.LoadFileMetaByID()
+		assert.Error(t, err, "Loading metadata for non-existent file should error")
+		assert.True(t, IsErrFileDoesNotExist(err), "Error should be ErrFileDoesNotExist")
+	})
+}
+
+// TestInitFileHandler_S3Configuration tests S3 configuration validation
 func TestInitFileHandler_S3Configuration(t *testing.T) {
 	// Save original config values
 	originalType := config.FilesType.GetString()
@@ -42,6 +226,7 @@ func TestInitFileHandler_S3Configuration(t *testing.T) {
 		config.FilesS3Region.Set(originalRegion)
 		config.FilesS3AccessKey.Set(originalAccessKey)
 		config.FilesS3SecretKey.Set(originalSecretKey)
+		_ = InitFileHandler()
 	}()
 
 	t.Run("valid S3 configuration", func(t *testing.T) {
