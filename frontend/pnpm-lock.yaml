@@ -38,8 +38,8 @@ importers:
         specifier: 11.0.1
         version: 11.0.1(@vue/compiler-dom@3.5.22)(eslint@9.38.0(jiti@2.4.2))(rollup@4.52.5)(typescript@5.9.3)(vue-i18n@11.1.12(vue@3.5.22(typescript@5.9.3)))(vue@3.5.22(typescript@5.9.3))
       '@kyvg/vue3-notification':
-        specifier: 3.4.1
-        version: 3.4.1(vue@3.5.22(typescript@5.9.3))
+        specifier: 3.4.2
+        version: 3.4.2(vue@3.5.22(typescript@5.9.3))
       '@sentry/tracing':
         specifier: 7.120.4
         version: 7.120.4
@@ -1627,8 +1627,8 @@ packages:
   '@keyv/serialize@1.1.0':
     resolution: {integrity: sha512-RlDgexML7Z63Q8BSaqhXdCYNBy/JQnqYIwxofUrNLGCblOMHp+xux2Q8nLMLlPpgHQPoU0Do8Z6btCpRBEqZ8g==}
 
-  '@kyvg/vue3-notification@3.4.1':
-    resolution: {integrity: sha512-WhTWCbF36JHLJR5UdKmJF7KXGOGVy4tLeaJuKTHZhwttZWnbF9w1/c2d32tvCSwY9CdeX/n9uoaKWLMKK3vOyg==}
+  '@kyvg/vue3-notification@3.4.2':
+    resolution: {integrity: sha512-CZ2zOdXsbGCtWbdqMgbusKtZTkMT+dYpw9bmAitsdSNHT0knh4njD8X95JIyTMWvNVjhDkFedbkNiZLcPqttwQ==}
     peerDependencies:
       vue: ^3.0.0
 
@@ -8457,7 +8457,7 @@ snapshots:
 
   '@keyv/serialize@1.1.0': {}
 
-  '@kyvg/vue3-notification@3.4.1(vue@3.5.22(typescript@5.9.3))':
+  '@kyvg/vue3-notification@3.4.2(vue@3.5.22(typescript@5.9.3))':
     dependencies:
       vue: 3.5.22(typescript@5.9.3)
 
