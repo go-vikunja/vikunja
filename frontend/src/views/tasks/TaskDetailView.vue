@@ -12,7 +12,7 @@
 			class="task-view"
 		>
 			<BaseButton
-				v-if="!isModal || isMobile"
+				v-if="!isModal"
 				class="back-button mbs-2"
 				@click="lastProject ? router.back() : router.push(projectRoute)"
 			>
@@ -600,7 +600,7 @@ import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, on
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
-import {unrefElement, useMediaQuery} from '@vueuse/core'
+import {unrefElement} from '@vueuse/core'
 import {klona} from 'klona/lite'
 import {eventToHotkeyString} from '@github/hotkey'
 
@@ -777,7 +777,6 @@ const color = computed(() => {
 })
 
 const isModal = computed(() => Boolean(props.backdropView))
-const isMobile = useMediaQuery('(max-width: 1024px)')
 
 function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 	return uploadFile(props.taskId, file, onSuccess)
