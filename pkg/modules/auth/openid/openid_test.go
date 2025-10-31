@@ -413,6 +413,7 @@ func TestMergeClaims(t *testing.T) {
 
 		// Verify error is returned for missing email
 		require.Error(t, err)
-		assert.IsType(t, &user.ErrNoOpenIDEmailProvided{}, err)
+		var expectedErr *user.ErrNoOpenIDEmailProvided
+		assert.ErrorAs(t, err, &expectedErr)
 	})
 }
