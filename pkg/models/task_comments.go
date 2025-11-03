@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -41,8 +41,8 @@ type TaskComment struct {
 	Created time.Time `xorm:"created" json:"created"`
 	Updated time.Time `xorm:"updated" json:"updated"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName holds the table name for the task comments table
@@ -255,7 +255,9 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 }
 
 func addCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
-	comments, _, _, err := getAllCommentsForTasksWithoutPermissionCheck(s, taskIDs, "", 0, 50)
+	// Only fetch the first page of comments when expanding tasks to avoid
+	// loading all comments for tasks with many comments.
+	comments, _, _, err := getAllCommentsForTasksWithoutPermissionCheck(s, taskIDs, "", 1, 50)
 	if err != nil {
 		return err
 	}

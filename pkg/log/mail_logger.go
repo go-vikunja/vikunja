@@ -2,90 +2,54 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package log
 
 import (
-	"strings"
-	"time"
+	"fmt"
+	"log/slog"
 
-	"github.com/op/go-logging"
-	"github.com/wneessen/go-mail/log"
+	maillog "github.com/wneessen/go-mail/log"
 )
 
 type MailLogger struct {
-	logger *logging.Logger
-	level  log.Level
+	logger *slog.Logger
 }
 
-const mailFormat = `%{color}%{time:` + time.RFC3339Nano + `}: %{level}` + "\t" + `▶ [MAIL] %{id:03x}%{color:reset} %{message}`
-const mailLogModule = `vikunja_mail`
-
 // NewMailLogger creates and initializes a new mail logger
-func NewMailLogger(configLogEnabled bool, configLogMail string, configLogMailLevel string) log.Logger {
-	lvl := strings.ToUpper(configLogMailLevel)
-	level, err := logging.LogLevel(lvl)
-	if err != nil {
-		Criticalf("Error setting mail log level %s: %s", lvl, err.Error())
-	}
+func NewMailLogger(configLogEnabled bool, configLogMail string, configLogMailLevel string, configLogFormat string) maillog.Logger {
+	handler, _ := makeLogHandler(configLogEnabled, configLogMail, configLogMailLevel, configLogFormat)
 
 	mailLogger := &MailLogger{
-		logger: logging.MustGetLogger(mailLogModule),
-	}
-
-	var backend logging.Backend
-	backend = &NoopBackend{}
-	if configLogEnabled && configLogMail != "off" {
-		logBackend := logging.NewLogBackend(GetLogWriter(configLogMail, "mail"), "", 0)
-		backend = logging.NewBackendFormatter(logBackend, logging.MustStringFormatter(mailFormat+"\n"))
-	}
-
-	backendLeveled := logging.AddModuleLevel(backend)
-	backendLeveled.SetLevel(level, mailLogModule)
-
-	mailLogger.logger.SetBackend(backendLeveled)
-
-	switch level {
-	case logging.CRITICAL:
-	case logging.ERROR:
-		mailLogger.level = log.LevelError
-	case logging.WARNING:
-		mailLogger.level = log.LevelWarn
-	case logging.NOTICE:
-	case logging.INFO:
-		mailLogger.level = log.LevelInfo
-	case logging.DEBUG:
-		mailLogger.level = log.LevelDebug
-	default:
-		mailLogger.level = 0
+		logger: slog.New(handler).With("component", "mail"),
 	}
 
 	return mailLogger
 }
 
-func (m *MailLogger) Debugf(l log.Log) {
-	m.logger.Debugf(l.Format, l.Messages...)
+func (m *MailLogger) Debugf(l maillog.Log) {
+	m.logger.Debug(fmt.Sprintf(l.Format, l.Messages...))
 }
 
-func (m *MailLogger) Infof(l log.Log) {
-	m.logger.Infof(l.Format, l.Messages...)
+func (m *MailLogger) Infof(l maillog.Log) {
+	m.logger.Info(fmt.Sprintf(l.Format, l.Messages...))
 }
 
-func (m *MailLogger) Warnf(l log.Log) {
-	m.logger.Warningf(l.Format, l.Messages...)
+func (m *MailLogger) Warnf(l maillog.Log) {
+	m.logger.Warn(fmt.Sprintf(l.Format, l.Messages...))
 }
 
-func (m *MailLogger) Errorf(l log.Log) {
-	m.logger.Errorf(l.Format, l.Messages...)
+func (m *MailLogger) Errorf(l maillog.Log) {
+	m.logger.Error(fmt.Sprintf(l.Format, l.Messages...))
 }

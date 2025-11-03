@@ -311,12 +311,6 @@
 				"addedSuccess": "{type} buvo sėkmingai pridėti.",
 				"updatedSuccess": "{type} buvo sėkmingai pridėti."
 			},
-			"right": {
-				"title": "Prieigos teisės",
-				"read": "Tik skaitymas",
-				"readWrite": "Skaityti & rašyti",
-				"admin": "Administratorius"
-			},
 			"attributes": {
 				"link": "Nuoroda",
 				"delete": "Ištrinti"
@@ -340,8 +334,7 @@
 			"month": "Mėnuo",
 			"day": "Diena",
 			"hour": "Valanda",
-			"range": "Datos intervalas",
-			"noDates": "Ši užduotis dar neturi nurodytos datos."
+			"range": "Datos intervalas"
 		},
 		"table": {
 			"title": "Lentelė",
@@ -383,7 +376,6 @@
 			"targetUrl": "Tikslinė nuoroda",
 			"targetUrlInvalid": "Prašome nurodyti veikiančia nuorodą.",
 			"events": "Įvykiai",
-			"eventsHint": "Parinkti visus įvykius, kuriuos šis webhook'as turėtų gauti atnaujinimus (su dabartiniu projektu).",
 			"mustSelectEvents": "Turi pasirinkti bent vieną įvykį.",
 			"delete": "Ištrinti šį webhook'ą",
 			"deleteText": "Ar tikrai nori ištrinti šį webhook'ą? Išoriniai naudotojai daugiau nebus informuoti apie tolimesnius įvykius.",
@@ -479,9 +471,7 @@
 					"greaterThanOrEqual": "Daugiau už ar lygu",
 					"lessThan": "Mažiau nei",
 					"lessThanOrEqual": "Mažiau negu ar lygu",
-					"like": "Atitinka šabloną (nadojama wildcard %)",
-					"in": "Sutampa su bet kuria verte kableliu atskirtuose verčių sąrašuose",
-					"notIn": "Sutampa su bet kuria neesančia verte kableliu atskirtuose verčių sąrašuose"
+					"like": "Atitinka šabloną (nadojama wildcard %)"
 				},
 				"logicalOperators": {
 					"intro": "Norint sujungti kelias sąlygas, galite naudoti žemiau esančius operandus:",
@@ -746,7 +736,6 @@
 		"addReminder": "Pridėti priminimą…",
 		"doneSuccess": "Užduotis buvo sėkmingai pažymėta kaip baigta.",
 		"undoneSuccess": "Užduotis buvo sėkmingai atžymėta kaip atlikta.",
-		"revertSuccess": "Užduoties pakeitimai buvo sėkmingai pakeisti.",
 		"undo": "Anuliuoti",
 		"openDetail": "Atidaryti užduoties duomenų vaizdą",
 		"checklistTotal": "{checked} iš {total} užduočių",
@@ -754,7 +743,6 @@
 		"show": {
 			"titleCurrent": "Dabartinės Užduotys",
 			"titleDates": "Užduotys nuo {from} iki {to}",
-			"noDates": "Rodyti užduotis be datų",
 			"overdue": "Rodyti neišpildytas užduotis",
 			"fromuntil": "Užduotys nuo {from} iki {until}",
 			"select": "Pasirinkti datos rėžį",
@@ -971,7 +959,6 @@
 			"project4": "Pavyzdžiui: {prefix}\"Projektas su tarpais\".",
 			"dateAndTime": "Data ir laikas",
 			"date": "Bet kuri data bus naudojama, kaip užduoties pabaigos data. Gali naudoti datas bet kuriuo iš formatų:",
-			"dateWeekday": "bet kuri savaitės diena, bus naudojama kaip data",
 			"dateCurrentYear": "naudoti šiuos metus",
 			"dateNth": "bus naudojama {day} dabartiniam mėnesiui",
 			"dateTime": "Sujungti bet kokį datos formatą su \"{time}\" (ar {timePM}) nustatyti laiką.",
@@ -1106,7 +1093,6 @@
 	"notification": {
 		"title": "Pranešimai",
 		"none": "Neturite pranešimų. Geros dienos!",
-		"explainer": "Prisiregistravus prie projektų ar užduočių, žinutės bus publikuojamos čia.",
 		"markAllRead": "Pažymėti visus pranešimus kaip skaitytus",
 		"markAllReadSuccess": "Sėkmingai pažymėjai visus pranešimus kaip skaitytus."
 	},

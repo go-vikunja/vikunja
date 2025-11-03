@@ -17,7 +17,7 @@ import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
 import {getSavedFilterIdFromProjectId} from '@/services/savedFilter'
 import type {IProjectView} from '@/modelTypes/IProjectView'
-import {RIGHTS} from '@/constants/rights.ts'
+import {PERMISSIONS} from '@/constants/permissions.ts'
 
 const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
@@ -83,8 +83,8 @@ export const useProjectStore = defineStore('project', () => {
 	const searchProjectAndFilter = computed(() => {
 		return (query: string, includeArchived = false) => {
 			return search(query)
-					?.map(id => projects.value[id])
-					.filter(project => project?.isArchived === includeArchived)
+				?.map(id => projects.value[id])
+				.filter(project => project?.isArchived === includeArchived)
 				|| []
 		}
 	})
@@ -102,9 +102,9 @@ export const useProjectStore = defineStore('project', () => {
 	const searchSavedFilter = computed(() => {
 		return (query: string, includeArchived = false) => {
 			return search(query)
-					?.filter(value => getSavedFilterIdFromProjectId(value) > 0)
-					.map(id => projects.value[id])
-					.filter(project => project?.isArchived === includeArchived)
+				?.filter(value => getSavedFilterIdFromProjectId(value) > 0)
+				.map(id => projects.value[id])
+				.filter(project => project?.isArchived === includeArchived)
 				|| []
 		}
 	})
@@ -213,7 +213,7 @@ export const useProjectStore = defineStore('project', () => {
 		let page = 1
 		try {
 			do {
-				const newProjects = await projectService.getAll({}, {is_archived: true, expand: 'rights'}, page) as IProject[]
+				const newProjects = await projectService.getAll({}, {is_archived: true, expand: 'permissions'}, page) as IProject[]
 				loadedProjects.push(...newProjects)
 				page++
 			} while (page <= projectService.totalPages)
@@ -255,6 +255,24 @@ export const useProjectStore = defineStore('project', () => {
 			views: updatedViews,
 		})
 	}
+
+	// Add method to ensure single project loading works for link shares
+	async function loadProject(projectId: number) {
+		const project = projects.value[projectId]
+		if (project) {
+			return project
+		}
+
+		try {
+			const projectService = new ProjectService()
+			const loadedProject = await projectService.get({id: projectId})
+			setProject(loadedProject)
+			return loadedProject
+		} catch (e) {
+			console.error(`Failed to load project ${projectId}:`, e)
+			throw e
+		}
+	}
 	
 	return {
 		isLoading: readonly(isLoading),
@@ -277,6 +295,7 @@ export const useProjectStore = defineStore('project', () => {
 		removeProjectById,
 		toggleProjectFavorite,
 		loadAllProjects,
+		loadProject,
 		createProject,
 		updateProject,
 		deleteProject,
@@ -320,7 +339,7 @@ export function useProject(projectId: MaybeRefOrGetter<IProject['id']>) {
 
 		const duplicate = await projectDuplicateService.create(projectDuplicate)
 		if (duplicate.duplicatedProject) {
-			duplicate.duplicatedProject.maxRight = RIGHTS.ADMIN
+			duplicate.duplicatedProject.maxPermission = PERMISSIONS.ADMIN
 		}
 
 		projectStore.setProject(duplicate.duplicatedProject)

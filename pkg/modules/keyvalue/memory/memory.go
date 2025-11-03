@@ -2,22 +2,23 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package memory
 
 import (
 	"reflect"
+	"strings"
 	"sync"
 
 	e "code.vikunja.io/api/pkg/modules/keyvalue/error"
@@ -123,5 +124,34 @@ func (s *Storage) DecrBy(key string, update int64) (err error) {
 		return &e.ErrValueHasWrongType{Key: key, ExpectedValue: "int64"}
 	}
 	s.store[key] = val - update
+	return nil
+}
+
+// ListKeys returns all keys in the storage which start with the given prefix
+func (s *Storage) ListKeys(prefix string) ([]string, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	keys := make([]string, 0)
+	for k := range s.store {
+		if strings.HasPrefix(k, prefix) {
+			keys = append(keys, k)
+		}
+	}
+
+	return keys, nil
+}
+
+// DelPrefix removes all keys which start with the given prefix
+func (s *Storage) DelPrefix(prefix string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	for k := range s.store {
+		if strings.HasPrefix(k, prefix) {
+			delete(s.store, k)
+		}
+	}
+
 	return nil
 }

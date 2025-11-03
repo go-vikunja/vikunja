@@ -1,6 +1,6 @@
 # Vikunja desktop
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
 
 The Vikunja frontend all repackaged as an electron app to run as a desktop app!
 
@@ -35,6 +35,10 @@ pnpm start
 ## Building for release
 
 1. Run the snippet from above, but with a valid frontend version instead of `unstable`
-2. Change the version in `package.json` (That's the one that will be used by electron-builder`
+2. Change the version in `package.json` (that's the one that will be used by electron-builder)
 3. `pnpm install`
 4. `pnpm run dist --linux --windows`
+
+## License
+
+This project is licensed under the GPL-3.0-or-later license. See the [LICENSE](LICENSE) file for details.

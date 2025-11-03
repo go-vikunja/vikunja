@@ -276,18 +276,21 @@ const getRepeats = (text: string): repeatParsedResult => {
 	}
 }
 
+const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 export const cleanupItemText = (text: string, items: string[], prefix: string): string => {
 	items.forEach(l => {
 		if (l === '') {
 			return
 		}
+		const escaped = escapeRegExp(l)
 		text = text
-			.replace(new RegExp(`\\${prefix}'${l}' `, 'ig'), '')
-			.replace(new RegExp(`\\${prefix}'${l}'`, 'ig'), '')
-			.replace(new RegExp(`\\${prefix}"${l}" `, 'ig'), '')
-			.replace(new RegExp(`\\${prefix}"${l}"`, 'ig'), '')
-			.replace(new RegExp(`\\${prefix}${l} `, 'ig'), '')
-			.replace(new RegExp(`\\${prefix}${l}`, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}'${escaped}' `, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}'${escaped}'`, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}"${escaped}" `, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}"${escaped}"`, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}${escaped} `, 'ig'), '')
+			.replace(new RegExp(`\\${prefix}${escaped}`, 'ig'), '')
 	})
 	return text
 }

@@ -65,8 +65,9 @@
 						@start="() => drag = true"
 						@end="saveTaskPosition"
 					>
-						<template #item="{element: t}">
+						<template #item="{element: t, index}">
 							<SingleTaskInProject
+								:ref="(el) => setTaskRef(el, index)"
 								:show-list-color="false"
 								:disabled="!canDragTasks"
 								:can-mark-as-done="canWrite || isPseudoProject"
@@ -93,12 +94,9 @@
 	</ProjectWrapper>
 </template>
 
-<script lang="ts">
-export default {name: 'List'}
-</script>
 
 <script setup lang="ts">
-import {ref, computed, nextTick, onMounted, watch} from 'vue'
+import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -111,10 +109,11 @@ import Pagination from '@/components/misc/Pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/project/partials/Filters.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
-import {RIGHTS as Rights} from '@/constants/rights'
+import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
+import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {ITask} from '@/modelTypes/ITask'
-import {isSavedFilter} from '@/services/savedFilter'
+import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
 
@@ -124,10 +123,14 @@ import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
 
 const props = defineProps<{
-	isLoadingProject: boolean,
-	projectId: IProject['id'],
-	viewId: IProjectView['id'],
+        isLoadingProject: boolean,
+        projectId: IProject['id'],
+        viewId: IProjectView['id'],
 }>()
+
+const projectId = toRef(props, 'projectId')
+
+defineOptions({name: 'List'})
 
 const ctaVisible = ref(false)
 
@@ -142,41 +145,28 @@ const {
 	params,
 	sortByParam,
 } = useTaskList(
-	() => props.projectId,
+	() => projectId.value,
 	() => props.viewId,
 	{position: 'asc'},
-	() => props.projectId === -1
+	() => projectId.value === -1
 		? null
 		: 'subtasks',
 )
 
 const taskPositionService = ref(new TaskPositionService())
 
+// Saved filter composable for accessing filter data
+const _savedFilter = useSavedFilter(() => projectId.value < 0 ? projectId.value : undefined).filter
+
 const tasks = ref<ITask[]>([])
 watch(
 	allTasks,
 	() => {
 		tasks.value = [...allTasks.value]
-		if (props.projectId < 0) {
+		if (projectId.value < 0) {
 			return
 		}
-		const tasksById = {}
-		tasks.value.forEach(t => tasksById[t.id] = true)
-
-		tasks.value = tasks.value.filter(t => {
-			if (typeof t.relatedTasks?.parenttask === 'undefined') {
-				return true
-			}
-
-			// If the task is a subtask, make sure the parent task is available in the current view as well
-			for (const pt of t.relatedTasks.parenttask) {
-				if (typeof tasksById[pt.id] === 'undefined') {
-					return true
-				}
-			}
-
-			return false
-		})
+		tasks.value = tasks.value.filter(t => shouldShowTaskInListView(t, allTasks.value))
 	},
 )
 
@@ -196,7 +186,7 @@ const baseStore = useBaseStore()
 const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
-	return project.value.maxRight > Rights.READ && project.value.id > 0
+	return project.value.maxPermission > Permissions.READ && project.value.id > 0
 })
 
 const isPseudoProject = computed(() => (project.value && isSavedFilter(project.value)) || project.value?.id === -1)
@@ -229,9 +219,8 @@ function updateTaskList(task: ITask) {
 }
 
 function updateTasks(updatedTask: ITask) {
-	if (props.projectId < 0) {
-		// In the case of a filter, we'll reload the filter in the background to avoid tasks which do 
-		// not match the filter show up here
+	if (projectId.value < 0) {
+		// Reload tasks to keep saved filter results in sync
 		loadTasks(false)
 		return
 	}
@@ -272,6 +261,73 @@ function prepareFiltersAndLoadTasks() {
 
 	loadTasks()
 }
+
+const taskRefs = ref<(InstanceType<typeof SingleTaskInProject> | null)[]>([])
+const focusedIndex = ref(-1)
+
+function setTaskRef(el: InstanceType<typeof SingleTaskInProject> | null, index: number) {
+	if (el === null) {
+		delete taskRefs.value[index]
+	} else {
+		taskRefs.value[index] = el
+	}
+}
+
+function focusTask(index: number) {
+	if (index < 0 || index >= tasks.value.length) {
+		return
+	}
+
+	const taskRef = taskRefs.value[index]
+
+	focusedIndex.value = index
+	taskRef?.focus()
+}
+
+function handleListNavigation(e: KeyboardEvent) {
+	if (e.target instanceof HTMLElement && (e.target.closest('input, textarea, select, [contenteditable="true"]'))) {
+		return
+	}
+
+	if (e.key === 'j') {
+		e.preventDefault()
+		focusTask(Math.min(focusedIndex.value + 1, tasks.value.length - 1))
+		return
+	}
+
+	if (e.key === 'k') {
+		e.preventDefault()
+		if (focusedIndex.value === -1) {
+			focusTask(tasks.value.length - 1)
+			return
+		}
+
+		if (focusedIndex.value === 0) {
+			addTaskRef.value?.focusTaskInput()
+			focusedIndex.value = -1
+			return
+		}
+
+		focusTask(Math.max(focusedIndex.value - 1, 0))
+		return
+	}
+
+	if (e.key === 'Enter') {
+		if (e.isComposing) {
+			return
+		}
+		e.preventDefault()
+		taskRefs.value[focusedIndex.value]?.click(e)
+	}
+}
+
+onMounted(() => {
+	document.addEventListener('keydown', handleListNavigation)
+})
+
+onBeforeUnmount(() => {
+	document.removeEventListener('keydown', handleListNavigation)
+})
 </script>
 
 <style lang="scss" scoped>
@@ -298,16 +354,11 @@ function prepareFiltersAndLoadTasks() {
 	box-shadow: none;
 }
 
-.control.has-icons-left .icon,
-.control.has-icons-right .icon {
-	transition: all $transition;
-}
-
 :deep(.single-task) {
 	.handle {
 		opacity: 1;
 		transition: opacity $transition;
-		margin-right: .25rem;
+		margin-inline-end: .25rem;
 		cursor: grab;
 	}
 
@@ -323,10 +374,10 @@ function prepareFiltersAndLoadTasks() {
 }
 
 .list-view {
-	padding-bottom: 1rem;
+	padding-block-end: 1rem;
 
 	:deep(.card) {
-		margin-bottom: 0;
+		margin-block-end: 0;
 	}
 }
 </style>

@@ -92,6 +92,8 @@
 				"discoverableByName": "Permitir que outros utilizadores me adicionem como membro a equipas ou projetos quando pesquisem pelo meu nome",
 				"discoverableByEmail": "Permitir que outros utilizadores me adicionem como membro a equipas ou projetos quando pesquisem pelos meu endereço de e-mail completo",
 				"playSoundWhenDone": "Tocar um som quando marcar tarefas como concluídas",
+				"allowIconChanges": "Mostrar logótipos especiais durante determinados períodos",
+				"defaultTaskRelationType": "Tipo de relação padrão da tarefa",
 				"weekStart": "A semana começa com",
 				"weekStartSunday": "Domingo",
 				"weekStartMonday": "Segunda-Feira",
@@ -102,7 +104,24 @@
 				"overdueTasksRemindersTime": "Horário do e-mail de lembrete de tarefas pendentes",
 				"filterUsedOnOverview": "Salvo filtro utilizado na vista geral",
 				"minimumPriority": "Prioridade mínima de tarefa a visualizar",
+				"dateDisplay": "Formato de exibição da data",
+				"dateDisplayOptions": {
+					"relative": "Relativo (ex. 3 dias atrás)",
+					"mm-dd-yyyy": "MM-DD-AAAA",
+					"dd-mm-yyyy": "DD-MM-AAAA",
+					"yyyy-mm-dd": "AAAA-MM-DD",
+					"mm/dd/yyyy": "MM/DD/AAAA",
+					"dd/mm/yyyy": "DD/MM/AAAA",
+					"yyyy/mm/dd": "AAAA/MM/DD"
+				},
 				"externalUserNameChange": "O teu nome é gerido pelo teu fornecedor de início de sessão ({provider}). Para o alterar, atualiza-o antes lá."
+			},
+			"sections": {
+				"personalInformation": "Informação Pessoal",
+				"taskAndNotifications": "Projetos e Tarefas",
+				"privacy": "Privacidade",
+				"localization": "Localização",
+				"appearance": "Aparência e Comportamento"
 			},
 			"totp": {
 				"title": "Autenticação de Dois Fatores",
@@ -139,7 +158,8 @@
 				"uploadAvatar": "Carregar Avatar",
 				"statusUpdateSuccess": "Estado do avatar foi atualizado com sucesso!",
 				"setSuccess": "O avatar foi configurado com sucesso!",
-				"ldap": "O teu avatar é sincronizado automaticamente a partir do serviço de diretório da tua organização (LDAP). Podes solicitar à tua equipa de TI mais informação sobre como o alterar."
+				"ldap": "O teu avatar é sincronizado automaticamente a partir do serviço de diretório da tua organização (LDAP). Podes solicitar à tua equipa de TI mais informação sobre como o alterar.",
+				"openid": "O teu avatar é gerido pelo teu fornecedor de início de sessão ({provider}). Para o alterar, atualiza-o antes lá."
 			},
 			"quickAddMagic": {
 				"title": "Modo de Introdução Mágica Rápida",
@@ -207,7 +227,9 @@
 			"descriptionPasswordRequired": "Por favor, introduz a tua palavra-passe para continuar:",
 			"request": "Solicitar uma cópia dos meus dados do Vikunja",
 			"success": "Solicitaste com sucesso os teus dados do Vikunja! Enviaremos um e-mail assim que estiverem prontos para transferência.",
-			"downloadTitle": "Transferir os teus dados exportados"
+			"downloadTitle": "Transferir os teus dados exportados",
+			"ready": "A tua exportação está pronta para transferência. Podes transferi-la até {0}.",
+			"requestNew": "Solicita outra exportação"
 		}
 	},
 	"project": {
@@ -315,11 +337,11 @@
 				"addedSuccess": "{type} foi adicionado com sucesso.",
 				"updatedSuccess": "{type} foi adicionado com sucesso."
 			},
-			"right": {
+			"permission": {
 				"title": "Permissão",
-				"read": "Apenas de leitura",
+				"read": "Apenas leitura",
 				"readWrite": "Leitura e escrita",
-				"admin": "Administrador"
+				"admin": "Admin"
 			},
 			"attributes": {
 				"link": "Link",
@@ -345,7 +367,21 @@
 			"day": "Dia",
 			"hour": "Hora",
 			"range": "Intervalo de Datas",
-			"noDates": "Esta tarefa não tem datas definidas."
+			"chartLabel": "Gráfico de Gantt do projeto",
+			"taskBarsForRow": "Barras de tarefas para a linha {rowId}",
+			"taskBarLabel": "Tarefa: {task}. De {startDate} a {endDate}. {dateType}. Clica para editar, arrasta para mover.",
+			"scheduledDates": "Datas programadas",
+			"estimatedDates": "Datas estimadas",
+			"resizeStartDate": "Redimensionar data de início para a tarefa {task}",
+			"resizeEndDate": "Redimensionar data de fim para a tarefa {task}",
+			"timelineHeader": "Cabeçalho da linha de tempo com meses e dias",
+			"monthsRow": "Linha de meses",
+			"daysRow": "Linha de dias",
+			"monthLabel": "Mês: {month}",
+			"dayLabel": "Dia: {weekday}, {date}",
+			"dayLabelToday": "Hoje: {weekday}, {date}",
+			"taskAriaLabel": "Tarefa: {task}",
+			"taskAriaLabelById": "Tarefa {id}"
 		},
 		"table": {
 			"title": "Tabela",
@@ -387,7 +423,7 @@
 			"targetUrl": "URL de destino",
 			"targetUrlInvalid": "Por favor, fornece um URL válido.",
 			"events": "Eventos",
-			"eventsHint": "Selecionar todos os eventos para os quais este webhook deve receber atualizações (no projeto atual).",
+			"eventsHint": "Seleciona todos os eventos para os quais esta webhook deve receber atualizações (dentro do projeto atual).",
 			"mustSelectEvents": "Tens de selecionar pelo menos um evento.",
 			"delete": "Eliminar este webhook",
 			"deleteText": "Tens a certeza de que pretendes eliminar este webhook? Os alvos externos deixarão de ser notificados dos seus eventos.",
@@ -420,6 +456,7 @@
 		"title": "Filtros",
 		"clear": "Limpar Filtros",
 		"showResults": "Mostrar resultados",
+		"noResults": "Sem resultados",
 		"fromView": "A vista atual tem também um filtro definido:",
 		"fromViewBoth": "Será utilizado em combinação com o que inserires aqui.",
 		"attributes": {
@@ -484,8 +521,8 @@
 					"lessThan": "Menor que",
 					"lessThanOrEqual": "Menor ou igual a",
 					"like": "Corresponde a um padrão (utilizando o carater universal %)",
-					"in": "Faz corresponder qualquer valor numa lista de valores separados por vírgulas",
-					"notIn": "Faz corresponder qualquer valor não presente numa lista de valores separados por vírgulas"
+					"in": "Faz corresponder qualquer valor presente numa lista de valores separada por vírgulas",
+					"notIn": "Faz corresponder qualquer valor não presente numa lista de valores separada por vírgulas"
 				},
 				"logicalOperators": {
 					"intro": "Para combinar várias condições, pode utilizar os seguintes operadores lógicos:",
@@ -551,7 +588,11 @@
 		"authenticating": "A autenticar…",
 		"passwordRequired": "Este projeto partilhado requer uma palavra-passe. Por favor, introduz-a abaixo:",
 		"error": "Ocorreu um erro.",
-		"invalidPassword": "A palavra-passe é inválida."
+		"invalidPassword": "A palavra-passe é inválida.",
+		"accessDenied": "Acesso negado. Por favor, verifica as tuas permissões e tenta novamente.",
+		"serverError": "Ocorreu um erro no servidor. Por favor, tenta novamente mais tarde.",
+		"projectLoadError": "Falha ao carregar informações do projeto.",
+		"retry": "Repetir"
 	},
 	"navigation": {
 		"overview": "Vista geral",
@@ -750,7 +791,6 @@
 		"addReminder": "Adicionar um lembrete…",
 		"doneSuccess": "A tarefa foi marcada como concluída.",
 		"undoneSuccess": "A tarefa foi desmarcada como concluída.",
-		"revertSuccess": "A alteração da tarefa foi anulada com sucesso.",
 		"undo": "Desfazer",
 		"openDetail": "Abrir vista detalhada da tarefa",
 		"checklistTotal": "{checked} de {total} tarefas",
@@ -758,7 +798,7 @@
 		"show": {
 			"titleCurrent": "Tarefas Atuais",
 			"titleDates": "Tarefas de {from} até {to}",
-			"noDates": "Mostrar tarefas sem datas",
+			"noDates": "Mostrar tarefas sem data",
 			"overdue": "Mostrar tarefas em atraso",
 			"fromuntil": "Tarefas de {from} a {until}",
 			"select": "Escolha um intervalo de datas",
@@ -777,6 +817,7 @@
 			"updateSuccess": "A tarefa foi salva com sucesso.",
 			"deleteSuccess": "A tarefa foi eliminada com sucesso.",
 			"belongsToProject": "Esta tarefa pertence ao projeto '{project}'",
+			"back": "Volta ao projeto",
 			"due": "Vence {at}",
 			"closePopup": "Fechar janela",
 			"organization": "Organização",
@@ -975,7 +1016,7 @@
 			"project4": "Por exemplo: {prefix}\"Projeto com espaços\".",
 			"dateAndTime": "Data e hora",
 			"date": "Qualquer data será utilizada como data de vencimento da nova tarefa. Podes utilizar datas em qualquer dos seguintes formatos:",
-			"dateWeekday": "qualquer dia de semana, usará a próxima data com essa data",
+			"dateWeekday": "qualquer dia da semana, utilizará a próxima data com esse dia",
 			"dateCurrentYear": "usará o ano atual",
 			"dateNth": "usará o {day} do mês atual",
 			"dateTime": "Combina qualquer um dos formatos de data com \"{time}\" (ou {timePM}) para definir uma hora.",
@@ -1057,6 +1098,7 @@
 			"delete": "Eliminar esta tarefa",
 			"priority": "Alterar a prioridade desta tarefa",
 			"favorite": "Marcar / Desmarcar esta tarefa como favorita",
+			"openProject": "Abrir o projeto desta tarefa",
 			"save": "Salvar a tarefa atual"
 		},
 		"project": {
@@ -1073,6 +1115,21 @@
 			"labels": "Navegar para etiquetas",
 			"teams": "Navegar para equipas",
 			"projects": "Navegar para projetos"
+		},
+		"list": {
+			"title": "Lista de tarefas",
+			"navigateDown": "Destacar a tarefa seguinte",
+			"navigateUp": "Destacar a tarefa anterior",
+			"open": "Abrir tarefa destacada"
+		},
+		"gantt": {
+			"title": "Gráfico de Gantt",
+			"moveTaskLeft": "Mover tarefa para data anterior",
+			"moveTaskRight": "Mover tarefa para data posterior",
+			"expandTaskLeft": "Expandir tarefa a partir da data de início",
+			"expandTaskRight": "Expandir tarefa a partir da data de fim",
+			"shrinkTaskLeft": "Encolher tarefa a partir da data de início",
+			"shrinkTaskRight": "Encolher tarefa a partir da data de fim"
 		}
 	},
 	"update": {
@@ -1110,7 +1167,7 @@
 	"notification": {
 		"title": "Notificações",
 		"none": "Não tens nenhuma notificação. Tem um bom dia!",
-		"explainer": "As notificações aparecerão aqui quando ocorrem ações em projetos ou tarefas às quais estejas subscrito.",
+		"explainer": "As notificações aparecerão aqui quando ações, projetos ou tarefas que subscreves-te ocorrerem.",
 		"markAllRead": "Marcar todas as notificações como lidas",
 		"markAllReadSuccess": "Todas as notificações foram marcadas como lidas."
 	},
@@ -1234,7 +1291,9 @@
 	},
 	"about": {
 		"title": "Sobre",
-		"version": "Versão: {version}"
+		"version": "Versão: {version}",
+		"frontendVersion": "Versão da interface: {version}",
+		"apiVersion": "Versão da API: {version}"
 	},
 	"time": {
 		"units": {

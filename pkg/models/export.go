@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -36,6 +36,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
+	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
 )
@@ -127,6 +128,53 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	})
 }
 
+func getRawTasksForExport(s *xorm.Session, projectIDs []int64, a web.Auth) (tasks []*Task, err error) {
+	if len(projectIDs) == 0 {
+		return []*Task{}, nil
+	}
+
+	opts := &taskSearchOptions{
+		projectIDs: projectIDs,
+		page:       0,
+		perPage:    -1,
+		sortby: []*sortParam{{
+			sortBy:  taskPropertyID,
+			orderBy: orderAscending,
+		}},
+	}
+
+	hasFavoritesProject := false
+	for _, id := range projectIDs {
+		if id == FavoritesPseudoProject.ID {
+			hasFavoritesProject = true
+			break
+		}
+	}
+
+	var dbSearcher taskSearcher = &dbTaskSearcher{
+		s:                   s,
+		a:                   a,
+		hasFavoritesProject: hasFavoritesProject,
+	}
+
+	tasks, _, err = dbSearcher.Search(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	taskMap := make(map[int64]*Task, len(tasks))
+	for _, t := range tasks {
+		taskMap[t.ID] = t
+	}
+
+	err = addMoreInfoToTasks(s, taskMap, a, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
 func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (taskIDs []int64, err error) {
 
 	// Get all projects
@@ -179,10 +227,7 @@ func exportProjectsAndTasks(s *xorm.Session, u *user.User, wr *zip.Writer) (task
 		viewIDs = append(viewIDs, v.ID)
 	}
 
-	tasks, _, _, err := getTasksForProjects(s, rawProjects, u, &taskSearchOptions{
-		page:    0,
-		perPage: -1,
-	}, nil)
+	tasks, err := getRawTasksForExport(s, projectIDs, u)
 	if err != nil {
 		return taskIDs, err
 	}

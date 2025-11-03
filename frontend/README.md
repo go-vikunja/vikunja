@@ -2,7 +2,7 @@
 
 > The todo app to organize your life.
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
 [![Translation](https://badges.crowdin.net/vikunja/localized.svg)](https://crowdin.com/project/vikunja)
 
 This is the web frontend for Vikunja, written in Vue.js.
@@ -25,7 +25,7 @@ You can develop the web front end against any accessible backend, including the 
 
 In order to do so, you need to set the `DEV_PROXY` env variable. The recommended way to do so is to:
 
-- Copy `.env.local.exemple` as `.env.local`
+- Copy `.env.local.example` as `.env.local`
 - Uncomment the `DEV_PROXY` line
 - Set the backend url you want to use
 
@@ -49,3 +49,7 @@ pnpm run build
 ```shell
 pnpm run lint
 ```
+
+## License
+
+This project is licensed under the AGPL-3.0-or-later license. See the [LICENSE](LICENSE) file for details.

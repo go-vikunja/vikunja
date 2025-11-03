@@ -55,7 +55,7 @@ $flash-background-duration: 750ms;
 
 .width-enter-from,
 .width-leave-to {
-  width: 0;
+  inline-size: 0;
 }
 
 .modal-enter,

@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -273,14 +273,14 @@ func TestTeam_Delete(t *testing.T) {
 	})
 }
 
-func TestIsErrInvalidRight(t *testing.T) {
-	require.NoError(t, RightAdmin.isValid())
-	require.NoError(t, RightRead.isValid())
-	require.NoError(t, RightWrite.isValid())
+func TestIsErrInvalidPermission(t *testing.T) {
+	require.NoError(t, PermissionAdmin.isValid())
+	require.NoError(t, PermissionRead.isValid())
+	require.NoError(t, PermissionWrite.isValid())
 
 	// Check invalid
-	var tr Right = 938
+	var tr Permission = 938
 	err := tr.isValid()
 	require.Error(t, err)
-	assert.True(t, IsErrInvalidRight(err))
+	assert.True(t, IsErrInvalidPermission(err))
 }

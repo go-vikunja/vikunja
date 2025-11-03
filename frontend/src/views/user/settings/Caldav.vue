@@ -25,7 +25,7 @@
 			</div>
 		</div>
 
-		<h5 class="mt-5 mb-4 has-text-weight-bold">
+		<h5 class="mbs-5 mbe-4 has-text-weight-bold">
 			{{ $t('user.settings.caldav.tokens') }}
 		</h5>
 
@@ -49,7 +49,7 @@
 			<tr>
 				<th>{{ $t('misc.id') }}</th>
 				<th>{{ $t('misc.created') }}</th>
-				<th class="has-text-right">
+				<th class="has-text-end">
 					{{ $t('misc.actions') }}
 				</th>
 			</tr>
@@ -59,7 +59,7 @@
 			>
 				<td>{{ tk.id }}</td>
 				<td>{{ formatDateShort(tk.created) }}</td>
-				<td class="has-text-right">
+				<td class="has-text-end">
 					<XButton
 						variant="secondary"
 						@click="deleteToken(tk)"
@@ -72,7 +72,7 @@
 
 		<Message
 			v-if="newToken"
-			class="mb-4"
+			class="mbe-4"
 		>
 			{{ $t('user.settings.caldav.tokenCreated', {token: newToken.token}) }}<br>
 			{{ $t('user.settings.caldav.wontSeeItAgain') }}
@@ -80,7 +80,7 @@
 
 		<XButton
 			icon="plus"
-			class="mb-4"
+			class="mbe-4"
 			:loading="service.loading"
 			@click="createToken"
 		>

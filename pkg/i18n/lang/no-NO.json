@@ -93,7 +93,9 @@
 			"overdue": {
 				"subject": "Oppgave \"%[1]s\" (%[2]s) er forfalt",
 				"multiple_subject": "Dine forfalte oppgaver",
-				"multiple_message": "Du har følgende forfalte oppgaver:"
+				"multiple_message": "Du har følgende forfalte oppgaver:",
+				"overdue_since": "siden %[1]s",
+				"overdue_now": "nå"
 			}
 		},
 		"project": {
@@ -140,8 +142,13 @@
 				"go_to_settings": "Gå til innstillinger",
 				"confirm_email": "Bekreft e-postadressen din",
 				"abort_deletion": "Avbryt slettingen",
-				"confirm_account_deletion": "Bekreft sletting av kontoen min"
+				"confirm_account_deletion": "Bekreft sletting av kontoen min",
+				"change_notification_settings_link": "Du kan endre varslingsinnstillingene dine [here](%[1]s)."
 			}
 		}
+	},
+	"time": {
+		"since_minutes": "ett minutt|%[1]d minutter",
+		"list_last_separator": "og"
 	}
 }

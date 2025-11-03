@@ -3,17 +3,19 @@
 		class="filters has-overflow"
 		:title="hasTitle ? $t('filters.title') : ''"
 		role="search"
+		:show-close="showClose"
+		@close="$emit('close')"
 	>
 		<FilterInput
+			ref="filterInputRef"
 			v-model="filterQuery"
 			:project-id="projectId"
+			class="mbe-2"
 			@update:modelValue="() => change('modelValue')"
-			@blur="() => change('blur')"
 		/>
-		
 		<div 
 			v-if="filterFromView"
-			class="tw-text-sm tw-mb-2"
+			class="tw-text-sm mbe-2"
 		>
 			{{ $t('filters.fromView') }}
 			<code>{{ filterFromView }}</code><br>
@@ -37,7 +39,7 @@
 		>
 			<XButton
 				variant="secondary"
-				class="mr-2"
+				class="mie-2"
 				:disabled="filterQuery === ''"
 				@click.prevent.stop="clearFiltersAndEmit"
 			>
@@ -60,7 +62,6 @@ export const ALPHABETICAL_SORT = 'title'
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
-import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {useRoute} from 'vue-router'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import {useLabelStore} from '@/stores/labels'
@@ -68,9 +69,9 @@ import {useProjectStore} from '@/stores/projects'
 import {
 	hasFilterQuery,
 	transformFilterStringForApi,
-	transformFilterStringFromApi,
 } from '@/helpers/filters'
-import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
+import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
+import FilterInput from '@/components/input/filter/FilterInput.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: TaskFilterParams,
@@ -78,16 +79,19 @@ const props = withDefaults(defineProps<{
 	hasFooter?: boolean,
 	changeImmediately?: boolean,
 	filterFromView?: string,
+	showClose?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
+	showClose: false,
 })
 
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams],
 	'showResults': [],
+	'close': [],
 }>()
 
 const route = useRoute()
@@ -120,17 +124,13 @@ watch(
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
+const filterInputRef = ref()
+
 // Using watchDebounced to prevent the filter re-triggering itself.
 watch(
 	() => props.modelValue,
 	(value: TaskFilterParams) => {
-		const val = {...value}
-		val.filter = transformFilterStringFromApi(
-			val?.filter || '',
-			labelId => labelStore.getLabelById(labelId)?.title || null,
-			projectId => projectStore.projects[projectId]?.title || null,
-		)
-		params.value = val
+		params.value = {...value}
 	},
 	{
 		immediate: true,
@@ -192,4 +192,12 @@ function clearFiltersAndEmit() {
 	filterQuery.value = ''
 	changeAndEmitButton()
 }
+
+function focusFilterInput() {
+	filterInputRef.value?.focus()
+}
+
+defineExpose({
+	focusFilterInput,
+})
 </script>

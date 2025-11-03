@@ -36,6 +36,7 @@
 
 <script lang="ts" setup>
 import BasePagination from '@/components/base/BasePagination.vue'
+import { useRoute } from 'vue-router'
 
 withDefaults(defineProps<{
 	totalPages: number,
@@ -44,15 +45,12 @@ withDefaults(defineProps<{
 	currentPage: 0,
 })
 
-function getRouteForPagination(page = 1, type = null) {
+const route = useRoute()
+function getRouteForPagination(page = 1) {
 	return {
-		name: type,
-		params: {
-			type: type,
-		},
-		query: {
-			page: page,
-		},
+		name: route.name,
+		params: route.params,
+		query: { ...route.query, page },
 	}
 }
 </script>

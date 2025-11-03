@@ -23,7 +23,7 @@ const props = withDefaults(defineProps<{
 const TEXT_ALIGN_MAP = {
 	left: '',
 	center: 'has-text-centered',
-	right: 'has-text-right',
+	right: 'has-text-end',
 } as const
 
 export type TextAlignVariant = keyof typeof TEXT_ALIGN_MAP

@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package files
@@ -98,13 +98,7 @@ func CreateWithMime(f io.Reader, realname string, realsize uint64, a web.Auth, m
 }
 
 func CreateWithMimeAndSession(s *xorm.Session, f io.Reader, realname string, realsize uint64, a web.Auth, mime string, checkFileSizeLimit bool) (file *File, err error) {
-	// Get and parse the configured file size
-	var maxSize datasize.ByteSize
-	err = maxSize.UnmarshalText([]byte(config.FilesMaxSize.GetString()))
-	if err != nil {
-		return nil, err
-	}
-	if realsize > maxSize.Bytes() && checkFileSizeLimit {
+	if realsize > config.GetMaxFileSizeInMBytes()*uint64(datasize.MB) && checkFileSizeLimit {
 		return nil, ErrFileIsTooLarge{Size: realsize}
 	}
 
@@ -143,7 +137,7 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 		var perr *os.PathError
 		if errors.As(err, &perr) {
 			// Don't fail when removing the file failed
-			log.Errorf("Error deleting file %d: %w", f.ID, err)
+			log.Errorf("Error deleting file %d: %s", f.ID, err)
 			return s.Commit()
 		}
 

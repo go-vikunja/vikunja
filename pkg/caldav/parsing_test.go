@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package caldav
@@ -39,7 +39,6 @@ func TestParseTaskFromVTODO(t *testing.T) {
 			name: "normal",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -63,7 +62,6 @@ END:VCALENDAR`,
 			name: "With priority",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -89,7 +87,6 @@ END:VCALENDAR`,
 			name: "With categories",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -122,7 +119,6 @@ END:VCALENDAR`,
 			name: "With alarm (time trigger)",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -154,7 +150,6 @@ END:VCALENDAR`,
 			name: "With alarm (relative trigger)",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -223,7 +218,6 @@ END:VCALENDAR`,
 			name: "With parent",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -255,7 +249,6 @@ END:VCALENDAR`,
 			name: "With subtask",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -357,7 +350,6 @@ END:VCALENDAR`,
 			name: "with apple hex color",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -374,7 +366,6 @@ END:VCALENDAR`,
 			name: "with apple css color",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -391,7 +382,6 @@ END:VCALENDAR`,
 			name: "with outlook hex color",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -408,7 +398,6 @@ END:VCALENDAR`,
 			name: "with outlook css color",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -425,7 +414,6 @@ END:VCALENDAR`,
 			name: "with funambol hex color",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -442,7 +430,6 @@ END:VCALENDAR`,
 			name: "with funambol css color",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -459,7 +446,6 @@ END:VCALENDAR`,
 			name: "with hex color",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -476,7 +462,6 @@ END:VCALENDAR`,
 			name: "with css color",
 			args: args{content: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:test
 PRODID:-//RandomProdID which is not random//EN
@@ -562,7 +547,6 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 			},
 			wantCaldav: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:List title
 PRODID:-//Vikunja Todo App//EN
@@ -578,7 +562,7 @@ STATUS:COMPLETED
 DUE:20181201T011202Z
 CREATED:20181201T011201Z
 PRIORITY:3
-RRULE:FREQ=SECONDLY;INTERVAL=86400
+RRULE:FREQ=DAILY;INTERVAL=1
 CATEGORIES:label1,label2
 LAST-MODIFIED:20181201T011205Z
 BEGIN:VALARM
@@ -677,7 +661,6 @@ END:VCALENDAR`,
 			},
 			wantCaldav: `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:List title
 PRODID:-//Vikunja Todo App//EN

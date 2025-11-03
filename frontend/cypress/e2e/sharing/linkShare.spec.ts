@@ -1,15 +1,17 @@
 import {LinkShareFactory} from '../../factories/link_sharing'
 import {TaskFactory} from '../../factories/task'
+import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
 
 function prepareLinkShare() {
+	UserFactory.create()
 	const projects = createProjects()
 	const tasks = TaskFactory.create(10, {
 		project_id: projects[0].id,
 	})
 	const linkShares = LinkShareFactory.create(1, {
 		project_id: projects[0].id,
-		right: 0,
+		permission: 0,
 	})
 	
 	return {

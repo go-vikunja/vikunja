@@ -199,7 +199,7 @@
 		"searchSelect": "Kattintson, vagy nyomja meg az Enter billentyűt a projekt kiválasztásához",
 		"shared": "Megosztott projektek",
 		"noDescriptionAvailable": "A projekt leírása nem áll rendelkezésre.",
-		"inboxTitle": "Beérkezett üzenetek",
+		"inboxTitle": "Beérkezett feladatok",
 		"create": {
 			"header": "Új projekt",
 			"titlePlaceholder": "Írja be a projekt címét…",
@@ -284,12 +284,6 @@
 				"addedSuccess": "A {type} sikeresen hozzá lett adva.",
 				"updatedSuccess": "A {type} sikeresen hozzá lett adva."
 			},
-			"right": {
-				"title": "Engedély",
-				"read": "Csak olvasható",
-				"readWrite": "Olvasás és írás",
-				"admin": "Adminisztrátor"
-			},
 			"attributes": {
 				"link": "Hivatkozás",
 				"delete": "Törlés"
@@ -308,8 +302,7 @@
 			"month": "Hónap",
 			"day": "Nap",
 			"hour": "Óra",
-			"range": "Időintervallum",
-			"noDates": "Ennek a feladatnak nincsenek beállítva a dátumai."
+			"range": "Időintervallum"
 		},
 		"table": {
 			"title": "Táblázat",
@@ -349,7 +342,6 @@
 			"targetUrl": "Cél URL",
 			"targetUrlInvalid": "Kérjük adjon meg egy érvényes URL-t.",
 			"events": "Események",
-			"eventsHint": "Válassza ki az összes olyan eseményt, amelyhez ez a webhook frissítéseket kap (az aktuális projekten belül).",
 			"mustSelectEvents": "Legalább egy eseményt ki kell választania.",
 			"delete": "Webhook törlése",
 			"deleteText": "Biztosan törli ezt a webhook-ot? A külső célpontok többé nem kapnak értesítést az eseményeiről.",
@@ -435,8 +427,7 @@
 					"greaterThanOrEqual": "Nagyobb, vagy egyenlő",
 					"lessThan": "Kevesebb, mint",
 					"lessThanOrEqual": "Kevesebb, vagy egyenlő mint",
-					"like": "Megfelel egy mintának (helyettesítő karakterrel %)",
-					"in": "A vesszővel elválasztott értéklistában szereplő bármely értéknek megfelel"
+					"like": "Megfelel egy mintának (helyettesítő karakterrel %)"
 				},
 				"logicalOperators": {
 					"intro": "Több feltétel kombinálásához a következő logikai operátorokat használhatja:",
@@ -702,7 +693,6 @@
 		"show": {
 			"titleCurrent": "Jelenlegi feladatok",
 			"titleDates": "Feladatok {from} és {to} között",
-			"noDates": "Feladatok megjelenítése, amiknél nincs dátum megadva",
 			"overdue": "A lejárt feladatok megjelenítése",
 			"fromuntil": "Feladatok {from} és {until} között",
 			"select": "Dátumtartomány kiválasztása",
@@ -914,7 +904,6 @@
 			"project4": "Például: {prefix}\"Projekt szóközökkel\".",
 			"dateAndTime": "Dátum és idő",
 			"date": "Bármely dátum az új feladat határidejeként lesz használva. A dátumokat az alábbi formátumok bármelyikében használhatja:",
-			"dateWeekday": "bármely hétköznap, a következő dátumot fogja használni ezzel a dátummal",
 			"dateCurrentYear": "az aktuális évet fogja használni",
 			"dateNth": "az aktuális hónap {day}. napját fogja használni",
 			"dateTime": "Kombinálja a dátumformátumok bármelyikét a „{time}” (vagy {timePM}) paraméterrel az idő beállításához.",
@@ -1047,7 +1036,6 @@
 	"notification": {
 		"title": "Értesítések",
 		"none": "Nincsenek értesítései. Legyen szép napja!",
-		"explainer": "Az értesítések itt jelennek meg, amikor olyan projektek vagy feladatok történnek, amelyekre feliratkozott.",
 		"markAllRead": "Minden értesítés megjelölése olvasottként",
 		"markAllReadSuccess": "Az összes értesítést olvasottként jelölte meg."
 	},

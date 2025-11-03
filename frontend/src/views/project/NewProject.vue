@@ -1,8 +1,9 @@
 <template>
 	<CreateEdit
+		v-model:loading="isSubmitting"
 		:title="$t('project.create.header')"
 		:primary-disabled="project.title === ''"
-		@create="createNewProject()"
+		@create="createProject()"
 	>
 		<div class="field">
 			<label
@@ -21,7 +22,7 @@
 					:placeholder="$t('project.create.titlePlaceholder')"
 					type="text"
 					name="projectTitle"
-					@keyup.enter="createNewProject()"
+					@keyup.enter="createProject()"
 					@keyup.esc="$router.back()"
 				>
 			</div>
@@ -78,6 +79,7 @@ const project = reactive(new ProjectModel())
 const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
 const parentProject = ref<IProject | null>(null)
+const isSubmitting = ref(false)
 
 watch(
 	() => props.parentProjectId,
@@ -85,18 +87,28 @@ watch(
 	{immediate: true},
 )
 
-async function createNewProject() {
+async function createProject() {
 	if (project.title === '') {
 		showError.value = true
 		return
 	}
 	showError.value = false
 
+	if (isSubmitting.value) {
+		return
+	}
+
+	isSubmitting.value = true
+
 	if (parentProject.value) {
 		project.parentProjectId = parentProject.value.id
 	}
 
-	await projectStore.createProject(project)
-	success({message: t('project.create.createdSuccess')})
+	try {
+		await projectStore.createProject(project)
+		success({message: t('project.create.createdSuccess')})
+	} finally {
+		isSubmitting.value = false
+	}
 }
 </script>

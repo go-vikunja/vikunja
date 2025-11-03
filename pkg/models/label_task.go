@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -40,8 +40,8 @@ type LabelTask struct {
 	// A timestamp when this task was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName makes a pretty table name
@@ -127,14 +127,14 @@ func (lt *LabelTask) Create(s *xorm.Session, auth web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{task}/labels [get]
 func (lt *LabelTask) ReadAll(s *xorm.Session, a web.Auth, search string, page int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-	// Check if the user has the right to see the task
+	// Check if the user has the permission to see the task
 	task := Task{ID: lt.TaskID}
 	canRead, _, err := task.CanRead(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 	if !canRead {
-		return nil, 0, 0, ErrNoRightToSeeTask{lt.TaskID, a.GetID()}
+		return nil, 0, 0, ErrNoPermissionToSeeTask{lt.TaskID, a.GetID()}
 	}
 
 	return GetLabelsByTaskIDs(s, &LabelByTaskIDsOptions{
@@ -164,7 +164,7 @@ type LabelByTaskIDsOptions struct {
 }
 
 // GetLabelsByTaskIDs is a helper function to get all labels for a set of tasks
-// Used when getting all labels for one task as well when getting all lables
+// Used when getting all labels for one task as well when getting all labels
 func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*LabelWithTaskID, resultCount int, totalEntries int64, err error) {
 
 	linkShare, isLinkShareAuth := opts.User.(*LinkSharing)
@@ -291,7 +291,9 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 
 	// Put it all together
 	for in, l := range labels {
-		labels[in].CreatedBy = users[l.CreatedByID]
+		if createdBy, has := users[l.CreatedByID]; has {
+			labels[in].CreatedBy = createdBy
+		}
 	}
 
 	// Get the total number of entries
@@ -375,7 +377,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 			return err
 		}
 
-		// Check if the user has the rights to see the label he is about to add
+		// Check if the user has the permissions to see the label he is about to add
 		hasAccessToLabel, _, err := label.hasAccessToLabel(s, creator)
 		if err != nil {
 			return err
@@ -411,8 +413,8 @@ type LabelTaskBulk struct {
 	Labels []*Label `json:"labels"`
 	TaskID int64    `json:"-" param:"projecttask"`
 
-	web.CRUDable `json:"-"`
-	web.Rights   `json:"-"`
+	web.CRUDable    `json:"-"`
+	web.Permissions `json:"-"`
 }
 
 // Create updates a bunch of labels on a task at once

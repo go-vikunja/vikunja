@@ -46,14 +46,14 @@ withDefaults(defineProps<{
 const authStore = useAuthStore()
 
 const minimumPriority = computed(() => {
-	return authStore.settings.frontendSettings.minimumPriority
+	return authStore.settings.frontendSettings.minimumPriority || priorities.MEDIUM
 })
 </script>
 
 <style lang="scss" scoped>
 .high-priority {
 	color: var(--danger);
-	width: auto !important; // To override the width set in tasks
+	inline-size: auto !important; // To override the width set in tasks
 }
 
 .not-so-high {
@@ -66,7 +66,7 @@ const minimumPriority = computed(() => {
 
 .icon {
 	vertical-align: top;
-	width: auto !important;
-	padding-right: .5rem;
+	inline-size: auto !important;
+	padding-inline-end: .5rem;
 }
 </style>

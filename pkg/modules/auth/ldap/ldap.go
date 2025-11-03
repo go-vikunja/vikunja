@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package ldap
@@ -21,10 +21,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"image"
-	"image/draw"
-	"image/jpeg"
-	"image/png"
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
@@ -32,8 +28,10 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/go-ldap/ldap/v3"
 	"xorm.io/xorm"
@@ -102,16 +100,64 @@ func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
 	return
 }
 
+// escapeLDAPFilterValue escapes special characters in LDAP filter values according to RFC 4515.
+// This prevents LDAP injection attacks by properly escaping all special characters.
+func escapeLDAPFilterValue(value string) string {
+	var buf strings.Builder
+	buf.Grow(len(value) * 2) // Pre-allocate to avoid reallocations
+
+	for _, r := range value {
+		switch r {
+		case 0x00: // NULL
+			buf.WriteString(`\00`)
+		case '(':
+			buf.WriteString(`\28`)
+		case ')':
+			buf.WriteString(`\29`)
+		case '*':
+			buf.WriteString(`\2a`)
+		case '\\':
+			buf.WriteString(`\5c`)
+		case '&':
+			buf.WriteString(`\26`)
+		case '|':
+			buf.WriteString(`\7c`)
+		case '=':
+			buf.WriteString(`\3d`)
+		case '<':
+			buf.WriteString(`\3c`)
+		case '>':
+			buf.WriteString(`\3e`)
+		case '~':
+			buf.WriteString(`\7e`)
+		default:
+			buf.WriteRune(r)
+		}
+	}
+
+	return buf.String()
+}
+
 // Adjusted from https://github.com/go-gitea/gitea/blob/6ca91f555ab9778310ac46cbbe33849c59286793/services/auth/source/ldap/source_search.go#L34
 func sanitizedUserQuery(username string) (string, bool) {
-	// See http://tools.ietf.org/search/rfc4515
-	badCharacters := "\x00()*\\"
-	if strings.ContainsAny(username, badCharacters) {
-		log.Debugf("'%s' contains invalid query characters. Aborting.", username)
+	// Validate username is not empty and doesn't contain control characters
+	if username == "" {
+		log.Debugf("Empty username provided. Aborting.")
 		return "", false
 	}
 
-	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), username), true
+	// Check for control characters that shouldn't be in usernames
+	for _, r := range username {
+		if r < 32 && r != 9 && r != 10 && r != 13 { // Allow tab, LF, CR but block other control chars
+			log.Debugf("Username contains control character 0x%02x. Aborting.", r)
+			return "", false
+		}
+	}
+
+	// Escape the username according to RFC 4515 to prevent LDAP injection
+	escapedUsername := escapeLDAPFilterValue(username)
+
+	return fmt.Sprintf(config.AuthLdapUserFilter.GetString(), escapedUsername), true
 }
 
 func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGroups bool, avatarSyncAttribute string) (u *user.User, err error) {
@@ -181,7 +227,7 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGrou
 		u.AvatarProvider = "ldap"
 
 		// Process the avatar image to ensure 1:1 aspect ratio
-		processedAvatar, err := cropAvatarTo1x1(raw)
+		processedAvatar, err := utils.CropAvatarTo1x1(raw)
 		if err != nil {
 			log.Debugf("Error processing LDAP avatar: %v", err)
 			// Continue without avatar if processing fails
@@ -190,6 +236,7 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGrou
 			if err != nil {
 				return nil, err
 			}
+			avatar.FlushAllCaches(u)
 		}
 	}
 
@@ -310,64 +357,4 @@ func syncUserGroups(l *ldap.Conn, u *user.User, userdn string) (err error) {
 	}
 
 	return
-}
-
-// cropAvatarTo1x1 crops the avatar image to a 1:1 aspect ratio, centered on the image
-func cropAvatarTo1x1(imageData []byte) ([]byte, error) {
-	if len(imageData) == 0 {
-		return nil, errors.New("empty image data")
-	}
-
-	// Decode the image
-	img, format, err := image.Decode(bytes.NewReader(imageData))
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %w", err)
-	}
-
-	// Get image dimensions
-	bounds := img.Bounds()
-	width := bounds.Dx()
-	height := bounds.Dy()
-
-	// If already square, return original
-	if width == height {
-		return imageData, nil
-	}
-
-	// Determine the crop size (use the smaller dimension)
-	size := width
-	if height < width {
-		size = height
-	}
-
-	// Calculate crop coordinates to center the image
-	x0 := (width - size) / 2
-	y0 := (height - size) / 2
-	x1 := x0 + size
-	y1 := y0 + size
-
-	// Create the cropping rectangle
-	cropRect := image.Rect(x0, y0, x1, y1)
-
-	// Create a new RGBA image
-	croppedImg := image.NewRGBA(image.Rect(0, 0, size, size))
-
-	// Copy the cropped portion
-	draw.Draw(croppedImg, croppedImg.Bounds(), img, cropRect.Min, draw.Src)
-
-	// Encode the result
-	var buf bytes.Buffer
-	switch format {
-	case "jpeg":
-		err = jpeg.Encode(&buf, croppedImg, nil)
-	default:
-		// Default to PNG if format is unknown
-		err = png.Encode(&buf, croppedImg)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to encode cropped image: %w", err)
-	}
-
-	return buf.Bytes(), nil
 }

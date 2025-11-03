@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -109,8 +109,8 @@ type Subscription struct {
 	// A timestamp when this subscription was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 type SubscriptionWithUser struct {
@@ -145,7 +145,7 @@ func (sb *Subscription) TableName() string {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /subscriptions/{entity}/{entityID} [put]
 func (sb *Subscription) Create(s *xorm.Session, auth web.Auth) (err error) {
-	// Rights method already does the validation of the entity type, so we don't need to do that here
+	// Permissions method already does the validation of the entity type, so we don't need to do that here
 
 	sb.ID = 0
 	sb.UserID = auth.GetID()
@@ -359,7 +359,7 @@ subscription_hierarchy AS (
         ph.task_id
     FROM subscriptions s
              INNER JOIN project_hierarchy ph ON s.entity_id = ph.id
-    WHERE s.entity_type = ?
+    WHERE s.entity_type = ?`+sUserCond+`
 )
 
 SELECT

@@ -20,39 +20,39 @@ const menuActive = computed(() => baseStore.menuActive)
 </script>
 
 <style lang="scss" scoped>
-$lineWidth: 2rem;
-$size: $lineWidth + 1rem;
+$line-width: 2rem;
+$size: $line-width + 1rem;
 
 .menu-show-button {
-	min-height: $size;
-	width: $size;
+	min-block-size: $size;
+	inline-size: $size;
 
 	position: relative;
 
-	$transformX: translateX(-50%);
+	$transform-x: translateX(-50%);
 
 	&::before,
 	&::after {
 		content: '';
 		display: block;
 		position: absolute;
-		height: 3px;
-		width: $lineWidth;
-		left: 50%;
-		transform: $transformX;
+		block-size: 3px;
+		inline-size: $line-width;
+		inset-inline-start: 50%;
+		transform: $transform-x;
 		background-color: var(--grey-400);
 		border-radius: 2px;
 		transition: all $transition;
 	}
 
 	&::before {
-		top: 50%;
-		transform: $transformX translateY(-0.4rem)
+		inset-block-start: 50%;
+		transform: $transform-x translateY(-0.4rem)
 	}
 
 	&::after {
-		bottom: 50%;
-		transform: $transformX translateY(0.4rem)
+		inset-block-end: 50%;
+		transform: $transform-x translateY(0.4rem)
 	}
 
 	&:hover,
@@ -63,11 +63,11 @@ $size: $lineWidth + 1rem;
 		}
 
 		&::before {
-			transform: $transformX translateY(-0.5rem);
+			transform: $transform-x translateY(-0.5rem);
 		}
 
 		&::after {
-			transform: $transformX translateY(0.5rem)
+			transform: $transform-x translateY(0.5rem)
 		}
 	}
 }

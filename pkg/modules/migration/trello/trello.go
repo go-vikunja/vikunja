@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package trello
@@ -208,7 +208,7 @@ func fillCardData(client *trello.Client, board *trello.Board) (err error) {
 		list.Cards = append(list.Cards, card)
 	}
 
-	log.Debugf("[Trello Migration] Looked for attachements on all cards of board %s", board.ID)
+	log.Debugf("[Trello Migration] Looked for attachments on all cards of board %s", board.ID)
 
 	return
 }

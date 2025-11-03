@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -59,7 +59,7 @@ type Task struct {
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
 	Done bool `xorm:"INDEX null" json:"done"`
-	// The time when a task was marked as done.
+	// The time when a task was marked as done. This field is system-controlled and cannot be set via API.
 	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at"`
 	// The time when the task is due.
 	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
@@ -141,8 +141,8 @@ type Task struct {
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the project
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 type TaskWithComments struct {
@@ -195,6 +195,7 @@ type taskSearchOptions struct {
 	isSavedFilter      bool
 	projectIDs         []int64
 	expand             []TaskCollectionExpandable
+	projectViewID      int64
 }
 
 // ReadAll is a dummy function to still have that endpoint documented
@@ -211,7 +212,7 @@ type taskSearchOptions struct {
 // @Param filter query string false "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature."
 // @Param filter_timezone query string false "The time zone which should be used for date match (statements like "now" resolve to different actual times)"
 // @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
-// @Param expand query array false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values."
+// @Param expand query []string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -370,22 +371,6 @@ func GetTasksSimpleByIDs(s *xorm.Session, ids []int64) (tasks []*Task, err error
 	return
 }
 
-// GetTasksByIDs returns all tasks for a project of ids
-func (bt *BulkTask) GetTasksByIDs(s *xorm.Session) (err error) {
-	for _, id := range bt.IDs {
-		if id < 1 {
-			return ErrTaskDoesNotExist{id}
-		}
-	}
-
-	err = s.In("id", bt.IDs).Find(&bt.Tasks)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
 func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 	var has bool
 	task = &Task{}
@@ -424,7 +409,7 @@ func getRemindersForTasks(s *xorm.Session, taskIDs []int64) (reminders []*TaskRe
 }
 
 func (t *Task) setIdentifier(project *Project) {
-	if project == nil || (project != nil && project.Identifier == "") {
+	if project == nil || project.Identifier == "" {
 		t.Identifier = "#" + strconv.FormatInt(t.Index, 10)
 		return
 	}
@@ -615,7 +600,9 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 	var projectIDs []int64
 	for _, i := range taskMap {
 		taskIDs = append(taskIDs, i.ID)
-		userIDs = append(userIDs, i.CreatedByID)
+		if i.CreatedByID != 0 {
+			userIDs = append(userIDs, i.CreatedByID)
+		}
 		projectIDs = append(projectIDs, i.ProjectID)
 	}
 
@@ -701,7 +688,9 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 	for _, task := range taskMap {
 
 		// Make created by user objects
-		task.CreatedBy = users[task.CreatedByID]
+		if createdBy, has := users[task.CreatedByID]; has {
+			task.CreatedBy = createdBy
+		}
 
 		// Add the reminders
 		task.Reminders = taskReminders[task.ID]
@@ -1015,9 +1004,13 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 // @Failure 403 {object} web.HTTPError "The user does not have access to the task (aka its project)"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [post]
-//
-//nolint:gocyclo
+// Update updates a project task by delegating to the shared bulk helper.
 func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
+	return t.updateSingleTask(s, a, nil)
+}
+
+//nolint:gocyclo
+func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (err error) {
 
 	// Check if the task exists and get the old values
 	ot, err := GetTaskByIDSimple(s, t.ID)
@@ -1054,12 +1047,73 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 		"start_date",
 		"end_date",
 		"hex_color",
-		"done_at",
 		"percent_done",
 		"project_id",
 		"bucket_id",
 		"repeat_mode",
 		"cover_image_attachment_id",
+	}
+
+	// Validate fields if provided
+	if len(fields) > 0 {
+		allowed := map[string]bool{}
+		for _, c := range colsToUpdate {
+			allowed[c] = true
+		}
+		cols := []string{}
+		fieldSet := map[string]bool{}
+		for _, f := range fields {
+			if !allowed[f] {
+				return ErrInvalidTaskColumn{Column: f}
+			}
+			cols = append(cols, f)
+			fieldSet[f] = true
+		}
+		colsToUpdate = cols
+
+		if !fieldSet["title"] {
+			t.Title = ot.Title
+		}
+		if !fieldSet["description"] {
+			t.Description = ot.Description
+		}
+		if !fieldSet["done"] {
+			t.Done = ot.Done
+			t.DoneAt = ot.DoneAt
+		}
+		if !fieldSet["due_date"] {
+			t.DueDate = ot.DueDate
+		}
+		if !fieldSet["repeat_after"] {
+			t.RepeatAfter = ot.RepeatAfter
+		}
+		if !fieldSet["priority"] {
+			t.Priority = ot.Priority
+		}
+		if !fieldSet["start_date"] {
+			t.StartDate = ot.StartDate
+		}
+		if !fieldSet["end_date"] {
+			t.EndDate = ot.EndDate
+		}
+		if !fieldSet["hex_color"] {
+			t.HexColor = ot.HexColor
+		}
+		if !fieldSet["percent_done"] {
+			t.PercentDone = ot.PercentDone
+		}
+		if !fieldSet["project_id"] {
+			t.ProjectID = ot.ProjectID
+		}
+		if !fieldSet["bucket_id"] {
+			t.BucketID = ot.BucketID
+		}
+		if !fieldSet["repeat_mode"] {
+			t.RepeatMode = ot.RepeatMode
+		}
+		if !fieldSet["cover_image_attachment_id"] {
+			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
+		}
 	}
 
 	// If the task is being moved between projects, make sure to move the bucket + index as well
@@ -1135,7 +1189,10 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
-	updateDone(&ot, t)
+	updateDoneAt := updateDone(&ot, t)
+	if updateDoneAt {
+		colsToUpdate = append(colsToUpdate, "done_at")
+	}
 
 	// Update the reminders
 	if err := ot.updateReminders(s, t); err != nil {
@@ -1179,7 +1236,7 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	//
 	// Maybe FIXME:
 	// I've disabled this for now, because it requires significant changes in the way we do updates (using the
-	// Update() function. We need a user object in updateTaskLabels to check if the user has the right to see
+	// Update() function. We need a user object in updateTaskLabels to check if the user has the permission to see
 	// the label it is currently adding. To do this, we'll need to update the webhandler to let it pass the current
 	// user object (like it's already the case with the create method). However when we change it, that'll break
 	// a lot of existing code which we'll then need to refactor.
@@ -1281,6 +1338,20 @@ func (t *Task) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
+}
+
+// updateTasks updates multiple tasks with the same payload.
+// If fields is nil, it updates the default set of columns.
+func updateTasks(s *xorm.Session, a web.Auth, t *Task, ids []int64, fields []string) (tasks []*Task, err error) {
+	for _, id := range ids {
+		nt := clone.Clone(t)
+		nt.ID = id
+		if err := nt.updateSingleTask(s, a, fields); err != nil {
+			return []*Task{}, err
+		}
+		tasks = append(tasks, nt)
+	}
+	return tasks, nil
 }
 
 func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
@@ -1494,7 +1565,10 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 // We make a few assumptions here:
 //  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
 //  2. Because of 1., this functions should not be used to update values other than Done in the same go
-func updateDone(oldTask *Task, newTask *Task) {
+func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
+	// Track if the done status changed before repeat helpers modify it
+	doneStatusChanged := oldTask.Done != newTask.Done
+
 	if !oldTask.Done && newTask.Done {
 		switch oldTask.RepeatMode {
 		case TaskRepeatModeMonth:
@@ -1512,6 +1586,8 @@ func updateDone(oldTask *Task, newTask *Task) {
 	if oldTask.Done && !newTask.Done {
 		newTask.DoneAt = time.Time{}
 	}
+
+	return doneStatusChanged
 }
 
 // Set the absolute trigger dates for Reminders with relative period
@@ -1711,7 +1787,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Accept json
 // @Produce json
 // @Param id path int true "The task ID"
-// @Param expand query array false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values."
+// @Param expand query []string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Task "The task"
 // @Failure 404 {object} models.Message "Task not found"

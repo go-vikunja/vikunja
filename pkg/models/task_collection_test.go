@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -26,6 +26,8 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"gopkg.in/d4l3k/messagediff.v1"
 )
@@ -44,6 +46,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		OverdueTasksRemindersTime:    "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
+		ExportFileID:                 1,
 	}
 	user2 := &user.User{
 		ID:                           2,
@@ -69,10 +72,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Updated:                      testUpdatedTime,
 	}
 	linkShareUser2 := &user.User{
-		ID:      -2,
-		Name:    "Link Share",
-		Created: testCreatedTime,
-		Updated: testUpdatedTime,
+		ID:       -2,
+		Name:     "Link Share",
+		Username: "link-share-2",
+		Created:  testCreatedTime,
+		Updated:  testUpdatedTime,
 	}
 
 	loc := config.GetTimeZone()
@@ -235,6 +239,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task6 := &Task{
 		ID:           6,
 		Title:        "task #6 lower due date",
+		Description:  "This has something unique",
 		Identifier:   "test1-6",
 		Index:        6,
 		CreatedByID:  1,
@@ -656,8 +661,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 
 		Expand []TaskCollectionExpandable
 
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		CRUDable    web.CRUDable
+		Permissions web.Permissions
 	}
 	type args struct {
 		search string
@@ -1437,19 +1442,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "search for task index",
-			fields: fields{},
-			args: args{
-				search: "number #17",
-				a:      &user.User{ID: 1},
-				page:   0,
-			},
-			want: []*Task{
-				task33, // has the index 17
-			},
-			wantErr: false,
-		},
-		{
 			name: "order by position",
 			fields: fields{
 				SortBy:        []string{"position", "id"},
@@ -1600,6 +1592,40 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		// TODO date magic
 	}
 
+	// Here we're explicitly testing search with and without paradeDB. Both return different results but that's
+	// expected - paradeDB returns more results than other databases with a naive like-search.
+
+	if db.ParadeDBAvailable() {
+		tests = append(tests, testcase{
+			name:   "search for task index",
+			fields: fields{},
+			args: args{
+				search: "number #17",
+				a:      &user.User{ID: 1},
+				page:   0,
+			},
+			want: []*Task{
+				task17, // has the text #17 in the title
+				task33, // has the index 17
+			},
+			wantErr: false,
+		})
+	} else {
+		tests = append(tests, testcase{
+			name:   "search for task index",
+			fields: fields{},
+			args: args{
+				search: "number #17",
+				a:      &user.User{ID: 1},
+				page:   0,
+			},
+			want: []*Task{
+				task33, // has the index 17
+			},
+			wantErr: false,
+		})
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -1618,15 +1644,15 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 
 				Expand: tt.fields.Expand,
 
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+				CRUDable:    tt.fields.CRUDable,
+				Permissions: tt.fields.Permissions,
 			}
 			got, _, _, err := lt.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 50)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Test %s, Task.ReadAll() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 				return
 			}
-			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
+			if diff, equal := messagediff.PrettyDiff(tt.want, got); !equal {
 				var is bool
 				var gotTasks []*Task
 				gotTasks, is = got.([]*Task)
@@ -1653,10 +1679,151 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 					return gotIDs[i] < gotIDs[j]
 				})
 
-				diffIDs, _ := messagediff.PrettyDiff(gotIDs, wantIDs)
+				diffIDs, _ := messagediff.PrettyDiff(wantIDs, gotIDs)
 
 				t.Errorf("Test %s, Task.ReadAll() = %v, \nwant %v, \ndiff: %v \n\n diffIDs: %v", tt.name, got, tt.want, diff, diffIDs)
 			}
 		})
 	}
+}
+
+func TestTaskCollection_SubtaskRemainsAfterMove(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	c := &TaskCollection{
+		ProjectID: 1,
+		Expand:    []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+	}
+
+	res, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err)
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	found := false
+	for _, tsk := range tasks {
+		if tsk.ID == 29 {
+			found = true
+			break
+		}
+	}
+	assert.True(t, found, "subtask should be returned before moving")
+
+	subtask := &Task{ID: 29, ProjectID: 7}
+	err = subtask.Update(s, u)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+	c = &TaskCollection{
+		ProjectID: 7,
+		Expand:    []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+	}
+
+	res, _, _, err = c.ReadAll(s2, u, "", 0, 50)
+	require.NoError(t, err)
+	tasks, ok = res.([]*Task)
+	require.True(t, ok)
+
+	found = false
+	for _, tsk := range tasks {
+		if tsk.ID == 29 {
+			found = true
+			break
+		}
+	}
+	assert.True(t, found, "subtask should be returned after moving to another project")
+}
+
+func TestTaskSearchWithExpandSubtasks(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	project, err := GetProjectSimpleByID(s, 36)
+	require.NoError(t, err)
+
+	opts := &taskSearchOptions{
+		search: "Caldav",
+		expand: []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+	}
+
+	tasks, _, _, err := getRawTasksForProjects(s, []*Project{project}, &user.User{ID: 15}, opts)
+	require.NoError(t, err)
+	require.NotEmpty(t, tasks)
+}
+
+func TestTaskCollection_SubtaskWithMultipleParentsNoDuplicates(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 15}
+
+	// Use existing tasks from fixtures:
+	// - Task 41: Parent task in project 36 (already exists)
+	// - Task 42: Another parent task in project 36 (already exists)
+	// - Task 43: Subtask in project 36 (already a subtask of task 41)
+
+	// Add a second parent relationship: task 43 -> task 42
+	// This will make task 43 have multiple parents (task 41 and task 42)
+	relation := &TaskRelation{
+		TaskID:       43, // subtask
+		OtherTaskID:  42, // second parent
+		RelationKind: RelationKindParenttask,
+		CreatedByID:  15,
+	}
+	_, err := s.Insert(relation)
+	require.NoError(t, err)
+
+	// Create inverse relation: task 42 -> task 43
+	inverseRelation := &TaskRelation{
+		TaskID:       42, // second parent
+		OtherTaskID:  43, // subtask
+		RelationKind: RelationKindSubtask,
+		CreatedByID:  15,
+	}
+	_, err = s.Insert(inverseRelation)
+	require.NoError(t, err)
+
+	// Test Project 36 - should include tasks 41, 42, and 43, but task 43 should only appear once
+	c := &TaskCollection{
+		ProjectID: 36,
+		Expand:    []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+	}
+
+	res, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err)
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	// Count how many times task 43 (the subtask) appears
+	subtaskCount := 0
+	for _, task := range tasks {
+		if task.ID == 43 {
+			subtaskCount++
+		}
+	}
+
+	// The subtask should appear exactly once (as a subtask, not as a standalone task)
+	assert.Equal(t, 1, subtaskCount, "Subtask should appear exactly once in Project 36")
+
+	// Verify that both parent tasks are present
+	foundParent1 := false
+	foundParent2 := false
+	for _, task := range tasks {
+		if task.ID == 41 {
+			foundParent1 = true
+		}
+		if task.ID == 42 {
+			foundParent2 = true
+		}
+	}
+	assert.True(t, foundParent1, "Parent task 41 should be present")
+	assert.True(t, foundParent2, "Parent task 42 should be present")
 }

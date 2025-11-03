@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package handler
@@ -44,7 +44,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
 	}
 
-	// Check rights
+	// Check permissions
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").SetInternal(err)
@@ -59,15 +59,15 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 		}
 	}()
 
-	canRead, maxRight, err := currentStruct.CanRead(s, currentAuth)
+	canRead, maxPermission, err := currentStruct.CanRead(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
 		return HandleHTTPError(err)
 	}
 	if !canRead {
 		_ = s.Rollback()
-		log.Warningf("Tried to read while not having the rights for it (User: %v)", currentAuth)
-		return echo.NewHTTPError(http.StatusForbidden, "You don't have the right to see this")
+		log.Warningf("Tried to read while not having the permissions for it (User: %v)", currentAuth)
+		return echo.NewHTTPError(http.StatusForbidden, "You don't have the permission to see this")
 	}
 
 	// Get our object
@@ -79,8 +79,8 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 
 	// Set the headers
 	if canRead {
-		ctx.Response().Header().Set("x-max-right", strconv.FormatInt(int64(maxRight), 10))
-		ctx.Response().Header().Set("Access-Control-Expose-Headers", "x-max-right")
+		ctx.Response().Header().Set("x-max-permission", strconv.FormatInt(int64(maxPermission), 10))
+		ctx.Response().Header().Set("Access-Control-Expose-Headers", "x-max-permission")
 	}
 
 	err = s.Commit()

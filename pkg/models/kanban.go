@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -61,8 +61,8 @@ type Bucket struct {
 	// Including the task collection type so we can use task filters on kanban
 	TaskCollection `xorm:"-" json:"-"`
 
-	web.Rights   `xorm:"-" json:"-"`
-	web.CRUDable `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
 }
 
 // TableName returns the table name for this bucket.
@@ -147,7 +147,9 @@ func (b *Bucket) ReadAll(s *xorm.Session, auth web.Auth, _ string, _ int, _ int)
 	}
 
 	for _, bb := range buckets {
-		bb.CreatedBy = users[bb.CreatedByID]
+		if createdBy, has := users[bb.CreatedByID]; has {
+			bb.CreatedBy = createdBy
+		}
 	}
 
 	return buckets, len(buckets), int64(len(buckets)), nil
@@ -196,11 +198,14 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 	}
 
 	for _, bb := range buckets {
-		bb.CreatedBy = users[bb.CreatedByID]
+		if createdBy, has := users[bb.CreatedByID]; has {
+			bb.CreatedBy = createdBy
+		}
 	}
 
 	tasks := []*Task{}
 
+	opts.projectViewID = view.ID
 	opts.sortby = []*sortParam{
 		{
 			projectViewID: view.ID,
@@ -276,9 +281,9 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 		return nil, err
 	}
 
-	// Put all tasks in their buckets
-	// All tasks which are not associated to any bucket will have bucket id 0 which is the nil value for int64
-	// Since we created a bucked with that id at the beginning, all tasks should be in there.
+	// Put all tasks in their buckets.
+	// Tasks without a bucket association are not returned by the query above
+	// and therefore will not be part of any bucket in the result.
 	for _, task := range tasks {
 		// Check if the bucket exists in the map to prevent nil pointer panics
 		if _, exists := bucketMap[task.BucketID]; !exists {

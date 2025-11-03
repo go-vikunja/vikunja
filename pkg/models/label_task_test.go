@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -51,12 +51,12 @@ func TestLabelTask_ReadAll(t *testing.T) {
 	}
 
 	type fields struct {
-		ID       int64
-		TaskID   int64
-		LabelID  int64
-		Created  time.Time
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		ID          int64
+		TaskID      int64
+		LabelID     int64
+		Created     time.Time
+		CRUDable    web.CRUDable
+		Permissions web.Permissions
 	}
 	type args struct {
 		search string
@@ -87,7 +87,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 			},
 		},
 		{
-			name: "no right to see the task",
+			name: "no permission to see the task",
 			fields: fields{
 				TaskID: 14,
 			},
@@ -95,7 +95,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 				a: &user.User{ID: 1},
 			},
 			wantErr: true,
-			errType: IsErrNoRightToSeeTask,
+			errType: IsErrNoPermissionToSeeTask,
 		},
 		{
 			name: "nonexistant task",
@@ -131,12 +131,12 @@ func TestLabelTask_ReadAll(t *testing.T) {
 			s := db.NewSession()
 
 			l := &LabelTask{
-				ID:       tt.fields.ID,
-				TaskID:   tt.fields.TaskID,
-				LabelID:  tt.fields.LabelID,
-				Created:  tt.fields.Created,
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+				ID:          tt.fields.ID,
+				TaskID:      tt.fields.TaskID,
+				LabelID:     tt.fields.LabelID,
+				Created:     tt.fields.Created,
+				CRUDable:    tt.fields.CRUDable,
+				Permissions: tt.fields.Permissions,
 			}
 			gotLabels, _, _, err := l.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 0)
 			if (err != nil) != tt.wantErr {
@@ -157,12 +157,12 @@ func TestLabelTask_ReadAll(t *testing.T) {
 
 func TestLabelTask_Create(t *testing.T) {
 	type fields struct {
-		ID       int64
-		TaskID   int64
-		LabelID  int64
-		Created  time.Time
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		ID          int64
+		TaskID      int64
+		LabelID     int64
+		Created     time.Time
+		CRUDable    web.CRUDable
+		Permissions web.Permissions
 	}
 	type args struct {
 		a web.Auth
@@ -229,12 +229,12 @@ func TestLabelTask_Create(t *testing.T) {
 			s := db.NewSession()
 
 			l := &LabelTask{
-				ID:       tt.fields.ID,
-				TaskID:   tt.fields.TaskID,
-				LabelID:  tt.fields.LabelID,
-				Created:  tt.fields.Created,
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+				ID:          tt.fields.ID,
+				TaskID:      tt.fields.TaskID,
+				LabelID:     tt.fields.LabelID,
+				Created:     tt.fields.Created,
+				CRUDable:    tt.fields.CRUDable,
+				Permissions: tt.fields.Permissions,
 			}
 			allowed, err := l.CanCreate(s, tt.args.a)
 			if !allowed && !tt.wantForbidden {
@@ -261,12 +261,12 @@ func TestLabelTask_Create(t *testing.T) {
 
 func TestLabelTask_Delete(t *testing.T) {
 	type fields struct {
-		ID       int64
-		TaskID   int64
-		LabelID  int64
-		Created  time.Time
-		CRUDable web.CRUDable
-		Rights   web.Rights
+		ID          int64
+		TaskID      int64
+		LabelID     int64
+		Created     time.Time
+		CRUDable    web.CRUDable
+		Permissions web.Permissions
 	}
 	tests := []struct {
 		name          string
@@ -329,12 +329,12 @@ func TestLabelTask_Delete(t *testing.T) {
 			defer s.Close()
 
 			l := &LabelTask{
-				ID:       tt.fields.ID,
-				TaskID:   tt.fields.TaskID,
-				LabelID:  tt.fields.LabelID,
-				Created:  tt.fields.Created,
-				CRUDable: tt.fields.CRUDable,
-				Rights:   tt.fields.Rights,
+				ID:          tt.fields.ID,
+				TaskID:      tt.fields.TaskID,
+				LabelID:     tt.fields.LabelID,
+				Created:     tt.fields.Created,
+				CRUDable:    tt.fields.CRUDable,
+				Permissions: tt.fields.Permissions,
 			}
 			allowed, _ := l.CanDelete(s, tt.auth)
 			if !allowed && !tt.wantForbidden {

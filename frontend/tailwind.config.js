@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   corePlugins: {
-    // TODO: Readd after removing bulma base styles
+    // TODO: Re-add after removing bulma base styles
     preflight: false,
   },
   prefix: 'tw-',

@@ -31,7 +31,10 @@ const router = createRouter({
 		}
 
 		// Otherwise just scroll to the top
-		return {left: 0, top: 0}
+		return {
+			'inset-inline-start': 0,
+			'inset-block-start': 0,
+		}
 	},
 	routes: [
 		{
@@ -405,16 +408,27 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 		return {name: 'user.login'}
 	}
 
-	// Check if the route the user wants to go to is a route which needs authentication. We use this to 
+	// Check if email confirmation token is in query params
+	const emailConfirmToken = to.query.userEmailConfirm as string | undefined
+	if (emailConfirmToken) {
+		// Save token to localStorage before redirecting
+		localStorage.setItem('emailConfirmToken', emailConfirmToken)
+		// Redirect to login page where it will be processed
+		if (to.name !== 'user.login') {
+			return {name: 'user.login'}
+		}
+	}
+
+	// Check if the route the user wants to go to is a route which needs authentication. We use this to
 	// redirect the user after successful login.
 	const isValidUserAppRoute = ![
-			'user.login',
-			'user.password-reset.request',
-			'user.password-reset.reset',
-			'user.register',
-			'link-share.auth',
-			'openid.auth',
-		].includes(to.name as string) &&
+		'user.login',
+		'user.password-reset.request',
+		'user.password-reset.reset',
+		'user.register',
+		'link-share.auth',
+		'openid.auth',
+	].includes(to.name as string) &&
 		localStorage.getItem('emailConfirmToken') === null
 	
 	if (isValidUserAppRoute) {
@@ -426,12 +440,14 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 	}
 	
 	if(localStorage.getItem('emailConfirmToken') !== null && to.name !== 'user.login') {
-		return {name: 'user.login'}
+		return {name: 'user.login', query: to.query}
 	}
 }
 
 router.beforeEach(async (to, from) => {
 	const authStore = useAuthStore()
+
+	await authStore.checkAuth()
 
 	if(from.hash && from.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
 		to.hash = from.hash

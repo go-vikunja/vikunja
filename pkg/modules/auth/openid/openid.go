@@ -2,24 +2,26 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package openid
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,7 +30,10 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/avatar"
+	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -47,27 +52,30 @@ type Callback struct {
 
 // Provider is the structure of an OpenID Connect provider
 type Provider struct {
-	Name             string `json:"name"`
-	Key              string `json:"key"`
-	OriginalAuthURL  string `json:"-"`
-	AuthURL          string `json:"auth_url"`
-	LogoutURL        string `json:"logout_url"`
-	ClientID         string `json:"client_id"`
-	Scope            string `json:"scope"`
-	EmailFallback    bool   `json:"email_fallback"`
-	UsernameFallback bool   `json:"username_fallback"`
-	ForceUserInfo    bool   `json:"force_user_info"`
-	ClientSecret     string `json:"-"`
-	openIDProvider   *oidc.Provider
-	Oauth2Config     *oauth2.Config `json:"-"`
+	Name                string `json:"name"`
+	Key                 string `json:"key"`
+	OriginalAuthURL     string `json:"-"`
+	AuthURL             string `json:"auth_url"`
+	LogoutURL           string `json:"logout_url"`
+	ClientID            string `json:"client_id"`
+	Scope               string `json:"scope"`
+	EmailFallback       bool   `json:"email_fallback"`
+	UsernameFallback    bool   `json:"username_fallback"`
+	ForceUserInfo       bool   `json:"force_user_info"`
+	RequireAvailability bool   `json:"-"`
+	ClientSecret        string `json:"-"`
+	openIDProvider      *oidc.Provider
+	Oauth2Config        *oauth2.Config `json:"-"`
 }
 
 type claims struct {
-	Email             string                   `json:"email"`
-	Name              string                   `json:"name"`
-	PreferredUsername string                   `json:"preferred_username"`
-	Nickname          string                   `json:"nickname"`
-	VikunjaGroups     []map[string]interface{} `json:"vikunja_groups"`
+	Email              string                   `json:"email"`
+	Name               string                   `json:"name"`
+	PreferredUsername  string                   `json:"preferred_username"`
+	Nickname           string                   `json:"nickname"`
+	VikunjaGroups      []map[string]interface{} `json:"vikunja_groups"`
+	Picture            string                   `json:"picture"`
+	ExtraSettingsLinks map[string]any           `json:"extra_settings_links"`
 }
 
 func init() {
@@ -76,6 +84,9 @@ func init() {
 
 func (p *Provider) setOicdProvider() (err error) {
 	p.openIDProvider, err = oidc.NewProvider(context.Background(), p.OriginalAuthURL)
+	if err != nil && p.RequireAvailability {
+		log.Fatalf("OpenID Connect provider '%s' is not available and require_availability is enabled: %s", p.Name, err)
+	}
 	return err
 }
 
@@ -215,6 +226,41 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 	return teamData
 }
 
+// Download and store a user's avatar from an OpenID provider
+func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) (err error) {
+	// Don't sync avatar if no picture URL is provided
+	if pictureURL == "" {
+		return fmt.Errorf("no picture URL provided")
+	}
+
+	log.Debugf("Found avatar URL for user %s: %s", u.Username, pictureURL)
+
+	// Download avatar
+	avatarData, err := utils.DownloadImage(pictureURL)
+	if err != nil {
+		return fmt.Errorf("error downloading avatar: %w", err)
+	}
+
+	// Process avatar, ensure 1:1 ratio
+	processedAvatar, err := utils.CropAvatarTo1x1(avatarData)
+	if err != nil {
+		return fmt.Errorf("error processing avatar: %w", err)
+	}
+
+	// Set avatar provider to openid
+	u.AvatarProvider = "openid"
+
+	// Store avatar and update user
+	err = upload.StoreAvatarFile(s, u, bytes.NewReader(processedAvatar))
+	if err != nil {
+		return fmt.Errorf("error storing avatar: %w", err)
+	}
+
+	avatar.FlushAllCaches(u)
+
+	return nil
+}
+
 func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
 
 	// set defaults
@@ -263,14 +309,19 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 		// If no user exists, create one with the preferred username if it is not already taken
 		uu := &user.User{
-			Username: strings.ReplaceAll(cl.PreferredUsername, " ", "-"),
-			Email:    cl.Email,
-			Name:     cl.Name,
-			Status:   user.StatusActive,
-			Issuer:   idToken.Issuer,
-			Subject:  idToken.Subject,
+			Username:           strings.ReplaceAll(cl.PreferredUsername, " ", "-"),
+			Email:              cl.Email,
+			Name:               cl.Name,
+			Status:             user.StatusActive,
+			Issuer:             idToken.Issuer,
+			Subject:            idToken.Subject,
+			ExtraSettingsLinks: cl.ExtraSettingsLinks,
 		}
-		return auth.CreateUserWithRandomUsername(s, uu)
+
+		u, err = auth.CreateUserWithRandomUsername(s, uu)
+		if err != nil {
+			return nil, err
+		}
 	} else if alreadyCreatedFromIssuer {
 
 		// try updating user.Name and/or user.Email if necessary
@@ -280,13 +331,22 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		if cl.Name != u.Name {
 			u.Name = cl.Name
 		}
+
+		u.ExtraSettingsLinks = cl.ExtraSettingsLinks
+
 		u, err = user.UpdateUser(s, u, false)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return
+	// Try sync avatar if available
+	err = syncUserAvatarFromOpenID(s, u, cl.Picture)
+	if err != nil {
+		log.Errorf("Error syncing avatar for user %s: %v", u.Username, err)
+	}
+
+	return u, nil
 }
 
 // mergeClaims combines claims from token and userinfo based on the ForceUserInfo setting
@@ -308,6 +368,10 @@ func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 		cl.PreferredUsername = cl2.Nickname
 	}
 
+	if (forceUserInfo && cl2.Picture != "") || cl.Picture == "" {
+		cl.Picture = cl2.Picture
+	}
+
 	if cl.Email == "" {
 		return &user.ErrNoOpenIDEmailProvided{}
 	}
@@ -324,7 +388,7 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 		return nil, err
 	}
 
-	if provider.ForceUserInfo || cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" {
+	if provider.ForceUserInfo || cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" || cl.Picture == "" {
 		info, err := provider.openIDProvider.UserInfo(context.Background(), provider.Oauth2Config.TokenSource(context.Background(), oauth2Token))
 		if err != nil {
 			log.Errorf("Error getting userinfo for provider %s: %v", provider.Name, err)

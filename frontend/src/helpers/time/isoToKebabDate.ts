@@ -3,7 +3,7 @@ import type {DateKebab} from '@/types/DateKebab'
 
 // ✅ Format a date to YYYY-MM-DD (or any other format)
 function padTo2Digits(num: number) {
-  return num.toString().padStart(2, '0')
+	return num.toString().padStart(2, '0')
 }
 
 export function isoToKebabDate(isoDate: DateISO) {

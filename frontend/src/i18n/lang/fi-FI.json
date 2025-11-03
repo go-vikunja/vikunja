@@ -103,6 +103,13 @@
 				"minimumPriority": "Pienin prioriteetti, jolla tehtävä näkyy",
 				"externalUserNameChange": "Nimeäsi hallinnoi kirjautumisoperaattori ({provider}). Muuttaaksesi sen, päivitä se siellä."
 			},
+			"sections": {
+				"personalInformation": "Henkilökohtaiset Tiedot",
+				"taskAndNotifications": "Projektit & Tehtävät",
+				"privacy": "Yksityisyys",
+				"localization": "Kielivalinnat",
+				"appearance": "Ulkoasu & Käyttäytyminen"
+			},
 			"totp": {
 				"title": "Kaksivaiheinen Tunnistautuminen",
 				"enroll": "Ota käyttöön",
@@ -132,12 +139,14 @@
 				"title": "Profiilikuva",
 				"initials": "Etukirjaimet",
 				"gravatar": "Gravatar",
+				"marble": "Marble",
 				"upload": "Lataa",
 				"uploadAvatar": "Lataa Profiilikuva",
 				"statusUpdateSuccess": "Profiilikuvan tila päivitettiin onnistuneesti!",
 				"setSuccess": "Profiilikuva on asetettu onnistuneesti!"
 			},
 			"quickAddMagic": {
+				"title": "Nopean Lisäyksen Tyyli",
 				"disabled": "Pois käytöstä",
 				"todoist": "Todoist",
 				"vikunja": "Vikunja"
@@ -220,6 +229,7 @@
 		"unfavorite": "Poista tämä projekti suosikeista",
 		"openSettingsMenu": "Avaa projektin asetusvalikko",
 		"description": "Projektin kuvaus",
+		"favoriteDescription": "Kaikki tämän projektin tehtävät on merkkitty suosikeiksi.",
 		"create": {
 			"header": "Uusi projekti ",
 			"titlePlaceholder": "Projektin otsikko menee tähän…",
@@ -284,6 +294,7 @@
 				"name": "Nimi (valinnainen)",
 				"namePlaceholder": "esim. Lorem Ipsum",
 				"password": "Salasana (valinnainen)",
+				"passwordExplanation": "Käyttäjän kirjautuessa sisään, heidän on syötettävä tämä salasana.",
 				"noName": "Nimeä ei ole asetettu",
 				"remove": "Poista jako linkki",
 				"removeText": "Haluatko varmasti poistaa tämän linkki jaon? Tähän projektiin ei enää voi päästä käsiksi tällä linkki jaolla. Tätä ei voi peruuttaa!",
@@ -296,12 +307,6 @@
 				"you": "Sinä",
 				"addedSuccess": "{type} lisättiin onnistuneesti.",
 				"updatedSuccess": "{type} lisättiin onnistuneesti."
-			},
-			"right": {
-				"title": "Oikeudet",
-				"read": "Vain luku",
-				"readWrite": "Luku & kirjoitus",
-				"admin": "Ylläpitäjä"
 			},
 			"attributes": {
 				"delete": "Poista"
@@ -343,6 +348,7 @@
 			"defaultBucketHint": "Kun uusia tehtäviä luodaan määrittelemättä saraketta, ne lisätään tähän sarakkeeseen.",
 			"defaultBucketSavedSuccess": "Oletus sarake tallennettiin onnistuneesti.",
 			"deleteLast": "Et voi poistaa viimeistä saraketta.",
+			"addTaskPlaceholder": "Syötä tehtävän uusi otsikko…",
 			"addTask": "Lisää tehtävä",
 			"addAnotherTask": "Lisää toinen tehtävä",
 			"addBucket": "Luo sarake",
@@ -360,6 +366,11 @@
 			"favorites": {
 				"title": "Suosikit"
 			}
+		},
+		"webhooks": {
+			"targetUrl": "Kohde URL",
+			"events": "Tapahtumat",
+			"mustSelectEvents": "Sinun on valittava ainakin yksi tapahtuma."
 		},
 		"views": {
 			"header": "Muokkaa näkymiä",
@@ -390,16 +401,22 @@
 			"includeNulls": "Sisällytä tehtävät, joille ei ole asetettu arvoa",
 			"requireAll": "Vaadi kaikkia suodattimia olemaan tosi, jotta tehtävä näkyy",
 			"showDoneTasks": "Näytä Valmiit Tehtävät",
-			"sortAlphabetically": "Lajittele Aakkosjärjestykseen"
+			"sortAlphabetically": "Lajittele Aakkosjärjestykseen",
+			"dueDateRange": "Erääntymispäivämäärä Väli",
+			"startDateRange": "Aloituspäivämäärä Väli",
+			"endDateRange": "Päättymispäivämäärä Väli",
+			"reminderRange": "Muistutuspäivämäärä Väli"
 		},
 		"create": {
 			"title": "Uusi Tallennettu Suodatin",
 			"description": "Tallennettu suodatin on virtuaalinen projekti, joka muodostetaan suodattimia hyödyntäen joka kerta kun sitä kutsutaan.",
-			"action": "Luo tallennettu suodatin"
+			"action": "Luo tallennettu suodatin",
+			"titleRequired": "Ole hyvä ja anna suodattimelle otsikko."
 		},
 		"delete": {
 			"header": "Poista tämä tallennettu suodatin",
-			"text": "Haluatko varmasti poistaa tämä tallennetun suodattimen?"
+			"text": "Haluatko varmasti poistaa tämä tallennetun suodattimen?",
+			"success": "Suodatin poistettiin onnistuneesti."
 		},
 		"edit": {
 			"title": "Muokkaa Tätä Tallennettua Suodinta",
@@ -648,14 +665,12 @@
 		"addReminder": "Lisää muistutus…",
 		"doneSuccess": "Tehtävä merkittiin onnistuneesti valmiiksi.",
 		"undoneSuccess": "Tehtävä merkittiin onnistuneesti keskeneräiseksi.",
-		"revertSuccess": "Tehtävän muutos peruutettiin onnistuneesti.",
 		"undo": "Kumoa",
 		"checklistTotal": "{checked} tehtävää {total} tehtävästä",
 		"checklistAllDone": "{total} tehtävää",
 		"show": {
 			"titleCurrent": "Nykyiset Tehtävät",
 			"titleDates": "Tehtävät väliltä {from} - {to}",
-			"noDates": "Näytä tehtävät joilla ei ole päivämäärää",
 			"overdue": "Näytä erääntyneet tehtävät",
 			"fromuntil": "Tehtävät väliltä {from} - {until}",
 			"select": "Valitse päivämäärä väli",
@@ -669,6 +684,7 @@
 			"done": "Merkitse tehtävä valmiiksi!",
 			"undone": "Merkitse tehtävä keskeneräiseksi",
 			"created": "Luotu {0} käyttäjältä {1}",
+			"updated": "Päivitetty {0}",
 			"updateSuccess": "Tehtävä tallennettiin onnistuneesti.",
 			"deleteSuccess": "Tehtävä poistettiin onnistuneesti.",
 			"belongsToProject": "Tämä tehtävä kuuluu '{project}' projektiin",
@@ -846,6 +862,7 @@
 			"success": "Tiimi luotiin onnistuneesti."
 		},
 		"edit": {
+			"success": "Tiimi päivitettiin onnistuneesti.",
 			"mustSelectUser": "Ole hyvä ja valitse käyttäjä.",
 			"delete": {
 				"header": "Poista tiimi",
@@ -927,7 +944,6 @@
 	"notification": {
 		"title": "Ilmoitukset",
 		"none": "Sinulla ei ole ilmoituksia. Mukavaa päivää!",
-		"explainer": "Ilmoitukset näkyvät täällä kun tilaamissasi projekteissa tai tehtävissä tapahtuu jotain.",
 		"markAllRead": "Merkitse kaikki ilmoitukset luetuiksi",
 		"markAllReadSuccess": "Kaikki ilmoitukset merkittiin onnistuneesti luetuiksi."
 	},

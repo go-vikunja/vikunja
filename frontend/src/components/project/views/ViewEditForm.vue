@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import type {IProjectView} from '@/modelTypes/IProjectView'
-import type {IFilter} from '@/modelTypes/ISavedFilter'
-import XButton from '@/components/input/Button.vue'
-import FilterInput from '@/components/project/partials/FilterInput.vue'
 import {onBeforeMount, ref} from 'vue'
+
+import type {IProjectView} from '@/modelTypes/IProjectView'
+import type {IFilters} from '@/modelTypes/ISavedFilter'
+
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
-import FilterInputDocs from '@/components/project/partials/FilterInputDocs.vue'
+
+import XButton from '@/components/input/Button.vue'
+import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
+import FilterInput from '@/components/input/filter/FilterInput.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: IProjectView,
@@ -29,14 +32,14 @@ const labelStore = useLabelStore()
 const projectStore = useProjectStore()
 
 onBeforeMount(() => {
-	const transformFilterFromApi = (filterInput: IFilter): IFilter => {
+	const transformFilterFromApi = (filterInput: IFilters): IFilter => {
 		const filterString = transformFilterStringFromApi(
 			filterInput.filter,
 			labelId => labelStore.getLabelById(labelId)?.title || null,
 			projectId => projectStore.projects[projectId]?.title || null,
 		)
 		
-		const filter: IFilter = {
+		const filter: IFilters = {
 			filter: '',
 			s: '',
 		}
@@ -72,7 +75,7 @@ onBeforeMount(() => {
 })
 
 function save() {
-	const transformFilterForApi = (filterQuery: string): IFilter => {
+	const transformFilterForApi = (filterQuery: string): IFilters => {
 		const filterString = transformFilterStringForApi(
 			filterQuery,
 			labelTitle => labelStore.getLabelByExactTitle(labelTitle)?.id || null,
@@ -81,7 +84,7 @@ function save() {
 				return found?.id || null
 			},
 		)
-		const filter: IFilter = {}
+		const filter: IFilters = {}
 		if (hasFilterQuery(filterString)) {
 			filter.filter = filterString
 		} else {
@@ -173,14 +176,20 @@ function handleBubbleSave() {
 			</div>
 		</div>
 
+		<label
+			class="label"
+			for="filter"
+		>
+			{{ $t('project.views.filter') }}
+		</label>
 		<FilterInput
+			id="filter"
 			v-model="view.filter.filter"
 			:project-id="view.projectId"
-			:input-label="$t('project.views.filter')"
-			class="mb-1"
+			class="mbe-1"
 		/>
 
-		<div class="is-size-7 mb-3">
+		<div class="is-size-7 mbe-3">
 			<FilterInputDocs />
 		</div>
 
@@ -260,7 +269,7 @@ function handleBubbleSave() {
 							v-model="view.bucketConfiguration[index].filter.filter"
 							:project-id="view.projectId"
 							:input-label="$t('project.views.filter')"
-							class="mb-2"
+							class="mbe-2"
 						/>
 
 						<div class="is-size-7">
@@ -285,7 +294,7 @@ function handleBubbleSave() {
 		>
 			<XButton
 				variant="tertiary"
-				class="mr-2"
+				class="mie-2"
 				@click="emit('cancel')"
 			>
 				{{ $t('misc.cancel') }}
@@ -308,16 +317,16 @@ function handleBubbleSave() {
 		background: transparent;
 		border: none;
 		color: var(--danger);
-		padding-right: .75rem;
+		padding-inline-end: .75rem;
 		cursor: pointer;
 	}
 
 	&-form {
-		margin-bottom: .5rem;
+		margin-block-end: .5rem;
 		padding: .5rem;
 		border: 1px solid var(--grey-200);
 		border-radius: $radius;
-		width: 100%;
+		inline-size: 100%;
 	}
 }
 </style>

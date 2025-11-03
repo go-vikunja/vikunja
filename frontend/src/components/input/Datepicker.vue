@@ -5,7 +5,7 @@
 			:disabled="disabled || undefined"
 			@click.stop="toggleDatePopup"
 		>
-			{{ date === null ? chooseDateLabel : formatDateShort(date) }}
+			{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
 		</SimpleButton>
 
 		<CustomTransition name="fade">
@@ -39,7 +39,7 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
 
-import {formatDateShort} from '@/helpers/time/formatDate'
+import {formatDisplayDate} from '@/helpers/time/formatDate'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {useI18n} from 'vue-i18n'
@@ -128,19 +128,19 @@ function close() {
 .datepicker-popup {
 	position: absolute;
 	z-index: 99;
-	width: 320px;
+	inline-size: 320px;
 	background: var(--white);
 	border-radius: $radius;
 	box-shadow: $shadow;
 
 	@media screen and (max-width: ($tablet)) {
-		width: calc(100vw - 5rem);
+		inline-size: calc(100vw - 5rem);
 	}
 }
 
 .datepicker__close-button {
 	margin: 1rem;
-	width: calc(100% - 2rem);
+	inline-size: calc(100% - 2rem);
 }
 
 :deep(.flatpickr-calendar) {

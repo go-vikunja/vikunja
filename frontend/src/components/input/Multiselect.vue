@@ -28,7 +28,7 @@
 						>
 							<span
 								:key="`item${key}`"
-								class="tag ml-2 mt-2"
+								class="tag mis-2 mbs-2"
 							>
 								{{ label !== '' ? item[label] : item }}
 								<BaseButton
@@ -123,7 +123,7 @@
 	</div>
 </template>
 
-<script setup lang="ts" generic="T extends { [id: string]: any }">
+<script setup lang="ts" generic="T extends Record<string, unknown>">
 import {computed, onBeforeUnmount, onMounted, ref, toRefs, watch, type ComponentPublicInstance} from 'vue'
 import {useI18n} from 'vue-i18n'
 
@@ -206,11 +206,10 @@ const emit = defineEmits<{
 	'remove': [value: T],
 }>()
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function elementInResults(elem: string | any, label: string, query: string): boolean {
+function elementInResults(elem: string | T, label: string, query: string): boolean {
 	// Don't make create available if we have an exact match in our search results.
 	if (label !== '') {
-		return elem[label] === query
+		return (elem as Record<string, unknown>)[label] === query
 	}
 
 	return elem === query
@@ -249,8 +248,7 @@ const searchResultsVisible = computed(() => {
 })
 
 const creatableAvailable = computed(() => {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const hasResult = filteredSearchResults.value.some((elem: any) => elementInResults(elem, props.label, query.value))
+	const hasResult = filteredSearchResults.value.some((elem) => elementInResults(elem, props.label, query.value as string))
 	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
 
 	return props.creatable
@@ -261,8 +259,7 @@ const creatableAvailable = computed(() => {
 const filteredSearchResults = computed(() => {
 	const currentInternal = internalValue.value
 	if (props.multiple && currentInternal !== null && Array.isArray(currentInternal)) {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		return searchResults.value.filter((item: any) => !currentInternal.some(e => e === item))
+		return searchResults.value.filter((item) => !currentInternal.some(e => e === item))
 	}
 
 	return searchResults.value
@@ -339,7 +336,7 @@ function select(object: T | null) {
 	}
 }
 
-function setSelectedObject(object: string | T | null, resetOnly = false) {
+function setSelectedObject(object: string | T | null | undefined, resetOnly = false) {
 	internalValue.value = object
 
 	// We assume we're getting an array when multiple is enabled and can therefore leave the query
@@ -349,7 +346,7 @@ function setSelectedObject(object: string | T | null, resetOnly = false) {
 		return
 	}
 
-	if (object === null) {
+	if (object === null || typeof object === 'undefined') {
 		query.value = ''
 		return
 	}
@@ -408,8 +405,7 @@ function createOrSelectOnEnter() {
 
 	if (!creatableAvailable.value) {
 		// Check if there's an exact match for our search term
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const exactMatch = filteredSearchResults.value.find((elem: any) => elementInResults(elem, props.label, query.value))
+		const exactMatch = filteredSearchResults.value.find((elem) => elementInResults(elem, props.label, query.value as string))
 		if (exactMatch) {
 			select(exactMatch)
 		}
@@ -420,8 +416,7 @@ function createOrSelectOnEnter() {
 	create()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function remove(item: any) {
+function remove(item: T) {
 	for (const ind in internalValue.value) {
 		if (internalValue.value[ind] === item) {
 			internalValue.value.splice(ind, 1)
@@ -440,11 +435,11 @@ function focus() {
 
 <style lang="scss" scoped>
 .multiselect {
-	width: 100%;
+	inline-size: 100%;
 	position: relative;
 
 	.control.is-loading::after {
-		top: .75rem;
+		inset-block-start: .75rem;
 	}
 
 	&.is-disabled {
@@ -465,7 +460,7 @@ function focus() {
 	background: var(--white);
 	border-color: var(--grey-200);
 	flex-wrap: wrap;
-	height: auto;
+	block-size: auto;
 
 	&:hover {
 		border-color: var(--grey-300) !important;
@@ -473,12 +468,12 @@ function focus() {
 
 	.input {
 		display: flex;
-		max-width: 100%;
-		width: 100%;
+		max-inline-size: 100%;
+		inline-size: 100%;
 		align-items: center;
 		border: none !important;
 		background: transparent;
-		height: auto;
+		block-size: auto;
 
 		&::placeholder {
 			font-style: normal !important;
@@ -486,10 +481,10 @@ function focus() {
 	}
 
 	&.has-multiple .input {
-		max-width: 250px;
+		max-inline-size: 250px;
 
 		input {
-			padding-left: 0;
+			padding-inline-start: 0;
 		}
 	}
 
@@ -510,7 +505,7 @@ function focus() {
 	background: var(--white) !important;
 
 	&, &:focus-within {
-		border-bottom-color: var(--grey-200) !important;
+		border-block-end-color: var(--grey-200) !important;
 	}
 }
 
@@ -518,14 +513,14 @@ function focus() {
 	background: var(--white);
 	border-radius: 0 0 $radius $radius;
 	border: 1px solid var(--primary);
-	border-top: none;
+	border-block-start: none;
 
-	max-height: 50vh;
+	max-block-size: 50vh;
 	overflow-x: auto;
 	position: absolute;
 	z-index: 100;
-	max-width: 100%;
-	min-width: 100%;
+	max-inline-size: 100%;
+	min-inline-size: 100%;
 }
 
 .search-results-inline {
@@ -534,7 +529,7 @@ function focus() {
 
 .search-result-button {
 	background: transparent;
-	text-align: left;
+	text-align: start;
 	box-shadow: none;
 	border-radius: 0;
 	text-transform: none;
@@ -577,7 +572,7 @@ function focus() {
 	font-size: .75rem;
 	color: transparent;
 	transition: color $transition;
-	padding-left: .5rem;
+	padding-inline-start: .5rem;
 }
 
 .has-removal-button {
@@ -586,7 +581,7 @@ function focus() {
 
 .removal-button {
 	position: absolute;
-	right: .5rem;
+	inset-inline-end: .5rem;
 	color: var(--danger);
 }
 </style>

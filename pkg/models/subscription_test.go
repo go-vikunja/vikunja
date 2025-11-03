@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -136,7 +136,7 @@ func TestSubscription_Create(t *testing.T) {
 		assert.True(t, IsErrTaskDoesNotExist(err))
 		assert.False(t, can)
 	})
-	t.Run("no rights to see project", func(t *testing.T) {
+	t.Run("no permissions to see project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -151,7 +151,7 @@ func TestSubscription_Create(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, can)
 	})
-	t.Run("no rights to see task", func(t *testing.T) {
+	t.Run("no permissions to see task", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -340,4 +340,26 @@ func TestSubscriptionGet(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(9), sub.ID)
 	})
+}
+
+func TestSubscription_NoCrossUserProjectInheritance(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	user1 := &user.User{ID: 1}
+	user2 := &user.User{ID: 2}
+
+	sb := &Subscription{
+		Entity:   "project",
+		EntityID: 3,
+	}
+	can, err := sb.CanCreate(s, user1)
+	require.NoError(t, err)
+	require.True(t, can)
+	require.NoError(t, sb.Create(s, user1))
+
+	sub, err := GetSubscriptionForUser(s, SubscriptionEntityTask, 32, user2)
+	require.NoError(t, err)
+	assert.Nil(t, sub)
 }

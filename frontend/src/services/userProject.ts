@@ -8,8 +8,8 @@ export default class UserProjectService extends AbstractService<IUserProject> {
 		super({
 			create: '/projects/{projectId}/users',
 			getAll: '/projects/{projectId}/users',
-			update: '/projects/{projectId}/users/{userId}',
-			delete: '/projects/{projectId}/users/{userId}',
+			update: '/projects/{projectId}/users/{username}',
+			delete: '/projects/{projectId}/users/{username}',
 		})
 	}
 

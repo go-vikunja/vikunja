@@ -115,19 +115,19 @@ function removeReminderByIndex(index: number) {
 		color: var(--danger);
 	}
 
-	&::last-child {
-		margin-bottom: 0.75rem;
+	&:last-child {
+		margin-block-end: 0.75rem;
 	}
 }
 
 .reminder-detail {
-	width: 100%;
+	inline-size: 100%;
 }
 
 .remove {
 	color: var(--danger);
 	vertical-align: top;
-	padding-left: .5rem;
+	padding-inline-start: .5rem;
 	line-height: 1;
 }
 </style>

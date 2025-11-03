@@ -13,10 +13,6 @@
 	</Modal>
 </template>
 
-<script lang="ts">
-export default {name: 'ProjectSettingArchive'}
-</script>
-
 <script setup lang="ts">
 import {computed} from 'vue'
 import {useRouter, useRoute} from 'vue-router'
@@ -27,6 +23,8 @@ import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
+
+defineOptions({name: 'ProjectSettingArchive'})
 
 const {t} = useI18n({useScope: 'global'})
 const projectStore = useProjectStore()

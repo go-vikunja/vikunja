@@ -36,5 +36,5 @@ export const useAttachmentStore = defineStore('attachment', () => {
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useAttachmentStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useAttachmentStore, import.meta.hot))
 }

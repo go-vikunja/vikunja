@@ -1,0 +1,15 @@
+#!/sbin/openrc-run
+
+command="/usr/local/bin/vikunja"
+command_background=true
+pidfile="/run/vikunja.pid"
+directory="/opt/vikunja"
+description="Vikunja service"
+
+depend() {
+    need net
+}
+
+start_pre() {
+    checkpath --directory /run
+}

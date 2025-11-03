@@ -43,7 +43,7 @@
 
 		<table
 			v-if="sharables.length > 0"
-			class="table has-actions is-striped is-hoverable is-fullwidth mb-4"
+			class="table has-actions is-striped is-hoverable is-fullwidth mbe-4"
 		>
 			<tbody>
 				<tr
@@ -71,23 +71,23 @@
 						</td>
 					</template>
 					<td class="type">
-						<template v-if="s.right === RIGHTS.ADMIN">
+						<template v-if="s.permission === PERMISSIONS.ADMIN">
 							<span class="icon is-small">
 								<Icon icon="lock" />
 							</span>
-							{{ $t('project.share.right.admin') }}
+							{{ $t('project.share.permission.admin') }}
 						</template>
-						<template v-else-if="s.right === RIGHTS.READ_WRITE">
+						<template v-else-if="s.permission === PERMISSIONS.READ_WRITE">
 							<span class="icon is-small">
 								<Icon icon="pen" />
 							</span>
-							{{ $t('project.share.right.readWrite') }}
+							{{ $t('project.share.permission.readWrite') }}
 						</template>
 						<template v-else>
 							<span class="icon is-small">
 								<Icon icon="users" />
 							</span>
-							{{ $t('project.share.right.read') }}
+							{{ $t('project.share.permission.read') }}
 						</template>
 					</td>
 					<td
@@ -96,27 +96,27 @@
 					>
 						<div class="select">
 							<select
-								v-model="selectedRight[s.id]"
-								class="mr-2"
+								v-model="selectedPermission[s.id]"
+								class="mie-2"
 								@change="toggleType(s)"
 							>
 								<option
-									:selected="s.right === RIGHTS.READ"
-									:value="RIGHTS.READ"
+									:selected="s.permission === PERMISSIONS.READ"
+									:value="PERMISSIONS.READ"
 								>
-									{{ $t('project.share.right.read') }}
+									{{ $t('project.share.permission.read') }}
 								</option>
 								<option
-									:selected="s.right === RIGHTS.READ_WRITE"
-									:value="RIGHTS.READ_WRITE"
+									:selected="s.permission === PERMISSIONS.READ_WRITE"
+									:value="PERMISSIONS.READ_WRITE"
 								>
-									{{ $t('project.share.right.readWrite') }}
+									{{ $t('project.share.permission.readWrite') }}
 								</option>
 								<option
-									:selected="s.right === RIGHTS.ADMIN"
-									:value="RIGHTS.ADMIN"
+									:selected="s.permission === PERMISSIONS.ADMIN"
+									:value="PERMISSIONS.ADMIN"
 								>
-									{{ $t('project.share.right.admin') }}
+									{{ $t('project.share.permission.admin') }}
 								</option>
 							</select>
 						</div>
@@ -156,9 +156,6 @@
 	</div>
 </template>
 
-<script lang="ts">
-export default {name: 'UserTeamShare'}
-</script>
 
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, type Ref} from 'vue'
@@ -181,7 +178,7 @@ import TeamModel from '@/models/team'
 import type {ITeam} from '@/modelTypes/ITeam'
 
 
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 import Multiselect from '@/components/input/Multiselect.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import {success} from '@/message'
@@ -201,6 +198,8 @@ const props = withDefaults(defineProps<{
 	userIsAdmin: false,
 })
 
+defineOptions({name: 'UserTeamShare'})
+
 const {t} = useI18n({useScope: 'global'})
 
 // This user service is a userProjectService, depending on the type we are using
@@ -210,7 +209,7 @@ let searchService: UserService | TeamService
 let sharable: Ref<IUser | ITeam>
 
 const searchLabel = ref('')
-const selectedRight = ref({})
+const selectedPermission = ref({})
 
 
 // This holds either teams or users who this namepace or project is shared with
@@ -276,14 +275,14 @@ load()
 
 async function load() {
 	sharables.value = await stuffService.getAll(stuffModel)
-	sharables.value.forEach(({id, right}) =>
-		selectedRight.value[id] = right,
+	sharables.value.forEach(({id, permission}) =>
+		selectedPermission.value[id] = permission,
 	)
 }
 
 async function deleteSharable() {
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.value.username
+		stuffModel.username = sharable.value.username
 	} else if (props.shareType === 'team') {
 		stuffModel.teamId = sharable.value.id
 	}
@@ -292,7 +291,7 @@ async function deleteSharable() {
 	showDeleteModal.value = false
 	for (const i in sharables.value) {
 		if (
-			(sharables.value[i].username === stuffModel.userId && props.shareType === 'user') ||
+			(sharables.value[i].username === stuffModel.username && props.shareType === 'user') ||
 			(sharables.value[i].id === stuffModel.teamId && props.shareType === 'team')
 		) {
 			sharables.value.splice(i, 1)
@@ -310,13 +309,13 @@ async function add(admin) {
 	if (admin === null) {
 		admin = false
 	}
-	stuffModel.right = RIGHTS.READ
+	stuffModel.permission = PERMISSIONS.READ
 	if (admin) {
-		stuffModel.right = RIGHTS.ADMIN
+		stuffModel.permission = PERMISSIONS.ADMIN
 	}
 
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.value.username
+		stuffModel.username = sharable.value.username
 	} else if (props.shareType === 'team') {
 		stuffModel.teamId = sharable.value.id
 	}
@@ -328,16 +327,16 @@ async function add(admin) {
 
 async function toggleType(sharable) {
 	if (
-		selectedRight.value[sharable.id] !== RIGHTS.ADMIN &&
-		selectedRight.value[sharable.id] !== RIGHTS.READ &&
-		selectedRight.value[sharable.id] !== RIGHTS.READ_WRITE
+		selectedPermission.value[sharable.id] !== PERMISSIONS.ADMIN &&
+		selectedPermission.value[sharable.id] !== PERMISSIONS.READ &&
+		selectedPermission.value[sharable.id] !== PERMISSIONS.READ_WRITE
 	) {
-		selectedRight.value[sharable.id] = RIGHTS.READ
+		selectedPermission.value[sharable.id] = PERMISSIONS.READ
 	}
-	stuffModel.right = selectedRight.value[sharable.id]
+	stuffModel.permission = selectedPermission.value[sharable.id]
 
 	if (props.shareType === 'user') {
-		stuffModel.userId = sharable.username
+		stuffModel.username = sharable.username
 	} else if (props.shareType === 'team') {
 		stuffModel.teamId = sharable.id
 	}
@@ -346,12 +345,12 @@ async function toggleType(sharable) {
 	for (const i in sharables.value) {
 		if (
 			(sharables.value[i].username ===
-				stuffModel.userId &&
+				stuffModel.username &&
 				props.shareType === 'user') ||
 			(sharables.value[i].id === stuffModel.teamId &&
 				props.shareType === 'team')
 		) {
-			sharables.value[i].right = r.right
+			sharables.value[i].permission = r.permission
 		}
 	}
 	success({message: t('project.share.userTeam.updatedSuccess', {type: shareTypeName.value})})

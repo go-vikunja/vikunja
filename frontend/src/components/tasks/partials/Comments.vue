@@ -16,9 +16,9 @@
 		<div class="comments">
 			<span
 				v-if="taskCommentService.loading && saving === null && !creating"
-				class="is-flex is-align-items-center my-4 ml-2"
+				class="is-flex is-align-items-center mbs-4 mbe-4 mis-2"
 			>
-				<span class="loader is-inline-block mr-2" />
+				<span class="loader is-inline-block mie-2" />
 				{{ $t('task.comment.loading') }}
 			</span>
 			<div
@@ -29,20 +29,20 @@
 			>
 				<figure class="media-left is-hidden-mobile">
 					<img
-						:src="getAvatarUrl(c.author, 48)"
+						:src="avatarFor(c.author, 48)"
 						alt=""
 						class="image is-avatar"
 						height="48"
 						width="48"
 					>
-					<figcaption class="tw-sr-only">
+					<figcaption class="is-sr-only">
 						{{ $t('misc.avatarOfUser', {user: getDisplayName(c.author)}) }}
 					</figcaption>
 				</figure>
 				<div class="media-content">
 					<div class="comment-info">
 						<img
-							:src="getAvatarUrl(c.author, 20)"
+							:src="avatarFor(c.author, 20)"
 							alt=""
 							class="image is-avatar d-print-none"
 							height="20"
@@ -53,13 +53,13 @@
 							v-tooltip="formatDateLong(c.created)"
 							class="has-text-grey"
 						>
-							{{ formatDateSince(c.created) }}
+							{{ formatDisplayDate(c.created) }}
 						</span>
 						<span
 							v-if="+new Date(c.created) !== +new Date(c.updated)"
 							v-tooltip="formatDateLong(c.updated)"
 						>
-							· {{ $t('task.comment.edited', {date: formatDateSince(c.updated)}) }}
+							· {{ $t('task.comment.edited', {date: formatDisplayDate(c.updated)}) }}
 						</span>
 						<a
 							v-tooltip="$t('task.comment.permalink')"
@@ -68,7 +68,7 @@
 							:title="$t('task.comment.permalink')"
 							@click.prevent.stop="copy(getCommentUrl(`${c.id}`))"
 						>
-							<span class="tw-sr-only">{{ $t('task.comment.permalink') }}</span>
+							<span class="is-sr-only">{{ $t('task.comment.permalink') }}</span>
 							<Icon icon="link" />
 						</a>
 						<CustomTransition name="fade">
@@ -79,7 +79,7 @@
 								"
 								class="is-inline-flex"
 							>
-								<span class="loader is-inline-block mr-2" />
+								<span class="loader is-inline-block mie-2" />
 								{{ $t('misc.saving') }}
 							</span>
 							<span
@@ -115,7 +115,7 @@
 					/>
 					<Reactions 
 						v-model="c.reactions"
-						class="mt-2" 
+						class="mbs-2" 
 						entity-kind="comments"
 						:entity-id="c.id"
 						:disabled="!canWrite"
@@ -142,7 +142,7 @@
 						height="48"
 						width="48"
 					>
-					<figcaption class="tw-sr-only">
+					<figcaption class="is-sr-only">
 						{{ $t('misc.avatarOfUser', {user: getDisplayName(authStore.info)}) }}
 					</figcaption>
 				</figure>
@@ -153,7 +153,7 @@
 								v-if="taskCommentService.loading && creating"
 								class="is-inline-flex"
 							>
-								<span class="loader is-inline-block mr-2" />
+								<span class="loader is-inline-block mie-2" />
 								{{ $t('task.comment.creating') }}
 							</span>
 						</CustomTransition>
@@ -221,12 +221,13 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
-import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
-import {getAvatarUrl, getDisplayName} from '@/models/user'
+import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
+import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
+import type {IUser} from '@/modelTypes/IUser'
 import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import Reactions from '@/components/input/Reactions.vue'
-import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
+import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 
 const props = withDefaults(defineProps<{
 	taskId: number,
@@ -255,7 +256,26 @@ const newCommentText = ref('')
 const saved = ref<ITask['id'] | null>(null)
 const saving = ref<ITask['id'] | null>(null)
 
-const userAvatar = computed(() => getAvatarUrl(authStore.info, 48))
+const userAvatar = ref('')
+const avatarCache = reactive(new Map<string, string>())
+
+function avatarFor(u: IUser, size: number) {
+	const key = `${u.id}-${size}`
+	const cached = avatarCache.get(key)
+	if (!cached) {
+		fetchAvatarBlobUrl(u, size).then(url => avatarCache.set(key, url))
+	}
+
+	return avatarCache.get(key) || ''
+}
+
+watch(() => authStore.info, async (nu) => {
+	if (!nu) {
+		return
+	}
+	userAvatar.value = await fetchAvatarBlobUrl(nu, 48)
+}, {immediate: true})
+
 const currentUserId = computed(() => authStore.info.id)
 const enabled = computed(() => configStore.taskCommentsEnabled)
 const actions = computed(() => {
@@ -279,6 +299,7 @@ const currentPage = ref(1)
 
 const commentsRef = ref<HTMLElement | null>(null)
 
+
 async function attachmentUpload(files: File[] | FileList): (Promise<string[]>) {
 
 	const uploadPromises: Promise<string>[] = []
@@ -301,12 +322,19 @@ async function loadComments(taskId: ITask['id']) {
 		return
 	}
 
+	if (currentPage.value === 1) {
+		taskCommentService.totalPages = 0
+		taskCommentService.resultCount = 0
+	}
+
 	commentEdit.taskId = taskId
 	commentToDelete.taskId = taskId
-	
-	if(typeof props.initialComments !== 'undefined' && currentPage.value === 1) {
-		comments.value = props.initialComments
-		return
+
+	if (typeof props.initialComments !== 'undefined' && currentPage.value === 1) {
+		if (props.initialComments.length < configStore.maxItemsPerPage) {
+			comments.value = props.initialComments
+			return
+		}
 	}
 
 	comments.value = await taskCommentService.getAll({taskId}, {}, currentPage.value)
@@ -319,7 +347,7 @@ async function changePage(page: number) {
 }
 
 watch(
-	() => props.taskId,
+	() => [props.taskId, props.initialComments],
 	() => {
 		currentPage.value = 1 // Reset to first page when task changes
 		loadComments(props.taskId)
@@ -438,10 +466,10 @@ function getCommentUrl(commentId: string) {
 	img {
 		@media screen and (max-width: $tablet) {
 			display: block;
-			width: 20px;
-			height: 20px;
-			padding-right: 0;
-			margin-right: .5rem;
+			inline-size: 20px;
+			block-size: 20px;
+			padding-inline-end: 0;
+			margin-inline-end: .5rem;
 		}
 
 		@media screen and (min-width: $tablet) {
@@ -474,10 +502,10 @@ function getCommentUrl(commentId: string) {
 }
 
 .media-content {
-	width: calc(100% - 48px - 2rem);
+	inline-size: calc(100% - 48px - 2rem);
 }
 
 .comments-container {
-	scroll-margin-top: 4rem;
+	scroll-margin-block-start: 4rem;
 }
 </style>

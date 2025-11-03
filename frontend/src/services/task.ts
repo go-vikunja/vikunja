@@ -99,7 +99,7 @@ export default class TaskService extends AbstractService<ITask> {
 			})
 		})
 
-		// Process all attachments to preven parsing errors
+		// Process all attachments to prevent parsing errors
 		if (model.attachments.length > 0) {
 			const attachmentService = new AttachmentService()
 			model.attachments.map(a => {

@@ -23,7 +23,7 @@
 							v-if="taskRelationService.loading"
 							class="is-inline-flex"
 						>
-							<span class="loader is-inline-block mr-2" />
+							<span class="loader is-inline-block mie-2" />
 							{{ $t('misc.saving') }}
 						</span>
 						<span
@@ -80,7 +80,7 @@
 				</div>
 				<div
 					key="field-kind"
-					class="field has-addons mb-4"
+					class="field has-addons mbe-4"
 				>
 					<div class="control is-expanded">
 						<div class="select is-fullwidth has-defaults">
@@ -191,7 +191,7 @@ import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
 import type {ITaskRelation} from '@/modelTypes/ITaskRelation'
-import {RELATION_KINDS, RELATION_KIND, type IRelationKind} from '@/types/IRelationKind'
+import {RELATION_KINDS, type IRelationKind} from '@/types/IRelationKind'
 
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
@@ -204,6 +204,7 @@ import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
+import {useAuthStore} from '@/stores/auth'
 import {playPopSound} from '@/helpers/playPop'
 
 const props = withDefaults(defineProps<{
@@ -219,6 +220,7 @@ const props = withDefaults(defineProps<{
 
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
+const authStore = useAuthStore()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
@@ -229,7 +231,7 @@ const taskService = shallowReactive(new TaskService())
 const relatedTasks = ref<ITask['relatedTasks']>({})
 
 const newTaskRelation: TaskRelation = reactive({
-	kind: RELATION_KIND.RELATED,
+	kind: authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind,
 	task: new TaskModel(),
 })
 
@@ -238,7 +240,7 @@ watch(
 	(value) => {
 		relatedTasks.value = value
 	},
-		{immediate: true},
+	{immediate: true},
 )
 
 const showNewRelationForm = ref(false)
@@ -318,6 +320,7 @@ async function addTaskRelation() {
 		newTaskRelation.task,
 	]
 	newTaskRelation.task = new TaskModel()
+	newTaskRelation.kind = authStore.settings.frontendSettings.defaultTaskRelationType as IRelationKind
 	saved.value = true
 	showNewRelationForm.value = false
 	setTimeout(() => {
@@ -388,7 +391,7 @@ async function toggleTaskDone(task: ITask) {
 
 <style lang="scss" scoped>
 .add-task-relation-button {
-	margin-top: -3rem;
+	margin-block-start: -3rem;
 
 	svg {
 		transition: transform $transition;
@@ -401,7 +404,7 @@ async function toggleTaskDone(task: ITask) {
 
 .different-project {
 	color: var(--grey-500);
-	width: auto;
+	inline-size: auto;
 }
 
 .title {
@@ -461,7 +464,7 @@ async function toggleTaskDone(task: ITask) {
 //  of the component.
 .task-done-checkbox {
 	padding: 0;
-	height: 18px; // The exact height of the checkbox in the container
-	margin-right: .75rem;
+	block-size: 18px; // The exact height of the checkbox in the container
+	margin-inline-end: .75rem;
 }
 </style>

@@ -30,7 +30,7 @@
 				:to="{ name: 'project.info', params: { projectId: currentProject.id } }"
 				class="project-title-button"
 			>
-				<span class="tw-sr-only">{{ $t('project.description') }}</span>
+				<span class="is-sr-only">{{ $t('project.description') }}</span>
 				<Icon icon="circle-info" />
 			</BaseButton>
 
@@ -44,7 +44,7 @@
 						class="project-title-button"
 						@click="toggleOpen"
 					>
-						<span class="tw-sr-only">{{ $t('project.openSettingsMenu') }}</span>
+						<span class="is-sr-only">{{ $t('project.openSettingsMenu') }}</span>
 						<Icon
 							icon="ellipsis-h"
 							class="icon"
@@ -74,7 +74,7 @@
 						>
 						<span class="username">{{ authStore.userDisplayName }}</span>
 						<span
-							class="ml-1 dropdown-icon icon is-small"
+							class="mis-1 dropdown-icon icon is-small"
 							:style="{
 								transform: open ? 'rotate(180deg)' : 'rotate(0)',
 							}"
@@ -116,7 +116,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { RIGHTS as Rights } from '@/constants/rights'
+import { PERMISSIONS as Permissions } from '@/constants/permissions'
 
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
@@ -137,7 +137,7 @@ import { useAuthStore } from '@/stores/auth'
 const baseStore = useBaseStore()
 const currentProject = computed(() => baseStore.currentProject)
 const background = computed(() => baseStore.background)
-const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxRight > Rights.READ)
+const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ)
 const menuActive = computed(() => baseStore.menuActive)
 
 const authStore = useAuthStore()
@@ -156,9 +156,9 @@ $user-dropdown-width-mobile: 5rem;
 	--navbar-icon-size: 1.25rem;
 
 	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 
 	display: flex;
 	justify-content: space-between;
@@ -167,7 +167,7 @@ $user-dropdown-width-mobile: 5rem;
 	background: var(--site-background);
 
 	@media screen and (min-width: $tablet) {
-		padding-left: 2rem;
+		padding-inline-start: 2rem;
 		align-items: stretch;
 	}
 
@@ -193,17 +193,17 @@ $user-dropdown-width-mobile: 5rem;
 		align-self: stretch;
 		display: flex;
 		align-items: center;
-		margin-right: .5rem;
+		margin-inline-end: .5rem;
 	}
 }
 
 .menu-button {
-	margin-right: auto;
+	margin-inline-end: auto;
 	align-self: stretch;
 	flex: 0 0 auto;
 
 	@media screen and (max-width: $tablet) {
-		margin-left: 1rem;
+		margin-inline-start: 1rem;
 	}
 }
 
@@ -214,7 +214,7 @@ $user-dropdown-width-mobile: 5rem;
 
 	// this makes the truncated text of the project title work
 	// inside the flexbox parent
-	min-width: 0;
+	min-inline-size: 0;
 
 	@media screen and (min-width: $tablet) {
 		padding-inline: var(--navbar-gap-width);
@@ -243,7 +243,7 @@ $user-dropdown-width-mobile: 5rem;
 
 .project-title-button {
 	align-self: stretch;
-	min-width: var(--navbar-button-min-width);
+	min-inline-size: var(--navbar-button-min-width);
 	display: flex;
 	place-items: center;
 	justify-content: center;
@@ -252,29 +252,39 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .navbar-end {
-	margin-left: auto;
+	margin-inline-start: 0; // overrides bulma core styles
+	margin-inline-end: 0; // overrides bulma core styles
 	flex: 0 0 auto;
 	display: flex;
 	align-items: stretch;
 
 	>* {
-		min-width: var(--navbar-button-min-width);
+		min-inline-size: var(--navbar-button-min-width);
 	}
 }
 
 .username-dropdown-trigger {
-	padding-left: .75rem;
+	padding-inline-start: .75rem;
 	display: inline-flex;
 	align-items: center;
 	font-size: .85rem;
 	font-weight: 700;
+	gap: .5rem;
+	
+	:deep(.avatar) {
+		margin-inline-end: 0;
+	}
+	
+	[dir="rtl"] & {
+		flex-direction: row-reverse;
+	}
 
 	@media screen and (max-width: $tablet) {
-		padding-right: .5rem;
+		padding-inline-end: .5rem;
 	}
 
 	@media screen and (min-width: $tablet) {
-		padding-right: .75rem;
+		padding-inline-end: .75rem;
 	}
 }
 
@@ -293,7 +303,7 @@ $user-dropdown-width-mobile: 5rem;
 .avatar {
 	border-radius: 100%;
 	vertical-align: middle;
-	height: 40px;
-	margin-right: .5rem;
+	block-size: 40px;
+	margin-inline-end: .5rem;
 }
 </style>

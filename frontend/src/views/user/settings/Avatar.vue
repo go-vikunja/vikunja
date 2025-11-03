@@ -4,8 +4,12 @@
 			{{ $t('user.settings.avatar.ldap') }}
 		</Message>
 
+		<Message v-else-if="avatarProvider === 'openid'">
+			{{ $t('user.settings.avatar.openid', {provider: authStore.info.authProvider}) }}
+		</Message>
+
 		<template v-else>
-			<div class="control mb-4">
+			<div class="control mbe-4">
 				<label
 					v-for="(label, providerId) in AVATAR_PROVIDERS"
 					:key="providerId"
@@ -42,7 +46,7 @@
 						ref="cropper"
 						:src="avatarToCrop"
 						:stencil-props="{aspectRatio: 1}"
-						class="mb-4 cropper"
+						class="mbe-4 cropper"
 						@ready="() => loading = false"
 					/>
 					<XButton
@@ -57,7 +61,7 @@
 
 			<div
 				v-else
-				class="mt-2"
+				class="mbs-2"
 			>
 				<XButton
 					:loading="avatarService.loading || loading"
@@ -71,9 +75,6 @@
 	</Card>
 </template>
 
-<script lang="ts">
-export default {name: 'UserSettingsAvatar'}
-</script>
 
 <script setup lang="ts">
 import {computed, ref, shallowReactive} from 'vue'
@@ -87,6 +88,8 @@ import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import Message from '@/components/misc/Message.vue'
+
+defineOptions({name: 'UserSettingsAvatar'})
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
@@ -102,7 +105,7 @@ const AVATAR_PROVIDERS = computed(() => ({
 useTitle(() => `${t('user.settings.avatar.title')} - ${t('user.settings.title')}`)
 
 const avatarService = shallowReactive(new AvatarService())
-// Seperate variable because some things we're doing in browser take a bit
+// Separate variable because some things we're doing in browser take a bit
 const loading = ref(false)
 
 
@@ -168,7 +171,7 @@ function cropAvatar() {
 
 <style lang="scss">
 .cropper {
-	height: 80vh;
+	block-size: 80vh;
 	background: transparent;
 }
 

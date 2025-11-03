@@ -40,7 +40,7 @@ defineProps<DropDownItemProps>()
 	position: relative;
 	text-align: inherit;
 	white-space: nowrap;
-	width: 100%;
+	inline-size: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: left !important;
@@ -60,7 +60,7 @@ defineProps<DropDownItemProps>()
 }
 
 .icon {
-	padding-right: .5rem;
+	padding-inline-end: .5rem;
 	color: var(--grey-300);
 }
 

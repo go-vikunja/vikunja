@@ -4,7 +4,7 @@
 			{{ $t('project.share.links.title') }}
 			<span
 				v-tooltip="$t('project.share.links.explanation')"
-				class="is-size-7 has-text-grey is-italic ml-3"
+				class="is-size-7 has-text-grey is-italic mis-3"
 			>
 				{{ $t('project.share.links.what') }}
 			</span>
@@ -14,7 +14,7 @@
 			<XButton
 				v-if="!(linkShares.length === 0 || showNewForm)"
 				icon="plus"
-				class="mb-4"
+				class="mbe-4"
 				@click="showNewForm = true"
 			>
 				{{ $t('project.share.links.create') }}
@@ -29,22 +29,22 @@
 						class="label"
 						for="linkShareRight"
 					>
-						{{ $t('project.share.right.title') }}
+						{{ $t('project.share.permission.title') }}
 					</label>
 					<div class="control">
 						<div class="select">
 							<select
 								id="linkShareRight"
-								v-model="selectedRight"
+								v-model="selectedPermission"
 							>
-								<option :value="RIGHTS.READ">
-									{{ $t('project.share.right.read') }}
+								<option :value="PERMISSIONS.READ">
+									{{ $t('project.share.permission.read') }}
 								</option>
-								<option :value="RIGHTS.READ_WRITE">
-									{{ $t('project.share.right.readWrite') }}
+								<option :value="PERMISSIONS.READ_WRITE">
+									{{ $t('project.share.permission.readWrite') }}
 								</option>
-								<option :value="RIGHTS.ADMIN">
-									{{ $t('project.share.right.admin') }}
+								<option :value="PERMISSIONS.ADMIN">
+									{{ $t('project.share.permission.admin') }}
 								</option>
 							</select>
 						</div>
@@ -114,12 +114,12 @@
 						<td>
 							<p
 								v-if="s.name !== ''"
-								class="mb-2 is-italic"
+								class="mbe-2 is-italic"
 							>
 								{{ s.name }}
 							</p>
 
-							<p class="mb-2">
+							<p class="mbe-2">
 								<i18n-t
 									keypath="project.share.links.sharedBy"
 									scope="global"
@@ -128,24 +128,24 @@
 								</i18n-t>
 							</p>
 
-							<p class="mb-2">
-								<template v-if="s.right === RIGHTS.ADMIN">
+							<p class="mbe-2">
+								<template v-if="s.permission === PERMISSIONS.ADMIN">
 									<span class="icon is-small">
 										<Icon icon="lock" />
 									</span>&nbsp;
-									{{ $t('project.share.right.admin') }}
+									{{ $t('project.share.permission.admin') }}
 								</template>
-								<template v-else-if="s.right === RIGHTS.READ_WRITE">
+								<template v-else-if="s.permission === PERMISSIONS.READ_WRITE">
 									<span class="icon is-small">
 										<Icon icon="pen" />
 									</span>&nbsp;
-									{{ $t('project.share.right.readWrite') }}
+									{{ $t('project.share.permission.readWrite') }}
 								</template>
 								<template v-else>
 									<span class="icon is-small">
 										<Icon icon="users" />
 									</span>&nbsp;
-									{{ $t('project.share.right.read') }}
+									{{ $t('project.share.permission.read') }}
 								</template>
 							</p>
 						
@@ -221,7 +221,7 @@
 import {ref, watch, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 import LinkShareModel from '@/models/linkShare'
 
 import type {ILinkShare} from '@/modelTypes/ILinkShare'
@@ -246,7 +246,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const linkShares = ref<ILinkShare[]>([])
 const linkShareService = shallowReactive(new LinkShareService())
-const selectedRight = ref(RIGHTS.READ)
+const selectedPermission = ref(PERMISSIONS.READ)
 const name = ref('')
 const password = ref('')
 const showDeleteModal = ref(false)
@@ -296,13 +296,13 @@ watch(() => ([linkShares.value, availableViews.value]), ([newLinkShares, newProj
 
 async function add(projectId: IProject['id']) {
 	const newLinkShare = new LinkShareModel({
-		right: selectedRight.value,
+		permission: selectedPermission.value,
 		projectId,
 		name: name.value,
 		password: password.value,
 	})
 	await linkShareService.create(newLinkShare)
-	selectedRight.value = RIGHTS.READ
+	selectedPermission.value = PERMISSIONS.READ
 	name.value = ''
 	password.value = ''
 	showNewForm.value = false
@@ -329,9 +329,9 @@ function getShareLink(hash: string, viewId: IProjectView['id']|null) {
 
 const shareLinks = computed(() => {
 	return linkShares.value.reduce((links, linkShare) => {
-			links[linkShare.id] = getShareLink(linkShare.hash, selectedViews.value[linkShare.id] ?? null)
-			return links
-		}, {} as {[id: string]: string },
+		links[linkShare.id] = getShareLink(linkShare.hash, selectedViews.value[linkShare.id] ?? null)
+		return links
+	}, {} as {[id: string]: string },
 	)
 })
 </script>

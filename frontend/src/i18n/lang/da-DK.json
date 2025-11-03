@@ -348,7 +348,6 @@
 		"show": {
 			"titleCurrent": "Aktuelle Opgaver",
 			"titleDates": "Opgaver fra {from} indtil {to}",
-			"noDates": "Vis opgaver uden datoer",
 			"overdue": "Vis forfaldne opgaver",
 			"fromuntil": "Opgaver fra {from} indtil {until}",
 			"select": "Vælg et datointerval",
@@ -528,7 +527,6 @@
 			"assignees": "For at tildele opgaven direkte til en bruger, tilføj deres brugernavn præfikset med {prefix} til opgaven.",
 			"dateAndTime": "Dato og tid",
 			"date": "En dato vil blive brugt som forfaldsdato for den nye opgave. Du kan bruge datoer i enhver af disse formater:",
-			"dateWeekday": "enhver ugedag, vil bruge den næste dato med på den dag",
 			"dateCurrentYear": "vil bruge det aktuelle år",
 			"dateNth": "vil bruge den {day}. i den aktuelle måned",
 			"dateTime": "Kombiner alle datoformater med \"{time}\" (eller {timePM}) for at angive en tid.",

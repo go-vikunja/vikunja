@@ -9,7 +9,7 @@
 				class="trigger-button"
 				@click.stop="showNotifications = !showNotifications"
 			>
-				<span class="sr-only">{{ $t('notification.title') }}</span>
+				<span class="is-sr-only">{{ $t('notification.title') }}</span>
 				<span
 					v-if="unreadNotifications > 0"
 					class="unread-indicator"
@@ -44,12 +44,12 @@
 						<div>
 							<span
 								v-if="n.notification.doer"
-								class="has-text-weight-bold mr-1"
+								class="has-text-weight-bold mie-1"
 							>
 								{{ getDisplayName(n.notification.doer) }}
 							</span>
 							<BaseButton
-								class="has-text-left"
+								class="has-text-start"
 								@click="() => to(n, index)()"
 							>
 								{{ n.toText(userInfo) }}
@@ -59,14 +59,14 @@
 							v-tooltip="formatDateLong(n.created)"
 							class="created"
 						>
-							{{ formatDateSince(n.created) }}
+							{{ formatDisplayDate(n.created) }}
 						</span>
 					</div>
 				</div>
 				<XButton
 					v-if="notifications.length > 0 && unreadNotifications > 0"
 					variant="tertiary"
-					class="mt-2 is-fullwidth" 
+					class="mbs-2 is-fullwidth" 
 					@click="markAllRead"
 				>
 					{{ $t('notification.markAllRead') }}
@@ -95,7 +95,7 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 import User from '@/components/misc/User.vue'
 import { NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
-import {formatDateLong, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
 import {useAuthStore} from '@/stores/auth'
 import XButton from '@/components/input/Button.vue'
@@ -202,16 +202,16 @@ async function markAllRead() {
 	display: flex;
 
 	.trigger-button {
-		width: 100%;
+		inline-size: 100%;
 		position: relative;
 	}
 
 	.unread-indicator {
 		position: absolute;
-		top: 1rem;
-		right: .5rem;
-		width: .75rem;
-		height: .75rem;
+		inset-block-start: 1rem;
+		inset-inline-end: .5rem;
+		inline-size: .75rem;
+		block-size: .75rem;
 
 		background: var(--primary);
 		border-radius: 100%;
@@ -220,21 +220,21 @@ async function markAllRead() {
 
 	.notifications-list {
 		position: absolute;
-		right: 1rem;
-		top: calc(100% + 1rem);
-		max-height: 400px;
+		inset-inline-end: 1rem;
+		inset-block-start: calc(100% + 1rem);
+		max-block-size: 400px;
 		overflow-y: auto;
 
 		background: var(--white);
-		width: 350px;
-		max-width: calc(100vw - 2rem);
+		inline-size: 350px;
+		max-inline-size: calc(100vw - 2rem);
 		padding: .75rem .25rem;
 		border-radius: $radius;
 		box-shadow: var(--shadow-sm);
 		font-size: .85rem;
 
 		@media screen and (max-width: $tablet) {
-			max-height: calc(100vh - 1rem - #{$navbar-height});
+			max-block-size: calc(100vh - 1rem - #{$navbar-height});
 		}
 
 		.head {
@@ -256,8 +256,8 @@ async function markAllRead() {
 			}
 
 			.read-indicator {
-				width: .35rem;
-				height: .35rem;
+				inline-size: .35rem;
+				block-size: .35rem;
 				background: var(--primary);
 				border-radius: 100%;
 				margin: 0 .5rem;
@@ -271,7 +271,7 @@ async function markAllRead() {
 			.user {
 				display: inline-flex;
 				align-items: center;
-				width: auto;
+				inline-size: auto;
 				margin: 0 .5rem;
 
 				span {
@@ -279,11 +279,11 @@ async function markAllRead() {
 				}
 
 				.avatar {
-					height: 16px;
+					block-size: 16px;
 				}
 
 				img {
-					margin-right: 0;
+					margin-inline-end: 0;
 				}
 			}
 
@@ -292,7 +292,7 @@ async function markAllRead() {
 			}
 
 			&:last-child {
-				margin-bottom: .25rem;
+				margin-block-end: .25rem;
 			}
 
 			a {

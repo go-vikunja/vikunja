@@ -2,22 +2,23 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package initials
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -37,6 +38,14 @@ import (
 
 // Provider represents the provider implementation of the initials provider
 type Provider struct {
+}
+
+// FlushCache removes cached initials avatars for a user
+func (p *Provider) FlushCache(u *user.User) error {
+	if err := keyvalue.Del(getCacheKey("full", u.ID)); err != nil {
+		return err
+	}
+	return keyvalue.DelPrefix(getCacheKey("resized", u.ID))
 }
 
 var (
@@ -125,30 +134,53 @@ func getCacheKey(prefix string, keys ...int64) string {
 }
 
 func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
+	return getAvatarForUserWithDepth(u, 0)
+}
+
+func getAvatarForUserWithDepth(u *user.User, recursionDepth int) (fullSizeAvatar *image.RGBA64, err error) {
+	// Prevent infinite recursion - max 3 attempts
+	if recursionDepth >= 3 {
+		return nil, fmt.Errorf("maximum recursion depth reached while generating avatar for user %d", u.ID)
+	}
+
 	cacheKey := getCacheKey("full", u.ID)
 
-	fullSizeAvatar = &image.RGBA64{}
-	exists, err := keyvalue.GetWithValue(cacheKey, fullSizeAvatar)
+	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
+		log.Debugf("Initials avatar for user %d not cached, creating...", u.ID)
+		avatarText := u.Name
+		if avatarText == "" {
+			avatarText = u.Username
+		}
+		firstRune := []rune(strings.ToUpper(avatarText))[0]
+		bg := avatarBgColors[int(u.ID)%len(avatarBgColors)] // Random color based on the user id
+
+		res, err := drawImage(firstRune, bg)
+		if err != nil {
+			return nil, err
+		}
+
+		return *res, nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	if !exists {
-		log.Debugf("Initials avatar for user %d not cached, creating...", u.ID)
-		firstRune := []rune(strings.ToUpper(u.Username))[0]
-		bg := avatarBgColors[int(u.ID)%len(avatarBgColors)] // Random color based on the user id
+	// Safe type assertion to handle cases where cached data might be corrupted or in legacy format
+	aa, ok := result.(image.RGBA64)
+	if !ok {
+		// Log the type mismatch with the actual stored value for debugging
+		log.Errorf("Invalid cached image type for user %d. Expected image.RGBA64, got %T with value: %+v. Clearing cache and regenerating.", u.ID, result, result)
 
-		fullSizeAvatar, err = drawImage(firstRune, bg)
-		if err != nil {
-			return nil, err
+		// Clear the invalid cache entry
+		if err := keyvalue.Del(cacheKey); err != nil {
+			log.Errorf("Failed to clear invalid cache entry for key %s: %v", cacheKey, err)
 		}
-		err = keyvalue.Put(cacheKey, fullSizeAvatar)
-		if err != nil {
-			return nil, err
-		}
+
+		// Regenerate the avatar by calling the function again (without the corrupted cache)
+		return getAvatarForUserWithDepth(u, recursionDepth+1)
 	}
 
-	return fullSizeAvatar, nil
+	return &aa, nil
 }
 
 // CachedAvatar represents a cached avatar with its content and mime type
@@ -159,43 +191,58 @@ type CachedAvatar struct {
 
 // GetAvatar returns an initials avatar for a user
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
+	return p.getAvatarWithDepth(u, size, 0)
+}
+
+func (p *Provider) getAvatarWithDepth(u *user.User, size int64, recursionDepth int) (avatar []byte, mimeType string, err error) {
+	// Prevent infinite recursion - max 3 attempts
+	if recursionDepth >= 3 {
+		return nil, "", fmt.Errorf("maximum recursion depth reached while generating avatar for user %d, size %d", u.ID, size)
+	}
+
 	cacheKey := getCacheKey("resized", u.ID, size)
 
-	var cachedAvatar CachedAvatar
-	exists, err := keyvalue.GetWithValue(cacheKey, &cachedAvatar)
+	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
+		log.Debugf("Initials avatar for user %d and size %d not cached, creating...", u.ID, size)
+		fullAvatar, err := getAvatarForUser(u)
+		if err != nil {
+			return nil, err
+		}
+
+		img := imaging.Resize(fullAvatar, int(size), int(size), imaging.Lanczos)
+		buf := &bytes.Buffer{}
+		err = png.Encode(buf, img)
+		if err != nil {
+			return nil, err
+		}
+		avatar := buf.Bytes()
+		mimeType := "image/png"
+
+		cachedAvatar := CachedAvatar{
+			Content:  avatar,
+			MimeType: mimeType,
+		}
+
+		return cachedAvatar, nil
+	})
 	if err != nil {
 		return nil, "", err
 	}
 
-	if exists && len(cachedAvatar.Content) > 0 {
-		log.Debugf("Serving initials avatar for user %d and size %d from cache", u.ID, size)
-		return cachedAvatar.Content, cachedAvatar.MimeType, nil
+	// Safe type assertion to handle cases where cached data might be corrupted or in legacy format
+	cachedAvatar, ok := result.(CachedAvatar)
+	if !ok {
+		// Log the type mismatch with the actual stored value for debugging
+		log.Errorf("Invalid cached avatar type for user %d, size %d. Expected CachedAvatar, got %T with value: %+v. Clearing cache and regenerating.", u.ID, size, result, result)
+
+		// Clear the invalid cache entry
+		if err := keyvalue.Del(cacheKey); err != nil {
+			log.Errorf("Failed to clear invalid cache entry for key %s: %v", cacheKey, err)
+		}
+
+		// Regenerate the avatar by calling the function again (without the corrupted cache)
+		return p.getAvatarWithDepth(u, size, recursionDepth+1)
 	}
 
-	log.Debugf("Initials avatar for user %d and size %d not cached, creating...", u.ID, size)
-	fullAvatar, err := getAvatarForUser(u)
-	if err != nil {
-		return nil, "", err
-	}
-
-	img := imaging.Resize(fullAvatar, int(size), int(size), imaging.Lanczos)
-	buf := &bytes.Buffer{}
-	err = png.Encode(buf, img)
-	if err != nil {
-		return nil, "", err
-	}
-	avatar = buf.Bytes()
-	mimeType = "image/png"
-
-	cachedAvatar = CachedAvatar{
-		Content:  avatar,
-		MimeType: mimeType,
-	}
-
-	err = keyvalue.Put(cacheKey, cachedAvatar)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return avatar, mimeType, nil
+	return cachedAvatar.Content, cachedAvatar.MimeType, nil
 }

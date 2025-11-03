@@ -55,11 +55,11 @@
 				</Modal>
 
 				<BaseButton
-					v-shortcut="'?'"
+					v-shortcut="'Shift+?'"
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 				>
-					<span class="sr-only">{{ $t('keyboardShortcuts.title') }}</span>
+					<span class="is-sr-only">{{ $t('keyboardShortcuts.title') }}</span>
 					<Icon icon="keyboard" />
 				</BaseButton>
 			</main>
@@ -132,11 +132,11 @@ projectStore.loadAllProjects()
 <style lang="scss" scoped>
 .menu-hide-button {
 	position: fixed;
-	top: 0.5rem;
-	right: 0.5rem;
+	inset-block-start: 0.5rem;
+	inset-inline-end: 0.5rem;
 	z-index: 31;
-	width: 3rem;
-	height: 3rem;
+	inline-size: 3rem;
+	block-size: 3rem;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -156,10 +156,10 @@ projectStore.loadAllProjects()
 }
 
 .app-container {
-	min-height: calc(100vh - 65px);
+	min-block-size: calc(100vh - 65px);
 
 	@media screen and (max-width: $tablet) {
-		padding-top: $navbar-height;
+		padding-block-start: $navbar-height;
 	}
 }
 
@@ -169,11 +169,12 @@ projectStore.loadAllProjects()
 	position: relative;
 	padding: 1.5rem 0.5rem 0;
 	// TODO refactor: DRY `transition-timing-function` with `./Navigation.vue`.
-	transition: margin-left $transition-duration;
+	transition: margin-inline-start $transition-duration;
 
 	@media screen and (max-width: $tablet) {
-		margin-left: 0;
-		min-height: calc(100vh - 4rem);
+		margin-inline-start: 0;
+		margin-inline-end: 0;
+		min-block-size: calc(100vh - 4rem);
 	}
 
 	@media screen and (min-width: $tablet) {
@@ -182,13 +183,13 @@ projectStore.loadAllProjects()
 
 	&.is-menu-enabled {
 		@media screen and (min-width: $tablet) {
-			margin-left: $navbar-width;
+			margin-inline-start: $navbar-width;
 		}
 	}
 
 	// Used to make sure the spinner is always in the middle while loading
 	> .loader-container {
-		min-height: calc(100vh - #{$navbar-height + 1.5rem + 1rem});
+		min-block-size: calc(100vh - #{$navbar-height + 1.5rem + 1rem});
 	}
 
 	// FIXME: This should be somehow defined inside Card.vue
@@ -200,12 +201,12 @@ projectStore.loadAllProjects()
 .mobile-overlay {
 	display: none;
 	position: fixed;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	height: 100vh;
-	width: 100vw;
+	inset-block-start: 0;
+	inset-block-end: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	block-size: 100vh;
+	inline-size: 100vw;
 	background: hsla(var(--grey-100-hsl), 0.8);
 	z-index: 5;
 	opacity: 0;
@@ -219,10 +220,9 @@ projectStore.loadAllProjects()
 
 .keyboard-shortcuts-button {
 	position: fixed;
-	bottom: calc(1rem - 4px);
-	right: 1rem;
+	inset-block-end: calc(1rem - 4px);
+	inset-inline-end: 1rem;
 	z-index: 4500; // The modal has a z-index of 4000
-
 	color: var(--grey-500);
 	transition: color $transition;
 

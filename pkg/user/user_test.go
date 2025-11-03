@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package user
@@ -146,6 +146,32 @@ func TestCreateUser(t *testing.T) {
 		})
 		require.Error(t, err)
 		assert.True(t, IsErrUsernameMustNotContainSpaces(err))
+	})
+	t.Run("reserved link-share username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
+			Username: "link-share-123",
+			Password: "12345678",
+			Email:    "user2@example.com",
+		})
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameReserved(err))
+	})
+	t.Run("reserved link-share username with single digit", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CreateUser(s, &User{
+			Username: "link-share-1",
+			Password: "12345678",
+			Email:    "user3@example.com",
+		})
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameReserved(err))
 	})
 }
 
@@ -569,5 +595,64 @@ func TestUserPasswordReset(t *testing.T) {
 		err := ResetPassword(s, reset)
 		require.Error(t, err)
 		assert.True(t, IsErrInvalidPasswordResetToken(err))
+	})
+}
+
+func TestConfirmDeletion(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		user := &User{ID: 1}
+		err := ConfirmDeletion(s, user, "deletiontesttoken")
+		require.NoError(t, err)
+
+		updatedUser, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		assert.False(t, updatedUser.DeletionScheduledAt.IsZero())
+	})
+	t.Run("invalid token", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		user := &User{ID: 1}
+		err := ConfirmDeletion(s, user, "invalidtoken")
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidDeletionToken(err))
+
+		invalidErr := err.(ErrInvalidDeletionToken)
+		assert.Equal(t, "invalidtoken", invalidErr.Token)
+	})
+	t.Run("token user mismatch", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		user := &User{ID: 3}
+		err := ConfirmDeletion(s, user, "deletiontesttoken")
+		require.Error(t, err)
+		assert.True(t, IsErrTokenUserMismatch(err))
+
+		mismatchErr := err.(ErrTokenUserMismatch)
+		assert.Equal(t, int64(1), mismatchErr.TokenUserID)
+		assert.Equal(t, int64(3), mismatchErr.UserID)
+	})
+	t.Run("removes token after successful confirmation", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		token := "deletiontesttoken"
+
+		user := &User{ID: 1}
+		err := ConfirmDeletion(s, user, token)
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "user_tokens", map[string]interface{}{
+			"token": token,
+			"kind":  TokenAccountDeletion,
+		})
 	})
 }

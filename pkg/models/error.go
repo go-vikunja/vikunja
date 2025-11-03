@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -564,31 +564,31 @@ func (err ErrBulkTasksNeedAtLeastOne) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeBulkTasksNeedAtLeastOne, Message: "Need at least one tasks to do bulk editing."}
 }
 
-// ErrNoRightToSeeTask represents an error where a user does not have the right to see a task
-type ErrNoRightToSeeTask struct {
+// ErrNoPermissionToSeeTask represents an error where a user does not have the permission to see a task
+type ErrNoPermissionToSeeTask struct {
 	TaskID int64
 	UserID int64
 }
 
-// IsErrNoRightToSeeTask checks if an error is ErrNoRightToSeeTask.
-func IsErrNoRightToSeeTask(err error) bool {
-	_, ok := err.(ErrNoRightToSeeTask)
+// IsErrNoPermissionToSeeTask checks if an error is ErrNoPermissionToSeeTask.
+func IsErrNoPermissionToSeeTask(err error) bool {
+	_, ok := err.(ErrNoPermissionToSeeTask)
 	return ok
 }
 
-func (err ErrNoRightToSeeTask) Error() string {
-	return fmt.Sprintf("User does not have the right to see the task [TaskID: %v, ID: %v]", err.TaskID, err.UserID)
+func (err ErrNoPermissionToSeeTask) Error() string {
+	return fmt.Sprintf("User does not have the permission to see the task [TaskID: %v, ID: %v]", err.TaskID, err.UserID)
 }
 
 // ErrCodeNoRightToSeeTask holds the unique world-error code of this error
 const ErrCodeNoRightToSeeTask = 4005
 
 // HTTPError holds the http error description
-func (err ErrNoRightToSeeTask) HTTPError() web.HTTPError {
+func (err ErrNoPermissionToSeeTask) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusForbidden,
 		Code:     ErrCodeNoRightToSeeTask,
-		Message:  "You don't have the right to see this task.",
+		Message:  "You don't have the permission to see this task.",
 	}
 }
 
@@ -1165,6 +1165,33 @@ func (err ErrMustHaveProjectViewToSortByPosition) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidTaskColumn represents an error where the provided task column is invalid
+type ErrInvalidTaskColumn struct {
+	Column string
+}
+
+// IsErrInvalidTaskColumn checks if an error is ErrInvalidTaskColumn.
+func IsErrInvalidTaskColumn(err error) bool {
+	_, ok := err.(ErrInvalidTaskColumn)
+	return ok
+}
+
+func (err ErrInvalidTaskColumn) Error() string {
+	return fmt.Sprintf("Task column %s is invalid", err.Column)
+}
+
+// ErrCodeInvalidTaskColumn holds the unique world-error code of this error
+const ErrCodeInvalidTaskColumn = 4027
+
+// HTTPError holds the http error description
+func (err ErrInvalidTaskColumn) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskColumn,
+		Message:  fmt.Sprintf("The task field '%s' is invalid.", err.Column),
+	}
+}
+
 // ============
 // Team errors
 // ============
@@ -1497,7 +1524,7 @@ func (err ErrLabelDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
-// ErrUserHasNoAccessToLabel represents an error where a user does not have the right to see a label
+// ErrUserHasNoAccessToLabel represents an error where a user does not have the permission to see a label
 type ErrUserHasNoAccessToLabel struct {
 	LabelID int64
 	UserID  int64
@@ -1526,33 +1553,33 @@ func (err ErrUserHasNoAccessToLabel) HTTPError() web.HTTPError {
 }
 
 // ========
-// Rights
+// Permissions
 // ========
 
-// ErrInvalidRight represents an error where a right is invalid
-type ErrInvalidRight struct {
-	Right Right
+// ErrInvalidPermission represents an error where a permission is invalid
+type ErrInvalidPermission struct {
+	Permission Permission
 }
 
-// IsErrInvalidRight checks if an error is ErrInvalidRight.
-func IsErrInvalidRight(err error) bool {
-	_, ok := err.(ErrInvalidRight)
+// IsErrInvalidPermission checks if an error is ErrInvalidPermission.
+func IsErrInvalidPermission(err error) bool {
+	_, ok := err.(ErrInvalidPermission)
 	return ok
 }
 
-func (err ErrInvalidRight) Error() string {
-	return fmt.Sprintf("Right invalid [Right: %d]", err.Right)
+func (err ErrInvalidPermission) Error() string {
+	return fmt.Sprintf("Permission invalid [Permission: %d]", err.Permission)
 }
 
 // ErrCodeInvalidRight holds the unique world-error code of this error
 const ErrCodeInvalidRight = 9001
 
 // HTTPError holds the http error description
-func (err ErrInvalidRight) HTTPError() web.HTTPError {
+func (err ErrInvalidPermission) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidRight,
-		Message:  "The right is invalid.",
+		Message:  "The permission is invalid.",
 	}
 }
 
@@ -1701,6 +1728,34 @@ func (err *ErrOnlyOneDoneBucketPerProject) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTaskAlreadyExistsInBucket represents an error where a task already exists in a bucket for a project view
+type ErrTaskAlreadyExistsInBucket struct {
+	TaskID        int64
+	ProjectViewID int64
+}
+
+// IsErrTaskAlreadyExistsInBucket checks if an error is ErrTaskAlreadyExistsInBucket.
+func IsErrTaskAlreadyExistsInBucket(err error) bool {
+	_, ok := err.(ErrTaskAlreadyExistsInBucket)
+	return ok
+}
+
+func (err ErrTaskAlreadyExistsInBucket) Error() string {
+	return fmt.Sprintf("Task already exists in a bucket for this project view [TaskID: %d, ProjectViewID: %d]", err.TaskID, err.ProjectViewID)
+}
+
+// ErrCodeTaskAlreadyExistsInBucket holds the unique world-error code of this error
+const ErrCodeTaskAlreadyExistsInBucket = 10006
+
+// HTTPError holds the http error description
+func (err ErrTaskAlreadyExistsInBucket) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTaskAlreadyExistsInBucket,
+		Message:  "This task already exists in a bucket for this project view.",
+	}
+}
+
 // =============
 // Saved Filters
 // =============
@@ -1776,7 +1831,7 @@ func IsErrUnknownSubscriptionEntityType(err error) bool {
 }
 
 func (err *ErrUnknownSubscriptionEntityType) Error() string {
-	return fmt.Sprintf("Subscription entity type is unkowns [EntityType: %d]", err.EntityType)
+	return fmt.Sprintf("Subscription entity type is unknown [EntityType: %d]", err.EntityType)
 }
 
 // ErrCodeUnknownSubscriptionEntityType holds the unique world-error code of this error

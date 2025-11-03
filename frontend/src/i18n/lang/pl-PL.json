@@ -289,12 +289,6 @@
 				"addedSuccess": "{type} został pomyślnie dodany.",
 				"updatedSuccess": "{type} został pomyślnie zaktualizowany."
 			},
-			"right": {
-				"title": "Uprawnienie",
-				"read": "Tylko do odczytu",
-				"readWrite": "Odczyt i zapis",
-				"admin": "Administrator"
-			},
 			"attributes": {
 				"link": "Link",
 				"delete": "Usuń"
@@ -318,8 +312,7 @@
 			"month": "Miesiąc",
 			"day": "Dzień",
 			"hour": "Godzina",
-			"range": "Zakres dat",
-			"noDates": "To zadanie nie ma ustawionych dat."
+			"range": "Zakres dat"
 		},
 		"table": {
 			"title": "Tabela",
@@ -360,7 +353,6 @@
 			"targetUrl": "Docelowy URL",
 			"targetUrlInvalid": "Podaj prawidłowy adres URL.",
 			"events": "Eventy",
-			"eventsHint": "Wybierz wszystkie eventy, dla których webhook powinien otrzymywać aktualizacje (w ramach bieżącego projektu).",
 			"mustSelectEvents": "Musisz wybrać co najmniej jeden event.",
 			"delete": "Usuń ten webhook",
 			"deleteText": "Czy na pewno chcesz usunąć ten webhook? Zewnętrzne adresy nie będą już powiadamiane o jego eventach.",
@@ -447,8 +439,7 @@
 					"greaterThanOrEqual": "Większe niż lub równe",
 					"lessThan": "Mniejsze niż",
 					"lessThanOrEqual": "Mniejsze niż lub równe",
-					"like": "Pasuje do wzorca (używając symbolu %)",
-					"in": "Dopasuje dowolną wartość z listy wartości oddzielonych przecinkami"
+					"like": "Pasuje do wzorca (używając symbolu %)"
 				},
 				"logicalOperators": {
 					"intro": "Aby połączyć wiele warunków, możesz użyć następujących operatorów logicznych:",
@@ -719,7 +710,6 @@
 		"show": {
 			"titleCurrent": "Bieżące zadania",
 			"titleDates": "Zadania od {from} do {to}",
-			"noDates": "Pokaż zadania bez dat",
 			"overdue": "Pokaż zaległe zadania",
 			"fromuntil": "Zadania od {from} do {until}",
 			"select": "Wybierz zakres dat",
@@ -935,7 +925,6 @@
 			"project4": "Na przykład: {prefix}\"Projekt ze spacjami\".",
 			"dateAndTime": "Data i godzina",
 			"date": "Dowolna data może być użyta jako termin wykonania nowego zadania. Możesz wykorzystać datę w dowolnym z podanych formatów:",
-			"dateWeekday": "dowolny dzień tygodnia spowoduje wybranie najbliższej daty przypadającej na podany dzień tygodnia",
 			"dateCurrentYear": "spowoduje wybranie bieżącego roku",
 			"dateNth": "spowoduje wybranie {day}-stego dnia bieżącego miesiąca",
 			"dateTime": "Połącz dowolny format daty z \"{time}\" (lub {timePM}), aby ustawić godzinę.",
@@ -1070,7 +1059,6 @@
 	"notification": {
 		"title": "Powiadomienia",
 		"none": "Nie masz żadnych powiadomień. Miłego dnia!",
-		"explainer": "Powiadomienia pojawią się tutaj, gdy zajdą akcje w projektach lub zadaniach, które obserwujesz.",
 		"markAllRead": "Oznacz wszystkie powiadomienia jako przeczytane",
 		"markAllReadSuccess": "Pomyślnie zaznaczono wszystkie powiadomienia jako przeczytane."
 	},

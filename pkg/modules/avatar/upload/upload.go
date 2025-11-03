@@ -2,22 +2,23 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package upload
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/png"
 	"io"
@@ -36,6 +37,13 @@ import (
 type Provider struct {
 }
 
+const CacheKeyPrefix = "avatar_upload_"
+
+// FlushCache removes cached avatars for a user
+func (p *Provider) FlushCache(u *user.User) error {
+	return keyvalue.Del(CacheKeyPrefix + strconv.Itoa(int(u.ID)))
+}
+
 // CachedAvatar represents a cached avatar with its content and mime type
 type CachedAvatar struct {
 	Content  []byte
@@ -44,73 +52,77 @@ type CachedAvatar struct {
 
 // GetAvatar returns an uploaded user avatar
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
-
-	cacheKey := "avatar_upload_" + strconv.Itoa(int(u.ID))
-
-	var cached map[int64]*CachedAvatar
-	exists, err := keyvalue.GetWithValue(cacheKey, &cached)
-	if err != nil {
-		return nil, "", err
-	}
-
-	if !exists {
-		// Nothing ever cached for this user so we need to create the size map to avoid panics
-		cached = make(map[int64]*CachedAvatar)
-	} else {
-		a := cached
-		if a != nil && a[size] != nil {
-			log.Debugf("Serving uploaded avatar for user %d and size %d from cache.", u.ID, size)
-			return a[size].Content, a[size].MimeType, nil
-		}
-		// This means we have a map for the user, but nothing in it.
-		if a == nil {
-			cached = make(map[int64]*CachedAvatar)
-		}
-	}
-
-	log.Debugf("Uploaded avatar for user %d and size %d not cached, resizing and caching.", u.ID, size)
-
-	// If we get this far, the avatar is either not cached at all or not in this size
-	f := &files.File{ID: u.AvatarFileID}
-	if err := f.LoadFileByID(); err != nil {
-		return nil, "", err
-	}
-
-	if err := f.LoadFileMetaByID(); err != nil {
-		return nil, "", err
-	}
-
-	img, _, err := image.Decode(f.File)
-	if err != nil {
-		return nil, "", err
-	}
-	resizedImg := imaging.Resize(img, 0, int(size), imaging.Lanczos)
-	buf := &bytes.Buffer{}
-	if err := png.Encode(buf, resizedImg); err != nil {
-		return nil, "", err
-	}
-
-	avatar, err = io.ReadAll(buf)
-	if err != nil {
-		return nil, "", err
-	}
-
-	// Always use image/png for resized avatars since we're encoding with png
-	mimeType = "image/png"
-	cached[size] = &CachedAvatar{
-		Content:  avatar,
-		MimeType: mimeType,
-	}
-
-	err = keyvalue.Put(cacheKey, cached)
-	return avatar, mimeType, err
+	return p.getAvatarWithDepth(u, size, 0)
 }
 
-// InvalidateCache invalidates the avatar cache for a user
-func InvalidateCache(u *user.User) {
-	if err := keyvalue.Del("avatar_upload_" + strconv.Itoa(int(u.ID))); err != nil {
-		log.Errorf("Could not invalidate upload avatar cache for user %d, error was %s", u.ID, err)
+func (p *Provider) getAvatarWithDepth(u *user.User, size int64, recursionDepth int) (avatar []byte, mimeType string, err error) {
+	// Prevent infinite recursion - max 3 attempts
+	if recursionDepth >= 3 {
+		return nil, "", fmt.Errorf("maximum recursion depth reached while generating avatar for user %d, size %d", u.ID, size)
 	}
+
+	cacheKey := CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_" + strconv.FormatInt(size, 10)
+
+	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
+		log.Debugf("Uploaded avatar for user %d and size %d not cached, resizing and caching.", u.ID, size)
+
+		// Check if user has an avatar file ID
+		if u.AvatarFileID == 0 {
+			return nil, fmt.Errorf("user %d has no avatar file", u.ID)
+		}
+
+		// If we get this far, the avatar is either not cached at all or not in this size
+		f := &files.File{ID: u.AvatarFileID}
+		if err := f.LoadFileByID(); err != nil {
+			return nil, err
+		}
+
+		if err := f.LoadFileMetaByID(); err != nil {
+			return nil, err
+		}
+
+		img, _, err := image.Decode(f.File)
+		if err != nil {
+			return nil, err
+		}
+		resizedImg := imaging.Resize(img, 0, int(size), imaging.Lanczos)
+		buf := &bytes.Buffer{}
+		if err := png.Encode(buf, resizedImg); err != nil {
+			return nil, err
+		}
+
+		avatar, err = io.ReadAll(buf)
+		if err != nil {
+			return nil, err
+		}
+
+		// Always use image/png for resized avatars since we're encoding with png
+		mimeType = "image/png"
+		return CachedAvatar{
+			Content:  avatar,
+			MimeType: mimeType,
+		}, nil
+	})
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Safe type assertion to handle cases where cached data might be corrupted or in legacy format
+	cachedAvatar, ok := result.(CachedAvatar)
+	if !ok {
+		// Log the type mismatch with the actual stored value for debugging
+		log.Errorf("Invalid cached avatar type for user %d, size %d. Expected CachedAvatar, got %T with value: %+v. Clearing cache and regenerating.", u.ID, size, result, result)
+
+		// Clear the invalid cache entry
+		if err := keyvalue.Del(cacheKey); err != nil {
+			log.Errorf("Failed to clear invalid cache entry for key %s: %v", cacheKey, err)
+		}
+
+		// Regenerate the avatar by calling the function again (without the corrupted cache)
+		return p.getAvatarWithDepth(u, size, recursionDepth+1)
+	}
+
+	return cachedAvatar.Content, cachedAvatar.MimeType, nil
 }
 
 func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
@@ -138,7 +150,10 @@ func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
 		return
 	}
 
-	InvalidateCache(u)
+	err = (&Provider{}).FlushCache(u)
+	if err != nil {
+		log.Errorf("Could not invalidate upload avatar cache for user %d, error was %s", u.ID, err)
+	}
 
 	// Save the file
 	f, err := files.CreateWithMime(buf, "avatar.png", uint64(buf.Len()), u, "image/png")

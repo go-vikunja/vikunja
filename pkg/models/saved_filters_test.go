@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -191,7 +191,7 @@ func TestSavedFilter_Delete(t *testing.T) {
 	})
 }
 
-func TestSavedFilter_Rights(t *testing.T) {
+func TestSavedFilter_Permissions(t *testing.T) {
 	user1 := &user.User{ID: 1}
 	user2 := &user.User{ID: 2}
 	ls := &LinkSharing{ID: 1}
@@ -216,9 +216,9 @@ func TestSavedFilter_Rights(t *testing.T) {
 				ID:    1,
 				Title: "Lorem",
 			}
-			can, maxRight, err := sf.CanRead(s, user1)
+			can, maxPermission, err := sf.CanRead(s, user1)
 			require.NoError(t, err)
-			assert.Equal(t, int(RightAdmin), maxRight)
+			assert.Equal(t, int(PermissionAdmin), maxPermission)
 			assert.True(t, can)
 		})
 		t.Run("not owner", func(t *testing.T) {

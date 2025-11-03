@@ -2,30 +2,30 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
-
 	"code.vikunja.io/api/pkg/web"
+
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/builder"
@@ -52,8 +52,8 @@ type LinkSharing struct {
 	Name string `xorm:"text null" json:"name"`
 	// The ID of the shared project
 	ProjectID int64 `xorm:"bigint not null" json:"-" param:"project"`
-	// The right this project is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	// The permission this project is shared with. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+	Permission Permission `xorm:"bigint INDEX not null default 0" json:"permission" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// The kind of this link. 0 = undefined, 1 = without password, 2 = with password.
 	SharingType SharingType `xorm:"bigint INDEX not null default 0" json:"sharing_type" valid:"length(0|2)" maximum:"2" default:"0"`
@@ -70,8 +70,8 @@ type LinkSharing struct {
 	// A timestamp when this share was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName holds the table name
@@ -91,11 +91,16 @@ func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error
 		return nil, &ErrLinkShareTokenInvalid{}
 	}
 
+	permissionFloat, is := claims["permission"].(float64)
+	if !is {
+		return nil, &ErrLinkShareTokenInvalid{}
+	}
+
 	share = &LinkSharing{}
 	share.ID = int64(claims["id"].(float64))
 	share.Hash = claims["hash"].(string)
 	share.ProjectID = int64(projectID)
-	share.Right = Right(claims["right"].(float64))
+	share.Permission = Permission(permissionFloat)
 	share.SharedByID = int64(claims["sharedByID"].(float64))
 	return
 }
@@ -110,10 +115,12 @@ func (share *LinkSharing) toUser() *user.User {
 		suffix = " (" + suffix + ")"
 	}
 
+	username := "link-share-" + strconv.FormatInt(share.ID, 10)
+
 	return &user.User{
 		ID:       share.getUserID(),
 		Name:     share.Name + suffix,
-		Username: share.Name,
+		Username: username,
 		Created:  share.Created,
 		Updated:  share.Updated,
 	}
@@ -136,7 +143,7 @@ func (share *LinkSharing) toUser() *user.User {
 // @Router /projects/{project}/shares [put]
 func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 
-	err = share.Right.isValid()
+	err = share.Permission.isValid()
 	if err != nil {
 		return
 	}
@@ -218,14 +225,14 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	limit, start := getLimitFromPageIndex(page, perPage)
 
 	var shares []*LinkSharing
-	query := s.
-		Where(builder.And(
-			builder.Eq{"project_id": share.ProjectID},
-			builder.Or(
-				db.ILIKE("hash", search),
-				db.ILIKE("name", search),
-			),
-		))
+	var where []builder.Cond
+	where = append(where, builder.Eq{"project_id": share.ProjectID})
+
+	if search != "" {
+		where = append(where, db.ILIKE("name", search))
+	}
+
+	query := s.Where(builder.And(where...))
 
 	if limit > 0 {
 		query = query.Limit(limit, start)
@@ -250,7 +257,9 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	for _, s := range shares {
-		s.SharedBy = users[s.SharedByID]
+		if sharedBy, has := users[s.SharedByID]; has {
+			s.SharedBy = sharedBy
+		}
 		s.Password = ""
 	}
 

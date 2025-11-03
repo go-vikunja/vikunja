@@ -310,12 +310,6 @@
 				"addedSuccess": "{type} đã được thêm thành công.",
 				"updatedSuccess": "{type} đã được thêm thành công."
 			},
-			"right": {
-				"title": "Quyền",
-				"read": "Chỉ đọc",
-				"readWrite": "Đọc & ghi",
-				"admin": "Quản trị viên"
-			},
 			"attributes": {
 				"link": "Liên kết",
 				"delete": "Xóa"
@@ -339,8 +333,7 @@
 			"month": "Tháng",
 			"day": "Ngày",
 			"hour": "Giờ",
-			"range": "Khoảng thời gian",
-			"noDates": "Đầu việc này không có thiết lập ngày."
+			"range": "Khoảng thời gian"
 		},
 		"table": {
 			"title": "Bảng",
@@ -382,7 +375,6 @@
 			"targetUrl": "URL đích",
 			"targetUrlInvalid": "Cung cấp một URL hợp lệ.",
 			"events": "Sự kiện",
-			"eventsHint": "Chon tất cả các sự kiện mà webhook này sẽ nhận cập nhật (trong phạm vi dự án hiện tại).",
 			"mustSelectEvents": "Bạn cần chọn ít nhất một sự kiện.",
 			"delete": "Xóa webhook này",
 			"deleteText": "Bạn có chắc muốn xóa webhook này? Các bên khác sẽ không thể nhận thông báo về các sự kiện được nữa.",
@@ -477,9 +469,7 @@
 					"greaterThanOrEqual": "Lớn hơn hoặc bằng",
 					"lessThan": "Nhỏ hơn",
 					"lessThanOrEqual": "Nhỏ hơn hoặc bằng",
-					"like": "Khớp với một kí tự (sử dụng kí tự %)",
-					"in": "Khớp với bất kì giá trị nào trong danh sách các gía trị được phân cách bởi dấu phẩy",
-					"notIn": "Khớp với bất kì giá trị nào không có trong danh sách các giá trị được phân cách bởi dấu phẩy"
+					"like": "Khớp với một kí tự (sử dụng kí tự %)"
 				},
 				"logicalOperators": {
 					"intro": "Để kết hợp nhiều điều kiện, bạn có thể sử dụng các chức năng lọc luận lý:",
@@ -744,7 +734,6 @@
 		"addReminder": "Thêm một nhắc nhở…",
 		"doneSuccess": "Công việc đã được đánh dấu Hoàn thành.",
 		"undoneSuccess": "Công việc đã được bỏ đánh dấu Hoàn thành.",
-		"revertSuccess": "Tác vụ được hoàn tác thành công.",
 		"undo": "Hoàn tác",
 		"openDetail": "Xem chi tiết công việc",
 		"checklistTotal": "{checked} trong số {total} công việc",
@@ -752,7 +741,6 @@
 		"show": {
 			"titleCurrent": "Công việc hiện tại",
 			"titleDates": "Công việc từ {from} cho đến {to}",
-			"noDates": "Hiển thị công việc không có ngày tháng",
 			"overdue": "Hiển thị công việc quá hạn",
 			"fromuntil": "Công việc từ {from} cho đến {until}",
 			"select": "Chọn khoảng ngày",
@@ -969,7 +957,6 @@
 			"project4": "Ví dụ: {prefix} \"Dự án có dấu cách\".",
 			"dateAndTime": "Ngày và giờ",
 			"date": "Bất kỳ ngày nào sẽ được sử dụng làm ngày hết hạn của nhiệm vụ mới. Bạn có thể sử dụng ngày ở bất kỳ định dạng nào sau đây:",
-			"dateWeekday": "bất kỳ ngày nào trong tuần, sẽ sử dụng ngày tiếp theo với ngày đó",
 			"dateCurrentYear": "sẽ sử dụng năm hiện tại",
 			"dateNth": "sẽ sử dụng ngày {day} của tháng hiện tại",
 			"dateTime": "Kết hợp bất kì đinh dạng ngày với \"{time}\" (hoặc {timePM}) để thiết lập thời gian.",
@@ -1104,7 +1091,6 @@
 	"notification": {
 		"title": "Thông báo",
 		"none": "Bạn không có thông báo nào. Chúc một ngày tốt lành!",
-		"explainer": "Thông báo sẽ xuất hiện tại đây khi các hành động dự án và tác vụ bạn theo dõi diễn ra.",
 		"markAllRead": "Đánh dẫu tất cả đã đọc",
 		"markAllReadSuccess": "Đánh dấu tất cả đã đọc thành công."
 	},

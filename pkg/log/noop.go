@@ -2,27 +2,25 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package log
 
-import (
-	"github.com/op/go-logging"
-)
+import "log/slog"
 
 // NoopBackend doesn't log anything. Used in cases where we want to disable logging completely.
 type NoopBackend struct{}
 
-func (n *NoopBackend) Log(_ logging.Level, _ int, _ *logging.Record) error {
+func (n *NoopBackend) Log(_ slog.Level, _ int, _ *slog.Record) error {
 	return nil
 }

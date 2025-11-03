@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package handler
@@ -51,6 +51,15 @@ import (
 	"golang.org/x/image/draw"
 	"xorm.io/xorm"
 )
+
+var allowedImageMimes = []string{
+	"image/jpeg",
+	"image/png",
+	"image/gif",
+	"image/bmp",
+	"image/tiff",
+	"image/webp",
+}
 
 // BackgroundProvider represents a thing which holds a background provider
 // Lets us get a new fresh provider every time we need one.
@@ -106,14 +115,14 @@ func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c echo.
 		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error()).SetInternal(err)
 	}
 
-	// Check if the user has the right to change the project background
+	// Check if the user has the permission to change the project background
 	project = &models.Project{ID: projectID}
 	can, err := project.CanUpdate(s, auth)
 	if err != nil {
 		return
 	}
 	if !can {
-		log.Infof("Tried to update project background of project %d while not having the rights for it (User: %v)", projectID, auth)
+		log.Infof("Tried to update project background of project %d while not having the permissions for it (User: %v)", projectID, auth)
 		return project, auth, models.ErrGenericForbidden{}
 	}
 	// Load the project
@@ -202,12 +211,26 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 		_ = s.Rollback()
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
 	}
+	supported := false
+	for _, m := range allowedImageMimes {
+		if mime.Is(m) {
+			supported = true
+			break
+		}
+	}
+	if !supported {
+		_ = s.Rollback()
+		return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
+	}
 
 	err = SaveBackgroundFile(s, auth, project, srcf, file.Filename, uint64(file.Size))
 	if err != nil {
 		_ = s.Rollback()
 		if files.IsErrFileIsTooLarge(err) {
 			return echo.ErrBadRequest
+		}
+		if IsErrFileUnsupportedImageFormat(err) {
+			return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
 		}
 
 		return handler.HandleHTTPError(err)
@@ -228,9 +251,13 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 }
 
 func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
+	mime, _ := mimetype.DetectReader(srcf)
 	_, _ = srcf.Seek(0, io.SeekStart)
 	src, err := imaging.Decode(srcf)
 	if err != nil {
+		if strings.Contains(err.Error(), "unknown format") {
+			return ErrFileUnsupportedImageFormat{Mime: mime.String()}
+		}
 		return err
 	}
 
@@ -282,7 +309,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error()).SetInternal(err)
 	}
 
-	// Check if a background for this project exists + Rights
+	// Check if a background for this project exists + Permissions
 	project = &models.Project{ID: projectID}
 	can, _, err := project.CanRead(s, auth)
 	if err != nil {
@@ -291,7 +318,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 	}
 	if !can {
 		_ = s.Rollback()
-		log.Infof("Tried to get project background of project %d while not having the rights for it (User: %v)", projectID, auth)
+		log.Infof("Tried to get project background of project %d while not having the permissions for it (User: %v)", projectID, auth)
 		return nil, auth, echo.NewHTTPError(http.StatusForbidden)
 	}
 

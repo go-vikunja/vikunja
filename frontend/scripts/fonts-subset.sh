@@ -34,13 +34,18 @@ trap err_report ERR
 
 mkdir -p $TEMP_FOLDER
 
-# the latin subset that google uses on GoogleFonts
-# this is the same as the latin subset range that google uses on GoogleFonts
-# see for examle the unicode-range definition here:
-# https://fonts.googleapis.com/css2?family=Open+Sans
-UNICODE_LATIN_SUBSET="U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,\
+# Includes basic Latin, extended Latin, Cyrillic, CJK, Arabic, Hebrew, and other scripts
+# to support all languages supported by Vikunja
+UNICODE_LATIN_SUBSET="U+0000-00FF,U+0100-017F,U+0131,U+0152-0153,U+02BB-02BC,\
 U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,\
-U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
+U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD,\
+U+0180-024F,U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,\
+U+1EA0-1EF9,U+0400-04FF,U+0500-052F,U+2DE0-2DFF,U+A640-A69F,\
+U+4E00-9FFF,U+3400-4DBF,U+20000-2A6DF,U+2A700-2B73F,U+2B740-2B81F,U+2B820-2CEAF,\
+U+3040-309F,U+30A0-30FF,U+31F0-31FF,U+3200-32FF,U+3300-33FF,U+FF00-FFEF,\
+AC00-D7AF,U+1100-11FF,U+3130-318F,U+A960-A97F,U+D7B0-D7FF,\
+U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,\
+U+0590-05FF,U+FB1D-FB4F"
 
 get_filename_without_type() {
 	filename=$1
@@ -115,7 +120,29 @@ echo "# Install required libs"
 echo "###################################################"
 echo ""
 
-pip install fonttools brotli
+# Check if fonttools is available
+if ! command -v fonttools >/dev/null 2>&1; then
+	echo "fonttools not found, installing..."
+	pip install fonttools
+else
+	echo "fonttools already available"
+fi
+
+# Check if pyftsubset is available (part of fonttools)
+if ! command -v pyftsubset >/dev/null 2>&1; then
+	echo "pyftsubset not found, installing fonttools..."
+	pip install fonttools
+else
+	echo "pyftsubset already available"
+fi
+
+# Check if brotli is available
+if ! python3 -c "import brotli" >/dev/null 2>&1; then
+	echo "brotli not found, installing..."
+	pip install brotli
+else
+	echo "brotli already available"
+fi
 
 echo ""
 echo "###################################################"
@@ -128,34 +155,96 @@ echo ""
 
 mkdir -p $TEMP_FOLDER
 
+echo ""
+echo "###################################################"
+echo "# Collect existing font files for cleanup"
+echo "###################################################"
+echo ""
+
+# Collect existing font files to remove later
+OLD_FONT_FILES=$(find $FONT_FOLDER -name "*.woff2" -type f 2>/dev/null || true)
+if [ -n "$OLD_FONT_FILES" ]; then
+    echo "Found existing font files to remove after generation:"
+    echo "$OLD_FONT_FILES"
+else
+    echo "No existing font files found"
+fi
+
 echo "\nOpen Sans"
-# we drop the wdth axis for all
+# we drop the wdth axis and keep only variable weight range
 
 instance_and_subset "${ORIGINAL_FONTS}/OpenSans[wdth,wght].ttf" "wdth=drop wght=400:700" "OpenSans[wght]"
 
-# we restrict the wght range
-instance_and_subset "${ORIGINAL_FONTS}/OpenSans[wdth,wght].ttf" "wdth=drop wght=400" "OpenSans-Regular"
-instance_and_subset "${ORIGINAL_FONTS}/OpenSans[wdth,wght].ttf" "wdth=drop wght=700" "OpenSans-Bold"
-
 echo "\nOpen Sans Italic"
-# we drop the wdth axis for all
+# we drop the wdth axis and keep only variable weight range
 
 instance_and_subset "${ORIGINAL_FONTS}/OpenSans-Italic[wdth,wght].ttf" "wdth=drop wght=400:700" "OpenSans-Italic[wght]"
 
-# we restrict the wght range
-instance_and_subset "${ORIGINAL_FONTS}/OpenSans-Italic[wdth,wght].ttf" "wdth=drop wght=400" "OpenSans-RegularItalic"
-instance_and_subset "${ORIGINAL_FONTS}/OpenSans-Italic[wdth,wght].ttf" "wdth=drop wght=700" "OpenSans-BoldItalic"
-
 echo "\nQuicksand"
+# keep only variable weight range
 
 instance_and_subset "${ORIGINAL_FONTS}/Quicksand[wght].ttf" "wght=400:700"
 
-# we restrict the wght range
-instance_and_subset "${ORIGINAL_FONTS}/Quicksand[wght].ttf" "wght=400" "Quicksand-Regular"
-instance_and_subset "${ORIGINAL_FONTS}/Quicksand[wght].ttf" "wght=600" "Quicksand-SemiBold"
-instance_and_subset "${ORIGINAL_FONTS}/Quicksand[wght].ttf" "wght=700" "Quicksand-Bold"
-
 echo "\nSubsetting files complete"
+
+echo ""
+echo "###################################################"
+echo "# Clean up old font files"
+echo "###################################################"
+echo ""
+
+# Remove only the old font files we collected earlier
+if [ -n "$OLD_FONT_FILES" ]; then
+    echo "Removing old font files..."
+    echo "$OLD_FONT_FILES" | while read -r file; do
+        if [ -f "$file" ]; then
+            echo "Removing: $file"
+            rm -f "$file"
+        fi
+    done
+else
+    echo "No old font files to remove"
+fi
+
+echo ""
+echo "###################################################"
+echo "# Update fonts.scss with new font files"
+echo "###################################################"
+echo ""
+
+FONTS_SCSS="./src/styles/fonts.scss"
+
+echo "Updating $FONTS_SCSS with new font files..."
+
+# Function to update font file references in SCSS
+update_font_reference() {
+    local pattern="$1"
+    local new_file="$2"
+    
+    # Use sed to replace the font file reference, preserving the rest of the line
+    sed -i "s|${pattern}_[a-f0-9]\{8\}\.woff2|${new_file}|g" "$FONTS_SCSS"
+}
+
+# Update each font file reference with the new checksum
+for file in $FONT_FOLDER/*.woff2; do
+    if [ -f "$file" ]; then
+        basename=$(basename "$file")
+        
+        case $basename in
+            OpenSans\[wght\]_*.woff2)
+                update_font_reference "OpenSans\[wght\]" "$basename"
+                ;;
+            OpenSans-Italic\[wght\]_*.woff2)
+                update_font_reference "OpenSans-Italic\[wght\]" "$basename"
+                ;;
+            Quicksand\[wght\]_*.woff2)
+                update_font_reference "Quicksand\[wght\]" "$basename"
+                ;;
+        esac
+    fi
+done
+
+echo "fonts.scss updated with new font files"
 
 # remove temp folder
 rm -r $TEMP_FOLDER

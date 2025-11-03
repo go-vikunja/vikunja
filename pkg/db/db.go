@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package db
@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -37,8 +39,13 @@ import (
 	_ "github.com/mattn/go-sqlite3"    // Because.
 )
 
-// We only want one instance of the engine, so we can reate it once and reuse it
-var x *xorm.Engine
+var (
+	// We only want one instance of the engine, so we can create it once and reuse it
+	x *xorm.Engine
+	// paradedbInstalled marks whether the paradedb extension is available
+	// and can be used for full text search.
+	paradedbInstalled bool
+)
 
 // CreateDBEngine initializes a db engine from the config
 func CreateDBEngine() (engine *xorm.Engine, err error) {
@@ -81,7 +88,7 @@ func CreateDBEngine() (engine *xorm.Engine, err error) {
 	}
 	engine.SetTZDatabase(loc)
 	engine.SetMapper(names.GonicMapper{})
-	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogDatabase.GetString(), config.LogDatabaseLevel.GetString())
+	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogDatabase.GetString(), config.LogDatabaseLevel.GetString(), config.LogFormat.GetString())
 	engine.SetLogger(logger)
 
 	x = engine
@@ -173,17 +180,35 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 		return
 	}
 	engine.SetConnMaxLifetime(maxLifetime)
+
+	checkParadeDB(engine)
 	return
 }
 
 func initSqliteEngine() (engine *xorm.Engine, err error) {
 	path := config.DatabasePath.GetString()
-	if path == "" {
-		path = "./db.db"
-	}
 
 	if path == "memory" {
 		return xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
+	}
+
+	// Resolve relative paths to a safe location instead of the current working directory
+	if !filepath.IsAbs(path) {
+		path = resolveDatabasePath(path)
+	}
+
+	// Convert to absolute path for logging
+	path, err = filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve database path to absolute path: %w", err)
+	}
+
+	// Log the resolved database path
+	log.Infof("Using SQLite database at: %s", path)
+
+	// Warn if the database is in a potentially problematic location
+	if isSystemDirectory(path) {
+		log.Warningf("Database path (%s) appears to be in a system directory. This may cause issues. Please use an absolute path or configure the database path to a user data directory.", path)
 	}
 
 	// Try opening the db file to return a better error message if that does not work
@@ -202,6 +227,141 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	}
 
 	return xorm.NewEngine("sqlite3", path)
+}
+
+// resolveDatabasePath resolves a relative database path to an appropriate location
+// based on platform-specific conventions. This prevents SQLite databases from being
+// created in system directories (like C:\Windows\System32 on Windows) when Vikunja
+// runs as a service.
+func resolveDatabasePath(relativePath string) string {
+	// First, check if a rootpath is explicitly configured and use that
+	rootPath := config.ServiceRootpath.GetString()
+
+	// Determine if rootpath appears to be a user-configured value or a default
+	// If it looks like it was explicitly configured (not just the binary location),
+	// use it for backward compatibility
+	execPath, err := os.Executable()
+	if err == nil && rootPath != filepath.Dir(execPath) {
+		// rootpath was explicitly configured, use it
+		return filepath.Join(rootPath, relativePath)
+	}
+
+	// Otherwise, use a platform-appropriate user data directory
+	dataDir, err := getUserDataDir()
+	if err != nil {
+		// Fall back to rootpath if we can't determine user data dir
+		log.Warningf("Could not determine user data directory, falling back to rootpath: %v", err)
+		return filepath.Join(rootPath, relativePath)
+	}
+
+	return filepath.Join(dataDir, relativePath)
+}
+
+// getUserDataDir returns the platform-appropriate directory for application data
+func getUserDataDir() (string, error) {
+	var dataDir string
+
+	switch runtime.GOOS {
+	case "windows":
+		// On Windows, use %LOCALAPPDATA%\Vikunja
+		localAppData := os.Getenv("LOCALAPPDATA")
+		if localAppData == "" {
+			// Fallback to %USERPROFILE%\AppData\Local if LOCALAPPDATA is not set
+			userProfile := os.Getenv("USERPROFILE")
+			if userProfile == "" {
+				return "", fmt.Errorf("neither LOCALAPPDATA nor USERPROFILE environment variables are set")
+			}
+			localAppData = filepath.Join(userProfile, "AppData", "Local")
+		}
+		dataDir = filepath.Join(localAppData, "Vikunja")
+	case "darwin":
+		// On macOS, use ~/Library/Application Support/Vikunja
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		dataDir = filepath.Join(home, "Library", "Application Support", "Vikunja")
+	default:
+		// On Linux and other Unix-like systems, use XDG_DATA_HOME or ~/.local/share/vikunja
+		xdgDataHome := os.Getenv("XDG_DATA_HOME")
+		if xdgDataHome != "" {
+			dataDir = filepath.Join(xdgDataHome, "vikunja")
+		} else {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return "", err
+			}
+			dataDir = filepath.Join(home, ".local", "share", "vikunja")
+		}
+	}
+
+	// Ensure the directory exists
+	if err := os.MkdirAll(dataDir, 0o700); err != nil {
+		return "", fmt.Errorf("could not create data directory %s: %w", dataDir, err)
+	}
+
+	return dataDir, nil
+}
+
+// isSystemDirectory checks if a path appears to be in a system directory
+// where users should not typically store application data
+func isSystemDirectory(path string) bool {
+	// Clean and normalize the path
+	path = filepath.Clean(path)
+	lowerPath := strings.ToLower(path)
+
+	// Windows system directories
+	if runtime.GOOS == "windows" {
+		// Convert to absolute path if possible for more accurate checking
+		absPath := lowerPath
+		if abs, err := filepath.Abs(path); err == nil {
+			absPath = strings.ToLower(filepath.Clean(abs))
+		}
+
+		// Check common Windows system directories using prefix matching
+		// This prevents false positives like C:\myapp\windows\data
+		windowsSystemPrefixes := []string{
+			"c:\\windows\\system32",
+			"c:\\windows\\syswow64",
+			"c:\\windows\\winsxs",
+			"c:\\windows\\servicing",
+		}
+
+		for _, prefix := range windowsSystemPrefixes {
+			if strings.HasPrefix(absPath, prefix) {
+				return true
+			}
+		}
+
+		// Also check for direct C:\Windows (not subdirectories like C:\myapp\windows)
+		// by ensuring it starts with the drive and windows directory
+		if absPath == "c:\\windows" || strings.HasPrefix(absPath, "c:\\windows\\") {
+			// Exclude some safe subdirectories under C:\Windows
+			safeDirs := []string{
+				"c:\\windows\\temp",
+			}
+			for _, safeDir := range safeDirs {
+				if strings.HasPrefix(absPath, safeDir) {
+					return false
+				}
+			}
+			return true
+		}
+	}
+
+	// Unix-like system directories - use prefix matching
+	systemDirs := []string{
+		"/bin", "/sbin", "/usr/bin", "/usr/sbin",
+		"/etc", "/sys", "/proc", "/dev",
+	}
+	for _, sysDir := range systemDirs {
+		// Ensure we match exact directory boundaries
+		if lowerPath == sysDir || strings.HasPrefix(lowerPath, sysDir+"/") {
+			return true
+		}
+	}
+
+	return false
 }
 
 // WipeEverything wipes all tables and their data. Use with caution...
@@ -232,10 +392,72 @@ func Type() schemas.DBType {
 }
 
 func GetDialect() string {
-	dialect := config.DatabaseType.GetString()
-	if dialect == "sqlite" {
-		dialect = builder.SQLITE
+	switch config.DatabaseType.GetString() {
+	case "mysql":
+		return builder.MYSQL
+	case "postgres":
+		return builder.POSTGRES
+	default:
+		return builder.SQLITE
+	}
+}
+
+func checkParadeDB(engine *xorm.Engine) {
+	if engine.Dialect().URI().DBType != schemas.POSTGRES {
+		return
 	}
 
-	return dialect
+	exists := false
+	if _, err := engine.SQL("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname='pg_search')").Get(&exists); err != nil {
+		log.Errorf("could not check for paradedb extension: %v", err)
+		return
+	}
+
+	if !exists {
+		return
+	}
+
+	paradedbInstalled = true
+	log.Debug("ParadeDB extension detected, using @@@ search operator")
+}
+
+func CreateParadeDBIndexes() error {
+	if !paradedbInstalled {
+		return nil
+	}
+	// ParadeDB only allows one bm25 index per table, so we create a single index covering both fields
+	// Use optimized configuration with fast fields and field boosting for better performance
+	indexSQL := `CREATE INDEX IF NOT EXISTS idx_tasks_paradedb ON tasks USING bm25 (id, title, description, project_id, done) 
+	WITH (
+		key_field='id',
+		text_fields='{
+			"title": {"fast": true, "record": "freq"}, 
+			"description": {"fast": true, "record": "freq"}
+		}',
+		numeric_fields='{
+			"project_id": {"fast": true}
+		}',
+		boolean_fields='{
+			"done": {"fast": true}
+		}'
+	)`
+	if _, err := x.Exec(indexSQL); err != nil {
+		return fmt.Errorf("could not ensure paradedb task index: %w", err)
+	}
+
+	// Create ParadeDB index for projects table
+	projectIndexSQL := `CREATE INDEX IF NOT EXISTS idx_projects_paradedb ON projects USING bm25 (id, title, description, identifier) 
+	WITH (
+		key_field='id',
+		text_fields='{
+			"title": {"fast": true, "record": "freq"}, 
+			"description": {"fast": true, "record": "freq"},
+			"identifier": {"fast": true, "record": "freq"}
+		}'
+	)`
+	if _, err := x.Exec(projectIndexSQL); err != nil {
+		return fmt.Errorf("could not ensure paradedb project index: %w", err)
+	}
+
+	return nil
 }

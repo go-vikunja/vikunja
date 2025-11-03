@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -130,7 +130,7 @@ func TestTeamMember_Update(t *testing.T) {
 		}
 		err := tm.Update(s, u)
 		require.NoError(t, err)
-		assert.False(t, tm.Admin) // Since this endpoint toggles the right, we should get a false for admin back.
+		assert.False(t, tm.Admin) // Since this endpoint toggles the permission, we should get a false for admin back.
 		err = s.Commit()
 		require.NoError(t, err)
 
@@ -163,5 +163,92 @@ func TestTeamMember_Update(t *testing.T) {
 			"user_id": 1,
 			"admin":   false,
 		}, false)
+	})
+}
+
+func TestCleanupTaskMembersAfterTeamRemoval(t *testing.T) {
+	t.Run("removes data when member loses team access", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		s := db.NewSession()
+		defer s.Close()
+
+		task := &Task{
+			Title:       "team cleanup",
+			ProjectID:   19,
+			CreatedByID: 7,
+			Index:       2,
+		}
+		_, err := s.Insert(task)
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TaskAssginee{TaskID: task.ID, UserID: 2})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: 2})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: 19, UserID: 2})
+		require.NoError(t, err)
+
+		_, err = s.Where("team_id = ? AND user_id = ?", 9, 2).Delete(&TeamMember{})
+		require.NoError(t, err)
+
+		_, err = s.Where("project_id = ? AND user_id = ?", 19, 2).Delete(&ProjectUser{})
+		require.NoError(t, err)
+
+		require.NoError(t, s.Commit())
+
+		err = cleanupTaskMembersAfterTeamRemoval(s, 9, 2)
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": task.ID, "user_id": 2})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": task.ID, "user_id": 2})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": 19, "user_id": 2})
+	})
+
+	t.Run("removes orphaned data for deleted project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		const orphanProjectID int64 = 54321
+
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Insert(&TeamProject{TeamID: 9, ProjectID: orphanProjectID, Permission: PermissionRead})
+		require.NoError(t, err)
+
+		task := &Task{
+			Title:       "orphan cleanup",
+			ProjectID:   orphanProjectID,
+			CreatedByID: 7,
+			Index:       5,
+		}
+		_, err = s.Insert(task)
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TaskAssginee{TaskID: task.ID, UserID: 2})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: 2})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: orphanProjectID, UserID: 2})
+		require.NoError(t, err)
+
+		_, err = s.Where("team_id = ? AND user_id = ?", 9, 2).Delete(&TeamMember{})
+		require.NoError(t, err)
+
+		_, err = s.Where("project_id = ? AND user_id = ?", orphanProjectID, 2).Delete(&ProjectUser{})
+		require.NoError(t, err)
+
+		require.NoError(t, s.Commit())
+
+		err = cleanupTaskMembersAfterTeamRemoval(s, 9, 2)
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"task_id": task.ID, "user_id": 2})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityTask, "entity_id": task.ID, "user_id": 2})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"entity_type": SubscriptionEntityProject, "entity_id": orphanProjectID, "user_id": 2})
 	})
 }

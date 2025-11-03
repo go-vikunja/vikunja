@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package caldav
@@ -104,11 +104,32 @@ func formatDuration(duration time.Duration) string {
 		strconv.FormatFloat(seconds, 'f', 0, 64) + `S`
 }
 
-// ParseTodos returns a caldav vcalendar string with todos
+func getRruleFromInterval(interval int64) (freq string, newInterval int64) {
+	const (
+		minute = 60
+		hour   = minute * 60
+		day    = hour * 24
+		week   = day * 7
+	)
+
+	switch {
+	case interval%week == 0:
+		return "WEEKLY", interval / week
+	case interval%day == 0:
+		return "DAILY", interval / day
+	case interval%hour == 0:
+		return "HOURLY", interval / hour
+	case interval%minute == 0:
+		return "MINUTELY", interval / minute
+	default:
+		return "SECONDLY", interval
+	}
+}
+
+// ParseTodos returns a caldav vcalendar string with todos.
 func ParseTodos(config *Config, todos []*Todo) (caldavtodos string) {
 	caldavtodos = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:` + config.Name + `
 PRODID:-//` + config.ProdID + `//EN` + getCaldavColor(config.Color)
@@ -172,8 +193,9 @@ PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 				caldavtodos += `
 RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month
 			} else {
+				freq, interval := getRruleFromInterval(t.RepeatAfter)
 				caldavtodos += `
-RRULE:FREQ=SECONDLY;INTERVAL=` + strconv.FormatInt(t.RepeatAfter, 10)
+RRULE:FREQ=` + freq + `;INTERVAL=` + strconv.FormatInt(interval, 10)
 			}
 		}
 

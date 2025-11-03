@@ -284,12 +284,6 @@
 				"addedSuccess": "{type} 已成功添加。",
 				"updatedSuccess": "{type} 已成功添加。"
 			},
-			"right": {
-				"title": "权限",
-				"read": "只读",
-				"readWrite": "可读并可写",
-				"admin": "管理员"
-			},
 			"attributes": {
 				"link": "链接",
 				"delete": "删除"
@@ -308,8 +302,7 @@
 			"month": "月",
 			"day": "日",
 			"hour": "时",
-			"range": "日期范围",
-			"noDates": "此任务没有设定日期。"
+			"range": "日期范围"
 		},
 		"table": {
 			"title": "表格",
@@ -349,7 +342,6 @@
 			"targetUrl": "目标 Url",
 			"targetUrlInvalid": "请提供有效的URL。",
 			"events": "事件",
-			"eventsHint": "选择此 webhook 应该接收更新的所有事件 (在当前项目内)。",
 			"mustSelectEvents": "您必须选择至少一个事件。",
 			"delete": "删除此 webhook？",
 			"deleteText": "您确定要删除此Webhook吗？外部目标将不再收到其事件通知。",
@@ -435,8 +427,7 @@
 					"greaterThanOrEqual": "大于或等于",
 					"lessThan": "小于",
 					"lessThanOrEqual": "小于或等于",
-					"like": "匹配模式 (使用通配符%)",
-					"in": "匹配任意一个逗号分隔的值列表"
+					"like": "匹配模式 (使用通配符%)"
 				},
 				"logicalOperators": {
 					"intro": "若要合并多个条件，您可以使用以下逻辑运算符：",
@@ -702,7 +693,6 @@
 		"show": {
 			"titleCurrent": "当前任务",
 			"titleDates": "从 {from} 到 {to} 的任务",
-			"noDates": "显示无日期的任务",
 			"overdue": "显示过期任务",
 			"fromuntil": "从 {from} 到 {until} 的任务",
 			"select": "选择一个日期范围",
@@ -914,7 +904,6 @@
 			"project4": "例如：{prefix} “带空格的项目”。",
 			"dateAndTime": "日期与时间",
 			"date": "任何日期都将当做新任务的截止日期。 可以使用以下格式的日期：",
-			"dateWeekday": "任意工作日，将使用该日期的下一个日期",
 			"dateCurrentYear": "将使用当前年份",
 			"dateNth": "将使用当月的第 {day} 天",
 			"dateTime": "将日期格式与 “{time}”（或 {timePM}）组合以设置时间。",
@@ -1047,7 +1036,6 @@
 	"notification": {
 		"title": "通知",
 		"none": "没有任何通知。 祝你今天过得愉快！",
-		"explainer": "当您订阅项目或任务发生时，通知将会显示在这里。",
 		"markAllRead": "将所有通知标为已读",
 		"markAllReadSuccess": "成功标记所有通知为已读。"
 	},

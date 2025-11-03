@@ -92,6 +92,8 @@
 				"discoverableByName": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meinem Namen suchen",
 				"discoverableByEmail": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meiner vollständigen E-Mail Adresse suchen",
 				"playSoundWhenDone": "Einen Ton abspielen, wenn Aufgaben als erledigt markiert werden",
+				"allowIconChanges": "Zu bestimmten Zeiten spezielle Logos anzeigen",
+				"defaultTaskRelationType": "Standard-Aufgabenbeziehungstyp",
 				"weekStart": "Woche beginnt am",
 				"weekStartSunday": "Sonntag",
 				"weekStartMonday": "Montag",
@@ -102,7 +104,24 @@
 				"overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
 				"filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird",
 				"minimumPriority": "Minimal sichtbare Aufgaben-Priorität",
+				"dateDisplay": "Datumsformat",
+				"dateDisplayOptions": {
+					"relative": "Relativ (z.B. vor 3 Tagen)",
+					"mm-dd-yyyy": "MM-TT-JJJJ",
+					"dd-mm-yyyy": "TT-MM-JJJJ",
+					"yyyy-mm-dd": "JJJJ-MM-TT",
+					"mm/dd/yyyy": "MM/TT/JJJJ",
+					"dd/mm/yyyy": "TT/MM/JJJJ",
+					"yyyy/mm/dd": "JJJJ/MM/TT"
+				},
 				"externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
+			},
+			"sections": {
+				"personalInformation": "Persönliche Angaben",
+				"taskAndNotifications": "Projekte & Aufgaben",
+				"privacy": "Privatsphäre",
+				"localization": "Sprachauswahl",
+				"appearance": "Aussehen & Verhalten"
 			},
 			"totp": {
 				"title": "Zwei-Faktor-Authentifizierung",
@@ -139,7 +158,8 @@
 				"uploadAvatar": "Avatar hochladen",
 				"statusUpdateSuccess": "Avatar-Status wurde erfolgreich aktualisiert.",
 				"setSuccess": "Der Avatar wurde erfolgreich gesetzt!",
-				"ldap": "Dein Avatar wird automatisch aus dem Verzeichnisdienst deiner Organisation (LDAP) synchronisiert. Du kannst dein IT-Team nach Informationen fragen, um es zu ändern."
+				"ldap": "Dein Avatar wird automatisch aus dem Verzeichnisdienst deiner Organisation (LDAP) synchronisiert. Du kannst dein IT-Team nach Informationen fragen, um es zu ändern.",
+				"openid": "Dein Avatar wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
 			},
 			"quickAddMagic": {
 				"title": "Quick Add Magic Modus",
@@ -207,7 +227,9 @@
 			"descriptionPasswordRequired": "Bitte gib dein Passwort ein, um fortzufahren:",
 			"request": "Eine Kopie meiner Vikunja Daten anfordern",
 			"success": "Du hast deine Daten bei Vikunja erfolgreich angefordert! Wir schicken dir eine E-Mail, sobald sie zum Download bereitstehen.",
-			"downloadTitle": "Lade deine exportierten Vikunja-Daten herunter"
+			"downloadTitle": "Lade deine exportierten Vikunja-Daten herunter",
+			"ready": "Dein Export steht zum Download bereit. Du kannst ihn bis {0} herunterladen.",
+			"requestNew": "Einen weiteren Export anfordern"
 		}
 	},
 	"project": {
@@ -315,7 +337,7 @@
 				"addedSuccess": "{type} wurde erfolgreich hinzugefügt.",
 				"updatedSuccess": "{type} wurde erfolgreich hinzugefügt."
 			},
-			"right": {
+			"permission": {
 				"title": "Berechtigung",
 				"read": "Nur Leserechte",
 				"readWrite": "Lesen & Schreiben",
@@ -345,7 +367,21 @@
 			"day": "Tag",
 			"hour": "Stunde",
 			"range": "Zeitraum",
-			"noDates": "Diese Aufgabe hat keine Daten definiert."
+			"chartLabel": "Projekt Gantt-Diagramm",
+			"taskBarsForRow": "Aufgabenleisten für Zeile {rowId}",
+			"taskBarLabel": "Aufgabe: {task}. Von {startDate} bis {endDate}. {dateType}. Klicke zum Bearbeiten, ziehe zum Verschieben.",
+			"scheduledDates": "Geplante Daten",
+			"estimatedDates": "Voraussichtliche Daten",
+			"resizeStartDate": "Startdatum für Aufgabe {task} anpassen",
+			"resizeEndDate": "Enddatum für Aufgabe {task} anpassen",
+			"timelineHeader": "Zeitleiste mit Monaten und Tagen",
+			"monthsRow": "Monatszeile",
+			"daysRow": "Tageszeile",
+			"monthLabel": "Monat: {month}",
+			"dayLabel": "Tag: {date}, {weekday}",
+			"dayLabelToday": "Heute: {date}, {weekday}",
+			"taskAriaLabel": "Aufgabe: {task}",
+			"taskAriaLabelById": "Aufgabe {id}"
 		},
 		"table": {
 			"title": "Tabelle",
@@ -420,6 +456,7 @@
 		"title": "Filter",
 		"clear": "Filter zurücksetzen",
 		"showResults": "Ergebnisse anzeigen",
+		"noResults": "Keine Ergebnisse",
 		"fromView": "Die aktuelle Ansicht hat bereits einen Filter gesetzt:",
 		"fromViewBoth": "Er wird in Kombination mit dem, was du hier setzt, verwendet.",
 		"attributes": {
@@ -485,7 +522,7 @@
 					"lessThanOrEqual": "Kleiner als oder gleich",
 					"like": "Vergleicht zu einem Muster (mit Platzhalter %)",
 					"in": "Filtert einen beliebigen Wert in einer kommaseparierten Liste",
-					"notIn": "Filtert einen beliebigen Wert, der nicht in einer kommaseparierten vorkommt"
+					"notIn": "Filtert einen beliebigen Wert, der nicht in einer kommaseparierten Liste vorkommt"
 				},
 				"logicalOperators": {
 					"intro": "Um mehrere Bedingungen zu kombinieren, kannst du folgende logische Operatoren verwenden:",
@@ -551,7 +588,11 @@
 		"authenticating": "Authentifizierung …",
 		"passwordRequired": "Dieses geteilte Projekt benötigt ein Passwort. Bitte gebe es unten ein:",
 		"error": "Es ist ein Fehler aufgetreten.",
-		"invalidPassword": "Das Passwort ist ungültig."
+		"invalidPassword": "Das Passwort ist ungültig.",
+		"accessDenied": "Zugriff verweigert. Bitte überprüfe deine Berechtigungen und versuche es nochmal.",
+		"serverError": "Es ist ein Serverfehler aufgetreten. Bitte versuche es später erneut.",
+		"projectLoadError": "Fehler beim Laden der Projektinformationen.",
+		"retry": "Erneut versuchen"
 	},
 	"navigation": {
 		"overview": "Übersicht",
@@ -750,7 +791,6 @@
 		"addReminder": "Eine Erinnerung hinzufügen…",
 		"doneSuccess": "Die Aufgabe wurde erfolgreich als erledigt markiert.",
 		"undoneSuccess": "Die Aufgabe wurde erfolgreich als nicht-erledigt markiert.",
-		"revertSuccess": "Die Änderung der Aufgabe wurde erfolgreich rückgängig gemacht.",
 		"undo": "Rückgängig",
 		"openDetail": "Aufgabe in der Detailansicht anzeigen",
 		"checklistTotal": "{checked} von {total} Aufgaben",
@@ -777,6 +817,7 @@
 			"updateSuccess": "Die Aufgabe wurde erfolgreich gespeichert.",
 			"deleteSuccess": "Die Aufgabe wurde erfolgreich gelöscht.",
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
+			"back": "Zurück zum Projekt",
 			"due": "Fällig {at}",
 			"closePopup": "Popup schließen",
 			"organization": "Organisation",
@@ -1057,6 +1098,7 @@
 			"delete": "Diese Aufgabe löschen",
 			"priority": "Die Priorität dieser Aufgabe ändern",
 			"favorite": "Diese Aufgabe zum Favoriten machen / von Favoriten entfernen",
+			"openProject": "Projekt dieser Aufgabe öffnen",
 			"save": "Aktuelle Aufgabe speichern"
 		},
 		"project": {
@@ -1073,6 +1115,21 @@
 			"labels": "Labels aufrufen",
 			"teams": "Teams aufrufen",
 			"projects": "Projekte aufrufen"
+		},
+		"list": {
+			"title": "Aufgabenliste",
+			"navigateDown": "Nächste Aufgabe hervorheben",
+			"navigateUp": "Vorherige Aufgabe hervorheben",
+			"open": "Markierte Aufgabe öffnen"
+		},
+		"gantt": {
+			"title": "Gantt-Diagramm",
+			"moveTaskLeft": "Aufgabe auf früheres Datum verschieben",
+			"moveTaskRight": "Aufgabe auf späteres Datum verschieben",
+			"expandTaskLeft": "Das Startdatum der Aufgabe früher verschieben",
+			"expandTaskRight": "Das Enddatum der Aufgabe später verschieben",
+			"shrinkTaskLeft": "Das Startdatum verringern",
+			"shrinkTaskRight": "Das Enddatum verringern"
 		}
 	},
 	"update": {
@@ -1234,7 +1291,9 @@
 	},
 	"about": {
 		"title": "Über",
-		"version": "Version: {version}"
+		"version": "Version: {version}",
+		"frontendVersion": "Frontend-Version: {version}",
+		"apiVersion": "API-Version: {version}"
 	},
 	"time": {
 		"units": {

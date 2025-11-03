@@ -1,14 +1,14 @@
 import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
 import type {ITeamMember} from './ITeamMember'
-import type {Right} from '@/constants/rights'
+import type {Permission} from '@/constants/permissions'
 
 export interface ITeam extends IAbstract {
 	id: number
 	name: string
 	description: string
 	members: ITeamMember[]
-	right: Right
+	permission: Permission
 	externalId: string
 	isPublic: boolean
 

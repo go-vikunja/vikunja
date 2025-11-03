@@ -15,19 +15,21 @@
 		@close="() => modalOpen = false"
 	>
 		<Filters
-			ref="filters"
+			ref="filtersRef"
 			v-model="value"
 			:has-title="true"
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
+			show-close
+			@close="modalOpen = false"
 			@showResults="showResults"
 		/>
 	</Modal>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
+import {computed, ref, watch, nextTick} from 'vue'
 
 import Filters from '@/components/project/partials/Filters.vue'
 
@@ -49,6 +51,7 @@ const emit = defineEmits<{
 const projectStore = useProjectStore()
 
 const value = ref<TaskFilterParams>({})
+const filtersRef = ref()
 
 watch(
 	() => props.modelValue,
@@ -67,6 +70,15 @@ const hasFilters = computed(() => {
 })
 
 const modalOpen = ref(false)
+
+// Auto-focus filter input when modal opens
+watch(modalOpen, (isOpen) => {
+	if (isOpen) {
+		nextTick(() => {
+			filtersRef.value?.focusFilterInput()
+		})
+	}
+})
 
 function showResults() {
 	emit('update:modelValue', {
@@ -107,11 +119,11 @@ $filter-bubble-size: .75rem;
 	&::after {
 		content: '';
 		position: absolute;
-		top: math.div($filter-bubble-size, -2);
-		right: math.div($filter-bubble-size, -2);
+		inset-block-start: math.div($filter-bubble-size, -2);
+		inset-inline-end: math.div($filter-bubble-size, -2);
 
-		width: $filter-bubble-size;
-		height: $filter-bubble-size;
+		inline-size: $filter-bubble-size;
+		block-size: $filter-bubble-size;
 		border-radius: 100%;
 		background: var(--primary);
 	}

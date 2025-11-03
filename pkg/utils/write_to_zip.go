@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package utils
@@ -40,7 +40,7 @@ func WriteBytesToZip(filename string, data []byte, writer *zip.Writer) (err erro
 	return
 }
 
-// WriteFilesToZip writes a bunch of files from the db to a zip file. It exprects a map with the file id
+// WriteFilesToZip writes a bunch of files from the db to a zip file. It expects a map with the file id
 // as key and its content as io.ReadCloser.
 func WriteFilesToZip(files map[int64]io.ReadCloser, wr *zip.Writer) (err error) {
 	for fid, file := range files {

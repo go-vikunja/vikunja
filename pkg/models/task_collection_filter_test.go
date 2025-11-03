@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -283,5 +283,32 @@ func TestParseFilter(t *testing.T) {
 		} else {
 			assert.Equal(t, 0, date.Year())
 		}
+	})
+	t.Run("project with parentheses", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("( project = 1 )", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		require.Len(t, result[0].value, 1)
+
+		firstSet := result[0].value.([]*taskFilter)
+		assert.Equal(t, "project_id", firstSet[0].field)
+		assert.Equal(t, taskFilterComparatorEquals, firstSet[0].comparator)
+		assert.Equal(t, int64(1), firstSet[0].value)
+	})
+	t.Run("project with OR in parentheses", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("( done = false || project = 1 )", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		require.Len(t, result[0].value, 2)
+
+		firstSet := result[0].value.([]*taskFilter)
+		assert.Equal(t, "done", firstSet[0].field)
+		assert.Equal(t, taskFilterComparatorEquals, firstSet[0].comparator)
+		assert.Equal(t, false, firstSet[0].value)
+		assert.Equal(t, "project_id", firstSet[1].field)
+		assert.Equal(t, taskFilterComparatorEquals, firstSet[1].comparator)
+		assert.Equal(t, int64(1), firstSet[1].value)
 	})
 }

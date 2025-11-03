@@ -4,7 +4,7 @@ import type {Method} from 'axios'
 import {objectToSnakeCase} from '@/helpers/case'
 import AbstractModel from '@/models/abstractModel'
 import type {IAbstract} from '@/modelTypes/IAbstract'
-import type {Right} from '@/constants/rights'
+import type {Permission} from '@/constants/permissions'
 
 interface Paths {
 	create : string
@@ -209,7 +209,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 	// Default factories
 	// It is possible to specify a factory for each type of request.
 	// This makes it possible to have different models returned from different routes.
-	// Specific factories for each request are completly optional, if these are not specified, the defautl factory is used.
+	// Specific factories for each request are completely optional, if these are not specified, the default factory is used.
 	////////////////
 
 	/**
@@ -310,7 +310,7 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		try {
 			const response = await this.http.get(finalUrl, {params: prepareParams(params)})
 			const result = this.modelGetFactory(response.data)
-			result.maxRight = Number(response.headers['x-max-right']) as Right
+			result.maxPermission = Number(response.headers['x-max-permission']) as Permission
 			return result
 		} finally {
 			cancel()
@@ -324,6 +324,17 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 			responseType: 'blob',
 			data,
 		})
+		
+		// Handle SVG blobs specially - convert to data URL for better browser compatibility
+		if (response.data.type === 'image/svg+xml') {
+			return new Promise((resolve, reject) => {
+				const reader = new FileReader()
+				reader.onload = () => resolve(reader.result as string)
+				reader.onerror = reject
+				reader.readAsDataURL(response.data)
+			})
+		}
+		
 		return window.URL.createObjectURL(new Blob([response.data]))
 	}
 
@@ -375,8 +386,8 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		try {
 			const response = await this.http.put(finalUrl, model)
 			const result = this.modelCreateFactory(response.data)
-			if (typeof model.maxRight !== 'undefined') {
-				result.maxRight = model.maxRight
+			if (typeof model.maxPermission !== 'undefined') {
+				result.maxPermission = model.maxPermission
 			}
 			return result
 		} finally {
@@ -394,8 +405,8 @@ export default abstract class AbstractService<Model extends IAbstract = IAbstrac
 		try {
 			const response = await this.http.post(url, model)
 			const result = this.modelUpdateFactory(response.data)
-			if (typeof model.maxRight !== 'undefined') {
-				result.maxRight = model.maxRight
+			if (typeof model.maxPermission !== 'undefined') {
+				result.maxPermission = model.maxPermission
 			}
 			return result
 		} finally {

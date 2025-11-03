@@ -1,0 +1,91 @@
+{
+	"extends": [
+		"stylelint-config-standard-scss",
+		"stylelint-config-recommended-vue"
+	],
+	"customSyntax": "postcss-html",
+	"plugins": [
+		"stylelint-use-logical"
+	],
+	"rules": {
+		"alpha-value-notation": null,
+		"at-rule-empty-line-before": null,
+		"at-rule-no-unknown": [
+			true,
+			{
+				"ignoreAtRules": [
+					"tailwind",
+					"apply",
+					"variants",
+					"responsive",
+					"screen",
+					"use",
+					"forward",
+					"import",
+					"each"
+				]
+			}
+		],
+		"color-function-alias-notation": null,
+		"color-function-notation": null,
+		"color-hex-length": "long",
+		"csstools/use-logical": true,
+		"declaration-block-no-redundant-longhand-properties": null,
+		"declaration-empty-line-before": null,
+		"declaration-property-value-keyword-no-deprecated": null,
+		"declaration-property-value-no-unknown": null,
+		"hue-degree-notation": null,
+		"media-query-no-invalid": null,
+		"no-descending-specificity": null,
+		"no-invalid-position-declaration": null,
+		"property-no-deprecated": null,
+		"property-no-vendor-prefix": [
+			true,
+			{
+				"ignoreProperties": ["appearance"]
+			}
+		],
+		"rule-empty-line-before": null,
+		"scss/at-rule-no-unknown": null,
+		"scss/dollar-variable-colon-space-after": "always",
+		"scss/dollar-variable-colon-space-before": "never",
+		"scss/double-slash-comment-empty-line-before": null,
+		"scss/double-slash-comment-whitespace-inside": null,
+		"scss/no-global-function-names": null,
+		"selector-class-pattern": null,
+		"selector-pseudo-element-colon-notation": null,
+		"selector-pseudo-element-no-unknown": [
+			true,
+			{
+				"ignorePseudoElements": ["v-deep", "last-child"]
+			}
+		],
+		"value-keyword-case": null
+	},
+	"overrides": [
+		{
+			"files": ["*.vue", "**/*.vue"],
+			"rules": {
+				"selector-pseudo-class-no-unknown": [
+					true,
+					{
+						"ignorePseudoClasses": ["deep", "global"]
+					}
+				],
+				"selector-pseudo-element-no-unknown": [
+					true,
+					{
+						"ignorePseudoElements": ["v-deep", "v-global", "v-slotted"]
+					}
+				]
+			}
+		}
+	],
+	"ignoreFiles": [
+		"node_modules/**/*",
+		"dist/**/*",
+		"cypress/**/*",
+		"**/*.js",
+		"**/*.ts"
+	]
+}

@@ -67,7 +67,8 @@
 			"noAccountYet": "Non hai un account?",
 			"alreadyHaveAnAccount": "Hai già un account?",
 			"remember": "Resta connesso",
-			"registrationDisabled": "La registrazione è disabilitata."
+			"registrationDisabled": "La registrazione è disabilitata.",
+			"passwordResetTokenMissing": "Manca il token per la reimpostazione della password."
 		},
 		"settings": {
 			"title": "Impostazioni",
@@ -91,6 +92,7 @@
 				"discoverableByName": "Permetti agli altri utenti di aggiungermi a gruppi o progetti cercando il mio nome",
 				"discoverableByEmail": "Permetti agli altri di aggiungermi a gruppi o progetti cercando il mio indirizzo email",
 				"playSoundWhenDone": "Riproduci un suono quando le attività vengono contrassegnate come completate",
+				"allowIconChanges": "Mostra loghi speciali durante determinati periodi",
 				"weekStart": "La settimana inizia di",
 				"weekStartSunday": "Domenica",
 				"weekStartMonday": "Lunedì",
@@ -99,7 +101,26 @@
 				"defaultView": "Vista predefinita",
 				"timezone": "Fuso orario",
 				"overdueTasksRemindersTime": "Orario d'invio delle e-mail per attività scadute",
-				"filterUsedOnOverview": "Filtro utilizzato nella panoramica"
+				"filterUsedOnOverview": "Filtro utilizzato nella panoramica",
+				"minimumPriority": "Priorità minima delle attività visibili",
+				"dateDisplay": "Formato data",
+				"dateDisplayOptions": {
+					"relative": "Relativa (es. 3 giorni fa)",
+					"mm-dd-yyyy": "MM-GG-AAAA",
+					"dd-mm-yyyy": "GG-MM-AAAA",
+					"yyyy-mm-dd": "AAAA-MM-GG",
+					"mm/dd/yyyy": "MM/GG/AAAA",
+					"dd/mm/yyyy": "GG/MM/AAAA",
+					"yyyy/mm/dd": "AAAA/MM/GG"
+				},
+				"externalUserNameChange": "Il tuo nome è gestito dal tuo provider di autenticazione ({provider}). Per cambiarlo, aggiorna il tuo nome lì."
+			},
+			"sections": {
+				"personalInformation": "Informazioni Personali",
+				"taskAndNotifications": "Progetti e Attività",
+				"privacy": "Privacy",
+				"localization": "Posizione",
+				"appearance": "Aspetto e comportamento"
 			},
 			"totp": {
 				"title": "Autenticazione a due fattori",
@@ -135,7 +156,9 @@
 				"upload": "Caricato",
 				"uploadAvatar": "Carica Avatar",
 				"statusUpdateSuccess": "Avatar aggiornato!",
-				"setSuccess": "L'avatar è stato impostato con successo!"
+				"setSuccess": "L'avatar è stato impostato con successo!",
+				"ldap": "Il tuo avatar è sincronizzato automaticamente dal servizio di directory della tua organizzazione (LDAP). Puoi chiedere al tuo team IT informazioni su come cambiarlo.",
+				"openid": "Il tuo avatar viene sincronizzato automaticamente dal tuo provider di accesso ({provider}). Per modificarlo, aggiornalo da lì."
 			},
 			"quickAddMagic": {
 				"title": "Modalità di aggiunta rapida",
@@ -203,13 +226,16 @@
 			"descriptionPasswordRequired": "Inserisci la tua password per procedere:",
 			"request": "Richiedi una copia dei tuoi dati",
 			"success": "Hai richiesto con successo i tuoi dati Vikunja! Ti invieremo un'e-mail una volta che saranno pronti da scaricare.",
-			"downloadTitle": "Scarica i tuoi dati esportati da Vikunja"
+			"downloadTitle": "Scarica i tuoi dati esportati da Vikunja",
+			"ready": "La tua esportazione è pronta per il download. Puoi scaricarla fino al {0}.",
+			"requestNew": "Richiedi un'altra esportazione"
 		}
 	},
 	"project": {
 		"archivedMessage": "Questo progetto è archiviato. Non è possibile creare nuove attività o modificarle.",
 		"archived": "Archiviati",
 		"showArchived": "Mostra Archiviati",
+		"title": "Titolo",
 		"color": "Colore",
 		"projects": "Progetti",
 		"parent": "Progetto Principale",
@@ -218,6 +244,11 @@
 		"shared": "Progetti Condivisi",
 		"noDescriptionAvailable": "Descrizione del progetto non disponibile.",
 		"inboxTitle": "In arrivo",
+		"favorite": "Segna questo progetto come preferito",
+		"unfavorite": "Rimuovi questo progetto dai preferiti",
+		"openSettingsMenu": "Apri menu impostazioni progetto",
+		"description": "Descrizione progetto",
+		"favoriteDescription": "Questo progetto ha tutte le attività contrassegnate come preferiti.",
 		"create": {
 			"header": "Nuovo progetto",
 			"titlePlaceholder": "Titolo del progetto…",
@@ -305,12 +336,6 @@
 				"addedSuccess": "{type} aggiunto con successo.",
 				"updatedSuccess": "{type} aggiunto con successo."
 			},
-			"right": {
-				"title": "Permessi",
-				"read": "Solo lettura",
-				"readWrite": "Lettura e scrittura",
-				"admin": "Amministratore"
-			},
 			"attributes": {
 				"link": "Link",
 				"delete": "Elimina"
@@ -335,7 +360,21 @@
 			"day": "Giorno",
 			"hour": "Ora",
 			"range": "Intervallo di date",
-			"noDates": "Questa attività non ha date impostate."
+			"chartLabel": "Progetto diagramma di Gantt",
+			"taskBarsForRow": "Barre delle attività per riga {rowId}",
+			"taskBarLabel": "Attività: {task}. Da {startDate} a {endDate}. {dateType}. Clicca per modificare, trascina per spostare.",
+			"scheduledDates": "Date previste",
+			"estimatedDates": "Date stimate",
+			"resizeStartDate": "Ridimensiona la data di inizio per l'attività {task}",
+			"resizeEndDate": "Ridimensiona la data di fine per l'attività {task}",
+			"timelineHeader": "Intestazione linea temporale con mesi e giorni",
+			"monthsRow": "Riga mesi",
+			"daysRow": "Riga giorni",
+			"monthLabel": "Mese: {month}",
+			"dayLabel": "Giorno: {weekday}, {date}",
+			"dayLabelToday": "Oggi: {weekday}, {date}",
+			"taskAriaLabel": "Attività: {task}",
+			"taskAriaLabelById": "Attività {id}"
 		},
 		"table": {
 			"title": "Tabella",
@@ -410,6 +449,7 @@
 		"title": "Filtri",
 		"clear": "Pulisci Filtri",
 		"showResults": "Mostra risultati",
+		"noResults": "Nessun risultato",
 		"fromView": "La vista corrente ha un filtro impostato:",
 		"fromViewBoth": "Sarà usato in combinazione con quello che inserisci qui.",
 		"attributes": {
@@ -582,7 +622,8 @@
 		"created": "Creato il",
 		"createdBy": "Creato da {0}",
 		"actions": "Azioni",
-		"cannotBeUndone": "Questa azione non può essere annullata!"
+		"cannotBeUndone": "Questa azione non può essere annullata!",
+		"avatarOfUser": "Immagine profilo di {user}"
 	},
 	"input": {
 		"resetColor": "Ripristina Colore",
@@ -739,7 +780,6 @@
 		"addReminder": "Aggiungi un promemoria…",
 		"doneSuccess": "Attività segnata come completata.",
 		"undoneSuccess": "Attività segnata come non completata.",
-		"revertSuccess": "La modifica dell'attività è stata annullata con successo.",
 		"undo": "Annulla",
 		"openDetail": "Apri vista dettagli attività",
 		"checklistTotal": "{checked} di {total} attività",
@@ -747,7 +787,7 @@
 		"show": {
 			"titleCurrent": "Attività correnti",
 			"titleDates": "Attività dal {from} al {to}",
-			"noDates": "Mostra attività senza date",
+			"noDates": "Mostra attività senza data",
 			"overdue": "Mostra attività scadute",
 			"fromuntil": "Attività dal {from} al {until}",
 			"select": "Seleziona intervallo di date",
@@ -964,7 +1004,7 @@
 			"project4": "Per esempio: {prefix}\"Progetto con spazi\".",
 			"dateAndTime": "Data e ora",
 			"date": "Qualsiasi data inserita sarà considerata come data di scadenza della nuova attività. È possibile utilizzare le date in uno dei seguenti formati:",
-			"dateWeekday": "qualsiasi giorno della settimana, userà la data più vicina",
+			"dateWeekday": "ogni giorno della settimana, userà la prossima data con quel giorno",
 			"dateCurrentYear": "userà l’anno corrente",
 			"dateNth": "userà il {day} del mese corrente",
 			"dateTime": "Combina uno qualsiasi dei formati di data con \"{time}\" (o {timePM}) per specificare un orario.",
@@ -1046,6 +1086,7 @@
 			"delete": "Elimina questa attività",
 			"priority": "Modifica la priorità di questa attività",
 			"favorite": "Segna questa attività come preferita o non preferita",
+			"openProject": "Apri il progetto di questa attività",
 			"save": "Salva attività corrente"
 		},
 		"project": {
@@ -1062,6 +1103,21 @@
 			"labels": "Passa a \"Etichette\"",
 			"teams": "Passa a \"Gruppi\"",
 			"projects": "Passa a \"Progetti\""
+		},
+		"list": {
+			"title": "Elenco Attività",
+			"navigateDown": "Evidenzia l'attività successiva",
+			"navigateUp": "Evidenzia l'attività precedente",
+			"open": "Apri l'attività evidenziata"
+		},
+		"gantt": {
+			"title": "Diagramma di Gantt",
+			"moveTaskLeft": "Sposta attività a data precedente",
+			"moveTaskRight": "Sposta l'attività in data successiva",
+			"expandTaskLeft": "Espandi inizio attività a data precedente",
+			"expandTaskRight": "Espandi fine attività a data successiva",
+			"shrinkTaskLeft": "Riduci l'attività dalla data di inizio",
+			"shrinkTaskRight": "Riduci l'attività dalla data di fine"
 		}
 	},
 	"update": {
@@ -1149,8 +1205,16 @@
 		"1016": "TOTP non è attivo per questo utente.",
 		"1017": "Codice TOTP non valido.",
 		"1018": "L'impostazione del tipo di avatar utente non è valida.",
+		"1019": "Nessun indirizzo email è stato fornito dal provider OpenID. Assicurati che il provider OpenID fornisca pubblicamente un indirizzo email per il tuo account.",
+		"1020": "Questo account è disabilitato. Controlla le tue email o chiedi al tuo amministratore.",
+		"1021": "Questo account è gestito da un provider di autenticazione di terze parti.",
+		"1022": "Il nome utente non deve contenere spazi.",
+		"1023": "Non puoi farlo come link condiviso.",
+		"1024": "Dati della richiesta non validi per il campo {field} del tipo {type}.",
+		"1025": "Il fuso orario '{timezone}' non è valido. Seleziona un fuso orario valido dalla lista.",
 		"2001": "L'ID non può essere vuoto o 0.",
 		"2002": "Alcuni dati della richiesta non erano validi.",
+		"2003": "Il fuso orario '{timezone}' non è valido.",
 		"3001": "Il progetto non esiste.",
 		"3004": "Per eseguire l'azione, è necessario avere i permessi di lettura sul progetto.",
 		"3005": "Il titolo del progetto non può essere vuoto.",
@@ -1176,12 +1240,18 @@
 		"4017": "Comparatore di filtri attività non valido.",
 		"4018": "Concatenatore filtro attività non valido.",
 		"4019": "Filtro attività non valido.",
+		"4020": "Questo allegato non appartiene a questa attività.",
+		"4021": "Questo utente è già assegnato a questa attività.",
+		"4022": "Fornisci a quale data di promemoria è relativa.",
+		"4023": "Impossibile creare un ciclo di relazione dell'attività.",
 		"6001": "Il nome del gruppo non può essere vuoto.",
 		"6002": "Gruppo non esistente.",
 		"6004": "Il gruppo ha già accesso a quel progetto.",
 		"6005": "L'utente è già membro di quel gruppo.",
 		"6006": "Non è possibile eliminare l'ultimo membro del gruppo.",
 		"6007": "Il gruppo non ha accesso al progetto per eseguire l'azione.",
+		"6008": "Non è stato possibile trovare alcun team per OIDC ID ed emittente forniti.",
+		"6009": "Non è stato trovato nessun team con proprietà OIDC ID per l'utente.",
 		"7002": "L'utente ha già accesso a questo progetto.",
 		"7003": "Non hai accesso a questo progetto.",
 		"8001": "Questa etichetta esiste già in quell'attività.",
@@ -1197,14 +1267,21 @@
 		"11002": "I filtri salvati non sono disponibili per i link di condivisione.",
 		"12001": "Il tipo di entità sottoscritto non è valido.",
 		"12002": "Sei già iscritto all'entità stessa o a un'entità principale.",
+		"12003": "È necessario fornire un utente per recuperare le sottoscrizioni.",
 		"13001": "Questa condivisione di link richiede una password per l'autenticazione, ma non è stata fornita.",
+		"13002": "La password inserita per il link condiviso non è valida.",
+		"13003": "Il token API inserito per il link condiviso non è valido.",
+		"14001": "Il token api fornito non è valido.",
+		"14002": "Il permesso {permission} del gruppo {group} non è valido.",
 		"error": "Errore",
 		"success": "Successo",
 		"0001": "Non ti è permesso farlo."
 	},
 	"about": {
 		"title": "Informazioni",
-		"version": "Versione: {version}"
+		"version": "Versione: {version}",
+		"frontendVersion": "Versione Frontend: {version}",
+		"apiVersion": "Versione API: {version}"
 	},
 	"time": {
 		"units": {

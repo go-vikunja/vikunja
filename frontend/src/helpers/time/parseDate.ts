@@ -109,7 +109,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		}
 	}
 
-	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9]?)?( ?(a|p)m)?)'
+	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9])?( ?(a|p)m)?)'
 	const matcher = new RegExp(timeRegex, 'ig')
 	const results = matcher.exec(text)
 
@@ -118,8 +118,12 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		const parts = time.split(':')
 		let hours = parseInt(parts[0])
 		let minutes = 0
-		if (time.endsWith('pm')) {
-			hours += 12
+		if (time.toLowerCase().endsWith('pm')) {
+			if (hours !== 12) {
+				hours += 12
+			}
+		} else if (time.toLowerCase().endsWith('am') && hours === 12) {
+			hours = 0
 		}
 		if (parts.length > 1) {
 			minutes = parseInt(parts[1])
@@ -128,6 +132,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		date.setHours(hours)
 		date.setMinutes(minutes)
 		date.setSeconds(0)
+		date.setMilliseconds(0)
 	}
 
 	const replace = results !== null ? results[0] : previousMatch

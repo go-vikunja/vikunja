@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -88,7 +88,7 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Success 200 {object} models.Message "The user was successfully removed from the team."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{username} [delete]
-func (tm *TeamMember) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (tm *TeamMember) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	t, err := GetTeamByID(s, tm.TeamID)
 	if err != nil {
@@ -115,7 +115,21 @@ func (tm *TeamMember) Delete(s *xorm.Session, _ web.Auth) (err error) {
 	tm.UserID = user.ID
 
 	_, err = s.Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).Delete(&TeamMember{})
-	return
+	if err != nil {
+		return err
+	}
+
+	err = s.Commit()
+	if err != nil {
+		return err
+	}
+
+	doer, _ := user2.GetFromAuth(a)
+	return events.Dispatch(&TeamMemberRemovedEvent{
+		Team:   t,
+		Member: user,
+		Doer:   doer,
+	})
 }
 
 func (tm *TeamMember) MembershipExists(s *xorm.Session) (exists bool, err error) {
@@ -132,7 +146,7 @@ func (tm *TeamMember) MembershipExists(s *xorm.Session) (exists bool, err error)
 // @Security JWTKeyAuth
 // @Param id path int true "Team ID"
 // @Param userID path int true "User ID"
-// @Success 200 {object} models.Message "The member right was successfully changed."
+// @Success 200 {object} models.Message "The member permission was successfully changed."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /teams/{id}/members/{userID}/admin [post]
 func (tm *TeamMember) Update(s *xorm.Session, _ web.Auth) (err error) {
@@ -143,7 +157,7 @@ func (tm *TeamMember) Update(s *xorm.Session, _ web.Auth) (err error) {
 	}
 	tm.UserID = user.ID
 
-	// Get the full member object and change the admin right
+	// Get the full member object and change the admin permission
 	ttm := &TeamMember{}
 	_, err = s.
 		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
@@ -158,6 +172,6 @@ func (tm *TeamMember) Update(s *xorm.Session, _ web.Auth) (err error) {
 		Where("team_id = ? AND user_id = ?", tm.TeamID, tm.UserID).
 		Cols("admin").
 		Update(ttm)
-	tm.Admin = ttm.Admin // Since we're returning the updated rights object
+	tm.Admin = ttm.Admin // Since we're returning the updated permissions object
 	return
 }

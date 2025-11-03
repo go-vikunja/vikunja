@@ -1,5 +1,5 @@
-import type {Right} from '@/constants/rights'
+import type {Permission} from '@/constants/permissions'
 
 export interface IAbstract {
-	maxRight: Right | null // FIXME: should this be readonly?
+	maxPermission: Permission | null // FIXME: should this be readonly?
 }

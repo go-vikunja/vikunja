@@ -1,0 +1,50 @@
+$bulma-sizes: (
+  0: 0,
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 0.75rem,
+  4: 1rem,
+  5: 1.5rem,
+  6: 3rem,
+);
+
+$types: (
+  p: padding,
+  m: margin,
+  b: border,
+);
+
+@each $name, $val in $bulma-sizes {
+  @each $type, $property in $types {
+    .#{$type}is-#{$name} {
+      #{$property}-inline-start: #{$val};
+    }
+    .#{$type}ie-#{$name} {
+      #{$property}-inline-end: #{$val};
+    }
+    .#{$type}bs-#{$name} {
+      #{$property}-block-start: #{$val};
+    }
+    .#{$type}be-#{$name} {
+      #{$property}-block-end: #{$val};
+    }
+    .#{$type}-#{$name} {
+      #{$property}: #{$val};
+    }
+  }
+}
+
+.has-text-start {
+  text-align: start;
+}
+
+.has-text-end {
+  text-align: end;
+}
+
+[dir="rtl"] .is-mirrored-rtl {
+  &,
+  > svg {
+    transform: scaleX(-1);
+  }
+}

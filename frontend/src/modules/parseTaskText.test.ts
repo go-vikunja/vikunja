@@ -96,6 +96,12 @@ describe('Parse Task Text', () => {
 				'at 3am': '3:0',
 				'at 3:12 am': '3:12',
 				'at 3:12 pm': '15:12',
+				'at 3:12 AM': '3:12',
+				'at 3:12 PM': '15:12',
+				'at 3:12 Am': '3:12',
+				'at 3:12 Pm': '15:12',
+				'at 12:00 pm': '12:0',
+				'at 12:00 am': '0:0',
 			} as const
 			
 			for (const c in cases) {
@@ -649,6 +655,20 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum')
 			expect(result.labels).toHaveLength(1)
 			expect(result.labels[0]).toBe('today')
+		})
+		it('should parse labels with parentheses and remove them from text', () => {
+			const result = parseTaskText('a *"a (a)"')
+
+			expect(result.text).toBe('a')
+			expect(result.labels).toHaveLength(1)
+			expect(result.labels[0]).toBe('a (a)')
+		})
+		it('should parse labels with parentheses from the start', () => {
+			const result = parseTaskText('*"a (a)" a')
+
+			expect(result.text).toBe('a')
+			expect(result.labels).toHaveLength(1)
+			expect(result.labels[0]).toBe('a (a)')
 		})
 	})
 

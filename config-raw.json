@@ -36,7 +36,7 @@
                 {
                     "key": "publicurl",
                     "default_value": "",
-                    "comment": "The public facing URL where your users can reach Vikunja. Used in emails and for the communication between api and frontend."
+                    "comment": "The public facing URL where your users can reach Vikunja. Used in emails and for the communication between api and frontend. The url must be a valid http or https url. This setting is required when cors.enable is true."
                 },
                 {
                     "key": "rootpath",
@@ -196,7 +196,7 @@
                 {
                     "key": "path",
                     "default_value": "./vikunja.db",
-                    "comment": "When using sqlite, this is the path where to store the data"
+                    "comment": "When using sqlite, this is the path where to store the database file. Can be an absolute path or relative path. \u003cbr/\u003e\nRelative paths are resolved as follows: \u003cbr/\u003e\n- If `service.rootpath` is explicitly configured (differs from the binary location), the database path is resolved relative to that directory. \u003cbr/\u003e\n- Otherwise, relative paths are resolved to a platform-specific user data directory to prevent database files from being created in system directories (like `C:\\Windows\\System32` on Windows when running as a service): \u003cbr/\u003e\n  - **Windows**: `%LOCALAPPDATA%\\Vikunja` (e.g., `C:\\Users\\username\\AppData\\Local\\Vikunja`) \u003cbr/\u003e\n  - **macOS**: `~/Library/Application Support/Vikunja` \u003cbr/\u003e\n  - **Linux**: `$XDG_DATA_HOME/vikunja` or `~/.local/share/vikunja` \u003cbr/\u003e\n**Recommendation**: Use an absolute path for production deployments, especially when running Vikunja as a Windows service, to have full control over the database location."
                 },
                 {
                     "key": "maxopenconnections",
@@ -290,15 +290,18 @@
             "children": [
                 {
                     "key": "enable",
-                    "default_value": "false",
-                    "comment": "Whether to enable or disable cors headers.\nNote: If you want to put the frontend and the api on separate domains or ports, you will need to enable this.\nOtherwise the frontend won't be able to make requests to the api through the browser."
+                    "default_value": "true",
+                    "comment": "Whether to enable or disable cors headers.\nBy default, this is enabled only for requests from the desktop application running on localhost.\nNote: If you want to put the frontend and the api on separate domains or ports, you will need to adjust this setting accordingly."
                 },
                 {
                     "key": "origins",
                     "comment": "A list of origins which may access the api. These need to include the protocol (`http://` or `https://`) and port, if any.",
                     "children": [
                         {
-                            "default_value": "*"
+                            "default_value": "http://127.0.0.1:*"
+                        },
+                        {
+                            "default_value": "http://localhost:*"
                         }
                     ]
                 },
@@ -393,6 +396,11 @@
                     "comment": "Change the log level. Possible values (case-insensitive) are CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG."
                 },
                 {
+                    "key": "format",
+                    "default_value": "text",
+                    "comment": "Logging format. Can be either `text` or `structured` to output JSON."
+                },
+                {
                     "key": "database",
                     "default_value": "off",
                     "comment": "Whether or not to log database queries. Useful for debugging. Possible values are stdout, stderr, file or off to disable database logging."
@@ -406,11 +414,6 @@
                     "key": "http",
                     "default_value": "stdout",
                     "comment": "Whether to log http requests or not. Possible values are stdout, stderr, file or off to disable http logging."
-                },
-                {
-                    "key": "echo",
-                    "default_value": "off",
-                    "comment": "Echo has its own logging which usually is unnecessary, which is why it is disabled by default. Possible values are stdout, stderr, file or off to disable standard logging."
                 },
                 {
                     "key": "events",
@@ -714,6 +717,11 @@
                                             "key": "forceuserinfo",
                                             "default_value": "false",
                                             "comment": "This option forces the use of the OpenID Connect UserInfo endpoint to retrieve user information instead of relying on claims from the ID token. When set to `true`, user data (email, name, username) will always be obtained from the UserInfo endpoint even if the information is available in the token claims. This is useful for providers that don't include complete user information in their tokens or when you need the most up-to-date user data. Allowed value is either `true` or `false`."
+                                        },
+                                        {
+                                            "key": "requireavailability",
+                                            "default_value": "false",
+                                            "comment": "This option requires the OpenID Connect provider to be available during Vikunja startup. When set to `true`, Vikunja will crash if it cannot connect to the provider during initialization, allowing container orchestrators like Kubernetes to handle the failure by restarting the application. This is useful in environments where you want to ensure all authentication providers are available before the application starts serving requests. Allowed value is either `true` or `false`."
                                         }
                                     ]
                                 }
@@ -940,6 +948,21 @@
                     "key": "renewbefore",
                     "default_value": "30d",
                     "comment": "A duration when certificates should be renewed before they expire. Valid time units are `ns`, `us` (or `µs`), `ms`, `s`, `m`, `h`."
+                }
+            ]
+        },
+        {
+            "key": "plugins",
+            "children": [
+                {
+                    "key": "enabled",
+                    "default_value": "false",
+                    "comment": "Whether to enable the plugin system."
+                },
+                {
+                    "key": "dir",
+                    "default_value": "<rootpath>plugins",
+                    "comment": "The directory where plugins are stored."
                 }
             ]
         }

@@ -70,7 +70,7 @@ defineEmits<{
 .card {
 	background-color: var(--white);
 	border-radius: $radius;
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 	border: 1px solid var(--card-border-color);
 	box-shadow: var(--shadow-sm);
 
@@ -82,13 +82,13 @@ defineEmits<{
 
 .card-header {
 	box-shadow: none;
-	border-bottom: 1px solid var(--card-border-color);
+	border-inline-end: 1px solid var(--card-border-color);
 	border-radius: $radius $radius 0 0;
 }
 
 .card-footer {
 	background-color: var(--grey-50);
-	border-top: 0;
+	border-block-start: 0;
 	padding: var(--modal-card-head-padding);
 	display: flex;
 	justify-content: flex-end;

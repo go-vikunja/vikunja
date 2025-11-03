@@ -3,7 +3,7 @@ import UserShareBaseModel from './userShareBase'
 import type {IUserProject} from '@/modelTypes/IUserProject'
 import type {IProject} from '@/modelTypes/IProject'
 
-// This class extends the user share model with a 'rights' parameter which is used in sharing
+// This class extends the user share model with a 'permissions' parameter which is used in sharing
 export default class UserProjectModel extends UserShareBaseModel implements IUserProject {
 	projectId: IProject['id'] = 0
 

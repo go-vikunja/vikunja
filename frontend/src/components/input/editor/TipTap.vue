@@ -11,56 +11,57 @@
 		<BubbleMenu
 			v-if="editor && isEditing"
 			:editor="editor"
-			class="editor-bubble__wrapper"
 		>
-			<BaseButton
-				v-tooltip="$t('input.editor.bold')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('bold') }"
-				@click="() => editor?.chain().focus().toggleBold().run()"
-			>
-				<Icon :icon="['fa', 'fa-bold']" />
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.italic')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('italic') }"
-				@click="() => editor?.chain().focus().toggleItalic().run()"
-			>
-				<Icon :icon="['fa', 'fa-italic']" />
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.underline')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('underline') }"
-				@click="() => editor?.chain().focus().toggleUnderline().run()"
-			>
-				<Icon :icon="['fa', 'fa-underline']" />
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.strikethrough')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('strike') }"
-				@click="() => editor?.chain().focus().toggleStrike().run()"
-			>
-				<Icon :icon="['fa', 'fa-strikethrough']" />
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.code')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('code') }"
-				@click="() => editor?.chain().focus().toggleCode().run()"
-			>
-				<Icon :icon="['fa', 'fa-code']" />
-			</BaseButton>
-			<BaseButton
-				v-tooltip="$t('input.editor.link')"
-				class="editor-bubble__button"
-				:class="{ 'is-active': editor.isActive('link') }"
-				@click="setLink"
-			>
-				<Icon :icon="['fa', 'fa-link']" />
-			</BaseButton>
+			<div class="editor-bubble__wrapper">
+				<BaseButton
+					v-tooltip="$t('input.editor.bold')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('bold') }"
+					@click="() => editor?.chain().focus().toggleBold().run()"
+				>
+					<Icon :icon="['fa', 'fa-bold']" />
+				</BaseButton>
+				<BaseButton
+					v-tooltip="$t('input.editor.italic')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('italic') }"
+					@click="() => editor?.chain().focus().toggleItalic().run()"
+				>
+					<Icon :icon="['fa', 'fa-italic']" />
+				</BaseButton>
+				<BaseButton
+					v-tooltip="$t('input.editor.underline')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('underline') }"
+					@click="() => editor?.chain().focus().toggleUnderline().run()"
+				>
+					<Icon :icon="['fa', 'fa-underline']" />
+				</BaseButton>
+				<BaseButton
+					v-tooltip="$t('input.editor.strikethrough')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('strike') }"
+					@click="() => editor?.chain().focus().toggleStrike().run()"
+				>
+					<Icon :icon="['fa', 'fa-strikethrough']" />
+				</BaseButton>
+				<BaseButton
+					v-tooltip="$t('input.editor.code')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('code') }"
+					@click="() => editor?.chain().focus().toggleCode().run()"
+				>
+					<Icon :icon="['fa', 'fa-code']" />
+				</BaseButton>
+				<BaseButton
+					v-tooltip="$t('input.editor.link')"
+					class="editor-bubble__button"
+					:class="{ 'is-active': editor.isActive('link') }"
+					@click="setLink"
+				>
+					<Icon :icon="['fa', 'fa-link']" />
+				</BaseButton>
+			</div>
 		</BubbleMenu>
 
 		<EditorContent
@@ -125,7 +126,7 @@
 		<XButton
 			v-else-if="isEditing && showSave"
 			v-cy="'saveEditor'"
-			class="mt-4"
+			class="mbs-4"
 			variant="secondary"
 			:shadow="false"
 			:disabled="!contentHasChanged"
@@ -145,23 +146,20 @@ import EditorToolbar from './EditorToolbar.vue'
 
 import StarterKit from '@tiptap/starter-kit'
 import {Extension, mergeAttributes} from '@tiptap/core'
-import {BubbleMenu, EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
+import {EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {marked} from 'marked'
+import {BubbleMenu} from '@tiptap/vue-3/menus'
 
 import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import Table from '@tiptap/extension-table'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
-import TableRow from '@tiptap/extension-table-row'
+import {Table, TableRow, TableCell, TableHeader} from '@tiptap/extension-table'
 import Typography from '@tiptap/extension-typography'
 import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
-import {Placeholder} from '@tiptap/extension-placeholder'
+import {Placeholder} from '@tiptap/extensions'
 
-import TaskItem from '@tiptap/extension-task-item'
-import TaskList from '@tiptap/extension-task-list'
+import {TaskItem, TaskList} from '@tiptap/extension-list'
 import HardBreak from '@tiptap/extension-hard-break'
 
 import {Node} from '@tiptap/pm/model'
@@ -295,6 +293,13 @@ const CustomImage = Image.extend({
 	},
 })
 
+// prevent links from extending after space
+const NonInclusiveLink = Link.extend({
+	inclusive() {
+		return false
+	},
+})
+
 type Mode = 'edit' | 'preview'
 
 const internalMode = ref<Mode>('preview')
@@ -331,6 +336,7 @@ const additionalLinkProtocols = [
 	'git',
 	'obsidian',
 	'notion',
+	'message',
 ]
 
 const PasteHandler = Extension.create({
@@ -347,7 +353,6 @@ const PasteHandler = Extension.create({
 						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length > 0) {
 
 							for (const item of event.clipboardData.items) {
-								console.log({item})
 								if (item.kind === 'file' && item.type.startsWith('image/')) {
 									const file = item.getAsFile()
 									if (file) {
@@ -358,15 +363,19 @@ const PasteHandler = Extension.create({
 							}
 						}
 						
-						// Handle markdown text
-						const text = event.clipboardData?.getData('text/plain')
-						if (!text) return false
+						const text = event.clipboardData?.getData('text/plain') || ''
+						if (!text) {
+							return false
+						}
+
+						const hasMarkdownSyntax = new RegExp('[*`_\\[\\]#-]').test(text)
+						if (!hasMarkdownSyntax) {
+							return false
+						}
 
 						const html = marked.parse(text)
 
-						// It is fine to paste the content without sanitizing because it will be sanitized later by TipTap
 						this.editor.commands.insertContent(html)
-						// https://github.com/ueberdosis/tiptap/discussions/4118#discussioncomment-8931999
 						return true
 					},
 				},
@@ -417,7 +426,7 @@ const extensions : Extensions = [
 	}),
 	Typography,
 	Underline,
-	Link.configure({
+	NonInclusiveLink.configure({
 		openOnClick: false,
 		validate: (href: string) => (new RegExp(
 			`^(https?|${additionalLinkProtocols.join('|')}):\\/\\/`,
@@ -448,7 +457,7 @@ const extensions : Extensions = [
 			// https://github.com/ueberdosis/tiptap/issues/3676
 
 			editor.value!.state.doc.descendants((subnode, pos) => {
-				if (node.eq(subnode)) {
+				if (subnode === node) {
 					const {tr} = editor.value!.state
 					tr.setNodeMarkup(pos, undefined, {
 						...node.attrs,
@@ -467,7 +476,7 @@ const extensions : Extensions = [
 	Commands.configure({
 		suggestion: suggestionSetup(t),
 	}),
-	
+
 	PasteHandler,
 ]
 
@@ -739,7 +748,7 @@ watch(
 	border-radius: $radius;
 	
 	&.tiptap__editor-is-edit-enabled {
-		min-height: 10rem;
+		min-block-size: 10rem;
 
 		.ProseMirror {
 			padding: .5rem;
@@ -759,8 +768,8 @@ watch(
 	content: attr(data-placeholder);
 	color: var(--grey-400);
 	pointer-events: none;
-	height: 0;
-	float: left;
+	block-size: 0;
+	float: inline-start;
 }
 
 // Basic editor styles
@@ -772,7 +781,7 @@ watch(
 	}
 
 	> * + * {
-		margin-top: 0.75em;
+		margin-block-start: 0.75em;
 	}
 
 	ul,
@@ -798,7 +807,7 @@ watch(
 	pre {
 		background: var(--grey-200);
 		color: var(--grey-700);
-		font-family: 'JetBrainsMono', monospace;
+		font-family: JetBrainsMono, monospace;
 		padding: 0.75rem 1rem;
 		border-radius: $radius;
 
@@ -821,7 +830,6 @@ watch(
 		.hljs-name,
 		.hljs-regexp,
 		.hljs-link,
-		.hljs-name,
 		.hljs-selector-id,
 		.hljs-selector-class {
 			color: var(--code-variable);
@@ -863,8 +871,8 @@ watch(
 	}
 
 	img {
-		max-width: 100%;
-		height: auto;
+		max-inline-size: 100%;
+		block-size: auto;
 
 		&.ProseMirror-selectednode {
 			outline: 3px solid var(--primary);
@@ -872,30 +880,27 @@ watch(
 	}
 
 	blockquote {
-		padding-left: 1rem;
-		border-left: 2px solid rgba(#0d0d0d, 0.1);
+		padding-inline-start: 1rem;
+		border-inline-start: 2px solid rgba(#0d0d0d, 0.1);
 	}
 
 	hr {
 		border: none;
-		border-top: 2px solid rgba(#0d0d0d, 0.1);
+		border-block-start: 2px solid rgba(#0d0d0d, 0.1);
 		margin: 2rem 0;
 	}
-}
-
-.ProseMirror {
-	/* Table-specific styling */
-
+	
+	// Table-specific styling
 	table {
 		border-collapse: collapse;
 		table-layout: fixed;
-		width: 100%;
+		inline-size: 100%;
 		margin: 0;
 		overflow: hidden;
 
 		td,
 		th {
-			min-width: 1em;
+			min-inline-size: 1em;
 			border: 2px solid var(--grey-300) !important;
 			padding: 3px 5px;
 			vertical-align: top;
@@ -903,13 +908,13 @@ watch(
 			position: relative;
 
 			> * {
-				margin-bottom: 0;
+				margin-block-end: 0;
 			}
 		}
 
 		th {
 			font-weight: bold;
-			text-align: left;
+			text-align: start;
 			background-color: var(--grey-200);
 		}
 
@@ -917,21 +922,21 @@ watch(
 			z-index: 2;
 			position: absolute;
 			content: '';
-			left: 0;
-			right: 0;
-			top: 0;
-			bottom: 0;
+			inset-inline-start: 0;
+			inset-inline-end: 0;
+			inset-block-start: 0;
+			inset-block-end: 0;
 			background: rgba(200, 200, 255, 0.4);
 			pointer-events: none;
 		}
 
 		.column-resize-handle {
 			position: absolute;
-			right: -2px;
-			top: 0;
-			bottom: -2px;
-			width: 4px;
-			background-color: #adf;
+			inset-inline-end: -2px;
+			inset-block-start: 0;
+			inset-block-end: -2px;
+			inline-size: 4px;
+			background-color: #aaddff;
 			pointer-events: none;
 		}
 
@@ -943,15 +948,15 @@ watch(
 	// Lists
 
 	ul {
-		margin-left: .5rem;
-		margin-top: 0 !important;
+		margin-inline-start: .5rem;
+		margin-block-start: 0 !important;
 
 		li {
-			margin-top: 0;
+			margin-block-start: 0;
 		}
 
 		p {
-			margin-bottom: 0 !important;
+			margin-block-end: 0 !important;
 		}
 	}
 }
@@ -969,7 +974,7 @@ watch(
 ul[data-type='taskList'] {
 	list-style: none;
 	padding: 0;
-	margin-left: 0;
+	margin-inline-start: 0;
 
 	li[data-checked='true'] {
 		color: var(--grey-500);
@@ -978,11 +983,11 @@ ul[data-type='taskList'] {
 
 	li {
 		display: flex;
-		margin-top: 0.25rem;
+		margin-block-start: 0.25rem;
 
 		> label {
 			flex: 0 0 auto;
-			margin-right: 0.5rem;
+			margin-inline-end: 0.5rem;
 			user-select: none;
 		}
 
@@ -1014,8 +1019,8 @@ ul[data-type='taskList'] {
 	svg {
 		box-sizing: border-box;
 		display: block;
-		width: 1rem;
-		height: 1rem;
+		inline-size: 2rem;
+		block-size: 2rem;
 		padding: .5rem;
 		margin: 0;
 	}

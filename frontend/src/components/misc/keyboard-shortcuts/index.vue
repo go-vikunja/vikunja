@@ -4,6 +4,8 @@
 			class="has-background-white keyboard-shortcuts"
 			:shadow="false"
 			:title="$t('keyboardShortcuts.title')"
+			:show-close="true"
+			@close="close()"
 		>
 			<template
 				v-for="(s, i) in shortcuts"
@@ -13,7 +15,7 @@
 
 				<Message
 					v-if="s.available"
-					class="mb-4"
+					class="mbe-4"
 				>
 					{{
 						typeof s.available === 'undefined' ?
@@ -62,11 +64,11 @@ function close() {
 
 <style scoped>
 .keyboard-shortcuts {
-	text-align: left;
+	text-align: start;
 }
 
 .message:not(:last-child) {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 }
 
 .message-body {
@@ -79,11 +81,11 @@ function close() {
 }
 
 .shortcut-title {
-	margin-bottom: .5rem;
+	margin-block-end: .5rem;
 }
 
 .shortcut-keys {
 	justify-content: end;
-	margin-bottom: .5rem;
+	margin-block-end: .5rem;
 }
 </style>

@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -19,22 +19,30 @@ package models
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
 
+// TaskBucket represents the relation between a task and a kanban bucket.
+// A task can only appear once per project view which is ensured by a
+// unique index on the combination of task_id and project_view_id.
 type TaskBucket struct {
-	BucketID      int64   `xorm:"bigint not null index" json:"bucket_id" param:"bucket"`
-	Bucket        *Bucket `xorm:"-" json:"bucket"`
-	TaskID        int64   `xorm:"bigint not null index" json:"task_id"`
-	ProjectViewID int64   `xorm:"bigint not null index" json:"project_view_id" param:"view"`
-	ProjectID     int64   `xorm:"-" json:"-" param:"project"`
-	Task          *Task   `xorm:"-" json:"task"`
+	BucketID int64   `xorm:"bigint not null index" json:"bucket_id" param:"bucket"`
+	Bucket   *Bucket `xorm:"-" json:"bucket"`
+	// The task which belongs to the bucket. Together with ProjectViewID
+	// this field is part of a unique index to prevent duplicates.
+	TaskID int64 `xorm:"bigint not null index unique(task_view)" json:"task_id"`
+	// The view this bucket belongs to. Combined with TaskID this forms a
+	// unique index.
+	ProjectViewID int64 `xorm:"bigint not null index unique(task_view)" json:"project_view_id" param:"view"`
+	ProjectID     int64 `xorm:"-" json:"-" param:"project"`
+	Task          *Task `xorm:"-" json:"task"`
 
-	web.Rights   `xorm:"-" json:"-"`
-	web.CRUDable `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
 }
 
 func (b *TaskBucket) TableName() string {
@@ -61,6 +69,13 @@ func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
 	if count == 0 {
 		_, err = s.Insert(b)
 		if err != nil {
+			// Check if this is a unique constraint violation for the task_buckets table
+			if db.IsUniqueConstraintError(err, "UQE_task_buckets_task_project_view") {
+				return ErrTaskAlreadyExistsInBucket{
+					TaskID:        b.TaskID,
+					ProjectViewID: b.ProjectViewID,
+				}
+			}
 			return
 		}
 	}
@@ -134,23 +149,26 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	var updateBucket = true
 
-	// mark task done if moved into the done bucket
+	// mark task done if moved into or out of the done bucket
+	// Only change the done state if the task's done value actually changes
 	var doneChanged bool
-	if view.DoneBucketID == b.BucketID {
-		doneChanged = true
-		task.Done = true
-		if task.isRepeating() {
-			oldTask := task
-			oldTask.Done = false
-			updateDone(oldTask, task)
-			updateBucket = false
-			b.BucketID = oldTaskBucket.BucketID
+	if view.DoneBucketID != 0 {
+		if view.DoneBucketID == b.BucketID && !task.Done {
+			doneChanged = true
+			task.Done = true
+			if task.isRepeating() {
+				oldTask := task
+				oldTask.Done = false
+				updateDone(oldTask, task)
+				updateBucket = false
+				b.BucketID = oldTaskBucket.BucketID
+			}
 		}
-	}
 
-	if oldTaskBucket.BucketID == view.DoneBucketID {
-		doneChanged = true
-		task.Done = false
+		if oldTaskBucket.BucketID == view.DoneBucketID && task.Done && b.BucketID != view.DoneBucketID {
+			doneChanged = true
+			task.Done = false
+		}
 	}
 
 	if doneChanged {

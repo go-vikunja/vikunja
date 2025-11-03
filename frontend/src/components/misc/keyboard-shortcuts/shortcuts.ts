@@ -16,7 +16,7 @@ export interface ShortcutGroup {
 	shortcuts: Shortcut[]
 }
 
-export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
+export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 	{
 		title: 'keyboardShortcuts.general',
 		shortcuts: [
@@ -61,6 +61,24 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 		],
 	},
 	{
+		title: 'keyboardShortcuts.list.title',
+		available: (route) => route.name === 'project.view',
+		shortcuts: [
+			{
+				title: 'keyboardShortcuts.list.navigateDown',
+				keys: ['j'],
+			},
+			{
+				title: 'keyboardShortcuts.list.navigateUp',
+				keys: ['k'],
+			},
+			{
+				title: 'keyboardShortcuts.list.open',
+				keys: ['enter'],
+			},
+		],
+	},
+	{
 		title: 'project.kanban.title',
 		available: (route) => route.name === 'project.view',
 		shortcuts: [
@@ -93,6 +111,36 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 				title: 'keyboardShortcuts.project.switchToKanbanView',
 				keys: ['g', 'k'],
 				combination: 'then',
+			},
+		],
+	},
+	{
+		title: 'keyboardShortcuts.gantt.title',
+		available: (route) => route.name === 'project.view',
+		shortcuts: [
+			{
+				title: 'keyboardShortcuts.gantt.moveTaskLeft',
+				keys: ['←'],
+			},
+			{
+				title: 'keyboardShortcuts.gantt.moveTaskRight',
+				keys: ['→'],
+			},
+			{
+				title: 'keyboardShortcuts.gantt.expandTaskLeft',
+				keys: ['shift', '←'],
+			},
+			{
+				title: 'keyboardShortcuts.gantt.expandTaskRight',
+				keys: ['shift', '→'],
+			},
+			{
+				title: 'keyboardShortcuts.gantt.shrinkTaskLeft',
+				keys: [ctrl, '←'],
+			},
+			{
+				title: 'keyboardShortcuts.gantt.shrinkTaskRight',
+				keys: [ctrl, '→'],
 			},
 		],
 	},
@@ -151,6 +199,10 @@ export const KEYBOARD_SHORTCUTS : ShortcutGroup[] = [
 			{
 				title: 'keyboardShortcuts.task.favorite',
 				keys: ['s'],
+			},
+			{
+				title: 'keyboardShortcuts.task.openProject',
+				keys: ['u'],
 			},
 			{
 				title: 'keyboardShortcuts.task.save',

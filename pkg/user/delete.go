@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package user
@@ -106,8 +106,16 @@ func ConfirmDeletion(s *xorm.Session, user *User, token string) (err error) {
 	}
 
 	if tk == nil {
-		// TODO: return invalid token error
-		return
+		return ErrInvalidDeletionToken{
+			Token: token,
+		}
+	}
+
+	if tk.UserID != user.ID {
+		return ErrTokenUserMismatch{
+			TokenUserID: tk.UserID,
+			UserID:      user.ID,
+		}
 	}
 
 	err = removeTokens(s, user, TokenAccountDeletion)
@@ -115,6 +123,10 @@ func ConfirmDeletion(s *xorm.Session, user *User, token string) (err error) {
 		return err
 	}
 
+	return ScheduleDeletion(s, user)
+}
+
+func ScheduleDeletion(s *xorm.Session, user *User) (err error) {
 	user.DeletionScheduledAt = time.Now().Add(3 * 24 * time.Hour)
 	_, err = s.Where("id = ?", user.ID).
 		Cols("deletion_scheduled_at").

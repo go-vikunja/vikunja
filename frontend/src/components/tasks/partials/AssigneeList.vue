@@ -59,7 +59,7 @@ defineEmits<{
 	}
 
 	&:hover .assignee:not(:first-child) {
-		margin-left: -0.5rem;
+		margin-inline-start: -0.5rem;
 	}
 }
 
@@ -68,27 +68,27 @@ defineEmits<{
 	transition: all $transition;
 
 	&:not(:first-child) {
-		margin-left: -1rem;
+		margin-inline-start: -1rem;
 	}
 
 	:deep(.user img) {
 		border: 2px solid var(--white);
-		margin-right: 0;
+		margin-inline-end: 0;
 	}
 }
 
 .remove-assignee {
 	position: absolute;
-	top: 4px;
-	left: 2px;
+	inset-block-start: 4px;
+	inset-inline-start: 2px;
 	color: var(--danger);
 	background: var(--white);
 	padding: 0 4px;
 	display: block;
 	border-radius: 100%;
 	font-size: .75rem;
-	width: 18px;
-	height: 18px;
+	inline-size: 18px;
+	block-size: 18px;
 	z-index: 100;
 }
 </style>

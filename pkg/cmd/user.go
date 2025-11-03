@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package cmd
@@ -51,6 +51,9 @@ var (
 )
 
 func init() {
+	// List flags
+	userListCmd.Flags().StringVarP(&userFlagEmail, "email", "e", "", "Filter users by an email address (exact match).")
+
 	// User create flags
 	userCreateCmd.Flags().StringVarP(&userFlagUsername, "username", "u", "", "The username of the new user.")
 	_ = userCreateCmd.MarkFlagRequired("username")
@@ -136,14 +139,24 @@ var userListCmd = &cobra.Command{
 		s := db.NewSession()
 		defer s.Close()
 
-		users, err := user.ListAllUsers(s)
-		if err != nil {
-			_ = s.Rollback()
-			log.Fatalf("Error getting users: %s", err)
-		}
+		var users []*user.User
 
-		if err := s.Commit(); err != nil {
-			log.Fatalf("Error getting users: %s", err)
+		if userFlagEmail != "" {
+			u, err := user.GetUserWithEmail(s, &user.User{Email: userFlagEmail})
+			if err != nil {
+				if user.IsErrUserDoesNotExist(err) {
+					log.Fatalf("No user found with email %s", userFlagEmail)
+				}
+				log.Fatalf("Error getting user: %s", err)
+			}
+
+			users = []*user.User{u}
+		} else {
+			var err error
+			users, err = user.ListAllUsers(s)
+			if err != nil {
+				log.Fatalf("Error getting users: %s", err)
+			}
 		}
 
 		table := tablewriter.NewTable(

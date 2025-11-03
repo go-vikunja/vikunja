@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package migration
@@ -39,6 +39,11 @@ import (
 
 var migrations []*xormigrate.Migration
 
+// AddPluginMigrations adds migrations provided by plugins to the global list.
+func AddPluginMigrations(ms []*xormigrate.Migration) {
+	migrations = append(migrations, ms...)
+}
+
 // A helper function because we need a migration in various places which we can't really solve with an init() function.
 func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 	// Get our own xorm engine if we don't have one
@@ -58,7 +63,7 @@ func initMigration(x *xorm.Engine) *xormigrate.Xormigrate {
 	})
 
 	m := xormigrate.New(x, migrations)
-	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogEvents.GetString(), config.LogEventsLevel.GetString())
+	logger := log.NewXormLogger(config.LogEnabled.GetBool(), config.LogEvents.GetString(), config.LogEventsLevel.GetString(), config.LogFormat.GetString())
 	m.SetLogger(logger)
 	m.InitSchema(initSchema)
 	return m
@@ -172,6 +177,82 @@ func renameTable(x *xorm.Engine, oldName, newName string) error {
 		}
 	case "postgres":
 		_, err := x.Exec("ALTER TABLE `" + oldName + "` RENAME TO `" + newName + "`")
+		if err != nil {
+			return err
+		}
+	default:
+		log.Fatal("Unknown db.")
+	}
+	return nil
+}
+
+// Checks if a column exists in a table
+func columnExists(x *xorm.Engine, tableName, columnName string) (bool, error) {
+	switch config.DatabaseType.GetString() {
+	case "sqlite":
+		results, err := x.Query("PRAGMA table_info(" + tableName + ")")
+		if err != nil {
+			return false, err
+		}
+
+		for _, row := range results {
+			if name, ok := row["name"]; ok && string(name) == columnName {
+				return true, nil
+			}
+		}
+		return false, nil
+	case "mysql":
+		results, err := x.Query("SHOW COLUMNS FROM `" + tableName + "` LIKE '" + columnName + "'")
+		if err != nil {
+			return false, err
+		}
+		return len(results) > 0, nil
+	case "postgres":
+		results, err := x.Query("SELECT column_name FROM information_schema.columns WHERE table_name = '" + tableName + "' AND column_name = '" + columnName + "'")
+		if err != nil {
+			return false, err
+		}
+		return len(results) > 0, nil
+	default:
+		log.Fatal("Unknown db.")
+		return false, nil
+	}
+}
+
+func renameColumn(x *xorm.Engine, tableName, oldColumn, newColumn string) error {
+	// Check if old column exists
+	exists, err := columnExists(x, tableName, oldColumn)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		log.Debugf("Column %s in table %s does not exist, skipping rename", oldColumn, tableName)
+		return nil
+	}
+
+	// Check if new column already exists
+	newExists, err := columnExists(x, tableName, newColumn)
+	if err != nil {
+		return err
+	}
+	if newExists {
+		log.Debugf("Column %s in table %s already exists, skipping rename", newColumn, tableName)
+		return nil
+	}
+
+	switch config.DatabaseType.GetString() {
+	case "sqlite":
+		_, err := x.Exec("ALTER TABLE \"" + tableName + "\" RENAME COLUMN \"" + oldColumn + "\" TO \"" + newColumn + "\"")
+		if err != nil {
+			return err
+		}
+	case "mysql":
+		_, err := x.Exec("ALTER TABLE `" + tableName + "` CHANGE `" + oldColumn + "` `" + newColumn + "` BIGINT NOT NULL DEFAULT 0")
+		if err != nil {
+			return err
+		}
+	case "postgres":
+		_, err := x.Exec("ALTER TABLE \"" + tableName + "\" RENAME COLUMN \"" + oldColumn + "\" TO \"" + newColumn + "\"")
 		if err != nil {
 			return err
 		}

@@ -2,6 +2,10 @@
 	<div
 		:class="{ 'is-loading': taskService.loading }"
 		class="defer-task loading-container"
+		@click.stop
+		@mousedown.stop
+		@pointerdown.stop
+		@touchstart.stop
 	>
 		<label class="label">{{ $t('task.deferDueDate.title') }}</label>
 		<div class="defer-days">
@@ -59,7 +63,7 @@ const {t} = useI18n({useScope: 'global'})
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>()
 
-// We're saving the due date seperately to prevent null errors in very short periods where the task is null.
+// We're saving the due date separately to prevent null errors in very short periods where the task is null.
 const dueDate = ref<Date | null>()
 const lastValue = ref<Date | null>()
 const changeInterval = ref<ReturnType<typeof setInterval>>()
@@ -135,14 +139,14 @@ async function updateDueDate() {
 $defer-task-max-width: 350px + 100px;
 
 .defer-task {
-	width: 100%;
-	max-width: $defer-task-max-width;
+	inline-size: 100%;
+	max-inline-size: $defer-task-max-width;
 
 	@media screen and (max-width: ($defer-task-max-width)) {
-		left: .5rem;
-		right: .5rem;
-		max-width: 100%;
-		width: calc(100vw - 1rem - 2rem);
+		inset-inline-start: .5rem;
+		inset-inline-end: .5rem;
+		max-inline-size: 100%;
+		inline-size: calc(100vw - 1rem - 2rem);
 	}
 }
 
@@ -162,11 +166,11 @@ $defer-task-max-width: 350px + 100px;
 		box-shadow: none;
 
 		@media screen and (max-width: ($defer-task-max-width)) {
-			max-width: 100%;
+			max-inline-size: 100%;
 		}
 
 		span {
-			width: auto !important;
+			inline-size: auto !important;
 		}
 
 	}

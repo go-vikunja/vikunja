@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -53,6 +53,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
 	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
+	events.RegisterListener((&TeamMemberRemovedEvent{}).Name(), &CleanupTaskAssignmentsAfterTeamRemoval{})
 	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskCommentEditMentions{})
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &HandleTaskCreateMentions{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &HandleTaskUpdatedMentions{})
@@ -704,7 +705,7 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 				IsErrInvalidTaskFilterConcatinator(err) ||
 				IsErrInvalidTaskFilterComparator(err) ||
 				IsErrInvalidTaskField(err) {
-				log.Debugf("Invalid filter expression for view %d, expression: %s", view.ID, view.Filter)
+				log.Debugf("Invalid filter expression for view %d, expression: %v", view.ID, view.Filter)
 				continue
 			}
 
@@ -840,13 +841,40 @@ type WebhookPayload struct {
 }
 
 func getIDAsInt64(id interface{}) int64 {
+	if id == nil {
+		return 0
+	}
+
 	switch v := id.(type) {
 	case int64:
 		return v
 	case float64:
 		return int64(v)
+	case float32:
+		return int64(v)
+	case int:
+		return int64(v)
+	case int32:
+		return int64(v)
+	case json.Number:
+		if i, err := v.Int64(); err == nil {
+			return i
+		}
+		if f, err := v.Float64(); err == nil {
+			return int64(f)
+		}
+		return 0
+	case string:
+		if i, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return i
+		}
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			return int64(f)
+		}
+		return 0
+	default:
+		return 0
 	}
-	return id.(int64)
 }
 
 func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
@@ -869,42 +897,56 @@ func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
 
 func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID int64) (eventWithData map[string]interface{}, doerID int64, err error) {
 	// Load event data again so that it is always populated in the webhook payload
-	if doer, has := event["doer"]; has {
-		d := doer.(map[string]interface{})
-		if rawDoerID, has := d["id"]; has {
-			doerID = getIDAsInt64(rawDoerID)
-			fullDoer, err := user.GetUserByID(s, doerID)
-			if err != nil && !user.IsErrUserDoesNotExist(err) {
-				return nil, 0, err
-			}
-			if err == nil {
-				event["doer"] = fullDoer
+	if doer, has := event["doer"]; has && doer != nil {
+		// doer can be null in incoming payloads, so guard the type assertion
+		d, ok := doer.(map[string]interface{})
+		if ok {
+			if rawDoerID, has := d["id"]; has && rawDoerID != nil {
+				doerID = getIDAsInt64(rawDoerID)
+				if doerID > 0 {
+					fullDoer, err := user.GetUserByID(s, doerID)
+					if err != nil && !user.IsErrUserDoesNotExist(err) {
+						return nil, 0, err
+					}
+					if err == nil {
+						event["doer"] = fullDoer
+					}
+				}
 			}
 		}
 	}
 
-	if task, has := event["task"]; has && doerID != 0 {
-		t := task.(map[string]interface{})
-		if taskID, has := t["id"]; has {
-			id := getIDAsInt64(taskID)
-			fullTask := Task{
-				ID: id,
-				Expand: []TaskCollectionExpandable{
-					TaskCollectionExpandBuckets,
-				},
-			}
-			err = fullTask.ReadOne(s, &user.User{ID: doerID})
-			if err != nil && !IsErrTaskDoesNotExist(err) {
-				return
-			}
-			if err == nil {
-				event["task"] = fullTask
+	if task, has := event["task"]; has && task != nil && doerID != 0 {
+		// guard the type assertion for task as well
+		t, ok := task.(map[string]interface{})
+		if ok {
+			if taskID, has := t["id"]; has && taskID != nil {
+				id := getIDAsInt64(taskID)
+				if id > 0 {
+					fullTask := Task{
+						ID: id,
+						Expand: []TaskCollectionExpandable{
+							TaskCollectionExpandBuckets,
+						},
+					}
+					err = fullTask.ReadOne(s, &user.User{ID: doerID})
+					if err != nil && !IsErrTaskDoesNotExist(err) {
+						return
+					}
+					if err == nil {
+						event["task"] = fullTask
+					}
+				}
 			}
 		}
 	}
 
 	if _, has := event["project"]; has && doerID != 0 {
-		project := &Project{ID: projectID}
+		var project *Project
+		project, err = GetProjectSimpleByID(s, projectID)
+		if err != nil && !IsErrProjectDoesNotExist(err) {
+			return
+		}
 		err = project.ReadOne(s, &user.User{ID: doerID})
 		if err != nil && !IsErrProjectDoesNotExist(err) {
 			return
@@ -1029,6 +1071,43 @@ func (s *DecreaseTeamCounter) Name() string {
 // Handle is executed when the event DecreaseTeamCounter listens on is fired
 func (s *DecreaseTeamCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.TeamCountKey, 1)
+}
+
+// CleanupTaskAssignmentsAfterTeamRemoval represents a listener
+type CleanupTaskAssignmentsAfterTeamRemoval struct{}
+
+// Name defines the name of the listener
+func (l *CleanupTaskAssignmentsAfterTeamRemoval) Name() string {
+	return "task.assignees.cleanup.team_removal"
+}
+
+// Handle cleans up task assignments and subscriptions for members removed from teams
+func (l *CleanupTaskAssignmentsAfterTeamRemoval) Handle(msg *message.Message) (err error) {
+	event := &TeamMemberRemovedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	if event == nil || event.Team == nil || event.Member == nil {
+		return nil
+	}
+
+	err = s.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = cleanupTaskMembersAfterTeamRemoval(s, event.Team.ID, event.Member.ID)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	return s.Commit()
 }
 
 // SendTeamMemberAddedNotification  represents a listener

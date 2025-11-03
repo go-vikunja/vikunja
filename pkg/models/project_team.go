@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -20,10 +20,9 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
-
 	"code.vikunja.io/api/pkg/events"
-
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
 )
 
@@ -35,16 +34,16 @@ type TeamProject struct {
 	TeamID int64 `xorm:"bigint not null INDEX" json:"team_id" param:"team"`
 	// The project id.
 	ProjectID int64 `xorm:"bigint not null INDEX" json:"-" param:"project"`
-	// The right this team has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
-	Right Right `xorm:"bigint INDEX not null default 0" json:"right" valid:"length(0|2)" maximum:"2" default:"0"`
+	// The permission this team has. 0 = Read only, 1 = Read & Write, 2 = Admin. See the docs for more details.
+	Permission Permission `xorm:"bigint INDEX not null default 0" json:"permission" valid:"length(0|2)" maximum:"2" default:"0"`
 
 	// A timestamp when this relation was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this relation was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName makes beautiful table names
@@ -52,10 +51,10 @@ func (*TeamProject) TableName() string {
 	return "team_projects"
 }
 
-// TeamWithRight represents a team, combined with rights.
-type TeamWithRight struct {
-	Team  `xorm:"extends"`
-	Right Right `json:"right"`
+// TeamWithPermission represents a team, combined with permissions.
+type TeamWithPermission struct {
+	Team       `xorm:"extends"`
+	Permission Permission `json:"permission"`
 }
 
 // Create creates a new team <-> project relation
@@ -75,8 +74,8 @@ type TeamWithRight struct {
 // @Router /projects/{id}/teams [put]
 func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 
-	// Check if the rights are valid
-	if err = tl.Right.isValid(); err != nil {
+	// Check if the permissions are valid
+	if err = tl.Permission.isValid(); err != nil {
 		return
 	}
 
@@ -178,8 +177,8 @@ func (tl *TeamProject) Delete(s *xorm.Session, _ web.Auth) (err error) {
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search teams by its name."
 // @Security JWTKeyAuth
-// @Success 200 {array} models.TeamWithRight "The teams with their right."
-// @Failure 403 {object} web.HTTPError "No right to see the project."
+// @Success 200 {array} models.TeamWithPermission "The teams with their permission."
+// @Failure 403 {object} web.HTTPError "No permission to see the project."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/teams [get]
 func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
@@ -196,7 +195,7 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 	limit, start := getLimitFromPageIndex(page, perPage)
 
 	// Get the teams
-	all := []*TeamWithRight{}
+	all := []*TeamWithPermission{}
 	query := s.
 		Table("teams").
 		Join("INNER", "team_projects", "team_id = teams.id").
@@ -225,7 +224,7 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 		Join("INNER", "team_projects", "team_id = teams.id").
 		Where("team_projects.project_id = ?", tl.ProjectID).
 		Where("teams.name LIKE ?", "%"+search+"%").
-		Count(&TeamWithRight{})
+		Count(&TeamWithPermission{})
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -235,7 +234,7 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 
 // Update updates a team <-> project relation
 // @Summary Update a team <-> project relation
-// @Description Update a team <-> project relation. Mostly used to update the right that team has.
+// @Description Update a team <-> project relation. Mostly used to update the permission that team has.
 // @tags sharing
 // @Accept json
 // @Produce json
@@ -250,14 +249,14 @@ func (tl *TeamProject) ReadAll(s *xorm.Session, a web.Auth, search string, page 
 // @Router /projects/{projectID}/teams/{teamID} [post]
 func (tl *TeamProject) Update(s *xorm.Session, _ web.Auth) (err error) {
 
-	// Check if the right is valid
-	if err := tl.Right.isValid(); err != nil {
+	// Check if the permission is valid
+	if err := tl.Permission.isValid(); err != nil {
 		return err
 	}
 
 	_, err = s.
 		Where("project_id = ? AND team_id = ?", tl.ProjectID, tl.TeamID).
-		Cols("right").
+		Cols("permission").
 		Update(tl)
 	if err != nil {
 		return err

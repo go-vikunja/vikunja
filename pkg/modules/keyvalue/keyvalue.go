@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package keyvalue
@@ -30,6 +30,8 @@ type Storage interface {
 	Del(key string) (err error)
 	IncrBy(key string, update int64) (err error)
 	DecrBy(key string, update int64) (err error)
+	ListKeys(prefix string) ([]string, error)
+	DelPrefix(prefix string) error
 }
 
 var store Storage
@@ -73,4 +75,38 @@ func IncrBy(key string, update int64) (err error) {
 // DecrBy increases a value at key by the amount in update
 func DecrBy(key string, update int64) (err error) {
 	return store.DecrBy(key, update)
+}
+
+// ListKeys returns all keys beginning with prefix from the configured backend
+func ListKeys(prefix string) ([]string, error) {
+	return store.ListKeys(prefix)
+}
+
+// DelPrefix deletes all keys with the given prefix in the backend
+func DelPrefix(prefix string) error {
+	return store.DelPrefix(prefix)
+}
+
+// Remember returns the value for a key if it exists.
+// If the key is not present, it executes fn to calculate the value,
+// stores it and then returns it.
+func Remember(key string, fn func() (any, error)) (any, error) {
+	val, exists, err := Get(key)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return val, nil
+	}
+
+	val, err = fn()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := Put(key, val); err != nil {
+		return nil, err
+	}
+
+	return val, nil
 }

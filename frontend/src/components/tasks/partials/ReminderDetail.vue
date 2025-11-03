@@ -3,7 +3,7 @@
 		<Popup @update:open="showFormSwitch = null">
 			<template #trigger="{toggle}">
 				<SimpleButton
-					v-tooltip="reminder.reminder && reminder.relativeTo !== null ? formatDateShort(reminder.reminder) : null"
+					v-tooltip="reminder.reminder && reminder.relativeTo !== null ? formatDisplayDate(reminder.reminder) : null"
 					@click.prevent.stop="toggle()"
 				>
 					{{ reminderText }}
@@ -77,7 +77,7 @@ import {useI18n} from 'vue-i18n'
 
 import {type PeriodUnit, secondsToPeriod} from '@/helpers/time/period'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
-import {formatDateShort} from '@/helpers/time/formatDate'
+import {formatDisplayDate} from '@/helpers/time/formatDate'
 
 import DatepickerInline from '@/components/input/DatepickerInline.vue'
 import ReminderPeriod from '@/components/tasks/partials/ReminderPeriod.vue'
@@ -132,7 +132,7 @@ const reminderText = computed(() => {
 	}
 
 	if (reminder.value.reminder !== null) {
-		return formatDateShort(reminder.value.reminder)
+		return formatDisplayDate(reminder.value.reminder)
 	}
 
 	return t('task.addReminder')
@@ -261,15 +261,15 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 }
 
 :deep(.popup) {
-	top: unset;
+	inset-block-start: unset;
 }
 
 .reminder-options-popup {
-	width: 310px;
+	inline-size: 310px;
 	z-index: 99;
 
 	@media screen and (max-width: ($tablet)) {
-		width: calc(100vw - 5rem);
+		inline-size: calc(100vw - 5rem);
 	}
 
 	.option-button {
@@ -286,7 +286,7 @@ function translateUnit(amount: number, unit: PeriodUnit): string {
 
 .reminder__close-button {
 	margin: .5rem;
-	width: calc(100% - 1rem);
+	inline-size: calc(100% - 1rem);
 }
 
 .currently-active {

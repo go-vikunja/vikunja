@@ -46,9 +46,9 @@ const availableMigrators = computed(() => configStore.availableMigrators
 
 .migration-service-link {
     display: inline-block;
-    width: 100px;
+    inline-size: 100px;
     text-transform: capitalize;
-    margin-right: 1rem;
+    margin-inline-end: 1rem;
 }
 
 .migration-service-image {

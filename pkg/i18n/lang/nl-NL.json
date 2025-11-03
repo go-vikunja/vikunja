@@ -1,1 +1,160 @@
-{}
+{
+	"notifications": {
+		"greeting": "Hallo %[1]s,",
+		"email_confirm": {
+			"subject": "%[1]s, bevestig je e-mailadres bij Vikunja",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Welkom bij Vikunja!",
+			"confirm": "Om je e-mailadres te bevestigen, klik op onderstaande link:"
+		},
+		"password": {
+			"changed": {
+				"subject": "Je wachtwoord bij Vikunja is gewijzigd",
+				"success": "Je accountwachtwoord is succesvol gewijzigd.",
+				"warning": "Als jij dit niet was, kan dit betekenen dat iemand je account heeft gehackt. Neem in dat geval contact op met de beheerder van uw server."
+			},
+			"reset": {
+				"subject": "Reset je wachtwoord op Vikunja",
+				"instructions": "Om je wachtwoord opnieuw in te stellen, klik op onderstaande link:",
+				"valid_duration": "Deze link is 24 uur geldig."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Iemand probeerde zojuist in te loggen op je Vikuna-account, maar dit mislukte",
+				"message": "Iemand probeerde zojuist in te loggen op je account met de juiste gebruikersnaam en wachtwoord, maar met een verkeerde TOTP-code.",
+				"warning": "**Als je dit niet zelf was, kent iemand je wachtwoord. Je moet meteen een nieuwe instellen!**"
+			},
+			"account_locked": {
+				"subject": "We hebben je account op Vikunja uitgeschakeld",
+				"message": "Iemand probeerde in te loggen met jouw inloggegevens maar kon geen geldige TOTP-code opgeven.",
+				"disabled": "Na 10 mislukte pogingen hebben we je account uitgeschakeld en je wachtwoord gereset. Om een nieuwe in te stellen, volg de instructies in de reset e-mail die zojuist is verstuurd.",
+				"reset_instructions": "Als je geen mail hebt ontvangen met instructies om te resetten, kun je altijd een nieuwe aanvragen via [%[1]s](%[2]s)."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Iemand probeerde in te loggen op je Vikunja account, maar kon geen geldig wachtwoord opgeven",
+				"message": "Iemand probeerde drie keer achter elkaar in te loggen op je account met een verkeerd wachtwoord.",
+				"warning": "Als jij dit niet zelf was, kan het zijn dat iemand probeert in te breken op je account.",
+				"enhance_security": "Om de beveiliging van je account te vergroten kun je misschien een sterker wachtwoord instellen of TOTP-authenticatie inschakelen in de instellingen:"
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Bevestig de verwijdering van je Vikunja-account",
+					"request": "Je hebt verwijdering van je account aangevraagd. Om te bevestigen, klik op onderstaande link:",
+					"valid_duration": "Deze link is 24 uur geldig.",
+					"schedule_info": "Zodra je de verwijdering bevestigt, plannen we de verwijdering van je account over drie dagen. Je ontvangt nog een e-mail.",
+					"consequences": "Als je doorgaat met de verwijdering van je account, verwijderen we al je projecten en taken die je maakte. Het eigenaarschap van alles wat je deelde met andere gebruikers of teams wordt aan hen overgedragen.",
+					"changed_mind": "Als je geen verwijdering hebt aangevraagd of van gedachten bent veranderd, kun je deze e-mail simpelweg negeren."
+				},
+				"scheduled": {
+					"subject_days": "Je Vikunja-account wordt over %[1]s dagen verwijderd",
+					"subject_tomorrow": "Je Vikunja-account wordt morgen verwijderd",
+					"request_reminder": "Je vroeg recent om de verwijdering van je Vikuna-account.",
+					"deletion_time_days": "We verwijderen je account over %[1]s dagen.",
+					"deletion_time_tomorrow": "We verwijderen je account morgen.",
+					"changed_mind": "Als je van gedachten bent veranderd, klik op onderstaande link om de verwijdering te annuleren en volg de instructies:"
+				},
+				"completed": {
+					"subject": "Je Vikunja account is verwijderd",
+					"confirmation": "Zoals gevraagd hebben we je Vikunja-account verwijderd.",
+					"permanent": "Deze verwijdering is definitief. Als je geen backup hebt gemaakt en toch je data weer nodig hebt, praat dan met je beheerder."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Herinnering voor \"%[1]s\" (%[2]s)",
+				"message": "Dit is een vriendelijke herinnering voor taak \"%[1]s\" (%[2]s)."
+			},
+			"comment": {
+				"subject": "Re: %[1]s",
+				"mentioned_subject": "%[1]s noemde je in een reactie in \"%[2]s\"",
+				"mentioned_message": "**%[1]s** noemde je in een reactie:"
+			},
+			"assigned": {
+				"subject_to_assignee": "Je bent toegewezen aan \"%[1]s\" (%[2]s)",
+				"message_to_assignee": "%[1]s heeft je toegewezen aan \"%[2]s\".",
+				"subject_to_others": "\"%[1]s\" (%[2]s) is toegewezen aan %[3]s",
+				"message_to_others": "%[1]s heeft deze taak toegewezen aan %[2]s."
+			},
+			"deleted": {
+				"subject": "\"%[1]s\" (%[2]s) is verwijderd",
+				"message": "%[1]s verwijderde taak \"%[2]s\" (%[3]s)"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s noemde je in nieuwe taak \"%[2]s\"",
+				"subject": "%[1]s noemde je in een taak \"%[2]s\"",
+				"message": "**%[1]s** noemde je in een taak:"
+			},
+			"overdue": {
+				"subject": "Taak \"%[1]s\" (%[2]s) is te laat",
+				"message": "Dit is een vriendelijke herinnering aan taak \"%[1]s\" (%[2]s) die te laat is %[3]s en nog niet voltooid.",
+				"multiple_subject": "Je achterstallige taken",
+				"multiple_message": "Je hebt de volgende achterstallige taken:",
+				"overdue_since": "sinds %[1]s",
+				"overdue_now": "nu",
+				"overdue": "te laat %[1]s"
+			}
+		},
+		"project": {
+			"created": "%[1]s maakte het project \"%[2]s\""
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s voegde je toe aan het \"%[2]s\" team in Vikunja",
+				"message": "%[1]s voegde je zojuist toe aan het %[2]s team in Vikunja."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "Je Vikunja gegevensexport is klaar",
+				"message": "Je Vikunja gegevensexport is klaar voor downloaden. Klik op onderstaande knop om te downloaden:",
+				"availability": "De download is beschikbaar gedurende 7 dagen."
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "De migratie van %[1]s naar Vikunja is voltooid",
+				"imported": "Vikunja heeft alle listen/projecten, taken, notities, herinneringen en bestanden geïmporteerd van %[1]s (waar je toegang tot hebt).",
+				"have_fun": "Veel plezier met je nieuwe (oude) projecten!"
+			},
+			"failed": {
+				"subject": "De migratie van %[1]s naar Vikunja is mislukt",
+				"message": "Het lijkt erop dat de verhuizing van %[1]s niet verliep zoals gepland.",
+				"retry": "Maak je geen zorgen! Probeer het gewoon nog een keer op dezelfde manier als eerder. Soms ontstaan deze haperingen door storingen aan de kant van %[1]s, maar vaak helpt het om het nog een keer te proberen.",
+				"error": "We kwamen een foutje tegen onderweg: `%[2]s`.",
+				"report": "Stuur ons hierover een berichtje [op het forum](https://community.vikunja.io/) of een andere gebruikelijke plek, zodat we kunnen kijken waarom het mis ging.",
+				"working_on_it": "We hebben de foutmelding op onze radar en werken aan een spoedige oplossing."
+			}
+		},
+		"common": {
+			"have_nice_day": "Fijne dag!",
+			"copy_url": "Als bovenstaande knop niet werkt, kopieer dan onderstaande URL en plak deze in de adresbalk van je browser:",
+			"actions": {
+				"open_task": "Taak openen",
+				"open_vikunja": "Vikunja openen",
+				"open_project": "Project openen",
+				"open_team": "Team openen",
+				"download": "Downloaden",
+				"reset_password": "Reset je wachtwoord",
+				"go_to_settings": "Ga naar instellingen",
+				"confirm_email": "Bevestig je e-mailadres",
+				"abort_deletion": "Annuleer de verwijdering",
+				"confirm_account_deletion": "Bevestig de verwijdering van mijn account",
+				"change_notification_settings_link": "Je kunt je notificatie-instellingen [hier veranderen](%[1]s)."
+			}
+		}
+	},
+	"time": {
+		"since_years": "een jaar|%[1]d jaren",
+		"since_weeks": "een week|%[1]d weken",
+		"since_days": "een dag|%[1]d dagen",
+		"since_hours": "een uur|%[1]d uren",
+		"since_minutes": "een minuut|%[1]d minuten",
+		"list_last_separator": "en"
+	}
+}

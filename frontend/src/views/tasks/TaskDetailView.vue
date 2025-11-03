@@ -11,6 +11,14 @@
 			v-if="visible"
 			class="task-view"
 		>
+			<BaseButton
+				v-if="!isModal || isMobile"
+				class="back-button mbs-2"
+				@click="lastProject ? router.back() : router.push(projectRoute)"
+			>
+				<Icon icon="arrow-left" />
+				{{ $t('task.detail.back') }}
+			</BaseButton>
 			<Heading
 				ref="heading"
 				:task="task"
@@ -28,13 +36,15 @@
 					:key="p.id"
 				>
 					<a
-						v-if="router.options.history.state.back?.includes('/projects/'+p.id+'/') || false"
+						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
+						v-shortcut="p.id === project?.id ? 'u' : ''"
 						@click="router.back()"
 					>
 						{{ getProjectTitle(p) }}
 					</a>
-					<RouterLink 
+					<RouterLink
 						v-else
+						v-shortcut="p.id === project?.id ? 'u' : ''"
 						:to="{ name: 'project.index', params: { projectId: p.id } }"
 					>
 						{{ getProjectTitle(p) }}
@@ -49,7 +59,7 @@
 			<ChecklistSummary :task="task" />
 
 			<!-- Content and buttons -->
-			<div class="columns mt-2">
+			<div class="columns mbs-2">
 				<!-- Content -->
 				<div
 					:class="{'is-two-thirds': canWrite}"
@@ -75,7 +85,7 @@
 							<AssigneeList
 								v-else
 								:assignees="task.assignees"
-								class="mt-2"
+								class="mbs-2"
 							/>
 						</div>
 						<CustomTransition
@@ -350,7 +360,7 @@
 					<!-- Related Tasks -->
 					<div
 						v-if="activeFields.relatedTasks"
-						class="content details mb-0"
+						class="content details mbe-0"
 					>
 						<h3>
 							<span class="icon is-grey">
@@ -574,7 +584,7 @@
 			</template>
 
 			<template #text>
-				<p class="tw-text-balance !tw-mb-0">
+				<p class="tw-text-balance">
 					{{ $t('task.detail.delete.text1') }}
 				</p>
 				<p class="tw-text-balance">
@@ -587,10 +597,10 @@
 
 <script lang="ts" setup>
 import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
-import {useRouter, type RouteLocation} from 'vue-router'
+import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
-import {unrefElement} from '@vueuse/core'
+import {unrefElement, useMediaQuery} from '@vueuse/core'
 import {klona} from 'klona/lite'
 import {eventToHotkeyString} from '@github/hotkey'
 
@@ -601,7 +611,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
@@ -655,6 +665,7 @@ defineEmits<{
 }>()
 
 const router = useRouter()
+const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
@@ -666,6 +677,7 @@ const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const task = ref<ITask>(new TaskModel())
+const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
@@ -679,6 +691,24 @@ function saveTaskViaHotkey(event) {
 	saveTask()
 }
 
+const lastProject = computed(() => {
+	const backRoute = router.options.history.state?.back
+	if (!backRoute || typeof backRoute !== 'string') {
+		return null
+	}
+
+	const projectMatch = backRoute.match(/\/projects\/(-?\d+)/)
+	if (!projectMatch || !projectMatch[1]) {
+		return null
+	}
+
+	const id = parseInt(projectMatch[1])
+
+	return projectStore.projects[id] ?? null
+})
+
+const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.value)
+
 onMounted(() => {
 	document.addEventListener('keydown', saveTaskViaHotkey)
 })
@@ -687,11 +717,38 @@ onBeforeUnmount(() => {
 	document.removeEventListener('keydown', saveTaskViaHotkey)
 })
 
+onBeforeRouteLeave(async () => {
+	if (taskNotFound.value) {
+		return
+	}
+
+	if (!lastProjectOrTaskProject.value) {
+		await new Promise<void>((resolve) => {
+			const timeout = setTimeout(() => {
+				stop()
+				resolve()
+			}, 5000) // 5 second timeout
+			
+			const stop = watch(lastProjectOrTaskProject, (p) => {
+				if (p) {
+					clearTimeout(timeout)
+					stop()
+					resolve()
+				}
+			})
+		})
+	}
+
+	if (lastProjectOrTaskProject.value) {
+		await baseStore.handleSetCurrentProjectIfNotSet(lastProjectOrTaskProject.value)
+	}
+})
+
 // We doubled the task color property here because verte does not have a real change property, leading
 // to the color property change being triggered when the # is removed from it, leading to an update,
 // which leads in turn to a change... This creates an infinite loop in which the task is updated, changed,
 // updated, changed, updated and so on.
-// To prevent this, we put the task color property in a seperate value which is set to the task color
+// To prevent this, we put the task color property in a separate value which is set to the task color
 // when it is saved and loaded.
 const taskColor = ref<ITask['hexColor']>('')
 
@@ -700,9 +757,15 @@ const visible = ref(false)
 
 const project = computed(() => projectStore.projects[task.value.projectId])
 
+const projectRoute = computed(() => ({
+	name: 'project.index',
+	params: {projectId: task.value.projectId},
+	hash: route.hash,
+}))
+
 const canWrite = computed(() => (
-	task.value.maxRight !== null &&
-	task.value.maxRight > RIGHTS.READ
+	task.value.maxPermission !== null &&
+	task.value.maxPermission > PERMISSIONS.READ
 ))
 
 const color = computed(() => {
@@ -714,6 +777,7 @@ const color = computed(() => {
 })
 
 const isModal = computed(() => Boolean(props.backdropView))
+const isMobile = useMediaQuery('(max-width: 1024px)')
 
 function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 	return uploadFile(props.taskId, file, onSuccess)
@@ -741,6 +805,18 @@ watch(
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
+
+			if (lastProject.value) {
+				await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)
+			}
+		} catch (e) {
+			if (e?.response?.status === 404) {
+				taskNotFound.value = true
+				router.replace({name: 'not-found'})
+				return
+			}
+
+			throw e
 		} finally {
 			await nextTick()
 			scrollToHeading()
@@ -952,15 +1028,15 @@ function setRelatedTasksActive() {
 .task-view-container {
 	// simulate sass lighten($primary, 30) by increasing lightness 30% to 73%
 	--primary-light: hsla(var(--primary-h), var(--primary-s), 73%, var(--primary-a));
-	padding-bottom: 0;
+	padding-block-end: 0;
 
 	@media screen and (min-width: $desktop) {
-		padding-bottom: 1rem;
+		padding-block-end: 1rem;
 	}
 }
 
 .task-view {
-	padding-top: 1rem;
+	padding-block-start: 1rem;
 	padding-inline: .5rem;
 	background-color: var(--site-background);
 
@@ -975,7 +1051,7 @@ function setRelatedTasksActive() {
 	color: var(--text);
 	background-color: var(--site-background) !important;
 
-	@media screen and (max-width: calc(#{$desktop} + 1px)) {
+	@media screen and (width <= calc(#{$desktop} + 1px)) {
 		border-radius: 0;
 	}
 }
@@ -991,7 +1067,7 @@ function setRelatedTasksActive() {
 
 .subtitle {
 	color: var(--grey-500);
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 
 	a {
 		color: var(--grey-800);
@@ -1014,12 +1090,12 @@ h3 .button {
 .remove {
 	color: var(--danger);
 	vertical-align: middle;
-	padding-left: .5rem;
+	padding-inline-start: .5rem;
 	line-height: 1;
 }
 
 :deep(.datepicker) {
-	width: 100%;
+	inline-size: 100%;
 
 	.show {
 		color: var(--text);
@@ -1028,8 +1104,8 @@ h3 .button {
 		border-radius: $radius;
 		display: block;
 		margin: .1rem 0;
-		width: 100%;
-		text-align: left;
+		inline-size: 100%;
+		text-align: start;
 
 		&:hover {
 			background: var(--white);
@@ -1042,9 +1118,9 @@ h3 .button {
 }
 
 .details {
-	padding-bottom: 0.75rem;
+	padding-block-end: 0.75rem;
 	flex-flow: row wrap;
-	margin-bottom: 0;
+	margin-block-end: 0;
 
 	.detail-title {
 		display: block;
@@ -1067,7 +1143,7 @@ h3 .button {
 .assignees {
 	:deep(.multiselect) {
 		.input-wrapper {
-			&:not(:focus-within):not(:hover) {
+			&:not(:focus-within, :hover) {
 				background: transparent;
 				border-color: transparent;
 			}
@@ -1116,23 +1192,23 @@ h3 .button {
 }
 
 .attachments {
-	margin-bottom: 0;
+	margin-block-end: 0;
 
 	table tr:last-child td {
-		border-bottom: none;
+		border-inline-end: none;
 	}
 }
 
 .action-buttons {
 	@media screen and (min-width: $tablet) {
 		position: sticky;
-		top: $navbar-height + 1.5rem;
+		inset-block-start: $navbar-height + 1.5rem;
 		align-self: flex-start;
 	}
 
 	.button {
-		width: 100%;
-		margin-bottom: .5rem;
+		inline-size: 100%;
+		margin-block-end: .5rem;
 		justify-content: left;
 
 		&.has-light-text {
@@ -1144,22 +1220,22 @@ h3 .button {
 .is-modal .action-buttons {
 	// we need same top margin for the modal close button 
 	@media screen and (min-width: $tablet) {
-		top: 6.5rem;
+		inset-block-start: 6.5rem;
 	}
 	// this is the moment when the fixed close button is outside the modal
 	// => we can fill up the space again
-	@media screen and (min-width: calc(#{$desktop} + 84px)) {
-		top: 0;
+	@media screen and (width >= calc(#{$desktop} + 84px)) {
+		inset-block-start: 0;
 	}
 }
 
 .checklist-summary {
-	padding-left: .25rem;
+	padding-inline-start: .25rem;
 }
 
 .detail-content {
 	@media print {
-		width: 100% !important;
+		inline-size: 100% !important;
 	}
 }
 

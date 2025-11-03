@@ -9,7 +9,7 @@
 		<Message
 			v-if="errorMessageFromQuery"
 			variant="danger"
-			class="mt-2"
+			class="mbs-2"
 		>
 			{{ errorMessageFromQuery }}
 		</Message>
@@ -19,9 +19,6 @@
 	</div>
 </template>
 
-<script lang="ts">
-export default { name: 'Auth' }
-</script>
 
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
@@ -33,6 +30,8 @@ import Message from '@/components/misc/Message.vue'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 
 import {useAuthStore} from '@/stores/auth'
+
+defineOptions({name: 'Auth'})
 
 const {t} = useI18n({useScope: 'global'})
 

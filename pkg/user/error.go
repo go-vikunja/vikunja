@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package user
@@ -608,4 +608,109 @@ const ErrorCodeInvalidTimezone = 1025
 // HTTPError holds the http error description
 func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeInvalidTimezone, Message: fmt.Sprintf("The timezone '%s' is invalid. Please select a valid timezone from the list.", err.Name)}
+}
+
+// ErrUsernameReserved represents a "UsernameReserved" kind of error.
+type ErrUsernameReserved struct {
+	Username string
+}
+
+// IsErrUsernameReserved checks if an error is a ErrUsernameReserved.
+func IsErrUsernameReserved(err error) bool {
+	_, ok := err.(ErrUsernameReserved)
+	return ok
+}
+
+func (err ErrUsernameReserved) Error() string {
+	return fmt.Sprintf("Username is reserved [Username: %s]", err.Username)
+}
+
+// ErrorCodeUsernameReserved holds the unique world-error code of this error
+const ErrorCodeUsernameReserved = 1026
+
+// HTTPError holds the http error description
+func (err ErrUsernameReserved) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrorCodeUsernameReserved, Message: "This username is reserved and cannot be used."}
+}
+
+// ErrInvalidUserContext represents an error where the user context is invalid or missing
+type ErrInvalidUserContext struct {
+	Reason string
+}
+
+// IsErrInvalidUserContext checks if an error is a ErrInvalidUserContext.
+func IsErrInvalidUserContext(err error) bool {
+	_, ok := err.(ErrInvalidUserContext)
+	return ok
+}
+
+func (err ErrInvalidUserContext) Error() string {
+	return fmt.Sprintf("Invalid user context: %s", err.Reason)
+}
+
+// ErrorCodeInvalidUserContext holds the unique world-error code of this error
+const ErrorCodeInvalidUserContext = 1027
+
+// HTTPError holds the http error description
+func (err ErrInvalidUserContext) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusUnauthorized,
+		Code:     ErrorCodeInvalidUserContext,
+		Message:  "Invalid user context. Please make sure the passed token is valid and try again.",
+	}
+}
+
+// ErrInvalidDeletionToken represents an error where the deletion token is invalid
+type ErrInvalidDeletionToken struct {
+	Token string
+}
+
+// IsErrInvalidDeletionToken checks if an error is a ErrInvalidDeletionToken.
+func IsErrInvalidDeletionToken(err error) bool {
+	_, ok := err.(ErrInvalidDeletionToken)
+	return ok
+}
+
+func (err ErrInvalidDeletionToken) Error() string {
+	return fmt.Sprintf("Invalid deletion token [Token: %s]", err.Token)
+}
+
+// ErrorCodeInvalidDeletionToken holds the unique world-error code of this error
+const ErrorCodeInvalidDeletionToken = 1028
+
+// HTTPError holds the http error description
+func (err ErrInvalidDeletionToken) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrorCodeInvalidDeletionToken,
+		Message:  "Invalid deletion token provided.",
+	}
+}
+
+// ErrTokenUserMismatch represents an error where the token doesn't belong to the user
+type ErrTokenUserMismatch struct {
+	TokenUserID int64
+	UserID      int64
+}
+
+// IsErrTokenUserMismatch checks if an error is a ErrTokenUserMismatch.
+func IsErrTokenUserMismatch(err error) bool {
+	_, ok := err.(ErrTokenUserMismatch)
+	return ok
+}
+
+func (err ErrTokenUserMismatch) Error() string {
+	return fmt.Sprintf("Token user mismatch [Token User ID: %d, User ID: %d]", err.TokenUserID, err.UserID)
+}
+
+// ErrorCodeTokenUserMismatch holds the unique world-error code of this error
+const ErrorCodeTokenUserMismatch = 1029
+
+// HTTPError holds the http error description
+func (err ErrTokenUserMismatch) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrorCodeTokenUserMismatch,
+		Message:  "This deletion token does not belong to your account.",
+	}
 }

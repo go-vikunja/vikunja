@@ -5,7 +5,7 @@
   // Added (from bulma-css-variables/css/bulma.css) to fix issues with undefined variables
   // This section should be removed once bulma/sass scoping issues are fixed
   // see https://kolaente.dev/vikunja/frontend/issues/1064
-  // Variables overriden in Vikunja specific rules below are commented out
+  // Variables overridden in Vikunja specific rules below are commented out
   //--scheme-main: white;
   --scheme-main-bis: #fafafa;
   --scheme-main-ter: whitesmoke;
@@ -252,7 +252,7 @@
   // Define custom color variable to prevent change in dark mode
   --switch-view-color: hsla(var(--white-h), var(--white-s), var(--white-l), var(--white-a));
 
-  // Define custom color variable to alow change in dark mode
+  // Define custom color variable to allow change in dark mode
   --card-border-color: var(--grey-200);
   --logo-text-color: hsl(180, 1%, 15%);
 
@@ -292,7 +292,7 @@
       --text-strong: var(--grey-900);
 
       // Elements that rely on Bulma defaults in light mode but
-      // need to be overriden in dark mode
+      // need to be overridden in dark mode
       --input-placeholder-color: hsla(var(--grey-900-hsl), 0.6);
       --tag-color: var(--grey-300);
       --table-row-hover-background-color: var(--grey-100);
@@ -308,7 +308,7 @@
       --card-border-color: hsla(var(--grey-100-hsl), 0.3);
       --logo-text-color: var(--grey-700);
 
-      // Slightly different primary color to make sure it has a sufficent contrast ratio
+      // Slightly different primary color to make sure it has a sufficient contrast ratio
       --primary-h: 217deg;
       --primary-s: 98%;
       --primary-l: 58%;

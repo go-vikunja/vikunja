@@ -1,9 +1,9 @@
 <template>
 	<CreateEdit
+		v-model:loading="loadingModel"
 		:title="$t('project.duplicate.title')"
 		primary-icon="paste"
 		:primary-label="$t('project.duplicate.label')"
-		:loading="isLoading"
 		@primary="duplicate"
 	>
 		<p>{{ $t('project.duplicate.text') }}</p>
@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -33,6 +33,14 @@ const projectStore = useProjectStore()
 const {project, isLoading, duplicateProject} = useProject(route.params.projectId)
 
 const parentProject = ref<IProject | null>(null)
+const isDuplicating = ref(false)
+
+const loadingModel = computed({
+	get: () => isDuplicating.value || isLoading.value,
+	set(value: boolean) {
+		isDuplicating.value = value
+	},
+})
 watch(
 	() => project.parentProjectId,
 	parentProjectId => {
@@ -42,7 +50,13 @@ watch(
 )
 
 async function duplicate() {
-	await duplicateProject(parentProject.value?.id ?? 0)
-	success({message: t('project.duplicate.success')})
+	isDuplicating.value = true
+
+	try {
+		await duplicateProject(parentProject.value?.id ?? 0)
+		success({message: t('project.duplicate.success')})
+	} finally {
+		isDuplicating.value = false
+	}
 }
 </script>

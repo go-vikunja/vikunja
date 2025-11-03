@@ -63,10 +63,10 @@ linters:
           - gocyclo
           - unparam
           - varcheck
-        path: pkg/integrations/*
+        path: pkg/webtests/*
       - linters:
           - gocritic
-        path: pkg/integrations/*
+        path: pkg/webtests/*
         text: unlambda
       - linters:
           - bodyclose
@@ -139,15 +139,20 @@ linters:
         text: 'G115: integer overflow conversion int -> uint64'
       - linters:
           - recvcheck
-        text: the methods of "Right" use pointer receiver and non-pointer receiver.
+        text: the methods of "Permission" use pointer receiver and non-pointer receiver.
       - linters:
           - recvcheck
         text: the methods of "SubscriptionEntityType" use pointer receiver and non-pointer receiver.
+      - linters:
+          - revive
+        path: pkg/utils/*
+        text: 'var-naming: avoid meaningless package names'
     paths:
       - third_party$
       - builtin$
       - examples$
       - pkg/routes/api/v1/docs.go
+      - plugins-dev/..*
 formatters:
   enable:
     - gofmt

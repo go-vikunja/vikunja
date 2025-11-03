@@ -20,6 +20,27 @@ definitions:
       url:
         type: string
     type: object
+  code_vikunja_io_api_pkg_modules_auth_openid.Provider:
+    properties:
+      auth_url:
+        type: string
+      client_id:
+        type: string
+      email_fallback:
+        type: boolean
+      force_user_info:
+        type: boolean
+      key:
+        type: string
+      logout_url:
+        type: string
+      name:
+        type: string
+      scope:
+        type: string
+      username_fallback:
+        type: boolean
+    type: object
   files.File:
     properties:
       created:
@@ -141,151 +162,20 @@ definitions:
     type: object
   models.BulkTask:
     properties:
-      assignees:
-        description: An array of users who are assigned to this task
+      fields:
         items:
-          $ref: '#/definitions/user.User'
+          type: string
         type: array
-      attachments:
-        description: All attachments this task has. This property is read-onlym, you
-          must use the separate endpoint to add attachments to a task.
-        items:
-          $ref: '#/definitions/models.TaskAttachment'
-        type: array
-      bucket_id:
-        description: |-
-          The bucket id. Will only be populated when the task is accessed via a view with buckets.
-          Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
-        type: integer
-      buckets:
-        description: All buckets across all views this task is part of. Only present
-          when fetching tasks with the `expand` parameter set to `buckets`.
-        items:
-          $ref: '#/definitions/models.Bucket'
-        type: array
-      comments:
-        description: All comments of this task. Only present when fetching tasks with
-          the `expand` parameter set to `comments`.
-        items:
-          $ref: '#/definitions/models.TaskComment'
-        type: array
-      cover_image_attachment_id:
-        description: If this task has a cover image, the field will return the id
-          of the attachment that is the cover image.
-        type: integer
-      created:
-        description: A timestamp when this task was created. You cannot change this
-          value.
-        type: string
-      created_by:
-        allOf:
-        - $ref: '#/definitions/user.User'
-        description: The user who initially created the task.
-      description:
-        description: The task description.
-        type: string
-      done:
-        description: Whether a task is done or not.
-        type: boolean
-      done_at:
-        description: The time when a task was marked as done.
-        type: string
-      due_date:
-        description: The time when the task is due.
-        type: string
-      end_date:
-        description: When this task ends.
-        type: string
-      hex_color:
-        description: The task color in hex
-        maxLength: 7
-        type: string
-      id:
-        description: The unique, numeric id of this task.
-        type: integer
-      identifier:
-        description: The task identifier, based on the project identifier and the
-          task's index
-        type: string
-      index:
-        description: The task index, calculated per project
-        type: integer
-      is_favorite:
-        description: True if a task is a favorite task. Favorite tasks show up in
-          a separate "Important" project. This value depends on the user making the
-          call to the api.
-        type: boolean
-      labels:
-        description: An array of labels which are associated with this task. This
-          property is read-only, you must use the separate endpoint to add labels
-          to a task.
-        items:
-          $ref: '#/definitions/models.Label'
-        type: array
-      percent_done:
-        description: Determines how far a task is left from being done
-        type: number
-      position:
-        description: |-
-          The position of the task - any task project can be sorted as usual by this parameter.
-          When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
-          Positions are always saved per view. They will automatically be set if you request the tasks through a view
-          endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
-        type: number
-      priority:
-        description: The task priority. Can be anything you want, it is possible to
-          sort by this later.
-        type: integer
-      project_id:
-        description: The project this task belongs to.
-        type: integer
-      reactions:
-        allOf:
-        - $ref: '#/definitions/models.ReactionMap'
-        description: Reactions on that task.
-      related_tasks:
-        allOf:
-        - $ref: '#/definitions/models.RelatedTaskMap'
-        description: All related tasks, grouped by their relation kind
-      reminders:
-        description: An array of reminders that are associated with this task.
-        items:
-          $ref: '#/definitions/models.TaskReminder'
-        type: array
-      repeat_after:
-        description: An amount in seconds this task repeats itself. If this is set,
-          when marking the task as done, it will mark itself as "undone" and then
-          increase all remindes and the due date by its amount.
-        type: integer
-      repeat_mode:
-        allOf:
-        - $ref: '#/definitions/models.TaskRepeatMode'
-        description: 'Can have three possible values which will trigger when the task
-          is marked as done: 0 = repeats after the amount specified in repeat_after,
-          1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from
-          the current date rather than the last set date.'
-      start_date:
-        description: When this task starts.
-        type: string
-      subscription:
-        allOf:
-        - $ref: '#/definitions/models.Subscription'
-        description: |-
-          The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
-          Will only returned when retrieving one task.
       task_ids:
-        description: A project of task ids to update
         items:
           type: integer
         type: array
-      title:
-        description: The task text. This is what you'll see in the project.
-        minLength: 1
-        type: string
-      updated:
-        description: A timestamp when this task was last updated. You cannot change
-          this value.
-        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/models.Task'
+        type: array
+      values:
+        $ref: '#/definitions/models.Task'
     type: object
   models.DatabaseNotifications:
     properties:
@@ -332,7 +222,7 @@ definitions:
         description: The unique, numeric id of this label.
         type: integer
       title:
-        description: The title of the lable. You'll see this one on tasks associated
+        description: The title of the label. You'll see this one on tasks associated
           with it.
         maxLength: 250
         minLength: 1
@@ -380,12 +270,12 @@ definitions:
         description: The password of this link share. You can only set it, not retrieve
           it after the link share has been created.
         type: string
-      right:
+      permission:
         allOf:
-        - $ref: '#/definitions/models.Right'
+        - $ref: '#/definitions/models.Permission'
         default: 0
-        description: The right this project is shared with. 0 = Read only, 1 = Read
-          & Write, 2 = Admin. See the docs for more details.
+        description: The permission this project is shared with. 0 = Read only, 1
+          = Read & Write, 2 = Admin. See the docs for more details.
         maximum: 2
       shared_by:
         allOf:
@@ -409,6 +299,16 @@ definitions:
         description: A standard message.
         type: string
     type: object
+  models.Permission:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - PermissionRead
+    - PermissionWrite
+    - PermissionAdmin
   models.Project:
     properties:
       background_blur_hash:
@@ -447,8 +347,8 @@ definitions:
           a separate parent project. This value depends on the user making the call
           to the api.
         type: boolean
-      max_right:
-        $ref: '#/definitions/models.Right'
+      max_permission:
+        $ref: '#/definitions/models.Permission'
       owner:
         allOf:
         - $ref: '#/definitions/user.User'
@@ -498,18 +398,18 @@ definitions:
       id:
         description: The unique, numeric id of this project <-> user relation.
         type: integer
-      right:
+      permission:
         allOf:
-        - $ref: '#/definitions/models.Right'
+        - $ref: '#/definitions/models.Permission'
         default: 0
-        description: The right this user has. 0 = Read only, 1 = Read & Write, 2 =
-          Admin. See the docs for more details.
+        description: The permission this user has. 0 = Read only, 1 = Read & Write,
+          2 = Admin. See the docs for more details.
         maximum: 2
       updated:
         description: A timestamp when this relation was last updated. You cannot change
           this value.
         type: string
-      user_id:
+      username:
         description: The username.
         type: string
     type: object
@@ -646,16 +546,6 @@ definitions:
     - ReminderRelationDueDate
     - ReminderRelationStartDate
     - ReminderRelationEndDate
-  models.Right:
-    enum:
-    - 0
-    - 1
-    - 2
-    type: integer
-    x-enum-varnames:
-    - RightRead
-    - RightWrite
-    - RightAdmin
   models.RouteDetail:
     properties:
       method:
@@ -771,7 +661,8 @@ definitions:
         description: Whether a task is done or not.
         type: boolean
       done_at:
-        description: The time when a task was marked as done.
+        description: The time when a task was marked as done. This field is system-controlled
+          and cannot be set via API.
         type: string
       due_date:
         description: The time when the task is due.
@@ -892,10 +783,16 @@ definitions:
       bucket_id:
         type: integer
       project_view_id:
+        description: |-
+          The view this bucket belongs to. Combined with TaskID this forms a
+          unique index.
         type: integer
       task:
         $ref: '#/definitions/models.Task'
       task_id:
+        description: |-
+          The task which belongs to the bucket. Together with ProjectViewID
+          this field is part of a unique index to prevent duplicates.
         type: integer
     type: object
   models.TaskCollection:
@@ -1074,12 +971,12 @@ definitions:
       id:
         description: The unique, numeric id of this project <-> team relation.
         type: integer
-      right:
+      permission:
         allOf:
-        - $ref: '#/definitions/models.Right'
+        - $ref: '#/definitions/models.Permission'
         default: 0
-        description: The right this team has. 0 = Read only, 1 = Read & Write, 2 =
-          Admin. See the docs for more details.
+        description: The permission this team has. 0 = Read only, 1 = Read & Write,
+          2 = Admin. See the docs for more details.
         maximum: 2
       team_id:
         description: The team id.
@@ -1119,7 +1016,7 @@ definitions:
         minLength: 1
         type: string
     type: object
-  models.TeamWithRight:
+  models.TeamWithPermission:
     properties:
       created:
         description: A timestamp when this relation was created. You cannot change
@@ -1157,14 +1054,14 @@ definitions:
         maxLength: 250
         minLength: 1
         type: string
-      right:
-        $ref: '#/definitions/models.Right'
+      permission:
+        $ref: '#/definitions/models.Permission'
       updated:
         description: A timestamp when this relation was last updated. You cannot change
           this value.
         type: string
     type: object
-  models.UserWithRight:
+  models.UserWithPermission:
     properties:
       created:
         description: A timestamp when this task was created. You cannot change this
@@ -1180,8 +1077,8 @@ definitions:
       name:
         description: The full name of the user.
         type: string
-      right:
-        $ref: '#/definitions/models.Right'
+      permission:
+        $ref: '#/definitions/models.Permission'
       updated:
         description: A timestamp when this task was last updated. You cannot change
           this value.
@@ -1253,27 +1150,6 @@ definitions:
         type: string
       scope:
         type: string
-    type: object
-  openid.Provider:
-    properties:
-      auth_url:
-        type: string
-      client_id:
-        type: string
-      email_fallback:
-        type: boolean
-      force_user_info:
-        type: boolean
-      key:
-        type: string
-      logout_url:
-        type: string
-      name:
-        type: string
-      scope:
-        type: string
-      username_fallback:
-        type: boolean
     type: object
   todoist.Migration:
     properties:
@@ -1393,13 +1269,25 @@ definitions:
       avatar_provider:
         description: The avatar provider. Valid types are `gravatar` (uses the user
           email), `upload`, `initials`, `marble` (generates a random avatar for each
-          user), `default`.
+          user), `ldap` (synced from LDAP server), `openid` (synced from OpenID provider),
+          `default`.
         type: string
     type: object
   v1.UserDeletionRequestConfirm:
     properties:
       token:
         type: string
+    type: object
+  v1.UserExportStatus:
+    properties:
+      created:
+        type: string
+      expires:
+        type: string
+      id:
+        type: integer
+      size:
+        type: integer
     type: object
   v1.UserPassword:
     properties:
@@ -1456,6 +1344,10 @@ definitions:
       email_reminders_enabled:
         description: If enabled, sends email reminders of tasks to the user.
         type: boolean
+      extra_settings_links:
+        additionalProperties: {}
+        description: Additional settings links as provided by openid
+        type: object
       frontend_settings:
         description: Additional settings only used by the frontend
       language:
@@ -1549,7 +1441,7 @@ definitions:
         type: boolean
       providers:
         items:
-          $ref: '#/definitions/openid.Provider'
+          $ref: '#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider'
         type: array
     type: object
   v1.vikunjaInfos:
@@ -1578,6 +1470,8 @@ definitions:
         type: boolean
       max_file_size:
         type: string
+      max_items_per_page:
+        type: integer
       motd:
         type: string
       public_teams_enabled:
@@ -1612,9 +1506,9 @@ info:
     Every endpoint capable of pagination will return two headers:
     * `x-pagination-total-pages`: The total number of available pages for this request
     * `x-pagination-result-count`: The number of items returned for this request.
-    # Rights
-    All endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
-    This can be used to show or hide ui elements based on the rights the user has.
+    # Permissions
+    All endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-permission` header with the max permission the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
+    This can be used to show or hide ui elements based on the permissions the user has.
     # Errors
     All errors have an error code and a human-readable error message in addition to the http status code. You should always check for the status code in the response, not only the http status code.
     Due to limitations in the swagger library we're using for this document, only one error per http status code is documented here. Make sure to check the [error docs](https://vikunja.io/docs/errors/) in Vikunja's documentation for a full list of available error codes.
@@ -2696,8 +2590,9 @@ paths:
         in: query
         name: is_archived
         type: boolean
-      - description: If set to `rights`, Vikunja will return the max right the current
-          user has on this project. You can currently only set this to `rights`.
+      - description: If set to `permissions`, Vikunja will return the max permission
+          the current user has on this project. You can currently only set this to
+          `permissions`.
         in: query
         name: expand
         type: string
@@ -3045,7 +2940,7 @@ paths:
           schema:
             $ref: '#/definitions/web.HTTPError'
         "401":
-          description: The user does not have the right to see the project.
+          description: The user does not have the permission to see the project.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -3127,13 +3022,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: The teams with their right.
+          description: The teams with their permission.
           schema:
             items:
-              $ref: '#/definitions/models.TeamWithRight'
+              $ref: '#/definitions/models.TeamWithPermission'
             type: array
         "403":
-          description: No right to see the project.
+          description: No permission to see the project.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -3218,13 +3113,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: The users with the right they have.
+          description: The users with the permission they have.
           schema:
             items:
-              $ref: '#/definitions/models.UserWithRight'
+              $ref: '#/definitions/models.UserWithPermission'
             type: array
         "403":
-          description: No right to see the project.
+          description: No permission to see the project.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -3997,9 +3892,9 @@ paths:
       consumes:
       - application/json
       description: Copies the project, tasks, files, kanban data, assignees, comments,
-        attachments, lables, relations, backgrounds, user/team rights and link shares
-        from one project to a new one. The user needs read access in the project and
-        write access in the parent of the new project.
+        attachments, labels, relations, backgrounds, user/team permissions and link
+        shares from one project to a new one. The user needs read access in the project
+        and write access in the parent of the new project.
       parameters:
       - description: The project ID to duplicate
         in: path
@@ -4078,7 +3973,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update a team <-> project relation. Mostly used to update the right
+      description: Update a team <-> project relation. Mostly used to update the permission
         that team has.
       parameters:
       - description: Project ID
@@ -4163,7 +4058,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update a user <-> project relation. Mostly used to update the right
+      description: Update a user <-> project relation. Mostly used to update the permission
         that user has.
       parameters:
       - description: Project ID
@@ -4506,7 +4401,8 @@ paths:
         name: id
         required: true
         type: integer
-      - description: If set to `subtasks`, Vikunja will fetch only tasks which do
+      - collectionFormat: csv
+        description: If set to `subtasks`, Vikunja will fetch only tasks which do
           not have subtasks and then in a second step, will fetch all of these subtasks.
           This may result in more tasks than the pagination limit being returned,
           but all subtasks will be present in the response. If set to `buckets`, the
@@ -4515,6 +4411,8 @@ paths:
           the first 50 comments of each task will be present in the response. You
           can set this multiple times with different values.
         in: query
+        items:
+          type: string
         name: expand
         type: array
       produces:
@@ -5304,9 +5202,9 @@ paths:
       consumes:
       - application/json
       description: Creates a new relation between two tasks. The user needs to have
-        update rights on the base task and at least read rights on the other task.
-        Both tasks do not need to be on the same project. Take a look at the docs
-        for available task relation kinds.
+        update permissions on the base task and at least read permissions on the other
+        task. Both tasks do not need to be on the same project. Take a look at the
+        docs for available task relation kinds.
       parameters:
       - description: The relation object
         in: body
@@ -5440,7 +5338,8 @@ paths:
         in: query
         name: filter_include_nulls
         type: string
-      - description: If set to `subtasks`, Vikunja will fetch only tasks which do
+      - collectionFormat: csv
+        description: If set to `subtasks`, Vikunja will fetch only tasks which do
           not have subtasks and then in a second step, will fetch all of these subtasks.
           This may result in more tasks than the pagination limit being returned,
           but all subtasks will be present in the response. If set to `buckets`, the
@@ -5449,6 +5348,8 @@ paths:
           the first 50 comments of each task will be present in the response. You
           can set this multiple times with different values.
         in: query
+        items:
+          type: string
         name: expand
         type: array
       produces:
@@ -5473,14 +5374,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: 'Updates a bunch of tasks at once. This includes marking them as
-        done. Note: although you could supply another ID, it will be ignored. Use
-        task_ids instead.'
+      description: Updates multiple tasks atomically. All provided tasks must be writable
+        by the user.
       parameters:
-      - description: The task object. Looks like a normal task, the only difference
-          is it uses an array of project_ids to update.
+      - description: Bulk task update payload
         in: body
-        name: task
+        name: bulkTask
         required: true
         schema:
           $ref: '#/definitions/models.BulkTask'
@@ -5488,15 +5387,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: The updated task object.
+          description: Updated tasks
           schema:
-            $ref: '#/definitions/models.Task'
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
         "400":
-          description: Invalid task object provided.
+          description: Invalid request
           schema:
             $ref: '#/definitions/web.HTTPError'
         "403":
-          description: The user does not have access to the task (aka its project)
+          description: The user does not have access to the tasks
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -5505,7 +5406,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Update a bunch of tasks at once
+      summary: Update multiple tasks
       tags:
       - task
   /teams:
@@ -5732,7 +5633,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: The member right was successfully changed.
+          description: The member permission was successfully changed.
           schema:
             $ref: '#/definitions/models.Message'
         "500":
@@ -6052,6 +5953,20 @@ paths:
       summary: Request the deletion of the user
       tags:
       - user
+  /user/export:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.UserExportStatus'
+      security:
+      - JWTKeyAuth: []
+      summary: Get current user data export
+      tags:
+      - user
   /user/export/download:
     post:
       consumes:
@@ -6072,6 +5987,10 @@ paths:
             $ref: '#/definitions/models.Message'
         "400":
           description: Something's invalid.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: No user data export found.
           schema:
             $ref: '#/definitions/web.HTTPError'
         "500":
@@ -6240,7 +6159,8 @@ paths:
       consumes:
       - application/json
       description: Changes the user avatar. Valid types are gravatar (uses the user
-        email), upload, initials, default.
+        email), upload, initials, marble, ldap (synced from LDAP server), openid (synced
+        from OpenID provider), default.
       parameters:
       - description: The user's avatar setting
         in: body
@@ -6433,7 +6353,7 @@ paths:
       tags:
       - user
   /user/settings/token/caldav/{id}:
-    get:
+    delete:
       consumes:
       - application/json
       parameters:

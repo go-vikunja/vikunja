@@ -7,11 +7,11 @@
 		<Message
 			v-if="deletionScheduledAt !== null"
 			variant="danger"
-			class="mb-4"
+			class="mbe-4"
 		>
 			{{
 				$t('user.deletion.scheduled', {
-					date: formatDateShort(deletionScheduledAt),
+					date: formatDisplayDate(deletionScheduledAt),
 					dateSince: formatDateSince(deletionScheduledAt),
 				})
 			}}
@@ -26,7 +26,7 @@
 		<ImportHint v-if="tasksLoaded" />
 		<div
 			v-if="projectHistory.length > 0"
-			class="is-max-width-desktop has-text-left mt-4"
+			class="is-max-width-desktop has-text-start mbs-4"
 		>
 			<h3>{{ $t('home.lastViewed') }}</h3>
 			<ProjectCardGrid
@@ -55,7 +55,7 @@ import ImportHint from '@/components/home/ImportHint.vue'
 
 import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {formatDateShort, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
 import {useProjectStore} from '@/stores/projects'
@@ -92,6 +92,6 @@ function updateTaskKey() {
 
 <style scoped lang="scss">
 .show-tasks {
-	margin-top: 2rem;
+	margin-block-start: 2rem;
 }
 </style>

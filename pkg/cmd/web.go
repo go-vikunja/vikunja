@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package cmd
@@ -30,6 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/plugins"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
@@ -59,7 +60,8 @@ func setupUnixSocket(e *echo.Echo) error {
 		defer utils.Umask(oldmask)
 	}
 
-	l, err := net.Listen("unix", path)
+	cfg := net.ListenConfig{}
+	l, err := cfg.Listen(context.Background(), "unix", path)
 	if err != nil {
 		return err
 	}
@@ -160,5 +162,6 @@ var webCmd = &cobra.Command{
 			e.Logger.Fatal(err)
 		}
 		cron.Stop()
+		plugins.Shutdown()
 	},
 }

@@ -9,7 +9,7 @@
 					class="dropdown-trigger"
 					@click="triggerProps.toggleOpen"
 				>
-					<span class="tw-sr-only">{{ $t('project.openSettingsMenu') }}</span>
+					<span class="is-sr-only">{{ $t('project.openSettingsMenu') }}</span>
 					<Icon
 						icon="ellipsis-h"
 						class="icon"
@@ -56,13 +56,14 @@
 				{{ $t('menu.edit') }}
 			</DropdownItem>
 			<DropdownItem
+				v-if="!simple"
 				:to="{ name: 'project.settings.views', params: { projectId: project.id } }"
 				icon="eye"
 			>
 				{{ $t('menu.views') }}
 			</DropdownItem>
 			<DropdownItem
-				v-if="backgroundsEnabled"
+				v-if="backgroundsEnabled && !simple"
 				:to="{ name: 'project.settings.background', params: { projectId: project.id } }"
 				icon="image"
 			>
@@ -81,6 +82,7 @@
 				{{ $t('menu.duplicate') }}
 			</DropdownItem>
 			<DropdownItem
+				v-if="!simple"
 				v-tooltip="isDefaultProject ? $t('menu.cantArchiveIsDefault') : ''"
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
@@ -110,7 +112,7 @@
 				{{ $t('menu.createProject') }}
 			</DropdownItem>
 			<DropdownItem
-				v-if="project.maxRight === RIGHTS.ADMIN"
+				v-if="project.maxPermission === PERMISSIONS.ADMIN"
 				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
@@ -137,11 +139,14 @@ import {isSavedFilter} from '@/services/savedFilter'
 import {useConfigStore} from '@/stores/config'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	project: IProject
-}>()
+	simple?: boolean
+}>(), {
+	simple: false,
+})
 
 const projectStore = useProjectStore()
 const subscription = ref<ISubscription | null>(null)

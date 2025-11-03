@@ -1417,7 +1417,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "If set to ` + "`" + `rights` + "`" + `, Vikunja will return the max right the current user has on this project. You can currently only set this to ` + "`" + `rights` + "`" + `.",
+                        "description": "If set to ` + "`" + `permissions` + "`" + `, Vikunja will return the max permission the current user has on this project. You can currently only set this to ` + "`" + `permissions` + "`" + `.",
                         "name": "expand",
                         "in": "query"
                     }
@@ -1947,7 +1947,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "The user does not have the right to see the project.",
+                        "description": "The user does not have the permission to see the project.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -2072,16 +2072,16 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The teams with their right.",
+                        "description": "The teams with their permission.",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.TeamWithRight"
+                                "$ref": "#/definitions/models.TeamWithPermission"
                             }
                         }
                     },
                     "403": {
-                        "description": "No right to see the project.",
+                        "description": "No permission to see the project.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -2210,16 +2210,16 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The users with the right they have.",
+                        "description": "The users with the permission they have.",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.UserWithRight"
+                                "$ref": "#/definitions/models.UserWithPermission"
                             }
                         }
                     },
                     "403": {
-                        "description": "No right to see the project.",
+                        "description": "No permission to see the project.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -2761,7 +2761,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
+                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team permissions and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2825,7 +2825,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Update a team \u003c-\u003e project relation. Mostly used to update the right that team has.",
+                "description": "Update a team \u003c-\u003e project relation. Mostly used to update the permission that team has.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2953,7 +2953,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Update a user \u003c-\u003e project relation. Mostly used to update the right that user has.",
+                "description": "Update a user \u003c-\u003e project relation. Mostly used to update the permission that user has.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4132,6 +4132,10 @@ const docTemplate = `{
                     },
                     {
                         "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "description": "If set to ` + "`" + `subtasks` + "`" + `, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to ` + "`" + `buckets` + "`" + `, the buckets of each task will be present in the response. If set to ` + "`" + `reactions` + "`" + `, the reactions of each task will be present in the response. If set to ` + "`" + `comments` + "`" + `, the first 50 comments of each task will be present in the response. You can set this multiple times with different values.",
                         "name": "expand",
                         "in": "query"
@@ -4163,7 +4167,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Updates a bunch of tasks at once. This includes marking them as done. Note: although you could supply another ID, it will be ignored. Use task_ids instead.",
+                "description": "Updates multiple tasks atomically. All provided tasks must be writable by the user.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4173,11 +4177,11 @@ const docTemplate = `{
                 "tags": [
                     "task"
                 ],
-                "summary": "Update a bunch of tasks at once",
+                "summary": "Update multiple tasks",
                 "parameters": [
                     {
-                        "description": "The task object. Looks like a normal task, the only difference is it uses an array of project_ids to update.",
-                        "name": "task",
+                        "description": "Bulk task update payload",
+                        "name": "bulkTask",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -4187,19 +4191,22 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The updated task object.",
+                        "description": "Updated tasks",
                         "schema": {
-                            "$ref": "#/definitions/models.Task"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Task"
+                            }
                         }
                     },
                     "400": {
-                        "description": "Invalid task object provided.",
+                        "description": "Invalid request",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
                     },
                     "403": {
-                        "description": "The user does not have access to the task (aka its project)",
+                        "description": "The user does not have access to the tasks",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -4241,6 +4248,10 @@ const docTemplate = `{
                     },
                     {
                         "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "description": "If set to ` + "`" + `subtasks` + "`" + `, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to ` + "`" + `buckets` + "`" + `, the buckets of each task will be present in the response. If set to ` + "`" + `reactions` + "`" + `, the reactions of each task will be present in the response. If set to ` + "`" + `comments` + "`" + `, the first 50 comments of each task will be present in the response. You can set this multiple times with different values.",
                         "name": "expand",
                         "in": "query"
@@ -5276,7 +5287,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Creates a new relation between two tasks. The user needs to have update rights on the base task and at least read rights on the other task. Both tasks do not need to be on the same project. Take a look at the docs for available task relation kinds.",
+                "description": "Creates a new relation between two tasks. The user needs to have update permissions on the base task and at least read permissions on the other task. Both tasks do not need to be on the same project. Take a look at the docs for available task relation kinds.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5950,7 +5961,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "The member right was successfully changed.",
+                        "description": "The member permission was successfully changed.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
@@ -6431,6 +6442,30 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/export": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get current user data export",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserExportStatus"
+                        }
+                    }
+                }
+            }
+        },
         "/user/export/download": {
             "post": {
                 "security": [
@@ -6468,6 +6503,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Something's invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "No user data export found.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -6725,7 +6766,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Changes the user avatar. Valid types are gravatar (uses the user email), upload, initials, default.",
+                "description": "Changes the user avatar. Valid types are gravatar (uses the user email), upload, initials, marble, ldap (synced from LDAP server), openid (synced from OpenID provider), default.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7025,7 +7066,7 @@ const docTemplate = `{
             }
         },
         "/user/settings/token/caldav/{id}": {
-            "get": {
+            "delete": {
                 "security": [
                     {
                         "JWTKeyAuth": []
@@ -7731,6 +7772,38 @@ const docTemplate = `{
                 }
             }
         },
+        "code_vikunja_io_api_pkg_modules_auth_openid.Provider": {
+            "type": "object",
+            "properties": {
+                "auth_url": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "email_fallback": {
+                    "type": "boolean"
+                },
+                "force_user_info": {
+                    "type": "boolean"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "logout_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scope": {
+                    "type": "string"
+                },
+                "username_fallback": {
+                    "type": "boolean"
+                }
+            }
+        },
         "files.File": {
             "type": "object",
             "properties": {
@@ -7901,180 +7974,26 @@ const docTemplate = `{
         "models.BulkTask": {
             "type": "object",
             "properties": {
-                "assignees": {
-                    "description": "An array of users who are assigned to this task",
+                "fields": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/user.User"
+                        "type": "string"
                     }
-                },
-                "attachments": {
-                    "description": "All attachments this task has. This property is read-onlym, you must use the separate endpoint to add attachments to a task.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.TaskAttachment"
-                    }
-                },
-                "bucket_id": {
-                    "description": "The bucket id. Will only be populated when the task is accessed via a view with buckets.\nCan be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.",
-                    "type": "integer"
-                },
-                "buckets": {
-                    "description": "All buckets across all views this task is part of. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `buckets` + "`" + `.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Bucket"
-                    }
-                },
-                "comments": {
-                    "description": "All comments of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `comments` + "`" + `.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.TaskComment"
-                    }
-                },
-                "cover_image_attachment_id": {
-                    "description": "If this task has a cover image, the field will return the id of the attachment that is the cover image.",
-                    "type": "integer"
-                },
-                "created": {
-                    "description": "A timestamp when this task was created. You cannot change this value.",
-                    "type": "string"
-                },
-                "created_by": {
-                    "description": "The user who initially created the task.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/user.User"
-                        }
-                    ]
-                },
-                "description": {
-                    "description": "The task description.",
-                    "type": "string"
-                },
-                "done": {
-                    "description": "Whether a task is done or not.",
-                    "type": "boolean"
-                },
-                "done_at": {
-                    "description": "The time when a task was marked as done.",
-                    "type": "string"
-                },
-                "due_date": {
-                    "description": "The time when the task is due.",
-                    "type": "string"
-                },
-                "end_date": {
-                    "description": "When this task ends.",
-                    "type": "string"
-                },
-                "hex_color": {
-                    "description": "The task color in hex",
-                    "type": "string",
-                    "maxLength": 7
-                },
-                "id": {
-                    "description": "The unique, numeric id of this task.",
-                    "type": "integer"
-                },
-                "identifier": {
-                    "description": "The task identifier, based on the project identifier and the task's index",
-                    "type": "string"
-                },
-                "index": {
-                    "description": "The task index, calculated per project",
-                    "type": "integer"
-                },
-                "is_favorite": {
-                    "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" project. This value depends on the user making the call to the api.",
-                    "type": "boolean"
-                },
-                "labels": {
-                    "description": "An array of labels which are associated with this task. This property is read-only, you must use the separate endpoint to add labels to a task.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Label"
-                    }
-                },
-                "percent_done": {
-                    "description": "Determines how far a task is left from being done",
-                    "type": "number"
-                },
-                "position": {
-                    "description": "The position of the task - any task project can be sorted as usual by this parameter.\nWhen accessing tasks via views with buckets, this is primarily used to sort them based on a range.\nPositions are always saved per view. They will automatically be set if you request the tasks through a view\nendpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.",
-                    "type": "number"
-                },
-                "priority": {
-                    "description": "The task priority. Can be anything you want, it is possible to sort by this later.",
-                    "type": "integer"
-                },
-                "project_id": {
-                    "description": "The project this task belongs to.",
-                    "type": "integer"
-                },
-                "reactions": {
-                    "description": "Reactions on that task.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.ReactionMap"
-                        }
-                    ]
-                },
-                "related_tasks": {
-                    "description": "All related tasks, grouped by their relation kind",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.RelatedTaskMap"
-                        }
-                    ]
-                },
-                "reminders": {
-                    "description": "An array of reminders that are associated with this task.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.TaskReminder"
-                    }
-                },
-                "repeat_after": {
-                    "description": "An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as \"undone\" and then increase all remindes and the due date by its amount.",
-                    "type": "integer"
-                },
-                "repeat_mode": {
-                    "description": "Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.TaskRepeatMode"
-                        }
-                    ]
-                },
-                "start_date": {
-                    "description": "When this task starts.",
-                    "type": "string"
-                },
-                "subscription": {
-                    "description": "The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.\nWill only returned when retrieving one task.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.Subscription"
-                        }
-                    ]
                 },
                 "task_ids": {
-                    "description": "A project of task ids to update",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
-                "title": {
-                    "description": "The task text. This is what you'll see in the project.",
-                    "type": "string",
-                    "minLength": 1
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Task"
+                    }
                 },
-                "updated": {
-                    "description": "A timestamp when this task was last updated. You cannot change this value.",
-                    "type": "string"
+                "values": {
+                    "$ref": "#/definitions/models.Task"
                 }
             }
         },
@@ -8135,7 +8054,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "title": {
-                    "description": "The title of the lable. You'll see this one on tasks associated with it.",
+                    "description": "The title of the label. You'll see this one on tasks associated with it.",
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
@@ -8194,13 +8113,13 @@ const docTemplate = `{
                     "description": "The password of this link share. You can only set it, not retrieve it after the link share has been created.",
                     "type": "string"
                 },
-                "right": {
-                    "description": "The right this project is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                "permission": {
+                    "description": "The permission this project is shared with. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "default": 0,
                     "maximum": 2,
                     "allOf": [
                         {
-                            "$ref": "#/definitions/models.Right"
+                            "$ref": "#/definitions/models.Permission"
                         }
                     ]
                 },
@@ -8236,6 +8155,19 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "models.Permission": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2
+            ],
+            "x-enum-varnames": [
+                "PermissionRead",
+                "PermissionWrite",
+                "PermissionAdmin"
+            ]
         },
         "models.Project": {
             "type": "object",
@@ -8278,8 +8210,8 @@ const docTemplate = `{
                     "description": "True if a project is a favorite. Favorite projects show up in a separate parent project. This value depends on the user making the call to the api.",
                     "type": "boolean"
                 },
-                "max_right": {
-                    "$ref": "#/definitions/models.Right"
+                "max_permission": {
+                    "$ref": "#/definitions/models.Permission"
                 },
                 "owner": {
                     "description": "The user who created this project.",
@@ -8350,13 +8282,13 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this project \u003c-\u003e user relation.",
                     "type": "integer"
                 },
-                "right": {
-                    "description": "The right this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                "permission": {
+                    "description": "The permission this user has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "default": 0,
                     "maximum": 2,
                     "allOf": [
                         {
-                            "$ref": "#/definitions/models.Right"
+                            "$ref": "#/definitions/models.Permission"
                         }
                     ]
                 },
@@ -8364,7 +8296,7 @@ const docTemplate = `{
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
                     "type": "string"
                 },
-                "user_id": {
+                "username": {
                     "description": "The username.",
                     "type": "string"
                 }
@@ -8536,19 +8468,6 @@ const docTemplate = `{
                 "ReminderRelationEndDate"
             ]
         },
-        "models.Right": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2
-            ],
-            "x-enum-varnames": [
-                "RightRead",
-                "RightWrite",
-                "RightAdmin"
-            ]
-        },
         "models.RouteDetail": {
             "type": "object",
             "properties": {
@@ -8700,7 +8619,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "done_at": {
-                    "description": "The time when a task was marked as done.",
+                    "description": "The time when a task was marked as done. This field is system-controlled and cannot be set via API.",
                     "type": "string"
                 },
                 "due_date": {
@@ -8854,12 +8773,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "project_view_id": {
+                    "description": "The view this bucket belongs to. Combined with TaskID this forms a\nunique index.",
                     "type": "integer"
                 },
                 "task": {
                     "$ref": "#/definitions/models.Task"
                 },
                 "task_id": {
+                    "description": "The task which belongs to the bucket. Together with ProjectViewID\nthis field is part of a unique index to prevent duplicates.",
                     "type": "integer"
                 }
             }
@@ -9088,13 +9009,13 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this project \u003c-\u003e team relation.",
                     "type": "integer"
                 },
-                "right": {
-                    "description": "The right this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
+                "permission": {
+                    "description": "The permission this team has. 0 = Read only, 1 = Read \u0026 Write, 2 = Admin. See the docs for more details.",
                     "default": 0,
                     "maximum": 2,
                     "allOf": [
                         {
-                            "$ref": "#/definitions/models.Right"
+                            "$ref": "#/definitions/models.Permission"
                         }
                     ]
                 },
@@ -9144,7 +9065,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.TeamWithRight": {
+        "models.TeamWithPermission": {
             "type": "object",
             "properties": {
                 "created": {
@@ -9193,8 +9114,8 @@ const docTemplate = `{
                     "maxLength": 250,
                     "minLength": 1
                 },
-                "right": {
-                    "$ref": "#/definitions/models.Right"
+                "permission": {
+                    "$ref": "#/definitions/models.Permission"
                 },
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
@@ -9202,7 +9123,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.UserWithRight": {
+        "models.UserWithPermission": {
             "type": "object",
             "properties": {
                 "created": {
@@ -9222,8 +9143,8 @@ const docTemplate = `{
                     "description": "The full name of the user.",
                     "type": "string"
                 },
-                "right": {
-                    "$ref": "#/definitions/models.Right"
+                "permission": {
+                    "$ref": "#/definitions/models.Permission"
                 },
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
@@ -9316,38 +9237,6 @@ const docTemplate = `{
                 },
                 "scope": {
                     "type": "string"
-                }
-            }
-        },
-        "openid.Provider": {
-            "type": "object",
-            "properties": {
-                "auth_url": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "string"
-                },
-                "email_fallback": {
-                    "type": "boolean"
-                },
-                "force_user_info": {
-                    "type": "boolean"
-                },
-                "key": {
-                    "type": "string"
-                },
-                "logout_url": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "scope": {
-                    "type": "string"
-                },
-                "username_fallback": {
-                    "type": "boolean"
                 }
             }
         },
@@ -9514,7 +9403,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar_provider": {
-                    "description": "The avatar provider. Valid types are ` + "`" + `gravatar` + "`" + ` (uses the user email), ` + "`" + `upload` + "`" + `, ` + "`" + `initials` + "`" + `, ` + "`" + `marble` + "`" + ` (generates a random avatar for each user), ` + "`" + `default` + "`" + `.",
+                    "description": "The avatar provider. Valid types are ` + "`" + `gravatar` + "`" + ` (uses the user email), ` + "`" + `upload` + "`" + `, ` + "`" + `initials` + "`" + `, ` + "`" + `marble` + "`" + ` (generates a random avatar for each user), ` + "`" + `ldap` + "`" + ` (synced from LDAP server), ` + "`" + `openid` + "`" + ` (synced from OpenID provider), ` + "`" + `default` + "`" + `.",
                     "type": "string"
                 }
             }
@@ -9524,6 +9413,23 @@ const docTemplate = `{
             "properties": {
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "v1.UserExportStatus": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
                 }
             }
         },
@@ -9590,6 +9496,11 @@ const docTemplate = `{
                 "email_reminders_enabled": {
                     "description": "If enabled, sends email reminders of tasks to the user.",
                     "type": "boolean"
+                },
+                "extra_settings_links": {
+                    "description": "Additional settings links as provided by openid",
+                    "type": "object",
+                    "additionalProperties": {}
                 },
                 "frontend_settings": {
                     "description": "Additional settings only used by the frontend"
@@ -9717,7 +9628,7 @@ const docTemplate = `{
                 "providers": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/openid.Provider"
+                        "$ref": "#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider"
                     }
                 }
             }
@@ -9760,6 +9671,9 @@ const docTemplate = `{
                 },
                 "max_file_size": {
                     "type": "string"
+                },
+                "max_items_per_page": {
+                    "type": "integer"
                 },
                 "motd": {
                     "type": "string"
@@ -9818,7 +9732,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Vikunja API",
-	Description:      "# Pagination\nEvery endpoint capable of pagination will return two headers:\n* `x-pagination-total-pages`: The total number of available pages for this request\n* `x-pagination-result-count`: The number of items returned for this request.\n# Rights\nAll endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.\nThis can be used to show or hide ui elements based on the rights the user has.\n# Errors\nAll errors have an error code and a human-readable error message in addition to the http status code. You should always check for the status code in the response, not only the http status code.\nDue to limitations in the swagger library we're using for this document, only one error per http status code is documented here. Make sure to check the [error docs](https://vikunja.io/docs/errors/) in Vikunja's documentation for a full list of available error codes.\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.\n\n**API Token:** You can create scoped API tokens for your user and use the token to make authenticated requests in the context of that user. The token must be provided via an `Authorization: Bearer <token>` header, similar to jwt auth. See the documentation for the `api` group to manage token creation and revocation.\n\n**BasicAuth:** Only used when requesting tasks via CalDAV.\n<!-- ReDoc-Inject: <security-definitions> -->",
+	Description:      "# Pagination\nEvery endpoint capable of pagination will return two headers:\n* `x-pagination-total-pages`: The total number of available pages for this request\n* `x-pagination-result-count`: The number of items returned for this request.\n# Permissions\nAll endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-permission` header with the max permission the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.\nThis can be used to show or hide ui elements based on the permissions the user has.\n# Errors\nAll errors have an error code and a human-readable error message in addition to the http status code. You should always check for the status code in the response, not only the http status code.\nDue to limitations in the swagger library we're using for this document, only one error per http status code is documented here. Make sure to check the [error docs](https://vikunja.io/docs/errors/) in Vikunja's documentation for a full list of available error codes.\n# Authorization\n**JWT-Auth:** Main authorization method, used for most of the requests. Needs `Authorization: Bearer <jwt-token>`-header to authenticate successfully.\n\n**API Token:** You can create scoped API tokens for your user and use the token to make authenticated requests in the context of that user. The token must be provided via an `Authorization: Bearer <token>` header, similar to jwt auth. See the documentation for the `api` group to manage token creation and revocation.\n\n**BasicAuth:** Only used when requesting tasks via CalDAV.\n<!-- ReDoc-Inject: <security-definitions> -->",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

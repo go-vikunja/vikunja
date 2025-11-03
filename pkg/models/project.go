@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -77,21 +77,21 @@ type Project struct {
 
 	Views []*ProjectView `xorm:"-" json:"views"`
 
-	Expand   ProjectExpandable `xorm:"-" json:"-" query:"expand"`
-	MaxRight Right             `xorm:"-" json:"max_right"`
+	Expand        ProjectExpandable `xorm:"-" json:"-" query:"expand"`
+	MaxPermission Permission        `xorm:"-" json:"max_permission"`
 
 	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 	// A timestamp when this project was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 type ProjectExpandable string
 
-const ProjectExpandableRights = `rights`
+const ProjectExpandableRights = `permissions`
 
 type ProjectWithTasksAndBuckets struct {
 	Project
@@ -168,7 +168,7 @@ var FavoritesPseudoProject = Project{
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search projects by title."
 // @Param is_archived query bool false "If true, also returns all archived projects."
-// @Param expand query string false "If set to `rights`, Vikunja will return the max right the current user has on this project. You can currently only set this to `rights`."
+// @Param expand query string false "If set to `permissions`, Vikunja will return the max permission the current user has on this project. You can currently only set this to `permissions`."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Project "The projects"
 // @Failure 403 {object} web.HTTPError "The user does not have access to the project"
@@ -200,13 +200,13 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		if err != nil {
 			return
 		}
-		err = addMaxRightToProjects(s, prs, doer)
+		err = addMaxPermissionToProjects(s, prs, doer)
 		if err != nil {
 			return
 		}
 	} else {
 		for _, pr := range prs {
-			pr.MaxRight = RightUnknown
+			pr.MaxPermission = PermissionUnknown
 		}
 	}
 
@@ -307,7 +307,9 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	// Get project owner
 	p.Owner, err = user.GetUserByID(s, p.OwnerID)
-	if err != nil {
+	if user.IsErrUserDoesNotExist(err) {
+		p.Owner = nil
+	} else if err != nil {
 		return err
 	}
 
@@ -470,9 +472,19 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 			ids = append(ids, v)
 		}
 
-		filterCond := db.ILIKE("l.title", search)
+		var filterCond builder.Cond
 		if len(ids) > 0 {
 			filterCond = builder.In("l.id", ids)
+		} else {
+			filterCond = db.MultiFieldSearchWithTableAlias(
+				[]string{
+					"title",
+					"description",
+					"identifier",
+				},
+				search,
+				"l",
+			)
 		}
 
 		parentCondition := builder.Or(
@@ -753,25 +765,25 @@ func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err er
 	return
 }
 
-func addMaxRightToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
+func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.User) (err error) {
 	projectIDs := make([]int64, 0, len(projects))
 	for _, project := range projects {
 		if GetSavedFilterIDFromProjectID(project.ID) > 0 {
-			project.MaxRight = RightAdmin
+			project.MaxPermission = PermissionAdmin
 			continue
 		}
 		projectIDs = append(projectIDs, project.ID)
 	}
 
-	rights, err := checkRightsForProjects(s, u, projectIDs)
+	permissions, err := checkPermissionsForProjects(s, u, projectIDs)
 	if err != nil {
 		return err
 	}
 
 	for _, project := range projects {
-		right, has := rights[project.ID]
+		permission, has := permissions[project.ID]
 		if has {
-			project.MaxRight = right.MaxRight
+			project.MaxPermission = permission.MaxPermission
 		}
 	}
 

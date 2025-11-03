@@ -2,22 +2,23 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
 
 import (
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
@@ -155,5 +156,66 @@ func TestTaskBucket_Update(t *testing.T) {
 			"task_id":   1,
 			"bucket_id": 1,
 		}, false)
+	})
+
+	t.Run("keep done timestamp when moving task between projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		u := &user.User{ID: 1}
+
+		doneAt := time.Now().Round(time.Second)
+
+		// Set a done timestamp on the task
+		{
+			s := db.NewSession()
+			_, err := s.ID(2).Cols("done_at").Update(&Task{DoneAt: doneAt})
+			require.NoError(t, err)
+			err = s.Commit()
+			require.NoError(t, err)
+			s.Close()
+		}
+
+		// Move the task to another project without a done bucket using Task.Update
+		{
+			s := db.NewSession()
+			task := &Task{ID: 2, Done: true, ProjectID: 9}
+			err := task.Update(s, u)
+			require.NoError(t, err)
+			err = s.Commit()
+			require.NoError(t, err)
+			s.Close()
+		}
+
+		// Verify the task still has the same done timestamp
+		{
+			s := db.NewSession()
+			var task Task
+			_, err := s.ID(2).Get(&task)
+			require.NoError(t, err)
+			assert.True(t, task.Done)
+			assert.WithinDuration(t, doneAt, task.DoneAt, time.Second)
+			s.Close()
+		}
+
+		// Move the task back to the original project with a done bucket using Task.Update
+		{
+			s := db.NewSession()
+			task := &Task{ID: 2, Done: true, ProjectID: 1}
+			err := task.Update(s, u)
+			require.NoError(t, err)
+			err = s.Commit()
+			require.NoError(t, err)
+			s.Close()
+		}
+
+		// Verify the done timestamp is still preserved
+		{
+			s := db.NewSession()
+			var task Task
+			_, err := s.ID(2).Get(&task)
+			require.NoError(t, err)
+			assert.True(t, task.Done)
+			assert.WithinDuration(t, doneAt, task.DoneAt, time.Second)
+			s.Close()
+		}
 	})
 }

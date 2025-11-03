@@ -484,7 +484,11 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 			searchInput.value?.focus()
 			break
 		case ACTION_TYPE.LABELS:
-			query.value = '*' + item.title
+			if (/\s/.test(item.title)) {
+				query.value = '*"' + item.title + '"'
+			} else {
+				query.value = '*' + item.title
+			}
 			searchInput.value?.focus()
 			searchTasks()
 			break
@@ -595,7 +599,7 @@ function reset() {
 
 	// FIXME: changed position should be an option of the modal
 	:deep(.modal-content) {
-		top: 3rem;
+		inset-block-start: 3rem;
 		transform: translate(-50%, 0);
 	}
 }
@@ -609,12 +613,12 @@ function reset() {
 		font-size: 1.5rem;
 		
 		@media screen and (max-width: $tablet) {
-			padding-right: .25rem;
+			padding-inline-end: .25rem;
 		}
 	}
 
 	&.has-active-cmd .input {
-		padding-left: .5rem;
+		padding-inline-start: .5rem;
 	}
 
 	.close {
@@ -629,14 +633,14 @@ function reset() {
 
 .active-cmd {
 	font-size: 1.25rem;
-	margin-left: .5rem;
+	margin-inline-start: .5rem;
 	background-color: var(--grey-100);
 	color: var(--grey-800);
 }
 
 .results {
-	text-align: left;
-	width: 100%;
+	text-align: start;
+	inline-size: 100%;
 	color: var(--grey-800);
 }
 
@@ -649,10 +653,10 @@ function reset() {
 
 .result-item-button {
 	font-size: .9rem;
-	width: 100%;
+	inline-size: 100%;
 	background: transparent;
 	color: var(--grey-800);
-	text-align: left;
+	text-align: start;
 	box-shadow: none;
 	border-radius: 0;
 	text-transform: none;
@@ -674,8 +678,8 @@ function reset() {
 	
 	.saved-filter-icon {
 		font-size: .75rem;
-		width: .75rem;
-		margin-right: .25rem;
+		inline-size: .75rem;
+		margin-inline-end: .25rem;
 		color: var(--grey-400)
 	}
 	

@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package user
@@ -105,7 +105,8 @@ type User struct {
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
 
-	FrontendSettings interface{} `xorm:"json null" json:"-"`
+	FrontendSettings   interface{}    `xorm:"json null" json:"-"`
+	ExtraSettingsLinks map[string]any `xorm:"json null" json:"-"`
 
 	ExportFileID int64 `xorm:"bigint null" json:"-"`
 
@@ -429,7 +430,21 @@ func GetCurrentUserFromDB(s *xorm.Session, c echo.Context) (user *User, err erro
 
 // GetCurrentUser returns the current user based on its jwt token
 func GetCurrentUser(c echo.Context) (user *User, err error) {
-	jwtinf := c.Get("user").(*jwt.Token)
+	if apiUser, ok := c.Get("api_user").(*User); ok {
+		return apiUser, nil
+	}
+
+	jwtinf, is := c.Get("user").(*jwt.Token)
+	if jwtinf == nil {
+		log.Error("No user found in context")
+		return nil, ErrInvalidUserContext{Reason: "no user found in context"}
+	}
+
+	if !is {
+		log.Errorf("User in context is not a JWT token, got type: %T", jwtinf)
+		return nil, ErrInvalidUserContext{Reason: "user in context is not a JWT token"}
+	}
+
 	claims := jwtinf.Claims.(jwt.MapClaims)
 	return GetUserFromClaims(claims)
 }
@@ -551,7 +566,8 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			user.AvatarProvider != "initials" &&
 			user.AvatarProvider != "upload" &&
 			user.AvatarProvider != "marble" &&
-			user.AvatarProvider != "ldap" {
+			user.AvatarProvider != "ldap" &&
+			user.AvatarProvider != "openid" {
 			return updatedUser, &ErrInvalidAvatarProvider{AvatarProvider: user.AvatarProvider}
 		}
 	}
@@ -580,7 +596,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			"email",
 			"avatar_provider",
 			"avatar_file_id",
-			"is_active",
+			"status",
 			"name",
 			"email_reminders_enabled",
 			"discoverable_by_name",
@@ -592,6 +608,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			"timezone",
 			"overdue_tasks_reminders_time",
 			"frontend_settings",
+			"extra_settings_links",
 		).
 		Update(user)
 	if err != nil {

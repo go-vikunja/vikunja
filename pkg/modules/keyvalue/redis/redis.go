@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package redis
@@ -112,4 +112,38 @@ func (s *Storage) IncrBy(key string, update int64) (err error) {
 // DecrBy decreases the value saved at key by the amount provided through update
 func (s *Storage) DecrBy(key string, update int64) (err error) {
 	return s.client.DecrBy(context.Background(), key, update).Err()
+}
+
+// ListKeys returns all keys in redis starting with the given prefix
+func (s *Storage) ListKeys(prefix string) ([]string, error) {
+	ctx := context.Background()
+	pattern := prefix + "*"
+	var cursor uint64
+	var keys []string
+
+	for {
+		k, c, err := s.client.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return nil, err
+		}
+		keys = append(keys, k...)
+		cursor = c
+		if cursor == 0 {
+			break
+		}
+	}
+
+	return keys, nil
+}
+
+// DelPrefix removes all keys in redis which start with the given prefix
+func (s *Storage) DelPrefix(prefix string) error {
+	keys, err := s.ListKeys(prefix)
+	if err != nil {
+		return err
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	return s.client.Del(context.Background(), keys...).Err()
 }

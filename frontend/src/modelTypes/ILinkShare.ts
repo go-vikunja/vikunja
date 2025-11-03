@@ -1,11 +1,11 @@
 import type {IAbstract} from './IAbstract'
 import type {IUser} from './IUser'
-import type { Right } from '@/constants/rights'
+import type { Permission } from '@/constants/permissions'
 
 export interface ILinkShare extends IAbstract {
 	id: number
 	hash: string
-	right: Right
+	permission: Permission
 	sharedBy: IUser
 	sharingType: number // FIXME: use correct numbers
 	projectId: number

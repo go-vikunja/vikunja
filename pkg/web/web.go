@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package web
@@ -21,15 +21,15 @@ import (
 	"xorm.io/xorm"
 )
 
-// Rights defines rights methods
-type Rights interface {
+// Permissions defines permissions methods
+type Permissions interface {
 	CanRead(*xorm.Session, Auth) (bool, int, error)
 	CanDelete(*xorm.Session, Auth) (bool, error)
 	CanUpdate(*xorm.Session, Auth) (bool, error)
 	CanCreate(*xorm.Session, Auth) (bool, error)
 }
 
-// CRUDable defines the crud methods
+// CRUDable defines the CRUD methods
 type CRUDable interface {
 	Create(*xorm.Session, Auth) error
 	ReadOne(*xorm.Session, Auth) error
@@ -43,7 +43,7 @@ type HTTPErrorProcessor interface {
 	HTTPError() HTTPError
 }
 
-// HTTPError holds informations about an http error
+// HTTPError holds information about an http error
 type HTTPError struct {
 	HTTPCode int    `json:"-"`
 	Code     int    `json:"code"`
@@ -55,18 +55,18 @@ type HTTPErrorWithDetails struct {
 	Details interface{} `json:"details"`
 }
 
-// Auth defines the authentication interface used to get some auth thing
+// Auth defines the interface used to retrieve authentication information
 type Auth interface {
 	// Most of the time, we need an ID from the auth object only. Having this method saves the need to cast it.
 	GetID() int64
 }
 
-// Authprovider is a holder for the implementation of an authprovider by the application
+// Authprovider holds the implementation of an auth provider used by the application
 type Authprovider interface {
 	GetAuthObject(echo.Context) (Auth, error)
 }
 
-// Auths holds the authobject
+// Auths holds the auth object
 type Auths struct {
 	AuthObject func(echo.Context) (Auth, error)
 }

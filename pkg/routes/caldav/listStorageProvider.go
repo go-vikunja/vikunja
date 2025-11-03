@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package caldav
@@ -57,7 +57,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	// It looks like we need to have the same handler for returning both the calendar home set and the user principal
 	// Since the client seems to ignore the whatever is being returned in the first request and just makes a second one
 	// to the same url but requesting the calendar home instead
-	// The problem with this is caldav-go just return whatever ressource it gets and making that the requested path
+	// The problem with this is caldav-go just return whatever resource it gets and making that the requested path
 	// And for us here, there is no easy (I can think of at least one hacky way) to figure out if the client is requesting
 	// the home or principal url. Ough.
 
@@ -166,7 +166,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 	defer s.Close()
 
 	// GetTasksByUIDs...
-	// Parse these into ressources...
+	// Parse these into resources...
 	tasks, err := models.GetTasksByUIDs(s, uids, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
@@ -272,10 +272,10 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 	return &r, true, nil
 }
 
-// GetShallowResource gets a ressource without childs
+// GetShallowResource gets a resource without children
 // Since Vikunja has no children, this is the same as GetResource
 func (vcls *VikunjaCaldavProjectStorage) GetShallowResource(rpath string) (*data.Resource, bool, error) {
-	// Since Vikunja has no childs, this just returns the same as GetResource()
+	// Since Vikunja has no children, this just returns the same as GetResource()
 	// FIXME: This should just get the project with no tasks whatsoever, nothing else
 	return vcls.GetResource(rpath)
 }
@@ -293,7 +293,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 
 	vTask.ProjectID = vcls.project.ID
 
-	// Check the rights
+	// Check the permissions
 	canCreate, err := vTask.CanCreate(s, vcls.user)
 	if err != nil {
 		return nil, err
@@ -354,7 +354,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	s := db.NewSession()
 	defer s.Close()
 
-	// Check the rights
+	// Check the permissions
 	canUpdate, err := vTask.CanUpdate(s, vcls.user)
 	if err != nil {
 		_ = s.Rollback()
@@ -403,7 +403,7 @@ func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
 		s := db.NewSession()
 		defer s.Close()
 
-		// Check the rights
+		// Check the permissions
 		canDelete, err := vcls.task.CanDelete(s, vcls.user)
 		if err != nil {
 			_ = s.Rollback()
@@ -600,7 +600,7 @@ func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 
 // GetContent returns the content string of a resource (a task in our case)
 func (vlra *VikunjaProjectResourceAdapter) GetContent() string {
-	if vlra.project != nil && vlra.project.Tasks != nil {
+	if vlra.project != nil && vlra.projectTasks != nil {
 		return caldav.GetCaldavTodosForTasks(vlra.project, vlra.projectTasks)
 	}
 

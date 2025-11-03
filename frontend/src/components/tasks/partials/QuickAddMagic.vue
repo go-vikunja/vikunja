@@ -2,7 +2,7 @@
 	<template v-if="mode !== 'disabled' && prefixes !== undefined">
 		<BaseButton
 			v-tooltip="$t('task.quickAddMagic.hint')"
-			class="icon is-small show-helper-text"
+			class="icon is-small show-helper-text quick-add-magic-trigger-btn"
 			:aria-label="$t('task.quickAddMagic.hint')"
 			:class="{'is-highlighted': highlightHintIcon}"
 			@click="() => visible = true"
@@ -19,6 +19,8 @@
 			<Card
 				class="has-no-shadow"
 				:title="$t('task.quickAddMagic.title')"
+				:show-close="true"
+				@close="() => visible = false"
 			>
 				<p>{{ $t('task.quickAddMagic.intro') }}</p>
 

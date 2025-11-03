@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package config
@@ -19,6 +19,7 @@ package config
 import (
 	"crypto/rand"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -30,6 +31,7 @@ import (
 
 	"code.vikunja.io/api/pkg/log"
 
+	"github.com/c2h5oh/datasize"
 	"github.com/spf13/viper"
 )
 
@@ -137,10 +139,10 @@ const (
 	LogEnabled       Key = `log.enabled`
 	LogStandard      Key = `log.standard`
 	LogLevel         Key = `log.level`
+	LogFormat        Key = `log.format`
 	LogDatabase      Key = `log.database`
 	LogDatabaseLevel Key = `log.databaselevel`
 	LogHTTP          Key = `log.http`
-	LogEcho          Key = `log.echo`
 	LogPath          Key = `log.path`
 	LogEvents        Key = `log.events`
 	LogEventsLevel   Key = `log.eventslevel`
@@ -207,7 +209,12 @@ const (
 	AutoTLSEnabled     Key = `autotls.enabled`
 	AutoTLSEmail       Key = `autotls.email`
 	AutoTLSRenewBefore Key = `autotls.renewbefore`
+
+	PluginsEnabled Key = `plugins.enabled`
+	PluginsDir     Key = `plugins.dir`
 )
+
+var maxFileSizeInBytes uint64
 
 // GetString returns a string config value
 func (k Key) GetString() string {
@@ -253,8 +260,7 @@ func GetTimeZone() *time.Location {
 	if timezone == nil {
 		loc, err := time.LoadLocation(ServiceTimeZone.GetString())
 		if err != nil {
-			fmt.Printf("Error parsing time zone: %s", err)
-			os.Exit(1)
+			log.Fatalf("Error parsing time zone: %s", err)
 		}
 		timezone = loc
 	}
@@ -366,7 +372,7 @@ func InitDefaultConfig() {
 	DatabaseUser.setDefault("vikunja")
 	DatabasePassword.setDefault("")
 	DatabaseDatabase.setDefault("vikunja")
-	DatabasePath.setDefault("./vikunja.db")
+	DatabasePath.setDefault(filepath.Join(ServiceRootpath.GetString(), "vikunja.db"))
 	DatabaseMaxOpenConnections.setDefault(100)
 	DatabaseMaxIdleConnections.setDefault(50)
 	DatabaseMaxConnectionLifetime.setDefault(10000)
@@ -401,10 +407,10 @@ func InitDefaultConfig() {
 	LogEnabled.setDefault(true)
 	LogStandard.setDefault("stdout")
 	LogLevel.setDefault("INFO")
+	LogFormat.setDefault("text")
 	LogDatabase.setDefault("off")
 	LogDatabaseLevel.setDefault("WARNING")
 	LogHTTP.setDefault("stdout")
-	LogEcho.setDefault("off")
 	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")
 	LogEvents.setDefault("off")
 	LogEventsLevel.setDefault("INFO")
@@ -421,8 +427,8 @@ func InitDefaultConfig() {
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")
 	// Cors
-	CorsEnable.setDefault(false)
-	CorsOrigins.setDefault([]string{"*"})
+	CorsEnable.setDefault(true)
+	CorsOrigins.setDefault([]string{"http://127.0.0.1:*", "http://localhost:*"})
 	CorsMaxAge.setDefault(0)
 	// Migration
 	MigrationTodoistEnable.setDefault(false)
@@ -447,6 +453,9 @@ func InitDefaultConfig() {
 	WebhooksTimeoutSeconds.setDefault(30)
 	// AutoTLS
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
+	// Plugins
+	PluginsEnabled.setDefault(false)
+	PluginsDir.setDefault(filepath.Join(ServiceRootpath.GetString(), "plugins"))
 }
 
 func GetConfigValueFromFile(configKey string) string {
@@ -538,7 +547,7 @@ func InitConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
-	log.ConfigureLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
+	log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 
 	// Load the config file
 	viper.AddConfigPath(ServiceRootpath.GetString())
@@ -563,7 +572,7 @@ func InitConfig() {
 			log.Warning(err.Error())
 			log.Warning("Using default config.")
 		} else {
-			log.ConfigureLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString())
+			log.ConfigureStandardLogger(LogEnabled.GetBool(), LogStandard.GetString(), LogPath.GetString(), LogLevel.GetString(), LogFormat.GetString())
 		}
 	} else {
 		log.Info("No config file found, using default or config from environment variables.")
@@ -580,8 +589,22 @@ func InitConfig() {
 		RateLimitStore.Set(KeyvalueType.GetString())
 	}
 
-	if ServicePublicURL.GetString() != "" && !strings.HasSuffix(ServicePublicURL.GetString(), "/") {
-		ServicePublicURL.Set(ServicePublicURL.GetString() + "/")
+	if CorsEnable.GetBool() && ServicePublicURL.GetString() == "" {
+		log.Fatalf("service.publicurl is required when cors.enable is true")
+	}
+
+	if ServicePublicURL.GetString() != "" {
+		if !strings.HasSuffix(ServicePublicURL.GetString(), "/") {
+			ServicePublicURL.Set(ServicePublicURL.GetString() + "/")
+		}
+
+		parsed, err := url.Parse(ServicePublicURL.GetString())
+		if err != nil {
+			log.Fatalf("Could not parse publicurl: %s", err)
+		}
+		if parsed.Scheme != "http" && parsed.Scheme != "https" {
+			log.Fatalf("service.publicurl must include http:// or https:// scheme, got: %s", ServicePublicURL.GetString())
+		}
 	}
 
 	if MigrationTodoistRedirectURL.GetString() == "" {
@@ -599,6 +622,14 @@ func InitConfig() {
 	if DefaultSettingsTimezone.GetString() == "" {
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	}
+
+	publicURL := strings.TrimSuffix(ServicePublicURL.GetString(), "/")
+	CorsOrigins.Set(append(CorsOrigins.GetStringSlice(), publicURL))
+
+	err = SetMaxFileSizeMBytesFromString(FilesMaxSize.GetString())
+	if err != nil {
+		log.Fatalf("Could not parse files.maxsize: %s", err)
+	}
 }
 
 func random(length int) (string, error) {
@@ -608,4 +639,22 @@ func random(length int) (string, error) {
 	}
 
 	return fmt.Sprintf("%X", b), nil
+}
+
+func SetMaxFileSizeMBytesFromString(size string) error {
+	var maxSize datasize.ByteSize
+	err := maxSize.UnmarshalText([]byte(size))
+	if err != nil {
+		return err
+	}
+
+	maxFileSizeInBytes = uint64(maxSize.MBytes())
+	return nil
+}
+
+func GetMaxFileSizeInMBytes() uint64 {
+	if maxFileSizeInBytes == 0 {
+		return 20
+	}
+	return maxFileSizeInBytes
 }

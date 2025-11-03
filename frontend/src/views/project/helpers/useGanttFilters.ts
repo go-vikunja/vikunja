@@ -4,8 +4,8 @@ import type {RouteLocationNormalized, RouteLocationRaw} from 'vue-router'
 import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
 import {parseDateProp} from '@/helpers/time/parseDateProp'
 import {parseBooleanProp} from '@/helpers/time/parseBooleanProp'
-import {useRouteFilters} from '@/composables/useRouteFilters'
-import {useGanttTaskList} from './useGanttTaskList'
+import {useRouteFilters, type UseRouteFiltersReturn} from '@/composables/useRouteFilters'
+import {useGanttTaskList, type UseGanttTaskListReturn} from './useGanttTaskList'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {TaskFilterParams} from '@/services/taskCollection'
@@ -94,8 +94,8 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 }
 
 export type UseGanttFiltersReturn =
-	ReturnType<typeof useRouteFilters<GanttFilters>> &
-	ReturnType<typeof useGanttTaskList<GanttFilters>>
+	UseRouteFiltersReturn<GanttFilters> &
+	UseGanttTaskListReturn
 
 export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref<IProjectView['id']>): UseGanttFiltersReturn {
 	const {

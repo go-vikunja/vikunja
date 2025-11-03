@@ -309,12 +309,6 @@
 				"addedSuccess": "ה-{type} נתווסף בהצלחה.",
 				"updatedSuccess": "ה-{type} נתווסף בהצלחה."
 			},
-			"right": {
-				"title": "הרשאה",
-				"read": "קריאה בלבד",
-				"readWrite": "קריאה וכתיבה",
-				"admin": "מנהל"
-			},
 			"attributes": {
 				"link": "לינק",
 				"delete": "מחיקה"
@@ -338,8 +332,7 @@
 			"month": "חודש",
 			"day": "יום",
 			"hour": "שעה",
-			"range": "טווח תאריכים",
-			"noDates": "חסרים תאריכים למטלה."
+			"range": "טווח תאריכים"
 		},
 		"table": {
 			"title": "טבלה",
@@ -468,9 +461,7 @@
 					"greaterThan": "גדול מ ",
 					"greaterThanOrEqual": "גדול או יותר",
 					"lessThan": "פחות מ ",
-					"lessThanOrEqual": "פחות או שווה ל ",
-					"in": "מתאים לכל ערך ברשימה מופרדת פסיקים (csv)",
-					"notIn": "מתאים לכל ערך לא נוכח ברשימת ערכים מופרדת פסיקים (csv)"
+					"lessThanOrEqual": "פחות או שווה ל "
 				},
 				"logicalOperators": {
 					"intro": "אפשר להשתמש באופרטורים הבאים כדי לחבר ריבוי תנאים:",
@@ -734,7 +725,6 @@
 		"show": {
 			"titleCurrent": "מטלות עדכניות",
 			"titleDates": "מטלות מ-{from} ועד {to}",
-			"noDates": "הצג מטלות בלי תאריך",
 			"overdue": "הצג מטלות באיחור",
 			"fromuntil": "מטלות מ-{from} ועד {until}",
 			"select": "בחירת טווח תאריכים",

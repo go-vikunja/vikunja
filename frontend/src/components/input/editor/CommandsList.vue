@@ -64,6 +64,9 @@ export default {
 			}
 
 			if (event.key === 'Enter') {
+				if (event.isComposing) {
+					return false
+				}
 				this.enterHandler()
 				return true
 			}
@@ -110,8 +113,8 @@ export default {
 	display: flex;
 	align-items: center;
 	margin: 0;
-	width: 100%;
-	text-align: left;
+	inline-size: 100%;
+	text-align: start;
 	background: transparent;
 	border-radius: $radius;
 	border: 0;
@@ -125,11 +128,11 @@ export default {
 	
 	> svg {
 		box-sizing: border-box;
-		width: 2rem;
-		height: 2rem;
+		inline-size: 2rem;
+		block-size: 2rem;
 		border: 1px solid var(--grey-300);
 		padding: .5rem;
-		margin-right: .5rem;
+		margin-inline-end: .5rem;
 		border-radius: $radius;
 		color: var(--grey-700);
 	}

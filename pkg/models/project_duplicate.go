@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -35,11 +35,11 @@ type ProjectDuplicate struct {
 	// The copied project
 	Project *Project `json:"duplicated_project,omitempty"`
 
-	web.Rights   `json:"-"`
-	web.CRUDable `json:"-"`
+	web.Permissions `json:"-"`
+	web.CRUDable    `json:"-"`
 }
 
-// CanCreate checks if a user has the right to duplicate a project
+// CanCreate checks if a user has the permission to duplicate a project
 func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool, err error) {
 	// Project Exists + user has read access to project
 	pd.Project = &Project{ID: pd.ProjectID}
@@ -59,7 +59,7 @@ func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bo
 
 // Create duplicates a project
 // @Summary Duplicate an existing project
-// @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, lables, relations, backgrounds, user/team rights and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.
+// @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team permissions and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.
 // @tags project
 // @Accept json
 // @Produce json
@@ -114,8 +114,8 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		return
 	}
 
-	// Rights / Shares
-	// To keep it simple(r) we will only copy rights which are directly used with the project, not the parent
+	// Permissions / Shares
+	// To keep it simple(r) we will only copy permissions which are directly used with the project, not the parent
 	users := []*ProjectUser{}
 	err = s.Where("project_id = ?", pd.ProjectID).Find(&users)
 	if err != nil {

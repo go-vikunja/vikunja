@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package v1
@@ -26,13 +26,14 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/avatar"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
 )
 
 // UserAvatarProvider holds the user avatar provider type
 type UserAvatarProvider struct {
-	// The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `marble` (generates a random avatar for each user), `default`.
+	// The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `marble` (generates a random avatar for each user), `ldap` (synced from LDAP server), `openid` (synced from OpenID provider), `default`.
 	AvatarProvider string `json:"avatar_provider"`
 }
 
@@ -61,6 +62,8 @@ type UserSettings struct {
 	Timezone string `json:"timezone"`
 	// Additional settings only used by the frontend
 	FrontendSettings interface{} `json:"frontend_settings"`
+	// Additional settings links as provided by openid
+	ExtraSettingsLinks map[string]any `json:"extra_settings_links"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -101,7 +104,7 @@ func GetUserAvatarProvider(c echo.Context) error {
 
 // ChangeUserAvatarProvider changes the user's avatar provider
 // @Summary Set the user's avatar
-// @Description Changes the user avatar. Valid types are gravatar (uses the user email), upload, initials, default.
+// @Description Changes the user avatar. Valid types are gravatar (uses the user email), upload, initials, marble, ldap (synced from LDAP server), openid (synced from OpenID provider), default.
 // @tags user
 // @Accept json
 // @Produce json
@@ -133,6 +136,8 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	oldProvider := user.AvatarProvider
+
 	user.AvatarProvider = uap.AvatarProvider
 
 	_, err = user2.UpdateUser(s, user, false)
@@ -141,9 +146,17 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	if user.AvatarProvider == "initials" {
+		avatar.FlushAllCaches(user)
+	}
+
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
+	}
+
+	if oldProvider != user.AvatarProvider {
+		avatar.FlushAllCaches(user)
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "Avatar was changed successfully."})
@@ -190,6 +203,8 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 		return handler.HandleHTTPError(err)
 	}
 
+	invalidateAvatar := user.AvatarProvider == "initials" && user.Name != us.Name
+
 	user.Name = us.Name
 	user.EmailRemindersEnabled = us.EmailRemindersEnabled
 	user.DiscoverableByEmail = us.DiscoverableByEmail
@@ -211,6 +226,10 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
+	}
+
+	if invalidateAvatar {
+		avatar.FlushAllCaches(user)
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "The settings were updated successfully."})

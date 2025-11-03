@@ -1,9 +1,8 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T">
 import {type ComponentPublicInstance, nextTick, ref, watch} from 'vue'
 
 const props = withDefaults(defineProps<{
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	options: any[],
+	options: T[],
 	suggestion?: string,
 	maxHeight?: number,
 }>(), {
@@ -24,9 +23,9 @@ const state = ref<StateType>('unfocused')
 const val = ref<string>('')
 const model = defineModel<string>()
 
-const suggestionScrollerRef = ref<HTMLInputElement | null>(null)
-const containerRef = ref<HTMLInputElement | null>(null)
-const editorRef = ref<HTMLInputElement | null>(null)
+const suggestionScrollerRef = ref<HTMLElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
+const editorRef = ref<HTMLTextAreaElement | null>(null)
 
 watch(
 	() => model.value,
@@ -111,7 +110,7 @@ function select(offset: number) {
 	elems?.focus()
 }
 
-function onSelectValue(value) {
+function onSelectValue(value: T) {
 	model.value = value
 	selectedIndex.value = 0
 	setState('unfocused')
@@ -191,24 +190,23 @@ function onUpdateField(e) {
 		background: var(--white);
 		border-radius: 0 0 var(--input-radius) var(--input-radius);
 		border: 1px solid var(--primary);
-		border-top: none;
+		border-block-start: none;
 
-		max-height: 50vh;
+		max-block-size: 50vh;
 		overflow-x: auto;
 		z-index: 100;
-		max-width: 100%;
-		min-width: 100%;
-		margin-top: -2px;
+		max-inline-size: 100%;
+		min-inline-size: 100%;
+		margin-block-start: -2px;
+		margin-inline: -1px;
 
 		button {
-			width: 100%;
 			background: transparent;
-			border: 0;
 
 			font-size: .9rem;
-			width: 100%;
+			inline-size: 100%;
 			color: var(--grey-800);
-			text-align: left;
+			text-align: start;
 			box-shadow: none;
 			text-transform: none;
 			font-family: $family-sans-serif;

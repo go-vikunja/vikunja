@@ -1,0 +1,28 @@
+name: Feature Request
+description: Found something you weren't expecting? Report it here!
+type: Feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        NOTE: If your issue is a security concern, please send an email to security@vikunja.io instead of opening a public issue. [More information about our security policy](https://vikunja.io/contact/#security).
+  - type: markdown
+    attributes:
+      value: |
+        Please fill out this issue template to request a new feature.
+
+        1. If you want to report a bug, please use the Bug template.
+        2. Please ask questions or configuration/deploy problems on our [Matrix Room](https://matrix.to/#/#vikunja:matrix.org) or forum (https://community.vikunja.io).
+        3. Make sure you are using the latest release and take a moment to check that your feature hasn't been requested before.
+        4. Please include all relevant information in the feature request to allow users to discuss this fully.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        Please provide a description of the feature you are looking for.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Which alternatives did you consider using instead?
+

@@ -4,7 +4,7 @@
 		"text": "Siden du ba om finnes ikke."
 	},
 	"home": {
-		"welcomeNight": "Hei {username}!",
+		"welcomeNight": "God kveld {username}!",
 		"welcomeMorning": "Hei {username}!",
 		"welcomeDay": "Hei {username}!",
 		"welcomeEvening": "Hei {username}!",
@@ -67,7 +67,8 @@
 			"noAccountYet": "Har du ikke konto ennå?",
 			"alreadyHaveAnAccount": "Har du allerede en konto?",
 			"remember": "Hold meg innlogget",
-			"registrationDisabled": "Registrering er slått av."
+			"registrationDisabled": "Registrering er slått av.",
+			"passwordResetTokenMissing": "Plassholder for tilbakestilling av passord mangler."
 		},
 		"settings": {
 			"title": "Innstillinger",
@@ -91,6 +92,8 @@
 				"discoverableByName": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter mitt navn",
 				"discoverableByEmail": "Tillat andre brukere å legge meg til som medlem i grupper eller prosjekter når det søkes etter min e-postadresse",
 				"playSoundWhenDone": "Spill av en lyd når oppgaver markeres som ferdig",
+				"allowIconChanges": "Vis spesiallogoer i visse tidsrom",
+				"defaultTaskRelationType": "Standard type oppgaverelasjon",
 				"weekStart": "Uken starter på",
 				"weekStartSunday": "Søndag",
 				"weekStartMonday": "Mandag",
@@ -101,7 +104,24 @@
 				"overdueTasksRemindersTime": "Påminnelsestid for utløpte oppgaver",
 				"filterUsedOnOverview": "Lagret filter brukt på siden med oversikt",
 				"minimumPriority": "Minimum synlig oppgaveprioritet",
+				"dateDisplay": "Datovisningsformat",
+				"dateDisplayOptions": {
+					"relative": "Relativ (f.eks. 3 dager siden)",
+					"mm-dd-yyyy": "MM-DD-ÅÅÅÅ",
+					"dd-mm-yyyy": "DD-MM-ÅÅÅÅ",
+					"yyyy-mm-dd": "ÅÅÅÅ-MM-DD",
+					"mm/dd/yyyy": "MM / DD / ÅÅÅÅ",
+					"dd/mm/yyyy": "DD / MM / ÅÅÅÅ",
+					"yyyy/mm/dd": "ÅÅÅÅ/MM/DD"
+				},
 				"externalUserNameChange": "Navnet ditt blir administrert av din innloggingsleverandør ({provider}). For å endre det, vennligst oppdater det hos leverandøren."
+			},
+			"sections": {
+				"personalInformation": "Personlig informasjon",
+				"taskAndNotifications": "Prosjekter & oppgaver",
+				"privacy": "Personvern",
+				"localization": "Språkoppsett",
+				"appearance": "Utseende og oppførsel"
 			},
 			"totp": {
 				"title": "To-faktor-autentisering",
@@ -122,7 +142,7 @@
 				"howTo": "Du kan koble Vikunja til CalDAV-klienter for å se og administrere alle oppgaver fra forskjellige kunder. Skriv inn denne Url'en til din klient:",
 				"more": "Mer informasjon om CalDAV i Vikunja",
 				"tokens": "CalDAV-plassholdere",
-				"tokensHowTo": "Du kan bruke et CalDAV token til å bruke istedet for passord for å logge på det ovennevnte endepunktet.",
+				"tokensHowTo": "Du kan bruke en CalDAV-plassholder til å bruke istedet for passord for å logge på det ovennevnte endepunktet.",
 				"createToken": "Opprett plassholder",
 				"tokenCreated": "Her er din plassholder: {token}",
 				"wontSeeItAgain": "Skriv den ned, du vil ikke kunne se den igjen.",
@@ -138,7 +158,8 @@
 				"uploadAvatar": "Last opp avatar",
 				"statusUpdateSuccess": "Avatar-status ble oppdatert!",
 				"setSuccess": "Avataren ble satt!",
-				"ldap": "Avataren din er automatisk synkronisert fra organisasjonens katalogtjeneste (LDAP). Du kan be IT-avdelingen din om informasjon om hvordan den kan endres."
+				"ldap": "Avataren din er automatisk synkronisert fra organisasjonens katalogtjeneste (LDAP). Du kan be IT-avdelingen din om informasjon om hvordan den kan endres.",
+				"openid": "Avartaren blir administrert av din innloggingsleverandør ({provider}). For å endre må du oppdatere den hos leverandøren."
 			},
 			"quickAddMagic": {
 				"title": "Legg til hurtig/magisk modus",
@@ -164,9 +185,9 @@
 				"30d": "30 dager",
 				"60d": "60 dager",
 				"90d": "90 dager",
-				"permissionExplanation": "Tillatelser gir mulighet for å hente ut hva en api-plassholder har lov til å gjøre.",
+				"permissionExplanation": "Rettigheter gir mulighet for å hente ut hva en api-plassholder har lov til å gjøre.",
 				"titleRequired": "Tittel er nødvendig",
-				"permissionRequired": "Velg minst en tillatelse fra listen.",
+				"permissionRequired": "Velg minst en rettighet fra listen.",
 				"expired": "Denne plassholderen har utløpt {ago}.",
 				"tokenCreatedSuccess": "Her er din nye api-plassholder {token}",
 				"tokenCreatedNotSeeAgain": "Lagre på et trygt sted. Du vil ikke se dette flere ganger!",
@@ -206,7 +227,9 @@
 			"descriptionPasswordRequired": "Skriv inn passordet for å fortsette:",
 			"request": "Be om kopi av mine Vikunja data",
 			"success": "Du har spurt om dine Vikunja data! Vi sender deg en e-post når den er klar til å laste ned.",
-			"downloadTitle": "Last ned dine eksporterte Vikunja data"
+			"downloadTitle": "Last ned dine eksporterte Vikunja data",
+			"ready": "Eksporten din er klar til å lastes ned. Du kan laste den ned til {0}.",
+			"requestNew": "Be om en ny eksport"
 		}
 	},
 	"project": {
@@ -314,11 +337,11 @@
 				"addedSuccess": "{type} ble lagt til.",
 				"updatedSuccess": "{type} ble lagt til."
 			},
-			"right": {
-				"title": "Tillatelse",
-				"read": "Kun lese",
+			"permission": {
+				"title": "Rettighet",
+				"read": "Kun lesetilgang",
 				"readWrite": "Lese og skrive",
-				"admin": "Administrator"
+				"admin": "Admin"
 			},
 			"attributes": {
 				"link": "Lenke",
@@ -344,7 +367,21 @@
 			"day": "Dag",
 			"hour": "Time",
 			"range": "Datointervall",
-			"noDates": "Denne oppgaven har ingen datoer satt."
+			"chartLabel": "Gantt-kart for prosjekt",
+			"taskBarsForRow": "Oppgavelinjer for rad {rowId}",
+			"taskBarLabel": "Oppgave: {task}. Fra {startDate} til {endDate}. {dateType}. Klikk for å redigere, dra for å flytte.",
+			"scheduledDates": "Planlagte datoer",
+			"estimatedDates": "Beregnede datoer",
+			"resizeStartDate": "Endre startdato for oppgaven {task}",
+			"resizeEndDate": "Endre sluttdatoen for oppgaven {task}",
+			"timelineHeader": "Tidslinje overskrift med måneder og dager",
+			"monthsRow": "Måneder rad",
+			"daysRow": "Dager rad",
+			"monthLabel": "Måned: {month}",
+			"dayLabel": "Dag: {date}, {weekday}",
+			"dayLabelToday": "I dag: {date}, {weekday}",
+			"taskAriaLabel": "Oppgave: {task}",
+			"taskAriaLabelById": "Oppgave {id}"
 		},
 		"table": {
 			"title": "Tabell",
@@ -419,6 +456,7 @@
 		"title": "Filtre",
 		"clear": "Fjern filtre",
 		"showResults": "Vis resultater",
+		"noResults": "Ingen resultater",
 		"fromView": "Gjeldende visning har også et filter:",
 		"fromViewBoth": "Den brukes i kombinasjon med det du skriver inn her.",
 		"attributes": {
@@ -550,7 +588,11 @@
 		"authenticating": "Autentiserer…",
 		"passwordRequired": "Dette delte prosjektet krever et passord. Vennligst skriv det nedenfor:",
 		"error": "Det oppsto en feil.",
-		"invalidPassword": "Det oppgitte passordet er ugyldig."
+		"invalidPassword": "Det oppgitte passordet er ugyldig.",
+		"accessDenied": "Ingen tilgang. Kontroller rettighetene og prøv på nytt.",
+		"serverError": "Det oppstod en tjenerfeil. Prøv igjen senere.",
+		"projectLoadError": "Kan ikke laste inn prosjektinformasjonen.",
+		"retry": "Prøv igjen"
 	},
 	"navigation": {
 		"overview": "Oversikt",
@@ -749,7 +791,6 @@
 		"addReminder": "Legg til påminnelse…",
 		"doneSuccess": "Oppgaven ble markert som ferdig.",
 		"undoneSuccess": "Oppgaven ble fjernet som ferdig.",
-		"revertSuccess": "Oppgaveendringen ble omgjort.",
 		"undo": "Angre",
 		"openDetail": "Åpne detaljvisning",
 		"checklistTotal": "{checked} av {total} oppgaver",
@@ -776,6 +817,7 @@
 			"updateSuccess": "Oppgaven ble lagret.",
 			"deleteSuccess": "Oppgaven ble slettet.",
 			"belongsToProject": "Denne oppgaven tilhører prosjektet '{project}'",
+			"back": "Tilbake til prosjekt",
 			"due": "Forfaller {at}",
 			"closePopup": "Lukk popup",
 			"organization": "Organisering",
@@ -912,7 +954,7 @@
 			"differentProject": "Denne oppgaven tilhører et annet prosjekt.",
 			"noneYet": "Ingen oppgaverelasjoner ennå.",
 			"delete": "Slett oppgaverelasjon",
-			"deleteText1": "Er du sikker på at du vil slette denneoppgaverelasjonen?",
+			"deleteText1": "Er du sikker på at du vil slette denne oppgaverelasjonen?",
 			"select": "Velg en relasjonstype",
 			"taskRequired": "Velg en oppgave eller angi en ny oppgavetittel.",
 			"kinds": {
@@ -974,7 +1016,7 @@
 			"project4": "For eksempel: {prefix}\"Prosjekt med mellomrom\".",
 			"dateAndTime": "Dato og tid",
 			"date": "Hvilken som helst dato vil bli brukt som forfallsdato for den nye oppgaven. Du kan bruke datoer i hvilket som helst format:",
-			"dateWeekday": "hver ukedag vil bruke neste dato med den datoen",
+			"dateWeekday": "hvilken som helst ukedag vil bruke neste dato med den dagen",
 			"dateCurrentYear": "vil bruke inneværende år",
 			"dateNth": "vil bruke den {day} i den gjeldende måneden",
 			"dateTime": "Kombiner hvilke som helst av datoformatene med \"{time}\" (eller {timePM}) til å velge et klokkeslett.",
@@ -1056,6 +1098,7 @@
 			"delete": "Slett denne oppgaven",
 			"priority": "Endre prioritet på denne oppgaven",
 			"favorite": "Marker denne oppgaven som favoritt/ikke favoritt",
+			"openProject": "Åpne prosjektet til denne oppgaven",
 			"save": "Lagre gjeldende oppgave"
 		},
 		"project": {
@@ -1072,6 +1115,21 @@
 			"labels": "Gå til etiketter",
 			"teams": "Gå til til grupper",
 			"projects": "Gå til prosjekter"
+		},
+		"list": {
+			"title": "Oppgaveliste",
+			"navigateDown": "Uthev neste oppgave",
+			"navigateUp": "Uthev forrige oppgave",
+			"open": "Åpne uthevet oppgave"
+		},
+		"gantt": {
+			"title": "Gantt-diagram",
+			"moveTaskLeft": "Flytt oppgave til tidligere dato",
+			"moveTaskRight": "Flytt oppgave til senere dato",
+			"expandTaskLeft": "Utvide startdato for oppgave tidligere",
+			"expandTaskRight": "Utvid sluttdato for oppgaven senere",
+			"shrinkTaskLeft": "Krymp oppgave fra startdato",
+			"shrinkTaskRight": "Krymp oppgave fra sluttdato"
 		}
 	},
 	"update": {
@@ -1226,14 +1284,16 @@
 		"13002": "Den angitte linken for å dele passordet er ugyldig.",
 		"13003": "Den oppgitte delelenke plassholder er ugyldig.",
 		"14001": "Den oppgitte api-plassholder er ugyldig.",
-		"14002": "Tillatelsen {permission} for gruppen {group} er ugyldig.",
+		"14002": "Rettigheten {permission} for gruppen {group} er ugyldig.",
 		"error": "Feil",
 		"success": "Suksess",
 		"0001": "Du har ikke lov til å gjøre det."
 	},
 	"about": {
 		"title": "Om",
-		"version": "Versjon: {version}"
+		"version": "Versjon: {version}",
+		"frontendVersion": "Frontend versjon: {version}",
+		"apiVersion": "API versjon: {version}"
 	},
 	"time": {
 		"units": {

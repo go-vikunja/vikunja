@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package handler
@@ -48,7 +48,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
 	}
 
-	// Check if the user has the right to delete
+	// Check if the user has the permission to delete
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
@@ -70,7 +70,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	}
 	if !canDelete {
 		_ = s.Rollback()
-		log.Warningf("Tried to delete while not having the rights for it (User: %v)", currentAuth)
+		log.Warningf("Tried to delete while not having the permissions for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

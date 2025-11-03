@@ -1,5 +1,10 @@
 import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+
+dayjs.extend(relativeTime)
+
 import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
 import {TaskCommentFactory} from '../../factories/task_comment'
@@ -189,6 +194,75 @@ describe('Task', () => {
 			LabelTaskFactory.truncate()
 			TaskAttachmentFactory.truncate()
 		})
+		
+		it('provides back navigation to the project in the list view', () => {
+			const tasks = TaskFactory.create(1)
+			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.visit('/projects/1/1')
+			cy.wait('@loadTasks')
+			cy.get('.list-view .task')
+				.first()
+				.find('a.task-link')
+				.click()
+			cy.get('.task-view .back-button')
+				.should('be.visible')
+				.click()
+			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
+		})
+
+		it('provides back navigation to the project in the table view', () => {
+			const tasks = TaskFactory.create(1)
+			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.visit('/projects/1/3')
+			cy.wait('@loadTasks')
+			cy.get('tbody tr')
+				.first()
+				.find('a')
+				.first()
+				.click()
+			cy.get('.task-view .back-button')
+				.should('be.visible')
+				.click()
+			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
+		})
+
+		it('provides back navigation to the project in the kanban view on mobile', () => {
+			cy.viewport('iphone-8')
+
+			const tasks = TaskFactory.create(1)
+			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.visit('/projects/1/4')
+			cy.wait('@loadTasks')
+			cy.get('.kanban-view .tasks .task')
+				.first()
+				.click()
+			cy.get('.task-view .back-button')
+				.should('be.visible')
+				.click()
+			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
+		})
+		
+		it('does not provide back navigation to the project in the kanban view on desktop', () => {
+			cy.viewport('macbook-15')
+
+			const tasks = TaskFactory.create(1)
+			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
+			cy.visit('/projects/1/4')
+			cy.wait('@loadTasks')
+			cy.get('.kanban-view .tasks .task')
+				.first()
+				.click()
+			cy.get('.task-view .back-button')
+				.should('not.exist')
+		})
+
+		it('Shows a 404 page for nonexisting tasks', () => {
+
+			cy.visit('/tasks/9999')
+
+			cy.contains('Not found')
+				.should('be.visible')
+		})
 
 		it('Shows all task details', () => {
 			const tasks = TaskFactory.create(1, {
@@ -283,6 +357,29 @@ describe('Task', () => {
 			cy.get('.task-view .details.content.description h3 span.is-small.has-text-success')
 				.contains('Saved!')
 				.should('exist')
+		})
+
+		it('autosaves the description when leaving the task view', () => {
+			TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+				description: 'Old Description',
+			})
+
+			cy.visit('/tasks/1')
+			
+			cy.get('.task-view .details.content.description .tiptap button.done-edit', {timeout: 30_000})
+				.click()
+			cy.get('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+				.type('{selectall}New Description')
+			
+			cy.get('.task-view h6.subtitle a')
+				.first()
+				.click()
+			
+			cy.visit('/tasks/1')
+			cy.get('.task-view .details.content.description')
+				.should('contain.text', 'New Description')
 		})
 
 		it('Shows an empty editor when the description of a task is empty', () => {
@@ -415,6 +512,7 @@ describe('Task', () => {
 			cy.get('.task-view .column.assignees .multiselect input')
 				.type(users[1].username)
 			cy.get('.task-view .column.assignees .multiselect .search-results')
+				.should('be.visible')
 				.children()
 				.first()
 				.click()
@@ -503,6 +601,7 @@ describe('Task', () => {
 			TaskBucketFactory.create(1, {
 				task_id: tasks[0].id,
 				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
 			})
 
 			cy.visit(`/projects/${projects[0].id}/4`)
@@ -598,10 +697,9 @@ describe('Task', () => {
 				.click()
 
 			const today = new Date()
-			const day = today.toLocaleString('default', {day: 'numeric'})
-			const month = today.toLocaleString('default', {month: 'short'})
-			const year = today.toLocaleString('default', {year: 'numeric'})
-			const date = `${month} ${day}, ${year} 12:00 PM`
+			today.setHours(12)
+			today.setMinutes(0)
+			today.setSeconds(0)
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input .datepicker-popup')
@@ -609,7 +707,7 @@ describe('Task', () => {
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input')
-				.should('contain.text', date)
+				.should('contain.text', dayjs(today).fromNow())
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 		})
@@ -627,6 +725,9 @@ describe('Task', () => {
 			})
 
 			const today = new Date(2025, 2, 5)
+			today.setHours(12)
+			today.setMinutes(0)
+			today.setSeconds(0)
 
 			cy.visit(`/tasks/${tasks[0].id}`)
 
@@ -643,10 +744,6 @@ describe('Task', () => {
 				.contains('Confirm')
 				.click()
 
-			const day = today.toLocaleString('default', {day: 'numeric'})
-			const month = today.toLocaleString('default', {month: 'short'})
-			const year = today.toLocaleString('default', {year: 'numeric'})
-			const date = `${month} ${day}, ${year} 12:00 PM`
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input .datepicker-popup')
@@ -654,7 +751,7 @@ describe('Task', () => {
 			cy.get('.task-view .columns.details .column')
 				.contains('Due Date')
 				.get('.date-input')
-				.should('contain.text', date)
+				.should('contain.text', dayjs(today).fromNow())
 			cy.get('.global-notification')
 				.should('contain', 'Success')
 		})
@@ -895,6 +992,11 @@ describe('Task', () => {
 			})
 			const labels = LabelFactory.create(1)
 			LabelTaskFactory.truncate()
+			TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
 
 			cy.visit(`/projects/${projects[0].id}/4`)
 
@@ -951,6 +1053,43 @@ describe('Task', () => {
 				.should('have.length', 5)
 			cy.get('.task-view .checklist-summary')
 				.should('contain.text', '2 of 5 tasks')
+			})
+
+		it('Persists checked checklist items after reload', () => {
+			const tasks = TaskFactory.create(1, {
+				id: 1,
+				description: `
+<ul data-type="taskList">
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>First Item</p></div>
+	</li>
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Second Item</p></div>
+	</li>
+</ul>`,
+				})
+			cy.visit(`/tasks/${tasks[0].id}`)
+
+			cy.get('.task-view .checklist-summary')
+				.should('contain.text', '0 of 2 tasks')
+			cy.get('.tiptap__editor ul > li input[type=checkbox]')
+				.first()
+				.click()
+
+			cy.get('.task-view .details.content.description h3 span.is-small.has-text-success')
+				.contains('Saved!')
+				.should('exist')
+
+			cy.get('.task-view .checklist-summary')
+				.should('contain.text', '1 of 2 tasks')
+
+			cy.reload()
+
+			cy.get('.task-view .checklist-summary')
+				.should('contain.text', '1 of 2 tasks')
+			cy.get('.tiptap__editor ul > li input[type=checkbox]')
+				.first()
+				.should('be.checked')
 		})
 
 		it('Should use the editor to render description', () => {

@@ -137,8 +137,8 @@ function updateData() {
 	padding: .5rem .5rem 0;
 
 	.input, .select select {
-		width: 100% !important;
-		height: auto;
+		inline-size: 100% !important;
+		block-size: auto;
 	}
 }
 </style>

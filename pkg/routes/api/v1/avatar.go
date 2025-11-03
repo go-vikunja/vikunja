@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package v1
@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/avatar/initials"
 	"code.vikunja.io/api/pkg/modules/avatar/ldap"
 	"code.vikunja.io/api/pkg/modules/avatar/marble"
+	"code.vikunja.io/api/pkg/modules/avatar/openid"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -79,6 +80,8 @@ func GetAvatar(c echo.Context) error {
 		avatarProvider = &marble.Provider{}
 	case "ldap":
 		avatarProvider = &ldap.Provider{}
+	case "openid":
+		avatarProvider = &openid.Provider{}
 	default:
 		avatarProvider = &empty.Provider{}
 	}
@@ -173,6 +176,8 @@ func UploadAvatar(c echo.Context) (err error) {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
 	}
+
+	avatar.FlushAllCaches(u)
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Avatar was uploaded successfully."})
 }

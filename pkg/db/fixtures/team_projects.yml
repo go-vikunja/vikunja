@@ -1,96 +1,96 @@
 - id: 1
   team_id: 1
   project_id: 3
-  right: 0
+  permission: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # This team has read only access on project 6
 - id: 2
   team_id: 2
   project_id: 6
-  right: 0
+  permission: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # This team has write access on project 7
 - id: 3
   team_id: 3
   project_id: 7
-  right: 1
+  permission: 1
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # This team has admin access on project 8
 - id: 4
   team_id: 4
   project_id: 8
-  right: 2
+  permission: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # Readonly acces on project 19
 - id: 5
   team_id: 8
   project_id: 19
-  right: 2
+  permission: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # Write acces on project 19
 - id: 6
   team_id: 9
   project_id: 19
-  right: 1
+  permission: 1
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 # Admin acces on project 19
 - id: 7
   team_id: 10
   project_id: 19
-  right: 2
+  permission: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 8
   team_id: 1
   project_id: 21
-  right: 0
+  permission: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 9
   team_id: 1
   project_id: 28
-  right: 0
+  permission: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 10
   team_id: 11
   project_id: 29
-  right: 0
+  permission: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 11
   team_id: 12
   project_id: 29
-  right: 1
+  permission: 1
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 12
   team_id: 13
   project_id: 29
-  right: 2
+  permission: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 13
   team_id: 1
   project_id: 32
-  right: 0
+  permission: 0
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 14
   team_id: 1
   project_id: 33
-  right: 1
+  permission: 1
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
 - id: 15
   team_id: 1
   project_id: 34
-  right: 2
+  permission: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12

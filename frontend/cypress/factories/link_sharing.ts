@@ -11,7 +11,7 @@ export class LinkShareFactory extends Factory {
 			id: '{increment}',
 			hash: faker.lorem.word(32),
 			project_id: 1,
-			right: 0,
+			permission: 0,
 			sharing_type: 0,
 			shared_by_id: 1,
 			created: now.toISOString(),

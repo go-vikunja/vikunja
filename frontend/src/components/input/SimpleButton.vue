@@ -16,8 +16,8 @@ import BaseButton from '@/components/base/BaseButton.vue'
 	border-radius: $radius;
 	display: block;
 	margin: .1rem 0;
-	width: 100%;
-	text-align: left;
+	inline-size: 100%;
+	text-align: start;
 
 	&:hover {
 		background: var(--white);

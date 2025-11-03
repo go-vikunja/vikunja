@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -48,8 +48,8 @@ type TaskAttachment struct {
 
 	Created time.Time `xorm:"created" json:"created"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName returns the table name for task attachments
@@ -186,7 +186,9 @@ func (ta *TaskAttachment) ReadAll(s *xorm.Session, a web.Auth, _ string, page in
 	}
 
 	for _, r := range attachments {
-		r.CreatedBy = users[r.CreatedByID]
+		if createdBy, has := users[r.CreatedByID]; has {
+			r.CreatedBy = createdBy
+		}
 
 		// If the actual file does not exist, don't try to load it as that would fail with nil panic
 		if _, exists := fs[r.FileID]; !exists {
@@ -205,18 +207,36 @@ func cacheKeyForTaskAttachmentPreview(id int64, size PreviewSize) string {
 	return "task_attachment_preview_" + strconv.FormatInt(id, 10) + "_size_" + string(size)
 }
 
-func (ta *TaskAttachment) GetPreviewFromCache(previewSize PreviewSize) []byte {
+func (ta *TaskAttachment) GetPreview(previewSize PreviewSize) []byte {
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
 
-	var cached []byte
-	exists, err := keyvalue.GetWithValue(cacheKey, &cached)
+	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
+		img, _, err := image.Decode(ta.File.File)
+		if err != nil {
+			return nil, err
+		}
 
-	// If the preview is not cached, return nil
-	if err != nil || !exists || cached == nil {
+		// Scale down the image to a minimum size
+		resizedImg := resizeImage(img, previewSize.GetSize())
+
+		// Get the raw bytes of the resized image
+		buf := &bytes.Buffer{}
+		if err := png.Encode(buf, resizedImg); err != nil {
+			return nil, err
+		}
+		previewImage, err := io.ReadAll(buf)
+		if err != nil {
+			return nil, err
+		}
+
+		log.Infof("Attachment image preview for task attachment %v of size %v created and cached", ta.ID, previewSize)
+		return previewImage, nil
+	})
+	if err != nil {
 		return nil
 	}
 
-	return cached
+	return result.([]byte)
 }
 
 type PreviewSize string
@@ -272,37 +292,6 @@ func resizeImage(img image.Image, width int) *image.NRGBA {
 	)
 
 	return resizedImg
-}
-
-func (ta *TaskAttachment) GenerateAndSavePreviewToCache(previewSize PreviewSize) []byte {
-	img, _, err := image.Decode(ta.File.File)
-	if err != nil {
-		return nil
-	}
-
-	// Scale down the image to a minimum size
-	resizedImg := resizeImage(img, previewSize.GetSize())
-
-	// Get the raw bytes of the resized image
-	buf := &bytes.Buffer{}
-	if err := png.Encode(buf, resizedImg); err != nil {
-		return nil
-	}
-	previewImage, err := io.ReadAll(buf)
-	if err != nil {
-		return nil
-	}
-
-	// Store the preview image in the cache
-	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
-	err = keyvalue.Put(cacheKey, previewImage)
-	if err != nil {
-		return nil
-	}
-
-	log.Infof("Attachment image preview for task attachment %v of size %v created and cached", ta.ID, previewSize)
-
-	return previewImage
 }
 
 // Delete removes an attachment
@@ -395,7 +384,9 @@ func getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments 
 	}
 
 	for _, a := range attachments {
-		a.CreatedBy = users[a.CreatedByID]
+		if createdBy, has := users[a.CreatedByID]; has {
+			a.CreatedBy = createdBy
+		}
 		a.File = fs[a.FileID]
 	}
 

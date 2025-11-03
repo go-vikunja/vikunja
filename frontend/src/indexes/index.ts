@@ -37,8 +37,8 @@ export const createNewIndexer = (name: string, fieldsToIndex: string[]) => {
 		}
 
 		return index.search(query)
-				?.flatMap(r => r.result)
-				.filter((value, index, self) => self.indexOf(value) === index) as number[]
+			?.flatMap(r => r.result)
+			.filter((value, index, self) => self.indexOf(value) === index) as number[]
 			|| null
 	}
 

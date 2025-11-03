@@ -8,7 +8,7 @@
 	>
 		<div
 			v-if="uploadBackgroundEnabled"
-			class="mb-4"
+			class="mbe-4"
 		>
 			<input
 				ref="backgroundUploadInput"
@@ -76,7 +76,7 @@
 			<XButton
 				v-if="backgroundSearchResult.length > 0"
 				:disabled="backgroundService.loading"
-				class="is-load-more-button mt-4"
+				class="is-load-more-button mbs-4"
 				:shadow="false"
 				variant="secondary"
 				@click="searchBackgrounds(currentPage + 1)"
@@ -105,9 +105,6 @@
 	</CreateEdit>
 </template>
 
-<script lang="ts">
-export default { name: 'ProjectSettingBackground' }
-</script>
 
 <script setup lang="ts">
 import {ref, computed, shallowReactive} from 'vue'
@@ -132,6 +129,8 @@ import {useTitle} from '@/composables/useTitle'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import {success} from '@/message'
+
+defineOptions({name: 'ProjectSettingBackground'})
 
 const SEARCH_DEBOUNCE = 300
 
@@ -233,7 +232,7 @@ async function removeBackground() {
 
 <style lang="scss" scoped>
 .unsplash-credit {
-	text-align: right;
+	text-align: end;
 	font-size: .8rem;
 }
 
@@ -260,7 +259,7 @@ async function removeBackground() {
 }
 
 .image-search__result-item {
-	margin-top: 0; // FIXME: removes padding from .content
+	margin-block-start: 0; // FIXME: removes padding from .content
 	aspect-ratio: 16 / 10;
 	background-size: cover;
 	background-position: center;
@@ -269,19 +268,19 @@ async function removeBackground() {
 }
 
 .image-search__image-button {
-	width: 100%;
+	inline-size: 100%;
 }
 
 .image-search__image {
-	width: 100%;
-	height: 100%;
+	inline-size: 100%;
+	block-size: 100%;
 	object-fit: cover;
 }
 
 .image-search__info {
 	position: absolute;
-	bottom: 0;
-	width: 100%;
+	inset-block-end: 0;
+	inline-size: 100%;
 	padding: .25rem 0;
 	opacity: 0;
 	text-align: center;
@@ -298,6 +297,6 @@ async function removeBackground() {
 .is-load-more-button {
 	margin: 1rem auto 0 !important;
 	display: block;
-	width: 200px;
+	inline-size: 200px;
 }
 </style>

@@ -1,0 +1,33 @@
+{
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Syler.sass-indented",
+        "codezombiech.gitignore",
+        "dbaeumer.vscode-eslint",
+        "editorconfig.editorconfig",
+        "golang.Go",
+        "lokalise.i18n-ally",
+        "mikestead.dotenv",
+        "mkhl.direnv",
+        "vitest.explorer",
+        "vue.volar"
+      ]
+    }
+  },
+  "forwardPorts": [
+    4173,
+    3456
+  ],
+  "image": "ghcr.io/cachix/devenv/devcontainer:latest",
+  "overrideCommand": false,
+  "portsAttributes": {
+    "3456": {
+      "label": "Vikunja API"
+    },
+    "4173": {
+      "label": "Vikunja Frontend dev server"
+    }
+  },
+  "updateContentCommand": "devenv test"
+}

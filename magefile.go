@@ -2,20 +2,19 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //go:build mage
-// +build mage
 
 package main
 
@@ -73,6 +72,7 @@ var (
 		"dev:make-event":              Dev.MakeEvent,
 		"dev:make-listener":           Dev.MakeListener,
 		"dev:make-notification":       Dev.MakeNotification,
+		"plugins:build":               Plugins.Build,
 		"lint":                        Check.Golangci,
 		"lint:fix":                    Check.GolangciFix,
 		"generate:config-yaml":        Generate.ConfigYAML,
@@ -168,7 +168,7 @@ func setApiPackages() {
 		os.Exit(1)
 	}
 	for _, p := range strings.Split(string(pkgs), "\n") {
-		if strings.Contains(p, "code.vikunja.io/api") && !strings.Contains(p, "code.vikunja.io/api/pkg/integrations") {
+		if strings.Contains(p, "code.vikunja.io/api") && !strings.Contains(p, "code.vikunja.io/api/pkg/webtests") {
 			ApiPackages = append(ApiPackages, p)
 		}
 	}
@@ -310,7 +310,7 @@ func copyFile(src, dst string) error {
 }
 
 // os.Rename has issues with moving files between docker volumes.
-// Because of this limitaion, it fails in drone.
+// Because of this limitation, it fails in drone.
 // Source: https://gist.github.com/var23rav/23ae5d0d4d830aff886c3c970b8f6c6b
 func moveFile(src, dst string) error {
 	inputFile, err := os.Open(src)
@@ -376,8 +376,8 @@ func Fmt() {
 
 type Test mg.Namespace
 
-// Runs all tests except integration tests
-func (Test) Unit() {
+// Runs the feature tests
+func (Test) Feature() {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
@@ -388,20 +388,29 @@ func (Test) Unit() {
 // Runs the tests and builds the coverage html file from coverage output
 func (Test) Coverage() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Unit)
+	mg.Deps(Test.Feature)
 	runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
 }
 
-// Runs the integration tests
-func (Test) Integration() {
+// Runs the web tests
+func (Test) Web() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	runAndStreamOutput("go", "test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE+"/pkg/integrations")
+	args := []string{"test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE + "/pkg/webtests"}
+	runAndStreamOutput("go", args...)
+}
+
+func (Test) Filter(filter string) {
+	mg.Deps(initVars)
+	setApiPackages()
+	// We run everything sequentially and not in parallel to prevent issues with real test databases
+	args := append([]string{"test", Goflags[0], "-p", "1", "-timeout", "45m", "-run", filter}, ApiPackages...)
+	runAndStreamOutput("go", args...)
 }
 
 func (Test) All() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Unit, Test.Integration)
+	mg.Deps(Test.Feature, Test.Web)
 }
 
 type Check mg.Namespace
@@ -597,7 +606,7 @@ func checkGolangCiLintInstalled() {
 	mg.Deps(initVars)
 	if err := exec.Command("golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
 		fmt.Println("Please manually install golangci-lint by running")
-		fmt.Println("curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.56.2")
+		fmt.Println("curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0")
 		os.Exit(1)
 	}
 }
@@ -612,7 +621,7 @@ func (Check) GolangciFix() {
 	runAndStreamOutput("golangci-lint", "run", "--fix")
 }
 
-// Runs golangci and the swagger test in parralel
+// Runs golangci and the swagger test in parallel
 func (Check) All() {
 	mg.Deps(initVars)
 	mg.Deps(
@@ -645,6 +654,26 @@ func (Build) Clean() error {
 // Builds a vikunja binary, ready to run
 func (Build) Build() {
 	mg.Deps(initVars)
+	// Check if the frontend dist folder exists
+	distPath := filepath.Join(RootPath, "frontend", "dist")
+	if _, err := os.Stat(distPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(distPath, 0o755); err != nil {
+			fmt.Printf("Error creating %s: %s\n", distPath, err)
+			os.Exit(1)
+		}
+	}
+
+	indexFile := filepath.Join(distPath, "index.html")
+	if _, err := os.Stat(indexFile); os.IsNotExist(err) {
+		f, err := os.Create(indexFile)
+		if err != nil {
+			fmt.Printf("Error creating %s: %s\n", indexFile, err)
+			os.Exit(1)
+		}
+		f.Close()
+		fmt.Printf("Warning: %s not found, created empty file\n", indexFile)
+	}
+
 	runAndStreamOutput("go", "build", Goflags[0], "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
@@ -818,7 +847,7 @@ func (Release) Compress(ctx context.Context) error {
 
 		// Runs compressing in parallel since upx is single-threaded
 		errs.Go(func() error {
-			runAndStreamOutput("chmod", "+x", path) // Make sure all binaries are executable. Sometimes the CI does weired things and they're not.
+			runAndStreamOutput("chmod", "+x", path) // Make sure all binaries are executable. Sometimes the CI does weird things and they're not.
 			runAndStreamOutput("upx", "-9", path)
 			return nil
 		})
@@ -998,13 +1027,16 @@ func (Release) Packages() error {
 
 type Dev mg.Namespace
 
-// Creates a new bare db migration skeleton in pkg/migration with the current date
-func (Dev) MakeMigration() error {
-
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter the name of the struct: ")
-	str, _ := reader.ReadString('\n')
-	str = strings.Trim(str, "\n")
+// MakeMigration creates a new bare db migration skeleton in pkg/migration.
+// If you pass the struct name as an argument, the prompt will be skipped.
+func (Dev) MakeMigration(name string) error {
+	str := strings.TrimSpace(name)
+	if str == "" {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter the name of the struct: ")
+		s, _ := reader.ReadString('\n')
+		str = strings.TrimSpace(s)
+	}
 
 	date := time.Now().Format("20060102150405")
 
@@ -1012,16 +1044,16 @@ func (Dev) MakeMigration() error {
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package migration
@@ -1360,4 +1392,27 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 // Create a yaml config file from the config-raw.json definition
 func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
+}
+
+type Plugins mg.Namespace
+
+// Build compiles a Go plugin at the provided path.
+func (Plugins) Build(pathToSourceFiles string) error {
+	mg.Deps(initVars)
+	if pathToSourceFiles == "" {
+		return fmt.Errorf("please provide a plugin path")
+	}
+
+	// Convert relative path to absolute path
+	if !strings.HasPrefix(pathToSourceFiles, "/") {
+		absPath, err := filepath.Abs(pathToSourceFiles)
+		if err != nil {
+			return fmt.Errorf("failed to resolve absolute path: %v", err)
+		}
+		pathToSourceFiles = absPath
+	}
+
+	out := filepath.Join(RootPath, "plugins", filepath.Base(pathToSourceFiles)+".so")
+	runAndStreamOutput("go", "build", "-buildmode=plugin", "-o", out, pathToSourceFiles)
+	return nil
 }

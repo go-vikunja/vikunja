@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -124,11 +124,12 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 		}
 
 		var prefix string
-		if param.sortBy == taskPropertyPosition {
+		switch param.sortBy {
+		case taskPropertyPosition:
 			prefix = "task_positions."
-		}
-
-		if param.sortBy == taskPropertyID || param.sortBy == taskPropertyCreated || param.sortBy == taskPropertyUpdated {
+		case taskPropertyBucketID:
+			prefix = "task_buckets."
+		default:
 			prefix = "tasks."
 		}
 
@@ -279,11 +280,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	var where builder.Cond
 
 	if opts.search != "" {
-		where =
-			builder.Or(
-				db.ILIKE("title", opts.search),
-				db.ILIKE("description", opts.search),
-			)
+		where = db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, opts.search, "tasks")
 
 		searchIndex := getTaskIndexFromSearchString(opts.search)
 		if searchIndex > 0 {
@@ -294,7 +291,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	var projectIDCond builder.Cond
 	var favoritesCond builder.Cond
 	if len(opts.projectIDs) > 0 {
-		projectIDCond = builder.In("project_id", opts.projectIDs)
+		projectIDCond = builder.In("tasks.project_id", opts.projectIDs)
 	}
 
 	if d.hasFavoritesProject {
@@ -328,7 +325,10 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	if expandSubtasks {
-		cond = builder.And(cond, builder.IsNull{"task_relations.id"})
+		cond = builder.And(cond, builder.Or(
+			builder.IsNull{"task_relations.id"},
+			builder.Expr("parent_tasks.project_id != tasks.project_id"),
+		))
 	}
 
 	query := d.s.
@@ -346,10 +346,18 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	if joinTaskBuckets {
-		query = query.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
+		joinCond := "task_buckets.task_id = tasks.id"
+		if opts.projectViewID > 0 {
+			joinCond += " AND task_buckets.project_view_id = ?"
+			query = query.Join("LEFT", "task_buckets", joinCond, opts.projectViewID)
+		} else {
+			query = query.Join("LEFT", "task_buckets", joinCond)
+		}
 	}
 	if expandSubtasks {
-		query = query.Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'")
+		query = query.
+			Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'").
+			Join("LEFT", "tasks parent_tasks", "task_relations.other_task_id = parent_tasks.id")
 	}
 
 	tasks = []*Task{}
@@ -362,24 +370,23 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	// fetch subtasks when expanding
-	if expandSubtasks {
+	if expandSubtasks && len(tasks) > 0 {
 		subtasks := []*Task{}
 
-		taskIDs := []int64{}
+		taskIDs := []any{}
 		for _, task := range tasks {
 			taskIDs = append(taskIDs, task.ID)
 		}
 
-		inQuery := builder.Dialect(db.GetDialect()).
-			Select("*").
-			From("task_relations").
-			Where(builder.In("task_id", taskIDs))
-		inSQL, inArgs, err := inQuery.ToSQL()
-		if err != nil {
-			return nil, totalCount, err
-		}
+		var inPlaceholders = strings.Repeat("?,", len(taskIDs))
+		inPlaceholders = inPlaceholders[:len(inPlaceholders)-1]
 
-		inSQL = strings.TrimPrefix(inSQL, "SELECT * FROM task_relations WHERE")
+		var notIn = strings.Repeat("?,", len(taskIDs))
+		notIn = notIn[:len(notIn)-1]
+
+		allArgs := make([]any, 0, len(taskIDs)*2)
+		allArgs = append(allArgs, taskIDs...)
+		allArgs = append(allArgs, taskIDs...)
 
 		err = d.s.SQL(`SELECT * FROM tasks WHERE id IN (WITH RECURSIVE sub_tasks AS (
 		SELECT task_id,
@@ -388,7 +395,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 			created_by_id,
 			created
 		FROM task_relations
-		WHERE `+inSQL+`
+		WHERE task_id IN (`+inPlaceholders+`)
 		AND relation_kind = '`+string(RelationKindSubtask)+`'
 
 		UNION ALL
@@ -403,7 +410,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		sub_tasks st ON tr.task_id = st.other_task_id
 		WHERE tr.relation_kind = '`+string(RelationKindSubtask)+`')
 		SELECT other_task_id
-		FROM sub_tasks)`, inArgs...).Find(&subtasks)
+		FROM sub_tasks) AND id NOT IN (`+notIn+`)`, allArgs...).Find(&subtasks)
 		if err != nil {
 			return nil, totalCount, err
 		}
@@ -413,10 +420,18 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 	queryCount := d.s.Where(cond)
 	if joinTaskBuckets {
-		queryCount = queryCount.Join("LEFT", "task_buckets", "task_buckets.task_id = tasks.id")
+		joinCond := "task_buckets.task_id = tasks.id"
+		if opts.projectViewID > 0 {
+			joinCond += " AND task_buckets.project_view_id = ?"
+			queryCount = queryCount.Join("LEFT", "task_buckets", joinCond, opts.projectViewID)
+		} else {
+			queryCount = queryCount.Join("LEFT", "task_buckets", joinCond)
+		}
 	}
 	if expandSubtasks {
-		queryCount = queryCount.Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'")
+		queryCount = queryCount.
+			Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'").
+			Join("LEFT", "tasks parent_tasks", "task_relations.other_task_id = parent_tasks.id")
 	}
 	totalCount, err = queryCount.
 		Select("count(DISTINCT tasks.id)").

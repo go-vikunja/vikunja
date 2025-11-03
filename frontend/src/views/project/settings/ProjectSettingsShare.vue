@@ -19,14 +19,11 @@
 		<LinkSharing
 			v-if="linkSharingEnabled"
 			:project-id="projectId"
-			class="mt-4"
+			class="mbs-4"
 		/>
 	</CreateEdit>
 </template>
 
-<script lang="ts">
-export default {name: 'ProjectSettingShare'}
-</script>
 
 <script lang="ts" setup>
 import {ref, computed, watchEffect} from 'vue'
@@ -37,7 +34,7 @@ import {useTitle} from '@vueuse/core'
 import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
 import type {IProject} from '@/modelTypes/IProject'
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import LinkSharing from '@/components/sharing/LinkSharing.vue'
@@ -45,6 +42,8 @@ import userTeam from '@/components/sharing/UserTeam.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
+
+defineOptions({name: 'ProjectSettingShare'})
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -58,7 +57,7 @@ useTitle(title)
 const configStore = useConfigStore()
 
 const linkSharingEnabled = computed(() => configStore.linkSharingEnabled)
-const userIsAdmin = computed(() => project?.value?.maxRight === RIGHTS.ADMIN)
+const userIsAdmin = computed(() => project?.value?.maxPermission === PERMISSIONS.ADMIN)
 
 async function loadProject(projectId: number) {
 	const projectService = new ProjectService()

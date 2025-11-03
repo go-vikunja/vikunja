@@ -2,24 +2,22 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package routes
 
 import (
-	"strings"
-
-	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/asaskevich/govalidator"
@@ -36,13 +34,13 @@ func init() {
 	// Custom validator for database TEXT fields that adapts to the database being used
 	govalidator.TagMap["dbtext"] = func(str string) bool {
 		// Get the current database dialect
-		dialect := strings.ToLower(config.DatabaseType.GetString())
+		dialect := db.GetDialect()
 
 		// Default limit for MySQL and unknown databases (65KB safely under TEXT limit)
 		maxLength := 65000
 
 		// For databases that support larger text fields
-		if dialect == "postgres" || dialect == "sqlite" || dialect == "sqlite3" {
+		if dialect == "postgres" || dialect == "sqlite3" {
 			maxLength = 1048576 // ~1MB limit for PostgreSQL and SQLite
 		}
 

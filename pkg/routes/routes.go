@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // @title Vikunja API
@@ -21,9 +21,9 @@
 // @description Every endpoint capable of pagination will return two headers:
 // @description * `x-pagination-total-pages`: The total number of available pages for this request
 // @description * `x-pagination-result-count`: The number of items returned for this request.
-// @description # Rights
-// @description All endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-right` header with the max right the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
-// @description This can be used to show or hide ui elements based on the rights the user has.
+// @description # Permissions
+// @description All endpoints which return a single item (project, task, etc.) - no array - will also return a `x-max-permission` header with the max permission the user has on this item as an int where `0` is `Read Only`, `1` is `Read & Write` and `2` is `Admin`.
+// @description This can be used to show or hide ui elements based on the permissions the user has.
 // @description # Errors
 // @description All errors have an error code and a human-readable error message in addition to the http status code. You should always check for the status code in the response, not only the http status code.
 // @description Due to limitations in the swagger library we're using for this document, only one error per http status code is documented here. Make sure to check the [error docs](https://vikunja.io/docs/errors/) in Vikunja's documentation for a full list of available error codes.
@@ -53,11 +53,15 @@ package routes
 
 import (
 	"errors"
+	"fmt"
+	"log/slog"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
@@ -72,6 +76,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
+	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
@@ -81,9 +86,35 @@ import (
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	elog "github.com/labstack/gommon/log"
 	"github.com/ulule/limiter/v3"
 )
+
+// slogHTTPMiddleware creates a custom HTTP logging middleware using slog
+func slogHTTPMiddleware(logger *slog.Logger) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return echo.HandlerFunc(func(c echo.Context) error {
+			start := time.Now()
+
+			err := next(c)
+			if err != nil {
+				c.Error(err)
+			}
+
+			req := c.Request()
+			res := c.Response()
+
+			logger.InfoContext(c.Request().Context(),
+				req.Method+" "+req.RequestURI,
+				"status", res.Status,
+				"remote_ip", c.RealIP(),
+				"latency", time.Since(start),
+				"user_agent", req.UserAgent(),
+			)
+
+			return err
+		})
+	}
+}
 
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
@@ -91,21 +122,12 @@ func NewEcho() *echo.Echo {
 
 	e.HideBanner = true
 
-	if l, ok := e.Logger.(*elog.Logger); ok {
-		if !config.LogEnabled.GetBool() || config.LogEcho.GetString() == "off" {
-			l.SetLevel(elog.OFF)
-		}
-		l.EnableColor()
-		l.SetHeader(log.ErrFmt)
-		l.SetOutput(log.GetLogWriter(config.LogEcho.GetString(), "echo"))
-	}
+	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
 
 	// Logger
-	if !config.LogEnabled.GetBool() || config.LogHTTP.GetString() != "off" {
-		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-			Format: log.WebFmt + "\n",
-			Output: log.GetLogWriter(config.LogHTTP.GetString(), "http"),
-		}))
+	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
+		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
+		e.Use(slogHTTPMiddleware(httpLogger))
 	}
 
 	// panic recover
@@ -115,6 +137,22 @@ func NewEcho() *echo.Echo {
 
 	// Validation
 	e.Validator = &CustomValidator{}
+
+	// Set body limit to allow file uploads up to the configured size
+	// Add some overhead for multipart form data (headers, boundaries, etc.)
+	e.Use(middleware.BodyLimit(fmt.Sprintf("%dM", config.GetMaxFileSizeInMBytes()+2)))
+
+	// Set up custom error handler for body limit exceeded when Sentry is not enabled
+	if !config.SentryEnabled.GetBool() {
+		e.HTTPErrorHandler = func(err error, c echo.Context) {
+			// Convert HTTP 413 errors to custom ErrFileIsTooLarge error
+			var herr *echo.HTTPError
+			if errors.As(err, &herr) && herr.Code == http.StatusRequestEntityTooLarge {
+				err = handler.HandleHTTPError(files.ErrFileIsTooLarge{})
+			}
+			e.DefaultHTTPErrorHandler(err, c)
+		}
+	}
 
 	return e
 }
@@ -138,8 +176,13 @@ func setupSentry(e *echo.Echo) {
 	}))
 
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		// Only capture errors not already handled by echo
+		// Convert HTTP 413 errors to custom ErrFileIsTooLarge error
 		var herr *echo.HTTPError
+		if errors.As(err, &herr) && herr.Code == http.StatusRequestEntityTooLarge {
+			err = handler.HandleHTTPError(files.ErrFileIsTooLarge{})
+		}
+
+		// Only capture errors not already handled by echo
 		if errors.As(err, &herr) && herr.Code > 499 {
 			var errToReport = err
 			if herr.Internal == nil {
@@ -158,6 +201,7 @@ func setupSentry(e *echo.Echo) {
 			}
 			log.Debugf("Error '%s' sent to sentry", err.Error())
 		}
+
 		e.DefaultHTTPErrorHandler(err, c)
 	}
 }
@@ -182,6 +226,7 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// CORS
 	if config.CorsEnable.GetBool() {
+		log.Debugf("CORS enabled with origins: %s", strings.Join(config.CorsOrigins.GetStringSlice(), ", "))
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins: config.CorsOrigins.GetStringSlice(),
 			MaxAge:       config.CorsMaxAge.GetInt(),
@@ -268,9 +313,6 @@ func registerAPIRoutes(a *echo.Group) {
 	// Info endpoint
 	n.GET("/info", apiv1.Info)
 
-	// Avatar endpoint
-	n.GET("/avatar/:username", apiv1.GetAvatar)
-
 	// Link share auth
 	if config.ServiceEnableLinkSharing.GetBool() {
 		ur.POST("/shares/:share/auth", apiv1.AuthenticateLinkShare)
@@ -289,6 +331,9 @@ func registerAPIRoutes(a *echo.Group) {
 	a.POST("/token/test", apiv1.CheckToken)
 	a.GET("/routes", models.GetAvailableAPIRoutesForToken)
 
+	// Avatar endpoint
+	a.GET("/avatar/:username", apiv1.GetAvatar)
+
 	// User stuff
 	u := a.Group("/user")
 
@@ -303,6 +348,7 @@ func registerAPIRoutes(a *echo.Group) {
 	u.POST("/settings/general", apiv1.UpdateGeneralUserSettings)
 	u.POST("/export/request", apiv1.RequestUserDataExport)
 	u.POST("/export/download", apiv1.DownloadUserDataExport)
+	u.GET("/export", apiv1.GetUserExportStatus)
 	u.GET("/timezones", apiv1.GetAvailableTimezones)
 	u.PUT("/settings/token/caldav", apiv1.GenerateCaldavToken)
 	u.GET("/settings/token/caldav", apiv1.GetCaldavTokens)
@@ -624,6 +670,17 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
+
+	// Plugin routes
+	if config.PluginsEnabled.GetBool() {
+		// Authenticated plugin routes
+		authenticatedPluginGroup := a.Group("/plugins")
+
+		// Unauthenticated plugin routes (with basic IP rate limiting)
+		unauthenticatedPluginGroup := n.Group("/plugins")
+
+		plugins.RegisterPluginRoutes(authenticatedPluginGroup, unauthenticatedPluginGroup)
+	}
 }
 
 func registerMigrations(m *echo.Group) {

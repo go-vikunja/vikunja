@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -35,8 +35,8 @@ type TaskAssginee struct {
 	UserID  int64     `xorm:"bigint INDEX not null" json:"user_id" param:"user"`
 	Created time.Time `xorm:"created not null"`
 
-	web.CRUDable `xorm:"-" json:"-"`
-	web.Rights   `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 // TableName makes a pretty table name
@@ -355,8 +355,8 @@ type BulkAssignees struct {
 	Assignees []*user.User `json:"assignees"`
 	TaskID    int64        `json:"-" param:"projecttask"`
 
-	web.CRUDable `json:"-"`
-	web.Rights   `json:"-"`
+	web.CRUDable    `json:"-"`
+	web.Permissions `json:"-"`
 }
 
 // Create adds new assignees to a task

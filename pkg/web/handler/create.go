@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package handler
@@ -63,7 +63,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		}
 	}()
 
-	// Check rights
+	// Check permissions
 	canCreate, err := currentStruct.CanCreate(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
@@ -71,7 +71,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	}
 	if !canCreate {
 		_ = s.Rollback()
-		log.Warningf("Tried to create while not having the rights for it (User: %v)", currentAuth)
+		log.Warningf("Tried to create while not having the permissions for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden)
 	}
 

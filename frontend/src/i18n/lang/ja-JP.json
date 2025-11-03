@@ -9,7 +9,7 @@
 		"welcomeDay": "こんにちは、{username}さん",
 		"welcomeEvening": "こんばんは、{username}さん",
 		"lastViewed": "最近の表示",
-		"addToHomeScreen": "ホーム画面に追加することで、よりすばやくアクセスでき操作性が向上します。",
+		"addToHomeScreen": "ホーム画面に追加すると、すぐにアクセスできて使いやすくなります。",
 		"goToOverview": "概要に移動",
 		"project": {
 			"importText": "他のサービスからVikunjaにプロジェクトやタスクをインポートします:",
@@ -67,7 +67,8 @@
 			"noAccountYet": "まだアカウントをお持ちでないですか？",
 			"alreadyHaveAnAccount": "すでにアカウントをお持ちですか？",
 			"remember": "ログインしたままにする",
-			"registrationDisabled": "新規登録は無効化されています。"
+			"registrationDisabled": "新規登録は無効化されています。",
+			"passwordResetTokenMissing": "パスワードリセットトークンがありません。"
 		},
 		"settings": {
 			"title": "設定",
@@ -91,6 +92,8 @@
 				"discoverableByName": "他のユーザーが名前で検索したときチームやプロジェクトのメンバーとして追加できるようにする",
 				"discoverableByEmail": "他のユーザーがメールアドレスで検索したときチームやプロジェクトのメンバーとして追加できるようにする",
 				"playSoundWhenDone": "タスクを完了したとき音を鳴らす",
+				"allowIconChanges": "特定の期間中に特別なロゴを表示",
+				"defaultTaskRelationType": "デフォルトのタスクの関係タイプ",
 				"weekStart": "週の始まり",
 				"weekStartSunday": "日曜日",
 				"weekStartMonday": "月曜日",
@@ -100,7 +103,25 @@
 				"timezone": "タイムゾーン",
 				"overdueTasksRemindersTime": "期限切れタスクのリマインダー送信時間",
 				"filterUsedOnOverview": "概要ページの絞り込み条件",
+				"minimumPriority": "表示タスク優先度の最小値",
+				"dateDisplay": "日付表示形式",
+				"dateDisplayOptions": {
+					"relative": "相対値 (例: 3 days ago)",
+					"mm-dd-yyyy": "MM-DD-YYYY",
+					"dd-mm-yyyy": "DD-MM-YYYY",
+					"yyyy-mm-dd": "YYYY-MM-DD",
+					"mm/dd/yyyy": "MM/DD/YYYY",
+					"dd/mm/yyyy": "DD/MM/YYYY",
+					"yyyy/mm/dd": "YYYY/MM/DD"
+				},
 				"externalUserNameChange": "名前はログインプロバイダー（{provider}）で管理されています。名前を変更する場合はそちらで行ってください。"
+			},
+			"sections": {
+				"personalInformation": "あなたの情報",
+				"taskAndNotifications": "プロジェクトとタスク",
+				"privacy": "プライバシー設定",
+				"localization": "ローカライズ",
+				"appearance": "外観と動作"
 			},
 			"totp": {
 				"title": "2要素認証",
@@ -136,9 +157,12 @@
 				"upload": "アップロード",
 				"uploadAvatar": "画像のアップロード",
 				"statusUpdateSuccess": "プロフィール画像を更新しました。",
-				"setSuccess": "プロフィール画像を設定しました。"
+				"setSuccess": "プロフィール画像を設定しました。",
+				"ldap": "プロフィール画像は組織のディレクトリサービス (LDAP) から自動的に同期されます。変更方法については組織のIT部門にお問い合わせください。",
+				"openid": "プロフィール画像はログインプロバイダー ({provider}) から自動同期されます。変更するにはログインプロバイダーから行ってください。"
 			},
 			"quickAddMagic": {
+				"title": "クイック追加",
 				"disabled": "無効",
 				"todoist": "Todoist",
 				"vikunja": "Vikunja"
@@ -171,7 +195,7 @@
 				"delete": {
 					"header": "トークンの削除",
 					"text1": "トークン \"{token}\" を削除してよろしいですか？",
-					"text2": "これにより、このトークンを使用しているアプリケーションやインテグレーションへのアクセスが取り消されます。この操作はもとに戻せません。"
+					"text2": "このトークンを使用して連携しているすべてのアプリケーションのアクセス権が失われます。この操作は元に戻せません。"
 				},
 				"attributes": {
 					"title": "トークン名",
@@ -183,7 +207,7 @@
 		},
 		"deletion": {
 			"title": "Vikunjaアカウントの削除",
-			"text1": "アカウントの削除は永久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてのものを削除します。",
+			"text1": "アカウント削除は恒久的なものであり、元に戻すことはできません。あなたのプロジェクト、タスク、それらに関連するすべてを削除します。",
 			"text2": "続行するにはパスワードを入力してください。詳しい案内の記載したメールを送信します。",
 			"text3": "続行するには以下のボタンを押してください。詳しい案内を記載したメールを送信します。",
 			"confirm": "アカウントの削除",
@@ -203,7 +227,9 @@
 			"descriptionPasswordRequired": "続行するにはパスワードを入力してください:",
 			"request": "Vikunjaデータのリクエスト",
 			"success": "Vikunjaデータのリクエストに成功しました！ダウンロードの準備が整い次第、メールでお知らせします。",
-			"downloadTitle": "エクスポートされたVikunjaデータのダウンロード"
+			"downloadTitle": "エクスポートされたVikunjaデータのダウンロード",
+			"ready": "エクスポートの準備が完了しました。{0} までダウンロードできます。",
+			"requestNew": "新しいエクスポートをリクエスト"
 		}
 	},
 	"project": {
@@ -223,6 +249,7 @@
 		"unfavorite": "このプロジェクトをお気に入りから削除",
 		"openSettingsMenu": "プロジェクト設定メニューを開く",
 		"description": "プロジェクトの説明",
+		"favoriteDescription": "このプロジェクトにはお気に入りに追加されたタスクがすべて含まれています。",
 		"create": {
 			"header": "新しいプロジェクトの作成",
 			"titlePlaceholder": "プロジェクト名を入力…",
@@ -261,6 +288,7 @@
 		"duplicate": {
 			"title": "プロジェクトの複製",
 			"label": "複製",
+			"text": "複製されたプロジェクトを配置する親のプロジェクトを選択してください:",
 			"success": "プロジェクトは正常に複製されました。"
 		},
 		"edit": {
@@ -271,7 +299,7 @@
 			"identifier": "プロジェクトID",
 			"identifierPlaceholder": "プロジェクトIDを入力…",
 			"description": "説明",
-			"descriptionPlaceholder": "このプロジェクトに関する説明を記入します。'/' でオプションを表示します…",
+			"descriptionPlaceholder": "このプロジェクトに関する説明を記入します。/ でオプションを表示…",
 			"color": "色",
 			"success": "プロジェクトは正常に更新されました。"
 		},
@@ -309,7 +337,7 @@
 				"addedSuccess": "{type} は正常に追加されました。",
 				"updatedSuccess": "{type} は正常に追加されました。"
 			},
-			"right": {
+			"permission": {
 				"title": "権限",
 				"read": "読み取り専用",
 				"readWrite": "読み取りと書き込み",
@@ -339,7 +367,21 @@
 			"day": "日",
 			"hour": "時間",
 			"range": "期間",
-			"noDates": "指定日が未設定のタスクです。"
+			"chartLabel": "プロジェクトガントチャート",
+			"taskBarsForRow": "行 {rowId} のタスクバー",
+			"taskBarLabel": "タスク: {task}。{startDate} から {endDate} まで。{dateType}。クリックして編集、ドラッグして移動。",
+			"scheduledDates": "予定日",
+			"estimatedDates": "推定日",
+			"resizeStartDate": "タスク「{task}」の開始日を変更",
+			"resizeEndDate": "タスク「{task}」の終了日を変更",
+			"timelineHeader": "月と日付のタイムラインのヘッダー",
+			"monthsRow": "月の行",
+			"daysRow": "日の行",
+			"monthLabel": "月: {month}",
+			"dayLabel": "日: {date} ({weekday})",
+			"dayLabelToday": "今日: {date} ({weekday})",
+			"taskAriaLabel": "タスク: {task}",
+			"taskAriaLabelById": "タスク {id}"
 		},
 		"table": {
 			"title": "テーブル",
@@ -355,7 +397,7 @@
 			"doneBucketSavedSuccess": "完了バケットは正常に保存されました。",
 			"defaultBucket": "デフォルトのバケット",
 			"defaultBucketHint": "バケットを指定せずにタスクを作成すると、このバケットに自動的に追加されます。",
-			"defaultBucketSavedSuccess": "デフォルト バケットは正常に保存されました。",
+			"defaultBucketSavedSuccess": "デフォルトのバケットは正常に保存されました。",
 			"deleteLast": "最後のバケットを削除することはできません。",
 			"addTaskPlaceholder": "新しいタスク名を入力…",
 			"addTask": "タスクの追加",
@@ -364,7 +406,7 @@
 			"addBucketPlaceholder": "新しいバケット名を入力…",
 			"deleteHeaderBucket": "バケットの削除",
 			"deleteBucketText1": "このバケットを削除して本当によろしいですか？",
-			"deleteBucketText2": "タスクは削除されずにデフォルト バケットに移動します。",
+			"deleteBucketText2": "タスクは削除されずデフォルトのバケットに移動します。",
 			"deleteBucketSuccess": "バケットは正常に削除されました。",
 			"bucketTitleSavedSuccess": "バケットのタイトルは正常に保存されました。",
 			"bucketLimitSavedSuccess": "バケットの上限は正常に保存されました。",
@@ -381,7 +423,7 @@
 			"targetUrl": "ターゲットURL",
 			"targetUrlInvalid": "有効なURLを入力してください。",
 			"events": "イベント",
-			"eventsHint": "Webhookが受信する (現在のプロジェクト内での) イベントを選択します。",
+			"eventsHint": "このWebhookで受信する (現在のプロジェクト内での) イベントを選択してください。",
 			"mustSelectEvents": "イベントを少なくとも1つ選択する必要があります。",
 			"delete": "Webhookの削除",
 			"deleteText": "このWebhookを削除して本当によろしいですか？このWebhookのターゲットURLにはイベントは送信されなくなります。",
@@ -399,21 +441,29 @@
 			"bucketConfigMode": "バケット設定モード",
 			"bucketConfig": "バケット設定",
 			"bucketConfigManual": "手動",
+			"filter": "絞り込み",
 			"create": "ビューの作成",
 			"createSuccess": "ビューは正常に作成されました。",
 			"titleRequired": "ビュー名を入力してください。",
 			"delete": "ビューの削除",
+			"deleteText": "このビューを削除して本当によろしいですか？このビューを使ってこのプロジェクトのタスクを表示することができなくなります。この操作はタスクを削除しません。この操作は元に戻せません！",
 			"deleteSuccess": "ビューは正常に削除されました。",
+			"onlyAdminsCanEdit": "プロジェクト管理者のみビューを編集できます。",
 			"updateSuccess": "ビューは正常に更新されました。"
 		}
 	},
 	"filters": {
 		"title": "絞り込み",
 		"clear": "絞り込みの解除",
+		"showResults": "結果を表示",
+		"noResults": "該当なし",
+		"fromView": "現在のビューに絞り込み条件が設定されています:",
+		"fromViewBoth": "ここで入力した内容と組み合わせて使用されます。",
 		"attributes": {
 			"title": "絞り込み条件名",
 			"titlePlaceholder": "絞り込み条件名を入力…",
 			"description": "説明",
+			"descriptionPlaceholder": "絞り込み条件に関する説明を記入します。/ でオプションを表示…",
 			"includeNulls": "値が設定されていないタスクを含める",
 			"requireAll": "すべての条件に一致するタスクのみ表示",
 			"showDoneTasks": "完了したタスクを表示",
@@ -441,9 +491,52 @@
 			"success": "絞り込み条件は正常に保存されました。"
 		},
 		"query": {
+			"title": "検索条件",
+			"placeholder": "検索条件・絞り込み条件を入力…",
 			"help": {
+				"intro": "SQLのような式を使ってタスクを絞り込むことができます。使用できる項目は以下のとおり:",
+				"link": "これはどのように動作しますか？",
+				"canUseDatemath": "日付計算を使用して相対日付検索も可能です。絞り込み条件内の日付をクリックすると日付計算の詳細を確認できます。",
 				"fields": {
-					"endDate": "タスクの終了日"
+					"done": "タスクが完了しているかどうか",
+					"priority": "タスクの優先度 (1-5)",
+					"percentDone": "タスクの進捗状況 (0-100)",
+					"dueDate": "タスクの期日",
+					"startDate": "タスクの開始日",
+					"endDate": "タスクの終了日",
+					"doneAt": "タスクの完了日時",
+					"assignees": "タスクの担当者",
+					"labels": "タスクに関連付けられたラベル",
+					"project": "タスクが属するプロジェクト (保存された絞り込み条件でのみ利用可能、プロジェクトレベルでは利用不可)",
+					"reminders": "タスクに複数のリマインダーが設定されている場合、検索条件に合う日付のリマインダーを1つでも持っていれば、そのタスクは検索結果に表示されます",
+					"created": "タスクの作成日時",
+					"updated": "タスクの更新日時"
+				},
+				"operators": {
+					"intro": "絞り込み条件に使用できる演算子:",
+					"notEqual": "等しくない",
+					"equal": "等しい",
+					"greaterThan": "より大きい",
+					"greaterThanOrEqual": "以上",
+					"lessThan": "より小さい",
+					"lessThanOrEqual": "以下",
+					"like": "パターンマッチ (ワイルドカード %)",
+					"in": "カンマ区切りリスト内のいずれかに一致",
+					"notIn": "カンマ区切りリスト内のいずれにも一致しない"
+				},
+				"logicalOperators": {
+					"intro": "複数条件の組み合わせに使用できる論理演算子:",
+					"and": "AND 演算子 (すべての条件が成り立つ場合)",
+					"or": "OR 演算子 (いずれかの条件が成り立つ場合)",
+					"parentheses": "条件のグループ化"
+				},
+				"examples": {
+					"intro": "絞り込み条件の例:",
+					"priorityEqual": "優先度が4のタスク",
+					"dueDatePast": "期日が過ぎているタスク",
+					"undoneHighPriority": "未完了で優先度が3以上のタスク",
+					"assigneesIn": "担当者が「user1」または「user2」のタスク",
+					"priorityOneOrTwoPastDue": "優先度が1または2で期日が過ぎているタスク"
 				}
 			}
 		}
@@ -461,7 +554,9 @@
 		"alreadyMigrated2": "再びインポートすることも可能ですが、重複する可能性があります。インポートして本当によろしいですか？",
 		"confirm": "了解！インポート開始なのだ！",
 		"importUpload": "{name}からVikunjaにデータをインポートするには、以下のボタンをクリックしてファイルを選択してください。",
-		"upload": "ファイルのアップロード"
+		"upload": "ファイルのアップロード",
+		"migrationStartedWillReciveEmail": "{service}のリスト、タスク、メモ、リマインダー、ファイルをすべてVikunjaにインポートします。完了までしばらくお待ちください。メールでお知らせします。このウィンドウは閉じても構いません。",
+		"migrationInProgress": "現在移行中です。完了するまでしばらくお待ちください。"
 	},
 	"label": {
 		"title": "ラベル",
@@ -493,7 +588,11 @@
 		"authenticating": "認証中…",
 		"passwordRequired": "この共有プロジェクトにはパスワードが必要です。パスワードを入力してください:",
 		"error": "エラーが発生しました。",
-		"invalidPassword": "無効なパスワードです。"
+		"invalidPassword": "無効なパスワードです。",
+		"accessDenied": "アクセスが拒否されました。権限を確認してもう一度お試しください。",
+		"serverError": "サーバーエラーが発生しました。しばらくしてからもう一度お試しください。",
+		"projectLoadError": "プロジェクト情報の読み込みに失敗しました。",
+		"retry": "再試行"
 	},
 	"navigation": {
 		"overview": "概要",
@@ -517,6 +616,7 @@
 		"previous": "前へ",
 		"next": "次へ",
 		"poweredBy": "Powered by Vikunja",
+		"info": "詳細",
 		"create": "作成",
 		"doit": "続行",
 		"saving": "保存中…",
@@ -530,6 +630,8 @@
 		"welcomeBack": "おかえりなさい",
 		"custom": "カスタム",
 		"id": "ID",
+		"created": "作成日時",
+		"createdBy": "{0} によって作成",
 		"actions": "アクション",
 		"cannotBeUndone": "この操作は元に戻せません！",
 		"avatarOfUser": "{user} のプロフィール画像"
@@ -569,6 +671,7 @@
 			"unorderedList": "順序なしリスト",
 			"orderedList": "順序付きリスト",
 			"orderedListTooltip": "番号付きのリストを作成",
+			"cleanBlock": "ブロックのクリア",
 			"link": "リンク",
 			"image": "画像",
 			"imageTooltip": "コンピュータから画像をアップロード",
@@ -577,11 +680,12 @@
 			"sideBySide": "並べて表示",
 			"guide": "説明書",
 			"text": "テキスト",
+			"textTooltip": "プレーンテキストで入力開始",
 			"taskList": "タスクリスト",
 			"taskListTooltip": "Todoリストでタスクを追跡",
 			"undo": "元に戻す",
 			"redo": "やり直す",
-			"placeholder": "テキストを入力するか「/」を押して選択肢から選ぶ…",
+			"placeholder": "テキストを入力するか、/ でオプションを表示…",
 			"table": {
 				"title": "テーブル",
 				"insert": "テーブルの挿入",
@@ -627,17 +731,38 @@
 			},
 			"values": {
 				"now": "現在",
+				"startOfToday": "今日の始まり",
 				"endOfToday": "今日の終わり",
+				"beginningOflastWeek": "先週の始まり",
 				"endOfLastWeek": "先週の終わり",
+				"beginningOfThisWeek": "今週の始まり",
 				"endOfThisWeek": "今週の終わり",
+				"startOfNextWeek": "来週の始まり",
 				"endOfNextWeek": "来週の終わり",
+				"in7Days": "7日後",
+				"beginningOfLastMonth": "先月の始まり",
 				"endOfLastMonth": "先月の終わり",
+				"startOfThisMonth": "今月の始まり",
 				"endOfThisMonth": "今月の終わり",
+				"startOfNextMonth": "来月の始まり",
 				"endOfNextMonth": "来月の終わり",
+				"in30Days": "30日後",
+				"startOfThisYear": "今年の始まり",
 				"endOfThisYear": "今年の終わり"
 			}
 		},
 		"datemathHelp": {
+			"canuse": "日付計算による絞り込みが可能です。",
+			"learnhow": "使用方法",
+			"title": "日付計算",
+			"intro": "相対日付を指定すると絞り込み条件を適用する際にVikunjaによって評価されます。",
+			"expression": "それぞれの日付計算式は基準日から始まります。この基準日には {0} か、{1} で区切られた複数の日付を使用できます。",
+			"similar": "{0} や {1} のような形式です。",
+			"add1Day": "1日加える",
+			"minus1Day": "1日減らす",
+			"roundDay": "最も近い日付に丸める",
+			"supportedUnits": "対応している単位",
+			"someExamples": "時間式の例",
 			"units": {
 				"seconds": "秒",
 				"minutes": "分",
@@ -666,7 +791,6 @@
 		"addReminder": "リマイダーを作成…",
 		"doneSuccess": "タスクを完了にしました。",
 		"undoneSuccess": "タスクを未完了に戻しました。",
-		"revertSuccess": "タスクは正常に未完了へ戻されました。",
 		"undo": "元に戻す",
 		"openDetail": "タスクの詳細を表示",
 		"checklistTotal": "{total}件中{checked}件のタスク",
@@ -674,7 +798,7 @@
 		"show": {
 			"titleCurrent": "現在のタスク",
 			"titleDates": "{from} 〜 {to} までのタスク",
-			"noDates": "指定日が未設定のタスクを表示",
+			"noDates": "日付のないタスクを表示",
 			"overdue": "期限切れタスクを表示",
 			"fromuntil": "{from} 〜 {until} までのタスク",
 			"select": "期間の選択",
@@ -687,12 +811,13 @@
 			"move": "別のプロジェクトにタスクを移動",
 			"done": "タスクを完了",
 			"undone": "未完了に戻す",
-			"created": "{1} によって {0} に作成",
-			"updated": "{0} に更新",
+			"created": "{1} によって{0}に作成",
+			"updated": "{0}に更新",
 			"doneAt": "完了 {0}",
 			"updateSuccess": "タスクは正常に保存されました。",
 			"deleteSuccess": "タスクは正常に削除されました。",
 			"belongsToProject": "このタスクはプロジェクト「{project}」に含まれています。",
+			"back": "プロジェクトに戻る",
 			"due": "期限: {at}",
 			"closePopup": "閉じる",
 			"organization": "組織",
@@ -725,7 +850,8 @@
 		"attributes": {
 			"assignees": "担当",
 			"color": "色",
-			"createdBy": "作成者:",
+			"created": "作成日",
+			"createdBy": "作成者",
 			"description": "説明",
 			"done": "完了",
 			"dueDate": "期日",
@@ -738,7 +864,8 @@
 			"repeat": "繰り返し間隔",
 			"startDate": "開始日",
 			"title": "タスク名",
-			"doneAt": "完了日時: "
+			"updated": "更新日",
+			"doneAt": "完了日"
 		},
 		"subscription": {
 			"subscribedTaskThroughParentProject": "現在プロジェクトを通して購読しているため、ここでこのタスクの購読を解除することはできません。",
@@ -755,7 +882,7 @@
 		},
 		"attachment": {
 			"title": "添付ファイル",
-			"createdBy": "{1}によって{0}に作成",
+			"createdBy": "{1} によって{0}に作成",
 			"downloadTooltip": "添付ファイルをダウンロード",
 			"upload": "添付ファイルのアップロード",
 			"drop": "ここにアップロードするファイルをドロップ",
@@ -774,7 +901,7 @@
 			"loading": "コメントを読み込み中…",
 			"edited": "{date} 編集",
 			"creating": "コメントを作成中…",
-			"placeholder": "コメントを追加します。'/' でオプションを表示します…",
+			"placeholder": "コメントを追加します。/ でオプションを表示…",
 			"comment": "コメント",
 			"delete": "コメントの削除",
 			"deleteText1": "このコメントを削除して本当によろしいですか？",
@@ -789,7 +916,7 @@
 			"1week": "1週間後"
 		},
 		"description": {
-			"placeholder": "説明を記入します。'/' でオプションを表示します…",
+			"placeholder": "タスクに関する説明を記入します。/ でオプションを表示…",
 			"empty": "説明文はありません。"
 		},
 		"assignee": {
@@ -833,10 +960,25 @@
 			"kinds": {
 				"subtask": "サブタスク",
 				"parenttask": "親タスク",
-				"related": "関連タスク"
+				"related": "関連タスク",
+				"duplicateof": "重複元",
+				"duplicates": "重複",
+				"blocking": "ブロック中",
+				"blocked": "ブロッカー",
+				"precedes": "先行",
+				"follows": "後続",
+				"copiedfrom": "コピー元",
+				"copiedto": "コピー先"
 			}
 		},
 		"reminder": {
+			"before": "{type}の{amount}{unit}前",
+			"after": "{type}の{amount}{unit}後",
+			"beforeShort": "前",
+			"afterShort": "後",
+			"onDueDate": "期日",
+			"onStartDate": "開始日",
+			"onEndDate": "終了日",
 			"custom": "カスタム",
 			"dateAndTime": "日付と時刻"
 		},
@@ -847,7 +989,6 @@
 			"mode": "繰り返しモード",
 			"monthly": "毎月",
 			"fromCurrentDate": "完了からの間隔",
-			"each": "隔",
 			"specifyAmount": "数字を入力…",
 			"hours": "時間ごと",
 			"days": "日ごと",
@@ -857,8 +998,29 @@
 			"invalidAmount": "0以上を入力してください。"
 		},
 		"quickAddMagic": {
+			"hint": "期日、担当者、その他の項目を追加するキーワードが使用できます。",
+			"title": "クイック追加",
+			"intro": "タスクを作成する際に特定のキーワードを使うことで項目を直接追加できます。よく使う項目とともにタスクをすぐ追加できます。",
+			"multiple": "複数使用できます。",
 			"label1": "ラベルを付けるには、ラベル名の前に {prefix} を入力します。",
-			"dateAndTime": "日付と時刻"
+			"label2": "Vikunja はそのラベルがすでに存在するか確認し、存在しなければ作成します。",
+			"label3": "空白を含む場合、ラベル名を \" \" または ' ' で囲みます。",
+			"label4": "例: {prefix}\"とある ラベル\"",
+			"priority1": "優先度を設定するには、{prefix} と 1〜5 の数字を入力します。",
+			"priority2": "数字が大きいほど優先度が高くなります。",
+			"assignees": "ユーザーを担当者として割り当てるには、ユーザー名の前に {prefix} を付けます。",
+			"project1": "プロジェクトを設定するには、プロジェクト名の前に {prefix} を付けます。",
+			"project2": "プロジェクトが存在しない場合はエラーになります。",
+			"project3": "空白を含む場合、プロジェクト名を \" \" または ' ' で囲みます。",
+			"project4": "例: {prefix}\"とある プロジェクト\"",
+			"dateAndTime": "日付と時刻",
+			"date": "日付は新しいタスクの期日として使用されます。以下の形式が利用可能です:",
+			"dateWeekday": "次に訪れるその曜日の日付",
+			"dateCurrentYear": "今年の日付",
+			"dateNth": "今月の{day}日",
+			"dateTime": "{time} または {timePM} を入力することで時刻も設定可能です。",
+			"repeats": "繰り返し",
+			"repeatsDescription": "一定間隔で繰り返すには {suffix} を入力します。amount には数字を入力します。省略して unit だけでも可能です。"
 		}
 	},
 	"team": {
@@ -883,18 +1045,32 @@
 			"delete": {
 				"header": "チームの削除",
 				"text1": "このチームと所属するチームメンバー全員を削除して本当によろしいですか？",
+				"text2": "すべてのチームメンバーが共有されているプロジェクトへのアクセス権を失います。この操作は元に戻せません！",
 				"success": "チームは正常に削除されました。"
 			},
 			"deleteUser": {
+				"header": "チームからユーザーを削除",
+				"text1": "チームからこのユーザーを削除して本当によろしいですか？",
+				"text2": "このユーザーはチーム内のプロジェクトへのアクセス権をすべて失います。この操作は元に戻せません！",
 				"success": "ユーザーは正常にチームから削除されました。"
+			},
+			"leave": {
+				"title": "チームから脱退",
+				"text1": "チームから脱退して本当によろしいですか？",
+				"text2": "チーム内のプロジェクトへのアクセス権をすべて失います。もし気が変わった場合、再度チーム管理者に追加してもらう必要があります。",
+				"success": "チームから脱退しました。"
 			}
 		},
 		"attributes": {
 			"name": "チーム名",
+			"namePlaceholder": "チーム名をここに入力…",
 			"nameRequired": "チーム名を入力してください。",
 			"description": "説明",
+			"descriptionPlaceholder": "このチームに関する説明を記入します。/ でオプションを表示…",
 			"admin": "管理者",
-			"member": "メンバー"
+			"member": "メンバー",
+			"isPublic": "公開チーム",
+			"isPublicDescription": "チームを公開します。有効にするとメンバー第三者がこのチームのプロジェクトを共有できます。"
 		}
 	},
 	"keyboardShortcuts": {
@@ -904,6 +1080,7 @@
 		"currentPageOnly": "これらのショートカットはこのページで機能します。",
 		"somePagesOnly": "これらのショートカットは一部のページで動作します。",
 		"toggleMenu": "メニューの表示/非表示",
+		"quickSearch": "検索・クイックアクションバーを開く",
 		"then": " ",
 		"task": {
 			"title": "タスク",
@@ -919,7 +1096,9 @@
 			"description": "タスクの説明を編集",
 			"delete": "タスクを削除",
 			"priority": "タスクの優先度を設定",
-			"favorite": "タスクをお気に入りに追加/削除"
+			"favorite": "タスクをお気に入りに追加/削除",
+			"openProject": "プロジェクトを開く",
+			"save": "現在のタスクを保存"
 		},
 		"project": {
 			"title": "プロジェクト",
@@ -935,6 +1114,21 @@
 			"labels": "ラベルに移動",
 			"teams": "チームに移動",
 			"projects": "プロジェクトに移動"
+		},
+		"list": {
+			"title": "タスクリスト",
+			"navigateDown": "次のタスクを強調表示",
+			"navigateUp": "前のタスクを強調表示",
+			"open": "強調表示されたタスクを開く"
+		},
+		"gantt": {
+			"title": "ガントチャート",
+			"moveTaskLeft": "タスクを早める",
+			"moveTaskRight": "タスクを遅らせる",
+			"expandTaskLeft": "タスク開始日を早める",
+			"expandTaskRight": "タスク終了日を遅らせる",
+			"shrinkTaskLeft": "タスク開始日を遅らせる",
+			"shrinkTaskRight": "タスク終了日を早める"
 		}
 	},
 	"update": {
@@ -964,14 +1158,22 @@
 		"success": "\"{domain}\" に設置されたVikunjaを使用します。",
 		"urlRequired": "URLを入力してください。"
 	},
+	"loadingError": {
+		"failed": "読み込みに失敗しました。{0}してください。エラーが解消しない場合、{1}ください。",
+		"tryAgain": "再試行",
+		"contact": "お知らせ"
+	},
 	"notification": {
 		"title": "通知",
 		"none": "通知はありません。よい一日を！",
-		"explainer": "購読しているプロジェクトやタスクが変更されると通知されます。"
+		"explainer": "購読中のアクション、プロジェクト、タスクへの変更が発生すると、通知がここに表示されます。",
+		"markAllRead": "通知をすべて既読にする",
+		"markAllReadSuccess": "通知をすべて既読にしました。"
 	},
 	"quickActions": {
 		"commands": "コマンド",
 		"placeholder": "コマンドまたはキーワードを入力…",
+		"hint": "{project} を使うとプロジェクトを検索対象にできます。{project} または {label} (ラベル) を検索条件と組み合わせて使うとプロジェクト内のタスクやラベルの付いたタスクを検索できます。{assignee} を使うとチームを検索対象にできます。",
 		"tasks": "タスク",
 		"projects": "プロジェクト",
 		"teams": "チーム",
@@ -991,32 +1193,106 @@
 		"altFormatLong": "Y/n/j H:i",
 		"altFormatShort": "Y/n/j"
 	},
+	"reaction": {
+		"reactedWith": "{user}が{value}でリアクションしました",
+		"reactedWithAnd": "{users}, {lastUser}が{value}でリアクションしました",
+		"reactedWithAndMany": "{users}と他{num}名が{value}でリアクションしました",
+		"add": "リアクションを追加"
+	},
 	"error": {
+		"1001": "このユーザー名のユーザーは既に存在します。",
+		"1002": "このメールアドレスのユーザーは既に存在します。",
+		"1004": "ユーザー名とパスワードが指定されていません。",
 		"1005": "そのユーザーは存在しません。",
+		"1006": "ユーザーIDを取得できませんでした。",
+		"1008": "パスワードリセットトークンが提供されていません。",
 		"1009": "無効なパスワードリセット用トークンです。",
 		"1010": "無効なメール確認用トークンです。",
 		"1011": "ユーザー名またはパスワードが正しくありません。",
+		"1012": "ユーザーのメールアドレスが確認されていません。",
+		"1013": "新しいパスワードが空です。",
+		"1014": "古いパスワードが空です。",
 		"1015": "このユーザーはすでにTOTPが有効になっています。",
 		"1016": "このユーザーはTOTPが有効ではありません。",
 		"1017": "無効なTOTP認証コードです。",
+		"1018": "ユーザーのプロフィール画像のタイプが無効です。",
+		"1019": "OpenIDプロバイダーからメールアドレスが提供されませんでした。OpenIDプロバイダーがアカウントのメールアドレスを提供していることを確認してください。",
+		"1020": "このアカウントは無効化されています。メールを確認するか管理者にお問い合わせください。",
+		"1021": "このアカウントはサードパーティの認証プロバイダーによって管理されています。",
+		"1022": "ユーザー名にスペースを含めてはいけません。",
+		"1023": "リンク共有としてその操作を実行することはできません。",
+		"1024": "タイプ「{type}」フィールド「{field}」は無効なクレームです。",
+		"1025": "タイムゾーン「{timezone}」は無効です。一覧から有効なタイムゾーンを選択してください。",
+		"2001": "IDは空または0にできません。",
+		"2002": "リクエストの一部が無効です。",
+		"2003": "タイムゾーン「{timezone}」は無効です。",
 		"3001": "そのプロジェクトは存在しません。",
+		"3004": "その操作を実行するにはそのプロジェクトへの読み取り権限が必要です。",
+		"3005": "プロジェクト名は空にできません。",
 		"3006": "その共有プロジェクトは存在しません。",
+		"3007": "このプロジェクトIDは既に存在します。",
 		"3008": "このプロジェクトはアーカイブ済みのため読み取り専用です。またプロジェクトに関連するタスクも同様です。",
+		"4001": "タスク名は空にできません。",
+		"4002": "そのタスクは存在しません。",
+		"4003": "一括編集タスクはすべて同じプロジェクトに属している必要があります。",
+		"4004": "一括編集するには少なくとも1つのタスクが必要です。",
+		"4005": "そのタスクを表示する権限がありません。",
+		"4006": "親タスクにそのタスク自身を設定することはできません。",
+		"4007": "無効な種類の関連タスクを作成することはできません。",
+		"4008": "既に存在する関連タスクを作成することはできません。",
 		"4009": "その関連タスクは存在しません。",
+		"4010": "タスクをそのタスク自身と関連付けることはできません。",
 		"4011": "その添付ファイルは存在しません。",
 		"4012": "添付ファイルが大きすぎます。",
+		"4013": "タスクソートパラメータが無効です。",
+		"4014": "タスクソート順が無効です。",
 		"4015": "そのコメントは存在しません。",
+		"4016": "無効なタスクフィールドです。",
+		"4017": "無効なタスク絞り込み比較演算子です。",
+		"4018": "無効なタスク絞り込み連結演算子です。",
+		"4019": "無効なタスク絞り込みです。",
+		"4020": "この添付ファイルはそのタスクに属していません。",
+		"4021": "このユーザーは既にそのタスクに割り当てられています。",
+		"4022": "リマインダーの日付が何に対する相対値かを指定してください。",
+		"4023": "タスクリレーションサイクルを作成することはできません。",
+		"6001": "チーム名は空にできません。",
 		"6002": "そのチームは存在しません。",
+		"6004": "そのチームは既にそのプロジェクトにアクセスできます。",
+		"6005": "そのユーザーは既にそのチームのメンバーです。",
+		"6006": "最後のチームメンバーを削除することはできません。",
+		"6007": "そのチームはその操作を実行するためのプロジェクトへのアクセス権がありません。",
+		"6008": "指定されたIDプロバイダーのグループに対応するチームが見つかりませんでした。",
+		"6009": "ユーザーのIDプロバイダーのグループに対応するチームが見つかりませんでした。",
+		"7002": "そのユーザーは既にそのプロジェクトにアクセスできます。",
+		"7003": "そのプロジェクトにアクセスする権限がありません。",
+		"8001": "このラベルにアクセスする権限がありません。",
 		"8002": "そのラベルは存在しません。",
+		"8003": "このラベルにアクセスする権限がありません。",
+		"9001": "その権限は無効です。",
 		"10001": "そのバケットは存在しません。",
+		"10002": "そのバケットはそのプロジェクトに属していません。",
+		"10003": "プロジェクトの最後のバケットを削除することはできません。",
+		"10004": "バケットが保持できるタスクの上限を既に超えているため、このバケットにタスクを追加できません。",
+		"10005": "プロジェクト内の完了したバケットは1つまでです。",
 		"11001": "その絞り込み条件は存在しません。",
 		"11002": "絞り込み条件はリンクの共有には使用できません。",
+		"12001": "購読エンティティタイプが無効です。",
+		"12002": "既にエンティティ自体または親エンティティを購読しています。",
+		"12003": "購読を取得するにはユーザーを指定する必要があります。",
+		"13001": "この共有リンクには認証用パスワードが必要ですが、何も入力されていません。",
+		"13002": "入力された共有リンクのパスワードが無効です。",
+		"13003": "提供された共有リンクトークンが無効です。",
+		"14001": "提供されたAPIトークンが無効です。",
+		"14002": "グループ「{group}」権限「{permission}」は無効です。",
 		"error": "エラー",
-		"success": "成功"
+		"success": "成功",
+		"0001": "その操作を行う権限がありません。"
 	},
 	"about": {
 		"title": "Vikunjaについて",
-		"version": "バージョン: {version}"
+		"version": "バージョン: {version}",
+		"frontendVersion": "フロントエンドのバージョン: {version}",
+		"apiVersion": "APIのバージョン: {version}"
 	},
 	"time": {
 		"units": {

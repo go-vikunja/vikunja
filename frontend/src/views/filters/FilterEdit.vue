@@ -1,13 +1,14 @@
 <template>
 	<CreateEdit
+		v-model:loading="loadingModel"
 		:title="$t('filters.edit.title')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
 		:tertiary="$t('misc.delete')"
-		@primary="saveFilterWithValidation"
+		@primary="handleSave"
 		@tertiary="$router.push({ name: 'filter.settings.delete', params: { id: projectId } })"
 	>
-		<form @submit.prevent="saveFilterWithValidation()">
+		<form @submit.prevent="handleSave()">
 			<div class="field">
 				<label
 					class="label"
@@ -69,6 +70,8 @@
 </template>
 
 <script setup lang="ts">
+import {computed, ref} from 'vue'
+
 import Editor from '@/components/input/AsyncEditor'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import Filters from '@/components/project/partials/Filters.vue'
@@ -89,4 +92,27 @@ const {
 	titleValid,
 	validateTitleField,
 } = useSavedFilter(() => props.projectId)
+
+const isSubmitting = ref(false)
+
+const loadingModel = computed({
+	get: () => isSubmitting.value || filterService.loading,
+	set(value: boolean) {
+		isSubmitting.value = value
+	},
+})
+
+async function handleSave() {
+	if (isSubmitting.value) {
+		return
+	}
+
+	isSubmitting.value = true
+
+	try {
+		await saveFilterWithValidation()
+	} finally {
+		isSubmitting.value = false
+	}
+}
 </script>

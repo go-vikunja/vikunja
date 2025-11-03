@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -70,5 +70,39 @@ func TestDeleteUser(t *testing.T) {
 		require.NoError(t, err)
 		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 37}) // only user16 had access to this project, and it was their default
+	})
+	t.Run("cleans up task assignments and subscriptions", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+
+		task := &Task{
+			Title:       "user cleanup",
+			ProjectID:   19,
+			CreatedByID: 7,
+			Index:       4,
+		}
+		_, err := s.Insert(task)
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TaskAssginee{TaskID: task.ID, UserID: 4})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityTask, EntityID: task.ID, UserID: 4})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&Subscription{EntityType: SubscriptionEntityProject, EntityID: 19, UserID: 4})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TeamMember{TeamID: 9, UserID: 4})
+		require.NoError(t, err)
+
+		err = DeleteUser(s, &user.User{ID: 4})
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "task_assignees", map[string]interface{}{"user_id": 4})
+		db.AssertMissing(t, "subscriptions", map[string]interface{}{"user_id": 4})
+		db.AssertMissing(t, "team_members", map[string]interface{}{"user_id": 4})
 	})
 }

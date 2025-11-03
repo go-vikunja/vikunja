@@ -26,6 +26,7 @@
 				:project="project"
 				:is-loading="projectUpdating[project.id]"
 				:can-collapse="canCollapse"
+				:can-edit-order="canEditOrder"
 				:data-project-id="project.id"
 			/>
 		</template>

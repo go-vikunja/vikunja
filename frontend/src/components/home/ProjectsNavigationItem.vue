@@ -14,6 +14,15 @@
 					:class="{ 'project-is-collapsed': !childProjectsOpen }"
 				/>
 			</BaseButton>
+			<span
+				v-if="canEditOrder && project.id > 0 && project.maxPermission > PERMISSIONS.READ"
+				class="icon menu-item-icon handle drag-handle-standalone"
+				@mousedown.stop
+				@click.stop.prevent
+				@touchstart.stop
+			>
+				<Icon icon="grip-lines" />
+			</span>
 			<BaseButton
 				:to="{ name: 'project.index', params: { projectId: project.id} }"
 				class="list-menu-link"
@@ -23,10 +32,7 @@
 					v-if="!canCollapse || childProjects?.length === 0"
 					class="collapse-project-button-placeholder"
 				/>
-				<div
-					class="color-bubble-handle-wrapper"
-					:class="{'is-draggable': project.id > 0 && project.maxRight > RIGHTS.READ}"
-				>
+				<div class="color-bubble-wrapper">
 					<ColorBubble
 						v-if="project.hexColor !== ''"
 						:color="project.hexColor"
@@ -38,36 +44,30 @@
 					>
 						<Icon icon="filter" />
 					</span>
-					<span
-						v-if="project.id > 0 && project.maxRight > RIGHTS.READ"
-						class="icon menu-item-icon handle"
-						:class="{'has-color-bubble': project.hexColor !== ''}"
-					>
-						<Icon icon="grip-lines" />
-					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
 			</BaseButton>
 			<BaseButton
-				v-if="project.id > 0 && project.maxRight > RIGHTS.READ"
+				v-if="project.id > 0 && project.maxPermission > PERMISSIONS.READ"
 				class="favorite"
 				:class="{'is-favorite': project.isFavorite}"
 				@click="projectStore.toggleProjectFavorite(project)"
 			>
-				<span class="tw-sr-only">{{ project.isFavorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
+				<span class="is-sr-only">{{ project.isFavorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
 				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
 			</BaseButton>
 			<ProjectSettingsDropdown
-				v-if="project.maxRight > RIGHTS.READ"
+				v-if="project.maxPermission > PERMISSIONS.READ"
 				class="menu-list-dropdown"
 				:project="project"
+				:simple="true"
 			>
 				<template #trigger="{toggleOpen}">
 					<BaseButton
 						class="menu-list-dropdown-trigger"
 						@click="toggleOpen"
 					>
-						<span class="tw-sr-only">{{ $t('project.openSettingsMenu') }}</span>
+						<span class="is-sr-only">{{ $t('project.openSettingsMenu') }}</span>
 						<Icon
 							icon="ellipsis-h"
 							class="icon"
@@ -98,12 +98,13 @@ import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdow
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
-import {RIGHTS} from '@/constants/rights'
+import {PERMISSIONS} from '@/constants/permissions'
 
 const props = defineProps<{
 	project: IProject,
 	isLoading?: boolean,
 	canCollapse?: boolean,
+	canEditOrder?: boolean,
 }>()
 
 const projectStore = useProjectStore()
@@ -132,7 +133,7 @@ const childProjects = computed(() => {
 
 <style lang="scss" scoped>
 .list-setting-spacer {
-	width: 5rem;
+	inline-size: 5rem;
 	flex-shrink: 0;
 }
 
@@ -155,7 +156,11 @@ const childProjects = computed(() => {
 	opacity: 1;
 }
 
-.list-menu:hover > div > a > .color-bubble-handle-wrapper.is-draggable > {
+.list-menu:hover > div > .drag-handle-standalone {
+	opacity: 1;
+}
+
+.list-menu:hover .color-bubble-wrapper > {
 	.saved-filter-icon,
 	.color-bubble {
 		opacity: 0;
@@ -166,22 +171,38 @@ const childProjects = computed(() => {
 	opacity: 1 !important;
 }
 
-.color-bubble-handle-wrapper {
+.color-bubble-wrapper {
 	position: relative;
-	width: 1rem;
-	height: 1rem;
+	inline-size: 1rem;
+	block-size: 1rem;
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	margin-right: .25rem;
+	margin-inline-end: .25rem;
 	flex-shrink: 0;
 
 	.color-bubble, .icon {
 		transition: all $transition;
 		position: absolute;
-		width: 12px;
+		inline-size: 12px;
 		margin: 0 !important;
 		padding: 0 !important;
+	}
+}
+
+.drag-handle-standalone {
+	inline-size: 1rem;
+	block-size: 1rem;
+	opacity: 0;
+	cursor: grab;
+	transition: opacity $transition;
+	z-index: 2;
+
+	position: absolute;
+	inset-inline-start: 1.75rem;
+
+	&:active {
+		cursor: grabbing;
 	}
 }
 
@@ -195,8 +216,14 @@ const childProjects = computed(() => {
 	font-size: .75rem;
 }
 
-.is-touch .handle.has-color-bubble {
-	display: none !important;
+@media (pointer: coarse) {
+	.drag-handle-standalone {
+		display: none !important;
+	}
+}
+
+.navigation-item {
+	position: relative;
 }
 
 .navigation-item:has(*:focus-visible) {

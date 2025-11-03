@@ -4,7 +4,8 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
-import UserModel, {getAvatarUrl, getDisplayName} from '@/models/user'
+import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} from '@/models/user'
+import AvatarService from '@/services/avatar'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
 import {setModuleLoading} from '@/stores/helper'
@@ -21,6 +22,8 @@ import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
 import {PrefixMode} from '@/modules/parseTaskText'
+import {DATE_DISPLAY} from '@/constants/dateDisplay'
+import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
 
 function redirectToSpecifiedProvider() {
@@ -66,7 +69,6 @@ export const useAuthStore = defineStore('auth', () => {
 	const configStore = useConfigStore()
 	
 	const authenticated = ref(false)
-	const isLinkShareAuth = ref(false)
 	const needsTotpPasscode = ref(false)
 	
 	const info = ref<IUser | null>(null)
@@ -92,7 +94,8 @@ export const useAuthStore = defineStore('auth', () => {
 	})
 
 	const userDisplayName = computed(() => info.value ? getDisplayName(info.value) : undefined)
-
+	
+	const isLinkShareAuth = computed(() => info.value?.type === AUTH_TYPES.LINK_SHARE)
 
 	function setIsLoading(newIsLoading: boolean) {
 		isLoading.value = newIsLoading 
@@ -104,14 +107,12 @@ export const useAuthStore = defineStore('auth', () => {
 
 	function setUser(newUser: IUser | null, saveSettings = true) {
 		info.value = newUser
-		if (newUser !== null) {
+		if (newUser !== null && !isLinkShareAuth.value) {
 			reloadAvatar()
 
 			if (saveSettings && newUser.settings) {
 				loadSettings(newUser.settings)
 			}
-
-			isLinkShareAuth.value = newUser.id < 0
 		}
 	}
 
@@ -131,6 +132,9 @@ export const useAuthStore = defineStore('auth', () => {
 				playSoundWhenDone: true,
 				quickAddMagicMode: PrefixMode.Default,
 				colorSchema: 'auto',
+				allowIconChanges: true,
+				dateDisplay: DATE_DISPLAY.RELATIVE,
+				defaultTaskRelationType: RELATION_KIND.RELATED,
 				...newSettings.frontendSettings,
 			},
 		})
@@ -141,17 +145,17 @@ export const useAuthStore = defineStore('auth', () => {
 		authenticated.value = newAuthenticated
 	}
 
-	function setIsLinkShareAuth(newIsLinkShareAuth: boolean) {
-		isLinkShareAuth.value = newIsLinkShareAuth
-	}
 
 	function setNeedsTotpPasscode(newNeedsTotpPasscode: boolean) {
 		needsTotpPasscode.value = newNeedsTotpPasscode
 	}
 
-	function reloadAvatar() {
-		if (!info.value) return
-		avatarUrl.value = `${getAvatarUrl(info.value)}&=${new Date().valueOf()}`
+	async function reloadAvatar() {
+		if (!info.value || !info.value.username) {
+			return
+		}
+		invalidateAvatarCache(info.value)
+		avatarUrl.value = await fetchAvatarBlobUrl(info.value, 40)
 	}
 
 	function updateLastUserRefresh() {
@@ -171,7 +175,7 @@ export const useAuthStore = defineStore('auth', () => {
 			// Save the token to local storage for later use
 			saveToken(response.data.token, true)
 
-			// Tell others the user is autheticated
+			// Tell others the user is authenticated
 			await checkAuth()
 		} catch (e) {
 			if (
@@ -190,7 +194,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 	/**
 	 * Registers a new user and logs them in.
-	 * Not sure if this is the right place to put the logic in, maybe a seperate js component would be better suited. 
+	 * Not sure if this is the right place to put the logic in, maybe a separate js component would be better suited. 
 	 */
 	async function register(credentials, language: string|null = null) {
 		const HTTP = HTTPFactory()
@@ -241,7 +245,7 @@ export const useAuthStore = defineStore('auth', () => {
 			saveToken(response.data.token, true)
 			setLoggedInVia(provider)
 
-			// Tell others the user is autheticated
+			// Tell others the user is authenticated
 			await checkAuth()
 		} finally {
 			setIsLoading(false)
@@ -372,13 +376,14 @@ export const useAuthStore = defineStore('auth', () => {
 		settings,
 		showMessage = true,
 	}: {
-		settings: IUserSettings
-		showMessage : boolean
+		settings: IUserSettings,
+		showMessage: boolean,
 	}) {
 		const userSettingsService = new UserSettingsService()
 
 		const cancel = setModuleLoading(setIsLoadingGeneralSettings)
 		try {
+			const oldName = info.value?.name
 			let settingsUpdate = {...settings}
 			if (configStore.demoModeEnabled) {
 				settingsUpdate = {
@@ -390,6 +395,12 @@ export const useAuthStore = defineStore('auth', () => {
 			setUserSettings(settingsUpdate)
 			await setLanguage(settings.language)
 			await updateSettingsPromise
+			if (oldName !== undefined && oldName !== settingsUpdate.name) {
+				const {avatarProvider} = await (new AvatarService()).get({})
+				if (avatarProvider === 'initials') {
+					await reloadAvatar()
+				}
+			}
 			if (showMessage) {
 				success({message: i18n.global.t('user.settings.general.savedSuccess')})
 			}
@@ -403,7 +414,7 @@ export const useAuthStore = defineStore('auth', () => {
 	/**
 	 * Renews the api token and saves it to local storage
 	 */
-		function renewToken() {
+	function renewToken() {
 		// FIXME: Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
 		// link share in another tab. Without the timeout both the token renew and link share auth are executed at
 		// the same time and one might win over the other.
@@ -442,7 +453,6 @@ export const useAuthStore = defineStore('auth', () => {
 	return {
 		// state
 		authenticated: readonly(authenticated),
-		isLinkShareAuth: readonly(isLinkShareAuth),
 		needsTotpPasscode: readonly(needsTotpPasscode),
 
 		info: readonly(info),
@@ -454,6 +464,7 @@ export const useAuthStore = defineStore('auth', () => {
 		authUser,
 		authLinkShare,
 		userDisplayName,
+		isLinkShareAuth,
 
 		isLoading: readonly(isLoading),
 		setIsLoading,
@@ -464,7 +475,6 @@ export const useAuthStore = defineStore('auth', () => {
 		setUser,
 		setUserSettings,
 		setAuthenticated,
-		setIsLinkShareAuth,
 		setNeedsTotpPasscode,
 
 		reloadAvatar,
@@ -485,5 +495,5 @@ export const useAuthStore = defineStore('auth', () => {
 
 // support hot reloading
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useAuthStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useAuthStore, import.meta.hot))
 }

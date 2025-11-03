@@ -2,21 +2,26 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package files
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+
+	"code.vikunja.io/api/pkg/web"
+)
 
 // ErrFileDoesNotExist defines an error where a file does not exist in the db
 type ErrFileDoesNotExist struct {
@@ -48,6 +53,18 @@ func (err ErrFileIsTooLarge) Error() string {
 func IsErrFileIsTooLarge(err error) bool {
 	_, ok := err.(ErrFileIsTooLarge)
 	return ok
+}
+
+// ErrCodeFileIsTooLarge holds the unique world-error code of this error
+const ErrCodeFileIsTooLarge = 4013
+
+// HTTPError holds the http error description
+func (err ErrFileIsTooLarge) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusRequestEntityTooLarge,
+		Code:     ErrCodeFileIsTooLarge,
+		Message:  "The uploaded file exceeds the maximum configured file size",
+	}
 }
 
 // ErrFileIsNotUnsplashFile defines an error where a file is not downloaded from unsplash.

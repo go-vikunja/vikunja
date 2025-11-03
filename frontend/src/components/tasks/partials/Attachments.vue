@@ -56,7 +56,7 @@
 								scope="global"
 							>
 								<span v-tooltip="formatDateLong(a.created)">
-									{{ formatDateSince(a.created) }}
+									{{ formatDisplayDate(a.created) }}
 								</span>
 								<User
 									:avatar-size="24"
@@ -113,7 +113,7 @@
 		<XButton
 			v-if="editEnabled"
 			:disabled="loading"
-			class="mb-4"
+			class="mbe-4"
 			icon="cloud-upload-alt"
 			variant="secondary"
 			:shadow="false"
@@ -185,7 +185,7 @@ import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
 import {useAttachmentStore} from '@/stores/attachments'
-import {formatDateSince, formatDateLong} from '@/helpers/time/formatDate'
+import {formatDisplayDate, formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
 import {getHumanSize} from '@/helpers/getHumanSize'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
@@ -289,26 +289,26 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 <style lang="scss" scoped>
 .attachments {
-	input[type=file] {
+	input[type="file"] {
 		display: none;
 	}
 
 	@media screen and (max-width: $tablet) {
 		.button {
-			width: 100%;
+			inline-size: 100%;
 		}
 	}
 }
 
 .files {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 }
 
 .attachment {
 	display: grid;
 	grid-template-columns: 9rem 1fr;
 	align-items: center;
-	width: 100%;
+	inline-size: 100%;
 	
 	padding: .5rem;
 	
@@ -327,9 +327,9 @@ async function setCoverImage(attachment: IAttachment | null) {
 	display: flex;
 	align-items: center;
 	font-weight: bold;
-	height: 2rem;
+	block-size: 2rem;
 	color: var(--text);
-	text-align: left;
+	text-align: start;
 }
 
 .info {
@@ -339,7 +339,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	flex-direction: column;
 
 	p {
-		margin-bottom: 0;
+		margin-block-end: 0;
 		display: flex;
 
 		> span,
@@ -352,10 +352,10 @@ async function setCoverImage(attachment: IAttachment | null) {
 .dropzone {
 	position: fixed;
 	background: hsla(var(--grey-100-hsl), 0.8);
-	top: 0;
-	left: 0;
-	bottom: 0;
-	right: 0;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	inset-block-end: 0;
+	inset-inline-end: 0;
 	z-index: 4001; // modal z-index is 4000
 	text-align: center;
 
@@ -366,14 +366,14 @@ async function setCoverImage(attachment: IAttachment | null) {
 
 .drop-hint {
 	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
+	inset-block-end: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 
 	.icon {
-		width: 100%;
+		inline-size: 100%;
 		font-size: 5rem;
-		height: auto;
+		block-size: auto;
 		text-shadow: var(--shadow-md);
 		animation: bounce 2s infinite;
 
@@ -389,8 +389,8 @@ async function setCoverImage(attachment: IAttachment | null) {
 		background: var(--primary);
 		padding: 1rem;
 		color: $white; // Should always be white because of the background, regardless of the theme
-		width: 100%;
-		max-width: 300px;
+		inline-size: 100%;
+		max-inline-size: 300px;
 	}
 }
 
@@ -435,11 +435,11 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 @keyframes bounce {
-	from,
+	0%,
 	20%,
 	53%,
 	80%,
-	to {
+	100% {
 		animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
 		transform: translate3d(0, 0, 0);
 	}
@@ -461,18 +461,18 @@ async function setCoverImage(attachment: IAttachment | null) {
 }
 
 .preview-column {
-	max-width: 8rem;
-	height: 5.2rem;
+	max-inline-size: 8rem;
+	block-size: 5.2rem;
 }
 
 .attachment-preview {
-	height: 100%;
+	block-size: 100%;
 }
 
 .is-task-cover {
 	background: var(--primary);
 	color: var(--white);
-	margin-left: .25rem;
+	margin-inline-start: .25rem;
 	padding: .25rem .35rem;
 	border-radius: 4px;
 	font-size: .75rem;

@@ -283,12 +283,6 @@
 				"addedSuccess": "{type} je uspješno dodan.",
 				"updatedSuccess": "{type} je uspješno dodan."
 			},
-			"right": {
-				"title": "Dopuštenja",
-				"read": "Samo za čitanje",
-				"readWrite": "Čitanje i pisanje",
-				"admin": "Administrator"
-			},
 			"attributes": {
 				"link": "Poveznica",
 				"delete": "Obriši"
@@ -307,8 +301,7 @@
 			"month": "Mjesec",
 			"day": "Dan",
 			"hour": "Sat",
-			"range": "Raspon datuma",
-			"noDates": "Ovaj zadatak nema postavljene datume."
+			"range": "Raspon datuma"
 		},
 		"table": {
 			"title": "Tablica",
@@ -639,7 +632,6 @@
 		"show": {
 			"titleCurrent": "Trenutni zadaci",
 			"titleDates": "Zadaci od {from} do {to}",
-			"noDates": "Prikaži zadatke bez datuma",
 			"overdue": "Prikaži zakašnjele zadatke",
 			"fromuntil": "Zadaci od {from} do {until}",
 			"select": "Odaberi vremenski raspon",

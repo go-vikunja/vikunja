@@ -5,7 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
+            "name": "Launch frontend dev",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "pnpm run dev",
+            "cwd": "${workspaceRoot}/frontend"
+        },
+        {
+            "name": "Launch API",
             "type": "go",
             "request": "launch",
             "mode": "auto",

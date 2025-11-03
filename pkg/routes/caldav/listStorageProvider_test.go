@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package caldav
@@ -57,7 +57,6 @@ func TestSubTask_Create(t *testing.T) {
 		const taskUID = "uid_child1"
 		const taskContent = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
@@ -108,7 +107,6 @@ END:VCALENDAR`
 		const taskUIDChild = "uid_child1"
 		const taskContentChild = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
@@ -135,7 +133,6 @@ END:VCALENDAR`
 		const taskUID = "uid_grand_child1"
 		const taskContent = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
@@ -199,7 +196,6 @@ END:VCALENDAR`
 		const taskUID = "uid_child1"
 		const taskContent = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
@@ -266,7 +262,6 @@ func TestSubTask_Update(t *testing.T) {
 		const taskUID = "uid-caldav-test-child-task"
 		const taskContent = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
@@ -320,7 +315,6 @@ END:VCALENDAR`
 		const taskUID = "uid-caldav-test-parent-task"
 		const taskContent = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
@@ -372,7 +366,6 @@ END:VCALENDAR`
 		const taskUID = "uid-caldav-test-child-task"
 		const taskContent = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN
@@ -435,7 +428,6 @@ END:VCALENDAR`
 		const taskUID = "uid-caldav-test-child-task"
 		const taskContent = `BEGIN:VCALENDAR
 VERSION:2.0
-METHOD:PUBLISH
 X-PUBLISHED-TTL:PT4H
 X-WR-CALNAME:Project 36 for Caldav tests
 PRODID:-//Vikunja Todo App//EN

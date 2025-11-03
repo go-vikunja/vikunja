@@ -2,16 +2,16 @@
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public Licensee as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public Licensee for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public Licensee
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package models
@@ -22,13 +22,12 @@ import (
 	"encoding/hex"
 	"time"
 
-	"xorm.io/builder"
-
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/utils"
-
 	"code.vikunja.io/api/pkg/web"
+
 	"golang.org/x/crypto/pbkdf2"
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -46,7 +45,7 @@ type APIToken struct {
 	TokenHash      string `xorm:"not null unique" json:"-"`
 	TokenLastEight string `xorm:"not null index varchar(8)" json:"-"`
 	// The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add `{"tasks":["read_all","update"]}`.
-	Permissions APIPermissions `xorm:"json not null" json:"permissions" valid:"required"`
+	APIPermissions APIPermissions `xorm:"json not null permissions" json:"permissions" valid:"required"`
 	// The date when this key expires.
 	ExpiresAt time.Time `xorm:"not null" json:"expires_at" valid:"required"`
 
@@ -55,8 +54,8 @@ type APIToken struct {
 
 	OwnerID int64 `xorm:"bigint not null" json:"-"`
 
-	web.Rights   `xorm:"-" json:"-"`
-	web.CRUDable `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
+	web.CRUDable    `xorm:"-" json:"-"`
 }
 
 const APITokenPrefix = `tk_`
@@ -102,7 +101,7 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	t.OwnerID = a.GetID()
 
-	if err := PermissionsAreValid(t.Permissions); err != nil {
+	if err := PermissionsAreValid(t.APIPermissions); err != nil {
 		return err
 	}
 
@@ -137,7 +136,7 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 	if search != "" {
 		where = builder.And(
 			where,
-			db.ILIKE("title", search),
+			db.ILIKE("api_tokens.title", search),
 		)
 	}
 

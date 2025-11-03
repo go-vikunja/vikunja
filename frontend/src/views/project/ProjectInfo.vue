@@ -11,7 +11,7 @@
 		>
 			<div
 				v-if="htmlDescription !== ''"
-				class="has-text-left"
+				class="has-text-start"
 				v-html="htmlDescription"
 			/>
 			<p
