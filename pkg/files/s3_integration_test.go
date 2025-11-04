@@ -37,6 +37,9 @@ func TestFileStorageIntegration(t *testing.T) {
 		t.Skip("Skipping integration tests - set VIKUNJA_TESTS_S3=1 to run")
 	}
 
+	// Initialize config to load environment variables
+	config.InitConfig()
+
 	// Ensure S3 is configured for this test
 	storageType := config.FilesType.GetString()
 	if storageType != "s3" {
