@@ -30,10 +30,22 @@ import (
 )
 
 // TestFileStorageIntegration tests end-to-end file storage and retrieval
-// with both S3/MinIO and local filesystem backends based on configuration
+// with S3/MinIO storage backend. This test specifically validates S3 functionality
+// and will fail if S3 is not properly configured.
 func TestFileStorageIntegration(t *testing.T) {
 	if os.Getenv("VIKUNJA_TESTS_USE_CONFIG") != "1" {
 		t.Skip("Skipping integration tests - set VIKUNJA_TESTS_USE_CONFIG=1 to run")
+	}
+
+	// Ensure S3 is configured for this test
+	storageType := config.FilesType.GetString()
+	if storageType != "s3" {
+		t.Skip("Skipping S3 integration tests - VIKUNJA_FILES_TYPE must be set to 's3'")
+	}
+
+	// Validate S3 configuration is present
+	if config.FilesS3Endpoint.GetString() == "" {
+		t.Fatal("S3 integration test requires VIKUNJA_FILES_S3_ENDPOINT to be set")
 	}
 
 	// Save original config values
@@ -60,19 +72,17 @@ func TestFileStorageIntegration(t *testing.T) {
 		_ = InitFileHandler()
 	}()
 
-	storageType := config.FilesType.GetString()
-
-	t.Run("Initialize file handler with "+storageType, func(t *testing.T) {
+	t.Run("Initialize file handler with s3", func(t *testing.T) {
 		err := InitFileHandler()
-		require.NoError(t, err, "Failed to initialize file handler with type: %s", storageType)
+		require.NoError(t, err, "Failed to initialize file handler with type: s3")
 		assert.NotNil(t, afs, "File system should be initialized")
 	})
 
-	t.Run("Create and retrieve file with "+storageType, func(t *testing.T) {
+	t.Run("Create and retrieve file with s3", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		// Test data
-		testContent := []byte("This is a test file for storage integration testing with " + storageType)
+		testContent := []byte("This is a test file for storage integration testing with s3")
 		testFileName := "integration-test-file.txt"
 		testAuth := &testauth{id: 1}
 
@@ -121,7 +131,7 @@ func TestFileStorageIntegration(t *testing.T) {
 		assert.True(t, os.IsNotExist(err), "Error should indicate file does not exist")
 	})
 
-	t.Run("Create multiple files with "+storageType, func(t *testing.T) {
+	t.Run("Create multiple files with s3", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		testAuth := &testauth{id: 1}
@@ -161,7 +171,7 @@ func TestFileStorageIntegration(t *testing.T) {
 		}
 	})
 
-	t.Run("Handle large file with "+storageType, func(t *testing.T) {
+	t.Run("Handle large file with s3", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		testAuth := &testauth{id: 1}
@@ -192,7 +202,7 @@ func TestFileStorageIntegration(t *testing.T) {
 		require.NoError(t, err, "Failed to delete large file")
 	})
 
-	t.Run("File not found with "+storageType, func(t *testing.T) {
+	t.Run("File not found with s3", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 
 		// Try to load a file that doesn't exist
