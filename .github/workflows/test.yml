@@ -280,6 +280,7 @@ jobs:
           VIKUNJA_FILES_S3_ACCESSKEY: vikunja
           VIKUNJA_FILES_S3_SECRETKEY: vikunjatest
           VIKUNJA_FILES_S3_USEPATHSTYLE: true
+          VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
         run: |
           mkdir -p frontend/dist
           touch frontend/dist/index.html
