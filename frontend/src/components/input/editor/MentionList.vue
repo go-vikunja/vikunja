@@ -115,8 +115,8 @@ export default {
 	overflow: hidden;
 	font-size: 0.9rem;
 	box-shadow: var(--shadow-md);
-	min-width: 200px;
-	max-height: 300px;
+	min-inline-size: 200px;
+	max-block-size: 300px;
 	overflow-y: auto;
 }
 
@@ -154,7 +154,7 @@ export default {
 .mention-info {
 	display: flex;
 	flex-direction: column;
-	min-width: 0;
+	min-inline-size: 0;
 	flex: 1;
 	
 	p {
