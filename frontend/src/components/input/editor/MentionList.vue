@@ -27,7 +27,7 @@
 			v-else
 			class="mention-item no-results"
 		>
-			No users found
+			{{ $t('task.mention.noUsersFound') }}
 		</div>
 	</div>
 </template>
