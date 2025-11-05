@@ -64,6 +64,9 @@ importers:
       '@tiptap/extension-list':
         specifier: 3.9.1
         version: 3.9.1(@tiptap/core@3.9.1(@tiptap/pm@3.9.1))(@tiptap/pm@3.9.1)
+      '@tiptap/extension-mention':
+        specifier: 3.9.1
+        version: 3.9.1(@tiptap/core@3.9.1(@tiptap/pm@3.9.1))(@tiptap/pm@3.9.1)(@tiptap/suggestion@3.9.1(@tiptap/core@3.9.1(@tiptap/pm@3.9.1))(@tiptap/pm@3.9.1))
       '@tiptap/extension-table':
         specifier: 3.9.1
         version: 3.9.1(@tiptap/core@3.9.1(@tiptap/pm@3.9.1))(@tiptap/pm@3.9.1)
@@ -2193,6 +2196,13 @@ packages:
     peerDependencies:
       '@tiptap/core': ^3.9.1
       '@tiptap/pm': ^3.9.1
+
+  '@tiptap/extension-mention@3.9.1':
+    resolution: {integrity: sha512-JF+QV2OMlx9LMOaBTEiHcaR3IwwwIX9QB4ddDGVRxWAZJZzbHpvn4j8MEDXtsnLNe+RfX5iGI7ggG+FCCL60LA==}
+    peerDependencies:
+      '@tiptap/core': ^3.9.1
+      '@tiptap/pm': ^3.9.1
+      '@tiptap/suggestion': ^3.9.1
 
   '@tiptap/extension-ordered-list@3.9.1':
     resolution: {integrity: sha512-EOq7D/aX8xFrLcGZnGMxWWHlwZWfuVjwTSqjtyPJ6voYTzgfkbsvAbx1tGTwOMK4dk1S9wno6QHVj1ifzzBJcQ==}
@@ -8962,6 +8972,12 @@ snapshots:
     dependencies:
       '@tiptap/core': 3.9.1(@tiptap/pm@3.9.1)
       '@tiptap/pm': 3.9.1
+
+  '@tiptap/extension-mention@3.9.1(@tiptap/core@3.9.1(@tiptap/pm@3.9.1))(@tiptap/pm@3.9.1)(@tiptap/suggestion@3.9.1(@tiptap/core@3.9.1(@tiptap/pm@3.9.1))(@tiptap/pm@3.9.1))':
+    dependencies:
+      '@tiptap/core': 3.9.1(@tiptap/pm@3.9.1)
+      '@tiptap/pm': 3.9.1
+      '@tiptap/suggestion': 3.9.1(@tiptap/core@3.9.1(@tiptap/pm@3.9.1))(@tiptap/pm@3.9.1)
 
   '@tiptap/extension-ordered-list@3.9.1(@tiptap/extension-list@3.9.1(@tiptap/core@3.9.1(@tiptap/pm@3.9.1))(@tiptap/pm@3.9.1))':
     dependencies:

@@ -158,6 +158,7 @@ import Typography from '@tiptap/extension-typography'
 import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
 import {Placeholder} from '@tiptap/extensions'
+import Mention from '@tiptap/extension-mention'
 
 import {TaskItem, TaskList} from '@tiptap/extension-list'
 import HardBreak from '@tiptap/extension-hard-break'
@@ -166,6 +167,7 @@ import {Node} from '@tiptap/pm/model'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
+import mentionSuggestionSetup from './mentionSuggestion'
 
 import {common, createLowlight} from 'lowlight'
 
@@ -190,6 +192,8 @@ const props = withDefaults(defineProps<{
 	placeholder?: string,
 	editShortcut?: string,
 	enableDiscardShortcut?: boolean,
+	enableMentions?: boolean,
+	mentionProjectId?: number,
 }>(), {
 	uploadCallback: undefined,
 	isEditEnabled: true,
@@ -198,6 +202,8 @@ const props = withDefaults(defineProps<{
 	placeholder: '',
 	editShortcut: '',
 	enableDiscardShortcut: false,
+	enableMentions: false,
+	mentionProjectId: 0,
 })
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -479,6 +485,18 @@ const extensions : Extensions = [
 
 	PasteHandler,
 ]
+
+// Add mention extension if enabled
+if (props.enableMentions && props.mentionProjectId > 0) {
+	extensions.push(
+		Mention.configure({
+			HTMLAttributes: {
+				class: 'mention',
+			},
+			suggestion: mentionSuggestionSetup(props.mentionProjectId),
+		}),
+	)
+}
 
 // Add a custom extension for the Escape key
 if (props.enableDiscardShortcut) {
@@ -802,6 +820,21 @@ watch(
 		background-color: var(--grey-200);
 		color: var(--grey-700);
 		border-radius: $radius;
+	}
+
+	// Mention styles
+	.mention {
+		background-color: var(--primary-light, #e3f2fd);
+		color: var(--primary, #1976d2);
+		border-radius: 0.25rem;
+		padding: 0.125rem 0.375rem;
+		font-weight: 500;
+		text-decoration: none;
+		cursor: default;
+		
+		&:hover {
+			background-color: var(--primary-lighter, #bbdefb);
+		}
 	}
 
 	pre {
