@@ -109,14 +109,14 @@ export default function mentionSuggestionSetup(projectId: number) {
 						return
 					}
 
-				// Create popup element
-				popupElement = document.createElement('div')
-				popupElement.style.position = 'absolute'
-				popupElement.style.top = '0'
-				popupElement.style.left = '0'
-				popupElement.style.zIndex = '4700'
-				popupElement.appendChild(component.element!)
-				document.body.appendChild(popupElement)					// Update virtual reference
+					// Create popup element
+					popupElement = document.createElement('div')
+					popupElement.style.position = 'absolute'
+					popupElement.style.top = '0'
+					popupElement.style.left = '0'
+					popupElement.style.zIndex = '4700'
+					popupElement.appendChild(component.element!)
+					document.body.appendChild(popupElement)					// Update virtual reference
 					const rect = props.clientRect()
 					virtualReference.getBoundingClientRect = () => rect
 
