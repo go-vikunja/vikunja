@@ -1,14 +1,14 @@
-import {VueRenderer} from '@tiptap/vue-3'
-import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom'
-import type {Editor} from '@tiptap/core'
+import { VueRenderer } from '@tiptap/vue-3'
+import { computePosition, flip, shift, offset, autoUpdate } from '@floating-ui/dom'
+import type { Editor } from '@tiptap/core'
 
 import MentionList from './MentionList.vue'
 import ProjectUserService from '@/services/projectUsers'
-import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
-import type {IUser} from '@/modelTypes/IUser'
-
-interface MentionItem {
-	id: number
+import { fetchAvatarBlobUrl, getDisplayName } from '@/models/user'
+import type { IUser } from '@/modelTypes/IUser'
+import type { MentionNodeAttrs } from '@tiptap/extension-mention'
+interface MentionItem extends MentionNodeAttrs {
+	id: string
 	label: string
 	username: string
 	avatarUrl: string
@@ -24,14 +24,14 @@ async function fetchUsersForProject(projectId: number): Promise<MentionItem[]> {
 	}
 
 	const projectUserService = new ProjectUserService()
-	const users = await projectUserService.getAll({projectId}, {}) as IUser[]
-	
+	const users = await projectUserService.getAll({ projectId }, {}) as IUser[]
+
 	// Fetch avatar URLs for all users
 	const usersWithAvatars = await Promise.all(
 		users.map(async (user) => {
 			const avatarUrl = await fetchAvatarBlobUrl(user, 32)
 			return {
-				id: user.id,
+				id: String(user.id),
 				label: getDisplayName(user),
 				username: user.username,
 				avatarUrl: avatarUrl as string,
@@ -49,22 +49,22 @@ async function fetchUsersForProject(projectId: number): Promise<MentionItem[]> {
 export default function mentionSuggestionSetup(projectId: number) {
 	return {
 		char: '@',
-		
-		items: async ({query}: {query: string}): Promise<MentionItem[]> => {
+
+		items: async ({ query }: { query: string }): Promise<MentionItem[]> => {
 			if (!projectId) {
 				return []
 			}
 
 			try {
 				const users = await fetchUsersForProject(projectId)
-				
+
 				if (!query) {
 					return users.slice(0, 5) // Limit to 5 users when no query
 				}
 
 				// Filter users by query (search in both display name and username)
 				return users
-					.filter(user => 
+					.filter(user =>
 						user.label.toLowerCase().includes(query.toLowerCase()) ||
 						user.username.toLowerCase().includes(query.toLowerCase()),
 					)
@@ -96,7 +96,7 @@ export default function mentionSuggestionSetup(projectId: number) {
 			return {
 				onStart: (props: {
 					editor: Editor
-					clientRect: () => DOMRect
+					clientRect?: (() => DOMRect | null) | null
 					items: MentionItem[]
 					command: (item: MentionItem) => void
 				}) => {
@@ -118,32 +118,33 @@ export default function mentionSuggestionSetup(projectId: number) {
 					popupElement.appendChild(component.element!)
 					document.body.appendChild(popupElement)					// Update virtual reference
 					const rect = props.clientRect()
-					virtualReference.getBoundingClientRect = () => rect
+					if (rect) {
+						virtualReference.getBoundingClientRect = () => rect
+						// Set up floating positioning
+						const updatePosition = () => {
+							computePosition(virtualReference, popupElement!, {
+								placement: 'bottom-start',
+								middleware: [
+									offset(8),
+									flip(),
+									shift({ padding: 8 }),
+								],
+							}).then(({ x, y }) => {
+								if (popupElement) {
+									popupElement.style.left = `${x}px`
+									popupElement.style.top = `${y}px`
+								}
+							})
+						}
 
-					// Set up floating positioning
-					const updatePosition = () => {
-						computePosition(virtualReference, popupElement!, {
-							placement: 'bottom-start',
-							middleware: [
-								offset(8),
-								flip(),
-								shift({padding: 8}),
-							],
-						}).then(({x, y}) => {
-							if (popupElement) {
-								popupElement.style.left = `${x}px`
-								popupElement.style.top = `${y}px`
-							}
-						})
+						updatePosition()
+						cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
 					}
-
-					updatePosition()
-					cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
 				},
 
 				onUpdate(props: {
 					editor: Editor
-					clientRect: () => DOMRect
+					clientRect?: (() => DOMRect | null) | null
 					items: MentionItem[]
 					command: (item: MentionItem) => void
 				}) {
@@ -155,10 +156,12 @@ export default function mentionSuggestionSetup(projectId: number) {
 
 					// Update virtual reference
 					const rect = props.clientRect()
-					virtualReference.getBoundingClientRect = () => rect
+					if (rect) {
+						virtualReference.getBoundingClientRect = () => rect
+					}
 				},
 
-				onKeyDown(props: {event: KeyboardEvent}) {
+				onKeyDown(props: { event: KeyboardEvent }) {
 					if (props.event.key === 'Escape') {
 						if (props.event.isComposing) {
 							return false
