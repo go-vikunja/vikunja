@@ -14,17 +14,11 @@ interface MentionItem extends MentionNodeAttrs {
 	avatarUrl: string
 }
 
-let cachedUsers: MentionItem[] = []
-let cacheProjectId: number | null = null
-
-async function fetchUsersForProject(projectId: number): Promise<MentionItem[]> {
-	// Return cached users if we're asking for the same project
-	if (cacheProjectId === projectId && cachedUsers.length > 0) {
-		return cachedUsers
-	}
-
+async function searchUsersForProject(projectId: number, query: string): Promise<MentionItem[]> {
 	const projectUserService = new ProjectUserService()
-	const users = await projectUserService.getAll({ projectId }, {}) as IUser[]
+	
+	// Use server-side search with the 's' parameter
+	const users = await projectUserService.getAll({ projectId }, { s: query }) as IUser[]
 
 	// Fetch avatar URLs for all users
 	const usersWithAvatars = await Promise.all(
@@ -39,14 +33,12 @@ async function fetchUsersForProject(projectId: number): Promise<MentionItem[]> {
 		}),
 	)
 
-	// Cache the results
-	cachedUsers = usersWithAvatars
-	cacheProjectId = projectId
-
 	return usersWithAvatars
 }
 
 export default function mentionSuggestionSetup(projectId: number) {
+	let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
 	return {
 		char: '@',
 
@@ -55,24 +47,27 @@ export default function mentionSuggestionSetup(projectId: number) {
 				return []
 			}
 
-			try {
-				const users = await fetchUsersForProject(projectId)
-
-				if (!query) {
-					return users.slice(0, 5) // Limit to 5 users when no query
-				}
-
-				// Filter users by query (search in both display name and username)
-				return users
-					.filter(user =>
-						user.label.toLowerCase().includes(query.toLowerCase()) ||
-						user.username.toLowerCase().includes(query.toLowerCase()),
-					)
-					.slice(0, 10) // Limit to 10 results
-			} catch (error) {
-				console.error('Failed to fetch users for mentions:', error)
-				return []
+			// Clear existing timer
+			if (debounceTimer) {
+				clearTimeout(debounceTimer)
 			}
+
+			// Return a promise that resolves after debounce delay
+			return new Promise((resolve) => {
+				debounceTimer = setTimeout(async () => {
+					try {
+						// Use server-side search - the backend will handle searching by username and display name
+						const users = await searchUsersForProject(projectId, query)
+
+						// Limit results to avoid overwhelming the UI
+						const limit = query ? 10 : 5
+						resolve(users.slice(0, limit))
+					} catch (error) {
+						console.error('Failed to fetch users for mentions:', error)
+						resolve([])
+					}
+				}, 300) // 300ms debounce delay
+			})
 		},
 
 		render: () => {

@@ -17,7 +17,10 @@
 					<p class="mention-name">
 						{{ item.label }}
 					</p>
-					<p class="mention-username">
+					<p
+						v-if="item.label !== item.username"
+						class="mention-username"
+					>
 						@{{ item.username }}
 					</p>
 				</div>
