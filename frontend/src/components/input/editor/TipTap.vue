@@ -824,16 +824,16 @@ watch(
 
 	// Mention styles
 	.mention {
-		background-color: var(--primary-light, #e3f2fd);
-		color: var(--primary, #1976d2);
+		background-color: var(--grey-200);
+		color: var(--grey-800);
 		border-radius: 0.25rem;
 		padding: 0.125rem 0.375rem;
-		font-weight: 500;
+		font-weight: 400;
 		text-decoration: none;
 		cursor: default;
 		
 		&:hover {
-			background-color: var(--primary-lighter, #bbdefb);
+			background-color: var(--grey-300);
 		}
 	}
 
