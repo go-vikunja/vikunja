@@ -33,16 +33,11 @@ import (
 // with S3/MinIO storage backend. This test specifically validates S3 functionality
 // and will fail if S3 is not properly configured.
 func TestFileStorageIntegration(t *testing.T) {
-	if os.Getenv("VIKUNJA_TESTS_S3") != "1" {
-		t.Skip("Skipping integration tests - set VIKUNJA_TESTS_S3=1 to run")
-	}
-
 	// Initialize config to load environment variables
 	config.InitConfig()
 
 	// Ensure S3 is configured for this test
-	storageType := config.FilesType.GetString()
-	if storageType != "s3" {
+	if config.FilesType.GetString() != "s3" {
 		t.Skip("Skipping S3 integration tests - VIKUNJA_FILES_TYPE must be set to 's3'")
 	}
 
@@ -50,30 +45,6 @@ func TestFileStorageIntegration(t *testing.T) {
 	if config.FilesS3Endpoint.GetString() == "" {
 		t.Fatal("S3 integration test requires VIKUNJA_FILES_S3_ENDPOINT to be set")
 	}
-
-	// Save original config values
-	originalType := config.FilesType.GetString()
-	originalBasePath := config.FilesBasePath.GetString()
-	originalEndpoint := config.FilesS3Endpoint.GetString()
-	originalBucket := config.FilesS3Bucket.GetString()
-	originalRegion := config.FilesS3Region.GetString()
-	originalAccessKey := config.FilesS3AccessKey.GetString()
-	originalSecretKey := config.FilesS3SecretKey.GetString()
-	originalUsePathStyle := config.FilesS3UsePathStyle.GetBool()
-
-	// Restore config after test
-	defer func() {
-		config.FilesType.Set(originalType)
-		config.FilesBasePath.Set(originalBasePath)
-		config.FilesS3Endpoint.Set(originalEndpoint)
-		config.FilesS3Bucket.Set(originalBucket)
-		config.FilesS3Region.Set(originalRegion)
-		config.FilesS3AccessKey.Set(originalAccessKey)
-		config.FilesS3SecretKey.Set(originalSecretKey)
-		config.FilesS3UsePathStyle.Set(originalUsePathStyle)
-		// Reinitialize with original settings
-		_ = InitFileHandler()
-	}()
 
 	t.Run("Initialize file handler with s3", func(t *testing.T) {
 		err := InitFileHandler()
