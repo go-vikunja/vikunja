@@ -33,9 +33,6 @@ import (
 // with S3/MinIO storage backend. This test specifically validates S3 functionality
 // and will fail if S3 is not properly configured.
 func TestFileStorageIntegration(t *testing.T) {
-	// Initialize config to load environment variables
-	config.InitConfig()
-
 	// Ensure S3 is configured for this test
 	if config.FilesType.GetString() != "s3" {
 		t.Skip("Skipping S3 integration tests - VIKUNJA_FILES_TYPE must be set to 's3'")

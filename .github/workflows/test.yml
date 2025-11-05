@@ -271,6 +271,7 @@ jobs:
           go-version: stable
       - name: test S3 file storage integration
         env:
+          VIKUNJA_TESTS_USE_CONFIG: 1
           VIKUNJA_DATABASE_TYPE: sqlite
           VIKUNJA_FILES_TYPE: s3
           VIKUNJA_FILES_S3_ENDPOINT: http://localhost:9000
