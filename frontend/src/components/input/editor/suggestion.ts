@@ -190,7 +190,7 @@ export default function suggestionSetup(t) {
 					popupElement.style.position = 'absolute'
 					popupElement.style.top = '0'
 					popupElement.style.left = '0'
-					popupElement.style.zIndex = '1000'
+					popupElement.style.zIndex = '4700'
 					popupElement.appendChild(component.element!)
 					document.body.appendChild(popupElement)
 
