@@ -222,7 +222,7 @@ const ErrCodeWrongUsernameOrPassword = 1011
 
 // HTTPError holds the http error description
 func (err ErrWrongUsernameOrPassword) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeWrongUsernameOrPassword, Message: "Wrong username or password."}
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeWrongUsernameOrPassword, Message: "Wrong username or password."}
 }
 
 // IsErrWrongUsernameOrPassword checks if an error is a ErrWrongUsernameOrPassword.
