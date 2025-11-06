@@ -92,4 +92,3 @@ func TestMemoryUsage_Concurrent(t *testing.T) {
 		t.Logf("WARNING: High heap memory usage detected (%.2f MB). This may lead to OOM in production.", heapAllocMB)
 	}
 }
-
