@@ -252,7 +252,7 @@ jobs:
       - mage
     services:
       test-minio:
-        image: bitnamilegacy/minio:latest
+        image: bitnamilegacy/minio:latest@sha256:451fe6858cb770cc9d0e77ba811ce287420f781c7c1b806a386f6896471a349c
         env:
           MINIO_ROOT_USER: vikunja
           MINIO_ROOT_PASSWORD: vikunjatest
