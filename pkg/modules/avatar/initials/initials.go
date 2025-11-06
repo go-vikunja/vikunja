@@ -25,6 +25,7 @@ import (
 	"image/png"
 	"strconv"
 	"strings"
+	"sync"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
@@ -60,12 +61,70 @@ var (
 		{R: 121, G: 134, B: 203, A: 255},
 		{R: 241, G: 185, B: 29, A: 255},
 	}
+
+	// Global font parsed once at initialization
+	globalFont     *truetype.Font
+	globalFontOnce sync.Once
+	globalFontErr  error
+
+	// Font face cache by size
+	fontFaceCache   = make(map[int]font.Face)
+	fontFaceCacheMu sync.RWMutex
+
+	// Buffer pool for encoding
+	bufferPool = sync.Pool{
+		New: func() interface{} {
+			return new(bytes.Buffer)
+		},
+	}
 )
 
 const (
 	dpi         = 72
 	defaultSize = 1024
 )
+
+// getGlobalFont returns the parsed font, initializing it once
+func getGlobalFont() (*truetype.Font, error) {
+	globalFontOnce.Do(func() {
+		globalFont, globalFontErr = truetype.Parse(goregular.TTF)
+		if globalFontErr != nil {
+			log.Errorf("Failed to parse font: %v", globalFontErr)
+		}
+	})
+	return globalFont, globalFontErr
+}
+
+// getFontFace returns a cached font face for the given size
+func getFontFace(size int) (font.Face, error) {
+	// Try read lock first
+	fontFaceCacheMu.RLock()
+	face, exists := fontFaceCache[size]
+	fontFaceCacheMu.RUnlock()
+
+	if exists {
+		return face, nil
+	}
+
+	// Need to create a new face
+	f, err := getGlobalFont()
+	if err != nil {
+		return nil, err
+	}
+
+	newFace := truetype.NewFace(f, &truetype.Options{
+		Size:    float64(size),
+		DPI:     dpi,
+		Hinting: font.HintingNone,
+	})
+
+	// Store in cache with write lock
+	fontFaceCacheMu.Lock()
+	fontFaceCache[size] = newFace
+	fontFaceCacheMu.Unlock()
+
+	return newFace, nil
+}
 
 func drawImage(text rune, bg *color.RGBA) (img *image.RGBA64, err error) {
 
@@ -74,8 +133,8 @@ func drawImage(text rune, bg *color.RGBA) (img *image.RGBA64, err error) {
 
 	// Inspired by https://github.com/holys/initials-avatar
 
-	// Get the font
-	f, err := truetype.Parse(goregular.TTF)
+	// Get the cached global font
+	f, err := getGlobalFont()
 	if err != nil {
 		return img, err
 	}
@@ -84,15 +143,17 @@ func drawImage(text rune, bg *color.RGBA) (img *image.RGBA64, err error) {
 	img = image.NewRGBA64(image.Rect(0, 0, size, size))
 	draw.Draw(img, img.Bounds(), &image.Uniform{C: bg}, image.Point{}, draw.Src)
 
+	// Get cached font face
+	face, err := getFontFace(int(fontSize))
+	if err != nil {
+		return img, err
+	}
+
 	// Add the text
 	drawer := &font.Drawer{
-		Dst: img,
-		Src: image.White,
-		Face: truetype.NewFace(f, &truetype.Options{
-			Size:    fontSize,
-			DPI:     dpi,
-			Hinting: font.HintingNone,
-		}),
+		Dst:  img,
+		Src:  image.White,
+		Face: face,
 	}
 
 	// Font Index
@@ -210,12 +271,20 @@ func (p *Provider) getAvatarWithDepth(u *user.User, size int64, recursionDepth i
 		}
 
 		img := imaging.Resize(fullAvatar, int(size), int(size), imaging.Lanczos)
-		buf := &bytes.Buffer{}
+
+		// Get buffer from pool
+		buf := bufferPool.Get().(*bytes.Buffer)
+		buf.Reset()               // Clear any existing data
+		defer bufferPool.Put(buf) // Return to pool when done
+
 		err = png.Encode(buf, img)
 		if err != nil {
 			return nil, err
 		}
-		avatar := buf.Bytes()
+
+		// Copy the bytes since we're returning the buffer to the pool
+		avatar := make([]byte, buf.Len())
+		copy(avatar, buf.Bytes())
 		mimeType := "image/png"
 
 		cachedAvatar := CachedAvatar{
