@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/mail"
 	"reflect"
 	"strconv"
 	"time"
@@ -175,7 +176,12 @@ func (u *User) GetName() string {
 
 // GetNameAndFromEmail returns the name and email address for a user. Useful to use in notifications.
 func (u *User) GetNameAndFromEmail() string {
-	return u.GetName() + " via Vikunja <" + config.MailerFromEmail.GetString() + ">"
+	// Use RFC 5322 compliant address formatting to properly handle special characters like @ in names
+	addr := mail.Address{
+		Name:    u.GetName() + " via Vikunja",
+		Address: config.MailerFromEmail.GetString(),
+	}
+	return addr.String()
 }
 
 func (u *User) GetFailedTOTPAttemptsKey() string {
