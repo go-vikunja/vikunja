@@ -279,6 +279,13 @@ func addCommentCountToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 		return nil
 	}
 
+	zero := int64(0)
+	for _, taskId := range taskIDs {
+		if task, ok := taskMap[taskId]; ok {
+			task.CommentCount = &zero
+		}
+	}
+
 	type CommentCount struct {
 		TaskID int64 `xorm:"task_id"`
 		Count  int64 `xorm:"count"`
@@ -287,7 +294,7 @@ func addCommentCountToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 	counts := []CommentCount{}
 
 	if err := s.
-		Select("task_id, COUNT(*) as comment_count").
+		Select("task_id, COUNT(*) as count").
 		Where(builder.In("task_id", taskIDs)).
 		GroupBy("task_id").
 		Table("task_comments").
