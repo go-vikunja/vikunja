@@ -126,7 +126,7 @@ type Task struct {
 	Comments []*TaskComment `xorm:"-" json:"comments,omitempty"`
 
 	// Comment count of this task. Only present when fetching tasks with the `expand` parameter set to `comment_count`.
-	CommentCount int64 `xorm:"-" json:"comment_count,omitempty"`
+	CommentCount *int64 `xorm:"-" json:"comment_count,omitempty"`
 
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
 	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
