@@ -87,6 +87,14 @@
 					<Icon icon="paperclip" />	
 				</span>
 				<span
+					v-if="task.commentCount && task.commentCount > 0"
+					class="project-task-icon comment-count-icon"
+					:title="`${task.commentCount} ${task.commentCount === 1 ? 'comment' : 'comments'}`"
+				>
+					<Icon :icon="['far', 'comments']" />	
+					<span class="comment-count-badge">{{ task.commentCount }}</span>
+				</span>
+				<span
 					v-if="!isEditorContentEmpty(task.description)"
 					class="icon"
 				>
@@ -395,5 +403,27 @@ $task-background: var(--white);
 	margin: 8px 0 0;
 	inline-size: 100%;
 	block-size: 0.5rem;
+}
+
+.comment-count-icon {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	font-size: 0.875rem;
+	color: var(--grey-500);
+	background: var(--grey-100);
+	border-radius: $radius;
+	padding: 0.25rem; 
+	margin-inline-end: .25rem;
+	
+	.comment-count-badge {
+		font-weight: 600;
+		font-size: 0.75rem;
+		line-height: 1;
+	}
+
+	&:hover {
+		color: var(--primary);
+	}
 }
 </style>
