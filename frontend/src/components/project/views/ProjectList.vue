@@ -150,7 +150,7 @@ const {
 	{position: 'asc'},
 	() => projectId.value === -1
 		? null
-		: 'subtasks',
+		: ['subtasks', 'comment_count'],
 )
 
 const taskPositionService = ref(new TaskPositionService())
