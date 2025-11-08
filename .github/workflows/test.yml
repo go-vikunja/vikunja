@@ -246,6 +246,48 @@ jobs:
           chmod +x mage-static
           ./mage-static test:${{ matrix.test }}
 
+  test-s3-integration:
+    runs-on: ubuntu-latest
+    needs:
+      - mage
+    services:
+      test-minio:
+        image: bitnamilegacy/minio:latest@sha256:451fe6858cb770cc9d0e77ba811ce287420f781c7c1b806a386f6896471a349c
+        env:
+          MINIO_ROOT_USER: vikunja
+          MINIO_ROOT_PASSWORD: vikunjatest
+          MINIO_DEFAULT_BUCKETS: vikunja-test
+        ports:
+          - 9000:9000
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - name: Download Mage Binary
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: mage_bin
+      - name: Set up Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6
+        with:
+          go-version: stable
+      - name: test S3 file storage integration
+        env:
+          VIKUNJA_TESTS_USE_CONFIG: 1
+          VIKUNJA_DATABASE_TYPE: sqlite
+          VIKUNJA_FILES_TYPE: s3
+          VIKUNJA_FILES_S3_ENDPOINT: http://localhost:9000
+          VIKUNJA_FILES_S3_BUCKET: vikunja-test
+          VIKUNJA_FILES_S3_REGION: us-east-1
+          VIKUNJA_FILES_S3_ACCESSKEY: vikunja
+          VIKUNJA_FILES_S3_SECRETKEY: vikunjatest
+          VIKUNJA_FILES_S3_USEPATHSTYLE: true
+          VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
+          chmod +x mage-static
+          # Run only the S3 file storage integration tests
+          ./mage-static test:filter "TestFileStorageIntegration"
+
   frontend-lint:
     runs-on: ubuntu-latest
     steps:

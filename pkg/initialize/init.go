@@ -80,7 +80,10 @@ func FullInitWithoutAsync() {
 	LightInit()
 
 	// Initialize the files handler
-	files.InitFileHandler()
+	err := files.InitFileHandler()
+	if err != nil {
+		log.Fatalf("Could not init file handler: %s", err)
+	}
 
 	// Run the migrations
 	migration.Migrate(nil)
@@ -98,7 +101,7 @@ func FullInitWithoutAsync() {
 	ldap.InitializeLDAPConnection()
 
 	// Check all OpenID Connect providers at startup
-	_, err := openid.GetAllProviders()
+	_, err = openid.GetAllProviders()
 	if err != nil {
 		log.Errorf("Error initializing OpenID Connect providers: %s", err)
 	}

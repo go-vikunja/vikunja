@@ -18,9 +18,12 @@ package v1
 
 import (
 	"errors"
+	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
@@ -179,7 +182,21 @@ func GetTaskAttachment(c echo.Context) error {
 		_ = s.Rollback()
 		return handler.HandleHTTPError(err)
 	}
+	if config.FilesType.GetString() == "s3" {
+		// s3 files cannot use http.ServeContent as it requires a Seekable file
+		// Set response headers
+		c.Response().Header().Set("Content-Type", taskAttachment.File.Mime)
+		c.Response().Header().Set("Content-Disposition", "inline; filename=\""+taskAttachment.File.Name+"\"")
+		c.Response().Header().Set("Content-Length", strconv.FormatUint(taskAttachment.File.Size, 10))
+		c.Response().Header().Set("Last-Modified", taskAttachment.File.Created.UTC().Format(http.TimeFormat))
 
-	http.ServeContent(c.Response(), c.Request(), taskAttachment.File.Name, taskAttachment.File.Created, taskAttachment.File.File)
+		// Stream the file content directly to the response
+		_, err = io.Copy(c.Response().Writer, taskAttachment.File.File)
+		if err != nil {
+			return handler.HandleHTTPError(err)
+		}
+	} else {
+		http.ServeContent(c.Response(), c.Request(), taskAttachment.File.Name, taskAttachment.File.Created, taskAttachment.File.File)
+	}
 	return nil
 }
