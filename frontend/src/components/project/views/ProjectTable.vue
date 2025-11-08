@@ -335,7 +335,7 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	updated: false,
 	createdBy: false,
 	doneAt: false,
-	commentCount: true
+	commentCount: false
 }
 
 const SORT_BY_DEFAULT: SortBy = {
