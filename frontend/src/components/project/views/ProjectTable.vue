@@ -41,6 +41,9 @@
 							<FancyCheckbox v-model="activeColumns.assignees">
 								{{ $t('task.attributes.assignees') }}
 							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.commentCount">
+								Comments
+							</FancyCheckbox>
 							<FancyCheckbox v-model="activeColumns.dueDate">
 								{{ $t('task.attributes.dueDate') }}
 							</FancyCheckbox>
@@ -131,6 +134,9 @@
 											:order="sortBy.due_date"
 											@click="sort('due_date', $event)"
 										/>
+									</th>
+									<th v-if="activeColumns.commentCount">
+										Comments
 									</th>
 									<th v-if="activeColumns.startDate">
 										{{ $t('task.attributes.startDate') }}
@@ -228,6 +234,15 @@
 										v-if="activeColumns.dueDate"
 										:date="t.dueDate"
 									/>
+									<td v-if="activeColumns.commentCount">
+									<span
+										v-if="t.commentCount && t.commentCount > 0"
+										class="comment-badge"
+									>
+										<Icon icon="comment" />
+										{{ t.commentCount }}
+									</span>
+									</td>
 									<DateTableCell
 										v-if="activeColumns.startDate"
 										:date="t.startDate"
@@ -320,6 +335,7 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	updated: false,
 	createdBy: false,
 	doneAt: false,
+	commentCount: true
 }
 
 const SORT_BY_DEFAULT: SortBy = {
@@ -329,7 +345,12 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const taskList = useTaskList(() => props.projectId, () => props.viewId, sortBy.value)
+const taskList = useTaskList(
+	() => props.projectId, 
+	() => props.viewId, 
+	sortBy.value,
+	() => 'comment_count',
+)
 
 const {
 	loading,
