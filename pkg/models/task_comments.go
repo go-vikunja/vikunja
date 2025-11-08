@@ -274,6 +274,36 @@ func addCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Tas
 	return nil
 }
 
+func addCommentCountToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	type CommentCount struct {
+		TaskID int64 `xorm:"task_id"`
+		Count  int64 `xorm:"count"`
+	}
+
+	counts := []CommentCount{}
+
+	if err := s.
+		Select("task_id, COUNT(*) as comment_count").
+		Where(builder.In("task_id", taskIDs)).
+		GroupBy("task_id").
+		Table("task_comments").
+		Find(&counts); err != nil {
+		return err
+	}
+
+	for _, c := range counts {
+		if task, ok := taskMap[c.TaskID]; ok {
+			task.CommentCount = c.Count
+		}
+	}
+
+	return nil
+}
+
 func getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Session, taskIDs []int64, search string, page int, perPage int) (result []*TaskComment, resultCount int, numberOfTotalItems int64, err error) {
 	// Because we can't extend the type in general, we need to do this here.
 	// Not a good solution, but saves performance.

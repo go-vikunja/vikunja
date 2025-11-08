@@ -125,6 +125,9 @@ type Task struct {
 	// All comments of this task. Only present when fetching tasks with the `expand` parameter set to `comments`.
 	Comments []*TaskComment `xorm:"-" json:"comments,omitempty"`
 
+	// Comment count of this task. Only present when fetching tasks with the `expand` parameter set to `comment_count`.
+	CommentCount int64 `xorm:"-" json:"comment_count,omitempty"`
+
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
 	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
 
@@ -665,8 +668,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 			case TaskCollectionExpandSubtasks:
 				// already dealt with earlier
 			case TaskCollectionExpandBuckets:
-				err = addBucketsToTasks(s, a, taskIDs, taskMap)
-				if err != nil {
+				if err = addBucketsToTasks(s, a, taskIDs, taskMap); err != nil {
 					return err
 				}
 			case TaskCollectionExpandReactions:
@@ -675,8 +677,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 					return
 				}
 			case TaskCollectionExpandComments:
-				err = addCommentsToTasks(s, taskIDs, taskMap)
-				if err != nil {
+				if err = addCommentsToTasks(s, taskIDs, taskMap); err != nil {
+					return err
+				}
+			case TaskCollectionExpandCommentCount:
+				if err := addCommentCountToTasks(s, taskIDs, taskMap); err != nil {
 					return err
 				}
 			}
