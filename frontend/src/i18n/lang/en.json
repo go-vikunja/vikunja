@@ -909,6 +909,9 @@
       "addedSuccess": "The comment was added successfully.",
       "permalink": "Copy permalink to this comment"
     },
+    "mention": {
+      "noUsersFound": "No users found"
+    },
     "deferDueDate": {
       "title": "Defer due date",
       "1day": "1 day",

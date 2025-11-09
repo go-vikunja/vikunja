@@ -65,6 +65,7 @@
     "@tiptap/extension-image": "3.10.2",
     "@tiptap/extension-link": "3.10.2",
     "@tiptap/extension-list": "3.10.2",
+    "@tiptap/extension-mention": "3.10.2",
     "@tiptap/extension-table": "3.10.2",
     "@tiptap/extension-typography": "3.10.2",
     "@tiptap/extension-underline": "3.10.2",

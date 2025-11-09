@@ -101,6 +101,8 @@
 						:bottom-actions="actions[c.id]"
 						:show-save="true"
 						:enable-discard-shortcut="true"
+						:enable-mentions="true"
+						:mention-project-id="projectId"
 						initial-mode="preview"
 						@update:modelValue="
 							() => {
@@ -168,6 +170,8 @@
 								}"
 								:upload-callback="attachmentUpload"
 								:placeholder="$t('task.comment.placeholder')"
+								:enable-mentions="true"
+								:mention-project-id="projectId"
 								@save="addComment()"
 							/>
 						</div>
@@ -231,6 +235,7 @@ import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 
 const props = withDefaults(defineProps<{
 	taskId: number,
+	projectId: number,
 	canWrite?: boolean
 	initialComments: ITaskComment[]
 }>(), {

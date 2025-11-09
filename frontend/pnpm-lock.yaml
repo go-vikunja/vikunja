@@ -61,6 +61,9 @@ importers:
       '@tiptap/extension-list':
         specifier: 3.10.2
         version: 3.10.2(@tiptap/core@3.10.2(@tiptap/pm@3.10.2))(@tiptap/pm@3.10.2)
+      '@tiptap/extension-mention':
+        specifier: 3.10.2
+        version: 3.10.2(@tiptap/core@3.10.2(@tiptap/pm@3.10.2))(@tiptap/pm@3.10.2)(@tiptap/suggestion@3.10.2(@tiptap/core@3.10.2(@tiptap/pm@3.10.2))(@tiptap/pm@3.10.2))
       '@tiptap/extension-table':
         specifier: 3.10.2
         version: 3.10.2(@tiptap/core@3.10.2(@tiptap/pm@3.10.2))(@tiptap/pm@3.10.2)
@@ -2183,6 +2186,13 @@ packages:
     peerDependencies:
       '@tiptap/core': ^3.10.2
       '@tiptap/pm': ^3.10.2
+
+  '@tiptap/extension-mention@3.10.2':
+    resolution: {integrity: sha512-/gyUIMNKBoXOIy0SvjNYJ7G/yiYsnwwbnBo2hQgDza4p53KgnpTzg623/6GHDZSk7zy2S3O+5yWlzEmtrUva3A==}
+    peerDependencies:
+      '@tiptap/core': ^3.10.2
+      '@tiptap/pm': ^3.10.2
+      '@tiptap/suggestion': ^3.10.2
 
   '@tiptap/extension-ordered-list@3.10.2':
     resolution: {integrity: sha512-zs8wK1GNVedGENZPJOYUMtiLLPPASvJtabS2HTLPQGnpVeXfF0toftdVYDhGRGoQBBDLDjNyyW5ARzJwwXbTzQ==}
@@ -8960,6 +8970,12 @@ snapshots:
     dependencies:
       '@tiptap/core': 3.10.2(@tiptap/pm@3.10.2)
       '@tiptap/pm': 3.10.2
+
+  '@tiptap/extension-mention@3.10.2(@tiptap/core@3.10.2(@tiptap/pm@3.10.2))(@tiptap/pm@3.10.2)(@tiptap/suggestion@3.10.2(@tiptap/core@3.10.2(@tiptap/pm@3.10.2))(@tiptap/pm@3.10.2))':
+    dependencies:
+      '@tiptap/core': 3.10.2(@tiptap/pm@3.10.2)
+      '@tiptap/pm': 3.10.2
+      '@tiptap/suggestion': 3.10.2(@tiptap/core@3.10.2(@tiptap/pm@3.10.2))(@tiptap/pm@3.10.2)
 
   '@tiptap/extension-ordered-list@3.10.2(@tiptap/extension-list@3.10.2(@tiptap/core@3.10.2(@tiptap/pm@3.10.2))(@tiptap/pm@3.10.2))':
     dependencies:
