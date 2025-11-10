@@ -678,7 +678,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 					return
 				}
 			case TaskCollectionExpandComments:
-				err := addCommentsToTasks(s, taskIDs, taskMap)
+				err = addCommentsToTasks(s, taskIDs, taskMap)
 				if err != nil {
 					return err
 				}
