@@ -289,6 +289,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		tc.ProjectViewID = tf.ProjectViewID
 		tc.ProjectID = tf.ProjectID
 		tc.isSavedFilter = true
+		tc.Expand = tf.Expand
 
 		if tf.Filter != "" {
 			if tc.Filter != "" {

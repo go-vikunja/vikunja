@@ -862,6 +862,8 @@
       "relatedTasks": "Related Tasks",
       "reminders": "Reminders",
       "repeat": "Repeat",
+      "commentSingular": "comment",
+      "commentPlural": "comments",
       "commentCount": "Number of comments",
       "startDate": "Start Date",
       "title": "Title",

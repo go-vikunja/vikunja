@@ -89,7 +89,7 @@
 				<span
 					v-if="task.commentCount && task.commentCount > 0"
 					class="project-task-icon comment-count-icon"
-					v-tooltip="`${task.commentCount} ${task.commentCount === 1 ? 'comment' : 'comments'}`"
+					v-tooltip="`${task.commentCount} ${$t(task.commentCount == 1 ? 'task.attributes.commentSingular' : 'task.attributes.commentPlural')}`"
 				>
 					<Icon :icon="['far', 'comments']" />	
 					<span class="comment-count-badge">{{ task.commentCount }}</span>
