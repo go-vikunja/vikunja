@@ -421,9 +421,5 @@ $task-background: var(--white);
 		font-size: 0.75rem;
 		line-height: 1;
 	}
-
-	&:hover {
-		color: var(--primary);
-	}
 }
 </style>
