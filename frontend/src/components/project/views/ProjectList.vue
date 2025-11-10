@@ -156,7 +156,31 @@ const {
 const taskPositionService = ref(new TaskPositionService())
 
 // Saved filter composable for accessing filter data
-const _savedFilter = useSavedFilter(() => projectId.value < 0 ? projectId.value : undefined).filter
+const savedFilter = useSavedFilter(() => projectId.value < 0 ? projectId.value : undefined).filter
+
+// Load saved filter's sort settings into params
+watch(
+	savedFilter,
+	(filter) => {
+		if (!filter || !filter.filters) {
+			return
+		}
+
+		// Apply saved filter's sort settings to params
+		if (filter.filters.sort_by && filter.filters.sort_by.length > 0) {
+			params.value.sort_by = filter.filters.sort_by
+			params.value.order_by = filter.filters.order_by || ['asc', 'desc']
+
+			// Apply to sortByParam for task loading
+			sortByParam.value = {}
+			sortByParam.value[filter.filters.sort_by[0]] = filter.filters.order_by?.[0] || 'asc'
+
+			// Reload tasks with the new sort settings
+			loadTasks()
+		}
+	},
+	{ immediate: true },
+)
 
 const tasks = ref<ITask[]>([])
 watch(
@@ -254,9 +278,10 @@ async function saveTaskPosition(e) {
 }
 
 function prepareFiltersAndLoadTasks() {
-	if (isAlphabeticalSorting.value) {
+	// Apply sorting from params
+	if (params.value.sort_by.length > 0) {
 		sortByParam.value = {}
-		sortByParam.value[ALPHABETICAL_SORT] = 'asc'
+		sortByParam.value[params.value.sort_by[0]] = params.value.order_by?.[0] || 'asc'
 	}
 
 	loadTasks()

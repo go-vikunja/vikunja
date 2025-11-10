@@ -229,27 +229,37 @@ describe('Task', () => {
 		it('provides back navigation to the project in the kanban view on mobile', () => {
 			cy.viewport('iphone-8')
 
-			const tasks = TaskFactory.create(1)
-			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
-			cy.visit('/projects/1/4')
-			cy.wait('@loadTasks')
-			cy.get('.kanban-view .tasks .task')
+			const tasks = TaskFactory.create(1, {
+				project_id: projects[0].id,
+			})
+			TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
+			cy.visit(`/projects/${projects[0].id}/${buckets[0].project_view_id}`)
+			cy.get('.kanban-view .bucket .tasks .task')
 				.first()
 				.click()
 			cy.get('.task-view .back-button')
 				.should('be.visible')
 				.click()
-			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
+			cy.location('pathname').should('match', /\/projects\/\d+\/\d+/)
 		})
 		
 		it('does not provide back navigation to the project in the kanban view on desktop', () => {
 			cy.viewport('macbook-15')
 
-			const tasks = TaskFactory.create(1)
-			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
-			cy.visit('/projects/1/4')
-			cy.wait('@loadTasks')
-			cy.get('.kanban-view .tasks .task')
+			const tasks = TaskFactory.create(1, {
+				project_id: projects[0].id,
+			})
+			TaskBucketFactory.create(1, {
+				task_id: tasks[0].id,
+				bucket_id: buckets[0].id,
+				project_view_id: buckets[0].project_view_id,
+			})
+			cy.visit(`/projects/${projects[0].id}/${buckets[0].project_view_id}`)
+			cy.get('.kanban-view .bucket .tasks .task')
 				.first()
 				.click()
 			cy.get('.task-view .back-button')

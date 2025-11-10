@@ -7,7 +7,7 @@ import BucketModel from '@/models/bucket'
 export type ExpandTaskFilterParam = 'subtasks' | 'buckets' | 'reactions' | null
 
 export interface TaskFilterParams {
-	sort_by: ('start_date' | 'end_date' | 'due_date' | 'done' | 'id' | 'position' | 'title')[],
+	sort_by: ('start_date' | 'end_date' | 'due_date' | 'done' | 'id' | 'position' | 'title' | 'priority')[],
 	order_by: ('asc' | 'desc')[],
 	filter: string,
 	filter_include_nulls: boolean,

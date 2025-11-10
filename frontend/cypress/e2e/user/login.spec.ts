@@ -2,9 +2,9 @@ import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
 
 const testAndAssertFailed = fixture => {
-	cy.intercept(Cypress.env('API_URL') + '/login*').as('login')
-	
 	cy.visit('/login')
+	cy.intercept('POST', Cypress.env('API_URL') + '/login').as('login')
+
 	cy.get('input[id=username]').type(fixture.username)
 	cy.get('input[id=password]').type(fixture.password)
 	cy.get('.button').contains('Login').click()

@@ -62,6 +62,7 @@
 						class="has-no-shadow has-no-border"
 						:has-footer="false"
 						:change-immediately="true"
+						:show-position-sort="false"
 					/>
 				</div>
 			</div>

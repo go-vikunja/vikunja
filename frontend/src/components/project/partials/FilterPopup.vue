@@ -21,6 +21,7 @@
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
+			:show-position-sort="showPositionSort"
 			show-close
 			@close="modalOpen = false"
 			@showResults="showResults"
@@ -38,11 +39,16 @@ import {type IProjectView} from '@/modelTypes/IProjectView'
 import {type IProject} from '@/modelTypes/IProject'
 import {useProjectStore} from '@/stores/projects'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	modelValue: TaskFilterParams,
 	projectId?: IProject['id'],
 	viewId?: IProjectView['id'],
-}>()
+	showPositionSort?: boolean,
+}>(), {
+	projectId: undefined,
+	viewId: undefined,
+	showPositionSort: true,
+})
 
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams]
@@ -50,7 +56,7 @@ const emit = defineEmits<{
 
 const projectStore = useProjectStore()
 
-const value = ref<TaskFilterParams>({})
+const value = ref<TaskFilterParams>(props.modelValue)
 const filtersRef = ref()
 
 watch(
