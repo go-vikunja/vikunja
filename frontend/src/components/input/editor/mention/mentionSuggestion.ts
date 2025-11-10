@@ -7,6 +7,7 @@ import ProjectUserService from '@/services/projectUsers'
 import { fetchAvatarBlobUrl, getDisplayName } from '@/models/user'
 import type { IUser } from '@/modelTypes/IUser'
 import type { MentionNodeAttrs } from '@tiptap/extension-mention'
+
 interface MentionItem extends MentionNodeAttrs {
 	id: string
 	label: string
@@ -25,7 +26,7 @@ async function searchUsersForProject(projectId: number, query: string): Promise<
 		users.map(async (user) => {
 			const avatarUrl = await fetchAvatarBlobUrl(user, 32)
 			return {
-				id: String(user.id),
+				id: user.username,
 				label: getDisplayName(user),
 				username: user.username,
 				avatarUrl: avatarUrl as string,

@@ -167,7 +167,7 @@ import {Node} from '@tiptap/pm/model'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
-import mentionSuggestionSetup from './mentionSuggestion'
+import mentionSuggestionSetup from './mention/mentionSuggestion'
 
 import {common, createLowlight} from 'lowlight'
 
