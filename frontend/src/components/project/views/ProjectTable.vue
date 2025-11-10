@@ -42,7 +42,7 @@
 								{{ $t('task.attributes.assignees') }}
 							</FancyCheckbox>
 							<FancyCheckbox v-model="activeColumns.commentCount">
-								Number of comments
+								{{ $t('task.attributes.commentCount') }}
 							</FancyCheckbox>
 							<FancyCheckbox v-model="activeColumns.dueDate">
 								{{ $t('task.attributes.dueDate') }}
@@ -136,7 +136,7 @@
 										/>
 									</th>
 									<th v-if="activeColumns.commentCount">
-										Number of comments
+										{{ $t('task.attributes.commentCount') }}
 									</th>
 									<th v-if="activeColumns.startDate">
 										{{ $t('task.attributes.startDate') }}

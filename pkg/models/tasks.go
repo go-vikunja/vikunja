@@ -668,7 +668,8 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 			case TaskCollectionExpandSubtasks:
 				// already dealt with earlier
 			case TaskCollectionExpandBuckets:
-				if err = addBucketsToTasks(s, a, taskIDs, taskMap); err != nil {
+				err := addBucketsToTasks(s, a, taskIDs, taskMap)
+				if err != nil {
 					return err
 				}
 			case TaskCollectionExpandReactions:
@@ -677,11 +678,13 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 					return
 				}
 			case TaskCollectionExpandComments:
-				if err = addCommentsToTasks(s, taskIDs, taskMap); err != nil {
+				err := addCommentsToTasks(s, taskIDs, taskMap)
+				if err != nil {
 					return err
 				}
 			case TaskCollectionExpandCommentCount:
-				if err := addCommentCountToTasks(s, taskIDs, taskMap); err != nil {
+				err := addCommentCountToTasks(s, taskIDs, taskMap)
+				if err != nil {
 					return err
 				}
 			}
