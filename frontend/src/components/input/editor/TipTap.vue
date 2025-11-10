@@ -146,7 +146,7 @@ import EditorToolbar from './EditorToolbar.vue'
 
 import StarterKit from '@tiptap/starter-kit'
 import {Extension, mergeAttributes} from '@tiptap/core'
-import {EditorContent, type Extensions, useEditor} from '@tiptap/vue-3'
+import {EditorContent, type Extensions, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {marked} from 'marked'
 import {BubbleMenu} from '@tiptap/vue-3/menus'
@@ -168,6 +168,7 @@ import {Node} from '@tiptap/pm/model'
 import Commands from './commands'
 import suggestionSetup from './suggestion'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
+import MentionUser from './mention/MentionUser.vue'
 
 import {common, createLowlight} from 'lowlight'
 
@@ -494,6 +495,23 @@ if (props.enableMentions && props.mentionProjectId > 0) {
 				class: 'mention',
 			},
 			suggestion: mentionSuggestionSetup(props.mentionProjectId),
+		}).extend({
+
+			parseHTML() {
+				return [
+					{
+						tag: 'mention-user',
+					},
+				]
+			},
+
+			renderHTML({ HTMLAttributes }) {
+				return ['mention-user', mergeAttributes(HTMLAttributes)]
+			},
+
+			addNodeView() {
+				return VueNodeViewRenderer(MentionUser)
+			},
 		}),
 	)
 }
@@ -820,21 +838,6 @@ watch(
 		background-color: var(--grey-200);
 		color: var(--grey-700);
 		border-radius: $radius;
-	}
-
-	// Mention styles
-	.mention {
-		background-color: var(--grey-200);
-		color: var(--grey-800);
-		border-radius: 0.25rem;
-		padding: 0.125rem 0.375rem;
-		font-weight: 400;
-		text-decoration: none;
-		cursor: default;
-		
-		&:hover {
-			background-color: var(--grey-300);
-		}
 	}
 
 	pre {
