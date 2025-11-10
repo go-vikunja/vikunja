@@ -34,7 +34,7 @@ type TaskComment struct {
 	Comment  string     `xorm:"text not null" json:"comment" valid:"dbtext,required"`
 	AuthorID int64      `xorm:"not null" json:"-"`
 	Author   *user.User `xorm:"-" json:"author"`
-	TaskID   int64      `xorm:"not null" json:"-" param:"task"`
+	TaskID   int64      `xorm:"index not null" json:"-" param:"task"`
 
 	Reactions ReactionMap `xorm:"-" json:"reactions"`
 
