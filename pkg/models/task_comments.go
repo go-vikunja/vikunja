@@ -280,8 +280,8 @@ func addCommentCountToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 	}
 
 	zero := int64(0)
-	for _, taskId := range taskIDs {
-		if task, ok := taskMap[taskId]; ok {
+	for _, taskID := range taskIDs {
+		if task, ok := taskMap[taskID]; ok {
 			task.CommentCount = &zero
 		}
 	}

@@ -235,13 +235,13 @@
 										:date="t.dueDate"
 									/>
 									<td v-if="activeColumns.commentCount">
-									<span
-										v-if="t.commentCount && t.commentCount > 0"
-										class="comment-badge"
-									>
-										<Icon icon="comment" />
-										{{ t.commentCount }}
-									</span>
+										<span
+											v-if="t.commentCount && t.commentCount > 0"
+											class="comment-badge"
+										>
+											<Icon icon="comment" />
+											{{ t.commentCount }}
+										</span>
 									</td>
 									<DateTableCell
 										v-if="activeColumns.startDate"
@@ -335,7 +335,7 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	updated: false,
 	createdBy: false,
 	doneAt: false,
-	commentCount: false
+	commentCount: false,
 }
 
 const SORT_BY_DEFAULT: SortBy = {

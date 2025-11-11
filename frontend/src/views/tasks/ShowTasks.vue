@@ -192,7 +192,7 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 		filter: 'done = false',
 		filter_include_nulls: props.showNulls,
 		s: '',
-		expand: 'comment_count'
+		expand: 'comment_count',
 	}
 
 	if (!showAll.value) {
