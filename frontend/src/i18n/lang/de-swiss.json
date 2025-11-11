@@ -909,6 +909,9 @@
 			"addedSuccess": "Din Kommentar isch erfolgriich hinzuegfüegt worde.",
 			"permalink": "Permalink zu diesem Kommentar kopieren"
 		},
+		"mention": {
+			"noUsersFound": "Keine Nutzer:innen gefunden"
+		},
 		"deferDueDate": {
 			"title": "Fälligkeitsdatum verschiebe",
 			"1day": "Ein Taag",

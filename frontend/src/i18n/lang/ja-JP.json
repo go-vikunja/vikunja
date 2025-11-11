@@ -909,6 +909,9 @@
 			"addedSuccess": "コメントは正常に追加されました。",
 			"permalink": "コメントへのリンクをコピー"
 		},
+		"mention": {
+			"noUsersFound": "ユーザーが見つかりません"
+		},
 		"deferDueDate": {
 			"title": "延期",
 			"1day": "1日後",
