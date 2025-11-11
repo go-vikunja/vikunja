@@ -319,10 +319,6 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 				tf.FilterTimezone = view.Filter.FilterTimezone
 			}
 
-			if view.Filter.FilterIncludeNulls {
-				tf.FilterIncludeNulls = view.Filter.FilterIncludeNulls
-			}
-
 			if view.Filter.Search != "" {
 				search = view.Filter.Search
 			}
