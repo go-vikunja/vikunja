@@ -8587,6 +8587,10 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.Bucket"
                     }
                 },
+                "comment_count": {
+                    "description": "Comment count of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `comment_count` + "`" + `.",
+                    "type": "integer"
+                },
                 "comments": {
                     "description": "All comments of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `comments` + "`" + `.",
                     "type": "array",
