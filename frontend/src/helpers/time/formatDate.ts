@@ -89,9 +89,9 @@ export function formatDisplayDateFormat(date: Date | string | null, format: Date
 	}
 
 	// Determine the time format string to use
-	// LT = localized time (uses locale's 12/24 hour preference)
-	// HH:mm = 24-hour format
-	const timeFormatString = timeFormat === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'LT'
+	// For 24-hour: HH:mm (24-hour format)
+	// For 12-hour: hh:mm A (explicit 12-hour format with AM/PM, ignoring locale default)
+	const timeFormatString = timeFormat === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A'
 
 	switch (format) {
 		case DATE_DISPLAY.MM_DD_YYYY:
