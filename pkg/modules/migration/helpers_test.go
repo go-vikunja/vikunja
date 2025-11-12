@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"sync/atomic"
 	"testing"
 )
@@ -53,17 +54,25 @@ func TestDoPostWithHeaders_RetriesOn500(t *testing.T) {
 
 func TestDoPostWithHeaders_GivesUpAfter3Retries(t *testing.T) {
 	var attempts atomic.Int32
+	expectedBody := "Internal Server Error: database connection failed"
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		attempts.Add(1)
 		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(expectedBody))
 	}))
 	defer server.Close()
 
 	form := url.Values{"key": {"value"}}
 	resp, err := DoPostWithHeaders(server.URL, form, map[string]string{})
 
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
+	if err == nil {
+		t.Fatal("expected error after exhausted retries, got nil")
+	}
+	if !strings.Contains(err.Error(), expectedBody) {
+		t.Errorf("expected error message to contain response body %q, got: %s", expectedBody, err.Error())
+	}
+	if resp == nil {
+		t.Fatal("expected response to be returned with error, got nil")
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusInternalServerError {

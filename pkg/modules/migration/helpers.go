@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"fmt"
+	"io"
 	"math"
 	"math/big"
 	"net/http"
@@ -92,9 +94,19 @@ func DoPostWithHeaders(url string, form url.Values, headers map[string]string) (
 			return resp, nil
 		}
 
-		// Don't retry on last attempt
+		// Return error on last attempt if still getting 5xx
 		if attempt == maxRetries-1 {
-			return resp, nil
+			bodyBytes, readErr := io.ReadAll(resp.Body)
+			resp.Body.Close()
+
+			// Re-create the body so the caller can still read it if needed
+			resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+			if readErr != nil {
+				return resp, fmt.Errorf("request failed after %d attempts with status code %d (could not read response body: %w)", maxRetries, resp.StatusCode, readErr)
+			}
+
+			return resp, fmt.Errorf("request failed after %d attempts with status code %d: %s", maxRetries, resp.StatusCode, string(bodyBytes))
 		}
 
 		// Close the body before retrying
@@ -108,5 +120,5 @@ func DoPostWithHeaders(url string, form url.Values, headers map[string]string) (
 		time.Sleep(delay + jitter)
 	}
 
-	return resp, nil
+	return nil, fmt.Errorf("request failed after %d attempts", maxRetries)
 }
