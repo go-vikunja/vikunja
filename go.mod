@@ -26,7 +26,7 @@ require (
 	github.com/bbrks/go-blurhash v1.1.1
 	github.com/c2h5oh/datasize v0.0.0-20231215233829-aa82cc1e6500
 	github.com/coreos/go-oidc/v3 v3.16.0
-	github.com/cweill/gotests v1.8.0
+	github.com/cweill/gotests v1.9.0
 	github.com/d4l3k/messagediff v1.2.1
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
