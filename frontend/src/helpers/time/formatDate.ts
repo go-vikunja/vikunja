@@ -88,22 +88,22 @@ export function formatDisplayDateFormat(date: Date | string | null, format: Date
 
 	switch (format) {
 		case DATE_DISPLAY.MM_DD_YYYY:
-			return formatDate(date, 'MM-DD-YYYY')
+			return formatDate(date, 'MM-DD-YYYY LT')
 		case DATE_DISPLAY.DD_MM_YYYY:
-			return formatDate(date, 'DD-MM-YYYY')
+			return formatDate(date, 'DD-MM-YYYY LT')
 		case DATE_DISPLAY.YYYY_MM_DD:
-			return formatDate(date, 'YYYY-MM-DD')
+			return formatDate(date, 'YYYY-MM-DD LT')
 		case DATE_DISPLAY.MM_SLASH_DD_YYYY:
-			return formatDate(date, 'MM/DD/YYYY')
+			return formatDate(date, 'MM/DD/YYYY LT')
 		case DATE_DISPLAY.DD_SLASH_MM_YYYY:
-			return formatDate(date, 'DD/MM/YYYY')
+			return formatDate(date, 'DD/MM/YYYY LT')
 		case DATE_DISPLAY.YYYY_SLASH_MM_DD:
-			return formatDate(date, 'YYYY/MM/DD')
+			return formatDate(date, 'YYYY/MM/DD LT')
 		case DATE_DISPLAY.DAY_MONTH_YEAR: {
-			return new Intl.DateTimeFormat(i18n.global.locale.value, {day: 'numeric', month: 'long', year: 'numeric'}).format(date)
+			return new Intl.DateTimeFormat(i18n.global.locale.value, {day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric'}).format(date)
 		}
 		case DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR: {
-			return new Intl.DateTimeFormat(i18n.global.locale.value, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}).format(date)
+			return new Intl.DateTimeFormat(i18n.global.locale.value, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric'}).format(date)
 		}
 		case DATE_DISPLAY.RELATIVE:
 		default:

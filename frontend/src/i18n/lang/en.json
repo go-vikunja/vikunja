@@ -107,12 +107,12 @@
         "dateDisplay": "Date display format",
         "dateDisplayOptions": {
           "relative": "Relative (e.g. 3 days ago)",
-          "mm-dd-yyyy": "MM-DD-YYYY",
-          "dd-mm-yyyy": "DD-MM-YYYY",
-          "yyyy-mm-dd": "YYYY-MM-DD",
-          "mm\/dd\/yyyy": "MM\/DD\/YYYY",
-          "dd\/mm\/yyyy": "DD\/MM\/YYYY",
-          "yyyy\/mm\/dd": "YYYY\/MM\/DD"
+          "mm-dd-yyyy": "MM-DD-YYYY HH:mm",
+          "dd-mm-yyyy": "DD-MM-YYYY HH:mm",
+          "yyyy-mm-dd": "YYYY-MM-DD HH:mm",
+          "mm\/dd\/yyyy": "MM\/DD\/YYYY HH:mm",
+          "dd\/mm\/yyyy": "DD\/MM\/YYYY HH:mm",
+          "yyyy\/mm\/dd": "YYYY\/MM\/DD HH:mm"
         },
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },

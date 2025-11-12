@@ -13,22 +13,26 @@ const now = new Date(Date.UTC(2022, 6, 30, 12))
 
 const expectedFormats = {
 	[DATE_DISPLAY.RELATIVE]: dayjs(createdDate).from(now),
-	[DATE_DISPLAY.MM_DD_YYYY]: dayjs(createdDate).format('MM-DD-YYYY'),
-	[DATE_DISPLAY.DD_MM_YYYY]: dayjs(createdDate).format('DD-MM-YYYY'),
-	[DATE_DISPLAY.YYYY_MM_DD]: dayjs(createdDate).format('YYYY-MM-DD'),
-	[DATE_DISPLAY.MM_SLASH_DD_YYYY]: dayjs(createdDate).format('MM/DD/YYYY'),
-	[DATE_DISPLAY.DD_SLASH_MM_YYYY]: dayjs(createdDate).format('DD/MM/YYYY'),
-	[DATE_DISPLAY.YYYY_SLASH_MM_DD]: dayjs(createdDate).format('YYYY/MM/DD'),
+	[DATE_DISPLAY.MM_DD_YYYY]: dayjs(createdDate).format('MM-DD-YYYY LT'),
+	[DATE_DISPLAY.DD_MM_YYYY]: dayjs(createdDate).format('DD-MM-YYYY LT'),
+	[DATE_DISPLAY.YYYY_MM_DD]: dayjs(createdDate).format('YYYY-MM-DD LT'),
+	[DATE_DISPLAY.MM_SLASH_DD_YYYY]: dayjs(createdDate).format('MM/DD/YYYY LT'),
+	[DATE_DISPLAY.DD_SLASH_MM_YYYY]: dayjs(createdDate).format('DD/MM/YYYY LT'),
+	[DATE_DISPLAY.YYYY_SLASH_MM_DD]: dayjs(createdDate).format('YYYY/MM/DD LT'),
 	[DATE_DISPLAY.DAY_MONTH_YEAR]: new Intl.DateTimeFormat('en', {
 		day: 'numeric',
 		month: 'long',
 		year: 'numeric',
+		hour: 'numeric',
+		minute: 'numeric',
 	}).format(createdDate),
 	[DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR]: new Intl.DateTimeFormat('en', {
 		weekday: 'long',
 		day: 'numeric',
 		month: 'long',
 		year: 'numeric',
+		hour: 'numeric',
+		minute: 'numeric',
 	}).format(createdDate),
 }
 
