@@ -17,7 +17,6 @@
 package initials
 
 import (
-	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/user"
@@ -50,6 +49,8 @@ func TestGetAvatar(t *testing.T) {
 		assert.Contains(t, svgString, ">J<")
 		// Should have a background color
 		assert.Contains(t, svgString, "fill=\"#")
+		// Should have bold font weight
+		assert.Contains(t, svgString, "font-weight=\"bold\"")
 	})
 
 	t.Run("generates valid SVG with username when name is empty", func(t *testing.T) {
@@ -90,17 +91,16 @@ func TestGetAvatar(t *testing.T) {
 		avatar2, _, err := provider.GetAvatar(testUser, 200)
 		require.NoError(t, err)
 
-		// Both should use the same color (user ID 0 -> index 0)
+		// Both should use the same colors (user ID 0 -> index 0)
 		svg1 := string(avatar1)
 		svg2 := string(avatar2)
 
-		// Extract the color from the first avatar
-		colorStart := strings.Index(svg1, `fill="#`) + 6
-		colorEnd := colorStart + 7
-		color1 := svg1[colorStart:colorEnd]
-
-		// Verify the second avatar has the same color
-		assert.Contains(t, svg2, `fill="`+color1)
+		// Should have the first background color (index 0)
+		assert.Contains(t, svg1, `fill="#e0f8d9"`)
+		assert.Contains(t, svg2, `fill="#e0f8d9"`)
+		// Should have the first text color (index 0)
+		assert.Contains(t, svg1, `fill="#005f00"`)
+		assert.Contains(t, svg2, `fill="#005f00"`)
 	})
 
 	t.Run("escapes special characters", func(t *testing.T) {

@@ -33,15 +33,21 @@ type Provider struct {
 func (p *Provider) FlushCache(_ *user.User) error { return nil }
 
 var avatarBgColors = []string{
-	"#45bdf3", // rgb(69, 189, 243)
-	"#e08f70", // rgb(224, 143, 112)
-	"#4db6ac", // rgb(77, 182, 172)
-	"#9575cd", // rgb(149, 117, 205)
-	"#b0855e", // rgb(176, 133, 94)
-	"#f06292", // rgb(240, 98, 146)
-	"#a3d36c", // rgb(163, 211, 108)
-	"#7986cb", // rgb(121, 134, 203)
-	"#f1b91d", // rgb(241, 185, 29)
+	"#e0f8d9",
+	"#e3f5f8",
+	"#faeefb",
+	"#f1efff",
+	"#ffecf0",
+	"#ffefe4",
+}
+
+var avatarTextColors = []string{
+	"#005f00",
+	"#00548c",
+	"#822198",
+	"#5d26cd",
+	"#9f0850",
+	"#9b2200",
 }
 
 // GetAvatar returns an initials avatar for a user as SVG
@@ -59,8 +65,10 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 	firstRune := []rune(strings.ToUpper(avatarText))[0]
 	initial := html.EscapeString(string(firstRune))
 
-	// Select background color based on user ID
-	bgColor := avatarBgColors[int(u.ID)%len(avatarBgColors)]
+	// Select background and text colors based on user ID
+	colorIndex := int(u.ID) % len(avatarBgColors)
+	bgColor := avatarBgColors[colorIndex]
+	textColor := avatarTextColors[colorIndex]
 
 	// Convert size to string
 	sizeStr := strconv.FormatInt(size, 10)
@@ -68,8 +76,8 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 	// Generate SVG
 	svg := fmt.Sprintf(`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="%s" height="%s">
   <rect width="100" height="100" fill="%s"/>
-  <text x="50" y="50" font-family="sans-serif" font-size="50" fill="white" text-anchor="middle" dominant-baseline="central">%s</text>
-</svg>`, sizeStr, sizeStr, bgColor, initial)
+  <text x="50" y="50" font-family="sans-serif" font-size="50" font-weight="bold" fill="%s" text-anchor="middle" dominant-baseline="central">%s</text>
+</svg>`, sizeStr, sizeStr, bgColor, textColor, initial)
 
 	return []byte(svg), "image/svg+xml", nil
 }
