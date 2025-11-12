@@ -21,6 +21,7 @@ declare global {
 		SENTRY_DSN?: string;
 		ALLOW_ICON_CHANGES: boolean;
 		CUSTOM_LOGO_URL?: string;
+		CUSTOM_LOGO_URL_DARK?: string;
 	}
 }
 
