@@ -58,7 +58,7 @@
     "@github/hotkey": "3.1.1",
     "@intlify/unplugin-vue-i18n": "11.0.1",
     "@kyvg/vue3-notification": "3.4.2",
-    "@sentry/vue": "10.23.0",
+    "@sentry/vue": "10.25.0",
     "@tiptap/core": "3.10.5",
     "@tiptap/extension-code-block-lowlight": "3.10.5",
     "@tiptap/extension-hard-break": "3.10.5",
