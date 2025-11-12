@@ -19,9 +19,13 @@ package migration
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"math"
+	"math/big"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // DownloadFile downloads a file and returns its contents
@@ -61,17 +65,48 @@ func DoPost(url string, form url.Values) (resp *http.Response, err error) {
 
 // DoPostWithHeaders does an api request and allows to pass in arbitrary headers
 func DoPostWithHeaders(url string, form url.Values, headers map[string]string) (resp *http.Response, err error) {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, strings.NewReader(form.Encode()))
-	if err != nil {
-		return
-	}
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	for key, value := range headers {
-		req.Header.Add(key, value)
-	}
+	const maxRetries = 3
+	const baseDelay = 100 * time.Millisecond
 
 	hc := http.Client{}
-	return hc.Do(req)
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, strings.NewReader(form.Encode()))
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+		for key, value := range headers {
+			req.Header.Add(key, value)
+		}
+
+		resp, err = hc.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		// Don't retry on non-5xx status codes
+		if resp.StatusCode < 500 {
+			return resp, nil
+		}
+
+		// Don't retry on last attempt
+		if attempt == maxRetries-1 {
+			return resp, nil
+		}
+
+		// Close the body before retrying
+		resp.Body.Close()
+
+		// Exponential backoff with jitter
+		delay := baseDelay * time.Duration(math.Pow(2, float64(attempt)))
+		maxJitter := int64(delay / 2)
+		jitterBig, _ := rand.Int(rand.Reader, big.NewInt(maxJitter))
+		jitter := time.Duration(jitterBig.Int64())
+		time.Sleep(delay + jitter)
+	}
+
+	return resp, nil
 }
