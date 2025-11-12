@@ -1,3 +1,5 @@
+import type {APIRequestContext} from '@playwright/test'
+
 /**
  * Seeds a db table with data. If a data object is provided as the second argument, it will load the fixtures
  * file for the table and merge the data from it with the passed data. This allows you to override specific
@@ -8,17 +10,18 @@
  * @param table
  * @param data
  */
-export function seed(table, data = {}, truncate = true) {
+export async function seed(apiContext: APIRequestContext, table: string, data: any = {}, truncate = true) {
 	if (data === null) {
 		data = []
 	}
 
-	cy.request({
-		method: 'PATCH',
-		url: `${Cypress.env('API_URL')}/test/${table}?truncate=${truncate ? 'true' : 'false'}`,
+	const apiUrl = process.env.API_URL || 'http://localhost:3456/api/v1'
+	const testSecret = process.env.TEST_SECRET || 'averyLongSecretToSe33dtheDB'
+
+	await apiContext.patch(`${apiUrl}/test/${table}?truncate=${truncate ? 'true' : 'false'}`, {
 		headers: {
-			'Authorization': Cypress.env('TEST_SECRET'),
+			'Authorization': testSecret,
 		},
-		body: data,
+		data: data,
 	})
 }

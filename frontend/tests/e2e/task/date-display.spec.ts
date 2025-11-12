@@ -1,10 +1,11 @@
+import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {login} from '../../support/authenticateUser'
 import {DATE_DISPLAY} from '../../../src/constants/dateDisplay'
 import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
+import relativeTime from 'dayjs/plugin/relativeTime.js'
 
 dayjs.extend(relativeTime)
 
@@ -32,26 +33,26 @@ const expectedFormats = {
 	}).format(createdDate),
 }
 
-describe('Date display setting', () => {
+test.describe('Date display setting', () => {
 	Object.entries(expectedFormats).forEach(([format, expected]) => {
-		it(`shows ${format}`, () => {
-			const user = UserFactory.create(1, {
+		test(`shows ${format}`, async ({page, apiContext}) => {
+			const user = (await UserFactory.create(1, {
 				frontend_settings: JSON.stringify({dateDisplay: format}),
-			})[0]
-			const project = ProjectFactory.create(1, {owner_id: user.id})[0]
+			}))[0]
+			const project = (await ProjectFactory.create(1, {owner_id: user.id}))[0]
 			TaskFactory.truncate()
-			const task = TaskFactory.create(1, {
+			const task = (await TaskFactory.create(1, {
 				id: 1,
 				project_id: project.id,
 				created_by_id: user.id,
 				created: createdDate.toISOString(),
 				updated: createdDate.toISOString(),
-			})[0]
+			}))[0]
 
-			cy.clock(now, ['Date'])
-			login(user)
-			cy.visit(`/tasks/${task.id}`)
-			cy.get('.task-view .created time span').should('contain', expected)
+			await page.clock.install({time: now})
+			await login(page, apiContext, user)
+			await page.goto(`/tasks/${task.id}`)
+			await expect(page.locator('.task-view .created time span')).toContainText(expected)
 		})
 	})
 })

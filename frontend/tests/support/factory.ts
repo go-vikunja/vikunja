@@ -1,10 +1,15 @@
-import {seed} from './seed'
+import type {APIRequestContext} from '@playwright/test'
 
 /**
  * A factory makes it easy to seed the database with data.
  */
 export class Factory {
 	static table: string | null = null
+	static request: APIRequestContext
+
+	static setRequestContext(request: APIRequestContext) {
+		this.request = request
+	}
 
 	static factory() {
 		return {}
@@ -20,7 +25,7 @@ export class Factory {
 	 * @param override
 	 * @returns {[]}
 	 */
-	static create(count = 1, override = {}, truncate = true) {
+	static async create(count = 1, override = {}, truncate = true) {
 		const data = []
 
 		for (let i = 1; i <= count; i++) {
@@ -29,7 +34,7 @@ export class Factory {
 				...override,
 			}
 			for (const e in entry) {
-				if(typeof entry[e] === 'function') {
+				if (typeof entry[e] === 'function') {
 					entry[e] = entry[e](i)
 					continue
 				}
@@ -59,13 +64,35 @@ export class Factory {
 			return flatItem
 		})
 
-		seed(this.table, flatData, truncate)
+		await this.seed(this.table, flatData, truncate)
 
-		return data
+		return Promise.resolve(data)
 	}
 
-	static truncate() {
-		seed(this.table, null)
+	static async seed(table: string, data: any, truncate = true) {
+		if (data === null) {
+			data = []
+		}
+
+		const response = await this.request.patch(
+			`test/${table}?truncate=${truncate ? 'true' : 'false'}`,
+			{
+				data,
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': process.env.VIKUNJA_SERVICE_TESTINGTOKEN || 'averyLongSecretToSe33dtheDB',
+				},
+			},
+		)
+
+		if (!response.ok()) {
+			throw new Error(`Failed to seed data for table ${table}: ${response.status()} ${response.statusText()}`)
+		}
+
+		return response.json()
+	}
+
+	static async truncate() {
+		await this.seed(this.table, null)
 	}
 }
-

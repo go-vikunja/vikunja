@@ -1,8 +1,8 @@
-import {createFakeUserAndLogin} from '../../support/authenticateUser'
+import {createFakeUserAndLogin} from '../../../tests/support/authenticateUser'
 
-import {TeamFactory} from '../../factories/team'
-import {TeamMemberFactory} from '../../factories/team_member'
-import {UserFactory} from '../../factories/user'
+import {TeamFactory} from '../../../tests/factories/team'
+import {TeamMemberFactory} from '../../../tests/factories/team_member'
+import {UserFactory} from '../../../tests/factories/user'
 
 describe('Team', () => {
 	createFakeUserAndLogin()

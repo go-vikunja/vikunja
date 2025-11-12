@@ -13,8 +13,9 @@ runs:
     - if: inputs.install-e2e-binaries == 'false'
       shell: bash
       run: |
-        echo "CYPRESS_INSTALL_BINARY=0"       >> $GITHUB_ENV
-        echo "PUPPETEER_SKIP_DOWNLOAD=true"   >> $GITHUB_ENV
+        echo "CYPRESS_INSTALL_BINARY=0"             >> $GITHUB_ENV
+        echo "PUPPETEER_SKIP_DOWNLOAD=true"         >> $GITHUB_ENV
+        echo "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1"   >> $GITHUB_ENV
     - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
       with:
         run_install: false

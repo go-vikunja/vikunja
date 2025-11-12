@@ -1,6 +1,6 @@
 // This test assumes no mailer is set up and all users are activated immediately.
 
-import {UserFactory} from '../../factories/user'
+import {UserFactory} from '../../../tests/factories/user'
 
 context('Registration', () => {
 	beforeEach(() => {
