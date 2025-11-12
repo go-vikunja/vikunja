@@ -1,7 +1,10 @@
 name: PR Docker Build
 
 on:
-  pull_request:
+  # Use pull_request_target instead of pull_request to get write access to GHCR
+  # even for PRs from forks. This is safe because we explicitly checkout the PR's
+  # code and only build a Docker image (no arbitrary code execution in the workflow).
+  pull_request_target:
 
 jobs:
   docker:
@@ -12,6 +15,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          # Checkout the PR's head commit for accurate builds
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
