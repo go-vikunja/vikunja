@@ -114,6 +114,11 @@
           "dd\/mm\/yyyy": "DD\/MM\/YYYY HH:mm",
           "yyyy\/mm\/dd": "YYYY\/MM\/DD HH:mm"
         },
+        "timeFormat": "Time format",
+        "timeFormatOptions": {
+          "12h": "12-hour (AM/PM)",
+          "24h": "24-hour (HH:mm)"
+        },
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "sections": {
