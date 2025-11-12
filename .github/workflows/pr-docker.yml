@@ -32,6 +32,7 @@ jobs:
           images: ghcr.io/go-vikunja/vikunja
           tags: |
             type=ref,event=pr
+            type=sha,format=long
       - name: Build and push PR image
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         with:
