@@ -72,14 +72,14 @@ require (
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/wneessen/go-mail v0.7.2
 	github.com/yuin/goldmark v1.7.13
-	golang.org/x/crypto v0.43.0
+	golang.org/x/crypto v0.44.0
 	golang.org/x/image v0.32.0
 	golang.org/x/net v0.46.0
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/sync v0.18.0
-	golang.org/x/sys v0.37.0
-	golang.org/x/term v0.36.0
-	golang.org/x/text v0.30.0
+	golang.org/x/sys v0.38.0
+	golang.org/x/term v0.37.0
+	golang.org/x/text v0.31.0
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1
 	mvdan.cc/xurls/v2 v2.6.0
 	src.techknowlogick.com/xgo v1.8.1-0.20241105013731-313dedef864f
