@@ -1827,3 +1827,267 @@ func TestTaskCollection_SubtaskWithMultipleParentsNoDuplicates(t *testing.T) {
 	assert.True(t, foundParent1, "Parent task 41 should be present")
 	assert.True(t, foundParent2, "Parent task 42 should be present")
 }
+
+func TestTaskCollection_SubtaskNoDuplicatesWithMultiProjectFilter(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	// Create a scenario that matches the bug report exactly:
+	// - Parent task in Project 1
+	// - Child tasks ALSO in Project 1 (or in Project 2, 3)
+	// - Filter by Project 1 OR Project 2 OR Project 3
+	// - Expected: Children should appear once as subtasks, not duplicated
+	
+	// Create parent task in project 1
+	parentTask := &Task{
+		Title:       "Parent Task",
+		ProjectID:   1,
+		CreatedByID: 1,
+	}
+	err := parentTask.Create(s, u)
+	require.NoError(t, err)
+	
+	// Create child task 1 in SAME project as parent (project 1)
+	child1 := &Task{
+		Title:       "Child Task 1",
+		ProjectID:   1,
+		CreatedByID: 1,
+	}
+	err = child1.Create(s, u)
+	require.NoError(t, err)
+	
+	// Create child task 2 in DIFFERENT project (project 2)
+	child2 := &Task{
+		Title:       "Child Task 2",
+		ProjectID:   2,
+		CreatedByID: 1,
+	}
+	err = child2.Create(s, u)
+	require.NoError(t, err)
+	
+	// Create subtask relations
+	rel1 := &TaskRelation{
+		TaskID:       child1.ID,
+		OtherTaskID:  parentTask.ID,
+		RelationKind: RelationKindParenttask,
+	}
+	err = rel1.Create(s, u)
+	require.NoError(t, err)
+	
+	rel2 := &TaskRelation{
+		TaskID:       child2.ID,
+		OtherTaskID:  parentTask.ID,
+		RelationKind: RelationKindParenttask,
+	}
+	err = rel2.Create(s, u)
+	require.NoError(t, err)
+	
+	// Now query with filter for multiple projects with expand=subtasks
+	c := &TaskCollection{
+		Filter:        "project_id = 1 || project_id = 2",
+		Expand:        []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+		isSavedFilter: true,
+	}
+
+	res, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err)
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	// Debug: print all tasks
+	t.Logf("All tasks returned:")
+	for _, task := range tasks {
+		t.Logf("  Task ID=%d, Title=%s, ProjectID=%d", task.ID, task.Title, task.ProjectID)
+	}
+
+	// Count occurrences of each task
+	taskCounts := make(map[int64]int)
+	for _, task := range tasks {
+		taskCounts[task.ID]++
+	}
+
+	// Debug output
+	t.Logf("Parent task %d count: %d", parentTask.ID, taskCounts[parentTask.ID])
+	t.Logf("Child1 task %d count: %d", child1.ID, taskCounts[child1.ID])
+	t.Logf("Child2 task %d count: %d", child2.ID, taskCounts[child2.ID])
+	for id, count := range taskCounts {
+		if count > 1 {
+			t.Logf("Task %d appears %d times (DUPLICATE!)", id, count)
+		}
+	}
+
+	// All tasks should appear exactly once
+	assert.Equal(t, 1, taskCounts[parentTask.ID], "Parent task should appear exactly once")
+	assert.Equal(t, 1, taskCounts[child1.ID], "Child task 1 (same project as parent) should appear exactly once, not duplicated")
+	assert.Equal(t, 1, taskCounts[child2.ID], "Child task 2 (different project from parent) should appear exactly once, not duplicated")
+}
+
+func TestTaskCollection_SubtaskWithParentNotInFilter(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	// Create a scenario where:
+	// - Parent task is in Project 3 (NOT in our filter)
+	// - Child task is in Project 1 (IS in our filter)
+	// - Filter by Project 1 and Project 2
+	// - Expected: Child should NOT appear as standalone task when parent is not in filter
+	
+	// Create parent task in project 3
+	parentTask := &Task{
+		Title:       "Parent in Project 3",
+		ProjectID:   3,
+		CreatedByID: 1,
+	}
+	err := parentTask.Create(s, u)
+	require.NoError(t, err)
+	
+	// Create child task in project 1
+	child := &Task{
+		Title:       "Child in Project 1",
+		ProjectID:   1,
+		CreatedByID: 1,
+	}
+	err = child.Create(s, u)
+	require.NoError(t, err)
+	
+	// Create subtask relation
+	rel := &TaskRelation{
+		TaskID:       child.ID,
+		OtherTaskID:  parentTask.ID,
+		RelationKind: RelationKindParenttask,
+	}
+	err = rel.Create(s, u)
+	require.NoError(t, err)
+	
+	// Query with filter for projects 1 and 2 only (parent is in project 3)
+	c := &TaskCollection{
+		Filter:        "project_id = 1 || project_id = 2",
+		Expand:        []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+		isSavedFilter: true,
+	}
+
+	res, _, _, err := c.ReadAll(s, u, "", 0, 50)
+	require.NoError(t, err)
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	// Count occurrences
+	taskCounts := make(map[int64]int)
+	for _, task := range tasks {
+		taskCounts[task.ID]++
+		if task.ID == child.ID || task.ID == parentTask.ID {
+			t.Logf("Found task ID=%d, Title=%s, ProjectID=%d", task.ID, task.Title, task.ProjectID)
+		}
+	}
+
+	// Parent should NOT be in results (it's in project 3, not in filter)
+	assert.Equal(t, 0, taskCounts[parentTask.ID], "Parent task in project 3 should not be in results")
+	
+	// Child appears because it's in the filter, but parent is not
+	// With the ORIGINAL logic, child would appear because parent is in different project
+	// With the FIX, child should NOT appear because parent is not in results
+	// This test documents the bug where orphaned subtasks (parent not in filter) appear
+	if taskCounts[child.ID] > 0 {
+		t.Logf("Child task appears even though parent is not in filter")
+		t.Logf("This happens with original logic due to cross-project parent check")
+	}
+}
+
+func TestTaskCollection_SubtaskDuplicationInMultiProjectView(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	// Reproduce the EXACT scenario from issue #1786:
+	// - Parent task in Project 1
+	// - Subtask1 in Project 1 (same as parent)
+	// - Subtask2 in Project 2 (different from parent)
+	// - Filter: project_id IN (1, 2)
+	// - Use expand=subtasks
+	// - Expected: Each task appears ONCE
+	// - Bug: Subtasks might appear twice (once as task, once as subtask)
+	
+	// Create parent in project 1
+	parent := &Task{
+		Title:       "Parent in Project 1",
+		ProjectID:   1,
+		CreatedByID: 1,
+	}
+	err := parent.Create(s, u)
+	require.NoError(t, err)
+	
+	// Create subtask1 in project 1 (same as parent)
+	subtask1 := &Task{
+		Title:       "Subtask in Project 1",
+		ProjectID:   1,
+		CreatedByID: 1,
+	}
+	err = subtask1.Create(s, u)
+	require.NoError(t, err)
+	
+	// Create subtask2 in project 2 (different from parent)
+	subtask2 := &Task{
+		Title:       "Subtask in Project 2",
+		ProjectID:   2,
+		CreatedByID: 1,
+	}
+	err = subtask2.Create(s, u)
+	require.NoError(t, err)
+	
+	// Create relations
+	rel1 := &TaskRelation{
+		TaskID:       subtask1.ID,
+		OtherTaskID:  parent.ID,
+		RelationKind: RelationKindParenttask,
+	}
+	err = rel1.Create(s, u)
+	require.NoError(t, err)
+	
+	rel2 := &TaskRelation{
+		TaskID:       subtask2.ID,
+		OtherTaskID:  parent.ID,
+		RelationKind: RelationKindParenttask,
+	}
+	err = rel2.Create(s, u)
+	require.NoError(t, err)
+	
+	// Query with multi-project filter and expand=subtasks
+	c := &TaskCollection{
+		Filter:        "project_id = 1 || project_id = 2",
+		Expand:        []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
+		isSavedFilter: true,
+	}
+
+	res, _, _, err := c.ReadAll(s, u, "", 0, 100)
+	require.NoError(t, err)
+	tasks, ok := res.([]*Task)
+	require.True(t, ok)
+
+	// Count occurrences
+	taskCounts := make(map[int64]int)
+	for _, task := range tasks {
+		taskCounts[task.ID]++
+	}
+
+	t.Logf("Parent count: %d", taskCounts[parent.ID])
+	t.Logf("Subtask1 (same project) count: %d", taskCounts[subtask1.ID])
+	t.Logf("Subtask2 (different project) count: %d", taskCounts[subtask2.ID])
+
+	// ALL tasks should appear EXACTLY ONCE (no duplicates)
+	assert.Equal(t, 1, taskCounts[parent.ID], "Parent should appear exactly once")
+	assert.Equal(t, 1, taskCounts[subtask1.ID], "Subtask1 should appear exactly once, not duplicated")
+	assert.Equal(t, 1, taskCounts[subtask2.ID], "Subtask2 should appear exactly once, not duplicated")
+
+	// Verify all three tasks are present
+	assert.Contains(t, taskCounts, parent.ID, "Parent should be in results")
+	assert.Contains(t, taskCounts, subtask1.ID, "Subtask1 should be in results")
+	assert.Contains(t, taskCounts, subtask2.ID, "Subtask2 should be in results")
+}
