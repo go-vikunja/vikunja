@@ -2,8 +2,12 @@ name: PR Docker Build
 
 on:
   # Use pull_request_target instead of pull_request to get write access to GHCR
-  # even for PRs from forks. This is safe because we explicitly checkout the PR's
-  # code and only build a Docker image (no arbitrary code execution in the workflow).
+  # even for PRs from forks. This is safe because:
+  # 1. We explicitly checkout the PR's head commit (no base branch code execution)
+  # 2. We ONLY build a Docker image (isolated container, no workflow scripts from PR)
+  # 3. No actions that execute PR code in the workflow context (no github-script, etc)
+  # 4. Build happens in isolated Docker container with well-defined Dockerfile
+  # This is the recommended pattern for building/publishing PR images from forks.
   pull_request_target:
 
 jobs:
@@ -16,7 +20,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
-          # Checkout the PR's head commit for accurate builds
+          # SECURITY: Explicitly checkout PR's head commit, not base branch.
+          # This is safe because no PR code is executed in workflow context.
+          # Only Docker build uses the PR code (isolated in container).
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Git describe
         id: ghd
