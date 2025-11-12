@@ -163,9 +163,8 @@ watch(
 	allTasks,
 	() => {
 		tasks.value = [...allTasks.value]
-		if (projectId.value < 0) {
-			return
-		}
+		// Filter out subtasks that have parents in the current view to avoid duplication
+		// This applies to all views including saved filters
 		tasks.value = tasks.value.filter(t => shouldShowTaskInListView(t, allTasks.value))
 	},
 )
