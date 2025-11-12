@@ -76,7 +76,7 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 	// Generate SVG
 	svg := fmt.Sprintf(`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="%s" height="%s">
   <rect width="100" height="100" fill="%s"/>
-  <text x="50" y="50" font-family="sans-serif" font-size="50" font-weight="bold" fill="%s" text-anchor="middle" dominant-baseline="central">%s</text>
+  <text x="50" y="50" font-family="sans-serif" font-size="50" fill="%s" text-anchor="middle" dominant-baseline="central">%s</text>
 </svg>`, sizeStr, sizeStr, bgColor, textColor, initial)
 
 	return []byte(svg), "image/svg+xml", nil

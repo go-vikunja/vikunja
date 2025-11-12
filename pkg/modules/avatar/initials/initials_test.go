@@ -49,8 +49,6 @@ func TestGetAvatar(t *testing.T) {
 		assert.Contains(t, svgString, ">J<")
 		// Should have a background color
 		assert.Contains(t, svgString, "fill=\"#")
-		// Should have bold font weight
-		assert.Contains(t, svgString, "font-weight=\"bold\"")
 	})
 
 	t.Run("generates valid SVG with username when name is empty", func(t *testing.T) {
