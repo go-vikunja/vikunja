@@ -74,7 +74,7 @@ require (
 	github.com/yuin/goldmark v1.7.13
 	golang.org/x/crypto v0.44.0
 	golang.org/x/image v0.33.0
-	golang.org/x/net v0.46.0
+	golang.org/x/net v0.47.0
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/sync v0.18.0
 	golang.org/x/sys v0.38.0
