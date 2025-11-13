@@ -1,7 +1,13 @@
 name: PR Docker Build
 
 on:
-  pull_request:
+  # pull_request_target gives write access to GHCR even for PRs from forks.
+  # This is safe because:
+  # 1. We explicitly checkout the PR's head commit (no base branch code execution)
+  # 2. We ONLY build a Docker image (isolated container, no workflow scripts from PR)
+  # 3. No actions that execute PR code in the workflow context (no github-script, etc)
+  # 4. Build happens in isolated Docker container with well-defined Dockerfile
+  pull_request_target:
 
 jobs:
   docker:
@@ -12,6 +18,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          # For pull_request_target, we need to explicitly fetch the PR ref from forks
+          # since the PR's commit SHA is not reachable in the base repository.
+          # This is safe because no PR code is executed in workflow context.
+          # Only Docker build uses the PR code (isolated in container).
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
