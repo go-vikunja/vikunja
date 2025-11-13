@@ -31,6 +31,7 @@
 		</span>
 	</BaseButton>
 	<BaseButton
+		v-if="!((new Date()).getDay() === 0 && (new Date()).getHours() >= 21)"
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('thisWeekend')"
 	>
