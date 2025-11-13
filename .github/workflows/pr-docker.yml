@@ -1,14 +1,18 @@
 name: PR Docker Build
 
 on:
-  # Use pull_request_target instead of pull_request to get write access to GHCR
-  # even for PRs from forks. This is safe because:
+  # Support both pull_request (for branch PRs) and pull_request_target (for fork PRs)
+  # pull_request_target gives write access to GHCR even for PRs from forks.
+  # This is safe because:
   # 1. We explicitly checkout the PR's head commit (no base branch code execution)
   # 2. We ONLY build a Docker image (isolated container, no workflow scripts from PR)
   # 3. No actions that execute PR code in the workflow context (no github-script, etc)
   # 4. Build happens in isolated Docker container with well-defined Dockerfile
   # This is the recommended pattern for building/publishing PR images from forks.
+  pull_request:
+    types: [opened, synchronize, reopened]
   pull_request_target:
+    types: [opened, synchronize, reopened]
 
 jobs:
   docker:
