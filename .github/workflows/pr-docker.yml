@@ -19,10 +19,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
-          # Explicitly checkout PR's head commit, not base branch.
+          # For pull_request_target, we need to explicitly fetch the PR ref from forks
+          # since the PR's commit SHA is not reachable in the base repository.
           # This is safe because no PR code is executed in workflow context.
           # Only Docker build uses the PR code (isolated in container).
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
