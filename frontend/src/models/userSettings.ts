@@ -28,7 +28,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		defaultView: DEFAULT_PROJECT_VIEW_SETTINGS.FIRST,
 		minimumPriority: PRIORITIES.MEDIUM,
 		dateDisplay: DATE_DISPLAY.RELATIVE,
-		timeFormat: TIME_FORMAT.HOURS_12,
+		timeFormat: TIME_FORMAT.HOURS_24,
 		defaultTaskRelationType: RELATION_KIND.RELATED,
 	}
 	extraSettingsLinks = {}
