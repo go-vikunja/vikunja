@@ -862,6 +862,8 @@
 			"relatedTasks": "Verwandte Aufgaben",
 			"reminders": "Erinnerungen",
 			"repeat": "Wiederholen",
+			"comment": "{count} Kommentar | {count} Kommentare",
+			"commentCount": "Anzahl der Kommentare",
 			"startDate": "Anfangsdatum",
 			"title": "Titel",
 			"updated": "Aktualisiert",

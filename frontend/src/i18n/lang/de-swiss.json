@@ -862,6 +862,8 @@
 			"relatedTasks": "Verwandti Uufgabe",
 			"reminders": "Errinnerige",
 			"repeat": "Widerhole",
+			"comment": "{count} Kommentar | {count} Kommentare",
+			"commentCount": "Anzahl der Kommentare",
 			"startDate": "Aahfangs Datum",
 			"title": "Titl",
 			"updated": "Aktualisiert",

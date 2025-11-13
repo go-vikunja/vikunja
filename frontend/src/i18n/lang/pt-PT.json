@@ -862,6 +862,8 @@
 			"relatedTasks": "Tarefas Relacionadas",
 			"reminders": "Lembretes",
 			"repeat": "Repetir",
+			"comment": "{count} comentário | {count} comentários",
+			"commentCount": "Número de comentários",
 			"startDate": "Data de Início",
 			"title": "Título",
 			"updated": "Atualizado",
@@ -908,6 +910,9 @@
 			"deleteSuccess": "O comentário foi eliminado com sucesso.",
 			"addedSuccess": "O comentário foi adicionada com sucesso.",
 			"permalink": "Copiar o link permanente para este comentário"
+		},
+		"mention": {
+			"noUsersFound": "Nenhum utilizador encontrado"
 		},
 		"deferDueDate": {
 			"title": "Adiar data de vencimento",
