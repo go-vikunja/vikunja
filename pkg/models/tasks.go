@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
@@ -1196,6 +1197,14 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		if err != nil {
 			return
 		}
+	}
+	// When a task is marked as done, increment the counter
+	if !ot.Done && t.Done {
+		go func() {
+			if err := metrics.IncCount(metrics.TasksCompletedCountKey); err != nil {
+				log.Error(err)
+			}
+		}()
 	}
 
 	// When a repeating task is marked as done, we update all deadlines and reminders and set it as undone
