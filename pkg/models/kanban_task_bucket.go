@@ -157,9 +157,9 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 			doneChanged = true
 			task.Done = true
 			if task.isRepeating() {
-				oldTask := task
+				oldTask := *task
 				oldTask.Done = false
-				updateDone(oldTask, task)
+				updateDone(&oldTask, task)
 				updateBucket = false
 				b.BucketID = oldTaskBucket.BucketID
 			}
