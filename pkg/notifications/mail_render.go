@@ -116,7 +116,7 @@ func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err e
 			continue
 		}
 
-		md := []byte(templatehtml.HTMLEscapeString(line.Text))
+		md := []byte(line.Text)
 		var buf bytes.Buffer
 		err = goldmark.Convert(md, &buf)
 		if err != nil {
