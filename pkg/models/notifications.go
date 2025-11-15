@@ -35,8 +35,8 @@ func getThreadID(taskID int64) string {
 	domain := "vikunja"
 	publicURL := config.ServicePublicURL.GetString()
 	if publicURL != "" {
-		if parsedURL, err := url.Parse(publicURL); err == nil && parsedURL.Host != "" {
-			domain = parsedURL.Host
+		if parsedURL, err := url.Parse(publicURL); err == nil && parsedURL.Hostname() != "" {
+			domain = parsedURL.Hostname()
 		}
 	}
 	return fmt.Sprintf("<task-%d@%s>", taskID, domain)
