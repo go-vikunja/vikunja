@@ -195,6 +195,7 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 		Message:     plainContent.String(),
 		HTMLMessage: htmlContent.String(),
 		Boundary:    boundary,
+		ThreadID:    m.threadID,
 		EmbedFS: map[string]*embed.FS{
 			"logo.png": &logo,
 		},

@@ -17,6 +17,7 @@
 package notifications
 
 import (
+	"fmt"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -48,6 +49,33 @@ func (n *testNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *testNotification) Name() string {
 	return "test.notification"
+}
+
+type testNotificationWithThreadID struct {
+	Test   string
+	TaskID int64
+}
+
+// ToMail returns the mail notification for testNotificationWithThreadID
+func (n *testNotificationWithThreadID) ToMail(_ string) *Mail {
+	return NewMail().
+		Subject("Test Notification with Thread ID").
+		Line(n.Test)
+}
+
+// ToDB returns the testNotificationWithThreadID notification in a format which can be saved in the db
+func (n *testNotificationWithThreadID) ToDB() interface{} {
+	return nil
+}
+
+// Name returns the name of the notification
+func (n *testNotificationWithThreadID) Name() string {
+	return "test.notification.thread"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *testNotificationWithThreadID) ThreadID() string {
+	return fmt.Sprintf("<task-%d@vikunja>", n.TaskID)
 }
 
 type testNotifiable struct {
