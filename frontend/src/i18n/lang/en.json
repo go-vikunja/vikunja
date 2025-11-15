@@ -807,7 +807,8 @@
       "overdue": "Show overdue tasks",
       "fromuntil": "Tasks from {from} until {until}",
       "select": "Select a date range",
-      "noTasks": "Nothing to do — Have a nice day!"
+      "noTasks": "Nothing to do — Have a nice day!",
+      "filterByLabel": "Filtering by label"
     },
     "detail": {
       "chooseDueDate": "Click here to set a due date",

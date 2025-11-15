@@ -6,6 +6,24 @@
 		<h3 class="mbe-2 title">
 			{{ pageTitle }}
 		</h3>
+		<div
+			v-if="filteredLabels.length > 0"
+			class="label-filter-info mbe-2"
+		>
+			<span class="filter-label-text">{{ $t('task.show.filterByLabel') }}:</span>
+			<XLabel
+				v-for="label in filteredLabels"
+				:key="label.id"
+				:label="label"
+				:clickable="false"
+			/>
+			<BaseButton
+				class="clear-filter-button"
+				@click="clearLabelFilter"
+			>
+				<Icon icon="times" />
+			</BaseButton>
+		</div>
 		<p
 			v-if="!showAll"
 			class="show-tasks-options"
@@ -76,15 +94,19 @@ import {useI18n} from 'vue-i18n'
 import {formatDate} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
 
+import BaseButton from '@/components/base/BaseButton.vue'
+import Icon from '@/components/misc/Icon.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
+import XLabel from '@/components/tasks/partials/Label.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
+import {useLabelStore} from '@/stores/labels'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import TaskCollectionService from '@/services/taskCollection'
 
@@ -93,11 +115,13 @@ const props = withDefaults(defineProps<{
 	dateTo?: Date | string,
 	showNulls?: boolean,
 	showOverdue?: boolean,
+	labelIds?: string[],
 }>(), {
 	showNulls: false,
 	showOverdue: false,
 	dateFrom: undefined,
 	dateTo: undefined,
+	labelIds: undefined,
 })
 
 const emit = defineEmits<{
@@ -107,6 +131,7 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
+const labelStore = useLabelStore()
 
 const route = useRoute()
 const router = useRouter()
@@ -119,6 +144,15 @@ const taskCollectionService = ref(new TaskCollectionService())
 setTimeout(() => showNothingToDo.value = true, 100)
 
 const showAll = computed(() => typeof props.dateFrom === 'undefined' || typeof props.dateTo === 'undefined')
+
+const filteredLabels = computed(() => {
+	if (!props.labelIds || props.labelIds.length === 0) {
+		return []
+	}
+	return props.labelIds
+		.map(id => labelStore.getLabelById(Number(id)))
+		.filter(label => label !== null && label !== undefined)
+})
 
 const pageTitle = computed(() => {
 	// We need to define "key" because it is the first parameter in the array and we need the second
@@ -177,6 +211,15 @@ function setShowNulls(show: boolean) {
 	})
 }
 
+function clearLabelFilter() {
+	const query = {...route.query}
+	delete query.labels
+	router.push({
+		name: route.name as string,
+		query,
+	})
+}
+
 async function loadPendingTasks(from: Date|string, to: Date|string) {
 	// FIXME: HACK! This should never happen.
 	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
@@ -205,6 +248,12 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 		if (!props.showOverdue) {
 			params.filter += ` && due_date > '${from instanceof Date ? from.toISOString() : from}'`
 		}
+	}
+	
+	// Add label filtering
+	if (props.labelIds && props.labelIds.length > 0) {
+		const labelFilter = `labels in ${props.labelIds.join(', ')}`
+		params.filter += params.filter ? ` && ${labelFilter}` : labelFilter
 	}
 	
 	let projectId = null
@@ -245,5 +294,28 @@ watchEffect(() => setTitle(pageTitle.value))
 .llama-cool {
 	margin: 3rem auto 0;
 	display: block;
+}
+
+.label-filter-info {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem;
+	background-color: var(--grey-100);
+	border-radius: $radius;
+	
+	.filter-label-text {
+		font-weight: 600;
+		color: var(--grey-700);
+	}
+	
+	.clear-filter-button {
+		margin-inline-start: auto;
+		padding: 0.25rem 0.5rem;
+		
+		&:hover {
+			color: var(--danger);
+		}
+	}
 }
 </style>

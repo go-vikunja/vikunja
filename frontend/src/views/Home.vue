@@ -38,6 +38,7 @@
 		<ShowTasks
 			v-if="projectStore.hasProjects"
 			:key="showTasksKey"
+			:label-ids="labelIds"
 			class="show-tasks"
 			@tasksLoaded="tasksLoaded = true"
 		/>
@@ -46,6 +47,7 @@
 
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
+import {useRoute} from 'vue-router'
 
 import Message from '@/components/misc/Message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
@@ -65,6 +67,7 @@ const salutation = useDaytimeSalutation()
 
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
+const route = useRoute()
 
 const projectHistory = computed(() => {
 	// If we don't check this, it tries to load the project background right after logging out	
@@ -80,6 +83,15 @@ const projectHistory = computed(() => {
 const tasksLoaded = ref(false)
 
 const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
+
+// Extract label IDs from query parameter
+const labelIds = computed(() => {
+	const labelsParam = route.query.labels
+	if (!labelsParam) {
+		return undefined
+	}
+	return Array.isArray(labelsParam) ? labelsParam : [labelsParam]
+})
 
 // This is to reload the tasks list after adding a new task through the global task add.
 // FIXME: Should use pinia (somehow?)
