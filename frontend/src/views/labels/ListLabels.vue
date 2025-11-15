@@ -29,32 +29,22 @@
 
 		<div class="columns">
 			<div class="labels-list column">
-				<span
+				<RouterLink
 					v-for="label in labelStore.labelsArray"
 					:key="label.id"
-					:class="{'disabled': userInfo.id !== label.createdBy.id}"
+					:to="{name: 'home', query: {labels: label.id.toString()}}"
 					:style="getLabelStyles(label)"
 					class="tag"
 				>
-					<span
-						v-if="userInfo.id !== label.createdBy.id"
-						v-tooltip.bottom="$t('label.edit.forbidden')"
-					>
-						{{ label.title }}
-					</span>
-					<BaseButton
-						v-else
-						:style="{'color': label.textColor}"
-						@click="editLabel(label)"
-					>
-						{{ label.title }}
-					</BaseButton>
+					<span>{{ label.title }}</span>
 					<BaseButton
 						v-if="userInfo.id === label.createdBy.id"
-						class="delete is-small"
-						@click="showDeleteDialoge(label)"
-					/>
-				</span>
+						class="label-edit-button is-small"
+						@click.stop.prevent="editLabel(label)"
+					>
+						<Icon icon="pen" class="icon"/>
+					</BaseButton>
+				</RouterLink>
 			</div>
 			<div
 				v-if="isLabelEdit"
@@ -212,3 +202,21 @@ function showDeleteDialoge(label: ILabel) {
 	showDeleteModal.value = true
 }
 </script>
+
+<style lang="scss" scoped>
+.label-edit-button {
+	border-radius: 100%;
+	background-color: rgba(0,0,0,0.2);
+	width: 1rem;
+	height: 1rem;
+	display: flex;
+  	align-items: center;
+  	justify-content: center;
+	color: #fff; // always white
+	margin-inline-start: .25rem;
+
+	.icon {
+		height: .5rem;
+	}
+}
+</style>
