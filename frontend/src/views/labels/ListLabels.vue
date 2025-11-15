@@ -41,16 +41,8 @@
 					/>
 					<BaseButton
 						v-if="userInfo.id === label.createdBy.id"
-						class="edit-button"
-						:style="{'color': label.textColor}"
-						@click="editLabel(label)"
-					>
-						<Icon icon="pen" />
-					</BaseButton>
-					<BaseButton
-						v-if="userInfo.id === label.createdBy.id"
 						class="delete is-small"
-						@click="showDeleteDialoge(label)"
+						@click="editLabel(label)"
 					/>
 				</span>
 			</div>
@@ -141,7 +133,6 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import XLabel from '@/components/tasks/partials/Label.vue'
-import Icon from '@/components/misc/Icon'
 
 import LabelModel from '@/models/label'
 import type {ILabel} from '@/modelTypes/ILabel'
@@ -149,7 +140,6 @@ import {useAuthStore} from '@/stores/auth'
 import {useLabelStore} from '@/stores/labels'
 
 import { useTitle } from '@/composables/useTitle'
-import {useLabelStyles} from '@/composables/useLabelStyles'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -168,7 +158,6 @@ const labelStore = useLabelStore()
 labelStore.loadAllLabels()
 
 const loading = computed(() => labelStore.isLoading)
-const {getLabelStyles} = useLabelStyles()
 
 function deleteLabel(label?: ILabel) {
 	if (!label) {
@@ -222,17 +211,6 @@ function showDeleteDialoge(label: ILabel) {
 	
 	&.disabled {
 		opacity: 0.6;
-	}
-	
-	.edit-button {
-		padding: 0.25rem 0.5rem;
-		background: transparent;
-		border: none;
-		cursor: pointer;
-		
-		&:hover {
-			opacity: 0.8;
-		}
 	}
 }
 </style>

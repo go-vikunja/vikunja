@@ -24,6 +24,7 @@
 				</template>
 			</i18n-t>
 			<BaseButton
+				v-tooltip="$t('task.show.clearLabelFilter')"
 				class="clear-filter-button"
 				@click="clearLabelFilter"
 			>
@@ -307,7 +308,6 @@ watchEffect(() => setTitle(pageTitle.value))
 	border-radius: $radius;
 	
 	.filter-label-text {
-		font-weight: 600;
 		color: var(--grey-700);
 	}
 	
