@@ -29,7 +29,6 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
@@ -44,10 +43,14 @@ const apiVersion = "v1.0"
 
 // Migration is the Nextcloud Deck migration struct
 type Migration struct {
-	Code      string `json:"code" valid:"required" minLength:"1" maxLength:"500"`
-	ServerURL string `json:"server_url" valid:"required" minLength:"10" maxLength:"250"`
+	Code         string `json:"code" valid:"required" minLength:"1" maxLength:"500"`
+	ServerURL    string `json:"server_url" valid:"required" minLength:"10" maxLength:"250"`
+	ClientID     string `json:"client_id" valid:"required" minLength:"1" maxLength:"250"`
+	ClientSecret string `json:"client_secret" valid:"required" minLength:"1" maxLength:"250"`
+	RedirectURL  string `json:"redirect_url" valid:"required" minLength:"10" maxLength:"500"`
+	UserMappings string `json:"user_mappings"` // Optional: format "nc_user:vikunja_user\nuser2:user2"
 
-	// userMappingCache caches the loaded user mapping from config
+	// userMappingCache caches the parsed user mapping from UserMappings field
 	// Maps Nextcloud username -> Vikunja user
 	userMappingCache map[string]*user.User
 }
@@ -185,7 +188,7 @@ func (m *Migration) Name() string {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param serverURL body string true "Nextcloud server URL"
+// @Param migration body Migration true "Migration config with server URL, client ID, and redirect URL"
 // @Success 200 {object} handler.AuthURL "The OAuth authorization URL"
 // @Failure 400 {object} models.Message "Bad request"
 // @Failure 500 {object} models.Message "Internal server error"
@@ -197,11 +200,8 @@ func (m *Migration) AuthURL() string {
 		return ""
 	}
 
-	// Get OAuth configuration
-	clientID := config.MigrationDeckClientID.GetString()
-	redirectURL := config.MigrationDeckRedirectURL.GetString()
-
-	if clientID == "" || redirectURL == "" {
+	// Validate OAuth configuration from struct
+	if m.ClientID == "" || m.RedirectURL == "" {
 		log.Error("[Deck Migration] OAuth not configured: missing client ID or redirect URL")
 		return ""
 	}
@@ -218,8 +218,8 @@ func (m *Migration) AuthURL() string {
 	authURL := fmt.Sprintf(
 		"%s/index.php/apps/oauth2/authorize?client_id=%s&redirect_uri=%s&response_type=code&state=%s",
 		serverURL,
-		url.QueryEscape(clientID),
-		url.QueryEscape(redirectURL),
+		url.QueryEscape(m.ClientID),
+		url.QueryEscape(m.RedirectURL),
 		url.QueryEscape(state),
 	)
 
@@ -232,21 +232,17 @@ func (m *Migration) exchangeToken() (string, error) {
 	serverURL := strings.TrimRight(m.ServerURL, "/")
 	tokenURL := fmt.Sprintf("%s/index.php/apps/oauth2/api/v1/token", serverURL)
 
-	// Get OAuth configuration
-	clientID := config.MigrationDeckClientID.GetString()
-	clientSecret := config.MigrationDeckClientSecret.GetString()
-	redirectURL := config.MigrationDeckRedirectURL.GetString()
-
-	if clientID == "" || clientSecret == "" || redirectURL == "" {
+	// Validate OAuth configuration from struct
+	if m.ClientID == "" || m.ClientSecret == "" || m.RedirectURL == "" {
 		return "", fmt.Errorf("OAuth not configured: missing client credentials")
 	}
 
 	// Prepare token request
 	formData := url.Values{
-		"client_id":     {clientID},
-		"client_secret": {clientSecret},
+		"client_id":     {m.ClientID},
+		"client_secret": {m.ClientSecret},
 		"code":          {m.Code},
-		"redirect_uri":  {redirectURL},
+		"redirect_uri":  {m.RedirectURL},
 		"grant_type":    {"authorization_code"},
 	}
 
@@ -365,7 +361,7 @@ func (m *Migration) Migrate(u *user.User) error {
 	return nil
 }
 
-// getUserMapping loads and caches the user mapping from config
+// getUserMapping loads and caches the user mapping from UserMappings field
 // Returns a map of Nextcloud username -> Vikunja user
 func (m *Migration) getUserMapping(s *xorm.Session) map[string]*user.User {
 	// Return cached mapping if already loaded
@@ -373,22 +369,34 @@ func (m *Migration) getUserMapping(s *xorm.Session) map[string]*user.User {
 		return m.userMappingCache
 	}
 
-	// Load mapping from config
-	configMapping := config.MigrationDeckUserMapping.Get()
-	if configMapping == nil {
-		// No mapping configured, return empty map
-		m.userMappingCache = make(map[string]*user.User)
+	// Parse user mappings from string
+	mapping := make(map[string]*user.User)
+
+	if m.UserMappings == "" {
+		// No mapping provided, return empty map
+		m.userMappingCache = mapping
 		return m.userMappingCache
 	}
 
-	// Convert config map to user objects
-	mapping := make(map[string]*user.User)
+	// Parse line by line: "nc_user:vikunja_user\nuser2:user2"
+	lines := strings.Split(m.UserMappings, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
 
-	// The config returns map[string]interface{}, we need to convert it
-	for ncUsername, vikunjaUsernameInterface := range configMapping.(map[string]interface{}) {
-		vikunjaUsername, ok := vikunjaUsernameInterface.(string)
-		if !ok {
-			log.Warningf("[Deck Migration] Invalid mapping for Nextcloud user '%s': value is not a string", ncUsername)
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			log.Warningf("[Deck Migration] Invalid mapping line '%s': expected format 'nc_user:vikunja_user'", line)
+			continue
+		}
+
+		ncUsername := strings.TrimSpace(parts[0])
+		vikunjaUsername := strings.TrimSpace(parts[1])
+
+		if ncUsername == "" || vikunjaUsername == "" {
+			log.Warningf("[Deck Migration] Invalid mapping line '%s': usernames cannot be empty", line)
 			continue
 		}
 
@@ -404,7 +412,7 @@ func (m *Migration) getUserMapping(s *xorm.Session) map[string]*user.User {
 	}
 
 	m.userMappingCache = mapping
-	log.Debugf("[Deck Migration] Loaded %d user mappings from config", len(mapping))
+	log.Debugf("[Deck Migration] Loaded %d user mappings from input", len(mapping))
 	return mapping
 }
 

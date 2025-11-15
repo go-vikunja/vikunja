@@ -10,7 +10,7 @@ export interface Migrator {
 	id: string
 	name: string
 	isFileMigrator?: boolean
-	requiresServerURL?: boolean
+	requiresCustomOAuth?: boolean
 	icon: string
 }
 
@@ -55,6 +55,6 @@ export const MIGRATORS = {
 		id: 'deck',
 		name: 'Nextcloud Deck',
 		icon: nextcloudIcon as string,
-		requiresServerURL: true,
+		requiresCustomOAuth: true,
 	},
 } as const satisfies IMigratorRecord

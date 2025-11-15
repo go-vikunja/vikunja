@@ -715,15 +715,13 @@ func registerMigrations(m *echo.Group) {
 		microsoftTodoMigrationHandler.RegisterMigrator(m)
 	}
 
-	// Nextcloud Deck
-	if config.MigrationDeckEnable.GetBool() {
-		deckMigrationHandler := &migrationHandler.MigrationWeb{
-			MigrationStruct: func() migration.Migrator {
-				return &deck.Migration{}
-			},
-		}
-		deckMigrationHandler.RegisterMigrator(m)
+	// Nextcloud Deck (always available - OAuth credentials provided via UI)
+	deckMigrationHandler := &migrationHandler.MigrationWeb{
+		MigrationStruct: func() migration.Migrator {
+			return &deck.Migration{}
+		},
 	}
+	deckMigrationHandler.RegisterMigrator(m)
 
 	// Vikunja File Migrator
 	vikunjaFileMigrationHandler := &migrationHandler.FileMigratorWeb{
