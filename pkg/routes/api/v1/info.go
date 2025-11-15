@@ -107,7 +107,6 @@ func Info(c echo.Context) error {
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),
-			(&deck.Migration{}).Name(),
 		},
 		Legal: legalInfo{
 			ImprintURL:       config.LegalImprintURL.GetString(),
