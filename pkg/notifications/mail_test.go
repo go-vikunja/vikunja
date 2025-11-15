@@ -407,4 +407,19 @@ This is a footer line
 </html>
 `, mailopts.HTMLMessage)
 	})
+	t.Run("with thread ID", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line("This is a line").
+			ThreadID("<task-123@vikunja>")
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+		assert.Equal(t, mail.from, mailopts.From)
+		assert.Equal(t, mail.to, mailopts.To)
+		assert.Equal(t, "<task-123@vikunja>", mailopts.ThreadID)
+	})
 }

@@ -35,6 +35,7 @@ type Mail struct {
 	introLines  []*mailLine
 	outroLines  []*mailLine
 	footerLines []*mailLine
+	threadID    string
 }
 
 type mailLine struct {
@@ -98,6 +99,12 @@ func (m *Mail) IncludeLinkToSettings(lang string) *Mail {
 
 func (m *Mail) HTML(line string) *Mail {
 	return m.appendLine(line, true)
+}
+
+// ThreadID sets the thread ID of the mail message for email threading
+func (m *Mail) ThreadID(threadID string) *Mail {
+	m.threadID = threadID
+	return m
 }
 
 func (m *Mail) appendLine(line string, isHTML bool) *Mail {
