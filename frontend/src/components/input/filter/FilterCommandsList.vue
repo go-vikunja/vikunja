@@ -12,6 +12,7 @@
 					<XLabel
 						v-if="item.fieldType === 'labels'"
 						:label="(item.item as unknown as ILabel)"
+						:clickable="false"
 						class="filter-autocomplete__label"
 					/>
 					<User
