@@ -114,6 +114,11 @@
 					"dd/mm/yyyy": "TT/MM/JJJJ",
 					"yyyy/mm/dd": "JJJJ/MM/TT"
 				},
+				"timeFormat": "Zeitformat",
+				"timeFormatOptions": {
+					"12h": "12 Stunden (AM/PM)",
+					"24h": "24 Stunden (HH:mm)"
+				},
 				"externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
 			},
 			"sections": {

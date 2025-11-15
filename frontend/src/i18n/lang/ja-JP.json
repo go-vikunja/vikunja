@@ -114,6 +114,11 @@
 					"dd/mm/yyyy": "DD/MM/YYYY",
 					"yyyy/mm/dd": "YYYY/MM/DD"
 				},
+				"timeFormat": "時刻の形式",
+				"timeFormatOptions": {
+					"12h": "12時間 (AM/PM)",
+					"24h": "24時間 (HH:mm)"
+				},
 				"externalUserNameChange": "名前はログインプロバイダー（{provider}）で管理されています。名前を変更する場合はそちらで行ってください。"
 			},
 			"sections": {

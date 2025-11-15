@@ -114,6 +114,11 @@
 					"dd/mm/yyyy": "DD/MM/AAAA",
 					"yyyy/mm/dd": "AAAA/MM/DD"
 				},
+				"timeFormat": "Formato da hora",
+				"timeFormatOptions": {
+					"12h": "12-horas (AM/PM)",
+					"24h": "24-horas (HH:mm)"
+				},
 				"externalUserNameChange": "O teu nome é gerido pelo teu fornecedor de início de sessão ({provider}). Para o alterar, atualiza-o antes lá."
 			},
 			"sections": {
