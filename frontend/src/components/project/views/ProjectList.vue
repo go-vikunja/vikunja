@@ -162,11 +162,7 @@ const tasks = ref<ITask[]>([])
 watch(
 	allTasks,
 	() => {
-		tasks.value = [...allTasks.value]
-		if (projectId.value < 0) {
-			return
-		}
-		tasks.value = tasks.value.filter(t => shouldShowTaskInListView(t, allTasks.value))
+		tasks.value = ([...allTasks.value]).filter(t => shouldShowTaskInListView(t, allTasks.value))
 	},
 )
 
