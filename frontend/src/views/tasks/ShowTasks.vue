@@ -101,7 +101,7 @@ import {formatDate} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import Icon from '@/components/misc/Icon.vue'
+import Icon from '@/components/misc/Icon'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'

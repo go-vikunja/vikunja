@@ -33,21 +33,19 @@
 					v-for="label in labelStore.labelsArray"
 					:key="label.id"
 					:class="{'disabled': userInfo.id !== label.createdBy.id}"
-					:style="getLabelStyles(label)"
-					class="tag"
+					class="label-item"
 				>
-					<span
-						v-if="userInfo.id !== label.createdBy.id"
-						v-tooltip.bottom="$t('label.edit.forbidden')"
-					>
-						{{ label.title }}
-					</span>
+					<XLabel
+						:label="label"
+						:clickable="true"
+					/>
 					<BaseButton
-						v-else
+						v-if="userInfo.id === label.createdBy.id"
+						class="edit-button"
 						:style="{'color': label.textColor}"
 						@click="editLabel(label)"
 					>
-						{{ label.title }}
+						<Icon icon="pen" />
 					</BaseButton>
 					<BaseButton
 						v-if="userInfo.id === label.createdBy.id"
@@ -142,6 +140,8 @@ import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
+import XLabel from '@/components/tasks/partials/Label.vue'
+import Icon from '@/components/misc/Icon'
 
 import LabelModel from '@/models/label'
 import type {ILabel} from '@/modelTypes/ILabel'
@@ -212,3 +212,27 @@ function showDeleteDialoge(label: ILabel) {
 	showDeleteModal.value = true
 }
 </script>
+
+<style lang="scss" scoped>
+.label-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin: 0.25rem;
+	
+	&.disabled {
+		opacity: 0.6;
+	}
+	
+	.edit-button {
+		padding: 0.25rem 0.5rem;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		
+		&:hover {
+			opacity: 0.8;
+		}
+	}
+}
+</style>

@@ -4,7 +4,6 @@
 			v-for="label in displayLabels"
 			:key="label.id"
 			:label="label"
-			:clickable="true"
 		/>
 	</div>
 </template>

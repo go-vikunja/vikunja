@@ -808,7 +808,7 @@
       "fromuntil": "Tasks from {from} until {until}",
       "select": "Select a date range",
       "noTasks": "Nothing to do — Have a nice day!",
-      "filterByLabel": "Filtering by label: {label}"
+      "filterByLabel": "Filtering by label {label}"
     },
     "detail": {
       "chooseDueDate": "Click here to set a due date",
