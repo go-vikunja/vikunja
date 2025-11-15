@@ -34,7 +34,7 @@ defineEmits<{
 			<User
 				:key="'user'+user.id"
 				:avatar-size="avatarSize"
-				:show-username="false"
+				:show-username="true"
 				:user="user"
 				:class="{'m-2': canRemove && !disabled}"
 			/>
@@ -60,6 +60,13 @@ defineEmits<{
 
 	&:hover .assignee:not(:first-child) {
 		margin-inline-start: -0.5rem;
+	}
+
+	// Hide usernames on desktop, show on mobile
+	:deep(.user .username) {
+		@media screen and (min-width: $tablet) {
+			display: none;
+		}
 	}
 }
 
