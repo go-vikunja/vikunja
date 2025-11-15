@@ -41,13 +41,14 @@
 			:label-ids="labelIds"
 			class="show-tasks"
 			@tasksLoaded="tasksLoaded = true"
+			@clearLabelFilter="handleClearLabelFilter"
 		/>
 	</div>
 </template>
 
 <script lang="ts" setup>
 import {ref, computed} from 'vue'
-import {useRoute} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 
 import Message from '@/components/misc/Message.vue'
 import ShowTasks from '@/views/tasks/ShowTasks.vue'
@@ -68,6 +69,7 @@ const salutation = useDaytimeSalutation()
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
 const route = useRoute()
+const router = useRouter()
 
 const projectHistory = computed(() => {
 	// If we don't check this, it tries to load the project background right after logging out	
@@ -99,6 +101,15 @@ const showTasksKey = ref(0)
 
 function updateTaskKey() {
 	showTasksKey.value++
+}
+
+function handleClearLabelFilter() {
+	const query = {...route.query}
+	delete query.labels
+	router.push({
+		name: route.name as string,
+		query,
+	})
 }
 </script>
 

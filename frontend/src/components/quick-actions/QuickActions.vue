@@ -71,10 +71,7 @@
 							@keyup.prevent.esc="searchInput?.focus()"
 						>
 							<template v-if="r.type === ACTION_TYPE.LABELS">
-								<XLabel
-									:label="i"
-									:clickable="false"
-								/>
+								<XLabel :label="i" />
 							</template>
 							<template v-else-if="r.type === ACTION_TYPE.TASK">
 								<SingleTaskInlineReadonly

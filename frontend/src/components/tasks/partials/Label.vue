@@ -6,7 +6,7 @@ const props = withDefaults(defineProps<{
 	label: ILabel
 	clickable?: boolean
 }>(), {
-	clickable: true,
+	clickable: false,
 })
 
 const {getLabelStyles} = useLabelStyles()

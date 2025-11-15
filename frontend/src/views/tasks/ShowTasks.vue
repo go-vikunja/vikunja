@@ -10,13 +10,19 @@
 			v-if="filteredLabels.length > 0"
 			class="label-filter-info mbe-2"
 		>
-			<span class="filter-label-text">{{ $t('task.show.filterByLabel') }}:</span>
-			<XLabel
-				v-for="label in filteredLabels"
-				:key="label.id"
-				:label="label"
-				:clickable="false"
-			/>
+			<i18n-t
+				keypath="task.show.filterByLabel"
+				tag="span"
+				class="filter-label-text"
+			>
+				<template #label>
+					<XLabel
+						v-for="label in filteredLabels"
+						:key="label.id"
+						:label="label"
+					/>
+				</template>
+			</i18n-t>
 			<BaseButton
 				class="clear-filter-button"
 				@click="clearLabelFilter"
@@ -126,6 +132,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
 	'tasksLoaded': true,
+	'clearLabelFilter': void,
 }>()
 
 const authStore = useAuthStore()
@@ -212,12 +219,7 @@ function setShowNulls(show: boolean) {
 }
 
 function clearLabelFilter() {
-	const query = {...route.query}
-	delete query.labels
-	router.push({
-		name: route.name as string,
-		query,
-	})
+	emit('clearLabelFilter')
 }
 
 async function loadPendingTasks(from: Date|string, to: Date|string) {
