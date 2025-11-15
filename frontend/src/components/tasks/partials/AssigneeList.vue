@@ -67,6 +67,14 @@ defineEmits<{
 		@media screen and (min-width: $tablet) {
 			display: none;
 		}
+
+	}
+
+	:deep(.user) {
+		display: flex;
+		align-content: center;
+  		align-items: center;
+  		gap: .5rem;
 	}
 }
 
@@ -90,7 +98,6 @@ defineEmits<{
 	inset-inline-start: 2px;
 	color: var(--danger);
 	background: var(--white);
-	padding: 0 4px;
 	display: block;
 	border-radius: 100%;
 	font-size: .75rem;
