@@ -207,16 +207,16 @@ function showDeleteDialoge(label: ILabel) {
 .label-edit-button {
 	border-radius: 100%;
 	background-color: rgba(0,0,0,0.2);
-	width: 1rem;
-	height: 1rem;
+	inline-size: 1rem;
+	block-size: 1rem;
 	display: flex;
   	align-items: center;
   	justify-content: center;
-	color: #fff; // always white
+	color: #ffffff; // always white
 	margin-inline-start: .25rem;
 
 	.icon {
-		height: .5rem;
+		block-size: .5rem;
 	}
 }
 </style>
