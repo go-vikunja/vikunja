@@ -35,7 +35,6 @@
 					:to="{name: 'home', query: {labels: label.id.toString()}}"
 					:style="getLabelStyles(label)"
 					class="tag"
-					:class="{'disabled': userInfo.id !== label.createdBy.id}"
 				>
 					<span>{{ label.title }}</span>
 					<BaseButton
