@@ -6,7 +6,7 @@
 		<h3 class="mbe-2 title">
 			{{ pageTitle }}
 		</h3>
-		<div
+		<Message
 			v-if="filteredLabels.length > 0"
 			class="label-filter-info mbe-2"
 		>
@@ -30,7 +30,7 @@
 			>
 				<Icon icon="times" />
 			</BaseButton>
-		</div>
+		</Message>
 		<p
 			v-if="!showAll"
 			class="show-tasks-options"
@@ -103,6 +103,7 @@ import {setTitle} from '@/helpers/setTitle'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Icon from '@/components/misc/Icon'
+import Message from '@/components/misc/Message.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
@@ -300,16 +301,7 @@ watchEffect(() => setTitle(pageTitle.value))
 }
 
 .label-filter-info {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.5rem;
-	background-color: var(--grey-100);
-	border-radius: $radius;
-	
-	.filter-label-text {
-		color: var(--grey-700);
-	}
+	margin-block-end: 1rem;
 	
 	.clear-filter-button {
 		margin-inline-start: auto;
@@ -318,6 +310,14 @@ watchEffect(() => setTitle(pageTitle.value))
 		&:hover {
 			color: var(--danger);
 		}
+	}
+
+	:deep(.message.info) {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
 	}
 }
 </style>

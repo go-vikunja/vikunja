@@ -29,25 +29,23 @@
 
 		<div class="columns">
 			<div class="labels-list column">
-				<span
+				<RouterLink
 					v-for="label in labelStore.labelsArray"
 					:key="label.id"
+					:to="{name: 'home', query: {labels: label.id.toString()}}"
+					:style="getLabelStyles(label)"
+					class="tag"
 					:class="{'disabled': userInfo.id !== label.createdBy.id}"
-					class="label-item"
 				>
-					<RouterLink
-						:to="{name: 'home', query: {labels: label.id.toString()}}"
-						:style="getLabelStyles(label)"
-						class="tag tag-clickable"
-					>
-						<span>{{ label.title }}</span>
-					</RouterLink>
+					<span>{{ label.title }}</span>
 					<BaseButton
 						v-if="userInfo.id === label.createdBy.id"
-						class="delete is-small"
-						@click="editLabel(label)"
-					/>
-				</span>
+						class="label-edit-button is-small"
+						@click.stop.prevent="editLabel(label)"
+					>
+						<Icon icon="pen" class="icon"/>
+					</BaseButton>
+				</RouterLink>
 			</div>
 			<div
 				v-if="isLabelEdit"
@@ -207,23 +205,19 @@ function showDeleteDialoge(label: ILabel) {
 </script>
 
 <style lang="scss" scoped>
-.label-item {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.25rem;
-	margin: 0.25rem;
-	
-	&.disabled {
-		opacity: 0.6;
-	}
-	
-	.tag-clickable {
-		cursor: pointer;
-		transition: opacity $transition;
-		
-		&:hover {
-			opacity: 0.8;
-		}
+.label-edit-button {
+	border-radius: 100%;
+	background-color: rgba(0,0,0,0.2);
+	width: 1rem;
+	height: 1rem;
+	display: flex;
+  	align-items: center;
+  	justify-content: center;
+	color: #fff; // always white
+	margin-inline-start: .25rem;
+
+	.icon {
+		height: .5rem;
 	}
 }
 </style>
