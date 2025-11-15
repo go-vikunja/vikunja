@@ -716,15 +716,14 @@ func registerMigrations(m *echo.Group) {
 	}
 
 	// Nextcloud Deck
-	// Note: Unlike other OAuth migrators, Deck is always registered because it requires
-	// the server URL before OAuth can start. The /info endpoint controls visibility based
-	// on MigrationDeckEnable configuration.
-	deckMigrationHandler := &migrationHandler.MigrationWeb{
-		MigrationStruct: func() migration.Migrator {
-			return &deck.Migration{}
-		},
+	if config.MigrationDeckEnable.GetBool() {
+		deckMigrationHandler := &migrationHandler.MigrationWeb{
+			MigrationStruct: func() migration.Migrator {
+				return &deck.Migration{}
+			},
+		}
+		deckMigrationHandler.RegisterMigrator(m)
 	}
-	deckMigrationHandler.RegisterMigrator(m)
 
 	// Vikunja File Migrator
 	vikunjaFileMigrationHandler := &migrationHandler.FileMigratorWeb{

@@ -57,8 +57,11 @@ func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 func (mw *MigrationWeb) AuthURL(c echo.Context) error {
 	ms := mw.MigrationStruct()
 
-	// For POST requests, bind the request body to the migrator struct
-	// This allows migrators that need server URL to receive it
+	// For POST requests, bind the request body to the migrator struct.
+	// This allows migrators that need user-provided configuration (e.g., server URL for self-hosted services)
+	// to receive it before generating the auth URL. The bound data is immediately consumed by ms.AuthURL() below.
+	// GET requests work for migrators with fixed OAuth URLs (Todoist, Trello, etc.)
+	// POST requests work for migrators requiring user input to construct the auth URL (Deck, etc.)
 	if c.Request().Method == http.MethodPost {
 		err := c.Bind(ms)
 		if err != nil {

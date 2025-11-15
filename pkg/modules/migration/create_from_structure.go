@@ -19,7 +19,6 @@ package migration
 import (
 	"bytes"
 	"io"
-	"time"
 
 	"xorm.io/xorm"
 
@@ -309,44 +308,8 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		originalBucketID := t.BucketID
 		t.BucketID = 0
 
-		// Debug logging for datetime preservation
-		hasPresetCreated := !t.Created.IsZero()
-		hasPresetUpdated := !t.Updated.IsZero()
-		if hasPresetCreated {
-			log.Debugf("[creating structure] Task %d (%s): Has pre-set Created=%s", oldid, t.Title, t.Created.Format(time.RFC3339))
-		}
-		if hasPresetUpdated {
-			log.Debugf("[creating structure] Task %d (%s): Has pre-set Updated=%s", oldid, t.Title, t.Updated.Format(time.RFC3339))
-		}
-		if (hasPresetCreated || hasPresetUpdated) && (hasPresetCreated != hasPresetUpdated) {
-			log.Warningf("[creating structure] Task %d (%s): WARNING - Only one of Created/Updated is set (asymmetric). Created=%v, Updated=%v", oldid, t.Title, hasPresetCreated, hasPresetUpdated)
-		}
-
-		// Debug logging for description field
-		if len(t.Description) > 0 {
-			log.Debugf("[creating structure] Before Create: Task %d (%s) has description (%d chars)", oldid, t.Title, len(t.Description))
-		} else if len(t.Title) > 0 {
-			// Empty description for non-empty task - this might be expected
-			log.Debugf("[creating structure] Task %d (%s) has NO description", oldid, t.Title)
-		}
-
 		// Use CreateWithTimestamps to preserve original timestamps from migration source
 		err = t.CreateWithTimestamps(s, user)
-
-		// Debug logging after create
-		// Verify if timestamps were preserved after insert
-		if !t.Created.IsZero() {
-			log.Debugf("[creating structure] After Create: Task %d (new ID %d) - Created=%s", oldid, t.ID, t.Created.Format(time.RFC3339))
-		}
-		if !t.Updated.IsZero() {
-			log.Debugf("[creating structure] After Create: Task %d (new ID %d) - Updated=%s", oldid, t.ID, t.Updated.Format(time.RFC3339))
-		}
-
-		if len(t.Description) > 0 {
-			log.Debugf("[creating structure] After Create: Task %d (new ID %d) still has description (%d chars)", oldid, t.ID, len(t.Description))
-		} else if oldid != 0 && len(t.Title) > 0 {
-			log.Warningf("[creating structure] WARNING: Task %d (%s) lost its description after Create (new ID %d)", oldid, t.Title, t.ID)
-		}
 		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
 			continue
 		}
@@ -434,13 +397,6 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				oldID := a.ID
 				a.ID = 0
 				a.TaskID = t.ID
-
-				// Attachment timestamps (a.Created and a.File.Created) are set by the importer
-				// and will be preserved by NewAttachment() using NoAutoTime() when needed
-				if !a.Created.IsZero() {
-					log.Debugf("[creating structure] Attachment has pre-set Created=%s, will be preserved by NewAttachment", a.Created.Format(time.RFC3339))
-				}
-
 				fr := io.NopCloser(bytes.NewReader(a.File.FileContent))
 				err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, user)
 				if err != nil {
