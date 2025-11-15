@@ -422,4 +422,45 @@ This is a footer line
 		assert.Equal(t, mail.to, mailopts.To)
 		assert.Equal(t, "<task-123@vikunja>", mailopts.ThreadID)
 	})
+	t.Run("with special characters in task title", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`This is a friendly reminder of the task "Fix structured data Value in property "reviewCount" must be positive" (My Project).`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+		assert.Equal(t, mail.from, mailopts.From)
+		assert.Equal(t, mail.to, mailopts.To)
+
+		// Plain text should keep quotes as-is
+		assert.Contains(t, mailopts.Message, `"Fix structured data Value in property "reviewCount" must be positive"`)
+
+		// HTML should have proper HTML entities for quotes
+		// &#34; is the correct HTML entity for the quote character and will render as " in the browser
+		assert.Contains(t, mailopts.HTMLMessage, `&#34;Fix structured data Value in property &#34;reviewCount&#34; must be positive&#34;`)
+	})
+	t.Run("with pre-escaped HTML entities", func(t *testing.T) {
+		// This tests the fix for issue #1664 where HTML entities were being double-escaped
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`Task with entity: &#34;already escaped&#34; should render correctly`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Plain text should contain the HTML entity as-is (it will be interpreted by email client)
+		assert.Contains(t, mailopts.Message, `&#34;`)
+
+		// HTML should properly handle the pre-escaped entity without double-escaping
+		// The entity should remain as &#34; (not become &amp;#34;)
+		assert.Contains(t, mailopts.HTMLMessage, `&#34;already escaped&#34;`)
+		// Should NOT double-escape to &amp;#34; which would display as literal &#34;
+		assert.NotContains(t, mailopts.HTMLMessage, `&amp;#34;`)
+	})
 }
