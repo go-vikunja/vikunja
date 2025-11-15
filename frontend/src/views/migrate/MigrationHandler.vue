@@ -28,6 +28,43 @@
 						{{ $t('migrate.upload') }}
 					</XButton>
 				</template>
+				<template v-else-if="migrator.requiresServerURL">
+					<Message
+						v-if="migrationError"
+						variant="danger"
+						class="mbe-4"
+					>
+						{{ migrationError }}
+					</Message>
+					<div class="field">
+						<label
+							class="label"
+							for="serverUrl"
+						>
+							{{ $t('migrate.deck.serverUrl') }}
+						</label>
+						<div class="control">
+							<input
+								id="serverUrl"
+								v-model="serverUrl"
+								class="input"
+								type="url"
+								:placeholder="$t('migrate.deck.serverUrlPlaceholder')"
+								required
+							>
+						</div>
+						<p class="help">
+							{{ $t('migrate.deck.serverUrlDescription') }}
+						</p>
+					</div>
+					<XButton
+						:loading="migrationService.loading"
+						:disabled="migrationService.loading || !serverUrl || undefined"
+						@click="startOAuthFlow"
+					>
+						{{ $t('migrate.getStarted') }}
+					</XButton>
+				</template>
 				<template v-else>
 					<p>{{ $t('migrate.authorize', {name: migrator.name}) }}</p>
 					<XButton
@@ -156,6 +193,7 @@ const message = ref('')
 const migratorAuthCode = ref('')
 const migrationJustStarted = ref(false)
 const migrationError = ref('')
+const serverUrl = ref('')
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
 
@@ -166,12 +204,33 @@ const migrationFileService = shallowReactive(new AbstractMigrationFileService(mi
 
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
+async function startOAuthFlow() {
+	try {
+		migrationError.value = ''
+		// Store server URL in session storage so we can retrieve it after OAuth callback
+		sessionStorage.setItem('deckServerUrl', serverUrl.value)
+		const {url} = await migrationService.getAuthUrl(serverUrl.value)
+		authUrl.value = url
+		window.location.href = authUrl.value
+	} catch (e) {
+		migrationError.value = getErrorText(e)
+	}
+}
+
 async function initMigration() {
 	if (migrator.value.isFileMigrator) {
 		return
 	}
 
-	authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
+	// For migrators that require server URL, restore it from session storage
+	if (migrator.value.requiresServerURL) {
+		const storedServerUrl = sessionStorage.getItem('deckServerUrl')
+		if (storedServerUrl) {
+			serverUrl.value = storedServerUrl
+		}
+	} else {
+		authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
+	}
 
 	const TOKEN_HASH_PREFIX = '#token='
 	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
@@ -218,6 +277,14 @@ async function migrate() {
 		migrationConfig = uploadInput.value?.files?.[0] as File
 	}
 
+	// For migrators that require server URL, include it in the migration config
+	if (migrator.value.requiresServerURL && serverUrl.value) {
+		migrationConfig = {
+			code: migratorAuthCode.value,
+			server_url: serverUrl.value,
+		}
+	}
+
 	try {
 		if (migrator.value.isFileMigrator) {
 			const result = await migrationFileService.migrate(migrationConfig as File)
@@ -225,7 +292,7 @@ async function migrate() {
 			const projectStore = useProjectStore()
 			return projectStore.loadAllProjects()
 		}
-		
+
 		await migrationService.migrate(migrationConfig as MigrationConfig)
 		migrationJustStarted.value = true
 	} catch (e) {

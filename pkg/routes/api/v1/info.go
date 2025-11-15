@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/modules/migration/deck"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
@@ -106,6 +107,7 @@ func Info(c echo.Context) error {
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),
+			(&deck.Migration{}).Name(),
 		},
 		Legal: legalInfo{
 			ImprintURL:       config.LegalImprintURL.GetString(),
@@ -144,6 +146,10 @@ func Info(c echo.Context) error {
 	}
 	if config.MigrationMicrosoftTodoEnable.GetBool() {
 		m := &microsofttodo.Migration{}
+		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
+	}
+	if config.MigrationDeckEnable.GetBool() {
+		m := &deck.Migration{}
 		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
 	}
 

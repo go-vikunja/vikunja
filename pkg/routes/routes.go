@@ -70,6 +70,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/api/pkg/modules/migration"
+	"code.vikunja.io/api/pkg/modules/migration/deck"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
@@ -713,6 +714,17 @@ func registerMigrations(m *echo.Group) {
 		}
 		microsoftTodoMigrationHandler.RegisterMigrator(m)
 	}
+
+	// Nextcloud Deck
+	// Note: Unlike other OAuth migrators, Deck is always registered because it requires
+	// the server URL before OAuth can start. The /info endpoint controls visibility based
+	// on MigrationDeckEnable configuration.
+	deckMigrationHandler := &migrationHandler.MigrationWeb{
+		MigrationStruct: func() migration.Migrator {
+			return &deck.Migration{}
+		},
+	}
+	deckMigrationHandler.RegisterMigrator(m)
 
 	// Vikunja File Migrator
 	vikunjaFileMigrationHandler := &migrationHandler.FileMigratorWeb{

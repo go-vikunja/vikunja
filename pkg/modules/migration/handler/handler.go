@@ -47,6 +47,7 @@ type AuthURL struct {
 func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 	ms := mw.MigrationStruct()
 	g.GET("/"+ms.Name()+"/auth", mw.AuthURL)
+	g.POST("/"+ms.Name()+"/auth", mw.AuthURL)
 	g.GET("/"+ms.Name()+"/status", mw.Status)
 	g.POST("/"+ms.Name()+"/migrate", mw.Migrate)
 	registeredMigrators[ms.Name()] = mw
@@ -55,6 +56,16 @@ func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 // AuthURL is the web handler to get the auth url
 func (mw *MigrationWeb) AuthURL(c echo.Context) error {
 	ms := mw.MigrationStruct()
+
+	// For POST requests, bind the request body to the migrator struct
+	// This allows migrators that need server URL to receive it
+	if c.Request().Method == http.MethodPost {
+		err := c.Bind(ms)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body: "+err.Error()).SetInternal(err)
+		}
+	}
+
 	return c.JSON(http.StatusOK, &AuthURL{URL: ms.AuthURL()})
 }
 

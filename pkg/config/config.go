@@ -180,6 +180,11 @@ const (
 	MigrationMicrosoftTodoClientID     Key = `migration.microsofttodo.clientid`
 	MigrationMicrosoftTodoClientSecret Key = `migration.microsofttodo.clientsecret`
 	MigrationMicrosoftTodoRedirectURL  Key = `migration.microsofttodo.redirecturl`
+	MigrationDeckEnable                Key = `migration.deck.enable`
+	MigrationDeckClientID              Key = `migration.deck.clientid`
+	MigrationDeckClientSecret          Key = `migration.deck.clientsecret`
+	MigrationDeckRedirectURL           Key = `migration.deck.redirecturl`
+	MigrationDeckUserMapping           Key = `migration.deck.usermapping`
 
 	CorsEnable  Key = `cors.enable`
 	CorsOrigins Key = `cors.origins`
@@ -452,6 +457,8 @@ func InitDefaultConfig() {
 	MigrationTodoistEnable.setDefault(false)
 	MigrationTrelloEnable.setDefault(false)
 	MigrationMicrosoftTodoEnable.setDefault(false)
+	MigrationDeckEnable.setDefault(false)
+	MigrationDeckUserMapping.setDefault(map[string]string{})
 	// Avatar
 	AvatarGravaterExpiration.setDefault(3600)
 	// Project Backgrounds
@@ -635,6 +642,10 @@ func InitConfig() {
 
 	if MigrationMicrosoftTodoRedirectURL.GetString() == "" {
 		MigrationMicrosoftTodoRedirectURL.Set(ServicePublicURL.GetString() + "migrate/microsoft-todo")
+	}
+
+	if MigrationDeckRedirectURL.GetString() == "" {
+		MigrationDeckRedirectURL.Set(ServicePublicURL.GetString() + "migrate/deck")
 	}
 
 	if DefaultSettingsTimezone.GetString() == "" {

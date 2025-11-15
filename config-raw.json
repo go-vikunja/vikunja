@@ -606,6 +606,31 @@
                             "comment": "The url where clients are redirected after they authorized Vikunja to access their Microsoft todo tasks.\nThis needs to match the url you entered when registering your Vikunja instance at Microsoft.\nWhen using the official Vikunja frontend, set this to `\u003cservice.publicurl\u003e/migrate/microsoft-todo` (the default value).\nOtherwise, set this to an url which then makes a request to /api/v1/migration/microsoft-todo/migrate\nwith the code obtained from the Microsoft Todo api."
                         }
                     ]
+                },
+                {
+                    "key": "deck",
+                    "children": [
+                        {
+                            "key": "enable",
+                            "default_value": "false",
+                            "comment": "Whether to enable the Nextcloud Deck migrator."
+                        },
+                        {
+                            "key": "clientid",
+                            "default_value": "",
+                            "comment": "The OAuth 2.0 client id, required for making authenticated requests to the Nextcloud Deck API.\nTo obtain credentials, log in to your Nextcloud instance as admin and navigate to Settings > Security > OAuth 2.0.\nCreate a new client with redirect URI: `\u003cservice.publicurl\u003e/migrate/deck`"
+                        },
+                        {
+                            "key": "clientsecret",
+                            "default_value": "",
+                            "comment": "The OAuth 2.0 client secret, also required for making authenticated requests to the Nextcloud Deck API.\nThis secret is shown only once when creating the OAuth client in Nextcloud."
+                        },
+                        {
+                            "key": "redirecturl",
+                            "default_value": "\u003cfrontend url\u003e/migrate/deck",
+                            "comment": "The url where clients are redirected after they authorized Vikunja to access their Nextcloud Deck boards.\nThis needs to match the redirect URI you entered when registering the OAuth client in Nextcloud.\nWhen using the official Vikunja frontend, set this to `\u003cservice.publicurl\u003e/migrate/deck`.\nOtherwise, set this to an url which then makes a request to /api/v1/migration/deck/migrate\nwith the code obtained from the Nextcloud OAuth API."
+                        }
+                    ]
                 }
             ]
         },

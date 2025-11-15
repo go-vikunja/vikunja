@@ -561,7 +561,25 @@
     "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
     "upload": "Upload file",
     "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
-    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
+    "migrationInProgress": "A migration is currently in progress. Please wait until it is done.",
+    "deck": {
+      "serverUrl": "Nextcloud Server URL",
+      "serverUrlPlaceholder": "https://cloud.example.com",
+      "serverUrlDescription": "Enter the URL of your Nextcloud instance (cloud or self-hosted)",
+      "invalidServerUrl": "Invalid server URL format. Please use http:// or https://",
+      "serverUnreachable": "Server is unreachable. Please check the URL and your network connection.",
+      "notNextcloudInstance": "Server is not a Nextcloud instance. Please verify the URL.",
+      "deckAppNotInstalled": "Nextcloud Deck app is not installed on this server.",
+      "httpsRequired": "HTTPS is required for non-localhost servers.",
+      "authorizationCodeMissing": "Authorization code is missing. Please restart the authorization process.",
+      "authorizationCodeInvalid": "Authorization code is invalid or expired. Please restart the authorization process.",
+      "authorizationCodeExpired": "Authorization code has expired. Please restart the authorization process.",
+      "accessTokenFailed": "Failed to obtain access token. Please restart the authorization process.",
+      "accessTokenInvalid": "Access token is invalid or expired. Please re-authorize.",
+      "accessTokenRevoked": "Access token was revoked. Please re-authorize.",
+      "oauthConfigError": "OAuth configuration error. Please contact your administrator.",
+      "serverMismatch": "Server URL mismatch. Please restart the authorization process."
+    }
   },
   "label": {
     "title": "Labels",
