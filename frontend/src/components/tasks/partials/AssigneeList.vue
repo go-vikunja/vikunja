@@ -54,10 +54,6 @@ defineEmits<{
 .assignees-list {
 	display: flex;
 
-	&.is-inline :deep(.user) {
-		display: inline;
-	}
-
 	&:hover .assignee:not(:first-child) {
 		margin-inline-start: -0.5rem;
 	}
@@ -75,6 +71,21 @@ defineEmits<{
 		align-content: center;
   		align-items: center;
   		gap: .5rem;
+	}
+
+	:deep(.user > .username) {
+		font-size: .75rem;
+	}
+
+	&.is-inline {
+		:deep(.user) {
+			display: inline;
+			text-wrap: nowrap;
+		}
+
+		:deep(.user > .username) {
+			margin-inline-start: .5rem;
+		}
 	}
 }
 
