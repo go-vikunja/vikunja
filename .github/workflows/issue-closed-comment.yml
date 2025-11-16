@@ -39,6 +39,7 @@ jobs:
               .filter(event => event.event === 'referenced')
               .pop(); // Get the last (most recent) referenced event
 
+            console.log({closedEvent, referencedEvent});
             if (closedEvent && (closedEvent.commit_id || referencedEvent)) {
               const commitId = closedEvent.commit_id ?? referencedEvent.commit_id
               console.log(`✅ Issue #${issueNumber} was closed by commit: ${commitId}`);
