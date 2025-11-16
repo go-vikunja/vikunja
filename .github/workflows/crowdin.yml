@@ -14,14 +14,14 @@ jobs:
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
           persist-credentials: true
       - name: push source files
-        uses: crowdin/github-action@0749939f635900a2521aa6aac7a3766642b2dc71 # v2
+        uses: crowdin/github-action@08713f00a50548bfe39b37e8f44afb53e7a802d4 # v2
         with:
           command: 'push'
         env:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
       - name: pull translations
-        uses: crowdin/github-action@0749939f635900a2521aa6aac7a3766642b2dc71 # v2
+        uses: crowdin/github-action@08713f00a50548bfe39b37e8f44afb53e7a802d4 # v2
         with:
           command: 'download'
           command_args: '--export-only-approved --skip-untranslated-strings'
@@ -29,7 +29,7 @@ jobs:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
       - name: Setup Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version-file: frontend/.nvmrc
       - name: Ensure file permissions

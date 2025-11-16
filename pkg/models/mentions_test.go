@@ -43,31 +43,31 @@ func TestFindMentionedUsersInText(t *testing.T) {
 	}{
 		{
 			name: "no users mentioned",
-			text: "Lorem Ipsum dolor sit amet",
+			text: "<p>Lorem Ipsum dolor sit amet</p>",
 		},
 		{
 			name:      "one user at the beginning",
-			text:      "@user1 Lorem Ipsum",
+			text:      `<p><span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> Lorem Ipsum</p>`,
 			wantUsers: []*user.User{user1},
 		},
 		{
 			name:      "one user at the end",
-			text:      "Lorem Ipsum @user1",
+			text:      `<p>Lorem Ipsum <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span></p>`,
 			wantUsers: []*user.User{user1},
 		},
 		{
 			name:      "one user in the middle",
-			text:      "Lorem @user1 Ipsum",
+			text:      `<p>Lorem <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> Ipsum</p>`,
 			wantUsers: []*user.User{user1},
 		},
 		{
 			name:      "same user multiple times",
-			text:      "Lorem @user1 Ipsum @user1 @user1",
+			text:      `<p>Lorem <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> Ipsum <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span></p>`,
 			wantUsers: []*user.User{user1},
 		},
 		{
 			name:      "Multiple users",
-			text:      "Lorem @user1 Ipsum @user2",
+			text:      `<p>Lorem <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> Ipsum <span class="mention" data-type="mention" data-id="2" data-label="user2">@user2</span></p>`,
 			wantUsers: []*user.User{user1, user2},
 		},
 	}
@@ -103,7 +103,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
 		tc := &TaskComment{
-			Comment: "Lorem Ipsum @user1 @user2 @user3 @user4 @user5 @user6",
+			Comment: `<p>Lorem Ipsum <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> <span class="mention" data-type="mention" data-id="2" data-label="user2">@user2</span> <span class="mention" data-type="mention" data-id="3" data-label="user3">@user3</span> <span class="mention" data-type="mention" data-id="4" data-label="user4">@user4</span> <span class="mention" data-type="mention" data-id="5" data-label="user5">@user5</span> <span class="mention" data-type="mention" data-id="6" data-label="user6">@user6</span></p>`,
 			TaskID:  32, // user2 has access to the project that task belongs to
 		}
 		err = tc.Create(s, u)
@@ -156,7 +156,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
 		tc := &TaskComment{
-			Comment: "Lorem Ipsum @user2",
+			Comment: `<p>Lorem Ipsum <span class="mention" data-type="mention" data-id="2" data-label="user2">@user2</span></p>`,
 			TaskID:  32, // user2 has access to the project that task belongs to
 		}
 		err = tc.Create(s, u)
@@ -170,7 +170,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		_, err = notifyMentionedUsers(s, &task, tc.Comment, n)
 		require.NoError(t, err)
 
-		_, err = notifyMentionedUsers(s, &task, "Lorem Ipsum @user2 @user3", n)
+		_, err = notifyMentionedUsers(s, &task, `<p>Lorem Ipsum <span class="mention" data-type="mention" data-id="2" data-label="user2">@user2</span> <span class="mention" data-type="mention" data-id="3" data-label="user3">@user3</span></p>`, n)
 		require.NoError(t, err)
 
 		// The second time mentioning the user in the same task should not create another notification

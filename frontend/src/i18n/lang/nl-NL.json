@@ -89,7 +89,7 @@
 				"savedSuccess": "De instellingen zijn succesvol bijgewerkt.",
 				"emailReminders": "Stuur me herinneringen voor taken via e-mail",
 				"overdueReminders": "Stuur me dagelijks een overzicht van mijn ongedaan gemaakte achterstallige taken",
-				"discoverableByName": "Sta andere gebruikers toe om mij als lid toe te voegen aan teams of projecten door mijn naam te zoeken",
+				"discoverableByName": "Andere gebruikers toestaan mij als lid toe te voegen aan teams of projecten door mijn naam te zoeken",
 				"discoverableByEmail": "Andere gebruikers toestaan mij als lid toe te voegen aan teams of projecten door mijn volledige e-mail te zoeken",
 				"playSoundWhenDone": "Een geluid afspelen wanneer taken als voltooid gemarkeerd worden",
 				"allowIconChanges": "Toon speciale logo's op bepaalde momenten",
@@ -340,7 +340,8 @@
 			"permission": {
 				"title": "Machtiging",
 				"read": "Alleen lezen",
-				"readWrite": "Lezen & schrijven"
+				"readWrite": "Lezen & schrijven",
+				"admin": "Beheren"
 			},
 			"attributes": {
 				"link": "Koppeling",
@@ -497,45 +498,45 @@
 				"link": "Hoe werkt dit?",
 				"canUseDatemath": "Je kunt datumberekeningen gebruiken om relatieve datums in te stellen. Klik op de datumwaarde in een zoekopdracht voor meer informatie.",
 				"fields": {
-					"done": "Of de taak voltooid is of niet",
-					"priority": "Het prioriteitsniveau van de taak (1-5)",
-					"percentDone": "Het percentage van voltooiing van de taak (0-100)",
-					"dueDate": "De vervaldatum van de taak",
-					"startDate": "De startdatum van de taak",
-					"endDate": "De einddatum van de taak",
-					"doneAt": "De datum en tijd waarop de taak is voltooid",
-					"assignees": "De verantwoordelijken van de taak",
-					"labels": "De labels die zijn gekoppeld aan de taak",
-					"project": "Het project waar de taak bij hoort (alleen beschikbaar voor opgeslagen filters, niet op projectniveau)",
-					"reminders": "De taakherinneringen als datumveld, zal alle taken opleveren met tenminste één herinnering die past in de zoekopdracht",
-					"created": "De tijd en datum waarop de taak is aangemaakt",
-					"updated": "De tijd en datum waarop de taak voor het laatst is gewijzigd"
+					"done": "of de taak voltooid is of niet",
+					"priority": "het prioriteitsniveau van de taak (1-5)",
+					"percentDone": "het percentage van voltooiing van de taak (0-100)",
+					"dueDate": "de vervaldatum van de taak",
+					"startDate": "de startdatum van de taak",
+					"endDate": "de einddatum van de taak",
+					"doneAt": "de datum en tijd waarop de taak is voltooid",
+					"assignees": "de verantwoordelijken van de taak",
+					"labels": "de labels die zijn gekoppeld aan de taak",
+					"project": "het project waar de taak bij hoort (alleen beschikbaar voor opgeslagen filters, niet op projectniveau)",
+					"reminders": "de taakherinneringen als datumveld, zal alle taken opleveren met tenminste één herinnering die past in de zoekopdracht",
+					"created": "de tijd en datum waarop de taak is aangemaakt",
+					"updated": "de tijd en datum waarop de taak voor het laatst is gewijzigd"
 				},
 				"operators": {
 					"intro": "De beschikbare operators voor het filteren zijn:",
-					"notEqual": "Is niet gelijk aan",
-					"equal": "Is gelijk aan",
-					"greaterThan": "Groter dan",
-					"greaterThanOrEqual": "Groter dan of gelijk aan",
-					"lessThan": "Kleiner dan",
-					"lessThanOrEqual": "Kleiner dan of gelijk aan",
-					"like": "Voldoet aan een patroon (met jokerteken %)",
-					"in": "Voldoet bij elke overeenkomst in een kommagescheiden lijst met waarden",
-					"notIn": "Voldoet bij elke waarde die niet voorkomt in een kommagescheiden lijst met waarden"
+					"notEqual": "is niet gelijk aan",
+					"equal": "is gelijk aan",
+					"greaterThan": "groter dan",
+					"greaterThanOrEqual": "groter dan of gelijk aan",
+					"lessThan": "kleiner dan",
+					"lessThanOrEqual": "kleiner dan of gelijk aan",
+					"like": "voldoet aan een patroon (met jokerteken %)",
+					"in": "voldoet bij elke overeenkomst in een kommagescheiden lijst met waarden",
+					"notIn": "voldoet bij elke waarde die niet voorkomt in een kommagescheiden lijst met waarden"
 				},
 				"logicalOperators": {
 					"intro": "Om meerdere voorwaarden te combineren, kun je de volgende logische operatoren gebruiken:",
 					"and": "AND operator, voldoet als alle voorwaarden waar zijn",
 					"or": "OR operator, voldoet als een van de voorwaarden waar is",
-					"parentheses": "Haakjes voor groeperen voorwaarden"
+					"parentheses": "haakjes voor groeperen voorwaarden"
 				},
 				"examples": {
 					"intro": "Hier zijn enkele voorbeelden van filterquery's:",
-					"priorityEqual": "Voldoet bij taken met prioriteit 4",
-					"dueDatePast": "Voldoet bij taken met een vervaldatum in het verleden",
-					"undoneHighPriority": "Voldoet bij ongedane taken met prioriteit 3 of hoger",
-					"assigneesIn": "Voldoet bij taken toegewezen aan \"gebruiker1\" of \"gebruiker2\"",
-					"priorityOneOrTwoPastDue": "Voldoet bij taken van prioriteit 1 of 2 en een vervaldatum in het verleden"
+					"priorityEqual": "voldoet bij taken met prioriteit 4",
+					"dueDatePast": "voldoet bij taken met een vervaldatum in het verleden",
+					"undoneHighPriority": "voldoet bij ongedane taken met prioriteit 3 of hoger",
+					"assigneesIn": "voldoet bij taken toegewezen aan \"gebruiker1\" of \"gebruiker2\"",
+					"priorityOneOrTwoPastDue": "voldoet bij taken van prioriteit 1 of 2 en een vervaldatum in het verleden"
 				}
 			}
 		}
@@ -810,7 +811,7 @@
 			"move": "Verplaats taak naar een ander project",
 			"done": "Markeer taak als voltooid!",
 			"undone": "Markeer als niet voltooid",
-			"created": "Gemaakt op {0} door {1}",
+			"created": "Gemaakt {0} door {1}",
 			"updated": "{0} bijgewerkt",
 			"doneAt": "{0} voltooid",
 			"updateSuccess": "De taak is succesvol opgeslagen.",
@@ -991,8 +992,8 @@
 			"each": "Elke",
 			"specifyAmount": "Kies hoeveelheid…",
 			"hours": "Uren",
-			"days": "Dagen",
-			"weeks": "Weken",
+			"days": "dagen",
+			"weeks": "weken",
 			"months": "Maanden",
 			"years": "Jaren",
 			"invalidAmount": "Voer meer dan nul in."

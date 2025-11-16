@@ -34,7 +34,7 @@ type TaskComment struct {
 	Comment  string     `xorm:"text not null" json:"comment" valid:"dbtext,required"`
 	AuthorID int64      `xorm:"not null" json:"-"`
 	Author   *user.User `xorm:"-" json:"author"`
-	TaskID   int64      `xorm:"not null" json:"-" param:"task"`
+	TaskID   int64      `xorm:"index not null" json:"-" param:"task"`
 
 	Reactions ReactionMap `xorm:"-" json:"reactions"`
 
@@ -268,6 +268,43 @@ func addCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Tas
 				task.Comments = []*TaskComment{}
 			}
 			task.Comments = append(task.Comments, comment)
+		}
+	}
+
+	return nil
+}
+
+func addCommentCountToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	zero := int64(0)
+	for _, taskID := range taskIDs {
+		if task, ok := taskMap[taskID]; ok {
+			task.CommentCount = &zero
+		}
+	}
+
+	type CommentCount struct {
+		TaskID int64 `xorm:"task_id"`
+		Count  int64 `xorm:"count"`
+	}
+
+	counts := []CommentCount{}
+
+	if err := s.
+		Select("task_id, COUNT(*) as count").
+		Where(builder.In("task_id", taskIDs)).
+		GroupBy("task_id").
+		Table("task_comments").
+		Find(&counts); err != nil {
+		return err
+	}
+
+	for _, c := range counts {
+		if task, ok := taskMap[c.TaskID]; ok {
+			task.CommentCount = &c.Count
 		}
 	}
 

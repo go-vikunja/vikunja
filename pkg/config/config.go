@@ -65,6 +65,7 @@ const (
 	ServiceMaxAvatarSize                  Key = `service.maxavatarsize`
 	ServiceAllowIconChanges               Key = `service.allowiconchanges`
 	ServiceCustomLogoURL                  Key = `service.customlogourl`
+	ServiceCustomLogoURLDark              Key = `service.customlogourldark`
 	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
@@ -158,6 +159,15 @@ const (
 
 	FilesBasePath Key = `files.basepath`
 	FilesMaxSize  Key = `files.maxsize`
+	FilesType     Key = `files.type`
+
+	// S3 Configuration
+	FilesS3Endpoint     Key = `files.s3.endpoint`
+	FilesS3Bucket       Key = `files.s3.bucket`
+	FilesS3Region       Key = `files.s3.region`
+	FilesS3AccessKey    Key = `files.s3.accesskey`
+	FilesS3SecretKey    Key = `files.s3.secretkey`
+	FilesS3UsePathStyle Key = `files.s3.usepathstyle`
 
 	MigrationTodoistEnable             Key = `migration.todoist.enable`
 	MigrationTodoistClientID           Key = `migration.todoist.clientid`
@@ -426,6 +436,14 @@ func InitDefaultConfig() {
 	// Files
 	FilesBasePath.setDefault("files")
 	FilesMaxSize.setDefault("20MB")
+	FilesType.setDefault("local")
+	// S3 Configuration
+	FilesS3Endpoint.setDefault("")
+	FilesS3Bucket.setDefault("")
+	FilesS3Region.setDefault("")
+	FilesS3AccessKey.setDefault("")
+	FilesS3SecretKey.setDefault("")
+	FilesS3UsePathStyle.setDefault(false)
 	// Cors
 	CorsEnable.setDefault(true)
 	CorsOrigins.setDefault([]string{"http://127.0.0.1:*", "http://localhost:*"})

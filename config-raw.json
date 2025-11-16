@@ -124,6 +124,11 @@
                     "comment": "Allow using a custom logo via external URL."
                 },
                 {
+                    "key": "customlogourldark",
+                    "default_value": "",
+                    "comment": "Allow using a custom logo for dark mode via external URL. If not set, the regular logo will be used for both light and dark modes."
+                },
+                {
                     "key": "enablepublicteams",
                     "default_value": "false",
                     "comment": "Enables the public team feature. If enabled, it is possible to configure teams to be public, which makes them\ndiscoverable when sharing a project, therefore not only showing teams the user is member of."
@@ -484,6 +489,47 @@
                     "key": "maxsize",
                     "default_value": "20MB",
                     "comment": "The maximum size of a file, as a human-readable string.\nWarning: The max size is limited 2^64-1 bytes due to the underlying datatype"
+                },
+                {
+                    "key": "type",
+                    "default_value": "local",
+                    "comment": "The type of file storage backend. Supported values are `local` and `s3`."
+                },
+                {
+                    "key": "s3",
+                    "comment": "Configuration for S3 storage backend",
+                    "children": [
+                        {
+                            "key": "endpoint",
+                            "default_value": "",
+                            "comment": "The S3 endpoint to use. Can be used with S3-compatible services like MinIO or Backblaze B2."
+                        },
+                        {
+                            "key": "bucket",
+                            "default_value": "",
+                            "comment": "The name of the S3 bucket to store files in."
+                        },
+                        {
+                            "key": "region",
+                            "default_value": "",
+                            "comment": "The S3 region where the bucket is located."
+                        },
+                        {
+                            "key": "accesskey",
+                            "default_value": "",
+                            "comment": "The S3 access key ID."
+                        },
+                        {
+                            "key": "secretkey",
+                            "default_value": "",
+                            "comment": "The S3 secret access key."
+                        },
+                        {
+                            "key": "usepathstyle",
+                            "default_value": "false",
+                            "comment": "Whether to use path-style addressing (e.g., https://s3.amazonaws.com/bucket/key) instead of virtual-hosted-style (e.g., https://bucket.s3.amazonaws.com/key). This is commonly needed for self-hosted S3-compatible services. Some providers only support one style or the other."
+                        }
+                    ]
                 }
             ]
         },

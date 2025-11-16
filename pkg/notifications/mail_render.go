@@ -116,7 +116,7 @@ func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err e
 			continue
 		}
 
-		md := []byte(templatehtml.HTMLEscapeString(line.Text))
+		md := []byte(line.Text)
 		var buf bytes.Buffer
 		err = goldmark.Convert(md, &buf)
 		if err != nil {
@@ -195,6 +195,7 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 		Message:     plainContent.String(),
 		HTMLMessage: htmlContent.String(),
 		Boundary:    boundary,
+		ThreadID:    m.threadID,
 		EmbedFS: map[string]*embed.FS{
 			"logo.png": &logo,
 		},

@@ -222,10 +222,10 @@ const ErrCodeWrongUsernameOrPassword = 1011
 
 // HTTPError holds the http error description
 func (err ErrWrongUsernameOrPassword) HTTPError() web.HTTPError {
-	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeWrongUsernameOrPassword, Message: "Wrong username or password."}
+	return web.HTTPError{HTTPCode: http.StatusForbidden, Code: ErrCodeWrongUsernameOrPassword, Message: "Wrong username or password."}
 }
 
-// IsErrWrongUsernameOrPassword checks if an error is a IsErrEmailNotConfirmed.
+// IsErrWrongUsernameOrPassword checks if an error is a ErrWrongUsernameOrPassword.
 func IsErrWrongUsernameOrPassword(err error) bool {
 	_, ok := err.(ErrWrongUsernameOrPassword)
 	return ok
@@ -248,7 +248,7 @@ func (err ErrEmailNotConfirmed) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusPreconditionFailed, Code: ErrCodeEmailNotConfirmed, Message: "Please confirm your email address."}
 }
 
-// IsErrEmailNotConfirmed checks if an error is a IsErrEmailNotConfirmed.
+// IsErrEmailNotConfirmed checks if an error is a ErrEmailNotConfirmed.
 func IsErrEmailNotConfirmed(err error) bool {
 	_, ok := err.(ErrEmailNotConfirmed)
 	return ok

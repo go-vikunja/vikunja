@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //go:build mage
-// +build mage
 
 package main
 

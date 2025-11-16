@@ -27,7 +27,7 @@ jobs:
           version: latest
           args: -compile ./mage-static
       - name: Store Mage Binary
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: mage_bin
           path: ./mage-static
@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Download Mage Binary
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: mage_bin
       - name: Git describe
@@ -57,7 +57,7 @@ jobs:
           chmod +x ./mage-static
           ./mage-static build
       - name: Store Vikunja Binary
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: vikunja_bin
           path: ./vikunja
@@ -74,9 +74,9 @@ jobs:
           mkdir -p frontend/dist
           touch frontend/dist/index.html
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8
+        uses: golangci/golangci-lint-action@0a35821d5c230e903fcfe077583637dea1b27b47 # v9
         with:
-          version: v2.4.0
+          version: v2.6.0
 
   api-check-translations:
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Download Mage Binary
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: mage_bin
       - name: Check
@@ -104,14 +104,14 @@ jobs:
           - mysql
     services:
       migration-smoke-db-mysql:
-        image: mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8
+        image: mariadb:12@sha256:607835cd628b78e2876f6a586d0ec37b296c47683b31ef750002d3d17d3d8f7a
         env:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
         ports:
           - 3306:3306
       migration-smoke-db-postgres:
-        image: postgres:18@sha256:073e7c8b84e2197f94c8083634640ab37105effe1bc853ca4d5fbece3219b0e8
+        image: postgres:18@sha256:435fe973d0516bf24165976346eced9c841a890b1a2092cb68c45a93679b1b19
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
@@ -123,7 +123,7 @@ jobs:
           wget https://dl.vikunja.io/vikunja/unstable/vikunja-unstable-linux-amd64-full.zip -q -O vikunja-latest.zip
           unzip vikunja-latest.zip vikunja-unstable-linux-amd64
       - name: Download Vikunja Binary
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: vikunja_bin
       - name: run migration
@@ -180,21 +180,21 @@ jobs:
           - web
     services:
       db-mysql:
-        image: mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8
+        image: ${{ matrix.db == 'mysql' && 'mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8' || '' }}
         env:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
         ports:
           - 3306:3306
       db-postgres:
-        image: postgres:18@sha256:073e7c8b84e2197f94c8083634640ab37105effe1bc853ca4d5fbece3219b0e8
+        image: ${{ matrix.db == 'postgres' && 'postgres:18@sha256:073e7c8b84e2197f94c8083634640ab37105effe1bc853ca4d5fbece3219b0e8' || '' }}
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
         ports:
           - 5432:5432
       db-paradedb:
-        image: paradedb/paradedb:latest-pg17@sha256:48d6b3fe349430ff190fdacfba7a26ad048d3927c1bca1a2d926468c19cab4c5
+        image: ${{ matrix.db == 'paradedb' && 'paradedb/paradedb:latest-pg17@sha256:741010eaa8894d292203d9407d46fc95ee4d0cd587915513bf92e6bd70cbd65e' || '' }}
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
@@ -207,7 +207,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Download Mage Binary
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: mage_bin
       - name: Set up Go
@@ -245,6 +245,48 @@ jobs:
           touch frontend/dist/index.html
           chmod +x mage-static
           ./mage-static test:${{ matrix.test }}
+
+  test-s3-integration:
+    runs-on: ubuntu-latest
+    needs:
+      - mage
+    services:
+      test-minio:
+        image: bitnamilegacy/minio:latest@sha256:451fe6858cb770cc9d0e77ba811ce287420f781c7c1b806a386f6896471a349c
+        env:
+          MINIO_ROOT_USER: vikunja
+          MINIO_ROOT_PASSWORD: vikunjatest
+          MINIO_DEFAULT_BUCKETS: vikunja-test
+        ports:
+          - 9000:9000
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - name: Download Mage Binary
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: mage_bin
+      - name: Set up Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6
+        with:
+          go-version: stable
+      - name: test S3 file storage integration
+        env:
+          VIKUNJA_TESTS_USE_CONFIG: 1
+          VIKUNJA_DATABASE_TYPE: sqlite
+          VIKUNJA_FILES_TYPE: s3
+          VIKUNJA_FILES_S3_ENDPOINT: http://localhost:9000
+          VIKUNJA_FILES_S3_BUCKET: vikunja-test
+          VIKUNJA_FILES_S3_REGION: us-east-1
+          VIKUNJA_FILES_S3_ACCESSKEY: vikunja
+          VIKUNJA_FILES_S3_SECRETKEY: vikunjatest
+          VIKUNJA_FILES_S3_USEPATHSTYLE: true
+          VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:3456
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
+          chmod +x mage-static
+          # Run only the S3 file storage integration tests
+          ./mage-static test:filter "TestFileStorageIntegration"
 
   frontend-lint:
     runs-on: ubuntu-latest
@@ -299,7 +341,7 @@ jobs:
         working-directory: frontend
         run: pnpm build
       - name: Store Frontend
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: frontend_dist
           path: ./frontend/dist
@@ -324,19 +366,19 @@ jobs:
         # Only run parallel tests for non-fork PRs, single container for forks
         containers: ${{ github.event.pull_request.head.repo.fork != true && fromJSON('[1, 2, 3, 4]') || fromJSON('[1]') }}
     container:
-      image: cypress/browsers:latest@sha256:1f1adf3bd11c79465abc22e1e29848695fdbbe82d468957103dc0f8ba00e0f8e
+      image: cypress/browsers:latest@sha256:e85371fb0053c4f5ec2ffcbbcbfce2bf2bb6b4d0e8274c977cc36a283a7bd9e1
       options: --user 1001
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Download Vikunja Binary
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: vikunja_bin
       - uses: ./.github/actions/setup-frontend
         with:
           install-e2e-binaries: true
       - name: Download Frontend
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: frontend_dist
           path: ./frontend/dist
