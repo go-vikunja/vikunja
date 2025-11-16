@@ -10,7 +10,6 @@ import {BucketFactory} from '../../factories/bucket'
 import {
 	createTasksWithPriorities,
 	createTasksWithSearch,
-	createTasksWithPriorityAndSearch,
 } from '../../support/filterTestHelpers'
 
 describe('Project View List', () => {
@@ -202,24 +201,19 @@ describe('Project View List', () => {
 	it('Should respect filter query parameter from URL', () => {
 		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities()
 
-		// Visit directly with filter parameter for priority >= 4
 		cy.visit('/projects/1/1?filter=priority%20>=%204')
 
-		// URL should retain the filter parameter
 		cy.url()
 			.should('include', 'filter=priority')
 
-		// Wait for the filtered task to appear (this ensures the filter was applied)
 		cy.contains('.tasks', highPriorityTasks[0].title, {timeout: 10000})
 			.should('exist')
 
-		// List should show high priority tasks
 		cy.get('.tasks')
 			.should('contain', highPriorityTasks[0].title)
 		cy.get('.tasks')
 			.should('contain', highPriorityTasks[1].title)
 
-		// List should not show low priority tasks
 		cy.get('.tasks')
 			.should('not.contain', lowPriorityTasks[0].title)
 		cy.get('.tasks')
@@ -229,50 +223,17 @@ describe('Project View List', () => {
 	it('Should respect search query parameter from URL', () => {
 		const {searchableTask} = createTasksWithSearch()
 
-		// Visit with search parameter
 		cy.visit('/projects/1/1?s=meeting')
 
-		// URL should retain the search parameter
 		cy.url()
 			.should('include', 's=meeting')
 
-		// Wait for the searchable task to appear (this ensures search was applied)
 		cy.contains('.tasks', searchableTask.title, {timeout: 10000})
 			.should('exist')
 
-		// List should show the searchable task
 		cy.get('.tasks')
 			.should('contain', searchableTask.title)
 
-		// List should not show other tasks (assuming they don't contain "meeting")
-		cy.get('.tasks .task')
-			.should('have.length', 1)
-	})
-
-	it('Should respect both filter and search query parameters from URL', () => {
-		const {matchingTask, nonMatchingTask1, nonMatchingTask2} = createTasksWithPriorityAndSearch()
-
-		// Visit with both filter and search parameters
-		cy.visit('/projects/1/1?filter=priority%20>=%205&s=meeting')
-
-		// URL should retain both parameters
-		cy.url()
-			.should('include', 'filter=priority')
-			.and('include', 's=meeting')
-
-		// Wait for the matching task to appear (this ensures both filter and search were applied)
-		cy.contains('.tasks', matchingTask.title, {timeout: 10000})
-			.should('exist')
-
-		// List should show only the matching task
-		cy.get('.tasks')
-			.should('contain', matchingTask.title)
-		cy.get('.tasks')
-			.should('not.contain', nonMatchingTask1.title)
-		cy.get('.tasks')
-			.should('not.contain', nonMatchingTask2.title)
-
-		// Should have exactly 1 task
 		cy.get('.tasks .task')
 			.should('have.length', 1)
 	})

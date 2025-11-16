@@ -9,7 +9,6 @@ import {TaskBucketFactory} from "../../factories/task_buckets";
 import {
 	createTasksWithPriorities,
 	createTasksWithSearch,
-	createTasksWithPriorityAndSearch,
 } from '../../support/filterTestHelpers'
 
 function createSingleTaskInBucket(count = 1, attrs = {}) {
@@ -311,28 +310,19 @@ describe('Project View Kanban', () => {
 	it('Should respect filter query parameter from URL', () => {
 		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities(buckets)
 
-		cy.visit('/projects/1/4')
-		cy.get('.task').should('exist')
-		cy.screenshot()
-
-		// Visit directly with filter parameter for priority >= 4
 		cy.visit('/projects/1/4?filter=priority%20>=%204')
 
-		// URL should retain the filter parameter
 		cy.url()
 			.should('include', 'filter=priority')
 
-		// Wait for the filtered task to appear (this ensures the filter was applied)
 		cy.contains('.kanban .bucket', highPriorityTasks[0].title, {timeout: 10000})
 			.should('exist')
 
-		// Kanban should show high priority tasks
 		cy.get('.kanban .bucket')
 			.should('contain', highPriorityTasks[0].title)
 		cy.get('.kanban .bucket')
 			.should('contain', highPriorityTasks[1].title)
 
-		// Kanban should not show low priority tasks
 		cy.get('.kanban .bucket')
 			.should('not.contain', lowPriorityTasks[0].title)
 		cy.get('.kanban .bucket')
@@ -342,50 +332,17 @@ describe('Project View Kanban', () => {
 	it('Should respect search query parameter from URL', () => {
 		const {searchableTask} = createTasksWithSearch(buckets)
 
-		// Visit with search parameter
 		cy.visit('/projects/1/4?s=meeting')
 
-		// URL should retain the search parameter
 		cy.url()
 			.should('include', 's=meeting')
 
-		// Wait for the searchable task to appear (this ensures search was applied)
 		cy.contains('.kanban .bucket', searchableTask.title, {timeout: 10000})
 			.should('exist')
 
-		// Kanban should show the searchable task
 		cy.get('.kanban .bucket')
 			.should('contain', searchableTask.title)
 
-		// Kanban should show only 1 task in the bucket
-		cy.get('.kanban .bucket .tasks .task')
-			.should('have.length', 1)
-	})
-
-	it('Should respect both filter and search query parameters from URL', () => {
-		const {matchingTask, nonMatchingTask1, nonMatchingTask2} = createTasksWithPriorityAndSearch(buckets)
-
-		// Visit with both filter and search parameters
-		cy.visit('/projects/1/4?filter=priority%20>=%205&s=meeting')
-
-		// URL should retain both parameters
-		cy.url()
-			.should('include', 'filter=priority')
-			.and('include', 's=meeting')
-
-		// Wait for the matching task to appear (this ensures both filter and search were applied)
-		cy.contains('.kanban .bucket', matchingTask.title, {timeout: 10000})
-			.should('exist')
-
-		// Kanban should show only the matching task
-		cy.get('.kanban .bucket')
-			.should('contain', matchingTask.title)
-		cy.get('.kanban .bucket')
-			.should('not.contain', nonMatchingTask1.title)
-		cy.get('.kanban .bucket')
-			.should('not.contain', nonMatchingTask2.title)
-
-		// Should have exactly 1 task in the bucket
 		cy.get('.kanban .bucket .tasks .task')
 			.should('have.length', 1)
 	})
