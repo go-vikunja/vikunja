@@ -28,7 +28,7 @@
 						{{ $t('migrate.upload') }}
 					</XButton>
 				</template>
-				<template v-else-if="migrator.requiresCustomOAuth">
+				<template v-else-if="migrator.isNextcloudDeck">
 					<Message
 						v-if="migrationError"
 						variant="danger"
@@ -320,7 +320,7 @@ async function initMigration() {
 	}
 
 	// For migrators that require custom OAuth, restore config from session storage
-	if (migrator.value.requiresCustomOAuth) {
+	if (migrator.value.isNextcloudDeck) {
 		const storedServerUrl = sessionStorage.getItem('deckServerUrl')
 		const storedClientId = sessionStorage.getItem('deckClientId')
 		const storedRedirectUrl = sessionStorage.getItem('deckRedirectUrl')
@@ -380,7 +380,7 @@ async function migrate() {
 	}
 
 	// For migrators that require custom OAuth, include all config in the migration config
-	if (migrator.value.requiresCustomOAuth && serverUrl.value) {
+	if (migrator.value.isNextcloudDeck && serverUrl.value) {
 		migrationConfig = {
 			code: migratorAuthCode.value,
 			server_url: serverUrl.value,
