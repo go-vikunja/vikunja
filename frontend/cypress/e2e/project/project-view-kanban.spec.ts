@@ -312,6 +312,7 @@ describe('Project View Kanban', () => {
 		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities(buckets)
 
 		cy.visit('/projects/1/4')
+		cy.get('.task').should('exist')
 		cy.screenshot()
 
 		// Visit directly with filter parameter for priority >= 4
