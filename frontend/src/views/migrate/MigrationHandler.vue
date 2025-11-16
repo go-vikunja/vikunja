@@ -323,13 +323,22 @@ async function initMigration() {
 	if (migrator.value.isNextcloudDeck) {
 		const storedServerUrl = sessionStorage.getItem('deckServerUrl')
 		const storedClientId = sessionStorage.getItem('deckClientId')
+		const storedClientSecret = sessionStorage.getItem('deckClientSecret')
 		const storedRedirectUrl = sessionStorage.getItem('deckRedirectUrl')
 		const storedUserMappings = sessionStorage.getItem('deckUserMappings')
 
 		if (storedServerUrl) serverUrl.value = storedServerUrl
 		if (storedClientId) clientId.value = storedClientId
+		if (storedClientSecret) clientSecret.value = storedClientSecret
 		if (storedRedirectUrl) redirectUrl.value = storedRedirectUrl
 		if (storedUserMappings) userMappings.value = storedUserMappings
+
+		// Clear sensitive data from sessionStorage immediately after retrieval
+		sessionStorage.removeItem('deckServerUrl')
+		sessionStorage.removeItem('deckClientId')
+		sessionStorage.removeItem('deckClientSecret')
+		sessionStorage.removeItem('deckRedirectUrl')
+		sessionStorage.removeItem('deckUserMappings')
 	} else {
 		authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
 	}
