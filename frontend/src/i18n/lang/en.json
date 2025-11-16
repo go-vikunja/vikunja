@@ -575,6 +575,8 @@
       "redirectUrl": "Redirect URL",
       "redirectUrlPlaceholder": "https://vikunja.example.com/migrate/deck",
       "redirectUrlDescription": "This must match the Redirect URI configured in your Nextcloud OAuth app. Use the current Vikunja URL with '/migrate/deck' appended.",
+      "oauthSetupTitle": "Important: Nextcloud OAuth Configuration",
+      "oauthSetupDescription": "When creating the OAuth app in Nextcloud (Settings > Security > OAuth 2.0), you must set the Redirect URI to the URL shown below. This is required for the authorization to work.",
       "userMappings": "User Mappings (Optional)",
       "userMappingsPlaceholder": "nextcloud_user:vikunja_user\nalice:alice\nbob:robert",
       "userMappingsDescription": "Map Nextcloud usernames to Vikunja usernames (one per line, format: nc_user:vikunja_user). Comments and attachments will be assigned to mapped users.",

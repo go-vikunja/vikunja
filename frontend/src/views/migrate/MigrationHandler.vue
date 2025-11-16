@@ -99,27 +99,16 @@
 							{{ $t('migrate.deck.clientSecretDescription') }}
 						</p>
 					</div>
-					<div class="field">
-						<label
-							class="label"
-							for="redirectUrl"
-						>
-							{{ $t('migrate.deck.redirectUrl') }}
-						</label>
-						<div class="control">
-							<input
-								id="redirectUrl"
-								v-model="redirectUrl"
-								class="input"
-								type="url"
-								:placeholder="$t('migrate.deck.redirectUrlPlaceholder')"
-								required
-							>
-						</div>
-						<p class="help">
-							{{ $t('migrate.deck.redirectUrlDescription') }}
+					<Message class="mbe-4">
+						<p>
+							<strong>{{ $t('migrate.deck.oauthSetupTitle') }}</strong>
 						</p>
-					</div>
+						<p>{{ $t('migrate.deck.oauthSetupDescription') }}</p>
+						<p class="mt-2">
+							<strong>{{ $t('migrate.deck.redirectUrl') }}:</strong>
+							<code class="has-background-light p-1">{{ redirectUrl }}</code>
+						</p>
+					</Message>
 					<div class="field">
 						<label
 							class="label"
@@ -142,7 +131,7 @@
 					</div>
 					<XButton
 						:loading="migrationService.loading"
-						:disabled="migrationService.loading || !serverUrl || !clientId || !clientSecret || !redirectUrl || undefined"
+						:disabled="migrationService.loading || !serverUrl || !clientId || !clientSecret || undefined"
 						@click="startOAuthFlow"
 					>
 						{{ $t('migrate.getStarted') }}
@@ -279,8 +268,10 @@ const migrationError = ref('')
 const serverUrl = ref('')
 const clientId = ref('')
 const clientSecret = ref('')
-const redirectUrl = ref('')
 const userMappings = ref('')
+
+// Auto-calculate redirect URL - this must be configured in Nextcloud OAuth app settings
+const redirectUrl = computed(() => window.location.origin + '/migrate/deck')
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
 
@@ -298,7 +289,6 @@ async function startOAuthFlow() {
 		sessionStorage.setItem('deckServerUrl', serverUrl.value)
 		sessionStorage.setItem('deckClientId', clientId.value)
 		sessionStorage.setItem('deckClientSecret', clientSecret.value)
-		sessionStorage.setItem('deckRedirectUrl', redirectUrl.value)
 		sessionStorage.setItem('deckUserMappings', userMappings.value)
 
 		const {url} = await migrationService.getAuthUrl({
@@ -324,20 +314,17 @@ async function initMigration() {
 		const storedServerUrl = sessionStorage.getItem('deckServerUrl')
 		const storedClientId = sessionStorage.getItem('deckClientId')
 		const storedClientSecret = sessionStorage.getItem('deckClientSecret')
-		const storedRedirectUrl = sessionStorage.getItem('deckRedirectUrl')
 		const storedUserMappings = sessionStorage.getItem('deckUserMappings')
 
 		if (storedServerUrl) serverUrl.value = storedServerUrl
 		if (storedClientId) clientId.value = storedClientId
 		if (storedClientSecret) clientSecret.value = storedClientSecret
-		if (storedRedirectUrl) redirectUrl.value = storedRedirectUrl
 		if (storedUserMappings) userMappings.value = storedUserMappings
 
 		// Clear sensitive data from sessionStorage immediately after retrieval
 		sessionStorage.removeItem('deckServerUrl')
 		sessionStorage.removeItem('deckClientId')
 		sessionStorage.removeItem('deckClientSecret')
-		sessionStorage.removeItem('deckRedirectUrl')
 		sessionStorage.removeItem('deckUserMappings')
 	} else {
 		authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
