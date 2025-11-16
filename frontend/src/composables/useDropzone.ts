@@ -1,9 +1,16 @@
 import type { MaybeRef, MaybeRefOrGetter, ShallowRef } from 'vue'
 import { isClient } from '@vueuse/shared'
-// eslint-disable-next-line no-restricted-imports
 import { shallowRef, unref } from 'vue'
 
 import { useEventListener } from '@vueuse/core'
+
+
+/////////
+// Temporary copy until https://github.com/vueuse/vueuse/pull/5169 is merged and released
+////////
+
+/* eslint-disable */ 
+
 
 export interface UseDropZoneReturn {
   files: ShallowRef<File[] | null>
@@ -16,6 +23,11 @@ export interface UseDropZoneOptions {
    * Also can be a function to check the data types.
    */
   dataTypes?: MaybeRef<readonly string[]> | ((types: readonly string[]) => boolean)
+  /**
+   * Similar to dataTypes, but exposes the DataTransferItemList for custom validation.
+   * If provided, this function takes precedence over dataTypes.
+   */
+  checkValidity?: (items: DataTransferItemList) => boolean
   onDrop?: (files: File[] | null, event: DragEvent) => void
   onEnter?: (files: File[] | null, event: DragEvent) => void
   onLeave?: (files: File[] | null, event: DragEvent) => void
@@ -67,6 +79,10 @@ export function useDropZone(
     }
 
     const checkValidity = (items: DataTransferItemList) => {
+      if (_options.checkValidity) {
+        return _options.checkValidity(items)
+      }
+
       const types = Array.from(items ?? []).map(item => item.type)
 
       const dataTypesValid = checkDataTypes(types)
