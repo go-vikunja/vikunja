@@ -122,6 +122,7 @@
     "@vue/eslint-config-typescript": "14.6.0",
     "@vue/test-utils": "2.4.6",
     "@vue/tsconfig": "0.8.1",
+    "@vueuse/shared": "^14.0.0",
     "autoprefixer": "10.4.22",
     "browserslist": "4.28.0",
     "caniuse-lite": "1.0.30001754",
