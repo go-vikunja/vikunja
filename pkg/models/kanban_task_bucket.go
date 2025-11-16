@@ -83,23 +83,8 @@ func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
 	return
 }
 
-// Update is the handler to update a task bucket
-// @Summary Update a task bucket
-// @Description Updates a task in a bucket
-// @tags task
-// @Accept json
-// @Produce json
-// @Security JWTKeyAuth
-// @Param project path int true "Project ID"
-// @Param view path int true "Project View ID"
-// @Param bucket path int true "Bucket ID"
-// @Param taskBucket body models.TaskBucket true "The id of the task you want to move into the bucket."
-// @Success 200 {object} models.TaskBucket "The updated task bucket."
-// @Failure 400 {object} web.HTTPError "Invalid task bucket object provided."
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /projects/{project}/views/{view}/buckets/{bucket}/tasks [post]
-func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
-
+// updateTaskBucket is internally used to actually do the update.
+func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 	oldTaskBucket := &TaskBucket{}
 	_, err = s.
 		Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).
@@ -192,7 +177,7 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 
 		err = task.updateReminders(s, task)
 		if err != nil {
-			return err
+			return
 		}
 
 		// Since the done state of the task was changed, we need to move the task into all done buckets everywhere
@@ -230,9 +215,33 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	b.Task = task
 	b.Bucket = bucket
 
+	return
+}
+
+// Update is the handler to update a task bucket
+// @Summary Update a task bucket
+// @Description Updates a task in a bucket
+// @tags task
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param project path int true "Project ID"
+// @Param view path int true "Project View ID"
+// @Param bucket path int true "Bucket ID"
+// @Param taskBucket body models.TaskBucket true "The id of the task you want to move into the bucket."
+// @Success 200 {object} models.TaskBucket "The updated task bucket."
+// @Failure 400 {object} web.HTTPError "Invalid task bucket object provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /projects/{project}/views/{view}/buckets/{bucket}/tasks [post]
+func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
+	err = updateTaskBucket(s, a, b)
+	if err != nil {
+		return err
+	}
+
 	doer, _ := user.GetFromAuth(a)
 	return events.Dispatch(&TaskUpdatedEvent{
-		Task: task,
+		Task: b.Task,
 		Doer: doer,
 	})
 }

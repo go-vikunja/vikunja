@@ -1173,7 +1173,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 				ProjectViewID: view.ID,
 				ProjectID:     t.ProjectID,
 			}
-			err = tb.Update(s, a)
+			err = updateTaskBucket(s, a, tb)
 			if err != nil {
 				return err
 			}
@@ -1183,7 +1183,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 				return err
 			}
 
-			err = tp.Update(s, a)
+			err = updateTaskPosition(s, a, tp)
 			if err != nil {
 				return err
 			}
@@ -1404,7 +1404,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 			ProjectViewID: view.ID,
 			ProjectID:     t.ProjectID,
 		}
-		err = tb.Update(s, a)
+		err = updateTaskBucket(s, a, tb)
 		if err != nil {
 			return err
 		}
@@ -1414,7 +1414,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 			ProjectViewID: view.ID,
 			Position:      calculateDefaultPosition(t.Index, t.Position),
 		}
-		err = tp.Update(s, a)
+		err = updateTaskPosition(s, a, &tp)
 		if err != nil {
 			return err
 		}
