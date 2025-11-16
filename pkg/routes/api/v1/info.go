@@ -147,7 +147,6 @@ func Info(c echo.Context) error {
 		m := &microsofttodo.Migration{}
 		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
 	}
-	// Deck migrator is always available (no config needed - OAuth credentials provided via UI)
 	{
 		m := &deck.Migration{}
 		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
