@@ -42,7 +42,10 @@
 						class="label-edit-button is-small"
 						@click.stop.prevent="editLabel(label)"
 					>
-						<Icon icon="pen" class="icon"/>
+						<Icon
+							icon="pen"
+							class="icon"
+						/>
 					</BaseButton>
 				</RouterLink>
 			</div>
