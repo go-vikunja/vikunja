@@ -311,6 +311,9 @@ describe('Project View Kanban', () => {
 	it('Should respect filter query parameter from URL', () => {
 		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities(buckets)
 
+		cy.visit('/projects/1/4')
+		cy.screenshot()
+
 		// Visit directly with filter parameter for priority >= 4
 		cy.visit('/projects/1/4?filter=priority%20>=%204')
 
