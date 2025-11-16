@@ -17,6 +17,8 @@
 package files
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,6 +29,10 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
+	"github.com/aws/aws-sdk-go/aws"             //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	"github.com/aws/aws-sdk-go/aws/credentials" //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	"github.com/aws/aws-sdk-go/aws/session"     //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	s3 "github.com/fclairamb/afero-s3"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +41,7 @@ import (
 var fs afero.Fs
 var afs *afero.Afero
 
-func setDefaultConfig() {
+func setDefaultLocalConfig() {
 	if !strings.HasPrefix(config.FilesBasePath.GetString(), "/") {
 		config.FilesBasePath.Set(filepath.Join(
 			config.ServiceRootpath.GetString(),
@@ -44,18 +50,73 @@ func setDefaultConfig() {
 	}
 }
 
-// InitFileHandler creates a new file handler for the file backend we want to use
-func InitFileHandler() {
+// initS3FileHandler initializes the S3 file backend
+func initS3FileHandler() error {
+	// Get S3 configuration
+	endpoint := config.FilesS3Endpoint.GetString()
+	bucket := config.FilesS3Bucket.GetString()
+	region := config.FilesS3Region.GetString()
+	accessKey := config.FilesS3AccessKey.GetString()
+	secretKey := config.FilesS3SecretKey.GetString()
+
+	if endpoint == "" {
+		return errors.New("S3 endpoint is not configured. Please set files.s3.endpoint")
+	}
+	if bucket == "" {
+		return errors.New("S3 bucket is not configured. Please set files.s3.bucket")
+	}
+	if accessKey == "" {
+		return errors.New("S3 access key is not configured. Please set files.s3.accesskey")
+	}
+	if secretKey == "" {
+		return errors.New("S3 secret key is not configured. Please set files.s3.secretkey")
+	}
+
+	// Create AWS session for afero-s3
+	sess, err := session.NewSession(&aws.Config{
+		Region:           aws.String(region),
+		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
+		Endpoint:         aws.String(endpoint),
+		S3ForcePathStyle: aws.Bool(config.FilesS3UsePathStyle.GetBool()),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create AWS session: %w", err)
+	}
+
+	// Initialize S3 filesystem using afero-s3
+	fs = s3.NewFs(bucket, sess)
+	afs = &afero.Afero{Fs: fs}
+
+	return nil
+}
+
+// initLocalFileHandler initializes the local filesystem backend
+func initLocalFileHandler() {
 	fs = afero.NewOsFs()
 	afs = &afero.Afero{Fs: fs}
-	setDefaultConfig()
+	setDefaultLocalConfig()
+}
+
+// InitFileHandler creates a new file handler for the file backend we want to use
+func InitFileHandler() error {
+	fileType := config.FilesType.GetString()
+
+	switch fileType {
+	case "s3":
+		return initS3FileHandler()
+	case "local":
+		initLocalFileHandler()
+		return nil
+	default:
+		return fmt.Errorf("invalid file storage type '%s': must be 'local' or 's3'", fileType)
+	}
 }
 
 // InitTestFileHandler initializes a new memory file system for testing
 func InitTestFileHandler() {
 	fs = afero.NewMemMapFs()
 	afs = &afero.Afero{Fs: fs}
-	setDefaultConfig()
+	setDefaultLocalConfig()
 }
 
 func initFixtures(t *testing.T) {

@@ -185,9 +185,9 @@
 				"30d": "30 dager",
 				"60d": "60 dager",
 				"90d": "90 dager",
-				"permissionExplanation": "Tillatelser gir mulighet for å hente ut hva en api-plassholder har lov til å gjøre.",
+				"permissionExplanation": "Rettigheter gir mulighet for å hente ut hva en api-plassholder har lov til å gjøre.",
 				"titleRequired": "Tittel er nødvendig",
-				"permissionRequired": "Velg minst en tillatelse fra listen.",
+				"permissionRequired": "Velg minst en rettighet fra listen.",
 				"expired": "Denne plassholderen har utløpt {ago}.",
 				"tokenCreatedSuccess": "Her er din nye api-plassholder {token}",
 				"tokenCreatedNotSeeAgain": "Lagre på et trygt sted. Du vil ikke se dette flere ganger!",
@@ -588,7 +588,11 @@
 		"authenticating": "Autentiserer…",
 		"passwordRequired": "Dette delte prosjektet krever et passord. Vennligst skriv det nedenfor:",
 		"error": "Det oppsto en feil.",
-		"invalidPassword": "Det oppgitte passordet er ugyldig."
+		"invalidPassword": "Det oppgitte passordet er ugyldig.",
+		"accessDenied": "Ingen tilgang. Kontroller rettighetene og prøv på nytt.",
+		"serverError": "Det oppstod en tjenerfeil. Prøv igjen senere.",
+		"projectLoadError": "Kan ikke laste inn prosjektinformasjonen.",
+		"retry": "Prøv igjen"
 	},
 	"navigation": {
 		"overview": "Oversikt",
@@ -813,6 +817,7 @@
 			"updateSuccess": "Oppgaven ble lagret.",
 			"deleteSuccess": "Oppgaven ble slettet.",
 			"belongsToProject": "Denne oppgaven tilhører prosjektet '{project}'",
+			"back": "Tilbake til prosjekt",
 			"due": "Forfaller {at}",
 			"closePopup": "Lukk popup",
 			"organization": "Organisering",
@@ -1279,7 +1284,7 @@
 		"13002": "Den angitte linken for å dele passordet er ugyldig.",
 		"13003": "Den oppgitte delelenke plassholder er ugyldig.",
 		"14001": "Den oppgitte api-plassholder er ugyldig.",
-		"14002": "Tillatelsen {permission} for gruppen {group} er ugyldig.",
+		"14002": "Rettigheten {permission} for gruppen {group} er ugyldig.",
 		"error": "Feil",
 		"success": "Suksess",
 		"0001": "Du har ikke lov til å gjøre det."

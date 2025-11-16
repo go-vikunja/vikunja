@@ -114,6 +114,11 @@
 					"dd/mm/yyyy": "TT/MM/JJJJ",
 					"yyyy/mm/dd": "JJJJ/MM/TT"
 				},
+				"timeFormat": "Zeitformat",
+				"timeFormatOptions": {
+					"12h": "12 Stunden (AM/PM)",
+					"24h": "24 Stunden (HH:mm)"
+				},
 				"externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
 			},
 			"sections": {
@@ -862,6 +867,8 @@
 			"relatedTasks": "Verwandte Aufgaben",
 			"reminders": "Erinnerungen",
 			"repeat": "Wiederholen",
+			"comment": "{count} Kommentar | {count} Kommentare",
+			"commentCount": "Anzahl der Kommentare",
 			"startDate": "Anfangsdatum",
 			"title": "Titel",
 			"updated": "Aktualisiert",
@@ -908,6 +915,9 @@
 			"deleteSuccess": "Der Kommentar wurde erfolgreich gelöscht.",
 			"addedSuccess": "Der Kommentar wurde erfolgreich hinzugefügt.",
 			"permalink": "Permalink zu diesem Kommentar kopieren"
+		},
+		"mention": {
+			"noUsersFound": "Keine Nutzer:innen gefunden"
 		},
 		"deferDueDate": {
 			"title": "Fälligkeitsdatum verschieben",

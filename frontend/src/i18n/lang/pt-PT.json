@@ -114,6 +114,11 @@
 					"dd/mm/yyyy": "DD/MM/AAAA",
 					"yyyy/mm/dd": "AAAA/MM/DD"
 				},
+				"timeFormat": "Formato da hora",
+				"timeFormatOptions": {
+					"12h": "12-horas (AM/PM)",
+					"24h": "24-horas (HH:mm)"
+				},
 				"externalUserNameChange": "O teu nome é gerido pelo teu fornecedor de início de sessão ({provider}). Para o alterar, atualiza-o antes lá."
 			},
 			"sections": {
@@ -862,6 +867,8 @@
 			"relatedTasks": "Tarefas Relacionadas",
 			"reminders": "Lembretes",
 			"repeat": "Repetir",
+			"comment": "{count} comentário | {count} comentários",
+			"commentCount": "Número de comentários",
 			"startDate": "Data de Início",
 			"title": "Título",
 			"updated": "Atualizado",
@@ -908,6 +915,9 @@
 			"deleteSuccess": "O comentário foi eliminado com sucesso.",
 			"addedSuccess": "O comentário foi adicionada com sucesso.",
 			"permalink": "Copiar o link permanente para este comentário"
+		},
+		"mention": {
+			"noUsersFound": "Nenhum utilizador encontrado"
 		},
 		"deferDueDate": {
 			"title": "Adiar data de vencimento",

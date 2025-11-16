@@ -404,6 +404,7 @@
 					<Comments
 						:can-write="canWrite"
 						:task-id="taskId"
+						:project-id="task.projectId"
 						:initial-comments="task.comments"
 					/>
 				</div>

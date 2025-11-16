@@ -407,4 +407,205 @@ This is a footer line
 </html>
 `, mailopts.HTMLMessage)
 	})
+	t.Run("with thread ID", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line("This is a line").
+			ThreadID("<task-123@vikunja>")
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+		assert.Equal(t, mail.from, mailopts.From)
+		assert.Equal(t, mail.to, mailopts.To)
+		assert.Equal(t, "<task-123@vikunja>", mailopts.ThreadID)
+	})
+	t.Run("with special characters in task title", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`This is a friendly reminder of the task "Fix structured data Value in property "reviewCount" must be positive" (My Project).`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+		assert.Equal(t, mail.from, mailopts.From)
+		assert.Equal(t, mail.to, mailopts.To)
+
+		// Plain text should keep quotes as-is
+		assert.Contains(t, mailopts.Message, `"Fix structured data Value in property "reviewCount" must be positive"`)
+
+		// HTML should have proper HTML entities for quotes
+		// &#34; is the correct HTML entity for the quote character and will render as " in the browser
+		assert.Contains(t, mailopts.HTMLMessage, `&#34;Fix structured data Value in property &#34;reviewCount&#34; must be positive&#34;`)
+	})
+	t.Run("with pre-escaped HTML entities", func(t *testing.T) {
+		// This tests the fix for issue #1664 where HTML entities were being double-escaped
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`Task with entity: &#34;already escaped&#34; should render correctly`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Plain text should contain the HTML entity as-is (it will be interpreted by email client)
+		assert.Contains(t, mailopts.Message, `&#34;`)
+
+		// HTML should properly handle the pre-escaped entity without double-escaping
+		// The entity should remain as &#34; (not become &amp;#34;)
+		assert.Contains(t, mailopts.HTMLMessage, `&#34;already escaped&#34;`)
+		// Should NOT double-escape to &amp;#34; which would display as literal &#34;
+		assert.NotContains(t, mailopts.HTMLMessage, `&amp;#34;`)
+	})
+	t.Run("with XSS attempt via script tag", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`Task: <script>alert('XSS')</script>`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Script tags should be stripped by bluemonday sanitization
+		assert.NotContains(t, mailopts.HTMLMessage, `<script>`)
+		assert.NotContains(t, mailopts.HTMLMessage, `</script>`)
+		assert.NotContains(t, mailopts.HTMLMessage, `alert('XSS')`)
+		// The text should be present but sanitized
+		assert.Contains(t, mailopts.HTMLMessage, `Task:`)
+	})
+	t.Run("with XSS attempt via img onerror", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`Task: <img src=x onerror=alert('XSS')>`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// The dangerous HTML should be escaped, not rendered as actual HTML
+		// This makes it safe - it will display as text, not execute
+		assert.Contains(t, mailopts.HTMLMessage, `&lt;img`)
+		assert.Contains(t, mailopts.HTMLMessage, `&gt;`)
+		// Verify it's not an actual executable img tag
+		assert.NotContains(t, mailopts.HTMLMessage, `<img src=x onerror=`)
+		// Task text should remain
+		assert.Contains(t, mailopts.HTMLMessage, `Task:`)
+	})
+	t.Run("with XSS attempt via javascript protocol", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`Task: <a href="javascript:alert('XSS')">Click me</a>`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// JavaScript protocol should be stripped
+		assert.NotContains(t, mailopts.HTMLMessage, `javascript:alert`)
+		assert.NotContains(t, mailopts.HTMLMessage, `href="javascript:`)
+		// Text content should remain
+		assert.Contains(t, mailopts.HTMLMessage, `Task:`)
+	})
+	t.Run("with XSS attempt via iframe", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`Task: <iframe src="http://evil.com"></iframe>`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Iframes should be completely stripped by bluemonday
+		assert.NotContains(t, mailopts.HTMLMessage, `<iframe`)
+		assert.NotContains(t, mailopts.HTMLMessage, `http://evil.com`)
+		// Task text should remain
+		assert.Contains(t, mailopts.HTMLMessage, `Task:`)
+	})
+	t.Run("with XSS attempt via HTML injection", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`Task: <div onclick="alert('XSS')">Dangerous</div>`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// onclick handler should be stripped
+		assert.NotContains(t, mailopts.HTMLMessage, `onclick=`)
+		assert.NotContains(t, mailopts.HTMLMessage, `onclick="alert`)
+		// Text content may remain but without the dangerous attributes
+		assert.Contains(t, mailopts.HTMLMessage, `Task:`)
+	})
+	t.Run("with XSS attempt via data URI", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`Task: <img src="data:text/html,<script>alert('XSS')</script>">`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Script tags should not appear in final HTML
+		assert.NotContains(t, mailopts.HTMLMessage, `<script>alert('XSS')</script>`)
+		assert.NotContains(t, mailopts.HTMLMessage, `<script>`)
+		// Task text should remain
+		assert.Contains(t, mailopts.HTMLMessage, `Task:`)
+	})
+	t.Run("with XSS attempt via style tag", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`Task: <style>body{background:url('javascript:alert(1)')}</style>`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Style tags should be stripped by bluemonday
+		assert.NotContains(t, mailopts.HTMLMessage, `<style>`)
+		// Task text should remain
+		assert.Contains(t, mailopts.HTMLMessage, `Task:`)
+	})
+	t.Run("with mixed XSS and legitimate content", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line(`Task "Fix Bug" has <script>alert('XSS')</script> priority & needs **attention**`)
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Malicious content should be stripped
+		assert.NotContains(t, mailopts.HTMLMessage, `<script>`)
+		assert.NotContains(t, mailopts.HTMLMessage, `alert('XSS')`)
+
+		// Legitimate content should be preserved
+		assert.Contains(t, mailopts.HTMLMessage, `Task`)
+		assert.Contains(t, mailopts.HTMLMessage, `Fix Bug`)
+		// Ampersand should be escaped
+		assert.Contains(t, mailopts.HTMLMessage, `&amp;`)
+		// Markdown bold should be converted to strong
+		assert.Contains(t, mailopts.HTMLMessage, `<strong>attention</strong>`)
+	})
 }

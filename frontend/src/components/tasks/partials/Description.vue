@@ -31,6 +31,8 @@
 			:show-save="true"
 			edit-shortcut="e"
 			:enable-discard-shortcut="true"
+			:enable-mentions="true"
+			:mention-project-id="modelValue.projectId"
 			@update:modelValue="saveWithDelay"
 			@save="save"
 		/>
