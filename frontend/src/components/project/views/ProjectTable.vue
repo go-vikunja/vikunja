@@ -361,10 +361,6 @@ const {
 } = taskList
 const tasks: Ref<ITask[]> = taskList.tasks
 
-Object.assign(params.value, {
-	filter: '',
-})
-
 watch(
 	() => activeColumns.value,
 	() => setActiveColumnsSortParam(),

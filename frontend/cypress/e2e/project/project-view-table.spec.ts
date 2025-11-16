@@ -2,6 +2,10 @@ import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import {TaskFactory} from '../../factories/task'
 import {prepareProjects} from './prepareProjects'
+import {
+	createTasksWithPriorities,
+	createTasksWithSearch,
+} from '../../support/filterTestHelpers'
 
 describe('Project View Table', () => {
 	createFakeUserAndLogin()
@@ -52,5 +56,45 @@ describe('Project View Table', () => {
 
 		cy.url()
 			.should('contain', `/tasks/${tasks[0].id}`)
+	})
+
+	it('Should respect filter query parameter from URL', () => {
+		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities()
+
+		cy.visit('/projects/1/3?filter=priority%20>=%204')
+
+		cy.url()
+			.should('include', 'filter=priority')
+
+		cy.contains('.project-table table.table', highPriorityTasks[0].title, {timeout: 10000})
+			.should('exist')
+
+		cy.get('.project-table table.table')
+			.should('contain', highPriorityTasks[0].title)
+		cy.get('.project-table table.table')
+			.should('contain', highPriorityTasks[1].title)
+
+		cy.get('.project-table table.table')
+			.should('not.contain', lowPriorityTasks[0].title)
+		cy.get('.project-table table.table')
+			.should('not.contain', lowPriorityTasks[1].title)
+	})
+
+	it('Should respect search query parameter from URL', () => {
+		const {searchableTask} = createTasksWithSearch()
+
+		cy.visit('/projects/1/3?s=meeting')
+
+		cy.url()
+			.should('include', 's=meeting')
+
+		cy.contains('.project-table table.table', searchableTask.title, {timeout: 10000})
+			.should('exist')
+
+		cy.get('.project-table table.table')
+			.should('contain', searchableTask.title)
+
+		cy.get('.project-table table.table tbody tr')
+			.should('have.length', 1)
 	})
 })

@@ -6,6 +6,10 @@ import {TaskFactory} from '../../factories/task'
 import {prepareProjects} from './prepareProjects'
 import {ProjectViewFactory} from "../../factories/project_view";
 import {TaskBucketFactory} from "../../factories/task_buckets";
+import {
+	createTasksWithPriorities,
+	createTasksWithSearch,
+} from '../../support/filterTestHelpers'
 
 function createSingleTaskInBucket(count = 1, attrs = {}) {
 	const projects = ProjectFactory.create(1)
@@ -301,5 +305,45 @@ describe('Project View Kanban', () => {
 
 		cy.get('.bucket .tasks .task .footer .icon svg')
 			.should('not.exist')
+	})
+
+	it('Should respect filter query parameter from URL', () => {
+		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities(buckets)
+
+		cy.visit('/projects/1/4?filter=priority%20>=%204')
+
+		cy.url()
+			.should('include', 'filter=priority')
+
+		cy.contains('.kanban .bucket', highPriorityTasks[0].title, {timeout: 10000})
+			.should('exist')
+
+		cy.get('.kanban .bucket')
+			.should('contain', highPriorityTasks[0].title)
+		cy.get('.kanban .bucket')
+			.should('contain', highPriorityTasks[1].title)
+
+		cy.get('.kanban .bucket')
+			.should('not.contain', lowPriorityTasks[0].title)
+		cy.get('.kanban .bucket')
+			.should('not.contain', lowPriorityTasks[1].title)
+	})
+
+	it('Should respect search query parameter from URL', () => {
+		const {searchableTask} = createTasksWithSearch(buckets)
+
+		cy.visit('/projects/1/4?s=meeting')
+
+		cy.url()
+			.should('include', 's=meeting')
+
+		cy.contains('.kanban .bucket', searchableTask.title, {timeout: 10000})
+			.should('exist')
+
+		cy.get('.kanban .bucket')
+			.should('contain', searchableTask.title)
+
+		cy.get('.kanban .bucket .tasks .task')
+			.should('have.length', 1)
 	})
 })
