@@ -1,10 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0082c9;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0080c9;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="256" height="256" rx="25" fill="url(#grad)"/>
-  <path fill="#fff" d="M128 40c-10 0-18 8-18 18v18c-20 0-36 16-36 36v24c-10 0-18 8-18 18s8 18 18 18c0 20 16 36 36 36h18c0 10 8 18 18 18s18-8 18-18h18c20 0 36-16 36-36 10 0 18-8 18-18s-8-18-18-18v-24c0-20-16-36-36-36V58c0-10-8-18-18-18zm0 24c3 0 6 3 6 6v18h-12V64c0-3 3-6 6-6zm-38 48h76c11 0 20 9 20 20v44c0 11-9 20-20 20H90c-11 0-20-9-20-20v-44c0-11 9-20 20-20zm-34 24c3 0 6 3 6 6s-3 6-6 6-6-3-6-6 3-6 6-6zm144 0c3 0 6 3 6 6s-3 6-6 6-6-3-6-6 3-6 6-6zM128 182c3 0 6 3 6 6v18c0 3-3 6-6 6s-6-3-6-6v-18c0-3 3-6 6-6z"/>
+<!--
+  Nextcloud Deck Icon
+  Source: https://github.com/nextcloud/deck/blob/main/img/deck.svg
+  Copyright (C) Nextcloud GmbH and contributors
+  License: GNU Affero General Public License or later (https://www.gnu.org/licenses/agpl-3.0.html)
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88">
+    <g fill="#fff">
+        <rect ry="5.5" height="44" width="77" y="38.5" x="5.5"/>
+        <rect ry="2.75" height="5.5" width="66" y="27.5" x="11"/>
+        <rect ry="2.75" height="5.5" width="55" y="16.5" x="16.5"/>
+        <rect ry="2.75" height="5.5" width="44" y="5.5" x="22"/>
+    </g>
 </svg>
