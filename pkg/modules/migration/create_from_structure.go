@@ -307,7 +307,9 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		t.ProjectID = project.ID
 		originalBucketID := t.BucketID
 		t.BucketID = 0
-		err = t.Create(s, user)
+
+		// Use CreateWithTimestamps to preserve original timestamps from migration source
+		err = t.CreateWithTimestamps(s, user)
 		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
 			continue
 		}
