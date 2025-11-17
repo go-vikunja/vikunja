@@ -1,159 +1,157 @@
 {
-    "notifications": {
-        "email_confirm": {
-            "subject": "%[1]s, 请在Vikunja确认你的邮箱地址",
-            "welcome": "欢迎使用 Vikunja！",
-            "confirm": "要确认您的电子邮件地址，请点击下面的链接："
-        },
-        "password": {
-            "changed": {
-                "subject": "您在 Vikunja上的密码已更改",
-                "success": "您的帐户密码修改成功。",
-                "warning": "如果不是你，这可能意味着有人破坏你的帐户。在这种情况下，请联系你的服务器管理员。"
-            },
-            "reset": {
-                "subject": "重置您在 Vikunja 上的密码",
-                "instructions": "如要重置您的密码，请点击下面的链接：",
-                "valid_duration": "此链接将有效期为24小时。"
-            }
-        },
-        "totp": {
-            "invalid": {
-                "subject": "有人刚刚尝试登录您的Vikunja帐户，但失败了",
-                "message": "有人刚刚试图使用正确的用户名和密码登录到您的帐户，但是TOTP 密码是错误的。",
-                "warning": "**如果不是你，意味着其他人知道你的密码。你应该立即设置一个新的密码！**"
-            },
-            "account_locked": {
-                "subject": "我们已在 Vikunja 禁用您的帐户",
-                "message": "有人试图使用您的凭据登录，但未能提供有效的TOTP密码。",
-                "disabled": "在10次尝试失败后，我们已禁用您的账户并重置您的密码。 若要设置一个新密码，请遵循我们刚刚发送给您的重置邮件中的说明。",
-                "reset_instructions": "如果您没有收到重置指令的电子邮件，您可以在 [%[1]s](%[2]s)请求新的重置指令。"
-            }
-        },
-        "login": {
-            "failed": {
-                "subject": "有人刚试图登录您的Vikunja帐户，但未能提供正确的密码",
-                "message": "有人刚刚尝试使用错误密码登录到您的帐户，连续三次登录。",
-                "warning": "如果不是您，这可能是其他人试图破坏您的帐户。",
-                "enhance_security": "为了增强您帐户的安全，您可能想要在设置中设置一个更强的密码或启用TOTP身份验证："
-            }
-        },
-        "account": {
-            "deletion": {
-                "confirm": {
-                    "subject": "请确认删除您的 Vikunja 账户",
-                    "request": "您已请求删除您的帐户。要确认这一点，请点击下面的链接：",
-                    "valid_duration": "此链接的有效期为24小时。",
-                    "schedule_info": "一旦您确认删除，我们将在三天内删除您的帐户，然后那时再发送一封电子邮件。",
-                    "consequences": "如果您继续删除您的账户，我们将删除您创建的所有项目和任务。 您与其他用户或团队共享的一切都会将所有权转让给他们。",
-                    "changed_mind": "如果你没有请求删除或改变主意，你可以忽略这封电子邮件。"
-                },
-                "scheduled": {
-                    "subject_days": "您的 Vikunja 帐户将在 %[1]s 天内删除",
-                    "subject_tomorrow": "您的Vikunja账户明天将被删除",
-                    "request_reminder": "您最近请求删除您的Vikunja帐户。",
-                    "deletion_time_days": "我们将在 %[1]s 天内删除您的帐户。",
-                    "deletion_time_tomorrow": "我们将在明天删除您的帐户。",
-                    "changed_mind": "如果你改变了主意，只需点击下面的链接取消删除并按照下面的说明操作："
-                },
-                "completed": {
-                    "subject": "您的 Vikunja 帐户已被删除",
-                    "confirmation": "按照要求，我们已删除您的Vikunja帐户。",
-                    "permanent": "这个删除是永久性的。如果没有创建备份并且现在需要你的数据，请与你的管理员联系。"
-                }
-            }
-        },
-        "task": {
-            "reminder": {
-                "subject": "提醒 \"%[1]s\" (%[2]s)",
-                "message": "这是一个友好的提醒任务\"%[1]s\" (%[2]s)。"
-            },
-            "comment": {
-                "subject": "回复：%[1]s",
-                "mentioned_subject": "%[1]s在\"%[2]s\"的评论中提到了你",
-                "mentioned_message": "**%[1]s**在评论中提到了您："
-            },
-            "assigned": {
-                "subject_to_assignee": "您已被分配到\"%[1]s\" (%[2]s)",
-                "message_to_assignee": "%[1]s已将您分配给\"%[2]s\"。",
-                "subject_to_others": "\"%[1]s\" (%[2]s)已分配给%[3]s",
-                "message_to_others": "%[1]s已将此任务分配给%[2]s。",
-                "subject_to_others_self": "\"%[1]s\" (%[2]s) has been assigned by %[3]s to themselves",
-                "message_to_others_self": "%[1]s has assigned this task to themselves."
-            },
-            "deleted": {
-                "subject": "\"%[1]s\" (%[2]s) 已经删除",
-                "message": "%[1]s已删除任务\"%[2]s\" (%[3]s)"
-            },
-            "mentioned": {
-                "subject_new": "%[1]s在一个新任务\"%[2]s\"中提到了你",
-                "subject": "%[1]s在任务\"%[2]s\"中提到了你",
-                "message": "**%[1]s** 在任务中提到了您："
-            },
-            "overdue": {
-                "subject": "任务 \"%[1]s\" (%[2]s) 已经逾期",
-                "message": "这是一个友情提示任务 \"%[1]s\" (%[2]s) ，这个任务已经逾期了 %[3]s 但尚未完成。",
-                "multiple_subject": "您逾期的任务",
-                "multiple_message": "您有以下逾期任务：",
-                "overdue_since": "从 %[1]s",
-                "overdue_now": "现在",
-                "overdue": "逾期 %[1]s"
-            }
-        },
-        "project": {
-            "created": "%[1]s 创建了项目 \"%[2]s\""
-        },
-        "team": {
-            "member_added": {
-                "subject": "%[1]s 将您添加到Vikunja的\"%[2]s\"团队",
-                "message": "%[1]s 刚刚将您添加到Vikunja的\"%[2]s\"团队。"
-            }
-        },
-        "data_export": {
-            "ready": {
-                "subject": "您的 Vikunja 数据导出已准备好",
-                "message": "您的 Vikunja 数据导出已准备好下载。点击下面的按钮下载它：",
-                "availability": "能够在7天内下载。"
-            }
-        },
-        "migration": {
-            "done": {
-                "subject": "从 %[1]s 到Vikunja 的迁移已完成",
-                "imported": "Vikunja从%[1]s中导入了所有列表/项目、任务、笔记、提醒和文件。",
-                "have_fun": "开始使用您的新项目(旧项目) ！"
-            },
-            "failed": {
-                "subject": "从 %[1]s 迁移到Vikunja 失败",
-                "message": "这次从 %[1]s 的移动似乎没有按计划进行。",
-                "retry": "不用担心！只要开始使用你以前的同样方式就让它再开一枪。 有时候，这些问题会因为在 %[1]s 的末尾有玻璃杯而出现，但又常常试图玩弄花招。",
-                "error": "我们在这段路上遇到了一些错误：`%[2]s`。",
-                "working_on_it": "我们在雷达上有错误消息，并且正在它上马上排序。"
-            }
-        },
-        "common": {
-            "have_nice_day": "祝你有愉快的一天！",
-            "copy_url": "如果上面的按钮无法工作，请复制下面的URL并将其粘贴到您的浏览器地址栏：",
-            "actions": {
-                "open_task": "打开任务",
-                "open_vikunja": "打开 Vikunja",
-                "open_project": "打开项目",
-                "open_team": "打开团队",
-                "download": "下载",
-                "reset_password": "重置密码",
-                "go_to_settings": "前往设置",
-                "confirm_email": "确认您的电子邮件地址",
-                "abort_deletion": "取消删除",
-                "confirm_account_deletion": "确认删除我的帐户",
-                "change_notification_settings_link": "您可以修改通知设置在 [这里](%[1]s)。"
-            }
-        }
-    },
-    "time": {
-        "since_years": "一年|%[1]d年",
-        "since_weeks": "一周|%[1]d 周",
-        "since_days": "一天|%[1]d 天",
-        "since_hours": "一小时|%[1]d 小时",
-        "since_minutes": "一分钟|%[1]d 分钟",
-        "list_last_separator": "和"
-    }
+	"notifications": {
+		"email_confirm": {
+			"subject": "%[1]s, 请在Vikunja确认你的邮箱地址",
+			"welcome": "欢迎使用 Vikunja！",
+			"confirm": "要确认您的电子邮件地址，请点击下面的链接："
+		},
+		"password": {
+			"changed": {
+				"subject": "您在 Vikunja上的密码已更改",
+				"success": "您的帐户密码修改成功。",
+				"warning": "如果不是你，这可能意味着有人破坏你的帐户。在这种情况下，请联系你的服务器管理员。"
+			},
+			"reset": {
+				"subject": "重置您在 Vikunja 上的密码",
+				"instructions": "如要重置您的密码，请点击下面的链接：",
+				"valid_duration": "此链接将有效期为24小时。"
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "有人刚刚尝试登录您的Vikunja帐户，但失败了",
+				"message": "有人刚刚试图使用正确的用户名和密码登录到您的帐户，但是TOTP 密码是错误的。",
+				"warning": "**如果不是你，意味着其他人知道你的密码。你应该立即设置一个新的密码！**"
+			},
+			"account_locked": {
+				"subject": "我们已在 Vikunja 禁用您的帐户",
+				"message": "有人试图使用您的凭据登录，但未能提供有效的TOTP密码。",
+				"disabled": "在10次尝试失败后，我们已禁用您的账户并重置您的密码。 若要设置一个新密码，请遵循我们刚刚发送给您的重置邮件中的说明。",
+				"reset_instructions": "如果您没有收到重置指令的电子邮件，您可以在 [%[1]s](%[2]s)请求新的重置指令。"
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "有人刚试图登录您的Vikunja帐户，但未能提供正确的密码",
+				"message": "有人刚刚尝试使用错误密码登录到您的帐户，连续三次登录。",
+				"warning": "如果不是您，这可能是其他人试图破坏您的帐户。",
+				"enhance_security": "为了增强您帐户的安全，您可能想要在设置中设置一个更强的密码或启用TOTP身份验证："
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "请确认删除您的 Vikunja 账户",
+					"request": "您已请求删除您的帐户。要确认这一点，请点击下面的链接：",
+					"valid_duration": "此链接的有效期为24小时。",
+					"schedule_info": "一旦您确认删除，我们将在三天内删除您的帐户，然后那时再发送一封电子邮件。",
+					"consequences": "如果您继续删除您的账户，我们将删除您创建的所有项目和任务。 您与其他用户或团队共享的一切都会将所有权转让给他们。",
+					"changed_mind": "如果你没有请求删除或改变主意，你可以忽略这封电子邮件。"
+				},
+				"scheduled": {
+					"subject_days": "您的 Vikunja 帐户将在 %[1]s 天内删除",
+					"subject_tomorrow": "您的Vikunja账户明天将被删除",
+					"request_reminder": "您最近请求删除您的Vikunja帐户。",
+					"deletion_time_days": "我们将在 %[1]s 天内删除您的帐户。",
+					"deletion_time_tomorrow": "我们将在明天删除您的帐户。",
+					"changed_mind": "如果你改变了主意，只需点击下面的链接取消删除并按照下面的说明操作："
+				},
+				"completed": {
+					"subject": "您的 Vikunja 帐户已被删除",
+					"confirmation": "按照要求，我们已删除您的Vikunja帐户。",
+					"permanent": "这个删除是永久性的。如果没有创建备份并且现在需要你的数据，请与你的管理员联系。"
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "提醒 \"%[1]s\" (%[2]s)",
+				"message": "这是一个友好的提醒任务\"%[1]s\" (%[2]s)。"
+			},
+			"comment": {
+				"subject": "回复：%[1]s",
+				"mentioned_subject": "%[1]s在\"%[2]s\"的评论中提到了你",
+				"mentioned_message": "**%[1]s**在评论中提到了您："
+			},
+			"assigned": {
+				"subject_to_assignee": "您已被分配到\"%[1]s\" (%[2]s)",
+				"message_to_assignee": "%[1]s已将您分配给\"%[2]s\"。",
+				"subject_to_others": "\"%[1]s\" (%[2]s)已分配给%[3]s",
+				"message_to_others": "%[1]s已将此任务分配给%[2]s。"
+			},
+			"deleted": {
+				"subject": "\"%[1]s\" (%[2]s) 已经删除",
+				"message": "%[1]s已删除任务\"%[2]s\" (%[3]s)"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s在一个新任务\"%[2]s\"中提到了你",
+				"subject": "%[1]s在任务\"%[2]s\"中提到了你",
+				"message": "**%[1]s** 在任务中提到了您："
+			},
+			"overdue": {
+				"subject": "任务 \"%[1]s\" (%[2]s) 已经逾期",
+				"message": "这是一个友情提示任务 \"%[1]s\" (%[2]s) ，这个任务已经逾期了 %[3]s 但尚未完成。",
+				"multiple_subject": "您逾期的任务",
+				"multiple_message": "您有以下逾期任务：",
+				"overdue_since": "从 %[1]s",
+				"overdue_now": "现在",
+				"overdue": "逾期 %[1]s"
+			}
+		},
+		"project": {
+			"created": "%[1]s 创建了项目 \"%[2]s\""
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s 将您添加到Vikunja的\"%[2]s\"团队",
+				"message": "%[1]s 刚刚将您添加到Vikunja的\"%[2]s\"团队。"
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "您的 Vikunja 数据导出已准备好",
+				"message": "您的 Vikunja 数据导出已准备好下载。点击下面的按钮下载它：",
+				"availability": "能够在7天内下载。"
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "从 %[1]s 到Vikunja 的迁移已完成",
+				"imported": "Vikunja从%[1]s中导入了所有列表/项目、任务、笔记、提醒和文件。",
+				"have_fun": "开始使用您的新项目(旧项目) ！"
+			},
+			"failed": {
+				"subject": "从 %[1]s 迁移到Vikunja 失败",
+				"message": "这次从 %[1]s 的移动似乎没有按计划进行。",
+				"retry": "不用担心！只要开始使用你以前的同样方式就让它再开一枪。 有时候，这些问题会因为在 %[1]s 的末尾有玻璃杯而出现，但又常常试图玩弄花招。",
+				"error": "我们在这段路上遇到了一些错误：`%[2]s`。",
+				"working_on_it": "我们在雷达上有错误消息，并且正在它上马上排序。"
+			}
+		},
+		"common": {
+			"have_nice_day": "祝你有愉快的一天！",
+			"copy_url": "如果上面的按钮无法工作，请复制下面的URL并将其粘贴到您的浏览器地址栏：",
+			"actions": {
+				"open_task": "打开任务",
+				"open_vikunja": "打开 Vikunja",
+				"open_project": "打开项目",
+				"open_team": "打开团队",
+				"download": "下载",
+				"reset_password": "重置密码",
+				"go_to_settings": "前往设置",
+				"confirm_email": "确认您的电子邮件地址",
+				"abort_deletion": "取消删除",
+				"confirm_account_deletion": "确认删除我的帐户",
+				"change_notification_settings_link": "您可以修改通知设置在 [这里](%[1]s)。"
+			}
+		}
+	},
+	"time": {
+		"since_years": "一年|%[1]d年",
+		"since_weeks": "一周|%[1]d 周",
+		"since_days": "一天|%[1]d 天",
+		"since_hours": "一小时|%[1]d 小时",
+		"since_minutes": "一分钟|%[1]d 分钟",
+		"list_last_separator": "和"
+	}
 }
