@@ -437,7 +437,7 @@ func (m *Migration) mapUser(s *xorm.Session, nextcloudUsername string, fallbackU
 	return fallbackUser
 }
 
-// resolveUserMappings resolves Nextcloud usernames stored in comments and attachments to Vikunja users
+// resolveUserMappings resolves Nextcloud usernames stored in comments, attachments, and assignees to Vikunja users
 // This is called after building the project structure but before insertion
 func (m *Migration) resolveUserMappings(projects []*models.ProjectWithTasksAndBuckets, fallbackUser *user.User) error {
 	// Create a database session for user lookups
@@ -448,9 +448,33 @@ func (m *Migration) resolveUserMappings(projects []*models.ProjectWithTasksAndBu
 	commentsTotal := 0
 	attachmentsMapped := 0
 	attachmentsTotal := 0
+	assigneesMapped := 0
+	assigneesTotal := 0
 
 	for _, project := range projects {
 		for _, task := range project.Tasks {
+			// Resolve task assignees
+			resolvedAssignees := []*user.User{}
+			for _, assignee := range task.Assignees {
+				assigneesTotal++
+				if assignee != nil && assignee.Username != "" && assignee.ID == 0 {
+					// This is a temporary user object with Nextcloud username
+					ncUsername := assignee.Username
+					vikunjaUser := m.mapUser(s, ncUsername, fallbackUser)
+
+					// Only add if we found a mapped user (not fallback)
+					// We don't want to assign tasks to the migrating user for unmapped users
+					if vikunjaUser.ID != fallbackUser.ID {
+						resolvedAssignees = append(resolvedAssignees, vikunjaUser)
+						assigneesMapped++
+						log.Debugf("[Deck Migration] Resolved assignee: NC user '%s' -> Vikunja user '%s' (ID: %d)", ncUsername, vikunjaUser.Username, vikunjaUser.ID)
+					} else {
+						log.Debugf("[Deck Migration] No mapping found for assignee NC user '%s', keeping in description only", ncUsername)
+					}
+				}
+			}
+			task.Assignees = resolvedAssignees
+
 			// Resolve comment authors
 			for _, comment := range task.Comments {
 				commentsTotal++
@@ -489,8 +513,8 @@ func (m *Migration) resolveUserMappings(projects []*models.ProjectWithTasksAndBu
 		}
 	}
 
-	log.Infof("[Deck Migration] User mapping summary: %d/%d comments mapped, %d/%d attachments mapped",
-		commentsMapped, commentsTotal, attachmentsMapped, attachmentsTotal)
+	log.Infof("[Deck Migration] User mapping summary: %d/%d assignees mapped, %d/%d comments mapped, %d/%d attachments mapped",
+		assigneesMapped, assigneesTotal, commentsMapped, commentsTotal, attachmentsMapped, attachmentsTotal)
 
 	return nil
 }
@@ -1230,6 +1254,8 @@ func (m *Migration) convertCard(card *deckCard, boardID, stackID int, labelMap m
 	// Build description with assignees
 	description := m.normalizeDescription(card.Description)
 
+	// Store assigned users temporarily for later resolution
+	// Also keep text note as fallback for unmapped users
 	if len(card.AssignedUsers) > 0 {
 		description += m.formatAssignees(card.AssignedUsers)
 	}
@@ -1298,6 +1324,18 @@ func (m *Migration) convertCard(card *deckCard, boardID, stackID int, labelMap m
 			}
 			task.Labels = append(task.Labels, label)
 		}
+	}
+
+	// Store assignees temporarily for later resolution
+	// These will be resolved to actual Vikunja users in resolveUserMappings()
+	task.Assignees = []*user.User{}
+	for _, au := range card.AssignedUsers {
+		// Store Nextcloud username temporarily in a user object (ID=0 indicates unresolved)
+		tempUser := &user.User{
+			Username: au.Participant.UID,
+		}
+		task.Assignees = append(task.Assignees, tempUser)
+		log.Debugf("[Deck Migration] Card %d: Added temporary assignee for NC user '%s'", card.ID, au.Participant.UID)
 	}
 
 	// Initialize attachments slice
