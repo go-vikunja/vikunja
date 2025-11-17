@@ -142,6 +142,14 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 	}
 
+	// Check if the doer assigned the task to themselves
+	if n.Doer.ID == n.Assignee.ID {
+		return notifications.NewMail().
+			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others_self", n.Task.Title, n.Task.GetFullIdentifier(), n.Doer.GetName())).
+			Line(i18n.T(lang, "notifications.task.assigned.message_to_others_self", n.Doer.GetName())).
+			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+	}
+
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())).
 		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", n.Doer.GetName(), n.Assignee.GetName())).
