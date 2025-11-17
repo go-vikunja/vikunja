@@ -807,7 +807,9 @@
 			"overdue": "期限切れタスクを表示",
 			"fromuntil": "{from} 〜 {until} までのタスク",
 			"select": "期間の選択",
-			"noTasks": "タスクはありません — よい一日を！"
+			"noTasks": "タスクはありません — よい一日を！",
+			"filterByLabel": "ラベル {label} での絞り込み",
+			"clearLabelFilter": "ラベルでの絞り込みの解除"
 		},
 		"detail": {
 			"chooseDueDate": "期日を設定…",
@@ -867,6 +869,8 @@
 			"relatedTasks": "関連タスク",
 			"reminders": "リマインダー",
 			"repeat": "繰り返し間隔",
+			"comment": "{count} 件",
+			"commentCount": "コメント数",
 			"startDate": "開始日",
 			"title": "タスク名",
 			"updated": "更新日",

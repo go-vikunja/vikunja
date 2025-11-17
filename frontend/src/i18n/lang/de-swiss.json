@@ -807,7 +807,9 @@
 			"overdue": "Überfällige Aufgaben anzeigen",
 			"fromuntil": "Aufgaben von {from} bis {until}",
 			"select": "Datumsbereich wählen",
-			"noTasks": "Nichts zu tun – Einen schönen Tag noch!"
+			"noTasks": "Nichts zu tun – Einen schönen Tag noch!",
+			"filterByLabel": "Filtern nach Label {label}",
+			"clearLabelFilter": "Label-Filter leeren"
 		},
 		"detail": {
 			"chooseDueDate": "Druck da, um es Fälligkeitsdatum z'setze",
