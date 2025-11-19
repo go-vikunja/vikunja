@@ -22,8 +22,8 @@ import (
 )
 
 type TaskUnreadStatus20251118125156 struct {
-	TaskID int64 `xorm:"int(11) not null unique(IDX_task_unread_statuses_task_user)"`
-	UserID int64 `xorm:"int(11) not null unique(IDX_task_unread_statuses_task_user)"`
+	TaskID int64 `xorm:"int(11) not null unique(task_user)"`
+	UserID int64 `xorm:"int(11) not null unique(task_user)"`
 }
 
 func (TaskUnreadStatus20251118125156) TableName() string {
