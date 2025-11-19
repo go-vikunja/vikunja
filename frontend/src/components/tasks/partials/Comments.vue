@@ -210,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, computed, shallowReactive, watch, nextTick} from 'vue'
+import {ref, reactive, computed, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
