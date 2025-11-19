@@ -21,8 +21,5 @@ const {getLabelStyles} = useLabelStyles()
 
 <style scoped lang="scss">
 .tag {
-	& + & {
-		margin-inline-start: 0.5rem;
-	}
 }
 </style>

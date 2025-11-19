@@ -26,11 +26,13 @@ const displayLabels = computed(() =>
 
 <style lang="scss" scoped>
 .label-wrapper {
-	display: inline;
-	
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+	align-items: flex-start;
+
 	:deep(.tag) {
-		margin-block-start: .125rem;
-		margin-block-end: .125rem;
+		margin: 0;
 	}
 }
 </style>
