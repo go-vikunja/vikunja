@@ -1,10 +1,10 @@
 package models
 
-type TaskUnreadStatuses struct {
+type TaskUnreadStatus struct {
 	TaskID int64 `xorm:"bigint not null unique(task_user)"`
 	UserID int64 `xorm:"bigint not null unique(task_user)"`
 }
 
-func (TaskUnreadStatuses) TableName() string {
+func (TaskUnreadStatus) TableName() string {
 	return "task_unread_statuses"
 }

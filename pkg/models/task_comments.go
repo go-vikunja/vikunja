@@ -97,6 +97,33 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 		}
 	}
 
+	assignees, err := getRawTaskAssigneesForTasks(s, []int64{tc.TaskID})
+	if err != nil {
+		return err
+	}
+
+	for _, assignee := range assignees {
+		if assignee.User.ID == a.GetID() {
+			continue
+		}
+
+		exists, err := s.Where("task_id = ? AND user_id = ?", tc.TaskID, a.GetID()).
+			Exist(&TaskUnreadStatus{})
+		if err != nil {
+			return err
+		}
+
+		if !exists {
+			_, err := s.Insert(&TaskUnreadStatus{
+				TaskID: tc.TaskID,
+				UserID: assignee.User.ID,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return events.Dispatch(&TaskCommentCreatedEvent{
 		Task:    &task,
 		Comment: tc,
