@@ -107,12 +107,8 @@ github.com/gabriel-vasile/mimetype v1.4.11 h1:AQvxbp830wPhHTqc1u7nzoLT+ZFxGY7emj
 github.com/gabriel-vasile/mimetype v1.4.11/go.mod h1:d+9Oxyo1wTzWdyVUPMmXFvp4F9tea18J8ufA774AB3s=
 github.com/ganigeorgiev/fexpr v0.5.0 h1:XA9JxtTE/Xm+g/JFI6RfZEHSiQlk+1glLvRK1Lpv/Tk=
 github.com/ganigeorgiev/fexpr v0.5.0/go.mod h1:RyGiGqmeXhEQ6+mlGdnUleLHgtzzu/VGO2WtJkF5drE=
-github.com/getsentry/sentry-go v0.37.0 h1:5bavywHxVkU/9aOIF4fn3s5RTJX5Hdw6K2W6jLYtM98=
-github.com/getsentry/sentry-go v0.37.0/go.mod h1:eRXCoh3uvmjQLY6qu63BjUZnaBu5L5WhMV1RwYO8W5s=
 github.com/getsentry/sentry-go v0.38.0 h1:S8Xui7gLeAvXINVLMOaX94HnsDf1GexnfXGSNC4+KQs=
 github.com/getsentry/sentry-go v0.38.0/go.mod h1:eRXCoh3uvmjQLY6qu63BjUZnaBu5L5WhMV1RwYO8W5s=
-github.com/getsentry/sentry-go/echo v0.37.0 h1:Lzpg9MVmMD9jPyuKyilyDtrH6dOU3luSLSjj+r5KfVI=
-github.com/getsentry/sentry-go/echo v0.37.0/go.mod h1:wbh4ppYCgmnuoIMGu/DrQzD0NoX6vt2qfoRxMe2wkUQ=
 github.com/getsentry/sentry-go/echo v0.38.0 h1:ZKvDf3O7jXS+UoeGCBiVVB6J14XWqz+9Dtldstl7FS4=
 github.com/getsentry/sentry-go/echo v0.38.0/go.mod h1:iEsS3MBdYoeCMXeG94dhpCca0nOdhB6dMMvbk/XMvvo=
 github.com/go-asn1-ber/asn1-ber v1.5.8-0.20250403174932-29230038a667 h1:BP4M0CvQ4S3TGls2FvczZtj5Re/2ZzkV9VwqPHH/3Bo=
