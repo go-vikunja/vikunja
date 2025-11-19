@@ -145,7 +145,7 @@ import {eventToHotkeyString} from '@github/hotkey'
 import EditorToolbar from './EditorToolbar.vue'
 
 import StarterKit from '@tiptap/starter-kit'
-import {Extension, mergeAttributes} from '@tiptap/core'
+import {Extension, mergeAttributes, type SetContentOptions} from '@tiptap/core'
 import {EditorContent, type Extensions, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {marked} from 'marked'
@@ -215,6 +215,12 @@ const emit = defineEmits(['update:modelValue', 'save'])
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 
 const {t} = useI18n()
+
+const defaultSetContentOptions: SetContentOptions = {
+	parseOptions: {
+		preserveWhitespace: 'full',
+	},
+}
 
 const CustomTableCell = TableCell.extend({
 	addAttributes() {
@@ -549,6 +555,9 @@ const editor = useEditor({
 	onUpdate: () => {
 		bubbleNow()
 	},
+	parseOptions: {
+		preserveWhitespace: 'full',
+	},
 })
 
 watch(
@@ -606,7 +615,10 @@ function bubbleSave() {
 }
 
 function exitEditMode() {
-	editor.value?.commands.setContent(lastSavedState, {emitUpdate: false})
+	editor.value?.commands.setContent(lastSavedState, {
+		...defaultSetContentOptions,
+		emitUpdate: false,
+	})
 
 	// Clear draft from localStorage when discarding changes
 	if (props.storageKey) {
@@ -659,7 +671,10 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 		
 		const html = editor.value?.getHTML().replace(UPLOAD_PLACEHOLDER_ELEMENT, '') ?? ''
 
-		editor.value?.commands.setContent(html, {emitUpdate: false})
+		editor.value?.commands.setContent(html, {
+			...defaultSetContentOptions,
+			emitUpdate: false,
+		})
 
 		bubbleNow()
 	})
@@ -733,7 +748,10 @@ onBeforeUnmount(() => {
 
 function setModeAndValue(value: string) {
 	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
-	editor.value?.commands.setContent(value, {emitUpdate: false})
+	editor.value?.commands.setContent(value, {
+		...defaultSetContentOptions,
+		emitUpdate: false,
+	})
 }
 
 
