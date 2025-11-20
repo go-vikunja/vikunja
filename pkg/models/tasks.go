@@ -1776,6 +1776,12 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	// Delete all task unread statuses
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskUnreadStatus{})
+	if err != nil {
+		return err
+	}
+
 	// Delete all relations
 	_, err = s.Where("task_id = ? OR other_task_id = ?", t.ID, t.ID).Delete(&TaskRelation{})
 	if err != nil {
