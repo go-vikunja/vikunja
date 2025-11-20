@@ -18,8 +18,3 @@ const {getLabelStyles} = useLabelStyles()
 		<span>{{ label.title }}</span>
 	</span>
 </template>
-
-<style scoped lang="scss">
-.tag {
-}
-</style>
