@@ -109,12 +109,18 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 		return err
 	}
 
+	userIDsToNotify := []int64{project.OwnerID}
+
 	for _, projectUser := range projectUsers {
-		if projectUser.UserID == a.GetID() {
+		userIDsToNotify = append(userIDsToNotify, projectUser.UserID)
+	}
+
+	for _, userIDToNotify := range userIDsToNotify {
+		if userIDToNotify == a.GetID() {
 			continue
 		}
 
-		exists, err := s.Where("task_id = ? AND user_id = ?", tc.TaskID, a.GetID()).
+		exists, err := s.Where("task_id = ? AND user_id = ?", tc.TaskID, userIDToNotify).
 			Exist(&TaskUnreadStatus{})
 		if err != nil {
 			return err
@@ -123,7 +129,7 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 		if !exists {
 			_, err := s.Insert(&TaskUnreadStatus{
 				TaskID: tc.TaskID,
-				UserID: projectUser.UserID,
+				UserID: userIDToNotify,
 			})
 			if err != nil {
 				return err
