@@ -90,9 +90,11 @@
 					v-if="task.commentCount && task.commentCount > 0"
 					v-tooltip="$t('task.attributes.comment', task.commentCount)"
 					class="project-task-icon comment-count-icon"
+					:class="{'is-unread': task.isUnread}"
 				>
 					<Icon :icon="['far', 'comments']" />	
 					<span class="comment-count-badge">{{ task.commentCount }}</span>
+					<span v-if="task.isUnread" class="unread-indicator"></span>
 				</span>
 				<span
 					v-if="!isEditorContentEmpty(task.description)"
@@ -420,6 +422,30 @@ $task-background: var(--white);
 		font-weight: 600;
 		font-size: 0.75rem;
 		line-height: 1;
+	}
+
+	&.is-unread {
+		font-weight: 600;
+		color: var(--primary);
+
+		.unread-indicator {
+			display: inline-block;
+			width: 6px;
+			height: 6px;
+			background-color: var(--primary);
+			border-radius: 50%;
+			margin-inline-start: 2px;
+			animation: pulse 2s infinite;
+		}
+	}
+}
+
+@keyframes pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.6;
 	}
 }
 </style>

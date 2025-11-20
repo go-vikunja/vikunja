@@ -123,10 +123,12 @@
 					<span
 						v-if="task.commentCount && task.commentCount > 0"
 						class="project-task-icon comment-count-icon"
+						:class="{'is-unread': task.isUnread}"
 						:title="`${task.commentCount} ${task.commentCount === 1 ? 'comment' : 'comments'}`"
 					>
 						<Icon :icon="['far', 'comments']" />	
 						<span class="comment-count-badge">{{ task.commentCount }}</span>
+						<span v-if="task.isUnread" class="unread-indicator"></span>
 					</span>
 				</span>
 
@@ -589,6 +591,30 @@ defineExpose({
 
 	&:hover {
 		color: var(--primary);
+	}
+
+	&.is-unread {
+		font-weight: 600;
+		color: var(--primary);
+
+		.unread-indicator {
+			display: inline-block;
+			width: 6px;
+			height: 6px;
+			background-color: var(--primary);
+			border-radius: 50%;
+			margin-inline-start: 2px;
+			animation: pulse 2s infinite;
+		}
+	}
+}
+
+@keyframes pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.6;
 	}
 }
 </style>

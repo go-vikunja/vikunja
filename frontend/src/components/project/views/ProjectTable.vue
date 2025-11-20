@@ -238,9 +238,11 @@
 										<span
 											v-if="t.commentCount && t.commentCount > 0"
 											class="comment-badge"
+											:class="{'is-unread': t.isUnread}"
 										>
 											<Icon icon="comment" />
 											{{ t.commentCount }}
+											<span v-if="t.isUnread" class="unread-indicator"></span>
 										</span>
 									</td>
 									<DateTableCell
@@ -450,5 +452,36 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 
 .filter-container :deep(.popup) {
 	inset-block-start: 7rem;
+}
+
+.comment-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	position: relative;
+
+	&.is-unread {
+		font-weight: 600;
+		color: var(--primary);
+
+		.unread-indicator {
+			display: inline-block;
+			width: 6px;
+			height: 6px;
+			background-color: var(--primary);
+			border-radius: 50%;
+			margin-inline-start: 2px;
+			animation: pulse 2s infinite;
+		}
+	}
+}
+
+@keyframes pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.6;
+	}
 }
 </style>
