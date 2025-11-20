@@ -97,13 +97,20 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 		}
 	}
 
-	assignees, err := getRawTaskAssigneesForTasks(s, []int64{tc.TaskID})
+	project, err := GetProjectSimpleByTaskID(s, tc.TaskID)
 	if err != nil {
 		return err
 	}
 
-	for _, assignee := range assignees {
-		if assignee.User.ID == a.GetID() {
+	projectUsers := []*ProjectUser{}
+	err = s.Where("project_id = ?", project.ID).
+		Find(&projectUsers)
+	if err != nil {
+		return err
+	}
+
+	for _, projectUser := range projectUsers {
+		if projectUser.UserID == a.GetID() {
 			continue
 		}
 
@@ -116,7 +123,7 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 		if !exists {
 			_, err := s.Insert(&TaskUnreadStatus{
 				TaskID: tc.TaskID,
-				UserID: assignee.User.ID,
+				UserID: projectUser.UserID,
 			})
 			if err != nil {
 				return err
