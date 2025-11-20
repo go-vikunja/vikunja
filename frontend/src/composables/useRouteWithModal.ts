@@ -62,7 +62,6 @@ export function useRouteWithModal() {
 	const historyState = computed(() => route.fullPath ? window.history.state : undefined)
 
 	function closeModal() {
-
 		// If the current project was changed because the user moved the currently opened task while coming from kanban,
 		// we need to reflect that change in the route when they close the task modal.
 		// The last route is only available as resolved string, therefore we need to use a regex for matching here
@@ -70,31 +69,50 @@ export function useRouteWithModal() {
 		const match = historyState.value?.back
 			? routeMatch.exec(historyState.value.back)
 			: null
-		if (match !== null && baseStore.currentProject) {
+		if (match !== null && baseStore.currentProject && baseStore.currentProject.id !== 0) {
 			let viewId: string | number = match[1]
 
 			if (!viewId) {
-				viewId = projectStore.projects[baseStore.currentProject?.id].views[0]?.id
+				const project = projectStore.projects[baseStore.currentProject.id]
+				viewId = project?.views?.[0]?.id
 			}
 
-			const newRoute = {
-				name: 'project.view',
-				params: {
-					projectId: baseStore.currentProject?.id,
-					viewId,
-				},
+			// Only navigate if we have a valid project and view
+			if (baseStore.currentProject.id && viewId) {
+				const newRoute = {
+					name: 'project.view',
+					params: {
+						projectId: baseStore.currentProject.id,
+						viewId,
+					},
+				}
+
+				router.push(newRoute)
+				return
 			}
-			router.push(newRoute)
+		}
+
+		// Try browser history first
+		if (historyState.value?.back) {
+			router.back()
 			return
 		}
 
-		if (historyState.value) {
-			router.back()
+		// Try backdrop view
+		const backdropRoute = historyState.value?.backdropView && router.resolve(historyState.value.backdropView)
+		if (backdropRoute && backdropRoute.params?.projectId !== '0') {
+			router.push(backdropRoute)
+			return
+		}
+
+		// Fallback to current project or home
+		if (baseStore.currentProject && baseStore.currentProject.id !== 0) {
+			router.push({
+				name: 'project.index',
+				params: { projectId: baseStore.currentProject.id },
+			})
 		} else {
-			const backdropRoute = historyState.value?.backdropView && router.resolve(historyState.value.backdropView)
-			if (backdropRoute) {
-				router.push(backdropRoute)
-			}
+			router.push({ name: 'home' })
 		}
 	}
 

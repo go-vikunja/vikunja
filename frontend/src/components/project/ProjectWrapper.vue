@@ -73,12 +73,12 @@ const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 
 const currentProject = computed<IProject>(() => {
-	return typeof baseStore.currentProject === 'undefined' ? {
+	return baseStore.currentProject || {
 		id: 0,
 		title: '',
 		isArchived: false,
 		maxPermission: null,
-	} : baseStore.currentProject
+	}
 })
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
 
