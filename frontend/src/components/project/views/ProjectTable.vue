@@ -469,8 +469,8 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 
 		.unread-indicator {
 			display: inline-block;
-			width: 6px;
-			height: 6px;
+			inline-size: 6px;
+			block-size: 6px;
 			background-color: var(--primary);
 			border-radius: 50%;
 			margin-inline-start: 2px;
