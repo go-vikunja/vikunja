@@ -94,7 +94,10 @@
 				>
 					<Icon :icon="['far', 'comments']" />	
 					<span class="comment-count-badge">{{ task.commentCount }}</span>
-					<span v-if="task.isUnread" class="unread-indicator"></span>
+					<span
+						v-if="task.isUnread"
+						class="unread-indicator"
+					/>
 				</span>
 				<span
 					v-if="!isEditorContentEmpty(task.description)"

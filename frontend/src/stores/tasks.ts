@@ -553,7 +553,7 @@ export const useTaskStore = defineStore('task', () => {
 		findProjectId,
 		ensureLabelsExist,
 		toggleFavorite,
-		markTaskAsRead
+		markTaskAsRead,
 	}
 })
 

@@ -242,7 +242,10 @@
 										>
 											<Icon icon="comment" />
 											{{ t.commentCount }}
-											<span v-if="t.isUnread" class="unread-indicator"></span>
+											<span
+												v-if="t.isUnread"
+												class="unread-indicator"
+											/>
 										</span>
 									</td>
 									<DateTableCell
