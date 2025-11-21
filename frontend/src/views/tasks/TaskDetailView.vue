@@ -808,7 +808,8 @@ watch(
 			setActiveFields()
 
 			if (task.value.isUnread) {
-				await taskService.markTaskAsRead(task.value.id)
+				await taskStore.markTaskAsRead(task.value.id)
+				task.value.isUnread = false
 			}
 
 			if (lastProject.value) {

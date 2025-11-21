@@ -130,8 +130,6 @@ export default class TaskService extends AbstractService<ITask> {
 	
 		try {
 			await AuthenticatedHTTPFactory().post(`/tasks/${taskId}/read`, {} as ITask)
-		}catch(e) {
-			console.error(e)
 		}finally {
 			cancel()
 		}
