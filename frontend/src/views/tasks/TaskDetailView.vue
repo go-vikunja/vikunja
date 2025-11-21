@@ -807,6 +807,10 @@ watch(
 			taskColor.value = task.value.hexColor
 			setActiveFields()
 
+			if (task.value.isUnread) {
+				await taskService.markTaskAsRead(task.value.id)
+			}
+
 			if (lastProject.value) {
 				await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)
 			}
