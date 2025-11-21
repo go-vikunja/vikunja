@@ -632,7 +632,7 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 		
 		editor.value?.commands.setContent(html, false)
 		
-		bubbleSave()
+		bubbleNow()
 	})
 }
 
@@ -663,7 +663,7 @@ async function addImage(event) {
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
-		bubbleSave()
+		bubbleNow()
 	}
 }
 
