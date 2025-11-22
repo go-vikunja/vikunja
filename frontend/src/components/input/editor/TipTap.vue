@@ -637,7 +637,7 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 	})
 }
 
-function triggerImageInput(event) {
+function triggerImageInput(event: Event) {
 	if (typeof props.uploadCallback !== 'undefined') {
 		uploadInputRef.value?.click()
 		return
@@ -646,7 +646,7 @@ function triggerImageInput(event) {
 	addImage(event)
 }
 
-async function addImage(event) {
+async function addImage(event: Event) {
 
 	if (typeof props.uploadCallback !== 'undefined') {
 		const files = uploadInputRef.value?.files
@@ -668,8 +668,9 @@ async function addImage(event) {
 	}
 }
 
-function setLink(event) {
-	setLinkInEditor(event.target.getBoundingClientRect(), editor.value)
+function setLink(event: MouseEvent) {
+	const target = event.target as HTMLElement
+	setLinkInEditor(target.getBoundingClientRect(), editor.value)
 }
 
 onMounted(async () => {
@@ -695,8 +696,9 @@ function setModeAndValue(value: string) {
 
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function setFocusToEditor(event) {
-	if (event.target.shadowRoot) {
+function setFocusToEditor(event: KeyboardEvent) {
+	const target = event.target as HTMLElement
+	if (target.shadowRoot) {
 		return
 	}
 
@@ -724,10 +726,11 @@ function focusIfEditing() {
 	}
 }
 
-function clickTasklistCheckbox(event) {
+function clickTasklistCheckbox(event: MouseEvent) {
 	event.stopImmediatePropagation()
 
-	if (event.target.localName !== 'p') {
+	const target = event.target as HTMLElement
+	if (target.localName !== 'p') {
 		return
 	}
 
