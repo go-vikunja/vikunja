@@ -97,46 +97,6 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 		}
 	}
 
-	project, err := GetProjectSimpleByTaskID(s, tc.TaskID)
-	if err != nil {
-		return err
-	}
-
-	projectUsers := []*ProjectUser{}
-	err = s.Where("project_id = ?", project.ID).
-		Find(&projectUsers)
-	if err != nil {
-		return err
-	}
-
-	userIDsToNotify := []int64{project.OwnerID}
-
-	for _, projectUser := range projectUsers {
-		userIDsToNotify = append(userIDsToNotify, projectUser.UserID)
-	}
-
-	for _, userIDToNotify := range userIDsToNotify {
-		if userIDToNotify == a.GetID() {
-			continue
-		}
-
-		exists, err := s.Where("task_id = ? AND user_id = ?", tc.TaskID, userIDToNotify).
-			Exist(&TaskUnreadStatus{})
-		if err != nil {
-			return err
-		}
-
-		if !exists {
-			_, err := s.Insert(&TaskUnreadStatus{
-				TaskID: tc.TaskID,
-				UserID: userIDToNotify,
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	return events.Dispatch(&TaskCommentCreatedEvent{
 		Task:    &task,
 		Comment: tc,
