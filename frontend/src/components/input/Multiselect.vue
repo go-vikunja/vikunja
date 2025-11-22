@@ -170,7 +170,7 @@ const props = withDefaults(defineProps<{
 }>(), {
 	loading: false,
 	placeholder: '',
-	searchResults: () => [],
+	searchResults: () => [] as T[],
 	label: '',
 	creatable: false,
 	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
@@ -248,8 +248,8 @@ const searchResultsVisible = computed(() => {
 })
 
 const creatableAvailable = computed(() => {
-	const hasResult = filteredSearchResults.value.some((elem) => elementInResults(elem, props.label, query.value as string))
-	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
+	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value as string))
+	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some((elem: T) => elementInResults(elem, props.label, query.value))
 
 	return props.creatable
 		&& query.value !== ''
@@ -259,7 +259,7 @@ const creatableAvailable = computed(() => {
 const filteredSearchResults = computed(() => {
 	const currentInternal = internalValue.value
 	if (props.multiple && currentInternal !== null && Array.isArray(currentInternal)) {
-		return searchResults.value.filter((item) => !currentInternal.some(e => e === item))
+		return searchResults.value.filter((item: T) => !currentInternal.some((e: T) => e === item))
 	}
 
 	return searchResults.value
@@ -405,7 +405,7 @@ function createOrSelectOnEnter() {
 
 	if (!creatableAvailable.value) {
 		// Check if there's an exact match for our search term
-		const exactMatch = filteredSearchResults.value.find((elem) => elementInResults(elem, props.label, query.value as string))
+		const exactMatch = filteredSearchResults.value.find((elem: T) => elementInResults(elem, props.label, query.value as string))
 		if (exactMatch) {
 			select(exactMatch)
 		}
