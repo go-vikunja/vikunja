@@ -29,17 +29,18 @@
 							>
 								<Icon icon="paperclip" />
 							</span>
-							<span
-								v-if="!isEditorContentEmpty(task.description)"
-								class="task-glance-icon is-mirrored-rtl"
-							>
-								<Icon icon="align-left" />
-							</span>
 							<CommentCount
 								:task="task"
 								class="task-glance-icon"
 							/>
 						</div>
+					</div>
+
+					<div
+						v-if="descriptionPreview"
+						class="task-glance-description"
+					>
+						{{ descriptionPreview }}
 					</div>
 							
 					<ChecklistSummary :task="task" />
@@ -95,15 +96,32 @@ const props = defineProps<{
 }>()
 
 const HOVER_DELAY = 1000 // 1 second
+const MAX_DESCRIPTION_LENGTH = 150
 
 const triggerRef = ref<HTMLElement | null>(null)
 const tooltipRef = ref<HTMLElement | null>(null)
 const showTooltip = ref(false)
 let hoverTimeout: ReturnType<typeof setTimeout> | null = null
 
-
-
 const taskIdentifier = computed(() => getTaskIdentifier(props.task))
+
+const descriptionPreview = computed(() => {
+	if (isEditorContentEmpty(props.task.description)) {
+		return ''
+	}
+
+	// Create a temporary div to extract plain text from HTML
+	const tempDiv = document.createElement('div')
+	tempDiv.innerHTML = props.task.description
+	const plainText = tempDiv.textContent || tempDiv.innerText || ''
+
+	const trimmedText = plainText.trim()
+	if (trimmedText.length <= MAX_DESCRIPTION_LENGTH) {
+		return trimmedText
+	}
+
+	return trimmedText.substring(0, MAX_DESCRIPTION_LENGTH) + '…'
+})
 
 async function updatePosition() {
 	if (!triggerRef.value || !tooltipRef.value) {
@@ -218,6 +236,14 @@ onUnmounted(() => {
 	font-weight: 600;
 	color: var(--text);
 	word-wrap: break-word;
+}
+
+.task-glance-description {
+	color: var(--grey-700);
+	font-size: 0.875rem;
+	line-height: 1.4;
+	word-wrap: break-word;
+	white-space: pre-wrap;
 }
 
 .task-glance-labels {
