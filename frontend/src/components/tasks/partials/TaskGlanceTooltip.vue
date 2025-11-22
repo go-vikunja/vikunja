@@ -43,7 +43,10 @@
 						{{ descriptionPreview }}
 					</div>
 							
-					<ChecklistSummary :task="task" class="task-glance-checklist-summary" />
+					<ChecklistSummary
+						:task="task"
+						class="task-glance-checklist-summary"
+					/>
 
 					<Labels
 						v-if="task.labels.length > 0"
