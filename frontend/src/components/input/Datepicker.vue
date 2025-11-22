@@ -5,7 +5,7 @@
 			:disabled="disabled || undefined"
 			@click.stop="toggleDatePopup"
 		>
-			{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
+			{{ date === null || date === undefined ? chooseDateLabel : formatDisplayDate(date) }}
 		</SimpleButton>
 
 		<CustomTransition name="fade">
@@ -15,7 +15,7 @@
 				class="datepicker-popup"
 			>
 				<DatepickerInline
-					v-model="date"
+					v-model="date ?? null"
 					@update:modelValue="updateData"
 				/>
 
@@ -86,7 +86,7 @@ function setDateValue(dateString: string | Date | null) {
 
 function updateData() {
 	changed.value = true
-	emit('update:modelValue', date.value)
+	emit('update:modelValue', date.value ?? null)
 }
 
 function toggleDatePopup() {
@@ -99,7 +99,7 @@ function toggleDatePopup() {
 
 const datepickerPopup = ref<HTMLElement | null>(null)
 function hideDatePopup(e: MouseEvent) {
-	if (show.value) {
+	if (show.value && datepickerPopup.value) {
 		closeWhenClickedOutside(e, datepickerPopup.value, close)
 	}
 }
