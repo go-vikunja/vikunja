@@ -26,15 +26,25 @@
 
 <script lang="ts">
 /* eslint-disable vue/component-api-style */
+import type {PropType} from 'vue'
+import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+
+interface CommandItem {
+	icon: IconProp
+	title: string
+	description: string
+	command: () => void
+}
+
 export default {
 	props: {
 		items: {
-			type: Array,
+			type: Array as PropType<CommandItem[]>,
 			required: true,
 		},
 
 		command: {
-			type: Function,
+			type: Function as PropType<(item: CommandItem) => void>,
 			required: true,
 		},
 	},
@@ -52,7 +62,7 @@ export default {
 	},
 
 	methods: {
-		onKeyDown({event}) {
+		onKeyDown({event}: {event: KeyboardEvent}) {
 			if (event.key === 'ArrowUp') {
 				this.upHandler()
 				return true
@@ -86,7 +96,7 @@ export default {
 			this.selectItem(this.selectedIndex)
 		},
 
-		selectItem(index) {
+		selectItem(index: number) {
 			const item = this.items[index]
 
 			if (item) {
