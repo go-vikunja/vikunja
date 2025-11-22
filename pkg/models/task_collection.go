@@ -71,6 +71,7 @@ const TaskCollectionExpandBuckets TaskCollectionExpandable = `buckets`
 const TaskCollectionExpandReactions TaskCollectionExpandable = `reactions`
 const TaskCollectionExpandComments TaskCollectionExpandable = `comments`
 const TaskCollectionExpandCommentCount TaskCollectionExpandable = `comment_count`
+const TaskCollectionExpandIsUnread TaskCollectionExpandable = `is_unread`
 
 // Validate validates if the TaskCollectionExpandable value is valid.
 func (t TaskCollectionExpandable) Validate() error {

@@ -106,7 +106,7 @@ type Task struct {
 	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" project. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
-	IsUnread bool `xorm:"-" json:"is_unread"`
+	IsUnread *bool `xorm:"-" json:"is_unread,omitempty"`
 
 	// The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
 	// Will only returned when retrieving one task.
@@ -435,9 +435,10 @@ func addIsUnreadToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Tas
 		return err
 	}
 
+	b := true
 	for _, status := range unreadStatuses {
 		if task, exists := taskMap[status.TaskID]; exists {
-			task.IsUnread = true
+			task.IsUnread = &b
 		}
 	}
 
@@ -635,11 +636,6 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		projectIDs = append(projectIDs, i.ProjectID)
 	}
 
-	err = addIsUnreadToTasks(s, taskIDs, taskMap, a)
-	if err != nil {
-		return
-	}
-
 	err = addAssigneesToTasks(s, taskIDs, taskMap)
 	if err != nil {
 		return
@@ -717,6 +713,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				err = addCommentCountToTasks(s, taskIDs, taskMap)
 				if err != nil {
 					return err
+				}
+			case TaskCollectionExpandIsUnread:
+				err = addIsUnreadToTasks(s, taskIDs, taskMap, a)
+				if err != nil {
+					return
 				}
 			}
 			expanded[expandable] = true
