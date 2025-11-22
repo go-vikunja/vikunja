@@ -53,7 +53,7 @@ function onFocusField() {
 	setState('focused')
 }
 
-function onKeydown(e) {
+function onKeydown(e: KeyboardEvent) {
 	switch (e.keyCode || e.which) {
 		case ESCAPE:
 			e.preventDefault()
@@ -116,9 +116,9 @@ function onSelectValue(value: T) {
 	setState('unfocused')
 }
 
-function onUpdateField(e) {
+function onUpdateField(e: Event) {
 	setState('focused')
-	model.value = e.currentTarget.value
+	model.value = (e.currentTarget as HTMLTextAreaElement).value
 }
 </script>
 
