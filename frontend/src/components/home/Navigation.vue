@@ -126,13 +126,15 @@ import Loading from '@/components/misc/Loading.vue'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
+import type {IProject} from '@/modelTypes/IProject'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 
-const projects = computed(() => projectStore.notArchivedRootProjects)
-const favoriteProjects = computed(() => projectStore.favoriteProjects)
-const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
+// Cast readonly arrays to mutable type - the arrays are not actually mutated by the component
+const projects = computed(() => projectStore.notArchivedRootProjects as IProject[])
+const favoriteProjects = computed(() => projectStore.favoriteProjects as IProject[])
+const savedFilterProjects = computed(() => projectStore.savedFilterProjects as IProject[])
 </script>
 
 <style lang="scss" scoped>
