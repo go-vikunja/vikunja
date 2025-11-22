@@ -95,7 +95,7 @@ const emit = defineEmits<{
 
 const {t} = useI18n({useScope: 'global'})
 
-const date = ref<Date | null>()
+const date = ref<Date | null>(null)
 const changed = ref(false)
 
 const modelValue = toRef(props, 'modelValue')
@@ -105,7 +105,7 @@ watch(
 	{immediate: true},
 )
 
-const flatPickrRef = ref<HTMLElement | null>(null)
+const flatPickrRef = ref<InstanceType<typeof flatPickr> | null>(null)
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
@@ -152,14 +152,14 @@ const flatPickrDate = computed({
 
 onMounted(() => {
 	const inputs = flatPickrRef.value?.$el.parentNode.querySelectorAll('.numInputWrapper > input.numInput')
-	inputs.forEach(i => {
+	inputs?.forEach((i: Element) => {
 		i.addEventListener('input', handleFlatpickrInput)
 	})
 })
 
 onBeforeUnmount(() => {
 	const inputs = flatPickrRef.value?.$el.parentNode.querySelectorAll('.numInputWrapper > input.numInput')
-	inputs.forEach(i => {
+	inputs?.forEach((i: Element) => {
 		i.removeEventListener('input', handleFlatpickrInput)
 	})
 })
@@ -168,19 +168,20 @@ onBeforeUnmount(() => {
 // That means it will usually only trigger when the focus is moved out of the input field.
 // This is fine most of the time. However, since we're displaying flatpickr in a popup,
 // the whole html dom instance might get destroyed, before the change event had a
-// chance to fire. In that case, it would not update the date value. To fix 
+// chance to fire. In that case, it would not update the date value. To fix
 // this, we're now listening on every change and bubble them up as soon
 // as they happen.
-function handleFlatpickrInput(e) {
+function handleFlatpickrInput(e: Event) {
 	const newDate = new Date(date?.value || 'now')
-	if (e.target.classList.contains('flatpickr-minute')) {
-		newDate.setMinutes(e.target.value)
+	const target = e.target as HTMLInputElement
+	if (target.classList.contains('flatpickr-minute')) {
+		newDate.setMinutes(Number(target.value))
 	}
-	if (e.target.classList.contains('flatpickr-hour')) {
-		newDate.setHours(e.target.value)
+	if (target.classList.contains('flatpickr-hour')) {
+		newDate.setHours(Number(target.value))
 	}
-	if (e.target.classList.contains('cur-year')) {
-		newDate.setFullYear(e.target.value)
+	if (target.classList.contains('cur-year')) {
+		newDate.setFullYear(Number(target.value))
 	}
 	flatPickrDate.value = newDate
 }
