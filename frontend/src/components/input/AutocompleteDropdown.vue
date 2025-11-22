@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T">
+<script setup lang="ts" generic="T extends string">
 import {type ComponentPublicInstance, nextTick, ref, watch} from 'vue'
 
 const props = withDefaults(defineProps<{
@@ -30,15 +30,21 @@ const editorRef = ref<HTMLTextAreaElement | null>(null)
 watch(
 	() => model.value,
 	newValue => {
-		val.value = newValue
+		val.value = newValue ?? ''
 	},
 )
 
 function updateSuggestionScroll() {
 	nextTick(() => {
 		const scroller = suggestionScrollerRef.value
-		const selectedItem = scroller?.querySelector('.selected')
-		scroller.scrollTop = selectedItem ? selectedItem.offsetTop : 0
+		if (!scroller) return
+
+		const selectedItem = scroller.querySelector('.selected')
+		if (selectedItem && selectedItem instanceof HTMLElement) {
+			scroller.scrollTop = selectedItem.offsetTop
+		} else {
+			scroller.scrollTop = 0
+		}
 	})
 }
 
