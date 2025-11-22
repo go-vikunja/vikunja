@@ -137,7 +137,7 @@ import { useAuthStore } from '@/stores/auth'
 const baseStore = useBaseStore()
 const currentProject = computed(() => baseStore.currentProject)
 const background = computed(() => baseStore.background)
-const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ)
+const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission !== null && baseStore.currentProject?.maxPermission !== undefined && baseStore.currentProject.maxPermission > Permissions.READ)
 const menuActive = computed(() => baseStore.menuActive)
 
 const authStore = useAuthStore()
