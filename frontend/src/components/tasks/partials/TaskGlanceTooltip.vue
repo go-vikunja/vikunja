@@ -59,7 +59,7 @@
 						class="task-glance-due"
 					>
 						<Icon icon="calendar" />
-						<span>{{ $t('task.detail.due') }}: {{ formatDisplayDate(task.dueDate) }}</span>
+						<span>{{ $t('task.detail.due', {at: formatDisplayDate(task.dueDate)}) }}</span>
 					</div>
 
 					<div class="task-glance-meta">
