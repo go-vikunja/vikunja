@@ -160,11 +160,8 @@ const childProjects = computed(() => {
 	opacity: 1;
 }
 
-.list-menu:hover .color-bubble-wrapper > {
-	.saved-filter-icon,
-	.color-bubble {
-		opacity: 0;
-	}
+.list-menu:hover .color-bubble-wrapper > .color-bubble {
+	opacity: 0;
 }
 
 .is-touch .color-bubble {
