@@ -5,7 +5,7 @@
 			:disabled="disabled || undefined"
 			@click.stop="toggleDatePopup"
 		>
-			{{ date === null || date === undefined ? chooseDateLabel : formatDisplayDate(date) }}
+			{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
 		</SimpleButton>
 
 		<CustomTransition name="fade">
@@ -15,7 +15,7 @@
 				class="datepicker-popup"
 			>
 				<DatepickerInline
-					v-model="date ?? null"
+					v-model="date"
 					@update:modelValue="updateData"
 				/>
 
@@ -62,7 +62,7 @@ const emit = defineEmits<{
 	'closeOnChange': [value: boolean],
 }>()
 
-const date = ref<Date | null>()
+const date = ref<Date | null>(null)
 const show = ref(false)
 const changed = ref(false)
 
