@@ -274,17 +274,17 @@ const CustomImage = Image.extend({
 
 				const img = document.getElementById(id)
 
-				if (!img) return
+				if (!img || !(img instanceof HTMLImageElement)) return
 
 				if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
 
 					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
 
 					const attachmentService = new AttachmentService()
-					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment)
+					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
 				}
 
-				img.src = loadedAttachments.value[cacheKey]
+				img.src = loadedAttachments.value[cacheKey] as string
 			})
 
 			return ['img', mergeAttributes(this.options.HTMLAttributes, {
