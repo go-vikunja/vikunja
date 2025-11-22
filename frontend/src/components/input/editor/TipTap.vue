@@ -361,7 +361,7 @@ const PasteHandler = Extension.create({
 
 							for (let i = 0; i < event.clipboardData.items.length; i++) {
 								const item = event.clipboardData.items[i]
-								if (item.kind === 'file' && item.type.startsWith('image/')) {
+								if (item && item.kind === 'file' && item.type.startsWith('image/')) {
 									const file = item.getAsFile()
 									if (file) {
 										uploadAndInsertFiles([file])
@@ -761,7 +761,10 @@ watch(
 
 				// We assume the first child contains the label element with the checkbox and the second child the actual label
 				// When the actual label is clicked, we forward that click to the checkbox.
-				check.children[1].removeEventListener('click', clickTasklistCheckbox)
+				const secondChild = check.children[1]
+				if (secondChild) {
+					secondChild.removeEventListener('click', clickTasklistCheckbox)
+				}
 			})
 
 			return
@@ -774,8 +777,11 @@ watch(
 
 			// We assume the first child contains the label element with the checkbox and the second child the actual label
 			// When the actual label is clicked, we forward that click to the checkbox.
-			check.children[1].removeEventListener('click', clickTasklistCheckbox)
-			check.children[1].addEventListener('click', clickTasklistCheckbox)
+			const secondChild = check.children[1]
+			if (secondChild) {
+				secondChild.removeEventListener('click', clickTasklistCheckbox)
+				secondChild.addEventListener('click', clickTasklistCheckbox)
+			}
 		})
 	},
 	{immediate: true},
