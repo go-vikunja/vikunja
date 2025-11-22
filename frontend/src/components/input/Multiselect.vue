@@ -302,7 +302,9 @@ function search() {
 const multiselectRoot = ref<HTMLElement | null>(null)
 
 function hideSearchResultsHandler(e: MouseEvent) {
-	closeWhenClickedOutside(e, multiselectRoot.value, closeSearchResults)
+	if (multiselectRoot.value) {
+		closeWhenClickedOutside(e, multiselectRoot.value, closeSearchResults)
+	}
 }
 
 function closeSearchResults() {
@@ -318,6 +320,10 @@ function handleFocus() {
 }
 
 function select(object: T | null) {
+	if (object === null) {
+		return
+	}
+
 	if (props.multiple) {
 		if (internalValue.value === null) {
 			internalValue.value = []
@@ -355,7 +361,13 @@ function setSelectedObject(object: string | T | null | undefined, resetOnly = fa
 		return
 	}
 
-	query.value = props.label !== '' ? object[props.label] : object
+	if (typeof object === 'string') {
+		query.value = object
+	} else if (props.label !== '') {
+		query.value = object[props.label] as string
+	} else {
+		query.value = String(object)
+	}
 }
 
 const results = ref<(Element | ComponentPublicInstance)[]>([])
@@ -375,16 +387,20 @@ function preSelect(index: number) {
 	}
 
 	const elems = results.value[index]
-	if (typeof elems === 'undefined' || elems.length === 0) {
+	if (typeof elems === 'undefined') {
 		return
 	}
 
 	if (Array.isArray(elems)) {
-		elems[0].focus()
+		if (elems.length > 0 && 'focus' in elems[0]) {
+			(elems[0] as HTMLElement).focus()
+		}
 		return
 	}
 
-	elems.focus()
+	if ('focus' in elems) {
+		(elems as HTMLElement).focus()
+	}
 }
 
 function create() {
