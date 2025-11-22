@@ -43,7 +43,7 @@
 						{{ descriptionPreview }}
 					</div>
 							
-					<ChecklistSummary :task="task" />
+					<ChecklistSummary :task="task" class="task-glance-checklist-summary" />
 
 					<Labels
 						v-if="task.labels.length > 0"
@@ -302,5 +302,9 @@ onUnmounted(() => {
 	&:not(:last-of-type) {
 		margin-inline-end: 8px;
 	}
+}
+
+.task-glance-checklist-summary {
+	margin-block-start: -0.25rem;
 }
 </style>
