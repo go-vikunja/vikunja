@@ -207,9 +207,11 @@
 										/>
 									</td>
 									<td v-if="activeColumns.title">
-										<RouterLink :to="taskDetailRoutes[t.id]">
-											{{ t.title }}
-										</RouterLink>
+										<TaskGlanceTooltip :task="t">
+											<RouterLink :to="taskDetailRoutes[t.id]">
+												{{ t.title }}
+											</RouterLink>
+										</TaskGlanceTooltip>
 									</td>
 									<td v-if="activeColumns.priority">
 										<PriorityLabel
@@ -235,13 +237,7 @@
 										:date="t.dueDate"
 									/>
 									<td v-if="activeColumns.commentCount">
-										<span
-											v-if="t.commentCount && t.commentCount > 0"
-											class="comment-badge"
-										>
-											<Icon icon="comment" />
-											{{ t.commentCount }}
-										</span>
+										<CommentCount :task="t" />
 									</td>
 									<DateTableCell
 										v-if="activeColumns.startDate"
@@ -298,7 +294,9 @@ import Done from '@/components/misc/Done.vue'
 import User from '@/components/misc/User.vue'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
+import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
 import DateTableCell from '@/components/tasks/partials/DateTableCell.vue'
+import CommentCount from '@/components/tasks/partials/CommentCount.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
