@@ -28,11 +28,11 @@ type TaskUnreadStatus struct {
 	web.Permissions `xorm:"-" json:"-"`
 }
 
-func (TaskUnreadStatus) TableName() string {
+func (*TaskUnreadStatus) TableName() string {
 	return "task_unread_statuses"
 }
 
-func (t *TaskUnreadStatus) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+func (t *TaskUnreadStatus) CanUpdate(_ *xorm.Session, _ web.Auth) (bool, error) {
 	return true, nil
 }
 
