@@ -16,11 +16,38 @@
 
 package models
 
+import (
+	"code.vikunja.io/api/pkg/web"
+	"xorm.io/xorm"
+)
+
 type TaskUnreadStatus struct {
-	TaskID int64 `xorm:"bigint not null unique(task_user)"`
-	UserID int64 `xorm:"bigint not null unique(task_user)"`
+	TaskID          int64 `xorm:"bigint not null unique(task_user)" param:"projecttask"`
+	UserID          int64 `xorm:"bigint not null unique(task_user)"`
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
 }
 
 func (TaskUnreadStatus) TableName() string {
 	return "task_unread_statuses"
+}
+
+func (t *TaskUnreadStatus) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	return true, nil
+}
+
+func (t *TaskUnreadStatus) Update(s *xorm.Session, a web.Auth) error {
+	err := markTaskAsRead(s, t.TaskID, a)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func markTaskAsRead(s *xorm.Session, taskID int64, a web.Auth) error {
+	_, err := s.Where("task_id = ? AND user_id = ?", taskID, a.GetID()).
+		Delete(&TaskUnreadStatus{})
+
+	return err
 }

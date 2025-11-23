@@ -429,7 +429,13 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:projecttask", taskHandler.UpdateWeb)
 
-	a.POST("/tasks/:projecttask/read", apiv1.MarkTaskAsRead)
+	taskUnreadStatusHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskUnreadStatus{}
+		},
+	}
+
+	a.POST("/tasks/:projecttask/read", taskUnreadStatusHandler.UpdateWeb)
 
 	taskPositionHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

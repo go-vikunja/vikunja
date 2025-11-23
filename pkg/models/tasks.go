@@ -1891,9 +1891,3 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 	})
 	return err
 }
-
-func (t *Task) MarkTaskAsRead(s *xorm.Session, a web.Auth) error {
-	_, err := s.Where("task_id = ? AND user_id = ?", t.ID, a.GetID()).
-		Delete(&TaskUnreadStatus{})
-	return err
-}
