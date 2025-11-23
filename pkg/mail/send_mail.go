@@ -128,6 +128,10 @@ func SendMail(opts *Opts) {
 		return
 	}
 
+	if !config.MailerEnabled.GetBool() || Queue == nil {
+		return
+	}
+
 	m := getMessage(opts)
 	Queue <- m
 }
