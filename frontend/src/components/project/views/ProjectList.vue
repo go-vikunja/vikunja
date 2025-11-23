@@ -149,8 +149,8 @@ const {
 	() => props.viewId,
 	{position: 'asc'},
 	() => projectId.value === -1
-		? 'comment_count'
-		: ['subtasks', 'comment_count'],
+		? ['comment_count', 'is_unread']
+		: ['subtasks', 'comment_count', 'is_unread'],
 )
 
 const taskPositionService = ref(new TaskPositionService())

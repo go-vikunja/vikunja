@@ -86,9 +86,11 @@ func (t TaskCollectionExpandable) Validate() error {
 		return nil
 	case TaskCollectionExpandCommentCount:
 		return nil
+	case TaskCollectionExpandIsUnread:
+		return nil
 	}
 
-	return InvalidFieldErrorWithMessage([]string{"expand"}, "Expand must be one of the following values: subtasks, buckets, reactions, comments, comment_count")
+	return InvalidFieldErrorWithMessage([]string{"expand"}, "Expand must be one of the following values: subtasks, buckets, reactions, comments, comment_count, is_unread")
 }
 
 func validateTaskField(fieldName string) error {
