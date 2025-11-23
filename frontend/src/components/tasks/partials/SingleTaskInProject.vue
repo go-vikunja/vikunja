@@ -49,14 +49,16 @@
 						class="pis-2 mie-1"
 					/>
 
-					<RouterLink
-						ref="taskLinkRef"
-						:to="taskDetailRoute"
-						class="task-link"
-						tabindex="-1"
-					>
-						{{ task.title }}
-					</RouterLink>
+					<TaskGlanceTooltip :task="task">
+						<RouterLink
+							ref="taskLinkRef"
+							:to="taskDetailRoute"
+							class="task-link"
+							tabindex="-1"
+						>
+							{{ task.title }}
+						</RouterLink>
+					</TaskGlanceTooltip>
 				</span>
 
 				<Labels
@@ -120,19 +122,10 @@
 					>
 						<Icon icon="history" />
 					</span>
-					<span
-						v-if="task.commentCount && task.commentCount > 0"
-						class="project-task-icon comment-count-icon"
-						:class="{'is-unread': task.isUnread}"
-						:title="`${task.commentCount} ${task.commentCount === 1 ? 'comment' : 'comments'}`"
-					>
-						<Icon :icon="['far', 'comments']" />	
-						<span class="comment-count-badge">{{ task.commentCount }}</span>
-						<span
-							v-if="task.isUnread"
-							class="unread-indicator"
-						/>
-					</span>
+					<CommentCount
+						:task="task"
+						class="project-task-icon"
+					/>
 				</span>
 
 				<ChecklistSummary :task="task" />
@@ -203,8 +196,10 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
+import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
 import DeferTask from '@/components/tasks/partials/DeferTask.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
+import CommentCount from '@/components/tasks/partials/CommentCount.vue'
 
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -576,48 +571,6 @@ defineExpose({
 	&.is-open {
 		padding: 1rem;
 		border: 1px solid var(--grey-200);
-	}
-}
-
-.comment-count-icon {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.25rem;
-	font-size: 0.875rem;
-	color: var(--grey-500);
-	
-	.comment-count-badge {
-		font-weight: 600;
-		font-size: 0.75rem;
-		line-height: 1;
-	}
-
-	&:hover {
-		color: var(--primary);
-	}
-
-	&.is-unread {
-		font-weight: 600;
-		color: var(--primary);
-
-		.unread-indicator {
-			display: inline-block;
-			inline-size: 6px;
-			block-size: 6px;
-			background-color: var(--primary);
-			border-radius: 50%;
-			margin-inline-start: 2px;
-			animation: pulse 2s infinite;
-		}
-	}
-}
-
-@keyframes pulse {
-	0%, 100% {
-		opacity: 1;
-	}
-	50% {
-		opacity: 0.6;
 	}
 }
 </style>

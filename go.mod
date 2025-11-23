@@ -25,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/bbrks/go-blurhash v1.1.1
 	github.com/c2h5oh/datasize v0.0.0-20231215233829-aa82cc1e6500
-	github.com/coreos/go-oidc/v3 v3.16.0
+	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/cweill/gotests v1.9.0
 	github.com/d4l3k/messagediff v1.2.1
 	github.com/disintegration/imaging v1.6.2
@@ -58,7 +58,7 @@ require (
 	github.com/olekukonko/tablewriter v1.1.1
 	github.com/pquerna/otp v1.5.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/redis/go-redis/v9 v9.16.0
+	github.com/redis/go-redis/v9 v9.17.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/spf13/afero v1.15.0
@@ -71,7 +71,7 @@ require (
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/wneessen/go-mail v0.7.2
 	github.com/yuin/goldmark v1.7.13
-	golang.org/x/crypto v0.44.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/image v0.33.0
 	golang.org/x/net v0.47.0
 	golang.org/x/oauth2 v0.33.0

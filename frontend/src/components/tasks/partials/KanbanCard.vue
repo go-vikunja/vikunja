@@ -84,21 +84,12 @@
 					v-if="task.attachments.length > 0"
 					class="icon"
 				>
-					<Icon icon="paperclip" />	
+					<Icon icon="paperclip" />
 				</span>
-				<span
-					v-if="task.commentCount && task.commentCount > 0"
-					v-tooltip="$t('task.attributes.comment', task.commentCount)"
-					class="project-task-icon comment-count-icon"
-					:class="{'is-unread': task.isUnread}"
-				>
-					<Icon :icon="['far', 'comments']" />	
-					<span class="comment-count-badge">{{ task.commentCount }}</span>
-					<span
-						v-if="task.isUnread"
-						class="unread-indicator"
-					/>
-				</span>
+				<CommentCount
+					:task="task"
+					class="project-task-icon"
+				/>
 				<span
 					v-if="!isEditorContentEmpty(task.description)"
 					class="icon"
@@ -127,6 +118,7 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Done from '@/components/misc/Done.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from './ChecklistSummary.vue'
+import CommentCount from './CommentCount.vue'
 
 import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
@@ -410,45 +402,10 @@ $task-background: var(--white);
 	block-size: 0.5rem;
 }
 
-.comment-count-icon {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.25rem;
-	font-size: 0.875rem;
-	color: var(--grey-500);
+:deep(.comment-count) {
 	background: var(--grey-100);
 	border-radius: $radius;
-	padding: 0.25rem; 
+	padding: 0.25rem;
 	margin-inline-end: .25rem;
-	
-	.comment-count-badge {
-		font-weight: 600;
-		font-size: 0.75rem;
-		line-height: 1;
-	}
-
-	&.is-unread {
-		font-weight: 600;
-		color: var(--primary);
-
-		.unread-indicator {
-			display: inline-block;
-			inline-size: 6px;
-			block-size: 6px;
-			background-color: var(--primary);
-			border-radius: 50%;
-			margin-inline-start: 2px;
-			animation: pulse 2s infinite;
-		}
-	}
-}
-
-@keyframes pulse {
-	0%, 100% {
-		opacity: 1;
-	}
-	50% {
-		opacity: 0.6;
-	}
 }
 </style>

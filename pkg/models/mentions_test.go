@@ -47,27 +47,27 @@ func TestFindMentionedUsersInText(t *testing.T) {
 		},
 		{
 			name:      "one user at the beginning",
-			text:      `<p><span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> Lorem Ipsum</p>`,
+			text:      `<p><mention-user data-id="user1">@user1</mention-user> Lorem Ipsum</p>`,
 			wantUsers: []*user.User{user1},
 		},
 		{
 			name:      "one user at the end",
-			text:      `<p>Lorem Ipsum <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span></p>`,
+			text:      `<p>Lorem Ipsum <mention-user data-id="user1">@user1</mention-user></p>`,
 			wantUsers: []*user.User{user1},
 		},
 		{
 			name:      "one user in the middle",
-			text:      `<p>Lorem <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> Ipsum</p>`,
+			text:      `<p>Lorem <mention-user data-id="user1">@user1</mention-user> Ipsum</p>`,
 			wantUsers: []*user.User{user1},
 		},
 		{
 			name:      "same user multiple times",
-			text:      `<p>Lorem <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> Ipsum <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span></p>`,
+			text:      `<p>Lorem <mention-user data-id="user1">@user1</mention-user> Ipsum <mention-user data-id="user1">@user1</mention-user> <mention-user data-id="user1">@user1</mention-user></p>`,
 			wantUsers: []*user.User{user1},
 		},
 		{
 			name:      "Multiple users",
-			text:      `<p>Lorem <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> Ipsum <span class="mention" data-type="mention" data-id="2" data-label="user2">@user2</span></p>`,
+			text:      `<p>Lorem <mention-user data-id="user1">@user1</mention-user> Ipsum <mention-user data-id="user2">@user2</mention-user></p>`,
 			wantUsers: []*user.User{user1, user2},
 		},
 	}
@@ -103,7 +103,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
 		tc := &TaskComment{
-			Comment: `<p>Lorem Ipsum <span class="mention" data-type="mention" data-id="1" data-label="user1">@user1</span> <span class="mention" data-type="mention" data-id="2" data-label="user2">@user2</span> <span class="mention" data-type="mention" data-id="3" data-label="user3">@user3</span> <span class="mention" data-type="mention" data-id="4" data-label="user4">@user4</span> <span class="mention" data-type="mention" data-id="5" data-label="user5">@user5</span> <span class="mention" data-type="mention" data-id="6" data-label="user6">@user6</span></p>`,
+			Comment: `<p>Lorem Ipsum <mention-user data-id="user1">@user1</mention-user> <mention-user data-id="user2">@user2</mention-user> <mention-user data-id="user3">@user3</mention-user> <mention-user data-id="user4">@user4</mention-user> <mention-user data-id="user5">@user5</mention-user> <mention-user data-id="user6">@user6</mention-user></p>`,
 			TaskID:  32, // user2 has access to the project that task belongs to
 		}
 		err = tc.Create(s, u)
@@ -156,7 +156,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
 		tc := &TaskComment{
-			Comment: `<p>Lorem Ipsum <span class="mention" data-type="mention" data-id="2" data-label="user2">@user2</span></p>`,
+			Comment: `<p>Lorem Ipsum <mention-user data-id="user2">@user2</mention-user></p>`,
 			TaskID:  32, // user2 has access to the project that task belongs to
 		}
 		err = tc.Create(s, u)
@@ -170,7 +170,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		_, err = notifyMentionedUsers(s, &task, tc.Comment, n)
 		require.NoError(t, err)
 
-		_, err = notifyMentionedUsers(s, &task, `<p>Lorem Ipsum <span class="mention" data-type="mention" data-id="2" data-label="user2">@user2</span> <span class="mention" data-type="mention" data-id="3" data-label="user3">@user3</span></p>`, n)
+		_, err = notifyMentionedUsers(s, &task, `<p>Lorem Ipsum <mention-user data-id="user2">@user2</mention-user> <mention-user data-id="user3">@user3</mention-user></p>`, n)
 		require.NoError(t, err)
 
 		// The second time mentioning the user in the same task should not create another notification

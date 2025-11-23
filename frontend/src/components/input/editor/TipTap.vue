@@ -19,7 +19,7 @@
 					:class="{ 'is-active': editor.isActive('bold') }"
 					@click="() => editor?.chain().focus().toggleBold().run()"
 				>
-					<Icon :icon="['fa', 'fa-bold']" />
+					<Icon :icon="['fas', 'bold']" />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.italic')"
@@ -27,7 +27,7 @@
 					:class="{ 'is-active': editor.isActive('italic') }"
 					@click="() => editor?.chain().focus().toggleItalic().run()"
 				>
-					<Icon :icon="['fa', 'fa-italic']" />
+					<Icon :icon="['fas', 'italic']" />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.underline')"
@@ -35,7 +35,7 @@
 					:class="{ 'is-active': editor.isActive('underline') }"
 					@click="() => editor?.chain().focus().toggleUnderline().run()"
 				>
-					<Icon :icon="['fa', 'fa-underline']" />
+					<Icon :icon="['fas', 'underline']" />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.strikethrough')"
@@ -43,7 +43,7 @@
 					:class="{ 'is-active': editor.isActive('strike') }"
 					@click="() => editor?.chain().focus().toggleStrike().run()"
 				>
-					<Icon :icon="['fa', 'fa-strikethrough']" />
+					<Icon :icon="['fas', 'strikethrough']" />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.code')"
@@ -51,7 +51,7 @@
 					:class="{ 'is-active': editor.isActive('code') }"
 					@click="() => editor?.chain().focus().toggleCode().run()"
 				>
-					<Icon :icon="['fa', 'fa-code']" />
+					<Icon :icon="['fas', 'code']" />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.link')"
@@ -59,7 +59,7 @@
 					:class="{ 'is-active': editor.isActive('link') }"
 					@click="setLink"
 				>
-					<Icon :icon="['fa', 'fa-link']" />
+					<Icon :icon="['fas', 'link']" />
 				</BaseButton>
 			</div>
 		</BubbleMenu>
@@ -274,17 +274,17 @@ const CustomImage = Image.extend({
 
 				const img = document.getElementById(id)
 
-				if (!img) return
+				if (!img || !(img instanceof HTMLImageElement)) return
 
 				if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
 
 					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
 
 					const attachmentService = new AttachmentService()
-					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment)
+					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
 				}
 
-				img.src = loadedAttachments.value[cacheKey]
+				img.src = loadedAttachments.value[cacheKey] as string
 			})
 
 			return ['img', mergeAttributes(this.options.HTMLAttributes, {
@@ -355,12 +355,13 @@ const PasteHandler = Extension.create({
 				key: new PluginKey('pasteHandler'),
 				props: {
 					handlePaste: (view, event) => {
-						
-						// Handle images pasted from clipboard
-						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length > 0) {
 
-							for (const item of event.clipboardData.items) {
-								if (item.kind === 'file' && item.type.startsWith('image/')) {
+						// Handle images pasted from clipboard
+						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items && event.clipboardData.items.length > 0) {
+
+							for (let i = 0; i < event.clipboardData.items.length; i++) {
+								const item = event.clipboardData.items[i]
+								if (item && item.kind === 'file' && item.type.startsWith('image/')) {
 									const file = item.getAsFile()
 									if (file) {
 										uploadAndInsertFiles([file])
@@ -583,7 +584,7 @@ function bubbleSave() {
 }
 
 function exitEditMode() {
-	editor.value?.commands.setContent(lastSavedState, false)
+	editor.value?.commands.setContent(lastSavedState, {emitUpdate: false})
 	if (isEditing.value) {
 		internalMode.value = 'preview'
 	}
@@ -629,14 +630,14 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 		})
 		
 		const html = editor.value?.getHTML().replace(UPLOAD_PLACEHOLDER_ELEMENT, '') ?? ''
-		
-		editor.value?.commands.setContent(html, false)
-		
-		bubbleSave()
+
+		editor.value?.commands.setContent(html, {emitUpdate: false})
+
+		bubbleNow()
 	})
 }
 
-function triggerImageInput(event) {
+function triggerImageInput(event: Event) {
 	if (typeof props.uploadCallback !== 'undefined') {
 		uploadInputRef.value?.click()
 		return
@@ -645,7 +646,7 @@ function triggerImageInput(event) {
 	addImage(event)
 }
 
-async function addImage(event) {
+async function addImage(event: Event) {
 
 	if (typeof props.uploadCallback !== 'undefined') {
 		const files = uploadInputRef.value?.files
@@ -663,12 +664,13 @@ async function addImage(event) {
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
-		bubbleSave()
+		bubbleNow()
 	}
 }
 
-function setLink(event) {
-	setLinkInEditor(event.target.getBoundingClientRect(), editor.value)
+function setLink(event: MouseEvent) {
+	const target = event.target as HTMLElement
+	setLinkInEditor(target.getBoundingClientRect(), editor.value)
 }
 
 onMounted(async () => {
@@ -689,13 +691,14 @@ onBeforeUnmount(() => {
 
 function setModeAndValue(value: string) {
 	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
-	editor.value?.commands.setContent(value, false)
+	editor.value?.commands.setContent(value, {emitUpdate: false})
 }
 
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function setFocusToEditor(event) {
-	if (event.target.shadowRoot) {
+function setFocusToEditor(event: KeyboardEvent) {
+	const target = event.target as HTMLElement
+	if (target.shadowRoot) {
 		return
 	}
 
@@ -723,10 +726,11 @@ function focusIfEditing() {
 	}
 }
 
-function clickTasklistCheckbox(event) {
+function clickTasklistCheckbox(event: MouseEvent) {
 	event.stopImmediatePropagation()
 
-	if (event.target.localName !== 'p') {
+	const target = event.target as HTMLElement
+	if (target.localName !== 'p') {
 		return
 	}
 
@@ -757,7 +761,10 @@ watch(
 
 				// We assume the first child contains the label element with the checkbox and the second child the actual label
 				// When the actual label is clicked, we forward that click to the checkbox.
-				check.children[1].removeEventListener('click', clickTasklistCheckbox)
+				const secondChild = check.children[1]
+				if (secondChild) {
+					secondChild.removeEventListener('click', clickTasklistCheckbox)
+				}
 			})
 
 			return
@@ -770,8 +777,11 @@ watch(
 
 			// We assume the first child contains the label element with the checkbox and the second child the actual label
 			// When the actual label is clicked, we forward that click to the checkbox.
-			check.children[1].removeEventListener('click', clickTasklistCheckbox)
-			check.children[1].addEventListener('click', clickTasklistCheckbox)
+			const secondChild = check.children[1]
+			if (secondChild) {
+				secondChild.removeEventListener('click', clickTasklistCheckbox)
+				secondChild.addEventListener('click', clickTasklistCheckbox)
+			}
 		})
 	},
 	{immediate: true},

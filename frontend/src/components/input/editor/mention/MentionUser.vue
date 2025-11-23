@@ -11,6 +11,7 @@
 import { fetchAvatarBlobUrl } from '@/models/user'
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 import { watch, ref } from 'vue'
+import type { IUser } from '@/modelTypes/IUser'
 
 const props = defineProps(nodeViewProps)
 
@@ -19,7 +20,9 @@ const avatarUrl = ref('')
 watch(
 	() => props.node.attrs.id,
 	async () => {
-		avatarUrl.value = await fetchAvatarBlobUrl({username: props.node.attrs.id}, 32)
+		const username = props.node.attrs.id as string
+		const url = await fetchAvatarBlobUrl({username} as IUser, 32)
+		avatarUrl.value = url as string
 	},
 	{immediate: true},
 )

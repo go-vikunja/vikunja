@@ -207,9 +207,11 @@
 										/>
 									</td>
 									<td v-if="activeColumns.title">
-										<RouterLink :to="taskDetailRoutes[t.id]">
-											{{ t.title }}
-										</RouterLink>
+										<TaskGlanceTooltip :task="t">
+											<RouterLink :to="taskDetailRoutes[t.id]">
+												{{ t.title }}
+											</RouterLink>
+										</TaskGlanceTooltip>
 									</td>
 									<td v-if="activeColumns.priority">
 										<PriorityLabel
@@ -235,18 +237,7 @@
 										:date="t.dueDate"
 									/>
 									<td v-if="activeColumns.commentCount">
-										<span
-											v-if="t.commentCount && t.commentCount > 0"
-											class="comment-badge"
-											:class="{'is-unread': t.isUnread}"
-										>
-											<Icon icon="comment" />
-											{{ t.commentCount }}
-											<span
-												v-if="t.isUnread"
-												class="unread-indicator"
-											/>
-										</span>
+										<CommentCount :task="t" />
 									</td>
 									<DateTableCell
 										v-if="activeColumns.startDate"
@@ -303,7 +294,9 @@ import Done from '@/components/misc/Done.vue'
 import User from '@/components/misc/User.vue'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
+import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
 import DateTableCell from '@/components/tasks/partials/DateTableCell.vue'
+import CommentCount from '@/components/tasks/partials/CommentCount.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
@@ -455,36 +448,5 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 
 .filter-container :deep(.popup) {
 	inset-block-start: 7rem;
-}
-
-.comment-badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.25rem;
-	position: relative;
-
-	&.is-unread {
-		font-weight: 600;
-		color: var(--primary);
-
-		.unread-indicator {
-			display: inline-block;
-			inline-size: 6px;
-			block-size: 6px;
-			background-color: var(--primary);
-			border-radius: 50%;
-			margin-inline-start: 2px;
-			animation: pulse 2s infinite;
-		}
-	}
-}
-
-@keyframes pulse {
-	0%, 100% {
-		opacity: 1;
-	}
-	50% {
-		opacity: 0.6;
-	}
 }
 </style>

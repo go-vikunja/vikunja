@@ -79,7 +79,9 @@
 				"subject_to_assignee": "Foste atribuído a \"%[1]s\" (%[2]s)",
 				"message_to_assignee": "%[1]s atribuiu-te a \"%[2]s\".",
 				"subject_to_others": "\"%[1]s\" (%[2]s) foi atribuído a %[3]s",
-				"message_to_others": "%[1]s atribuiu esta tarefa a %[2]s."
+				"message_to_others": "%[1]s atribuiu esta tarefa a %[2]s.",
+				"subject_to_others_self": "“%[1]s” (%[2]s) foi atribuído por %[3]s a si próprio",
+				"message_to_others_self": "%[1]s atribuiu esta tarefa a si próprio."
 			},
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) foi eliminada",
