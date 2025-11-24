@@ -1,3 +1,5 @@
+import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
+
 const STORAGE_KEY_PREFIX = 'editorDraft'
 
 /**
@@ -11,7 +13,7 @@ export function saveEditorDraft(storageKey: string, content: string) {
 	const key = `${STORAGE_KEY_PREFIX}-${storageKey}`
 
 	try {
-		if (!content || content === '' || content === '<p></p>') {
+		if (!content || isEditorContentEmpty(content)) {
 			// Remove empty drafts
 			localStorage.removeItem(key)
 			return
