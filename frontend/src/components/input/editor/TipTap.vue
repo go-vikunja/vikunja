@@ -577,8 +577,8 @@ function bubbleNow() {
 	const newContent = editor.value?.getHTML()
 
 	// Save to localStorage if storageKey is provided
-	if (props.storageKey && newContent) {
-		saveEditorDraft(props.storageKey, newContent)
+	if (props.storageKey) {
+		saveEditorDraft(props.storageKey, newContent || '')
 	}
 
 	emit('update:modelValue', newContent)
