@@ -707,7 +707,11 @@ onMounted(async () => {
 		const draft = loadEditorDraft(props.storageKey)
 		if (draft && isEditorContentEmpty(props.modelValue)) {
 			// Only load draft if current content is empty
-			setModeAndValue(draft)
+			// Set content and force edit mode for immediate editing
+			editor.value?.commands.setContent(draft, {emitUpdate: false})
+			internalMode.value = 'edit'
+			// Emit the model update so parent sees the restored content
+			emit('update:modelValue', draft)
 			return
 		}
 	}
