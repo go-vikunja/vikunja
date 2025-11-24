@@ -183,6 +183,7 @@ import XButton from '@/components/input/Button.vue'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
+import {saveEditorDraft, loadEditorDraft, clearEditorDraft} from '@/helpers/editorDraftStorage'
 
 const props = withDefaults(defineProps<{
 	modelValue: string,
@@ -195,6 +196,7 @@ const props = withDefaults(defineProps<{
 	enableDiscardShortcut?: boolean,
 	enableMentions?: boolean,
 	mentionProjectId?: number,
+	storageKey?: string,
 }>(), {
 	uploadCallback: undefined,
 	isEditEnabled: true,
@@ -205,6 +207,7 @@ const props = withDefaults(defineProps<{
 	enableDiscardShortcut: false,
 	enableMentions: false,
 	mentionProjectId: 0,
+	storageKey: '',
 })
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -571,12 +574,25 @@ function bubbleNow() {
 	}
 
 	contentHasChanged.value = true
-	emit('update:modelValue', editor.value?.getHTML())
+	const newContent = editor.value?.getHTML()
+
+	// Save to localStorage if storageKey is provided
+	if (props.storageKey) {
+		saveEditorDraft(props.storageKey, newContent || '')
+	}
+
+	emit('update:modelValue', newContent)
 }
 
 function bubbleSave() {
 	bubbleNow()
 	lastSavedState = editor.value?.getHTML() ?? ''
+
+	// Clear draft from localStorage when saved
+	if (props.storageKey) {
+		clearEditorDraft(props.storageKey)
+	}
+
 	emit('save', lastSavedState)
 	if (isEditing.value) {
 		internalMode.value = 'preview'
@@ -585,6 +601,12 @@ function bubbleSave() {
 
 function exitEditMode() {
 	editor.value?.commands.setContent(lastSavedState, {emitUpdate: false})
+
+	// Clear draft from localStorage when discarding changes
+	if (props.storageKey) {
+		clearEditorDraft(props.storageKey)
+	}
+
 	if (isEditing.value) {
 		internalMode.value = 'preview'
 	}
@@ -679,6 +701,20 @@ onMounted(async () => {
 	}
 
 	await nextTick()
+
+	// Load draft from localStorage if available
+	if (props.storageKey) {
+		const draft = loadEditorDraft(props.storageKey)
+		if (draft && isEditorContentEmpty(props.modelValue)) {
+			// Only load draft if current content is empty
+			// Set content and force edit mode for immediate editing
+			editor.value?.commands.setContent(draft, {emitUpdate: false})
+			internalMode.value = 'edit'
+			// Emit the model update so parent sees the restored content
+			emit('update:modelValue', draft)
+			return
+		}
+	}
 
 	setModeAndValue(props.modelValue)
 })

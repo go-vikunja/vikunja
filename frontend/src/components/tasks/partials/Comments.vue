@@ -172,6 +172,7 @@
 								:placeholder="$t('task.comment.placeholder')"
 								:enable-mentions="true"
 								:mention-project-id="projectId"
+								:storage-key="commentStorageKey"
 								@save="addComment()"
 							/>
 						</div>
@@ -226,6 +227,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
+import {clearEditorDraft} from '@/helpers/editorDraftStorage'
 import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 import {useConfigStore} from '@/stores/config'
@@ -299,6 +301,7 @@ const actions = computed(() => {
 })
 
 const frontendUrl = computed(() => configStore.frontendUrl)
+const commentStorageKey = computed(() => `task-comment-${props.taskId}`)
 
 const currentPage = ref(1)
 
@@ -377,6 +380,10 @@ async function addComment() {
 		const comment = await taskCommentService.create(newComment)
 		comments.value.push(comment)
 		newCommentText.value = ''
+
+		// Ensure draft is cleared from localStorage
+		clearEditorDraft(commentStorageKey.value)
+
 		success({message: t('task.comment.addedSuccess')})
 	} finally {
 		creating.value = false
