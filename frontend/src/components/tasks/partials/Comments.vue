@@ -172,7 +172,7 @@
 								:placeholder="$t('task.comment.placeholder')"
 								:enable-mentions="true"
 								:mention-project-id="projectId"
-								:storage-key="`task-comment-${taskId}`"
+								:storage-key="commentStorageKey"
 								@save="addComment()"
 							/>
 						</div>
@@ -301,6 +301,7 @@ const actions = computed(() => {
 })
 
 const frontendUrl = computed(() => configStore.frontendUrl)
+const commentStorageKey = computed(() => `task-comment-${props.taskId}`)
 
 const currentPage = ref(1)
 
@@ -381,7 +382,7 @@ async function addComment() {
 		newCommentText.value = ''
 
 		// Ensure draft is cleared from localStorage
-		clearEditorDraft(`task-comment-${props.taskId}`)
+		clearEditorDraft(commentStorageKey.value)
 
 		success({message: t('task.comment.addedSuccess')})
 	} finally {
