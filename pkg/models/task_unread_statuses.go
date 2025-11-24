@@ -36,6 +36,18 @@ func (t *TaskUnreadStatus) CanUpdate(_ *xorm.Session, _ web.Auth) (bool, error) 
 	return true, nil
 }
 
+// Update marks a task as read
+// @Summary Mark a task as read
+// @Description Marks a task as read for the current user by removing the unread status entry.
+// @tags task
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param projecttask path int true "Task ID"
+// @Success 200 {object} models.TaskUnreadStatus "The task unread status object."
+// @Failure 403 {object} web.HTTPError "The user does not have access to the task"
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /tasks/{projecttask}/read [post]
 func (t *TaskUnreadStatus) Update(s *xorm.Session, a web.Auth) error {
 	err := markTaskAsRead(s, t.TaskID, a)
 	if err != nil {
