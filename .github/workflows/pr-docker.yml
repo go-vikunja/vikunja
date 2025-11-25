@@ -1,0 +1,59 @@
+name: PR Docker Build
+
+on:
+  # pull_request_target gives write access to GHCR even for PRs from forks.
+  # This is safe because:
+  # 1. We explicitly checkout the PR's head commit (no base branch code execution)
+  # 2. We ONLY build a Docker image (isolated container, no workflow scripts from PR)
+  # 3. No actions that execute PR code in the workflow context (no github-script, etc)
+  # 4. Build happens in isolated Docker container with well-defined Dockerfile
+  pull_request_target:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
+        with:
+          # For pull_request_target, we need to explicitly fetch the PR ref from forks
+          # since the PR's commit SHA is not reachable in the base repository.
+          # This is safe because no PR code is executed in workflow context.
+          # Only Docker build uses the PR code (isolated in container).
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
+      - name: Login to GHCR
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
+        with:
+          version: latest
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5
+        with:
+          images: ghcr.io/go-vikunja/vikunja
+          tags: |
+            type=ref,event=pr
+            type=sha,format=long
+      - name: Build and push PR image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
