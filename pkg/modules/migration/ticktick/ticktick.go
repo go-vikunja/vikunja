@@ -173,6 +173,10 @@ func stripBOM(r io.Reader) io.Reader {
 	buf := make([]byte, 3)
 	n, err := r.Read(buf)
 	if err != nil && err != io.EOF {
+		// If we read some bytes before the error, preserve them
+		if n > 0 {
+			return io.MultiReader(bytes.NewReader(buf[:n]), r)
+		}
 		return r
 	}
 
