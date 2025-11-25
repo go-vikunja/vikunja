@@ -1,0 +1,14 @@
+﻿"Date: 2025-11-25+0000"
+"Version: 7.1"
+"Status:
+0 Normal
+1 Completed
+2 Archived"
+"Folder Name","List Name","Title","Kind","Tags","Content","Is Check list","Start Date","Due Date","Reminder","Repeat","Priority","Status","Created Time","Completed Time","Order","Timezone","Is All Day","Is Floating","Column Name","Column Order","View Mode","taskId","parentId"
+"Work","Project Alpha","Task with multiline
+description","TEXT","urgent, work","This is a task description
+that spans multiple lines.
+
+It has paragraphs and everything!
+Including special characters: #, *, @","N","","","","","0","0","2022-10-09T15:09:48+0000","","-1099511627776","Europe/Berlin",,"false",,,"list","1",""
+"Work","Project Alpha","Regular task","TEXT","","Simple description","N","","","","","0","0","2022-10-09T15:10:00+0000","","-1099511627775","Europe/Berlin",,"false",,,"list","2",""

@@ -195,12 +195,24 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) (gocsv.SimpleDecoder, erro
 	// Strip BOM if present - this must be done consistently with linesToSkipBeforeHeader
 	r = stripBOM(r)
 
-	// Skip lines using a scanner first, then create CSV reader
-	scanner := bufio.NewScanner(r)
+	// Read all content into memory so we can work with it
+	// This is acceptable since CSV imports are typically not huge files
+	allBytes, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	// Skip the metadata lines before the CSV header by finding byte offsets
+	// We use a scanner here because these metadata lines are plain text, not CSV data,
+	// so they won't contain multiline quoted fields
+	scanner := bufio.NewScanner(bytes.NewReader(allBytes))
+	bytesSkipped := 0
 	for i := 0; i < linesToSkip; i++ {
 		if !scanner.Scan() {
 			break
 		}
+		// Count bytes for this line plus the newline character
+		bytesSkipped += len(scanner.Bytes()) + 1 // +1 for the \n
 	}
 
 	// Check for errors after skipping lines
@@ -208,20 +220,10 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) (gocsv.SimpleDecoder, erro
 		return nil, err
 	}
 
-	// Collect remaining content after skipping lines
-	var remainingLines []string
-	for scanner.Scan() {
-		remainingLines = append(remainingLines, scanner.Text())
-	}
-
-	// Check for errors after collecting remaining lines
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	// Create CSV reader from remaining content
-	remainingContent := strings.Join(remainingLines, "\n")
-	reader := csv.NewReader(strings.NewReader(remainingContent))
+	// Now create a CSV reader starting from after the skipped lines
+	// This preserves any multiline quoted fields in the CSV data
+	remainingContent := allBytes[bytesSkipped:]
+	reader := csv.NewReader(bytes.NewReader(remainingContent))
 
 	// Allow variable field counts and be lenient with parsing
 	reader.FieldsPerRecord = -1

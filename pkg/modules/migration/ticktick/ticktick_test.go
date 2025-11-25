@@ -454,6 +454,65 @@ func assertLabelsMatch(t *testing.T, vikunjaTask *models.TaskWithComments, expec
 	}
 }
 
+func TestMultilineDescriptions(t *testing.T) {
+	// Test with a CSV fixture that contains actual multiline content in quoted fields
+	file, err := os.Open("testdata_ticktick_multiline.csv")
+	require.NoError(t, err, "Failed to open test fixture")
+	defer file.Close()
+
+	stat, err := file.Stat()
+	require.NoError(t, err)
+
+	lines, err := linesToSkipBeforeHeader(file, stat.Size())
+	require.NoError(t, err)
+	t.Logf("Lines to skip: %d", lines)
+	assert.Equal(t, 6, lines, "Should skip 6 metadata lines")
+
+	// Reset file position
+	_, err = file.Seek(0, io.SeekStart)
+	require.NoError(t, err)
+
+	dec, err := newLineSkipDecoder(file, lines)
+	require.NoError(t, err)
+	tasks := []*tickTickTask{}
+	err = gocsv.UnmarshalDecoder(dec, &tasks)
+	require.NoError(t, err, "Failed to parse CSV with multiline descriptions")
+
+	// We expect 2 tasks in this fixture
+	require.Len(t, tasks, 2, "Should parse exactly 2 tasks")
+
+	// First task has multiline content in both Title and Content fields
+	task1 := tasks[0]
+	assert.Equal(t, "Work", task1.FolderName)
+	assert.Equal(t, "Project Alpha", task1.ProjectName)
+
+	// The title contains a newline
+	assert.Contains(t, task1.Title, "Task with multiline")
+	assert.Contains(t, task1.Title, "description")
+	assert.Contains(t, task1.Title, "\n", "Title should contain actual newline character")
+
+	// The content contains multiple newlines and paragraphs
+	assert.Contains(t, task1.Content, "This is a task description")
+	assert.Contains(t, task1.Content, "that spans multiple lines")
+	assert.Contains(t, task1.Content, "It has paragraphs and everything!")
+	assert.Contains(t, task1.Content, "Including special characters: #, *, @")
+
+	// Count newlines in content - should have at least 3 (between the 4 lines)
+	newlineCount := strings.Count(task1.Content, "\n")
+	assert.GreaterOrEqual(t, newlineCount, 3, "Content should have multiple newlines")
+
+	// Second task is a regular task without multiline content
+	task2 := tasks[1]
+	assert.Equal(t, "Regular task", task2.Title)
+	assert.Equal(t, "Simple description", task2.Content)
+	assert.NotContains(t, task2.Title, "\n", "Regular task title should not have newlines")
+
+	t.Logf("Successfully parsed tasks with multiline content:")
+	t.Logf("  Task 1 title: %q", task1.Title)
+	t.Logf("  Task 1 content: %q", task1.Content)
+	t.Logf("  Task 2 title: %q", task2.Title)
+}
+
 func TestEmptyLabelHandlingWithRealCSV(t *testing.T) {
 	t.Run("Parse CSV file", func(t *testing.T) {
 		file, err := os.Open("testdata_ticktick_export.csv")
