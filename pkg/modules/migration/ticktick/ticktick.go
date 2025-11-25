@@ -203,8 +203,9 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) (gocsv.SimpleDecoder, erro
 	}
 
 	// Skip the metadata lines before the CSV header by finding newlines
-	// We manually search for newlines instead of using bufio.Scanner because
-	// Scanner has a 64KB line limit which could fail on large CSV records
+	// linesToSkipBeforeHeader counts raw text lines (newlines), not CSV records,
+	// because even metadata can have multiline quoted fields.
+	// We manually search for newlines (no buffer size limits like bufio.Scanner)
 	bytesSkipped := 0
 	linesFound := 0
 	for i := 0; i < len(allBytes) && linesFound < linesToSkip; i++ {
@@ -223,7 +224,7 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) (gocsv.SimpleDecoder, erro
 	}
 
 	// Now create a CSV reader starting from after the skipped lines
-	// This preserves any multiline quoted fields in the CSV data
+	// The CSV reader will properly handle any multiline quoted fields in the actual data
 	remainingContent := allBytes[bytesSkipped:]
 	reader := csv.NewReader(bytes.NewReader(remainingContent))
 

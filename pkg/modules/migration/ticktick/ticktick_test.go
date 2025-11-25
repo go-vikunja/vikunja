@@ -178,7 +178,7 @@ func TestLinesToSkipBeforeHeaderWithRealCSV(t *testing.T) {
 		"1 Completed\n" +
 		"2 Archived\"\n" +
 		"\"Folder Name\",\"List Name\",\"Title\",\"Kind\",\"Tags\",\"Content\",\"Is Check list\",\"Start Date\",\"Due Date\",\"Reminder\",\"Repeat\",\"Priority\",\"Status\",\"Created Time\",\"Completed Time\",\"Order\",\"Timezone\",\"Is All Day\",\"Is Floating\",\"Column Name\",\"Column Order\",\"View Mode\",\"taskId\",\"parentId\"\n" +
-		"\"dsx\",\"x\",\"this task repeats\",\"TEXT\",\"\",\"\",\"N\",\"\",\"\",\"\",\"\",\"0\",\"0\",\"2022-10-09T15:09:48+0000\",\"\",\"-1099511627776\",\"Europe/Berlin\",,\"false\",,,,\"list\",\"1\",\"\"\n"
+		"\"dsx\",\"x\",\"this task repeats\",\"TEXT\",\"\",\"\",\"N\",\"\",\"\",\"\",\"\",\"0\",\"0\",\"2022-10-09T15:09:48+0000\",\"\",\"-1099511627776\",\"Europe/Berlin\",,\"false\",,,\"list\",\"2\",\"\"\n"
 
 	t.Logf("CSV content length: %d", len(csvContent))
 	t.Logf("CSV content first 100 chars: %q", csvContent[:100])
