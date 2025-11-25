@@ -18,6 +18,7 @@ package ticktick
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/csv"
 	"errors"
 	"io"
@@ -25,7 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
@@ -163,24 +163,59 @@ func (m *Migrator) Name() string {
 	return "ticktick"
 }
 
+// stripBOM removes the UTF-8 BOM from the beginning of a reader
+func stripBOM(r io.Reader) io.Reader {
+	// Read the first few bytes to check for BOM
+	buf := make([]byte, 3)
+	n, err := r.Read(buf)
+	if err != nil && err != io.EOF {
+		return r
+	}
+
+	// Check if it starts with UTF-8 BOM (0xEF, 0xBB, 0xBF)
+	if n >= 3 && buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF {
+		// BOM found, return reader without BOM
+		return io.MultiReader(bytes.NewReader(buf[3:n]), r)
+	}
+
+	// No BOM found, return reader with the bytes we read back
+	return io.MultiReader(bytes.NewReader(buf[:n]), r)
+}
+
 func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
-	reader := csv.NewReader(r)
+	// Strip BOM if present - this must be done consistently with linesToSkipBeforeHeader
+	r = stripBOM(r)
+
+	// Skip lines using a scanner first, then create CSV reader
+	scanner := bufio.NewScanner(r)
 	for i := 0; i < linesToSkip; i++ {
-		_, err := reader.Read()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			log.Debugf("[TickTick Migration] CSV parse error: %s", err)
+		if !scanner.Scan() {
+			break
 		}
 	}
-	reader.FieldsPerRecord = 0
+
+	// Collect remaining content after skipping lines
+	var remainingLines []string
+	for scanner.Scan() {
+		remainingLines = append(remainingLines, scanner.Text())
+	}
+
+	// Create CSV reader from remaining content
+	remainingContent := strings.Join(remainingLines, "\n")
+	reader := csv.NewReader(strings.NewReader(remainingContent))
+
+	// Allow variable field counts and be lenient with parsing
+	reader.FieldsPerRecord = -1
+	reader.LazyQuotes = true
+	reader.TrimLeadingSpace = true
 	return gocsv.NewSimpleDecoderFromCSVReader(reader)
 }
 
 func linesToSkipBeforeHeader(file io.ReaderAt, size int64) (int, error) {
 	sr := io.NewSectionReader(file, 0, size)
-	scanner := bufio.NewScanner(sr)
+	// Strip BOM before scanning for header
+	r := stripBOM(sr)
+	scanner := bufio.NewScanner(r)
 	lines := 0
 	for scanner.Scan() {
 		line := scanner.Text()
