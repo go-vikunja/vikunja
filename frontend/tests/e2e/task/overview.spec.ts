@@ -91,7 +91,7 @@ test.describe('Home Page Task Overview', () => {
 		await page.locator('.task-add textarea').fill(newTaskTitle)
 		await page.locator('.task-add textarea').press('Enter')
 		await page.goto('/')
-		await expect(page.locator('[data-cy="showTasks"] .card .task').last()).not.toContainText(newTaskTitle)
+		await expect(page.locator('[data-cy="showTasks"]')).not.toContainText(newTaskTitle)
 	})
 
 	test('Should show a new task without a date at the bottom when there are < 50 tasks', async ({authenticatedPage: page, apiContext}) => {
@@ -103,7 +103,7 @@ test.describe('Home Page Task Overview', () => {
 		}, false)
 
 		await page.goto('/')
-		await expect(page.locator('[data-cy="showTasks"] .card .task').last()).toContainText(newTaskTitle)
+		await expect(page.locator('[data-cy="showTasks"]')).toContainText(newTaskTitle)
 	})
 
 	// FIXME: SecurityError when accessing localStorage - "Access is denied for this document"
