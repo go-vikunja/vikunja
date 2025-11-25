@@ -391,6 +391,7 @@ jobs:
 
           pnpm run test:e2e --shard=${{ matrix.shard }}/${{ matrix.total-shards }}
         env:
+          PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: 1
           TEST_SECRET: averyLongSecretToSe33dtheDB
           VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
           VIKUNJA_LOG_LEVEL: DEBUG
