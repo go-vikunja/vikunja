@@ -191,7 +191,7 @@ func stripBOM(r io.Reader) io.Reader {
 	return io.MultiReader(bytes.NewReader(buf[:n]), r)
 }
 
-func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
+func newLineSkipDecoder(r io.Reader, linesToSkip int) (gocsv.SimpleDecoder, error) {
 	// Strip BOM if present - this must be done consistently with linesToSkipBeforeHeader
 	r = stripBOM(r)
 
@@ -203,10 +203,20 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
 		}
 	}
 
+	// Check for errors after skipping lines
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
 	// Collect remaining content after skipping lines
 	var remainingLines []string
 	for scanner.Scan() {
 		remainingLines = append(remainingLines, scanner.Text())
+	}
+
+	// Check for errors after collecting remaining lines
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 
 	// Create CSV reader from remaining content
@@ -217,7 +227,7 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
 	reader.FieldsPerRecord = -1
 	reader.LazyQuotes = true
 	reader.TrimLeadingSpace = true
-	return gocsv.NewSimpleDecoderFromCSVReader(reader)
+	return gocsv.NewSimpleDecoderFromCSVReader(reader), nil
 }
 
 func linesToSkipBeforeHeader(file io.ReaderAt, size int64) (int, error) {
@@ -287,7 +297,10 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 	if err != nil {
 		return err
 	}
-	decode := newLineSkipDecoder(fr, skip)
+	decode, err := newLineSkipDecoder(fr, skip)
+	if err != nil {
+		return err
+	}
 	err = gocsv.UnmarshalDecoder(decode, &allTasks)
 	if err != nil {
 		return err

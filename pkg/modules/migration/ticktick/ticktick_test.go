@@ -160,7 +160,8 @@ func TestLinesToSkipBeforeHeader(t *testing.T) {
 	assert.Equal(t, 2, lines)
 
 	r2 := bytes.NewReader([]byte(csvContent))
-	dec := newLineSkipDecoder(r2, lines)
+	dec, err := newLineSkipDecoder(r2, lines)
+	require.NoError(t, err)
 	tasks := []*tickTickTask{}
 	err = gocsv.UnmarshalDecoder(dec, &tasks)
 	require.NoError(t, err)
@@ -189,7 +190,8 @@ func TestLinesToSkipBeforeHeaderWithRealCSV(t *testing.T) {
 	assert.Equal(t, 6, lines) // Should skip 6 lines to get to the header
 
 	r2 := bytes.NewReader([]byte(csvContent))
-	dec := newLineSkipDecoder(r2, lines)
+	dec, err := newLineSkipDecoder(r2, lines)
+	require.NoError(t, err)
 	tasks := []*tickTickTask{}
 	err = gocsv.UnmarshalDecoder(dec, &tasks)
 	t.Logf("Unmarshal error: %v", err)
@@ -237,7 +239,8 @@ func TestLinesToSkipBeforeHeaderWithCleanTestFile(t *testing.T) {
 	_, err = file.Seek(0, io.SeekStart)
 	require.NoError(t, err)
 
-	dec := newLineSkipDecoder(file, lines)
+	dec, err := newLineSkipDecoder(file, lines)
+	require.NoError(t, err)
 	tasks := []*tickTickTask{}
 	err = gocsv.UnmarshalDecoder(dec, &tasks)
 	t.Logf("Unmarshal error with test file: %v", err)
@@ -467,7 +470,8 @@ func TestEmptyLabelHandlingWithRealCSV(t *testing.T) {
 		_, err = file.Seek(0, io.SeekStart)
 		require.NoError(t, err)
 
-		dec := newLineSkipDecoder(file, lines)
+		dec, err := newLineSkipDecoder(file, lines)
+		require.NoError(t, err)
 		tasks := []*tickTickTask{}
 		err = gocsv.UnmarshalDecoder(dec, &tasks)
 		require.NoError(t, err)
@@ -491,7 +495,8 @@ func TestEmptyLabelHandlingWithRealCSV(t *testing.T) {
 		_, err = file.Seek(0, io.SeekStart)
 		require.NoError(t, err)
 
-		dec := newLineSkipDecoder(file, lines)
+		dec, err := newLineSkipDecoder(file, lines)
+		require.NoError(t, err)
 		tasks := []*tickTickTask{}
 		err = gocsv.UnmarshalDecoder(dec, &tasks)
 		require.NoError(t, err)
