@@ -1,6 +1,6 @@
 import {test, expect} from '../../support/fixtures'
 
-test.describe.skip('OpenID Login', () => {
+test.describe('OpenID Login', () => {
 	test('logs in via Dex provider', async ({page}) => {
 		await page.goto('/login')
 		await page.locator('text=Dex').click()

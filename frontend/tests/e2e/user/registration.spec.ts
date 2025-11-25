@@ -3,8 +3,8 @@
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 
-test.describe.skip('Registration', () => {
-	test.beforeEach(async ({page}) => {
+test.describe('Registration', () => {
+	test.beforeEach(async ({page, apiContext}) => {
 		await UserFactory.create(1, {
 			username: 'test',
 		})
@@ -12,7 +12,7 @@ test.describe.skip('Registration', () => {
 		await page.evaluate(() => localStorage.removeItem('token'))
 	})
 
-	test('Should work without issues', async ({page}) => {
+	test('Should work without issues', async ({page, apiContext}) => {
 		const fixture = {
 			username: 'testuser',
 			password: '12345678',
@@ -26,10 +26,10 @@ test.describe.skip('Registration', () => {
 		await page.locator('#register-submit').click()
 		await expect(page).toHaveURL(/\//)
 		await page.clock.install({time: new Date(1625656161057)}) // 13:00
-		await expect(page.locator('h2')).toContainText(`Hi ${fixture.username}!`)
+		await expect(page.locator('main h2')).toContainText(`Hi ${fixture.username}!`)
 	})
 
-	test('Should fail', async ({page}) => {
+	test('Should fail', async ({page, apiContext}) => {
 		const fixture = {
 			username: 'test',
 			password: '12345678',

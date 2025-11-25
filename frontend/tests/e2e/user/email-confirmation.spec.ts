@@ -2,21 +2,22 @@ import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {TokenFactory} from '../../factories/token'
 
-test.describe.skip('Email Confirmation', () => {
+test.describe('Email Confirmation', () => {
 	let user
 	let confirmationToken
 
-	test.beforeEach(async ({page}) => {
-		UserFactory.truncate()
-		TokenFactory.truncate()
+	test.beforeEach(async ({page, apiContext}) => {
+		await UserFactory.truncate()
+		await TokenFactory.truncate()
 
 		// Create a user with status = 1 (StatusEmailConfirmationRequired)
-		user = await UserFactory.create(1, {
+		const users = await UserFactory.create(1, {
 			username: 'unconfirmeduser',
 			email: 'unconfirmed@example.com',
 			password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.', // 1234
 			status: 1, // StatusEmailConfirmationRequired
-		})[0]
+		})
+		user = users[0]
 
 		// Create an email confirmation token for this user
 		// kind: 2 = TokenEmailConfirm
@@ -28,7 +29,7 @@ test.describe.skip('Email Confirmation', () => {
 		})
 	})
 
-	test('Should fail login before email is confirmed', async ({page}) => {
+	test('Should fail login before email is confirmed', async ({page, apiContext}) => {
 		await page.goto('/login')
 		await page.locator('input[id=username]').fill(user.username)
 		await page.locator('input[id=password]').fill('1234')
@@ -37,7 +38,7 @@ test.describe.skip('Email Confirmation', () => {
 		await expect(page.locator('div.message.danger')).toContainText('Email address of the user not confirmed')
 	})
 
-	test('Should confirm email and allow login', async ({page}) => {
+	test('Should confirm email and allow login', async ({page, apiContext}) => {
 		// Setup response promise for the confirmation API call
 		const confirmEmailPromise = page.waitForResponse(response =>
 			response.url().includes('/user/confirm') && response.request().method() === 'POST',
@@ -71,7 +72,7 @@ test.describe.skip('Email Confirmation', () => {
 		await expect(page.locator('body')).toContainText(user.username)
 	})
 
-	test('Should fail with invalid confirmation token', async ({page}) => {
+	test('Should fail with invalid confirmation token', async ({page, apiContext}) => {
 		// Setup response promise for the confirmation API call
 		const confirmEmailPromise = page.waitForResponse(response =>
 			response.url().includes('/user/confirm') && response.request().method() === 'POST',
@@ -99,7 +100,7 @@ test.describe.skip('Email Confirmation', () => {
 		await expect(page.locator('div.message.danger')).toContainText('Email address of the user not confirmed')
 	})
 
-	test('Should not allow using the same token twice', async ({page}) => {
+	test('Should not allow using the same token twice', async ({page, apiContext}) => {
 		// First confirmation - should work
 		let confirmEmailPromise = page.waitForResponse(response =>
 			response.url().includes('/user/confirm') && response.request().method() === 'POST',
@@ -131,7 +132,7 @@ test.describe.skip('Email Confirmation', () => {
 		await expect(page.locator('.message.danger')).toBeVisible({timeout: 10000})
 	})
 
-	test('Should confirm email when clicking link from email (via query parameter)', async ({page}) => {
+	test('Should confirm email when clicking link from email (via query parameter)', async ({page, apiContext}) => {
 		// Setup response promise for the confirmation API call
 		const confirmEmailPromise = page.waitForResponse(response =>
 			response.url().includes('/user/confirm') && response.request().method() === 'POST',

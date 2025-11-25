@@ -76,6 +76,7 @@ async function uploadAttachmentAndVerify(page: Page, taskId: number) {
 	await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
 }
 
+// FIXME: Large test suite (47 tests) - many pass but some have timeout issues, needs detailed investigation
 test.describe.skip('Task', () => {
 	let projects: Project[]
 	let buckets: Bucket[]

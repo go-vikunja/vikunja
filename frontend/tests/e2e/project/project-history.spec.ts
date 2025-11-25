@@ -2,11 +2,12 @@ import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
 import {ProjectViewFactory} from '../../factories/project_view'
 
-test.describe.skip('Project History', () => {
-	test('should show a project history on the home page', async ({authenticatedPage: page}) => {
+test.describe('Project History', () => {
+	// FIXME: API timeout waiting for /projects response - likely related to project_views table seeding issues
+	test.skip('should show a project history on the home page', async ({authenticatedPage: page}) => {
 		test.setTimeout(60000)
 		const projects = await ProjectFactory.create(7)
-		ProjectViewFactory.truncate()
+		await ProjectViewFactory.truncate()
 		await Promise.all(projects.map(p => ProjectViewFactory.create(1, {
 			id: p.id,
 			project_id: p.id,

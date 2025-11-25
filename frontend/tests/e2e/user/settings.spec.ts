@@ -1,7 +1,8 @@
 import {test, expect} from '../../support/fixtures'
 
-test.describe.skip('User Settings', () => {
-	test('Changes the user avatar', async ({authenticatedPage: page}) => {
+test.describe('User Settings', () => {
+	// FIXME: File upload and image cropping functionality not working - upload response timeout
+	test.skip('Changes the user avatar', async ({authenticatedPage: page}) => {
 		const uploadAvatarPromise = page.waitForResponse(response =>
 			response.url().includes('/user/settings/avatar/upload') && response.request().method() === 'POST',
 		)
