@@ -202,22 +202,24 @@ func newLineSkipDecoder(r io.Reader, linesToSkip int) (gocsv.SimpleDecoder, erro
 		return nil, err
 	}
 
-	// Skip the metadata lines before the CSV header by finding byte offsets
-	// We use a scanner here because these metadata lines are plain text, not CSV data,
-	// so they won't contain multiline quoted fields
-	scanner := bufio.NewScanner(bytes.NewReader(allBytes))
+	// Skip the metadata lines before the CSV header by finding newlines
+	// We manually search for newlines instead of using bufio.Scanner because
+	// Scanner has a 64KB line limit which could fail on large CSV records
 	bytesSkipped := 0
-	for i := 0; i < linesToSkip; i++ {
-		if !scanner.Scan() {
-			break
+	linesFound := 0
+	for i := 0; i < len(allBytes) && linesFound < linesToSkip; i++ {
+		if allBytes[i] == '\n' {
+			linesFound++
+			if linesFound == linesToSkip {
+				// Position is right after the Nth newline
+				bytesSkipped = i + 1
+				break
+			}
 		}
-		// Count bytes for this line plus the newline character
-		bytesSkipped += len(scanner.Bytes()) + 1 // +1 for the \n
 	}
 
-	// Check for errors after skipping lines
-	if err := scanner.Err(); err != nil {
-		return nil, err
+	if linesFound < linesToSkip {
+		return nil, io.ErrUnexpectedEOF
 	}
 
 	// Now create a CSV reader starting from after the skipped lines
