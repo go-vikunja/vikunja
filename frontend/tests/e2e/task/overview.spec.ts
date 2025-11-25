@@ -93,7 +93,7 @@ test.describe('Home Page Task Overview', () => {
 		await page.locator('.task-add textarea').press('Enter')
 		await taskResponsePromise
 		await page.goto('/')
-		await expect(page.locator('[data-cy="showTasks"]').last()).not.toContainText(newTaskTitle)
+		await expect(page.locator('[data-cy="showTasks"]')).not.toContainText(newTaskTitle)
 	})
 
 	// FIXME: the task is not shown 
