@@ -84,7 +84,7 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.kanban .bucket').first()).toContainText('New Task')
 	})
 
-	test.skip('Can create a new bucket', async ({authenticatedPage: page}) => {
+	test('Can create a new bucket', async ({authenticatedPage: page}) => {
 		await page.goto('/projects/1/4')
 
 		await page.locator('.kanban .bucket.new-bucket .button').click()
