@@ -177,7 +177,8 @@ func stripBOM(r io.Reader) io.Reader {
 	}
 
 	// Check if it starts with UTF-8 BOM (0xEF, 0xBB, 0xBF)
-	if n >= 3 && buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF {
+	// We need exactly 3 bytes and they must match the BOM sequence
+	if n == 3 && len(buf) >= 3 && buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF {
 		// BOM found, return reader without BOM
 		return io.MultiReader(bytes.NewReader(buf[3:n]), r)
 	}
