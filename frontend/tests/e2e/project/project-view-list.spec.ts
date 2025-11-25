@@ -8,8 +8,7 @@ import {createProjects} from './prepareProjects'
 import {BucketFactory} from '../../factories/bucket'
 
 test.describe('Project View List', () => {
-	// FIXME: API returns 500 Internal Server Error when seeding project_views table
-	test.skip('Should be an empty project', async ({authenticatedPage: page}) => {
+	test('Should be an empty project', async ({authenticatedPage: page}) => {
 		const projects = await createProjects(1)
 		await page.goto('/projects/1')
 		await expect(page).toHaveURL(/\/projects\/1\/1/)
@@ -18,8 +17,7 @@ test.describe('Project View List', () => {
 		await expect(page.locator('.has-text-centered.has-text-grey.is-italic').filter({hasText: 'This project is currently empty.'})).toBeVisible()
 	})
 
-	// FIXME: API returns 500 Internal Server Error when seeding project_views table
-	test.skip('Should create a new task', async ({authenticatedPage: page}) => {
+	test('Should create a new task', async ({authenticatedPage: page}) => {
 		const projects = await createProjects(1)
 		await BucketFactory.create(2, {
 			project_view_id: 4,
@@ -33,8 +31,7 @@ test.describe('Project View List', () => {
 		await expect(page.locator('.tasks')).toContainText(newTaskTitle)
 	})
 
-	// FIXME: API returns 500 Internal Server Error when seeding project_views table
-	test.skip('Should navigate to the task when the title is clicked', async ({authenticatedPage: page}) => {
+	test('Should navigate to the task when the title is clicked', async ({authenticatedPage: page}) => {
 		const projects = await createProjects(1)
 		const tasks = await TaskFactory.create(5, {
 			id: '{increment}',
@@ -63,13 +60,11 @@ test.describe('Project View List', () => {
 		await expect(page.locator('input.input[placeholder="Add a task…"]')).not.toBeVisible()
 	})
 
-	// FIXME: API returns 500 Internal Server Error when seeding projects table
-	test.skip('Should only show the color of a project in the navigation and not in the list view', async ({authenticatedPage: page}) => {
-		const projects = await createProjects(1)
-		await ProjectFactory.create(1, {
-			id: projects[0].id,
+	test('Should only show the color of a project in the navigation and not in the list view', async ({authenticatedPage: page}) => {
+		const projects = await ProjectFactory.create(1, {
+			id: 1,
 			hex_color: '00db60',
-		}, false)
+		})
 		await TaskFactory.create(10, {
 			project_id: projects[0].id,
 		})
@@ -79,8 +74,7 @@ test.describe('Project View List', () => {
 		await expect(page.locator('.tasks .color-bubble')).not.toBeVisible()
 	})
 
-	// FIXME: API returns 500 Internal Server Error when seeding project_views table
-	test.skip('Should paginate for > 50 tasks', async ({authenticatedPage: page}) => {
+	test('Should paginate for > 50 tasks', async ({authenticatedPage: page}) => {
 		const projects = await createProjects(1)
 		const tasks = await TaskFactory.create(100, {
 			id: '{increment}',
@@ -135,8 +129,7 @@ test.describe('Project View List', () => {
 		await expect(page.locator('.tasks')).toContainText('Subtask in Project B')
 	})
 
-	// FIXME: API returns 500 Internal Server Error when seeding project_views table
-	test.skip('Should show same-project subtasks under their parent', async ({authenticatedPage: page}) => {
+	test('Should show same-project subtasks under their parent', async ({authenticatedPage: page}) => {
 		const projects = await createProjects(1)
 
 		const tasks = [

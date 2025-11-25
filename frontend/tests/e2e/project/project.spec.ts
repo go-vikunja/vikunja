@@ -44,7 +44,7 @@ test.describe('Projects', () => {
 	})
 
 	// FIXME: seeding fails with error 500
-	test.skip('Should rename the project in all places', async ({authenticatedPage: page}) => {
+	test('Should rename the project in all places', async ({authenticatedPage: page}) => {
 		await TaskFactory.create(5, {
 			id: '{increment}',
 			project_id: 1,
