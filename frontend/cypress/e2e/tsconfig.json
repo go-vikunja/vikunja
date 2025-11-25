@@ -1,6 +1,6 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["./**/*", "../support/**/*", "../../tests/**/*"],
+  "include": ["./**/*", "../support/**/*", "../factories/**/*"],
   "compilerOptions": {
     "baseUrl": ".",
     "isolatedModules": false,

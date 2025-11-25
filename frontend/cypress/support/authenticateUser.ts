@@ -1,3 +1,4 @@
+
 // This authenticates a user and puts the token in local storage which allows us to perform authenticated requests.
 // Built after https://github.com/cypress-io/cypress-example-recipes/tree/bd2d6ffb33214884cab343d38e7f9e6ebffb323f/examples/logging-in__jwt
 

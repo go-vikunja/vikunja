@@ -1,6 +1,6 @@
-import {LinkShareFactory} from '../../../tests/factories/link_sharing'
-import {TaskFactory} from '../../../tests/factories/task'
-import {UserFactory} from '../../../tests/factories/user'
+import {LinkShareFactory} from '../../factories/link_sharing'
+import {TaskFactory} from '../../factories/task'
+import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
 
 function prepareLinkShare() {

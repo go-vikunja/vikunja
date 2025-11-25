@@ -68,3 +68,4 @@ export class Factory {
 		seed(this.table, null)
 	}
 }
+

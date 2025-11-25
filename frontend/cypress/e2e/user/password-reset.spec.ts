@@ -1,5 +1,5 @@
-import {UserFactory, type UserAttributes} from '../../../tests/factories/user'
-import {TokenFactory, type TokenAttributes} from '../../../tests/factories/token'
+import {UserFactory, type UserAttributes} from '../../factories/user'
+import {TokenFactory, type TokenAttributes} from '../../factories/token'
 
 context('Password Reset', () => {
 	let user: UserAttributes

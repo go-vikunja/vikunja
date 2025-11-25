@@ -1,24 +1,24 @@
-import {createFakeUserAndLogin} from '../../../tests/support/authenticateUser'
+import {createFakeUserAndLogin} from '../../support/authenticateUser'
 
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
 dayjs.extend(relativeTime)
 
-import {TaskFactory} from '../../../tests/factories/task'
-import {ProjectFactory} from '../../../tests/factories/project'
-import {TaskCommentFactory} from '../../../tests/factories/task_comment'
-import {UserFactory} from '../../../tests/factories/user'
-import {UserProjectFactory} from '../../../tests/factories/users_project'
-import {TaskAssigneeFactory} from '../../../tests/factories/task_assignee'
-import {LabelFactory} from '../../../tests/factories/labels'
-import {LabelTaskFactory} from '../../../tests/factories/label_task'
-import {BucketFactory} from '../../../tests/factories/bucket'
+import {TaskFactory} from '../../factories/task'
+import {ProjectFactory} from '../../factories/project'
+import {TaskCommentFactory} from '../../factories/task_comment'
+import {UserFactory} from '../../factories/user'
+import {UserProjectFactory} from '../../factories/users_project'
+import {TaskAssigneeFactory} from '../../factories/task_assignee'
+import {LabelFactory} from '../../factories/labels'
+import {LabelTaskFactory} from '../../factories/label_task'
+import {BucketFactory} from '../../factories/bucket'
 
-import {TaskAttachmentFactory} from '../../../tests/factories/task_attachments'
-import {TaskReminderFactory} from '../../../tests/factories/task_reminders'
+import {TaskAttachmentFactory} from '../../factories/task_attachments'
+import {TaskReminderFactory} from '../../factories/task_reminders'
 import {createDefaultViews} from '../project/prepareProjects'
-import {TaskBucketFactory} from '../../../tests/factories/task_buckets'
+import {TaskBucketFactory} from '../../factories/task_buckets'
 
 // Type definitions to fix linting errors
 interface Project {

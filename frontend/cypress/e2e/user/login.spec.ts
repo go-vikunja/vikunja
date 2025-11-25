@@ -49,26 +49,26 @@ context('Login', () => {
 
 	it('Should fail with a bad username', () => {
 		const fixture = {
-			username: 'wrong',
+			username: 'loremipsum',
 			password: '1234',
 		}
 
 		testAndAssertFailed(fixture)
 	})
-
-	it('Should redirect to / after login', () => {
-		cy.visit('/login')
-		login()
-		cy.url().should('equal', Cypress.config().baseUrl + '/')
-	})
-
-	it('Should redirect to the page visited before login after login', () => {
-		ProjectFactory.create(1, {
-			id: 42,
-		})
-		cy.visit('/projects/42')
+	
+	it('Should redirect to /login when no user is logged in', () => {
+		cy.visit('/')
 		cy.url().should('include', '/login')
+	})
+	
+	it('Should redirect to the previous route after logging in', () => {
+		const projects = ProjectFactory.create(1)
+		cy.visit(`/projects/${projects[0].id}/1`)
+
+		cy.url().should('include', '/login')
+		
 		login()
-		cy.url().should('include', '/projects/42')
+
+		cy.url().should('include', `/projects/${projects[0].id}/1`)
 	})
 })

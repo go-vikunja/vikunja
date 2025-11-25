@@ -1,3 +1,4 @@
+
 export function updateUserSettings(settings) {
 	const token = `Bearer ${window.localStorage.getItem('token')}`
 	
