@@ -7,6 +7,7 @@ inputs:
 
 # If you're using non-OSS software, you can set allowUnfree to true.
 allowUnfree: true
+
 # If you're willing to use a package that's vulnerable
 # permittedInsecurePackages:
 #  - "openssl-1.1.1w"
