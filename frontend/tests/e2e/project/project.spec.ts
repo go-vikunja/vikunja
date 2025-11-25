@@ -43,7 +43,7 @@ test.describe('Projects', () => {
 		await expect(page).toHaveURL(/\/projects\/1\/4/)
 	})
 
-	// FIXME: seeing fails with error 500
+	// FIXME: seeding fails with error 500
 	test.skip('Should rename the project in all places', async ({authenticatedPage: page}) => {
 		await TaskFactory.create(5, {
 			id: '{increment}',
