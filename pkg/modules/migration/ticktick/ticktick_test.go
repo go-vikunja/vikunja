@@ -280,6 +280,149 @@ func TestBOMStripping(t *testing.T) {
 	t.Logf("CSV records: %+v", records)
 }
 
+func TestEmptyLabelHandling(t *testing.T) {
+	tests := []struct {
+		name         string
+		tagsList     string
+		expectedTags []string
+	}{
+		{
+			name:         "Normal tags",
+			tagsList:     "work, personal, urgent",
+			expectedTags: []string{"work", "personal", "urgent"},
+		},
+		{
+			name:         "Tags with extra spaces",
+			tagsList:     "work,  personal  , urgent",
+			expectedTags: []string{"work", "personal", "urgent"},
+		},
+		{
+			name:         "Empty tags mixed with valid ones",
+			tagsList:     "work, , urgent, ",
+			expectedTags: []string{"work", "urgent"},
+		},
+		{
+			name:         "Only whitespace tags",
+			tagsList:     " ,  ,   ",
+			expectedTags: []string{},
+		},
+		{
+			name:         "Empty string",
+			tagsList:     "",
+			expectedTags: []string{},
+		},
+		{
+			name:         "Single valid tag",
+			tagsList:     "important",
+			expectedTags: []string{"important"},
+		},
+		{
+			name:         "Single empty tag",
+			tagsList:     " ",
+			expectedTags: []string{},
+		},
+		{
+			name:         "Tags with leading/trailing spaces",
+			tagsList:     "  work  , personal,   urgent   ",
+			expectedTags: []string{"work", "personal", "urgent"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a test task with the given tags
+			task := &tickTickTask{
+				Title:       "Test Task",
+				ProjectName: "Test Project",
+				TagsList:    tt.tagsList,
+			}
+
+			// Split tags as the migration code does
+			task.Tags = strings.Split(task.TagsList, ", ")
+
+			// Convert to Vikunja format
+			tasks := []*tickTickTask{task}
+			vikunjaTasks := convertTickTickToVikunja(tasks)
+
+			// The function creates a parent project and child projects
+			// We expect 2 projects: parent "Migrated from TickTick" and child "Test Project"
+			require.Len(t, vikunjaTasks, 2)
+
+			// Find the project with tasks (should be the child project)
+			var projectWithTasks *models.ProjectWithTasksAndBuckets
+			for _, project := range vikunjaTasks {
+				if len(project.Tasks) > 0 {
+					projectWithTasks = project
+					break
+				}
+			}
+
+			require.NotNil(t, projectWithTasks, "Should find a project with tasks")
+			require.Len(t, projectWithTasks.Tasks, 1)
+			vikunjaTask := projectWithTasks.Tasks[0]
+
+			// Check that only non-empty labels were created
+			assert.Len(t, vikunjaTask.Labels, len(tt.expectedTags), "Number of labels should match expected")
+
+			// Check that the label titles match expected tags
+			actualTags := make([]string, len(vikunjaTask.Labels))
+			for i, label := range vikunjaTask.Labels {
+				actualTags[i] = label.Title
+			}
+
+			assert.ElementsMatch(t, tt.expectedTags, actualTags, "Label titles should match expected tags")
+
+			// Ensure no empty labels were created
+			for _, label := range vikunjaTask.Labels {
+				assert.NotEmpty(t, strings.TrimSpace(label.Title), "No label should be empty or whitespace-only")
+			}
+		})
+	}
+}
+
+func TestEmptyLabelHandlingWithRealCSV(t *testing.T) {
+	// Test with the actual CSV file to ensure empty labels are not created
+	file, err := os.Open("testdata_ticktick_export.csv")
+	require.NoError(t, err)
+	defer file.Close()
+
+	stat, err := file.Stat()
+	require.NoError(t, err)
+
+	lines, err := linesToSkipBeforeHeader(file, stat.Size())
+	require.NoError(t, err)
+
+	// Reset file position
+	_, err = file.Seek(0, io.SeekStart)
+	require.NoError(t, err)
+
+	dec := newLineSkipDecoder(file, lines)
+	tasks := []*tickTickTask{}
+	err = gocsv.UnmarshalDecoder(dec, &tasks)
+	require.NoError(t, err)
+	require.Greater(t, len(tasks), 0)
+
+	// Process tags as the migration code does
+	for _, task := range tasks {
+		task.Tags = strings.Split(task.TagsList, ", ")
+	}
+
+	// Convert to Vikunja format
+	vikunjaTasks := convertTickTickToVikunja(tasks)
+
+	// Check all tasks for empty labels
+	for _, project := range vikunjaTasks {
+		for _, task := range project.Tasks {
+			for _, label := range task.Labels {
+				assert.NotEmpty(t, strings.TrimSpace(label.Title),
+					"No label should be empty or whitespace-only. Found empty label in task: %s", task.Title)
+			}
+		}
+	}
+
+	t.Logf("Successfully processed %d tasks from CSV without creating empty labels", len(tasks))
+}
+
 func TestDebugCSVParsing(t *testing.T) {
 	// Debug the CSV parsing step by step
 	file, err := os.Open("testdata_ticktick_export.csv")

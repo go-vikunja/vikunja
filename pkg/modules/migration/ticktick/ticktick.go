@@ -101,9 +101,13 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 
 		labels := make([]*models.Label, 0, len(t.Tags))
 		for _, tag := range t.Tags {
-			labels = append(labels, &models.Label{
-				Title: tag,
-			})
+			// Only create labels for non-empty tags after trimming whitespace
+			trimmedTag := strings.TrimSpace(tag)
+			if trimmedTag != "" {
+				labels = append(labels, &models.Label{
+					Title: trimmedTag,
+				})
+			}
 		}
 
 		task := &models.TaskWithComments{
