@@ -114,6 +114,11 @@
 					"dd/mm/yyyy": "TT/MM/JJJJ",
 					"yyyy/mm/dd": "JJJJ/MM/TT"
 				},
+				"timeFormat": "Zeitformat",
+				"timeFormatOptions": {
+					"12h": "12 Stunden (AM/PM)",
+					"24h": "24 Stunden (HH:mm)"
+				},
 				"externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
 			},
 			"sections": {
@@ -802,7 +807,9 @@
 			"overdue": "Überfällige Aufgaben anzeigen",
 			"fromuntil": "Aufgaben von {from} bis {until}",
 			"select": "Datumsbereich wählen",
-			"noTasks": "Nichts zu tun – Einen schönen Tag noch!"
+			"noTasks": "Nichts zu tun – Einen schönen Tag noch!",
+			"filterByLabel": "Filtern nach Label {label}",
+			"clearLabelFilter": "Label-Filter leeren"
 		},
 		"detail": {
 			"chooseDueDate": "Klicke hier, um ein Fälligkeitsdatum zu setzen",
@@ -862,6 +869,8 @@
 			"relatedTasks": "Verwandte Aufgaben",
 			"reminders": "Erinnerungen",
 			"repeat": "Wiederholen",
+			"comment": "{count} Kommentar | {count} Kommentare",
+			"commentCount": "Anzahl der Kommentare",
 			"startDate": "Anfangsdatum",
 			"title": "Titel",
 			"updated": "Aktualisiert",

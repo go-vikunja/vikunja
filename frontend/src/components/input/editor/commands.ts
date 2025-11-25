@@ -1,7 +1,12 @@
 import {Extension} from '@tiptap/core'
+import type {Editor, Range} from '@tiptap/core'
 import Suggestion from '@tiptap/suggestion'
 
 // Copied and adjusted from https://github.com/ueberdosis/tiptap/tree/252acb32d27a0f9af14813eeed83d8a50059a43a/demos/src/Experiments/Commands/Vue
+
+interface CommandProps {
+	command: (params: {editor: Editor, range: Range}) => void
+}
 
 export default Extension.create({
 	name: 'slash-menu-commands',
@@ -10,7 +15,7 @@ export default Extension.create({
 		return {
 			suggestion: {
 				char: '/',
-				command: ({editor, range, props}) => {
+				command: ({editor, range, props}: {editor: Editor, range: Range, props: CommandProps}) => {
 					props.command({editor, range})
 				},
 			},

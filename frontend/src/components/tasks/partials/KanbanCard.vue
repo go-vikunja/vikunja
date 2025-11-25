@@ -84,8 +84,12 @@
 					v-if="task.attachments.length > 0"
 					class="icon"
 				>
-					<Icon icon="paperclip" />	
+					<Icon icon="paperclip" />
 				</span>
+				<CommentCount
+					:task="task"
+					class="project-task-icon"
+				/>
 				<span
 					v-if="!isEditorContentEmpty(task.description)"
 					class="icon"
@@ -114,6 +118,7 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import Done from '@/components/misc/Done.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from './ChecklistSummary.vue'
+import CommentCount from './CommentCount.vue'
 
 import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
@@ -395,5 +400,12 @@ $task-background: var(--white);
 	margin: 8px 0 0;
 	inline-size: 100%;
 	block-size: 0.5rem;
+}
+
+:deep(.comment-count) {
+	background: var(--grey-100);
+	border-radius: $radius;
+	padding: 0.25rem;
+	margin-inline-end: .25rem;
 }
 </style>

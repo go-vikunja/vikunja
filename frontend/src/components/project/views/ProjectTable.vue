@@ -41,6 +41,9 @@
 							<FancyCheckbox v-model="activeColumns.assignees">
 								{{ $t('task.attributes.assignees') }}
 							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.commentCount">
+								{{ $t('task.attributes.commentCount') }}
+							</FancyCheckbox>
 							<FancyCheckbox v-model="activeColumns.dueDate">
 								{{ $t('task.attributes.dueDate') }}
 							</FancyCheckbox>
@@ -132,6 +135,9 @@
 											@click="sort('due_date', $event)"
 										/>
 									</th>
+									<th v-if="activeColumns.commentCount">
+										{{ $t('task.attributes.commentCount') }}
+									</th>
 									<th v-if="activeColumns.startDate">
 										{{ $t('task.attributes.startDate') }}
 										<Sort
@@ -201,9 +207,11 @@
 										/>
 									</td>
 									<td v-if="activeColumns.title">
-										<RouterLink :to="taskDetailRoutes[t.id]">
-											{{ t.title }}
-										</RouterLink>
+										<TaskGlanceTooltip :task="t">
+											<RouterLink :to="taskDetailRoutes[t.id]">
+												{{ t.title }}
+											</RouterLink>
+										</TaskGlanceTooltip>
 									</td>
 									<td v-if="activeColumns.priority">
 										<PriorityLabel
@@ -228,6 +236,9 @@
 										v-if="activeColumns.dueDate"
 										:date="t.dueDate"
 									/>
+									<td v-if="activeColumns.commentCount">
+										<CommentCount :task="t" />
+									</td>
 									<DateTableCell
 										v-if="activeColumns.startDate"
 										:date="t.startDate"
@@ -283,7 +294,9 @@ import Done from '@/components/misc/Done.vue'
 import User from '@/components/misc/User.vue'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
+import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
 import DateTableCell from '@/components/tasks/partials/DateTableCell.vue'
+import CommentCount from '@/components/tasks/partials/CommentCount.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
@@ -320,6 +333,7 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	updated: false,
 	createdBy: false,
 	doneAt: false,
+	commentCount: false,
 }
 
 const SORT_BY_DEFAULT: SortBy = {
@@ -329,7 +343,12 @@ const SORT_BY_DEFAULT: SortBy = {
 const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT})
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
-const taskList = useTaskList(() => props.projectId, () => props.viewId, sortBy.value)
+const taskList = useTaskList(
+	() => props.projectId, 
+	() => props.viewId, 
+	sortBy.value,
+	() => 'comment_count',
+)
 
 const {
 	loading,
@@ -339,10 +358,6 @@ const {
 	sortByParam,
 } = taskList
 const tasks: Ref<ITask[]> = taskList.tasks
-
-Object.assign(params.value, {
-	filter: '',
-})
 
 watch(
 	() => activeColumns.value,

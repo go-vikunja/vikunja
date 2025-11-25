@@ -37,15 +37,25 @@
 
 <script lang="ts">
 /* eslint-disable vue/component-api-style */
+import type {PropType} from 'vue'
+import type {MentionNodeAttrs} from '@tiptap/extension-mention'
+
+interface MentionItem extends MentionNodeAttrs {
+	id: string
+	label: string
+	username: string
+	avatarUrl: string
+}
+
 export default {
 	props: {
 		items: {
-			type: Array,
+			type: Array as PropType<MentionItem[]>,
 			required: true,
 		},
 
 		command: {
-			type: Function,
+			type: Function as PropType<(item: MentionItem) => void>,
 			required: true,
 		},
 	},

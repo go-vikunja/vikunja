@@ -3,6 +3,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import {useBaseStore} from '@/stores/base'
 import {onBeforeUnmount, onMounted} from 'vue'
 import {eventToHotkeyString} from '@github/hotkey'
+import {isAppleDevice} from '@/helpers/isAppleDevice'
 
 const baseStore = useBaseStore()
 
@@ -10,7 +11,11 @@ const baseStore = useBaseStore()
 function openQuickActionsViaHotkey(event) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
-	if (hotkeyString !== 'Control+k' && hotkeyString !== 'Meta+k') return
+	
+	// On macOS, use Cmd+K (Meta+K), on other platforms use Ctrl+K (Control+K)
+	const expectedHotkey = isAppleDevice() ? 'Meta+k' : 'Control+k'
+	if (hotkeyString !== expectedHotkey) return
+	
 	event.preventDefault()
 
 	openQuickActions()

@@ -41,10 +41,13 @@ async function addReaction(value: string) {
 		model.value = {}
 	}
 
-	if (typeof model.value[reaction.value] === 'undefined') {
-		model.value[reaction.value] = [authStore.info]
+	if (!authStore.info || !model.value) return
+
+	const modelValue = model.value
+	if (typeof modelValue[reaction.value] === 'undefined') {
+		modelValue[reaction.value] = [authStore.info]
 	} else {
-		model.value[reaction.value].push(authStore.info)
+		modelValue[reaction.value]!.push(authStore.info)
 	}
 }
 
@@ -56,35 +59,39 @@ async function removeReaction(value: string) {
 	})
 	await reactionService.delete(reaction)
 	showEmojiPicker.value = false
-	
-	const userIndex = model.value[reaction.value].findIndex(u => u.id === authStore.info?.id)
+
+	if (!model.value) return
+
+	const modelValue = model.value
+	const userIndex = modelValue[reaction.value]?.findIndex(u => u.id === authStore.info?.id) ?? -1
 	if (userIndex !== -1) {
-		model.value[reaction.value].splice(userIndex, 1)
+		modelValue[reaction.value]!.splice(userIndex, 1)
 	}
-	if(model.value[reaction.value].length === 0) {
-		delete model.value[reaction.value]
+	if(modelValue[reaction.value]!.length === 0) {
+		delete modelValue[reaction.value]
 	}
 }
 
-function getReactionTooltip(users: IUser[], value: string) {
+function getReactionTooltip(users: IUser[], value: string | number) {
 	const names = users.map(u => getDisplayName(u))
+	const valueStr = String(value)
 
 	if (names.length === 1) {
-		return t('reaction.reactedWith', {user: names[0], value})
+		return t('reaction.reactedWith', {user: names[0], value: valueStr})
 	}
 
 	if (names.length > 1 && names.length < 10) {
 		return t('reaction.reactedWithAnd', {
 			users: names.slice(0, names.length - 1).join(', '),
 			lastUser: names[names.length - 1],
-			value,
+			value: valueStr,
 		})
 	}
 
 	return t('reaction.reactedWithAndMany', {
 		users: names.slice(0, 10).join(', '),
 		num: names.length - 10,
-		value,
+		value: valueStr,
 	})
 }
 
@@ -92,8 +99,8 @@ const showEmojiPicker = ref(false)
 const emojiPickerRef = ref<HTMLElement | null>(null)
 
 function hideEmojiPicker(e: MouseEvent) {
-	if (showEmojiPicker.value) {
-		closeWhenClickedOutside(e, emojiPickerRef.value.$el, () => showEmojiPicker.value = false)
+	if (showEmojiPicker.value && emojiPickerRef.value) {
+		closeWhenClickedOutside(e, emojiPickerRef.value, () => showEmojiPicker.value = false)
 	}
 }
 
@@ -106,29 +113,33 @@ const emojiPickerPosition = ref()
 
 function toggleEmojiPicker() {
 	if (!showEmojiPicker.value) {
-		const rect = emojiPickerButtonRef.value?.$el.getBoundingClientRect()
+		const rect = emojiPickerButtonRef.value?.getBoundingClientRect()
 		const container = reactionContainerRef.value?.getBoundingClientRect()
-		const left = rect.left - container.left + rect.width
+		if (rect && container) {
+			const left = rect.left - container.left + rect.width
 
-		emojiPickerPosition.value = {
-			'inset-inline-start': left === 0 ? undefined : left,
+			emojiPickerPosition.value = {
+				'inset-inline-start': left === 0 ? undefined : left,
+			}
 		}
 	}
 
 	nextTick(() => showEmojiPicker.value = !showEmojiPicker.value)
 }
 
-function hasCurrentUserReactedWithEmoji(value: string): boolean {
-	const user = model.value[value].find(u => u.id === authStore.info.id)
+function hasCurrentUserReactedWithEmoji(value: string | number): boolean {
+	if (!model.value || !authStore.info) return false
+	const user = model.value[String(value)]?.find(u => u.id === authStore.info!.id)
 	return typeof user !== 'undefined'
 }
 
-async function toggleReaction(value: string) {
-	if (hasCurrentUserReactedWithEmoji(value)) {
-		return removeReaction(value)
+async function toggleReaction(value: string | number) {
+	const valueStr = String(value)
+	if (hasCurrentUserReactedWithEmoji(valueStr)) {
+		return removeReaction(valueStr)
 	}
-	
-	return addReaction(value)
+
+	return addReaction(valueStr)
 }
 </script>
 

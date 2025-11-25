@@ -1,5 +1,5 @@
 import {computed, defineAsyncComponent, h, shallowRef, type VNode, watchEffect} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
+import {useRoute, useRouter, type RouteLocationNormalizedGeneric} from 'vue-router'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 
@@ -12,7 +12,7 @@ export function useRouteWithModal() {
 
 	const routeWithModal = computed(() => {
 		return backdropView.value
-			? router.resolve(backdropView.value)
+			? router.resolve(backdropView.value) as RouteLocationNormalizedGeneric
 			: route
 	})
 

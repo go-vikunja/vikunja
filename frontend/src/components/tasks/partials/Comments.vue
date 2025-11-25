@@ -172,6 +172,7 @@
 								:placeholder="$t('task.comment.placeholder')"
 								:enable-mentions="true"
 								:mention-project-id="projectId"
+								:storage-key="commentStorageKey"
 								@save="addComment()"
 							/>
 						</div>
@@ -210,7 +211,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, computed, shallowReactive, watch, nextTick} from 'vue'
+import {ref, reactive, computed, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
@@ -226,6 +227,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {uploadFile} from '@/helpers/attachments'
 import {success} from '@/message'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
+import {clearEditorDraft} from '@/helpers/editorDraftStorage'
 import {fetchAvatarBlobUrl, getDisplayName} from '@/models/user'
 import type {IUser} from '@/modelTypes/IUser'
 import {useConfigStore} from '@/stores/config'
@@ -299,6 +301,7 @@ const actions = computed(() => {
 })
 
 const frontendUrl = computed(() => configStore.frontendUrl)
+const commentStorageKey = computed(() => `task-comment-${props.taskId}`)
 
 const currentPage = ref(1)
 
@@ -368,13 +371,6 @@ async function addComment() {
 		return
 	}
 
-	// This makes the editor trigger its mounted function again which makes it forget every input
-	// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
-	// which made it impossible to detect change from the outside. Therefore the component would
-	// not update if new content from the outside was made available.
-	// See https://github.com/NikulinIlya/vue-easymde/issues/3
-	editorActive.value = false
-	nextTick(() => (editorActive.value = true))
 	creating.value = true
 
 	try {
@@ -384,6 +380,10 @@ async function addComment() {
 		const comment = await taskCommentService.create(newComment)
 		comments.value.push(comment)
 		newCommentText.value = ''
+
+		// Ensure draft is cleared from localStorage
+		clearEditorDraft(commentStorageKey.value)
+
 		success({message: t('task.comment.addedSuccess')})
 	} finally {
 		creating.value = false

@@ -1,24 +1,33 @@
 export function calculateNearestHours(currentDate: Date = new Date()): number {
-	if (currentDate.getHours() <= 9 || currentDate.getHours() > 21) {
+	const hours = currentDate.getHours()
+	const minutes = currentDate.getMinutes()
+	
+	// Helper to check if current time is before a given hour breakpoint
+	// Returns true if we're before the hour, or at the hour with 0 minutes
+	const isBeforeOrAt = (breakpoint: number): boolean => {
+		return hours < breakpoint || (hours === breakpoint && minutes === 0)
+	}
+	
+	if (isBeforeOrAt(9) || hours > 21) {
 		return 9
 	}
 
-	if (currentDate.getHours() <= 12) {
+	if (isBeforeOrAt(12)) {
 		return 12
 	}
 
-	if (currentDate.getHours() <= 15) {
+	if (isBeforeOrAt(15)) {
 		return 15
 	}
 
-	if (currentDate.getHours() <= 18) {
+	if (isBeforeOrAt(18)) {
 		return 18
 	}
 
-	if (currentDate.getHours() <= 21) {
+	if (isBeforeOrAt(21)) {
 		return 21
 	}
 	
-	// Same case as in the first if, will never be called
+	// After 21:00 with minutes > 0, return 9 for next day
 	return 9
 }
