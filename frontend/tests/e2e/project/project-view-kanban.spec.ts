@@ -4,6 +4,7 @@ import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {ProjectViewFactory} from '../../factories/project_view'
 import {TaskBucketFactory} from '../../factories/task_buckets'
+import {createTasksWithPriorities, createTasksWithSearch} from '../../support/filterTestHelpers'
 
 async function createSingleTaskInBucket(count = 1, attrs = {}) {
 	const projects = await ProjectFactory.create(1)
@@ -260,5 +261,57 @@ test.describe('Project View Kanban', () => {
 		await loadTasksPromise
 
 		await expect(page.locator('.bucket .tasks .task .footer .icon svg')).not.toBeVisible()
+	})
+
+	test('Should respect filter query parameter from URL', async ({authenticatedPage: page}) => {
+		// Create buckets first
+		const projects = await ProjectFactory.create(1)
+		const views = await ProjectViewFactory.create(1, {
+			id: 4,
+			project_id: 1,
+			view_kind: 3,
+		})
+		const buckets = await BucketFactory.create(2, {
+			project_view_id: 4,
+		})
+
+		const {highPriorityTasks, lowPriorityTasks} = await createTasksWithPriorities(buckets)
+
+		await page.goto('/projects/1/4?filter=priority%20>=%204')
+
+		await expect(page).toHaveURL(/filter=priority/)
+
+		// Wait for tasks to load and verify high priority tasks are visible
+		await expect(page.locator('.kanban')).toContainText(highPriorityTasks[0].title, {timeout: 10000})
+		await expect(page.locator('.kanban')).toContainText(highPriorityTasks[1].title)
+
+		// Verify low priority tasks are not visible
+		await expect(page.locator('.kanban')).not.toContainText(lowPriorityTasks[0].title)
+		await expect(page.locator('.kanban')).not.toContainText(lowPriorityTasks[1].title)
+	})
+
+	test('Should respect search query parameter from URL', async ({authenticatedPage: page}) => {
+		// Create buckets first
+		const projects = await ProjectFactory.create(1)
+		const views = await ProjectViewFactory.create(1, {
+			id: 4,
+			project_id: 1,
+			view_kind: 3,
+		})
+		const buckets = await BucketFactory.create(2, {
+			project_view_id: 4,
+		})
+
+		const {searchableTask} = await createTasksWithSearch(buckets)
+
+		await page.goto('/projects/1/4?s=meeting')
+
+		await expect(page).toHaveURL(/s=meeting/)
+
+		// Wait for search results to load and verify searchable task is visible
+		await expect(page.locator('.kanban')).toContainText(searchableTask.title, {timeout: 10000})
+
+		// Verify only one task is shown (the search result) - count task headings
+		await expect(page.locator('main h2')).toHaveCount(1)
 	})
 })

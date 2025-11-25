@@ -34,12 +34,12 @@ test.describe('Login', () => {
 		await UserFactory.create(1, {username: credentials.username})
 	})
 
-	// FIXME: Selector 'h2' resolves to 2 elements ("Welcome Back!" and "Login") causing strict mode violation
-	test.skip('Should log in with the right credentials', async ({page}) => {
+	test('Should log in with the right credentials', async ({page}) => {
 		await page.goto('/login')
 		await login(page)
 		await page.clock.install({time: new Date(1625656161057)}) // 13:00
-		await expect(page.locator('h2')).toContainText(`Hi ${credentials.username}!`)
+		// Use more specific selector to avoid strict mode violation
+		await expect(page.locator('main h2')).toContainText(`Hi ${credentials.username}!`)
 	})
 
 	test('Should fail with a bad password', async ({page}) => {
