@@ -362,7 +362,7 @@ jobs:
         ports:
           - 5556:5556
     container:
-      image: mcr.microsoft.com/playwright:v1.56.1-jammy
+      image: mcr.microsoft.com/playwright:v1.57.0-jammy
       options: --user 1001
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
