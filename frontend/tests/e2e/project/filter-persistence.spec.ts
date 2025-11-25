@@ -55,8 +55,7 @@ test.describe('Filter Persistence Across Views', () => {
 		await expect(page).toHaveURL(/filter=/)
 	})
 
-	// FIXME: API returns 500 Internal Server Error when seeding project_views table
-	test.skip('should handle URL sharing with filters', async ({authenticatedPage: page}) => {
+	test('should handle URL sharing with filters', async ({authenticatedPage: page}) => {
 		// Visit URL with pre-existing filter parameters
 		await page.goto('/projects/1/4?filter=done%3Dtrue&s=Test')
 
