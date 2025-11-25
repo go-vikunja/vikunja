@@ -194,11 +194,7 @@ func TestLinesToSkipBeforeHeaderWithRealCSV(t *testing.T) {
 	require.NoError(t, err)
 	tasks := []*tickTickTask{}
 	err = gocsv.UnmarshalDecoder(dec, &tasks)
-	t.Logf("Unmarshal error: %v", err)
-	t.Logf("Tasks length: %d", len(tasks))
-	if err != nil {
-		return // Don't continue if there's an error
-	}
+	require.NoError(t, err)
 	require.Len(t, tasks, 1)
 	assert.Equal(t, "this task repeats", tasks[0].Title)
 	assert.Equal(t, "dsx", tasks[0].FolderName)
@@ -243,13 +239,8 @@ func TestLinesToSkipBeforeHeaderWithCleanTestFile(t *testing.T) {
 	require.NoError(t, err)
 	tasks := []*tickTickTask{}
 	err = gocsv.UnmarshalDecoder(dec, &tasks)
-	t.Logf("Unmarshal error with test file: %v", err)
-	t.Logf("Tasks length with test file: %d", len(tasks))
-	if err != nil {
-		return // Don't continue if there's an error
-	}
+	require.NoError(t, err)
 	require.Greater(t, len(tasks), 0)
-	t.Logf("First task: %+v", tasks[0])
 
 	// Verify that the first task has actual data
 	assert.Equal(t, "Work", tasks[0].FolderName)
