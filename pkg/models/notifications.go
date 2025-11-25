@@ -17,6 +17,8 @@
 package models
 
 import (
+	"fmt"
+	"net/url"
 	"sort"
 	"strconv"
 	"time"
@@ -27,6 +29,18 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 )
+
+// getThreadID generates a Message-ID format thread ID for a task
+func getThreadID(taskID int64) string {
+	domain := "vikunja"
+	publicURL := config.ServicePublicURL.GetString()
+	if publicURL != "" {
+		if parsedURL, err := url.Parse(publicURL); err == nil && parsedURL.Hostname() != "" {
+			domain = parsedURL.Hostname()
+		}
+	}
+	return fmt.Sprintf("<task-%d@%s>", taskID, domain)
+}
 
 // ReminderDueNotification represents a ReminderDueNotification notification
 type ReminderDueNotification struct {
@@ -58,6 +72,11 @@ func (n *ReminderDueNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *ReminderDueNotification) Name() string {
 	return "task.reminder"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *ReminderDueNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
 }
 
 // TaskCommentNotification represents a TaskCommentNotification notification
@@ -101,6 +120,11 @@ func (n *TaskCommentNotification) Name() string {
 	return "task.comment"
 }
 
+// ThreadID returns the thread ID for email threading
+func (n *TaskCommentNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
+}
+
 // TaskAssignedNotification represents a TaskAssignedNotification notification
 type TaskAssignedNotification struct {
 	Doer     *user.User `json:"doer"`
@@ -118,6 +142,14 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 	}
 
+	// Check if the doer assigned the task to themselves
+	if n.Doer.ID == n.Assignee.ID {
+		return notifications.NewMail().
+			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others_self", n.Task.Title, n.Task.GetFullIdentifier(), n.Doer.GetName())).
+			Line(i18n.T(lang, "notifications.task.assigned.message_to_others_self", n.Doer.GetName())).
+			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+	}
+
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())).
 		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", n.Doer.GetName(), n.Assignee.GetName())).
@@ -132,6 +164,11 @@ func (n *TaskAssignedNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *TaskAssignedNotification) Name() string {
 	return "task.assigned"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *TaskAssignedNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
 }
 
 // TaskDeletedNotification represents a TaskDeletedNotification notification
@@ -155,6 +192,11 @@ func (n *TaskDeletedNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *TaskDeletedNotification) Name() string {
 	return "task.deleted"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *TaskDeletedNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
 }
 
 // ProjectCreatedNotification represents a ProjectCreatedNotification notification
@@ -245,6 +287,11 @@ func (n *UndoneTaskOverdueNotification) Name() string {
 	return "task.undone.overdue"
 }
 
+// ThreadID returns the thread ID for email threading
+func (n *UndoneTaskOverdueNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
+}
+
 // UndoneTasksOverdueNotification represents a UndoneTasksOverdueNotification notification
 type UndoneTasksOverdueNotification struct {
 	User     *user.User
@@ -328,6 +375,11 @@ func (n *UserMentionedInTaskNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *UserMentionedInTaskNotification) Name() string {
 	return "task.mentioned"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *UserMentionedInTaskNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
 }
 
 // DataExportReadyNotification represents a DataExportReadyNotification notification

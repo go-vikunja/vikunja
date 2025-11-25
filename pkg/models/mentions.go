@@ -17,7 +17,6 @@
 package models
 
 import (
-	"strconv"
 	"strings"
 
 	"code.vikunja.io/api/pkg/user"
@@ -27,48 +26,41 @@ import (
 )
 
 func FindMentionedUsersInText(s *xorm.Session, text string) (users map[int64]*user.User, err error) {
-	userIDs := extractMentionedUserIDs(text)
-	if len(userIDs) == 0 {
+	usernames := extractMentionedUsernames(text)
+	if len(usernames) == 0 {
 		return
 	}
 
-	return user.GetUsersByIDs(s, userIDs)
+	return user.GetUsersByUsername(s, usernames, true)
 }
 
-// extractMentionedUserIDs parses HTML content and extracts user IDs from mention spans.
-// It looks for <span class="mention" data-id="123"> elements and returns the user IDs.
-func extractMentionedUserIDs(htmlText string) []int64 {
+// extractMentionedUsernames parses HTML content and extracts usernames from mention spans.
+// It looks for <mention-user data-id="username"> elements and returns the usernames.
+func extractMentionedUsernames(htmlText string) []string {
 	doc, err := html.Parse(strings.NewReader(htmlText))
 	if err != nil {
 		return nil
 	}
 
-	var userIDs []int64
-	seen := make(map[int64]bool) // Deduplicate user IDs
+	usernames := []string{}
+	seen := make(map[string]bool) // Deduplicate usernames
 
 	var traverse func(*html.Node)
 	traverse = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "span" {
-			isMention := false
+		if n.Type == html.ElementNode && n.Data == "mention-user" {
 			var dataID string
 
-			// Check if this span has class="mention" and extract data-id
+			// Extract data-id attribute
 			for _, attr := range n.Attr {
-				if attr.Key == "class" && strings.Contains(attr.Val, "mention") {
-					isMention = true
-				}
 				if attr.Key == "data-id" {
 					dataID = attr.Val
 				}
 			}
 
-			// If this is a mention span with a valid data-id, extract the user ID
-			if isMention && dataID != "" {
-				if userID, err := strconv.ParseInt(dataID, 10, 64); err == nil {
-					if !seen[userID] {
-						userIDs = append(userIDs, userID)
-						seen[userID] = true
-					}
+			if dataID != "" {
+				if !seen[dataID] {
+					usernames = append(usernames, dataID)
+					seen[dataID] = true
 				}
 			}
 		}
@@ -80,5 +72,5 @@ func extractMentionedUserIDs(htmlText string) []int64 {
 	}
 
 	traverse(doc)
-	return userIDs
+	return usernames
 }

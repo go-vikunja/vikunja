@@ -79,7 +79,9 @@
                 "subject_to_assignee": "You have been assigned to \"%[1]s\" (%[2]s)",
                 "message_to_assignee": "%[1]s has assigned you to \"%[2]s\".",
                 "subject_to_others": "\"%[1]s\" (%[2]s) has been assigned to %[3]s",
-                "message_to_others": "%[1]s has assigned this task to %[2]s."
+                "message_to_others": "%[1]s has assigned this task to %[2]s.",
+                "subject_to_others_self": "\"%[1]s\" (%[2]s) has been assigned by %[3]s to themselves",
+                "message_to_others_self": "%[1]s has assigned this task to themselves."
             },
             "deleted": {
                 "subject": "\"%[1]s\" (%[2]s) has been deleted",

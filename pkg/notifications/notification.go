@@ -39,6 +39,10 @@ type NotificationWithSubject interface {
 	SubjectID
 }
 
+type ThreadID interface {
+	ThreadID() string
+}
+
 // Notifiable is an entity which can be notified. Usually a user.
 type Notifiable interface {
 	// RouteForMail should return the email address this notifiable has.
@@ -84,6 +88,10 @@ func notifyMail(notifiable Notifiable, notification Notification) error {
 		return err
 	}
 	mail.To(to)
+
+	if threadID, is := notification.(ThreadID); is {
+		mail.ThreadID(threadID.ThreadID())
+	}
 
 	return SendMail(mail, notifiable.Lang())
 }

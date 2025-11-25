@@ -54,21 +54,9 @@ func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return t.CanUpdate(s, a)
 }
 
-// Update is the handler to update a task position
-// @Summary Updates a task position
-// @Description Updates a task position.
-// @tags task
-// @Accept json
-// @Produce json
-// @Security JWTKeyAuth
-// @Param id path int true "Task ID"
-// @Param view body models.TaskPosition true "The task position with updated values you want to change."
-// @Success 200 {object} models.TaskPosition "The updated task position."
-// @Failure 400 {object} web.HTTPError "Invalid task position object provided."
-// @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/{id}/position [post]
-func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
-
+// updateTaskPosition is the internal function that performs the task position update logic
+// without dispatching events. This is used by moveTaskToDoneBuckets to avoid duplicate events.
+func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err error) {
 	// Update all positions if the newly saved position is < 0.1
 	var shouldRecalculate bool
 	var view *ProjectView
@@ -108,6 +96,28 @@ func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 
 	if shouldRecalculate {
 		return RecalculateTaskPositions(s, view, a)
+	}
+
+	return nil
+}
+
+// Update is the handler to update a task position
+// @Summary Updates a task position
+// @Description Updates a task position.
+// @tags task
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Task ID"
+// @Param view body models.TaskPosition true "The task position with updated values you want to change."
+// @Success 200 {object} models.TaskPosition "The updated task position."
+// @Failure 400 {object} web.HTTPError "Invalid task position object provided."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /tasks/{id}/position [post]
+func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
+	err = updateTaskPosition(s, a, tp)
+	if err != nil {
+		return err
 	}
 
 	return triggerTaskUpdatedEventForTaskID(s, a, tp.TaskID)

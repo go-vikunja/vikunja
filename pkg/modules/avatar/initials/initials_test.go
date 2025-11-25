@@ -17,163 +17,165 @@
 package initials
 
 import (
-	"image"
-	"os"
 	"testing"
 
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestMain initializes the test environment
-func TestMain(m *testing.M) {
-	// Initialize logger for tests
-	log.InitLogger()
-
-	os.Exit(m.Run())
-}
-
 func TestGetAvatar(t *testing.T) {
-	// Initialize storage for testing
-	keyvalue.InitStorage()
-
-	t.Run("handles invalid cached type", func(t *testing.T) {
+	t.Run("generates valid SVG with name", func(t *testing.T) {
 		provider := &Provider{}
 
-		// Create a test user
 		testUser := &user.User{
-			ID:       999999, // Use a high ID to avoid conflicts
-			Name:     "Test User",
-			Username: "testuser",
-		}
-
-		// Simulate corrupted cached data by storing a string instead of CachedAvatar
-		cacheKey := getCacheKey("resized", testUser.ID, 64)
-		err := keyvalue.Put(cacheKey, "corrupted_string_data")
-		require.NoError(t, err)
-
-		// This should not panic but should handle the type assertion gracefully
-		// and regenerate the avatar
-		avatar, mimeType, err := provider.GetAvatar(testUser, 64)
-
-		// The function should handle the type assertion failure gracefully
-		// and regenerate the avatar successfully
-		require.NoError(t, err)
-		assert.NotNil(t, avatar)
-		assert.Equal(t, "image/png", mimeType)
-		assert.NotEmpty(t, avatar, "Avatar should contain image data")
-	})
-
-	t.Run("handles valid cached type", func(t *testing.T) {
-		provider := &Provider{}
-
-		// Create a test user
-		testUser := &user.User{
-			ID:       888888, // Use a different ID to avoid cache conflicts
-			Name:     "Valid User",
-			Username: "validuser",
-		}
-
-		// Store a valid cached avatar
-		cacheKey := getCacheKey("resized", testUser.ID, 32)
-		validCachedAvatar := CachedAvatar{
-			Content:  []byte("fake_image_data"),
-			MimeType: "image/png",
-		}
-		err := keyvalue.Put(cacheKey, validCachedAvatar)
-		require.NoError(t, err)
-
-		// This should work correctly with the valid cached data
-		avatar, mimeType, err := provider.GetAvatar(testUser, 32)
-
-		// Should return the cached data successfully
-		require.NoError(t, err)
-		assert.Equal(t, []byte("fake_image_data"), avatar)
-		assert.Equal(t, "image/png", mimeType)
-	})
-
-	t.Run("generates valid initials", func(t *testing.T) {
-		provider := &Provider{}
-
-		// Test with name
-		testUser1 := &user.User{
-			ID:       555555,
+			ID:       1,
 			Name:     "John Doe",
 			Username: "johndoe",
 		}
 
-		avatar1, mimeType1, err1 := provider.GetAvatar(testUser1, 128)
-		require.NoError(t, err1)
-		assert.NotNil(t, avatar1)
-		assert.Equal(t, "image/png", mimeType1)
-		assert.NotEmpty(t, avatar1)
+		avatar, mimeType, err := provider.GetAvatar(testUser, 128)
+		require.NoError(t, err)
+		assert.NotNil(t, avatar)
+		assert.Equal(t, "image/svg+xml", mimeType)
 
-		// Test with username when name is empty
-		testUser2 := &user.User{
-			ID:       444444,
+		// Verify it's valid SVG
+		svgString := string(avatar)
+		assert.Contains(t, svgString, "<svg")
+		assert.Contains(t, svgString, "viewBox=\"0 0 100 100\"")
+		assert.Contains(t, svgString, "width=\"128\"")
+		assert.Contains(t, svgString, "height=\"128\"")
+		// Should contain "J" from "John"
+		assert.Contains(t, svgString, ">J<")
+		// Should have a background color
+		assert.Contains(t, svgString, "fill=\"#")
+	})
+
+	t.Run("generates valid SVG with username when name is empty", func(t *testing.T) {
+		provider := &Provider{}
+
+		testUser := &user.User{
+			ID:       2,
 			Name:     "", // Empty name
 			Username: "jane_smith",
 		}
 
-		avatar2, mimeType2, err2 := provider.GetAvatar(testUser2, 128)
-		require.NoError(t, err2)
-		assert.NotNil(t, avatar2)
-		assert.Equal(t, "image/png", mimeType2)
-		assert.NotEmpty(t, avatar2)
+		avatar, mimeType, err := provider.GetAvatar(testUser, 64)
+		require.NoError(t, err)
+		assert.NotNil(t, avatar)
+		assert.Equal(t, "image/svg+xml", mimeType)
+
+		// Verify it's valid SVG
+		svgString := string(avatar)
+		assert.Contains(t, svgString, "<svg")
+		assert.Contains(t, svgString, "width=\"64\"")
+		assert.Contains(t, svgString, "height=\"64\"")
+		// Should contain "J" from "jane_smith"
+		assert.Contains(t, svgString, ">J<")
+	})
+
+	t.Run("uses consistent colors based on user ID", func(t *testing.T) {
+		provider := &Provider{}
+
+		testUser := &user.User{
+			ID:       0,
+			Name:     "Alice",
+			Username: "alice",
+		}
+
+		avatar1, _, err := provider.GetAvatar(testUser, 100)
+		require.NoError(t, err)
+
+		avatar2, _, err := provider.GetAvatar(testUser, 200)
+		require.NoError(t, err)
+
+		// Both should use the same colors (user ID 0 -> index 0)
+		svg1 := string(avatar1)
+		svg2 := string(avatar2)
+
+		// Should have the first background color (index 0)
+		assert.Contains(t, svg1, `fill="#e0f8d9"`)
+		assert.Contains(t, svg2, `fill="#e0f8d9"`)
+		// Should have the first text color (index 0)
+		assert.Contains(t, svg1, `fill="#005f00"`)
+		assert.Contains(t, svg2, `fill="#005f00"`)
+	})
+
+	t.Run("escapes special characters", func(t *testing.T) {
+		provider := &Provider{}
+
+		testUser := &user.User{
+			ID:       3,
+			Name:     "<script>",
+			Username: "hacker",
+		}
+
+		avatar, mimeType, err := provider.GetAvatar(testUser, 50)
+		require.NoError(t, err)
+		assert.Equal(t, "image/svg+xml", mimeType)
+
+		svgString := string(avatar)
+		// Should escape the < character
+		assert.NotContains(t, svgString, "><script><")
+		assert.Contains(t, svgString, "&lt;")
+	})
+
+	t.Run("handles different sizes", func(t *testing.T) {
+		provider := &Provider{}
+
+		testUser := &user.User{
+			ID:       4,
+			Name:     "Bob",
+			Username: "bob",
+		}
+
+		testCases := []struct {
+			size         int64
+			expectedSize string
+		}{
+			{32, "32"},
+			{64, "64"},
+			{128, "128"},
+			{256, "256"},
+			{512, "512"},
+		}
+
+		for _, tc := range testCases {
+			avatar, mimeType, err := provider.GetAvatar(testUser, tc.size)
+			require.NoError(t, err)
+			assert.Equal(t, "image/svg+xml", mimeType)
+
+			svgString := string(avatar)
+			assert.Contains(t, svgString, `width="`+tc.expectedSize+`"`)
+			assert.Contains(t, svgString, `height="`+tc.expectedSize+`"`)
+			assert.Contains(t, svgString, ">B<")
+		}
+	})
+
+	t.Run("returns error for user without name or username", func(t *testing.T) {
+		provider := &Provider{}
+
+		testUser := &user.User{
+			ID:       5,
+			Name:     "",
+			Username: "",
+		}
+
+		_, _, err := provider.GetAvatar(testUser, 100)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "no name or username")
 	})
 }
 
-func TestGetAvatarForUser(t *testing.T) {
-	// Initialize storage for testing
-	keyvalue.InitStorage()
+func TestFlushCache(t *testing.T) {
+	provider := &Provider{}
+	testUser := &user.User{
+		ID:       999,
+		Name:     "Test",
+		Username: "test",
+	}
 
-	t.Run("handles invalid cached type", func(t *testing.T) {
-		// Create a test user
-		testUser := &user.User{
-			ID:       777777, // Use another unique ID
-			Name:     "Full Size Test User",
-			Username: "fullsizeuser",
-		}
-
-		// Simulate corrupted cached data by storing a string instead of image.RGBA64
-		cacheKey := getCacheKey("full", testUser.ID)
-		err := keyvalue.Put(cacheKey, "corrupted_image_data")
-		require.NoError(t, err)
-
-		// This should not panic but should handle the type assertion gracefully
-		// and regenerate the full size avatar
-		fullAvatar, err := getAvatarForUser(testUser)
-
-		// The function should handle the type assertion failure gracefully
-		// and generate a new avatar successfully
-		require.NoError(t, err)
-		assert.NotNil(t, fullAvatar)
-		assert.IsType(t, &image.RGBA64{}, fullAvatar)
-	})
-
-	t.Run("handles valid cached type", func(t *testing.T) {
-		// Create a test user
-		testUser := &user.User{
-			ID:       666666, // Use another unique ID
-			Name:     "Valid Full Size User",
-			Username: "validfulluser",
-		}
-
-		// Create a valid image.RGBA64 for caching
-		validImage := image.NewRGBA64(image.Rect(0, 0, 64, 64))
-		cacheKey := getCacheKey("full", testUser.ID)
-		err := keyvalue.Put(cacheKey, *validImage)
-		require.NoError(t, err)
-
-		// This should work correctly with the valid cached data
-		fullAvatar, err := getAvatarForUser(testUser)
-
-		// Should return the cached image successfully
-		require.NoError(t, err)
-		assert.NotNil(t, fullAvatar)
-		assert.IsType(t, &image.RGBA64{}, fullAvatar)
-	})
+	// FlushCache should be a no-op and not return an error
+	err := provider.FlushCache(testUser)
+	assert.NoError(t, err)
 }
