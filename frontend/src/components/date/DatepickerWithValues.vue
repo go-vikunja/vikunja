@@ -121,7 +121,7 @@ const showHowItWorks = ref(false)
 
 const flatpickrDate = ref('')
 
-const date = ref<string|Date|null>('')
+const date = ref<string|Date>('')
 
 watch(
 	() => props.modelValue,
@@ -129,10 +129,9 @@ watch(
 		date.value = newValue
 		// Only set the date back to flatpickr when it's an actual date.
 		// Otherwise flatpickr runs in an endless loop and slows down the browser.
-		const dateValueAsString = date.value instanceof Date ? date.value.toISOString() : date.value
-		const parsed = parseDateOrString(dateValueAsString, false)
+		const parsed = parseDateOrString(date.value, false)
 		if (parsed instanceof Date) {
-			flatpickrDate.value = date.value instanceof Date ? date.value.toISOString() : (date.value ?? '')
+			flatpickrDate.value = date.value
 		}
 	},
 )

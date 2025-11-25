@@ -170,7 +170,7 @@ const props = withDefaults(defineProps<{
 }>(), {
 	loading: false,
 	placeholder: '',
-	searchResults: () => [] as T[],
+	searchResults: () => [],
 	label: '',
 	creatable: false,
 	createPlaceholder: () => useI18n().t('input.multiselect.createPlaceholder'),
@@ -248,8 +248,8 @@ const searchResultsVisible = computed(() => {
 })
 
 const creatableAvailable = computed(() => {
-	const hasResult = filteredSearchResults.value.some((elem: T) => elementInResults(elem, props.label, query.value as string))
-	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some((elem: T) => elementInResults(elem, props.label, query.value))
+	const hasResult = filteredSearchResults.value.some((elem) => elementInResults(elem, props.label, query.value as string))
+	const hasQueryAlreadyAdded = Array.isArray(internalValue.value) && internalValue.value.some(elem => elementInResults(elem, props.label, query.value))
 
 	return props.creatable
 		&& query.value !== ''
@@ -259,7 +259,7 @@ const creatableAvailable = computed(() => {
 const filteredSearchResults = computed(() => {
 	const currentInternal = internalValue.value
 	if (props.multiple && currentInternal !== null && Array.isArray(currentInternal)) {
-		return searchResults.value.filter((item: T) => !currentInternal.some((e: T) => e === item))
+		return searchResults.value.filter((item) => !currentInternal.some(e => e === item))
 	}
 
 	return searchResults.value
@@ -302,9 +302,7 @@ function search() {
 const multiselectRoot = ref<HTMLElement | null>(null)
 
 function hideSearchResultsHandler(e: MouseEvent) {
-	if (multiselectRoot.value) {
-		closeWhenClickedOutside(e, multiselectRoot.value, closeSearchResults)
-	}
+	closeWhenClickedOutside(e, multiselectRoot.value, closeSearchResults)
 }
 
 function closeSearchResults() {
@@ -320,10 +318,6 @@ function handleFocus() {
 }
 
 function select(object: T | null) {
-	if (object === null) {
-		return
-	}
-
 	if (props.multiple) {
 		if (internalValue.value === null) {
 			internalValue.value = []
@@ -361,13 +355,7 @@ function setSelectedObject(object: string | T | null | undefined, resetOnly = fa
 		return
 	}
 
-	if (typeof object === 'string') {
-		query.value = object
-	} else if (props.label !== '') {
-		query.value = object[props.label] as string
-	} else {
-		query.value = String(object)
-	}
+	query.value = props.label !== '' ? object[props.label] : object
 }
 
 const results = ref<(Element | ComponentPublicInstance)[]>([])
@@ -387,20 +375,16 @@ function preSelect(index: number) {
 	}
 
 	const elems = results.value[index]
-	if (typeof elems === 'undefined') {
+	if (typeof elems === 'undefined' || elems.length === 0) {
 		return
 	}
 
 	if (Array.isArray(elems)) {
-		if (elems.length > 0 && 'focus' in elems[0]) {
-			(elems[0] as HTMLElement).focus()
-		}
+		elems[0].focus()
 		return
 	}
 
-	if ('focus' in elems) {
-		(elems as HTMLElement).focus()
-	}
+	elems.focus()
 }
 
 function create() {
@@ -421,7 +405,7 @@ function createOrSelectOnEnter() {
 
 	if (!creatableAvailable.value) {
 		// Check if there's an exact match for our search term
-		const exactMatch = filteredSearchResults.value.find((elem: T) => elementInResults(elem, props.label, query.value as string))
+		const exactMatch = filteredSearchResults.value.find((elem) => elementInResults(elem, props.label, query.value as string))
 		if (exactMatch) {
 			select(exactMatch)
 		}

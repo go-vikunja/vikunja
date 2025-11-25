@@ -1,4 +1,4 @@
-import {createFakeUserAndLogin} from '../../support/authenticateUser'
+import {createFakeUserAndLogin} from '../../../tests/support/authenticateUser'
 
 describe('User Settings', () => {
 	createFakeUserAndLogin()

@@ -82,15 +82,10 @@ async function saveProjectPosition(e: SortableEvent) {
 	// To work around that we're explicitly checking that case here and decrease the index.
 	const newIndex = e.newIndex === projectsActive.length ? e.newIndex - 1 : e.newIndex
 
-	const projectIdStr = e.item.dataset.projectId
-	if (!projectIdStr) return
-
-	const projectId = parseInt(projectIdStr)
+	const projectId = parseInt(e.item.dataset.projectId)
 	const project = projectStore.projects[projectId]
-	if (!project) return
 
-	const parentNode = e.to.parentNode as HTMLElement | null
-	const parentProjectId = parentNode?.dataset?.projectId ? parseInt(parentNode.dataset.projectId) : 0
+	const parentProjectId = e.to.parentNode.dataset.projectId ? parseInt(e.to.parentNode.dataset.projectId) : 0
 	const projectBefore = projectsActive[newIndex - 1] ?? null
 	const projectAfter = projectsActive[newIndex + 1] ?? null
 	projectUpdating.value[project.id] = true
@@ -106,7 +101,7 @@ async function saveProjectPosition(e: SortableEvent) {
 			...project,
 			position,
 			parentProjectId,
-		} as IProject)
+		})
 		emit('update:modelValue', availableProjects.value)
 	} finally {
 		projectUpdating.value[project.id] = false

@@ -39,7 +39,7 @@ import ContentLinkShare from '@/components/home/ContentLinkShare.vue'
 import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
 import Ready from '@/components/misc/Ready.vue'
 
-import {DEFAULT_LANGUAGE, setLanguage} from '@/i18n'
+import {setLanguage} from '@/i18n'
 
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
@@ -76,7 +76,7 @@ watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
 	authStore.refreshUserInfo()
 }, { immediate: true })
 
-setLanguage(authStore.settings.language ?? DEFAULT_LANGUAGE)
+setLanguage(authStore.settings.language)
 useColorScheme()
 </script>
 

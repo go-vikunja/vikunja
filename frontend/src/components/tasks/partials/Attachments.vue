@@ -173,7 +173,7 @@
 
 <script setup lang="ts">
 import {ref, shallowReactive, computed} from 'vue'
-import {useDropZone} from '@/composables/useDropzone'
+import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
@@ -221,17 +221,7 @@ function onDrop(files: File[] | null) {
 	}
 }
 
-const {isOverDropZone} = useDropZone(document, {
-	onDrop,
-	checkValidity: items => {
-		for (const item of items) {
-			if (item.kind === 'file') {
-				return true
-			}
-		}
-		return false
-	},
-})
+const {isOverDropZone} = useDropZone(document, onDrop)
 
 function downloadAttachment(attachment: IAttachment) {
 	attachmentService.download(attachment)

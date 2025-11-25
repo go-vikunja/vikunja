@@ -114,11 +114,6 @@
           "dd\/mm\/yyyy": "DD\/MM\/YYYY",
           "yyyy\/mm\/dd": "YYYY\/MM\/DD"
         },
-        "timeFormat": "Time format",
-        "timeFormatOptions": {
-          "12h": "12-hour (AM/PM)",
-          "24h": "24-hour (HH:mm)"
-        },
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "sections": {
@@ -807,9 +802,7 @@
       "overdue": "Show overdue tasks",
       "fromuntil": "Tasks from {from} until {until}",
       "select": "Select a date range",
-      "noTasks": "Nothing to do — Have a nice day!",
-      "filterByLabel": "Filtering by label {label}",
-      "clearLabelFilter": "Clear label filter"
+      "noTasks": "Nothing to do — Have a nice day!"
     },
     "detail": {
       "chooseDueDate": "Click here to set a due date",
@@ -869,8 +862,6 @@
       "relatedTasks": "Related Tasks",
       "reminders": "Reminders",
       "repeat": "Repeat",
-      "comment": "{count} comment | {count} comments",
-      "commentCount": "Number of comments",
       "startDate": "Start Date",
       "title": "Title",
       "updated": "Updated",

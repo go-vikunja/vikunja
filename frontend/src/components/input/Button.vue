@@ -37,20 +37,12 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import BaseButton from '@/components/base/BaseButton.vue'
+import BaseButton, {type BaseButtonProps} from '@/components/base/BaseButton.vue'
 import type {IconProp} from '@fortawesome/fontawesome-svg-core'
-
-const props = defineProps<ButtonProps>()
-
-const VARIANT_CLASS_MAP = {
-	primary: 'is-primary',
-	secondary: 'is-outlined',
-	tertiary: 'is-text is-inverted underline-none',
-} as const
 
 export type ButtonTypes = keyof typeof VARIANT_CLASS_MAP
 
-export interface ButtonProps {
+export interface ButtonProps extends /* @vue-ignore */ BaseButtonProps {
 	variant?: ButtonTypes
 	icon?: IconProp
 	iconColor?: string
@@ -60,13 +52,25 @@ export interface ButtonProps {
 	wrap?: boolean
 }
 
+const props = withDefaults(defineProps<ButtonProps>(), {
+	variant: 'primary',
+	icon: undefined,
+	iconColor: undefined,
+	loading: false,
+	disabled: false,
+	shadow: true,
+	wrap: true,
+})
+
 defineOptions({name: 'XButton'})
 
-// @ts-expect-error - Complex union type from IconProp causes TS2590, but the code is correct
-const variant = computed(() => (props.variant ?? 'primary') as ButtonTypes)
-const shadow = computed(() => (props.shadow ?? true) as boolean)
-const wrap = computed(() => (props.wrap ?? true) as boolean)
-const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
+const VARIANT_CLASS_MAP = {
+	primary: 'is-primary',
+	secondary: 'is-outlined',
+	tertiary: 'is-text is-inverted underline-none',
+} as const
+
+const variantClass = computed(() => VARIANT_CLASS_MAP[props.variant])
 </script>
 
 <style lang="scss" scoped>

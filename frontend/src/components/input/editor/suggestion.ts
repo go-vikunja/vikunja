@@ -1,20 +1,9 @@
-import type {Editor, Range} from '@tiptap/core'
 import {VueRenderer} from '@tiptap/vue-3'
 import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom'
 
 import CommandsList from './CommandsList.vue'
 
-type TranslateFunction = (key: string) => string
-
-interface SuggestionProps {
-	editor: Editor
-	clientRect?: () => DOMRect
-	command: (item: {command: (params: {editor: Editor, range: Range}) => void}) => void
-	items: unknown[]
-	event?: KeyboardEvent
-}
-
-export default function suggestionSetup(t: TranslateFunction) {
+export default function suggestionSetup(t) {
 	return {
 		items: ({query}: { query: string }) => {
 			return [
@@ -22,7 +11,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					title: t('input.editor.text'),
 					description: t('input.editor.textTooltip'),
 					icon: 'fa-font',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
@@ -35,7 +24,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					title: t('input.editor.heading1'),
 					description: t('input.editor.heading1Tooltip'),
 					icon: 'fa-header',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
@@ -48,7 +37,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					title: t('input.editor.heading2'),
 					description: t('input.editor.heading2Tooltip'),
 					icon: 'fa-header',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
@@ -61,7 +50,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					title: t('input.editor.heading3'),
 					description: t('input.editor.heading3Tooltip'),
 					icon: 'fa-header',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
@@ -74,7 +63,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					title: t('input.editor.bulletList'),
 					description: t('input.editor.bulletListTooltip'),
 					icon: 'fa-list-ul',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
@@ -87,7 +76,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					title: t('input.editor.orderedList'),
 					description: t('input.editor.orderedListTooltip'),
 					icon: 'fa-list-ol',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
@@ -100,7 +89,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					title: t('input.editor.taskList'),
 					description: t('input.editor.taskListTooltip'),
 					icon: 'fa-list-check',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
@@ -113,7 +102,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					title: t('input.editor.quote'),
 					description: t('input.editor.quoteTooltip'),
 					icon: 'fa-quote-right',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
@@ -126,7 +115,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					title: t('input.editor.code'),
 					description: t('input.editor.codeTooltip'),
 					icon: 'fa-code',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
@@ -139,23 +128,20 @@ export default function suggestionSetup(t: TranslateFunction) {
 					title: t('input.editor.image'),
 					description: t('input.editor.imageTooltip'),
 					icon: 'fa-image',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
 							.deleteRange(range)
 							.run()
-						const uploadElement = document.getElementById('tiptap__image-upload')
-						if (uploadElement) {
-							uploadElement.click()
-						}
+						document.getElementById('tiptap__image-upload').click()
 					},
 				},
 				{
 					title: t('input.editor.horizontalRule'),
 					description: t('input.editor.horizontalRuleTooltip'),
 					icon: 'fa-ruler-horizontal',
-					command: ({editor, range}: {editor: Editor, range: Range}) => {
+					command: ({editor, range}) => {
 						editor
 							.chain()
 							.focus()
@@ -186,7 +172,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 			}
 
 			return {
-				onStart: (props: SuggestionProps) => {
+				onStart: props => {
 					component = new VueRenderer(CommandsList, {
 						// using vue 2:
 						// parent: this,
@@ -233,7 +219,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
 				},
 
-				onUpdate(props: SuggestionProps) {
+				onUpdate(props) {
 					component.updateProps(props)
 
 					if (!props.clientRect || !popupElement) {
@@ -245,8 +231,8 @@ export default function suggestionSetup(t: TranslateFunction) {
 					virtualReference.getBoundingClientRect = () => rect
 				},
 
-				onKeyDown(props: SuggestionProps) {
-					if (props.event && props.event.key === 'Escape') {
+				onKeyDown(props) {
+					if (props.event.key === 'Escape') {
 						if (props.event.isComposing) {
 							return false
 						}

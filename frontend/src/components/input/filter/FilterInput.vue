@@ -154,18 +154,9 @@ function setEditorContentFromModelValue(newValue: string | undefined) {
 	) : ''
 
 	if (editor.value.getText() !== content) {
-		// Preserve cursor position before updating content
-		const currentPosition = editor.value.state.selection.from
-
 		editor.value.commands.setContent(content, {
 			emitUpdate: false,
 		})
-
-		// Restore cursor position after content update
-		// Ensure position is within the new content bounds
-		const maxPosition = editor.value.state.doc.content.size
-		const safePosition = Math.min(currentPosition, maxPosition)
-		editor.value.commands.setTextSelection(safePosition)
 	}
 }
 

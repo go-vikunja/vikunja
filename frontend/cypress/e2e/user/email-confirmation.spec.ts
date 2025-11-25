@@ -1,5 +1,5 @@
-import {UserFactory} from '../../factories/user'
-import {TokenFactory} from '../../factories/token'
+import {UserFactory} from '../../../tests/factories/user'
+import {TokenFactory} from '../../../tests/factories/token'
 
 context('Email Confirmation', () => {
 	let user

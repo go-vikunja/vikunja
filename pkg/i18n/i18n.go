@@ -59,7 +59,6 @@ var availableLanguages = map[string]bool{
 	"nl-NL":    true,
 	"pt-PT":    true,
 	"zh-CN":    true,
-	"zh-TW":    true,
 	"no-NO":    true,
 	"es-ES":    true,
 	"da-DK":    true,

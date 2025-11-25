@@ -34,7 +34,7 @@ defineEmits<{
 			<User
 				:key="'user'+user.id"
 				:avatar-size="avatarSize"
-				:show-username="true"
+				:show-username="false"
 				:user="user"
 				:class="{'m-2': canRemove && !disabled}"
 			/>
@@ -54,38 +54,12 @@ defineEmits<{
 .assignees-list {
 	display: flex;
 
+	&.is-inline :deep(.user) {
+		display: inline;
+	}
+
 	&:hover .assignee:not(:first-child) {
 		margin-inline-start: -0.5rem;
-	}
-
-	// Hide usernames on desktop, show on mobile
-	:deep(.user .username) {
-		@media screen and (min-width: $tablet) {
-			display: none;
-		}
-
-	}
-
-	:deep(.user) {
-		display: flex;
-		align-content: center;
-  		align-items: center;
-  		gap: .5rem;
-	}
-
-	:deep(.user > .username) {
-		font-size: .75rem;
-	}
-
-	&.is-inline {
-		:deep(.user) {
-			display: inline;
-			text-wrap: nowrap;
-		}
-
-		:deep(.user > .username) {
-			margin-inline-start: .5rem;
-		}
 	}
 }
 
@@ -109,6 +83,7 @@ defineEmits<{
 	inset-inline-start: 2px;
 	color: var(--danger);
 	background: var(--white);
+	padding: 0 4px;
 	display: block;
 	border-radius: 100%;
 	font-size: .75rem;

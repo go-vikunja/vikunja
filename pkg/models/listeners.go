@@ -1019,18 +1019,13 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	for _, webhook := range matchingWebhooks {
 
 		if _, has := event["project"]; !has {
-			project, err := GetProjectSimpleByID(s, webhook.ProjectID)
+			project := &Project{ID: webhook.ProjectID}
+			err = project.ReadOne(s, &user.User{ID: doerID})
 			if err != nil && !IsErrProjectDoesNotExist(err) {
 				log.Errorf("Could not load project for webhook %d: %s", webhook.ID, err)
 			}
-			if project != nil {
-				err = project.ReadOne(s, &user.User{ID: doerID})
-				if err != nil && !IsErrProjectDoesNotExist(err) {
-					log.Errorf("Could not load project for webhook %d: %s", webhook.ID, err)
-				}
-				if err == nil {
-					event["project"] = project
-				}
+			if err == nil {
+				event["project"] = project
 			}
 		}
 

@@ -1,8 +1,8 @@
-import {createFakeUserAndLogin} from '../../support/authenticateUser'
+import {createFakeUserAndLogin} from '../../../tests/support/authenticateUser'
 
-import {ProjectFactory} from '../../factories/project'
+import {ProjectFactory} from '../../../tests/factories/project'
 import {prepareProjects} from './prepareProjects'
-import {ProjectViewFactory} from '../../factories/project_view'
+import {ProjectViewFactory} from '../../../tests/factories/project_view'
 
 describe('Project History', () => {
 	createFakeUserAndLogin()

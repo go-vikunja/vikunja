@@ -125,9 +125,6 @@ type Task struct {
 	// All comments of this task. Only present when fetching tasks with the `expand` parameter set to `comments`.
 	Comments []*TaskComment `xorm:"-" json:"comments,omitempty"`
 
-	// Comment count of this task. Only present when fetching tasks with the `expand` parameter set to `comment_count`.
-	CommentCount *int64 `xorm:"-" json:"comment_count,omitempty"`
-
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
 	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
 
@@ -590,8 +587,6 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
-//
-//nolint:gocyclo
 func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
 
 	// No need to iterate over users and stuff if the project doesn't have tasks
@@ -681,11 +676,6 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				}
 			case TaskCollectionExpandComments:
 				err = addCommentsToTasks(s, taskIDs, taskMap)
-				if err != nil {
-					return err
-				}
-			case TaskCollectionExpandCommentCount:
-				err = addCommentCountToTasks(s, taskIDs, taskMap)
 				if err != nil {
 					return err
 				}
@@ -1173,7 +1163,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 				ProjectViewID: view.ID,
 				ProjectID:     t.ProjectID,
 			}
-			err = updateTaskBucket(s, a, tb)
+			err = tb.Update(s, a)
 			if err != nil {
 				return err
 			}
@@ -1183,7 +1173,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 				return err
 			}
 
-			err = updateTaskPosition(s, a, tp)
+			err = tp.Update(s, a)
 			if err != nil {
 				return err
 			}
@@ -1404,7 +1394,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 			ProjectViewID: view.ID,
 			ProjectID:     t.ProjectID,
 		}
-		err = updateTaskBucket(s, a, tb)
+		err = tb.Update(s, a)
 		if err != nil {
 			return err
 		}
@@ -1414,7 +1404,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 			ProjectViewID: view.ID,
 			Position:      calculateDefaultPosition(t.Index, t.Position),
 		}
-		err = updateTaskPosition(s, a, &tp)
+		err = tp.Update(s, a)
 		if err != nil {
 			return err
 		}
@@ -1570,7 +1560,7 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 	newTask.Done = false
 }
 
-// This helper function updates the reminders, doneAt, start, end and due dates of the *old* task
+// This helper function updates the reminders, doneAt, start and end dates of the *old* task
 // and saves the new values in the newTask object.
 // We make a few assumptions here:
 //  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0

@@ -41,4 +41,7 @@ cypress/videos
 
 # histoire
 .histoire
-TYPECHECK_ISSUES.md
+frontend/playwright-report/
+frontend/test-results/
+playwright-report/
+test-results/

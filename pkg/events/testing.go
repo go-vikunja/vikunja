@@ -61,20 +61,3 @@ func TestListener(t *testing.T, event Event, listener Listener) {
 	err = listener.Handle(msg)
 	require.NoError(t, err)
 }
-
-// ClearDispatchedEvents clears the list of dispatched test events. This is useful when you want to
-// test event dispatch counts in a specific section of code without events from previous test operations.
-func ClearDispatchedEvents() {
-	dispatchedTestEvents = nil
-}
-
-// CountDispatchedEvents counts how many events of a specific type have been dispatched.
-func CountDispatchedEvents(eventName string) int {
-	count := 0
-	for _, testEvent := range dispatchedTestEvents {
-		if testEvent.Name() == eventName {
-			count++
-		}
-	}
-	return count
-}

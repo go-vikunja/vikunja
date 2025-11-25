@@ -5,9 +5,7 @@ import {i18n} from '@/i18n'
 import {createSharedComposable} from '@vueuse/core'
 import {computed, toValue, type MaybeRefOrGetter} from 'vue'
 import {useDateDisplay} from '@/composables/useDateDisplay'
-import {useTimeFormat} from '@/composables/useTimeFormat'
 import {DATE_DISPLAY, type DateDisplay} from '@/constants/dateDisplay'
-import {TIME_FORMAT, type TimeFormat} from '@/constants/timeFormat'
 import {DAYJS_LOCALE_MAPPING} from '@/i18n/useDayjsLanguageSync.ts'
 
 export function dateIsValid(date: Date | null) {
@@ -73,13 +71,13 @@ export function useWeekDayFromDate() {
 }
 
 export function formatDisplayDate(date: Date | string | null) {
-	const {store: dateDisplay} = useDateDisplay()
-	const {store: timeFormat} = useTimeFormat()
+	const {store} = useDateDisplay()
+	const current = store.value
 
-	return formatDisplayDateFormat(date, dateDisplay.value, timeFormat.value)	
+	return formatDisplayDateFormat(date, current)	
 }
 
-export function formatDisplayDateFormat(date: Date | string | null, format: DateDisplay, timeFormat?: TimeFormat) {
+export function formatDisplayDateFormat(date: Date | string | null, format: DateDisplay) {
 	if (typeof date === 'string') {
 		date = createDateFromString(date)
 	}
@@ -88,31 +86,24 @@ export function formatDisplayDateFormat(date: Date | string | null, format: Date
 		return ''
 	}
 
-	// Determine the time format string to use
-	// For 24-hour: HH:mm (24-hour format)
-	// For 12-hour: hh:mm A (explicit 12-hour format with AM/PM, ignoring locale default)
-	const timeFormatString = timeFormat === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'hh:mm A'
-
 	switch (format) {
 		case DATE_DISPLAY.MM_DD_YYYY:
-			return formatDate(date, `MM-DD-YYYY ${timeFormatString}`)
+			return formatDate(date, 'MM-DD-YYYY')
 		case DATE_DISPLAY.DD_MM_YYYY:
-			return formatDate(date, `DD-MM-YYYY ${timeFormatString}`)
+			return formatDate(date, 'DD-MM-YYYY')
 		case DATE_DISPLAY.YYYY_MM_DD:
-			return formatDate(date, `YYYY-MM-DD ${timeFormatString}`)
+			return formatDate(date, 'YYYY-MM-DD')
 		case DATE_DISPLAY.MM_SLASH_DD_YYYY:
-			return formatDate(date, `MM/DD/YYYY ${timeFormatString}`)
+			return formatDate(date, 'MM/DD/YYYY')
 		case DATE_DISPLAY.DD_SLASH_MM_YYYY:
-			return formatDate(date, `DD/MM/YYYY ${timeFormatString}`)
+			return formatDate(date, 'DD/MM/YYYY')
 		case DATE_DISPLAY.YYYY_SLASH_MM_DD:
-			return formatDate(date, `YYYY/MM/DD ${timeFormatString}`)
+			return formatDate(date, 'YYYY/MM/DD')
 		case DATE_DISPLAY.DAY_MONTH_YEAR: {
-			const hour12 = timeFormat !== TIME_FORMAT.HOURS_24
-			return new Intl.DateTimeFormat(i18n.global.locale.value, {day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12}).format(date)
+			return new Intl.DateTimeFormat(i18n.global.locale.value, {day: 'numeric', month: 'long', year: 'numeric'}).format(date)
 		}
 		case DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR: {
-			const hour12 = timeFormat !== TIME_FORMAT.HOURS_24
-			return new Intl.DateTimeFormat(i18n.global.locale.value, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12}).format(date)
+			return new Intl.DateTimeFormat(i18n.global.locale.value, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}).format(date)
 		}
 		case DATE_DISPLAY.RELATIVE:
 		default:

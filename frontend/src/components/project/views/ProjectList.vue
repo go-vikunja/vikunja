@@ -149,8 +149,8 @@ const {
 	() => props.viewId,
 	{position: 'asc'},
 	() => projectId.value === -1
-		? 'comment_count'
-		: ['subtasks', 'comment_count'],
+		? null
+		: 'subtasks',
 )
 
 const taskPositionService = ref(new TaskPositionService())
@@ -162,7 +162,11 @@ const tasks = ref<ITask[]>([])
 watch(
 	allTasks,
 	() => {
-		tasks.value = ([...allTasks.value]).filter(t => shouldShowTaskInListView(t, allTasks.value))
+		tasks.value = [...allTasks.value]
+		if (projectId.value < 0) {
+			return
+		}
+		tasks.value = tasks.value.filter(t => shouldShowTaskInListView(t, allTasks.value))
 	},
 )
 

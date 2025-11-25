@@ -7,7 +7,6 @@ import type {SupportedLocale} from '@/i18n'
 import type {DefaultProjectViewKind} from '@/modelTypes/IProjectView'
 import type {Priority} from '@/constants/priorities'
 import type {DateDisplay} from '@/constants/dateDisplay'
-import type {TimeFormat} from '@/constants/timeFormat'
 import type {IRelationKind} from '@/types/IRelationKind'
 
 export interface IFrontendSettings {
@@ -19,7 +18,6 @@ export interface IFrontendSettings {
 	defaultView?: DefaultProjectViewKind
 	minimumPriority?: Priority
 	dateDisplay: DateDisplay
-	timeFormat: TimeFormat
 	defaultTaskRelationType: IRelationKind
 }
 

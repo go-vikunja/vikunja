@@ -346,7 +346,7 @@
 
 					<!-- Attachments -->
 					<div
-						v-show="activeFields.attachments || hasAttachments"
+						v-if="activeFields.attachments || hasAttachments"
 						class="content attachments"
 					>
 						<Attachments

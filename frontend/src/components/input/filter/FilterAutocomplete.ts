@@ -167,7 +167,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 		const fetchSuggestions = async (autocompleteContext: AutocompleteContext, fieldType: AutocompleteField): Promise<SuggestionItem[]> => {
 			try {
 				if (fieldType === 'labels') {
-					return labelStore.filterLabelsByQuery([], autocompleteContext.search).filter((label): label is ILabel => label !== undefined) as SuggestionItem[]
+					return labelStore.filterLabelsByQuery([], autocompleteContext.search)
 				}
 
 				if (fieldType === 'assignees') {
@@ -181,10 +181,9 @@ export default Extension.create<FilterAutocompleteOptions>({
 							let assigneeSuggestions: SuggestionItem[] = []
 							try {
 								if (this.options.projectId) {
-									// @ts-expect-error - projectId is used for URL replacement but not part of IAbstract
-									assigneeSuggestions = await projectUserService.getAll({projectId: this.options.projectId}, {s: autocompleteContext.search}) as SuggestionItem[]
+									assigneeSuggestions = await projectUserService.getAll({projectId: this.options.projectId}, {s: autocompleteContext.search})
 								} else {
-									assigneeSuggestions = await userService.getAll({} as IUser, {s: autocompleteContext.search}) as SuggestionItem[]
+									assigneeSuggestions = await userService.getAll({}, {s: autocompleteContext.search})
 								}
 								// For assignees, show suggestions even with empty search, but limit if we have many
 								if (autocompleteContext.search === '' && assigneeSuggestions.length > 10) {
@@ -198,9 +197,9 @@ export default Extension.create<FilterAutocompleteOptions>({
 						}, 300)
 					})
 				}
-
+				
 				if (fieldType === 'projects' && !this.options.projectId) {
-					return projectStore.searchProject(autocompleteContext.search).filter((project): project is IProject => project !== undefined) as SuggestionItem[]
+					return projectStore.searchProject(autocompleteContext.search)
 				}
 			} catch (error) {
 				console.error('Error fetching suggestions:', error)
@@ -258,14 +257,14 @@ export default Extension.create<FilterAutocompleteOptions>({
 				const pattern = new RegExp(`(${field}\\s*${FILTER_OPERATORS_REGEX}\\s*)(["']?)([^"'&|()]*)?$`, 'ig')
 				const match = pattern.exec(textUpToCursor)
 
-				if (match && match.index !== undefined) {
-					const [, prefix = '', , , keyword = ''] = match
+				if (match) {
+					const [, prefix, , , keyword = ''] = match
 
 					let search = keyword.trim()
 					const operator = match[0].match(new RegExp(FILTER_OPERATORS_REGEX))?.[0] || ''
 					if (operator === 'in' || operator === '?=') {
 						const keywords = keyword.split(',')
-						search = keywords[keywords.length - 1]?.trim() ?? ''
+						search = keywords[keywords.length - 1].trim()
 					}
 
 					// Check if this expression is complete
@@ -328,28 +327,23 @@ export default Extension.create<FilterAutocompleteOptions>({
 						items,
 						command: (item: AutocompleteItem) => {
 							// Handle selection
-							const newValue = item.fieldType === 'assignees'
-								? (item.item as IUser).username
-								: (item.item as IProject | ILabel).title
+							const newValue = item.fieldType === 'assignees' ? item.item.username : item.item.title
 							const {from} = view.state.selection
 							const context = autocompleteContext
-							if (!context) {
-								return
-							}
 							const operator = context.operator
-
+							
 							let insertValue: string = newValue ?? ''
 							const replaceFrom = Math.max(0, from - context.search.length)
 							const replaceTo = from
-
+							
 							// Handle multi-value operators
 							if (isMultiValueOperator(operator) && context.keyword.includes(',')) {
 								// For multi-value fields, we need to replace only the current search term
 								const keywords = context.keyword.split(',')
 								const currentKeywordIndex = keywords.length - 1
-
+								
 								// If we're not adding the first item, add comma prefix
-								if (currentKeywordIndex > 0 && keywords[currentKeywordIndex]?.trim() === context.search.trim()) {
+								if (currentKeywordIndex > 0 && keywords[currentKeywordIndex].trim() === context.search.trim()) {
 									// We're replacing the last incomplete keyword
 									insertValue = newValue ?? ''
 								} else {
@@ -357,7 +351,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 									insertValue = ',' + newValue
 								}
 							}
-
+							
 							const tr = view.state.tr.replaceWith(
 								replaceFrom,
 								replaceTo,
@@ -365,7 +359,6 @@ export default Extension.create<FilterAutocompleteOptions>({
 							)
 							// Position cursor after the inserted text
 							const newPos = replaceFrom + insertValue.length
-							// @ts-expect-error - Selection.near is a static method but TypeScript doesn't recognize it on constructor
 							tr.setSelection(view.state.selection.constructor.near(tr.doc.resolve(newPos)))
 							view.dispatch(tr)
 							

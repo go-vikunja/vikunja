@@ -50,7 +50,6 @@ const (
 	window.SENTRY_DSN = '{{ .SENTRY_DSN }}'
 	window.ALLOW_ICON_CHANGES = {{ .ALLOW_ICON_CHANGES }}
 	window.CUSTOM_LOGO_URL = '{{ .CUSTOM_LOGO_URL }}'
-	window.CUSTOM_LOGO_URL_DARK = '{{ .CUSTOM_LOGO_URL_DARK }}'
 </script>`
 )
 
@@ -97,7 +96,6 @@ func serveIndexFile(c echo.Context, assetFs http.FileSystem) (err error) {
 			data["ALLOW_ICON_CHANGES"] = "true"
 		}
 		data["CUSTOM_LOGO_URL"] = config.ServiceCustomLogoURL.GetString()
-		data["CUSTOM_LOGO_URL_DARK"] = config.ServiceCustomLogoURLDark.GetString()
 
 		err = tmpl.Execute(&tplOutput, data)
 		if err != nil {

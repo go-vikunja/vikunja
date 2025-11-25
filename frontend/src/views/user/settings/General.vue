@@ -214,25 +214,6 @@
 					</div>
 				</label>
 			</div>
-			<div
-				v-if="settings.frontendSettings.dateDisplay !== 'relative'"
-				class="field"
-			>
-				<label class="two-col">
-					<span>
-						{{ $t('user.settings.general.timeFormat') }}
-					</span>
-					<div class="select">
-						<select v-model="settings.frontendSettings.timeFormat">
-							<option
-								v-for="(label, value) in timeFormatSettings"
-								:key="value"
-								:value="value"
-							>{{ label }}</option>
-						</select>
-					</div>
-				</label>
-			</div>
 		</div>
 	</Card>
 
@@ -385,7 +366,6 @@ import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
-import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KINDS} from '@/types/IRelationKind'
 
 defineOptions({name: 'UserSettingsGeneral'})
@@ -409,13 +389,8 @@ const dateDisplaySettings = computed(() => ({
 	[DATE_DISPLAY.MM_SLASH_DD_YYYY]: t('user.settings.general.dateDisplayOptions.mm/dd/yyyy'),
 	[DATE_DISPLAY.DD_SLASH_MM_YYYY]: t('user.settings.general.dateDisplayOptions.dd/mm/yyyy'),
 	[DATE_DISPLAY.YYYY_SLASH_MM_DD]: t('user.settings.general.dateDisplayOptions.yyyy/mm/dd'),
-	[DATE_DISPLAY.DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.DAY_MONTH_YEAR, settings.value?.frontendSettings?.timeFormat),
-	[DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR, settings.value?.frontendSettings?.timeFormat),
-}))
-
-const timeFormatSettings = computed(() => ({
-	[TIME_FORMAT.HOURS_12]: t('user.settings.general.timeFormatOptions.12h'),
-	[TIME_FORMAT.HOURS_24]: t('user.settings.general.timeFormatOptions.24h'),
+	[DATE_DISPLAY.DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.DAY_MONTH_YEAR),
+	[DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR),
 }))
 
 const authStore = useAuthStore()
@@ -433,8 +408,6 @@ const settings = ref<IUserSettings>({
 		// Add fallback for old settings that don't have the logo change setting set
 		allowIconChanges: authStore.settings.frontendSettings.allowIconChanges ?? true,
 		dateDisplay: authStore.settings.frontendSettings.dateDisplay ?? DATE_DISPLAY.RELATIVE,
-		// Add fallback for old settings that don't have the time format set
-		timeFormat: authStore.settings.frontendSettings.timeFormat ?? TIME_FORMAT.HOURS_12,
 		// Add fallback for old settings that don't have the default task relation type set
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
 	},

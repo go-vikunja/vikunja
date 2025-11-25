@@ -8,7 +8,6 @@ import {
 	FILTER_OPERATORS_REGEX,
 	getFilterFieldRegexPattern,
 	LABEL_FIELDS,
-	PROJECT_FIELDS,
 } from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
 import {colorIsDark} from '@/helpers/color/colorIsDark.ts'
@@ -149,70 +148,12 @@ function decorateDocument(doc: Node) {
 		}
 	})
 
-	// Handle project fields with multi-value support
-	PROJECT_FIELDS.forEach(projectField => {
-		const pattern = getFilterFieldRegexPattern(projectField)
-		let projectMatch
-		while ((projectMatch = pattern.exec(text)) !== null) {
-			const projectValue = projectMatch[4]?.trim()
-			const operator = projectMatch[2]?.trim()
-
-			if(!projectValue) {
-				continue
-			}
-
-			const valueStart = projectMatch.index + projectMatch[0].lastIndexOf(projectValue)
-			const valueEnd = valueStart + projectValue.length
-
-			const addProjectDecoration = (projectValue: string, start: number, end: number) => {
-				const from = findPosForIndex(doc, start)
-				const to = findPosForIndex(doc, end)
-
-				if (from === null || to === null) {
-					return
-				}
-
-				valueRanges.push({start, end})
-
-				// Use generic value styling for projects
-				decorations.push(
-					Decoration.inline(from, to, {class: 'value'}),
-				)
-			}
-
-			// Check if this is a multi-value operator and the value contains commas
-			const isMultiValueOperator = ['in', '?=', 'not in', '?!='].includes(operator)
-			if (isMultiValueOperator && projectValue.includes(',')) {
-				// Split by commas and create decorations for each individual project
-				const projects = projectValue.split(',').map(p => p.trim()).filter(p => p.length > 0)
-				let currentOffset = 0
-
-				projects.forEach(individualProject => {
-					// Find the position of this individual project within the full value
-					const projectIndex = projectValue.indexOf(individualProject, currentOffset)
-					if (projectIndex !== -1) {
-						const individualStart = valueStart + projectIndex
-						const individualEnd = individualStart + individualProject.length
-
-						addProjectDecoration(individualProject, individualStart, individualEnd)
-
-						currentOffset = projectIndex + individualProject.length
-					}
-				})
-
-				continue
-			}
-
-			addProjectDecoration(projectValue, valueStart, valueEnd)
-		}
-	})
-
-	// Match other values - anything coming after an operator (excluding labels, dates, and projects)
+	// Match other values - anything coming after an operator (excluding labels and dates)
 	fieldValueRegex.lastIndex = 0
 	while ((match = fieldValueRegex.exec(text)) !== null) {
 		const [fullMatch, field, operator, value] = match
 
-		if (LABEL_FIELDS.includes(field) || DATE_FIELDS.includes(field) || PROJECT_FIELDS.includes(field)) {
+		if (LABEL_FIELDS.includes(field) || DATE_FIELDS.includes(field)) {
 			continue
 		}
 

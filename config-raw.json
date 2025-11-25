@@ -124,11 +124,6 @@
                     "comment": "Allow using a custom logo via external URL."
                 },
                 {
-                    "key": "customlogourldark",
-                    "default_value": "",
-                    "comment": "Allow using a custom logo for dark mode via external URL. If not set, the regular logo will be used for both light and dark modes."
-                },
-                {
                     "key": "enablepublicteams",
                     "default_value": "false",
                     "comment": "Enables the public team feature. If enabled, it is possible to configure teams to be public, which makes them\ndiscoverable when sharing a project, therefore not only showing teams the user is member of."

@@ -19,7 +19,7 @@
 					:class="{ 'is-active': editor.isActive('bold') }"
 					@click="() => editor?.chain().focus().toggleBold().run()"
 				>
-					<Icon :icon="['fas', 'bold']" />
+					<Icon :icon="['fa', 'fa-bold']" />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.italic')"
@@ -27,7 +27,7 @@
 					:class="{ 'is-active': editor.isActive('italic') }"
 					@click="() => editor?.chain().focus().toggleItalic().run()"
 				>
-					<Icon :icon="['fas', 'italic']" />
+					<Icon :icon="['fa', 'fa-italic']" />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.underline')"
@@ -35,7 +35,7 @@
 					:class="{ 'is-active': editor.isActive('underline') }"
 					@click="() => editor?.chain().focus().toggleUnderline().run()"
 				>
-					<Icon :icon="['fas', 'underline']" />
+					<Icon :icon="['fa', 'fa-underline']" />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.strikethrough')"
@@ -43,7 +43,7 @@
 					:class="{ 'is-active': editor.isActive('strike') }"
 					@click="() => editor?.chain().focus().toggleStrike().run()"
 				>
-					<Icon :icon="['fas', 'strikethrough']" />
+					<Icon :icon="['fa', 'fa-strikethrough']" />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.code')"
@@ -51,7 +51,7 @@
 					:class="{ 'is-active': editor.isActive('code') }"
 					@click="() => editor?.chain().focus().toggleCode().run()"
 				>
-					<Icon :icon="['fas', 'code']" />
+					<Icon :icon="['fa', 'fa-code']" />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.link')"
@@ -59,7 +59,7 @@
 					:class="{ 'is-active': editor.isActive('link') }"
 					@click="setLink"
 				>
-					<Icon :icon="['fas', 'link']" />
+					<Icon :icon="['fa', 'fa-link']" />
 				</BaseButton>
 			</div>
 		</BubbleMenu>
@@ -183,7 +183,6 @@ import XButton from '@/components/input/Button.vue'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
-import {saveEditorDraft, loadEditorDraft, clearEditorDraft} from '@/helpers/editorDraftStorage'
 
 const props = withDefaults(defineProps<{
 	modelValue: string,
@@ -196,7 +195,6 @@ const props = withDefaults(defineProps<{
 	enableDiscardShortcut?: boolean,
 	enableMentions?: boolean,
 	mentionProjectId?: number,
-	storageKey?: string,
 }>(), {
 	uploadCallback: undefined,
 	isEditEnabled: true,
@@ -207,7 +205,6 @@ const props = withDefaults(defineProps<{
 	enableDiscardShortcut: false,
 	enableMentions: false,
 	mentionProjectId: 0,
-	storageKey: '',
 })
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -277,17 +274,17 @@ const CustomImage = Image.extend({
 
 				const img = document.getElementById(id)
 
-				if (!img || !(img instanceof HTMLImageElement)) return
+				if (!img) return
 
 				if (typeof loadedAttachments.value[cacheKey] === 'undefined') {
 
 					const attachment = new AttachmentModel({taskId: taskId, id: attachmentId})
 
 					const attachmentService = new AttachmentService()
-					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment) as string
+					loadedAttachments.value[cacheKey] = await attachmentService.getBlobUrl(attachment)
 				}
 
-				img.src = loadedAttachments.value[cacheKey] as string
+				img.src = loadedAttachments.value[cacheKey]
 			})
 
 			return ['img', mergeAttributes(this.options.HTMLAttributes, {
@@ -358,13 +355,12 @@ const PasteHandler = Extension.create({
 				key: new PluginKey('pasteHandler'),
 				props: {
 					handlePaste: (view, event) => {
-
+						
 						// Handle images pasted from clipboard
-						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items && event.clipboardData.items.length > 0) {
+						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length > 0) {
 
-							for (let i = 0; i < event.clipboardData.items.length; i++) {
-								const item = event.clipboardData.items[i]
-								if (item && item.kind === 'file' && item.type.startsWith('image/')) {
+							for (const item of event.clipboardData.items) {
+								if (item.kind === 'file' && item.type.startsWith('image/')) {
 									const file = item.getAsFile()
 									if (file) {
 										uploadAndInsertFiles([file])
@@ -574,25 +570,12 @@ function bubbleNow() {
 	}
 
 	contentHasChanged.value = true
-	const newContent = editor.value?.getHTML()
-
-	// Save to localStorage if storageKey is provided
-	if (props.storageKey) {
-		saveEditorDraft(props.storageKey, newContent || '')
-	}
-
-	emit('update:modelValue', newContent)
+	emit('update:modelValue', editor.value?.getHTML())
 }
 
 function bubbleSave() {
 	bubbleNow()
 	lastSavedState = editor.value?.getHTML() ?? ''
-
-	// Clear draft from localStorage when saved
-	if (props.storageKey) {
-		clearEditorDraft(props.storageKey)
-	}
-
 	emit('save', lastSavedState)
 	if (isEditing.value) {
 		internalMode.value = 'preview'
@@ -600,13 +583,7 @@ function bubbleSave() {
 }
 
 function exitEditMode() {
-	editor.value?.commands.setContent(lastSavedState, {emitUpdate: false})
-
-	// Clear draft from localStorage when discarding changes
-	if (props.storageKey) {
-		clearEditorDraft(props.storageKey)
-	}
-
+	editor.value?.commands.setContent(lastSavedState, false)
 	if (isEditing.value) {
 		internalMode.value = 'preview'
 	}
@@ -652,14 +629,14 @@ function uploadAndInsertFiles(files: File[] | FileList) {
 		})
 		
 		const html = editor.value?.getHTML().replace(UPLOAD_PLACEHOLDER_ELEMENT, '') ?? ''
-
-		editor.value?.commands.setContent(html, {emitUpdate: false})
-
-		bubbleNow()
+		
+		editor.value?.commands.setContent(html, false)
+		
+		bubbleSave()
 	})
 }
 
-function triggerImageInput(event: Event) {
+function triggerImageInput(event) {
 	if (typeof props.uploadCallback !== 'undefined') {
 		uploadInputRef.value?.click()
 		return
@@ -668,7 +645,7 @@ function triggerImageInput(event: Event) {
 	addImage(event)
 }
 
-async function addImage(event: Event) {
+async function addImage(event) {
 
 	if (typeof props.uploadCallback !== 'undefined') {
 		const files = uploadInputRef.value?.files
@@ -686,13 +663,12 @@ async function addImage(event: Event) {
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
-		bubbleNow()
+		bubbleSave()
 	}
 }
 
-function setLink(event: MouseEvent) {
-	const target = event.target as HTMLElement
-	setLinkInEditor(target.getBoundingClientRect(), editor.value)
+function setLink(event) {
+	setLinkInEditor(event.target.getBoundingClientRect(), editor.value)
 }
 
 onMounted(async () => {
@@ -701,20 +677,6 @@ onMounted(async () => {
 	}
 
 	await nextTick()
-
-	// Load draft from localStorage if available
-	if (props.storageKey) {
-		const draft = loadEditorDraft(props.storageKey)
-		if (draft && isEditorContentEmpty(props.modelValue)) {
-			// Only load draft if current content is empty
-			// Set content and force edit mode for immediate editing
-			editor.value?.commands.setContent(draft, {emitUpdate: false})
-			internalMode.value = 'edit'
-			// Emit the model update so parent sees the restored content
-			emit('update:modelValue', draft)
-			return
-		}
-	}
 
 	setModeAndValue(props.modelValue)
 })
@@ -727,14 +689,13 @@ onBeforeUnmount(() => {
 
 function setModeAndValue(value: string) {
 	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
-	editor.value?.commands.setContent(value, {emitUpdate: false})
+	editor.value?.commands.setContent(value, false)
 }
 
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function setFocusToEditor(event: KeyboardEvent) {
-	const target = event.target as HTMLElement
-	if (target.shadowRoot) {
+function setFocusToEditor(event) {
+	if (event.target.shadowRoot) {
 		return
 	}
 
@@ -762,11 +723,10 @@ function focusIfEditing() {
 	}
 }
 
-function clickTasklistCheckbox(event: MouseEvent) {
+function clickTasklistCheckbox(event) {
 	event.stopImmediatePropagation()
 
-	const target = event.target as HTMLElement
-	if (target.localName !== 'p') {
+	if (event.target.localName !== 'p') {
 		return
 	}
 
@@ -797,10 +757,7 @@ watch(
 
 				// We assume the first child contains the label element with the checkbox and the second child the actual label
 				// When the actual label is clicked, we forward that click to the checkbox.
-				const secondChild = check.children[1]
-				if (secondChild) {
-					secondChild.removeEventListener('click', clickTasklistCheckbox)
-				}
+				check.children[1].removeEventListener('click', clickTasklistCheckbox)
 			})
 
 			return
@@ -813,11 +770,8 @@ watch(
 
 			// We assume the first child contains the label element with the checkbox and the second child the actual label
 			// When the actual label is clicked, we forward that click to the checkbox.
-			const secondChild = check.children[1]
-			if (secondChild) {
-				secondChild.removeEventListener('click', clickTasklistCheckbox)
-				secondChild.addEventListener('click', clickTasklistCheckbox)
-			}
+			check.children[1].removeEventListener('click', clickTasklistCheckbox)
+			check.children[1].addEventListener('click', clickTasklistCheckbox)
 		})
 	},
 	{immediate: true},

@@ -12,7 +12,7 @@
 
 		<div class="sharables-project">
 			<XButton
-				v-if="!showNewForm"
+				v-if="!(linkShares.length === 0 || showNewForm)"
 				icon="plus"
 				class="mbe-4"
 				@click="showNewForm = true"
@@ -21,7 +21,7 @@
 			</XButton>
 
 			<div
-				v-if="showNewForm"
+				v-if="linkShares.length === 0 || showNewForm"
 				class="p-4"
 			>
 				<div class="field">

@@ -17,67 +17,232 @@
 package initials
 
 import (
+	"bytes"
 	"fmt"
-	"html"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
 	"strconv"
 	"strings"
 
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
+	"github.com/disintegration/imaging"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/goregular"
+	"golang.org/x/image/math/fixed"
 )
 
 // Provider represents the provider implementation of the initials provider
 type Provider struct {
 }
 
-// FlushCache is a no-op for the initials provider since SVG generation is lightweight
-func (p *Provider) FlushCache(_ *user.User) error { return nil }
-
-var avatarBgColors = []string{
-	"#e0f8d9",
-	"#e3f5f8",
-	"#faeefb",
-	"#f1efff",
-	"#ffecf0",
-	"#ffefe4",
+// FlushCache removes cached initials avatars for a user
+func (p *Provider) FlushCache(u *user.User) error {
+	if err := keyvalue.Del(getCacheKey("full", u.ID)); err != nil {
+		return err
+	}
+	return keyvalue.DelPrefix(getCacheKey("resized", u.ID))
 }
 
-var avatarTextColors = []string{
-	"#005f00",
-	"#00548c",
-	"#822198",
-	"#5d26cd",
-	"#9f0850",
-	"#9b2200",
+var (
+	avatarBgColors = []*color.RGBA{
+		{R: 69, G: 189, B: 243, A: 255},
+		{R: 224, G: 143, B: 112, A: 255},
+		{R: 77, G: 182, B: 172, A: 255},
+		{R: 149, G: 117, B: 205, A: 255},
+		{R: 176, G: 133, B: 94, A: 255},
+		{R: 240, G: 98, B: 146, A: 255},
+		{R: 163, G: 211, B: 108, A: 255},
+		{R: 121, G: 134, B: 203, A: 255},
+		{R: 241, G: 185, B: 29, A: 255},
+	}
+)
+
+const (
+	dpi         = 72
+	defaultSize = 1024
+)
+
+func drawImage(text rune, bg *color.RGBA) (img *image.RGBA64, err error) {
+
+	size := defaultSize
+	fontSize := float64(size) * 0.8
+
+	// Inspired by https://github.com/holys/initials-avatar
+
+	// Get the font
+	f, err := truetype.Parse(goregular.TTF)
+	if err != nil {
+		return img, err
+	}
+
+	// Build the image background
+	img = image.NewRGBA64(image.Rect(0, 0, size, size))
+	draw.Draw(img, img.Bounds(), &image.Uniform{C: bg}, image.Point{}, draw.Src)
+
+	// Add the text
+	drawer := &font.Drawer{
+		Dst: img,
+		Src: image.White,
+		Face: truetype.NewFace(f, &truetype.Options{
+			Size:    fontSize,
+			DPI:     dpi,
+			Hinting: font.HintingNone,
+		}),
+	}
+
+	// Font Index
+	fi := f.Index(text)
+
+	// Glyph example: http://www.freetype.org/freetype2/docs/tutorial/metrics.png
+	var gbuf truetype.GlyphBuf
+	fsize := fixed.Int26_6(fontSize * dpi * (64.0 / 72.0))
+	err = gbuf.Load(f, fsize, fi, font.HintingFull)
+	if err != nil {
+		drawer.DrawString("")
+		return img, err
+	}
+
+	// Center
+	dY := (size - int(gbuf.Bounds.Max.Y-gbuf.Bounds.Min.Y)>>6) / 2
+	dX := (size - int(gbuf.Bounds.Max.X-gbuf.Bounds.Min.X)>>6) / 2
+	y := int(gbuf.Bounds.Max.Y>>6) + dY
+	x := 0 - int(gbuf.Bounds.Min.X>>6) + dX
+
+	drawer.Dot = fixed.Point26_6{
+		X: fixed.I(x),
+		Y: fixed.I(y),
+	}
+	drawer.DrawString(string(text))
+
+	return img, err
 }
 
-// GetAvatar returns an initials avatar for a user as SVG
+func getCacheKey(prefix string, keys ...int64) string {
+	result := "avatar_initials_" + prefix
+	for i, key := range keys {
+		result += strconv.Itoa(int(key))
+		if i < len(keys) {
+			result += "_"
+		}
+	}
+	return result
+}
+
+func getAvatarForUser(u *user.User) (fullSizeAvatar *image.RGBA64, err error) {
+	return getAvatarForUserWithDepth(u, 0)
+}
+
+func getAvatarForUserWithDepth(u *user.User, recursionDepth int) (fullSizeAvatar *image.RGBA64, err error) {
+	// Prevent infinite recursion - max 3 attempts
+	if recursionDepth >= 3 {
+		return nil, fmt.Errorf("maximum recursion depth reached while generating avatar for user %d", u.ID)
+	}
+
+	cacheKey := getCacheKey("full", u.ID)
+
+	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
+		log.Debugf("Initials avatar for user %d not cached, creating...", u.ID)
+		avatarText := u.Name
+		if avatarText == "" {
+			avatarText = u.Username
+		}
+		firstRune := []rune(strings.ToUpper(avatarText))[0]
+		bg := avatarBgColors[int(u.ID)%len(avatarBgColors)] // Random color based on the user id
+
+		res, err := drawImage(firstRune, bg)
+		if err != nil {
+			return nil, err
+		}
+
+		return *res, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Safe type assertion to handle cases where cached data might be corrupted or in legacy format
+	aa, ok := result.(image.RGBA64)
+	if !ok {
+		// Log the type mismatch with the actual stored value for debugging
+		log.Errorf("Invalid cached image type for user %d. Expected image.RGBA64, got %T with value: %+v. Clearing cache and regenerating.", u.ID, result, result)
+
+		// Clear the invalid cache entry
+		if err := keyvalue.Del(cacheKey); err != nil {
+			log.Errorf("Failed to clear invalid cache entry for key %s: %v", cacheKey, err)
+		}
+
+		// Regenerate the avatar by calling the function again (without the corrupted cache)
+		return getAvatarForUserWithDepth(u, recursionDepth+1)
+	}
+
+	return &aa, nil
+}
+
+// CachedAvatar represents a cached avatar with its content and mime type
+type CachedAvatar struct {
+	Content  []byte
+	MimeType string
+}
+
+// GetAvatar returns an initials avatar for a user
 func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
-	// Get the text to display
-	avatarText := u.Name
-	if avatarText == "" {
-		avatarText = u.Username
+	return p.getAvatarWithDepth(u, size, 0)
+}
+
+func (p *Provider) getAvatarWithDepth(u *user.User, size int64, recursionDepth int) (avatar []byte, mimeType string, err error) {
+	// Prevent infinite recursion - max 3 attempts
+	if recursionDepth >= 3 {
+		return nil, "", fmt.Errorf("maximum recursion depth reached while generating avatar for user %d, size %d", u.ID, size)
 	}
-	if avatarText == "" {
-		return nil, "", fmt.Errorf("user has no name or username")
+
+	cacheKey := getCacheKey("resized", u.ID, size)
+
+	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
+		log.Debugf("Initials avatar for user %d and size %d not cached, creating...", u.ID, size)
+		fullAvatar, err := getAvatarForUser(u)
+		if err != nil {
+			return nil, err
+		}
+
+		img := imaging.Resize(fullAvatar, int(size), int(size), imaging.Lanczos)
+		buf := &bytes.Buffer{}
+		err = png.Encode(buf, img)
+		if err != nil {
+			return nil, err
+		}
+		avatar := buf.Bytes()
+		mimeType := "image/png"
+
+		cachedAvatar := CachedAvatar{
+			Content:  avatar,
+			MimeType: mimeType,
+		}
+
+		return cachedAvatar, nil
+	})
+	if err != nil {
+		return nil, "", err
 	}
 
-	// Get the first character and convert to uppercase
-	firstRune := []rune(strings.ToUpper(avatarText))[0]
-	initial := html.EscapeString(string(firstRune))
+	// Safe type assertion to handle cases where cached data might be corrupted or in legacy format
+	cachedAvatar, ok := result.(CachedAvatar)
+	if !ok {
+		// Log the type mismatch with the actual stored value for debugging
+		log.Errorf("Invalid cached avatar type for user %d, size %d. Expected CachedAvatar, got %T with value: %+v. Clearing cache and regenerating.", u.ID, size, result, result)
 
-	// Select background and text colors based on user ID
-	colorIndex := int(u.ID) % len(avatarBgColors)
-	bgColor := avatarBgColors[colorIndex]
-	textColor := avatarTextColors[colorIndex]
+		// Clear the invalid cache entry
+		if err := keyvalue.Del(cacheKey); err != nil {
+			log.Errorf("Failed to clear invalid cache entry for key %s: %v", cacheKey, err)
+		}
 
-	// Convert size to string
-	sizeStr := strconv.FormatInt(size, 10)
+		// Regenerate the avatar by calling the function again (without the corrupted cache)
+		return p.getAvatarWithDepth(u, size, recursionDepth+1)
+	}
 
-	// Generate SVG
-	svg := fmt.Sprintf(`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="%s" height="%s">
-  <rect width="100" height="100" fill="%s"/>
-  <text x="50" y="50" font-family="sans-serif" font-size="50" fill="%s" text-anchor="middle" dominant-baseline="central">%s</text>
-</svg>`, sizeStr, sizeStr, bgColor, textColor, initial)
-
-	return []byte(svg), "image/svg+xml", nil
+	return cachedAvatar.Content, cachedAvatar.MimeType, nil
 }

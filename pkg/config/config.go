@@ -65,7 +65,6 @@ const (
 	ServiceMaxAvatarSize                  Key = `service.maxavatarsize`
 	ServiceAllowIconChanges               Key = `service.allowiconchanges`
 	ServiceCustomLogoURL                  Key = `service.customlogourl`
-	ServiceCustomLogoURLDark              Key = `service.customlogourldark`
 	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`

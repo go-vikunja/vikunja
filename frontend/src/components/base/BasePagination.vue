@@ -42,26 +42,20 @@
 <script lang="ts" setup>
 import {computed} from 'vue'
 
-interface PaginationPage {
-	number: number
-	isEllipsis: boolean
-}
-
 const props = defineProps<{
 	totalPages: number,
 	currentPage: number
 }>()
 
-function createPagination(totalPages: number, currentPage: number): PaginationPage[] {
-	const pages: PaginationPage[] = []
+function createPagination(totalPages: number, currentPage: number) {
+	const pages = []
 	for (let i = 0; i < totalPages; i++) {
 		if (
 			i > 0 &&
 			(i + 1) < totalPages &&
 			((i + 1) > currentPage + 1 || (i + 1) < currentPage - 1)
 		) {
-			const prevPage = pages[i - 1]
-			if (prevPage && !prevPage.isEllipsis) {
+			if (pages[i - 1] && !pages[i - 1].isEllipsis) {
 				pages.push({
 					number: 0,
 					isEllipsis: true,
@@ -69,7 +63,7 @@ function createPagination(totalPages: number, currentPage: number): PaginationPa
 			}
 			continue
 		}
-		
+
 		pages.push({
 			number: i + 1,
 			isEllipsis: false,

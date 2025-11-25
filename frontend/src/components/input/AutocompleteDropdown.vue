@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends string">
+<script setup lang="ts" generic="T">
 import {type ComponentPublicInstance, nextTick, ref, watch} from 'vue'
 
 const props = withDefaults(defineProps<{
@@ -30,21 +30,15 @@ const editorRef = ref<HTMLTextAreaElement | null>(null)
 watch(
 	() => model.value,
 	newValue => {
-		val.value = newValue ?? ''
+		val.value = newValue
 	},
 )
 
 function updateSuggestionScroll() {
 	nextTick(() => {
 		const scroller = suggestionScrollerRef.value
-		if (!scroller) return
-
-		const selectedItem = scroller.querySelector('.selected')
-		if (selectedItem && selectedItem instanceof HTMLElement) {
-			scroller.scrollTop = selectedItem.offsetTop
-		} else {
-			scroller.scrollTop = 0
-		}
+		const selectedItem = scroller?.querySelector('.selected')
+		scroller.scrollTop = selectedItem ? selectedItem.offsetTop : 0
 	})
 }
 
@@ -59,7 +53,7 @@ function onFocusField() {
 	setState('focused')
 }
 
-function onKeydown(e: KeyboardEvent) {
+function onKeydown(e) {
 	switch (e.keyCode || e.which) {
 		case ESCAPE:
 			e.preventDefault()
@@ -122,9 +116,9 @@ function onSelectValue(value: T) {
 	setState('unfocused')
 }
 
-function onUpdateField(e: Event) {
+function onUpdateField(e) {
 	setState('focused')
-	model.value = (e.currentTarget as HTMLTextAreaElement).value
+	model.value = e.currentTarget.value
 }
 </script>
 

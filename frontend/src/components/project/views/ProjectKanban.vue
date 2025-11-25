@@ -511,7 +511,7 @@ async function updateTaskPosition(e) {
 		: e.newIndex
 
 	const task = newBucket.tasks[newTaskIndex]
-	const oldBucket = buckets.value.find(b => b.id === sourceBucket.value)
+	const oldBucket = buckets.value.find(b => b.id === task.bucketId)
 	const taskBefore = newBucket.tasks[newTaskIndex - 1] ?? null
 	const taskAfter = newBucket.tasks[newTaskIndex + 1] ?? null
 	taskUpdating.value[task.id] = true

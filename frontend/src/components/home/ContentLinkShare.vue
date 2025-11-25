@@ -112,10 +112,10 @@ watch(() => route.params.projectId, ensureProjectLoaded, { immediate: true })
 onMounted(ensureProjectLoaded)
 
 function getProjectRoute() {
-	if (!currentProject.value) return undefined
-
+	if (!currentProject.value) return null
+	
 	const hash = route.hash // Preserve link share hash
-
+	
 	// Default to the first available view or list view
 	const projectId = currentProject.value.id
 	const firstView = projectStore.projects[projectId]?.views?.[0]

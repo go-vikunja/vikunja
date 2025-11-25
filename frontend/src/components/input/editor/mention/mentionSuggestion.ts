@@ -17,9 +17,8 @@ interface MentionItem extends MentionNodeAttrs {
 
 async function searchUsersForProject(projectId: number, query: string): Promise<MentionItem[]> {
 	const projectUserService = new ProjectUserService()
-
+	
 	// Use server-side search with the 's' parameter
-	// @ts-expect-error - projectId is used for URL replacement but not part of IAbstract
 	const users = await projectUserService.getAll({ projectId }, { s: query }) as IUser[]
 
 	// Fetch avatar URLs for all users

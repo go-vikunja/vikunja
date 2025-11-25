@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import {logEvent} from 'histoire/client'
-import {reactive, type App} from 'vue'
+import {reactive} from 'vue'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import BaseButton from './BaseButton.vue'
 
-function setupApp({ app }: { app: App }) {
+function setupApp({ app }) {
 	// Router mock
 	app.use(createRouter({
 		history: createMemoryHistory(),
