@@ -18,6 +18,7 @@ package ticktick
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/csv"
 	"errors"
 	"io"
@@ -25,7 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
@@ -101,9 +101,13 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 
 		labels := make([]*models.Label, 0, len(t.Tags))
 		for _, tag := range t.Tags {
-			labels = append(labels, &models.Label{
-				Title: tag,
-			})
+			// Only create labels for non-empty tags after trimming whitespace
+			trimmedTag := strings.TrimSpace(tag)
+			if trimmedTag != "" {
+				labels = append(labels, &models.Label{
+					Title: trimmedTag,
+				})
+			}
 		}
 
 		task := &models.TaskWithComments{
@@ -163,24 +167,79 @@ func (m *Migrator) Name() string {
 	return "ticktick"
 }
 
-func newLineSkipDecoder(r io.Reader, linesToSkip int) gocsv.SimpleDecoder {
-	reader := csv.NewReader(r)
-	for i := 0; i < linesToSkip; i++ {
-		_, err := reader.Read()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
+// stripBOM removes the UTF-8 BOM from the beginning of a reader
+func stripBOM(r io.Reader) io.Reader {
+	// Read the first few bytes to check for BOM
+	buf := make([]byte, 3)
+	n, err := r.Read(buf)
+	if err != nil && err != io.EOF {
+		// If we read some bytes before the error, preserve them
+		if n > 0 {
+			return io.MultiReader(bytes.NewReader(buf[:n]), r)
+		}
+		return r
+	}
+
+	// Check if it starts with UTF-8 BOM (0xEF, 0xBB, 0xBF)
+	// We need exactly 3 bytes and they must match the BOM sequence
+	if n == 3 && len(buf) >= 3 && buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF {
+		// BOM found, return reader without BOM
+		return io.MultiReader(bytes.NewReader(buf[3:n]), r)
+	}
+
+	// No BOM found, return reader with the bytes we read back
+	return io.MultiReader(bytes.NewReader(buf[:n]), r)
+}
+
+func newLineSkipDecoder(r io.Reader, linesToSkip int) (gocsv.SimpleDecoder, error) {
+	// Strip BOM if present - this must be done consistently with linesToSkipBeforeHeader
+	r = stripBOM(r)
+
+	// Read all content into memory so we can work with it
+	// This is acceptable since CSV imports are typically not huge files
+	allBytes, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	// Skip the metadata lines before the CSV header by finding newlines
+	// linesToSkipBeforeHeader counts raw text lines (newlines), not CSV records,
+	// because even metadata can have multiline quoted fields.
+	// We manually search for newlines (no buffer size limits like bufio.Scanner)
+	bytesSkipped := 0
+	linesFound := 0
+	for i := 0; i < len(allBytes) && linesFound < linesToSkip; i++ {
+		if allBytes[i] == '\n' {
+			linesFound++
+			if linesFound == linesToSkip {
+				// Position is right after the Nth newline
+				bytesSkipped = i + 1
 				break
 			}
-			log.Debugf("[TickTick Migration] CSV parse error: %s", err)
 		}
 	}
-	reader.FieldsPerRecord = 0
-	return gocsv.NewSimpleDecoderFromCSVReader(reader)
+
+	if linesFound < linesToSkip {
+		return nil, io.ErrUnexpectedEOF
+	}
+
+	// Now create a CSV reader starting from after the skipped lines
+	// The CSV reader will properly handle any multiline quoted fields in the actual data
+	remainingContent := allBytes[bytesSkipped:]
+	reader := csv.NewReader(bytes.NewReader(remainingContent))
+
+	// Allow variable field counts and be lenient with parsing
+	reader.FieldsPerRecord = -1
+	reader.LazyQuotes = true
+	reader.TrimLeadingSpace = true
+	return gocsv.NewSimpleDecoderFromCSVReader(reader), nil
 }
 
 func linesToSkipBeforeHeader(file io.ReaderAt, size int64) (int, error) {
 	sr := io.NewSectionReader(file, 0, size)
-	scanner := bufio.NewScanner(sr)
+	// Strip BOM before scanning for header
+	r := stripBOM(sr)
+	scanner := bufio.NewScanner(r)
 	lines := 0
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -243,7 +302,10 @@ func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error 
 	if err != nil {
 		return err
 	}
-	decode := newLineSkipDecoder(fr, skip)
+	decode, err := newLineSkipDecoder(fr, skip)
+	if err != nil {
+		return err
+	}
 	err = gocsv.UnmarshalDecoder(decode, &allTasks)
 	if err != nil {
 		return err

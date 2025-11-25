@@ -1,0 +1,18 @@
+﻿"Date: 2025-11-25+0000"
+"Version: 7.1"
+"Status: 
+0 Normal
+1 Completed
+2 Archived"
+"Folder Name","List Name","Title","Kind","Tags","Content","Is Check list","Start Date","Due Date","Reminder","Repeat","Priority","Status","Created Time","Completed Time","Order","Timezone","Is All Day","Is Floating","Column Name","Column Order","View Mode","taskId","parentId"
+"Work","Project Alpha","Task with repeating schedule","TEXT","urgent, work","This task repeats weekly","N","","","","","0","0","2022-10-09T15:09:48+0000","","-1099511627776","Europe/Berlin",,"false",,,"list","1",""
+"Work","Project Alpha","Task with reminder and dates","TEXT","work, reminder","Task description with reminder","N","2018-12-11T23:00:00+0000","2018-12-11T23:00:00+0000","","","0","0","2018-12-11T20:10:46+0000","2018-12-11T20:12:14+0000","0","Europe/Berlin","true","false",,,"list","2",""
+"Work","Project Alpha","Subtask example","TEXT","","This is a subtask","N","","","","","0","0","2022-10-09T15:20:55+0000","","1099511627776","Europe/Berlin","true","false",,,"list","3","2"
+"Work","Project Alpha","Another subtask","TEXT","","Another subtask example","N","","","","","0","0","2022-10-09T15:20:59+0000","","2199023255552","Europe/Berlin","true","false",,,"list","4","2"
+"Personal","Shopping","Buy groceries","TEXT","shopping, personal","Weekly grocery shopping","N","","","","","0","0","2018-12-29T21:48:09+0000","","-1099511627776","Europe/Berlin",,"false",,,"list","5",""
+"Personal","Shopping","Buy household items","TEXT","shopping","Cleaning supplies and toiletries","N","","","","","0","0","2018-12-29T21:48:00+0000","","-1099511627776","Europe/Berlin",,"false",,,"list","6",""
+"","Inbox","Long task description example","TEXT","","This is an example of a task with a very long description that might contain special characters and formatting.","N","","","","","0","2","2022-01-21T11:33:40+0000","2025-11-25T10:39:31+0000","-2748779069440","Europe/Berlin","false","false",,,"list","7",""
+"","Inbox","Completed task example","TEXT","","This task was completed and shows the completed timestamp","N","","","","","0","2","2022-01-21T11:33:34+0000","2025-11-25T10:39:31+0000","-2473901162496","Europe/Berlin","false","false",,,"list","8",""
+"","Inbox","Task with due date","TEXT","important, deadline","Task with specific due date and tags","N","2023-03-28T22:00:00+0000","2023-03-28T22:00:00+0000","","","0","0","2018-12-29T21:14:45+0000","","-2199023255552","Europe/Berlin","true","false",,,"list","9",""
+"","Inbox","Welcome task","TEXT","","Welcome to the task management system. This task demonstrates basic functionality.","N","2023-06-13T22:00:00+0000","2023-06-13T22:00:00+0000","","","0","0","2018-12-11T20:09:58+0000","","-1099511627776","","true","false",,,"list","10",""
+"","Inbox","Checklist example","CHECKLIST","","This is a checklist task with multiple items","Y","","","","","0","0","2018-12-11T20:09:58+0000","","2199023255552","",,"false",,,"list","11",""
