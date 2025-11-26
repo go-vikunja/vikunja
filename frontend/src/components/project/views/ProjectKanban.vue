@@ -429,7 +429,7 @@ const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permis
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
-const projectIdWithFallback = computed(() => project.value?.id || projectId.value)
+const projectIdWithFallback = computed<number>(() => project.value?.id || projectId.value)
 
 const taskLoading = computed(() => taskStore.isLoading || taskPositionService.value.loading)
 
