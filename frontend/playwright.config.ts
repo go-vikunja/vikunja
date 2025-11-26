@@ -26,6 +26,7 @@ export default defineConfig({
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure',
 		testIdAttribute: 'data-cy', // Preserve existing data-cy selectors
+		serviceWorkers: 'block',
 		launchOptions: {
 			executablePath: getChromiumPath(),
 		},
