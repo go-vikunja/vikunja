@@ -418,7 +418,6 @@ test.describe('Task', () => {
 		})
 
 		test('Can add an assignee to a task', async ({authenticatedPage: page}) => {
-			// Truncate task_assignees to start fresh (prevents leftover data from previous runs)
 			await TaskAssigneeFactory.truncate()
 
 			// Create users with IDs starting at 100 to avoid conflict with logged-in user (ID 1)
