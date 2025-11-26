@@ -373,9 +373,15 @@ const PasteHandler = Extension.create({
 								}
 							}
 						}
-						
+
 						const text = event.clipboardData?.getData('text/plain') || ''
 						if (!text) {
+							return false
+						}
+
+						// Don't convert markdown when pasting inside a code block
+						const $from = view.state.selection.$from
+						if ($from.parent.type.name === 'codeBlock') {
 							return false
 						}
 
