@@ -121,7 +121,12 @@ watch(
 	redirectToDefaultViewIfNecessary,
 )
 
-watchEffect(() => saveProjectToHistory({id: props.projectId}))
+watchEffect(() => {
+	// Don't save to history if the user is not authenticated (e.g., during logout)
+	if (authStore.authenticated) {
+		saveProjectToHistory({id: props.projectId})
+	}
+})
 watchEffect(() => saveProjectView(props.projectId, props.viewId))
 
 watchEffect(() => baseStore.setCurrentProjectViewId(props.viewId))
