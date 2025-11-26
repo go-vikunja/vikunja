@@ -66,6 +66,7 @@ test.describe('Home Page Task Overview', () => {
 		const newTaskTitle = 'New Task'
 
 		await page.goto('/')
+		await page.waitForLoadState('networkidle')
 
 		await TaskFactory.create(1, {
 			id: 999,
@@ -75,9 +76,11 @@ test.describe('Home Page Task Overview', () => {
 		}, false)
 
 		await page.goto(`/projects/${project.id}/1`)
+		await page.waitForLoadState('networkidle')
 		// Wait for the tasks list to load and contain the new task
 		await expect(page.locator('.tasks')).toContainText(newTaskTitle)
 		await page.goto('/')
+		await page.waitForLoadState('networkidle')
 		await expect(page.locator('[data-cy="showTasks"] .card .task').first()).toContainText(newTaskTitle)
 	})
 
@@ -87,13 +90,16 @@ test.describe('Home Page Task Overview', () => {
 		const newTaskTitle = 'New Task'
 
 		await page.goto('/')
+		await page.waitForLoadState('networkidle')
 
 		await page.goto(`/projects/${tasks[0].project_id}/1`)
- 		const taskResponsePromise = page.waitForResponse('**/api/v1/projects/*/tasks');
+		await page.waitForLoadState('networkidle')
+		const taskResponsePromise = page.waitForResponse('**/api/v1/projects/*/tasks')
 		await page.locator('.task-add textarea').fill(newTaskTitle)
 		await page.locator('.task-add textarea').press('Enter')
 		await taskResponsePromise
 		await page.goto('/')
+		await page.waitForLoadState('networkidle')
 		await expect(page.locator('[data-cy="showTasks"]')).not.toContainText(newTaskTitle)
 	})
 
@@ -107,6 +113,7 @@ test.describe('Home Page Task Overview', () => {
 		}, false)
 
 		await page.goto('/')
+		await page.waitForLoadState('networkidle')
 		await expect(page.locator('[data-cy="showTasks"]')).toContainText(newTaskTitle)
 	})
 
@@ -115,6 +122,7 @@ test.describe('Home Page Task Overview', () => {
 
 		// Navigate first to get access to localStorage
 		await page.goto('/')
+		await page.waitForLoadState('networkidle')
 		const token = await page.evaluate(() => localStorage.getItem('token'))
 
 		await updateUserSettings(apiContext, token, {
@@ -129,8 +137,10 @@ test.describe('Home Page Task Overview', () => {
 		// Wait for page to be fully loaded
 		await page.waitForLoadState('networkidle')
 
-		// Type task title and submit
+		// Wait for the add task input to be visible and ready
 		const addTaskInput = page.locator('.add-task-textarea')
+		await expect(addTaskInput).toBeVisible()
+
 		await addTaskInput.fill(newTaskTitle)
 
 		// Wait for the task creation request to complete

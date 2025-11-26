@@ -40,8 +40,14 @@ test.describe('User Settings', () => {
 
 	test('Updates the name', async ({authenticatedPage: page}) => {
 		await page.goto('/user/settings/general')
+		await page.waitForLoadState('networkidle')
 
-		await page.locator('.general-settings input.input').first().fill('Lorem Ipsum')
+		// Wait for the settings page to be fully loaded and the input to be enabled
+		const nameInput = page.locator('.general-settings input.input').first()
+		await expect(nameInput).toBeVisible()
+		await expect(nameInput).toBeEnabled()
+
+		await nameInput.fill('Lorem Ipsum')
 		await page.locator('[data-cy="saveGeneralSettings"]').filter({hasText: 'Save'}).click()
 
 		await expect(page.locator('.global-notification')).toContainText('Success')
