@@ -6,7 +6,7 @@ test.describe('OpenID Login', () => {
 		await page.locator('text=Dex').click()
 
 		// Wait for navigation to Dex origin
-		await page.waitForURL('**/dex/**')
+		await expect(page.locator('h2')).toContainText('Log in to Your Account')
 
 		// Fill in the Dex login form
 		await page.locator('#login').fill('test@example.com')
