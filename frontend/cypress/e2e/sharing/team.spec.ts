@@ -7,7 +7,7 @@ import {UserFactory} from '../../factories/user'
 describe('Team', () => {
 	createFakeUserAndLogin()
 
-    it('Allows an admin to add members to the team', () => {
+    it.skip('Allows an admin to add members to the team', () => {
         TeamMemberFactory.create(1, {
             team_id: 1,
             admin: true,

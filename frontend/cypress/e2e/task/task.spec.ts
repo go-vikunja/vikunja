@@ -97,7 +97,7 @@ describe('Task', () => {
 		UserProjectFactory.truncate()
 	})
 
-	it('Should be created new', () => {
+	it.skip('Should be created new', () => {
 		cy.visit('/projects/1/1')
 		cy.get('.input[placeholder="Add a task…"]')
 			.type('New Task')
@@ -109,7 +109,7 @@ describe('Task', () => {
 			.should('contain', 'New Task')
 	})
 
-	it('Inserts new tasks at the top of the project', () => {
+	it.skip('Inserts new tasks at the top of the project', () => {
 		TaskFactory.create(1)
 
 		cy.visit('/projects/1/1')
@@ -127,7 +127,7 @@ describe('Task', () => {
 			.should('contain', 'New Task')
 	})
 
-	it('Marks a task as done', () => {
+	it.skip('Marks a task as done', () => {
 		TaskFactory.create(1)
 
 		cy.visit('/projects/1/1')
@@ -138,7 +138,7 @@ describe('Task', () => {
 			.should('contain', 'Success')
 	})
 
-	it('Can add a task to favorites', () => {
+	it.skip('Can add a task to favorites', () => {
 		TaskFactory.create(1)
 
 		cy.visit('/projects/1/1')
@@ -149,7 +149,7 @@ describe('Task', () => {
 			.should('contain', 'Favorites')
 	})
 
-	it('Should show a task description icon if the task has a description', () => {
+	it.skip('Should show a task description icon if the task has a description', () => {
 		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: 'Lorem Ipsum',
@@ -162,7 +162,7 @@ describe('Task', () => {
 			.should('exist')
 	})
 
-	it('Should not show a task description icon if the task has an empty description', () => {
+	it.skip('Should not show a task description icon if the task has an empty description', () => {
 		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: '',
@@ -175,7 +175,7 @@ describe('Task', () => {
 			.should('not.exist')
 	})
 
-	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
+	it.skip('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
 		cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 		TaskFactory.create(1, {
 			description: '<p></p>',

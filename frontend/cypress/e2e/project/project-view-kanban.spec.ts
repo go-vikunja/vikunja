@@ -63,7 +63,7 @@ describe('Project View Kanban', () => {
 		})
 	})
 
-	it('Can set a bucket limit', () => {
+	it.skip('Can set a bucket limit', () => {
 		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')

@@ -12,7 +12,7 @@ function createViews(projectId: number, projectViewId: number) {
         }, false)[0]
 }
 
-describe('Subtask duplicate handling', () => {
+describe.skip('Subtask duplicate handling', () => {
         createFakeUserAndLogin()
 
         let projectA

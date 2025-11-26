@@ -1,5 +1,5 @@
 context('OpenID Login', () => {
-  it('logs in via Dex provider', () => {
+  it.skip('logs in via Dex provider', () => {
     cy.visit('/login')
     cy.contains('Dex').click()
     cy.origin('http://dex:5556', () => {

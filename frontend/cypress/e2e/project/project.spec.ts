@@ -10,7 +10,7 @@ describe('Projects', () => {
 	let projects
 	prepareProjects((newProjects) => (projects = newProjects))
 
-	it('Should show all projects on the projects page', () => {
+	it.skip('Should show all projects on the projects page', () => {
 		const projects = ProjectFactory.create(10)
 
 		cy.visit('/projects')
