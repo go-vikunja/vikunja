@@ -1,27 +1,41 @@
 import {test, expect} from '../../support/fixtures'
 
 test.describe('User Settings', () => {
-	// FIXME: File upload timeout - waitForResponse times out waiting for avatar upload POST request
+	// TODO: This test is flaky - the cropper's canvas.toBlob returns null intermittently
+	// The vue-advanced-cropper component seems to not properly initialize in the test environment
 	test.skip('Changes the user avatar', async ({authenticatedPage: page}) => {
-		const uploadAvatarPromise = page.waitForResponse(response =>
-			response.url().includes('/user/settings/avatar/upload') && response.request().method() === 'POST',
-		)
-
 		await page.goto('/user/settings/avatar')
+		await page.waitForLoadState('networkidle')
 
-		await page.locator('input[name=avatarProvider][value=upload]').click()
-		await page.locator('input[type=file]').setInputFiles('tests/fixtures/image.jpg')
+		// Wait for the avatar settings content to be visible
+		const uploadRadio = page.locator('input[name=avatarProvider][value=upload]')
+		await expect(uploadRadio).toBeVisible({timeout: 5000})
 
-		// Simulate the crop handler drag
-		const handler = page.locator('.vue-handler-wrapper.vue-handler-wrapper--south .vue-simple-handler.vue-simple-handler--south')
-		await handler.dispatchEvent('mousedown', {which: 1})
-		await handler.dispatchEvent('mousemove', {clientY: 100})
-		await handler.dispatchEvent('mouseup')
+		await uploadRadio.click()
 
-		await page.locator('[data-cy="uploadAvatar"]').filter({hasText: 'Upload Avatar'}).click()
+		// Set the file directly on the (hidden) file input
+		const fileInput = page.locator('input[type=file]')
+		await fileInput.setInputFiles('tests/fixtures/image.jpg')
 
-		await uploadAvatarPromise
-		await expect(page.locator('.global-notification')).toContainText('Success')
+		// Wait for the cropper to be visible (the image needs to be loaded)
+		const cropper = page.locator('.vue-advanced-cropper')
+		await expect(cropper).toBeVisible({timeout: 10000})
+
+		// After cropper appears, there's a new "Upload Avatar" button with data-cy attribute
+		const uploadButton = page.locator('[data-cy="uploadAvatar"]')
+		await expect(uploadButton).toBeVisible()
+
+		// Listen for network requests
+		page.on('request', (request) => {
+			if (request.url().includes('avatar')) {
+				console.log('Request:', request.method(), request.url())
+			}
+		})
+
+		await uploadButton.click()
+
+		// Wait for success notification instead of specific response
+		await expect(page.locator('.global-notification')).toContainText('Success', {timeout: 10000})
 	})
 
 	test('Updates the name', async ({authenticatedPage: page}) => {

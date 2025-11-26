@@ -1,6 +1,10 @@
 import type {Locator} from '@playwright/test'
 import {readFileSync} from 'fs'
-import {join} from 'path'
+import {join, dirname} from 'path'
+import {fileURLToPath} from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 /**
  * Simulates pasting a file from the clipboard into an element
@@ -13,18 +17,18 @@ export async function pasteFile(locator: Locator, fileName: string, fileType = '
 	const fileBuffer = readFileSync(filePath)
 	const base64 = fileBuffer.toString('base64')
 
-	await locator.evaluate(([element, base64, fileName, fileType]) => {
+	await locator.evaluate((element, {base64Data, name, type}) => {
 		// Convert base64 to blob
-		const byteCharacters = atob(base64)
+		const byteCharacters = atob(base64Data)
 		const byteNumbers = new Array(byteCharacters.length)
 		for (let i = 0; i < byteCharacters.length; i++) {
 			byteNumbers[i] = byteCharacters.charCodeAt(i)
 		}
 		const byteArray = new Uint8Array(byteNumbers)
-		const blob = new Blob([byteArray], {type: fileType})
+		const blob = new Blob([byteArray], {type})
 
 		// Create file and paste event
-		const file = new File([blob], fileName, {type: fileType})
+		const file = new File([blob], name, {type})
 		const dataTransfer = new DataTransfer()
 		dataTransfer.items.add(file)
 
@@ -35,7 +39,7 @@ export async function pasteFile(locator: Locator, fileName: string, fileType = '
 		})
 
 		element.dispatchEvent(pasteEvent)
-	}, [await locator.elementHandle(), base64, fileName, fileType])
+	}, {base64Data: base64, name: fileName, type: fileType})
 }
 
 /**

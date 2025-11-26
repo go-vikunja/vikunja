@@ -61,9 +61,8 @@ test.describe('Home Page Task Overview', () => {
 		}
 	})
 
-	// FIXME: Selector '.tasks .task' resolves to 50 elements causing strict mode violation
-	test.skip('Should show a new task with a very soon due date at the top', async ({authenticatedPage: page, apiContext}) => {
-		const {tasks} = await seedTasks(apiContext, 49)
+	test('Should show a new task with a very soon due date at the top', async ({authenticatedPage: page, apiContext}) => {
+		const {tasks, project} = await seedTasks(apiContext, 49)
 		const newTaskTitle = 'New Task'
 
 		await page.goto('/')
@@ -71,17 +70,18 @@ test.describe('Home Page Task Overview', () => {
 		await TaskFactory.create(1, {
 			id: 999,
 			title: newTaskTitle,
+			project_id: project.id,
 			due_date: new Date().toISOString(),
 		}, false)
 
-		await page.goto(`/projects/${tasks[0].project_id}/1`)
-		await expect(page.locator('.tasks .task')).toContainText(newTaskTitle)
+		await page.goto(`/projects/${project.id}/1`)
+		// Wait for the tasks list to load and contain the new task
+		await expect(page.locator('.tasks')).toContainText(newTaskTitle)
 		await page.goto('/')
 		await expect(page.locator('[data-cy="showTasks"] .card .task').first()).toContainText(newTaskTitle)
 	})
 
-	// FIXME: this test works locally as expected, but fails in CI
-	test.skip('Should not show a new task without a date at the bottom when there are > 50 tasks', async ({authenticatedPage: page, apiContext}) => {
+	test('Should not show a new task without a date at the bottom when there are > 50 tasks', async ({authenticatedPage: page, apiContext}) => {
 		// We're not using the api here to create the task in order to verify the flow
 		const {tasks} = await seedTasks(apiContext, 100)
 		const newTaskTitle = 'New Task'
@@ -97,35 +97,53 @@ test.describe('Home Page Task Overview', () => {
 		await expect(page.locator('[data-cy="showTasks"]')).not.toContainText(newTaskTitle)
 	})
 
-	// FIXME: the task is not shown 
-	test.skip('Should show a new task without a date at the bottom when there are < 50 tasks', async ({authenticatedPage: page, apiContext}) => {
-		await seedTasks(apiContext, 40)
+	test('Should show a new task without a date at the bottom when there are < 50 tasks', async ({authenticatedPage: page, apiContext}) => {
+		const {project} = await seedTasks(apiContext, 40)
 		const newTaskTitle = 'New Task'
 		await TaskFactory.create(1, {
 			id: 999,
 			title: newTaskTitle,
+			project_id: project.id,
 		}, false)
 
 		await page.goto('/')
 		await expect(page.locator('[data-cy="showTasks"]')).toContainText(newTaskTitle)
 	})
 
-	// FIXME: SecurityError when accessing localStorage - "Access is denied for this document"
-	test.skip('Should show a task without a due date added via default project at the bottom', async ({authenticatedPage: page, apiContext}) => {
+	test('Should show a task without a due date added via default project at the bottom', async ({authenticatedPage: page, apiContext}) => {
 		const {project} = await seedTasks(apiContext, 40)
+
+		// Navigate first to get access to localStorage
+		await page.goto('/')
 		const token = await page.evaluate(() => localStorage.getItem('token'))
+
 		await updateUserSettings(apiContext, token, {
 			default_project_id: project.id,
 			overdue_tasks_reminders_time: '9:00',
 		})
 
 		const newTaskTitle = 'New Task'
-		await page.goto('/')
+		// Reload page to apply the new settings
+		await page.reload()
 
-		await page.locator('.add-task-textarea').fill(newTaskTitle)
-		await page.locator('.add-task-textarea').press('Enter')
+		// Wait for page to be fully loaded
+		await page.waitForLoadState('networkidle')
 
-		await expect(page.locator('[data-cy="showTasks"] .card .task').last()).toContainText(newTaskTitle)
+		// Type task title and submit
+		const addTaskInput = page.locator('.add-task-textarea')
+		await addTaskInput.fill(newTaskTitle)
+
+		// Wait for the task creation request to complete
+		const createTaskPromise = page.waitForResponse(response =>
+			response.url().includes('/projects/') &&
+			response.url().includes('/tasks') &&
+			response.request().method() === 'PUT',
+		)
+		await addTaskInput.press('Enter')
+		await createTaskPromise
+
+		// Wait for the task to appear in the list (no due date tasks appear at the bottom)
+		await expect(page.locator('[data-cy="showTasks"] .card .task').last()).toContainText(newTaskTitle, {timeout: 10000})
 	})
 
 	test('Should show the cta buttons for new project when there are no tasks', async ({authenticatedPage: page}) => {

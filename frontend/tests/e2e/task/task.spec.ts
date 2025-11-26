@@ -76,8 +76,7 @@ async function uploadAttachmentAndVerify(page: Page, taskId: number) {
 	await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
 }
 
-// FIXME: Large test suite (47 tests) - many pass but some have timeout issues, needs detailed investigation
-test.describe.skip('Task', () => {
+test.describe('Task', () => {
 	let projects: Project[]
 	let buckets: Bucket[]
 
@@ -371,13 +370,15 @@ test.describe.skip('Task', () => {
 			await page.locator('.task-view .comments .media.comment .tiptap__editor .tiptap.ProseMirror').fill('New Comment')
 			await page.locator('.task-view .comments .media.comment .button:not([disabled])').filter({hasText: 'Comment'}).click()
 
-			await expect(page.locator('.task-view .comments .media.comment .tiptap__editor')).toContainText('New Comment')
+			await expect(page.locator('.task-view .comments .media.comment .tiptap__editor').first()).toContainText('New Comment')
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
 		test('Can move a task to another project', async ({authenticatedPage: page}) => {
 			const projects = await ProjectFactory.create(2)
 			const views = await createDefaultViews(projects[0].id)
+			// Also create views for the target project
+			await createDefaultViews(projects[1].id)
 			await BucketFactory.create(2, {
 				project_view_id: views[3].id,
 			})
@@ -388,9 +389,12 @@ test.describe.skip('Task', () => {
 			await page.goto(`/tasks/${tasks[0].id}`)
 
 			await page.locator('.task-view .action-buttons .button').filter({hasText: /^Move$/}).click()
-			await page.locator('.task-view .content.details .field .multiselect.control .input-wrapper input').fill(`${projects[1].title}{enter}`)
-			// The requests happen with a 200ms timeout. Because of that, the results are not yet there when we
-			// press enter and we can't simulate pressing on enter to select the item.
+			const multiselectInput = page.locator('.task-view .content.details .field .multiselect.control .input-wrapper input')
+			// Use type/pressSequentially instead of fill to properly trigger Vue's input events
+			await multiselectInput.click()
+			await multiselectInput.pressSequentially(projects[1].title.substring(0, 10), {delay: 20})
+			// Wait for the search results to appear (there's a 200ms debounce in the multiselect)
+			await expect(page.locator('.task-view .content.details .field .multiselect.control .search-results')).toBeVisible({timeout: 5000})
 			await page.locator('.task-view .content.details .field .multiselect.control .search-results').locator('> *').first().click()
 
 			await expect(page.locator('.task-view h6.subtitle')).toContainText(projects[1].title)
@@ -414,21 +418,36 @@ test.describe.skip('Task', () => {
 		})
 
 		test('Can add an assignee to a task', async ({authenticatedPage: page}) => {
-			const users = await UserFactory.create(5)
+			// Truncate task_assignees to start fresh (prevents leftover data from previous runs)
+			await TaskAssigneeFactory.truncate()
+
+			// Create users with IDs starting at 100 to avoid conflict with logged-in user (ID 1)
+			// Don't truncate to preserve the authenticated user from the fixture
+			const users = await UserFactory.create(5, {
+				id: (i: number) => 100 + i,
+			}, false)
+			const projects = await ProjectFactory.create(1)
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
-				project_id: 1,
+				project_id: projects[0].id,
 			})
+			// Create project membership for all users at once (to avoid truncate issue)
 			await UserProjectFactory.create(5, {
-				project_id: 1,
-				user_id: '{increment}',
+				project_id: projects[0].id,
+				user_id: (i: number) => users[i - 1].id,
 			})
 
 			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
 
 			await page.locator('[data-cy="taskDetail.assign"]').click()
-			await page.locator('.task-view .column.assignees .multiselect input').fill(users[1].username)
-			await expect(page.locator('.task-view .column.assignees .multiselect .search-results')).toBeVisible()
+			const input = page.locator('.task-view .column.assignees .multiselect input')
+			const userToAssign = users[0]
+			// Use type/pressSequentially instead of fill to properly trigger Vue's input events
+			await input.click()
+			await input.pressSequentially(userToAssign.username.substring(0, 10), {delay: 20})
+			// Wait for search results (200ms debounce + API request time)
+			await expect(page.locator('.task-view .column.assignees .multiselect .search-results')).toBeVisible({timeout: 5000})
 			await page.locator('.task-view .column.assignees .multiselect .search-results').locator('> *').first().click()
 
 			await expect(page.locator('.global-notification')).toContainText('Success')
@@ -635,7 +654,7 @@ test.describe.skip('Task', () => {
 			await page.locator('.task-view .columns.details .column button').filter({hasText: 'Add a reminder'}).click()
 			await page.locator('.datepicker__quick-select-date').filter({hasText: 'Tomorrow'}).click()
 
-			await expect(page.locator('.reminder-options-popup')).not.toBeVisible()
+			await expect(page.locator('.reminder-options-popup.is-open')).not.toBeVisible()
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
@@ -651,10 +670,12 @@ test.describe.skip('Task', () => {
 			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Reminders'}).click()
 			await page.locator('.task-view .columns.details .column button').filter({hasText: 'Add a reminder'}).click()
 			await expect(page.locator('.datepicker__quick-select-date')).not.toBeVisible()
-			await expect(page.locator('.reminder-options-popup .card-content')).toContainText('1 day before Due Date')
-			await page.locator('.reminder-options-popup .card-content').filter({hasText: '1 day before Due Date'}).click()
+			// Use .is-open to target the currently open popup
+			const openPopup = page.locator('.reminder-options-popup.is-open')
+			await expect(openPopup.locator('.card-content')).toContainText('1 day before Due Date')
+			await openPopup.locator('.card-content button').filter({hasText: '1 day before Due Date'}).click()
 
-			await expect(page.locator('.reminder-options-popup')).not.toBeVisible()
+			await expect(page.locator('.reminder-options-popup.is-open')).not.toBeVisible()
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
@@ -670,10 +691,12 @@ test.describe.skip('Task', () => {
 			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Reminders'}).click()
 			await page.locator('.task-view .columns.details .column button').filter({hasText: 'Add a reminder'}).click()
 			await expect(page.locator('.datepicker__quick-select-date')).not.toBeVisible()
-			await expect(page.locator('.reminder-options-popup .card-content')).toContainText('1 day before Start Date')
-			await page.locator('.reminder-options-popup .card-content').filter({hasText: '1 day before Start Date'}).click()
+			// Use .is-open to target the currently open popup
+			const openPopup = page.locator('.reminder-options-popup.is-open')
+			await expect(openPopup.locator('.card-content')).toContainText('1 day before Start Date')
+			await openPopup.locator('.card-content').filter({hasText: '1 day before Start Date'}).click()
 
-			await expect(page.locator('.reminder-options-popup')).not.toBeVisible()
+			await expect(page.locator('.reminder-options-popup.is-open')).not.toBeVisible()
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
@@ -689,12 +712,16 @@ test.describe.skip('Task', () => {
 			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Reminders'}).click()
 			await page.locator('.task-view .columns.details .column button').filter({hasText: 'Add a reminder'}).click()
 			await expect(page.locator('.datepicker__quick-select-date')).not.toBeVisible()
-			await page.locator('.reminder-options-popup .card-content').filter({hasText: 'Custom'}).click()
-			await page.locator('.reminder-options-popup .card-content .reminder-period input').first().fill('10')
-			await page.locator('.reminder-options-popup .card-content .reminder-period select').first().selectOption('days')
-			await page.locator('.reminder-options-popup .card-content button').filter({hasText: 'Confirm'}).click()
+			// Use .is-open to target the currently open popup
+			const openPopup = page.locator('.reminder-options-popup.is-open')
+			await openPopup.locator('.option-button').filter({hasText: 'Custom'}).click()
+			// Wait for the custom form to appear
+			await expect(openPopup.locator('.reminder-period')).toBeVisible()
+			await openPopup.locator('.reminder-period input').fill('10')
+			await openPopup.locator('.reminder-period select').first().selectOption('days')
+			await openPopup.locator('button').filter({hasText: 'Confirm'}).click()
 
-			await expect(page.locator('.reminder-options-popup')).not.toBeVisible()
+			await expect(page.locator('.reminder-options-popup.is-open')).not.toBeVisible()
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
@@ -710,10 +737,14 @@ test.describe.skip('Task', () => {
 			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Reminders'}).click()
 			await page.locator('.task-view .columns.details .column button').filter({hasText: 'Add a reminder'}).click()
 			await expect(page.locator('.datepicker__quick-select-date')).not.toBeVisible()
-			await page.locator('.reminder-options-popup .card-content').filter({hasText: 'Date and time'}).click()
-			await page.locator('.datepicker__quick-select-date').filter({hasText: 'Tomorrow'}).click()
+			// Use .is-open to target the currently open popup
+			const openPopup = page.locator('.reminder-options-popup.is-open')
+			await openPopup.locator('.option-button').filter({hasText: 'Date and time'}).click()
+			// Wait for the datepicker to appear within the popup
+			await expect(openPopup.locator('.datepicker__quick-select-date').first()).toBeVisible()
+			await openPopup.locator('.datepicker__quick-select-date').filter({hasText: 'Tomorrow'}).click()
 
-			await expect(page.locator('.reminder-options-popup')).not.toBeVisible()
+			await expect(page.locator('.reminder-options-popup.is-open')).not.toBeVisible()
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
@@ -879,6 +910,9 @@ test.describe.skip('Task', () => {
 			await page.goto('/')
 			const token = await page.evaluate(() => localStorage.getItem('token'))
 
+			// Get the window.API_URL from the page - this is what the TipTap CustomImage extension checks against
+			const apiUrl = await page.evaluate(() => window.API_URL)
+
 			const response = await apiContext.put(`tasks/${tasks[0].id}/attachments`, {
 				multipart: {
 					files: {
@@ -894,6 +928,8 @@ test.describe.skip('Task', () => {
 
 			const {success} = await response.json()
 
+			// The URL format MUST match window.API_URL for the CustomImage extension to
+			// recognize it as an attachment URL and load it with authentication
 			await TaskFactory.create(1, {
 				id: 1,
 				description: `<img src="${apiUrl}/tasks/${tasks[0].id}/attachments/${success[0].id}" alt="test image">`,
@@ -901,8 +937,25 @@ test.describe.skip('Task', () => {
 
 			await page.goto(`/tasks/${tasks[0].id}`)
 
-			const img = page.locator('.tiptap__editor img')
+			// Wait for the page to load
+			await page.waitForLoadState('networkidle')
+
+			// Get the description editor (first tiptap editor, not comments)
+			const descriptionEditor = page.locator('.tiptap__editor').first()
+			const img = descriptionEditor.locator('img')
 			await expect(img).toBeVisible()
+
+			// Wait for the image to be loaded (the editor loads images asynchronously via blob URL)
+			await page.waitForFunction(
+				() => {
+					// Get the first tiptap editor (description)
+					const editor = document.querySelector('.tiptap__editor')
+					const img = editor?.querySelector('img') as HTMLImageElement
+					return img && img.naturalWidth > 0
+				},
+				{timeout: 10000},
+			)
+
 			const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth)
 			expect(naturalWidth).toBeGreaterThan(0)
 		})

@@ -68,8 +68,7 @@ test.describe('Team', () => {
 		await expect(page.locator('table.table td').filter({hasText: 'Member'})).toBeVisible()
 	})
 
-	// FIXME: Multiselect search results don't appear after typing username - search results locator not found
-	test.skip('Allows an admin to add members to the team', async ({authenticatedPage: page}) => {
+	test('Allows an admin to add members to the team', async ({authenticatedPage: page}) => {
 		await TeamMemberFactory.create(1, {
 			team_id: 1,
 			admin: true,
@@ -80,16 +79,25 @@ test.describe('Team', () => {
 		const users = await UserFactory.create(5)
 
 		await page.goto('/teams/1/edit')
-		await page.locator('.card').filter({hasText: 'Team Members'}).locator('.card-content .multiselect .input-wrapper input').fill(users[1].username)
+		const teamMembersCard = page.locator('.card').filter({hasText: 'Team Members'})
+		const multiselect = teamMembersCard.locator('.card-content .multiselect')
+		const input = multiselect.locator('.input-wrapper input')
 
-		// Wait for search results to appear
-		await expect(page.locator('.card').filter({hasText: 'Team Members'}).locator('.card-content .multiselect .search-results').locator('> *').first()).toBeVisible()
-		await page.locator('.card').filter({hasText: 'Team Members'}).locator('.card-content .multiselect .search-results').locator('> *').first().click()
-		await page.locator('.card').filter({hasText: 'Team Members'}).locator('.card-content .button').filter({hasText: 'Add to team'}).click()
+		// Use the full username because the /users endpoint requires exact match
+		// Use type/pressSequentially instead of fill to properly trigger Vue's input events
+		await input.click()
+		await input.pressSequentially(users[1].username, {delay: 10})
+
+		// Wait for search results to appear (there's a 200ms debounce in the multiselect)
+		await expect(multiselect.locator('.search-results')).toBeVisible({timeout: 5000})
+		await multiselect.locator('.search-results').locator('> *').first().click()
+		await teamMembersCard.locator('.card-content .button').filter({hasText: 'Add to team'}).click()
 
 		await expect(page.locator('table.table td').filter({hasText: 'Admin'})).toBeVisible()
-		await expect(page.locator('table.table tr')).toContainText(users[1].username)
-		await expect(page.locator('table.table tr')).toContainText('Member')
+		// Find the row containing the new member's username
+		const newMemberRow = page.locator('table.table tr').filter({hasText: users[1].username})
+		await expect(newMemberRow).toBeVisible()
+		await expect(newMemberRow).toContainText('Member')
 		await expect(page.locator('.global-notification')).toContainText('Success')
 	})
 })

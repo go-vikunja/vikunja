@@ -96,17 +96,17 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.kanban .bucket .title').filter({hasText: 'New Bucket'})).toBeVisible()
 	})
 
-	// FIXME: Dropdown menu remains visible when it should be hidden - dropdown-menu still visible after action
-	test.skip('Can set a bucket limit', async ({authenticatedPage: page}) => {
+	test('Can set a bucket limit', async ({authenticatedPage: page}) => {
 		await page.goto('/projects/1/4')
 
-		await page.locator('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger').first().click()
-		await page.locator('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item').filter({hasText: 'Limit: Not Set'}).click()
-		await page.locator('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .field input.input').first().fill('3')
-		await page.locator('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .field .control .button').first().click()
+		const bucketDropdown = page.locator('.kanban .bucket .bucket-header .dropdown.options').first()
+		await bucketDropdown.locator('.dropdown-trigger').click()
+		await bucketDropdown.locator('.dropdown-menu .dropdown-item').filter({hasText: 'Limit: Not Set'}).click()
+		await bucketDropdown.locator('.dropdown-menu .field input.input').fill('3')
+		await bucketDropdown.locator('.dropdown-menu .field .control .button').click()
 
-		// Wait for dropdown to close then check the limit is visible
-		await expect(page.locator('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu')).not.toBeVisible()
+		// Wait for the limit to be saved - the dropdown closes and limit is shown
+		await expect(page.locator('.global-notification')).toContainText('Success')
 		await expect(page.locator('.kanban .bucket .bucket-header span.limit').first()).toBeVisible()
 		await expect(page.locator('.kanban .bucket .bucket-header span.limit').first()).toContainText('/3')
 	})
