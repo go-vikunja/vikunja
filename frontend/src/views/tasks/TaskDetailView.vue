@@ -14,7 +14,7 @@
 			<BaseButton
 				v-if="!isModal || isMobile"
 				class="back-button mbs-2"
-				@click="handleBackNavigation"
+				@click="lastProject ? router.back() : router.push(projectRoute)"
 			>
 				<Icon icon="arrow-left" />
 				{{ $t('task.detail.back') }}
@@ -693,30 +693,19 @@ function saveTaskViaHotkey(event) {
 }
 
 const lastProject = computed(() => {
-	// Try to get from browser history first
 	const backRoute = router.options.history.state?.back
-	if (backRoute && typeof backRoute === 'string') {
-		const projectMatch = backRoute.match(/\/projects\/(-?\d+)/)
-		if (projectMatch && projectMatch[1]) {
-			const id = parseInt(projectMatch[1])
-			const project = projectStore.projects[id]
-			if (project) {
-				return project
-			}
-		}
+	if (!backRoute || typeof backRoute !== 'string') {
+		return null
 	}
 
-	// Fallback: try to get from current project context
-	if (baseStore.currentProject && baseStore.currentProject.id !== 0) {
-		return baseStore.currentProject
+	const projectMatch = backRoute.match(/\/projects\/(-?\d+)/)
+	if (!projectMatch || !projectMatch[1]) {
+		return null
 	}
 
-	// Last resort: try to get from task's project
-	if (task.value.projectId && task.value.projectId !== 0) {
-		return projectStore.projects[task.value.projectId] ?? null
-	}
+	const id = parseInt(projectMatch[1])
 
-	return null
+	return projectStore.projects[id] ?? null
 })
 
 const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.value)
@@ -769,7 +758,11 @@ const visible = ref(false)
 
 const project = computed(() => projectStore.projects[task.value.projectId])
 
-
+const projectRoute = computed(() => ({
+	name: 'project.index',
+	params: {projectId: task.value.projectId},
+	hash: route.hash,
+}))
 
 const canWrite = computed(() => (
 	task.value.maxPermission !== null &&
@@ -831,48 +824,6 @@ watch(
 			visible.value = true
 		}
 	}, {immediate: true})
-
-async function handleBackNavigation() {
-	// If we have browser history, use it
-	if (lastProject.value) {
-		router.back()
-		return
-	}
-
-	// Wait for task to load if it hasn't yet
-	if (!task.value.id || task.value.projectId === 0) {
-		await new Promise<void>((resolve) => {
-			const timeout = setTimeout(() => {
-				stop()
-				resolve()
-			}, 5000) // 5 second timeout
-
-			const stop = watch(
-				() => task.value.projectId,
-				(projectId) => {
-					if (projectId && projectId !== 0) {
-						clearTimeout(timeout)
-						stop()
-						resolve()
-					}
-				},
-				{ immediate: true },
-			)
-		})
-	}
-
-	// Navigate to the task's project
-	if (task.value.projectId && task.value.projectId !== 0) {
-		router.push({
-			name: 'project.index',
-			params: { projectId: task.value.projectId },
-			hash: route.hash,
-		})
-	} else {
-		// Fallback to home if we still can't determine the project
-		router.push({ name: 'home' })
-	}
-}
 
 type FieldType =
 	| 'assignees'
