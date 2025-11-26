@@ -29,7 +29,10 @@ describe('Filter Persistence Across Views', () => {
 		cy.visit('/projects/1/1')
 	})
 
-	it('should persist filters in List view after page refresh', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('should persist filters in List view after page refresh', () => {
 		openAndSetFilters()
 
 		cy.url().should('include', 'filter=')
@@ -39,7 +42,10 @@ describe('Filter Persistence Across Views', () => {
 		cy.url().should('include', 'filter=')
 	})
 
-	it('should persist filters in Table view after page refresh', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('should persist filters in Table view after page refresh', () => {
 		cy.visit('/projects/1/3')
 
 		openAndSetFilters()
@@ -51,7 +57,10 @@ describe('Filter Persistence Across Views', () => {
 		cy.url().should('include', 'filter=')
 	})
 
-	it('should persist filters in Kanban view after page refresh', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('should persist filters in Kanban view after page refresh', () => {
 		cy.visit('/projects/1/4')
 
 		openAndSetFilters()
@@ -63,7 +72,10 @@ describe('Filter Persistence Across Views', () => {
 		cy.url().should('include', 'filter=')
 	})
 
-	it('should handle URL sharing with filters', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('should handle URL sharing with filters', () => {
 		// Visit URL with pre-existing filter parameters
 		cy.visit('/projects/1/4?filter=done%3Dtrue&s=Test')
 		

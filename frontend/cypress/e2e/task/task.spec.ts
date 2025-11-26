@@ -195,7 +195,10 @@ describe('Task', () => {
 			TaskAttachmentFactory.truncate()
 		})
 		
-		it('provides back navigation to the project in the list view', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+		
+		it.skip('provides back navigation to the project in the list view', () => {
 			const tasks = TaskFactory.create(1)
 			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 			cy.visit('/projects/1/1')
@@ -210,7 +213,10 @@ describe('Task', () => {
 			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
 		})
 
-		it('provides back navigation to the project in the table view', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('provides back navigation to the project in the table view', () => {
 			const tasks = TaskFactory.create(1)
 			cy.intercept('**/projects/1/views/*/tasks**').as('loadTasks')
 			cy.visit('/projects/1/3')
@@ -226,7 +232,10 @@ describe('Task', () => {
 			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
 		})
 
-		it('provides back navigation to the project in the kanban view on mobile', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('provides back navigation to the project in the kanban view on mobile', () => {
 			cy.viewport('iphone-8')
 
 			const tasks = TaskFactory.create(1)
@@ -242,7 +251,10 @@ describe('Task', () => {
 			cy.location('pathname').should('match', /\/projects\/1\/\d+/)
 		})
 		
-		it('does not provide back navigation to the project in the kanban view on desktop', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+		
+		it.skip('does not provide back navigation to the project in the kanban view on desktop', () => {
 			cy.viewport('macbook-15')
 
 			const tasks = TaskFactory.create(1)
@@ -256,7 +268,10 @@ describe('Task', () => {
 				.should('not.exist')
 		})
 
-		it('Shows a 404 page for nonexisting tasks', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Shows a 404 page for nonexisting tasks', () => {
 
 			cy.visit('/tasks/9999')
 
@@ -264,7 +279,10 @@ describe('Task', () => {
 				.should('be.visible')
 		})
 
-		it('Shows all task details', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Shows all task details', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				index: 1,
@@ -284,7 +302,10 @@ describe('Task', () => {
 				.should('contain', 'Created')
 		})
 
-		it('Shows a done label for done tasks', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Shows a done label for done tasks', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				index: 1,
@@ -302,7 +323,10 @@ describe('Task', () => {
 				.should('contain', 'Done')
 		})
 
-		it('Can mark a task as done', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can mark a task as done', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -322,7 +346,10 @@ describe('Task', () => {
 				.should('contain', 'Mark as undone')
 		})
 
-		it('Shows a task identifier since the project has one', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Shows a task identifier since the project has one', () => {
 			const projects = ProjectFactory.create(1, {
 				id: 1,
 				identifier: 'TEST',
@@ -339,7 +366,10 @@ describe('Task', () => {
 				.should('contain', `${projects[0].identifier}-${tasks[0].index}`)
 		})
 
-		it('Can edit the description', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can edit the description', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: 'Lorem ipsum dolor sit amet.',
@@ -359,7 +389,10 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it('autosaves the description when leaving the task view', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('autosaves the description when leaving the task view', () => {
 			TaskFactory.create(1, {
 				id: 1,
 				project_id: projects[0].id,
@@ -382,7 +415,10 @@ describe('Task', () => {
 				.should('contain.text', 'New Description')
 		})
 
-		it('Shows an empty editor when the description of a task is empty', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Shows an empty editor when the description of a task is empty', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: '',
@@ -395,7 +431,10 @@ describe('Task', () => {
 				.should('not.exist')
 		})
 
-		it('Shows a preview editor when the description of a task is not empty', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Shows a preview editor when the description of a task is not empty', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: 'Lorem Ipsum dolor sit amet',
@@ -408,7 +447,10 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it('Shows a preview editor when the description of a task contains html', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Shows a preview editor when the description of a task contains html', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: '<p>Lorem Ipsum dolor sit amet</p>',
@@ -421,7 +463,10 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it('Can add a new comment', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can add a new comment', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 			})
@@ -441,7 +486,10 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Can move a task to another project', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can move a task to another project', () => {
 			const projects = ProjectFactory.create(2)
 			const views = createDefaultViews(projects[0].id)
 			BucketFactory.create(2, {
@@ -471,7 +519,10 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Can delete a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can delete a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				project_id: 1,
@@ -494,7 +545,10 @@ describe('Task', () => {
 				.should('contain', `/projects/${tasks[0].project_id}/`)
 		})
 
-		it('Can add an assignee to a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can add an assignee to a task', () => {
 			const users = UserFactory.create(5)
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -523,7 +577,10 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it('Can remove an assignee from a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can remove an assignee from a task', () => {
 			const users = UserFactory.create(2)
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -550,7 +607,10 @@ describe('Task', () => {
 				.should('not.exist')
 		})
 
-		it('Can add a new label to a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can add a new label to a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				project_id: 1,
@@ -578,7 +638,10 @@ describe('Task', () => {
 				.should('contain', newLabelText)
 		})
 
-		it('Can add an existing label to a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can add an existing label to a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				project_id: 1,
@@ -591,7 +654,10 @@ describe('Task', () => {
 			addLabelToTaskAndVerify(labels[0].title)
 		})
 
-		it('Can add a label to a task and it shows up on the kanban board afterwards', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can add a label to a task and it shows up on the kanban board afterwards', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				project_id: projects[0].id,
@@ -619,7 +685,10 @@ describe('Task', () => {
 				.should('contain.text', labels[0].title)
 		})
 
-		it('Can remove a label from a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can remove a label from a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				project_id: 1,
@@ -647,7 +716,10 @@ describe('Task', () => {
 				.should('not.contain', labels[0].title)
 		})
 
-		it('Can set a due date for a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can set a due date for a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -676,7 +748,10 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Can set a due date to a specific date for a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can set a due date to a specific date for a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -712,7 +787,10 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Can change a due date to a specific date for a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can change a due date to a specific date for a task', () => {
 			const dueDate = new Date(2025, 2, 20)
 			dueDate.setHours(12)
 			dueDate.setMinutes(0)
@@ -756,7 +834,10 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Can paste an image into the description editor which uploads it as an attachment', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can paste an image into the description editor which uploads it as an attachment', () => {
 			TaskAttachmentFactory.truncate()
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -779,7 +860,10 @@ describe('Task', () => {
 				})
 		})
 
-		it('Can set a reminder', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can set a reminder', () => {
 			TaskReminderFactory.truncate()
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -803,7 +887,10 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Allows to set a relative reminder when the task already has a due date', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Allows to set a relative reminder when the task already has a due date', () => {
 			TaskReminderFactory.truncate()
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -832,7 +919,10 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Allows to set a relative reminder when the task already has a start date', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Allows to set a relative reminder when the task already has a start date', () => {
 			TaskReminderFactory.truncate()
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -861,7 +951,10 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Allows to set a custom relative reminder when the task already has a due date', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Allows to set a custom relative reminder when the task already has a due date', () => {
 			TaskReminderFactory.truncate()
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -897,7 +990,10 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Allows to set a fixed reminder when the task already has a due date', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Allows to set a fixed reminder when the task already has a due date', () => {
 			TaskReminderFactory.truncate()
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -927,7 +1023,10 @@ describe('Task', () => {
 				.should('contain', 'Success')
 		})
 
-		it('Can set a priority for a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can set a priority for a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 			})
@@ -949,7 +1048,10 @@ describe('Task', () => {
 				.should('have.value', '4')
 		})
 
-		it('Can set the progress for a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can set the progress for a task', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 			})
@@ -974,7 +1076,10 @@ describe('Task', () => {
 				.should('have.value', '0.5')
 		})
 
-		it('Can add an attachment to a task', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can add an attachment to a task', () => {
 			TaskAttachmentFactory.truncate()
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -984,7 +1089,10 @@ describe('Task', () => {
 			uploadAttachmentAndVerify(tasks[0].id)
 		})
 
-		it('Can add an attachment to a task and see it appearing on kanban', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can add an attachment to a task and see it appearing on kanban', () => {
 			TaskAttachmentFactory.truncate()
 			const tasks = TaskFactory.create(1, {
 				id: 1,
@@ -1013,7 +1121,10 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it('Can check items off a checklist', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Can check items off a checklist', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: `
@@ -1055,7 +1166,10 @@ describe('Task', () => {
 				.should('contain.text', '2 of 5 tasks')
 			})
 
-		it('Persists checked checklist items after reload', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Persists checked checklist items after reload', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: `
@@ -1092,7 +1206,10 @@ describe('Task', () => {
 				.should('be.checked')
 		})
 
-		it('Should use the editor to render description', () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Should use the editor to render description', () => {
 			const tasks = TaskFactory.create(1, {
 				id: 1,
 				description: `
@@ -1119,7 +1236,10 @@ describe('Task', () => {
 				.should('exist')
 		})
 
-		it('Should render an image from attachment', async () => {
+		// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+		it.skip('Should render an image from attachment', async () => {
 
 			TaskAttachmentFactory.truncate()
 

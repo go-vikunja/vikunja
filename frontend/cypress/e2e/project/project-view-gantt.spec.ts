@@ -9,7 +9,10 @@ describe('Project View Gantt', () => {
 	createFakeUserAndLogin()
 	prepareProjects()
 
-	it('Hides tasks with no dates', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Hides tasks with no dates', () => {
 		const tasks = TaskFactory.create(1)
 		cy.visit('/projects/1/2')
 
@@ -17,7 +20,10 @@ describe('Project View Gantt', () => {
 			.should('not.contain', tasks[0].title)
 	})
 
-	it('Shows tasks from the current and next month', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Shows tasks from the current and next month', () => {
 		const now = Date.UTC(2022, 8, 25)
 		cy.clock(now, ['Date'])
 
@@ -32,7 +38,10 @@ describe('Project View Gantt', () => {
 			.should('contain', dayjs(nextMonth).format('MMMM YYYY'))
 	})
 
-	it('Shows tasks with dates', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Shows tasks with dates', () => {
 		const now = new Date()
 		const tasks = TaskFactory.create(1, {
 			start_date: now.toISOString(),
@@ -45,7 +54,10 @@ describe('Project View Gantt', () => {
 			.should('contain', tasks[0].title)
 	})
 
-	it('Shows tasks with no dates after enabling them', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Shows tasks with no dates after enabling them', () => {
 		const tasks = TaskFactory.create(1, {
 			start_date: null,
 			end_date: null,
@@ -61,7 +73,10 @@ describe('Project View Gantt', () => {
 			.should('contain', tasks[0].title)
 	})
 
-	it('Drags a task around', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Drags a task around', () => {
 		cy.intercept(Cypress.env('API_URL') + '/tasks/*').as('taskUpdate')
 
 		const now = new Date()
@@ -108,7 +123,10 @@ describe('Project View Gantt', () => {
 		cy.wait('@taskUpdate')
 	})
 
-	it('Should change the query parameters when selecting a date range', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should change the query parameters when selecting a date range', () => {
 		const now = Date.UTC(2022, 10, 9)
 		cy.clock(now, ['Date'])
 
@@ -127,7 +145,10 @@ describe('Project View Gantt', () => {
 		cy.url().should('contain', 'dateTo=2022-11-05')
 	})
 
-	it('Should change the date range based on date query parameters', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should change the date range based on date query parameters', () => {
 		cy.visit('/projects/1/2?dateFrom=2022-09-25&dateTo=2022-11-05')
 
 		cy.get('.gantt-timeline-months')
@@ -138,7 +159,10 @@ describe('Project View Gantt', () => {
 			.should('have.value', '25 Sep 2022 to 5 Nov 2022')
 	})
 
-	it('Should open a task when double clicked on it', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should open a task when double clicked on it', () => {
 		const now = new Date()
 		const tasks = TaskFactory.create(1, {
 			start_date: dayjs(now).format(),

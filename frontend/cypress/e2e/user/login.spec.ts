@@ -31,7 +31,10 @@ context('Login', () => {
 		UserFactory.create(1, {username: credentials.username})
 	})
 
-	it('Should log in with the right credentials', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should log in with the right credentials', () => {
 		cy.visit('/login')
 		login()
 		cy.clock(1625656161057) // 13:00
@@ -47,7 +50,10 @@ context('Login', () => {
 		testAndAssertFailed(fixture)
 	})
 
-	it('Should fail with a bad username', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should fail with a bad username', () => {
 		const fixture = {
 			username: 'loremipsum',
 			password: '1234',
@@ -56,7 +62,10 @@ context('Login', () => {
 		testAndAssertFailed(fixture)
 	})
 	
-	it('Should redirect to /login when no user is logged in', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+	
+	it.skip('Should redirect to /login when no user is logged in', () => {
 		cy.visit('/')
 		cy.url().should('include', '/login')
 	})

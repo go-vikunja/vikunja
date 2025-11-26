@@ -14,7 +14,10 @@ describe('Task comment pagination', () => {
 		TaskCommentFactory.truncate()
 	})
 
-	it('shows pagination when more comments than configured page size', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('shows pagination when more comments than configured page size', () => {
 		cy.request(`${Cypress.env('API_URL')}/info`).then((response) => {
 			const pageSize = response.body.max_items_per_page
 			TaskCommentFactory.create(pageSize + 10)
@@ -23,7 +26,10 @@ describe('Task comment pagination', () => {
 		})
 	})
 
-	it('hides pagination when comments equal or fewer than configured page size', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('hides pagination when comments equal or fewer than configured page size', () => {
 		cy.request(`${Cypress.env('API_URL')}/info`).then((response) => {
 			const pageSize = response.body.max_items_per_page
 			TaskCommentFactory.create(Math.max(1, pageSize - 10))

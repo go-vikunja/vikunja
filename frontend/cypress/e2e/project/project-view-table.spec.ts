@@ -11,7 +11,10 @@ describe('Project View Table', () => {
 	createFakeUserAndLogin()
 	prepareProjects()
 
-	it('Should show a table with tasks', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should show a table with tasks', () => {
 		const tasks = TaskFactory.create(1)
 		cy.visit('/projects/1/3')
 
@@ -21,7 +24,10 @@ describe('Project View Table', () => {
 			.should('contain', tasks[0].title)
 	})
 
-	it('Should have working column switches', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should have working column switches', () => {
 		TaskFactory.create(1)
 		cy.visit('/projects/1/3')
 
@@ -43,7 +49,10 @@ describe('Project View Table', () => {
 			.should('not.exist')
 	})
 
-	it('Should navigate to the task when the title is clicked', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should navigate to the task when the title is clicked', () => {
 		const tasks = TaskFactory.create(5, {
 			id: '{increment}',
 			project_id: 1,
@@ -58,7 +67,10 @@ describe('Project View Table', () => {
 			.should('contain', `/tasks/${tasks[0].id}`)
 	})
 
-	it('Should respect filter query parameter from URL', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should respect filter query parameter from URL', () => {
 		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities()
 
 		cy.visit('/projects/1/3?filter=priority%20>=%204')
@@ -80,7 +92,10 @@ describe('Project View Table', () => {
 			.should('not.contain', lowPriorityTasks[1].title)
 	})
 
-	it('Should respect search query parameter from URL', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should respect search query parameter from URL', () => {
 		const {searchableTask} = createTasksWithSearch()
 
 		cy.visit('/projects/1/3?s=meeting')

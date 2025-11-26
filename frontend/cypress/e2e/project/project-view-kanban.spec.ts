@@ -63,7 +63,10 @@ describe('Project View Kanban', () => {
 		})
 	})
 
-	it('Shows all buckets with their tasks', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Shows all buckets with their tasks', () => {
 		const data = createTaskWithBuckets(buckets, 10)
 		cy.visit('/projects/1/4')
 
@@ -78,7 +81,10 @@ describe('Project View Kanban', () => {
 			.should('contain', data[0].title)
 	})
 
-	it('Can add a new task to a bucket', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Can add a new task to a bucket', () => {
 		createTaskWithBuckets(buckets, 2)
 		cy.visit('/projects/1/4')
 
@@ -97,7 +103,10 @@ describe('Project View Kanban', () => {
 			.should('contain', 'New Task')
 	})
 
-	it('Can create a new bucket', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Can create a new bucket', () => {
 		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket.new-bucket .button')
@@ -132,7 +141,10 @@ describe('Project View Kanban', () => {
 			.should('exist')
 	})
 
-	it('Can rename a bucket', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Can rename a bucket', () => {
 		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket .bucket-header .title')
@@ -143,7 +155,10 @@ describe('Project View Kanban', () => {
 			.should('contain', 'New Bucket Title')
 	})
 
-	it('Can delete a bucket', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Can delete a bucket', () => {
 		cy.visit('/projects/1/4')
 
 		cy.get('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger')
@@ -166,7 +181,10 @@ describe('Project View Kanban', () => {
 			.should('exist')
 	})
 
-	it('Can drag tasks around', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Can drag tasks around', () => {
 		const tasks = createTaskWithBuckets(buckets, 2)
 		cy.visit('/projects/1/4')
 
@@ -181,7 +199,10 @@ describe('Project View Kanban', () => {
 			.should('not.contain', tasks[0].title)
 	})
 
-	it('Should navigate to the task when the task card is clicked', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should navigate to the task when the task card is clicked', () => {
 		const tasks = createTaskWithBuckets(buckets, 5)
 		cy.visit('/projects/1/4')
 
@@ -194,7 +215,10 @@ describe('Project View Kanban', () => {
 			.should('contain', `/tasks/${tasks[0].id}`, {timeout: 1000})
 	})
 
-	it('Should remove a task from the kanban board when moving it to another project', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should remove a task from the kanban board when moving it to another project', () => {
 		const projects = ProjectFactory.create(2)
 		const views = ProjectViewFactory.create(2, {
 			project_id: '{increment}',
@@ -236,14 +260,20 @@ describe('Project View Kanban', () => {
 			.should('not.contain', task.title)
 	})
 
-	it('Shows a button to filter the kanban board', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Shows a button to filter the kanban board', () => {
 		cy.visit('/projects/1/4')
 
 		cy.get('.project-kanban .filter-container .base-button')
 			.should('exist')
 	})
 
-	it('Should remove a task from the board when deleting it', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should remove a task from the board when deleting it', () => {
 		const {task, view} = createSingleTaskInBucket(5)
 		cy.visit(`/projects/1/${view.id}`)
 
@@ -268,7 +298,10 @@ describe('Project View Kanban', () => {
 			.should('not.contain', task.title)
 	})
 
-	it('Should show a task description icon if the task has a description', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should show a task description icon if the task has a description', () => {
 		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: 'Lorem Ipsum',
@@ -281,7 +314,10 @@ describe('Project View Kanban', () => {
 			.should('exist')
 	})
 
-	it('Should not show a task description icon if the task has an empty description', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should not show a task description icon if the task has an empty description', () => {
 		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: '',
@@ -294,7 +330,10 @@ describe('Project View Kanban', () => {
 			.should('not.exist')
 	})
 
-	it('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should not show a task description icon if the task has a description containing only an empty p tag', () => {
 		cy.intercept(Cypress.env('API_URL') + '/projects/1/views/*/tasks**').as('loadTasks')
 		const {task, view} = createSingleTaskInBucket(1, {
 			description: '<p></p>',
@@ -307,7 +346,10 @@ describe('Project View Kanban', () => {
 			.should('not.exist')
 	})
 
-	it('Should respect filter query parameter from URL', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should respect filter query parameter from URL', () => {
 		const {highPriorityTasks, lowPriorityTasks} = createTasksWithPriorities(buckets)
 
 		cy.visit('/projects/1/4?filter=priority%20>=%204')
@@ -329,7 +371,10 @@ describe('Project View Kanban', () => {
 			.should('not.contain', lowPriorityTasks[1].title)
 	})
 
-	it('Should respect search query parameter from URL', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should respect search query parameter from URL', () => {
 		const {searchableTask} = createTasksWithSearch(buckets)
 
 		cy.visit('/projects/1/4?s=meeting')

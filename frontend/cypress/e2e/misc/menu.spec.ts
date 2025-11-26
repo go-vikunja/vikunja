@@ -7,25 +7,37 @@ describe('The Menu', () => {
 		cy.visit('/')
 	})
 
-	it('Is visible by default on desktop', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Is visible by default on desktop', () => {
 		cy.get('.menu-container')
 			.should('have.class', 'is-active')
 	})
 
-	it('Can be hidden on desktop', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Can be hidden on desktop', () => {
 		cy.get('button.menu-show-button:visible')
 			.click()
 		cy.get('.menu-container')
 			.should('not.have.class', 'is-active')
 	})
 
-	it('Is hidden by default on mobile', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Is hidden by default on mobile', () => {
 		cy.viewport('iphone-8')
 		cy.get('.menu-container')
 			.should('not.have.class', 'is-active')
 	})
 
-	it('Is can be shown on mobile', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Is can be shown on mobile', () => {
 		cy.viewport('iphone-8')
 		cy.get('button.menu-show-button:visible')
 			.click()

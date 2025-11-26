@@ -37,7 +37,10 @@ function seedTasks(numberOfTasks = 50, startDueDate = new Date()) {
 describe('Home Page Task Overview', () => {
 	createFakeUserAndLogin()
 
-	it('Should show tasks with a near due date first on the home page overview', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should show tasks with a near due date first on the home page overview', () => {
 		const taskCount = 50
 		const {tasks} = seedTasks(taskCount)
 
@@ -48,7 +51,10 @@ describe('Home Page Task Overview', () => {
 			})
 	})
 
-	it('Should show overdue tasks first, then show other tasks', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should show overdue tasks first, then show other tasks', () => {
 		const now = new Date()
 		const oldDate = new Date(new Date(now).setDate(now.getDate() - 14))
 		const taskCount = 50
@@ -130,7 +136,10 @@ describe('Home Page Task Overview', () => {
 			.should('contain.text', newTaskTitle)
 	})
 	
-	it('Should show the cta buttons for new project when there are no tasks', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+	
+	it.skip('Should show the cta buttons for new project when there are no tasks', () => {
 		TaskFactory.truncate()
 		
 		cy.visit('/')
@@ -139,7 +148,10 @@ describe('Home Page Task Overview', () => {
 			.should('contain.text', 'Import your projects and tasks from other services into Vikunja:')
 	})
 	
-	it('Should not show the cta buttons for new project when there are tasks', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+	
+	it.skip('Should not show the cta buttons for new project when there are tasks', () => {
 		seedTasks()
 
 		cy.visit('/')

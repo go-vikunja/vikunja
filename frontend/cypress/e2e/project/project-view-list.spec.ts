@@ -16,7 +16,10 @@ describe('Project View List', () => {
 	createFakeUserAndLogin()
 	prepareProjects()
 
-	it('Should be an empty project', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should be an empty project', () => {
 		cy.visit('/projects/1')
 		cy.url()
 			.should('contain', '/projects/1/1')
@@ -29,7 +32,10 @@ describe('Project View List', () => {
 			.should('exist')
 	})
 	
-	it('Should create a new task', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+	
+	it.skip('Should create a new task', () => {
 		BucketFactory.create(2, {
 			project_view_id: 4,
 		})
@@ -43,7 +49,10 @@ describe('Project View List', () => {
 			.should('contain.text', newTaskTitle)
 	})
 
-	it('Should navigate to the task when the title is clicked', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should navigate to the task when the title is clicked', () => {
 		const tasks = TaskFactory.create(5, {
 			id: '{increment}',
 			project_id: 1,
@@ -59,7 +68,10 @@ describe('Project View List', () => {
 			.should('contain', `/tasks/${tasks[0].id}`)
 	})
 
-	it('Should not see any elements for a project which is shared read only', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should not see any elements for a project which is shared read only', () => {
 		UserFactory.create(2)
 		UserProjectFactory.create(1, {
 			project_id: 2,
@@ -77,7 +89,10 @@ describe('Project View List', () => {
 			.should('not.exist')
 	})
 
-	it('Should only show the color of a project in the navigation and not in the list view', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should only show the color of a project in the navigation and not in the list view', () => {
 		const projects = ProjectFactory.create(1, {
 			hex_color: '00db60',
 		})
@@ -92,7 +107,10 @@ describe('Project View List', () => {
 			.should('not.exist')
 	})
 
-	it('Should paginate for > 50 tasks', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should paginate for > 50 tasks', () => {
 		const tasks = TaskFactory.create(100, {
 			id: '{increment}',
 			title: i => `task${i}`,
@@ -117,7 +135,10 @@ describe('Project View List', () => {
 			.should('not.contain', tasks[20].title)
 	})
 
-	it('Should show cross-project subtasks in their own project List view', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should show cross-project subtasks in their own project List view', () => {
 		const projects = createProjects(2)
 
 		const tasks = [
@@ -154,7 +175,10 @@ describe('Project View List', () => {
 			.should('contain', 'Subtask in Project B')
 	})
 
-	it('Should show same-project subtasks under their parent', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should show same-project subtasks under their parent', () => {
 		const projects = createProjects(1)
 
 		const tasks = [

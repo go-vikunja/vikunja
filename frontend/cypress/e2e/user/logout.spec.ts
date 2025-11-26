@@ -12,7 +12,10 @@ function logout() {
 describe('Log out', () => {
 	createFakeUserAndLogin()
 
-	it('Logs the user out', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Logs the user out', () => {
 		cy.visit('/')
 
 		expect(localStorage.getItem('token')).to.not.eq(null)

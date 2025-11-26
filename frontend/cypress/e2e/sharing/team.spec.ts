@@ -7,7 +7,10 @@ import {UserFactory} from '../../factories/user'
 describe('Team', () => {
 	createFakeUserAndLogin()
 
-    it('Creates a new team', () => {
+    // FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+    it.skip('Creates a new team', () => {
         TeamFactory.truncate()
         cy.visit('/teams')
 
@@ -32,7 +35,10 @@ describe('Team', () => {
             .should('have.value', newTeamName)
     })
 
-    it('Shows all teams', () => {
+    // FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+    it.skip('Shows all teams', () => {
         TeamMemberFactory.create(10, {
             team_id: '{increment}',
         })
@@ -50,7 +56,10 @@ describe('Team', () => {
         })
     })
 
-    it('Allows an admin to edit the team', () => {
+    // FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+    it.skip('Allows an admin to edit the team', () => {
         TeamMemberFactory.create(1, {
             team_id: 1,
             admin: true,
@@ -75,7 +84,10 @@ describe('Team', () => {
 			.should('contain', 'Success')
     })
 
-    it('Does not allow a normal user to edit the team', () => {
+    // FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+    it.skip('Does not allow a normal user to edit the team', () => {
         TeamMemberFactory.create(1, {
             team_id: 1,
             admin: false,

@@ -22,7 +22,9 @@ function prepareLinkShare() {
 }
 
 describe('Link shares', () => {
-	it('Can view a link share', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+	it.skip('Can view a link share', () => {
 		const {share, project, tasks} = prepareLinkShare()
 
 		cy.visit(`/share/${share.hash}/auth`)
@@ -37,7 +39,10 @@ describe('Link shares', () => {
 		cy.url().should('contain', `/projects/${project.id}/1#share-auth-token=${share.hash}`)
 	})
 
-	it('Should work when directly viewing a project with share hash present', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should work when directly viewing a project with share hash present', () => {
 		const {share, project, tasks} = prepareLinkShare()
 
 		cy.visit(`/projects/${project.id}/1#share-auth-token=${share.hash}`)
@@ -50,7 +55,10 @@ describe('Link shares', () => {
 			.should('contain', tasks[0].title)
 	})
 	
-	it('Should work when directly viewing a task with share hash present', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+	
+	it.skip('Should work when directly viewing a task with share hash present', () => {
 		const {share, project, tasks} = prepareLinkShare()
 
 		cy.visit(`/tasks/${tasks[0].id}#share-auth-token=${share.hash}`)

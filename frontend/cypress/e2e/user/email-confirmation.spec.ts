@@ -27,7 +27,10 @@ context('Email Confirmation', () => {
 		})
 	})
 
-	it('Should fail login before email is confirmed', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should fail login before email is confirmed', () => {
 		cy.visit('/login')
 		cy.get('input[id=username]').type(user.username)
 		cy.get('input[id=password]').type('1234')
@@ -36,7 +39,10 @@ context('Email Confirmation', () => {
 		cy.get('div.message.danger').contains('Email address of the user not confirmed')
 	})
 
-	it('Should confirm email and allow login', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should confirm email and allow login', () => {
 		// Intercept the confirmation API call
 		cy.intercept('POST', '**/user/confirm').as('confirmEmail')
 
@@ -67,7 +73,10 @@ context('Email Confirmation', () => {
 		cy.contains(user.username)
 	})
 
-	it('Should fail with invalid confirmation token', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should fail with invalid confirmation token', () => {
 		// Intercept the confirmation API call
 		cy.intercept('POST', '**/user/confirm').as('confirmEmail')
 
@@ -93,7 +102,10 @@ context('Email Confirmation', () => {
 		cy.get('div.message.danger').contains('Email address of the user not confirmed')
 	})
 
-	it('Should not allow using the same token twice', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should not allow using the same token twice', () => {
 		// Intercept the confirmation API call
 		cy.intercept('POST', '**/user/confirm').as('confirmEmail')
 
@@ -117,7 +129,10 @@ context('Email Confirmation', () => {
 		cy.get('.message.danger', {timeout: 10000}).should('be.visible')
 	})
 
-	it('Should confirm email when clicking link from email (via query parameter)', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should confirm email when clicking link from email (via query parameter)', () => {
 		// Intercept the confirmation API call
 		cy.intercept('POST', '**/user/confirm').as('confirmEmail')
 

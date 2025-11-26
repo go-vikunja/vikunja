@@ -10,7 +10,10 @@ describe('Projects', () => {
 	let projects
 	prepareProjects((newProjects) => (projects = newProjects))
 
-	it('Should create a new project', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should create a new project', () => {
 		cy.visit('/projects')
 		cy.get('.project-header [data-cy=new-project]')
 			.click()
@@ -32,7 +35,10 @@ describe('Projects', () => {
 			.should('contain', 'New Project')
 	})
 
-	it('Should redirect to a specific project view after visited', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should redirect to a specific project view after visited', () => {
 		cy.intercept(Cypress.env('API_URL') + '/projects/*/views/*/tasks**').as('loadBuckets')
 		cy.visit('/projects/1/4')
 		cy.url()
@@ -43,7 +49,10 @@ describe('Projects', () => {
 			.should('contain', '/projects/1/4')
 	})
 
-	it('Should rename the project in all places', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should rename the project in all places', () => {
 		TaskFactory.create(5, {
 			id: '{increment}',
 			project_id: 1,
@@ -79,7 +88,10 @@ describe('Projects', () => {
 			.should('not.contain', projects[0].title)
 	})
 
-	it('Should remove a project when deleting it', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should remove a project when deleting it', () => {
 		cy.visit(`/projects/${projects[0].id}`)
 
 		cy.get('.menu-container .menu-list li:first-child .dropdown .menu-list-dropdown-trigger')
@@ -101,7 +113,10 @@ describe('Projects', () => {
 			.should('equal', '/')
 	})
 
-	it('Should archive a project', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should archive a project', () => {
 		cy.visit(`/projects/${projects[0].id}`)
 
 		cy.get('.project-title-dropdown')
@@ -131,7 +146,10 @@ describe('Projects', () => {
 		})
 	})
 
-	it('Should not show archived projects if the filter is not checked', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should not show archived projects if the filter is not checked', () => {
 		ProjectFactory.create(1, {
 			id: 2,
 		}, false)

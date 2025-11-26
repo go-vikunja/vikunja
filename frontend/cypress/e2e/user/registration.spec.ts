@@ -14,7 +14,10 @@ context('Registration', () => {
 		})
 	})
 
-	it('Should work without issues', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should work without issues', () => {
 		const fixture = {
 			username: 'testuser',
 			password: '12345678',
@@ -31,7 +34,10 @@ context('Registration', () => {
 		cy.get('h2').should('contain', `Hi ${fixture.username}!`)
 	})
 
-	it('Should fail', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should fail', () => {
 		const fixture = {
 			username: 'test',
 			password: '12345678',

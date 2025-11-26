@@ -10,7 +10,10 @@ context('Password Reset', () => {
 		user = UserFactory.create(1)[0] as UserAttributes
 	})
 
-	it('Should allow a user to reset their password with a valid token', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should allow a user to reset their password with a valid token', () => {
 		const tokenArray = TokenFactory.create(1, {user_id: user.id as number, kind: 1})
 		const token: TokenAttributes = tokenArray[0] as TokenAttributes
 
@@ -32,7 +35,10 @@ context('Password Reset', () => {
 		cy.url().should('not.include', '/login')
 	})
 
-	it('Should show an error for an invalid token', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should show an error for an invalid token', () => {
 		cy.visit('/?userPasswordReset=invalidtoken123')
 		cy.url().should('include', '/password-reset?userPasswordReset=invalidtoken123')
 
@@ -44,14 +50,20 @@ context('Password Reset', () => {
 		cy.get('.message').should('contain', 'Invalid token')
 	})
 
-	it('Should redirect to login if no token is present in query param when visiting /password-reset directly', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should redirect to login if no token is present in query param when visiting /password-reset directly', () => {
 		cy.visit('/password-reset')
 		cy.url().should('not.include', '/password-reset')
 		cy.wait(1000) // Wait for the redirect to happen - this seems to be flaky in CI
 		cy.url().should('include', '/login')
 	})
 
-	it('Should redirect to login if userPasswordReset token is not present in query param when visiting root', () => {
+	// FIXME: Migrated to Playwright - skip to avoid duplication
+
+
+	it.skip('Should redirect to login if userPasswordReset token is not present in query param when visiting root', () => {
 		cy.visit('/')
 		cy.url().should('include', '/login')
 	})
