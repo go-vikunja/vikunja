@@ -68,7 +68,7 @@ test.describe('Team', () => {
 		await expect(page.locator('table.table td').filter({hasText: 'Member'})).toBeVisible()
 	})
 
-	// FIXME: Multiselect search results don't appear after typing username
+	// FIXME: Multiselect search results don't appear after typing username - search results locator not found
 	test.skip('Allows an admin to add members to the team', async ({authenticatedPage: page}) => {
 		await TeamMemberFactory.create(1, {
 			team_id: 1,

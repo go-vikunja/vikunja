@@ -96,7 +96,7 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.kanban .bucket .title').filter({hasText: 'New Bucket'})).toBeVisible()
 	})
 
-	// FIXME: Dropdown menu remains visible when it should be hidden, causing test to fail
+	// FIXME: Dropdown menu remains visible when it should be hidden - dropdown-menu still visible after action
 	test.skip('Can set a bucket limit', async ({authenticatedPage: page}) => {
 		await page.goto('/projects/1/4')
 

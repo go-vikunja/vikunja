@@ -102,8 +102,7 @@ test.describe('Projects', () => {
 		await expect(page.locator('main.app-content')).toContainText('This project is archived. It is not possible to create new or edit tasks for it.')
 	})
 
-	// FIXME: Intermittent API returns 500 Internal Server Error when seeding project_views table (race condition)
-	test.skip('Should show all projects on the projects page', async ({authenticatedPage: page}) => {
+	test('Should show all projects on the projects page', async ({authenticatedPage: page}) => {
 		const projects = await ProjectFactory.create(10)
 
 		await page.goto('/projects')

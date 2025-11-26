@@ -59,8 +59,7 @@ test.describe('Subtask duplicate handling', () => {
 		})
 	})
 
-	// FIXME: Intermittent API returns 500 Internal Server Error when seeding project_views table (race condition)
-	test.skip('shows subtask only once in each project list', async ({authenticatedPage: page}) => {
+	test('shows subtask only once in each project list', async ({authenticatedPage: page}) => {
 		await page.goto(`/projects/${projectA.id}/1`)
 		await expect(page.locator('.subtask-nested .task-link').filter({hasText: subtask.title})).toBeVisible()
 		await expect(page.locator('.tasks .task-link').filter({hasText: subtask.title})).toHaveCount(1)

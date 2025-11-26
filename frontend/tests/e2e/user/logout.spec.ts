@@ -28,7 +28,7 @@ test.describe('Log out', () => {
 		expect(tokenAfter).toBeNull()
 	})
 
-	// FIXME: Project history is not being stored in localStorage, test expects non-null but receives null
+	// FIXME: Project history is not being stored in localStorage - expects non-null but receives null
 	test.skip('Should clear the project history after logging the user out', async ({authenticatedPage: page, apiContext}) => {
 		const projects = await ProjectFactory.create(1)
 		await page.goto(`/projects/${projects[0].id}`)
