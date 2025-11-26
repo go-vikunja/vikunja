@@ -3,8 +3,7 @@ import {ProjectFactory} from '../../factories/project'
 import {ProjectViewFactory} from '../../factories/project_view'
 
 test.describe('Project History', () => {
-	// FIXME: API timeout waiting for /projects response - likely related to project_views table seeding issues
-	test.skip('should show a project history on the home page', async ({authenticatedPage: page}) => {
+	test('should show a project history on the home page', async ({authenticatedPage: page}) => {
 		test.setTimeout(60000)
 		const projects = await ProjectFactory.create(7)
 		await ProjectViewFactory.truncate()
@@ -13,9 +12,7 @@ test.describe('Project History', () => {
 			project_id: p.id,
 		}, false)))
 
-		const loadProjectArrayPromise = page.waitForResponse(response =>
-			response.url().includes('/projects') && !response.url().includes('/projects/'),
-		)
+		const loadProjectArrayPromise = page.waitForResponse('**/api/v1/projects*')
 		await page.goto('/')
 		await loadProjectArrayPromise
 		await expect(page.locator('body')).not.toContainText('Last viewed')
@@ -36,12 +33,7 @@ test.describe('Project History', () => {
 			)
 		}
 
-		// Not using goto here to work around the redirect issue fixed in #1337
-		const loadProjectArrayPromise2 = page.waitForResponse(response =>
-			response.url().includes('/projects') && !response.url().includes('/projects/'),
-		)
 		await page.locator('nav.menu.top-menu a').filter({hasText: 'Overview'}).click()
-		await loadProjectArrayPromise2
 
 		await expect(page.locator('body')).toContainText('Last viewed')
 		await expect(page.locator('.project-grid')).not.toContainText(projects[0].title)
