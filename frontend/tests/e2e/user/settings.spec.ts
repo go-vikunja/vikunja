@@ -44,11 +44,17 @@ test.describe('User Settings', () => {
 
 		// Wait for the settings page to be fully loaded and the input to be enabled
 		const nameInput = page.locator('.general-settings input.input').first()
-		await expect(nameInput).toBeVisible()
+		await expect(nameInput).toBeVisible({timeout: 10000})
 		await expect(nameInput).toBeEnabled()
 
-		await nameInput.fill('Lorem Ipsum')
-		await page.locator('[data-cy="saveGeneralSettings"]').filter({hasText: 'Save'}).click()
+		// Clear and type to ensure Vue's reactivity is triggered
+		await nameInput.clear()
+		await nameInput.pressSequentially('Lorem Ipsum', {delay: 10})
+
+		// The save button only appears when isDirty becomes true (settings changed)
+		const saveButton = page.locator('[data-cy="saveGeneralSettings"]')
+		await expect(saveButton).toBeVisible({timeout: 10000})
+		await saveButton.click()
 
 		await expect(page.locator('.global-notification')).toContainText('Success')
 		await expect(page.locator('.navbar .username-dropdown-trigger .username')).toContainText('Lorem Ipsum')
