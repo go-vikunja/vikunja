@@ -121,8 +121,21 @@ test.describe('Task', () => {
 		await TaskFactory.create(1)
 
 		await page.goto('/projects/1/1')
-		await page.locator('.tasks .task .favorite').first().click()
-		await expect(page.locator('.menu-container')).toContainText('Favorites')
+		await page.waitForLoadState('networkidle')
+
+		// Wait for tasks to be visible
+		const favoriteButton = page.locator('.tasks .task .favorite').first()
+		await expect(favoriteButton).toBeVisible({timeout: 10000})
+
+		// Wait for the favorite API response
+		const favoritePromise = page.waitForResponse(response =>
+			response.url().includes('/tasks/') && response.request().method() === 'POST',
+		)
+		await favoriteButton.click()
+		await favoritePromise
+
+		// The Favorites menu item should appear after a task is favorited
+		await expect(page.locator('.menu-container')).toContainText('Favorites', {timeout: 10000})
 	})
 
 	test('Should show a task description icon if the task has a description', async ({authenticatedPage: page}) => {
@@ -204,12 +217,13 @@ test.describe('Task', () => {
 			await page.setViewportSize({width: 375, height: 667}) // iphone-8
 
 			const tasks = await TaskFactory.create(1)
-			const loadTasksPromise = page.waitForResponse(response =>
-				response.url().includes('/projects/1/views/') && response.url().includes('/tasks'),
-			)
 			await page.goto('/projects/1/4')
-			await loadTasksPromise
-			await page.locator('.kanban-view .tasks .task').first().click()
+			await page.waitForLoadState('networkidle')
+
+			// Wait for kanban view and task to be visible
+			const taskLocator = page.locator('.kanban-view .tasks .task').first()
+			await expect(taskLocator).toBeVisible({timeout: 10000})
+			await taskLocator.click()
 			await expect(page.locator('.task-view .back-button')).toBeVisible()
 			await page.locator('.task-view .back-button').click()
 			await expect(page).toHaveURL(/\/projects\/1\/\d+/)
@@ -219,12 +233,13 @@ test.describe('Task', () => {
 			await page.setViewportSize({width: 1440, height: 900}) // macbook-15
 
 			const tasks = await TaskFactory.create(1)
-			const loadTasksPromise = page.waitForResponse(response =>
-				response.url().includes('/projects/1/views/') && response.url().includes('/tasks'),
-			)
 			await page.goto('/projects/1/4')
-			await loadTasksPromise
-			await page.locator('.kanban-view .tasks .task').first().click()
+			await page.waitForLoadState('networkidle')
+
+			// Wait for kanban view and task to be visible
+			const taskLocator = page.locator('.kanban-view .tasks .task').first()
+			await expect(taskLocator).toBeVisible({timeout: 10000})
+			await taskLocator.click()
 			await expect(page.locator('.task-view .back-button')).not.toBeVisible()
 		})
 
@@ -301,10 +316,20 @@ test.describe('Task', () => {
 				description: 'Lorem ipsum dolor sit amet.',
 			})
 			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
 
-			await page.locator('.task-view .details.content.description .tiptap button.done-edit').click()
-			await page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror').fill('New Description')
-			await page.locator('[data-cy="saveEditor"]').filter({hasText: 'Save'}).click()
+			// Wait for the edit button to be visible
+			const editButton = page.locator('.task-view .details.content.description .tiptap button.done-edit')
+			await expect(editButton).toBeVisible({timeout: 10000})
+			await editButton.click()
+
+			const editor = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+			await expect(editor).toBeVisible()
+			await editor.fill('New Description')
+
+			const saveButton = page.locator('[data-cy="saveEditor"]').filter({hasText: 'Save'})
+			await expect(saveButton).toBeVisible()
+			await saveButton.click()
 
 			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
 		})
@@ -439,7 +464,11 @@ test.describe('Task', () => {
 			await page.goto(`/tasks/${tasks[0].id}`)
 			await page.waitForLoadState('networkidle')
 
-			await page.locator('[data-cy="taskDetail.assign"]').click()
+			// Wait for the assign button to be visible
+			const assignButton = page.locator('[data-cy="taskDetail.assign"]')
+			await expect(assignButton).toBeVisible({timeout: 10000})
+			await assignButton.click()
+
 			const input = page.locator('.task-view .column.assignees .multiselect input')
 			const userToAssign = users[0]
 			// Use type/pressSequentially instead of fill to properly trigger Vue's input events
@@ -545,13 +574,21 @@ test.describe('Task', () => {
 			})
 
 			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
 
-			await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper')).toBeVisible()
-			await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper')).toContainText(labels[0].title)
-			await page.locator('.task-view .details.labels-list .multiselect .input-wrapper').locator('> *').first().locator('[data-cy="taskDetail.removeLabel"]').click()
+			const labelWrapper = page.locator('.task-view .details.labels-list .multiselect .input-wrapper')
+			await expect(labelWrapper).toBeVisible({timeout: 10000})
+			await expect(labelWrapper).toContainText(labels[0].title)
+
+			// Hover over the label to reveal the remove button
+			const labelItem = labelWrapper.locator('> *').first()
+			await labelItem.hover()
+			const removeButton = labelItem.locator('[data-cy="taskDetail.removeLabel"]')
+			await expect(removeButton).toBeVisible()
+			await removeButton.click()
 
 			await expect(page.locator('.global-notification')).toContainText('Success')
-			await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper')).not.toContainText(labels[0].title)
+			await expect(labelWrapper).not.toContainText(labels[0].title)
 		})
 
 		test('Can set a due date for a task', async ({authenticatedPage: page}) => {
@@ -560,11 +597,23 @@ test.describe('Task', () => {
 				done: false,
 			})
 			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
 
-			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Due Date'}).click()
-			await page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show').click()
-			await page.locator('.datepicker .datepicker-popup button').filter({hasText: 'Tomorrow'}).click()
-			await page.locator('[data-cy="closeDatepicker"]').filter({hasText: 'Confirm'}).click()
+			const setDueDateButton = page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Due Date'})
+			await expect(setDueDateButton).toBeVisible({timeout: 10000})
+			await setDueDateButton.click()
+
+			const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
+			await expect(datepickerShow).toBeVisible()
+			await datepickerShow.click()
+
+			const tomorrowButton = page.locator('.datepicker .datepicker-popup button').filter({hasText: 'Tomorrow'})
+			await expect(tomorrowButton).toBeVisible()
+			await tomorrowButton.click()
+
+			const confirmButton = page.locator('[data-cy="closeDatepicker"]').filter({hasText: 'Confirm'})
+			await expect(confirmButton).toBeVisible()
+			await confirmButton.click()
 
 			await expect(page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker-popup')).not.toBeVisible()
 			await expect(page.locator('.global-notification')).toContainText('Success')
@@ -576,11 +625,23 @@ test.describe('Task', () => {
 				done: false,
 			})
 			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
 
-			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Due Date'}).click()
-			await page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show').click()
-			await page.locator('.datepicker-popup .flatpickr-innerContainer .flatpickr-days .flatpickr-day.today').click()
-			await page.locator('[data-cy="closeDatepicker"]').filter({hasText: 'Confirm'}).click()
+			const setDueDateButton = page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Due Date'})
+			await expect(setDueDateButton).toBeVisible({timeout: 10000})
+			await setDueDateButton.click()
+
+			const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
+			await expect(datepickerShow).toBeVisible()
+			await datepickerShow.click()
+
+			const todayButton = page.locator('.datepicker-popup .flatpickr-innerContainer .flatpickr-days .flatpickr-day.today')
+			await expect(todayButton).toBeVisible()
+			await todayButton.click()
+
+			const confirmButton = page.locator('[data-cy="closeDatepicker"]').filter({hasText: 'Confirm'})
+			await expect(confirmButton).toBeVisible()
+			await confirmButton.click()
 
 			const today = new Date()
 			today.setHours(12)
@@ -609,11 +670,23 @@ test.describe('Task', () => {
 			today.setSeconds(0)
 
 			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
 
-			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Due Date'}).click()
-			await page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show').click()
-			await page.locator(`.datepicker-popup .flatpickr-innerContainer .flatpickr-days [aria-label="${today.toLocaleString('en-US', {month: 'long'})} ${today.getDate()}, ${today.getFullYear()}"]`).click()
-			await page.locator('[data-cy="closeDatepicker"]').filter({hasText: 'Confirm'}).click()
+			const setDueDateButton = page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Due Date'})
+			await expect(setDueDateButton).toBeVisible({timeout: 10000})
+			await setDueDateButton.click()
+
+			const datepickerShow = page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker .show')
+			await expect(datepickerShow).toBeVisible()
+			await datepickerShow.click()
+
+			const dateButton = page.locator(`.datepicker-popup .flatpickr-innerContainer .flatpickr-days [aria-label="${today.toLocaleString('en-US', {month: 'long'})} ${today.getDate()}, ${today.getFullYear()}"]`)
+			await expect(dateButton).toBeVisible()
+			await dateButton.click()
+
+			const confirmButton = page.locator('[data-cy="closeDatepicker"]').filter({hasText: 'Confirm'})
+			await expect(confirmButton).toBeVisible()
+			await confirmButton.click()
 
 			await expect(page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input .datepicker-popup')).not.toBeVisible()
 			await expect(page.locator('.task-view .columns.details .column').filter({hasText: 'Due Date'}).locator('.date-input')).toContainText(dayjs(today).fromNow())
