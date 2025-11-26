@@ -539,7 +539,7 @@
 							{{ $t('task.detail.actions.endDate') }}
 						</XButton>
 						<XButton
-							v-shortcut="'Alt+r'"
+							v-shortcut="reminderShortcut"
 							variant="secondary"
 							:icon="['far', 'clock']"
 							@click="setFieldActive('reminders')"
@@ -640,6 +640,7 @@ import Reactions from '@/components/input/Reactions.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
+import {isAppleDevice} from '@/helpers/isAppleDevice'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {playPopSound} from '@/helpers/playPop'
@@ -709,6 +710,10 @@ const lastProject = computed(() => {
 })
 
 const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.value)
+
+// Use Shift+R on macOS (Alt+R produces special characters depending on keyboard layout)
+// Use Alt+r on other platforms
+const reminderShortcut = computed(() => isAppleDevice() ? 'Shift+R' : 'Alt+r')
 
 onMounted(() => {
 	document.addEventListener('keydown', saveTaskViaHotkey)
