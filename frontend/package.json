@@ -115,7 +115,7 @@
     "@faker-js/faker": "9.9.0",
     "@histoire/plugin-screenshot": "1.0.0-alpha.5",
     "@histoire/plugin-vue": "1.0.0-alpha.5",
-    "@playwright/test": "1.56.1",
+    "@playwright/test": "^1.57.0",
     "@tsconfig/node22": "22.0.5",
     "@types/codemirror": "5.60.17",
     "@types/is-touch-device": "1.0.3",
