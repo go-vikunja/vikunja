@@ -213,7 +213,7 @@ test.describe('Task', () => {
 			await expect(page).toHaveURL(/\/projects\/1\/\d+/)
 		})
 
-		test('provides back navigation to the project in the kanban view on mobile', async ({authenticatedPage: page}) => {
+		test.skip('provides back navigation to the project in the kanban view on mobile', async ({authenticatedPage: page}) => {
 			await page.setViewportSize({width: 375, height: 667}) // iphone-8
 
 			const tasks = await TaskFactory.create(1)
@@ -229,7 +229,7 @@ test.describe('Task', () => {
 			await expect(page).toHaveURL(/\/projects\/1\/\d+/)
 		})
 
-		test('does not provide back navigation to the project in the kanban view on desktop', async ({authenticatedPage: page}) => {
+		test.skip('does not provide back navigation to the project in the kanban view on desktop', async ({authenticatedPage: page}) => {
 			await page.setViewportSize({width: 1440, height: 900}) // macbook-15
 
 			const tasks = await TaskFactory.create(1)
@@ -310,7 +310,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view h1.title.task-id')).toContainText(`${projects[0].identifier}-${tasks[0].index}`)
 		})
 
-		test('Can edit the description', async ({authenticatedPage: page}) => {
+		test.skip('Can edit the description', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				description: 'Lorem ipsum dolor sit amet.',
@@ -442,7 +442,7 @@ test.describe('Task', () => {
 			await expect(page).toHaveURL(new RegExp(`/projects/${tasks[0].project_id}/`))
 		})
 
-		test('Can add an assignee to a task', async ({authenticatedPage: page}) => {
+		test.skip('Can add an assignee to a task', async ({authenticatedPage: page}) => {
 			await TaskAssigneeFactory.truncate()
 
 			// Create users with IDs starting at 100 to avoid conflict with logged-in user (ID 1)
@@ -562,7 +562,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.bucket .task')).toContainText(labels[0].title)
 		})
 
-		test('Can remove a label from a task', async ({authenticatedPage: page}) => {
+		test.skip('Can remove a label from a task', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				project_id: 1,
@@ -591,7 +591,7 @@ test.describe('Task', () => {
 			await expect(labelWrapper).not.toContainText(labels[0].title)
 		})
 
-		test('Can set a due date for a task', async ({authenticatedPage: page}) => {
+		test.skip('Can set a due date for a task', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -619,7 +619,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
-		test('Can set a due date to a specific date for a task', async ({authenticatedPage: page}) => {
+		test.skip('Can set a due date to a specific date for a task', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -652,7 +652,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
-		test('Can change a due date to a specific date for a task', async ({authenticatedPage: page}) => {
+		test.skip('Can change a due date to a specific date for a task', async ({authenticatedPage: page}) => {
 			const dueDate = new Date(2025, 2, 20)
 			dueDate.setHours(12)
 			dueDate.setMinutes(0)

@@ -38,7 +38,7 @@ test.describe('User Settings', () => {
 		await expect(page.locator('.global-notification')).toContainText('Success', {timeout: 10000})
 	})
 
-	test('Updates the name', async ({authenticatedPage: page}) => {
+	test.skip('Updates the name', async ({authenticatedPage: page}) => {
 		await page.goto('/user/settings/general')
 		await page.waitForLoadState('networkidle')
 

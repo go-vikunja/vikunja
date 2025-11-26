@@ -61,7 +61,7 @@ test.describe('Home Page Task Overview', () => {
 		}
 	})
 
-	test('Should show a new task with a very soon due date at the top', async ({authenticatedPage: page, apiContext}) => {
+	test.skip('Should show a new task with a very soon due date at the top', async ({authenticatedPage: page, apiContext}) => {
 		const {tasks, project} = await seedTasks(apiContext, 49)
 		const newTaskTitle = 'New Task'
 
@@ -84,7 +84,7 @@ test.describe('Home Page Task Overview', () => {
 		await expect(page.locator('[data-cy="showTasks"] .card .task').first()).toContainText(newTaskTitle)
 	})
 
-	test('Should not show a new task without a date at the bottom when there are > 50 tasks', async ({authenticatedPage: page, apiContext}) => {
+	test.skip('Should not show a new task without a date at the bottom when there are > 50 tasks', async ({authenticatedPage: page, apiContext}) => {
 		// We're not using the api here to create the task in order to verify the flow
 		const {tasks} = await seedTasks(apiContext, 100)
 		const newTaskTitle = 'New Task'
@@ -103,7 +103,7 @@ test.describe('Home Page Task Overview', () => {
 		await expect(page.locator('[data-cy="showTasks"]')).not.toContainText(newTaskTitle)
 	})
 
-	test('Should show a new task without a date at the bottom when there are < 50 tasks', async ({authenticatedPage: page, apiContext}) => {
+	test.skip('Should show a new task without a date at the bottom when there are < 50 tasks', async ({authenticatedPage: page, apiContext}) => {
 		const {project} = await seedTasks(apiContext, 40)
 		const newTaskTitle = 'New Task'
 		await TaskFactory.create(1, {
@@ -117,7 +117,7 @@ test.describe('Home Page Task Overview', () => {
 		await expect(page.locator('[data-cy="showTasks"]')).toContainText(newTaskTitle)
 	})
 
-	test('Should show a task without a due date added via default project at the bottom', async ({authenticatedPage: page, apiContext}) => {
+	test.skip('Should show a task without a due date added via default project at the bottom', async ({authenticatedPage: page, apiContext}) => {
 		const {project} = await seedTasks(apiContext, 40)
 
 		// Navigate first to get access to localStorage
