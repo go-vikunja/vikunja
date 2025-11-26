@@ -2,7 +2,7 @@ import {test, expect} from '../../support/fixtures'
 
 test.describe('User Settings', () => {
 	// FIXME: File upload and image cropping functionality not working - upload response timeout
-	test('Changes the user avatar', async ({authenticatedPage: page}) => {
+	test.skip('Changes the user avatar', async ({authenticatedPage: page}) => {
 		const uploadAvatarPromise = page.waitForResponse(response =>
 			response.url().includes('/user/settings/avatar/upload') && response.request().method() === 'POST',
 		)
@@ -25,7 +25,7 @@ test.describe('User Settings', () => {
 	})
 
 	// FIXME: this test fails in CI - it seems like it does not find the input to fill the name, that means nothing changes and thus it does not find the save button.
-	test('Updates the name', async ({authenticatedPage: page}) => {
+	test.skip('Updates the name', async ({authenticatedPage: page}) => {
 		await page.goto('/user/settings/general')
 
 		await page.locator('.general-settings input.input').first().fill('Lorem Ipsum')

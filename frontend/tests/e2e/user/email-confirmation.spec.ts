@@ -38,7 +38,6 @@ test.describe('Email Confirmation', () => {
 		await expect(page.locator('div.message.danger')).toContainText('Email address of the user not confirmed')
 	})
 
-	// FIXME this seems to fail in CI - it does not enter anything and thus the login fails
 	test('Should confirm email and allow login', async ({page, apiContext}) => {
 		// Setup response promise for the confirmation API call
 		const confirmEmailPromise = page.waitForResponse(response =>
