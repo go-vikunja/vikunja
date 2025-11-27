@@ -92,7 +92,6 @@ test.describe('Project View Kanban', () => {
 		await page.locator('.kanban .bucket.new-bucket input.input').fill('New Bucket')
 		await page.locator('.kanban .bucket.new-bucket input.input').press('Enter')
 
-		await page.waitForTimeout(1000) // Wait for the request to finish
 		await expect(page.locator('.kanban .bucket .title').filter({hasText: 'New Bucket'})).toBeVisible()
 	})
 
