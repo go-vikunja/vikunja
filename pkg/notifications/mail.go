@@ -119,6 +119,24 @@ func (m *Mail) IsConversational() bool {
 	return m.conversational
 }
 
+
+
+
+
+// CreateConversationalHeader creates a GitHub-style header line with username, action, and task reference
+func CreateConversationalHeader(username, action, taskURL, projectTitle, taskTitle string) string {
+	return fmt.Sprintf(
+		`<div style="margin-bottom: 16px;"><strong>%s</strong> %s <a href="%s" style="color: #0969da; text-decoration: none;">(%s &gt; %s)</a></div>`,
+		username,
+		action,
+		taskURL,
+		projectTitle,
+		taskTitle,
+	)
+}
+
+
+
 func (m *Mail) appendLine(line string, isHTML bool) *Mail {
 	if m.actionURL == "" {
 		m.introLines = append(m.introLines, &mailLine{
