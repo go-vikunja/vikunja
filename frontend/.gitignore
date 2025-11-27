@@ -20,6 +20,8 @@ coverage
 # Test files
 cypress/screenshots
 cypress/videos
+playwright-report/
+test-results/
 
 # local env files
 .env.local
@@ -41,7 +43,3 @@ cypress/videos
 
 # histoire
 .histoire
-frontend/playwright-report/
-frontend/test-results/
-playwright-report/
-test-results/
