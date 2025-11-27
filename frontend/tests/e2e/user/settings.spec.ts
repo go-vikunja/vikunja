@@ -25,16 +25,17 @@ test.describe('User Settings', () => {
 		const uploadButton = page.locator('[data-cy="uploadAvatar"]')
 		await expect(uploadButton).toBeVisible()
 
-		// Listen for network requests
-		page.on('request', (request) => {
-			if (request.url().includes('avatar')) {
-				console.log('Request:', request.method(), request.url())
-			}
-		})
+		// Set up response waiter before clicking
+		const avatarUploadPromise = page.waitForResponse(response =>
+			response.url().includes('avatar') && response.request().method() === 'PUT',
+		)
 
 		await uploadButton.click()
 
-		// Wait for success notification instead of specific response
+		// Wait for the avatar upload response and verify it succeeded
+		const response = await avatarUploadPromise
+		expect(response.ok()).toBe(true)
+
 		await expect(page.locator('.global-notification')).toContainText('Success', {timeout: 10000})
 	})
 
