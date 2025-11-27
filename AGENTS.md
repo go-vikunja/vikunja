@@ -11,6 +11,14 @@ The project consists of:
 - `desktop/` – Electron wrapper application
 - `docs/` – Documentation website
 
+## Plans
+
+When the user asks you to create a plan to fix or implement something:
+
+- ALWAYS write that plan to the plans/ directory on the root of the repo.
+- NEVER commit plans to git
+- Give the plan a descriptive name
+
 ## Development Commands
 
 ### Backend (Go)
