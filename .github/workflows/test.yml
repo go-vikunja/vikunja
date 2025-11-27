@@ -430,15 +430,6 @@ jobs:
         image: ghcr.io/go-vikunja/dex-testing:main@sha256:d401c06a9f8fd36ece446a07499b827232af7f21eb36872a76c9eac4d0c77bab
         ports:
           - 5556:5556
-    strategy:
-      # when one test fails, DO NOT cancel the other
-      # containers, because this will kill Cypress processes
-      # leaving Cypress Cloud hanging ...
-      # https://github.com/cypress-io/github-action/issues/48
-      fail-fast: false
-      matrix:
-        # Only run parallel tests for non-fork PRs, single container for forks
-        containers: ${{ github.event.pull_request.head.repo.fork != true && fromJSON('[1, 2, 3, 4]') || fromJSON('[1]') }}
     container:
       image: cypress/browsers:latest@sha256:7331c596894429c9809c9a8bf92158224d151d5fa9736d14cf8e0268805a37ab
       options: --user 1001
@@ -461,7 +452,6 @@ jobs:
         timeout-minutes: 20
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           CYPRESS_API_URL: http://127.0.0.1:3456/api/v1
           CYPRESS_TEST_SECRET: averyLongSecretToSe33dtheDB
           CYPRESS_DEFAULT_COMMAND_TIMEOUT: 60000
@@ -482,8 +472,8 @@ jobs:
           install: false
           working-directory: frontend
           browser: chrome
-          record: ${{ github.event.pull_request.head.repo.fork != true }}
-          parallel: ${{ github.event.pull_request.head.repo.fork != true }}
+          record: false
+          parallel: false
           start: |
             pnpm run preview:vikunja
             pnpm run preview
