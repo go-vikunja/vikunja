@@ -7,6 +7,411 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [1.0.0-rc-3] - 2025-11-27
+
+### Bug Fixes
+
+* *(attachments)* Extend upload file size to form data (#1577)
+* *(caldav)* Remove METHOD:PUBLISH from caldav exports (#1576)
+* *(ci)* Comment on closed issues when closed by commit or PR
+* *(ci)* Download correct unstable binary during migration smoke test
+* *(ci)* Use correct quotes for commit description
+* *(ci)* Find closing PRs when they are not explicitly referenced
+* *(ci)* Don't run cypress tests in parallel when started from a fork (#1631)
+* *(ci)* Unxecpected token in issue close workflow
+* *(ci)* Remove blacksmith docker builder
+* *(ci)* Login to ghcr
+* *(components)* Handle null values in DatepickerWithValues
+* *(components)* Add generic constraints and null checks in AutocompleteDropdown
+* *(components)* Add type guards and null checks in Multiselect
+* *(components)* Add undefined checks in GanttChartPrimitive
+* *(components)* Use undefined instead of empty object in ImportHint
+* *(components)* Suppress complex union type error in Button.vue
+* *(components)* Correct FontAwesome icon format in TipTap.vue
+* *(components)* Add type guards and assertions in TipTap.vue
+* *(components)* Fix clipboard data null checks in TipTap.vue
+* *(components)* Use correct SetContentOptions in TipTap.vue
+* *(components)* Add type annotations for event parameters in TipTap.vue
+* *(components)* Add undefined checks in TipTap.vue
+* *(components)* Add type annotations in commands.ts
+* *(components)* Add type annotations in setLinkInEditor.ts
+* *(components)* Add type annotations in suggestion.ts
+* *(components)* Add type annotations in MentionList.vue
+* *(components)* Add type assertions in MentionUser.vue
+* *(components)* Use ts-expect-error in mentionSuggestion.ts
+* *(components)* Fix all type errors in FilterAutocomplete.ts
+* *(date parsing)* 12pm/12am edge case
+* *(date picker)* Hide "this weekend" option on Sunday after 9pm (#1813)
+* *(editor)* Prevent image insertion from triggering save (#1846)
+* *(editor)* Don't convert text that's pasted into a code block to markdown
+* *(editor)* Prevent upload overlay from intercepting text drag operations (#1890)
+* *(editor)* Preserve consecutive whitespace in comments in TipTap (#1893)
+* *(editor)* Close only editor when pressing escape
+* *(events)* Only trigger task.updated once when marking task done
+* *(filter)* Check date boundary after timezone conversion
+* *(filter)* Don't duplicate subtasks in list view
+* *(filter)* Restore cursor position when making changes
+* *(filters)* Support project filter in parentheses (#1647)
+* *(filters)* Handle multiple projects correctly in parsing, fixing autocomplete
+* *(kanban)* Repeating tasks dates won't update when moved in done bucket (#1638)
+* *(migration)* Add retry to migration request helper
+* *(migration)* Return proper error message when request fails
+* *(project)* Correctly set last project when navigating from a saved filter (#1642)
+* *(reminders)* Refactor and check permissions when fetching task users
+* *(rtl)* Put the menu to the correct side on rtl languages
+* *(rtl)* Make sure modals are centered
+* *(rtl)* Correct spacing for user avatar menu
+* *(sharing)* Make editing link share comments work
+* *(sharing)* Use the highest team sharing permission when sharing the same project with multiple teams (#1894)
+* *(table)* Label spacing when wrapping
+* *(task)* Go back to project or saved filter, depending on where the user came from
+* *(task)* Slash menu appearing behind modals (#1752)
+* *(test)* Prune leftover task duplicates
+* *(test)* Set cypress api url when running tests locally
+* *(test)* Correctly set fixed time in login test
+* *(user)* Race condition during email confirmation (#1575)
+* *(views)* Migrate filter bucket configuration
+* *(webhook)* Actually fetch project before enriching details
+* *(webhook)* Make sure the payload always contains a fully loaded project
+* Fix(menu): make sure dropdown menu changes direction when screen is too small
+
+Resolves https://github.com/go-vikunja/vikunja/issues/1523 ([32501bc](32501bc93b002951a2e7ab0048f64ceaa8424814))
+* Lint ([8c4fc47](8c4fc4780ed1d10d667bb57f3c32ef472844254e))
+* Position dropdown absolute, not fixed (#1552) ([a7eebaf](a7eebaffb07f96f50abd5c5b17d7e89fdce7aa6d))
+* Process multiple reminders in the same time window (#1564) ([ff8e98e](ff8e98e6e2626450106d4e75dfaa94ed61a0dff8))
+* Prevent keyboard events during IME composition (#1535) ([d7d3078](d7d3078de5a25a20c8938818dd5c4b675c71a3d4))
+* Correct case-sensitivity in duedate time parsing (#1613) ([c2e224d](c2e224dbb19ece72e72711d069704eefa9eae124))
+* Style lint ([28f9e5b](28f9e5b83b375aefd8a5a8cb9945a3c531dbad1c))
+* Task.comment.deleted triggers panic in event listener which sends webhook (#1621) ([db6b82a](db6b82a002b61558fb9010b18f2d372a4f451576))
+* Restore quick add magic modal close button on mobile (#1622) ([dd245cf](dd245cf35ef2b98dd9e80990710978a4cb4bb966))
+* Preserve link share hash on task back navigation (#1623) ([0c602d1](0c602d10b82b3ca86acda7c6a8c1cbfbc908d7b7))
+* Correctly set database path on windows (#1616) ([7da2942](7da2942ca6481995059dc194ea7ed1bfd1b91250))
+* Cleanup team memberships, assignments and subscriptions when users lose access to a project ([9358954](9358954c9043d305c639fa76fb764c60b6da5e2d))
+* Prevent duplicate CreateEdit submissions (#1541) ([4383948](438394827592d4a44d853779680db0bdca8ad512))
+* Show cross-project subtasks in List view (#1649) ([2977a11](2977a11a2ca6e305a5d34d194575c995b6351498))
+* 403 http error code on failed login (#1756) ([f83bd60](f83bd60915840d3241e18d9fd9b2cb6c0d6e8621))
+* Properly quote email sender names containing @ symbols (#1768) ([4fe0763](4fe07630107e6653b9292f7b8da27a2e2a155cbe))
+* Migrate Sentry integration to SDK v8 API (#1769) ([e424689](e424689ed9dc0760798c5a4d6018a15d67ab8d2e))
+* Ignore filter_include_nulls from views ([22fc19c](22fc19cd246b178e92c13e5c1044c4517b4e596a))
+* Downgrade tiptap to v3.8.0 to resolve editor crash (#1806) ([409edb8](409edb82c62399afd7acd47a551191cbda72615a))
+* Prevent date picker from selecting past times at hour breakpoints (#1814) ([7cd3f69](7cd3f69096b5c4ce0c3e9d8566b61310a78258b8))
+* Correctly store fetched task positions ([411cfbe](411cfbef92d6662b226f41b4b2e3b9a84138ea46))
+* Lint ([14c7bd8](14c7bd88f2e76bf1975676e93e26ccfbe312b3a0))
+* HTML entity double-escaping in email notifications (#1829) ([7729a3d](7729a3dcad2a512304dfd270a4b4092a5321a649))
+* Always allow dropping files ([3f1f92c](3f1f92c410f549662b5c116d17680e2bbd438bff))
+* Ensure project filters are retained correctly across views (#1643) ([2e3b2cb](2e3b2cb770cceeb5bb3969f9797a2e0abb9192aa))
+* Self-assignment notification to use "themselves" instead of repeating username (#1836) ([5f795bb](5f795bb531eefb1ada2d4597a47074af0e8fbc90))
+* Prevent panic in webhook listener when fetching project (#1848) ([9d06332](9d0633268a984733b23b345d354c18256d717aa1))
+* Don't hide filter icon on hover ([a76ff31](a76ff31dbcbf8e09652fc022313a70593759478d))
+* Remove empty style block from Label.vue ([e3ca310](e3ca310c056e466bfbf689baabe5b23bf8aa108b))
+* Update mention format to use custom HTML element with usernames (#1843) ([cfab3ff](cfab3ff92270e6b0add6c3190e47f54ea2ddf141))
+* Tycheck issues in Story ([6831f3c](6831f3c347d619f357ef2f6f589ab244fb9285a0))
+* Add pagination type ([21d9724](21d9724572fc239ea65675cf0950e861d9aea7d9))
+* Type issues with expandable ([a6d31da](a6d31dad0883f3c15b77cdb21cb3c00c1e6b307a))
+* Service worker types ([5b38a82](5b38a825e3cee383e5ca23276f90fb9fd2b2c569))
+* Event type ([3fadacb](3fadacbb76b334842a6c5cdcd69c514bafbb015f))
+* Types for DatepickerInline ([db531ab](db531ab1c45f0c5cf869171fbc503c5dad699714))
+* Types for Multiselect ([7543b3b](7543b3b5cdcd5f3f0c0a449cbb95811b759ef320))
+* Default language in App.vue types ([a89855a](a89855a9d19c8b0652982fecb6004e4914789518))
+* ContentAuth types ([4a2f961](4a2f961a778242d1ea98a0458bbea0af3b8ca4fb))
+* Return undefined instead of null in ContentLinkShare getProjectRoute() ([75dafd1](75dafd18e3f41282dde23cf5a8c8b656434f2f3a))
+* Add null checks and type assertion in ProjectsNavigation.vue ([8f062f2](8f062f21d8a7ee51b4ec95f94887d40242ce1682))
+* Add null checks for project.maxPermission in ProjectsNavigationItem.vue ([cdb39c9](cdb39c945cc1b41466c0100266648fd8cf10a0b8))
+* Add null/undefined checks for maxPermission in AppHeader.vue ([aadf0e4](aadf0e4c171a38c1e23b8ab6d4b2531d777518c5))
+* Add undefined checks and null coalescing in Datepicker.vue ([575cf14](575cf149b0c95bc0bf336ea6611967aa5aaf14d0))
+* Add comprehensive null/undefined checks in Reactions.vue ([3742234](3742234540e44bfd123596d58fdd334e91004b8e))
+* Initialize date ref with null instead of undefined in Datepicker.vue ([508f91a](508f91a97be43379c49ca91d6fd212b620770d25))
+* Use proper FontAwesome icon types in EditorToolbar.vue ([cc76b87](cc76b87b893f8d1eb3aa9b96f2da9cff3ae97fa3))
+* Handle readonly arrays and type conversions in DatepickerWithRange.vue ([618c85a](618c85a0a77168d250e7ad92e55f7685da300a0a))
+* Add null/undefined handling in GanttChart.vue ([83191eb](83191eb24d7100e6dab561a32f053b2fdc123ed4))
+* Add proper type definitions for CommandItem in CommandsList.vue ([4cd53c2](4cd53c204d48b617e4a4279609da840888428c0f))
+* Resolve readonly array type issue in Navigation.vue ([f67af55](f67af5520469c3b2cd639687b0b19b29a7d3d43e))
+* Resolve readonly project type issue in AppHeader.vue ([658946b](658946b02999b6b1c7ed6ebbe8c778daf5a6bd45))
+* Emit null ([4b46849](4b4684961baa31417886f722aacaa95cd355ab8c))
+* TickTick import (#1871) ([a4aad79](a4aad79f53f6cd4c2118d8f33f5d692da7ea3c00))
+* Don't try to switch to project 0 when reloading the page (#1855) ([f7acdf4](f7acdf4ac1fe41849bc2f9ec500ea7326c9e048c))
+* Use shift+r for reminder shortcut on apple devices ([2976d6f](2976d6f6767559a48a9ceb1a1111a0fc0924c1c0))
+
+### Dependencies
+
+* *(deps)* Update dependency @sentry/vue to v10.11.0 (#1485)
+* *(deps)* Update dependency axios to v1.12.0 [security] (#1487)
+* *(deps)* Update dependency @intlify/unplugin-vue-i18n to v11.0.1 (#1488)
+* *(deps)* Update module github.com/getsentry/sentry-go/echo to v0.35.2 (#1484)
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.14.0 (#1493)
+* *(deps)* Update dependency axios to v1.12.2 (#1495)
+* *(deps)* Update dependency marked to v16.3.0 (#1500)
+* *(deps)* Update pnpm to v10.16.1 (#1496)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.7.0 (#1497)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.35.3 (#1504)
+* *(deps)* Update dev-dependencies (#1316)
+* *(deps)* Update module github.com/getsentry/sentry-go/echo to v0.35.3 (#1505)
+* *(deps)* Update tiptap to v3.4.3 (#1506)
+* *(deps)* Update dependency @sentry/vue to v10.12.0 (#1515)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 046971a (#1514)
+* *(deps)* Update mariadb:12 docker digest to 8a061ef (#1512)
+* *(deps)* Update ghcr.io/go-vikunja/dex-testing:main docker digest to 5713289 (#1511)
+* *(deps)* Update dependency dompurify to v3.2.7 (#1517)
+* *(deps)* Update tiptap to v3.4.4 (#1519)
+* *(deps)* Update pnpm to v10.17.0 (#1521)
+* *(deps)* Update dev-dependencies (#1522)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to e7771c3 (#1525)
+* *(deps)* Update dev-dependencies (#1527)
+* *(deps)* Update module github.com/olekukonko/tablewriter to v1.1.0 (#1532)
+* *(deps)* Update tar-fs to 3.1.1
+* *(deps)* Update useblacksmith/build-push-action action to v2 (#1235)
+* *(deps)* Update pnpm to v10.17.1 (#1537)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 7ba49d1 (#1539)
+* *(deps)* Update tiptap to v3.4.5 (#1534)
+* *(deps)* Update dependency go to v1.25.1 (#1403)
+* *(deps)* Update dependency @sentry/vue to v10.13.0 (#1538)
+* *(deps)* Update dependency vue to v3.5.22 (#1558)
+* *(deps)* Update postgres:17 docker digest to cecd364 (#1557)
+* *(deps)* Update ghcr.io/go-vikunja/dex-testing:main docker digest to e374904 (#1556)
+* *(deps)* Update cypress/browsers:latest docker digest to 79a28dd (#1555)
+* *(deps)* Update actions/cache digest to 0057852 (#1554)
+* *(deps)* Pin useblacksmith/setup-docker-builder action to 80c45ee (#1553)
+* *(deps)* Update module github.com/jaswdr/faker/v2 to v2.8.1 (#1559)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.7.1 (#1560)
+* *(deps)* Update node.js to v22.20.0 (#1561)
+* *(deps)* Update dev-dependencies (#1563)
+* *(deps)* Update docker/login-action digest to 5e57cd1 (#1565)
+* *(deps)* Update tiptap to v3.6.2 (#1566)
+* *(deps)* Update module github.com/wneessen/go-mail to v0.7.2 (#1567)
+* *(deps)* Update dependency @sentry/vue to v10.16.0 (#1568)
+* *(deps)* Update dev-dependencies (#1569)
+* *(deps)* Update ghcr.io/go-vikunja/dex-testing:main docker digest to 738f7db (#1571)
+* *(deps)* Update postgres docker tag to v18 (#1562)
+* *(deps)* Update postgres:18 docker digest to ad98a3b (#1572)
+* *(deps)* Update dependency @sentry/vue to v10.17.0 (#1574)
+* *(deps)* Update dev-dependencies (#1578)
+* *(deps)* Update postgres:18 docker digest to 67a7c38 (#1579)
+* *(deps)* Update dev-dependencies (#1584)
+* *(deps)* Update mariadb:12 docker digest to 03a03a6 (#1592)
+* *(deps)* Update postgres:18 docker digest to 073e7c8 (#1583)
+* *(deps)* Update useblacksmith/build-push-action digest to 30c7116 (#1593)
+* *(deps)* Update useblacksmith/setup-docker-builder digest to 18cdb72 (#1594)
+* *(deps)* Update dependency tailwindcss to v3.4.18 (#1585)
+* *(deps)* Update module github.com/go-ldap/ldap/v3 to v3.4.12 (#1586)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 48d6b3f (#1582)
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.16.0 (#1597)
+* *(deps)* Update pnpm to v10.18.0 (#1596)
+* *(deps)* Update tiptap to v3.6.5 (#1595)
+* *(deps)* Update font awesome to v7.1.0 (#1587)
+* *(deps)* Update pnpm to v10.18.1 (#1598)
+* *(deps)* Update dependency marked to v16.4.0 (#1603)
+* *(deps)* Update softprops/action-gh-release digest to aec2ec5 (#1602)
+* *(deps)* Update dev-dependencies (#1601)
+* *(deps)* Update useblacksmith/setup-docker-builder digest to 6679018 (#1600)
+* *(deps)* Update dependency @sentry/vue to v10.18.0 (#1606)
+* *(deps)* Update ghcr.io/go-vikunja/dex-testing:main docker digest to d401c06 (#1604)
+* *(deps)* Update dependency go to v1.25.2 (#1607)
+* *(deps)* Update pnpm/action-setup digest to 41ff726 (#1609)
+* *(deps)* Update cypress/browsers:latest docker digest to 1f1adf3 (#1608)
+* *(deps)* Update module golang.org/x/oauth2 to v0.32.0 (#1611)
+* *(deps)* Update module golang.org/x/sys to v0.37.0 (#1612)
+* *(deps)* Update useblacksmith/setup-docker-builder digest to 78f4168 (#1617)
+* *(deps)* Update module golang.org/x/crypto to v0.43.0 (#1618)
+* *(deps)* Update module golang.org/x/image to v0.32.0 (#1619)
+* *(deps)* Update node.js to 605dc0b (#1626)
+* *(deps)* Update docker/dockerfile:1 docker digest to b6afd42 (#1624)
+* *(deps)* Update dev-dependencies (#1625)
+* *(deps)* Update node.js to dbcedd8 (#1627)
+* *(deps)* Update dependency @sentry/vue to v10.19.0 (#1632)
+* *(deps)* Update tiptap to v3.6.6 (#1633)
+* *(deps)* Update mariadb:12 docker digest to 5b6a1ea (#1634)
+* *(deps)* Update dependency @types/node to v22.18.9 (#1635)
+* *(deps)* Update pnpm to v10.18.2 (#1636)
+* *(deps)* Update dependency happy-dom to v20 [security] (#1640)
+* *(deps)* Update softprops/action-gh-release digest to 6da8fa9 (#1641)
+* *(deps)* Update actions/setup-node action to v6 (#1654)
+* *(deps)* Update pnpm to v10.18.3 (#1655)
+* *(deps)* Update dependency go to v1.25.3 (#1653)
+* *(deps)* Update dev-dependencies (#1644)
+* *(deps)* Update tiptap to v3.6.7 (#1656)
+* *(deps)* Update dependency dompurify to v3.3.0 (#1651)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.36.0 (#1658)
+* *(deps)* Update tiptap to v3.7.0 (#1660)
+* *(deps)* Update dependency vue-router to v4.6.0 (#1657)
+* *(deps)* Update module github.com/getsentry/sentry-go/echo to v0.36.0 (#1659)
+* *(deps)* Update dependency @sentry/vue to v10.20.0 (#1666)
+* *(deps)* Update dependency vue-router to v4.6.2 (#1665)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 11e1827 (#1661)
+* *(deps)* Update dependency happy-dom to v20.0.2 [security] (#1668)
+* *(deps)* Update dev-dependencies (#1662)
+* *(deps)* Update dependency marked to v16.4.1 (#1677)
+* *(deps)* Update dev-dependencies (#1676)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 4f5d59a (#1675)
+* *(deps)* Update dependency vue-router to v4.6.3 (#1671)
+* *(deps)* Update tiptap to v3.7.2 (#1669)
+* *(deps)* Update cypress/browsers:latest docker digest to f47e21d (#1674)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 842e7ed (#1678)
+* *(deps)* Update cypress/browsers:latest docker digest to b7d45cd (#1680)
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.14.1 (#1681)
+* *(deps)* Update dev-dependencies (#1682)
+* *(deps)* Pin docker/build-push-action action to 2634353 (#1683)
+* *(deps)* Update dev-dependencies (#1686)
+* *(deps)* Update crowdin/github-action digest to 08713f0 (#1687)
+* *(deps)* Update module xorm.io/xorm to v1.3.11 (#1689)
+* *(deps)* Update paradedb/paradedb:latest-pg17 docker digest to 741010e (#1691)
+* *(deps)* Update node.js to v22.21.0 (#1693)
+* *(deps)* Update dev-dependencies (#1692)
+* *(deps)* Update module github.com/cweill/gotests to v1.8.0 (#1694)
+* *(deps)* Update dev-dependencies (#1700)
+* *(deps)* Update module github.com/getsentry/sentry-go/echo to v0.36.1 (#1701)
+* *(deps)* Pin docker/login-action action to 5e57cd1 (#1698)
+* *(deps)* Update postgres:18 docker digest to b5b154c (#1695)
+* *(deps)* Update postgres:18 docker digest to 33d0aae (#1705)
+* *(deps)* Update dependency @sentry/vue to v10.21.0 (#1706)
+* *(deps)* Update pnpm to v10.19.0 (#1704)
+* *(deps)* Update node.js to v22.21.0 (#1703)
+* *(deps)* Update vueuse to v14 (major) (#1707)
+* *(deps)* Update postgres:18 docker digest to 7499fa0 (#1709)
+* *(deps)* Update postgres:18 docker digest to 1ffc019 (#1715)
+* *(deps)* Update tiptap to v3.8.0 (#1713)
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.16.0 (#1710)
+* *(deps)* Update dev-dependencies (#1708)
+* *(deps)* Update cypress/browsers:latest docker digest to 1b0e8df (#1697)
+* *(deps)* Update github artifact actions (major) (#1719)
+* *(deps)* Update dependency axios to v1.13.0 (#1720)
+* *(deps)* Update tiptap to v3.9.0 (#1723)
+* *(deps)* Update module github.com/getsentry/sentry-go/echo to v0.36.2 (#1722)
+* *(deps)* Update node.js to v24 (#1721)
+* *(deps)* Update dependency @sentry/vue to v10.22.0 (#1712)
+* *(deps)* Update dependency @kyvg/vue3-notification to v3.4.2 (#1726)
+* *(deps)* Update dependency axios to v1.13.1 (#1727)
+* *(deps)* Update pnpm to v10.20.0 (#1732)
+* *(deps)* Update tiptap to v3.9.1 (#1731)
+* *(deps)* Update module github.com/gabriel-vasile/mimetype to v1.4.11 (#1730)
+* *(deps)* Update dependency dayjs to v1.11.19 (#1736)
+* *(deps)* Update cypress/browsers:latest docker digest to 368e300 (#1734)
+* *(deps)* Update golangci-lint to 2.6.0 (#1737)
+* *(deps)* Update dev-dependencies (#1740)
+* *(deps)* Update postgres:18 docker digest to 6f3e42a (#1742)
+* *(deps)* Update dependency axios to v1.13.2 (#1748)
+* *(deps)* Update dependency @cypress/vite-dev-server to v7.0.1 (#1750)
+* *(deps)* Update cypress/browsers:latest docker digest to 33dbe61 (#1749)
+* *(deps)* Update dependency pinia to v3.0.4 (#1753)
+* *(deps)* Update dependency @sentry/vue to v10.23.0 (#1755)
+* *(deps)* Update docker/setup-qemu-action digest to c7c5346 (#1757)
+* *(deps)* Update tiptap to v3.10.2 (#1735)
+* *(deps)* Update dependency go to v1.25.4 (#1758)
+* *(deps)* Pin bitnamilegacy/minio docker tag to 451fe68 (#1759)
+* *(deps)* Update dependency vue to v3.5.23 (#1760)
+* *(deps)* Update dependency marked to v16.4.2 (#1767)
+* *(deps)* Update actions/download-artifact action to v6 (#1764)
+* *(deps)* Update postgres:18 docker digest to 41fc534 (#1751)
+* *(deps)* Update mariadb:12 docker digest to 439d77b (#1776)
+* *(deps)* Update docker/metadata-action digest to 318604b (#1744)
+* *(deps)* Update module github.com/olekukonko/tablewriter to v1.1.1 (#1778)
+* *(deps)* Update softprops/action-gh-release digest to 5be0e66 (#1777)
+* *(deps)* Update tiptap to v3.10.5 (#1773)
+* *(deps)* Update dependency vue to v3.5.24 (#1772)
+* *(deps)* Update pnpm to v10.21.0 (#1779)
+* *(deps)* Update module golang.org/x/sync to v0.18.0 (#1784)
+* *(deps)* Update node.js to v24.11.1 (#1787)
+* *(deps)* Update module golang.org/x/oauth2 to v0.33.0 (#1782)
+* *(deps)* Update module github.com/go-testfixtures/testfixtures/v3 to v3.19.0 (#1718)
+* *(deps)* Update module golang.org/x/crypto to v0.44.0 (#1789)
+* *(deps)* Update golangci/golangci-lint-action action to v9 (#1796)
+* *(deps)* Update module golang.org/x/image to v0.33.0 (#1791)
+* *(deps)* Update dev-dependencies (#1790)
+* *(deps)* Update module github.com/cweill/gotests to v1.9.0 (#1733)
+* *(deps)* Update cypress/browsers:latest docker digest to e85371f (#1798)
+* *(deps)* Update module golang.org/x/net to v0.47.0 (#1792)
+* *(deps)* Update module github.com/jaswdr/faker/v2 to v2.9.0 (#1783)
+* *(deps)* Update pnpm to v10.22.0 (#1800)
+* *(deps)* Update dependency @sentry/vue to v10.25.0 (#1780)
+* *(deps)* Pin actions/create-github-app-token action to d72941d (#1801)
+* *(deps)* Update node.js to v24.11.1 (#1804)
+* *(deps)* Update actions/create-github-app-token action to v2 (#1809)
+* *(deps)* Update node.js to 54dfcc1 (#1811)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.37.0 (#1818)
+* *(deps)* Update mariadb:12 docker digest to 607835c (#1817)
+* *(deps)* Update postgres:18 docker digest to 28bda6d (#1816)
+* *(deps)* Update node.js to 2867d55 (#1815)
+* *(deps)* Update module github.com/getsentry/sentry-go/echo to v0.37.0 (#1819)
+* *(deps)* Update dev-dependencies (#1822)
+* *(deps)* Update postgres:18 docker digest to 435fe97 (#1821)
+* *(deps)* Update dev-dependencies (#1830)
+* *(deps)* Update module github.com/getsentry/sentry-go/echo to v0.38.0 (#1835)
+* *(deps)* Update postgres:18 docker digest to 41bfa2e (#1824)
+* *(deps)* Update dev-dependencies (#1832)
+* *(deps)* Update actions/checkout digest to 93cb6ef (#1838)
+* *(deps)* Update postgres:18 docker digest to 5ec39c1 (#1842)
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.17.0 (#1850)
+* *(deps)* Update module golang.org/x/crypto to v0.45.0 (#1851)
+* *(deps)* Update mariadb:12 docker digest to e1bcd6f (#1856)
+* *(deps)* Update module github.com/coreos/go-oidc/v3 to v3.17.0 (#1859)
+* *(deps)* Update golangci/golangci-lint-action digest to e7fa5ac (#1860)
+* *(deps)* Update actions/checkout action to v6 (#1854)
+* *(deps)* Update cypress/browsers:latest docker digest to 7331c59 (#1852)
+* *(deps)* Update actions/setup-go digest to 4dc6199 (#1853)
+* *(deps)* Update actions/create-github-app-token digest to 7e473ef (#1862)
+* *(deps)* Update dev-dependencies
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.17.1 (#1881)
+* *(deps)* Update dependency workbox-precaching to v7.4.0 (#1879)
+* *(deps)* Update actions/checkout digest to 93cb6ef (#1885)
+* *(deps)* Pin mcr.microsoft.com/playwright docker tag to 6aca677 (#1884)
+* *(deps)* Update pnpm to v10.23.0 (#1877)
+* *(deps)* Update dependency marked to v17 (#1797)
+* *(deps)* Update docker/metadata-action digest to c299e40 (#1887)
+* *(deps)* Update module github.com/getsentry/sentry-go to v0.40.0 (#1892)
+* *(deps)* Update dependency vue-i18n to v11.2.1 (#1891)
+* *(deps)* Update module github.com/labstack/echo-jwt/v4 to v4.4.0 (#1896)
+* *(deps)* Update dependency vue to v3.5.25 (#1888)
+* *(deps)* Update module github.com/getsentry/sentry-go/echo to v0.40.0 (#1895)
+* *(deps)* Update actions/checkout action to v6 (#1897)
+* *(deps)* Update dependency @sentry/vue to v10.26.0 (#1878)
+
+### Documentation
+
+* Fix sticker link ([869bb6e](869bb6e014ca15fee60ead33e6d65ace78369ac8))
+* Update AI instructions about plans ([4de4951](4de49512b068141c9b3989d930618ca8659ab173))
+
+### Features
+
+* *(ci)* Change s3 service
+* *(ci)* Publish docker images to ghcr as well
+* *(ci)* Run database docker images only when needed (#1696)
+* *(ci)* Update Docker PR push build strategy for forked PRs (#1812)
+* *(editor)* Automatically save draft comments locally (#1868)
+* Add S3 file storage support (#1688) ([bc1368a](bc1368abcc2c2e4aaf8bad50d080dc622299cafe))
+* Enable user mentions in task description & comments (#1754) ([43a5ae1](43a5ae13096fa454889d48698abfd429572f4d5f))
+* Show avatar for mentioned users ([435d029](435d029f33e4b0d38c72b378288abc81a56d5f64))
+* Add comment count to tasks (#1771) ([01a84dd](01a84dd2d5de8548ddaec9d3236e0ccd61aadf68))
+* Allow setting dark custom logo ([dcfd096](dcfd0965889e2c6a92d617c6c05c15aec4d3646b))
+* Replace PNG-based initials avatar with SVG generation (#1802) ([9c81afb](9c81afb7b29833e4fa4a025df06d3d3b3c312137))
+* Add PR Docker image builds for x86_64 (#1810) ([cf8ad52](cf8ad52a27485655bb79453e6dc361e89abb9faf))
+* Add time display with configurable format (12h/24h) to non-relative date formats (#1807) ([650fb94](650fb949782fd9d5256d6a8d994e5389d767b0ca))
+* Add clickable labels on Labels page for task filtering (#1825) ([6903bb6](6903bb67c71c3cc865d5af3ea885f23a8bf51e1a))
+* Add thread IDs to task notification emails for client-side threading (#1826) ([f2a1348](f2a1348c5182c0c96ff9c8695b0450da85ef3d9e))
+* Hide link share creation form by default in sharing dialogue (#1827) ([25827f4](25827f432ea36286ee0f7768750b06047dd90570))
+* Display assignee names on mobile for accessibility (#1828) ([d057afb](d057afb7810266472abbd3fe303b0172d8de0d7d))
+* Restrict attachment drop to files ([85fc8ff](85fc8fffd4b4210ff1f709cf99ebabdaa3ee9ee9))
+* Show task card preview when hovering over task title in list and table view (#1863) ([2bc2311](2bc2311212a2d3b1c8497c202ed96cda2b326136))
+* Task unread tracking (#1857) ([7dddc5d](7dddc5dfa2ea82e883da8daa4deaf5eb3d4aa382))
+* Migrate cypress e2e tests to playwright (#1739) ([51512c1](51512c1cb41111496912e80c4cb64618dcc1d108))
+
+### Miscellaneous Tasks
+
+* *(ci)* Use github app to handle issue closed comments
+* *(ci)* Add debug log
+* *(i18n)* Update translations via Crowdin
+* *(i18n)* Add Traditional Chinese locale and translations (#1839)
+* *(i18n)* Update translations via Crowdin
+* Make condition simpler ([d33e742](d33e742961479e5f07f0cdb2e1969d3b32c4d48d))
+* Reorganize mention setup ([0d83a56](0d83a568ce6dd5382a97d227660253ecd7bdccf9))
+* Copy useDropZone from vueuse ([abbf2ce](abbf2ce1838dbb4114e5ea3bf0ba5c78762834de))
+* Delete frontend/package-lock.json ([d5a4631](d5a46310a7b84c4ff9add156994d9f5e213d566e))
+* Add TYPECHECK_ISSUES.md to .gitignore ([8e089f5](8e089f578934e1a44d8a213787f622f65310887b))
+* Update devenv ([8bcd7ec](8bcd7ec5f5d0c039834c4c77a9dac27971263c23))
+
+### Other
+
+* *(other)* [skip ci] Updated swagger docs
+* *(other)* Use Cmd+K for quick actions on macOS instead of Ctrl+K (#1837)
+
 ## [1.0.0-rc2] - 2025-09-12
 
 ### Bug Fixes
