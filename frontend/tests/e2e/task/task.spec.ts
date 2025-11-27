@@ -53,6 +53,7 @@ interface Label {
 
 interface Bucket {
 	id: number;
+	project_view_id: number;
 }
 
 async function addLabelToTaskAndVerify(page: Page, labelTitle: string) {
