@@ -173,7 +173,7 @@
 
 <script setup lang="ts">
 import {ref, shallowReactive, computed, watch} from 'vue'
-import {useDropZone} from '@/composables/useDropzone'
+import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
