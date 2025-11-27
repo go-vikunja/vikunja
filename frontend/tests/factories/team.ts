@@ -8,8 +8,8 @@ export class TeamFactory extends Factory {
         const now = new Date()
 
         return {
-            name: faker.lorem.words(3),
-            created_by_id: 1,
+			name: faker.lorem.words(3),
+			created_by_id: 1,
 			created: now.toISOString(),
 			updated: now.toISOString(),
         }
