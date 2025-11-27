@@ -53,22 +53,13 @@ const tooltip = computed(() => t('task.attributes.comment', props.task.commentCo
 
 		.unread-indicator {
 			display: inline-block;
-			inline-size: 6px;
-			block-size: 6px;
+			inline-size: 0.375rem;
+			block-size: 0.375rem;
 			background-color: var(--primary);
 			border-radius: 50%;
-			margin-inline-start: 2px;
+			margin-inline-start: 0.125rem;
 			animation: pulse 2s infinite;
 		}
-	}
-}
-
-@keyframes pulse {
-	0%, 100% {
-		opacity: 1;
-	}
-	50% {
-		opacity: 0.6;
 	}
 }
 </style>

@@ -49,12 +49,7 @@ func (t *TaskUnreadStatus) CanUpdate(_ *xorm.Session, _ web.Auth) (bool, error) 
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{projecttask}/read [post]
 func (t *TaskUnreadStatus) Update(s *xorm.Session, a web.Auth) error {
-	err := markTaskAsRead(s, t.TaskID, a)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return markTaskAsRead(s, t.TaskID, a)
 }
 
 func markTaskAsRead(s *xorm.Session, taskID int64, a web.Auth) error {
