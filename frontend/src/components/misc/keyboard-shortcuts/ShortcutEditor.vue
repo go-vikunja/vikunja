@@ -187,7 +187,7 @@ function resetToDefault() {
 	align-items: center;
 	justify-content: space-between;
 	padding: 1rem;
-	border-bottom: 1px solid var(--grey-200);
+	border-block-end: 1px solid var(--grey-200);
 }
 
 .shortcut-editor.is-disabled {
@@ -220,7 +220,7 @@ function resetToDefault() {
 }
 
 .key-capture-input {
-	min-width: 200px;
+	min-inline-size: 200px;
 	padding: 0.5rem;
 	border: 2px solid var(--primary);
 	border-radius: 4px;
@@ -231,6 +231,6 @@ function resetToDefault() {
 .help.is-danger {
 	color: var(--danger);
 	font-size: 0.875rem;
-	margin-top: 0.25rem;
+	margin-block-start: 0.25rem;
 }
 </style>

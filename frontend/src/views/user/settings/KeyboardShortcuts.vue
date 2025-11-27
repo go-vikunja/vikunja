@@ -116,33 +116,33 @@ async function resetAll() {
 
 <style scoped>
 .keyboard-shortcuts-settings {
-	max-width: 800px;
+	max-inline-size: 800px;
 }
 
 header {
-	margin-bottom: 2rem;
+	margin-block-end: 2rem;
 }
 
 header h2 {
-	margin-bottom: 0.5rem;
+	margin-block-end: 0.5rem;
 }
 
 header .help {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 	color: var(--text-light);
 }
 
 .shortcut-group {
-	margin-bottom: 2rem;
+	margin-block-end: 2rem;
 }
 
 .group-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 1rem;
-	padding-bottom: 0.5rem;
-	border-bottom: 2px solid var(--grey-200);
+	margin-block-end: 1rem;
+	padding-block-end: 0.5rem;
+	border-block-end: 2px solid var(--grey-200);
 }
 
 .group-header h3 {
@@ -158,6 +158,6 @@ header .help {
 }
 
 .shortcuts-list > :last-child {
-	border-bottom: none;
+	border-block-end: none;
 }
 </style>

@@ -100,7 +100,7 @@ function getEffectiveKeys(shortcut: ShortcutAction): string[] {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	width: 100%;
+	inline-size: 100%;
 }
 
 .help-header h2 {
@@ -108,9 +108,9 @@ function getEffectiveKeys(shortcut: ShortcutAction): string[] {
 }
 
 .help-text {
-	margin-top: 1rem;
-	padding-top: 1rem;
-	border-top: 1px solid var(--grey-200);
+	margin-block-start: 1rem;
+	padding-block-start: 1rem;
+	border-block-start: 1px solid var(--grey-200);
 	color: var(--text-light);
 	font-size: 0.875rem;
 }
