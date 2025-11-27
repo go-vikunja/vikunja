@@ -155,9 +155,6 @@
                 "assigned_you": "assigned you",
                 "assigned_themselves": "assigned themselves",
                 "assigned_user": "assigned %[1]s"
-            },
-            "fallbacks": {
-                "project": "Project"
             }
         }
     },
