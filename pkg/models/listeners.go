@@ -69,6 +69,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskRelationDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
+	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &MarkTaskUnreadOnComment{})
 	if config.TypesenseEnabled.GetBool() {
 		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
 		events.RegisterListener((&TaskCreatedEvent{}).Name(), &AddTaskToTypesense{})
@@ -1180,4 +1181,79 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 
 	err = sess.Commit()
 	return err
+}
+
+type MarkTaskUnreadOnComment struct {
+}
+
+func (s *MarkTaskUnreadOnComment) Name() string {
+	return "task.comment.mark.unread"
+}
+
+func (s *MarkTaskUnreadOnComment) Handle(msg *message.Message) (err error) {
+	event := &TaskCommentCreatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	err = sess.Begin()
+	if err != nil {
+		return err
+	}
+
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		_ = sess.Rollback()
+		return err
+	}
+
+	users, err := ListUsersFromProject(sess, project, event.Doer, "")
+	if err != nil {
+		_ = sess.Rollback()
+		return err
+	}
+
+	// Get existing unread statuses for this task
+	existingUnreadStatuses := []*TaskUnreadStatus{}
+	err = sess.
+		Where("task_id = ?", event.Task.ID).
+		Find(&existingUnreadStatuses)
+	if err != nil {
+		_ = sess.Rollback()
+		return err
+	}
+
+	// Create a set of existing user IDs for quick lookup
+	existingUserIDs := make(map[int64]bool)
+	for _, status := range existingUnreadStatuses {
+		existingUserIDs[status.UserID] = true
+	}
+
+	// Build list of new unread statuses
+	unreadStatuses := []*TaskUnreadStatus{}
+	for _, u := range users {
+		// Skip the comment author and users who already have unread status
+		if u.ID == event.Doer.ID || existingUserIDs[u.ID] {
+			continue
+		}
+		unreadStatuses = append(unreadStatuses, &TaskUnreadStatus{
+			TaskID: event.Task.ID,
+			UserID: u.ID,
+		})
+	}
+
+	// Bulk insert new unread statuses
+	if len(unreadStatuses) > 0 {
+		_, err = sess.Insert(&unreadStatuses)
+		if err != nil {
+			_ = sess.Rollback()
+			return err
+		}
+	}
+
+	return sess.Commit()
 }

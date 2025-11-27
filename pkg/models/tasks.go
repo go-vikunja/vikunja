@@ -106,6 +106,8 @@ type Task struct {
 	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" project. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
+	IsUnread *bool `xorm:"-" json:"is_unread,omitempty"`
+
 	// The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
 	// Will only returned when retrieving one task.
 	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
@@ -420,6 +422,29 @@ func (t *Task) setIdentifier(project *Project) {
 	t.Identifier = project.Identifier + "-" + strconv.FormatInt(t.Index, 10)
 }
 
+func addIsUnreadToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth) (err error) {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	unreadStatuses := []*TaskUnreadStatus{}
+	err = s.In("task_id", taskIDs).
+		Where("user_id = ?", a.GetID()).
+		Find(&unreadStatuses)
+	if err != nil {
+		return err
+	}
+
+	b := true
+	for _, status := range unreadStatuses {
+		if task, exists := taskMap[status.TaskID]; exists {
+			task.IsUnread = &b
+		}
+	}
+
+	return nil
+}
+
 // Get all assignees
 func addAssigneesToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
 	taskAssignees, err := getRawTaskAssigneesForTasks(s, taskIDs)
@@ -688,6 +713,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				err = addCommentCountToTasks(s, taskIDs, taskMap)
 				if err != nil {
 					return err
+				}
+			case TaskCollectionExpandIsUnread:
+				err = addIsUnreadToTasks(s, taskIDs, taskMap, a)
+				if err != nil {
+					return
 				}
 			}
 			expanded[expandable] = true
@@ -1745,6 +1775,12 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskComment{})
 	if err != nil {
 		return
+	}
+
+	// Delete all task unread statuses
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskUnreadStatus{})
+	if err != nil {
+		return err
 	}
 
 	// Delete all relations

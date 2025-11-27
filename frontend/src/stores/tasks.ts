@@ -512,6 +512,26 @@ export const useTaskStore = defineStore('task', () => {
 		return task
 	}
 
+	async function markTaskAsRead(taskId: ITask['id']) {
+		const taskService = new TaskService()
+		await taskService.markTaskAsRead(taskId)
+		
+		const t = kanbanStore.getTaskById(taskId)
+		if (t.task !== null) {
+			kanbanStore.setTaskInBucket({
+				...t.task,
+				isUnread: false,
+			})
+		}
+		
+		if (tasks.value[taskId]) {
+			tasks.value[taskId] = {
+				...tasks.value[taskId],
+				isUnread: false,
+			}
+		}
+	}
+
 	return {
 		tasks,
 		isLoading,
@@ -533,6 +553,7 @@ export const useTaskStore = defineStore('task', () => {
 		findProjectId,
 		ensureLabelsExist,
 		toggleFavorite,
+		markTaskAsRead,
 	}
 })
 

@@ -806,11 +806,16 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments']})
+			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments', 'is_unread']})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
+
+			if (task.value.isUnread) {
+				await taskStore.markTaskAsRead(task.value.id)
+				task.value.isUnread = false
+			}
 
 			if (lastProject.value) {
 				await baseStore.handleSetCurrentProjectIfNotSet(lastProject.value)

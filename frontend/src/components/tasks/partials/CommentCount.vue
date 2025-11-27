@@ -3,9 +3,14 @@
 		v-if="task.commentCount && task.commentCount > 0"
 		v-tooltip="tooltip"
 		class="comment-count"
+		:class="{'is-unread': task.isUnread}"
 	>
 		<Icon :icon="['far', 'comments']" />
 		<span class="comment-count-badge">{{ task.commentCount }}</span>
+		<span
+			v-if="task.isUnread"
+			class="unread-indicator"
+		/>
 	</span>
 </template>
 
@@ -40,6 +45,21 @@ const tooltip = computed(() => t('task.attributes.comment', props.task.commentCo
 
 	&:hover {
 		color: var(--primary);
+	}
+
+	&.is-unread {
+		font-weight: 600;
+		color: var(--primary);
+
+		.unread-indicator {
+			display: inline-block;
+			inline-size: 0.375rem;
+			block-size: 0.375rem;
+			background-color: var(--primary);
+			border-radius: 50%;
+			margin-inline-start: 0.125rem;
+			animation: pulse 2s infinite;
+		}
 	}
 }
 </style>
