@@ -1,5 +1,7 @@
 import {test, expect} from '../../support/fixtures'
 
+const iPhone8 = {width: 375, height: 667}
+
 test.describe('The Menu', () => {
 	test.beforeEach(async ({authenticatedPage: page}) => {
 		await page.goto('/')
@@ -15,12 +17,12 @@ test.describe('The Menu', () => {
 	})
 
 	test('Is hidden by default on mobile', async ({authenticatedPage: page}) => {
-		await page.setViewportSize({width: 375, height: 667}) // iphone-8
+		await page.setViewportSize(iPhone8)
 		await expect(page.locator('.menu-container')).not.toHaveClass(/is-active/)
 	})
 
 	test('Is can be shown on mobile', async ({authenticatedPage: page}) => {
-		await page.setViewportSize({width: 375, height: 667}) // iphone-8
+		await page.setViewportSize(iPhone8)
 		await page.locator('button.menu-show-button:visible').click()
 		await expect(page.locator('.menu-container')).toHaveClass(/is-active/)
 	})
