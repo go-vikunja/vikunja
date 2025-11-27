@@ -59,7 +59,10 @@ interface Bucket {
 async function addLabelToTaskAndVerify(page: Page, labelTitle: string) {
 	await page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Labels'}).click()
 	await page.locator('.task-view .details.labels-list .multiselect input').fill(labelTitle)
-	await page.locator('.task-view .details.labels-list .multiselect .search-results').locator('> *').first().click()
+	// Wait for search results to appear before clicking
+	const searchResults = page.locator('.task-view .details.labels-list .multiselect .search-results')
+	await searchResults.waitFor({state: 'visible'})
+	await searchResults.locator('> *').first().click()
 
 	await expect(page.locator('.global-notification')).toContainText('Success', {timeout: 4000})
 	await expect(page.locator('.task-view .details.labels-list .multiselect .input-wrapper span.tag')).toBeVisible()
