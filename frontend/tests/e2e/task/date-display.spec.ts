@@ -74,7 +74,7 @@ test.describe('Date display setting', () => {
 				frontend_settings: JSON.stringify({dateDisplay: format, timeFormat: TIME_FORMAT.HOURS_12}),
 			}))[0]
 			const project = (await ProjectFactory.create(1, {owner_id: user.id}))[0]
-			TaskFactory.truncate()
+			await TaskFactory.truncate()
 			const task = (await TaskFactory.create(1, {
 				id: 1,
 				project_id: project.id,
@@ -96,7 +96,7 @@ test.describe('Date display setting', () => {
 				frontend_settings: JSON.stringify({dateDisplay: format, timeFormat: TIME_FORMAT.HOURS_24}),
 			}))[0]
 			const project = (await ProjectFactory.create(1, {owner_id: user.id}))[0]
-			TaskFactory.truncate()
+			await TaskFactory.truncate()
 			const task = (await TaskFactory.create(1, {
 				id: 1,
 				project_id: project.id,

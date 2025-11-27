@@ -90,8 +90,8 @@ test.describe('Task', () => {
 		buckets = await BucketFactory.create(1, {
 			project_view_id: views[3].id,
 		}) as Bucket[]
-		TaskFactory.truncate()
-		UserProjectFactory.truncate()
+		await TaskFactory.truncate()
+		await UserProjectFactory.truncate()
 	})
 
 	test('Should be created new', async ({authenticatedPage: page}) => {
@@ -186,9 +186,9 @@ test.describe('Task', () => {
 
 	test.describe('Task Detail View', () => {
 		test.beforeEach(async ({authenticatedPage: page}) => {
-			TaskCommentFactory.truncate()
-			LabelTaskFactory.truncate()
-			TaskAttachmentFactory.truncate()
+			await TaskCommentFactory.truncate()
+			await LabelTaskFactory.truncate()
+			await TaskAttachmentFactory.truncate()
 		})
 
 		test('provides back navigation to the project in the list view', async ({authenticatedPage: page}) => {
@@ -514,7 +514,7 @@ test.describe('Task', () => {
 				id: 1,
 				project_id: 1,
 			})
-			LabelFactory.truncate()
+			await LabelFactory.truncate()
 			const newLabelText = 'some new label'
 
 			await page.goto(`/tasks/${tasks[0].id}`)
@@ -535,7 +535,7 @@ test.describe('Task', () => {
 				project_id: 1,
 			})
 			const labels = await LabelFactory.create(1)
-			LabelTaskFactory.truncate()
+			await LabelTaskFactory.truncate()
 
 			await page.goto(`/tasks/${tasks[0].id}`)
 
@@ -548,7 +548,7 @@ test.describe('Task', () => {
 				project_id: projects[0].id,
 			})
 			const labels = await LabelFactory.create(1)
-			LabelTaskFactory.truncate()
+			await LabelTaskFactory.truncate()
 			await TaskBucketFactory.create(1, {
 				task_id: tasks[0].id,
 				bucket_id: buckets[0].id,
@@ -698,7 +698,7 @@ test.describe('Task', () => {
 		})
 
 		test('Can paste an image into the description editor which uploads it as an attachment', async ({authenticatedPage: page}) => {
-			TaskAttachmentFactory.truncate()
+			await TaskAttachmentFactory.truncate()
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 			}) as Task[]
@@ -721,7 +721,7 @@ test.describe('Task', () => {
 		})
 
 		test('Can set a reminder', async ({authenticatedPage: page}) => {
-			TaskReminderFactory.truncate()
+			await TaskReminderFactory.truncate()
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -737,7 +737,7 @@ test.describe('Task', () => {
 		})
 
 		test('Allows to set a relative reminder when the task already has a due date', async ({authenticatedPage: page}) => {
-			TaskReminderFactory.truncate()
+			await TaskReminderFactory.truncate()
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -758,7 +758,7 @@ test.describe('Task', () => {
 		})
 
 		test('Allows to set a relative reminder when the task already has a start date', async ({authenticatedPage: page}) => {
-			TaskReminderFactory.truncate()
+			await TaskReminderFactory.truncate()
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -779,7 +779,7 @@ test.describe('Task', () => {
 		})
 
 		test('Allows to set a custom relative reminder when the task already has a due date', async ({authenticatedPage: page}) => {
-			TaskReminderFactory.truncate()
+			await TaskReminderFactory.truncate()
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -804,7 +804,7 @@ test.describe('Task', () => {
 		})
 
 		test('Allows to set a fixed reminder when the task already has a due date', async ({authenticatedPage: page}) => {
-			TaskReminderFactory.truncate()
+			await TaskReminderFactory.truncate()
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				done: false,
@@ -856,7 +856,7 @@ test.describe('Task', () => {
 		})
 
 		test('Can add an attachment to a task', async ({authenticatedPage: page}) => {
-			TaskAttachmentFactory.truncate()
+			await TaskAttachmentFactory.truncate()
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 			})
@@ -866,13 +866,13 @@ test.describe('Task', () => {
 		})
 
 		test('Can add an attachment to a task and see it appearing on kanban', async ({authenticatedPage: page}) => {
-			TaskAttachmentFactory.truncate()
+			await TaskAttachmentFactory.truncate()
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				project_id: projects[0].id,
 			})
 			const labels = await LabelFactory.create(1)
-			LabelTaskFactory.truncate()
+			await LabelTaskFactory.truncate()
 			await TaskBucketFactory.create(1, {
 				task_id: tasks[0].id,
 				bucket_id: buckets[0].id,
@@ -974,7 +974,7 @@ test.describe('Task', () => {
 		})
 
 		test('Should render an image from attachment', async ({authenticatedPage: page, apiContext}) => {
-			TaskAttachmentFactory.truncate()
+			await TaskAttachmentFactory.truncate()
 
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
