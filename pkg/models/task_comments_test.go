@@ -93,7 +93,6 @@ func TestTaskComment_Create(t *testing.T) {
 			"name":          (&TaskCommentNotification{}).Name(),
 		}, false)
 	})
-
 	t.Run("should mark task unread for project members on comment", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
