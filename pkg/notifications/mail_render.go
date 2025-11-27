@@ -121,17 +121,13 @@ const mailTemplateConversationalHTML = `
 <html style="width: 100%; height: 100%; padding: 0; margin: 0;">
 <head>
     <meta name="viewport" content="width: display-width;">
+    <meta charset="utf-8">
 </head>
-<body style="width: 100%; padding: 0; margin: 0; background: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-<div style="max-width: 700px; margin: 20px auto; padding: 20px; background: #ffffff;">
+<body style="width: 100%; padding: 0; margin: 0; background: #f6f8fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;">
+<div style="max-width: 700px; margin: 0 auto; background: #ffffff;">
 
-    <!-- Minimal header with small logo -->
-    <div style="margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb;">
-        <img src="cid:logo.png" style="height: 24px;" alt="Vikunja"/>
-    </div>
-
-    <!-- Conversational content -->
-    <div style="color: #1f2937; font-size: 14px; line-height: 1.5;">
+    <!-- Conversational content (no logo) -->
+    <div style="padding: 20px; color: #24292f; font-size: 14px; line-height: 1.5;">
         {{ range $line := .IntroLinesHTML}}
             {{ $line }}
         {{ end }}
@@ -143,8 +139,8 @@ const mailTemplateConversationalHTML = `
 
     <!-- Inline action link instead of button -->
     {{ if .ActionURL }}
-    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-        <a href="{{ .ActionURL }}" style="color: #2563eb; text-decoration: none;">
+    <div style="padding: 0 20px 16px 20px; border-top: 1px solid #d1d9e0; margin-top: 16px; padding-top: 16px;">
+        <a href="{{ .ActionURL }}" style="color: #0969da; text-decoration: none; font-weight: 500; font-size: 14px;">
             {{ .ActionText }} →
         </a>
     </div>
@@ -152,11 +148,14 @@ const mailTemplateConversationalHTML = `
 
     <!-- Footer -->
     {{ if .FooterLinesHTML }}
-    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+    <div style="padding: 16px 20px 20px 20px; {{ if .ActionURL }}border-top: 1px solid #d1d9e0;{{ else }}border-top: 1px solid #d1d9e0; margin-top: 16px;{{ end }} color: #656d76; font-size: 12px;">
         {{ range $line := .FooterLinesHTML }}
             {{ $line }}
         {{ end }}
     </div>
+    {{ else if .ActionURL }}
+    <!-- Add bottom padding if there's an action but no footer -->
+    <div style="padding-bottom: 4px;"></div>
     {{ end }}
 </div>
 </body>
