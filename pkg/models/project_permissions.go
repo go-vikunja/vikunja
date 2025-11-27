@@ -250,7 +250,6 @@ func checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int
 		u.ID,
 		u.ID,
 		u.ID,
-		u.ID,
 	}
 
 	err = s.SQL(`
