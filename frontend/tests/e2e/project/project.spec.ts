@@ -29,29 +29,33 @@ test.describe('Projects', () => {
 	})
 
 	test('Should redirect to a specific project view after visited', async ({authenticatedPage: page}) => {
+		const projectId = projects[0].id
+		const kanbanViewId = projects[0].views[3].id
 		const loadBucketsPromise = page.waitForResponse(response =>
-			response.url().includes('/projects/') &&
+			response.url().includes(`/projects/${projectId}/`) &&
 			response.url().includes('/views/') &&
 			response.url().includes('/tasks'),
 		)
 
-		await page.goto('/projects/1/4')
-		await expect(page).toHaveURL(/\/projects\/1\/4/)
+		await page.goto(`/projects/${projectId}/${kanbanViewId}`)
+		await expect(page).toHaveURL(new RegExp(`/projects/${projectId}/${kanbanViewId}`))
 		await loadBucketsPromise
-		await page.goto('/projects/1')
-		await expect(page).toHaveURL(/\/projects\/1\/4/)
+		await page.goto(`/projects/${projectId}`)
+		await expect(page).toHaveURL(new RegExp(`/projects/${projectId}/${kanbanViewId}`))
 	})
 
 	// FIXME: seeding fails with error 500
 	test('Should rename the project in all places', async ({authenticatedPage: page}) => {
+		const projectId = projects[0].id
+		const listViewId = projects[0].views[0].id
 		await TaskFactory.create(5, {
 			id: '{increment}',
-			project_id: 1,
+			project_id: projectId,
 		})
 		const newProjectName = 'New project name'
 
 		// Navigate to project and wait for redirect to view
-		await page.goto('/projects/1/1')
+		await page.goto(`/projects/${projectId}/${listViewId}`)
 		await page.waitForLoadState('networkidle')
 		await expect(page.locator('.project-title')).toContainText('First Project')
 
@@ -74,7 +78,9 @@ test.describe('Projects', () => {
 	})
 
 	test('Should remove a project when deleting it', async ({authenticatedPage: page}) => {
-		await page.goto(`/projects/${projects[0].id}/1`)
+		const projectId = projects[0].id
+		const listViewId = projects[0].views[0].id
+		await page.goto(`/projects/${projectId}/${listViewId}`)
 		await page.waitForLoadState('networkidle')
 
 		await page.locator('.project-title-dropdown .project-title-button').click()
@@ -90,7 +96,9 @@ test.describe('Projects', () => {
 	})
 
 	test('Should archive a project', async ({authenticatedPage: page}) => {
-		await page.goto(`/projects/${projects[0].id}/1`)
+		const projectId = projects[0].id
+		const listViewId = projects[0].views[0].id
+		await page.goto(`/projects/${projectId}/${listViewId}`)
 		await page.waitForLoadState('networkidle')
 
 		await page.locator('.project-title-dropdown .project-title-button').click()

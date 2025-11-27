@@ -32,7 +32,7 @@ test.describe('Link shares', () => {
 		await expect(page.locator('input.input[placeholder="Add a task…"]')).not.toBeVisible()
 		await expect(page.locator('.tasks')).toContainText(tasks[0].title)
 
-		await expect(page).toHaveURL(new RegExp(`/projects/${project.id}/1#share-auth-token=${share.hash}`))
+		await expect(page).toHaveURL(`/projects/${project.id}/1#share-auth-token=${share.hash}`)
 	})
 
 	test('Should work when directly viewing a project with share hash present', async ({page, apiContext}) => {
