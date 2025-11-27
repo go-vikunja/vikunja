@@ -97,12 +97,12 @@ func TestProjectPermissions_OwnerInMultipleTeamsWithDifferentPermissions(t *test
 		require.NoError(t, s.Commit())
 	}
 
+	prepareSharingY()
+
 	// Verify User A still has admin permissions after sharing with Team Y
 	t.Run("owner has admin permissions after sharing with team Y (admin)", func(t *testing.T) {
 		s = db.NewSession()
 		defer s.Close()
-
-		prepareSharingY()
 
 		canRead, maxPerm, err := project.CanRead(s, userA)
 		require.NoError(t, err)
@@ -142,13 +142,13 @@ func TestProjectPermissions_OwnerInMultipleTeamsWithDifferentPermissions(t *test
 		require.NoError(t, s.Commit())
 	}
 
+	prepareTeamSharedMultiple()
+
 	// Verify User A STILL has admin permissions after sharing with Team Z
 	// user should retain highest permission (owner/admin), not be downgraded to read-only
 	t.Run("owner has admin permissions after sharing with team Z (read-only)", func(t *testing.T) {
 		s = db.NewSession()
 		defer s.Close()
-
-		prepareTeamSharedMultiple()
 
 		canRead, maxPerm, err := project.CanRead(s, userA)
 		require.NoError(t, err)
