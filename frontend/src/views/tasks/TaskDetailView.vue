@@ -37,14 +37,14 @@
 				>
 					<a
 						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
-						v-shortcut="p.id === project?.id ? 'u' : ''"
+						v-shortcut="p.id === project?.id ? '.task.openProject' : ''"
 						@click="router.back()"
 					>
 						{{ getProjectTitle(p) }}
 					</a>
 					<RouterLink
 						v-else
-						v-shortcut="p.id === project?.id ? 'u' : ''"
+						v-shortcut="p.id === project?.id ? '.task.openProject' : ''"
 						:to="{ name: 'project.index', params: { projectId: p.id } }"
 					>
 						{{ getProjectTitle(p) }}
@@ -416,7 +416,7 @@
 				>
 					<template v-if="canWrite">
 						<XButton
-							v-shortcut="'t'"
+							v-shortcut="'.task.markDone'"
 							:class="{'is-success': !task.done}"
 							:shadow="task.done"
 							class="is-outlined has-no-border"
@@ -433,7 +433,7 @@
 							@update:modelValue="sub => task.subscription = sub"
 						/>
 						<XButton
-							v-shortcut="'s'"
+							v-shortcut="'.task.toggleFavorite'"
 							variant="secondary"
 							:icon="task.isFavorite ? 'star' : ['far', 'star']"
 							@click="toggleFavorite"
@@ -446,7 +446,7 @@
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
-							v-shortcut="'l'"
+							v-shortcut="'.task.labels'"
 							variant="secondary"
 							icon="tags"
 							@click="setFieldActive('labels')"
@@ -454,7 +454,7 @@
 							{{ $t('task.detail.actions.label') }}
 						</XButton>
 						<XButton
-							v-shortcut="'p'"
+							v-shortcut="'.task.priority'"
 							variant="secondary"
 							icon="exclamation-circle"
 							@click="setFieldActive('priority')"
@@ -469,7 +469,7 @@
 							{{ $t('task.detail.actions.percentDone') }}
 						</XButton>
 						<XButton
-							v-shortcut="'c'"
+							v-shortcut="'.task.color'"
 							variant="secondary"
 							icon="fill-drip"
 							:icon-color="color"
@@ -481,7 +481,7 @@
 						<span class="action-heading">{{ $t('task.detail.management') }}</span>
 
 						<XButton
-							v-shortcut="'a'"
+							v-shortcut="'.task.assign'"
 							v-cy="'taskDetail.assign'"
 							variant="secondary"
 							icon="users"
@@ -490,7 +490,7 @@
 							{{ $t('task.detail.actions.assign') }}
 						</XButton>
 						<XButton
-							v-shortcut="'f'"
+							v-shortcut="'.task.attachment'"
 							variant="secondary"
 							icon="paperclip"
 							@click="setFieldActive('attachments')"
@@ -498,7 +498,7 @@
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
-							v-shortcut="'r'"
+							v-shortcut="'.task.related'"
 							variant="secondary"
 							icon="sitemap"
 							@click="setRelatedTasksActive()"
@@ -506,7 +506,7 @@
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</XButton>
 						<XButton
-							v-shortcut="'m'"
+							v-shortcut="'.task.move'"
 							variant="secondary"
 							icon="list"
 							@click="setFieldActive('moveProject')"
@@ -517,7 +517,7 @@
 						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
 						
 						<XButton
-							v-shortcut="'d'"
+							v-shortcut="'.task.dueDate'"
 							variant="secondary"
 							icon="calendar"
 							@click="setFieldActive('dueDate')"
@@ -539,7 +539,7 @@
 							{{ $t('task.detail.actions.endDate') }}
 						</XButton>
 						<XButton
-							v-shortcut="reminderShortcut"
+							v-shortcut="'.task.reminder'"
 							variant="secondary"
 							:icon="['far', 'clock']"
 							@click="setFieldActive('reminders')"
@@ -554,7 +554,7 @@
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
 						<XButton
-							v-shortcut="'Shift+Delete'"
+							v-shortcut="'.task.delete'"
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
@@ -604,6 +604,7 @@ import {useI18n} from 'vue-i18n'
 import {unrefElement, useMediaQuery} from '@vueuse/core'
 import {klona} from 'klona/lite'
 import {eventToHotkeyString} from '@github/hotkey'
+import {useShortcutManager} from '@/composables/useShortcutManager'
 
 import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
@@ -640,7 +641,7 @@ import Reactions from '@/components/input/Reactions.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
-import {isAppleDevice} from '@/helpers/isAppleDevice'
+// isAppleDevice no longer needed - reminder shortcut handled by shortcut manager
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {playPopSound} from '@/helpers/playPop'
@@ -687,9 +688,12 @@ useTitle(taskTitle)
 function saveTaskViaHotkey(event) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
-	if (hotkeyString !== 'Control+s' && hotkeyString !== 'Meta+s') return
-	event.preventDefault()
 
+	const shortcutManager = useShortcutManager()
+	const expectedHotkey = shortcutManager.getHotkeyString('task.save')
+	if (hotkeyString !== expectedHotkey) return
+
+	event.preventDefault()
 	saveTask()
 }
 
@@ -713,7 +717,7 @@ const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.val
 
 // Use Shift+R on macOS (Alt+R produces special characters depending on keyboard layout)
 // Use Alt+r on other platforms
-const reminderShortcut = computed(() => isAppleDevice() ? 'Shift+R' : 'Alt+r')
+// Reminder shortcut is now handled by shortcut manager
 
 onMounted(() => {
 	document.addEventListener('keydown', saveTaskViaHotkey)

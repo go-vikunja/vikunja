@@ -17,7 +17,7 @@
 			<menu class="menu-list other-menu-items">
 				<li>
 					<RouterLink
-						v-shortcut="'g o'"
+						v-shortcut="'.navigation.goToOverview'"
 						:to="{ name: 'home'}"
 					>
 						<span class="menu-item-icon icon">
@@ -28,7 +28,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g u'"
+						v-shortcut="'.navigation.goToUpcoming'"
 						:to="{ name: 'tasks.range'}"
 					>
 						<span class="menu-item-icon icon">
@@ -39,7 +39,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g p'"
+						v-shortcut="'.navigation.goToProjects'"
 						:to="{ name: 'projects.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -50,7 +50,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g a'"
+						v-shortcut="'.navigation.goToLabels'"
 						:to="{ name: 'labels.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -61,7 +61,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g m'"
+						v-shortcut="'.navigation.goToTeams'"
 						:to="{ name: 'teams.index'}"
 					>
 						<span class="menu-item-icon icon">

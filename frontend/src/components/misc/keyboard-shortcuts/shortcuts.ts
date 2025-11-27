@@ -58,6 +58,14 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 				contexts: ['*'],
 				category: ShortcutCategory.GENERAL,
 			},
+			{
+				actionId: 'general.showHelp',
+				title: 'keyboardShortcuts.showHelp',
+				keys: ['shift', '?'],
+				customizable: true,
+				contexts: ['*'],
+				category: ShortcutCategory.GENERAL,
+			},
 		],
 	},
 	{
