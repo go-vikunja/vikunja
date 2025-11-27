@@ -4,7 +4,7 @@ import {ProjectViewFactory} from '../../factories/project_view'
 
 export async function createDefaultViews(projectId: number, startViewId = 1, truncate: boolean = true) {
 	if (truncate) {
-		ProjectViewFactory.truncate()
+		await ProjectViewFactory.truncate()
 	}
 	const list = await ProjectViewFactory.create(1, {
 		id: startViewId,
@@ -41,8 +41,8 @@ export async function createProjects(count: number = 1) {
 		title: i => count === 1 ? 'First Project' : `Project ${i + 1}`,
 	})
 
-	TaskFactory.truncate()
-	ProjectViewFactory.truncate()
+	await TaskFactory.truncate()
+	await ProjectViewFactory.truncate()
 
 	for (let i = 0; i < projects.length; i++) {
 		const views = await createDefaultViews(projects[i].id, i * 4 + 1, false)
