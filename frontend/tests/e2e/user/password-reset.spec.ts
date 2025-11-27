@@ -17,7 +17,7 @@ test.describe('Password Reset', () => {
 		const token: TokenAttributes = tokenArray[0] as TokenAttributes
 
 		await page.goto(`/?userPasswordReset=${token.token}`)
-		await expect(page).toHaveURL(new RegExp(`/password-reset\\?userPasswordReset=${token.token}`))
+		await expect(page).toHaveURL(`/password-reset?userPasswordReset=${token.token}`)
 
 		const newPassword = 'newSecurePassword123'
 		await page.locator('input[id=password]').fill(newPassword)
@@ -25,18 +25,18 @@ test.describe('Password Reset', () => {
 
 		await expect(page.locator('.message.success')).toContainText('The password was updated successfully.')
 		await page.locator('.button').filter({hasText: 'Login'}).click()
-		await expect(page).toHaveURL(/\/login/)
+		await expect(page).toHaveURL('/login')
 
 		// Try to login with the new password
 		await page.locator('input[id=username]').fill(user.username)
 		await page.locator('input[id=password]').fill(newPassword)
 		await page.locator('.button').filter({hasText: 'Login'}).click()
-		await expect(page).not.toHaveURL(/\/login/)
+		await expect(page).toHaveURL('/')
 	})
 
 	test('Should show an error for an invalid token', async ({page, apiContext}) => {
 		await page.goto('/?userPasswordReset=invalidtoken123')
-		await expect(page).toHaveURL(/\/password-reset\?userPasswordReset=invalidtoken123/)
+		await expect(page).toHaveURL('/password-reset?userPasswordReset=invalidtoken123')
 
 		// Attempt to reset password
 		const newPassword = 'newSecurePassword123'
@@ -48,13 +48,12 @@ test.describe('Password Reset', () => {
 
 	test('Should redirect to login if no token is present in query param when visiting /password-reset directly', async ({page, apiContext}) => {
 		await page.goto('/password-reset')
-		await expect(page).not.toHaveURL(/\/password-reset/)
-		await page.waitForTimeout(1000) // Wait for the redirect to happen - this seems to be flaky in CI
-		await expect(page).toHaveURL(/\/login/)
+		// Wait for redirect to login page
+		await expect(page).toHaveURL('/login')
 	})
 
 	test('Should redirect to login if userPasswordReset token is not present in query param when visiting root', async ({page, apiContext}) => {
 		await page.goto('/')
-		await expect(page).toHaveURL(/\/login/)
+		await expect(page).toHaveURL('/login')
 	})
 })
