@@ -36,7 +36,7 @@ importers:
         version: 3.1.1(patch_hash=145ab3233cbcd3bc934b4961cd8710e2b15e4ae5dd20862a8d1d6621d7f9d4a8)
       '@intlify/unplugin-vue-i18n':
         specifier: 11.0.1
-        version: 11.0.1(@vue/compiler-dom@3.5.24)(eslint@9.39.1(jiti@2.4.2))(rollup@4.53.3)(typescript@5.9.3)(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))
+        version: 11.0.1(@vue/compiler-dom@3.5.24)(eslint@9.39.1(jiti@2.4.2))(rollup@4.53.3)(typescript@5.9.3)(vue-i18n@11.2.1(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))
       '@kyvg/vue3-notification':
         specifier: 3.4.2
         version: 3.4.2(vue@3.5.24(typescript@5.9.3))
@@ -134,8 +134,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       marked:
-        specifier: 16.4.2
-        version: 16.4.2
+        specifier: 17.0.1
+        version: 17.0.1
       pinia:
         specifier: 3.0.4
         version: 3.0.4(typescript@5.9.3)(vue@3.5.24(typescript@5.9.3))
@@ -161,8 +161,8 @@ importers:
         specifier: 11.0.5
         version: 11.0.5(vue@3.5.24(typescript@5.9.3))
       vue-i18n:
-        specifier: 11.1.12
-        version: 11.1.12(vue@3.5.24(typescript@5.9.3))
+        specifier: 11.2.1
+        version: 11.2.1(vue@3.5.24(typescript@5.9.3))
       vue-router:
         specifier: 4.6.3
         version: 4.6.3(vue@3.5.24(typescript@5.9.3))
@@ -170,8 +170,8 @@ importers:
         specifier: 0.3.2
         version: 0.3.2(vue@3.5.24(typescript@5.9.3))
       workbox-precaching:
-        specifier: 7.3.0
-        version: 7.3.0
+        specifier: 7.4.0
+        version: 7.4.0
       zhyswan-vuedraggable:
         specifier: 4.1.3
         version: 4.1.3(vue@3.5.24(typescript@5.9.3))
@@ -1722,16 +1722,24 @@ packages:
       vue-i18n:
         optional: true
 
-  '@intlify/core-base@11.1.12':
-    resolution: {integrity: sha512-whh0trqRsSqVLNEUCwU59pyJZYpU8AmSWl8M3Jz2Mv5ESPP6kFh4juas2NpZ1iCvy7GlNRffUD1xr84gceimjg==}
+  '@intlify/core-base@11.2.1':
+    resolution: {integrity: sha512-2V1A4yaN9ElAnQ6ih3HHEc+jZ+sHV6BlQHjCsnIVlOotL5NCUgJElIxgUFiJs6zV4puoAq3hHuQIfWNp+J+8yQ==}
     engines: {node: '>= 16'}
 
   '@intlify/message-compiler@11.1.12':
     resolution: {integrity: sha512-Fv9iQSJoJaXl4ZGkOCN1LDM3trzze0AS2zRz2EHLiwenwL6t0Ki9KySYlyr27yVOj5aVz0e55JePO+kELIvfdQ==}
     engines: {node: '>= 16'}
 
+  '@intlify/message-compiler@11.2.1':
+    resolution: {integrity: sha512-J2454D3Agg3Kvgaj14gxTleJU8/H06Sisz7C2BwiHF0/i5Soyfb5ySpwn8GCL6yscDbOGj6xM+lUe6gO6BFQyg==}
+    engines: {node: '>= 16'}
+
   '@intlify/shared@11.1.12':
     resolution: {integrity: sha512-Om86EjuQtA69hdNj3GQec9ZC0L0vPSAnXzB3gP/gyJ7+mA7t06d9aOAiqMZ+xEOsumGP4eEBlfl8zF2LOTzf2A==}
+    engines: {node: '>= 16'}
+
+  '@intlify/shared@11.2.1':
+    resolution: {integrity: sha512-O67LZM4dbfr70WCsZLW+g+pIXdgQ66laLVd/FicW7iYgP/RuH0X1FDGSh+Hr9Gou/8TeldUE6KmTGdLwX2ufIA==}
     engines: {node: '>= 16'}
 
   '@intlify/unplugin-vue-i18n@11.0.1':
@@ -4836,8 +4844,8 @@ packages:
     resolution: {integrity: sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==}
     hasBin: true
 
-  marked@16.4.2:
-    resolution: {integrity: sha512-TI3V8YYWvkVf3KJe1dRkpnjs68JUPyEa5vjKrp1XEEJUAOaQc+Qj+L1qWbPd0SJuAdQkFU0h73sXXqwDYxsiDA==}
+  marked@17.0.1:
+    resolution: {integrity: sha512-boeBdiS0ghpWcSwoNm/jJBwdpFaMnZWRzjA6SkUMYb40SVaN1x7mmfGKp0jvexGcx+7y2La5zRZsYFZI6Qpypg==}
     engines: {node: '>= 20'}
     hasBin: true
 
@@ -6838,8 +6846,8 @@ packages:
     peerDependencies:
       vue: ^3.2.0
 
-  vue-i18n@11.1.12:
-    resolution: {integrity: sha512-BnstPj3KLHLrsqbVU2UOrPmr0+Mv11bsUZG0PyCOzsawCivk8W00GMXHeVUWIDOgNaScCuZah47CZFE+Wnl8mw==}
+  vue-i18n@11.2.1:
+    resolution: {integrity: sha512-cc3Wx4eJZac9WMS8mxhfYiCipm9PBQ2Dz15piWYm7DwNcCehaKRgpolEdiqrjjT27T3Wijz3xJ7NeIc8ofIWAA==}
     engines: {node: '>= 16'}
     peerDependencies:
       vue: ^3.0.0
@@ -6986,9 +6994,6 @@ packages:
     engines: {node: '>=20.0.0'}
     hasBin: true
 
-  workbox-core@7.3.0:
-    resolution: {integrity: sha512-Z+mYrErfh4t3zi7NVTvOuACB0A/jA3bgxUN3PwtAVHvfEsZxV9Iju580VEETug3zYJRc0Dmii/aixI/Uxj8fmw==}
-
   workbox-core@7.4.0:
     resolution: {integrity: sha512-6BMfd8tYEnN4baG4emG9U0hdXM4gGuDU3ectXuVHnj71vwxTFI7WOpQJC4siTOlVtGqCUtj0ZQNsrvi6kZZTAQ==}
 
@@ -7001,9 +7006,6 @@ packages:
   workbox-navigation-preload@7.4.0:
     resolution: {integrity: sha512-etzftSgdQfjMcfPgbfaZCfM2QuR1P+4o8uCA2s4rf3chtKTq/Om7g/qvEOcZkG6v7JZOSOxVYQiOu6PbAZgU6w==}
 
-  workbox-precaching@7.3.0:
-    resolution: {integrity: sha512-ckp/3t0msgXclVAYaNndAGeAoWQUv7Rwc4fdhWL69CCAb2UHo3Cef0KIUctqfQj1p8h6aGyz3w8Cy3Ihq9OmIw==}
-
   workbox-precaching@7.4.0:
     resolution: {integrity: sha512-VQs37T6jDqf1rTxUJZXRl3yjZMf5JX/vDPhmx2CPgDDKXATzEoqyRqhYnRoxl6Kr0rqaQlp32i9rtG5zTzIlNg==}
 
@@ -7013,14 +7015,8 @@ packages:
   workbox-recipes@7.4.0:
     resolution: {integrity: sha512-kOkWvsAn4H8GvAkwfJTbwINdv4voFoiE9hbezgB1sb/0NLyTG4rE7l6LvS8lLk5QIRIto+DjXLuAuG3Vmt3cxQ==}
 
-  workbox-routing@7.3.0:
-    resolution: {integrity: sha512-ZUlysUVn5ZUzMOmQN3bqu+gK98vNfgX/gSTZ127izJg/pMMy4LryAthnYtjuqcjkN4HEAx1mdgxNiKJMZQM76A==}
-
   workbox-routing@7.4.0:
     resolution: {integrity: sha512-C/ooj5uBWYAhAqwmU8HYQJdOjjDKBp9MzTQ+otpMmd+q0eF59K+NuXUek34wbL0RFrIXe/KKT+tUWcZcBqxbHQ==}
-
-  workbox-strategies@7.3.0:
-    resolution: {integrity: sha512-tmZydug+qzDFATwX7QiEL5Hdf7FrkhjaF9db1CbB39sDmEZJg3l9ayDvPxy8Y18C3Y66Nrr9kkN1f/RlkDgllg==}
 
   workbox-strategies@7.4.0:
     resolution: {integrity: sha512-T4hVqIi5A4mHi92+5EppMX3cLaVywDp8nsyUgJhOZxcfSV/eQofcOA6/EMo5rnTNmNTpw0rUgjAI6LaVullPpg==}
@@ -8627,7 +8623,7 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.2': {}
 
-  '@intlify/bundle-utils@11.0.1(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))':
+  '@intlify/bundle-utils@11.0.1(vue-i18n@11.2.1(vue@3.5.24(typescript@5.9.3)))':
     dependencies:
       '@intlify/message-compiler': 11.1.12
       '@intlify/shared': 11.1.12
@@ -8639,26 +8635,33 @@ snapshots:
       source-map-js: 1.2.1
       yaml-eslint-parser: 1.2.3
     optionalDependencies:
-      vue-i18n: 11.1.12(vue@3.5.24(typescript@5.9.3))
+      vue-i18n: 11.2.1(vue@3.5.24(typescript@5.9.3))
 
-  '@intlify/core-base@11.1.12':
+  '@intlify/core-base@11.2.1':
     dependencies:
-      '@intlify/message-compiler': 11.1.12
-      '@intlify/shared': 11.1.12
+      '@intlify/message-compiler': 11.2.1
+      '@intlify/shared': 11.2.1
 
   '@intlify/message-compiler@11.1.12':
     dependencies:
       '@intlify/shared': 11.1.12
       source-map-js: 1.2.1
 
+  '@intlify/message-compiler@11.2.1':
+    dependencies:
+      '@intlify/shared': 11.2.1
+      source-map-js: 1.2.1
+
   '@intlify/shared@11.1.12': {}
 
-  '@intlify/unplugin-vue-i18n@11.0.1(@vue/compiler-dom@3.5.24)(eslint@9.39.1(jiti@2.4.2))(rollup@4.53.3)(typescript@5.9.3)(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))':
+  '@intlify/shared@11.2.1': {}
+
+  '@intlify/unplugin-vue-i18n@11.0.1(@vue/compiler-dom@3.5.24)(eslint@9.39.1(jiti@2.4.2))(rollup@4.53.3)(typescript@5.9.3)(vue-i18n@11.2.1(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))':
     dependencies:
       '@eslint-community/eslint-utils': 4.7.0(eslint@9.39.1(jiti@2.4.2))
-      '@intlify/bundle-utils': 11.0.1(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))
+      '@intlify/bundle-utils': 11.0.1(vue-i18n@11.2.1(vue@3.5.24(typescript@5.9.3)))
       '@intlify/shared': 11.1.12
-      '@intlify/vue-i18n-extensions': 8.0.0(@intlify/shared@11.1.12)(@vue/compiler-dom@3.5.24)(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))
+      '@intlify/vue-i18n-extensions': 8.0.0(@intlify/shared@11.1.12)(@vue/compiler-dom@3.5.24)(vue-i18n@11.2.1(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))
       '@rollup/pluginutils': 5.1.3(rollup@4.53.3)
       '@typescript-eslint/scope-manager': 8.40.0
       '@typescript-eslint/typescript-estree': 8.40.0(typescript@5.9.3)
@@ -8669,7 +8672,7 @@ snapshots:
       unplugin: 2.3.10
       vue: 3.5.24(typescript@5.9.3)
     optionalDependencies:
-      vue-i18n: 11.1.12(vue@3.5.24(typescript@5.9.3))
+      vue-i18n: 11.2.1(vue@3.5.24(typescript@5.9.3))
     transitivePeerDependencies:
       - '@vue/compiler-dom'
       - eslint
@@ -8677,14 +8680,14 @@ snapshots:
       - supports-color
       - typescript
 
-  '@intlify/vue-i18n-extensions@8.0.0(@intlify/shared@11.1.12)(@vue/compiler-dom@3.5.24)(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))':
+  '@intlify/vue-i18n-extensions@8.0.0(@intlify/shared@11.1.12)(@vue/compiler-dom@3.5.24)(vue-i18n@11.2.1(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))':
     dependencies:
       '@babel/parser': 7.28.3
     optionalDependencies:
       '@intlify/shared': 11.1.12
       '@vue/compiler-dom': 3.5.24
       vue: 3.5.24(typescript@5.9.3)
-      vue-i18n: 11.1.12(vue@3.5.24(typescript@5.9.3))
+      vue-i18n: 11.2.1(vue@3.5.24(typescript@5.9.3))
 
   '@isaacs/balanced-match@4.0.1': {}
 
@@ -12053,7 +12056,7 @@ snapshots:
       punycode.js: 2.3.1
       uc.micro: 2.1.0
 
-  marked@16.4.2: {}
+  marked@17.0.1: {}
 
   math-intrinsics@1.1.0: {}
 
@@ -14291,10 +14294,10 @@ snapshots:
       flatpickr: 4.6.13
       vue: 3.5.24(typescript@5.9.3)
 
-  vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)):
+  vue-i18n@11.2.1(vue@3.5.24(typescript@5.9.3)):
     dependencies:
-      '@intlify/core-base': 11.1.12
-      '@intlify/shared': 11.1.12
+      '@intlify/core-base': 11.2.1
+      '@intlify/shared': 11.2.1
       '@vue/devtools-api': 6.6.4
       vue: 3.5.24(typescript@5.9.3)
 
@@ -14505,8 +14508,6 @@ snapshots:
       - '@types/babel__core'
       - supports-color
 
-  workbox-core@7.3.0: {}
-
   workbox-core@7.4.0: {}
 
   workbox-expiration@7.4.0:
@@ -14524,12 +14525,6 @@ snapshots:
   workbox-navigation-preload@7.4.0:
     dependencies:
       workbox-core: 7.4.0
-
-  workbox-precaching@7.3.0:
-    dependencies:
-      workbox-core: 7.3.0
-      workbox-routing: 7.3.0
-      workbox-strategies: 7.3.0
 
   workbox-precaching@7.4.0:
     dependencies:
@@ -14550,17 +14545,9 @@ snapshots:
       workbox-routing: 7.4.0
       workbox-strategies: 7.4.0
 
-  workbox-routing@7.3.0:
-    dependencies:
-      workbox-core: 7.3.0
-
   workbox-routing@7.4.0:
     dependencies:
       workbox-core: 7.4.0
-
-  workbox-strategies@7.3.0:
-    dependencies:
-      workbox-core: 7.3.0
 
   workbox-strategies@7.4.0:
     dependencies:

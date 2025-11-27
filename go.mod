@@ -33,7 +33,7 @@ require (
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/gabriel-vasile/mimetype v1.4.11
 	github.com/ganigeorgiev/fexpr v0.5.0
-	github.com/getsentry/sentry-go v0.38.0
+	github.com/getsentry/sentry-go v0.40.0
 	github.com/getsentry/sentry-go/echo v0.38.0
 	github.com/go-ldap/ldap/v3 v3.4.12
 	github.com/go-sql-driver/mysql v1.9.3
@@ -58,7 +58,7 @@ require (
 	github.com/olekukonko/tablewriter v1.1.1
 	github.com/pquerna/otp v1.5.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/redis/go-redis/v9 v9.17.0
+	github.com/redis/go-redis/v9 v9.17.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samedi/caldav-go v3.0.0+incompatible
 	github.com/spf13/afero v1.15.0
