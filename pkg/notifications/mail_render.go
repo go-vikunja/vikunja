@@ -45,6 +45,19 @@ const mailTemplatePlain = `
 {{ $line.Text }}
 {{ end }}`
 
+const mailTemplateConversationalPlain = `
+{{ range $line := .IntroLines}}
+{{ $line.Text }}
+{{ end }}
+{{ if .ActionURL }}{{ .ActionText }}:
+{{ .ActionURL }}{{end}}
+{{ range $line := .OutroLines}}
+{{ $line.Text }}
+{{ end }}
+{{ range $line := .FooterLines}}
+{{ $line.Text }}
+{{ end }}`
+
 const mailTemplateHTML = `
 <!doctype html>
 <html style="width: 100%; height: 100%; padding: 0; margin: 0;">
@@ -103,6 +116,53 @@ const mailTemplateHTML = `
 </html>
 `
 
+const mailTemplateConversationalHTML = `
+<!doctype html>
+<html style="width: 100%; height: 100%; padding: 0; margin: 0;">
+<head>
+    <meta name="viewport" content="width: display-width;">
+</head>
+<body style="width: 100%; padding: 0; margin: 0; background: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+<div style="max-width: 700px; margin: 20px auto; padding: 20px; background: #ffffff;">
+
+    <!-- Minimal header with small logo -->
+    <div style="margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb;">
+        <img src="cid:logo.png" style="height: 24px;" alt="Vikunja"/>
+    </div>
+
+    <!-- Conversational content -->
+    <div style="color: #1f2937; font-size: 14px; line-height: 1.5;">
+        {{ range $line := .IntroLinesHTML}}
+            {{ $line }}
+        {{ end }}
+
+        {{ range $line := .OutroLinesHTML}}
+            {{ $line }}
+        {{ end }}
+    </div>
+
+    <!-- Inline action link instead of button -->
+    {{ if .ActionURL }}
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+        <a href="{{ .ActionURL }}" style="color: #2563eb; text-decoration: none;">
+            {{ .ActionText }} →
+        </a>
+    </div>
+    {{ end }}
+
+    <!-- Footer -->
+    {{ if .FooterLinesHTML }}
+    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+        {{ range $line := .FooterLinesHTML }}
+            {{ $line }}
+        {{ end }}
+    </div>
+    {{ end }}
+</div>
+</body>
+</html>
+`
+
 //go:embed logo.png
 var logo embed.FS
 
@@ -135,12 +195,22 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 	var htmlContent bytes.Buffer
 	var plainContent bytes.Buffer
 
-	plain, err := templatetext.New("mail-plain").Parse(mailTemplatePlain)
+	// Select template based on conversational flag
+	var plainTemplate, htmlTemplate string
+	if m.conversational {
+		plainTemplate = mailTemplateConversationalPlain
+		htmlTemplate = mailTemplateConversationalHTML
+	} else {
+		plainTemplate = mailTemplatePlain
+		htmlTemplate = mailTemplateHTML
+	}
+
+	plain, err := templatetext.New("mail-plain").Parse(plainTemplate)
 	if err != nil {
 		return nil, err
 	}
 
-	html, err := templatehtml.New("mail-plain").Parse(mailTemplateHTML)
+	html, err := templatehtml.New("mail-html").Parse(htmlTemplate)
 	if err != nil {
 		return nil, err
 	}

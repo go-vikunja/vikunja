@@ -609,3 +609,129 @@ This is a footer line
 		assert.Contains(t, mailopts.HTMLMessage, `<strong>attention</strong>`)
 	})
 }
+
+func TestConversationalMail(t *testing.T) {
+	t.Run("Conversational flag", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Conversational().
+			Line("This is a conversational message")
+
+		assert.True(t, mail.IsConversational())
+	})
+
+	t.Run("Default is not conversational", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Line("This is a formal message")
+
+		assert.False(t, mail.IsConversational())
+	})
+
+	t.Run("Conversational template selection", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Conversational().
+			Line("This is a conversational message").
+			Action("View Task", "https://example.com/task/123")
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Should not contain greeting section
+		assert.NotContains(t, mailopts.HTMLMessage, "<p>\n\t\t\n\t</p>")
+
+		// Should use conversational styling
+		assert.Contains(t, mailopts.HTMLMessage, "background: #f9fafb")
+		assert.Contains(t, mailopts.HTMLMessage, "font-family: -apple-system")
+		assert.Contains(t, mailopts.HTMLMessage, "max-width: 700px")
+		assert.Contains(t, mailopts.HTMLMessage, "height: 24px")
+
+		// Should have inline action link with arrow
+		assert.Contains(t, mailopts.HTMLMessage, "View Task →")
+		assert.Contains(t, mailopts.HTMLMessage, "color: #2563eb")
+
+		// Should not have the formal button styling
+		assert.NotContains(t, mailopts.HTMLMessage, "background-color: #1973ff")
+		assert.NotContains(t, mailopts.HTMLMessage, "width:280px")
+
+		// Plain text should not have greeting
+		assert.NotContains(t, mailopts.Message, "Hi there,")
+		assert.Contains(t, mailopts.Message, "This is a conversational message")
+	})
+
+	t.Run("Formal template still works", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Greeting("Hi there,").
+			Line("This is a formal message").
+			Action("View Task", "https://example.com/task/123")
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Should contain greeting
+		assert.Contains(t, mailopts.HTMLMessage, "Hi there,")
+
+		// Should use formal styling
+		assert.Contains(t, mailopts.HTMLMessage, "background: #f3f4f6")
+		assert.Contains(t, mailopts.HTMLMessage, "font-family: 'Open Sans'")
+		assert.Contains(t, mailopts.HTMLMessage, "width: 600px")
+		assert.Contains(t, mailopts.HTMLMessage, "height: 75px")
+
+		// Should have formal button styling
+		assert.Contains(t, mailopts.HTMLMessage, "background-color: #1973ff")
+		assert.Contains(t, mailopts.HTMLMessage, "width:280px")
+
+		// Should not have conversational arrow
+		assert.NotContains(t, mailopts.HTMLMessage, "View Task →")
+
+		// Plain text should have greeting
+		assert.Contains(t, mailopts.Message, "Hi there,")
+	})
+
+	t.Run("Conversational without action", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Conversational().
+			Line("This is a conversational message without action")
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Should use conversational styling
+		assert.Contains(t, mailopts.HTMLMessage, "background: #f9fafb")
+		assert.Contains(t, mailopts.HTMLMessage, "max-width: 700px")
+
+		// Should not have action section
+		assert.NotContains(t, mailopts.HTMLMessage, "border-top: 1px solid #e5e7eb")
+	})
+
+	t.Run("Conversational with footer", func(t *testing.T) {
+		mail := NewMail().
+			From("test@example.com").
+			To("test@otherdomain.com").
+			Subject("Testmail").
+			Conversational().
+			Line("This is a conversational message").
+			FooterLine("This is a footer line")
+
+		mailopts, err := RenderMail(mail, "en")
+		require.NoError(t, err)
+
+		// Should have footer with conversational styling
+		assert.Contains(t, mailopts.HTMLMessage, "color: #6b7280")
+		assert.Contains(t, mailopts.HTMLMessage, "font-size: 12px")
+		assert.Contains(t, mailopts.HTMLMessage, "This is a footer line")
+	})
+}

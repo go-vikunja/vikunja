@@ -95,6 +95,7 @@ func (n *TaskCommentNotification) SubjectID() int64 {
 func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
 
 	mail := notifications.NewMail().
+		Conversational().
 		From(n.Doer.GetNameAndFromEmail()).
 		Subject(i18n.T(lang, "notifications.task.comment.subject", n.Task.Title))
 
@@ -137,6 +138,7 @@ type TaskAssignedNotification struct {
 func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 	if n.Target.ID == n.Assignee.ID {
 		return notifications.NewMail().
+			Conversational().
 			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_assignee", n.Task.Title, n.Task.GetFullIdentifier())).
 			Line(i18n.T(lang, "notifications.task.assigned.message_to_assignee", n.Doer.GetName(), n.Task.Title)).
 			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
@@ -145,12 +147,14 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 	// Check if the doer assigned the task to themselves
 	if n.Doer.ID == n.Assignee.ID {
 		return notifications.NewMail().
+			Conversational().
 			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others_self", n.Task.Title, n.Task.GetFullIdentifier(), n.Doer.GetName())).
 			Line(i18n.T(lang, "notifications.task.assigned.message_to_others_self", n.Doer.GetName())).
 			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 	}
 
 	return notifications.NewMail().
+		Conversational().
 		Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())).
 		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", n.Doer.GetName(), n.Assignee.GetName())).
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
@@ -358,6 +362,7 @@ func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mai
 	}
 
 	mail := notifications.NewMail().
+		Conversational().
 		From(n.Doer.GetNameAndFromEmail()).
 		Subject(subject).
 		Line(i18n.T(lang, "notifications.task.mentioned.message", n.Doer.GetName())).
