@@ -41,7 +41,7 @@ test.describe('Team', () => {
 			team_id: 1,
 			admin: true,
 		})
-		const teams = await TeamFactory.create(1, {
+		await TeamFactory.create(1, {
 			id: 1,
 		})
 
@@ -59,7 +59,7 @@ test.describe('Team', () => {
 			team_id: 1,
 			admin: false,
 		})
-		const teams = await TeamFactory.create(1, {
+		await TeamFactory.create(1, {
 			id: 1,
 		})
 

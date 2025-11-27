@@ -5,7 +5,7 @@ import {TaskCommentFactory} from '../../factories/task_comment'
 import {createDefaultViews} from '../project/prepareProjects'
 
 test.describe('Task comment pagination', () => {
-	test.beforeEach(async ({authenticatedPage: page}) => {
+	test.beforeEach(async () => {
 		await ProjectFactory.create(1)
 		createDefaultViews(1)
 		await TaskFactory.create(1, {id: 1})

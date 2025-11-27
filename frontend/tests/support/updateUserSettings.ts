@@ -1,6 +1,6 @@
 import type {APIRequestContext} from '@playwright/test'
 
-export async function updateUserSettings(apiContext: APIRequestContext, token: string, settings: any) {
+export async function updateUserSettings(apiContext: APIRequestContext, token: string, settings: Record<string, unknown>) {
 	const apiUrl = process.env.API_URL || 'http://localhost:3456/api/v1'
 
 	const userResponse = await apiContext.get(`${apiUrl}/user`, {

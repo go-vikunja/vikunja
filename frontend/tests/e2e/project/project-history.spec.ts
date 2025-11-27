@@ -27,7 +27,7 @@ test.describe('Project History', () => {
 			await page.waitForFunction(
 				(projectId) => {
 					const history = JSON.parse(localStorage.getItem('projectHistory') || '[]')
-					return history.some((h: any) => h.id === projectId)
+					return history.some((h: {id: number}) => h.id === projectId)
 				},
 				projects[i].id,
 			)

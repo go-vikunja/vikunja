@@ -14,7 +14,7 @@ export class TaskCommentFactory extends Factory {
 			author_id: 1,
 			task_id: 1,
 			created: now.toISOString(),
-			updated: now.toISOString()
+			updated: now.toISOString(),
 		}
 	}
 }

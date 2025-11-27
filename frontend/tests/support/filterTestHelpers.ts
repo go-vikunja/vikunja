@@ -1,7 +1,7 @@
 import {TaskFactory} from '../factories/task'
 import {TaskBucketFactory} from '../factories/task_buckets'
 
-export async function createTasksWithPriorities(buckets?: any[]) {
+export async function createTasksWithPriorities(buckets?: Array<{id: number; project_view_id: number}>) {
 	await TaskFactory.truncate()
 
 	const highPriorityTask1 = (await TaskFactory.create(1, {
@@ -63,7 +63,7 @@ export async function createTasksWithPriorities(buckets?: any[]) {
 	}
 }
 
-export async function createTasksWithSearch(buckets?: any[]) {
+export async function createTasksWithSearch(buckets?: Array<{id: number; project_view_id: number}>) {
 	await TaskFactory.truncate()
 
 	const task1 = (await TaskFactory.create(1, {

@@ -1,11 +1,12 @@
 import {test as base, type APIRequestContext, type Page} from '@playwright/test'
 import {Factory} from './factory'
 import {login, createFakeUser} from './authenticateUser'
+import type {UserAttributes} from '../factories/user'
 
 export const test = base.extend<{
 	apiContext: APIRequestContext;
 	authenticatedPage: Page;
-	currentUser: any;
+	currentUser: UserAttributes;
 }>({
 	apiContext: async ({playwright}, use) => {
 		const baseURL = process.env.API_URL || 'http://localhost:3456/api/v1/'
@@ -18,6 +19,7 @@ export const test = base.extend<{
 		await apiContext.dispose()
 	},
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	currentUser: async ({apiContext}, use) => {
 		const user = await createFakeUser()
 		await use(user)

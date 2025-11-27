@@ -5,7 +5,7 @@ import {createTasksWithPriorities, createTasksWithSearch} from '../../support/fi
 
 test.describe('Project View Table', () => {
 	test('Should show a table with tasks', async ({authenticatedPage: page}) => {
-		const projects = await createProjects(1)
+		await createProjects(1)
 		const tasks = await TaskFactory.create(1, {
 			project_id: 1,
 		})
@@ -16,7 +16,7 @@ test.describe('Project View Table', () => {
 	})
 
 	test('Should have working column switches', async ({authenticatedPage: page}) => {
-		const projects = await createProjects(1)
+		await createProjects(1)
 		await TaskFactory.create(1, {
 			project_id: 1,
 		})
@@ -48,8 +48,8 @@ test.describe('Project View Table', () => {
 	})
 
 	test('Should navigate to the task when the title is clicked', async ({authenticatedPage: page}) => {
-		const projects = await createProjects(1)
-		const tasks = await TaskFactory.create(5, {
+		await createProjects(1)
+		await TaskFactory.create(5, {
 			id: '{increment}',
 			project_id: 1,
 		})
@@ -65,7 +65,7 @@ test.describe('Project View Table', () => {
 	})
 
 	test('Should respect filter query parameter from URL', async ({authenticatedPage: page}) => {
-		const projects = await createProjects(1)
+		await createProjects(1)
 		const {highPriorityTasks, lowPriorityTasks} = await createTasksWithPriorities()
 
 		await page.goto('/projects/1/3?filter=priority%20>=%204')
@@ -82,7 +82,7 @@ test.describe('Project View Table', () => {
 	})
 
 	test('Should respect search query parameter from URL', async ({authenticatedPage: page}) => {
-		const projects = await createProjects(1)
+		await createProjects(1)
 		const {searchableTask} = await createTasksWithSearch()
 
 		await page.goto('/projects/1/3?s=meeting')

@@ -52,7 +52,7 @@ async function createTaskWithBuckets(buckets, count = 1) {
 test.describe('Project View Kanban', () => {
 	let buckets
 
-	test.beforeEach(async ({authenticatedPage: page}) => {
+	test.beforeEach(async () => {
 		const projects = await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {
 			id: 4,
@@ -265,8 +265,8 @@ test.describe('Project View Kanban', () => {
 
 	test('Should respect filter query parameter from URL', async ({authenticatedPage: page}) => {
 		// Create buckets first
-		const projects = await ProjectFactory.create(1)
-		const views = await ProjectViewFactory.create(1, {
+		await ProjectFactory.create(1)
+		await ProjectViewFactory.create(1, {
 			id: 4,
 			project_id: 1,
 			view_kind: 3,
@@ -292,8 +292,8 @@ test.describe('Project View Kanban', () => {
 
 	test('Should respect search query parameter from URL', async ({authenticatedPage: page}) => {
 		// Create buckets first
-		const projects = await ProjectFactory.create(1)
-		const views = await ProjectViewFactory.create(1, {
+		await ProjectFactory.create(1)
+		await ProjectViewFactory.create(1, {
 			id: 4,
 			project_id: 1,
 			view_kind: 3,

@@ -5,14 +5,14 @@ import {TokenFactory, type TokenAttributes} from '../../factories/token'
 test.describe('Password Reset', () => {
 	let user: UserAttributes
 
-	test.beforeEach(async ({page, apiContext}) => {
+	test.beforeEach(async () => {
 		await UserFactory.truncate()
 		await TokenFactory.truncate()
 		const users = await UserFactory.create(1)
 		user = users[0] as UserAttributes
 	})
 
-	test('Should allow a user to reset their password with a valid token', async ({page, apiContext}) => {
+	test('Should allow a user to reset their password with a valid token', async ({page}) => {
 		const tokenArray = await TokenFactory.create(1, {user_id: user.id as number, kind: 1})
 		const token: TokenAttributes = tokenArray[0] as TokenAttributes
 
@@ -34,7 +34,7 @@ test.describe('Password Reset', () => {
 		await expect(page).not.toHaveURL(/\/login/)
 	})
 
-	test('Should show an error for an invalid token', async ({page, apiContext}) => {
+	test('Should show an error for an invalid token', async ({page}) => {
 		await page.goto('/?userPasswordReset=invalidtoken123')
 		await expect(page).toHaveURL(/\/password-reset\?userPasswordReset=invalidtoken123/)
 
@@ -46,14 +46,14 @@ test.describe('Password Reset', () => {
 		await expect(page.locator('.message')).toContainText('Invalid token')
 	})
 
-	test('Should redirect to login if no token is present in query param when visiting /password-reset directly', async ({page, apiContext}) => {
+	test('Should redirect to login if no token is present in query param when visiting /password-reset directly', async ({page}) => {
 		await page.goto('/password-reset')
 		await expect(page).not.toHaveURL(/\/password-reset/)
 		await page.waitForTimeout(1000) // Wait for the redirect to happen - this seems to be flaky in CI
 		await expect(page).toHaveURL(/\/login/)
 	})
 
-	test('Should redirect to login if userPasswordReset token is not present in query param when visiting root', async ({page, apiContext}) => {
+	test('Should redirect to login if userPasswordReset token is not present in query param when visiting root', async ({page}) => {
 		await page.goto('/')
 		await expect(page).toHaveURL(/\/login/)
 	})

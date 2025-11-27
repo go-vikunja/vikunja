@@ -41,12 +41,12 @@ interface Task {
 	index: number;
 }
 
-interface User {
+interface _User {
 	id: number;
 	username: string;
 }
 
-interface Label {
+interface _Label {
 	id: number;
 	title: string;
 }
@@ -80,7 +80,7 @@ test.describe('Task', () => {
 	let projects: Project[]
 	let buckets: Bucket[]
 
-	test.beforeEach(async ({authenticatedPage: page}) => {
+	test.beforeEach(async () => {
 		projects = await ProjectFactory.create(1) as Project[]
 		const views = await createDefaultViews(projects[0].id)
 		buckets = await BucketFactory.create(1, {
@@ -181,14 +181,14 @@ test.describe('Task', () => {
 	})
 
 	test.describe('Task Detail View', () => {
-		test.beforeEach(async ({authenticatedPage: page}) => {
+		test.beforeEach(async () => {
 			TaskCommentFactory.truncate()
 			LabelTaskFactory.truncate()
 			TaskAttachmentFactory.truncate()
 		})
 
 		test('provides back navigation to the project in the list view', async ({authenticatedPage: page}) => {
-			const tasks = await TaskFactory.create(1)
+			await TaskFactory.create(1)
 			const loadTasksPromise = page.waitForResponse(response =>
 				response.url().includes('/projects/1/views/') && response.url().includes('/tasks'),
 			)
@@ -201,7 +201,7 @@ test.describe('Task', () => {
 		})
 
 		test('provides back navigation to the project in the table view', async ({authenticatedPage: page}) => {
-			const tasks = await TaskFactory.create(1)
+			await TaskFactory.create(1)
 			const loadTasksPromise = page.waitForResponse(response =>
 				response.url().includes('/projects/1/views/') && response.url().includes('/tasks'),
 			)
@@ -216,7 +216,7 @@ test.describe('Task', () => {
 		test.skip('provides back navigation to the project in the kanban view on mobile', async ({authenticatedPage: page}) => {
 			await page.setViewportSize({width: 375, height: 667}) // iphone-8
 
-			const tasks = await TaskFactory.create(1)
+			await TaskFactory.create(1)
 			await page.goto('/projects/1/4')
 			await page.waitForLoadState('networkidle')
 
@@ -232,7 +232,7 @@ test.describe('Task', () => {
 		test.skip('does not provide back navigation to the project in the kanban view on desktop', async ({authenticatedPage: page}) => {
 			await page.setViewportSize({width: 1440, height: 900}) // macbook-15
 
-			const tasks = await TaskFactory.create(1)
+			await TaskFactory.create(1)
 			await page.goto('/projects/1/4')
 			await page.waitForLoadState('networkidle')
 
@@ -865,7 +865,6 @@ test.describe('Task', () => {
 				id: 1,
 				project_id: projects[0].id,
 			})
-			const labels = await LabelFactory.create(1)
 			LabelTaskFactory.truncate()
 			await TaskBucketFactory.create(1, {
 				task_id: tasks[0].id,
