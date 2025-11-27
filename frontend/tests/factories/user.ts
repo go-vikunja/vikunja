@@ -1,6 +1,7 @@
 import {faker} from '@faker-js/faker'
 
 import {Factory} from '../support/factory'
+import {TEST_PASSWORD_HASH} from '../support/constants'
 
 export interface UserAttributes {
 	id: number | '{increment}';
@@ -22,7 +23,7 @@ export class UserFactory extends Factory {
 		return {
 			id: '{increment}',
 			username: faker.lorem.word(10) + faker.string.uuid(),
-			password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.', // 1234
+			password: TEST_PASSWORD_HASH,
 			status: 0,
 			issuer: 'local',
 			language: 'en',

@@ -1,5 +1,6 @@
 import type {Page, APIRequestContext} from '@playwright/test'
 import {UserFactory} from '../factories/user'
+import {TEST_PASSWORD} from './constants'
 
 /**
  * This authenticates a user and puts the token in local storage which allows us to perform authenticated requests.
@@ -13,7 +14,7 @@ export async function login(page: Page, apiContext: APIRequestContext, user?: an
 	const response = await apiContext.post('login', {
 		data: {
 			username: user.username,
-			password: '1234',
+			password: TEST_PASSWORD,
 		},
 	})
 

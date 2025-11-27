@@ -2,6 +2,7 @@ import type {Page} from '@playwright/test'
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
+import {TEST_PASSWORD} from '../../support/constants'
 
 interface LoginCredentials {
 	username: string
@@ -25,7 +26,7 @@ const testAndAssertFailed = async (page: Page, fixture: LoginCredentials): Promi
 
 const credentials: LoginCredentials = {
 	username: 'test',
-	password: '1234',
+	password: TEST_PASSWORD,
 }
 
 async function login(page: Page): Promise<void> {
@@ -61,7 +62,7 @@ test.describe('Login', () => {
 	test('Should fail with a bad username', async ({page}) => {
 		const fixture = {
 			username: 'loremipsum',
-			password: '1234',
+			password: TEST_PASSWORD,
 		}
 
 		await testAndAssertFailed(page, fixture)

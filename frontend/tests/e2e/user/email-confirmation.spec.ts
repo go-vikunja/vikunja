@@ -1,6 +1,7 @@
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {TokenFactory} from '../../factories/token'
+import {TEST_PASSWORD, TEST_PASSWORD_HASH} from '../../support/constants'
 
 test.describe('Email Confirmation', () => {
 	let user
@@ -14,7 +15,7 @@ test.describe('Email Confirmation', () => {
 		const users = await UserFactory.create(1, {
 			username: 'unconfirmeduser',
 			email: 'unconfirmed@example.com',
-			password: '$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.', // 1234
+			password: TEST_PASSWORD_HASH,
 			status: 1, // StatusEmailConfirmationRequired
 		})
 		user = users[0]
@@ -32,7 +33,7 @@ test.describe('Email Confirmation', () => {
 	test('Should fail login before email is confirmed', async ({page, apiContext}) => {
 		await page.goto('/login')
 		await page.locator('input[id=username]').fill(user.username)
-		await page.locator('input[id=password]').fill('1234')
+		await page.locator('input[id=password]').fill(TEST_PASSWORD)
 		await page.locator('.button').filter({hasText: 'Login'}).click()
 
 		await expect(page.locator('div.message.danger')).toContainText('Email address of the user not confirmed')
@@ -62,7 +63,7 @@ test.describe('Email Confirmation', () => {
 
 		// Now login should work
 		await page.locator('input[id=username]').fill(user.username)
-		await page.locator('input[id=password]').fill('1234')
+		await page.locator('input[id=password]').fill(TEST_PASSWORD)
 		await page.locator('.button').filter({hasText: 'Login'}).click()
 
 		// Should successfully log in
@@ -94,7 +95,7 @@ test.describe('Email Confirmation', () => {
 
 		// Login should still fail
 		await page.locator('input[id=username]').fill(user.username)
-		await page.locator('input[id=password]').fill('1234')
+		await page.locator('input[id=password]').fill(TEST_PASSWORD)
 		await page.locator('.button').filter({hasText: 'Login'}).click()
 
 		await expect(page.locator('div.message.danger')).toContainText('Email address of the user not confirmed')
@@ -155,7 +156,7 @@ test.describe('Email Confirmation', () => {
 
 		// Now login should work
 		await page.locator('input[id=username]').fill(user.username)
-		await page.locator('input[id=password]').fill('1234')
+		await page.locator('input[id=password]').fill(TEST_PASSWORD)
 		await page.locator('.button').filter({hasText: 'Login'}).click()
 
 		// Should successfully log in
