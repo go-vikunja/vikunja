@@ -7,9 +7,9 @@ import {createDefaultViews} from '../project/prepareProjects'
 test.describe('Task comment pagination', () => {
 	test.beforeEach(async ({authenticatedPage: page}) => {
 		await ProjectFactory.create(1)
-		createDefaultViews(1)
+		await createDefaultViews(1)
 		await TaskFactory.create(1, {id: 1})
-		TaskCommentFactory.truncate()
+		await TaskCommentFactory.truncate()
 	})
 
 	test('shows pagination when more comments than configured page size', async ({authenticatedPage: page, apiContext}) => {
