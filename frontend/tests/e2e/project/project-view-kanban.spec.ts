@@ -180,11 +180,10 @@ test.describe('Project View Kanban', () => {
 		await expect(multiselectInput).toBeVisible({timeout: 5000})
 		await multiselectInput.click()
 		await multiselectInput.pressSequentially(projects[1].title)
-		// The requests happen with a 200ms timeout. Because of that, the results are not yet there when we
-		// press enter and we can't simulate pressing on enter to select the item.
-		await page.waitForTimeout(300)
-		await expect(page.locator('.task-view .content.details .field .multiselect.control .search-results')).toBeVisible()
-		await page.locator('.task-view .content.details .field .multiselect.control .search-results').locator('> *').first().click()
+		// Wait for search results to appear before clicking
+		const searchResults = page.locator('.task-view .content.details .field .multiselect.control .search-results')
+		await searchResults.waitFor({state: 'visible'})
+		await searchResults.locator('> *').first().click()
 
 		await expect(page.locator('.global-notification')).toContainText('Success', {timeout: 1000})
 		await page.goBack()
