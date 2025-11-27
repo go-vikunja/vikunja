@@ -5,7 +5,7 @@ import {UserFactory} from '../../factories/user'
 
 test.describe('Team', () => {
 	test('Creates a new team', async ({authenticatedPage: page}) => {
-		TeamFactory.truncate()
+		await TeamFactory.truncate()
 		await page.goto('/teams')
 
 		const newTeamName = 'New Team'
