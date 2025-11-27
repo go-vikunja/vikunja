@@ -77,21 +77,12 @@ func TestProjectPermissions_OwnerInMultipleTeamsWithDifferentPermissions(t *test
 		s = db.NewSession()
 		defer s.Close()
 
-		// Create Team Y
+		// Create Team Y - User A will be automatically added as a member when creating the team
 		teamY := &Team{
 			Name:        "Team Y",
 			Description: "Team with admin permissions",
 		}
 		err = teamY.Create(s, userA)
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-
-		// Add User A to Team Y
-		teamMemberY := &TeamMember{
-			TeamID:   teamY.ID,
-			Username: "user1",
-		}
-		err = teamMemberY.Create(s, userA)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 
@@ -131,21 +122,12 @@ func TestProjectPermissions_OwnerInMultipleTeamsWithDifferentPermissions(t *test
 		s = db.NewSession()
 		defer s.Close()
 
-		// Create Team Z
+		// Create Team Z - User A will be automatically added as a member when creating the team
 		teamZ := &Team{
 			Name:        "Team Z",
 			Description: "Team with read-only permissions",
 		}
 		err = teamZ.Create(s, userA)
-		require.NoError(t, err)
-		require.NoError(t, s.Commit())
-
-		// Add User A to Team Z
-		teamMemberZ := &TeamMember{
-			TeamID:   teamZ.ID,
-			Username: "user1",
-		}
-		err = teamMemberZ.Create(s, userA)
 		require.NoError(t, err)
 		require.NoError(t, s.Commit())
 
@@ -208,20 +190,11 @@ func TestProjectPermissions_OwnerInMultipleTeamsAdminThenWrite(t *testing.T) {
 	err = s.Commit()
 	require.NoError(t, err)
 
-	// Create Team Y with admin permissions
+	// Create Team Y with admin permissions - User A will be automatically added as a member
 	teamY := &Team{
 		Name: "Team Y Admin",
 	}
 	err = teamY.Create(s, userA)
-	require.NoError(t, err)
-	err = s.Commit()
-	require.NoError(t, err)
-
-	teamMemberY := &TeamMember{
-		TeamID:   teamY.ID,
-		Username: "user1",
-	}
-	err = teamMemberY.Create(s, userA)
 	require.NoError(t, err)
 	err = s.Commit()
 	require.NoError(t, err)
@@ -236,20 +209,11 @@ func TestProjectPermissions_OwnerInMultipleTeamsAdminThenWrite(t *testing.T) {
 	err = s.Commit()
 	require.NoError(t, err)
 
-	// Create Team Z with write permissions
+	// Create Team Z with write permissions - User A will be automatically added as a member
 	teamZ := &Team{
 		Name: "Team Z Write",
 	}
 	err = teamZ.Create(s, userA)
-	require.NoError(t, err)
-	err = s.Commit()
-	require.NoError(t, err)
-
-	teamMemberZ := &TeamMember{
-		TeamID:   teamZ.ID,
-		Username: "user1",
-	}
-	err = teamMemberZ.Create(s, userA)
 	require.NoError(t, err)
 	err = s.Commit()
 	require.NoError(t, err)
