@@ -37,15 +37,14 @@ async function login(page: Page): Promise<void> {
 }
 
 test.describe('Login', () => {
-	test.beforeEach(async ({apiContext}) => {
+	test.beforeEach(async ({page, apiContext}) => {
 		await UserFactory.create(1, {username: credentials.username})
+		await page.clock.setFixedTime(new Date(1625656161057)) // 13:00
 	})
 
 	test('Should log in with the right credentials', async ({page}) => {
 		await page.goto('/login')
 		await login(page)
-		await page.clock.install({time: new Date(1625656161057)}) // 13:00
-		// Use more specific selector to avoid strict mode violation
 		await expect(page.locator('main h2')).toContainText(`Hi ${credentials.username}!`)
 	})
 
