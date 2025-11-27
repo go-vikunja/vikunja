@@ -139,6 +139,11 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/ApiTokens.vue'),
 				},
 				{
+					path: '/user/settings/keyboard-shortcuts',
+					name: 'user.settings.keyboardShortcuts',
+					component: () => import('@/views/user/settings/KeyboardShortcuts.vue'),
+				},
+				{
 					path: '/user/settings/migrate',
 					name: 'migrate.start',
 					component: () => import('@/views/migrate/Migration.vue'),

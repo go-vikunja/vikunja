@@ -208,6 +208,18 @@
           "expiresAt": "Expires at",
           "permissions": "Permissions"
         }
+      },
+      "keyboardShortcuts": {
+        "title": "Keyboard Shortcuts",
+        "description": "Customize keyboard shortcuts for actions. Navigation shortcuts (j/k, g+keys) are fixed and cannot be changed.",
+        "resetAll": "Reset All to Defaults",
+        "resetAllConfirm": "Are you sure you want to reset all keyboard shortcuts to defaults?",
+        "resetCategory": "Reset Category",
+        "resetToDefault": "Reset to default",
+        "shortcutUpdated": "Shortcut updated successfully",
+        "shortcutReset": "Shortcut reset to default",
+        "categoryReset": "Category shortcuts reset to defaults",
+        "allReset": "All shortcuts reset to defaults"
       }
     },
     "deletion": {
@@ -1095,6 +1107,16 @@
     "toggleMenu": "Toggle The Menu",
     "quickSearch": "Open the search/quick action bar",
     "then": "then",
+    "fixed": "Fixed",
+    "pressKeys": "Press keys...",
+    "customizeShortcuts": "Customize shortcuts",
+    "helpText": "You can customize most keyboard shortcuts in settings.",
+    "errors": {
+      "unknownAction": "Unknown shortcut action",
+      "notCustomizable": "This shortcut cannot be customized",
+      "emptyShortcut": "Please press at least one key",
+      "conflict": "This shortcut is already assigned to: "
+    },
     "task": {
       "title": "Task Page",
       "done": "Mark task done / undone",
