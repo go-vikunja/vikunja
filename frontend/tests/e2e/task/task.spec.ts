@@ -708,7 +708,9 @@ test.describe('Task', () => {
 				response.url().includes(`/tasks/${tasks[0].id}/attachments`) && response.request().method() === 'PUT',
 			)
 
-			await pasteFile(page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror', {timeout: 30_000}), 'image.jpg', 'image/jpeg')
+			const editor = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+			await expect(editor).toBeVisible({timeout: 30_000})
+			await pasteFile(editor, 'image.jpg', 'image/jpeg')
 
 			await uploadAttachmentPromise
 			await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
