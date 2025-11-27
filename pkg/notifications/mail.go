@@ -26,16 +26,17 @@ import (
 
 // Mail is a mail message
 type Mail struct {
-	from        string
-	to          string
-	subject     string
-	actionText  string
-	actionURL   string
-	greeting    string
-	introLines  []*mailLine
-	outroLines  []*mailLine
-	footerLines []*mailLine
-	threadID    string
+	from           string
+	to             string
+	subject        string
+	actionText     string
+	actionURL      string
+	greeting       string
+	introLines     []*mailLine
+	outroLines     []*mailLine
+	footerLines    []*mailLine
+	threadID       string
+	conversational bool
 }
 
 type mailLine struct {
@@ -105,6 +106,17 @@ func (m *Mail) HTML(line string) *Mail {
 func (m *Mail) ThreadID(threadID string) *Mail {
 	m.threadID = threadID
 	return m
+}
+
+// Conversational sets the email to use conversational styling
+func (m *Mail) Conversational() *Mail {
+	m.conversational = true
+	return m
+}
+
+// IsConversational returns whether the email uses conversational styling
+func (m *Mail) IsConversational() bool {
+	return m.conversational
 }
 
 func (m *Mail) appendLine(line string, isHTML bool) *Mail {
