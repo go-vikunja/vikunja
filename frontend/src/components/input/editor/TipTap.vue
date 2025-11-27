@@ -218,7 +218,7 @@ const {t} = useI18n()
 
 const defaultSetContentOptions: SetContentOptions = {
 	parseOptions: {
-		preserveWhitespace: 'full',
+		preserveWhitespace: true,
 	},
 }
 
@@ -556,7 +556,7 @@ const editor = useEditor({
 		bubbleNow()
 	},
 	parseOptions: {
-		preserveWhitespace: 'full',
+		preserveWhitespace: true,
 	},
 })
 
