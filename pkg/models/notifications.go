@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -86,6 +85,7 @@ type TaskCommentNotification struct {
 	Task      *Task        `json:"task"`
 	Comment   *TaskComment `json:"comment"`
 	Mentioned bool         `json:"mentioned"`
+	Project   *Project     `json:"project"`
 }
 
 func (n *TaskCommentNotification) SubjectID() int64 {
@@ -107,17 +107,11 @@ func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
 		mail.Subject(i18n.T(lang, "notifications.task.comment.mentioned_subject", n.Doer.GetName(), n.Task.Title))
 	}
 
-	// Get project title - use a fallback if we can't get it
-	projectTitle := i18n.T(lang, "notifications.common.fallbacks.project")
-	if project, err := GetProjectSimpleByID(db.NewSession(), n.Task.ProjectID); err == nil {
-		projectTitle = project.Title
-	}
-
 	headerLine := notifications.CreateConversationalHeader(
 		n.Doer.GetName(),
 		action,
 		n.Task.GetFrontendURL(),
-		projectTitle,
+		n.Project.Title,
 		n.Task.Title,
 	)
 	mail.HTML(headerLine)
@@ -150,16 +144,11 @@ type TaskAssignedNotification struct {
 	Task     *Task      `json:"task"`
 	Assignee *user.User `json:"assignee"`
 	Target   *user.User `json:"-"`
+	Project  *Project   `json:"project"`
 }
 
 // ToMail returns the mail notification for TaskAssignedNotification
 func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
-	// Get project title - use a fallback if we can't get it
-	projectTitle := i18n.T(lang, "notifications.common.fallbacks.project")
-	if project, err := GetProjectSimpleByID(db.NewSession(), n.Task.ProjectID); err == nil {
-		projectTitle = project.Title
-	}
-
 	if n.Target.ID == n.Assignee.ID {
 		// Notification to the assignee
 		mail := notifications.NewMail().
@@ -170,7 +159,7 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 			n.Doer.GetName(),
 			i18n.T(lang, "notifications.common.actions.assigned_you"),
 			n.Task.GetFrontendURL(),
-			projectTitle,
+			n.Project.Title,
 			n.Task.Title,
 		)
 		mail.HTML(headerLine)
@@ -188,7 +177,7 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 			n.Doer.GetName(),
 			i18n.T(lang, "notifications.common.actions.assigned_themselves"),
 			n.Task.GetFrontendURL(),
-			projectTitle,
+			n.Project.Title,
 			n.Task.Title,
 		)
 		mail.HTML(headerLine)
@@ -205,7 +194,7 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 		n.Doer.GetName(),
 		i18n.T(lang, "notifications.common.actions.assigned_user", n.Assignee.GetName()),
 		n.Task.GetFrontendURL(),
-		projectTitle,
+		n.Project.Title,
 		n.Task.Title,
 	)
 	mail.HTML(headerLine)
@@ -396,9 +385,10 @@ func (n *UndoneTasksOverdueNotification) Name() string {
 
 // UserMentionedInTaskNotification represents a UserMentionedInTaskNotification notification
 type UserMentionedInTaskNotification struct {
-	Doer  *user.User `json:"doer"`
-	Task  *Task      `json:"task"`
-	IsNew bool       `json:"is_new"`
+	Doer    *user.User `json:"doer"`
+	Task    *Task      `json:"task"`
+	IsNew   bool       `json:"is_new"`
+	Project *Project   `json:"project"`
 }
 
 func (n *UserMentionedInTaskNotification) SubjectID() int64 {
@@ -425,17 +415,11 @@ func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mai
 		action = i18n.T(lang, "notifications.common.actions.mentioned_you_new_task")
 	}
 
-	// Get project title - use a fallback if we can't get it
-	projectTitle := i18n.T(lang, "notifications.common.fallbacks.project")
-	if project, err := GetProjectSimpleByID(db.NewSession(), n.Task.ProjectID); err == nil {
-		projectTitle = project.Title
-	}
-
 	headerLine := notifications.CreateConversationalHeader(
 		n.Doer.GetName(),
 		action,
 		n.Task.GetFrontendURL(),
-		projectTitle,
+		n.Project.Title,
 		n.Task.Title,
 	)
 	mail.HTML(headerLine)
