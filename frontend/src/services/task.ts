@@ -7,7 +7,7 @@ import LabelService from './label'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
-import { AuthenticatedHTTPFactory } from '@/helpers/fetcher'
+import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
 const parseDate = date => {
 	if (date) {
