@@ -1,6 +1,5 @@
 import {test, expect} from '../../support/fixtures'
 import {TaskFactory} from '../../factories/task'
-import {ProjectFactory} from '../../factories/project'
 import {createProjects} from './prepareProjects'
 
 async function openAndSetFilters(page) {

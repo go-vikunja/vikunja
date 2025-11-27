@@ -6,7 +6,7 @@ import {ProjectViewFactory} from '../../factories/project_view'
 
 test.describe('Project View Gantt', () => {
 	test('Hides tasks with no dates', async ({authenticatedPage: page}) => {
-		const projects = await ProjectFactory.create(1)
+		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		const tasks = await TaskFactory.create(1)
 		await page.goto('/projects/1/2')
@@ -15,7 +15,7 @@ test.describe('Project View Gantt', () => {
 	})
 
 	test('Shows tasks from the current and next month', async ({authenticatedPage: page}) => {
-		const projects = await ProjectFactory.create(1)
+		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		const now = Date.UTC(2022, 8, 25)
 		await page.clock.install({time: new Date(now)})
@@ -31,7 +31,7 @@ test.describe('Project View Gantt', () => {
 	})
 
 	test('Shows tasks with dates', async ({authenticatedPage: page}) => {
-		const projects = await ProjectFactory.create(1)
+		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		const now = new Date()
 		const tasks = await TaskFactory.create(1, {
@@ -45,7 +45,7 @@ test.describe('Project View Gantt', () => {
 	})
 
 	test('Shows tasks with no dates after enabling them', async ({authenticatedPage: page}) => {
-		const projects = await ProjectFactory.create(1)
+		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		const tasks = await TaskFactory.create(1, {
 			start_date: null,
@@ -60,7 +60,7 @@ test.describe('Project View Gantt', () => {
 	})
 
 	test('Drags a task around', async ({authenticatedPage: page}) => {
-		const projects = await ProjectFactory.create(1)
+		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		const taskUpdatePromise = page.waitForResponse(response =>
 			response.url().includes('/tasks/') && response.request().method() === 'POST',
@@ -92,7 +92,7 @@ test.describe('Project View Gantt', () => {
 	})
 
 	test('Should change the query parameters when selecting a date range', async ({authenticatedPage: page}) => {
-		const projects = await ProjectFactory.create(1)
+		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		const now = Date.UTC(2022, 10, 9)
 		await page.clock.install({time: new Date(now)})
@@ -108,7 +108,7 @@ test.describe('Project View Gantt', () => {
 	})
 
 	test('Should change the date range based on date query parameters', async ({authenticatedPage: page}) => {
-		const projects = await ProjectFactory.create(1)
+		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		await page.goto('/projects/1/2?dateFrom=2022-09-25&dateTo=2022-11-05')
 
@@ -119,7 +119,7 @@ test.describe('Project View Gantt', () => {
 	})
 
 	test('Should open a task when double clicked on it', async ({authenticatedPage: page}) => {
-		const projects = await ProjectFactory.create(1)
+		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		const now = new Date()
 		const tasks = await TaskFactory.create(1, {

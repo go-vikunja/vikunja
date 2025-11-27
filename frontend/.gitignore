@@ -43,3 +43,4 @@ test-results/
 
 # histoire
 .histoire
+package-lock.json
