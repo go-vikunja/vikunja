@@ -693,6 +693,8 @@ definitions:
           a separate "Important" project. This value depends on the user making the
           call to the api.
         type: boolean
+      is_unread:
+        type: boolean
       labels:
         description: An array of labels which are associated with this task. This
           property is read-only, you must use the separate endpoint to add labels
@@ -905,6 +907,13 @@ definitions:
     - TaskRepeatModeDefault
     - TaskRepeatModeMonth
     - TaskRepeatModeFromCurrentDate
+  models.TaskUnreadStatus:
+    properties:
+      taskID:
+        type: integer
+      userID:
+        type: integer
+    type: object
   models.Team:
     properties:
       created:
@@ -4686,6 +4695,38 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Updates a task position
+      tags:
+      - task
+  /tasks/{projecttask}/read:
+    post:
+      consumes:
+      - application/json
+      description: Marks a task as read for the current user by removing the unread
+        status entry.
+      parameters:
+      - description: Task ID
+        in: path
+        name: projecttask
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The task unread status object.
+          schema:
+            $ref: '#/definitions/models.TaskUnreadStatus'
+        "403":
+          description: The user does not have access to the task
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Mark a task as read
       tags:
       - task
   /tasks/{task}/labels:
