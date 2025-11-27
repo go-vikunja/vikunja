@@ -1,8 +1,14 @@
+import type {Page} from '@playwright/test'
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
 
-const testAndAssertFailed = async (page, fixture) => {
+interface LoginCredentials {
+	username: string
+	password: string
+}
+
+const testAndAssertFailed = async (page: Page, fixture: LoginCredentials): Promise<void> => {
 	const loginPromise = page.waitForResponse(response =>
 		response.url().includes('/login') && response.request().method() === 'POST',
 	)
@@ -13,20 +19,20 @@ const testAndAssertFailed = async (page, fixture) => {
 	await page.locator('.button').filter({hasText: 'Login'}).click()
 
 	await loginPromise
-	await expect(page).toHaveURL(/\//)
+	await expect(page).toHaveURL('/login')
 	await expect(page.locator('div.message.danger')).toContainText('Wrong username or password.')
 }
 
-const credentials = {
+const credentials: LoginCredentials = {
 	username: 'test',
 	password: '1234',
 }
 
-async function login(page) {
+async function login(page: Page): Promise<void> {
 	await page.locator('input[id=username]').fill(credentials.username)
 	await page.locator('input[id=password]').fill(credentials.password)
 	await page.locator('.button').filter({hasText: 'Login'}).click()
-	await expect(page).toHaveURL(/\//)
+	await expect(page).toHaveURL('/')
 }
 
 test.describe('Login', () => {
