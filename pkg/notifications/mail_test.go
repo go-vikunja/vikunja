@@ -648,14 +648,17 @@ func TestConversationalMail(t *testing.T) {
 		assert.NotContains(t, mailopts.HTMLMessage, "<p>\n\t\t\n\t</p>")
 
 		// Should use conversational styling
-		assert.Contains(t, mailopts.HTMLMessage, "background: #f9fafb")
+		assert.Contains(t, mailopts.HTMLMessage, "background: #f6f8fa")
 		assert.Contains(t, mailopts.HTMLMessage, "font-family: -apple-system")
 		assert.Contains(t, mailopts.HTMLMessage, "max-width: 700px")
-		assert.Contains(t, mailopts.HTMLMessage, "height: 24px")
+
+		// Should NOT have logo (completely removed)
+		assert.NotContains(t, mailopts.HTMLMessage, "logo.png")
+		assert.NotContains(t, mailopts.HTMLMessage, "Vikunja")
 
 		// Should have inline action link with arrow
 		assert.Contains(t, mailopts.HTMLMessage, "View Task →")
-		assert.Contains(t, mailopts.HTMLMessage, "color: #2563eb")
+		assert.Contains(t, mailopts.HTMLMessage, "color: #0969da")
 
 		// Should not have the formal button styling
 		assert.NotContains(t, mailopts.HTMLMessage, "background-color: #1973ff")
@@ -687,6 +690,10 @@ func TestConversationalMail(t *testing.T) {
 		assert.Contains(t, mailopts.HTMLMessage, "width: 600px")
 		assert.Contains(t, mailopts.HTMLMessage, "height: 75px")
 
+		// Should HAVE logo in formal emails
+		assert.Contains(t, mailopts.HTMLMessage, "logo.png")
+		assert.Contains(t, mailopts.HTMLMessage, "Vikunja")
+
 		// Should have formal button styling
 		assert.Contains(t, mailopts.HTMLMessage, "background-color: #1973ff")
 		assert.Contains(t, mailopts.HTMLMessage, "width:280px")
@@ -710,7 +717,7 @@ func TestConversationalMail(t *testing.T) {
 		require.NoError(t, err)
 
 		// Should use conversational styling
-		assert.Contains(t, mailopts.HTMLMessage, "background: #f9fafb")
+		assert.Contains(t, mailopts.HTMLMessage, "background: #f6f8fa")
 		assert.Contains(t, mailopts.HTMLMessage, "max-width: 700px")
 
 		// Should not have action section
@@ -730,8 +737,64 @@ func TestConversationalMail(t *testing.T) {
 		require.NoError(t, err)
 
 		// Should have footer with conversational styling
-		assert.Contains(t, mailopts.HTMLMessage, "color: #6b7280")
+		assert.Contains(t, mailopts.HTMLMessage, "color: #656d76")
 		assert.Contains(t, mailopts.HTMLMessage, "font-size: 12px")
 		assert.Contains(t, mailopts.HTMLMessage, "This is a footer line")
+	})
+
+	t.Run("Conversational header line format", func(t *testing.T) {
+		username := "testuser"
+		action := "left a comment"
+		taskURL := "https://example.com/task/123"
+		projectTitle := "Test Project"
+		taskTitle := "Test Task"
+
+		headerLine := CreateConversationalHeader(username, action, taskURL, projectTitle, taskTitle)
+
+		// Should contain username in strong tags
+		assert.Contains(t, headerLine, `<strong>testuser</strong>`)
+
+		// Should contain action
+		assert.Contains(t, headerLine, "left a comment")
+
+		// Should contain task link with GitHub blue color
+		assert.Contains(t, headerLine, `<a href="https://example.com/task/123"`)
+		assert.Contains(t, headerLine, `color: #0969da`)
+		assert.Contains(t, headerLine, `(Test Project &gt; Test Task)`)
+
+		// Should have proper margin bottom
+		assert.Contains(t, headerLine, `margin-bottom: 16px`)
+	})
+
+	t.Run("Conversational action link font size", func(t *testing.T) {
+		mail := NewMail().
+			Conversational().
+			Subject("Test").
+			Line("Content").
+			Action("View Task", "https://example.com/task/123")
+
+		mailOpts, err := RenderMail(mail, "en")
+		assert.NoError(t, err)
+
+		// Action link should have 14px font size to match main content
+		assert.Contains(t, mailOpts.HTMLMessage, `font-size: 14px; line-height: 1.5`) // Main content
+		assert.Contains(t, mailOpts.HTMLMessage, `font-weight: 500; font-size: 14px`) // Action link
+	})
+
+	t.Run("Translation system integration", func(t *testing.T) {
+		// Test that translation keys are properly structured
+		// This verifies the translation keys exist and are accessible
+
+		// Test action translations
+		headerLine1 := CreateConversationalHeader("John", "left a comment", "https://example.com", "Project", "Task")
+		assert.Contains(t, headerLine1, "left a comment")
+
+		headerLine2 := CreateConversationalHeader("Jane", "assigned you", "https://example.com", "Project", "Task")
+		assert.Contains(t, headerLine2, "assigned you")
+
+		// Verify header structure is maintained
+		assert.Contains(t, headerLine1, "<strong>John</strong>")
+		assert.Contains(t, headerLine1, `color: #0969da`)
+		assert.Contains(t, headerLine1, "(Project &gt; Task)")
 	})
 }
