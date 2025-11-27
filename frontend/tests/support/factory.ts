@@ -69,7 +69,7 @@ export class Factory {
 		return Promise.resolve(data)
 	}
 
-	static async seed(table: string, data: unknown, truncate = true) {
+	static async seed(table: string, data: any, truncate = true) {
 		if (data === null) {
 			data = []
 		}

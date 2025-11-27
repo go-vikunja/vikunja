@@ -30,7 +30,7 @@ async function login(page) {
 }
 
 test.describe('Login', () => {
-	test.beforeEach(async () => {
+	test.beforeEach(async ({apiContext}) => {
 		await UserFactory.create(1, {username: credentials.username})
 	})
 

@@ -4,7 +4,7 @@ import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
 
 test.describe('Registration', () => {
-	test.beforeEach(async ({page}) => {
+	test.beforeEach(async ({page, apiContext}) => {
 		await UserFactory.create(1, {
 			username: 'test',
 		})
@@ -12,7 +12,7 @@ test.describe('Registration', () => {
 		await page.evaluate(() => localStorage.removeItem('token'))
 	})
 
-	test('Should work without issues', async ({page}) => {
+	test('Should work without issues', async ({page, apiContext}) => {
 		const fixture = {
 			username: 'testuser',
 			password: '12345678',
@@ -29,7 +29,7 @@ test.describe('Registration', () => {
 		await expect(page.locator('main h2')).toContainText(`Hi ${fixture.username}!`)
 	})
 
-	test('Should fail', async ({page}) => {
+	test('Should fail', async ({page, apiContext}) => {
 		const fixture = {
 			username: 'test',
 			password: '12345678',

@@ -1,12 +1,13 @@
 import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
+import {seed} from '../../support/seed'
 import {TaskFactory} from '../../factories/task'
 import {BucketFactory} from '../../factories/bucket'
 import {updateUserSettings} from '../../support/updateUserSettings'
 import {createDefaultViews} from '../project/prepareProjects'
 import type {APIRequestContext} from '@playwright/test'
 
-async function seedTasks(_apiContext: APIRequestContext, numberOfTasks = 50, startDueDate = new Date()) {
+async function seedTasks(apiContext: APIRequestContext, numberOfTasks = 50, startDueDate = new Date()) {
 	const project = (await ProjectFactory.create())[0]
 	const views = await createDefaultViews(project.id)
 	await BucketFactory.create(1, {
@@ -61,7 +62,7 @@ test.describe('Home Page Task Overview', () => {
 	})
 
 	test.skip('Should show a new task with a very soon due date at the top', async ({authenticatedPage: page, apiContext}) => {
-		const {project} = await seedTasks(apiContext, 49)
+		const {tasks, project} = await seedTasks(apiContext, 49)
 		const newTaskTitle = 'New Task'
 
 		await page.goto('/')

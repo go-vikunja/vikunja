@@ -8,9 +8,9 @@ test.describe('Projects', () => {
 		// Use authenticated page for all tests
 	})
 
-	let projects: unknown[]
+	let projects: any[]
 
-	test.beforeEach(async () => {
+	test.beforeEach(async ({authenticatedPage}) => {
 		projects = await createProjects()
 	})
 

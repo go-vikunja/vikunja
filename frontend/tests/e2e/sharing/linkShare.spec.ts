@@ -23,7 +23,7 @@ async function prepareLinkShare() {
 }
 
 test.describe('Link shares', () => {
-	test('Can view a link share', async ({page}) => {
+	test('Can view a link share', async ({page, apiContext}) => {
 		const {share, project, tasks} = await prepareLinkShare()
 
 		await page.goto(`/share/${share.hash}/auth`)
@@ -35,7 +35,7 @@ test.describe('Link shares', () => {
 		await expect(page).toHaveURL(new RegExp(`/projects/${project.id}/1#share-auth-token=${share.hash}`))
 	})
 
-	test('Should work when directly viewing a project with share hash present', async ({page}) => {
+	test('Should work when directly viewing a project with share hash present', async ({page, apiContext}) => {
 		const {share, project, tasks} = await prepareLinkShare()
 
 		await page.goto(`/projects/${project.id}/1#share-auth-token=${share.hash}`)
@@ -45,8 +45,8 @@ test.describe('Link shares', () => {
 		await expect(page.locator('.tasks')).toContainText(tasks[0].title)
 	})
 
-	test('Should work when directly viewing a task with share hash present', async ({page}) => {
-		const {share, tasks} = await prepareLinkShare()
+	test('Should work when directly viewing a task with share hash present', async ({page, apiContext}) => {
+		const {share, project, tasks} = await prepareLinkShare()
 
 		await page.goto(`/tasks/${tasks[0].id}#share-auth-token=${share.hash}`)
 

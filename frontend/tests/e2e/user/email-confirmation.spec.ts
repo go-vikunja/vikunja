@@ -6,7 +6,7 @@ test.describe('Email Confirmation', () => {
 	let user
 	let confirmationToken
 
-	test.beforeEach(async () => {
+	test.beforeEach(async ({page, apiContext}) => {
 		await UserFactory.truncate()
 		await TokenFactory.truncate()
 
@@ -29,7 +29,7 @@ test.describe('Email Confirmation', () => {
 		})
 	})
 
-	test('Should fail login before email is confirmed', async ({page}) => {
+	test('Should fail login before email is confirmed', async ({page, apiContext}) => {
 		await page.goto('/login')
 		await page.locator('input[id=username]').fill(user.username)
 		await page.locator('input[id=password]').fill('1234')
@@ -38,7 +38,7 @@ test.describe('Email Confirmation', () => {
 		await expect(page.locator('div.message.danger')).toContainText('Email address of the user not confirmed')
 	})
 
-	test('Should confirm email and allow login', async ({page}) => {
+	test('Should confirm email and allow login', async ({page, apiContext}) => {
 		// Setup response promise for the confirmation API call
 		const confirmEmailPromise = page.waitForResponse(response =>
 			response.url().includes('/user/confirm') && response.request().method() === 'POST',
@@ -72,7 +72,7 @@ test.describe('Email Confirmation', () => {
 		await expect(page.locator('body')).toContainText(user.username)
 	})
 
-	test('Should fail with invalid confirmation token', async ({page}) => {
+	test('Should fail with invalid confirmation token', async ({page, apiContext}) => {
 		// Setup response promise for the confirmation API call
 		const confirmEmailPromise = page.waitForResponse(response =>
 			response.url().includes('/user/confirm') && response.request().method() === 'POST',
@@ -100,7 +100,7 @@ test.describe('Email Confirmation', () => {
 		await expect(page.locator('div.message.danger')).toContainText('Email address of the user not confirmed')
 	})
 
-	test('Should not allow using the same token twice', async ({page}) => {
+	test('Should not allow using the same token twice', async ({page, apiContext}) => {
 		// First confirmation - should work
 		let confirmEmailPromise = page.waitForResponse(response =>
 			response.url().includes('/user/confirm') && response.request().method() === 'POST',
@@ -112,7 +112,7 @@ test.describe('Email Confirmation', () => {
 		}, confirmationToken)
 		await page.reload()
 
-		const confirmResponse = await confirmEmailPromise
+		let confirmResponse = await confirmEmailPromise
 		expect(confirmResponse.status()).toBe(200)
 		await expect(page.locator('.message.success')).toBeVisible({timeout: 10000})
 		await expect(page.locator('.message.success')).toContainText('You successfully confirmed your email')
@@ -132,7 +132,7 @@ test.describe('Email Confirmation', () => {
 		await expect(page.locator('.message.danger')).toBeVisible({timeout: 10000})
 	})
 
-	test('Should confirm email when clicking link from email (via query parameter)', async ({page}) => {
+	test('Should confirm email when clicking link from email (via query parameter)', async ({page, apiContext}) => {
 		// Setup response promise for the confirmation API call
 		const confirmEmailPromise = page.waitForResponse(response =>
 			response.url().includes('/user/confirm') && response.request().method() === 'POST',

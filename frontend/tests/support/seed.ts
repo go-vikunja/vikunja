@@ -10,7 +10,7 @@ import type {APIRequestContext} from '@playwright/test'
  * @param table
  * @param data
  */
-export async function seed(apiContext: APIRequestContext, table: string, data: unknown = {}, truncate = true) {
+export async function seed(apiContext: APIRequestContext, table: string, data: any = {}, truncate = true) {
 	if (data === null) {
 		data = []
 	}
