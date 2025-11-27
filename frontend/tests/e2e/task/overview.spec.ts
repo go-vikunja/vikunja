@@ -157,7 +157,7 @@ test.describe('Home Page Task Overview', () => {
 	})
 
 	test('Should show the cta buttons for new project when there are no tasks', async ({authenticatedPage: page}) => {
-		TaskFactory.truncate()
+		await TaskFactory.truncate()
 
 		await page.goto('/')
 
