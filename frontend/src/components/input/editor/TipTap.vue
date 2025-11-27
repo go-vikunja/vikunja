@@ -644,7 +644,13 @@ function setEdit(focus: boolean = true) {
 	}
 }
 
-onBeforeUnmount(() => editor.value?.destroy())
+onBeforeUnmount(() => {
+	if (props.enableDiscardShortcut) {
+		tiptapInstanceRef.value?.removeEventListener('keydown', handleEscapeKey)
+	}
+
+	editor.value?.destroy()
+})
 
 const uploadInputRef = ref<HTMLInputElement | null>(null)
 
@@ -721,6 +727,11 @@ onMounted(async () => {
 		document.addEventListener('keydown', setFocusToEditor)
 	}
 
+	// Add Escape key handler to prevent event bubbling when editing
+	if (props.enableDiscardShortcut) {
+		tiptapInstanceRef.value?.addEventListener('keydown', handleEscapeKey)
+	}
+
 	await nextTick()
 
 	// Load draft from localStorage if available
@@ -784,6 +795,24 @@ function focusIfEditing() {
 	if (isEditing.value) {
 		editor.value?.commands.focus()
 	}
+}
+
+function handleEscapeKey(event: KeyboardEvent) {
+	// Only intercept Escape when discard shortcut is enabled
+	if (event.key !== 'Escape' || !props.enableDiscardShortcut) {
+		return
+	}
+
+	// Check if the event originated from within the ProseMirror editor
+	const target = event.target as HTMLElement
+	const isInEditor = target.contentEditable === 'true' || target.closest('.ProseMirror')
+	if (!isInEditor) {
+		return
+	}
+
+	// Stop propagation to prevent modal/parent handlers from firing
+	event.stopPropagation()
+	// Don't preventDefault - let ProseMirror's extension handle the actual exit
 }
 
 function clickTasklistCheckbox(event: MouseEvent) {
