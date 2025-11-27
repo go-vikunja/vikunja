@@ -19,13 +19,14 @@ test.describe('Registration', () => {
 			email: 'testuser@example.com',
 		}
 
+		// Install clock before navigation so app observes mocked time for greeting
+		await page.clock.install({time: new Date(1625656161057)}) // 13:00
 		await page.goto('/register')
 		await page.locator('#username').fill(fixture.username)
 		await page.locator('#email').fill(fixture.email)
 		await page.locator('#password').fill(fixture.password)
 		await page.locator('#register-submit').click()
-		await expect(page).toHaveURL(/\//)
-		await page.clock.install({time: new Date(1625656161057)}) // 13:00
+		await expect(page).toHaveURL('/')
 		await expect(page.locator('main h2')).toContainText(`Hi ${fixture.username}!`)
 	})
 
