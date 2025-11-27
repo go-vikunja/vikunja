@@ -23,7 +23,6 @@ import (
 	"net/mail"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -678,25 +677,3 @@ func (u *User) SetStatus(s *xorm.Session, status Status) (err error) {
 		Update(u)
 	return
 }
-
-// GetAvatarURL returns the full URL to the user's avatar for use in emails
-func (u *User) GetAvatarURL(size int64) string {
-	if size == 0 {
-		size = 20 // Default size for email avatars
-	}
-
-	// Import config here to avoid circular imports
-	publicURL := config.ServicePublicURL.GetString()
-	if publicURL == "" {
-		// Fallback to a relative URL if no public URL is configured
-		return fmt.Sprintf("/api/v1/avatar/%s?size=%d", u.Username, size)
-	}
-
-	// Remove trailing slash from public URL and construct full avatar URL
-	publicURL = strings.TrimSuffix(publicURL, "/")
-	return fmt.Sprintf("%s/api/v1/avatar/%s?size=%d", publicURL, u.Username, size)
-}
-
-
-
-
