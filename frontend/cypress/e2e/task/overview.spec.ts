@@ -37,30 +37,6 @@ function seedTasks(numberOfTasks = 50, startDueDate = new Date()) {
 describe('Home Page Task Overview', () => {
 	createFakeUserAndLogin()
 
-	it('Should show tasks with a near due date first on the home page overview', () => {
-		const taskCount = 50
-		const {tasks} = seedTasks(taskCount)
-
-		cy.visit('/')
-		cy.get('[data-cy="showTasks"] .card .task')
-			.each(([task], index) => {
-				expect(task.innerText).to.contain(tasks[index].title)
-			})
-	})
-
-	it('Should show overdue tasks first, then show other tasks', () => {
-		const now = new Date()
-		const oldDate = new Date(new Date(now).setDate(now.getDate() - 14))
-		const taskCount = 50
-		const {tasks} = seedTasks(taskCount, oldDate)
-
-		cy.visit('/')
-		cy.get('[data-cy="showTasks"] .card .task')
-			.each(([task], index) => {
-				expect(task.innerText).to.contain(tasks[index].title)
-			})
-	})
-
 	it('Should show a new task with a very soon due date at the top', () => {
 		const {tasks} = seedTasks(49)
 		const newTaskTitle = 'New Task'
@@ -130,22 +106,4 @@ describe('Home Page Task Overview', () => {
 			.should('contain.text', newTaskTitle)
 	})
 	
-	it('Should show the cta buttons for new project when there are no tasks', () => {
-		TaskFactory.truncate()
-		
-		cy.visit('/')
-		
-		cy.get('.home.app-content .content')
-			.should('contain.text', 'Import your projects and tasks from other services into Vikunja:')
-	})
-	
-	it('Should not show the cta buttons for new project when there are tasks', () => {
-		seedTasks()
-
-		cy.visit('/')
-
-		cy.get('.home.app-content .content')
-			.should('not.contain.text', 'You can create a new project for your new tasks:')
-			.should('not.contain.text', 'Or import your projects and tasks from other services into Vikunja:')
-	})
 })

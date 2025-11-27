@@ -76,5 +76,17 @@ func HandleTesting(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusCreated, nil)
+	s := db.NewSession()
+	defer s.Close()
+	data := []map[string]interface{}{}
+	err = s.Table(table).Find(&data)
+	if err != nil {
+		log.Errorf("Error fetching table data: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   true,
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusCreated, data)
 }

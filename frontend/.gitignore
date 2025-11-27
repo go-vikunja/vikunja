@@ -20,6 +20,8 @@ coverage
 # Test files
 cypress/screenshots
 cypress/videos
+playwright-report/
+test-results/
 
 # local env files
 .env.local
@@ -41,4 +43,4 @@ cypress/videos
 
 # histoire
 .histoire
-TYPECHECK_ISSUES.md
+package-lock.json
