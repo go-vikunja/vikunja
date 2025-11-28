@@ -17,8 +17,13 @@
 package migration
 
 import (
+	"strings"
+
+	"code.vikunja.io/api/pkg/db"
+
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 func init() {
@@ -26,8 +31,21 @@ func init() {
 		ID:          "20251108154913",
 		Description: "Add index on task_comments.task_id for better query performance",
 		Migrate: func(tx *xorm.Engine) error {
-			_, err := tx.Exec("CREATE INDEX IF NOT EXISTS IDX_task_comments_task_id ON task_comments (task_id)")
-			return err
+			var query string
+
+			switch db.Type() {
+			case schemas.POSTGRES, schemas.SQLITE:
+				query = "CREATE INDEX IF NOT EXISTS IDX_task_comments_task_id ON task_comments (task_id)"
+			case schemas.MYSQL:
+				query = "CREATE INDEX IDX_task_comments_task_id ON task_comments (task_id)"
+			}
+
+			_, err := tx.Exec(query)
+			// For MySQL, ignore duplicate key name error (Error 1061)
+			if err != nil && (!strings.Contains(err.Error(), "Error 1061") || !strings.Contains(err.Error(), "Duplicate key name")) {
+				return err
+			}
+			return nil
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
