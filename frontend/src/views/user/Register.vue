@@ -266,10 +266,10 @@ async function submit() {
 				serverValidationErrors.value = fieldErrors
 			} else {
 				// Fallback to general error message if no field errors
-				errorMessage.value = e.message || 'Registration failed'
+				errorMessage.value = e.message || t('user.auth.registrationFailed')
 			}
 		} else {
-			errorMessage.value = 'Registration failed'
+			errorMessage.value = t('user.auth.registrationFailed')
 		}
 	}
 }
