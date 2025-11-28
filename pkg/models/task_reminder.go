@@ -126,7 +126,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 			userProjects[task.ProjectID] = p.isOwner(u)
 
 			if !p.isOwner(u) {
-				userProjects[task.ProjectID], _, err = p.checkPermission(s, u, PermissionRead)
+				userProjects[task.ProjectID], _, err = p.checkPermission(s, u, PermissionRead, PermissionWrite, PermissionAdmin)
 				if err != nil {
 					return err
 				}
