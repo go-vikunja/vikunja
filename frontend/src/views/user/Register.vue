@@ -21,10 +21,10 @@
 				required
 				type="text"
 				autocomplete="username"
-				:error="usernameValid !== true ? usernameValid : null"
+				:error="usernameError"
 				@keyup.enter="submit"
 				@focusout="validateUsername(); validateUsernameAfterFirst = true"
-				@keyup="validateUsernameAfterFirst && validateUsername()"
+				@keyup="handleUsernameKeyup"
 			/>
 			<FormField
 				id="email"
@@ -34,11 +34,11 @@
 				:placeholder="$t('user.auth.emailPlaceholder')"
 				required
 				type="email"
-				:error="emailValid ? null : $t('user.auth.emailInvalid')"
+				:error="emailError"
 				autocomplete="email"
 				@keyup.enter="submit"
 				@focusout="validateEmail(); validateEmailAfterFirst = true"
-				@keyup="validateEmailAfterFirst && validateEmail()"
+				@keyup="handleEmailKeyup"
 			/>
 			<div class="field">
 				<label
@@ -50,6 +50,12 @@
 					@submit="submit"
 					@update:modelValue="v => credentials.password = v"
 				/>
+				<p
+					v-if="passwordError"
+					class="help is-danger"
+				>
+					{{ passwordError }}
+				</p>
 			</div>
 
 			<XButton
@@ -98,6 +104,7 @@ import Message from '@/components/misc/Message.vue'
 import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/Password.vue'
 import FormField from '@/components/input/FormField.vue'
+import {parseValidationErrors} from '@/helpers/parseValidationErrors'
 
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {useAuthStore} from '@/stores/auth'
@@ -126,6 +133,7 @@ const credentials = reactive({
 const isLoading = computed(() => authStore.isLoading)
 const errorMessage = ref('')
 const validatePasswordInitially = ref(false)
+const serverValidationErrors = ref<Record<string, string>>({})
 
 const DEBOUNCE_TIME = 100
 
@@ -165,8 +173,57 @@ const everythingValid = computed(() => {
 		usernameValid.value === true
 })
 
+const usernameError = computed(() => {
+	// Client-side validation takes priority
+	if (usernameValid.value !== true) {
+		return usernameValid.value
+	}
+	// Show server-side error if present
+	return serverValidationErrors.value.username || null
+})
+
+const emailError = computed(() => {
+	// Client-side validation takes priority
+	if (!emailValid.value) {
+		return t('user.auth.emailInvalid')
+	}
+	// Show server-side error if present
+	return serverValidationErrors.value.email || null
+})
+
+const passwordError = computed(() => {
+	// Show server-side error if present
+	return serverValidationErrors.value.password || null
+})
+
+function handleUsernameKeyup() {
+	if (validateUsernameAfterFirst.value) {
+		validateUsername()
+	}
+	delete serverValidationErrors.value.username
+}
+
+function handleEmailKeyup() {
+	if (validateEmailAfterFirst.value) {
+		validateEmail()
+	}
+	delete serverValidationErrors.value.email
+}
+
+interface ApiValidationError {
+	message?: string
+	invalid_fields?: string[]
+}
+
+function isApiValidationError(error: unknown): error is ApiValidationError {
+	return error !== null &&
+		typeof error === 'object' &&
+		('message' in error || 'invalid_fields' in error)
+}
+
 async function submit() {
 	errorMessage.value = ''
+	serverValidationErrors.value = {}
 	validatePasswordInitially.value = true
 
 	if (!everythingValid.value) {
@@ -176,8 +233,21 @@ async function submit() {
 	try {
 		await authStore.register(toRaw(credentials))
 		redirectIfSaved()
-	} catch (e) {
-		errorMessage.value = e?.message
+	} catch (e: unknown) {
+		// Parse field-specific validation errors
+		if (isApiValidationError(e)) {
+			const fieldErrors = parseValidationErrors(e)
+
+			if (Object.keys(fieldErrors).length > 0) {
+				// Apply field-level errors (computed properties will display them)
+				serverValidationErrors.value = fieldErrors
+			} else {
+				// Fallback to general error message if no field errors
+				errorMessage.value = e.message || t('user.auth.registrationFailed')
+			}
+		} else {
+			errorMessage.value = t('user.auth.registrationFailed')
+		}
 	}
 }
 </script>
