@@ -79,7 +79,9 @@
 				"subject_to_assignee": "\"%[1]s\" (%[2]s) olarak atandınız",
 				"message_to_assignee": "%[1]s sizi \"%[2]s\" olarak atadı",
 				"subject_to_others": "\"%[1]s\" (%[2]s), %[3]s'ye atanmıştır",
-				"message_to_others": "%[1]s, bu görevi %[2]s kullanıcısına atadı."
+				"message_to_others": "%[1]s, bu görevi %[2]s kullanıcısına atadı.",
+				"subject_to_others_self": "\"%[1]s\" (%[2]s), %[3]s tarafından kendilerine atandı",
+				"message_to_others_self": "%[1]s bu görevi kendilerine atadı."
 			},
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) silindi",
