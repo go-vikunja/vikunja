@@ -29,7 +29,7 @@
 						autocomplete="username"
 						@keyup.enter="submit"
 						@focusout="() => {validateUsername(); validateUsernameAfterFirst = true}"
-						@keyup="() => {validateUsernameAfterFirst ? validateUsername() : null; delete serverValidationErrors.username}"
+						@keyup="handleUsernameKeyup"
 					>
 				</div>
 				<p
@@ -57,7 +57,7 @@
 						type="email"
 						@keyup.enter="submit"
 						@focusout="() => {validateEmail(); validateEmailAfterFirst = true}"
-						@keyup="() => {validateEmailAfterFirst ? validateEmail() : null; delete serverValidationErrors.email}"
+						@keyup="handleEmailKeyup"
 					>
 				</div>
 				<p
@@ -220,6 +220,31 @@ const passwordError = computed(() => {
 	return serverValidationErrors.value.password || null
 })
 
+function handleUsernameKeyup() {
+	if (validateUsernameAfterFirst.value) {
+		validateUsername()
+	}
+	delete serverValidationErrors.value.username
+}
+
+function handleEmailKeyup() {
+	if (validateEmailAfterFirst.value) {
+		validateEmail()
+	}
+	delete serverValidationErrors.value.email
+}
+
+interface ApiValidationError {
+	message?: string
+	invalid_fields?: string[]
+}
+
+function isApiValidationError(error: unknown): error is ApiValidationError {
+	return error !== null &&
+		typeof error === 'object' &&
+		('message' in error || 'invalid_fields' in error)
+}
+
 async function submit() {
 	errorMessage.value = ''
 	serverValidationErrors.value = {}
@@ -233,15 +258,18 @@ async function submit() {
 		await authStore.register(toRaw(credentials))
 	} catch (e: unknown) {
 		// Parse field-specific validation errors
-		const errorData = e as {message?: string, invalid_fields?: string[]} | null | undefined
-		const fieldErrors = parseValidationErrors(errorData)
+		if (isApiValidationError(e)) {
+			const fieldErrors = parseValidationErrors(e)
 
-		if (Object.keys(fieldErrors).length > 0) {
-			// Apply field-level errors (computed properties will display them)
-			serverValidationErrors.value = fieldErrors
+			if (Object.keys(fieldErrors).length > 0) {
+				// Apply field-level errors (computed properties will display them)
+				serverValidationErrors.value = fieldErrors
+			} else {
+				// Fallback to general error message if no field errors
+				errorMessage.value = e.message || 'Registration failed'
+			}
 		} else {
-			// Fallback to general error message if no field errors
-			errorMessage.value = errorData?.message || 'Registration failed'
+			errorMessage.value = 'Registration failed'
 		}
 	}
 }
