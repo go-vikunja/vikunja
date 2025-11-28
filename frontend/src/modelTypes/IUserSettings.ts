@@ -9,6 +9,7 @@ import type {Priority} from '@/constants/priorities'
 import type {DateDisplay} from '@/constants/dateDisplay'
 import type {TimeFormat} from '@/constants/timeFormat'
 import type {IRelationKind} from '@/types/IRelationKind'
+import type {ICustomShortcutsMap} from './ICustomShortcut'
 
 export interface IFrontendSettings {
 	playSoundWhenDone: boolean
@@ -21,6 +22,7 @@ export interface IFrontendSettings {
 	dateDisplay: DateDisplay
 	timeFormat: TimeFormat
 	defaultTaskRelationType: IRelationKind
+	customShortcuts?: ICustomShortcutsMap
 }
 
 export interface IExtraSettingsLink {
