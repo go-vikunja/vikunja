@@ -86,7 +86,8 @@ export class Factory {
 		)
 
 		if (!response.ok()) {
-			throw new Error(`Failed to seed data for table ${table}: ${response.status()} ${response.statusText()}`)
+			const body = await response.json()
+			throw new Error(`Failed to seed data for table ${table} (${response.status()}): ${body.message}`)
 		}
 
 		return response.json()
