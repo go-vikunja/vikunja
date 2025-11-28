@@ -42,10 +42,10 @@ func init() {
 
 			_, err := tx.Exec(query)
 			// For MySQL, ignore duplicate key name error (Error 1061)
-			if err != nil && strings.Contains(err.Error(), "Error 1061") && strings.Contains(err.Error(), "Duplicate key name") {
-				return nil
+			if err != nil && (!strings.Contains(err.Error(), "Error 1061") || !strings.Contains(err.Error(), "Duplicate key name")) {
+				return err
 			}
-			return err
+			return nil
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
