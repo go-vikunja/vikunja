@@ -85,11 +85,10 @@ import {useProjectStore} from '@/stores/projects'
 import {useRouteWithModal} from '@/composables/useRouteWithModal'
 import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
 import { useAuthStore } from '@/stores/auth'
-import { storeToRefs } from 'pinia'
 
 const authStore = useAuthStore()
 const backgroundBrightness = computed(() => 
-  authStore.settings?.frontendSettings?.backgroundBrightness ?? 100
+	authStore.settings?.frontendSettings?.backgroundBrightness ?? 100,
 )
 
 const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
