@@ -21,6 +21,7 @@ export interface IFrontendSettings {
 	dateDisplay: DateDisplay
 	timeFormat: TimeFormat
 	defaultTaskRelationType: IRelationKind
+	backgroundBrightness: number
 }
 
 export interface IExtraSettingsLink {

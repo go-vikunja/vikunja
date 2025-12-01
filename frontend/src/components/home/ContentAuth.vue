@@ -15,7 +15,10 @@
 			<div
 				:class="{'is-visible': background}"
 				class="app-container-background background-fade-in d-print-none"
-				:style="{'background-image': background && `url(${background})`}"
+				:style="{
+					'background-image': background && `url(${background})`,
+					'filter': `brightness(${backgroundBrightness}%)`
+				}"
 			/>
 			<Navigation class="d-print-none" />
 			<main
@@ -81,6 +84,13 @@ import {useProjectStore} from '@/stores/projects'
 
 import {useRouteWithModal} from '@/composables/useRouteWithModal'
 import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
+import { useAuthStore } from '@/stores/auth'
+import { storeToRefs } from 'pinia'
+
+const authStore = useAuthStore()
+const backgroundBrightness = computed(() => 
+  authStore.settings?.frontendSettings?.backgroundBrightness ?? 100
+)
 
 const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
 
