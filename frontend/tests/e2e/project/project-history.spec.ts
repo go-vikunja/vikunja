@@ -7,10 +7,12 @@ test.describe('Project History', () => {
 		test.setTimeout(60000)
 		const projects = await ProjectFactory.create(7)
 		await ProjectViewFactory.truncate()
-		await Promise.all(projects.map(p => ProjectViewFactory.create(1, {
-			id: p.id,
-			project_id: p.id,
-		}, false)))
+		for (const p of projects) {
+			await ProjectViewFactory.create(1, {
+				id: p.id,
+				project_id: p.id,
+			}, false)
+		}
 
 		const loadProjectArrayPromise = page.waitForResponse('**/api/v1/projects*')
 		await page.goto('/')
