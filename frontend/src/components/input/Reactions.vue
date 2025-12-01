@@ -113,7 +113,7 @@ const emojiPickerPosition = ref()
 
 function toggleEmojiPicker() {
 	if (!showEmojiPicker.value) {
-		const rect = emojiPickerButtonRef.value?.getBoundingClientRect()
+		const rect = emojiPickerButtonRef.value?.$el?.getBoundingClientRect()
 		const container = reactionContainerRef.value?.getBoundingClientRect()
 		if (rect && container) {
 			const left = rect.left - container.left + rect.width
