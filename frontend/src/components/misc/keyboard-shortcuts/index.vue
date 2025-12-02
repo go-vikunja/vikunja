@@ -7,6 +7,18 @@
 			:show-close="true"
 			@close="close()"
 		>
+			<template #header>
+				<div class="help-header">
+					<h2>{{ $t('keyboardShortcuts.title') }}</h2>
+					<RouterLink
+						:to="{ name: 'user.settings.keyboardShortcuts' }"
+						class="button is-small"
+						@click="close()"
+					>
+						{{ $t('keyboardShortcuts.customizeShortcuts') }}
+					</RouterLink>
+				</div>
+			</template>
 			<template
 				v-for="(s, i) in shortcuts"
 				:key="i"
@@ -39,32 +51,68 @@
 						<Shortcut
 							is="dd"
 							class="shortcut-keys"
-							:keys="sc.keys"
+							:keys="getEffectiveKeys(sc)"
 							:combination="sc.combination && $t(`keyboardShortcuts.${sc.combination}`)"
 						/>
 					</template>
 				</dl>
 			</template>
+
+			<p class="help-text">
+				{{ $t('keyboardShortcuts.helpText') }}
+			</p>
 		</Card>
 	</Modal>
 </template>
 
 <script lang="ts" setup>
 import {useBaseStore} from '@/stores/base'
+import {useShortcutManager} from '@/composables/useShortcutManager'
 
 import Shortcut from '@/components/misc/Shortcut.vue'
 import Message from '@/components/misc/Message.vue'
 
 import {KEYBOARD_SHORTCUTS as shortcuts} from './shortcuts'
+import type {ShortcutAction} from './shortcuts'
+
+const shortcutManager = useShortcutManager()
 
 function close() {
 	useBaseStore().setKeyboardShortcutsActive(false)
+}
+
+function getEffectiveKeys(shortcut: ShortcutAction): string[] {
+	// For shortcuts with actionId, get effective keys from shortcut manager
+	if (shortcut.actionId) {
+		return shortcutManager.getShortcut(shortcut.actionId) || shortcut.keys
+	}
+	// Fallback to default keys for backwards compatibility
+	return shortcut.keys
 }
 </script>
 
 <style scoped>
 .keyboard-shortcuts {
 	text-align: start;
+}
+
+.help-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	inline-size: 100%;
+}
+
+.help-header h2 {
+	margin: 0;
+}
+
+.help-text {
+	margin-block-start: 1rem;
+	padding-block-start: 1rem;
+	border-block-start: 1px solid var(--grey-200);
+	color: var(--text-light);
+	font-size: 0.875rem;
 }
 
 .message:not(:last-child) {

@@ -109,6 +109,10 @@ const navigationItems = computed(() => {
 			routeName: 'user.settings.apiTokens',
 		},
 		{
+			title: t('user.settings.keyboardShortcuts.title'),
+			routeName: 'user.settings.keyboardShortcuts',
+		},
+		{
 			title: t('user.deletion.title'),
 			routeName: 'user.settings.deletion',
 			condition: userDeletionEnabled.value,

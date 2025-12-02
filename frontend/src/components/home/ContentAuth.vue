@@ -55,7 +55,7 @@
 				</Modal>
 
 				<BaseButton
-					v-shortcut="'Shift+?'"
+					v-shortcut="'.general.showHelp'"
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 				>

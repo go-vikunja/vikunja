@@ -137,6 +137,7 @@ export const useAuthStore = defineStore('auth', () => {
 				dateDisplay: DATE_DISPLAY.RELATIVE,
 				timeFormat: TIME_FORMAT.HOURS_24,
 				defaultTaskRelationType: RELATION_KIND.RELATED,
+				customShortcuts: {},
 				...newSettings.frontendSettings,
 			},
 		})
