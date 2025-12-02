@@ -492,7 +492,7 @@ function enforceBackgroundBrightnessBounds() {
 	const value = Number(settings.value.frontendSettings.backgroundBrightness)
     
 	if (!value || isNaN(value)) {
-		settings.value.frontendSettings.backgroundBrightness = 100
+		settings.value.frontendSettings.backgroundBrightness = null
 	} else if (value < 0) {
 		settings.value.frontendSettings.backgroundBrightness = 0
 	} else if (value > 100) {
