@@ -320,13 +320,13 @@
 						{{ $t('user.settings.backgroundBrightness.title') }}
 					</span>
 					<input 
+						v-model.number="settings.frontendSettings.backgroundBrightness"
 						class="input"
 						type="number"
-						v-model.number="settings.frontendSettings.backgroundBrightness"
 						min="0"
 						max="100"
 						@blur="enforceBackgroundBrightnessBounds"
-					/>
+					>
 				</label>
 			</div>
 		</div>
@@ -489,15 +489,15 @@ watch(
 )
 
 function enforceBackgroundBrightnessBounds() {
-    let value = Number(settings.value.frontendSettings.backgroundBrightness)
+	const value = Number(settings.value.frontendSettings.backgroundBrightness)
     
-    if (!value || isNaN(value)) {
-        settings.value.frontendSettings.backgroundBrightness = 100
-    } else if (value < 0) {
-        settings.value.frontendSettings.backgroundBrightness = 0
-    } else if (value > 100) {
-        settings.value.frontendSettings.backgroundBrightness = 100
-    }
+	if (!value || isNaN(value)) {
+		settings.value.frontendSettings.backgroundBrightness = 100
+	} else if (value < 0) {
+		settings.value.frontendSettings.backgroundBrightness = 0
+	} else if (value > 100) {
+		settings.value.frontendSettings.backgroundBrightness = 100
+	}
 }
 
 function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
