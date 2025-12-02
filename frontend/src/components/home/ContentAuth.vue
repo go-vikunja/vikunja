@@ -88,7 +88,7 @@ import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 const backgroundBrightness = computed(() => 
-	authStore.settings?.frontendSettings?.backgroundBrightness ?? 100,
+	authStore.settings?.frontendSettings?.backgroundBrightness,
 )
 
 const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
