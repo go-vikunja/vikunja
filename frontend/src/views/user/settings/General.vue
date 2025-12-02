@@ -314,9 +314,24 @@
 					{{ $t('user.settings.general.allowIconChanges') }}
 				</label>
 			</div>
+			<div class="field">
+				<label class="two-col">
+					<span>
+						{{ $t('user.settings.backgroundBrightness.title') }}
+					</span>
+					<input 
+						v-model.number="settings.frontendSettings.backgroundBrightness"
+						class="input"
+						type="number"
+						min="0"
+						max="100"
+						@blur="enforceBackgroundBrightnessBounds"
+					>
+				</label>
+			</div>
 		</div>
 	</Card>
-	
+
 	<Card
 		:title="$t('user.settings.sections.privacy')"
 		class="general-settings section-block"
@@ -472,6 +487,18 @@ watch(
 	},
 	{deep: true},
 )
+
+function enforceBackgroundBrightnessBounds() {
+	const value = Number(settings.value.frontendSettings.backgroundBrightness)
+    
+	if (!value || isNaN(value)) {
+		settings.value.frontendSettings.backgroundBrightness = null
+	} else if (value < 0) {
+		settings.value.frontendSettings.backgroundBrightness = 0
+	} else if (value > 100) {
+		settings.value.frontendSettings.backgroundBrightness = 100
+	}
+}
 
 function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 	const availableTimezones = ref<{value: string, label: string}[]>([])

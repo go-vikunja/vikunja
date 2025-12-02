@@ -181,6 +181,9 @@
           "dark": "Dark"
         }
       },
+      "backgroundBrightness": {
+        "title": "Background brightness"
+      },
       "apiTokens": {
         "title": "API Tokens",
         "general": "API tokens allow you to use Vikunja's API without user credentials.",
