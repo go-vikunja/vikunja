@@ -311,6 +311,9 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 	if err != nil && !files.IsErrFileIsNotUnsplashFile(err) {
 		return err
 	}
+	// Clear the error if it was ErrFileIsNotUnsplashFile since we intentionally ignore it
+	// for uploaded (non-Unsplash) backgrounds
+	err = nil
 	if up != nil {
 		up.ID = 0
 		up.FileID = file.ID
