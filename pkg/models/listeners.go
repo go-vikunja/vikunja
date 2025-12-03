@@ -192,11 +192,17 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	n := &TaskCommentNotification{
 		Doer:      event.Doer,
 		Task:      event.Task,
 		Comment:   event.Comment,
 		Mentioned: true,
+		Project:   project,
 	}
 	mentionedUsers, err := notifyMentionedUsers(sess, event.Task, event.Comment.Comment, n)
 	if err != nil {
@@ -223,6 +229,7 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 			Doer:    event.Doer,
 			Task:    event.Task,
 			Comment: event.Comment,
+			Project: project,
 		}
 		err = notifications.Notify(subscriber.User, n)
 		if err != nil {
@@ -253,11 +260,17 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 	sess := db.NewSession()
 	defer sess.Close()
 
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	n := &TaskCommentNotification{
 		Doer:      event.Doer,
 		Task:      event.Task,
 		Comment:   event.Comment,
 		Mentioned: true,
+		Project:   project,
 	}
 	_, err = notifyMentionedUsers(sess, event.Task, event.Comment.Comment, n)
 	return err
@@ -295,6 +308,11 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
+	project, err := GetProjectSimpleByID(sess, task.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	notifiedUsers := make(map[int64]bool)
 
 	for _, subscriber := range subscribers {
@@ -312,6 +330,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 			Task:     &task,
 			Assignee: event.Assignee,
 			Target:   subscriber.User,
+			Project:  project,
 		}
 		err = notifications.Notify(subscriber.User, n)
 		if err != nil {
@@ -395,10 +414,16 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	n := &UserMentionedInTaskNotification{
-		Task:  event.Task,
-		Doer:  event.Doer,
-		IsNew: true,
+		Task:    event.Task,
+		Doer:    event.Doer,
+		IsNew:   true,
+		Project: project,
 	}
 	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)
 	return err
@@ -424,10 +449,16 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	n := &UserMentionedInTaskNotification{
-		Task:  event.Task,
-		Doer:  event.Doer,
-		IsNew: false,
+		Task:    event.Task,
+		Doer:    event.Doer,
+		IsNew:   false,
+		Project: project,
 	}
 
 	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)

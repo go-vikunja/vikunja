@@ -26,16 +26,17 @@ import (
 
 // Mail is a mail message
 type Mail struct {
-	from        string
-	to          string
-	subject     string
-	actionText  string
-	actionURL   string
-	greeting    string
-	introLines  []*mailLine
-	outroLines  []*mailLine
-	footerLines []*mailLine
-	threadID    string
+	from           string
+	to             string
+	subject        string
+	actionText     string
+	actionURL      string
+	greeting       string
+	introLines     []*mailLine
+	outroLines     []*mailLine
+	footerLines    []*mailLine
+	threadID       string
+	conversational bool
 }
 
 type mailLine struct {
@@ -106,6 +107,35 @@ func (m *Mail) ThreadID(threadID string) *Mail {
 	m.threadID = threadID
 	return m
 }
+
+// Conversational sets the email to use conversational styling
+func (m *Mail) Conversational() *Mail {
+	m.conversational = true
+	return m
+}
+
+// IsConversational returns whether the email uses conversational styling
+func (m *Mail) IsConversational() bool {
+	return m.conversational
+}
+
+
+
+
+
+// CreateConversationalHeader creates a GitHub-style header line with username, action, and task reference
+func CreateConversationalHeader(username, action, taskURL, projectTitle, taskTitle string) string {
+	return fmt.Sprintf(
+		`<div style="margin-bottom: 16px;"><strong>%s</strong> %s <a href="%s" style="color: #0969da; text-decoration: none;">(%s &gt; %s)</a></div>`,
+		username,
+		action,
+		taskURL,
+		projectTitle,
+		taskTitle,
+	)
+}
+
+
 
 func (m *Mail) appendLine(line string, isHTML bool) *Mail {
 	if m.actionURL == "" {
