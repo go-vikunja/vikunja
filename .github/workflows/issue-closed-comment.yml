@@ -53,7 +53,9 @@ jobs:
               
               core.setOutput('closed_by_commit', 'true');
               core.setOutput('commit_sha', commitId);
-              core.setOutput('commit_message', commit.message);
+              // Escape backslashes, backticks and ${ to prevent breaking JS template strings
+              const escapedMessage = commit.message.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+              core.setOutput('commit_message', escapedMessage);
               core.setOutput('commit_url', closedEvent.commit_url);
             } else {
               console.log(`ℹ️  Issue #${issueNumber} was closed manually (not by commit)`);
