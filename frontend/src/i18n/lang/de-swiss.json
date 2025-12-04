@@ -181,6 +181,9 @@
 					"dark": "Dunkel"
 				}
 			},
+			"backgroundBrightness": {
+				"title": "Hintergrundhelligkeit"
+			},
 			"apiTokens": {
 				"title": "API-Tokens",
 				"general": "Mit API-Token kannst du die API von Vikunja ohne Login-Daten verwenden.",
