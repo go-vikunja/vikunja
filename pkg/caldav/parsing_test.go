@@ -17,13 +17,25 @@
 package caldav
 
 import (
+	"os"
 	"testing"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
+
+func TestMain(m *testing.M) {
+	// Initialize logger for tests
+	log.InitLogger()
+
+	// Run tests
+	code := m.Run()
+
+	os.Exit(code)
+}
 
 func TestParseTaskFromVTODO(t *testing.T) {
 	type args struct {
