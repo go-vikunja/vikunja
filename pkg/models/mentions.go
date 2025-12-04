@@ -17,8 +17,10 @@
 package models
 
 import (
+	"bytes"
 	"strings"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 
 	"golang.org/x/net/html"
@@ -73,4 +75,119 @@ func extractMentionedUsernames(htmlText string) []string {
 
 	traverse(doc)
 	return usernames
+}
+
+// formatMentionsForEmail replaces mention-user tags with human-readable user names for email display.
+// It converts <mention-user data-id="username" data-label="Display Name"> tags to <strong>@Display Name</strong>.
+// If data-label is missing, it falls back to data-id. Returns the original HTML unchanged on any error.
+func formatMentionsForEmail(htmlText string) string {
+	if htmlText == "" {
+		return htmlText
+	}
+
+	doc, err := html.Parse(strings.NewReader(htmlText))
+	if err != nil {
+		log.Debugf("Failed to parse HTML for mention formatting: %v", err)
+		return htmlText
+	}
+
+	// Track nodes to replace (can't modify while traversing)
+	type replacement struct {
+		oldNode *html.Node
+		newNode *html.Node
+	}
+	replacements := []replacement{}
+
+	var traverse func(*html.Node)
+	traverse = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "mention-user" {
+			var dataLabel, dataID string
+
+			// Extract data-label and data-id attributes
+			for _, attr := range n.Attr {
+				switch attr.Key {
+				case "data-label":
+					dataLabel = attr.Val
+				case "data-id":
+					dataID = attr.Val
+				}
+			}
+
+			// Determine what to display
+			displayName := dataLabel
+			if displayName == "" {
+				displayName = dataID
+			}
+
+			// If still empty and has text content (old format), use that
+			if displayName == "" && n.FirstChild != nil && n.FirstChild.Type == html.TextNode {
+				displayName = strings.TrimPrefix(n.FirstChild.Data, "@")
+			}
+
+			if displayName == "" {
+				log.Debugf("Mention node has no data-label, data-id, or text content, skipping")
+				// Continue traversing children in case there are nested elements
+				for child := n.FirstChild; child != nil; child = child.NextSibling {
+					traverse(child)
+				}
+				return
+			}
+
+			// Create <strong>@DisplayName</strong>
+			strongNode := &html.Node{
+				Type: html.ElementNode,
+				Data: "strong",
+			}
+
+			textNode := &html.Node{
+				Type: html.TextNode,
+				Data: "@" + displayName,
+			}
+
+			strongNode.AppendChild(textNode)
+
+			// Schedule replacement
+			replacements = append(replacements, replacement{
+				oldNode: n,
+				newNode: strongNode,
+			})
+
+			// Don't traverse children of mention-user since we're replacing it
+			return
+		}
+
+		// Traverse child nodes
+		for child := n.FirstChild; child != nil; child = child.NextSibling {
+			traverse(child)
+		}
+	}
+
+	traverse(doc)
+
+	// Apply replacements
+	for _, r := range replacements {
+		if r.oldNode.Parent != nil {
+			r.oldNode.Parent.InsertBefore(r.newNode, r.oldNode)
+			r.oldNode.Parent.RemoveChild(r.oldNode)
+		}
+	}
+
+	// Render back to HTML
+	var buf bytes.Buffer
+	err = html.Render(&buf, doc)
+	if err != nil {
+		log.Debugf("Failed to render HTML after mention formatting: %v", err)
+		return htmlText
+	}
+
+	// The html.Parse wraps content in <html><head></head><body>...</body></html>
+	// We need to extract just the body content
+	result := buf.String()
+
+	// Remove the wrapper tags
+	// html.Parse adds: <html><head></head><body>CONTENT</body></html>
+	result = strings.TrimPrefix(result, "<html><head></head><body>")
+	result = strings.TrimSuffix(result, "</body></html>")
+
+	return result
 }
