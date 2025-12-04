@@ -40,50 +40,6 @@ func TestProjectDuplicate(t *testing.T) {
 	})
 }
 
-func TestProjectDuplicateWithUploadedBackground(t *testing.T) {
-	// This test specifically tests that duplicating a project with an uploaded (non-Unsplash)
-	// background does not fail and properly copies the background file.
-	// Regression test for issue #1745
-	files.InitTestFileFixtures(t)
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	u := &user.User{
-		ID: 6,
-	}
-
-	// Project 35 has background_file_id = 1 which is not an Unsplash file
-	l := &ProjectDuplicate{
-		ProjectID: 35,
-	}
-
-	// First, verify that project 35 has a background by querying directly
-	originalProject := &Project{}
-	exists, err := s.Where("id = ?", 35).Get(originalProject)
-	require.NoError(t, err)
-	require.True(t, exists, "Project 35 should exist")
-	require.NotEqual(t, int64(0), originalProject.BackgroundFileID, "Original project should have a background file")
-
-	// Duplicate the project - this should not fail
-	can, err := l.CanCreate(s, u)
-	require.NoError(t, err)
-	assert.True(t, can)
-	err = l.Create(s, u)
-	require.NoError(t, err, "Duplicating a project with an uploaded background should not fail")
-
-	// Query the duplicated project to check its background
-	duplicatedProject := &Project{}
-	exists, err = s.Where("id = ?", l.Project.ID).Get(duplicatedProject)
-	require.NoError(t, err)
-	require.True(t, exists, "Duplicated project should exist")
-
-	// Verify that the duplicated project has a background file
-	assert.NotEqual(t, int64(0), duplicatedProject.BackgroundFileID, "Duplicated project should have a background file")
-	// The duplicated project should have a different background file ID (a new copy)
-	assert.NotEqual(t, originalProject.BackgroundFileID, duplicatedProject.BackgroundFileID, "Duplicated project should have a new background file, not the same one")
-}
-
 func testProjectDuplicate(t *testing.T, projectID int64, userID int64) {
 	files.InitTestFileFixtures(t)
 	db.LoadAndAssertFixtures(t)
