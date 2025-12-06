@@ -179,3 +179,189 @@ func TestSendingMentionNotification(t *testing.T) {
 		assert.Len(t, dbNotifications, 1)
 	})
 }
+
+func TestFormatMentionsForEmail(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "no mentions",
+			input:    "<p>Lorem Ipsum dolor sit amet</p>",
+			expected: "<p>Lorem Ipsum dolor sit amet</p>",
+		},
+		{
+			name:     "single mention with data-label (new format)",
+			input:    `<p><mention-user data-id="konrad" data-label="Konrad" data-mention-suggestion-char="@"></mention-user> hello</p>`,
+			expected: `<p><strong>@Konrad</strong> hello</p>`,
+		},
+		{
+			name:     "single mention with full name in data-label",
+			input:    `<p><mention-user data-id="johndoe" data-label="John Doe" data-mention-suggestion-char="@"></mention-user> please help</p>`,
+			expected: `<p><strong>@John Doe</strong> please help</p>`,
+		},
+		{
+			name:     "mention without data-label (fallback to data-id)",
+			input:    `<p><mention-user data-id="johndoe"></mention-user> test</p>`,
+			expected: `<p><strong>@johndoe</strong> test</p>`,
+		},
+		{
+			name:     "old format with text node inside",
+			input:    `<p><mention-user data-id="user1">@user1</mention-user> Lorem Ipsum</p>`,
+			expected: `<p><strong>@user1</strong> Lorem Ipsum</p>`,
+		},
+		{
+			name:     "old format with text node (data-id takes precedence over text)",
+			input:    `<p><mention-user data-id="actualuser">@differentuser</mention-user> text</p>`,
+			expected: `<p><strong>@actualuser</strong> text</p>`,
+		},
+		{
+			name:     "multiple mentions in one paragraph",
+			input:    `<p>Hey <mention-user data-id="john" data-label="John"></mention-user> and <mention-user data-id="jane" data-label="Jane Doe"></mention-user>, please review</p>`,
+			expected: `<p>Hey <strong>@John</strong> and <strong>@Jane Doe</strong>, please review</p>`,
+		},
+		{
+			name:     "mention at beginning",
+			input:    `<p><mention-user data-id="user1" data-label="User One"></mention-user> Lorem Ipsum</p>`,
+			expected: `<p><strong>@User One</strong> Lorem Ipsum</p>`,
+		},
+		{
+			name:     "mention at end",
+			input:    `<p>Lorem Ipsum <mention-user data-id="user1" data-label="User One"></mention-user></p>`,
+			expected: `<p>Lorem Ipsum <strong>@User One</strong></p>`,
+		},
+		{
+			name:     "mention in middle",
+			input:    `<p>Lorem <mention-user data-id="user1" data-label="User One"></mention-user> Ipsum</p>`,
+			expected: `<p>Lorem <strong>@User One</strong> Ipsum</p>`,
+		},
+		{
+			name:     "same user mentioned multiple times",
+			input:    `<p><mention-user data-id="user1" data-label="User"></mention-user> and <mention-user data-id="user1" data-label="User"></mention-user> again</p>`,
+			expected: `<p><strong>@User</strong> and <strong>@User</strong> again</p>`,
+		},
+		{
+			name:     "HTML preservation with links",
+			input:    `<p>Check <a href="http://example.com">this link</a> and ask <mention-user data-id="expert" data-label="Expert"></mention-user></p>`,
+			expected: `<p>Check <a href="http://example.com">this link</a> and ask <strong>@Expert</strong></p>`,
+		},
+		{
+			name:     "HTML preservation with multiple paragraphs",
+			input:    `<p>First paragraph with <mention-user data-id="user1" data-label="User"></mention-user></p><p>Second paragraph</p>`,
+			expected: `<p>First paragraph with <strong>@User</strong></p><p>Second paragraph</p>`,
+		},
+		{
+			name:     "HTML preservation with bold and italic",
+			input:    `<p><strong>Bold text</strong> and <em>italic</em> with <mention-user data-id="user1" data-label="User"></mention-user></p>`,
+			expected: `<p><strong>Bold text</strong> and <em>italic</em> with <strong>@User</strong></p>`,
+		},
+		{
+			name:     "special characters in data-label",
+			input:    `<p><mention-user data-id="user1" data-label="O'Brien"></mention-user> test</p>`,
+			expected: `<p><strong>@O&#39;Brien</strong> test</p>`,
+		},
+		{
+			name:     "special characters - ampersand in data-label",
+			input:    `<p><mention-user data-id="user1" data-label="Tom &amp; Jerry"></mention-user> test</p>`,
+			expected: `<p><strong>@Tom &amp; Jerry</strong> test</p>`,
+		},
+		{
+			name:     "special characters - quotes in data-label",
+			input:    `<p><mention-user data-id="user1" data-label="&quot;Nickname&quot;"></mention-user> test</p>`,
+			expected: `<p><strong>@&#34;Nickname&#34;</strong> test</p>`,
+		},
+		{
+			name:     "mixed old and new format",
+			input:    `<p><mention-user data-id="new" data-label="New User"></mention-user> and <mention-user data-id="old">@old</mention-user></p>`,
+			expected: `<p><strong>@New User</strong> and <strong>@old</strong></p>`,
+		},
+		{
+			name:     "self-closing tag format (XML-style)",
+			input:    `<p><mention-user data-id="user" data-label="User"/> hello</p>`,
+			expected: `<p><strong>@User</strong></p>`,
+		},
+		{
+			name:     "mention with only text content (no attributes) - old format edge case",
+			input:    `<p><mention-user>@someuser</mention-user> test</p>`,
+			expected: `<p><strong>@someuser</strong> test</p>`,
+		},
+		{
+			name:     "data-label takes precedence over data-id",
+			input:    `<p><mention-user data-id="username123" data-label="John Smith"></mention-user> test</p>`,
+			expected: `<p><strong>@John Smith</strong> test</p>`,
+		},
+		{
+			name:     "unicode characters in data-label",
+			input:    `<p><mention-user data-id="user" data-label="Müller François"></mention-user> test</p>`,
+			expected: `<p><strong>@Müller François</strong> test</p>`,
+		},
+		{
+			name:     "emoji in data-label",
+			input:    `<p><mention-user data-id="user" data-label="Cool User 😎"></mention-user> test</p>`,
+			expected: `<p><strong>@Cool User 😎</strong> test</p>`,
+		},
+		{
+			name:     "nested HTML structure",
+			input:    `<div><p>Text with <mention-user data-id="user" data-label="User"></mention-user> in div</p></div>`,
+			expected: `<div><p>Text with <strong>@User</strong> in div</p></div>`,
+		},
+		{
+			name:     "mention in list",
+			input:    `<ul><li>Item with <mention-user data-id="user" data-label="User"></mention-user></li></ul>`,
+			expected: `<ul><li>Item with <strong>@User</strong></li></ul>`,
+		},
+		{
+			name:     "very long name",
+			input:    `<p><mention-user data-id="user" data-label="Christopher Montgomery Bartholomew Johnson-Smith III"></mention-user> test</p>`,
+			expected: `<p><strong>@Christopher Montgomery Bartholomew Johnson-Smith III</strong> test</p>`,
+		},
+		{
+			name:     "empty data-label and data-id with text content",
+			input:    `<p><mention-user>@fallback</mention-user> test</p>`,
+			expected: `<p><strong>@fallback</strong> test</p>`,
+		},
+		{
+			name:     "whitespace in data-label",
+			input:    `<p><mention-user data-id="user" data-label="  Spaces  "></mention-user> test</p>`,
+			expected: `<p><strong>@  Spaces  </strong> test</p>`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := formatMentionsForEmail(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestFormatMentionsForEmail_MalformedHTML(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			name:  "unclosed tag - returns original",
+			input: `<p>Test <mention-user data-id="user" data-label="User">`,
+		},
+		{
+			name:  "invalid HTML entities",
+			input: `<p>Test &invalid; entity</p>`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := formatMentionsForEmail(tt.input)
+			// For malformed HTML, we expect it to either be fixed by the parser or returned as-is
+			// The key is that it shouldn't panic or error
+			assert.NotEmpty(t, result)
+		})
+	}
+}

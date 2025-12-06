@@ -93,6 +93,7 @@ func (n *TaskCommentNotification) SubjectID() int64 {
 
 // ToMail returns the mail notification for TaskCommentNotification
 func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
+	formattedComment := formatMentionsForEmail(n.Comment.Comment)
 
 	mail := notifications.NewMail().
 		From(n.Doer.GetNameAndFromEmail()).
@@ -104,7 +105,7 @@ func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
 			Subject(i18n.T(lang, "notifications.task.comment.mentioned_subject", n.Doer.GetName(), n.Task.Title))
 	}
 
-	mail.HTML(n.Comment.Comment)
+	mail.HTML(formattedComment)
 
 	return mail.
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
@@ -350,6 +351,8 @@ func (n *UserMentionedInTaskNotification) SubjectID() int64 {
 
 // ToMail returns the mail notification for UserMentionedInTaskNotification
 func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mail {
+	formattedDescription := formatMentionsForEmail(n.Task.Description)
+
 	var subject string
 	if n.IsNew {
 		subject = i18n.T(lang, "notifications.task.mentioned.subject_new", n.Doer.GetName(), n.Task.Title)
@@ -361,7 +364,7 @@ func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mai
 		From(n.Doer.GetNameAndFromEmail()).
 		Subject(subject).
 		Line(i18n.T(lang, "notifications.task.mentioned.message", n.Doer.GetName())).
-		HTML(n.Task.Description)
+		HTML(formattedDescription)
 
 	return mail.
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
