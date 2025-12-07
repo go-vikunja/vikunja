@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
@@ -108,6 +109,7 @@ func Info(c *echo.Context) error {
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),
 			(&wekan.Migrator{}).Name(),
+			(&csvmigrator.Migrator{}).Name(),
 		},
 		Legal: legalInfo{
 			ImprintURL:       config.LegalImprintURL.GetString(),
