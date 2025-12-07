@@ -85,6 +85,7 @@ type TaskCommentNotification struct {
 	Task      *Task        `json:"task"`
 	Comment   *TaskComment `json:"comment"`
 	Mentioned bool         `json:"mentioned"`
+	Project   *Project     `json:"project"`
 }
 
 func (n *TaskCommentNotification) SubjectID() int64 {
@@ -95,15 +96,27 @@ func (n *TaskCommentNotification) SubjectID() int64 {
 func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
 
 	mail := notifications.NewMail().
+		Conversational().
 		From(n.Doer.GetNameAndFromEmail()).
 		Subject(i18n.T(lang, "notifications.task.comment.subject", n.Task.Title))
 
+	// Add GitHub-style header line
+	action := i18n.T(lang, "notifications.common.actions.left_comment")
 	if n.Mentioned {
-		mail.
-			Line(i18n.T(lang, "notifications.task.comment.mentioned_message", n.Doer.GetName())).
-			Subject(i18n.T(lang, "notifications.task.comment.mentioned_subject", n.Doer.GetName(), n.Task.Title))
+		action = i18n.T(lang, "notifications.common.actions.mentioned_you_comment")
+		mail.Subject(i18n.T(lang, "notifications.task.comment.mentioned_subject", n.Doer.GetName(), n.Task.Title))
 	}
 
+	headerLine := notifications.CreateConversationalHeader(
+		n.Doer.GetName(),
+		action,
+		n.Task.GetFrontendURL(),
+		n.Project.Title,
+		n.Task.Title,
+	)
+	mail.HTML(headerLine)
+
+	// Add the actual comment content
 	mail.HTML(n.Comment.Comment)
 
 	return mail.
@@ -131,29 +144,62 @@ type TaskAssignedNotification struct {
 	Task     *Task      `json:"task"`
 	Assignee *user.User `json:"assignee"`
 	Target   *user.User `json:"-"`
+	Project  *Project   `json:"project"`
 }
 
 // ToMail returns the mail notification for TaskAssignedNotification
 func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 	if n.Target.ID == n.Assignee.ID {
-		return notifications.NewMail().
-			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_assignee", n.Task.Title, n.Task.GetFullIdentifier())).
-			Line(i18n.T(lang, "notifications.task.assigned.message_to_assignee", n.Doer.GetName(), n.Task.Title)).
-			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+		// Notification to the assignee
+		mail := notifications.NewMail().
+			Conversational().
+			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_assignee", n.Task.Title, n.Task.GetFullIdentifier()))
+
+		headerLine := notifications.CreateConversationalHeader(
+			n.Doer.GetName(),
+			i18n.T(lang, "notifications.common.actions.assigned_you"),
+			n.Task.GetFrontendURL(),
+			n.Project.Title,
+			n.Task.Title,
+		)
+		mail.HTML(headerLine)
+
+		return mail.Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 	}
 
 	// Check if the doer assigned the task to themselves
 	if n.Doer.ID == n.Assignee.ID {
-		return notifications.NewMail().
-			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others_self", n.Task.Title, n.Task.GetFullIdentifier(), n.Doer.GetName())).
-			Line(i18n.T(lang, "notifications.task.assigned.message_to_others_self", n.Doer.GetName())).
-			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+		mail := notifications.NewMail().
+			Conversational().
+			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others_self", n.Task.Title, n.Task.GetFullIdentifier(), n.Doer.GetName()))
+
+		headerLine := notifications.CreateConversationalHeader(
+			n.Doer.GetName(),
+			i18n.T(lang, "notifications.common.actions.assigned_themselves"),
+			n.Task.GetFrontendURL(),
+			n.Project.Title,
+			n.Task.Title,
+		)
+		mail.HTML(headerLine)
+
+		return mail.Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 	}
 
-	return notifications.NewMail().
-		Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())).
-		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", n.Doer.GetName(), n.Assignee.GetName())).
-		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+	// Notification to others about assignment
+	mail := notifications.NewMail().
+		Conversational().
+		Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName()))
+
+	headerLine := notifications.CreateConversationalHeader(
+		n.Doer.GetName(),
+		i18n.T(lang, "notifications.common.actions.assigned_user", n.Assignee.GetName()),
+		n.Task.GetFrontendURL(),
+		n.Project.Title,
+		n.Task.Title,
+	)
+	mail.HTML(headerLine)
+
+	return mail.Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 }
 
 // ToDB returns the TaskAssignedNotification notification in a format which can be saved in the db
@@ -339,9 +385,10 @@ func (n *UndoneTasksOverdueNotification) Name() string {
 
 // UserMentionedInTaskNotification represents a UserMentionedInTaskNotification notification
 type UserMentionedInTaskNotification struct {
-	Doer  *user.User `json:"doer"`
-	Task  *Task      `json:"task"`
-	IsNew bool       `json:"is_new"`
+	Doer    *user.User `json:"doer"`
+	Task    *Task      `json:"task"`
+	IsNew   bool       `json:"is_new"`
+	Project *Project   `json:"project"`
 }
 
 func (n *UserMentionedInTaskNotification) SubjectID() int64 {
@@ -358,10 +405,29 @@ func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mai
 	}
 
 	mail := notifications.NewMail().
+		Conversational().
 		From(n.Doer.GetNameAndFromEmail()).
-		Subject(subject).
-		Line(i18n.T(lang, "notifications.task.mentioned.message", n.Doer.GetName())).
-		HTML(n.Task.Description)
+		Subject(subject)
+
+	// Add GitHub-style header line
+	action := i18n.T(lang, "notifications.common.actions.mentioned_you")
+	if n.IsNew {
+		action = i18n.T(lang, "notifications.common.actions.mentioned_you_new_task")
+	}
+
+	headerLine := notifications.CreateConversationalHeader(
+		n.Doer.GetName(),
+		action,
+		n.Task.GetFrontendURL(),
+		n.Project.Title,
+		n.Task.Title,
+	)
+	mail.HTML(headerLine)
+
+	// Add the task description if available
+	if n.Task.Description != "" {
+		mail.HTML(n.Task.Description)
+	}
 
 	return mail.
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())

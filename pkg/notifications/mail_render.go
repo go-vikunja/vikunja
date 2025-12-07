@@ -45,6 +45,19 @@ const mailTemplatePlain = `
 {{ $line.Text }}
 {{ end }}`
 
+const mailTemplateConversationalPlain = `
+{{ range $line := .IntroLines}}
+{{ $line.Text }}
+{{ end }}
+{{ if .ActionURL }}{{ .ActionText }}:
+{{ .ActionURL }}{{end}}
+{{ range $line := .OutroLines}}
+{{ $line.Text }}
+{{ end }}
+{{ range $line := .FooterLines}}
+{{ $line.Text }}
+{{ end }}`
+
 const mailTemplateHTML = `
 <!doctype html>
 <html style="width: 100%; height: 100%; padding: 0; margin: 0;">
@@ -103,6 +116,52 @@ const mailTemplateHTML = `
 </html>
 `
 
+const mailTemplateConversationalHTML = `
+<!doctype html>
+<html style="width: 100%; height: 100%; padding: 0; margin: 0;">
+<head>
+    <meta name="viewport" content="width: display-width;">
+    <meta charset="utf-8">
+</head>
+<body style="width: 100%; padding: 0; margin: 0; background: #f6f8fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;">
+<div style="max-width: 700px; margin: 0 auto; background: #ffffff;">
+
+    <!-- Conversational content (no logo) -->
+    <div style="padding: 20px; color: #24292f; font-size: 14px; line-height: 1.5;">
+        {{ range $line := .IntroLinesHTML}}
+            {{ $line }}
+        {{ end }}
+
+        {{ range $line := .OutroLinesHTML}}
+            {{ $line }}
+        {{ end }}
+    </div>
+
+    <!-- Inline action link instead of button -->
+    {{ if .ActionURL }}
+    <div style="padding: 0 20px 16px 20px; border-top: 1px solid #d1d9e0; margin-top: 16px; padding-top: 16px;">
+        <a href="{{ .ActionURL }}" style="color: #0969da; text-decoration: none; font-weight: 500; font-size: 14px;">
+            {{ .ActionText }} →
+        </a>
+    </div>
+    {{ end }}
+
+    <!-- Footer -->
+    {{ if .FooterLinesHTML }}
+    <div style="padding: 16px 20px 20px 20px; {{ if .ActionURL }}border-top: 1px solid #d1d9e0;{{ else }}border-top: 1px solid #d1d9e0; margin-top: 16px;{{ end }} color: #656d76; font-size: 12px;">
+        {{ range $line := .FooterLinesHTML }}
+            {{ $line }}
+        {{ end }}
+    </div>
+    {{ else if .ActionURL }}
+    <!-- Add bottom padding if there's an action but no footer -->
+    <div style="padding-bottom: 4px;"></div>
+    {{ end }}
+</div>
+</body>
+</html>
+`
+
 //go:embed logo.png
 var logo embed.FS
 
@@ -135,12 +194,22 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 	var htmlContent bytes.Buffer
 	var plainContent bytes.Buffer
 
-	plain, err := templatetext.New("mail-plain").Parse(mailTemplatePlain)
+	// Select template based on conversational flag
+	var plainTemplate, htmlTemplate string
+	if m.conversational {
+		plainTemplate = mailTemplateConversationalPlain
+		htmlTemplate = mailTemplateConversationalHTML
+	} else {
+		plainTemplate = mailTemplatePlain
+		htmlTemplate = mailTemplateHTML
+	}
+
+	plain, err := templatetext.New("mail-plain").Parse(plainTemplate)
 	if err != nil {
 		return nil, err
 	}
 
-	html, err := templatehtml.New("mail-plain").Parse(mailTemplateHTML)
+	html, err := templatehtml.New("mail-html").Parse(htmlTemplate)
 	if err != nil {
 		return nil, err
 	}
