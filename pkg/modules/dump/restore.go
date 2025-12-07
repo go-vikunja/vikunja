@@ -45,7 +45,7 @@ import (
 const maxConfigSize = 5 * 1024 * 1024 // 5 MB, should be largely enough
 
 // Restore takes a zip file name and restores it
-func Restore(filename string) error {
+func Restore(filename string, overrideConfig bool) error {
 
 	r, err := zip.OpenReader(filename)
 	if err != nil {
@@ -101,9 +101,14 @@ func Restore(filename string) error {
 
 	///////
 	// Restore the config file
-	err = restoreConfig(configFile, dotEnvFile)
-	if err != nil {
-		return err
+	if overrideConfig {
+		err = restoreConfig(configFile, dotEnvFile)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Warning("Preserving existing configuration (--preserve-config flag used)")
+		log.Warning("Configuration preserved - ensure your current config is compatible with the restored data")
 	}
 	log.Info("Restoring...")
 
@@ -188,7 +193,9 @@ func Restore(filename string) error {
 	///////
 	// Done
 	log.Infof("Done restoring dump.")
-	log.Infof("Restart Vikunja to make sure the new configuration file is applied.")
+	if overrideConfig {
+		log.Infof("Restart Vikunja to make sure the new configuration file is applied.")
+	}
 
 	return nil
 }
