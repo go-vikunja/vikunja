@@ -1,0 +1,16 @@
+<svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" fill-rule="evenodd">
+    <!-- Document background -->
+    <rect x="14" y="4" width="60" height="80" rx="4" fill="#4772FA"/>
+    <!-- Folded corner -->
+    <path d="M54 4 L74 24 L54 24 Z" fill="#2a5bd7"/>
+    <!-- CSV text lines representing data rows -->
+    <rect x="22" y="34" width="44" height="6" rx="2" fill="#ffffff"/>
+    <rect x="22" y="46" width="44" height="6" rx="2" fill="#ffffff" opacity="0.8"/>
+    <rect x="22" y="58" width="44" height="6" rx="2" fill="#ffffff" opacity="0.6"/>
+    <rect x="22" y="70" width="30" height="6" rx="2" fill="#ffffff" opacity="0.4"/>
+    <!-- Vertical separators (comma separators) -->
+    <rect x="36" y="34" width="2" height="42" fill="#4772FA" opacity="0.3"/>
+    <rect x="52" y="34" width="2" height="42" fill="#4772FA" opacity="0.3"/>
+  </g>
+</svg>
