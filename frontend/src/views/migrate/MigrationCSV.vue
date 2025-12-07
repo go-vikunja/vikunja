@@ -55,10 +55,10 @@
 						>
 							<option
 								v-for="delim in SUPPORTED_DELIMITERS"
-								:key="delim.value"
-								:value="delim.value"
+								:key="delim"
+								:value="delim"
 							>
-								{{ delim.label }}
+								{{ getDelimiterLabel(delim) }}
 							</option>
 						</select>
 					</div>
@@ -71,10 +71,10 @@
 						>
 							<option
 								v-for="format in SUPPORTED_DATE_FORMATS"
-								:key="format.value"
-								:value="format.value"
+								:key="format"
+								:value="format"
 							>
-								{{ format.label }}
+								{{ getDateFormatLabel(format) }}
 							</option>
 						</select>
 					</div>
@@ -105,10 +105,10 @@
 						>
 							<option
 								v-for="attr in TASK_ATTRIBUTES"
-								:key="attr.value"
-								:value="attr.value"
+								:key="attr"
+								:value="attr"
 							>
-								{{ getAttributeLabel(attr.value) }}
+								{{ getAttributeLabel(attr) }}
 							</option>
 						</select>
 					</div>
@@ -267,6 +267,31 @@ function getAttributeLabel(attribute: string): string {
 		ignore: 'migrate.csv.ignore',
 	}
 	return t(attributeMap[attribute] || attribute)
+}
+
+function getDelimiterLabel(delimiter: string): string {
+	const labels: Record<string, string> = {
+		',': t('migrate.csv.delimiters.comma'),
+		';': t('migrate.csv.delimiters.semicolon'),
+		'\t': t('migrate.csv.delimiters.tab'),
+		'|': t('migrate.csv.delimiters.pipe'),
+	}
+	return labels[delimiter] || delimiter
+}
+
+function getDateFormatLabel(format: string): string {
+	const labels: Record<string, string> = {
+		'2006-01-02': 'YYYY-MM-DD (2024-01-15)',
+		'2006-01-02T15:04:05': 'ISO DateTime (2024-01-15T10:30:00)',
+		'02/01/2006': 'DD/MM/YYYY (15/01/2024)',
+		'01/02/2006': 'MM/DD/YYYY (01/15/2024)',
+		'02-01-2006': 'DD-MM-YYYY (15-01-2024)',
+		'01-02-2006': 'MM-DD-YYYY (01-15-2024)',
+		'02.01.2006': 'DD.MM.YYYY (15.01.2024)',
+		'2006/01/02': 'YYYY/MM/DD (2024/01/15)',
+		'2006-01-02 15:04:05': 'DateTime (2024-01-15 10:30:00)',
+	}
+	return labels[format] || format
 }
 
 function truncate(text: string, length: number): string {
