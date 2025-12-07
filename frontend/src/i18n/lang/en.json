@@ -582,7 +582,13 @@
       "import": "Import Tasks",
       "untitled": "Untitled Task",
       "completed": "Completed",
-      "ignore": "Ignore"
+      "ignore": "Ignore",
+      "delimiters": {
+        "comma": "Comma (,)",
+        "semicolon": "Semicolon (;)",
+        "tab": "Tab",
+        "pipe": "Pipe (|)"
+      }
     }
   },
   "label": {
