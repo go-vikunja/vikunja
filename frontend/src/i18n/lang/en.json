@@ -582,23 +582,7 @@
       "import": "Import Tasks",
       "untitled": "Untitled Task",
       "completed": "Completed",
-      "dueDate": "Due",
-      "priority": "Priority",
-      "project": "Project",
-      "labels": "Labels",
-      "attributes": {
-        "title": "Title",
-        "description": "Description",
-        "due_date": "Due Date",
-        "start_date": "Start Date",
-        "end_date": "End Date",
-        "done": "Done/Completed",
-        "priority": "Priority",
-        "labels": "Labels/Tags",
-        "project": "Project",
-        "reminder": "Reminder",
-        "ignore": "Ignore"
-      }
+      "ignore": "Ignore"
     }
   },
   "label": {

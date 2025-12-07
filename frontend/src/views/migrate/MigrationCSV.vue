@@ -108,7 +108,7 @@
 								:key="attr.value"
 								:value="attr.value"
 							>
-								{{ $t('migrate.csv.attributes.' + attr.value) }}
+								{{ getAttributeLabel(attr.value) }}
 							</option>
 						</select>
 					</div>
@@ -153,16 +153,16 @@
 						</div>
 						<div class="task-meta">
 							<span v-if="task.due_date">
-								{{ $t('migrate.csv.dueDate') }}: {{ task.due_date }}
+								{{ $t('task.attributes.dueDate') }}: {{ task.due_date }}
 							</span>
 							<span v-if="task.priority > 0">
-								{{ $t('migrate.csv.priority') }}: {{ task.priority }}
+								{{ $t('task.attributes.priority') }}: {{ task.priority }}
 							</span>
 							<span v-if="task.project">
-								{{ $t('migrate.csv.project') }}: {{ task.project }}
+								{{ $t('project.title') }}: {{ task.project }}
 							</span>
 							<span v-if="task.labels && task.labels.length > 0">
-								{{ $t('migrate.csv.labels') }}: {{ task.labels.join(', ') }}
+								{{ $t('task.attributes.labels') }}: {{ task.labels.join(', ') }}
 							</span>
 						</div>
 					</div>
@@ -250,6 +250,24 @@ const hasValidMapping = computed(() => {
 	// At least one column should be mapped to title
 	return config.value.mapping.some(m => m.attribute === 'title')
 })
+
+// Map snake_case attribute names to translation keys
+function getAttributeLabel(attribute: string): string {
+	const attributeMap: Record<string, string> = {
+		title: 'task.attributes.title',
+		description: 'task.attributes.description',
+		due_date: 'task.attributes.dueDate',
+		start_date: 'task.attributes.startDate',
+		end_date: 'task.attributes.endDate',
+		done: 'task.attributes.done',
+		priority: 'task.attributes.priority',
+		labels: 'task.attributes.labels',
+		reminder: 'task.attributes.reminders',
+		project: 'project.title',
+		ignore: 'migrate.csv.ignore',
+	}
+	return t(attributeMap[attribute] || attribute)
+}
 
 function truncate(text: string, length: number): string {
 	if (text.length <= length) return text
