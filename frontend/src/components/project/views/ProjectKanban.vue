@@ -156,7 +156,7 @@
 									:item-key="(task: ITask) => `bucket${bucket.id}-task${task.id}`"
 									:component-data="getTaskDraggableTaskComponentData(bucket)"
 									@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
-									@start="() => dragstart(bucket)"
+									@start="handleTaskDragStart"
 									@end="updateTaskPosition"
 								>
 									<template #footer>
@@ -489,7 +489,34 @@ function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
 }
 
 async function updateTaskPosition(e) {
+	const movedTaskId = taskStore.draggedTask?.id
+	const originalProjectId = taskStore.draggedTask?.projectId
+
 	drag.value = false
+	taskStore.setDraggedTask(null)
+
+	// If the task was dropped outside kanban (e.g., to sidebar)
+	if (!e.to.dataset.bucketIndex) {
+		// Wait a bit for the sidebar drop to complete, then check if task was moved
+		setTimeout(() => {
+			if (movedTaskId && originalProjectId !== projectId.value) {
+				// Task was moved to another project, remove it from kanban
+				const task = {id: movedTaskId} as ITask
+				kanbanStore.removeTaskInBucket(task)
+				// Also update bucket counts
+				if (sourceBucket.value) {
+					const bucket = kanbanStore.getBucketById(sourceBucket.value)
+					if (bucket) {
+						kanbanStore.setBucketById({
+							...bucket,
+							count: bucket.count - 1,
+						})
+					}
+				}
+			}
+		}, 100)
+		return
+	}
 
 	// While we could just pass the bucket index in through the function call, this would not give us the
 	// new bucket id when a task has been moved between buckets, only the new bucket. Using the data-bucket-id
@@ -769,6 +796,17 @@ function shouldAcceptDrop(bucket: IBucket) {
 function dragstart(bucket: IBucket) {
 	drag.value = true
 	sourceBucket.value = bucket.id
+}
+
+function handleTaskDragStart(e) {
+	const taskId = parseInt(e.item.dataset.taskId)
+	const bucketIndex = parseInt(e.from.dataset.bucketIndex)
+	const bucket = buckets.value[bucketIndex]
+	const task = bucket?.tasks.find(t => t.id === taskId)
+	if (task) {
+		taskStore.setDraggedTask(task)
+	}
+	dragstart(bucket)
 }
 
 async function toggleDefaultBucket(bucket: IBucket) {

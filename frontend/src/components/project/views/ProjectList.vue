@@ -62,7 +62,7 @@
 						}"
 						:animation="100"
 						ghost-class="task-ghost"
-						@start="() => drag = true"
+						@start="handleDragStart"
 						@end="saveTaskPosition"
 					>
 						<template #item="{element: t, index}">
@@ -116,6 +116,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
+import {useTaskStore} from '@/stores/tasks'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -179,6 +180,7 @@ const firstNewPosition = computed(() => {
 })
 
 const baseStore = useBaseStore()
+const taskStore = useTaskStore()
 const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
@@ -229,8 +231,33 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
+function handleDragStart(e) {
+	drag.value = true
+	const taskId = parseInt(e.item.dataset.taskId)
+	const task = tasks.value.find(t => t.id === taskId)
+	if (task) {
+		taskStore.setDraggedTask(task)
+	}
+}
+
 async function saveTaskPosition(e) {
+	const movedTaskId = taskStore.draggedTask?.id
+	const originalProjectId = taskStore.draggedTask?.projectId
+
 	drag.value = false
+	taskStore.setDraggedTask(null)
+
+	// If the task was dropped outside this list (e.g., to sidebar)
+	if (e.to !== e.from) {
+		// Wait a bit for the sidebar drop to complete, then check if task was moved
+		setTimeout(() => {
+			if (movedTaskId && originalProjectId !== projectId.value) {
+				// Task was moved to another project, remove it from our list
+				tasks.value = tasks.value.filter(t => t.id !== movedTaskId)
+			}
+		}, 100)
+		return
+	}
 
 	const task = tasks.value[e.newIndex]
 	const taskBefore = tasks.value[e.newIndex - 1] ?? null
