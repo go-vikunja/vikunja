@@ -564,7 +564,42 @@
     "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
     "upload": "Upload file",
     "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
-    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
+    "migrationInProgress": "A migration is currently in progress. Please wait until it is done.",
+    "csv": {
+      "description": "Import tasks from a CSV file with custom column mapping.",
+      "uploadDescription": "Select a CSV file to import. The file should contain task data with headers in the first row.",
+      "selectFile": "Select CSV file",
+      "columnMapping": "Column Mapping",
+      "columnMappingDescription": "Map each column in your CSV file to a task attribute. Vikunja has auto-detected the most likely mappings.",
+      "parsingOptions": "Parsing Options",
+      "delimiter": "Delimiter",
+      "dateFormat": "Date Format",
+      "mapColumns": "Map Columns",
+      "example": "e.g.",
+      "preview": "Preview",
+      "previewDescription": "Showing first 5 of {count} tasks that will be imported.",
+      "previewErrors": "{count} rows had parsing errors and will be skipped.",
+      "import": "Import Tasks",
+      "untitled": "Untitled Task",
+      "completed": "Completed",
+      "dueDate": "Due",
+      "priority": "Priority",
+      "project": "Project",
+      "labels": "Labels",
+      "attributes": {
+        "title": "Title",
+        "description": "Description",
+        "due_date": "Due Date",
+        "start_date": "Start Date",
+        "end_date": "End Date",
+        "done": "Done/Completed",
+        "priority": "Priority",
+        "labels": "Labels/Tags",
+        "project": "Project",
+        "reminder": "Reminder",
+        "ignore": "Ignore"
+      }
+    }
   },
   "label": {
     "title": "Labels",

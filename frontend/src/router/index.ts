@@ -144,6 +144,11 @@ const router = createRouter({
 					component: () => import('@/views/migrate/Migration.vue'),
 				},
 				{
+					path: '/migrate/csv',
+					name: 'migrate.csv',
+					component: () => import('@/views/migrate/MigrationCSV.vue'),
+				},
+				{
 					path: '/migrate/:service',
 					name: 'migrate.service',
 					component: () => import('@/views/migrate/MigrationHandler.vue'),
