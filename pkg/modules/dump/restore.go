@@ -193,7 +193,9 @@ func Restore(filename string, overrideConfig bool) error {
 	///////
 	// Done
 	log.Infof("Done restoring dump.")
-	log.Infof("Restart Vikunja to make sure the new configuration file is applied.")
+	if overrideConfig {
+		log.Infof("Restart Vikunja to make sure the new configuration file is applied.")
+	}
 
 	return nil
 }
