@@ -5,7 +5,7 @@ on:
 
 jobs:
   docker:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: namespace-profile-default
     steps:
       - name: Git describe
         id: ghd
