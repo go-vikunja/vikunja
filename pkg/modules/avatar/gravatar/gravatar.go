@@ -29,6 +29,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
+	"golang.org/x/sync/singleflight"
 )
 
 type avatar struct {
@@ -40,6 +41,8 @@ type avatar struct {
 // Provider is the gravatar provider
 type Provider struct {
 }
+
+var gravatarFetchGroup singleflight.Group
 
 // FlushCache removes all gravatar cache entries for a user
 func (g *Provider) FlushCache(u *user.User) error {
@@ -59,36 +62,42 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 		log.Errorf("Error retrieving gravatar from keyvalue store: %s", err)
 	}
 
-	var needsRefetch bool
 	if exists {
-		// elapsed is always < 0 so the next check would always succeed.
-		// To have it make sense, we flip that.
-		elapsed := time.Until(av.LoadedAt) * -1
-		needsRefetch = elapsed > time.Duration(config.AvatarGravaterExpiration.GetInt64())*time.Second
+		elapsed := time.Since(av.LoadedAt)
+		needsRefetch := elapsed > time.Duration(config.AvatarGravaterExpiration.GetInt64())*time.Second
 		if needsRefetch {
 			log.Debugf("Refetching avatar for user %d after %v", user.ID, elapsed)
 		} else {
 			log.Debugf("Serving avatar for user %d from cache", user.ID)
+			return av.Content, av.MimeType, nil
 		}
 	}
 
-	if !exists || needsRefetch {
+	result, err, _ := gravatarFetchGroup.Do(cacheKey, func() (interface{}, error) {
+		cached, cacheErr := keyvalue.GetWithValue(cacheKey, &av)
+		if cacheErr != nil {
+			log.Errorf("Error retrieving gravatar from keyvalue store: %s", cacheErr)
+		}
+		if cached && !g.avatarExpired(av) {
+			log.Debugf("Serving avatar for user %d from cache", user.ID)
+			return av, nil
+		}
+
 		log.Debugf("Gravatar for user %d with size %d not cached, requesting from gravatar...", user.ID, size)
 		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://www.gravatar.com/avatar/"+utils.Md5String(strings.ToLower(user.Email))+"?s="+sizeString+"&d=mp", nil)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 		defer resp.Body.Close()
 		avatarContent, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 
-		// Determine the mime type from the response
 		mimeType := "image/jpeg"
 		if contentType := resp.Header.Get("Content-Type"); contentType != "" {
 			mimeType = contentType
@@ -100,11 +109,20 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 			LoadedAt: time.Now(),
 		}
 
-		// Store in keyvalue cache
 		if err := keyvalue.Put(cacheKey, av); err != nil {
 			log.Errorf("Error storing gravatar in keyvalue store: %s", err)
 		}
+
+		return av, nil
+	})
+	if err != nil {
+		return nil, "", err
 	}
 
+	av = result.(avatar)
 	return av.Content, av.MimeType, nil
+}
+
+func (g *Provider) avatarExpired(av avatar) bool {
+	return time.Since(av.LoadedAt) > time.Duration(config.AvatarGravaterExpiration.GetInt64())*time.Second
 }
