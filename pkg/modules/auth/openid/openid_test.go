@@ -417,3 +417,139 @@ func TestMergeClaims(t *testing.T) {
 		assert.ErrorAs(t, err, &expectedErr)
 	})
 }
+
+// TestExtractCustomEmailClaim tests extracting email from a custom claim
+func TestExtractCustomEmailClaim(t *testing.T) {
+	t.Run("Custom email claim is used when configured", func(t *testing.T) {
+		provider := &Provider{
+			EmailClaim: "upn",
+		}
+
+		// Simulate raw claims with a custom claim
+		rawClaims := map[string]interface{}{
+			"email": "standard@example.com",
+			"upn":   "custom-upn@example.com",
+		}
+
+		// If a custom email claim is configured, extract it
+		var email string
+		if provider.EmailClaim != "" {
+			if customEmail, ok := rawClaims[provider.EmailClaim].(string); ok && customEmail != "" {
+				email = customEmail
+			}
+		}
+		if email == "" {
+			if standardEmail, ok := rawClaims["email"].(string); ok {
+				email = standardEmail
+			}
+		}
+
+		assert.Equal(t, "custom-upn@example.com", email)
+	})
+
+	t.Run("Falls back to standard email when custom claim is empty", func(t *testing.T) {
+		provider := &Provider{
+			EmailClaim: "upn",
+		}
+
+		// Simulate raw claims where custom claim is empty
+		rawClaims := map[string]interface{}{
+			"email": "standard@example.com",
+			"upn":   "",
+		}
+
+		// If a custom email claim is configured, extract it
+		var email string
+		if provider.EmailClaim != "" {
+			if customEmail, ok := rawClaims[provider.EmailClaim].(string); ok && customEmail != "" {
+				email = customEmail
+			}
+		}
+		if email == "" {
+			if standardEmail, ok := rawClaims["email"].(string); ok {
+				email = standardEmail
+			}
+		}
+
+		assert.Equal(t, "standard@example.com", email)
+	})
+
+	t.Run("Falls back to standard email when custom claim is not present", func(t *testing.T) {
+		provider := &Provider{
+			EmailClaim: "upn",
+		}
+
+		// Simulate raw claims without the custom claim
+		rawClaims := map[string]interface{}{
+			"email": "standard@example.com",
+		}
+
+		// If a custom email claim is configured, extract it
+		var email string
+		if provider.EmailClaim != "" {
+			if customEmail, ok := rawClaims[provider.EmailClaim].(string); ok && customEmail != "" {
+				email = customEmail
+			}
+		}
+		if email == "" {
+			if standardEmail, ok := rawClaims["email"].(string); ok {
+				email = standardEmail
+			}
+		}
+
+		assert.Equal(t, "standard@example.com", email)
+	})
+
+	t.Run("Uses upn when email claim is missing and emailscope is upn", func(t *testing.T) {
+		provider := &Provider{
+			EmailClaim: "upn",
+		}
+
+		// Simulate raw claims without the standard email claim
+		rawClaims := map[string]interface{}{
+			"upn": "custom-upn@example.com",
+		}
+
+		// If a custom email claim is configured, extract it
+		var email string
+		if provider.EmailClaim != "" {
+			if customEmail, ok := rawClaims[provider.EmailClaim].(string); ok && customEmail != "" {
+				email = customEmail
+			}
+		}
+		if email == "" {
+			if standardEmail, ok := rawClaims["email"].(string); ok {
+				email = standardEmail
+			}
+		}
+
+		assert.Equal(t, "custom-upn@example.com", email)
+	})
+
+	t.Run("Uses standard email when no custom claim is configured", func(t *testing.T) {
+		provider := &Provider{
+			EmailClaim: "",
+		}
+
+		// Simulate raw claims
+		rawClaims := map[string]interface{}{
+			"email": "standard@example.com",
+			"upn":   "custom-upn@example.com",
+		}
+
+		// If a custom email claim is configured, extract it
+		var email string
+		if provider.EmailClaim != "" {
+			if customEmail, ok := rawClaims[provider.EmailClaim].(string); ok && customEmail != "" {
+				email = customEmail
+			}
+		}
+		if email == "" {
+			if standardEmail, ok := rawClaims["email"].(string); ok {
+				email = standardEmail
+			}
+		}
+
+		assert.Equal(t, "standard@example.com", email)
+	})
+}

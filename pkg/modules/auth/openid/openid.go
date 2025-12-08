@@ -63,6 +63,7 @@ type Provider struct {
 	UsernameFallback    bool   `json:"username_fallback"`
 	ForceUserInfo       bool   `json:"force_user_info"`
 	RequireAvailability bool   `json:"-"`
+	EmailClaim          string `json:"-"`
 	ClientSecret        string `json:"-"`
 	openIDProvider      *oidc.Provider
 	Oauth2Config        *oauth2.Config `json:"-"`
@@ -388,6 +389,20 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 		return nil, err
 	}
 
+	// If a custom email claim is configured, extract it from the raw claims
+	if provider.EmailClaim != "" {
+		rawClaims := make(map[string]interface{})
+		err = idToken.Claims(&rawClaims)
+		if err != nil {
+			log.Errorf("Error getting raw token claims for provider %s: %v", provider.Name, err)
+			return nil, err
+		}
+
+		if customEmail, ok := rawClaims[provider.EmailClaim].(string); ok && customEmail != "" {
+			cl.Email = customEmail
+		}
+	}
+
 	if provider.ForceUserInfo || cl.Email == "" || cl.Name == "" || cl.PreferredUsername == "" || cl.Picture == "" {
 		info, err := provider.openIDProvider.UserInfo(context.Background(), provider.Oauth2Config.TokenSource(context.Background(), oauth2Token))
 		if err != nil {
@@ -400,6 +415,20 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 		if err != nil {
 			log.Errorf("Error parsing userinfo claims for provider %s: %v", provider.Name, err)
 			return nil, err
+		}
+
+		// If a custom email claim is configured, also check userinfo for it
+		if provider.EmailClaim != "" {
+			rawUserInfoClaims := make(map[string]interface{})
+			err = info.Claims(&rawUserInfoClaims)
+			if err != nil {
+				log.Errorf("Error getting raw userinfo claims for provider %s: %v", provider.Name, err)
+				return nil, err
+			}
+
+			if customEmail, ok := rawUserInfoClaims[provider.EmailClaim].(string); ok && customEmail != "" {
+				cl2.Email = customEmail
+			}
 		}
 
 		err = mergeClaims(cl, cl2, provider.ForceUserInfo)
