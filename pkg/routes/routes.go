@@ -790,7 +790,7 @@ func registerMigrations(m *echo.Group) {
 	tickTickFileMigrator.RegisterRoutes(m)
 
 	// CSV File Migrator (always enabled - generic import)
-	csvFileMigrator := &csvmigrator.CSVMigratorWeb{}
+	csvFileMigrator := &csvmigrator.MigratorWeb{}
 	csvFileMigrator.RegisterRoutes(m)
 }
 

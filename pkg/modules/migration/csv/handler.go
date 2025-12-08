@@ -27,11 +27,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// CSVMigratorWeb handles CSV migration HTTP routes
-type CSVMigratorWeb struct{}
+// MigratorWeb handles CSV migration HTTP routes
+type MigratorWeb struct{}
 
 // RegisterRoutes registers all CSV migration routes
-func (c *CSVMigratorWeb) RegisterRoutes(g *echo.Group) {
+func (c *MigratorWeb) RegisterRoutes(g *echo.Group) {
 	g.GET("/csv/status", c.Status)
 	g.PUT("/csv/detect", c.Detect)
 	g.PUT("/csv/preview", c.Preview)
@@ -47,7 +47,7 @@ func (c *CSVMigratorWeb) RegisterRoutes(g *echo.Group) {
 // @Success 200 {object} migration.Status "The migration status"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/status [get]
-func (c *CSVMigratorWeb) Status(ctx echo.Context) error {
+func (c *MigratorWeb) Status(ctx echo.Context) error {
 	u, err := user2.GetCurrentUser(ctx)
 	if err != nil {
 		return handler.HandleHTTPError(err)
@@ -74,7 +74,7 @@ func (c *CSVMigratorWeb) Status(ctx echo.Context) error {
 // @Failure 400 {object} models.Message "Invalid CSV file"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/detect [put]
-func (c *CSVMigratorWeb) Detect(ctx echo.Context) error {
+func (c *MigratorWeb) Detect(ctx echo.Context) error {
 	_, err := user2.GetCurrentUser(ctx)
 	if err != nil {
 		return handler.HandleHTTPError(err)
@@ -112,7 +112,7 @@ func (c *CSVMigratorWeb) Detect(ctx echo.Context) error {
 // @Failure 400 {object} models.Message "Invalid CSV file or configuration"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/preview [put]
-func (c *CSVMigratorWeb) Preview(ctx echo.Context) error {
+func (c *MigratorWeb) Preview(ctx echo.Context) error {
 	_, err := user2.GetCurrentUser(ctx)
 	if err != nil {
 		return handler.HandleHTTPError(err)
@@ -160,7 +160,7 @@ func (c *CSVMigratorWeb) Preview(ctx echo.Context) error {
 // @Failure 400 {object} models.Message "Invalid CSV file or configuration"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/migrate [put]
-func (c *CSVMigratorWeb) Migrate(ctx echo.Context) error {
+func (c *MigratorWeb) Migrate(ctx echo.Context) error {
 	u, err := user2.GetCurrentUser(ctx)
 	if err != nil {
 		return handler.HandleHTTPError(err)

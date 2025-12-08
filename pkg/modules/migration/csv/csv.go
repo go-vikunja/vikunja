@@ -19,6 +19,7 @@ package csv
 import (
 	"bytes"
 	"encoding/csv"
+	"errors"
 	"io"
 	"sort"
 	"strconv"
@@ -46,29 +47,29 @@ var SupportedQuoteChars = []string{"\"", "'"}
 
 // SupportedDateFormats contains common date formats for parsing
 var SupportedDateFormats = []string{
-	"2006-01-02",                    // ISO date
-	"2006-01-02T15:04:05",           // ISO datetime
-	"2006-01-02T15:04:05Z07:00",     // RFC3339
-	"2006-01-02T15:04:05-0700",      // ISO with timezone
-	"02/01/2006",                    // DD/MM/YYYY
-	"01/02/2006",                    // MM/DD/YYYY
-	"02-01-2006",                    // DD-MM-YYYY
-	"01-02-2006",                    // MM-DD-YYYY
-	"Jan 2, 2006",                   // Month D, YYYY
-	"2 Jan 2006",                    // D Month YYYY
-	"02/01/2006 15:04",              // DD/MM/YYYY HH:MM
-	"01/02/2006 15:04",              // MM/DD/YYYY HH:MM
-	"2006-01-02 15:04:05",           // MySQL datetime
-	"2006/01/02",                    // YYYY/MM/DD
-	"02.01.2006",                    // DD.MM.YYYY (European)
-	"02.01.2006 15:04",              // DD.MM.YYYY HH:MM (European)
-	time.RFC1123,                    // RFC1123
-	time.RFC1123Z,                   // RFC1123 with numeric zone
-	time.RFC822,                     // RFC822
-	time.RFC822Z,                    // RFC822 with numeric zone
-	time.RFC850,                     // RFC850
-	time.ANSIC,                      // ANSIC
-	time.UnixDate,                   // Unix date
+	"2006-01-02",                // ISO date
+	"2006-01-02T15:04:05",       // ISO datetime
+	"2006-01-02T15:04:05Z07:00", // RFC3339
+	"2006-01-02T15:04:05-0700",  // ISO with timezone
+	"02/01/2006",                // DD/MM/YYYY
+	"01/02/2006",                // MM/DD/YYYY
+	"02-01-2006",                // DD-MM-YYYY
+	"01-02-2006",                // MM-DD-YYYY
+	"Jan 2, 2006",               // Month D, YYYY
+	"2 Jan 2006",                // D Month YYYY
+	"02/01/2006 15:04",          // DD/MM/YYYY HH:MM
+	"01/02/2006 15:04",          // MM/DD/YYYY HH:MM
+	"2006-01-02 15:04:05",       // MySQL datetime
+	"2006/01/02",                // YYYY/MM/DD
+	"02.01.2006",                // DD.MM.YYYY (European)
+	"02.01.2006 15:04",          // DD.MM.YYYY HH:MM (European)
+	time.RFC1123,                // RFC1123
+	time.RFC1123Z,               // RFC1123 with numeric zone
+	time.RFC822,                 // RFC822
+	time.RFC822Z,                // RFC822 with numeric zone
+	time.RFC850,                 // RFC850
+	time.ANSIC,                  // ANSIC
+	time.UnixDate,               // Unix date
 }
 
 // TaskAttribute represents a task attribute that can be mapped from CSV
@@ -112,20 +113,20 @@ type ColumnMapping struct {
 
 // DetectionResult contains the auto-detected CSV structure
 type DetectionResult struct {
-	Columns         []string `json:"columns"`
-	Delimiter       string   `json:"delimiter"`
-	QuoteChar       string   `json:"quote_char"`
-	DateFormat      string   `json:"date_format"`
+	Columns          []string        `json:"columns"`
+	Delimiter        string          `json:"delimiter"`
+	QuoteChar        string          `json:"quote_char"`
+	DateFormat       string          `json:"date_format"`
 	SuggestedMapping []ColumnMapping `json:"suggested_mapping"`
-	PreviewRows     [][]string `json:"preview_rows"`
+	PreviewRows      [][]string      `json:"preview_rows"`
 }
 
 // ImportConfig contains the configuration for CSV import
 type ImportConfig struct {
-	Delimiter   string          `json:"delimiter"`
-	QuoteChar   string          `json:"quote_char"`
-	DateFormat  string          `json:"date_format"`
-	Mapping     []ColumnMapping `json:"mapping"`
+	Delimiter  string          `json:"delimiter"`
+	QuoteChar  string          `json:"quote_char"`
+	DateFormat string          `json:"date_format"`
+	Mapping    []ColumnMapping `json:"mapping"`
 }
 
 // PreviewTask represents a task preview before import
@@ -170,7 +171,7 @@ func detectDelimiter(data []byte) string {
 	delimiterCounts := make(map[string]int)
 	for _, delim := range SupportedDelimiters {
 		count := 0
-		for _, line := range lines[:min(3, len(lines))] {
+		for _, line := range lines[:minInt(3, len(lines))] {
 			count += strings.Count(line, delim)
 		}
 		delimiterCounts[delim] = count
@@ -278,7 +279,7 @@ func suggestMapping(columns []string) []ColumnMapping {
 }
 
 // parseCSV parses CSV data with the given configuration
-func parseCSV(data []byte, delimiter, quoteChar string) ([]string, [][]string, error) {
+func parseCSV(data []byte, delimiter, _ string) ([]string, [][]string, error) {
 	data = stripBOM(data)
 	reader := csv.NewReader(bytes.NewReader(data))
 
@@ -316,7 +317,7 @@ func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) 
 	// Read the entire file
 	data := make([]byte, size)
 	_, err := file.ReadAt(data, 0)
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, err
 	}
 
@@ -374,7 +375,7 @@ func PreviewImport(file io.ReaderAt, size int64, config ImportConfig) (*PreviewR
 
 	data := make([]byte, size)
 	_, err := file.ReadAt(data, 0)
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, err
 	}
 
@@ -384,18 +385,13 @@ func PreviewImport(file io.ReaderAt, size int64, config ImportConfig) (*PreviewR
 	}
 
 	result := &PreviewResult{
-		Tasks:     make([]PreviewTask, 0, min(5, len(rows))),
+		Tasks:     make([]PreviewTask, 0, minInt(5, len(rows))),
 		TotalRows: len(rows),
 	}
 
-	previewCount := min(5, len(rows))
+	previewCount := minInt(5, len(rows))
 	for i := 0; i < previewCount; i++ {
-		task, err := rowToPreviewTask(rows[i], config)
-		if err != nil {
-			result.ErrorCount++
-			result.Errors = append(result.Errors, err.Error())
-			continue
-		}
+		task := rowToPreviewTask(rows[i], config)
 		result.Tasks = append(result.Tasks, task)
 	}
 
@@ -403,7 +399,7 @@ func PreviewImport(file io.ReaderAt, size int64, config ImportConfig) (*PreviewR
 }
 
 // rowToPreviewTask converts a CSV row to a preview task
-func rowToPreviewTask(row []string, config ImportConfig) (PreviewTask, error) {
+func rowToPreviewTask(row []string, config ImportConfig) PreviewTask {
 	task := PreviewTask{}
 
 	for _, mapping := range config.Mapping {
@@ -435,10 +431,14 @@ func rowToPreviewTask(row []string, config ImportConfig) (PreviewTask, error) {
 			task.Labels = parseLabels(value)
 		case AttrProject:
 			task.Project = value
+		case AttrReminder:
+			// Reminders are not supported in preview tasks
+		case AttrIgnore:
+			// Ignored attributes are not processed
 		}
 	}
 
-	return task, nil
+	return task
 }
 
 // parseBool parses various boolean representations
@@ -470,10 +470,10 @@ func parsePriority(value string) int {
 		return 4
 	case strings.Contains(lower, "medium") || strings.Contains(lower, "normal"):
 		return 3
-	case strings.Contains(lower, "low"):
-		return 2
 	case strings.Contains(lower, "lowest"):
 		return 1
+	case strings.Contains(lower, "low"):
+		return 2
 	}
 
 	return 0
@@ -526,7 +526,7 @@ func parseDate(value, format string) time.Time {
 // @Failure 400 {object} models.Message "Invalid CSV file or configuration"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/migrate [put]
-func (m *Migrator) Migrate(u *user.User, file io.ReaderAt, size int64) error {
+func (m *Migrator) Migrate(_ *user.User, _ io.ReaderAt, _ int64) error {
 	// This will be called with the standard file migrator handler
 	// The actual configuration will come through the handler
 	return &migration.ErrNotACSVFile{} // Need config, use MigrateWithConfig instead
@@ -540,7 +540,7 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config Import
 
 	data := make([]byte, size)
 	_, err := file.ReadAt(data, 0)
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return err
 	}
 
@@ -664,6 +664,10 @@ func rowToTask(row []string, config ImportConfig, taskID int64) models.Task {
 					},
 				}
 			}
+		case AttrProject:
+			// Project attribute is handled separately for task creation
+		case AttrIgnore:
+			// Ignored attributes are not processed
 		}
 	}
 
@@ -675,7 +679,7 @@ func rowToTask(row []string, config ImportConfig, taskID int64) models.Task {
 	return task
 }
 
-func min(a, b int) int {
+func minInt(a, b int) int {
 	if a < b {
 		return a
 	}
