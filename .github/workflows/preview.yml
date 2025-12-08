@@ -1,4 +1,4 @@
-name: PR Docker Build
+name: Preview
 
 on:
   # pull_request_target gives write access to GHCR even for PRs from forks.
