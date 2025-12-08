@@ -74,7 +74,6 @@
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
 					:avatar-size="24"
-					class="mie-1"
 				/>
 				<ChecklistSummary
 					:task="task"
@@ -285,15 +284,8 @@ $task-background: var(--white);
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
+		gap: .25rem;
 		margin-block-start: .25rem;
-
-		:deep(.tag),
-		:deep(.checklist-summary),
-		.assignees,
-		.icon,
-		.priority-label {
-			margin-inline-end: .25rem;
-		}
 
 		:deep(.checklist-summary) {
 			padding-inline-start: 0;
@@ -310,11 +302,6 @@ $task-background: var(--white);
 					margin: 0;
 				}
 			}
-		}
-
-		// FIXME: should be in Labels.vue
-		:deep(.tag) {
-			margin-inline-start: 0;
 		}
 
 		.priority-label {
@@ -393,7 +380,7 @@ $task-background: var(--white);
 }
 
 .kanban-card__done {
-	margin-inline-end: .25rem;
+	// Spacing handled by parent flex gap
 }
 
 .task-progress {
@@ -406,6 +393,5 @@ $task-background: var(--white);
 	background: var(--grey-100);
 	border-radius: $radius;
 	padding: 0.25rem;
-	margin-inline-end: .25rem;
 }
 </style>
