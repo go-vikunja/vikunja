@@ -108,6 +108,8 @@ var logo embed.FS
 
 func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err error) {
 	p := bluemonday.UGCPolicy()
+	// Allow data URI images for inline avatars in mentions
+	p.AllowDataURIImages()
 
 	for _, line := range lines {
 		if line.isHTML {

@@ -335,7 +335,8 @@ func TestFormatMentionsForEmail(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := formatMentionsForEmail(tt.input)
+			// Pass nil session - avatar lookup will be skipped, falling back to @DisplayName
+			result := formatMentionsForEmail(nil, tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -358,7 +359,7 @@ func TestFormatMentionsForEmail_MalformedHTML(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := formatMentionsForEmail(tt.input)
+			result := formatMentionsForEmail(nil, tt.input)
 			// For malformed HTML, we expect it to either be fixed by the parser or returned as-is
 			// The key is that it shouldn't panic or error
 			assert.NotEmpty(t, result)

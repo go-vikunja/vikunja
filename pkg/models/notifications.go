@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -93,7 +94,9 @@ func (n *TaskCommentNotification) SubjectID() int64 {
 
 // ToMail returns the mail notification for TaskCommentNotification
 func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
-	formattedComment := formatMentionsForEmail(n.Comment.Comment)
+	s := db.NewSession()
+	defer s.Close()
+	formattedComment := formatMentionsForEmail(s, n.Comment.Comment)
 
 	mail := notifications.NewMail().
 		From(n.Doer.GetNameAndFromEmail()).
@@ -351,7 +354,9 @@ func (n *UserMentionedInTaskNotification) SubjectID() int64 {
 
 // ToMail returns the mail notification for UserMentionedInTaskNotification
 func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mail {
-	formattedDescription := formatMentionsForEmail(n.Task.Description)
+	s := db.NewSession()
+	defer s.Close()
+	formattedDescription := formatMentionsForEmail(s, n.Task.Description)
 
 	var subject string
 	if n.IsNew {
