@@ -1,4 +1,4 @@
-name: PR Docker Build
+name: Preview
 
 on:
   # pull_request_target gives write access to GHCR even for PRs from forks.
@@ -16,6 +16,12 @@ jobs:
       packages: write
       contents: read
     steps:
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+        with:
+          large-packages: false
+          docker-images: false
+          swap-storage: false
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
@@ -41,7 +47,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         with:
-          images: ghcr.io/go-vikunja/vikunja
+          images: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
           tags: |
             type=ref,event=pr
             type=sha,format=long

@@ -21,8 +21,8 @@
 			class="tw-w-full"
 		>
 		<div class="p-2">
-			<div class="task-id tw-flex tw-justify-between">
-				<div>
+			<div class="tw-flex tw-justify-between">
+				<span class="task-id">
 					<Done
 						class="kanban-card__done"
 						:is-done="task.done"
@@ -40,25 +40,30 @@
 					>
 						{{ task.position }}
 					</span>
-				</div>
-				<div v-if="projectTitle">
-					{{ projectTitle }}
-				</div>
-			</div>
-			<span
-				v-if="task.dueDate > 0"
-				v-tooltip="formatDateLong(task.dueDate)"
-				:class="{'overdue': isOverdue}"
-				class="due-date"
-			>
-				<span class="icon">
-					<Icon :icon="['far', 'calendar-alt']" />
 				</span>
-				<time :datetime="formatISO(task.dueDate)">
-					{{ formatDisplayDate(task.dueDate) }}
-				</time>
-			</span>
+				<span
+					v-if="task.dueDate > 0"
+					v-tooltip="formatDateLong(task.dueDate)"
+					:class="{'overdue': isOverdue}"
+					class="due-date"
+				>
+					<span class="icon">
+						<Icon :icon="['far', 'calendar-alt']" />
+					</span>
+					<time :datetime="formatISO(task.dueDate)">
+						{{ formatDisplayDate(task.dueDate) }}
+					</time>
+				</span>
+			</div>
+			
 			<h3>{{ task.title }}</h3>
+			
+			<span
+				v-if="projectTitle"
+				class="project-title"
+			>
+				{{ projectTitle }}
+			</span>
 
 			<ProgressBar
 				v-if="task.percentDone > 0"
@@ -71,16 +76,6 @@
 					:priority="task.priority"
 					:done="task.done"
 					class="is-inline-flex is-align-items-center"
-				/>
-				<AssigneeList
-					v-if="task.assignees.length > 0"
-					:assignees="task.assignees"
-					:avatar-size="24"
-					class="mie-1"
-				/>
-				<ChecklistSummary
-					:task="task"
-					class="checklist"
 				/>
 				<span
 					v-if="task.attachments.length > 0"
@@ -104,6 +99,15 @@
 				>
 					<Icon icon="history" />
 				</span>
+				<AssigneeList
+					v-if="task.assignees.length > 0"
+					:assignees="task.assignees"
+					:avatar-size="24"
+				/>
+				<ChecklistSummary
+					:task="task"
+					class="checklist"
+				/>
 			</div>
 		</div>
 	</div>
@@ -267,6 +271,7 @@ $task-background: var(--white);
 		display: flex;
 		align-items: center;
 		padding: 0 .25rem;
+		font-size: .85rem;
 
 		.icon {
 			margin-inline-end: .25rem;
@@ -287,15 +292,8 @@ $task-background: var(--white);
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
+		gap: .25rem;
 		margin-block-start: .25rem;
-
-		:deep(.tag),
-		:deep(.checklist-summary),
-		.assignees,
-		.icon,
-		.priority-label {
-			margin-inline-end: .25rem;
-		}
 
 		:deep(.checklist-summary) {
 			padding-inline-start: 0;
@@ -312,11 +310,6 @@ $task-background: var(--white);
 					margin: 0;
 				}
 			}
-		}
-
-		// FIXME: should be in Labels.vue
-		:deep(.tag) {
-			margin-inline-start: 0;
 		}
 
 		.priority-label {
@@ -339,7 +332,7 @@ $task-background: var(--white);
 		padding: 0 .5rem;
 	}
 
-	.task-id {
+	.task-id, .project-title {
 		color: var(--grey-500);
 		font-size: .8rem;
 		margin-block-end: .25rem;
@@ -395,7 +388,7 @@ $task-background: var(--white);
 }
 
 .kanban-card__done {
-	margin-inline-end: .25rem;
+	// Spacing handled by parent flex gap
 }
 
 .task-progress {
@@ -408,6 +401,5 @@ $task-background: var(--white);
 	background: var(--grey-100);
 	border-radius: $radius;
 	padding: 0.25rem;
-	margin-inline-end: .25rem;
 }
 </style>

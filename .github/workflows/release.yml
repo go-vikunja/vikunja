@@ -5,7 +5,7 @@ on:
 
 jobs:
   docker:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: namespace-profile-default
     steps:
       - name: Git describe
         id: ghd
@@ -21,12 +21,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
-        with:
-          version: latest
       - name: Docker meta version
         if: ${{ github.ref_type == 'tag' }}
         id: meta
@@ -49,8 +43,6 @@ jobs:
           tags: |
             vikunja/vikunja:unstable
             ghcr.io/go-vikunja/vikunja:unstable
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           build-args: |
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
       - name: Build and push version
@@ -61,8 +53,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           build-args: |
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
 
