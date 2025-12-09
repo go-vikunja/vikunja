@@ -17,6 +17,7 @@
 package initials
 
 import (
+	"encoding/base64"
 	"fmt"
 	"html"
 	"strconv"
@@ -82,13 +83,16 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 	return []byte(svg), "image/svg+xml", nil
 }
 
-// InlineProfilePicture returns the SVG string directly since SVG can be used inline
-func (p *Provider) InlineProfilePicture(u *user.User, size int64) (string, error) {
-	avatarData, _, err := p.GetAvatar(u, size)
+// AsDataUri returns a data URI for the SVG avatar
+func (p *Provider) AsDataUri(u *user.User, size int64) (string, error) {
+	avatarData, mimeType, err := p.GetAvatar(u, size)
 	if err != nil {
 		return "", err
 	}
 
-	// For SVG, we return the plain SVG string
-	return string(avatarData), nil
+	// Encode the SVG as base64 and create a data URI
+	base64Data := base64.StdEncoding.EncodeToString(avatarData)
+	dataURI := fmt.Sprintf("data:%s;base64,%s", mimeType, base64Data)
+
+	return dataURI, nil
 }

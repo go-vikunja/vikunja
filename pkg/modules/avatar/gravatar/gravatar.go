@@ -125,8 +125,8 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 	return av.Content, av.MimeType, nil
 }
 
-// InlineProfilePicture returns a base64 encoded data URI for the gravatar
-func (g *Provider) InlineProfilePicture(user *user.User, size int64) (string, error) {
+// AsDataUri returns a base64 encoded data URI for the gravatar
+func (g *Provider) AsDataUri(user *user.User, size int64) (string, error) {
 	avatarData, mimeType, err := g.GetAvatar(user, size)
 	if err != nil {
 		return "", err

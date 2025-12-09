@@ -32,10 +32,10 @@ import (
 type Provider interface {
 	// GetAvatar is the method used to get an actual avatar for a user
 	GetAvatar(user *user.User, size int64) (avatar []byte, mimeType string, err error)
-	// InlineProfilePicture returns a string representation suitable for inline use
+	// AsDataUri returns a string representation suitable for inline use
 	// For rasterized images, returns base64 encoded data URI (e.g., "data:image/png;base64,...")
 	// For SVG images, returns the plain SVG string
-	InlineProfilePicture(user *user.User, size int64) (inlineData string, err error)
+	AsDataUri(user *user.User, size int64) (inlineData string, err error)
 	// FlushCache removes cached avatar data for the user
 	FlushCache(u *user.User) error
 }
@@ -56,4 +56,37 @@ func FlushAllCaches(u *user.User) {
 			log.Errorf("Error flushing avatar cache: %v", err)
 		}
 	}
+}
+
+
+
+// GetProvider returns the appropriate avatar provider for a user
+func GetProvider(u *user.User) Provider {
+	switch u.GetAvatarProviderType() {
+	case "gravatar":
+		return &gravatar.Provider{}
+	case "initials":
+		return &initials.Provider{}
+	case "upload":
+		return &upload.Provider{}
+	case "marble":
+		return &marble.Provider{}
+	case "ldap":
+		return &ldap.Provider{}
+	case "openid":
+		return &openid.Provider{}
+	default:
+		return &empty.Provider{}
+	}
+}
+
+// AsDataUri fetches the user's avatar and returns it as a data URI string
+// suitable for embedding in emails. Returns an empty string if the avatar cannot be fetched.
+func AsDataUri(u *user.User, size int) string {
+	provider := GetProvider(u)
+	dataURI, err := provider.AsDataUri(u, int64(size))
+	if err != nil {
+		return ""
+	}
+	return dataURI
 }

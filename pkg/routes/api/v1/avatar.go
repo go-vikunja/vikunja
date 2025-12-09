@@ -23,11 +23,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/avatar/empty"
-	"code.vikunja.io/api/pkg/modules/avatar/gravatar"
-	"code.vikunja.io/api/pkg/modules/avatar/initials"
-	"code.vikunja.io/api/pkg/modules/avatar/ldap"
-	"code.vikunja.io/api/pkg/modules/avatar/marble"
-	"code.vikunja.io/api/pkg/modules/avatar/openid"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -68,23 +63,7 @@ func GetAvatar(c echo.Context) error {
 
 	found := err == nil || !user.IsErrUserDoesNotExist(err)
 
-	var avatarProvider avatar.Provider
-	switch u.AvatarProvider {
-	case "gravatar":
-		avatarProvider = &gravatar.Provider{}
-	case "initials":
-		avatarProvider = &initials.Provider{}
-	case "upload":
-		avatarProvider = &upload.Provider{}
-	case "marble":
-		avatarProvider = &marble.Provider{}
-	case "ldap":
-		avatarProvider = &ldap.Provider{}
-	case "openid":
-		avatarProvider = &openid.Provider{}
-	default:
-		avatarProvider = &empty.Provider{}
-	}
+	avatarProvider := avatar.GetProvider(u)
 
 	if !found {
 		avatarProvider = &empty.Provider{}

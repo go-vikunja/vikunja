@@ -16,7 +16,12 @@
 
 package empty
 
-import "code.vikunja.io/api/pkg/user"
+import (
+	"encoding/base64"
+	"fmt"
+
+	"code.vikunja.io/api/pkg/user"
+)
 
 // Provider represents the empty avatar provider
 type Provider struct {
@@ -47,8 +52,11 @@ func (p *Provider) GetAvatar(_ *user.User, _ int64) (avatar []byte, mimeType str
 	return []byte(defaultAvatar), "image/svg+xml", nil
 }
 
-// InlineProfilePicture returns the SVG string directly since SVG can be used inline
-func (p *Provider) InlineProfilePicture(_ *user.User, _ int64) (string, error) {
-	// For SVG, we return the plain SVG string
-	return defaultAvatar, nil
+// AsDataUri returns a data URI for the default SVG avatar
+func (p *Provider) AsDataUri(_ *user.User, _ int64) (string, error) {
+	// Encode the SVG as base64 and create a data URI
+	base64Data := base64.StdEncoding.EncodeToString([]byte(defaultAvatar))
+	dataURI := fmt.Sprintf("data:image/svg+xml;base64,%s", base64Data)
+
+	return dataURI, nil
 }
