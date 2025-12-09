@@ -58,8 +58,6 @@ func FlushAllCaches(u *user.User) {
 	}
 }
 
-
-
 // GetProvider returns the appropriate avatar provider for a user
 func GetProvider(u *user.User) Provider {
 	switch u.GetAvatarProviderType() {
@@ -78,15 +76,4 @@ func GetProvider(u *user.User) Provider {
 	default:
 		return &empty.Provider{}
 	}
-}
-
-// AsDataUri fetches the user's avatar and returns it as a data URI string
-// suitable for embedding in emails. Returns an empty string if the avatar cannot be fetched.
-func AsDataUri(u *user.User, size int) string {
-	provider := GetProvider(u)
-	dataURI, err := provider.AsDataUri(u, int64(size))
-	if err != nil {
-		return ""
-	}
-	return dataURI
 }

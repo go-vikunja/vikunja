@@ -18,19 +18,10 @@ package models
 
 import (
 	"bytes"
-	"encoding/base64"
-	"fmt"
 	"strings"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/avatar"
-	"code.vikunja.io/api/pkg/modules/avatar/empty"
-	"code.vikunja.io/api/pkg/modules/avatar/gravatar"
-	"code.vikunja.io/api/pkg/modules/avatar/initials"
-	"code.vikunja.io/api/pkg/modules/avatar/ldap"
-	"code.vikunja.io/api/pkg/modules/avatar/marble"
-	"code.vikunja.io/api/pkg/modules/avatar/openid"
-	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 
 	"golang.org/x/net/html"
@@ -85,73 +76,6 @@ func extractMentionedUsernames(htmlText string) []string {
 
 	traverse(doc)
 	return usernames
-}
-
-// getAvatarProvider returns the appropriate avatar provider for a user
-func getAvatarProvider(u *user.User) avatar.Provider {
-	switch u.AvatarProvider {
-	case "gravatar":
-		return &gravatar.Provider{}
-	case "initials":
-		return &initials.Provider{}
-	case "upload":
-		return &upload.Provider{}
-	case "marble":
-		return &marble.Provider{}
-	case "ldap":
-		return &ldap.Provider{}
-	case "openid":
-		return &openid.Provider{}
-	default:
-		return &empty.Provider{}
-	}
-}
-
-// getUserAvatarAsBase64 fetches the user's avatar and returns it as a data URI string
-// suitable for embedding in emails. For SVG avatars, it converts them to data URIs.
-// Returns an empty string if the avatar cannot be fetched.
-func getUserAvatarAsBase64(u *user.User, size int) string {
-	log.Debugf("getUserAvatarAsBase64 called for user %s (ID: %d, AvatarProvider: %s)", u.Username, u.ID, u.AvatarProvider)
-	provider := getAvatarProvider(u)
-	log.Debugf("Using avatar provider: %T", provider)
-
-	// Use the new InlineProfilePicture method
-	inlineData, err := provider.InlineProfilePicture(u, int64(size))
-	if err != nil {
-		log.Debugf("Failed to get inline profile picture for user %s: %v", u.Username, err)
-		return ""
-	}
-
-	log.Debugf("InlineProfilePicture returned data of length %d for user %s", len(inlineData), u.Username)
-	if len(inlineData) > 50 {
-		log.Debugf("First 50 chars of inline data: %s", inlineData[:50])
-	} else {
-		log.Debugf("Full inline data: %s", inlineData)
-	}
-
-	// If it's already a data URI (base64 encoded), return as-is
-	if strings.HasPrefix(inlineData, "data:") {
-		log.Debugf("Detected data URI for user %s, returning as-is", u.Username)
-		return inlineData
-	}
-
-	// If it's SVG content, convert to data URI
-	// SVG can start with either <svg or <?xml (for XML declaration)
-	if strings.HasPrefix(inlineData, "<svg") || strings.HasPrefix(inlineData, "<?xml") {
-		log.Debugf("Detected SVG content for user %s, converting to data URI", u.Username)
-		svgDataURI := fmt.Sprintf("data:image/svg+xml;base64,%s",
-			base64.StdEncoding.EncodeToString([]byte(inlineData)))
-		log.Debugf("SVG data URI length: %d", len(svgDataURI))
-		return svgDataURI
-	}
-
-	// Fallback: if it's neither data URI nor SVG, log and return empty
-	maxLen := 50
-	if len(inlineData) < maxLen {
-		maxLen = len(inlineData)
-	}
-	log.Debugf("Unexpected inline profile picture format for user %s: %s", u.Username, inlineData[:maxLen])
-	return ""
 }
 
 // formatMentionsForEmail replaces mention-user tags with user avatars and names for email display.
@@ -240,22 +164,10 @@ func formatMentionsForEmail(s *xorm.Session, htmlText string) string {
 			var avatarDataURI string
 			if usernameToUser != nil && dataID != "" {
 				if u, ok := usernameToUser[dataID]; ok {
-					log.Debugf("Getting avatar for user %s (ID: %d, AvatarProvider: %s)", u.Username, u.ID, u.AvatarProvider)
-					avatarDataURI = getUserAvatarAsBase64(u, 20)
-					if avatarDataURI == "" {
-						log.Debugf("getUserAvatarAsBase64 returned empty string for user %s", u.Username)
-					} else {
-						log.Debugf("getUserAvatarAsBase64 returned data URI of length %d for user %s", len(avatarDataURI), u.Username)
+					avatarDataURI, err = avatar.GetProvider(u).AsDataUri(u, 20)
+					if err != nil {
+						return
 					}
-				} else {
-					log.Debugf("User with dataID '%s' not found in usernameToUser map", dataID)
-				}
-			} else {
-				if usernameToUser == nil {
-					log.Debugf("usernameToUser map is nil")
-				}
-				if dataID == "" {
-					log.Debugf("dataID is empty")
 				}
 			}
 
