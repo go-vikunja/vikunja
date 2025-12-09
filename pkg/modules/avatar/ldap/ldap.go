@@ -29,6 +29,11 @@ func (p *Provider) GetAvatar(user *user.User, size int64) (avatar []byte, mimeTy
 	return up.GetAvatar(user, size)
 }
 
+func (p *Provider) InlineProfilePicture(user *user.User, size int64) (string, error) {
+	up := upload.Provider{}
+	return up.InlineProfilePicture(user, size)
+}
+
 func (p *Provider) FlushCache(u *user.User) error {
 	up := upload.Provider{}
 	return up.FlushCache(u)

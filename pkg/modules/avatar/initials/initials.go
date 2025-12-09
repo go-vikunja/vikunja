@@ -81,3 +81,14 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
 
 	return []byte(svg), "image/svg+xml", nil
 }
+
+// InlineProfilePicture returns the SVG string directly since SVG can be used inline
+func (p *Provider) InlineProfilePicture(u *user.User, size int64) (string, error) {
+	avatarData, _, err := p.GetAvatar(u, size)
+	if err != nil {
+		return "", err
+	}
+
+	// For SVG, we return the plain SVG string
+	return string(avatarData), nil
+}

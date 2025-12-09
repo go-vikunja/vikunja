@@ -46,3 +46,9 @@ const defaultAvatar string = `<?xml version="1.0" encoding="UTF-8"?>
 func (p *Provider) GetAvatar(_ *user.User, _ int64) (avatar []byte, mimeType string, err error) {
 	return []byte(defaultAvatar), "image/svg+xml", nil
 }
+
+// InlineProfilePicture returns the SVG string directly since SVG can be used inline
+func (p *Provider) InlineProfilePicture(_ *user.User, _ int64) (string, error) {
+	// For SVG, we return the plain SVG string
+	return defaultAvatar, nil
+}

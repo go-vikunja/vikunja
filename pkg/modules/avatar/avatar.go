@@ -32,6 +32,10 @@ import (
 type Provider interface {
 	// GetAvatar is the method used to get an actual avatar for a user
 	GetAvatar(user *user.User, size int64) (avatar []byte, mimeType string, err error)
+	// InlineProfilePicture returns a string representation suitable for inline use
+	// For rasterized images, returns base64 encoded data URI (e.g., "data:image/png;base64,...")
+	// For SVG images, returns the plain SVG string
+	InlineProfilePicture(user *user.User, size int64) (inlineData string, err error)
 	// FlushCache removes cached avatar data for the user
 	FlushCache(u *user.User) error
 }
