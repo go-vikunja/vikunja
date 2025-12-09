@@ -110,6 +110,10 @@ func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err e
 	p := bluemonday.UGCPolicy()
 	// Allow data URI images for inline avatars in mentions
 	p.AllowDataURIImages()
+	// Allow style attribute on img elements for avatar styling
+	p.AllowAttrs("style").OnElements("img")
+	// Allow specific CSS properties for avatar styling
+	p.AllowStyles("border-radius", "vertical-align", "margin-right").OnElements("img")
 
 	for _, line := range lines {
 		if line.isHTML {
