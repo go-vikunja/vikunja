@@ -98,16 +98,26 @@ func formatMentionsForEmail(s *xorm.Session, htmlText string) string {
 	var usersMap map[int64]*user.User
 	var usernameToUser map[string]*user.User
 
+	// Create maps for user data and avatar data URIs
+	usernameToAvatarURI := make(map[string]string)
+
 	if len(usernames) > 0 && s != nil {
 		usersMap, err = user.GetUsersByUsername(s, usernames, true)
 		if err != nil {
 			log.Debugf("Failed to fetch users for mention formatting: %v", err)
 			// Continue without user data - we'll fall back to display names from attributes
 		} else {
-			// Create username -> user map for easy lookup
+			// Create username -> user map for easy lookup and fetch avatar data URIs
 			usernameToUser = make(map[string]*user.User)
 			for _, u := range usersMap {
 				usernameToUser[u.Username] = u
+
+				// Fetch avatar data URI for this user
+				provider := avatar.GetProvider(u)
+				avatarDataURI, err := provider.AsDataUri(u, 20)
+				if err == nil && avatarDataURI != "" {
+					usernameToAvatarURI[u.Username] = avatarDataURI
+				}
 			}
 		}
 	}
@@ -160,15 +170,10 @@ func formatMentionsForEmail(s *xorm.Session, htmlText string) string {
 				Data: "strong",
 			}
 
-			// Try to get avatar for the user
+			// Get pre-fetched avatar data URI for the user
 			var avatarDataURI string
-			if usernameToUser != nil && dataID != "" {
-				if u, ok := usernameToUser[dataID]; ok {
-					avatarDataURI, err = avatar.GetProvider(u).AsDataUri(u, 20)
-					if err != nil {
-						return
-					}
-				}
+			if dataID != "" {
+				avatarDataURI = usernameToAvatarURI[dataID]
 			}
 
 			// If we have an avatar, add the img element
