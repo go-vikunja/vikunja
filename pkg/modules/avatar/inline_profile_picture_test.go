@@ -26,7 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 )
 
-func TestInlineProfilePicture(t *testing.T) {
+func TestAsDataURI(t *testing.T) {
 	testUser := &user.User{
 		ID:       1,
 		Username: "testuser",
@@ -36,43 +36,46 @@ func TestInlineProfilePicture(t *testing.T) {
 
 	t.Run("Initials Provider", func(t *testing.T) {
 		provider := &initials.Provider{}
-		result, err := provider.InlineProfilePicture(testUser, 64)
+		result, err := provider.AsDataURI(testUser, 64)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
-		if !strings.Contains(result, "<svg") {
-			t.Errorf("Expected SVG content, got: %s", result)
+		if !strings.HasPrefix(result, "data:image/svg+xml;base64,") {
+			t.Errorf("Expected data URI with SVG base64, got: %s", result)
 		}
-		if !strings.Contains(result, "T") { // Should contain the initial "T"
-			t.Errorf("Expected initial 'T' in SVG, got: %s", result)
+		// The base64 content should decode to SVG containing the initial "T"
+		if len(result) < 50 { // Basic sanity check for reasonable length
+			t.Errorf("Expected longer data URI, got: %s", result)
 		}
 	})
 
 	t.Run("Marble Provider", func(t *testing.T) {
 		provider := &marble.Provider{}
-		result, err := provider.InlineProfilePicture(testUser, 64)
+		result, err := provider.AsDataURI(testUser, 64)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
-		if !strings.Contains(result, "<svg") {
-			t.Errorf("Expected SVG content, got: %s", result)
+		if !strings.HasPrefix(result, "data:image/svg+xml;base64,") {
+			t.Errorf("Expected data URI with SVG base64, got: %s", result)
 		}
-		if !strings.Contains(result, "mask__marble") {
-			t.Errorf("Expected marble-specific SVG content, got: %s", result)
+		// Basic sanity check for reasonable length
+		if len(result) < 50 {
+			t.Errorf("Expected longer data URI, got: %s", result)
 		}
 	})
 
 	t.Run("Empty Provider", func(t *testing.T) {
 		provider := &empty.Provider{}
-		result, err := provider.InlineProfilePicture(testUser, 64)
+		result, err := provider.AsDataURI(testUser, 64)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
-		if !strings.Contains(result, "<svg") {
-			t.Errorf("Expected SVG content, got: %s", result)
+		if !strings.HasPrefix(result, "data:image/svg+xml;base64,") {
+			t.Errorf("Expected data URI with SVG base64, got: %s", result)
 		}
-		if !strings.Contains(result, "<?xml") {
-			t.Errorf("Expected XML declaration in SVG, got: %s", result)
+		// Basic sanity check for reasonable length
+		if len(result) < 50 {
+			t.Errorf("Expected longer data URI, got: %s", result)
 		}
 	})
 

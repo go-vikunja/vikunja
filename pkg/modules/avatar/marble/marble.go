@@ -126,8 +126,8 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
     </svg>`), "image/svg+xml", nil
 }
 
-// AsDataUri returns a data URI for the SVG avatar
-func (p *Provider) AsDataUri(u *user.User, size int64) (string, error) {
+// AsDataURI returns a data URI for the SVG avatar
+func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
 	avatarData, mimeType, err := p.GetAvatar(u, size)
 	if err != nil {
 		return "", err

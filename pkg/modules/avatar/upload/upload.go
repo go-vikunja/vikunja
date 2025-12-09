@@ -126,8 +126,8 @@ func (p *Provider) getAvatarWithDepth(u *user.User, size int64, recursionDepth i
 	return cachedAvatar.Content, cachedAvatar.MimeType, nil
 }
 
-// AsDataUri returns a base64 encoded data URI for the uploaded avatar
-func (p *Provider) AsDataUri(u *user.User, size int64) (string, error) {
+// AsDataURI returns a base64 encoded data URI for the uploaded avatar
+func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
 	avatarData, mimeType, err := p.GetAvatar(u, size)
 	if err != nil {
 		return "", err
