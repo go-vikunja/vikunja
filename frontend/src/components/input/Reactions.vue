@@ -96,11 +96,11 @@ function getReactionTooltip(users: IUser[], value: string | number) {
 }
 
 const showEmojiPicker = ref(false)
-const emojiPickerRef = ref<HTMLElement | null>(null)
+const emojiPickerRef = ref<InstanceType<typeof VuemojiPicker> | null>(null)
 
 function hideEmojiPicker(e: MouseEvent) {
-	if (showEmojiPicker.value && emojiPickerRef.value) {
-		closeWhenClickedOutside(e, emojiPickerRef.value, () => showEmojiPicker.value = false)
+	if (showEmojiPicker.value && emojiPickerRef.value?.$el) {
+		closeWhenClickedOutside(e, emojiPickerRef.value.$el, () => showEmojiPicker.value = false)
 	}
 }
 
