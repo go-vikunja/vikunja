@@ -13,11 +13,11 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 		popupElement.style.top = '0'
 		popupElement.style.left = '0'
 		popupElement.style.zIndex = '4700'
-		popupElement.style.background = 'white'
-		popupElement.style.border = '1px solid #ccc'
+		popupElement.style.background = 'var(--white)'
+		popupElement.style.border = '1px solid var(--grey-300)'
 		popupElement.style.borderRadius = '4px'
 		popupElement.style.padding = '8px'
-		popupElement.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'
+		popupElement.style.boxShadow = 'var(--shadow-md)'
 		popupElement.innerHTML = `<div><input class="input" placeholder="URL" id="${id}" value="${oldValue}"/></div>`
 		document.body.appendChild(popupElement)
 
