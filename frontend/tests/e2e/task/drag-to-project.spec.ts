@@ -283,5 +283,43 @@ test.describe('Drag Task to Project in Sidebar', () => {
 			// No success notification should appear (visual highlight doesn't show for read-only)
 			await expect(page.locator('.global-notification')).not.toContainText('moved to')
 		})
+
+		test('Shows error notification when task move fails', async ({authenticatedPage: page}) => {
+			const {sourceProject, targetProject, sourceListView, tasks} = await createProjectsWithTasks()
+
+			await page.goto(`/projects/${sourceProject.id}/${sourceListView.id}`)
+
+			// Wait for tasks to load
+			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
+
+			// Intercept the task update API call and return an error
+			await page.route('**/api/v1/tasks/*', async (route) => {
+				if (route.request().method() === 'POST') {
+					await route.fulfill({
+						status: 500,
+						contentType: 'application/json',
+						body: JSON.stringify({
+							code: 500,
+							message: 'Internal server error',
+						}),
+					})
+				} else {
+					await route.continue()
+				}
+			})
+
+			// Find the task and the target project in sidebar
+			const task = page.locator('.tasks .single-task').filter({hasText: tasks[0].title})
+			const targetProjectInSidebar = page.locator('li[data-project-id="' + targetProject.id + '"]')
+
+			// Drag task to target project
+			await task.dragTo(targetProjectInSidebar)
+
+			// Verify error notification appears
+			await expect(page.locator('.global-notification .vue-notification.error')).toBeVisible()
+
+			// Task should still be in the list (move failed)
+			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
+		})
 	})
 })

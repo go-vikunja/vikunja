@@ -310,7 +310,7 @@ import {
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
 import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
-import {success} from '@/message'
+import {success, error} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -544,8 +544,8 @@ async function updateTaskPosition(e) {
 
 				// Show success message
 				success({message: t('task.movedToProject', {project: targetProject?.title || t('project.title')})})
-			} catch (error) {
-				console.error('Failed to move task to project:', error)
+			} catch (e) {
+				error(e)
 			} finally {
 				taskStore.setDraggedTask(null)
 			}

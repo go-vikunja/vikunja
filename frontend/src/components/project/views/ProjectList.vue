@@ -117,7 +117,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
-import {success} from '@/message'
+import {success, error} from '@/message'
 
 const props = defineProps<{
         isLoadingProject: boolean,
@@ -281,8 +281,8 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 
 				// Show success message
 				success({message: $t('task.movedToProject', {project: targetProject?.title || $t('project.title')})})
-			} catch (error) {
-				console.error('Failed to move task to project:', error)
+			} catch (e) {
+				error(e)
 			} finally {
 				taskStore.setDraggedTask(null)
 			}
