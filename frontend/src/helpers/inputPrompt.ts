@@ -26,23 +26,55 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 			getBoundingClientRect: () => pos,
 		}
 
-		// Position the popup
-		computePosition(virtualReference, popupElement, {
-			placement: 'top-start',
-			strategy: 'fixed',
-			middleware: [
-				offset(8),
-				flip(),
-				shift({ padding: 8 }),
-			],
-		}).then(({ x, y }) => {
-			popupElement.style.left = `${x}px`
-			popupElement.style.top = `${y}px`
-		})
+		// Function to update popup position
+		const updatePosition = () => {
+			computePosition(virtualReference, popupElement, {
+				placement: 'top-start',
+				strategy: 'fixed',
+				middleware: [
+					offset(8),
+					flip(),
+					shift({ padding: 8 }),
+				],
+			}).then(({ x, y }) => {
+				popupElement.style.left = `${x}px`
+				popupElement.style.top = `${y}px`
+			})
+		}
+
+		// Position the popup initially
+		updatePosition()
+
+		// Track scroll position
+		let lastScrollY = window.scrollY
+		let lastScrollX = window.scrollX
+
+		// Update position on scroll
+		const handleScroll = () => {
+			const deltaY = window.scrollY - lastScrollY
+			const deltaX = window.scrollX - lastScrollX
+
+			// Update the virtual reference position to account for scroll
+			const currentRect = pos as DOMRect
+			pos = new DOMRect(
+				currentRect.x - deltaX,
+				currentRect.y - deltaY,
+				currentRect.width,
+				currentRect.height,
+			)
+
+			lastScrollY = window.scrollY
+			lastScrollX = window.scrollX
+
+			updatePosition()
+		}
+
+		window.addEventListener('scroll', handleScroll, true)
 
 		nextTick(() => document.getElementById(id)?.focus())
 
 		const cleanup = () => {
+			window.removeEventListener('scroll', handleScroll, true)
 			if (document.body.contains(popupElement)) {
 				document.body.removeChild(popupElement)
 			}
