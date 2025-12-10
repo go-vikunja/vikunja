@@ -128,17 +128,12 @@ function handleMouseMove(e: MouseEvent) {
 		return projectId && parseInt(projectId) === props.project.id
 	})
 
-	if (isOverThisProject && !isHoveredDuringDrag.value) {
-		console.log('Hovering over project:', props.project.id, 'elements:', elementsUnderMouse.map(el => (el as HTMLElement).dataset?.projectId).filter(Boolean))
-	}
-
 	isHoveredDuringDrag.value = isOverThisProject
 }
 
 // Only add the listener when a task is being dragged
 // Use capture phase to receive events before Sortable.js can prevent them
 watch(() => taskStore.draggedTask, (draggedTask) => {
-	console.log('draggedTask changed:', draggedTask, 'for project:', props.project.id)
 	if (draggedTask) {
 		document.addEventListener('mousemove', handleMouseMove, true)
 		document.addEventListener('dragover', handleMouseMove, true)
@@ -159,9 +154,9 @@ const isDropTarget = computed(() => {
 	if (!taskStore.draggedTask || !isHoveredDuringDrag.value) {
 		return false
 	}
-	// Only highlight if this is a valid drop target (not the same project, not a pseudo project)
+	// Highlight any valid project (not a pseudo project, has write permission)
+	// The actual drop logic will handle the case when it's the same project (no-op)
 	return props.project.id > 0
-		&& taskStore.draggedTask.projectId !== props.project.id
 		&& props.project.maxPermission !== null
 		&& props.project.maxPermission > PERMISSIONS.READ
 })
