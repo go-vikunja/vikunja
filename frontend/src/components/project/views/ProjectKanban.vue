@@ -505,9 +505,9 @@ async function updateTaskPosition(e) {
 		// Find a project element under the mouse
 		let targetProjectId: number | null = null
 		for (const el of elementsUnderMouse) {
-			const projectId = (el as HTMLElement).dataset?.projectId
-			if (projectId) {
-				targetProjectId = parseInt(projectId)
+			const dataProjectId = (el as HTMLElement).dataset?.projectId
+			if (dataProjectId) {
+				targetProjectId = parseInt(dataProjectId)
 				break
 			}
 			// Also check parent elements
