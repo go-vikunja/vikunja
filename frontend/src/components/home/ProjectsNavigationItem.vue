@@ -186,6 +186,10 @@ const childProjects = computed(() => {
 </script>
 
 <style lang="scss" scoped>
+.list-menu {
+	transition: background-color $transition;
+}
+
 .list-setting-spacer {
 	inline-size: 5rem;
 	flex-shrink: 0;
@@ -275,6 +279,7 @@ const childProjects = computed(() => {
 
 .navigation-item {
 	position: relative;
+	transition: background-color $transition, box-shadow $transition;
 }
 
 .navigation-item:has(*:focus-visible) {
