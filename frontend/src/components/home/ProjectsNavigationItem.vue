@@ -1,7 +1,10 @@
 <template>
 	<li
 		class="list-menu loader-container is-loading-small"
-		:class="{'is-loading': isLoading}"
+		:class="{
+			'is-loading': isLoading,
+			'is-drop-target': isDropTarget,
+		}"
 		:data-project-id="project.id"
 	>
 		<div class="navigation-item">
@@ -87,9 +90,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
+import {computed, ref, onUnmounted, watch} from 'vue'
 import {useProjectStore} from '@/stores/projects'
 import {useBaseStore} from '@/stores/base'
+import {useTaskStore} from '@/stores/tasks'
 import {useStorage} from '@vueuse/core'
 
 import type {IProject} from '@/modelTypes/IProject'
@@ -107,6 +111,60 @@ const props = defineProps<{
 	canCollapse?: boolean,
 	canEditOrder?: boolean,
 }>()
+
+const taskStore = useTaskStore()
+const isHoveredDuringDrag = ref(false)
+
+// Track mouse position during drag to detect hover (mouseenter doesn't fire during drag)
+function handleMouseMove(e: MouseEvent) {
+	if (!taskStore.draggedTask) {
+		isHoveredDuringDrag.value = false
+		return
+	}
+
+	const elementsUnderMouse = document.elementsFromPoint(e.clientX, e.clientY)
+	const isOverThisProject = elementsUnderMouse.some(el => {
+		const projectId = (el as HTMLElement).dataset?.projectId
+		return projectId && parseInt(projectId) === props.project.id
+	})
+
+	if (isOverThisProject && !isHoveredDuringDrag.value) {
+		console.log('Hovering over project:', props.project.id, 'elements:', elementsUnderMouse.map(el => (el as HTMLElement).dataset?.projectId).filter(Boolean))
+	}
+
+	isHoveredDuringDrag.value = isOverThisProject
+}
+
+// Only add the listener when a task is being dragged
+// Use capture phase to receive events before Sortable.js can prevent them
+watch(() => taskStore.draggedTask, (draggedTask) => {
+	console.log('draggedTask changed:', draggedTask, 'for project:', props.project.id)
+	if (draggedTask) {
+		document.addEventListener('mousemove', handleMouseMove, true)
+		document.addEventListener('dragover', handleMouseMove, true)
+	} else {
+		document.removeEventListener('mousemove', handleMouseMove, true)
+		document.removeEventListener('dragover', handleMouseMove, true)
+		isHoveredDuringDrag.value = false
+	}
+}, {immediate: true})
+
+onUnmounted(() => {
+	document.removeEventListener('mousemove', handleMouseMove, true)
+	document.removeEventListener('dragover', handleMouseMove, true)
+})
+
+// Show drop target highlight when a task is being dragged and this project is hovered
+const isDropTarget = computed(() => {
+	if (!taskStore.draggedTask || !isHoveredDuringDrag.value) {
+		return false
+	}
+	// Only highlight if this is a valid drop target (not the same project, not a pseudo project)
+	return props.project.id > 0
+		&& taskStore.draggedTask.projectId !== props.project.id
+		&& props.project.maxPermission !== null
+		&& props.project.maxPermission > PERMISSIONS.READ
+})
 
 const projectStore = useProjectStore()
 const baseStore = useBaseStore()
@@ -236,5 +294,16 @@ const childProjects = computed(() => {
 .navigation-item a:focus-visible {
 	// The focus ring is already added to the navigation-item, so we don't need to add it again.
 	box-shadow: none;
+}
+
+.is-drop-target {
+	background-color: hsla(var(--primary-hsl), 0.15);
+	border-radius: $radius;
+
+	.navigation-item {
+		background-color: hsla(var(--primary-hsl), 0.1);
+		box-shadow: inset 0 0 0 2px var(--primary);
+		border-radius: $radius;
+	}
 }
 </style>
