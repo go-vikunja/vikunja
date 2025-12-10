@@ -229,9 +229,9 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-function handleDragStart(e) {
+function handleDragStart(e: { item: HTMLElement }) {
 	drag.value = true
-	const taskId = parseInt(e.item.dataset.taskId)
+	const taskId = parseInt(e.item.dataset.taskId ?? '', 10)
 	const task = tasks.value.find(t => t.id === taskId)
 
 	if (task) {
