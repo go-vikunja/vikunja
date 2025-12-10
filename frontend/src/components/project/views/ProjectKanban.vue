@@ -348,7 +348,7 @@ const baseStore = useBaseStore()
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
-const {handleTaskDropToProject, clearDragState} = useTaskDragToProject()
+const {handleTaskDropToProject} = useTaskDragToProject()
 const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
 
@@ -497,6 +497,7 @@ async function updateTaskPosition(e) {
 	drag.value = false
 
 	// Check if the task was dropped over a sidebar project
+	// Note: handleTaskDropToProject always clears drag state, so we don't need to call clearDragState()
 	const {moved} = await handleTaskDropToProject(e, (task) => {
 		// Remove from kanban store on successful move
 		// Note: removeTaskInBucket already decrements the bucket count
@@ -506,9 +507,6 @@ async function updateTaskPosition(e) {
 	if (moved) {
 		return
 	}
-
-	// Clear drag state if not moved to a project
-	clearDragState()
 
 	// If the task was dropped outside kanban (not on a project)
 	if (!e.to.dataset.bucketIndex) {

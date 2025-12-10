@@ -175,7 +175,7 @@ const firstNewPosition = computed(() => {
 
 const baseStore = useBaseStore()
 const taskStore = useTaskStore()
-const {handleTaskDropToProject, clearDragState} = useTaskDragToProject()
+const {handleTaskDropToProject} = useTaskDragToProject()
 const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
@@ -240,6 +240,7 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 	drag.value = false
 
 	// Check if the task was dropped over a sidebar project
+	// Note: handleTaskDropToProject always clears drag state, so we don't need to call clearDragState()
 	const {moved} = await handleTaskDropToProject(e, (task) => {
 		// Remove from local list on successful move
 		tasks.value = tasks.value.filter(t => t.id !== task.id)
@@ -248,9 +249,6 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 	if (moved) {
 		return
 	}
-
-	// Clear drag state if not moved to a project
-	clearDragState()
 
 	// If the task was dropped outside this list (not on a project)
 	if (e.to !== e.from) {
