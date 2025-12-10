@@ -21,9 +21,12 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 		popupElement.innerHTML = `<div><input class="input" placeholder="URL" id="${id}" value="${oldValue}"/></div>`
 		document.body.appendChild(popupElement)
 
+		// Create a local mutable copy of the position for scroll tracking
+		let currentRect = new DOMRect(pos.left, pos.top, pos.width, pos.height)
+
 		// Virtual reference for positioning
 		const virtualReference = {
-			getBoundingClientRect: () => pos,
+			getBoundingClientRect: () => currentRect,
 		}
 
 		// Function to update popup position
@@ -54,9 +57,8 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 			const deltaY = window.scrollY - lastScrollY
 			const deltaX = window.scrollX - lastScrollX
 
-			// Update the virtual reference position to account for scroll
-			const currentRect = pos as DOMRect
-			pos = new DOMRect(
+			// Update the local mutable rect to account for scroll
+			currentRect = new DOMRect(
 				currentRect.x - deltaX,
 				currentRect.y - deltaY,
 				currentRect.width,
