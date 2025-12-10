@@ -9,7 +9,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 
 		// Create popup element
 		const popupElement = document.createElement('div')
-		popupElement.style.position = 'absolute'
+		popupElement.style.position = 'fixed'
 		popupElement.style.top = '0'
 		popupElement.style.left = '0'
 		popupElement.style.zIndex = '4700'
@@ -21,27 +21,62 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 		popupElement.innerHTML = `<div><input class="input" placeholder="URL" id="${id}" value="${oldValue}"/></div>`
 		document.body.appendChild(popupElement)
 
+		// Create a local mutable copy of the position for scroll tracking
+		let currentRect = new DOMRect(pos.left, pos.top, pos.width, pos.height)
+
 		// Virtual reference for positioning
 		const virtualReference = {
-			getBoundingClientRect: () => pos,
+			getBoundingClientRect: () => currentRect,
 		}
 
-		// Position the popup
-		computePosition(virtualReference, popupElement, {
-			placement: 'top-start',
-			middleware: [
-				offset(8),
-				flip(),
-				shift({ padding: 8 }),
-			],
-		}).then(({ x, y }) => {
-			popupElement.style.left = `${x}px`
-			popupElement.style.top = `${y}px`
-		})
+		// Function to update popup position
+		const updatePosition = () => {
+			computePosition(virtualReference, popupElement, {
+				placement: 'top-start',
+				strategy: 'fixed',
+				middleware: [
+					offset(8),
+					flip(),
+					shift({ padding: 8 }),
+				],
+			}).then(({ x, y }) => {
+				popupElement.style.left = `${x}px`
+				popupElement.style.top = `${y}px`
+			})
+		}
+
+		// Position the popup initially
+		updatePosition()
+
+		// Track scroll position
+		let lastScrollY = window.scrollY
+		let lastScrollX = window.scrollX
+
+		// Update position on scroll
+		const handleScroll = () => {
+			const deltaY = window.scrollY - lastScrollY
+			const deltaX = window.scrollX - lastScrollX
+
+			// Update the local mutable rect to account for scroll
+			currentRect = new DOMRect(
+				currentRect.x - deltaX,
+				currentRect.y - deltaY,
+				currentRect.width,
+				currentRect.height,
+			)
+
+			lastScrollY = window.scrollY
+			lastScrollX = window.scrollX
+
+			updatePosition()
+		}
+
+		window.addEventListener('scroll', handleScroll, true)
 
 		nextTick(() => document.getElementById(id)?.focus())
 
 		const cleanup = () => {
+			window.removeEventListener('scroll', handleScroll, true)
 			if (document.body.contains(popupElement)) {
 				document.body.removeChild(popupElement)
 			}

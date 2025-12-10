@@ -1038,4 +1038,152 @@ test.describe('Task', () => {
 			expect(naturalWidth).toBeGreaterThan(0)
 		})
 	})
+
+	test.describe('Link functionality in description editor', () => {
+		test('Should show URL input when clicking link button without scroll', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				description: 'Test text for link',
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			// Click edit button to open editor
+			const editButton = page.locator('.task-view .details.content.description .tiptap button.done-edit')
+			await expect(editButton).toBeVisible({timeout: 10000})
+			await editButton.click()
+
+			// Wait for editor to be visible
+			const editor = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+			await expect(editor).toBeVisible()
+
+			// Select text by triple-clicking
+			await editor.click({clickCount: 3})
+			await page.waitForTimeout(200)
+
+			// Wait for bubble menu to appear and click Link button (6th button - chain icon)
+			const bubbleMenu = page.locator('.editor-bubble__wrapper')
+			await expect(bubbleMenu).toBeVisible({timeout: 5000})
+			const linkButton = bubbleMenu.locator('button').nth(5)
+			await linkButton.click()
+
+			// Verify URL input popup appears
+			const urlInput = page.locator('input[placeholder="URL"]')
+			await expect(urlInput).toBeVisible({timeout: 2000})
+
+			// Verify input is positioned near the toolbar button (not at top/bottom of viewport)
+			const urlInputBox = await urlInput.boundingBox()
+			const linkButtonBox = await linkButton.boundingBox()
+			expect(urlInputBox).not.toBeNull()
+			expect(linkButtonBox).not.toBeNull()
+
+			// URL input should be near the link button (within 200px vertically)
+			const verticalDistance = Math.abs(urlInputBox!.y - linkButtonBox!.y)
+			expect(verticalDistance).toBeLessThan(200)
+		})
+
+		test('Should position URL input correctly when page is scrolled (issue #1899)', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				description: 'Test text for link',
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			// Scroll the page down
+			await page.evaluate(() => window.scrollBy(0, 500))
+			await page.waitForTimeout(100)
+
+			// Click edit button to open editor
+			const editButton = page.locator('.task-view .details.content.description .tiptap button.done-edit')
+			await expect(editButton).toBeVisible({timeout: 10000})
+			await editButton.click()
+
+			// Wait for editor to be visible
+			const editor = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+			await expect(editor).toBeVisible()
+
+			// Select text by triple-clicking
+			await editor.click({clickCount: 3})
+			await page.waitForTimeout(200)
+
+			// Wait for bubble menu and click Link button
+			const bubbleMenu = page.locator('.editor-bubble__wrapper')
+			await expect(bubbleMenu).toBeVisible({timeout: 5000})
+			const linkButton = bubbleMenu.locator('button').nth(5)
+			await linkButton.click()
+
+			// Verify URL input popup appears and is positioned correctly (not off-screen)
+			const urlInput = page.locator('input[placeholder="URL"]')
+			await expect(urlInput).toBeVisible({timeout: 2000})
+
+			// Verify input is positioned near the toolbar button
+			const urlInputBox = await urlInput.boundingBox()
+			const linkButtonBox = await linkButton.boundingBox()
+			expect(urlInputBox).not.toBeNull()
+			expect(linkButtonBox).not.toBeNull()
+
+			// URL input should be near the link button even after scroll
+			const verticalDistance = Math.abs(urlInputBox!.y - linkButtonBox!.y)
+			expect(verticalDistance).toBeLessThan(200)
+
+			// Verify URL input is visible in viewport (not off-screen at top)
+			const viewportHeight = page.viewportSize()!.height
+			expect(urlInputBox!.y).toBeGreaterThan(0)
+			expect(urlInputBox!.y).toBeLessThan(viewportHeight)
+		})
+
+		test('Should follow scroll when URL input is open', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				description: 'Test text for link',
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			// Click edit button to open editor
+			const editButton = page.locator('.task-view .details.content.description .tiptap button.done-edit')
+			await expect(editButton).toBeVisible({timeout: 10000})
+			await editButton.click()
+
+			// Wait for editor and select text
+			const editor = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+			await expect(editor).toBeVisible()
+			await editor.click({clickCount: 3})
+			await page.waitForTimeout(200)
+
+			// Click Link button to open URL input
+			const bubbleMenu = page.locator('.editor-bubble__wrapper')
+			await expect(bubbleMenu).toBeVisible({timeout: 5000})
+			const linkButton = bubbleMenu.locator('button').nth(5)
+			await linkButton.click()
+
+			// Verify URL input is visible
+			const urlInput = page.locator('input[placeholder="URL"]')
+			await expect(urlInput).toBeVisible({timeout: 2000})
+
+			// Get initial position
+			const initialBox = await urlInput.boundingBox()
+			expect(initialBox).not.toBeNull()
+
+			// Scroll down while URL input is open
+			await page.evaluate(() => window.scrollBy(0, 300))
+			await page.waitForTimeout(400)
+
+			// Get new position after scroll
+			const afterScrollBox = await urlInput.boundingBox()
+			expect(afterScrollBox).not.toBeNull()
+
+			// URL input should have moved with the scroll (Y position should change)
+			// The input should follow the content, so its position relative to viewport should adjust
+			const positionChanged = Math.abs(afterScrollBox!.y - initialBox!.y) > 50
+			expect(positionChanged).toBe(true)
+
+			// Verify input is still near the link button after scroll
+			const linkButtonBox = await linkButton.boundingBox()
+			expect(linkButtonBox).not.toBeNull()
+			const verticalDistance = Math.abs(afterScrollBox!.y - linkButtonBox!.y)
+			expect(verticalDistance).toBeLessThan(200)
+		})
+	})
 })
