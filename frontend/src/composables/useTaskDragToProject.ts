@@ -13,14 +13,21 @@ function findProjectIdAtPosition(mouseX: number, mouseY: number): number | null 
 	const elementsUnderMouse = document.elementsFromPoint(mouseX, mouseY)
 
 	for (const el of elementsUnderMouse) {
-		const projectId = (el as HTMLElement).dataset?.projectId
-		if (projectId) {
-			return parseInt(projectId, 10)
+		if (!(el instanceof HTMLElement)) {
+			continue
 		}
-		// Also check parent elements
-		const parentWithProjectId = (el as HTMLElement).closest?.('[data-project-id]')
-		if (parentWithProjectId) {
-			return parseInt((parentWithProjectId as HTMLElement).dataset.projectId!, 10)
+
+		const withProjectId =
+			el.dataset?.projectId != null
+				? el
+				: el.closest('[data-project-id]') as HTMLElement | null
+
+		const projectId = withProjectId?.dataset.projectId
+		if (projectId) {
+			const parsed = parseInt(projectId, 10)
+			if (!Number.isNaN(parsed)) {
+				return parsed
+			}
 		}
 	}
 
