@@ -9,7 +9,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 
 		// Create popup element
 		const popupElement = document.createElement('div')
-		popupElement.style.position = 'absolute'
+		popupElement.style.position = 'fixed'
 		popupElement.style.top = '0'
 		popupElement.style.left = '0'
 		popupElement.style.zIndex = '4700'
@@ -29,6 +29,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 		// Position the popup
 		computePosition(virtualReference, popupElement, {
 			placement: 'top-start',
+			strategy: 'fixed',
 			middleware: [
 				offset(8),
 				flip(),
