@@ -8,6 +8,8 @@
 			'has-custom-background-color': color ?? undefined,
 		}"
 		:style="{'background-color': color ?? undefined}"
+		:data-task-id="task.id"
+		:data-project-id="task.projectId"
 		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"

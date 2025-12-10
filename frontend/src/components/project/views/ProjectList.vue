@@ -48,8 +48,7 @@
 					<draggable
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
-						group="tasks"
-						handle=".handle"
+						:group="{name: 'tasks', put: false}"
 						:disabled="!canDragTasks"
 						item-key="id"
 						tag="ul"
@@ -62,7 +61,7 @@
 						}"
 						:animation="100"
 						ghost-class="task-ghost"
-						@start="() => drag = true"
+						@start="handleDragStart"
 						@end="saveTaskPosition"
 					>
 						<template #item="{element: t, index}">
@@ -74,13 +73,7 @@
 								:the-task="t"
 								:all-tasks="allTasks"
 								@taskUpdated="updateTasks"
-							>
-								<template v-if="canDragTasks">
-									<span class="icon handle">
-										<Icon icon="grip-lines" />
-									</span>
-								</template>
-							</SingleTaskInProject>
+							/>
 						</template>
 					</draggable>
 
@@ -109,6 +102,7 @@ import Pagination from '@/components/misc/Pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/project/partials/Filters.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
+import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
@@ -116,6 +110,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
+import {useTaskStore} from '@/stores/tasks'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -179,6 +174,8 @@ const firstNewPosition = computed(() => {
 })
 
 const baseStore = useBaseStore()
+const taskStore = useTaskStore()
+const {handleTaskDropToProject} = useTaskDragToProject()
 const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
@@ -229,8 +226,32 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-async function saveTaskPosition(e) {
+function handleDragStart(e: { item: HTMLElement }) {
+	drag.value = true
+	const taskId = parseInt(e.item.dataset.taskId ?? '', 10)
+	const task = tasks.value.find(t => t.id === taskId)
+
+	if (task) {
+		taskStore.setDraggedTask(task)
+	}
+}
+
+async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement, from: HTMLElement, newIndex: number }) {
 	drag.value = false
+
+	// Check if dropped on a sidebar project
+	const {moved} = await handleTaskDropToProject(e, (task) => {
+		tasks.value = tasks.value.filter(t => t.id !== task.id)
+	})
+
+	if (moved) {
+		return
+	}
+
+	// If dropped outside this list
+	if (e.to !== e.from) {
+		return
+	}
 
 	const task = tasks.value[e.newIndex]
 	const taskBefore = tasks.value[e.newIndex - 1] ?? null
@@ -350,22 +371,11 @@ onBeforeUnmount(() => {
 	box-shadow: none;
 }
 
-:deep(.single-task) {
-	.handle {
-		opacity: 1;
-		transition: opacity $transition;
-		margin-inline-end: .25rem;
-		cursor: grab;
-	}
+:deep(.tasks:not(.dragging-disabled) .single-task) {
+	cursor: grab;
 
-	@media(hover: hover) and (pointer: fine) {
-		& .handle {
-			opacity: 0;
-		}
-
-		&:hover .handle {
-			opacity: 1;
-		}
+	&:active {
+		cursor: grabbing;
 	}
 }
 

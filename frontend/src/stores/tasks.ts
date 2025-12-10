@@ -113,11 +113,16 @@ export const useTaskStore = defineStore('task', () => {
 
 	const tasks = ref<{ [id: ITask['id']]: ITask }>({}) // TODO: or is this ITask[]
 	const isLoading = ref(false)
+	const draggedTask = ref<ITask | null>(null)
 
 	const hasTasks = computed(() => Object.keys(tasks.value).length > 0)
 
 	function setIsLoading(newIsLoading: boolean) {
 		isLoading.value = newIsLoading
+	}
+
+	function setDraggedTask(task: ITask | null) {
+		draggedTask.value = task
 	}
 
 	function setTasks(newTasks: ITask[]) {
@@ -535,10 +540,12 @@ export const useTaskStore = defineStore('task', () => {
 	return {
 		tasks,
 		isLoading,
+		draggedTask,
 
 		hasTasks,
 
 		setTasks,
+		setDraggedTask,
 		loadTasks,
 		update,
 		delete: deleteTask, // since delete is a reserved word we have to alias here

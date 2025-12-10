@@ -156,7 +156,7 @@
 									:item-key="(task: ITask) => `bucket${bucket.id}-task${task.id}`"
 									:component-data="getTaskDraggableTaskComponentData(bucket)"
 									@update:modelValue="(tasks) => updateTasks(bucket.id, tasks)"
-									@start="() => dragstart(bucket)"
+									@start="handleTaskDragStart"
 									@end="updateTaskPosition"
 								>
 									<template #footer>
@@ -210,7 +210,10 @@
 									</template>
 
 									<template #item="{element: task}">
-										<div class="task-item">
+										<div
+											class="task-item"
+											:data-task-id="task.id"
+										>
 											<KanbanCard
 												class="kanban-card"
 												:task="task"
@@ -307,6 +310,7 @@ import {
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 
 import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
+import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import type {TaskFilterParams} from '@/services/taskCollection'
@@ -344,6 +348,7 @@ const baseStore = useBaseStore()
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
+const {handleTaskDropToProject} = useTaskDragToProject()
 const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
 
@@ -490,6 +495,20 @@ function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
 
 async function updateTaskPosition(e) {
 	drag.value = false
+
+	// Check if dropped on a sidebar project
+	const {moved} = await handleTaskDropToProject(e, (task) => {
+		kanbanStore.removeTaskInBucket(task)
+	})
+
+	if (moved) {
+		return
+	}
+
+	// If dropped outside kanban
+	if (!e.to.dataset.bucketIndex) {
+		return
+	}
 
 	// While we could just pass the bucket index in through the function call, this would not give us the
 	// new bucket id when a task has been moved between buckets, only the new bucket. Using the data-bucket-id
@@ -769,6 +788,18 @@ function shouldAcceptDrop(bucket: IBucket) {
 function dragstart(bucket: IBucket) {
 	drag.value = true
 	sourceBucket.value = bucket.id
+}
+
+function handleTaskDragStart(e) {
+	const taskId = parseInt(e.item.dataset.taskId, 10)
+	const bucketIndex = parseInt(e.from.dataset.bucketIndex, 10)
+	const bucket = buckets.value[bucketIndex]
+	const task = bucket?.tasks.find(t => t.id === taskId)
+
+	if (task) {
+		taskStore.setDraggedTask(task)
+	}
+	dragstart(bucket)
 }
 
 async function toggleDefaultBucket(bucket: IBucket) {
