@@ -94,6 +94,10 @@ test.describe('Drag Task to Project in Sidebar', () => {
 
 			// Verify task is removed from the list
 			await expect(page.locator('.tasks')).not.toContainText(tasks[0].title)
+
+			// Verify task appears in target project
+			await page.goto(`/projects/${targetProject.id}/3`)
+			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
 		})
 
 		test('Does not move task when dropped on the same project', async ({authenticatedPage: page}) => {
@@ -140,6 +144,10 @@ test.describe('Drag Task to Project in Sidebar', () => {
 
 			// Verify task is removed from the kanban board
 			await expect(page.locator('.kanban .bucket .tasks')).not.toContainText(tasks[0].title)
+
+			// Verify task appears in target project
+			await page.goto(`/projects/${targetProject.id}/3`)
+			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
 		})
 
 		test('Does not move task when dropped on the same project', async ({authenticatedPage: page}) => {
