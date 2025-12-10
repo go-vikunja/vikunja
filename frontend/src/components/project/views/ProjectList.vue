@@ -90,7 +90,6 @@
 
 <script setup lang="ts">
 import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef} from 'vue'
-import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -103,6 +102,7 @@ import Pagination from '@/components/misc/Pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/project/partials/Filters.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
+import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
 import {shouldShowTaskInListView} from '@/composables/useTaskListFiltering'
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
 import {calculateItemPosition} from '@/helpers/calculateItemPosition'
@@ -111,13 +111,11 @@ import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
-import {useProjectStore} from '@/stores/projects'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
-import {success, error} from '@/message'
 
 const props = defineProps<{
         isLoadingProject: boolean,
@@ -177,8 +175,7 @@ const firstNewPosition = computed(() => {
 
 const baseStore = useBaseStore()
 const taskStore = useTaskStore()
-const projectStore = useProjectStore()
-const {t: $t} = useI18n({useScope: 'global'})
+const {handleTaskDropToProject, clearDragState} = useTaskDragToProject()
 const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
@@ -240,58 +237,20 @@ function handleDragStart(e: { item: HTMLElement }) {
 }
 
 async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement, from: HTMLElement, newIndex: number }) {
-	const draggedTask = taskStore.draggedTask
-
 	drag.value = false
 
-	// Check if the task was dropped over a sidebar project using mouse position
-	if (draggedTask && e.originalEvent) {
-		const mouseX = e.originalEvent.clientX
-		const mouseY = e.originalEvent.clientY
-		const elementsUnderMouse = document.elementsFromPoint(mouseX, mouseY)
+	// Check if the task was dropped over a sidebar project
+	const {moved} = await handleTaskDropToProject(e, (task) => {
+		// Remove from local list on successful move
+		tasks.value = tasks.value.filter(t => t.id !== task.id)
+	})
 
-		// Find a project element under the mouse
-		let targetProjectId: number | null = null
-		for (const el of elementsUnderMouse) {
-			const elProjectId = (el as HTMLElement).dataset?.projectId
-			if (elProjectId) {
-				targetProjectId = parseInt(elProjectId, 10)
-				break
-			}
-			// Also check parent elements
-			const parentWithProjectId = (el as HTMLElement).closest?.('[data-project-id]')
-			if (parentWithProjectId) {
-				targetProjectId = parseInt((parentWithProjectId as HTMLElement).dataset.projectId!, 10)
-				break
-			}
-		}
-
-		if (targetProjectId && targetProjectId > 0 && targetProjectId !== draggedTask.projectId) {
-			const targetProject = projectStore.projects[targetProjectId]
-
-			try {
-				// Move the task to the new project
-				await taskStore.update({
-					...draggedTask,
-					projectId: targetProjectId,
-				})
-
-				// Remove from local list
-				tasks.value = tasks.value.filter(t => t.id !== draggedTask.id)
-
-				// Show success message
-				success({message: $t('task.movedToProject', {project: targetProject?.title || $t('project.title')})})
-			} catch (e) {
-				error(e)
-			} finally {
-				taskStore.setDraggedTask(null)
-			}
-			return
-		}
+	if (moved) {
+		return
 	}
 
-	// Clear drag state
-	taskStore.setDraggedTask(null)
+	// Clear drag state if not moved to a project
+	clearDragState()
 
 	// If the task was dropped outside this list (not on a project)
 	if (e.to !== e.from) {
