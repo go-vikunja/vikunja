@@ -239,7 +239,7 @@ function handleDragStart(e: { item: HTMLElement }) {
 	}
 }
 
-async function saveTaskPosition(e) {
+async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement, from: HTMLElement, newIndex: number }) {
 	const draggedTask = taskStore.draggedTask
 
 	drag.value = false
