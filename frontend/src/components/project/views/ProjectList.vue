@@ -90,6 +90,7 @@
 
 <script setup lang="ts">
 import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef} from 'vue'
+import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -110,11 +111,13 @@ import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
+import {useProjectStore} from '@/stores/projects'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
+import {success} from '@/message'
 
 const props = defineProps<{
         isLoadingProject: boolean,
@@ -174,6 +177,8 @@ const firstNewPosition = computed(() => {
 
 const baseStore = useBaseStore()
 const taskStore = useTaskStore()
+const projectStore = useProjectStore()
+const {t: $t} = useI18n({useScope: 'global'})
 const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
@@ -262,6 +267,7 @@ async function saveTaskPosition(e) {
 		}
 
 		if (targetProjectId && targetProjectId > 0 && targetProjectId !== draggedTask.projectId) {
+			const targetProject = projectStore.projects[targetProjectId]
 
 			try {
 				// Move the task to the new project
@@ -272,6 +278,9 @@ async function saveTaskPosition(e) {
 
 				// Remove from local list
 				tasks.value = tasks.value.filter(t => t.id !== draggedTask.id)
+
+				// Show success message
+				success({message: $t('task.movedToProject', {project: targetProject?.title || $t('project.title')})})
 			} catch (error) {
 				console.error('Failed to move task to project:', error)
 			} finally {

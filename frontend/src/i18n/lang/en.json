@@ -799,6 +799,7 @@
     "addReminder": "Add a reminder…",
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
+    "movedToProject": "The task was moved to {project}.",
     "undo": "Undo",
     "openDetail": "Open task detail view",
     "checklistTotal": "{checked} of {total} tasks",

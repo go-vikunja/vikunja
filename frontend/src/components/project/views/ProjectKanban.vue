@@ -519,6 +519,7 @@ async function updateTaskPosition(e) {
 		}
 
 		if (targetProjectId && targetProjectId > 0 && targetProjectId !== draggedTask.projectId) {
+			const targetProject = projectStore.projects[targetProjectId]
 
 			try {
 				// Move the task to the new project
@@ -540,6 +541,9 @@ async function updateTaskPosition(e) {
 						})
 					}
 				}
+
+				// Show success message
+				success({message: t('task.movedToProject', {project: targetProject?.title || t('project.title')})})
 			} catch (error) {
 				console.error('Failed to move task to project:', error)
 			} finally {
