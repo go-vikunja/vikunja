@@ -34,50 +34,40 @@ func TestAsDataURI(t *testing.T) {
 		Email:    "test@example.com",
 	}
 
-	t.Run("Initials Provider", func(t *testing.T) {
-		provider := &initials.Provider{}
-		result, err := provider.AsDataURI(testUser, 64)
-		if err != nil {
-			t.Fatalf("Expected no error, got: %v", err)
-		}
-		if !strings.HasPrefix(result, "data:image/svg+xml;base64,") {
-			t.Errorf("Expected data URI with SVG base64, got: %s", result)
-		}
-		// The base64 content should decode to SVG containing the initial "T"
-		if len(result) < 50 { // Basic sanity check for reasonable length
-			t.Errorf("Expected longer data URI, got: %s", result)
-		}
-	})
+	// Table-driven test for SVG providers
+	testCases := []struct {
+		name     string
+		provider Provider
+	}{
+		{
+			name:     "Initials Provider",
+			provider: &initials.Provider{},
+		},
+		{
+			name:     "Marble Provider",
+			provider: &marble.Provider{},
+		},
+		{
+			name:     "Empty Provider",
+			provider: &empty.Provider{},
+		},
+	}
 
-	t.Run("Marble Provider", func(t *testing.T) {
-		provider := &marble.Provider{}
-		result, err := provider.AsDataURI(testUser, 64)
-		if err != nil {
-			t.Fatalf("Expected no error, got: %v", err)
-		}
-		if !strings.HasPrefix(result, "data:image/svg+xml;base64,") {
-			t.Errorf("Expected data URI with SVG base64, got: %s", result)
-		}
-		// Basic sanity check for reasonable length
-		if len(result) < 50 {
-			t.Errorf("Expected longer data URI, got: %s", result)
-		}
-	})
-
-	t.Run("Empty Provider", func(t *testing.T) {
-		provider := &empty.Provider{}
-		result, err := provider.AsDataURI(testUser, 64)
-		if err != nil {
-			t.Fatalf("Expected no error, got: %v", err)
-		}
-		if !strings.HasPrefix(result, "data:image/svg+xml;base64,") {
-			t.Errorf("Expected data URI with SVG base64, got: %s", result)
-		}
-		// Basic sanity check for reasonable length
-		if len(result) < 50 {
-			t.Errorf("Expected longer data URI, got: %s", result)
-		}
-	})
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := tc.provider.AsDataURI(testUser, 64)
+			if err != nil {
+				t.Fatalf("Expected no error, got: %v", err)
+			}
+			if !strings.HasPrefix(result, "data:image/svg+xml;base64,") {
+				t.Errorf("Expected data URI with SVG base64, got: %s", result)
+			}
+			// Basic sanity check for reasonable length
+			if len(result) < 50 {
+				t.Errorf("Expected longer data URI, got: %s", result)
+			}
+		})
+	}
 
 	t.Run("Gravatar Provider - Base64 Format", func(t *testing.T) {
 		// Skip this test as it requires keyvalue store initialization
