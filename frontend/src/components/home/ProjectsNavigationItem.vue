@@ -125,7 +125,7 @@ function handleMouseMove(e: MouseEvent) {
 	const elementsUnderMouse = document.elementsFromPoint(e.clientX, e.clientY)
 	const isOverThisProject = elementsUnderMouse.some(el => {
 		const projectId = (el as HTMLElement).dataset?.projectId
-		return projectId && parseInt(projectId) === props.project.id
+		return projectId && parseInt(projectId, 10) === props.project.id
 	})
 
 	isHoveredDuringDrag.value = isOverThisProject
