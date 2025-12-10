@@ -253,15 +253,15 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 		// Find a project element under the mouse
 		let targetProjectId: number | null = null
 		for (const el of elementsUnderMouse) {
-			const projectId = (el as HTMLElement).dataset?.projectId
-			if (projectId) {
-				targetProjectId = parseInt(projectId)
+			const elProjectId = (el as HTMLElement).dataset?.projectId
+			if (elProjectId) {
+				targetProjectId = parseInt(elProjectId, 10)
 				break
 			}
 			// Also check parent elements
 			const parentWithProjectId = (el as HTMLElement).closest?.('[data-project-id]')
 			if (parentWithProjectId) {
-				targetProjectId = parseInt((parentWithProjectId as HTMLElement).dataset.projectId!)
+				targetProjectId = parseInt((parentWithProjectId as HTMLElement).dataset.projectId!, 10)
 				break
 			}
 		}
