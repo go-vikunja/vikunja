@@ -60,7 +60,11 @@ func FlushAllCaches(u *user.User) {
 
 // GetProvider returns the appropriate avatar provider for a user
 func GetProvider(u *user.User) Provider {
-	switch u.GetAvatarProviderType() {
+	if u.AvatarProvider == "" {
+		u.AvatarProvider = "empty"
+	}
+
+	switch u.AvatarProvider {
 	case "gravatar":
 		return &gravatar.Provider{}
 	case "initials":

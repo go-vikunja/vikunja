@@ -677,11 +677,3 @@ func (u *User) SetStatus(s *xorm.Session, status Status) (err error) {
 		Update(u)
 	return
 }
-
-// GetAvatarProviderType returns the avatar provider type for this user
-func (u *User) GetAvatarProviderType() string {
-	if u.AvatarProvider == "" {
-		return "empty"
-	}
-	return u.AvatarProvider
-}
