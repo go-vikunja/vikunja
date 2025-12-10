@@ -431,7 +431,7 @@ jobs:
         ports:
           - 5556:5556
     container:
-      image: cypress/browsers:latest@sha256:ff79e75249941c52c301821a7979db306e2659aa2d6038428bcf77c6f5f125e1
+      image: cypress/browsers:latest@sha256:c03803eed8a1c80a1cfe38672e8c6f661439fcff5cfa2c5ed424ffa502b0b0a1
       options: --user 1001
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
