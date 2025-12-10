@@ -1,10 +1,9 @@
 <template>
-	<div>
+	<div :data-task-id="task.id">
 		<div
 			ref="taskRoot"
 			:class="{'is-loading': taskService.loading}"
 			class="task loader-container single-task"
-			:data-task-id="task.id"
 			:data-project-id="task.projectId"
 			tabindex="-1"
 			@click="openTaskDetail"

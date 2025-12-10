@@ -3,7 +3,7 @@
 		v-model="availableProjects"
 		animation="100"
 		ghost-class="ghost"
-		:group="{name: 'projects', put: ['tasks']}"
+		group="projects"
 		handle=".handle"
 		tag="menu"
 		item-key="id"
@@ -18,7 +18,7 @@
 			],
 		}"
 		@start="() => drag = true"
-		@end="handleDrop"
+		@end="saveProjectPosition"
 	>
 		<template #item="{element: project}">
 			<ProjectsNavigationItem
@@ -44,10 +44,6 @@ import {calculateItemPosition} from '@/helpers/calculateItemPosition'
 import type {IProject} from '@/modelTypes/IProject'
 
 import {useProjectStore} from '@/stores/projects'
-import {useTaskStore} from '@/stores/tasks'
-import {useKanbanStore} from '@/stores/kanban'
-import {PERMISSIONS} from '@/constants/permissions'
-import {isSavedFilter} from '@/services/savedFilter'
 
 const props = defineProps<{
 	modelValue?: IProject[],
@@ -61,8 +57,6 @@ const emit = defineEmits<{
 const drag = ref(false)
 
 const projectStore = useProjectStore()
-const taskStore = useTaskStore()
-const kanbanStore = useKanbanStore()
 
 // Vue draggable will modify the projects list as it changes their position which will not work on a prop.
 // Hence, we'll clone the prop and work on the clone.
@@ -77,82 +71,8 @@ watch(
 
 const projectUpdating = ref<{ [id: IProject['id']]: boolean }>({})
 
-async function handleDrop(e: SortableEvent) {
-	drag.value = false
-
-	// Check if this is a task drop (from task views to sidebar)
-	const taskIdStr = e.item.dataset.taskId
-	if (taskIdStr) {
-		await handleTaskDrop(e)
-		return
-	}
-
-	// Otherwise handle as project reorder
-	await saveProjectPosition(e)
-}
-
-async function handleTaskDrop(e: SortableEvent) {
-	const draggedTask = taskStore.draggedTask
-	if (!draggedTask) {
-		// Clean up: remove the temporarily inserted DOM element
-		e.item.remove()
-		return
-	}
-
-	// Determine target project
-	let targetProjectId: number | null = null
-	const targetElement = e.to.children[e.newIndex ?? 0] as HTMLElement
-
-	if (targetElement?.dataset?.projectId) {
-		targetProjectId = parseInt(targetElement.dataset.projectId)
-	} else if (e.newIndex !== undefined && e.newIndex >= 0) {
-		const targetProject = availableProjects.value[e.newIndex]
-		if (targetProject) {
-			targetProjectId = targetProject.id
-		}
-	}
-
-	// Clean up: remove the temporarily inserted DOM element
-	e.item.remove()
-
-	if (!targetProjectId || targetProjectId <= 0) {
-		return
-	}
-
-	const targetProject = projectStore.projects[targetProjectId]
-	if (!targetProject) {
-		return
-	}
-
-	// Check permissions: reject pseudo projects and read-only projects
-	if (isSavedFilter(targetProject) || targetProject.id < 0) {
-		return
-	}
-
-	if (targetProject.maxPermission <= PERMISSIONS.READ) {
-		return
-	}
-
-	// Don't move if it's already in the target project
-	if (draggedTask.projectId === targetProjectId) {
-		return
-	}
-
-	try {
-		// Move the task to the new project
-		await taskStore.update({
-			...draggedTask,
-			projectId: targetProjectId,
-		})
-
-		// Remove from kanban store if it was in a bucket
-		kanbanStore.removeTaskInBucket(draggedTask)
-	} catch (error) {
-		console.error('Failed to move task to project:', error)
-	}
-}
-
 async function saveProjectPosition(e: SortableEvent) {
+	drag.value = false
 	if (!e.newIndex && e.newIndex !== 0) return
 
 	const projectsActive = availableProjects.value

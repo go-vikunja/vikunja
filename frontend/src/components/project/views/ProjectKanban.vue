@@ -210,7 +210,10 @@
 									</template>
 
 									<template #item="{element: task}">
-										<div class="task-item">
+										<div
+											class="task-item"
+											:data-task-id="task.id"
+										>
 											<KanbanCard
 												class="kanban-card"
 												:task="task"
@@ -489,21 +492,45 @@ function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
 }
 
 async function updateTaskPosition(e) {
-	const movedTaskId = taskStore.draggedTask?.id
-	const originalProjectId = taskStore.draggedTask?.projectId
+	const draggedTask = taskStore.draggedTask
 
 	drag.value = false
-	taskStore.setDraggedTask(null)
 
-	// If the task was dropped outside kanban (e.g., to sidebar)
-	if (!e.to.dataset.bucketIndex) {
-		// Wait a bit for the sidebar drop to complete, then check if task was moved
-		setTimeout(() => {
-			if (movedTaskId && originalProjectId !== projectId.value) {
-				// Task was moved to another project, remove it from kanban
-				const task = {id: movedTaskId} as ITask
-				kanbanStore.removeTaskInBucket(task)
-				// Also update bucket counts
+	// Check if the task was dropped over a sidebar project using mouse position
+	if (draggedTask && e.originalEvent) {
+		const mouseX = e.originalEvent.clientX
+		const mouseY = e.originalEvent.clientY
+		const elementsUnderMouse = document.elementsFromPoint(mouseX, mouseY)
+
+		// Find a project element under the mouse
+		let targetProjectId: number | null = null
+		for (const el of elementsUnderMouse) {
+			const projectId = (el as HTMLElement).dataset?.projectId
+			if (projectId) {
+				targetProjectId = parseInt(projectId)
+				break
+			}
+			// Also check parent elements
+			const parentWithProjectId = (el as HTMLElement).closest?.('[data-project-id]')
+			if (parentWithProjectId) {
+				targetProjectId = parseInt((parentWithProjectId as HTMLElement).dataset.projectId!)
+				break
+			}
+		}
+
+		if (targetProjectId && targetProjectId > 0 && targetProjectId !== draggedTask.projectId) {
+
+			try {
+				// Move the task to the new project
+				await taskStore.update({
+					...draggedTask,
+					projectId: targetProjectId,
+				})
+
+				// Remove from kanban store
+				kanbanStore.removeTaskInBucket(draggedTask)
+
+				// Update bucket counts
 				if (sourceBucket.value) {
 					const bucket = kanbanStore.getBucketById(sourceBucket.value)
 					if (bucket) {
@@ -513,8 +540,20 @@ async function updateTaskPosition(e) {
 						})
 					}
 				}
+			} catch (error) {
+				console.error('Failed to move task to project:', error)
+			} finally {
+				taskStore.setDraggedTask(null)
 			}
-		}, 100)
+			return
+		}
+	}
+
+	// Clear drag state
+	taskStore.setDraggedTask(null)
+
+	// If the task was dropped outside kanban (not on a project)
+	if (!e.to.dataset.bucketIndex) {
 		return
 	}
 
@@ -803,6 +842,7 @@ function handleTaskDragStart(e) {
 	const bucketIndex = parseInt(e.from.dataset.bucketIndex)
 	const bucket = buckets.value[bucketIndex]
 	const task = bucket?.tasks.find(t => t.id === taskId)
+
 	if (task) {
 		taskStore.setDraggedTask(task)
 	}

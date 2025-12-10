@@ -48,7 +48,7 @@
 					<draggable
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
-						group="tasks"
+						:group="{name: 'tasks', put: false}"
 						handle=".handle"
 						:disabled="!canDragTasks"
 						item-key="id"
@@ -235,27 +235,64 @@ function handleDragStart(e) {
 	drag.value = true
 	const taskId = parseInt(e.item.dataset.taskId)
 	const task = tasks.value.find(t => t.id === taskId)
+
 	if (task) {
 		taskStore.setDraggedTask(task)
 	}
 }
 
 async function saveTaskPosition(e) {
-	const movedTaskId = taskStore.draggedTask?.id
-	const originalProjectId = taskStore.draggedTask?.projectId
+	const draggedTask = taskStore.draggedTask
 
 	drag.value = false
+
+	// Check if the task was dropped over a sidebar project using mouse position
+	if (draggedTask && e.originalEvent) {
+		const mouseX = e.originalEvent.clientX
+		const mouseY = e.originalEvent.clientY
+		const elementsUnderMouse = document.elementsFromPoint(mouseX, mouseY)
+
+		// Find a project element under the mouse
+		let targetProjectId: number | null = null
+		for (const el of elementsUnderMouse) {
+			const projectId = (el as HTMLElement).dataset?.projectId
+			if (projectId) {
+				targetProjectId = parseInt(projectId)
+				break
+			}
+			// Also check parent elements
+			const parentWithProjectId = (el as HTMLElement).closest?.('[data-project-id]')
+			if (parentWithProjectId) {
+				targetProjectId = parseInt((parentWithProjectId as HTMLElement).dataset.projectId!)
+				break
+			}
+		}
+
+		if (targetProjectId && targetProjectId > 0 && targetProjectId !== draggedTask.projectId) {
+
+			try {
+				// Move the task to the new project
+				await taskStore.update({
+					...draggedTask,
+					projectId: targetProjectId,
+				})
+
+				// Remove from local list
+				tasks.value = tasks.value.filter(t => t.id !== draggedTask.id)
+			} catch (error) {
+				console.error('Failed to move task to project:', error)
+			} finally {
+				taskStore.setDraggedTask(null)
+			}
+			return
+		}
+	}
+
+	// Clear drag state
 	taskStore.setDraggedTask(null)
 
-	// If the task was dropped outside this list (e.g., to sidebar)
+	// If the task was dropped outside this list (not on a project)
 	if (e.to !== e.from) {
-		// Wait a bit for the sidebar drop to complete, then check if task was moved
-		setTimeout(() => {
-			if (movedTaskId && originalProjectId !== projectId.value) {
-				// Task was moved to another project, remove it from our list
-				tasks.value = tasks.value.filter(t => t.id !== movedTaskId)
-			}
-		}, 100)
 		return
 	}
 
