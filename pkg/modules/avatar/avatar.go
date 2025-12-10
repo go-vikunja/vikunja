@@ -32,6 +32,8 @@ import (
 type Provider interface {
 	// GetAvatar is the method used to get an actual avatar for a user
 	GetAvatar(user *user.User, size int64) (avatar []byte, mimeType string, err error)
+	// AsDataURI returns a base64-encoded string representation of the avatar suitable for inline use
+	AsDataURI(user *user.User, size int64) (inlineData string, err error)
 	// FlushCache removes cached avatar data for the user
 	FlushCache(u *user.User) error
 }
@@ -51,5 +53,30 @@ func FlushAllCaches(u *user.User) {
 		if err := p.FlushCache(u); err != nil {
 			log.Errorf("Error flushing avatar cache: %v", err)
 		}
+	}
+}
+
+// GetProvider returns the appropriate avatar provider for a user
+func GetProvider(u *user.User) Provider {
+	provider := u.AvatarProvider
+	if provider == "" {
+		provider = "empty"
+	}
+
+	switch provider {
+	case "gravatar":
+		return &gravatar.Provider{}
+	case "initials":
+		return &initials.Provider{}
+	case "upload":
+		return &upload.Provider{}
+	case "marble":
+		return &marble.Provider{}
+	case "ldap":
+		return &ldap.Provider{}
+	case "openid":
+		return &openid.Provider{}
+	default:
+		return &empty.Provider{}
 	}
 }

@@ -17,6 +17,8 @@
 package marble
 
 import (
+	"encoding/base64"
+	"fmt"
 	"math"
 	"strconv"
 
@@ -122,4 +124,18 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
         </filter>
       </defs>
     </svg>`), "image/svg+xml", nil
+}
+
+// AsDataURI returns a data URI for the SVG avatar
+func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
+	avatarData, mimeType, err := p.GetAvatar(u, size)
+	if err != nil {
+		return "", err
+	}
+
+	// Encode the SVG as base64 and create a data URI
+	base64Data := base64.StdEncoding.EncodeToString(avatarData)
+	dataURI := fmt.Sprintf("data:%s;base64,%s", mimeType, base64Data)
+
+	return dataURI, nil
 }

@@ -18,6 +18,8 @@ package gravatar
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -121,6 +123,20 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 
 	av = result.(avatar)
 	return av.Content, av.MimeType, nil
+}
+
+// AsDataURI returns a base64 encoded data URI for the gravatar
+func (g *Provider) AsDataURI(user *user.User, size int64) (string, error) {
+	avatarData, mimeType, err := g.GetAvatar(user, size)
+	if err != nil {
+		return "", err
+	}
+
+	// Encode the avatar data as base64 and create a data URI
+	base64Data := base64.StdEncoding.EncodeToString(avatarData)
+	dataURI := fmt.Sprintf("data:%s;base64,%s", mimeType, base64Data)
+
+	return dataURI, nil
 }
 
 func (g *Provider) avatarExpired(av avatar) bool {
