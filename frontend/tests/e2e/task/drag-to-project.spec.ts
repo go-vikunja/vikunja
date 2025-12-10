@@ -4,6 +4,9 @@ import {ProjectFactory} from '../../factories/project'
 import {ProjectViewFactory} from '../../factories/project_view'
 import {BucketFactory} from '../../factories/bucket'
 import {TaskBucketFactory} from '../../factories/task_buckets'
+import {SavedFilterFactory} from '../../factories/saved_filter'
+import {UserFactory} from '../../factories/user'
+import {UserProjectFactory} from '../../factories/users_project'
 
 async function createProjectsWithTasks() {
 	// Create two projects
@@ -158,6 +161,126 @@ test.describe('Drag Task to Project in Sidebar', () => {
 			await expect(page.locator('.kanban .bucket .tasks')).toContainText(tasks[0].title)
 
 			// No success notification should appear for same-project drop
+			await expect(page.locator('.global-notification')).not.toContainText('moved to')
+		})
+	})
+
+	test.describe('Invalid Drop Targets', () => {
+		test('Does not move task when dropped on a saved filter', async ({authenticatedPage: page}) => {
+			// Create source project with tasks
+			const projects = await ProjectFactory.create(1, {
+				title: 'Source Project',
+			})
+
+			await ProjectViewFactory.truncate()
+			const sourceListView = await ProjectViewFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+				view_kind: 0,
+			}, false)
+
+			// Create a saved filter (shows as pseudo-project with negative ID in sidebar)
+			await SavedFilterFactory.create(1, {
+				id: 1,
+				title: 'My Saved Filter',
+				owner_id: 1,
+			})
+
+			await TaskFactory.truncate()
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				title: 'Test Task',
+				project_id: projects[0].id,
+			})
+
+			await page.goto(`/projects/${projects[0].id}/${sourceListView[0].id}`)
+
+			// Wait for tasks to load
+			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
+
+			// Find the task and the saved filter in sidebar
+			// Saved filters have negative IDs: id * -1 - 1, so filter id=1 -> project id=-2
+			const task = page.locator('.tasks .single-task').filter({hasText: tasks[0].title})
+			const savedFilterInSidebar = page.locator('li[data-project-id="-2"]')
+
+			// Verify the saved filter is visible in sidebar
+			await expect(savedFilterInSidebar).toBeVisible()
+
+			// Drag task to the saved filter
+			await task.dragTo(savedFilterInSidebar)
+
+			// Task should still be in the list (saved filters cannot accept tasks)
+			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
+
+			// No success notification should appear
+			await expect(page.locator('.global-notification')).not.toContainText('moved to')
+		})
+
+		test('Does not move task when dropped on a read-only shared project', async ({authenticatedPage: page}) => {
+			// Create a second user who will own the read-only project
+			await UserFactory.create(2)
+
+			// Create source project (owned by user 1)
+			const sourceProject = await ProjectFactory.create(1, {
+				id: 1,
+				title: 'Source Project',
+				owner_id: 1,
+			})
+
+			// Create target project (owned by user 2, shared read-only to user 1)
+			const readOnlyProject = await ProjectFactory.create(1, {
+				id: 2,
+				title: 'Read Only Project',
+				owner_id: 2,
+			}, false)
+
+			// Share the project read-only to user 1 (permission 0 = read)
+			await UserProjectFactory.create(1, {
+				project_id: 2,
+				user_id: 1,
+				permission: 0,
+			})
+
+			await ProjectViewFactory.truncate()
+			const sourceListView = await ProjectViewFactory.create(1, {
+				id: 1,
+				project_id: sourceProject[0].id,
+				view_kind: 0,
+			}, false)
+
+			// Create a view for the read-only project so it shows in sidebar
+			await ProjectViewFactory.create(1, {
+				id: 2,
+				project_id: readOnlyProject[0].id,
+				view_kind: 0,
+			}, false)
+
+			await TaskFactory.truncate()
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				title: 'Test Task',
+				project_id: sourceProject[0].id,
+			})
+
+			await page.goto(`/projects/${sourceProject[0].id}/${sourceListView[0].id}`)
+
+			// Wait for tasks to load
+			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
+
+			// Find the task and the read-only project in sidebar
+			const task = page.locator('.tasks .single-task').filter({hasText: tasks[0].title})
+			const readOnlyProjectInSidebar = page.locator('li[data-project-id="' + readOnlyProject[0].id + '"]')
+
+			// Verify the read-only project is visible in sidebar
+			await expect(readOnlyProjectInSidebar).toBeVisible()
+
+			// Drag task to the read-only project
+			await task.dragTo(readOnlyProjectInSidebar)
+
+			// Task should still be in the list (read-only projects cannot accept tasks)
+			await expect(page.locator('.tasks')).toContainText(tasks[0].title)
+
+			// No success notification should appear (visual highlight doesn't show for read-only)
 			await expect(page.locator('.global-notification')).not.toContainText('moved to')
 		})
 	})
