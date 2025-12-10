@@ -49,7 +49,6 @@
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
 						:group="{name: 'tasks', put: false}"
-						handle=".handle"
 						:disabled="!canDragTasks"
 						item-key="id"
 						tag="ul"
@@ -74,13 +73,7 @@
 								:the-task="t"
 								:all-tasks="allTasks"
 								@taskUpdated="updateTasks"
-							>
-								<template v-if="canDragTasks">
-									<span class="icon handle">
-										<Icon icon="grip-lines" />
-									</span>
-								</template>
-							</SingleTaskInProject>
+							/>
 						</template>
 					</draggable>
 
@@ -415,21 +408,10 @@ onBeforeUnmount(() => {
 }
 
 :deep(.single-task) {
-	.handle {
-		opacity: 1;
-		transition: opacity $transition;
-		margin-inline-end: .25rem;
-		cursor: grab;
-	}
+	cursor: grab;
 
-	@media(hover: hover) and (pointer: fine) {
-		& .handle {
-			opacity: 0;
-		}
-
-		&:hover .handle {
-			opacity: 1;
-		}
+	&:active {
+		cursor: grabbing;
 	}
 }
 
