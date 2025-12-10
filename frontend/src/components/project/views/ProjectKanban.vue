@@ -499,18 +499,8 @@ async function updateTaskPosition(e) {
 	// Check if the task was dropped over a sidebar project
 	const {moved} = await handleTaskDropToProject(e, (task) => {
 		// Remove from kanban store on successful move
+		// Note: removeTaskInBucket already decrements the bucket count
 		kanbanStore.removeTaskInBucket(task)
-
-		// Update bucket counts
-		if (sourceBucket.value) {
-			const bucket = kanbanStore.getBucketById(sourceBucket.value)
-			if (bucket) {
-				kanbanStore.setBucketById({
-					...bucket,
-					count: bucket.count - 1,
-				})
-			}
-		}
 	})
 
 	if (moved) {
