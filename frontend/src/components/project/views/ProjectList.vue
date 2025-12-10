@@ -239,10 +239,8 @@ function handleDragStart(e: { item: HTMLElement }) {
 async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement, from: HTMLElement, newIndex: number }) {
 	drag.value = false
 
-	// Check if the task was dropped over a sidebar project
-	// Note: handleTaskDropToProject always clears drag state, so we don't need to call clearDragState()
+	// Check if dropped on a sidebar project
 	const {moved} = await handleTaskDropToProject(e, (task) => {
-		// Remove from local list on successful move
 		tasks.value = tasks.value.filter(t => t.id !== task.id)
 	})
 
@@ -250,7 +248,7 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 		return
 	}
 
-	// If the task was dropped outside this list (not on a project)
+	// If dropped outside this list
 	if (e.to !== e.from) {
 		return
 	}
@@ -373,7 +371,6 @@ onBeforeUnmount(() => {
 	box-shadow: none;
 }
 
-// Only show grab cursor when dragging is enabled
 :deep(.tasks:not(.dragging-disabled) .single-task) {
 	cursor: grab;
 

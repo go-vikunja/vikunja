@@ -69,7 +69,6 @@ export function useTaskDragToProject() {
 		const draggedTask = taskStore.draggedTask
 
 		if (!draggedTask || !e.originalEvent) {
-			// Clear drag state even on early returns
 			taskStore.setDraggedTask(null)
 			return {moved: false, targetProjectId: null}
 		}
@@ -78,9 +77,7 @@ export function useTaskDragToProject() {
 		const mouseY = e.originalEvent.clientY
 		const targetProjectId = findProjectIdAtPosition(mouseX, mouseY)
 
-		// Only proceed if dropped on a valid, different project
 		if (!targetProjectId || targetProjectId <= 0 || targetProjectId === draggedTask.projectId) {
-			// Clear drag state even on early returns
 			taskStore.setDraggedTask(null)
 			return {moved: false, targetProjectId}
 		}
@@ -88,18 +85,15 @@ export function useTaskDragToProject() {
 		const targetProject = projectStore.projects[targetProjectId]
 
 		try {
-			// Move the task to the new project
 			await taskStore.update({
 				...draggedTask,
 				projectId: targetProjectId,
 			})
 
-			// Call success callback for component-specific cleanup
 			if (onSuccess) {
 				onSuccess(draggedTask, targetProjectId)
 			}
 
-			// Show success message
 			success({message: t('task.movedToProject', {project: targetProject?.title || t('project.title')})})
 
 			return {moved: true, targetProjectId}
@@ -107,8 +101,7 @@ export function useTaskDragToProject() {
 			error(e)
 			return {moved: false, targetProjectId}
 		} finally {
-			// AUTHORITATIVE drag state cleanup - always clears after processing
-			// Callers should NOT clear drag state again after calling this function
+			// Always clears drag state - callers should not clear again
 			taskStore.setDraggedTask(null)
 		}
 	}

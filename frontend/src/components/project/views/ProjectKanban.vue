@@ -496,11 +496,8 @@ function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
 async function updateTaskPosition(e) {
 	drag.value = false
 
-	// Check if the task was dropped over a sidebar project
-	// Note: handleTaskDropToProject always clears drag state, so we don't need to call clearDragState()
+	// Check if dropped on a sidebar project
 	const {moved} = await handleTaskDropToProject(e, (task) => {
-		// Remove from kanban store on successful move
-		// Note: removeTaskInBucket already decrements the bucket count
 		kanbanStore.removeTaskInBucket(task)
 	})
 
@@ -508,7 +505,7 @@ async function updateTaskPosition(e) {
 		return
 	}
 
-	// If the task was dropped outside kanban (not on a project)
+	// If dropped outside kanban
 	if (!e.to.dataset.bucketIndex) {
 		return
 	}
