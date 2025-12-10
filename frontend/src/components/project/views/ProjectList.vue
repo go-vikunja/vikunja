@@ -375,7 +375,8 @@ onBeforeUnmount(() => {
 	box-shadow: none;
 }
 
-:deep(.single-task) {
+// Only show grab cursor when dragging is enabled
+:deep(.tasks:not(.dragging-disabled) .single-task) {
 	cursor: grab;
 
 	&:active {
