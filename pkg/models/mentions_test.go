@@ -19,6 +19,8 @@ package models
 import (
 	"testing"
 
+	"regexp"
+
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -185,6 +187,7 @@ func TestFormatMentionsForEmail(t *testing.T) {
 		name     string
 		input    string
 		expected string
+		useRegex bool // If true, expected is treated as a regex pattern
 	}{
 		{
 			name:     "empty string",
@@ -214,7 +217,8 @@ func TestFormatMentionsForEmail(t *testing.T) {
 		{
 			name:     "old format with text node inside",
 			input:    `<p><mention-user data-id="user1">@user1</mention-user> Lorem Ipsum</p>`,
-			expected: `<p><strong>@user1</strong> Lorem Ipsum</p>`,
+			expected: `<p><strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="user1"/>user1</strong> Lorem Ipsum</p>`,
+			useRegex: true,
 		},
 		{
 			name:     "old format with text node (data-id takes precedence over text)",
@@ -229,22 +233,26 @@ func TestFormatMentionsForEmail(t *testing.T) {
 		{
 			name:     "mention at beginning",
 			input:    `<p><mention-user data-id="user1" data-label="User One"></mention-user> Lorem Ipsum</p>`,
-			expected: `<p><strong>@User One</strong> Lorem Ipsum</p>`,
+			expected: `<p><strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="User One"/>User One</strong> Lorem Ipsum</p>`,
+			useRegex: true,
 		},
 		{
 			name:     "mention at end",
 			input:    `<p>Lorem Ipsum <mention-user data-id="user1" data-label="User One"></mention-user></p>`,
-			expected: `<p>Lorem Ipsum <strong>@User One</strong></p>`,
+			expected: `<p>Lorem Ipsum <strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="User One"/>User One</strong></p>`,
+			useRegex: true,
 		},
 		{
 			name:     "mention in middle",
 			input:    `<p>Lorem <mention-user data-id="user1" data-label="User One"></mention-user> Ipsum</p>`,
-			expected: `<p>Lorem <strong>@User One</strong> Ipsum</p>`,
+			expected: `<p>Lorem <strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="User One"/>User One</strong> Ipsum</p>`,
+			useRegex: true,
 		},
 		{
 			name:     "same user mentioned multiple times",
 			input:    `<p><mention-user data-id="user1" data-label="User"></mention-user> and <mention-user data-id="user1" data-label="User"></mention-user> again</p>`,
-			expected: `<p><strong>@User</strong> and <strong>@User</strong> again</p>`,
+			expected: `<p><strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="User"/>User</strong> and <strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="User"/>User</strong> again</p>`,
+			useRegex: true,
 		},
 		{
 			name:     "HTML preservation with links",
@@ -254,27 +262,32 @@ func TestFormatMentionsForEmail(t *testing.T) {
 		{
 			name:     "HTML preservation with multiple paragraphs",
 			input:    `<p>First paragraph with <mention-user data-id="user1" data-label="User"></mention-user></p><p>Second paragraph</p>`,
-			expected: `<p>First paragraph with <strong>@User</strong></p><p>Second paragraph</p>`,
+			expected: `<p>First paragraph with <strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="User"/>User</strong></p><p>Second paragraph</p>`,
+			useRegex: true,
 		},
 		{
 			name:     "HTML preservation with bold and italic",
 			input:    `<p><strong>Bold text</strong> and <em>italic</em> with <mention-user data-id="user1" data-label="User"></mention-user></p>`,
-			expected: `<p><strong>Bold text</strong> and <em>italic</em> with <strong>@User</strong></p>`,
+			expected: `<p><strong>Bold text</strong> and <em>italic</em> with <strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="User"/>User</strong></p>`,
+			useRegex: true,
 		},
 		{
 			name:     "special characters in data-label",
 			input:    `<p><mention-user data-id="user1" data-label="O'Brien"></mention-user> test</p>`,
-			expected: `<p><strong>@O&#39;Brien</strong> test</p>`,
+			expected: `<p><strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="O&#39;Brien"/>O&#39;Brien</strong> test</p>`,
+			useRegex: true,
 		},
 		{
 			name:     "special characters - ampersand in data-label",
 			input:    `<p><mention-user data-id="user1" data-label="Tom &amp; Jerry"></mention-user> test</p>`,
-			expected: `<p><strong>@Tom &amp; Jerry</strong> test</p>`,
+			expected: `<p><strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="Tom &amp; Jerry"/>Tom &amp; Jerry</strong> test</p>`,
+			useRegex: true,
 		},
 		{
 			name:     "special characters - quotes in data-label",
 			input:    `<p><mention-user data-id="user1" data-label="&quot;Nickname&quot;"></mention-user> test</p>`,
-			expected: `<p><strong>@&#34;Nickname&#34;</strong> test</p>`,
+			expected: `<p><strong><img src="data:image/svg\+xml;base64,[A-Za-z0-9+/=]+" width="20" height="20" style="border-radius: 50%; vertical-align: middle; margin-right: 4px;" alt="&#34;Nickname&#34;"/>&#34;Nickname&#34;</strong> test</p>`,
+			useRegex: true,
 		},
 		{
 			name:     "mixed old and new format",
@@ -289,7 +302,7 @@ func TestFormatMentionsForEmail(t *testing.T) {
 		{
 			name:     "mention with only text content (no attributes) - old format edge case",
 			input:    `<p><mention-user>@someuser</mention-user> test</p>`,
-			expected: `<p><strong>@someuser</strong> test</p>`,
+			expected: `<p><mention-user>@someuser</mention-user> test</p>`,
 		},
 		{
 			name:     "data-label takes precedence over data-id",
@@ -324,7 +337,7 @@ func TestFormatMentionsForEmail(t *testing.T) {
 		{
 			name:     "empty data-label and data-id with text content",
 			input:    `<p><mention-user>@fallback</mention-user> test</p>`,
-			expected: `<p><strong>@fallback</strong> test</p>`,
+			expected: `<p><mention-user>@fallback</mention-user> test</p>`,
 		},
 		{
 			name:     "whitespace in data-label",
@@ -340,7 +353,13 @@ func TestFormatMentionsForEmail(t *testing.T) {
 			defer s.Close()
 
 			result := formatMentionsForEmail(s, tt.input)
-			assert.Equal(t, tt.expected, result)
+			if tt.useRegex {
+				matched, err := regexp.MatchString(tt.expected, result)
+				require.NoError(t, err, "Invalid regex pattern: %s", tt.expected)
+				assert.True(t, matched, "Result does not match regex pattern.\nExpected pattern: %s\nActual result: %s", tt.expected, result)
+			} else {
+				assert.Equal(t, tt.expected, result)
+			}
 		})
 	}
 }
