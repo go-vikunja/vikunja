@@ -198,8 +198,8 @@ func TestFormatMentionsForEmail(t *testing.T) {
 		},
 		{
 			name:     "single mention with data-label (new format)",
-			input:    `<p><mention-user data-id="konrad" data-label="Konrad" data-mention-suggestion-char="@"></mention-user> hello</p>`,
-			expected: `<p><strong>@Konrad</strong> hello</p>`,
+			input:    `<p><mention-user data-id="frederick" data-label="Frederick" data-mention-suggestion-char="@"></mention-user> hello</p>`,
+			expected: `<p><strong>@Frederick</strong> hello</p>`,
 		},
 		{
 			name:     "single mention with full name in data-label",
