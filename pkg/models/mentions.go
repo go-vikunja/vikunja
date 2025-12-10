@@ -101,8 +101,6 @@ func formatMentionsForEmail(s *xorm.Session, htmlText string) string {
 		return htmlText
 	}
 
-
-
 	// If no fragments, return original
 	if len(fragments) == 0 {
 		return htmlText
