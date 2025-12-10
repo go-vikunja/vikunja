@@ -806,8 +806,8 @@ function dragstart(bucket: IBucket) {
 }
 
 function handleTaskDragStart(e) {
-	const taskId = parseInt(e.item.dataset.taskId)
-	const bucketIndex = parseInt(e.from.dataset.bucketIndex)
+	const taskId = parseInt(e.item.dataset.taskId, 10)
+	const bucketIndex = parseInt(e.from.dataset.bucketIndex, 10)
 	const bucket = buckets.value[bucketIndex]
 	const task = bucket?.tasks.find(t => t.id === taskId)
 
