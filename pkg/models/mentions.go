@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 	"xorm.io/xorm"
 )
 
@@ -87,9 +88,23 @@ func formatMentionsForEmail(s *xorm.Session, htmlText string) string {
 		return htmlText
 	}
 
-	doc, err := html.Parse(strings.NewReader(htmlText))
+	// Create a synthetic body node for fragment parsing
+	bodyNode := &html.Node{
+		Type:     html.ElementNode,
+		Data:     "body",
+		DataAtom: atom.Body,
+	}
+
+	fragments, err := html.ParseFragment(strings.NewReader(htmlText), bodyNode)
 	if err != nil {
-		log.Debugf("Failed to parse HTML for mention formatting: %v", err)
+		log.Debugf("Failed to parse HTML fragment for mention formatting: %v", err)
+		return htmlText
+	}
+
+
+
+	// If no fragments, return original
+	if len(fragments) == 0 {
 		return htmlText
 	}
 
@@ -105,21 +120,24 @@ func formatMentionsForEmail(s *xorm.Session, htmlText string) string {
 	// Create maps for user data and avatar data URIs
 	usernameToAvatarURI := make(map[string]string)
 
-	usersMap, err = user.GetUsersByUsername(s, usernames, true)
-	if err != nil {
-		log.Debugf("Failed to fetch users for mention formatting: %v", err)
-		// Continue without user data - we'll fall back to display names from attributes
-	} else {
-		// Create username -> user map for easy lookup and fetch avatar data URIs
-		usernameToUser = make(map[string]*user.User)
-		for _, u := range usersMap {
-			usernameToUser[u.Username] = u
+	// Only fetch users if we have a valid session
+	if s != nil {
+		usersMap, err = user.GetUsersByUsername(s, usernames, true)
+		if err != nil {
+			log.Debugf("Failed to fetch users for mention formatting: %v", err)
+			// Continue without user data - we'll fall back to display names from attributes
+		} else {
+			// Create username -> user map for easy lookup and fetch avatar data URIs
+			usernameToUser = make(map[string]*user.User)
+			for _, u := range usersMap {
+				usernameToUser[u.Username] = u
 
-			// Fetch avatar data URI for this user
-			provider := avatar.GetProvider(u)
-			avatarDataURI, err := provider.AsDataURI(u, 20)
-			if err == nil && avatarDataURI != "" {
-				usernameToAvatarURI[u.Username] = avatarDataURI
+				// Fetch avatar data URI for this user
+				provider := avatar.GetProvider(u)
+				avatarDataURI, err := provider.AsDataURI(u, 20)
+				if err == nil && avatarDataURI != "" {
+					usernameToAvatarURI[u.Username] = avatarDataURI
+				}
 			}
 		}
 	}
@@ -224,7 +242,10 @@ func formatMentionsForEmail(s *xorm.Session, htmlText string) string {
 		}
 	}
 
-	traverse(doc)
+	// Traverse all fragment nodes
+	for _, fragment := range fragments {
+		traverse(fragment)
+	}
 
 	// Apply replacements
 	for _, r := range replacements {
@@ -234,22 +255,15 @@ func formatMentionsForEmail(s *xorm.Session, htmlText string) string {
 		}
 	}
 
-	// Render back to HTML
+	// Render each fragment node back to HTML
 	var buf bytes.Buffer
-	err = html.Render(&buf, doc)
-	if err != nil {
-		log.Debugf("Failed to render HTML after mention formatting: %v", err)
-		return htmlText
+	for _, fragment := range fragments {
+		err = html.Render(&buf, fragment)
+		if err != nil {
+			log.Debugf("Failed to render HTML fragment after mention formatting: %v", err)
+			return htmlText
+		}
 	}
 
-	// The html.Parse wraps content in <html><head></head><body>...</body></html>
-	// We need to extract just the body content
-	result := buf.String()
-
-	// Remove the wrapper tags
-	// html.Parse adds: <html><head></head><body>CONTENT</body></html>
-	result = strings.TrimPrefix(result, "<html><head></head><body>")
-	result = strings.TrimSuffix(result, "</body></html>")
-
-	return result
+	return buf.String()
 }
