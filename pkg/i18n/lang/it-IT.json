@@ -68,7 +68,7 @@
 		"task": {
 			"reminder": {
 				"subject": "Promemoria per \"%[1]s\" (%[2]s)",
-				"message": "Questo è un promemoria amichevole del compito \"%[1]s\" (%[2]s)."
+				"message": "Questo è un promemoria amichevole dell'attività \"%[1]s\" (%[2]s)."
 			},
 			"comment": {
 				"subject": "Riguardo a %[1]s",
@@ -79,7 +79,9 @@
 				"subject_to_assignee": "Sei stato assegnato a \"%[1]s\" (%[2]s)",
 				"message_to_assignee": "%[1]s ti ha assegnato a \"%[2]s\".",
 				"subject_to_others": "\"%[1]s\" (%[2]s) è ​​stato assegnato a %[3]s",
-				"message_to_others": "%[1]s ha assegnato questo compito a %[2]s."
+				"message_to_others": "%[1]s ha assegnato questa attività a %[2]s.",
+				"subject_to_others_self": "\"%[1]s\" (%[2]s) è stato assegnato da %[3]s a se stessi",
+				"message_to_others_self": "%[1]s ha assegnato questa attività a se stessi."
 			},
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) è ​​stato eliminato",
@@ -92,7 +94,7 @@
 			},
 			"overdue": {
 				"subject": "L'attività \"%[1]s\" (%[2]s) è ​​in ritardo",
-				"message": "Questo è un promemoria amichevole del compito \"%[1]s\" (%[2]s) che è in ritardo di %[3]s e non è ancora stato completato.",
+				"message": "Questo è un promemoria amichevole dell'attività \"%[1]s\" (%[2]s) che è in ritardo di %[3]s e non è ancora stata completata.",
 				"multiple_subject": "I tuoi compiti in ritardo",
 				"multiple_message": "Hai i seguenti compiti scaduti:",
 				"overdue_since": "da %[1]s",
