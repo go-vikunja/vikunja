@@ -3,9 +3,8 @@ import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {BucketFactory} from '../../factories/bucket'
 import {createDefaultViews} from '../project/prepareProjects'
-import type {APIRequestContext} from '@playwright/test'
 
-async function seedTasks(apiContext: APIRequestContext, numberOfTasks = 5, startDueDate = new Date()) {
+async function seedTasks(userId: number, numberOfTasks = 5, startDueDate = new Date()) {
 	const project = (await ProjectFactory.create())[0]
 	const views = await createDefaultViews(project.id)
 	await BucketFactory.create(1, {
@@ -20,7 +19,7 @@ async function seedTasks(apiContext: APIRequestContext, numberOfTasks = 5, start
 			id: i + 1,
 			project_id: project.id,
 			done: false,
-			created_by_id: 1,
+			created_by_id: userId,
 			title: 'Test Task ' + i,
 			index: i + 1,
 			due_date: dueDate.toISOString(),
@@ -33,9 +32,9 @@ async function seedTasks(apiContext: APIRequestContext, numberOfTasks = 5, start
 }
 
 test.describe('Sidebar Resize', () => {
-	test('should not reload tasks when resizing the sidebar', async ({authenticatedPage: page, apiContext}) => {
+	test('should not reload tasks when resizing the sidebar', async ({authenticatedPage: page, currentUser}) => {
 		await page.setViewportSize({width: 1280, height: 720})
-		await seedTasks(apiContext, 5)
+		await seedTasks(currentUser.id, 5)
 
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')
@@ -71,9 +70,9 @@ test.describe('Sidebar Resize', () => {
 		expect(taskApiCalls).toBe(0)
 	})
 
-	test('should persist sidebar width after resize', async ({authenticatedPage: page, apiContext}) => {
+	test('should persist sidebar width after resize', async ({authenticatedPage: page, currentUser}) => {
 		await page.setViewportSize({width: 1280, height: 720})
-		await seedTasks(apiContext, 1)
+		await seedTasks(currentUser.id, 1)
 
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')
@@ -108,8 +107,8 @@ test.describe('Sidebar Resize', () => {
 		expect(Math.abs(reloadedBox!.width - newBox!.width)).toBeLessThan(5)
 	})
 
-	test('should not show resize handle on mobile', async ({authenticatedPage: page, apiContext}) => {
-		await seedTasks(apiContext, 1)
+	test('should not show resize handle on mobile', async ({authenticatedPage: page, currentUser}) => {
+		await seedTasks(currentUser.id, 1)
 		await page.setViewportSize({width: 375, height: 667})
 
 		await page.goto('/')
