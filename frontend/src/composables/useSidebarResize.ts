@@ -7,6 +7,10 @@ const DEFAULT_SIDEBAR_WIDTH = 300
 const MIN_SIDEBAR_WIDTH = 200
 const MAX_SIDEBAR_WIDTH = 500
 
+function clampWidth(width: number): number {
+	return Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, width))
+}
+
 // Shared state across all component instances
 const isResizing = ref(false)
 const currentWidth = ref(DEFAULT_SIDEBAR_WIDTH)
@@ -23,7 +27,7 @@ export function useSidebarResize() {
 
 		const savedWidth = authStore.settings?.frontendSettings?.sidebarWidth
 		if (savedWidth !== null && savedWidth !== undefined) {
-			currentWidth.value = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, savedWidth))
+			currentWidth.value = clampWidth(savedWidth)
 		}
 	})
 
@@ -32,7 +36,7 @@ export function useSidebarResize() {
 		() => authStore.settings?.frontendSettings?.sidebarWidth,
 		(newWidth) => {
 			if (newWidth !== null && newWidth !== undefined && !isResizing.value) {
-				currentWidth.value = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, newWidth))
+				currentWidth.value = clampWidth(newWidth)
 			}
 		},
 	)
@@ -75,9 +79,7 @@ export function useSidebarResize() {
 			newWidth = clientX
 		}
 
-		// Clamp width to min/max bounds
-		newWidth = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, newWidth))
-		currentWidth.value = newWidth
+		currentWidth.value = clampWidth(newWidth)
 	}
 
 	function stopResize() {
