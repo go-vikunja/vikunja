@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect} from 'vue'
+import {computed, ref, watch, watchEffect} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -285,7 +285,17 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-watchEffect(() => loadPendingTasks(props.dateFrom, props.dateTo, filterIdUsedOnOverview.value))
+// Use watch instead of watchEffect to prevent reloading tasks when unrelated settings change.
+// watchEffect would track all reactive dependencies accessed inside loadPendingTasks,
+// which includes the entire settings object. When sidebarWidth changes, the settings
+// object is replaced, triggering the watchEffect even though filterIdUsedOnOverview
+// hasn't changed. Using watch with explicit dependencies and immediate:true gives us
+// the same behavior but only triggers when these specific values actually change.
+watch(
+	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview],
+	([from, to, filterId]) => loadPendingTasks(from, to, filterId),
+	{immediate: true},
+)
 watchEffect(() => setTitle(pageTitle.value))
 </script>
 
