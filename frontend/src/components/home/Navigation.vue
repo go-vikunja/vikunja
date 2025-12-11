@@ -1,7 +1,8 @@
 <template>
 	<aside
-		:class="{'is-active': baseStore.menuActive}"
+		:class="{'is-active': baseStore.menuActive, 'is-resizing': isResizing}"
 		class="menu-container"
+		:style="{'--sidebar-width': sidebarWidth}"
 	>
 		<nav class="menu top-menu">
 			<RouterLink
@@ -113,6 +114,13 @@
 			class="mbs-auto"
 			utm-medium="navigation"
 		/>
+
+		<div
+			v-if="!isMobile"
+			class="resize-handle"
+			@mousedown="startResize"
+			@touchstart="startResize"
+		/>
 	</aside>
 </template>
 
@@ -127,9 +135,12 @@ import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import type {IProject} from '@/modelTypes/IProject'
+import {useSidebarResize} from '@/composables/useSidebarResize'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
+
+const {sidebarWidth, isResizing, startResize, isMobile} = useSidebarResize()
 
 // Cast readonly arrays to mutable type - the arrays are not actually mutated by the component
 const projects = computed(() => projectStore.notArchivedRootProjects as IProject[])
@@ -151,6 +162,8 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 }
 
 .menu-container {
+	--sidebar-width: #{$navbar-width};
+
 	display: flex;
 	flex-direction: column;
 	background: var(--site-background);
@@ -162,7 +175,7 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 	inset-block-end: 0;
 	inset-inline-start: 0;
 	transform: translateX(-100%);
-	inline-size: $navbar-width;
+	inline-size: var(--sidebar-width);
 	overflow-y: auto;
 
 	[dir="rtl"] & {
@@ -178,6 +191,26 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 	&.is-active {
 		transform: translateX(0);
 		transition: transform $transition-duration ease-out;
+	}
+
+	&.is-resizing {
+		transition: none;
+	}
+}
+
+.resize-handle {
+	position: absolute;
+	inset-block-start: 0;
+	inset-block-end: 0;
+	inset-inline-end: 0;
+	inline-size: 4px;
+	cursor: ew-resize;
+	background: transparent;
+	transition: background-color $transition-duration ease;
+
+	&:hover,
+	&:active {
+		background-color: var(--primary);
 	}
 }
 

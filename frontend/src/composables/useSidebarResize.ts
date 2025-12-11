@@ -1,0 +1,131 @@
+import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
+import {useMediaQuery} from '@vueuse/core'
+import {useAuthStore} from '@/stores/auth'
+
+const BULMA_MOBILE_BREAKPOINT = 768
+const DEFAULT_SIDEBAR_WIDTH = 300
+const MIN_SIDEBAR_WIDTH = 200
+const MAX_SIDEBAR_WIDTH = 500
+
+// Shared state across all component instances
+const isResizing = ref(false)
+const currentWidth = ref(DEFAULT_SIDEBAR_WIDTH)
+let initialized = false
+
+export function useSidebarResize() {
+	const authStore = useAuthStore()
+	const isMobile = useMediaQuery(`(max-width: ${BULMA_MOBILE_BREAKPOINT}px)`)
+
+	// Initialize width from settings only once
+	onMounted(() => {
+		if (initialized) return
+		initialized = true
+
+		const savedWidth = authStore.settings?.frontendSettings?.sidebarWidth
+		if (savedWidth !== null && savedWidth !== undefined) {
+			currentWidth.value = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, savedWidth))
+		}
+	})
+
+	// Watch for settings changes (e.g., when user logs in)
+	watch(
+		() => authStore.settings?.frontendSettings?.sidebarWidth,
+		(newWidth) => {
+			if (newWidth !== null && newWidth !== undefined && !isResizing.value) {
+				currentWidth.value = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, newWidth))
+			}
+		},
+	)
+
+	const sidebarWidth = computed(() => {
+		if (isMobile.value) {
+			return '70vw'
+		}
+		return `${currentWidth.value}px`
+	})
+
+	function startResize(event: MouseEvent | TouchEvent) {
+		if (isMobile.value) return
+
+		event.preventDefault()
+		isResizing.value = true
+
+		document.addEventListener('mousemove', handleResize)
+		document.addEventListener('mouseup', stopResize)
+		document.addEventListener('touchmove', handleResize)
+		document.addEventListener('touchend', stopResize)
+
+		// Prevent text selection during drag
+		document.body.style.userSelect = 'none'
+		document.body.style.cursor = 'ew-resize'
+	}
+
+	function handleResize(event: MouseEvent | TouchEvent) {
+		if (!isResizing.value) return
+
+		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX
+
+		// Handle RTL direction
+		const isRtl = document.dir === 'rtl'
+		let newWidth: number
+
+		if (isRtl) {
+			newWidth = window.innerWidth - clientX
+		} else {
+			newWidth = clientX
+		}
+
+		// Clamp width to min/max bounds
+		newWidth = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, newWidth))
+		currentWidth.value = newWidth
+	}
+
+	function stopResize() {
+		if (!isResizing.value) return
+
+		isResizing.value = false
+
+		document.removeEventListener('mousemove', handleResize)
+		document.removeEventListener('mouseup', stopResize)
+		document.removeEventListener('touchmove', handleResize)
+		document.removeEventListener('touchend', stopResize)
+
+		// Restore text selection and cursor
+		document.body.style.userSelect = ''
+		document.body.style.cursor = ''
+
+		// Save width to user settings
+		saveWidth()
+	}
+
+	async function saveWidth() {
+		const newSettings = {
+			...authStore.settings,
+			frontendSettings: {
+				...authStore.settings.frontendSettings,
+				sidebarWidth: currentWidth.value,
+			},
+		}
+		await authStore.saveUserSettings({
+			settings: newSettings,
+			showMessage: false,
+		})
+	}
+
+	// Cleanup listeners on unmount
+	onUnmounted(() => {
+		document.removeEventListener('mousemove', handleResize)
+		document.removeEventListener('mouseup', stopResize)
+		document.removeEventListener('touchmove', handleResize)
+		document.removeEventListener('touchend', stopResize)
+	})
+
+	return {
+		sidebarWidth,
+		currentWidth,
+		isResizing,
+		startResize,
+		isMobile,
+		DEFAULT_SIDEBAR_WIDTH,
+	}
+}
