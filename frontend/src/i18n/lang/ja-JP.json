@@ -181,6 +181,9 @@
 					"dark": "ダーク"
 				}
 			},
+			"backgroundBrightness": {
+				"title": "背景の明るさ"
+			},
 			"apiTokens": {
 				"title": "APIトークン",
 				"general": "APIトークンを使うとログインせずにVikunjaのAPIを利用できます。",
