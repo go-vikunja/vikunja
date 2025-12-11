@@ -22,6 +22,7 @@ export interface IFrontendSettings {
 	timeFormat: TimeFormat
 	defaultTaskRelationType: IRelationKind
 	backgroundBrightness: number | null
+	alwaysShowBucketTaskCount: boolean
 }
 
 export interface IExtraSettingsLink {

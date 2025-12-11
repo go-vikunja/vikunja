@@ -64,11 +64,11 @@
 										{{ bucket.title }}
 									</h2>
 									<span
-										v-if="bucket.limit > 0"
-										:class="{'is-max': bucket.count >= bucket.limit}"
+										v-if="bucket.limit > 0 || alwaysShowBucketTaskCount"
+										:class="{'is-max': bucket.limit > 0 && bucket.count >= bucket.limit}"
 										class="limit"
 									>
-										{{ bucket.count }}/{{ bucket.limit }}
+										{{ bucket.limit > 0 ? `${bucket.count}/${bucket.limit}` : bucket.count }}
 									</span>
 									<Dropdown
 										v-if="canWrite && !collapsedBuckets[bucket.id]"
@@ -295,6 +295,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
+import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
@@ -348,6 +349,9 @@ const baseStore = useBaseStore()
 const kanbanStore = useKanbanStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
+const authStore = useAuthStore()
+
+const alwaysShowBucketTaskCount = computed(() => authStore.settings.frontendSettings.alwaysShowBucketTaskCount)
 const {handleTaskDropToProject} = useTaskDragToProject()
 const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
