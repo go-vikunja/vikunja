@@ -11,13 +11,23 @@ export async function updateUserSettings(apiContext: APIRequestContext, token: s
 
 	const oldSettings = await userResponse.json()
 
+	// Deep merge frontendSettings if provided
+	const mergedSettings = {
+		...oldSettings,
+		...settings,
+	}
+
+	if (settings.frontendSettings) {
+		mergedSettings.frontendSettings = {
+			...oldSettings.frontendSettings,
+			...settings.frontendSettings,
+		}
+	}
+
 	await apiContext.post(`${apiUrl}/user/settings/general`, {
 		headers: {
 			'Authorization': `Bearer ${token}`,
 		},
-		data: {
-			...oldSettings,
-			...settings,
-		},
+		data: mergedSettings,
 	})
 }

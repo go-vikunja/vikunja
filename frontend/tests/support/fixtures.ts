@@ -6,13 +6,14 @@ export const test = base.extend<{
 	apiContext: APIRequestContext;
 	authenticatedPage: Page;
 	currentUser: any;
+	userToken: string;
 }>({
 	apiContext: async ({playwright}, use) => {
 		const baseURL = process.env.API_URL || 'http://localhost:3456/api/v1/'
 		const apiContext = await playwright.request.newContext({
 			baseURL,
 		})
-		
+
 		Factory.setRequestContext(apiContext)
 		await use(apiContext)
 		await apiContext.dispose()
@@ -23,8 +24,13 @@ export const test = base.extend<{
 		await use(user)
 	},
 
+	userToken: async ({apiContext, currentUser}, use) => {
+		const {token} = await login(null, apiContext, currentUser)
+		await use(token)
+	},
+
 	authenticatedPage: async ({page, apiContext, currentUser}, use) => {
-		await login(page, apiContext, currentUser)
+		const {token} = await login(page, apiContext, currentUser)
 		await use(page)
 	},
 })

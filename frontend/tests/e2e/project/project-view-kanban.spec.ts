@@ -5,6 +5,7 @@ import {TaskFactory} from '../../factories/task'
 import {ProjectViewFactory} from '../../factories/project_view'
 import {TaskBucketFactory} from '../../factories/task_buckets'
 import {createTasksWithPriorities, createTasksWithSearch} from '../../support/filterTestHelpers'
+import {updateUserSettings} from '../../support/updateUserSettings'
 
 async function createSingleTaskInBucket(count = 1, attrs = {}) {
 	const projects = await ProjectFactory.create(1)
@@ -311,5 +312,61 @@ test.describe('Project View Kanban', () => {
 
 		// Verify only one task is shown (the search result) - count task headings
 		await expect(page.locator('main h2')).toHaveCount(1)
+	})
+
+	test('Should not show task count by default when bucket has no limit', async ({authenticatedPage: page}) => {
+		await createTaskWithBuckets(buckets, 5)
+		await page.goto('/projects/1/4')
+
+		// Wait for buckets to load
+		await expect(page.locator('.kanban .bucket .title').filter({hasText: buckets[0].title})).toBeVisible()
+
+		// Verify the task count span is not visible when no limit is set
+		await expect(page.locator('.kanban .bucket .bucket-header span.limit').first()).not.toBeVisible()
+	})
+
+	test('Should show task count when alwaysShowBucketTaskCount setting is enabled', async ({authenticatedPage: page, apiContext, userToken}) => {
+		await createTaskWithBuckets(buckets, 5)
+
+		// Enable the alwaysShowBucketTaskCount setting
+		await updateUserSettings(apiContext, userToken, {
+			frontendSettings: {
+				alwaysShowBucketTaskCount: true,
+			},
+		})
+
+		await page.goto('/projects/1/4')
+
+		// Wait for buckets to load
+		await expect(page.locator('.kanban .bucket .title').filter({hasText: buckets[0].title})).toBeVisible()
+
+		// Verify the task count is shown (without limit, just the count)
+		const limitSpan = page.locator('.kanban .bucket .bucket-header span.limit').first()
+		await expect(limitSpan).toBeVisible()
+		// Should show just the count (5) without a limit
+		await expect(limitSpan).toContainText('5')
+		// Should not contain a slash (no limit set)
+		await expect(limitSpan).not.toContainText('/')
+	})
+
+	test('Should show count/limit format when bucket has a limit set', async ({authenticatedPage: page}) => {
+		// Create tasks in the bucket
+		await createTaskWithBuckets(buckets, 2)
+		await page.goto('/projects/1/4')
+
+		// Set a bucket limit
+		const bucketDropdown = page.locator('.kanban .bucket .bucket-header .dropdown.options').first()
+		await bucketDropdown.locator('.dropdown-trigger').click()
+		await bucketDropdown.locator('.dropdown-menu .dropdown-item').filter({hasText: 'Limit: Not Set'}).click()
+		await bucketDropdown.locator('.dropdown-menu .field input.input').fill('10')
+		await bucketDropdown.locator('.dropdown-menu .field .control .button').click()
+
+		// Wait for the limit to be saved
+		await expect(page.locator('.global-notification')).toContainText('Success')
+
+		// Verify the count/limit format is shown (2/10)
+		const limitSpan = page.locator('.kanban .bucket .bucket-header span.limit').first()
+		await expect(limitSpan).toBeVisible()
+		await expect(limitSpan).toContainText('2/10')
 	})
 })
