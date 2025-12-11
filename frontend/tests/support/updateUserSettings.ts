@@ -25,7 +25,7 @@ export async function updateUserSettings(apiContext: APIRequestContext, token: s
 
 	if (snakeSettings.frontend_settings) {
 		mergedSettings.frontend_settings = {
-			...oldSettings.frontend_settings,
+			...(oldSettings.frontend_settings || {}),
 			...snakeSettings.frontend_settings,
 		}
 	}
