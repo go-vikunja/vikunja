@@ -10,7 +10,10 @@ export async function updateUserSettings(apiContext: APIRequestContext, token: s
 		},
 	})
 
-	const oldSettings = await userResponse.json()
+	const userData = await userResponse.json()
+	// GET /user returns { settings: { frontend_settings: ... }, ... }
+	// POST /user/settings/general expects { frontend_settings: ... } at the top level
+	const oldSettings = userData.settings || {}
 
 	const snakeSettings = objectToSnakeCase(settings)
 
