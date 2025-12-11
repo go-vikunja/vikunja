@@ -207,6 +207,7 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 	cursor: ew-resize;
 	background: transparent;
 	transition: background-color $transition-duration ease;
+	touch-action: none;
 
 	&:hover,
 	&:active {
