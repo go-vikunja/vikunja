@@ -35,8 +35,12 @@ export function useSidebarResize() {
 	watch(
 		() => authStore.settings?.frontendSettings?.sidebarWidth,
 		(newWidth) => {
-			if (newWidth !== null && newWidth !== undefined && !isResizing.value) {
+			if (isResizing.value) return
+
+			if (newWidth !== null && newWidth !== undefined) {
 				currentWidth.value = clampWidth(newWidth)
+			} else {
+				currentWidth.value = DEFAULT_SIDEBAR_WIDTH
 			}
 		},
 	)
