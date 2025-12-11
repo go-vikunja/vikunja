@@ -16,6 +16,10 @@ const isResizing = ref(false)
 const currentWidth = ref(DEFAULT_SIDEBAR_WIDTH)
 let initialized = false
 
+// Captured body styles to restore after resize
+let previousUserSelect: string | undefined
+let previousCursor: string | undefined
+
 export function useSidebarResize() {
 	const authStore = useAuthStore()
 	const isMobile = useMediaQuery(`(max-width: ${BULMA_MOBILE_BREAKPOINT}px)`)
@@ -63,7 +67,9 @@ export function useSidebarResize() {
 		document.addEventListener('touchmove', handleResize)
 		document.addEventListener('touchend', stopResize)
 
-		// Prevent text selection during drag
+		// Capture current styles and set new values
+		previousUserSelect = document.body.style.userSelect
+		previousCursor = document.body.style.cursor
 		document.body.style.userSelect = 'none'
 		document.body.style.cursor = 'ew-resize'
 	}
@@ -96,9 +102,15 @@ export function useSidebarResize() {
 		document.removeEventListener('touchmove', handleResize)
 		document.removeEventListener('touchend', stopResize)
 
-		// Restore text selection and cursor
-		document.body.style.userSelect = ''
-		document.body.style.cursor = ''
+		// Restore previous styles
+		if (previousUserSelect !== undefined) {
+			document.body.style.userSelect = previousUserSelect
+			previousUserSelect = undefined
+		}
+		if (previousCursor !== undefined) {
+			document.body.style.cursor = previousCursor
+			previousCursor = undefined
+		}
 
 		// Save width to user settings
 		saveWidth()
