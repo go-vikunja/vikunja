@@ -125,6 +125,10 @@ export function useSidebarResize() {
 	}
 
 	async function saveWidth() {
+		const savedWidth = authStore.settings?.frontendSettings?.sidebarWidth
+		// Only save if width actually changed
+		if (savedWidth === currentWidth.value) return
+
 		const newSettings = {
 			...authStore.settings,
 			frontendSettings: {
