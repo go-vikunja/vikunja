@@ -130,13 +130,8 @@ export function useSidebarResize() {
 		})
 	}
 
-	// Cleanup listeners on unmount
-	onUnmounted(() => {
-		document.removeEventListener('mousemove', handleResize)
-		document.removeEventListener('mouseup', stopResize)
-		document.removeEventListener('touchmove', handleResize)
-		document.removeEventListener('touchend', stopResize)
-	})
+	// Cleanup on unmount
+	onUnmounted(stopResize)
 
 	return {
 		sidebarWidth,
