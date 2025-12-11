@@ -15,10 +15,29 @@ function clampWidth(width: number): number {
 const isResizing = ref(false)
 const currentWidth = ref(DEFAULT_SIDEBAR_WIDTH)
 let initialized = false
+let watcherInitialized = false
 
 // Captured body styles to restore after resize
 let previousUserSelect: string | undefined
 let previousCursor: string | undefined
+
+function setupWatcher(authStore: ReturnType<typeof useAuthStore>) {
+	if (watcherInitialized) return
+	watcherInitialized = true
+
+	watch(
+		() => authStore.settings?.frontendSettings?.sidebarWidth,
+		(newWidth) => {
+			if (isResizing.value) return
+
+			if (newWidth !== null && newWidth !== undefined) {
+				currentWidth.value = clampWidth(newWidth)
+			} else {
+				currentWidth.value = DEFAULT_SIDEBAR_WIDTH
+			}
+		},
+	)
+}
 
 export function useSidebarResize() {
 	const authStore = useAuthStore()
@@ -35,19 +54,8 @@ export function useSidebarResize() {
 		}
 	})
 
-	// Watch for settings changes (e.g., when user logs in)
-	watch(
-		() => authStore.settings?.frontendSettings?.sidebarWidth,
-		(newWidth) => {
-			if (isResizing.value) return
-
-			if (newWidth !== null && newWidth !== undefined) {
-				currentWidth.value = clampWidth(newWidth)
-			} else {
-				currentWidth.value = DEFAULT_SIDEBAR_WIDTH
-			}
-		},
-	)
+	// Register settings watcher only once
+	setupWatcher(authStore)
 
 	const sidebarWidth = computed(() => {
 		if (isMobile.value) {
