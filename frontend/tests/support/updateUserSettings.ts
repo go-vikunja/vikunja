@@ -1,4 +1,5 @@
 import type {APIRequestContext} from '@playwright/test'
+import {objectToSnakeCase} from '../../src/helpers/case'
 
 export async function updateUserSettings(apiContext: APIRequestContext, token: string, settings: any) {
 	const apiUrl = process.env.API_URL || 'http://localhost:3456/api/v1'
@@ -11,16 +12,18 @@ export async function updateUserSettings(apiContext: APIRequestContext, token: s
 
 	const oldSettings = await userResponse.json()
 
-	// Deep merge frontendSettings if provided
+	const snakeSettings = objectToSnakeCase(settings)
+
+	// Deep merge frontend_settings if provided
 	const mergedSettings = {
 		...oldSettings,
-		...settings,
+		...snakeSettings,
 	}
 
-	if (settings.frontendSettings) {
-		mergedSettings.frontendSettings = {
-			...oldSettings.frontendSettings,
-			...settings.frontendSettings,
+	if (snakeSettings.frontend_settings) {
+		mergedSettings.frontend_settings = {
+			...oldSettings.frontend_settings,
+			...snakeSettings.frontend_settings,
 		}
 	}
 
