@@ -9,7 +9,9 @@ declare global {
 const cypressDirective = <Directive<HTMLElement,string>>{
 	mounted(el, {arg, value}) {
 		const testingId = arg || value
-		if ((window.Cypress || import.meta.env.DEV) && testingId) {
+		// Always add data-cy attributes - they're harmless metadata and ensure
+		// tests work in both dev mode and production builds (e.g., Playwright in CI)
+		if (testingId) {
 			el.setAttribute('data-cy', testingId)
 		}
 	},

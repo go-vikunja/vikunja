@@ -33,79 +33,11 @@ async function seedTasks(userId: number, numberOfTasks = 5, startDueDate = new D
 
 test.describe('Sidebar Resize', () => {
 	test('should not reload tasks when resizing the sidebar', async ({authenticatedPage: page, currentUser}) => {
-		console.log('DEBUG: currentUser.id =', currentUser.id, 'username =', currentUser.username)
 		await page.setViewportSize({width: 1280, height: 720})
-		const {project, tasks} = await seedTasks(currentUser.id, 5)
-		console.log('DEBUG: created project.id =', project.id, 'owner_id =', project.owner_id, 'task count =', tasks.length)
-
-		// Capture console errors
-		page.on('console', msg => {
-			if (msg.type() === 'error') {
-				console.log('DEBUG: Console error:', msg.text())
-			}
-		})
-
-		page.on('pageerror', error => {
-			console.log('DEBUG: Page error:', error.message)
-		})
+		await seedTasks(currentUser.id, 5)
 
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')
-
-		// Debug: Check localStorage
-		const apiUrl = await page.evaluate(() => window.localStorage.getItem('API_URL'))
-		const token = await page.evaluate(() => window.localStorage.getItem('token'))
-		console.log('DEBUG: localStorage API_URL =', apiUrl)
-		console.log('DEBUG: localStorage token =', token ? 'SET' : 'NOT SET')
-
-		// Debug: Check window.API_URL
-		const windowApiUrl = await page.evaluate(() => window.API_URL)
-		console.log('DEBUG: window.API_URL =', windowApiUrl)
-
-		// Debug: check elements
-		const showTasksExists = await page.locator('[data-cy="showTasks"]').count()
-		console.log('DEBUG: showTasks count =', showTasksExists)
-
-		// Debug: Check if app is in loading state or error state
-		await page.waitForTimeout(2000)
-		const appStateDebug = await page.evaluate(() => {
-			// Check for loading indicator
-			const isLoading = document.querySelector('.vikunja-loading') !== null
-			// Check for error message
-			const hasError = document.querySelector('.message.danger') !== null
-			// Check for the Ready slot content (actual app)
-			const hasContent = document.querySelector('.content-auth') !== null || document.querySelector('[data-cy="showTasks"]') !== null
-			// Check for auth elements
-			const hasAuthContent = document.querySelector('.menu-container') !== null
-			return {
-				isLoading,
-				hasError,
-				hasContent,
-				hasAuthContent,
-				bodyHTML: document.body.innerHTML.substring(0, 500),
-			}
-		})
-		console.log('DEBUG: app state:', JSON.stringify({
-			isLoading: appStateDebug.isLoading,
-			hasError: appStateDebug.hasError,
-			hasContent: appStateDebug.hasContent,
-			hasAuthContent: appStateDebug.hasAuthContent,
-		}))
-		// Check what's in the main content area
-		const mainContent = await page.evaluate(() => {
-			const homeContent = document.querySelector('.home.app-content .content')
-			return {
-				homeContentText: homeContent?.textContent?.substring(0, 300) || 'not found',
-				hasImportHint: document.querySelector('.import-hint') !== null,
-				hasShowTasksTitle: document.querySelector('[data-cy="showTasks"] .title') !== null,
-			}
-		})
-		console.log('DEBUG: main content:', JSON.stringify(mainContent))
-
-		// Debug: Check card and task elements
-		const cardCount = await page.locator('[data-cy="showTasks"] .card').count()
-		const taskCount = await page.locator('[data-cy="showTasks"] .card .task').count()
-		console.log('DEBUG: card count =', cardCount, 'task count =', taskCount)
 
 		// Wait for showTasks to appear with longer timeout for CI
 		await expect(page.locator('[data-cy="showTasks"]')).toBeAttached({timeout: 30000})
