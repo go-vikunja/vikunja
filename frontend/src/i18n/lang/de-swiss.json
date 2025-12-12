@@ -799,6 +799,7 @@
 		"addReminder": "Eine Erinnerung hinzufügen…",
 		"doneSuccess": "Die Uufgab isch erfolgriich als \"Fertig\" markiert wordä.",
 		"undoneSuccess": "Die Uufgaab isch nüme als fertig markiert.",
+		"movedToProject": "Die Aufgabe wurde nach {project} verschoben.",
 		"undo": "Rückgängig",
 		"openDetail": "Uufgab i de Detailaahsicht öffne",
 		"checklistTotal": "{checked} von {total} Aufgaben",

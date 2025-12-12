@@ -799,6 +799,7 @@
 		"addReminder": "Eine Erinnerung hinzufügen…",
 		"doneSuccess": "Die Aufgabe wurde erfolgreich als erledigt markiert.",
 		"undoneSuccess": "Die Aufgabe wurde erfolgreich als nicht-erledigt markiert.",
+		"movedToProject": "Die Aufgabe wurde nach {project} verschoben.",
 		"undo": "Rückgängig",
 		"openDetail": "Aufgabe in der Detailansicht anzeigen",
 		"checklistTotal": "{checked} von {total} Aufgaben",

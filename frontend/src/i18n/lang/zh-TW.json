@@ -1,1 +1,246 @@
-{}
+{
+	"404": {
+		"title": "未找到數據",
+		"text": "您請求的頁面不存在。"
+	},
+	"home": {
+		"welcomeNight": "晚上好，{username}！",
+		"welcomeMorning": "早安，{username}！",
+		"welcomeDay": "嗨~，{username}！",
+		"welcomeEvening": "午安，{username}！",
+		"lastViewed": "最近查看",
+		"addToHomeScreen": "將此應用程序添加到您的主屏幕以便更快地訪問和改善體驗。",
+		"goToOverview": "轉到概覽",
+		"project": {
+			"importText": "將您的項目和任務從其他服務導入 Vikunja：",
+			"import": "將您的數據導入到 Vikunja"
+		}
+	},
+	"demo": {
+		"title": "此實例處於演示模式。不要將其用於真實數據！",
+		"everythingWillBeDeleted": "每隔一段時間，所有東西都將被刪除！",
+		"accountWillBeDeleted": "您的帳戶將被刪除，包括您創建的所有項目、任務和附件。"
+	},
+	"ready": {
+		"loading": "Vikunja 正在加載…",
+		"errorOccured": "發生錯誤：",
+		"checkApiUrl": "請檢查 API 網址是否正確。",
+		"noApiUrlConfigured": "未配置 API 網址，請在下框中設置："
+	},
+	"offline": {
+		"title": "當前為離線狀態。",
+		"text": "請檢查網絡連接並重試。"
+	},
+	"user": {
+		"auth": {
+			"username": "用户名",
+			"usernameEmail": "用户名或郵箱地址",
+			"usernamePlaceholder": "例如：frederick",
+			"email": "電子郵箱地址",
+			"emailPlaceholder": "例如：frederic{'@'}vikunja.io",
+			"password": "密碼",
+			"passwordPlaceholder": "例如：···························",
+			"forgotPassword": "忘記密碼？",
+			"resetPassword": "重置密碼",
+			"resetPasswordAction": "發送密碼重置鏈接",
+			"resetPasswordSuccess": "請檢查收件箱！您應該會收到一封郵件，告知您如何重置密碼。",
+			"passwordsDontMatch": "兩次輸入的密碼不一致",
+			"confirmEmailSuccess": "已成功確認您的電子郵件！現在可以登錄。",
+			"totpTitle": "兩步驗證碼",
+			"totpPlaceholder": "例如：123456",
+			"login": "登錄",
+			"createAccount": "創建帳戶",
+			"loginWith": "以 {provider} 身份登錄",
+			"authenticating": "驗證中…",
+			"openIdStateError": "狀態不匹配，無法繼續！",
+			"openIdGeneralError": "在對第三方進行身份驗證時出錯。",
+			"logout": "登出",
+			"emailInvalid": "請輸入有效的電子郵件地址。",
+			"usernameRequired": "請輸入用户名。",
+			"usernameMustNotContainSpace": "用户名不能包含空格。",
+			"usernameMustNotLookLikeUrl": "用户名不能像一個 URL。",
+			"passwordRequired": "請提供密碼。",
+			"passwordNotMin": "密碼至少有8個字符。",
+			"passwordNotMax": "密碼不能超過 72 個字符。",
+			"showPassword": "顯示密碼",
+			"hidePassword": "隱藏密碼",
+			"noAccountYet": "還沒有帳號？",
+			"alreadyHaveAnAccount": "已有帳號？",
+			"passwordResetTokenMissing": "缺少密碼重置令牌。"
+		},
+		"settings": {
+			"title": "設定",
+			"newPasswordTitle": "更新密碼",
+			"newPassword": "新密碼",
+			"newPasswordConfirm": "新密碼確認",
+			"currentPassword": "當前密碼",
+			"currentPasswordPlaceholder": "輸入當前密碼",
+			"passwordsDontMatch": "兩次輸入密碼不一致",
+			"passwordUpdateSuccess": "已成功更新密碼",
+			"updateEmailTitle": "更新電子郵件地址",
+			"updateEmailNew": "新郵箱地址",
+			"updateEmailSuccess": "您的電子郵件地址已成功更新。我們已經向您發送了一個鏈接來確認。",
+			"general": {
+				"title": "通用設定",
+				"savedSuccess": "成功更新了設定。",
+				"emailReminders": "通過電子郵件發送任務提醒",
+				"discoverableByName": "允許其他用户在搜索我的名字時將我添加為團隊或項目的成員",
+				"discoverableByEmail": "允許其他用户在搜索我的完整電子郵件時將我添加為團隊或項目的成員",
+				"language": "語言設定",
+				"overdueTasksRemindersTime": "逾期任務提醒郵件時間"
+			},
+			"totp": {
+				"finishSetupPart1": "要完成您的設定，請在您的 TOTP 應用程序中使用此密文 (Google 身份驗證器或類似的軟件)：",
+				"enterPassword": "請輸入密碼",
+				"confirmSuccess": "您已成功確認您的 TOTP 設定，並且可以從現在起使用！"
+			},
+			"caldav": {
+				"tokensHowTo": "您可以使用 CalDAV Tokens 代替密碼登錄上述端點。",
+				"mustUseToken": "如果您想要通過第三方客户端來登錄使用 CalDAV，則需要創建一個 CalDAV 令牌，並使用該令牌作為密碼。",
+				"usernameIs": "您的用户名是: {0}"
+			},
+			"avatar": {
+				"setSuccess": "頭像設定成功！"
+			},
+			"apiTokens": {
+				"general": "API 令牌允許您在無需用户憑據的情況下使用 Vikunja 的 API。"
+			}
+		},
+		"deletion": {
+			"title": "刪除您的 Vikunja 帳號",
+			"text1": "帳號的刪除是永久性的且無法撤消。 我們將刪除您的所有項目、任務以及與之相關的所有內容。",
+			"text2": "若要繼續，請輸入您的密碼。您將收到一封包含更多説明的電子郵件。",
+			"text3": "若要繼續，請按下面的按鈕。您將收到一封包含進一步説明的電子郵件。",
+			"confirm": "刪除我的帳號",
+			"requestSuccess": "請求成功。您將收到一封包含更多説明的電子郵件。",
+			"passwordRequired": "請輸入密碼",
+			"confirmSuccess": "已成功確認您帳號的刪除請求。您的帳户將在三天內註銷刪除。",
+			"scheduled": "您的 Vikunja 帳號將於 {date} ({dateSince}) 完成註銷刪除。",
+			"scheduledCancel": "要取消您的帳號刪除操作，請單擊此處。",
+			"scheduledCancelText": "若要取消您的帳號刪除操作，請在下面輸入您的密碼：",
+			"scheduledCancelButton": "若要取消您的帳號刪除，請按下面的按鈕：",
+			"scheduledCancelConfirm": "取消刪除我的帳號"
+		},
+		"export": {
+			"descriptionPasswordRequired": "請輸入您的密碼以繼續。",
+			"success": "已成功請求您的 Vikunja 數據！一旦準備好下載，我們將向您發送一封電子郵件。"
+		}
+	},
+	"project": {
+		"openSettingsMenu": "打開項目設定菜單",
+		"create": {
+			"addProjectRequired": "請指定列表或在設定中設置默認列表。"
+		},
+		"background": {
+			"title": "設定項目背景",
+			"success": "背景圖設定成功！"
+		},
+		"edit": {
+			"identifierTooltip": "項目標識符可以用來獨特識別整個項目的任務。您可以設定為空以禁用它。"
+		},
+		"share": {
+			"links": {
+				"explanation": "共享鏈接使您能夠輕鬆地與其他未註冊帳號的訪客共享一個列表。",
+				"password": "密碼 (可選)",
+				"passwordExplanation": "驗證時，用户需要輸入此密碼。",
+				"noName": "未設定名稱"
+			}
+		},
+		"kanban": {
+			"noLimit": "未設定"
+		}
+	},
+	"filters": {
+		"attributes": {
+			"includeNulls": "包含沒有設定值的任務"
+		},
+		"query": {
+			"help": {
+				"canUseDatemath": "您可以使用日期計算來設定相對日期。點擊查詢中的日期值來了解更多信息。"
+			}
+		}
+	},
+	"migrate": {
+		"authorize": "要授權 Vikunja 訪問您的 {name} 帳號，請點擊下面的按鈕。",
+		"migrationStartedWillReciveEmail": "Vikunja 現在將從 {service} 導入您的列表/項目、任務、註釋、提醒和文件。 由於這需要一段時間，完成後我們會向您發送一封電子郵件。 您現在可以關閉此窗口。"
+	},
+	"sharing": {
+		"passwordRequired": "此共享項目需要密碼。請在下面輸入：",
+		"invalidPassword": "密碼錯誤"
+	},
+	"navigation": {
+		"settings": "設定"
+	},
+	"task": {
+		"detail": {
+			"chooseStartDate": "點擊設定開始日期",
+			"actions": {
+				"assign": "分配給用户",
+				"priority": "設定優先級",
+				"dueDate": "設定截止日期",
+				"startDate": "設定開始日期",
+				"endDate": "設定結束日期",
+				"reminders": "設定提醒",
+				"repeatAfter": "設定重複間隔",
+				"percentDone": "設定進度",
+				"color": "設定顏色"
+			}
+		},
+		"assignee": {
+			"placeholder": "分配給用户…",
+			"selectPlaceholder": "分配給這個用户",
+			"assignSuccess": "已成功分配給用户。",
+			"unassignSuccess": "已取消分配給用户。"
+		},
+		"priority": {
+			"unset": "取消設定"
+		},
+		"quickAddMagic": {
+			"priority1": "要設定任務的優先級，請添加數字 1-5，並以 {prefix} 為前綴。",
+			"assignees": "將任務分配給用户，請將帶有 {prefix} 前綴的用户名添加到此任務中。",
+			"project1": "要設定任務顯示的項目，請輸入其名稱，前綴為{prefix}。",
+			"dateTime": "將日期格式與 “{time}” （或 {timePM}）組合以設定時間。",
+			"repeatsDescription": "將任務設定為間隔重複，只需在任務文本中添加“{suffix}”即可。 內容必須是數字，並且可以省略使用類型（參見示例）。"
+		}
+	},
+	"team": {
+		"edit": {
+			"search": "輸入以搜索用户…",
+			"mustSelectUser": "請選擇一個用户。",
+			"deleteUser": {
+				"header": "從團隊中刪除用户",
+				"success": "此用户已成功從團隊中刪除。"
+			}
+		}
+	},
+	"keyboardShortcuts": {
+		"task": {
+			"assign": "分配此任務給一個用户"
+		}
+	},
+	"menu": {
+		"setBackground": "背景設定"
+	},
+	"error": {
+		"1001": "具有此用户名的用户已存在。",
+		"1002": "已存在使用該郵箱的用户。",
+		"1004": "未提供用户名和密碼。",
+		"1005": "用户不存在。",
+		"1006": "無法獲取用户 ID。",
+		"1008": "未提供密碼重置令牌。",
+		"1009": "密碼重置令牌無效。",
+		"1010": "電子郵件確認令牌無效。",
+		"1011": "用户名或密碼錯誤。",
+		"1012": "用户的電子郵件地址未確認。",
+		"1013": "新密碼為空。",
+		"1014": "舊密碼為空。",
+		"1017": "TOTP 密碼是無效的。",
+		"1018": "用户頭像設定無效。",
+		"1019": "OpenID提供商沒有提供電子郵件地址。請確保OpenID提供商公開為您的帳户提供電子郵件地址。",
+		"1020": "此帳户被禁用。請檢查您的電子郵件或詢問您的管理員。",
+		"4006": "不能將上級任務設定為任務本身。",
+		"6005": "該用户已經是此團隊的成員。",
+		"13001": "此鏈接共享需要密碼進行身份驗證，但沒有提供密碼。",
+		"13002": "提供的鏈接共享密碼無效。"
+	}
+}
