@@ -5,7 +5,7 @@ import {BucketFactory} from '../../factories/bucket'
 import {createDefaultViews} from '../project/prepareProjects'
 
 async function seedTasks(userId: number, numberOfTasks = 5, startDueDate = new Date()) {
-	const project = (await ProjectFactory.create())[0]
+	const project = (await ProjectFactory.create(1, {owner_id: userId}))[0]
 	const views = await createDefaultViews(project.id)
 	await BucketFactory.create(1, {
 		project_view_id: views[3].id,
