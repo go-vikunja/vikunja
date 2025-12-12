@@ -163,8 +163,10 @@ function cropAvatar() {
 	reader.onload = e => {
 		avatarToCrop.value = e.target.result
 		isCropAvatar.value = true
+		// Note: loading stays true until Cropper's @ready event fires
+		// This ensures the canvas is ready before allowing upload
 	}
-	reader.onloadend = () => loading.value = false
+	reader.onerror = () => loading.value = false
 	reader.readAsDataURL(avatar[0])
 }
 </script>

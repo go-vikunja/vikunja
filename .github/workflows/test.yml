@@ -378,6 +378,9 @@ jobs:
         with:
           name: frontend_dist
           path: ./frontend/dist
+      - name: Inject testing flag into index.html
+        run: |
+          sed -i 's/<head>/<head><script>window.TESTING=true;<\/script>/' ./frontend/dist/index.html
       - run: chmod +x ./vikunja
       - name: Run Playwright tests
         timeout-minutes: 20
@@ -447,6 +450,9 @@ jobs:
         with:
           name: frontend_dist
           path: ./frontend/dist
+      - name: Inject testing flag into index.html
+        run: |
+          sed -i 's/<head>/<head><script>window.TESTING=true;<\/script>/' ./frontend/dist/index.html
       - run: chmod +x ./vikunja
       - uses: cypress-io/github-action@v6
         timeout-minutes: 20

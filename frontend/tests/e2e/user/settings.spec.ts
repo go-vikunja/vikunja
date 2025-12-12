@@ -1,9 +1,7 @@
 import {test, expect} from '../../support/fixtures'
 
 test.describe('User Settings', () => {
-	// TODO: This test is flaky - the cropper's canvas.toBlob returns null intermittently
-	// The vue-advanced-cropper component seems to not properly initialize in the test environment
-	test.skip('Changes the user avatar', async ({authenticatedPage: page}) => {
+	test('Changes the user avatar', async ({authenticatedPage: page}) => {
 		await page.goto('/user/settings/avatar')
 		await page.waitForLoadState('networkidle')
 
@@ -25,6 +23,9 @@ test.describe('User Settings', () => {
 		const uploadButton = page.locator('[data-cy="uploadAvatar"]')
 		await expect(uploadButton).toBeVisible()
 
+		// Wait for the cropper to be ready (button becomes enabled when canvas is ready)
+		await expect(uploadButton).toBeEnabled({timeout: 10000})
+
 		// Set up response waiter before clicking
 		const avatarUploadPromise = page.waitForResponse(response =>
 			response.url().includes('avatar') && response.request().method() === 'PUT',
@@ -39,7 +40,7 @@ test.describe('User Settings', () => {
 		await expect(page.locator('.global-notification')).toContainText('Success', {timeout: 10000})
 	})
 
-	test.skip('Updates the name', async ({authenticatedPage: page}) => {
+	test('Updates the name', async ({authenticatedPage: page}) => {
 		await page.goto('/user/settings/general')
 		await page.waitForLoadState('networkidle')
 
