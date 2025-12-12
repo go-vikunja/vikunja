@@ -53,7 +53,27 @@ test.describe('Sidebar Resize', () => {
 		const showTasksExists = await page.locator('[data-cy="showTasks"]').count()
 		console.log('DEBUG: showTasks count =', showTasksExists)
 
-		await expect(page.locator('[data-cy="showTasks"] .card .task').first()).toBeVisible()
+		// Debug: Wait for potential async loading and check store state
+		await page.waitForTimeout(2000)
+		const storeDebug = await page.evaluate(() => {
+			// @ts-ignore - accessing Pinia store from window
+			const projectStore = window.__pinia?.state?.value?.project
+			const hasProjects = projectStore?.projects ? Object.keys(projectStore.projects).length > 0 : false
+			const projectCount = projectStore?.projects ? Object.keys(projectStore.projects).length : 0
+			return {
+				hasProjects,
+				projectCount,
+				projectIds: projectStore?.projects ? Object.keys(projectStore.projects) : [],
+			}
+		})
+		console.log('DEBUG: projectStore state:', JSON.stringify(storeDebug))
+
+		// Debug: Check card and task elements
+		const cardCount = await page.locator('[data-cy="showTasks"] .card').count()
+		const taskCount = await page.locator('[data-cy="showTasks"] .card .task').count()
+		console.log('DEBUG: card count =', cardCount, 'task count =', taskCount)
+
+		await expect(page.locator('[data-cy="showTasks"] .card .task').first()).toBeVisible({timeout: 10000})
 
 		let taskApiCalls = 0
 		page.on('request', request => {
