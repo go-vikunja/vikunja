@@ -7,7 +7,7 @@
     "env.config.d.ts",
     "vite.config.*",
     "vitest.config.*",
-    "cypress.config.*"
+    "playwright.config.*"
   ],
   "compilerOptions": {
     "composite": true,

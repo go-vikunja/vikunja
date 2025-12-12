@@ -6,6 +6,7 @@ import {UserFactory} from '../../factories/user'
 import {ProjectFactory} from '../../factories/project'
 import {createProjects} from './prepareProjects'
 import {BucketFactory} from '../../factories/bucket'
+import {createTasksWithPriorities, createTasksWithSearch} from '../../support/filterTestHelpers'
 
 test.describe('Project View List', () => {
 	test('Should be an empty project', async ({authenticatedPage: page}) => {
@@ -163,5 +164,37 @@ test.describe('Project View List', () => {
 
 		await expect(page.locator('ul.tasks > div > .single-task')).toBeVisible()
 		await expect(page.locator('ul.tasks > div > .subtask-nested')).toBeVisible()
+	})
+
+	test('Should respect filter query parameter from URL', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		const {highPriorityTasks, lowPriorityTasks} = await createTasksWithPriorities()
+
+		await page.goto('/projects/1/1?filter=priority%20>=%204')
+
+		await expect(page).toHaveURL(/filter=priority/)
+
+		// Wait for tasks to load and verify high priority tasks are visible
+		await expect(page.locator('.tasks')).toContainText(highPriorityTasks[0].title, {timeout: 10000})
+		await expect(page.locator('.tasks')).toContainText(highPriorityTasks[1].title)
+
+		// Verify low priority tasks are NOT visible
+		await expect(page.locator('.tasks')).not.toContainText(lowPriorityTasks[0].title)
+		await expect(page.locator('.tasks')).not.toContainText(lowPriorityTasks[1].title)
+	})
+
+	test('Should respect search query parameter from URL', async ({authenticatedPage: page}) => {
+		await createProjects(1)
+		const {searchableTask} = await createTasksWithSearch()
+
+		await page.goto('/projects/1/1?s=meeting')
+
+		await expect(page).toHaveURL(/s=meeting/)
+
+		// Wait for tasks to load and verify searchable task is visible
+		await expect(page.locator('.tasks')).toContainText(searchableTask.title, {timeout: 10000})
+
+		// Only one task should be visible (the searchable one)
+		await expect(page.locator('.tasks .task')).toHaveCount(1)
 	})
 })

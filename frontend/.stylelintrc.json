@@ -84,7 +84,6 @@
 	"ignoreFiles": [
 		"node_modules/**/*",
 		"dist/**/*",
-		"cypress/**/*",
 		"**/*.js",
 		"**/*.ts"
 	]

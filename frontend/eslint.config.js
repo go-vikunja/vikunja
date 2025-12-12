@@ -13,7 +13,6 @@ export default [
 	{
 		ignores: [
 			'**/*.test.ts',
-			'./cypress',
 		],
 	},
 	{
@@ -78,15 +77,6 @@ export default [
 		},
 
 
-		// 'parser': 'vue-eslint-parser',
-		// 'parserOptions': {
-		// 	'parser': '@typescript-eslint/parser',
-		// 	'ecmaVersion': 'latest',
-		// 	'tsconfigRootDir': __dirname,
-		// },
-		// 'ignorePatterns': [
-		// 	'cypress/*',
-		// ],
 	},
 
 ]

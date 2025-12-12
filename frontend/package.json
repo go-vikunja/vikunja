@@ -38,12 +38,6 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui-host=0.0.0.0",
-    "test:cypress:headed": "start-server-and-test preview http://127.0.0.1:4173 'cypress open --e2e'",
-    "test:cypress:e2e": "start-server-and-test preview http://127.0.0.1:4173 'cypress run --e2e --browser chrome'",
-    "test:cypress:e2e-nix": "CYPRESS_RUN_BINARY=`which Cypress` CYPRESS_API_URL=http://127.0.0.1:3456/api/v1 start-server-and-test preview http://127.0.0.1:4173 'cypress run --e2e --browser chromium'",
-    "test:cypress:e2e-record-test": "start-server-and-test preview:test http://127.0.0.1:4173 'cypress run --e2e --browser chrome --record'",
-    "test:cypress:e2e-dev-dev": "start-server-and-test preview:dev http://127.0.0.1:4173 'cypress open --e2e'",
-    "test:cypress:e2e-dev": "start-server-and-test preview http://127.0.0.1:4173 'cypress open --e2e'",
     "test:unit": "vitest --dir ./src",
     "typecheck": "vue-tsc --build --force",
     "fonts:update": "pnpm fonts:download && pnpm fonts:subset",
@@ -109,9 +103,6 @@
     "zhyswan-vuedraggable": "4.1.3"
   },
   "devDependencies": {
-    "@4tw/cypress-drag-drop": "2.3.1",
-    "@cypress/vite-dev-server": "7.0.1",
-    "@cypress/vue": "6.0.2",
     "@faker-js/faker": "9.9.0",
     "@histoire/plugin-screenshot": "1.0.0-alpha.5",
     "@histoire/plugin-vue": "1.0.0-alpha.5",
@@ -132,7 +123,6 @@
     "browserslist": "4.28.1",
     "caniuse-lite": "1.0.30001759",
     "csstype": "3.2.3",
-    "cypress": "14.5.4",
     "esbuild": "0.27.1",
     "eslint": "9.39.1",
     "eslint-plugin-vue": "10.6.2",
@@ -144,7 +134,6 @@
     "rollup": "4.53.3",
     "rollup-plugin-visualizer": "6.0.5",
     "sass-embedded": "1.93.3",
-    "start-server-and-test": "2.1.3",
     "stylelint": "16.26.1",
     "stylelint-config-property-sort-order-smacss": "10.0.0",
     "stylelint-config-recommended-vue": "1.6.1",
@@ -170,7 +159,6 @@
     "onlyBuiltDependencies": [
       "@parcel/watcher",
       "@sentry/cli",
-      "cypress",
       "esbuild",
       "puppeteer",
       "vue-demi"

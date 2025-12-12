@@ -2,7 +2,6 @@ import type {Directive} from 'vue'
 
 declare global {
 	interface Window {
-		Cypress: object;
 		TESTING?: boolean;
 	}
 }
@@ -14,7 +13,7 @@ function isTestingEnabled(): boolean {
 	return import.meta.env.DEV || window.TESTING === true
 }
 
-const cypressDirective = <Directive<HTMLElement,string>>{
+const testIdDirective = <Directive<HTMLElement,string>>{
 	mounted(el, {arg, value}) {
 		if (!isTestingEnabled()) {
 			return
@@ -31,4 +30,4 @@ const cypressDirective = <Directive<HTMLElement,string>>{
 	},
 }
 
-export default cypressDirective
+export default testIdDirective
