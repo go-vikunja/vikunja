@@ -34,43 +34,10 @@ async function seedTasks(userId: number, numberOfTasks = 5, startDueDate = new D
 test.describe('Sidebar Resize', () => {
 	test('should not reload tasks when resizing the sidebar', async ({authenticatedPage: page, currentUser}) => {
 		await page.setViewportSize({width: 1280, height: 720})
-
-		console.log('DEBUG: currentUser.id =', currentUser.id)
-		const {tasks, project} = await seedTasks(currentUser.id, 5)
-		console.log('DEBUG: seeded project =', JSON.stringify(project))
-		console.log('DEBUG: seeded tasks count =', tasks.length)
-
-		// Capture API responses for debugging
-		const apiResponses: {url: string, status: number, body?: string}[] = []
-		page.on('response', async response => {
-			if (response.url().includes('/api/v1/')) {
-				const body = response.status() === 200 ? await response.text().catch(() => 'N/A') : undefined
-				apiResponses.push({
-					url: response.url(),
-					status: response.status(),
-					body: body?.substring(0, 500),
-				})
-			}
-		})
+		await seedTasks(currentUser.id, 5)
 
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')
-
-		// Debug: log API responses
-		console.log('DEBUG: API responses:', JSON.stringify(apiResponses, null, 2))
-
-		// Debug: check if showTasks element exists
-		const showTasksExists = await page.locator('[data-cy="showTasks"]').count()
-		console.log('DEBUG: showTasks element count =', showTasksExists)
-
-		// Debug: check if card exists within showTasks
-		const cardExists = await page.locator('[data-cy="showTasks"] .card').count()
-		console.log('DEBUG: card element count =', cardExists)
-
-		// Debug: check if task exists within card
-		const taskExists = await page.locator('[data-cy="showTasks"] .card .task').count()
-		console.log('DEBUG: task element count =', taskExists)
-
 		await expect(page.locator('[data-cy="showTasks"] .card .task').first()).toBeVisible()
 
 		let taskApiCalls = 0

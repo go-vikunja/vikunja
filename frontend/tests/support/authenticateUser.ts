@@ -26,11 +26,13 @@ export async function login(page: Page | null, apiContext: APIRequestContext, us
 	const body = await response.json()
 	const token = body.token
 
-	// Set token in localStorage before navigating (only if page is provided)
+	// Set token and API_URL in localStorage before navigating (only if page is provided)
 	if (page) {
-		await page.addInitScript((token) => {
+		const apiUrl = process.env.API_URL || 'http://localhost:3456/api/v1'
+		await page.addInitScript(({token, apiUrl}) => {
 			window.localStorage.setItem('token', token)
-		}, token)
+			window.localStorage.setItem('API_URL', apiUrl)
+		}, {token, apiUrl})
 	}
 
 	return {user, token}
