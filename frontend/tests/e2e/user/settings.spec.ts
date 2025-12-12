@@ -1,42 +1,43 @@
 import {test, expect} from '../../support/fixtures'
 
 test.describe('User Settings', () => {
-	test('Changes the user avatar', async ({authenticatedPage: page, apiContext}) => {
-		// This test uses the API directly to upload the avatar since the vue-advanced-cropper
-		// component's canvas.toBlob() can return null in headless browser environments
+	test('Changes the user avatar', async ({authenticatedPage: page}) => {
 		await page.goto('/user/settings/avatar')
 		await page.waitForLoadState('networkidle')
 
-		// Get the auth token from localStorage
-		const token = await page.evaluate(() => localStorage.getItem('token'))
+		// Wait for the avatar settings content to be visible
+		const uploadRadio = page.locator('input[name=avatarProvider][value=upload]')
+		await expect(uploadRadio).toBeVisible({timeout: 5000})
 
-		// Upload the avatar directly via API
-		const fs = await import('fs')
-		const path = await import('path')
-		const fileBuffer = fs.readFileSync(path.join(process.cwd(), 'tests/fixtures/image.jpg'))
+		await uploadRadio.click()
 
-		const response = await apiContext.put('user/settings/avatar/upload', {
-			multipart: {
-				avatar: {
-					name: 'avatar.jpg',
-					mimeType: 'image/jpeg',
-					buffer: fileBuffer,
-				},
-			},
-			headers: {
-				'Authorization': `Bearer ${token}`,
-			},
-		})
+		// Set the file directly on the (hidden) file input
+		const fileInput = page.locator('input[type=file]')
+		await fileInput.setInputFiles('tests/fixtures/image.jpg')
 
+		// Wait for the cropper to be visible (the image needs to be loaded)
+		const cropper = page.locator('.vue-advanced-cropper')
+		await expect(cropper).toBeVisible({timeout: 10000})
+
+		// After cropper appears, there's a new "Upload Avatar" button with data-cy attribute
+		const uploadButton = page.locator('[data-cy="uploadAvatar"]')
+		await expect(uploadButton).toBeVisible()
+
+		// Wait for the cropper to be ready (button becomes enabled when canvas is ready)
+		await expect(uploadButton).toBeEnabled({timeout: 10000})
+
+		// Set up response waiter before clicking
+		const avatarUploadPromise = page.waitForResponse(response =>
+			response.url().includes('avatar') && response.request().method() === 'PUT',
+		)
+
+		await uploadButton.click()
+
+		// Wait for the avatar upload response and verify it succeeded
+		const response = await avatarUploadPromise
 		expect(response.ok()).toBe(true)
 
-		// Reload the page to verify the avatar was updated
-		await page.reload()
-		await page.waitForLoadState('networkidle')
-
-		// Verify the upload radio is now checked (indicating upload provider is set)
-		const uploadRadio = page.locator('input[name=avatarProvider][value=upload]')
-		await expect(uploadRadio).toBeChecked()
+		await expect(page.locator('.global-notification')).toContainText('Success', {timeout: 10000})
 	})
 
 	test('Updates the name', async ({authenticatedPage: page}) => {
