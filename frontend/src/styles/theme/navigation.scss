@@ -89,7 +89,7 @@
       }
 
       .collapse-project-button-placeholder {
-        width: 2rem; 
+        width: calc(.75rem + 1.25em); 
         flex-shrink: 0;
       }
 
