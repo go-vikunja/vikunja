@@ -33,8 +33,32 @@ async function seedTasks(userId: number, numberOfTasks = 5, startDueDate = new D
 
 test.describe('Sidebar Resize', () => {
 	test('should not reload tasks when resizing the sidebar', async ({authenticatedPage: page, currentUser}) => {
+		console.log('DEBUG: currentUser.id =', currentUser.id, 'username =', currentUser.username)
 		await page.setViewportSize({width: 1280, height: 720})
-		await seedTasks(currentUser.id, 5)
+		const {project, tasks} = await seedTasks(currentUser.id, 5)
+		console.log('DEBUG: created project.id =', project.id, 'owner_id =', project.owner_id, 'task count =', tasks.length)
+
+		// Debug: Intercept API responses before navigating
+		let projectsResponse: any = null
+		let tasksResponse: any = null
+		page.on('response', async response => {
+			if (response.url().includes('/projects') && response.request().method() === 'GET') {
+				try {
+					projectsResponse = await response.json()
+					console.log('DEBUG: /projects response:', JSON.stringify(projectsResponse))
+				} catch (e) {
+					console.log('DEBUG: /projects response not JSON:', response.status())
+				}
+			}
+			if (response.url().includes('/tasks/all') && response.request().method() === 'GET') {
+				try {
+					tasksResponse = await response.json()
+					console.log('DEBUG: /tasks/all response count:', Array.isArray(tasksResponse) ? tasksResponse.length : 'not array')
+				} catch (e) {
+					console.log('DEBUG: /tasks/all response not JSON:', response.status())
+				}
+			}
+		})
 
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')
