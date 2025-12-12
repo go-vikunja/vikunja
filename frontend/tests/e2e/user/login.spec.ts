@@ -48,8 +48,7 @@ test.describe('Login', () => {
 		await expect(page.locator('main h2')).toContainText(`Hi ${credentials.username}!`)
 	})
 
-	// FIXME: request timeout for the request that's awaited
-	test.skip('Should fail with a bad password', async ({page}) => {
+	test('Should fail with a bad password', async ({page}) => {
 		const fixture = {
 			username: 'test',
 			password: '123456',
@@ -72,15 +71,18 @@ test.describe('Login', () => {
 		await expect(page).toHaveURL(/\/login/)
 	})
 
-	// FIXME: request timeout
-	test.skip('Should redirect to the previous route after logging in', async ({page}) => {
+	test('Should redirect to the previous route after logging in', async ({page}) => {
 		const projects = await ProjectFactory.create(1)
 		await page.goto(`/projects/${projects[0].id}/1`)
 
 		await expect(page).toHaveURL(/\/login/)
 
-		await login(page)
+		// Login without expecting redirect to /
+		await page.locator('input[id=username]').fill(credentials.username)
+		await page.locator('input[id=password]').fill(credentials.password)
+		await page.locator('.button').filter({hasText: 'Login'}).click()
 
+		// Should redirect back to the project route
 		await expect(page).toHaveURL(new RegExp(`/projects/${projects[0].id}/1`))
 	})
 })
