@@ -91,13 +91,24 @@ test.describe('Sidebar Resize', () => {
 			hasContent: appStateDebug.hasContent,
 			hasAuthContent: appStateDebug.hasAuthContent,
 		}))
-		console.log('DEBUG: body HTML preview:', appStateDebug.bodyHTML.substring(0, 200))
+		// Check what's in the main content area
+		const mainContent = await page.evaluate(() => {
+			const homeContent = document.querySelector('.home.app-content .content')
+			return {
+				homeContentText: homeContent?.textContent?.substring(0, 300) || 'not found',
+				hasImportHint: document.querySelector('.import-hint') !== null,
+				hasShowTasksTitle: document.querySelector('[data-cy="showTasks"] .title') !== null,
+			}
+		})
+		console.log('DEBUG: main content:', JSON.stringify(mainContent))
 
 		// Debug: Check card and task elements
 		const cardCount = await page.locator('[data-cy="showTasks"] .card').count()
 		const taskCount = await page.locator('[data-cy="showTasks"] .card .task').count()
 		console.log('DEBUG: card count =', cardCount, 'task count =', taskCount)
 
+		// Wait for showTasks to appear with longer timeout for CI
+		await expect(page.locator('[data-cy="showTasks"]')).toBeAttached({timeout: 30000})
 		await expect(page.locator('[data-cy="showTasks"] .card .task').first()).toBeVisible({timeout: 10000})
 
 		let taskApiCalls = 0
