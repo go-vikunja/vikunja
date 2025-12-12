@@ -38,26 +38,15 @@ test.describe('Sidebar Resize', () => {
 		const {project, tasks} = await seedTasks(currentUser.id, 5)
 		console.log('DEBUG: created project.id =', project.id, 'owner_id =', project.owner_id, 'task count =', tasks.length)
 
-		// Debug: Intercept API responses before navigating
-		let projectsResponse: any = null
-		let tasksResponse: any = null
-		page.on('response', async response => {
-			if (response.url().includes('/projects') && response.request().method() === 'GET') {
-				try {
-					projectsResponse = await response.json()
-					console.log('DEBUG: /projects response:', JSON.stringify(projectsResponse))
-				} catch (e) {
-					console.log('DEBUG: /projects response not JSON:', response.status())
-				}
+		// Capture console errors
+		page.on('console', msg => {
+			if (msg.type() === 'error') {
+				console.log('DEBUG: Console error:', msg.text())
 			}
-			if (response.url().includes('/tasks/all') && response.request().method() === 'GET') {
-				try {
-					tasksResponse = await response.json()
-					console.log('DEBUG: /tasks/all response count:', Array.isArray(tasksResponse) ? tasksResponse.length : 'not array')
-				} catch (e) {
-					console.log('DEBUG: /tasks/all response not JSON:', response.status())
-				}
-			}
+		})
+
+		page.on('pageerror', error => {
+			console.log('DEBUG: Page error:', error.message)
 		})
 
 		await page.goto('/')
@@ -77,20 +66,32 @@ test.describe('Sidebar Resize', () => {
 		const showTasksExists = await page.locator('[data-cy="showTasks"]').count()
 		console.log('DEBUG: showTasks count =', showTasksExists)
 
-		// Debug: Wait for potential async loading and check store state
+		// Debug: Check if app is in loading state or error state
 		await page.waitForTimeout(2000)
-		const storeDebug = await page.evaluate(() => {
-			// @ts-ignore - accessing Pinia store from window
-			const projectStore = window.__pinia?.state?.value?.project
-			const hasProjects = projectStore?.projects ? Object.keys(projectStore.projects).length > 0 : false
-			const projectCount = projectStore?.projects ? Object.keys(projectStore.projects).length : 0
+		const appStateDebug = await page.evaluate(() => {
+			// Check for loading indicator
+			const isLoading = document.querySelector('.vikunja-loading') !== null
+			// Check for error message
+			const hasError = document.querySelector('.message.danger') !== null
+			// Check for the Ready slot content (actual app)
+			const hasContent = document.querySelector('.content-auth') !== null || document.querySelector('[data-cy="showTasks"]') !== null
+			// Check for auth elements
+			const hasAuthContent = document.querySelector('.menu-container') !== null
 			return {
-				hasProjects,
-				projectCount,
-				projectIds: projectStore?.projects ? Object.keys(projectStore.projects) : [],
+				isLoading,
+				hasError,
+				hasContent,
+				hasAuthContent,
+				bodyHTML: document.body.innerHTML.substring(0, 500),
 			}
 		})
-		console.log('DEBUG: projectStore state:', JSON.stringify(storeDebug))
+		console.log('DEBUG: app state:', JSON.stringify({
+			isLoading: appStateDebug.isLoading,
+			hasError: appStateDebug.hasError,
+			hasContent: appStateDebug.hasContent,
+			hasAuthContent: appStateDebug.hasAuthContent,
+		}))
+		console.log('DEBUG: body HTML preview:', appStateDebug.bodyHTML.substring(0, 200))
 
 		// Debug: Check card and task elements
 		const cardCount = await page.locator('[data-cy="showTasks"] .card').count()
