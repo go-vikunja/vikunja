@@ -38,6 +38,21 @@ test.describe('Sidebar Resize', () => {
 
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')
+
+		// Debug: Check localStorage
+		const apiUrl = await page.evaluate(() => window.localStorage.getItem('API_URL'))
+		const token = await page.evaluate(() => window.localStorage.getItem('token'))
+		console.log('DEBUG: localStorage API_URL =', apiUrl)
+		console.log('DEBUG: localStorage token =', token ? 'SET' : 'NOT SET')
+
+		// Debug: Check window.API_URL
+		const windowApiUrl = await page.evaluate(() => window.API_URL)
+		console.log('DEBUG: window.API_URL =', windowApiUrl)
+
+		// Debug: check elements
+		const showTasksExists = await page.locator('[data-cy="showTasks"]').count()
+		console.log('DEBUG: showTasks count =', showTasksExists)
+
 		await expect(page.locator('[data-cy="showTasks"] .card .task').first()).toBeVisible()
 
 		let taskApiCalls = 0
