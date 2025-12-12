@@ -27,6 +27,7 @@
 					{ 'is-menu-enabled': menuActive },
 					$route.name,
 				]"
+				:style="{'--sidebar-width': sidebarWidth}"
 			>
 				<BaseButton
 					v-show="menuActive"
@@ -84,12 +85,15 @@ import {useProjectStore} from '@/stores/projects'
 
 import {useRouteWithModal} from '@/composables/useRouteWithModal'
 import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
-import { useAuthStore } from '@/stores/auth'
+import {useSidebarResize} from '@/composables/useSidebarResize'
+import {useAuthStore} from '@/stores/auth'
 
 const authStore = useAuthStore()
-const backgroundBrightness = computed(() => 
+const backgroundBrightness = computed(() =>
 	authStore.settings?.frontendSettings?.backgroundBrightness,
 )
+
+const {sidebarWidth} = useSidebarResize()
 
 const {routeWithModal, currentModal, closeModal} = useRouteWithModal()
 
@@ -173,6 +177,8 @@ projectStore.loadAllProjects()
 }
 
 .app-content {
+	--sidebar-width: #{$navbar-width};
+
 	display: flow-root;
 	z-index: 10;
 	position: relative;
@@ -192,7 +198,7 @@ projectStore.loadAllProjects()
 
 	&.is-menu-enabled {
 		@media screen and (min-width: $tablet) {
-			margin-inline-start: $navbar-width;
+			margin-inline-start: var(--sidebar-width);
 		}
 	}
 

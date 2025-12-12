@@ -26,11 +26,17 @@ export async function login(page: Page | null, apiContext: APIRequestContext, us
 	const body = await response.json()
 	const token = body.token
 
-	// Set token in localStorage before navigating (only if page is provided)
+	// Set token and API_URL before navigating (only if page is provided)
 	if (page) {
-		await page.addInitScript((token) => {
+		// Use 127.0.0.1 instead of localhost to match the frontend's origin for CORS
+		const apiUrl = process.env.API_URL || 'http://127.0.0.1:3456/api/v1'
+		await page.addInitScript(({token, apiUrl}) => {
+			// Set both localStorage AND window.API_URL
+			// The app uses window.API_URL for initialization (in base.ts loadApp)
 			window.localStorage.setItem('token', token)
-		}, token)
+			window.localStorage.setItem('API_URL', apiUrl)
+			window.API_URL = apiUrl
+		}, {token, apiUrl})
 	}
 
 	return {user, token}

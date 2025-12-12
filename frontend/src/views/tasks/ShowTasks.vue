@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect} from 'vue'
+import {computed, ref, watch, watchEffect} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -182,6 +182,7 @@ const pageTitle = computed(() => {
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
 const loading = computed(() => taskStore.isLoading || taskCollectionService.value.loading)
+const filterIdUsedOnOverview = computed(() => authStore.settings?.frontendSettings?.filterIdUsedOnOverview)
 
 interface dateStrings {
 	dateFrom: string,
@@ -224,7 +225,7 @@ function clearLabelFilter() {
 	emit('clearLabelFilter')
 }
 
-async function loadPendingTasks(from: Date|string, to: Date|string) {
+async function loadPendingTasks(from: Date|string, to: Date|string, filterId: number | null | undefined) {
 	// FIXME: HACK! This should never happen.
 	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 	// Since this component is mounted as the home page before unauthenticated users get redirected
@@ -243,7 +244,7 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 	}
 
 	if (!showAll.value) {
-		
+
 		params.filter += ` && due_date < '${to instanceof Date ? to.toISOString() : to}'`
 
 		// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
@@ -253,15 +254,14 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 			params.filter += ` && due_date > '${from instanceof Date ? from.toISOString() : from}'`
 		}
 	}
-	
+
 	// Add label filtering
 	if (props.labelIds && props.labelIds.length > 0) {
 		const labelFilter = `labels in ${props.labelIds.join(', ')}`
 		params.filter += params.filter ? ` && ${labelFilter}` : labelFilter
 	}
-	
+
 	let projectId = null
-	const filterId = authStore.settings.frontendSettings.filterIdUsedOnOverview
 	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined') {
 		projectId = filterId
 	}
@@ -285,7 +285,17 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-watchEffect(() => loadPendingTasks(props.dateFrom, props.dateTo))
+// Use watch instead of watchEffect to prevent reloading tasks when unrelated settings change.
+// watchEffect would track all reactive dependencies accessed inside loadPendingTasks,
+// which includes the entire settings object. When sidebarWidth changes, the settings
+// object is replaced, triggering the watchEffect even though filterIdUsedOnOverview
+// hasn't changed. Using watch with explicit dependencies and immediate:true gives us
+// the same behavior but only triggers when these specific values actually change.
+watch(
+	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview],
+	([from, to, filterId]) => loadPendingTasks(from, to, filterId),
+	{immediate: true},
+)
 watchEffect(() => setTitle(pageTitle.value))
 </script>
 

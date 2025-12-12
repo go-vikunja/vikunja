@@ -23,6 +23,7 @@ export interface IFrontendSettings {
 	defaultTaskRelationType: IRelationKind
 	backgroundBrightness: number | null
 	alwaysShowBucketTaskCount: boolean
+	sidebarWidth: number | null
 }
 
 export interface IExtraSettingsLink {
