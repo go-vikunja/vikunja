@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run watch:*)",
+      "Bash(git log:*)",
+      "Bash(go test:*)",
+      "Bash(mage -l:*)",
+      "Bash(mage lint:*)",
+      "Bash(mage lint:fix:*)",
+      "Bash(mage test)",
+      "Bash(mage test:all:*)",
+      "Bash(mage test:feature:*)",
+      "Bash(mage test:filter:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm lint:fix:*)",
+      "Bash(pnpm test:e2e:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
