@@ -93,6 +93,7 @@
 				"discoverableByEmail": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meiner vollständigen E-Mail Adresse suchen",
 				"playSoundWhenDone": "Spil es Tönli ab, wenn en Task als fertig markiert wird",
 				"allowIconChanges": "Zu bestimmten Zeiten spezielle Logos anzeigen",
+				"alwaysShowBucketTaskCount": "Immer die Anzahl der Aufgaben pro Kanban-Spalte anzeigen",
 				"defaultTaskRelationType": "Standard-Aufgabenbeziehungstyp",
 				"weekStart": "D'Wuche fangt ah am",
 				"weekStartSunday": "Sunntig",

@@ -66,6 +66,8 @@
 			"hidePassword": "隱藏密碼",
 			"noAccountYet": "還沒有帳號？",
 			"alreadyHaveAnAccount": "已有帳號？",
+			"remember": "保持登入狀態",
+			"registrationDisabled": "已關閉註冊。",
 			"passwordResetTokenMissing": "缺少密碼重置令牌。"
 		},
 		"settings": {
@@ -82,28 +84,134 @@
 			"updateEmailSuccess": "您的電子郵件地址已成功更新。我們已經向您發送了一個鏈接來確認。",
 			"general": {
 				"title": "通用設定",
+				"name": "我的名字",
+				"newName": "新的名字",
 				"savedSuccess": "成功更新了設定。",
 				"emailReminders": "通過電子郵件發送任務提醒",
+				"overdueReminders": "每天發送未完成任務的摘要給我",
 				"discoverableByName": "允許其他用户在搜索我的名字時將我添加為團隊或項目的成員",
 				"discoverableByEmail": "允許其他用户在搜索我的完整電子郵件時將我添加為團隊或項目的成員",
+				"playSoundWhenDone": "將任務標記為已完成時播放聲音",
+				"allowIconChanges": "在特定時間顯示特殊標誌",
+				"alwaysShowBucketTaskCount": "永遠顯示看板欄位的任務數量",
+				"defaultTaskRelationType": "預設任務關聯類型",
+				"weekStart": "一週起始日",
+				"weekStartSunday": "星期日",
+				"weekStartMonday": "星期一",
 				"language": "語言設定",
-				"overdueTasksRemindersTime": "逾期任務提醒郵件時間"
+				"defaultProject": "默認項目",
+				"defaultView": "默認視圖",
+				"timezone": "時區",
+				"overdueTasksRemindersTime": "逾期任務提醒郵件時間",
+				"filterUsedOnOverview": "在總覽頁面中使用的已儲存篩選器",
+				"minimumPriority": "最低可見任務優先級",
+				"dateDisplay": "時間顯示格式",
+				"dateDisplayOptions": {
+					"relative": "相對時間（例如，3天前）",
+					"mm-dd-yyyy": "月-日-年",
+					"dd-mm-yyyy": "日-月-年",
+					"yyyy-mm-dd": "年-月-日",
+					"mm/dd/yyyy": "月/日/年",
+					"dd/mm/yyyy": "日/月/年",
+					"yyyy/mm/dd": "年/月/日"
+				},
+				"timeFormat": "時間格式",
+				"timeFormatOptions": {
+					"12h": "12小時制 (AM/PM)",
+					"24h": "24小時制 (HH:mm)"
+				},
+				"externalUserNameChange": "您的名稱由您的管理者 ({provider}) 管理。需要安排管理者更改。"
+			},
+			"sections": {
+				"personalInformation": "個人資訊",
+				"taskAndNotifications": "專案和任務",
+				"privacy": "隱私",
+				"localization": "本地化",
+				"appearance": "外觀與行為"
 			},
 			"totp": {
+				"title": "雙重驗證",
+				"enroll": "啟用",
 				"finishSetupPart1": "要完成您的設定，請在您的 TOTP 應用程序中使用此密文 (Google 身份驗證器或類似的軟件)：",
+				"finishSetupPart2": "在下方輸入您應用程式生成的驗證碼。",
+				"scanQR": "或者，您可以掃描此二維碼：",
+				"passcode": "驗證碼",
+				"passcodePlaceholder": "由您的 TOTP 應用程式生成的驗證碼",
+				"setupSuccess": "您已成功啟用雙重驗證！",
 				"enterPassword": "請輸入密碼",
-				"confirmSuccess": "您已成功確認您的 TOTP 設定，並且可以從現在起使用！"
+				"disable": "停用雙重驗證",
+				"confirmSuccess": "您已成功確認您的 TOTP 設定，並且可以從現在起使用！",
+				"disableSuccess": "雙重驗證已停用。"
 			},
 			"caldav": {
+				"title": "CalDAV",
+				"howTo": "您可以將 Vikunja 連接到 CalDAV 用戶端，從不同用戶端查看並管理所有任務。請在您的用戶端中輸入此 URL：",
+				"more": "更多關於 Vikunja 的 CalDAV 信息",
+				"tokens": "CalDAV 令牌",
 				"tokensHowTo": "您可以使用 CalDAV Tokens 代替密碼登錄上述端點。",
+				"createToken": "建立令牌",
+				"tokenCreated": "這是您的令牌: {token}",
+				"wontSeeItAgain": "請將它記下，之後將無法再次查看。",
 				"mustUseToken": "如果您想要通過第三方客户端來登錄使用 CalDAV，則需要創建一個 CalDAV 令牌，並使用該令牌作為密碼。",
 				"usernameIs": "您的用户名是: {0}"
 			},
 			"avatar": {
-				"setSuccess": "頭像設定成功！"
+				"title": "頭像",
+				"initials": "首字母",
+				"gravatar": "Gravatar 頭像",
+				"marble": "大理石",
+				"upload": "上傳",
+				"uploadAvatar": "上傳頭像",
+				"statusUpdateSuccess": "頭像狀態更新成功！",
+				"setSuccess": "頭像設定成功！",
+				"ldap": "您的頭像會自動從組織的目錄服務（LDAP）同步。若想更改，請向您的 IT 團隊詢問相關資訊。",
+				"openid": "您的頭像會自動從登入提供者（{provider}）同步。若要更改，請直接在該提供者處更新。"
+			},
+			"quickAddMagic": {
+				"title": "快速添加 Magic 模式",
+				"disabled": "停用",
+				"todoist": "Todoist",
+				"vikunja": "Vikunja"
+			},
+			"appearance": {
+				"title": "配色方案",
+				"setSuccess": "已將配色方案變更儲存為 {colorScheme}",
+				"colorScheme": {
+					"light": "淺色",
+					"system": "跟隨系統",
+					"dark": "深色"
+				}
+			},
+			"backgroundBrightness": {
+				"title": "背景亮度"
 			},
 			"apiTokens": {
-				"general": "API 令牌允許您在無需用户憑據的情況下使用 Vikunja 的 API。"
+				"title": "API 令牌",
+				"general": "API 令牌允許您在無需用户憑據的情況下使用 Vikunja 的 API。",
+				"apiDocs": "查看 api 文檔",
+				"createAToken": "建立令牌",
+				"createToken": "建立令牌",
+				"30d": "30 天",
+				"60d": "60 天",
+				"90d": "90 天",
+				"permissionExplanation": "權限可讓您設定API令牌的操作範圍。",
+				"titleRequired": "需要指定標題",
+				"permissionRequired": "請從列表中選擇至少一個權限。",
+				"expired": "此令牌已於 {ago} 前過期。",
+				"tokenCreatedSuccess": "這是您的新 api 令牌：{token}",
+				"tokenCreatedNotSeeAgain": "請將它妥善保存，之後將無法再次查看！",
+				"selectAll": "全選",
+				"delete": {
+					"header": "刪除該令牌",
+					"text1": "您確定要刪除令牌 {token} 嗎？",
+					"text2": "這將撤銷所有使用該令牌的應用程式或整合的存取權限。此操作無法還原。"
+				},
+				"attributes": {
+					"title": "標題",
+					"titlePlaceholder": "輸入一個您以後能夠識別的標題",
+					"expiresAt": "過期於",
+					"permissions": "權限"
+				}
 			}
 		},
 		"deletion": {
@@ -119,44 +227,148 @@
 			"scheduledCancel": "要取消您的帳號刪除操作，請單擊此處。",
 			"scheduledCancelText": "若要取消您的帳號刪除操作，請在下面輸入您的密碼：",
 			"scheduledCancelButton": "若要取消您的帳號刪除，請按下面的按鈕：",
-			"scheduledCancelConfirm": "取消刪除我的帳號"
+			"scheduledCancelConfirm": "取消刪除我的帳號",
+			"scheduledCancelSuccess": "帳號刪除操作已撤銷。"
 		},
 		"export": {
+			"title": "導出 Vikunja 數據",
+			"description": "您可以索取所有 Vikunja 數據的副本。 這包括專案、任務以及與它們相關的所有內容。 您可以通過遷移功能將這些數據導入到任何 Vikunja 實例中。",
 			"descriptionPasswordRequired": "請輸入您的密碼以繼續。",
-			"success": "已成功請求您的 Vikunja 數據！一旦準備好下載，我們將向您發送一封電子郵件。"
+			"request": "請求我的 Vikunja 資料副本",
+			"success": "已成功請求您的 Vikunja 數據！一旦準備好下載，我們將向您發送一封電子郵件。",
+			"downloadTitle": "下載您的 Vikunja 匯出資料",
+			"ready": "您的匯出檔已準備好，可下載至 {0}。",
+			"requestNew": "請求另一份匯出資料"
 		}
 	},
 	"project": {
+		"archivedMessage": "此專案已封存，無法建立或編輯任務。",
+		"archived": "已封存",
+		"showArchived": "顯示已封存",
+		"title": "標題",
+		"color": "顏色",
+		"projects": "專案",
+		"parent": "父專案",
+		"search": "輸入以搜索專案…",
+		"searchSelect": "點擊或按 Enter 以選取此專案",
+		"shared": "共享專案",
+		"noDescriptionAvailable": "沒有可用的專案描述。",
+		"inboxTitle": "收件箱",
+		"favorite": "收藏這個專案",
+		"unfavorite": "從收藏夾中刪除此專案",
 		"openSettingsMenu": "打開項目設定菜單",
+		"description": "項目描述",
+		"favoriteDescription": "此專案中所有任務均已標記為收藏。",
 		"create": {
+			"header": "新專案",
+			"titlePlaceholder": "專案標題…",
+			"addTitleRequired": "請指定一個標題。",
+			"createdSuccess": "已成功創建此專案。",
 			"addProjectRequired": "請指定列表或在設定中設置默認列表。"
+		},
+		"archive": {
+			"title": "封存 \"{project}\"",
+			"archive": "封存此專案",
+			"unarchive": "取消封存此專案",
+			"unarchiveText": "您將能夠建立或編輯任務。",
+			"archiveText": "在取消封存之前，您將無法編輯此專案或新建任務。",
+			"success": "專案已成功封存。"
 		},
 		"background": {
 			"title": "設定項目背景",
-			"success": "背景圖設定成功！"
+			"remove": "刪除背景",
+			"upload": "從您的電腦選擇一個背景圖片",
+			"searchPlaceholder": "搜索背景圖片…",
+			"poweredByUnsplash": "由 Unsplash 提供技術支持",
+			"loadMore": "載入更多照片",
+			"success": "背景圖設定成功！",
+			"removeSuccess": "已移除背景圖片！"
+		},
+		"delete": {
+			"title": "刪除 \"{project}\"",
+			"header": "刪除此專案",
+			"text1": "確定要刪除此專案及其所有內容嗎？",
+			"success": "專案已成功刪除。",
+			"tasksAndChildProjectsToDelete": "這將不可逆地刪除 {tasks} 個任務和 {projects} 個專案。"
+		},
+		"duplicate": {
+			"title": "複製此專案",
+			"success": "專案已成功複製。"
 		},
 		"edit": {
-			"identifierTooltip": "項目標識符可以用來獨特識別整個項目的任務。您可以設定為空以禁用它。"
+			"header": "編輯此項目",
+			"title": "編輯「{project}」",
+			"titlePlaceholder": "專案標題…",
+			"identifierTooltip": "項目標識符可以用來獨特識別整個項目的任務。您可以設定為空以禁用它。",
+			"identifier": "專案識別碼",
+			"identifierPlaceholder": "專案識別碼…",
+			"descriptionPlaceholder": "輸入此專案的描述，按 '/' 查看更多選項…",
+			"success": "專案更新成功。"
 		},
 		"share": {
+			"header": "共享項目",
+			"title": "分享 \"{project}\"",
+			"share": "共享",
 			"links": {
+				"title": "分享連結",
+				"what": "什麼是分享連結？",
 				"explanation": "共享鏈接使您能夠輕鬆地與其他未註冊帳號的訪客共享一個列表。",
+				"create": "建立分享連結",
+				"name": "分享連結名稱 (可選)",
+				"nameExplanation": "此連結分享執行的所有操作都會顯示其名稱。",
 				"password": "密碼 (可選)",
 				"passwordExplanation": "驗證時，用户需要輸入此密碼。",
-				"noName": "未設定名稱"
+				"noName": "未設定名稱",
+				"remove": "移除連結分享",
+				"removeText": "您確定要移除此分享連結嗎？移除後將無法再透過此連結存取專案，此操作無法復原！",
+				"createSuccess": "分享連結已成功建立。",
+				"deleteSuccess": "分享連結已成功刪除",
+				"sharedBy": "{0} 分享"
+			},
+			"userTeam": {
+				"shared": "與 {type} 共享",
+				"notShared": "尚未與任何 {type} 共享。"
 			}
 		},
+		"list": {
+			"empty": "此專案目前為空。"
+		},
+		"gantt": {
+			"default": "預設",
+			"chartLabel": "專案甘特圖"
+		},
 		"kanban": {
-			"noLimit": "未設定"
+			"noLimit": "未設定",
+			"defaultBucket": "預設分類",
+			"defaultBucketHint": "若建立任務時未指定分類，任務將會被加入此分類。",
+			"defaultBucketSavedSuccess": "已成功保存預設分類。",
+			"addBucket": "建立分類",
+			"deleteBucketText2": "這不會刪除任何任務，而是將其移動到預設分類。"
+		},
+		"webhooks": {
+			"create": "建立 Webhook"
+		},
+		"views": {
+			"create": "建立視圖",
+			"createSuccess": "視圖建立成功。",
+			"deleteText": "您確定要移除此視圖嗎？移除後將無法再用它來查看此專案的任務。此操作不會刪除任何任務。此操作無法復原！",
+			"onlyAdminsCanEdit": "只有專案管理員才能編輯視圖。"
 		}
 	},
 	"filters": {
 		"attributes": {
 			"includeNulls": "包含沒有設定值的任務"
 		},
+		"create": {
+			"action": "建立已儲存的篩選器"
+		},
 		"query": {
 			"help": {
-				"canUseDatemath": "您可以使用日期計算來設定相對日期。點擊查詢中的日期值來了解更多信息。"
+				"canUseDatemath": "您可以使用日期計算來設定相對日期。點擊查詢中的日期值來了解更多信息。",
+				"fields": {
+					"project": "任務所屬的專案（僅適用於已儲存的篩選器，專案層級不可用）",
+					"created": "任務建立的日期與時間"
+				}
 			}
 		}
 	},
@@ -164,16 +376,39 @@
 		"authorize": "要授權 Vikunja 訪問您的 {name} 帳號，請點擊下面的按鈕。",
 		"migrationStartedWillReciveEmail": "Vikunja 現在將從 {service} 導入您的列表/項目、任務、註釋、提醒和文件。 由於這需要一段時間，完成後我們會向您發送一封電子郵件。 您現在可以關閉此窗口。"
 	},
+	"label": {
+		"description": "點擊標籤以編輯。您可以編輯您建立的所有標籤，也可以使用與您有存取權限的專案任務相關聯的所有標籤。"
+	},
 	"sharing": {
 		"passwordRequired": "此共享項目需要密碼。請在下面輸入：",
-		"invalidPassword": "密碼錯誤"
+		"invalidPassword": "密碼錯誤",
+		"projectLoadError": "載入專案資訊失敗。"
 	},
 	"navigation": {
 		"settings": "設定"
 	},
+	"misc": {
+		"disable": "停用",
+		"create": "建立",
+		"default": "預設",
+		"created": "建立於",
+		"createdBy": "由 {0} 建立"
+	},
+	"input": {
+		"editor": {
+			"bulletListTooltip": "建立簡單的項目符號清單。",
+			"orderedListTooltip": "建立帶編號的清單。"
+		}
+	},
 	"task": {
+		"createSuccess": "任務已成功建立。",
+		"movedToProject": "任務已移動到「{project}」。",
 		"detail": {
 			"chooseStartDate": "點擊設定開始日期",
+			"move": "將任務移動到另一個專案",
+			"created": "由 {1} 建立的 {0}",
+			"belongsToProject": "此任務屬於專案「{project}」",
+			"back": "返回專案",
 			"actions": {
 				"assign": "分配給用户",
 				"priority": "設定優先級",
@@ -186,40 +421,109 @@
 				"color": "設定顏色"
 			}
 		},
+		"attributes": {
+			"created": "已建立",
+			"createdBy": "建立者"
+		},
+		"subscription": {
+			"subscribedTaskThroughParentProject": "您無法在此取消訂閱，因為您是透過該任務所屬的專案訂閱的。",
+			"subscribedProject": "您已訂閱此專案，將會收到變更通知。",
+			"notSubscribedProject": "您尚未訂閱此專案，將不會收到變更通知。",
+			"subscribeSuccessProject": "您已訂閲此專案",
+			"unsubscribeSuccessProject": "您已取消訂閲此專案"
+		},
+		"attachment": {
+			"createdBy": "由 {1} 建立的 {0}"
+		},
+		"comment": {
+			"creating": "正在建立評論…"
+		},
 		"assignee": {
 			"placeholder": "分配給用户…",
 			"selectPlaceholder": "分配給這個用户",
 			"assignSuccess": "已成功分配給用户。",
 			"unassignSuccess": "已取消分配給用户。"
 		},
+		"label": {
+			"createSuccess": "標籤已成功建立。",
+			"addCreateSuccess": "標籤已成功建立並新增完成。"
+		},
 		"priority": {
 			"unset": "取消設定"
 		},
+		"relation": {
+			"differentProject": "此任務屬於另一個專案。"
+		},
 		"quickAddMagic": {
+			"intro": "建立任務時，您可以使用特殊關鍵字直接為新建立的任務添加屬性。這可以讓您更快速地為任務加入常用屬性。",
+			"label2": "Vikunja 會先檢查標籤是否已存在，如果不存在則會建立該標籤。",
 			"priority1": "要設定任務的優先級，請添加數字 1-5，並以 {prefix} 為前綴。",
 			"assignees": "將任務分配給用户，請將帶有 {prefix} 前綴的用户名添加到此任務中。",
 			"project1": "要設定任務顯示的項目，請輸入其名稱，前綴為{prefix}。",
+			"project2": "如果專案不存在將會返回錯誤。",
+			"project3": "若要使用空格，只需在專案名稱前後加上 \" 或 '。",
+			"project4": "例如：{prefix}\"專案名稱含空格\"。",
 			"dateTime": "將日期格式與 “{time}” （或 {timePM}）組合以設定時間。",
 			"repeatsDescription": "將任務設定為間隔重複，只需在任務文本中添加“{suffix}”即可。 內容必須是數字，並且可以省略使用類型（參見示例）。"
 		}
 	},
 	"team": {
+		"create": {
+			"title": "創建團隊",
+			"success": "團隊已成功建立。"
+		},
 		"edit": {
 			"search": "輸入以搜索用户…",
 			"mustSelectUser": "請選擇一個用户。",
+			"delete": {
+				"text2": "所有團隊成員將失去對與此團隊共享的專案的存取權。此操作無法復原！"
+			},
 			"deleteUser": {
 				"header": "從團隊中刪除用户",
+				"text2": "他們將失去對此團隊可存取的所有專案的權限。此操作無法復原！",
 				"success": "此用户已成功從團隊中刪除。"
+			},
+			"leave": {
+				"text2": "您將失去對此團隊可存取的所有專案的權限。如果您改變主意，需要由團隊管理員重新將您加入。"
 			}
+		},
+		"attributes": {
+			"isPublicDescription": "使此團隊可公開被搜尋。啟用後，即使非直接成員，任何人也可以與此團隊共享專案。"
 		}
 	},
 	"keyboardShortcuts": {
 		"task": {
-			"assign": "分配此任務給一個用户"
+			"assign": "分配此任務給一個用户",
+			"move": "將此任務移至其他專案",
+			"openProject": "開啟此任務所屬的專案"
+		},
+		"project": {
+			"title": "專案視圖"
+		},
+		"navigation": {
+			"projects": "前往專案頁面"
 		}
 	},
 	"menu": {
-		"setBackground": "背景設定"
+		"setBackground": "背景設定",
+		"share": "共享",
+		"newProject": "新專案",
+		"createProject": "建立專案",
+		"cantArchiveIsDefault": "您無法封存此專案，因為它是您的預設專案。",
+		"cantDeleteIsDefault": "您無法刪除此專案，因為它是您的預設專案。"
+	},
+	"notification": {
+		"explainer": "當您訂閱的動作、專案或任務發生時，通知將會顯示在此處。"
+	},
+	"quickActions": {
+		"hint": "您可以使用 {project} 將搜尋範圍限制在特定專案。將 {project} 或 {label}（標籤）與搜尋查詢結合，可搜尋具有這些標籤或屬於該專案的任務。使用 {assignee} 則僅搜尋團隊。",
+		"projects": "項目",
+		"newProject": "輸入新專案的標題…",
+		"createTask": "在目前專案（{title}）中建立任務",
+		"createProject": "建立專案",
+		"cmds": {
+			"newProject": "新專案"
+		}
 	},
 	"error": {
 		"1001": "具有此用户名的用户已存在。",
@@ -238,9 +542,27 @@
 		"1018": "用户頭像設定無效。",
 		"1019": "OpenID提供商沒有提供電子郵件地址。請確保OpenID提供商公開為您的帳户提供電子郵件地址。",
 		"1020": "此帳户被禁用。請檢查您的電子郵件或詢問您的管理員。",
+		"1023": "您無法以分享連結方式執行此操作。",
+		"3001": "專案不存在。",
+		"3004": "您需要對該專案具有讀取權限才能執行此操作。",
+		"3006": "該專案的分享不存在。",
+		"3007": "具有此識別碼的專案已存在。",
+		"3008": "此專案已封存，因此僅能以唯讀方式存取。與此專案相關的所有任務亦同樣只能以唯讀方式存取。",
+		"4003": "所有批次編輯的任務必須屬於同一個專案。",
 		"4006": "不能將上級任務設定為任務本身。",
+		"4007": "您無法建立不合法類型的任務關聯。",
+		"4008": "您無法建立已存在的任務關聯。",
+		"6004": "該團隊已經可以存取此專案。",
 		"6005": "該用户已經是此團隊的成員。",
+		"6007": "該團隊無法存取此專案，因此無法執行此操作。",
+		"7002": "該用戶已經可以存取此專案。",
+		"7003": "您無法存取該專案。",
+		"10002": "該分類不屬於此專案。",
+		"10003": "您無法移除專案中的最後一個分類。",
+		"10005": "每個專案只能有一個完成分類。",
+		"11002": "已儲存的篩選器無法用於分享連結。",
 		"13001": "此鏈接共享需要密碼進行身份驗證，但沒有提供密碼。",
-		"13002": "提供的鏈接共享密碼無效。"
+		"13002": "提供的鏈接共享密碼無效。",
+		"13003": "提供的分享連結令牌無效。"
 	}
 }
