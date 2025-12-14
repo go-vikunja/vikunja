@@ -288,11 +288,16 @@
 			"title": "刪除 \"{project}\"",
 			"header": "刪除此專案",
 			"text1": "確定要刪除此專案及其所有內容嗎？",
+			"text2": "這包含所有任務，且無法復原！",
 			"success": "專案已成功刪除。",
-			"tasksAndChildProjectsToDelete": "這將不可逆地刪除 {tasks} 個任務和 {projects} 個專案。"
+			"tasksToDelete": "此操作將不可逆地移除約 {count} 筆任務，完成後將無法復原。",
+			"tasksAndChildProjectsToDelete": "這將不可逆地刪除 {tasks} 個任務和 {projects} 個專案。",
+			"noTasksToDelete": "此列表不包含任何任務，可以安全刪除。"
 		},
 		"duplicate": {
 			"title": "複製此專案",
+			"label": "複製",
+			"text": "請選擇一個上層專案，用以存放複製後的專案。",
 			"success": "專案已成功複製。"
 		},
 		"edit": {
@@ -302,7 +307,9 @@
 			"identifierTooltip": "項目標識符可以用來獨特識別整個項目的任務。您可以設定為空以禁用它。",
 			"identifier": "專案識別碼",
 			"identifierPlaceholder": "專案識別碼…",
+			"description": "描述",
 			"descriptionPlaceholder": "輸入此專案的描述，按 '/' 查看更多選項…",
+			"color": "顏色",
 			"success": "專案更新成功。"
 		},
 		"share": {
@@ -315,6 +322,7 @@
 				"explanation": "共享鏈接使您能夠輕鬆地與其他未註冊帳號的訪客共享一個列表。",
 				"create": "建立分享連結",
 				"name": "分享連結名稱 (可選)",
+				"namePlaceholder": "例如：Lorem Ipsum",
 				"nameExplanation": "此連結分享執行的所有操作都會顯示其名稱。",
 				"password": "密碼 (可選)",
 				"passwordExplanation": "驗證時，用户需要輸入此密碼。",
@@ -323,44 +331,164 @@
 				"removeText": "您確定要移除此分享連結嗎？移除後將無法再透過此連結存取專案，此操作無法復原！",
 				"createSuccess": "分享連結已成功建立。",
 				"deleteSuccess": "分享連結已成功刪除",
+				"view": "查看",
 				"sharedBy": "{0} 分享"
 			},
 			"userTeam": {
+				"typeUser": "用户名 | 用户",
+				"typeTeam": "團隊 | 團隊",
 				"shared": "與 {type} 共享",
-				"notShared": "尚未與任何 {type} 共享。"
+				"you": "您",
+				"notShared": "尚未與任何 {type} 共享。",
+				"removeHeader": "從 {sharable} 中移除一個 {type}",
+				"removeText": "您確定要從此 {type} 中移除此 {sharable} 嗎？此操作將無法復原！",
+				"removeSuccess": "此 {sharable} 已成功從 {type} 中移除。",
+				"addedSuccess": "{type} 已成功新增。",
+				"updatedSuccess": "{type} 已成功更新。"
+			},
+			"permission": {
+				"title": "權限",
+				"read": "唯讀",
+				"readWrite": "可讀寫",
+				"admin": "管理員"
+			},
+			"attributes": {
+				"link": "連結",
+				"delete": "刪除"
 			}
 		},
+		"first": {
+			"title": "第一視圖"
+		},
 		"list": {
-			"empty": "此專案目前為空。"
+			"title": "清單",
+			"add": "新增",
+			"addPlaceholder": "新增任務…",
+			"empty": "此專案目前為空。",
+			"newTaskCta": "新增任務。",
+			"editTask": "編輯任務"
 		},
 		"gantt": {
+			"title": "甘特圖",
+			"size": "時間粒度",
 			"default": "預設",
-			"chartLabel": "專案甘特圖"
+			"month": "月",
+			"day": "日",
+			"hour": "時",
+			"range": "日期範圍",
+			"chartLabel": "專案甘特圖",
+			"taskBarsForRow": "第 {rowId} 列的任務列",
+			"taskBarLabel": "任務：{task}。從 {startDate} 到 {endDate}。{dateType}。點擊編輯，拖曳移動。",
+			"scheduledDates": "排程日期",
+			"estimatedDates": "預估日期",
+			"resizeStartDate": "調整任務 {task} 的開始日期",
+			"resizeEndDate": "調整任務 {task} 的結束日期",
+			"timelineHeader": "時間軸",
+			"monthsRow": "月份列",
+			"daysRow": "日期列",
+			"monthLabel": "月份: {month}",
+			"dayLabel": "日期: {date}, {weekday}",
+			"dayLabelToday": "今天: {date}, {weekday}",
+			"taskAriaLabel": "任務: {task}",
+			"taskAriaLabelById": "任務 {id}"
+		},
+		"table": {
+			"title": "表格",
+			"columns": "列"
 		},
 		"kanban": {
+			"title": "看板",
+			"limit": "限制: {limit}",
 			"noLimit": "未設定",
+			"doneBucket": "已完成類別",
+			"doneBucketHint": "移入此類別的任務將自動標記為已完成。",
+			"doneBucketHintExtended": "所有移入已完成類別的任務將自動標記為已完成。 其他位置標記為已完成的任務也將被移動。",
+			"doneBucketSavedSuccess": "已完成類別保存成功。",
 			"defaultBucket": "預設分類",
 			"defaultBucketHint": "若建立任務時未指定分類，任務將會被加入此分類。",
 			"defaultBucketSavedSuccess": "已成功保存預設分類。",
+			"deleteLast": "無法刪除最後一個類別。",
+			"addTaskPlaceholder": "輸入新任務標題…",
+			"addTask": "新增任務",
+			"addAnotherTask": "新增另一個任務",
 			"addBucket": "建立分類",
-			"deleteBucketText2": "這不會刪除任何任務，而是將其移動到預設分類。"
+			"addBucketPlaceholder": "輸入新的類別標題…",
+			"deleteHeaderBucket": "刪除類別",
+			"deleteBucketText1": "您確定要刪除此類別嗎？",
+			"deleteBucketText2": "這不會刪除任何任務，而是將其移動到預設分類。",
+			"deleteBucketSuccess": "類別已刪除。",
+			"bucketTitleSavedSuccess": "類別標題已保存。",
+			"bucketLimitSavedSuccess": "類別限制已保存。",
+			"collapse": "摺疊此類別",
+			"bucketLimitReached": "已經達到類別任務數量上限，請刪除任務或者提高上限然後再添加任務。"
+		},
+		"pseudo": {
+			"favorites": {
+				"title": "收藏"
+			}
 		},
 		"webhooks": {
-			"create": "建立 Webhook"
+			"title": "Webhook",
+			"targetUrl": "目標 URL",
+			"targetUrlInvalid": "請提供有效的URL。",
+			"events": "事件",
+			"eventsHint": "選擇此 webhook 應接收更新的所有事件（限於當前專案）。",
+			"mustSelectEvents": "您必須選擇至少一個事件。",
+			"delete": "刪除此 webhook",
+			"deleteText": "確定要刪除此Webhook嗎？外部目標將不再收到其事件通知。",
+			"deleteSuccess": "Webhook 已成功刪除。",
+			"create": "建立 Webhook",
+			"secret": "密鑰",
+			"secretHint": "若有提供，所有發送到 webhook 目標 URL 的請求將使用 HMAC 簽名。",
+			"secretDocs": "請參考文件以了解更多關於密鑰的說明。"
 		},
 		"views": {
+			"header": "編輯視圖",
+			"title": "標題",
+			"actions": "操作",
+			"kind": "類別",
+			"bucketConfigMode": "類別配置模式",
+			"bucketConfig": "類別配置",
+			"bucketConfigManual": "手冊",
+			"filter": "過濾器",
 			"create": "建立視圖",
 			"createSuccess": "視圖建立成功。",
+			"titleRequired": "請提供標題。",
+			"delete": "刪除此視圖",
 			"deleteText": "您確定要移除此視圖嗎？移除後將無法再用它來查看此專案的任務。此操作不會刪除任何任務。此操作無法復原！",
-			"onlyAdminsCanEdit": "只有專案管理員才能編輯視圖。"
+			"deleteSuccess": "視圖刪除成功。",
+			"onlyAdminsCanEdit": "只有專案管理員才能編輯視圖。",
+			"updateSuccess": "視圖更新成功。"
 		}
 	},
 	"filters": {
+		"title": "篩選器",
+		"clear": "清除篩選條件",
+		"showResults": "顯示結果",
+		"noResults": "無結果",
+		"fromView": "當前視圖套用了以下篩選條件：",
+		"fromViewBoth": "它將與您在此處輸入的內容結合使用。",
 		"attributes": {
-			"includeNulls": "包含沒有設定值的任務"
+			"title": "標題",
+			"titlePlaceholder": "填寫篩選器標題",
+			"description": "描述",
+			"descriptionPlaceholder": "在此處添加此過濾器的描述，點擊'/'獲取更多選項…",
+			"includeNulls": "包含沒有設定值的任務",
+			"requireAll": "僅當所有篩選條件皆符合時，任務才會顯示。",
+			"showDoneTasks": "顯示已完成的任務",
+			"sortAlphabetically": "按字母排序",
+			"enablePriority": "按優先級啓用篩選器",
+			"enablePercentDone": "根據進度啓用篩選器",
+			"dueDateRange": "到期日期範圍",
+			"startDateRange": "起始日期範圍",
+			"endDateRange": "結束日期範圍",
+			"reminderRange": "提醒日期範圍"
 		},
 		"create": {
-			"action": "建立已儲存的篩選器"
+			"title": "新保存的過濾器",
+			"description": "已儲存的篩選器是一個虛擬專案，每次存取時都會依據一組篩選條件動態計算。",
+			"action": "建立已儲存的篩選器",
+			"titleRequired": "請提供此篩選器的標題。"
 		},
 		"query": {
 			"help": {
@@ -373,6 +501,7 @@
 		}
 	},
 	"migrate": {
+		"descriptionDo": "Vikunja 將導入所有您有訪問權限的清單、任務、筆記、提醒和文件。",
 		"authorize": "要授權 Vikunja 訪問您的 {name} 帳號，請點擊下面的按鈕。",
 		"migrationStartedWillReciveEmail": "Vikunja 現在將從 {service} 導入您的列表/項目、任務、註釋、提醒和文件。 由於這需要一段時間，完成後我們會向您發送一封電子郵件。 您現在可以關閉此窗口。"
 	},
@@ -396,8 +525,13 @@
 	},
 	"input": {
 		"editor": {
+			"bulletList": "符號清單",
 			"bulletListTooltip": "建立簡單的項目符號清單。",
-			"orderedListTooltip": "建立帶編號的清單。"
+			"unorderedList": "無序清單",
+			"orderedList": "有序清單",
+			"orderedListTooltip": "建立帶編號的清單。",
+			"taskList": "任務清單",
+			"taskListTooltip": "使用待辦清單追蹤任務。"
 		}
 	},
 	"task": {
@@ -498,10 +632,14 @@
 			"openProject": "開啟此任務所屬的專案"
 		},
 		"project": {
-			"title": "專案視圖"
+			"title": "專案視圖",
+			"switchToListView": "切換到清單視圖"
 		},
 		"navigation": {
 			"projects": "前往專案頁面"
+		},
+		"list": {
+			"title": "任務清單"
 		}
 	},
 	"menu": {
@@ -543,8 +681,10 @@
 		"1019": "OpenID提供商沒有提供電子郵件地址。請確保OpenID提供商公開為您的帳户提供電子郵件地址。",
 		"1020": "此帳户被禁用。請檢查您的電子郵件或詢問您的管理員。",
 		"1023": "您無法以分享連結方式執行此操作。",
+		"1025": "時區「{timezone}」無效。請從清單中選擇有效的時區。",
 		"3001": "專案不存在。",
 		"3004": "您需要對該專案具有讀取權限才能執行此操作。",
+		"3005": "清單標題不能為空。",
 		"3006": "該專案的分享不存在。",
 		"3007": "具有此識別碼的專案已存在。",
 		"3008": "此專案已封存，因此僅能以唯讀方式存取。與此專案相關的所有任務亦同樣只能以唯讀方式存取。",
@@ -557,8 +697,10 @@
 		"6007": "該團隊無法存取此專案，因此無法執行此操作。",
 		"7002": "該用戶已經可以存取此專案。",
 		"7003": "您無法存取該專案。",
+		"10001": "類別不存在。",
 		"10002": "該分類不屬於此專案。",
 		"10003": "您無法移除專案中的最後一個分類。",
+		"10004": "無法將任務添加到此類別，因為已超過此類別可容納的任務上限。",
 		"10005": "每個專案只能有一個完成分類。",
 		"11002": "已儲存的篩選器無法用於分享連結。",
 		"13001": "此鏈接共享需要密碼進行身份驗證，但沒有提供密碼。",
