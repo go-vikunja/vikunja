@@ -60,6 +60,8 @@
 							type: 'transition-group'
 						}"
 						:animation="100"
+						:delay-on-touch-only="true"
+						:delay="1000"
 						ghost-class="task-ghost"
 						@start="handleDragStart"
 						@end="saveTaskPosition"
