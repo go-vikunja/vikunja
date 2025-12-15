@@ -93,6 +93,7 @@
 				"discoverableByEmail": "Diğer kullanıcıların beni tam e-posta adresimle arayarak takımlara veya projelere üye olarak eklemesine izin ver",
 				"playSoundWhenDone": "Görevleri tamamlandı olarak işaretlerken ses çal",
 				"allowIconChanges": "Belirli zamanlarda özel logoları göster",
+				"alwaysShowBucketTaskCount": "Kanban listelerindeki görev sayısını her zaman göster",
 				"defaultTaskRelationType": "Varsayılan görev ilişkisi türü",
 				"weekStart": "Hafta başlangıcı",
 				"weekStartSunday": "Pazar",
@@ -180,6 +181,9 @@
 					"system": "Sistem",
 					"dark": "Koyu"
 				}
+			},
+			"backgroundBrightness": {
+				"title": "Arka plan parlaklığı"
 			},
 			"apiTokens": {
 				"title": "API Token’ları",
@@ -796,6 +800,7 @@
 		"addReminder": "Bir hatırlatıcı ekle…",
 		"doneSuccess": "Görev başarıyla tamamlandı olarak işaretlendi.",
 		"undoneSuccess": "Görev başarıyla tamamlanmadı olarak işaretlendi.",
+		"movedToProject": "Görev, {project} projesine taşındı.",
 		"undo": "Geri al",
 		"openDetail": "Görev detay görünümünü aç",
 		"checklistTotal": "{checked}/{total} görev",

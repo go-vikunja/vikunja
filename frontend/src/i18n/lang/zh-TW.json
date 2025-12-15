@@ -490,19 +490,79 @@
 			"action": "建立已儲存的篩選器",
 			"titleRequired": "請提供此篩選器的標題。"
 		},
+		"delete": {
+			"header": "刪除此已儲存的篩選器",
+			"text": "確定要刪除此已儲存的篩選器嗎？",
+			"success": "篩選器已成功刪除。"
+		},
+		"edit": {
+			"title": "編輯此已儲存的篩選器",
+			"success": "篩選器已成功儲存。"
+		},
 		"query": {
+			"title": "查詢",
+			"placeholder": "輸入搜索或篩選查詢…",
 			"help": {
+				"intro": "若要篩選任務，您可以使用類似 SQL 的查詢語法。可用於篩選的欄位包括：",
+				"link": "這是如何運作的？",
 				"canUseDatemath": "您可以使用日期計算來設定相對日期。點擊查詢中的日期值來了解更多信息。",
 				"fields": {
+					"done": "任務是否完成",
+					"priority": "任務的優先級(1-5)",
+					"percentDone": "任務完成百分比(0-100)",
+					"dueDate": "任務到期日期",
+					"startDate": "任務開始日期",
+					"endDate": "任務結束日期",
+					"doneAt": "任務完成的日期和時間",
+					"assignees": "任務指派人",
+					"labels": "任務關聯標籤",
 					"project": "任務所屬的專案（僅適用於已儲存的篩選器，專案層級不可用）",
-					"created": "任務建立的日期與時間"
+					"reminders": "任務的提醒（以日期欄位表示），會回傳至少有一個提醒符合查詢條件的所有任務\n",
+					"created": "任務建立的日期與時間",
+					"updated": "任務最後變更的時間和日期"
+				},
+				"operators": {
+					"intro": "可用於篩選的運算子包括：",
+					"notEqual": "不等於",
+					"equal": "等於",
+					"greaterThan": "大於",
+					"greaterThanOrEqual": "大於或等於",
+					"lessThan": "小於",
+					"lessThanOrEqual": "小於或等於",
+					"like": "匹配模式 (使用通配符%)",
+					"in": "匹配清單中的任一值，以逗號分隔",
+					"notIn": "匹配不在清單中的任一值，以逗號分隔"
+				},
+				"logicalOperators": {
+					"intro": "若要結合多個條件，您可以使用以下邏輯運算子：",
+					"and": "AND 運算子，僅當所有條件皆為真時符合",
+					"or": "OR 運算子，只要有任一條件為真即符合",
+					"parentheses": "使用括號來分組條件"
+				},
+				"examples": {
+					"intro": "以下是一些篩選查詢的範例：",
+					"priorityEqual": "匹配任務優先級別4",
+					"dueDatePast": "匹配已到期的任務",
+					"undoneHighPriority": "匹配未完成且優先級別3或更高的任務",
+					"assigneesIn": "匹配分配給「user1」或「user2」的任務",
+					"priorityOneOrTwoPastDue": "匹配優先級別1或2以及已到期的任務"
 				}
 			}
 		}
 	},
 	"migrate": {
+		"title": "從其他服務匯入",
+		"titleService": "從 {name} 匯入您的數據到 Vikunja",
+		"import": "匯入數據到 Vikunja",
+		"description": "點擊下方的第三方服務標誌以開始操作。",
 		"descriptionDo": "Vikunja 將導入所有您有訪問權限的清單、任務、筆記、提醒和文件。",
 		"authorize": "要授權 Vikunja 訪問您的 {name} 帳號，請點擊下面的按鈕。",
+		"getStarted": "開始",
+		"inProgress": "匯入進行中...",
+		"alreadyMigrated1": "{date} 已經從 {name} 匯入過數據",
+		"alreadyMigrated2": "可以再次匯入，但可能會產生重複資料。您確定要繼續嗎？",
+		"confirm": "我確定, 請立即開始匯入！",
+		"importUpload": "要將 {name} 的資料匯入 Vikunja，請點擊下方按鈕選擇檔案。",
 		"migrationStartedWillReciveEmail": "Vikunja 現在將從 {service} 導入您的列表/項目、任務、註釋、提醒和文件。 由於這需要一段時間，完成後我們會向您發送一封電子郵件。 您現在可以關閉此窗口。"
 	},
 	"label": {
