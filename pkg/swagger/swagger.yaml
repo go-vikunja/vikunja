@@ -4371,6 +4371,88 @@ paths:
       summary: Subscribes the current user to an entity.
       tags:
       - subscriptions
+  /tasks:
+    get:
+      consumes:
+      - application/json
+      description: Returns all tasks on any project the user has access to.
+      parameters:
+      - description: The page number. Used for pagination. If not provided, the first
+          page of results is returned.
+        in: query
+        name: page
+        type: integer
+      - description: The maximum number of items per page. Note this parameter is
+          limited by the configured maximum of items per page.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search tasks by task text.
+        in: query
+        name: s
+        type: string
+      - description: The sorting parameter. You can pass this multiple times to get
+          the tasks ordered by multiple different parametes, along with `order_by`.
+          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
+          `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
+          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
+          is `id`.
+        in: query
+        name: sort_by
+        type: string
+      - description: The ordering parameter. Possible values to order by are `asc`
+          or `desc`. Default is `asc`.
+        in: query
+        name: order_by
+        type: string
+      - description: The filter query to match tasks by. Check out https://vikunja.io/docs/filters
+          for a full explanation of the feature.
+        in: query
+        name: filter
+        type: string
+      - description: 'The time zone which should be used for date match (statements
+          like '
+        in: query
+        name: filter_timezone
+        type: string
+      - description: If set to true the result will include filtered fields whose
+          value is set to `null`. Available values are `true` or `false`. Defaults
+          to `false`.
+        in: query
+        name: filter_include_nulls
+        type: string
+      - collectionFormat: csv
+        description: If set to `subtasks`, Vikunja will fetch only tasks which do
+          not have subtasks and then in a second step, will fetch all of these subtasks.
+          This may result in more tasks than the pagination limit being returned,
+          but all subtasks will be present in the response. If set to `buckets`, the
+          buckets of each task will be present in the response. If set to `reactions`,
+          the reactions of each task will be present in the response. If set to `comments`,
+          the first 50 comments of each task will be present in the response. You
+          can set this multiple times with different values.
+        in: query
+        items:
+          type: string
+        name: expand
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get tasks
+      tags:
+      - task
   /tasks/{id}:
     delete:
       description: Deletes a task from a project. This does not mean "mark it done".
@@ -5331,88 +5413,6 @@ paths:
       security:
       - JWTKeyAuth: []
       summary: Remove a task relation
-      tags:
-      - task
-  /tasks/all:
-    get:
-      consumes:
-      - application/json
-      description: Returns all tasks on any project the user has access to.
-      parameters:
-      - description: The page number. Used for pagination. If not provided, the first
-          page of results is returned.
-        in: query
-        name: page
-        type: integer
-      - description: The maximum number of items per page. Note this parameter is
-          limited by the configured maximum of items per page.
-        in: query
-        name: per_page
-        type: integer
-      - description: Search tasks by task text.
-        in: query
-        name: s
-        type: string
-      - description: The sorting parameter. You can pass this multiple times to get
-          the tasks ordered by multiple different parametes, along with `order_by`.
-          Possible values to sort by are `id`, `title`, `description`, `done`, `done_at`,
-          `due_date`, `created_by_id`, `project_id`, `repeat_after`, `priority`, `start_date`,
-          `end_date`, `hex_color`, `percent_done`, `uid`, `created`, `updated`. Default
-          is `id`.
-        in: query
-        name: sort_by
-        type: string
-      - description: The ordering parameter. Possible values to order by are `asc`
-          or `desc`. Default is `asc`.
-        in: query
-        name: order_by
-        type: string
-      - description: The filter query to match tasks by. Check out https://vikunja.io/docs/filters
-          for a full explanation of the feature.
-        in: query
-        name: filter
-        type: string
-      - description: 'The time zone which should be used for date match (statements
-          like '
-        in: query
-        name: filter_timezone
-        type: string
-      - description: If set to true the result will include filtered fields whose
-          value is set to `null`. Available values are `true` or `false`. Defaults
-          to `false`.
-        in: query
-        name: filter_include_nulls
-        type: string
-      - collectionFormat: csv
-        description: If set to `subtasks`, Vikunja will fetch only tasks which do
-          not have subtasks and then in a second step, will fetch all of these subtasks.
-          This may result in more tasks than the pagination limit being returned,
-          but all subtasks will be present in the response. If set to `buckets`, the
-          buckets of each task will be present in the response. If set to `reactions`,
-          the reactions of each task will be present in the response. If set to `comments`,
-          the first 50 comments of each task will be present in the response. You
-          can set this multiple times with different values.
-        in: query
-        items:
-          type: string
-        name: expand
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: The tasks
-          schema:
-            items:
-              $ref: '#/definitions/models.Task'
-            type: array
-        "500":
-          description: Internal error
-          schema:
-            $ref: '#/definitions/models.Message'
-      security:
-      - JWTKeyAuth: []
-      summary: Get tasks
       tags:
       - task
   /tasks/bulk:

@@ -4055,7 +4055,7 @@
                 }
             }
         },
-        "/tasks/all": {
+        "/tasks": {
             "get": {
                 "security": [
                     {

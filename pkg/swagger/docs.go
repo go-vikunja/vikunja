@@ -4063,7 +4063,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/tasks/all": {
+        "/tasks": {
             "get": {
                 "security": [
                     {
