@@ -221,7 +221,7 @@ type taskSearchOptions struct {
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/all [get]
+// @Router /tasks [get]
 func (t *Task) ReadAll(_ *xorm.Session, _ web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, totalItems int64, err error) {
 	return nil, 0, 0, nil
 }

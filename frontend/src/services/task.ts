@@ -21,7 +21,7 @@ export default class TaskService extends AbstractService<ITask> {
 	constructor() {
 		super({
 			create: '/projects/{projectId}/tasks',
-			getAll: '/tasks/all',
+			getAll: '/tasks',
 			get: '/tasks/{id}',
 			update: '/tasks/{id}',
 			delete: '/tasks/{id}',

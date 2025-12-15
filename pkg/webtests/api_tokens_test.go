@@ -35,7 +35,7 @@ func TestAPIToken(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks", nil)
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
 		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
@@ -55,7 +55,7 @@ func TestAPIToken(t *testing.T) {
 	t.Run("invalid token", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks", nil)
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
 		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
@@ -68,7 +68,7 @@ func TestAPIToken(t *testing.T) {
 	t.Run("expired token", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks", nil)
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
 		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {
@@ -94,7 +94,7 @@ func TestAPIToken(t *testing.T) {
 	t.Run("jwt", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks/all", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks", nil)
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
 		h := routes.SetupTokenMiddleware()(func(c echo.Context) error {

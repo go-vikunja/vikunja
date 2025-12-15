@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"reflect"
 	"strconv"
 
 	vconfig "code.vikunja.io/api/pkg/config"
@@ -126,6 +127,13 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	err = s.Commit()
 	if err != nil {
 		return HandleHTTPError(err)
+	}
+
+	// Ensure we return an empty array instead of null when there are no results.
+	// We need to use reflection here because a nil slice wrapped in an interface{}
+	// is not equal to nil (the interface contains a nil value but is not nil itself).
+	if result == nil || (reflect.ValueOf(result).Kind() == reflect.Slice && reflect.ValueOf(result).IsNil()) {
+		result = []interface{}{}
 	}
 
 	err = ctx.JSON(http.StatusOK, result)
