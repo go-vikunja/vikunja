@@ -408,6 +408,12 @@
 						:project-id="task.projectId"
 						:initial-comments="task.comments"
 					/>
+
+					<!-- Marker element for scroll-to-bottom button visibility -->
+					<div
+						ref="contentBottomMarker"
+						class="content-bottom-marker"
+					/>
 				</div>
 				
 				<!-- Task Actions -->
@@ -578,10 +584,10 @@
 
 		<BaseButton
 			v-if="showScrollToCommentsButton"
-			v-tooltip="$t('task.detail.scrollToComments')"
+			v-tooltip="$t('task.detail.scrollToBottom')"
 			class="scroll-to-comments-button d-print-none"
-			:aria-label="$t('task.detail.scrollToComments')"
-			@click="scrollToComments"
+			:aria-label="$t('task.detail.scrollToBottom')"
+			@click="scrollToBottom"
 		>
 			<Icon icon="chevron-down" />
 		</BaseButton>
@@ -808,8 +814,8 @@ async function scrollToHeading() {
 
 const taskViewContainer = ref<HTMLElement | null>(null)
 const scrollContainer = ref<HTMLElement | null>(null)
-const lastCommentEl = ref<HTMLElement | null>(null)
-const lastCommentVisible = ref(true)
+const contentBottomMarker = ref<HTMLElement | null>(null)
+const bottomMarkerVisible = ref(true)
 const isScrollable = ref(false)
 
 function resolveScrollContainer() {
@@ -827,27 +833,6 @@ function resolveScrollContainer() {
 	scrollContainer.value = (document.scrollingElement as HTMLElement | null) ?? document.documentElement
 }
 
-function updateLastCommentEl() {
-	const root = taskViewContainer.value
-	if (!root) {
-		lastCommentEl.value = null
-		return
-	}
-
-	// We need to track when the bottom of the comments section is visible.
-	// The comments section has a comment form at the bottom (when canWrite is true),
-	// or the last comment element. We look for the form first, then fall back to
-	// the last comment element.
-	const commentsContainer = root.querySelector<HTMLElement>('.comments-container .comments')
-	if (commentsContainer) {
-		// Get the last child element of the comments container (form or last comment)
-		const lastChild = commentsContainer.lastElementChild as HTMLElement | null
-		lastCommentEl.value = lastChild
-	} else {
-		lastCommentEl.value = null
-	}
-}
-
 function updateScrollable() {
 	const scroller = scrollContainer.value
 	if (!scroller) {
@@ -858,28 +843,16 @@ function updateScrollable() {
 	isScrollable.value = scroller.scrollHeight > scroller.clientHeight + 1
 }
 
-const hasComments = ref(false)
-
-function updateHasComments() {
-	const root = taskViewContainer.value
-	if (!root) {
-		hasComments.value = false
-		return
-	}
-	const commentEls = root.querySelectorAll('.comments-container .comments .comment[id^="comment-"]')
-	hasComments.value = commentEls.length > 0
-}
-
 const showScrollToCommentsButton = computed(() => {
-	return isScrollable.value && hasComments.value && lastCommentEl.value !== null && !lastCommentVisible.value
+	return isScrollable.value && !bottomMarkerVisible.value
 })
 
-function scrollToComments() {
-	if (!lastCommentEl.value) {
+function scrollToBottom() {
+	if (!contentBottomMarker.value) {
 		return
 	}
 
-	lastCommentEl.value.scrollIntoView({
+	contentBottomMarker.value.scrollIntoView({
 		behavior: 'smooth',
 		block: 'end',
 		inline: 'nearest',
@@ -887,9 +860,9 @@ function scrollToComments() {
 }
 
 useIntersectionObserver(
-	lastCommentEl,
+	contentBottomMarker,
 	([entry]) => {
-		lastCommentVisible.value = entry?.isIntersecting ?? true
+		bottomMarkerVisible.value = entry?.isIntersecting ?? true
 	},
 	{threshold: 0.1},
 )
@@ -899,8 +872,6 @@ useMutationObserver(
 	async () => {
 		await nextTick()
 		resolveScrollContainer()
-		updateLastCommentEl()
-		updateHasComments()
 		updateScrollable()
 	},
 	{subtree: true, childList: true},
@@ -912,8 +883,6 @@ watch(scrollContainerHeight, () => updateScrollable())
 onMounted(async () => {
 	await nextTick()
 	resolveScrollContainer()
-	updateLastCommentEl()
-	updateHasComments()
 	updateScrollable()
 })
 
@@ -954,8 +923,6 @@ watch(
 			await nextTick()
 			scrollToHeading()
 			resolveScrollContainer()
-			updateLastCommentEl()
-			updateHasComments()
 			updateScrollable()
 			visible.value = true
 		}

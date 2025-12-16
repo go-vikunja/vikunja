@@ -832,7 +832,7 @@
       "back": "Back to project",
       "due": "Due {at}",
       "closePopup": "Close popup",
-      "scrollToComments": "Scroll to comments",
+      "scrollToBottom": "Scroll to bottom",
       "organization": "Organization",
       "management": "Management",
       "dateAndTime": "Date and time",
