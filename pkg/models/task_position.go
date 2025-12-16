@@ -272,3 +272,43 @@ func DeleteOrphanedTaskPositions(s *xorm.Session) (count int64, err error) {
 		Where("task_id not in (select id from tasks) OR project_view_id not in (select id from project_views)").
 		Delete(&TaskPosition{})
 }
+
+// createPositionsForTasksInView creates position records for tasks that don't have them.
+// Used as a safety net during task fetching for saved filter views.
+func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *ProjectView, a web.Auth) error {
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	// Get the current lowest position to place new tasks at the top
+	lowestPosition := &TaskPosition{}
+	has, err := s.
+		Where("project_view_id = ?", view.ID).
+		OrderBy("position asc").
+		Get(lowestPosition)
+	if err != nil {
+		return err
+	}
+
+	var basePosition float64
+	if !has || lowestPosition.Position == 0 {
+		// No existing positions or all are zero - trigger full recalculation
+		return RecalculateTaskPositions(s, view, a)
+	}
+
+	// Place new tasks before the lowest position, evenly spaced
+	basePosition = lowestPosition.Position
+	spacing := basePosition / float64(len(tasks)+1)
+
+	newPositions := make([]*TaskPosition, 0, len(tasks))
+	for i, task := range tasks {
+		newPositions = append(newPositions, &TaskPosition{
+			TaskID:        task.ID,
+			ProjectViewID: view.ID,
+			Position:      spacing * float64(i+1),
+		})
+	}
+
+	_, err = s.Insert(&newPositions)
+	return err
+}
