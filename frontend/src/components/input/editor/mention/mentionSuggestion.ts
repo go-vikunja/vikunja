@@ -145,7 +145,7 @@ export default function mentionSuggestionSetup(projectId: number) {
 					items: MentionItem[]
 					command: (item: MentionItem) => void
 				}) {
-					component.updateProps(props)
+					component?.updateProps(props)
 
 					if (!props.clientRect || !popupElement) {
 						return
@@ -171,7 +171,7 @@ export default function mentionSuggestionSetup(projectId: number) {
 						return true
 					}
 
-					return component.ref?.onKeyDown(props)
+					return component?.ref?.onKeyDown(props)
 				},
 
 				onExit() {
