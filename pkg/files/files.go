@@ -154,32 +154,35 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 
 // Save saves a file to storage
 func (f *File) Save(fcontent io.Reader) (err error) {
-	// For S3 storage, use PutObject directly with Content-Length to enable streaming
-	// without buffering the entire file in memory. Some S3-compatible services
-	// (like MinIO) require Content-Length to be set explicitly.
-	if s3Client != nil {
-		body, contentLength, cleanup, err := prepareS3UploadBody(fcontent, f.Size)
-		if err != nil {
-			return err
-		}
-		if cleanup != nil {
-			defer cleanup()
-		}
 
-		_, err = s3Client.PutObject(&s3.PutObjectInput{
-			Bucket:        aws.String(s3Bucket),
-			Key:           aws.String(f.getAbsoluteFilePath()),
-			Body:          body,
-			ContentLength: aws.Int64(contentLength),
-		})
-		if err != nil {
-			return fmt.Errorf("failed to upload file to S3: %w", err)
-		}
-	} else {
+	if s3Client == nil {
 		err = afs.WriteReader(f.getAbsoluteFilePath(), fcontent)
 		if err != nil {
 			return fmt.Errorf("failed to save file: %w", err)
 		}
+
+		return keyvalue.IncrBy(metrics.FilesCountKey, 1)
+	}
+
+	// For S3 storage, use PutObject directly with Content-Length to enable streaming
+	// without buffering the entire file in memory. Some S3-compatible services
+	// (like MinIO) require Content-Length to be set explicitly.
+	body, contentLength, cleanup, err := prepareS3UploadBody(fcontent, f.Size)
+	if err != nil {
+		return err
+	}
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	_, err = s3Client.PutObject(&s3.PutObjectInput{
+		Bucket:        aws.String(s3Bucket),
+		Key:           aws.String(f.getAbsoluteFilePath()),
+		Body:          body,
+		ContentLength: aws.Int64(contentLength),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upload file to S3: %w", err)
 	}
 
 	return keyvalue.IncrBy(metrics.FilesCountKey, 1)
