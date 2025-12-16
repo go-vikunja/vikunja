@@ -618,7 +618,7 @@ import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, on
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
-import {unrefElement, useElementSize, useIntersectionObserver, useMediaQuery, useMutationObserver} from '@vueuse/core'
+import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMediaQuery, useMutationObserver} from '@vueuse/core'
 import {klona} from 'klona/lite'
 import {eventToHotkeyString} from '@github/hotkey'
 
@@ -738,6 +738,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	document.removeEventListener('keydown', saveTaskViaHotkey)
+	debouncedMutationHandler.cancel()
 })
 
 onBeforeRouteLeave(async () => {
@@ -867,13 +868,15 @@ useIntersectionObserver(
 	{threshold: 0.1},
 )
 
+const debouncedMutationHandler = useDebounceFn(async () => {
+	await nextTick()
+	resolveScrollContainer()
+	updateScrollable()
+}, 100)
+
 useMutationObserver(
 	taskViewContainer,
-	async () => {
-		await nextTick()
-		resolveScrollContainer()
-		updateScrollable()
-	},
+	debouncedMutationHandler,
 	{subtree: true, childList: true},
 )
 
