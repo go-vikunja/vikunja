@@ -1057,6 +1057,154 @@ test.describe('Task', () => {
 		})
 	})
 
+	test.describe('Scroll to bottom button', () => {
+		test('Shows scroll-to-bottom button when content is long and hides when at bottom', async ({authenticatedPage: page}) => {
+			// Create a task with a very long description to ensure scrollable content
+			const longDescription = `
+<h1>Introduction</h1>
+<p>This is a very long description to test the scroll-to-bottom button functionality.</p>
+${Array(30).fill('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>').join('\n')}
+<h2>Conclusion</h2>
+<p>End of the long description.</p>
+`
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				description: longDescription,
+			})
+
+			// Set viewport to ensure content is scrollable
+			await page.setViewportSize({width: 1280, height: 800})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			// Scroll to top and wait for scroll to complete
+			await page.evaluate(() => window.scrollTo(0, 0))
+			await page.waitForFunction(() => window.scrollY <= 5)
+
+			// The scroll-to-bottom button should be visible when not at bottom
+			const scrollButton = page.locator('.scroll-to-comments-button')
+			await expect(scrollButton).toBeVisible({timeout: 5000})
+
+			// Click the button to scroll to bottom
+			await scrollButton.click()
+
+			// Wait for the bottom marker to be in or near the viewport (within 50px tolerance)
+			const bottomMarker = page.locator('.content-bottom-marker')
+			await expect(async () => {
+				const markerTop = await bottomMarker.evaluate((el) => el.getBoundingClientRect().top)
+				const viewportHeight = await page.evaluate(() => window.innerHeight)
+				expect(markerTop).toBeLessThanOrEqual(viewportHeight + 50)
+			}).toPass({timeout: 5000})
+
+			// The button should be hidden when at the bottom
+			await expect(scrollButton).not.toBeVisible({timeout: 5000})
+		})
+
+		test('Shows scroll-to-bottom button with long comments', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				description: 'Short description',
+			})
+
+			// Create a long comment to ensure scrollable content
+			const longComment = `
+# Code Review Summary
+
+This is a very long comment that should make the page scrollable.
+
+## Changes Overview
+
+${Array(20).fill('- Lorem ipsum dolor sit amet, consectetur adipiscing elit').join('\n')}
+
+## Detailed Analysis
+
+${Array(10).fill('The implementation looks good overall. Here are some specific points to consider:\n\n1. Performance implications\n2. Security considerations\n3. Code maintainability\n\n').join('\n')}
+
+## Conclusion
+
+Everything looks good!
+`
+			await TaskCommentFactory.create(1, {
+				task_id: tasks[0].id,
+				comment: longComment,
+			})
+
+			// Set viewport to ensure content is scrollable
+			await page.setViewportSize({width: 1280, height: 800})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			// Scroll to top and wait for scroll to complete
+			await page.evaluate(() => window.scrollTo(0, 0))
+			await page.waitForFunction(() => window.scrollY <= 5)
+
+			// The scroll-to-bottom button should be visible
+			const scrollButton = page.locator('.scroll-to-comments-button')
+			await expect(scrollButton).toBeVisible({timeout: 5000})
+
+			// Click the button to scroll to bottom
+			await scrollButton.click()
+
+			// Wait for the bottom marker to be in or near the viewport (within 50px tolerance)
+			const bottomMarker = page.locator('.content-bottom-marker')
+			await expect(async () => {
+				const markerTop = await bottomMarker.evaluate((el) => el.getBoundingClientRect().top)
+				const viewportHeight = await page.evaluate(() => window.innerHeight)
+				expect(markerTop).toBeLessThanOrEqual(viewportHeight + 50)
+			}).toPass({timeout: 5000})
+
+			// The button should be hidden when at the bottom
+			await expect(scrollButton).not.toBeVisible({timeout: 5000})
+		})
+
+		test('Does not show scroll-to-bottom button when already at bottom', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				description: 'Short description',
+			})
+
+			// Set viewport
+			await page.setViewportSize({width: 1280, height: 800})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			// Scroll to bottom of page and wait for scroll to complete
+			await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+			await page.waitForFunction(() => {
+				const scrollTop = window.scrollY || document.documentElement.scrollTop
+				const scrollHeight = document.documentElement.scrollHeight
+				const clientHeight = document.documentElement.clientHeight
+				return scrollTop + clientHeight >= scrollHeight - 5
+			})
+
+			// The scroll-to-bottom button should not be visible when already at bottom
+			const scrollButton = page.locator('.scroll-to-comments-button')
+			await expect(scrollButton).not.toBeVisible({timeout: 3000})
+		})
+
+		test('Does not show scroll-to-bottom button on mobile', async ({authenticatedPage: page}) => {
+			// Create a task with long content
+			const longDescription = Array(30).fill('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>').join('\n')
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				description: longDescription,
+			})
+
+			// Set mobile viewport
+			await page.setViewportSize({width: 375, height: 667})
+			await page.goto(`/tasks/${tasks[0].id}`)
+			await page.waitForLoadState('networkidle')
+
+			// Scroll to top and wait for scroll to complete
+			await page.evaluate(() => window.scrollTo(0, 0))
+			await page.waitForFunction(() => window.scrollY <= 5)
+
+			// The scroll-to-bottom button should be hidden on mobile (CSS hides it)
+			const scrollButton = page.locator('.scroll-to-comments-button')
+			await expect(scrollButton).not.toBeVisible({timeout: 3000})
+		})
+	})
+
 	test.describe('Link functionality in description editor', () => {
 		test('Should show URL input when clicking link button without scroll', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
