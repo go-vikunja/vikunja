@@ -1077,9 +1077,9 @@ ${Array(30).fill('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Se
 			await page.goto(`/tasks/${tasks[0].id}`)
 			await page.waitForLoadState('networkidle')
 
-			// Scroll to top to ensure button is visible
+			// Scroll to top and wait for scroll to complete
 			await page.evaluate(() => window.scrollTo(0, 0))
-			await page.waitForTimeout(300)
+			await page.waitForFunction(() => window.scrollY <= 5)
 
 			// The scroll-to-bottom button should be visible when not at bottom
 			const scrollButton = page.locator('.scroll-to-comments-button')
@@ -1087,21 +1087,14 @@ ${Array(30).fill('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Se
 
 			// Click the button to scroll to bottom
 			await scrollButton.click()
-			await page.waitForTimeout(1000) // Wait for smooth scroll animation
 
-			// Verify the content bottom marker is now in or near the viewport
-			// (scrollIntoView with block: 'end' places it at the bottom edge)
+			// Wait for the bottom marker to be in or near the viewport (within 50px tolerance)
 			const bottomMarker = page.locator('.content-bottom-marker')
-			const markerPosition = await bottomMarker.evaluate((el) => {
-				const rect = el.getBoundingClientRect()
-				return {
-					top: rect.top,
-					bottom: rect.bottom,
-					viewportHeight: window.innerHeight,
-				}
-			})
-			// The marker should be within the viewport or just slightly below it (within 50px tolerance)
-			expect(markerPosition.top).toBeLessThanOrEqual(markerPosition.viewportHeight + 50)
+			await expect(async () => {
+				const markerTop = await bottomMarker.evaluate((el) => el.getBoundingClientRect().top)
+				const viewportHeight = await page.evaluate(() => window.innerHeight)
+				expect(markerTop).toBeLessThanOrEqual(viewportHeight + 50)
+			}).toPass({timeout: 5000})
 
 			// The button should be hidden when at the bottom
 			await expect(scrollButton).not.toBeVisible({timeout: 5000})
@@ -1141,9 +1134,9 @@ Everything looks good!
 			await page.goto(`/tasks/${tasks[0].id}`)
 			await page.waitForLoadState('networkidle')
 
-			// Scroll to top to ensure button is visible
+			// Scroll to top and wait for scroll to complete
 			await page.evaluate(() => window.scrollTo(0, 0))
-			await page.waitForTimeout(300)
+			await page.waitForFunction(() => window.scrollY <= 5)
 
 			// The scroll-to-bottom button should be visible
 			const scrollButton = page.locator('.scroll-to-comments-button')
@@ -1151,21 +1144,14 @@ Everything looks good!
 
 			// Click the button to scroll to bottom
 			await scrollButton.click()
-			await page.waitForTimeout(1000) // Wait for smooth scroll animation
 
-			// Verify the content bottom marker is now in or near the viewport
-			// (scrollIntoView with block: 'end' places it at the bottom edge)
+			// Wait for the bottom marker to be in or near the viewport (within 50px tolerance)
 			const bottomMarker = page.locator('.content-bottom-marker')
-			const markerPosition = await bottomMarker.evaluate((el) => {
-				const rect = el.getBoundingClientRect()
-				return {
-					top: rect.top,
-					bottom: rect.bottom,
-					viewportHeight: window.innerHeight,
-				}
-			})
-			// The marker should be within the viewport or just slightly below it (within 50px tolerance)
-			expect(markerPosition.top).toBeLessThanOrEqual(markerPosition.viewportHeight + 50)
+			await expect(async () => {
+				const markerTop = await bottomMarker.evaluate((el) => el.getBoundingClientRect().top)
+				const viewportHeight = await page.evaluate(() => window.innerHeight)
+				expect(markerTop).toBeLessThanOrEqual(viewportHeight + 50)
+			}).toPass({timeout: 5000})
 
 			// The button should be hidden when at the bottom
 			await expect(scrollButton).not.toBeVisible({timeout: 5000})
@@ -1182,9 +1168,14 @@ Everything looks good!
 			await page.goto(`/tasks/${tasks[0].id}`)
 			await page.waitForLoadState('networkidle')
 
-			// Scroll to bottom of page
+			// Scroll to bottom of page and wait for scroll to complete
 			await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-			await page.waitForTimeout(500)
+			await page.waitForFunction(() => {
+				const scrollTop = window.scrollY || document.documentElement.scrollTop
+				const scrollHeight = document.documentElement.scrollHeight
+				const clientHeight = document.documentElement.clientHeight
+				return scrollTop + clientHeight >= scrollHeight - 5
+			})
 
 			// The scroll-to-bottom button should not be visible when already at bottom
 			const scrollButton = page.locator('.scroll-to-comments-button')
@@ -1204,9 +1195,9 @@ Everything looks good!
 			await page.goto(`/tasks/${tasks[0].id}`)
 			await page.waitForLoadState('networkidle')
 
-			// Scroll to top
+			// Scroll to top and wait for scroll to complete
 			await page.evaluate(() => window.scrollTo(0, 0))
-			await page.waitForTimeout(300)
+			await page.waitForFunction(() => window.scrollY <= 5)
 
 			// The scroll-to-bottom button should be hidden on mobile (CSS hides it)
 			const scrollButton = page.locator('.scroll-to-comments-button')
