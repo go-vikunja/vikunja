@@ -18,7 +18,9 @@ package files
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -31,6 +33,8 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"code.vikunja.io/api/pkg/web"
+	"github.com/aws/aws-sdk-go/aws"        //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	"github.com/aws/aws-sdk-go/service/s3" //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
 	"github.com/c2h5oh/datasize"
 	"github.com/spf13/afero"
 	"xorm.io/xorm"
@@ -150,10 +154,134 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 
 // Save saves a file to storage
 func (f *File) Save(fcontent io.Reader) (err error) {
-	err = afs.WriteReader(f.getAbsoluteFilePath(), fcontent)
+
+	if s3Client == nil {
+		err = afs.WriteReader(f.getAbsoluteFilePath(), fcontent)
+		if err != nil {
+			return fmt.Errorf("failed to save file: %w", err)
+		}
+
+		return keyvalue.IncrBy(metrics.FilesCountKey, 1)
+	}
+
+	// For S3 storage, use PutObject directly with Content-Length to enable streaming
+	// without buffering the entire file in memory. Some S3-compatible services
+	// (like MinIO) require Content-Length to be set explicitly.
+	body, contentLength, cleanup, err := prepareS3UploadBody(fcontent, f.Size)
 	if err != nil {
-		return
+		return err
+	}
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	_, err = s3Client.PutObject(&s3.PutObjectInput{
+		Bucket:        aws.String(s3Bucket),
+		Key:           aws.String(f.getAbsoluteFilePath()),
+		Body:          body,
+		ContentLength: aws.Int64(contentLength),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upload file to S3: %w", err)
 	}
 
 	return keyvalue.IncrBy(metrics.FilesCountKey, 1)
+}
+
+func prepareS3UploadBody(fcontent io.Reader, expectedSize uint64) (body io.ReadSeeker, contentLength int64, cleanup func(), err error) {
+	if seeker, ok := fcontent.(io.ReadSeeker); ok {
+		contentLength, err = contentLengthFromReadSeeker(seeker, expectedSize)
+		if err != nil {
+			return nil, 0, nil, fmt.Errorf("failed to determine S3 upload content length: %w", err)
+		}
+
+		_, err = seeker.Seek(0, io.SeekStart)
+		if err != nil {
+			return nil, 0, nil, fmt.Errorf("failed to seek S3 upload body to start: %w", err)
+		}
+
+		return seeker, contentLength, nil, nil
+	}
+
+	tempFile, tempPath, err := createS3TempFile()
+	if err != nil {
+		return nil, 0, nil, fmt.Errorf("failed to create temp file for S3 upload: %w", err)
+	}
+
+	cleanup = func() {
+		_ = tempFile.Close()
+		_ = os.Remove(tempPath)
+	}
+
+	written, err := io.Copy(tempFile, fcontent)
+	if err != nil {
+		cleanup()
+		return nil, 0, nil, fmt.Errorf("failed to buffer S3 upload to temp file: %w", err)
+	}
+
+	if expectedSize > 0 {
+		if expectedSize > uint64(math.MaxInt64) {
+			log.Warningf("File size mismatch for S3 upload: expected size %d bytes does not fit into int64", expectedSize)
+		} else if written != int64(expectedSize) {
+			log.Warningf("File size mismatch for S3 upload: expected %d bytes but buffered %d bytes", expectedSize, written)
+		}
+	}
+
+	_, err = tempFile.Seek(0, io.SeekStart)
+	if err != nil {
+		cleanup()
+		return nil, 0, nil, fmt.Errorf("failed to seek temp file for S3 upload: %w", err)
+	}
+
+	return tempFile, written, cleanup, nil
+}
+
+func contentLengthFromReadSeeker(seeker io.ReadSeeker, expectedSize uint64) (int64, error) {
+	currentOffset, err := seeker.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return 0, err
+	}
+
+	endOffset, err := seeker.Seek(0, io.SeekEnd)
+	if err != nil {
+		return 0, err
+	}
+
+	_, err = seeker.Seek(currentOffset, io.SeekStart)
+	if err != nil {
+		return 0, err
+	}
+
+	if expectedSize > 0 && expectedSize <= uint64(math.MaxInt64) && endOffset != int64(expectedSize) {
+		log.Warningf("File size mismatch for S3 upload: expected %d bytes but reader reports %d bytes", expectedSize, endOffset)
+	}
+
+	return endOffset, nil
+}
+
+func createS3TempFile() (file *os.File, path string, err error) {
+	dir := config.FilesS3TempDir.GetString()
+
+	tryCreate := func(tempDir string) (*os.File, error) {
+		return os.CreateTemp(tempDir, "vikunja-s3-upload-*")
+	}
+
+	if dir != "" {
+		file, err = tryCreate(dir)
+		if err == nil {
+			return file, file.Name(), nil
+		}
+	}
+
+	file, err = tryCreate("")
+	if err == nil {
+		return file, file.Name(), nil
+	}
+
+	file, err = tryCreate(".")
+	if err != nil {
+		return nil, "", err
+	}
+
+	return file, file.Name(), nil
 }
