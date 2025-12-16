@@ -685,7 +685,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		// For saved filter views, ensure all tasks have positions
 		// This is a safety net - the cron job handles bulk position creation,
 		// but we need immediate positions for newly matching tasks
-		if view.ProjectID < -1 {
+		if GetSavedFilterIDFromProjectID(view.ProjectID) > 0 {
 			tasksNeedingPositions := make([]*Task, 0)
 			for _, task := range taskMap {
 				if _, hasPosition := positionsMap[task.ID]; !hasPosition {
