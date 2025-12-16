@@ -118,20 +118,14 @@ func TestCronCreatesNonZeroPositions(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify no positions are 0
-	var zeroPositions []*TaskPosition
-	err = s.Where("project_view_id = ? AND position = 0", view.ID).Find(&zeroPositions)
+	zeroCount, err := s.Where("project_view_id = ? AND position = 0", view.ID).Count(&TaskPosition{})
 	require.NoError(t, err)
-	assert.Empty(t, zeroPositions, "No positions should be 0")
+	assert.Zero(t, zeroCount, "No positions should be 0")
 
 	// Verify all tasks have positions
-	var positions []*TaskPosition
-	err = s.Where("project_view_id = ?", view.ID).Find(&positions)
+	positionCount, err := s.Where("project_view_id = ?", view.ID).Count(&TaskPosition{})
 	require.NoError(t, err)
-	assert.NotEmpty(t, positions)
-
-	for _, p := range positions {
-		assert.NotZero(t, p.Position, "Task %d should have non-zero position", p.TaskID)
-	}
+	assert.NotZero(t, positionCount, "Should have positions")
 }
 
 func TestFilterUpdateCreatesNonZeroPositions(t *testing.T) {
@@ -160,10 +154,9 @@ func TestFilterUpdateCreatesNonZeroPositions(t *testing.T) {
 	require.True(t, exists)
 
 	// Verify no positions are 0
-	var zeroPositions []*TaskPosition
-	err = s.Where("project_view_id = ? AND position = 0", view.ID).Find(&zeroPositions)
+	zeroCount, err := s.Where("project_view_id = ? AND position = 0", view.ID).Count(&TaskPosition{})
 	require.NoError(t, err)
-	assert.Empty(t, zeroPositions, "No positions should be 0 after filter update")
+	assert.Zero(t, zeroCount, "No positions should be 0 after filter update")
 }
 
 func TestMultipleNewTasksGetDistinctPositions(t *testing.T) {
@@ -233,10 +226,9 @@ func TestTaskFetchCreatesPositionsOnDemand(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify NO positions exist now
-	var existingPositions []*TaskPosition
-	err = s.Where("project_view_id = ?", view.ID).Find(&existingPositions)
+	existingCount, err := s.Where("project_view_id = ?", view.ID).Count(&TaskPosition{})
 	require.NoError(t, err)
-	assert.Empty(t, existingPositions, "No positions should exist after deletion")
+	assert.Zero(t, existingCount, "No positions should exist after deletion")
 
 	// Fetch tasks for the view - this should trigger on-demand position creation
 	tc := &TaskCollection{
@@ -256,16 +248,14 @@ func TestTaskFetchCreatesPositionsOnDemand(t *testing.T) {
 	}
 
 	// Verify positions were created in database
-	var createdPositions []*TaskPosition
-	err = s.Where("project_view_id = ?", view.ID).Find(&createdPositions)
+	createdCount, err := s.Where("project_view_id = ?", view.ID).Count(&TaskPosition{})
 	require.NoError(t, err)
-	assert.NotEmpty(t, createdPositions, "Positions should have been created")
+	assert.NotZero(t, createdCount, "Positions should have been created")
 
 	// Verify no zero positions
-	for _, p := range createdPositions {
-		assert.NotZero(t, p.Position,
-			"Position for task %d should be non-zero", p.TaskID)
-	}
+	zeroCount, err := s.Where("project_view_id = ? AND position = 0", view.ID).Count(&TaskPosition{})
+	require.NoError(t, err)
+	assert.Zero(t, zeroCount, "No positions should be zero")
 }
 
 func TestIssue724_SortingOnFilteredViews(t *testing.T) {
@@ -309,9 +299,8 @@ func TestIssue724_SortingOnFilteredViews(t *testing.T) {
 	}
 
 	// Verify positions in database are all non-zero
-	var zeroPositions []*TaskPosition
-	err = s.Where("project_view_id = ? AND position = 0", view.ID).Find(&zeroPositions)
+	zeroCount, err := s.Where("project_view_id = ? AND position = 0", view.ID).Count(&TaskPosition{})
 	require.NoError(t, err)
-	assert.Empty(t, zeroPositions,
+	assert.Zero(t, zeroCount,
 		"No position=0 records should exist in database for view %d", view.ID)
 }
