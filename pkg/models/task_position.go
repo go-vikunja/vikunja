@@ -17,7 +17,10 @@
 package models
 
 import (
+	"errors"
+	"fmt"
 	"math"
+	"sort"
 
 	"xorm.io/xorm"
 
@@ -25,6 +28,15 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/web"
 )
+
+// ErrNeedsFullRecalculation indicates localized repair cannot proceed
+// and the entire view must be recalculated.
+var ErrNeedsFullRecalculation = errors.New("insufficient spacing for localized repair")
+
+// MinPositionSpacing is the smallest gap we allow between positions.
+// Must be large enough to survive JSON serialization round-trips.
+// Using 1e-9 provides ~9 decimal digits of precision.
+const MinPositionSpacing = 1e-9
 
 type TaskPosition struct {
 	// The ID of the task this position is for
@@ -80,22 +92,61 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 		if err != nil {
 			return
 		}
-		if shouldRecalculate {
-			return RecalculateTaskPositions(s, view, a)
+	} else {
+		_, err = s.
+			Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).
+			Cols("project_view_id", "position").
+			Update(tp)
+		if err != nil {
+			return
 		}
-		return nil
 	}
 
-	_, err = s.
-		Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).
-		Cols("project_view_id", "position").
-		Update(tp)
+	// Check for and resolve position conflicts
+	conflicts, err := findPositionConflicts(s, tp.ProjectViewID, tp.Position)
 	if err != nil {
-		return
+		return err
+	}
+
+	if len(conflicts) > 1 {
+		// Lazy-load view if not already loaded
+		if view == nil {
+			view, err = GetProjectViewByID(s, tp.ProjectViewID)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = resolveTaskPositionConflicts(s, tp.ProjectViewID, conflicts)
+		if errors.Is(err, ErrNeedsFullRecalculation) {
+			return RecalculateTaskPositions(s, view, a)
+		}
+		if err != nil {
+			return err
+		}
+
+		// Refresh tp.Position from DB so the API response reflects the actual stored value
+		updatedPosition := &TaskPosition{}
+		_, err = s.Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).Get(updatedPosition)
+		if err != nil {
+			return err
+		}
+		tp.Position = updatedPosition.Position
 	}
 
 	if shouldRecalculate {
-		return RecalculateTaskPositions(s, view, a)
+		err = RecalculateTaskPositions(s, view, a)
+		if err != nil {
+			return err
+		}
+
+		// Refresh tp.Position from DB so the API response reflects the actual stored value
+		updatedPosition := &TaskPosition{}
+		_, err = s.Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).Get(updatedPosition)
+		if err != nil {
+			return err
+		}
+		tp.Position = updatedPosition.Position
 	}
 
 	return nil
@@ -311,4 +362,220 @@ func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *Project
 
 	_, err = s.Insert(&newPositions)
 	return err
+}
+
+// findPositionConflicts returns all task positions that share the same position value
+// within a given project view. Returns an empty slice if no conflicts exist.
+func findPositionConflicts(s *xorm.Session, projectViewID int64, position float64) (conflicts []*TaskPosition, err error) {
+	conflicts = []*TaskPosition{}
+	err = s.
+		Where("project_view_id = ? AND position = ?", projectViewID, position).
+		Find(&conflicts)
+	if err != nil {
+		return nil, err
+	}
+	return conflicts, nil
+}
+
+// RepairResult contains the summary of a repair operation.
+type RepairResult struct {
+	ViewsScanned    int
+	ViewsRepaired   int
+	TasksAffected   int
+	FullRecalcViews int      // Views that needed full recalculation
+	Errors          []string // Views that couldn't be repaired
+}
+
+// RepairTaskPositions scans all project views for duplicate task positions
+// and repairs them using localized conflict resolution or full recalculation.
+// If dryRun is true, it reports what would be fixed without making changes.
+func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
+	result := &RepairResult{}
+
+	// Get all project view IDs that have task positions
+	var allPositions []*TaskPosition
+	err := s.GroupBy("project_view_id").Find(&allPositions)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pos := range allPositions {
+		viewID := pos.ProjectViewID
+		result.ViewsScanned++
+
+		// Find all duplicate positions in this view
+		duplicates, err := findDuplicatePositionsInView(s, viewID)
+		if err != nil {
+			result.Errors = append(result.Errors, fmt.Sprintf("view %d: %v", viewID, err))
+			continue
+		}
+
+		if len(duplicates) == 0 {
+			continue
+		}
+
+		if dryRun {
+			// Count affected tasks without making changes
+			for _, dup := range duplicates {
+				result.TasksAffected += len(dup)
+			}
+			result.ViewsRepaired++
+			log.Debugf("[dry-run] Would repair %d position conflicts in view %d", len(duplicates), viewID)
+			continue
+		}
+
+		// Repair each set of duplicates
+		view, err := GetProjectViewByID(s, viewID)
+		if err != nil {
+			result.Errors = append(result.Errors, fmt.Sprintf("view %d: %v", viewID, err))
+			continue
+		}
+
+		viewRepaired := false
+		for _, conflicts := range duplicates {
+			result.TasksAffected += len(conflicts)
+
+			err = resolveTaskPositionConflicts(s, viewID, conflicts)
+			if errors.Is(err, ErrNeedsFullRecalculation) {
+				// Fall back to full recalculation for this view
+				err = RecalculateTaskPositions(s, view, nil)
+				if err != nil {
+					result.Errors = append(result.Errors, fmt.Sprintf("view %d: recalculation failed: %v", viewID, err))
+					continue
+				}
+				result.FullRecalcViews++
+				viewRepaired = true
+				// After full recalculation, no need to process more duplicates in this view
+				break
+			} else if err != nil {
+				result.Errors = append(result.Errors, fmt.Sprintf("view %d: %v", viewID, err))
+				continue
+			}
+			viewRepaired = true
+		}
+
+		if viewRepaired {
+			result.ViewsRepaired++
+		}
+	}
+
+	return result, nil
+}
+
+// findDuplicatePositionsInView returns groups of task positions that share the same position value.
+func findDuplicatePositionsInView(s *xorm.Session, projectViewID int64) ([][]*TaskPosition, error) {
+	// Find all positions in this view
+	var allPositions []*TaskPosition
+	err := s.Where("project_view_id = ?", projectViewID).
+		OrderBy("position ASC").
+		Find(&allPositions)
+	if err != nil {
+		return nil, err
+	}
+
+	// Group by position
+	positionGroups := make(map[float64][]*TaskPosition)
+	for _, tp := range allPositions {
+		positionGroups[tp.Position] = append(positionGroups[tp.Position], tp)
+	}
+
+	// Filter to only duplicates (groups with more than 1 task)
+	var duplicates [][]*TaskPosition
+	for _, group := range positionGroups {
+		if len(group) > 1 {
+			duplicates = append(duplicates, group)
+		}
+	}
+
+	return duplicates, nil
+}
+
+// resolveTaskPositionConflicts redistributes conflicting task positions within the
+// available gap between their neighbors. Returns ErrNeedsFullRecalculation if there
+// is insufficient spacing to assign unique positions.
+func resolveTaskPositionConflicts(s *xorm.Session, projectViewID int64, conflicts []*TaskPosition) error {
+	if len(conflicts) <= 1 {
+		return nil // No conflict to resolve
+	}
+
+	conflictPosition := conflicts[0].Position
+
+	// Find the nearest distinct neighbor positions
+	var leftNeighbor, rightNeighbor *TaskPosition
+
+	// Get the position immediately before the conflict position
+	leftNeighbor = &TaskPosition{}
+	hasLeft, err := s.
+		Where("project_view_id = ? AND position < ?", projectViewID, conflictPosition).
+		OrderBy("position DESC").
+		Limit(1).
+		Get(leftNeighbor)
+	if err != nil {
+		return err
+	}
+	if !hasLeft {
+		leftNeighbor = nil
+	}
+
+	// Get the position immediately after the conflict position
+	rightNeighbor = &TaskPosition{}
+	hasRight, err := s.
+		Where("project_view_id = ? AND position > ?", projectViewID, conflictPosition).
+		OrderBy("position ASC").
+		Limit(1).
+		Get(rightNeighbor)
+	if err != nil {
+		return err
+	}
+	if !hasRight {
+		rightNeighbor = nil
+	}
+
+	// Determine the available range for redistribution
+	var lowerBound, upperBound float64
+
+	if leftNeighbor != nil {
+		lowerBound = leftNeighbor.Position
+	} else {
+		// No left neighbor - use half of the conflict position as lower bound
+		lowerBound = 0
+	}
+
+	if rightNeighbor != nil {
+		upperBound = rightNeighbor.Position
+	} else {
+		// No right neighbor - extend beyond the conflict position
+		upperBound = conflictPosition + math.Pow(2, 16)
+	}
+
+	// Calculate spacing needed
+	numConflicts := len(conflicts)
+	availableGap := upperBound - lowerBound
+	spacing := availableGap / float64(numConflicts+1)
+
+	// Check if we have enough spacing
+	if spacing < MinPositionSpacing {
+		return ErrNeedsFullRecalculation
+	}
+
+	// Sort conflicts by task ID for deterministic ordering
+	sort.Slice(conflicts, func(i, j int) bool {
+		return conflicts[i].TaskID < conflicts[j].TaskID
+	})
+
+	// Assign new positions
+	for i, tp := range conflicts {
+		newPosition := lowerBound + spacing*float64(i+1)
+		_, err = s.
+			Where("task_id = ? AND project_view_id = ?", tp.TaskID, projectViewID).
+			Cols("position").
+			Update(&TaskPosition{Position: newPosition})
+		if err != nil {
+			return err
+		}
+	}
+
+	log.Debugf("Repaired position conflict in view %d: %d tasks respaced from position %.6f", projectViewID, numConflicts, conflictPosition)
+
+	return nil
 }
