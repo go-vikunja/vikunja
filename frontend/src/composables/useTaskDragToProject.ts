@@ -10,6 +10,12 @@ import {success, error} from '@/message'
  * Searches through elements under the mouse and their parents for data-project-id attribute.
  */
 function findProjectIdAtPosition(mouseX: number, mouseY: number): number | null {
+	// Validate coordinates are finite numbers (required by elementsFromPoint)
+	// This prevents errors on Firefox mobile where touch events may provide invalid coordinates
+	if (!Number.isFinite(mouseX) || !Number.isFinite(mouseY)) {
+		return null
+	}
+
 	const elementsUnderMouse = document.elementsFromPoint(mouseX, mouseY)
 
 	for (const el of elementsUnderMouse) {
