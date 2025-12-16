@@ -82,7 +82,7 @@ func TestFileSave_S3_UsesSeekableReaderWithoutTempFile(t *testing.T) {
 
 	entries, err := os.ReadDir(tempDir)
 	require.NoError(t, err)
-	assert.Len(t, entries, 0)
+	assert.Empty(t, entries)
 }
 
 func TestFileSave_S3_BuffersNonSeekableReaderAndCleansUpTempFile(t *testing.T) {
@@ -115,7 +115,7 @@ func TestFileSave_S3_BuffersNonSeekableReaderAndCleansUpTempFile(t *testing.T) {
 
 	entries, err := os.ReadDir(tempDir)
 	require.NoError(t, err)
-	assert.Len(t, entries, 0)
+	assert.Empty(t, entries)
 }
 
 func TestFileSave_S3_CleansUpTempFileOnPutObjectError(t *testing.T) {
@@ -144,7 +144,7 @@ func TestFileSave_S3_CleansUpTempFileOnPutObjectError(t *testing.T) {
 
 	entries, readErr := os.ReadDir(tempDir)
 	require.NoError(t, readErr)
-	assert.Len(t, entries, 0)
+	assert.Empty(t, entries)
 }
 
 func TestFileSave_S3_UsesBufferedSizeWhenExpectedSizeMismatch(t *testing.T) {
@@ -176,5 +176,5 @@ func TestFileSave_S3_UsesBufferedSizeWhenExpectedSizeMismatch(t *testing.T) {
 
 	entries, readErr := os.ReadDir(tempDir)
 	require.NoError(t, readErr)
-	assert.Len(t, entries, 0)
+	assert.Empty(t, entries)
 }

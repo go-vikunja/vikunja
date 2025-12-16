@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -32,7 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"code.vikunja.io/api/pkg/web"
-	"github.com/aws/aws-sdk-go/aws"      //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	"github.com/aws/aws-sdk-go/aws"        //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
 	"github.com/aws/aws-sdk-go/service/s3" //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
 	"github.com/c2h5oh/datasize"
 	"github.com/spf13/afero"
@@ -222,8 +223,12 @@ func prepareS3UploadBody(fcontent io.Reader, expectedSize uint64) (body io.ReadS
 		return nil, 0, nil, fmt.Errorf("failed to buffer S3 upload to temp file: %w", err)
 	}
 
-	if expectedSize > 0 && written != int64(expectedSize) {
-		log.Warningf("File size mismatch for S3 upload: expected %d bytes but buffered %d bytes", expectedSize, written)
+	if expectedSize > 0 {
+		if expectedSize > uint64(math.MaxInt64) {
+			log.Warningf("File size mismatch for S3 upload: expected size %d bytes does not fit into int64", expectedSize)
+		} else if written != int64(expectedSize) {
+			log.Warningf("File size mismatch for S3 upload: expected %d bytes but buffered %d bytes", expectedSize, written)
+		}
 	}
 
 	_, err = tempFile.Seek(0, io.SeekStart)
@@ -251,7 +256,7 @@ func contentLengthFromReadSeeker(seeker io.ReadSeeker, expectedSize uint64) (int
 		return 0, err
 	}
 
-	if expectedSize > 0 && endOffset != int64(expectedSize) {
+	if expectedSize > 0 && expectedSize <= uint64(math.MaxInt64) && endOffset != int64(expectedSize) {
 		log.Warningf("File size mismatch for S3 upload: expected %d bytes but reader reports %d bytes", expectedSize, endOffset)
 	}
 
