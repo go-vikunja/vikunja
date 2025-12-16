@@ -176,16 +176,9 @@ func (f *File) Save(fcontent io.Reader) (err error) {
 			return fmt.Errorf("failed to upload file to S3: %w", err)
 		}
 	} else {
-		// For local/memory filesystem, use afero's Create and io.Copy for streaming
-		file, err := afs.Create(f.getAbsoluteFilePath())
+		err = afs.WriteReader(f.getAbsoluteFilePath(), fcontent)
 		if err != nil {
-			return fmt.Errorf("failed to create file: %w", err)
-		}
-		defer file.Close()
-
-		_, err = io.Copy(file, fcontent)
-		if err != nil {
-			return fmt.Errorf("failed to write file content: %w", err)
+			return fmt.Errorf("failed to save file: %w", err)
 		}
 	}
 
