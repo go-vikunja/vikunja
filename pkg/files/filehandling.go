@@ -32,7 +32,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"             //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
 	"github.com/aws/aws-sdk-go/aws/credentials" //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
 	"github.com/aws/aws-sdk-go/aws/session"     //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
-	s3 "github.com/fclairamb/afero-s3"
+	"github.com/aws/aws-sdk-go/service/s3"      //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	aferos3 "github.com/fclairamb/afero-s3"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -40,6 +41,14 @@ import (
 // This file handles storing and retrieving a file for different backends
 var fs afero.Fs
 var afs *afero.Afero
+
+// S3 client and bucket for direct uploads with Content-Length
+type s3PutObjectClient interface {
+	PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error)
+}
+
+var s3Client s3PutObjectClient
+var s3Bucket string
 
 func setDefaultLocalConfig() {
 	if !strings.HasPrefix(config.FilesBasePath.GetString(), "/") {
@@ -84,8 +93,12 @@ func initS3FileHandler() error {
 	}
 
 	// Initialize S3 filesystem using afero-s3
-	fs = s3.NewFs(bucket, sess)
+	fs = aferos3.NewFs(bucket, sess)
 	afs = &afero.Afero{Fs: fs}
+
+	// Store S3 client and bucket for direct uploads with Content-Length
+	s3Client = s3.New(sess)
+	s3Bucket = bucket
 
 	return nil
 }
