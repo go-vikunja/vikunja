@@ -1,5 +1,8 @@
 <template>
-	<div class="label-wrapper">
+	<div
+		v-if="labels?.length > 0"
+		class="label-wrapper"
+	>
 		<XLabel
 			v-for="label in displayLabels"
 			:key="label.id"
