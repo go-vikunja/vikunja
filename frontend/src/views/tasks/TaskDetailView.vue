@@ -738,7 +738,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	document.removeEventListener('keydown', saveTaskViaHotkey)
-	debouncedMutationHandler.cancel()
 })
 
 onBeforeRouteLeave(async () => {
