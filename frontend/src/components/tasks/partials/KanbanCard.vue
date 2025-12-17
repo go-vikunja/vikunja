@@ -83,10 +83,6 @@
 				>
 					<Icon icon="paperclip" />
 				</span>
-				<CommentCount
-					:task="task"
-					class="project-task-icon"
-				/>
 				<span
 					v-if="!isEditorContentEmpty(task.description)"
 					class="icon"
@@ -99,6 +95,10 @@
 				>
 					<Icon icon="history" />
 				</span>
+				<CommentCount
+					:task="task"
+					class="project-task-icon"
+				/>
 				<AssigneeList
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
