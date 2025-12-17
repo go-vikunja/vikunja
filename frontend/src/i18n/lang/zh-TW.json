@@ -768,20 +768,81 @@
 			"expression": "每個日期運算表達式都以一個基準日期開始，該基準日期可以是 {0}，或以 {1} 結尾的日期字串。基準日期後面可選擇性地跟隨一個或多個運算表達式。",
 			"similar": "這些運算表達式的語法與 {0} 和 {1} 所提供的方式類似。",
 			"add1Day": "加一天",
-			"minus1Day": "減一天"
+			"minus1Day": "減一天",
+			"roundDay": "無條件捨去至最近一日",
+			"supportedUnits": "支援的時間單位",
+			"someExamples": "時間表達範例",
+			"units": {
+				"seconds": "秒",
+				"minutes": "分",
+				"hours": "小時",
+				"days": "天",
+				"weeks": "周",
+				"months": "月",
+				"years": "年"
+			},
+			"examples": {
+				"now": "現在",
+				"in24h": "24 小時內",
+				"today": "今天 00:00",
+				"beginningOfThisWeek": "本週起始日期的 00:00",
+				"endOfThisWeek": "本週末",
+				"in30Days": "30 天內",
+				"datePlusMonth": "{0} 加上一個月，並取該日期的 00:00"
+			}
 		}
 	},
 	"task": {
+		"task": "任務",
+		"new": "新增任務",
+		"delete": "刪除任務",
 		"createSuccess": "任務已成功建立。",
+		"addReminder": "新增提醒…",
+		"doneSuccess": "待辦事項已標記為完成。",
+		"undoneSuccess": "待辦事項已標記為未完成。",
 		"movedToProject": "任務已移動到「{project}」。",
+		"undo": "還原",
+		"openDetail": "開啟任務詳情檢視",
+		"checklistTotal": "{checked} 項任務，共 {total} 項。",
+		"checklistAllDone": "共 {total} 項任務",
+		"show": {
+			"titleCurrent": "目前任務",
+			"titleDates": "從 {from} 到 {to} 的任務",
+			"noDates": "顯示未設定日期的任務",
+			"overdue": "顯示已過期任務",
+			"fromuntil": "從 {from} 到 {until} 的任務",
+			"select": "選擇一個日期範圍",
+			"noTasks": "沒有待辦事項 —— 祝你一天好心情！",
+			"filterByLabel": "依 {label} 標籤篩選中",
+			"clearLabelFilter": "清除標籤篩選"
+		},
 		"detail": {
+			"chooseDueDate": "設定到期日期",
 			"chooseStartDate": "點擊設定開始日期",
+			"chooseEndDate": "設定結束日期",
 			"move": "將任務移動到另一個專案",
+			"done": "標記為已完成",
+			"undone": "標記為待辦",
 			"created": "由 {1} 建立的 {0}",
+			"updated": "更新於 {0}",
+			"doneAt": "已完成 {0}",
+			"updateSuccess": "任務已儲存。",
+			"deleteSuccess": "任務已刪除。",
 			"belongsToProject": "此任務屬於專案「{project}」",
 			"back": "返回專案",
+			"due": "截止至 {at}",
+			"closePopup": "關閉彈窗",
+			"organization": "機構",
+			"management": "管理",
+			"dateAndTime": "日期與時間",
+			"delete": {
+				"header": "刪除此任務",
+				"text1": "您確定要移除此任務嗎？",
+				"text2": "此操作將一併移除與此任務相關的所有附件、提醒及關聯項目，且無法復原！"
+			},
 			"actions": {
 				"assign": "分配給用户",
+				"label": "新增標籤",
 				"priority": "設定優先級",
 				"dueDate": "設定截止日期",
 				"startDate": "設定開始日期",
@@ -789,25 +850,72 @@
 				"reminders": "設定提醒",
 				"repeatAfter": "設定重複間隔",
 				"percentDone": "設定進度",
-				"color": "設定顏色"
+				"attachments": "新增附件",
+				"relatedTasks": "新增關聯",
+				"moveProject": "移動",
+				"color": "設定顏色",
+				"delete": "刪除",
+				"favorite": "收藏",
+				"unfavorite": "移除收藏"
 			}
 		},
 		"attributes": {
+			"assignees": "指派對象",
+			"color": "顏色",
 			"created": "已建立",
-			"createdBy": "建立者"
+			"createdBy": "建立者",
+			"description": "描述",
+			"done": "完成",
+			"dueDate": "到期日期",
+			"endDate": "結束日期",
+			"labels": "標籤",
+			"percentDone": "進度",
+			"priority": "優先級",
+			"relatedTasks": "相關任務",
+			"reminders": "提醒",
+			"repeat": "重複",
+			"comment": "第 {count} 則評論 | {count} 則評論",
+			"commentCount": "評論數量",
+			"startDate": "開始日期",
+			"title": "標題",
+			"updated": "已更新",
+			"doneAt": "完成於"
 		},
 		"subscription": {
 			"subscribedTaskThroughParentProject": "您無法在此取消訂閱，因為您是透過該任務所屬的專案訂閱的。",
 			"subscribedProject": "您已訂閱此專案，將會收到變更通知。",
 			"notSubscribedProject": "您尚未訂閱此專案，將不會收到變更通知。",
+			"subscribedTask": "您已訂閱此任務，變動時將會收到通知。",
+			"notSubscribedTask": "您未訂閱此任務，變動時將不會收到通知。",
+			"subscribe": "訂閲",
+			"unsubscribe": "取消訂閲",
 			"subscribeSuccessProject": "您已訂閲此專案",
-			"unsubscribeSuccessProject": "您已取消訂閲此專案"
+			"unsubscribeSuccessProject": "您已取消訂閲此專案",
+			"subscribeSuccessTask": "你訂閲了此任務",
+			"unsubscribeSuccessTask": "你取消訂閲了此任務"
 		},
 		"attachment": {
-			"createdBy": "由 {1} 建立的 {0}"
+			"title": "附件",
+			"createdBy": "由 {1} 建立的 {0}",
+			"downloadTooltip": "下載附件",
+			"upload": "上傳附件",
+			"drop": "將檔案拖曳至此處以上傳",
+			"delete": "刪除附件",
+			"deleteTooltip": "刪除附件",
+			"deleteText1": "您確定要刪除附件 {filename} 嗎？",
+			"copyUrl": "複製連結",
+			"copyUrlTooltip": "複製此附件網址，以便在文字中使用",
+			"setAsCover": "製作封面",
+			"unsetAsCover": "移除封面",
+			"successfullyChangedCoverImage": "封面圖片已更新成功。",
+			"usedAsCover": "封面圖片"
 		},
 		"comment": {
-			"creating": "正在建立評論…"
+			"title": "評論",
+			"loading": "載入評論中…",
+			"edited": "編輯於 {date}",
+			"creating": "正在建立評論…",
+			"placeholder": "輸入評論，按「/」以取得更多選項…"
 		},
 		"assignee": {
 			"placeholder": "分配給用户…",
