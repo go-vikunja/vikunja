@@ -832,6 +832,7 @@
 			"back": "Zurück zum Projekt",
 			"due": "Fällig bis {at}",
 			"closePopup": "Popup schließen",
+			"scrollToBottom": "Nach unten scrollen",
 			"organization": "Organisation",
 			"management": "Verwaltung",
 			"dateAndTime": "Datum und Uhrzeit",
