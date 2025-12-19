@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 
-import {findCheckboxesInText, getChecklistStatistics, getCheckboxesWithIds} from './checklistFromText'
+import {findCheckboxesInText, getChecklistStatistics} from './checklistFromText'
 
 describe('Find checklists in text', () => {
 	it('should find no checkbox', () => {
@@ -126,33 +126,5 @@ describe('Get Checklist Statistics in a Text', () => {
 
 		expect(stats.total).toBe(6)
 		expect(stats.checked).toBe(2)
-	})
-})
-
-describe('Get Checkboxes With IDs', () => {
-	it('should extract checkbox info with task IDs', () => {
-		const text = `
-<ul data-type="taskList">
-	<li data-checked="false" data-task-id="abc123"><p>Task 1</p></li>
-	<li data-checked="true" data-task-id="def456"><p>Task 2</p></li>
-</ul>`
-		const checkboxes = getCheckboxesWithIds(text)
-
-		expect(checkboxes).toHaveLength(2)
-		expect(checkboxes[0].checked).toBe(false)
-		expect(checkboxes[0].taskId).toBe('abc123')
-		expect(checkboxes[1].checked).toBe(true)
-		expect(checkboxes[1].taskId).toBe('def456')
-	})
-
-	it('should handle checkboxes without task IDs', () => {
-		const text = `
-<ul data-type="taskList">
-	<li data-checked="false"><p>Legacy task</p></li>
-</ul>`
-		const checkboxes = getCheckboxesWithIds(text)
-
-		expect(checkboxes).toHaveLength(1)
-		expect(checkboxes[0].taskId).toBe(null)
 	})
 })
