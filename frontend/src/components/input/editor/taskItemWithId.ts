@@ -1,6 +1,7 @@
 import { TaskItem } from '@tiptap/extension-list'
 import { nanoid } from 'nanoid'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
+import type { Node } from '@tiptap/pm/model'
 
 const uniqueIdPluginKey = new PluginKey('taskItemUniqueId')
 
@@ -42,7 +43,7 @@ export const TaskItemWithId = TaskItem.extend({
 					}
 
 					const seenIds = new Set<string>()
-					const duplicates: { pos: number; node: typeof newState.doc.firstChild }[] = []
+					const duplicates: { pos: number; node: Node }[] = []
 
 					// Find all task items and check for duplicate IDs
 					newState.doc.descendants((node, pos) => {
