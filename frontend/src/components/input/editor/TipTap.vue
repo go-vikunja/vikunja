@@ -160,7 +160,8 @@ import Underline from '@tiptap/extension-underline'
 import {Placeholder} from '@tiptap/extensions'
 import Mention from '@tiptap/extension-mention'
 
-import {TaskItem, TaskList} from '@tiptap/extension-list'
+import {TaskList} from '@tiptap/extension-list'
+import {TaskItemWithId} from './taskItemWithId'
 import HardBreak from '@tiptap/extension-hard-break'
 
 import {Node} from '@tiptap/pm/model'
@@ -468,29 +469,47 @@ const extensions : Extensions = [
 	CustomImage,
 
 	TaskList,
-	TaskItem.configure({
+	TaskItemWithId.configure({
 		nested: true,
 		onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
 			if (!props.isEditEnabled) {
 				return false
 			}
 
-			// The following is a workaround for this bug:
-			// https://github.com/ueberdosis/tiptap/issues/4521
-			// https://github.com/ueberdosis/tiptap/issues/3676
+			// Use taskId attribute to reliably find the correct node
+			// This fixes GitHub issues #293 and #563
+			const targetTaskId = node.attrs.taskId
 
+			if (!targetTaskId) {
+				// Fallback to original behavior if no ID (shouldn't happen)
+				console.warn('TaskItem missing taskId, falling back to node comparison')
+				editor.value!.state.doc.descendants((subnode, pos) => {
+					if (subnode === node) {
+						const {tr} = editor.value!.state
+						tr.setNodeMarkup(pos, undefined, {
+							...node.attrs,
+							checked,
+						})
+						editor.value!.view.dispatch(tr)
+						bubbleSave()
+					}
+				})
+				return true
+			}
+
+			// Find node by taskId for reliable matching
 			editor.value!.state.doc.descendants((subnode, pos) => {
-				if (subnode === node) {
+				if (subnode.type.name === 'taskItem' && subnode.attrs.taskId === targetTaskId) {
 					const {tr} = editor.value!.state
 					tr.setNodeMarkup(pos, undefined, {
-						...node.attrs,
+						...subnode.attrs,
 						checked,
 					})
 					editor.value!.view.dispatch(tr)
 					bubbleSave()
+					return false // Stop iteration once found
 				}
 			})
-
 
 			return true
 		},
