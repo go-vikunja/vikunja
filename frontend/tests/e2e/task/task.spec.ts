@@ -969,6 +969,60 @@ test.describe('Task', () => {
 			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]').first()).toBeChecked()
 		})
 
+		test('Loads old checklist data without task IDs and generates unique IDs (backwards compatibility)', async ({authenticatedPage: page}) => {
+			// Old checklist HTML format without data-task-id attributes
+			// This simulates data saved before the checkbox persistence fix
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				description: `
+<ul data-type="taskList">
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Item One</p></div>
+	</li>
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Item Two</p></div>
+	</li>
+	<li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label>
+		<div><p>Item Three</p></div>
+	</li>
+</ul>`,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			// Verify all checkboxes are rendered
+			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]')).toHaveCount(3)
+			await expect(page.locator('.task-view .checklist-summary')).toContainText('0 of 3 tasks')
+
+			// Check that unique IDs were generated for each task item
+			const taskIds = await page.evaluate(() => {
+				const items = document.querySelectorAll('.tiptap__editor [data-task-id]')
+				return Array.from(items).map(el => el.getAttribute('data-task-id'))
+			})
+			expect(taskIds).toHaveLength(3)
+			// All IDs should be unique
+			const uniqueIds = new Set(taskIds)
+			expect(uniqueIds.size).toBe(3)
+
+			// Toggle only the second checkbox
+			await page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(1).click()
+
+			await expect(page.locator('.task-view .details.content.description h3 span.is-small.has-text-success')).toContainText('Saved!')
+			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 3 tasks')
+
+			// Verify only the second checkbox is checked, not the others
+			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(0)).not.toBeChecked()
+			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(1)).toBeChecked()
+			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(2)).not.toBeChecked()
+
+			// Reload and verify persistence
+			await page.reload()
+
+			await expect(page.locator('.task-view .checklist-summary')).toContainText('1 of 3 tasks')
+			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(0)).not.toBeChecked()
+			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(1)).toBeChecked()
+			await expect(page.locator('.tiptap__editor ul > li input[type=checkbox]').nth(2)).not.toBeChecked()
+		})
+
 		test('Should use the editor to render description', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
