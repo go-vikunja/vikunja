@@ -56,7 +56,28 @@ describe('TaskItemWithId Extension', () => {
 
 		editor.destroy()
 	})
-	
+
+	it('should regenerate duplicate IDs to be unique', () => {
+		const editor = createEditor()
+		const duplicateId = 'duplicate-id-abc'
+
+		// Inject HTML with two task items sharing the same data-task-id
+		editor.commands.setContent(`<ul data-type="taskList"><li data-type="taskItem" data-checked="false" data-task-id="${duplicateId}"><p>Item 1</p></li><li data-type="taskItem" data-checked="false" data-task-id="${duplicateId}"><p>Item 2</p></li></ul>`)
+
+		const html = editor.getHTML()
+		const idMatches = html.match(/data-task-id="([^"]+)"/g)
+
+		// Assert there are two data-task-id attributes
+		expect(idMatches).toHaveLength(2)
+
+		// Extract their values and assert the Set of IDs has size 2
+		const ids = idMatches!.map(match => match.match(/data-task-id="([^"]+)"/)?.[1])
+		const uniqueIds = new Set(ids)
+		expect(uniqueIds.size).toBe(2)
+
+		editor.destroy()
+	})
+
 	it('should generate different IDs for different items with the same name', () => {
 		const editor = createEditor()
 
