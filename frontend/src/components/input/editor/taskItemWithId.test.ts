@@ -56,6 +56,24 @@ describe('TaskItemWithId Extension', () => {
 
 		editor.destroy()
 	})
+	
+	it('should generate different IDs for different items with the same name', () => {
+		const editor = createEditor()
+
+		editor.commands.setContent('<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p>Item 1</p></li><li data-type="taskItem" data-checked="false"><p>Item 1</p></li><li data-type="taskItem" data-checked="false"><p>Item 2</p></li></ul>')
+
+		const html = editor.getHTML()
+		const idMatches = html.match(/data-task-id="([^"]+)"/g)
+
+		expect(idMatches).toHaveLength(3)
+
+		// Extract IDs and verify they're unique
+		const ids = idMatches!.map(match => match.match(/data-task-id="([^"]+)"/)?.[1])
+		const uniqueIds = new Set(ids)
+		expect(uniqueIds.size).toBe(3)
+
+		editor.destroy()
+	})
 
 	it('should preserve IDs through getHTML/setContent round-trip', () => {
 		const editor = createEditor()
