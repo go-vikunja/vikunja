@@ -77,13 +77,8 @@ func (tp *TaskPosition) refresh(s *xorm.Session) (err error) {
 func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err error) {
 	// Update all positions if the newly saved position is < 0.1
 	var shouldRecalculate bool
-	var view *ProjectView
 	if tp.Position < 0.1 {
 		shouldRecalculate = true
-		view, err = GetProjectViewByID(s, tp.ProjectViewID)
-		if err != nil {
-			return err
-		}
 	}
 
 	exists, err := s.
@@ -108,7 +103,11 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 		}
 	}
 
-	if shouldRecalculate {
+	if tp.Position < MinPositionSpacing {
+		view, err := GetProjectViewByID(s, tp.ProjectViewID)
+		if err != nil {
+			return err
+		}
 		err = RecalculateTaskPositions(s, view, a)
 		if err != nil {
 			return err
@@ -124,11 +123,6 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 	}
 
 	if len(conflicts) > 1 {
-		view, err = GetProjectViewByID(s, tp.ProjectViewID)
-		if err != nil {
-			return err
-		}
-
 		err = resolveTaskPositionConflicts(s, tp.ProjectViewID, conflicts)
 		if err != nil {
 			return err

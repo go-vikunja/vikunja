@@ -315,3 +315,121 @@ func TestUpdateTaskPositionWithConflictResolution(t *testing.T) {
 		assert.NotEqual(t, pos1.Position, pos2.Position)
 	})
 }
+
+func TestRepairTaskPositions(t *testing.T) {
+	t.Run("no duplicates to repair", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Clear all positions and set up clean data with no duplicates
+		_, err := s.Where("project_view_id = ?", 94).Delete(&TaskPosition{})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TaskPosition{TaskID: 700, ProjectViewID: 94, Position: 100})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 701, ProjectViewID: 94, Position: 200})
+		require.NoError(t, err)
+
+		result, err := RepairTaskPositions(s, false)
+		require.NoError(t, err)
+
+		// View 94 should be scanned but not repaired (no duplicates)
+		assert.GreaterOrEqual(t, result.ViewsScanned, 1)
+		assert.Empty(t, result.Errors)
+	})
+
+	t.Run("repairs duplicates in view", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Clear and set up duplicates
+		_, err := s.Where("project_view_id = ?", 93).Delete(&TaskPosition{})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TaskPosition{TaskID: 800, ProjectViewID: 93, Position: 100})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 801, ProjectViewID: 93, Position: 200})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 802, ProjectViewID: 93, Position: 200}) // Duplicate!
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 803, ProjectViewID: 93, Position: 300})
+		require.NoError(t, err)
+
+		result, err := RepairTaskPositions(s, false)
+		require.NoError(t, err)
+
+		assert.GreaterOrEqual(t, result.ViewsRepaired, 1)
+		assert.GreaterOrEqual(t, result.TasksAffected, 2)
+		assert.Empty(t, result.Errors)
+
+		// Verify positions are now unique
+		var pos1, pos2 TaskPosition
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 801, 93).Get(&pos1)
+		require.NoError(t, err)
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 802, 93).Get(&pos2)
+		require.NoError(t, err)
+
+		assert.NotEqual(t, pos1.Position, pos2.Position)
+	})
+
+	t.Run("dry run reports without changes", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Clear and set up duplicates
+		_, err := s.Where("project_view_id = ?", 92).Delete(&TaskPosition{})
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TaskPosition{TaskID: 900, ProjectViewID: 92, Position: 500})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 901, ProjectViewID: 92, Position: 500}) // Duplicate!
+		require.NoError(t, err)
+
+		result, err := RepairTaskPositions(s, true) // dry run
+		require.NoError(t, err)
+
+		assert.GreaterOrEqual(t, result.ViewsRepaired, 1)
+		assert.GreaterOrEqual(t, result.TasksAffected, 2)
+
+		// Verify positions are still duplicates (dry run shouldn't change them)
+		var pos1, pos2 TaskPosition
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 900, 92).Get(&pos1)
+		require.NoError(t, err)
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 901, 92).Get(&pos2)
+		require.NoError(t, err)
+
+		assert.InDelta(t, pos1.Position, pos2.Position, 0) // Still duplicates
+	})
+
+	t.Run("handles multiple views", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Set up duplicates in two different views
+		_, err := s.Where("project_view_id IN (90, 91)").Delete(&TaskPosition{})
+		require.NoError(t, err)
+
+		// View 90: duplicates
+		_, err = s.Insert(&TaskPosition{TaskID: 1000, ProjectViewID: 90, Position: 100})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 1001, ProjectViewID: 90, Position: 100})
+		require.NoError(t, err)
+
+		// View 91: duplicates
+		_, err = s.Insert(&TaskPosition{TaskID: 1002, ProjectViewID: 91, Position: 200})
+		require.NoError(t, err)
+		_, err = s.Insert(&TaskPosition{TaskID: 1003, ProjectViewID: 91, Position: 200})
+		require.NoError(t, err)
+
+		result, err := RepairTaskPositions(s, false)
+		require.NoError(t, err)
+
+		assert.GreaterOrEqual(t, result.ViewsRepaired, 2)
+		assert.GreaterOrEqual(t, result.TasksAffected, 4)
+		assert.Empty(t, result.Errors)
+	})
+}
