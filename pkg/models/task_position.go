@@ -117,11 +117,12 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 			}
 
 			err = resolveTaskPositionConflicts(s, tp.ProjectViewID, conflicts)
-			if IsErrNeedsFullRecalculation(err) {
+			switch {
+			case IsErrNeedsFullRecalculation(err):
 				shouldRecalculate = true
-			} else if err != nil {
+			case err != nil:
 				return err
-			} else {
+			default:
 				positionsModified = true
 			}
 		}
