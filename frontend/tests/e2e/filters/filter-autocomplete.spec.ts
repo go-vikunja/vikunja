@@ -80,8 +80,8 @@ test.describe('Filter Autocomplete', () => {
 			// Verify the filter text is correct (not corrupted)
 			await expect(filterInput).toContainText('project in Inbox')
 
-			// Save the filter
-			await page.locator('button').filter({hasText: /erstellen|create/i}).click()
+			// Save the filter (use CSS selector for primary fullwidth button)
+			await page.locator('button.is-primary.is-fullwidth').click()
 
 			// Verify filter was saved and shows correct results
 			await expect(page.locator('.tasks')).toContainText('Inbox Task')
@@ -112,8 +112,8 @@ test.describe('Filter Autocomplete', () => {
 			await expect(filterInput).not.toContainText('Work To Do, Do')
 			await expect(filterInput).not.toContainText('Work To Do Do')
 
-			// Save the filter
-			await page.locator('button').filter({hasText: /erstellen|create/i}).click()
+			// Save the filter (use CSS selector for primary fullwidth button)
+			await page.locator('button.is-primary.is-fullwidth').click()
 
 			// Verify no error message appears
 			await expect(page.locator('.notification.is-danger')).not.toBeVisible()
@@ -142,8 +142,8 @@ test.describe('Filter Autocomplete', () => {
 			// Verify correct filter text
 			await expect(filterInput).toContainText('done = false && project in Work To Do')
 
-			// Save and verify
-			await page.locator('button').filter({hasText: /erstellen|create/i}).click()
+			// Save and verify (use CSS selector for primary fullwidth button)
+			await page.locator('button.is-primary.is-fullwidth').click()
 			await expect(page.locator('.notification.is-danger')).not.toBeVisible()
 		})
 	})
@@ -182,8 +182,8 @@ test.describe('Filter Autocomplete', () => {
 			await expect(filterInput).toContainText('project in Work To Do')
 			await expect(filterInput).not.toContainText('Work To Do, Do')
 
-			// Save the filter
-			await page.locator('button').filter({hasText: /speichern|save/i}).click()
+			// Save the filter (use CSS selector for primary button in card footer)
+			await page.locator('.card-footer button.is-primary').click()
 
 			// Verify no error
 			await expect(page.locator('.notification.is-danger')).not.toBeVisible()
@@ -212,8 +212,8 @@ test.describe('Filter Autocomplete', () => {
 			// Should replace "Work" with "Work To Do", keeping "Inbox, "
 			await expect(filterInput).toContainText('project in Inbox, Work To Do')
 
-			// Save and verify no error
-			await page.locator('button').filter({hasText: /erstellen|create/i}).click()
+			// Save and verify no error (use CSS selector for primary fullwidth button)
+			await page.locator('button.is-primary.is-fullwidth').click()
 			await expect(page.locator('.notification.is-danger')).not.toBeVisible()
 		})
 	})
