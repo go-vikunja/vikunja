@@ -97,6 +97,9 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 		}
 	}
 
+	// Track if positions were modified and need refreshing
+	var positionsModified bool
+
 	// Check for and resolve position conflicts (skip if we're recalculating anyway)
 	if !shouldRecalculate {
 		conflicts, err := findPositionConflicts(s, tp.ProjectViewID, tp.Position)
@@ -119,13 +122,7 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 			} else if err != nil {
 				return err
 			} else {
-				// Refresh tp.Position from DB so the API response reflects the actual stored value
-				updatedPosition := &TaskPosition{}
-				_, err = s.Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).Get(updatedPosition)
-				if err != nil {
-					return err
-				}
-				tp.Position = updatedPosition.Position
+				positionsModified = true
 			}
 		}
 	}
@@ -142,8 +139,11 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 		if err != nil {
 			return err
 		}
+		positionsModified = true
+	}
 
-		// Refresh tp.Position from DB so the API response reflects the actual stored value
+	// Refresh tp.Position from DB so the API response reflects the actual stored value
+	if positionsModified {
 		updatedPosition := &TaskPosition{}
 		_, err = s.Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).Get(updatedPosition)
 		if err != nil {
