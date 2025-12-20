@@ -551,7 +551,7 @@ func resolveTaskPositionConflicts(s *xorm.Session, projectViewID int64, conflict
 	if hasRight {
 		upperBound = rightNeighbor.Position
 	} else {
-		upperBound = math.Pow(2, 16)
+		upperBound = math.Pow(2, 32)
 	}
 
 	// Calculate spacing needed
