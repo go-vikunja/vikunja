@@ -1,6 +1,6 @@
 // Minimum spacing between positions. Must survive JSON round-trip.
 // Matches backend MinPositionSpacing constant.
-const MIN_POSITION_SPACING = 1e-9
+const MIN_POSITION_SPACING = 0.01
 
 export const calculateItemPosition = (
 	positionBefore: number | null = null,
