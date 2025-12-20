@@ -282,6 +282,57 @@ func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskP
 	return
 }
 
+// recalculateTaskPositionsForRepair recalculates positions for all tasks in a view
+// without requiring auth. Used by CLI repair when localized repair fails.
+// Unlike RecalculateTaskPositions, this only operates on tasks that already have
+// positions in the view (doesn't discover new tasks).
+func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error {
+	log.Debugf("Recalculating task positions for view %d (repair mode)", view.ID)
+
+	// Get all existing positions for this view, ordered by current position then task ID
+	var existingPositions []*TaskPosition
+	err := s.Where("project_view_id = ?", view.ID).
+		OrderBy("position ASC, task_id ASC").
+		Find(&existingPositions)
+	if err != nil {
+		return err
+	}
+
+	if len(existingPositions) == 0 {
+		return nil
+	}
+
+	// Delete all existing positions
+	_, err = s.Where("project_view_id = ?", view.ID).Delete(&TaskPosition{})
+	if err != nil {
+		return err
+	}
+
+	// Reassign evenly spaced positions
+	maxPosition := math.Pow(2, 32)
+	newPositions := make([]*TaskPosition, 0, len(existingPositions))
+
+	for i, pos := range existingPositions {
+		currentPosition := maxPosition / float64(len(existingPositions)) * float64(i+1)
+		newPositions = append(newPositions, &TaskPosition{
+			TaskID:        pos.TaskID,
+			ProjectViewID: view.ID,
+			Position:      currentPosition,
+		})
+	}
+
+	count, err := s.Insert(newPositions)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Repair: inserted %d new positions for view %d", count, view.ID)
+
+	return events.Dispatch(&TaskPositionsRecalculatedEvent{
+		NewTaskPositions: newPositions,
+	})
+}
+
 func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {
 	if t.Position == 0 {
 		lowestPosition := &TaskPosition{}
@@ -438,7 +489,7 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 			err = resolveTaskPositionConflicts(s, viewID, conflicts)
 			if errors.Is(err, ErrNeedsFullRecalculation) {
 				// Fall back to full recalculation for this view
-				err = RecalculateTaskPositions(s, view, nil)
+				err = recalculateTaskPositionsForRepair(s, view)
 				if err != nil {
 					result.Errors = append(result.Errors, fmt.Sprintf("view %d: recalculation failed: %v", viewID, err))
 					continue
