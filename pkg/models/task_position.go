@@ -29,9 +29,7 @@ import (
 )
 
 // MinPositionSpacing is the smallest gap we allow between positions.
-// Must be large enough to survive JSON serialization round-trips.
-// Using 1e-9 provides ~9 decimal digits of precision.
-const MinPositionSpacing = 1e-9
+const MinPositionSpacing = 0.01
 
 type TaskPosition struct {
 	// The ID of the task this position is for
@@ -75,12 +73,6 @@ func (tp *TaskPosition) refresh(s *xorm.Session) (err error) {
 // updateTaskPosition is the internal function that performs the task position update logic
 // without dispatching events. This is used by moveTaskToDoneBuckets to avoid duplicate events.
 func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err error) {
-	// Update all positions if the newly saved position is < 0.1
-	var shouldRecalculate bool
-	if tp.Position < 0.1 {
-		shouldRecalculate = true
-	}
-
 	exists, err := s.
 		Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).
 		Exist(&TaskPosition{})
