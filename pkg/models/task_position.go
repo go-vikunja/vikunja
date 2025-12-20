@@ -61,6 +61,17 @@ func (tp *TaskPosition) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 	return t.CanUpdate(s, a)
 }
 
+func (tp *TaskPosition) refresh(s *xorm.Session) (err error) {
+	updatedPosition := &TaskPosition{}
+	_, err = s.Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).Get(updatedPosition)
+	if err != nil {
+		return err
+	}
+
+	tp.Position = updatedPosition.Position
+	return nil
+}
+
 // updateTaskPosition is the internal function that performs the task position update logic
 // without dispatching events. This is used by moveTaskToDoneBuckets to avoid duplicate events.
 func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err error) {
@@ -97,60 +108,33 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 		}
 	}
 
-	// Track if positions were modified and need refreshing
-	var positionsModified bool
-
-	// Check for and resolve position conflicts (skip if we're recalculating anyway)
-	if !shouldRecalculate {
-		conflicts, err := findPositionConflicts(s, tp.ProjectViewID, tp.Position)
-		if err != nil {
-			return err
-		}
-
-		if len(conflicts) > 1 {
-			// Lazy-load view if not already loaded
-			if view == nil {
-				view, err = GetProjectViewByID(s, tp.ProjectViewID)
-				if err != nil {
-					return err
-				}
-			}
-
-			err = resolveTaskPositionConflicts(s, tp.ProjectViewID, conflicts)
-			switch {
-			case IsErrNeedsFullRecalculation(err):
-				shouldRecalculate = true
-			case err != nil:
-				return err
-			default:
-				positionsModified = true
-			}
-		}
-	}
-
 	if shouldRecalculate {
-		// Lazy-load view if not already loaded
-		if view == nil {
-			view, err = GetProjectViewByID(s, tp.ProjectViewID)
-			if err != nil {
-				return err
-			}
-		}
 		err = RecalculateTaskPositions(s, view, a)
 		if err != nil {
 			return err
 		}
-		positionsModified = true
+
+		return tp.refresh(s)
 	}
 
-	// Refresh tp.Position from DB so the API response reflects the actual stored value
-	if positionsModified {
-		updatedPosition := &TaskPosition{}
-		_, err = s.Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).Get(updatedPosition)
+	// Check for and resolve position conflicts
+	conflicts, err := findPositionConflicts(s, tp.ProjectViewID, tp.Position)
+	if err != nil {
+		return err
+	}
+
+	if len(conflicts) > 1 {
+		view, err = GetProjectViewByID(s, tp.ProjectViewID)
 		if err != nil {
 			return err
 		}
-		tp.Position = updatedPosition.Position
+
+		err = resolveTaskPositionConflicts(s, tp.ProjectViewID, conflicts)
+		if err != nil {
+			return err
+		}
+
+		return tp.refresh(s)
 	}
 
 	return nil
@@ -549,19 +533,19 @@ func resolveTaskPositionConflicts(s *xorm.Session, projectViewID int64, conflict
 
 	// Find the nearest distinct neighbor positions
 	var leftNeighbor, rightNeighbor *TaskPosition
+	var lowerBound, upperBound float64
 
 	// Get the position immediately before the conflict position
 	leftNeighbor = &TaskPosition{}
 	hasLeft, err := s.
 		Where("project_view_id = ? AND position < ?", projectViewID, conflictPosition).
 		OrderBy("position DESC").
-		Limit(1).
 		Get(leftNeighbor)
 	if err != nil {
 		return err
 	}
-	if !hasLeft {
-		leftNeighbor = nil
+	if hasLeft {
+		lowerBound = leftNeighbor.Position
 	}
 
 	// Get the position immediately after the conflict position
@@ -569,36 +553,19 @@ func resolveTaskPositionConflicts(s *xorm.Session, projectViewID int64, conflict
 	hasRight, err := s.
 		Where("project_view_id = ? AND position > ?", projectViewID, conflictPosition).
 		OrderBy("position ASC").
-		Limit(1).
 		Get(rightNeighbor)
 	if err != nil {
 		return err
 	}
-	if !hasRight {
-		rightNeighbor = nil
-	}
-
-	// Determine the available range for redistribution
-	var lowerBound, upperBound float64
-
-	if leftNeighbor != nil {
-		lowerBound = leftNeighbor.Position
-	} else {
-		// No left neighbor - use half of the conflict position as lower bound
-		lowerBound = 0
-	}
-
-	if rightNeighbor != nil {
+	if hasRight {
 		upperBound = rightNeighbor.Position
 	} else {
-		// No right neighbor - extend beyond the conflict position
-		upperBound = conflictPosition + math.Pow(2, 16)
+		upperBound = math.Pow(2, 16)
 	}
 
 	// Calculate spacing needed
-	numConflicts := len(conflicts)
 	availableGap := upperBound - lowerBound
-	spacing := availableGap / float64(numConflicts+1)
+	spacing := availableGap / float64(len(conflicts)+1)
 
 	// Check if we have enough spacing
 	if spacing < MinPositionSpacing {
@@ -622,7 +589,7 @@ func resolveTaskPositionConflicts(s *xorm.Session, projectViewID int64, conflict
 		}
 	}
 
-	log.Debugf("Repaired position conflict in view %d: %d tasks respaced from position %.6f", projectViewID, numConflicts, conflictPosition)
+	log.Debugf("Repaired position conflict in view %d: %d tasks respaced from position %.6f", projectViewID, len(conflicts), conflictPosition)
 
 	return nil
 }
