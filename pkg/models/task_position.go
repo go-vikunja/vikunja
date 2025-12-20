@@ -430,7 +430,7 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 	}
 
 	viewIDs := []int64{}
-	for viewID, _ := range positionsByView {
+	for viewID := range positionsByView {
 		viewIDs = append(viewIDs, viewID)
 	}
 
