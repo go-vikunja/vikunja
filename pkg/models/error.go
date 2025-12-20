@@ -1192,6 +1192,34 @@ func (err ErrInvalidTaskColumn) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrNeedsFullRecalculation represents an error where localized position repair cannot proceed
+// and the entire view must be recalculated.
+type ErrNeedsFullRecalculation struct {
+	ProjectViewID int64
+}
+
+// IsErrNeedsFullRecalculation checks if an error is ErrNeedsFullRecalculation.
+func IsErrNeedsFullRecalculation(err error) bool {
+	_, ok := err.(*ErrNeedsFullRecalculation)
+	return ok
+}
+
+func (err *ErrNeedsFullRecalculation) Error() string {
+	return fmt.Sprintf("Insufficient spacing for localized repair [ProjectViewID: %d]", err.ProjectViewID)
+}
+
+// ErrCodeNeedsFullRecalculation holds the unique world-error code of this error
+const ErrCodeNeedsFullRecalculation = 4028
+
+// HTTPError holds the http error description
+func (err *ErrNeedsFullRecalculation) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusInternalServerError,
+		Code:     ErrCodeNeedsFullRecalculation,
+		Message:  "Position repair requires full view recalculation.",
+	}
+}
+
 // ============
 // Team errors
 // ============
