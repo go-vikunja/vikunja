@@ -331,31 +331,22 @@ export default Extension.create<FilterAutocompleteOptions>({
 							const newValue = item.fieldType === 'assignees'
 								? (item.item as IUser).username
 								: (item.item as IProject | ILabel).title
-							const {from} = view.state.selection
 							const context = autocompleteContext
 							if (!context) {
 								return
 							}
 							const operator = context.operator
 
-							let insertValue: string = newValue ?? ''
-							const replaceFrom = Math.max(0, from - context.search.length)
-							const replaceTo = from
+							const insertValue: string = newValue ?? ''
+							let replaceFrom = context.startPos
+							const replaceTo = context.endPos
 
-							// Handle multi-value operators
+							// Handle multi-value operators - only replace the last value after comma
 							if (isMultiValueOperator(operator) && context.keyword.includes(',')) {
-								// For multi-value fields, we need to replace only the current search term
-								const keywords = context.keyword.split(',')
-								const currentKeywordIndex = keywords.length - 1
-
-								// If we're not adding the first item, add comma prefix
-								if (currentKeywordIndex > 0 && keywords[currentKeywordIndex]?.trim() === context.search.trim()) {
-									// We're replacing the last incomplete keyword
-									insertValue = newValue ?? ''
-								} else {
-									// We're adding to existing keywords
-									insertValue = ',' + newValue
-								}
+								const lastCommaIndex = context.keyword.lastIndexOf(',')
+								const textAfterComma = context.keyword.substring(lastCommaIndex + 1)
+								const leadingSpaces = textAfterComma.length - textAfterComma.trimStart().length
+								replaceFrom = context.startPos + lastCommaIndex + 1 + leadingSpaces
 							}
 
 							const tr = view.state.tr.replaceWith(
@@ -378,24 +369,10 @@ export default Extension.create<FilterAutocompleteOptions>({
 								view.focus()
 							}, 0)
 
-							// For multi-value operators, don't suppress autocomplete to keep dropdown open
-							if (isMultiValueOperator(operator)) {
-								// Add comma and space for next entry if not already present
-								setTimeout(() => {
-									const currentText = view.state.doc.textContent
-									const currentPos = view.state.selection.from
-									if (currentText.charAt(currentPos) !== ',') {
-										const tr = view.state.tr.insertText(',', currentPos)
-										view.dispatch(tr)
-										// Update position after comma insertion
-										lastSelectionPosition = currentPos + 1
-										lastSelectionTime = Date.now()
-									}
-								}, 10)
-							} else {
-								suppressNextAutocomplete = true
-								hidePopup()
-							}
+							// Always suppress and hide after selection
+							// User can type comma manually if they want to add more values
+							suppressNextAutocomplete = true
+							hidePopup()
 						},
 					},
 					editor: this.editor,
