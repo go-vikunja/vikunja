@@ -97,13 +97,40 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 		}
 	}
 
-	// Check for and resolve position conflicts
-	conflicts, err := findPositionConflicts(s, tp.ProjectViewID, tp.Position)
-	if err != nil {
-		return err
+	// Check for and resolve position conflicts (skip if we're recalculating anyway)
+	if !shouldRecalculate {
+		conflicts, err := findPositionConflicts(s, tp.ProjectViewID, tp.Position)
+		if err != nil {
+			return err
+		}
+
+		if len(conflicts) > 1 {
+			// Lazy-load view if not already loaded
+			if view == nil {
+				view, err = GetProjectViewByID(s, tp.ProjectViewID)
+				if err != nil {
+					return err
+				}
+			}
+
+			err = resolveTaskPositionConflicts(s, tp.ProjectViewID, conflicts)
+			if IsErrNeedsFullRecalculation(err) {
+				shouldRecalculate = true
+			} else if err != nil {
+				return err
+			} else {
+				// Refresh tp.Position from DB so the API response reflects the actual stored value
+				updatedPosition := &TaskPosition{}
+				_, err = s.Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).Get(updatedPosition)
+				if err != nil {
+					return err
+				}
+				tp.Position = updatedPosition.Position
+			}
+		}
 	}
 
-	if len(conflicts) > 1 {
+	if shouldRecalculate {
 		// Lazy-load view if not already loaded
 		if view == nil {
 			view, err = GetProjectViewByID(s, tp.ProjectViewID)
@@ -111,25 +138,6 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 				return err
 			}
 		}
-
-		err = resolveTaskPositionConflicts(s, tp.ProjectViewID, conflicts)
-		if IsErrNeedsFullRecalculation(err) {
-			return RecalculateTaskPositions(s, view, a)
-		}
-		if err != nil {
-			return err
-		}
-
-		// Refresh tp.Position from DB so the API response reflects the actual stored value
-		updatedPosition := &TaskPosition{}
-		_, err = s.Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).Get(updatedPosition)
-		if err != nil {
-			return err
-		}
-		tp.Position = updatedPosition.Position
-	}
-
-	if shouldRecalculate {
 		err = RecalculateTaskPositions(s, view, a)
 		if err != nil {
 			return err
