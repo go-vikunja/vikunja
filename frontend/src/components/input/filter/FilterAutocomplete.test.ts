@@ -3,8 +3,11 @@ import {calculateReplacementRange} from './FilterAutocomplete'
 
 describe('FilterAutocomplete', () => {
 	describe('calculateReplacementRange', () => {
+		// Note: calculateReplacementRange adds +1 to convert string indices to ProseMirror positions
+		// In ProseMirror, position 0 is before the document, text starts at position 1
+
 		describe('single value replacement', () => {
-			it('should use startPos and endPos for replacement boundaries', () => {
+			it('should use startPos and endPos for replacement boundaries with +1 offset for ProseMirror', () => {
 				const context = {
 					keyword: 'Work To Do',
 					startPos: 11, // position after "project in "
@@ -13,8 +16,8 @@ describe('FilterAutocomplete', () => {
 
 				const result = calculateReplacementRange(context, 'in')
 
-				expect(result.replaceFrom).toBe(11)
-				expect(result.replaceTo).toBe(21)
+				expect(result.replaceFrom).toBe(12) // 11 + 1 for ProseMirror offset
+				expect(result.replaceTo).toBe(22)   // 21 + 1 for ProseMirror offset
 				expect(result.replaceTo - result.replaceFrom).toBe(context.keyword.length)
 			})
 
@@ -39,8 +42,8 @@ describe('FilterAutocomplete', () => {
 
 				const result = calculateReplacementRange(context, '=')
 
-				expect(result.replaceFrom).toBe(10)
-				expect(result.replaceTo).toBe(19)
+				expect(result.replaceFrom).toBe(11) // 10 + 1
+				expect(result.replaceTo).toBe(20)   // 19 + 1
 			})
 		})
 
@@ -57,9 +60,9 @@ describe('FilterAutocomplete', () => {
 				// lastCommaIndex = 5 (position of comma in "Inbox, Work To Do")
 				// textAfterComma = " Work To Do" (11 chars)
 				// leadingSpaces = 1
-				// replaceFrom = 11 + 5 + 1 + 1 = 18
-				expect(result.replaceFrom).toBe(18)
-				expect(result.replaceTo).toBe(28)
+				// replaceFrom = 11 + 5 + 1 + 1 + 1 = 19 (extra +1 for ProseMirror offset)
+				expect(result.replaceFrom).toBe(19)
+				expect(result.replaceTo).toBe(29) // 28 + 1
 			})
 
 			it('should handle multiple commas correctly', () => {
@@ -74,9 +77,9 @@ describe('FilterAutocomplete', () => {
 				// lastCommaIndex = 8 (position of second comma in "One, Two, Three")
 				// textAfterComma = " Three" (6 chars)
 				// leadingSpaces = 1
-				// replaceFrom = 11 + 8 + 1 + 1 = 21
-				expect(result.replaceFrom).toBe(21)
-				expect(result.replaceTo).toBe(26)
+				// replaceFrom = 11 + 8 + 1 + 1 + 1 = 22 (extra +1 for ProseMirror offset)
+				expect(result.replaceFrom).toBe(22)
+				expect(result.replaceTo).toBe(27) // 26 + 1
 			})
 
 			it('should handle ?= operator as multi-value', () => {
@@ -91,9 +94,9 @@ describe('FilterAutocomplete', () => {
 				// lastCommaIndex = 6
 				// textAfterComma = " Label2" (7 chars)
 				// leadingSpaces = 1
-				// replaceFrom = 10 + 6 + 1 + 1 = 18
-				expect(result.replaceFrom).toBe(18)
-				expect(result.replaceTo).toBe(24)
+				// replaceFrom = 10 + 6 + 1 + 1 + 1 = 19 (extra +1 for ProseMirror offset)
+				expect(result.replaceFrom).toBe(19)
+				expect(result.replaceTo).toBe(25) // 24 + 1
 			})
 
 			it('should handle no spaces after comma', () => {
@@ -108,9 +111,9 @@ describe('FilterAutocomplete', () => {
 				// lastCommaIndex = 3 (position of second comma)
 				// textAfterComma = "C" (1 char)
 				// leadingSpaces = 0
-				// replaceFrom = 5 + 3 + 1 + 0 = 9
-				expect(result.replaceFrom).toBe(9)
-				expect(result.replaceTo).toBe(10)
+				// replaceFrom = 5 + 3 + 1 + 0 + 1 = 10 (extra +1 for ProseMirror offset)
+				expect(result.replaceFrom).toBe(10)
+				expect(result.replaceTo).toBe(11) // 10 + 1
 			})
 
 			it('should not modify range for single values even with in operator', () => {
@@ -122,9 +125,9 @@ describe('FilterAutocomplete', () => {
 
 				const result = calculateReplacementRange(context, 'in')
 
-				// No comma in keyword, so full range should be used
-				expect(result.replaceFrom).toBe(11)
-				expect(result.replaceTo).toBe(24)
+				// No comma in keyword, so full range should be used (with +1 offset)
+				expect(result.replaceFrom).toBe(12) // 11 + 1
+				expect(result.replaceTo).toBe(25)   // 24 + 1
 			})
 		})
 
@@ -138,9 +141,9 @@ describe('FilterAutocomplete', () => {
 
 				const result = calculateReplacementRange(context, '=')
 
-				// = is not a multi-value operator, so full range should be used
-				expect(result.replaceFrom).toBe(10)
-				expect(result.replaceTo).toBe(29)
+				// = is not a multi-value operator, so full range should be used (with +1 offset)
+				expect(result.replaceFrom).toBe(11) // 10 + 1
+				expect(result.replaceTo).toBe(30)   // 29 + 1
 			})
 
 			it('should not modify range for != operator', () => {
@@ -152,8 +155,8 @@ describe('FilterAutocomplete', () => {
 
 				const result = calculateReplacementRange(context, '!=')
 
-				expect(result.replaceFrom).toBe(10)
-				expect(result.replaceTo).toBe(14)
+				expect(result.replaceFrom).toBe(11) // 10 + 1
+				expect(result.replaceTo).toBe(15)   // 14 + 1
 			})
 		})
 	})

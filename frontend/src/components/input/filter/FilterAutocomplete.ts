@@ -59,15 +59,17 @@ export function calculateReplacementRange(
 	context: { startPos: number; endPos: number; keyword: string },
 	operator: string,
 ): { replaceFrom: number; replaceTo: number } {
-	let replaceFrom = context.startPos
-	const replaceTo = context.endPos
+	// Add 1 to convert from string indices to ProseMirror positions
+	// In ProseMirror, position 0 is before the document, text starts at position 1
+	let replaceFrom = context.startPos + 1
+	const replaceTo = context.endPos + 1
 
 	// Handle multi-value operators - only replace the last value after comma
 	if (isMultiValueOperator(operator) && context.keyword.includes(',')) {
 		const lastCommaIndex = context.keyword.lastIndexOf(',')
 		const textAfterComma = context.keyword.substring(lastCommaIndex + 1)
 		const leadingSpaces = textAfterComma.length - textAfterComma.trimStart().length
-		replaceFrom = context.startPos + lastCommaIndex + 1 + leadingSpaces
+		replaceFrom = context.startPos + lastCommaIndex + 1 + leadingSpaces + 1
 	}
 
 	return { replaceFrom, replaceTo }
@@ -78,6 +80,7 @@ export interface AutocompleteItem {
 	title: string
 	item: ILabel | IUser | IProject
 	fieldType: AutocompleteField
+	context: AutocompleteContext
 }
 
 export default Extension.create<FilterAutocompleteOptions>({
@@ -139,10 +142,15 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 			// Check what comes after the expression
 			const trimmedAfter = textAfterExpression.trim()
-			
-			// If there's a logical operator or end of string immediately after, it's likely complete
-			if (trimmedAfter === '' || trimmedAfter.startsWith('&&') || trimmedAfter.startsWith('||') || trimmedAfter.startsWith(')')) {
-				return keyword.trim().length > 1
+
+			// If at end of expression (nothing after), keep autocomplete open to allow selection
+			if (trimmedAfter === '') {
+				return false
+			}
+
+			// If there's a logical operator after, expression is complete (user has moved on)
+			if (trimmedAfter.startsWith('&&') || trimmedAfter.startsWith('||') || trimmedAfter.startsWith(')')) {
+				return true
 			}
 
 			// If there's a space followed by non-operator text, it's likely complete
@@ -358,13 +366,20 @@ export default Extension.create<FilterAutocompleteOptions>({
 							const newValue = item.fieldType === 'assignees'
 								? (item.item as IUser).username
 								: (item.item as IProject | ILabel).title
-							const context = autocompleteContext
+							// Use currentAutocompleteContext (outer variable) for up-to-date positions
+							// The local autocompleteContext would be stale since this callback
+							// was created on first component render
+							const context = currentAutocompleteContext
 							if (!context) {
 								return
 							}
 							const operator = context.operator
 
-							const insertValue: string = newValue ?? ''
+							// Quote values that contain spaces for filter syntax
+							let insertValue: string = newValue ?? ''
+							if (insertValue.includes(' ')) {
+								insertValue = `"${insertValue}"`
+							}
 							const { replaceFrom, replaceTo } = calculateReplacementRange(context, operator)
 
 							const tr = view.state.tr.replaceWith(

@@ -59,32 +59,37 @@ test.describe('Filter Autocomplete', () => {
 		})
 	})
 
-	test.describe('Saved Filter Creation', () => {
-		test('should create filter with single-word project name', async ({authenticatedPage: page}) => {
+	test.describe('Saved Filter Creation with Autocomplete', () => {
+		test('should replace single-word project name via autocomplete', async ({authenticatedPage: page}) => {
 			await page.goto('/filters/new')
 
-			// Wait for projects to be loaded (use exact match to avoid matching "Inbox Filter")
+			// Wait for projects to be loaded
 			await expect(page.getByRole('link', {name: 'Inbox', exact: true})).toBeVisible({timeout: 10000})
 
 			// Fill in filter name
 			await page.locator('input#Title').fill('Inbox Filter')
 
-			// Type filter directly using project_id
+			// Type filter with project name to trigger autocomplete
 			const filterInput = getFilterInput(page)
 			await filterInput.click()
 			await page.keyboard.press('ControlOrMeta+a')
 			await page.keyboard.press('Backspace')
-			await filterInput.pressSequentially('project_id = 1', {delay: 30})
+			await filterInput.pressSequentially('project = Inb', {delay: 50})
 
-			// Verify the filter text is correct (not corrupted)
-			await expect(filterInput).toContainText('project_id = 1')
+			// Wait for autocomplete popup and select "Inbox"
+			const autocompletePopup = page.locator('#filter-autocomplete-popup')
+			await expect(autocompletePopup).toBeVisible({timeout: 5000})
+			await autocompletePopup.getByRole('button', {name: 'Inbox'}).click()
+
+			// Verify the filter text is correct after autocomplete replacement
+			await expect(filterInput).toContainText('project = Inbox')
 
 			// Save the filter and verify no error
 			await page.locator('button.is-primary.is-fullwidth').click()
 			await expect(page.locator('.notification.is-danger')).not.toBeVisible()
 		})
 
-		test('should create filter with multi-word project name containing spaces', async ({authenticatedPage: page}) => {
+		test('should replace multi-word project name with spaces via autocomplete', async ({authenticatedPage: page}) => {
 			await page.goto('/filters/new')
 
 			// Wait for projects to be loaded
@@ -93,26 +98,33 @@ test.describe('Filter Autocomplete', () => {
 			// Fill in filter name
 			await page.locator('input#Title').fill('Work Filter')
 
-			// Type filter directly with multi-word project name
+			// Type filter with partial project name to trigger autocomplete
 			const filterInput = getFilterInput(page)
 			await filterInput.click()
 			await page.keyboard.press('ControlOrMeta+a')
 			await page.keyboard.press('Backspace')
-			// Use project ID directly since autocomplete replacement is what was buggy
-			await filterInput.pressSequentially('project_id in 2', {delay: 30})
+			await filterInput.pressSequentially('project = Work', {delay: 50})
 
-			// Verify the filter text is not corrupted
-			await expect(filterInput).toContainText('project_id in 2')
+			// Wait for autocomplete popup to update with latest context
+			const autocompletePopup = page.locator('#filter-autocomplete-popup')
+			await expect(autocompletePopup).toBeVisible({timeout: 5000})
+			// Wait a bit for the context to be fully updated after the last keystroke
+			await page.waitForTimeout(100)
+			await autocompletePopup.getByRole('button', {name: 'Work To Do'}).click()
+
+			// Verify the filter text is correct after autocomplete replacement
+			// Multi-word names should be quoted
+			await expect(filterInput).toContainText('project = "Work To Do"')
 
 			// Save the filter and verify no error
 			await page.locator('button.is-primary.is-fullwidth').click()
 			await expect(page.locator('.notification.is-danger')).not.toBeVisible()
 		})
 
-		test('should handle filter with done condition', async ({authenticatedPage: page}) => {
+		test('should handle autocomplete after logical operator', async ({authenticatedPage: page}) => {
 			await page.goto('/filters/new')
 
-			// Wait for projects to be loaded (use exact match)
+			// Wait for projects to be loaded
 			await expect(page.getByRole('link', {name: 'Inbox', exact: true})).toBeVisible({timeout: 10000})
 
 			await page.locator('input#Title').fill('Complex Filter')
@@ -121,39 +133,17 @@ test.describe('Filter Autocomplete', () => {
 			await filterInput.click()
 			await page.keyboard.press('ControlOrMeta+a')
 			await page.keyboard.press('Backspace')
-			await filterInput.pressSequentially('done = false && project_id = 2', {delay: 30})
 
-			// Verify correct filter text
-			await expect(filterInput).toContainText('done = false && project_id = 2')
+			// Type a complex filter with autocomplete for project name
+			await filterInput.pressSequentially('done = false && project = Pers', {delay: 50})
 
-			// Save and verify no error
-			await page.locator('button.is-primary.is-fullwidth').click()
-			await expect(page.locator('.notification.is-danger')).not.toBeVisible()
-		})
-	})
+			// Wait for autocomplete popup and select "Personal Tasks"
+			const autocompletePopup = page.locator('#filter-autocomplete-popup')
+			await expect(autocompletePopup).toBeVisible({timeout: 5000})
+			await autocompletePopup.getByRole('button', {name: 'Personal Tasks'}).click()
 
-	// Note: Editing existing filters is tested implicitly by the create tests
-	// since the UI components are shared. Explicit edit testing requires additional
-	// setup for the modal/page navigation which is beyond the scope of this fix.
-
-	test.describe('Multi-value Operators', () => {
-		test('should handle multiple projects with in operator', async ({authenticatedPage: page}) => {
-			await page.goto('/filters/new')
-
-			// Wait for projects to be loaded (use exact match)
-			await expect(page.getByRole('link', {name: 'Inbox', exact: true})).toBeVisible({timeout: 10000})
-
-			await page.locator('input#Title').fill('Multi Project Filter')
-
-			const filterInput = getFilterInput(page)
-			await filterInput.click()
-			await page.keyboard.press('ControlOrMeta+a')
-			await page.keyboard.press('Backspace')
-			// Use project IDs directly (no space after comma for reliable parsing)
-			await filterInput.pressSequentially('project_id in 1,2', {delay: 30})
-
-			// Verify the multi-value filter is not corrupted
-			await expect(filterInput).toContainText('project_id in 1,2')
+			// Verify correct filter text - multi-word name should be quoted
+			await expect(filterInput).toContainText('done = false && project = "Personal Tasks"')
 
 			// Save and verify no error
 			await page.locator('button.is-primary.is-fullwidth').click()

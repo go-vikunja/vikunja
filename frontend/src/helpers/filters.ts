@@ -239,7 +239,9 @@ export function transformFilterStringFromApi(
 					keywords.forEach(k => {
 						const title = resolver(parseInt(k))
 						if (title) {
-							filter = filter.replace(k, title)
+							// Quote multi-word titles for filter syntax
+							const quotedTitle = title.includes(' ') ? `"${title}"` : title
+							filter = filter.replace(k, quotedTitle)
 						}
 					})
 				}
