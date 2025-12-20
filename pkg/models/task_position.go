@@ -381,8 +381,7 @@ func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *Project
 	}
 
 	var basePosition float64
-	if !has || lowestPosition.Position == 0 {
-		// No existing positions or all are zero - trigger full recalculation
+	if !has || lowestPosition.Position < MinPositionSpacing {
 		return RecalculateTaskPositions(s, view, a)
 	}
 
@@ -440,8 +439,16 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 
 	// Group positions by view ID
 	positionsByView := make(map[int64][]*TaskPosition)
+	viewIDs := []int64{}
 	for _, pos := range allPositions {
 		positionsByView[pos.ProjectViewID] = append(positionsByView[pos.ProjectViewID], pos)
+		viewIDs = append(viewIDs, pos.ProjectViewID)
+	}
+
+	viewsByID := make(map[int64]*ProjectView)
+	err = s.In("id", viewIDs).Find(&viewsByID)
+	if err != nil {
+		return nil, err
 	}
 
 	// Process each view
@@ -460,14 +467,12 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 				result.TasksAffected += len(dup)
 			}
 			result.ViewsRepaired++
-			log.Debugf("[dry-run] Would repair %d position conflicts in view %d", len(duplicates), viewID)
+			log.Infof("[dry-run] Would repair %d position conflicts in view %d", len(duplicates), viewID)
 			continue
 		}
 
-		// Repair each set of duplicates
-		view, err := GetProjectViewByID(s, viewID)
-		if err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("view %d: %v", viewID, err))
+		view, has := viewsByID[viewID]
+		if !has {
 			continue
 		}
 
