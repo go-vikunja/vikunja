@@ -446,24 +446,25 @@ type RepairResult struct {
 func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 	result := &RepairResult{}
 
-	// Get all project view IDs that have task positions
+	// Get all task positions in a single query
 	var allPositions []*TaskPosition
-	err := s.GroupBy("project_view_id").Find(&allPositions)
+	err := s.OrderBy("project_view_id ASC, position ASC").Find(&allPositions)
 	if err != nil {
 		return nil, err
 	}
 
+	// Group positions by view ID
+	positionsByView := make(map[int64][]*TaskPosition)
 	for _, pos := range allPositions {
-		viewID := pos.ProjectViewID
+		positionsByView[pos.ProjectViewID] = append(positionsByView[pos.ProjectViewID], pos)
+	}
+
+	// Process each view
+	for viewID, positions := range positionsByView {
 		result.ViewsScanned++
 
-		// Find all duplicate positions in this view
-		duplicates, err := findDuplicatePositionsInView(s, viewID)
-		if err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("view %d: %v", viewID, err))
-			continue
-		}
-
+		// Find duplicate positions within this view's positions
+		duplicates := findDuplicatesInPositions(positions)
 		if len(duplicates) == 0 {
 			continue
 		}
@@ -516,20 +517,11 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 	return result, nil
 }
 
-// findDuplicatePositionsInView returns groups of task positions that share the same position value.
-func findDuplicatePositionsInView(s *xorm.Session, projectViewID int64) ([][]*TaskPosition, error) {
-	// Find all positions in this view
-	var allPositions []*TaskPosition
-	err := s.Where("project_view_id = ?", projectViewID).
-		OrderBy("position ASC").
-		Find(&allPositions)
-	if err != nil {
-		return nil, err
-	}
-
+// findDuplicatesInPositions finds groups of positions that share the same position value.
+func findDuplicatesInPositions(positions []*TaskPosition) [][]*TaskPosition {
 	// Group by position
 	positionGroups := make(map[float64][]*TaskPosition)
-	for _, tp := range allPositions {
+	for _, tp := range positions {
 		positionGroups[tp.Position] = append(positionGroups[tp.Position], tp)
 	}
 
@@ -541,7 +533,7 @@ func findDuplicatePositionsInView(s *xorm.Session, projectViewID int64) ([][]*Ta
 		}
 	}
 
-	return duplicates, nil
+	return duplicates
 }
 
 // resolveTaskPositionConflicts redistributes conflicting task positions within the
