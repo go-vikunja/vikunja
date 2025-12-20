@@ -423,6 +423,10 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 		return nil, err
 	}
 
+	if len(allPositions) == 0 {
+		return result, nil
+	}
+
 	// Group positions by view ID
 	positionsByView := make(map[int64][]*TaskPosition)
 	for _, pos := range allPositions {
