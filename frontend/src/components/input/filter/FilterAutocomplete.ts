@@ -46,6 +46,33 @@ interface SuggestionItem {
 
 export type AutocompleteField = 'labels' | 'assignees' | 'projects'
 
+/**
+ * Calculates the replacement range for autocomplete selection.
+ * For single-value operators: replaces the entire keyword
+ * For multi-value operators with commas: only replaces the text after the last comma
+ *
+ * @param context - The autocomplete context containing position and keyword info
+ * @param operator - The filter operator (e.g., 'in', '=', '?=')
+ * @returns Object with replaceFrom and replaceTo positions
+ */
+export function calculateReplacementRange(
+	context: { startPos: number; endPos: number; keyword: string },
+	operator: string,
+): { replaceFrom: number; replaceTo: number } {
+	let replaceFrom = context.startPos
+	const replaceTo = context.endPos
+
+	// Handle multi-value operators - only replace the last value after comma
+	if (isMultiValueOperator(operator) && context.keyword.includes(',')) {
+		const lastCommaIndex = context.keyword.lastIndexOf(',')
+		const textAfterComma = context.keyword.substring(lastCommaIndex + 1)
+		const leadingSpaces = textAfterComma.length - textAfterComma.trimStart().length
+		replaceFrom = context.startPos + lastCommaIndex + 1 + leadingSpaces
+	}
+
+	return { replaceFrom, replaceTo }
+}
+
 export interface AutocompleteItem {
 	id: number | string
 	title: string
@@ -338,16 +365,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 							const operator = context.operator
 
 							const insertValue: string = newValue ?? ''
-							let replaceFrom = context.startPos
-							const replaceTo = context.endPos
-
-							// Handle multi-value operators - only replace the last value after comma
-							if (isMultiValueOperator(operator) && context.keyword.includes(',')) {
-								const lastCommaIndex = context.keyword.lastIndexOf(',')
-								const textAfterComma = context.keyword.substring(lastCommaIndex + 1)
-								const leadingSpaces = textAfterComma.length - textAfterComma.trimStart().length
-								replaceFrom = context.startPos + lastCommaIndex + 1 + leadingSpaces
-							}
+							const { replaceFrom, replaceTo } = calculateReplacementRange(context, operator)
 
 							const tr = view.state.tr.replaceWith(
 								replaceFrom,
