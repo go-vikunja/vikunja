@@ -425,10 +425,13 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 
 	// Group positions by view ID
 	positionsByView := make(map[int64][]*TaskPosition)
-	viewIDs := []int64{}
 	for _, pos := range allPositions {
 		positionsByView[pos.ProjectViewID] = append(positionsByView[pos.ProjectViewID], pos)
-		viewIDs = append(viewIDs, pos.ProjectViewID)
+	}
+
+	viewIDs := []int64{}
+	for viewID, _ := range positionsByView {
+		viewIDs = append(viewIDs, viewID)
 	}
 
 	viewsByID := make(map[int64]*ProjectView)
