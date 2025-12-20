@@ -220,7 +220,7 @@ func TestResolveTaskPositionConflicts(t *testing.T) {
 		}
 
 		err = resolveTaskPositionConflicts(s, 97, conflicts)
-		assert.ErrorIs(t, err, ErrNeedsFullRecalculation)
+		assert.True(t, IsErrNeedsFullRecalculation(err))
 	})
 
 	t.Run("handles multiple conflicts deterministically", func(t *testing.T) {

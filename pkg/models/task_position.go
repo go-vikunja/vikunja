@@ -17,7 +17,6 @@
 package models
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -28,10 +27,6 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/web"
 )
-
-// ErrNeedsFullRecalculation indicates localized repair cannot proceed
-// and the entire view must be recalculated.
-var ErrNeedsFullRecalculation = errors.New("insufficient spacing for localized repair")
 
 // MinPositionSpacing is the smallest gap we allow between positions.
 // Must be large enough to survive JSON serialization round-trips.
@@ -118,7 +113,7 @@ func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err erro
 		}
 
 		err = resolveTaskPositionConflicts(s, tp.ProjectViewID, conflicts)
-		if errors.Is(err, ErrNeedsFullRecalculation) {
+		if IsErrNeedsFullRecalculation(err) {
 			return RecalculateTaskPositions(s, view, a)
 		}
 		if err != nil {
@@ -487,7 +482,7 @@ func RepairTaskPositions(s *xorm.Session, dryRun bool) (*RepairResult, error) {
 			result.TasksAffected += len(conflicts)
 
 			err = resolveTaskPositionConflicts(s, viewID, conflicts)
-			if errors.Is(err, ErrNeedsFullRecalculation) {
+			if IsErrNeedsFullRecalculation(err) {
 				// Fall back to full recalculation for this view
 				err = recalculateTaskPositionsForRepair(s, view)
 				if err != nil {
@@ -606,7 +601,7 @@ func resolveTaskPositionConflicts(s *xorm.Session, projectViewID int64, conflict
 
 	// Check if we have enough spacing
 	if spacing < MinPositionSpacing {
-		return ErrNeedsFullRecalculation
+		return &ErrNeedsFullRecalculation{ProjectViewID: projectViewID}
 	}
 
 	// Sort conflicts by task ID for deterministic ordering
