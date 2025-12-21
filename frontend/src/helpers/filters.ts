@@ -221,31 +221,67 @@ export function transformFilterStringFromApi(
 			const pattern = getFilterFieldRegexPattern(field)
 
 			let match: RegExpExecArray | null
+			const replacements: { start: number, length: number, replacement: string }[] = []
+
 			while ((match = pattern.exec(filter)) !== null) {
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const [matched, fieldName, operator, quotes, quotedContent, unquotedContent] = match
 				const keyword = quotedContent || unquotedContent
-				if (keyword) {
-					let keywords = [keyword.trim()]
-					if (isMultiValueOperator(operator)) {
-						keywords = keyword.trim().split(',').map(k => {
-							let trimmed = k.trim()
-							// Strip quotes from individual values in multi-value scenarios
-							trimmed = trimQuotes(trimmed)
-							return trimmed
-						})
-					}
+				if (!keyword) {
+					continue
+				}
 
-					keywords.forEach(k => {
-						const title = resolver(parseInt(k))
-						if (title) {
-							// Quote multi-word titles for filter syntax
-							const quotedTitle = title.includes(' ') ? `"${title}"` : title
-							filter = filter.replace(k, quotedTitle)
-						}
+				let keywords = [keyword.trim()]
+				if (isMultiValueOperator(operator)) {
+					keywords = keyword.trim().split(',').map(k => {
+						let trimmed = k.trim()
+						// Strip quotes from individual values in multi-value scenarios
+						trimmed = trimQuotes(trimmed)
+						return trimmed
 					})
 				}
+
+				const transformedKeywords: string[] = []
+				keywords.forEach(k => {
+					const title = resolver(parseInt(k))
+					if (title) {
+						// Quote multi-word titles or titles with special characters for filter syntax
+						// Escape any quotes or backslashes in the title
+						const escaped = title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+						const quotedTitle = title.includes(' ') || title.includes('"') || title.includes('\\')
+							? `"${escaped}"`
+							: title
+						transformedKeywords.push(quotedTitle)
+					} else {
+						// Keep original value if resolver returns null
+						transformedKeywords.push(k)
+					}
+				})
+
+				// Reconstruct the entire match with the replaced values
+				const replaced = isMultiValueOperator(operator)
+					? transformedKeywords.join(', ')
+					: transformedKeywords[0] || keyword
+
+				const reconstructedMatch = quotes
+					? `${fieldName} ${operator} ${replaced}`
+					: `${fieldName} ${operator} ${replaced}`
+
+				replacements.push({
+					start: match.index!,
+					length: matched.length,
+					replacement: reconstructedMatch,
+				})
 			}
+
+			// Apply replacements using position-based replacement to avoid
+			// incorrectly replacing values that appear elsewhere in the string
+			let offset = 0
+			replacements.forEach(({start, length, replacement}) => {
+				filter = filter.substring(0, start + offset) +
+					replacement +
+					filter.substring(start + offset + length)
+				offset += replacement.length - length
+			})
 		})
 	}
 
