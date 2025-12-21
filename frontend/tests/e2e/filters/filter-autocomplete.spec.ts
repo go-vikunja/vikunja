@@ -107,12 +107,13 @@ test.describe('Filter Autocomplete', () => {
 			await page.keyboard.press('Backspace')
 			await filterInput.pressSequentially('project = Work', {delay: 50})
 
-			// Wait for autocomplete popup to update with latest context
+			// Wait for autocomplete popup with the specific option we want to click
 			const autocompletePopup = page.locator('#filter-autocomplete-popup')
 			await expect(autocompletePopup).toBeVisible({timeout: 5000})
-			// Wait a bit for the context to be fully updated after the last keystroke
-			await page.waitForTimeout(100)
-			await autocompletePopup.getByRole('button', {name: 'Work To Do'}).click()
+			// Wait for the specific autocomplete option to be visible (ensures context is updated)
+			const workToDoButton = autocompletePopup.getByRole('button', {name: 'Work To Do'})
+			await expect(workToDoButton).toBeVisible({timeout: 2000})
+			await workToDoButton.click()
 
 			// Verify the filter text is correct after autocomplete replacement
 			// Multi-word names should be quoted
@@ -175,11 +176,13 @@ test.describe('Filter Autocomplete', () => {
 			// Type 'project in Work' to trigger autocomplete
 			await filterInput.pressSequentially('project in Work', {delay: 50})
 
-			// Wait for autocomplete popup and select "Work To Do"
+			// Wait for autocomplete popup with the specific option we want to click
 			const autocompletePopup = page.locator('#filter-autocomplete-popup')
 			await expect(autocompletePopup).toBeVisible({timeout: 5000})
-			await page.waitForTimeout(100) // Wait for context to update
-			await autocompletePopup.getByRole('button', {name: 'Work To Do'}).click()
+			// Wait for the specific autocomplete option to be visible (ensures context is updated)
+			const workToDoButton = autocompletePopup.getByRole('button', {name: 'Work To Do'})
+			await expect(workToDoButton).toBeVisible({timeout: 2000})
+			await workToDoButton.click()
 
 			// Wait for autocomplete to close and text to stabilize
 			await expect(autocompletePopup).not.toBeVisible({timeout: 2000})
@@ -234,9 +237,11 @@ test.describe('Filter Autocomplete', () => {
 			// Type a space
 			await page.keyboard.type(' ')
 
-			// Step 5: Save again
-			await page.locator('.card-footer .button.is-primary').click()
-			await page.waitForTimeout(500) // Wait for save to complete
+			// Step 5: Save again and wait for the modal to close (indicates save complete)
+			const saveButton = page.locator('.card-footer .button.is-primary')
+			await saveButton.click()
+			// Wait for the edit card/modal to close after save
+			await expect(saveButton).not.toBeVisible({timeout: 5000})
 
 			// Step 6: Assert no error occurred
 			await expect(page.locator('.notification.is-danger')).not.toBeVisible()
