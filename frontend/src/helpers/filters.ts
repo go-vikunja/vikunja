@@ -151,16 +151,7 @@ export function transformFilterStringForApi(
 				replaced = replaced.replaceAll('"', '').replaceAll('\'', '')
 
 				// Reconstruct the entire match with the replaced value
-				let reconstructedMatch
-				if (quotes && quotedContent) {
-					// For quoted values, remove quotes since we converted to IDs
-					reconstructedMatch = `${fieldName} ${operator} ${replaced}`
-				} else if (unquotedContent) {
-					// For unquoted values
-					reconstructedMatch = `${fieldName} ${operator} ${replaced}`
-				} else {
-					continue
-				}
+				const reconstructedMatch = `${fieldName} ${operator} ${replaced}`
 
 				replacements.push({
 					start: match.index!,
