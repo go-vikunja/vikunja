@@ -244,13 +244,7 @@ export function transformFilterStringFromApi(
 				keywords.forEach(k => {
 					const title = resolver(parseInt(k))
 					if (title) {
-						// Quote multi-word titles or titles with special characters for filter syntax
-						// Escape any quotes or backslashes in the title
-						const escaped = title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-						const quotedTitle = title.includes(' ') || title.includes('"') || title.includes('\\')
-							? `"${escaped}"`
-							: title
-						transformedKeywords.push(quotedTitle)
+						transformedKeywords.push(title)
 					} else {
 						// Keep original value if resolver returns null
 						transformedKeywords.push(k)
@@ -262,9 +256,7 @@ export function transformFilterStringFromApi(
 					? transformedKeywords.join(', ')
 					: transformedKeywords[0] || keyword
 
-				const reconstructedMatch = quotes
-					? `${fieldName} ${operator} ${replaced}`
-					: `${fieldName} ${operator} ${replaced}`
+				const reconstructedMatch = `${fieldName} ${operator} ${replaced}`
 
 				replacements.push({
 					start: match.index!,
