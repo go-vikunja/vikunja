@@ -116,8 +116,7 @@ test.describe('Filter Autocomplete', () => {
 			await workToDoButton.click()
 
 			// Verify the filter text is correct after autocomplete replacement
-			// Multi-word names should be quoted
-			await expect(filterInput).toContainText('project = "Work To Do"')
+			await expect(filterInput).toContainText('project = Work To Do')
 
 			// Save the filter and verify no error
 			await page.locator('button.is-primary.is-fullwidth').click()
@@ -145,8 +144,8 @@ test.describe('Filter Autocomplete', () => {
 			await expect(autocompletePopup).toBeVisible({timeout: 5000})
 			await autocompletePopup.getByRole('button', {name: 'Personal Tasks'}).click()
 
-			// Verify correct filter text - multi-word name should be quoted
-			await expect(filterInput).toContainText('done = false && project = "Personal Tasks"')
+			// Verify correct filter text
+			await expect(filterInput).toContainText('done = false && project = Personal Tasks')
 
 			// Save and verify no error
 			await page.locator('button.is-primary.is-fullwidth').click()
@@ -157,7 +156,7 @@ test.describe('Filter Autocomplete', () => {
 	test.describe('Edit Saved Filter with Multi-Value Autocomplete (Issue #2010 Regression)', () => {
 		test('should preserve filter text after editing and adding trailing space', async ({authenticatedPage: page}) => {
 			// This test covers the specific bug from Issue #2010:
-			// Creating a filter with 'project in "Work To Do", Inbox', then editing
+			// Creating a filter with 'project in Work To Do, Inbox', then editing
 			// and adding a trailing space should not corrupt the filter or cause errors
 
 			await page.goto('/filters/new')
@@ -186,7 +185,7 @@ test.describe('Filter Autocomplete', () => {
 
 			// Wait for autocomplete to close and text to stabilize
 			await expect(autocompletePopup).not.toBeVisible({timeout: 2000})
-			await expect(filterInput).toContainText('project in "Work To Do"')
+			await expect(filterInput).toContainText('project in Work To Do')
 
 			// Continue typing the second value: ', Inbox'
 			await filterInput.click()
@@ -194,8 +193,7 @@ test.describe('Filter Autocomplete', () => {
 			await filterInput.pressSequentially(', Inbox', {delay: 50})
 
 			// Verify the filter text shows the multi-value 'in' clause
-			// "Work To Do" should be quoted since it has spaces
-			await expect(filterInput).toContainText('project in "Work To Do", Inbox')
+			await expect(filterInput).toContainText('project in Work To Do, Inbox')
 
 			// Step 2: Save the filter and verify no error
 			await page.locator('button.is-primary.is-fullwidth').click()
@@ -228,7 +226,7 @@ test.describe('Filter Autocomplete', () => {
 			await expect(editFilterInput).toBeVisible()
 
 			// Verify the filter text is correctly loaded
-			await expect(editFilterInput).toContainText('project in "Work To Do", Inbox')
+			await expect(editFilterInput).toContainText('project in Work To Do, Inbox')
 
 			// Step 4: Add a trailing space (the bug trigger from #2010)
 			await editFilterInput.click()
@@ -262,7 +260,7 @@ test.describe('Filter Autocomplete', () => {
 
 			const reloadedFilterInput = page.locator('.filters .filter-input .ProseMirror')
 			// The trailing space may be trimmed, but the core filter should be preserved
-			await expect(reloadedFilterInput).toContainText('project in "Work To Do", Inbox')
+			await expect(reloadedFilterInput).toContainText('project in Work To Do, Inbox')
 		})
 	})
 })

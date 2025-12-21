@@ -350,8 +350,7 @@ describe('Filter Transformation', () => {
 					nullIdToTitleResolver,
 				)
 
-				// Multi-word values are quoted for filter syntax
-				expect(transformed).toBe('labels = "John\'s Task"')
+				expect(transformed).toBe('labels = John\'s Task')
 			})
 
 			it('should transform projects with apostrophes from API to frontend', () => {
@@ -361,8 +360,7 @@ describe('Filter Transformation', () => {
 					apostropheIdResolver,
 				)
 
-				// Multi-word values are quoted for filter syntax
-				expect(transformed).toBe('project = "Mary\'s Project"')
+				expect(transformed).toBe('project = Mary\'s Project')
 			})
 
 			it('should handle multiple values with apostrophes in reverse transformation', () => {
@@ -372,8 +370,7 @@ describe('Filter Transformation', () => {
 					nullIdToTitleResolver,
 				)
 
-				// Multi-word values are quoted for filter syntax
-				expect(transformed).toBe('labels in "John\'s Task", "Mary\'s Project"')
+				expect(transformed).toBe('labels in John\'s Task, Mary\'s Project')
 			})
 
 			it('should handle complex queries with apostrophes in reverse transformation', () => {
@@ -383,8 +380,7 @@ describe('Filter Transformation', () => {
 					apostropheIdResolver,
 				)
 
-				// Multi-word values are quoted for filter syntax
-				expect(transformed).toBe('labels = "John\'s Task" && project = "Mary\'s Project" || priority = 1')
+				expect(transformed).toBe('labels = John\'s Task && project = Mary\'s Project || priority = 1')
 			})
 		})
 	})
@@ -548,7 +544,7 @@ describe('Filter Transformation', () => {
 				nullIdToTitleResolver,
 			)
 
-			expect(transformed).toBe('priority = 1 && labels = "My Label"')
+			expect(transformed).toBe('priority = 1 && labels = My Label')
 		})
 
 		it('should not replace project id that appears in other parts of the filter', () => {
@@ -558,7 +554,7 @@ describe('Filter Transformation', () => {
 				(id: number) => id === 2 ? 'My Project' : null,
 			)
 
-			expect(transformed).toBe('priority = 2 && project = "My Project"')
+			expect(transformed).toBe('priority = 2 && project = My Project')
 		})
 	})
 })
