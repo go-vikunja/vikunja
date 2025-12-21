@@ -159,5 +159,63 @@ describe('FilterAutocomplete', () => {
 				expect(result.replaceTo).toBe(15)   // 14 + 1
 			})
 		})
+
+		describe('closing quote handling', () => {
+			it('should extend replaceTo by 1 when hasClosingQuote is true', () => {
+				const context = {
+					keyword: 'Work To Do',
+					startPos: 12, // position after opening quote in 'project = "'
+					endPos: 22,
+				}
+
+				const result = calculateReplacementRange(context, '=', true)
+
+				expect(result.replaceFrom).toBe(13) // 12 + 1
+				expect(result.replaceTo).toBe(24)   // 22 + 1 + 1 (extra 1 for closing quote)
+			})
+
+			it('should not extend replaceTo when hasClosingQuote is false', () => {
+				const context = {
+					keyword: 'Work To Do',
+					startPos: 12,
+					endPos: 22,
+				}
+
+				const result = calculateReplacementRange(context, '=', false)
+
+				expect(result.replaceFrom).toBe(13) // 12 + 1
+				expect(result.replaceTo).toBe(23)   // 22 + 1 (no extra for closing quote)
+			})
+
+			it('should default hasClosingQuote to false when not provided', () => {
+				const context = {
+					keyword: 'Work To Do',
+					startPos: 12,
+					endPos: 22,
+				}
+
+				const result = calculateReplacementRange(context, '=')
+
+				expect(result.replaceTo).toBe(23) // 22 + 1 (no extra for closing quote)
+			})
+
+			it('should handle closing quote with multi-value operators', () => {
+				const context = {
+					keyword: 'Inbox, Work To Do',
+					startPos: 12,
+					endPos: 29,
+				}
+
+				const result = calculateReplacementRange(context, 'in', true)
+
+				// lastCommaIndex = 5
+				// textAfterComma = " Work To Do" (11 chars)
+				// leadingSpaces = 1
+				// replaceFrom = 12 + 5 + 1 + 1 + 1 = 20
+				expect(result.replaceFrom).toBe(20)
+				// replaceTo = 29 + 1 + 1 = 31 (extra 1 for closing quote)
+				expect(result.replaceTo).toBe(31)
+			})
+		})
 	})
 })

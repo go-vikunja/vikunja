@@ -35,6 +35,7 @@ interface AutocompleteContext {
 	startPos: number
 	endPos: number
 	isComplete: boolean
+	quoteChar: string // The quote character surrounding the keyword ('"', "'", or '' if unquoted)
 }
 
 interface SuggestionItem {
@@ -50,19 +51,22 @@ export type AutocompleteField = 'labels' | 'assignees' | 'projects'
  * Calculates the replacement range for autocomplete selection.
  * For single-value operators: replaces the entire keyword
  * For multi-value operators with commas: only replaces the text after the last comma
+ * When inside quotes, extends the range to include the closing quote
  *
  * @param context - The autocomplete context containing position and keyword info
  * @param operator - The filter operator (e.g., 'in', '=', '?=')
+ * @param hasClosingQuote - Whether there's a closing quote to include in replacement
  * @returns Object with replaceFrom and replaceTo positions
  */
 export function calculateReplacementRange(
 	context: { startPos: number; endPos: number; keyword: string },
 	operator: string,
+	hasClosingQuote: boolean = false,
 ): { replaceFrom: number; replaceTo: number } {
 	// Add 1 to convert from string indices to ProseMirror positions
 	// In ProseMirror, position 0 is before the document, text starts at position 1
 	let replaceFrom = context.startPos + 1
-	const replaceTo = context.endPos + 1
+	let replaceTo = context.endPos + 1
 
 	// Handle multi-value operators - only replace the last value after comma
 	if (isMultiValueOperator(operator) && context.keyword.includes(',')) {
@@ -70,6 +74,11 @@ export function calculateReplacementRange(
 		const textAfterComma = context.keyword.substring(lastCommaIndex + 1)
 		const leadingSpaces = textAfterComma.length - textAfterComma.trimStart().length
 		replaceFrom = context.startPos + lastCommaIndex + 1 + leadingSpaces + 1
+	}
+
+	// Extend range to include closing quote if present
+	if (hasClosingQuote) {
+		replaceTo += 1
 	}
 
 	return { replaceFrom, replaceTo }
@@ -294,7 +303,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 				const match = pattern.exec(textUpToCursor)
 
 				if (match && match.index !== undefined) {
-					const [, prefix = '', , , keyword = ''] = match
+					const [, prefix = '', , quoteChar = '', keyword = ''] = match
 
 					let search = keyword.trim()
 					const operator = match[0].match(new RegExp(FILTER_OPERATORS_REGEX))?.[0] || ''
@@ -316,6 +325,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 						startPos: match.index + prefix.length,
 						endPos: match.index + prefix.length + keyword.length,
 						isComplete,
+						quoteChar,
 					}
 
 					if (LABEL_FIELDS.includes(field)) {
@@ -375,12 +385,18 @@ export default Extension.create<FilterAutocompleteOptions>({
 							}
 							const operator = context.operator
 
+							// Check if there's a closing quote immediately after the keyword
+							const docText = view.state.doc.textContent
+							const charAfterKeyword = docText[context.endPos] || ''
+							const hasClosingQuote = context.quoteChar !== '' && charAfterKeyword === context.quoteChar
+
 							// Quote values that contain spaces for filter syntax
+							// But skip quoting if already inside quotes (we'll replace including the closing quote)
 							let insertValue: string = newValue ?? ''
-							if (insertValue.includes(' ')) {
+							if (insertValue.includes(' ') && !context.quoteChar) {
 								insertValue = `"${insertValue}"`
 							}
-							const { replaceFrom, replaceTo } = calculateReplacementRange(context, operator)
+							const { replaceFrom, replaceTo } = calculateReplacementRange(context, operator, hasClosingQuote)
 
 							const tr = view.state.tr.replaceWith(
 								replaceFrom,
