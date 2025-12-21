@@ -390,7 +390,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 							const charAfterKeyword = docText[context.endPos] || ''
 							const hasClosingQuote = context.quoteChar !== '' && charAfterKeyword === context.quoteChar
 
-							let insertValue: string = newValue ?? ''
+							const insertValue: string = newValue ?? ''
 							const { replaceFrom, replaceTo } = calculateReplacementRange(context, operator, hasClosingQuote)
 
 							const tr = view.state.tr.replaceWith(

@@ -114,7 +114,7 @@ export function transformFilterStringForApi(
 			const replacements: { start: number, length: number, replacement: string }[] = []
 
 			while ((match = pattern.exec(filter)) !== null) {
-				const [matched, fieldName, operator, quotes, quotedContent, unquotedContent] = match
+				const [matched, fieldName, operator, _quotes, quotedContent, unquotedContent] = match
 				const keyword = quotedContent || unquotedContent
 				if (!keyword) {
 					continue
@@ -224,7 +224,7 @@ export function transformFilterStringFromApi(
 			const replacements: { start: number, length: number, replacement: string }[] = []
 
 			while ((match = pattern.exec(filter)) !== null) {
-				const [matched, fieldName, operator, quotes, quotedContent, unquotedContent] = match
+				const [matched, fieldName, operator, _quotes, quotedContent, unquotedContent] = match
 				const keyword = quotedContent || unquotedContent
 				if (!keyword) {
 					continue
