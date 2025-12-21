@@ -394,7 +394,9 @@ export default Extension.create<FilterAutocompleteOptions>({
 							// But skip quoting if already inside quotes (we'll replace including the closing quote)
 							let insertValue: string = newValue ?? ''
 							if (insertValue.includes(' ') && !context.quoteChar) {
-								insertValue = `"${insertValue}"`
+								// Escape backslashes and quotes before wrapping in double quotes
+								const escaped = insertValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+								insertValue = `"${escaped}"`
 							}
 							const { replaceFrom, replaceTo } = calculateReplacementRange(context, operator, hasClosingQuote)
 
