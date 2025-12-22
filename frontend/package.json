@@ -127,7 +127,7 @@
     "browserslist": "4.28.1",
     "caniuse-lite": "1.0.30001760",
     "csstype": "3.2.3",
-    "esbuild": "0.27.1",
+    "esbuild": "0.27.2",
     "eslint": "9.39.2",
     "eslint-plugin-vue": "10.6.2",
     "happy-dom": "20.0.11",
