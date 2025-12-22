@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
@@ -28,14 +29,65 @@ func (t *Task) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanUpdate determines if a user has the permission to update a project task
 func (t *Task) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return t.canDoTask(s, a)
+	authorized, err := t.canDoTask(s, a)
+	if err != nil {
+		return false, err
+	}
+	if authorized {
+		return true, nil
+	}
+
+	if config.ServiceEnableAssigneeEdit.GetBool() {
+		ot, err := GetTaskByIDSimple(s, t.ID)
+		if err != nil {
+			return false, err
+		}
+
+		if t.ProjectID != 0 && t.ProjectID != ot.ProjectID {
+			return false, nil
+		}
+
+		if ot.CreatedByID == a.GetID() {
+			l := &Project{ID: ot.ProjectID}
+			canRead, _, err := l.CanRead(s, a)
+			if err != nil {
+				return false, err
+			}
+			return canRead, nil
+		}
+
+		// Check if the user is assigned to the task
+		exists, err := s.Where("task_id = ? AND user_id = ?", t.ID, a.GetID()).Exist(&TaskAssginee{})
+		if err != nil {
+			return false, err
+		}
+		if exists {
+			l := &Project{ID: ot.ProjectID}
+			canRead, _, err := l.CanRead(s, a)
+			if err != nil {
+				return false, err
+			}
+			return canRead, nil
+		}
+
+	}
+
+	return false, nil
 }
 
 // CanCreate determines if a user has the permission to create a project task
 func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	// A user can do a task if he has write acces to its project
 	l := &Project{ID: t.ProjectID}
-	return l.CanWrite(s, a)
+	canWrite, err := l.CanWrite(s, a)
+	if err != nil {
+		return false, err
+	}
+	if canWrite {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // CanRead determines if a user can read a task

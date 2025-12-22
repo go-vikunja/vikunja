@@ -403,7 +403,7 @@
 
 					<!-- Comments -->
 					<Comments
-						:can-write="canWrite"
+						:can-write="canComment"
 						:task-id="taskId"
 						:project-id="task.projectId"
 						:initial-comments="task.comments"
@@ -668,6 +668,7 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
+import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 
@@ -694,6 +695,7 @@ const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
+const configStore = useConfigStore()
 
 const task = ref<ITask>(new TaskModel())
 const taskNotFound = ref(false)
@@ -786,10 +788,31 @@ const projectRoute = computed(() => ({
 	hash: route.hash,
 }))
 
-const canWrite = computed(() => (
-	task.value.maxPermission !== null &&
-	task.value.maxPermission > PERMISSIONS.READ
-))
+const canWrite = computed(() => {
+	if (task.value.maxPermission !== null && task.value.maxPermission > PERMISSIONS.READ) {
+		return true
+	}
+
+	if (configStore.assigneeEditEnabled && task.value.maxPermission !== null && task.value.maxPermission >= PERMISSIONS.READ) {
+		// Executor feature: Creator or Assignee can edit if enabled
+		const userId = authStore.info?.id
+		if (userId && task.value.id) {
+			const isCreator = task.value.createdBy?.id === userId
+			const isAssignee = task.value.assignees?.some(a => a.id === userId)
+			if (isCreator || isAssignee) {
+				return true
+			}
+		}
+	}
+	return false
+})
+
+const canComment = computed(() => {
+	if (canWrite.value) {
+		return true
+	}
+	return configStore.readerCommentsEnabled && task.value.maxPermission !== null && task.value.maxPermission >= PERMISSIONS.READ
+})
 
 const color = computed(() => {
 	const color = task.value.getHexColor

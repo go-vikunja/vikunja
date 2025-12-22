@@ -434,7 +434,9 @@ const bucketDraggableComponentData = computed(() => ({
 }))
 const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : null)
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
-const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
+const canWrite = computed(() => {
+	return baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual'
+})
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)

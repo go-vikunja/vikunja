@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
@@ -67,5 +68,15 @@ func (tc *TaskComment) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 // CanCreate checks if a user can create a new comment
 func (tc *TaskComment) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	t := Task{ID: tc.TaskID}
+	if config.ServiceEnableReaderComments.GetBool() {
+		canRead, _, err := t.CanRead(s, a)
+		if err != nil {
+			return false, err
+		}
+		if canRead {
+			return true, nil
+		}
+	}
 	return t.CanWrite(s, a)
+
 }
