@@ -1,18 +1,29 @@
 {
 	"404": {
-		"title": "Hittades inte"
+		"title": "Hittades inte",
+		"text": "Sidan du sökte finns inte."
 	},
 	"home": {
 		"welcomeNight": "Godnatt {username}!",
 		"welcomeMorning": "Godmorgon {username}!",
 		"welcomeDay": "Hej {username}!",
 		"welcomeEvening": "Godkväll {username}!",
+		"lastViewed": "Senast visade",
+		"addToHomeScreen": "Lägg till den här appen på din hemskärm för snabbare åtkomst och en förbättrad upplevelse.",
+		"goToOverview": "Gå till översikten",
 		"project": {
+			"importText": "Importera dina projekt och uppgifter från andra tjänster till Vikunja:",
 			"import": "Importera din data till Vikunja"
 		}
 	},
 	"demo": {
+		"title": "Denna instans är i demoläge. Använd inte detta för riktiga data!",
+		"everythingWillBeDeleted": "Allt kommer att raderas med jämna mellanrum!",
 		"accountWillBeDeleted": "Ditt konto raderas, inklusive alla projekt, uppgifter och bilagor som du kan ha skapat."
+	},
+	"ready": {
+		"loading": "Vikunja laddar…",
+		"errorOccured": "Ett fel uppstod:"
 	},
 	"offline": {
 		"title": "Du är offline."
