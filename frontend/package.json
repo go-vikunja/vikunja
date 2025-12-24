@@ -100,7 +100,7 @@
     "vue": "3.5.26",
     "vue-advanced-cropper": "2.8.9",
     "vue-flatpickr-component": "11.0.5",
-    "vue-i18n": "11.2.2",
+    "vue-i18n": "11.2.7",
     "vue-router": "4.6.4",
     "vuemoji-picker": "0.3.2",
     "workbox-precaching": "7.4.0",
