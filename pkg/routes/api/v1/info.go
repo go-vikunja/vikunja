@@ -52,6 +52,8 @@ type vikunjaInfos struct {
 	DemoModeEnabled            bool      `json:"demo_mode_enabled"`
 	WebhooksEnabled            bool      `json:"webhooks_enabled"`
 	PublicTeamsEnabled         bool      `json:"public_teams_enabled"`
+	ReaderCommentsEnabled      bool      `json:"reader_comments_enabled"`
+	AssigneeEditEnabled        bool      `json:"assignee_edit_enabled"`
 }
 
 type authInfo struct {
@@ -103,6 +105,8 @@ func Info(c echo.Context) error {
 		DemoModeEnabled:        config.ServiceDemoMode.GetBool(),
 		WebhooksEnabled:        config.WebhooksEnabled.GetBool(),
 		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
+		ReaderCommentsEnabled:  config.ServiceEnableReaderComments.GetBool(),
+		AssigneeEditEnabled:    config.ServiceEnableAssigneeEdit.GetBool(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),
