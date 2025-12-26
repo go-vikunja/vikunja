@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	ics "github.com/arran4/golang-ical"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
@@ -715,5 +716,17 @@ END:VCALENDAR`,
 				t.Errorf("GetCaldavTodosForTasks() gotVTask = %v, want %v, diff = %s", got, tt.wantCaldav, diff)
 			}
 		})
+	}
+}
+
+func TestCaldavTimeToTimestamp_NoTZID(t *testing.T) {
+	config.InitDefaultConfig()
+	prop := ics.IANAProperty{BaseProperty: ics.BaseProperty{Value: "20181201T011204", ICalParameters: map[string][]string{}}}
+
+	got := caldavTimeToTimestamp(prop)
+	want := time.Date(2018, 12, 1, 1, 12, 4, 0, config.GetTimeZone())
+
+	if !got.Equal(want) || got.Location().String() != config.GetTimeZone().String() {
+		t.Fatalf("caldavTimeToTimestamp() = %v, want %v", got, want)
 	}
 }
