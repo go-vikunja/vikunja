@@ -624,6 +624,7 @@ import {eventToHotkeyString} from '@github/hotkey'
 
 import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
+import {getTaskIdentifier} from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
@@ -700,14 +701,53 @@ const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
+const dotKeyPressedTimes = ref(0)
+const dotKeyCopyValue = ref('')
+let dotKeyPressedTimeout = null
+
+function resetDotKeyPressed() {
+	console.log('clear')
+	dotKeyPressedTimes.value = 0
+	dotKeyCopyValue.value = ''
+	clearTimeout(dotKeyPressedTimeout)
+}
+
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function saveTaskViaHotkey(event) {
+function handleTaskHotkey(event) {
 	const hotkeyString = eventToHotkeyString(event)
 	if (!hotkeyString) return
-	if (hotkeyString !== 'Control+s' && hotkeyString !== 'Meta+s') return
-	event.preventDefault()
+	if (hotkeyString === 'Control+s' || hotkeyString === 'Meta+s') {
+		event.preventDefault()
+		saveTask()
+	}
 
-	saveTask()
+	if (hotkeyString === '.') {
+		dotKeyPressedTimes.value++
+		if (dotKeyPressedTimeout !== null) {
+			clearTimeout(dotKeyPressedTimeout)
+		}
+		dotKeyPressedTimeout = setTimeout(() => {
+			console.log('copy', dotKeyCopyValue.value)
+			navigator.clipboard.writeText(dotKeyCopyValue.value)
+			resetDotKeyPressed()
+		}, 300)
+
+		switch (dotKeyPressedTimes.value) {
+			case 1:
+				dotKeyCopyValue.value = getTaskIdentifier(task.value)
+				break
+			case 2:
+				dotKeyCopyValue.value += ' - ' + taskTitle.value
+				break
+			case 3:
+				dotKeyCopyValue.value += ' - ' + window.location
+				break
+			default:
+				resetDotKeyPressed()
+		}
+	}
+
+	console.log({hotkeyString, times: dotKeyPressedTimes.value})
 }
 
 const lastProject = computed(() => {
@@ -733,11 +773,11 @@ const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.val
 const reminderShortcut = computed(() => isAppleDevice() ? 'Shift+R' : 'Alt+r')
 
 onMounted(() => {
-	document.addEventListener('keydown', saveTaskViaHotkey)
+	document.addEventListener('keydown', handleTaskHotkey)
 })
 
 onBeforeUnmount(() => {
-	document.removeEventListener('keydown', saveTaskViaHotkey)
+	document.removeEventListener('keydown', handleTaskHotkey)
 })
 
 onBeforeRouteLeave(async () => {
