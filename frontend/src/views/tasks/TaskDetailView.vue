@@ -614,17 +614,15 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMediaQuery, useMutationObserver} from '@vueuse/core'
 import {klona} from 'klona/lite'
-import {eventToHotkeyString} from '@github/hotkey'
 
 import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
-import {getTaskIdentifier} from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
@@ -671,6 +669,7 @@ import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 
 import {useTitle} from '@/composables/useTitle'
+import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
 
 import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
@@ -701,55 +700,6 @@ const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
-const dotKeyPressedTimes = ref(0)
-const dotKeyCopyValue = ref('')
-let dotKeyPressedTimeout = null
-
-function resetDotKeyPressed() {
-	console.log('clear')
-	dotKeyPressedTimes.value = 0
-	dotKeyCopyValue.value = ''
-	clearTimeout(dotKeyPressedTimeout)
-}
-
-// See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-function handleTaskHotkey(event) {
-	const hotkeyString = eventToHotkeyString(event)
-	if (!hotkeyString) return
-	if (hotkeyString === 'Control+s' || hotkeyString === 'Meta+s') {
-		event.preventDefault()
-		saveTask()
-	}
-
-	if (hotkeyString === '.') {
-		dotKeyPressedTimes.value++
-		if (dotKeyPressedTimeout !== null) {
-			clearTimeout(dotKeyPressedTimeout)
-		}
-		dotKeyPressedTimeout = setTimeout(() => {
-			console.log('copy', dotKeyCopyValue.value)
-			navigator.clipboard.writeText(dotKeyCopyValue.value)
-			resetDotKeyPressed()
-		}, 300)
-
-		switch (dotKeyPressedTimes.value) {
-			case 1:
-				dotKeyCopyValue.value = getTaskIdentifier(task.value)
-				break
-			case 2:
-				dotKeyCopyValue.value += ' - ' + taskTitle.value
-				break
-			case 3:
-				dotKeyCopyValue.value += ' - ' + window.location
-				break
-			default:
-				resetDotKeyPressed()
-		}
-	}
-
-	console.log({hotkeyString, times: dotKeyPressedTimes.value})
-}
-
 const lastProject = computed(() => {
 	const backRoute = router.options.history.state?.back
 	if (!backRoute || typeof backRoute !== 'string') {
@@ -771,14 +721,6 @@ const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.val
 // Use Shift+R on macOS (Alt+R produces special characters depending on keyboard layout)
 // Use Alt+r on other platforms
 const reminderShortcut = computed(() => isAppleDevice() ? 'Shift+R' : 'Alt+r')
-
-onMounted(() => {
-	document.addEventListener('keydown', handleTaskHotkey)
-})
-
-onBeforeUnmount(() => {
-	document.removeEventListener('keydown', handleTaskHotkey)
-})
 
 onBeforeRouteLeave(async () => {
 	if (taskNotFound.value) {
@@ -1093,6 +1035,12 @@ async function saveTask(
 	}
 	success({message: t('task.detail.updateSuccess')}, actions)
 }
+
+useTaskDetailShortcuts({
+	task: () => task.value,
+	taskTitle: () => taskTitle.value,
+	onSave: saveTask,
+})
 
 const showDeleteModal = ref(false)
 
