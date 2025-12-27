@@ -832,6 +832,7 @@
 			"back": "プロジェクトに戻る",
 			"due": "期限: {at}",
 			"closePopup": "閉じる",
+			"scrollToBottom": "一番下まで移動",
 			"organization": "組織",
 			"management": "管理",
 			"dateAndTime": "日付と時刻",
