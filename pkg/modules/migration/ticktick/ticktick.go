@@ -118,7 +118,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 				StartDate:   t.StartDate.Time,
 				EndDate:     t.DueDate.Time,
 				DueDate:     t.DueDate.Time,
-				Done:        t.Status == "1",
+				Done:        t.Status == "2",
 				DoneAt:      t.CompletedTime.Time,
 				Position:    t.Order,
 				Labels:      labels,
