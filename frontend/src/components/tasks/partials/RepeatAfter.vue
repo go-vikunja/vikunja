@@ -22,6 +22,34 @@
 			>
 				{{ $t('task.repeat.every30d') }}
 			</XButton>
+			<XButton
+				variant="secondary"
+				class="is-small"
+				@click="() => setRepeatAfter(1, 'months')"
+			>
+				{{ $t('task.repeat.everyMonth') }}
+			</XButton>
+			<XButton
+				variant="secondary"
+				class="is-small"
+				@click="() => setRepeatAfter(3, 'months')"
+			>
+				{{ $t('task.repeat.everyQuarter') }}
+			</XButton>
+			<XButton
+				variant="secondary"
+				class="is-small"
+				@click="() => setRepeatAfter(6, 'months')"
+			>
+				{{ $t('task.repeat.everySixMonths') }}
+			</XButton>
+			<XButton
+				variant="secondary"
+				class="is-small"
+				@click="() => setRepeatAfter(1, 'years')"
+			>
+				{{ $t('task.repeat.everyYear') }}
+			</XButton>
 		</div>
 		<div class="is-flex is-align-items-center mbe-2">
 			<label
@@ -43,6 +71,9 @@
 						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_MONTH">
 							{{ $t('task.repeat.monthly') }}
 						</option>
+						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_YEAR">
+							{{ $t('task.repeat.yearly') }}
+						</option>
 						<option :value="TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE">
 							{{ $t('task.repeat.fromCurrentDate') }}
 						</option>
@@ -51,7 +82,38 @@
 			</div>
 		</div>
 		<div
-			v-if="task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH"
+			v-if="task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH"
+			class="is-flex is-align-items-center mbe-2"
+		>
+			<label
+				for="repeatDay"
+				class="is-fullwidth"
+			>
+				{{ $t('task.repeat.onDay') }}:
+			</label>
+			<div class="control">
+				<div class="select">
+					<select
+						id="repeatDay"
+						v-model="task.repeatDay"
+						@change="updateData"
+					>
+						<option :value="0">
+							{{ $t('task.repeat.sameDay') }}
+						</option>
+						<option
+							v-for="day in 31"
+							:key="day"
+							:value="day"
+						>
+							{{ day }}
+						</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div
+			v-if="task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_MONTH && task.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_YEAR"
 			class="is-flex"
 		>
 			<p class="pis-4">
@@ -84,6 +146,12 @@
 							</option>
 							<option value="weeks">
 								{{ $t('task.repeat.weeks') }}
+							</option>
+							<option value="months">
+								{{ $t('task.repeat.months') }}
+							</option>
+							<option value="years">
+								{{ $t('task.repeat.years') }}
 							</option>
 						</select>
 					</div>
@@ -138,19 +206,26 @@ watch(
 )
 
 function updateData() {
-	if (!task.value || 
-		(task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount === 0) ||
-		(task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_FROM_CURRENT_DATE && repeatAfter.amount === 0)
-	) {
+	if (!task.value) {
 		return
 	}
 
-	if (task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT && repeatAfter.amount < 0) {
-		error({message: t('task.repeat.invalidAmount')})
-		return
+	// Calendar-aware modes (Monthly/Yearly) don't need repeatAfter amount
+	const isCalendarAwareMode = task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH ||
+		task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_YEAR
+
+	// For interval-based modes, validate the amount
+	if (!isCalendarAwareMode) {
+		if (repeatAfter.amount === 0) {
+			return
+		}
+		if (repeatAfter.amount < 0) {
+			error({message: t('task.repeat.invalidAmount')})
+			return
+		}
+		Object.assign(task.value.repeatAfter, repeatAfter)
 	}
 
-	Object.assign(task.value.repeatAfter, repeatAfter)
 	emit('update:modelValue', task.value)
 }
 

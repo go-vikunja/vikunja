@@ -121,6 +121,7 @@
 					</span>
 					<span
 						v-if="isRepeating"
+						v-tooltip="repeatTooltip"
 						class="project-task-icon"
 					>
 						<Icon icon="history" />
@@ -256,7 +257,31 @@ const {t} = useI18n({useScope: 'global'})
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>(new TaskModel())
 
-const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
+const isRepeating = computed(() => {
+	// Interval-based repeats have amount > 0
+	// Calendar-aware modes (Monthly/Yearly) don't need amount
+	return task.value.repeatAfter.amount > 0 ||
+		task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH ||
+		task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_YEAR
+})
+
+const repeatTooltip = computed(() => {
+	if (task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH) {
+		if (task.value.repeatDay > 0) {
+			return t('task.repeat.monthlyOnDay', {day: task.value.repeatDay})
+		}
+		return t('task.repeat.monthly')
+	}
+	if (task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_YEAR) {
+		return t('task.repeat.yearly')
+	}
+	if (task.value.repeatAfter.amount > 0) {
+		const amount = task.value.repeatAfter.amount
+		const type = task.value.repeatAfter.type
+		return t('task.repeat.every', {amount, type: t(`task.repeat.${type}`)})
+	}
+	return ''
+})
 
 watch(
 	() => props.theTask,

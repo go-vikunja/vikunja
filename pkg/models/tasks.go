@@ -47,6 +47,7 @@ const (
 	TaskRepeatModeDefault TaskRepeatMode = iota
 	TaskRepeatModeMonth
 	TaskRepeatModeFromCurrentDate
+	TaskRepeatModeYear
 )
 
 // Task represents a task in a project
@@ -71,6 +72,8 @@ type Task struct {
 	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after" valid:"range(0|9223372036854775807)"`
 	// Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.
 	RepeatMode TaskRepeatMode `xorm:"not null default 0" json:"repeat_mode"`
+	// The day of month (1-31) to repeat on for monthly repeats. 0 means use the due date's day.
+	RepeatDay int8 `xorm:"tinyint null default 0" json:"repeat_day" valid:"range(0|31)"`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"bigint null" json:"priority"`
 	// When this task starts.
@@ -178,7 +181,8 @@ func (t *Task) GetFrontendURL() string {
 
 func (t *Task) isRepeating() bool {
 	return t.RepeatAfter > 0 ||
-		t.RepeatMode == TaskRepeatModeMonth
+		t.RepeatMode == TaskRepeatModeMonth ||
+		t.RepeatMode == TaskRepeatModeYear
 }
 
 type taskFilterConcatinator string
@@ -1120,6 +1124,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		"project_id",
 		"bucket_id",
 		"repeat_mode",
+		"repeat_day",
 		"cover_image_attachment_id",
 	}
 
@@ -1179,6 +1184,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 		if !fieldSet["repeat_mode"] {
 			t.RepeatMode = ot.RepeatMode
+		}
+		if !fieldSet["repeat_day"] {
+			t.RepeatDay = ot.RepeatDay
 		}
 		if !fieldSet["cover_image_attachment_id"] {
 			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
@@ -1371,6 +1379,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	if t.RepeatMode == TaskRepeatModeDefault {
 		ot.RepeatMode = TaskRepeatModeDefault
 	}
+	// Repeat day (0 means use same day as due date)
+	if t.RepeatDay == 0 {
+		ot.RepeatDay = 0
+	}
 	// Is Favorite
 	if !t.IsFavorite {
 		ot.IsFavorite = false
@@ -1485,6 +1497,50 @@ func addOneMonthToDate(d time.Time) time.Time {
 	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
 }
 
+// addOneMonthToDateWithDay adds one month to a date, optionally using a specific day of month.
+// If repeatDay is 0, uses the original date's day. If repeatDay is 1-31, uses that day.
+// Handles months with fewer days (e.g., Feb 30 -> Feb 28/29).
+func addOneMonthToDateWithDay(d time.Time, repeatDay int8) time.Time {
+	year := d.Year()
+	month := d.Month() + 1
+	day := d.Day()
+
+	// Use repeatDay if specified
+	if repeatDay > 0 {
+		day = int(repeatDay)
+	}
+
+	// Handle year rollover
+	if month > 12 {
+		month = 1
+		year++
+	}
+
+	// Handle months with fewer days (e.g., if repeatDay is 31 but month only has 30 days)
+	// Get the last day of the target month
+	lastDay := time.Date(year, month+1, 0, 0, 0, 0, 0, config.GetTimeZone()).Day()
+	if day > lastDay {
+		day = lastDay
+	}
+
+	return time.Date(year, month, day, d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
+}
+
+func addOneYearToDate(d time.Time) time.Time {
+	year := d.Year() + 1
+	month := d.Month()
+	day := d.Day()
+
+	// Handle Feb 29 in non-leap years (and any other edge cases)
+	// Get the last day of the target month in the target year
+	lastDay := time.Date(year, month+1, 0, 0, 0, 0, 0, config.GetTimeZone()).Day()
+	if day > lastDay {
+		day = lastDay
+	}
+
+	return time.Date(year, month, day, d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
+}
+
 func addRepeatIntervalToTime(now, t time.Time, duration time.Duration) time.Time {
 	for {
 		t = t.Add(duration)
@@ -1533,31 +1589,64 @@ func setTaskDatesDefault(oldTask, newTask *Task) {
 }
 
 func setTaskDatesMonthRepeat(oldTask, newTask *Task) {
+	repeatDay := oldTask.RepeatDay
+
 	if !oldTask.DueDate.IsZero() {
-		newTask.DueDate = addOneMonthToDate(oldTask.DueDate)
+		newTask.DueDate = addOneMonthToDateWithDay(oldTask.DueDate, repeatDay)
 	}
 
 	newTask.Reminders = oldTask.Reminders
 	if len(oldTask.Reminders) > 0 {
 		for in, r := range oldTask.Reminders {
-			newTask.Reminders[in].Reminder = addOneMonthToDate(r.Reminder)
+			newTask.Reminders[in].Reminder = addOneMonthToDateWithDay(r.Reminder, repeatDay)
 		}
 	}
 
 	if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
 		diff := oldTask.EndDate.Sub(oldTask.StartDate)
-		newTask.StartDate = addOneMonthToDate(oldTask.StartDate)
+		newTask.StartDate = addOneMonthToDateWithDay(oldTask.StartDate, repeatDay)
 		newTask.EndDate = newTask.StartDate.Add(diff)
 	} else {
 		if !oldTask.StartDate.IsZero() {
-			newTask.StartDate = addOneMonthToDate(oldTask.StartDate)
+			newTask.StartDate = addOneMonthToDateWithDay(oldTask.StartDate, repeatDay)
 		}
 
 		if !oldTask.EndDate.IsZero() {
-			newTask.EndDate = addOneMonthToDate(oldTask.EndDate)
+			newTask.EndDate = addOneMonthToDateWithDay(oldTask.EndDate, repeatDay)
 		}
 	}
 
+	newTask.RepeatDay = repeatDay
+	newTask.Done = false
+}
+
+func setTaskDatesYearRepeat(oldTask, newTask *Task) {
+	if !oldTask.DueDate.IsZero() {
+		newTask.DueDate = addOneYearToDate(oldTask.DueDate)
+	}
+
+	newTask.Reminders = oldTask.Reminders
+	if len(oldTask.Reminders) > 0 {
+		for in, r := range oldTask.Reminders {
+			newTask.Reminders[in].Reminder = addOneYearToDate(r.Reminder)
+		}
+	}
+
+	if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
+		diff := oldTask.EndDate.Sub(oldTask.StartDate)
+		newTask.StartDate = addOneYearToDate(oldTask.StartDate)
+		newTask.EndDate = newTask.StartDate.Add(diff)
+	} else {
+		if !oldTask.StartDate.IsZero() {
+			newTask.StartDate = addOneYearToDate(oldTask.StartDate)
+		}
+
+		if !oldTask.EndDate.IsZero() {
+			newTask.EndDate = addOneYearToDate(oldTask.EndDate)
+		}
+	}
+
+	newTask.RepeatMode = TaskRepeatModeYear
 	newTask.Done = false
 }
 
@@ -1642,6 +1731,8 @@ func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
 		switch oldTask.RepeatMode {
 		case TaskRepeatModeMonth:
 			setTaskDatesMonthRepeat(oldTask, newTask)
+		case TaskRepeatModeYear:
+			setTaskDatesYearRepeat(oldTask, newTask)
 		case TaskRepeatModeFromCurrentDate:
 			setTaskDatesFromCurrentDateRepeat(oldTask, newTask)
 		case TaskRepeatModeDefault:

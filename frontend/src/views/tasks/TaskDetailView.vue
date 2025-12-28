@@ -613,12 +613,13 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMediaQuery, useMutationObserver} from '@vueuse/core'
 import {klona} from 'klona/lite'
+import {eventToHotkeyString} from '@github/hotkey'
 
 import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
@@ -699,6 +700,16 @@ const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
+// See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
+function saveTaskViaHotkey(event) {
+	const hotkeyString = eventToHotkeyString(event)
+	if (!hotkeyString) return
+	if (hotkeyString !== 'Control+s' && hotkeyString !== 'Meta+s') return
+	event.preventDefault()
+
+	saveTask()
+}
+
 const lastProject = computed(() => {
 	const backRoute = router.options.history.state?.back
 	if (!backRoute || typeof backRoute !== 'string') {
@@ -720,6 +731,14 @@ const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.val
 // Use Shift+R on macOS (Alt+R produces special characters depending on keyboard layout)
 // Use Alt+r on other platforms
 const reminderShortcut = computed(() => isAppleDevice() ? 'Shift+R' : 'Alt+r')
+
+onMounted(() => {
+	document.addEventListener('keydown', saveTaskViaHotkey)
+})
+
+onBeforeUnmount(() => {
+	document.removeEventListener('keydown', saveTaskViaHotkey)
+})
 
 onBeforeRouteLeave(async () => {
 	if (taskNotFound.value) {
@@ -957,7 +976,10 @@ function setActiveFields() {
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
 	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeatAfter = task.value.repeatAfter?.amount > 0 || task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	// Check for valid repeat config: either interval-based (amount > 0) or calendar-aware mode
+	const hasRepeatAmount = task.value.repeatAfter && typeof task.value.repeatAfter === 'object' && task.value.repeatAfter.amount > 0
+	const hasNonDefaultMode = task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	activeFields.repeatAfter = hasRepeatAmount || hasNonDefaultMode
 	activeFields.startDate = task.value.startDate !== null
 }
 
@@ -1009,6 +1031,9 @@ async function saveTask(
 		return
 	}
 
+	// Remember which fields were open before saving (to preserve edit state)
+	const repeatWasOpen = activeFields.repeatAfter
+
 	currentTask.hexColor = taskColor.value
 
 	// If no end date is being set, but a start date and due date,
@@ -1022,8 +1047,21 @@ async function saveTask(
 	}
 
 	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
+
 	Object.assign(task.value, updatedTask)
+
+	// Wait for Vue reactivity to settle before re-evaluating active fields
+	await nextTick()
+
+	const hasRepeatAmount = task.value.repeatAfter && typeof task.value.repeatAfter === 'object' && task.value.repeatAfter.amount > 0
+	const hasNonDefaultMode = task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+
 	setActiveFields()
+
+	// Preserve repeat field if it was open and still has valid repeat config
+	if (repeatWasOpen && (hasRepeatAmount || hasNonDefaultMode)) {
+		activeFields.repeatAfter = true
+	}
 
 	let actions: MessageAction[] = []
 	if (undoCallback) {

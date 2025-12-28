@@ -90,7 +90,7 @@
 					<Icon icon="align-left" />
 				</span>
 				<span
-					v-if="task.repeatAfter.amount > 0"
+					v-if="task.repeatAfter.amount > 0 || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_YEAR"
 					class="icon"
 				>
 					<Icon icon="history" />
@@ -181,7 +181,7 @@ const isOverdue = computed(() => (
 ))
 
 async function toggleTaskDone(task: ITask) {
-	const isRecurringTask = task.repeatAfter.amount > 0 || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+	const isRecurringTask = task.repeatAfter.amount > 0 || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_YEAR
 	const wasBeingMarkedDone = !task.done
 	
 	loadingInternal.value = true

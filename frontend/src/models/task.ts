@@ -73,6 +73,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	repeatAfter: number | IRepeatAfter = 0
 	repeatFromCurrentDate = false
 	repeatMode: IRepeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	repeatDay = 0
 	reminders: ITaskReminder[] = []
 	parentTaskId: ITask['id'] = 0
 	hexColor = ''
