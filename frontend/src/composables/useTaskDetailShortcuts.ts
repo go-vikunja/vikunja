@@ -10,6 +10,15 @@ interface UseTaskDetailShortcutsOptions {
 	onSave: () => void
 }
 
+async function copySavely(value: string) {
+
+	try {
+					await navigator.clipboard.writeText(value)
+				} catch(e) {
+					console.error('could not write to clipboard', e)
+				}
+}
+
 export function useTaskDetailShortcuts({
 	task,
 	taskTitle,
@@ -29,7 +38,7 @@ export function useTaskDetailShortcuts({
 	}
 
 	// See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
-	function handleTaskHotkey(event: KeyboardEvent) {
+	async function handleTaskHotkey(event: KeyboardEvent) {
 		const hotkeyString = eventToHotkeyString(event)
 		if (!hotkeyString) return
 
@@ -49,17 +58,18 @@ export function useTaskDetailShortcuts({
 			return
 		}
 
+		if (hotkeyString === 'Control+.') {
+			await copySavely(window.location.href)
+			return
+		}
+
 		if (hotkeyString === '.') {
 			dotKeyPressedTimes.value++
 			if (dotKeyPressedTimeout !== null) {
 				clearTimeout(dotKeyPressedTimeout)
 			}
 			dotKeyPressedTimeout = setTimeout(async () => {
-				try {
-					navigator.clipboard.writeText(dotKeyCopyValue.value)
-				} catch(e) {
-					console.error('could not write to clipboard', e)
-				}
+				await copySavely(dotKeyCopyValue.value)
 				resetDotKeyPressed()
 			}, 300)
 
