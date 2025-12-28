@@ -13,10 +13,10 @@ interface UseTaskDetailShortcutsOptions {
 async function copySavely(value: string) {
 
 	try {
-					await navigator.clipboard.writeText(value)
-				} catch(e) {
-					console.error('could not write to clipboard', e)
-				}
+		await navigator.clipboard.writeText(value)
+	} catch(e) {
+		console.error('could not write to clipboard', e)
+	}
 }
 
 export function useTaskDetailShortcuts({

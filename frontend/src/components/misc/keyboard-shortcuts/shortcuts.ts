@@ -223,6 +223,10 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 				keys: ['.', '.', '.'],
 				combination: 'then',
 			},
+			{
+				title: 'keyboardShortcuts.task.copyUrl',
+				keys: [ctrl, '.'],
+			},
 		],
 	},
 ] as const

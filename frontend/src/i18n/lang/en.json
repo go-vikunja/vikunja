@@ -1120,7 +1120,8 @@
       "save": "Save the current task",
       "copyIdentifier": "Copy task identifier to clipboard",
       "copyIdentifierAndTitle": "Copy task identifier and title to clipboard",
-      "copyIdentifierTitleAndUrl": "Copy task identifier, title and URL to clipboard"
+      "copyIdentifierTitleAndUrl": "Copy task identifier, title and URL to clipboard",
+      "copyUrl": "Copy task URL to clipboard"
     },
     "project": {
       "title": "Project Views",
