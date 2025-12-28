@@ -54,8 +54,12 @@ export function useTaskDetailShortcuts({
 			if (dotKeyPressedTimeout !== null) {
 				clearTimeout(dotKeyPressedTimeout)
 			}
-			dotKeyPressedTimeout = setTimeout(() => {
-				navigator.clipboard.writeText(dotKeyCopyValue.value)
+			dotKeyPressedTimeout = setTimeout(async () => {
+				try {
+					navigator.clipboard.writeText(dotKeyCopyValue.value)
+				} catch(e) {
+					console.error('could not write to clipboard', e)
+				}
 				resetDotKeyPressed()
 			}, 300)
 
