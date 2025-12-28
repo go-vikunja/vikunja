@@ -27,6 +27,8 @@
 				:is-loading="projectUpdating[project.id]"
 				:can-collapse="canCollapse"
 				:can-edit-order="canEditOrder"
+				:hide-star-icons="hideStarIcons"
+				:show-task-counts="showTaskCounts"
 				:data-project-id="project.id"
 			/>
 		</template>
@@ -49,6 +51,8 @@ const props = defineProps<{
 	modelValue?: IProject[],
 	canEditOrder: boolean,
 	canCollapse?: boolean,
+	hideStarIcons?: boolean,
+	showTaskCounts?: boolean,
 }>()
 const emit = defineEmits<{
 	(e: 'update:modelValue', projects: IProject[]): void

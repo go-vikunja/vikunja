@@ -15,6 +15,7 @@ export interface ISavedFilter extends IAbstract {
 	title: string
 	description: string
 	filters: IFilters
+	isFavorite: boolean
 
 	owner: IUser
 	created: Date

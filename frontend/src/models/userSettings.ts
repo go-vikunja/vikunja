@@ -32,6 +32,8 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		defaultTaskRelationType: RELATION_KIND.RELATED,
 		alwaysShowBucketTaskCount: false,
 		sidebarWidth: null,
+		sidebarEnhancedMode: false,
+		sidebarShowTaskCounts: false,
 	}
 	extraSettingsLinks = {}
 

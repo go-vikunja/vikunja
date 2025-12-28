@@ -24,6 +24,8 @@ export interface IFrontendSettings {
 	backgroundBrightness: number | null
 	alwaysShowBucketTaskCount: boolean
 	sidebarWidth: number | null
+	sidebarEnhancedMode: boolean
+	sidebarShowTaskCounts: boolean
 }
 
 export interface IExtraSettingsLink {

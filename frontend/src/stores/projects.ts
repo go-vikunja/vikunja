@@ -6,6 +6,8 @@ import {useRouter} from 'vue-router'
 import ProjectService from '@/services/project'
 import ProjectDuplicateService from '@/services/projectDuplicateService'
 import ProjectDuplicateModel from '@/models/projectDuplicateModel'
+import SavedFilterService from '@/services/savedFilter'
+import SavedFilterModel from '@/models/savedFilter'
 import {setModuleLoading} from '@/stores/helper'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
 import {createNewIndexer} from '@/indexes'
@@ -151,6 +153,37 @@ export const useProjectStore = defineStore('project', () => {
 		})
 	}
 
+	async function toggleSavedFilterFavorite(project: IProject) {
+		// Only handle saved filters (negative IDs less than -1)
+		const filterId = getSavedFilterIdFromProjectId(project.id)
+		if (filterId <= 0) {
+			return
+		}
+
+		const filterService = new SavedFilterService()
+
+		// Optimistically update the UI
+		const newIsFavorite = !project.isFavorite
+		setProject({
+			...project,
+			isFavorite: newIsFavorite,
+		})
+
+		try {
+			// Get the current filter and update it
+			const filter = await filterService.get(new SavedFilterModel({id: filterId}))
+			filter.isFavorite = newIsFavorite
+			await filterService.update(filter)
+		} catch (e) {
+			// Revert on error
+			setProject({
+				...project,
+				isFavorite: !newIsFavorite,
+			})
+			throw e
+		}
+	}
+
 	async function createProject(project: IProject) {
 		const cancel = setModuleLoading(setIsLoading)
 		const projectService = new ProjectService()
@@ -294,6 +327,7 @@ export const useProjectStore = defineStore('project', () => {
 		setProjects,
 		removeProjectById,
 		toggleProjectFavorite,
+		toggleSavedFilterFavorite,
 		loadAllProjects,
 		loadProject,
 		createProject,
