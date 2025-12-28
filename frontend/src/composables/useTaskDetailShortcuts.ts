@@ -36,6 +36,17 @@ export function useTaskDetailShortcuts({
 		if (hotkeyString === 'Control+s' || hotkeyString === 'Meta+s') {
 			event.preventDefault()
 			onSave()
+			return
+		}
+
+		const target = event.target as HTMLElement
+
+		if (
+			target.tagName.toLowerCase() === 'input' ||
+			target.tagName.toLowerCase() === 'textarea' ||
+			target.contentEditable === 'true'
+		) {
+			return
 		}
 
 		if (hotkeyString === '.') {
