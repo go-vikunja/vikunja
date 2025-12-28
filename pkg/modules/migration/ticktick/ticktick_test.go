@@ -86,7 +86,7 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 			ParentID:    0,
 			ProjectName: "Project 2",
 			Title:       "Test task 4",
-			Status:      "0",
+			Status:      "2",
 			Order:       -109951627777,
 		},
 	}
@@ -147,6 +147,7 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 
 	assert.Equal(t, vikunjaTasks[2].Tasks[0].Title, tickTickTasks[3].Title)
 	assert.Equal(t, vikunjaTasks[2].Tasks[0].Position, tickTickTasks[3].Order)
+	assert.True(t, vikunjaTasks[2].Tasks[0].Done)
 }
 
 func TestLinesToSkipBeforeHeader(t *testing.T) {
