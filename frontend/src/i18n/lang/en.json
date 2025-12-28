@@ -1117,7 +1117,11 @@
       "priority": "Change the priority of this task",
       "favorite": "Mark this task as favorite / unfavorite",
       "openProject": "Open the project of this task",
-      "save": "Save the current task"
+      "save": "Save the current task",
+      "copyIdentifier": "Copy task identifier to clipboard",
+      "copyIdentifierAndTitle": "Copy task identifier and title to clipboard",
+      "copyIdentifierTitleAndUrl": "Copy task identifier, title and URL to clipboard",
+      "copyUrl": "Copy task URL to clipboard"
     },
     "project": {
       "title": "Project Views",

@@ -209,6 +209,24 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 				title: 'keyboardShortcuts.task.save',
 				keys: [ctrl, 's'],
 			},
+			{
+				title: 'keyboardShortcuts.task.copyIdentifier',
+				keys: ['.'],
+			},
+			{
+				title: 'keyboardShortcuts.task.copyIdentifierAndTitle',
+				keys: ['.', '.'],
+				combination: 'then',
+			},
+			{
+				title: 'keyboardShortcuts.task.copyIdentifierTitleAndUrl',
+				keys: ['.', '.', '.'],
+				combination: 'then',
+			},
+			{
+				title: 'keyboardShortcuts.task.copyUrl',
+				keys: [ctrl, '.'],
+			},
 		],
 	},
 ] as const
