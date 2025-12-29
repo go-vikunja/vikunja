@@ -229,8 +229,7 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 			Updated:     t.Updated,
 			DueDate:     t.DueDate,
 			Duration:    duration,
-			RepeatAfter: t.RepeatAfter,
-			RepeatMode:  t.RepeatMode,
+			Repeats:     t.Repeats,
 			Alarms:      alarms,
 			Relations:   relations,
 		})

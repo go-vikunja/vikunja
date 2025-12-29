@@ -8,12 +8,9 @@ import type {IProject} from '@/modelTypes/IProject'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 import type {IBucket} from '@/modelTypes/IBucket'
 
-import type {IRepeatAfter} from '@/types/IRepeatAfter'
 import type {IRelationKind} from '@/types/IRelationKind'
-import {TASK_REPEAT_MODES, type IRepeatMode} from '@/types/IRepeatMode'
 
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
-import {secondsToPeriod} from '@/helpers/time/period'
 
 import AbstractModel from './abstractModel'
 import LabelModel from './label'
@@ -30,19 +27,6 @@ export function	getHexColor(hexColor: string): string | undefined {
 	}
 
 	return hexColor
-}
-
-/**
- * Parses `repeatAfterSeconds` into a usable js object.
- */
-export function parseRepeatAfter(repeatAfterSeconds: number): IRepeatAfter {
-	
-	const period = secondsToPeriod(repeatAfterSeconds)
-	
-	return {
-		type: period.unit,
-		amount: period.amount,
-	}
 }
 
 export function getTaskIdentifier(task: ITask | null | undefined): string {
@@ -70,10 +54,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	dueDate: Date | null = 0
 	startDate: Date | null = 0
 	endDate: Date | null = 0
-	repeatAfter: number | IRepeatAfter = 0
-	repeatFromCurrentDate = false
-	repeatMode: IRepeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	repeatDay = 0
+	repeats = ''
+	repeatsFromCurrentDate = false
 	reminders: ITaskReminder[] = []
 	parentTaskId: ITask['id'] = 0
 	hexColor = ''
@@ -118,9 +100,6 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.dueDate = parseDateOrNull(this.dueDate)
 		this.startDate = parseDateOrNull(this.startDate)
 		this.endDate = parseDateOrNull(this.endDate)
-
-		// Parse the repeat after into something usable
-		this.repeatAfter = parseRepeatAfter(this.repeatAfter as number)
 
 		this.reminders = this.reminders.map(r => new TaskReminderModel(r))
 

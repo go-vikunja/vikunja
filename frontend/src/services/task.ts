@@ -5,7 +5,6 @@ import AttachmentService from './attachment'
 import LabelService from './label'
 
 import {colorFromHex} from '@/helpers/color/colorFromHex'
-import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK, SECONDS_A_MONTH, SECONDS_A_YEAR} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
@@ -73,29 +72,6 @@ export default class TaskService extends AbstractService<ITask> {
 				r.reminder = new Date(r.reminder).toISOString()
 			})
 		}
-
-		// Make the repeating amount to seconds
-		let repeatAfterSeconds = 0
-		if (model.repeatAfter !== null && (model.repeatAfter.amount !== null || model.repeatAfter.amount !== 0)) {
-			switch (model.repeatAfter.type) {
-				case 'hours':
-					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_HOUR
-					break
-				case 'days':
-					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_DAY
-					break
-				case 'weeks':
-					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_WEEK
-					break
-				case 'months':
-					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_MONTH
-					break
-				case 'years':
-					repeatAfterSeconds = model.repeatAfter.amount * SECONDS_A_YEAR
-					break
-			}
-		}
-		model.repeatAfter = repeatAfterSeconds
 
 		model.hexColor = colorFromHex(model.hexColor)
 

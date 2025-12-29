@@ -36,19 +36,12 @@ import (
 	"github.com/google/uuid"
 	clone "github.com/huandu/go-clone/generic"
 	"github.com/jinzhu/copier"
+	"github.com/teambition/rrule-go"
 	"github.com/typesense/typesense-go/v2/typesense"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
-type TaskRepeatMode int
-
-const (
-	TaskRepeatModeDefault TaskRepeatMode = iota
-	TaskRepeatModeMonth
-	TaskRepeatModeFromCurrentDate
-	TaskRepeatModeYear
-)
 
 // Task represents a task in a project
 type Task struct {
@@ -68,12 +61,10 @@ type Task struct {
 	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// The project this task belongs to.
 	ProjectID int64 `xorm:"bigint INDEX not null" json:"project_id" param:"project"`
-	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
-	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after" valid:"range(0|9223372036854775807)"`
-	// Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.
-	RepeatMode TaskRepeatMode `xorm:"not null default 0" json:"repeat_mode"`
-	// The day of month (1-31) to repeat on for monthly repeats. 0 means use the due date's day.
-	RepeatDay int8 `xorm:"tinyint null default 0" json:"repeat_day" valid:"range(0|31)"`
+	// An RFC 5545 RRULE string defining the recurrence pattern. Examples: "FREQ=DAILY;INTERVAL=1", "FREQ=WEEKLY;BYDAY=MO,WE,FR", "FREQ=MONTHLY;BYMONTHDAY=15"
+	Repeats string `xorm:"varchar(500) null" json:"repeats"`
+	// If true, the next occurrence is calculated from the completion date rather than the original due date.
+	RepeatsFromCurrentDate bool `xorm:"null default false" json:"repeats_from_current_date"`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"bigint null" json:"priority"`
 	// When this task starts.
@@ -180,9 +171,7 @@ func (t *Task) GetFrontendURL() string {
 }
 
 func (t *Task) isRepeating() bool {
-	return t.RepeatAfter > 0 ||
-		t.RepeatMode == TaskRepeatModeMonth ||
-		t.RepeatMode == TaskRepeatModeYear
+	return t.Repeats != ""
 }
 
 type taskFilterConcatinator string
@@ -1115,7 +1104,8 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		"description",
 		"done",
 		"due_date",
-		"repeat_after",
+		"repeats",
+		"repeats_from_current_date",
 		"priority",
 		"start_date",
 		"end_date",
@@ -1123,8 +1113,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		"percent_done",
 		"project_id",
 		"bucket_id",
-		"repeat_mode",
-		"repeat_day",
 		"cover_image_attachment_id",
 	}
 
@@ -1158,8 +1146,11 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		if !fieldSet["due_date"] {
 			t.DueDate = ot.DueDate
 		}
-		if !fieldSet["repeat_after"] {
-			t.RepeatAfter = ot.RepeatAfter
+		if !fieldSet["repeats"] {
+			t.Repeats = ot.Repeats
+		}
+		if !fieldSet["repeats_from_current_date"] {
+			t.RepeatsFromCurrentDate = ot.RepeatsFromCurrentDate
 		}
 		if !fieldSet["priority"] {
 			t.Priority = ot.Priority
@@ -1181,12 +1172,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 		if !fieldSet["bucket_id"] {
 			t.BucketID = ot.BucketID
-		}
-		if !fieldSet["repeat_mode"] {
-			t.RepeatMode = ot.RepeatMode
-		}
-		if !fieldSet["repeat_day"] {
-			t.RepeatDay = ot.RepeatDay
 		}
 		if !fieldSet["cover_image_attachment_id"] {
 			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
@@ -1355,9 +1340,13 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	if t.DueDate.IsZero() {
 		ot.DueDate = time.Time{}
 	}
-	// Repeat after
-	if t.RepeatAfter == 0 {
-		ot.RepeatAfter = 0
+	// RRULE repeats
+	if t.Repeats == "" {
+		ot.Repeats = ""
+	}
+	// Repeats from current date
+	if !t.RepeatsFromCurrentDate {
+		ot.RepeatsFromCurrentDate = false
 	}
 	// Start date
 	if t.StartDate.IsZero() {
@@ -1374,14 +1363,6 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// Percent Done
 	if t.PercentDone == 0 {
 		ot.PercentDone = 0
-	}
-	// Repeat from current date
-	if t.RepeatMode == TaskRepeatModeDefault {
-		ot.RepeatMode = TaskRepeatModeDefault
-	}
-	// Repeat day (0 means use same day as due date)
-	if t.RepeatDay == 0 {
-		ot.RepeatDay = 0
 	}
 	// Is Favorite
 	if !t.IsFavorite {
@@ -1493,225 +1474,82 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 	return nil
 }
 
-func addOneMonthToDate(d time.Time) time.Time {
-	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
-}
-
-// addOneMonthToDateWithDay adds one month to a date, optionally using a specific day of month.
-// If repeatDay is 0, uses the original date's day. If repeatDay is 1-31, uses that day.
-// Handles months with fewer days (e.g., Feb 30 -> Feb 28/29).
-func addOneMonthToDateWithDay(d time.Time, repeatDay int8) time.Time {
-	year := d.Year()
-	month := d.Month() + 1
-	day := d.Day()
-
-	// Use repeatDay if specified
-	if repeatDay > 0 {
-		day = int(repeatDay)
-	}
-
-	// Handle year rollover
-	if month > 12 {
-		month = 1
-		year++
-	}
-
-	// Handle months with fewer days (e.g., if repeatDay is 31 but month only has 30 days)
-	// Get the last day of the target month
-	lastDay := time.Date(year, month+1, 0, 0, 0, 0, 0, config.GetTimeZone()).Day()
-	if day > lastDay {
-		day = lastDay
-	}
-
-	return time.Date(year, month, day, d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
-}
-
-func addOneYearToDate(d time.Time) time.Time {
-	year := d.Year() + 1
-	month := d.Month()
-	day := d.Day()
-
-	// Handle Feb 29 in non-leap years (and any other edge cases)
-	// Get the last day of the target month in the target year
-	lastDay := time.Date(year, month+1, 0, 0, 0, 0, 0, config.GetTimeZone()).Day()
-	if day > lastDay {
-		day = lastDay
-	}
-
-	return time.Date(year, month, day, d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
-}
-
-func addRepeatIntervalToTime(now, t time.Time, duration time.Duration) time.Time {
-	for {
-		t = t.Add(duration)
-		if t.After(now) {
-			break
-		}
-	}
-
-	return t
-}
-
-func setTaskDatesDefault(oldTask, newTask *Task) {
-	if oldTask.RepeatAfter == 0 {
+// setTaskDatesRRule sets the next occurrence dates using an RRULE string.
+// If repeatsFromCurrentDate is true, the next occurrence is calculated from now.
+// Otherwise, it's calculated from the current due date.
+func setTaskDatesRRule(oldTask, newTask *Task) {
+	if oldTask.Repeats == "" {
 		return
 	}
 
-	// Current time in an extra variable to base all calculations on the same time
-	now := time.Now()
-
-	repeatDuration := time.Duration(oldTask.RepeatAfter) * time.Second
-
-	// assuming we'll merge the new task over the old task
-	if !oldTask.DueDate.IsZero() {
-		newTask.DueDate = addRepeatIntervalToTime(now, oldTask.DueDate, repeatDuration)
-	}
-
-	newTask.Reminders = oldTask.Reminders
-	// When repeating from the current date, all reminders should keep their difference to each other.
-	// To make this easier, we sort them first because we can then rely on the fact the first is the smallest
-	if len(oldTask.Reminders) > 0 {
-		for in, r := range oldTask.Reminders {
-			newTask.Reminders[in].Reminder = addRepeatIntervalToTime(now, r.Reminder, repeatDuration)
-		}
-	}
-
-	// If a task has a start and end date, the end date should keep the difference to the start date when setting them as new
-	if !oldTask.StartDate.IsZero() {
-		newTask.StartDate = addRepeatIntervalToTime(now, oldTask.StartDate, repeatDuration)
-	}
-
-	if !oldTask.EndDate.IsZero() {
-		newTask.EndDate = addRepeatIntervalToTime(now, oldTask.EndDate, repeatDuration)
-	}
-
-	newTask.Done = false
-}
-
-func setTaskDatesMonthRepeat(oldTask, newTask *Task) {
-	repeatDay := oldTask.RepeatDay
-
-	if !oldTask.DueDate.IsZero() {
-		newTask.DueDate = addOneMonthToDateWithDay(oldTask.DueDate, repeatDay)
-	}
-
-	newTask.Reminders = oldTask.Reminders
-	if len(oldTask.Reminders) > 0 {
-		for in, r := range oldTask.Reminders {
-			newTask.Reminders[in].Reminder = addOneMonthToDateWithDay(r.Reminder, repeatDay)
-		}
-	}
-
-	if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
-		diff := oldTask.EndDate.Sub(oldTask.StartDate)
-		newTask.StartDate = addOneMonthToDateWithDay(oldTask.StartDate, repeatDay)
-		newTask.EndDate = newTask.StartDate.Add(diff)
-	} else {
-		if !oldTask.StartDate.IsZero() {
-			newTask.StartDate = addOneMonthToDateWithDay(oldTask.StartDate, repeatDay)
-		}
-
-		if !oldTask.EndDate.IsZero() {
-			newTask.EndDate = addOneMonthToDateWithDay(oldTask.EndDate, repeatDay)
-		}
-	}
-
-	newTask.RepeatDay = repeatDay
-	newTask.Done = false
-}
-
-func setTaskDatesYearRepeat(oldTask, newTask *Task) {
-	if !oldTask.DueDate.IsZero() {
-		newTask.DueDate = addOneYearToDate(oldTask.DueDate)
-	}
-
-	newTask.Reminders = oldTask.Reminders
-	if len(oldTask.Reminders) > 0 {
-		for in, r := range oldTask.Reminders {
-			newTask.Reminders[in].Reminder = addOneYearToDate(r.Reminder)
-		}
-	}
-
-	if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
-		diff := oldTask.EndDate.Sub(oldTask.StartDate)
-		newTask.StartDate = addOneYearToDate(oldTask.StartDate)
-		newTask.EndDate = newTask.StartDate.Add(diff)
-	} else {
-		if !oldTask.StartDate.IsZero() {
-			newTask.StartDate = addOneYearToDate(oldTask.StartDate)
-		}
-
-		if !oldTask.EndDate.IsZero() {
-			newTask.EndDate = addOneYearToDate(oldTask.EndDate)
-		}
-	}
-
-	newTask.RepeatMode = TaskRepeatModeYear
-	newTask.Done = false
-}
-
-func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
-	if oldTask.RepeatAfter == 0 {
+	// Parse the RRULE string
+	rule, err := rrule.StrToRRule(oldTask.Repeats)
+	if err != nil {
+		log.Errorf("Failed to parse RRULE '%s' for task %d: %v", oldTask.Repeats, oldTask.ID, err)
 		return
 	}
 
-	// Current time in an extra variable to base all calculations on the same time
 	now := time.Now()
 
-	repeatDuration := time.Duration(oldTask.RepeatAfter) * time.Second
-
-	// assuming we'll merge the new task over the old task
-	if !oldTask.DueDate.IsZero() {
-		newTask.DueDate = now.Add(repeatDuration)
-	}
-
-	newTask.Reminders = oldTask.Reminders
-	// When repeating from the current date, all reminders should keep their difference to each other.
-	// To make this easier, we sort them first because we can then rely on the fact the first is the smallest
-	if len(oldTask.Reminders) > 0 {
-		sort.Slice(oldTask.Reminders, func(i, j int) bool {
-			return oldTask.Reminders[i].Reminder.Unix() < oldTask.Reminders[j].Reminder.Unix()
-		})
-		first := oldTask.Reminders[0].Reminder
-		for in, r := range oldTask.Reminders {
-			diff := r.Reminder.Sub(first)
-			newTask.Reminders[in].Reminder = now.Add(repeatDuration + diff)
-		}
-	}
-
-	// We want to preserve intervals among the due, start and end dates.
-	// The due date is used as a reference point for all new dates, so the
-	// behaviour depends on whether the due date is set at all.
-	if oldTask.DueDate.IsZero() {
-		// If a task has no due date, but does have a start and end date, the
-		// end date should keep the difference to the start date when setting
-		// them as new
-		if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
-			diff := oldTask.EndDate.Sub(oldTask.StartDate)
-			newTask.StartDate = now.Add(repeatDuration)
-			newTask.EndDate = now.Add(repeatDuration + diff)
-		} else {
-			if !oldTask.StartDate.IsZero() {
-				newTask.StartDate = now.Add(repeatDuration)
-			}
-
-			if !oldTask.EndDate.IsZero() {
-				newTask.EndDate = now.Add(repeatDuration)
-			}
-		}
+	// Determine the base date for calculating the next occurrence
+	var baseDate time.Time
+	if oldTask.RepeatsFromCurrentDate {
+		baseDate = now
+	} else if !oldTask.DueDate.IsZero() {
+		baseDate = oldTask.DueDate
 	} else {
-		// If the old task has a start and due date, we set the new start date
-		// to preserve the interval between them.
-		if !oldTask.StartDate.IsZero() {
-			diff := oldTask.DueDate.Sub(oldTask.StartDate)
-			newTask.StartDate = newTask.DueDate.Add(-diff)
-		}
+		baseDate = now
+	}
 
-		// If the old task has an end and due date, we set the new end date
-		// to preserve the interval between them.
+	// Set the DTSTART on the rule so After() works correctly
+	rule.DTStart(baseDate)
+
+	// Get the next occurrence after the base date
+	nextOccurrence := rule.After(baseDate, false)
+	if nextOccurrence.IsZero() {
+		// No more occurrences according to the rule (e.g., COUNT limit reached)
+		// Don't reschedule, just mark as done
+		return
+	}
+
+	// Calculate the time difference for adjusting related dates
+	var timeDiff time.Duration
+	if !oldTask.DueDate.IsZero() {
+		timeDiff = nextOccurrence.Sub(oldTask.DueDate)
+		newTask.DueDate = nextOccurrence
+	}
+
+	// Update reminders with the same time difference
+	newTask.Reminders = oldTask.Reminders
+	if len(oldTask.Reminders) > 0 && timeDiff != 0 {
+		for in, r := range oldTask.Reminders {
+			newTask.Reminders[in].Reminder = r.Reminder.Add(timeDiff)
+		}
+	}
+
+	// Update start/end dates preserving their relationship to due date
+	if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
+		diff := oldTask.EndDate.Sub(oldTask.StartDate)
+		if timeDiff != 0 {
+			newTask.StartDate = oldTask.StartDate.Add(timeDiff)
+		} else if oldTask.RepeatsFromCurrentDate {
+			newTask.StartDate = now
+		}
+		newTask.EndDate = newTask.StartDate.Add(diff)
+	} else {
+		if !oldTask.StartDate.IsZero() {
+			if timeDiff != 0 {
+				newTask.StartDate = oldTask.StartDate.Add(timeDiff)
+			} else if oldTask.RepeatsFromCurrentDate {
+				newTask.StartDate = now
+			}
+		}
 		if !oldTask.EndDate.IsZero() {
-			diff := oldTask.DueDate.Sub(oldTask.EndDate)
-			newTask.EndDate = newTask.DueDate.Add(-diff)
+			if timeDiff != 0 {
+				newTask.EndDate = oldTask.EndDate.Add(timeDiff)
+			} else if oldTask.RepeatsFromCurrentDate {
+				newTask.EndDate = now
+			}
 		}
 	}
 
@@ -1721,22 +1559,16 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 // This helper function updates the reminders, doneAt, start, end and due dates of the *old* task
 // and saves the new values in the newTask object.
 // We make a few assumptions here:
-//  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
+//  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.Repeats has a value
 //  2. Because of 1., this functions should not be used to update values other than Done in the same go
 func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
 	// Track if the done status changed before repeat helpers modify it
 	doneStatusChanged := oldTask.Done != newTask.Done
 
 	if !oldTask.Done && newTask.Done {
-		switch oldTask.RepeatMode {
-		case TaskRepeatModeMonth:
-			setTaskDatesMonthRepeat(oldTask, newTask)
-		case TaskRepeatModeYear:
-			setTaskDatesYearRepeat(oldTask, newTask)
-		case TaskRepeatModeFromCurrentDate:
-			setTaskDatesFromCurrentDateRepeat(oldTask, newTask)
-		case TaskRepeatModeDefault:
-			setTaskDatesDefault(oldTask, newTask)
+		// Use RRULE to calculate next occurrence
+		if oldTask.Repeats != "" {
+			setTaskDatesRRule(oldTask, newTask)
 		}
 
 		newTask.DoneAt = time.Now()

@@ -76,7 +76,7 @@
 				<Icon icon="align-left" />
 			</span>
 			<span
-				v-if="task.repeatAfter.amount > 0 || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH || task.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_YEAR"
+				v-if="isRepeating(task.repeats)"
 				class="project-task-icon"
 			>
 				<Icon icon="history" />
@@ -101,7 +101,7 @@ import {computed} from 'vue'
 
 import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {isRepeating} from '@/helpers/rrule'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'

@@ -120,7 +120,7 @@
 						<Icon icon="align-left" />
 					</span>
 					<span
-						v-if="isRepeating"
+						v-if="taskIsRepeating"
 						v-tooltip="repeatTooltip"
 						class="project-task-icon"
 					>
@@ -223,7 +223,7 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {isRepeating, describeRRule} from '@/helpers/rrule'
 
 const props = withDefaults(defineProps<{
 	theTask: ITask,
@@ -257,30 +257,13 @@ const {t} = useI18n({useScope: 'global'})
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>(new TaskModel())
 
-const isRepeating = computed(() => {
-	// Interval-based repeats have amount > 0
-	// Calendar-aware modes (Monthly/Yearly) don't need amount
-	return task.value.repeatAfter.amount > 0 ||
-		task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH ||
-		task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_YEAR
-})
+const taskIsRepeating = computed(() => isRepeating(task.value.repeats))
 
 const repeatTooltip = computed(() => {
-	if (task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH) {
-		if (task.value.repeatDay > 0) {
-			return t('task.repeat.monthlyOnDay', {day: task.value.repeatDay})
-		}
-		return t('task.repeat.monthly')
+	if (!task.value.repeats) {
+		return ''
 	}
-	if (task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_YEAR) {
-		return t('task.repeat.yearly')
-	}
-	if (task.value.repeatAfter.amount > 0) {
-		const amount = task.value.repeatAfter.amount
-		const type = task.value.repeatAfter.type
-		return t('task.repeat.every', {amount, type: t(`task.repeat.${type}`)})
-	}
-	return ''
+	return describeRRule(task.value.repeats, t)
 })
 
 watch(
@@ -353,7 +336,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 		emit('taskUpdated', newTask)
 
 		let message = t('task.doneSuccess')
-		if (!task.value.done && !isRepeating.value) {
+		if (!task.value.done && !taskIsRepeating.value) {
 			message = t('task.undoneSuccess')
 		}
 
@@ -371,7 +354,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 }
 
 function undoDone(checked: boolean) {
-	if (isRepeating.value) {
+	if (taskIsRepeating.value) {
 		task.value = {...oldTask}
 	}
 	task.value.done = !task.value.done

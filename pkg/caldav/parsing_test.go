@@ -532,7 +532,7 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 							EndDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
 							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
 							DoneAt:      time.Unix(1543626726, 0).In(config.GetTimeZone()),
-							RepeatAfter: 86400,
+							Repeats:     "FREQ=DAILY;INTERVAL=1",
 							Labels: []*models.Label{
 								{
 									ID:    1,

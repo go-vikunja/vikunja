@@ -658,7 +658,7 @@ import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {isRepeating} from '@/helpers/rrule'
 import {playPopSound} from '@/helpers/playPop'
 
 import {useAttachmentStore} from '@/stores/attachments'
@@ -976,10 +976,7 @@ function setActiveFields() {
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
 	activeFields.reminders = task.value.reminders.length > 0
-	// Check for valid repeat config: either interval-based (amount > 0) or calendar-aware mode
-	const hasRepeatAmount = task.value.repeatAfter && typeof task.value.repeatAfter === 'object' && task.value.repeatAfter.amount > 0
-	const hasNonDefaultMode = task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-	activeFields.repeatAfter = hasRepeatAmount || hasNonDefaultMode
+	activeFields.repeatAfter = isRepeating(task.value.repeats)
 	activeFields.startDate = task.value.startDate !== null
 }
 
@@ -1053,13 +1050,10 @@ async function saveTask(
 	// Wait for Vue reactivity to settle before re-evaluating active fields
 	await nextTick()
 
-	const hasRepeatAmount = task.value.repeatAfter && typeof task.value.repeatAfter === 'object' && task.value.repeatAfter.amount > 0
-	const hasNonDefaultMode = task.value.repeatMode !== TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
-
 	setActiveFields()
 
 	// Preserve repeat field if it was open and still has valid repeat config
-	if (repeatWasOpen && (hasRepeatAmount || hasNonDefaultMode)) {
+	if (repeatWasOpen && isRepeating(task.value.repeats)) {
 		activeFields.repeatAfter = true
 	}
 
@@ -1139,8 +1133,8 @@ async function setPercentDone(percentDone: number) {
 }
 
 async function removeRepeatAfter() {
-	task.value.repeatAfter.amount = 0
-	task.value.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_DEFAULT
+	task.value.repeats = ''
+	task.value.repeatsFromCurrentDate = false
 	await saveTask()
 }
 
