@@ -502,7 +502,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 	task28 := &Task{
 		ID:           28,
-		Title:        "task #28 with repeat after, start_date, end_date and due_date",
+		Title:        "task #28 with repeats, start_date, end_date and due_date",
 		Identifier:   "test1-13",
 		Index:        13,
 		CreatedByID:  1,
