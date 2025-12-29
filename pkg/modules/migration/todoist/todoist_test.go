@@ -637,3 +637,72 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		t.Errorf("converted todoist data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)
 	}
 }
+
+func TestTodoistDueStringToRRule(t *testing.T) {
+	testCases := []struct {
+		name        string
+		dueString   string
+		isRecurring bool
+		expected    string
+	}{
+		// Non-recurring tasks
+		{"not recurring", "tomorrow", false, ""},
+		{"empty string not recurring", "", false, ""},
+
+		// Basic frequencies
+		{"every day", "every day", true, "FREQ=DAILY;INTERVAL=1"},
+		{"daily", "daily", true, "FREQ=DAILY;INTERVAL=1"},
+		{"every week", "every week", true, "FREQ=WEEKLY;INTERVAL=1"},
+		{"weekly", "weekly", true, "FREQ=WEEKLY;INTERVAL=1"},
+		{"every month", "every month", true, "FREQ=MONTHLY;INTERVAL=1"},
+		{"monthly", "monthly", true, "FREQ=MONTHLY;INTERVAL=1"},
+		{"every year", "every year", true, "FREQ=YEARLY;INTERVAL=1"},
+		{"yearly", "yearly", true, "FREQ=YEARLY;INTERVAL=1"},
+		{"annually", "annually", true, "FREQ=YEARLY;INTERVAL=1"},
+
+		// Interval variations
+		{"every 2 days", "every 2 days", true, "FREQ=DAILY;INTERVAL=2"},
+		{"every 3 weeks", "every 3 weeks", true, "FREQ=WEEKLY;INTERVAL=3"},
+		{"every 6 months", "every 6 months", true, "FREQ=MONTHLY;INTERVAL=6"},
+		{"every 2 years", "every 2 years", true, "FREQ=YEARLY;INTERVAL=2"},
+
+		// Weekday patterns
+		{"every monday", "every monday", true, "FREQ=WEEKLY;BYDAY=MO"},
+		{"every tuesday", "every tuesday", true, "FREQ=WEEKLY;BYDAY=TU"},
+		{"every wednesday", "every wednesday", true, "FREQ=WEEKLY;BYDAY=WE"},
+		{"every thursday", "every thursday", true, "FREQ=WEEKLY;BYDAY=TH"},
+		{"every friday", "every friday", true, "FREQ=WEEKLY;BYDAY=FR"},
+		{"every saturday", "every saturday", true, "FREQ=WEEKLY;BYDAY=SA"},
+		{"every sunday", "every sunday", true, "FREQ=WEEKLY;BYDAY=SU"},
+
+		// Special patterns
+		{"every weekday", "every weekday", true, "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"},
+		{"weekdays", "weekdays", true, "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"},
+		{"every weekend", "every weekend", true, "FREQ=WEEKLY;BYDAY=SA,SU"},
+		{"weekends", "weekends", true, "FREQ=WEEKLY;BYDAY=SA,SU"},
+
+		// "every other" patterns
+		{"every other day", "every other day", true, "FREQ=DAILY;INTERVAL=2"},
+		{"every other week", "every other week", true, "FREQ=WEEKLY;INTERVAL=2"},
+		{"every other month", "every other month", true, "FREQ=MONTHLY;INTERVAL=2"},
+
+		// Case insensitivity
+		{"Every Day uppercase", "Every Day", true, "FREQ=DAILY;INTERVAL=1"},
+		{"EVERY WEEK uppercase", "EVERY WEEK", true, "FREQ=WEEKLY;INTERVAL=1"},
+
+		// Strict recurrence (with !)
+		{"every! day strict", "every! day", true, "FREQ=DAILY;INTERVAL=1"},
+		{"every !week strict", "every !week", true, "FREQ=WEEKLY;INTERVAL=1"},
+
+		// Unknown patterns return empty string
+		{"unknown pattern", "every third tuesday", true, ""},
+		{"complex pattern", "every 2nd monday of the month", true, ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := todoistDueStringToRRule(tc.dueString, tc.isRecurring)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
