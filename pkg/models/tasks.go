@@ -1504,8 +1504,17 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 	// Set the DTSTART on the rule so After() works correctly
 	rule.DTStart(baseDate)
 
-	// Get the next occurrence after the base date
-	nextOccurrence := rule.After(baseDate, false)
+	// Determine where to search for the next occurrence:
+	// - If due date is in the future, advance from there (to get the next interval)
+	// - Otherwise, get the next occurrence after now (to skip past dates)
+	var searchFrom time.Time
+	if !oldTask.DueDate.IsZero() && oldTask.DueDate.After(now) {
+		searchFrom = oldTask.DueDate
+	} else {
+		searchFrom = now
+	}
+
+	nextOccurrence := rule.After(searchFrom, false)
 	if nextOccurrence.IsZero() {
 		// No more occurrences according to the rule (e.g., COUNT limit reached)
 		// Don't reschedule, just mark as done
@@ -1516,6 +1525,9 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 	var timeDiff time.Duration
 	if !oldTask.DueDate.IsZero() {
 		timeDiff = nextOccurrence.Sub(oldTask.DueDate)
+	} else {
+		// No due date, calculate diff from the base date used for rule generation
+		timeDiff = nextOccurrence.Sub(baseDate)
 	}
 	// Always set the due date for repeating tasks - if there was no due date,
 	// the next occurrence becomes the new due date
@@ -1530,27 +1542,28 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 	}
 
 	// Update start/end dates preserving their relationship to due date
+	// When RepeatsFromCurrentDate is true, dates are set to the next occurrence (future date)
 	if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
 		diff := oldTask.EndDate.Sub(oldTask.StartDate)
-		if timeDiff != 0 {
+		if oldTask.RepeatsFromCurrentDate {
+			newTask.StartDate = nextOccurrence
+		} else if timeDiff != 0 {
 			newTask.StartDate = oldTask.StartDate.Add(timeDiff)
-		} else if oldTask.RepeatsFromCurrentDate {
-			newTask.StartDate = now
 		}
 		newTask.EndDate = newTask.StartDate.Add(diff)
 	} else {
 		if !oldTask.StartDate.IsZero() {
-			if timeDiff != 0 {
+			if oldTask.RepeatsFromCurrentDate {
+				newTask.StartDate = nextOccurrence
+			} else if timeDiff != 0 {
 				newTask.StartDate = oldTask.StartDate.Add(timeDiff)
-			} else if oldTask.RepeatsFromCurrentDate {
-				newTask.StartDate = now
 			}
 		}
 		if !oldTask.EndDate.IsZero() {
-			if timeDiff != 0 {
+			if oldTask.RepeatsFromCurrentDate {
+				newTask.EndDate = nextOccurrence
+			} else if timeDiff != 0 {
 				newTask.EndDate = oldTask.EndDate.Add(timeDiff)
-			} else if oldTask.RepeatsFromCurrentDate {
-				newTask.EndDate = now
 			}
 		}
 	}
