@@ -113,6 +113,7 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 	assert.Equal(t, vikunjaTasks[1].Tasks[0].Reminders[0].RelativeTo, models.ReminderRelation("due_date"))
 	assert.Equal(t, vikunjaTasks[1].Tasks[0].Reminders[0].RelativePeriod, int64(-24*3600))
 	assert.Equal(t, vikunjaTasks[1].Tasks[0].Position, tickTickTasks[0].Order)
+	assert.Equal(t, vikunjaTasks[1].Tasks[0].Repeats, "FREQ=WEEKLY;INTERVAL=1;UNTIL=20190117T210000Z")
 	assert.False(t, vikunjaTasks[1].Tasks[0].Done)
 
 	assert.Equal(t, vikunjaTasks[1].Tasks[1].Title, tickTickTasks[1].Title)
@@ -573,4 +574,30 @@ func TestEmptyLabelHandlingWithRealCSV(t *testing.T) {
 
 		t.Logf("Successfully processed %d tasks with %d total labels, no empty labels created", len(tasks), totalLabels)
 	})
+}
+
+func TestNormalizeTickTickRepeat(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"empty string", "", ""},
+		{"whitespace only", "   ", ""},
+		{"simple RRULE", "FREQ=DAILY;INTERVAL=1", "FREQ=DAILY;INTERVAL=1"},
+		{"RRULE with RRULE prefix", "RRULE:FREQ=WEEKLY;BYDAY=MO", "FREQ=WEEKLY;BYDAY=MO"},
+		{"RRULE with lowercase prefix", "rrule:FREQ=MONTHLY;INTERVAL=2", "FREQ=MONTHLY;INTERVAL=2"},
+		{"multiline takes first", "FREQ=DAILY;INTERVAL=1\nFREQ=WEEKLY;INTERVAL=2", "FREQ=DAILY;INTERVAL=1"},
+		{"multiline with empty first line", "\nFREQ=DAILY;INTERVAL=1", "FREQ=DAILY;INTERVAL=1"},
+		{"RRULE with UNTIL", "FREQ=WEEKLY;INTERVAL=1;UNTIL=20190117T210000Z", "FREQ=WEEKLY;INTERVAL=1;UNTIL=20190117T210000Z"},
+		{"leading/trailing whitespace", "  FREQ=DAILY;INTERVAL=1  ", "FREQ=DAILY;INTERVAL=1"},
+		{"multiline with RRULE prefix", "RRULE:FREQ=DAILY\nRRULE:FREQ=WEEKLY", "FREQ=DAILY"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := normalizeTickTickRepeat(tc.input)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
 }
