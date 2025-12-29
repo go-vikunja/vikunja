@@ -1492,11 +1492,12 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 
 	// Determine the base date for calculating the next occurrence
 	var baseDate time.Time
-	if oldTask.RepeatsFromCurrentDate {
+	switch {
+	case oldTask.RepeatsFromCurrentDate:
 		baseDate = now
-	} else if !oldTask.DueDate.IsZero() {
+	case !oldTask.DueDate.IsZero():
 		baseDate = oldTask.DueDate
-	} else {
+	default:
 		baseDate = now
 	}
 

@@ -440,15 +440,15 @@ func indexDummyTask() (err error) {
 }
 
 type typesenseTask struct {
-	ID                     string `json:"id"`
-	Title                  string `json:"title"`
-	Description            string `json:"description"`
-	Done                   bool   `json:"done"`
-	DoneAt                 *int64 `json:"done_at"`
-	DueDate                *int64 `json:"due_date"`
-	ProjectID              int64  `json:"project_id"`
-	Repeats                string `json:"repeats"`
-	RepeatsFromCurrentDate bool   `json:"repeats_from_current_date"`
+	ID                     string      `json:"id"`
+	Title                  string      `json:"title"`
+	Description            string      `json:"description"`
+	Done                   bool        `json:"done"`
+	DoneAt                 *int64      `json:"done_at"`
+	DueDate                *int64      `json:"due_date"`
+	ProjectID              int64       `json:"project_id"`
+	Repeats                string      `json:"repeats"`
+	RepeatsFromCurrentDate bool        `json:"repeats_from_current_date"`
 	Priority               int64       `json:"priority"`
 	StartDate              *int64      `json:"start_date"`
 	EndDate                *int64      `json:"end_date"`
