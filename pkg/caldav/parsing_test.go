@@ -486,6 +486,28 @@ END:VCALENDAR`,
 				HexColor: "7b68ee",
 			},
 		},
+		{
+			name: "with RRULE",
+			args: args{content: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randomuid
+DTSTAMP:20181201T011204
+SUMMARY:Recurring Task
+RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR
+END:VTODO
+END:VCALENDAR`,
+			},
+			wantVTask: &models.Task{
+				Title:   "Recurring Task",
+				UID:     "randomuid",
+				Updated: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+				Repeats: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -532,7 +554,7 @@ func TestGetCaldavTodosForTasks(t *testing.T) {
 							EndDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
 							Updated:     time.Unix(1543626725, 0).In(config.GetTimeZone()),
 							DoneAt:      time.Unix(1543626726, 0).In(config.GetTimeZone()),
-							RepeatAfter: 86400,
+							Repeats:     "FREQ=DAILY;INTERVAL=1",
 							Labels: []*models.Label{
 								{
 									ID:    1,

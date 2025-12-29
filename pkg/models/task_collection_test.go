@@ -509,7 +509,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		CreatedBy:    user1,
 		ProjectID:    1,
 		RelatedTasks: map[RelationKind][]*Task{},
-		RepeatAfter:  3600,
+		Repeats:      "FREQ=HOURLY;INTERVAL=1",
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 		DueDate:      time.Unix(1543789524, 0).In(loc),
