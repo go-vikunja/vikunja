@@ -20,6 +20,12 @@
 
 		<template v-if="isSavedFilter(project)">
 			<DropdownItem
+				:icon="project.isFavorite ? ['far', 'star'] : 'star'"
+				@click="toggleFilterFavorite"
+			>
+				{{ project.isFavorite ? $t('project.unfavorite') : $t('project.favorite') }}
+			</DropdownItem>
+			<DropdownItem
 				:to="{ name: 'filter.settings.edit', params: { projectId: project.id } }"
 				icon="pen"
 			>
@@ -168,4 +174,8 @@ function setSubscriptionInStore(sub: ISubscription) {
 
 const authStore = useAuthStore()
 const isDefaultProject = computed(() => props.project?.id === authStore.settings.defaultProjectId)
+
+function toggleFilterFavorite() {
+	projectStore.toggleSavedFilterFavorite(props.project)
+}
 </script>

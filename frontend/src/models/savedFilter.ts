@@ -16,6 +16,7 @@ export default class SavedFilterModel extends AbstractModel<ISavedFilter> implem
 		filter_include_nulls: true,
 		s: '',
 	}
+	isFavorite = false
 
 	owner: IUser = {}
 	created: Date = null

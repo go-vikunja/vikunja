@@ -47,3 +47,4 @@ devenv.local.nix
 PLAN.md
 /.crush/
 /.playwright-mcp
+.claude/
