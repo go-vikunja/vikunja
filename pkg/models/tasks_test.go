@@ -633,18 +633,19 @@ func TestUpdateDone(t *testing.T) {
 			assert.True(t, newTask.DueDate.After(time.Now()) || newTask.DueDate.Equal(time.Now().Truncate(24*time.Hour)))
 			assert.False(t, newTask.Done)
 		})
-		t.Run("don't update if due date is zero", func(t *testing.T) {
+		t.Run("set due date if old task had no due date", func(t *testing.T) {
 			oldTask := &Task{
 				Done:    false,
 				Repeats: "FREQ=DAILY;INTERVAL=1",
 				DueDate: time.Time{},
 			}
 			newTask := &Task{
-				Done:    true,
-				DueDate: time.Unix(1543626724, 0),
+				Done: true,
 			}
 			updateDone(oldTask, newTask)
-			assert.Equal(t, time.Unix(1543626724, 0), newTask.DueDate)
+			// Even if old task had no due date, new task should get one (next occurrence from now)
+			assert.False(t, newTask.DueDate.IsZero(), "due date should be set for repeating task")
+			assert.True(t, newTask.DueDate.After(time.Now().Add(-time.Minute)), "due date should be in the future (or very recent)")
 			assert.False(t, newTask.Done)
 		})
 		t.Run("update reminders", func(t *testing.T) {

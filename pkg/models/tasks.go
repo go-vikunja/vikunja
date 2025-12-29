@@ -1516,8 +1516,10 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 	var timeDiff time.Duration
 	if !oldTask.DueDate.IsZero() {
 		timeDiff = nextOccurrence.Sub(oldTask.DueDate)
-		newTask.DueDate = nextOccurrence
 	}
+	// Always set the due date for repeating tasks - if there was no due date,
+	// the next occurrence becomes the new due date
+	newTask.DueDate = nextOccurrence
 
 	// Update reminders with the same time difference
 	newTask.Reminders = oldTask.Reminders
