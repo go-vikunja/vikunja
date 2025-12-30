@@ -1116,7 +1116,11 @@
 			"priority": "タスクの優先度を設定",
 			"favorite": "タスクをお気に入りに追加/削除",
 			"openProject": "プロジェクトを開く",
-			"save": "現在のタスクを保存"
+			"save": "現在のタスクを保存",
+			"copyIdentifier": "タスクIDをクリップボードにコピー",
+			"copyIdentifierAndTitle": "タスクIDとタイトルをクリップボードにコピー",
+			"copyIdentifierTitleAndUrl": "タスクID、タイトル、URLをクリップボードにコピー",
+			"copyUrl": "タスクURLをクリップボードにコピー"
 		},
 		"project": {
 			"title": "プロジェクト",

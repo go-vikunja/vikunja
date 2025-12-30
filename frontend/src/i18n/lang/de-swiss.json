@@ -1117,7 +1117,11 @@
 			"priority": "Die Priorität dieser Aufgabe ändern",
 			"favorite": "Diese Aufgabe zum Favoriten machen / von Favoriten entfernen",
 			"openProject": "Projekt dieser Aufgabe öffnen",
-			"save": "Aktuelle Aufgabe speichern"
+			"save": "Aktuelle Aufgabe speichern",
+			"copyIdentifier": "Task-Nummer in die Zwischenablage kopieren",
+			"copyIdentifierAndTitle": "Task-Nummer und Titel in die Zwischenablage kopieren",
+			"copyIdentifierTitleAndUrl": "Task-Nummer, Titel und URL in die Zwischenablage kopieren",
+			"copyUrl": "Task-URL in die Zwischenablage kopieren"
 		},
 		"project": {
 			"title": "Projektansichten",
