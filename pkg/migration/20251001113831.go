@@ -17,15 +17,16 @@
 package migration
 
 import (
+	"encoding/json"
+
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
-	"xorm.io/xorm/schemas"
 )
 
-// Old bucket configuration format (filter as string)
+// Flexible bucket configuration format that can handle both string and object filters
 type bucketConfigurationCatchup struct {
-	Title  string `json:"title"`
-	Filter string `json:"filter"`
+	Title  string          `json:"title"`
+	Filter json.RawMessage `json:"filter"`
 }
 
 // New bucket configuration format (filter as object)
@@ -61,19 +62,9 @@ func init() {
 		Migrate: func(tx *xorm.Engine) (err error) {
 			oldViews := []*projectViewBucketsCatchup{}
 
-			// Find views with bucket_configuration in old string format
-			// Only check views with bucket_configuration_mode = 2 (filter mode)
-			// Pattern: bucket_configuration contains "filter":"<string>" but not "filter":{"filter":
-			if tx.Dialect().URI().DBType == schemas.POSTGRES {
-				err = tx.Where("bucket_configuration_mode = 2 AND bucket_configuration::text like '%\"filter\":\"%'").
-					And("bucket_configuration::text not like '%\"filter\":{\"filter\":%'").
-					Find(&oldViews)
-			} else {
-				err = tx.Where("bucket_configuration_mode = 2 AND bucket_configuration like '%\"filter\":\"%'").
-					And("bucket_configuration not like '%\"filter\":{\"filter\":%'").
-					Find(&oldViews)
-			}
-
+			// Find all filter-mode views - we'll check individual buckets in code
+			err = tx.Where("bucket_configuration_mode = 2").
+				Find(&oldViews)
 			if err != nil {
 				return
 			}
@@ -84,15 +75,43 @@ func init() {
 					ID: view.ID,
 				}
 
+				needsUpdate := false
+
 				// Convert each bucket configuration from old to new format
 				for _, configuration := range view.BucketConfiguration {
-					newView.BucketConfiguration = append(newView.BucketConfiguration,
-						&bucketConfigurationCatchupNew{
-							Title: configuration.Title,
-							Filter: &taskCollection20241118123644{
-								Filter: configuration.Filter, // Wrap string in object
-							},
-						})
+					newConfig := &bucketConfigurationCatchupNew{
+						Title: configuration.Title,
+					}
+
+					// Check if filter is a string (old format) or object (already converted)
+					if len(configuration.Filter) > 0 {
+						switch configuration.Filter[0] {
+						case '"':
+							// It's a JSON string - extract and wrap in object
+							var filterString string
+							if err := json.Unmarshal(configuration.Filter, &filterString); err != nil {
+								return err
+							}
+							newConfig.Filter = &taskCollection20241118123644{
+								Filter: filterString,
+							}
+							needsUpdate = true
+						case '{':
+							// It's already an object - preserve it
+							var existingFilter taskCollection20241118123644
+							if err := json.Unmarshal(configuration.Filter, &existingFilter); err != nil {
+								return err
+							}
+							newConfig.Filter = &existingFilter
+						}
+					}
+
+					newView.BucketConfiguration = append(newView.BucketConfiguration, newConfig)
+				}
+
+				// Only update if we actually found string filters to convert
+				if !needsUpdate {
+					continue
 				}
 
 				// Update only the bucket_configuration column
