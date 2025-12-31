@@ -68,7 +68,8 @@
       "alreadyHaveAnAccount": "Already have an account?",
       "remember": "Stay logged in",
       "registrationDisabled": "Registration is disabled.",
-      "passwordResetTokenMissing": "Password reset token is missing."
+      "passwordResetTokenMissing": "Password reset token is missing.",
+      "registrationFailed": "An error occurred during registration. Please check your input and try again."
     },
     "settings": {
       "title": "Settings",
