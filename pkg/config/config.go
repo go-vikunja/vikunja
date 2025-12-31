@@ -69,6 +69,8 @@ const (
 	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
+	ServiceEnableReaderComments           Key = `service.enablereadercomments`
+	ServiceEnableAssigneeEdit             Key = `service.enableassigneeedit`
 
 	SentryEnabled         Key = `sentry.enabled`
 	SentryDsn             Key = `sentry.dsn`
@@ -356,6 +358,8 @@ func InitDefaultConfig() {
 	ServiceEnablePublicTeams.setDefault(false)
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
+	ServiceEnableReaderComments.setDefault(false)
+	ServiceEnableAssigneeEdit.setDefault(false)
 
 	// Sentry
 	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")
