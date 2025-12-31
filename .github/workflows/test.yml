@@ -12,7 +12,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
         with:
-          go-version: stable
+          go-version-file: ./go.mod
       - name: Cache Mage
         id: cache-mage
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
@@ -44,10 +44,16 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
+      # Workaround for `Cannot open: File exists` go caching issues
+      # See https://github.com/go-vikunja/vikunja/pull/613
+      # and https://github.com/actions/setup-go/issues/424#issuecomment-2796487736  
+      - name: Setup tar default options
+        shell: bash
+        run: echo "TAR_OPTIONS=--skip-old-files" >> $GITHUB_ENV
       - name: Set up Go
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
         with:
-          go-version: stable
+          go-version-file: ./go.mod
       - name: Build
         env:
           RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
@@ -68,7 +74,7 @@ jobs:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
         with:
-          go-version: stable
+          go-version-file: ./go.mod
       - name: prepare frontend files
         run: |
           mkdir -p frontend/dist
