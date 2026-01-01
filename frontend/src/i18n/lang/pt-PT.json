@@ -1117,7 +1117,11 @@
 			"priority": "Alterar a prioridade desta tarefa",
 			"favorite": "Marcar / Desmarcar esta tarefa como favorita",
 			"openProject": "Abrir o projeto desta tarefa",
-			"save": "Salvar a tarefa atual"
+			"save": "Salvar a tarefa atual",
+			"copyIdentifier": "Copiar identificador da tarefa para a área de transferência",
+			"copyIdentifierAndTitle": "Copiar identificador da tarefa e título para a área de transferência",
+			"copyIdentifierTitleAndUrl": "Copiar identificador da tarefa, título e URL para a área de transferência",
+			"copyUrl": "Copiar URL da tarefa para a área de transferência"
 		},
 		"project": {
 			"title": "Vista do Projeto",
