@@ -120,7 +120,8 @@
 						<Icon icon="align-left" />
 					</span>
 					<span
-						v-if="isRepeating"
+						v-if="taskIsRepeating"
+						v-tooltip="repeatTooltip"
 						class="project-task-icon"
 					>
 						<Icon icon="history" />
@@ -222,7 +223,7 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {isRepeating, describeRRule} from '@/helpers/rrule'
 
 const props = withDefaults(defineProps<{
 	theTask: ITask,
@@ -256,7 +257,14 @@ const {t} = useI18n({useScope: 'global'})
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>(new TaskModel())
 
-const isRepeating = computed(() => task.value.repeatAfter.amount > 0 || (task.value.repeatAfter.amount === 0 && task.value.repeatMode === TASK_REPEAT_MODES.REPEAT_MODE_MONTH))
+const taskIsRepeating = computed(() => isRepeating(task.value.repeats))
+
+const repeatTooltip = computed(() => {
+	if (!task.value.repeats) {
+		return ''
+	}
+	return describeRRule(task.value.repeats, t)
+})
 
 watch(
 	() => props.theTask,
@@ -328,7 +336,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 		emit('taskUpdated', newTask)
 
 		let message = t('task.doneSuccess')
-		if (!task.value.done && !isRepeating.value) {
+		if (!task.value.done && !taskIsRepeating.value) {
 			message = t('task.undoneSuccess')
 		}
 
@@ -346,7 +354,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 }
 
 function undoDone(checked: boolean) {
-	if (isRepeating.value) {
+	if (taskIsRepeating.value) {
 		task.value = {...oldTask}
 	}
 	task.value.done = !task.value.done

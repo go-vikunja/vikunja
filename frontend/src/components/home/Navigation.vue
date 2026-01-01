@@ -83,29 +83,71 @@
 				v-if="favoriteProjects.length"
 				class="menu"
 			>
+				<BaseButton
+					v-if="enhancedMode"
+					class="menu-section-header"
+					@click="sectionOpenState.favorites = !sectionOpenState.favorites"
+				>
+					<Icon
+						icon="chevron-down"
+						:class="{ 'section-is-collapsed': !sectionOpenState.favorites }"
+					/>
+					{{ $t('navigation.favorites') }}
+				</BaseButton>
 				<ProjectsNavigation
-					:model-value="favoriteProjects" 
+					v-if="!enhancedMode || sectionOpenState.favorites"
+					:model-value="favoriteProjects"
 					:can-edit-order="false"
 					:can-collapse="false"
+					:hide-star-icons="enhancedMode"
+					:show-task-counts="showTaskCounts"
 				/>
 			</nav>
-			
+
 			<nav
 				v-if="savedFilterProjects.length"
 				class="menu"
 			>
+				<BaseButton
+					v-if="enhancedMode"
+					class="menu-section-header"
+					@click="sectionOpenState.filters = !sectionOpenState.filters"
+				>
+					<Icon
+						icon="chevron-down"
+						:class="{ 'section-is-collapsed': !sectionOpenState.filters }"
+					/>
+					{{ $t('navigation.filters') }}
+				</BaseButton>
 				<ProjectsNavigation
+					v-if="!enhancedMode || sectionOpenState.filters"
 					:model-value="savedFilterProjects"
 					:can-edit-order="false"
 					:can-collapse="false"
+					:hide-star-icons="enhancedMode"
+					:show-task-counts="showTaskCounts"
 				/>
 			</nav>
 
 			<nav class="menu">
+				<BaseButton
+					v-if="enhancedMode"
+					class="menu-section-header"
+					@click="sectionOpenState.projects = !sectionOpenState.projects"
+				>
+					<Icon
+						icon="chevron-down"
+						:class="{ 'section-is-collapsed': !sectionOpenState.projects }"
+					/>
+					{{ $t('navigation.myProjects') }}
+				</BaseButton>
 				<ProjectsNavigation
+					v-if="!enhancedMode || sectionOpenState.projects"
 					:model-value="projects"
 					:can-edit-order="true"
 					:can-collapse="true"
+					:hide-star-icons="enhancedMode"
+					:show-task-counts="showTaskCounts"
 				/>
 			</nav>
 		</template>
@@ -125,27 +167,62 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue'
+import {computed, watch} from 'vue'
+import {useStorage} from '@vueuse/core'
 
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
 import Loading from '@/components/misc/Loading.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
+import {useAuthStore} from '@/stores/auth'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import type {IProject} from '@/modelTypes/IProject'
 import {useSidebarResize} from '@/composables/useSidebarResize'
+import {useProjectTaskCounts} from '@/composables/useProjectTaskCounts'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
+const authStore = useAuthStore()
 
 const {sidebarWidth, isResizing, startResize, isMobile} = useSidebarResize()
+const {fetchTaskCountsForProjects} = useProjectTaskCounts()
+
+// Section collapse state (persisted)
+type SectionState = { favorites: boolean; filters: boolean; projects: boolean }
+const sectionOpenState = useStorage<SectionState>('navigation-sections-open', {
+	favorites: true,
+	filters: true,
+	projects: true,
+})
+
+// Enhanced sidebar mode setting
+const enhancedMode = computed(() => authStore.settings?.frontendSettings?.sidebarEnhancedMode ?? false)
+const showTaskCounts = computed(() => authStore.settings?.frontendSettings?.sidebarShowTaskCounts ?? false)
 
 // Cast readonly arrays to mutable type - the arrays are not actually mutated by the component
 const projects = computed(() => projectStore.notArchivedRootProjects as IProject[])
 const favoriteProjects = computed(() => projectStore.favoriteProjects as IProject[])
 const savedFilterProjects = computed(() => projectStore.savedFilterProjects as IProject[])
+
+// All non-archived projects (including children) for task count fetching
+const allNonArchivedProjects = computed(() =>
+	(projectStore.projectsArray as IProject[]).filter(p => !p.isArchived),
+)
+
+// Fetch task counts when the setting is enabled and projects are loaded
+watch(
+	[showTaskCounts, () => projectStore.isLoading],
+	([showCounts, isLoading]) => {
+		if (showCounts && !isLoading) {
+			// Fetch counts for ALL non-archived projects (including nested children)
+			fetchTaskCountsForProjects(allNonArchivedProjects.value)
+		}
+	},
+	{immediate: true},
+)
 </script>
 
 <style lang="scss" scoped>
@@ -234,5 +311,37 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects as I
 
 .menu + .menu {
 	padding-block-start: math.div($navbar-padding, 2);
+}
+
+.menu-section-header {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	inline-size: 100%;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--grey-500);
+	padding-inline-start: 1.5rem;
+	padding-block: 0.5rem 0.25rem;
+	margin: 0;
+	cursor: pointer;
+	background: transparent;
+	border: none;
+	text-align: start;
+
+	&:hover {
+		color: var(--grey-400);
+	}
+
+	.icon {
+		font-size: 0.6rem;
+		transition: transform $transition;
+	}
+
+	.section-is-collapsed {
+		transform: rotate(-90deg);
+	}
 }
 </style>

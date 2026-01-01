@@ -14,29 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package caldav
+package migration
 
-import "testing"
+import (
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
+)
 
-func Test_getRruleFromInterval(t *testing.T) {
-	tests := []struct {
-		name         string
-		interval     int64
-		wantFreq     string
-		wantInterval int64
-	}{
-		{"seconds", 435, "SECONDLY", 435},
-		{"minutes", 120, "MINUTELY", 2},
-		{"hours", 7200, "HOURLY", 2},
-		{"daily", 86400, "DAILY", 1},
-		{"weekly", 1209600, "WEEKLY", 2},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotFreq, gotInterval := getRruleFromInterval(tt.interval)
-			if gotFreq != tt.wantFreq || gotInterval != tt.wantInterval {
-				t.Errorf("getRruleFromInterval() = %s,%d; want %s,%d", gotFreq, gotInterval, tt.wantFreq, tt.wantInterval)
-			}
-		})
-	}
+type tasks20251228214425 struct {
+	// The day of month (1-31) to repeat on for monthly repeats. 0 means use the due date's day.
+	RepeatDay int8 `xorm:"tinyint null default 0"`
+}
+
+func (tasks20251228214425) TableName() string {
+	return "tasks"
+}
+
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20251228214425",
+		Description: "add repeat_day field for fixed day of month repeats",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.Sync(tasks20251228214425{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }

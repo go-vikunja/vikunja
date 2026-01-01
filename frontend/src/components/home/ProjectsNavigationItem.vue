@@ -50,12 +50,16 @@
 					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
+				<span
+					v-if="taskCount !== null && taskCount > 0"
+					class="task-count-badge"
+				>{{ taskCount }}</span>
 			</BaseButton>
 			<BaseButton
-				v-if="project.id > 0 && project.maxPermission !== null && project.maxPermission > PERMISSIONS.READ"
+				v-if="!hideStarIcons && (project.id > 0 || project.id < -1) && project.maxPermission !== null && project.maxPermission > PERMISSIONS.READ"
 				class="favorite"
 				:class="{'is-favorite': project.isFavorite}"
-				@click="projectStore.toggleProjectFavorite(project)"
+				@click="toggleFavorite"
 			>
 				<span class="is-sr-only">{{ project.isFavorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
 				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
@@ -85,6 +89,8 @@
 			:model-value="childProjects"
 			:can-edit-order="true"
 			:can-collapse="canCollapse"
+			:hide-star-icons="hideStarIcons"
+			:show-task-counts="showTaskCounts"
 		/>
 	</li>
 </template>
@@ -104,12 +110,15 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import {PERMISSIONS} from '@/constants/permissions'
+import {useProjectTaskCounts} from '@/composables/useProjectTaskCounts'
 
 const props = defineProps<{
 	project: IProject,
 	isLoading?: boolean,
 	canCollapse?: boolean,
 	canEditOrder?: boolean,
+	hideStarIcons?: boolean,
+	showTaskCounts?: boolean,
 }>()
 
 const taskStore = useTaskStore()
@@ -182,6 +191,23 @@ const childProjects = computed(() => {
 	return projectStore.getChildProjects(props.project.id)
 		.filter(p => !p.isArchived)
 		.sort((a, b) => a.position - b.position)
+})
+
+function toggleFavorite() {
+	if (props.project.id < -1) {
+		// Saved filter
+		projectStore.toggleSavedFilterFavorite(props.project)
+	} else {
+		// Regular project
+		projectStore.toggleProjectFavorite(props.project)
+	}
+}
+
+// Task count badge
+const {getTaskCount} = useProjectTaskCounts()
+const taskCount = computed(() => {
+	if (!props.showTaskCounts) return null
+	return getTaskCount.value(props.project.id)
 })
 </script>
 
@@ -269,6 +295,17 @@ const childProjects = computed(() => {
 .saved-filter-icon {
 	color: var(--grey-300) !important;
 	font-size: .75rem;
+}
+
+.task-count-badge {
+	font-size: 0.7rem;
+	font-weight: 500;
+	color: var(--grey-500);
+	background-color: var(--grey-100);
+	padding: 0.1rem 0.4rem;
+	border-radius: 10px;
+	margin-inline-start: auto;
+	flex-shrink: 0;
 }
 
 @media (pointer: coarse) {

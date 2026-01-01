@@ -324,6 +324,24 @@
 				</label>
 			</div>
 			<div class="field">
+				<label class="checkbox">
+					<input
+						v-model="settings.frontendSettings.sidebarEnhancedMode"
+						type="checkbox"
+					>
+					{{ $t('user.settings.general.sidebarEnhancedMode') }}
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input
+						v-model="settings.frontendSettings.sidebarShowTaskCounts"
+						type="checkbox"
+					>
+					{{ $t('user.settings.general.sidebarShowTaskCounts') }}
+				</label>
+			</div>
+			<div class="field">
 				<label class="two-col">
 					<span>
 						{{ $t('user.settings.backgroundBrightness.title') }}
@@ -447,7 +465,7 @@ const authStore = useAuthStore()
 const settings = ref<IUserSettings>({
 	...authStore.settings,
 	frontendSettings: {
-		// Sub objects get exported as read only as well, so we need to 
+		// Sub objects get exported as read only as well, so we need to
 		// explicitly spread the object here to allow modification
 		...authStore.settings.frontendSettings,
 		// Add fallback for old settings that don't have the default view set
@@ -461,6 +479,10 @@ const settings = ref<IUserSettings>({
 		timeFormat: authStore.settings.frontendSettings.timeFormat ?? TIME_FORMAT.HOURS_12,
 		// Add fallback for old settings that don't have the default task relation type set
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
+		// Add fallback for old settings that don't have the enhanced sidebar mode set
+		sidebarEnhancedMode: authStore.settings.frontendSettings.sidebarEnhancedMode ?? false,
+		// Add fallback for old settings that don't have the sidebar task counts set
+		sidebarShowTaskCounts: authStore.settings.frontendSettings.sidebarShowTaskCounts ?? false,
 	},
 })
 
