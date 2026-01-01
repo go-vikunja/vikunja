@@ -295,6 +295,7 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		}
 		p.Title = sf.Title
 		p.Description = sf.Description
+		p.IsFavorite = sf.IsFavorite
 		p.Created = sf.Created
 		p.Updated = sf.Updated
 		p.OwnerID = sf.OwnerID
@@ -334,9 +335,13 @@ func (p *Project) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	p.IsFavorite, err = isFavorite(s, p.ID, a, FavoriteKindProject)
-	if err != nil {
-		return
+	// For saved filters, IsFavorite was already set from the SavedFilter struct.
+	// Don't overwrite it with the project favorites lookup.
+	if !isFilter {
+		p.IsFavorite, err = isFavorite(s, p.ID, a, FavoriteKindProject)
+		if err != nil {
+			return
+		}
 	}
 
 	subs, err := GetSubscriptionForUser(s, SubscriptionEntityProject, p.ID, a)
