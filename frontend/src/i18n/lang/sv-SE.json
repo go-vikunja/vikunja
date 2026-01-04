@@ -23,10 +23,13 @@
 	},
 	"ready": {
 		"loading": "Vikunja laddar…",
-		"errorOccured": "Ett fel uppstod:"
+		"errorOccured": "Ett fel uppstod:",
+		"checkApiUrl": "Vänligen kontrollera om API:ns URL stämmer.",
+		"noApiUrlConfigured": "Ingen URL för API:n har konfigurerats. Vänligen ange en nedan:"
 	},
 	"offline": {
-		"title": "Du är offline."
+		"title": "Du är offline.",
+		"text": "Kontrollera din nätverksanslutning och försök igen."
 	},
 	"user": {
 		"auth": {
@@ -39,78 +42,203 @@
 			"passwordPlaceholder": "t. ex. •••••••••••",
 			"forgotPassword": "Har du glömt ditt lösenord?",
 			"resetPassword": "Återställ ditt lösenord",
+			"resetPasswordAction": "Skicka en länk för återställning av lösenord",
 			"resetPasswordSuccess": "Kolla din inkorg! Du bör ha fått ett e-postmeddelande med instruktioner om hur du återställer ditt lösenord.",
 			"passwordsDontMatch": "Lösenorden matchar inte",
+			"confirmEmailSuccess": "Du bekräftade din e-post! Du kan logga in nu.",
 			"totpTitle": "Tvåfaktorsautentiseringskod",
 			"totpPlaceholder": "t. ex. 123456",
 			"login": "Logga in",
 			"createAccount": "Skapa konto",
 			"loginWith": "Logga in med {provider}",
 			"authenticating": "Autentiserar…",
+			"openIdStateError": "Tillstånd matchar inte, vägrar att fortsätta!",
+			"openIdGeneralError": "Ett fel uppstod vid autentisering mot tredje part.",
 			"logout": "Logga ut",
 			"emailInvalid": "Vänligen ange en giltig e-postadress.",
 			"usernameRequired": "Vänligen ange ett användarnamn.",
+			"usernameMustNotContainSpace": "Användarnamnet får inte innehålla mellanslag.",
+			"usernameMustNotLookLikeUrl": "Användarnamnet får inte se ut som en webbadress.",
 			"passwordRequired": "Vänligen ange ett lösenord.",
 			"passwordNotMin": "Lösenord måste innehålla minst 8 tecken.",
+			"passwordNotMax": "Lösenordet får inte innehålla mer än 72 tecken.",
+			"showPassword": "Visa lösenordet",
+			"hidePassword": "Dölj lösenordet",
 			"noAccountYet": "Har du inget konto än?",
-			"alreadyHaveAnAccount": "Har du redan ett konto?"
+			"alreadyHaveAnAccount": "Har du redan ett konto?",
+			"remember": "Fortsätt vara inloggad",
+			"registrationDisabled": "Registreringen är stängd.",
+			"passwordResetTokenMissing": "Token för återställning av lösenord saknas."
 		},
 		"settings": {
 			"title": "Inställningar",
 			"newPasswordTitle": "Uppdatera ditt lösenord",
 			"newPassword": "Nytt lösenord",
+			"newPasswordConfirm": "Bekräftelse av nytt lösenord",
 			"currentPassword": "Nuvarande lösenord",
 			"currentPasswordPlaceholder": "Ditt nuvarande lösenord",
+			"passwordsDontMatch": "Det nya lösenordet och bekräftelsen överensstämmer inte.",
+			"passwordUpdateSuccess": "Lösenordet har uppdaterats.",
 			"updateEmailTitle": "Uppdatera din e-postadress",
 			"updateEmailNew": "Ny e-postadress",
+			"updateEmailSuccess": "Din e-postadress har uppdaterats. Vi har skickat en länk till dig för att bekräfta den.",
 			"general": {
+				"title": "Allmänna inställningar",
 				"name": "Mitt namn",
+				"newName": "Nytt namn",
+				"savedSuccess": "Inställningarna har uppdaterats framgångsrikt.",
+				"emailReminders": "Skicka påminnelser för uppgifter via e-post",
+				"overdueReminders": "Skicka en sammanfattning av mina ofärdiga förfallna uppgifter varje dag",
+				"discoverableByName": "Tillåt andra användare att lägga till mig som medlem i team eller projekt när de söker efter mitt namn",
 				"discoverableByEmail": "Tillåt andra användare att lägga till mig som medlem i team eller projekt när de söker efter min fullständiga e-postadress",
+				"playSoundWhenDone": "Spela upp ett ljud när du markerar uppgifter som färdiga",
+				"allowIconChanges": "Visa speciella logotyper vid vissa tidpunkter",
+				"alwaysShowBucketTaskCount": "Visa alltid antal uppgifter på Kanbankolumner",
+				"defaultTaskRelationType": "Förvald uppgiftsrelationstyp",
+				"weekStart": "Veckan börjar med",
 				"weekStartSunday": "Söndag",
 				"weekStartMonday": "Måndag",
 				"language": "Språk",
-				"timezone": "Tidzon"
+				"defaultProject": "Förvalt projekt",
+				"defaultView": "Förvald vy",
+				"timezone": "Tidzon",
+				"overdueTasksRemindersTime": "Klockslag för mejlpåminnelse för förfallna uppgifter",
+				"filterUsedOnOverview": "Sparat filter som används på översiktssidan",
+				"minimumPriority": "Minimalt synlig uppgiftsprioritet",
+				"dateDisplay": "Visningsformat för datum",
+				"dateDisplayOptions": {
+					"relative": "Relativ (t.ex. för 3 dagar sedan)",
+					"mm-dd-yyyy": "MM-DD-ÅÅÅÅ",
+					"dd-mm-yyyy": "DD-MM-ÅÅÅÅ",
+					"yyyy-mm-dd": "ÅÅÅÅ-MM-DD",
+					"mm/dd/yyyy": "MM/DD/ÅÅÅÅ",
+					"dd/mm/yyyy": "DD/MM/ÅÅÅÅ",
+					"yyyy/mm/dd": "ÅÅÅÅ/MM/DD"
+				},
+				"timeFormat": "Tidsformat",
+				"timeFormatOptions": {
+					"12h": "12 timmar (AM/PM)",
+					"24h": "24 timmar (HH:mm)"
+				},
+				"externalUserNameChange": "Ditt namn hanteras av din inloggningsleverantör ({provider}). För att ändra det, vänligen uppdatera det där istället."
+			},
+			"sections": {
+				"personalInformation": "Personlig information",
+				"taskAndNotifications": "Projekt & uppgifter",
+				"privacy": "Sekretess",
+				"localization": "Lokalisering",
+				"appearance": "Utseende och beteende"
 			},
 			"totp": {
 				"title": "Tvåfaktorsautentisering",
+				"enroll": "Skriv in dig",
+				"finishSetupPart1": "För att färdigställa inställningen, använd den här koden i din TOTP-app (Google Authenticator eller liknande):",
+				"finishSetupPart2": "Efter det, ange en kod från din app nedan.",
+				"scanQR": "Alternativt kan du skanna denna QR-kod:",
+				"passcode": "Lösenkod",
+				"passcodePlaceholder": "En kod genererad av din TOTP-app",
+				"setupSuccess": "Du har framgångsrikt konfigurerat tvåfaktorsautentisering!",
 				"enterPassword": "Vänligen ange ditt lösenord",
-				"disable": "Inaktivera tvåfaktorsautentisering"
+				"disable": "Inaktivera tvåfaktorsautentisering",
+				"confirmSuccess": "Du har bekräftat din TOTP-konfiguration och kan använda den från och med nu!",
+				"disableSuccess": "Tvåfaktorsautentisering har blivit inaktiverad."
 			},
 			"caldav": {
 				"title": "CalDAV",
+				"howTo": "Du kan ansluta Vikunja till CalDAV-klienter för att visa och hantera alla uppgifter från olika klienter. Ange denna URL i din klient:",
+				"more": "Mer information om CalDAV i Vikunja",
+				"tokens": "CalDAV-token",
+				"tokensHowTo": "Du kan använda en CalDAV-token för att använda istället för ett lösenord för att logga in på ovanstående slutpunkt.",
+				"createToken": "Skapa ny token",
+				"tokenCreated": "Här är din token: {token}",
+				"wontSeeItAgain": "Skriv ner den, du kommer inte att kunna se den igen.",
+				"mustUseToken": "Du måste skapa en CalDAV-token om du vill använda CalDAV med en tredjepartsklient. Använd token som lösenord.",
 				"usernameIs": "Ditt användarnamn är: {0}"
 			},
 			"avatar": {
 				"title": "Avatar",
 				"initials": "Initialer",
 				"gravatar": "Gravatar",
+				"marble": "Marble",
 				"upload": "Ladda upp",
-				"uploadAvatar": "Ladda upp avatar"
+				"uploadAvatar": "Ladda upp avatar",
+				"statusUpdateSuccess": "Avatar status uppdaterades framgångsrikt!",
+				"setSuccess": "Avatar har ställts in framgångsrikt!",
+				"ldap": "Din avatar synkroniseras automatiskt från organisationens katalogtjänst (LDAP). Du kan be ditt IT-team om information om hur du ändrar den.",
+				"openid": "Din avatar synkroniseras automatiskt från din inloggningsleverantör ({provider}). För att ändra den, vänligen uppdatera den där istället."
 			},
 			"quickAddMagic": {
+				"title": "Snabbtilläggning Magiskt Läge",
+				"disabled": "Inaktiverad",
+				"todoist": "Att göra-lista",
 				"vikunja": "Vikunja"
 			},
 			"appearance": {
 				"title": "Färgschema",
+				"setSuccess": "Sparat ändring av färgschema till {colorScheme}",
 				"colorScheme": {
 					"light": "Ljust",
 					"system": "System",
 					"dark": "Mörkt"
 				}
 			},
+			"backgroundBrightness": {
+				"title": "Bakgrundsljusstyrka"
+			},
 			"apiTokens": {
+				"title": "API-token",
+				"general": "API-token låter dig använda Vikunjas API utan användaruppgifter.",
+				"apiDocs": "Kolla in API-dokumentationen",
+				"createAToken": "Skapa en token",
+				"createToken": "Skapa token",
 				"30d": "30 dagar",
 				"60d": "60 dagar",
 				"90d": "90 dagar",
-				"tokenCreatedNotSeeAgain": "Förvara den på en säker plats, du kommer aldrig att se den igen!"
+				"permissionExplanation": "Behörigheter gör att du kan välja vad en API-token är tillåten att göra.",
+				"titleRequired": "En titel måste anges",
+				"permissionRequired": "Välj minst en behörighet från listan.",
+				"expired": "Denna token har gått ut {ago}.",
+				"tokenCreatedSuccess": "Här är din nya API-token: {token}",
+				"tokenCreatedNotSeeAgain": "Förvara den på en säker plats, du kommer aldrig att se den igen!",
+				"selectAll": "Markera allt",
+				"delete": {
+					"header": "Ta bort denna token",
+					"text1": "Är du säker på att du vill radera token \"{token}\"?",
+					"text2": "Detta kommer att återkalla åtkomst till alla program eller integrationer som använder den. Du kan inte ångra detta."
+				},
+				"attributes": {
+					"title": "Titel",
+					"titlePlaceholder": "Ange en titel som du kommer känna igen senare",
+					"expiresAt": "Förfaller den",
+					"permissions": "Behörigheter"
+				}
 			}
 		},
 		"deletion": {
 			"title": "Radera ditt Vikunja-konto",
+			"text1": "Raderingen av ditt konto är permanent och kan inte ångras. Vi kommer att ta bort alla dina projekt, uppgifter och allt som är kopplat till det.",
+			"text2": "För att fortsätta, ange ditt lösenord. Du kommer att få ett e-postmeddelande med ytterligare instruktioner.",
 			"text3": "För att fortsätta, tryck på knappen nedan. Du kommer att få ett e-postmeddelande med ytterligare instruktioner.",
 			"confirm": "Radera mitt konto",
+			"requestSuccess": "Begäran lyckades. Du får ett e-postmeddelande med ytterligare instruktioner.",
 			"passwordRequired": "Vänligen ange ditt lösenord.",
+			"confirmSuccess": "Du har bekräftat raderingen av ditt konto. Vi kommer att ta bort ditt konto inom tre dagar.",
+			"scheduled": "Vi kommer att radera ditt Vikunja-konto på {date} ({dateSince}).",
+			"scheduledCancel": "För att avbryta raderingen av ditt konto, klicka här.",
+			"scheduledCancelText": "För att avbryta radering av ditt konto, ange ditt lösenord nedan:",
+			"scheduledCancelButton": "För att avbryta raderingen av ditt konto, vänligen tryck på knappen nedan:",
+			"scheduledCancelConfirm": "Avbryt raderingen av mitt konto",
 			"scheduledCancelSuccess": "Vi kommer inte radera ditt konto."
+		},
+		"export": {
+			"title": "Exportera din Vikunja-data",
+			"description": "Du kan begära en kopia av alla dina Vikunja-data. Detta inkluderar projekt, uppgifter och allt som är kopplat till dem. Du kan importera dessa data i valfri Vikunja genom flyttningsfunktionen.",
+			"descriptionPasswordRequired": "Ange ditt lösenord för att fortsätta:",
+			"request": "Begär en kopia av min Vikunja-data",
+			"success": "Du har begärt din Vikunja-data! Vi kommer att skicka ett mejl till dig när den är klar för nedladdning.",
+			"downloadTitle": "Ladda ned dina exporterade Vikunja-data",
+			"ready": "Din export är klar för nedladdning. Du kan ladda ner den tills {0}.",
+			"requestNew": "Begär en annan export"
 		}
 	},
 	"project": {
