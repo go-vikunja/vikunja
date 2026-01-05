@@ -61,11 +61,17 @@ func InitializeLDAPConnection() {
 		log.Fatal("LDAP user filter is not configured")
 	}
 
-	l, err := ConnectAndBindToLDAPDirectory()
+	err := utils.RetryWithBackoff("LDAP server", func() error {
+		l, connErr := ConnectAndBindToLDAPDirectory()
+		if connErr == nil {
+			_ = l.Close()
+		}
+		return connErr
+	})
+
 	if err != nil {
-		log.Fatalf("Could not bind to LDAP server: %s", err)
+		log.Fatalf("Could not connect to LDAP server: %s", err)
 	}
-	_ = l.Close()
 }
 
 func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
@@ -90,7 +96,7 @@ func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
 
 	l, err = ldap.DialURL(url, opts...)
 	if err != nil {
-		log.Fatalf("Could not connect to LDAP server: %s", err)
+		return nil, fmt.Errorf("could not connect to LDAP server: %w", err)
 	}
 
 	err = l.Bind(

@@ -83,10 +83,16 @@ func init() {
 }
 
 func (p *Provider) setOicdProvider() (err error) {
-	p.openIDProvider, err = oidc.NewProvider(context.Background(), p.OriginalAuthURL)
+	err = utils.RetryWithBackoff(fmt.Sprintf("OpenID Connect provider '%s'", p.Name), func() error {
+		var providerErr error
+		p.openIDProvider, providerErr = oidc.NewProvider(context.Background(), p.OriginalAuthURL)
+		return providerErr
+	})
+
 	if err != nil && p.RequireAvailability {
 		log.Fatalf("OpenID Connect provider '%s' is not available and require_availability is enabled: %s", p.Name, err)
 	}
+
 	return err
 }
 
