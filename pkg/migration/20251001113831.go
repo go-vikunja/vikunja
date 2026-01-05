@@ -23,6 +23,15 @@ import (
 	"xorm.io/xorm"
 )
 
+// Full bucket filter struct with all fields to avoid dropping data during migration
+type bucketFilterCatchup struct {
+	Search             string   `json:"s,omitempty"`
+	SortBy             []string `json:"sort_by,omitempty"`
+	OrderBy            []string `json:"order_by,omitempty"`
+	Filter             string   `json:"filter,omitempty"`
+	FilterIncludeNulls bool     `json:"filter_include_nulls,omitempty"`
+}
+
 // Flexible bucket configuration format that can handle both string and object filters
 type bucketConfigurationCatchup struct {
 	Title  string          `json:"title"`
@@ -31,8 +40,8 @@ type bucketConfigurationCatchup struct {
 
 // New bucket configuration format (filter as object)
 type bucketConfigurationCatchupNew struct {
-	Title  string                        `json:"title"`
-	Filter *taskCollection20241118123644 `json:"filter"`
+	Title  string               `json:"title"`
+	Filter *bucketFilterCatchup `json:"filter"`
 }
 
 // Old format project view
@@ -92,13 +101,13 @@ func init() {
 							if err := json.Unmarshal(configuration.Filter, &filterString); err != nil {
 								return err
 							}
-							newConfig.Filter = &taskCollection20241118123644{
+							newConfig.Filter = &bucketFilterCatchup{
 								Filter: filterString,
 							}
 							needsUpdate = true
 						case '{':
-							// It's already an object - preserve it
-							var existingFilter taskCollection20241118123644
+							// It's already an object - preserve all fields
+							var existingFilter bucketFilterCatchup
 							if err := json.Unmarshal(configuration.Filter, &existingFilter); err != nil {
 								return err
 							}
