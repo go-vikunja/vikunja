@@ -52,10 +52,10 @@
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
 			</BaseButton>
 			<BaseButton
-				v-if="project.id > 0 && project.maxPermission !== null && project.maxPermission > PERMISSIONS.READ"
+				v-if="canToggleFavorite"
 				class="favorite"
 				:class="{'is-favorite': project.isFavorite}"
-				@click="projectStore.toggleProjectFavorite(project)"
+				@click="toggleFavorite"
 			>
 				<span class="is-sr-only">{{ project.isFavorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
 				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
@@ -104,6 +104,7 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import ColorBubble from '@/components/misc/ColorBubble.vue'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import {PERMISSIONS} from '@/constants/permissions'
+import {isSavedFilter} from '@/services/savedFilter'
 
 const props = defineProps<{
 	project: IProject,
@@ -183,6 +184,26 @@ const childProjects = computed(() => {
 		.filter(p => !p.isArchived)
 		.sort((a, b) => a.position - b.position)
 })
+
+const canToggleFavorite = computed(() => {
+	// Allow favorite toggle for:
+	// 1. Regular projects (id > 0) with write permission
+	// 2. Saved filters (id < -1) - user owns their own filters
+	if (props.project.id === -1) return false  // Favorites pseudo-project
+	if (props.project.id > 0) {
+		return props.project.maxPermission !== null && props.project.maxPermission > PERMISSIONS.READ
+	}
+	// Saved filters (negative IDs except -1)
+	return isSavedFilter(props.project)
+})
+
+async function toggleFavorite() {
+	if (isSavedFilter(props.project)) {
+		await projectStore.toggleSavedFilterFavorite(props.project)
+	} else {
+		await projectStore.toggleProjectFavorite(props.project)
+	}
+}
 </script>
 
 <style lang="scss" scoped>
