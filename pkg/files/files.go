@@ -158,7 +158,6 @@ func writeToStorage(path string, content io.Reader, size uint64) error {
 		return afs.WriteReader(path, content)
 	}
 
-	// S3 path - use PutObject with Content-Length
 	body, contentLength, cleanup, err := prepareS3UploadBody(content, size)
 	if err != nil {
 		return err
