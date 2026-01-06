@@ -388,7 +388,7 @@ $task-background: var(--white);
 }
 
 .kanban-card__done {
-	// Spacing handled by parent flex gap
+	margin-inline-end: .25rem;
 }
 
 .task-progress {
