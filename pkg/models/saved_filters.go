@@ -195,6 +195,8 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 
+	sf.OwnerID = origFilter.OwnerID
+
 	if sf.Filters == nil {
 		sf.Filters = origFilter.Filters
 	}
