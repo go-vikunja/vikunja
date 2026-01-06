@@ -109,6 +109,7 @@ func initS3FileHandler() error {
 func initLocalFileHandler() {
 	fs = afero.NewOsFs()
 	afs = &afero.Afero{Fs: fs}
+	s3Client = nil // Reset S3 client when using local storage
 	setDefaultLocalConfig()
 }
 

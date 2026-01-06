@@ -173,7 +173,10 @@ func writeToStorage(path string, content io.Reader, size uint64) error {
 		Body:          body,
 		ContentLength: aws.Int64(contentLength),
 	})
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to upload file to S3: %w", err)
+	}
+	return nil
 }
 
 // Save saves a file to storage
