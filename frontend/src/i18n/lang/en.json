@@ -1128,7 +1128,8 @@
       "switchToListView": "Switch to list view",
       "switchToGanttView": "Switch to gantt view",
       "switchToKanbanView": "Switch to kanban view",
-      "switchToTableView": "Switch to table view"
+      "switchToTableView": "Switch to table view",
+      "switchToWikiView": "Switch to wiki view"
     },
     "navigation": {
       "title": "Navigation",
@@ -1170,7 +1171,8 @@
     "createProject": "Create project",
     "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
     "cantDeleteIsDefault": "You cannot delete this because it is your default project.",
-    "views": "Views"
+    "views": "Views",
+    "wiki": "Wiki"
   },
   "apiConfig": {
     "url": "Vikunja URL",
@@ -1309,7 +1311,12 @@
     "13002": "The provided link share password is invalid.",
     "13003": "The provided link share token is invalid.",
     "14001": "The provided api token is invalid.",
-    "14002": "The permission {permission} of group {group} is invalid."
+    "14002": "The permission {permission} of group {group} is invalid.",
+    "16001": "This wiki page does not exist.",
+    "16002": "The parent wiki page must be a folder.",
+    "16003": "The parent wiki page must belong to the same project.",
+    "16004": "A wiki page with this path already exists. Please choose a different title.",
+    "16005": "Moving this wiki page would create a cycle in the hierarchy."
   },
   "about": {
     "title": "About",
@@ -1327,5 +1334,15 @@
       "months": "month|months",
       "years": "year|years"
     }
+  },
+  "wiki": {
+    "title": "Wiki",
+    "selectOrCreate": "Select a page or create a new one to get started.",
+    "createFirstPage": "Create First Page",
+    "createPage": "Create Page",
+    "createFolder": "Create Folder",
+    "createPageInFolder": "Create page in this folder",
+    "contentPlaceholder": "Start writing your page content...",
+    "doubleclickToEdit": "Double-click to edit title"
   }
 }

@@ -38,6 +38,8 @@ func (p *ProjectViewKind) MarshalJSON() ([]byte, error) {
 		return []byte(`"table"`), nil
 	case ProjectViewKindKanban:
 		return []byte(`"kanban"`), nil
+	case ProjectViewKindWiki:
+		return []byte(`"wiki"`), nil
 	}
 
 	return []byte(`null`), nil
@@ -59,6 +61,8 @@ func (p *ProjectViewKind) UnmarshalJSON(bytes []byte) error {
 		*p = ProjectViewKindTable
 	case "kanban":
 		*p = ProjectViewKindKanban
+	case "wiki":
+		*p = ProjectViewKindWiki
 	default:
 		return fmt.Errorf("unknown project view kind: %s", value)
 	}
@@ -75,6 +79,7 @@ const (
 	ProjectViewKindGantt
 	ProjectViewKindTable
 	ProjectViewKindKanban
+	ProjectViewKindWiki
 )
 
 type BucketConfigurationModeKind int
@@ -135,8 +140,8 @@ type ProjectView struct {
 	Title string `xorm:"varchar(255) not null" json:"title" valid:"required,runelength(1|250)"`
 	// The project this view belongs to
 	ProjectID int64 `xorm:"not null index" json:"project_id" param:"project"`
-	// The kind of this view. Can be `list`, `gantt`, `table` or `kanban`.
-	ViewKind ProjectViewKind `xorm:"not null" json:"view_kind" swaggertype:"string" enums:"list,gantt,table,kanban"`
+	// The kind of this view. Can be `list`, `gantt`, `table`, `kanban`, or `wiki`.
+	ViewKind ProjectViewKind `xorm:"not null" json:"view_kind" swaggertype:"string" enums:"list,gantt,table,kanban,wiki"`
 
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
 	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter"`
@@ -534,11 +539,23 @@ func CreateDefaultViewsForProject(s *xorm.Session, project *Project, a web.Auth,
 		return
 	}
 
+	wiki := &ProjectView{
+		ProjectID: project.ID,
+		Title:     "Wiki",
+		ViewKind:  ProjectViewKindWiki,
+		Position:  500,
+	}
+	err = createProjectView(s, wiki, a, createBacklogBucket, true)
+	if err != nil {
+		return
+	}
+
 	project.Views = []*ProjectView{
 		list,
 		gantt,
 		table,
 		kanban,
+		wiki,
 	}
 
 	return

@@ -7,6 +7,7 @@ export const PROJECT_VIEW_KINDS = {
 	GANTT: 'gantt',
 	TABLE: 'table',
 	KANBAN: 'kanban',
+	WIKI: 'wiki',
 } as const
 export type ProjectViewKind = typeof PROJECT_VIEW_KINDS[keyof typeof PROJECT_VIEW_KINDS]
 

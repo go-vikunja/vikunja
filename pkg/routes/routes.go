@@ -547,6 +547,9 @@ func registerAPIRoutes(a *echo.Group) {
 	a.DELETE("/projects/:project/users/:user", projectUserHandler.DeleteWeb)
 	a.POST("/projects/:project/users/:user", projectUserHandler.UpdateWeb)
 
+	// Wiki pages
+	apiv1.RegisterWikiPageRoutes(a)
+
 	savedFiltersHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.SavedFilter{}

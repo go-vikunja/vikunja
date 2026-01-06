@@ -31,7 +31,7 @@ mage-static
 .DS_Store
 /plugins/*
 /plugins-dev/*
-
+.pnpm-store
 # Devenv
 .devenv*
 devenv.local.nix

@@ -66,6 +66,7 @@ func GetTables() []interface{} {
 		&TaskPosition{},
 		&TaskBucket{},
 		&TaskUnreadStatus{},
+		&WikiPage{},
 	}
 }
 

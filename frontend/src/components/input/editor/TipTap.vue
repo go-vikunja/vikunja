@@ -198,6 +198,7 @@ const props = withDefaults(defineProps<{
 	enableMentions?: boolean,
 	mentionProjectId?: number,
 	storageKey?: string,
+	startInEditMode?: boolean,
 }>(), {
 	uploadCallback: undefined,
 	isEditEnabled: true,
@@ -209,6 +210,7 @@ const props = withDefaults(defineProps<{
 	enableMentions: false,
 	mentionProjectId: 0,
 	storageKey: '',
+	startInEditMode: false,
 })
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -416,7 +418,45 @@ const extensions : Extensions = [
 		hardBreak: false,
 	}),
 
-	CodeBlockLowlight.configure({
+	CodeBlockLowlight.extend({
+		addNodeView() {
+			return ({node, getPos, editor}) => {
+				// If this code block has language="mermaid", render as Mermaid
+				if (node.attrs.language === 'mermaid') {
+					const dom = document.createElement('div')
+					dom.className = 'mermaid-wrapper'
+					
+					// In edit mode, show the raw code
+					if (isEditing.value) {
+						const pre = document.createElement('pre')
+						const code = document.createElement('code')
+						code.className = 'language-mermaid'
+						code.textContent = node.textContent
+						pre.appendChild(code)
+						dom.appendChild(pre)
+					} else {
+						// In preview mode, render the Mermaid diagram
+						try {
+							import('mermaid').then(({default: mermaid}) => {
+								mermaid.initialize({startOnLoad: false, theme: 'default'})
+								const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
+								mermaid.render(id, node.textContent).then(({svg}) => {
+									dom.innerHTML = svg
+								}).catch(err => {
+									dom.innerHTML = `<div class="mermaid-error">Error rendering diagram: ${err.message}</div>`
+								})
+							})
+						} catch (err) {
+							dom.innerHTML = `<div class="mermaid-error">Mermaid not available</div>`
+						}
+					}
+					return {dom}
+				}
+				// For non-mermaid code blocks, use default behavior
+				return null
+			}
+		},
+	}).configure({
 		lowlight: createLowlight(common),
 	}),
 	HardBreak.extend({
@@ -777,7 +817,11 @@ onBeforeUnmount(() => {
 })
 
 function setModeAndValue(value: string) {
-	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
+	if (props.startInEditMode) {
+		internalMode.value = 'edit'
+	} else {
+		internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
+	}
 	editor.value?.commands.setContent(value, {
 		...defaultSetContentOptions,
 		emitUpdate: false,
@@ -1211,6 +1255,24 @@ ul.tiptap__editor-actions {
 
 	a:hover {
 		text-decoration: underline;
+	}
+	
+	// Mermaid diagram styling
+	.mermaid-wrapper {
+		margin: 1rem 0;
+		
+		svg {
+			max-width: 100%;
+			height: auto;
+		}
+		
+		.mermaid-error {
+			background-color: var(--danger-light);
+			border: 1px solid var(--danger);
+			border-radius: 4px;
+			padding: 1rem;
+			color: var(--danger-dark);
+		}
 	}
 }
 </style>

@@ -2098,3 +2098,144 @@ type ErrOpenIDBadRequestWithDetails struct {
 func (err *ErrOpenIDBadRequestWithDetails) Error() string {
 	return err.Message
 }
+
+// =============
+// Wiki errors
+// =============
+
+// ErrWikiPageDoesNotExist represents an error where a wiki page does not exist
+type ErrWikiPageDoesNotExist struct {
+	ID int64
+}
+
+// IsErrWikiPageDoesNotExist checks if an error is ErrWikiPageDoesNotExist.
+func IsErrWikiPageDoesNotExist(err error) bool {
+	_, ok := err.(ErrWikiPageDoesNotExist)
+	return ok
+}
+
+func (err ErrWikiPageDoesNotExist) Error() string {
+	return fmt.Sprintf("Wiki page does not exist [ID: %d]", err.ID)
+}
+
+// ErrCodeWikiPageDoesNotExist holds the unique world-error code of this error
+const ErrCodeWikiPageDoesNotExist = 16001
+
+// HTTPError holds the http error description
+func (err ErrWikiPageDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeWikiPageDoesNotExist,
+		Message:  "This wiki page does not exist.",
+	}
+}
+
+// ErrWikiPageParentMustBeFolder represents an error where a wiki page's parent is not a folder
+type ErrWikiPageParentMustBeFolder struct {
+	ParentID int64
+}
+
+// IsErrWikiPageParentMustBeFolder checks if an error is ErrWikiPageParentMustBeFolder.
+func IsErrWikiPageParentMustBeFolder(err error) bool {
+	_, ok := err.(ErrWikiPageParentMustBeFolder)
+	return ok
+}
+
+func (err ErrWikiPageParentMustBeFolder) Error() string {
+	return fmt.Sprintf("Wiki page parent must be a folder [ParentID: %d]", err.ParentID)
+}
+
+// ErrCodeWikiPageParentMustBeFolder holds the unique world-error code of this error
+const ErrCodeWikiPageParentMustBeFolder = 16002
+
+// HTTPError holds the http error description
+func (err ErrWikiPageParentMustBeFolder) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeWikiPageParentMustBeFolder,
+		Message:  "The parent wiki page must be a folder.",
+	}
+}
+
+// ErrWikiPageParentProjectMismatch represents an error where a wiki page's parent belongs to a different project
+type ErrWikiPageParentProjectMismatch struct {
+	ParentID  int64
+	ProjectID int64
+}
+
+// IsErrWikiPageParentProjectMismatch checks if an error is ErrWikiPageParentProjectMismatch.
+func IsErrWikiPageParentProjectMismatch(err error) bool {
+	_, ok := err.(ErrWikiPageParentProjectMismatch)
+	return ok
+}
+
+func (err ErrWikiPageParentProjectMismatch) Error() string {
+	return fmt.Sprintf("Wiki page parent belongs to different project [ParentID: %d, ProjectID: %d]", err.ParentID, err.ProjectID)
+}
+
+// ErrCodeWikiPageParentProjectMismatch holds the unique world-error code of this error
+const ErrCodeWikiPageParentProjectMismatch = 16003
+
+// HTTPError holds the http error description
+func (err ErrWikiPageParentProjectMismatch) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeWikiPageParentProjectMismatch,
+		Message:  "The parent wiki page must belong to the same project.",
+	}
+}
+
+// ErrWikiPagePathNotUnique represents an error where a wiki page path is not unique
+type ErrWikiPagePathNotUnique struct {
+	Path string
+}
+
+// IsErrWikiPagePathNotUnique checks if an error is ErrWikiPagePathNotUnique.
+func IsErrWikiPagePathNotUnique(err error) bool {
+	_, ok := err.(ErrWikiPagePathNotUnique)
+	return ok
+}
+
+func (err ErrWikiPagePathNotUnique) Error() string {
+	return fmt.Sprintf("Wiki page path is not unique [Path: %s]", err.Path)
+}
+
+// ErrCodeWikiPagePathNotUnique holds the unique world-error code of this error
+const ErrCodeWikiPagePathNotUnique = 16004
+
+// HTTPError holds the http error description
+func (err ErrWikiPagePathNotUnique) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeWikiPagePathNotUnique,
+		Message:  "A wiki page with this path already exists.",
+	}
+}
+
+// ErrWikiPageCyclicRelationship represents an error where a wiki page would create a cycle
+type ErrWikiPageCyclicRelationship struct {
+	PageID int64
+}
+
+// IsErrWikiPageCyclicRelationship checks if an error is ErrWikiPageCyclicRelationship.
+func IsErrWikiPageCyclicRelationship(err error) bool {
+	_, ok := err.(ErrWikiPageCyclicRelationship)
+	return ok
+}
+
+func (err ErrWikiPageCyclicRelationship) Error() string {
+	return fmt.Sprintf("Wiki page would create a cyclic relationship [PageID: %d]", err.PageID)
+}
+
+// ErrCodeWikiPageCyclicRelationship holds the unique world-error code of this error
+const ErrCodeWikiPageCyclicRelationship = 16005
+
+// HTTPError holds the http error description
+func (err ErrWikiPageCyclicRelationship) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeWikiPageCyclicRelationship,
+		Message:  "Moving this wiki page would create a cycle in the hierarchy.",
+	}
+}
+

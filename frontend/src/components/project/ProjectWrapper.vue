@@ -15,7 +15,6 @@
 			:class="{'is-justify-content-flex-end': views.length === 1}"
 		>
 			<div
-				v-if="views.length > 1"
 				class="switch-view"
 			>
 				<BaseButton
@@ -51,6 +50,7 @@ import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Message from '@/components/misc/Message.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
+import Icon from '@/components/misc/Icon'
 
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {useTitle} from '@/composables/useTitle'
@@ -94,6 +94,8 @@ function getViewTitle(view: IProjectView) {
 			return t('project.table.title')
 		case 'Kanban':
 			return t('project.kanban.title')
+		case 'Wiki':
+			return t('wiki.title')
 	}
 	
 	return view.title
