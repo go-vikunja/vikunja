@@ -158,10 +158,7 @@ export const useProjectStore = defineStore('project', () => {
 			return
 		}
 
-		// Store original favorite state in case we need to revert
-		// (project may be reactive and change during async operation)
 		const wasFavorite = project.isFavorite
-
 		const filterId = getSavedFilterIdFromProjectId(project.id)
 		const savedFilterService = new SavedFilterService()
 
