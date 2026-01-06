@@ -109,7 +109,7 @@ func initS3FileHandler() error {
 func initLocalFileHandler() {
 	fs = afero.NewOsFs()
 	afs = &afero.Afero{Fs: fs}
-	s3Client = nil // Reset S3 client when using local storage
+	s3Client = nil
 	setDefaultLocalConfig()
 }
 
@@ -128,7 +128,6 @@ func InitFileHandler() error {
 		return fmt.Errorf("invalid file storage type '%s': must be 'local' or 's3'", fileType)
 	}
 
-	// Validate storage is writable
 	if err := ValidateFileStorage(); err != nil {
 		return fmt.Errorf("storage validation failed: %w", err)
 	}
