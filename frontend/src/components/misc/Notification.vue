@@ -2,6 +2,7 @@
 	<Notifications
 		position="bottom left"
 		:max="2"
+		:ignore-duplicates="true"
 		class="global-notification"
 	>
 		<template #body="{ item, close }">
@@ -20,12 +21,23 @@
 					{{ item.title }}
 				</div>
 				<div class="notification-content">
-					<template
-						v-for="(t, k) in item.text"
-						:key="k"
-					>
-						{{ t }}<br>
+					<template v-if="Array.isArray(item.text)">
+						<template
+							v-for="(t, k) in item.text"
+							:key="k"
+						>
+							{{ t }}<br>
+						</template>
 					</template>
+					<template v-else>
+						{{ item.text }}
+					</template>
+					<span
+						v-if="item.duplicates > 0"
+						class="tw-text-xs tw-font-bold tw-ml-1"
+					>
+						×{{ item.duplicates + 1 }}
+					</span>
 				</div>
 				<div
 					v-if="item.data?.actions?.length > 0"
