@@ -42,7 +42,7 @@ When the user asks you to create a plan to fix or implement something:
 
 ### Frontend (Vue.js)
 Navigate to `frontend/` directory:
-- **Dev Server**: `pnpm dev` - Starts development server
+- **Dev Server**: `pnpm dev` - Starts development server, running on port 4173 unless changed with the `--port` flag
 - **Build**: `pnpm build` - Production build
 - **Build Dev**: `pnpm build:dev` - Development build  
 - **Lint**: `pnpm lint` - ESLint check
