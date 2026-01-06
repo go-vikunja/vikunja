@@ -21,11 +21,16 @@
 					{{ item.title }}
 				</div>
 				<div class="notification-content">
-					<template
-						v-for="(t, k) in item.text"
-						:key="k"
-					>
-						{{ t }}<br>
+					<template v-if="Array.isArray(item.text)">
+						<template
+							v-for="(t, k) in item.text"
+							:key="k"
+						>
+							{{ t }}<br>
+						</template>
+					</template>
+					<template v-else>
+						{{ item.text }}
 					</template>
 					<span
 						v-if="item.duplicates > 0"
