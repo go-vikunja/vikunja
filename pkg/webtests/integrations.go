@@ -220,7 +220,12 @@ func getHTTPErrorCode(err error) int {
 
 // getHTTPErrorMessage extracts the message from various error types
 func getHTTPErrorMessage(err error) interface{} {
-	// First, try echo.HTTPError (for Forbidden etc.)
+	// First, try domain errors that implement HTTPErrorProcessor
+	if httpErr, ok := err.(web.HTTPErrorProcessor); ok {
+		return httpErr.HTTPError().Message
+	}
+
+	// Then try echo.HTTPError (for Forbidden etc.)
 	var httperr *echo.HTTPError
 	if errors.As(err, &httperr) {
 		return httperr.Message
