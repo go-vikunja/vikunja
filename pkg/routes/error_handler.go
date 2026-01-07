@@ -35,6 +35,11 @@ type httpCodeGetter interface {
 	GetHTTPCode() int
 }
 
+// errorMessage is used to wrap string error messages in a consistent JSON structure.
+type errorMessage struct {
+	Message interface{} `json:"message"`
+}
+
 // CreateHTTPErrorHandler creates a centralized HTTP error handler that:
 // 1. Converts all error types to proper HTTP responses
 // 2. Preserves full error details (like ValidationHTTPError.InvalidFields)
@@ -101,6 +106,11 @@ func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandl
 		if c.Request().Method == http.MethodHead {
 			err = c.NoContent(code)
 		} else {
+			// Wrap string messages in a struct to ensure consistent JSON format
+			// e.g., "Forbidden" becomes {"message": "Forbidden"}
+			if _, isString := message.(string); isString {
+				message = errorMessage{Message: message}
+			}
 			err = c.JSON(code, message)
 		}
 		if err != nil {
