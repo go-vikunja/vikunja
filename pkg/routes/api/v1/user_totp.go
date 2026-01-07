@@ -111,9 +111,9 @@ func UserTOTPEnable(c echo.Context) error {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message)}
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
+		return models.ErrInvalidModel{}
 	}
 
 	err = user.EnableTOTP(s, passcode)
@@ -149,9 +149,9 @@ func UserTOTPDisable(c echo.Context) error {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message)}
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
+		return models.ErrInvalidModel{}
 	}
 
 	u, s, err := getLocalUserFromContext(c)

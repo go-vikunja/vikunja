@@ -174,6 +174,36 @@ func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrInvalidModel represents an error where the request body could not be parsed
+type ErrInvalidModel struct {
+	Message string
+}
+
+// IsErrInvalidModel checks if an error is ErrInvalidModel.
+func IsErrInvalidModel(err error) bool {
+	_, ok := err.(ErrInvalidModel)
+	return ok
+}
+
+func (err ErrInvalidModel) Error() string {
+	if err.Message != "" {
+		return fmt.Sprintf("Invalid model provided: %s", err.Message)
+	}
+	return "Invalid model provided."
+}
+
+// ErrCodeInvalidModel holds the unique world-error code of this error
+const ErrCodeInvalidModel = 2004
+
+// HTTPError holds the http error description
+func (err ErrInvalidModel) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidModel,
+		Message:  err.Error(),
+	}
+}
+
 // ===========
 // Project errors
 // ===========
