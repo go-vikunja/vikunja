@@ -23,7 +23,6 @@ import (
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 )
 
@@ -60,7 +59,7 @@ func UserChangePassword(c echo.Context) error {
 	}
 
 	if newPW.OldPassword == "" {
-		return handler.HandleHTTPError(user.ErrEmptyOldPassword{})
+		return user.ErrEmptyOldPassword{}
 	}
 
 	s := db.NewSession()
@@ -69,18 +68,18 @@ func UserChangePassword(c echo.Context) error {
 	// Check the current password
 	if _, err = user.CheckUserCredentials(s, &user.Login{Username: doer.Username, Password: newPW.OldPassword}); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Update the password
 	if err = user.UpdateUserPassword(s, doer, newPW.NewPassword); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "The password was updated successfully."})

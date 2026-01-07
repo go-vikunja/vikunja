@@ -46,7 +46,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 
 	// Validate the struct
 	if err := ctx.Validate(currentStruct); err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 
 	// Check if the user has the permission to do that
@@ -67,7 +67,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	canUpdate, err := currentStruct.CanUpdate(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 	if !canUpdate {
 		_ = s.Rollback()
@@ -79,17 +79,17 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	err = currentStruct.Update(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 
 	err = ctx.JSON(http.StatusOK, currentStruct)
 	if err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 	return err
 }

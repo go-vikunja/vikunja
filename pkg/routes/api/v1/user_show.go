@@ -29,7 +29,6 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 
-	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 )
 
@@ -63,7 +62,7 @@ func UserShow(c echo.Context) error {
 
 	u, err := models.GetUserOrLinkShareUser(s, a)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	us := &UserWithSettings{
@@ -88,7 +87,7 @@ func UserShow(c echo.Context) error {
 
 	us.AuthProvider, err = getAuthProviderName(u)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, us)

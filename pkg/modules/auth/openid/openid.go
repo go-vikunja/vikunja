@@ -34,7 +34,6 @@ import (
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
-	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	petname "github.com/dustinkirkland/golang-petname"
@@ -140,12 +139,12 @@ func HandleCallback(c echo.Context) error {
 				"details": detailedErr.Details,
 			})
 		}
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	cl, err := getClaims(provider, oauthToken, idToken)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -156,21 +155,21 @@ func HandleCallback(c echo.Context) error {
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
 
 	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, "OIDC")
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new team for provider %s: %v", provider.Name, err)
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Create token

@@ -28,7 +28,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 )
 
 // UserAvatarProvider holds the user avatar provider type
@@ -81,7 +80,7 @@ func GetUserAvatarProvider(c echo.Context) error {
 
 	u, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -90,12 +89,12 @@ func GetUserAvatarProvider(c echo.Context) error {
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	uap := &UserAvatarProvider{AvatarProvider: user.AvatarProvider}
@@ -124,7 +123,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 
 	u, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -133,7 +132,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	oldProvider := user.AvatarProvider
@@ -143,7 +142,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 	_, err = user2.UpdateUser(s, user, false)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if user.AvatarProvider == "initials" {
@@ -152,7 +151,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if oldProvider != user.AvatarProvider {
@@ -191,7 +190,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 
 	u, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -200,7 +199,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	invalidateAvatar := user.AvatarProvider == "initials" && user.Name != us.Name
@@ -220,12 +219,12 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	_, err = user2.UpdateUser(s, user, true)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if invalidateAvatar {

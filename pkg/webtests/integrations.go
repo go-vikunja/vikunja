@@ -181,17 +181,53 @@ func assertHandlerErrorCode(t *testing.T, err error, expectedErrorCode int) {
 		t.Error("Error is nil")
 		t.FailNow()
 	}
+
+	// First, try to get error code from HTTPErrorProcessor (domain errors like ValidationHTTPError)
+	if httpErr, ok := err.(web.HTTPErrorProcessor); ok {
+		assert.Equal(t, expectedErrorCode, httpErr.HTTPError().Code)
+		return
+	}
+
+	// Fall back to echo.HTTPError for middleware/auth errors
 	var httperr *echo.HTTPError
 	if !errors.As(err, &httperr) {
-		t.Error("Error is not *echo.HTTPError")
+		t.Errorf("Error is not *echo.HTTPError or web.HTTPErrorProcessor: %T", err)
 		t.FailNow()
 	}
 	webhttperr, ok := httperr.Message.(web.HTTPError)
 	if !ok {
-		t.Error("Error is not *web.HTTPError")
+		t.Errorf("Error message is not web.HTTPError: %T", httperr.Message)
 		t.FailNow()
 	}
 	assert.Equal(t, expectedErrorCode, webhttperr.Code)
+}
+
+// getHTTPErrorCode extracts the HTTP status code from various error types
+func getHTTPErrorCode(err error) int {
+	// First, try domain errors that implement HTTPErrorProcessor
+	if httpErr, ok := err.(web.HTTPErrorProcessor); ok {
+		return httpErr.HTTPError().HTTPCode
+	}
+
+	// Fall back to echo.HTTPError
+	var httperr *echo.HTTPError
+	if errors.As(err, &httperr) {
+		return httperr.Code
+	}
+
+	return 0
+}
+
+// getHTTPErrorMessage extracts the message from various error types
+func getHTTPErrorMessage(err error) interface{} {
+	// First, try echo.HTTPError (for Forbidden etc.)
+	var httperr *echo.HTTPError
+	if errors.As(err, &httperr) {
+		return httperr.Message
+	}
+
+	// Fall back to error string
+	return err.Error()
 }
 
 type webHandlerTest struct {

@@ -22,7 +22,6 @@ import (
 
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,8 +32,8 @@ func TestUserExportDownload(t *testing.T) {
 		body := `{"password": "12345678"}`
 		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.DownloadUserDataExport, &testuser15, body, nil, nil)
 		require.Error(t, err)
-		assert.Equal(t, http.StatusNotFound, err.(*echo.HTTPError).Code)
-		assert.Contains(t, err.(*echo.HTTPError).Message, "No user data export found")
+		assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
+		assert.Contains(t, getHTTPErrorMessage(err), "No user data export found")
 	})
 
 	t.Run("export file metadata exists but physical file does not exist", func(t *testing.T) {
@@ -43,7 +42,7 @@ func TestUserExportDownload(t *testing.T) {
 		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.DownloadUserDataExport, &testuser1, body, nil, nil)
 		require.Error(t, err)
 		// This should return 404 when the physical file doesn't exist
-		assert.Equal(t, http.StatusNotFound, err.(*echo.HTTPError).Code)
-		assert.Contains(t, err.(*echo.HTTPError).Message, "No user data export found")
+		assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
+		assert.Contains(t, getHTTPErrorMessage(err), "No user data export found")
 	})
 }

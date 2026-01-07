@@ -22,7 +22,6 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/labstack/echo/v4"
 )
@@ -53,13 +52,13 @@ func UserRequestDeletion(c echo.Context) error {
 
 	err := s.Begin()
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if u.IsLocalUser() {
@@ -76,20 +75,20 @@ func UserRequestDeletion(c echo.Context) error {
 		err = user.CheckUserPassword(u, deletionRequest.Password)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err).SetInternal(err)
+			return err
 		}
 	}
 
 	err = user.RequestDeletion(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully requested deletion."})
@@ -122,25 +121,25 @@ func UserConfirmDeletion(c echo.Context) error {
 
 	err = s.Begin()
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = user.ConfirmDeletion(s, u, deleteConfirmation.Token)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusNoContent, models.Message{Message: "Successfully confirmed the deletion request."})
@@ -164,13 +163,13 @@ func UserCancelDeletion(c echo.Context) error {
 
 	err := s.Begin()
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if u.IsLocalUser() {
@@ -187,20 +186,20 @@ func UserCancelDeletion(c echo.Context) error {
 		err = user.CheckUserPassword(u, deletionRequest.Password)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err)
+			return err
 		}
 	}
 
 	err = user.CancelDeletion(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusNoContent, models.Message{Message: "Successfully confirmed the deletion request."})

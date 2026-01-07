@@ -104,7 +104,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	result, resultCount, numberOfItems, err := currentStruct.ReadAll(s, currentAuth, search, pageNumber, perPageNumber)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 
 	// Calculate the number of pages from the number of items
@@ -126,7 +126,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 
 	// Ensure we return an empty array instead of null when there are no results.
@@ -138,7 +138,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 
 	err = ctx.JSON(http.StatusOK, result)
 	if err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 	return err
 }

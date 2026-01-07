@@ -47,7 +47,7 @@ func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandl
 		}
 
 		var (
-			code    = http.StatusInternalServerError
+			code                = http.StatusInternalServerError
 			message interface{} = http.StatusText(http.StatusInternalServerError)
 		)
 

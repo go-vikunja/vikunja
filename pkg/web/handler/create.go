@@ -45,7 +45,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 
 	// Validate the struct
 	if err := ctx.Validate(currentStruct); err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 
 	// Get the user to pass for later checks
@@ -67,7 +67,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	canCreate, err := currentStruct.CanCreate(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 	if !canCreate {
 		_ = s.Rollback()
@@ -79,17 +79,17 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	err = currentStruct.Create(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 
 	err = ctx.JSON(http.StatusCreated, currentStruct)
 	if err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 	return err
 }

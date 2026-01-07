@@ -24,7 +24,6 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/labstack/echo/v4"
 )
@@ -61,7 +60,7 @@ func RegisterUser(c echo.Context) error {
 			return c.JSON(e.HTTPCode, e)
 		}
 
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	if userIn == nil {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "No or invalid user model provided."})
@@ -79,19 +78,19 @@ func RegisterUser(c echo.Context) error {
 	})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Create their initial project
 	err = models.CreateNewProjectForUser(s, newUser)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, newUser)

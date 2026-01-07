@@ -27,7 +27,6 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/labstack/echo/v4"
 	"xorm.io/xorm"
@@ -66,19 +65,19 @@ func getLocalUserFromContext(c echo.Context) (*user.User, *xorm.Session, error) 
 func UserTOTPEnroll(c echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer s.Close()
 
 	t, err := user.EnrollTOTP(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, t)
@@ -101,7 +100,7 @@ func UserTOTPEnroll(c echo.Context) error {
 func UserTOTPEnable(c echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer s.Close()
 
@@ -120,12 +119,12 @@ func UserTOTPEnable(c echo.Context) error {
 	err = user.EnableTOTP(s, passcode)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was enabled successfully."})
@@ -157,25 +156,25 @@ func UserTOTPDisable(c echo.Context) error {
 
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer s.Close()
 
 	err = user.CheckUserPassword(u, login.Password)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = user.DisableTOTP(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was enabled successfully."})
@@ -194,26 +193,26 @@ func UserTOTPDisable(c echo.Context) error {
 func UserTOTPQrCode(c echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer s.Close()
 
 	qrcode, err := user.GetTOTPQrCodeForUser(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	buff := &bytes.Buffer{}
 	err = jpeg.Encode(buff, qrcode, nil)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.Blob(http.StatusOK, "image/jpeg", buff.Bytes())
@@ -232,19 +231,19 @@ func UserTOTPQrCode(c echo.Context) error {
 func UserTOTP(c echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer s.Close()
 
 	t, err := user.GetTOTPForUser(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, t)
