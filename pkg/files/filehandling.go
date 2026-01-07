@@ -17,12 +17,14 @@
 package files
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -107,6 +109,7 @@ func initS3FileHandler() error {
 func initLocalFileHandler() {
 	fs = afero.NewOsFs()
 	afs = &afero.Afero{Fs: fs}
+	s3Client = nil
 	setDefaultLocalConfig()
 }
 
@@ -116,13 +119,20 @@ func InitFileHandler() error {
 
 	switch fileType {
 	case "s3":
-		return initS3FileHandler()
+		if err := initS3FileHandler(); err != nil {
+			return err
+		}
 	case "local":
 		initLocalFileHandler()
-		return nil
 	default:
 		return fmt.Errorf("invalid file storage type '%s': must be 'local' or 's3'", fileType)
 	}
+
+	if err := ValidateFileStorage(); err != nil {
+		return fmt.Errorf("storage validation failed: %w", err)
+	}
+
+	return nil
 }
 
 // InitTestFileHandler initializes a new memory file system for testing
@@ -174,4 +184,23 @@ func InitTests() {
 // FileStat stats a file. This is an exported function to be able to test this from outide of the package
 func FileStat(file *File) (os.FileInfo, error) {
 	return afs.Stat(file.getAbsoluteFilePath())
+}
+
+// ValidateFileStorage checks that the configured file storage is writable
+// by creating and removing a temporary file.
+func ValidateFileStorage() error {
+	filename := fmt.Sprintf(".vikunja-check-%d", time.Now().UnixNano())
+	path := filepath.Join(config.FilesBasePath.GetString(), filename)
+
+	err := writeToStorage(path, bytes.NewReader([]byte{}), 0)
+	if err != nil {
+		return fmt.Errorf("failed to create test file at %s: %w", path, err)
+	}
+
+	err = afs.Remove(path)
+	if err != nil {
+		return fmt.Errorf("failed to remove test file at %s: %w", path, err)
+	}
+
+	return nil
 }

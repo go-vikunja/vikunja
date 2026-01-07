@@ -42,7 +42,7 @@ When the user asks you to create a plan to fix or implement something:
 
 ### Frontend (Vue.js)
 Navigate to `frontend/` directory:
-- **Dev Server**: `pnpm dev` - Starts development server
+- **Dev Server**: `pnpm dev` - Starts development server, running on port 4173 unless changed with the `--port` flag
 - **Build**: `pnpm build` - Production build
 - **Build Dev**: `pnpm build:dev` - Development build  
 - **Lint**: `pnpm lint` - ESLint check
@@ -51,8 +51,7 @@ Navigate to `frontend/` directory:
 - **Lint Styles Fix**: `pnpm lint:styles:fix` - Stylelint with auto-fix
 - **Type Check**: `pnpm typecheck` - Vue TypeScript checking
 - **Test Unit**: `pnpm test:unit` - Vitest unit tests
-- **Test E2E**: `pnpm test:e2e` - Cypress end-to-end tests
-- **Test E2E Dev**: `pnpm test:e2e-dev` - Interactive Cypress testing
+- **Test E2E**: `pnpm test:e2e` - Playwright end-to-end tests (located in `tests/e2e/`)
 
 ### Pre-commit Checks
 Always run both lint before committing:
@@ -150,7 +149,7 @@ Modern Vue 3 composition API application with TypeScript:
 
 ### Testing
 - Backend: Feature tests alongside source files, web tests in `pkg/webtests/`
-- Frontend: Unit tests with Vitest, E2E tests with Cypress
+- Frontend: Unit tests with Vitest, E2E tests with Playwright
 - Always test both positive and negative authorization scenarios
 - Use test fixtures in `pkg/db/fixtures/` for consistent test data
 
