@@ -177,7 +177,7 @@ func UserTOTPDisable(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was enabled successfully."})
+	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was disabled successfully."})
 }
 
 // UserTOTPQrCode is the handler to show a qr code to enroll the user into totp
