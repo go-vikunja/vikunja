@@ -84,7 +84,7 @@
 				class="menu"
 			>
 				<ProjectsNavigation
-					:model-value="favoriteProjects" 
+					:model-value="favoriteProjects"
 					:can-edit-order="false"
 					:can-collapse="false"
 				/>

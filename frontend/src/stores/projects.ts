@@ -15,7 +15,9 @@ import type {IProject} from '@/modelTypes/IProject'
 import ProjectModel from '@/models/project'
 import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
-import {getSavedFilterIdFromProjectId} from '@/services/savedFilter'
+import SavedFilterService from '@/services/savedFilter'
+import {getSavedFilterIdFromProjectId, isSavedFilter} from '@/services/savedFilter'
+import SavedFilterModel from '@/models/savedFilter'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import {PERMISSIONS} from '@/constants/permissions.ts'
 
@@ -145,10 +147,43 @@ export const useProjectStore = defineStore('project', () => {
 		if (project.id === -1 || project.isArchived) {
 			return
 		}
+
+		if (isSavedFilter(project)) {
+			return toggleSavedFilterFavorite(project)
+		}
+		
 		return updateProject({
 			...project,
 			isFavorite: !project.isFavorite,
 		})
+	}
+
+	async function toggleSavedFilterFavorite(project: IProject) {
+		if (!isSavedFilter(project)) {
+			return
+		}
+
+		const wasFavorite = project.isFavorite
+		const filterId = getSavedFilterIdFromProjectId(project.id)
+		const savedFilterService = new SavedFilterService()
+
+		// Optimistically update the UI
+		setProject({
+			...project,
+			isFavorite: !wasFavorite,
+		})
+
+		try {
+			const savedFilter = await savedFilterService.get(new SavedFilterModel({id: filterId}))
+			savedFilter.isFavorite = !wasFavorite
+			await savedFilterService.update(savedFilter)
+		} catch (e) {
+			setProject({
+				...project,
+				isFavorite: wasFavorite,
+			})
+			throw e
+		}
 	}
 
 	async function createProject(project: IProject) {
