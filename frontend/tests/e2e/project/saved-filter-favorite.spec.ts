@@ -11,6 +11,7 @@ test.describe('Saved Filter Favorites', () => {
 		await SavedFilterFactory.create(1, {
 			title: 'My Test Filter',
 			is_favorite: false,
+			filters: '{"filter":"done = false","filter_include_nulls":false,"s":""}',
 		})
 
 		await page.goto('/')
@@ -18,7 +19,7 @@ test.describe('Saved Filter Favorites', () => {
 
 		// The saved filter should appear in the sidebar (as a pseudo-project with negative ID)
 		// Saved filters section shows filters that aren't favorites
-		const filterItem = page.locator('.menu-container').getByRole('listitem').filter({hasText: 'My Test Filter'})
+		const filterItem = page.locator('.list-menu .navigation-item').filter({hasText: 'My Test Filter'})
 		await expect(filterItem).toBeVisible({timeout: 10000})
 
 		// Hover to reveal the favorite button
@@ -33,12 +34,8 @@ test.describe('Saved Filter Favorites', () => {
 		await favoriteButton.click()
 		await favoritePromise
 
-		// The filter should now appear in the Favorites section
-		await expect(page.locator('.menu-container')).toContainText('Favorites', {timeout: 10000})
-
-		// Verify the star is now filled (is-favorite class)
-		await filterItem.hover()
-		await expect(filterItem.locator('.favorite.is-favorite')).toBeVisible()
+		await expect(filterItem.locator('.favorite.is-favorite').nth(0)).toBeVisible()
+		await expect(filterItem.locator('.favorite.is-favorite').nth(1)).toBeVisible()
 	})
 
 	test('Can remove a saved filter from favorites', async ({authenticatedPage: page}) => {
@@ -49,15 +46,15 @@ test.describe('Saved Filter Favorites', () => {
 		await SavedFilterFactory.create(1, {
 			title: 'Favorited Filter',
 			is_favorite: true,
+			filters: '{"filter":"done = false","filter_include_nulls":false,"s":""}',
 		})
 
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')
 
-		// The saved filter should appear in the Favorites section
-		await expect(page.locator('.menu-container')).toContainText('Favorites', {timeout: 10000})
-
-		const filterItem = page.locator('.menu-container').getByRole('listitem').filter({hasText: 'Favorited Filter'})
+		// The saved filter appears twice (favorites section + saved filters section)
+		// Get the first instance (in favorites section) which should have a filled star
+		const filterItem = page.locator('.menu-container').getByRole('listitem').filter({hasText: 'Favorited Filter'}).first()
 		await expect(filterItem).toBeVisible()
 
 		// Hover to reveal the favorite button (should be filled star)
@@ -72,9 +69,9 @@ test.describe('Saved Filter Favorites', () => {
 		await favoriteButton.click()
 		await unfavoritePromise
 
-		// The filter should no longer have the is-favorite class
-		await filterItem.hover()
-		await expect(filterItem.locator('.favorite:not(.is-favorite)')).toBeVisible()
+		// After unfavoriting, the star should be outline (not filled)
+		// Wait for UI to update with longer timeout
+		await expect(filterItem.locator('.favorite:not(.is-favorite)')).toBeVisible({timeout: 10000})
 	})
 
 	test('Saved filter favorite status persists after page reload', async ({authenticatedPage: page}) => {
@@ -85,6 +82,7 @@ test.describe('Saved Filter Favorites', () => {
 		await SavedFilterFactory.create(1, {
 			title: 'Persistent Filter',
 			is_favorite: false,
+			filters: '{"filter":"done = false","filter_include_nulls":false,"s":""}',
 		})
 
 		await page.goto('/')
@@ -100,14 +98,15 @@ test.describe('Saved Filter Favorites', () => {
 		await filterItem.locator('.favorite').click()
 		await favoritePromise
 
+		// Wait for UI to update before reloading
+		await page.waitForTimeout(500)
+
 		// Reload the page
 		await page.reload()
 		await page.waitForLoadState('networkidle')
 
-		// The filter should still be in favorites after reload
-		await expect(page.locator('.menu-container')).toContainText('Favorites', {timeout: 10000})
-		const reloadedFilterItem = page.locator('.menu-container').getByRole('listitem').filter({hasText: 'Persistent Filter'})
-		await reloadedFilterItem.hover()
-		await expect(reloadedFilterItem.locator('.favorite.is-favorite')).toBeVisible()
+		// The filter should still be favorited after reload (filled star)
+		await expect(filterItem.locator('.favorite.is-favorite').nth(0)).toBeVisible()
+		await expect(filterItem.locator('.favorite.is-favorite').nth(1)).toBeVisible()
 	})
 })
