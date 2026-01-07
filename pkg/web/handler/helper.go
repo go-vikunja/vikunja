@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/log"
@@ -37,12 +38,35 @@ type CObject interface {
 	web.Permissions
 }
 
+// httpCodeGetter is an interface for errors that can provide their HTTP status code.
+type httpCodeGetter interface {
+	GetHTTPCode() int
+}
+
 // HandleHTTPError does what it says
 func HandleHTTPError(err error) *echo.HTTPError {
 	log.Error(err.Error())
+
+	// First, check if error implements json.Marshaler and httpCodeGetter.
+	// This allows errors with extra fields (like ValidationHTTPError with InvalidFields)
+	// to be serialized with all their fields intact.
+	if _, isMarshaler := err.(json.Marshaler); isMarshaler {
+		if codeGetter, hasCode := err.(httpCodeGetter); hasCode {
+			return echo.NewHTTPError(codeGetter.GetHTTPCode(), err).SetInternal(err)
+		}
+	}
+
+	// Standard HTTPErrorProcessor handling
 	if a, has := err.(web.HTTPErrorProcessor); has {
 		errDetails := a.HTTPError()
+		// If the error implements json.Marshaler, pass the original error to Echo
+		// so that Echo serializes the full struct (including any extra fields like InvalidFields).
+		// Echo's DefaultHTTPErrorHandler checks for json.Marshaler and uses it directly.
+		if _, isMarshaler := err.(json.Marshaler); isMarshaler {
+			return echo.NewHTTPError(errDetails.HTTPCode, err).SetInternal(err)
+		}
 		return echo.NewHTTPError(errDetails.HTTPCode, errDetails).SetInternal(err)
 	}
+
 	return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
 }

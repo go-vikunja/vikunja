@@ -17,6 +17,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -108,6 +109,26 @@ func (err ValidationHTTPError) Error() string {
 		Message: err.Message,
 	}
 	return theErr.Error()
+}
+
+// MarshalJSON implements json.Marshaler to ensure InvalidFields is included in the JSON response.
+// This is needed because Echo's DefaultHTTPErrorHandler converts error types to {"message": err.Error()},
+// losing structured data. By implementing json.Marshaler, Echo will serialize the full struct.
+func (err ValidationHTTPError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Code          int      `json:"code"`
+		Message       string   `json:"message"`
+		InvalidFields []string `json:"invalid_fields"`
+	}{
+		Code:          err.Code,
+		Message:       err.Message,
+		InvalidFields: err.InvalidFields,
+	})
+}
+
+// GetHTTPCode returns the HTTP status code for this error.
+func (err ValidationHTTPError) GetHTTPCode() int {
+	return err.HTTPCode
 }
 
 func InvalidFieldError(fields []string) error {

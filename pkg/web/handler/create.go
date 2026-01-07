@@ -45,7 +45,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 
 	// Validate the struct
 	if err := ctx.Validate(currentStruct); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+		return HandleHTTPError(err)
 	}
 
 	// Get the user to pass for later checks

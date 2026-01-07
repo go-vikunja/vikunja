@@ -46,7 +46,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 
 	// Validate the struct
 	if err := ctx.Validate(currentStruct); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+		return HandleHTTPError(err)
 	}
 
 	// Check if the user has the permission to do that
