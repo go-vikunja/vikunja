@@ -52,16 +52,13 @@
 package routes
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
@@ -142,17 +139,8 @@ func NewEcho() *echo.Echo {
 	// Add some overhead for multipart form data (headers, boundaries, etc.)
 	e.Use(middleware.BodyLimit(fmt.Sprintf("%dM", config.GetMaxFileSizeInMBytes()+2)))
 
-	// Set up custom error handler for body limit exceeded when Sentry is not enabled
-	if !config.SentryEnabled.GetBool() {
-		e.HTTPErrorHandler = func(err error, c echo.Context) {
-			// Convert HTTP 413 errors to custom ErrFileIsTooLarge error
-			var herr *echo.HTTPError
-			if errors.As(err, &herr) && herr.Code == http.StatusRequestEntityTooLarge {
-				err = handler.HandleHTTPError(files.ErrFileIsTooLarge{})
-			}
-			e.DefaultHTTPErrorHandler(err, c)
-		}
-	}
+	// Set up centralized error handler
+	e.HTTPErrorHandler = CreateHTTPErrorHandler(e, config.SentryEnabled.GetBool())
 
 	return e
 }
@@ -174,36 +162,6 @@ func setupSentry(e *echo.Echo) {
 	e.Use(sentryecho.New(sentryecho.Options{
 		Repanic: true,
 	}))
-
-	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		// Convert HTTP 413 errors to custom ErrFileIsTooLarge error
-		var herr *echo.HTTPError
-		if errors.As(err, &herr) && herr.Code == http.StatusRequestEntityTooLarge {
-			err = handler.HandleHTTPError(files.ErrFileIsTooLarge{})
-		}
-
-		// Only capture errors not already handled by echo
-		if errors.As(err, &herr) && herr.Code > 499 {
-			var errToReport = err
-			if herr.Internal == nil {
-				errToReport = herr.Internal
-			}
-
-			hub := sentryecho.GetHubFromContext(c)
-			if hub != nil {
-				hub.WithScope(func(scope *sentry.Scope) {
-					scope.SetExtra("url", c.Request().URL)
-					hub.CaptureException(errToReport)
-				})
-			} else {
-				sentry.CaptureException(errToReport)
-				log.Debugf("Could not add context for sending error '%s' to sentry", err.Error())
-			}
-			log.Debugf("Error '%s' sent to sentry", err.Error())
-		}
-
-		e.DefaultHTTPErrorHandler(err, c)
-	}
 }
 
 // RegisterRoutes registers all routes for the application
