@@ -174,16 +174,10 @@ export const useProjectStore = defineStore('project', () => {
 		})
 
 		try {
-			// Fetch the full saved filter first to get all required fields
 			const savedFilter = await savedFilterService.get(new SavedFilterModel({id: filterId}))
-
-			// Update only the isFavorite field
 			savedFilter.isFavorite = !wasFavorite
-
-			// Send the update
 			await savedFilterService.update(savedFilter)
 		} catch (e) {
-			// Revert on error
 			setProject({
 				...project,
 				isFavorite: wasFavorite,
@@ -335,7 +329,6 @@ export const useProjectStore = defineStore('project', () => {
 		setProjects,
 		removeProjectById,
 		toggleProjectFavorite,
-		toggleSavedFilterFavorite,
 		loadAllProjects,
 		loadProject,
 		createProject,
