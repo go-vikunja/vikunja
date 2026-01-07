@@ -74,7 +74,7 @@ func GetAvatar(c echo.Context) error {
 		sizeInt, err = strconv.ParseInt(size, 10, 64)
 		if err != nil {
 			log.Errorf("Error parsing size: %v", err)
-			return err
+			return models.ErrInvalidModel{Message: "Invalid size parameter"}
 		}
 	}
 	if sizeInt > config.ServiceMaxAvatarSize.GetInt64() {
