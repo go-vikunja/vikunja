@@ -27,9 +27,32 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/labstack/echo/v4"
 )
+
+// attachmentUploadError represents a structured error for attachment upload failures
+type attachmentUploadError struct {
+	Code    int    `json:"code,omitempty"`
+	Message string `json:"message"`
+}
+
+// toAttachmentUploadError converts an error to a structured attachmentUploadError
+func toAttachmentUploadError(err error) attachmentUploadError {
+	// Try to get structured error info from HTTPErrorProcessor
+	if httpErr, ok := err.(web.HTTPErrorProcessor); ok {
+		errDetails := httpErr.HTTPError()
+		return attachmentUploadError{
+			Code:    errDetails.Code,
+			Message: errDetails.Message,
+		}
+	}
+	// Fall back to just the error message
+	return attachmentUploadError{
+		Message: err.Error(),
+	}
+}
 
 // UploadTaskAttachment handles everything needed for the upload of a task attachment
 // @Summary Upload a task attachment
@@ -81,7 +104,7 @@ func UploadTaskAttachment(c echo.Context) error {
 	}
 
 	type result struct {
-		Errors  []error                  `json:"errors"`
+		Errors  []attachmentUploadError  `json:"errors"`
 		Success []*models.TaskAttachment `json:"success"`
 	}
 	r := &result{}
@@ -94,14 +117,14 @@ func UploadTaskAttachment(c echo.Context) error {
 
 		f, err := file.Open()
 		if err != nil {
-			r.Errors = append(r.Errors, err)
+			r.Errors = append(r.Errors, toAttachmentUploadError(err))
 			continue
 		}
 		defer f.Close()
 
 		err = ta.NewAttachment(s, f, file.Filename, uint64(file.Size), auth)
 		if err != nil {
-			r.Errors = append(r.Errors, err)
+			r.Errors = append(r.Errors, toAttachmentUploadError(err))
 			continue
 		}
 		r.Success = append(r.Success, ta)
