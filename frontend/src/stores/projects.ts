@@ -147,6 +147,11 @@ export const useProjectStore = defineStore('project', () => {
 		if (project.id === -1 || project.isArchived) {
 			return
 		}
+
+		if (isSavedFilter(project)) {
+			return toggleSavedFilterFavorite(project)
+		}
+		
 		return updateProject({
 			...project,
 			isFavorite: !project.isFavorite,

@@ -55,7 +55,7 @@
 				v-if="canToggleFavorite"
 				class="favorite"
 				:class="{'is-favorite': project.isFavorite}"
-				@click="toggleFavorite"
+				@click="projectStore.toggleProjectFavorite(project)"
 			>
 				<span class="is-sr-only">{{ project.isFavorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
 				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
@@ -196,24 +196,11 @@ const canToggleFavorite = computed(() => {
 	// Saved filters (negative IDs except -1)
 	return isSavedFilter(props.project)
 })
-
-async function toggleFavorite() {
-	if (isSavedFilter(props.project)) {
-		await projectStore.toggleSavedFilterFavorite(props.project)
-	} else {
-		await projectStore.toggleProjectFavorite(props.project)
-	}
-}
 </script>
 
 <style lang="scss" scoped>
 .list-menu {
 	transition: background-color $transition;
-}
-
-.list-setting-spacer {
-	inline-size: 5rem;
-	flex-shrink: 0;
 }
 
 .project-is-collapsed {
