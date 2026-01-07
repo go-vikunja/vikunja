@@ -70,7 +70,8 @@ func TestErrorResponseFormats(t *testing.T) {
 
 		// Verify the error structure includes invalid_fields
 		assert.Equal(t, 2002, errResp.Code, "Expected error code 2002 (ErrCodeInvalidData)")
-		assert.NotEmpty(t, errResp.InvalidFields, "invalid_fields should not be empty")
+		require.NotEmpty(t, errResp.InvalidFields, "invalid_fields should not be empty")
+		require.GreaterOrEqual(t, len(errResp.InvalidFields), 1, "invalid_fields should have at least one element")
 		assert.Contains(t, errResp.InvalidFields[0], "title", "invalid_fields should mention 'title'")
 	})
 
