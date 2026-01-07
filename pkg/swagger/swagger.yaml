@@ -466,12 +466,14 @@ definitions:
           value.
         type: string
       view_kind:
-        description: The kind of this view. Can be `list`, `gantt`, `table` or `kanban`.
+        description: The kind of this view. Can be `list`, `gantt`, `table`, `kanban`,
+          or `wiki`.
         enum:
         - list
         - gantt
         - table
         - kanban
+        - wiki
         type: string
     type: object
   models.ProjectViewBucketConfiguration:
@@ -1134,6 +1136,45 @@ definitions:
       updated:
         description: A timestamp when this webhook target was last updated. You cannot
           change this value.
+        type: string
+    type: object
+  models.WikiPage:
+    properties:
+      content:
+        description: The markdown content of the wiki page.
+        type: string
+      created:
+        description: A timestamp when this page was created. You cannot change this
+          value.
+        type: string
+      created_by:
+        $ref: '#/definitions/user.User'
+      id:
+        description: The unique, numeric id of this wiki page.
+        type: integer
+      is_folder:
+        description: Whether this is a folder (true) or a page (false).
+        type: boolean
+      parent_id:
+        description: The parent page ID. Null if this is a root page.
+        type: integer
+      path:
+        description: The full path of the page for easier querying and display.
+        type: string
+      position:
+        description: The position of this page within its parent folder for ordering.
+        type: number
+      project_id:
+        description: The project this wiki page belongs to.
+        type: integer
+      title:
+        description: The title of the wiki page.
+        maxLength: 250
+        minLength: 1
+        type: string
+      updated:
+        description: A timestamp when this page was last updated. You cannot change
+          this value.
         type: string
     type: object
   notifications.DatabaseNotification:
@@ -3900,6 +3941,35 @@ paths:
       summary: Update a task bucket
       tags:
       - task
+  /projects/{project}/wiki:
+    get:
+      consumes:
+      - application/json
+      description: Returns all wiki pages for a project, including folders.
+      parameters:
+      - description: Project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All wiki pages in the project
+          schema:
+            items:
+              $ref: '#/definitions/models.WikiPage'
+            type: array
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all wiki pages in a project
+      tags:
+      - wiki
   /projects/{projectID}/duplicate:
     put:
       consumes:

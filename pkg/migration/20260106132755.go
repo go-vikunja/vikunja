@@ -22,16 +22,16 @@ import (
 )
 
 type wikiPages20260106132755 struct {
-	ID        int64  `xorm:"bigint autoincr not null unique pk"`
-	ProjectID int64  `xorm:"bigint not null INDEX"`
-	ParentID  *int64 `xorm:"bigint null INDEX"`
-	Title     string `xorm:"varchar(250) not null"`
-	Content   string `xorm:"longtext null"`
-	Path      string `xorm:"varchar(500) not null INDEX"`
-	IsFolder  bool   `xorm:"bool default false"`
-	Position  float64 `xorm:"double not null"`
-	CreatedByID int64  `xorm:"bigint not null"`
-	
+	ID          int64   `xorm:"bigint autoincr not null unique pk"`
+	ProjectID   int64   `xorm:"bigint not null INDEX"`
+	ParentID    *int64  `xorm:"bigint null INDEX"`
+	Title       string  `xorm:"varchar(250) not null"`
+	Content     string  `xorm:"longtext null"`
+	Path        string  `xorm:"varchar(500) not null INDEX"`
+	IsFolder    bool    `xorm:"bool default false"`
+	Position    float64 `xorm:"double not null"`
+	CreatedByID int64   `xorm:"bigint not null"`
+
 	Created int64 `xorm:"created not null"`
 	Updated int64 `xorm:"updated not null"`
 }

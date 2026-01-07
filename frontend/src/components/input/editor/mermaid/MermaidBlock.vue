@@ -115,10 +115,10 @@ async function renderDiagram() {
 
 .mermaid-editor {
 	.mermaid-textarea {
-		width: 100%;
-		min-height: 200px;
+		inline-size: 100%;
+		min-block-size: 200px;
 		padding: 1rem;
-		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+		font-family: Monaco, Menlo, 'Ubuntu Mono', Consolas, source-code-pro, monospace;
 		font-size: 14px;
 		border: none;
 		outline: none;
@@ -143,8 +143,8 @@ async function renderDiagram() {
 	align-items: center;
 	
 	:deep(svg) {
-		max-width: 100%;
-		height: auto;
+		max-inline-size: 100%;
+		block-size: auto;
 	}
 }
 
@@ -153,6 +153,6 @@ async function renderDiagram() {
 	padding: 1rem;
 	background: var(--danger-light);
 	border-radius: 4px;
-	margin-top: 1rem;
+	margin-block-start: 1rem;
 }
 </style>

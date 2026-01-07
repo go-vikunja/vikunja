@@ -44,17 +44,14 @@ const emit = defineEmits<{
 	save: [page: IWikiPage]
 }>()
 
-const pageTitle = ref(props.page.title)
-const pageContent = ref(props.page.content)
-
-const page = toRef(props, 'page')
+const pageRef = toRef(props, 'page')
 const editableTitle = ref('')
 const editableContent = ref('')
 const isEditingTitle = ref(false)
 const titleInputRef = ref<HTMLInputElement>()
 
 // Initialize values from props
-watch(() => page.value, (newPage) => {
+watch(() => pageRef.value, (newPage) => {
 	editableTitle.value = newPage.title
 	editableContent.value = newPage.content
 }, { immediate: true })
@@ -69,7 +66,7 @@ function startEditingTitle() {
 
 function saveTitle() {
 	isEditingTitle.value = false
-	if (editableTitle.value !== page.value.title) {
+	if (editableTitle.value !== pageRef.value.title) {
 		handleSave()
 	}
 }
@@ -80,7 +77,7 @@ function updateContent(newContent: string) {
 
 function handleSave() {
 	const updatedPage: IWikiPage = {
-		...page.value,
+		...pageRef.value,
 		title: editableTitle.value,
 		content: editableContent.value,
 	}
@@ -95,9 +92,9 @@ function handleSave() {
 }
 
 .wiki-page-header {
-	margin-bottom: 1rem;
-	padding-bottom: 1rem;
-	border-bottom: 1px solid var(--grey-200);
+	margin-block-end: 1rem;
+	padding-block-end: 1rem;
+	border-block-end: 1px solid var(--grey-200);
 }
 
 .wiki-page-title {
@@ -113,17 +110,17 @@ function handleSave() {
 }
 
 .wiki-page-title-input {
-	width: 100%;
+	inline-size: 100%;
 	font-size: 1.75rem;
 	font-weight: 700;
 	border: none;
-	border-bottom: 2px solid var(--primary);
+	border-block-end: 2px solid var(--primary);
 	padding: 0.25rem 0;
 	outline: none;
 	background: transparent;
 	
 	&:focus {
-		border-bottom-color: var(--primary);
+		border-block-end-color: var(--primary);
 	}
 }
 </style>

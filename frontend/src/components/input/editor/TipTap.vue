@@ -420,7 +420,7 @@ const extensions : Extensions = [
 
 	CodeBlockLowlight.extend({
 		addNodeView() {
-			return ({node, getPos, editor}) => {
+			return ({node}) => {
 				// If this code block has language="mermaid", render as Mermaid
 				if (node.attrs.language === 'mermaid') {
 					const dom = document.createElement('div')
@@ -442,12 +442,12 @@ const extensions : Extensions = [
 								const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
 								mermaid.render(id, node.textContent).then(({svg}) => {
 									dom.innerHTML = svg
-								}).catch(err => {
-									dom.innerHTML = `<div class="mermaid-error">Error rendering diagram: ${err.message}</div>`
+								}).catch(() => {
+									dom.innerHTML = '<div class="mermaid-error">Error rendering diagram</div>'
 								})
 							})
-						} catch (err) {
-							dom.innerHTML = `<div class="mermaid-error">Mermaid not available</div>`
+						} catch (_err) {
+							dom.innerHTML = '<div class="mermaid-error">Mermaid not available</div>'
 						}
 					}
 					return {dom}
@@ -1262,8 +1262,8 @@ ul.tiptap__editor-actions {
 		margin: 1rem 0;
 		
 		svg {
-			max-width: 100%;
-			height: auto;
+			max-inline-size: 100%;
+			block-size: auto;
 		}
 		
 		.mermaid-error {

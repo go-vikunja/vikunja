@@ -47,9 +47,10 @@
 import {computed} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 import BaseButton from '@/components/base/BaseButton.vue'
-import Icon from '@/components/misc/Icon'
+import Icon from '@/components/misc/Icon.ts'
 import WikiPageItem from './WikiPageItem.vue'
 import {useWikiPageStore} from '@/stores/wikiPages'
+import type { IWikiPage } from '@/modelTypes/IWikiPage'
 
 const props = defineProps<{
 	projectId: number
@@ -68,9 +69,9 @@ const rootPages = computed(() => {
 	return wikiPageStore.getRootPagesForProject(props.projectId)
 })
 
-function handleDragEnd(event: any) {
+function handleDragEnd(): void {
 	// TODO: Implement drag-and-drop reordering at root level
-	console.log('Root level drag ended', event)
+	console.log('Root level drag ended')
 }
 </script>
 
@@ -78,7 +79,7 @@ function handleDragEnd(event: any) {
 .wiki-sidebar-container {
 	display: flex;
 	flex-direction: column;
-	height: 100%;
+	block-size: 100%;
 }
 
 .wiki-sidebar-header {
@@ -86,7 +87,7 @@ function handleDragEnd(event: any) {
 	align-items: center;
 	justify-content: space-between;
 	padding: 1rem;
-	border-bottom: 1px solid var(--grey-200);
+	border-block-end: 1px solid var(--grey-200);
 }
 
 .wiki-sidebar-title {

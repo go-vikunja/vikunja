@@ -106,7 +106,7 @@ func (wp *WikiPage) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Success 200 {array} models.WikiPage "All wiki pages in the project"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/wiki [get]
-func (wp *WikiPage) ReadAll(s *xorm.Session, auth web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (wp *WikiPage) ReadAll(s *xorm.Session, _ web.Auth, search string, _ int, _ int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
 	// Build the query
 	var cond builder.Cond = builder.Eq{"project_id": wp.ProjectID}
 
@@ -250,7 +250,7 @@ func (wp *WikiPage) Update(s *xorm.Session, auth web.Auth) (err error) {
 		if exists {
 			return ErrWikiPagePathNotUnique{Path: wp.Path}
 		}
-		
+
 		// Update paths of all descendants if this is a folder
 		if existing.IsFolder {
 			if err := wp.updateDescendantPaths(s); err != nil {
@@ -340,7 +340,7 @@ func (wp *WikiPage) updateDescendantPaths(s *xorm.Session) error {
 	// Update each child's path
 	for _, child := range children {
 		child.Path = child.buildPath(s)
-		
+
 		// Check for uniqueness
 		exists, err := s.Where("project_id = ? AND path = ? AND id != ?", child.ProjectID, child.Path, child.ID).
 			Exist(&WikiPage{})
@@ -350,13 +350,13 @@ func (wp *WikiPage) updateDescendantPaths(s *xorm.Session) error {
 		if exists {
 			return ErrWikiPagePathNotUnique{Path: child.Path}
 		}
-		
+
 		// Update in database
 		_, err = s.ID(child.ID).Cols("path").Update(child)
 		if err != nil {
 			return err
 		}
-		
+
 		// Recursively update its descendants if it's a folder
 		if child.IsFolder {
 			if err := child.updateDescendantPaths(s); err != nil {
@@ -372,7 +372,7 @@ func (wp *WikiPage) updateDescendantPaths(s *xorm.Session) error {
 func (wp *WikiPage) buildPath(s *xorm.Session) string {
 	// Simple path sanitization - remove slashes and trim spaces
 	cleanTitle := strings.ReplaceAll(strings.TrimSpace(wp.Title), "/", "-")
-	
+
 	if wp.ParentID == nil || *wp.ParentID == 0 {
 		return fmt.Sprintf("/%s", cleanTitle)
 	}

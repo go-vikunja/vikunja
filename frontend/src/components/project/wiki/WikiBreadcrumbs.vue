@@ -72,7 +72,7 @@ function navigateToPage(page: IWikiPage) {
 .breadcrumb {
 	background: transparent;
 	padding: 0.75rem 0;
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 	
 	ul {
 		flex-wrap: nowrap;

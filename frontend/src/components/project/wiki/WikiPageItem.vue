@@ -85,11 +85,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, nextTick} from 'vue'
+import {computed, ref, nextTick, toRef, watch} from 'vue'
 import {useStorage} from '@vueuse/core'
 import draggable from 'zhyswan-vuedraggable'
 import BaseButton from '@/components/base/BaseButton.vue'
-import Icon from '@/components/misc/Icon'
 import {useWikiPageStore} from '@/stores/wikiPages'
 import type {IWikiPage} from '@/modelTypes/IWikiPage'
 
@@ -111,17 +110,22 @@ const emit = defineEmits<{
 
 const wikiPageStore = useWikiPageStore()
 
+const pageRef = toRef(props, 'page')
 const isEditingTitle = ref(false)
-const editableTitle = ref(props.page.title)
+const editableTitle = ref('')
+
+watch(() => pageRef.value.title, (newTitle) => {
+	editableTitle.value = newTitle
+}, {immediate: true})
 
 const collapsedState = useStorage<Record<number, boolean>>('wiki-collapsed-folders-v2', {})
 const isCollapsed = computed({
 	get: () => {
 		// Default to expanded (false) for new folders
-		return collapsedState.value[props.page.id] ?? false
+		return collapsedState.value[pageRef.value.id] ?? false
 	},
 	set: (value) => {
-		collapsedState.value[props.page.id] = value
+		collapsedState.value[pageRef.value.id] = value
 	},
 })
 
@@ -146,9 +150,9 @@ function handleClick() {
 	}
 }
 
-function handleDragEnd(event: any) {
+function handleDragEnd(): void {
 	// TODO: Implement drag-and-drop reordering
-	console.log('Drag ended', event)
+	console.log('Drag ended')
 }
 
 function startEditingTitle() {
@@ -189,6 +193,10 @@ async function saveTitle() {
 <style lang="scss" scoped>
 .wiki-page-item {
 	position: relative;
+	
+	@media screen and (max-width: $mobile) {
+		padding-inline-start: calc(var(--level, 0) * 1rem) !important;
+	}
 }
 
 .wiki-page-item-content {
@@ -196,6 +204,10 @@ async function saveTitle() {
 	align-items: center;
 	gap: 0.25rem;
 	padding: 0.25rem 0.5rem;
+	
+	@media screen and (max-width: $mobile) {
+		padding: 0.35rem 0.25rem;
+	}
 	
 	&:hover {
 		background: var(--grey-100);
@@ -208,33 +220,58 @@ async function saveTitle() {
 
 .collapse-button {
 	padding: 0.25rem;
-	min-width: auto;
+	min-inline-size: auto;
+	background: transparent;
 	
-	.icon {
+	:deep(svg),
+	:deep(i) {
 		transition: transform 0.2s;
-		
-		&.is-collapsed {
-			transform: rotate(-90deg);
-		}
 	}
 }
 
+.collapse-button :deep(.is-collapsed) {
+	transform: rotate(-90deg);
+}
+
 .collapse-button-placeholder {
-	width: 24px;
-	min-width: 24px;
+	inline-size: 24px;
+	min-inline-size: 24px;
+	
+	@media screen and (max-width: $mobile) {
+		inline-size: 20px;
+		min-inline-size: 20px;
+	}
 }
 
 .page-link {
 	flex: 1;
 	justify-content: flex-start;
 	gap: 0.5rem;
-	padding: 0.35rem 0.5rem;
+	padding: .25rem .5rem;
+	display: block;
+	border-radius: $radius;
 	font-size: 0.9rem;
-	text-align: left;
+	text-align: start;
+	color: var(--text);
+	background: transparent;
+	transition: all 100ms;
+	
+	@media screen and (max-width: $mobile) {
+		padding: .25rem 0.25rem;
+		font-size: 0.85rem;
+		gap: 0.35rem;
+	}
+	
+	&:hover {
+		color: var(--switch-view-color);
+		background: var(--primary);
+	}
 	
 	&.router-link-exact-active {
+		color: var(--switch-view-color);
 		background: var(--primary);
-		color: var(--white);
+		font-weight: bold;
+		box-shadow: var(--shadow-xs);
 	}
 }
 
@@ -253,6 +290,11 @@ async function saveTitle() {
 	background: var(--white);
 	color: var(--text);
 	
+	@media screen and (max-width: $mobile) {
+		padding: 0.25rem 0.35rem;
+		font-size: 0.85rem;
+	}
+	
 	&:focus {
 		outline: none;
 		box-shadow: 0 0 0 2px var(--primary-light);
@@ -264,11 +306,19 @@ async function saveTitle() {
 	gap: 0.25rem;
 	opacity: 0;
 	transition: opacity 0.2s;
+	
+	@media screen and (max-width: $mobile) {
+		opacity: 1;
+	}
 }
 
 .action-button {
 	padding: 0.25rem 0.5rem;
-	min-width: auto;
+	min-inline-size: auto;
+	
+	@media screen and (max-width: $mobile) {
+		padding: 0.25rem 0.35rem;
+	}
 }
 
 .is-folder {

@@ -134,36 +134,82 @@ async function handleSave(page: IWikiPage) {
 <style lang="scss" scoped>
 .wiki-view {
 	:deep(.loader-container) {
-		height: 100%;
+		block-size: 100%;
 	}
 }
 
 .wiki-layout {
 	display: flex;
-	min-height: calc(100vh - 140px);
+	block-size: calc(100vh - 180px);
 	gap: 0;
 	background: var(--white);
 	border-radius: $radius;
 	box-shadow: var(--shadow-sm);
 	overflow: hidden;
+	
+	@media screen and (max-width: $tablet) {
+		flex-direction: column;
+		block-size: calc(100vh - 180px);
+		max-block-size: none;
+		overflow-y: auto;
+	}
+	
+	@media screen and (max-width: $mobile) {
+		border-radius: 0;
+	}
 }
 
 .wiki-sidebar {
-	width: 300px;
-	min-width: 300px;
-	border-right: 1px solid var(--grey-200);
+	inline-size: 300px;
+	min-inline-size: 300px;
+	border-inline-end: 1px solid var(--grey-200);
 	overflow-y: auto;
 	background: var(--white);
+	flex-shrink: 0;
+	
+	@media screen and (max-width: $tablet) {
+		inline-size: 100%;
+		min-inline-size: 100%;
+		border-inline-end: none;
+		border-block-end: 1px solid var(--grey-200);
+		block-size: auto;
+		max-block-size: 35vh;
+		flex-shrink: 0;
+		position: sticky;
+		top: 0;
+		z-index: 10;
+	}
+	
+	@media screen and (max-width: $mobile) {
+		max-block-size: 25vh;
+	}
 }
 
 .wiki-content {
 	flex: 1;
 	overflow-y: auto;
 	padding: 1rem;
+	min-block-size: 0;
+	
+	@media screen and (max-width: $tablet) {
+		flex: none;
+		block-size: auto;
+		overflow-y: visible;
+		padding: 0.75rem;
+	}
+	
+	@media screen and (max-width: $mobile) {
+		padding: 0.5rem;
+	}
 }
 
 .wiki-breadcrumbs {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
+	
+	@media screen and (max-width: $mobile) {
+		margin-block-end: 0.5rem;
+		font-size: 0.85rem;
+	}
 }
 
 .wiki-empty {
@@ -174,6 +220,17 @@ async function handleSave(page: IWikiPage) {
 	gap: 1rem;
 	padding: 4rem 2rem;
 	text-align: center;
-	min-height: 400px;
+	min-block-size: 400px;
+	
+	@media screen and (max-width: $tablet) {
+		min-block-size: 250px;
+		padding: 2rem 1rem;
+	}
+	
+	@media screen and (max-width: $mobile) {
+		min-block-size: auto;
+		padding: 1.5rem 1rem;
+		gap: 0.75rem;
+	}
 }
 </style>

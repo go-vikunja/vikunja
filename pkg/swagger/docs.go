@@ -3814,6 +3814,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/projects/{project}/wiki": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns all wiki pages for a project, including folders.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wiki"
+                ],
+                "summary": "Get all wiki pages in a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "All wiki pages in the project",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.WikiPage"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/register": {
             "post": {
                 "description": "Creates a new user account.",
@@ -8412,13 +8458,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "view_kind": {
-                    "description": "The kind of this view. Can be ` + "`" + `list` + "`" + `, ` + "`" + `gantt` + "`" + `, ` + "`" + `table` + "`" + ` or ` + "`" + `kanban` + "`" + `.",
+                    "description": "The kind of this view. Can be ` + "`" + `list` + "`" + `, ` + "`" + `gantt` + "`" + `, ` + "`" + `table` + "`" + `, ` + "`" + `kanban` + "`" + `, or ` + "`" + `wiki` + "`" + `.",
                     "type": "string",
                     "enum": [
                         "list",
                         "gantt",
                         "table",
-                        "kanban"
+                        "kanban",
+                        "wiki"
                     ]
                 }
             }
@@ -9265,6 +9312,56 @@ const docTemplate = `{
                 },
                 "updated": {
                     "description": "A timestamp when this webhook target was last updated. You cannot change this value.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.WikiPage": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "The markdown content of the wiki page.",
+                    "type": "string"
+                },
+                "created": {
+                    "description": "A timestamp when this page was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/user.User"
+                },
+                "id": {
+                    "description": "The unique, numeric id of this wiki page.",
+                    "type": "integer"
+                },
+                "is_folder": {
+                    "description": "Whether this is a folder (true) or a page (false).",
+                    "type": "boolean"
+                },
+                "parent_id": {
+                    "description": "The parent page ID. Null if this is a root page.",
+                    "type": "integer"
+                },
+                "path": {
+                    "description": "The full path of the page for easier querying and display.",
+                    "type": "string"
+                },
+                "position": {
+                    "description": "The position of this page within its parent folder for ordering.",
+                    "type": "number"
+                },
+                "project_id": {
+                    "description": "The project this wiki page belongs to.",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "The title of the wiki page.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
+                },
+                "updated": {
+                    "description": "A timestamp when this page was last updated. You cannot change this value.",
                     "type": "string"
                 }
             }

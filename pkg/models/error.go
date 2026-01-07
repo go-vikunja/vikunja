@@ -2238,4 +2238,3 @@ func (err ErrWikiPageCyclicRelationship) HTTPError() web.HTTPError {
 		Message:  "Moving this wiki page would create a cycle in the hierarchy.",
 	}
 }
-
