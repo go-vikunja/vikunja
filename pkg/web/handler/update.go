@@ -88,9 +88,5 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 		return err
 	}
 
-	err = ctx.JSON(http.StatusOK, currentStruct)
-	if err != nil {
-		return err
-	}
-	return err
+	return ctx.JSON(http.StatusOK, currentStruct)
 }

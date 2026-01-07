@@ -137,9 +137,5 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		result = []interface{}{}
 	}
 
-	err = ctx.JSON(http.StatusOK, result)
-	if err != nil {
-		return err
-	}
-	return err
+	return ctx.JSON(http.StatusOK, result)
 }

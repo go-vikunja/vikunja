@@ -86,9 +86,5 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 		return err
 	}
 
-	err = ctx.JSON(http.StatusOK, message{"Successfully deleted."})
-	if err != nil {
-		return err
-	}
-	return err
+	return ctx.JSON(http.StatusOK, message{"Successfully deleted."})
 }
