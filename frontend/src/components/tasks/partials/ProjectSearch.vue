@@ -44,7 +44,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'update:modelValue': [value: IProject]
+	'update:modelValue': [value: IProject | null]
 }>()
 
 const project: IProject = reactive(new ProjectModel())
@@ -78,7 +78,9 @@ function findProjects(query: string) {
 
 function select(p: IProject | null) {
 	if (p === null) {
-		Object.assign(project, {id: 0})
+		Object.assign(project, new ProjectModel())
+		emit('update:modelValue', null)
+		return
 	}
 	Object.assign(project, p)
 	emit('update:modelValue', project)
