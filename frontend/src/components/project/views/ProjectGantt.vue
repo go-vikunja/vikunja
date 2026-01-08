@@ -8,22 +8,16 @@
 		<template #default>
 			<Card :has-content="false">
 				<div class="gantt-options">
-					<div class="field">
-						<label
-							class="label"
-							for="range"
-						>{{ $t('project.gantt.range') }}</label>
-						<div class="control">
-							<Foo
-								id="range"
-								ref="flatPickerEl"
-								v-model="flatPickerDateRange"
-								:config="flatPickerConfig"
-								class="input"
-								:placeholder="$t('project.gantt.range')"
-							/>
-						</div>
-					</div>
+					<FormField :label="$t('project.gantt.range')">
+						<Foo
+							id="range"
+							ref="flatPickerEl"
+							v-model="flatPickerDateRange"
+							:config="flatPickerConfig"
+							class="input"
+							:placeholder="$t('project.gantt.range')"
+						/>
+					</FormField>
 					<div
 						v-if="!hasDefaultFilters"
 						class="field"
@@ -84,6 +78,7 @@ import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
+import FormField from '@/components/input/FormField.vue'
 
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'

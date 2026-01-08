@@ -11,6 +11,7 @@ import {useProjectStore} from '@/stores/projects'
 import XButton from '@/components/input/Button.vue'
 import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
+import FormField from '@/components/input/FormField.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: IProjectView,
@@ -121,60 +122,37 @@ function handleBubbleSave() {
 
 <template>
 	<form @focusout="handleBubbleSave">
-		<div class="field">
-			<label
-				class="label"
-				for="title"
-			>
-				{{ $t('project.views.title') }}
-			</label>
-			<div class="control">
-				<input
-					id="title"
-					v-model="view.title"
-					v-focus
-					class="input"
-					:placeholder="$t('project.share.links.namePlaceholder')"
-					@blur="validateTitle"
-				>
-			</div>
-			<p
-				v-if="!titleValid"
-				class="help is-danger"
-			>
-				{{ $t('project.views.titleRequired') }}
-			</p>
-		</div>
+		<FormField
+			id="title"
+			v-model="view.title"
+			v-focus
+			:label="$t('project.views.title')"
+			:placeholder="$t('project.share.links.namePlaceholder')"
+			:error="titleValid ? null : $t('project.views.titleRequired')"
+			@blur="validateTitle"
+		/>
 
-		<div class="field">
-			<label
-				class="label"
-				for="kind"
-			>
-				{{ $t('project.views.kind') }}
-			</label>
-			<div class="control">
-				<div class="select">
-					<select
-						id="kind"
-						v-model="view.viewKind"
-					>
-						<option value="list">
-							{{ $t('project.list.title') }}
-						</option>
-						<option value="gantt">
-							{{ $t('project.gantt.title') }}
-						</option>
-						<option value="table">
-							{{ $t('project.table.title') }}
-						</option>
-						<option value="kanban">
-							{{ $t('project.kanban.title') }}
-						</option>
-					</select>
-				</div>
+		<FormField :label="$t('project.views.kind')">
+			<div class="select">
+				<select
+					id="kind"
+					v-model="view.viewKind"
+				>
+					<option value="list">
+						{{ $t('project.list.title') }}
+					</option>
+					<option value="gantt">
+						{{ $t('project.gantt.title') }}
+					</option>
+					<option value="table">
+						{{ $t('project.table.title') }}
+					</option>
+					<option value="kanban">
+						{{ $t('project.kanban.title') }}
+					</option>
+				</select>
 			</div>
-		</div>
+		</FormField>
 
 		<label
 			class="label"
@@ -248,22 +226,12 @@ function handleBubbleSave() {
 						<Icon icon="trash-alt" />
 					</button>
 					<div class="filter-bucket-form">
-						<div class="field">
-							<label
-								class="label"
-								:for="'bucket_'+index+'_title'"
-							>
-								{{ $t('project.views.title') }}
-							</label>
-							<div class="control">
-								<input
-									:id="'bucket_'+index+'_title'"
-									v-model="view.bucketConfiguration[index].title"
-									class="input"
-									:placeholder="$t('project.share.links.namePlaceholder')"
-								>
-							</div>
-						</div>
+						<FormField
+							:id="'bucket_'+index+'_title'"
+							v-model="view.bucketConfiguration[index].title"
+							:label="$t('project.views.title')"
+							:placeholder="$t('project.share.links.namePlaceholder')"
+						/>
 
 						<FilterInput
 							v-model="view.bucketConfiguration[index].filter.filter"
