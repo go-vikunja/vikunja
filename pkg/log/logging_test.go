@@ -40,16 +40,6 @@ func TestConfigureStandardLoggerWithPath(t *testing.T) {
 	assert.True(t, os.IsNotExist(err), "Log file should NOT be created in current directory")
 }
 
-func TestConfigureStandardLoggerWithEmptyPath(t *testing.T) {
-	// Save original logPath
-	originalLogPath := logPath
-	defer func() { logPath = originalLogPath }()
-
-	// Configure with empty path should default to "."
-	ConfigureStandardLogger(true, "stdout", "", "INFO", "text")
-	assert.Equal(t, ".", logPath, "Empty path should default to current directory")
-}
-
 func TestConfigureStandardLoggerSetsPathBeforeHandler(t *testing.T) {
 	tempDir := t.TempDir()
 

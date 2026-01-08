@@ -87,10 +87,7 @@ func NewHTTPLogger(enabled bool, output string, format string) *slog.Logger {
 
 // ConfigureStandardLogger configures the global log handler
 func ConfigureStandardLogger(enabled bool, output string, path string, level string, format string) {
-	if path == "" {
-		path = "." // Fallback to current directory if not specified
-	}
-	logPath = path // Set path FIRST before it's used by makeLogHandler
+	logPath = path
 	handler, _ := makeLogHandler(enabled, output, level, format)
 	logInstance = slog.New(handler)
 }
