@@ -1,6 +1,6 @@
 <template>
 	<div class="control repeat-after-input">
-		<div class="buttons has-addons is-centered mbs-2">
+		<div class="button-group mbs-2">
 			<XButton
 				variant="secondary"
 				class="is-small"
@@ -167,5 +167,20 @@ p {
 
 .input {
 	min-inline-size: 2rem;
+}
+
+.button-group {
+	display: flex;
+	justify-content: center;
+
+	:deep(.button:not(:last-child)) {
+		border-start-end-radius: 0;
+		border-end-end-radius: 0;
+	}
+
+	:deep(.button:not(:first-child)) {
+		border-start-start-radius: 0;
+		border-end-start-radius: 0;
+	}
 }
 </style>

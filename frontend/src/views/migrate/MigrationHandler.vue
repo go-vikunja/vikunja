@@ -76,7 +76,7 @@
 				}}<br>
 				{{ $t('migrate.alreadyMigrated2') }}
 			</p>
-			<div class="buttons">
+			<div class="migration-buttons">
 				<XButton @click="migrate">
 					{{ $t('migrate.confirm') }}
 				</XButton>
@@ -325,5 +325,13 @@ async function migrate() {
 			background-color: var(--primary);
 		}
 	}
+}
+
+.migration-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.5rem;
 }
 </style>
