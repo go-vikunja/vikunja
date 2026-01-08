@@ -357,7 +357,7 @@ const taskPositionService = ref(new TaskPositionService())
 const taskBucketService = ref(new TaskBucketService())
 
 // Saved filter composable for accessing filter data
-const savedFilter = useSavedFilter(() => projectId.value < 0 ? projectId.value : undefined).filter
+const savedFilter = useSavedFilter(() => isSavedFilter({id: projectId.value}) ? projectId.value : undefined).filter
 
 const taskContainerRefs = ref<{ [id: IBucket['id']]: HTMLElement }>({})
 const bucketLimitInputRef = ref<HTMLInputElement | null>(null)
