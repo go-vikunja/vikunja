@@ -44,9 +44,9 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message)}
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
 		}
-		return models.ErrInvalidModel{}
+		return models.ErrInvalidModel{Err: err}
 	}
 
 	// Check if the user has the permission to delete

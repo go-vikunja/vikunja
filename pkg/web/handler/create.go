@@ -39,9 +39,9 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message)}
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
 		}
-		return models.ErrInvalidModel{}
+		return models.ErrInvalidModel{Err: err}
 	}
 
 	// Validate the struct

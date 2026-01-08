@@ -177,6 +177,7 @@ func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
 // ErrInvalidModel represents an error where the request body could not be parsed
 type ErrInvalidModel struct {
 	Message string
+	Err     error // Original error for unwrapping
 }
 
 // IsErrInvalidModel checks if an error is ErrInvalidModel.
@@ -190,6 +191,11 @@ func (err ErrInvalidModel) Error() string {
 		return fmt.Sprintf("Invalid model provided: %s", err.Message)
 	}
 	return "Invalid model provided."
+}
+
+// Unwrap returns the wrapped error for use with errors.Is/errors.As
+func (err ErrInvalidModel) Unwrap() error {
+	return err.Err
 }
 
 // ErrCodeInvalidModel holds the unique world-error code of this error

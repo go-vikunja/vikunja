@@ -178,9 +178,9 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	if err != nil {
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message)}
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
 		}
-		return models.ErrInvalidModel{}
+		return models.ErrInvalidModel{Err: err}
 	}
 
 	err = c.Validate(us)
