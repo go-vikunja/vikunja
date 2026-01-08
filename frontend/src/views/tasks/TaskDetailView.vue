@@ -1066,7 +1066,10 @@ async function toggleTaskDone() {
 	)
 }
 
-async function changeProject(project: IProject) {
+async function changeProject(project: IProject | null) {
+	if (project === null) {
+		return
+	}
 	kanbanStore.removeTaskInBucket(task.value)
 	await saveTask({
 		...task.value,

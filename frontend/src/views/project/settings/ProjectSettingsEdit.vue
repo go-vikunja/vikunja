@@ -145,7 +145,7 @@ async function save() {
 	isSaving.value = true
 
 	try {
-		project.parentProjectId = parentProject.value?.id ?? project.parentProjectId
+		project.parentProjectId = parentProject.value === null ? 0 : (parentProject.value?.id ?? project.parentProjectId)
 		await saveProject()
 		await useBaseStore().handleSetCurrentProject({project})
 		router.back()
