@@ -24,67 +24,39 @@
 				v-if="showNewForm"
 				class="p-4"
 			>
-				<div class="field">
-					<label
-						class="label"
-						for="linkShareRight"
-					>
-						{{ $t('project.share.permission.title') }}
-					</label>
-					<div class="control">
-						<div class="select">
-							<select
-								id="linkShareRight"
-								v-model="selectedPermission"
-							>
-								<option :value="PERMISSIONS.READ">
-									{{ $t('project.share.permission.read') }}
-								</option>
-								<option :value="PERMISSIONS.READ_WRITE">
-									{{ $t('project.share.permission.readWrite') }}
-								</option>
-								<option :value="PERMISSIONS.ADMIN">
-									{{ $t('project.share.permission.admin') }}
-								</option>
-							</select>
-						</div>
-					</div>
-				</div>
-				<div class="field">
-					<label
-						class="label"
-						for="linkShareName"
-					>
-						{{ $t('project.share.links.name') }}
-					</label>
-					<div class="control">
-						<input
-							id="linkShareName"
-							v-model="name"
-							v-tooltip="$t('project.share.links.nameExplanation')"
-							class="input"
-							:placeholder="$t('project.share.links.namePlaceholder')"
+				<FormField :label="$t('project.share.permission.title')">
+					<div class="select">
+						<select
+							id="linkShareRight"
+							v-model="selectedPermission"
 						>
+							<option :value="PERMISSIONS.READ">
+								{{ $t('project.share.permission.read') }}
+							</option>
+							<option :value="PERMISSIONS.READ_WRITE">
+								{{ $t('project.share.permission.readWrite') }}
+							</option>
+							<option :value="PERMISSIONS.ADMIN">
+								{{ $t('project.share.permission.admin') }}
+							</option>
+						</select>
 					</div>
-				</div>
-				<div class="field">
-					<label
-						class="label"
-						for="linkSharePassword"
-					>
-						{{ $t('project.share.links.password') }}
-					</label>
-					<div class="control">
-						<input
-							id="linkSharePassword"
-							v-model="password"
-							v-tooltip="$t('project.share.links.passwordExplanation')"
-							type="password"
-							class="input"
-							:placeholder="$t('user.auth.passwordPlaceholder')"
-						>
-					</div>
-				</div>
+				</FormField>
+				<FormField
+					id="linkShareName"
+					v-model="name"
+					v-tooltip="$t('project.share.links.nameExplanation')"
+					:label="$t('project.share.links.name')"
+					:placeholder="$t('project.share.links.namePlaceholder')"
+				/>
+				<FormField
+					id="linkSharePassword"
+					v-model="password"
+					v-tooltip="$t('project.share.links.passwordExplanation')"
+					:label="$t('project.share.links.password')"
+					type="password"
+					:placeholder="$t('user.auth.passwordPlaceholder')"
+				/>
 				<XButton
 					icon="plus"
 					@click="add(projectId)"
@@ -149,16 +121,12 @@
 								</template>
 							</p>
 						
-							<div class="field has-addons no-input-mobile">
-								<div class="control">
-									<input
-										:value="shareLinks[s.id]"
-										class="input"
-										readonly
-										type="text"
-									>
-								</div>
-								<div class="control">
+							<FormField
+								:model-value="shareLinks[s.id]"
+								readonly
+								type="text"
+							>
+								<template #addon>
 									<XButton
 										v-tooltip="$t('misc.copy')"
 										:shadow="false"
@@ -168,8 +136,8 @@
 											<Icon icon="paste" />
 										</span>
 									</XButton>
-								</div>
-							</div>
+								</template>
+							</FormField>
 						</td>
 						<td v-if="availableViews.length > 0">
 							<div class="select">
@@ -222,6 +190,7 @@ import {ref, watch, computed, shallowReactive} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {PERMISSIONS} from '@/constants/permissions'
+import FormField from '@/components/input/FormField.vue'
 import LinkShareModel from '@/models/linkShare'
 
 import type {ILinkShare} from '@/modelTypes/ILinkShare'
