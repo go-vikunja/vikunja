@@ -14,6 +14,7 @@ import {
 	faBars,
 	faBell,
 	faBolt,
+	faBook,
 	faCalendar,
 	faCheck,
 	faCheckDouble,
@@ -34,9 +35,11 @@ import {
 	faEye,
 	faEyeSlash,
 	faFile,
+	faFileAlt,
 	faFileImage,
 	faFillDrip,
 	faFilter,
+	faFolder,
 	faForward,
 	faGripLines,
 	faHeader,
@@ -108,7 +111,9 @@ library.add(faParagraph)
 library.add(faSquareCheck)
 library.add(faTable)
 library.add(faFile)
+library.add(faFileAlt)
 library.add(faFileImage)
+library.add(faFolder)
 library.add(faCheckSquare)
 library.add(faStrikethrough)
 library.add(faCode)
@@ -121,6 +126,7 @@ library.add(faArrowLeft)
 library.add(faBars)
 library.add(faBell)
 library.add(faBellSlash)
+library.add(faBook)
 library.add(faCalendar)
 library.add(faCalendarAlt)
 library.add(faCheck)

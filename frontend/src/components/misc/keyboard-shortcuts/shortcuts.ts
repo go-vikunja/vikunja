@@ -113,6 +113,11 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 				keys: ['g', 'k'],
 				combination: 'then',
 			},
+			{
+				title: 'keyboardShortcuts.project.switchToWikiView',
+				keys: ['g', 'w'],
+				combination: 'then',
+			},
 		],
 	},
 	{
