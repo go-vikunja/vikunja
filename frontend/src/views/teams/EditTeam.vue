@@ -9,66 +9,38 @@
 			:title="title"
 		>
 			<form @submit.prevent="save()">
-				<div class="field">
-					<label
-						class="label"
-						for="teamtext"
-					>{{ $t('team.attributes.name') }}</label>
-					<div class="control">
-						<input
-							id="teamtext"
-							v-model="team.name"
-							v-focus
-							:class="{ disabled: teamMemberService.loading }"
-							:disabled="teamMemberService.loading || undefined"
-							class="input"
-							:placeholder="$t('team.attributes.namePlaceholder')"
-							type="text"
-						>
-					</div>
-				</div>
-				<p
-					v-if="showErrorTeamnameRequired && team.name === ''"
-					class="help is-danger"
-				>
-					{{ $t('team.attributes.nameRequired') }}
-				</p>
-				<div
+				<FormField
+					id="teamtext"
+					v-model="team.name"
+					v-focus
+					:label="$t('team.attributes.name')"
+					:class="{ disabled: teamMemberService.loading }"
+					:disabled="teamMemberService.loading || undefined"
+					:placeholder="$t('team.attributes.namePlaceholder')"
+					type="text"
+					:error="showErrorTeamnameRequired && team.name === '' ? $t('team.attributes.nameRequired') : null"
+				/>
+				<FormField
 					v-if="configStore.publicTeamsEnabled"
-					class="field"
+					:label="$t('team.attributes.isPublic')"
 				>
-					<label
-						class="label"
-						for="teamIsPublic"
-					>{{ $t('team.attributes.isPublic') }}</label>
-					<div
-						class="control is-expanded"
-						:class="{ 'is-loading': teamService.loading }"
+					<FancyCheckbox
+						v-model="team.isPublic"
+						:disabled="teamMemberService.loading || undefined"
+						:class="{ 'disabled': teamService.loading }"
 					>
-						<FancyCheckbox
-							v-model="team.isPublic"
-							:disabled="teamMemberService.loading || undefined"
-							:class="{ 'disabled': teamService.loading }"
-						>
-							{{ $t('team.attributes.isPublicDescription') }}
-						</FancyCheckbox>
-					</div>
-				</div>
-				<div class="field">
-					<label
-						class="label"
-						for="teamdescription"
-					>{{ $t('team.attributes.description') }}</label>
-					<div class="control">
-						<Editor
-							id="teamdescription"
-							v-model="team.description"
-							:class="{ disabled: teamService.loading }"
-							:disabled="teamService.loading"
-							:placeholder="$t('team.attributes.descriptionPlaceholder')"
-						/>
-					</div>
-				</div>
+						{{ $t('team.attributes.isPublicDescription') }}
+					</FancyCheckbox>
+				</FormField>
+				<FormField :label="$t('team.attributes.description')">
+					<Editor
+						id="teamdescription"
+						v-model="team.description"
+						:class="{ disabled: teamService.loading }"
+						:disabled="teamService.loading"
+						:placeholder="$t('team.attributes.descriptionPlaceholder')"
+					/>
+				</FormField>
 			</form>
 
 			<div class="field has-addons mbs-4">
@@ -265,6 +237,7 @@ import {useRoute, useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
+import FormField from '@/components/input/FormField.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/User.vue'
 

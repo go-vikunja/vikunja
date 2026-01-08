@@ -59,33 +59,22 @@
 					@close="() => isLabelEdit = false"
 				>
 					<form @submit.prevent="editLabelSubmit()">
-						<div class="field">
-							<label class="label">{{ $t('label.attributes.title') }}</label>
-							<div class="control">
-								<input
-									v-model="labelEditLabel.title"
-									class="input"
-									:placeholder="$t('label.attributes.titlePlaceholder')"
-									type="text"
-								>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label">{{ $t('label.attributes.description') }}</label>
-							<div class="control">
-								<Editor
-									v-if="editorActive"
-									v-model="labelEditLabel.description"
-									:placeholder="$t('label.attributes.description')"
-								/>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label">{{ $t('label.attributes.color') }}</label>
-							<div class="control">
-								<ColorPicker v-model="labelEditLabel.hexColor" />
-							</div>
-						</div>
+						<FormField
+							v-model="labelEditLabel.title"
+							:label="$t('label.attributes.title')"
+							:placeholder="$t('label.attributes.titlePlaceholder')"
+							type="text"
+						/>
+						<FormField :label="$t('label.attributes.description')">
+							<Editor
+								v-if="editorActive"
+								v-model="labelEditLabel.description"
+								:placeholder="$t('label.attributes.description')"
+							/>
+						</FormField>
+						<FormField :label="$t('label.attributes.color')">
+							<ColorPicker v-model="labelEditLabel.hexColor" />
+						</FormField>
 						<div class="field has-addons">
 							<div class="control is-expanded">
 								<XButton
@@ -135,6 +124,7 @@ import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
+import FormField from '@/components/input/FormField.vue'
 
 import LabelModel from '@/models/label'
 import type {ILabel} from '@/modelTypes/ILabel'
