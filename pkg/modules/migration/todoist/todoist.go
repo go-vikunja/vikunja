@@ -97,21 +97,12 @@ type item struct {
 	DateCompleted  time.Time   `json:"completed_at"`
 }
 
-type itemWrapper struct {
-	Item *item `json:"item"`
-}
-
 type doneItem struct {
 	CompletedDate time.Time `json:"completed_at"`
 	Content       string    `json:"content"`
 	ID            string    `json:"id"`
 	ProjectID     string    `json:"project_id"`
 	TaskID        string    `json:"task_id"`
-}
-
-type doneItemSync struct {
-	Items    []*doneItem         `json:"items"`
-	Projects map[string]*project `json:"projects"`
 }
 
 // paginatedCompletedTasks is the response structure for the v1 API completed tasks endpoint
