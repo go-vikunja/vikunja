@@ -87,9 +87,9 @@ func NewHTTPLogger(enabled bool, output string, format string) *slog.Logger {
 
 // ConfigureStandardLogger configures the global log handler
 func ConfigureStandardLogger(enabled bool, output string, path string, level string, format string) {
+	logPath = path
 	handler, _ := makeLogHandler(enabled, output, level, format)
 	logInstance = slog.New(handler)
-	logPath = path
 }
 
 // wrapLogger is used for libraries requiring a Debugf method.
