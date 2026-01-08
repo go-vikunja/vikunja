@@ -321,6 +321,13 @@ function handleFocus() {
 
 function select(object: T | null) {
 	if (object === null) {
+		// Handle clearing the value
+		if (!props.multiple) {
+			internalValue.value = null
+			query.value = ''
+			emit('update:modelValue', null)
+			closeSearchResults()
+		}
 		return
 	}
 
