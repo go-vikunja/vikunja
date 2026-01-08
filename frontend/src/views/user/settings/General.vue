@@ -626,6 +626,10 @@ async function updateSettings() {
 .timezone-select {
 	min-inline-size: 200px;
 	flex-grow: 1;
+
+	@media screen and (max-width: $tablet) {
+		min-inline-size: unset;
+	}
 }
 
 .section-block + .section-block {
