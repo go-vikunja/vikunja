@@ -61,7 +61,7 @@ test.describe('Parent Project Clear', () => {
 		await expect(parentProjectInput).toHaveValue('')
 	})
 
-	test('Should not jump back after clearing the parent project field', async ({authenticatedPage: page}) => {
+	test('Should not jump back after selecting and deleting the parent project text', async ({authenticatedPage: page}) => {
 		// Create a parent project
 		const parentProjects = await ProjectFactory.create(1, {
 			id: 200,
@@ -92,8 +92,10 @@ test.describe('Parent Project Clear', () => {
 		// Verify the parent project is shown
 		await expect(parentProjectInput).toHaveValue('Test Parent')
 
-		// Click the clear button
-		await page.locator('.multiselect .removal-button').click()
+		// Select all text and delete it (simulating user manually clearing the field)
+		await parentProjectInput.click()
+		await parentProjectInput.selectText()
+		await page.keyboard.press('Backspace')
 
 		// Wait a moment to ensure the value doesn't jump back
 		await page.waitForTimeout(500)
