@@ -546,7 +546,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		"Authorization": "Bearer " + token,
 	}
 
-	resp, err := migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/sync", form, bearerHeader)
+	resp, err := migration.DoPostWithHeaders("https://api.todoist.com/api/v1/sync", form, bearerHeader)
 	if err != nil {
 		return
 	}
