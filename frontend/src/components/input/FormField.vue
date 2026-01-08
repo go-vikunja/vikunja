@@ -33,6 +33,16 @@ const controlClasses = computed(() => [
 	{'is-expanded': hasAddon.value},
 ])
 
+// Only bind value when modelValue is explicitly provided (not undefined)
+// This allows the component to be used without v-model for native input behavior
+const inputBindings = computed(() => {
+	const bindings: Record<string, unknown> = {}
+	if (props.modelValue !== undefined) {
+		bindings.value = props.modelValue
+	}
+	return bindings
+})
+
 // Expose input element for direct access (needed for browser autofill workarounds)
 const inputRef = ref<HTMLInputElement | null>(null)
 defineExpose({
@@ -57,8 +67,7 @@ defineExpose({
 				<input
 					:id="inputId"
 					ref="inputRef"
-					v-bind="$attrs"
-					:value="modelValue"
+					v-bind="{ ...$attrs, ...inputBindings }"
 					class="input"
 					@input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
 				>
