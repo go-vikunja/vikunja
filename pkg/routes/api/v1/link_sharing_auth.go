@@ -23,7 +23,6 @@ import (
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 )
 
@@ -56,7 +55,7 @@ func AuthenticateLinkShare(c echo.Context) error {
 	sh := &LinkShareAuth{}
 	err := c.Bind(sh)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -64,19 +63,19 @@ func AuthenticateLinkShare(c echo.Context) error {
 
 	share, err := models.GetLinkShareByHash(s, sh.Hash)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if share.SharingType == models.SharingTypeWithPassword {
 		err := models.VerifyLinkSharePassword(share, sh.Password)
 		if err != nil {
-			return handler.HandleHTTPError(err)
+			return err
 		}
 	}
 
 	t, err := auth.NewLinkShareJWTAuthtoken(share)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	share.Password = ""

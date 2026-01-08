@@ -43,7 +43,6 @@ import (
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/api/pkg/web"
-	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/bbrks/go-blurhash"
 	"github.com/gabriel-vasile/mimetype"
@@ -138,7 +137,7 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 	project, auth, err := bp.setBackgroundPreparations(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	p := bp.Provider()
@@ -153,13 +152,13 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 	err = p.Set(s, image, project, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = project.ReadOne(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, project)
@@ -185,7 +184,7 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	project, auth, err := bp.setBackgroundPreparations(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Get + upload the image
@@ -205,7 +204,7 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 	mime, err := mimetype.DetectReader(srcf)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	if !strings.HasPrefix(mime.String(), "image") {
 		_ = s.Rollback()
@@ -233,18 +232,18 @@ func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
 		}
 
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = project.ReadOne(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, project)
@@ -314,7 +313,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 	can, _, err := project.CanRead(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, auth, handler.HandleHTTPError(err)
+		return nil, auth, err
 	}
 	if !can {
 		_ = s.Rollback()
@@ -359,12 +358,12 @@ func GetProjectBackground(c echo.Context) error {
 	}
 	if err := bgFile.LoadFileByID(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	stat, err := bgFile.File.Stat()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Unsplash requires pingbacks as per their api usage guidelines.
@@ -374,7 +373,7 @@ func GetProjectBackground(c echo.Context) error {
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Set Last-Modified header if we have the file stat, so clients can decide whether to use cached files

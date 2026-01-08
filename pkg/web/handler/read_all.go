@@ -27,6 +27,7 @@ import (
 	vconfig "code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/labstack/echo/v4"
@@ -47,9 +48,9 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
+		return models.ErrInvalidModel{Err: err}
 	}
 
 	// Pagination
@@ -104,7 +105,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	result, resultCount, numberOfItems, err := currentStruct.ReadAll(s, currentAuth, search, pageNumber, perPageNumber)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 
 	// Calculate the number of pages from the number of items
@@ -126,7 +127,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 
 	// Ensure we return an empty array instead of null when there are no results.
@@ -136,9 +137,5 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		result = []interface{}{}
 	}
 
-	err = ctx.JSON(http.StatusOK, result)
-	if err != nil {
-		return HandleHTTPError(err)
-	}
-	return err
+	return ctx.JSON(http.StatusOK, result)
 }

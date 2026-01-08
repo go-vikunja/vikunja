@@ -23,7 +23,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -69,34 +68,34 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"permission":0}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("write", func(t *testing.T) {
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"permission":1}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("admin", func(t *testing.T) {
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "20"}, `{"permission":2}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 		})
 		t.Run("Read only access", func(t *testing.T) {
 			t.Run("read only", func(t *testing.T) {
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"permission":0}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("write", func(t *testing.T) {
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"permission":1}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("admin", func(t *testing.T) {
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "9"}, `{"permission":2}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 		})
 		t.Run("Write access", func(t *testing.T) {
@@ -113,7 +112,7 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("admin", func(t *testing.T) {
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{"project": "10"}, `{"permission":2}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 		})
 		t.Run("Admin access", func(t *testing.T) {
@@ -197,7 +196,7 @@ func TestLinkSharing(t *testing.T) {
 					// Project 2, not shared with this token
 					_, err := testHandlerProjectReadOnly.testReadOneWithLinkShare(nil, map[string]string{"project": "2"})
 					require.Error(t, err)
-					assert.Contains(t, err.(*echo.HTTPError).Message, `You don't have the permission to see this`)
+					assert.Contains(t, getHTTPErrorMessage(err), `You don't have the permission to see this`)
 				})
 				t.Run("Shared readonly", func(t *testing.T) {
 					rec, err := testHandlerProjectReadOnly.testReadOneWithLinkShare(nil, map[string]string{"project": "1"})
@@ -226,12 +225,12 @@ func TestLinkSharing(t *testing.T) {
 				t.Run("Forbidden", func(t *testing.T) {
 					_, err := testHandlerProjectReadOnly.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"TestLoremIpsum"}`)
 					require.Error(t, err)
-					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+					assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 				})
 				t.Run("Shared readonly", func(t *testing.T) {
 					_, err := testHandlerProjectReadOnly.testUpdateWithLinkShare(nil, map[string]string{"project": "1"}, `{"title":"TestLoremIpsum"}`)
 					require.Error(t, err)
-					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+					assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 				})
 				t.Run("Shared write", func(t *testing.T) {
 					rec, err := testHandlerProjectWrite.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"TestLoremIpsum","namespace_id":1}`)
@@ -255,17 +254,17 @@ func TestLinkSharing(t *testing.T) {
 				t.Run("Forbidden", func(t *testing.T) {
 					_, err := testHandlerProjectReadOnly.testDeleteWithLinkShare(nil, map[string]string{"project": "1"})
 					require.Error(t, err)
-					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+					assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 				})
 				t.Run("Shared readonly", func(t *testing.T) {
 					_, err := testHandlerProjectReadOnly.testDeleteWithLinkShare(nil, map[string]string{"project": "1"})
 					require.Error(t, err)
-					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+					assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 				})
 				t.Run("Shared write", func(t *testing.T) {
 					_, err := testHandlerProjectWrite.testDeleteWithLinkShare(nil, map[string]string{"project": "2"})
 					require.Error(t, err)
-					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+					assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 				})
 				t.Run("Shared admin", func(t *testing.T) {
 					rec, err := testHandlerProjectAdmin.testDeleteWithLinkShare(nil, map[string]string{"project": "3"})
@@ -280,23 +279,23 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("Nonexisting", func(t *testing.T) {
 				_, err := testHandlerProjectReadOnly.testCreateWithLinkShare(nil, nil, `{"title":"Lorem"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Permissions check", func(t *testing.T) {
 				t.Run("Shared readonly", func(t *testing.T) {
 					_, err := testHandlerProjectReadOnly.testCreateWithLinkShare(nil, map[string]string{"namespace": "1"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
 					require.Error(t, err)
-					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+					assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 				})
 				t.Run("Shared write", func(t *testing.T) {
 					_, err := testHandlerProjectWrite.testCreateWithLinkShare(nil, map[string]string{"namespace": "2"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
 					require.Error(t, err)
-					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+					assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 				})
 				t.Run("Shared admin", func(t *testing.T) {
 					_, err := testHandlerProjectAdmin.testCreateWithLinkShare(nil, map[string]string{"namespace": "3"}, `{"title":"Lorem","description":"Lorem Ipsum"}`)
 					require.Error(t, err)
-					assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+					assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 				})
 			})
 		})
@@ -345,34 +344,34 @@ func TestLinkSharing(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
 						_, err := testHandlerProjectUserReadOnly.testCreateWithLinkShare(nil, map[string]string{"project": "1"}, `{"user_id":"user1"}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
 						_, err := testHandlerProjectUserWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{"user_id":"user1"}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
 						_, err := testHandlerProjectUserAdmin.testCreateWithLinkShare(nil, map[string]string{"project": "3"}, `{"user_id":"user1"}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 				})
 				t.Run("Update", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
 						_, err := testHandlerProjectUserReadOnly.testUpdateWithLinkShare(nil, map[string]string{"project": "1"}, `{"user_id":"user1"}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
 						_, err := testHandlerProjectUserWrite.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"user_id":"user1"}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
 						_, err := testHandlerProjectUserAdmin.testUpdateWithLinkShare(nil, map[string]string{"project": "3"}, `{"user_id":"user1"}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 
 				})
@@ -380,17 +379,17 @@ func TestLinkSharing(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
 						_, err := testHandlerProjectUserReadOnly.testDeleteWithLinkShare(nil, map[string]string{"project": "1"})
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
 						_, err := testHandlerProjectUserWrite.testDeleteWithLinkShare(nil, map[string]string{"project": "2"})
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
 						_, err := testHandlerProjectUserAdmin.testDeleteWithLinkShare(nil, map[string]string{"project": "3"})
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 				})
 			})
@@ -437,34 +436,34 @@ func TestLinkSharing(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
 						_, err := testHandlerProjectTeamReadOnly.testCreateWithLinkShare(nil, map[string]string{"project": "1"}, `{"team_id":1}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
 						_, err := testHandlerProjectTeamWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{"team_id":1}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
 						_, err := testHandlerProjectTeamAdmin.testCreateWithLinkShare(nil, map[string]string{"project": "3"}, `{"team_id":1}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 				})
 				t.Run("Update", func(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
 						_, err := testHandlerProjectTeamReadOnly.testUpdateWithLinkShare(nil, map[string]string{"project": "1"}, `{"team_id":1}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
 						_, err := testHandlerProjectTeamWrite.testUpdateWithLinkShare(nil, map[string]string{"project": "2"}, `{"team_id":1}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
 						_, err := testHandlerProjectTeamAdmin.testUpdateWithLinkShare(nil, map[string]string{"project": "3"}, `{"team_id":1}`)
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 
 				})
@@ -472,17 +471,17 @@ func TestLinkSharing(t *testing.T) {
 					t.Run("Shared readonly", func(t *testing.T) {
 						_, err := testHandlerProjectTeamReadOnly.testDeleteWithLinkShare(nil, map[string]string{"project": "1"})
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared write", func(t *testing.T) {
 						_, err := testHandlerProjectTeamWrite.testDeleteWithLinkShare(nil, map[string]string{"project": "2"})
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 					t.Run("Shared admin", func(t *testing.T) {
 						_, err := testHandlerProjectTeamAdmin.testDeleteWithLinkShare(nil, map[string]string{"project": "3"})
 						require.Error(t, err)
-						assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+						assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 					})
 				})
 			})
@@ -590,7 +589,7 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
 				_, err := testHandlerTaskReadOnly.testCreateWithLinkShare(nil, map[string]string{"project": "1"}, `{"title":"Lorem Ipsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
 				rec, err := testHandlerTaskWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{"title":"Lorem Ipsum"}`)
@@ -607,7 +606,7 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
 				_, err := testHandlerTaskReadOnly.testUpdateWithLinkShare(nil, map[string]string{"projecttask": "1"}, `{"title":"Lorem Ipsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
 				rec, err := testHandlerTaskWrite.testUpdateWithLinkShare(nil, map[string]string{"projecttask": "13"}, `{"title":"Lorem Ipsum"}`)
@@ -625,7 +624,7 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
 				_, err := testHandlerTaskReadOnly.testDeleteWithLinkShare(nil, map[string]string{"projecttask": "1"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
 				rec, err := testHandlerTaskWrite.testDeleteWithLinkShare(nil, map[string]string{"projecttask": "13"})
@@ -683,17 +682,17 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
 				_, err := testHandlerTeamReadOnly.testUpdateWithLinkShare(nil, map[string]string{"team": "1"}, `{"name":"Lorem Ipsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
 				_, err := testHandlerTeamWrite.testUpdateWithLinkShare(nil, map[string]string{"team": "2"}, `{"name":"Lorem Ipsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
 				_, err := testHandlerTeamAdmin.testUpdateWithLinkShare(nil, map[string]string{"team": "3"}, `{"name":"Lorem Ipsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 
 		})
@@ -701,17 +700,17 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
 				_, err := testHandlerTeamReadOnly.testDeleteWithLinkShare(nil, map[string]string{"team": "1"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
 				_, err := testHandlerTeamWrite.testDeleteWithLinkShare(nil, map[string]string{"team": "2"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
 				_, err := testHandlerTeamAdmin.testDeleteWithLinkShare(nil, map[string]string{"team": "3"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 		})
 	})
@@ -759,34 +758,34 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
 				_, err := testHandlerLinkShareReadOnly.testCreateWithLinkShare(nil, map[string]string{"project": "1"}, `{}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
 				_, err := testHandlerLinkShareWrite.testCreateWithLinkShare(nil, map[string]string{"project": "2"}, `{}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
 				_, err := testHandlerLinkShareAdmin.testCreateWithLinkShare(nil, map[string]string{"project": "3"}, `{}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 		})
 		t.Run("Update", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
 				_, err := testHandlerLinkShareReadOnly.testUpdateWithLinkShare(nil, map[string]string{"share": "1"}, `{}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
 				_, err := testHandlerLinkShareWrite.testUpdateWithLinkShare(nil, map[string]string{"share": "2"}, `{}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
 				_, err := testHandlerLinkShareAdmin.testUpdateWithLinkShare(nil, map[string]string{"share": "3"}, `{}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 
 		})
@@ -794,17 +793,17 @@ func TestLinkSharing(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
 				_, err := testHandlerLinkShareReadOnly.testDeleteWithLinkShare(nil, map[string]string{"share": "1"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
 				_, err := testHandlerLinkShareWrite.testDeleteWithLinkShare(nil, map[string]string{"share": "2"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
 				_, err := testHandlerLinkShareAdmin.testDeleteWithLinkShare(nil, map[string]string{"share": "3"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 		})
 	})

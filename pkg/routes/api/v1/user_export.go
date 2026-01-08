@@ -26,7 +26,6 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 	"github.com/labstack/echo/v4"
 	"xorm.io/xorm"
 )
@@ -37,13 +36,13 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 
 	err = s.Begin()
 	if err != nil {
-		return nil, nil, handler.HandleHTTPError(err)
+		return nil, nil, err
 	}
 
 	u, err = user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, nil, handler.HandleHTTPError(err)
+		return nil, nil, err
 	}
 
 	// Users authenticated with a third-party are unable to provide their password.
@@ -64,7 +63,7 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 	err = user.CheckUserPassword(u, pass.Password)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, nil, handler.HandleHTTPError(err)
+		return nil, nil, err
 	}
 
 	return
@@ -92,13 +91,13 @@ func RequestUserDataExport(c echo.Context) error {
 	})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully requested data export. We will send you an email when it's ready."})
@@ -125,7 +124,7 @@ func DownloadUserDataExport(c echo.Context) error {
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Check if user has an export file
@@ -141,14 +140,14 @@ func DownloadUserDataExport(c echo.Context) error {
 		if files.IsErrFileDoesNotExist(err) {
 			return exportNotFoundError
 		}
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	err = exportFile.LoadFileByID()
 	if err != nil {
 		if os.IsNotExist(err) {
 			return exportNotFoundError
 		}
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File)
@@ -175,7 +174,7 @@ func GetUserExportStatus(c echo.Context) error {
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if u.ExportFileID == 0 {
@@ -184,7 +183,7 @@ func GetUserExportStatus(c echo.Context) error {
 
 	exportFile := &files.File{ID: u.ExportFileID}
 	if err := exportFile.LoadFileMetaByID(); err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	status := UserExportStatus{

@@ -23,7 +23,6 @@ import (
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
 
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,7 +36,7 @@ func TestUserConfirmEmail(t *testing.T) {
 	t.Run("Empty payload", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserConfirmEmail, `{}`, nil, nil)
 		require.Error(t, err)
-		assert.Equal(t, http.StatusPreconditionFailed, err.(*echo.HTTPError).Code)
+		assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
 		assertHandlerErrorCode(t, err, user.ErrCodeInvalidEmailConfirmToken)
 	})
 	t.Run("Empty token", func(t *testing.T) {

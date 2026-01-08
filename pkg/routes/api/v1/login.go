@@ -26,7 +26,6 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -58,7 +57,7 @@ func Login(c echo.Context) (err error) {
 		user, err = ldap.AuthenticateUserInLDAP(s, u.Username, u.Password, config.AuthLdapGroupSyncEnabled.GetBool(), config.AuthLdapAvatarSyncAttribute.GetString())
 		if err != nil && !user2.IsErrWrongUsernameOrPassword(err) {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err)
+			return err
 		}
 	}
 
@@ -67,25 +66,25 @@ func Login(c echo.Context) (err error) {
 		user, err = user2.CheckUserCredentials(s, &u)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err)
+			return err
 		}
 	}
 
 	if user.Status == user2.StatusDisabled {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(&user2.ErrAccountDisabled{UserID: user.ID})
+		return &user2.ErrAccountDisabled{UserID: user.ID}
 	}
 
 	totpEnabled, err := user2.TOTPEnabledForUser(s, user)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if totpEnabled {
 		if u.TOTPPasscode == "" {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(user2.ErrInvalidTOTPPasscode{})
+			return user2.ErrInvalidTOTPPasscode{}
 		}
 
 		_, err = user2.ValidateTOTPPasscode(s, &user2.TOTPPasscode{
@@ -97,7 +96,7 @@ func Login(c echo.Context) (err error) {
 				user2.HandleFailedTOTPAuth(s, user)
 			}
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err)
+			return err
 		}
 	}
 
@@ -110,7 +109,7 @@ func Login(c echo.Context) (err error) {
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Create token
@@ -141,12 +140,12 @@ func RenewToken(c echo.Context) (err error) {
 		err := share.ReadOne(s, share)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err)
+			return err
 		}
 		t, err := auth.NewLinkShareJWTAuthtoken(share)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err)
+			return err
 		}
 		return c.JSON(http.StatusOK, auth.Token{Token: t})
 	}
@@ -154,18 +153,18 @@ func RenewToken(c echo.Context) (err error) {
 	u, err := user2.GetUserFromClaims(claims)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	var long bool

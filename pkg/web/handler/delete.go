@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/labstack/echo/v4"
@@ -43,9 +44,9 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
+		return models.ErrInvalidModel{Err: err}
 	}
 
 	// Check if the user has the permission to delete
@@ -66,7 +67,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	canDelete, err := currentStruct.CanDelete(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 	if !canDelete {
 		_ = s.Rollback()
@@ -77,17 +78,13 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	err = currentStruct.Delete(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 
-	err = ctx.JSON(http.StatusOK, message{"Successfully deleted."})
-	if err != nil {
-		return HandleHTTPError(err)
-	}
-	return err
+	return ctx.JSON(http.StatusOK, message{"Successfully deleted."})
 }
