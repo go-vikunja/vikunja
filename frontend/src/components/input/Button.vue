@@ -180,7 +180,7 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 			display: block;
 			block-size: 1em;
 			inline-size: 1em;
-			border: 2px solid currentColor;
+			border: 2px solid var(--white);
 			border-radius: 50%;
 			border-inline-end-color: transparent;
 			border-block-start-color: transparent;
@@ -190,6 +190,13 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 			inset-inline-start: calc(50% - 0.5em);
 			inset-block-start: calc(50% - 0.5em);
 		}
+	}
+
+	&.is-outlined.is-loading::after,
+	&.is-text.is-loading::after {
+		border-color: var(--grey-700);
+		border-inline-end-color: transparent;
+		border-block-start-color: transparent;
 	}
 }
 
