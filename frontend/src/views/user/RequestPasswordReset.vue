@@ -25,24 +25,16 @@
 			v-if="!isSuccess"
 			@submit.prevent="requestPasswordReset"
 		>
-			<div class="field">
-				<label
-					class="label"
-					for="email"
-				>{{ $t('user.auth.email') }}</label>
-				<div class="control">
-					<input
-						id="email"
-						v-model="passwordReset.email"
-						v-focus
-						class="input"
-						name="email"
-						:placeholder="$t('user.auth.emailPlaceholder')"
-						required
-						type="email"
-					>
-				</div>
-			</div>
+			<FormField
+				id="email"
+				v-model="passwordReset.email"
+				v-focus
+				:label="$t('user.auth.email')"
+				name="email"
+				:placeholder="$t('user.auth.emailPlaceholder')"
+				required
+				type="email"
+			/>
 
 			<div class="is-flex">
 				<XButton
@@ -68,6 +60,7 @@ import {ref, shallowReactive} from 'vue'
 import PasswordResetModel from '@/models/passwordReset'
 import PasswordResetService from '@/services/passwordReset'
 import Message from '@/components/misc/Message.vue'
+import FormField from '@/components/input/FormField.vue'
 
 const passwordResetService = shallowReactive(new PasswordResetService())
 const passwordReset = ref(new PasswordResetModel())
