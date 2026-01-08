@@ -546,12 +546,16 @@ function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 	}
 	
 	const timezoneObject = computed({
-		get: () => ({ 
-			value: settingsRef.value.timezone, 
-			label: settingsRef.value.timezone?.replace(/_/g, ' '), 
+		get: () => ({
+			value: settingsRef.value.timezone,
+			label: settingsRef.value.timezone?.replace(/_/g, ' '),
 		}),
 		set: (obj) => {
-			if (obj && typeof obj === 'object' && 'value' in obj) {
+			if (obj === null) {
+				settingsRef.value.timezone = ''
+				return
+			}
+			if (typeof obj === 'object' && 'value' in obj) {
 				settingsRef.value.timezone = obj.value
 			}
 		},
