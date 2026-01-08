@@ -20,7 +20,6 @@
 				</p>
 				<XButton
 					:to="{name:'user.export.download'}"
-					class="button"
 				>
 					{{ $t('misc.download') }}
 				</XButton>
