@@ -24,10 +24,8 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"strconv"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
@@ -42,19 +40,11 @@ import (
 )
 
 func ExportUserData(s *xorm.Session, u *user.User) (err error) {
-	exportDir := config.FilesBasePath.GetString() + "/user-export-tmp/"
-	err = os.MkdirAll(exportDir, 0700)
+	dumpFile, err := os.CreateTemp("", "vikunja-export-*.zip")
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating temp file: %w", err)
 	}
-
-	tmpFilename := exportDir + strconv.FormatInt(u.ID, 10) + "_" + time.Now().Format("2006-01-02_15-03-05") + ".zip"
-
-	// Open zip
-	dumpFile, err := os.Create(tmpFilename)
-	if err != nil {
-		return fmt.Errorf("error opening dump file: %w", err)
-	}
+	tmpFilename := dumpFile.Name()
 	defer dumpFile.Close()
 
 	dumpWriter := zip.NewWriter(dumpFile)
