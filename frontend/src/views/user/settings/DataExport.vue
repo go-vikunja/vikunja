@@ -32,32 +32,17 @@
 			<p>
 				{{ $t('user.export.descriptionPasswordRequired') }}
 			</p>
-			<div class="field">
-				<label
-					class="label"
-					for="currentPasswordDataExport"
-				>
-					{{ $t('user.settings.currentPassword') }}
-				</label>
-				<div class="control">
-					<input
-						id="currentPasswordDataExport"
-						ref="passwordInput"
-						v-model="password"
-						class="input"
-						:class="{'is-danger': errPasswordRequired}"
-						:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-						type="password"
-						@keyup="() => errPasswordRequired = password === ''"
-					>
-				</div>
-				<p
-					v-if="errPasswordRequired"
-					class="help is-danger"
-				>
-					{{ $t('user.deletion.passwordRequired') }}
-				</p>
-			</div>
+			<FormField
+				id="currentPasswordDataExport"
+				ref="passwordInput"
+				v-model="password"
+				:label="$t('user.settings.currentPassword')"
+				:class="{'is-danger': errPasswordRequired}"
+				:placeholder="$t('user.settings.currentPasswordPlaceholder')"
+				type="password"
+				:error="errPasswordRequired ? $t('user.deletion.passwordRequired') : null"
+				@keyup="() => errPasswordRequired = password === ''"
+			/>
 		</template>
 
 		<XButton
@@ -81,6 +66,7 @@ import {useAuthStore} from '@/stores/auth'
 import {formatISO, formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 
 import Message from '@/components/misc/Message.vue'
+import FormField from '@/components/input/FormField.vue'
 
 defineOptions({name: 'UserSettingsDataExport'})
 

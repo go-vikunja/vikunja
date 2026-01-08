@@ -12,6 +12,7 @@ import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
 import Message from '@/components/misc/Message.vue'
+import FormField from '@/components/input/FormField.vue'
 import type {IApiToken} from '@/modelTypes/IApiToken'
 
 const service = new ApiTokenService()
@@ -232,31 +233,18 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			@submit.prevent="createToken"
 		>
 			<!-- Title -->
-			<div class="field">
-				<label
-					class="label"
-					for="apiTokenTitle"
-				>{{ $t('user.settings.apiTokens.attributes.title') }}</label>
-				<div class="control">
-					<input
-						id="apiTokenTitle"
-						ref="apiTokenTitle"
-						v-model="newToken.title"
-						v-focus
-						class="input"
-						type="text"
-						:placeholder="$t('user.settings.apiTokens.attributes.titlePlaceholder')"
-						@keyup="() => newTokenTitleValid = newToken.title !== ''"
-						@focusout="() => newTokenTitleValid = newToken.title !== ''"
-					>
-				</div>
-				<p
-					v-if="!newTokenTitleValid"
-					class="help is-danger"
-				>
-					{{ $t('user.settings.apiTokens.titleRequired') }}
-				</p>
-			</div>
+			<FormField
+				id="apiTokenTitle"
+				ref="apiTokenTitle"
+				v-model="newToken.title"
+				v-focus
+				:label="$t('user.settings.apiTokens.attributes.title')"
+				type="text"
+				:placeholder="$t('user.settings.apiTokens.attributes.titlePlaceholder')"
+				:error="newTokenTitleValid ? null : $t('user.settings.apiTokens.titleRequired')"
+				@keyup="() => newTokenTitleValid = newToken.title !== ''"
+				@focusout="() => newTokenTitleValid = newToken.title !== ''"
+			/>
 
 			<!-- Expiry -->
 			<div class="field">

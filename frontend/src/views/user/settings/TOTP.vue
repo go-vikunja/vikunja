@@ -23,24 +23,16 @@
 					alt=""
 				>
 			</p>
-			<div class="field">
-				<label
-					class="label"
-					for="totpConfirmPasscode"
-				>{{ $t('user.settings.totp.passcode') }}</label>
-				<div class="control">
-					<input
-						id="totpConfirmPasscode"
-						v-model="totpConfirmPasscode"
-						autocomplete="one-time-code"
-						class="input"
-						:placeholder="$t('user.settings.totp.passcodePlaceholder')"
-						type="text"
-						inputmode="numeric"
-						@keyup.enter="totpConfirm"
-					>
-				</div>
-			</div>
+			<FormField
+				id="totpConfirmPasscode"
+				v-model="totpConfirmPasscode"
+				:label="$t('user.settings.totp.passcode')"
+				autocomplete="one-time-code"
+				:placeholder="$t('user.settings.totp.passcodePlaceholder')"
+				type="text"
+				inputmode="numeric"
+				@keyup.enter="totpConfirm"
+			/>
 			<XButton @click="totpConfirm">
 				{{ $t('misc.confirm') }}
 			</XButton>
@@ -58,23 +50,15 @@
 				</XButton>
 			</p>
 			<div v-if="totpDisableForm">
-				<div class="field">
-					<label
-						class="label"
-						for="currentPassword"
-					>{{ $t('user.settings.totp.enterPassword') }}</label>
-					<div class="control">
-						<input
-							id="currentPassword"
-							v-model="totpDisablePassword"
-							v-focus
-							class="input"
-							:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-							type="password"
-							@keyup.enter="totpDisable"
-						>
-					</div>
-				</div>
+				<FormField
+					id="currentPassword"
+					v-model="totpDisablePassword"
+					v-focus
+					:label="$t('user.settings.totp.enterPassword')"
+					:placeholder="$t('user.settings.currentPasswordPlaceholder')"
+					type="password"
+					@keyup.enter="totpDisable"
+				/>
 				<XButton
 					danger
 					@click="totpDisable"
@@ -100,6 +84,7 @@ import {useI18n} from 'vue-i18n'
 
 import TotpService from '@/services/totp'
 import TotpModel from '@/models/totp'
+import FormField from '@/components/input/FormField.vue'
 
 import {success} from '@/message'
 
