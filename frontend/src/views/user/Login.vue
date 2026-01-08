@@ -20,34 +20,21 @@
 			id="loginform"
 			@submit.prevent="submit"
 		>
-			<div class="field">
-				<label
-					class="label"
-					for="username"
-				>{{ $t('user.auth.usernameEmail') }}</label>
-				<div class="control">
-					<input
-						id="username"
-						ref="usernameRef"
-						v-focus
-						class="input"
-						name="username"
-						:placeholder="$t('user.auth.usernamePlaceholder')"
-						required
-						type="text"
-						autocomplete="username"
-						tabindex="1"
-						@keyup.enter="submit"
-						@focusout="validateUsernameField()"
-					>
-				</div>
-				<p
-					v-if="!usernameValid"
-					class="help is-danger"
-				>
-					{{ $t('user.auth.usernameRequired') }}
-				</p>
-			</div>
+			<FormField
+				id="username"
+				ref="usernameRef"
+				v-focus
+				:label="$t('user.auth.usernameEmail')"
+				name="username"
+				:placeholder="$t('user.auth.usernamePlaceholder')"
+				required
+				type="text"
+				autocomplete="username"
+				tabindex="1"
+				:error="usernameValid ? null : $t('user.auth.usernameRequired')"
+				@keyup.enter="submit"
+				@focusout="validateUsernameField()"
+			/>
 			<div class="field">
 				<div class="label-with-link">
 					<label
@@ -71,30 +58,20 @@
 					@submit="submit"
 				/>
 			</div>
-			<div
+			<FormField
 				v-if="needsTotpPasscode"
-				class="field"
-			>
-				<label
-					class="label"
-					for="totpPasscode"
-				>{{ $t('user.auth.totpTitle') }}</label>
-				<div class="control">
-					<input
-						id="totpPasscode"
-						ref="totpPasscode"
-						v-focus
-						autocomplete="one-time-code"
-						class="input"
-						:placeholder="$t('user.auth.totpPlaceholder')"
-						required
-						type="text"
-						tabindex="3"
-						inputmode="numeric"
-						@keyup.enter="submit"
-					>
-				</div>
-			</div>
+				id="totpPasscode"
+				ref="totpPasscode"
+				v-focus
+				:label="$t('user.auth.totpTitle')"
+				autocomplete="one-time-code"
+				:placeholder="$t('user.auth.totpPlaceholder')"
+				required
+				type="text"
+				tabindex="3"
+				inputmode="numeric"
+				@keyup.enter="submit"
+			/>
 			<div class="field">
 				<label class="label">
 					<input
@@ -152,6 +129,7 @@ import {useDebounceFn} from '@vueuse/core'
 
 import Message from '@/components/misc/Message.vue'
 import Password from '@/components/input/Password.vue'
+import FormField from '@/components/input/FormField.vue'
 
 import {getErrorText} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'

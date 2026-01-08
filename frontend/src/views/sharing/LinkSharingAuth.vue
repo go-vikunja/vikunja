@@ -10,19 +10,14 @@
 			<p class="pbe-2">
 				{{ $t('sharing.passwordRequired') }}
 			</p>
-			<div class="field">
-				<div class="control">
-					<input
-						id="linkSharePassword"
-						v-model="password"
-						v-focus
-						type="password"
-						class="input"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						@keyup.enter.prevent="authenticate()"
-					>
-				</div>
-			</div>
+			<FormField
+				id="linkSharePassword"
+				v-model="password"
+				v-focus
+				type="password"
+				:placeholder="$t('user.auth.passwordPlaceholder')"
+				@keyup.enter.prevent="authenticate()"
+			/>
 
 			<XButton
 				:loading="loading"
@@ -49,6 +44,7 @@ import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
 import Message from '@/components/misc/Message.vue'
+import FormField from '@/components/input/FormField.vue'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 
 import {useBaseStore} from '@/stores/base'
