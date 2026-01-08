@@ -5,49 +5,27 @@
 		:primary-disabled="project.title === ''"
 		@create="createProject()"
 	>
-		<div class="field">
-			<label
-				class="label"
-				for="projectTitle"
-			>{{ $t('project.title') }}</label>
-			<div
-				:class="{ 'is-loading': projectService.loading }"
-				class="control"
-			>
-				<input
-					v-model="project.title"
-					v-focus
-					:class="{ disabled: projectService.loading }"
-					class="input"
-					:placeholder="$t('project.create.titlePlaceholder')"
-					type="text"
-					name="projectTitle"
-					@keyup.enter="createProject()"
-					@keyup.esc="$router.back()"
-				>
-			</div>
-		</div>
-		<p
-			v-if="showError && project.title === ''"
-			class="help is-danger"
-		>
-			{{ $t('project.create.addTitleRequired') }}
-		</p>
-		<div
+		<FormField
+			v-model="project.title"
+			v-focus
+			:label="$t('project.title')"
+			:class="{ disabled: projectService.loading }"
+			:placeholder="$t('project.create.titlePlaceholder')"
+			type="text"
+			name="projectTitle"
+			:error="showError && project.title === '' ? $t('project.create.addTitleRequired') : null"
+			@keyup.enter="createProject()"
+			@keyup.esc="$router.back()"
+		/>
+		<FormField
 			v-if="projectStore.hasProjects"
-			class="field"
+			:label="$t('project.parent')"
 		>
-			<label class="label">{{ $t('project.parent') }}</label>
-			<div class="control">
-				<ProjectSearch v-model="parentProject" />
-			</div>
-		</div>
-		<div class="field">
-			<label class="label">{{ $t('project.color') }}</label>
-			<div class="control">
-				<ColorPicker v-model="project.hexColor" />
-			</div>
-		</div>
+			<ProjectSearch v-model="parentProject" />
+		</FormField>
+		<FormField :label="$t('project.color')">
+			<ColorPicker v-model="project.hexColor" />
+		</FormField>
 	</CreateEdit>
 </template>
 
@@ -59,6 +37,7 @@ import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
+import FormField from '@/components/input/FormField.vue'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'

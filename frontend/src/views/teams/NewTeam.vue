@@ -5,53 +5,28 @@
 		:primary-disabled="team.name === ''"
 		@create="createTeam()"
 	>
-		<div class="field">
-			<label
-				class="label"
-				for="teamName"
-			>{{ $t('team.attributes.name') }}</label>
-			<div
-				class="control is-expanded"
-				:class="{ 'is-loading': teamService.loading }"
-			>
-				<input
-					id="teamName"
-					v-model="team.name"
-					v-focus
-					:class="{ 'disabled': teamService.loading }"
-					class="input"
-					:placeholder="$t('team.attributes.namePlaceholder')"
-					type="text"
-					@keyup.enter="createTeam"
-				>
-			</div>
-		</div>
-		<div
+		<FormField
+			id="teamName"
+			v-model="team.name"
+			v-focus
+			:label="$t('team.attributes.name')"
+			:class="{ 'disabled': teamService.loading }"
+			:placeholder="$t('team.attributes.namePlaceholder')"
+			type="text"
+			:error="showError && team.name === '' ? $t('team.attributes.nameRequired') : null"
+			@keyup.enter="createTeam"
+		/>
+		<FormField
 			v-if="configStore.publicTeamsEnabled"
-			class="field"
+			:label="$t('team.attributes.isPublic')"
 		>
-			<label
-				class="label"
-				for="teamIsPublic"
-			>{{ $t('team.attributes.isPublic') }}</label>
-			<div
-				class="control is-expanded"
-				:class="{ 'is-loading': teamService.loading }"
+			<FancyCheckbox
+				v-model="team.isPublic"
+				:class="{ 'disabled': teamService.loading }"
 			>
-				<FancyCheckbox
-					v-model="team.isPublic"
-					:class="{ 'disabled': teamService.loading }"
-				>
-					{{ $t('team.attributes.isPublicDescription') }}
-				</FancyCheckbox>
-			</div>
-		</div>
-		<p
-			v-if="showError && team.name === ''"
-			class="help is-danger"
-		>
-			{{ $t('team.attributes.nameRequired') }}
-		</p>
+				{{ $t('team.attributes.isPublicDescription') }}
+			</FancyCheckbox>
+		</FormField>
 	</CreateEdit>
 </template>
 
@@ -64,6 +39,7 @@ import TeamService from '@/services/team'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
+import FormField from '@/components/input/FormField.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {useRouter} from 'vue-router'
