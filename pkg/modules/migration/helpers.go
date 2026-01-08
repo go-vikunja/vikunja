@@ -65,6 +65,62 @@ func DoPost(url string, form url.Values) (resp *http.Response, err error) {
 	return DoPostWithHeaders(url, form, map[string]string{})
 }
 
+// DoGetWithHeaders makes an HTTP GET request with custom headers
+func DoGetWithHeaders(url string, headers map[string]string) (resp *http.Response, err error) {
+	const maxRetries = 3
+	const baseDelay = 100 * time.Millisecond
+
+	hc := http.Client{}
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		for key, value := range headers {
+			req.Header.Add(key, value)
+		}
+
+		resp, err = hc.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		// Don't retry on non-5xx status codes
+		if resp.StatusCode < 500 {
+			return resp, nil
+		}
+
+		// Return error on last attempt if still getting 5xx
+		if attempt == maxRetries-1 {
+			bodyBytes, readErr := io.ReadAll(resp.Body)
+			resp.Body.Close()
+
+			// Re-create the body so the caller can still read it if needed
+			resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+			if readErr != nil {
+				return resp, fmt.Errorf("request failed after %d attempts with status code %d (could not read response body: %w)", maxRetries, resp.StatusCode, readErr)
+			}
+
+			return resp, fmt.Errorf("request failed after %d attempts with status code %d: %s", maxRetries, resp.StatusCode, string(bodyBytes))
+		}
+
+		// Close the body before retrying
+		resp.Body.Close()
+
+		// Exponential backoff with jitter
+		delay := baseDelay * time.Duration(math.Pow(2, float64(attempt)))
+		maxJitter := int64(delay / 2)
+		jitterBig, _ := rand.Int(rand.Reader, big.NewInt(maxJitter))
+		jitter := time.Duration(jitterBig.Int64())
+		time.Sleep(delay + jitter)
+	}
+
+	return nil, fmt.Errorf("request failed after %d attempts", maxRetries)
+}
+
 // DoPostWithHeaders does an api request and allows to pass in arbitrary headers
 func DoPostWithHeaders(url string, form url.Values, headers map[string]string) (resp *http.Response, err error) {
 	const maxRetries = 3
