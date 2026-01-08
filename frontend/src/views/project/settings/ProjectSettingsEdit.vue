@@ -37,7 +37,6 @@
 				<FormField
 					id="identifier"
 					v-model="project.identifier"
-					v-focus
 					v-tooltip="$t('project.edit.identifierTooltip')"
 					:label="$t('project.edit.identifier')"
 					:class="{ 'disabled': isLoading}"
