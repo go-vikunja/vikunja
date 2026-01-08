@@ -121,6 +121,12 @@ type paginatedCompletedTasks struct {
 	NextCursor string              `json:"next_cursor"`
 }
 
+// paginatedProjects is the response structure for the v1 API paginated projects endpoints
+type paginatedProjects struct {
+	Results    []*project `json:"results"`
+	NextCursor string     `json:"next_cursor"`
+}
+
 type fileAttachment struct {
 	FileType    string `json:"file_type"`
 	FileName    string `json:"file_name"`
@@ -647,18 +653,39 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	log.Debugf("[Todoist Migration] Got %d done items for user %d", len(doneItems), u.ID)
 	log.Debugf("[Todoist Migration] Getting archived projects for user %d", u.ID)
 
-	// Get all archived projects
-	resp, err = migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/projects/get_archived", form, bearerHeader)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-
+	// Get all archived projects using cursor-based pagination
 	archivedProjects := []*project{}
-	err = json.NewDecoder(resp.Body).Decode(&archivedProjects)
-	if err != nil {
-		return
+	cursor = "" // reuse cursor variable
+	iteration = 0
+
+	for {
+		archivedURL := "https://api.todoist.com/api/v1/projects/archived"
+		if cursor != "" {
+			archivedURL += "?cursor=" + cursor
+		}
+
+		resp, err = migration.DoGetWithHeaders(archivedURL, bearerHeader)
+		if err != nil {
+			return
+		}
+		defer resp.Body.Close()
+
+		archivedResponse := &paginatedProjects{}
+		err = json.NewDecoder(resp.Body).Decode(archivedResponse)
+		if err != nil {
+			return
+		}
+
+		archivedProjects = append(archivedProjects, archivedResponse.Results...)
+
+		if archivedResponse.NextCursor == "" {
+			break
+		}
+		cursor = archivedResponse.NextCursor
+		iteration++
+		log.Debugf("[Todoist Migration] User %d has more archived projects, fetching more; iteration %d", u.ID, iteration)
 	}
+
 	syncResponse.Projects = append(syncResponse.Projects, archivedProjects...)
 
 	log.Debugf("[Todoist Migration] Got %d archived projects for user %d", len(archivedProjects), u.ID)
@@ -666,7 +693,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 
 	// Project data is not included in the regular sync for archived projects, so we need to get all of those by hand
 	for _, p := range archivedProjects {
-		resp, err = migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/projects/get_data?project_id="+p.ID, form, bearerHeader)
+		resp, err = migration.DoGetWithHeaders("https://api.todoist.com/api/v1/projects/"+p.ID+"/full", bearerHeader)
 		if err != nil {
 			return
 		}
