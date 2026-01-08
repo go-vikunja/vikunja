@@ -114,6 +114,13 @@ type doneItemSync struct {
 	Projects map[string]*project `json:"projects"`
 }
 
+// paginatedCompletedTasks is the response structure for the v1 API completed tasks endpoint
+type paginatedCompletedTasks struct {
+	Items      []*doneItem         `json:"items"`
+	Projects   map[string]*project `json:"projects"`
+	NextCursor string              `json:"next_cursor"`
+}
+
 type fileAttachment struct {
 	FileType    string `json:"file_type"`
 	FileName    string `json:"file_name"`
@@ -560,18 +567,24 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 
 	log.Debugf("[Todoist Migration] Getting done items for user %d", u.ID)
 
-	// Get all done tasks and projects
-	offset := 0
+	// Get all done tasks and projects using cursor-based pagination
+	var cursor string
 	doneItems := make(map[string]*doneItem)
+	iteration := 0
 
 	for {
-		resp, err = migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/completed/get_all?limit="+strconv.Itoa(paginationLimit)+"&offset="+strconv.Itoa(offset*paginationLimit), form, bearerHeader)
+		completedURL := "https://api.todoist.com/api/v1/tasks/completed?limit=" + strconv.Itoa(paginationLimit)
+		if cursor != "" {
+			completedURL += "&cursor=" + cursor
+		}
+
+		resp, err = migration.DoGetWithHeaders(completedURL, bearerHeader)
 		if err != nil {
 			return
 		}
 		defer resp.Body.Close()
 
-		completedSyncResponse := &doneItemSync{}
+		completedSyncResponse := &paginatedCompletedTasks{}
 		err = json.NewDecoder(resp.Body).Decode(completedSyncResponse)
 		if err != nil {
 			return
@@ -596,10 +609,8 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 			}
 			doneItems[i.TaskID] = i
 
-			// need to get done item data
-			resp, err = migration.DoPostWithHeaders("https://api.todoist.com/sync/v9/items/get", url.Values{
-				"item_id": []string{i.TaskID},
-			}, bearerHeader)
+			// need to get done item data using v1 API
+			resp, err = migration.DoGetWithHeaders("https://api.todoist.com/api/v1/tasks/"+i.TaskID, bearerHeader)
 			if err != nil {
 				return
 			}
@@ -614,20 +625,23 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 				continue
 			}
 
-			doneI := &itemWrapper{}
+			// The v1 API returns the task directly, not wrapped
+			doneI := &item{}
 			err = json.NewDecoder(resp.Body).Decode(doneI)
 			if err != nil {
 				return
 			}
 			log.Debugf("[Todoist Migration] Retrieved full task data for done task %s", i.TaskID)
-			syncResponse.Items = append(syncResponse.Items, doneI.Item)
+			syncResponse.Items = append(syncResponse.Items, doneI)
 		}
 
-		if len(completedSyncResponse.Items) < paginationLimit {
+		// Check if there are more pages
+		if completedSyncResponse.NextCursor == "" {
 			break
 		}
-		offset++
-		log.Debugf("[Todoist Migration] User %d has more than 200 done tasks or projects, looping to get more; iteration %d", u.ID, offset)
+		cursor = completedSyncResponse.NextCursor
+		iteration++
+		log.Debugf("[Todoist Migration] User %d has more than %d done tasks or projects, looping to get more; iteration %d", u.ID, paginationLimit, iteration)
 	}
 
 	log.Debugf("[Todoist Migration] Got %d done items for user %d", len(doneItems), u.ID)
