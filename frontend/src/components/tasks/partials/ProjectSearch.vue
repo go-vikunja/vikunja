@@ -6,7 +6,7 @@
 		label="title"
 		:select-placeholder="$t('project.searchSelect')"
 		:model-value="project"
-		@update:modelValue="Object.assign(project, $event)"
+		@update:modelValue="(val) => val === null ? select(null) : Object.assign(project, val)"
 		@select="select"
 		@search="findProjects"
 	>
