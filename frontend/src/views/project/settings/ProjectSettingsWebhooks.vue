@@ -18,6 +18,7 @@ import User from '@/components/misc/User.vue'
 import WebhookModel from '@/models/webhook'
 import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
+import FormField from '@/components/input/FormField.vue'
 import {success} from '@/message'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 
@@ -136,30 +137,15 @@ function validateSelectedEvents() {
 			v-if="webhooks?.length === 0 || showNewForm"
 			class="p-4"
 		>
-			<div class="field">
-				<label
-					class="label"
-					for="targetUrl"
-				>
-					{{ $t('project.webhooks.targetUrl') }}
-				</label>
-				<div class="control">
-					<input
-						id="targetUrl"
-						v-model="newWebhook.targetUrl"
-						required
-						class="input"
-						:placeholder="$t('project.webhooks.targetUrl')"
-						@focusout="validateTargetUrl"
-					>
-				</div>
-				<p
-					v-if="!webhookTargetUrlValid"
-					class="help is-danger"
-				>
-					{{ $t('project.webhooks.targetUrlInvalid') }}
-				</p>
-			</div>
+			<FormField
+				id="targetUrl"
+				v-model="newWebhook.targetUrl"
+				:label="$t('project.webhooks.targetUrl')"
+				required
+				:placeholder="$t('project.webhooks.targetUrl')"
+				:error="webhookTargetUrlValid ? null : $t('project.webhooks.targetUrlInvalid')"
+				@focusout="validateTargetUrl"
+			/>
 			<div class="field">
 				<label
 					class="label"
