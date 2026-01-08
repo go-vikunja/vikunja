@@ -4,38 +4,22 @@
 		:title="$t('user.settings.updateEmailTitle')"
 	>
 		<form @submit.prevent="updateEmail">
-			<div class="field">
-				<label
-					class="label"
-					for="newEmail"
-				>{{ $t('user.settings.updateEmailNew') }}</label>
-				<div class="control">
-					<input
-						id="newEmail"
-						v-model="emailUpdate.newEmail"
-						class="input"
-						:placeholder="$t('user.auth.emailPlaceholder')"
-						type="email"
-						@keyup.enter="updateEmail"
-					>
-				</div>
-			</div>
-			<div class="field">
-				<label
-					class="label"
-					for="currentPasswordEmail"
-				>{{ $t('user.settings.currentPassword') }}</label>
-				<div class="control">
-					<input
-						id="currentPasswordEmail"
-						v-model="emailUpdate.password"
-						class="input"
-						:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-						type="password"
-						@keyup.enter="updateEmail"
-					>
-				</div>
-			</div>
+			<FormField
+				id="newEmail"
+				v-model="emailUpdate.newEmail"
+				:label="$t('user.settings.updateEmailNew')"
+				:placeholder="$t('user.auth.emailPlaceholder')"
+				type="email"
+				@keyup.enter="updateEmail"
+			/>
+			<FormField
+				id="currentPasswordEmail"
+				v-model="emailUpdate.password"
+				:label="$t('user.settings.currentPassword')"
+				:placeholder="$t('user.settings.currentPasswordPlaceholder')"
+				type="password"
+				@keyup.enter="updateEmail"
+			/>
 		</form>
 
 		<XButton
@@ -55,6 +39,7 @@ import {useI18n} from 'vue-i18n'
 
 import EmailUpdateService from '@/services/emailUpdate'
 import EmailUpdateModel from '@/models/emailUpdate'
+import FormField from '@/components/input/FormField.vue'
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
 import {useAuthStore} from '@/stores/auth'

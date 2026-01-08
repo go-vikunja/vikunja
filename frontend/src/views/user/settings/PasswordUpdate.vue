@@ -5,57 +5,33 @@
 		:loading="passwordUpdateService.loading"
 	>
 		<form @submit.prevent="updatePassword">
-			<div class="field">
-				<label
-					class="label"
-					for="newPassword"
-				>{{ $t('user.settings.newPassword') }}</label>
-				<div class="control">
-					<input
-						id="newPassword"
-						v-model="passwordUpdate.newPassword"
-						autocomplete="new-password"
-						class="input"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						type="password"
-						@keyup.enter="updatePassword"
-					>
-				</div>
-			</div>
-			<div class="field">
-				<label
-					class="label"
-					for="newPasswordConfirm"
-				>{{ $t('user.settings.newPasswordConfirm') }}</label>
-				<div class="control">
-					<input
-						id="newPasswordConfirm"
-						v-model="passwordConfirm"
-						autocomplete="new-password"
-						class="input"
-						:placeholder="$t('user.auth.passwordPlaceholder')"
-						type="password"
-						@keyup.enter="updatePassword"
-					>
-				</div>
-			</div>
-			<div class="field">
-				<label
-					class="label"
-					for="currentPassword"
-				>{{ $t('user.settings.currentPassword') }}</label>
-				<div class="control">
-					<input
-						id="currentPassword"
-						v-model="passwordUpdate.oldPassword"
-						autocomplete="current-password"
-						class="input"
-						:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-						type="password"
-						@keyup.enter="updatePassword"
-					>
-				</div>
-			</div>
+			<FormField
+				id="newPassword"
+				v-model="passwordUpdate.newPassword"
+				:label="$t('user.settings.newPassword')"
+				autocomplete="new-password"
+				:placeholder="$t('user.auth.passwordPlaceholder')"
+				type="password"
+				@keyup.enter="updatePassword"
+			/>
+			<FormField
+				id="newPasswordConfirm"
+				v-model="passwordConfirm"
+				:label="$t('user.settings.newPasswordConfirm')"
+				autocomplete="new-password"
+				:placeholder="$t('user.auth.passwordPlaceholder')"
+				type="password"
+				@keyup.enter="updatePassword"
+			/>
+			<FormField
+				id="currentPassword"
+				v-model="passwordUpdate.oldPassword"
+				:label="$t('user.settings.currentPassword')"
+				autocomplete="current-password"
+				:placeholder="$t('user.settings.currentPasswordPlaceholder')"
+				type="password"
+				@keyup.enter="updatePassword"
+			/>
 		</form>
 
 		<XButton
@@ -75,6 +51,7 @@ import {useI18n} from 'vue-i18n'
 
 import PasswordUpdateService from '@/services/passwordUpdateService'
 import PasswordUpdateModel from '@/models/passwordUpdate'
+import FormField from '@/components/input/FormField.vue'
 
 import {useTitle} from '@/composables/useTitle'
 import {success, error} from '@/message'
