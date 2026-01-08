@@ -71,6 +71,16 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 
 <style lang="scss" scoped>
 .button {
+	// Base structure (replaces Bulma's .button)
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: top;
+	cursor: pointer;
+	text-align: center;
+	white-space: var(--button-white-space);
+
+	// Custom styles
 	transition: all $transition;
 	border: 0;
 	text-transform: uppercase;
@@ -79,12 +89,14 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 	block-size: auto;
 	min-block-size: $button-height;
 	box-shadow: var(--shadow-sm);
-	white-space: var(--button-white-space);
 	line-height: 1;
-	display: inline-flex;
-	padding-inline: 0; // override bulma style // override bulma style
 	padding-inline: .5rem;
 	gap: .25rem;
+
+	// Default/Primary variant colors
+	background-color: var(--primary);
+	color: var(--white);
+	border-radius: $radius;
 
 	[dir="rtl"] & {
 		flex-direction: row-reverse;
@@ -92,11 +104,13 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 
 	&:hover {
 		box-shadow: var(--shadow-md);
+		background-color: var(--primary-dark, color-mix(in srgb, var(--primary) 85%, black));
 	}
 
-	&.fullheight {
-		padding-inline-end: 7px;
-		block-size: 100%;
+	&:focus,
+	&:focus-visible {
+		outline: 2px solid var(--primary);
+		outline-offset: 2px;
 	}
 
 	&.is-active,
@@ -107,12 +121,84 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 		box-shadow: var(--shadow-xs) !important;
 	}
 
-	&.is-primary.is-outlined:hover {
-		color: var(--white);
+	&[disabled] {
+		opacity: 0.5;
+		cursor: not-allowed;
+		pointer-events: none;
 	}
 
 	.icon {
 		margin: 0 !important;
+	}
+
+	// Primary variant (default, explicit)
+	&.is-primary {
+		background-color: var(--primary);
+		color: var(--white);
+
+		&:hover {
+			background-color: var(--primary-dark, color-mix(in srgb, var(--primary) 85%, black));
+		}
+	}
+
+	// Secondary/Outlined variant
+	&.is-outlined {
+		background-color: var(--scheme-main);
+		color: var(--grey-900);
+
+		&:hover {
+			color: var(--grey-600);
+		}
+	}
+
+	// Tertiary/Text variant
+	&.is-text {
+		background-color: transparent;
+		color: var(--text);
+		box-shadow: none;
+
+		&:hover {
+			background-color: var(--grey-100);
+			box-shadow: none;
+		}
+	}
+
+	&.is-inverted {
+		// Used with is-text for tertiary buttons
+		color: inherit;
+	}
+
+	// Loading state
+	&.is-loading {
+		color: transparent !important;
+		pointer-events: none;
+		position: relative;
+
+		&::after {
+			content: "";
+			position: absolute;
+			display: block;
+			block-size: 1em;
+			inline-size: 1em;
+			border: 2px solid currentColor;
+			border-radius: 50%;
+			border-inline-end-color: transparent;
+			border-block-start-color: transparent;
+			animation: spin-around 500ms infinite linear;
+
+			// Center the spinner
+			inset-inline-start: calc(50% - 0.5em);
+			inset-block-start: calc(50% - 0.5em);
+		}
+	}
+}
+
+@keyframes spin-around {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
 	}
 }
 
