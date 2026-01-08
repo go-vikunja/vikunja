@@ -90,7 +90,10 @@
 							<span class="search-result">{{ label !== '' ? data[label] : data }}</span>
 						</slot>
 					</span>
-					<span class="hint-text">
+					<span
+						v-if="selectPlaceholder.trim()"
+						class="hint-text"
+					>
 						{{ selectPlaceholder }}
 					</span>
 				</BaseButton>
@@ -453,6 +456,7 @@ function focus() {
 .multiselect {
 	inline-size: 100%;
 	position: relative;
+	container-type: inline-size;
 
 	.control.is-loading::after {
 		inset-block-start: .75rem;
@@ -532,11 +536,13 @@ function focus() {
 	border-block-start: none;
 
 	max-block-size: 50vh;
-	overflow-x: auto;
+	overflow: hidden auto;
 	position: absolute;
 	z-index: 100;
-	max-inline-size: 100%;
-	min-inline-size: 100%;
+	inset-inline: 0;
+	inline-size: 100%;
+	box-sizing: border-box;
+	clip-path: inset(0);
 }
 
 .search-results-inline {
@@ -557,9 +563,17 @@ function focus() {
 	color: var(--grey-800);
 
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
 	overflow: hidden;
+	max-inline-size: 100%;
+	box-sizing: border-box;
+	position: relative;
+
+	> span:first-child {
+		overflow: hidden;
+		min-inline-size: 0;
+		flex: 1;
+	}
 
 	&:focus,
 	&:hover {

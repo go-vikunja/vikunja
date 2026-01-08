@@ -181,6 +181,7 @@
 						:show-empty="true"
 						class="timezone-select"
 						label="label"
+						select-placeholder=""
 						@search="searchTimezones"
 					/>
 				</label>
