@@ -579,10 +579,10 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		if err != nil {
 			return
 		}
-		defer resp.Body.Close()
 
 		completedSyncResponse := &paginatedCompletedTasks{}
 		err = json.NewDecoder(resp.Body).Decode(completedSyncResponse)
+		resp.Body.Close()
 		if err != nil {
 			return
 		}
@@ -611,13 +611,13 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 			if err != nil {
 				return
 			}
-			defer resp.Body.Close()
 
 			if resp.StatusCode == http.StatusNotFound {
 				// Done items of deleted projects may show up here but since the project is already deleted
 				// we can't show them individually and the api returns a 404.
 				buf := bytes.Buffer{}
 				_, _ = buf.ReadFrom(resp.Body)
+				resp.Body.Close()
 				log.Debugf("[Todoist Migration] Could not retrieve task details for task %s: %s", i.TaskID, buf.String())
 				continue
 			}
@@ -625,6 +625,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 			// The v1 API returns the task directly, not wrapped
 			doneI := &item{}
 			err = json.NewDecoder(resp.Body).Decode(doneI)
+			resp.Body.Close()
 			if err != nil {
 				return
 			}
@@ -659,10 +660,10 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 		if err != nil {
 			return
 		}
-		defer resp.Body.Close()
 
 		archivedResponse := &paginatedProjects{}
 		err = json.NewDecoder(resp.Body).Decode(archivedResponse)
+		resp.Body.Close()
 		if err != nil {
 			return
 		}
