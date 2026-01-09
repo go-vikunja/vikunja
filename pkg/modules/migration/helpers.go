@@ -19,15 +19,11 @@ package migration
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"fmt"
 	"io"
-	"math"
-	"math/big"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
@@ -111,16 +107,13 @@ func DoGetWithHeaders(urlStr string, headers map[string]string) (resp *http.Resp
 }
 
 // DoPostWithHeaders does an api request and allows to pass in arbitrary headers
-func DoPostWithHeaders(url string, form url.Values, headers map[string]string) (resp *http.Response, err error) {
-	const maxRetries = 3
-	const baseDelay = 100 * time.Millisecond
-
+func DoPostWithHeaders(urlStr string, form url.Values, headers map[string]string) (resp *http.Response, err error) {
 	hc := http.Client{}
 
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, strings.NewReader(form.Encode()))
-		if err != nil {
-			return nil, err
+	err = utils.RetryWithBackoff("HTTP POST "+urlStr, func() error {
+		req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodPost, urlStr, strings.NewReader(form.Encode()))
+		if reqErr != nil {
+			return reqErr
 		}
 
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -129,41 +122,30 @@ func DoPostWithHeaders(url string, form url.Values, headers map[string]string) (
 			req.Header.Add(key, value)
 		}
 
-		resp, err = hc.Do(req)
+		resp, err = hc.Do(req) //nolint:bodyclose // Caller is responsible for closing on success
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		// Don't retry on non-5xx status codes
-		if resp.StatusCode < 500 {
-			return resp, nil
-		}
-
-		// Return error on last attempt if still getting 5xx
-		if attempt == maxRetries-1 {
-			bodyBytes, readErr := io.ReadAll(resp.Body)
+		// Log 4xx errors for debugging
+		if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+			bodyBytes, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
-
-			// Re-create the body so the caller can still read it if needed
+			// Re-create the body so the caller can still read it
 			resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-
-			if readErr != nil {
-				return resp, fmt.Errorf("request failed after %d attempts with status code %d (could not read response body: %w)", maxRetries, resp.StatusCode, readErr)
-			}
-
-			return resp, fmt.Errorf("request failed after %d attempts with status code %d: %s", maxRetries, resp.StatusCode, string(bodyBytes))
+			log.Debugf("[Migration] HTTP POST %s returned %d: %s", urlStr, resp.StatusCode, string(bodyBytes))
+			return nil // Don't retry on 4xx
 		}
 
-		// Close the body before retrying
-		resp.Body.Close()
+		// Retry on 5xx status codes, include response body in error
+		if resp.StatusCode >= 500 {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			return fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(bodyBytes))
+		}
 
-		// Exponential backoff with jitter
-		delay := baseDelay * time.Duration(math.Pow(2, float64(attempt)))
-		maxJitter := int64(delay / 2)
-		jitterBig, _ := rand.Int(rand.Reader, big.NewInt(maxJitter))
-		jitter := time.Duration(jitterBig.Int64())
-		time.Sleep(delay + jitter)
-	}
+		return nil
+	})
 
-	return nil, fmt.Errorf("request failed after %d attempts", maxRetries)
+	return resp, err
 }
