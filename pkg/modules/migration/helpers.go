@@ -29,6 +29,7 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
 )
 
@@ -86,10 +87,21 @@ func DoGetWithHeaders(urlStr string, headers map[string]string) (resp *http.Resp
 			return err
 		}
 
-		// Retry on 5xx status codes
-		if resp.StatusCode >= 500 {
+		// Log 4xx errors for debugging
+		if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+			bodyBytes, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
-			return fmt.Errorf("server returned status %d", resp.StatusCode)
+			// Re-create the body so the caller can still read it
+			resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			log.Debugf("[Migration] HTTP GET %s returned %d: %s", urlStr, resp.StatusCode, string(bodyBytes))
+			return nil // Don't retry on 4xx
+		}
+
+		// Retry on 5xx status codes, include response body in error
+		if resp.StatusCode >= 500 {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			return fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(bodyBytes))
 		}
 
 		return nil
