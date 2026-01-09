@@ -572,7 +572,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	for {
 		completedURL := "https://api.todoist.com/api/v1/tasks/completed?limit=" + strconv.Itoa(paginationLimit)
 		if cursor != "" {
-			completedURL += "&cursor=" + cursor
+			completedURL += "&cursor=" + url.QueryEscape(cursor)
 		}
 
 		resp, err = migration.DoGetWithHeaders(completedURL, bearerHeader)
@@ -652,7 +652,7 @@ func (m *Migration) Migrate(u *user.User) (err error) {
 	for {
 		archivedURL := "https://api.todoist.com/api/v1/projects/archived"
 		if cursor != "" {
-			archivedURL += "?cursor=" + cursor
+			archivedURL += "?cursor=" + url.QueryEscape(cursor)
 		}
 
 		resp, err = migration.DoGetWithHeaders(archivedURL, bearerHeader)
