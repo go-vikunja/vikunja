@@ -178,7 +178,7 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 	&.is-danger {
 		background-color: var(--danger);
 		border-color: transparent;
-		color: var(--white);
+		color: var(--button-text-color);
 
 		&:hover {
 			background-color: var(--danger-dark);
@@ -209,7 +209,7 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 		&:focus {
 			background-color: var(--danger);
 			border-color: var(--danger);
-			color: var(--white);
+			color: var(--button-text-color);
 		}
 	}
 
