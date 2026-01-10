@@ -10,7 +10,7 @@
 			v-model="team.name"
 			v-focus
 			:label="$t('team.attributes.name')"
-			:class="{ 'disabled': teamService.loading }"
+			:disabled="teamService.loading"
 			:placeholder="$t('team.attributes.namePlaceholder')"
 			type="text"
 			:error="showError && team.name === '' ? $t('team.attributes.nameRequired') : null"

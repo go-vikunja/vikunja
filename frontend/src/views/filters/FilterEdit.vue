@@ -14,8 +14,8 @@
 				v-model="filter.title"
 				v-focus
 				:label="$t('filters.attributes.title')"
-				:class="{ 'disabled': filterService.loading, 'is-danger': !titleValid }"
-				:disabled="filterService.loading || undefined"
+				:class="{ 'is-danger': !titleValid }"
+				:disabled="filterService.loading"
 				:placeholder="$t('filters.attributes.titlePlaceholder')"
 				type="text"
 				:error="titleValid ? null : $t('filters.create.titleRequired')"

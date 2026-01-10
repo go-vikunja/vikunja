@@ -14,8 +14,7 @@
 					v-model="team.name"
 					v-focus
 					:label="$t('team.attributes.name')"
-					:class="{ disabled: teamMemberService.loading }"
-					:disabled="teamMemberService.loading || undefined"
+					:disabled="teamMemberService.loading"
 					:placeholder="$t('team.attributes.namePlaceholder')"
 					type="text"
 					:error="showErrorTeamnameRequired && team.name === '' ? $t('team.attributes.nameRequired') : null"
