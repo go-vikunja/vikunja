@@ -34,6 +34,7 @@
 				:placeholder="$t('user.auth.emailPlaceholder')"
 				required
 				type="email"
+				autocomplete="email"
 			/>
 
 			<div class="is-flex">
