@@ -23,8 +23,8 @@
 				autocomplete="username"
 				:error="usernameValid !== true ? usernameValid : null"
 				@keyup.enter="submit"
-				@focusout="() => {validateUsername(); validateUsernameAfterFirst = true}"
-				@keyup="() => {validateUsernameAfterFirst ? validateUsername() : null}"
+				@focusout="validateUsername(); validateUsernameAfterFirst = true"
+				@keyup="validateUsernameAfterFirst && validateUsername()"
 			/>
 			<FormField
 				id="email"
@@ -36,8 +36,8 @@
 				type="email"
 				:error="emailValid ? null : $t('user.auth.emailInvalid')"
 				@keyup.enter="submit"
-				@focusout="() => {validateEmail(); validateEmailAfterFirst = true}"
-				@keyup="() => {validateEmailAfterFirst ? validateEmail() : null}"
+				@focusout="validateEmail(); validateEmailAfterFirst = true"
+				@keyup="validateEmailAfterFirst && validateEmail()"
 			/>
 			<div class="field">
 				<label
