@@ -51,7 +51,7 @@
 			</p>
 			<p v-if="!totpDisableForm">
 				<XButton
-					class="is-danger"
+					danger
 					@click="totpDisableForm = true"
 				>
 					{{ $t('misc.disable') }}
@@ -76,7 +76,7 @@
 					</div>
 				</div>
 				<XButton
-					class="is-danger"
+					danger
 					@click="totpDisable"
 				>
 					{{ $t('user.settings.totp.disable') }}

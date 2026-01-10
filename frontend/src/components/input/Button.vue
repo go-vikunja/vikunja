@@ -6,6 +6,7 @@
 			{
 				'is-loading': loading,
 				'has-no-shadow': !shadow || variant === 'tertiary',
+				'is-danger': danger,
 			}
 		]"
 		:disabled="disabled || loading"
@@ -58,6 +59,7 @@ export interface ButtonProps {
 	disabled?: boolean
 	shadow?: boolean
 	wrap?: boolean
+	danger?: boolean
 }
 
 defineOptions({name: 'XButton'})
@@ -166,6 +168,65 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 	&.is-inverted {
 		// Used with is-text for tertiary buttons
 		color: inherit;
+	}
+
+	// Danger modifier - solid filled button (default and primary variant)
+	&.is-danger {
+		background-color: var(--danger);
+		border-color: transparent;
+		color: var(--white);
+
+		&:hover {
+			background-color: var(--danger-dark);
+			border-color: transparent;
+		}
+
+		&:focus,
+		&:focus-visible {
+			outline-color: var(--danger);
+			&:not(:active) {
+				box-shadow: 0 0 0 0.125em hsla(var(--danger-h), var(--danger-s), var(--danger-l), 0.25);
+			}
+		}
+
+		&:active {
+			background-color: var(--danger-dark);
+			border-color: transparent;
+		}
+	}
+
+	// Danger + outlined/secondary variant
+	&.is-danger.is-outlined {
+		background-color: transparent;
+		border: 1px solid var(--danger);
+		color: var(--danger);
+
+		&:hover,
+		&:focus {
+			background-color: var(--danger);
+			border-color: var(--danger);
+			color: var(--white);
+		}
+	}
+
+	// Danger + text/tertiary variant
+	&.is-danger.is-text {
+		background-color: transparent;
+		color: var(--danger);
+
+		&:hover {
+			background-color: hsla(var(--danger-h), var(--danger-s), var(--danger-l), 0.1);
+		}
+	}
+
+	// Danger loading spinner - white on solid, danger-colored on outlined/text
+	&.is-danger.is-loading::after {
+		border-color: transparent transparent var(--white) var(--white);
+	}
+
+	&.is-danger.is-outlined.is-loading::after,
+	&.is-danger.is-text.is-loading::after {
+		border-color: transparent transparent var(--danger) var(--danger);
 	}
 
 	// Loading state

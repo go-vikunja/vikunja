@@ -84,7 +84,7 @@
 				<div class="control">
 					<XButton
 						:loading="teamService.loading"
-						class="is-danger"
+						danger
 						icon="trash-alt"
 						@click="showDeleteModal = true"
 					/>
@@ -184,7 +184,7 @@
 							<XButton
 								v-if="m.id !== userInfo.id"
 								:loading="teamMemberService.loading"
-								class="is-danger"
+								danger
 								icon="trash-alt"
 								@click="() => {memberToDelete = m; showUserDeleteModal = true}"
 							/>

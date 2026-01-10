@@ -245,7 +245,7 @@ function validateSelectedEvents() {
 
 					<td class="actions">
 						<XButton
-							class="is-danger"
+							danger
 							icon="trash-alt"
 							@click="() => {showDeleteModal = true;webhookIdToDelete = w.id}"
 						/>
