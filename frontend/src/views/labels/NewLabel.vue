@@ -10,7 +10,7 @@
 			v-model="label.title"
 			v-focus
 			:label="$t('label.attributes.title')"
-			:class="{ disabled: loading }"
+			:disabled="loading"
 			:placeholder="$t('label.attributes.titlePlaceholder')"
 			type="text"
 			:error="showError && label.title === '' ? $t('label.create.titleRequired') : null"

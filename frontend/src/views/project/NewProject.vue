@@ -9,7 +9,7 @@
 			v-model="project.title"
 			v-focus
 			:label="$t('project.title')"
-			:class="{ disabled: projectService.loading }"
+			:disabled="projectService.loading"
 			:placeholder="$t('project.create.titlePlaceholder')"
 			type="text"
 			name="projectTitle"
