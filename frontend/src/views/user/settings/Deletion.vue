@@ -22,7 +22,6 @@
 						ref="passwordInput"
 						v-model="password"
 						:label="$t('user.settings.currentPassword')"
-						:class="{'is-danger': errPasswordRequired}"
 						:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 						type="password"
 						:error="errPasswordRequired ? $t('user.deletion.passwordRequired') : null"
