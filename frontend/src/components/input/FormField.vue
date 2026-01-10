@@ -11,9 +11,19 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-defineEmits<{
-	'update:modelValue': [value: string]
+const emit = defineEmits<{
+	'update:modelValue': [value: string | number]
 }>()
+
+function handleInput(event: Event) {
+	const value = (event.target as HTMLInputElement).value
+	// Preserve numeric type if modelValue was a number
+	if (typeof props.modelValue === 'number') {
+		emit('update:modelValue', value === '' ? '' : Number(value))
+	} else {
+		emit('update:modelValue', value)
+	}
+}
 
 defineOptions({
 	inheritAttrs: false,
@@ -83,7 +93,7 @@ defineExpose({
 					v-bind="{ ...$attrs, ...inputBindings }"
 					:class="inputClasses"
 					:disabled="disabled || undefined"
-					@input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+					@input="handleInput"
 				>
 			</slot>
 		</div>
