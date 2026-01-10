@@ -404,9 +404,11 @@ async function setCoverImage(attachment: IAttachment | null) {
 	display: flex;
 	align-items: center;
 	font-weight: bold;
-	block-size: 2rem;
+	min-block-size: 2rem;
 	color: var(--text);
 	text-align: start;
+	word-break: break-all;
+	min-inline-size: 0;
 }
 
 .info {
@@ -475,6 +477,7 @@ async function setCoverImage(attachment: IAttachment | null) {
 	display: flex;
 	flex-flow: column wrap;
 	align-self: start;
+	min-inline-size: 0;
 }
 
 .attachment-info-meta {
