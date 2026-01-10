@@ -53,6 +53,10 @@ const availableEvents = ref<string[]>()
 async function loadWebhooks() {
 	webhooks.value = await webhookService.getAll({projectId: project.value.id})
 	availableEvents.value = await webhookService.getAvailableEvents()
+	// Initialize all events to false to avoid undefined modelValue errors
+	newWebhookEvents.value = Object.fromEntries(
+		availableEvents.value.map(event => [event, false]),
+	)
 }
 
 const showDeleteModal = ref(false)
