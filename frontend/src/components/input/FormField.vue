@@ -6,6 +6,7 @@ interface Props {
 	label?: string
 	error?: string | null
 	id?: string
+	disabled?: boolean
 }
 
 const props = defineProps<Props>()
@@ -31,6 +32,11 @@ const fieldClasses = computed(() => [
 const controlClasses = computed(() => [
 	'control',
 	{'is-expanded': hasAddon.value},
+])
+
+const inputClasses = computed(() => [
+	'input',
+	{'disabled': props.disabled},
 ])
 
 // Only bind value when modelValue is explicitly provided (not undefined)
@@ -68,7 +74,8 @@ defineExpose({
 					:id="inputId"
 					ref="inputRef"
 					v-bind="{ ...$attrs, ...inputBindings }"
-					class="input"
+					:class="inputClasses"
+					:disabled="disabled || undefined"
 					@input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
 				>
 			</slot>
