@@ -73,6 +73,10 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 
 <style lang="scss" scoped>
 .button {
+	// Button text must stay white regardless of theme, so we use a fixed value
+	// instead of var(--white) which changes in dark mode.
+	--button-text-color: #fff;
+
 	// Base structure (replaces Bulma's .button)
 	display: inline-flex;
 	align-items: center;
@@ -97,7 +101,7 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 
 	// Default/Primary variant colors
 	background-color: var(--primary);
-	color: var(--white);
+	color: var(--button-text-color);
 	border-radius: $radius;
 
 	[dir="rtl"] & {
@@ -136,7 +140,7 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 	// Primary variant (default, explicit)
 	&.is-primary {
 		background-color: var(--primary);
-		color: var(--white);
+		color: var(--button-text-color);
 
 		&:hover {
 			background-color: var(--primary-dark, color-mix(in srgb, var(--primary) 85%, black));
@@ -241,7 +245,7 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 			display: block;
 			block-size: 1em;
 			inline-size: 1em;
-			border: 2px solid var(--white);
+			border: 2px solid var(--button-text-color);
 			border-radius: 50%;
 			border-inline-end-color: transparent;
 			border-block-start-color: transparent;
