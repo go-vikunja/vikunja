@@ -59,6 +59,9 @@ defineExpose({
 	get value() {
 		return inputRef.value?.value ?? ''
 	},
+	focus() {
+		inputRef.value?.focus()
+	},
 })
 </script>
 
