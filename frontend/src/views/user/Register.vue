@@ -35,6 +35,7 @@
 				required
 				type="email"
 				:error="emailValid ? null : $t('user.auth.emailInvalid')"
+				autocomplete="email"
 				@keyup.enter="submit"
 				@focusout="validateEmail(); validateEmailAfterFirst = true"
 				@keyup="validateEmailAfterFirst && validateEmail()"
