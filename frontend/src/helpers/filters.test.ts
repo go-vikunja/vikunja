@@ -527,12 +527,34 @@ describe('Filter Transformation', () => {
 		
 		it('should transform the same attribute multiple times', () => {
 			const transformed = transformFilterStringFromApi(
-				'due_date = now/d || due_date > now/w+1w', 
+				'due_date = now/d || due_date > now/w+1w',
 				nullIdToTitleResolver,
 				nullIdToTitleResolver,
 			)
 
 			expect(transformed).toBe('dueDate = now/d || dueDate > now/w+1w')
+		})
+
+		it('should not replace label id that appears in other parts of the filter', () => {
+			// This tests that position-based replacement is used, not global string replace
+			// The label id "1" should only be replaced in the labels clause, not in "priority = 1"
+			const transformed = transformFilterStringFromApi(
+				'priority = 1 && labels = 1',
+				(id: number) => id === 1 ? 'My Label' : null,
+				nullIdToTitleResolver,
+			)
+
+			expect(transformed).toBe('priority = 1 && labels = My Label')
+		})
+
+		it('should not replace project id that appears in other parts of the filter', () => {
+			const transformed = transformFilterStringFromApi(
+				'priority = 2 && project = 2',
+				nullIdToTitleResolver,
+				(id: number) => id === 2 ? 'My Project' : null,
+			)
+
+			expect(transformed).toBe('priority = 2 && project = My Project')
 		})
 	})
 })
