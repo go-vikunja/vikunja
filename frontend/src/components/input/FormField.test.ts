@@ -125,6 +125,28 @@ describe('FormField', () => {
 		expect(onFocusout).toHaveBeenCalledTimes(1)
 	})
 
+	it('forwards @keyup.enter to inner input', async () => {
+		const onSubmit = vi.fn()
+
+		const wrapper = mount({
+			components: {FormField},
+			template: `<FormField @keyup.enter="onSubmit" />`,
+			setup() {
+				return {onSubmit}
+			},
+		})
+
+		const input = wrapper.find('input')
+
+		// Enter key should trigger the handler
+		await input.trigger('keyup', {key: 'Enter'})
+		expect(onSubmit).toHaveBeenCalledTimes(1)
+
+		// Other keys should not trigger the handler
+		await input.trigger('keyup', {key: 'a'})
+		expect(onSubmit).toHaveBeenCalledTimes(1)
+	})
+
 	it('uses provided id for input', () => {
 		const wrapper = mount(FormField, {
 			props: {id: 'my-input', label: 'My Input'},
