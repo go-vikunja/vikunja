@@ -75,7 +75,7 @@ const variantClass = computed<string>(() => VARIANT_CLASS_MAP[variant.value])
 .button {
 	// Button text must stay white regardless of theme, so we use a fixed value
 	// instead of var(--white) which changes in dark mode.
-	--button-text-color: #fff;
+	--button-text-color: #ffffff;
 
 	// Base structure (replaces Bulma's .button)
 	display: inline-flex;
