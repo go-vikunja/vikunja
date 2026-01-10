@@ -24,6 +24,7 @@
 			<FancyCheckbox
 				v-model="team.isPublic"
 				:class="{ 'disabled': teamService.loading }"
+				:disabled="teamService.loading"
 			>
 				{{ $t('team.attributes.isPublicDescription') }}
 			</FancyCheckbox>
