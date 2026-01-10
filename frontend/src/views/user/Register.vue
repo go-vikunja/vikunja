@@ -159,7 +159,7 @@ const everythingValid = computed(() => {
 		credentials.email !== '' &&
 		validatePassword(credentials.password) === true &&
 		emailValid.value &&
-		usernameValid.value
+		usernameValid.value === true
 })
 
 async function submit() {
