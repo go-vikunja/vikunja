@@ -11,6 +11,7 @@
 			v-focus
 			:label="$t('team.attributes.name')"
 			:disabled="teamService.loading"
+			:loading="teamService.loading"
 			:placeholder="$t('team.attributes.namePlaceholder')"
 			type="text"
 			:error="showError && team.name === '' ? $t('team.attributes.nameRequired') : null"

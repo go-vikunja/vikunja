@@ -10,6 +10,7 @@
 			v-focus
 			:label="$t('project.title')"
 			:disabled="projectService.loading"
+			:loading="projectService.loading"
 			:placeholder="$t('project.create.titlePlaceholder')"
 			type="text"
 			name="projectTitle"
