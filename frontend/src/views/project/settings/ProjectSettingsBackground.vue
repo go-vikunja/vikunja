@@ -90,7 +90,7 @@
 				v-if="hasBackground"
 				:shadow="false"
 				variant="tertiary"
-				class="is-danger"
+				danger
 				@click.prevent.stop="removeBackground"
 			>
 				{{ $t('project.background.remove') }}

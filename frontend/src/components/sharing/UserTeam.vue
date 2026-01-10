@@ -121,7 +121,7 @@
 							</select>
 						</div>
 						<XButton
-							class="is-danger"
+							danger
 							icon="trash-alt"
 							@click="
 								() => {

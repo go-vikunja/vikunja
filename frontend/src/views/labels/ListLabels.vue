@@ -99,7 +99,7 @@
 							<div class="control">
 								<XButton
 									icon="trash-alt"
-									class="is-danger"
+									danger
 									@click="showDeleteDialoge(labelEditLabel)"
 								/>
 							</div>
