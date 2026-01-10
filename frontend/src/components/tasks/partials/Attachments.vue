@@ -172,8 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch} from 'vue'
-import {useDropZone} from '@vueuse/core'
+import {ref, shallowReactive, computed, watch, onMounted, onUnmounted} from 'vue'
 
 import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'
@@ -227,6 +226,17 @@ function eventTargetsEditor(event: Event | null | undefined): boolean {
 	return false
 }
 
+function isFileDrag(event: DragEvent | null | undefined): boolean {
+	if (!event?.dataTransfer) {
+		return false
+	}
+
+	// Check if the drag contains files
+	// dataTransfer.types is a DOMStringList containing the types of data
+	// 'Files' indicates a file drag from the OS or another application
+	return Array.from(event.dataTransfer.types).includes('Files')
+}
+
 const taskStore = useTaskStore()
 const {t} = useI18n({useScope: 'global'})
 
@@ -239,55 +249,103 @@ const loading = computed(() => attachmentService.loading || taskStore.isLoading)
 
 const isDraggingFiles = ref(false)
 const isDragOverEditor = ref(false)
+// Track drag depth to handle nested elements properly
+const dragDepth = ref(0)
 
 function resetDragState() {
 	isDraggingFiles.value = false
 	isDragOverEditor.value = false
+	dragDepth.value = 0
 }
 
-const {isOverDropZone} = useDropZone(document, {
-	onEnter(files, event) {
-		if (!props.editEnabled) {
-			return
-		}
-		
+function handleDragEnter(event: DragEvent) {
+	if (!props.editEnabled) {
+		return
+	}
+
+	// Only handle file drags - let text drags work natively
+	if (!isFileDrag(event)) {
+		return
+	}
+
+	dragDepth.value++
+
+	if (dragDepth.value === 1) {
 		isDraggingFiles.value = true
-		isDragOverEditor.value = eventTargetsEditor(event)
-	},
-	onOver(files, event) {
-		if (!props.editEnabled) {
-			return
-		}
+	}
+	isDragOverEditor.value = eventTargetsEditor(event)
+}
 
-		isDragOverEditor.value = eventTargetsEditor(event)
-	},
-	onLeave(files, event) {
-		if (!props.editEnabled) {
-			return
-		}
+function handleDragOver(event: DragEvent) {
+	if (!props.editEnabled) {
+		return
+	}
 
-		if (!isOverDropZone.value) {
-			resetDragState()
-			return
-		}
+	// Only prevent default for file drags - this is the key fix!
+	// Not preventing default allows native text dragging to work
+	if (!isFileDrag(event)) {
+		return
+	}
 
-		isDragOverEditor.value = eventTargetsEditor(event)
-	},
-	onDrop(files, event) {
-		if (!props.editEnabled) {
-			return
-		}
+	event.preventDefault()
+	isDragOverEditor.value = eventTargetsEditor(event)
+}
 
-		const dropOverEditor = eventTargetsEditor(event)
+function handleDragLeave(event: DragEvent) {
+	if (!props.editEnabled) {
+		return
+	}
+
+	if (!isFileDrag(event)) {
+		return
+	}
+
+	dragDepth.value--
+
+	if (dragDepth.value === 0) {
 		resetDragState()
+	} else {
+		isDragOverEditor.value = eventTargetsEditor(event)
+	}
+}
 
-		// Ignore drops over editor - let TipTap handle them
-		if (dropOverEditor || !files || files.length === 0) {
-			return
-		}
+function handleDrop(event: DragEvent) {
+	if (!props.editEnabled) {
+		return
+	}
 
-		uploadFilesToTask(files)
-	},
+	// Only handle file drops - let text drops work natively
+	if (!isFileDrag(event)) {
+		return
+	}
+
+	event.preventDefault()
+	dragDepth.value = 0
+
+	const dropOverEditor = eventTargetsEditor(event)
+	resetDragState()
+
+	// Ignore drops over editor - let TipTap handle them
+	const files = event.dataTransfer?.files
+	if (dropOverEditor || !files || files.length === 0) {
+		return
+	}
+
+	uploadFilesToTask(files)
+}
+
+onMounted(() => {
+	document.addEventListener('dragenter', handleDragEnter)
+	document.addEventListener('dragover', handleDragOver)
+	document.addEventListener('dragleave', handleDragLeave)
+	document.addEventListener('drop', handleDrop)
+})
+
+onUnmounted(() => {
+	document.removeEventListener('dragenter', handleDragEnter)
+	document.removeEventListener('dragover', handleDragOver)
+	document.removeEventListener('dragleave', handleDragLeave)
+	document.removeEventListener('drop', handleDrop)
 })
 
 const showDropzone = computed(() =>
