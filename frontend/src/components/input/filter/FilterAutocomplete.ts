@@ -136,6 +136,14 @@ export default Extension.create<FilterAutocompleteOptions>({
 				return false
 			}
 
+			// Check if cursor is in the middle of a word/value
+			// If the character immediately after the cursor is not whitespace, operator, or delimiter,
+			// then we're in the middle of a value and shouldn't show autocomplete
+			const firstCharAfter = textAfterExpression[0]
+			if (firstCharAfter && !/[\s&|(),"']/.test(firstCharAfter)) {
+				return true
+			}
+
 			// Check if we're immediately after a recent selection
 			const timeSinceLastSelection = Date.now() - lastSelectionTime
 			if (timeSinceLastSelection < 1000) { // 1 second grace period
