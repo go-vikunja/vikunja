@@ -1,4 +1,4 @@
-import {describe, it, expect} from 'vitest'
+import {describe, it, expect, vi} from 'vitest'
 import {mount} from '@vue/test-utils'
 import FormField from './FormField.vue'
 
@@ -100,6 +100,29 @@ describe('FormField', () => {
 		expect(input.attributes('disabled')).toBe('')
 		expect(input.attributes('readonly')).toBe('')
 		expect(input.attributes('autocomplete')).toBe('email')
+	})
+
+	it('forwards $attrs event listeners to inner input', async () => {
+		const onKeyup = vi.fn()
+		const onFocusout = vi.fn()
+
+		const wrapper = mount(FormField, {
+			props: {
+				modelValue: 'test',
+			},
+			attrs: {
+				onKeyup,
+				onFocusout,
+			},
+		})
+
+		const input = wrapper.find('input')
+
+		await input.trigger('keyup', {key: 'Enter'})
+		expect(onKeyup).toHaveBeenCalledTimes(1)
+
+		await input.trigger('focusout')
+		expect(onFocusout).toHaveBeenCalledTimes(1)
 	})
 
 	it('uses provided id for input', () => {
