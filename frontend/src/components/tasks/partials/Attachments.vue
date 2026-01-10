@@ -259,10 +259,6 @@ function resetDragState() {
 }
 
 function handleDragEnter(event: DragEvent) {
-	if (!props.editEnabled) {
-		return
-	}
-
 	// Only handle file drags - let text drags work natively
 	if (!isFileDrag(event)) {
 		return
@@ -277,10 +273,6 @@ function handleDragEnter(event: DragEvent) {
 }
 
 function handleDragOver(event: DragEvent) {
-	if (!props.editEnabled) {
-		return
-	}
-
 	// Only prevent default for file drags - this is the key fix!
 	// Not preventing default allows native text dragging to work
 	if (!isFileDrag(event)) {
@@ -292,10 +284,6 @@ function handleDragOver(event: DragEvent) {
 }
 
 function handleDragLeave(event: DragEvent) {
-	if (!props.editEnabled) {
-		return
-	}
-
 	if (!isFileDrag(event)) {
 		return
 	}
@@ -310,10 +298,6 @@ function handleDragLeave(event: DragEvent) {
 }
 
 function handleDrop(event: DragEvent) {
-	if (!props.editEnabled) {
-		return
-	}
-
 	// Only handle file drops - let text drops work natively
 	if (!isFileDrag(event)) {
 		return
@@ -334,29 +318,42 @@ function handleDrop(event: DragEvent) {
 	uploadFilesToTask(files)
 }
 
-onMounted(() => {
+function addDragListeners() {
 	document.addEventListener('dragenter', handleDragEnter)
 	document.addEventListener('dragover', handleDragOver)
 	document.addEventListener('dragleave', handleDragLeave)
 	document.addEventListener('drop', handleDrop)
-})
+}
 
-onUnmounted(() => {
+function removeDragListeners() {
 	document.removeEventListener('dragenter', handleDragEnter)
 	document.removeEventListener('dragover', handleDragOver)
 	document.removeEventListener('dragleave', handleDragLeave)
 	document.removeEventListener('drop', handleDrop)
+}
+
+onMounted(() => {
+	if (props.editEnabled) {
+		addDragListeners()
+	}
+})
+
+onUnmounted(() => {
+	removeDragListeners()
+})
+
+watch(() => props.editEnabled, (enabled) => {
+	if (enabled) {
+		addDragListeners()
+	} else {
+		removeDragListeners()
+		resetDragState()
+	}
 })
 
 const showDropzone = computed(() =>
 	props.editEnabled && isDraggingFiles.value && !isDragOverEditor.value,
 )
-
-watch(() => props.editEnabled, enabled => {
-	if (!enabled) {
-		resetDragState()
-	}
-})
 
 function downloadAttachment(attachment: IAttachment) {
 	attachmentService.download(attachment)
