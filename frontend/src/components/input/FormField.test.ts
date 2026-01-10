@@ -136,14 +136,30 @@ describe('FormField', () => {
 	})
 
 	it('generates unique id when not provided', () => {
-		const wrapper = mount(FormField, {
-			props: {label: 'My Input'},
+		// Mount both FormFields in the same Vue app to test useId uniqueness
+		const wrapper = mount({
+			components: {FormField},
+			template: `
+				<div>
+					<FormField label="First Input" />
+					<FormField label="Second Input" />
+				</div>
+			`,
 		})
-		const input = wrapper.find('input')
-		const label = wrapper.find('label')
-		const inputId = input.attributes('id')
-		expect(inputId).toBeTruthy()
-		expect(label.attributes('for')).toBe(inputId)
+
+		const inputs = wrapper.findAll('input')
+		const labels = wrapper.findAll('label')
+
+		const id1 = inputs[0].attributes('id')
+		const id2 = inputs[1].attributes('id')
+
+		expect(id1).toBeTruthy()
+		expect(id2).toBeTruthy()
+		expect(id1).not.toBe(id2)
+
+		// Verify label linkage for both
+		expect(labels[0].attributes('for')).toBe(id1)
+		expect(labels[1].attributes('for')).toBe(id2)
 	})
 
 	it('links label to input via for attribute', () => {
