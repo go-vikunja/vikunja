@@ -25,22 +25,24 @@
 				class="p-4"
 			>
 				<FormField :label="$t('project.share.permission.title')">
-					<div class="select">
-						<select
-							id="linkShareRight"
-							v-model="selectedPermission"
-						>
-							<option :value="PERMISSIONS.READ">
-								{{ $t('project.share.permission.read') }}
-							</option>
-							<option :value="PERMISSIONS.READ_WRITE">
-								{{ $t('project.share.permission.readWrite') }}
-							</option>
-							<option :value="PERMISSIONS.ADMIN">
-								{{ $t('project.share.permission.admin') }}
-							</option>
-						</select>
-					</div>
+					<template #default="{ id }">
+						<div class="select">
+							<select
+								:id="id"
+								v-model="selectedPermission"
+							>
+								<option :value="PERMISSIONS.READ">
+									{{ $t('project.share.permission.read') }}
+								</option>
+								<option :value="PERMISSIONS.READ_WRITE">
+									{{ $t('project.share.permission.readWrite') }}
+								</option>
+								<option :value="PERMISSIONS.ADMIN">
+									{{ $t('project.share.permission.admin') }}
+								</option>
+							</select>
+						</div>
+					</template>
 				</FormField>
 				<FormField
 					id="linkShareName"
