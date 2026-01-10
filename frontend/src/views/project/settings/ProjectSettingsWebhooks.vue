@@ -113,9 +113,7 @@ function getSelectedEventsArray() {
 
 function validateSelectedEvents() {
 	const events = getSelectedEventsArray()
-	if (events.length === 0) {
-		selectedEventsValid.value = false
-	}
+	selectedEventsValid.value = events.length > 0
 }
 </script>
 
