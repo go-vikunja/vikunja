@@ -367,6 +367,13 @@ export default Extension.create<FilterAutocompleteOptions>({
 				return
 			}
 
+			// If there's only one suggestion and it exactly matches the search term,
+			// don't show autocomplete - the user has already typed/selected the complete value
+			if (items.length === 1 && items[0].title?.toLowerCase() === autocompleteContext.search.toLowerCase()) {
+				hidePopup()
+				return
+			}
+
 			if (!component) {
 				component = new VueRenderer(FilterCommandsList, {
 					props: {
