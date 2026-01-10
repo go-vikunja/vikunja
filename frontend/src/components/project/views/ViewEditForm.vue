@@ -133,25 +133,27 @@ function handleBubbleSave() {
 		/>
 
 		<FormField :label="$t('project.views.kind')">
-			<div class="select">
-				<select
-					id="kind"
-					v-model="view.viewKind"
-				>
-					<option value="list">
-						{{ $t('project.list.title') }}
-					</option>
-					<option value="gantt">
-						{{ $t('project.gantt.title') }}
-					</option>
-					<option value="table">
-						{{ $t('project.table.title') }}
-					</option>
-					<option value="kanban">
-						{{ $t('project.kanban.title') }}
-					</option>
-				</select>
-			</div>
+			<template #default="{ id }">
+				<div class="select">
+					<select
+						:id="id"
+						v-model="view.viewKind"
+					>
+						<option value="list">
+							{{ $t('project.list.title') }}
+						</option>
+						<option value="gantt">
+							{{ $t('project.gantt.title') }}
+						</option>
+						<option value="table">
+							{{ $t('project.table.title') }}
+						</option>
+						<option value="kanban">
+							{{ $t('project.kanban.title') }}
+						</option>
+					</select>
+				</div>
+			</template>
 		</FormField>
 
 		<label
