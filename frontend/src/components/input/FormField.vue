@@ -7,6 +7,7 @@ interface Props {
 	error?: string | null
 	id?: string
 	disabled?: boolean
+	loading?: boolean
 }
 
 const props = defineProps<Props>()
@@ -36,7 +37,10 @@ const controlClasses = computed(() => [
 
 const inputClasses = computed(() => [
 	'input',
-	{'disabled': props.disabled},
+	{
+		'disabled': props.disabled,
+		'is-loading': props.loading,
+	},
 ])
 
 // Only bind value when modelValue is explicitly provided (not undefined)
