@@ -11,6 +11,7 @@
 			v-focus
 			:label="$t('label.attributes.title')"
 			:disabled="loading"
+			:loading="loading"
 			:placeholder="$t('label.attributes.titlePlaceholder')"
 			type="text"
 			:error="showError && label.title === '' ? $t('label.create.titleRequired') : null"
