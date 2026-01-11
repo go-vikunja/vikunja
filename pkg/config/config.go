@@ -607,6 +607,8 @@ func InitConfig() {
 
 	readConfigValuesFromFiles()
 
+	AvatarGravatarBaseURL.Set(strings.TrimRight(AvatarGravatarBaseURL.GetString(), "/"))
+
 	if RateLimitStore.GetString() == "keyvalue" {
 		RateLimitStore.Set(KeyvalueType.GetString())
 	}
