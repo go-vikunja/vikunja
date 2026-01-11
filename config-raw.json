@@ -620,7 +620,7 @@
                 {
                     "key": "gravatarbaseurl",
                     "default_value": "https://www.gravatar.com",
-                    "comment": "If you use a Gravatar-compatible service other than gravatar.com, you may configure the base URL for the service here.\nFor instance, gravatarbaseurl: 'https://libravatar.org'. The default is https://www.gravatar.com.\nDo not include a trailing slash."
+                    "comment": "If you use a Gravatar-compatible service other than gravatar.com, you may configure the base URL for the service here.\nFor instance, gravatarbaseurl: 'https://libravatar.org'. The default is https://www.gravatar.com."
                 }
             ]
         },
