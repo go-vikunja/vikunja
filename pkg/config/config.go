@@ -187,7 +187,7 @@ const (
 	CorsMaxAge  Key = `cors.maxage`
 
 	AvatarGravaterExpiration Key = `avatar.gravatarexpiration`
-	AvatarGravatarBaseURL Key = `avatar.gravatarbaseurl`
+	AvatarGravatarBaseURL    Key = `avatar.gravatarbaseurl`
 
 	BackgroundsEnabled               Key = `backgrounds.enabled`
 	BackgroundsUploadEnabled         Key = `backgrounds.providers.upload.enabled`
