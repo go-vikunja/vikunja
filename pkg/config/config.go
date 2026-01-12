@@ -607,9 +607,7 @@ func InitConfig() {
 
 	readConfigValuesFromFiles()
 
-	parsed, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString())
-	_ = parsed
-	if err != nil {
+	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
 		log.Fatalf("Could not parse gravatarbaseurl: %s", err)
 	}
 
