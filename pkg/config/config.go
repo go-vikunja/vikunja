@@ -607,6 +607,12 @@ func InitConfig() {
 
 	readConfigValuesFromFiles()
 
+	parsed, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString())
+	_ = parsed
+	if err != nil {
+		log.Fatalf("Could not parse gravatarbaseurl: %s", err)
+	}
+
 	AvatarGravatarBaseURL.Set(strings.TrimRight(AvatarGravatarBaseURL.GetString(), "/"))
 
 	if RateLimitStore.GetString() == "keyvalue" {
