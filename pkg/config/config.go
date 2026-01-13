@@ -187,6 +187,7 @@ const (
 	CorsMaxAge  Key = `cors.maxage`
 
 	AvatarGravaterExpiration Key = `avatar.gravatarexpiration`
+	AvatarGravatarBaseURL    Key = `avatar.gravatarbaseurl`
 
 	BackgroundsEnabled               Key = `backgrounds.enabled`
 	BackgroundsUploadEnabled         Key = `backgrounds.providers.upload.enabled`
@@ -456,6 +457,7 @@ func InitDefaultConfig() {
 	MigrationMicrosoftTodoEnable.setDefault(false)
 	// Avatar
 	AvatarGravaterExpiration.setDefault(3600)
+	AvatarGravatarBaseURL.setDefault("https://www.gravatar.com")
 	// Project Backgrounds
 	BackgroundsEnabled.setDefault(true)
 	BackgroundsUploadEnabled.setDefault(true)
@@ -604,6 +606,12 @@ func InitConfig() {
 	}
 
 	readConfigValuesFromFiles()
+
+	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
+		log.Fatalf("Could not parse gravatarbaseurl: %s", err)
+	}
+
+	AvatarGravatarBaseURL.Set(strings.TrimRight(AvatarGravatarBaseURL.GetString(), "/"))
 
 	if RateLimitStore.GetString() == "keyvalue" {
 		RateLimitStore.Set(KeyvalueType.GetString())
