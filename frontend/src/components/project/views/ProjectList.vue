@@ -28,7 +28,7 @@
 					class="has-overflow"
 				>
 					<AddTask
-						v-if="!project.isArchived && canWrite"
+						v-if="!project?.isArchived && canWrite"
 						ref="addTaskRef"
 						class="list-view__add-task d-print-none"
 						:default-position="firstNewPosition"
@@ -38,7 +38,7 @@
 					<Nothing v-if="ctaVisible && tasks.length === 0 && !loading">
 						{{ $t('project.list.empty') }}
 						<ButtonLink
-							v-if="project.id > 0 && canWrite"
+							v-if="project?.id > 0 && canWrite"
 							@click="focusNewTaskInput()"
 						>
 							{{ $t('project.list.newTaskCta') }}
@@ -181,7 +181,7 @@ const {handleTaskDropToProject} = useTaskDragToProject()
 const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
-	return project.value.maxPermission > Permissions.READ && project.value.id > 0
+	return project.value?.maxPermission > Permissions.READ && project.value?.id > 0
 })
 
 const isPseudoProject = computed(() => (project.value && isSavedFilter(project.value)) || project.value?.id === -1)
