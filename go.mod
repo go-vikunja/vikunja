@@ -36,7 +36,7 @@ require (
 	github.com/fclairamb/afero-s3 v0.4.0
 	github.com/gabriel-vasile/mimetype v1.4.12
 	github.com/ganigeorgiev/fexpr v0.5.0
-	github.com/getsentry/sentry-go v0.40.0
+	github.com/getsentry/sentry-go v0.41.0
 	github.com/getsentry/sentry-go/echo v0.40.0
 	github.com/go-ldap/ldap/v3 v3.4.12
 	github.com/go-sql-driver/mysql v1.9.3
