@@ -17,6 +17,7 @@
 package files
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -33,8 +34,8 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"code.vikunja.io/api/pkg/web"
-	"github.com/aws/aws-sdk-go/aws"        //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
-	"github.com/aws/aws-sdk-go/service/s3" //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/c2h5oh/datasize"
 	"github.com/spf13/afero"
 	"xorm.io/xorm"
@@ -166,7 +167,7 @@ func writeToStorage(path string, content io.Reader, size uint64) error {
 		defer cleanup()
 	}
 
-	_, err = s3Client.PutObject(&s3.PutObjectInput{
+	_, err = s3Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket:        aws.String(s3Bucket),
 		Key:           aws.String(path),
 		Body:          body,

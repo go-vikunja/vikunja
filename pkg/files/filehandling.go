@@ -18,6 +18,7 @@ package files
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -31,10 +32,10 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
-	"github.com/aws/aws-sdk-go/aws"             //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
-	"github.com/aws/aws-sdk-go/aws/credentials" //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
-	"github.com/aws/aws-sdk-go/aws/session"     //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
-	"github.com/aws/aws-sdk-go/service/s3"      //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	aferos3 "github.com/fclairamb/afero-s3"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
@@ -46,7 +47,7 @@ var afs *afero.Afero
 
 // S3 client and bucket for direct uploads with Content-Length
 type s3PutObjectClient interface {
-	PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error)
+	PutObject(ctx context.Context, input *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
 }
 
 var s3Client s3PutObjectClient
@@ -83,23 +84,27 @@ func initS3FileHandler() error {
 		return errors.New("S3 secret key is not configured. Please set files.s3.secretkey")
 	}
 
-	// Create AWS session for afero-s3
-	sess, err := session.NewSession(&aws.Config{
-		Region:           aws.String(region),
-		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
-		Endpoint:         aws.String(endpoint),
-		S3ForcePathStyle: aws.Bool(config.FilesS3UsePathStyle.GetBool()),
-	})
+	// Create AWS SDK v2 config
+	cfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+		awsconfig.WithRegion(region),
+		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
+	)
 	if err != nil {
-		return fmt.Errorf("failed to create AWS session: %w", err)
+		return fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
+	// Create S3 client with custom endpoint and path style options
+	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(endpoint)
+		o.UsePathStyle = config.FilesS3UsePathStyle.GetBool()
+	})
+
 	// Initialize S3 filesystem using afero-s3
-	fs = aferos3.NewFs(bucket, sess)
+	fs = aferos3.NewFsFromClient(bucket, client)
 	afs = &afero.Afero{Fs: fs}
 
 	// Store S3 client and bucket for direct uploads with Content-Length
-	s3Client = s3.New(sess)
+	s3Client = client
 	s3Bucket = bucket
 
 	return nil

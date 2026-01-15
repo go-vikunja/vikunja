@@ -18,6 +18,7 @@ package files
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"os"
@@ -25,7 +26,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"github.com/aws/aws-sdk-go/service/s3" //nolint:staticcheck // afero-s3 still requires aws-sdk-go v1
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -312,7 +313,7 @@ type fakeS3PutObjectClient struct {
 	err       error
 }
 
-func (f *fakeS3PutObjectClient) PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
+func (f *fakeS3PutObjectClient) PutObject(_ context.Context, input *s3.PutObjectInput, _ ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
 	f.lastInput = input
 	if f.err != nil {
 		return nil, f.err
