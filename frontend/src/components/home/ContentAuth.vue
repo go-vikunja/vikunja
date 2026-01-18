@@ -59,7 +59,7 @@
 				</Modal>
 
 				<BaseButton
-					v-shortcut="'Shift+?'"
+					v-shortcut="comboHotkey('Shift','?')"
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 				>
@@ -87,6 +87,7 @@ import {useRouteWithModal} from '@/composables/useRouteWithModal'
 import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
 import {useSidebarResize} from '@/composables/useSidebarResize'
 import {useAuthStore} from '@/stores/auth'
+import {comboHotkey} from '@/components/misc/keyboard-shortcuts/shortcuts'
 
 const authStore = useAuthStore()
 const backgroundBrightness = computed(() =>

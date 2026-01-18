@@ -1,6 +1,7 @@
 import type {RouteLocation} from 'vue-router'
 
 import {isAppleDevice} from '@/helpers/isAppleDevice'
+import {HOTKEY_MAPS} from '@/i18n/hotkeyMaps'
 
 const ctrl = isAppleDevice() ? '⌘' : 'ctrl'
 const reminderModifier = isAppleDevice() ? 'shift' : 'alt'
@@ -230,3 +231,58 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		],
 	},
 ] as const
+
+/**
+ * Transform simple hotkey into array like 'a' → ['a', 'ф', 'ع']
+ */
+export function singleHotkey(key:string):string[]
+{
+	const keys = [key]
+	for (const i in HOTKEY_MAPS)
+	{
+		const dictionary = HOTKEY_MAPS[i]
+		if (dictionary == undefined) continue
+		if (!dictionary[key]) continue
+
+		keys.push(dictionary[key] as string)
+	}
+	return keys
+}
+
+/**
+ * Transform combo hotkey into array like 'Shift+a' → ['Shift+a', 'Shift+ф', 'Shift+ع']
+*/
+export function comboHotkey(mod:string, key:string):string[]
+{
+	const shortcut = `${mod}+${key}`
+	const keys = [shortcut]
+
+	for (const i in HOTKEY_MAPS)
+	{
+		const dictionary = HOTKEY_MAPS[i]
+		if (dictionary == undefined) continue
+
+		if (dictionary[shortcut]) keys.push(dictionary[shortcut])
+		else if (!dictionary[key]) continue
+		else keys.push(`${mod}+${dictionary[key]}`)
+	}
+
+	return keys
+}
+
+/**
+ * Transform follow hotkey into array like 'g o' → ['g o', 'п щ']
+ */
+export function followHotkey(keyA:string, keyB:string):string[]
+{
+	const keys = [`${keyA} ${keyB}`]
+	for (const i in HOTKEY_MAPS)
+	{
+		const dictionary = HOTKEY_MAPS[i]
+		if (dictionary == undefined) continue
+
+		keys.push(`${dictionary[keyA] || keyA} ${dictionary[keyB] || keyB}`)
+	}
+
+	return keys
+}
