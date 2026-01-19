@@ -43,6 +43,8 @@ export interface ConfigState {
 		},
 	},
 	publicTeamsEnabled: boolean,
+	readerCommentsEnabled: boolean,
+	assigneeEditEnabled: boolean,
 }
 
 export const useConfigStore = defineStore('config', () => {
@@ -81,6 +83,8 @@ export const useConfigStore = defineStore('config', () => {
 			},
 		},
 		publicTeamsEnabled: false,
+		readerCommentsEnabled: false,
+		assigneeEditEnabled: false,
 	})
 
 	const migratorsEnabled = computed(() => state.availableMigrators?.length > 0)
