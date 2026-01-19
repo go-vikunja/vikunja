@@ -350,6 +350,18 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 		return nil, valueSlice, nil
 	}
 
+	if realFieldName == "Bucket" {
+		if comparator == taskFilterComparatorIn || comparator == taskFilterComparatorNotIn {
+			vals := strings.Split(value, ",")
+			valueSlice := []interface{}{}
+			for _, val := range vals {
+				valueSlice = append(valueSlice, val)
+			}
+			return nil, valueSlice, nil
+		}
+		return nil, value, nil
+	}
+
 	field, ok := reflect.TypeOf(&Task{}).Elem().FieldByName(realFieldName)
 	if !ok {
 		return nil, nil, ErrInvalidTaskField{TaskField: fieldName}
