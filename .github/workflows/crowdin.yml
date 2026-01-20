@@ -14,14 +14,14 @@ jobs:
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
           persist-credentials: true
       - name: push source files
-        uses: crowdin/github-action@60debf382ee245b21794321190ad0501db89d8c1 # v2
+        uses: crowdin/github-action@b4b468cffefb50bdd99dd83e5d2eaeb63c880380 # v2
         with:
           command: 'push'
         env:
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
       - name: pull translations
-        uses: crowdin/github-action@60debf382ee245b21794321190ad0501db89d8c1 # v2
+        uses: crowdin/github-action@b4b468cffefb50bdd99dd83e5d2eaeb63c880380 # v2
         with:
           command: 'download'
           command_args: '--export-only-approved --skip-untranslated-strings'
