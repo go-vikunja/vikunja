@@ -20,12 +20,11 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/builder"
 	"xorm.io/xorm"
-
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
 )
 
 // RelationKind represents a kind of relation between to tasks
@@ -300,7 +299,6 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 		),
 	)
 
-	// Fetch complete relation BEFORE deletion
 	fullRelation := &TaskRelation{}
 	exists, err := s.Where(cond).Get(fullRelation)
 	if err != nil {
@@ -314,13 +312,11 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 		}
 	}
 
-	// Fetch CreatedBy user
 	fullRelation.CreatedBy, err = user.GetUserByID(s, fullRelation.CreatedByID)
 	if err != nil && !user.IsErrUserDoesNotExist(err) {
 		return err
 	}
 
-	// Then delete
 	_, err = s.
 		Where(cond).
 		Delete(&TaskRelation{})
@@ -334,7 +330,6 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	// Event now has complete data
 	return events.Dispatch(&TaskRelationDeletedEvent{
 		Task:     &task,
 		Relation: fullRelation,
