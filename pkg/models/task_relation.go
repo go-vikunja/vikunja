@@ -300,10 +300,9 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 		),
 	)
 
-	// Check if the relation exists
-	exists, err := s.
-		Where(cond).
-		Exist(&TaskRelation{})
+	// Fetch complete relation BEFORE deletion
+	fullRelation := &TaskRelation{}
+	exists, err := s.Where(cond).Get(fullRelation)
 	if err != nil {
 		return err
 	}
@@ -315,6 +314,13 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 		}
 	}
 
+	// Fetch CreatedBy user
+	fullRelation.CreatedBy, err = user.GetUserByID(s, fullRelation.CreatedByID)
+	if err != nil && !user.IsErrUserDoesNotExist(err) {
+		return err
+	}
+
+	// Then delete
 	_, err = s.
 		Where(cond).
 		Delete(&TaskRelation{})
@@ -328,9 +334,10 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
+	// Event now has complete data
 	return events.Dispatch(&TaskRelationDeletedEvent{
 		Task:     &task,
-		Relation: rel,
+		Relation: fullRelation,
 		Doer:     doer,
 	})
 }

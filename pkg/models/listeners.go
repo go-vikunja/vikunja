@@ -957,6 +957,20 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 		}
 	}
 
+	// Reload assignee field (for task.assignee.deleted events)
+	if assignee, has := event["assignee"]; has && assignee != nil {
+		a, ok := assignee.(map[string]interface{})
+		if ok {
+			assigneeID := getIDAsInt64(a["id"])
+			if assigneeID > 0 {
+				fullAssignee, err := user.GetUserByID(s, assigneeID)
+				if err == nil {
+					event["assignee"] = fullAssignee
+				}
+			}
+		}
+	}
+
 	return event, doerID, nil
 }
 

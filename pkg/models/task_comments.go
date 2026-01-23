@@ -118,7 +118,17 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [delete]
-func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
+func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
+	// Fetch full comment BEFORE deletion
+	err := tc.ReadOne(s, a)
+	if err != nil {
+		return err
+	}
+
+	// Store author for doer field
+	author := tc.Author
+
+	// Then delete
 	deleted, err := s.
 		ID(tc.ID).
 		NoAutoCondition().
@@ -136,10 +146,11 @@ func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 
+	// Event now has complete data
 	return events.Dispatch(&TaskCommentDeletedEvent{
 		Task:    &task,
 		Comment: tc,
-		Doer:    tc.Author,
+		Doer:    author,
 	})
 }
 

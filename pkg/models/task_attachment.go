@@ -121,6 +121,12 @@ func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 	// Get the file
 	ta.File = &files.File{ID: ta.FileID}
 	err = ta.File.LoadFileMetaByID()
+	if err != nil {
+		return
+	}
+
+	// Get the creator
+	ta.CreatedBy, err = user.GetUserByID(s, ta.CreatedByID)
 	return
 }
 
