@@ -269,6 +269,31 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 	})
 }
 
+// ReadOne returns a task relation
+func (rel *TaskRelation) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
+	exists, err := s.
+		Where("task_id = ? AND other_task_id = ? AND relation_kind = ?", rel.TaskID, rel.OtherTaskID, rel.RelationKind).
+		Get(rel)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrRelationDoesNotExist{
+			TaskID:      rel.TaskID,
+			OtherTaskID: rel.OtherTaskID,
+			Kind:        rel.RelationKind,
+		}
+	}
+
+	// Get the creator
+	rel.CreatedBy, err = user.GetUserByID(s, rel.CreatedByID)
+	if err != nil && !user.IsErrUserDoesNotExist(err) {
+		return err
+	}
+
+	return nil
+}
+
 // Delete removes a task relation
 // @Summary Remove a task relation
 // @tags task
@@ -285,7 +310,13 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/relations/{relationKind}/{otherTaskID} [delete]
 func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
+	// Load the full relation first (populates CreatedBy)
+	err := rel.ReadOne(s, a)
+	if err != nil {
+		return err
+	}
 
+	// Build condition for deleting both the forward and inverse relations
 	cond := builder.Or(
 		builder.And(
 			builder.Eq{"task_id": rel.TaskID},
@@ -298,24 +329,6 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 			builder.Eq{"relation_kind": getInverseRelation(rel.RelationKind)},
 		),
 	)
-
-	fullRelation := &TaskRelation{}
-	exists, err := s.Where(cond).Get(fullRelation)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return ErrRelationDoesNotExist{
-			TaskID:      rel.TaskID,
-			OtherTaskID: rel.OtherTaskID,
-			Kind:        rel.RelationKind,
-		}
-	}
-
-	fullRelation.CreatedBy, err = user.GetUserByID(s, fullRelation.CreatedByID)
-	if err != nil && !user.IsErrUserDoesNotExist(err) {
-		return err
-	}
 
 	_, err = s.
 		Where(cond).
@@ -332,7 +345,7 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 
 	return events.Dispatch(&TaskRelationDeletedEvent{
 		Task:     &task,
-		Relation: fullRelation,
+		Relation: rel,
 		Doer:     doer,
 	})
 }
