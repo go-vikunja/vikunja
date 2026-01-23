@@ -22,7 +22,7 @@ import (
 )
 
 type webhooks20260123000717 struct {
-	BasicAuthUser string `xorm:"null" json:"basicauthuser"`
+	BasicAuthUser     string `xorm:"null" json:"basicauthuser"`
 	BasicAuthPassword string `xorm:"null" json:"basicauthpassword"`
 }
 
