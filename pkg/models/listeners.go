@@ -975,7 +975,10 @@ func reloadProjectInEvent(s *xorm.Session, event map[string]interface{}, project
 	}
 
 	project, err := GetProjectSimpleByID(s, projectID)
-	if err != nil && !IsErrProjectDoesNotExist(err) {
+	if err != nil {
+		if IsErrProjectDoesNotExist(err) {
+			return nil
+		}
 		return err
 	}
 
