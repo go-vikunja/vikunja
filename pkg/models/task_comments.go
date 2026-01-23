@@ -125,9 +125,6 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	// Store author for doer field
-	author := tc.Author
-
 	// Then delete
 	deleted, err := s.
 		ID(tc.ID).
@@ -141,6 +138,7 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
+	doer, _ := user.GetFromAuth(a)
 	task, err := GetTaskByIDSimple(s, tc.TaskID)
 	if err != nil {
 		return err
@@ -150,7 +148,7 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 	return events.Dispatch(&TaskCommentDeletedEvent{
 		Task:    &task,
 		Comment: tc,
-		Doer:    author,
+		Doer:    doer,
 	})
 }
 
