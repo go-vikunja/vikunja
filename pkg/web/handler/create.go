@@ -26,11 +26,11 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // CreateWeb is the handler to create an object
-func (c *WebHandler) CreateWeb(ctx echo.Context) error {
+func (c *WebHandler) CreateWeb(ctx *echo.Context) error {
 	// Get our model
 	currentStruct := c.EmptyStruct()
 
@@ -52,7 +52,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	// Get the user to pass for later checks
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 
 	// Create the db session
@@ -73,7 +73,7 @@ func (c *WebHandler) CreateWeb(ctx echo.Context) error {
 	if !canCreate {
 		_ = s.Rollback()
 		log.Warningf("Tried to create while not having the permissions for it (User: %v)", currentAuth)
-		return echo.NewHTTPError(http.StatusForbidden)
+		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 	}
 
 	// Create

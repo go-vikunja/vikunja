@@ -26,7 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type message struct {
@@ -34,7 +34,7 @@ type message struct {
 }
 
 // DeleteWeb is the web handler to delete something
-func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
+func (c *WebHandler) DeleteWeb(ctx *echo.Context) error {
 
 	// Get our model
 	currentStruct := c.EmptyStruct()
@@ -52,7 +52,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	// Check if the user has the permission to delete
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	// Create the db session
@@ -72,7 +72,7 @@ func (c *WebHandler) DeleteWeb(ctx echo.Context) error {
 	if !canDelete {
 		_ = s.Rollback()
 		log.Warningf("Tried to delete while not having the permissions for it (User: %v)", currentAuth)
-		return echo.NewHTTPError(http.StatusForbidden)
+		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 	}
 
 	err = currentStruct.Delete(s, currentAuth)

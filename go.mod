@@ -37,7 +37,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.12
 	github.com/ganigeorgiev/fexpr v0.5.0
 	github.com/getsentry/sentry-go v0.41.0
-	github.com/getsentry/sentry-go/echo v0.41.0
 	github.com/go-ldap/ldap/v3 v3.4.12
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/go-testfixtures/testfixtures/v3 v3.19.0
@@ -51,11 +50,8 @@ require (
 	github.com/jaswdr/faker/v2 v2.9.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6
-	github.com/labstack/echo-jwt/v4 v4.4.0
 	github.com/labstack/echo-jwt/v5 v5.0.0
-	github.com/labstack/echo/v4 v4.13.4
 	github.com/labstack/echo/v5 v5.0.0
-	github.com/labstack/gommon v0.4.2
 	github.com/lib/pq v1.10.9
 	github.com/magefile/mage v1.15.0
 	github.com/mattn/go-sqlite3 v1.14.33
@@ -172,8 +168,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tj/assert v0.0.3 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4 // indirect
 	go.uber.org/mock v0.5.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
@@ -188,8 +182,6 @@ require (
 )
 
 replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190610114120-2a4eb8b5dcc9+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
-
-replace github.com/labstack/echo/v4 => github.com/kolaente/echo/v4 v4.0.0-20250124112709-682dfde74c31 // https://github.com/labstack/echo/pull/2738
 
 go 1.25.0
 

@@ -27,7 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/ThreeDotsLabs/watermill/message"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type ExamplePlugin struct{}
@@ -58,7 +58,7 @@ func (p *ExamplePlugin) RegisterUnauthenticatedRoutes(g *echo.Group) {
 }
 
 // Authenticated route handlers
-func handleUserInfo(c echo.Context) error {
+func handleUserInfo(c *echo.Context) error {
 
 	s := db.NewSession()
 	defer s.Close()
@@ -80,7 +80,7 @@ func handleUserInfo(c echo.Context) error {
 }
 
 // Unauthenticated route handlers
-func handleStatus(c echo.Context) error {
+func handleStatus(c *echo.Context) error {
 
 	p := &ExamplePlugin{}
 
@@ -93,6 +93,10 @@ func handleStatus(c echo.Context) error {
 }
 
 func NewPlugin() plugins.Plugin { return &ExamplePlugin{} }
+
+// main is required for the plugin to be built as a standalone binary during testing.
+// In production, plugins are loaded dynamically and this function is not called.
+func main() {}
 
 type TestListener struct{}
 

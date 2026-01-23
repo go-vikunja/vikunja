@@ -46,7 +46,7 @@ import (
 
 	"github.com/bbrks/go-blurhash"
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"golang.org/x/image/draw"
 	"xorm.io/xorm"
 )
@@ -67,12 +67,12 @@ type BackgroundProvider struct {
 }
 
 // SearchBackgrounds is the web handler to search for backgrounds
-func (bp *BackgroundProvider) SearchBackgrounds(c echo.Context) error {
+func (bp *BackgroundProvider) SearchBackgrounds(c *echo.Context) error {
 	p := bp.Provider()
 
 	err := c.Bind(p)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error()).SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error())
 	}
 
 	search := c.QueryParam("s")
@@ -81,7 +81,7 @@ func (bp *BackgroundProvider) SearchBackgrounds(c echo.Context) error {
 	if pg != "" {
 		page, err = strconv.ParseInt(pg, 10, 64)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid page number: "+err.Error()).SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid page number: "+err.Error())
 		}
 	}
 
@@ -91,27 +91,27 @@ func (bp *BackgroundProvider) SearchBackgrounds(c echo.Context) error {
 	result, err := p.Search(s, search, page)
 	if err != nil {
 		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusBadRequest, "An error occurred: "+err.Error()).SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "An error occurred: "+err.Error())
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusBadRequest, "An error occurred: "+err.Error()).SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "An error occurred: "+err.Error())
 	}
 
 	return c.JSON(http.StatusOK, result)
 }
 
 // This function does all kinds of preparations for setting and uploading a background
-func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c echo.Context) (project *models.Project, auth web.Auth, err error) {
+func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c *echo.Context) (project *models.Project, auth web.Auth, err error) {
 	auth, err = auth2.GetAuthFromClaims(c)
 	if err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error()).SetInternal(err)
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
 	}
 
 	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error()).SetInternal(err)
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error())
 	}
 
 	// Check if the user has the permission to change the project background
@@ -130,7 +130,7 @@ func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c echo.
 }
 
 // SetBackground sets an Image as project background
-func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
+func (bp *BackgroundProvider) SetBackground(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -146,7 +146,7 @@ func (bp *BackgroundProvider) SetBackground(c echo.Context) error {
 	err = c.Bind(image)
 	if err != nil {
 		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error()).SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error())
 	}
 
 	err = p.Set(s, image, project, auth)
@@ -177,7 +177,7 @@ func CreateBlurHash(srcf io.Reader) (hash string, err error) {
 }
 
 // UploadBackground uploads a background and passes the id of the uploaded file as an Image to the Set function of the BackgroundProvider.
-func (bp *BackgroundProvider) UploadBackground(c echo.Context) error {
+func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -297,15 +297,15 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 	return err
 }
 
-func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *models.Project, auth web.Auth, err error) {
+func checkProjectBackgroundRights(s *xorm.Session, c *echo.Context) (project *models.Project, auth web.Auth, err error) {
 	auth, err = auth2.GetAuthFromClaims(c)
 	if err != nil {
-		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error()).SetInternal(err)
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
 	}
 
 	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
-		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error()).SetInternal(err)
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error())
 	}
 
 	// Check if a background for this project exists + Permissions
@@ -318,7 +318,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 	if !can {
 		_ = s.Rollback()
 		log.Infof("Tried to get project background of project %d while not having the permissions for it (User: %v)", projectID, auth)
-		return nil, auth, echo.NewHTTPError(http.StatusForbidden)
+		return nil, auth, echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 	}
 
 	return
@@ -337,7 +337,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c echo.Context) (project *mod
 // @Failure 404 {object} models.Message "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/background [get]
-func GetProjectBackground(c echo.Context) error {
+func GetProjectBackground(c *echo.Context) error {
 
 	s := db.NewSession()
 	defer s.Close()
@@ -349,7 +349,7 @@ func GetProjectBackground(c echo.Context) error {
 
 	if project.BackgroundFileID == 0 {
 		_ = s.Rollback()
-		return echo.NotFoundHandler(c)
+		return echo.NewHTTPError(http.StatusNotFound, "Project background not found")
 	}
 
 	// Get the file
@@ -397,7 +397,7 @@ func GetProjectBackground(c echo.Context) error {
 // @Failure 404 {object} models.Message "The project does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/background [delete]
-func RemoveProjectBackground(c echo.Context) error {
+func RemoveProjectBackground(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 

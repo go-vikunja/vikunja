@@ -29,7 +29,7 @@ import (
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/web"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // attachmentUploadError represents a structured error for attachment upload failures
@@ -68,11 +68,11 @@ func toAttachmentUploadError(err error) attachmentUploadError {
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/attachments [put]
-func UploadTaskAttachment(c echo.Context) error {
+func UploadTaskAttachment(c *echo.Context) error {
 
 	var taskAttachment models.TaskAttachment
 	if err := c.Bind(&taskAttachment); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided")
 	}
 
 	// Permissions check
@@ -152,11 +152,11 @@ func UploadTaskAttachment(c echo.Context) error {
 // @Failure 404 {object} models.Message "The task does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id}/attachments/{attachmentID} [get]
-func GetTaskAttachment(c echo.Context) error {
+func GetTaskAttachment(c *echo.Context) error {
 
 	var taskAttachment models.TaskAttachment
 	if err := c.Bind(&taskAttachment); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided")
 	}
 
 	// Permissions check
@@ -213,7 +213,7 @@ func GetTaskAttachment(c echo.Context) error {
 		c.Response().Header().Set("Last-Modified", taskAttachment.File.Created.UTC().Format(http.TimeFormat))
 
 		// Stream the file content directly to the response
-		_, err = io.Copy(c.Response().Writer, taskAttachment.File.File)
+		_, err = io.Copy(c.Response(), taskAttachment.File.File)
 		if err != nil {
 			return err
 		}

@@ -26,11 +26,11 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"xorm.io/xorm"
 )
 
-func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err error) {
+func checkExportRequest(c *echo.Context) (s *xorm.Session, u *user.User, err error) {
 	s = db.NewSession()
 	defer s.Close()
 
@@ -52,12 +52,12 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 
 	var pass UserPasswordConfirmation
 	if err := c.Bind(&pass); err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
 	}
 
 	err = c.Validate(pass)
 	if err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	err = user.CheckUserPassword(u, pass.Password)
@@ -80,7 +80,7 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/export/request [post]
-func RequestUserDataExport(c echo.Context) error {
+func RequestUserDataExport(c *echo.Context) error {
 	s, u, err := checkExportRequest(c)
 	if err != nil {
 		return err
@@ -115,7 +115,7 @@ func RequestUserDataExport(c echo.Context) error {
 // @Failure 404 {object} web.HTTPError "No user data export found."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/export/download [post]
-func DownloadUserDataExport(c echo.Context) error {
+func DownloadUserDataExport(c *echo.Context) error {
 	s, u, err := checkExportRequest(c)
 	if err != nil {
 		return err
@@ -168,7 +168,7 @@ type UserExportStatus struct {
 // @Security JWTKeyAuth
 // @Success 200 {object} v1.UserExportStatus
 // @Router /user/export [get]
-func GetUserExportStatus(c echo.Context) error {
+func GetUserExportStatus(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 

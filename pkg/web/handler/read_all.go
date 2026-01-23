@@ -30,17 +30,17 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // ReadAllWeb is the webhandler to get all objects of a type
-func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
+func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 	// Get our model
 	currentStruct := c.EmptyStruct()
 
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 
 	// Get the object & bind params to struct
@@ -61,7 +61,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
 		log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
 	}
 	if pageNumber < 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Page number cannot be negative.")
@@ -76,7 +76,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		perPageNumber, err = strconv.Atoi(perPage)
 		if err != nil {
 			log.Error(err.Error())
-			return echo.NewHTTPError(http.StatusBadRequest, "Bad per page amount requested.").SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, "Bad per page amount requested.")
 		}
 	}
 	// Set default page count

@@ -29,7 +29,7 @@ type MailLogger struct {
 
 // NewMailLogger creates and initializes a new mail logger
 func NewMailLogger(configLogEnabled bool, configLogMail string, configLogMailLevel string, configLogFormat string) maillog.Logger {
-	handler, _ := makeLogHandler(configLogEnabled, configLogMail, configLogMailLevel, configLogFormat)
+	handler := makeLogHandler(configLogEnabled, configLogMail, configLogMailLevel, configLogFormat)
 
 	mailLogger := &MailLogger{
 		logger: slog.New(handler).With("component", "mail"),

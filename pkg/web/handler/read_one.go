@@ -27,11 +27,11 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // ReadOneWeb is the webhandler to get one object
-func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
+func (c *WebHandler) ReadOneWeb(ctx *echo.Context) error {
 	// Get our model
 	currentStruct := c.EmptyStruct()
 
@@ -48,7 +48,7 @@ func (c *WebHandler) ReadOneWeb(ctx echo.Context) error {
 	// Check permissions
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
 	}
 
 	// Create the db session

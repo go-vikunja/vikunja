@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/tkuchiki/go-timezone"
 
 	"code.vikunja.io/api/pkg/db"
@@ -76,7 +76,7 @@ type UserSettings struct {
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/avatar [get]
-func GetUserAvatarProvider(c echo.Context) error {
+func GetUserAvatarProvider(c *echo.Context) error {
 
 	u, err := user2.GetCurrentUser(c)
 	if err != nil {
@@ -113,12 +113,12 @@ func GetUserAvatarProvider(c echo.Context) error {
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/avatar [post]
-func ChangeUserAvatarProvider(c echo.Context) error {
+func ChangeUserAvatarProvider(c *echo.Context) error {
 
 	uap := &UserAvatarProvider{}
 	err := c.Bind(uap)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad avatar type provided.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad avatar type provided.")
 	}
 
 	u, err := user2.GetCurrentUser(c)
@@ -172,7 +172,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/general [post]
-func UpdateGeneralUserSettings(c echo.Context) error {
+func UpdateGeneralUserSettings(c *echo.Context) error {
 	us := &UserSettings{}
 	err := c.Bind(us)
 	if err != nil {
@@ -185,7 +185,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 
 	err = c.Validate(us)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	u, err := user2.GetCurrentUser(c)
@@ -244,7 +244,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 // @Success 200 {array} string "All available time zones."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/timezones [get]
-func GetAvailableTimezones(c echo.Context) error {
+func GetAvailableTimezones(c *echo.Context) error {
 
 	allTimezones := timezone.New().Timezones()
 	timezoneMap := make(map[string]bool) // to filter all duplicates

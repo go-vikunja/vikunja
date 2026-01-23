@@ -23,7 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // UserConfirmEmail is the handler to confirm a user email
@@ -37,11 +37,11 @@ import (
 // @Failure 412 {object} web.HTTPError "Bad token provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/confirm [post]
-func UserConfirmEmail(c echo.Context) error {
+func UserConfirmEmail(c *echo.Context) error {
 	// Check for Request Content
 	var emailConfirm user.EmailConfirm
 	if err := c.Bind(&emailConfirm); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.")
 	}
 
 	s := db.NewSession()

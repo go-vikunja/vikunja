@@ -26,8 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/getsentry/sentry-go"
-	sentryecho "github.com/getsentry/sentry-go/echo"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // httpCodeGetter is an interface for errors that can provide their HTTP status code.
@@ -46,10 +45,7 @@ type errorMessage struct {
 // 3. Handles Sentry reporting for 5xx errors
 // 4. Logs all errors appropriately
 func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandler {
-	return func(err error, c echo.Context) {
-		if c.Response().Committed {
-			return
-		}
+	return func(c *echo.Context, err error) {
 
 		var (
 			code                = http.StatusInternalServerError
@@ -64,16 +60,12 @@ func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandl
 		if errors.As(err, &he) {
 			code = he.Code
 			message = he.Message
-			// Check if internal error has more details we should use
-			if he.Internal != nil {
-				originalErr = he.Internal
-				err = he.Internal
-			}
 		}
 
 		// 2. Special case: 413 body limit → convert to ErrFileIsTooLarge
-		// This must be checked before other error type checks
-		if code == http.StatusRequestEntityTooLarge {
+		// Check both the code (if it was an HTTPError) and errors.Is for wrapped errors
+		// In Echo v5, body limit errors during multipart parsing may be wrapped
+		if code == http.StatusRequestEntityTooLarge || errors.Is(err, echo.ErrStatusRequestEntityTooLarge) {
 			fileErr := files.ErrFileIsTooLarge{}
 			errDetails := fileErr.HTTPError()
 			code = errDetails.HTTPCode
@@ -114,14 +106,14 @@ func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandl
 			err = c.JSON(code, message)
 		}
 		if err != nil {
-			e.Logger.Error(err)
+			e.Logger.Error(err.Error())
 		}
 	}
 }
 
 // reportToSentry sends an error to Sentry with request context
-func reportToSentry(err error, c echo.Context) {
-	hub := sentryecho.GetHubFromContext(c)
+func reportToSentry(err error, c *echo.Context) {
+	hub := GetSentryHubFromContext(c)
 	if hub != nil {
 		hub.WithScope(func(scope *sentry.Scope) {
 			scope.SetExtra("url", c.Request().URL)

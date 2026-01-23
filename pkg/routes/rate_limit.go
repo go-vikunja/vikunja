@@ -25,7 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/red"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 	"github.com/ulule/limiter/v3/drivers/store/redis"
@@ -34,7 +34,7 @@ import (
 // RateLimit is the rate limit middleware
 func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) (err error) {
+		return func(c *echo.Context) (err error) {
 			var rateLimitKey string
 			switch rateLimitKind {
 			case "ip":
@@ -51,7 +51,7 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 			limiterCtx, err := rateLimiter.Get(c.Request().Context(), rateLimitKey)
 			if err != nil {
 				log.Errorf("IPRateLimit - rateLimiter.Get - err: %v, %s on %s", err, rateLimitKey, c.Request().URL)
-				return c.JSON(http.StatusInternalServerError, echo.Map{
+				return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 					"message": err,
 				})
 			}
@@ -63,7 +63,7 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 
 			if limiterCtx.Reached {
 				log.Infof("Too Many Requests from %s on %s", rateLimitKey, c.Request().URL)
-				return c.JSON(http.StatusTooManyRequests, echo.Map{
+				return c.JSON(http.StatusTooManyRequests, map[string]interface{}{
 					"message": "Too Many Requests on " + c.Request().URL.String(),
 				})
 			}

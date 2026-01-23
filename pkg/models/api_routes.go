@@ -18,13 +18,9 @@ package models
 
 import (
 	"net/http"
-	"reflect"
-	"runtime"
 	"strings"
 
-	"code.vikunja.io/api/pkg/log"
-
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 var apiTokenRoutes = map[string]APITokenRoute{}
@@ -62,42 +58,40 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 	}
 }
 
-func getRouteDetail(route echo.Route) (method string, detail *RouteDetail) {
-	if strings.Contains(route.Name, "CreateWeb") {
-		return "create", &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
-	}
-	if strings.Contains(route.Name, "ReadOneWeb") {
-		return "read_one", &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
-	}
-	if strings.Contains(route.Name, "ReadAllWeb") {
-		return "read_all", &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
-	}
-	if strings.Contains(route.Name, "UpdateWeb") {
-		return "update", &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
-	}
-	if strings.Contains(route.Name, "DeleteWeb") {
-		return "delete", &RouteDetail{
-			Path:   route.Path,
-			Method: route.Method,
-		}
-	}
-
-	return "", &RouteDetail{
+// getRouteDetail determines the API permission type from the route's HTTP method and path.
+// In Echo v5, route.Name is auto-generated as METHOD:PATH, so we derive permissions from
+// the HTTP method and path structure instead of the handler function name.
+func getRouteDetail(route echo.RouteInfo) (method string, detail *RouteDetail) {
+	detail = &RouteDetail{
 		Path:   route.Path,
 		Method: route.Method,
 	}
+
+	// Check if path ends with a parameter (e.g., /:id, /:task, /:project)
+	pathParts := strings.Split(route.Path, "/")
+	lastPart := ""
+	if len(pathParts) > 0 {
+		lastPart = pathParts[len(pathParts)-1]
+	}
+	endsWithParam := strings.HasPrefix(lastPart, ":")
+
+	switch route.Method {
+	case http.MethodGet:
+		if endsWithParam {
+			return "read_one", detail
+		}
+		return "read_all", detail
+	case http.MethodPut:
+		// PUT is used for creating resources in this codebase
+		return "create", detail
+	case http.MethodPost:
+		// POST is used for updating resources
+		return "update", detail
+	case http.MethodDelete:
+		return "delete", detail
+	}
+
+	return "", detail
 }
 
 func ensureAPITokenRoutesGroup(group string) {
@@ -106,21 +100,76 @@ func ensureAPITokenRoutesGroup(group string) {
 	}
 }
 
+// isStandardCRUDRoute checks if a route follows the standard CRUD pattern.
+// In Echo v5, route.Name is auto-generated as METHOD:PATH, so we can no longer
+// check for "(*WebHandler)" in the name. Instead, we identify CRUD routes by:
+// 1. Path structure: simple /resource or /resource/:param patterns
+// 2. HTTP method: GET, PUT, POST, DELETE matching CRUD semantics
+//
+// Standard CRUD routes have paths like:
+// - /projects, /tasks, /teams, /labels, /notifications, /webhooks, /filters, etc.
+// - /projects/:project, /tasks/:task, /teams/:team, etc.
+//
+// Non-CRUD routes have paths with additional segments or special paths like:
+// - /user/settings/email, /projects/:project/background, /backgrounds/unsplash/search
+func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) bool {
+	// Standard CRUD resource groups that follow the WebHandler pattern
+	crudResources := map[string]bool{
+		"projects":             true,
+		"tasks":                true,
+		"teams":                true,
+		"labels":               true,
+		"filters":              true,
+		"notifications":        true,
+		"webhooks":             true,
+		"reactions":            true,
+		"shares":               true,
+		"buckets":              true,
+		"views":                true,
+		"assignees":            true,
+		"comments":             true,
+		"relations":            true,
+		"attachments":          true,
+		"projects_views":       true,
+		"projects_teams":       true,
+		"projects_users":       true,
+		"projects_shares":      true,
+		"projects_webhooks":    true,
+		"projects_buckets":     true,
+		"tasks_attachments":    true,
+		"tasks_assignees":      true,
+		"tasks_labels":         true,
+		"tasks_comments":       true,
+		"tasks_relations":      true,
+		"teams_members":        true,
+		"projects_views_tasks": true,
+	}
+
+	// Check if this is a standard CRUD resource
+	if crudResources[routeGroupName] {
+		return true
+	}
+
+	// Also check the base resource for nested paths
+	if len(routeParts) > 0 && crudResources[routeParts[0]] {
+		// For single-segment paths, it's CRUD if it's a known resource
+		if len(routeParts) == 1 {
+			return true
+		}
+	}
+
+	return false
+}
+
 // CollectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
-func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.MiddlewareFunc) {
+// The requiresJWT parameter indicates if this route is protected by JWT authentication.
+func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 	if route.Method == "echo_route_not_found" {
 		return
 	}
 
-	seenJWT := false
-	for _, middleware := range middlewares {
-		if strings.Contains(runtime.FuncForPC(reflect.ValueOf(middleware).Pointer()).Name(), "github.com/labstack/echo-jwt/") {
-			seenJWT = true
-		}
-	}
-
-	if !seenJWT {
+	if !requiresJWT {
 		return
 	}
 
@@ -134,7 +183,14 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 		return
 	}
 
-	if !strings.Contains(route.Name, "(*WebHandler)") && !strings.Contains(route.Name, "Attachment") {
+	// Check if this is a standard CRUD route using path-based heuristics
+	// In Echo v5, we can no longer rely on route.Name containing "(*WebHandler)"
+	isCRUD := isStandardCRUDRoute(routeGroupName, routeParts, route.Method)
+
+	// Special case for task attachments which use custom handlers
+	isAttachmentRoute := routeGroupName == "tasks_attachments"
+
+	if !isCRUD && !isAttachmentRoute {
 		routeDetail := &RouteDetail{
 			Path:   route.Path,
 			Method: route.Method,
@@ -196,14 +252,16 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 		apiTokenRoutes[routeGroupName][method] = routeDetail
 	}
 
+	// Handle task attachments specially - they use custom handlers not WebHandler
 	if routeGroupName == "tasks_attachments" {
-		if strings.Contains(route.Name, "UploadTaskAttachment") {
+		// PUT is upload (create), GET with :attachment param is download (read_one)
+		if route.Method == http.MethodPut {
 			apiTokenRoutes[routeGroupName]["create"] = &RouteDetail{
 				Path:   route.Path,
 				Method: route.Method,
 			}
 		}
-		if strings.Contains(route.Name, "GetTaskAttachment") {
+		if route.Method == http.MethodGet && strings.HasSuffix(route.Path, ":attachment") {
 			apiTokenRoutes[routeGroupName]["read_one"] = &RouteDetail{
 				Path:   route.Path,
 				Method: route.Method,
@@ -221,12 +279,12 @@ func CollectRoutesForAPITokenUsage(route echo.Route, middlewares []echo.Middlewa
 // @Security JWTKeyAuth
 // @Success 200 {array} models.APITokenRoute "The list of all routes."
 // @Router /routes [get]
-func GetAvailableAPIRoutesForToken(c echo.Context) error {
+func GetAvailableAPIRoutesForToken(c *echo.Context) error {
 	return c.JSON(http.StatusOK, apiTokenRoutes)
 }
 
 // CanDoAPIRoute checks if a token is allowed to use the current api route
-func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
+func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	path := c.Path()
 	if path == "" {
 		// c.Path() is empty during testing, but returns the path which
@@ -275,8 +333,6 @@ func CanDoAPIRoute(c echo.Context, token *APIToken) (can bool) {
 			return true
 		}
 	}
-
-	log.Debugf("[auth] Token %d tried to use route %s which requires permission %s but has only %v", token.ID, path, route, token.APIPermissions)
 
 	return false
 }

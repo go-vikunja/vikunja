@@ -33,7 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -425,7 +425,7 @@ func CheckUserPassword(user *User, password string) error {
 }
 
 // GetCurrentUserFromDB gets a user from jwt claims and returns the full user from the db.
-func GetCurrentUserFromDB(s *xorm.Session, c echo.Context) (user *User, err error) {
+func GetCurrentUserFromDB(s *xorm.Session, c *echo.Context) (user *User, err error) {
 	u, err := GetCurrentUser(c)
 	if err != nil {
 		return nil, err
@@ -435,7 +435,7 @@ func GetCurrentUserFromDB(s *xorm.Session, c echo.Context) (user *User, err erro
 }
 
 // GetCurrentUser returns the current user based on its jwt token
-func GetCurrentUser(c echo.Context) (user *User, err error) {
+func GetCurrentUser(c *echo.Context) (user *User, err error) {
 	if apiUser, ok := c.Get("api_user").(*User); ok {
 		return apiUser, nil
 	}

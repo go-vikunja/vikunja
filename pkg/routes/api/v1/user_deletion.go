@@ -23,7 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type UserPasswordConfirmation struct {
@@ -45,7 +45,7 @@ type UserDeletionRequestConfirm struct {
 // @Failure 412 {object} web.HTTPError "Bad password provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/deletion/request [post]
-func UserRequestDeletion(c echo.Context) error {
+func UserRequestDeletion(c *echo.Context) error {
 
 	s := db.NewSession()
 	defer s.Close()
@@ -64,12 +64,12 @@ func UserRequestDeletion(c echo.Context) error {
 	if u.IsLocalUser() {
 		var deletionRequest UserPasswordConfirmation
 		if err := c.Bind(&deletionRequest); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
 		}
 
 		err = c.Validate(deletionRequest)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
 		err = user.CheckUserPassword(u, deletionRequest.Password)
@@ -105,15 +105,15 @@ func UserRequestDeletion(c echo.Context) error {
 // @Failure 412 {object} web.HTTPError "Bad token provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/deletion/confirm [post]
-func UserConfirmDeletion(c echo.Context) error {
+func UserConfirmDeletion(c *echo.Context) error {
 	var deleteConfirmation UserDeletionRequestConfirm
 	if err := c.Bind(&deleteConfirmation); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.")
 	}
 
 	err := c.Validate(deleteConfirmation)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	s := db.NewSession()
@@ -156,7 +156,7 @@ func UserConfirmDeletion(c echo.Context) error {
 // @Failure 412 {object} web.HTTPError "Bad password provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/deletion/cancel [post]
-func UserCancelDeletion(c echo.Context) error {
+func UserCancelDeletion(c *echo.Context) error {
 
 	s := db.NewSession()
 	defer s.Close()
@@ -175,12 +175,12 @@ func UserCancelDeletion(c echo.Context) error {
 	if u.IsLocalUser() {
 		var deletionRequest UserPasswordConfirmation
 		if err := c.Bind(&deletionRequest); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
 		}
 
 		err = c.Validate(deletionRequest)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
 		err = user.CheckUserPassword(u, deletionRequest.Password)

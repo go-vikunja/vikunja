@@ -28,12 +28,12 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"xorm.io/xorm"
 )
 
 // getLocalUserFromContext is a helper function to get the current local user and database session
-func getLocalUserFromContext(c echo.Context) (*user.User, *xorm.Session, error) {
+func getLocalUserFromContext(c *echo.Context) (*user.User, *xorm.Session, error) {
 	s := db.NewSession()
 
 	u, err := user.GetCurrentUserFromDB(s, c)
@@ -62,7 +62,7 @@ func getLocalUserFromContext(c echo.Context) (*user.User, *xorm.Session, error) 
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/enroll [post]
-func UserTOTPEnroll(c echo.Context) error {
+func UserTOTPEnroll(c *echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func UserTOTPEnroll(c echo.Context) error {
 // @Failure 412 {object} web.HTTPError "TOTP is not enrolled."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/enable [post]
-func UserTOTPEnable(c echo.Context) error {
+func UserTOTPEnable(c *echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func UserTOTPEnable(c echo.Context) error {
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/disable [post]
-func UserTOTPDisable(c echo.Context) error {
+func UserTOTPDisable(c *echo.Context) error {
 	login := &user.Login{}
 	if err := c.Bind(login); err != nil {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
@@ -190,7 +190,7 @@ func UserTOTPDisable(c echo.Context) error {
 // @Success 200 {file} blob "The qr code as jpeg image"
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/qrcode [get]
-func UserTOTPQrCode(c echo.Context) error {
+func UserTOTPQrCode(c *echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
 		return err
@@ -228,7 +228,7 @@ func UserTOTPQrCode(c echo.Context) error {
 // @Success 200 {object} user.TOTP "The totp settings."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp [get]
-func UserTOTP(c echo.Context) error {
+func UserTOTP(c *echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
 		return err

@@ -29,7 +29,7 @@ import (
 
 	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"xorm.io/xorm"
 )
 
@@ -46,7 +46,7 @@ type Token struct {
 }
 
 // NewUserAuthTokenResponse creates a new user auth token response from a user object.
-func NewUserAuthTokenResponse(u *user.User, c echo.Context, long bool) error {
+func NewUserAuthTokenResponse(u *user.User, c *echo.Context, long bool) error {
 	t, err := NewUserJWTAuthtoken(u, long)
 	if err != nil {
 		return err
@@ -104,7 +104,7 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 }
 
 // GetAuthFromClaims returns a web.Auth object from jwt claims
-func GetAuthFromClaims(c echo.Context) (a web.Auth, err error) {
+func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 	// check if we have a token in context and use it if that's the case
 	if c.Get("api_token") != nil {
 		apiToken := c.Get("api_token").(*models.APIToken)
@@ -127,7 +127,7 @@ func GetAuthFromClaims(c echo.Context) (a web.Auth, err error) {
 	if typ == AuthTypeUser {
 		return user.GetUserFromClaims(claims)
 	}
-	return nil, echo.NewHTTPError(http.StatusBadRequest, models.Message{Message: "Invalid JWT token."})
+	return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid JWT token.")
 }
 
 func CreateUserWithRandomUsername(s *xorm.Session, uu *user.User) (u *user.User, err error) {
