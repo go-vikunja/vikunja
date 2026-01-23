@@ -125,9 +125,13 @@ func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 		return
 	}
 
-	// Get the creator
+	// Get the creator (non-fatal if user doesn't exist)
 	ta.CreatedBy, err = user.GetUserByID(s, ta.CreatedByID)
-	return
+	if err != nil && !user.IsErrUserDoesNotExist(err) {
+		return err
+	}
+
+	return nil
 }
 
 // ReadAll returns a project with all attachments
