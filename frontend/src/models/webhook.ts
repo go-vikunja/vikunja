@@ -6,8 +6,8 @@ export default class WebhookModel extends AbstractModel<IWebhook> implements IWe
 	id = 0
 	projectId = 0
 	secret = ''
-  basicauthuser = ''
-  basicauthpassword = ''
+    basicauthuser = ''
+    basicauthpassword = ''
 	targetUrl = ''
 	events = []
 	createdBy = null
