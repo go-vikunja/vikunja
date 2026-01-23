@@ -167,6 +167,36 @@ function validateSelectedEvents() {
 					</BaseButton>
 				</p>
 			</div>
+      <div class="field">
+				<label
+					class="label"
+					for="basicauthuser"
+				>
+					{{ $t('project.webhooks.basicauthuser') }}
+				</label>
+				<div class="control">
+					<input
+						id="basicauthuser"
+						v-model="newWebhook.basicauthuser"
+						class="input"
+					>
+				</div>
+			</div>
+      <div class="field">
+				<label
+					class="label"
+					for="basicauthpassword"
+				>
+					{{ $t('project.webhooks.basicauthpassword') }}
+				</label>
+				<div class="control">
+					<input
+						id="basicauthpassword"
+						v-model="newWebhook.basicauthpassword"
+						class="input"
+					>
+				</div>
+			</div>
 			<div class="field">
 				<label
 					class="label"
