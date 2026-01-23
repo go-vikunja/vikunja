@@ -994,26 +994,31 @@ func reloadProjectInEvent(s *xorm.Session, event map[string]interface{}, project
 	return nil
 }
 
-func reloadAssigneeInEvent(s *xorm.Session, event map[string]interface{}) {
+func reloadAssigneeInEvent(s *xorm.Session, event map[string]interface{}) error {
 	assignee, has := event["assignee"]
 	if !has || assignee == nil {
-		return
+		return nil
 	}
 
 	a, ok := assignee.(map[string]interface{})
 	if !ok {
-		return
+		return nil
 	}
 
 	assigneeID := getIDAsInt64(a["id"])
 	if assigneeID <= 0 {
-		return
+		return nil
 	}
 
 	fullAssignee, err := user.GetUserByID(s, assigneeID)
+	if err != nil && !user.IsErrUserDoesNotExist(err) {
+		return err
+	}
 	if err == nil {
 		event["assignee"] = fullAssignee
 	}
+
+	return nil
 }
 
 func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID int64) (eventWithData map[string]interface{}, doerID int64, err error) {
@@ -1034,7 +1039,10 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 		return nil, doerID, err
 	}
 
-	reloadAssigneeInEvent(s, event)
+	err = reloadAssigneeInEvent(s, event)
+	if err != nil {
+		return nil, doerID, err
+	}
 
 	return event, doerID, nil
 }
