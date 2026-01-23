@@ -167,7 +167,7 @@ function validateSelectedEvents() {
 					</BaseButton>
 				</p>
 			</div>
-      <div class="field">
+			<div class="field">
 				<label
 					class="label"
 					for="basicauthuser"
@@ -182,7 +182,7 @@ function validateSelectedEvents() {
 					>
 				</div>
 			</div>
-      <div class="field">
+			<div class="field">
 				<label
 					class="label"
 					for="basicauthpassword"
