@@ -896,80 +896,142 @@ func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
 	return 0
 }
 
+func reloadDoerInEvent(s *xorm.Session, event map[string]interface{}) (doerID int64, err error) {
+	doer, has := event["doer"]
+	if !has || doer == nil {
+		return 0, nil
+	}
+
+	// doer can be null in incoming payloads, so guard the type assertion
+	d, ok := doer.(map[string]interface{})
+	if !ok {
+		return 0, nil
+	}
+
+	rawDoerID, has := d["id"]
+	if !has || rawDoerID == nil {
+		return 0, nil
+	}
+
+	doerID = getIDAsInt64(rawDoerID)
+	if doerID <= 0 {
+		return 0, nil
+	}
+
+	fullDoer, err := user.GetUserByID(s, doerID)
+	if err != nil && !user.IsErrUserDoesNotExist(err) {
+		return 0, err
+	}
+	if err == nil {
+		event["doer"] = fullDoer
+	}
+
+	return doerID, nil
+}
+
+func reloadTaskInEvent(s *xorm.Session, event map[string]interface{}, doerID int64) error {
+	task, has := event["task"]
+	if !has || task == nil || doerID == 0 {
+		return nil
+	}
+
+	// guard the type assertion for task as well
+	t, ok := task.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	taskID, has := t["id"]
+	if !has || taskID == nil {
+		return nil
+	}
+
+	id := getIDAsInt64(taskID)
+	if id <= 0 {
+		return nil
+	}
+
+	fullTask := Task{
+		ID: id,
+		Expand: []TaskCollectionExpandable{
+			TaskCollectionExpandBuckets,
+		},
+	}
+	err := fullTask.ReadOne(s, &user.User{ID: doerID})
+	if err != nil && !IsErrTaskDoesNotExist(err) {
+		return err
+	}
+	if err == nil {
+		event["task"] = fullTask
+	}
+
+	return nil
+}
+
+func reloadProjectInEvent(s *xorm.Session, event map[string]interface{}, projectID, doerID int64) error {
+	_, has := event["project"]
+	if !has || doerID == 0 {
+		return nil
+	}
+
+	project, err := GetProjectSimpleByID(s, projectID)
+	if err != nil && !IsErrProjectDoesNotExist(err) {
+		return err
+	}
+
+	err = project.ReadOne(s, &user.User{ID: doerID})
+	if err != nil && !IsErrProjectDoesNotExist(err) {
+		return err
+	}
+
+	if err == nil {
+		event["project"] = project
+	}
+
+	return nil
+}
+
+func reloadAssigneeInEvent(s *xorm.Session, event map[string]interface{}) {
+	assignee, has := event["assignee"]
+	if !has || assignee == nil {
+		return
+	}
+
+	a, ok := assignee.(map[string]interface{})
+	if !ok {
+		return
+	}
+
+	assigneeID := getIDAsInt64(a["id"])
+	if assigneeID <= 0 {
+		return
+	}
+
+	fullAssignee, err := user.GetUserByID(s, assigneeID)
+	if err == nil {
+		event["assignee"] = fullAssignee
+	}
+}
+
 func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID int64) (eventWithData map[string]interface{}, doerID int64, err error) {
 	// Load event data again so that it is always populated in the webhook payload
-	if doer, has := event["doer"]; has && doer != nil {
-		// doer can be null in incoming payloads, so guard the type assertion
-		d, ok := doer.(map[string]interface{})
-		if ok {
-			if rawDoerID, has := d["id"]; has && rawDoerID != nil {
-				doerID = getIDAsInt64(rawDoerID)
-				if doerID > 0 {
-					fullDoer, err := user.GetUserByID(s, doerID)
-					if err != nil && !user.IsErrUserDoesNotExist(err) {
-						return nil, 0, err
-					}
-					if err == nil {
-						event["doer"] = fullDoer
-					}
-				}
-			}
-		}
+
+	doerID, err = reloadDoerInEvent(s, event)
+	if err != nil {
+		return nil, 0, err
 	}
 
-	if task, has := event["task"]; has && task != nil && doerID != 0 {
-		// guard the type assertion for task as well
-		t, ok := task.(map[string]interface{})
-		if ok {
-			if taskID, has := t["id"]; has && taskID != nil {
-				id := getIDAsInt64(taskID)
-				if id > 0 {
-					fullTask := Task{
-						ID: id,
-						Expand: []TaskCollectionExpandable{
-							TaskCollectionExpandBuckets,
-						},
-					}
-					err = fullTask.ReadOne(s, &user.User{ID: doerID})
-					if err != nil && !IsErrTaskDoesNotExist(err) {
-						return
-					}
-					if err == nil {
-						event["task"] = fullTask
-					}
-				}
-			}
-		}
+	err = reloadTaskInEvent(s, event, doerID)
+	if err != nil {
+		return nil, doerID, err
 	}
 
-	if _, has := event["project"]; has && doerID != 0 {
-		var project *Project
-		project, err = GetProjectSimpleByID(s, projectID)
-		if err != nil && !IsErrProjectDoesNotExist(err) {
-			return
-		}
-		err = project.ReadOne(s, &user.User{ID: doerID})
-		if err != nil && !IsErrProjectDoesNotExist(err) {
-			return
-		}
-		if err == nil {
-			event["project"] = project
-		}
+	err = reloadProjectInEvent(s, event, projectID, doerID)
+	if err != nil {
+		return nil, doerID, err
 	}
 
-	// Reload assignee field (for task.assignee.deleted events)
-	if assignee, has := event["assignee"]; has && assignee != nil {
-		a, ok := assignee.(map[string]interface{})
-		if ok {
-			assigneeID := getIDAsInt64(a["id"])
-			if assigneeID > 0 {
-				fullAssignee, err := user.GetUserByID(s, assigneeID)
-				if err == nil {
-					event["assignee"] = fullAssignee
-				}
-			}
-		}
-	}
+	reloadAssigneeInEvent(s, event)
 
 	return event, doerID, nil
 }
