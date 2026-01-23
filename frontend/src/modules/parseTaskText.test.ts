@@ -315,7 +315,7 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum github')
 			expect(result.date).toBeNull()
 		})
-		describe('Should not recognize weekdays in words', () => {
+		describe('Should not recognize partial keywords in words', () => {
 			const cases = [
 				'renewed',
 				'github',
@@ -328,6 +328,11 @@ describe('Parse Task Text', () => {
 				'monitor blood pressure',
 				'Monitor blood pressure',
 				'buy almonds',
+				'Renovation',
+				'Remark',
+				'Renovation - 2nd Floor Bath',
+				'Remark - 13th floor',
+				'13th floor - remark',
 			]
 
 			cases.forEach(c => {
@@ -347,6 +352,12 @@ describe('Parse Task Text', () => {
 					const result = parseTaskText(`Lorem Ipsum ${c} dolor`)
 
 					expect(result.text).toBe(`Lorem Ipsum ${c} dolor`)
+					expect(result.date).toBeNull()
+				})
+				it(`should not recognize text with ${c} as special keywords`, () => {
+					const result = parseTaskText(c)
+
+					expect(result.text).toBe(c)
 					expect(result.date).toBeNull()
 				})
 			})
