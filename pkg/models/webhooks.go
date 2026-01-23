@@ -55,6 +55,9 @@ type Webhook struct {
 	ProjectID int64 `xorm:"bigint not null index" json:"project_id" param:"project"`
 	// If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing
 	Secret string `xorm:"null" json:"secret"`
+	// If provided, webhook requests will be sent with a Basic Auth header.
+	BasicAuthUser string `xorm:"null" json:"basicauthuser"`
+	BasicAuthPassword string `xorm:"null" json:"basicauthpassword"`
 
 	// The user who initially created the webhook target.
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
@@ -287,6 +290,10 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 		}
 		signature := hex.EncodeToString(sig256.Sum(nil))
 		req.Header.Add("X-Vikunja-Signature", signature)
+	}
+
+	if len(w.BasicAuthUser) > 0 && len(w.BasicAuthPassword) > 0 {
+		req.Header.Add("Authorization", "Basic " + base64.StdEncoding.EncodeToString([]byte(w.BasicAuthUser+":"+w.BasicAuthPassword)))
 	}
 
 	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
