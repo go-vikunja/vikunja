@@ -9251,6 +9251,14 @@
                     "description": "If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing",
                     "type": "string"
                 },
+                "basicauthuser": {
+                    "description": "If provided along with basicauthpassword, webhook request will send a Basic Auth header.",
+                    "type": "string"
+                },
+                "basicauthpassword": {
+                    "description": "If provided along with basicauthuser, webhook request will send a Basic Auth header.",
+                    "type": "string"
+                },
                 "target_url": {
                     "description": "The target URL where the POST request with the webhook payload will be made",
                     "type": "string"
