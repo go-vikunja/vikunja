@@ -66,7 +66,7 @@
 					</CustomTransition>
 
 					<BaseButton
-						:href="`https://unsplash.com/@${im.info.author}`"
+						:href="`https://unsplash.com/@${im.info.author}?utm_source=vikunja&utm_medium=referral`"
 						class="image-search__info"
 					>
 						{{ im.info.authorName }}
