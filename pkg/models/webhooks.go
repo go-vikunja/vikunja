@@ -56,8 +56,8 @@ type Webhook struct {
 	// If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing
 	Secret string `xorm:"null" json:"secret"`
 	// If provided, webhook requests will be sent with a Basic Auth header.
-	BasicAuthUser     string `xorm:"null" json:"basicauthuser"`
-	BasicAuthPassword string `xorm:"null" json:"basicauthpassword"`
+	BasicAuthUser     string `xorm:"null" json:"basic_auth_user"`
+	BasicAuthPassword string `xorm:"null" json:"basic_auth_password"`
 
 	// The user who initially created the webhook target.
 	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
