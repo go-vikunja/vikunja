@@ -72,6 +72,7 @@ var (
 		"dev:make-event":              Dev.MakeEvent,
 		"dev:make-listener":           Dev.MakeListener,
 		"dev:make-notification":       Dev.MakeNotification,
+		"dev:prepare-worktree":        Dev.PrepareWorktree,
 		"plugins:build":               Plugins.Build,
 		"lint":                        Check.Golangci,
 		"lint:fix":                    Check.GolangciFix,
@@ -1392,6 +1393,132 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 // Create a yaml config file from the config-raw.json definition
 func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
+}
+
+// PrepareWorktree creates a new git worktree for development.
+// The first argument is the name, which becomes both the folder name and branch name.
+// The second argument is a path to a plan file that will be copied to the new worktree (pass "" to skip).
+// The worktree is created in the parent directory (../).
+// It also copies the current config.yml with an updated rootpath, and initializes the frontend.
+func (Dev) PrepareWorktree(name string, planPath string) error {
+	if name == "" {
+		return fmt.Errorf("name is required: mage dev:prepare-worktree <name> <plan-path>")
+	}
+
+	// Get the parent directory path
+	parentDir := filepath.Dir(RootPath)
+	worktreePath := filepath.Join(parentDir, name)
+
+	fmt.Printf("Creating worktree at %s with branch %s...\n", worktreePath, name)
+
+	// Create the git worktree
+	cmd := exec.Command("git", "worktree", "add", worktreePath, "-b", name)
+	cmd.Dir = RootPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to create worktree: %w", err)
+	}
+	printSuccess("Worktree created successfully!")
+
+	// Copy and modify config.yml
+	configSrc := filepath.Join(RootPath, "config.yml")
+	configDst := filepath.Join(worktreePath, "config.yml")
+
+	if _, err := os.Stat(configSrc); err == nil {
+		configContent, err := os.ReadFile(configSrc)
+		if err != nil {
+			return fmt.Errorf("failed to read config.yml: %w", err)
+		}
+
+		// Replace the rootpath value
+		re := regexp.MustCompile(`(?m)^(\s*rootpath:\s*)"[^"]*"`)
+		newConfig := re.ReplaceAllString(string(configContent), `${1}"`+worktreePath+`"`)
+
+		// Also handle unquoted rootpath values
+		re2 := regexp.MustCompile(`(?m)^(\s*rootpath:\s*)(/[^\s\n]+)`)
+		newConfig = re2.ReplaceAllString(newConfig, `${1}"`+worktreePath+`"`)
+
+		if err := os.WriteFile(configDst, []byte(newConfig), 0644); err != nil {
+			return fmt.Errorf("failed to write config.yml: %w", err)
+		}
+		printSuccess("Config copied with updated rootpath!")
+	} else {
+		fmt.Println("Warning: config.yml not found, skipping config copy")
+	}
+
+	// Copy .claude/settings.local.json if it exists
+	claudeSettingsSrc := filepath.Join(RootPath, ".claude", "settings.local.json")
+	if _, err := os.Stat(claudeSettingsSrc); err == nil {
+		claudeDir := filepath.Join(worktreePath, ".claude")
+		if err := os.MkdirAll(claudeDir, 0755); err != nil {
+			return fmt.Errorf("failed to create .claude directory: %w", err)
+		}
+		claudeSettingsDst := filepath.Join(claudeDir, "settings.local.json")
+		if err := copyFile(claudeSettingsSrc, claudeSettingsDst); err != nil {
+			return fmt.Errorf("failed to copy .claude/settings.local.json: %w", err)
+		}
+		printSuccess("Claude settings copied!")
+	}
+
+	// Copy plan file if provided
+	if planPath != "" {
+		planPath = strings.TrimSpace(planPath)
+		if planPath != "" {
+			// Create plans directory in the new worktree
+			plansDir := filepath.Join(worktreePath, "plans")
+			if err := os.MkdirAll(plansDir, 0755); err != nil {
+				return fmt.Errorf("failed to create plans directory: %w", err)
+			}
+
+			// Determine source path (relative to RootPath or absolute)
+			srcPlanPath := planPath
+			if !filepath.IsAbs(planPath) {
+				srcPlanPath = filepath.Join(RootPath, planPath)
+			}
+
+			if _, err := os.Stat(srcPlanPath); err != nil {
+				return fmt.Errorf("plan file not found: %s", srcPlanPath)
+			}
+
+			dstPlanPath := filepath.Join(plansDir, filepath.Base(planPath))
+			if err := copyFile(srcPlanPath, dstPlanPath); err != nil {
+				return fmt.Errorf("failed to copy plan file: %w", err)
+			}
+			printSuccess("Plan file copied to %s!", dstPlanPath)
+		}
+	}
+
+	// Initialize frontend
+	fmt.Println("Initializing frontend...")
+	frontendDir := filepath.Join(worktreePath, "frontend")
+
+	// Run pnpm install
+	pnpmCmd := exec.Command("pnpm", "i")
+	pnpmCmd.Dir = frontendDir
+	pnpmCmd.Stdout = os.Stdout
+	pnpmCmd.Stderr = os.Stderr
+	if err := pnpmCmd.Run(); err != nil {
+		return fmt.Errorf("failed to run pnpm install: %w", err)
+	}
+
+	// Run patch-sass-embedded (shell alias from devenv)
+	patchCmd := exec.Command("bash", "-ic", "patch-sass-embedded")
+	patchCmd.Dir = frontendDir
+	patchCmd.Stdout = os.Stdout
+	patchCmd.Stderr = os.Stderr
+	if err := patchCmd.Run(); err != nil {
+		// patch-sass-embedded might not be critical, just warn
+		fmt.Printf("Warning: patch-sass-embedded failed: %v\n", err)
+	}
+
+	printSuccess("Frontend initialized!")
+	printSuccess("\nWorktree ready at: %s", worktreePath)
+	printSuccess("Branch: %s", name)
+	fmt.Println("\nTo start working:")
+	fmt.Printf("  cd %s\n", worktreePath)
+
+	return nil
 }
 
 type Plugins mg.Namespace
