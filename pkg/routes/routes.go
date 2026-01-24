@@ -127,7 +127,7 @@ func NewEcho() *echo.Echo {
 			LogMethod:   true,
 			LogLatency:  true,
 			HandleError: true,
-			LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+			LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
 				if v.Error == nil {
 					httpLogger.LogAttrs(context.Background(), slog.LevelInfo, "",
 						slog.String("method", v.Method),

@@ -72,7 +72,7 @@ func makeLogHandler(enabled bool, output string, level string, format string) sl
 func createHandler(writer io.Writer, level slog.Level, format string) slog.Handler {
 	handlerOpts := &slog.HandlerOptions{
 		Level: level,
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
 			// Remove message attribute when empty
 			if a.Key == slog.MessageKey && a.Value.String() == "" {
 				return slog.Attr{}
