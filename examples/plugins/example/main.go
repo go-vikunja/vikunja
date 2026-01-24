@@ -94,10 +94,6 @@ func handleStatus(c *echo.Context) error {
 
 func NewPlugin() plugins.Plugin { return &ExamplePlugin{} }
 
-// main is required for the plugin to be built as a standalone binary during testing.
-// In production, plugins are loaded dynamically and this function is not called.
-func main() {}
-
 type TestListener struct{}
 
 func (t *TestListener) Handle(msg *message.Message) error {
