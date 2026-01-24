@@ -293,7 +293,7 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	}
 
 	if len(w.BasicAuthUser) > 0 && len(w.BasicAuthPassword) > 0 {
-		req.Header.Add("Authorization", "Basic " + base64.StdEncoding.EncodeToString([]byte(w.BasicAuthUser+":"+w.BasicAuthPassword)))
+		req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(w.BasicAuthUser+":"+w.BasicAuthPassword)))
 	}
 
 	req.Header.Add("User-Agent", "Vikunja/"+version.Version)
