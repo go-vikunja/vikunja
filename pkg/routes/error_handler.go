@@ -46,6 +46,11 @@ type errorMessage struct {
 // 4. Logs all errors appropriately
 func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandler {
 	return func(c *echo.Context, err error) {
+		// Check if the response has already been committed (e.g., by the RequestLogger middleware
+		// with HandleError=true). If so, we should not try to write another response.
+		if r, _ := echo.UnwrapResponse(c.Response()); r != nil && r.Committed {
+			return
+		}
 
 		var (
 			code                = http.StatusInternalServerError
@@ -97,9 +102,6 @@ func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandl
 		}
 		// 6. For any other error type, we keep the defaults (500 with generic message)
 		// or the echo.HTTPStatusCoder/HTTPError values if it was that type
-
-		// Log the error
-		log.Error(originalErr.Error())
 
 		// Sentry reporting for 5xx errors
 		if enableSentry && code >= 500 {
