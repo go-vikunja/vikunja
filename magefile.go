@@ -73,6 +73,7 @@ var (
 		"dev:make-listener":           Dev.MakeListener,
 		"dev:make-notification":       Dev.MakeNotification,
 		"dev:prepare-worktree":        Dev.PrepareWorktree,
+		"dev:tag-release":             Dev.TagRelease,
 		"plugins:build":               Plugins.Build,
 		"lint":                        Check.Golangci,
 		"lint:fix":                    Check.GolangciFix,
@@ -1519,6 +1520,233 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 	fmt.Printf("  cd %s\n", worktreePath)
 
 	return nil
+}
+
+// TagRelease creates a new release tag with changelog.
+// It updates the version badge in README.md, generates changelog using git-cliff,
+// commits the changes, and creates an annotated tag.
+func (Dev) TagRelease(version string) error {
+	if version == "" {
+		return fmt.Errorf("version is required: mage dev:tag-release <version>")
+	}
+
+	// Ensure version starts with 'v'
+	if !strings.HasPrefix(version, "v") {
+		version = "v" + version
+	}
+
+	fmt.Printf("Creating release %s...\n", version)
+
+	// Get the last tag
+	lastTagBytes, err := runCmdWithOutput("git", "describe", "--tags", "--abbrev=0")
+	if err != nil {
+		return fmt.Errorf("failed to get last tag: %w", err)
+	}
+	lastTag := strings.TrimSpace(string(lastTagBytes))
+	fmt.Printf("Last tag: %s\n", lastTag)
+
+	// Generate changelog using git cliff
+	fmt.Println("Generating changelog...")
+	changelogBytes, err := runCmdWithOutput("git", "cliff", lastTag+"..HEAD", "--tag", version)
+	if err != nil {
+		return fmt.Errorf("failed to generate changelog: %w", err)
+	}
+	changelog := string(changelogBytes)
+
+	// Clean up the changelog
+	changelog = cleanupChangelog(changelog)
+
+	// Update README.md version badge
+	fmt.Println("Updating README.md version badge...")
+	if err := updateReadmeBadge(version); err != nil {
+		return fmt.Errorf("failed to update README badge: %w", err)
+	}
+
+	// Prepend changelog to CHANGELOG.md
+	fmt.Println("Updating CHANGELOG.md...")
+	if err := prependChangelog(changelog); err != nil {
+		return fmt.Errorf("failed to update CHANGELOG.md: %w", err)
+	}
+
+	// Commit the changes
+	fmt.Println("Committing changes...")
+	commitMsg := fmt.Sprintf("chore: %s release preparations", version)
+	cmd := exec.Command("git", "add", "README.md", "CHANGELOG.md")
+	cmd.Dir = RootPath
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to stage files: %w", err)
+	}
+
+	cmd = exec.Command("git", "commit", "-m", commitMsg)
+	cmd.Dir = RootPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to commit: %w", err)
+	}
+
+	// Prepare tag message (remove markdown header formatting)
+	tagMessage := prepareTagMessage(changelog)
+
+	// Create the annotated tag
+	fmt.Printf("Creating tag %s...\n", version)
+	cmd = exec.Command("git", "tag", "-a", version, "-m", tagMessage)
+	cmd.Dir = RootPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to create tag: %w", err)
+	}
+
+	printSuccess("Release %s created successfully!", version)
+	fmt.Println("\nNext steps:")
+	fmt.Println("  git push origin main")
+	fmt.Printf("  git push origin %s\n", version)
+
+	return nil
+}
+
+// cleanupChangelog cleans up the generated changelog by:
+// - Removing duplicate lines
+// - Fixing entries that span multiple lines
+// - Ensuring each change is on a single line
+func cleanupChangelog(changelog string) string {
+	lines := strings.Split(changelog, "\n")
+	var cleanedLines []string
+	seenLines := make(map[string]bool)
+	var currentEntry strings.Builder
+
+	for i, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+
+		// Check if this is a new entry (starts with * or - or is a header)
+		isNewEntry := strings.HasPrefix(trimmedLine, "* ") ||
+			strings.HasPrefix(trimmedLine, "- ") ||
+			strings.HasPrefix(trimmedLine, "## ") ||
+			strings.HasPrefix(trimmedLine, "### ") ||
+			trimmedLine == ""
+
+		if isNewEntry {
+			// Flush the current entry if any
+			if currentEntry.Len() > 0 {
+				entryStr := strings.TrimSpace(currentEntry.String())
+				if !seenLines[entryStr] && entryStr != "" {
+					cleanedLines = append(cleanedLines, entryStr)
+					seenLines[entryStr] = true
+				}
+				currentEntry.Reset()
+			}
+
+			// Start a new entry or add empty line/header
+			if trimmedLine == "" {
+				// Only add empty line if the previous line wasn't empty
+				if len(cleanedLines) > 0 && cleanedLines[len(cleanedLines)-1] != "" {
+					cleanedLines = append(cleanedLines, "")
+				}
+			} else if strings.HasPrefix(trimmedLine, "## ") || strings.HasPrefix(trimmedLine, "### ") {
+				// Headers are never duplicates
+				cleanedLines = append(cleanedLines, trimmedLine)
+			} else {
+				currentEntry.WriteString(trimmedLine)
+			}
+		} else if currentEntry.Len() > 0 {
+			// This is a continuation of the current entry
+			currentEntry.WriteString(" ")
+			currentEntry.WriteString(trimmedLine)
+		} else if trimmedLine != "" {
+			// Standalone line that's not part of an entry
+			if !seenLines[trimmedLine] {
+				cleanedLines = append(cleanedLines, trimmedLine)
+				seenLines[trimmedLine] = true
+			}
+		}
+
+		// Handle last line
+		if i == len(lines)-1 && currentEntry.Len() > 0 {
+			entryStr := strings.TrimSpace(currentEntry.String())
+			if !seenLines[entryStr] && entryStr != "" {
+				cleanedLines = append(cleanedLines, entryStr)
+			}
+		}
+	}
+
+	return strings.Join(cleanedLines, "\n")
+}
+
+// updateReadmeBadge updates the version badge in README.md
+func updateReadmeBadge(version string) error {
+	readmePath := filepath.Join(RootPath, "README.md")
+	content, err := os.ReadFile(readmePath)
+	if err != nil {
+		return fmt.Errorf("failed to read README.md: %w", err)
+	}
+
+	// Convert version for badge (e.g., v1.0.0-rc3 -> v1.0.0rc3 for the badge display)
+	badgeVersion := strings.ReplaceAll(version, "-", "")
+
+	// Update the badge - match the pattern: download-vX.X.X...-brightgreen
+	re := regexp.MustCompile(`(download-)(v[0-9a-zA-Z.]+)(-brightgreen)`)
+	newContent := re.ReplaceAllString(string(content), "${1}"+badgeVersion+"${3}")
+
+	if err := os.WriteFile(readmePath, []byte(newContent), 0644); err != nil {
+		return fmt.Errorf("failed to write README.md: %w", err)
+	}
+
+	return nil
+}
+
+// prependChangelog prepends the new changelog entries to CHANGELOG.md
+func prependChangelog(newChangelog string) error {
+	changelogPath := filepath.Join(RootPath, "CHANGELOG.md")
+	existingContent, err := os.ReadFile(changelogPath)
+	if err != nil {
+		return fmt.Errorf("failed to read CHANGELOG.md: %w", err)
+	}
+
+	// Find where to insert the new changelog (after the header section)
+	content := string(existingContent)
+	headerEnd := strings.Index(content, "\n## ")
+	if headerEnd == -1 {
+		// No existing version sections, append at the end
+		headerEnd = len(content)
+	}
+
+	// Build new content: header + new changelog + existing versions
+	header := content[:headerEnd]
+	existingVersions := ""
+	if headerEnd < len(content) {
+		existingVersions = content[headerEnd:]
+	}
+
+	// Ensure there's proper spacing
+	newContent := strings.TrimRight(header, "\n") + "\n\n" +
+		strings.TrimSpace(newChangelog) + "\n" +
+		existingVersions
+
+	if err := os.WriteFile(changelogPath, []byte(newContent), 0644); err != nil {
+		return fmt.Errorf("failed to write CHANGELOG.md: %w", err)
+	}
+
+	return nil
+}
+
+// prepareTagMessage removes markdown header formatting from the changelog for use as a tag message
+func prepareTagMessage(changelog string) string {
+	lines := strings.Split(changelog, "\n")
+	var result []string
+
+	for _, line := range lines {
+		// Remove ## and ### prefixes
+		if strings.HasPrefix(line, "### ") {
+			result = append(result, strings.TrimPrefix(line, "### "))
+		} else if strings.HasPrefix(line, "## ") {
+			result = append(result, strings.TrimPrefix(line, "## "))
+		} else {
+			result = append(result, line)
+		}
+	}
+
+	return strings.Join(result, "\n")
 }
 
 type Plugins mg.Namespace
