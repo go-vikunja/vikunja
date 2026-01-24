@@ -112,7 +112,6 @@ func matchCORSOrigin(origin string, allowedOrigins []string) (string, bool, erro
 	return "", false, nil
 }
 
-
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
 	e := echo.New()
@@ -210,7 +209,7 @@ func RegisterRoutes(e *echo.Echo) {
 	// CORS
 	if config.CorsEnable.GetBool() {
 		allowedOrigins := config.CorsOrigins.GetStringSlice()
-		log.Debugf("CORS enabled with origins: %s", strings.Join(allowedOrigins, ", "))
+		log.Infof("CORS enabled with origins: %s", strings.Join(allowedOrigins, ", "))
 
 		// Echo v5 CORS middleware is stricter and doesn't accept wildcards in ports like "http://127.0.0.1:*"
 		// We use UnsafeAllowOriginFunc to handle these patterns for backwards compatibility
@@ -259,7 +258,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 // In Echo v5, OnAddRouteHandler was removed, so we collect routes after registration.
 func collectRoutesForAPITokens(e *echo.Echo) {
 	routeList := e.Router().Routes()
-	log.Infof("Collecting %d routes for API token usage", len(routeList))
+	log.Debugf("Collecting %d routes for API token usage", len(routeList))
 	for _, route := range routeList {
 		// Only process API routes
 		if !strings.HasPrefix(route.Path, "/api/v1") {
