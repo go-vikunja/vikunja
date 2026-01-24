@@ -23,7 +23,7 @@
 					:key="view.id"
 					class="switch-view-button"
 					:class="{'is-active': view.id === viewId}"
-					:to="{ name: 'project.view', params: { projectId, viewId: view.id } }"
+					:to="getViewRoute(view)"
 				>
 					{{ getViewTitle(view) }}
 				</BaseButton>
@@ -57,6 +57,7 @@ import {useTitle} from '@/composables/useTitle'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
+import {useViewFiltersStore} from '@/stores/viewFilters'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -71,6 +72,7 @@ const {t} = useI18n()
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
+const viewFiltersStore = useViewFiltersStore()
 
 const currentProject = computed<IProject>(() => {
 	return baseStore.currentProject || {
@@ -95,8 +97,17 @@ function getViewTitle(view: IProjectView) {
 		case 'Kanban':
 			return t('project.kanban.title')
 	}
-	
+
 	return view.title
+}
+
+function getViewRoute(view: IProjectView) {
+	const storedQuery = viewFiltersStore.getViewQuery(view.id)
+	return {
+		name: 'project.view',
+		params: {projectId: props.projectId, viewId: view.id},
+		query: storedQuery,
+	}
 }
 </script>
 
