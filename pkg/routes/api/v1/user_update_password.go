@@ -23,7 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // UserPassword holds a user password. Used to update it.
@@ -45,17 +45,17 @@ type UserPassword struct {
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/password [post]
-func UserChangePassword(c echo.Context) error {
+func UserChangePassword(c *echo.Context) error {
 	// Check if the user is itself
 	doer, err := user.GetCurrentUser(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.").Wrap(err)
 	}
 
 	// Check for Request Content
 	var newPW UserPassword
 	if err := c.Bind(&newPW); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").Wrap(err)
 	}
 
 	if newPW.OldPassword == "" {

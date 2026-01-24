@@ -52,9 +52,8 @@
 package routes
 
 import (
-	"fmt"
+	"context"
 	"log/slog"
-	"net/url"
 	"strings"
 	"time"
 
@@ -80,51 +79,83 @@ import (
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/getsentry/sentry-go"
-	sentryecho "github.com/getsentry/sentry-go/echo"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/ulule/limiter/v3"
 )
 
-// slogHTTPMiddleware creates a custom HTTP logging middleware using slog
-func slogHTTPMiddleware(logger *slog.Logger) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return echo.HandlerFunc(func(c echo.Context) error {
-			start := time.Now()
-
-			err := next(c)
-			if err != nil {
-				c.Error(err)
+// matchCORSOrigin checks if an origin matches any of the allowed origin patterns.
+// It supports wildcards in the port position (e.g., "http://127.0.0.1:*").
+func matchCORSOrigin(origin string, allowedOrigins []string) (string, bool, error) {
+	for _, pattern := range allowedOrigins {
+		// Exact match
+		if origin == pattern {
+			return origin, true, nil
+		}
+		// Allow all
+		if pattern == "*" {
+			return origin, true, nil
+		}
+		// Handle wildcard port patterns like "http://127.0.0.1:*" or "http://localhost:*"
+		if strings.HasSuffix(pattern, ":*") {
+			prefix := strings.TrimSuffix(pattern, ":*")
+			// Check if the origin starts with the prefix and has a port after
+			if strings.HasPrefix(origin, prefix+":") {
+				return origin, true, nil
 			}
-
-			req := c.Request()
-			res := c.Response()
-
-			logger.InfoContext(c.Request().Context(),
-				req.Method+" "+req.RequestURI,
-				"status", res.Status,
-				"remote_ip", c.RealIP(),
-				"latency", time.Since(start),
-				"user_agent", req.UserAgent(),
-			)
-
-			return err
-		})
+			// Also match if origin has no port but pattern allows any port
+			if origin == prefix {
+				return origin, true, nil
+			}
+		}
 	}
+	return "", false, nil
 }
 
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
-	e := echo.New()
-
-	e.HideBanner = true
+	// Configure Echo with a router that unescapes path parameters.
+	// This is needed because Echo v5 does not unescape path params by default.
+	// Without this, path parameters like usernames with spaces or apostrophes
+	// would remain URL-encoded (e.g., "John%20D%27Urso" instead of "John D'Urso").
+	// See https://kolaente.dev/vikunja/vikunja/issues/1224
+	e := echo.NewWithConfig(echo.Config{
+		Router: echo.NewRouter(echo.RouterConfig{
+			UnescapePathParamValues: true,
+		}),
+	})
 
 	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
 
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
 		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
-		e.Use(slogHTTPMiddleware(httpLogger))
+		e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+			LogStatus:   true,
+			LogURI:      true,
+			LogMethod:   true,
+			LogLatency:  true,
+			HandleError: true,
+			LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
+				if v.Error == nil {
+					httpLogger.LogAttrs(context.Background(), slog.LevelInfo, "",
+						slog.String("method", v.Method),
+						slog.String("uri", v.URI),
+						slog.Int("status", v.Status),
+						slog.Duration("latency", v.Latency),
+					)
+				} else {
+					httpLogger.LogAttrs(context.Background(), slog.LevelError, "",
+						slog.String("method", v.Method),
+						slog.String("uri", v.URI),
+						slog.Int("status", v.Status),
+						slog.Duration("latency", v.Latency),
+						slog.String("err", v.Error.Error()),
+					)
+				}
+				return nil
+			},
+		}))
 	}
 
 	// panic recover
@@ -137,7 +168,9 @@ func NewEcho() *echo.Echo {
 
 	// Set body limit to allow file uploads up to the configured size
 	// Add some overhead for multipart form data (headers, boundaries, etc.)
-	e.Use(middleware.BodyLimit(fmt.Sprintf("%dM", config.GetMaxFileSizeInMBytes()+2)))
+	maxFileSize := config.GetMaxFileSizeInMBytes()
+	// #nosec G115 - maxFileSize is a configuration value that won't exceed int64 max in practice
+	e.Use(middleware.BodyLimit((int64(maxFileSize) + 2) * 1024 * 1024))
 
 	// Set up centralized error handler
 	e.HTTPErrorHandler = CreateHTTPErrorHandler(e, config.SentryEnabled.GetBool())
@@ -159,7 +192,7 @@ func setupSentry(e *echo.Echo) {
 	}
 	defer sentry.Flush(5 * time.Second)
 
-	e.Use(sentryecho.New(sentryecho.Options{
+	e.Use(SentryMiddleware(SentryOptions{
 		Repanic: true,
 	}))
 }
@@ -184,11 +217,18 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// CORS
 	if config.CorsEnable.GetBool() {
-		log.Debugf("CORS enabled with origins: %s", strings.Join(config.CorsOrigins.GetStringSlice(), ", "))
+		allowedOrigins := config.CorsOrigins.GetStringSlice()
+		log.Infof("CORS enabled with origins: %s", strings.Join(allowedOrigins, ", "))
+
+		// Echo v5 CORS middleware is stricter and doesn't accept wildcards in ports like "http://127.0.0.1:*"
+		// We use UnsafeAllowOriginFunc to handle these patterns for backwards compatibility
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-			AllowOrigins: config.CorsOrigins.GetStringSlice(),
-			MaxAge:       config.CorsMaxAge.GetInt(),
-			Skipper: func(context echo.Context) bool {
+			AllowOrigins: []string{}, // Empty because we use UnsafeAllowOriginFunc
+			UnsafeAllowOriginFunc: func(_ *echo.Context, origin string) (string, bool, error) {
+				return matchCORSOrigin(origin, allowedOrigins)
+			},
+			MaxAge: config.CorsMaxAge.GetInt(),
+			Skipper: func(context *echo.Context) bool {
 				// Since it is not possible to register this middleware just for the api group,
 				// we just disable it when for caldav requests.
 				// Caldav requires OPTIONS requests to be answered in a specific manner,
@@ -200,10 +240,45 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// API Routes
 	a := e.Group("/api/v1")
-	e.OnAddRouteHandler = func(_ string, route echo.Route, _ echo.HandlerFunc, middlewares []echo.MiddlewareFunc) {
-		models.CollectRoutesForAPITokenUsage(route, middlewares)
-	}
 	registerAPIRoutes(a)
+
+	// Collect routes for API token permissions
+	// In Echo v5, we collect routes after registration using e.Router().Routes()
+	collectRoutesForAPITokens(e)
+}
+
+// unauthenticatedAPIPaths contains paths that don't require JWT authentication
+var unauthenticatedAPIPaths = map[string]bool{
+	"/api/v1/register":                       true,
+	"/api/v1/user/password/token":            true,
+	"/api/v1/user/password/reset":            true,
+	"/api/v1/user/confirm":                   true,
+	"/api/v1/login":                          true,
+	"/api/v1/auth/openid/:provider/callback": true,
+	"/api/v1/test/:table":                    true,
+	"/api/v1/info":                           true,
+	"/api/v1/shares/:share/auth":             true,
+	"/api/v1/docs.json":                      true,
+	"/api/v1/docs":                           true,
+	"/api/v1/metrics":                        true,
+}
+
+// collectRoutesForAPITokens collects all routes for API token permission checking.
+// In Echo v5, OnAddRouteHandler was removed, so we collect routes after registration.
+func collectRoutesForAPITokens(e *echo.Echo) {
+	routeList := e.Router().Routes()
+	log.Debugf("Collecting %d routes for API token usage", len(routeList))
+	for _, route := range routeList {
+		// Only process API routes
+		if !strings.HasPrefix(route.Path, "/api/v1") {
+			continue
+		}
+
+		// Check if this route requires JWT authentication
+		requiresJWT := !unauthenticatedAPIPaths[route.Path]
+
+		models.CollectRoutesForAPITokenUsage(route, requiresJWT)
+	}
 }
 
 func registerAPIRoutes(a *echo.Group) {
@@ -212,25 +287,6 @@ func registerAPIRoutes(a *echo.Group) {
 	// It is its own group to be able to rate limit this based on different heuristics
 	n := a.Group("")
 	setupRateLimit(n, "ip")
-
-	// Echo does not unescape url path params by default. To make sure values bound as :param in urls are passed
-	// properly to handlers, we use this middleware to unescape them.
-	// See https://kolaente.dev/vikunja/vikunja/issues/1224
-	// See https://github.com/labstack/echo/issues/766
-	a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			params := make([]string, 0, len(c.ParamValues()))
-			for _, param := range c.ParamValues() {
-				p, err := url.PathUnescape(param)
-				if err != nil {
-					return err
-				}
-				params = append(params, p)
-			}
-			c.SetParamValues(params...)
-			return next(c)
-		}
-	})
 
 	// Docs
 	n.GET("/docs.json", apiv1.DocsJSON)

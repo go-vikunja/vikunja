@@ -28,7 +28,7 @@ import (
 	user2 "code.vikunja.io/api/pkg/user"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // Login is the login handler
@@ -43,7 +43,7 @@ import (
 // @Failure 412 {object} models.Message "Invalid totp passcode."
 // @Failure 403 {object} models.Message "Invalid username or password."
 // @Router /login [post]
-func Login(c echo.Context) (err error) {
+func Login(c *echo.Context) (err error) {
 	u := user2.Login{}
 	if err := c.Bind(&u); err != nil {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Please provide a username and password."})
@@ -126,7 +126,7 @@ func Login(c echo.Context) (err error) {
 // @Success 200 {object} auth.Token
 // @Failure 400 {object} models.Message "Only user token are available for renew."
 // @Router /user/token [post]
-func RenewToken(c echo.Context) (err error) {
+func RenewToken(c *echo.Context) (err error) {
 
 	s := db.NewSession()
 	defer s.Close()

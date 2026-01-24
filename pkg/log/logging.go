@@ -37,7 +37,7 @@ func InitLogger() {
 	logInstance = slog.New(handler)
 }
 
-func makeLogHandler(enabled bool, output string, level string, format string) (slog.Handler, io.Writer) {
+func makeLogHandler(enabled bool, output string, level string, format string) slog.Handler {
 	var slogLevel slog.Level
 	switch strings.ToUpper(level) {
 	case "CRITICAL", "ERROR":
@@ -65,12 +65,21 @@ func makeLogHandler(enabled bool, output string, level string, format string) (s
 		writer = getLogWriter(output, "standard")
 	}
 
-	return createHandler(writer, slogLevel, format), writer
+	return createHandler(writer, slogLevel, format)
 }
 
 // createHandler creates a consistent slog handler for all loggers
 func createHandler(writer io.Writer, level slog.Level, format string) slog.Handler {
-	handlerOpts := &slog.HandlerOptions{Level: level}
+	handlerOpts := &slog.HandlerOptions{
+		Level: level,
+		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+			// Remove message attribute when empty
+			if a.Key == slog.MessageKey && a.Value.String() == "" {
+				return slog.Attr{}
+			}
+			return a
+		},
+	}
 	if strings.ToLower(format) == "structured" {
 		return slog.NewJSONHandler(writer, handlerOpts)
 	}
@@ -80,7 +89,7 @@ func createHandler(writer io.Writer, level slog.Level, format string) slog.Handl
 
 // NewHTTPLogger creates and initializes a new HTTP logger
 func NewHTTPLogger(enabled bool, output string, format string) *slog.Logger {
-	handler, _ := makeLogHandler(enabled, output, "DEBUG", format)
+	handler := makeLogHandler(enabled, output, "DEBUG", format)
 
 	return slog.New(handler).With("component", "http")
 }
@@ -88,7 +97,7 @@ func NewHTTPLogger(enabled bool, output string, format string) *slog.Logger {
 // ConfigureStandardLogger configures the global log handler
 func ConfigureStandardLogger(enabled bool, output string, path string, level string, format string) {
 	logPath = path
-	handler, _ := makeLogHandler(enabled, output, level, format)
+	handler := makeLogHandler(enabled, output, level, format)
 	logInstance = slog.New(handler)
 }
 

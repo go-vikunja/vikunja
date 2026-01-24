@@ -25,7 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // HandleTesting is the web handler to reset the db
@@ -38,7 +38,7 @@ import (
 // @Success 201 {array} user.User "Everything has been imported successfully."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /test/{table} [patch]
-func HandleTesting(c echo.Context) error {
+func HandleTesting(c *echo.Context) error {
 	token := c.Request().Header.Get("Authorization")
 	if token != config.ServiceTestingtoken.GetString() {
 		return echo.ErrForbidden

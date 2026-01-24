@@ -26,7 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // UpdateUserEmail is the handler to let a user update their email address.
@@ -42,7 +42,7 @@ import (
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/email [post]
-func UpdateUserEmail(c echo.Context) (err error) {
+func UpdateUserEmail(c *echo.Context) (err error) {
 
 	var emailUpdate = &user.EmailUpdate{}
 	if err := c.Bind(emailUpdate); err != nil {

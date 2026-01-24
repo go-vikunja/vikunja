@@ -21,10 +21,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
-func unsplashImage(url string, c echo.Context) error {
+func unsplashImage(url string, c *echo.Context) error {
 	// Replacing and appending the url for security reasons
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://images.unsplash.com/"+strings.Replace(url, "https://images.unsplash.com/", "", 1), nil)
 	if err != nil {
@@ -52,7 +52,7 @@ func unsplashImage(url string, c echo.Context) error {
 // @Failure 404 {object} models.Message "The image does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/image/{image} [get]
-func ProxyUnsplashImage(c echo.Context) error {
+func ProxyUnsplashImage(c *echo.Context) error {
 	photo, err := getUnsplashPhotoInfoByID(c.Param("image"))
 	if err != nil {
 		return err
@@ -72,7 +72,7 @@ func ProxyUnsplashImage(c echo.Context) error {
 // @Failure 404 {object} models.Message "The image does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/image/{image}/thumb [get]
-func ProxyUnsplashThumb(c echo.Context) error {
+func ProxyUnsplashThumb(c *echo.Context) error {
 	photo, err := getUnsplashPhotoInfoByID(c.Param("image"))
 	if err != nil {
 		return err

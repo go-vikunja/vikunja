@@ -26,8 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/getsentry/sentry-go"
-	sentryecho "github.com/getsentry/sentry-go/echo"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // httpCodeGetter is an interface for errors that can provide their HTTP status code.
@@ -46,8 +45,10 @@ type errorMessage struct {
 // 3. Handles Sentry reporting for 5xx errors
 // 4. Logs all errors appropriately
 func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandler {
-	return func(err error, c echo.Context) {
-		if c.Response().Committed {
+	return func(c *echo.Context, err error) {
+		// Check if the response has already been committed (e.g., by the RequestLogger middleware
+		// with HandleError=true). If so, we should not try to write another response.
+		if r, _ := echo.UnwrapResponse(c.Response()); r != nil && r.Committed {
 			return
 		}
 
@@ -59,43 +60,48 @@ func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandl
 		// Keep track of the original error for logging/sentry
 		originalErr := err
 
-		// 1. Check if it's already an echo.HTTPError (from middleware, auth, etc.)
+		// 1. Check if it implements HTTPStatusCoder (includes echo.ErrForbidden, etc.)
+		// In Echo v5, predefined errors like ErrForbidden are *httpError (unexported),
+		// not *HTTPError, so we must check the interface instead of the concrete type.
+		var sc echo.HTTPStatusCoder
+		if errors.As(err, &sc) {
+			code = sc.StatusCode()
+			// HTTPStatusCoder doesn't have Error(), so we use the status text
+			message = http.StatusText(code)
+		}
+
+		// 2. If it's specifically an HTTPError, use its message for more details
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
 			code = he.Code
-			message = he.Message
-			// Check if internal error has more details we should use
-			if he.Internal != nil {
-				originalErr = he.Internal
-				err = he.Internal
+			if he.Message != "" {
+				message = he.Message
 			}
 		}
 
-		// 2. Special case: 413 body limit → convert to ErrFileIsTooLarge
-		// This must be checked before other error type checks
-		if code == http.StatusRequestEntityTooLarge {
+		// 3. Special case: 413 body limit → convert to ErrFileIsTooLarge
+		// Check both the code (if it was an HTTPError) and errors.Is for wrapped errors
+		// In Echo v5, body limit errors during multipart parsing may be wrapped
+		if code == http.StatusRequestEntityTooLarge || errors.Is(err, echo.ErrStatusRequestEntityTooLarge) {
 			fileErr := files.ErrFileIsTooLarge{}
 			errDetails := fileErr.HTTPError()
 			code = errDetails.HTTPCode
 			message = errDetails
 		} else if _, isMarshaler := err.(json.Marshaler); isMarshaler {
-			// 3. Check for json.Marshaler (preserves full struct like ValidationHTTPError)
+			// 4. Check for json.Marshaler (preserves full struct like ValidationHTTPError)
 			// This allows errors with extra fields (like InvalidFields) to be serialized correctly
 			if codeGetter, hasCode := err.(httpCodeGetter); hasCode {
 				code = codeGetter.GetHTTPCode()
 			}
 			message = err // Echo will serialize via MarshalJSON
 		} else if hp, ok := err.(web.HTTPErrorProcessor); ok {
-			// 4. Standard HTTPErrorProcessor (domain errors like ErrProjectDoesNotExist)
+			// 5. Standard HTTPErrorProcessor (domain errors like ErrProjectDoesNotExist)
 			errDetails := hp.HTTPError()
 			code = errDetails.HTTPCode
 			message = errDetails
 		}
-		// 5. For any other error type, we keep the defaults (500 with generic message)
-		// or the echo.HTTPError values if it was that type
-
-		// Log the error
-		log.Error(originalErr.Error())
+		// 6. For any other error type, we keep the defaults (500 with generic message)
+		// or the echo.HTTPStatusCoder/HTTPError values if it was that type
 
 		// Sentry reporting for 5xx errors
 		if enableSentry && code >= 500 {
@@ -114,14 +120,14 @@ func CreateHTTPErrorHandler(e *echo.Echo, enableSentry bool) echo.HTTPErrorHandl
 			err = c.JSON(code, message)
 		}
 		if err != nil {
-			e.Logger.Error(err)
+			e.Logger.Error(err.Error())
 		}
 	}
 }
 
 // reportToSentry sends an error to Sentry with request context
-func reportToSentry(err error, c echo.Context) {
-	hub := sentryecho.GetHubFromContext(c)
+func reportToSentry(err error, c *echo.Context) {
+	hub := GetSentryHubFromContext(c)
 	if hub != nil {
 		hub.WithScope(func(scope *sentry.Scope) {
 			scope.SetExtra("url", c.Request().URL)

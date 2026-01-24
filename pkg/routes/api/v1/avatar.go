@@ -32,7 +32,7 @@ import (
 	"strings"
 
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // GetAvatar returns a user's avatar
@@ -46,7 +46,7 @@ import (
 // @Failure 404 {object} models.Message "The user does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /{username}/avatar [get]
-func GetAvatar(c echo.Context) error {
+func GetAvatar(c *echo.Context) error {
 	// Get the username
 	username := c.Param("username")
 
@@ -104,7 +104,7 @@ func GetAvatar(c echo.Context) error {
 // @Failure 403 {object} models.Message "File too large."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/settings/avatar/upload [put]
-func UploadAvatar(c echo.Context) (err error) {
+func UploadAvatar(c *echo.Context) (err error) {
 
 	s := db.NewSession()
 	defer s.Close()

@@ -26,11 +26,11 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // UpdateWeb is the webhandler to update an object
-func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
+func (c *WebHandler) UpdateWeb(ctx *echo.Context) error {
 
 	// Get our model
 	currentStruct := c.EmptyStruct()
@@ -53,7 +53,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	// Check if the user has the permission to do that
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").Wrap(err)
 	}
 
 	// Create the db session
@@ -73,7 +73,7 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	if !canUpdate {
 		_ = s.Rollback()
 		log.Warningf("Tried to update while not having the permissions for it (User: %v)", currentAuth)
-		return echo.NewHTTPError(http.StatusForbidden)
+		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 	}
 
 	// Do the update

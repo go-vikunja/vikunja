@@ -23,7 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 
 	"code.vikunja.io/api/pkg/user"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // GenerateCaldavToken is the handler to create a caldav token
@@ -38,7 +38,7 @@ import (
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/token/caldav [put]
-func GenerateCaldavToken(c echo.Context) (err error) {
+func GenerateCaldavToken(c *echo.Context) (err error) {
 
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
@@ -65,7 +65,7 @@ func GenerateCaldavToken(c echo.Context) (err error) {
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/token/caldav [get]
-func GetCaldavTokens(c echo.Context) error {
+func GetCaldavTokens(c *echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func GetCaldavTokens(c echo.Context) error {
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/token/caldav/{id} [delete]
-func DeleteCaldavToken(c echo.Context) error {
+func DeleteCaldavToken(c *echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
 		return err

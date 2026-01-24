@@ -22,11 +22,11 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // CheckToken checks prints a message if the token is valid or not. Currently only used for testing purposes.
-func CheckToken(c echo.Context) error {
+func CheckToken(c *echo.Context) error {
 
 	user := c.Get("user").(*jwt.Token)
 
@@ -36,6 +36,6 @@ func CheckToken(c echo.Context) error {
 }
 
 // TestToken returns a simple test message. Used for testing purposes.
-func TestToken(c echo.Context) error {
+func TestToken(c *echo.Context) error {
 	return c.JSON(http.StatusOK, models.Message{Message: "ok"})
 }

@@ -25,7 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type UserRegister struct {
@@ -45,7 +45,7 @@ type UserRegister struct {
 // @Failure 400 {object} web.HTTPError "No or invalid user register object provided / User already exists."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /register [post]
-func RegisterUser(c echo.Context) error {
+func RegisterUser(c *echo.Context) error {
 	if !config.ServiceEnableRegistration.GetBool() {
 		return echo.ErrNotFound
 	}

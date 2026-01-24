@@ -29,7 +29,7 @@ import (
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/version"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type vikunjaInfos struct {
@@ -86,7 +86,7 @@ type legalInfo struct {
 // @Produce json
 // @Success 200 {object} v1.vikunjaInfos
 // @Router /info [get]
-func Info(c echo.Context) error {
+func Info(c *echo.Context) error {
 	info := vikunjaInfos{
 		Version:                version.Version,
 		FrontendURL:            config.ServicePublicURL.GetString(),
