@@ -26,16 +26,15 @@ test.describe('API Tokens', () => {
 		const titleInput = page.locator('#apiTokenTitle')
 		await expect(titleInput).toBeVisible()
 
-		// Find the checkbox for "create" under the tasks group and verify it's checked
-		// We look for the nested structure: tasks group followed by create permission
-		// The tasks section contains multiple checkboxes - the first "create" after "tasks" should be checked
-		const tasksSection = page.locator('.fancy-checkbox:has-text("tasks")').first()
-		await expect(tasksSection).toBeVisible()
+		// Find the div containing the "tasks" group (has the bold group header checkbox)
+		const tasksGroupDiv = page.locator('.mbe-2').filter({
+			has: page.locator('.fancy-checkbox.has-text-weight-bold:has-text("tasks")'),
+		})
+		await expect(tasksGroupDiv).toBeVisible()
 
-		// Verify at least one checkbox is checked (the one we specified in the URL)
-		// The tasks:create checkbox should have its input checked
-		const checkedCheckbox = page.locator('.fancy-checkbox input[type="checkbox"]:checked')
-		await expect(checkedCheckbox.first()).toBeVisible()
+		// Within that group, find the specific "create" permission checkbox and verify it's checked
+		const createCheckbox = tasksGroupDiv.locator('.fancy-checkbox.mis-4:has-text("create") input[type="checkbox"]')
+		await expect(createCheckbox).toBeChecked()
 	})
 
 	test('Pre-populates both title and scopes from query parameters', async ({authenticatedPage: page}) => {
