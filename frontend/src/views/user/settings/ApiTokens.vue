@@ -82,8 +82,9 @@ function resetPermissions() {
 }
 
 function applyQueryParams() {
-	const titleParam = route.query.title as string | undefined
-	const scopesParam = route.query.scopes as string | undefined
+	// Normalize query params - they can be string, string[], or null
+	const titleParam = Array.isArray(route.query.title) ? route.query.title[0] : route.query.title
+	const scopesParam = Array.isArray(route.query.scopes) ? route.query.scopes[0] : route.query.scopes
 
 	if (titleParam || scopesParam) {
 		showCreateForm.value = true
