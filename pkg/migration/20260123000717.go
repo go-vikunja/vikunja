@@ -33,7 +33,7 @@ func (webhooks20260123000717) TableName() string {
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20260123000717",
-		Description: "add basic auth",
+		Description: "Add basic auth to webhooks",
 		Migrate: func(tx *xorm.Engine) error {
 			return tx.Sync(webhooks20260123000717{})
 		},
