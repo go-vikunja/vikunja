@@ -68,7 +68,7 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context) er
 	defer s.Close()
 	token, err := models.GetTokenFromTokenString(s, strings.TrimPrefix(tokenHeaderValue, "Bearer "))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error()).Wrap(err)
 	}
 
 	if time.Now().After(token.ExpiresAt) {
@@ -83,7 +83,7 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context) er
 
 	u, err := user.GetUserByID(s, token.OwnerID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error()).Wrap(err)
 	}
 
 	c.Set("api_token", token)

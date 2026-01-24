@@ -118,7 +118,7 @@ func ChangeUserAvatarProvider(c *echo.Context) error {
 	uap := &UserAvatarProvider{}
 	err := c.Bind(uap)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad avatar type provided.")
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad avatar type provided.").Wrap(err)
 	}
 
 	u, err := user2.GetCurrentUser(c)
@@ -185,7 +185,7 @@ func UpdateGeneralUserSettings(c *echo.Context) error {
 
 	err = c.Validate(us)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
 	u, err := user2.GetCurrentUser(c)

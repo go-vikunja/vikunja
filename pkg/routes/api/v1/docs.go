@@ -34,7 +34,7 @@ func DocsJSON(c *echo.Context) error {
 	doc, err := swag.ReadDoc()
 	if err != nil {
 		log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error()).Wrap(err)
 	}
 
 	return c.Blob(http.StatusOK, echo.MIMEApplicationJSON, []byte(doc))

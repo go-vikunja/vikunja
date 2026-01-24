@@ -52,7 +52,7 @@ func (c *WebHandler) CreateWeb(ctx *echo.Context) error {
 	// Get the user to pass for later checks
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").Wrap(err)
 	}
 
 	// Create the db session

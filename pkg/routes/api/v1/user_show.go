@@ -54,7 +54,7 @@ type UserWithSettings struct {
 func UserShow(c *echo.Context) error {
 	a, err := auth.GetAuthFromClaims(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.").Wrap(err)
 	}
 
 	s := db.NewSession()

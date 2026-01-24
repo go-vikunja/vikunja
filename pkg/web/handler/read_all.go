@@ -40,7 +40,7 @@ func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").Wrap(err)
 	}
 
 	// Get the object & bind params to struct
@@ -61,7 +61,7 @@ func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
 		log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.")
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.").Wrap(err)
 	}
 	if pageNumber < 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Page number cannot be negative.")
@@ -76,7 +76,7 @@ func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 		perPageNumber, err = strconv.Atoi(perPage)
 		if err != nil {
 			log.Error(err.Error())
-			return echo.NewHTTPError(http.StatusBadRequest, "Bad per page amount requested.")
+			return echo.NewHTTPError(http.StatusBadRequest, "Bad per page amount requested.").Wrap(err)
 		}
 	}
 	// Set default page count

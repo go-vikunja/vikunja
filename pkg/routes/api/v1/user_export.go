@@ -52,12 +52,12 @@ func checkExportRequest(c *echo.Context) (s *xorm.Session, u *user.User, err err
 
 	var pass UserPasswordConfirmation
 	if err := c.Bind(&pass); err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "No password provided.")
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "No password provided.").Wrap(err)
 	}
 
 	err = c.Validate(pass)
 	if err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
 	err = user.CheckUserPassword(u, pass.Password)

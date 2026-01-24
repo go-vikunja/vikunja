@@ -27,7 +27,7 @@ import (
 // HealthcheckHandler handles healthckeck 'OK' response
 func HealthcheckHandler(c *echo.Context) error {
 	if err := health.Check(); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error()).Wrap(err)
 	}
 	return c.String(http.StatusOK, "OK")
 }

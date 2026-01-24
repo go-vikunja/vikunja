@@ -72,7 +72,7 @@ func (bp *BackgroundProvider) SearchBackgrounds(c *echo.Context) error {
 
 	err := c.Bind(p)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error()).Wrap(err)
 	}
 
 	search := c.QueryParam("s")
@@ -81,7 +81,7 @@ func (bp *BackgroundProvider) SearchBackgrounds(c *echo.Context) error {
 	if pg != "" {
 		page, err = strconv.ParseInt(pg, 10, 64)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid page number: "+err.Error())
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid page number: "+err.Error()).Wrap(err)
 		}
 	}
 
@@ -91,12 +91,12 @@ func (bp *BackgroundProvider) SearchBackgrounds(c *echo.Context) error {
 	result, err := p.Search(s, search, page)
 	if err != nil {
 		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusBadRequest, "An error occurred: "+err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "An error occurred: "+err.Error()).Wrap(err)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusBadRequest, "An error occurred: "+err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "An error occurred: "+err.Error()).Wrap(err)
 	}
 
 	return c.JSON(http.StatusOK, result)
@@ -106,12 +106,12 @@ func (bp *BackgroundProvider) SearchBackgrounds(c *echo.Context) error {
 func (bp *BackgroundProvider) setBackgroundPreparations(s *xorm.Session, c *echo.Context) (project *models.Project, auth web.Auth, err error) {
 	auth, err = auth2.GetAuthFromClaims(c)
 	if err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error()).Wrap(err)
 	}
 
 	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error())
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error()).Wrap(err)
 	}
 
 	// Check if the user has the permission to change the project background
@@ -146,7 +146,7 @@ func (bp *BackgroundProvider) SetBackground(c *echo.Context) error {
 	err = c.Bind(image)
 	if err != nil {
 		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error()).Wrap(err)
 	}
 
 	err = p.Set(s, image, project, auth)
@@ -300,12 +300,12 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 func checkProjectBackgroundRights(s *xorm.Session, c *echo.Context) (project *models.Project, auth web.Auth, err error) {
 	auth, err = auth2.GetAuthFromClaims(c)
 	if err != nil {
-		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error())
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error()).Wrap(err)
 	}
 
 	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
-		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error())
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error()).Wrap(err)
 	}
 
 	// Check if a background for this project exists + Permissions

@@ -72,7 +72,7 @@ func UploadTaskAttachment(c *echo.Context) error {
 
 	var taskAttachment models.TaskAttachment
 	if err := c.Bind(&taskAttachment); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided")
+		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided").Wrap(err)
 	}
 
 	// Permissions check
@@ -98,7 +98,7 @@ func UploadTaskAttachment(c *echo.Context) error {
 	if err != nil {
 		_ = s.Rollback()
 		if errors.Is(err, http.ErrNotMultipart) {
-			return echo.NewHTTPError(http.StatusBadRequest, "No multipart form provided")
+			return echo.NewHTTPError(http.StatusBadRequest, "No multipart form provided").Wrap(err)
 		}
 		return err
 	}
@@ -156,7 +156,7 @@ func GetTaskAttachment(c *echo.Context) error {
 
 	var taskAttachment models.TaskAttachment
 	if err := c.Bind(&taskAttachment); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided")
+		return echo.NewHTTPError(http.StatusBadRequest, "No task ID provided").Wrap(err)
 	}
 
 	// Permissions check

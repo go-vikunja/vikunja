@@ -48,7 +48,7 @@ func (c *WebHandler) ReadOneWeb(ctx *echo.Context) error {
 	// Check permissions
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").Wrap(err)
 	}
 
 	// Create the db session

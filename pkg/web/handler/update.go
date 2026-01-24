@@ -53,7 +53,7 @@ func (c *WebHandler) UpdateWeb(ctx *echo.Context) error {
 	// Check if the user has the permission to do that
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").Wrap(err)
 	}
 
 	// Create the db session
