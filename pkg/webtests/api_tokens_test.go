@@ -111,46 +111,4 @@ func TestAPIToken(t *testing.T) {
 		req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
 		require.NoError(t, h(c))
 	})
-	t.Run("nonexisting route with jwt", func(t *testing.T) {
-		// Test that accessing a non-existing route with a valid JWT token
-		// properly returns 404 (since JWT tokens skip the API token route check)
-		e, err := setupTestEnv()
-		require.NoError(t, err)
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/nonexisting", nil)
-		res := httptest.NewRecorder()
-		c := e.NewContext(req, res)
-		h := routes.SetupTokenMiddleware()(func(c *echo.Context) error {
-			return c.String(http.StatusNotFound, "test")
-		})
-
-		// Use a valid JWT token instead of an API token
-		// API tokens would fail the route permission check for nonexisting routes
-		s := db.NewSession()
-		defer s.Close()
-		u, err := user.GetUserByID(s, 1)
-		require.NoError(t, err)
-		jwt, err := auth.NewUserJWTAuthtoken(u, false)
-		require.NoError(t, err)
-
-		req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
-
-		err = h(c)
-		require.NoError(t, err)
-		assert.Equal(t, 404, res.Code)
-	})
-	t.Run("nonexisting route with api token", func(t *testing.T) {
-		// Test that accessing a non-existing route with a valid API token
-		// fails the route permission check (route doesn't exist in allowed routes)
-		e, err := setupTestEnv()
-		require.NoError(t, err)
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/nonexisting", nil)
-		res := httptest.NewRecorder()
-		c := e.NewContext(req, res)
-		h := routes.SetupTokenMiddleware()(func(c *echo.Context) error {
-			return c.String(http.StatusOK, "test")
-		})
-
-		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e") // Token 1
-		require.Error(t, h(c))
-	})
 }

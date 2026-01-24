@@ -46,12 +46,6 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 						return true
 					}
 
-					// Check if the route exists before validating permissions.
-					// If the route doesn't exist, skip JWT middleware and let the router return 404.
-					if !models.IsKnownAPIRoute(c.Request().URL.Path) {
-						return true
-					}
-
 					err := checkAPITokenAndPutItInContext(s, c)
 					return err == nil
 				}

@@ -285,34 +285,6 @@ func GetAvailableAPIRoutesForToken(c *echo.Context) error {
 	return c.JSON(http.StatusOK, apiTokenRoutes)
 }
 
-// IsKnownAPIRoute checks if the given path corresponds to a known API route.
-// This is used to differentiate between "route doesn't exist" (should 404) and
-// "route exists but token lacks permission" (should 401).
-func IsKnownAPIRoute(path string) bool {
-	routeGroupName, routeParts := getRouteGroupName(path)
-	routeGroupName = strings.TrimSuffix(routeGroupName, "_bulk")
-
-	if routeGroupName == "user" ||
-		routeGroupName == "users" ||
-		routeGroupName == "routes" {
-		routeGroupName = "other"
-	}
-
-	_, has := apiTokenRoutes[routeGroupName]
-	if has {
-		return true
-	}
-
-	if len(routeParts) > 0 {
-		_, has = apiTokenRoutes[routeParts[0]]
-		if has {
-			return true
-		}
-	}
-
-	return false
-}
-
 // CanDoAPIRoute checks if a token is allowed to use the current api route
 func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	path := c.Path()
