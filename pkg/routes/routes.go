@@ -114,7 +114,16 @@ func matchCORSOrigin(origin string, allowedOrigins []string) (string, bool, erro
 
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
-	e := echo.New()
+	// Configure Echo with a router that unescapes path parameters.
+	// This is needed because Echo v5 does not unescape path params by default.
+	// Without this, path parameters like usernames with spaces or apostrophes
+	// would remain URL-encoded (e.g., "John%20D%27Urso" instead of "John D'Urso").
+	// See https://kolaente.dev/vikunja/vikunja/issues/1224
+	e := echo.NewWithConfig(echo.Config{
+		Router: echo.NewRouter(echo.RouterConfig{
+			UnescapePathParamValues: true,
+		}),
+	})
 
 	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
 
