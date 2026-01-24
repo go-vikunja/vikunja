@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"strings"
 
+	"code.vikunja.io/api/pkg/log"
+
 	"github.com/labstack/echo/v5"
 )
 
@@ -333,6 +335,8 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 			return true
 		}
 	}
+
+	log.Debugf("[auth] Token %d tried to use route %s which requires permission %s but has only %v", token.ID, path, route, token.APIPermissions)
 
 	return false
 }
