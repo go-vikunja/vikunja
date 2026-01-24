@@ -177,7 +177,7 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 	routeGroupName, routeParts := getRouteGroupName(route.Path)
 
-	if routeGroupName == "tokenTest" ||
+	if routeGroupName == "token_test" ||
 		routeGroupName == "subscriptions" ||
 		routeGroupName == "tokens" ||
 		routeGroupName == "*" ||
