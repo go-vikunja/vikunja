@@ -245,7 +245,7 @@ func getWebhookHTTPClient() (client *http.Client) {
 		return webhookClient
 	}
 
-	client = http.DefaultClient
+	client = &http.Client{}
 	client.Timeout = time.Duration(config.WebhooksTimeoutSeconds.GetInt()) * time.Second
 
 	if config.WebhooksProxyURL.GetString() == "" || config.WebhooksProxyPassword.GetString() == "" {
