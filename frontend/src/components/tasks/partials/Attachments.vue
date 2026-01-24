@@ -245,12 +245,29 @@ function resetDragState() {
 	isDragOverEditor.value = false
 }
 
+/**
+ * Check if a drag event contains actual files (not text being dragged).
+ * This prevents the file upload overlay from appearing when dragging text
+ * from within the editor to outside it.
+ */
+function eventContainsFiles(event: Event | null | undefined): boolean {
+	if (!event || !(event instanceof DragEvent)) {
+		return false
+	}
+	return event.dataTransfer?.types.includes('Files') ?? false
+}
+
 const {isOverDropZone} = useDropZone(document, {
 	onEnter(files, event) {
 		if (!props.editEnabled) {
 			return
 		}
-		
+
+		// Only show dropzone if actual files are being dragged, not text
+		if (!eventContainsFiles(event)) {
+			return
+		}
+
 		isDraggingFiles.value = true
 		isDragOverEditor.value = eventTargetsEditor(event)
 	},
