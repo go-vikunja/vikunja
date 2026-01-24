@@ -257,7 +257,7 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	if err != nil {
 		return
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
 		return err
 	}
@@ -340,7 +340,7 @@ func pingbackByPhotoID(photoID string) {
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}
-	_, err = http.DefaultClient.Do(req)
+	_, err = (&http.Client{}).Do(req)
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}

@@ -90,7 +90,7 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 		if err != nil {
 			return nil, err
 		}
-		resp, err := http.DefaultClient.Do(req)
+		resp, err := (&http.Client{}).Do(req)
 		if err != nil {
 			return nil, err
 		}
