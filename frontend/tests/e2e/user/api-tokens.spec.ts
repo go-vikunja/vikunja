@@ -26,14 +26,14 @@ test.describe('API Tokens', () => {
 		const titleInput = page.locator('#apiTokenTitle')
 		await expect(titleInput).toBeVisible()
 
-		// Find the div containing the "tasks" group (has the bold group header checkbox)
+		// Find the div containing the "tasks" group by looking for the exact checkbox name
 		const tasksGroupDiv = page.locator('.mbe-2').filter({
-			has: page.locator('.fancy-checkbox.has-text-weight-bold:has-text("tasks")'),
+			has: page.getByRole('checkbox', {name: 'Checkbox tasks', exact: true}),
 		})
 		await expect(tasksGroupDiv).toBeVisible()
 
 		// Within that group, find the specific "create" permission checkbox and verify it's checked
-		const createCheckbox = tasksGroupDiv.locator('.fancy-checkbox.mis-4:has-text("create") input[type="checkbox"]')
+		const createCheckbox = tasksGroupDiv.getByRole('checkbox', {name: 'Checkbox create'})
 		await expect(createCheckbox).toBeChecked()
 	})
 
