@@ -125,6 +125,7 @@ func setupAutoTLS(server *http.Server) {
 		}
 	}()
 
+	log.Infof("HTTPS server listening on %s", config.ServiceInterface.GetString())
 	err = server.ListenAndServeTLS("", "")
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Errorf("Server error: %v", err)
@@ -169,8 +170,10 @@ var webCmd = &cobra.Command{
 				if err != nil {
 					log.Fatalf("Failed to setup unix socket: %v", err)
 				}
+				log.Infof("HTTP server listening on unix socket %s", config.ServiceUnixSocket.GetString())
 				err = server.Serve(listener)
 			} else {
+				log.Infof("HTTP server listening on %s", config.ServiceInterface.GetString())
 				err = server.ListenAndServe()
 			}
 
