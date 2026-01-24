@@ -56,7 +56,7 @@ func ProjectHandler(c *echo.Context) error {
 
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error()).Wrap(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -98,7 +98,7 @@ func TaskHandler(c *echo.Context) error {
 
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error()).Wrap(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
 	// Get the task uid
@@ -120,7 +120,7 @@ func TaskHandler(c *echo.Context) error {
 func PrincipalHandler(c *echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error()).Wrap(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -149,7 +149,7 @@ func PrincipalHandler(c *echo.Context) error {
 func EntryHandler(c *echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error()).Wrap(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
