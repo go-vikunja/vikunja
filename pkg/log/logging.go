@@ -70,7 +70,16 @@ func makeLogHandler(enabled bool, output string, level string, format string) sl
 
 // createHandler creates a consistent slog handler for all loggers
 func createHandler(writer io.Writer, level slog.Level, format string) slog.Handler {
-	handlerOpts := &slog.HandlerOptions{Level: level}
+	handlerOpts := &slog.HandlerOptions{
+		Level: level,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			// Remove message attribute when empty
+			if a.Key == slog.MessageKey && a.Value.String() == "" {
+				return slog.Attr{}
+			}
+			return a
+		},
+	}
 	if strings.ToLower(format) == "structured" {
 		return slog.NewJSONHandler(writer, handlerOpts)
 	}

@@ -52,8 +52,8 @@
 package routes
 
 import (
+	"context"
 	"log/slog"
-	"net/http"
 	"strings"
 	"time"
 
@@ -112,46 +112,6 @@ func matchCORSOrigin(origin string, allowedOrigins []string) (string, bool, erro
 	return "", false, nil
 }
 
-// responseWriterWrapper wraps http.ResponseWriter to capture the status code
-type responseWriterWrapper struct {
-	http.ResponseWriter
-	status int
-}
-
-func (w *responseWriterWrapper) WriteHeader(code int) {
-	w.status = code
-	w.ResponseWriter.WriteHeader(code)
-}
-
-// slogHTTPMiddleware creates a custom HTTP logging middleware using slog
-func slogHTTPMiddleware(logger *slog.Logger) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return echo.HandlerFunc(func(c *echo.Context) error {
-			start := time.Now()
-
-			// Wrap the response writer to capture status code
-			wrapper := &responseWriterWrapper{
-				ResponseWriter: c.Response(),
-				status:         http.StatusOK,
-			}
-			c.SetResponse(wrapper)
-
-			err := next(c)
-
-			req := c.Request()
-
-			logger.InfoContext(c.Request().Context(),
-				req.Method+" "+req.RequestURI,
-				"status", wrapper.status,
-				"remote_ip", c.RealIP(),
-				"latency", time.Since(start),
-				"user_agent", req.UserAgent(),
-			)
-
-			return err
-		})
-	}
-}
 
 // NewEcho registers a new Echo instance
 func NewEcho() *echo.Echo {
@@ -162,7 +122,32 @@ func NewEcho() *echo.Echo {
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
 		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
-		e.Use(slogHTTPMiddleware(httpLogger))
+		e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+			LogStatus:   true,
+			LogURI:      true,
+			LogMethod:   true,
+			LogLatency:  true,
+			HandleError: true,
+			LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+				if v.Error == nil {
+					httpLogger.LogAttrs(context.Background(), slog.LevelInfo, "",
+						slog.String("method", v.Method),
+						slog.String("uri", v.URI),
+						slog.Int("status", v.Status),
+						slog.Duration("latency", v.Latency),
+					)
+				} else {
+					httpLogger.LogAttrs(context.Background(), slog.LevelError, "",
+						slog.String("method", v.Method),
+						slog.String("uri", v.URI),
+						slog.Int("status", v.Status),
+						slog.Duration("latency", v.Latency),
+						slog.String("err", v.Error.Error()),
+					)
+				}
+				return nil
+			},
+		}))
 	}
 
 	// panic recover
