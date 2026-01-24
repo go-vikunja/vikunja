@@ -295,11 +295,6 @@ func registerAPIRoutes(a *echo.Group) {
 	n := a.Group("")
 	setupRateLimit(n, "ip")
 
-	// NOTE: Echo v5 handles URL path parameter unescaping correctly by default.
-	// The previous middleware for unescaping params is no longer needed.
-	// See https://kolaente.dev/vikunja/vikunja/issues/1224
-	// See https://github.com/labstack/echo/issues/766
-
 	// Docs
 	n.GET("/docs.json", apiv1.DocsJSON)
 	n.GET("/docs", apiv1.RedocUI)
