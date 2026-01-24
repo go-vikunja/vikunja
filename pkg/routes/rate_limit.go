@@ -51,9 +51,7 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 			limiterCtx, err := rateLimiter.Get(c.Request().Context(), rateLimitKey)
 			if err != nil {
 				log.Errorf("IPRateLimit - rateLimiter.Get - err: %v, %s on %s", err, rateLimitKey, c.Request().URL)
-				return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-					"message": err,
-				})
+				return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 			}
 
 			h := c.Response().Header()
@@ -63,9 +61,7 @@ func RateLimit(rateLimiter *limiter.Limiter, rateLimitKind string) echo.Middlewa
 
 			if limiterCtx.Reached {
 				log.Infof("Too Many Requests from %s on %s", rateLimitKey, c.Request().URL)
-				return c.JSON(http.StatusTooManyRequests, map[string]interface{}{
-					"message": "Too Many Requests on " + c.Request().URL.String(),
-				})
+				return echo.NewHTTPError(http.StatusTooManyRequests, "Too Many Requests")
 			}
 
 			// log.Printf("%s request continue", c.RealIP())
