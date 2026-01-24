@@ -45,7 +45,7 @@ import (
 // Callback contains the callback after an auth request was made and redirected
 type Callback struct {
 	Code        string `query:"code" json:"code"`
-	Scope       string `query:"scop" json:"scope"`
+	Scope       string `query:"scope" json:"scope"`
 	RedirectURL string `json:"redirect_url"`
 }
 
