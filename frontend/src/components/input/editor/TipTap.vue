@@ -134,6 +134,21 @@
 		>
 			{{ $t('misc.save') }}
 		</XButton>
+
+		<!-- Discard changes confirmation modal -->
+		<Modal
+			:enabled="showDiscardModal"
+			@close="cancelDiscard"
+			@submit="confirmDiscard"
+		>
+			<template #header>
+				<span>{{ $t('input.editor.discardChanges.title') }}</span>
+			</template>
+
+			<template #text>
+				<p>{{ $t('input.editor.discardChanges.text') }}</p>
+			</template>
+		</Modal>
 	</div>
 </template>
 
@@ -180,6 +195,7 @@ import AttachmentModel from '@/models/attachment'
 import AttachmentService from '@/services/attachment'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/Button.vue'
+import Modal from '@/components/misc/Modal.vue'
 
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import inputPrompt from '@/helpers/inputPrompt'
@@ -322,6 +338,9 @@ type Mode = 'edit' | 'preview'
 const internalMode = ref<Mode>('preview')
 const isEditing = computed(() => internalMode.value === 'edit' && props.isEditEnabled)
 const contentHasChanged = ref<boolean>(false)
+
+// Discard confirmation modal state
+const showDiscardModal = ref(false)
 
 // TipTap crashes when inserting an image into an empty editor.
 // To work around this, we're inserting an element first, then insert the image, then remove the element.
@@ -559,7 +578,7 @@ if (props.enableDiscardShortcut) {
 		addKeyboardShortcuts() {
 			return {
 				'Escape': () => {
-					exitEditMode()
+					tryExitEditMode()
 					return true
 				},
 			}
@@ -647,6 +666,27 @@ function exitEditMode() {
 	if (isEditing.value) {
 		internalMode.value = 'preview'
 	}
+}
+
+function tryExitEditMode() {
+	// If content has changed, show confirmation modal
+	if (contentHasChanged.value) {
+		showDiscardModal.value = true
+		return
+	}
+	// No changes, exit directly
+	exitEditMode()
+}
+
+function confirmDiscard() {
+	showDiscardModal.value = false
+	exitEditMode()
+}
+
+function cancelDiscard() {
+	showDiscardModal.value = false
+	// Refocus the editor
+	editor.value?.commands.focus()
 }
 
 function setEditIfApplicable() {

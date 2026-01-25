@@ -78,8 +78,17 @@ const loading = computed(() => taskStore.isLoading)
 
 const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
+function handleBeforeUnload(e: BeforeUnloadEvent) {
+	if (hasChanges.value) {
+		e.preventDefault()
+		// Modern browsers ignore custom messages but this is still required
+		e.returnValue = ''
+		return ''
+	}
+}
+
 onMounted(() => {
-	window.addEventListener('beforeunload', save)
+	window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
 async function saveWithDelay() {
@@ -106,7 +115,7 @@ onBeforeUnmount(async () => {
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
-	window.removeEventListener('beforeunload', save)
+	window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
 onBeforeRouteLeave(() => save())

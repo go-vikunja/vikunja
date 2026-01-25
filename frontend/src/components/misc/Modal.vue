@@ -66,10 +66,10 @@
 </template>
 
 <script lang="ts" setup>
-import CustomTransition from '@/components/misc/CustomTransition.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
-import {ref, useAttrs, watchEffect, onBeforeUnmount, watch} from 'vue'
-import {useScrollLock} from '@vueuse/core'
+import BaseButton from '@/components/base/BaseButton.vue';
+import CustomTransition from '@/components/misc/CustomTransition.vue';
+import { useScrollLock } from '@vueuse/core';
+import { onBeforeUnmount, ref, useAttrs, watch, watchEffect } from 'vue';
 
 const props = withDefaults(defineProps<{
 	enabled?: boolean,
@@ -101,11 +101,11 @@ watchEffect(() => {
 })
 
 function onKeydown(e: KeyboardEvent) {
-	if (e.key === 'Escape') {
-		if (e.isComposing) {
-			return
-		}
- 		emit('close')
+	if (e.isComposing) {
+		return
+	}
+	if (e.key === 'Enter') {
+		emit('submit')
 	}
 }
 

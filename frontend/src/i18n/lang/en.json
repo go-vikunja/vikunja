@@ -695,6 +695,10 @@
       "undo": "Undo",
       "redo": "Redo",
       "placeholder": "Type some text or hit '/' to see more options…",
+      "discardChanges": {
+        "title": "Discard changes?",
+        "text": "You have unsaved changes. Do you really want to discard them?"
+      },
       "table": {
         "title": "Table",
         "insert": "Insert table",
