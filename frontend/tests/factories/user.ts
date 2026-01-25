@@ -22,7 +22,7 @@ export class UserFactory extends Factory {
 
 		return {
 			id: '{increment}',
-			username: faker.lorem.word(10) + faker.string.uuid(),
+			username: faker.string.alphanumeric(10) + faker.string.uuid(),
 			password: TEST_PASSWORD_HASH,
 			status: 0,
 			issuer: 'local',

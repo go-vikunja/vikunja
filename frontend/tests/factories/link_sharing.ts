@@ -9,7 +9,7 @@ export class LinkShareFactory extends Factory {
 
 		return {
 			id: '{increment}',
-			hash: faker.lorem.word(32),
+			hash: faker.string.alphanumeric(32),
 			project_id: 1,
 			permission: 0,
 			sharing_type: 0,
