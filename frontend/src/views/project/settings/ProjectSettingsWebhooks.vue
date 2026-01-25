@@ -19,6 +19,7 @@ import WebhookModel from '@/models/webhook'
 import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FormField from '@/components/input/FormField.vue'
+import Expandable from '@/components/base/Expandable.vue'
 import {success} from '@/message'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 
@@ -30,6 +31,7 @@ const project = ref<IProject>()
 useTitle(t('project.webhooks.title'))
 
 const showNewForm = ref(false)
+const showBasicAuth = ref(false)
 
 async function loadProject(projectId: number) {
 	const projectService = new ProjectService()
@@ -167,36 +169,47 @@ function validateSelectedEvents() {
 					</BaseButton>
 				</p>
 			</div>
-			<div class="field">
-				<label
-					class="label"
-					for="basicauthuser"
-				>
-					{{ $t('project.webhooks.basicauthuser') }}
-				</label>
-				<div class="control">
-					<input
-						id="basicauthuser"
-						v-model="newWebhook.basicauthuser"
-						class="input"
+			<XButton
+				class="mbe-2"
+				@click="showBasicAuth = !showBasicAuth"
+			>
+				{{ $t('project.webhooks.basicauthlink') }}
+			</XButton>
+			<Expandable
+				:open="showBasicAuth"
+				class="content"
+			>
+				<div class="field">
+					<label
+						class="label"
+						for="basicauthuser"
 					>
+						{{ $t('project.webhooks.basicauthuser') }}
+					</label>
+					<div class="control">
+						<input
+							id="basicauthuser"
+							v-model="newWebhook.basicauthuser"
+							class="input"
+						>
+					</div>
 				</div>
-			</div>
-			<div class="field">
-				<label
-					class="label"
-					for="basicauthpassword"
-				>
-					{{ $t('project.webhooks.basicauthpassword') }}
-				</label>
-				<div class="control">
-					<input
-						id="basicauthpassword"
-						v-model="newWebhook.basicauthpassword"
-						class="input"
+				<div class="field">
+					<label
+						class="label"
+						for="basicauthpassword"
 					>
+						{{ $t('project.webhooks.basicauthpassword') }}
+					</label>
+					<div class="control">
+						<input
+							id="basicauthpassword"
+							v-model="newWebhook.basicauthpassword"
+							class="input"
+						>
+					</div>
 				</div>
-			</div>
+			</Expandable>
 			<div class="field">
 				<label
 					class="label"
