@@ -166,8 +166,8 @@ func static() echo.MiddlewareFunc {
 					return err
 				}
 
-				var he *echo.HTTPError
-				if !errors.As(err, &he) || he.Code != http.StatusNotFound {
+				var he echo.HTTPStatusCoder
+				if !errors.As(err, &he) || he.StatusCode() != http.StatusNotFound {
 					return err
 				}
 
