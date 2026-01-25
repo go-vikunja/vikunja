@@ -137,7 +137,7 @@
     "postcss-preset-env": "10.6.1",
     "rollup": "4.55.3",
     "rollup-plugin-visualizer": "6.0.5",
-    "sass-embedded": "1.97.2",
+    "sass-embedded": "1.97.3",
     "stylelint": "16.26.1",
     "stylelint-config-property-sort-order-smacss": "10.0.0",
     "stylelint-config-recommended-vue": "1.6.1",
