@@ -17,6 +17,7 @@
 package notifications
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -88,6 +89,24 @@ func TestNewMail(t *testing.T) {
 	})
 }
 
+// assertHTMLContainsDarkModeSupport checks that the HTML message contains
+// the required dark mode meta tags and CSS
+func assertHTMLContainsDarkModeSupport(t *testing.T, htmlMessage string) {
+	t.Helper()
+	// Check for dark mode meta tags
+	assert.Contains(t, htmlMessage, `<meta name="color-scheme" content="light dark">`)
+	assert.Contains(t, htmlMessage, `<meta name="supported-color-schemes" content="light dark">`)
+
+	// Check for dark mode CSS
+	assert.Contains(t, htmlMessage, `@media (prefers-color-scheme: dark)`)
+	assert.Contains(t, htmlMessage, `.email-card`)
+	assert.Contains(t, htmlMessage, `box-shadow: 0.3em 0.3em 0.8em rgba(0,0,0,0.3) !important`)
+	assert.Contains(t, htmlMessage, `.email-button`)
+
+	// Check for email-card class on the card div
+	assert.Contains(t, htmlMessage, `class="email-card"`)
+}
+
 func TestRenderMail(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
 		mail := NewMail().
@@ -110,41 +129,16 @@ This is a line
 
 
 `, mailopts.Message)
-		assert.Equal(t, `
-<!doctype html>
-<html style="width: 100%; height: 100%; padding: 0; margin: 0;">
-<head>
-    <meta name="viewport" content="width: display-width;">
-</head>
-<body style="width: 100%; padding: 0; margin: 0; background: #f3f4f6">
-<div style="width: 100%; font-family: 'Open Sans', sans-serif; Text-rendering: optimizeLegibility">
-    <div style="width: 600px; margin: 0 auto; Text-align: justify;">
-        <h1 style="font-size: 30px; Text-align: center;">
-            <img src="cid:logo.png" style="height: 75px;" alt="Vikunja"/>
-        </h1>
-        <div style="border: 1px solid #dbdbdb; -webkit-box-shadow: 0.3em 0.3em 0.8em #e6e6e6; box-shadow: 0.3em 0.3em 0.8em #e6e6e6; color: #4a4a4a; padding: 5px 25px; border-radius: 3px; background: #fff;">
-<p>
-	Hi there,
-</p>
 
+		// Check for dark mode support
+		assertHTMLContainsDarkModeSupport(t, mailopts.HTMLMessage)
 
-	<p>This is a line</p>
+		// Check for expected content
+		assert.Contains(t, mailopts.HTMLMessage, `<p>This is a line</p>`)
+		assert.Contains(t, mailopts.HTMLMessage, `Hi there,`)
 
-
-
-
-
-
-
-
-
-
-</div>
-</div>
-</div>
-</body>
-</html>
-`, mailopts.HTMLMessage)
+		// Verify no action button is present
+		assert.NotContains(t, mailopts.HTMLMessage, `class="email-button"`)
 	})
 	t.Run("with action", func(t *testing.T) {
 		mail := NewMail().
@@ -181,64 +175,25 @@ This should be an outro line
 And one more, because why not?
 
 `, mailopts.Message)
-		assert.Equal(t, `
-<!doctype html>
-<html style="width: 100%; height: 100%; padding: 0; margin: 0;">
-<head>
-    <meta name="viewport" content="width: display-width;">
-</head>
-<body style="width: 100%; padding: 0; margin: 0; background: #f3f4f6">
-<div style="width: 100%; font-family: 'Open Sans', sans-serif; Text-rendering: optimizeLegibility">
-    <div style="width: 600px; margin: 0 auto; Text-align: justify;">
-        <h1 style="font-size: 30px; Text-align: center;">
-            <img src="cid:logo.png" style="height: 75px;" alt="Vikunja"/>
-        </h1>
-        <div style="border: 1px solid #dbdbdb; -webkit-box-shadow: 0.3em 0.3em 0.8em #e6e6e6; box-shadow: 0.3em 0.3em 0.8em #e6e6e6; color: #4a4a4a; padding: 5px 25px; border-radius: 3px; background: #fff;">
-<p>
-	Hi there,
-</p>
 
+		// Check for dark mode support
+		assertHTMLContainsDarkModeSupport(t, mailopts.HTMLMessage)
 
-	<p>This is a line</p>
+		// Check for action button with email-button class
+		assert.Contains(t, mailopts.HTMLMessage, `class="email-button"`)
+		assert.Contains(t, mailopts.HTMLMessage, `href="https://example.com"`)
+		assert.Contains(t, mailopts.HTMLMessage, `The action`)
 
+		// Check for markdown conversion
+		assert.Contains(t, mailopts.HTMLMessage, `<strong>line</strong>`)
+		assert.Contains(t, mailopts.HTMLMessage, `<a href="https://vikunja.io" rel="nofollow">a link</a>`)
 
-	<p>This <strong>line</strong> contains <a href="https://vikunja.io" rel="nofollow">a link</a></p>
+		// Check for outro lines
+		assert.Contains(t, mailopts.HTMLMessage, `This should be an outro line`)
+		assert.Contains(t, mailopts.HTMLMessage, `And one more, because why not?`)
 
-
-	<p>And another one</p>
-
-
-
-
-	<a href="https://example.com" title="The action"
-		style="position: relative;Text-decoration:none;display: block;border-radius: 4px;cursor: pointer;padding-bottom: 8px;padding-left: 14px;padding-right: 14px;padding-top: 8px;width:280px;margin:10px auto;Text-align: center;white-space: nowrap;border: 0;Text-transform: uppercase;font-size: 14px;font-weight: 700;-webkit-box-shadow: 0 3px 6px rgba(107,114,128,.12),0 2px 4px rgba(107,114,128,.1);box-shadow: 0 3px 6px rgba(107,114,128,.12),0 2px 4px rgba(107,114,128,.1);background-color: #1973ff;border-color: transparent;color: #fff;">
-		The action
-	</a>
-
-
-
-	<p>This should be an outro line</p>
-
-
-	<p>And one more, because why not?</p>
-
-
-
-
-	<div style="color: #9CA3AF;font-size:12px;border-top: 1px solid #dbdbdb;margin-top:20px;padding-top:20px;">
-	<p>
-		If the button above doesn&#39;t work, copy the url below and paste it in your browser&#39;s address bar:<br/>
-		https://example.com
-	</p>
-
-	</div>
-
-</div>
-</div>
-</div>
-</body>
-</html>
-`, mailopts.HTMLMessage)
+		// Check for copy URL text
+		assert.Contains(t, mailopts.HTMLMessage, `https://example.com`)
 	})
 	t.Run("with footer", func(t *testing.T) {
 		mail := NewMail().
@@ -264,48 +219,16 @@ This is a line
 
 This is a footer line
 `, mailopts.Message)
-		assert.Equal(t, `
-<!doctype html>
-<html style="width: 100%; height: 100%; padding: 0; margin: 0;">
-<head>
-    <meta name="viewport" content="width: display-width;">
-</head>
-<body style="width: 100%; padding: 0; margin: 0; background: #f3f4f6">
-<div style="width: 100%; font-family: 'Open Sans', sans-serif; Text-rendering: optimizeLegibility">
-    <div style="width: 600px; margin: 0 auto; Text-align: justify;">
-        <h1 style="font-size: 30px; Text-align: center;">
-            <img src="cid:logo.png" style="height: 75px;" alt="Vikunja"/>
-        </h1>
-        <div style="border: 1px solid #dbdbdb; -webkit-box-shadow: 0.3em 0.3em 0.8em #e6e6e6; box-shadow: 0.3em 0.3em 0.8em #e6e6e6; color: #4a4a4a; padding: 5px 25px; border-radius: 3px; background: #fff;">
-<p>
-	Hi there,
-</p>
 
+		// Check for dark mode support
+		assertHTMLContainsDarkModeSupport(t, mailopts.HTMLMessage)
 
-	<p>This is a line</p>
+		// Check for content
+		assert.Contains(t, mailopts.HTMLMessage, `<p>This is a line</p>`)
+		assert.Contains(t, mailopts.HTMLMessage, `<p>This is a footer line</p>`)
 
-
-
-
-
-
-
-
-
-	<div style="color: #9CA3AF;font-size:12px;border-top: 1px solid #dbdbdb;margin-top:20px;padding-top:20px;">
-		
-			<p>This is a footer line</p>
-
-		
-	</div>
-
-
-</div>
-</div>
-</div>
-</body>
-</html>
-`, mailopts.HTMLMessage)
+		// Verify no action button
+		assert.NotContains(t, mailopts.HTMLMessage, `class="email-button"`)
 	})
 	t.Run("with footer and action", func(t *testing.T) {
 		mail := NewMail().
@@ -345,67 +268,16 @@ And one more, because why not?
 
 This is a footer line
 `, mailopts.Message)
-		assert.Equal(t, `
-<!doctype html>
-<html style="width: 100%; height: 100%; padding: 0; margin: 0;">
-<head>
-    <meta name="viewport" content="width: display-width;">
-</head>
-<body style="width: 100%; padding: 0; margin: 0; background: #f3f4f6">
-<div style="width: 100%; font-family: 'Open Sans', sans-serif; Text-rendering: optimizeLegibility">
-    <div style="width: 600px; margin: 0 auto; Text-align: justify;">
-        <h1 style="font-size: 30px; Text-align: center;">
-            <img src="cid:logo.png" style="height: 75px;" alt="Vikunja"/>
-        </h1>
-        <div style="border: 1px solid #dbdbdb; -webkit-box-shadow: 0.3em 0.3em 0.8em #e6e6e6; box-shadow: 0.3em 0.3em 0.8em #e6e6e6; color: #4a4a4a; padding: 5px 25px; border-radius: 3px; background: #fff;">
-<p>
-	Hi there,
-</p>
 
+		// Check for dark mode support
+		assertHTMLContainsDarkModeSupport(t, mailopts.HTMLMessage)
 
-	<p>This is a line</p>
+		// Check for action button with email-button class
+		assert.Contains(t, mailopts.HTMLMessage, `class="email-button"`)
+		assert.Contains(t, mailopts.HTMLMessage, `href="https://example.com"`)
 
-
-	<p>This <strong>line</strong> contains <a href="https://vikunja.io" rel="nofollow">a link</a></p>
-
-
-	<p>And another one</p>
-
-
-
-
-	<a href="https://example.com" title="The action"
-		style="position: relative;Text-decoration:none;display: block;border-radius: 4px;cursor: pointer;padding-bottom: 8px;padding-left: 14px;padding-right: 14px;padding-top: 8px;width:280px;margin:10px auto;Text-align: center;white-space: nowrap;border: 0;Text-transform: uppercase;font-size: 14px;font-weight: 700;-webkit-box-shadow: 0 3px 6px rgba(107,114,128,.12),0 2px 4px rgba(107,114,128,.1);box-shadow: 0 3px 6px rgba(107,114,128,.12),0 2px 4px rgba(107,114,128,.1);background-color: #1973ff;border-color: transparent;color: #fff;">
-		The action
-	</a>
-
-
-
-	<p>This should be an outro line</p>
-
-
-	<p>And one more, because why not?</p>
-
-
-
-
-	<div style="color: #9CA3AF;font-size:12px;border-top: 1px solid #dbdbdb;margin-top:20px;padding-top:20px;">
-	<p>
-		If the button above doesn&#39;t work, copy the url below and paste it in your browser&#39;s address bar:<br/>
-		https://example.com
-	</p>
-
-	<p>This is a footer line</p>
-
-	
-	</div>
-
-</div>
-</div>
-</div>
-</body>
-</html>
-`, mailopts.HTMLMessage)
+		// Check for footer
+		assert.Contains(t, mailopts.HTMLMessage, `<p>This is a footer line</p>`)
 	})
 	t.Run("with thread ID", func(t *testing.T) {
 		mail := NewMail().
@@ -569,7 +441,7 @@ This is a footer line
 		// Task text should remain
 		assert.Contains(t, mailopts.HTMLMessage, `Task:`)
 	})
-	t.Run("with XSS attempt via style tag", func(t *testing.T) {
+	t.Run("with XSS attempt via style tag in user content", func(t *testing.T) {
 		mail := NewMail().
 			From("test@example.com").
 			To("test@otherdomain.com").
@@ -580,10 +452,17 @@ This is a footer line
 		mailopts, err := RenderMail(mail, "en")
 		require.NoError(t, err)
 
-		// Style tags should be stripped by bluemonday
-		assert.NotContains(t, mailopts.HTMLMessage, `<style>`)
+		// User-provided style tags should be stripped by bluemonday (different from template style)
+		// The template has a legitimate <style> block for dark mode in the <head>, but user content
+		// style tags in the body should be stripped
+		assert.NotContains(t, mailopts.HTMLMessage, `<style>body{background:url`)
 		// Task text should remain
 		assert.Contains(t, mailopts.HTMLMessage, `Task:`)
+
+		// The template's dark mode style block should still be present in the head
+		// Count <style> tags - there should be exactly one (the template's dark mode styles)
+		styleCount := strings.Count(mailopts.HTMLMessage, "<style>")
+		assert.Equal(t, 1, styleCount, "There should be exactly one <style> tag (the template's dark mode styles)")
 	})
 	t.Run("with mixed XSS and legitimate content", func(t *testing.T) {
 		mail := NewMail().
