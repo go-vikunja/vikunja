@@ -1,18 +1,18 @@
 {
-  "name": "vikunja-frontend",
-  "description": "The todo app to organize your life.",
+  "name": "mytodo-frontend",
+  "description": "A personal task management app by Yi-Hung Lee",
+  "author": "Yi-Hung Lee",
   "private": true,
   "version": "0.10.0",
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "https://kolaente.dev/vikunja/vikunja"
+    "url": "https://github.com/YiHungLee/vikunja"
   },
   "bugs": {
-    "url": "https://kolaente.dev/vikunja/vikunja/issues"
+    "url": "https://github.com/YiHungLee/vikunja/issues"
   },
-  "homepage": "https://vikunja.io/",
-  "funding": "https://opencollective.com/vikunja",
+  "homepage": "https://github.com/YiHungLee/vikunja",
   "packageManager": "pnpm@10.28.1",
   "engines": {
     "node": ">=24.0.0"

@@ -1,4 +1,7 @@
-// Vikunja colors as CSS custom properties
+// MyToDo colors as CSS custom properties
+// Color Palette by Yi-Hung Lee
+// Light: Charcoal text, Warm Cream backgrounds, Ochre accent, Sage secondary, Rust tertiary
+// Dark: #2a2826 background, #e8e3db text, #44413d borders
 
 :root {
   // Core Bulma color variables
@@ -173,19 +176,20 @@
   // END core Bulma color variables
 
 
-  // Vikunja specific variables
-  --grey-50: hsl(210, 20%, 98%);
-  --grey-100-hsl: 220, 14.3%, 95.9%;
+  // MyToDo specific variables
+  // Light mode: Warm Cream backgrounds (50-400), Charcoal text (500-900)
+  --grey-50: #faf8f3;
+  --grey-100-hsl: 40, 30%, 94%;
   --grey-100: hsl(var(--grey-100-hsl));
-  --grey-200: hsl(220, 13%, 91%);
-  --grey-300: hsl(216, 12.2%, 83.9%);
-  --grey-400: hsl(217.9, 10.6%, 64.9%);
-  --grey-500-hsl: 220, 8.9%, 46.1%;
+  --grey-200: #ebe6d8;
+  --grey-300: #e0d8c6;
+  --grey-400: #d4c9b0;
+  --grey-500-hsl: 50, 5%, 30%;
   --grey-500: hsl(var(--grey-500-hsl));
-  --grey-600: hsl(215, 13.8%, 34.1%);
-  --grey-700: hsl(216.9, 19.1%, 26.7%);
-  --grey-800: hsl(215, 27.9%, 16.9%);
-  --grey-900: hsl(220.9, 39.3%, 11%);
+  --grey-600: #40403a;
+  --grey-700: #2d2d28;
+  --grey-800: #1f1f1a;
+  --grey-900: #1a1a17;
   --site-background: var(--grey-100);
 
   // Overrides of Bulma defaults
@@ -211,31 +215,31 @@
   --black-a: 1;
   --black: hsla(var(--black-h), var(--black-s), var(--black-l), var(--black-a));
 
-  // $warning / $orange: #ff851b
-  --warning-h: 27.9deg;
-  --warning-s: 100%;
-  --warning-l: 55.3%;
+  // $warning / Ochre light: #d4a84d
+  --warning-h: 40deg;
+  --warning-s: 60%;
+  --warning-l: 57%;
   --warning-a: 1;
   --warning: hsla(var(--warning-h), var(--warning-s), var(--warning-l), var(--warning-a));
 
-  // $success / $green is #00db60
-  --success-h: 146.3deg;
-  --success-s: 100%;
-  --success-l: 42.9%;
+  // $success / Sage green: #7a9f7a
+  --success-h: 120deg;
+  --success-s: 16%;
+  --success-l: 55%;
   --success-a: 1;
   --success: hsla(var(--success-h), var(--success-s), var(--success-l), var(--success-a));
 
-  // $danger / $red is #ff4136
-  --danger-h: 3.3deg;
-  --danger-s: 100%;
-  --danger-l: 60.6%;
+  // $danger / Rust: #b87357
+  --danger-h: 15deg;
+  --danger-s: 42%;
+  --danger-l: 53%;
   --danger-a: 1;
   --danger: hsla(var(--danger-h), var(--danger-s), var(--danger-l), var(--danger-a));
 
-  // var(--primary) / $blue is #1973ff
-  --primary-h: 217deg;
-  --primary-s: 98%;
-  --primary-l: 53%;
+  // var(--primary) / Ochre: #c99a2e
+  --primary-h: 42deg;
+  --primary-s: 65%;
+  --primary-l: 48%;
   --primary-a: 1;
   --primary-hsl: var(--primary-h), var(--primary-s), var(--primary-l);
   --primary: hsla(var(--primary-h), var(--primary-s), var(--primary-l), var(--primary-a));
@@ -254,7 +258,7 @@
 
   // Define custom color variable to allow change in dark mode
   --card-border-color: var(--grey-200);
-  --logo-text-color: hsl(180, 1%, 15%);
+  --logo-text-color: var(--grey-800);
 
   // Code colors
   --code-variable: #da2222;
@@ -265,53 +269,58 @@
 
   &.dark {
     @media screen {
-      // Light mode colours reversed for dark mode
-      --grey-900-hsl: 210, 20%, 98%;
-      --grey-900: hsl(var(--grey-900-hsl));
-      --grey-800: hsl(220, 14.3%, 95.9%);
-      --grey-700: hsl(220, 13%, 91%);
-      --grey-600: hsl(216, 12.2%, 83.9%);
-      --grey-500-hsl: 217.9, 10.6%, 64.9%;
-      --grey-500: hsl(var(--grey-500-hsl));
-      --grey-400: hsl(220, 8.9%, 46.1%);
-      --grey-300: hsl(215, 13.8%, 34.1%);
-      --grey-200: hsl(216.9, 19.1%, 26.7%);
-      --grey-100-hsl: 215, 27.9%, 16.9%;
-      --grey-100: hsl(var(--grey-100-hsl));
-      --grey-50-hsl: 220.9, 39.3%, 11%;
-      --grey-50: hsl(var(--grey-50-hsl));
+      // MyToDo Dark Mode
+      // Background: #2a2826 (primary), #35322f (cards)
+      // Text: #e8e3db (primary), #b8b0a6 (secondary)
+      // Border: #44413d
 
-      // Dark grey looks better than black
+      // Dark mode warm grey scale
+      --grey-900-hsl: 35, 10%, 90%;
+      --grey-900: #e8e3db;
+      --grey-800: #d8d2c8;
+      --grey-700: #c8c0b4;
+      --grey-600: #b8b0a6;
+      --grey-500-hsl: 30, 8%, 55%;
+      --grey-500: hsl(var(--grey-500-hsl));
+      --grey-400: #6d675f;
+      --grey-300: #55504a;
+      --grey-200: #44413d;
+      --grey-100-hsl: 30, 6%, 20%;
+      --grey-100: #35322f;
+      --grey-50-hsl: 30, 5%, 15%;
+      --grey-50: #2a2826;
+
+      // Dark warm grey for backgrounds
       --white: var(--grey-50);
       --black-l: 100%;
 
-      // Text renders better in grey than black
-      --text: var(--grey-800);
-      --text-invert: #000;
-      --text-light: var(--grey-300);
-      --text-strong: var(--grey-900);
+      // Text colors
+      --text: var(--grey-900);
+      --text-invert: #1a1a17;
+      --text-light: var(--grey-600);
+      --text-strong: #f5f2ea;
 
       // Elements that rely on Bulma defaults in light mode but
       // need to be overridden in dark mode
-      --input-placeholder-color: hsla(var(--grey-900-hsl), 0.6);
-      --tag-color: var(--grey-300);
+      --input-placeholder-color: hsla(var(--grey-900-hsl), 0.5);
+      --tag-color: var(--grey-700);
       --table-row-hover-background-color: var(--grey-100);
       --dropdown-item-hover-background-color: var(--grey-100);
       --dropdown-item-hover-color: var(--text);
       --pre-background: var(--grey-200);
       --button-text-hover-background-color: var(--grey-200);
-      --button-hover-color: var(--grey-600);
-      --button-active-color: var(--grey-600);
-      --button-focus-color: var(--grey-600);
+      --button-hover-color: var(--grey-700);
+      --button-active-color: var(--grey-700);
+      --button-focus-color: var(--grey-700);
 
       // Custom color variables we need to override
-      --card-border-color: hsla(var(--grey-100-hsl), 0.3);
-      --logo-text-color: var(--grey-700);
+      --card-border-color: var(--grey-200);
+      --logo-text-color: var(--grey-800);
 
-      // Slightly different primary color to make sure it has a sufficient contrast ratio
-      --primary-h: 217deg;
-      --primary-s: 98%;
-      --primary-l: 58%;
+      // Slightly brighter Ochre primary for dark mode contrast
+      --primary-h: 42deg;
+      --primary-s: 70%;
+      --primary-l: 55%;
 
       --scheme-main-bis: var(--grey-100);
       --scheme-main-ter: var(--grey-100);
@@ -319,12 +328,12 @@
       --scheme-invert-bis: var(--grey-900);
       --scheme-invert-ter: var(--grey-800);
 
-      // Code colors
-      --code-variable: #f98181;
-      --code-literal: #fbbc88;
-      --code-symbol: #b9f18d;
-      --code-section: #faf594;
-      --code-keyword: #70cff8;
+      // Code colors (warm tones for dark mode)
+      --code-variable: #e8a87c;
+      --code-literal: #d4a84d;
+      --code-symbol: #a8c0a8;
+      --code-section: #dbb978;
+      --code-keyword: #c98a70;
     }
   }
 }

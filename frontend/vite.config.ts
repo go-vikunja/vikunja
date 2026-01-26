@@ -144,9 +144,9 @@ function getBuildConfig(env: Record<string, string>) {
 				strategies: 'injectManifest',
 				injectRegister: false,
 				manifest: {
-					name: 'Vikunja',
-					short_name: 'Vikunja',
-					theme_color: '#1973ff',
+					name: 'MyToDo',
+					short_name: 'MyToDo',
+					theme_color: '#c99a2e',
 					icons: [
 						{
 							src: './images/icons/android-chrome-192x192.png',

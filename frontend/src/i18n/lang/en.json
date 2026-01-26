@@ -8,8 +8,8 @@
     "addToHomeScreen": "Add this app to your home screen for faster access and improved experience.",
     "goToOverview": "Go to overview",
     "project": {
-      "importText": "Import your projects and tasks from other services into Vikunja:",
-      "import": "Import your data into Vikunja"
+      "importText": "Import your projects and tasks from other services into MyToDo:",
+      "import": "Import your data into MyToDo"
     }
   },
   "demo": {
@@ -22,7 +22,7 @@
     "text": "The page you requested does not exist."
   },
   "ready": {
-    "loading": "Vikunja is loading…",
+    "loading": "MyToDo is loading…",
     "errorOccured": "An error occurred:",
     "checkApiUrl": "Please check if the api url is correct.",
     "noApiUrlConfigured": "No API url was configured. Please set one below:"
@@ -145,8 +145,8 @@
       },
       "caldav": {
         "title": "CalDAV",
-        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
-        "more": "More information about CalDAV in Vikunja",
+        "howTo": "You can connect MyToDo to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
+        "more": "More information about CalDAV in MyToDo",
         "tokens": "CalDAV Tokens",
         "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
         "createToken": "Create a token",
@@ -171,7 +171,7 @@
         "title": "Quick Add Magic Mode",
         "disabled": "Disabled",
         "todoist": "Todoist",
-        "vikunja": "Vikunja"
+        "vikunja": "MyToDo"
       },
       "appearance": {
         "title": "Color Scheme",
@@ -187,7 +187,7 @@
       },
       "apiTokens": {
         "title": "API Tokens",
-        "general": "API tokens allow you to use Vikunja's API without user credentials.",
+        "general": "API tokens allow you to use MyToDo's API without user credentials.",
         "apiDocs": "Check out the api docs",
         "createAToken": "Create a token",
         "createToken": "Create token",
@@ -215,7 +215,7 @@
       }
     },
     "deletion": {
-      "title": "Delete your Vikunja Account",
+      "title": "Delete your MyToDo Account",
       "text1": "The deletion of your account is permanent and cannot be undone. We will delete all your projects, tasks and everything associated with it.",
       "text2": "To proceed, please enter your password. You will receive an email with further instructions.",
       "text3": "To proceed, please press the button below. You will receive an email with further instructions.",
@@ -223,7 +223,7 @@
       "requestSuccess": "The request was successful. You'll receive an email with further instructions.",
       "passwordRequired": "Please enter your password.",
       "confirmSuccess": "You've successfully confirmed the deletion of your account. We will delete your account in three days.",
-      "scheduled": "We will delete your Vikunja account at {date} ({dateSince}).",
+      "scheduled": "We will delete your MyToDo account at {date} ({dateSince}).",
       "scheduledCancel": "To cancel the deletion of your account, click here.",
       "scheduledCancelText": "To cancel the deletion of your account, please enter your password below:",
       "scheduledCancelButton": "To cancel the deletion of your account, please press the button below:",
@@ -231,12 +231,12 @@
       "scheduledCancelSuccess": "We will not delete your account."
     },
     "export": {
-      "title": "Export your Vikunja data",
-      "description": "You can request a copy of all your Vikunja data. This includes Projects, Tasks and everything associated to them. You can import this data in any Vikunja instance through the migration function.",
+      "title": "Export your MyToDo data",
+      "description": "You can request a copy of all your MyToDo data. This includes Projects, Tasks and everything associated to them. You can import this data in any MyToDo instance through the migration function.",
       "descriptionPasswordRequired": "Please enter your password to proceed:",
-      "request": "Request a copy of my Vikunja Data",
-      "success": "You've successfully requested your Vikunja Data! We will send you an email once it's ready to download.",
-      "downloadTitle": "Download your exported Vikunja data",
+      "request": "Request a copy of my MyToDo Data",
+      "success": "You've successfully requested your MyToDo Data! We will send you an email once it's ready to download.",
+      "downloadTitle": "Download your exported MyToDo data",
       "ready": "Your export is ready to download. You can download it until {0}.",
       "requestNew": "Request another export"
     }
@@ -319,7 +319,7 @@
       "links": {
         "title": "Share Links",
         "what": "What is a share link?",
-        "explanation": "Share Links allow you to easily share a project with other users who don't have an account on Vikunja.",
+        "explanation": "Share Links allow you to easily share a project with other users who don't have an account on MyToDo.",
         "create": "Create a link share",
         "name": "Name (optional)",
         "namePlaceholder": "e.g. Lorem Ipsum",
@@ -552,19 +552,19 @@
   },
   "migrate": {
     "title": "Import from other services",
-    "titleService": "Import your data from {name} into Vikunja",
-    "import": "Import your data into Vikunja",
+    "titleService": "Import your data from {name} into MyToDo",
+    "import": "Import your data into MyToDo",
     "description": "Click on the logo of one of the third-party services below to get started.",
-    "descriptionDo": "Vikunja will import all lists, tasks, notes, reminders and files you have access to.",
-    "authorize": "To authorize Vikunja to access your {name} Account, click the button below.",
+    "descriptionDo": "MyToDo will import all lists, tasks, notes, reminders and files you have access to.",
+    "authorize": "To authorize MyToDo to access your {name} Account, click the button below.",
     "getStarted": "Get Started",
     "inProgress": "Importing in progress…",
     "alreadyMigrated1": "It looks like you've already imported your stuff from {name} at {date}.",
     "alreadyMigrated2": "Importing again is possible, but might create duplicates. Are you sure?",
     "confirm": "I am sure, please start migrating now!",
-    "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
+    "importUpload": "To import data from {name} into MyToDo, click the button below to select a file.",
     "upload": "Upload file",
-    "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
+    "migrationStartedWillReciveEmail": "MyToDo will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
     "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
   },
   "label": {
@@ -624,7 +624,7 @@
     "searchPlaceholder": "Type to search…",
     "previous": "Previous",
     "next": "Next",
-    "poweredBy": "Powered by Vikunja",
+    "poweredBy": "Powered by MyToDo",
     "info": "Info",
     "create": "Create",
     "doit": "Do it!",
@@ -764,7 +764,7 @@
       "canuse": "You can use date math to filter for relative dates.",
       "learnhow": "Check out how it works",
       "title": "Date Math",
-      "intro": "Specify relative dates which are resolved on the fly by Vikunja when applying the filter.",
+      "intro": "Specify relative dates which are resolved on the fly by MyToDo when applying the filter.",
       "expression": "Each Date Math expression starts with an anchor date, which can either be {0}, or a date string ending with {1}. This anchor date can optionally be followed by one or more maths expressions.",
       "similar": "These expressions are similar to the ones provided by {0} and {1}.",
       "add1Day": "Add one day",
@@ -1022,7 +1022,7 @@
       "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
       "multiple": "You can use this multiple times.",
       "label1": "To add a label, simply prefix the name of the label with {prefix}.",
-      "label2": "Vikunja will first check if the label already exist and create it if not.",
+      "label2": "MyToDo will first check if the label already exist and create it if not.",
       "label3": "To use spaces, simply add a \" or ' around the label name.",
       "label4": "For example: {prefix}\"Label with spaces\".",
       "priority1": "To set a task's priority, add a number 1-5, prefixed with a {prefix}.",
@@ -1173,12 +1173,12 @@
     "views": "Views"
   },
   "apiConfig": {
-    "url": "Vikunja URL",
+    "url": "MyToDo URL",
     "urlPlaceholder": "eg. https://localhost:3456",
     "change": "change",
-    "use": "Using Vikunja installation at {0}",
-    "error": "Could not find or use Vikunja installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
-    "success": "Using Vikunja installation at \"{domain}\".",
+    "use": "Using MyToDo installation at {0}",
+    "error": "Could not find or use MyToDo installation at \"{domain}\". Please check if the url has the correct format and you can reach it when accessing it directly and try again.",
+    "success": "Using MyToDo installation at \"{domain}\".",
     "urlRequired": "A url is required."
   },
   "loadingError": {
