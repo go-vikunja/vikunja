@@ -169,12 +169,12 @@ function validateSelectedEvents() {
 					</BaseButton>
 				</p>
 			</div>
-			<XButton
-				class="mbe-2"
+			<BaseButton
+				class="mbe-2 has-text-primary"
 				@click="showBasicAuth = !showBasicAuth"
 			>
 				{{ $t('project.webhooks.basicauthlink') }}
-			</XButton>
+			</BaseButton>
 			<Expandable
 				:open="showBasicAuth"
 				class="content"
