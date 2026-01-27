@@ -200,7 +200,7 @@ create unique index UQE_tasks_id on tasks (id);
 			if err := dropTableColum(tx, "tasks", "repeat_mode"); err != nil {
 				log.Warningf("Could not drop repeat_mode column: %v", err)
 			}
-	
+
 			return nil
 		},
 		Rollback: func(tx *xorm.Engine) error {

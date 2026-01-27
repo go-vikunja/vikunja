@@ -60,8 +60,12 @@ type Task struct {
 	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// The project this task belongs to.
 	ProjectID int64 `xorm:"bigint INDEX not null" json:"project_id" param:"project"`
-	// An RFC 5545 RRULE string defining the recurrence pattern. Examples: "FREQ=DAILY;INTERVAL=1", "FREQ=WEEKLY;BYDAY=MO,WE,FR", "FREQ=MONTHLY;BYMONTHDAY=15"
-	Repeats string `xorm:"varchar(500) null" json:"repeats"`
+	// An RFC 5545 RRULE string defining the recurrence pattern, stored in the database.
+	// Not exposed via JSON; use the structured Repeat field instead.
+	Repeats string `xorm:"varchar(500) null" json:"-"`
+	// Structured recurrence pattern for the API. Mirrors RFC 5545 RRULE fields.
+	// Converted to/from the Repeats RRULE string at the API boundary.
+	Repeat *TaskRepeat `xorm:"-" json:"repeat,omitempty"`
 	// If true, the next occurrence is calculated from the completion date rather than the original due date.
 	RepeatsFromCurrentDate bool `xorm:"null default false" json:"repeats_from_current_date"`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
@@ -764,6 +768,9 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 
 		task.IsFavorite = taskFavorites[task.ID]
 
+		// Populate structured repeat from RRULE string
+		task.Repeat = taskRepeatFromRRule(task.Repeats)
+
 		if reactions != nil {
 			r, has := reactions[task.ID]
 			if has {
@@ -911,6 +918,14 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 
 	t.HexColor = utils.NormalizeHex(t.HexColor)
 
+	// Convert structured repeat to RRULE string for storage
+	if t.Repeat != nil {
+		t.Repeats, err = t.Repeat.toRRule()
+		if err != nil {
+			return err
+		}
+	}
+
 	if err := validateRRule(t.Repeats); err != nil {
 		return err
 	}
@@ -981,6 +996,9 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	if err != nil {
 		return err
 	}
+
+	// Populate structured repeat for API response
+	t.Repeat = taskRepeatFromRRule(t.Repeats)
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
@@ -1181,6 +1199,14 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
+	// Convert structured repeat to RRULE string for storage
+	if t.Repeat != nil {
+		t.Repeats, err = t.Repeat.toRRule()
+		if err != nil {
+			return err
+		}
+	}
+
 	if err := validateRRule(t.Repeats); err != nil {
 		return err
 	}
@@ -1347,8 +1373,8 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	if t.DueDate.IsZero() {
 		ot.DueDate = time.Time{}
 	}
-	// RRULE repeats
-	if t.Repeats == "" {
+	// RRULE repeats - clear if no repeat was provided
+	if t.Repeat == nil && t.Repeats == "" {
 		ot.Repeats = ""
 	}
 	// Repeats from current date
@@ -1396,6 +1422,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		return err
 	}
 	t.Updated = nt.Updated
+
+	// Populate structured repeat for API response
+	t.Repeat = taskRepeatFromRRule(t.Repeats)
 
 	doer, _ := user.GetFromAuth(a)
 	err = events.Dispatch(&TaskUpdatedEvent{

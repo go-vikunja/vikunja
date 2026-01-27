@@ -838,12 +838,12 @@ func TestValidateRRule(t *testing.T) {
 	})
 	t.Run("malformed string rejected", func(t *testing.T) {
 		err := validateRRule("not a valid rrule")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrInvalidData(err))
 	})
 	t.Run("missing freq rejected", func(t *testing.T) {
 		err := validateRRule("INTERVAL=2")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.True(t, IsErrInvalidData(err))
 	})
 }
