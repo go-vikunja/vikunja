@@ -7,6 +7,31 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [1.0.0] - 2026-01-27
+
+### Bug Fixes
+
+* *(editor)* Prevent crash when exiting edit mode in tiptap
+* *(files)* Make sure base directory exists when using local file system (#2166)
+* *(routes)* Restore SPA routing after Echo v5 upgrade
+* Use dark shadows for email template in dark mode (#2155) ([28593e6](28593e6460e66b78c9bed4e401aa51b93bcfb8f9))
+
+### Dependencies
+
+* *(deps)* Update dependency sass-embedded to v1.97.3 (#2150)
+* *(deps)* Update module github.com/redis/go-redis/v9 to v9.17.3 (#2153)
+* *(deps)* Update dev-dependencies (major) (#1375)
+* *(deps)* Update tiptap to v3.17.0
+
+### Features
+
+* Add required checkbox to confirm issue search before submission ([d61caab](d61caab168f8649598f21df438716e9257cefe59))
+* Add vikunja doctor command for diagnostic checks (#2165) ([3aa1e90](3aa1e90d7f9b40be78e9b5aa047010d1558f7eb7))
+
+### Miscellaneous Tasks
+
+* Use correct repo and issue url ([72a928d](72a928dcce62699262fdbf6051abfd633633ea60))
+
 ## [1.0.0-rc4] - 2026-01-24
 
 ### Bug Fixes
