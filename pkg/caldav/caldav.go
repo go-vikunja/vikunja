@@ -49,9 +49,9 @@ type Todo struct {
 	End         time.Time
 	DueDate     time.Time
 	Duration    time.Duration
-	RepeatAfter int64
-	RepeatMode  models.TaskRepeatMode
-	Alarms      []Alarm
+	// Repeats is an RFC 5545 RRULE string defining the recurrence pattern.
+	Repeats string
+	Alarms  []Alarm
 
 	Created time.Time
 	Updated time.Time // last-mod
@@ -102,28 +102,6 @@ func formatDuration(duration time.Duration) string {
 	return strconv.FormatFloat(duration.Hours(), 'f', 0, 64) + `H` +
 		strconv.FormatFloat(minutes, 'f', 0, 64) + `M` +
 		strconv.FormatFloat(seconds, 'f', 0, 64) + `S`
-}
-
-func getRruleFromInterval(interval int64) (freq string, newInterval int64) {
-	const (
-		minute = 60
-		hour   = minute * 60
-		day    = hour * 24
-		week   = day * 7
-	)
-
-	switch {
-	case interval%week == 0:
-		return "WEEKLY", interval / week
-	case interval%day == 0:
-		return "DAILY", interval / day
-	case interval%hour == 0:
-		return "HOURLY", interval / hour
-	case interval%minute == 0:
-		return "MINUTELY", interval / minute
-	default:
-		return "SECONDLY", interval
-	}
 }
 
 // ParseTodos returns a caldav vcalendar string with todos.
@@ -188,15 +166,9 @@ CREATED:` + makeCalDavTimeFromTimeStamp(t.Created)
 PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 		}
 
-		if t.RepeatAfter > 0 || t.RepeatMode == models.TaskRepeatModeMonth {
-			if t.RepeatMode == models.TaskRepeatModeMonth {
-				caldavtodos += `
-RRULE:FREQ=MONTHLY;BYMONTHDAY=` + t.DueDate.Format("02") // Day of the month
-			} else {
-				freq, interval := getRruleFromInterval(t.RepeatAfter)
-				caldavtodos += `
-RRULE:FREQ=` + freq + `;INTERVAL=` + strconv.FormatInt(interval, 10)
-			}
+		if t.Repeats != "" {
+			caldavtodos += `
+RRULE:` + t.Repeats
 		}
 
 		if len(t.Categories) > 0 {
