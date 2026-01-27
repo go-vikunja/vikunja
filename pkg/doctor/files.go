@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//go:build unix
-
 package doctor
 
 import (
@@ -23,8 +21,6 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
-
-	"golang.org/x/sys/unix"
 )
 
 // CheckFiles returns file storage checks.
@@ -94,31 +90,10 @@ func checkLocalStorage() []CheckResult {
 		})
 	}
 
-	// Check disk space
+	// Check disk space (platform-specific)
 	results = append(results, checkDiskSpace(basePath))
 
 	return results
-}
-
-func checkDiskSpace(path string) CheckResult {
-	var stat unix.Statfs_t
-	if err := unix.Statfs(path, &stat); err != nil {
-		return CheckResult{
-			Name:   "Disk space",
-			Passed: false,
-			Error:  err.Error(),
-		}
-	}
-
-	// Available space in bytes
-	availableBytes := stat.Bavail * uint64(stat.Bsize)
-	availableGB := float64(availableBytes) / (1024 * 1024 * 1024)
-
-	return CheckResult{
-		Name:   "Disk space",
-		Passed: true,
-		Value:  fmt.Sprintf("%.1f GB available", availableGB),
-	}
 }
 
 func checkS3Storage() []CheckResult {

@@ -1,4 +1,4 @@
-//go:build windows
+//go:build !windows
 
 // Vikunja is a to-do list application to facilitate your life.
 // Copyright 2018-present Vikunja and contributors. All rights reserved.
@@ -18,10 +18,29 @@
 
 package doctor
 
-func checkDiskSpace(_ string) CheckResult {
+import (
+	"fmt"
+
+	"golang.org/x/sys/unix"
+)
+
+func checkDiskSpace(path string) CheckResult {
+	var stat unix.Statfs_t
+	if err := unix.Statfs(path, &stat); err != nil {
+		return CheckResult{
+			Name:   "Disk space",
+			Passed: false,
+			Error:  err.Error(),
+		}
+	}
+
+	// Available space in bytes
+	availableBytes := stat.Bavail * uint64(stat.Bsize)
+	availableGB := float64(availableBytes) / (1024 * 1024 * 1024)
+
 	return CheckResult{
 		Name:   "Disk space",
 		Passed: true,
-		Value:  "check not available on Windows",
+		Value:  fmt.Sprintf("%.1f GB available", availableGB),
 	}
 }
