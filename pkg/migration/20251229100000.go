@@ -30,7 +30,6 @@ type taskOld20251229100000 struct {
 	ID          int64  `xorm:"bigint autoincr not null unique pk"`
 	RepeatAfter int64  `xorm:"bigint INDEX null"`
 	RepeatMode  int    `xorm:"not null default 0"`
-	RepeatDay   int8   `xorm:"tinyint null default 0"`
 	Repeats     string `xorm:"varchar(500) null"`
 }
 
@@ -50,7 +49,7 @@ func (taskNew20251229100000) TableName() string {
 }
 
 // convertLegacyRepeatToRRule converts legacy repeat_after/repeat_mode to an RRULE string.
-func convertLegacyRepeatToRRule(repeatAfter int64, repeatMode int, repeatDay int8) string {
+func convertLegacyRepeatToRRule(repeatAfter int64, repeatMode int) string {
 	const (
 		TaskRepeatModeDefault         = 0
 		TaskRepeatModeMonth           = 1
@@ -60,9 +59,6 @@ func convertLegacyRepeatToRRule(repeatAfter int64, repeatMode int, repeatDay int
 
 	switch repeatMode {
 	case TaskRepeatModeMonth:
-		if repeatDay > 0 && repeatDay <= 31 {
-			return fmt.Sprintf("FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=%d", repeatDay)
-		}
 		return "FREQ=MONTHLY;INTERVAL=1"
 	case TaskRepeatModeYear:
 		return "FREQ=YEARLY;INTERVAL=1"
@@ -127,7 +123,7 @@ func init() {
 					continue
 				}
 
-				rrule := convertLegacyRepeatToRRule(task.RepeatAfter, task.RepeatMode, task.RepeatDay)
+				rrule := convertLegacyRepeatToRRule(task.RepeatAfter, task.RepeatMode)
 				if rrule == "" {
 					continue
 				}
@@ -204,10 +200,7 @@ create unique index UQE_tasks_id on tasks (id);
 			if err := dropTableColum(tx, "tasks", "repeat_mode"); err != nil {
 				log.Warningf("Could not drop repeat_mode column: %v", err)
 			}
-			if err := dropTableColum(tx, "tasks", "repeat_day"); err != nil {
-				log.Warningf("Could not drop repeat_day column: %v", err)
-			}
-
+	
 			return nil
 		},
 		Rollback: func(tx *xorm.Engine) error {
