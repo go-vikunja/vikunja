@@ -19,7 +19,6 @@ package doctor
 import (
 	"fmt"
 	"os"
-	osuser "os/user"
 	"runtime"
 
 	"code.vikunja.io/api/pkg/version"
@@ -62,21 +61,6 @@ func checkOS() CheckResult {
 		Name:   "OS",
 		Passed: true,
 		Value:  fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
-	}
-}
-
-func checkUser() CheckResult {
-	uid := os.Getuid()
-	username := "unknown"
-
-	if u, err := osuser.Current(); err == nil {
-		username = u.Username
-	}
-
-	return CheckResult{
-		Name:   "User",
-		Passed: true,
-		Value:  fmt.Sprintf("%s (uid=%d)", username, uid),
 	}
 }
 
