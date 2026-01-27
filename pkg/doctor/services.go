@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/red"
 )
 
@@ -57,6 +56,9 @@ func CheckOptionalServices() []CheckGroup {
 }
 
 func checkRedis() CheckGroup {
+	// Initialize Redis
+	red.InitRedis()
+
 	r := red.GetRedis()
 	if r == nil {
 		return CheckGroup{
@@ -274,21 +276,47 @@ func checkLDAP() CheckGroup {
 }
 
 func checkOpenID() CheckGroup {
-	providers, err := openid.GetAllProviders()
-	if err != nil {
+	// Parse raw config to get all providers (including ones that fail to connect)
+	rawProviders := config.AuthOpenIDProviders.Get()
+	if rawProviders == nil {
 		return CheckGroup{
 			Name: "OpenID Connect",
 			Results: []CheckResult{
 				{
 					Name:   "Providers",
-					Passed: false,
-					Error:  err.Error(),
+					Passed: true,
+					Value:  "none configured",
 				},
 			},
 		}
 	}
 
-	if len(providers) == 0 {
+	// Convert to map[string]interface{}
+	var providerMap map[string]interface{}
+	switch p := rawProviders.(type) {
+	case map[string]interface{}:
+		providerMap = p
+	case map[interface{}]interface{}:
+		providerMap = make(map[string]interface{}, len(p))
+		for k, v := range p {
+			if key, ok := k.(string); ok {
+				providerMap[key] = v
+			}
+		}
+	default:
+		return CheckGroup{
+			Name: "OpenID Connect",
+			Results: []CheckResult{
+				{
+					Name:   "Configuration",
+					Passed: false,
+					Error:  "invalid provider configuration format",
+				},
+			},
+		}
+	}
+
+	if len(providerMap) == 0 {
 		return CheckGroup{
 			Name: "OpenID Connect",
 			Results: []CheckResult{
@@ -302,17 +330,96 @@ func checkOpenID() CheckGroup {
 	}
 
 	var results []CheckResult
-	for _, provider := range providers {
-		// The provider was already validated when loaded, so if it's in the list it's working
-		results = append(results, CheckResult{
-			Name:   fmt.Sprintf("Provider: %s", provider.Name),
-			Passed: true,
-			Value:  "OK",
-		})
+	for key, p := range providerMap {
+		result := checkOpenIDProvider(key, p)
+		results = append(results, result)
 	}
 
 	return CheckGroup{
 		Name:    "OpenID Connect",
 		Results: results,
+	}
+}
+
+func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
+	// Extract provider config
+	var pi map[string]interface{}
+	switch p := rawProvider.(type) {
+	case map[string]interface{}:
+		pi = p
+	case map[interface{}]interface{}:
+		pi = make(map[string]interface{}, len(p))
+		for k, v := range p {
+			if kStr, ok := k.(string); ok {
+				pi[kStr] = v
+			}
+		}
+	default:
+		return CheckResult{
+			Name:   fmt.Sprintf("Provider: %s", key),
+			Passed: false,
+			Error:  "invalid configuration format",
+		}
+	}
+
+	// Get provider name
+	name := key
+	if n, ok := pi["name"].(string); ok {
+		name = n
+	}
+
+	// Get auth URL
+	authURL, ok := pi["authurl"].(string)
+	if !ok {
+		return CheckResult{
+			Name:   fmt.Sprintf("Provider: %s", name),
+			Passed: false,
+			Error:  "authurl not configured",
+		}
+	}
+
+	// Check if the provider's discovery endpoint is reachable
+	// OpenID Connect discovery is at /.well-known/openid-configuration
+	discoveryURL := authURL
+	if discoveryURL[len(discoveryURL)-1] != '/' {
+		discoveryURL += "/"
+	}
+	discoveryURL += ".well-known/openid-configuration"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, discoveryURL, nil)
+	if err != nil {
+		return CheckResult{
+			Name:   fmt.Sprintf("Provider: %s", name),
+			Passed: false,
+			Error:  err.Error(),
+		}
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return CheckResult{
+			Name:   fmt.Sprintf("Provider: %s", name),
+			Passed: false,
+			Error:  err.Error(),
+		}
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return CheckResult{
+			Name:   fmt.Sprintf("Provider: %s", name),
+			Passed: false,
+			Error:  fmt.Sprintf("discovery endpoint returned status %d", resp.StatusCode),
+		}
+	}
+
+	return CheckResult{
+		Name:   fmt.Sprintf("Provider: %s", name),
+		Passed: true,
+		Value:  "OK",
 	}
 }

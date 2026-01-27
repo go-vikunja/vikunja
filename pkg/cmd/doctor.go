@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"os"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/doctor"
-	"code.vikunja.io/api/pkg/initialize"
+	"code.vikunja.io/api/pkg/log"
 
 	"github.com/spf13/cobra"
 )
@@ -46,7 +47,10 @@ Exit codes:
   0 - All checks passed
   1 - One or more checks failed`,
 	PreRun: func(_ *cobra.Command, _ []string) {
-		initialize.InitForDoctorCmd()
+		// Minimal init - just config and logger
+		// Each check will initialize and test its own components
+		log.InitLogger()
+		config.InitConfig()
 	},
 	Run: func(_ *cobra.Command, _ []string) {
 		results := doctor.Run()

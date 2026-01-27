@@ -113,40 +113,6 @@ func FullInitWithoutAsync() {
 	plugins.Initialize()
 }
 
-// InitForDoctorCmd initializes only the core components needed for the doctor command.
-// Unlike FullInitWithoutAsync, this does not initialize services that may call log.Fatal
-// on connection failures (LDAP, mail, OpenID), allowing the doctor command to check
-// their connectivity and report issues gracefully.
-func InitForDoctorCmd() {
-	LightInit()
-
-	// Initialize the files handler
-	err := files.InitFileHandler()
-	if err != nil {
-		log.Fatalf("Could not init file handler: %s", err)
-	}
-
-	// Run the migrations
-	migration.Migrate(nil)
-
-	// Set Engine
-	InitEngines()
-
-	// Init Typesense
-	models.InitTypesense()
-
-	// Load translations
-	i18n.Init()
-
-	// Initialize plugins
-	plugins.Initialize()
-
-	// Note: We intentionally skip:
-	// - mail.StartMailDaemon() - doctor will check connectivity itself
-	// - ldap.InitializeLDAPConnection() - can call log.Fatal on failure
-	// - openid.GetAllProviders() - can call log.Fatal if RequireAvailability is set
-}
-
 // FullInit initializes all kinds of things in the right order
 func FullInit() {
 

@@ -27,6 +27,21 @@ import (
 func CheckDatabase() CheckGroup {
 	dbType := config.DatabaseType.GetString()
 
+	// Initialize database engine
+	_, err := db.CreateDBEngine()
+	if err != nil {
+		return CheckGroup{
+			Name: fmt.Sprintf("Database (%s)", dbType),
+			Results: []CheckResult{
+				{
+					Name:   "Connection",
+					Passed: false,
+					Error:  err.Error(),
+				},
+			},
+		}
+	}
+
 	results := []CheckResult{
 		checkDatabaseConnection(),
 		checkDatabaseVersion(dbType),

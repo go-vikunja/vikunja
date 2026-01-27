@@ -29,6 +29,20 @@ import (
 func CheckFiles() CheckGroup {
 	fileType := config.FilesType.GetString()
 
+	// Initialize file handler
+	if err := files.InitFileHandler(); err != nil {
+		return CheckGroup{
+			Name: fmt.Sprintf("Files (%s)", fileType),
+			Results: []CheckResult{
+				{
+					Name:   "Initialization",
+					Passed: false,
+					Error:  err.Error(),
+				},
+			},
+		}
+	}
+
 	var results []CheckResult
 
 	switch fileType {
