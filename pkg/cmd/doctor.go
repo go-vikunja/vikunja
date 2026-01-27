@@ -46,7 +46,7 @@ Exit codes:
   0 - All checks passed
   1 - One or more checks failed`,
 	PreRun: func(_ *cobra.Command, _ []string) {
-		initialize.FullInitWithoutAsync()
+		initialize.InitForDoctorCmd()
 	},
 	Run: func(_ *cobra.Command, _ []string) {
 		results := doctor.Run()
