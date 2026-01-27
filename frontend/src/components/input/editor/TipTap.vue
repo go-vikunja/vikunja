@@ -134,73 +134,57 @@
 		>
 			{{ $t('misc.save') }}
 		</XButton>
-
-		<!-- Discard changes confirmation modal -->
-		<Modal
-			:enabled="showDiscardModal"
-			@close="cancelDiscard"
-			@submit="confirmDiscard"
-		>
-			<template #header>
-				<span>{{ $t('input.editor.discardChanges.title') }}</span>
-			</template>
-
-			<template #text>
-				<p>{{ $t('input.editor.discardChanges.text') }}</p>
-			</template>
-		</Modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
-import {useI18n} from 'vue-i18n'
-import {eventToHotkeyString} from '@github/hotkey'
+import { eventToHotkeyString } from '@github/hotkey'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import EditorToolbar from './EditorToolbar.vue'
 
+import { Extension, mergeAttributes, type SetContentOptions } from '@tiptap/core'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
-import {Extension, mergeAttributes, type SetContentOptions} from '@tiptap/core'
-import {EditorContent, type Extensions, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
-import {Plugin, PluginKey} from '@tiptap/pm/state'
-import {marked} from 'marked'
-import {BubbleMenu} from '@tiptap/vue-3/menus'
+import { EditorContent, type Extensions, useEditor, VueNodeViewRenderer } from '@tiptap/vue-3'
+import { BubbleMenu } from '@tiptap/vue-3/menus'
+import { marked } from 'marked'
 
-import Link from '@tiptap/extension-link'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import {Table, TableRow, TableCell, TableHeader} from '@tiptap/extension-table'
-import Typography from '@tiptap/extension-typography'
 import Image from '@tiptap/extension-image'
-import Underline from '@tiptap/extension-underline'
-import {Placeholder} from '@tiptap/extensions'
+import Link from '@tiptap/extension-link'
 import Mention from '@tiptap/extension-mention'
+import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
+import Typography from '@tiptap/extension-typography'
+import Underline from '@tiptap/extension-underline'
+import { Placeholder } from '@tiptap/extensions'
 
-import {TaskList} from '@tiptap/extension-list'
-import {TaskItemWithId} from './taskItemWithId'
 import HardBreak from '@tiptap/extension-hard-break'
+import { TaskList } from '@tiptap/extension-list'
+import { TaskItemWithId } from './taskItemWithId'
 
-import {Node} from '@tiptap/pm/model'
+import { Node } from '@tiptap/pm/model'
 
 import Commands from './commands'
-import suggestionSetup from './suggestion'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
 import MentionUser from './mention/MentionUser.vue'
+import suggestionSetup from './suggestion'
 
-import {common, createLowlight} from 'lowlight'
+import { common, createLowlight } from 'lowlight'
 
-import type {BottomAction, UploadCallback} from './types'
-import type {ITask} from '@/modelTypes/ITask'
-import type {IAttachment} from '@/modelTypes/IAttachment'
-import AttachmentModel from '@/models/attachment'
-import AttachmentService from '@/services/attachment'
 import BaseButton from '@/components/base/BaseButton.vue'
 import XButton from '@/components/input/Button.vue'
-import Modal from '@/components/misc/Modal.vue'
+import AttachmentModel from '@/models/attachment'
+import type { IAttachment } from '@/modelTypes/IAttachment'
+import type { ITask } from '@/modelTypes/ITask'
+import AttachmentService from '@/services/attachment'
+import type { BottomAction, UploadCallback } from './types'
 
-import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
+import { setLinkInEditor } from '@/components/input/editor/setLinkInEditor'
+import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
+import { clearEditorDraft, loadEditorDraft, saveEditorDraft } from '@/helpers/editorDraftStorage'
 import inputPrompt from '@/helpers/inputPrompt'
-import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
-import {saveEditorDraft, loadEditorDraft, clearEditorDraft} from '@/helpers/editorDraftStorage'
 
 const props = withDefaults(defineProps<{
 	modelValue: string,
@@ -338,9 +322,6 @@ type Mode = 'edit' | 'preview'
 const internalMode = ref<Mode>('preview')
 const isEditing = computed(() => internalMode.value === 'edit' && props.isEditEnabled)
 const contentHasChanged = ref<boolean>(false)
-
-// Discard confirmation modal state
-const showDiscardModal = ref(false)
 
 // TipTap crashes when inserting an image into an empty editor.
 // To work around this, we're inserting an element first, then insert the image, then remove the element.
@@ -570,22 +551,6 @@ if (props.enableMentions && props.mentionProjectId > 0) {
 	)
 }
 
-// Add a custom extension for the Escape key
-if (props.enableDiscardShortcut) {
-	extensions.push(Extension.create({
-		name: 'escapeKey',
-
-		addKeyboardShortcuts() {
-			return {
-				'Escape': () => {
-					tryExitEditMode()
-					return true
-				},
-			}
-		},
-	}))
-}
-
 const editor = useEditor({
 	// eslint-disable-next-line vue/no-ref-object-reactivity-loss
 	editable: isEditing.value,
@@ -668,27 +633,6 @@ function exitEditMode() {
 	}
 }
 
-function tryExitEditMode() {
-	// If content has changed, show confirmation modal
-	if (contentHasChanged.value) {
-		showDiscardModal.value = true
-		return
-	}
-	// No changes, exit directly
-	exitEditMode()
-}
-
-function confirmDiscard() {
-	showDiscardModal.value = false
-	exitEditMode()
-}
-
-function cancelDiscard() {
-	showDiscardModal.value = false
-	// Refocus the editor
-	editor.value?.commands.focus()
-}
-
 function setEditIfApplicable() {
 	if (!props.isEditEnabled) return
 	if (isEditing.value) return
@@ -704,10 +648,6 @@ function setEdit(focus: boolean = true) {
 }
 
 onBeforeUnmount(() => {
-	if (props.enableDiscardShortcut) {
-		tiptapInstanceRef.value?.removeEventListener('keydown', handleEscapeKey)
-	}
-
 	editor.value?.destroy()
 })
 
@@ -786,21 +726,17 @@ onMounted(async () => {
 		document.addEventListener('keydown', setFocusToEditor)
 	}
 
-	// Add Escape key handler to prevent event bubbling when editing
-	if (props.enableDiscardShortcut) {
-		tiptapInstanceRef.value?.addEventListener('keydown', handleEscapeKey)
-	}
-
 	await nextTick()
 
 	// Load draft from localStorage if available
 	if (props.storageKey) {
 		const draft = loadEditorDraft(props.storageKey)
-		if (draft && isEditorContentEmpty(props.modelValue)) {
-			// Only load draft if current content is empty
+		// Load draft if it exists and differs from the saved value
+		if (draft && draft !== props.modelValue) {
 			// Set content and force edit mode for immediate editing
 			editor.value?.commands.setContent(draft, {emitUpdate: false})
 			internalMode.value = 'edit'
+			contentHasChanged.value = true
 			// Emit the model update so parent sees the restored content
 			emit('update:modelValue', draft)
 			return
@@ -854,24 +790,6 @@ function focusIfEditing() {
 	if (isEditing.value) {
 		editor.value?.commands.focus()
 	}
-}
-
-function handleEscapeKey(event: KeyboardEvent) {
-	// Only intercept Escape when discard shortcut is enabled
-	if (event.key !== 'Escape' || !props.enableDiscardShortcut) {
-		return
-	}
-
-	// Check if the event originated from within the ProseMirror editor
-	const target = event.target as HTMLElement
-	const isInEditor = target.contentEditable === 'true' || target.closest('.ProseMirror')
-	if (!isInEditor) {
-		return
-	}
-
-	// Stop propagation to prevent modal/parent handlers from firing
-	event.stopPropagation()
-	// Don't preventDefault - let ProseMirror's extension handle the actual exit
 }
 
 function clickTasklistCheckbox(event: MouseEvent) {
