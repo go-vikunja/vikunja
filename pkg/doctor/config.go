@@ -113,9 +113,7 @@ func checkCORS() CheckResult {
 	// Show first origin in the value, rest as additional lines
 	result.Value = origins[0]
 	if len(origins) > 1 {
-		for _, origin := range origins[1:] {
-			result.Lines = append(result.Lines, origin)
-		}
+		result.Lines = append(result.Lines, origins[1:]...)
 	}
 
 	return result

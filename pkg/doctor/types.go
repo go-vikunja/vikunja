@@ -27,6 +27,6 @@ type CheckResult struct {
 
 // CheckGroup represents a category of checks with a header.
 type CheckGroup struct {
-	Name    string        // e.g., "Database (sqlite)"
+	Name    string // e.g., "Database (sqlite)"
 	Results []CheckResult
 }

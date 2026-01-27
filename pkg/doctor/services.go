@@ -183,7 +183,11 @@ func checkMailer() CheckGroup {
 	address := net.JoinHostPort(host, fmt.Sprintf("%d", port))
 
 	// Simple TCP dial test with timeout
-	conn, err := net.DialTimeout("tcp", address, 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	dialer := &net.Dialer{}
+	conn, err := dialer.DialContext(ctx, "tcp", address)
 	if err != nil {
 		return CheckGroup{
 			Name: "Mailer",
@@ -217,6 +221,9 @@ func checkLDAP() CheckGroup {
 
 	address := net.JoinHostPort(host, fmt.Sprintf("%d", port))
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	var conn net.Conn
 	var err error
 
@@ -225,9 +232,14 @@ func checkLDAP() CheckGroup {
 		tlsConfig := &tls.Config{
 			InsecureSkipVerify: !config.AuthLdapVerifyTLS.GetBool(),
 		}
-		conn, err = tls.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second}, "tcp", address, tlsConfig)
+		tlsDialer := &tls.Dialer{
+			NetDialer: &net.Dialer{},
+			Config:    tlsConfig,
+		}
+		conn, err = tlsDialer.DialContext(ctx, "tcp", address)
 	} else {
-		conn, err = net.DialTimeout("tcp", address, 5*time.Second)
+		dialer := &net.Dialer{}
+		conn, err = dialer.DialContext(ctx, "tcp", address)
 	}
 
 	if err != nil {
