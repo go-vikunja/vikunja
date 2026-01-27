@@ -194,8 +194,31 @@ func FileStat(file *File) (os.FileInfo, error) {
 // ValidateFileStorage checks that the configured file storage is writable
 // by creating and removing a temporary file.
 func ValidateFileStorage() error {
+	basePath := config.FilesBasePath.GetString()
+
+	// For local filesystem, ensure the base directory exists
+	if config.FilesType.GetString() == "local" {
+		// Check if directory exists
+		info, err := afs.Stat(basePath)
+		if err != nil {
+			if !errors.Is(err, os.ErrNotExist) {
+				// Error other than "file doesn't exist"
+				return fmt.Errorf("failed to access file storage directory at %s: %w", basePath, err)
+			}
+
+			// Directory doesn't exist, try to create it
+			err = afs.MkdirAll(basePath, 0755)
+			if err != nil {
+				return fmt.Errorf("failed to create file storage directory at %s: %w", basePath, err)
+			}
+		} else if !info.IsDir() {
+			// Path exists but is not a directory
+			return fmt.Errorf("file storage path exists but is not a directory: %s", basePath)
+		}
+	}
+
 	filename := fmt.Sprintf(".vikunja-check-%d", time.Now().UnixNano())
-	path := filepath.Join(config.FilesBasePath.GetString(), filename)
+	path := filepath.Join(basePath, filename)
 
 	err := writeToStorage(path, bytes.NewReader([]byte{}), 0)
 	if err != nil {
