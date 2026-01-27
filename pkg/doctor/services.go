@@ -351,7 +351,7 @@ func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
 
 	// Get auth URL
 	authURL, ok := pi["authurl"].(string)
-	if !ok {
+	if !ok || authURL == "" {
 		return CheckResult{
 			Name:   fmt.Sprintf("Provider: %s", name),
 			Passed: false,
@@ -362,7 +362,7 @@ func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
 	// Check if the provider's discovery endpoint is reachable
 	// OpenID Connect discovery is at /.well-known/openid-configuration
 	discoveryURL := authURL
-	if discoveryURL[len(discoveryURL)-1] != '/' {
+	if authURL[len(authURL)-1] != '/' {
 		discoveryURL += "/"
 	}
 	discoveryURL += ".well-known/openid-configuration"
