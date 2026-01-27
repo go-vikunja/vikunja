@@ -70,6 +70,10 @@ After creation, tell the user where they can find the new worktree.
 - **Clean**: `mage build:clean` - Cleans build artifacts
 - **Format**: `mage fmt` - Format Go code before committing
 
+**Go Tips:**
+- To see source files from a dependency, or to answer questions about a dependency, run `go mod download -json MODULE` and use the returned `Dir` path to read the files.
+- Use `go doc foo.Bar` or `go doc -all foo` to read documentation for packages, types, functions, etc.
+
 -Development helpers under the `dev` namespace:
 - **Migration**: `mage dev:make-migration <StructName>` - Creates new database migration. If you omit `<StructName>`, the command will prompt for it.
 - **Event**: `mage dev:make-event` - Create an event type
