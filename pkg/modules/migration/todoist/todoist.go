@@ -235,9 +235,19 @@ func (m *Migration) AuthURL() string {
 }
 
 // todoistDueStringToRRule converts Todoist's natural language due string to an RRULE.
-// Supports common patterns like "every day", "every week", "every monday", "every 2 weeks", etc.
-func todoistDueStringToRRule(dueString string, isRecurring bool) string {
+// Supports common English patterns like "every day", "every week", "every monday", "every 2 weeks", etc.
+// The lang parameter is the language code from the Todoist API (e.g. "en", "de", "ja").
+// Only English ("en") due strings are supported; non-English strings are skipped with a log message.
+func todoistDueStringToRRule(dueString string, isRecurring bool, lang string) string {
 	if !isRecurring || dueString == "" {
+		return ""
+	}
+
+	// Only attempt conversion for English due strings. Todoist's due.string
+	// is a natural language representation in the user's language, and our
+	// parser only handles English patterns.
+	if lang != "" && lang != "en" {
+		log.Debugf("[Todoist Migration] Skipping recurrence conversion for non-English due string (lang=%s): %s", lang, dueString)
 		return ""
 	}
 
@@ -459,7 +469,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 
 			// Convert Todoist recurrence to RRULE
 			if i.Due.IsRecurring {
-				task.Repeats = todoistDueStringToRRule(i.Due.String, i.Due.IsRecurring)
+				task.Repeats = todoistDueStringToRRule(i.Due.String, i.Due.IsRecurring, i.Due.Lang)
 			}
 		}
 
