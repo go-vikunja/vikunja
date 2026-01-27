@@ -18,13 +18,13 @@ package doctor
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/modules/auth/ldap"
 	"code.vikunja.io/api/pkg/red"
 )
 
@@ -223,27 +223,13 @@ func checkLDAP() CheckGroup {
 
 	address := net.JoinHostPort(host, fmt.Sprintf("%d", port))
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	var conn net.Conn
-	var err error
-
+	protocol := "ldap"
 	if useTLS {
-		// #nosec G402
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: !config.AuthLdapVerifyTLS.GetBool(),
-		}
-		tlsDialer := &tls.Dialer{
-			NetDialer: &net.Dialer{},
-			Config:    tlsConfig,
-		}
-		conn, err = tlsDialer.DialContext(ctx, "tcp", address)
-	} else {
-		dialer := &net.Dialer{}
-		conn, err = dialer.DialContext(ctx, "tcp", address)
+		protocol = "ldaps"
 	}
 
+	// Use the actual LDAP connection function which tests bind credentials
+	l, err := ldap.ConnectAndBindToLDAPDirectory()
 	if err != nil {
 		return CheckGroup{
 			Name: "LDAP",
@@ -256,12 +242,7 @@ func checkLDAP() CheckGroup {
 			},
 		}
 	}
-	defer conn.Close()
-
-	protocol := "ldap"
-	if useTLS {
-		protocol = "ldaps"
-	}
+	defer l.Close()
 
 	return CheckGroup{
 		Name: "LDAP",
