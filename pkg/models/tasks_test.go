@@ -823,6 +823,31 @@ func TestUpdateDone(t *testing.T) {
 	})
 }
 
+func TestValidateRRule(t *testing.T) {
+	t.Run("empty string is valid", func(t *testing.T) {
+		assert.NoError(t, validateRRule(""))
+	})
+	t.Run("valid daily rule", func(t *testing.T) {
+		assert.NoError(t, validateRRule("FREQ=DAILY;INTERVAL=1"))
+	})
+	t.Run("valid weekly with byday", func(t *testing.T) {
+		assert.NoError(t, validateRRule("FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR"))
+	})
+	t.Run("valid monthly with bymonthday", func(t *testing.T) {
+		assert.NoError(t, validateRRule("FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15"))
+	})
+	t.Run("malformed string rejected", func(t *testing.T) {
+		err := validateRRule("not a valid rrule")
+		assert.Error(t, err)
+		assert.True(t, IsErrInvalidData(err))
+	})
+	t.Run("missing freq rejected", func(t *testing.T) {
+		err := validateRRule("INTERVAL=2")
+		assert.Error(t, err)
+		assert.True(t, IsErrInvalidData(err))
+	})
+}
+
 func TestTask_ReadOne(t *testing.T) {
 	u := &user.User{ID: 1}
 

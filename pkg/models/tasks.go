@@ -911,6 +911,10 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 
 	t.HexColor = utils.NormalizeHex(t.HexColor)
 
+	if err := validateRRule(t.Repeats); err != nil {
+		return err
+	}
+
 	_, err = s.Insert(t)
 	if err != nil {
 		return err
@@ -1175,6 +1179,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		if !fieldSet["cover_image_attachment_id"] {
 			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
 		}
+	}
+
+	if err := validateRRule(t.Repeats); err != nil {
+		return err
 	}
 
 	// If the task is being moved between projects, make sure to move the bucket + index as well
@@ -1469,6 +1477,19 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// validateRRule checks that an RRULE string is parseable.
+// Empty strings are valid (no recurrence). Returns ErrInvalidData if parsing fails.
+func validateRRule(rruleStr string) error {
+	if rruleStr == "" {
+		return nil
+	}
+	_, err := rrule.StrToRRule(rruleStr)
+	if err != nil {
+		return ErrInvalidData{Message: "Invalid RRULE: " + err.Error()}
 	}
 	return nil
 }
