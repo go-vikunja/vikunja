@@ -15,6 +15,13 @@ body:
         2. Please ask questions or configuration/deploy problems on our [Matrix Room](https://matrix.to/#/#vikunja:matrix.org) or forum (https://community.vikunja.io).
         3. Make sure you are using the latest release and take a moment to check that your feature hasn't been requested before.
         4. Please include all relevant information in the feature request to allow users to discuss this fully.
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have searched for existing open or closed issue reports with the same feature request.
+          required: true
   - type: textarea
     id: description
     attributes:
