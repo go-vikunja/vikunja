@@ -1490,6 +1490,12 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 
 	now := time.Now()
 
+	// If no due date is set and we're not repeating from current date,
+	// there's nothing to reschedule — the repeat interval is a no-op.
+	if oldTask.DueDate.IsZero() && !oldTask.RepeatsFromCurrentDate {
+		return
+	}
+
 	// Determine the base date for calculating the next occurrence
 	var baseDate time.Time
 	switch {
@@ -1525,13 +1531,10 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 	var timeDiff time.Duration
 	if !oldTask.DueDate.IsZero() {
 		timeDiff = nextOccurrence.Sub(oldTask.DueDate)
+		newTask.DueDate = nextOccurrence
 	} else {
-		// No due date, calculate diff from the base date used for rule generation
 		timeDiff = nextOccurrence.Sub(baseDate)
 	}
-	// Always set the due date for repeating tasks - if there was no due date,
-	// the next occurrence becomes the new due date
-	newTask.DueDate = nextOccurrence
 
 	// Update reminders with the same time difference
 	newTask.Reminders = oldTask.Reminders

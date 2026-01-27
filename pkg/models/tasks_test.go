@@ -633,7 +633,7 @@ func TestUpdateDone(t *testing.T) {
 			assert.True(t, newTask.DueDate.After(time.Now()) || newTask.DueDate.Equal(time.Now().Truncate(24*time.Hour)))
 			assert.False(t, newTask.Done)
 		})
-		t.Run("set due date if old task had no due date", func(t *testing.T) {
+		t.Run("no due date is a no-op", func(t *testing.T) {
 			oldTask := &Task{
 				Done:    false,
 				Repeats: "FREQ=DAILY;INTERVAL=1",
@@ -643,10 +643,8 @@ func TestUpdateDone(t *testing.T) {
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
-			// Even if old task had no due date, new task should get one (next occurrence from now)
-			assert.False(t, newTask.DueDate.IsZero(), "due date should be set for repeating task")
-			assert.True(t, newTask.DueDate.After(time.Now().Add(-time.Minute)), "due date should be in the future (or very recent)")
-			assert.False(t, newTask.Done)
+			// Repeating task without a due date should not get one auto-assigned
+			assert.True(t, newTask.DueDate.IsZero(), "due date should remain unset")
 		})
 		t.Run("update reminders", func(t *testing.T) {
 			oldReminder1 := time.Now().Add(-48 * time.Hour)
@@ -654,6 +652,7 @@ func TestUpdateDone(t *testing.T) {
 			oldTask := &Task{
 				Done:    false,
 				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: time.Now().Add(-48 * time.Hour),
 				Reminders: []*TaskReminder{
 					{
 						Reminder: oldReminder1,
@@ -679,6 +678,7 @@ func TestUpdateDone(t *testing.T) {
 			oldTask := &Task{
 				Done:      false,
 				Repeats:   "FREQ=DAILY;INTERVAL=1",
+				DueDate:   time.Now().Add(-48 * time.Hour),
 				StartDate: oldStartDate,
 			}
 			newTask := &Task{
@@ -694,6 +694,7 @@ func TestUpdateDone(t *testing.T) {
 			oldTask := &Task{
 				Done:    false,
 				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: time.Now().Add(-48 * time.Hour),
 				EndDate: oldEndDate,
 			}
 			newTask := &Task{
@@ -788,6 +789,7 @@ func TestUpdateDone(t *testing.T) {
 				oldTask := &Task{
 					Done:      false,
 					Repeats:   "FREQ=MONTHLY;INTERVAL=1",
+					DueDate:   time.Unix(1550000000, 0),
 					StartDate: time.Unix(1550000000, 0),
 				}
 				newTask := &Task{
@@ -804,6 +806,7 @@ func TestUpdateDone(t *testing.T) {
 				oldTask := &Task{
 					Done:    false,
 					Repeats: "FREQ=MONTHLY;INTERVAL=1",
+					DueDate: time.Unix(1560000000, 0),
 					EndDate: time.Unix(1560000000, 0),
 				}
 				newTask := &Task{
