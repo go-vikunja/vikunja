@@ -80,6 +80,12 @@ var subTableFilters = SubTableFilters{
 		FilterableField: "parent_project_id",
 		AllowNullCheck:  false,
 	},
+	"bucket": {
+		Table:           "buckets",
+		BaseFilter:      "task_buckets.bucket_id = buckets.id",
+		FilterableField: "title",
+		AllowNullCheck:  true,
+	},
 }
 
 var strictComparators = map[taskFilterComparator]bool{
@@ -108,6 +114,10 @@ func (sf *SubTableFilter) ToBaseSubQuery() *builder.Builder {
 	// little hack to add users table for assignees filter
 	if sf.Table == "task_assignees" {
 		cond.Join("INNER", "users", "users.id = user_id")
+	}
+
+	if sf.Table == "buckets" {
+		cond.Join("INNER", "task_buckets", "tasks.id = task_buckets.task_id")
 	}
 
 	return cond
@@ -245,15 +255,15 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 	return filterCond, nil
 }
 
-func hasBucketIDInParsedFilter(filters []*taskFilter) bool {
+func hasBucketInParsedFilter(filters []*taskFilter) bool {
 	for _, filter := range filters {
 		if subfilters, is := filter.value.([]*taskFilter); is {
-			has := hasBucketIDInParsedFilter(subfilters)
+			has := hasBucketInParsedFilter(subfilters)
 			if has {
 				return true
 			}
 		}
-		if filter.field == taskPropertyBucketID {
+		if filter.field == taskPropertyBucketID || filter.field == taskPropertyBucket {
 			return true
 		}
 	}
@@ -269,7 +279,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, 0, err
 	}
 
-	joinTaskBuckets := hasBucketIDInParsedFilter(opts.parsedFilters)
+	joinTaskBuckets := hasBucketInParsedFilter(opts.parsedFilters)
 
 	filterCond, err := convertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
 	if err != nil {
