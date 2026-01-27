@@ -116,16 +116,15 @@ func TestTask(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `{"Reminder":"2020-02-10T10:00:00Z"`)
 			})
 			t.Run("Repeats RRULE", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"repeats":"FREQ=DAILY;INTERVAL=1"}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"repeat":{"freq":"daily","interval":1}}`)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"repeats":"FREQ=DAILY;INTERVAL=1"`)
-				assert.NotContains(t, rec.Body.String(), `"repeats":""`)
+				assert.Contains(t, rec.Body.String(), `"repeat":{"freq":"daily","interval":1}`)
+				assert.NotContains(t, rec.Body.String(), `"repeat":null`)
 			})
 			t.Run("Repeats unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "28"}, `{"repeats":""}`)
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "28"}, `{"repeat":null}`)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"repeats":""`)
-				assert.NotContains(t, rec.Body.String(), `"repeats":"FREQ=`)
+				assert.NotContains(t, rec.Body.String(), `"repeat":{"freq":`)
 			})
 			t.Run("Repeating task update done", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "28"}, `{"done":true}`)
