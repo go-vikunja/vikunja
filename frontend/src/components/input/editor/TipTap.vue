@@ -3,13 +3,17 @@
 		ref="tiptapInstanceRef"
 		class="tiptap"
 	>
+		<!-- Using v-show instead of v-if to avoid unmounting which causes race condition
+			 with tiptap's DOM manipulation. See: https://github.com/ueberdosis/tiptap/issues/7342 -->
 		<EditorToolbar
-			v-if="editor && isEditing"
+			v-if="editor"
+			v-show="isEditing"
 			:editor="editor"
 			@imageUploadClicked="triggerImageInput"
 		/>
 		<BubbleMenu
-			v-if="editor && isEditing"
+			v-if="editor"
+			v-show="isEditing"
 			:editor="editor"
 		>
 			<div class="editor-bubble__wrapper">
