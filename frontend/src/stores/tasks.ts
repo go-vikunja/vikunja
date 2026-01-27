@@ -479,8 +479,8 @@ export const useTaskStore = defineStore('task', () => {
 			position,
 			index,
 		})
-		if (parsedTask.repeats) {
-			task.repeats = parsedTask.repeats
+		if (parsedTask.repeat) {
+			task.repeat = parsedTask.repeat
 		}
 
 		const taskService = new TaskService()

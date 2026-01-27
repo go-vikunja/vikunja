@@ -1,62 +1,10 @@
 /**
- * RRULE helper functions for parsing and generating RFC 5545 recurrence rules.
- * This is a simplified implementation for the UI - the backend uses the full rrule-go library.
+ * Helper functions for working with structured task repeat objects.
+ * The API provides structured repeat data (ITaskRepeat) instead of raw RRULE strings.
  */
 
-export type RRuleFrequency = 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+import type {ITaskRepeat} from '@/modelTypes/ITask'
 
-export interface ParsedRRule {
-	freq: RRuleFrequency
-	interval: number
-	bymonthday?: number
-}
-
-/**
- * Parses an RRULE string into a structured object.
- * Example: "FREQ=DAILY;INTERVAL=2" -> { freq: 'DAILY', interval: 2 }
- */
-export function parseRRule(rrule: string): ParsedRRule | null {
-	if (!rrule || rrule.trim() === '') {
-		return null
-	}
-
-	const parts: Record<string, string> = {}
-	rrule.split(';').forEach(part => {
-		const [key, value] = part.split('=')
-		if (key && value) {
-			parts[key.toUpperCase()] = value
-		}
-	})
-
-	if (!parts.FREQ) {
-		return null
-	}
-
-	const freq = parts.FREQ as RRuleFrequency
-	const interval = parts.INTERVAL ? parseInt(parts.INTERVAL, 10) : 1
-	const bymonthday = parts.BYMONTHDAY ? parseInt(parts.BYMONTHDAY, 10) : undefined
-
-	return {
-		freq,
-		interval,
-		bymonthday,
-	}
-}
-
-/**
- * Generates an RRULE string from structured parameters.
- */
-export function generateRRule(freq: RRuleFrequency, interval: number, bymonthday?: number): string {
-	let rrule = `FREQ=${freq};INTERVAL=${interval}`
-	if (bymonthday !== undefined && bymonthday > 0) {
-		rrule += `;BYMONTHDAY=${bymonthday}`
-	}
-	return rrule
-}
-
-/**
- * UI-friendly frequency types that map to RRULE frequencies.
- */
 export const REPEAT_FREQUENCIES = {
 	Hours: 'hours',
 	Days: 'days',
@@ -67,109 +15,109 @@ export const REPEAT_FREQUENCIES = {
 
 export type RepeatFrequency = typeof REPEAT_FREQUENCIES[keyof typeof REPEAT_FREQUENCIES]
 
-/**
- * Maps UI frequency to RRULE frequency.
- */
-export function uiFreqToRRuleFreq(freq: RepeatFrequency): RRuleFrequency {
-	switch (freq) {
-		case 'hours':
-			return 'HOURLY'
-		case 'days':
-			return 'DAILY'
-		case 'weeks':
-			return 'WEEKLY'
-		case 'months':
-			return 'MONTHLY'
-		case 'years':
-			return 'YEARLY'
-		default:
-			return 'DAILY'
-	}
+const FREQ_TO_UI: Record<string, RepeatFrequency> = {
+	hourly: 'hours',
+	daily: 'days',
+	weekly: 'weeks',
+	monthly: 'months',
+	yearly: 'years',
+}
+
+const UI_TO_FREQ: Record<RepeatFrequency, string> = {
+	hours: 'hourly',
+	days: 'daily',
+	weeks: 'weekly',
+	months: 'monthly',
+	years: 'yearly',
 }
 
 /**
- * Maps RRULE frequency to UI frequency.
+ * Maps an API freq string to a UI frequency.
  */
-export function rruleFreqToUiFreq(freq: RRuleFrequency): RepeatFrequency {
-	switch (freq) {
-		case 'HOURLY':
-			return 'hours'
-		case 'DAILY':
-			return 'days'
-		case 'WEEKLY':
-			return 'weeks'
-		case 'MONTHLY':
-			return 'months'
-		case 'YEARLY':
-			return 'years'
-		default:
-			return 'days'
-	}
+export function freqToUiFreq(freq: string): RepeatFrequency {
+	return FREQ_TO_UI[freq.toLowerCase()] || 'days'
 }
 
 /**
- * Converts UI-friendly repeat settings to an RRULE string.
+ * Maps a UI frequency to an API freq string.
  */
-export function repeatSettingsToRRule(amount: number, freq: RepeatFrequency, bymonthday?: number): string {
+export function uiFreqToFreq(freq: RepeatFrequency): string {
+	return UI_TO_FREQ[freq] || 'daily'
+}
+
+/**
+ * Creates a structured repeat object from UI-friendly settings.
+ */
+export function repeatFromSettings(amount: number, freq: RepeatFrequency, bymonthday?: number): ITaskRepeat | null {
 	if (amount <= 0) {
-		return ''
+		return null
 	}
-	return generateRRule(uiFreqToRRuleFreq(freq), amount, bymonthday)
+
+	const repeat: ITaskRepeat = {
+		freq: uiFreqToFreq(freq),
+		interval: amount,
+	}
+
+	if (bymonthday !== undefined && bymonthday > 0) {
+		repeat.byMonthDay = [bymonthday]
+	}
+
+	return repeat
 }
 
 /**
- * Parses an RRULE string to UI-friendly repeat settings.
+ * Extracts UI-friendly settings from a structured repeat object.
  */
-export function rruleToRepeatSettings(rrule: string): { amount: number; freq: RepeatFrequency; bymonthday?: number } | null {
-	const parsed = parseRRule(rrule)
-	if (!parsed) {
+export function repeatToSettings(repeat: ITaskRepeat | null): { amount: number; freq: RepeatFrequency; bymonthday?: number } | null {
+	if (!repeat) {
 		return null
 	}
 	return {
-		amount: parsed.interval,
-		freq: rruleFreqToUiFreq(parsed.freq),
-		bymonthday: parsed.bymonthday,
+		amount: repeat.interval || 1,
+		freq: freqToUiFreq(repeat.freq),
+		bymonthday: repeat.byMonthDay?.[0],
 	}
 }
 
 /**
- * Returns a human-readable description of an RRULE.
+ * Returns a human-readable description of a repeat configuration.
  */
-export function describeRRule(rrule: string, t: (key: string, params?: Record<string, unknown>) => string): string {
-	const parsed = parseRRule(rrule)
-	if (!parsed) {
+export function describeRepeat(repeat: ITaskRepeat | null, t: (key: string, params?: Record<string, unknown>) => string): string {
+	if (!repeat) {
 		return ''
 	}
 
-	const { freq, interval, bymonthday } = parsed
+	const freq = repeat.freq.toLowerCase()
+	const interval = repeat.interval || 1
+	const bymonthday = repeat.byMonthDay?.[0]
 
 	// Special cases for interval=1
 	if (interval === 1) {
 		switch (freq) {
-			case 'HOURLY':
+			case 'hourly':
 				return t('task.repeat.everyHour')
-			case 'DAILY':
+			case 'daily':
 				return t('task.repeat.everyDay')
-			case 'WEEKLY':
+			case 'weekly':
 				return t('task.repeat.everyWeek')
-			case 'MONTHLY':
+			case 'monthly':
 				if (bymonthday) {
-					return t('task.repeat.everyMonthOnDay', { day: bymonthday })
+					return t('task.repeat.everyMonthOnDay', {day: bymonthday})
 				}
 				return t('task.repeat.everyMonth')
-			case 'YEARLY':
+			case 'yearly':
 				return t('task.repeat.everyYear')
 		}
 	}
 
 	// General case with interval
-	const freqKey = rruleFreqToUiFreq(freq)
-	return t('task.repeat.everyN', { n: interval, unit: t(`task.repeat.${freqKey}`) })
+	const freqKey = freqToUiFreq(freq)
+	return t('task.repeat.everyN', {n: interval, unit: t(`task.repeat.${freqKey}`)})
 }
 
 /**
  * Checks if a task has a valid repeat configuration.
  */
-export function isRepeating(repeats: string | undefined | null): boolean {
-	return !!repeats && repeats.trim() !== ''
+export function isRepeating(repeat: ITaskRepeat | null | undefined): boolean {
+	return repeat != null && !!repeat.freq
 }

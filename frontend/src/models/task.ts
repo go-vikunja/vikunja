@@ -54,7 +54,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	dueDate: Date | null = 0
 	startDate: Date | null = 0
 	endDate: Date | null = 0
-	repeats = ''
+	repeat: ITask['repeat'] = null
 	repeatsFromCurrentDate = false
 	reminders: ITaskReminder[] = []
 	parentTaskId: ITask['id'] = 0

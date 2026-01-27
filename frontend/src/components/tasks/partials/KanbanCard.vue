@@ -90,7 +90,7 @@
 					<Icon icon="align-left" />
 				</span>
 				<span
-					v-if="isRepeating(task.repeats)"
+					v-if="isRepeating(task.repeat)"
 					class="icon"
 				>
 					<Icon icon="history" />
@@ -181,7 +181,7 @@ const isOverdue = computed(() => (
 ))
 
 async function toggleTaskDone(task: ITask) {
-	const isRecurringTask = isRepeating(task.repeats)
+	const isRecurringTask = isRepeating(task.repeat)
 	const wasBeingMarkedDone = !task.done
 	
 	loadingInternal.value = true

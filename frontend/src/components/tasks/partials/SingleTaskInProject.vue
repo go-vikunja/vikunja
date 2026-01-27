@@ -223,7 +223,7 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import {useIntervalFn} from '@vueuse/core'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
-import {isRepeating, describeRRule} from '@/helpers/rrule'
+import {isRepeating, describeRepeat} from '@/helpers/rrule'
 
 const props = withDefaults(defineProps<{
 	theTask: ITask,
@@ -257,13 +257,13 @@ const {t} = useI18n({useScope: 'global'})
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>(new TaskModel())
 
-const taskIsRepeating = computed(() => isRepeating(task.value.repeats))
+const taskIsRepeating = computed(() => isRepeating(task.value.repeat))
 
 const repeatTooltip = computed(() => {
-	if (!task.value.repeats) {
+	if (!task.value.repeat) {
 		return ''
 	}
-	return describeRRule(task.value.repeats, t)
+	return describeRepeat(task.value.repeat, t)
 })
 
 watch(

@@ -76,7 +76,7 @@
 				<Icon icon="align-left" />
 			</span>
 			<span
-				v-if="isRepeating(task.repeats)"
+				v-if="isRepeating(task.repeat)"
 				class="project-task-icon"
 			>
 				<Icon icon="history" />

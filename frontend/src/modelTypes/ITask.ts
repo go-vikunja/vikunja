@@ -15,6 +15,23 @@ import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IReactionPerEntity} from '@/modelTypes/IReaction'
 import type {ITaskComment} from '@/modelTypes/ITaskComment.ts'
 
+export interface ITaskRepeat {
+	freq: string
+	interval: number
+	byDay?: string[]
+	byMonthDay?: number[]
+	byMonth?: number[]
+	byYearDay?: number[]
+	byWeekNo?: number[]
+	bySetPos?: number[]
+	byHour?: number[]
+	byMinute?: number[]
+	bySecond?: number[]
+	count?: number
+	until?: string | null
+	wkst?: string
+}
+
 export interface ITask extends IAbstract {
 	id: number
 	title: string
@@ -28,8 +45,8 @@ export interface ITask extends IAbstract {
 	dueDate: Date | null
 	startDate: Date | null
 	endDate: Date | null
-	// RFC 5545 RRULE string defining the recurrence pattern (e.g., "FREQ=DAILY;INTERVAL=1")
-	repeats: string
+	// Structured recurrence pattern from the API
+	repeat: ITaskRepeat | null
 	// If true, the next occurrence is calculated from the completion date rather than the original date
 	repeatsFromCurrentDate: boolean
 	reminders: ITaskReminder[]

@@ -1,6 +1,7 @@
 import {parseDate} from '../helpers/time/parseDate'
 import {PRIORITIES} from '@/constants/priorities'
-import {repeatSettingsToRRule, type RepeatFrequency} from '@/helpers/rrule'
+import type {ITaskRepeat} from '@/modelTypes/ITask'
+import {repeatFromSettings, type RepeatFrequency} from '@/helpers/rrule'
 
 const VIKUNJA_PREFIXES: Prefixes = {
 	label: '*',
@@ -30,7 +31,7 @@ export const PREFIXES = {
 
 interface repeatParsedResult {
 	textWithoutMatched: string,
-	repeats: string | null,
+	repeat: ITaskRepeat | null,
 }
 
 export interface ParsedTaskText {
@@ -40,7 +41,7 @@ export interface ParsedTaskText {
 	project: string | null,
 	priority: number | null,
 	assignees: string[],
-	repeats: string | null,
+	repeat: ITaskRepeat | null,
 }
 
 interface Prefixes {
@@ -63,7 +64,7 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 		project: null,
 		priority: null,
 		assignees: [],
-		repeats: null,
+		repeat: null,
 	}
 
 	const prefixes = PREFIXES[prefixesMode]
@@ -82,9 +83,9 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 
 	result.assignees = getItemsFromPrefix(result.text, prefixes.assignee)
 
-	const {textWithoutMatched, repeats} = getRepeats(result.text)
+	const {textWithoutMatched, repeat} = getRepeats(result.text)
 	result.text = textWithoutMatched
-	result.repeats = repeats
+	result.repeat = repeat
 
 	const {newText, date} = parseDate(result.text, now)
 	result.text = newText
@@ -170,7 +171,7 @@ const getRepeats = (text: string): repeatParsedResult => {
 	if (results === null) {
 		return {
 			textWithoutMatched: text,
-			repeats: null,
+			repeat: null,
 		}
 	}
 
@@ -269,7 +270,7 @@ const getRepeats = (text: string): repeatParsedResult => {
 
 	return {
 		textWithoutMatched: text.replace(matchedText, ''),
-		repeats: repeatSettingsToRRule(amount, freq),
+		repeat: repeatFromSettings(amount, freq),
 	}
 }
 

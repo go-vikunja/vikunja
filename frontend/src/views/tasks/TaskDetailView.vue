@@ -976,7 +976,7 @@ function setActiveFields() {
 	activeFields.priority = task.value.priority !== PRIORITIES.UNSET
 	activeFields.relatedTasks = Object.keys(task.value.relatedTasks).length > 0
 	activeFields.reminders = task.value.reminders.length > 0
-	activeFields.repeatAfter = isRepeating(task.value.repeats)
+	activeFields.repeatAfter = isRepeating(task.value.repeat)
 	activeFields.startDate = task.value.startDate !== null
 }
 
@@ -1053,7 +1053,7 @@ async function saveTask(
 	setActiveFields()
 
 	// Preserve repeat field if it was open and still has valid repeat config
-	if (repeatWasOpen && isRepeating(task.value.repeats)) {
+	if (repeatWasOpen && isRepeating(task.value.repeat)) {
 		activeFields.repeatAfter = true
 	}
 
@@ -1133,7 +1133,7 @@ async function setPercentDone(percentDone: number) {
 }
 
 async function removeRepeatAfter() {
-	task.value.repeats = ''
+	task.value.repeat = null
 	task.value.repeatsFromCurrentDate = false
 	await saveTask()
 }

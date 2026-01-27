@@ -4,49 +4,49 @@
 			<XButton
 				variant="secondary"
 				class="is-small"
-				@click="() => setQuickRepeat('FREQ=DAILY;INTERVAL=1')"
+				@click="() => setQuickRepeat('daily', 1)"
 			>
 				{{ $t('task.repeat.everyDay') }}
 			</XButton>
 			<XButton
 				variant="secondary"
 				class="is-small"
-				@click="() => setQuickRepeat('FREQ=WEEKLY;INTERVAL=1')"
+				@click="() => setQuickRepeat('weekly', 1)"
 			>
 				{{ $t('task.repeat.everyWeek') }}
 			</XButton>
 			<XButton
 				variant="secondary"
 				class="is-small"
-				@click="() => setQuickRepeat('FREQ=DAILY;INTERVAL=30')"
+				@click="() => setQuickRepeat('daily', 30)"
 			>
 				{{ $t('task.repeat.every30d') }}
 			</XButton>
 			<XButton
 				variant="secondary"
 				class="is-small"
-				@click="() => setQuickRepeat('FREQ=MONTHLY;INTERVAL=1')"
+				@click="() => setQuickRepeat('monthly', 1)"
 			>
 				{{ $t('task.repeat.everyMonth') }}
 			</XButton>
 			<XButton
 				variant="secondary"
 				class="is-small"
-				@click="() => setQuickRepeat('FREQ=MONTHLY;INTERVAL=3')"
+				@click="() => setQuickRepeat('monthly', 3)"
 			>
 				{{ $t('task.repeat.everyQuarter') }}
 			</XButton>
 			<XButton
 				variant="secondary"
 				class="is-small"
-				@click="() => setQuickRepeat('FREQ=MONTHLY;INTERVAL=6')"
+				@click="() => setQuickRepeat('monthly', 6)"
 			>
 				{{ $t('task.repeat.everySixMonths') }}
 			</XButton>
 			<XButton
 				variant="secondary"
 				class="is-small"
-				@click="() => setQuickRepeat('FREQ=YEARLY;INTERVAL=1')"
+				@click="() => setQuickRepeat('yearly', 1)"
 			>
 				{{ $t('task.repeat.everyYear') }}
 			</XButton>
@@ -147,9 +147,8 @@ import {error} from '@/message'
 import type {ITask} from '@/modelTypes/ITask'
 import TaskModel from '@/models/task'
 import {
-	parseRRule,
-	repeatSettingsToRRule,
-	rruleFreqToUiFreq,
+	freqToUiFreq,
+	repeatFromSettings,
 	type RepeatFrequency,
 } from '@/helpers/rrule'
 
@@ -181,14 +180,11 @@ watch(
 		task.value = value
 		repeatsFromCurrentDate.value = value.repeatsFromCurrentDate || false
 
-		// Parse the existing RRULE if present
-		if (value.repeats) {
-			const parsed = parseRRule(value.repeats)
-			if (parsed) {
-				repeatInterval.value = parsed.interval
-				repeatFrequency.value = rruleFreqToUiFreq(parsed.freq)
-				repeatByMonthDay.value = parsed.bymonthday || 0
-			}
+		// Parse the existing repeat config if present
+		if (value.repeat) {
+			repeatInterval.value = value.repeat.interval || 1
+			repeatFrequency.value = freqToUiFreq(value.repeat.freq)
+			repeatByMonthDay.value = value.repeat.byMonthDay?.[0] || 0
 		}
 	},
 	{
@@ -207,32 +203,27 @@ function updateData() {
 		return
 	}
 
-	// Generate the RRULE string
+	// Build structured repeat object
 	const bymonthday = repeatFrequency.value === 'months' && repeatByMonthDay.value > 0
 		? repeatByMonthDay.value
 		: undefined
-	const rrule = repeatSettingsToRRule(repeatInterval.value, repeatFrequency.value, bymonthday)
-
-	task.value.repeats = rrule
+	task.value.repeat = repeatFromSettings(repeatInterval.value, repeatFrequency.value, bymonthday)
 	task.value.repeatsFromCurrentDate = repeatsFromCurrentDate.value
 
 	emit('update:modelValue', task.value)
 }
 
-function setQuickRepeat(rrule: string) {
+function setQuickRepeat(freq: string, interval: number) {
 	if (!task.value) {
 		return
 	}
 
-	// Parse and update local state
-	const parsed = parseRRule(rrule)
-	if (parsed) {
-		repeatInterval.value = parsed.interval
-		repeatFrequency.value = rruleFreqToUiFreq(parsed.freq)
-		repeatByMonthDay.value = parsed.bymonthday || 0
-	}
+	// Update local state
+	repeatInterval.value = interval
+	repeatFrequency.value = freqToUiFreq(freq)
+	repeatByMonthDay.value = 0
 
-	task.value.repeats = rrule
+	task.value.repeat = {freq, interval}
 	emit('update:modelValue', task.value)
 }
 </script>

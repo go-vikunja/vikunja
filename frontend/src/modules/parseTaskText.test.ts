@@ -819,58 +819,58 @@ describe('Parse Task Text', () => {
 	})
 
 	describe('Recurring Dates', () => {
-		// Test cases now expect RRULE strings
+		// Test cases now expect structured repeat objects {freq, interval}
 		const cases = {
-			'every 1 hour': 'FREQ=HOURLY;INTERVAL=1',
-			'every hour': 'FREQ=HOURLY;INTERVAL=1',
-			'every 5 hours': 'FREQ=HOURLY;INTERVAL=5',
-			'every 12 hours': 'FREQ=HOURLY;INTERVAL=12',
-			'every day': 'FREQ=DAILY;INTERVAL=1',
-			'every 1 day': 'FREQ=DAILY;INTERVAL=1',
-			'every 2 days': 'FREQ=DAILY;INTERVAL=2',
-			'every week': 'FREQ=WEEKLY;INTERVAL=1',
-			'every 1 week': 'FREQ=WEEKLY;INTERVAL=1',
-			'every 3 weeks': 'FREQ=WEEKLY;INTERVAL=3',
-			'every month': 'FREQ=MONTHLY;INTERVAL=1',
-			'every 1 month': 'FREQ=MONTHLY;INTERVAL=1',
-			'every 2 months': 'FREQ=MONTHLY;INTERVAL=2',
-			'every year': 'FREQ=YEARLY;INTERVAL=1',
-			'every 1 year': 'FREQ=YEARLY;INTERVAL=1',
-			'every 4 years': 'FREQ=YEARLY;INTERVAL=4',
-			'every one hour': 'FREQ=HOURLY;INTERVAL=1', // maybe unnesecary but better to include it for completeness sake
-			'every two hours': 'FREQ=HOURLY;INTERVAL=2',
-			'every three hours': 'FREQ=HOURLY;INTERVAL=3',
-			'every four hours': 'FREQ=HOURLY;INTERVAL=4',
-			'every five hours': 'FREQ=HOURLY;INTERVAL=5',
-			'every six hours': 'FREQ=HOURLY;INTERVAL=6',
-			'every seven hours': 'FREQ=HOURLY;INTERVAL=7',
-			'every eight hours': 'FREQ=HOURLY;INTERVAL=8',
-			'every nine hours': 'FREQ=HOURLY;INTERVAL=9',
-			'every ten hours': 'FREQ=HOURLY;INTERVAL=10',
-			'annually': 'FREQ=YEARLY;INTERVAL=1',
-			'biannually': 'FREQ=MONTHLY;INTERVAL=6',
-			'semiannually': 'FREQ=MONTHLY;INTERVAL=6',
-			'biennially': 'FREQ=YEARLY;INTERVAL=2',
-			'daily': 'FREQ=DAILY;INTERVAL=1',
-			'hourly': 'FREQ=HOURLY;INTERVAL=1',
-			'monthly': 'FREQ=MONTHLY;INTERVAL=1',
-			'weekly': 'FREQ=WEEKLY;INTERVAL=1',
-			'yearly': 'FREQ=YEARLY;INTERVAL=1',
-		} as Record<string, string>
+			'every 1 hour': {freq: 'hourly', interval: 1},
+			'every hour': {freq: 'hourly', interval: 1},
+			'every 5 hours': {freq: 'hourly', interval: 5},
+			'every 12 hours': {freq: 'hourly', interval: 12},
+			'every day': {freq: 'daily', interval: 1},
+			'every 1 day': {freq: 'daily', interval: 1},
+			'every 2 days': {freq: 'daily', interval: 2},
+			'every week': {freq: 'weekly', interval: 1},
+			'every 1 week': {freq: 'weekly', interval: 1},
+			'every 3 weeks': {freq: 'weekly', interval: 3},
+			'every month': {freq: 'monthly', interval: 1},
+			'every 1 month': {freq: 'monthly', interval: 1},
+			'every 2 months': {freq: 'monthly', interval: 2},
+			'every year': {freq: 'yearly', interval: 1},
+			'every 1 year': {freq: 'yearly', interval: 1},
+			'every 4 years': {freq: 'yearly', interval: 4},
+			'every one hour': {freq: 'hourly', interval: 1},
+			'every two hours': {freq: 'hourly', interval: 2},
+			'every three hours': {freq: 'hourly', interval: 3},
+			'every four hours': {freq: 'hourly', interval: 4},
+			'every five hours': {freq: 'hourly', interval: 5},
+			'every six hours': {freq: 'hourly', interval: 6},
+			'every seven hours': {freq: 'hourly', interval: 7},
+			'every eight hours': {freq: 'hourly', interval: 8},
+			'every nine hours': {freq: 'hourly', interval: 9},
+			'every ten hours': {freq: 'hourly', interval: 10},
+			'annually': {freq: 'yearly', interval: 1},
+			'biannually': {freq: 'monthly', interval: 6},
+			'semiannually': {freq: 'monthly', interval: 6},
+			'biennially': {freq: 'yearly', interval: 2},
+			'daily': {freq: 'daily', interval: 1},
+			'hourly': {freq: 'hourly', interval: 1},
+			'monthly': {freq: 'monthly', interval: 1},
+			'weekly': {freq: 'weekly', interval: 1},
+			'yearly': {freq: 'yearly', interval: 1},
+		} as Record<string, {freq: string, interval: number}>
 
 		for (const c in cases) {
-			it(`should parse ${c} as recurring RRULE ${cases[c]}`, () => {
+			it(`should parse ${c} as recurring repeat {freq: ${cases[c].freq}, interval: ${cases[c].interval}}`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c}`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result?.repeats).toBe(cases[c])
+				expect(result?.repeat).toEqual(cases[c])
 			})
 
-			it(`should parse ${c} as recurring RRULE ${cases[c]} at 11:42`, () => {
+			it(`should parse ${c} as recurring repeat at 11:42`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c} at 11:42`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result?.repeats).toBe(cases[c])
+				expect(result?.repeat).toEqual(cases[c])
 				const now = new Date()
 				expect(`${result?.date?.getFullYear()}-${result?.date?.getMonth()}-${result?.date?.getDate()}`).toBe(`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`)
 				expect(`${result?.date?.getHours()}:${result?.date?.getMinutes()}`).toBe('11:42')
@@ -894,7 +894,7 @@ describe('Parse Task Text', () => {
 				const result = parseTaskText(`Lorem Ipsum word${c}notword`)
 
 				expect(result.text).toBe(`Lorem Ipsum word${c}notword`)
-				expect(result?.repeats).toBeNull()
+				expect(result?.repeat).toBeNull()
 			})
 		})
 	})
