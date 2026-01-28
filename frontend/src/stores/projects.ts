@@ -49,6 +49,21 @@ export const useProjectStore = defineStore('project', () => {
 		return (id: IProject['id']) => projectsArray.value.filter(p => p.parentProjectId === id)
 	})
 
+	// Check if a project is an orphaned sub-project (has a parent that isn't accessible)
+	function isOrphanedSubProject(project: IProject): boolean {
+		return project.parentProjectId !== 0 && !projects.value[project.parentProjectId]
+	}
+
+	// Get the effective parentProjectId for saving position changes.
+	// For orphaned sub-projects shown at root level, preserve the original parentProjectId
+	// to prevent accidentally detaching them from their real parent.
+	function getEffectiveParentProjectId(project: IProject, parentProjectIdFromDom: number): number {
+		if (parentProjectIdFromDom === 0 && isOrphanedSubProject(project)) {
+			return project.parentProjectId
+		}
+		return parentProjectIdFromDom
+	}
+
 	const getAncestors = computed(() => {
 		return (project: IProject): IProject[] => {
 			if (typeof project === 'undefined') {
@@ -322,6 +337,8 @@ export const useProjectStore = defineStore('project', () => {
 		savedFilterProjects: readonly(savedFilterProjects),
 
 		getChildProjects,
+		isOrphanedSubProject,
+		getEffectiveParentProjectId,
 		findProjectByExactname,
 		findProjectByIdentifier,
 		searchProject,

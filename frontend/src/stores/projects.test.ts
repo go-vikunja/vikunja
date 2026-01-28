@@ -139,4 +139,85 @@ describe('project store', () => {
 			expect(titles).not.toContain('Child')
 		})
 	})
+
+	describe('isOrphanedSubProject', () => {
+		it('should return false for root projects', () => {
+			const store = useProjectStore()
+			const rootProject = createMockProject({id: 1, parentProjectId: 0})
+
+			store.setProject(rootProject)
+
+			expect(store.isOrphanedSubProject(rootProject)).toBe(false)
+		})
+
+		it('should return false for sub-projects with accessible parent', () => {
+			const store = useProjectStore()
+			const parentProject = createMockProject({id: 1, parentProjectId: 0})
+			const childProject = createMockProject({id: 2, parentProjectId: 1})
+
+			store.setProject(parentProject)
+			store.setProject(childProject)
+
+			expect(store.isOrphanedSubProject(childProject)).toBe(false)
+		})
+
+		it('should return true for sub-projects with inaccessible parent', () => {
+			const store = useProjectStore()
+			const orphanedProject = createMockProject({id: 2, parentProjectId: 999})
+
+			store.setProject(orphanedProject)
+
+			expect(store.isOrphanedSubProject(orphanedProject)).toBe(true)
+		})
+	})
+
+	describe('getEffectiveParentProjectId', () => {
+		it('should return DOM parentProjectId for root projects', () => {
+			const store = useProjectStore()
+			const rootProject = createMockProject({id: 1, parentProjectId: 0})
+
+			store.setProject(rootProject)
+
+			// Dragged within root level
+			expect(store.getEffectiveParentProjectId(rootProject, 0)).toBe(0)
+			// Dragged into a sub-project
+			expect(store.getEffectiveParentProjectId(rootProject, 5)).toBe(5)
+		})
+
+		it('should return DOM parentProjectId for sub-projects with accessible parent', () => {
+			const store = useProjectStore()
+			const parentProject = createMockProject({id: 1, parentProjectId: 0})
+			const childProject = createMockProject({id: 2, parentProjectId: 1})
+
+			store.setProject(parentProject)
+			store.setProject(childProject)
+
+			// Dragged to root level - allow reparenting
+			expect(store.getEffectiveParentProjectId(childProject, 0)).toBe(0)
+			// Dragged to another parent
+			expect(store.getEffectiveParentProjectId(childProject, 5)).toBe(5)
+		})
+
+		it('should preserve original parentProjectId for orphaned sub-projects at root level', () => {
+			const store = useProjectStore()
+			const orphanedProject = createMockProject({id: 2, parentProjectId: 999})
+
+			store.setProject(orphanedProject)
+
+			// Dragged within root level (DOM says 0) - preserve original to prevent detachment
+			expect(store.getEffectiveParentProjectId(orphanedProject, 0)).toBe(999)
+		})
+
+		it('should allow orphaned sub-projects to be moved to an accessible parent', () => {
+			const store = useProjectStore()
+			const accessibleParent = createMockProject({id: 5, parentProjectId: 0})
+			const orphanedProject = createMockProject({id: 2, parentProjectId: 999})
+
+			store.setProject(accessibleParent)
+			store.setProject(orphanedProject)
+
+			// Dragged to an accessible parent - allow reparenting
+			expect(store.getEffectiveParentProjectId(orphanedProject, 5)).toBe(5)
+		})
+	})
 })
