@@ -439,6 +439,9 @@
       "deleteSuccess": "The webhook was successfully deleted.",
       "create": "Create webhook",
       "secret": "Secret",
+      "basicauthuser": "Basic Auth User",
+      "basicauthpassword": "Basic Auth Password",
+      "basicauthlink": "Use Basic Auth?",
       "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
       "secretDocs": "Check out the docs for more details about how to use secrets."
     },
