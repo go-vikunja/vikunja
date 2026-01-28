@@ -81,6 +81,28 @@ func AvailableWebhookNotificationTypes() []WebhookNotificationType {
 		{Type: "all", Description: "General webhook for all notification types (fallback)"},
 		{Type: "task.reminder", Description: "Task reminder notifications"},
 		{Type: "task.undone.overdue", Description: "Overdue task notifications"},
+		// Task notifications
+		// {Type: "task.comment", Description: "Task comment notifications"},
+		// {Type: "task.assigned", Description: "Task assigned notifications"},
+		// {Type: "task.deleted", Description: "Task deleted notifications"},
+		// {Type: "task.mentioned", Description: "User mentioned in task notifications"},
+		// Project notifications
+		// {Type: "project.created", Description: "Project created notifications"},
+		// Team notifications
+		// {Type: "team.member.added", Description: "Team member added notifications"},
+		// Data export notifications
+		// {Type: "data.export.ready", Description: "Data export ready notifications"},
+		// Migration notifications
+		// {Type: "migration.done", Description: "Migration completed notifications"},
+		// {Type: "migration.failed", Description: "Migration failed notifications"},
+		// {Type: "migration.failed.reported", Description: "Migration failure reported notifications"},
+		// User account notifications
+		// {Type: "totp.invalid", Description: "Invalid TOTP code notifications"},
+		// {Type: "password.account.locked.after.invalid.totp", Description: "Account locked after invalid TOTP notifications"},
+		// {Type: "failed.login.attempt", Description: "Failed login attempt notifications"},
+		// {Type: "user.deletion.confirm", Description: "Account deletion confirmation notifications"},
+		// {Type: "user.deletion", Description: "Account deletion scheduled notifications"},
+		// {Type: "user.deleted", Description: "Account deleted notifications"},
 	}
 }
 
