@@ -66,10 +66,10 @@
 </template>
 
 <script lang="ts" setup>
-import BaseButton from '@/components/base/BaseButton.vue';
-import CustomTransition from '@/components/misc/CustomTransition.vue';
-import { useScrollLock } from '@vueuse/core';
-import { onBeforeUnmount, ref, useAttrs, watch, watchEffect } from 'vue';
+import CustomTransition from '@/components/misc/CustomTransition.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
+import {ref, useAttrs, watchEffect, onBeforeUnmount, watch} from 'vue'
+import {useScrollLock} from '@vueuse/core'
 
 const props = withDefaults(defineProps<{
 	enabled?: boolean,

@@ -41,11 +41,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watchEffect } from 'vue'
-import { onBeforeRouteLeave } from 'vue-router'
+import {ref, computed, watchEffect,  onBeforeUnmount} from 'vue'
+import {onBeforeRouteLeave} from 'vue-router'
 
-import Editor from '@/components/input/AsyncEditor'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
+import Editor from '@/components/input/AsyncEditor'
 
 import { clearEditorDraft } from '@/helpers/editorDraftStorage'
 import type { ITask } from '@/modelTypes/ITask'
