@@ -34,8 +34,15 @@ export const useProjectStore = defineStore('project', () => {
 	const projectsArray = computed(() => Object.values(projects.value)
 		.sort((a, b) => a.position - b.position))
 
+	// Check if a project is an orphaned sub-project (has a parent that isn't accessible)
+	function isOrphanedSubProject(project: IProject): boolean {
+		return project.parentProjectId !== 0 && !projects.value[project.parentProjectId]
+	}
+
 	const notArchivedRootProjects = computed(() => projectsArray.value
-		.filter(p => p.parentProjectId === 0 && !p.isArchived && p.id > 0))
+		.filter(p => !p.isArchived && p.id > 0 && (
+			p.parentProjectId === 0 || isOrphanedSubProject(p)
+		)))
 	const favoriteProjects = computed(() => projectsArray.value
 		.filter(p => !p.isArchived && p.isFavorite))
 	const savedFilterProjects = computed(() => projectsArray.value
@@ -45,6 +52,16 @@ export const useProjectStore = defineStore('project', () => {
 	const getChildProjects = computed(() => {
 		return (id: IProject['id']) => projectsArray.value.filter(p => p.parentProjectId === id)
 	})
+
+	// Get the effective parentProjectId for saving position changes.
+	// For orphaned sub-projects shown at root level, preserve the original parentProjectId
+	// to prevent accidentally detaching them from their real parent.
+	function getEffectiveParentProjectId(project: IProject, parentProjectIdFromDom: number): number {
+		if (parentProjectIdFromDom === 0 && isOrphanedSubProject(project)) {
+			return project.parentProjectId
+		}
+		return parentProjectIdFromDom
+	}
 
 	const getAncestors = computed(() => {
 		return (project: IProject): IProject[] => {
@@ -319,6 +336,8 @@ export const useProjectStore = defineStore('project', () => {
 		savedFilterProjects: readonly(savedFilterProjects),
 
 		getChildProjects,
+		isOrphanedSubProject,
+		getEffectiveParentProjectId,
 		findProjectByExactname,
 		findProjectByIdentifier,
 		searchProject,
