@@ -22,7 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type FileMigratorWeb struct {
@@ -37,7 +37,7 @@ func (fw *FileMigratorWeb) RegisterRoutes(g *echo.Group) {
 }
 
 // Migrate calls the migration method
-func (fw *FileMigratorWeb) Migrate(c echo.Context) error {
+func (fw *FileMigratorWeb) Migrate(c *echo.Context) error {
 	ms := fw.MigrationStruct()
 
 	// Get the user from context
@@ -76,7 +76,7 @@ func (fw *FileMigratorWeb) Migrate(c echo.Context) error {
 }
 
 // Status returns whether or not a user has already done this migration
-func (fw *FileMigratorWeb) Status(c echo.Context) error {
+func (fw *FileMigratorWeb) Status(c *echo.Context) error {
 	ms := fw.MigrationStruct()
 
 	return status(ms, c)

@@ -50,6 +50,23 @@ const mailTemplateHTML = `
 <html style="width: 100%; height: 100%; padding: 0; margin: 0;">
 <head>
     <meta name="viewport" content="width: display-width;">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        @media (prefers-color-scheme: dark) {
+            .email-card {
+                box-shadow: 0.3em 0.3em 0.8em rgba(0,0,0,0.3) !important;
+                -webkit-box-shadow: 0.3em 0.3em 0.8em rgba(0,0,0,0.3) !important;
+            }
+            .email-button {
+                box-shadow: 0 3px 6px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.15) !important;
+                -webkit-box-shadow: 0 3px 6px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.15) !important;
+            }
+        }
+    </style>
 </head>
 <body style="width: 100%; padding: 0; margin: 0; background: #f3f4f6">
 <div style="width: 100%; font-family: 'Open Sans', sans-serif; Text-rendering: optimizeLegibility">
@@ -57,7 +74,7 @@ const mailTemplateHTML = `
         <h1 style="font-size: 30px; Text-align: center;">
             <img src="cid:logo.png" style="height: 75px;" alt="Vikunja"/>
         </h1>
-        <div style="border: 1px solid #dbdbdb; -webkit-box-shadow: 0.3em 0.3em 0.8em #e6e6e6; box-shadow: 0.3em 0.3em 0.8em #e6e6e6; color: #4a4a4a; padding: 5px 25px; border-radius: 3px; background: #fff;">
+        <div class="email-card" style="border: 1px solid #dbdbdb; -webkit-box-shadow: 0.3em 0.3em 0.8em #e6e6e6; box-shadow: 0.3em 0.3em 0.8em #e6e6e6; color: #4a4a4a; padding: 5px 25px; border-radius: 3px; background: #fff;">
 <p>
 	{{ .Greeting }}
 </p>
@@ -67,7 +84,7 @@ const mailTemplateHTML = `
 {{ end }}
 
 {{ if .ActionURL }}
-	<a href="{{ .ActionURL }}" title="{{ .ActionText }}"
+	<a class="email-button" href="{{ .ActionURL }}" title="{{ .ActionText }}"
 		style="position: relative;Text-decoration:none;display: block;border-radius: 4px;cursor: pointer;padding-bottom: 8px;padding-left: 14px;padding-right: 14px;padding-top: 8px;width:280px;margin:10px auto;Text-align: center;white-space: nowrap;border: 0;Text-transform: uppercase;font-size: 14px;font-weight: 700;-webkit-box-shadow: 0 3px 6px rgba(107,114,128,.12),0 2px 4px rgba(107,114,128,.1);box-shadow: 0 3px 6px rgba(107,114,128,.12),0 2px 4px rgba(107,114,128,.1);background-color: #1973ff;border-color: transparent;color: #fff;">
 		{{ .ActionText }}
 	</a>

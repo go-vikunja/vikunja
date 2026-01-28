@@ -56,7 +56,7 @@ type TaskCollection struct {
 	// If set to `reactions`, the reactions of each task will be present in the response.
 	// If set to `comments`, the first 50 comments of each task will be present in the response.
 	// You can set this multiple times with different values.
-	Expand []TaskCollectionExpandable `query:"expand" json:"-"`
+	Expand []TaskCollectionExpandable `query:"expand[]" json:"-"`
 
 	isSavedFilter bool
 

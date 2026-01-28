@@ -72,6 +72,8 @@ var (
 		"dev:make-event":              Dev.MakeEvent,
 		"dev:make-listener":           Dev.MakeListener,
 		"dev:make-notification":       Dev.MakeNotification,
+		"dev:prepare-worktree":        Dev.PrepareWorktree,
+		"dev:tag-release":             Dev.TagRelease,
 		"plugins:build":               Plugins.Build,
 		"lint":                        Check.Golangci,
 		"lint:fix":                    Check.GolangciFix,
@@ -1392,6 +1394,359 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 // Create a yaml config file from the config-raw.json definition
 func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
+}
+
+// PrepareWorktree creates a new git worktree for development.
+// The first argument is the name, which becomes both the folder name and branch name.
+// The second argument is a path to a plan file that will be copied to the new worktree (pass "" to skip).
+// The worktree is created in the parent directory (../).
+// It also copies the current config.yml with an updated rootpath, and initializes the frontend.
+func (Dev) PrepareWorktree(name string, planPath string) error {
+	if name == "" {
+		return fmt.Errorf("name is required: mage dev:prepare-worktree <name> <plan-path>")
+	}
+
+	// Get the parent directory path
+	parentDir := filepath.Dir(RootPath)
+	worktreePath := filepath.Join(parentDir, name)
+
+	fmt.Printf("Creating worktree at %s with branch %s...\n", worktreePath, name)
+
+	// Create the git worktree
+	cmd := exec.Command("git", "worktree", "add", worktreePath, "-b", name)
+	cmd.Dir = RootPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to create worktree: %w", err)
+	}
+	printSuccess("Worktree created successfully!")
+
+	// Copy and modify config.yml
+	configSrc := filepath.Join(RootPath, "config.yml")
+	configDst := filepath.Join(worktreePath, "config.yml")
+
+	if _, err := os.Stat(configSrc); err == nil {
+		configContent, err := os.ReadFile(configSrc)
+		if err != nil {
+			return fmt.Errorf("failed to read config.yml: %w", err)
+		}
+
+		// Replace the rootpath value
+		re := regexp.MustCompile(`(?m)^(\s*rootpath:\s*)"[^"]*"`)
+		newConfig := re.ReplaceAllString(string(configContent), `${1}"`+worktreePath+`"`)
+
+		// Also handle unquoted rootpath values
+		re2 := regexp.MustCompile(`(?m)^(\s*rootpath:\s*)(/[^\s\n]+)`)
+		newConfig = re2.ReplaceAllString(newConfig, `${1}"`+worktreePath+`"`)
+
+		if err := os.WriteFile(configDst, []byte(newConfig), 0644); err != nil {
+			return fmt.Errorf("failed to write config.yml: %w", err)
+		}
+		printSuccess("Config copied with updated rootpath!")
+	} else {
+		fmt.Println("Warning: config.yml not found, skipping config copy")
+	}
+
+	// Copy .claude/settings.local.json if it exists
+	claudeSettingsSrc := filepath.Join(RootPath, ".claude", "settings.local.json")
+	if _, err := os.Stat(claudeSettingsSrc); err == nil {
+		claudeDir := filepath.Join(worktreePath, ".claude")
+		if err := os.MkdirAll(claudeDir, 0755); err != nil {
+			return fmt.Errorf("failed to create .claude directory: %w", err)
+		}
+		claudeSettingsDst := filepath.Join(claudeDir, "settings.local.json")
+		if err := copyFile(claudeSettingsSrc, claudeSettingsDst); err != nil {
+			return fmt.Errorf("failed to copy .claude/settings.local.json: %w", err)
+		}
+		printSuccess("Claude settings copied!")
+	}
+
+	// Copy plan file if provided
+	if planPath != "" {
+		planPath = strings.TrimSpace(planPath)
+		if planPath != "" {
+			// Create plans directory in the new worktree
+			plansDir := filepath.Join(worktreePath, "plans")
+			if err := os.MkdirAll(plansDir, 0755); err != nil {
+				return fmt.Errorf("failed to create plans directory: %w", err)
+			}
+
+			// Determine source path (relative to RootPath or absolute)
+			srcPlanPath := planPath
+			if !filepath.IsAbs(planPath) {
+				srcPlanPath = filepath.Join(RootPath, planPath)
+			}
+
+			if _, err := os.Stat(srcPlanPath); err != nil {
+				return fmt.Errorf("plan file not found: %s", srcPlanPath)
+			}
+
+			dstPlanPath := filepath.Join(plansDir, filepath.Base(planPath))
+			if err := copyFile(srcPlanPath, dstPlanPath); err != nil {
+				return fmt.Errorf("failed to copy plan file: %w", err)
+			}
+			printSuccess("Plan file copied to %s!", dstPlanPath)
+		}
+	}
+
+	// Initialize frontend
+	fmt.Println("Initializing frontend...")
+	frontendDir := filepath.Join(worktreePath, "frontend")
+
+	// Run pnpm install
+	pnpmCmd := exec.Command("pnpm", "i")
+	pnpmCmd.Dir = frontendDir
+	pnpmCmd.Stdout = os.Stdout
+	pnpmCmd.Stderr = os.Stderr
+	if err := pnpmCmd.Run(); err != nil {
+		return fmt.Errorf("failed to run pnpm install: %w", err)
+	}
+
+	// Run patch-sass-embedded (shell alias from devenv)
+	patchCmd := exec.Command("bash", "-ic", "patch-sass-embedded")
+	patchCmd.Dir = frontendDir
+	patchCmd.Stdout = os.Stdout
+	patchCmd.Stderr = os.Stderr
+	if err := patchCmd.Run(); err != nil {
+		// patch-sass-embedded might not be critical, just warn
+		fmt.Printf("Warning: patch-sass-embedded failed: %v\n", err)
+	}
+
+	printSuccess("Frontend initialized!")
+	printSuccess("\nWorktree ready at: %s", worktreePath)
+	printSuccess("Branch: %s", name)
+	fmt.Println("\nTo start working:")
+	fmt.Printf("  cd %s\n", worktreePath)
+
+	return nil
+}
+
+// TagRelease creates a new release tag with changelog.
+// It updates the version badge in README.md, generates changelog using git-cliff,
+// commits the changes, and creates an annotated tag.
+func (Dev) TagRelease(version string) error {
+	if version == "" {
+		return fmt.Errorf("version is required: mage dev:tag-release <version>")
+	}
+
+	// Ensure version starts with 'v'
+	if !strings.HasPrefix(version, "v") {
+		version = "v" + version
+	}
+
+	fmt.Printf("Creating release %s...\n", version)
+
+	// Get the last tag
+	lastTagBytes, err := runCmdWithOutput("git", "describe", "--tags", "--abbrev=0")
+	if err != nil {
+		return fmt.Errorf("failed to get last tag: %w", err)
+	}
+	lastTag := strings.TrimSpace(string(lastTagBytes))
+	fmt.Printf("Last tag: %s\n", lastTag)
+
+	// Generate changelog using git cliff
+	fmt.Println("Generating changelog...")
+	changelogBytes, err := runCmdWithOutput("git", "cliff", lastTag+"..HEAD", "--tag", version)
+	if err != nil {
+		return fmt.Errorf("failed to generate changelog: %w", err)
+	}
+	changelog := string(changelogBytes)
+
+	// Clean up the changelog
+	changelog = cleanupChangelog(changelog)
+
+	// Update README.md version badge
+	fmt.Println("Updating README.md version badge...")
+	if err := updateReadmeBadge(version); err != nil {
+		return fmt.Errorf("failed to update README badge: %w", err)
+	}
+
+	// Prepend changelog to CHANGELOG.md
+	fmt.Println("Updating CHANGELOG.md...")
+	if err := prependChangelog(changelog); err != nil {
+		return fmt.Errorf("failed to update CHANGELOG.md: %w", err)
+	}
+
+	// Commit the changes
+	fmt.Println("Committing changes...")
+	commitMsg := fmt.Sprintf("chore: %s release preparations", version)
+	cmd := exec.Command("git", "add", "README.md", "CHANGELOG.md")
+	cmd.Dir = RootPath
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to stage files: %w", err)
+	}
+
+	cmd = exec.Command("git", "commit", "-m", commitMsg)
+	cmd.Dir = RootPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to commit: %w", err)
+	}
+
+	// Prepare tag message (remove markdown header formatting)
+	tagMessage := prepareTagMessage(changelog)
+
+	// Create the annotated tag
+	fmt.Printf("Creating tag %s...\n", version)
+	cmd = exec.Command("git", "tag", "-a", version, "-m", tagMessage)
+	cmd.Dir = RootPath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to create tag: %w", err)
+	}
+
+	printSuccess("Release %s created successfully!", version)
+	fmt.Println("\nNext steps:")
+	fmt.Println("  git push origin main")
+	fmt.Printf("  git push origin %s\n", version)
+
+	return nil
+}
+
+// cleanupChangelog cleans up the generated changelog by:
+// - Removing duplicate lines
+// - Fixing entries that span multiple lines
+// - Ensuring each change is on a single line
+func cleanupChangelog(changelog string) string {
+	lines := strings.Split(changelog, "\n")
+	var cleanedLines []string
+	seenLines := make(map[string]bool)
+	var currentEntry strings.Builder
+
+	for i, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+
+		// Check if this is a new entry (starts with * or - or is a header)
+		isNewEntry := strings.HasPrefix(trimmedLine, "* ") ||
+			strings.HasPrefix(trimmedLine, "- ") ||
+			strings.HasPrefix(trimmedLine, "## ") ||
+			strings.HasPrefix(trimmedLine, "### ") ||
+			trimmedLine == ""
+
+		if isNewEntry {
+			// Flush the current entry if any
+			if currentEntry.Len() > 0 {
+				entryStr := strings.TrimSpace(currentEntry.String())
+				if !seenLines[entryStr] && entryStr != "" {
+					cleanedLines = append(cleanedLines, entryStr)
+					seenLines[entryStr] = true
+				}
+				currentEntry.Reset()
+			}
+
+			// Start a new entry or add empty line/header
+			if trimmedLine == "" {
+				// Only add empty line if the previous line wasn't empty
+				if len(cleanedLines) > 0 && cleanedLines[len(cleanedLines)-1] != "" {
+					cleanedLines = append(cleanedLines, "")
+				}
+			} else if strings.HasPrefix(trimmedLine, "## ") || strings.HasPrefix(trimmedLine, "### ") {
+				// Headers are never duplicates
+				cleanedLines = append(cleanedLines, trimmedLine)
+			} else {
+				currentEntry.WriteString(trimmedLine)
+			}
+		} else if currentEntry.Len() > 0 {
+			// This is a continuation of the current entry
+			currentEntry.WriteString(" ")
+			currentEntry.WriteString(trimmedLine)
+		} else if trimmedLine != "" {
+			// Standalone line that's not part of an entry
+			if !seenLines[trimmedLine] {
+				cleanedLines = append(cleanedLines, trimmedLine)
+				seenLines[trimmedLine] = true
+			}
+		}
+
+		// Handle last line
+		if i == len(lines)-1 && currentEntry.Len() > 0 {
+			entryStr := strings.TrimSpace(currentEntry.String())
+			if !seenLines[entryStr] && entryStr != "" {
+				cleanedLines = append(cleanedLines, entryStr)
+			}
+		}
+	}
+
+	return strings.Join(cleanedLines, "\n")
+}
+
+// updateReadmeBadge updates the version badge in README.md
+func updateReadmeBadge(version string) error {
+	readmePath := filepath.Join(RootPath, "README.md")
+	content, err := os.ReadFile(readmePath)
+	if err != nil {
+		return fmt.Errorf("failed to read README.md: %w", err)
+	}
+
+	// Convert version for badge (e.g., v1.0.0-rc3 -> v1.0.0rc3 for the badge display)
+	badgeVersion := strings.ReplaceAll(version, "-", "")
+
+	// Update the badge - match the pattern: download-vX.X.X...-brightgreen
+	re := regexp.MustCompile(`(download-)(v[0-9a-zA-Z.]+)(-brightgreen)`)
+	newContent := re.ReplaceAllString(string(content), "${1}"+badgeVersion+"${3}")
+
+	if err := os.WriteFile(readmePath, []byte(newContent), 0644); err != nil {
+		return fmt.Errorf("failed to write README.md: %w", err)
+	}
+
+	return nil
+}
+
+// prependChangelog prepends the new changelog entries to CHANGELOG.md
+func prependChangelog(newChangelog string) error {
+	changelogPath := filepath.Join(RootPath, "CHANGELOG.md")
+	existingContent, err := os.ReadFile(changelogPath)
+	if err != nil {
+		return fmt.Errorf("failed to read CHANGELOG.md: %w", err)
+	}
+
+	// Find where to insert the new changelog (after the header section)
+	content := string(existingContent)
+	headerEnd := strings.Index(content, "\n## ")
+	if headerEnd == -1 {
+		// No existing version sections, append at the end
+		headerEnd = len(content)
+	}
+
+	// Build new content: header + new changelog + existing versions
+	header := content[:headerEnd]
+	existingVersions := ""
+	if headerEnd < len(content) {
+		existingVersions = content[headerEnd:]
+	}
+
+	// Ensure there's proper spacing
+	newContent := strings.TrimRight(header, "\n") + "\n\n" +
+		strings.TrimSpace(newChangelog) + "\n" +
+		existingVersions
+
+	if err := os.WriteFile(changelogPath, []byte(newContent), 0644); err != nil {
+		return fmt.Errorf("failed to write CHANGELOG.md: %w", err)
+	}
+
+	return nil
+}
+
+// prepareTagMessage removes markdown header formatting from the changelog for use as a tag message
+func prepareTagMessage(changelog string) string {
+	lines := strings.Split(changelog, "\n")
+	var result []string
+
+	for _, line := range lines {
+		// Remove ## and ### prefixes
+		if strings.HasPrefix(line, "### ") {
+			result = append(result, strings.TrimPrefix(line, "### "))
+		} else if strings.HasPrefix(line, "## ") {
+			result = append(result, strings.TrimPrefix(line, "## "))
+		} else {
+			result = append(result, line)
+		}
+	}
+
+	return strings.Join(result, "\n")
 }
 
 type Plugins mg.Namespace

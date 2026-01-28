@@ -17,6 +17,13 @@ body:
            take a moment to check that your issue hasn't been reported before.
         4. Please give all relevant information below for bug reports, because
            incomplete details will be handled as an invalid report and closed.
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have searched for existing open or closed issue reports with the same problem.
+          required: true
   - type: textarea
     id: description
     attributes:

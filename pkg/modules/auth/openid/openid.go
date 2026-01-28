@@ -37,7 +37,7 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	petname "github.com/dustinkirkland/golang-petname"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"golang.org/x/oauth2"
 	"xorm.io/xorm"
 )
@@ -45,7 +45,7 @@ import (
 // Callback contains the callback after an auth request was made and redirected
 type Callback struct {
 	Code        string `query:"code" json:"code"`
-	Scope       string `query:"scop" json:"scope"`
+	Scope       string `query:"scope" json:"scope"`
 	RedirectURL string `json:"redirect_url"`
 }
 
@@ -128,7 +128,7 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 // @Success 200 {object} auth.Token
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /auth/openid/{provider}/callback [post]
-func HandleCallback(c echo.Context) error {
+func HandleCallback(c *echo.Context) error {
 
 	provider, oauthToken, idToken, err := getProviderAndOidcTokens(c)
 	if err != nil {
@@ -419,7 +419,7 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 	return cl, nil
 }
 
-func getProviderAndOidcTokens(c echo.Context) (*Provider, *oauth2.Token, *oidc.IDToken, error) {
+func getProviderAndOidcTokens(c *echo.Context) (*Provider, *oauth2.Token, *oidc.IDToken, error) {
 
 	cb := &Callback{}
 	if err := c.Bind(cb); err != nil {

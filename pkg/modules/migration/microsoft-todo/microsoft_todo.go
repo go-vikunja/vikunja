@@ -187,7 +187,7 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
 		return err
 	}

@@ -24,11 +24,11 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func BasicAuth(username, password string, c echo.Context) (bool, error) {
+func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 	s := db.NewSession()
 	defer s.Close()
 

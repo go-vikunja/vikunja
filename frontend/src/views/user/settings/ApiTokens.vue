@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import ApiTokenService from '@/services/apiToken'
 import {computed, onMounted, ref} from 'vue'
+import {useRoute} from 'vue-router'
+import {parseScopesFromQuery} from '@/helpers/parseScopesFromQuery'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/Button.vue'
@@ -35,6 +37,8 @@ const tokenToDelete = ref<IApiToken>()
 
 const {t} = useI18n()
 
+const route = useRoute()
+
 const now = new Date()
 
 const flatPickerConfig = computed(() => ({
@@ -57,10 +61,13 @@ onMounted(async () => {
 	keys.forEach(key => {
 		routesAvailable[key] = allRoutes[key]
 	})
-	
+
 	availableRoutes.value = routesAvailable
-	
+
 	resetPermissions()
+
+	// Apply query parameters if present
+	applyQueryParams()
 })
 
 function resetPermissions() {
@@ -72,6 +79,38 @@ function resetPermissions() {
 			newTokenPermissions.value[group][r] = false
 		})
 	})
+}
+
+function applyQueryParams() {
+	// Normalize query params - they can be string, string[], or null
+	const titleParam = Array.isArray(route.query.title) ? route.query.title[0] : route.query.title
+	const scopesParam = Array.isArray(route.query.scopes) ? route.query.scopes[0] : route.query.scopes
+
+	if (titleParam || scopesParam) {
+		showCreateForm.value = true
+	}
+
+	if (titleParam) {
+		newToken.value.title = titleParam
+		newTokenTitleValid.value = true
+	}
+
+	if (scopesParam) {
+		const requestedScopes = parseScopesFromQuery(scopesParam)
+
+		// Apply requested scopes to the permissions checkboxes
+		for (const [group, permissions] of Object.entries(requestedScopes)) {
+			if (newTokenPermissions.value[group]) {
+				for (const permission of permissions) {
+					if (newTokenPermissions.value[group][permission] !== undefined) {
+						newTokenPermissions.value[group][permission] = true
+					}
+				}
+				// Update group checkbox if all permissions in group are selected
+				toggleGroupPermissionsFromChild(group, true)
+			}
+		}
+	}
 }
 
 async function deleteToken() {
@@ -306,15 +345,15 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						<br>
 					</template>
 					<template
-						v-for="(paths, route) in routes"
-						:key="group+'-'+route"
+						v-for="(paths, permission) in routes"
+						:key="group+'-'+permission"
 					>
 						<FancyCheckbox
-							v-model="newTokenPermissions[group][route]"
+							v-model="newTokenPermissions[group][permission]"
 							class="mis-4 mie-2 is-capitalized"
 							@update:modelValue="checked => toggleGroupPermissionsFromChild(group, checked)"
 						>
-							{{ formatPermissionTitle(route) }}
+							{{ formatPermissionTitle(permission) }}
 						</FancyCheckbox>
 						<br>
 					</template>

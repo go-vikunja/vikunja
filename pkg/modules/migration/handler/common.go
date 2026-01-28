@@ -21,10 +21,10 @@ import (
 
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
-func status(ms migration.MigratorName, c echo.Context) error {
+func status(ms migration.MigratorName, c *echo.Context) error {
 	user, err := user2.GetCurrentUser(c)
 	if err != nil {
 		return err

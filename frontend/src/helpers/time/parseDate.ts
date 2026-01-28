@@ -316,7 +316,9 @@ const getDateFromWeekday = (text: string, date: Date = new Date()): dateFoundRes
 }
 
 const getDayFromText = (text: string, now: Date = new Date()) => {
-	const matcher = /(^| )(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\.)($| )/ig
+	// Only match ordinals when followed by end-of-string, time expressions, or month names
+	// This prevents matching "2nd Floor" or "13th floor" as dates
+	const matcher = new RegExp('(^| )(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\\.)(?=$| at | @ | ' + monthsRegexGroup + ')', 'ig')
 	const results = matcher.exec(text)
 	if (results === null) {
 		return {
@@ -348,7 +350,7 @@ const getDayFromText = (text: string, now: Date = new Date()) => {
 }
 
 const getMonthFromText = (text: string, date: Date) => {
-	const matcher = new RegExp(monthsRegexGroup, 'ig')
+	const matcher = new RegExp('\\b' + monthsRegexGroup + '\\b', 'ig')
 	const results = matcher.exec(text)
 
 	if (results === null) {
