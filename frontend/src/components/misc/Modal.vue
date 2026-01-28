@@ -105,7 +105,7 @@ function onKeydown(e: KeyboardEvent) {
 		if (e.isComposing) {
 			return
 		}
-		emit('close')
+ 		emit('close')
 	}
 }
 
