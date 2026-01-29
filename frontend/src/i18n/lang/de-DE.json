@@ -319,8 +319,8 @@
 			"links": {
 				"title": "Linkfreigaben",
 				"what": "Was ist eine Linkfreigabe?",
-				"explanation": "Mit Linkfreigaben kannst Projekt du Listen mit Benutzer:innen ohne Vikunja-Account teilen.",
-				"create": "Erstelle ein Linkfreigabe",
+				"explanation": "Mit Linkfreigaben kannst du Projekte mit Benutzer:innen ohne Vikunja-Account teilen.",
+				"create": "Erstelle eine Linkfreigabe",
 				"name": "Name (optional)",
 				"namePlaceholder": "z.B. Lorem Ipsum",
 				"nameExplanation": "Alle Aktionen, die mit dieser Linkfreigabe durchgeführt werden, werden mit diesem Namen angezeigt.",
@@ -556,7 +556,7 @@
 		"import": "Importiere deine Daten in Vikunja",
 		"description": "Klicke auf das Logo eines der unten aufgeführten Drittanbieterdienste, um loszulegen.",
 		"descriptionDo": "Vikunja importiert alle Listen, Aufgaben, Notizen, Erinnerungen und Dateien, auf die du Zugriff hast.",
-		"authorize": "Ermögliche Vikunja den Zugriff auf deinem Account bei {name}, indem du auf die Schaltfläche unten klickst.",
+		"authorize": "Ermögliche Vikunja den Zugriff auf deinen Account bei {name}, indem du auf die Schaltfläche unten klickst.",
 		"getStarted": "Loslegen",
 		"inProgress": "Importiere…",
 		"alreadyMigrated1": "Es scheint, dass du schon von {name} am {date} importiert hast.",
@@ -587,7 +587,7 @@
 		"deleteSuccess": "Das Label wurde erfolgreich gelöscht.",
 		"attributes": {
 			"title": "Titel",
-			"titlePlaceholder": "Gebe einen Labelnamen an…",
+			"titlePlaceholder": "Gib einen Labelnamen an…",
 			"description": "Beschreibung",
 			"descriptionPlaceholder": "Labelbeschreibung",
 			"color": "Farbe"
@@ -1089,7 +1089,7 @@
 			"admin": "Admin",
 			"member": "Mitglied",
 			"isPublic": "Öffentliches Team",
-			"isPublicDescription": "Machs das Team öffentlich sichtbar. Wenn aktiviert, kann jede:r mit diesem Team Projekte teilen, auch wenn er oder sie kein direktes Mitglied des Teams ist."
+			"isPublicDescription": "Macht das Team öffentlich sichtbar. Wenn aktiviert, kann jede:r mit diesem Team Projekte teilen, auch wenn er oder sie kein direktes Mitglied des Teams ist."
 		}
 	},
 	"keyboardShortcuts": {
