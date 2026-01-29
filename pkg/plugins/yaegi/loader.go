@@ -29,8 +29,31 @@ import (
 	"github.com/traefik/yaegi/stdlib"
 )
 
+// LoadedPlugin holds a plugin loaded via Yaegi along with its optional capabilities.
+// Because Yaegi wraps interpreted values per return type, sub-interface type assertions
+// (e.g. Plugin -> AuthenticatedRouterPlugin) do not work. Instead, plugins must export
+// typed factory functions for each capability they implement:
+//
+//   - NewPlugin() plugins.Plugin                                          (required)
+//   - NewAuthenticatedRouterPlugin() plugins.AuthenticatedRouterPlugin    (optional)
+//   - NewUnauthenticatedRouterPlugin() plugins.UnauthenticatedRouterPlugin (optional)
+type LoadedPlugin struct {
+	Plugin          plugins.Plugin
+	AuthRouter      plugins.AuthenticatedRouterPlugin
+	UnauthRouter    plugins.UnauthenticatedRouterPlugin
+}
+
 // LoadPlugin loads a plugin from a directory of Go source files using the Yaegi interpreter.
 func LoadPlugin(dir string) (plugins.Plugin, error) {
+	loaded, err := LoadPluginFull(dir)
+	if err != nil {
+		return nil, err
+	}
+	return loaded.Plugin, nil
+}
+
+// LoadPluginFull loads a plugin and all its optional capabilities via typed factory functions.
+func LoadPluginFull(dir string) (*LoadedPlugin, error) {
 	i := interp.New(interp.Options{})
 	i.Use(stdlib.Symbols)
 	i.Use(yaegi_symbols.Symbols)
@@ -55,16 +78,32 @@ func LoadPlugin(dir string) (plugins.Plugin, error) {
 		}
 	}
 
-	// Look up the NewPlugin entry point
+	loaded := &LoadedPlugin{}
+
+	// Required: NewPlugin
 	v, err := i.Eval("main.NewPlugin")
 	if err != nil {
 		return nil, fmt.Errorf("looking up NewPlugin: %w", err)
 	}
-
 	newPlugin, ok := v.Interface().(func() plugins.Plugin)
 	if !ok {
 		return nil, fmt.Errorf("NewPlugin has wrong signature: %T", v.Interface())
 	}
+	loaded.Plugin = newPlugin()
 
-	return newPlugin(), nil
+	// Optional: NewAuthenticatedRouterPlugin
+	if v, err := i.Eval("main.NewAuthenticatedRouterPlugin"); err == nil {
+		if fn, ok := v.Interface().(func() plugins.AuthenticatedRouterPlugin); ok {
+			loaded.AuthRouter = fn()
+		}
+	}
+
+	// Optional: NewUnauthenticatedRouterPlugin
+	if v, err := i.Eval("main.NewUnauthenticatedRouterPlugin"); err == nil {
+		if fn, ok := v.Interface().(func() plugins.UnauthenticatedRouterPlugin); ok {
+			loaded.UnauthRouter = fn()
+		}
+	}
+
+	return loaded, nil
 }

@@ -22,8 +22,10 @@ import (
 	"testing"
 )
 
+const examplePluginDir = "../../../examples/plugins/example"
+
 func TestLoadPlugin(t *testing.T) {
-	pluginDir := filepath.Join("..", "..", "..", "examples", "plugins", "example")
+	pluginDir := filepath.Join(examplePluginDir)
 
 	mainGo := filepath.Join(pluginDir, "main.go")
 	if _, err := os.Stat(mainGo); err != nil {
@@ -41,4 +43,28 @@ func TestLoadPlugin(t *testing.T) {
 	if p.Version() != "1.0.0" {
 		t.Errorf("expected version '1.0.0', got %q", p.Version())
 	}
+}
+
+func TestLoadPluginFull(t *testing.T) {
+	loaded, err := LoadPluginFull(examplePluginDir)
+	if err != nil {
+		t.Fatalf("LoadPluginFull failed: %v", err)
+	}
+
+	if loaded.Plugin == nil {
+		t.Fatal("Plugin is nil")
+	}
+	if loaded.Plugin.Name() != "example" {
+		t.Errorf("expected plugin name 'example', got %q", loaded.Plugin.Name())
+	}
+
+	if loaded.AuthRouter == nil {
+		t.Fatal("AuthRouter is nil — typed factory NewAuthenticatedRouterPlugin not found")
+	}
+	t.Logf("AuthRouter type: %T, name: %s", loaded.AuthRouter, loaded.AuthRouter.Name())
+
+	if loaded.UnauthRouter == nil {
+		t.Fatal("UnauthRouter is nil — typed factory NewUnauthenticatedRouterPlugin not found")
+	}
+	t.Logf("UnauthRouter type: %T, name: %s", loaded.UnauthRouter, loaded.UnauthRouter.Name())
 }
