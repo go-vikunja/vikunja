@@ -43,6 +43,40 @@ type ThreadID interface {
 	ThreadID() string
 }
 
+// WebhookNotifiable is an optional interface for entities that can receive webhook notifications.
+// Deprecated: Use WebhookURLLookupFunc instead for per-notification-type webhook settings.
+type WebhookNotifiable interface {
+	// RouteForWebhook returns the webhook URL. Empty string means no webhook.
+	RouteForWebhook() (string, error)
+}
+
+// WebhookNotification is an optional interface for notifications that support webhooks.
+type WebhookNotification interface {
+	ToWebhook() *WebhookPayload
+	// WebhookType returns the notification type for webhook settings lookup (e.g., "task.reminder")
+	WebhookType() string
+}
+
+// WebhookURLLookupFunc is a function type for looking up webhook URLs by user ID and notification type.
+// This allows the models package to provide the lookup implementation without circular imports.
+type WebhookURLLookupFunc func(userID int64, notificationType string) (url string, err error)
+
+// webhookURLLookup is the function used to look up webhook URLs.
+// It is set by the models package during initialization.
+var webhookURLLookup WebhookURLLookupFunc
+
+// SetWebhookURLLookup sets the function used to look up webhook URLs.
+// This should be called by the models package during initialization.
+func SetWebhookURLLookup(fn WebhookURLLookupFunc) {
+	webhookURLLookup = fn
+}
+
+// MailNotification is an optional interface for notifications that can control whether email should be sent.
+// If not implemented, email will be sent if ToMail() returns a non-nil value.
+type MailNotification interface {
+	ShouldSendMail() bool
+}
+
 // Notifiable is an entity which can be notified. Usually a user.
 type Notifiable interface {
 	// RouteForMail should return the email address this notifiable has.
@@ -74,10 +108,63 @@ func Notify(notifiable Notifiable, notification Notification) (err error) {
 		return
 	}
 
+	err = notifyWebhook(notifiable, notification)
+	if err != nil {
+		return
+	}
+
 	return notifyDB(notifiable, notification)
 }
 
+func notifyWebhook(notifiable Notifiable, notification Notification) error {
+	// Check if notification supports webhooks
+	webhookNotification, ok := notification.(WebhookNotification)
+	if !ok {
+		return nil
+	}
+
+	payload := webhookNotification.ToWebhook()
+	if payload == nil {
+		return nil
+	}
+
+	// Get notification type for settings lookup
+	notificationType := webhookNotification.WebhookType()
+	userID := notifiable.RouteForDB()
+
+	// Use the webhook URL lookup function if available (new per-type settings)
+	if webhookURLLookup != nil {
+		url, err := webhookURLLookup(userID, notificationType)
+		if err != nil {
+			return err
+		}
+		if url != "" {
+			return sendWebhookPayload(url, payload)
+		}
+		// No URL found via new settings, skip webhook
+		return nil
+	}
+
+	// Fallback to legacy WebhookNotifiable interface (deprecated)
+	webhookNotifiable, ok := notifiable.(WebhookNotifiable)
+	if !ok {
+		return nil
+	}
+
+	url, err := webhookNotifiable.RouteForWebhook()
+	if err != nil || url == "" {
+		return err
+	}
+
+	return sendWebhookPayload(url, payload)
+}
+
 func notifyMail(notifiable Notifiable, notification Notification) error {
+	// Check if notification has opted out of email
+	if mailNotification, ok := notification.(MailNotification); ok && !mailNotification.ShouldSendMail() {
+		return nil
+	}
+
 	mail := notification.ToMail(notifiable.Lang())
 	if mail == nil {
 		return nil
