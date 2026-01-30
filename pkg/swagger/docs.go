@@ -9228,6 +9228,13 @@ const docTemplate = `{
         "models.Webhook": {
             "type": "object",
             "properties": {
+                "basic_auth_password": {
+                    "type": "string"
+                },
+                "basic_auth_user": {
+                    "description": "If provided, webhook requests will be sent with a Basic Auth header.",
+                    "type": "string"
+                },
                 "created": {
                     "description": "A timestamp when this webhook target was created. You cannot change this value.",
                     "type": "string"
