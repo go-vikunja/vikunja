@@ -218,7 +218,7 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 	microsoftTodoData = []*project{}
 
 	projects := &projectsResponse{}
-	err = makeAuthenticatedGetRequest(token, "lists", projects)
+	err = makeAuthenticatedGetRequest(token, "lists/delta", projects)
 	if err != nil {
 		log.Errorf("[Microsoft Todo Migration] Could not get projects: %s", err)
 		return
