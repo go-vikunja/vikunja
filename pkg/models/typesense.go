@@ -90,12 +90,14 @@ func CreateTypesenseCollections() error {
 				Type: "int64",
 			},
 			{
-				Name: "repeat_after",
-				Type: "int64",
+				Name:     "repeats",
+				Type:     "string",
+				Optional: pointer.True(),
 			},
 			{
-				Name: "repeat_mode",
-				Type: "int32",
+				Name:     "repeats_from_current_date",
+				Type:     "bool",
+				Optional: pointer.True(),
 			},
 			{
 				Name: "priority",
@@ -445,8 +447,8 @@ type typesenseTask struct {
 	DoneAt                 *int64      `json:"done_at"`
 	DueDate                *int64      `json:"due_date"`
 	ProjectID              int64       `json:"project_id"`
-	RepeatAfter            int64       `json:"repeat_after"`
-	RepeatMode             int         `json:"repeat_mode"`
+	Repeats                string      `json:"repeats"`
+	RepeatsFromCurrentDate bool        `json:"repeats_from_current_date"`
 	Priority               int64       `json:"priority"`
 	StartDate              *int64      `json:"start_date"`
 	EndDate                *int64      `json:"end_date"`
@@ -479,8 +481,8 @@ func convertTaskToTypesenseTask(task *Task, positions []*TaskPositionWithView, b
 		DoneAt:                 pointer.Int64(task.DoneAt.UTC().Unix()),
 		DueDate:                pointer.Int64(task.DueDate.UTC().Unix()),
 		ProjectID:              task.ProjectID,
-		RepeatAfter:            task.RepeatAfter,
-		RepeatMode:             int(task.RepeatMode),
+		Repeats:                task.Repeats,
+		RepeatsFromCurrentDate: task.RepeatsFromCurrentDate,
 		Priority:               task.Priority,
 		StartDate:              pointer.Int64(task.StartDate.UTC().Unix()),
 		EndDate:                pointer.Int64(task.EndDate.UTC().Unix()),
