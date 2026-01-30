@@ -20,6 +20,10 @@ package doctor
 
 import (
 	"fmt"
+	"os"
+	"os/user"
+	"strconv"
+	"syscall"
 
 	"golang.org/x/sys/unix"
 )
@@ -43,4 +47,81 @@ func checkDiskSpace(path string) CheckResult {
 		Passed: true,
 		Value:  fmt.Sprintf("%.1f GB available", availableGB),
 	}
+}
+
+// isGroupMember reports whether the current process belongs to the given
+// group, checking both the primary gid and all supplementary groups.
+func isGroupMember(gid int) bool {
+	if os.Getgid() == gid {
+		return true
+	}
+
+	groups, err := os.Getgroups()
+	if err != nil {
+		return false
+	}
+	for _, g := range groups {
+		if g == gid {
+			return true
+		}
+	}
+	return false
+}
+
+func checkDirectoryOwnership(info os.FileInfo) []CheckResult {
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return []CheckResult{
+			{
+				Name:   "Directory owner",
+				Passed: true,
+				Value:  "unable to determine ownership",
+			},
+		}
+	}
+
+	uid := stat.Uid
+	gid := stat.Gid
+
+	ownerName := strconv.FormatUint(uint64(uid), 10)
+	groupName := strconv.FormatUint(uint64(gid), 10)
+
+	if u, err := user.LookupId(ownerName); err == nil {
+		ownerName = u.Username
+	}
+	if g, err := user.LookupGroupId(groupName); err == nil {
+		groupName = g.Name
+	}
+
+	currentUID := os.Getuid()
+
+	results := []CheckResult{
+		{
+			Name:   "Directory owner",
+			Passed: true,
+			Value:  fmt.Sprintf("%s:%s (uid=%d, gid=%d)", ownerName, groupName, uid, gid),
+		},
+	}
+
+	if currentUID != 0 && currentUID != int(uid) {
+		results = append(results, CheckResult{
+			Name:   "Ownership match",
+			Passed: false,
+			Error: fmt.Sprintf(
+				"directory owned by uid %d but Vikunja runs as uid %d",
+				uid, currentUID,
+			),
+		})
+	} else if currentUID != 0 && !isGroupMember(int(gid)) {
+		results = append(results, CheckResult{
+			Name:   "Ownership match",
+			Passed: false,
+			Error: fmt.Sprintf(
+				"directory owned by gid %d but Vikunja process is not a member of that group",
+				gid,
+			),
+		})
+	}
+
+	return results
 }

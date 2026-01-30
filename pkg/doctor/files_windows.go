@@ -18,10 +18,22 @@
 
 package doctor
 
+import "os"
+
 func checkDiskSpace(_ string) CheckResult {
 	return CheckResult{
 		Name:   "Disk space",
 		Passed: true,
 		Value:  "check not available on Windows",
+	}
+}
+
+func checkDirectoryOwnership(_ os.FileInfo) []CheckResult {
+	return []CheckResult{
+		{
+			Name:   "Directory owner",
+			Passed: true,
+			Value:  "ownership check not available on Windows",
+		},
 	}
 }
