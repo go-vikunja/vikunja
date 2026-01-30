@@ -4,11 +4,13 @@ import trelloIcon from './icons/trello.svg?url'
 import microsoftTodoIcon from './icons/microsoft-todo.svg?url'
 import vikunjaFileIcon from './icons/vikunja-file.png?url'
 import tickTickIcon from './icons/ticktick.svg?url'
+import csvIcon from './icons/csv.svg?url'
 
 export interface Migrator {
 	id: string
 	name: string
 	isFileMigrator?: boolean
+	isCSVMigrator?: boolean
 	icon: string
 }
 
@@ -48,5 +50,12 @@ export const MIGRATORS = {
 		name: 'TickTick',
 		icon: tickTickIcon as string,
 		isFileMigrator: true,
+	},
+	csv: {
+		id: 'csv',
+		name: 'CSV',
+		icon: csvIcon as string,
+		isFileMigrator: true,
+		isCSVMigrator: true,
 	},
 } as const satisfies IMigratorRecord
