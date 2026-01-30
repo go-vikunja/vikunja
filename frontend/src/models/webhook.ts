@@ -6,6 +6,8 @@ export default class WebhookModel extends AbstractModel<IWebhook> implements IWe
 	id = 0
 	projectId = 0
 	secret = ''
+	basicauthuser = ''
+	basicauthpassword = ''
 	targetUrl = ''
 	events = []
 	createdBy = null
@@ -16,7 +18,7 @@ export default class WebhookModel extends AbstractModel<IWebhook> implements IWe
 	constructor(data: Partial<IWebhook> = {}) {
 		super()
 		this.assignData(data)
-		
+
 		this.createdBy = new UserModel(this.createdBy)
 
 		this.created = new Date(this.created)
