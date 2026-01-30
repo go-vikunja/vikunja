@@ -32,6 +32,7 @@ func CheckSystem() CheckGroup {
 		checkOS(),
 		checkUser(),
 		checkWorkingDirectory(),
+		checkUserNamespace(),
 	}
 
 	return CheckGroup{
