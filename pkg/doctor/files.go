@@ -104,7 +104,7 @@ func checkLocalStorage() []CheckResult {
 	})
 
 	// Directory ownership (platform-specific)
-	results = append(results, checkDirectoryOwnership(basePath, info)...)
+	results = append(results, checkDirectoryOwnership(info)...)
 
 	// Check writable using the existing ValidateFileStorage function
 	if err := files.ValidateFileStorage(); err != nil {

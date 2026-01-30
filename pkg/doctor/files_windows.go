@@ -28,7 +28,7 @@ func checkDiskSpace(_ string) CheckResult {
 	}
 }
 
-func checkDirectoryOwnership(_ string, _ os.FileInfo) []CheckResult {
+func checkDirectoryOwnership(_ os.FileInfo) []CheckResult {
 	return []CheckResult{
 		{
 			Name:   "Directory owner",

@@ -49,7 +49,7 @@ func checkDiskSpace(path string) CheckResult {
 	}
 }
 
-func checkDirectoryOwnership(_ string, info os.FileInfo) []CheckResult {
+func checkDirectoryOwnership(info os.FileInfo) []CheckResult {
 	stat, ok := info.Sys().(*syscall.Stat_t)
 	if !ok {
 		return []CheckResult{
@@ -74,8 +74,8 @@ func checkDirectoryOwnership(_ string, info os.FileInfo) []CheckResult {
 		groupName = g.Name
 	}
 
-	currentUID := uint32(os.Getuid())
-	currentGID := uint32(os.Getgid())
+	currentUID := os.Getuid()
+	currentGID := os.Getgid()
 
 	results := []CheckResult{
 		{
@@ -85,7 +85,7 @@ func checkDirectoryOwnership(_ string, info os.FileInfo) []CheckResult {
 		},
 	}
 
-	if currentUID != 0 && currentUID != uid {
+	if currentUID != 0 && currentUID != int(uid) {
 		results = append(results, CheckResult{
 			Name:   "Ownership match",
 			Passed: false,
@@ -94,7 +94,7 @@ func checkDirectoryOwnership(_ string, info os.FileInfo) []CheckResult {
 				uid, currentUID,
 			),
 		})
-	} else if currentUID != 0 && currentGID != gid {
+	} else if currentUID != 0 && currentGID != int(gid) {
 		results = append(results, CheckResult{
 			Name:   "Ownership match",
 			Passed: false,
