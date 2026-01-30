@@ -113,7 +113,7 @@ func checkDirectoryOwnership(info os.FileInfo) []CheckResult {
 			uid, currentUID,
 		)
 		if nsActive {
-			if hostUID, ok := utils.MapToHostUID(currentUID); ok {
+			if hostUID, ok := utils.MapToHostUID(int64(currentUID)); ok {
 				errMsg += fmt.Sprintf(" (user namespace active, host uid=%d)", hostUID)
 			}
 		}
@@ -137,7 +137,7 @@ func checkDirectoryOwnership(info os.FileInfo) []CheckResult {
 			Passed: true,
 			Value:  fmt.Sprintf("uid %d matches", currentUID),
 		}
-		if hostUID, ok := utils.MapToHostUID(currentUID); ok {
+		if hostUID, ok := utils.MapToHostUID(int64(currentUID)); ok {
 			matchResult.Lines = []string{
 				fmt.Sprintf("WARNING: user namespace active — uid %d maps to host uid %d,", currentUID, hostUID),
 				"which may differ from the actual host directory owner.",

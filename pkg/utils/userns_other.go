@@ -20,10 +20,11 @@ package utils
 
 // UIDMapEntry represents a single line from /proc/self/uid_map.
 // On non-Linux platforms this type exists for API compatibility but is never populated.
+// Fields use int64 to avoid overflow on 32-bit architectures.
 type UIDMapEntry struct {
-	InsideUID  int
-	OutsideUID int
-	Count      int
+	InsideUID  int64
+	OutsideUID int64
+	Count      int64
 }
 
 // IsUserNamespaceActive always returns false on non-Linux platforms.
@@ -33,7 +34,7 @@ func IsUserNamespaceActive() bool { return false }
 func GetUIDMapping() ([]UIDMapEntry, error) { return nil, nil }
 
 // MapToHostUID always returns mapped=false on non-Linux platforms.
-func MapToHostUID(_ int) (int, bool) { return 0, false }
+func MapToHostUID(_ int64) (int64, bool) { return 0, false }
 
 // UIDMappingSummary returns empty string on non-Linux platforms.
 func UIDMappingSummary() string { return "" }

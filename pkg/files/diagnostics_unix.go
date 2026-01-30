@@ -47,7 +47,7 @@ func storageDiagnosticInfo(basePath string) string {
 		summary := utils.UIDMappingSummary()
 		parts = append(parts, fmt.Sprintf("user namespace ACTIVE (%s)", summary))
 
-		if hostUID, ok := utils.MapToHostUID(uid); ok {
+		if hostUID, ok := utils.MapToHostUID(int64(uid)); ok {
 			parts = append(parts, fmt.Sprintf("process host uid=%d", hostUID))
 		}
 	}
@@ -55,7 +55,7 @@ func storageDiagnosticInfo(basePath string) string {
 	result := "[" + strings.Join(parts, ", ") + "]"
 
 	if utils.IsUserNamespaceActive() {
-		hostUID, ok := utils.MapToHostUID(uid)
+		hostUID, ok := utils.MapToHostUID(int64(uid))
 		if ok {
 			result += fmt.Sprintf(
 				"\n  Hint: A user namespace is active (common in rootless Docker). "+

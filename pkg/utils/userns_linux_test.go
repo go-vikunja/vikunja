@@ -42,6 +42,14 @@ func TestParseUIDMap_RootlessDocker(t *testing.T) {
 	assert.Equal(t, UIDMapEntry{InsideUID: 1, OutsideUID: 101001, Count: 65536}, entries[1])
 }
 
+func TestParseUIDMap_LargeCount(t *testing.T) {
+	// Verify that the full 32-bit range parses correctly (would overflow int on 32-bit arch).
+	input := "         0          0 4294967295\n"
+	entries, err := parseUIDMap(input)
+	require.NoError(t, err)
+	assert.Equal(t, int64(4294967295), entries[0].Count)
+}
+
 func TestParseUIDMap_Empty(t *testing.T) {
 	entries, err := parseUIDMap("")
 	require.NoError(t, err)
@@ -69,15 +77,15 @@ func TestMapToHostUID(t *testing.T) {
 
 	hostUID, ok := mapContainerUID(entries, 0)
 	assert.True(t, ok)
-	assert.Equal(t, 1001, hostUID)
+	assert.Equal(t, int64(1001), hostUID)
 
 	hostUID, ok = mapContainerUID(entries, 1)
 	assert.True(t, ok)
-	assert.Equal(t, 101001, hostUID)
+	assert.Equal(t, int64(101001), hostUID)
 
 	hostUID, ok = mapContainerUID(entries, 1000)
 	assert.True(t, ok)
-	assert.Equal(t, 102000, hostUID)
+	assert.Equal(t, int64(102000), hostUID)
 
 	_, ok = mapContainerUID(entries, 70000)
 	assert.False(t, ok)

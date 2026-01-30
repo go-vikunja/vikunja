@@ -27,10 +27,12 @@ import (
 )
 
 // UIDMapEntry represents a single line from /proc/self/uid_map.
+// Fields use int64 to avoid overflow on 32-bit architectures where the
+// trivial mapping count (4294967295) exceeds math.MaxInt32.
 type UIDMapEntry struct {
-	InsideUID  int
-	OutsideUID int
-	Count      int
+	InsideUID  int64
+	OutsideUID int64
+	Count      int64
 }
 
 var (
@@ -59,15 +61,15 @@ func parseUIDMap(content string) ([]UIDMapEntry, error) {
 		if len(fields) != 3 {
 			return nil, fmt.Errorf("unexpected uid_map line: %q", line)
 		}
-		inside, err := strconv.Atoi(fields[0])
+		inside, err := strconv.ParseInt(fields[0], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("parsing inside uid %q: %w", fields[0], err)
 		}
-		outside, err := strconv.Atoi(fields[1])
+		outside, err := strconv.ParseInt(fields[1], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("parsing outside uid %q: %w", fields[1], err)
 		}
-		count, err := strconv.Atoi(fields[2])
+		count, err := strconv.ParseInt(fields[2], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("parsing count %q: %w", fields[2], err)
 		}
@@ -88,7 +90,7 @@ func isTrivialMapping(entries []UIDMapEntry) bool {
 	return e.InsideUID == 0 && e.OutsideUID == 0 && e.Count == 4294967295
 }
 
-func mapContainerUID(entries []UIDMapEntry, containerUID int) (hostUID int, ok bool) {
+func mapContainerUID(entries []UIDMapEntry, containerUID int64) (hostUID int64, ok bool) {
 	for _, e := range entries {
 		if containerUID >= e.InsideUID && containerUID < e.InsideUID+e.Count {
 			return e.OutsideUID + (containerUID - e.InsideUID), true
@@ -129,7 +131,7 @@ func GetUIDMapping() ([]UIDMapEntry, error) {
 
 // MapToHostUID maps a container UID to the corresponding host UID.
 // Returns mapped=false if no mapping covers that UID.
-func MapToHostUID(containerUID int) (hostUID int, mapped bool) {
+func MapToHostUID(containerUID int64) (hostUID int64, mapped bool) {
 	uidMapOnce.Do(loadUIDMap)
 	if uidMapErr != nil {
 		return 0, false
