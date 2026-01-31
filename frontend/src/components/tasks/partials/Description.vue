@@ -33,6 +33,7 @@
 			:enable-discard-shortcut="true"
 			:enable-mentions="true"
 			:mention-project-id="modelValue.projectId"
+			:storage-key="descriptionStorageKey"
 			@update:modelValue="saveWithDelay"
 			@save="save"
 		/>
@@ -40,14 +41,15 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watchEffect, onMounted, onBeforeUnmount} from 'vue'
+import {ref, computed, watchEffect,  onBeforeUnmount} from 'vue'
 import {onBeforeRouteLeave} from 'vue-router'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
 
-import type {ITask} from '@/modelTypes/ITask'
-import {useTaskStore} from '@/stores/tasks'
+import { clearEditorDraft } from '@/helpers/editorDraftStorage'
+import type { ITask } from '@/modelTypes/ITask'
+import { useTaskStore } from '@/stores/tasks'
 
 export type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: string) => void) => Promise<string>
 
@@ -78,9 +80,7 @@ const loading = computed(() => taskStore.isLoading)
 
 const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
-onMounted(() => {
-	window.addEventListener('beforeunload', save)
-})
+const descriptionStorageKey = computed(() => `task-description-${props.modelValue.id}`)
 
 async function saveWithDelay() {
 	if (description.value === props.modelValue.description) {
@@ -106,7 +106,6 @@ onBeforeUnmount(async () => {
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
-	window.removeEventListener('beforeunload', save)
 })
 
 onBeforeRouteLeave(() => save())
@@ -129,6 +128,9 @@ async function save() {
 			description: description.value,
 		})
 		emit('update:modelValue', updated)
+
+		// Clear draft from localStorage when saved successfully
+		clearEditorDraft(descriptionStorageKey.value)
 
 		saved.value = true
 		setTimeout(() => {
