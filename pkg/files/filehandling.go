@@ -203,13 +203,13 @@ func ValidateFileStorage() error {
 		if err != nil {
 			if !errors.Is(err, os.ErrNotExist) {
 				// Error other than "file doesn't exist"
-				return fmt.Errorf("failed to access file storage directory at %s: %w", basePath, err)
+				return fmt.Errorf("failed to access file storage directory at %s: %w\n%s", basePath, err, storageDiagnosticInfo(basePath))
 			}
 
 			// Directory doesn't exist, try to create it
 			err = afs.MkdirAll(basePath, 0755)
 			if err != nil {
-				return fmt.Errorf("failed to create file storage directory at %s: %w", basePath, err)
+				return fmt.Errorf("failed to create file storage directory at %s: %w\n%s", basePath, err, storageDiagnosticInfo(basePath))
 			}
 		} else if !info.IsDir() {
 			// Path exists but is not a directory
@@ -222,7 +222,7 @@ func ValidateFileStorage() error {
 
 	err := writeToStorage(path, bytes.NewReader([]byte{}), 0)
 	if err != nil {
-		return fmt.Errorf("failed to create test file at %s: %w", path, err)
+		return fmt.Errorf("failed to create test file at %s: %w\n%s", path, err, storageDiagnosticInfo(basePath))
 	}
 
 	err = afs.Remove(path)

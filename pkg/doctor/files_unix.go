@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"syscall"
 
+	"code.vikunja.io/api/pkg/utils"
 	"golang.org/x/sys/unix"
 )
 
@@ -103,16 +104,25 @@ func checkDirectoryOwnership(info os.FileInfo) []CheckResult {
 		},
 	}
 
-	if currentUID != 0 && currentUID != int(uid) {
+	nsActive := utils.IsUserNamespaceActive()
+
+	switch {
+	case currentUID != 0 && currentUID != int(uid):
+		errMsg := fmt.Sprintf(
+			"directory owned by uid %d but Vikunja runs as uid %d",
+			uid, currentUID,
+		)
+		if nsActive {
+			if hostUID, ok := utils.MapToHostUID(int64(currentUID)); ok {
+				errMsg += fmt.Sprintf(" (user namespace active, host uid=%d)", hostUID)
+			}
+		}
 		results = append(results, CheckResult{
 			Name:   "Ownership match",
 			Passed: false,
-			Error: fmt.Sprintf(
-				"directory owned by uid %d but Vikunja runs as uid %d",
-				uid, currentUID,
-			),
+			Error:  errMsg,
 		})
-	} else if currentUID != 0 && !isGroupMember(int(gid)) {
+	case currentUID != 0 && !isGroupMember(int(gid)):
 		results = append(results, CheckResult{
 			Name:   "Ownership match",
 			Passed: false,
@@ -121,6 +131,21 @@ func checkDirectoryOwnership(info os.FileInfo) []CheckResult {
 				gid,
 			),
 		})
+	case currentUID != 0 && nsActive:
+		matchResult := CheckResult{
+			Name:   "Ownership match",
+			Passed: true,
+			Value:  fmt.Sprintf("uid %d matches", currentUID),
+		}
+		if hostUID, ok := utils.MapToHostUID(int64(currentUID)); ok {
+			matchResult.Lines = []string{
+				fmt.Sprintf("WARNING: user namespace active — uid %d maps to host uid %d,", currentUID, hostUID),
+				"which may differ from the actual host directory owner.",
+				"If writes fail, ensure the host directory is owned by the mapped host uid,",
+				"or run the container with --user 0:0.",
+			}
+		}
+		results = append(results, matchResult)
 	}
 
 	return results
