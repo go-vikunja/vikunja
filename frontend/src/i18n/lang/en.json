@@ -875,6 +875,7 @@
       "labels": "Labels",
       "percentDone": "Progress",
       "priority": "Priority",
+      "project": "Project",
       "relatedTasks": "Related Tasks",
       "reminders": "Reminders",
       "repeat": "Repeat",
