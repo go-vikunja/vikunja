@@ -3,6 +3,7 @@ import {eventToHotkeyString} from '@github/hotkey'
 
 import {getTaskIdentifier} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
+import {comboHotkey} from '@/components/misc/keyboard-shortcuts/shortcuts'
 
 interface UseTaskDetailShortcutsOptions {
 	task: () => ITask
@@ -42,7 +43,9 @@ export function useTaskDetailShortcuts({
 		const hotkeyString = eventToHotkeyString(event)
 		if (!hotkeyString) return
 
-		if (hotkeyString === 'Control+s' || hotkeyString === 'Meta+s') {
+		const expectedHotkeys:string[] = comboHotkey('Meta', 's')
+		expectedHotkeys.concat(comboHotkey('Control', 's'))
+		if (expectedHotkeys.includes(hotkeyString)) {
 			event.preventDefault()
 			onSave()
 			return

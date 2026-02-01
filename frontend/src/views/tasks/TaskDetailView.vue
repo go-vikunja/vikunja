@@ -38,14 +38,14 @@
 				>
 					<a
 						v-if="router.options.history.state?.back?.includes('/projects/'+p.id+'/') || false"
-						v-shortcut="p.id === project?.id ? 'u' : ''"
+						v-shortcut="p.id === project?.id ? singleHotkey('u') : ''"
 						@click="router.back()"
 					>
 						{{ getProjectTitle(p) }}
 					</a>
 					<RouterLink
 						v-else
-						v-shortcut="p.id === project?.id ? 'u' : ''"
+						v-shortcut="p.id === project?.id ? singleHotkey('u') : ''"
 						:to="{ name: 'project.index', params: { projectId: p.id } }"
 					>
 						{{ getProjectTitle(p) }}
@@ -423,7 +423,7 @@
 				>
 					<template v-if="canWrite">
 						<XButton
-							v-shortcut="'t'"
+							v-shortcut="singleHotkey('t')"
 							:class="{'is-pending': !task.done}"
 							class="button--mark-done"
 							icon="check-double"
@@ -439,7 +439,7 @@
 							@update:modelValue="sub => task.subscription = sub"
 						/>
 						<XButton
-							v-shortcut="'s'"
+							v-shortcut="singleHotkey('s')"
 							variant="secondary"
 							:icon="task.isFavorite ? 'star' : ['far', 'star']"
 							@click="toggleFavorite"
@@ -452,7 +452,7 @@
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
-							v-shortcut="'l'"
+							v-shortcut="singleHotkey('l')"
 							variant="secondary"
 							icon="tags"
 							@click="setFieldActive('labels')"
@@ -460,7 +460,7 @@
 							{{ $t('task.detail.actions.label') }}
 						</XButton>
 						<XButton
-							v-shortcut="'p'"
+							v-shortcut="singleHotkey('p')"
 							variant="secondary"
 							icon="exclamation-circle"
 							@click="setFieldActive('priority')"
@@ -475,7 +475,7 @@
 							{{ $t('task.detail.actions.percentDone') }}
 						</XButton>
 						<XButton
-							v-shortcut="'c'"
+							v-shortcut="singleHotkey('c')"
 							variant="secondary"
 							icon="fill-drip"
 							:icon-color="color"
@@ -487,7 +487,7 @@
 						<span class="action-heading">{{ $t('task.detail.management') }}</span>
 
 						<XButton
-							v-shortcut="'a'"
+							v-shortcut="singleHotkey('a')"
 							v-cy="'taskDetail.assign'"
 							variant="secondary"
 							icon="users"
@@ -496,7 +496,7 @@
 							{{ $t('task.detail.actions.assign') }}
 						</XButton>
 						<XButton
-							v-shortcut="'f'"
+							v-shortcut="singleHotkey('f')"
 							variant="secondary"
 							icon="paperclip"
 							@click="setFieldActive('attachments')"
@@ -504,7 +504,7 @@
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
-							v-shortcut="'r'"
+							v-shortcut="singleHotkey('r')"
 							variant="secondary"
 							icon="sitemap"
 							@click="setRelatedTasksActive()"
@@ -512,7 +512,7 @@
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</XButton>
 						<XButton
-							v-shortcut="'m'"
+							v-shortcut="singleHotkey('m')"
 							variant="secondary"
 							icon="list"
 							@click="setFieldActive('moveProject')"
@@ -523,7 +523,7 @@
 						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
 						
 						<XButton
-							v-shortcut="'d'"
+							v-shortcut="singleHotkey('d')"
 							variant="secondary"
 							icon="calendar"
 							@click="setFieldActive('dueDate')"
@@ -672,6 +672,7 @@ import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
 
 import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
+import {singleHotkey} from '@/components/misc/keyboard-shortcuts/shortcuts'
 
 const props = defineProps<{
 	taskId: ITask['id'],

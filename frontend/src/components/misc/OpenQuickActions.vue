@@ -4,6 +4,7 @@ import {useBaseStore} from '@/stores/base'
 import {onBeforeUnmount, onMounted} from 'vue'
 import {eventToHotkeyString} from '@github/hotkey'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
+import {comboHotkey} from '@/components/misc/keyboard-shortcuts/shortcuts'
 
 const baseStore = useBaseStore()
 
@@ -13,8 +14,8 @@ function openQuickActionsViaHotkey(event) {
 	if (!hotkeyString) return
 	
 	// On macOS, use Cmd+K (Meta+K), on other platforms use Ctrl+K (Control+K)
-	const expectedHotkey = isAppleDevice() ? 'Meta+k' : 'Control+k'
-	if (hotkeyString !== expectedHotkey) return
+	const modKey = isAppleDevice() ? 'Meta' : 'Control'
+	if (!comboHotkey(modKey, 'k').includes(hotkeyString)) return
 	
 	event.preventDefault()
 
