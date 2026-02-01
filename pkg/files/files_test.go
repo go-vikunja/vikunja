@@ -17,7 +17,7 @@
 package files
 
 import (
-	"io"
+	"bytes"
 	"os"
 	"testing"
 
@@ -26,24 +26,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-type testfile struct {
-	content []byte
-	done    bool
-}
-
-func (t *testfile) Read(p []byte) (n int, err error) {
-	if t.done {
-		return 0, io.EOF
-	}
-	copy(p, t.content)
-	t.done = true
-	return len(p), nil
-}
-
-func (t *testfile) Close() error {
-	return nil
-}
 
 type testauth struct {
 	id int64
@@ -56,11 +38,8 @@ func (a *testauth) GetID() int64 {
 func TestCreate(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		initFixtures(t)
-		tf := &testfile{
-			content: []byte("testfile"),
-		}
 		ta := &testauth{id: 1}
-		createdFile, err := Create(tf, "testfile", 100, ta)
+		createdFile, err := Create(bytes.NewReader([]byte("testfile")), "testfile", 100, ta)
 		require.NoError(t, err)
 
 		// Check the file was created correctly
@@ -74,11 +53,8 @@ func TestCreate(t *testing.T) {
 	})
 	t.Run("Too Large", func(t *testing.T) {
 		initFixtures(t)
-		tf := &testfile{
-			content: []byte("testfile"),
-		}
 		ta := &testauth{id: 1}
-		_, err := Create(tf, "testfile", 99999999999, ta)
+		_, err := Create(bytes.NewReader([]byte("testfile")), "testfile", 99999999999, ta)
 		require.Error(t, err)
 		assert.True(t, IsErrFileIsTooLarge(err))
 	})
