@@ -196,6 +196,11 @@ func FileStat(file *File) (os.FileInfo, error) {
 func ValidateFileStorage() error {
 	basePath := config.FilesBasePath.GetString()
 
+	diag := storageDiagnosticInfo(basePath)
+	if diag != "" {
+		diag = "\n" + diag
+	}
+
 	// For local filesystem, ensure the base directory exists
 	if config.FilesType.GetString() == "local" {
 		// Check if directory exists
@@ -203,13 +208,13 @@ func ValidateFileStorage() error {
 		if err != nil {
 			if !errors.Is(err, os.ErrNotExist) {
 				// Error other than "file doesn't exist"
-				return fmt.Errorf("failed to access file storage directory at %s: %w", basePath, err)
+				return fmt.Errorf("failed to access file storage directory at %s: %w%s", basePath, err, diag)
 			}
 
 			// Directory doesn't exist, try to create it
 			err = afs.MkdirAll(basePath, 0755)
 			if err != nil {
-				return fmt.Errorf("failed to create file storage directory at %s: %w", basePath, err)
+				return fmt.Errorf("failed to create file storage directory at %s: %w%s", basePath, err, diag)
 			}
 		} else if !info.IsDir() {
 			// Path exists but is not a directory
@@ -222,7 +227,7 @@ func ValidateFileStorage() error {
 
 	err := writeToStorage(path, bytes.NewReader([]byte{}), 0)
 	if err != nil {
-		return fmt.Errorf("failed to create test file at %s: %w", path, err)
+		return fmt.Errorf("failed to create test file at %s: %w%s", path, err, diag)
 	}
 
 	err = afs.Remove(path)
