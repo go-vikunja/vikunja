@@ -321,26 +321,13 @@ func (f *fakeS3PutObjectClient) PutObject(_ context.Context, input *s3.PutObject
 	return &s3.PutObjectOutput{}, nil
 }
 
-type readerOnly struct {
-	r io.Reader
-}
-
-func (r *readerOnly) Read(p []byte) (int, error) {
-	return r.r.Read(p)
-}
-
-func TestFileSave_S3_UsesSeekableReaderWithoutTempFile(t *testing.T) {
+func TestFileSave_S3_UsesSeekableReader(t *testing.T) {
 	originalClient := s3Client
 	originalBucket := s3Bucket
-	originalTempDir := config.FilesS3TempDir.GetString()
 	t.Cleanup(func() {
 		s3Client = originalClient
 		s3Bucket = originalBucket
-		config.FilesS3TempDir.Set(originalTempDir)
 	})
-
-	tempDir := t.TempDir()
-	config.FilesS3TempDir.Set(tempDir)
 
 	client := &fakeS3PutObjectClient{}
 	s3Client = client
@@ -358,86 +345,35 @@ func TestFileSave_S3_UsesSeekableReaderWithoutTempFile(t *testing.T) {
 	require.NotNil(t, client.lastInput.ContentLength)
 	assert.Equal(t, int64(len(content)), *client.lastInput.ContentLength)
 	assert.IsType(t, &bytes.Reader{}, client.lastInput.Body)
-
-	entries, err := os.ReadDir(tempDir)
-	require.NoError(t, err)
-	assert.Empty(t, entries)
 }
 
-func TestFileSave_S3_BuffersNonSeekableReaderAndCleansUpTempFile(t *testing.T) {
+func TestFileSave_S3_ReturnsErrorOnPutObjectFailure(t *testing.T) {
 	originalClient := s3Client
 	originalBucket := s3Bucket
-	originalTempDir := config.FilesS3TempDir.GetString()
 	t.Cleanup(func() {
 		s3Client = originalClient
 		s3Bucket = originalBucket
-		config.FilesS3TempDir.Set(originalTempDir)
 	})
-
-	tempDir := t.TempDir()
-	config.FilesS3TempDir.Set(tempDir)
-
-	client := &fakeS3PutObjectClient{}
-	s3Client = client
-	s3Bucket = "test-bucket"
-
-	content := []byte("non-seekable-content")
-	file := &File{ID: 456, Size: 0}
-
-	err := file.Save(&readerOnly{r: bytes.NewReader(content)})
-	require.NoError(t, err)
-
-	require.NotNil(t, client.lastInput)
-	require.NotNil(t, client.lastInput.ContentLength)
-	assert.Equal(t, int64(len(content)), *client.lastInput.ContentLength)
-	assert.IsType(t, &os.File{}, client.lastInput.Body)
-
-	entries, err := os.ReadDir(tempDir)
-	require.NoError(t, err)
-	assert.Empty(t, entries)
-}
-
-func TestFileSave_S3_CleansUpTempFileOnPutObjectError(t *testing.T) {
-	originalClient := s3Client
-	originalBucket := s3Bucket
-	originalTempDir := config.FilesS3TempDir.GetString()
-	t.Cleanup(func() {
-		s3Client = originalClient
-		s3Bucket = originalBucket
-		config.FilesS3TempDir.Set(originalTempDir)
-	})
-
-	tempDir := t.TempDir()
-	config.FilesS3TempDir.Set(tempDir)
 
 	client := &fakeS3PutObjectClient{err: errors.New("boom")}
 	s3Client = client
 	s3Bucket = "test-bucket"
 
-	content := []byte("non-seekable-content")
-	file := &File{ID: 789, Size: 0}
+	content := []byte("test-content")
+	file := &File{ID: 789, Size: uint64(len(content))}
 
-	err := file.Save(&readerOnly{r: bytes.NewReader(content)})
+	err := file.Save(bytes.NewReader(content))
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to upload file to S3")
-
-	entries, readErr := os.ReadDir(tempDir)
-	require.NoError(t, readErr)
-	assert.Empty(t, entries)
 }
 
-func TestFileSave_S3_UsesBufferedSizeWhenExpectedSizeMismatch(t *testing.T) {
+func TestFileSave_S3_LogsWarnOnSizeMismatch(t *testing.T) {
 	originalClient := s3Client
 	originalBucket := s3Bucket
-	originalTempDir := config.FilesS3TempDir.GetString()
 	t.Cleanup(func() {
 		s3Client = originalClient
 		s3Bucket = originalBucket
-		config.FilesS3TempDir.Set(originalTempDir)
 	})
-
-	tempDir := t.TempDir()
-	config.FilesS3TempDir.Set(tempDir)
 
 	client := &fakeS3PutObjectClient{}
 	s3Client = client
@@ -446,14 +382,10 @@ func TestFileSave_S3_UsesBufferedSizeWhenExpectedSizeMismatch(t *testing.T) {
 	content := []byte("mismatch-content")
 	file := &File{ID: 999, Size: uint64(len(content) + 10)}
 
-	err := file.Save(&readerOnly{r: bytes.NewReader(content)})
+	err := file.Save(bytes.NewReader(content))
 	require.NoError(t, err)
 
 	require.NotNil(t, client.lastInput)
 	require.NotNil(t, client.lastInput.ContentLength)
 	assert.Equal(t, int64(len(content)), *client.lastInput.ContentLength)
-
-	entries, readErr := os.ReadDir(tempDir)
-	require.NoError(t, readErr)
-	assert.Empty(t, entries)
 }
