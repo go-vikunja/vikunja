@@ -18,7 +18,6 @@ package migration
 
 import (
 	"bytes"
-	"io"
 
 	"xorm.io/xorm"
 
@@ -395,8 +394,7 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				oldID := a.ID
 				a.ID = 0
 				a.TaskID = t.ID
-				fr := io.NopCloser(bytes.NewReader(a.File.FileContent))
-				err = a.NewAttachment(s, fr, a.File.Name, a.File.Size, user)
+				err = a.NewAttachment(s, bytes.NewReader(a.File.FileContent), a.File.Name, a.File.Size, user)
 				if err != nil {
 					if models.IsErrTaskAttachmentIsTooLarge(err) {
 						log.Warningf("[creating structure] Attachment %s is too large (%d bytes), skipping: %v", a.File.Name, a.File.Size, err)

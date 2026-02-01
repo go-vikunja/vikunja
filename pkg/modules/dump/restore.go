@@ -181,11 +181,15 @@ func Restore(filename string, overrideConfig bool) error {
 			return fmt.Errorf("could not open file %s: %w", i, err)
 		}
 
-		if err := f.Save(fc); err != nil {
-			return fmt.Errorf("could not save file: %w", err)
+		content, err := io.ReadAll(fc)
+		_ = fc.Close()
+		if err != nil {
+			return fmt.Errorf("could not read file %s: %w", i, err)
 		}
 
-		_ = fc.Close()
+		if err := f.Save(bytes.NewReader(content)); err != nil {
+			return fmt.Errorf("could not save file: %w", err)
+		}
 		log.Infof("Restored file %s", i)
 	}
 	log.Infof("Restored %d files.", len(filesFiles))
