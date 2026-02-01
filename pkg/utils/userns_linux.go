@@ -123,10 +123,16 @@ func IsUserNamespaceActive() bool {
 	return !isTrivialMapping(uidMapEntries)
 }
 
-// GetUIDMapping returns the parsed uid_map entries.
+// GetUIDMapping returns a copy of the parsed uid_map entries.
+// The returned slice is safe to modify without affecting cached state.
 func GetUIDMapping() ([]UIDMapEntry, error) {
 	uidMapOnce.Do(loadUIDMap)
-	return uidMapEntries, uidMapErr
+	if uidMapEntries == nil {
+		return nil, uidMapErr
+	}
+	out := make([]UIDMapEntry, len(uidMapEntries))
+	copy(out, uidMapEntries)
+	return out, uidMapErr
 }
 
 // MapToHostUID maps a container UID to the corresponding host UID.
