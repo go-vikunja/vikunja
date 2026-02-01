@@ -171,7 +171,7 @@ func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
 	}
 
 	// Save the file
-	f, err := files.CreateWithMime(buf, "avatar.png", uint64(buf.Len()), u, "image/png")
+	f, err := files.CreateWithMime(bytes.NewReader(buf.Bytes()), "avatar.png", uint64(buf.Len()), u, "image/png")
 	if err != nil {
 		return err
 	}

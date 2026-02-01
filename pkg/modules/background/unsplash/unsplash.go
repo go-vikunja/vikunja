@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -279,8 +280,14 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	}
 	log.Debugf("Pinged unsplash download endpoint for photo %s", image.ID)
 
+	// Buffer the response body so we have a seekable reader for S3 uploads
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
 	// Save it as a file in vikunja
-	file, err := files.Create(resp.Body, "", 0, auth)
+	file, err := files.Create(bytes.NewReader(bodyBytes), "", uint64(len(bodyBytes)), auth)
 	if err != nil {
 		return
 	}
