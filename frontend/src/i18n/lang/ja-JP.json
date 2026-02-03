@@ -439,6 +439,9 @@
 			"deleteSuccess": "Webhookは正常に削除されました。",
 			"create": "Webhookを作成",
 			"secret": "シークレット",
+			"basicauthuser": "Basic認証ユーザー名",
+			"basicauthpassword": "Basic認証パスワード",
+			"basicauthlink": "Basic認証を使用しますか？",
 			"secretHint": "シークレットを指定した場合、WebhookターゲットURLへのリクエストはすべてHMAC署名されます。",
 			"secretDocs": "シークレットに関する詳細はドキュメントをご確認ください。"
 		},
