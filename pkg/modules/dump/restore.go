@@ -32,6 +32,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/initialize"
@@ -212,8 +213,14 @@ func restoreFile(id int64, zipFile *zip.File) error {
 		_ = os.Remove(tmpFile.Name())
 	}()
 
-	if _, err := io.Copy(tmpFile, fc); err != nil {
+	// Limit copy size to prevent decompression bombs
+	maxSize := config.GetMaxFileSizeInMBytes() * 1024 * 1024
+	written, err := io.CopyN(tmpFile, fc, int64(maxSize)+1) // #nosec G115 -- maxSize is configured, not user input
+	if err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("could not copy to temp file: %w", err)
+	}
+	if uint64(written) > maxSize {
+		return files.ErrFileIsTooLarge{Size: uint64(written)}
 	}
 
 	if _, err := tmpFile.Seek(0, io.SeekStart); err != nil {
