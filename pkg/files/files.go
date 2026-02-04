@@ -153,8 +153,15 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 	return keyvalue.DecrBy(metrics.FilesCountKey, 1)
 }
 
-// writeToStorage writes content to the given path, handling both local and S3 backends
+// writeToStorage writes content to the given path, handling both local and S3 backends.
+// The reader is always seeked to position 0 before writing to ensure consistent behavior.
 func writeToStorage(path string, content io.ReadSeeker, size uint64) error {
+	// Seek to start to ensure we write the complete content regardless of
+	// the reader's current position
+	if _, err := content.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("failed to seek to start of content: %w", err)
+	}
+
 	if s3Client == nil {
 		return afs.WriteReader(path, content)
 	}
