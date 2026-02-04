@@ -185,16 +185,72 @@ func initPostgresEngine() (engine *xorm.Engine, err error) {
 	return
 }
 
-func initSqliteEngine() (engine *xorm.Engine, err error) {
-	path := config.DatabasePath.GetString()
+// DatabasePathConfig holds configuration for database path resolution.
+// This struct allows the path resolution logic to be tested independently
+// of the global config package.
+type DatabasePathConfig struct {
+	ConfiguredPath string // The database.path config value
+	RootPath       string // The service.rootpath config value
+	ExecutablePath string // Directory of the executable binary
+}
 
-	if path == "memory" {
+// ResolveDatabasePath resolves a database path configuration to an absolute path.
+//
+// Resolution rules:
+//  1. If ConfiguredPath is "memory", returns "memory" (special case for in-memory DB)
+//  2. If ConfiguredPath is already absolute, returns it as-is (cleaned)
+//  3. If ConfiguredPath is relative:
+//     a. If RootPath differs from ExecutablePath (explicitly configured),
+//     joins with RootPath
+//     b. Otherwise, joins with platform-specific user data directory
+//
+// The getUserDataDir parameter allows injecting a mock for testing.
+func ResolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, error)) (string, error) {
+	// Handle memory special case
+	if cfg.ConfiguredPath == "memory" {
+		return "memory", nil
+	}
+
+	// Absolute paths are used as-is
+	if filepath.IsAbs(cfg.ConfiguredPath) {
+		return filepath.Clean(cfg.ConfiguredPath), nil
+	}
+
+	// Relative path resolution
+	// Check if rootpath was explicitly configured (differs from executable location)
+	if cfg.RootPath != cfg.ExecutablePath {
+		return filepath.Join(cfg.RootPath, cfg.ConfiguredPath), nil
+	}
+
+	// Use platform-specific user data directory
+	dataDir, err := getUserDataDir()
+	if err != nil {
+		// Fall back to rootpath if user data dir fails
+		log.Debugf("Could not get user data directory, falling back to rootpath: %v", err)
+		return filepath.Join(cfg.RootPath, cfg.ConfiguredPath), nil
+	}
+
+	return filepath.Join(dataDir, cfg.ConfiguredPath), nil
+}
+
+func initSqliteEngine() (engine *xorm.Engine, err error) {
+	configuredPath := config.DatabasePath.GetString()
+
+	// Handle memory special case early
+	if configuredPath == "memory" {
 		return xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
 	}
 
-	// Resolve relative paths to a safe location instead of the current working directory
-	if !filepath.IsAbs(path) {
-		path = resolveDatabasePath(path)
+	execPath, _ := os.Executable()
+	cfg := DatabasePathConfig{
+		ConfiguredPath: configuredPath,
+		RootPath:       config.ServiceRootpath.GetString(),
+		ExecutablePath: filepath.Dir(execPath),
+	}
+
+	path, err := ResolveDatabasePath(cfg, getUserDataDir)
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve database path: %w", err)
 	}
 
 	// Convert to absolute path for logging
@@ -227,34 +283,6 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	}
 
 	return xorm.NewEngine("sqlite3", path)
-}
-
-// resolveDatabasePath resolves a relative database path to an appropriate location
-// based on platform-specific conventions. This prevents SQLite databases from being
-// created in system directories (like C:\Windows\System32 on Windows) when Vikunja
-// runs as a service.
-func resolveDatabasePath(relativePath string) string {
-	// First, check if a rootpath is explicitly configured and use that
-	rootPath := config.ServiceRootpath.GetString()
-
-	// Determine if rootpath appears to be a user-configured value or a default
-	// If it looks like it was explicitly configured (not just the binary location),
-	// use it for backward compatibility
-	execPath, err := os.Executable()
-	if err == nil && rootPath != filepath.Dir(execPath) {
-		// rootpath was explicitly configured, use it
-		return filepath.Join(rootPath, relativePath)
-	}
-
-	// Otherwise, use a platform-appropriate user data directory
-	dataDir, err := getUserDataDir()
-	if err != nil {
-		// Fall back to rootpath if we can't determine user data dir
-		log.Warningf("Could not determine user data directory, falling back to rootpath: %v", err)
-		return filepath.Join(rootPath, relativePath)
-	}
-
-	return filepath.Join(dataDir, relativePath)
 }
 
 // getUserDataDir returns the platform-appropriate directory for application data
