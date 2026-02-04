@@ -281,19 +281,19 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	log.Debugf("Pinged unsplash download endpoint for photo %s", image.ID)
 
 	// Enforce max file size to prevent OOM from unexpectedly large responses
-	maxSize := int64(config.GetMaxFileSizeInMBytes() * 1024 * 1024)
-	if resp.ContentLength > maxSize {
+	maxSize := config.GetMaxFileSizeInMBytes() * 1024 * 1024
+	if resp.ContentLength > 0 && uint64(resp.ContentLength) > maxSize {
 		return files.ErrFileIsTooLarge{Size: uint64(resp.ContentLength)}
 	}
 
 	// Buffer the response body so we have a seekable reader for S3 uploads.
 	// Use LimitReader as a safety net in case Content-Length was missing or inaccurate.
-	limitedReader := io.LimitReader(resp.Body, maxSize+1)
+	limitedReader := io.LimitReader(resp.Body, int64(maxSize)+1) // #nosec G115 -- maxSize is configured, not user input
 	bodyBytes, err := io.ReadAll(limitedReader)
 	if err != nil {
 		return err
 	}
-	if int64(len(bodyBytes)) > maxSize {
+	if uint64(len(bodyBytes)) > maxSize {
 		return files.ErrFileIsTooLarge{Size: uint64(len(bodyBytes))}
 	}
 
