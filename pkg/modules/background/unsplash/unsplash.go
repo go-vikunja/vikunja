@@ -280,10 +280,21 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	}
 	log.Debugf("Pinged unsplash download endpoint for photo %s", image.ID)
 
-	// Buffer the response body so we have a seekable reader for S3 uploads
-	bodyBytes, err := io.ReadAll(resp.Body)
+	// Enforce max file size to prevent OOM from unexpectedly large responses
+	maxSize := int64(config.GetMaxFileSizeInMBytes() * 1024 * 1024)
+	if resp.ContentLength > maxSize {
+		return files.ErrFileIsTooLarge{Size: uint64(resp.ContentLength)}
+	}
+
+	// Buffer the response body so we have a seekable reader for S3 uploads.
+	// Use LimitReader as a safety net in case Content-Length was missing or inaccurate.
+	limitedReader := io.LimitReader(resp.Body, maxSize+1)
+	bodyBytes, err := io.ReadAll(limitedReader)
 	if err != nil {
 		return err
+	}
+	if int64(len(bodyBytes)) > maxSize {
+		return files.ErrFileIsTooLarge{Size: uint64(len(bodyBytes))}
 	}
 
 	// Save it as a file in vikunja
