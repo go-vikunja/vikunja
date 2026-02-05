@@ -57,10 +57,10 @@ func UpgradeHandler(c *echo.Context) error {
 
 	conn := NewConnection(ws, globalHub)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 
-	go conn.WriteLoop(ctx)
-	go conn.ReadLoop(ctx)
+	go conn.WriteLoop(ctx, cancel)
+	go conn.ReadLoop(ctx, cancel)
 
 	return nil
 }
