@@ -18,10 +18,7 @@ package websocket
 
 import (
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/user"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -52,7 +49,11 @@ func ValidateToken(tokenString string) (int64, error) {
 
 	// Check for API token
 	if tokenID, ok := claims["token_id"].(float64); ok && tokenID > 0 {
-		return validateAPIToken(tokenString, claims)
+		_, u, err := auth.ValidateAPITokenString(tokenString)
+		if err != nil {
+			return 0, err
+		}
+		return u.ID, nil
 	}
 
 	// Get user ID from claims
@@ -62,21 +63,4 @@ func ValidateToken(tokenString string) (int64, error) {
 	}
 
 	return int64(userIDFloat), nil
-}
-
-func validateAPIToken(tokenString string, _ jwt.MapClaims) (int64, error) {
-	s := db.NewSession()
-	defer s.Close()
-
-	token, err := models.GetTokenFromTokenString(s, tokenString)
-	if err != nil {
-		return 0, err
-	}
-
-	u, err := user.GetUserByID(s, token.OwnerID)
-	if err != nil {
-		return 0, err
-	}
-
-	return u.ID, nil
 }
