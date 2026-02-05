@@ -87,6 +87,7 @@ import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {useRouter, isNavigationFailure, NavigationFailureType, RouteLocationRaw} from 'vue-router'
 
 import NotificationService from '@/services/notification'
+import NotificationModel from '@/models/notification'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import User from '@/components/misc/User.vue'
@@ -95,11 +96,12 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
 import {useAuthStore} from '@/stores/auth'
+import {useWebSocket} from '@/composables/useWebSocket'
 import XButton from '@/components/input/Button.vue'
 import {success} from '@/message'
 import {useI18n} from 'vue-i18n'
 
-const LOAD_NOTIFICATIONS_INTERVAL = 10000
+const {subscribe, connected: wsConnected} = useWebSocket()
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -117,26 +119,51 @@ const notifications = computed(() => {
 })
 const userInfo = computed(() => authStore.info)
 
-let interval: ReturnType<typeof setInterval>
+let unsubscribeWs: (() => void) | null = null
+let pollInterval: ReturnType<typeof setInterval> | null = null
 
-onMounted(() => {
-	loadNotifications()
+const POLL_INTERVAL = 10000
+
+onMounted(async () => {
+	// Initial load via REST
+	await loadNotifications()
+
 	document.addEventListener('click', hidePopup)
-	document.addEventListener('visibilitychange', loadNotifications)
-	interval = setInterval(loadNotifications, LOAD_NOTIFICATIONS_INTERVAL)
+
+	// Subscribe to real-time notifications
+	unsubscribeWs = subscribe('notifications', (msg) => {
+		if (msg.event === 'notification.created' && msg.data) {
+			const notification = new NotificationModel(msg.data as Partial<INotification>)
+			allNotifications.value = [notification, ...allNotifications.value]
+		}
+	})
+
+	// Fallback polling when WebSocket is not available
+	startPollingFallback()
 })
 
 onUnmounted(() => {
 	document.removeEventListener('click', hidePopup)
-	document.removeEventListener('visibilitychange', loadNotifications)
-	clearInterval(interval)
+	unsubscribeWs?.()
+	stopPollingFallback()
 })
 
-async function loadNotifications() {
-	if (document.visibilityState !== 'visible') {
-		return
+function startPollingFallback() {
+	pollInterval = setInterval(async () => {
+		if (!wsConnected.value) {
+			await loadNotifications()
+		}
+	}, POLL_INTERVAL)
+}
+
+function stopPollingFallback() {
+	if (pollInterval) {
+		clearInterval(pollInterval)
+		pollInterval = null
 	}
-	// We're recreating the notification service here to make sure it uses the latest api user token
+}
+
+async function loadNotifications() {
 	const notificationService = new NotificationService()
 	allNotifications.value = await notificationService.getAll()
 }
