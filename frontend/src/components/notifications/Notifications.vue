@@ -86,7 +86,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, onUnmounted, ref} from 'vue'
+import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
 import NotificationService from '@/services/notification'
@@ -128,8 +128,13 @@ let pollInterval: ReturnType<typeof setInterval> | null = null
 const POLL_INTERVAL = 10000
 
 onMounted(async () => {
-	// Initial load via REST
-	await loadNotifications()
+	// Initial load via REST - wrapped in try/catch so the rest of setup
+	// (click handler, WS subscription, polling) still runs if this fails
+	try {
+		await loadNotifications()
+	} catch (e) {
+		console.warn('Failed to load initial notifications:', e)
+	}
 
 	document.addEventListener('click', hidePopup)
 
@@ -143,6 +148,14 @@ onMounted(async () => {
 
 	// Fallback polling when WebSocket is not available
 	startPollingFallback()
+})
+
+// Reload notifications when WebSocket disconnects to catch any events
+// that may have been missed during the disconnect window
+watch(wsConnected, (isConnected, wasConnected) => {
+	if (wasConnected && !isConnected) {
+		loadNotifications()
+	}
 })
 
 onUnmounted(() => {
