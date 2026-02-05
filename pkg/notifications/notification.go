@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 )
 
@@ -125,5 +126,13 @@ func notifyDB(notifiable Notifiable, notification Notification) (err error) {
 		return err
 	}
 
-	return s.Commit()
+	err = s.Commit()
+	if err != nil {
+		return err
+	}
+
+	return events.Dispatch(&NotificationCreatedEvent{
+		Notification: dbNotification,
+		UserID:       notifiable.RouteForDB(),
+	})
 }
