@@ -119,7 +119,7 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 
 	dbNotification := &DatabaseNotification{
 		NotifiableID: notifiable.RouteForDB(),
-		Notification: content,
+		Notification: json.RawMessage(content),
 		Name:         notification.Name(),
 	}
 
