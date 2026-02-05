@@ -375,6 +375,9 @@ onBeforeUnmount(() => {
 
 :deep(.tasks:not(.dragging-disabled) .single-task) {
 	cursor: grab;
+	-webkit-touch-callout: none;
+	user-select: none;
+	touch-action: manipulation;
 
 	&:active {
 		cursor: grabbing;
