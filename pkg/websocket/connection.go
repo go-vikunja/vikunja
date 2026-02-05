@@ -93,8 +93,9 @@ func (c *Connection) UserID() int64 {
 }
 
 // ReadLoop reads messages from the WebSocket and handles auth/subscribe/unsubscribe.
-func (c *Connection) ReadLoop(ctx context.Context) {
+func (c *Connection) ReadLoop(ctx context.Context, cancel context.CancelFunc) {
 	defer func() {
+		cancel()
 		if c.IsAuthenticated() {
 			c.hub.Unregister(c)
 		}
@@ -211,7 +212,8 @@ func (c *Connection) sendError(errMsg, topic string) {
 
 // WriteLoop drains the send channel and writes messages to the WebSocket.
 // It also sends periodic pings.
-func (c *Connection) WriteLoop(ctx context.Context) {
+func (c *Connection) WriteLoop(ctx context.Context, cancel context.CancelFunc) {
+	defer cancel()
 	ticker := time.NewTicker(pingInterval)
 	defer ticker.Stop()
 
