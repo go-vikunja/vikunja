@@ -54,7 +54,11 @@ func (h *Hub) Unregister(conn *Connection) {
 			break
 		}
 	}
-	log.Debugf("WebSocket: unregistered connection for user %d (remaining: %d)", conn.userID, len(h.connections[conn.userID]))
+	remaining := len(h.connections[conn.userID])
+	if remaining == 0 {
+		delete(h.connections, conn.userID)
+	}
+	log.Debugf("WebSocket: unregistered connection for user %d (remaining: %d)", conn.userID, remaining)
 }
 
 // PublishForUser sends an event to all connections of a specific user that are subscribed to the given topic.
