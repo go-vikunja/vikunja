@@ -86,6 +86,7 @@ import {useProjectStore} from '@/stores/projects'
 import {useRouteWithModal} from '@/composables/useRouteWithModal'
 import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
 import {useSidebarResize} from '@/composables/useSidebarResize'
+import {useWebSocket} from '@/composables/useWebSocket'
 import {useAuthStore} from '@/stores/auth'
 
 const authStore = useAuthStore()
@@ -134,6 +135,9 @@ watch(() => route.name as string, (routeName) => {
 // TODO: Reset the title if the page component does not set one itself
 
 useRenewTokenOnFocus()
+
+const {connect} = useWebSocket()
+connect()
 
 const labelStore = useLabelStore()
 labelStore.loadAllLabels()
