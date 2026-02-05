@@ -118,17 +118,17 @@ func (c *Connection) ReadLoop(ctx context.Context) {
 			continue
 		}
 
-		if !c.handleMessage(msg) {
+		if !c.handleMessage(ctx, msg) {
 			return // close connection
 		}
 	}
 }
 
 // handleMessage processes an incoming message. Returns false if connection should be closed.
-func (c *Connection) handleMessage(msg IncomingMessage) bool {
+func (c *Connection) handleMessage(ctx context.Context, msg IncomingMessage) bool {
 	switch msg.Action {
 	case ActionAuth:
-		return c.handleAuth(msg.Token)
+		return c.handleAuth(ctx, msg.Token)
 	case ActionSubscribe:
 		if !c.IsAuthenticated() {
 			c.sendError("auth_required", "")
@@ -153,7 +153,7 @@ func (c *Connection) handleMessage(msg IncomingMessage) bool {
 	return true
 }
 
-func (c *Connection) handleAuth(token string) bool {
+func (c *Connection) handleAuth(ctx context.Context, token string) bool {
 	if c.IsAuthenticated() {
 		c.sendError("already_authenticated", "")
 		return true
@@ -162,8 +162,9 @@ func (c *Connection) handleAuth(token string) bool {
 	userID, err := ValidateToken(token)
 	if err != nil {
 		log.Debugf("WebSocket: auth failed: %v", err)
-		c.sendError("invalid_token", "")
-		// Close connection after failed auth
+		// Write the error directly to the websocket since ReadLoop will close the
+		// connection immediately after we return false, before WriteLoop can drain the channel.
+		c.writeMessageDirect(ctx, OutgoingMessage{Error: "invalid_token"})
 		return false
 	}
 
@@ -183,6 +184,21 @@ func (c *Connection) handleAuth(token string) bool {
 
 	log.Debugf("WebSocket: user %d authenticated", userID)
 	return true
+}
+
+// writeMessageDirect writes a message directly to the websocket, bypassing the send channel.
+// Use this when the message must be sent before the connection is closed.
+func (c *Connection) writeMessageDirect(ctx context.Context, msg OutgoingMessage) {
+	writeCtx, cancel := context.WithTimeout(ctx, writeTimeout)
+	defer cancel()
+	data, err := json.Marshal(msg)
+	if err != nil {
+		log.Errorf("WebSocket: marshal error: %v", err)
+		return
+	}
+	if err := c.ws.Write(writeCtx, websocket.MessageText, data); err != nil {
+		log.Debugf("WebSocket: direct write error: %v", err)
+	}
 }
 
 func (c *Connection) sendError(errMsg, topic string) {
