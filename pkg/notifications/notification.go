@@ -112,7 +112,7 @@ func notifyDB(notifiable Notifiable, notification Notification) (err error) {
 	s := db.NewSession()
 	dbNotification := &DatabaseNotification{
 		NotifiableID: notifiable.RouteForDB(),
-		Notification: content,
+		Notification: json.RawMessage(content),
 		Name:         notification.Name(),
 	}
 
