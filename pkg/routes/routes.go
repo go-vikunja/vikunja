@@ -74,6 +74,7 @@ import (
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	ws "code.vikunja.io/api/pkg/websocket"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -304,6 +305,9 @@ func registerAPIRoutes(a *echo.Group) {
 	// Docs
 	n.GET("/docs.json", apiv1.DocsJSON)
 	n.GET("/docs", apiv1.RedocUI)
+
+	// WebSocket (auth happens after upgrade via first message)
+	n.GET("/ws", ws.UpgradeHandler)
 
 	// Prometheus endpoint
 	setupMetrics(n)
