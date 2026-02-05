@@ -20,12 +20,11 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/golang-jwt/jwt/v5"
 )
-
-const authTypeLinkShare = 1
 
 // ValidateToken validates a JWT token and returns the user ID if valid.
 // Returns 0 and an error if the token is invalid.
@@ -47,7 +46,7 @@ func ValidateToken(tokenString string) (int64, error) {
 	if !ok {
 		return 0, jwt.ErrTokenInvalidClaims
 	}
-	if int(typ) == authTypeLinkShare {
+	if int(typ) != auth.AuthTypeUser {
 		return 0, jwt.ErrTokenInvalidClaims
 	}
 
