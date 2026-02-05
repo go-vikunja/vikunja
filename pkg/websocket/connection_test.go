@@ -17,6 +17,7 @@
 package websocket
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,7 +58,7 @@ func TestConnectionRejectsActionsBeforeAuth(t *testing.T) {
 	}
 
 	// Try to subscribe before auth - should be rejected
-	conn.handleMessage(IncomingMessage{Action: ActionSubscribe, Topic: "notifications"})
+	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Topic: "notifications"})
 
 	// Should have sent an error
 	msg := <-conn.send
