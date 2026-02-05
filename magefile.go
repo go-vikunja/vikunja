@@ -211,7 +211,11 @@ func init() {
 
 // Some variables have external dependencies (like git) which may not always be available.
 func initVars() {
-	Tags = os.Getenv("TAGS")
+	// Always include osusergo to use pure Go os/user implementation instead of CGO.
+	// This prevents SIGFPE crashes when running under systemd without HOME set,
+	// caused by glibc's getpwuid_r() failing in certain environments.
+	// See: https://github.com/go-vikunja/vikunja/issues/2170
+	Tags = "osusergo " + os.Getenv("TAGS")
 	setVersion()
 	setBinLocation()
 	setPkgVersion()
