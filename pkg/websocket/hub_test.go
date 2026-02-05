@@ -34,6 +34,8 @@ func TestHubRegisterUnregister(t *testing.T) {
 
 	h.Unregister(conn)
 	assert.Empty(t, h.connections[1])
+	_, exists := h.connections[1]
+	assert.False(t, exists, "map entry should be deleted when last connection is removed")
 }
 
 func TestHubPublishToSubscribedConnection(t *testing.T) {
