@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
@@ -54,5 +55,6 @@ func TestMain(m *testing.M) {
 	SetupTests()
 
 	mail.Fake()
+	events.Fake()
 	os.Exit(m.Run())
 }
