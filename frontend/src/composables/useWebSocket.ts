@@ -66,10 +66,14 @@ function handleMessage(event: MessageEvent) {
 		return
 	}
 
-	// Handle auth error
+	// Handle auth error - close the socket so callers see connected=false
+	// and fallback polling kicks in
 	if (msg.error === 'invalid_token' || msg.error === 'auth_required') {
 		console.warn('WebSocket: auth failed:', msg.error)
 		authenticated.value = false
+		connected.value = false
+		socket?.close()
+		socket = null
 		return
 	}
 
