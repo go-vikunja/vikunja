@@ -19,6 +19,7 @@ package websocket
 import (
 	"context"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/coder/websocket"
@@ -40,7 +41,9 @@ func GetHub() *Hub {
 // UpgradeHandler is the Echo handler for WebSocket upgrades at /api/v1/ws.
 // The upgrade happens without authentication - auth is done via the first message.
 func UpgradeHandler(c *echo.Context) error {
-	ws, err := websocket.Accept(c.Response(), c.Request(), &websocket.AcceptOptions{})
+	ws, err := websocket.Accept(c.Response(), c.Request(), &websocket.AcceptOptions{
+		OriginPatterns: config.CorsOrigins.GetStringSlice(),
+	})
 	if err != nil {
 		log.Errorf("WebSocket: upgrade failed: %v", err)
 		return nil // Accept already wrote the error response
