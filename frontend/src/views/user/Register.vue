@@ -99,6 +99,7 @@ import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/Password.vue'
 import FormField from '@/components/input/FormField.vue'
 
+import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 import {validatePassword} from '@/helpers/validatePasswort'
@@ -106,6 +107,7 @@ import {validatePassword} from '@/helpers/validatePasswort'
 const {t} = useI18n()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
+const {redirectIfSaved} = useRedirectToLastVisited()
 
 // FIXME: use the `beforeEnter` hook of vue-router
 // Check if the user is already logged in, if so, redirect them to the homepage
@@ -173,6 +175,7 @@ async function submit() {
 
 	try {
 		await authStore.register(toRaw(credentials))
+		redirectIfSaved()
 	} catch (e) {
 		errorMessage.value = e?.message
 	}
