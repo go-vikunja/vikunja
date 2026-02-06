@@ -1,6 +1,6 @@
 <template>
 	<Ready>
-		<template v-if="authStore.authUser">
+		<template v-if="showAuthLayout">
 			<AppHeader />
 			<ContentAuth />
 		</template>
@@ -56,6 +56,15 @@ const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const route = useRoute()
+
+const AUTH_ROUTE_NAMES = new Set([
+	'user.login',
+	'user.register',
+	'user.password-reset.request',
+	'user.password-reset.reset',
+	'openid.auth',
+])
+const showAuthLayout = computed(() => authStore.authUser && !AUTH_ROUTE_NAMES.has(route.name as string))
 
 useBodyClass('is-touch', isTouchDevice())
 const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)
