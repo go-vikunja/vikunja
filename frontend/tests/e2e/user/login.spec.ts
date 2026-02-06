@@ -71,6 +71,33 @@ test.describe('Login', () => {
 		await expect(page).toHaveURL(/\/login/)
 	})
 
+	test('Should not show login form inside authenticated app shell after login', async ({page}) => {
+		await page.goto('/login')
+
+		// Set up a flag that tracks if login form and navbar are ever visible simultaneously
+		await page.evaluate(() => {
+			(window as any).__loginFormFlashDetected = false
+			const observer = new MutationObserver(() => {
+				const hasLoginForm = !!document.querySelector('#loginform')
+				const hasNavbar = !!document.querySelector('nav[aria-label="main navigation"]')
+				if (hasLoginForm && hasNavbar) {
+					(window as any).__loginFormFlashDetected = true
+				}
+			})
+			observer.observe(document.body, {childList: true, subtree: true, attributes: true})
+			;(window as any).__loginFormFlashObserver = observer
+		})
+
+		await login(page)
+
+		const flashDetected = await page.evaluate(() => {
+			(window as any).__loginFormFlashObserver.disconnect()
+			return (window as any).__loginFormFlashDetected
+		})
+
+		expect(flashDetected).toBe(false)
+	})
+
 	test('Should redirect to the previous route after logging in', async ({page}) => {
 		const projects = await ProjectFactory.create(1)
 		await page.goto(`/projects/${projects[0].id}/1`)
