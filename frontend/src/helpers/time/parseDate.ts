@@ -163,11 +163,13 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 }
 
 export const getDateFromText = (text: string, now: Date = new Date()) => {
-	const dateRegexes: RegExp[] = [
-		/(^| )(?<found>(?<month>[0-9][0-9]?)\/(?<day>[0-9][0-9]?)(\/(?<year>[0-9][0-9]([0-9][0-9])?))?)($| )/gi,
-		/(^| )(?<found>(?<year>[0-9][0-9][0-9][0-9]?)\/(?<month>[0-9][0-9]?)\/(?<day>[0-9][0-9]))($| )/gi,
-		/(^| )(?<found>(?<year>[0-9][0-9][0-9][0-9]?)-(?<month>[0-9][0-9]?)-(?<day>[0-9][0-9]))($| )/gi,
-		/(^| )(?<found>(?<day>[0-9][0-9]?)\.(?<month>[0-9][0-9]?)(\.(?<year>[0-9][0-9]([0-9][0-9])?))?)($| )/gi,
+	// Each entry is the inner date pattern (the part between the boundary anchors).
+	// Original regexes were: /(^| )(?<found>PATTERN)($| )/gi
+	const datePatterns: string[] = [
+		'(?<found>(?<month>[0-9][0-9]?)\\/(?<day>[0-9][0-9]?)(\\/(?<year>[0-9][0-9]([0-9][0-9])?))?)',
+		'(?<found>(?<year>[0-9][0-9][0-9][0-9]?)\\/(?<month>[0-9][0-9]?)\\/(?<day>[0-9][0-9]))',
+		'(?<found>(?<year>[0-9][0-9][0-9][0-9]?)-(?<month>[0-9][0-9]?)-(?<day>[0-9][0-9]))',
+		'(?<found>(?<day>[0-9][0-9]?)\\.(?<month>[0-9][0-9]?)(\\.(?<year>[0-9][0-9]([0-9][0-9])?))?)',
 	]
 
 	let result: string | null = null
@@ -176,8 +178,8 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 	let containsYear = true
 
 	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or "06/24/2021" or "27/01" or "01/27"
-	for (const dateRegex of dateRegexes) {
-		results = dateRegex.exec(text)
+	for (const datePattern of datePatterns) {
+		results = matchDateAtBoundary(text, datePattern, 'gi')
 		if (results !== null) {
 			const {day, month, year, found} = {...results.groups}
 			let tmp_year = year
