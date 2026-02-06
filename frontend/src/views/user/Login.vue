@@ -211,6 +211,7 @@ async function submit() {
 	try {
 		await authStore.login(credentials)
 		authStore.setNeedsTotpPasscode(false)
+		redirectIfSaved()
 	} catch (e) {
 		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
 			return
