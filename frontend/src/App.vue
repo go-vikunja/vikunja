@@ -48,6 +48,7 @@ import {useColorScheme} from '@/composables/useColorScheme'
 import {useBodyClass} from '@/composables/useBodyClass'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
+import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 
 const importAccountDeleteService = () => import('@/services/accountDelete')
 import {success} from '@/message'
@@ -57,13 +58,6 @@ const baseStore = useBaseStore()
 
 const route = useRoute()
 
-const AUTH_ROUTE_NAMES = new Set([
-	'user.login',
-	'user.register',
-	'user.password-reset.request',
-	'user.password-reset.reset',
-	'openid.auth',
-])
 const showAuthLayout = computed(() => authStore.authUser && !AUTH_ROUTE_NAMES.has(route.name as string))
 
 useBodyClass('is-touch', isTouchDevice())
