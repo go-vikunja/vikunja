@@ -6,6 +6,7 @@ import {getProjectViewId} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
+import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 
 import {useAuthStore} from '@/stores/auth'
 
@@ -421,14 +422,7 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 
 	// Check if the route the user wants to go to is a route which needs authentication. We use this to
 	// redirect the user after successful login.
-	const isValidUserAppRoute = ![
-		'user.login',
-		'user.password-reset.request',
-		'user.password-reset.reset',
-		'user.register',
-		'link-share.auth',
-		'openid.auth',
-	].includes(to.name as string) &&
+	const isValidUserAppRoute = !AUTH_ROUTE_NAMES.has(to.name as string) &&
 		localStorage.getItem('emailConfirmToken') === null
 	
 	if (isValidUserAppRoute) {
