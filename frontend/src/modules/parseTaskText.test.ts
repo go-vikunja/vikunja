@@ -377,6 +377,13 @@ describe('Parse Task Text', () => {
 					expect(result.date).toBeNull()
 				})
 			})
+
+			it('should not parse a dot-separated date from the middle of text', () => {
+				const result = parseTaskText('The 1.2 formula')
+
+				expect(result.text).toBe('The 1.2 formula')
+				expect(result.date).toBeNull()
+			})
 		})
 		it('should not recognize date number with no spacing around them', () => {
 			const result = parseTaskText('Lorem Ispum v1.1.1')
