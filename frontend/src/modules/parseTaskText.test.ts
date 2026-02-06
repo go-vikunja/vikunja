@@ -398,6 +398,7 @@ describe('Parse Task Text', () => {
 				{input: 'Lorem Ipsum 06/26/2021', dateStr: '2021-6-26', text: 'Lorem Ipsum'},
 				{input: '01.02 Lorem Ipsum', dateStr: '2022-2-1', text: 'Lorem Ipsum'},
 				{input: 'Lorem Ipsum 01.02', dateStr: '2022-2-1', text: 'Lorem Ipsum'},
+				{input: 'The 9/11 Report due 10/12', dateStr: '2021-10-12', text: 'The 9/11 Report due'},
 			]
 
 			boundaryTests.forEach(({input, dateStr, text}) => {

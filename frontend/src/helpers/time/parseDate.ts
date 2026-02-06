@@ -24,18 +24,18 @@ const monthsRegexGroup = '(january|february|march|april|june|july|august|septemb
  */
 function matchDateAtBoundary(text: string, pattern: string): RegExpExecArray | null {
 	const regex = new RegExp(`(^| )${pattern}($| )`, 'gi')
-	const result = regex.exec(text)
-	if (result === null) return null
+	let result: RegExpExecArray | null
+	while ((result = regex.exec(text)) !== null) {
+		const matchEnd = result.index + result[0].length
+		const isAtStart = result.index === 0
+		const isAtEnd = matchEnd >= text.length
 
-	const matchEnd = result.index + result[0].length
-	const isAtStart = result.index === 0
-	const isAtEnd = matchEnd >= text.length
+		if (isAtStart || isAtEnd) return result
 
-	if (isAtStart || isAtEnd) return result
-
-	// Allow middle-of-text matches when followed by a time expression
-	const afterMatch = text.substring(matchEnd)
-	if (/^(at |@ )/i.test(afterMatch)) return result
+		// Allow middle-of-text matches when followed by a time expression
+		const afterMatch = text.substring(matchEnd)
+		if (/^(at |@ )/i.test(afterMatch)) return result
+	}
 
 	return null
 }
