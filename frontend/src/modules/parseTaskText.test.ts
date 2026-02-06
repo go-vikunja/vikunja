@@ -392,6 +392,8 @@ describe('Parse Task Text', () => {
 			const boundaryTests = [
 				{input: '9/11 meeting', dateStr: '2021-9-11', text: 'meeting'},
 				{input: 'meeting 9/11', dateStr: '2021-9-11', text: 'meeting'},
+				{input: 'meeting 9/11 at 10:00', dateStr: '2021-9-11', text: 'meeting'},
+				{input: 'meeting 9/11 @ 15:00', dateStr: '2021-9-11', text: 'meeting'},
 				{input: '2021-06-24 Lorem Ipsum', dateStr: '2021-6-24', text: 'Lorem Ipsum'},
 				{input: 'Lorem Ipsum 06/26/2021', dateStr: '2021-6-26', text: 'Lorem Ipsum'},
 				{input: '01.02 Lorem Ipsum', dateStr: '2022-2-1', text: 'Lorem Ipsum'},
