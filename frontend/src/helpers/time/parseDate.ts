@@ -163,8 +163,6 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 }
 
 export const getDateFromText = (text: string, now: Date = new Date()) => {
-	// Each entry is the inner date pattern (the part between the boundary anchors).
-	// Original regexes were: /(^| )(?<found>PATTERN)($| )/gi
 	const datePatterns: string[] = [
 		'(?<found>(?<month>[0-9][0-9]?)\\/(?<day>[0-9][0-9]?)(\\/(?<year>[0-9][0-9]([0-9][0-9])?))?)',
 		'(?<found>(?<year>[0-9][0-9][0-9][0-9]?)\\/(?<month>[0-9][0-9]?)\\/(?<day>[0-9][0-9]))',
