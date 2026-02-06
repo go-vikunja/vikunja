@@ -21,16 +21,16 @@ const monthsRegexGroup = '(january|february|march|april|june|july|august|septemb
  *
  * The pattern is tested in two passes: first anchored to the start, then anchored to the end.
  */
-function matchDateAtBoundary(text: string, pattern: string, flags: string): RegExpExecArray | null {
+function matchDateAtBoundary(text: string, pattern: string): RegExpExecArray | null {
 	// Pass 1: try matching at the start of the text
-	const startRegex = new RegExp(`^${pattern}($| )`, flags)
+	const startRegex = new RegExp(`^${pattern}($| )`, 'gi')
 	const startResult = startRegex.exec(text)
 	if (startResult !== null) {
 		return startResult
 	}
 
 	// Pass 2: try matching at the end of the text
-	const endRegex = new RegExp(`(^| )${pattern}$`, flags)
+	const endRegex = new RegExp(`(^| )${pattern}$`, 'gi')
 	return endRegex.exec(text)
 }
 
@@ -179,7 +179,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 
 	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or "06/24/2021" or "27/01" or "01/27"
 	for (const datePattern of datePatterns) {
-		results = matchDateAtBoundary(text, datePattern, 'gi')
+		results = matchDateAtBoundary(text, datePattern)
 		if (results !== null) {
 			const {day, month, year, found} = {...results.groups}
 			let tmp_year = year
