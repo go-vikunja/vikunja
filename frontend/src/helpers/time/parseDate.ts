@@ -14,6 +14,26 @@ interface dateFoundResult {
 
 const monthsRegexGroup = '(january|february|march|april|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)'
 
+/**
+ * Tries matching a date regex against text, but only at the start or end of the string.
+ * This prevents false positives like "The 9/11 Report" where the date-like pattern
+ * appears in the middle of the text.
+ *
+ * The pattern is tested in two passes: first anchored to the start, then anchored to the end.
+ */
+function matchDateAtBoundary(text: string, pattern: string, flags: string): RegExpExecArray | null {
+	// Pass 1: try matching at the start of the text
+	const startRegex = new RegExp(`^${pattern}($| )`, flags)
+	const startResult = startRegex.exec(text)
+	if (startResult !== null) {
+		return startResult
+	}
+
+	// Pass 2: try matching at the end of the text
+	const endRegex = new RegExp(`(^| )${pattern}$`, flags)
+	return endRegex.exec(text)
+}
+
 function matchesDateExpr(text: string, dateExpr: string): boolean {
 	return text.match(new RegExp('(^| )' + dateExpr, 'gi')) !== null
 }
