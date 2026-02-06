@@ -362,6 +362,23 @@ describe('Parse Task Text', () => {
 				})
 			})
 		})
+		describe('Should not parse dates from the middle of text', () => {
+			const cases = [
+				'The 9/11 Report',
+				'The 01/02 Report',
+				'a]7/8 debate',
+				'24/7 availability',
+			]
+
+			cases.forEach(c => {
+				it(`should not parse a date from '${c}'`, () => {
+					const result = parseTaskText(c)
+
+					expect(result.text).toBe(c)
+					expect(result.date).toBeNull()
+				})
+			})
+		})
 		it('should not recognize date number with no spacing around them', () => {
 			const result = parseTaskText('Lorem Ispum v1.1.1')
 
