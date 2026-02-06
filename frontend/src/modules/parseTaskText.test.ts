@@ -385,6 +385,30 @@ describe('Parse Task Text', () => {
 				expect(result.date).toBeNull()
 			})
 		})
+		describe('Should still parse dates at text boundaries', () => {
+			const now = new Date()
+			now.setFullYear(2021, 5, 24)
+
+			const boundaryTests = [
+				{input: '9/11 meeting', dateStr: '2021-9-11', text: 'meeting'},
+				{input: 'meeting 9/11', dateStr: '2021-9-11', text: 'meeting'},
+				{input: '2021-06-24 Lorem Ipsum', dateStr: '2021-6-24', text: 'Lorem Ipsum'},
+				{input: 'Lorem Ipsum 06/26/2021', dateStr: '2021-6-26', text: 'Lorem Ipsum'},
+				{input: '01.02 Lorem Ipsum', dateStr: '2022-2-1', text: 'Lorem Ipsum'},
+				{input: 'Lorem Ipsum 01.02', dateStr: '2022-2-1', text: 'Lorem Ipsum'},
+			]
+
+			boundaryTests.forEach(({input, dateStr, text}) => {
+				it(`should parse a date from '${input}'`, () => {
+					const result = parseTaskText(input, PrefixMode.Default, now)
+
+					expect(result.text.trim()).toBe(text)
+					const d = result.date
+					expect(d).not.toBeNull()
+					expect(`${d?.getFullYear()}-${(d?.getMonth() ?? 0) + 1}-${d?.getDate()}`).toBe(dateStr)
+				})
+			})
+		})
 		it('should not recognize date number with no spacing around them', () => {
 			const result = parseTaskText('Lorem Ispum v1.1.1')
 
