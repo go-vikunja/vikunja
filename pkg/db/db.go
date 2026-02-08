@@ -220,7 +220,7 @@ func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, 
 	default:
 		dataDir, err := getUserDataDir()
 		if err != nil {
-			log.Debugf("Could not get user data directory, falling back to rootpath: %v", err)
+			log.Warningf("Could not get user data directory, falling back to rootpath: %v", err)
 			path = filepath.Join(cfg.RootPath, cfg.ConfiguredPath)
 		} else {
 			path = filepath.Join(dataDir, cfg.ConfiguredPath)
