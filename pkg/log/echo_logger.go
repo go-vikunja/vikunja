@@ -22,6 +22,6 @@ import (
 
 // NewEchoLogger creates and initializes a new slog logger for Echo v5
 func NewEchoLogger(configLogEnabled bool, configLogEcho string, configLogFormat string) *slog.Logger {
-	handler := makeLogHandler(configLogEnabled, configLogEcho, "DEBUG", configLogFormat)
+	handler := makeLogHandler(configLogEnabled, configLogEcho, "http", "DEBUG", configLogFormat)
 	return slog.New(handler).With("component", "http")
 }

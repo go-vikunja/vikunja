@@ -29,7 +29,7 @@ type WatermillLogger struct {
 
 // NewWatermillLogger creates and initializes a new watermill logger
 func NewWatermillLogger(configLogEnabled bool, configLogEvents string, configLogEventsLevel string, configLogFormat string) *WatermillLogger {
-	handler := makeLogHandler(configLogEnabled, configLogEvents, configLogEventsLevel, configLogFormat)
+	handler := makeLogHandler(configLogEnabled, configLogEvents, "events", configLogEventsLevel, configLogFormat)
 
 	watermillLogger := &WatermillLogger{
 		logger: slog.New(handler).With("component", "events"),
