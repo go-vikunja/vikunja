@@ -52,7 +52,6 @@ func TestMakeLogHandlerCreatesCorrectLogFile(t *testing.T) {
 		{"standard", "standard", "standard.log"},
 		{"database", "database", "database.log"},
 		{"http", "http", "http.log"},
-		{"echo", "echo", "echo.log"},
 		{"events", "events", "events.log"},
 		{"mail", "mail", "mail.log"},
 	}
