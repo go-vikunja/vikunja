@@ -528,6 +528,11 @@
                             "key": "usepathstyle",
                             "default_value": "false",
                             "comment": "Whether to use path-style addressing (e.g., https://s3.amazonaws.com/bucket/key) instead of virtual-hosted-style (e.g., https://bucket.s3.amazonaws.com/key). This is commonly needed for self-hosted S3-compatible services. Some providers only support one style or the other."
+                        },
+                        {
+                            "key": "disablesigning",
+                            "default_value": "false",
+                            "comment": "When enabled, the S3 client will send UNSIGNED-PAYLOAD instead of computing a SHA256 hash for request signing. Some S3-compatible providers (such as Ceph RadosGW, Clever Cloud Cellar) do not correctly verify payload signatures and return XAmzContentSHA256Mismatch errors. Enabling this option works around the issue. Only applies over HTTPS."
                         }
                     ]
                 }

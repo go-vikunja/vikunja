@@ -33,6 +33,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -97,6 +98,9 @@ func initS3FileHandler() error {
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
 		o.BaseEndpoint = aws.String(endpoint)
 		o.UsePathStyle = config.FilesS3UsePathStyle.GetBool()
+		if config.FilesS3DisableSigning.GetBool() {
+			o.APIOptions = append(o.APIOptions, v4.SwapComputePayloadSHA256ForUnsignedPayloadMiddleware)
+		}
 	})
 
 	// Initialize S3 filesystem using afero-s3

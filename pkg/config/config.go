@@ -162,13 +162,14 @@ const (
 	FilesType     Key = `files.type`
 
 	// S3 Configuration
-	FilesS3Endpoint     Key = `files.s3.endpoint`
-	FilesS3Bucket       Key = `files.s3.bucket`
-	FilesS3Region       Key = `files.s3.region`
-	FilesS3AccessKey    Key = `files.s3.accesskey`
-	FilesS3SecretKey    Key = `files.s3.secretkey`
-	FilesS3UsePathStyle Key = `files.s3.usepathstyle`
-	FilesS3TempDir      Key = `files.s3.tempdir`
+	FilesS3Endpoint       Key = `files.s3.endpoint`
+	FilesS3Bucket         Key = `files.s3.bucket`
+	FilesS3Region         Key = `files.s3.region`
+	FilesS3AccessKey      Key = `files.s3.accesskey`
+	FilesS3SecretKey      Key = `files.s3.secretkey`
+	FilesS3UsePathStyle   Key = `files.s3.usepathstyle`
+	FilesS3DisableSigning Key = `files.s3.disablesigning`
+	FilesS3TempDir        Key = `files.s3.tempdir`
 
 	MigrationTodoistEnable             Key = `migration.todoist.enable`
 	MigrationTodoistClientID           Key = `migration.todoist.clientid`
@@ -446,6 +447,7 @@ func InitDefaultConfig() {
 	FilesS3AccessKey.setDefault("")
 	FilesS3SecretKey.setDefault("")
 	FilesS3UsePathStyle.setDefault(false)
+	FilesS3DisableSigning.setDefault(false)
 	FilesS3TempDir.setDefault("")
 	// Cors
 	CorsEnable.setDefault(true)
