@@ -117,6 +117,17 @@ func Test_resolveDatabasePath(t *testing.T) {
 		},
 
 		{
+			name: "os.Executable failure falls back to user data dir",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "vikunja.db",
+				RootPath:       "/opt/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "/home/user/.local/share/vikunja/vikunja.db",
+		},
+
+		{
 			name: "falls back to rootpath when getUserDataDir fails",
 			cfg: DatabasePathConfig{
 				ConfiguredPath: "vikunja.db",

@@ -231,11 +231,17 @@ func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, 
 }
 
 func initSqliteEngine() (engine *xorm.Engine, err error) {
-	execPath, _ := os.Executable()
+	rootPath := config.ServiceRootpath.GetString()
+
+	executablePath := rootPath
+	if execPath, err := os.Executable(); err == nil {
+		executablePath = filepath.Dir(execPath)
+	}
+
 	cfg := DatabasePathConfig{
 		ConfiguredPath: config.DatabasePath.GetString(),
-		RootPath:       config.ServiceRootpath.GetString(),
-		ExecutablePath: filepath.Dir(execPath),
+		RootPath:       rootPath,
+		ExecutablePath: executablePath,
 	}
 
 	path, err := resolveDatabasePath(cfg, getUserDataDir)
