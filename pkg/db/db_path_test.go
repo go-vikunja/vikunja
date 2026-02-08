@@ -52,7 +52,6 @@ func Test_resolveDatabasePath(t *testing.T) {
 		expected       string
 		expectError    bool
 	}{
-		// Memory special case
 		{
 			name: "memory database",
 			cfg: DatabasePathConfig{
@@ -64,7 +63,6 @@ func Test_resolveDatabasePath(t *testing.T) {
 			expected:       "memory",
 		},
 
-		// Absolute paths - THE BUG FROM ISSUE #2189
 		{
 			name: "absolute path should be used as-is",
 			cfg: DatabasePathConfig{
@@ -86,7 +84,6 @@ func Test_resolveDatabasePath(t *testing.T) {
 			expected:       "/data/mydb.db",
 		},
 
-		// Relative paths with explicit rootpath
 		{
 			name: "relative path with explicit rootpath",
 			cfg: DatabasePathConfig{
@@ -108,7 +105,6 @@ func Test_resolveDatabasePath(t *testing.T) {
 			expected:       "/var/lib/vikunja/data/vikunja.db",
 		},
 
-		// Relative paths with default rootpath (uses user data dir)
 		{
 			name: "relative path with default rootpath uses user data dir",
 			cfg: DatabasePathConfig{
@@ -120,7 +116,6 @@ func Test_resolveDatabasePath(t *testing.T) {
 			expected:       "/home/user/.local/share/vikunja/vikunja.db",
 		},
 
-		// Fallback when getUserDataDir fails
 		{
 			name: "falls back to rootpath when getUserDataDir fails",
 			cfg: DatabasePathConfig{
@@ -132,7 +127,6 @@ func Test_resolveDatabasePath(t *testing.T) {
 			expected:       "/opt/vikunja/vikunja.db",
 		},
 
-		// Edge cases
 		{
 			name: "empty configured path with explicit rootpath",
 			cfg: DatabasePathConfig{
@@ -181,8 +175,6 @@ func Test_resolveDatabasePath(t *testing.T) {
 }
 
 func Test_resolveDatabasePath_Integration(t *testing.T) {
-	// Integration tests using the real getUserDataDir function
-
 	t.Run("with explicitly configured rootpath", func(t *testing.T) {
 		cfg := DatabasePathConfig{
 			ConfiguredPath: "vikunja.db",
@@ -198,7 +190,6 @@ func Test_resolveDatabasePath_Integration(t *testing.T) {
 	})
 
 	t.Run("with default rootpath uses user data directory", func(t *testing.T) {
-		// Get the actual executable path
 		execPath, err := os.Executable()
 		require.NoError(t, err)
 		execDir := filepath.Dir(execPath)
@@ -212,22 +203,16 @@ func Test_resolveDatabasePath_Integration(t *testing.T) {
 		result, err := resolveDatabasePath(cfg, getUserDataDir)
 		require.NoError(t, err)
 
-		// Result should contain the platform-specific user data directory
-		// and not be in the executable directory
 		assert.NotEqual(t, filepath.Join(execDir, "vikunja.db"), result)
 		assert.Contains(t, result, "vikunja.db")
 
-		// Verify it's using a platform-appropriate path
 		switch runtime.GOOS {
 		case "windows":
-			// Should be in %LOCALAPPDATA%\Vikunja or %USERPROFILE%\AppData\Local\Vikunja
 			assert.Contains(t, result, "Vikunja")
 		case "darwin":
-			// Should be in ~/Library/Application Support/Vikunja
 			assert.Contains(t, result, "Library")
 			assert.Contains(t, result, "Application Support")
 		default:
-			// Should be in ~/.local/share/vikunja or $XDG_DATA_HOME/vikunja
 			assert.NotEqual(t,
 				filepath.Dir(result),
 				execDir,
@@ -300,13 +285,11 @@ func Test_resolveDatabasePath_Windows(t *testing.T) {
 }
 
 func TestGetUserDataDir(t *testing.T) {
-
 	test := func() string {
 		dataDir, err := getUserDataDir()
 		require.NoError(t, err)
 		assert.NotEmpty(t, dataDir)
 
-		// Verify the directory was created
 		info, err := os.Stat(dataDir)
 		require.NoError(t, err)
 		assert.True(t, info.IsDir())
@@ -314,7 +297,6 @@ func TestGetUserDataDir(t *testing.T) {
 		return dataDir
 	}
 
-	// Verify platform-specific paths
 	switch runtime.GOOS {
 	case "windows":
 		dataDir := test()
@@ -354,7 +336,6 @@ func TestIsSystemDirectory(t *testing.T) {
 		path     string
 		expected bool
 	}{
-		// Windows system directories
 		{
 			name:     "Windows System32",
 			path:     "C:\\Windows\\System32\\vikunja.db",
@@ -375,7 +356,6 @@ func TestIsSystemDirectory(t *testing.T) {
 			path:     "c:\\windows\\system32\\vikunja.db",
 			expected: runtime.GOOS == "windows",
 		},
-		// Unix-like system directories
 		{
 			name:     "/bin",
 			path:     "/bin/vikunja.db",
@@ -396,7 +376,6 @@ func TestIsSystemDirectory(t *testing.T) {
 			path:     "/etc/vikunja.db",
 			expected: runtime.GOOS != "windows",
 		},
-		// Non-system directories
 		{
 			name:     "user home directory (Unix)",
 			path:     "/home/user/vikunja.db",
