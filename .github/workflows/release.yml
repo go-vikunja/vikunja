@@ -104,6 +104,16 @@ jobs:
           gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
       - name: sign
         run: |
+          echo "=== GPG agent status ==="
+          gpg-connect-agent 'keyinfo --list' /bye || true
+          echo "=== GPG secret keys ==="
+          gpg -K --with-keygrip
+          echo "=== GPG public keys ==="
+          gpg --list-keys
+          echo "=== GNUPG directory contents ==="
+          ls -la ~/.gnupg/
+          ls -la ~/.gnupg/private-keys-v1.d/ || true
+          echo "=== Signing files ==="
           ls -hal dist/zip/*
           for file in dist/zip/*; do
             gpg -v --default-key 7D061A4AA61436B40713D42EFF054DACD908493A -b --batch --yes --passphrase "${{ secrets.RELEASE_GPG_PASSPHRASE }}" --pinentry-mode loopback --sign "$file"
