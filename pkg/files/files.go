@@ -154,15 +154,11 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 }
 
 // writeToStorage writes content to the given path, handling both local and S3 backends.
-// The reader is always seeked to position 0 before writing to ensure consistent behavior.
 func writeToStorage(path string, content io.ReadSeeker, size uint64) error {
-	// Seek to start to ensure we write the complete content regardless of
-	// the reader's current position
-	if _, err := content.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("failed to seek to start of content: %w", err)
-	}
-
 	if s3Client == nil {
+		if _, err := content.Seek(0, io.SeekStart); err != nil {
+			return fmt.Errorf("failed to seek to start of content: %w", err)
+		}
 		return afs.WriteReader(path, content)
 	}
 
@@ -171,9 +167,8 @@ func writeToStorage(path string, content io.ReadSeeker, size uint64) error {
 		return fmt.Errorf("failed to determine S3 upload content length: %w", err)
 	}
 
-	_, err = content.Seek(0, io.SeekStart)
-	if err != nil {
-		return fmt.Errorf("failed to seek S3 upload body to start: %w", err)
+	if _, err = content.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("failed to seek to start before S3 upload: %w", err)
 	}
 
 	_, err = s3Client.PutObject(context.Background(), &s3.PutObjectInput{
@@ -197,18 +192,9 @@ func (f *File) Save(fcontent io.ReadSeeker) error {
 	return keyvalue.IncrBy(metrics.FilesCountKey, 1)
 }
 
+// contentLengthFromReadSeeker determines the content length by seeking to the end.
 func contentLengthFromReadSeeker(seeker io.ReadSeeker, expectedSize uint64) (int64, error) {
-	currentOffset, err := seeker.Seek(0, io.SeekCurrent)
-	if err != nil {
-		return 0, err
-	}
-
 	endOffset, err := seeker.Seek(0, io.SeekEnd)
-	if err != nil {
-		return 0, err
-	}
-
-	_, err = seeker.Seek(currentOffset, io.SeekStart)
 	if err != nil {
 		return 0, err
 	}
