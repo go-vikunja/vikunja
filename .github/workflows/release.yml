@@ -83,11 +83,6 @@ jobs:
           sha256sum -c upx-5.0.0-amd64_linux.tar.xz.sha256
           tar xf upx-5.0.0-amd64_linux.tar.xz
           mv upx-5.0.0-amd64_linux/upx /usr/local/bin
-      - name: GPG setup
-        uses: kolaente/action-gpg@main
-        with:
-          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
-          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
       - name: setup xgo cache
         uses: useblacksmith/cache@71c7c918062ba3861252d84b07fe5ab2a6b467a6 # v5
         with:
@@ -102,6 +97,11 @@ jobs:
         run: |
           export PATH=$PATH:$GOPATH/bin
           ./mage-static release
+      - name: GPG setup
+        uses: kolaente/action-gpg@main
+        with:
+          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
+          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
       - name: sign
         run: |
           ls -hal dist/zip/*
