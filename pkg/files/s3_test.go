@@ -367,7 +367,7 @@ func TestFileSave_S3_ReturnsErrorOnPutObjectFailure(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to upload file to S3")
 }
 
-func TestFileSave_S3_LogsWarnOnSizeMismatch(t *testing.T) {
+func TestFileSave_S3_UsesActualReaderSizeOnMismatch(t *testing.T) {
 	originalClient := s3Client
 	originalBucket := s3Bucket
 	t.Cleanup(func() {
