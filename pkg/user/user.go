@@ -461,24 +461,14 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 	if err != nil {
 		return nil, err
 	}
-	email, err := getClaimAsString(claims, "email")
-	if err != nil {
-		return nil, err
-	}
 	username, err := getClaimAsString(claims, "username")
-	if err != nil {
-		return nil, err
-	}
-	name, err := getClaimAsString(claims, "name")
 	if err != nil {
 		return nil, err
 	}
 
 	return &User{
 		ID:       userID,
-		Email:    email,
 		Username: username,
-		Name:     name,
 	}, nil
 }
 
