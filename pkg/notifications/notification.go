@@ -146,8 +146,12 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 		return err
 	}
 
-	return events.Dispatch(&NotificationCreatedEvent{
+	if err := events.Dispatch(&NotificationCreatedEvent{
 		Notification: dbNotification,
 		UserID:       notifiable.RouteForDB(),
-	})
+	}); err != nil {
+		log.Errorf("Failed to dispatch notification created event: %v", err)
+	}
+
+	return nil
 }
