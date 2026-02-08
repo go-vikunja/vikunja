@@ -206,31 +206,28 @@ type DatabasePathConfig struct {
 //
 // The getUserDataDir parameter allows injecting a mock for testing.
 func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, error)) (string, error) {
-	// Handle memory special case
 	if cfg.ConfiguredPath == "memory" {
 		return "memory", nil
 	}
 
-	// Absolute paths are used as-is
-	if filepath.IsAbs(cfg.ConfiguredPath) {
-		return filepath.Clean(cfg.ConfiguredPath), nil
+	var path string
+
+	switch {
+	case filepath.IsAbs(cfg.ConfiguredPath):
+		path = filepath.Clean(cfg.ConfiguredPath)
+	case cfg.RootPath != cfg.ExecutablePath:
+		path = filepath.Join(cfg.RootPath, cfg.ConfiguredPath)
+	default:
+		dataDir, err := getUserDataDir()
+		if err != nil {
+			log.Debugf("Could not get user data directory, falling back to rootpath: %v", err)
+			path = filepath.Join(cfg.RootPath, cfg.ConfiguredPath)
+		} else {
+			path = filepath.Join(dataDir, cfg.ConfiguredPath)
+		}
 	}
 
-	// Relative path resolution
-	// Check if rootpath was explicitly configured (differs from executable location)
-	if cfg.RootPath != cfg.ExecutablePath {
-		return filepath.Join(cfg.RootPath, cfg.ConfiguredPath), nil
-	}
-
-	// Use platform-specific user data directory
-	dataDir, err := getUserDataDir()
-	if err != nil {
-		// Fall back to rootpath if user data dir fails
-		log.Debugf("Could not get user data directory, falling back to rootpath: %v", err)
-		return filepath.Join(cfg.RootPath, cfg.ConfiguredPath), nil
-	}
-
-	return filepath.Join(dataDir, cfg.ConfiguredPath), nil
+	return filepath.Abs(path)
 }
 
 func initSqliteEngine() (engine *xorm.Engine, err error) {
@@ -248,11 +245,6 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 
 	if path == "memory" {
 		return xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
-	}
-
-	path, err = filepath.Abs(path)
-	if err != nil {
-		return nil, fmt.Errorf("could not resolve database path to absolute path: %w", err)
 	}
 
 	log.Infof("Using SQLite database at: %s", path)
