@@ -25,7 +25,7 @@ const authenticated = ref(false)
 let manuallyDisconnected = false
 
 function getWebSocketUrl(): string {
-	const base = window.API_URL
+	const base = window.API_URL.replace(/\/+$/, '')
 	const wsProtocol = base.startsWith('https') ? 'wss' : 'ws'
 	return base.replace(/^https?/, wsProtocol) + '/ws'
 }
@@ -93,6 +93,11 @@ function scheduleReconnect() {
 		return
 	}
 
+	if (reconnectTimer) {
+		clearTimeout(reconnectTimer)
+		reconnectTimer = null
+	}
+
 	const delay = Math.min(
 		RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempt),
 		RECONNECT_MAX_DELAY,
@@ -101,6 +106,7 @@ function scheduleReconnect() {
 	console.debug(`WebSocket: reconnecting in ${delay}ms (attempt ${reconnectAttempt})`)
 
 	reconnectTimer = setTimeout(() => {
+		reconnectTimer = null
 		connect()
 	}, delay)
 }
