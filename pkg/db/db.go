@@ -234,16 +234,9 @@ func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, 
 }
 
 func initSqliteEngine() (engine *xorm.Engine, err error) {
-	configuredPath := config.DatabasePath.GetString()
-
-	// Handle memory special case early
-	if configuredPath == "memory" {
-		return xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
-	}
-
 	execPath, _ := os.Executable()
 	cfg := DatabasePathConfig{
-		ConfiguredPath: configuredPath,
+		ConfiguredPath: config.DatabasePath.GetString(),
 		RootPath:       config.ServiceRootpath.GetString(),
 		ExecutablePath: filepath.Dir(execPath),
 	}
@@ -253,13 +246,15 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		return nil, fmt.Errorf("could not resolve database path: %w", err)
 	}
 
-	// Convert to absolute path for logging
+	if path == "memory" {
+		return xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
+	}
+
 	path, err = filepath.Abs(path)
 	if err != nil {
 		return nil, fmt.Errorf("could not resolve database path to absolute path: %w", err)
 	}
 
-	// Log the resolved database path
 	log.Infof("Using SQLite database at: %s", path)
 
 	// Warn if the database is in a potentially problematic location
