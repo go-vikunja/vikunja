@@ -30,6 +30,7 @@ import (
 const (
 	writeTimeout = 10 * time.Second
 	pingInterval = 30 * time.Second
+	authTimeout  = 30 * time.Second
 	sendBufSize  = 64
 )
 
@@ -101,6 +102,15 @@ func (c *Connection) ReadLoop(ctx context.Context, cancel context.CancelFunc) {
 		}
 		c.ws.Close(websocket.StatusNormalClosure, "")
 	}()
+
+	// Close the connection if auth doesn't happen within the timeout
+	authTimer := time.AfterFunc(authTimeout, func() {
+		if !c.IsAuthenticated() {
+			log.Debugf("WebSocket: closing unauthenticated connection after timeout")
+			c.ws.Close(websocket.StatusPolicyViolation, "auth timeout")
+		}
+	})
+	defer authTimer.Stop()
 
 	for {
 		_, data, err := c.ws.Read(ctx)
