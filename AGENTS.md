@@ -70,6 +70,8 @@ After creation, tell the user where they can find the new worktree.
 - **Clean**: `mage build:clean` - Cleans build artifacts
 - **Format**: `mage fmt` - Format Go code before committing
 
+**IMPORTANT:** To run api tests, you MUST use the `mage test:web`, or `mage test:feature` or `mage test:filter` commands. Using plain `go test` will not work!
+
 **Go Tips:**
 - To see source files from a dependency, or to answer questions about a dependency, run `go mod download -json MODULE` and use the returned `Dir` path to read the files.
 - Use `go doc foo.Bar` or `go doc -all foo` to read documentation for packages, types, functions, etc.
