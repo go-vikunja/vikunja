@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestResolveDatabasePath(t *testing.T) {
+func Test_resolveDatabasePath(t *testing.T) {
 	mockGetUserDataDir := func(path string) func() (string, error) {
 		return func() (string, error) {
 			return path, nil
@@ -167,7 +167,7 @@ func TestResolveDatabasePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := ResolveDatabasePath(tt.cfg, tt.getUserDataDir)
+			result, err := resolveDatabasePath(tt.cfg, tt.getUserDataDir)
 
 			if tt.expectError {
 				require.Error(t, err)
@@ -180,7 +180,7 @@ func TestResolveDatabasePath(t *testing.T) {
 	}
 }
 
-func TestResolveDatabasePath_Integration(t *testing.T) {
+func Test_resolveDatabasePath_Integration(t *testing.T) {
 	// Integration tests using the real getUserDataDir function
 
 	t.Run("with explicitly configured rootpath", func(t *testing.T) {
@@ -190,7 +190,7 @@ func TestResolveDatabasePath_Integration(t *testing.T) {
 			ExecutablePath: "/opt/vikunja",
 		}
 
-		result, err := ResolveDatabasePath(cfg, getUserDataDir)
+		result, err := resolveDatabasePath(cfg, getUserDataDir)
 		require.NoError(t, err)
 
 		expected := filepath.Join("/custom/path", "vikunja.db")
@@ -209,7 +209,7 @@ func TestResolveDatabasePath_Integration(t *testing.T) {
 			ExecutablePath: execDir,
 		}
 
-		result, err := ResolveDatabasePath(cfg, getUserDataDir)
+		result, err := resolveDatabasePath(cfg, getUserDataDir)
 		require.NoError(t, err)
 
 		// Result should contain the platform-specific user data directory
@@ -243,7 +243,7 @@ func TestResolveDatabasePath_Integration(t *testing.T) {
 			ExecutablePath: "/opt/vikunja",
 		}
 
-		result, err := ResolveDatabasePath(cfg, getUserDataDir)
+		result, err := resolveDatabasePath(cfg, getUserDataDir)
 		require.NoError(t, err)
 
 		expected := filepath.Join("/custom/path", "data", "vikunja.db")
@@ -251,7 +251,7 @@ func TestResolveDatabasePath_Integration(t *testing.T) {
 	})
 }
 
-func TestResolveDatabasePath_Windows(t *testing.T) {
+func Test_resolveDatabasePath_Windows(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		t.Skip("Skipping Windows-specific test on non-Windows platform")
 	}
@@ -292,7 +292,7 @@ func TestResolveDatabasePath_Windows(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := ResolveDatabasePath(tt.cfg, tt.getUserDataDir)
+			result, err := resolveDatabasePath(tt.cfg, tt.getUserDataDir)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, result)
 		})

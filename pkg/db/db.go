@@ -194,7 +194,7 @@ type DatabasePathConfig struct {
 	ExecutablePath string // Directory of the executable binary
 }
 
-// ResolveDatabasePath resolves a database path configuration to an absolute path.
+// resolveDatabasePath resolves a database path configuration to an absolute path.
 //
 // Resolution rules:
 //  1. If ConfiguredPath is "memory", returns "memory" (special case for in-memory DB)
@@ -205,7 +205,7 @@ type DatabasePathConfig struct {
 //     b. Otherwise, joins with platform-specific user data directory
 //
 // The getUserDataDir parameter allows injecting a mock for testing.
-func ResolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, error)) (string, error) {
+func resolveDatabasePath(cfg DatabasePathConfig, getUserDataDir func() (string, error)) (string, error) {
 	// Handle memory special case
 	if cfg.ConfiguredPath == "memory" {
 		return "memory", nil
@@ -248,7 +248,7 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		ExecutablePath: filepath.Dir(execPath),
 	}
 
-	path, err := ResolveDatabasePath(cfg, getUserDataDir)
+	path, err := resolveDatabasePath(cfg, getUserDataDir)
 	if err != nil {
 		return nil, fmt.Errorf("could not resolve database path: %w", err)
 	}
