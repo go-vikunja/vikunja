@@ -325,7 +325,6 @@ export const useAuthStore = defineStore('auth', () => {
 			const newUser = new UserModel({
 				...response.data,
 				...(info.value?.type && {type: info.value?.type}),
-				...(info.value?.email && {email: info.value?.email}),
 				...(info.value?.exp && {exp: info.value?.exp}),
 			})
 

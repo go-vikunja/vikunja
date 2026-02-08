@@ -70,11 +70,7 @@ func NewUserJWTAuthtoken(u *user.User, long bool) (token string, err error) {
 	claims["type"] = AuthTypeUser
 	claims["id"] = u.ID
 	claims["username"] = u.Username
-	claims["email"] = u.Email
 	claims["exp"] = exp
-	claims["name"] = u.Name
-	claims["emailRemindersEnabled"] = u.EmailRemindersEnabled
-	claims["isLocalUser"] = u.Issuer == user.IssuerLocal
 	claims["long"] = long
 
 	// Generate encoded token and send it as response.
@@ -97,7 +93,6 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 	claims["permission"] = share.Permission
 	claims["sharedByID"] = share.SharedByID
 	claims["exp"] = exp
-	claims["isLocalUser"] = true // Link shares are always local
 
 	// Generate encoded token and send it as response.
 	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))
