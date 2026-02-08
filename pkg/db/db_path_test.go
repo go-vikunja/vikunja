@@ -290,6 +290,7 @@ func TestGetUserDataDir(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotEmpty(t, dataDir)
 
+		// Verify the directory was created
 		info, err := os.Stat(dataDir)
 		require.NoError(t, err)
 		assert.True(t, info.IsDir())
@@ -297,6 +298,7 @@ func TestGetUserDataDir(t *testing.T) {
 		return dataDir
 	}
 
+	// Verify platform-specific paths
 	switch runtime.GOOS {
 	case "windows":
 		dataDir := test()
@@ -336,6 +338,7 @@ func TestIsSystemDirectory(t *testing.T) {
 		path     string
 		expected bool
 	}{
+		// Windows system directories
 		{
 			name:     "Windows System32",
 			path:     "C:\\Windows\\System32\\vikunja.db",
@@ -356,6 +359,7 @@ func TestIsSystemDirectory(t *testing.T) {
 			path:     "c:\\windows\\system32\\vikunja.db",
 			expected: runtime.GOOS == "windows",
 		},
+		// Unix-like system directories
 		{
 			name:     "/bin",
 			path:     "/bin/vikunja.db",
@@ -376,6 +380,7 @@ func TestIsSystemDirectory(t *testing.T) {
 			path:     "/etc/vikunja.db",
 			expected: runtime.GOOS != "windows",
 		},
+		// Non-system directories
 		{
 			name:     "user home directory (Unix)",
 			path:     "/home/user/vikunja.db",

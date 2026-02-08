@@ -247,6 +247,7 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		return xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
 	}
 
+	// Log the resolved database path
 	log.Infof("Using SQLite database at: %s", path)
 
 	// Warn if the database is in a potentially problematic location
