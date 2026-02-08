@@ -151,7 +151,7 @@ onMounted(async () => {
 // that may have been missed during the disconnect window
 watch(wsConnected, (isConnected, wasConnected) => {
 	if (wasConnected && !isConnected) {
-		loadNotifications()
+		loadNotifications().catch(e => console.warn('Failed to reload notifications after WS disconnect:', e))
 	}
 })
 
@@ -163,7 +163,7 @@ onUnmounted(() => {
 
 function startPollingFallback() {
 	pollInterval = setInterval(async () => {
-		if (!wsConnected.value) {
+		if (!wsConnected.value && document.visibilityState === 'visible') {
 			await loadNotifications()
 		}
 	}, POLL_INTERVAL)
