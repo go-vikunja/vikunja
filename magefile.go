@@ -330,7 +330,7 @@ func Fmt() error {
 		return nil
 	})
 	if err != nil {
-		panic(err)
+		return err
 	}
 	args := append([]string{"-s", "-w"}, goFiles...)
 	return runAndStreamOutput("gofmt", args...)
