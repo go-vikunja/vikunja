@@ -43,6 +43,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/magefile/mage/mg"
+	"xorm.io/xorm/schemas"
 )
 
 const (
@@ -195,6 +196,11 @@ func runAndStreamOutput(ctx context.Context, cmd string, args ...string) error {
 	c.Env = os.Environ()
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
+	c.WaitDelay = 5 * time.Second
+	c.Cancel = func() error {
+		return killProcessGroup(c, syscall.SIGINT)
+	}
+	setProcessGroup(c)
 
 	fmt.Printf("%s\n\n", c.String())
 	return c.Run()
@@ -305,15 +311,22 @@ func setProcessGroup(cmd *exec.Cmd) {
 }
 
 // killProcessGroup sends a signal to the entire process group of the given command.
-func killProcessGroup(cmd *exec.Cmd) error {
+func killProcessGroup(cmd *exec.Cmd, signal syscall.Signal) error {
 	if cmd.Process == nil {
 		return nil
 	}
 	if pgid, err := syscall.Getpgid(cmd.Process.Pid); err == nil { // use best-effort to kill full process group
-		err = syscall.Kill(-pgid, syscall.SIGTERM)
+		err = syscall.Kill(-pgid, signal)
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func killProcessGroupAndWait(cmd *exec.Cmd) error {
+	if err := killProcessGroup(cmd, syscall.SIGTERM); err != nil {
+		return err
 	}
 	return cmd.Wait()
 }
@@ -375,11 +388,169 @@ func Fmt(ctx context.Context) error {
 
 type Test mg.Namespace
 
+// Bench runs all benchmarks
+func (Test) Bench(ctx context.Context) error {
+	mg.Deps(initVars)
+	return runAndStreamOutput(ctx, "go", "test",
+		goDetectVerboseFlag(),
+		"-timeout", "45m",
+		"-run", "^$", // Only run benchmarks
+		"-bench", ".", // Run all benchmarks
+		"./...")
+}
+
+func mustContainerCommand() string {
+	var errs []error
+	for _, name := range []string{ // in order of precedence
+		"docker",
+		"podman",
+	} {
+		absolutePath, err := exec.LookPath(name)
+		if err == nil {
+			return absolutePath
+		}
+		errs = append(errs, err)
+	}
+	panic(errors.Join(errs...))
+}
+
+func waitUntilSuccess(ctx context.Context, fn func() error) error {
+	if err := fn(); err == nil {
+		return nil
+	}
+	wait := 100 * time.Millisecond
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(wait):
+			err := fn()
+			if err == nil {
+				return nil
+			}
+			wait *= 2
+			fmt.Fprintln(os.Stderr, err, "\nNot ready yet, waiting", wait, "...")
+		}
+	}
+}
+
+// LocalDBAndTarget configures the given database type as a local container and runs a mage target, then cleans everything up.
+//
+// Example usage:
+//   - mage test:localDBAndTarget sqlite3 test:bench
+//   - mage test:localDBAndTarget mysql test:bench
+//   - mage test:localDBAndTarget postgres test:bench
+func (Test) LocalDBAndTarget(ctx context.Context, dbType, target string) (returnedErr error) {
+	mg.Deps(initVars)
+	for key, value := range map[string]string{
+		"VIKUNJA_TESTS_USE_CONFIG":  "1",
+		"VIKUNJA_DATABASE_TYPE":     dbType,
+		"VIKUNJA_DATABASE_USER":     "root",
+		"VIKUNJA_DATABASE_PASSWORD": "vikunjatest",
+		"VIKUNJA_DATABASE_DATABASE": "vikunjatest",
+		"VIKUNJA_DATABASE_SSLMODE":  "disable",
+		"VIKUNJA_DATABASE_HOST":     "localhost",
+		"VIKUNJA_SERVICE_PUBLICURL": "http://127.0.0.1:3456",
+	} {
+		os.Setenv(key, value)
+	}
+
+	shutdown, err := startAndWaitForDB(ctx, schemas.DBType(dbType), &returnedErr)
+	if err != nil {
+		return err
+	}
+	defer shutdown()
+	return runAndStreamOutput(ctx, "mage", goDetectVerboseFlag(), target)
+}
+
+func startAndWaitForDB(ctx context.Context, dbType schemas.DBType, shutdownErr *error) (_ context.CancelFunc, returnedErr error) {
+	var shutdown context.CancelFunc
+	if dbType != schemas.SQLITE { // sqlite is simple, no container needed
+		shutdown = func() {
+			err := runAndStreamOutput(ctx, mustContainerCommand(), "rm", "--force", "db")
+			if *shutdownErr == nil {
+				*shutdownErr = err
+			}
+		}
+		defer func() {
+			if returnedErr != nil {
+				shutdown()
+			}
+		}()
+	}
+
+	switch dbType {
+	case schemas.SQLITE:
+		os.Setenv("VIKUNJA_DATABASE_TYPE", "sqlite")
+		return func() {}, nil
+	case schemas.MYSQL:
+		err := runAndStreamOutput(ctx, mustContainerCommand(), "run",
+			"--detach",
+			"--rm",
+			"--name", "db",
+			"--publish", "3306:3306",
+			"--env", "MYSQL_ROOT_PASSWORD=vikunjatest",
+			"--env", "MYSQL_DATABASE=vikunjatest",
+			"docker.io/library/mysql:8@sha256:da906917ca4ace3ba55538b7c2ee97a9bc865ef14a4b6920b021f0249d603f3d",
+		)
+		if err != nil {
+			return nil, err
+		}
+		err = waitUntilSuccess(ctx, func() error {
+			return runAndStreamOutput(ctx, mustContainerCommand(), "exec", "db", "mysql", "-pvikunjatest", "vikunjatest", "-e", "select 1;")
+		})
+		if err != nil {
+			return nil, err
+		}
+		return shutdown, nil
+	case schemas.POSTGRES:
+		err := runAndStreamOutput(ctx, mustContainerCommand(), "run",
+			"--detach",
+			"--rm",
+			"--name", "db",
+			"--publish", "5432:5432",
+			"--env", "POSTGRES_PASSWORD=vikunjatest",
+			"--env", "POSTGRES_DB=vikunjatest",
+			"docker.io/library/postgres:18@sha256:073e7c8b84e2197f94c8083634640ab37105effe1bc853ca4d5fbece3219b0e8",
+		)
+		if err != nil {
+			return nil, err
+		}
+		err = waitUntilSuccess(ctx, func() error {
+			// Speed up tests and improve benchmark stability.
+			// Without these tweaks, high scale tests would hit sporadic large latency spikes.
+			return runAndStreamOutput(ctx, mustContainerCommand(), "exec", "db", "psql", "-U", "postgres", "-d", "vikunjatest",
+				"-c", "ALTER SYSTEM SET fsync = off;",
+				"-c", "ALTER SYSTEM SET full_page_writes = off;",
+				"-c", "ALTER SYSTEM SET synchronous_commit = off;",
+				"-c", "ALTER SYSTEM SET log_statement = 'all';",
+				"-c", "SELECT pg_reload_conf();",
+			)
+		})
+		if err != nil {
+			return nil, err
+		}
+		os.Setenv("VIKUNJA_DATABASE_USER", "postgres")
+		return shutdown, nil
+	case
+		schemas.DAMENG,
+		schemas.GBASE8S,
+		schemas.MSSQL,
+		schemas.ORACLE:
+	}
+	return nil, fmt.Errorf("setup not implemented for DB type: %s", dbType)
+}
+
 // Feature runs the feature tests
 func (Test) Feature(ctx context.Context) error {
 	mg.Deps(initVars)
-	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m", "-short", "./...")
+	return runAndStreamOutput(ctx, "go", "test",
+		goDetectVerboseFlag(),
+		"-coverprofile", "cover.out",
+		"-timeout", "45m",
+		"-short",
+		"-race",
+		"./...")
 }
 
 // Coverage runs the tests and builds the coverage html file from coverage output
@@ -405,7 +576,15 @@ func (Test) Filter(ctx context.Context, filter string) error {
 
 func (Test) All() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Feature, Test.Web, Test.Caldav, Test.E2EApi)
+	mg.Deps(
+		Test.Feature,
+	)
+	mg.SerialDeps(
+		Test.Bench,
+		Test.Caldav,
+		Test.E2EApi,
+		Test.Web,
+	)
 }
 
 // Caldav runs the CalDAV protocol compliance tests in pkg/caldavtests.
@@ -439,7 +618,6 @@ func (Test) E2EApi(ctx context.Context) error {
 //   - VIKUNJA_E2E_API_PORT: API port (default: random)
 //   - VIKUNJA_E2E_FRONTEND_PORT: Frontend port (default: random)
 //   - VIKUNJA_E2E_TESTING_TOKEN: Testing token for seed endpoints (default: random)
-//   - VIKUNJA_E2E_SKIP_BUILD: Set to "true" to skip rebuilding the API binary (default: false)
 func (Test) E2E(ctx context.Context, args string) error {
 	mg.Deps(initVars)
 
@@ -464,14 +642,6 @@ func (Test) E2E(ctx context.Context, args string) error {
 	fmt.Printf("  Frontend port: %d\n", frontendPort)
 	fmt.Printf("  Testing token: %s\n", testingToken)
 
-	// Build the API binary (unless skipped)
-	if os.Getenv("VIKUNJA_E2E_SKIP_BUILD") != "true" {
-		fmt.Println("\n--- Building API binary ---")
-		if err := (Build{}).Build(ctx); err != nil {
-			return fmt.Errorf("failed to build API: %w", err)
-		}
-	}
-
 	// Create temp directory for file uploads and rootpath
 	tmpDir, err := os.MkdirTemp("", "vikunja-e2e-*")
 	if err != nil {
@@ -489,7 +659,7 @@ func (Test) E2E(ctx context.Context, args string) error {
 	// Start the API server — all config via env vars, no config file
 	// Uses in-memory SQLite (no DB file on disk)
 	fmt.Println("\n--- Starting API server ---")
-	apiCmd := exec.CommandContext(ctx, "./vikunja", "web")
+	apiCmd := exec.CommandContext(ctx, "go", "run", ".", "web")
 	apiCmd.Env = append(os.Environ(),
 		fmt.Sprintf("VIKUNJA_SERVICE_INTERFACE=:%d", apiPort),
 		fmt.Sprintf("VIKUNJA_SERVICE_PUBLICURL=http://127.0.0.1:%d/", apiPort),
@@ -512,7 +682,7 @@ func (Test) E2E(ctx context.Context, args string) error {
 	}
 	defer func() {
 		fmt.Println("\n--- Stopping API server ---")
-		if err := killProcessGroup(apiCmd); err != nil {
+		if err := killProcessGroupAndWait(apiCmd); err != nil {
 			fmt.Println("Failed to stop API server:", err)
 		}
 	}()
@@ -548,7 +718,7 @@ func (Test) E2E(ctx context.Context, args string) error {
 	}
 	defer func() {
 		fmt.Println("\n--- Stopping frontend preview server ---")
-		if err := killProcessGroup(frontendCmd); err != nil {
+		if err := killProcessGroupAndWait(frontendCmd); err != nil {
 			fmt.Println("Failed to stop API server:", err)
 		}
 	}()
