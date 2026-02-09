@@ -130,17 +130,20 @@ func getRawVersionNumber() (version string, err error) {
 	return string(versionBytes), err
 }
 
-func setVersion() {
+func setVersion() error {
 	versionNumber, err := getRawVersionNumber()
+	if err != nil {
+		return err
+	}
 	VersionNumber = strings.Trim(versionNumber, "\n")
 	VersionNumber = strings.Replace(VersionNumber, "-g", "-", 1)
 
 	version, err := getRawVersionString()
 	if err != nil {
-		fmt.Printf("Error getting version: %s\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error getting version: %w", err)
 	}
 	Version = version
+	return nil
 }
 
 func setBinLocation() {
@@ -196,47 +199,31 @@ func init() {
 }
 
 // Some variables have external dependencies (like git) which may not always be available.
-func initVars() {
+func initVars() error {
 	// Always include osusergo to use pure Go os/user implementation instead of CGO.
 	// This prevents SIGFPE crashes when running under systemd without HOME set,
 	// caused by glibc's getpwuid_r() failing in certain environments.
 	// See: https://github.com/go-vikunja/vikunja/issues/2170
 	Tags = "osusergo " + strings.ReplaceAll(os.Getenv("TAGS"), ",", " ")
-	setVersion()
+	if err := setVersion(); err != nil {
+		return err
+	}
 	setBinLocation()
 	setPkgVersion()
 	setGoFiles()
 	Ldflags = `-X "` + PACKAGE + `/pkg/version.Version=` + VersionNumber + `" -X "main.Tags=` + Tags + `"`
+	return nil
 }
 
-func runAndStreamOutput(cmd string, args ...string) {
+func runAndStreamOutput(cmd string, args ...string) error {
 	c := exec.Command(cmd, args...)
 
 	c.Env = os.Environ()
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
 
 	fmt.Printf("%s\n\n", c.String())
-
-	stdout, _ := c.StdoutPipe()
-	errbuf := bytes.Buffer{}
-	c.Stderr = &errbuf
-	err := c.Start()
-	if err != nil {
-		fmt.Printf("Could not start: %s\n", err)
-		os.Exit(1)
-	}
-
-	reader := bufio.NewReader(stdout)
-	line, err := reader.ReadString('\n')
-	for err == nil {
-		fmt.Print(line)
-		line, err = reader.ReadString('\n')
-	}
-
-	if err := c.Wait(); err != nil {
-		fmt.Printf(errbuf.String())
-		fmt.Printf("Error: %s\n", err)
-		os.Exit(1)
-	}
+	return c.Run()
 }
 
 // Will check if the tool exists and if not install it from the provided import path
@@ -359,44 +346,44 @@ func printSuccess(text string, args ...interface{}) {
 }
 
 // Fmt formats the code using go fmt
-func Fmt() {
+func Fmt() error {
 	mg.Deps(initVars)
 	args := append([]string{"-s", "-w"}, GoFiles...)
-	runAndStreamOutput("gofmt", args...)
+	return runAndStreamOutput("gofmt", args...)
 }
 
 type Test mg.Namespace
 
 // Feature runs the feature tests
-func (Test) Feature() {
+func (Test) Feature() error {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
 	args := append([]string{"test", goDetectVerboseFlag(), "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}, ApiPackages...)
-	runAndStreamOutput("go", args...)
+	return runAndStreamOutput("go", args...)
 }
 
 // Coverage runs the tests and builds the coverage html file from coverage output
-func (Test) Coverage() {
+func (Test) Coverage() error {
 	mg.Deps(initVars)
 	mg.Deps(Test.Feature)
-	runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
+	return runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
 }
 
 // Web runs the web tests
-func (Test) Web() {
+func (Test) Web() error {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
 	args := []string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", PACKAGE + "/pkg/webtests"}
-	runAndStreamOutput("go", args...)
+	return runAndStreamOutput("go", args...)
 }
 
-func (Test) Filter(filter string) {
+func (Test) Filter(filter string) error {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
 	args := append([]string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter}, ApiPackages...)
-	runAndStreamOutput("go", args...)
+	return runAndStreamOutput("go", args...)
 }
 
 func (Test) All() {
@@ -602,14 +589,14 @@ func checkGolangCiLintInstalled() {
 	}
 }
 
-func (Check) Golangci() {
+func (Check) Golangci() error {
 	checkGolangCiLintInstalled()
-	runAndStreamOutput("golangci-lint", "run")
+	return runAndStreamOutput("golangci-lint", "run")
 }
 
-func (Check) GolangciFix() {
+func (Check) GolangciFix() error {
 	checkGolangCiLintInstalled()
-	runAndStreamOutput("golangci-lint", "run", "--fix")
+	return runAndStreamOutput("golangci-lint", "run", "--fix")
 }
 
 // All runs golangci and the swagger test in parallel
@@ -643,7 +630,7 @@ func (Build) Clean() error {
 }
 
 // Build builds a vikunja binary, ready to run
-func (Build) Build() {
+func (Build) Build() error {
 	mg.Deps(initVars)
 	// Check if the frontend dist folder exists
 	distPath := filepath.Join("frontend", "dist")
@@ -665,7 +652,7 @@ func (Build) Build() {
 		fmt.Printf("Warning: %s not found, created empty file\n", indexFile)
 	}
 
-	runAndStreamOutput("go", "build", goDetectVerboseFlag(), "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
+	return runAndStreamOutput("go", "build", goDetectVerboseFlag(), "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
 func (Build) SaveVersionToFile() error {
@@ -733,12 +720,12 @@ func (Release) Dirs() error {
 	return nil
 }
 
-func prepareXgo() {
+func prepareXgo() error {
 	mg.Deps(initVars)
 	checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo")
 
 	fmt.Println("Pulling latest xgo docker image...")
-	runAndStreamOutput("docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
+	return runAndStreamOutput("docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
 }
 
 func runXgo(targets string) error {
@@ -756,13 +743,15 @@ func runXgo(targets string) error {
 		outName = Executable + "-" + Version
 	}
 
-	runAndStreamOutput("xgo",
+	if err := runAndStreamOutput("xgo",
 		"-dest", "./"+DIST+"/binaries",
 		"-tags", "netgo "+Tags,
 		"-ldflags", extraLdflags+Ldflags,
 		"-targets", targets,
 		"-out", outName,
-		".")
+		"."); err != nil {
+		return err
+	}
 	if os.Getenv("DRONE_WORKSPACE") != "" {
 		return filepath.Walk("/build/", func(path string, info os.FileInfo, err error) error {
 			// Skip directories
@@ -838,9 +827,10 @@ func (Release) Compress(ctx context.Context) error {
 
 		// Runs compressing in parallel since upx is single-threaded
 		errs.Go(func() error {
-			runAndStreamOutput("chmod", "+x", path) // Make sure all binaries are executable. Sometimes the CI does weird things and they're not.
-			runAndStreamOutput("upx", "-9", path)
-			return nil
+			if err := runAndStreamOutput("chmod", "+x", path); err != nil { // Make sure all binaries are executable. Sometimes the CI does weird things and they're not.
+				return err
+			}
+			return runAndStreamOutput("upx", "-9", path)
 		})
 
 		return nil
@@ -957,9 +947,9 @@ func (Release) Zip() error {
 }
 
 // Reprepro creates a debian repo structure
-func (Release) Reprepro() {
+func (Release) Reprepro() error {
 	mg.Deps(setVersion, setBinLocation)
-	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "buster", "./"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
+	return runAndStreamOutput("reprepro_expect", "debian", "includedeb", "buster", "./"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
 }
 
 // PrepareNFPMConfig prepares the nfpm config
@@ -1015,9 +1005,15 @@ func (Release) Packages() error {
 		return err
 	}
 
-	runAndStreamOutput(binpath, "pkg", "--packager", "deb", "--target", releasePath)
-	runAndStreamOutput(binpath, "pkg", "--packager", "rpm", "--target", releasePath)
-	runAndStreamOutput(binpath, "pkg", "--packager", "apk", "--target", releasePath)
+	if err := runAndStreamOutput(binpath, "pkg", "--packager", "deb", "--target", releasePath); err != nil {
+		return err
+	}
+	if err := runAndStreamOutput(binpath, "pkg", "--packager", "rpm", "--target", releasePath); err != nil {
+		return err
+	}
+	if err := runAndStreamOutput(binpath, "pkg", "--packager", "apk", "--target", releasePath); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -1254,11 +1250,11 @@ type Generate mg.Namespace
 const DefaultConfigYAMLSamplePath = "config.yml.sample"
 
 // SwaggerDocs generates the swagger docs from the code annotations
-func (Generate) SwaggerDocs() {
+func (Generate) SwaggerDocs() error {
 	mg.Deps(initVars)
 
 	checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag")
-	runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", ".", "-o", "./pkg/swagger")
+	return runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", ".", "-o", "./pkg/swagger")
 }
 
 type ConfigNode struct {
@@ -1756,6 +1752,5 @@ func (Plugins) Build(pathToSourceFiles string) error {
 	}
 
 	out := filepath.Join("plugins", filepath.Base(pathToSourceFiles)+".so")
-	runAndStreamOutput("go", "build", "-buildmode=plugin", "-tags", Tags, "-o", out, pathToSourceFiles)
-	return nil
+	return runAndStreamOutput("go", "build", "-buildmode=plugin", "-tags", Tags, "-o", out, pathToSourceFiles)
 }
