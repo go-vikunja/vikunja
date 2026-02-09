@@ -750,6 +750,9 @@ test.describe('Task', () => {
 			await page.locator('.task-view .columns.details .column button').filter({hasText: 'Add a reminder'}).click()
 			await page.locator('.datepicker__quick-select-date').filter({hasText: 'Tomorrow'}).click()
 
+			const openPopup = page.locator('.reminder-options-popup.is-open')
+			await openPopup.locator('button').filter({hasText: 'Confirm'}).click()
+
 			await expect(page.locator('.reminder-options-popup.is-open')).not.toBeVisible()
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
@@ -839,6 +842,8 @@ test.describe('Task', () => {
 			// Wait for the datepicker to appear within the popup
 			await expect(openPopup.locator('.datepicker__quick-select-date').first()).toBeVisible()
 			await openPopup.locator('.datepicker__quick-select-date').filter({hasText: 'Tomorrow'}).click()
+
+			await openPopup.locator('button').filter({hasText: 'Confirm'}).click()
 
 			await expect(page.locator('.reminder-options-popup.is-open')).not.toBeVisible()
 			await expect(page.locator('.global-notification')).toContainText('Success')
