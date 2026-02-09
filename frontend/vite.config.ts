@@ -143,6 +143,7 @@ function getBuildConfig(env: Record<string, string>) {
 				filename: 'sw.ts',
 				strategies: 'injectManifest',
 				injectRegister: false,
+				useCredentials: true,
 				manifest: {
 					name: 'Vikunja',
 					short_name: 'Vikunja',
