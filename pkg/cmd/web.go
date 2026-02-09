@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
 	"time"
@@ -140,8 +139,7 @@ var webCmd = &cobra.Command{
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
 	},
-	Run: func(_ *cobra.Command, _ []string) {
-
+	Run: func(c *cobra.Command, _ []string) {
 		// Version notification
 		log.Infof("Vikunja version %s", version.Version)
 
@@ -186,9 +184,7 @@ var webCmd = &cobra.Command{
 
 		// Wait for interrupt signal to gracefully shut down the server with
 		// a timeout of 10 seconds.
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, os.Interrupt)
-		<-quit
+		<-c.Context().Done()
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		log.Infof("Shutting down...")
