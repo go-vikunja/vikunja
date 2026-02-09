@@ -31,9 +31,6 @@ import (
 )
 
 func TestConvertTodoistToVikunja(t *testing.T) {
-
-	config.InitConfig()
-
 	time1, err := time.Parse(time.RFC3339Nano, "2014-09-26T08:25:05Z")
 	require.NoError(t, err)
 	time1 = time1.In(config.GetTimeZone())
@@ -48,7 +45,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	dueTimeWithTime = dueTimeWithTime.In(config.GetTimeZone())
 	nilTime, err := time.Parse(time.RFC3339Nano, "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
-	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/testimage.jpg")
+	exampleFile, err := os.ReadFile("../testimage.jpg")
 	require.NoError(t, err)
 
 	makeTestItem := func(id, projectId string, hasDueDate, hasLabels, done bool) *item {

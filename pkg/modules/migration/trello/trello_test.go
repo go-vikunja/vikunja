@@ -22,7 +22,6 @@ import (
 	"testing"
 	"time"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 
@@ -33,9 +32,6 @@ import (
 )
 
 func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
-
-	config.InitConfig()
-
 	time1, err := time.Parse(time.RFC3339Nano, "2014-09-26T08:25:05Z")
 	require.NoError(t, err)
 
@@ -240,7 +236,7 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 func TestConvertTrelloToVikunja(t *testing.T) {
 	trelloData, time1 := getTestBoard(t)
 
-	exampleFile, err := os.ReadFile(config.ServiceRootpath.GetString() + "/pkg/modules/migration/testimage.jpg")
+	exampleFile, err := os.ReadFile("../testimage.jpg")
 	require.NoError(t, err)
 
 	expectedHierarchyOrg := map[string][]*models.ProjectWithTasksAndBuckets{

@@ -36,8 +36,6 @@ func TestMain(m *testing.M) {
 
 	// Set default config
 	config.InitDefaultConfig()
-	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
 
 	// Some tests use the file engine, so we'll need to initialize that
 	files.InitTests()
