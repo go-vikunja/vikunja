@@ -373,7 +373,7 @@ func printSuccess(text string, args ...interface{}) {
 	fmt.Printf(InfoColor+"\n", text)
 }
 
-// Formats the code using go fmt
+// Fmt formats the code using go fmt
 func Fmt() {
 	mg.Deps(initVars)
 	args := append([]string{"-s", "-w"}, GoFiles...)
@@ -382,7 +382,7 @@ func Fmt() {
 
 type Test mg.Namespace
 
-// Runs the feature tests
+// Feature runs the feature tests
 func (Test) Feature() {
 	mg.Deps(initVars)
 	setApiPackages()
@@ -391,14 +391,14 @@ func (Test) Feature() {
 	runAndStreamOutput("go", args...)
 }
 
-// Runs the tests and builds the coverage html file from coverage output
+// Coverage runs the tests and builds the coverage html file from coverage output
 func (Test) Coverage() {
 	mg.Deps(initVars)
 	mg.Deps(Test.Feature)
 	runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
 }
 
-// Runs the web tests
+// Web runs the web tests
 func (Test) Web() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
@@ -421,7 +421,7 @@ func (Test) All() {
 
 type Check mg.Namespace
 
-// Checks if the swagger docs need to be re-generated from the code annotations
+// GotSwag checks if the swagger docs need to be re-generated from the code annotations
 func (Check) GotSwag() {
 	mg.Deps(initVars)
 	// The check is pretty cheaply done: We take the hash of the swagger.json file, generate the docs,
@@ -451,7 +451,7 @@ func (Check) GotSwag() {
 	}
 }
 
-// Checks if all translation keys used in the code exist in the English translation file
+// Translations checks if all translation keys used in the code exist in the English translation file
 func (Check) Translations() {
 	mg.Deps(initVars)
 	fmt.Println("Checking for missing translation keys...")
@@ -627,7 +627,7 @@ func (Check) GolangciFix() {
 	runAndStreamOutput("golangci-lint", "run", "--fix")
 }
 
-// Runs golangci and the swagger test in parallel
+// All runs golangci and the swagger test in parallel
 func (Check) All() {
 	mg.Deps(initVars)
 	mg.Deps(
@@ -639,7 +639,7 @@ func (Check) All() {
 
 type Build mg.Namespace
 
-// Cleans all build, executable and bindata files
+// Clean cleans all build, executable and bindata files
 func (Build) Clean() error {
 	mg.Deps(initVars)
 	if err := exec.Command("go", "clean", "./...").Run(); err != nil {
@@ -657,7 +657,7 @@ func (Build) Clean() error {
 	return nil
 }
 
-// Builds a vikunja binary, ready to run
+// Build builds a vikunja binary, ready to run
 func (Build) Build() {
 	mg.Deps(initVars)
 	// Check if the frontend dist folder exists
@@ -705,7 +705,7 @@ func (Build) SaveVersionToFile() error {
 
 type Release mg.Namespace
 
-// Runs all steps in the right order to create release packages for various platforms
+// Release runs all steps in the right order to create release packages for various platforms
 func (Release) Release(ctx context.Context) error {
 	mg.Deps(initVars)
 	mg.Deps(Release.Dirs, prepareXgo)
@@ -738,7 +738,7 @@ func (Release) Release(ctx context.Context) error {
 	return nil
 }
 
-// Creates all directories needed to release vikunja
+// Dirs creates all directories needed to release vikunja
 func (Release) Dirs() error {
 	for _, d := range []string{"binaries", "release", "zip"} {
 		if err := os.MkdirAll(RootPath+"/"+DIST+"/"+d, 0o755); err != nil {
@@ -791,12 +791,12 @@ func runXgo(targets string) error {
 	return nil
 }
 
-// Builds binaries for windows
+// Windows builds binaries for windows
 func (Release) Windows() error {
 	return runXgo("windows/*")
 }
 
-// Builds binaries for linux
+// Linux builds binaries for linux
 func (Release) Linux() error {
 	targets := []string{
 		"linux/amd64",
@@ -813,7 +813,7 @@ func (Release) Linux() error {
 	return runXgo(strings.Join(targets, ","))
 }
 
-// Builds binaries for darwin
+// Darwin builds binaries for darwin
 func (Release) Darwin() error {
 	return runXgo("darwin-10.15/*")
 }
@@ -832,7 +832,7 @@ func (Release) Xgo(target string) error {
 	return runXgo(parts[0] + "/" + parts[1] + variant)
 }
 
-// Compresses the built binaries in dist/binaries/ to reduce their filesize
+// Compress compresses the built binaries in dist/binaries/ to reduce their filesize
 func (Release) Compress(ctx context.Context) error {
 	// $(foreach file,$(filter-out $(wildcard $(wildcard $(DIST)/binaries/$(EXECUTABLE)-*mips*)),$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*)), upx -9 $(file);)
 
@@ -864,7 +864,7 @@ func (Release) Compress(ctx context.Context) error {
 	return errs.Wait()
 }
 
-// Copies all built binaries to dist/release/ in preparation for creating the os packages
+// Copy copies all built binaries to dist/release/ in preparation for creating the os packages
 func (Release) Copy() error {
 	return filepath.Walk(RootPath+"/"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
 		// Only executable files
@@ -876,7 +876,7 @@ func (Release) Copy() error {
 	})
 }
 
-// Creates sha256 checksum files for each binary in dist/release/
+// Check creates sha256 checksum files for each binary in dist/release/
 func (Release) Check() error {
 	p := RootPath + "/" + DIST + "/release/"
 	return filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
@@ -903,7 +903,7 @@ func (Release) Check() error {
 	})
 }
 
-// Creates a folder for each
+// OsPackage creates a folder for each
 func (Release) OsPackage() error {
 	p := RootPath + "/" + DIST + "/release/"
 
@@ -943,7 +943,7 @@ func (Release) OsPackage() error {
 	return nil
 }
 
-// Creates a zip file from all os-package folders in dist/release
+// Zip creates a zip file from all os-package folders in dist/release
 func (Release) Zip() error {
 	p := RootPath + "/" + DIST + "/release/"
 	if err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
@@ -965,13 +965,13 @@ func (Release) Zip() error {
 	return nil
 }
 
-// Creates a debian repo structure
+// Reprepro creates a debian repo structure
 func (Release) Reprepro() {
 	mg.Deps(setVersion, setBinLocation)
 	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "buster", RootPath+"/"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
 }
 
-// Prepares the nfpm config
+// PrepareNFPMConfig prepares the nfpm config
 func (Release) PrepareNFPMConfig() error {
 	mg.Deps(initVars)
 	var err error
@@ -994,7 +994,7 @@ func (Release) PrepareNFPMConfig() error {
 	return nil
 }
 
-// Creates deb, rpm and apk packages
+// Packages creates deb, rpm and apk packages
 func (Release) Packages() error {
 	mg.Deps(initVars)
 
@@ -1105,7 +1105,7 @@ func init() {
 	return nil
 }
 
-// Create a new event. Takes the name of the event as the first argument and the module where the event should be created as the second argument. Events will be appended to the pkg/<module>/events.go file.
+// MakeEvent create a new event. Takes the name of the event as the first argument and the module where the event should be created as the second argument. Events will be appended to the pkg/<module>/events.go file.
 func (Dev) MakeEvent(name, module string) error {
 	name = strcase.ToCamel(name)
 
@@ -1135,7 +1135,7 @@ func (t *` + name + `) Name() string {
 	return nil
 }
 
-// Create a new listener for an event. Takes the name of the listener, the name of the event to listen to and the module where everything should be placed as parameters.
+// MakeListener create a new listener for an event. Takes the name of the listener, the name of the event to listen to and the module where everything should be placed as parameters.
 func (Dev) MakeListener(name, event, module string) error {
 	name = strcase.ToCamel(name)
 	listenerName := strcase.ToDelimited(name, '.')
@@ -1213,7 +1213,7 @@ func (s *` + name + `) Handle(msg *message.Message) (err error) {
 	return nil
 }
 
-// Create a new notification. Takes the name of the notification as the first argument and the module where the notification should be created as the second argument. Notifications will be appended to the pkg/<module>/notifications.go file.
+// MakeNotification create a new notification. Takes the name of the notification as the first argument and the module where the notification should be created as the second argument. Notifications will be appended to the pkg/<module>/notifications.go file.
 func (Dev) MakeNotification(name, module string) error {
 	name = strcase.ToCamel(name)
 
@@ -1262,7 +1262,7 @@ type Generate mg.Namespace
 
 const DefaultConfigYAMLSamplePath = "config.yml.sample"
 
-// Generates the swagger docs from the code annotations
+// SwaggerDocs generates the swagger docs from the code annotations
 func (Generate) SwaggerDocs() {
 	mg.Deps(initVars)
 
@@ -1393,7 +1393,7 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 	fmt.Println("Successfully generated " + yamlPath)
 }
 
-// Create a yaml config file from the config-raw.json definition
+// ConfigYAML create a yaml config file from the config-raw.json definition
 func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
 }
