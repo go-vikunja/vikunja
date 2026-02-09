@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"math"
 	"os"
 	"os/exec"
@@ -55,7 +56,6 @@ var (
 	BinLocation   = ""
 	PkgVersion    = "unstable"
 	ApiPackages   = []string{}
-	GoFiles       = []string{}
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]interface{}{
@@ -179,20 +179,6 @@ func setApiPackages() {
 	}
 }
 
-func setGoFiles() {
-	// GOFILES := $(shell find . -name "*.go" -type f ! -path "*/bindata.go")
-	files, err := runCmdWithOutput("find", "./pkg", "-name", "*.go", "-type", "f", "!", "-path", "*/bindata.go")
-	if err != nil {
-		fmt.Printf("Error getting go files: %s\n", err)
-		os.Exit(1)
-	}
-	for _, f := range strings.Split(string(files), "\n") {
-		if strings.HasSuffix(f, ".go") {
-			GoFiles = append(GoFiles, strings.TrimLeft(f, "."))
-		}
-	}
-}
-
 // Some variables can always get initialized, so we do just that.
 func init() {
 	setExecutable()
@@ -210,7 +196,6 @@ func initVars() error {
 	}
 	setBinLocation()
 	setPkgVersion()
-	setGoFiles()
 	Ldflags = `-X "` + PACKAGE + `/pkg/version.Version=` + VersionNumber + `" -X "main.Tags=` + Tags + `"`
 	return nil
 }
@@ -348,7 +333,20 @@ func printSuccess(text string, args ...interface{}) {
 // Fmt formats the code using go fmt
 func Fmt() error {
 	mg.Deps(initVars)
-	args := append([]string{"-s", "-w"}, GoFiles...)
+	var goFiles []string
+	err := filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".go" {
+			goFiles = append(goFiles, path)
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	args := append([]string{"-s", "-w"}, goFiles...)
 	return runAndStreamOutput("gofmt", args...)
 }
 
