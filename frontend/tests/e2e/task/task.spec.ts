@@ -844,6 +844,70 @@ test.describe('Task', () => {
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
+		test('Does not auto-save when clicking a date in the absolute reminder picker', async ({authenticatedPage: page}) => {
+			await TaskReminderFactory.truncate()
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Reminders'}).click()
+			await page.locator('.task-view .columns.details .column button').filter({hasText: 'Add a reminder'}).click()
+
+			const openPopup = page.locator('.reminder-options-popup.is-open')
+			// Wait for the flatpickr calendar to appear
+			await expect(openPopup.locator('.flatpickr-innerContainer')).toBeVisible()
+
+			// Track whether any task save request fires
+			let saveRequestFired = false
+			await page.route('**/api/v1/tasks/*', async (route) => {
+				if (route.request().method() === 'POST' || route.request().method() === 'PUT') {
+					saveRequestFired = true
+				}
+				await route.continue()
+			})
+
+			// Click a day in the calendar
+			await openPopup.locator('.flatpickr-innerContainer .flatpickr-days .flatpickr-day:not(.flatpickr-disabled)').first().click()
+
+			// Wait a moment to ensure no request fires
+			await page.waitForTimeout(1000)
+			expect(saveRequestFired).toBe(false)
+
+			// The popup should still be open
+			await expect(openPopup).toBeVisible()
+
+			// The Confirm button should be visible
+			const confirmButton = openPopup.locator('button').filter({hasText: 'Confirm'})
+			await expect(confirmButton).toBeVisible()
+
+			// Now click Confirm — this should trigger the save
+			await confirmButton.click()
+
+			await expect(page.locator('.global-notification')).toContainText('Success')
+		})
+
+		test('Shows Confirm button for absolute date reminder when task has no due date', async ({authenticatedPage: page}) => {
+			await TaskReminderFactory.truncate()
+			// Task with no due_date — defaultRelativeTo will be null
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				done: false,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Reminders'}).click()
+			await page.locator('.task-view .columns.details .column button').filter({hasText: 'Add a reminder'}).click()
+
+			const openPopup = page.locator('.reminder-options-popup.is-open')
+			// When no due date, the absolute date form should show directly
+			await expect(openPopup.locator('.flatpickr-innerContainer')).toBeVisible()
+
+			// The Confirm button must be visible
+			await expect(openPopup.locator('button').filter({hasText: 'Confirm'})).toBeVisible()
+		})
+
 		test('Can set a priority for a task', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
