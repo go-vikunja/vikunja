@@ -58,7 +58,6 @@ var (
 	BinLocation   = ""
 	PkgVersion    = "unstable"
 	ApiPackages   = []string{}
-	RootPath      = ""
 	GoFiles       = []string{}
 
 	// Aliases are mage aliases of targets
@@ -176,19 +175,6 @@ func setApiPackages() {
 	}
 }
 
-func setRootPath() {
-	pwd, err := os.Getwd()
-	if err != nil {
-		fmt.Printf("Error getting pwd: %s\n", err)
-		os.Exit(1)
-	}
-	if err := os.Setenv("VIKUNJA_SERVICE_ROOTPATH", pwd); err != nil {
-		fmt.Printf("Error setting root path: %s\n", err)
-		os.Exit(1)
-	}
-	RootPath = pwd
-}
-
 func setGoFiles() {
 	// GOFILES := $(shell find . -name "*.go" -type f ! -path "*/bindata.go")
 	files, err := runCmdWithOutput("find", "./pkg", "-name", "*.go", "-type", "f", "!", "-path", "*/bindata.go")
@@ -198,7 +184,7 @@ func setGoFiles() {
 	}
 	for _, f := range strings.Split(string(files), "\n") {
 		if strings.HasSuffix(f, ".go") {
-			GoFiles = append(GoFiles, RootPath+strings.TrimLeft(f, "."))
+			GoFiles = append(GoFiles, strings.TrimLeft(f, "."))
 		}
 	}
 }
@@ -206,7 +192,6 @@ func setGoFiles() {
 // Some variables can always get initialized, so we do just that.
 func init() {
 	setExecutable()
-	setRootPath()
 }
 
 // Some variables have external dependencies (like git) which may not always be available.
@@ -227,7 +212,6 @@ func runAndStreamOutput(cmd string, args ...string) {
 	c := exec.Command(cmd, args...)
 
 	c.Env = os.Environ()
-	c.Dir = RootPath
 
 	fmt.Printf("%s\n\n", c.String())
 
@@ -430,7 +414,7 @@ func (Check) GotSwag() {
 	// swag is not capable of just outputting the generated docs to stdout, therefore we need to do it this way.
 	// Another drawback of this is obviously it will only work once - we're not resetting the newly generated
 	// docs after the check. This behaviour is good enough for ci though.
-	oldHash, err := calculateSha256FileHash(RootPath + "/pkg/swagger/swagger.json")
+	oldHash, err := calculateSha256FileHash("./pkg/swagger/swagger.json")
 	if err != nil {
 		fmt.Printf("Error getting old hash of the swagger docs: %s", err)
 		os.Exit(1)
@@ -438,7 +422,7 @@ func (Check) GotSwag() {
 
 	(Generate{}).SwaggerDocs()
 
-	newHash, err := calculateSha256FileHash(RootPath + "/pkg/swagger/swagger.json")
+	newHash, err := calculateSha256FileHash("./pkg/swagger/swagger.json")
 	if err != nil {
 		fmt.Printf("Error getting new hash of the swagger docs: %s", err)
 		os.Exit(1)
@@ -457,7 +441,7 @@ func (Check) Translations() {
 	fmt.Println("Checking for missing translation keys...")
 
 	// Load translations from the English translation file
-	translationFile := RootPath + "/pkg/i18n/lang/en.json"
+	translationFile := "./pkg/i18n/lang/en.json"
 	translations, err := loadTranslations(translationFile)
 	if err != nil {
 		fmt.Printf("Error loading translations: %v\n", err)
@@ -467,7 +451,7 @@ func (Check) Translations() {
 	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
 
 	// Extract keys from codebase
-	keys, err := walkCodebaseForTranslationKeys(RootPath)
+	keys, err := walkCodebaseForTranslationKeys(".")
 	if err != nil {
 		fmt.Printf("Error walking codebase: %v\n", err)
 		os.Exit(1)
@@ -661,7 +645,7 @@ func (Build) Clean() error {
 func (Build) Build() {
 	mg.Deps(initVars)
 	// Check if the frontend dist folder exists
-	distPath := filepath.Join(RootPath, "frontend", "dist")
+	distPath := filepath.Join("frontend", "dist")
 	if _, err := os.Stat(distPath); os.IsNotExist(err) {
 		if err := os.MkdirAll(distPath, 0o755); err != nil {
 			fmt.Printf("Error creating %s: %s\n", distPath, err)
@@ -741,7 +725,7 @@ func (Release) Release(ctx context.Context) error {
 // Dirs creates all directories needed to release vikunja
 func (Release) Dirs() error {
 	for _, d := range []string{"binaries", "release", "zip"} {
-		if err := os.MkdirAll(RootPath+"/"+DIST+"/"+d, 0o755); err != nil {
+		if err := os.MkdirAll("./"+DIST+"/"+d, 0o755); err != nil {
 			return err
 		}
 	}
@@ -772,12 +756,12 @@ func runXgo(targets string) error {
 	}
 
 	runAndStreamOutput("xgo",
-		"-dest", RootPath+"/"+DIST+"/binaries",
+		"-dest", "./"+DIST+"/binaries",
 		"-tags", "netgo "+Tags,
 		"-ldflags", extraLdflags+Ldflags,
 		"-targets", targets,
 		"-out", outName,
-		RootPath)
+		".")
 	if os.Getenv("DRONE_WORKSPACE") != "" {
 		return filepath.Walk("/build/", func(path string, info os.FileInfo, err error) error {
 			// Skip directories
@@ -785,7 +769,7 @@ func runXgo(targets string) error {
 				return nil
 			}
 
-			return moveFile(path, RootPath+"/"+DIST+"/binaries/"+info.Name())
+			return moveFile(path, "./"+DIST+"/binaries/"+info.Name())
 		})
 	}
 	return nil
@@ -838,7 +822,7 @@ func (Release) Compress(ctx context.Context) error {
 
 	errs, _ := errgroup.WithContext(ctx)
 
-	filepath.Walk(RootPath+"/"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
+	filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
 		// Only executable files
 		if !strings.Contains(info.Name(), Executable) {
 			return nil
@@ -866,19 +850,19 @@ func (Release) Compress(ctx context.Context) error {
 
 // Copy copies all built binaries to dist/release/ in preparation for creating the os packages
 func (Release) Copy() error {
-	return filepath.Walk(RootPath+"/"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
 		// Only executable files
 		if !strings.Contains(info.Name(), Executable) {
 			return nil
 		}
 
-		return copyFile(path, RootPath+"/"+DIST+"/release/"+info.Name())
+		return copyFile(path, "./"+DIST+"/release/"+info.Name())
 	})
 }
 
 // Check creates sha256 checksum files for each binary in dist/release/
 func (Release) Check() error {
-	p := RootPath + "/" + DIST + "/release/"
+	p := "./" + DIST + "/release/"
 	return filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -905,7 +889,7 @@ func (Release) Check() error {
 
 // OsPackage creates a folder for each
 func (Release) OsPackage() error {
-	p := RootPath + "/" + DIST + "/release/"
+	p := "./" + DIST + "/release/"
 
 	// We first put all files in a map to then iterate over it since the walk function would otherwise also iterate
 	// over the newly created files, creating some kind of endless loop.
@@ -920,7 +904,7 @@ func (Release) OsPackage() error {
 		return err
 	}
 
-	generateConfigYAMLFromJSON(RootPath+"/"+DefaultConfigYAMLSamplePath, true)
+	generateConfigYAMLFromJSON("./"+DefaultConfigYAMLSamplePath, true)
 
 	for path, info := range bins {
 		folder := p + info.Name() + "-full/"
@@ -933,10 +917,10 @@ func (Release) OsPackage() error {
 		if err := moveFile(path, folder+info.Name()); err != nil {
 			return err
 		}
-		if err := copyFile(RootPath+"/"+DefaultConfigYAMLSamplePath, folder+DefaultConfigYAMLSamplePath); err != nil {
+		if err := copyFile("./"+DefaultConfigYAMLSamplePath, folder+DefaultConfigYAMLSamplePath); err != nil {
 			return err
 		}
-		if err := copyFile(RootPath+"/LICENSE", folder+"LICENSE"); err != nil {
+		if err := copyFile("./LICENSE", folder+"LICENSE"); err != nil {
 			return err
 		}
 	}
@@ -945,7 +929,7 @@ func (Release) OsPackage() error {
 
 // Zip creates a zip file from all os-package folders in dist/release
 func (Release) Zip() error {
-	p := RootPath + "/" + DIST + "/release/"
+	p := "./" + DIST + "/release/"
 	if err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() || info.Name() == "release" {
 			return nil
@@ -953,7 +937,7 @@ func (Release) Zip() error {
 
 		fmt.Printf("Zipping %s...\n", info.Name())
 
-		c := exec.Command("zip", "-r", RootPath+"/"+DIST+"/zip/"+info.Name()+".zip", ".", "-i", "*")
+		c := exec.Command("zip", "-r", "./"+DIST+"/zip/"+info.Name()+".zip", ".", "-i", "*")
 		c.Dir = path
 		out, err := c.Output()
 		fmt.Print(string(out))
@@ -968,7 +952,7 @@ func (Release) Zip() error {
 // Reprepro creates a debian repo structure
 func (Release) Reprepro() {
 	mg.Deps(setVersion, setBinLocation)
-	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "buster", RootPath+"/"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
+	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "buster", "./"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
 }
 
 // PrepareNFPMConfig prepares the nfpm config
@@ -977,7 +961,7 @@ func (Release) PrepareNFPMConfig() error {
 	var err error
 
 	// Because nfpm does not support templating, we replace the values in the config file and restore it after running
-	nfpmConfigPath := RootPath + "/nfpm.yaml"
+	nfpmConfigPath := "./nfpm.yaml"
 	nfpmconfig, err := os.ReadFile(nfpmConfigPath)
 	if err != nil {
 		return err
@@ -1019,7 +1003,7 @@ func (Release) Packages() error {
 		return err
 	}
 
-	releasePath := RootPath + "/" + DIST + "/os-packages/"
+	releasePath := "./" + DIST + "/os-packages/"
 	if err := os.MkdirAll(releasePath, 0o755); err != nil {
 		return err
 	}
@@ -1089,8 +1073,8 @@ func init() {
 	})
 }
 `
-	filename := "/pkg/migration/" + date + ".go"
-	f, err := os.Create(RootPath + filename)
+	filename := "./pkg/migration/" + date + ".go"
+	f, err := os.Create(filename)
 	defer f.Close()
 	if err != nil {
 		return err
@@ -1267,7 +1251,7 @@ func (Generate) SwaggerDocs() {
 	mg.Deps(initVars)
 
 	checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag")
-	runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", RootPath, "-o", RootPath+"/pkg/swagger")
+	runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", ".", "-o", "./pkg/swagger")
 }
 
 type ConfigNode struct {
@@ -1409,14 +1393,12 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 	}
 
 	// Get the parent directory path
-	parentDir := filepath.Dir(RootPath)
-	worktreePath := filepath.Join(parentDir, name)
+	worktreePath := filepath.Join("..", name)
 
 	fmt.Printf("Creating worktree at %s with branch %s...\n", worktreePath, name)
 
 	// Create the git worktree
 	cmd := exec.Command("git", "worktree", "add", worktreePath, "-b", name)
-	cmd.Dir = RootPath
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -1425,7 +1407,7 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 	printSuccess("Worktree created successfully!")
 
 	// Copy and modify config.yml
-	configSrc := filepath.Join(RootPath, "config.yml")
+	configSrc := "config.yml"
 	configDst := filepath.Join(worktreePath, "config.yml")
 
 	if _, err := os.Stat(configSrc); err == nil {
@@ -1451,7 +1433,7 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 	}
 
 	// Copy .claude/settings.local.json if it exists
-	claudeSettingsSrc := filepath.Join(RootPath, ".claude", "settings.local.json")
+	claudeSettingsSrc := filepath.Join(".claude", "settings.local.json")
 	if _, err := os.Stat(claudeSettingsSrc); err == nil {
 		claudeDir := filepath.Join(worktreePath, ".claude")
 		if err := os.MkdirAll(claudeDir, 0o755); err != nil {
@@ -1474,10 +1456,10 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 				return fmt.Errorf("failed to create plans directory: %w", err)
 			}
 
-			// Determine source path (relative to RootPath or absolute)
+			// Determine source path (relative to current directory or absolute)
 			srcPlanPath := planPath
 			if !filepath.IsAbs(planPath) {
-				srcPlanPath = filepath.Join(RootPath, planPath)
+				srcPlanPath = planPath
 			}
 
 			if _, err := os.Stat(srcPlanPath); err != nil {
@@ -1574,13 +1556,11 @@ func (Dev) TagRelease(version string) error {
 	fmt.Println("Committing changes...")
 	commitMsg := fmt.Sprintf("chore: %s release preparations", version)
 	cmd := exec.Command("git", "add", "README.md", "CHANGELOG.md")
-	cmd.Dir = RootPath
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to stage files: %w", err)
 	}
 
 	cmd = exec.Command("git", "commit", "-m", commitMsg)
-	cmd.Dir = RootPath
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -1593,7 +1573,6 @@ func (Dev) TagRelease(version string) error {
 	// Create the annotated tag
 	fmt.Printf("Creating tag %s...\n", version)
 	cmd = exec.Command("git", "tag", "-a", version, "-m", tagMessage)
-	cmd.Dir = RootPath
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -1677,7 +1656,7 @@ func cleanupChangelog(changelog string) string {
 
 // updateReadmeBadge updates the version badge in README.md
 func updateReadmeBadge(version string) error {
-	readmePath := filepath.Join(RootPath, "README.md")
+	readmePath := "README.md"
 	content, err := os.ReadFile(readmePath)
 	if err != nil {
 		return fmt.Errorf("failed to read README.md: %w", err)
@@ -1699,7 +1678,7 @@ func updateReadmeBadge(version string) error {
 
 // prependChangelog prepends the new changelog entries to CHANGELOG.md
 func prependChangelog(newChangelog string) error {
-	changelogPath := filepath.Join(RootPath, "CHANGELOG.md")
+	changelogPath := "CHANGELOG.md"
 	existingContent, err := os.ReadFile(changelogPath)
 	if err != nil {
 		return fmt.Errorf("failed to read CHANGELOG.md: %w", err)
@@ -1769,7 +1748,7 @@ func (Plugins) Build(pathToSourceFiles string) error {
 		pathToSourceFiles = absPath
 	}
 
-	out := filepath.Join(RootPath, "plugins", filepath.Base(pathToSourceFiles)+".so")
+	out := filepath.Join("plugins", filepath.Base(pathToSourceFiles)+".so")
 	runAndStreamOutput("go", "build", "-buildmode=plugin", "-tags", Tags, "-o", out, pathToSourceFiles)
 	return nil
 }
