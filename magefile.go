@@ -355,7 +355,7 @@ func moveFile(src, dst string) error {
 }
 
 func appendToFile(filename, content string) error {
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return err
 	}
@@ -741,7 +741,7 @@ func (Release) Release(ctx context.Context) error {
 // Creates all directories needed to release vikunja
 func (Release) Dirs() error {
 	for _, d := range []string{"binaries", "release", "zip"} {
-		if err := os.MkdirAll(RootPath+"/"+DIST+"/"+d, 0755); err != nil {
+		if err := os.MkdirAll(RootPath+"/"+DIST+"/"+d, 0o755); err != nil {
 			return err
 		}
 	}
@@ -924,7 +924,7 @@ func (Release) OsPackage() error {
 
 	for path, info := range bins {
 		folder := p + info.Name() + "-full/"
-		if err := os.Mkdir(folder, 0755); err != nil {
+		if err := os.Mkdir(folder, 0o755); err != nil {
 			return err
 		}
 		if err := moveFile(p+info.Name()+".sha256", folder+info.Name()+".sha256"); err != nil {
@@ -1020,7 +1020,7 @@ func (Release) Packages() error {
 	}
 
 	releasePath := RootPath + "/" + DIST + "/os-packages/"
-	if err := os.MkdirAll(releasePath, 0755); err != nil {
+	if err := os.MkdirAll(releasePath, 0o755); err != nil {
 		return err
 	}
 
@@ -1107,7 +1107,6 @@ func init() {
 
 // Create a new event. Takes the name of the event as the first argument and the module where the event should be created as the second argument. Events will be appended to the pkg/<module>/events.go file.
 func (Dev) MakeEvent(name, module string) error {
-
 	name = strcase.ToCamel(name)
 
 	if !strings.HasSuffix(name, "Event") {
@@ -1175,7 +1174,7 @@ func (s *` + name + `) Handle(msg *message.Message) (err error) {
 	var idx int64 = 0
 	for scanner.Scan() {
 		if scanner.Text() == "}" {
-			//idx -= int64(len(scanner.Text()))
+			// idx -= int64(len(scanner.Text()))
 			break
 		}
 		idx += int64(len(scanner.Bytes()) + 1)
@@ -1185,7 +1184,7 @@ func (s *` + name + `) Handle(msg *message.Message) (err error) {
 	registerListenerCode := `	events.RegisterListener((&` + event + `{}).Name(), &` + name + `{})
 `
 
-	f, err := os.OpenFile(filename, os.O_RDWR, 0600)
+	f, err := os.OpenFile(filename, os.O_RDWR, 0o600)
 	if err != nil {
 		return err
 	}
@@ -1216,7 +1215,6 @@ func (s *` + name + `) Handle(msg *message.Message) (err error) {
 
 // Create a new notification. Takes the name of the notification as the first argument and the module where the notification should be created as the second argument. Notifications will be appended to the pkg/<module>/notifications.go file.
 func (Dev) MakeNotification(name, module string) error {
-
 	name = strcase.ToCamel(name)
 
 	if !strings.HasSuffix(name, "Notification") {
@@ -1386,7 +1384,7 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 
 	yamlData := convertConfigJSONToYAML(&root, -1, true, "", commented)
 
-	err = os.WriteFile(yamlPath, []byte(yamlData), 0644)
+	err = os.WriteFile(yamlPath, []byte(yamlData), 0o644)
 	if err != nil {
 		fmt.Println("Error writing YAML file:", err)
 		return
@@ -1444,7 +1442,7 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 		re2 := regexp.MustCompile(`(?m)^(\s*rootpath:\s*)(/[^\s\n]+)`)
 		newConfig = re2.ReplaceAllString(newConfig, `${1}"`+worktreePath+`"`)
 
-		if err := os.WriteFile(configDst, []byte(newConfig), 0644); err != nil {
+		if err := os.WriteFile(configDst, []byte(newConfig), 0o644); err != nil {
 			return fmt.Errorf("failed to write config.yml: %w", err)
 		}
 		printSuccess("Config copied with updated rootpath!")
@@ -1456,7 +1454,7 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 	claudeSettingsSrc := filepath.Join(RootPath, ".claude", "settings.local.json")
 	if _, err := os.Stat(claudeSettingsSrc); err == nil {
 		claudeDir := filepath.Join(worktreePath, ".claude")
-		if err := os.MkdirAll(claudeDir, 0755); err != nil {
+		if err := os.MkdirAll(claudeDir, 0o755); err != nil {
 			return fmt.Errorf("failed to create .claude directory: %w", err)
 		}
 		claudeSettingsDst := filepath.Join(claudeDir, "settings.local.json")
@@ -1472,7 +1470,7 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 		if planPath != "" {
 			// Create plans directory in the new worktree
 			plansDir := filepath.Join(worktreePath, "plans")
-			if err := os.MkdirAll(plansDir, 0755); err != nil {
+			if err := os.MkdirAll(plansDir, 0o755); err != nil {
 				return fmt.Errorf("failed to create plans directory: %w", err)
 			}
 
@@ -1692,7 +1690,7 @@ func updateReadmeBadge(version string) error {
 	re := regexp.MustCompile(`(download-)(v[0-9a-zA-Z.]+)(-brightgreen)`)
 	newContent := re.ReplaceAllString(string(content), "${1}"+badgeVersion+"${3}")
 
-	if err := os.WriteFile(readmePath, []byte(newContent), 0644); err != nil {
+	if err := os.WriteFile(readmePath, []byte(newContent), 0o644); err != nil {
 		return fmt.Errorf("failed to write README.md: %w", err)
 	}
 
@@ -1727,7 +1725,7 @@ func prependChangelog(newChangelog string) error {
 		strings.TrimSpace(newChangelog) + "\n" +
 		existingVersions
 
-	if err := os.WriteFile(changelogPath, []byte(newContent), 0644); err != nil {
+	if err := os.WriteFile(changelogPath, []byte(newContent), 0o644); err != nil {
 		return fmt.Errorf("failed to write CHANGELOG.md: %w", err)
 	}
 
