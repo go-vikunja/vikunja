@@ -304,16 +304,16 @@ func copyFile(src, dst string) error {
 // Source: https://gist.github.com/var23rav/23ae5d0d4d830aff886c3c970b8f6c6b
 func moveFile(src, dst string) error {
 	inputFile, err := os.Open(src)
-	defer inputFile.Close()
 	if err != nil {
 		return fmt.Errorf("couldn't open source file: %s", err)
 	}
+	defer inputFile.Close()
 
 	outputFile, err := os.Create(dst)
-	defer outputFile.Close()
 	if err != nil {
 		return fmt.Errorf("couldn't open dest file: %s", err)
 	}
+	defer outputFile.Close()
 
 	_, err = io.Copy(outputFile, inputFile)
 	if err != nil {
@@ -864,6 +864,9 @@ func (Release) Copy() error {
 func (Release) Check() error {
 	p := "./" + DIST + "/release/"
 	return filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if info.IsDir() {
 			return nil
 		}
@@ -931,6 +934,9 @@ func (Release) OsPackage() error {
 func (Release) Zip() error {
 	p := "./" + DIST + "/release/"
 	if err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if !info.IsDir() || info.Name() == "release" {
 			return nil
 		}
@@ -1075,10 +1081,10 @@ func init() {
 `
 	filename := "./pkg/migration/" + date + ".go"
 	f, err := os.Create(filename)
-	defer f.Close()
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	if _, err := f.WriteString(migration); err != nil {
 		return err
