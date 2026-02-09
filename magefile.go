@@ -55,7 +55,6 @@ var (
 	Version       = "unstable" // This holds the built version, unstable by default, when building from a tag or release branch, their name
 	BinLocation   = ""
 	PkgVersion    = "unstable"
-	ApiPackages   = []string{}
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]interface{}{
@@ -163,19 +162,6 @@ func setPkgVersion() {
 func setExecutable() {
 	if runtime.GOOS == "windows" {
 		Executable += ".exe"
-	}
-}
-
-func setApiPackages() {
-	pkgs, err := runCmdWithOutput("go", "list", "all")
-	if err != nil {
-		fmt.Printf("Error getting packages: %s\n", err)
-		os.Exit(1)
-	}
-	for _, p := range strings.Split(string(pkgs), "\n") {
-		if strings.Contains(p, "code.vikunja.io/api") && !strings.Contains(p, "code.vikunja.io/api/pkg/webtests") {
-			ApiPackages = append(ApiPackages, p)
-		}
 	}
 }
 
@@ -355,10 +341,8 @@ type Test mg.Namespace
 // Feature runs the feature tests
 func (Test) Feature() error {
 	mg.Deps(initVars)
-	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", goDetectVerboseFlag(), "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}, ApiPackages...)
-	return runAndStreamOutput("go", args...)
+	return runAndStreamOutput("go", "test", goDetectVerboseFlag(), "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m", "-short", "./...")
 }
 
 // Coverage runs the tests and builds the coverage html file from coverage output
@@ -372,16 +356,14 @@ func (Test) Coverage() error {
 func (Test) Web() error {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := []string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", PACKAGE + "/pkg/webtests"}
+	args := []string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/webtests"}
 	return runAndStreamOutput("go", args...)
 }
 
 func (Test) Filter(filter string) error {
 	mg.Deps(initVars)
-	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter}, ApiPackages...)
-	return runAndStreamOutput("go", args...)
+	return runAndStreamOutput("go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, "-short", "./...")
 }
 
 func (Test) All() {
