@@ -47,9 +47,6 @@ const (
 )
 
 var (
-	Goflags = []string{
-		"-v",
-	}
 	Executable    = "vikunja"
 	Ldflags       = ""
 	Tags          = ""
@@ -80,6 +77,10 @@ var (
 		"generate:swagger-docs":       Generate.SwaggerDocs,
 	}
 )
+
+func goDetectVerboseFlag() string {
+	return fmt.Sprintf("-v=%t", mg.Verbose())
+}
 
 func runCmdWithOutput(name string, arg ...string) (output []byte, err error) {
 	cmd := exec.Command(name, arg...)
@@ -243,7 +244,7 @@ func runAndStreamOutput(cmd string, args ...string) {
 func checkAndInstallGoTool(tool, importPath string) {
 	if err := exec.Command(tool).Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
 		fmt.Printf("%s not installed, installing %s...\n", tool, importPath)
-		if err := exec.Command("go", "install", Goflags[0], importPath).Run(); err != nil {
+		if err := exec.Command("go", "install", goDetectVerboseFlag(), importPath).Run(); err != nil {
 			fmt.Printf("Error installing %s\n", tool)
 			os.Exit(1)
 		}
@@ -371,7 +372,7 @@ func (Test) Feature() {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", Goflags[0], "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}, ApiPackages...)
+	args := append([]string{"test", goDetectVerboseFlag(), "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}, ApiPackages...)
 	runAndStreamOutput("go", args...)
 }
 
@@ -386,7 +387,7 @@ func (Test) Coverage() {
 func (Test) Web() {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := []string{"test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE + "/pkg/webtests"}
+	args := []string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", PACKAGE + "/pkg/webtests"}
 	runAndStreamOutput("go", args...)
 }
 
@@ -394,7 +395,7 @@ func (Test) Filter(filter string) {
 	mg.Deps(initVars)
 	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", Goflags[0], "-p", "1", "-timeout", "45m", "-run", filter}, ApiPackages...)
+	args := append([]string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter}, ApiPackages...)
 	runAndStreamOutput("go", args...)
 }
 
@@ -664,7 +665,7 @@ func (Build) Build() {
 		fmt.Printf("Warning: %s not found, created empty file\n", indexFile)
 	}
 
-	runAndStreamOutput("go", "build", Goflags[0], "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
+	runAndStreamOutput("go", "build", goDetectVerboseFlag(), "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
 func (Build) SaveVersionToFile() error {
