@@ -1772,6 +1772,6 @@ func (Plugins) Build(pathToSourceFiles string) error {
 	}
 
 	out := filepath.Join(RootPath, "plugins", filepath.Base(pathToSourceFiles)+".so")
-	runAndStreamOutput("go", "build", "-buildmode=plugin", "-o", out, pathToSourceFiles)
+	runAndStreamOutput("go", "build", "-buildmode=plugin", "-tags", Tags, "-o", out, pathToSourceFiles)
 	return nil
 }
