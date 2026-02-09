@@ -127,7 +127,7 @@ func (sf *SavedFilter) ToProject() *Project {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /filters [put]
 func (sf *SavedFilter) Create(s *xorm.Session, auth web.Auth) (err error) {
-	_, err = getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	err = sf.Filters.ValidateFilterString()
 	if err != nil {
 		return
 	}
@@ -207,7 +207,7 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 		sf.Filters = origFilter.Filters
 	}
 
-	_, err = getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
+	err = sf.Filters.ValidateFilterString()
 	if err != nil {
 		return err
 	}
@@ -238,12 +238,7 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 
-	parsedFilters, err := getTaskFiltersFromFilterString(sf.Filters.Filter, sf.Filters.FilterTimezone)
-	if err != nil {
-		return err
-	}
-
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, sf.Filters.FilterIncludeNulls)
+	filterCond, err := sf.Filters.FilterCondition()
 	if err != nil {
 		return err
 	}
@@ -356,22 +351,13 @@ func dropFiltersWithInactiveOwners(s *xorm.Session, filters map[int64]*SavedFilt
 }
 
 func addTaskToFilter(s *xorm.Session, filter *SavedFilter, view *ProjectView, fallbackTimezone string, task *Task) (taskBucket *TaskBucket, taskPosition *TaskPosition, err error) {
-
-	filterString := filter.Filters.Filter
-
 	if filter.Filters.FilterTimezone == "" {
 		filter.Filters.FilterTimezone = fallbackTimezone
 	}
 
-	parsedFilters, err := getTaskFiltersFromFilterString(filterString, filter.Filters.FilterTimezone)
+	filterCond, err := filter.Filters.FilterCondition()
 	if err != nil {
-		log.Errorf("Could not parse filter string '%s' from view %d and saved filter %d: %v", filterString, view.ID, filter.ID, err)
-		return
-	}
-
-	filterCond, err := convertFiltersToDBFilterCond(parsedFilters, filter.Filters.FilterIncludeNulls)
-	if err != nil {
-		log.Errorf("Could not convert filter string '%s' from view %d and saved filter %d to db conditions: %v", filterString, view.ID, filter.ID, err)
+		log.Errorf("Could not parse filter from view %d and convert to database conditions: %v", view.ID, err)
 		return
 	}
 

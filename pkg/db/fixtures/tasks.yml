@@ -447,6 +447,16 @@
   index: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
+- id: 100
+  title: 'Due in thousands of years'
+  description: 'Due in thousands of years'
+  done: false
+  created_by_id: 1
+  project_id: 1
+  index: 34
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+  due_date: 9999-01-01 00:00:00
 # Soft-deleted task: must never surface anywhere except through Unscoped queries
 - id: 51
   title: 'task #51 soft deleted'
@@ -454,7 +464,7 @@
   due_date: 2018-11-30 00:00:00
   created_by_id: 1
   project_id: 1
-  index: 34
+  index: 35
   deleted_at: 2018-12-01 01:12:04
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04

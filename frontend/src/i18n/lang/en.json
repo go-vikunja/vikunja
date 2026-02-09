@@ -552,6 +552,36 @@
       "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
       "secretDocs": "Check out the docs for more details about how to use secrets."
     },
+    "urgency": {
+      "title": "Urgency",
+      "header": "Edit \"{project}\" urgency",
+      "description": "Urgency sorts your most important tasks to the top. Weigh one or more task properties by their importance to you.",
+      "getStarted": "Get started by creating new weights below, then sort your views by Urgency.",
+      "property": "Property",
+      "filter": "Filter",
+      "weight": {
+        "name": "Weight",
+        "description": "Larger weights are more important."
+      },
+      "properties": {
+        "due_date": {
+          "name": "Due Date",
+          "description": "Overdue tasks are more important. Accelerates over time."
+        },
+        "matches_filter": {
+          "name": "Matches Filter",
+          "description": "Matching tasks are more important."
+        },
+        "percent_done": {
+          "name": "Progress",
+          "description": "Almost finished tasks are more important."
+        },
+        "priority": {
+          "name": "Priority",
+          "description": "Higher priority tasks are more important."
+        }
+      }
+    },
     "views": {
       "header": "Edit views",
       "title": "Title",
@@ -672,7 +702,9 @@
       "createdDesc": "Created (Newest first)",
       "createdAsc": "Created (Oldest first)",
       "updatedDesc": "Updated (Newest first)",
-      "updatedAsc": "Updated (Oldest first)"
+      "updatedAsc": "Updated (Oldest first)",
+      "urgencyDesc": "Urgency (Highest first)",
+      "urgencyAsc": "Urgency (Lowest first)"
     }
   },
   "migrate": {
@@ -1055,6 +1087,7 @@
       "startDate": "Start Date",
       "title": "Title",
       "updated": "Updated",
+      "urgency": "Urgency",
       "doneAt": "Done At"
     },
     "subscription": {

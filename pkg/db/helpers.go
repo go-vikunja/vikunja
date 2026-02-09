@@ -17,10 +17,12 @@
 package db
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
 	"xorm.io/builder"
+	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
 )
 
@@ -138,4 +140,20 @@ func IsUniqueConstraintError(err error, constraintName string) bool {
 	}
 
 	return false
+}
+
+func DoTransaction(s *xorm.Session, do func() error) (returnedErr error) {
+	if err := s.Begin(); err != nil {
+		return err
+	}
+	defer func() {
+		var commitErr error
+		if returnedErr != nil {
+			commitErr = s.Rollback()
+		} else {
+			commitErr = s.Commit()
+		}
+		returnedErr = errors.Join(returnedErr, commitErr)
+	}()
+	return do()
 }

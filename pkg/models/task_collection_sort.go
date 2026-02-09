@@ -51,9 +51,14 @@ const (
 	taskPropertyAssignees     string = "assignees"
 	taskPropertyLabels        string = "labels"
 	taskPropertyReminders     string = "reminders"
-	// Not a task column: sorts by search relevance on ParadeDB. Valid for
-	// sorting only, silently skipped when the database or query cannot score.
-	taskPropertyRelevance string = "relevance"
+)
+
+// Task computed properties. Silently skipped when the database or query cannot compute them.
+const (
+	// taskPropertyRelevance sorts by search relevance on ParadeDB.
+	taskPropertyRelevance = "relevance"
+	// taskPropertyUrgency sorts by a project-specific urgency. See [urgencyScoreQuery] for details.
+	taskPropertyUrgency = "urgency"
 )
 
 const (
@@ -116,7 +121,8 @@ func validateTaskFieldForSorting(fieldName string) error {
 		taskPropertyUpdated,
 		taskPropertyPosition,
 		taskPropertyBucketID,
-		taskPropertyIndex:
+		taskPropertyIndex,
+		taskPropertyUrgency:
 		return nil
 	}
 	return ErrInvalidTaskField{TaskField: fieldName}

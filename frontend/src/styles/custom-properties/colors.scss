@@ -274,6 +274,13 @@
   --code-section: #3a86ff;
   --code-keyword: #8338ec;
 
+  // Chart colors
+  --chart-color-1: #fd8a09;
+  --chart-color-2: #0ead69;
+  --chart-color-3: #3a86ff;
+  --chart-color-4: #8338ec;
+  --chart-color-5: #da2222;
+
   &.dark {
     @media screen {
       // Light mode colours reversed for dark mode
@@ -346,6 +353,13 @@
       --code-symbol: #b9f18d;
       --code-section: #faf594;
       --code-keyword: #70cff8;
+
+      // Chart colors
+      --chart-color-1: #fbbc88;
+      --chart-color-2: #b9f18d;
+      --chart-color-3: #faf594;
+      --chart-color-4: #70cff8;
+      --chart-color-5: #f98181;
     }
   }
 }

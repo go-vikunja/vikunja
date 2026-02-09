@@ -99,6 +99,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	bucketId: IBucket['id'] = 0
 	buckets: IBucket[] = []
 
+	urgency: number | null
+
 	constructor(data: Partial<ITask> = {}) {
 		super()
 		this.assignData(data)

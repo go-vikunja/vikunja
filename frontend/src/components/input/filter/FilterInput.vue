@@ -20,6 +20,7 @@ import FilterAutocomplete from '@/components/input/filter/FilterAutocomplete'
 import type {IProject} from '@/modelTypes/IProject'
 
 const props = defineProps<{
+	disabled?: boolean,
 	projectId?: IProject['id'],
 	modelValue?: string,
 }>()
@@ -83,6 +84,7 @@ const DateClickHandler = Extension.create({
 
 // Initialize TipTap editor
 const editor = useEditor({
+	editable: !props.disabled,
 	editorProps: {
 		attributes: {
 			role: 'textbox',

@@ -68,6 +68,9 @@
 							<FancyCheckbox v-model="activeColumns.updated">
 								{{ $t('task.attributes.updated') }}
 							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.urgency">
+								{{ $t('task.attributes.urgency') }}
+							</FancyCheckbox>
 							<FancyCheckbox v-model="activeColumns.createdBy">
 								{{ $t('task.attributes.createdBy') }}
 							</FancyCheckbox>
@@ -230,6 +233,13 @@
 											@click="sort('updated', $event)"
 										/>
 									</th>
+									<th v-if="activeColumns.urgency">
+										{{ $t('task.attributes.urgency') }}
+										<Sort
+											:order="sortBy.urgency"
+											@click="sort('urgency', $event)"
+										/>
+									</th>
 									<th v-if="activeColumns.createdBy">
 										{{ $t('task.attributes.createdBy') }}
 									</th>
@@ -320,6 +330,15 @@
 										v-if="activeColumns.updated"
 										:date="t.updated"
 									/>
+									<td v-if="activeColumns.urgency"
+										:title="`Urgency score: ${Math.round(t.urgency * 100)}`"
+									>
+										<PriorityLabel
+											:priority="Math.round(t.urgency * 5)"
+											:done="t.done"
+											:show-all="true"
+										/>
+									</td>
 									<td v-if="activeColumns.createdBy">
 										<User
 											:avatar-size="27"
@@ -396,6 +415,7 @@ const ACTIVE_COLUMNS_DEFAULT = {
 	createdBy: false,
 	doneAt: false,
 	commentCount: false,
+	urgency: false,
 }
 
 const SORT_BY_DEFAULT: SortBy = {

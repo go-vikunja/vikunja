@@ -29,14 +29,27 @@ export interface SortBy {
 	percent_done?: Order
 	created?: Order
 	updated?: Order
-	done_at?: Order,
-	position?: Order,
+	done_at?: Order
+	position?: Order
+	urgency?: Order
 }
 
-const VALID_SORT_FIELDS = new Set<string>(
-	['id', 'index', 'done', 'title', 'priority', 'due_date', 'start_date',
-		'end_date', 'percent_done', 'created', 'updated', 'done_at', 'position'],
-)
+const VALID_SORT_FIELDS = new Set<string>([
+	'id',
+	'index',
+	'done',
+	'title',
+	'priority',
+	'due_date',
+	'start_date',
+	'end_date',
+	'percent_done',
+	'created',
+	'updated',
+	'done_at',
+	'position',
+	'urgency',
+])
 
 function parseSortQuery(raw: string, fallback: SortBy): SortBy {
 	const result: Record<string, Order> = {}

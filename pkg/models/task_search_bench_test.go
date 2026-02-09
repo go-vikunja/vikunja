@@ -166,6 +166,21 @@ func BenchmarkTaskSearch(b *testing.B) {
 			},
 			numberOfTasksExponent: []int{1, 2, 3, 4},
 		},
+		{
+			description: "sort by urgency",
+			pickProject: true,
+			opts: taskSearchOptions{
+				page:    1,
+				perPage: 50,
+				sortby: []*sortParam{
+					{
+						sortBy:  taskPropertyUrgency,
+						orderBy: orderDescending,
+					},
+				},
+			},
+			numberOfTasksExponent: []int{1, 2, 3, 4},
+		},
 	} {
 		b.Run(fmt.Sprintf("%s %s", config.DatabaseType.GetString(), tc.description), func(b *testing.B) {
 			slices.Sort(tc.numberOfTasksExponent) // Ensure they're sorted in order of magnitude, since we don't delete anything due to global shared database.

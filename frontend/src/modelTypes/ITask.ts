@@ -61,6 +61,7 @@ export interface ITask extends IAbstract {
 	projectId: IProject['id'] // Meta, only used when creating a new task
 	bucketId: IBucket['id']
 	buckets: IBucket[]
+	urgency: number | null
 }
 
 export type ITaskPartialWithId = PartialWithId<ITask>
