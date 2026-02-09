@@ -20,7 +20,6 @@ import (
 	"os"
 	"testing"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
@@ -34,7 +33,7 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 		m := &FileMigrator{}
 		u := &user.User{ID: 1}
 
-		f, err := os.Open(config.ServiceRootpath.GetString() + "/pkg/modules/migration/vikunja-file/export.zip")
+		f, err := os.Open("export.zip")
 		if err != nil {
 			t.Fatalf("Could not open file: %s", err)
 		}
@@ -81,7 +80,7 @@ func TestVikunjaFileMigrator_Migrate(t *testing.T) {
 		m := &FileMigrator{}
 		u := &user.User{ID: 1}
 
-		f, err := os.Open(config.ServiceRootpath.GetString() + "/pkg/modules/migration/vikunja-file/export_pre_0.21.0.zip")
+		f, err := os.Open("export_pre_0.21.0.zip")
 		if err != nil {
 			t.Fatalf("Could not open file: %s", err)
 		}
