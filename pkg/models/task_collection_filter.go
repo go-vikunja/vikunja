@@ -394,6 +394,14 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 		return nil, valueSlice, nil
 	}
 
+	// For the like operator on string fields, just return the pattern directly
+	// without type conversion to allow wildcards like %
+	if comparator == taskFilterComparatorLike && field.Type.Kind() == reflect.String {
+		value = strings.TrimSpace(value)
+		value = strings.Trim(value, "'\"")
+		return &field, value, nil
+	}
+
 	val, err := getValueForField(field, value, loc)
 	return &field, val, err
 }
