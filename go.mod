@@ -167,6 +167,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tj/assert v0.0.3 // indirect
+	github.com/traefik/yaegi v0.16.1 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4 // indirect
 	go.uber.org/mock v0.5.0 // indirect
