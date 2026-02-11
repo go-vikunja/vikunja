@@ -28,6 +28,7 @@
 			:class="{'disabled': !canWrite}"
 			:contenteditable="canWrite ? true : undefined"
 			:spellcheck="false"
+			@input="handleTitleInput"
 			@blur="save(($event.target as HTMLInputElement).textContent as string)"
 			@keydown.enter.prevent.stop="!$event.isComposing && ($event.target as HTMLInputElement).blur()"
 			@keydown.esc.prevent.stop="!$event.isComposing && cancel($event.target as HTMLInputElement)"
@@ -64,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed} from 'vue'
+import {ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
 import {useRouter} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -109,6 +110,36 @@ const saving = ref(false)
 
 const showSavedMessage = ref(false)
 
+// Track if title has unsaved changes
+const titleHasChanges = ref(false)
+
+function handleBeforeUnload(e: BeforeUnloadEvent) {
+	if (titleHasChanges.value) {
+		e.preventDefault()
+		// Modern browsers ignore custom messages but this is still required
+		e.returnValue = ''
+		return ''
+	}
+}
+
+onMounted(() => {
+	window.addEventListener('beforeunload', handleBeforeUnload)
+})
+
+onBeforeUnmount(() => {
+	window.removeEventListener('beforeunload', handleBeforeUnload)
+})
+
+// Reset titleHasChanges when the task changes
+watch(() => props.task.id, () => {
+	titleHasChanges.value = false
+})
+
+function handleTitleInput(event: Event) {
+	const target = event.target as HTMLInputElement
+	titleHasChanges.value = target.textContent !== props.task.title
+}
+
 async function save(title: string) {
 	// We only want to save if the title was actually changed.
 	// so we only continue if the task title changed.
@@ -123,6 +154,7 @@ async function save(title: string) {
 			title,
 		})
 		emit('update:task', newTask)
+		titleHasChanges.value = false
 		showSavedMessage.value = true
 		setTimeout(() => {
 			showSavedMessage.value = false
@@ -134,6 +166,7 @@ async function save(title: string) {
 
 async function cancel(element: HTMLInputElement) {
 	element.textContent = props.task.title
+	titleHasChanges.value = false
 	element.blur()
 }
 </script>
