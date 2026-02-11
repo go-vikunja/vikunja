@@ -29,6 +29,9 @@
 							<FancyCheckbox v-model="activeColumns.done">
 								{{ $t('task.attributes.done') }}
 							</FancyCheckbox>
+							<FancyCheckbox v-model="activeColumns.project">
+								{{ $t('task.attributes.project') }}
+							</FancyCheckbox>
 							<FancyCheckbox v-model="activeColumns.title">
 								{{ $t('task.attributes.title') }}
 							</FancyCheckbox>
@@ -107,6 +110,9 @@
 											:order="sortBy.done"
 											@click="sort('done', $event)"
 										/>
+									</th>
+									<th v-if="activeColumns.project">
+										{{ $t('task.attributes.project') }}
 									</th>
 									<th v-if="activeColumns.title">
 										{{ $t('task.attributes.title') }}
@@ -205,6 +211,14 @@
 											:is-done="t.done"
 											variant="small"
 										/>
+									</td>
+									<td v-if="activeColumns.project">
+										<RouterLink
+											v-if="projectStore.projects[t.projectId]"
+											:to="{ name: 'project.index', params: { projectId: t.projectId } }"
+										>
+											{{ projectStore.projects[t.projectId].title }}
+										</RouterLink>
 									</td>
 									<td v-if="activeColumns.title">
 										<TaskGlanceTooltip :task="t">
@@ -311,6 +325,7 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import { camelCase } from 'change-case'
 import {isSavedFilter} from '@/services/savedFilter'
+import {useProjectStore} from '@/stores/projects'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
@@ -318,9 +333,12 @@ const props = defineProps<{
 	viewId: IProjectView['id'],
 }>()
 
+const projectStore = useProjectStore()
+
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
 	done: true,
+	project: false,
 	title: true,
 	priority: false,
 	labels: true,
