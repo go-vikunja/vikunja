@@ -58,6 +58,7 @@
 						v-if="activeForm !== null"
 						class="reminder__close-button"
 						:shadow="false"
+						:disabled="activeForm === 'absolute' && reminderDate === null"
 						@click="confirmAndClose(close)"
 					>
 						{{ $t('misc.confirm') }}
