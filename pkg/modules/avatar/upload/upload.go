@@ -42,7 +42,7 @@ const CacheKeyPrefix = "avatar_upload_"
 
 // FlushCache removes cached avatars for a user
 func (p *Provider) FlushCache(u *user.User) error {
-	return keyvalue.Del(CacheKeyPrefix + strconv.Itoa(int(u.ID)))
+	return keyvalue.DelPrefix(CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_")
 }
 
 // CachedAvatar represents a cached avatar with its content and mime type
