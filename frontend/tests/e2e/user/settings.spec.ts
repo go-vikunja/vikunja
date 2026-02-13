@@ -40,6 +40,54 @@ test.describe('User Settings', () => {
 		await expect(page.locator('.global-notification')).toContainText('Success', {timeout: 10000})
 	})
 
+	test('Invalidates avatar cache when uploading a new avatar', async ({authenticatedPage: page}) => {
+		await page.goto('/user/settings/avatar')
+		await page.waitForLoadState('networkidle')
+
+		const uploadRadio = page.locator('input[name=avatarProvider][value=upload]')
+		await expect(uploadRadio).toBeVisible({timeout: 5000})
+		await uploadRadio.click()
+
+		const fileInput = page.locator('input[type=file]')
+		const uploadButton = page.locator('[data-cy="uploadAvatar"]')
+		const headerAvatar = page.locator('.username-dropdown-trigger img.avatar')
+		const notification = page.locator('.global-notification')
+
+		// Upload first avatar (image.jpg)
+		await fileInput.setInputFiles('tests/fixtures/image.jpg')
+		await expect(uploadButton).toBeEnabled({timeout: 10000})
+
+		const firstUploadPromise = page.waitForResponse(response =>
+			response.url().includes('avatar') && response.request().method() === 'PUT',
+		)
+		await uploadButton.click()
+		const firstResponse = await firstUploadPromise
+		expect(firstResponse.ok()).toBe(true)
+		await expect(notification).toContainText('Success', {timeout: 10000})
+
+		// Wait for the header avatar to update and capture its src
+		await expect(headerAvatar).toHaveAttribute('src', /blob:|data:/, {timeout: 10000})
+		const firstAvatarSrc = await headerAvatar.getAttribute('src')
+
+		// Wait for the notification to disappear before uploading again
+		await expect(notification).not.toBeVisible({timeout: 10000})
+
+		// Upload second avatar (image-blue.png)
+		await fileInput.setInputFiles('tests/fixtures/image-blue.png')
+		await expect(uploadButton).toBeEnabled({timeout: 10000})
+
+		const secondUploadPromise = page.waitForResponse(response =>
+			response.url().includes('avatar') && response.request().method() === 'PUT',
+		)
+		await uploadButton.click()
+		const secondResponse = await secondUploadPromise
+		expect(secondResponse.ok()).toBe(true)
+		await expect(notification).toContainText('Success', {timeout: 10000})
+
+		// Verify the header avatar changed to a different blob URL
+		await expect(headerAvatar).not.toHaveAttribute('src', firstAvatarSrc!, {timeout: 10000})
+	})
+
 	test('Updates the name', async ({authenticatedPage: page}) => {
 		await page.goto('/user/settings/general')
 		await page.waitForLoadState('networkidle')
