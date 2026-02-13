@@ -52,14 +52,14 @@
 					<DatepickerInline
 						v-else-if="activeForm === 'absolute'"
 						v-model="reminderDate"
-						@update:modelValue="setReminderDateAndClose(close)"
 					/>
 
 					<XButton
-						v-if="showFormSwitch !== null"
+						v-if="activeForm !== null"
 						class="reminder__close-button"
 						:shadow="false"
-						@click="updateDataAndMaybeCloseNow(close)"
+						:disabled="activeForm === 'absolute' && reminderDate === null"
+						@click="confirmAndClose(close)"
 					>
 						{{ $t('misc.confirm') }}
 					</XButton>
@@ -86,7 +86,6 @@ import Popup from '@/components/misc/Popup.vue'
 import TaskReminderModel from '@/models/taskReminder'
 import Card from '@/components/misc/Card.vue'
 import SimpleButton from '@/components/input/SimpleButton.vue'
-import {useDebounceFn} from '@vueuse/core'
 
 const props = withDefaults(defineProps<{
 	modelValue?: ITaskReminder,
@@ -170,7 +169,7 @@ function setReminderDateAndClose(close: () => void) {
 		: new Date(reminderDate.value)
 	reminder.value.relativeTo = null
 	reminder.value.relativePeriod = 0
-	updateDataAndMaybeClose(close)
+	updateDataAndMaybeCloseNow(close)
 }
 
 
@@ -180,12 +179,18 @@ function setReminderFromPreset(preset: ITaskReminder, close: () => void) {
 	close()
 }
 
-const updateDataAndMaybeClose = useDebounceFn(updateDataAndMaybeCloseNow, 500)
-
 function updateDataAndMaybeCloseNow(close: () => void) {
 	updateData()
 	if (props.clearAfterUpdate) {
 		close()
+	}
+}
+
+function confirmAndClose(close: () => void) {
+	if (activeForm.value === 'absolute') {
+		setReminderDateAndClose(close)
+	} else {
+		updateDataAndMaybeCloseNow(close)
 	}
 }
 
