@@ -55,6 +55,11 @@
 						class="has-text-grey-light"
 					> &gt; </span>
 				</template>
+				<BucketSelect
+					:task="task"
+					:can-write="canWrite"
+					@update:task="Object.assign(task, $event)"
+				/>
 			</h6>
 
 			<ChecklistSummary :task="task" />
@@ -651,6 +656,7 @@ import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
 import TaskSubscription from '@/components/misc/Subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
+import BucketSelect from '@/components/tasks/partials/BucketSelect.vue'
 import Reactions from '@/components/input/Reactions.vue'
 
 import {uploadFile} from '@/helpers/attachments'
@@ -880,7 +886,7 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments', 'is_unread']})
+			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments', 'is_unread', 'buckets']})
 			Object.assign(task.value, loaded)
 			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
