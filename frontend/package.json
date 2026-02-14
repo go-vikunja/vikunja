@@ -129,7 +129,7 @@
     "csstype": "3.2.3",
     "esbuild": "0.27.3",
     "eslint": "9.39.2",
-    "eslint-plugin-vue": "10.7.0",
+    "eslint-plugin-vue": "10.8.0",
     "happy-dom": "20.6.1",
     "histoire": "1.0.0-beta.1",
     "postcss": "8.5.6",
