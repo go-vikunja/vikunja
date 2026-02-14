@@ -51,12 +51,6 @@ func InitializeLDAPConnection() {
 	if config.AuthLdapBaseDN.GetString() == "" {
 		log.Fatal("LDAP base DN is not configured")
 	}
-	if config.AuthLdapBindDN.GetString() == "" {
-		log.Fatal("LDAP bind DN is not configured")
-	}
-	if config.AuthLdapBindPassword.GetString() == "" {
-		log.Fatal("LDAP bind password is not configured")
-	}
 	if config.AuthLdapUserFilter.GetString() == "" {
 		log.Fatal("LDAP user filter is not configured")
 	}
@@ -99,10 +93,17 @@ func ConnectAndBindToLDAPDirectory() (l *ldap.Conn, err error) {
 		return nil, fmt.Errorf("could not connect to LDAP server: %w", err)
 	}
 
-	err = l.Bind(
-		config.AuthLdapBindDN.GetString(),
-		config.AuthLdapBindPassword.GetString(),
-	)
+	bindDN := config.AuthLdapBindDN.GetString()
+	bindPassword := config.AuthLdapBindPassword.GetString()
+
+	if bindDN != "" && bindPassword != "" {
+		// Standard authentication
+		err = l.Bind(bindDN, bindPassword)
+	} else {
+		// Anonymous bind attempt (depending on the server, this call is explicit or automatic)
+		log.Info("No LDAP bind DN or password configured, attempting anonymous bind")
+		err = l.UnauthenticatedBind("")
+	}
 	return
 }
 
