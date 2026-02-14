@@ -1,6 +1,7 @@
 import {parseDate} from '../helpers/time/parseDate'
 import {PRIORITIES} from '@/constants/priorities'
-import {REPEAT_TYPES, type IRepeatAfter, type IRepeatType} from '@/types/IRepeatAfter'
+import type {ITaskRepeat} from '@/modelTypes/ITask'
+import {repeatFromSettings, type RepeatFrequency} from '@/helpers/rrule'
 
 const VIKUNJA_PREFIXES: Prefixes = {
 	label: '*',
@@ -30,7 +31,7 @@ export const PREFIXES = {
 
 interface repeatParsedResult {
 	textWithoutMatched: string,
-	repeats: IRepeatAfter | null,
+	repeat: ITaskRepeat | null,
 }
 
 export interface ParsedTaskText {
@@ -40,7 +41,7 @@ export interface ParsedTaskText {
 	project: string | null,
 	priority: number | null,
 	assignees: string[],
-	repeats: IRepeatAfter | null,
+	repeat: ITaskRepeat | null,
 }
 
 interface Prefixes {
@@ -63,7 +64,7 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 		project: null,
 		priority: null,
 		assignees: [],
-		repeats: null,
+		repeat: null,
 	}
 
 	const prefixes = PREFIXES[prefixesMode]
@@ -82,9 +83,9 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 
 	result.assignees = getItemsFromPrefix(result.text, prefixes.assignee)
 
-	const {textWithoutMatched, repeats} = getRepeats(result.text)
+	const {textWithoutMatched, repeat} = getRepeats(result.text)
 	result.text = textWithoutMatched
-	result.repeats = repeats
+	result.repeat = repeat
 
 	const {newText, date} = parseDate(result.text, now)
 	result.text = newText
@@ -170,7 +171,7 @@ const getRepeats = (text: string): repeatParsedResult => {
 	if (results === null) {
 		return {
 			textWithoutMatched: text,
-			repeats: null,
+			repeat: null,
 		}
 	}
 
@@ -209,59 +210,59 @@ const getRepeats = (text: string): repeatParsedResult => {
 		default:
 			amount = results[5] ? parseInt(results[5]) : 1
 	}
-	let type: IRepeatType = REPEAT_TYPES.Hours
+	let freq: RepeatFrequency = 'hours'
 
 	switch (results[2]) {
 		case 'biennially':
-			type = REPEAT_TYPES.Years
+			freq = 'years'
 			amount = 2
 			break
 		case 'biannually':
 		case 'semiannually':
-			type = REPEAT_TYPES.Months
+			freq = 'months'
 			amount = 6
 			break
 		case 'yearly':
 		case 'annually':
-			type = REPEAT_TYPES.Years
+			freq = 'years'
 			break
 		case 'daily':
-			type = REPEAT_TYPES.Days
+			freq = 'days'
 			break
 		case 'hourly':
-			type = REPEAT_TYPES.Hours
+			freq = 'hours'
 			break
 		case 'monthly':
-			type = REPEAT_TYPES.Months
+			freq = 'months'
 			break
 		case 'weekly':
-			type = REPEAT_TYPES.Weeks
+			freq = 'weeks'
 			break
 		default:
 			switch (results[7]) {
 				case 'hour':
 				case 'hours':
-					type = REPEAT_TYPES.Hours
+					freq = 'hours'
 					break
 				case 'day':
 				case 'days':
-					type = REPEAT_TYPES.Days
+					freq = 'days'
 					break
 				case 'week':
 				case 'weeks':
-					type = REPEAT_TYPES.Weeks
+					freq = 'weeks'
 					break
 				case 'month':
 				case 'months':
-					type = REPEAT_TYPES.Months
+					freq = 'months'
 					break
 				case 'year':
 				case 'years':
-					type = REPEAT_TYPES.Years
+					freq = 'years'
 					break
 			}
 	}
-	
+
 	let matchedText = results[0]
 	if(matchedText.endsWith(' ')) {
 		matchedText = matchedText.substring(0, matchedText.length - 1)
@@ -269,10 +270,7 @@ const getRepeats = (text: string): repeatParsedResult => {
 
 	return {
 		textWithoutMatched: text.replace(matchedText, ''),
-		repeats: {
-			amount,
-			type,
-		},
+		repeat: repeatFromSettings(amount, freq),
 	}
 }
 

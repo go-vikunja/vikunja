@@ -75,6 +75,32 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 	return err
 }
 
+// normalizeTickTickRepeat normalizes the TickTick Repeat field to a single RRULE string.
+// TickTick exports repeat rules in RRULE format, but may include multiple rules separated by newlines.
+// Vikunja only supports one RRULE, so we take the first one.
+func normalizeTickTickRepeat(repeat string) string {
+	repeat = strings.TrimSpace(repeat)
+	if repeat == "" {
+		return ""
+	}
+
+	// TickTick may have multiple RRULE lines, take the first one
+	lines := strings.Split(repeat, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			// Remove RRULE: prefix if present (TickTick may or may not include it)
+			if strings.HasPrefix(strings.ToUpper(line), "RRULE:") {
+				line = strings.TrimPrefix(line, "RRULE:")
+				line = strings.TrimPrefix(line, "rrule:")
+			}
+			return line
+		}
+	}
+
+	return ""
+}
+
 func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWithTasksAndBuckets) {
 	var pseudoParentID int64 = 1
 	result = []*models.ProjectWithTasksAndBuckets{
@@ -122,6 +148,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 				DoneAt:      t.CompletedTime.Time,
 				Position:    t.Order,
 				Labels:      labels,
+				Repeats:     normalizeTickTickRepeat(t.Repeat),
 			},
 		}
 

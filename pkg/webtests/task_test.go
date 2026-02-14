@@ -115,19 +115,18 @@ func TestTask(t *testing.T) {
 				assert.Contains(t, rec.Body.String(), `"reminders":null`)
 				assert.NotContains(t, rec.Body.String(), `{"Reminder":"2020-02-10T10:00:00Z"`)
 			})
-			t.Run("Repeat after", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"repeat_after":3600}`)
+			t.Run("Repeats RRULE", func(t *testing.T) {
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "1"}, `{"repeat":{"freq":"daily","interval":1}}`)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"repeat_after":3600`)
-				assert.NotContains(t, rec.Body.String(), `"repeat_after":0`)
+				assert.Contains(t, rec.Body.String(), `"repeat":{"freq":"daily","interval":1}`)
+				assert.NotContains(t, rec.Body.String(), `"repeat":null`)
 			})
-			t.Run("Repeat after unset", func(t *testing.T) {
-				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "28"}, `{"repeat_after":0}`)
+			t.Run("Repeats unset", func(t *testing.T) {
+				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "28"}, `{"repeat":null}`)
 				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"repeat_after":0`)
-				assert.NotContains(t, rec.Body.String(), `"repeat_after":3600`)
+				assert.NotContains(t, rec.Body.String(), `"repeat":{"freq":`)
 			})
-			t.Run("Repeat after update done", func(t *testing.T) {
+			t.Run("Repeating task update done", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"projecttask": "28"}, `{"done":true}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"done":false`)
