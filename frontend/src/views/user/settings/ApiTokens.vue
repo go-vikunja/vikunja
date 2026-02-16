@@ -72,6 +72,7 @@ onMounted(async () => {
 
 function resetPermissions() {
 	newTokenPermissions.value = {}
+	newTokenPermissionsGroup.value = {}
 	Object.entries(availableRoutes.value).forEach(entry => {
 		const [group, routes] = entry
 		newTokenPermissions.value[group] = {}
