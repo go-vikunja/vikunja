@@ -234,41 +234,41 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 				</tr>
 			</thead>
 			<tbody>
-			<tr
-				v-for="tk in tokens"
-				:key="tk.id"
-			>
-				<td>{{ tk.id }}</td>
-				<td>{{ tk.title }}</td>
-				<td class="is-capitalized">
-					<template
-						v-for="(v, p) in tk.permissions"
-						:key="'permission-' + p"
-					>
-						<strong>{{ formatPermissionTitle(p) }}:</strong>
-						{{ v.map(formatPermissionTitle).join(', ') }}
-						<br>
-					</template>
-				</td>
-				<td>
-					{{ formatDisplayDate(tk.expiresAt) }}
-					<p
-						v-if="tk.expiresAt < new Date()"
-						class="has-text-danger"
-					>
-						{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
-					</p>
-				</td>
-				<td>{{ formatDisplayDate(tk.created) }}</td>
-				<td class="has-text-end">
-					<XButton
-						variant="secondary"
-						@click="() => {tokenToDelete = tk; showDeleteModal = true}"
-					>
-						{{ $t('misc.delete') }}
-					</XButton>
-				</td>
-			</tr>
+				<tr
+					v-for="tk in tokens"
+					:key="tk.id"
+				>
+					<td>{{ tk.id }}</td>
+					<td>{{ tk.title }}</td>
+					<td class="is-capitalized">
+						<template
+							v-for="(v, p) in tk.permissions"
+							:key="'permission-' + p"
+						>
+							<strong>{{ formatPermissionTitle(p) }}:</strong>
+							{{ v.map(formatPermissionTitle).join(', ') }}
+							<br>
+						</template>
+					</td>
+					<td>
+						{{ formatDisplayDate(tk.expiresAt) }}
+						<p
+							v-if="tk.expiresAt < new Date()"
+							class="has-text-danger"
+						>
+							{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
+						</p>
+					</td>
+					<td>{{ formatDisplayDate(tk.created) }}</td>
+					<td class="has-text-end">
+						<XButton
+							variant="secondary"
+							@click="() => {tokenToDelete = tk; showDeleteModal = true}"
+						>
+							{{ $t('misc.delete') }}
+						</XButton>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 
