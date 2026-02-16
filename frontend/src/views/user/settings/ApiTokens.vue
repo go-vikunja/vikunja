@@ -72,6 +72,7 @@ onMounted(async () => {
 
 function resetPermissions() {
 	newTokenPermissions.value = {}
+	newTokenPermissionsGroup.value = {}
 	Object.entries(availableRoutes.value).forEach(entry => {
 		const [group, routes] = entry
 		newTokenPermissions.value[group] = {}
@@ -220,51 +221,55 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			v-if="tokens.length > 0"
 			class="table"
 		>
-			<tr>
-				<th>{{ $t('misc.id') }}</th>
-				<th>{{ $t('user.settings.apiTokens.attributes.title') }}</th>
-				<th>{{ $t('user.settings.apiTokens.attributes.permissions') }}</th>
-				<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
-				<th>{{ $t('misc.created') }}</th>
-				<th class="has-text-end">
-					{{ $t('misc.actions') }}
-				</th>
-			</tr>
-			<tr
-				v-for="tk in tokens"
-				:key="tk.id"
-			>
-				<td>{{ tk.id }}</td>
-				<td>{{ tk.title }}</td>
-				<td class="is-capitalized">
-					<template
-						v-for="(v, p) in tk.permissions"
-						:key="'permission-' + p"
-					>
-						<strong>{{ formatPermissionTitle(p) }}:</strong>
-						{{ v.map(formatPermissionTitle).join(', ') }}
-						<br>
-					</template>
-				</td>
-				<td>
-					{{ formatDisplayDate(tk.expiresAt) }}
-					<p
-						v-if="tk.expiresAt < new Date()"
-						class="has-text-danger"
-					>
-						{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
-					</p>
-				</td>
-				<td>{{ formatDisplayDate(tk.created) }}</td>
-				<td class="has-text-end">
-					<XButton
-						variant="secondary"
-						@click="() => {tokenToDelete = tk; showDeleteModal = true}"
-					>
-						{{ $t('misc.delete') }}
-					</XButton>
-				</td>
-			</tr>
+			<thead>
+				<tr>
+					<th>{{ $t('misc.id') }}</th>
+					<th>{{ $t('user.settings.apiTokens.attributes.title') }}</th>
+					<th>{{ $t('user.settings.apiTokens.attributes.permissions') }}</th>
+					<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
+					<th>{{ $t('misc.created') }}</th>
+					<th class="has-text-end">
+						{{ $t('misc.actions') }}
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr
+					v-for="tk in tokens"
+					:key="tk.id"
+				>
+					<td>{{ tk.id }}</td>
+					<td>{{ tk.title }}</td>
+					<td class="is-capitalized">
+						<template
+							v-for="(v, p) in tk.permissions"
+							:key="'permission-' + p"
+						>
+							<strong>{{ formatPermissionTitle(p) }}:</strong>
+							{{ v.map(formatPermissionTitle).join(', ') }}
+							<br>
+						</template>
+					</td>
+					<td>
+						{{ formatDisplayDate(tk.expiresAt) }}
+						<p
+							v-if="tk.expiresAt < new Date()"
+							class="has-text-danger"
+						>
+							{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
+						</p>
+					</td>
+					<td>{{ formatDisplayDate(tk.created) }}</td>
+					<td class="has-text-end">
+						<XButton
+							variant="secondary"
+							@click="() => {tokenToDelete = tk; showDeleteModal = true}"
+						>
+							{{ $t('misc.delete') }}
+						</XButton>
+					</td>
+				</tr>
+			</tbody>
 		</table>
 
 		<form
