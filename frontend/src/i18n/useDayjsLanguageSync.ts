@@ -32,6 +32,7 @@ export const DAYJS_LOCALE_MAPPING = {
 	'tr-tr': 'tr',
 	'fi-fi': 'fi',
 	'he-il': 'he',
+	'sv-se': 'sv',
 } as Record<SupportedLocale, ISOLanguage>
 
 export const DAYJS_LANGUAGE_IMPORTS = {
@@ -63,6 +64,7 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'tr-tr': () => import('dayjs/locale/tr'),
 	'fi-fi': () => import('dayjs/locale/fi'),
 	'he-il': () => import('dayjs/locale/he'),
+	'sv-se': () => import('dayjs/locale/sv'),
 } as Record<SupportedLocale, () => Promise<ILocale>>
 
 export async function loadDayJsLocale(language: SupportedLocale) {
