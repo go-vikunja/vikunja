@@ -221,16 +221,19 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			v-if="tokens.length > 0"
 			class="table"
 		>
-			<tr>
-				<th>{{ $t('misc.id') }}</th>
-				<th>{{ $t('user.settings.apiTokens.attributes.title') }}</th>
-				<th>{{ $t('user.settings.apiTokens.attributes.permissions') }}</th>
-				<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
-				<th>{{ $t('misc.created') }}</th>
-				<th class="has-text-end">
-					{{ $t('misc.actions') }}
-				</th>
-			</tr>
+			<thead>
+				<tr>
+					<th>{{ $t('misc.id') }}</th>
+					<th>{{ $t('user.settings.apiTokens.attributes.title') }}</th>
+					<th>{{ $t('user.settings.apiTokens.attributes.permissions') }}</th>
+					<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
+					<th>{{ $t('misc.created') }}</th>
+					<th class="has-text-end">
+						{{ $t('misc.actions') }}
+					</th>
+				</tr>
+			</thead>
+			<tbody>
 			<tr
 				v-for="tk in tokens"
 				:key="tk.id"
@@ -266,6 +269,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					</XButton>
 				</td>
 			</tr>
+			</tbody>
 		</table>
 
 		<form
