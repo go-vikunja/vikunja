@@ -55,6 +55,8 @@ export default [
 			'vue/no-ref-object-reactivity-loss': 'error',
 			'vue/no-setup-props-reactivity-loss': 'error',
 
+			'depend/ban-dependencies': 'warn',
+
 			'@typescript-eslint/no-unused-vars': [
 				'error',
 				{
