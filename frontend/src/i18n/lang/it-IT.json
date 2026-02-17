@@ -93,6 +93,8 @@
 				"discoverableByEmail": "Permetti agli altri di aggiungermi a gruppi o progetti cercando il mio indirizzo email",
 				"playSoundWhenDone": "Riproduci un suono quando le attività vengono contrassegnate come completate",
 				"allowIconChanges": "Mostra loghi speciali durante determinati periodi",
+				"alwaysShowBucketTaskCount": "Mostra sempre il conteggio delle attività nelle colonne Kanban",
+				"defaultTaskRelationType": "Tipo di relazione attività predefinita",
 				"weekStart": "La settimana inizia di",
 				"weekStartSunday": "Domenica",
 				"weekStartMonday": "Lunedì",
@@ -798,6 +800,7 @@
 		"addReminder": "Aggiungi un promemoria…",
 		"doneSuccess": "Attività segnata come completata.",
 		"undoneSuccess": "Attività segnata come non completata.",
+		"movedToProject": "L'attività è stata spostata in {project}.",
 		"undo": "Annulla",
 		"openDetail": "Apri vista dettagli attività",
 		"checklistTotal": "{checked} di {total} attività",
@@ -829,6 +832,7 @@
 			"back": "Torna al progetto",
 			"due": "Scadenza {at}",
 			"closePopup": "Chiudi popup",
+			"scrollToBottom": "Scorri in fondo",
 			"organization": "Organizza",
 			"management": "Gestisci",
 			"dateAndTime": "Data e ora",
@@ -1113,7 +1117,11 @@
 			"priority": "Modifica la priorità di questa attività",
 			"favorite": "Segna questa attività come preferita o non preferita",
 			"openProject": "Apri il progetto di questa attività",
-			"save": "Salva attività corrente"
+			"save": "Salva attività corrente",
+			"copyIdentifier": "Copia identificativo attività negli appunti",
+			"copyIdentifierAndTitle": "Copia identificativo e titolo attività negli appunti",
+			"copyIdentifierTitleAndUrl": "Copia identificativo, titolo e URL attività negli appunti",
+			"copyUrl": "Copia URL attività negli appunti"
 		},
 		"project": {
 			"title": "Viste Progetto",

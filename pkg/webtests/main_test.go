@@ -14,14 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package log
+package webtests
 
 import (
-	"log/slog"
+	"flag"
+	"os"
+	"testing"
 )
 
-// NewEchoLogger creates and initializes a new slog logger for Echo v5
-func NewEchoLogger(configLogEnabled bool, configLogEcho string, configLogFormat string) *slog.Logger {
-	handler := makeLogHandler(configLogEnabled, configLogEcho, "http", "DEBUG", configLogFormat)
-	return slog.New(handler).With("component", "http")
+func TestMain(m *testing.M) {
+	flag.Parse()
+	if testing.Short() {
+		println("-short requested, skipping long-running web tests")
+		return
+	}
+	os.Exit(m.Run())
 }

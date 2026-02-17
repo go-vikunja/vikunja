@@ -14,45 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package notifications
+//go:build !linux
 
-import (
-	"os"
-	"testing"
+package utils
 
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/i18n"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/mail"
-)
-
-// SetupTests initializes all db tests
-func SetupTests() {
-	var err error
-	x, err := db.CreateTestEngine()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = x.Sync2(&DatabaseNotification{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	i18n.Init()
+// UIDMapEntry represents a single line from /proc/self/uid_map.
+// On non-Linux platforms this type exists for API compatibility but is never populated.
+// Fields use int64 to avoid overflow on 32-bit architectures.
+type UIDMapEntry struct {
+	InsideUID  int64
+	OutsideUID int64
+	Count      int64
 }
 
-// TestMain is the main test function used to bootstrap the test env
-func TestMain(m *testing.M) {
-	// Initialize logger for tests
-	log.InitLogger()
+// IsUserNamespaceActive always returns false on non-Linux platforms.
+func IsUserNamespaceActive() bool { return false }
 
-	// Set default config
-	config.InitDefaultConfig()
+// GetUIDMapping returns nil on non-Linux platforms.
+func GetUIDMapping() ([]UIDMapEntry, error) { return nil, nil }
 
-	SetupTests()
+// MapToHostUID always returns mapped=false on non-Linux platforms.
+func MapToHostUID(_ int64) (int64, bool) { return 0, false }
 
-	mail.Fake()
-	os.Exit(m.Run())
-}
+// UIDMappingSummary returns empty string on non-Linux platforms.
+func UIDMappingSummary() string { return "" }

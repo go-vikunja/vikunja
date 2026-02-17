@@ -24,6 +24,7 @@
 				:height="32"
 				:rx="4"
 				:fill="getBarFill(bar)"
+				:opacity="bar.meta?.isDone ? 0.5 : 1"
 				:stroke="getBarStroke(bar)"
 				:stroke-width="getBarStrokeWidth(bar)"
 				:stroke-dasharray="!bar.meta?.hasActualDates ? '5,5' : 'none'"
@@ -88,6 +89,7 @@
 				:y="24"
 				class="gantt-bar-text"
 				:fill="getBarTextColor(bar)"
+				:text-decoration="bar.meta?.isDone ? 'line-through' : 'none'"
 				:clip-path="`url(#clip-${bar.id})`"
 				aria-hidden="true"
 			>

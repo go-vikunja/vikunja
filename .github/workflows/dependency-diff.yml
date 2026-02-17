@@ -1,0 +1,43 @@
+name: Dependency Checks
+
+on:
+  pull_request:
+    paths:
+      - frontend/pnpm-lock.yaml
+      - desktop/pnpm-lock.yaml
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  diff_dependencies:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        directory: [frontend, desktop]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create Diff
+        uses: e18e/action-dependency-diff@v1
+        with:
+          working-directory: ${{ matrix.directory }}
+
+  check-provenance:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        directory: [frontend, desktop]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check provenance downgrades
+        uses: danielroe/provenance-action@main
+        with:
+          workspace-path: ${{ matrix.directory }}
+          fail-on-provenance-change: true

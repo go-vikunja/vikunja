@@ -30,7 +30,8 @@ export async function uploadFiles(
 	})
 
 	if (response.errors !== null) {
-		throw Error(response.errors)
+		const messages = response.errors.map((e: {message: string}) => e.message)
+		throw new Error(messages.join('\n'))
 	}
 }
 

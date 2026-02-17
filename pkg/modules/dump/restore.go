@@ -32,6 +32,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/initialize"
@@ -174,18 +175,9 @@ func Restore(filename string, overrideConfig bool) error {
 			return fmt.Errorf("could not parse file id %s: %w", i, err)
 		}
 
-		f := &files.File{ID: id}
-
-		fc, err := file.Open()
-		if err != nil {
-			return fmt.Errorf("could not open file %s: %w", i, err)
+		if err := restoreFile(id, file); err != nil {
+			return fmt.Errorf("could not restore file %s: %w", i, err)
 		}
-
-		if err := f.Save(fc); err != nil {
-			return fmt.Errorf("could not save file: %w", err)
-		}
-
-		_ = fc.Close()
 		log.Infof("Restored file %s", i)
 	}
 	log.Infof("Restored %d files.", len(filesFiles))
@@ -198,6 +190,44 @@ func Restore(filename string, overrideConfig bool) error {
 	}
 
 	return nil
+}
+
+func restoreFile(id int64, zipFile *zip.File) error {
+	f := &files.File{ID: id}
+
+	fc, err := zipFile.Open()
+	if err != nil {
+		return fmt.Errorf("could not open zip entry: %w", err)
+	}
+	defer fc.Close()
+
+	// Create a temporary file to make the content seekable without loading
+	// it all into memory. zip.File.Open() returns io.ReadCloser which is not
+	// seekable, but f.Save requires io.ReadSeeker.
+	tmpFile, err := os.CreateTemp("", "vikunja-restore-*")
+	if err != nil {
+		return fmt.Errorf("could not create temp file: %w", err)
+	}
+	defer func() {
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpFile.Name())
+	}()
+
+	// Limit copy size to prevent decompression bombs
+	maxSize := config.GetMaxFileSizeInMBytes() * 1024 * 1024
+	written, err := io.CopyN(tmpFile, fc, int64(maxSize)+1) // #nosec G115 -- maxSize is configured, not user input
+	if err != nil && !errors.Is(err, io.EOF) {
+		return fmt.Errorf("could not copy to temp file: %w", err)
+	}
+	if uint64(written) > maxSize {
+		return files.ErrFileIsTooLarge{Size: uint64(written)}
+	}
+
+	if _, err := tmpFile.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("could not seek temp file: %w", err)
+	}
+
+	return f.Save(tmpFile)
 }
 
 func convertFieldValue(fieldName string, value interface{}, isFloat bool) (interface{}, error) {

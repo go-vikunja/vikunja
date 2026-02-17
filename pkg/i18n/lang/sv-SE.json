@@ -1,1 +1,162 @@
-{}
+{
+	"notifications": {
+		"greeting": "Hej %[1]s,",
+		"email_confirm": {
+			"subject": "%[1]s, vänligen bekräfta din e-postadress hos Vikunja",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "Välkommen till Vikunja!",
+			"confirm": "För att bekräfta din e-postadress, klicka på länken nedan:"
+		},
+		"password": {
+			"changed": {
+				"subject": "Ditt lösenord på Vikunja har ändrats",
+				"success": "Ditt kontolösenord har ändrats.",
+				"warning": "Om detta inte var du kan det betyda att någon äventyrat ditt konto. Kontakta i så fall serverns administratör."
+			},
+			"reset": {
+				"subject": "Återställ ditt lösenord för Vikunja",
+				"instructions": "Klicka på länken nedan för att återställa ditt lösenord:",
+				"valid_duration": "Denna länk kommer att vara giltig i 24 timmar."
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "Någon försökte precis logga in på ditt Vikunja-konto, men misslyckades",
+				"message": "Någon försökte precis logga in på ditt konto med rätt användarnamn och lösenord, men fel TOTP-lösenkod.",
+				"warning": "**Om detta inte var du känner någon annan till ditt lösenord. Du bör ange ett nytt omedelbart!**"
+			},
+			"account_locked": {
+				"subject": "Vi har inaktiverat ditt konto på Vikunja",
+				"message": "Någon försökte logga in med dina inloggningsuppgifter men kunde inte ange ett giltigt TOTP-lösenord.",
+				"disabled": "Efter 10 misslyckade försök har vi inaktiverat ditt konto och återställt ditt lösenord. För att ställa in ett nytt, följ instruktionerna i återställningsmejlet som vi just har skickat till dig.",
+				"reset_instructions": "Om du inte tagit emot ett mejl med återställningsinstruktioner kan du begära ett nytt på [%[1]s](%[2]s)."
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "Någon försökte precis logga in på ditt Vikunja-konto, men angav ett felaktigt lösenord",
+				"message": "Någon försökte precis logga in på ditt konto med fel lösenord tre gånger i rad.",
+				"warning": "Om detta inte var du kan det vara någon annan som försöker bryta sig in på ditt konto.",
+				"enhance_security": "För att öka säkerheten för ditt konto kan du vilja ange ett starkare lösenord eller aktivera TOTP-autentisering i inställningarna:"
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "Vänligen bekräfta raderingen av ditt Vikunja-konto",
+					"request": "Du har begärt att ditt konto ska raderas. För att bekräfta detta klickar du på länken nedan:",
+					"valid_duration": "Denna länk kommer att vara giltig i 24 timmar.",
+					"schedule_info": "När du har bekräftat raderingen kommer vi att schemalägga raderingen av ditt konto om tre dagar och skicka ett nytt mejl till dig fram till dess.",
+					"consequences": "Om du fortsätter med raderingen av ditt konto kommer vi att ta bort alla dina projekt och uppgifter som du har skapat. Allt du delat med en annan användare eller ett team kommer att överföra äganderätten till dem.",
+					"changed_mind": "Om du inte har begärt raderingen eller ändrat dig kan du bara ignorera det här mejlet."
+				},
+				"scheduled": {
+					"subject_days": "Ditt Vikunja-konto kommer att raderas om %[1]s dagar",
+					"subject_tomorrow": "Ditt Vikunja-konto kommer att raderas imorgon",
+					"request_reminder": "Du begärde nyligen att ditt Vikunja-konto ska raderas.",
+					"deletion_time_days": "Vi kommer att radera ditt konto om %[1]dagar.",
+					"deletion_time_tomorrow": "Vi kommer att radera ditt konto i morgon.",
+					"changed_mind": "Om du har ändrat dig, klicka på länken nedan för att avbryta raderingen och följ instruktionerna där:"
+				},
+				"completed": {
+					"subject": "Ditt Vikunja-konto har raderats",
+					"confirmation": "På begäran har vi raderat ditt Vikunja-konto.",
+					"permanent": "Denna radering är permanent. Om du inte skapade en säkerhetskopia och behöver dina data tillbaka nu, prata med administratören."
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "Påminnelse om \"%[1]s\" (%[2]s)",
+				"message": "Det här är en vänlig påminnelse om uppgiften \"%[1]s\" (%[2])."
+			},
+			"comment": {
+				"subject": "Ang: %[1]s",
+				"mentioned_subject": "%[1]s nämnde dig i en kommentar i \"%[2]s\"",
+				"mentioned_message": "**%[1]s** nämnde dig i en kommentar:"
+			},
+			"assigned": {
+				"subject_to_assignee": "Du har tilldelats till \"%[1]s\" (%[2]s)",
+				"message_to_assignee": "%[1]s har tilldelat dig till \"%[2]s\".",
+				"subject_to_others": "\"%[1]s\" (%[2]s) har tilldelats %[3]s",
+				"message_to_others": "%[1]s har tilldelat denna uppgift till %[2]s.",
+				"subject_to_others_self": "\"%[1]s\" (%[2]s) har tilldelats av %[3]s till sig själv",
+				"message_to_others_self": "%[1]s har tilldelat den här uppgiften till sig själv."
+			},
+			"deleted": {
+				"subject": "\"%[1]s\" (%[2]s) har raderats",
+				"message": "%[1]s har raderat uppgiften \"%[2]s\" (%[3]s)"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s nämnde dig i en ny uppgift \"%[2]s\"",
+				"subject": "%[1]s nämnde dig i en uppgift \"%[2]s\"",
+				"message": "**%[1]s** nämnde dig i en uppgift:"
+			},
+			"overdue": {
+				"subject": "Uppgift \"%[1]s\" (%[2]s) är förfallen",
+				"message": "Det här är en vänlig påminnelse om uppgiften \"%[1]s\" (%[2]s) som är förfallen %[3]s och ännu inte färdig.",
+				"multiple_subject": "Dina förfallna uppgifter",
+				"multiple_message": "Du har följande förfallna uppgifter:",
+				"overdue_since": "sedan %[1]s",
+				"overdue_now": "nu",
+				"overdue": "förfallen %[1]s"
+			}
+		},
+		"project": {
+			"created": "%[1]s skapade projektet \"%[2]s\""
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s la till dig i teamet \"%[2]s\" i Vikunja",
+				"message": "%[1]s har precis lagt till dig i teamet %[2]s i Vikunja."
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "Din dataexport för Vikunja är redo",
+				"message": "Din dataexport för Vikunja är redo att laddas ner. Klicka på knappen nedan för att ladda ner den:",
+				"availability": "Nedladdningen kommer att vara tillgänglig under de kommande 7 dagarna."
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "Migreringen från %[1]s till Vikunja slutfördes",
+				"imported": "Vikunja har importerat alla listor/projekt, uppgifter, anteckningar, påminnelser och filer från %[1]s som du har tillgång till.",
+				"have_fun": "Ha kul med dina nya (gamla) projekt!"
+			},
+			"failed": {
+				"subject": "Migreringen från %[1]s till Vikunja har misslyckats",
+				"message": "Det verkar som om flytten från %[1]s inte gick som planerat den här gången.",
+				"retry": "Oroa dig inte! Gör bara ett nytt försök genom att starta om på samma sätt dom du gjorde innan. Ibland händer sånt här på grund av buggar hos %[1]s, men ofta lyckas det om man försöker igen.",
+				"error": "Vi stötte på ett litet fel på vägen: `%[2]s`.",
+				"report": "Vänligen skicka en anteckning om detta [i forumet](https://community.vikunja.io/) eller någon av de vanliga platserna så att vi kan ta en titt på varför det misslyckades.",
+				"working_on_it": "Vi har felmeddelandet på radarn och är på väg att få det ordnat snart."
+			}
+		},
+		"common": {
+			"have_nice_day": "Ha en trevlig dag!",
+			"copy_url": "Om knappen ovan inte fungerar, kopiera URL:en nedan och klistra in den i webbläsarens adressfält:",
+			"actions": {
+				"open_task": "Öppna uppgift",
+				"open_vikunja": "Öppna Vikunja",
+				"open_project": "Öppna projekt",
+				"open_team": "Öppna team",
+				"download": "Ladda ner",
+				"reset_password": "Återställ ditt lösenord",
+				"go_to_settings": "Gå till inställningar",
+				"confirm_email": "Bekräfta din e-postadress",
+				"abort_deletion": "Avbryt raderingen",
+				"confirm_account_deletion": "Bekräfta raderingen av mitt konto",
+				"change_notification_settings_link": "Du kan ändra dina notisinställningar [here](%[1]s)."
+			}
+		}
+	},
+	"time": {
+		"since_years": "ett år|%[1]d år",
+		"since_weeks": "en vecka|%[1]d veckor",
+		"since_days": "en dag|%[1]d dagar",
+		"since_hours": "en timme|%[1]d timmar",
+		"since_minutes": "en minut|%[1]d minuter",
+		"list_last_separator": "och"
+	}
+}

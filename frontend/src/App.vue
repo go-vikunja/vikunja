@@ -1,6 +1,6 @@
 <template>
 	<Ready>
-		<template v-if="authStore.authUser">
+		<template v-if="showAuthLayout">
 			<AppHeader />
 			<ContentAuth />
 		</template>
@@ -48,6 +48,7 @@ import {useColorScheme} from '@/composables/useColorScheme'
 import {useBodyClass} from '@/composables/useBodyClass'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
+import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 
 const importAccountDeleteService = () => import('@/services/accountDelete')
 import {success} from '@/message'
@@ -56,6 +57,8 @@ const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const route = useRoute()
+
+const showAuthLayout = computed(() => authStore.authUser && typeof route.name === 'string' && !AUTH_ROUTE_NAMES.has(route.name))
 
 useBodyClass('is-touch', isTouchDevice())
 const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)

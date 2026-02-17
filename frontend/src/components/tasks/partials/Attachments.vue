@@ -333,8 +333,12 @@ function uploadNewAttachment() {
 	uploadFilesToTask(files)
 }
 
-function uploadFilesToTask(files: File[] | FileList) {
-	uploadFiles(attachmentService, props.task.id, files)
+async function uploadFilesToTask(files: File[] | FileList) {
+	try {
+		await uploadFiles(attachmentService, props.task.id, files)
+	} catch (e) {
+		error(e)
+	}
 }
 
 const attachmentToDelete = ref<IAttachment | null>(null)

@@ -113,10 +113,8 @@ const descriptionPreview = computed(() => {
 		return ''
 	}
 
-	// Create a temporary div to extract plain text from HTML
-	const tempDiv = document.createElement('div')
-	tempDiv.innerHTML = props.task.description
-	const plainText = tempDiv.textContent || tempDiv.innerText || ''
+	const doc = new DOMParser().parseFromString(props.task.description, 'text/html')
+	const plainText = doc.body.textContent || ''
 
 	const trimmedText = plainText.trim()
 	if (trimmedText.length <= MAX_DESCRIPTION_LENGTH) {

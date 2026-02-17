@@ -20,8 +20,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -279,8 +282,37 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	}
 	log.Debugf("Pinged unsplash download endpoint for photo %s", image.ID)
 
+	// Enforce max file size to prevent OOM from unexpectedly large responses
+	maxSize := config.GetMaxFileSizeInMBytes() * 1024 * 1024
+	if resp.ContentLength > 0 && uint64(resp.ContentLength) > maxSize {
+		return files.ErrFileIsTooLarge{Size: uint64(resp.ContentLength)}
+	}
+
+	// Stream the response body into a temp file so we have a seekable reader
+	// for S3 uploads without buffering the entire image in memory.
+	tmpFile, err := os.CreateTemp("", "vikunja-unsplash-*")
+	if err != nil {
+		return fmt.Errorf("could not create temp file for unsplash download: %w", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+
+	// Use LimitReader as a safety net in case Content-Length was missing or inaccurate.
+	limitedReader := io.LimitReader(resp.Body, int64(maxSize)+1) // #nosec G115 -- maxSize is configured, not user input
+	written, err := io.Copy(tmpFile, limitedReader)
+	if err != nil {
+		return fmt.Errorf("could not write unsplash download to temp file: %w", err)
+	}
+	if uint64(written) > maxSize {
+		return files.ErrFileIsTooLarge{Size: uint64(written)}
+	}
+
+	if _, err = tmpFile.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("could not seek temp file to start: %w", err)
+	}
+
 	// Save it as a file in vikunja
-	file, err := files.Create(resp.Body, "", 0, auth)
+	file, err := files.Create(tmpFile, "", uint64(written), auth)
 	if err != nil {
 		return
 	}

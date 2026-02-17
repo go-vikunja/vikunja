@@ -14,14 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package log
+//go:build linux
+
+package doctor
 
 import (
-	"log/slog"
+	"code.vikunja.io/api/pkg/utils"
 )
 
-// NewEchoLogger creates and initializes a new slog logger for Echo v5
-func NewEchoLogger(configLogEnabled bool, configLogEcho string, configLogFormat string) *slog.Logger {
-	handler := makeLogHandler(configLogEnabled, configLogEcho, "http", "DEBUG", configLogFormat)
-	return slog.New(handler).With("component", "http")
+func checkUserNamespace() CheckResult {
+	if !utils.IsUserNamespaceActive() {
+		return CheckResult{
+			Name:   "User namespace",
+			Passed: true,
+			Value:  "not active",
+		}
+	}
+
+	return CheckResult{
+		Name:   "User namespace",
+		Passed: true,
+		Value:  "active (" + utils.UIDMappingSummary() + ")",
+		Lines:  []string{"UIDs inside this container are remapped. See directory ownership check for details."},
+	}
 }

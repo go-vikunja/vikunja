@@ -7,6 +7,81 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [1.1.0] - 2026-02-09
+
+### Bug Fixes
+
+* *(auth)* Remove unnecessary fields from JWT token payloads
+* *(backgrounds)* Enforce max file size for unsplash downloads
+* *(backgrounds)* Avoid integer overflow in max size calculation
+* *(backgrounds)* Stream unsplash download to temp file instead of memory
+* *(build)* Add osusergo tag to prevent SIGFPE crash under systemd
+* *(build)* Normalize comma-separated TAGS to prevent build failure
+* *(ci)* Move gpg setup to right before sign step
+* *(dump)* Stream files during restore to avoid memory pressure
+* *(dump)* Limit copy size to prevent decompression bombs
+* *(files)* Require io.ReadSeeker for S3 uploads, remove temp file fallback
+* *(files)* Update all callers to provide seekable readers for S3 uploads
+* *(files)* Seek to start before writing for consistent behavior
+* *(log)* Write each log category to its own file (#2206)
+* *(nav)* Show shared sub-projects in sidebar when the parent is inaccessible (#2176)
+* *(task)* Use DOMParser in task glance tooltip description preview
+* Add touch CSS properties to list view for mobile drag-and-drop ([b741c2d](b741c2d8911c05506f4e30215b7a1b5a8d699476))
+* Restrict numeric date regex matching to text boundaries (#2195) ([a82efa0](a82efa01b54df7cee4887ed8716d7ec6d897f2ce))
+* Allow middle-of-text dates when followed by time expressions (#2195) ([3f0bf71](3f0bf71d30833b8800a0430d7780801badfd7be9))
+* Iterate past rejected middle matches in matchDateAtBoundary() ([77b8403](77b8403c24e5dead6bde239256ea4ecac9b437c2))
+* Redirect immediately after login to prevent form flash in app shell ([8bccf21](8bccf21a81d2dadff15c61a41691e7ff191d1776))
+* Redirect immediately after registration to prevent form flash in app shell ([dcff454](dcff45475566f68f5717d67bb94a134ff7f1d2a7))
+* Avoid clearing saved redirect in onBeforeMount to prevent race with submit ([0e2ea5c](0e2ea5c42ade932e8debd118ccd8c47415ed32ef))
+* Prevent auth layout swap while still on login/register route ([5d9f62c](5d9f62cc93ec9d84024ee7ec4c6df2f615fe916b))
+* Guard against undefined route.name in auth layout check ([cdca790](cdca79032526966cb248b72bddcf2a0f888c8a8f))
+* Format attachment upload error messages as readable strings ([7256a14](7256a1419455f43fb1063495f147711cb1e89b49))
+* Handle attachment upload errors with user-visible notifications ([eb369cf](eb369cf3ee4fe6d2bff05e539da7dd395cefe494))
+
+### Dependencies
+
+* *(deps)* Update @isaacs/brace-expansion to 5.0.1
+* *(deps)* Update node-tar
+* *(deps)* Update lodash to 4.17.23
+
+### Documentation
+
+* *(agents)* Include go tips [skip ci]
+* Add caveat about running go tests to agent instructions [skip ci] ([ac3fd3e](ac3fd3e131c1c7c425eb5d2b2622b7045c3a4c77))
+
+### Features
+
+* *(doctor)* Add detailed file diagnostics for local storage (#2179)
+* *(doctor)* Add user namespace detection and improved storage diagnostics (#2180)
+* Add option to send Basic Auth header with webhook requests (#2137) ([cf029ce](cf029cef0cf2920735e1533950f84c6dcee6d09e))
+* Add matchDateAtBoundary() helper for position-aware date matching (#2195) ([1013305](1013305fc616ae3276ffdac8de6fdd8a27ef02fe))
+* Add UNSIGNED-PAYLOAD config option for S3-compatible stores (#2205) ([b6974ff](b6974ffcfd1147b7c1b1b2bc67c836172abda083))
+
+### Miscellaneous Tasks
+
+* *(ci)* Add debugging around release signing
+* *(i18n)* Update translations via Crowdin
+
+### Other
+
+* *(other)* [skip ci] Updated swagger docs
+
+### Refactor
+
+* *(db)* Extract testable ResolveDatabasePath function (#2193)
+* *(files)* Remove redundant seek operations in writeToStorage
+* Remove unnecessary flags parameter from matchDateAtBoundary() ([61448bb](61448bb0289859b32c877b8944ae6f153aa8fd46))
+* Remove unnecessary comment from getDateFromText() ([cee258e](cee258edc3b216bdf7d0e9241c263180f46a2f48))
+* Extract auth route names into shared constant ([e9a6abf](e9a6abfe4434aeb4d267838d363850f466f56691))
+
+### Testing
+
+* *(files)* Update tests for io.ReadSeeker API
+* Add failing tests for middle-of-text date false positives (#2195) ([e9b10e6](e9b10e67f3654bce00a9c96be44c4443504714a6))
+* Add dot-separated middle-of-text date false positive test (#2195) ([829b10b](829b10bfd22afa429e742707b65dfedd42669258))
+* Add positive boundary tests for date parsing (#2195) ([c544886](c544886524405542bfcbdb872ec501558a3171c6))
+* Add E2E test for login form flash regression ([b3e95e9](b3e95e9f4e0a602b552c742c94c8b09978ea7139))
+
 ## [1.0.0] - 2026-01-27
 
 ### Bug Fixes

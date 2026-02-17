@@ -362,6 +362,56 @@ describe('Parse Task Text', () => {
 				})
 			})
 		})
+		describe('Should not parse dates from the middle of text', () => {
+			const cases = [
+				'The 9/11 Report',
+				'The 01/02 Report',
+				'a]7/8 debate',
+			]
+
+			cases.forEach(c => {
+				it(`should not parse a date from '${c}'`, () => {
+					const result = parseTaskText(c)
+
+					expect(result.text).toBe(c)
+					expect(result.date).toBeNull()
+				})
+			})
+
+			it('should not parse a dot-separated date from the middle of text', () => {
+				const result = parseTaskText('The 1.2 formula')
+
+				expect(result.text).toBe('The 1.2 formula')
+				expect(result.date).toBeNull()
+			})
+		})
+		describe('Should still parse dates at text boundaries', () => {
+			const now = new Date()
+			now.setFullYear(2021, 5, 24)
+
+			const boundaryTests = [
+				{input: '9/11 meeting', dateStr: '2021-9-11', text: 'meeting'},
+				{input: 'meeting 9/11', dateStr: '2021-9-11', text: 'meeting'},
+				{input: 'meeting 9/11 at 10:00', dateStr: '2021-9-11', text: 'meeting'},
+				{input: 'meeting 9/11 @ 15:00', dateStr: '2021-9-11', text: 'meeting'},
+				{input: '2021-06-24 Lorem Ipsum', dateStr: '2021-6-24', text: 'Lorem Ipsum'},
+				{input: 'Lorem Ipsum 06/26/2021', dateStr: '2021-6-26', text: 'Lorem Ipsum'},
+				{input: '01.02 Lorem Ipsum', dateStr: '2022-2-1', text: 'Lorem Ipsum'},
+				{input: 'Lorem Ipsum 01.02', dateStr: '2022-2-1', text: 'Lorem Ipsum'},
+				{input: 'The 9/11 Report due 10/12', dateStr: '2021-10-12', text: 'The 9/11 Report due'},
+			]
+
+			boundaryTests.forEach(({input, dateStr, text}) => {
+				it(`should parse a date from '${input}'`, () => {
+					const result = parseTaskText(input, PrefixMode.Default, now)
+
+					expect(result.text.trim()).toBe(text)
+					const d = result.date
+					expect(d).not.toBeNull()
+					expect(`${d?.getFullYear()}-${(d?.getMonth() ?? 0) + 1}-${d?.getDate()}`).toBe(dateStr)
+				})
+			})
+		})
 		it('should not recognize date number with no spacing around them', () => {
 			const result = parseTaskText('Lorem Ispum v1.1.1')
 

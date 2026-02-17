@@ -17,76 +17,285 @@
 package db
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 
-	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestResolveDatabasePath(t *testing.T) {
-	// Save original config values
-	originalRootpath := config.ServiceRootpath.GetString()
-	defer config.ServiceRootpath.Set(originalRootpath)
+func TestMain(m *testing.M) {
+	log.InitLogger()
+	os.Exit(m.Run())
+}
 
+func Test_resolveDatabasePath(t *testing.T) {
+	mockGetUserDataDir := func(path string) func() (string, error) {
+		return func() (string, error) {
+			return path, nil
+		}
+	}
+
+	mockGetUserDataDirError := func() (string, error) {
+		return "", fmt.Errorf("no home directory")
+	}
+
+	tests := []struct {
+		name           string
+		cfg            DatabasePathConfig
+		getUserDataDir func() (string, error)
+		expected       string
+		expectError    bool
+	}{
+		{
+			name: "memory database",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "memory",
+				RootPath:       "/opt/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "memory",
+		},
+
+		{
+			name: "absolute path should be used as-is",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "/var/lib/vikunja/vikunja.db",
+				RootPath:       "/opt/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "/var/lib/vikunja/vikunja.db",
+		},
+		{
+			name: "absolute path with different rootpath still used as-is",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "/data/mydb.db",
+				RootPath:       "/custom/path",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "/data/mydb.db",
+		},
+
+		{
+			name: "relative path with explicit rootpath",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "vikunja.db",
+				RootPath:       "/var/lib/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "/var/lib/vikunja/vikunja.db",
+		},
+		{
+			name: "relative subdirectory path with explicit rootpath",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "data/vikunja.db",
+				RootPath:       "/var/lib/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "/var/lib/vikunja/data/vikunja.db",
+		},
+
+		{
+			name: "relative path with default rootpath uses user data dir",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "vikunja.db",
+				RootPath:       "/opt/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "/home/user/.local/share/vikunja/vikunja.db",
+		},
+
+		{
+			name: "os.Executable failure falls back to user data dir",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "vikunja.db",
+				RootPath:       "/opt/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "/home/user/.local/share/vikunja/vikunja.db",
+		},
+
+		{
+			name: "falls back to rootpath when getUserDataDir fails",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "vikunja.db",
+				RootPath:       "/opt/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDirError,
+			expected:       "/opt/vikunja/vikunja.db",
+		},
+
+		{
+			name: "empty configured path with explicit rootpath",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "",
+				RootPath:       "/var/lib/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "/var/lib/vikunja",
+		},
+		{
+			name: "empty configured path with default rootpath",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "",
+				RootPath:       "/opt/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "/home/user/.local/share/vikunja",
+		},
+		{
+			name: "path with dots normalized",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "/var/lib/vikunja/../vikunja/./db.db",
+				RootPath:       "/opt/vikunja",
+				ExecutablePath: "/opt/vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("/home/user/.local/share/vikunja"),
+			expected:       "/var/lib/vikunja/db.db",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := resolveDatabasePath(tt.cfg, tt.getUserDataDir)
+
+			if tt.expectError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func Test_resolveDatabasePath_Integration(t *testing.T) {
 	t.Run("with explicitly configured rootpath", func(t *testing.T) {
-		// Set a rootpath that is different from the executable location
-		config.ServiceRootpath.Set("/custom/path")
+		cfg := DatabasePathConfig{
+			ConfiguredPath: "vikunja.db",
+			RootPath:       "/custom/path",
+			ExecutablePath: "/opt/vikunja",
+		}
 
-		result := resolveDatabasePath("vikunja.db")
+		result, err := resolveDatabasePath(cfg, getUserDataDir)
+		require.NoError(t, err)
+
 		expected := filepath.Join("/custom/path", "vikunja.db")
-
 		assert.Equal(t, expected, result)
 	})
 
 	t.Run("with default rootpath uses user data directory", func(t *testing.T) {
-		// Get the actual executable path and set rootpath to it
 		execPath, err := os.Executable()
 		require.NoError(t, err)
-		config.ServiceRootpath.Set(filepath.Dir(execPath))
+		execDir := filepath.Dir(execPath)
 
-		result := resolveDatabasePath("vikunja.db")
+		cfg := DatabasePathConfig{
+			ConfiguredPath: "vikunja.db",
+			RootPath:       execDir,
+			ExecutablePath: execDir,
+		}
 
-		// Result should contain the platform-specific user data directory
-		// and not be in the executable directory
-		assert.NotEqual(t, filepath.Join(filepath.Dir(execPath), "vikunja.db"), result)
+		result, err := resolveDatabasePath(cfg, getUserDataDir)
+		require.NoError(t, err)
+
+		assert.NotEqual(t, filepath.Join(execDir, "vikunja.db"), result)
 		assert.Contains(t, result, "vikunja.db")
 
-		// Verify it's using a platform-appropriate path
 		switch runtime.GOOS {
 		case "windows":
-			// Should be in %LOCALAPPDATA%\Vikunja or %USERPROFILE%\AppData\Local\Vikunja
 			assert.Contains(t, result, "Vikunja")
 		case "darwin":
-			// Should be in ~/Library/Application Support/Vikunja
 			assert.Contains(t, result, "Library")
 			assert.Contains(t, result, "Application Support")
 		default:
-			// Should be in ~/.local/share/vikunja or $XDG_DATA_HOME/vikunja
 			assert.NotEqual(t,
 				filepath.Dir(result),
-				filepath.Dir(execPath),
+				execDir,
 				"Database should not be in executable directory",
 			)
 		}
 	})
 
 	t.Run("with subdirectory path", func(t *testing.T) {
-		config.ServiceRootpath.Set("/custom/path")
+		cfg := DatabasePathConfig{
+			ConfiguredPath: "data/vikunja.db",
+			RootPath:       "/custom/path",
+			ExecutablePath: "/opt/vikunja",
+		}
 
-		result := resolveDatabasePath("data/vikunja.db")
+		result, err := resolveDatabasePath(cfg, getUserDataDir)
+		require.NoError(t, err)
+
 		expected := filepath.Join("/custom/path", "data", "vikunja.db")
-
 		assert.Equal(t, expected, result)
 	})
 }
 
-func TestGetUserDataDir(t *testing.T) {
+func Test_resolveDatabasePath_Windows(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("Skipping Windows-specific test on non-Windows platform")
+	}
 
+	mockGetUserDataDir := func(path string) func() (string, error) {
+		return func() (string, error) {
+			return path, nil
+		}
+	}
+
+	tests := []struct {
+		name           string
+		cfg            DatabasePathConfig
+		getUserDataDir func() (string, error)
+		expected       string
+	}{
+		{
+			name: "windows absolute path",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "C:\\ProgramData\\Vikunja\\vikunja.db",
+				RootPath:       "C:\\Program Files\\Vikunja",
+				ExecutablePath: "C:\\Program Files\\Vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("C:\\Users\\test\\AppData\\Local\\Vikunja"),
+			expected:       "C:\\ProgramData\\Vikunja\\vikunja.db",
+		},
+		{
+			name: "windows relative path with explicit rootpath",
+			cfg: DatabasePathConfig{
+				ConfiguredPath: "vikunja.db",
+				RootPath:       "C:\\ProgramData\\Vikunja",
+				ExecutablePath: "C:\\Program Files\\Vikunja",
+			},
+			getUserDataDir: mockGetUserDataDir("C:\\Users\\test\\AppData\\Local\\Vikunja"),
+			expected:       "C:\\ProgramData\\Vikunja\\vikunja.db",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := resolveDatabasePath(tt.cfg, tt.getUserDataDir)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetUserDataDir(t *testing.T) {
 	test := func() string {
 		dataDir, err := getUserDataDir()
 		require.NoError(t, err)

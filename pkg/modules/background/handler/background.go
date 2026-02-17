@@ -278,7 +278,7 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 		return err
 	}
 
-	f, err := files.Create(&buf, filename, filesize, auth)
+	f, err := files.Create(bytes.NewReader(buf.Bytes()), filename, filesize, auth)
 	if err != nil {
 		return err
 	}

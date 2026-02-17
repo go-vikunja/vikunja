@@ -125,6 +125,7 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
 
 import Message from '@/components/misc/Message.vue'
@@ -143,6 +144,7 @@ import {useTitle} from '@/composables/useTitle'
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.auth.login'))
 
+const router = useRouter()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
 const {redirectIfSaved} = useRedirectToLastVisited()
@@ -171,9 +173,13 @@ onBeforeMount(() => {
 		errorMessage.value = e.message
 	})
 
-	// Check if the user is already logged in, if so, redirect them to the homepage
+	// Check if the user is already logged in, if so, redirect them to the homepage.
+	// We intentionally use router.push here instead of redirectIfSaved() because
+	// this hook also fires when Login.vue re-mounts inside the authenticated layout
+	// after a successful login. Using redirectIfSaved() here would clear the saved
+	// route before the submit() handler gets a chance to use it.
 	if (authenticated.value) {
-		redirectIfSaved()
+		router.push({name: 'home'})
 	}
 })
 
@@ -211,6 +217,7 @@ async function submit() {
 	try {
 		await authStore.login(credentials)
 		authStore.setNeedsTotpPasscode(false)
+		redirectIfSaved()
 	} catch (e) {
 		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
 			return

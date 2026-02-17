@@ -4,10 +4,10 @@
 		"text": "Sidan du sökte finns inte."
 	},
 	"home": {
-		"welcomeNight": "Godnatt {username}!",
-		"welcomeMorning": "Godmorgon {username}!",
+		"welcomeNight": "God natt {username}!",
+		"welcomeMorning": "God morgon {username}!",
 		"welcomeDay": "Hej {username}!",
-		"welcomeEvening": "Godkväll {username}!",
+		"welcomeEvening": "God kväll {username}!",
 		"lastViewed": "Senast visade",
 		"addToHomeScreen": "Lägg till den här appen på din hemskärm för snabbare åtkomst och en förbättrad upplevelse.",
 		"goToOverview": "Gå till översikten",
@@ -35,11 +35,11 @@
 		"auth": {
 			"username": "Användarnamn",
 			"usernameEmail": "Användarnamn eller e-postadress",
-			"usernamePlaceholder": "t. ex. Frederick",
+			"usernamePlaceholder": "t.ex. Frederick",
 			"email": "E-postadress",
-			"emailPlaceholder": "t. ex. frederic{'@'}vikunja.io",
+			"emailPlaceholder": "t.ex. frederic{'@'}vikunja.io",
 			"password": "Lösenord",
-			"passwordPlaceholder": "t. ex. •••••••••••",
+			"passwordPlaceholder": "t.ex. •••••••••••",
 			"forgotPassword": "Har du glömt ditt lösenord?",
 			"resetPassword": "Återställ ditt lösenord",
 			"resetPasswordAction": "Skicka en länk för återställning av lösenord",
@@ -47,7 +47,7 @@
 			"passwordsDontMatch": "Lösenorden matchar inte",
 			"confirmEmailSuccess": "Du bekräftade din e-post! Du kan logga in nu.",
 			"totpTitle": "Tvåfaktorsautentiseringskod",
-			"totpPlaceholder": "t. ex. 123456",
+			"totpPlaceholder": "t.ex. 123456",
 			"login": "Logga in",
 			"createAccount": "Skapa konto",
 			"loginWith": "Logga in med {provider}",
@@ -242,57 +242,129 @@
 		}
 	},
 	"project": {
+		"archivedMessage": "Projektet är arkiverat. Det går inte att skapa nya eller redigera uppgifter för det.",
+		"archived": "Arkiverad",
+		"showArchived": "Visa arkiverade",
+		"title": "Titel",
 		"color": "Färg",
 		"projects": "Projekt",
+		"parent": "Överordnat projekt",
 		"search": "Skriv för att söka efter ett projekt…",
 		"searchSelect": "Klicka eller tryck på enter för att välja detta projekt",
 		"shared": "Delade projekt",
+		"noDescriptionAvailable": "Ny projektbeskrivning tillgänglig.",
 		"inboxTitle": "Inkorg",
+		"favorite": "Markera projektet som favorit",
+		"unfavorite": "Ta bort projektet från favoriter",
+		"openSettingsMenu": "Öppna projektets inställningsmeny",
+		"description": "Projektbeskrivning",
+		"favoriteDescription": "Detta projekt har alla uppgifter markerade som favoriter.",
 		"create": {
 			"header": "Nytt projekt",
-			"addTitleRequired": "Vänligen ange en titel."
+			"titlePlaceholder": "Projektets titel anges här…",
+			"addTitleRequired": "Vänligen ange en titel.",
+			"createdSuccess": "Projektet skapades framgångsrikt.",
+			"addProjectRequired": "Ange ett projekt eller ställ in ett förvalt projekt i inställningar."
 		},
 		"archive": {
 			"title": "Arkivera \"{project}\"",
-			"archive": "Arkivera detta projekt"
+			"archive": "Arkivera detta projekt",
+			"unarchive": "Avarkivera detta projekt",
+			"unarchiveText": "Du kommer att kunna skapa uppgifter eller redigera den.",
+			"archiveText": "Du kommer inte att kunna redigera detta projekt eller skapa uppgifter förrän du avarkiverar det.",
+			"success": "Projektet arkiverades framgångsrikt."
 		},
 		"background": {
-			"searchPlaceholder": "Sök efter en bakgrund…"
+			"title": "Ställ in projektbakgrund",
+			"remove": "Ta bort bakgrund",
+			"upload": "Välj en bakgrund från din dator",
+			"searchPlaceholder": "Sök efter en bakgrund…",
+			"poweredByUnsplash": "Drivs av Unsplash",
+			"loadMore": "Läs in fler bilder",
+			"success": "Bakgrunden har ställts in!",
+			"removeSuccess": "Bakgrunden har tagits bort!"
 		},
 		"delete": {
 			"title": "Radera \"{project}\"",
-			"header": "Radera detta projekt"
+			"header": "Radera detta projekt",
+			"text1": "Är du säker på att du vill radera detta projekt och projektets alla uppgifter?",
+			"text2": "Detta inkluderar alla uppgifter och KAN INTE ÅNGRAS!",
+			"success": "Projektet raderades framgångsrikt.",
+			"tasksToDelete": "Detta kommer oåterkalleligt ta bort ca. {count} uppgifter.",
+			"tasksAndChildProjectsToDelete": "Detta kommer att oåterkalleligt ta bort ungefär {tasks} uppgifter och {projects} projekt.",
+			"noTasksToDelete": "Detta projekt innehåller inga uppgifter, det borde vara säkert att radera."
 		},
 		"duplicate": {
 			"title": "Duplicera detta projekt",
-			"label": "Duplicera"
+			"label": "Duplicera",
+			"text": "Välj ett överordnat projekt som ska innehålla det duplicerade projektet:",
+			"success": "Projektet duplicerades framgångsrikt."
 		},
 		"edit": {
 			"header": "Redigera detta projekt",
 			"title": "Redigera \"{project}\"",
+			"titlePlaceholder": "Projektets titel här…",
+			"identifierTooltip": "Projektidentifieraren kan användas för att unikt identifiera en uppgift över olika projekt. Du kan lämna den blank för att inaktivera den.",
+			"identifier": "Projektidentifierare",
+			"identifierPlaceholder": "Projektidentifieraren här",
 			"description": "Beskrivning",
-			"color": "Färg"
+			"descriptionPlaceholder": "Ange en beskrivning för projektet, tryck '/' för fler alternativ…",
+			"color": "Färg",
+			"success": "Projektet uppdaterades framgångsrikt."
 		},
 		"share": {
 			"header": "Dela detta projekt",
 			"title": "Dela \"{project}\"",
 			"share": "Dela",
 			"links": {
+				"title": "Delningslänkar",
+				"what": "Vad är en delningslänk?",
+				"explanation": "Delningslänkar gör att du enkelt kan dela ett projekt med andra användare som inte har ett konto på Vikunja.",
+				"create": "Skapa en länkdelning",
 				"name": "Namn (valfritt)",
-				"namePlaceholder": "t. ex. Lorem Ipsum",
+				"namePlaceholder": "t.ex. Lorem Ipsum",
+				"nameExplanation": "Alla åtgärder som görs av denna länkdelning kommer att visas med namnet.",
 				"password": "Lösenord (valfritt)",
-				"passwordExplanation": "Vid inloggning kommer användaren att bli ombedd att ange detta lösenord."
+				"passwordExplanation": "Vid inloggning kommer användaren att bli ombedd att ange detta lösenord.",
+				"noName": "Inget namn angett",
+				"remove": "Ta bort en länkdelning",
+				"removeText": "Är du säker på att du vill ta bort denna länkdelning? Det kommer inte längre vara möjligt att komma åt detta projekt med denna länkdelning. Detta kan inte ångras!",
+				"createSuccess": "Länkdelningen skapades framgångsrikt.",
+				"deleteSuccess": "Länkdelningen raderades framgångsrikt",
+				"view": "Visa",
+				"sharedBy": "Delad av {0}"
 			},
 			"userTeam": {
 				"typeUser": "användare | användare",
-				"you": "Du"
+				"typeTeam": "team | team",
+				"shared": "Delad med dessa {type}",
+				"you": "Du",
+				"notShared": "Delas inte med någon {type} än.",
+				"removeHeader": "Ta bort en {type} från {sharable}",
+				"removeText": "Är du säker på att du vill ta bort denna {sharable} från {type}? Detta kan inte ångras!",
+				"removeSuccess": "{sharable} togs bort framgångsrikt från {type}.",
+				"addedSuccess": "{type} las till framgångsrikt.",
+				"updatedSuccess": "{type} uppdaterades framgångsrikt."
+			},
+			"permission": {
+				"title": "Behörighet",
+				"read": "Skrivskyddad",
+				"readWrite": "Läsa & skriva",
+				"admin": "Administratör"
 			},
 			"attributes": {
+				"link": "Länk",
 				"delete": "Radera"
 			}
 		},
+		"first": {
+			"title": "Första vyn"
+		},
 		"list": {
+			"title": "Lista",
 			"add": "Lägg till",
+			"addPlaceholder": "Lägg till en uppgift…",
+			"empty": "Detta projekt är för närvarande tomt.",
 			"newTaskCta": "Skapa en uppgift.",
 			"editTask": "Redigera uppgift"
 		},
@@ -302,15 +374,53 @@
 			"default": "Standard",
 			"month": "Månad",
 			"day": "Dag",
-			"hour": "Timme"
+			"hour": "Timme",
+			"range": "Datumintervall",
+			"chartLabel": "Projektets Gantt-schema",
+			"taskBarsForRow": "Uppgiftsstaplar för rad {rowId}",
+			"taskBarLabel": "Uppgift: {task}. Från {startDate} till {endDate}. {dateType}. Klicka för att redigera, dra för att flytta.",
+			"scheduledDates": "Planerade datum",
+			"estimatedDates": "Beräknade datum",
+			"resizeStartDate": "Ändra storlek på startdatum för uppgiften {task}",
+			"resizeEndDate": "Ändra storlek på slutdatum för uppgift {task}",
+			"timelineHeader": "Tidslinjens rubrik med månader och dagar",
+			"monthsRow": "Månaderrad",
+			"daysRow": "Dagarrad",
+			"monthLabel": "Månad: {month}",
+			"dayLabel": "Dag: {date}, {weekday}",
+			"dayLabelToday": "Idag: {date}, {weekday}",
+			"taskAriaLabel": "Uppgift: {task}",
+			"taskAriaLabelById": "Uppgift {id}"
 		},
 		"table": {
 			"title": "Tabell",
 			"columns": "Kolumner"
 		},
 		"kanban": {
+			"title": "Kanban",
+			"limit": "Gräns: {limit}",
+			"noLimit": "Ej inställt",
+			"doneBucket": "Färdigkolumn",
+			"doneBucketHint": "Alla uppgifter som flyttas till den här kolumnen markeras automatiskt som klara.",
+			"doneBucketHintExtended": "Alla uppgifter som flyttas till färdigkolumnen markeras som färdiga automatiskt. Alla uppgifter som markerats som färdiga från andra håll kommer också att flyttas.",
+			"doneBucketSavedSuccess": "Färdigkolumnen har sparats.",
+			"defaultBucket": "Förvald kolumn",
+			"defaultBucketHint": "När du skapar uppgifter utan att ange en kolumn kommer de att läggas till i denna kolumn.",
+			"defaultBucketSavedSuccess": "Den förvalda kolumnen sparades framgångsrikt.",
+			"deleteLast": "Du kan inte ta bort den sista kolumnen.",
+			"addTaskPlaceholder": "Ange titeln på den nya uppgiften…",
 			"addTask": "Lägg till en uppgift",
-			"addAnotherTask": "Lägg till ytterligare en uppgift"
+			"addAnotherTask": "Lägg till ytterligare en uppgift",
+			"addBucket": "Skapa en kolumn",
+			"addBucketPlaceholder": "Ange titeln på den nya kolumnen…",
+			"deleteHeaderBucket": "Radera kolumnen",
+			"deleteBucketText1": "Är du säker på att du vill radera den här kolumnen?",
+			"deleteBucketText2": "Detta kommer inte att radera någon uppgift utan flytta dem till den förvalda kolumnen.",
+			"deleteBucketSuccess": "Kolumnen raderades framgångsrikt.",
+			"bucketTitleSavedSuccess": "Kolumntiteln sparades framgångsrikt.",
+			"bucketLimitSavedSuccess": "Kolumngränsen sparades framgångsrikt.",
+			"collapse": "Minimera denna kolumn",
+			"bucketLimitReached": "Du har nått kolumngränsen. Ta bort uppgifter eller öka gränsen för att lägga till nya uppgifter."
 		},
 		"pseudo": {
 			"favorites": {
@@ -318,32 +428,127 @@
 			}
 		},
 		"webhooks": {
-			"targetUrlInvalid": "Vänligen ange en giltig URL."
+			"title": "Webhooks",
+			"targetUrl": "Mål-URL",
+			"targetUrlInvalid": "Vänligen ange en giltig URL.",
+			"events": "Händelser",
+			"eventsHint": "Välj alla händelser som denna webhook ska få uppdateringar för (inom det aktuella projektet).",
+			"mustSelectEvents": "Du måste välja minst en händelse.",
+			"delete": "Radera denna webhook",
+			"deleteText": "Är du säker på att du vill radera denna webhook? Externa mål kommer inte längre att meddelas om dess händelser.",
+			"deleteSuccess": "Webhooken raderades framgångsrikt.",
+			"create": "Skapa webhook",
+			"secret": "Hemlighet",
+			"basicauthuser": "Basic Auth-användare",
+			"basicauthpassword": "Basic Auth-lösenord",
+			"basicauthlink": "Använd Basic Auth?",
+			"secretHint": "Om detta fylls i, kommer alla förfrågningar till webhookens mål-URL att signeras med hjälp av HMAC.",
+			"secretDocs": "Kolla in dokumentationen för mer information om hur man använder hemligheter."
 		},
 		"views": {
+			"header": "Redigera vyer",
+			"title": "Titel",
 			"actions": "Åtgärder",
-			"create": "Skapa vy"
+			"kind": "Typ",
+			"bucketConfigMode": "Kolumnkonfigurationsläge",
+			"bucketConfig": "Kolumnkonfiguration",
+			"bucketConfigManual": "Manuell",
+			"filter": "Filter",
+			"create": "Skapa vy",
+			"createSuccess": "Vyn skapades framgångsrikt.",
+			"titleRequired": "Vänligen ange en titel.",
+			"delete": "Radera denna vy",
+			"deleteText": "Är du säker på att du vill ta bort den här vyn? Det kommer inte längre vara möjligt att använda den för att visa uppgifter i projektet. Denna åtgärd kommer inte att ta bort några uppgifter. Detta kan inte ångras!",
+			"deleteSuccess": "Vyn raderades framgångsrikt.",
+			"onlyAdminsCanEdit": "Endast projektadministratörer kan redigera vyer.",
+			"updateSuccess": "Vyn uppdaterades framgångsrikt."
 		}
 	},
 	"filters": {
 		"title": "Filter",
 		"clear": "Rensa filter",
 		"showResults": "Visa resultat",
+		"noResults": "Inga resultat",
+		"fromView": "Den aktuella vyn har ett filter satt också:",
+		"fromViewBoth": "Det kommer att användas i kombination med vad du skriver in här.",
 		"attributes": {
 			"title": "Titel",
+			"titlePlaceholder": "Den sparade filtertiteln går här…",
 			"description": "Beskrivning",
+			"descriptionPlaceholder": "Ange en beskrivning för filtret här, tryck '/' för fler alternativ…",
+			"includeNulls": "Inkludera uppgifter som inte har ett värde angett",
+			"requireAll": "Kräv att alla filter är sanna för att en uppgift ska visas",
+			"showDoneTasks": "Visa utförda uppgifter",
 			"sortAlphabetically": "Sortera alfabetiskt",
-			"enablePriority": "Aktivera filter efter prioritet"
+			"enablePriority": "Aktivera filter efter prioritet",
+			"enablePercentDone": "Aktivera filter efter framsteg",
+			"dueDateRange": "Förfallodatumets intervall",
+			"startDateRange": "Startdatumintervall",
+			"endDateRange": "Slutdatumintervall",
+			"reminderRange": "Datumintervall för påminnelse"
+		},
+		"create": {
+			"title": "Nytt sparat filter",
+			"description": "Ett sparat filter är ett virtuellt projekt som beräknas från en uppsättning filter varje gång det öppnas.",
+			"action": "Skapa sparat filter",
+			"titleRequired": "Vänligen ange en titel för filtret."
+		},
+		"delete": {
+			"header": "Radera detta sparade filter",
+			"text": "Är du säker på att du vill radera det sparade filtret?",
+			"success": "Filtret raderades framgångsrikt."
+		},
+		"edit": {
+			"title": "Redigera detta sparade filter",
+			"success": "Filtret sparades framgångsrikt."
 		},
 		"query": {
+			"title": "Fråga",
+			"placeholder": "Skriv in en sök- eller filterfråga…",
 			"help": {
+				"intro": "För att filtrera uppgifter kan du använda en syntax som liknar SQL. De tillgängliga fälten för filtrering inkluderar:",
+				"link": "Hur fungerar det här?",
+				"canUseDatemath": "Du kan använda datummatematik för att ställa in relativa datum. Klicka på datumvärdet i en fråga för att ta reda på mer.",
+				"fields": {
+					"done": "Om uppgiften är slutförd eller inte",
+					"priority": "Prioriteringsnivån för uppgiften (1-5)",
+					"percentDone": "Färdigställandeprocenten för uppgiften (0-100)",
+					"dueDate": "Uppgiftens förfallodag",
+					"startDate": "Uppgiftens startdatum",
+					"endDate": "Uppgiftens slutdatum",
+					"doneAt": "Datum och tid då uppgiften slutfördes",
+					"assignees": "Uppgiftens tilldelningar",
+					"labels": "Uppgiftens associerade etiketter",
+					"project": "Projektet som uppgiften tillhör (endast tillgängligt på sparade filter, inte på projektnivå)",
+					"reminders": "Uppgiftens påminnelser som ett datumfält, kommer att returnera alla uppgifter med minst en påminnelse som matchar frågan",
+					"created": "Tid och datum när uppgiften skapades",
+					"updated": "Tid och datum när uppgiften senast ändrades"
+				},
 				"operators": {
+					"intro": "De tillgängliga operatorerna för filtrering inkluderar:",
 					"notEqual": "Inte lika med",
 					"equal": "Lika med",
 					"greaterThan": "Större än",
 					"greaterThanOrEqual": "Större än eller lika med",
 					"lessThan": "Mindre än",
-					"lessThanOrEqual": "Mindre än eller lika med"
+					"lessThanOrEqual": "Mindre än eller lika med",
+					"like": "Matchar ett mönster (med jokertecken %)",
+					"in": "Matchar valfritt värde i en kommaseparerad värdelista",
+					"notIn": "Matchar valfritt värde som inte finns i en kommaseparerad värdelista"
+				},
+				"logicalOperators": {
+					"intro": "För att kombinera flera villkor kan du använda följande logiska operatorer:",
+					"and": "OCH-operator, matchar om alla villkor är sanna",
+					"or": "ELLER-operator, matchar om något av villkoren är sant",
+					"parentheses": "Parenteser för att gruppera villkor"
+				},
+				"examples": {
+					"intro": "Här är några exempel på filterfrågor:",
+					"priorityEqual": "Matchar uppgifter med prioritetsnivå 4",
+					"dueDatePast": "Matchar uppgifter med passerade förfallodatum",
+					"undoneHighPriority": "Matchar ångrade uppgifter med prioritet nivå 3 eller högre",
+					"assigneesIn": "Matchar uppgifter tilldelade till antingen \"user1\" eller \"user2\"",
+					"priorityOneOrTwoPastDue": "Matchar uppgifter med prioritet 1 eller 2 och ett passerat förfallodatum"
 				}
 			}
 		}
@@ -352,25 +557,40 @@
 		"title": "Importera från andra tjänster",
 		"titleService": "Importera din data från {name} till Vikunja",
 		"import": "Importera din data till Vikunja",
+		"description": "Klicka på logotypen för en av nedanstående tredjepartstjänster för att komma igång.",
+		"descriptionDo": "Vikunja kommer att importera alla listor, uppgifter, anteckningar, påminnelser och filer du har tillgång till.",
+		"authorize": "För att tillåta Vikunja att komma åt ditt {name}konto, klicka på knappen nedan.",
 		"getStarted": "Kom igång",
-		"upload": "Ladda upp fil"
+		"inProgress": "Importering pågår…",
+		"alreadyMigrated1": "Det verkar som om du redan har importerat dina grejer från {name} den {date}.",
+		"alreadyMigrated2": "Det är möjligt att importera igen, men det kan skapa dubbletter. Är du säker?",
+		"confirm": "Jag är säker, börja migrera nu!",
+		"importUpload": "För att importera data från {name} till Vikunja, klicka på knappen nedan för att välja en fil.",
+		"upload": "Ladda upp fil",
+		"migrationStartedWillReciveEmail": "Vikunja kommer nu att importera dina listor/projekt, uppgifter, anteckningar, påminnelser och filer från {service}. Eftersom detta kommer att ta ett tag, kommer vi att mejla dig när det är klart. Du kan stänga detta fönster nu.",
+		"migrationInProgress": "En migrering pågår. Vänta tills den är klar."
 	},
 	"label": {
 		"title": "Etiketter",
 		"manage": "Hantera etiketter",
+		"description": "Klicka på en etikett för att redigera den. Du kan redigera alla etiketter du skapat, du kan använda alla etiketter som är associerade med en uppgift vars projekt du har tillgång till.",
 		"newCTA": "Du har för närvarande inga etiketter.",
 		"search": "Skriv för att söka efter en etikett…",
 		"create": {
 			"header": "Ny etikett",
+			"title": "Skapa en etikett",
 			"titleRequired": "Vänligen ange en titel.",
 			"success": "Etiketten har skapats."
 		},
 		"edit": {
 			"header": "Redigera etikett",
-			"forbidden": "Du får inte redigera denna etikett eftersom du inte äger den."
+			"forbidden": "Du får inte redigera denna etikett eftersom du inte äger den.",
+			"success": "Etiketten skapades framgångsrikt."
 		},
+		"deleteSuccess": "Etiketten raderades framgångsrikt.",
 		"attributes": {
 			"title": "Titel",
+			"titlePlaceholder": "Etikettiteln här…",
 			"description": "Beskrivning",
 			"descriptionPlaceholder": "Etikettbeskrivning",
 			"color": "Färg"
@@ -378,12 +598,19 @@
 	},
 	"sharing": {
 		"authenticating": "Autentiserar…",
-		"invalidPassword": "Lösenordet är ogiltigt."
+		"passwordRequired": "Detta delade projekt kräver ett lösenord. Ange det nedan:",
+		"error": "Ett fel uppstod.",
+		"invalidPassword": "Lösenordet är ogiltigt.",
+		"accessDenied": "Åtkomst nekad. Kontrollera dina behörigheter och försök igen.",
+		"serverError": "Serverfel inträffade. Försök igen senare.",
+		"projectLoadError": "Det gick inte att läsa in projektinformation.",
+		"retry": "Försök igen"
 	},
 	"navigation": {
 		"overview": "Översikt",
 		"upcoming": "Kommande",
 		"settings": "Inställningar",
+		"imprint": "Märke",
 		"privacy": "Integritetspolicy"
 	},
 	"misc": {
@@ -395,18 +622,31 @@
 		"refresh": "Uppdatera",
 		"disable": "Inaktivera",
 		"copy": "Kopiera till urklipp",
+		"copyError": "Kopiering till urklipp misslyckades",
 		"search": "Sök",
 		"searchPlaceholder": "Skriv för att söka…",
 		"previous": "Föregående",
 		"next": "Nästa",
+		"poweredBy": "Drivs av Vikunja",
+		"info": "Info",
 		"create": "Skapa",
+		"doit": "Gör det!",
 		"saving": "Sparar…",
+		"saved": "Sparat!",
 		"default": "Standard",
 		"close": "Stäng",
 		"download": "Ladda ner",
+		"showMenu": "Visa menyn",
+		"hideMenu": "Dölj menyn",
 		"forExample": "Till exempel:",
 		"welcomeBack": "Välkommen tillbaka!",
-		"actions": "Åtgärder"
+		"custom": "Anpassad",
+		"id": "ID",
+		"created": "Skapad den",
+		"createdBy": "Skapad av {0}",
+		"actions": "Åtgärder",
+		"cannotBeUndone": "Detta kan inte ångras!",
+		"avatarOfUser": "{user}s profilbild"
 	},
 	"input": {
 		"resetColor": "Återställ färg",
@@ -414,28 +654,67 @@
 			"today": "I dag",
 			"tomorrow": "I morgon",
 			"nextMonday": "Nästa måndag",
+			"thisWeekend": "I helgen",
+			"laterThisWeek": "Senare i veckan",
 			"nextWeek": "Nästa vecka",
 			"chooseDate": "Välj ett datum"
 		},
 		"editor": {
 			"edit": "Redigera",
+			"done": "Klart",
+			"heading1": "Rubrik 1",
+			"heading1Tooltip": "Stor sektionsrubrik.",
+			"heading2": "Rubrik 2",
+			"heading2Tooltip": "Mellanstor sektionsrubrik.",
+			"heading3": "Rubrik 3",
+			"heading3Tooltip": "Mindre sektionsrubrik.",
+			"headingSmaller": "Mindre rubrik",
+			"headingBigger": "Större rubrik",
 			"bold": "Fetstil",
 			"italic": "Kursiv",
 			"strikethrough": "Genomstruken",
+			"underline": "Understruken",
 			"code": "Kod",
+			"codeTooltip": "Fånga en kodsnutt.",
 			"quote": "Citat",
+			"quoteTooltip": "Fånga ett citat.",
+			"bulletList": "Punktlista",
+			"bulletListTooltip": "Skapa en enkel punktlista.",
+			"unorderedList": "Osorterad lista",
+			"orderedList": "Sorterad lista",
+			"orderedListTooltip": "Skapa en lista med numrering.",
+			"cleanBlock": "Rensa block",
 			"link": "Länk",
 			"image": "Bild",
+			"imageTooltip": "Ladda upp en bild från din dator.",
+			"horizontalRule": "Horisontell linje",
+			"horizontalRuleTooltip": "Dela upp en sektion.",
+			"sideBySide": "Sida vid sida",
+			"guide": "Guide",
+			"text": "Text",
+			"textTooltip": "Börja bara skriva med vanlig text.",
+			"taskList": "Uppgiftslista",
+			"taskListTooltip": "Följ uppgifter med en att-göra-lista.",
 			"undo": "Ångra",
+			"redo": "Gör om",
+			"placeholder": "Skriv lite text eller tryck på '/' för att se fler alternativ…",
 			"table": {
 				"title": "Tabell",
+				"insert": "Infoga tabell",
 				"addColumnBefore": "Lägg till kolumn före",
 				"addColumnAfter": "Lägg till kolumn efter",
 				"deleteColumn": "Radera kolumn",
 				"addRowBefore": "Lägg till rad före",
 				"addRowAfter": "Lägg till rad efter",
 				"deleteRow": "Radera rad",
-				"deleteTable": "Radera tabell"
+				"deleteTable": "Radera tabell",
+				"mergeCells": "Sammanfoga celler",
+				"splitCell": "Dela cell",
+				"toggleHeaderColumn": "Växla rubrikkolumn",
+				"toggleHeaderRow": "Växla sidhuvudets rad",
+				"toggleHeaderCell": "Växla rubrikcell",
+				"mergeOrSplit": "Sammanfoga eller dela",
+				"fixTables": "Fixa tabeller"
 			}
 		},
 		"multiselect": {
@@ -450,19 +729,52 @@
 			"ranges": {
 				"today": "I dag",
 				"thisWeek": "Denna vecka",
+				"restOfThisWeek": "Resten av veckan",
 				"nextWeek": "Nästa vecka",
+				"next7Days": "Nästa 7 dagar",
 				"lastWeek": "Förra veckan",
 				"thisMonth": "Denna månad",
+				"restOfThisMonth": "Resten av månaden",
 				"nextMonth": "Nästa månad",
-				"lastMonth": "Förra månaden"
+				"next30Days": "Kommande 30 dagar",
+				"lastMonth": "Förra månaden",
+				"thisYear": "I år",
+				"restOfThisYear": "Resten av året"
 			},
 			"values": {
-				"now": "Nu"
+				"now": "Nu",
+				"startOfToday": "Början av dagen",
+				"endOfToday": "Slutet av dagen",
+				"beginningOflastWeek": "Början av förra veckan",
+				"endOfLastWeek": "Slutet av förra veckan",
+				"beginningOfThisWeek": "Början av veckan",
+				"endOfThisWeek": "Slutet av veckan",
+				"startOfNextWeek": "Början av nästa vecka",
+				"endOfNextWeek": "Slutet av nästa vecka",
+				"in7Days": "Om 7 dagar",
+				"beginningOfLastMonth": "Början på förra månaden",
+				"endOfLastMonth": "Slutet av förra månaden",
+				"startOfThisMonth": "Början av månaden",
+				"endOfThisMonth": "Slutet av månaden",
+				"startOfNextMonth": "Början av nästa månad",
+				"endOfNextMonth": "Slutet av nästa månad",
+				"in30Days": "Inom 30 dagar",
+				"startOfThisYear": "Början av året",
+				"endOfThisYear": "Slutet av året"
 			}
 		},
 		"datemathHelp": {
+			"canuse": "Du kan använda datummatematik för att filtrera för relativa datum.",
+			"learnhow": "Kolla in hur det fungerar",
+			"title": "Datummatematik",
+			"intro": "Ange relativa datum som beräknas på språng av Vikunja när du applicerar filtret.",
+			"expression": "Varje datummatematikuttryck börjar med ett ankardatum, som antingen kan vara {0}, eller en datumsträng som slutar med {1}. Detta ankardatum kan eventuellt följas av ett eller flera matematiska uttryck.",
+			"similar": "Dessa uttryck liknar de som tillhandahålls av {0} och {1}.",
 			"add1Day": "Lägg till en dag",
 			"minus1Day": "Subtrahera en dag",
+			"roundDay": "Avrunda ner till närmaste dag",
+			"supportedUnits": "Tidsenheter som stöds",
+			"someExamples": "Exempel på tidsuttryck",
 			"units": {
 				"seconds": "Sekunder",
 				"minutes": "Minuter",
@@ -474,118 +786,379 @@
 			},
 			"examples": {
 				"now": "Just nu",
+				"in24h": "Inom 24h",
 				"today": "I dag kl. 00:00",
-				"in30Days": "Om 30 dagar"
+				"beginningOfThisWeek": "Början av denna vecka kl 00:00",
+				"endOfThisWeek": "Slutet av veckan",
+				"in30Days": "Om 30 dagar",
+				"datePlusMonth": "{0} plus en månad klockan 00:00 den dagen"
 			}
 		}
 	},
 	"task": {
 		"task": "Uppgift",
 		"new": "Skapa en uppgift",
+		"delete": "Radera denna uppgift",
+		"createSuccess": "Uppgiften skapades framgångsrikt.",
 		"addReminder": "Lägg till en påminnelse…",
+		"doneSuccess": "Uppgiften markerades framgångsrikt som klar.",
+		"undoneSuccess": "Uppgiften avmarkerades framgångsrikt som klar.",
+		"movedToProject": "Uppgiften flyttades till {project}.",
 		"undo": "Ångra",
+		"openDetail": "Öppna detaljvyn för uppgift",
 		"checklistTotal": "{checked} av {total} uppgifter",
 		"checklistAllDone": "{total} uppgifter",
 		"show": {
 			"titleCurrent": "Aktuella uppgifter",
 			"titleDates": "Uppgifter från {from} till {to}",
+			"noDates": "Visa uppgifter utan datum",
+			"overdue": "Visa förfallna uppgifter",
 			"fromuntil": "Uppgifter från {from} till {until}",
-			"noTasks": "Det finns inget att göra - ha en bra dag!"
+			"select": "Välj ett datumspann",
+			"noTasks": "Det finns inget att göra - ha en bra dag!",
+			"filterByLabel": "Filtrerar på etikett {label}",
+			"clearLabelFilter": "Rensa etikettfilter"
 		},
 		"detail": {
+			"chooseDueDate": "Klicka här för att ange ett förfallodatum",
+			"chooseStartDate": "Klicka här för att ange ett startdatum",
+			"chooseEndDate": "Klicka här för att ange ett slutdatum",
 			"move": "Flytta uppgift till ett annat projekt",
 			"done": "Markera uppgiften klar!",
+			"undone": "Markera som ångrad",
 			"created": "Skapad {0} av {1}",
+			"updated": "Uppdaterade {0}",
+			"doneAt": "Klar vid {0}",
+			"updateSuccess": "Uppgiften sparades framgångsrikt.",
+			"deleteSuccess": "Uppgiften raderades framgångsrikt.",
+			"belongsToProject": "Denna uppgift tillhör projektet '{project}'",
+			"back": "Tillbaka till projekt",
+			"due": "Förfaller {at}",
+			"closePopup": "Stäng popup",
+			"scrollToBottom": "Skrolla till botten",
 			"organization": "Organisation",
+			"management": "Hantering",
 			"dateAndTime": "Datum och tid",
 			"delete": {
-				"header": "Radera denna uppgift"
+				"header": "Radera denna uppgift",
+				"text1": "Är du säker på att du vill ta bort denna uppgift?",
+				"text2": "Detta kommer också att ta bort alla bilagor, påminnelser och relationer associerade med denna uppgift och kan inte ångras!"
 			},
 			"actions": {
+				"assign": "Tilldela till användare",
 				"label": "Lägg till etiketter",
 				"priority": "Ange prioritet",
 				"dueDate": "Ange förfallodatum",
+				"startDate": "Ange startdatum",
+				"endDate": "Ange slutdatum",
+				"reminders": "Ställ in påminnelser",
+				"repeatAfter": "Ställ in upprepande intervall",
+				"percentDone": "Ställ in framsteg",
 				"attachments": "Lägg till bilagor",
+				"relatedTasks": "Lägg till förhållande",
 				"moveProject": "Flytta",
+				"color": "Ställ in färg",
 				"delete": "Radera",
-				"favorite": "Lägg till i favoriter"
+				"favorite": "Lägg till i favoriter",
+				"unfavorite": "Ta bort från favoriter"
 			}
 		},
 		"attributes": {
+			"assignees": "Tilldelade",
 			"color": "Färg",
+			"created": "Skapades",
+			"createdBy": "Skapades av",
 			"description": "Beskrivning",
+			"done": "Klar",
+			"dueDate": "Förfallodatum",
+			"endDate": "Slutdatum",
 			"labels": "Etiketter",
+			"percentDone": "Framsteg",
+			"priority": "Prioritet",
+			"relatedTasks": "Relaterade uppgifter",
 			"reminders": "Påminnelser",
 			"repeat": "Upprepa",
+			"comment": "{count} kommentar | {count} kommentarer",
+			"commentCount": "Antal kommentarer",
 			"startDate": "Startdatum",
-			"title": "Titel"
+			"title": "Titel",
+			"updated": "Uppdaterad",
+			"doneAt": "Klar vid"
 		},
 		"subscription": {
+			"subscribedTaskThroughParentProject": "Du kan inte avregistrera dig här eftersom du prenumererar på denna uppgift genom dess projekt.",
+			"subscribedProject": "Du prenumererar för närvarande på detta projekt och kommer att få notiser om ändringar.",
+			"notSubscribedProject": "Du prenumererar inte på detta projekt och kommer inte att få notiser om ändringar.",
+			"subscribedTask": "Du prenumererar för närvarande på denna uppgift och kommer att få notiser om ändringar.",
+			"notSubscribedTask": "Du prenumererar inte på denna uppgift och kommer inte att få notiser om ändringar.",
 			"subscribe": "Prenumerera",
-			"unsubscribe": "Avprenumerera"
+			"unsubscribe": "Avprenumerera",
+			"subscribeSuccessProject": "Du prenumererar nu på detta projekt",
+			"unsubscribeSuccessProject": "Du är nu avregistrerad från detta projekt",
+			"subscribeSuccessTask": "Du prenumererar nu på denna uppgift",
+			"unsubscribeSuccessTask": "Du är nu avregistrerad från denna uppgift"
 		},
 		"attachment": {
 			"title": "Bilagor",
 			"createdBy": "skapad {0} av {1}",
+			"downloadTooltip": "Ladda ner denna bilaga",
 			"upload": "Ladda upp bilaga",
+			"drop": "Släpp filer här för att ladda upp",
 			"delete": "Radera bilaga",
 			"deleteTooltip": "Radera denna bilaga",
-			"copyUrl": "Kopiera URL"
+			"deleteText1": "Är du säker på att du vill radera bilagan {filename}?",
+			"copyUrl": "Kopiera URL",
+			"copyUrlTooltip": "Kopiera denna bilagas URL för användning i text",
+			"setAsCover": "Gör omslag",
+			"unsetAsCover": "Ta bort omslag",
+			"successfullyChangedCoverImage": "Omslagsbilden ändrades framgångsrikt.",
+			"usedAsCover": "Omslagsbild"
 		},
 		"comment": {
 			"title": "Kommentarer",
 			"loading": "Laddar kommentarer…",
-			"deleteText1": "Är du säker på att du vill radera denna kommentar?"
+			"edited": "ändrad {date}",
+			"creating": "Skapar kommentar…",
+			"placeholder": "Lägg till din kommentar, tryck på '/' för fler alternativ…",
+			"comment": "Kommentera",
+			"delete": "Radera denna kommentar",
+			"deleteText1": "Är du säker på att du vill radera denna kommentar?",
+			"deleteSuccess": "Kommentaren raderades framgångsrikt.",
+			"addedSuccess": "Kommentaren las till framgångsrikt.",
+			"permalink": "Kopiera permalänk till denna kommentar"
+		},
+		"mention": {
+			"noUsersFound": "Inga användare hittades"
 		},
 		"deferDueDate": {
+			"title": "Skjut fram förfallodatum",
 			"1day": "1 dag",
 			"3days": "3 dagar",
 			"1week": "1 vecka"
 		},
+		"description": {
+			"placeholder": "Ange en beskrivning, tryck '/' för fler alternativ…",
+			"empty": "Ingen beskrivning är tillgänglig ännu."
+		},
+		"assignee": {
+			"placeholder": "Skriv för att tilldela en användare…",
+			"selectPlaceholder": "Tilldela denna användare",
+			"assignSuccess": "Användaren tilldelades framgångsrikt.",
+			"unassignSuccess": "Användaren togs bort framgångsrikt."
+		},
 		"label": {
-			"createPlaceholder": "Lägg till som ny etikett"
+			"placeholder": "Skriv för att lägga till en etikett…",
+			"createPlaceholder": "Lägg till som ny etikett",
+			"addSuccess": "Etiketten las till framgångsrikt.",
+			"createSuccess": "Etiketten skapades framgångsrikt.",
+			"removeSuccess": "Etiketten togs bort framgångsrikt.",
+			"addCreateSuccess": "Etiketten skapades och las till framgångsrikt.",
+			"delete": {
+				"header": "Radera denna etikett",
+				"text1": "Är du säker på att du vill radera denna etikett?",
+				"text2": "Detta kommer att ta bort den från alla uppgifter och kan inte återställas."
+			}
 		},
 		"priority": {
+			"unset": "Upphäv",
 			"low": "Låg",
-			"high": "Hög"
+			"medium": "Medel",
+			"high": "Hög",
+			"urgent": "Brådskande",
+			"doNow": "GÖR NU"
+		},
+		"relation": {
+			"add": "Lägg till en ny uppgiftsrelation",
+			"new": "Ny uppgiftsrelation",
+			"searchPlaceholder": "Skriv in sökning efter en uppgift att lägga till som relaterad...",
+			"createPlaceholder": "Lägg till den här som relaterad uppgift",
+			"differentProject": "Den här uppgiften tillhör ett annat projekt.",
+			"noneYet": "Inga uppgiftsrelationer ännu.",
+			"delete": "Radera uppgiftsrelation",
+			"deleteText1": "Är du säker på att du vill radera den här uppgiftsrelationen?",
+			"select": "Välj en relationsform",
+			"taskRequired": "Välj en uppgift eller ange en ny uppgiftstitel.",
+			"kinds": {
+				"subtask": "Underaktivitet | Underaktiviteter",
+				"parenttask": "Överordnad uppgift | Överordnade uppgifter",
+				"related": "Relaterad uppgift | Relaterade uppgifter",
+				"duplicateof": "Dubblett av | Dubletter av",
+				"duplicates": "Dubblar | Dubblar",
+				"blocking": "Blockerar | Blockerar",
+				"blocked": "Blockerad av | Blockerade av",
+				"precedes": "Föregår | Föregår",
+				"follows": "Följer | Följer",
+				"copiedfrom": "Kopierad från | Kopierade från",
+				"copiedto": "Kopierad till | Kopierade till"
+			}
 		},
 		"reminder": {
+			"before": "{amount} {unit} före {type}",
+			"after": "{amount} {unit} efter {type}",
 			"beforeShort": "före",
 			"afterShort": "efter",
+			"onDueDate": "På förfallodatumet",
+			"onStartDate": "På startdatumet",
+			"onEndDate": "På slutdatumet",
+			"custom": "Anpassad",
 			"dateAndTime": "Datum och tid"
 		},
 		"repeat": {
 			"everyDay": "Varje dag",
 			"everyWeek": "Varje vecka",
+			"every30d": "Var 30:e dag",
+			"mode": "Upprepningsläge",
+			"monthly": "Månatligen",
+			"fromCurrentDate": "Från datum för slutförande",
+			"each": "Varje",
+			"specifyAmount": "Ange ett antal…",
 			"hours": "Timmar",
 			"days": "Dagar",
 			"weeks": "Veckor",
 			"months": "Månader",
-			"years": "År"
+			"years": "År",
+			"invalidAmount": "Vänligen ange mer än 0."
 		},
 		"quickAddMagic": {
-			"dateAndTime": "Datum och tid"
+			"hint": "Använd magiska prefix för att definiera förfallodatum, tilldelade personer och andra uppgiftsegenskaper.",
+			"title": "Snabbtilläggsmagi",
+			"intro": "När du skapar en uppgift kan du använda speciella nyckelord för att direkt lägga till attribut till den nyskapade uppgiften. Detta gör det möjligt att lägga till vanliga attribut till uppgifter mycket snabbare.",
+			"multiple": "Du kan använda detta flera gånger.",
+			"label1": "För att lägga till en etikett behöver du bara ange namnet på etiketten med prefixet {prefix}.",
+			"label2": "Vikunja kontrollerar först om etiketten redan finns och skapar den annars.",
+			"label3": "För att använda mellanslag, lägg bara till \" eller ' runt etikettens namn.",
+			"label4": "Till exempel: {prefix}\"Etikett med mellanslag\".",
+			"priority1": "För att sätta en uppgift prioritet, lägg till ett nummer 1-5, med en {prefix} före.",
+			"priority2": "Ju högre nummer, desto högre prioritet.",
+			"assignees": "För att direkt tilldela uppgiften till en användare, lägg till deras användarnamn med prefixet {prefix} till uppgiften.",
+			"project1": "För att ställa in ett projekt för uppgiften att visas i, ange dess namn med prefixet {prefix}.",
+			"project2": "Detta kommer att returnera ett fel om projektet inte existerar.",
+			"project3": "För att använda mellanslag, lägg bara till \" eller ' runt projektnamnet.",
+			"project4": "Till exempel: {prefix}\"Projekt med mellanslag\".",
+			"dateAndTime": "Datum och tid",
+			"date": "Valfritt datum kommer att användas som förfallodatum för den nya uppgiften. Du kan använda datum i något av dessa format:",
+			"dateWeekday": "valfri veckodag kommer att använda nästa datum med den veckodagen",
+			"dateCurrentYear": "kommer att använda det nuvarande året",
+			"dateNth": "kommer att använda den {day}de den nuvarande månaden",
+			"dateTime": "Kombinera valfritt datumformat med \"{time}\" (eller {timePM}) för att ange en tid.",
+			"repeats": "Upprepande uppgifter",
+			"repeatsDescription": "För att ställa in en uppgift som upprepande i ett intervall, lägg bara till '{suffix}' till uppgiftstexten. Värdet måste vara ett tal och kan utelämnas för att använda bara typen (se exempel)."
 		}
 	},
 	"team": {
+		"title": "Team",
+		"noTeams": "Du är för närvarande inte del av något team.",
+		"create": {
+			"title": "Skapa ett team",
+			"success": "Teamet skapades framgångsrikt."
+		},
 		"edit": {
+			"title": "Redigera team \"{team}\"",
+			"members": "Teammedlemmar",
 			"search": "Skriv för att söka efter en användare…",
+			"addUser": "Lägg till i team",
+			"makeMember": "Gör till medlem",
+			"makeAdmin": "Gör till administratör",
+			"success": "Teamet uppdaterades framgångsrikt.",
+			"userAddedSuccess": "Teammedlemmen las till framgångsrikt.",
+			"madeMember": "Teammedlemmen blev framgångsrikt medlem.",
+			"madeAdmin": "Teammedlemmen blev framgångsrikt administratör.",
 			"mustSelectUser": "Vänligen välj en användare.",
+			"delete": {
+				"header": "Radera teamet",
+				"text1": "Är du säker på att du vill radera detta team och alla dess medlemmar?",
+				"text2": "Alla teammedlemmar kommer att förlora åtkomst till projekt som delas med det här teamet. Detta KAN INTE ÅNGRAS!",
+				"success": "Teamet raderades framgångsrikt."
+			},
+			"deleteUser": {
+				"header": "Ta bort en användare från teamet",
+				"text1": "Är du säker på att du vill ta bort den här användaren från teamet?",
+				"text2": "De kommer att förlora åtkomst till alla projekt som teamet har tillgång till. Detta KAN INTE ÅNGRAS!",
+				"success": "Användaren raderades framgångsrikt från teamet."
+			},
 			"leave": {
-				"title": "Lämna team"
+				"title": "Lämna team",
+				"text1": "Är du säker på att du vill lämna detta team?",
+				"text2": "Du kommer att förlora åtkomst till alla projekt som teamet har tillgång till. Om du ändrar dig behöver en teamadministratör lägga till dig igen.",
+				"success": "Du har framgångsrikt lämnat teamet."
 			}
 		},
 		"attributes": {
+			"name": "Teamnamn",
+			"namePlaceholder": "Teamets namn här…",
+			"nameRequired": "Vänligen ange ett namn.",
 			"description": "Beskrivning",
-			"member": "Medlem"
+			"descriptionPlaceholder": "Beskriv teamet här, tryck '/' för fler alternativ…",
+			"admin": "Administratör",
+			"member": "Medlem",
+			"isPublic": "Offentligt team",
+			"isPublicDescription": "Gör teamet offentligt. När det är aktiverat kan vem som helst dela projekt med det här teamet även om man inte är medlem."
 		}
 	},
 	"keyboardShortcuts": {
+		"title": "Tangentbordsgenvägar",
+		"general": "Allmänt",
+		"allPages": "Dessa genvägar fungerar på alla sidor.",
+		"currentPageOnly": "Dessa genvägar fungerar bara på den aktuella sidan.",
+		"somePagesOnly": "Dessa genvägar fungerar endast på vissa sidor.",
+		"toggleMenu": "Växla menyn",
+		"quickSearch": "Öppna sök-/snabbåtgärdsfältet",
+		"then": "då",
 		"task": {
-			"delete": "Radera denna uppgift"
+			"title": "Uppgiftssida",
+			"done": "Markera uppgiften klar / ogjord",
+			"assign": "Tilldela den här uppgiften till en användare",
+			"labels": "Lägg till etiketter till den här uppgiften",
+			"dueDate": "Ändra förfallodatum för den här uppgiften",
+			"attachment": "Lägg till en bilaga till den här uppgiften",
+			"related": "Ändra relaterade uppgifter för den här uppgiften",
+			"color": "Ändra färgen på den här uppgiften",
+			"move": "Flytta uppgiften till ett annat projekt",
+			"reminder": "Hantera påminnelser för den här uppgiften",
+			"description": "Växla redigering av uppgiftens beskrivning",
+			"delete": "Radera denna uppgift",
+			"priority": "Ändra prioritet för den här uppgiften",
+			"favorite": "Markera den här uppgiften som favorit / ej favorit",
+			"openProject": "Öppna uppgiftens projekt",
+			"save": "Spara den nuvarande uppgiften",
+			"copyIdentifier": "Kopiera uppgiftsidentifierare till urklipp",
+			"copyIdentifierAndTitle": "Kopiera uppgiftsidentifierare och titel till urklipp",
+			"copyIdentifierTitleAndUrl": "Kopiera uppgiftsidentifierare, titel och URL till urklipp",
+			"copyUrl": "Kopiera uppgiftens URL till urklipp"
+		},
+		"project": {
+			"title": "Projektvy",
+			"switchToListView": "Växla till listvy",
+			"switchToGanttView": "Växla till Gantt-vy",
+			"switchToKanbanView": "Växla till kanban-vy",
+			"switchToTableView": "Växla till tabellvy"
+		},
+		"navigation": {
+			"title": "Navigering",
+			"overview": "Gå till översikten",
+			"upcoming": "Gå till kommande uppgifter",
+			"labels": "Gå till etiketter",
+			"teams": "Gå till team",
+			"projects": "Gå till projekt"
+		},
+		"list": {
+			"title": "Uppgiftslista",
+			"navigateDown": "Markera nästa uppgift",
+			"navigateUp": "Markera föregående uppgift",
+			"open": "Öppna markerad uppgift"
+		},
+		"gantt": {
+			"title": "Gantt-schema",
+			"moveTaskLeft": "Flytta uppgiften till ett tidigare datum",
+			"moveTaskRight": "Flytta uppgiften till ett senare datum",
+			"expandTaskLeft": "Expandera uppgiftens startdatum tidigare",
+			"expandTaskRight": "Expandera uppgiftens slutdatum senare",
+			"shrinkTaskLeft": "Krymp uppgiften från startdatum",
+			"shrinkTaskRight": "Krymp uppgiften från slutdatum"
 		}
 	},
 	"update": {
+		"available": "Det finns en uppdatering tillgänglig!",
 		"do": "Uppdatera nu"
 	},
 	"menu": {
@@ -593,22 +1166,48 @@
 		"archive": "Arkivera",
 		"duplicate": "Duplicera",
 		"delete": "Radera",
+		"unarchive": "Avarkivera",
+		"setBackground": "Bakgrundsinställningar",
 		"share": "Dela",
 		"newProject": "Nytt projekt",
-		"createProject": "Skapa projekt"
+		"createProject": "Skapa projekt",
+		"cantArchiveIsDefault": "Du kan inte arkivera detta eftersom det är ditt förvalda projekt.",
+		"cantDeleteIsDefault": "Du kan inte radera detta eftersom det är ditt förvalda projekt.",
+		"views": "Vyer"
 	},
 	"apiConfig": {
-		"urlPlaceholder": "t. ex. https://localhost:3456"
+		"url": "Vikunjas URL",
+		"urlPlaceholder": "t.ex. https://localhost:3456",
+		"change": "ändra",
+		"use": "Använder Vikunja-installation på {0}",
+		"error": "Kunde inte hitta eller använda Vikunja-installationen på \"{domain}\". Kontrollera att URL:en har rätt format och att den är nåbar när du går in på den direkt och försök igen.",
+		"success": "Använder Vikunja-installation på \"{domain}\".",
+		"urlRequired": "Det krävs en URL."
 	},
 	"loadingError": {
+		"failed": "Laddningen misslyckades, vänligen {0}. Om felet kvarstår, vänligen {1}.",
 		"tryAgain": "försök igen",
 		"contact": "kontakta oss"
 	},
+	"notification": {
+		"title": "Notiser",
+		"none": "Du har inga notiser. Ha en trevlig dag!",
+		"explainer": "Notiser kommer att visas här när åtgärder, projekt eller uppgifter som du prenumererar på sker.",
+		"markAllRead": "Markera alla notiser som lästa",
+		"markAllReadSuccess": "Markerade framgångsrikt alla notiser som lästa."
+	},
 	"quickActions": {
 		"commands": "Kommandon",
+		"placeholder": "Skriv ett kommando eller sök…",
+		"hint": "Du kan använda {project} för att begränsa sökningen till ett projekt. Kombinera {project} eller {label} (etiketter) med en sökfråga för att söka efter en uppgift med dessa etiketter eller på det projektet. Använd {assignee} för att endast söka efter team.",
 		"tasks": "Uppgifter",
 		"projects": "Projekt",
+		"teams": "Team",
 		"labels": "Etiketter",
+		"newProject": "Skriv in titeln på det nya projektet…",
+		"newTask": "Skriv in titeln på den nya uppgiften…",
+		"newTeam": "Skriv in namnet på det nya teamet…",
+		"createTask": "Skapa en uppgift i det nuvarande projektet ({title})",
 		"createProject": "Skapa ett projekt",
 		"cmds": {
 			"newTask": "Ny uppgift",
@@ -616,18 +1215,110 @@
 			"newTeam": "Nytt team"
 		}
 	},
+	"date": {
+		"altFormatLong": "j M Y, H:i",
+		"altFormatShort": "j M Y"
+	},
 	"reaction": {
 		"reactedWith": "{user} reagerade med {value}",
 		"reactedWithAnd": "{users} och {lastUser} reagerade med {value}",
+		"reactedWithAndMany": "{users} och {num} reagerade med {value}",
 		"add": "Lägg till din reaktion"
 	},
 	"error": {
+		"1001": "En användare med samma namn finns redan.",
+		"1002": "En användare med den här e-postadressen finns redan.",
+		"1004": "Inget användarnamn och lösenord angivet.",
+		"1005": "Användaren finns inte.",
+		"1006": "Kunde inte hämta användar-ID:t.",
+		"1008": "Ingen token för lösenordsåterställning angiven.",
+		"1009": "Ogiltig token för lösenordsåterställning.",
+		"1010": "Ogiltig token för e-postbekräftelse.",
 		"1011": "Fel användarnamn eller lösenord.",
-		"8002": "Etiketten finns inte."
+		"1012": "Användarens e-postadressen är inte bekräftad.",
+		"1013": "Nytt lösenord är tomt.",
+		"1014": "Det gamla lösenordet är tomt.",
+		"1015": "TOTP är redan aktiverat för den här användaren.",
+		"1016": "TOTP är inte aktiverat för den här användaren.",
+		"1017": "TOTP-koden är ogiltig.",
+		"1018": "Användarens avatartypinställning är ogiltig.",
+		"1019": "Ingen e-postadress har angetts av OpenID-leverantören. Se till att OpenID-leverantören offentligt tillhandahåller en e-postadress för ditt konto.",
+		"1020": "Det här kontot är inaktiverat. Kontrollera din e-post eller fråga din administratör.",
+		"1021": "Detta konto hanteras av en tredjepartsautentiseringsleverantör.",
+		"1022": "Användarnamnet får inte innehålla mellanslag.",
+		"1023": "Du kan inte göra det som en länkdelning.",
+		"1024": "Ogiltig anspråksdata för fältet {field} av typen {type}.",
+		"1025": "Tidszonen '{timezone}' är ogiltig. Välj en giltig tidszon i listan.",
+		"2001": "ID kan inte vara tomt eller 0.",
+		"2002": "En del av förfrågningsdatan var ogiltig.",
+		"2003": "Tidszonen '{timezone}' är ogiltig.",
+		"3001": "Projektet finns inte.",
+		"3004": "Du måste ha läsrättigheter för det projektet för att kunna utföra den åtgärden.",
+		"3005": "Projekttiteln kan inte vara tom.",
+		"3006": "Projektdelningen finns inte.",
+		"3007": "Ett projekt med den här identifieraren finns redan.",
+		"3008": "Projektet är arkiverat och kan därför endast läsas. Detta gäller även för alla uppgifter som är kopplade till projektet.",
+		"4001": "Uppgiftstiteln kan inte vara tom.",
+		"4002": "Uppgiften finns inte.",
+		"4003": "Alla massredigerade uppgifter måste tillhöra samma projekt.",
+		"4004": "Minst en uppgift behövs vid massredigering av uppgifter.",
+		"4005": "Du har inte rätt att se uppgiften.",
+		"4006": "Du kan inte ställa in en överordnad uppgift som samma uppgift.",
+		"4007": "Du kan inte skapa en uppgiftsrelation med en ogiltig typ av relation.",
+		"4008": "Du kan inte skapa en uppgiftsrelation som redan finns.",
+		"4009": "Uppgiftsrelationen finns inte.",
+		"4010": "Det går inte att relatera en uppgift till sig själv.",
+		"4011": "Uppgiftsbilagan finns inte.",
+		"4012": "Uppgiftsbilagan är för stor.",
+		"4013": "Uppgiftssorteringsparametern är ogiltig.",
+		"4014": "Uppgiftssorteringsordningen är ogiltig.",
+		"4015": "Uppgiftskommentaren finns inte.",
+		"4016": "Ogiltigt uppgiftsfält.",
+		"4017": "Ogiltig uppgiftsfilterjämförelse.",
+		"4018": "Ogiltig uppgiftsfiltersammanfogning.",
+		"4019": "Ogiltigt värde för uppgiftsfilter.",
+		"4020": "Den här bilagan tillhör inte den uppgiften.",
+		"4021": "Den här användaren är redan tilldelad den uppgiften.",
+		"4022": "Vänligen ange vad påminnelsedatumet är relativt till.",
+		"4023": "Kan inte skapa en uppgiftsrelationscykel.",
+		"6001": "Teamnamnet kan inte vara tomt.",
+		"6002": "Teamet finns inte.",
+		"6004": "Teamet har redan tillgång till det projektet.",
+		"6005": "Användaren är redan medlem i det teamet.",
+		"6006": "Kan inte radera den sista teammedlemmen.",
+		"6007": "Teamet har inte tillgång till projektet för att utföra den åtgärden.",
+		"6008": "Inget team kunde hittas för angivet OIDC-ID och utfärdare.",
+		"6009": "Inga team med egenskapen oidcId kunde hittas för användaren.",
+		"7002": "Användaren har redan tillgång till det projektet.",
+		"7003": "Du har inte tillgång till det projektet.",
+		"8001": "Den här etiketten finns redan på den uppgiften.",
+		"8002": "Etiketten finns inte.",
+		"8003": "Du har inte tillgång till den här etiketten.",
+		"9001": "Rätten är ogiltig.",
+		"10001": "Kolumnen finns inte.",
+		"10002": "Kolumnen tillhör inte det projektet.",
+		"10003": "Du kan inte ta bort den sista kolumnen på ett projekt.",
+		"10004": "Du kan inte lägga till uppgiften till den här kolumnen eftersom den redan överskridit antalet uppgifter den kan innehålla.",
+		"10005": "Det kan bara finnas en klar-kolumn per projekt.",
+		"11001": "Det sparade filtret finns inte.",
+		"11002": "Sparade filter är inte tillgängliga för länkdelningar.",
+		"12001": "Prenumerationens enhetstyp är ogiltig.",
+		"12002": "Du prenumererar redan på själva enheten eller en föräldraenhet.",
+		"12003": "Du måste ange en användare för att hämta prenumerationer.",
+		"13001": "Den här länkdelningen kräver ett lösenord för autentisering, men inget har angetts.",
+		"13002": "Angivet lösenord för länkdelningen är ogiltigt.",
+		"13003": "Angiven token för länkdelning är ogiltig.",
+		"14001": "Angiven API-token är ogiltig.",
+		"14002": "Behörigheten {permission} för grupp {group} är ogiltig.",
+		"error": "Fel",
+		"success": "Framgång",
+		"0001": "Du har inte tillstånd att göra det."
 	},
 	"about": {
 		"title": "Om",
-		"version": "Version: {version}"
+		"version": "Version: {version}",
+		"frontendVersion": "Frontendversion: {version}",
+		"apiVersion": "API-version: {version}"
 	},
 	"time": {
 		"units": {

@@ -31,7 +31,7 @@ type XormLogger struct {
 
 // NewXormLogger creates and initializes a new xorm logger
 func NewXormLogger(configLogEnabled bool, configLogDatabase string, configLogDatabaseLevel string, configLogFormat string) *XormLogger {
-	handler := makeLogHandler(configLogEnabled, configLogDatabase, configLogDatabaseLevel, configLogFormat)
+	handler := makeLogHandler(configLogEnabled, configLogDatabase, "database", configLogDatabaseLevel, configLogFormat)
 
 	xormLogger := &XormLogger{
 		logger: slog.New(handler).With("component", "database"),

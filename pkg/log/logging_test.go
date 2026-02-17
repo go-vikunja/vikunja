@@ -40,6 +40,33 @@ func TestConfigureStandardLoggerWithPath(t *testing.T) {
 	assert.True(t, os.IsNotExist(err), "Log file should NOT be created in current directory")
 }
 
+func TestMakeLogHandlerCreatesCorrectLogFile(t *testing.T) {
+	tempDir := t.TempDir()
+	logPath = tempDir
+
+	tests := []struct {
+		name     string
+		logfile  string
+		expected string
+	}{
+		{"standard", "standard", "standard.log"},
+		{"database", "database", "database.log"},
+		{"http", "http", "http.log"},
+		{"events", "events", "events.log"},
+		{"mail", "mail", "mail.log"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_ = makeLogHandler(true, "file", tt.logfile, "INFO", "text")
+
+			expectedPath := filepath.Join(tempDir, tt.expected)
+			_, err := os.Stat(expectedPath)
+			require.NoError(t, err, "Log file %s should be created", tt.expected)
+		})
+	}
+}
+
 func TestConfigureStandardLoggerSetsPathBeforeHandler(t *testing.T) {
 	tempDir := t.TempDir()
 

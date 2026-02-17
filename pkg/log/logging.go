@@ -37,7 +37,7 @@ func InitLogger() {
 	logInstance = slog.New(handler)
 }
 
-func makeLogHandler(enabled bool, output string, level string, format string) slog.Handler {
+func makeLogHandler(enabled bool, output string, logfile string, level string, format string) slog.Handler {
 	var slogLevel slog.Level
 	switch strings.ToUpper(level) {
 	case "CRITICAL", "ERROR":
@@ -62,7 +62,7 @@ func makeLogHandler(enabled bool, output string, level string, format string) sl
 
 	writer := io.Discard
 	if enabled && output != "off" {
-		writer = getLogWriter(output, "standard")
+		writer = getLogWriter(output, logfile)
 	}
 
 	return createHandler(writer, slogLevel, format)
@@ -89,7 +89,7 @@ func createHandler(writer io.Writer, level slog.Level, format string) slog.Handl
 
 // NewHTTPLogger creates and initializes a new HTTP logger
 func NewHTTPLogger(enabled bool, output string, format string) *slog.Logger {
-	handler := makeLogHandler(enabled, output, "DEBUG", format)
+	handler := makeLogHandler(enabled, output, "http", "DEBUG", format)
 
 	return slog.New(handler).With("component", "http")
 }
@@ -97,7 +97,7 @@ func NewHTTPLogger(enabled bool, output string, format string) *slog.Logger {
 // ConfigureStandardLogger configures the global log handler
 func ConfigureStandardLogger(enabled bool, output string, path string, level string, format string) {
 	logPath = path
-	handler := makeLogHandler(enabled, output, level, format)
+	handler := makeLogHandler(enabled, output, "standard", level, format)
 	logInstance = slog.New(handler)
 }
 
