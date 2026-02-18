@@ -16,6 +16,42 @@
 			:timeline-end="dateToDate"
 			:on-update="(id, start, end) => emit('updateTask', id, start, end)"
 		>
+			<!-- Gradient definitions for partial-date bars -->
+			<defs v-if="bar.meta?.dateType === 'startOnly' || bar.meta?.dateType === 'endOnly'">
+				<linearGradient
+					:id="`gradient-${bar.id}`"
+					x1="0"
+					y1="0"
+					x2="1"
+					y2="0"
+				>
+					<stop
+						v-if="bar.meta?.dateType === 'endOnly'"
+						offset="0%"
+						:stop-color="getBarFill(bar)"
+						stop-opacity="0"
+					/>
+					<stop
+						v-if="bar.meta?.dateType === 'endOnly'"
+						offset="40%"
+						:stop-color="getBarFill(bar)"
+						stop-opacity="1"
+					/>
+					<stop
+						v-if="bar.meta?.dateType === 'startOnly'"
+						offset="60%"
+						:stop-color="getBarFill(bar)"
+						stop-opacity="1"
+					/>
+					<stop
+						v-if="bar.meta?.dateType === 'startOnly'"
+						offset="100%"
+						:stop-color="getBarFill(bar)"
+						stop-opacity="0"
+					/>
+				</linearGradient>
+			</defs>
+
 			<!-- Main bar -->
 			<rect
 				:x="getBarX(bar)"
@@ -23,25 +59,21 @@
 				:width="getBarWidth(bar)"
 				:height="32"
 				:rx="4"
-				:fill="getBarFill(bar)"
+				:fill="getBarFillAttr(bar)"
 				:opacity="bar.meta?.isDone ? 0.5 : 1"
 				:stroke="getBarStroke(bar)"
 				:stroke-width="getBarStrokeWidth(bar)"
-				:stroke-dasharray="!bar.meta?.hasActualDates ? '5,5' : 'none'"
+				:stroke-dasharray="isDateless(bar) ? '5,5' : 'none'"
 				class="gantt-bar"
 				role="button"
-				:aria-label="$t('project.gantt.taskBarLabel', {
-					task: bar.meta?.label || bar.id,
-					startDate: bar.start.toLocaleDateString(),
-					endDate: bar.end.toLocaleDateString(),
-					dateType: bar.meta?.hasActualDates ? $t('project.gantt.scheduledDates') : $t('project.gantt.estimatedDates')
-				})"
+				:aria-label="getBarAriaLabel(bar)"
 				:aria-pressed="isRowFocused"
 				@pointerdown="handleBarPointerDown(bar, $event)"
 			/>
 
-			<!-- Left resize handle -->
+			<!-- Left resize handle (hidden for endOnly bars) -->
 			<rect
+				v-if="bar.meta?.dateType !== 'endOnly'"
 				:x="getBarX(bar) - RESIZE_HANDLE_OFFSET"
 				:y="4"
 				:width="6"
@@ -56,8 +88,9 @@
 				@pointerdown="startResize(bar, 'start', $event)"
 			/>
 
-			<!-- Right resize handle -->
+			<!-- Right resize handle (hidden for startOnly bars) -->
 			<rect
+				v-if="bar.meta?.dateType !== 'startOnly'"
 				:x="getBarX(bar) + getBarWidth(bar) - RESIZE_HANDLE_OFFSET"
 				:y="4"
 				:width="6"
@@ -102,6 +135,7 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import dayjs from 'dayjs'
+import {useI18n} from 'vue-i18n'
 
 import type {GanttBarModel} from '@/composables/useGanttBar'
 import {getTextColor, LIGHT} from '@/helpers/color/getTextColor'
@@ -109,6 +143,8 @@ import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
+
+const {t} = useI18n({useScope: 'global'})
 
 const props = defineProps<{
 	bars: GanttBarModel[]
@@ -206,7 +242,23 @@ const getBarTextX = computed(() => (bar: GanttBarModel) => {
 	return getBarX.value(bar) + 8
 })
 
+function isPartialDate(bar: GanttBarModel) {
+	return bar.meta?.dateType === 'startOnly' || bar.meta?.dateType === 'endOnly'
+}
+
+function isDateless(bar: GanttBarModel) {
+	return !bar.meta?.hasActualDates && !isPartialDate(bar)
+}
+
 function getBarFill(bar: GanttBarModel) {
+	// Partial dates still have "actual" dates on one side — use the task color
+	if (isPartialDate(bar)) {
+		if (bar.meta?.color) {
+			return bar.meta.color
+		}
+		return 'var(--primary)'
+	}
+
 	if (bar.meta?.hasActualDates) {
 		if (bar.meta?.color) {
 			return bar.meta.color
@@ -217,22 +269,29 @@ function getBarFill(bar: GanttBarModel) {
 	return 'var(--grey-100)'
 }
 
+function getBarFillAttr(bar: GanttBarModel): string {
+	if (isPartialDate(bar)) {
+		return `url(#gradient-${bar.id})`
+	}
+	return getBarFill(bar)
+}
+
 function getBarStroke(bar: GanttBarModel) {
-	if (!bar.meta?.hasActualDates) {
+	if (isDateless(bar)) {
 		return 'var(--grey-300)' // Gray for dashed border
 	}
 	return 'none'
 }
 
 function getBarStrokeWidth(bar: GanttBarModel) {
-	if (!bar.meta?.hasActualDates) {
+	if (isDateless(bar)) {
 		return '2'
 	}
 	return '0'
 }
 
 function getBarTextColor(bar: GanttBarModel) {
-	if (!bar.meta?.hasActualDates) {
+	if (isDateless(bar)) {
 		return 'var(--grey-800)'
 	}
 
@@ -241,6 +300,25 @@ function getBarTextColor(bar: GanttBarModel) {
 	}
 
 	return LIGHT
+}
+
+function getBarAriaLabel(bar: GanttBarModel): string {
+	const task = bar.meta?.label || bar.id
+	const startDate = bar.start.toLocaleDateString()
+	const endDate = bar.end.toLocaleDateString()
+
+	let dateType: string
+	if (bar.meta?.dateType === 'startOnly') {
+		dateType = t('project.gantt.partialDatesStart')
+	} else if (bar.meta?.dateType === 'endOnly') {
+		dateType = t('project.gantt.partialDatesEnd')
+	} else if (bar.meta?.hasActualDates) {
+		dateType = t('project.gantt.scheduledDates')
+	} else {
+		dateType = t('project.gantt.estimatedDates')
+	}
+
+	return t('project.gantt.taskBarLabel', {task, startDate, endDate, dateType})
 }
 
 function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
