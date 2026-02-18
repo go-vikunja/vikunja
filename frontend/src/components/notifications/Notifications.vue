@@ -29,6 +29,8 @@
 					v-for="(n, index) in notifications"
 					:key="n.id"
 					class="single-notification"
+					:class="{'is-task-notification': isTaskNotification(n)}"
+					@click="() => { if (isTaskNotification(n)) to(n, index)() }"
 				>
 					<div
 						class="read-indicator"
@@ -48,7 +50,11 @@
 							>
 								{{ getDisplayName(n.notification.doer) }}
 							</span>
+							<template v-if="isTaskNotification(n)">
+								{{ n.toText(userInfo) }}
+							</template>
 							<BaseButton
+								v-else
 								class="has-text-start"
 								@click="() => to(n, index)()"
 							>
@@ -150,8 +156,19 @@ function hidePopup(e) {
 	}
 }
 
+const TASK_NOTIFICATION_NAMES = [
+	names.TASK_COMMENT,
+	names.TASK_ASSIGNED,
+	names.TASK_REMINDER,
+	names.TASK_MENTIONED,
+]
+
+function isTaskNotification(n: INotification): boolean {
+	return TASK_NOTIFICATION_NAMES.includes(n.name)
+}
+
 function to(n, index) {
-	const to = {
+	const to: any = {
 		name: '',
 		params: {},
 	}
@@ -249,6 +266,10 @@ async function markAllRead() {
 			padding: 0.25rem 0;
 
 			transition: background-color $transition;
+
+			&.is-task-notification {
+				cursor: pointer;
+			}
 
 			&:hover {
 				background: var(--grey-100);
