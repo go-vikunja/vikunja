@@ -252,8 +252,8 @@ importers:
         specifier: 10.8.0
         version: 10.8.0(@typescript-eslint/parser@8.56.0(eslint@9.39.2(jiti@2.4.2))(typescript@5.9.3))(eslint@9.39.2(jiti@2.4.2))(vue-eslint-parser@10.4.0(eslint@9.39.2(jiti@2.4.2)))
       happy-dom:
-        specifier: 20.6.1
-        version: 20.6.1
+        specifier: 20.6.2
+        version: 20.6.2
       histoire:
         specifier: 1.0.0-beta.1
         version: 1.0.0-beta.1(@types/node@24.10.13)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)(vite@7.3.1(@types/node@24.10.13)(jiti@2.4.2)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)(yaml@2.5.0))(yaml@2.5.0)
@@ -313,7 +313,7 @@ importers:
         version: 5.1.0(vue@3.5.27(typescript@5.9.3))
       vitest:
         specifier: 4.0.18
-        version: 4.0.18(@types/node@24.10.13)(happy-dom@20.6.1)(jiti@2.4.2)(jsdom@27.4.0)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)(yaml@2.5.0)
+        version: 4.0.18(@types/node@24.10.13)(happy-dom@20.6.2)(jiti@2.4.2)(jsdom@27.4.0)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)(yaml@2.5.0)
       vue-tsc:
         specifier: 3.2.4
         version: 3.2.4(typescript@5.9.3)
@@ -3586,6 +3586,10 @@ packages:
     resolution: {integrity: sha512-FDWG5cmEYf2Z00IkYRhbFrwIwvdFKH07uV8dvNy0omp/Qb1xcyCWp2UDtcwJF4QZZvk0sLudP6/hAu42TaqVhQ==}
     engines: {node: '>=0.12'}
 
+  entities@7.0.1:
+    resolution: {integrity: sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA==}
+    engines: {node: '>=0.12'}
+
   env-paths@2.2.1:
     resolution: {integrity: sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==}
     engines: {node: '>=6'}
@@ -4014,8 +4018,8 @@ packages:
     resolution: {integrity: sha512-5v6yZd4JK3eMI3FqqCouswVqwugaA9r4dNZB1wwcmrD02QkV5H0y7XBQW8QwQqEaZY1pM9aqORSORhJRdNK44Q==}
     engines: {node: '>=6.0'}
 
-  happy-dom@20.6.1:
-    resolution: {integrity: sha512-+0vhESXXhFwkdjZnJ5DlmJIfUYGgIEEjzIjB+aKJbFuqlvvKyOi+XkI1fYbgYR9QCxG5T08koxsQ6HrQfa5gCQ==}
+  happy-dom@20.6.2:
+    resolution: {integrity: sha512-Xk/Y0cuq9ngN/my8uvK4gKoyDl6sBKkIl8A/hJ0IabZVH7E5SJLHNE7uKRPVmSrQbhJaLIHTEcvTct4GgNtsRA==}
     engines: {node: '>=20.0.0'}
 
   hard-rejection@2.1.0:
@@ -10126,6 +10130,8 @@ snapshots:
 
   entities@7.0.0: {}
 
+  entities@7.0.1: {}
+
   env-paths@2.2.1: {}
 
   error-ex@1.3.2:
@@ -10692,12 +10698,12 @@ snapshots:
       section-matter: 1.0.0
       strip-bom-string: 1.0.0
 
-  happy-dom@20.6.1:
+  happy-dom@20.6.2:
     dependencies:
       '@types/node': 24.10.13
       '@types/whatwg-mimetype': 3.0.2
       '@types/ws': 8.18.1
-      entities: 6.0.1
+      entities: 7.0.1
       whatwg-mimetype: 3.0.0
       ws: 8.19.0
     transitivePeerDependencies:
@@ -13325,7 +13331,7 @@ snapshots:
       terser: 5.31.6
       yaml: 2.5.0
 
-  vitest@4.0.18(@types/node@24.10.13)(happy-dom@20.6.1)(jiti@2.4.2)(jsdom@27.4.0)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)(yaml@2.5.0):
+  vitest@4.0.18(@types/node@24.10.13)(happy-dom@20.6.2)(jiti@2.4.2)(jsdom@27.4.0)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)(yaml@2.5.0):
     dependencies:
       '@vitest/expect': 4.0.18
       '@vitest/mocker': 4.0.18(vite@7.3.1(@types/node@24.10.13)(jiti@2.4.2)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)(yaml@2.5.0))
@@ -13349,7 +13355,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.10.13
-      happy-dom: 20.6.1
+      happy-dom: 20.6.2
       jsdom: 27.4.0
     transitivePeerDependencies:
       - jiti
