@@ -260,13 +260,33 @@ function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 		id: Number(id),
 	}
 
-	// Always set the dates that were dragged/resized
-	update.startDate = roundToNaturalDayBoundary(newStart, true)
-	update.endDate = roundToNaturalDayBoundary(newEnd)
+	const hasStartDate = Boolean(task.startDate)
+	const hasEndDate = Boolean(task.endDate)
+	const hasDueDate = Boolean(task.dueDate)
 
-	// If the task originally only had dueDate (no endDate), also update dueDate
-	if (!task.endDate && task.dueDate) {
+	if (hasStartDate && hasEndDate) {
+		// Both dates exist — update both
+		update.startDate = roundToNaturalDayBoundary(newStart, true)
+		update.endDate = roundToNaturalDayBoundary(newEnd)
+	} else if (hasStartDate && !hasEndDate && hasDueDate) {
+		// startDate + dueDate (no endDate) — treat as fully dated
+		update.startDate = roundToNaturalDayBoundary(newStart, true)
 		update.dueDate = roundToNaturalDayBoundary(newEnd)
+	} else if (hasStartDate && !hasEndDate) {
+		// startOnly — only update startDate, don't persist the synthetic end
+		update.startDate = roundToNaturalDayBoundary(newStart, true)
+	} else if (!hasStartDate && (hasEndDate || hasDueDate)) {
+		// endOnly / dueOnly — only update the end side
+		if (hasEndDate) {
+			update.endDate = roundToNaturalDayBoundary(newEnd)
+		}
+		if (hasDueDate) {
+			update.dueDate = roundToNaturalDayBoundary(newEnd)
+		}
+	} else {
+		// No dates at all — update both (existing behavior for dateless tasks)
+		update.startDate = roundToNaturalDayBoundary(newStart, true)
+		update.endDate = roundToNaturalDayBoundary(newEnd)
 	}
 
 	emit('update:task', update)
