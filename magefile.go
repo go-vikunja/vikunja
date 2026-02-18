@@ -903,6 +903,11 @@ func (Release) OsPackage() error {
 
 // Zip creates a zip file from all os-package folders in dist/release
 func (Release) Zip() error {
+	rootDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("could not get working directory: %w", err)
+	}
+
 	p := "./" + DIST + "/release/"
 	if err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -914,7 +919,8 @@ func (Release) Zip() error {
 
 		fmt.Printf("Zipping %s...\n", info.Name())
 
-		c := exec.Command("zip", "-r", "./"+DIST+"/zip/"+info.Name()+".zip", ".", "-i", "*")
+		zipFile := filepath.Join(rootDir, DIST, "zip", info.Name()+".zip")
+		c := exec.Command("zip", "-r", zipFile, ".", "-i", "*")
 		c.Dir = path
 		out, err := c.Output()
 		fmt.Print(string(out))
