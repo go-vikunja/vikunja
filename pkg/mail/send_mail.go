@@ -40,6 +40,7 @@ type Opts struct {
 	Headers     []*header
 	Embeds      map[string]io.Reader
 	EmbedFS     map[string]*embed.FS
+	ThreadID    string
 }
 
 // ContentType represents mail content types
@@ -88,6 +89,11 @@ func getMessage(opts *Opts) *mail.Msg {
 		m.SetGenHeader(h.Field, h.Content)
 	}
 
+	if opts.ThreadID != "" {
+		m.SetGenHeader(mail.HeaderInReplyTo, opts.ThreadID)
+		m.SetGenHeader(mail.HeaderReferences, opts.ThreadID)
+	}
+
 	for name, content := range opts.Embeds {
 		err := m.EmbedReader(name, content)
 		if err != nil {
@@ -119,6 +125,10 @@ func getMessage(opts *Opts) *mail.Msg {
 func SendMail(opts *Opts) {
 	if isUnderTest {
 		sentMails = append(sentMails, opts)
+		return
+	}
+
+	if !config.MailerEnabled.GetBool() || Queue == nil {
 		return
 	}
 

@@ -93,6 +93,8 @@
 				"discoverableByEmail": "Permetti agli altri di aggiungermi a gruppi o progetti cercando il mio indirizzo email",
 				"playSoundWhenDone": "Riproduci un suono quando le attività vengono contrassegnate come completate",
 				"allowIconChanges": "Mostra loghi speciali durante determinati periodi",
+				"alwaysShowBucketTaskCount": "Mostra sempre il conteggio delle attività nelle colonne Kanban",
+				"defaultTaskRelationType": "Tipo di relazione attività predefinita",
 				"weekStart": "La settimana inizia di",
 				"weekStartSunday": "Domenica",
 				"weekStartMonday": "Lunedì",
@@ -112,6 +114,11 @@
 					"mm/dd/yyyy": "MM/GG/AAAA",
 					"dd/mm/yyyy": "GG/MM/AAAA",
 					"yyyy/mm/dd": "AAAA/MM/GG"
+				},
+				"timeFormat": "Formato ora",
+				"timeFormatOptions": {
+					"12h": "12 ore (AM/PM)",
+					"24h": "24 ore (HH:mm)"
 				},
 				"externalUserNameChange": "Il tuo nome è gestito dal tuo provider di autenticazione ({provider}). Per cambiarlo, aggiorna il tuo nome lì."
 			},
@@ -174,6 +181,9 @@
 					"system": "Sistema",
 					"dark": "Scuro"
 				}
+			},
+			"backgroundBrightness": {
+				"title": "Luminosità sfondo"
 			},
 			"apiTokens": {
 				"title": "Token API",
@@ -335,6 +345,12 @@
 				"removeSuccess": "{sharable} rimosso dal {type} con successo.",
 				"addedSuccess": "{type} aggiunto con successo.",
 				"updatedSuccess": "{type} aggiunto con successo."
+			},
+			"permission": {
+				"title": "Permessi",
+				"read": "Sola lettura",
+				"readWrite": "Lettura e scrittura",
+				"admin": "Amministratore"
 			},
 			"attributes": {
 				"link": "Link",
@@ -581,7 +597,11 @@
 		"authenticating": "Autenticazione…",
 		"passwordRequired": "Questo progetto condiviso richiede una password. Prego inseriscila qui sotto:",
 		"error": "Si è verificato un errore.",
-		"invalidPassword": "La password non è valida."
+		"invalidPassword": "La password non è valida.",
+		"accessDenied": "Accesso negato. Controlla i tuoi permessi e riprova.",
+		"serverError": "Si è verificato un errore nel server. Riprova più tardi.",
+		"projectLoadError": "Impossibile caricare le informazioni sul progetto.",
+		"retry": "Riprova"
 	},
 	"navigation": {
 		"overview": "Panoramica",
@@ -780,6 +800,7 @@
 		"addReminder": "Aggiungi un promemoria…",
 		"doneSuccess": "Attività segnata come completata.",
 		"undoneSuccess": "Attività segnata come non completata.",
+		"movedToProject": "L'attività è stata spostata in {project}.",
 		"undo": "Annulla",
 		"openDetail": "Apri vista dettagli attività",
 		"checklistTotal": "{checked} di {total} attività",
@@ -791,7 +812,9 @@
 			"overdue": "Mostra attività scadute",
 			"fromuntil": "Attività dal {from} al {until}",
 			"select": "Seleziona intervallo di date",
-			"noTasks": "Nessuna attività — Buona giornata!"
+			"noTasks": "Nessuna attività — Buona giornata!",
+			"filterByLabel": "Filtra per etichetta {label}",
+			"clearLabelFilter": "Cancella filtro etichetta"
 		},
 		"detail": {
 			"chooseDueDate": "Clicca qui per impostare una data di scadenza",
@@ -806,8 +829,10 @@
 			"updateSuccess": "Attività salvata con successo.",
 			"deleteSuccess": "L'attività è stata eliminata con successo.",
 			"belongsToProject": "Questa attività appartiene al progetto '{project}'",
+			"back": "Torna al progetto",
 			"due": "Scadenza {at}",
 			"closePopup": "Chiudi popup",
+			"scrollToBottom": "Scorri in fondo",
 			"organization": "Organizza",
 			"management": "Gestisci",
 			"dateAndTime": "Data e ora",
@@ -850,6 +875,8 @@
 			"relatedTasks": "Attività Collegate",
 			"reminders": "Promemoria",
 			"repeat": "Ripeti",
+			"comment": "{count} commento | {count} commenti",
+			"commentCount": "Numero di commenti",
 			"startDate": "Data Inizio",
 			"title": "Titolo",
 			"updated": "Aggiornato",
@@ -896,6 +923,9 @@
 			"deleteSuccess": "Commento cancellato con successo.",
 			"addedSuccess": "Il commento è stato aggiunto correttamente.",
 			"permalink": "Copia permalink a questo commento"
+		},
+		"mention": {
+			"noUsersFound": "Nessun utente trovato"
 		},
 		"deferDueDate": {
 			"title": "Rinvia data di scadenza",
@@ -1087,7 +1117,11 @@
 			"priority": "Modifica la priorità di questa attività",
 			"favorite": "Segna questa attività come preferita o non preferita",
 			"openProject": "Apri il progetto di questa attività",
-			"save": "Salva attività corrente"
+			"save": "Salva attività corrente",
+			"copyIdentifier": "Copia identificativo attività negli appunti",
+			"copyIdentifierAndTitle": "Copia identificativo e titolo attività negli appunti",
+			"copyIdentifierTitleAndUrl": "Copia identificativo, titolo e URL attività negli appunti",
+			"copyUrl": "Copia URL attività negli appunti"
 		},
 		"project": {
 			"title": "Viste Progetto",

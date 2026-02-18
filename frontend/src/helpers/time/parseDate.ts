@@ -14,6 +14,32 @@ interface dateFoundResult {
 
 const monthsRegexGroup = '(january|february|march|april|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)'
 
+/**
+ * Matches a date regex against text, rejecting matches that appear in the middle
+ * of text with non-date content on both sides. This prevents false positives like
+ * "The 9/11 Report" while still allowing "meeting 9/11 at 10:00".
+ *
+ * Matches at the start or end of text are always accepted. Middle matches are
+ * only accepted when followed by a time expression (at/@ prefix).
+ */
+function matchDateAtBoundary(text: string, pattern: string): RegExpExecArray | null {
+	const regex = new RegExp(`(^| )${pattern}($| )`, 'gi')
+	let result: RegExpExecArray | null
+	while ((result = regex.exec(text)) !== null) {
+		const matchEnd = result.index + result[0].length
+		const isAtStart = result.index === 0
+		const isAtEnd = matchEnd >= text.length
+
+		if (isAtStart || isAtEnd) return result
+
+		// Allow middle-of-text matches when followed by a time expression
+		const afterMatch = text.substring(matchEnd)
+		if (/^(at |@ )/i.test(afterMatch)) return result
+	}
+
+	return null
+}
+
 function matchesDateExpr(text: string, dateExpr: string): boolean {
 	return text.match(new RegExp('(^| )' + dateExpr, 'gi')) !== null
 }
@@ -109,7 +135,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		}
 	}
 
-	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9]?)?( ?(a|p)m)?)'
+	const timeRegex = ' (at|@) ([0-9][0-9]?(:[0-9][0-9])?( ?(a|p)m)?)'
 	const matcher = new RegExp(timeRegex, 'ig')
 	const results = matcher.exec(text)
 
@@ -118,8 +144,12 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		const parts = time.split(':')
 		let hours = parseInt(parts[0])
 		let minutes = 0
-		if (time.endsWith('pm')) {
-			hours += 12
+		if (time.toLowerCase().endsWith('pm')) {
+			if (hours !== 12) {
+				hours += 12
+			}
+		} else if (time.toLowerCase().endsWith('am') && hours === 12) {
+			hours = 0
 		}
 		if (parts.length > 1) {
 			minutes = parseInt(parts[1])
@@ -128,6 +158,7 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 		date.setHours(hours)
 		date.setMinutes(minutes)
 		date.setSeconds(0)
+		date.setMilliseconds(0)
 	}
 
 	const replace = results !== null ? results[0] : previousMatch
@@ -138,11 +169,11 @@ const addTimeToDate = (text: string, date: Date, previousMatch: string | null): 
 }
 
 export const getDateFromText = (text: string, now: Date = new Date()) => {
-	const dateRegexes: RegExp[] = [
-		/(^| )(?<found>(?<month>[0-9][0-9]?)\/(?<day>[0-9][0-9]?)(\/(?<year>[0-9][0-9]([0-9][0-9])?))?)($| )/gi,
-		/(^| )(?<found>(?<year>[0-9][0-9][0-9][0-9]?)\/(?<month>[0-9][0-9]?)\/(?<day>[0-9][0-9]))($| )/gi,
-		/(^| )(?<found>(?<year>[0-9][0-9][0-9][0-9]?)-(?<month>[0-9][0-9]?)-(?<day>[0-9][0-9]))($| )/gi,
-		/(^| )(?<found>(?<day>[0-9][0-9]?)\.(?<month>[0-9][0-9]?)(\.(?<year>[0-9][0-9]([0-9][0-9])?))?)($| )/gi,
+	const datePatterns: string[] = [
+		'(?<found>(?<month>[0-9][0-9]?)\\/(?<day>[0-9][0-9]?)(\\/(?<year>[0-9][0-9]([0-9][0-9])?))?)',
+		'(?<found>(?<year>[0-9][0-9][0-9][0-9]?)\\/(?<month>[0-9][0-9]?)\\/(?<day>[0-9][0-9]))',
+		'(?<found>(?<year>[0-9][0-9][0-9][0-9]?)-(?<month>[0-9][0-9]?)-(?<day>[0-9][0-9]))',
+		'(?<found>(?<day>[0-9][0-9]?)\\.(?<month>[0-9][0-9]?)(\\.(?<year>[0-9][0-9]([0-9][0-9])?))?)',
 	]
 
 	let result: string | null = null
@@ -151,8 +182,8 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 	let containsYear = true
 
 	// 1. Try parsing the text as a "usual" date, like 2021-06-24 or "06/24/2021" or "27/01" or "01/27"
-	for (const dateRegex of dateRegexes) {
-		results = dateRegex.exec(text)
+	for (const datePattern of datePatterns) {
+		results = matchDateAtBoundary(text, datePattern)
 		if (results !== null) {
 			const {day, month, year, found} = {...results.groups}
 			let tmp_year = year
@@ -311,7 +342,9 @@ const getDateFromWeekday = (text: string, date: Date = new Date()): dateFoundRes
 }
 
 const getDayFromText = (text: string, now: Date = new Date()) => {
-	const matcher = /(^| )(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\.)($| )/ig
+	// Only match ordinals when followed by end-of-string, time expressions, or month names
+	// This prevents matching "2nd Floor" or "13th floor" as dates
+	const matcher = new RegExp('(^| )(([1-2][0-9])|(3[01])|(0?[1-9]))(st|nd|rd|th|\\.)(?=$| at | @ | ' + monthsRegexGroup + ')', 'ig')
 	const results = matcher.exec(text)
 	if (results === null) {
 		return {
@@ -343,7 +376,7 @@ const getDayFromText = (text: string, now: Date = new Date()) => {
 }
 
 const getMonthFromText = (text: string, date: Date) => {
-	const matcher = new RegExp(monthsRegexGroup, 'ig')
+	const matcher = new RegExp('\\b' + monthsRegexGroup + '\\b', 'ig')
 	const results = matcher.exec(text)
 
 	if (results === null) {

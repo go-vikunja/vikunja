@@ -61,6 +61,13 @@
       ]
     },
     {
+      "groupName": "playwright",
+      "matchPackageNames": [
+        "@playwright/{/,}**",
+        "mcr.microsoft.com/playwright"
+      ]
+    },
+    {
       "matchCategories": [
         "github-actions",
         "service"

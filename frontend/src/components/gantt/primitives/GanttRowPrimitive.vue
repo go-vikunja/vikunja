@@ -36,6 +36,9 @@ function onFocus() {
 
 function onKeyDown(e: KeyboardEvent) {
 	if (e.key === 'Enter' || e.key === ' ') {
+		if (e.isComposing) {
+			return
+		}
 		e.preventDefault()
 		onSelect()
 	}

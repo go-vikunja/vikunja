@@ -23,8 +23,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var preserveConfig bool
+
 func init() {
 	rootCmd.AddCommand(restoreCmd)
+	restoreCmd.Flags().BoolVar(&preserveConfig, "preserve-config", false, "Preserve existing configuration instead of restoring from dump")
 }
 
 var restoreCmd = &cobra.Command{
@@ -35,7 +38,7 @@ var restoreCmd = &cobra.Command{
 		initialize.FullInitWithoutAsync()
 	},
 	Run: func(_ *cobra.Command, args []string) {
-		if err := dump.Restore(args[0]); err != nil {
+		if err := dump.Restore(args[0], !preserveConfig); err != nil {
 			log.Critical(err.Error())
 		}
 	},

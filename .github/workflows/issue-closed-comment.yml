@@ -1,4 +1,4 @@
-name: Comment on PR when issue is closed
+name: Comment on issue when it is closed automatically
 
 on:
   issues:
@@ -8,11 +8,18 @@ jobs:
   comment-on-issue-closure:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
       - name: Check if issue was closed by commit
         id: check-commit
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ steps.generate-token.outputs.token }}
           script: |
             const issueNumber = context.payload.issue.number;
 
@@ -27,20 +34,28 @@ jobs:
             const closedEvent = events
               .filter(event => event.event === 'closed')
               .pop(); // Get the last (most recent) closed event
+            // Find the most recent "referenced" event
+            const referencedEvent = events
+              .filter(event => event.event === 'referenced')
+              .pop(); // Get the last (most recent) referenced event
 
-            if (closedEvent && closedEvent.commit_id) {
-              console.log(`✅ Issue #${issueNumber} was closed by commit: ${closedEvent.commit_id}`);
+            console.log({closedEvent, referencedEvent});
+            if (closedEvent && (closedEvent.commit_id || referencedEvent)) {
+              const commitId = closedEvent.commit_id ?? referencedEvent.commit_id
+              console.log(`✅ Issue #${issueNumber} was closed by commit: ${commitId}`);
               
               // Get commit details
               const { data: commit } = await github.rest.git.getCommit({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                commit_sha: closedEvent.commit_id
+                commit_sha: commitId
               });
               
               core.setOutput('closed_by_commit', 'true');
-              core.setOutput('commit_sha', closedEvent.commit_id);
-              core.setOutput('commit_message', commit.message);
+              core.setOutput('commit_sha', commitId);
+              // Escape backslashes, backticks and ${ to prevent breaking JS template strings
+              const escapedMessage = commit.message.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+              core.setOutput('commit_message', escapedMessage);
               core.setOutput('commit_url', closedEvent.commit_url);
             } else {
               console.log(`ℹ️  Issue #${issueNumber} was closed manually (not by commit)`);
@@ -51,11 +66,11 @@ jobs:
         if: steps.check-commit.outputs.closed_by_commit == 'true'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ steps.generate-token.outputs.token }}
           script: |
             const issueNumber = context.payload.issue.number;
             const commitSha = '${{ steps.check-commit.outputs.commit_sha }}';
-            const commitMessage = '${{ steps.check-commit.outputs.commit_message }}';
+            const commitMessage = `${{ steps.check-commit.outputs.commit_message }}`;
             const commitUrl = '${{ steps.check-commit.outputs.commit_url }}';
 
             try {
@@ -112,7 +127,7 @@ jobs:
                 ? `#${closingPR.number}`
                 : `[\`${commitSha.substring(0, 7)}\`](${commitUrl})`
               
-              const comment = `This issue has been fixed in ${closedRef}, please check with the next unstable build (should be ready for deployment in ~30min, also on [the demo](https://try.vikunja.io).`
+              const comment = `This issue has been fixed in ${closedRef}, please check with the next unstable build (should be ready for deployment in ~30min, also on [the demo](https://try.vikunja.io)).`
               
               await github.rest.issues.createComment({
                 owner: context.repo.owner,

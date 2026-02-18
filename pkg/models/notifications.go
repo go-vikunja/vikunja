@@ -17,16 +17,31 @@
 package models
 
 import (
+	"fmt"
+	"net/url"
 	"sort"
 	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 )
+
+// getThreadID generates a Message-ID format thread ID for a task
+func getThreadID(taskID int64) string {
+	domain := "vikunja"
+	publicURL := config.ServicePublicURL.GetString()
+	if publicURL != "" {
+		if parsedURL, err := url.Parse(publicURL); err == nil && parsedURL.Hostname() != "" {
+			domain = parsedURL.Hostname()
+		}
+	}
+	return fmt.Sprintf("<task-%d@%s>", taskID, domain)
+}
 
 // ReminderDueNotification represents a ReminderDueNotification notification
 type ReminderDueNotification struct {
@@ -60,6 +75,11 @@ func (n *ReminderDueNotification) Name() string {
 	return "task.reminder"
 }
 
+// ThreadID returns the thread ID for email threading
+func (n *ReminderDueNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
+}
+
 // TaskCommentNotification represents a TaskCommentNotification notification
 type TaskCommentNotification struct {
 	Doer      *user.User   `json:"doer"`
@@ -74,6 +94,9 @@ func (n *TaskCommentNotification) SubjectID() int64 {
 
 // ToMail returns the mail notification for TaskCommentNotification
 func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
+	s := db.NewSession()
+	defer s.Close()
+	formattedComment := formatMentionsForEmail(s, n.Comment.Comment)
 
 	mail := notifications.NewMail().
 		From(n.Doer.GetNameAndFromEmail()).
@@ -85,7 +108,7 @@ func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
 			Subject(i18n.T(lang, "notifications.task.comment.mentioned_subject", n.Doer.GetName(), n.Task.Title))
 	}
 
-	mail.HTML(n.Comment.Comment)
+	mail.HTML(formattedComment)
 
 	return mail.
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
@@ -99,6 +122,11 @@ func (n *TaskCommentNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *TaskCommentNotification) Name() string {
 	return "task.comment"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *TaskCommentNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
 }
 
 // TaskAssignedNotification represents a TaskAssignedNotification notification
@@ -118,6 +146,14 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
 	}
 
+	// Check if the doer assigned the task to themselves
+	if n.Doer.ID == n.Assignee.ID {
+		return notifications.NewMail().
+			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others_self", n.Task.Title, n.Task.GetFullIdentifier(), n.Doer.GetName())).
+			Line(i18n.T(lang, "notifications.task.assigned.message_to_others_self", n.Doer.GetName())).
+			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+	}
+
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())).
 		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", n.Doer.GetName(), n.Assignee.GetName())).
@@ -132,6 +168,11 @@ func (n *TaskAssignedNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *TaskAssignedNotification) Name() string {
 	return "task.assigned"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *TaskAssignedNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
 }
 
 // TaskDeletedNotification represents a TaskDeletedNotification notification
@@ -155,6 +196,11 @@ func (n *TaskDeletedNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *TaskDeletedNotification) Name() string {
 	return "task.deleted"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *TaskDeletedNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
 }
 
 // ProjectCreatedNotification represents a ProjectCreatedNotification notification
@@ -245,6 +291,11 @@ func (n *UndoneTaskOverdueNotification) Name() string {
 	return "task.undone.overdue"
 }
 
+// ThreadID returns the thread ID for email threading
+func (n *UndoneTaskOverdueNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
+}
+
 // UndoneTasksOverdueNotification represents a UndoneTasksOverdueNotification notification
 type UndoneTasksOverdueNotification struct {
 	User     *user.User
@@ -303,6 +354,10 @@ func (n *UserMentionedInTaskNotification) SubjectID() int64 {
 
 // ToMail returns the mail notification for UserMentionedInTaskNotification
 func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mail {
+	s := db.NewSession()
+	defer s.Close()
+	formattedDescription := formatMentionsForEmail(s, n.Task.Description)
+
 	var subject string
 	if n.IsNew {
 		subject = i18n.T(lang, "notifications.task.mentioned.subject_new", n.Doer.GetName(), n.Task.Title)
@@ -314,7 +369,7 @@ func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mai
 		From(n.Doer.GetNameAndFromEmail()).
 		Subject(subject).
 		Line(i18n.T(lang, "notifications.task.mentioned.message", n.Doer.GetName())).
-		HTML(n.Task.Description)
+		HTML(formattedDescription)
 
 	return mail.
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
@@ -328,6 +383,11 @@ func (n *UserMentionedInTaskNotification) ToDB() interface{} {
 // Name returns the name of the notification
 func (n *UserMentionedInTaskNotification) Name() string {
 	return "task.mentioned"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *UserMentionedInTaskNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
 }
 
 // DataExportReadyNotification represents a DataExportReadyNotification notification

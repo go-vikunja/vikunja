@@ -81,7 +81,7 @@ export function hasFilterQuery(filter: string): boolean {
 }
 
 export function getFilterFieldRegexPattern(field: string): RegExp {
-	return new RegExp('\\b(' + field + ')\\s*' + FILTER_OPERATORS_REGEX + '\\s*(?:(["\'])((?:\\\\.|(?!\\3)[^\\\\])*?)\\3|([^&|()<]+?))(?=\\s*(?:&&|\\||$))', 'g')
+	return new RegExp('\\b(' + field + ')\\s*' + FILTER_OPERATORS_REGEX + '\\s*(?:(["\'])((?:\\\\.|(?!\\3)[^\\\\])*?)\\3|([^&|()<]+?))(?=\\s*(?:&&|\\||\\)|$))', 'g')
 }
 
 export function transformFilterStringForApi(
@@ -114,7 +114,7 @@ export function transformFilterStringForApi(
 			const replacements: { start: number, length: number, replacement: string }[] = []
 
 			while ((match = pattern.exec(filter)) !== null) {
-				const [matched, fieldName, operator, quotes, quotedContent, unquotedContent] = match
+				const [matched, fieldName, operator, _quotes, quotedContent, unquotedContent] = match
 				const keyword = quotedContent || unquotedContent
 				if (!keyword) {
 					continue
@@ -151,16 +151,7 @@ export function transformFilterStringForApi(
 				replaced = replaced.replaceAll('"', '').replaceAll('\'', '')
 
 				// Reconstruct the entire match with the replaced value
-				let reconstructedMatch
-				if (quotes && quotedContent) {
-					// For quoted values, remove quotes since we converted to IDs
-					reconstructedMatch = `${fieldName} ${operator} ${replaced}`
-				} else if (unquotedContent) {
-					// For unquoted values
-					reconstructedMatch = `${fieldName} ${operator} ${replaced}`
-				} else {
-					continue
-				}
+				const reconstructedMatch = `${fieldName} ${operator} ${replaced}`
 
 				replacements.push({
 					start: match.index!,
@@ -221,29 +212,59 @@ export function transformFilterStringFromApi(
 			const pattern = getFilterFieldRegexPattern(field)
 
 			let match: RegExpExecArray | null
-			while ((match = pattern.exec(filter)) !== null) {
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [matched, fieldName, operator, quotes, quotedContent, unquotedContent] = match
-				const keyword = quotedContent || unquotedContent
-				if (keyword) {
-					let keywords = [keyword.trim()]
-					if (isMultiValueOperator(operator)) {
-						keywords = keyword.trim().split(',').map(k => {
-							let trimmed = k.trim()
-							// Strip quotes from individual values in multi-value scenarios
-							trimmed = trimQuotes(trimmed)
-							return trimmed
-						})
-					}
+			const replacements: { start: number, length: number, replacement: string }[] = []
 
-					keywords.forEach(k => {
-						const title = resolver(parseInt(k))
-						if (title) {
-							filter = filter.replace(k, title)
-						}
+			while ((match = pattern.exec(filter)) !== null) {
+				const [matched, fieldName, operator, _quotes, quotedContent, unquotedContent] = match
+				const keyword = quotedContent || unquotedContent
+				if (!keyword) {
+					continue
+				}
+
+				let keywords = [keyword.trim()]
+				if (isMultiValueOperator(operator)) {
+					keywords = keyword.trim().split(',').map(k => {
+						let trimmed = k.trim()
+						// Strip quotes from individual values in multi-value scenarios
+						trimmed = trimQuotes(trimmed)
+						return trimmed
 					})
 				}
+
+				const transformedKeywords: string[] = []
+				keywords.forEach(k => {
+					const title = resolver(parseInt(k))
+					if (title) {
+						transformedKeywords.push(title)
+					} else {
+						// Keep original value if resolver returns null
+						transformedKeywords.push(k)
+					}
+				})
+
+				// Reconstruct the entire match with the replaced values
+				const replaced = isMultiValueOperator(operator)
+					? transformedKeywords.join(', ')
+					: transformedKeywords[0] || keyword
+
+				const reconstructedMatch = `${fieldName} ${operator} ${replaced}`
+
+				replacements.push({
+					start: match.index!,
+					length: matched.length,
+					replacement: reconstructedMatch,
+				})
 			}
+
+			// Apply replacements using position-based replacement to avoid
+			// incorrectly replacing values that appear elsewhere in the string
+			let offset = 0
+			replacements.forEach(({start, length, replacement}) => {
+				filter = filter.substring(0, start + offset) +
+					replacement +
+					filter.substring(start + offset + length)
+				offset += replacement.length - length
+			})
 		})
 	}
 

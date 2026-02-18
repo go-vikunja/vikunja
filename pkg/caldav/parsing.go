@@ -265,6 +265,7 @@ func getHexColorFromCaldavColor(caldavColor string) string {
 	return hexColor
 }
 
+//nolint:gocyclo
 func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	parsed, err := ics.ParseCalendar(strings.NewReader(content))
 	if err != nil {
@@ -273,8 +274,14 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	if len(parsed.Components) == 0 {
 		return nil, errors.New("VTODO element does seem not contain any components")
 	}
-	vTodo, ok := parsed.Components[0].(*ics.VTodo)
-	if !ok {
+	var vTodo *ics.VTodo
+	for _, comp := range parsed.Components {
+		if todo, ok := comp.(*ics.VTodo); ok {
+			vTodo = todo
+			break
+		}
+	}
+	if vTodo == nil {
 		return nil, errors.New("VTODO element not found")
 	}
 	// We put the vTodo details in a map to be able to handle them more easily
@@ -301,11 +308,23 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		}
 	}
 
+	// Get UID and SUMMARY (log warning if missing, but don't fail for backwards compatibility)
+	uid, hasUID := task["UID"]
+	if !hasUID {
+		log.Warningf("[CALDAV] VTODO missing UID field")
+	}
+
+	summary, hasSummary := task["SUMMARY"]
+	if !hasSummary {
+		log.Warningf("[CALDAV] VTODO missing SUMMARY field")
+	}
+
 	// Parse the priority
 	var priority int64
 	if _, ok := task["PRIORITY"]; ok {
 		priorityParsed, err := strconv.ParseInt(task["PRIORITY"].Value, 10, 64)
 		if err != nil {
+			log.Errorf("[CALDAV] Failed to parse PRIORITY: %v", err)
 			return nil, err
 		}
 
@@ -313,10 +332,16 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 	}
 
 	// Parse the enddate
-	duration, _ := time.ParseDuration(task["DURATION"].Value)
+	var duration time.Duration
+	if durationProp, ok := task["DURATION"]; ok {
+		duration, _ = time.ParseDuration(durationProp.Value)
+	}
 
-	description := strings.ReplaceAll(task["DESCRIPTION"].Value, "\\,", ",")
-	description = strings.ReplaceAll(description, "\\n", "\n")
+	description := ""
+	if descProp, ok := task["DESCRIPTION"]; ok {
+		description = strings.ReplaceAll(descProp.Value, "\\,", ",")
+		description = strings.ReplaceAll(description, "\\n", "\n")
+	}
 
 	var labels []*models.Label
 	if val, ok := task["CATEGORIES"]; ok {
@@ -329,9 +354,18 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		}
 	}
 
+	// Safely extract values
+	var uidValue, titleValue string
+	if hasUID {
+		uidValue = uid.Value
+	}
+	if hasSummary {
+		titleValue = summary.Value
+	}
+
 	vTask = &models.Task{
-		UID:         task["UID"].Value,
-		Title:       task["SUMMARY"].Value,
+		UID:         uidValue,
+		Title:       titleValue,
 		Description: description,
 		Priority:    priority,
 		Labels:      labels,
@@ -371,7 +405,7 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		})
 	}
 
-	if task["STATUS"].Value == "COMPLETED" {
+	if status, ok := task["STATUS"]; ok && status.Value == "COMPLETED" {
 		vTask.Done = true
 	}
 

@@ -46,6 +46,11 @@ func (tc *TaskComment) canUserModifyTaskComment(s *xorm.Session, a web.Auth) (bo
 		return false, err
 	}
 
+	shareAuth, is := a.(*LinkSharing)
+	if is {
+		return shareAuth.getUserID() == savedComment.AuthorID, nil
+	}
+
 	return a.GetID() == savedComment.AuthorID, nil
 }
 

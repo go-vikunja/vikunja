@@ -1,5 +1,6 @@
 <template>
 	<CreateEdit
+		v-model:loading="loadingModel"
 		:title="$t('project.edit.header')"
 		primary-icon=""
 		:primary-label="$t('misc.save')"
@@ -7,90 +8,62 @@
 		@primary="save"
 		@tertiary="$router.push({ name: 'project.settings.delete', params: { id: projectId } })"
 	>
-		<div class="field">
-			<label
-				class="label"
-				for="title"
-			>{{ $t('project.title') }}</label>
-			<div class="control">
-				<input
-					id="title"
-					v-model="project.title"
-					v-focus
-					:class="{ 'disabled': isLoading}"
-					:disabled="isLoading || undefined"
-					class="input"
-					:placeholder="$t('project.edit.titlePlaceholder')"
-					type="text"
-					@keyup.enter="save"
-				>
-			</div>
-		</div>
-		<div class="field">
-			<label class="label">{{ $t('project.parent') }}</label>
-			<div class="control">
-				<ProjectSearch v-model="parentProject" />
-			</div>
-		</div>
-		<div class="field">
-			<label
-				class="label"
-				for="projectdescription"
-			>{{ $t('project.edit.description') }}</label>
-			<div class="control">
-				<Editor
-					id="projectdescription"
-					v-model="project.description"
-					:class="{ 'disabled': isLoading}"
-					:disabled="isLoading"
-					:placeholder="$t('project.edit.descriptionPlaceholder')"
-				/>
-			</div>
-		</div>
+		<FormField
+			id="title"
+			v-model="project.title"
+			v-focus
+			:label="$t('project.title')"
+			:disabled="isLoading"
+			:placeholder="$t('project.edit.titlePlaceholder')"
+			type="text"
+			@keyup.enter="save"
+		/>
+		<FormField :label="$t('project.parent')">
+			<ProjectSearch v-model="parentProject" />
+		</FormField>
+		<FormField :label="$t('project.edit.description')">
+			<Editor
+				id="projectdescription"
+				v-model="project.description"
+				:class="{ 'disabled': isLoading}"
+				:disabled="isLoading"
+				:placeholder="$t('project.edit.descriptionPlaceholder')"
+			/>
+		</FormField>
 
 		<div class="columns">
-			<div class="column field">
-				<label
+			<div class="column">
+				<FormField
+					id="identifier"
+					v-model="project.identifier"
 					v-tooltip="$t('project.edit.identifierTooltip')"
-					class="label"
-					for="identifier"
-				>
-					{{ $t('project.edit.identifier') }}
-				</label>
-				<div class="control">
-					<input
-						id="identifier"
-						v-model="project.identifier"
-						v-focus
-						:class="{ 'disabled': isLoading}"
-						:disabled="isLoading || undefined"
-						class="input"
-						:placeholder="$t('project.edit.identifierPlaceholder')"
-						type="text"
-						maxlength="10"
-						@keyup.enter="save"
-					>
-				</div>
+					:label="$t('project.edit.identifier')"
+					:disabled="isLoading"
+					:placeholder="$t('project.edit.identifierPlaceholder')"
+					type="text"
+					maxlength="10"
+					@keyup.enter="save"
+				/>
 			</div>
 
-			<div class="column field">
-				<label class="label">{{ $t('project.edit.color') }}</label>
-				<div class="control">
+			<div class="column">
+				<FormField :label="$t('project.edit.color')">
 					<ColorPicker v-model="project.hexColor" />
-				</div>
+				</FormField>
 			</div>
 		</div>
 	</CreateEdit>
 </template>
 
 <script setup lang="ts">
-import {watch, ref} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
+import FormField from '@/components/input/FormField.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 
 import type {IProject} from '@/modelTypes/IProject'
@@ -116,6 +89,14 @@ const {t} = useI18n({useScope: 'global'})
 const {project, save: saveProject, isLoading} = useProject(() => props.projectId)
 
 const parentProject = ref<IProject | null>(null)
+const isSaving = ref(false)
+
+const loadingModel = computed({
+	get: () => isSaving.value || isLoading.value,
+	set(value: boolean) {
+		isSaving.value = value
+	},
+})
 watch(
 	() => project.parentProjectId,
 	parentProjectId => {
@@ -129,9 +110,19 @@ watch(
 useTitle(() => project?.title ? t('project.edit.title', {project: project.title}) : '')
 
 async function save() {
-	project.parentProjectId = parentProject.value?.id ?? project.parentProjectId
-	await saveProject()
-	await useBaseStore().handleSetCurrentProject({project})
-	router.back()
+	if (isSaving.value) {
+		return
+	}
+
+	isSaving.value = true
+
+	try {
+		project.parentProjectId = parentProject.value === null ? 0 : (parentProject.value?.id ?? project.parentProjectId)
+		await saveProject()
+		await useBaseStore().handleSetCurrentProject({project})
+		router.back()
+	} finally {
+		isSaving.value = false
+	}
 }
 </script>

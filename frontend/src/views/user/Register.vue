@@ -11,62 +11,35 @@
 			id="registerform"
 			@submit.prevent="submit"
 		>
-			<div class="field">
-				<label
-					class="label"
-					for="username"
-				>{{ $t('user.auth.username') }}</label>
-				<div class="control">
-					<input
-						id="username"
-						v-model="credentials.username"
-						v-focus
-						class="input"
-						name="username"
-						:placeholder="$t('user.auth.usernamePlaceholder')"
-						required
-						type="text"
-						autocomplete="username"
-						@keyup.enter="submit"
-						@focusout="() => {validateUsername(); validateUsernameAfterFirst = true}"
-						@keyup="() => {validateUsernameAfterFirst ? validateUsername() : null}"
-					>
-				</div>
-				<p
-					v-if="usernameValid !== true"
-					class="help is-danger"
-				>
-					{{ usernameValid }}
-				</p>
-			</div>
-			<div class="field">
-				<label
-					class="label"
-					for="email"
-				>
-					{{ $t('user.auth.email') }}
-				</label>
-				<div class="control">
-					<input
-						id="email"
-						v-model="credentials.email"
-						class="input"
-						name="email"
-						:placeholder="$t('user.auth.emailPlaceholder')"
-						required
-						type="email"
-						@keyup.enter="submit"
-						@focusout="() => {validateEmail(); validateEmailAfterFirst = true}"
-						@keyup="() => {validateEmailAfterFirst ? validateEmail() : null}"
-					>
-				</div>
-				<p
-					v-if="!emailValid"
-					class="help is-danger"
-				>
-					{{ $t('user.auth.emailInvalid') }}
-				</p>
-			</div>
+			<FormField
+				id="username"
+				v-model="credentials.username"
+				v-focus
+				:label="$t('user.auth.username')"
+				name="username"
+				:placeholder="$t('user.auth.usernamePlaceholder')"
+				required
+				type="text"
+				autocomplete="username"
+				:error="usernameValid !== true ? usernameValid : null"
+				@keyup.enter="submit"
+				@focusout="validateUsername(); validateUsernameAfterFirst = true"
+				@keyup="validateUsernameAfterFirst && validateUsername()"
+			/>
+			<FormField
+				id="email"
+				v-model="credentials.email"
+				:label="$t('user.auth.email')"
+				name="email"
+				:placeholder="$t('user.auth.emailPlaceholder')"
+				required
+				type="email"
+				:error="emailValid ? null : $t('user.auth.emailInvalid')"
+				autocomplete="email"
+				@keyup.enter="submit"
+				@focusout="validateEmail(); validateEmailAfterFirst = true"
+				@keyup="validateEmailAfterFirst && validateEmail()"
+			/>
 			<div class="field">
 				<label
 					class="label"
@@ -124,7 +97,9 @@ import router from '@/router'
 import Message from '@/components/misc/Message.vue'
 import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/Password.vue'
+import FormField from '@/components/input/FormField.vue'
 
+import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 import {validatePassword} from '@/helpers/validatePasswort'
@@ -132,6 +107,7 @@ import {validatePassword} from '@/helpers/validatePasswort'
 const {t} = useI18n()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
+const {redirectIfSaved} = useRedirectToLastVisited()
 
 // FIXME: use the `beforeEnter` hook of vue-router
 // Check if the user is already logged in, if so, redirect them to the homepage
@@ -186,7 +162,7 @@ const everythingValid = computed(() => {
 		credentials.email !== '' &&
 		validatePassword(credentials.password) === true &&
 		emailValid.value &&
-		usernameValid.value
+		usernameValid.value === true
 })
 
 async function submit() {
@@ -199,6 +175,7 @@ async function submit() {
 
 	try {
 		await authStore.register(toRaw(credentials))
+		redirectIfSaved()
 	} catch (e) {
 		errorMessage.value = e?.message
 	}

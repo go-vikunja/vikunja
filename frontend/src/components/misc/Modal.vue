@@ -102,6 +102,9 @@ watchEffect(() => {
 
 function onKeydown(e: KeyboardEvent) {
 	if (e.key === 'Escape') {
+		if (e.isComposing) {
+			return
+		}
  		emit('close')
 	}
 }
@@ -158,6 +161,10 @@ $modal-width: 1024px;
 	inset-block-start: 50%;
 	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
+	
+	[dir="rtl"] & {
+		transform: translate(50%, -50%);
+	}
 
 	@media screen and (max-width: $tablet) {
 		margin: 0;

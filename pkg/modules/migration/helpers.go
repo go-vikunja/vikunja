@@ -19,9 +19,14 @@ package migration
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 // DownloadFile downloads a file and returns its contents
@@ -59,19 +64,88 @@ func DoPost(url string, form url.Values) (resp *http.Response, err error) {
 	return DoPostWithHeaders(url, form, map[string]string{})
 }
 
-// DoPostWithHeaders does an api request and allows to pass in arbitrary headers
-func DoPostWithHeaders(url string, form url.Values, headers map[string]string) (resp *http.Response, err error) {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, strings.NewReader(form.Encode()))
-	if err != nil {
-		return
-	}
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	for key, value := range headers {
-		req.Header.Add(key, value)
-	}
-
+// DoGetWithHeaders makes an HTTP GET request with custom headers
+func DoGetWithHeaders(urlStr string, headers map[string]string) (resp *http.Response, err error) {
 	hc := http.Client{}
-	return hc.Do(req)
+
+	err = utils.RetryWithBackoff("HTTP GET "+urlStr, func() error {
+		req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodGet, urlStr, nil)
+		if reqErr != nil {
+			return reqErr
+		}
+
+		for key, value := range headers {
+			req.Header.Add(key, value)
+		}
+
+		resp, err = hc.Do(req) //nolint:bodyclose // Caller is responsible for closing on success
+		if err != nil {
+			return err
+		}
+
+		// Log 4xx errors for debugging
+		if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			// Re-create the body so the caller can still read it
+			resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			log.Debugf("[Migration] HTTP GET %s returned %d: %s", urlStr, resp.StatusCode, string(bodyBytes))
+			return nil // Don't retry on 4xx
+		}
+
+		// Retry on 5xx status codes, include response body in error
+		if resp.StatusCode >= 500 {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			return fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		return nil
+	})
+
+	return resp, err
+}
+
+// DoPostWithHeaders does an api request and allows to pass in arbitrary headers
+func DoPostWithHeaders(urlStr string, form url.Values, headers map[string]string) (resp *http.Response, err error) {
+	hc := http.Client{}
+
+	err = utils.RetryWithBackoff("HTTP POST "+urlStr, func() error {
+		req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodPost, urlStr, strings.NewReader(form.Encode()))
+		if reqErr != nil {
+			return reqErr
+		}
+
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+		for key, value := range headers {
+			req.Header.Add(key, value)
+		}
+
+		resp, err = hc.Do(req) //nolint:bodyclose // Caller is responsible for closing on success
+		if err != nil {
+			return err
+		}
+
+		// Log 4xx errors for debugging
+		if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			// Re-create the body so the caller can still read it
+			resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			log.Debugf("[Migration] HTTP POST %s returned %d: %s", urlStr, resp.StatusCode, string(bodyBytes))
+			return nil // Don't retry on 4xx
+		}
+
+		// Retry on 5xx status codes, include response body in error
+		if resp.StatusCode >= 500 {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			return fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		return nil
+	})
+
+	return resp, err
 }

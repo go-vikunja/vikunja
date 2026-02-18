@@ -79,7 +79,9 @@
 				"subject_to_assignee": "Du wurdest „%[1]s“ (%[2]s) zugewiesen",
 				"message_to_assignee": "%[1]s hat dich in „%[2]s“ zugewiesen.",
 				"subject_to_others": "„%[1]s“ (%[2]s) wurde zu %[3]s zugewiesen",
-				"message_to_others": "%[1]s hat diese Aufgabe %[2]s zugewiesen."
+				"message_to_others": "%[1]s hat diese Aufgabe %[2]s zugewiesen.",
+				"subject_to_others_self": "%[3]s hat „%[1]s“ (%[2]s) sich selbst zugewiesen",
+				"message_to_others_self": "%[1]s hat diese Aufgabe sich selbst zugewiesen."
 			},
 			"deleted": {
 				"subject": "„%[1]s“ (%[2]s) wurde gelöscht",

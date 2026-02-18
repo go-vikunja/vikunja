@@ -93,6 +93,7 @@
         "discoverableByEmail": "Allow other users to add me as a member to teams or projects when they search for my full email",
         "playSoundWhenDone": "Play a sound when marking tasks as done",
         "allowIconChanges": "Show special logos during certain times",
+        "alwaysShowBucketTaskCount": "Always show task count on Kanban buckets",
         "defaultTaskRelationType": "Default task relation type",
         "weekStart": "Week starts on",
         "weekStartSunday": "Sunday",
@@ -113,6 +114,11 @@
           "mm\/dd\/yyyy": "MM\/DD\/YYYY",
           "dd\/mm\/yyyy": "DD\/MM\/YYYY",
           "yyyy\/mm\/dd": "YYYY\/MM\/DD"
+        },
+        "timeFormat": "Time format",
+        "timeFormatOptions": {
+          "12h": "12-hour (AM/PM)",
+          "24h": "24-hour (HH:mm)"
         },
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
@@ -175,6 +181,9 @@
           "system": "System",
           "dark": "Dark"
         }
+      },
+      "backgroundBrightness": {
+        "title": "Background brightness"
       },
       "apiTokens": {
         "title": "API Tokens",
@@ -430,6 +439,9 @@
       "deleteSuccess": "The webhook was successfully deleted.",
       "create": "Create webhook",
       "secret": "Secret",
+      "basicauthuser": "Basic Auth User",
+      "basicauthpassword": "Basic Auth Password",
+      "basicauthlink": "Use Basic Auth?",
       "secretHint": "If provided, all requests to the webhook target URL will be signed using HMAC.",
       "secretDocs": "Check out the docs for more details about how to use secrets."
     },
@@ -791,6 +803,7 @@
     "addReminder": "Add a reminder…",
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
+    "movedToProject": "The task was moved to {project}.",
     "undo": "Undo",
     "openDetail": "Open task detail view",
     "checklistTotal": "{checked} of {total} tasks",
@@ -802,7 +815,9 @@
       "overdue": "Show overdue tasks",
       "fromuntil": "Tasks from {from} until {until}",
       "select": "Select a date range",
-      "noTasks": "Nothing to do — Have a nice day!"
+      "noTasks": "Nothing to do — Have a nice day!",
+      "filterByLabel": "Filtering by label {label}",
+      "clearLabelFilter": "Clear label filter"
     },
     "detail": {
       "chooseDueDate": "Click here to set a due date",
@@ -820,6 +835,7 @@
       "back": "Back to project",
       "due": "Due {at}",
       "closePopup": "Close popup",
+      "scrollToBottom": "Scroll to bottom",
       "organization": "Organization",
       "management": "Management",
       "dateAndTime": "Date and time",
@@ -862,6 +878,8 @@
       "relatedTasks": "Related Tasks",
       "reminders": "Reminders",
       "repeat": "Repeat",
+      "comment": "{count} comment | {count} comments",
+      "commentCount": "Number of comments",
       "startDate": "Start Date",
       "title": "Title",
       "updated": "Updated",
@@ -908,6 +926,9 @@
       "deleteSuccess": "The comment was deleted successfully.",
       "addedSuccess": "The comment was added successfully.",
       "permalink": "Copy permalink to this comment"
+    },
+    "mention": {
+      "noUsersFound": "No users found"
     },
     "deferDueDate": {
       "title": "Defer due date",
@@ -1099,7 +1120,11 @@
       "priority": "Change the priority of this task",
       "favorite": "Mark this task as favorite / unfavorite",
       "openProject": "Open the project of this task",
-      "save": "Save the current task"
+      "save": "Save the current task",
+      "copyIdentifier": "Copy task identifier to clipboard",
+      "copyIdentifierAndTitle": "Copy task identifier and title to clipboard",
+      "copyIdentifierTitleAndUrl": "Copy task identifier, title and URL to clipboard",
+      "copyUrl": "Copy task URL to clipboard"
     },
     "project": {
       "title": "Project Views",

@@ -31,12 +31,12 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/samedi/caldav-go"
 	"github.com/samedi/caldav-go/lib"
 )
 
-func getBasicAuthUserFromContext(c echo.Context) (*user.User, error) {
+func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
 	u, is := c.Get("userBasicAuth").(*user.User)
 	if !is {
 		return &user.User{}, fmt.Errorf("user is not user element, is %s", reflect.TypeOf(c.Get("userBasicAuth")))
@@ -45,7 +45,7 @@ func getBasicAuthUserFromContext(c echo.Context) (*user.User, error) {
 }
 
 // ProjectHandler returns all tasks from a project
-func ProjectHandler(c echo.Context) error {
+func ProjectHandler(c *echo.Context) error {
 	project, err := getProjectFromParam(c)
 	if err != nil && models.IsErrProjectDoesNotExist(err) {
 		return c.String(http.StatusNotFound, "Project not found")
@@ -56,7 +56,7 @@ func ProjectHandler(c echo.Context) error {
 
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.ErrInternalServerError.SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -90,7 +90,7 @@ func ProjectHandler(c echo.Context) error {
 }
 
 // TaskHandler is the handler which manages updating/deleting a single task
-func TaskHandler(c echo.Context) error {
+func TaskHandler(c *echo.Context) error {
 	project, err := getProjectFromParam(c)
 	if err != nil {
 		return err
@@ -98,7 +98,7 @@ func TaskHandler(c echo.Context) error {
 
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.ErrInternalServerError.SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
 	// Get the task uid
@@ -117,10 +117,10 @@ func TaskHandler(c echo.Context) error {
 }
 
 // PrincipalHandler handles all request to principal resources
-func PrincipalHandler(c echo.Context) error {
+func PrincipalHandler(c *echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.ErrInternalServerError.SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -146,10 +146,10 @@ func PrincipalHandler(c echo.Context) error {
 }
 
 // EntryHandler handles all request to principal resources
-func EntryHandler(c echo.Context) error {
+func EntryHandler(c *echo.Context) error {
 	u, err := getBasicAuthUserFromContext(c)
 	if err != nil {
-		return echo.ErrInternalServerError.SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
 	storage := &VikunjaCaldavProjectStorage{
@@ -174,7 +174,7 @@ func EntryHandler(c echo.Context) error {
 	return nil
 }
 
-func getProjectFromParam(c echo.Context) (project *models.ProjectWithTasksAndBuckets, err error) {
+func getProjectFromParam(c *echo.Context) (project *models.ProjectWithTasksAndBuckets, err error) {
 	param := c.Param("project")
 	if param == "" {
 		return &models.ProjectWithTasksAndBuckets{}, nil

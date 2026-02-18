@@ -1,0 +1,65 @@
+name: Preview
+
+on:
+  # pull_request_target gives write access to GHCR even for PRs from forks.
+  # This is safe because:
+  # 1. We explicitly checkout the PR's head commit (no base branch code execution)
+  # 2. We ONLY build a Docker image (isolated container, no workflow scripts from PR)
+  # 3. No actions that execute PR code in the workflow context (no github-script, etc)
+  # 4. Build happens in isolated Docker container with well-defined Dockerfile
+  pull_request_target:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+        with:
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          # For pull_request_target, we need to explicitly fetch the PR ref from forks
+          # since the PR's commit SHA is not reachable in the base repository.
+          # This is safe because no PR code is executed in workflow context.
+          # Only Docker build uses the PR code (isolated in container).
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
+      - name: Login to GHCR
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        with:
+          version: latest
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+          tags: |
+            type=ref,event=pr
+            type=sha,format=long
+      - name: Build and push PR image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            RELEASE_VERSION=${{ steps.ghd.outputs.describe }}

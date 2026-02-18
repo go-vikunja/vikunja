@@ -26,6 +26,7 @@ const PREFIXED_SCSS_STYLES = `@use "sass:math";
 /*
 ** Configure sentry plugin
 */
+// @ts-ignore
 function getSentryConfig(env: ImportMetaEnv): ViteSentryPluginOptions {
 	return {
 		skipEnvironmentCheck: true,
@@ -142,6 +143,7 @@ function getBuildConfig(env: Record<string, string>) {
 				filename: 'sw.ts',
 				strategies: 'injectManifest',
 				injectRegister: false,
+				useCredentials: true,
 				manifest: {
 					name: 'Vikunja',
 					short_name: 'Vikunja',

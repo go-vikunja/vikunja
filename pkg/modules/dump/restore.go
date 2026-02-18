@@ -32,6 +32,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/initialize"
@@ -45,7 +46,7 @@ import (
 const maxConfigSize = 5 * 1024 * 1024 // 5 MB, should be largely enough
 
 // Restore takes a zip file name and restores it
-func Restore(filename string) error {
+func Restore(filename string, overrideConfig bool) error {
 
 	r, err := zip.OpenReader(filename)
 	if err != nil {
@@ -101,16 +102,24 @@ func Restore(filename string) error {
 
 	///////
 	// Restore the config file
-	err = restoreConfig(configFile, dotEnvFile)
-	if err != nil {
-		return err
+	if overrideConfig {
+		err = restoreConfig(configFile, dotEnvFile)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Warning("Preserving existing configuration (--preserve-config flag used)")
+		log.Warning("Configuration preserved - ensure your current config is compatible with the restored data")
 	}
 	log.Info("Restoring...")
 
 	// Init the configFile again since the restored configuration is most likely different from the one before
 	initialize.LightInit()
 	initialize.InitEngines()
-	files.InitFileHandler()
+	err = files.InitFileHandler()
+	if err != nil {
+		return fmt.Errorf("could not init file handler: %w", err)
+	}
 
 	///////
 	// Restore the db
@@ -166,18 +175,9 @@ func Restore(filename string) error {
 			return fmt.Errorf("could not parse file id %s: %w", i, err)
 		}
 
-		f := &files.File{ID: id}
-
-		fc, err := file.Open()
-		if err != nil {
-			return fmt.Errorf("could not open file %s: %w", i, err)
+		if err := restoreFile(id, file); err != nil {
+			return fmt.Errorf("could not restore file %s: %w", i, err)
 		}
-
-		if err := f.Save(fc); err != nil {
-			return fmt.Errorf("could not save file: %w", err)
-		}
-
-		_ = fc.Close()
 		log.Infof("Restored file %s", i)
 	}
 	log.Infof("Restored %d files.", len(filesFiles))
@@ -185,9 +185,49 @@ func Restore(filename string) error {
 	///////
 	// Done
 	log.Infof("Done restoring dump.")
-	log.Infof("Restart Vikunja to make sure the new configuration file is applied.")
+	if overrideConfig {
+		log.Infof("Restart Vikunja to make sure the new configuration file is applied.")
+	}
 
 	return nil
+}
+
+func restoreFile(id int64, zipFile *zip.File) error {
+	f := &files.File{ID: id}
+
+	fc, err := zipFile.Open()
+	if err != nil {
+		return fmt.Errorf("could not open zip entry: %w", err)
+	}
+	defer fc.Close()
+
+	// Create a temporary file to make the content seekable without loading
+	// it all into memory. zip.File.Open() returns io.ReadCloser which is not
+	// seekable, but f.Save requires io.ReadSeeker.
+	tmpFile, err := os.CreateTemp("", "vikunja-restore-*")
+	if err != nil {
+		return fmt.Errorf("could not create temp file: %w", err)
+	}
+	defer func() {
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpFile.Name())
+	}()
+
+	// Limit copy size to prevent decompression bombs
+	maxSize := config.GetMaxFileSizeInMBytes() * 1024 * 1024
+	written, err := io.CopyN(tmpFile, fc, int64(maxSize)+1) // #nosec G115 -- maxSize is configured, not user input
+	if err != nil && !errors.Is(err, io.EOF) {
+		return fmt.Errorf("could not copy to temp file: %w", err)
+	}
+	if uint64(written) > maxSize {
+		return files.ErrFileIsTooLarge{Size: uint64(written)}
+	}
+
+	if _, err := tmpFile.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("could not seek temp file: %w", err)
+	}
+
+	return f.Save(tmpFile)
 }
 
 func convertFieldValue(fieldName string, value interface{}, isFloat bool) (interface{}, error) {

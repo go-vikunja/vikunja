@@ -34,7 +34,7 @@ type TaskComment struct {
 	Comment  string     `xorm:"text not null" json:"comment" valid:"dbtext,required"`
 	AuthorID int64      `xorm:"not null" json:"-"`
 	Author   *user.User `xorm:"-" json:"author"`
-	TaskID   int64      `xorm:"not null" json:"-" param:"task"`
+	TaskID   int64      `xorm:"index not null" json:"-" param:"task"`
 
 	Reactions ReactionMap `xorm:"-" json:"reactions"`
 
@@ -118,7 +118,12 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [delete]
-func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
+func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
+	err := tc.ReadOne(s, a)
+	if err != nil {
+		return err
+	}
+
 	deleted, err := s.
 		ID(tc.ID).
 		NoAutoCondition().
@@ -131,6 +136,7 @@ func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 
+	doer, _ := user.GetFromAuth(a)
 	task, err := GetTaskByIDSimple(s, tc.TaskID)
 	if err != nil {
 		return err
@@ -139,7 +145,7 @@ func (tc *TaskComment) Delete(s *xorm.Session, _ web.Auth) error {
 	return events.Dispatch(&TaskCommentDeletedEvent{
 		Task:    &task,
 		Comment: tc,
-		Doer:    tc.Author,
+		Doer:    doer,
 	})
 }
 
@@ -268,6 +274,43 @@ func addCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Tas
 				task.Comments = []*TaskComment{}
 			}
 			task.Comments = append(task.Comments, comment)
+		}
+	}
+
+	return nil
+}
+
+func addCommentCountToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	zero := int64(0)
+	for _, taskID := range taskIDs {
+		if task, ok := taskMap[taskID]; ok {
+			task.CommentCount = &zero
+		}
+	}
+
+	type CommentCount struct {
+		TaskID int64 `xorm:"task_id"`
+		Count  int64 `xorm:"count"`
+	}
+
+	counts := []CommentCount{}
+
+	if err := s.
+		Select("task_id, COUNT(*) as count").
+		Where(builder.In("task_id", taskIDs)).
+		GroupBy("task_id").
+		Table("task_comments").
+		Find(&counts); err != nil {
+		return err
+	}
+
+	for _, c := range counts {
+		if task, ok := taskMap[c.TaskID]; ok {
+			task.CommentCount = &c.Count
 		}
 	}
 

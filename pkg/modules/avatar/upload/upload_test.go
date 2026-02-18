@@ -18,6 +18,7 @@ package upload
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"code.vikunja.io/api/pkg/log"
@@ -33,6 +34,47 @@ func TestMain(m *testing.M) {
 	log.InitLogger()
 
 	os.Exit(m.Run())
+}
+
+func TestFlushCache(t *testing.T) {
+	keyvalue.InitStorage()
+
+	provider := &Provider{}
+
+	testUser := &user.User{
+		ID: 777777,
+	}
+
+	// Populate cache with multiple size variants (matching the real key format from line 65)
+	sizes := []int64{32, 64, 128, 250}
+	for _, size := range sizes {
+		cacheKey := CacheKeyPrefix + strconv.Itoa(int(testUser.ID)) + "_" + strconv.FormatInt(size, 10)
+		err := keyvalue.Put(cacheKey, CachedAvatar{
+			Content:  []byte("fake_avatar_data"),
+			MimeType: "image/png",
+		})
+		require.NoError(t, err)
+	}
+
+	// Verify all entries exist before flush
+	for _, size := range sizes {
+		cacheKey := CacheKeyPrefix + strconv.Itoa(int(testUser.ID)) + "_" + strconv.FormatInt(size, 10)
+		_, exists, err := keyvalue.Get(cacheKey)
+		require.NoError(t, err)
+		assert.True(t, exists, "cache entry for size %d should exist before flush", size)
+	}
+
+	// Flush cache
+	err := provider.FlushCache(testUser)
+	require.NoError(t, err)
+
+	// Verify ALL size variants are removed
+	for _, size := range sizes {
+		cacheKey := CacheKeyPrefix + strconv.Itoa(int(testUser.ID)) + "_" + strconv.FormatInt(size, 10)
+		_, exists, err := keyvalue.Get(cacheKey)
+		require.NoError(t, err)
+		assert.False(t, exists, "cache entry for size %d should be removed after flush", size)
+	}
 }
 
 func TestGetAvatar(t *testing.T) {

@@ -93,6 +93,7 @@
 				"discoverableByEmail": "Diğer kullanıcıların beni tam e-posta adresimle arayarak takımlara veya projelere üye olarak eklemesine izin ver",
 				"playSoundWhenDone": "Görevleri tamamlandı olarak işaretlerken ses çal",
 				"allowIconChanges": "Belirli zamanlarda özel logoları göster",
+				"alwaysShowBucketTaskCount": "Kanban listelerindeki görev sayısını her zaman göster",
 				"defaultTaskRelationType": "Varsayılan görev ilişkisi türü",
 				"weekStart": "Hafta başlangıcı",
 				"weekStartSunday": "Pazar",
@@ -113,6 +114,11 @@
 					"mm/dd/yyyy": "AA/GG/YYYY",
 					"dd/mm/yyyy": "GG/AA/YYYY",
 					"yyyy/mm/dd": "YYYY/AA/GG"
+				},
+				"timeFormat": "Zaman biçimi",
+				"timeFormatOptions": {
+					"12h": "12 saatlik (ÖÖ/ÖS)",
+					"24h": "24 saatlik (SS:dd)"
 				},
 				"externalUserNameChange": "Adınız, oturum açma sağlayıcınız ({provider}) tarafından yönetiliyor. Değiştirmek için lütfen orada güncelleyin."
 			},
@@ -175,6 +181,9 @@
 					"system": "Sistem",
 					"dark": "Koyu"
 				}
+			},
+			"backgroundBrightness": {
+				"title": "Arka plan parlaklığı"
 			},
 			"apiTokens": {
 				"title": "API Token’ları",
@@ -791,6 +800,7 @@
 		"addReminder": "Bir hatırlatıcı ekle…",
 		"doneSuccess": "Görev başarıyla tamamlandı olarak işaretlendi.",
 		"undoneSuccess": "Görev başarıyla tamamlanmadı olarak işaretlendi.",
+		"movedToProject": "Görev, {project} projesine taşındı.",
 		"undo": "Geri al",
 		"openDetail": "Görev detay görünümünü aç",
 		"checklistTotal": "{checked}/{total} görev",
@@ -802,7 +812,9 @@
 			"overdue": "Gecikmiş görevleri göster",
 			"fromuntil": "{from} ile {until} arasındaki görevler",
 			"select": "Bir tarih aralığı seçin",
-			"noTasks": "Yapacak bir şey yok — İyi günler!"
+			"noTasks": "Yapacak bir şey yok — İyi günler!",
+			"filterByLabel": "{label} etiketine göre filtreleme",
+			"clearLabelFilter": "Etiket filtresini temizle"
 		},
 		"detail": {
 			"chooseDueDate": "Bitiş tarihi belirlemek için buraya tıklayın",
@@ -862,6 +874,8 @@
 			"relatedTasks": "İlgili Görevler",
 			"reminders": "Hatırlatıcılar",
 			"repeat": "Tekrarla",
+			"comment": "{count} yorum",
+			"commentCount": "Yorum sayısı",
 			"startDate": "Başlangıç Tarihi",
 			"title": "Başlık",
 			"updated": "Güncellendi",
@@ -908,6 +922,9 @@
 			"deleteSuccess": "Yorum başarıyla silindi.",
 			"addedSuccess": "Yorum başarıyla eklendi.",
 			"permalink": "Bu yoruma kalıcı bağlantıyı kopyala"
+		},
+		"mention": {
+			"noUsersFound": "Kullanıcı bulunamadı"
 		},
 		"deferDueDate": {
 			"title": "Bitiş tarihini ertele",

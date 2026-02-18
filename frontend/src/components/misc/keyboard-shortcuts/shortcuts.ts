@@ -3,6 +3,7 @@ import type {RouteLocation} from 'vue-router'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 
 const ctrl = isAppleDevice() ? '⌘' : 'ctrl'
+const reminderModifier = isAppleDevice() ? 'shift' : 'alt'
 
 export interface Shortcut {
 	title: string
@@ -182,7 +183,7 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 			},
 			{
 				title: 'keyboardShortcuts.task.reminder',
-				keys: ['alt', 'r'],
+				keys: [reminderModifier, 'r'],
 			},
 			{
 				title: 'keyboardShortcuts.task.description',
@@ -207,6 +208,24 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 			{
 				title: 'keyboardShortcuts.task.save',
 				keys: [ctrl, 's'],
+			},
+			{
+				title: 'keyboardShortcuts.task.copyIdentifier',
+				keys: ['.'],
+			},
+			{
+				title: 'keyboardShortcuts.task.copyIdentifierAndTitle',
+				keys: ['.', '.'],
+				combination: 'then',
+			},
+			{
+				title: 'keyboardShortcuts.task.copyIdentifierTitleAndUrl',
+				keys: ['.', '.', '.'],
+				combination: 'then',
+			},
+			{
+				title: 'keyboardShortcuts.task.copyUrl',
+				keys: [ctrl, '.'],
 			},
 		],
 	},

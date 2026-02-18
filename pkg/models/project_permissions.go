@@ -250,7 +250,6 @@ func checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int
 		u.ID,
 		u.ID,
 		u.ID,
-		u.ID,
 	}
 
 	err = s.SQL(`
@@ -274,12 +273,21 @@ WITH RECURSIVE
         FROM projects p
                  INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id),
 
+    -- Calculate max team permission for each project/user combination
+    max_team_permissions AS (
+        SELECT tl.project_id,
+               MAX(tl.permission) AS max_team_permission
+        FROM team_projects tl
+                 INNER JOIN team_members tm ON tm.team_id = tl.team_id AND tm.user_id = ?
+        GROUP BY tl.project_id
+    ),
+
     project_permissions AS (SELECT ph.id,
                                    ph.original_project_id,
                                    CASE
                                        WHEN p.owner_id = ? THEN 2
-                                       WHEN COALESCE(ul.permission, 0) > COALESCE(tl.permission, 0) THEN ul.permission
-                                       ELSE COALESCE(tl.permission, 0)
+                                       WHEN COALESCE(ul.permission, 0) > COALESCE(mtp.max_team_permission, 0) THEN ul.permission
+                                       ELSE COALESCE(mtp.max_team_permission, 0)
                                        END AS project_permission,
             CASE
                 WHEN p.owner_id = ? THEN 1  -- Direct project ownership
@@ -289,9 +297,8 @@ WITH RECURSIVE
                                 LEFT JOIN projects p
                             ON ph.id = p.id
                                 LEFT JOIN users_projects ul ON ul.project_id = ph.id AND ul.user_id = ?
-                                LEFT JOIN team_projects tl ON tl.project_id = ph.id
-                                LEFT JOIN team_members tm ON tm.team_id = tl.team_id AND tm.user_id = ?
-                            WHERE p.owner_id = ? OR ul.user_id = ? OR tm.user_id = ?)
+                                LEFT JOIN max_team_permissions mtp ON mtp.project_id = ph.id
+                            WHERE p.owner_id = ? OR ul.user_id = ? OR mtp.max_team_permission IS NOT NULL)
 
 SELECT ph.original_project_id AS id,
        COALESCE(MAX(pp.project_permission), -1) AS max_permission

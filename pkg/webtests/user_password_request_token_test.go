@@ -22,7 +22,6 @@ import (
 
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,7 +40,7 @@ func TestUserRequestResetPasswordToken(t *testing.T) {
 	t.Run("Invalid email address", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserRequestResetPasswordToken, `{"email": "user1example.com"}`, nil, nil)
 		require.Error(t, err)
-		assert.Equal(t, http.StatusBadRequest, err.(*echo.HTTPError).Code)
+		assert.Equal(t, http.StatusBadRequest, getHTTPErrorCode(err))
 	})
 	t.Run("No user with that email address", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.UserRequestResetPasswordToken, `{"email": "user1000@example.com"}`, nil, nil)

@@ -93,6 +93,7 @@
 				"discoverableByEmail": "Erlaube anderen Benutzer:innen, mich als Mitglied zu Teams oder Projekten hinzuzufügen, wenn sie nach meiner vollständigen E-Mail Adresse suchen",
 				"playSoundWhenDone": "Einen Ton abspielen, wenn Aufgaben als erledigt markiert werden",
 				"allowIconChanges": "Zu bestimmten Zeiten spezielle Logos anzeigen",
+				"alwaysShowBucketTaskCount": "Immer die Anzahl der Aufgaben pro Kanban-Spalte anzeigen",
 				"defaultTaskRelationType": "Standard-Aufgabenbeziehungstyp",
 				"weekStart": "Woche beginnt am",
 				"weekStartSunday": "Sonntag",
@@ -113,6 +114,11 @@
 					"mm/dd/yyyy": "MM/TT/JJJJ",
 					"dd/mm/yyyy": "TT/MM/JJJJ",
 					"yyyy/mm/dd": "JJJJ/MM/TT"
+				},
+				"timeFormat": "Zeitformat",
+				"timeFormatOptions": {
+					"12h": "12 Stunden (AM/PM)",
+					"24h": "24 Stunden (HH:mm)"
 				},
 				"externalUserNameChange": "Dein Name wird von deinem Login-Provider verwaltet ({provider}). Um ihn zu ändern, aktualisiere ihn bitte dort."
 			},
@@ -175,6 +181,9 @@
 					"system": "System",
 					"dark": "Dunkel"
 				}
+			},
+			"backgroundBrightness": {
+				"title": "Hintergrundhelligkeit"
 			},
 			"apiTokens": {
 				"title": "API-Tokens",
@@ -310,8 +319,8 @@
 			"links": {
 				"title": "Linkfreigaben",
 				"what": "Was ist eine Linkfreigabe?",
-				"explanation": "Mit Linkfreigaben kannst Projekt du Listen mit Benutzer:innen ohne Vikunja-Account teilen.",
-				"create": "Erstelle ein Linkfreigabe",
+				"explanation": "Mit Linkfreigaben kannst du Projekte mit Benutzer:innen ohne Vikunja-Account teilen.",
+				"create": "Erstelle eine Linkfreigabe",
 				"name": "Name (optional)",
 				"namePlaceholder": "z.B. Lorem Ipsum",
 				"nameExplanation": "Alle Aktionen, die mit dieser Linkfreigabe durchgeführt werden, werden mit diesem Namen angezeigt.",
@@ -430,6 +439,9 @@
 			"deleteSuccess": "Der Webhook wurde erfolgreich gelöscht.",
 			"create": "Webhook erstellen",
 			"secret": "Schlüssel",
+			"basicauthuser": "Basic Auth User",
+			"basicauthpassword": "Basic Auth Passwort",
+			"basicauthlink": "Basic Auth verwenden?",
 			"secretHint": "Wenn angegeben, werden alle Anfragen an die Webhook Ziel-URL mit HMAC signiert.",
 			"secretDocs": "In der Dokumentation findest du weitere Informationen zum Umgang mit Schlüsseln."
 		},
@@ -547,7 +559,7 @@
 		"import": "Importiere deine Daten in Vikunja",
 		"description": "Klicke auf das Logo eines der unten aufgeführten Drittanbieterdienste, um loszulegen.",
 		"descriptionDo": "Vikunja importiert alle Listen, Aufgaben, Notizen, Erinnerungen und Dateien, auf die du Zugriff hast.",
-		"authorize": "Ermögliche Vikunja den Zugriff auf deinem Account bei {name}, indem du auf die Schaltfläche unten klickst.",
+		"authorize": "Ermögliche Vikunja den Zugriff auf deinen Account bei {name}, indem du auf die Schaltfläche unten klickst.",
 		"getStarted": "Loslegen",
 		"inProgress": "Importiere…",
 		"alreadyMigrated1": "Es scheint, dass du schon von {name} am {date} importiert hast.",
@@ -578,7 +590,7 @@
 		"deleteSuccess": "Das Label wurde erfolgreich gelöscht.",
 		"attributes": {
 			"title": "Titel",
-			"titlePlaceholder": "Gebe einen Labelnamen an…",
+			"titlePlaceholder": "Gib einen Labelnamen an…",
 			"description": "Beschreibung",
 			"descriptionPlaceholder": "Labelbeschreibung",
 			"color": "Farbe"
@@ -791,6 +803,7 @@
 		"addReminder": "Eine Erinnerung hinzufügen…",
 		"doneSuccess": "Die Aufgabe wurde erfolgreich als erledigt markiert.",
 		"undoneSuccess": "Die Aufgabe wurde erfolgreich als nicht-erledigt markiert.",
+		"movedToProject": "Die Aufgabe wurde nach {project} verschoben.",
 		"undo": "Rückgängig",
 		"openDetail": "Aufgabe in der Detailansicht anzeigen",
 		"checklistTotal": "{checked} von {total} Aufgaben",
@@ -802,7 +815,9 @@
 			"overdue": "Überfällige Aufgaben anzeigen",
 			"fromuntil": "Aufgaben von {from} bis {until}",
 			"select": "Datumsbereich wählen",
-			"noTasks": "Nichts zu tun – Einen schönen Tag noch!"
+			"noTasks": "Nichts zu tun – Einen schönen Tag noch!",
+			"filterByLabel": "Filtern nach Label {label}",
+			"clearLabelFilter": "Label-Filter leeren"
 		},
 		"detail": {
 			"chooseDueDate": "Klicke hier, um ein Fälligkeitsdatum zu setzen",
@@ -820,6 +835,7 @@
 			"back": "Zurück zum Projekt",
 			"due": "Fällig {at}",
 			"closePopup": "Popup schließen",
+			"scrollToBottom": "Nach unten scrollen",
 			"organization": "Organisation",
 			"management": "Verwaltung",
 			"dateAndTime": "Datum und Uhrzeit",
@@ -862,6 +878,8 @@
 			"relatedTasks": "Verwandte Aufgaben",
 			"reminders": "Erinnerungen",
 			"repeat": "Wiederholen",
+			"comment": "{count} Kommentar | {count} Kommentare",
+			"commentCount": "Anzahl der Kommentare",
 			"startDate": "Anfangsdatum",
 			"title": "Titel",
 			"updated": "Aktualisiert",
@@ -908,6 +926,9 @@
 			"deleteSuccess": "Der Kommentar wurde erfolgreich gelöscht.",
 			"addedSuccess": "Der Kommentar wurde erfolgreich hinzugefügt.",
 			"permalink": "Permalink zu diesem Kommentar kopieren"
+		},
+		"mention": {
+			"noUsersFound": "Keine Nutzer:innen gefunden"
 		},
 		"deferDueDate": {
 			"title": "Fälligkeitsdatum verschieben",
@@ -1071,7 +1092,7 @@
 			"admin": "Admin",
 			"member": "Mitglied",
 			"isPublic": "Öffentliches Team",
-			"isPublicDescription": "Machs das Team öffentlich sichtbar. Wenn aktiviert, kann jede:r mit diesem Team Projekte teilen, auch wenn er oder sie kein direktes Mitglied des Teams ist."
+			"isPublicDescription": "Macht das Team öffentlich sichtbar. Wenn aktiviert, kann jede:r mit diesem Team Projekte teilen, auch wenn er oder sie kein direktes Mitglied des Teams ist."
 		}
 	},
 	"keyboardShortcuts": {
@@ -1099,7 +1120,11 @@
 			"priority": "Die Priorität dieser Aufgabe ändern",
 			"favorite": "Diese Aufgabe zum Favoriten machen / von Favoriten entfernen",
 			"openProject": "Projekt dieser Aufgabe öffnen",
-			"save": "Aktuelle Aufgabe speichern"
+			"save": "Aktuelle Aufgabe speichern",
+			"copyIdentifier": "Task-Nummer in die Zwischenablage kopieren",
+			"copyIdentifierAndTitle": "Task-Nummer und Titel in die Zwischenablage kopieren",
+			"copyIdentifierTitleAndUrl": "Task-Nummer, Titel und URL in die Zwischenablage kopieren",
+			"copyUrl": "Task-URL in die Zwischenablage kopieren"
 		},
 		"project": {
 			"title": "Projektansichten",
@@ -1244,7 +1269,7 @@
 		"4009": "Diese Aufgabenbeziehung existiert nicht.",
 		"4010": "Du kannst eine Aufgabe nicht mit sich selbst verknüpfen.",
 		"4011": "Der Anhang existiert nicht.",
-		"4012": "Der Anhang ist zu gross.",
+		"4012": "Der Anhang ist zu groß.",
 		"4013": "Ungültiger Aufgabensortierungsparameter.",
 		"4014": "Die Aufgabensortierungsreihenfolge ist ungültig.",
 		"4015": "Dieser Aufgabenkommentar existiert nicht.",
@@ -1272,7 +1297,7 @@
 		"9001": "Das Recht ist ungültig.",
 		"10001": "Diese Spalte existiert nicht.",
 		"10002": "Diese Spalte gehört nicht zu diesem Projekt.",
-		"10003": "Du kannst die letze Spalte in einem Projekt nicht entfernen.",
+		"10003": "Du kannst die letzte Spalte in einem Projekt nicht entfernen.",
 		"10004": "Du kannst die Aufgabe nicht in diese Spalte legen, da sie schon die maximale Anzahl an Aufgaben enthält.",
 		"10005": "Es kann nur eine Erledigt-Spalte pro Projekt geben.",
 		"11001": "Der gespeicherte Filter existiert nicht.",

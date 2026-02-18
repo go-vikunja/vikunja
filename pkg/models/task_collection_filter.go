@@ -62,6 +62,21 @@ type taskFilter struct {
 	join       taskFilterConcatinator
 }
 
+// adjustDateForMysql adjusts dates with year < 1 to be compatible with MySQL/MariaDB.
+// MySQL does not support dates where year < 1. We set the year to 1 and add an extra day
+// if the date is January 1st to survive xorm's timezone conversion to GMT.
+func adjustDateForMysql(t time.Time) time.Time {
+	if db.GetDialect() != builder.MYSQL || t.Year() >= 1 {
+		return t
+	}
+	t = t.AddDate(1-t.Year(), 0, 0)
+	// Add extra day to survive timezone conversion to GMT (only needed for Jan 1st)
+	if t.Month() == 1 && t.Day() == 1 {
+		t = t.AddDate(0, 0, 1)
+	}
+	return t
+}
+
 func parseTimeFromUserInput(timeString string, loc *time.Location) (value time.Time, err error) {
 	value, err = time.ParseInLocation(time.RFC3339, timeString, loc)
 	if err != nil {
@@ -89,9 +104,10 @@ func parseTimeFromUserInput(timeString string, loc *time.Location) (value time.T
 			return value, err
 		}
 		value = time.Date(year, time.Month(month), day, 0, 0, 0, 0, loc)
-		return value.In(config.GetTimeZone()), nil
 	}
-	return value.In(config.GetTimeZone()), err
+	value = value.In(config.GetTimeZone())
+	value = adjustDateForMysql(value)
+	return value, err
 }
 
 func parseFilterFromExpression(f fexpr.ExprGroup, loc *time.Location) (filter *taskFilter, err error) {
@@ -292,16 +308,12 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 			t, err = datemath.Parse(rawValue)
 			if err == nil {
 				tt = t.Time(datemath.WithLocation(loc)).In(config.GetTimeZone())
+				tt = adjustDateForMysql(tt)
 			} else {
 				tt, err = parseTimeFromUserInput(rawValue, loc)
 			}
 			if err != nil {
 				return
-			}
-			// Mysql/Mariadb does not support date values where the year < 1. To make this edge-case work,
-			// we're setting the year to 1 in that case.
-			if db.GetDialect() == builder.MYSQL && tt.Year() < 1 {
-				tt = tt.AddDate(1-tt.Year(), 0, 0)
 			}
 			value = tt
 		}

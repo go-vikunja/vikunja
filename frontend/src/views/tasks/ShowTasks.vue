@@ -6,6 +6,31 @@
 		<h3 class="mbe-2 title">
 			{{ pageTitle }}
 		</h3>
+		<Message
+			v-if="filteredLabels.length > 0"
+			class="label-filter-info mbe-2"
+		>
+			<i18n-t
+				keypath="task.show.filterByLabel"
+				tag="span"
+				class="filter-label-text"
+			>
+				<template #label>
+					<XLabel
+						v-for="label in filteredLabels"
+						:key="label.id"
+						:label="label"
+					/>
+				</template>
+			</i18n-t>
+			<BaseButton
+				v-tooltip="$t('task.show.clearLabelFilter')"
+				class="clear-filter-button"
+				@click="clearLabelFilter"
+			>
+				<Icon icon="times" />
+			</BaseButton>
+		</Message>
 		<p
 			v-if="!showAll"
 			class="show-tasks-options"
@@ -69,22 +94,27 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect} from 'vue'
+import {computed, ref, watch, watchEffect} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import {formatDate} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
 
+import BaseButton from '@/components/base/BaseButton.vue'
+import Icon from '@/components/misc/Icon'
+import Message from '@/components/misc/Message.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import DatepickerWithRange from '@/components/date/DatepickerWithRange.vue'
+import XLabel from '@/components/tasks/partials/Label.vue'
 import {DATE_RANGES} from '@/components/date/dateRanges'
 import LlamaCool from '@/assets/llama-cool.svg?component'
 import type {ITask} from '@/modelTypes/ITask'
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 import {useProjectStore} from '@/stores/projects'
+import {useLabelStore} from '@/stores/labels'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import TaskCollectionService from '@/services/taskCollection'
 
@@ -93,20 +123,24 @@ const props = withDefaults(defineProps<{
 	dateTo?: Date | string,
 	showNulls?: boolean,
 	showOverdue?: boolean,
+	labelIds?: string[],
 }>(), {
 	showNulls: false,
 	showOverdue: false,
 	dateFrom: undefined,
 	dateTo: undefined,
+	labelIds: undefined,
 })
 
 const emit = defineEmits<{
 	'tasksLoaded': true,
+	'clearLabelFilter': void,
 }>()
 
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
+const labelStore = useLabelStore()
 
 const route = useRoute()
 const router = useRouter()
@@ -119,6 +153,15 @@ const taskCollectionService = ref(new TaskCollectionService())
 setTimeout(() => showNothingToDo.value = true, 100)
 
 const showAll = computed(() => typeof props.dateFrom === 'undefined' || typeof props.dateTo === 'undefined')
+
+const filteredLabels = computed(() => {
+	if (!props.labelIds || props.labelIds.length === 0) {
+		return []
+	}
+	return props.labelIds
+		.map(id => labelStore.getLabelById(Number(id)))
+		.filter(label => label !== null && label !== undefined)
+})
 
 const pageTitle = computed(() => {
 	// We need to define "key" because it is the first parameter in the array and we need the second
@@ -139,6 +182,7 @@ const pageTitle = computed(() => {
 const hasTasks = computed(() => tasks.value && tasks.value.length > 0)
 const userAuthenticated = computed(() => authStore.authenticated)
 const loading = computed(() => taskStore.isLoading || taskCollectionService.value.loading)
+const filterIdUsedOnOverview = computed(() => authStore.settings?.frontendSettings?.filterIdUsedOnOverview)
 
 interface dateStrings {
 	dateFrom: string,
@@ -177,7 +221,11 @@ function setShowNulls(show: boolean) {
 	})
 }
 
-async function loadPendingTasks(from: Date|string, to: Date|string) {
+function clearLabelFilter() {
+	emit('clearLabelFilter')
+}
+
+async function loadPendingTasks(from: Date|string, to: Date|string, filterId: number | null | undefined) {
 	// FIXME: HACK! This should never happen.
 	// Since this route is authentication only, users would get an error message if they access the page unauthenticated.
 	// Since this component is mounted as the home page before unauthenticated users get redirected
@@ -192,10 +240,11 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 		filter: 'done = false',
 		filter_include_nulls: props.showNulls,
 		s: '',
+		expand: ['comment_count', 'is_unread'],
 	}
 
 	if (!showAll.value) {
-		
+
 		params.filter += ` && due_date < '${to instanceof Date ? to.toISOString() : to}'`
 
 		// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
@@ -205,9 +254,14 @@ async function loadPendingTasks(from: Date|string, to: Date|string) {
 			params.filter += ` && due_date > '${from instanceof Date ? from.toISOString() : from}'`
 		}
 	}
-	
+
+	// Add label filtering
+	if (props.labelIds && props.labelIds.length > 0) {
+		const labelFilter = `labels in ${props.labelIds.join(', ')}`
+		params.filter += params.filter ? ` && ${labelFilter}` : labelFilter
+	}
+
 	let projectId = null
-	const filterId = authStore.settings.frontendSettings.filterIdUsedOnOverview
 	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined') {
 		projectId = filterId
 	}
@@ -231,7 +285,17 @@ function updateTasks(updatedTask: ITask) {
 	}
 }
 
-watchEffect(() => loadPendingTasks(props.dateFrom, props.dateTo))
+// Use watch instead of watchEffect to prevent reloading tasks when unrelated settings change.
+// watchEffect would track all reactive dependencies accessed inside loadPendingTasks,
+// which includes the entire settings object. When sidebarWidth changes, the settings
+// object is replaced, triggering the watchEffect even though filterIdUsedOnOverview
+// hasn't changed. Using watch with explicit dependencies and immediate:true gives us
+// the same behavior but only triggers when these specific values actually change.
+watch(
+	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview],
+	([from, to, filterId]) => loadPendingTasks(from, to, filterId),
+	{immediate: true},
+)
 watchEffect(() => setTitle(pageTitle.value))
 </script>
 
@@ -244,5 +308,26 @@ watchEffect(() => setTitle(pageTitle.value))
 .llama-cool {
 	margin: 3rem auto 0;
 	display: block;
+}
+
+.label-filter-info {
+	margin-block-end: 1rem;
+	
+	.clear-filter-button {
+		margin-inline-start: auto;
+		padding: 0.25rem 0.5rem;
+		
+		&:hover {
+			color: var(--danger);
+		}
+	}
+
+	:deep(.message.info) {
+		inline-size: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+	}
 }
 </style>

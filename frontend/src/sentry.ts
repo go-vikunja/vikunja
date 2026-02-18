@@ -5,7 +5,6 @@ import {AxiosError} from 'axios'
 
 export default async function setupSentry(app: App, router: Router) {
 	const Sentry = await import('@sentry/vue')
-	const {Integrations} = await import('@sentry/tracing')
 
 	Sentry.init({
 		app,
@@ -13,9 +12,8 @@ export default async function setupSentry(app: App, router: Router) {
 		release: import.meta.env.VITE_PLUGIN_SENTRY_CONFIG.release,
 		dist: import.meta.env.VITE_PLUGIN_SENTRY_CONFIG.dist,
 		integrations: [
-			new Integrations.BrowserTracing({
-				routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-				tracingOrigins: ['localhost', /^\//],
+			Sentry.browserTracingIntegration({
+				router,
 			}),
 		],
 		tracesSampleRate: 1.0,

@@ -4063,7 +4063,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/tasks/all": {
+        "/tasks": {
             "get": {
                 "security": [
                     {
@@ -4691,6 +4691,55 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Invalid task position object provided.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/tasks/{projecttask}/read": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Marks a task as read for the current user by removing the unread status entry.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Mark a task as read",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Task ID",
+                        "name": "projecttask",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The task unread status object.",
+                        "schema": {
+                            "$ref": "#/definitions/models.TaskUnreadStatus"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the task",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
                         }
@@ -8587,6 +8636,10 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.Bucket"
                     }
                 },
+                "comment_count": {
+                    "description": "Comment count of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `comment_count` + "`" + `.",
+                    "type": "integer"
+                },
                 "comments": {
                     "description": "All comments of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `comments` + "`" + `.",
                     "type": "array",
@@ -8649,6 +8702,9 @@ const docTemplate = `{
                 },
                 "is_favorite": {
                     "description": "True if a task is a favorite task. Favorite tasks show up in a separate \"Important\" project. This value depends on the user making the call to the api.",
+                    "type": "boolean"
+                },
+                "is_unread": {
                     "type": "boolean"
                 },
                 "labels": {
@@ -8922,6 +8978,17 @@ const docTemplate = `{
                 "TaskRepeatModeFromCurrentDate"
             ]
         },
+        "models.TaskUnreadStatus": {
+            "type": "object",
+            "properties": {
+                "taskID": {
+                    "type": "integer"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Team": {
             "type": "object",
             "properties": {
@@ -9161,6 +9228,13 @@ const docTemplate = `{
         "models.Webhook": {
             "type": "object",
             "properties": {
+                "basic_auth_password": {
+                    "type": "string"
+                },
+                "basic_auth_user": {
+                    "description": "If provided, webhook requests will be sent with a Basic Auth header.",
+                    "type": "string"
+                },
                 "created": {
                     "description": "A timestamp when this webhook target was created. You cannot change this value.",
                     "type": "string"

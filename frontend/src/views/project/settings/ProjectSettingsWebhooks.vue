@@ -18,6 +18,8 @@ import User from '@/components/misc/User.vue'
 import WebhookModel from '@/models/webhook'
 import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
+import FormField from '@/components/input/FormField.vue'
+import Expandable from '@/components/base/Expandable.vue'
 import {success} from '@/message'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 
@@ -29,6 +31,7 @@ const project = ref<IProject>()
 useTitle(t('project.webhooks.title'))
 
 const showNewForm = ref(false)
+const showBasicAuth = ref(false)
 
 async function loadProject(projectId: number) {
 	const projectService = new ProjectService()
@@ -53,6 +56,10 @@ const availableEvents = ref<string[]>()
 async function loadWebhooks() {
 	webhooks.value = await webhookService.getAll({projectId: project.value.id})
 	availableEvents.value = await webhookService.getAvailableEvents()
+	// Initialize all events to false to avoid undefined modelValue errors
+	newWebhookEvents.value = Object.fromEntries(
+		availableEvents.value.map(event => [event, false]),
+	)
 }
 
 const showDeleteModal = ref(false)
@@ -109,9 +116,7 @@ function getSelectedEventsArray() {
 
 function validateSelectedEvents() {
 	const events = getSelectedEventsArray()
-	if (events.length === 0) {
-		selectedEventsValid.value = false
-	}
+	selectedEventsValid.value = events.length > 0
 }
 </script>
 
@@ -134,30 +139,15 @@ function validateSelectedEvents() {
 			v-if="webhooks?.length === 0 || showNewForm"
 			class="p-4"
 		>
-			<div class="field">
-				<label
-					class="label"
-					for="targetUrl"
-				>
-					{{ $t('project.webhooks.targetUrl') }}
-				</label>
-				<div class="control">
-					<input
-						id="targetUrl"
-						v-model="newWebhook.targetUrl"
-						required
-						class="input"
-						:placeholder="$t('project.webhooks.targetUrl')"
-						@focusout="validateTargetUrl"
-					>
-				</div>
-				<p
-					v-if="!webhookTargetUrlValid"
-					class="help is-danger"
-				>
-					{{ $t('project.webhooks.targetUrlInvalid') }}
-				</p>
-			</div>
+			<FormField
+				id="targetUrl"
+				v-model="newWebhook.targetUrl"
+				:label="$t('project.webhooks.targetUrl')"
+				required
+				:placeholder="$t('project.webhooks.targetUrl')"
+				:error="webhookTargetUrlValid ? null : $t('project.webhooks.targetUrlInvalid')"
+				@focusout="validateTargetUrl"
+			/>
 			<div class="field">
 				<label
 					class="label"
@@ -179,6 +169,47 @@ function validateSelectedEvents() {
 					</BaseButton>
 				</p>
 			</div>
+			<BaseButton
+				class="mbe-2 has-text-primary"
+				@click="showBasicAuth = !showBasicAuth"
+			>
+				{{ $t('project.webhooks.basicauthlink') }}
+			</BaseButton>
+			<Expandable
+				:open="showBasicAuth"
+				class="content"
+			>
+				<div class="field">
+					<label
+						class="label"
+						for="basicauthuser"
+					>
+						{{ $t('project.webhooks.basicauthuser') }}
+					</label>
+					<div class="control">
+						<input
+							id="basicauthuser"
+							v-model="newWebhook.basicauthuser"
+							class="input"
+						>
+					</div>
+				</div>
+				<div class="field">
+					<label
+						class="label"
+						for="basicauthpassword"
+					>
+						{{ $t('project.webhooks.basicauthpassword') }}
+					</label>
+					<div class="control">
+						<input
+							id="basicauthpassword"
+							v-model="newWebhook.basicauthpassword"
+							class="input"
+						>
+					</div>
+				</div>
+			</Expandable>
 			<div class="field">
 				<label
 					class="label"
@@ -245,7 +276,7 @@ function validateSelectedEvents() {
 
 					<td class="actions">
 						<XButton
-							class="is-danger"
+							danger
 							icon="trash-alt"
 							@click="() => {showDeleteModal = true;webhookIdToDelete = w.id}"
 						/>

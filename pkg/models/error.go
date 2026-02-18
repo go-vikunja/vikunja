@@ -17,6 +17,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -110,6 +111,26 @@ func (err ValidationHTTPError) Error() string {
 	return theErr.Error()
 }
 
+// MarshalJSON implements json.Marshaler to ensure InvalidFields is included in the JSON response.
+// This is needed because Echo's DefaultHTTPErrorHandler converts error types to {"message": err.Error()},
+// losing structured data. By implementing json.Marshaler, Echo will serialize the full struct.
+func (err ValidationHTTPError) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Code          int      `json:"code"`
+		Message       string   `json:"message"`
+		InvalidFields []string `json:"invalid_fields"`
+	}{
+		Code:          err.Code,
+		Message:       err.Message,
+		InvalidFields: err.InvalidFields,
+	})
+}
+
+// GetHTTPCode returns the HTTP status code for this error.
+func (err ValidationHTTPError) GetHTTPCode() int {
+	return err.HTTPCode
+}
+
 func InvalidFieldError(fields []string) error {
 	return InvalidFieldErrorWithMessage(fields, "Invalid Data")
 }
@@ -150,6 +171,42 @@ func (err ErrInvalidTimezone) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidTimezone,
 		Message:  fmt.Sprintf("The timezone '%s' is invalid", err.Name),
+	}
+}
+
+// ErrInvalidModel represents an error where the request body could not be parsed
+type ErrInvalidModel struct {
+	Message string
+	Err     error // Original error for unwrapping
+}
+
+// IsErrInvalidModel checks if an error is ErrInvalidModel.
+func IsErrInvalidModel(err error) bool {
+	_, ok := err.(ErrInvalidModel)
+	return ok
+}
+
+func (err ErrInvalidModel) Error() string {
+	if err.Message != "" {
+		return fmt.Sprintf("Invalid model provided: %s", err.Message)
+	}
+	return "Invalid model provided."
+}
+
+// Unwrap returns the wrapped error for use with errors.Is/errors.As
+func (err ErrInvalidModel) Unwrap() error {
+	return err.Err
+}
+
+// ErrCodeInvalidModel holds the unique world-error code of this error
+const ErrCodeInvalidModel = 2004
+
+// HTTPError holds the http error description
+func (err ErrInvalidModel) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidModel,
+		Message:  err.Error(),
 	}
 }
 
@@ -1189,6 +1246,34 @@ func (err ErrInvalidTaskColumn) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeInvalidTaskColumn,
 		Message:  fmt.Sprintf("The task field '%s' is invalid.", err.Column),
+	}
+}
+
+// ErrNeedsFullRecalculation represents an error where localized position repair cannot proceed
+// and the entire view must be recalculated.
+type ErrNeedsFullRecalculation struct {
+	ProjectViewID int64
+}
+
+// IsErrNeedsFullRecalculation checks if an error is ErrNeedsFullRecalculation.
+func IsErrNeedsFullRecalculation(err error) bool {
+	_, ok := err.(*ErrNeedsFullRecalculation)
+	return ok
+}
+
+func (err *ErrNeedsFullRecalculation) Error() string {
+	return fmt.Sprintf("Insufficient spacing for localized repair [ProjectViewID: %d]", err.ProjectViewID)
+}
+
+// ErrCodeNeedsFullRecalculation holds the unique world-error code of this error
+const ErrCodeNeedsFullRecalculation = 4028
+
+// HTTPError holds the http error description
+func (err *ErrNeedsFullRecalculation) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusInternalServerError,
+		Code:     ErrCodeNeedsFullRecalculation,
+		Message:  "Position repair requires full view recalculation.",
 	}
 }
 

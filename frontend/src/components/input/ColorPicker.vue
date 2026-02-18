@@ -137,7 +137,7 @@ function reset() {
 
 	// reset / see https://stackoverflow.com/a/11471224/15522256
 	input[type="color"] {
-		-webkit-appearance: none;
+		appearance: none;
 		border: none;
 	}
 	input[type="color"]::-webkit-color-swatch-wrapper {

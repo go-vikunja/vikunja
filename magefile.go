@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //go:build mage
-// +build mage
 
 package main
 
@@ -27,6 +26,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"math"
 	"os"
 	"os/exec"
@@ -48,9 +48,6 @@ const (
 )
 
 var (
-	Goflags = []string{
-		"-v",
-	}
 	Executable    = "vikunja"
 	Ldflags       = ""
 	Tags          = ""
@@ -58,9 +55,6 @@ var (
 	Version       = "unstable" // This holds the built version, unstable by default, when building from a tag or release branch, their name
 	BinLocation   = ""
 	PkgVersion    = "unstable"
-	ApiPackages   = []string{}
-	RootPath      = ""
-	GoFiles       = []string{}
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]interface{}{
@@ -73,6 +67,8 @@ var (
 		"dev:make-event":              Dev.MakeEvent,
 		"dev:make-listener":           Dev.MakeListener,
 		"dev:make-notification":       Dev.MakeNotification,
+		"dev:prepare-worktree":        Dev.PrepareWorktree,
+		"dev:tag-release":             Dev.TagRelease,
 		"plugins:build":               Plugins.Build,
 		"lint":                        Check.Golangci,
 		"lint:fix":                    Check.GolangciFix,
@@ -80,6 +76,10 @@ var (
 		"generate:swagger-docs":       Generate.SwaggerDocs,
 	}
 )
+
+func goDetectVerboseFlag() string {
+	return fmt.Sprintf("-v=%t", mg.Verbose())
+}
 
 func runCmdWithOutput(name string, arg ...string) (output []byte, err error) {
 	cmd := exec.Command(name, arg...)
@@ -129,17 +129,20 @@ func getRawVersionNumber() (version string, err error) {
 	return string(versionBytes), err
 }
 
-func setVersion() {
+func setVersion() error {
 	versionNumber, err := getRawVersionNumber()
+	if err != nil {
+		return err
+	}
 	VersionNumber = strings.Trim(versionNumber, "\n")
 	VersionNumber = strings.Replace(VersionNumber, "-g", "-", 1)
 
 	version, err := getRawVersionString()
 	if err != nil {
-		fmt.Printf("Error getting version: %s\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error getting version: %w", err)
 	}
 	Version = version
+	return nil
 }
 
 func setBinLocation() {
@@ -162,91 +165,36 @@ func setExecutable() {
 	}
 }
 
-func setApiPackages() {
-	pkgs, err := runCmdWithOutput("go", "list", "all")
-	if err != nil {
-		fmt.Printf("Error getting packages: %s\n", err)
-		os.Exit(1)
-	}
-	for _, p := range strings.Split(string(pkgs), "\n") {
-		if strings.Contains(p, "code.vikunja.io/api") && !strings.Contains(p, "code.vikunja.io/api/pkg/webtests") {
-			ApiPackages = append(ApiPackages, p)
-		}
-	}
-}
-
-func setRootPath() {
-	pwd, err := os.Getwd()
-	if err != nil {
-		fmt.Printf("Error getting pwd: %s\n", err)
-		os.Exit(1)
-	}
-	if err := os.Setenv("VIKUNJA_SERVICE_ROOTPATH", pwd); err != nil {
-		fmt.Printf("Error setting root path: %s\n", err)
-		os.Exit(1)
-	}
-	RootPath = pwd
-}
-
-func setGoFiles() {
-	// GOFILES := $(shell find . -name "*.go" -type f ! -path "*/bindata.go")
-	files, err := runCmdWithOutput("find", "./pkg", "-name", "*.go", "-type", "f", "!", "-path", "*/bindata.go")
-	if err != nil {
-		fmt.Printf("Error getting go files: %s\n", err)
-		os.Exit(1)
-	}
-	for _, f := range strings.Split(string(files), "\n") {
-		if strings.HasSuffix(f, ".go") {
-			GoFiles = append(GoFiles, RootPath+strings.TrimLeft(f, "."))
-		}
-	}
-}
-
 // Some variables can always get initialized, so we do just that.
 func init() {
 	setExecutable()
-	setRootPath()
 }
 
 // Some variables have external dependencies (like git) which may not always be available.
-func initVars() {
-	Tags = os.Getenv("TAGS")
-	setVersion()
+func initVars() error {
+	// Always include osusergo to use pure Go os/user implementation instead of CGO.
+	// This prevents SIGFPE crashes when running under systemd without HOME set,
+	// caused by glibc's getpwuid_r() failing in certain environments.
+	// See: https://github.com/go-vikunja/vikunja/issues/2170
+	Tags = "osusergo " + strings.ReplaceAll(os.Getenv("TAGS"), ",", " ")
+	if err := setVersion(); err != nil {
+		return err
+	}
 	setBinLocation()
 	setPkgVersion()
-	setGoFiles()
 	Ldflags = `-X "` + PACKAGE + `/pkg/version.Version=` + VersionNumber + `" -X "main.Tags=` + Tags + `"`
+	return nil
 }
 
-func runAndStreamOutput(cmd string, args ...string) {
+func runAndStreamOutput(cmd string, args ...string) error {
 	c := exec.Command(cmd, args...)
 
 	c.Env = os.Environ()
-	c.Dir = RootPath
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
 
 	fmt.Printf("%s\n\n", c.String())
-
-	stdout, _ := c.StdoutPipe()
-	errbuf := bytes.Buffer{}
-	c.Stderr = &errbuf
-	err := c.Start()
-	if err != nil {
-		fmt.Printf("Could not start: %s\n", err)
-		os.Exit(1)
-	}
-
-	reader := bufio.NewReader(stdout)
-	line, err := reader.ReadString('\n')
-	for err == nil {
-		fmt.Print(line)
-		line, err = reader.ReadString('\n')
-	}
-
-	if err := c.Wait(); err != nil {
-		fmt.Printf(errbuf.String())
-		fmt.Printf("Error: %s\n", err)
-		os.Exit(1)
-	}
+	return c.Run()
 }
 
 // Will check if the tool exists and if not install it from the provided import path
@@ -254,7 +202,7 @@ func runAndStreamOutput(cmd string, args ...string) {
 func checkAndInstallGoTool(tool, importPath string) {
 	if err := exec.Command(tool).Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
 		fmt.Printf("%s not installed, installing %s...\n", tool, importPath)
-		if err := exec.Command("go", "install", Goflags[0], importPath).Run(); err != nil {
+		if err := exec.Command("go", "install", goDetectVerboseFlag(), importPath).Run(); err != nil {
 			fmt.Printf("Error installing %s\n", tool)
 			os.Exit(1)
 		}
@@ -315,16 +263,16 @@ func copyFile(src, dst string) error {
 // Source: https://gist.github.com/var23rav/23ae5d0d4d830aff886c3c970b8f6c6b
 func moveFile(src, dst string) error {
 	inputFile, err := os.Open(src)
-	defer inputFile.Close()
 	if err != nil {
 		return fmt.Errorf("couldn't open source file: %s", err)
 	}
+	defer inputFile.Close()
 
 	outputFile, err := os.Create(dst)
-	defer outputFile.Close()
 	if err != nil {
 		return fmt.Errorf("couldn't open dest file: %s", err)
 	}
+	defer outputFile.Close()
 
 	_, err = io.Copy(outputFile, inputFile)
 	if err != nil {
@@ -350,7 +298,7 @@ func moveFile(src, dst string) error {
 }
 
 func appendToFile(filename, content string) error {
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return err
 	}
@@ -368,45 +316,54 @@ func printSuccess(text string, args ...interface{}) {
 	fmt.Printf(InfoColor+"\n", text)
 }
 
-// Formats the code using go fmt
-func Fmt() {
+// Fmt formats the code using go fmt
+func Fmt() error {
 	mg.Deps(initVars)
-	args := append([]string{"-s", "-w"}, GoFiles...)
-	runAndStreamOutput("gofmt", args...)
+	var goFiles []string
+	err := filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".go" {
+			goFiles = append(goFiles, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	args := append([]string{"-s", "-w"}, goFiles...)
+	return runAndStreamOutput("gofmt", args...)
 }
 
 type Test mg.Namespace
 
-// Runs the feature tests
-func (Test) Feature() {
+// Feature runs the feature tests
+func (Test) Feature() error {
 	mg.Deps(initVars)
-	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", Goflags[0], "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m"}, ApiPackages...)
-	runAndStreamOutput("go", args...)
+	return runAndStreamOutput("go", "test", goDetectVerboseFlag(), "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m", "-short", "./...")
 }
 
-// Runs the tests and builds the coverage html file from coverage output
-func (Test) Coverage() {
+// Coverage runs the tests and builds the coverage html file from coverage output
+func (Test) Coverage() error {
 	mg.Deps(initVars)
 	mg.Deps(Test.Feature)
-	runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
+	return runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
 }
 
-// Runs the web tests
-func (Test) Web() {
+// Web runs the web tests
+func (Test) Web() error {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := []string{"test", Goflags[0], "-p", "1", "-timeout", "45m", PACKAGE + "/pkg/webtests"}
-	runAndStreamOutput("go", args...)
+	args := []string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/webtests"}
+	return runAndStreamOutput("go", args...)
 }
 
-func (Test) Filter(filter string) {
+func (Test) Filter(filter string) error {
 	mg.Deps(initVars)
-	setApiPackages()
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	args := append([]string{"test", Goflags[0], "-p", "1", "-timeout", "45m", "-run", filter}, ApiPackages...)
-	runAndStreamOutput("go", args...)
+	return runAndStreamOutput("go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, "-short", "./...")
 }
 
 func (Test) All() {
@@ -416,7 +373,7 @@ func (Test) All() {
 
 type Check mg.Namespace
 
-// Checks if the swagger docs need to be re-generated from the code annotations
+// GotSwag checks if the swagger docs need to be re-generated from the code annotations
 func (Check) GotSwag() {
 	mg.Deps(initVars)
 	// The check is pretty cheaply done: We take the hash of the swagger.json file, generate the docs,
@@ -425,7 +382,7 @@ func (Check) GotSwag() {
 	// swag is not capable of just outputting the generated docs to stdout, therefore we need to do it this way.
 	// Another drawback of this is obviously it will only work once - we're not resetting the newly generated
 	// docs after the check. This behaviour is good enough for ci though.
-	oldHash, err := calculateSha256FileHash(RootPath + "/pkg/swagger/swagger.json")
+	oldHash, err := calculateSha256FileHash("./pkg/swagger/swagger.json")
 	if err != nil {
 		fmt.Printf("Error getting old hash of the swagger docs: %s", err)
 		os.Exit(1)
@@ -433,7 +390,7 @@ func (Check) GotSwag() {
 
 	(Generate{}).SwaggerDocs()
 
-	newHash, err := calculateSha256FileHash(RootPath + "/pkg/swagger/swagger.json")
+	newHash, err := calculateSha256FileHash("./pkg/swagger/swagger.json")
 	if err != nil {
 		fmt.Printf("Error getting new hash of the swagger docs: %s", err)
 		os.Exit(1)
@@ -446,13 +403,13 @@ func (Check) GotSwag() {
 	}
 }
 
-// Checks if all translation keys used in the code exist in the English translation file
+// Translations checks if all translation keys used in the code exist in the English translation file
 func (Check) Translations() {
 	mg.Deps(initVars)
 	fmt.Println("Checking for missing translation keys...")
 
 	// Load translations from the English translation file
-	translationFile := RootPath + "/pkg/i18n/lang/en.json"
+	translationFile := "./pkg/i18n/lang/en.json"
 	translations, err := loadTranslations(translationFile)
 	if err != nil {
 		fmt.Printf("Error loading translations: %v\n", err)
@@ -462,7 +419,7 @@ func (Check) Translations() {
 	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
 
 	// Extract keys from codebase
-	keys, err := walkCodebaseForTranslationKeys(RootPath)
+	keys, err := walkCodebaseForTranslationKeys(".")
 	if err != nil {
 		fmt.Printf("Error walking codebase: %v\n", err)
 		os.Exit(1)
@@ -612,17 +569,17 @@ func checkGolangCiLintInstalled() {
 	}
 }
 
-func (Check) Golangci() {
+func (Check) Golangci() error {
 	checkGolangCiLintInstalled()
-	runAndStreamOutput("golangci-lint", "run")
+	return runAndStreamOutput("golangci-lint", "run")
 }
 
-func (Check) GolangciFix() {
+func (Check) GolangciFix() error {
 	checkGolangCiLintInstalled()
-	runAndStreamOutput("golangci-lint", "run", "--fix")
+	return runAndStreamOutput("golangci-lint", "run", "--fix")
 }
 
-// Runs golangci and the swagger test in parallel
+// All runs golangci and the swagger test in parallel
 func (Check) All() {
 	mg.Deps(initVars)
 	mg.Deps(
@@ -634,7 +591,7 @@ func (Check) All() {
 
 type Build mg.Namespace
 
-// Cleans all build, executable and bindata files
+// Clean cleans all build, executable and bindata files
 func (Build) Clean() error {
 	mg.Deps(initVars)
 	if err := exec.Command("go", "clean", "./...").Run(); err != nil {
@@ -652,11 +609,11 @@ func (Build) Clean() error {
 	return nil
 }
 
-// Builds a vikunja binary, ready to run
-func (Build) Build() {
+// Build builds a vikunja binary, ready to run
+func (Build) Build() error {
 	mg.Deps(initVars)
 	// Check if the frontend dist folder exists
-	distPath := filepath.Join(RootPath, "frontend", "dist")
+	distPath := filepath.Join("frontend", "dist")
 	if _, err := os.Stat(distPath); os.IsNotExist(err) {
 		if err := os.MkdirAll(distPath, 0o755); err != nil {
 			fmt.Printf("Error creating %s: %s\n", distPath, err)
@@ -675,7 +632,7 @@ func (Build) Build() {
 		fmt.Printf("Warning: %s not found, created empty file\n", indexFile)
 	}
 
-	runAndStreamOutput("go", "build", Goflags[0], "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
+	return runAndStreamOutput("go", "build", goDetectVerboseFlag(), "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
 func (Build) SaveVersionToFile() error {
@@ -700,7 +657,7 @@ func (Build) SaveVersionToFile() error {
 
 type Release mg.Namespace
 
-// Runs all steps in the right order to create release packages for various platforms
+// Release runs all steps in the right order to create release packages for various platforms
 func (Release) Release(ctx context.Context) error {
 	mg.Deps(initVars)
 	mg.Deps(Release.Dirs, prepareXgo)
@@ -733,22 +690,22 @@ func (Release) Release(ctx context.Context) error {
 	return nil
 }
 
-// Creates all directories needed to release vikunja
+// Dirs creates all directories needed to release vikunja
 func (Release) Dirs() error {
 	for _, d := range []string{"binaries", "release", "zip"} {
-		if err := os.MkdirAll(RootPath+"/"+DIST+"/"+d, 0755); err != nil {
+		if err := os.MkdirAll("./"+DIST+"/"+d, 0o755); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func prepareXgo() {
+func prepareXgo() error {
 	mg.Deps(initVars)
 	checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo")
 
 	fmt.Println("Pulling latest xgo docker image...")
-	runAndStreamOutput("docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
+	return runAndStreamOutput("docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
 }
 
 func runXgo(targets string) error {
@@ -766,13 +723,15 @@ func runXgo(targets string) error {
 		outName = Executable + "-" + Version
 	}
 
-	runAndStreamOutput("xgo",
-		"-dest", RootPath+"/"+DIST+"/binaries",
+	if err := runAndStreamOutput("xgo",
+		"-dest", "./"+DIST+"/binaries",
 		"-tags", "netgo "+Tags,
 		"-ldflags", extraLdflags+Ldflags,
 		"-targets", targets,
 		"-out", outName,
-		RootPath)
+		"."); err != nil {
+		return err
+	}
 	if os.Getenv("DRONE_WORKSPACE") != "" {
 		return filepath.Walk("/build/", func(path string, info os.FileInfo, err error) error {
 			// Skip directories
@@ -780,18 +739,18 @@ func runXgo(targets string) error {
 				return nil
 			}
 
-			return moveFile(path, RootPath+"/"+DIST+"/binaries/"+info.Name())
+			return moveFile(path, "./"+DIST+"/binaries/"+info.Name())
 		})
 	}
 	return nil
 }
 
-// Builds binaries for windows
+// Windows builds binaries for windows
 func (Release) Windows() error {
 	return runXgo("windows/*")
 }
 
-// Builds binaries for linux
+// Linux builds binaries for linux
 func (Release) Linux() error {
 	targets := []string{
 		"linux/amd64",
@@ -808,7 +767,7 @@ func (Release) Linux() error {
 	return runXgo(strings.Join(targets, ","))
 }
 
-// Builds binaries for darwin
+// Darwin builds binaries for darwin
 func (Release) Darwin() error {
 	return runXgo("darwin-10.15/*")
 }
@@ -827,13 +786,13 @@ func (Release) Xgo(target string) error {
 	return runXgo(parts[0] + "/" + parts[1] + variant)
 }
 
-// Compresses the built binaries in dist/binaries/ to reduce their filesize
+// Compress compresses the built binaries in dist/binaries/ to reduce their filesize
 func (Release) Compress(ctx context.Context) error {
 	// $(foreach file,$(filter-out $(wildcard $(wildcard $(DIST)/binaries/$(EXECUTABLE)-*mips*)),$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*)), upx -9 $(file);)
 
 	errs, _ := errgroup.WithContext(ctx)
 
-	filepath.Walk(RootPath+"/"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
+	filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
 		// Only executable files
 		if !strings.Contains(info.Name(), Executable) {
 			return nil
@@ -848,9 +807,10 @@ func (Release) Compress(ctx context.Context) error {
 
 		// Runs compressing in parallel since upx is single-threaded
 		errs.Go(func() error {
-			runAndStreamOutput("chmod", "+x", path) // Make sure all binaries are executable. Sometimes the CI does weird things and they're not.
-			runAndStreamOutput("upx", "-9", path)
-			return nil
+			if err := runAndStreamOutput("chmod", "+x", path); err != nil { // Make sure all binaries are executable. Sometimes the CI does weird things and they're not.
+				return err
+			}
+			return runAndStreamOutput("upx", "-9", path)
 		})
 
 		return nil
@@ -859,22 +819,25 @@ func (Release) Compress(ctx context.Context) error {
 	return errs.Wait()
 }
 
-// Copies all built binaries to dist/release/ in preparation for creating the os packages
+// Copy copies all built binaries to dist/release/ in preparation for creating the os packages
 func (Release) Copy() error {
-	return filepath.Walk(RootPath+"/"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
 		// Only executable files
 		if !strings.Contains(info.Name(), Executable) {
 			return nil
 		}
 
-		return copyFile(path, RootPath+"/"+DIST+"/release/"+info.Name())
+		return copyFile(path, "./"+DIST+"/release/"+info.Name())
 	})
 }
 
-// Creates sha256 checksum files for each binary in dist/release/
+// Check creates sha256 checksum files for each binary in dist/release/
 func (Release) Check() error {
-	p := RootPath + "/" + DIST + "/release/"
+	p := "./" + DIST + "/release/"
 	return filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if info.IsDir() {
 			return nil
 		}
@@ -898,9 +861,9 @@ func (Release) Check() error {
 	})
 }
 
-// Creates a folder for each
+// OsPackage creates a folder for each
 func (Release) OsPackage() error {
-	p := RootPath + "/" + DIST + "/release/"
+	p := "./" + DIST + "/release/"
 
 	// We first put all files in a map to then iterate over it since the walk function would otherwise also iterate
 	// over the newly created files, creating some kind of endless loop.
@@ -915,11 +878,11 @@ func (Release) OsPackage() error {
 		return err
 	}
 
-	generateConfigYAMLFromJSON(RootPath+"/"+DefaultConfigYAMLSamplePath, true)
+	generateConfigYAMLFromJSON("./"+DefaultConfigYAMLSamplePath, true)
 
 	for path, info := range bins {
 		folder := p + info.Name() + "-full/"
-		if err := os.Mkdir(folder, 0755); err != nil {
+		if err := os.Mkdir(folder, 0o755); err != nil {
 			return err
 		}
 		if err := moveFile(p+info.Name()+".sha256", folder+info.Name()+".sha256"); err != nil {
@@ -928,27 +891,30 @@ func (Release) OsPackage() error {
 		if err := moveFile(path, folder+info.Name()); err != nil {
 			return err
 		}
-		if err := copyFile(RootPath+"/"+DefaultConfigYAMLSamplePath, folder+DefaultConfigYAMLSamplePath); err != nil {
+		if err := copyFile("./"+DefaultConfigYAMLSamplePath, folder+DefaultConfigYAMLSamplePath); err != nil {
 			return err
 		}
-		if err := copyFile(RootPath+"/LICENSE", folder+"LICENSE"); err != nil {
+		if err := copyFile("./LICENSE", folder+"LICENSE"); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// Creates a zip file from all os-package folders in dist/release
+// Zip creates a zip file from all os-package folders in dist/release
 func (Release) Zip() error {
-	p := RootPath + "/" + DIST + "/release/"
+	p := "./" + DIST + "/release/"
 	if err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if !info.IsDir() || info.Name() == "release" {
 			return nil
 		}
 
 		fmt.Printf("Zipping %s...\n", info.Name())
 
-		c := exec.Command("zip", "-r", RootPath+"/"+DIST+"/zip/"+info.Name()+".zip", ".", "-i", "*")
+		c := exec.Command("zip", "-r", "./"+DIST+"/zip/"+info.Name()+".zip", ".", "-i", "*")
 		c.Dir = path
 		out, err := c.Output()
 		fmt.Print(string(out))
@@ -960,19 +926,19 @@ func (Release) Zip() error {
 	return nil
 }
 
-// Creates a debian repo structure
-func (Release) Reprepro() {
+// Reprepro creates a debian repo structure
+func (Release) Reprepro() error {
 	mg.Deps(setVersion, setBinLocation)
-	runAndStreamOutput("reprepro_expect", "debian", "includedeb", "buster", RootPath+"/"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
+	return runAndStreamOutput("reprepro_expect", "debian", "includedeb", "buster", "./"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
 }
 
-// Prepares the nfpm config
+// PrepareNFPMConfig prepares the nfpm config
 func (Release) PrepareNFPMConfig() error {
 	mg.Deps(initVars)
 	var err error
 
 	// Because nfpm does not support templating, we replace the values in the config file and restore it after running
-	nfpmConfigPath := RootPath + "/nfpm.yaml"
+	nfpmConfigPath := "./nfpm.yaml"
 	nfpmconfig, err := os.ReadFile(nfpmConfigPath)
 	if err != nil {
 		return err
@@ -989,7 +955,7 @@ func (Release) PrepareNFPMConfig() error {
 	return nil
 }
 
-// Creates deb, rpm and apk packages
+// Packages creates deb, rpm and apk packages
 func (Release) Packages() error {
 	mg.Deps(initVars)
 
@@ -1014,14 +980,20 @@ func (Release) Packages() error {
 		return err
 	}
 
-	releasePath := RootPath + "/" + DIST + "/os-packages/"
-	if err := os.MkdirAll(releasePath, 0755); err != nil {
+	releasePath := "./" + DIST + "/os-packages/"
+	if err := os.MkdirAll(releasePath, 0o755); err != nil {
 		return err
 	}
 
-	runAndStreamOutput(binpath, "pkg", "--packager", "deb", "--target", releasePath)
-	runAndStreamOutput(binpath, "pkg", "--packager", "rpm", "--target", releasePath)
-	runAndStreamOutput(binpath, "pkg", "--packager", "apk", "--target", releasePath)
+	if err := runAndStreamOutput(binpath, "pkg", "--packager", "deb", "--target", releasePath); err != nil {
+		return err
+	}
+	if err := runAndStreamOutput(binpath, "pkg", "--packager", "rpm", "--target", releasePath); err != nil {
+		return err
+	}
+	if err := runAndStreamOutput(binpath, "pkg", "--packager", "apk", "--target", releasePath); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -1084,12 +1056,12 @@ func init() {
 	})
 }
 `
-	filename := "/pkg/migration/" + date + ".go"
-	f, err := os.Create(RootPath + filename)
-	defer f.Close()
+	filename := "./pkg/migration/" + date + ".go"
+	f, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	if _, err := f.WriteString(migration); err != nil {
 		return err
@@ -1100,9 +1072,8 @@ func init() {
 	return nil
 }
 
-// Create a new event. Takes the name of the event as the first argument and the module where the event should be created as the second argument. Events will be appended to the pkg/<module>/events.go file.
+// MakeEvent create a new event. Takes the name of the event as the first argument and the module where the event should be created as the second argument. Events will be appended to the pkg/<module>/events.go file.
 func (Dev) MakeEvent(name, module string) error {
-
 	name = strcase.ToCamel(name)
 
 	if !strings.HasSuffix(name, "Event") {
@@ -1131,7 +1102,7 @@ func (t *` + name + `) Name() string {
 	return nil
 }
 
-// Create a new listener for an event. Takes the name of the listener, the name of the event to listen to and the module where everything should be placed as parameters.
+// MakeListener create a new listener for an event. Takes the name of the listener, the name of the event to listen to and the module where everything should be placed as parameters.
 func (Dev) MakeListener(name, event, module string) error {
 	name = strcase.ToCamel(name)
 	listenerName := strcase.ToDelimited(name, '.')
@@ -1170,7 +1141,7 @@ func (s *` + name + `) Handle(msg *message.Message) (err error) {
 	var idx int64 = 0
 	for scanner.Scan() {
 		if scanner.Text() == "}" {
-			//idx -= int64(len(scanner.Text()))
+			// idx -= int64(len(scanner.Text()))
 			break
 		}
 		idx += int64(len(scanner.Bytes()) + 1)
@@ -1180,7 +1151,7 @@ func (s *` + name + `) Handle(msg *message.Message) (err error) {
 	registerListenerCode := `	events.RegisterListener((&` + event + `{}).Name(), &` + name + `{})
 `
 
-	f, err := os.OpenFile(filename, os.O_RDWR, 0600)
+	f, err := os.OpenFile(filename, os.O_RDWR, 0o600)
 	if err != nil {
 		return err
 	}
@@ -1209,9 +1180,8 @@ func (s *` + name + `) Handle(msg *message.Message) (err error) {
 	return nil
 }
 
-// Create a new notification. Takes the name of the notification as the first argument and the module where the notification should be created as the second argument. Notifications will be appended to the pkg/<module>/notifications.go file.
+// MakeNotification create a new notification. Takes the name of the notification as the first argument and the module where the notification should be created as the second argument. Notifications will be appended to the pkg/<module>/notifications.go file.
 func (Dev) MakeNotification(name, module string) error {
-
 	name = strcase.ToCamel(name)
 
 	if !strings.HasSuffix(name, "Notification") {
@@ -1259,12 +1229,12 @@ type Generate mg.Namespace
 
 const DefaultConfigYAMLSamplePath = "config.yml.sample"
 
-// Generates the swagger docs from the code annotations
-func (Generate) SwaggerDocs() {
+// SwaggerDocs generates the swagger docs from the code annotations
+func (Generate) SwaggerDocs() error {
 	mg.Deps(initVars)
 
 	checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag")
-	runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", RootPath, "-o", RootPath+"/pkg/swagger")
+	return runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", ".", "-o", "./pkg/swagger")
 }
 
 type ConfigNode struct {
@@ -1381,7 +1351,7 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 
 	yamlData := convertConfigJSONToYAML(&root, -1, true, "", commented)
 
-	err = os.WriteFile(yamlPath, []byte(yamlData), 0644)
+	err = os.WriteFile(yamlPath, []byte(yamlData), 0o644)
 	if err != nil {
 		fmt.Println("Error writing YAML file:", err)
 		return
@@ -1390,9 +1360,357 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 	fmt.Println("Successfully generated " + yamlPath)
 }
 
-// Create a yaml config file from the config-raw.json definition
+// ConfigYAML create a yaml config file from the config-raw.json definition
 func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
+}
+
+// PrepareWorktree creates a new git worktree for development.
+// The first argument is the name, which becomes both the folder name and branch name.
+// The second argument is a path to a plan file that will be copied to the new worktree (pass "" to skip).
+// The worktree is created in the parent directory (../).
+// It also copies the current config.yml with an updated rootpath, and initializes the frontend.
+func (Dev) PrepareWorktree(name string, planPath string) error {
+	if name == "" {
+		return fmt.Errorf("name is required: mage dev:prepare-worktree <name> <plan-path>")
+	}
+
+	// Get the parent directory path
+	worktreePath := filepath.Join("..", name)
+
+	fmt.Printf("Creating worktree at %s with branch %s...\n", worktreePath, name)
+
+	// Create the git worktree
+	cmd := exec.Command("git", "worktree", "add", worktreePath, "-b", name)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to create worktree: %w", err)
+	}
+	printSuccess("Worktree created successfully!")
+
+	// Copy and modify config.yml
+	configSrc := "config.yml"
+	configDst := filepath.Join(worktreePath, "config.yml")
+
+	if _, err := os.Stat(configSrc); err == nil {
+		configContent, err := os.ReadFile(configSrc)
+		if err != nil {
+			return fmt.Errorf("failed to read config.yml: %w", err)
+		}
+
+		// Replace the rootpath value
+		re := regexp.MustCompile(`(?m)^(\s*rootpath:\s*)"[^"]*"`)
+		newConfig := re.ReplaceAllString(string(configContent), `${1}"`+worktreePath+`"`)
+
+		// Also handle unquoted rootpath values
+		re2 := regexp.MustCompile(`(?m)^(\s*rootpath:\s*)(/[^\s\n]+)`)
+		newConfig = re2.ReplaceAllString(newConfig, `${1}"`+worktreePath+`"`)
+
+		if err := os.WriteFile(configDst, []byte(newConfig), 0o644); err != nil {
+			return fmt.Errorf("failed to write config.yml: %w", err)
+		}
+		printSuccess("Config copied with updated rootpath!")
+	} else {
+		fmt.Println("Warning: config.yml not found, skipping config copy")
+	}
+
+	// Copy .claude/settings.local.json if it exists
+	claudeSettingsSrc := filepath.Join(".claude", "settings.local.json")
+	if _, err := os.Stat(claudeSettingsSrc); err == nil {
+		claudeDir := filepath.Join(worktreePath, ".claude")
+		if err := os.MkdirAll(claudeDir, 0o755); err != nil {
+			return fmt.Errorf("failed to create .claude directory: %w", err)
+		}
+		claudeSettingsDst := filepath.Join(claudeDir, "settings.local.json")
+		if err := copyFile(claudeSettingsSrc, claudeSettingsDst); err != nil {
+			return fmt.Errorf("failed to copy .claude/settings.local.json: %w", err)
+		}
+		printSuccess("Claude settings copied!")
+	}
+
+	// Copy plan file if provided
+	if planPath != "" {
+		planPath = strings.TrimSpace(planPath)
+		if planPath != "" {
+			// Create plans directory in the new worktree
+			plansDir := filepath.Join(worktreePath, "plans")
+			if err := os.MkdirAll(plansDir, 0o755); err != nil {
+				return fmt.Errorf("failed to create plans directory: %w", err)
+			}
+
+			// Determine source path (relative to current directory or absolute)
+			srcPlanPath := planPath
+			if !filepath.IsAbs(planPath) {
+				srcPlanPath = planPath
+			}
+
+			if _, err := os.Stat(srcPlanPath); err != nil {
+				return fmt.Errorf("plan file not found: %s", srcPlanPath)
+			}
+
+			dstPlanPath := filepath.Join(plansDir, filepath.Base(planPath))
+			if err := copyFile(srcPlanPath, dstPlanPath); err != nil {
+				return fmt.Errorf("failed to copy plan file: %w", err)
+			}
+			printSuccess("Plan file copied to %s!", dstPlanPath)
+		}
+	}
+
+	// Initialize frontend
+	fmt.Println("Initializing frontend...")
+	frontendDir := filepath.Join(worktreePath, "frontend")
+
+	// Run pnpm install
+	pnpmCmd := exec.Command("pnpm", "i")
+	pnpmCmd.Dir = frontendDir
+	pnpmCmd.Stdout = os.Stdout
+	pnpmCmd.Stderr = os.Stderr
+	if err := pnpmCmd.Run(); err != nil {
+		return fmt.Errorf("failed to run pnpm install: %w", err)
+	}
+
+	// Run patch-sass-embedded (shell alias from devenv)
+	patchCmd := exec.Command("bash", "-ic", "patch-sass-embedded")
+	patchCmd.Dir = frontendDir
+	patchCmd.Stdout = os.Stdout
+	patchCmd.Stderr = os.Stderr
+	if err := patchCmd.Run(); err != nil {
+		// patch-sass-embedded might not be critical, just warn
+		fmt.Printf("Warning: patch-sass-embedded failed: %v\n", err)
+	}
+
+	printSuccess("Frontend initialized!")
+	printSuccess("\nWorktree ready at: %s", worktreePath)
+	printSuccess("Branch: %s", name)
+	fmt.Println("\nTo start working:")
+	fmt.Printf("  cd %s\n", worktreePath)
+
+	return nil
+}
+
+// TagRelease creates a new release tag with changelog.
+// It updates the version badge in README.md, generates changelog using git-cliff,
+// commits the changes, and creates an annotated tag.
+func (Dev) TagRelease(version string) error {
+	if version == "" {
+		return fmt.Errorf("version is required: mage dev:tag-release <version>")
+	}
+
+	// Ensure version starts with 'v'
+	if !strings.HasPrefix(version, "v") {
+		version = "v" + version
+	}
+
+	fmt.Printf("Creating release %s...\n", version)
+
+	// Get the last tag
+	lastTagBytes, err := runCmdWithOutput("git", "describe", "--tags", "--abbrev=0")
+	if err != nil {
+		return fmt.Errorf("failed to get last tag: %w", err)
+	}
+	lastTag := strings.TrimSpace(string(lastTagBytes))
+	fmt.Printf("Last tag: %s\n", lastTag)
+
+	// Generate changelog using git cliff
+	fmt.Println("Generating changelog...")
+	changelogBytes, err := runCmdWithOutput("git", "cliff", lastTag+"..HEAD", "--tag", version)
+	if err != nil {
+		return fmt.Errorf("failed to generate changelog: %w", err)
+	}
+	changelog := string(changelogBytes)
+
+	// Clean up the changelog
+	changelog = cleanupChangelog(changelog)
+
+	// Update README.md version badge
+	fmt.Println("Updating README.md version badge...")
+	if err := updateReadmeBadge(version); err != nil {
+		return fmt.Errorf("failed to update README badge: %w", err)
+	}
+
+	// Prepend changelog to CHANGELOG.md
+	fmt.Println("Updating CHANGELOG.md...")
+	if err := prependChangelog(changelog); err != nil {
+		return fmt.Errorf("failed to update CHANGELOG.md: %w", err)
+	}
+
+	// Commit the changes
+	fmt.Println("Committing changes...")
+	commitMsg := fmt.Sprintf("chore: %s release preparations", version)
+	cmd := exec.Command("git", "add", "README.md", "CHANGELOG.md")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to stage files: %w", err)
+	}
+
+	cmd = exec.Command("git", "commit", "-m", commitMsg)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to commit: %w", err)
+	}
+
+	// Prepare tag message (remove markdown header formatting)
+	tagMessage := prepareTagMessage(changelog)
+
+	// Create the annotated tag
+	fmt.Printf("Creating tag %s...\n", version)
+	cmd = exec.Command("git", "tag", "-a", version, "-m", tagMessage)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to create tag: %w", err)
+	}
+
+	printSuccess("Release %s created successfully!", version)
+	fmt.Println("\nNext steps:")
+	fmt.Println("  git push origin main")
+	fmt.Printf("  git push origin %s\n", version)
+
+	return nil
+}
+
+// cleanupChangelog cleans up the generated changelog by:
+// - Removing duplicate lines
+// - Fixing entries that span multiple lines
+// - Ensuring each change is on a single line
+func cleanupChangelog(changelog string) string {
+	lines := strings.Split(changelog, "\n")
+	var cleanedLines []string
+	seenLines := make(map[string]bool)
+	var currentEntry strings.Builder
+
+	for i, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+
+		// Check if this is a new entry (starts with * or - or is a header)
+		isNewEntry := strings.HasPrefix(trimmedLine, "* ") ||
+			strings.HasPrefix(trimmedLine, "- ") ||
+			strings.HasPrefix(trimmedLine, "## ") ||
+			strings.HasPrefix(trimmedLine, "### ") ||
+			trimmedLine == ""
+
+		if isNewEntry {
+			// Flush the current entry if any
+			if currentEntry.Len() > 0 {
+				entryStr := strings.TrimSpace(currentEntry.String())
+				if !seenLines[entryStr] && entryStr != "" {
+					cleanedLines = append(cleanedLines, entryStr)
+					seenLines[entryStr] = true
+				}
+				currentEntry.Reset()
+			}
+
+			// Start a new entry or add empty line/header
+			if trimmedLine == "" {
+				// Only add empty line if the previous line wasn't empty
+				if len(cleanedLines) > 0 && cleanedLines[len(cleanedLines)-1] != "" {
+					cleanedLines = append(cleanedLines, "")
+				}
+			} else if strings.HasPrefix(trimmedLine, "## ") || strings.HasPrefix(trimmedLine, "### ") {
+				// Headers are never duplicates
+				cleanedLines = append(cleanedLines, trimmedLine)
+			} else {
+				currentEntry.WriteString(trimmedLine)
+			}
+		} else if currentEntry.Len() > 0 {
+			// This is a continuation of the current entry
+			currentEntry.WriteString(" ")
+			currentEntry.WriteString(trimmedLine)
+		} else if trimmedLine != "" {
+			// Standalone line that's not part of an entry
+			if !seenLines[trimmedLine] {
+				cleanedLines = append(cleanedLines, trimmedLine)
+				seenLines[trimmedLine] = true
+			}
+		}
+
+		// Handle last line
+		if i == len(lines)-1 && currentEntry.Len() > 0 {
+			entryStr := strings.TrimSpace(currentEntry.String())
+			if !seenLines[entryStr] && entryStr != "" {
+				cleanedLines = append(cleanedLines, entryStr)
+			}
+		}
+	}
+
+	return strings.Join(cleanedLines, "\n")
+}
+
+// updateReadmeBadge updates the version badge in README.md
+func updateReadmeBadge(version string) error {
+	readmePath := "README.md"
+	content, err := os.ReadFile(readmePath)
+	if err != nil {
+		return fmt.Errorf("failed to read README.md: %w", err)
+	}
+
+	// Convert version for badge (e.g., v1.0.0-rc3 -> v1.0.0rc3 for the badge display)
+	badgeVersion := strings.ReplaceAll(version, "-", "")
+
+	// Update the badge - match the pattern: download-vX.X.X...-brightgreen
+	re := regexp.MustCompile(`(download-)(v[0-9a-zA-Z.]+)(-brightgreen)`)
+	newContent := re.ReplaceAllString(string(content), "${1}"+badgeVersion+"${3}")
+
+	if err := os.WriteFile(readmePath, []byte(newContent), 0o644); err != nil {
+		return fmt.Errorf("failed to write README.md: %w", err)
+	}
+
+	return nil
+}
+
+// prependChangelog prepends the new changelog entries to CHANGELOG.md
+func prependChangelog(newChangelog string) error {
+	changelogPath := "CHANGELOG.md"
+	existingContent, err := os.ReadFile(changelogPath)
+	if err != nil {
+		return fmt.Errorf("failed to read CHANGELOG.md: %w", err)
+	}
+
+	// Find where to insert the new changelog (after the header section)
+	content := string(existingContent)
+	headerEnd := strings.Index(content, "\n## ")
+	if headerEnd == -1 {
+		// No existing version sections, append at the end
+		headerEnd = len(content)
+	}
+
+	// Build new content: header + new changelog + existing versions
+	header := content[:headerEnd]
+	existingVersions := ""
+	if headerEnd < len(content) {
+		existingVersions = content[headerEnd:]
+	}
+
+	// Ensure there's proper spacing
+	newContent := strings.TrimRight(header, "\n") + "\n\n" +
+		strings.TrimSpace(newChangelog) + "\n" +
+		existingVersions
+
+	if err := os.WriteFile(changelogPath, []byte(newContent), 0o644); err != nil {
+		return fmt.Errorf("failed to write CHANGELOG.md: %w", err)
+	}
+
+	return nil
+}
+
+// prepareTagMessage removes markdown header formatting from the changelog for use as a tag message
+func prepareTagMessage(changelog string) string {
+	lines := strings.Split(changelog, "\n")
+	var result []string
+
+	for _, line := range lines {
+		// Remove ## and ### prefixes
+		if strings.HasPrefix(line, "### ") {
+			result = append(result, strings.TrimPrefix(line, "### "))
+		} else if strings.HasPrefix(line, "## ") {
+			result = append(result, strings.TrimPrefix(line, "## "))
+		} else {
+			result = append(result, line)
+		}
+	}
+
+	return strings.Join(result, "\n")
 }
 
 type Plugins mg.Namespace
@@ -1413,7 +1731,6 @@ func (Plugins) Build(pathToSourceFiles string) error {
 		pathToSourceFiles = absPath
 	}
 
-	out := filepath.Join(RootPath, "plugins", filepath.Base(pathToSourceFiles)+".so")
-	runAndStreamOutput("go", "build", "-buildmode=plugin", "-o", out, pathToSourceFiles)
-	return nil
+	out := filepath.Join("plugins", filepath.Base(pathToSourceFiles)+".so")
+	return runAndStreamOutput("go", "build", "-buildmode=plugin", "-tags", Tags, "-o", out, pathToSourceFiles)
 }

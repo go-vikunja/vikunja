@@ -23,7 +23,6 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -90,7 +89,7 @@ func TestBucket(t *testing.T) {
 				"view":    "4",
 			}, `{"title":""}`)
 			require.Error(t, err)
-			assert.Contains(t, err.(*echo.HTTPError).Message.(models.ValidationHTTPError).InvalidFields, "title: non zero value required")
+			assert.Contains(t, err.(models.ValidationHTTPError).InvalidFields, "title: non zero value required")
 		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
@@ -101,7 +100,7 @@ func TestBucket(t *testing.T) {
 					"view":    "80",
 				}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{
@@ -110,7 +109,7 @@ func TestBucket(t *testing.T) {
 					"view":    "24",
 				}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{
@@ -138,7 +137,7 @@ func TestBucket(t *testing.T) {
 					"view":    "36",
 				}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{
@@ -166,7 +165,7 @@ func TestBucket(t *testing.T) {
 					"view":    "48",
 				}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{
@@ -194,7 +193,7 @@ func TestBucket(t *testing.T) {
 					"view":    "60",
 				}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{
@@ -236,12 +235,12 @@ func TestBucket(t *testing.T) {
 				// Owned by user13
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "20", "bucket": "5"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "6", "bucket": "6"})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
 				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{
@@ -269,7 +268,7 @@ func TestBucket(t *testing.T) {
 					"view":    "36",
 				})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
 				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{
@@ -297,7 +296,7 @@ func TestBucket(t *testing.T) {
 					"view":    "48",
 				})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
 				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{
@@ -325,7 +324,7 @@ func TestBucket(t *testing.T) {
 					"view":    "60",
 				})
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
 				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{
@@ -380,7 +379,7 @@ func TestBucket(t *testing.T) {
 					"view":    "80",
 				}, `{"title":"Lorem Ipsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
 				_, err := testHandler.testCreateWithUser(nil, map[string]string{
@@ -388,7 +387,7 @@ func TestBucket(t *testing.T) {
 					"view":    "24",
 				}, `{"title":"Lorem Ipsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{
@@ -413,7 +412,7 @@ func TestBucket(t *testing.T) {
 					"view":    "36",
 				}, `{"title":"Lorem Ipsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{
@@ -438,7 +437,7 @@ func TestBucket(t *testing.T) {
 					"view":    "48",
 				}, `{"title":"Lorem Ipsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{
@@ -463,7 +462,7 @@ func TestBucket(t *testing.T) {
 					"view":    "60",
 				}, `{"title":"Lorem Ipsum"}`)
 				require.Error(t, err)
-				assert.Contains(t, err.(*echo.HTTPError).Message, `Forbidden`)
+				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
 				rec, err := testHandler.testCreateWithUser(nil, map[string]string{

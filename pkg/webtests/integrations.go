@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 
@@ -40,7 +39,7 @@ import (
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -65,8 +64,7 @@ var (
 
 func setupTestEnv() (e *echo.Echo, err error) {
 	config.InitDefaultConfig()
-	// We need to set the root path even if we're not using the config, otherwise fixtures are not loaded correctly
-	config.ServiceRootpath.Set(os.Getenv("VIKUNJA_SERVICE_ROOTPATH"))
+	config.ServicePublicURL.Set("https://localhost")
 
 	// Initialize logger for tests
 	log.InitLogger()
@@ -88,25 +86,26 @@ func setupTestEnv() (e *echo.Echo, err error) {
 	return
 }
 
-func createRequest(e *echo.Echo, method string, payload string, queryParam url.Values, urlParams map[string]string) (c echo.Context, rec *httptest.ResponseRecorder) {
+func createRequest(e *echo.Echo, method string, payload string, queryParam url.Values, urlParams map[string]string) (c *echo.Context, rec *httptest.ResponseRecorder) {
 	req := httptest.NewRequest(method, "/", strings.NewReader(payload))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.URL.RawQuery = queryParam.Encode()
 	rec = httptest.NewRecorder()
 
 	c = e.NewContext(req, rec)
-	var paramNames []string
-	var paramValues []string
-	for name, value := range urlParams {
-		paramNames = append(paramNames, name)
-		paramValues = append(paramValues, value)
+	// In Echo v5, we use SetPathValues to set path parameters
+	// Only set path values if there are any, as SetPathValues panics with nil
+	if len(urlParams) > 0 {
+		pathValues := make(echo.PathValues, 0, len(urlParams))
+		for name, value := range urlParams {
+			pathValues = append(pathValues, echo.PathValue{Name: name, Value: value})
+		}
+		c.SetPathValues(pathValues)
 	}
-	c.SetParamNames(paramNames...)
-	c.SetParamValues(paramValues...)
 	return
 }
 
-func bootstrapTestRequest(t *testing.T, method string, payload string, queryParam url.Values, urlParams map[string]string) (c echo.Context, rec *httptest.ResponseRecorder) {
+func bootstrapTestRequest(t *testing.T, method string, payload string, queryParam url.Values, urlParams map[string]string) (c *echo.Context, rec *httptest.ResponseRecorder) {
 	// Setup
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -115,14 +114,14 @@ func bootstrapTestRequest(t *testing.T, method string, payload string, queryPara
 	return
 }
 
-func newTestRequest(t *testing.T, method string, handler func(ctx echo.Context) error, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
-	var c echo.Context
+func newTestRequest(t *testing.T, method string, handler func(ctx *echo.Context) error, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
+	var c *echo.Context
 	c, rec = bootstrapTestRequest(t, method, payload, queryParams, urlParams)
 	err = handler(c)
 	return
 }
 
-func addUserTokenToContext(t *testing.T, user *user.User, c echo.Context) {
+func addUserTokenToContext(t *testing.T, user *user.User, c *echo.Context) {
 	// Get the token as a string
 	token, err := auth.NewUserJWTAuthtoken(user, false)
 	require.NoError(t, err)
@@ -134,7 +133,7 @@ func addUserTokenToContext(t *testing.T, user *user.User, c echo.Context) {
 	c.Set("user", tken)
 }
 
-func addLinkShareTokenToContext(t *testing.T, share *models.LinkSharing, c echo.Context) {
+func addLinkShareTokenToContext(t *testing.T, share *models.LinkSharing, c *echo.Context) {
 	// Get the token as a string
 	token, err := auth.NewLinkShareJWTAuthtoken(share)
 	require.NoError(t, err)
@@ -147,7 +146,7 @@ func addLinkShareTokenToContext(t *testing.T, share *models.LinkSharing, c echo.
 }
 
 func newTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFunc, user *user.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
-	var c echo.Context
+	var c *echo.Context
 	c, rec = bootstrapTestRequest(t, method, payload, queryParams, urlParams)
 	addUserTokenToContext(t, user, c)
 	err = handler(c)
@@ -155,7 +154,7 @@ func newTestRequestWithUser(t *testing.T, method string, handler echo.HandlerFun
 }
 
 func newTestRequestWithLinkShare(t *testing.T, method string, handler echo.HandlerFunc, share *models.LinkSharing, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
-	var c echo.Context
+	var c *echo.Context
 	c, rec = bootstrapTestRequest(t, method, payload, queryParams, urlParams)
 	addLinkShareTokenToContext(t, share, c)
 	err = handler(c)
@@ -163,11 +162,11 @@ func newTestRequestWithLinkShare(t *testing.T, method string, handler echo.Handl
 }
 
 func newCaldavTestRequestWithUser(t *testing.T, e *echo.Echo, method string, handler echo.HandlerFunc, user *user.User, payload string, queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
-	var c echo.Context
+	var c *echo.Context
 	c, rec = createRequest(e, method, payload, queryParams, urlParams)
 	c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextPlain)
 
-	result, _ := caldav.BasicAuth(user.Username, "12345678", c)
+	result, _ := caldav.BasicAuth(c, user.Username, "12345678")
 	if !result {
 		t.Error("BasicAuth for caldav failed")
 		t.FailNow()
@@ -181,17 +180,74 @@ func assertHandlerErrorCode(t *testing.T, err error, expectedErrorCode int) {
 		t.Error("Error is nil")
 		t.FailNow()
 	}
+
+	// First, try to get error code from HTTPErrorProcessor (domain errors like ValidationHTTPError)
+	if httpErr, ok := err.(web.HTTPErrorProcessor); ok {
+		assert.Equal(t, expectedErrorCode, httpErr.HTTPError().Code)
+		return
+	}
+
+	// Try to unwrap to find HTTPErrorProcessor
+	unwrapped := errors.Unwrap(err)
+	for unwrapped != nil {
+		if httpErr, ok := unwrapped.(web.HTTPErrorProcessor); ok {
+			assert.Equal(t, expectedErrorCode, httpErr.HTTPError().Code)
+			return
+		}
+		unwrapped = errors.Unwrap(unwrapped)
+	}
+
+	// Fall back to echo.HTTPError for middleware/auth errors
 	var httperr *echo.HTTPError
 	if !errors.As(err, &httperr) {
-		t.Error("Error is not *echo.HTTPError")
+		t.Errorf("Error is not *echo.HTTPError or web.HTTPErrorProcessor: %T", err)
 		t.FailNow()
 	}
-	webhttperr, ok := httperr.Message.(web.HTTPError)
-	if !ok {
-		t.Error("Error is not *web.HTTPError")
-		t.FailNow()
+
+	// In Echo v5, HTTPError.Message is a string, not interface{}
+	// The internal error might contain our web.HTTPError
+	if innerErr := httperr.Unwrap(); innerErr != nil {
+		if httpErr, ok := innerErr.(web.HTTPErrorProcessor); ok {
+			assert.Equal(t, expectedErrorCode, httpErr.HTTPError().Code)
+			return
+		}
 	}
-	assert.Equal(t, expectedErrorCode, webhttperr.Code)
+
+	t.Errorf("Could not extract error code from error: %T - %v", err, err)
+	t.FailNow()
+}
+
+// getHTTPErrorCode extracts the HTTP status code from various error types
+func getHTTPErrorCode(err error) int {
+	// First, try domain errors that implement HTTPErrorProcessor
+	if httpErr, ok := err.(web.HTTPErrorProcessor); ok {
+		return httpErr.HTTPError().HTTPCode
+	}
+
+	// Fall back to echo.HTTPError
+	var httperr *echo.HTTPError
+	if errors.As(err, &httperr) {
+		return httperr.Code
+	}
+
+	return 0
+}
+
+// getHTTPErrorMessage extracts the message from various error types
+func getHTTPErrorMessage(err error) interface{} {
+	// First, try domain errors that implement HTTPErrorProcessor
+	if httpErr, ok := err.(web.HTTPErrorProcessor); ok {
+		return httpErr.HTTPError().Message
+	}
+
+	// Then try echo.HTTPError (for Forbidden etc.)
+	var httperr *echo.HTTPError
+	if errors.As(err, &httperr) {
+		return httperr.Message
+	}
+
+	// Fall back to error string
+	return err.Error()
 }
 
 type webHandlerTest struct {

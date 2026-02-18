@@ -17,6 +17,7 @@
 package db
 
 import (
+	"embed"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -28,13 +29,16 @@ import (
 	"xorm.io/xorm/schemas"
 )
 
-var fixtures *testfixtures.Loader
+var (
+	fixtures *testfixtures.Loader
+	//go:embed fixtures
+	fixturesFS embed.FS
+)
 
 // InitFixtures initialize test fixtures for a test database
 func InitFixtures(tablenames ...string) (err error) {
-
 	var testfiles func(loader *testfixtures.Loader) error
-	dir := filepath.Join(config.ServiceRootpath.GetString(), "pkg", "db", "fixtures")
+	dir := "fixtures"
 
 	// If fixture table names are specified, load them
 	// Otherwise, load all fixtures
@@ -48,14 +52,15 @@ func InitFixtures(tablenames ...string) (err error) {
 	}
 
 	loaderOptions := []func(loader *testfixtures.Loader) error{
+		testfixtures.FS(fixturesFS),
 		testfixtures.Database(x.DB().DB),
-		testfixtures.Dialect(config.DatabaseType.GetString()),
+		testfixtures.Dialect(GetDialect()),
 		testfixtures.DangerousSkipTestDatabaseCheck(),
 		testfixtures.Location(config.GetTimeZone()),
 		testfiles,
 	}
 
-	if config.DatabaseType.GetString() == "postgres" {
+	if GetDialect() == "postgres" {
 		loaderOptions = append(loaderOptions, testfixtures.SkipResetSequences())
 	}
 

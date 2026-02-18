@@ -18,8 +18,8 @@ coverage
 .vite/
 
 # Test files
-cypress/screenshots
-cypress/videos
+playwright-report/
+test-results/
 
 # local env files
 .env.local
@@ -41,3 +41,4 @@ cypress/videos
 
 # histoire
 .histoire
+package-lock.json

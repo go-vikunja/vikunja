@@ -1,13 +1,13 @@
 {
   "extends": [
-    "@tsconfig/node22/tsconfig.json",
+    "@tsconfig/node24/tsconfig.json",
     "@vue/tsconfig/tsconfig.json"
   ],
   "include": [
     "env.config.d.ts",
     "vite.config.*",
     "vitest.config.*",
-    "cypress.config.*"
+    "playwright.config.*"
   ],
   "compilerOptions": {
     "composite": true,

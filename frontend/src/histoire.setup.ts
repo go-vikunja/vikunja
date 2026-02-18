@@ -6,7 +6,7 @@ import './styles/global.scss'
 
 import {createPinia} from 'pinia'
 
-import cypress from '@/directives/cypress'
+import testid from '@/directives/testid'
 
 import FontAwesomeIcon from '@/components/misc/Icon'
 import XButton from '@/components/input/button.vue'
@@ -19,7 +19,7 @@ export const setupVue3 = defineSetupVue3(({ app }) => {
 	app.use(pinia)
 	app.use(i18n)
 
-	app.directive('cy', cypress)
+	app.directive('cy', testid)
 
 	app.component('Icon', FontAwesomeIcon)
 	app.component('XButton', XButton)

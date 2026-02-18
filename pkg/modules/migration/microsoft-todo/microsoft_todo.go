@@ -187,7 +187,7 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func getMicrosoftTodoData(token string) (microsoftTodoData []*project, err error
 	microsoftTodoData = []*project{}
 
 	projects := &projectsResponse{}
-	err = makeAuthenticatedGetRequest(token, "lists", projects)
+	err = makeAuthenticatedGetRequest(token, "lists/delta", projects)
 	if err != nil {
 		log.Errorf("[Microsoft Todo Migration] Could not get projects: %s", err)
 		return

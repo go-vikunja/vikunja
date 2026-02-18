@@ -40,7 +40,7 @@
 						>
 							<div class="gantt-row-content">
 								<GanttRowBars
-									:bars="ganttBars[index]"
+									:bars="ganttBars[index] ?? []"
 									:total-width="totalWidth"
 									:date-from-date="dateFromDate"
 									:date-to-date="dateToDate"
@@ -48,7 +48,7 @@
 									:is-dragging="isDragging"
 									:is-resizing="isResizing"
 									:drag-state="dragState"
-									:focused-row="focusedRow"
+									:focused-row="focusedRow ?? null"
 									:focused-cell="focusedCell"
 									:row-id="rowId"
 									@barPointerDown="handleBarPointerDown"
@@ -150,13 +150,13 @@ const ganttBars = ref<GanttBarModel[][]>([])
 const ganttRows = ref<string[]>([])
 const cellsByRow = ref<Record<string, string[]>>({})
 
-function getRoundedDate(value: string | Date | undefined, fallback: Date, isStart: boolean) {
+function getRoundedDate(value: string | Date | undefined, fallback: Date | string, isStart: boolean) {
 	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
 }
 
 function transformTaskToGanttBar(t: ITask): GanttBarModel {
-	const startDate = getRoundedDate(t.startDate, props.defaultTaskStartDate, true)
-	const endDate = getRoundedDate(t.endDate, props.defaultTaskEndDate, false)
+	const startDate = getRoundedDate(t.startDate ?? undefined, props.defaultTaskStartDate, true)
+	const endDate = getRoundedDate(t.endDate ?? undefined, props.defaultTaskEndDate, false)
 
 	const taskColor = getHexColor(t.hexColor)
 
@@ -188,8 +188,8 @@ watch(
 				return false
 			}
 
-			const taskStart = getRoundedDate(task.startDate, props.defaultTaskStartDate, true)
-			const taskEnd = getRoundedDate(task.endDate, props.defaultTaskEndDate, false)
+			const taskStart = getRoundedDate(task.startDate ?? undefined, props.defaultTaskStartDate, true)
+			const taskEnd = getRoundedDate(task.endDate ?? undefined, props.defaultTaskEndDate, false)
 
 			// Task is visible if it overlaps with the current date range
 			return taskStart <= dateToDate.value

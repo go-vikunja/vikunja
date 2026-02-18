@@ -75,7 +75,7 @@ func TestTaskComment_Create(t *testing.T) {
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
 		tc := &TaskComment{
-			Comment: "Lorem Ipsum @user2",
+			Comment: `<p>Lorem Ipsum <mention-user data-id="user2">@user2</mention-user></p>`,
 			TaskID:  32, // user2 has access to the project that task belongs to
 		}
 		err = tc.Create(s, u)
@@ -92,6 +92,39 @@ func TestTaskComment_Create(t *testing.T) {
 			"notifiable_id": 2,
 			"name":          (&TaskCommentNotification{}).Name(),
 		}, false)
+	})
+	t.Run("should mark task unread for project members on comment", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task, err := GetTaskByIDSimple(s, 32)
+		require.NoError(t, err)
+
+		tc := &TaskComment{
+			Comment: "test comment",
+			TaskID:  32,
+		}
+		err = tc.Create(s, u)
+		require.NoError(t, err)
+
+		ev := &TaskCommentCreatedEvent{
+			Task:    &task,
+			Doer:    u,
+			Comment: tc,
+		}
+
+		events.TestListener(t, ev, &MarkTaskUnreadOnComment{})
+
+		db.AssertExists(t, "task_unread_statuses", map[string]interface{}{
+			"task_id": task.ID,
+			"user_id": 2,
+		}, false)
+
+		db.AssertMissing(t, "task_unread_statuses", map[string]interface{}{
+			"task_id": task.ID,
+			"user_id": u.ID,
+		})
 	})
 }
 

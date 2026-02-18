@@ -83,47 +83,51 @@ function forceLayout(el: HTMLElement) {
 # see: https://vuejs.org/guide/built-ins/transition.html#javascript-hooks
 ###################################################################### */
 
-function beforeEnter(el: HTMLElement) {
-	el.style.height = '0'
-	el.style.willChange = 'height'
-	el.style.backfaceVisibility = 'hidden'
-	forceLayout(el)
+function beforeEnter(el: Element) {
+	const htmlEl = el as HTMLElement
+	htmlEl.style.height = '0'
+	htmlEl.style.willChange = 'height'
+	htmlEl.style.backfaceVisibility = 'hidden'
+	forceLayout(htmlEl)
 }
 
 // the done callback is optional when
 // used in combination with CSS
-function enter(el: HTMLElement) {
-	const height = getHeight(el) // Get the natural height
-	el.style.height = height // Update the height
+function enter(el: Element) {
+	const htmlEl = el as HTMLElement
+	const height = getHeight(htmlEl) // Get the natural height
+	htmlEl.style.height = height // Update the height
 }
 
-function afterEnter(el: HTMLElement) {
-	removeHeight(el)
+function afterEnter(el: Element) {
+	removeHeight(el as HTMLElement)
 }
 
-function enterCancelled(el: HTMLElement) {
-	removeHeight(el)
+function enterCancelled(el: Element) {
+	removeHeight(el as HTMLElement)
 }
 
-function beforeLeave(el: HTMLElement) {
+function beforeLeave(el: Element) {
+	const htmlEl = el as HTMLElement
 	// Give the element a height to change from
-	el.style.height = `${el.scrollHeight}px`
-	forceLayout(el)
+	htmlEl.style.height = `${htmlEl.scrollHeight}px`
+	forceLayout(htmlEl)
 }
 
-function leave(el: HTMLElement) {
+function leave(el: Element) {
+	const htmlEl = el as HTMLElement
 	// Set the height back to 0
-	el.style.height = '0'
-	el.style.willChange = ''
-	el.style.backfaceVisibility = ''
+	htmlEl.style.height = '0'
+	htmlEl.style.willChange = ''
+	htmlEl.style.backfaceVisibility = ''
 }
 
-function afterLeave(el: HTMLElement) {
-	removeHeight(el)
+function afterLeave(el: Element) {
+	removeHeight(el as HTMLElement)
 }
 
-function leaveCancelled(el: HTMLElement) {
-	removeHeight(el)
+function leaveCancelled(el: Element) {
+	removeHeight(el as HTMLElement)
 }
 
 function removeHeight(el: HTMLElement) {

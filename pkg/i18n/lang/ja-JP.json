@@ -79,7 +79,9 @@
 				"subject_to_assignee": "「%[1]」(%[2]s) の担当者に割り当てられました",
 				"message_to_assignee": "%[1]s があなたを「%[2]」の担当者に割り当てました。",
 				"subject_to_others": "「%[1]」(%[2]s) の担当者に %[3]s が割り当てられました",
-				"message_to_others": "%[1]s がこのタスクの担当者を %[2]s に割り当てました。"
+				"message_to_others": "%[1]s がこのタスクの担当者を %[2]s に割り当てました。",
+				"subject_to_others_self": "「%[1]」(%[2]s) は %[3]s が自身に割り当てました",
+				"message_to_others_self": "%[1]s がこのタスクを自身に割り当てました。"
 			},
 			"deleted": {
 				"subject": "「%[1]」(%[2]s) が削除されました",

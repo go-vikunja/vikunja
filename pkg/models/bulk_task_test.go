@@ -88,7 +88,8 @@ func TestBulkTask_Update(t *testing.T) {
 
 		err = bt.Update(s, u)
 		require.Error(t, err)
-		assert.IsType(t, ErrInvalidTaskColumn{}, err)
+		var expectedErr ErrInvalidTaskColumn
+		assert.ErrorAs(t, err, &expectedErr)
 	})
 
 	t.Run("update done_at when bulk marking tasks done", func(t *testing.T) {
@@ -132,6 +133,7 @@ func TestBulkTask_Update(t *testing.T) {
 
 		err := bt.Update(s, u)
 		require.Error(t, err)
-		assert.IsType(t, ErrInvalidTaskColumn{}, err)
+		var expectedErr ErrInvalidTaskColumn
+		assert.ErrorAs(t, err, &expectedErr)
 	})
 }

@@ -29,32 +29,25 @@
 
 		<div class="columns">
 			<div class="labels-list column">
-				<span
+				<RouterLink
 					v-for="label in labelStore.labelsArray"
 					:key="label.id"
-					:class="{'disabled': userInfo.id !== label.createdBy.id}"
+					:to="{name: 'home', query: {labels: label.id.toString()}}"
 					:style="getLabelStyles(label)"
 					class="tag"
 				>
-					<span
-						v-if="userInfo.id !== label.createdBy.id"
-						v-tooltip.bottom="$t('label.edit.forbidden')"
-					>
-						{{ label.title }}
-					</span>
-					<BaseButton
-						v-else
-						:style="{'color': label.textColor}"
-						@click="editLabel(label)"
-					>
-						{{ label.title }}
-					</BaseButton>
+					<span>{{ label.title }}</span>
 					<BaseButton
 						v-if="userInfo.id === label.createdBy.id"
-						class="delete is-small"
-						@click="showDeleteDialoge(label)"
-					/>
-				</span>
+						class="label-edit-button is-small"
+						@click.stop.prevent="editLabel(label)"
+					>
+						<Icon
+							icon="pen"
+							class="icon"
+						/>
+					</BaseButton>
+				</RouterLink>
 			</div>
 			<div
 				v-if="isLabelEdit"
@@ -66,33 +59,22 @@
 					@close="() => isLabelEdit = false"
 				>
 					<form @submit.prevent="editLabelSubmit()">
-						<div class="field">
-							<label class="label">{{ $t('label.attributes.title') }}</label>
-							<div class="control">
-								<input
-									v-model="labelEditLabel.title"
-									class="input"
-									:placeholder="$t('label.attributes.titlePlaceholder')"
-									type="text"
-								>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label">{{ $t('label.attributes.description') }}</label>
-							<div class="control">
-								<Editor
-									v-if="editorActive"
-									v-model="labelEditLabel.description"
-									:placeholder="$t('label.attributes.description')"
-								/>
-							</div>
-						</div>
-						<div class="field">
-							<label class="label">{{ $t('label.attributes.color') }}</label>
-							<div class="control">
-								<ColorPicker v-model="labelEditLabel.hexColor" />
-							</div>
-						</div>
+						<FormField
+							v-model="labelEditLabel.title"
+							:label="$t('label.attributes.title')"
+							:placeholder="$t('label.attributes.titlePlaceholder')"
+							type="text"
+						/>
+						<FormField :label="$t('label.attributes.description')">
+							<Editor
+								v-if="editorActive"
+								v-model="labelEditLabel.description"
+								:placeholder="$t('label.attributes.description')"
+							/>
+						</FormField>
+						<FormField :label="$t('label.attributes.color')">
+							<ColorPicker v-model="labelEditLabel.hexColor" />
+						</FormField>
 						<div class="field has-addons">
 							<div class="control is-expanded">
 								<XButton
@@ -106,7 +88,7 @@
 							<div class="control">
 								<XButton
 									icon="trash-alt"
-									class="is-danger"
+									danger
 									@click="showDeleteDialoge(labelEditLabel)"
 								/>
 							</div>
@@ -142,6 +124,7 @@ import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
+import FormField from '@/components/input/FormField.vue'
 
 import LabelModel from '@/models/label'
 import type {ILabel} from '@/modelTypes/ILabel'
@@ -212,3 +195,21 @@ function showDeleteDialoge(label: ILabel) {
 	showDeleteModal.value = true
 }
 </script>
+
+<style lang="scss" scoped>
+.label-edit-button {
+	border-radius: 100%;
+	background-color: rgba(0,0,0,0.2);
+	inline-size: 1rem;
+	block-size: 1rem;
+	display: flex;
+  	align-items: center;
+  	justify-content: center;
+	color: #ffffff; // always white
+	margin-inline-start: .25rem;
+
+	.icon {
+		block-size: .5rem;
+	}
+}
+</style>

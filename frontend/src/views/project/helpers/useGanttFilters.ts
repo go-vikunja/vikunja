@@ -1,5 +1,7 @@
-import type {Ref} from 'vue'
-import type {RouteLocationNormalized, RouteLocationRaw} from 'vue-router'
+import {watch, type Ref} from 'vue'
+import type {RouteLocationNormalized, RouteLocationRaw, LocationQueryRaw} from 'vue-router'
+
+import {useViewFiltersStore} from '@/stores/viewFilters'
 
 import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
 import {parseDateProp} from '@/helpers/time/parseDateProp'
@@ -98,6 +100,8 @@ export type UseGanttFiltersReturn =
 	UseGanttTaskListReturn
 
 export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref<IProjectView['id']>): UseGanttFiltersReturn {
+	const viewFiltersStore = useViewFiltersStore()
+
 	const {
 		filters,
 		hasDefaultFilters,
@@ -108,6 +112,21 @@ export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref
 		ganttRouteToFilters,
 		ganttFiltersToRoute,
 		['project.view'],
+	)
+
+	// Sync filters to store whenever they change (for view tab navigation)
+	watch(
+		filters,
+		(newFilters) => {
+			const routeLocation = ganttFiltersToRoute(newFilters)
+			const query = routeLocation.query as LocationQueryRaw
+			if (query && Object.keys(query).length > 0) {
+				viewFiltersStore.setViewQuery(viewId.value, query)
+			} else {
+				viewFiltersStore.clearViewQuery(viewId.value)
+			}
+		},
+		{immediate: true, deep: true},
 	)
 
 	const {

@@ -257,6 +257,18 @@ func (t *TeamMemberAddedEvent) Name() string {
 	return "team.member.added"
 }
 
+// TeamMemberRemovedEvent defines an event where a user is removed from a team
+type TeamMemberRemovedEvent struct {
+	Team   *Team      `json:"team"`
+	Member *user.User `json:"member"`
+	Doer   *user.User `json:"doer"`
+}
+
+// Name defines the name for TeamMemberRemovedEvent
+func (t *TeamMemberRemovedEvent) Name() string {
+	return "team.member.removed"
+}
+
 // TeamCreatedEvent represents a TeamCreatedEvent event
 type TeamCreatedEvent struct {
 	Team *Team    `json:"team"`

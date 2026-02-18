@@ -1,1 +1,162 @@
-{}
+{
+	"notifications": {
+		"greeting": "嗨 %[1]s",
+		"email_confirm": {
+			"subject": "%[1]s，請確認您在 Vikunja 的電子郵件地址",
+			"subject_new": "%[1]s + Vikunja = <3",
+			"welcome": "歡迎來到 Vikunja！",
+			"confirm": "請點選以下連結以確認您的信箱："
+		},
+		"password": {
+			"changed": {
+				"subject": "您的密碼已變更",
+				"success": "您的帳戶密碼已經成功變更。",
+				"warning": "若您未曾進行此操作，那可能表示有人盜用了您的帳號。請聯絡您的伺服器管理員。"
+			},
+			"reset": {
+				"subject": "重置您的Vikunja 密碼",
+				"instructions": "請點選以下連結以重設您的密碼：",
+				"valid_duration": "連結將在 24 小時後失效。"
+			}
+		},
+		"totp": {
+			"invalid": {
+				"subject": "您的 Vikunja 帳號偵測到一次登入失敗",
+				"message": "有人嘗試使用正確的使用者名稱和密碼登入您的帳號，但輸入了錯誤的 TOTP 驗證碼。",
+				"warning": "**若您未曾進行此操作，即表示您的密碼可能已被他人知悉。請您立即重設密碼！**"
+			},
+			"account_locked": {
+				"subject": "我們已停用您的 Vikunja 帳號",
+				"message": "有人嘗試使用您的帳號密碼登入，但未能提供有效的 TOTP 驗證碼。",
+				"disabled": "由於連續 10 次登入失敗，我們已停用您的帳號並重設密碼。若要設定新密碼，請依照我們剛剛寄送給您的重設郵件中的指示操作。",
+				"reset_instructions": "如果您沒有收到重設指示的電子郵件，您隨時可以在  [%[1]s](%[2]s) 重新申請一封。"
+			}
+		},
+		"login": {
+			"failed": {
+				"subject": "您的 Vikunja 帳號偵測到一次密碼錯誤的登入嘗試",
+				"message": "您的 Vikunja 帳號偵測到連續 3 次密碼錯誤的登入嘗試。",
+				"warning": "若您未曾進行此操作，則可能代表有人試圖盜用您的帳號。",
+				"enhance_security": "為了提升帳號安全性，請在設定中設定更強的密碼或啟用 TOTP 驗證："
+			}
+		},
+		"account": {
+			"deletion": {
+				"confirm": {
+					"subject": "請確認刪除您的 Vikunja 帳號",
+					"request": "您已請求刪除您的帳號。若要確認，請點擊以下連結：",
+					"valid_duration": "此連結有效期限為 24 小時。",
+					"schedule_info": "一旦您確認刪除，我們將安排在三天後刪除您的帳號，並在此期間再寄送一次確認郵件給您。",
+					"consequences": "如果您繼續刪除帳號，我們會刪掉您建立的所有專案和任務。您分享給其他使用者或團隊的內容，所有權會轉給他們。",
+					"changed_mind": "如果您沒有申請刪除帳號，或是改變主意，只要忽略這封信即可。"
+				},
+				"scheduled": {
+					"subject_days": "您的 Vikunja 帳號將於 %[1]s 天後被刪除",
+					"subject_tomorrow": "您的 Vikunja 帳號將於明天被刪除",
+					"request_reminder": "您最近申請了刪除您的 Vikunja 帳號。",
+					"deletion_time_days": "我們將在 %[1]s 天後刪除您的帳號。",
+					"deletion_time_tomorrow": "我們將在明天刪除您的帳號。",
+					"changed_mind": "如果您改變主意，只要點擊下面的連結取消刪除，並依照指示操作即可："
+				},
+				"completed": {
+					"subject": "您的 Vikunja 帳號已被刪除",
+					"confirmation": "依照您的申請，我們已刪除您的 Vikunja 帳號。",
+					"permanent": "此刪除為永久性。如果您沒有備份，且現在需要取回資料，請聯絡您的管理員。"
+				}
+			}
+		},
+		"task": {
+			"reminder": {
+				"subject": "「%[1]s」(%[2]s) 提醒",
+				"message": "任務「%[1]s」(%[2]s) 提醒。"
+			},
+			"comment": {
+				"subject": "Re: %[1]s",
+				"mentioned_subject": "%[1]s 在「%[2]s」的評論中提到您",
+				"mentioned_message": "**%[1]s** 在評論中提到您："
+			},
+			"assigned": {
+				"subject_to_assignee": "您已被指派至「%[1]s」(%[2]s)",
+				"message_to_assignee": "%[1]s 已將您指派到「%[2]s」。",
+				"subject_to_others": "「%[1]s」(%[2]s) 已指派給 %[3]s",
+				"message_to_others": "%[1]s 已將此任務指派給 %[2]s。",
+				"subject_to_others_self": "「%[1]s」(%[2]s) 已由 %[3]s 指派給自己",
+				"message_to_others_self": "%[1]s 已將此任務指派給自己。"
+			},
+			"deleted": {
+				"subject": "「%[1]s」(%[2]s) 已被刪除",
+				"message": "%[1]s 已刪除任務「%[2]s」(%[3]s)"
+			},
+			"mentioned": {
+				"subject_new": "%[1]s 在新任務「%[2]s」中提到您",
+				"subject": "%[1]s 在任務「%[2]s」中提到您",
+				"message": "%[1]s 在任務中提到您："
+			},
+			"overdue": {
+				"subject": "任務「%[1]s」(%[2]s) 已逾期",
+				"message": "任務「%[1]s」(%[2]s) 提醒：該任務已逾期 %[3]s，尚未完成。",
+				"multiple_subject": "您的逾期任務",
+				"multiple_message": "您有以下逾期任務：",
+				"overdue_since": "自 %[1]s 起",
+				"overdue_now": "現在",
+				"overdue": "逾期 %[1]s"
+			}
+		},
+		"project": {
+			"created": "%[1]s 建立了專案 「%[2]s」"
+		},
+		"team": {
+			"member_added": {
+				"subject": "%[1]s 已將您加入 Vikunja 的「%[2]s」團隊",
+				"message": "%[1]s 剛剛將您加入 Vikunja 的 %[2]s 團隊。"
+			}
+		},
+		"data_export": {
+			"ready": {
+				"subject": "您的 Vikunja 資料匯出完成",
+				"message": "您的 Vikunja 資料匯出已準備好下載。請點擊下方按鈕進行下載：",
+				"availability": "此下載連結將於接下來的 7 天內有效。"
+			}
+		},
+		"migration": {
+			"done": {
+				"subject": "從 %[1]s 到 Vikunja 的資料遷移已完成",
+				"imported": "Vikunja 已匯入您在 %[1]s 的所有清單/專案、任務、筆記、提醒與檔案。",
+				"have_fun": "祝您玩得開心，享受您的新（舊）專案！"
+			},
+			"failed": {
+				"subject": "從 %[1]s 到 Vikunja 的資料遷移失敗",
+				"message": "從 %[1]s 的搬移沒有按計畫順利完成。",
+				"retry": "不用擔心！請依照之前的指示重新操作一次。有時這些問題是 %[1]s 系統故障造成的，再試一次通常就能成功。",
+				"error": "在過程中遇到了一個錯誤：%[2]s。",
+				"report": "請在論壇(https://community.vikunja.io/)或其他常用管道告訴我們這個情況，讓我們可以檢查失敗原因。",
+				"working_on_it": "我們已經注意到這個錯誤訊息並正在處理，會盡快解決。"
+			}
+		},
+		"common": {
+			"have_nice_day": "祝您有美好的一天！",
+			"copy_url": "如果上方按鈕無法使用，請將以下網址複製到瀏覽器的網址列中：",
+			"actions": {
+				"open_task": "開啟任務",
+				"open_vikunja": "開啟 Vikunja",
+				"open_project": "開啟專案",
+				"open_team": "開啟團隊",
+				"download": "下載",
+				"reset_password": "重設密碼",
+				"go_to_settings": "前往設定",
+				"confirm_email": "確認您的電子郵件地址",
+				"abort_deletion": "取消刪除",
+				"confirm_account_deletion": "確認刪除我的帳號",
+				"change_notification_settings_link": "您可以在這裡 更改通知設定(%[1]s)。"
+			}
+		}
+	},
+	"time": {
+		"since_years": "一年｜%[1]d 年",
+		"since_weeks": "一周｜%[1]d 周",
+		"since_days": "一天｜%[1]d 天",
+		"since_hours": "一小時｜%[1]d 小時",
+		"since_minutes": "一分鐘｜%[1]d 分鐘",
+		"list_last_separator": "且"
+	}
+}

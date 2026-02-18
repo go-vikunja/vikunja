@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/models"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // GetAvailableWebhookEvents returns a list of all possible webhook target events
@@ -33,6 +33,6 @@ import (
 // @Success 200 {array} string "The list of all possible webhook events"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /webhooks/events [get]
-func GetAvailableWebhookEvents(c echo.Context) error {
+func GetAvailableWebhookEvents(c *echo.Context) error {
 	return c.JSON(http.StatusOK, models.GetAvailableWebhookEvents())
 }

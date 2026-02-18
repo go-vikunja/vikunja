@@ -35,8 +35,8 @@ import (
 	"code.vikunja.io/api/pkg/config"
 
 	etaggenerator "github.com/hhsnopek/etag"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 )
 
 const (
@@ -50,6 +50,7 @@ const (
 	window.SENTRY_DSN = '{{ .SENTRY_DSN }}'
 	window.ALLOW_ICON_CHANGES = {{ .ALLOW_ICON_CHANGES }}
 	window.CUSTOM_LOGO_URL = '{{ .CUSTOM_LOGO_URL }}'
+	window.CUSTOM_LOGO_URL_DARK = '{{ .CUSTOM_LOGO_URL_DARK }}'
 </script>`
 )
 
@@ -66,7 +67,7 @@ func init() {
 	scriptConfigStringLock = sync.Mutex{}
 }
 
-func serveIndexFile(c echo.Context, assetFs http.FileSystem) (err error) {
+func serveIndexFile(c *echo.Context, assetFs http.FileSystem) (err error) {
 	index, err := assetFs.Open(path.Join(rootPath, indexFile))
 	if err != nil {
 		return err
@@ -96,6 +97,7 @@ func serveIndexFile(c echo.Context, assetFs http.FileSystem) (err error) {
 			data["ALLOW_ICON_CHANGES"] = "true"
 		}
 		data["CUSTOM_LOGO_URL"] = config.ServiceCustomLogoURL.GetString()
+		data["CUSTOM_LOGO_URL_DARK"] = config.ServiceCustomLogoURLDark.GetString()
 
 		err = tmpl.Execute(&tplOutput, data)
 		if err != nil {
@@ -138,7 +140,7 @@ func static() echo.MiddlewareFunc {
 	assetFs := http.FS(frontend.Files)
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) (err error) {
+		return func(c *echo.Context) (err error) {
 			p := c.Request().URL.Path
 			if strings.HasPrefix(p, "/api/") {
 				return next(c)
@@ -164,8 +166,8 @@ func static() echo.MiddlewareFunc {
 					return err
 				}
 
-				var he *echo.HTTPError
-				if !errors.As(err, &he) || he.Code != http.StatusNotFound {
+				var he echo.HTTPStatusCoder
+				if !errors.As(err, &he) || he.StatusCode() != http.StatusNotFound {
 					return err
 				}
 
@@ -266,7 +268,7 @@ func getCacheControlHeader(info os.FileInfo, file io.ReadSeeker) (header string,
 	return cacheControlNone, nil
 }
 
-func serveFile(c echo.Context, file io.ReadSeeker, info os.FileInfo, etag string) error {
+func serveFile(c *echo.Context, file io.ReadSeeker, info os.FileInfo, etag string) error {
 
 	c.Response().Header().Set("Server", "Vikunja")
 	c.Response().Header().Set("Vary", "Accept-Encoding")
@@ -288,7 +290,7 @@ func setupStaticFrontendFilesHandler(e *echo.Echo) {
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level:     6,
 		MinLength: 256,
-		Skipper: func(c echo.Context) bool {
+		Skipper: func(c *echo.Context) bool {
 			return strings.HasPrefix(c.Path(), "/api/")
 		},
 	}))

@@ -27,14 +27,13 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"xorm.io/xorm"
 )
 
 // getLocalUserFromContext is a helper function to get the current local user and database session
-func getLocalUserFromContext(c echo.Context) (*user.User, *xorm.Session, error) {
+func getLocalUserFromContext(c *echo.Context) (*user.User, *xorm.Session, error) {
 	s := db.NewSession()
 
 	u, err := user.GetCurrentUserFromDB(s, c)
@@ -63,22 +62,22 @@ func getLocalUserFromContext(c echo.Context) (*user.User, *xorm.Session, error) 
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/enroll [post]
-func UserTOTPEnroll(c echo.Context) error {
+func UserTOTPEnroll(c *echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer s.Close()
 
 	t, err := user.EnrollTOTP(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, t)
@@ -98,10 +97,10 @@ func UserTOTPEnroll(c echo.Context) error {
 // @Failure 412 {object} web.HTTPError "TOTP is not enrolled."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/enable [post]
-func UserTOTPEnable(c echo.Context) error {
+func UserTOTPEnable(c *echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer s.Close()
 
@@ -112,20 +111,20 @@ func UserTOTPEnable(c echo.Context) error {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
+		return models.ErrInvalidModel{Err: err}
 	}
 
 	err = user.EnableTOTP(s, passcode)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was enabled successfully."})
@@ -144,41 +143,41 @@ func UserTOTPEnable(c echo.Context) error {
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/disable [post]
-func UserTOTPDisable(c echo.Context) error {
+func UserTOTPDisable(c *echo.Context) error {
 	login := &user.Login{}
 	if err := c.Bind(login); err != nil {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
+		return models.ErrInvalidModel{Err: err}
 	}
 
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer s.Close()
 
 	err = user.CheckUserPassword(u, login.Password)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = user.DisableTOTP(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
-	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was enabled successfully."})
+	return c.JSON(http.StatusOK, models.Message{Message: "TOTP was disabled successfully."})
 }
 
 // UserTOTPQrCode is the handler to show a qr code to enroll the user into totp
@@ -191,29 +190,29 @@ func UserTOTPDisable(c echo.Context) error {
 // @Success 200 {file} blob "The qr code as jpeg image"
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp/qrcode [get]
-func UserTOTPQrCode(c echo.Context) error {
+func UserTOTPQrCode(c *echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer s.Close()
 
 	qrcode, err := user.GetTOTPQrCodeForUser(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	buff := &bytes.Buffer{}
 	err = jpeg.Encode(buff, qrcode, nil)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.Blob(http.StatusOK, "image/jpeg", buff.Bytes())
@@ -229,22 +228,22 @@ func UserTOTPQrCode(c echo.Context) error {
 // @Success 200 {object} user.TOTP "The totp settings."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/totp [get]
-func UserTOTP(c echo.Context) error {
+func UserTOTP(c *echo.Context) error {
 	u, s, err := getLocalUserFromContext(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer s.Close()
 
 	t, err := user.GetTOTPForUser(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, t)

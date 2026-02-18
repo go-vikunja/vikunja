@@ -20,6 +20,7 @@ import (
 	"os"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 )
 
@@ -27,6 +28,8 @@ import (
 func TestMain(m *testing.M) {
 	// Initialize logger for tests
 	log.InitLogger()
+	config.ServicePublicURL.Set("https://localhost")
+	config.InitConfig()
 
 	os.Exit(m.Run())
 }

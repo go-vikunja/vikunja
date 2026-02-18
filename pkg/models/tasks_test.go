@@ -261,6 +261,27 @@ func TestTask_Update(t *testing.T) {
 			"bucket_id": 3,
 		}, false)
 	})
+	t.Run("marking a task as done should fire exactly ONE task.updated event", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Clear any events from previous operations
+		events.ClearDispatchedEvents()
+
+		task := &Task{
+			ID:   1,
+			Done: true,
+		}
+		err := task.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// Verify exactly ONE task.updated event was dispatched
+		count := events.CountDispatchedEvents("task.updated")
+		assert.Equal(t, 1, count, "Expected exactly 1 task.updated event, got %d", count)
+	})
 	t.Run("move task to another project should use the default bucket", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

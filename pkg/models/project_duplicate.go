@@ -325,7 +325,7 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 
 	log.Debugf("Duplicated project background from project %d into %d", pd.ProjectID, pd.Project.ID)
 
-	return
+	return nil
 }
 
 func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTaskIDs map[int64]int64, err error) {

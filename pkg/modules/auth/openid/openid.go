@@ -34,11 +34,10 @@ import (
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
-	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	petname "github.com/dustinkirkland/golang-petname"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"golang.org/x/oauth2"
 	"xorm.io/xorm"
 )
@@ -46,7 +45,7 @@ import (
 // Callback contains the callback after an auth request was made and redirected
 type Callback struct {
 	Code        string `query:"code" json:"code"`
-	Scope       string `query:"scop" json:"scope"`
+	Scope       string `query:"scope" json:"scope"`
 	RedirectURL string `json:"redirect_url"`
 }
 
@@ -83,10 +82,16 @@ func init() {
 }
 
 func (p *Provider) setOicdProvider() (err error) {
-	p.openIDProvider, err = oidc.NewProvider(context.Background(), p.OriginalAuthURL)
+	err = utils.RetryWithBackoff(fmt.Sprintf("OpenID Connect provider '%s'", p.Name), func() error {
+		var providerErr error
+		p.openIDProvider, providerErr = oidc.NewProvider(context.Background(), p.OriginalAuthURL)
+		return providerErr
+	})
+
 	if err != nil && p.RequireAvailability {
 		log.Fatalf("OpenID Connect provider '%s' is not available and require_availability is enabled: %s", p.Name, err)
 	}
+
 	return err
 }
 
@@ -123,7 +128,7 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 // @Success 200 {object} auth.Token
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /auth/openid/{provider}/callback [post]
-func HandleCallback(c echo.Context) error {
+func HandleCallback(c *echo.Context) error {
 
 	provider, oauthToken, idToken, err := getProviderAndOidcTokens(c)
 	if err != nil {
@@ -134,12 +139,12 @@ func HandleCallback(c echo.Context) error {
 				"details": detailedErr.Details,
 			})
 		}
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	cl, err := getClaims(provider, oauthToken, idToken)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -150,21 +155,21 @@ func HandleCallback(c echo.Context) error {
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
 
 	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, "OIDC")
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new team for provider %s: %v", provider.Name, err)
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Create token
@@ -414,7 +419,7 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 	return cl, nil
 }
 
-func getProviderAndOidcTokens(c echo.Context) (*Provider, *oauth2.Token, *oidc.IDToken, error) {
+func getProviderAndOidcTokens(c *echo.Context) (*Provider, *oauth2.Token, *oidc.IDToken, error) {
 
 	cb := &Callback{}
 	if err := c.Bind(cb); err != nil {

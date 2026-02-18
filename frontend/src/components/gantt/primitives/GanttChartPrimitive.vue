@@ -35,9 +35,12 @@ const focusedCellIndex = ref<number | null>(null)
 const focusedRow = computed(() => focusedRowIndex.value === null
 	? null
 	: props.rows[focusedRowIndex.value])
-const cellsCount = computed(() => props.rows.length 
-	? props.cellsByRow[props.rows[0]].length 
-	: 0)
+const cellsCount = computed(() => {
+	const firstRow = props.rows[0]
+	return firstRow !== undefined && props.cellsByRow[firstRow]
+		? props.cellsByRow[firstRow].length
+		: 0
+})
 
 onClickOutside(chartRef, () => {
 	focusedRowIndex.value = null
@@ -49,6 +52,9 @@ function onKeyDown(e: KeyboardEvent) {
 	if (focusedRowIndex.value === null || focusedCellIndex.value === null) return
 
 	if (e.key === 'Enter') {
+		if (e.isComposing) {
+			return
+		}
 		e.preventDefault()
 		emit('enterPressed', { row: focusedRow.value!, cell: focusedCellIndex.value })
 		return
@@ -60,7 +66,7 @@ function initializeFocus() {
 	if (focusedRowIndex.value === null && props.rows.length > 0) {
 		focusedRowIndex.value = 0
 		focusedCellIndex.value = 0
-		emit('update:focused', { row: focusedRow.value, cell: focusedCellIndex.value })
+		emit('update:focused', { row: focusedRow.value ?? null, cell: focusedCellIndex.value })
 	}
 }
 
@@ -69,7 +75,7 @@ function setFocus(rowId: string, cellIndex: number = 0) {
 	if (rowIndex !== -1) {
 		focusedRowIndex.value = rowIndex
 		focusedCellIndex.value = Math.max(0, Math.min(cellIndex, cellsCount.value - 1))
-		emit('update:focused', { row: focusedRow.value, cell: focusedCellIndex.value })
+		emit('update:focused', { row: focusedRow.value ?? null, cell: focusedCellIndex.value })
 	}
 }
 

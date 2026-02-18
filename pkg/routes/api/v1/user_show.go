@@ -29,8 +29,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 
-	"code.vikunja.io/api/pkg/web/handler"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type UserWithSettings struct {
@@ -52,10 +51,10 @@ type UserWithSettings struct {
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user [get]
-func UserShow(c echo.Context) error {
+func UserShow(c *echo.Context) error {
 	a, err := auth.GetAuthFromClaims(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error getting current user.").Wrap(err)
 	}
 
 	s := db.NewSession()
@@ -63,7 +62,7 @@ func UserShow(c echo.Context) error {
 
 	u, err := models.GetUserOrLinkShareUser(s, a)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	us := &UserWithSettings{
@@ -88,7 +87,7 @@ func UserShow(c echo.Context) error {
 
 	us.AuthProvider, err = getAuthProviderName(u)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, us)

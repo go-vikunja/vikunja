@@ -23,8 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/web/handler"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // LinkShareToken represents a link share auth token with extra infos about the actual link share
@@ -52,11 +51,11 @@ type LinkShareAuth struct {
 // @Failure 400 {object} web.HTTPError "Invalid link share object provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /shares/{share}/auth [post]
-func AuthenticateLinkShare(c echo.Context) error {
+func AuthenticateLinkShare(c *echo.Context) error {
 	sh := &LinkShareAuth{}
 	err := c.Bind(sh)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -64,19 +63,19 @@ func AuthenticateLinkShare(c echo.Context) error {
 
 	share, err := models.GetLinkShareByHash(s, sh.Hash)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if share.SharingType == models.SharingTypeWithPassword {
 		err := models.VerifyLinkSharePassword(share, sh.Password)
 		if err != nil {
-			return handler.HandleHTTPError(err)
+			return err
 		}
 	}
 
 	t, err := auth.NewLinkShareJWTAuthtoken(share)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	share.Password = ""

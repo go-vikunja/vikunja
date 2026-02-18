@@ -43,12 +43,14 @@ export interface ITask extends IAbstract {
 	identifier: string
 	index: number
 	isFavorite: boolean
+	isUnread?: boolean
 	subscription: ISubscription
 
 	position: number
 	
 	reactions: IReactionPerEntity
 	comments: ITaskComment[]
+	commentCount?: number
 
 	createdBy: IUser
 	created: Date

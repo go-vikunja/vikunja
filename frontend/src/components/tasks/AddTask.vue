@@ -270,6 +270,10 @@ function handleEnter(e: KeyboardEvent) {
 		return
 	}
 
+	if (e.isComposing) {
+		return
+	}
+
 	e.preventDefault()
 	addTask()
 }

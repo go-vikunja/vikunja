@@ -53,6 +53,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
 	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
+	events.RegisterListener((&TeamMemberRemovedEvent{}).Name(), &CleanupTaskAssignmentsAfterTeamRemoval{})
 	events.RegisterListener((&TaskCommentUpdatedEvent{}).Name(), &HandleTaskCommentEditMentions{})
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &HandleTaskCreateMentions{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &HandleTaskUpdatedMentions{})
@@ -68,6 +69,7 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskRelationDeletedEvent{}).Name(), &HandleTaskUpdateLastUpdated{})
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
+	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &MarkTaskUnreadOnComment{})
 	if config.TypesenseEnabled.GetBool() {
 		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
 		events.RegisterListener((&TaskCreatedEvent{}).Name(), &AddTaskToTypesense{})
@@ -840,13 +842,40 @@ type WebhookPayload struct {
 }
 
 func getIDAsInt64(id interface{}) int64 {
+	if id == nil {
+		return 0
+	}
+
 	switch v := id.(type) {
 	case int64:
 		return v
 	case float64:
 		return int64(v)
+	case float32:
+		return int64(v)
+	case int:
+		return int64(v)
+	case int32:
+		return int64(v)
+	case json.Number:
+		if i, err := v.Int64(); err == nil {
+			return i
+		}
+		if f, err := v.Float64(); err == nil {
+			return int64(f)
+		}
+		return 0
+	case string:
+		if i, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return i
+		}
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			return int64(f)
+		}
+		return 0
+	default:
+		return 0
 	}
-	return id.(int64)
 }
 
 func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
@@ -867,57 +896,152 @@ func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
 	return 0
 }
 
+func reloadDoerInEvent(s *xorm.Session, event map[string]interface{}) (doerID int64, err error) {
+	doer, has := event["doer"]
+	if !has || doer == nil {
+		return 0, nil
+	}
+
+	// doer can be null in incoming payloads, so guard the type assertion
+	d, ok := doer.(map[string]interface{})
+	if !ok {
+		return 0, nil
+	}
+
+	rawDoerID, has := d["id"]
+	if !has || rawDoerID == nil {
+		return 0, nil
+	}
+
+	doerID = getIDAsInt64(rawDoerID)
+	if doerID <= 0 {
+		return 0, nil
+	}
+
+	fullDoer, err := user.GetUserByID(s, doerID)
+	if err != nil && !user.IsErrUserDoesNotExist(err) {
+		return 0, err
+	}
+	if err == nil {
+		event["doer"] = fullDoer
+	}
+
+	return doerID, nil
+}
+
+func reloadTaskInEvent(s *xorm.Session, event map[string]interface{}, doerID int64) error {
+	task, has := event["task"]
+	if !has || task == nil || doerID == 0 {
+		return nil
+	}
+
+	// guard the type assertion for task as well
+	t, ok := task.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	taskID, has := t["id"]
+	if !has || taskID == nil {
+		return nil
+	}
+
+	id := getIDAsInt64(taskID)
+	if id <= 0 {
+		return nil
+	}
+
+	fullTask := Task{
+		ID: id,
+		Expand: []TaskCollectionExpandable{
+			TaskCollectionExpandBuckets,
+		},
+	}
+	err := fullTask.ReadOne(s, &user.User{ID: doerID})
+	if err != nil && !IsErrTaskDoesNotExist(err) {
+		return err
+	}
+	if err == nil {
+		event["task"] = fullTask
+	}
+
+	return nil
+}
+
+func reloadProjectInEvent(s *xorm.Session, event map[string]interface{}, projectID, doerID int64) error {
+	_, has := event["project"]
+	if !has || doerID == 0 {
+		return nil
+	}
+
+	project, err := GetProjectSimpleByID(s, projectID)
+	if err != nil {
+		if IsErrProjectDoesNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	err = project.ReadOne(s, &user.User{ID: doerID})
+	if err != nil && !IsErrProjectDoesNotExist(err) {
+		return err
+	}
+
+	if err == nil {
+		event["project"] = project
+	}
+
+	return nil
+}
+
+func reloadAssigneeInEvent(s *xorm.Session, event map[string]interface{}) error {
+	assignee, has := event["assignee"]
+	if !has || assignee == nil {
+		return nil
+	}
+
+	a, ok := assignee.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	assigneeID := getIDAsInt64(a["id"])
+	if assigneeID <= 0 {
+		return nil
+	}
+
+	fullAssignee, err := user.GetUserByID(s, assigneeID)
+	if err != nil && !user.IsErrUserDoesNotExist(err) {
+		return err
+	}
+	if err == nil {
+		event["assignee"] = fullAssignee
+	}
+
+	return nil
+}
+
 func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID int64) (eventWithData map[string]interface{}, doerID int64, err error) {
 	// Load event data again so that it is always populated in the webhook payload
-	if doer, has := event["doer"]; has {
-		d := doer.(map[string]interface{})
-		if rawDoerID, has := d["id"]; has {
-			doerID = getIDAsInt64(rawDoerID)
-			if doerID > 0 {
-				fullDoer, err := user.GetUserByID(s, doerID)
-				if err != nil && !user.IsErrUserDoesNotExist(err) {
-					return nil, 0, err
-				}
-				if err == nil {
-					event["doer"] = fullDoer
-				}
-			}
-		}
+
+	doerID, err = reloadDoerInEvent(s, event)
+	if err != nil {
+		return nil, 0, err
 	}
 
-	if task, has := event["task"]; has && doerID != 0 {
-		t := task.(map[string]interface{})
-		if taskID, has := t["id"]; has {
-			id := getIDAsInt64(taskID)
-			fullTask := Task{
-				ID: id,
-				Expand: []TaskCollectionExpandable{
-					TaskCollectionExpandBuckets,
-				},
-			}
-			err = fullTask.ReadOne(s, &user.User{ID: doerID})
-			if err != nil && !IsErrTaskDoesNotExist(err) {
-				return
-			}
-			if err == nil {
-				event["task"] = fullTask
-			}
-		}
+	err = reloadTaskInEvent(s, event, doerID)
+	if err != nil {
+		return nil, doerID, err
 	}
 
-	if _, has := event["project"]; has && doerID != 0 {
-		var project *Project
-		project, err = GetProjectSimpleByID(s, projectID)
-		if err != nil && !IsErrProjectDoesNotExist(err) {
-			return
-		}
-		err = project.ReadOne(s, &user.User{ID: doerID})
-		if err != nil && !IsErrProjectDoesNotExist(err) {
-			return
-		}
-		if err == nil {
-			event["project"] = project
-		}
+	err = reloadProjectInEvent(s, event, projectID, doerID)
+	if err != nil {
+		return nil, doerID, err
+	}
+
+	err = reloadAssigneeInEvent(s, event)
+	if err != nil {
+		return nil, doerID, err
 	}
 
 	return event, doerID, nil
@@ -983,13 +1107,18 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	for _, webhook := range matchingWebhooks {
 
 		if _, has := event["project"]; !has {
-			project := &Project{ID: webhook.ProjectID}
-			err = project.ReadOne(s, &user.User{ID: doerID})
+			project, err := GetProjectSimpleByID(s, webhook.ProjectID)
 			if err != nil && !IsErrProjectDoesNotExist(err) {
 				log.Errorf("Could not load project for webhook %d: %s", webhook.ID, err)
 			}
-			if err == nil {
-				event["project"] = project
+			if project != nil {
+				err = project.ReadOne(s, &user.User{ID: doerID})
+				if err != nil && !IsErrProjectDoesNotExist(err) {
+					log.Errorf("Could not load project for webhook %d: %s", webhook.ID, err)
+				}
+				if err == nil {
+					event["project"] = project
+				}
 			}
 		}
 
@@ -1035,6 +1164,43 @@ func (s *DecreaseTeamCounter) Name() string {
 // Handle is executed when the event DecreaseTeamCounter listens on is fired
 func (s *DecreaseTeamCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.DecrBy(metrics.TeamCountKey, 1)
+}
+
+// CleanupTaskAssignmentsAfterTeamRemoval represents a listener
+type CleanupTaskAssignmentsAfterTeamRemoval struct{}
+
+// Name defines the name of the listener
+func (l *CleanupTaskAssignmentsAfterTeamRemoval) Name() string {
+	return "task.assignees.cleanup.team_removal"
+}
+
+// Handle cleans up task assignments and subscriptions for members removed from teams
+func (l *CleanupTaskAssignmentsAfterTeamRemoval) Handle(msg *message.Message) (err error) {
+	event := &TeamMemberRemovedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	if event == nil || event.Team == nil || event.Member == nil {
+		return nil
+	}
+
+	err = s.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = cleanupTaskMembersAfterTeamRemoval(s, event.Team.ID, event.Member.ID)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	return s.Commit()
 }
 
 // SendTeamMemberAddedNotification  represents a listener
@@ -1102,4 +1268,79 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 
 	err = sess.Commit()
 	return err
+}
+
+type MarkTaskUnreadOnComment struct {
+}
+
+func (s *MarkTaskUnreadOnComment) Name() string {
+	return "task.comment.mark.unread"
+}
+
+func (s *MarkTaskUnreadOnComment) Handle(msg *message.Message) (err error) {
+	event := &TaskCommentCreatedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	err = sess.Begin()
+	if err != nil {
+		return err
+	}
+
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		_ = sess.Rollback()
+		return err
+	}
+
+	users, err := ListUsersFromProject(sess, project, event.Doer, "")
+	if err != nil {
+		_ = sess.Rollback()
+		return err
+	}
+
+	// Get existing unread statuses for this task
+	existingUnreadStatuses := []*TaskUnreadStatus{}
+	err = sess.
+		Where("task_id = ?", event.Task.ID).
+		Find(&existingUnreadStatuses)
+	if err != nil {
+		_ = sess.Rollback()
+		return err
+	}
+
+	// Create a set of existing user IDs for quick lookup
+	existingUserIDs := make(map[int64]bool)
+	for _, status := range existingUnreadStatuses {
+		existingUserIDs[status.UserID] = true
+	}
+
+	// Build list of new unread statuses
+	unreadStatuses := []*TaskUnreadStatus{}
+	for _, u := range users {
+		// Skip the comment author and users who already have unread status
+		if u.ID == event.Doer.ID || existingUserIDs[u.ID] {
+			continue
+		}
+		unreadStatuses = append(unreadStatuses, &TaskUnreadStatus{
+			TaskID: event.Task.ID,
+			UserID: u.ID,
+		})
+	}
+
+	// Bulk insert new unread statuses
+	if len(unreadStatuses) > 0 {
+		_, err = sess.Insert(&unreadStatuses)
+		if err != nil {
+			_ = sess.Rollback()
+			return err
+		}
+	}
+
+	return sess.Commit()
 }

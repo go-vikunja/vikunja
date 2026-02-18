@@ -164,7 +164,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		if (bucketIndex === null) return
 		const currentTaskBucket = buckets.value[bucketIndex]
 		
-		const currentView: IProjectView = baseStore.currentProject?.views.find(v => v.id === baseStore.currentProjectViewId)
+		const currentView: IProjectView | undefined = baseStore.currentProject?.views?.find(v => v.id === baseStore.currentProjectViewId)
 		if(typeof currentView === 'undefined') return
 		
 		// If the task is done, make sure it is in the done bucket
@@ -262,6 +262,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		try {
 			const newBuckets = await taskCollectionService.getAll({projectId, viewId}, {
 				...params,
+				expand: ['comment_count', 'is_unread'],
 				per_page: TASKS_PER_BUCKET,
 			})
 			setBuckets(newBuckets)
@@ -300,6 +301,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 		params.filter = `${params.filter === '' ? '' : params.filter + ' && '}bucket_id = ${bucketId}`
 		params.filter_timezone = authStore.settings.timezone
 		params.per_page = TASKS_PER_BUCKET
+		params.expand = ['comment_count', 'is_unread']
 
 		const taskService = new TaskCollectionService()
 		try {

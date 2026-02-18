@@ -23,8 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // UserResetPassword is the handler to change a users password
@@ -38,11 +37,11 @@ import (
 // @Failure 400 {object} web.HTTPError "Bad token provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/password/reset [post]
-func UserResetPassword(c echo.Context) error {
+func UserResetPassword(c *echo.Context) error {
 	// Check for Request Content
 	var pwReset user.PasswordReset
 	if err := c.Bind(&pwReset); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").Wrap(err)
 	}
 
 	s := db.NewSession()
@@ -51,12 +50,12 @@ func UserResetPassword(c echo.Context) error {
 	err := user.ResetPassword(s, &pwReset)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "The password was updated successfully."})
@@ -73,15 +72,15 @@ func UserResetPassword(c echo.Context) error {
 // @Failure 404 {object} web.HTTPError "The user does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/password/token [post]
-func UserRequestResetPasswordToken(c echo.Context) error {
+func UserRequestResetPasswordToken(c *echo.Context) error {
 	// Check for Request Content
 	var pwTokenReset user.PasswordTokenRequest
 	if err := c.Bind(&pwTokenReset); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No username provided.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No username provided.").Wrap(err)
 	}
 
 	if err := c.Validate(pwTokenReset); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
 	s := db.NewSession()
@@ -90,12 +89,12 @@ func UserRequestResetPasswordToken(c echo.Context) error {
 	err := user.RequestUserPasswordResetTokenByEmail(s, &pwTokenReset)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Token was sent."})

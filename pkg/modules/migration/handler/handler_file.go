@@ -22,8 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type FileMigratorWeb struct {
@@ -38,13 +37,13 @@ func (fw *FileMigratorWeb) RegisterRoutes(g *echo.Group) {
 }
 
 // Migrate calls the migration method
-func (fw *FileMigratorWeb) Migrate(c echo.Context) error {
+func (fw *FileMigratorWeb) Migrate(c *echo.Context) error {
 	ms := fw.MigrationStruct()
 
 	// Get the user from context
 	user, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	file, err := c.FormFile("import")
@@ -59,25 +58,25 @@ func (fw *FileMigratorWeb) Migrate(c echo.Context) error {
 
 	m, err := migration.StartMigration(ms, user)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Do the migration
 	err = ms.Migrate(user, src, file.Size)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = migration.FinishMigration(m)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Everything was migrated successfully."})
 }
 
 // Status returns whether or not a user has already done this migration
-func (fw *FileMigratorWeb) Status(c echo.Context) error {
+func (fw *FileMigratorWeb) Status(c *echo.Context) error {
 	ms := fw.MigrationStruct()
 
 	return status(ms, c)

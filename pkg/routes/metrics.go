@@ -27,8 +27,8 @@ import (
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -83,7 +83,7 @@ func setupMetrics(a *echo.Group) {
 	r := a.Group("/metrics")
 
 	if config.MetricsUsername.GetString() != "" && config.MetricsPassword.GetString() != "" {
-		r.Use(middleware.BasicAuth(func(username, password string, _ echo.Context) (bool, error) {
+		r.Use(middleware.BasicAuth(func(_ *echo.Context, username, password string) (bool, error) {
 			if subtle.ConstantTimeCompare([]byte(username), []byte(config.MetricsUsername.GetString())) == 1 &&
 				subtle.ConstantTimeCompare([]byte(password), []byte(config.MetricsPassword.GetString())) == 1 {
 				return true, nil
@@ -101,7 +101,7 @@ func setupMetricsMiddleware(a *echo.Group) {
 	}
 
 	a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(c *echo.Context) error {
 
 			// Update currently active users
 			if err := updateActiveUsersFromContext(c); err != nil {
@@ -114,7 +114,7 @@ func setupMetricsMiddleware(a *echo.Group) {
 }
 
 // updateActiveUsersFromContext updates the currently active users in redis
-func updateActiveUsersFromContext(c echo.Context) (err error) {
+func updateActiveUsersFromContext(c *echo.Context) (err error) {
 	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return

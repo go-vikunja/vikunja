@@ -35,6 +35,7 @@ interface AutocompleteContext {
 	startPos: number
 	endPos: number
 	isComplete: boolean
+	quoteChar: string // The quote character surrounding the keyword ('"', "'", or '' if unquoted)
 }
 
 interface SuggestionItem {
@@ -46,11 +47,49 @@ interface SuggestionItem {
 
 export type AutocompleteField = 'labels' | 'assignees' | 'projects'
 
+/**
+ * Calculates the replacement range for autocomplete selection.
+ * For single-value operators: replaces the entire keyword
+ * For multi-value operators with commas: only replaces the text after the last comma
+ * When inside quotes, extends the range to include the closing quote
+ *
+ * @param context - The autocomplete context containing position and keyword info
+ * @param operator - The filter operator (e.g., 'in', '=', '?=')
+ * @param hasClosingQuote - Whether there's a closing quote to include in replacement
+ * @returns Object with replaceFrom and replaceTo positions
+ */
+export function calculateReplacementRange(
+	context: { startPos: number; endPos: number; keyword: string },
+	operator: string,
+	hasClosingQuote: boolean = false,
+): { replaceFrom: number; replaceTo: number } {
+	// Add 1 to convert from string indices to ProseMirror positions
+	// In ProseMirror, position 0 is before the document, text starts at position 1
+	let replaceFrom = context.startPos + 1
+	let replaceTo = context.endPos + 1
+
+	// Handle multi-value operators - only replace the last value after comma
+	if (isMultiValueOperator(operator) && context.keyword.includes(',')) {
+		const lastCommaIndex = context.keyword.lastIndexOf(',')
+		const textAfterComma = context.keyword.substring(lastCommaIndex + 1)
+		const leadingSpaces = textAfterComma.length - textAfterComma.trimStart().length
+		replaceFrom = context.startPos + lastCommaIndex + 1 + leadingSpaces + 1
+	}
+
+	// Extend range to include closing quote if present
+	if (hasClosingQuote) {
+		replaceTo += 1
+	}
+
+	return { replaceFrom, replaceTo }
+}
+
 export interface AutocompleteItem {
 	id: number | string
 	title: string
 	item: ILabel | IUser | IProject
 	fieldType: AutocompleteField
+	context: AutocompleteContext
 }
 
 export default Extension.create<FilterAutocompleteOptions>({
@@ -97,6 +136,14 @@ export default Extension.create<FilterAutocompleteOptions>({
 				return false
 			}
 
+			// Check if cursor is in the middle of a word/value
+			// If the character immediately after the cursor is not whitespace, operator, or delimiter,
+			// then we're in the middle of a value and shouldn't show autocomplete
+			const firstCharAfter = textAfterExpression[0]
+			if (firstCharAfter && !/[\s&|(),"']/.test(firstCharAfter)) {
+				return true
+			}
+
 			// Check if we're immediately after a recent selection
 			const timeSinceLastSelection = Date.now() - lastSelectionTime
 			if (timeSinceLastSelection < 1000) { // 1 second grace period
@@ -112,10 +159,15 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 			// Check what comes after the expression
 			const trimmedAfter = textAfterExpression.trim()
-			
-			// If there's a logical operator or end of string immediately after, it's likely complete
-			if (trimmedAfter === '' || trimmedAfter.startsWith('&&') || trimmedAfter.startsWith('||') || trimmedAfter.startsWith(')')) {
-				return keyword.trim().length > 1
+
+			// If at end of expression (nothing after), keep autocomplete open to allow selection
+			if (trimmedAfter === '') {
+				return false
+			}
+
+			// If there's a logical operator after, expression is complete (user has moved on)
+			if (trimmedAfter.startsWith('&&') || trimmedAfter.startsWith('||') || trimmedAfter.startsWith(')')) {
+				return true
 			}
 
 			// If there's a space followed by non-operator text, it's likely complete
@@ -167,7 +219,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 		const fetchSuggestions = async (autocompleteContext: AutocompleteContext, fieldType: AutocompleteField): Promise<SuggestionItem[]> => {
 			try {
 				if (fieldType === 'labels') {
-					return labelStore.filterLabelsByQuery([], autocompleteContext.search)
+					return labelStore.filterLabelsByQuery([], autocompleteContext.search).filter((label): label is ILabel => label !== undefined) as SuggestionItem[]
 				}
 
 				if (fieldType === 'assignees') {
@@ -181,9 +233,10 @@ export default Extension.create<FilterAutocompleteOptions>({
 							let assigneeSuggestions: SuggestionItem[] = []
 							try {
 								if (this.options.projectId) {
-									assigneeSuggestions = await projectUserService.getAll({projectId: this.options.projectId}, {s: autocompleteContext.search})
+									// @ts-expect-error - projectId is used for URL replacement but not part of IAbstract
+									assigneeSuggestions = await projectUserService.getAll({projectId: this.options.projectId}, {s: autocompleteContext.search}) as SuggestionItem[]
 								} else {
-									assigneeSuggestions = await userService.getAll({}, {s: autocompleteContext.search})
+									assigneeSuggestions = await userService.getAll({} as IUser, {s: autocompleteContext.search}) as SuggestionItem[]
 								}
 								// For assignees, show suggestions even with empty search, but limit if we have many
 								if (autocompleteContext.search === '' && assigneeSuggestions.length > 10) {
@@ -197,9 +250,9 @@ export default Extension.create<FilterAutocompleteOptions>({
 						}, 300)
 					})
 				}
-				
+
 				if (fieldType === 'projects' && !this.options.projectId) {
-					return projectStore.searchProject(autocompleteContext.search)
+					return projectStore.searchProject(autocompleteContext.search).filter((project): project is IProject => project !== undefined) as SuggestionItem[]
 				}
 			} catch (error) {
 				console.error('Error fetching suggestions:', error)
@@ -257,14 +310,14 @@ export default Extension.create<FilterAutocompleteOptions>({
 				const pattern = new RegExp(`(${field}\\s*${FILTER_OPERATORS_REGEX}\\s*)(["']?)([^"'&|()]*)?$`, 'ig')
 				const match = pattern.exec(textUpToCursor)
 
-				if (match) {
-					const [, prefix, , , keyword = ''] = match
+				if (match && match.index !== undefined) {
+					const [, prefix = '', , quoteChar = '', keyword = ''] = match
 
 					let search = keyword.trim()
 					const operator = match[0].match(new RegExp(FILTER_OPERATORS_REGEX))?.[0] || ''
 					if (operator === 'in' || operator === '?=') {
 						const keywords = keyword.split(',')
-						search = keywords[keywords.length - 1].trim()
+						search = keywords[keywords.length - 1]?.trim() ?? ''
 					}
 
 					// Check if this expression is complete
@@ -280,6 +333,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 						startPos: match.index + prefix.length,
 						endPos: match.index + prefix.length + keyword.length,
 						isComplete,
+						quoteChar,
 					}
 
 					if (LABEL_FIELDS.includes(field)) {
@@ -321,37 +375,39 @@ export default Extension.create<FilterAutocompleteOptions>({
 				return
 			}
 
+			// If there's only one suggestion and it exactly matches the search term,
+			// don't show autocomplete - the user has already typed/selected the complete value
+			if (items.length === 1 && items[0].title?.toLowerCase() === autocompleteContext.search.toLowerCase()) {
+				hidePopup()
+				return
+			}
+
 			if (!component) {
 				component = new VueRenderer(FilterCommandsList, {
 					props: {
 						items,
 						command: (item: AutocompleteItem) => {
 							// Handle selection
-							const newValue = item.fieldType === 'assignees' ? item.item.username : item.item.title
-							const {from} = view.state.selection
-							const context = autocompleteContext
-							const operator = context.operator
-							
-							let insertValue: string = newValue ?? ''
-							const replaceFrom = Math.max(0, from - context.search.length)
-							const replaceTo = from
-							
-							// Handle multi-value operators
-							if (isMultiValueOperator(operator) && context.keyword.includes(',')) {
-								// For multi-value fields, we need to replace only the current search term
-								const keywords = context.keyword.split(',')
-								const currentKeywordIndex = keywords.length - 1
-								
-								// If we're not adding the first item, add comma prefix
-								if (currentKeywordIndex > 0 && keywords[currentKeywordIndex].trim() === context.search.trim()) {
-									// We're replacing the last incomplete keyword
-									insertValue = newValue ?? ''
-								} else {
-									// We're adding to existing keywords
-									insertValue = ',' + newValue
-								}
+							const newValue = item.fieldType === 'assignees'
+								? (item.item as IUser).username
+								: (item.item as IProject | ILabel).title
+							// Use currentAutocompleteContext (outer variable) for up-to-date positions
+							// The local autocompleteContext would be stale since this callback
+							// was created on first component render
+							const context = currentAutocompleteContext
+							if (!context) {
+								return
 							}
-							
+							const operator = context.operator
+
+							// Check if there's a closing quote immediately after the keyword
+							const docText = view.state.doc.textContent
+							const charAfterKeyword = docText[context.endPos] || ''
+							const hasClosingQuote = context.quoteChar !== '' && charAfterKeyword === context.quoteChar
+
+							const insertValue: string = newValue ?? ''
+							const { replaceFrom, replaceTo } = calculateReplacementRange(context, operator, hasClosingQuote)
+
 							const tr = view.state.tr.replaceWith(
 								replaceFrom,
 								replaceTo,
@@ -359,6 +415,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 							)
 							// Position cursor after the inserted text
 							const newPos = replaceFrom + insertValue.length
+							// @ts-expect-error - Selection.near is a static method but TypeScript doesn't recognize it on constructor
 							tr.setSelection(view.state.selection.constructor.near(tr.doc.resolve(newPos)))
 							view.dispatch(tr)
 							
@@ -371,24 +428,10 @@ export default Extension.create<FilterAutocompleteOptions>({
 								view.focus()
 							}, 0)
 
-							// For multi-value operators, don't suppress autocomplete to keep dropdown open
-							if (isMultiValueOperator(operator)) {
-								// Add comma and space for next entry if not already present
-								setTimeout(() => {
-									const currentText = view.state.doc.textContent
-									const currentPos = view.state.selection.from
-									if (currentText.charAt(currentPos) !== ',') {
-										const tr = view.state.tr.insertText(',', currentPos)
-										view.dispatch(tr)
-										// Update position after comma insertion
-										lastSelectionPosition = currentPos + 1
-										lastSelectionTime = Date.now()
-									}
-								}, 10)
-							} else {
-								suppressNextAutocomplete = true
-								hidePopup()
-							}
+							// Always suppress and hide after selection
+							// User can type comma manually if they want to add more values
+							suppressNextAutocomplete = true
+							hidePopup()
 						},
 					},
 					editor: this.editor,

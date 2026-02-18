@@ -195,6 +195,8 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 
+	sf.OwnerID = origFilter.OwnerID
+
 	if sf.Filters == nil {
 		sf.Filters = origFilter.Filters
 	}
@@ -263,18 +265,11 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 		}
 
 		taskBuckets := make([]*TaskBucket, 0, len(tasksToAdd))
-		taskPositions := make([]*TaskPosition, 0, len(tasksToAdd))
 		for _, task := range tasksToAdd {
 			taskBuckets = append(taskBuckets, &TaskBucket{
 				TaskID:        task.ID,
 				BucketID:      bucketID,
 				ProjectViewID: view.ID,
-			})
-
-			taskPositions = append(taskPositions, &TaskPosition{
-				TaskID:        task.ID,
-				ProjectViewID: view.ID,
-				Position:      0,
 			})
 		}
 
@@ -284,11 +279,9 @@ func (sf *SavedFilter) Update(s *xorm.Session, _ web.Auth) error {
 			}
 		}
 
-		if len(taskPositions) > 0 {
-			if _, err = s.Insert(taskPositions); err != nil {
-				return err
-			}
-
+		// Recalculate positions for all tasks - this will create positions for
+		// new tasks that don't have them yet
+		if len(tasksToAdd) > 0 {
 			if err = RecalculateTaskPositions(s, view, &user.User{ID: sf.OwnerID}); err != nil {
 				return err
 			}
@@ -504,13 +497,8 @@ func RegisterAddTaskToFilterViewCron() {
 					newTaskBuckets = append(newTaskBuckets, tb)
 				}
 				if _, exists := savedTaskPositionMap[task.ID]; !exists {
-					tp := &TaskPosition{
-						TaskID:        task.ID,
-						ProjectViewID: view.ID,
-						Position:      0,
-					}
-					newTaskPositions = append(newTaskPositions, tp)
-
+					// Mark view for recalculation - RecalculateTaskPositions will create
+					// positions for all tasks including new ones
 					if _, ok := viewsToRecalc[view.ID]; !ok {
 						viewsToRecalc[view.ID] = struct {
 							view    *ProjectView

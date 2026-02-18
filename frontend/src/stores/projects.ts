@@ -15,7 +15,9 @@ import type {IProject} from '@/modelTypes/IProject'
 import ProjectModel from '@/models/project'
 import {success} from '@/message'
 import {useBaseStore} from '@/stores/base'
-import {getSavedFilterIdFromProjectId} from '@/services/savedFilter'
+import SavedFilterService from '@/services/savedFilter'
+import {getSavedFilterIdFromProjectId, isSavedFilter} from '@/services/savedFilter'
+import SavedFilterModel from '@/models/savedFilter'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import {PERMISSIONS} from '@/constants/permissions.ts'
 
@@ -32,8 +34,15 @@ export const useProjectStore = defineStore('project', () => {
 	const projectsArray = computed(() => Object.values(projects.value)
 		.sort((a, b) => a.position - b.position))
 
+	// Check if a project is an orphaned sub-project (has a parent that isn't accessible)
+	function isOrphanedSubProject(project: IProject): boolean {
+		return project.parentProjectId !== 0 && !projects.value[project.parentProjectId]
+	}
+
 	const notArchivedRootProjects = computed(() => projectsArray.value
-		.filter(p => p.parentProjectId === 0 && !p.isArchived && p.id > 0))
+		.filter(p => !p.isArchived && p.id > 0 && (
+			p.parentProjectId === 0 || isOrphanedSubProject(p)
+		)))
 	const favoriteProjects = computed(() => projectsArray.value
 		.filter(p => !p.isArchived && p.isFavorite))
 	const savedFilterProjects = computed(() => projectsArray.value
@@ -43,6 +52,16 @@ export const useProjectStore = defineStore('project', () => {
 	const getChildProjects = computed(() => {
 		return (id: IProject['id']) => projectsArray.value.filter(p => p.parentProjectId === id)
 	})
+
+	// Get the effective parentProjectId for saving position changes.
+	// For orphaned sub-projects shown at root level, preserve the original parentProjectId
+	// to prevent accidentally detaching them from their real parent.
+	function getEffectiveParentProjectId(project: IProject, parentProjectIdFromDom: number): number {
+		if (parentProjectIdFromDom === 0 && isOrphanedSubProject(project)) {
+			return project.parentProjectId
+		}
+		return parentProjectIdFromDom
+	}
 
 	const getAncestors = computed(() => {
 		return (project: IProject): IProject[] => {
@@ -145,10 +164,43 @@ export const useProjectStore = defineStore('project', () => {
 		if (project.id === -1 || project.isArchived) {
 			return
 		}
+
+		if (isSavedFilter(project)) {
+			return toggleSavedFilterFavorite(project)
+		}
+		
 		return updateProject({
 			...project,
 			isFavorite: !project.isFavorite,
 		})
+	}
+
+	async function toggleSavedFilterFavorite(project: IProject) {
+		if (!isSavedFilter(project)) {
+			return
+		}
+
+		const wasFavorite = project.isFavorite
+		const filterId = getSavedFilterIdFromProjectId(project.id)
+		const savedFilterService = new SavedFilterService()
+
+		// Optimistically update the UI
+		setProject({
+			...project,
+			isFavorite: !wasFavorite,
+		})
+
+		try {
+			const savedFilter = await savedFilterService.get(new SavedFilterModel({id: filterId}))
+			savedFilter.isFavorite = !wasFavorite
+			await savedFilterService.update(savedFilter)
+		} catch (e) {
+			setProject({
+				...project,
+				isFavorite: wasFavorite,
+			})
+			throw e
+		}
 	}
 
 	async function createProject(project: IProject) {
@@ -284,6 +336,8 @@ export const useProjectStore = defineStore('project', () => {
 		savedFilterProjects: readonly(savedFilterProjects),
 
 		getChildProjects,
+		isOrphanedSubProject,
+		getEffectiveParentProjectId,
 		findProjectByExactname,
 		findProjectByIdentifier,
 		searchProject,

@@ -1,7 +1,8 @@
 <template>
 	<aside
-		:class="{'is-active': baseStore.menuActive}"
+		:class="{'is-active': baseStore.menuActive, 'is-resizing': isResizing}"
 		class="menu-container"
+		:style="{'--sidebar-width': sidebarWidth}"
 	>
 		<nav class="menu top-menu">
 			<RouterLink
@@ -83,7 +84,7 @@
 				class="menu"
 			>
 				<ProjectsNavigation
-					:model-value="favoriteProjects" 
+					:model-value="favoriteProjects"
 					:can-edit-order="false"
 					:can-collapse="false"
 				/>
@@ -113,6 +114,13 @@
 			class="mbs-auto"
 			utm-medium="navigation"
 		/>
+
+		<div
+			v-if="!isMobile"
+			class="resize-handle"
+			@mousedown="startResize"
+			@touchstart="startResize"
+		/>
 	</aside>
 </template>
 
@@ -126,13 +134,18 @@ import Loading from '@/components/misc/Loading.vue'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
+import type {IProject} from '@/modelTypes/IProject'
+import {useSidebarResize} from '@/composables/useSidebarResize'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
 
-const projects = computed(() => projectStore.notArchivedRootProjects)
-const favoriteProjects = computed(() => projectStore.favoriteProjects)
-const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
+const {sidebarWidth, isResizing, startResize, isMobile} = useSidebarResize()
+
+// Cast readonly arrays to mutable type - the arrays are not actually mutated by the component
+const projects = computed(() => projectStore.notArchivedRootProjects as IProject[])
+const favoriteProjects = computed(() => projectStore.favoriteProjects as IProject[])
+const savedFilterProjects = computed(() => projectStore.savedFilterProjects as IProject[])
 </script>
 
 <style lang="scss" scoped>
@@ -149,6 +162,8 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 }
 
 .menu-container {
+	--sidebar-width: #{$navbar-width};
+
 	display: flex;
 	flex-direction: column;
 	background: var(--site-background);
@@ -160,12 +175,10 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 	inset-block-end: 0;
 	inset-inline-start: 0;
 	transform: translateX(-100%);
-	inline-size: $navbar-width;
+	inline-size: var(--sidebar-width);
 	overflow-y: auto;
 
 	[dir="rtl"] & {
-		inset-inline-start: auto;
-		inset-inline-end: 0;
 		transform: translateX(100%);
 	}
 
@@ -178,6 +191,27 @@ const savedFilterProjects = computed(() => projectStore.savedFilterProjects)
 	&.is-active {
 		transform: translateX(0);
 		transition: transform $transition-duration ease-out;
+	}
+
+	&.is-resizing {
+		transition: none;
+	}
+}
+
+.resize-handle {
+	position: absolute;
+	inset-block-start: 0;
+	inset-block-end: 0;
+	inset-inline-end: 0;
+	inline-size: 4px;
+	cursor: ew-resize;
+	background: transparent;
+	transition: background-color $transition-duration ease;
+	touch-action: none;
+
+	&:hover,
+	&:active {
+		background-color: var(--primary);
 	}
 }
 

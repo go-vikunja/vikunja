@@ -18,6 +18,7 @@ package upload
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"image"
 	"image/png"
@@ -41,7 +42,7 @@ const CacheKeyPrefix = "avatar_upload_"
 
 // FlushCache removes cached avatars for a user
 func (p *Provider) FlushCache(u *user.User) error {
-	return keyvalue.Del(CacheKeyPrefix + strconv.Itoa(int(u.ID)))
+	return keyvalue.DelPrefix(CacheKeyPrefix + strconv.Itoa(int(u.ID)) + "_")
 }
 
 // CachedAvatar represents a cached avatar with its content and mime type
@@ -125,6 +126,20 @@ func (p *Provider) getAvatarWithDepth(u *user.User, size int64, recursionDepth i
 	return cachedAvatar.Content, cachedAvatar.MimeType, nil
 }
 
+// AsDataURI returns a base64 encoded data URI for the uploaded avatar
+func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
+	avatarData, mimeType, err := p.GetAvatar(u, size)
+	if err != nil {
+		return "", err
+	}
+
+	// Encode the avatar data as base64 and create a data URI
+	base64Data := base64.StdEncoding.EncodeToString(avatarData)
+	dataURI := fmt.Sprintf("data:%s;base64,%s", mimeType, base64Data)
+
+	return dataURI, nil
+}
+
 func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
 
 	// Remove the old file if one exists
@@ -156,7 +171,7 @@ func StoreAvatarFile(s *xorm.Session, u *user.User, src io.Reader) (err error) {
 	}
 
 	// Save the file
-	f, err := files.CreateWithMime(buf, "avatar.png", uint64(buf.Len()), u, "image/png")
+	f, err := files.CreateWithMime(bytes.NewReader(buf.Bytes()), "avatar.png", uint64(buf.Len()), u, "image/png")
 	if err != nil {
 		return err
 	}

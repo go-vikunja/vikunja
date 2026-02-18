@@ -27,14 +27,14 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
-	echojwt "github.com/labstack/echo-jwt/v4"
-	"github.com/labstack/echo/v4"
+	echojwt "github.com/labstack/echo-jwt/v5"
+	"github.com/labstack/echo/v5"
 )
 
 func SetupTokenMiddleware() echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(config.ServiceJWTSecret.GetString()),
-		Skipper: func(c echo.Context) bool {
+		Skipper: func(c *echo.Context) bool {
 			authHeader := c.Request().Header.Values("Authorization")
 			if len(authHeader) == 0 {
 				return false // let the jwt middleware handle invalid headers
@@ -42,13 +42,6 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 
 			for _, s := range authHeader {
 				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
-					// If the route does not exist, skip the current handling and let the rest of echo's logic handle it
-					findCtx := c.Echo().NewContext(c.Request(), c.Response())
-					c.Echo().Router().Find(c.Request().Method, echo.GetPath(c.Request()), findCtx)
-					if findCtx.Path() == "/api/v1/*" {
-						return true
-					}
-
 					if c.Request().URL.Path == "/api/v1/token/test" {
 						return true
 					}
@@ -60,9 +53,9 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 
 			return false
 		},
-		ErrorHandler: func(_ echo.Context, err error) error {
+		ErrorHandler: func(_ *echo.Context, err error) error {
 			if err != nil {
-				return echo.NewHTTPError(http.StatusUnauthorized, "missing, malformed, expired or otherwise invalid token provided").SetInternal(err)
+				return echo.NewHTTPError(http.StatusUnauthorized, "missing, malformed, expired or otherwise invalid token provided")
 			}
 
 			return nil
@@ -70,27 +63,27 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 	})
 }
 
-func checkAPITokenAndPutItInContext(tokenHeaderValue string, c echo.Context) error {
+func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 	token, err := models.GetTokenFromTokenString(s, strings.TrimPrefix(tokenHeaderValue, "Bearer "))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error").Wrap(err)
 	}
 
 	if time.Now().After(token.ExpiresAt) {
 		log.Debugf("[auth] Tried authenticating with token %d but it expired on %s", token.ID, token.ExpiresAt.String())
-		return echo.NewHTTPError(http.StatusUnauthorized)
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
 	if !models.CanDoAPIRoute(c, token) {
 		log.Debugf("[auth] Tried authenticating with token %d but it does not have permission to do this route", token.ID)
-		return echo.NewHTTPError(http.StatusUnauthorized)
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
 	u, err := user.GetUserByID(s, token.OwnerID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error").Wrap(err)
 	}
 
 	c.Set("api_token", token)

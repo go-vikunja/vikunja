@@ -1,11 +1,11 @@
-import {createI18n} from 'vue-i18n'
-import type {PluralizationRule} from 'vue-i18n'
+import type { PluralizationRule } from 'vue-i18n'
+import { createI18n } from 'vue-i18n'
 import langEN from './lang/en.json'
 
+import { loadDayJsLocale } from '@/i18n/useDayjsLanguageSync.ts'
+import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import dayjs from 'dayjs'
-import {loadDayJsLocale} from '@/i18n/useDayjsLanguageSync.ts'
 
 dayjs.extend(localizedFormat)
 dayjs.extend(relativeTime)
@@ -22,7 +22,8 @@ export const SUPPORTED_LOCALES = {
 	'pl-PL': 'Polski',
 	'nl-NL': 'Nederlands',
 	'pt-PT': 'Português',
-	'zh-CN': '中文',
+	'zh-CN': '简体中文',
+	'zh-TW': '繁體中文',
 	'no-NO': 'Norsk Bokmål',
 	'es-ES': 'Español',
 	'da-DK': 'Dansk',
@@ -39,6 +40,7 @@ export const SUPPORTED_LOCALES = {
 	'tr-TR': 'Türkçe',
 	'fi-FI': 'Suomi',
 	'he-IL': 'עִבְרִית',
+	'sv-SE': 'Svenska',
 	// IMPORTANT: Also add new languages to useDayjsLanguageSync
 	// IMPORTANT: Also add new languages to pkg/i18n/i18n.go
 } as const

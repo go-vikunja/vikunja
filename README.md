@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/go-vikunja/vikunja/actions/workflows/ci.yml/badge.svg)](https://github.com/go-vikunja/vikunja/actions/workflows/ci.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Install](https://img.shields.io/badge/download-v1.0.0rc2-brightgreen.svg)](https://vikunja.io/docs/installing)
+[![Install](https://img.shields.io/badge/download-v1.1.0-brightgreen.svg)](https://vikunja.io/docs/installing)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/vikunja.svg)](https://hub.docker.com/r/vikunja/vikunja/)
 [![Swagger Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v1/docs)
 [![Go Report Card](https://goreportcard.com/badge/kolaente.dev/vikunja/vikunja)](https://goreportcard.com/report/kolaente.dev/vikunja/vikunja)
@@ -11,7 +11,7 @@
 
 > The Todo-app to organize your life.
 
-If Vikunja is useful to you, please consider [buying me a coffee](https://www.buymeacoffee.com/kolaente), [sponsoring me on GitHub](https://github.com/sponsors/kolaente) or buying [a sticker pack](https://vikunja.cloud/stickers).
+If Vikunja is useful to you, please consider [buying me a coffee](https://www.buymeacoffee.com/kolaente), [sponsoring me on GitHub](https://github.com/sponsors/kolaente) or buying [a sticker pack](https://vikunja.io/stickers).
 I'm also offering [a hosted version of Vikunja](https://vikunja.cloud/) if you want a hassle-free solution for yourself or your team.
 
 ## Table of contents

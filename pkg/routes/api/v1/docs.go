@@ -24,24 +24,24 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	_ "code.vikunja.io/api/pkg/swagger" // To make sure the swag files are properly registered
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/swaggo/swag"
 )
 
 // DocsJSON serves swagger doc json specs
-func DocsJSON(c echo.Context) error {
+func DocsJSON(c *echo.Context) error {
 
 	doc, err := swag.ReadDoc()
 	if err != nil {
 		log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError).SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
 
 	return c.Blob(http.StatusOK, echo.MIMEApplicationJSON, []byte(doc))
 }
 
 // RedocUI serves everything needed to provide the redoc ui
-func RedocUI(c echo.Context) error {
+func RedocUI(c *echo.Context) error {
 	return c.HTML(http.StatusOK, RedocUITemplate)
 }
 

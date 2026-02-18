@@ -21,17 +21,16 @@ import (
 	"net/http"
 	"strings"
 
-	"code.vikunja.io/api/pkg/web/handler"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
-func unsplashImage(url string, c echo.Context) error {
+func unsplashImage(url string, c *echo.Context) error {
 	// Replacing and appending the url for security reasons
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://images.unsplash.com/"+strings.Replace(url, "https://images.unsplash.com/", "", 1), nil)
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
 		return err
 	}
@@ -53,10 +52,10 @@ func unsplashImage(url string, c echo.Context) error {
 // @Failure 404 {object} models.Message "The image does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/image/{image} [get]
-func ProxyUnsplashImage(c echo.Context) error {
+func ProxyUnsplashImage(c *echo.Context) error {
 	photo, err := getUnsplashPhotoInfoByID(c.Param("image"))
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	pingbackByPhotoID(photo.ID)
 	return unsplashImage(photo.Urls.Raw, c)
@@ -73,10 +72,10 @@ func ProxyUnsplashImage(c echo.Context) error {
 // @Failure 404 {object} models.Message "The image does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/image/{image}/thumb [get]
-func ProxyUnsplashThumb(c echo.Context) error {
+func ProxyUnsplashThumb(c *echo.Context) error {
 	photo, err := getUnsplashPhotoInfoByID(c.Param("image"))
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	pingbackByPhotoID(photo.ID)
 	return unsplashImage("https://images.unsplash.com/"+getImageID(photo.Urls.Raw)+"?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjcyODAwfQ", c)

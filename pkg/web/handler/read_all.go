@@ -21,24 +21,26 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"reflect"
 	"strconv"
 
 	vconfig "code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // ReadAllWeb is the webhandler to get all objects of a type
-func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
+func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 	// Get our model
 	currentStruct := c.EmptyStruct()
 
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").Wrap(err)
 	}
 
 	// Get the object & bind params to struct
@@ -46,9 +48,9 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
+		return models.ErrInvalidModel{Err: err}
 	}
 
 	// Pagination
@@ -59,7 +61,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	pageNumber, err := strconv.Atoi(page)
 	if err != nil {
 		log.Error(err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad page requested.").Wrap(err)
 	}
 	if pageNumber < 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Page number cannot be negative.")
@@ -74,7 +76,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 		perPageNumber, err = strconv.Atoi(perPage)
 		if err != nil {
 			log.Error(err.Error())
-			return echo.NewHTTPError(http.StatusBadRequest, "Bad per page amount requested.").SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, "Bad per page amount requested.").Wrap(err)
 		}
 	}
 	// Set default page count
@@ -103,7 +105,7 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 	result, resultCount, numberOfItems, err := currentStruct.ReadAll(s, currentAuth, search, pageNumber, perPageNumber)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 
 	// Calculate the number of pages from the number of items
@@ -125,12 +127,15 @@ func (c *WebHandler) ReadAllWeb(ctx echo.Context) error {
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 
-	err = ctx.JSON(http.StatusOK, result)
-	if err != nil {
-		return HandleHTTPError(err)
+	// Ensure we return an empty array instead of null when there are no results.
+	// We need to use reflection here because a nil slice wrapped in an interface{}
+	// is not equal to nil (the interface contains a nil value but is not nil itself).
+	if result == nil || (reflect.ValueOf(result).Kind() == reflect.Slice && reflect.ValueOf(result).IsNil()) {
+		result = []interface{}{}
 	}
-	return err
+
+	return ctx.JSON(http.StatusOK, result)
 }

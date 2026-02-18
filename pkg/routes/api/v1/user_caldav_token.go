@@ -23,8 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // GenerateCaldavToken is the handler to create a caldav token
@@ -39,16 +38,16 @@ import (
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/token/caldav [put]
-func GenerateCaldavToken(c echo.Context) (err error) {
+func GenerateCaldavToken(c *echo.Context) (err error) {
 
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	token, err := user.GenerateNewCaldavToken(u)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusCreated, token)
@@ -66,15 +65,15 @@ func GenerateCaldavToken(c echo.Context) (err error) {
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/token/caldav [get]
-func GetCaldavTokens(c echo.Context) error {
+func GetCaldavTokens(c *echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	tokens, err := user.GetCaldavTokens(u)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, tokens)
@@ -92,20 +91,20 @@ func GetCaldavTokens(c echo.Context) error {
 // @Failure 404 {object} web.HTTPError "User does not exist."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/token/caldav/{id} [delete]
-func DeleteCaldavToken(c echo.Context) error {
+func DeleteCaldavToken(c *echo.Context) error {
 	u, err := user.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = user.DeleteCaldavTokenByID(u, id)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "The token was deleted successfully."})

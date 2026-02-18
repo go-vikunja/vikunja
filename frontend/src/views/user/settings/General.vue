@@ -181,6 +181,7 @@
 						:show-empty="true"
 						class="timezone-select"
 						label="label"
+						select-placeholder=""
 						@search="searchTimezones"
 					/>
 				</label>
@@ -207,6 +208,25 @@
 						<select v-model="settings.frontendSettings.dateDisplay">
 							<option
 								v-for="(label, value) in dateDisplaySettings"
+								:key="value"
+								:value="value"
+							>{{ label }}</option>
+						</select>
+					</div>
+				</label>
+			</div>
+			<div
+				v-if="settings.frontendSettings.dateDisplay !== 'relative'"
+				class="field"
+			>
+				<label class="two-col">
+					<span>
+						{{ $t('user.settings.general.timeFormat') }}
+					</span>
+					<div class="select">
+						<select v-model="settings.frontendSettings.timeFormat">
+							<option
+								v-for="(label, value) in timeFormatSettings"
 								:key="value"
 								:value="value"
 							>{{ label }}</option>
@@ -295,9 +315,33 @@
 					{{ $t('user.settings.general.allowIconChanges') }}
 				</label>
 			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input
+						v-model="settings.frontendSettings.alwaysShowBucketTaskCount"
+						type="checkbox"
+					>
+					{{ $t('user.settings.general.alwaysShowBucketTaskCount') }}
+				</label>
+			</div>
+			<div class="field">
+				<label class="two-col">
+					<span>
+						{{ $t('user.settings.backgroundBrightness.title') }}
+					</span>
+					<input 
+						v-model.number="settings.frontendSettings.backgroundBrightness"
+						class="input"
+						type="number"
+						min="0"
+						max="100"
+						@blur="enforceBackgroundBrightnessBounds"
+					>
+				</label>
+			</div>
 		</div>
 	</Card>
-	
+
 	<Card
 		:title="$t('user.settings.sections.privacy')"
 		class="general-settings section-block"
@@ -366,6 +410,7 @@ import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
+import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KINDS} from '@/types/IRelationKind'
 
 defineOptions({name: 'UserSettingsGeneral'})
@@ -389,8 +434,13 @@ const dateDisplaySettings = computed(() => ({
 	[DATE_DISPLAY.MM_SLASH_DD_YYYY]: t('user.settings.general.dateDisplayOptions.mm/dd/yyyy'),
 	[DATE_DISPLAY.DD_SLASH_MM_YYYY]: t('user.settings.general.dateDisplayOptions.dd/mm/yyyy'),
 	[DATE_DISPLAY.YYYY_SLASH_MM_DD]: t('user.settings.general.dateDisplayOptions.yyyy/mm/dd'),
-	[DATE_DISPLAY.DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.DAY_MONTH_YEAR),
-	[DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR),
+	[DATE_DISPLAY.DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.DAY_MONTH_YEAR, settings.value?.frontendSettings?.timeFormat),
+	[DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR]: formatDisplayDateFormat(new Date(), DATE_DISPLAY.WEEKDAY_DAY_MONTH_YEAR, settings.value?.frontendSettings?.timeFormat),
+}))
+
+const timeFormatSettings = computed(() => ({
+	[TIME_FORMAT.HOURS_12]: t('user.settings.general.timeFormatOptions.12h'),
+	[TIME_FORMAT.HOURS_24]: t('user.settings.general.timeFormatOptions.24h'),
 }))
 
 const authStore = useAuthStore()
@@ -408,6 +458,8 @@ const settings = ref<IUserSettings>({
 		// Add fallback for old settings that don't have the logo change setting set
 		allowIconChanges: authStore.settings.frontendSettings.allowIconChanges ?? true,
 		dateDisplay: authStore.settings.frontendSettings.dateDisplay ?? DATE_DISPLAY.RELATIVE,
+		// Add fallback for old settings that don't have the time format set
+		timeFormat: authStore.settings.frontendSettings.timeFormat ?? TIME_FORMAT.HOURS_12,
 		// Add fallback for old settings that don't have the default task relation type set
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
 	},
@@ -446,6 +498,18 @@ watch(
 	{deep: true},
 )
 
+function enforceBackgroundBrightnessBounds() {
+	const value = Number(settings.value.frontendSettings.backgroundBrightness)
+    
+	if (!value || isNaN(value)) {
+		settings.value.frontendSettings.backgroundBrightness = null
+	} else if (value < 0) {
+		settings.value.frontendSettings.backgroundBrightness = 0
+	} else if (value > 100) {
+		settings.value.frontendSettings.backgroundBrightness = 100
+	}
+}
+
 function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 	const availableTimezones = ref<{value: string, label: string}[]>([])
 	const searchResults = ref<{value: string, label: string}[]>([])
@@ -483,12 +547,16 @@ function useAvailableTimezones(settingsRef: Ref<IUserSettings>) {
 	}
 	
 	const timezoneObject = computed({
-		get: () => ({ 
-			value: settingsRef.value.timezone, 
-			label: settingsRef.value.timezone?.replace(/_/g, ' '), 
+		get: () => ({
+			value: settingsRef.value.timezone,
+			label: settingsRef.value.timezone?.replace(/_/g, ' '),
 		}),
 		set: (obj) => {
-			if (obj && typeof obj === 'object' && 'value' in obj) {
+			if (obj === null) {
+				settingsRef.value.timezone = ''
+				return
+			}
+			if (typeof obj === 'object' && 'value' in obj) {
 				settingsRef.value.timezone = obj.value
 			}
 		},
@@ -563,6 +631,10 @@ async function updateSettings() {
 .timezone-select {
 	min-inline-size: 200px;
 	flex-grow: 1;
+
+	@media screen and (max-width: $tablet) {
+		min-inline-size: unset;
+	}
 }
 
 .section-block + .section-block {

@@ -7,6 +7,7 @@ import LabelService from './label'
 import {colorFromHex} from '@/helpers/color/colorFromHex'
 import {SECONDS_A_DAY, SECONDS_A_HOUR, SECONDS_A_WEEK} from '@/constants/date'
 import {objectToSnakeCase} from '@/helpers/case'
+import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
 const parseDate = date => {
 	if (date) {
@@ -20,7 +21,7 @@ export default class TaskService extends AbstractService<ITask> {
 	constructor() {
 		super({
 			create: '/projects/{projectId}/tasks',
-			getAll: '/tasks/all',
+			getAll: '/tasks',
 			get: '/tasks/{id}',
 			update: '/tasks/{id}',
 			delete: '/tasks/{id}',
@@ -122,6 +123,16 @@ export default class TaskService extends AbstractService<ITask> {
 		})
 
 		return transformed as ITask
+	}
+
+	async markTaskAsRead(taskId: ITask['id']): Promise<void> {
+		const cancel = this.setLoading()
+	
+		try {
+			await AuthenticatedHTTPFactory().post(`/tasks/${taskId}/read`, {} as ITask)
+		} finally {
+			cancel()
+		}
 	}
 }
 

@@ -93,6 +93,7 @@
 				"discoverableByEmail": "Permitir que outros utilizadores me adicionem como membro a equipas ou projetos quando pesquisem pelos meu endereço de e-mail completo",
 				"playSoundWhenDone": "Tocar um som quando marcar tarefas como concluídas",
 				"allowIconChanges": "Mostrar logótipos especiais durante determinados períodos",
+				"alwaysShowBucketTaskCount": "Mostrar sempre contagem de tarefas nos conjuntos Kanban",
 				"defaultTaskRelationType": "Tipo de relação padrão da tarefa",
 				"weekStart": "A semana começa com",
 				"weekStartSunday": "Domingo",
@@ -113,6 +114,11 @@
 					"mm/dd/yyyy": "MM/DD/AAAA",
 					"dd/mm/yyyy": "DD/MM/AAAA",
 					"yyyy/mm/dd": "AAAA/MM/DD"
+				},
+				"timeFormat": "Formato da hora",
+				"timeFormatOptions": {
+					"12h": "12-horas (AM/PM)",
+					"24h": "24-horas (HH:mm)"
 				},
 				"externalUserNameChange": "O teu nome é gerido pelo teu fornecedor de início de sessão ({provider}). Para o alterar, atualiza-o antes lá."
 			},
@@ -175,6 +181,9 @@
 					"system": "Sistema",
 					"dark": "Escuro"
 				}
+			},
+			"backgroundBrightness": {
+				"title": "Brilho do fundo"
 			},
 			"apiTokens": {
 				"title": "Tokens de API",
@@ -791,6 +800,7 @@
 		"addReminder": "Adicionar um lembrete…",
 		"doneSuccess": "A tarefa foi marcada como concluída.",
 		"undoneSuccess": "A tarefa foi desmarcada como concluída.",
+		"movedToProject": "A tarefa foi movida para {project}.",
 		"undo": "Desfazer",
 		"openDetail": "Abrir vista detalhada da tarefa",
 		"checklistTotal": "{checked} de {total} tarefas",
@@ -801,8 +811,10 @@
 			"noDates": "Mostrar tarefas sem data",
 			"overdue": "Mostrar tarefas em atraso",
 			"fromuntil": "Tarefas de {from} a {until}",
-			"select": "Escolha um intervalo de datas",
-			"noTasks": "Nada para fazer — Tem um bom dia!"
+			"select": "Escolhe um intervalo de datas",
+			"noTasks": "Nada para fazer — Tem um bom dia!",
+			"filterByLabel": "A filtrar por etiqueta {label}",
+			"clearLabelFilter": "Limpar filtro por etiqueta"
 		},
 		"detail": {
 			"chooseDueDate": "Clica aqui para definir uma data de vencimento",
@@ -820,6 +832,7 @@
 			"back": "Volta ao projeto",
 			"due": "Vence {at}",
 			"closePopup": "Fechar janela",
+			"scrollToBottom": "Rolar até ao fundo",
 			"organization": "Organização",
 			"management": "Gestão",
 			"dateAndTime": "Data e hora",
@@ -862,6 +875,8 @@
 			"relatedTasks": "Tarefas Relacionadas",
 			"reminders": "Lembretes",
 			"repeat": "Repetir",
+			"comment": "{count} comentário | {count} comentários",
+			"commentCount": "Número de comentários",
 			"startDate": "Data de Início",
 			"title": "Título",
 			"updated": "Atualizado",
@@ -908,6 +923,9 @@
 			"deleteSuccess": "O comentário foi eliminado com sucesso.",
 			"addedSuccess": "O comentário foi adicionada com sucesso.",
 			"permalink": "Copiar o link permanente para este comentário"
+		},
+		"mention": {
+			"noUsersFound": "Nenhum utilizador encontrado"
 		},
 		"deferDueDate": {
 			"title": "Adiar data de vencimento",
@@ -1099,7 +1117,11 @@
 			"priority": "Alterar a prioridade desta tarefa",
 			"favorite": "Marcar / Desmarcar esta tarefa como favorita",
 			"openProject": "Abrir o projeto desta tarefa",
-			"save": "Salvar a tarefa atual"
+			"save": "Salvar a tarefa atual",
+			"copyIdentifier": "Copiar identificador da tarefa para a área de transferência",
+			"copyIdentifierAndTitle": "Copiar identificador da tarefa e título para a área de transferência",
+			"copyIdentifierTitleAndUrl": "Copiar identificador da tarefa, título e URL para a área de transferência",
+			"copyUrl": "Copiar URL da tarefa para a área de transferência"
 		},
 		"project": {
 			"title": "Vista do Projeto",

@@ -133,11 +133,16 @@ import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
 import { useBaseStore } from '@/stores/base'
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
+import type { IProject } from '@/modelTypes/IProject'
 
 const baseStore = useBaseStore()
-const currentProject = computed(() => baseStore.currentProject)
+// Create a mutable copy to satisfy type requirements (readonly deep -> mutable)
+const currentProject = computed<IProject | null>(() => {
+	const project = baseStore.currentProject
+	return project ? { ...project } as IProject : null
+})
 const background = computed(() => baseStore.background)
-const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ)
+const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission !== null && baseStore.currentProject?.maxPermission !== undefined && baseStore.currentProject.maxPermission > Permissions.READ)
 const menuActive = computed(() => baseStore.menuActive)
 
 const authStore = useAuthStore()
@@ -253,7 +258,7 @@ $user-dropdown-width-mobile: 5rem;
 
 .navbar-end {
 	margin-inline-start: 0; // overrides bulma core styles
-	margin-inline-start: auto;
+	margin-inline-end: 0; // overrides bulma core styles
 	flex: 0 0 auto;
 	display: flex;
 	align-items: stretch;

@@ -106,7 +106,7 @@ async function main() {
 		console.log('Step 4: Installing dependencies and building...')
 		execSync('pnpm dist', {stdio: 'inherit'})
 
-		if (renameDistFiles) {
+		if (!renameDistFiles) {
 			console.log('Step 5: Renaming release files...')
 			await renameDistFilesToUnstable(versionPlaceholder)
 		}

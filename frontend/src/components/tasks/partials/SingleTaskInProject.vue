@@ -1,5 +1,8 @@
 <template>
-	<div>
+	<div
+		:data-task-id="task.id"
+		:data-project-id="task.projectId"
+	>
 		<div
 			ref="taskRoot"
 			:class="{'is-loading': taskService.loading}"
@@ -49,14 +52,16 @@
 						class="pis-2 mie-1"
 					/>
 
-					<RouterLink
-						ref="taskLinkRef"
-						:to="taskDetailRoute"
-						class="task-link"
-						tabindex="-1"
-					>
-						{{ task.title }}
-					</RouterLink>
+					<TaskGlanceTooltip :task="task">
+						<RouterLink
+							ref="taskLinkRef"
+							:to="taskDetailRoute"
+							class="task-link"
+							tabindex="-1"
+						>
+							{{ task.title }}
+						</RouterLink>
+					</TaskGlanceTooltip>
 				</span>
 
 				<Labels
@@ -120,6 +125,10 @@
 					>
 						<Icon icon="history" />
 					</span>
+					<CommentCount
+						:task="task"
+						class="project-task-icon"
+					/>
 				</span>
 
 				<ChecklistSummary :task="task" />
@@ -190,8 +199,10 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
+import TaskGlanceTooltip from '@/components/tasks/partials/TaskGlanceTooltip.vue'
 import DeferTask from '@/components/tasks/partials/DeferTask.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
+import CommentCount from '@/components/tasks/partials/CommentCount.vue'
 
 import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'

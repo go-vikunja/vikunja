@@ -96,6 +96,12 @@ describe('Parse Task Text', () => {
 				'at 3am': '3:0',
 				'at 3:12 am': '3:12',
 				'at 3:12 pm': '15:12',
+				'at 3:12 AM': '3:12',
+				'at 3:12 PM': '15:12',
+				'at 3:12 Am': '3:12',
+				'at 3:12 Pm': '15:12',
+				'at 12:00 pm': '12:0',
+				'at 12:00 am': '0:0',
 			} as const
 			
 			for (const c in cases) {
@@ -309,7 +315,7 @@ describe('Parse Task Text', () => {
 			expect(result.text).toBe('Lorem Ipsum github')
 			expect(result.date).toBeNull()
 		})
-		describe('Should not recognize weekdays in words', () => {
+		describe('Should not recognize partial keywords in words', () => {
 			const cases = [
 				'renewed',
 				'github',
@@ -322,6 +328,11 @@ describe('Parse Task Text', () => {
 				'monitor blood pressure',
 				'Monitor blood pressure',
 				'buy almonds',
+				'Renovation',
+				'Remark',
+				'Renovation - 2nd Floor Bath',
+				'Remark - 13th floor',
+				'13th floor - remark',
 			]
 
 			cases.forEach(c => {
@@ -342,6 +353,62 @@ describe('Parse Task Text', () => {
 
 					expect(result.text).toBe(`Lorem Ipsum ${c} dolor`)
 					expect(result.date).toBeNull()
+				})
+				it(`should not recognize text with ${c} as special keywords`, () => {
+					const result = parseTaskText(c)
+
+					expect(result.text).toBe(c)
+					expect(result.date).toBeNull()
+				})
+			})
+		})
+		describe('Should not parse dates from the middle of text', () => {
+			const cases = [
+				'The 9/11 Report',
+				'The 01/02 Report',
+				'a]7/8 debate',
+			]
+
+			cases.forEach(c => {
+				it(`should not parse a date from '${c}'`, () => {
+					const result = parseTaskText(c)
+
+					expect(result.text).toBe(c)
+					expect(result.date).toBeNull()
+				})
+			})
+
+			it('should not parse a dot-separated date from the middle of text', () => {
+				const result = parseTaskText('The 1.2 formula')
+
+				expect(result.text).toBe('The 1.2 formula')
+				expect(result.date).toBeNull()
+			})
+		})
+		describe('Should still parse dates at text boundaries', () => {
+			const now = new Date()
+			now.setFullYear(2021, 5, 24)
+
+			const boundaryTests = [
+				{input: '9/11 meeting', dateStr: '2021-9-11', text: 'meeting'},
+				{input: 'meeting 9/11', dateStr: '2021-9-11', text: 'meeting'},
+				{input: 'meeting 9/11 at 10:00', dateStr: '2021-9-11', text: 'meeting'},
+				{input: 'meeting 9/11 @ 15:00', dateStr: '2021-9-11', text: 'meeting'},
+				{input: '2021-06-24 Lorem Ipsum', dateStr: '2021-6-24', text: 'Lorem Ipsum'},
+				{input: 'Lorem Ipsum 06/26/2021', dateStr: '2021-6-26', text: 'Lorem Ipsum'},
+				{input: '01.02 Lorem Ipsum', dateStr: '2022-2-1', text: 'Lorem Ipsum'},
+				{input: 'Lorem Ipsum 01.02', dateStr: '2022-2-1', text: 'Lorem Ipsum'},
+				{input: 'The 9/11 Report due 10/12', dateStr: '2021-10-12', text: 'The 9/11 Report due'},
+			]
+
+			boundaryTests.forEach(({input, dateStr, text}) => {
+				it(`should parse a date from '${input}'`, () => {
+					const result = parseTaskText(input, PrefixMode.Default, now)
+
+					expect(result.text.trim()).toBe(text)
+					const d = result.date
+					expect(d).not.toBeNull()
+					expect(`${d?.getFullYear()}-${(d?.getMonth() ?? 0) + 1}-${d?.getDate()}`).toBe(dateStr)
 				})
 			})
 		})
@@ -492,6 +559,17 @@ describe('Parse Task Text', () => {
 				'june 21': '2022-6-21',
 				'June 21': '2022-6-21',
 				'21st June': '2021-6-21',
+				'2nd March': '2021-3-2',
+				'2nd march': '2021-3-2',
+				'3rd April': '2021-4-3',
+				'1st January': '2021-1-1',
+				'22nd December': '2021-12-22',
+				'23rd October': '2021-10-23',
+				'4th July': '2021-7-4',
+				'15th August': '2021-8-15',
+				'31st December': '2021-12-31',
+				'5th Mar': '2021-3-5',
+				'12th Sep': '2021-9-12',
 				'jul 21': '2021-7-21',
 				'Jul 21': '2021-7-21',
 				'july 21': '2021-7-21',
@@ -574,6 +652,13 @@ describe('Parse Task Text', () => {
 				'Something at 10:00 in 5 days': '2021-6-29 10:0',
 				'Something at 10:00 17th': '2021-7-17 10:0',
 				'Something at 10:00 sep 17th': '2021-9-17 10:0',
+				'2nd March at 5': '2021-3-2 5:0',
+				'2nd March at 5pm': '2021-3-2 17:0',
+				'2nd March @ 14:00': '2021-3-2 14:0',
+				'3rd April at 10:30': '2021-4-3 10:30',
+				'15th August @ 9am': '2021-8-15 9:0',
+				'21st June at 18:45': '2021-6-21 18:45',
+				'5th Mar at 3pm': '2021-3-5 15:0',
 			} as Record<string, string>
 
 			for (const c in cases) {

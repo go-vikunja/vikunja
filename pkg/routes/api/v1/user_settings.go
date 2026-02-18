@@ -21,14 +21,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/tkuchiki/go-timezone"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 )
 
 // UserAvatarProvider holds the user avatar provider type
@@ -77,11 +76,11 @@ type UserSettings struct {
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/avatar [get]
-func GetUserAvatarProvider(c echo.Context) error {
+func GetUserAvatarProvider(c *echo.Context) error {
 
 	u, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -90,12 +89,12 @@ func GetUserAvatarProvider(c echo.Context) error {
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	uap := &UserAvatarProvider{AvatarProvider: user.AvatarProvider}
@@ -114,17 +113,17 @@ func GetUserAvatarProvider(c echo.Context) error {
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/avatar [post]
-func ChangeUserAvatarProvider(c echo.Context) error {
+func ChangeUserAvatarProvider(c *echo.Context) error {
 
 	uap := &UserAvatarProvider{}
 	err := c.Bind(uap)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad avatar type provided.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Bad avatar type provided.").Wrap(err)
 	}
 
 	u, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -133,7 +132,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	oldProvider := user.AvatarProvider
@@ -143,7 +142,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 	_, err = user2.UpdateUser(s, user, false)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if user.AvatarProvider == "initials" {
@@ -152,7 +151,7 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if oldProvider != user.AvatarProvider {
@@ -173,25 +172,25 @@ func ChangeUserAvatarProvider(c echo.Context) error {
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/general [post]
-func UpdateGeneralUserSettings(c echo.Context) error {
+func UpdateGeneralUserSettings(c *echo.Context) error {
 	us := &UserSettings{}
 	err := c.Bind(us)
 	if err != nil {
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
+		return models.ErrInvalidModel{Err: err}
 	}
 
 	err = c.Validate(us)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
 	u, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -200,7 +199,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	user, err := user2.GetUserWithEmail(s, &user2.User{ID: u.ID})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	invalidateAvatar := user.AvatarProvider == "initials" && user.Name != us.Name
@@ -220,12 +219,12 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 	_, err = user2.UpdateUser(s, user, true)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if invalidateAvatar {
@@ -245,7 +244,7 @@ func UpdateGeneralUserSettings(c echo.Context) error {
 // @Success 200 {array} string "All available time zones."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/timezones [get]
-func GetAvailableTimezones(c echo.Context) error {
+func GetAvailableTimezones(c *echo.Context) error {
 
 	allTimezones := timezone.New().Timezones()
 	timezoneMap := make(map[string]bool) // to filter all duplicates

@@ -22,9 +22,8 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type UserPasswordConfirmation struct {
@@ -46,50 +45,50 @@ type UserDeletionRequestConfirm struct {
 // @Failure 412 {object} web.HTTPError "Bad password provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/deletion/request [post]
-func UserRequestDeletion(c echo.Context) error {
+func UserRequestDeletion(c *echo.Context) error {
 
 	s := db.NewSession()
 	defer s.Close()
 
 	err := s.Begin()
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if u.IsLocalUser() {
 		var deletionRequest UserPasswordConfirmation
 		if err := c.Bind(&deletionRequest); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").Wrap(err)
 		}
 
 		err = c.Validate(deletionRequest)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 		}
 
 		err = user.CheckUserPassword(u, deletionRequest.Password)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err).SetInternal(err)
+			return err
 		}
 	}
 
 	err = user.RequestDeletion(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully requested deletion."})
@@ -106,15 +105,15 @@ func UserRequestDeletion(c echo.Context) error {
 // @Failure 412 {object} web.HTTPError "Bad token provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/deletion/confirm [post]
-func UserConfirmDeletion(c echo.Context) error {
+func UserConfirmDeletion(c *echo.Context) error {
 	var deleteConfirmation UserDeletionRequestConfirm
 	if err := c.Bind(&deleteConfirmation); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No token provided.").Wrap(err)
 	}
 
 	err := c.Validate(deleteConfirmation)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
 	s := db.NewSession()
@@ -122,25 +121,25 @@ func UserConfirmDeletion(c echo.Context) error {
 
 	err = s.Begin()
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = user.ConfirmDeletion(s, u, deleteConfirmation.Token)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusNoContent, models.Message{Message: "Successfully confirmed the deletion request."})
@@ -157,50 +156,50 @@ func UserConfirmDeletion(c echo.Context) error {
 // @Failure 412 {object} web.HTTPError "Bad password provided."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /user/deletion/cancel [post]
-func UserCancelDeletion(c echo.Context) error {
+func UserCancelDeletion(c *echo.Context) error {
 
 	s := db.NewSession()
 	defer s.Close()
 
 	err := s.Begin()
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if u.IsLocalUser() {
 		var deletionRequest UserPasswordConfirmation
 		if err := c.Bind(&deletionRequest); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").Wrap(err)
 		}
 
 		err = c.Validate(deletionRequest)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 		}
 
 		err = user.CheckUserPassword(u, deletionRequest.Password)
 		if err != nil {
 			_ = s.Rollback()
-			return handler.HandleHTTPError(err)
+			return err
 		}
 	}
 
 	err = user.CancelDeletion(s, u)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusNoContent, models.Message{Message: "Successfully confirmed the deletion request."})

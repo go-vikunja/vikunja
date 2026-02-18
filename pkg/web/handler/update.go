@@ -23,13 +23,14 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // UpdateWeb is the webhandler to update an object
-func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
+func (c *WebHandler) UpdateWeb(ctx *echo.Context) error {
 
 	// Get our model
 	currentStruct := c.EmptyStruct()
@@ -39,20 +40,20 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 		log.Debugf("Invalid model error. Internal error was: %s", err.Error())
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid model provided. Error was: %s", he.Message)).SetInternal(err)
+			return models.ErrInvalidModel{Message: fmt.Sprintf("%v", he.Message), Err: err}
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model provided.").SetInternal(err)
+		return models.ErrInvalidModel{Err: err}
 	}
 
 	// Validate the struct
 	if err := ctx.Validate(currentStruct); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+		return err
 	}
 
 	// Check if the user has the permission to do that
 	currentAuth, err := auth.GetAuthFromClaims(ctx)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").SetInternal(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").Wrap(err)
 	}
 
 	// Create the db session
@@ -67,29 +68,25 @@ func (c *WebHandler) UpdateWeb(ctx echo.Context) error {
 	canUpdate, err := currentStruct.CanUpdate(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 	if !canUpdate {
 		_ = s.Rollback()
 		log.Warningf("Tried to update while not having the permissions for it (User: %v)", currentAuth)
-		return echo.NewHTTPError(http.StatusForbidden)
+		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 	}
 
 	// Do the update
 	err = currentStruct.Update(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
-		return HandleHTTPError(err)
+		return err
 	}
 
-	err = ctx.JSON(http.StatusOK, currentStruct)
-	if err != nil {
-		return HandleHTTPError(err)
-	}
-	return err
+	return ctx.JSON(http.StatusOK, currentStruct)
 }

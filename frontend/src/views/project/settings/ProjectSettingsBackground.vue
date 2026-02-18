@@ -66,7 +66,7 @@
 					</CustomTransition>
 
 					<BaseButton
-						:href="`https://unsplash.com/@${im.info.author}`"
+						:href="`https://unsplash.com/@${im.info.author}?utm_source=vikunja&utm_medium=referral`"
 						class="image-search__info"
 					>
 						{{ im.info.authorName }}
@@ -90,7 +90,7 @@
 				v-if="hasBackground"
 				:shadow="false"
 				variant="tertiary"
-				class="is-danger"
+				danger
 				@click.prevent.stop="removeBackground"
 			>
 				{{ $t('project.background.remove') }}

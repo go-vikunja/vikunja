@@ -101,7 +101,7 @@ func DownloadImage(url string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download image: %w", err)
 	}

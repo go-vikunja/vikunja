@@ -17,7 +17,7 @@
 package models
 
 import (
-	"io"
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -86,24 +86,6 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 	})
 }
 
-type testfile struct {
-	content []byte
-	done    bool
-}
-
-func (t *testfile) Read(p []byte) (n int, err error) {
-	if t.done {
-		return 0, io.EOF
-	}
-	copy(p, t.content)
-	t.done = true
-	return len(p), nil
-}
-
-func (t *testfile) Close() error {
-	return nil
-}
-
 func TestTaskAttachment_NewAttachment(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
@@ -114,12 +96,9 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	ta := TaskAttachment{
 		TaskID: 1,
 	}
-	tf := &testfile{
-		content: []byte("testingstuff"),
-	}
 	testuser := &user.User{ID: 1}
 
-	err := ta.NewAttachment(s, tf, "testfile", 100, testuser)
+	err := ta.NewAttachment(s, bytes.NewReader([]byte("testingstuff")), "testfile", 100, testuser)
 	require.NoError(t, err)
 	assert.NotEqual(t, 0, ta.FileID)
 	_, err = files.FileStat(ta.File)

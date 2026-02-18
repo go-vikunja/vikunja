@@ -36,8 +36,11 @@ export function error(e, actions: Action[] = []) {
 	notify({
 		type: 'error',
 		title: i18n.global.t('error.error'),
-		text: [getErrorText(e)],
-		actions: actions,
+		text: getErrorText(e),
+		ignoreDuplicates: true,
+		data: {
+			actions: actions,
+		},
 	})
 }
 
@@ -45,7 +48,8 @@ export function success(e, actions: Action[] = []) {
 	notify({
 		type: 'success',
 		title: i18n.global.t('error.success'),
-		text: [getErrorText(e)],
+		text: getErrorText(e),
+		ignoreDuplicates: true,
 		data: {
 			actions: actions,
 		},

@@ -23,8 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 var registeredMigrators map[string]*MigrationWeb
@@ -53,24 +52,24 @@ func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 }
 
 // AuthURL is the web handler to get the auth url
-func (mw *MigrationWeb) AuthURL(c echo.Context) error {
+func (mw *MigrationWeb) AuthURL(c *echo.Context) error {
 	ms := mw.MigrationStruct()
 	return c.JSON(http.StatusOK, &AuthURL{URL: ms.AuthURL()})
 }
 
 // Migrate calls the migration method
-func (mw *MigrationWeb) Migrate(c echo.Context) error {
+func (mw *MigrationWeb) Migrate(c *echo.Context) error {
 	ms := mw.MigrationStruct()
 
 	// Get the user from context
 	user, err := user2.GetCurrentUser(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	stats, err := migration.GetMigrationStatus(ms, user)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if !stats.StartedAt.IsZero() && stats.FinishedAt.IsZero() {
@@ -83,7 +82,7 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 	// Bind user request stuff
 	err = c.Bind(ms)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error()).SetInternal(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error()).Wrap(err)
 	}
 
 	err = events.Dispatch(&MigrationRequestedEvent{
@@ -92,14 +91,14 @@ func (mw *MigrationWeb) Migrate(c echo.Context) error {
 		User:         user,
 	})
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Migration was started successfully."})
 }
 
 // Status returns whether or not a user has already done this migration
-func (mw *MigrationWeb) Status(c echo.Context) error {
+func (mw *MigrationWeb) Status(c *echo.Context) error {
 	ms := mw.MigrationStruct()
 
 	return status(ms, c)

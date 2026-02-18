@@ -17,32 +17,16 @@
 					<p>
 						{{ $t('user.deletion.scheduledCancelText') }}
 					</p>
-					<div class="field">
-						<label
-							class="label"
-							for="currentPasswordAccountDelete"
-						>
-							{{ $t('user.settings.currentPassword') }}
-						</label>
-						<div class="control">
-							<input
-								id="currentPasswordAccountDelete"
-								ref="passwordInput"
-								v-model="password"
-								class="input"
-								:class="{'is-danger': errPasswordRequired}"
-								:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-								type="password"
-								@keyup="() => errPasswordRequired = password === ''"
-							>
-						</div>
-						<p
-							v-if="errPasswordRequired"
-							class="help is-danger"
-						>
-							{{ $t('user.deletion.passwordRequired') }}
-						</p>
-					</div>
+					<FormField
+						id="currentPasswordAccountDelete"
+						ref="passwordInput"
+						v-model="password"
+						:label="$t('user.settings.currentPassword')"
+						:placeholder="$t('user.settings.currentPasswordPlaceholder')"
+						type="password"
+						:error="errPasswordRequired ? $t('user.deletion.passwordRequired') : null"
+						@keyup="() => errPasswordRequired = password === ''"
+					/>
 				</template>
 				<p v-else>
 					{{ $t('user.deletion.scheduledCancelButton') }}
@@ -68,32 +52,17 @@
 				<p>
 					{{ $t('user.deletion.text2') }}
 				</p>
-				<div class="field">
-					<label
-						class="label"
-						for="currentPasswordAccountDelete"
-					>
-						{{ $t('user.settings.currentPassword') }}
-					</label>
-					<div class="control">
-						<input
-							id="currentPasswordAccountDelete"
-							ref="passwordInput"
-							v-model="password"
-							class="input"
-							:class="{'is-danger': errPasswordRequired}"
-							:placeholder="$t('user.settings.currentPasswordPlaceholder')"
-							type="password"
-							@keyup="() => errPasswordRequired = password === ''"
-						>
-					</div>
-					<p
-						v-if="errPasswordRequired"
-						class="help is-danger"
-					>
-						{{ $t('user.deletion.passwordRequired') }}
-					</p>
-				</div>
+				<FormField
+					id="currentPasswordAccountDelete"
+					ref="passwordInput"
+					v-model="password"
+					:label="$t('user.settings.currentPassword')"
+					:class="{'is-danger': errPasswordRequired}"
+					:placeholder="$t('user.settings.currentPasswordPlaceholder')"
+					type="password"
+					:error="errPasswordRequired ? $t('user.deletion.passwordRequired') : null"
+					@keyup="() => errPasswordRequired = password === ''"
+				/>
 			</form>
 			<p v-else>
 				{{ $t('user.deletion.text3') }}
@@ -121,6 +90,7 @@ import {useTitle} from '@/composables/useTitle'
 import {success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
+import FormField from '@/components/input/FormField.vue'
 
 defineOptions({name: 'UserSettingsDeletion'})
 

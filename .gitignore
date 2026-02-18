@@ -43,7 +43,7 @@ devenv.local.nix
 .pre-commit-config.yaml
 
 # AI Tools
-/.claude/
+/.claude/settings.local.json
 PLAN.md
 /.crush/
-
+/.playwright-mcp

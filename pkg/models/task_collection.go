@@ -56,7 +56,7 @@ type TaskCollection struct {
 	// If set to `reactions`, the reactions of each task will be present in the response.
 	// If set to `comments`, the first 50 comments of each task will be present in the response.
 	// You can set this multiple times with different values.
-	Expand []TaskCollectionExpandable `query:"expand" json:"-"`
+	Expand []TaskCollectionExpandable `query:"expand[]" json:"-"`
 
 	isSavedFilter bool
 
@@ -70,6 +70,8 @@ const TaskCollectionExpandSubtasks TaskCollectionExpandable = `subtasks`
 const TaskCollectionExpandBuckets TaskCollectionExpandable = `buckets`
 const TaskCollectionExpandReactions TaskCollectionExpandable = `reactions`
 const TaskCollectionExpandComments TaskCollectionExpandable = `comments`
+const TaskCollectionExpandCommentCount TaskCollectionExpandable = `comment_count`
+const TaskCollectionExpandIsUnread TaskCollectionExpandable = `is_unread`
 
 // Validate validates if the TaskCollectionExpandable value is valid.
 func (t TaskCollectionExpandable) Validate() error {
@@ -82,9 +84,13 @@ func (t TaskCollectionExpandable) Validate() error {
 		return nil
 	case TaskCollectionExpandComments:
 		return nil
+	case TaskCollectionExpandCommentCount:
+		return nil
+	case TaskCollectionExpandIsUnread:
+		return nil
 	}
 
-	return InvalidFieldErrorWithMessage([]string{"expand"}, "Expand must be one of the following values: subtasks, buckets, reactions")
+	return InvalidFieldErrorWithMessage([]string{"expand"}, "Expand must be one of the following values: subtasks, buckets, reactions, comments, comment_count, is_unread")
 }
 
 func validateTaskField(fieldName string) error {
@@ -286,6 +292,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		tc.ProjectViewID = tf.ProjectViewID
 		tc.ProjectID = tf.ProjectID
 		tc.isSavedFilter = true
+		tc.Expand = tf.Expand
 
 		if tf.Filter != "" {
 			if tc.Filter != "" {
@@ -317,10 +324,6 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 
 			if view.Filter.FilterTimezone != "" {
 				tf.FilterTimezone = view.Filter.FilterTimezone
-			}
-
-			if view.Filter.FilterIncludeNulls {
-				tf.FilterIncludeNulls = view.Filter.FilterIncludeNulls
 			}
 
 			if view.Filter.Search != "" {

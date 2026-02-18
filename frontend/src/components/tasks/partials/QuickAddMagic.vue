@@ -19,6 +19,8 @@
 			<Card
 				class="has-no-shadow"
 				:title="$t('task.quickAddMagic.title')"
+				:show-close="true"
+				@close="() => visible = false"
 			>
 				<p>{{ $t('task.quickAddMagic.intro') }}</p>
 

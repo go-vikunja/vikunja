@@ -1,6 +1,7 @@
 import pluginVue from 'eslint-plugin-vue'
 import js from '@eslint/js'
 import vueTsEslintConfig from '@vue/eslint-config-typescript'
+import pluginDepend from 'eslint-plugin-depend'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
 
@@ -10,10 +11,10 @@ export default [
 	js.configs.recommended,
 	...pluginVue.configs['flat/recommended'],
 	...vueTsEslintConfig(),
+	pluginDepend.configs['flat/recommended'],
 	{
 		ignores: [
 			'**/*.test.ts',
-			'./cypress',
 		],
 	},
 	{
@@ -54,6 +55,8 @@ export default [
 			'vue/no-ref-object-reactivity-loss': 'error',
 			'vue/no-setup-props-reactivity-loss': 'error',
 
+			'depend/ban-dependencies': 'warn',
+
 			'@typescript-eslint/no-unused-vars': [
 				'error',
 				{
@@ -78,15 +81,6 @@ export default [
 		},
 
 
-		// 'parser': 'vue-eslint-parser',
-		// 'parserOptions': {
-		// 	'parser': '@typescript-eslint/parser',
-		// 	'ecmaVersion': 'latest',
-		// 	'tsconfigRootDir': __dirname,
-		// },
-		// 'ignorePatterns': [
-		// 	'cypress/*',
-		// ],
 	},
 
 ]

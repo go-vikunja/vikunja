@@ -18,11 +18,3 @@ const {getLabelStyles} = useLabelStyles()
 		<span>{{ label.title }}</span>
 	</span>
 </template>
-
-<style scoped lang="scss">
-.tag {
-	& + & {
-		margin-inline-start: 0.5rem;
-	}
-}
-</style>

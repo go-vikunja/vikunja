@@ -26,24 +26,23 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"xorm.io/xorm"
 )
 
-func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err error) {
+func checkExportRequest(c *echo.Context) (s *xorm.Session, u *user.User, err error) {
 	s = db.NewSession()
 	defer s.Close()
 
 	err = s.Begin()
 	if err != nil {
-		return nil, nil, handler.HandleHTTPError(err)
+		return nil, nil, err
 	}
 
 	u, err = user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, nil, handler.HandleHTTPError(err)
+		return nil, nil, err
 	}
 
 	// Users authenticated with a third-party are unable to provide their password.
@@ -53,18 +52,18 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 
 	var pass UserPasswordConfirmation
 	if err := c.Bind(&pass); err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "No password provided.").SetInternal(err)
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "No password provided.").Wrap(err)
 	}
 
 	err = c.Validate(pass)
 	if err != nil {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, err).SetInternal(err)
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
 	err = user.CheckUserPassword(u, pass.Password)
 	if err != nil {
 		_ = s.Rollback()
-		return nil, nil, handler.HandleHTTPError(err)
+		return nil, nil, err
 	}
 
 	return
@@ -81,7 +80,7 @@ func checkExportRequest(c echo.Context) (s *xorm.Session, u *user.User, err erro
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/export/request [post]
-func RequestUserDataExport(c echo.Context) error {
+func RequestUserDataExport(c *echo.Context) error {
 	s, u, err := checkExportRequest(c)
 	if err != nil {
 		return err
@@ -92,13 +91,13 @@ func RequestUserDataExport(c echo.Context) error {
 	})
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully requested data export. We will send you an email when it's ready."})
@@ -116,7 +115,7 @@ func RequestUserDataExport(c echo.Context) error {
 // @Failure 404 {object} web.HTTPError "No user data export found."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/export/download [post]
-func DownloadUserDataExport(c echo.Context) error {
+func DownloadUserDataExport(c *echo.Context) error {
 	s, u, err := checkExportRequest(c)
 	if err != nil {
 		return err
@@ -125,7 +124,7 @@ func DownloadUserDataExport(c echo.Context) error {
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Check if user has an export file
@@ -141,14 +140,14 @@ func DownloadUserDataExport(c echo.Context) error {
 		if files.IsErrFileDoesNotExist(err) {
 			return exportNotFoundError
 		}
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	err = exportFile.LoadFileByID()
 	if err != nil {
 		if os.IsNotExist(err) {
 			return exportNotFoundError
 		}
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File)
@@ -169,13 +168,13 @@ type UserExportStatus struct {
 // @Security JWTKeyAuth
 // @Success 200 {object} v1.UserExportStatus
 // @Router /user/export [get]
-func GetUserExportStatus(c echo.Context) error {
+func GetUserExportStatus(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if u.ExportFileID == 0 {
@@ -184,7 +183,7 @@ func GetUserExportStatus(c echo.Context) error {
 
 	exportFile := &files.File{ID: u.ExportFileID}
 	if err := exportFile.LoadFileMetaByID(); err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	status := UserExportStatus{

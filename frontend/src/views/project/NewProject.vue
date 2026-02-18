@@ -1,52 +1,32 @@
 <template>
 	<CreateEdit
+		v-model:loading="isSubmitting"
 		:title="$t('project.create.header')"
 		:primary-disabled="project.title === ''"
-		@create="createNewProject()"
+		@create="createProject()"
 	>
-		<div class="field">
-			<label
-				class="label"
-				for="projectTitle"
-			>{{ $t('project.title') }}</label>
-			<div
-				:class="{ 'is-loading': projectService.loading }"
-				class="control"
-			>
-				<input
-					v-model="project.title"
-					v-focus
-					:class="{ disabled: projectService.loading }"
-					class="input"
-					:placeholder="$t('project.create.titlePlaceholder')"
-					type="text"
-					name="projectTitle"
-					@keyup.enter="createNewProject()"
-					@keyup.esc="$router.back()"
-				>
-			</div>
-		</div>
-		<p
-			v-if="showError && project.title === ''"
-			class="help is-danger"
-		>
-			{{ $t('project.create.addTitleRequired') }}
-		</p>
-		<div
+		<FormField
+			v-model="project.title"
+			v-focus
+			:label="$t('project.title')"
+			:disabled="projectService.loading"
+			:loading="projectService.loading"
+			:placeholder="$t('project.create.titlePlaceholder')"
+			type="text"
+			name="projectTitle"
+			:error="showError && project.title === '' ? $t('project.create.addTitleRequired') : null"
+			@keyup.enter="createProject()"
+			@keyup.esc="$router.back()"
+		/>
+		<FormField
 			v-if="projectStore.hasProjects"
-			class="field"
+			:label="$t('project.parent')"
 		>
-			<label class="label">{{ $t('project.parent') }}</label>
-			<div class="control">
-				<ProjectSearch v-model="parentProject" />
-			</div>
-		</div>
-		<div class="field">
-			<label class="label">{{ $t('project.color') }}</label>
-			<div class="control">
-				<ColorPicker v-model="project.hexColor" />
-			</div>
-		</div>
+			<ProjectSearch v-model="parentProject" />
+		</FormField>
+		<FormField :label="$t('project.color')">
+			<ColorPicker v-model="project.hexColor" />
+		</FormField>
 	</CreateEdit>
 </template>
 
@@ -58,6 +38,7 @@ import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
+import FormField from '@/components/input/FormField.vue'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
@@ -78,6 +59,7 @@ const project = reactive(new ProjectModel())
 const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
 const parentProject = ref<IProject | null>(null)
+const isSubmitting = ref(false)
 
 watch(
 	() => props.parentProjectId,
@@ -85,18 +67,28 @@ watch(
 	{immediate: true},
 )
 
-async function createNewProject() {
+async function createProject() {
 	if (project.title === '') {
 		showError.value = true
 		return
 	}
 	showError.value = false
 
+	if (isSubmitting.value) {
+		return
+	}
+
+	isSubmitting.value = true
+
 	if (parentProject.value) {
 		project.parentProjectId = parentProject.value.id
 	}
 
-	await projectStore.createProject(project)
-	success({message: t('project.create.createdSuccess')})
+	try {
+		await projectStore.createProject(project)
+		success({message: t('project.create.createdSuccess')})
+	} finally {
+		isSubmitting.value = false
+	}
 }
 </script>

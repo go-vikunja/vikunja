@@ -106,6 +106,8 @@ type Task struct {
 	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" project. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
+	IsUnread *bool `xorm:"-" json:"is_unread,omitempty"`
+
 	// The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
 	// Will only returned when retrieving one task.
 	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
@@ -125,8 +127,11 @@ type Task struct {
 	// All comments of this task. Only present when fetching tasks with the `expand` parameter set to `comments`.
 	Comments []*TaskComment `xorm:"-" json:"comments,omitempty"`
 
+	// Comment count of this task. Only present when fetching tasks with the `expand` parameter set to `comment_count`.
+	CommentCount *int64 `xorm:"-" json:"comment_count,omitempty"`
+
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
-	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
+	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand[]"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
@@ -216,7 +221,7 @@ type taskSearchOptions struct {
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
-// @Router /tasks/all [get]
+// @Router /tasks [get]
 func (t *Task) ReadAll(_ *xorm.Session, _ web.Auth, _ string, _ int, _ int) (result interface{}, resultCount int, totalItems int64, err error) {
 	return nil, 0, 0, nil
 }
@@ -409,12 +414,35 @@ func getRemindersForTasks(s *xorm.Session, taskIDs []int64) (reminders []*TaskRe
 }
 
 func (t *Task) setIdentifier(project *Project) {
-	if project == nil || (project != nil && project.Identifier == "") {
+	if project == nil || project.Identifier == "" {
 		t.Identifier = "#" + strconv.FormatInt(t.Index, 10)
 		return
 	}
 
 	t.Identifier = project.Identifier + "-" + strconv.FormatInt(t.Index, 10)
+}
+
+func addIsUnreadToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task, a web.Auth) (err error) {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	unreadStatuses := []*TaskUnreadStatus{}
+	err = s.In("task_id", taskIDs).
+		Where("user_id = ?", a.GetID()).
+		Find(&unreadStatuses)
+	if err != nil {
+		return err
+	}
+
+	b := true
+	for _, status := range unreadStatuses {
+		if task, exists := taskMap[status.TaskID]; exists {
+			task.IsUnread = &b
+		}
+	}
+
+	return nil
 }
 
 // Get all assignees
@@ -587,6 +615,8 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 
 // This function takes a map with pointers and returns a slice with pointers to tasks
 // It adds more stuff like assignees/labels/etc to a bunch of tasks
+//
+//nolint:gocyclo
 func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, view *ProjectView, expand []TaskCollectionExpandable) (err error) {
 
 	// No need to iterate over users and stuff if the project doesn't have tasks
@@ -651,6 +681,35 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 		for _, position := range positions {
 			positionsMap[position.TaskID] = position
 		}
+
+		// For saved filter views, ensure all tasks have positions
+		// This is a safety net - the cron job handles bulk position creation,
+		// but we need immediate positions for newly matching tasks
+		if GetSavedFilterIDFromProjectID(view.ProjectID) > 0 {
+			tasksNeedingPositions := make([]*Task, 0)
+			for _, task := range taskMap {
+				if _, hasPosition := positionsMap[task.ID]; !hasPosition {
+					tasksNeedingPositions = append(tasksNeedingPositions, task)
+				}
+			}
+
+			if len(tasksNeedingPositions) > 0 {
+				// Create positions for tasks that don't have them
+				if err = createPositionsForTasksInView(s, tasksNeedingPositions, view, a); err != nil {
+					return err
+				}
+
+				// Reload positions after creation
+				positions, err = getPositionsForView(s, view)
+				if err != nil {
+					return err
+				}
+				positionsMap = make(map[int64]*TaskPosition, len(positions))
+				for _, p := range positions {
+					positionsMap[p.TaskID] = p
+				}
+			}
+		}
 	}
 
 	var reactions map[int64]ReactionMap
@@ -678,6 +737,16 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				err = addCommentsToTasks(s, taskIDs, taskMap)
 				if err != nil {
 					return err
+				}
+			case TaskCollectionExpandCommentCount:
+				err = addCommentCountToTasks(s, taskIDs, taskMap)
+				if err != nil {
+					return err
+				}
+			case TaskCollectionExpandIsUnread:
+				err = addIsUnreadToTasks(s, taskIDs, taskMap, a)
+				if err != nil {
+					return
 				}
 			}
 			expanded[expandable] = true
@@ -1163,7 +1232,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 				ProjectViewID: view.ID,
 				ProjectID:     t.ProjectID,
 			}
-			err = tb.Update(s, a)
+			err = updateTaskBucket(s, a, tb)
 			if err != nil {
 				return err
 			}
@@ -1173,7 +1242,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 				return err
 			}
 
-			err = tp.Update(s, a)
+			err = updateTaskPosition(s, a, tp)
 			if err != nil {
 				return err
 			}
@@ -1394,7 +1463,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 			ProjectViewID: view.ID,
 			ProjectID:     t.ProjectID,
 		}
-		err = tb.Update(s, a)
+		err = updateTaskBucket(s, a, tb)
 		if err != nil {
 			return err
 		}
@@ -1404,7 +1473,7 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 			ProjectViewID: view.ID,
 			Position:      calculateDefaultPosition(t.Index, t.Position),
 		}
-		err = tp.Update(s, a)
+		err = updateTaskPosition(s, a, &tp)
 		if err != nil {
 			return err
 		}
@@ -1560,7 +1629,7 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 	newTask.Done = false
 }
 
-// This helper function updates the reminders, doneAt, start and end dates of the *old* task
+// This helper function updates the reminders, doneAt, start, end and due dates of the *old* task
 // and saves the new values in the newTask object.
 // We make a few assumptions here:
 //  1. Everything in oldTask is the truth - we figure out if we update anything at all if oldTask.RepeatAfter has a value > 0
@@ -1735,6 +1804,12 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskComment{})
 	if err != nil {
 		return
+	}
+
+	// Delete all task unread statuses
+	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskUnreadStatus{})
+	if err != nil {
+		return err
 	}
 
 	// Delete all relations

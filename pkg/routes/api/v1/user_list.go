@@ -25,8 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // UserList gets all information about a list of users
@@ -41,7 +40,7 @@ import (
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /users [get]
-func UserList(c echo.Context) error {
+func UserList(c *echo.Context) error {
 	search := c.QueryParam("s")
 
 	s := db.NewSession()
@@ -50,13 +49,13 @@ func UserList(c echo.Context) error {
 	currentUser, err := user.GetCurrentUser(c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	users, err := user.ListUsers(s, search, currentUser, nil)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	// Obfuscate the mailadresses
@@ -81,7 +80,7 @@ func UserList(c echo.Context) error {
 // @Failure 401 {object} web.HTTPError "The user does not have the permission to see the project."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /projects/{id}/projectusers [get]
-func ListUsersForProject(c echo.Context) error {
+func ListUsersForProject(c *echo.Context) error {
 	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
@@ -93,7 +92,7 @@ func ListUsersForProject(c echo.Context) error {
 	project := models.Project{ID: projectID}
 	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	s := db.NewSession()
@@ -102,7 +101,7 @@ func ListUsersForProject(c echo.Context) error {
 	canRead, _, err := project.CanRead(s, auth)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	if !canRead {
 		return echo.ErrForbidden
@@ -111,19 +110,19 @@ func ListUsersForProject(c echo.Context) error {
 	currentUser, err := user.GetCurrentUser(c)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	search := c.QueryParam("s")
 	users, err := models.ListUsersFromProject(s, &project, currentUser, search)
 	if err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, users)
