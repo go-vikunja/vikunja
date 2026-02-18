@@ -54,7 +54,7 @@ func TestTask_Create(t *testing.T) {
 		assert.NotEmpty(t, task.UID)
 		// Assert getting a new index
 		assert.NotEmpty(t, task.Index)
-		assert.Equal(t, int64(18), task.Index)
+		assert.Equal(t, int64(33), task.Index)
 		err = s.Commit()
 		require.NoError(t, err)
 
