@@ -159,8 +159,12 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
 
 	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
-	// To still find tasks with nil values, we exclude 0s when comparing with >/< values.
-	for _, f := range rawFilters {
+	// Track join types separately because after merging consecutive sub-table
+	// filters, the indexes of dbFilters no longer correspond 1:1 with rawFilters.
+	var dbFilterJoins = make([]taskFilterConcatinator, 0, len(rawFilters))
+
+	for i := 0; i < len(rawFilters); i++ {
+		f := rawFilters[i]
 
 		if nested, is := f.value.([]*taskFilter); is {
 			nestedDBFilters, err := convertFiltersToDBFilterCond(nested, includeNulls)
@@ -168,6 +172,7 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 				return nil, err
 			}
 			dbFilters = append(dbFilters, nestedDBFilters)
+			dbFilterJoins = append(dbFilterJoins, f.join)
 			continue
 		}
 
@@ -177,39 +182,69 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 				continue
 			}
 
-			comparator := f.comparator
-			_, ok = strictComparators[f.comparator]
-			// we will select all specified values in both cases, negative and positive filtering.
-			// but later we will eather check their existence or absence of them.
-			if ok {
-				comparator = taskFilterComparatorIn
+			// Collect all consecutive AND-joined filters targeting the same sub-table
+			group := []*taskFilter{f}
+			for i+1 < len(rawFilters) {
+				next := rawFilters[i+1]
+				nextSubTable, nextOk := subTableFilters[next.field]
+				if !nextOk || nextSubTable.Table != subTableFilterParams.Table || next.join != filterConcatAnd {
+					break
+				}
+				if next.field == "assignees" && next.comparator == taskFilterComparatorLike {
+					break
+				}
+				// Don't mix positive and negative filters (EXISTS vs NOT EXISTS)
+				currentIsNegative := f.comparator == taskFilterComparatorNotEquals || f.comparator == taskFilterComparatorNotIn
+				nextIsNegative := next.comparator == taskFilterComparatorNotEquals || next.comparator == taskFilterComparatorNotIn
+				if currentIsNegative != nextIsNegative {
+					break
+				}
+				group = append(group, next)
+				i++
 			}
 
-			filter, err := getFilterCond(&taskFilter{
-				// recreating the struct here to avoid modifying it when reusing the opts struct
-				field:      subTableFilterParams.FilterableField,
-				value:      f.value,
-				comparator: comparator,
-				isNumeric:  f.isNumeric,
-			}, false)
-			if err != nil {
-				return nil, err
+			// Build the combined condition for all filters in the group
+			var combinedInnerCond builder.Cond
+			for _, gf := range group {
+				comparator := gf.comparator
+				_, isStrict := strictComparators[gf.comparator]
+				if isStrict {
+					comparator = taskFilterComparatorIn
+				}
+
+				innerFilter, err := getFilterCond(&taskFilter{
+					field:      subTableFilterParams.FilterableField,
+					value:      gf.value,
+					comparator: comparator,
+					isNumeric:  gf.isNumeric,
+				}, false)
+				if err != nil {
+					return nil, err
+				}
+
+				if combinedInnerCond == nil {
+					combinedInnerCond = innerFilter
+				} else {
+					combinedInnerCond = builder.And(combinedInnerCond, innerFilter)
+				}
 			}
 
-			filterSubQuery := subTableFilterParams.ToBaseSubQuery().And(filter)
+			filterSubQuery := subTableFilterParams.ToBaseSubQuery().And(combinedInnerCond)
 
-			if f.comparator == taskFilterComparatorNotEquals || f.comparator == taskFilterComparatorNotIn {
+			var filter builder.Cond
+			if group[0].comparator == taskFilterComparatorNotEquals || group[0].comparator == taskFilterComparatorNotIn {
 				filter = builder.NotExists(filterSubQuery)
 			} else {
 				filter = builder.Exists(filterSubQuery)
 			}
 
 			if includeNulls && subTableFilterParams.AllowNullCheck {
-				// check that we have no any connected values for this field
 				filter = builder.Or(filter, builder.NotExists(subTableFilterParams.ToBaseSubQuery()))
 			}
 
 			dbFilters = append(dbFilters, filter)
+			// Use the join from the last filter in the group (how this group connects to the next filter)
+			dbFilterJoins = append(dbFilterJoins, group[len(group)-1].join)
 			continue
 		}
 
@@ -223,6 +258,7 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 			return nil, err
 		}
 		dbFilters = append(dbFilters, filter)
+		dbFilterJoins = append(dbFilterJoins, f.join)
 	}
 
 	if len(dbFilters) > 0 {
@@ -231,7 +267,7 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 		} else {
 			for i, f := range dbFilters {
 				if len(dbFilters) > i+1 {
-					switch rawFilters[i+1].join {
+					switch dbFilterJoins[i+1] {
 					case filterConcatOr:
 						filterCond = builder.Or(filterCond, f, dbFilters[i+1])
 					case filterConcatAnd:
