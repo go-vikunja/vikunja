@@ -1127,8 +1127,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			fields: fields{
 				Filter: "reminders > '2018-09-01T00:00:00+00:00' && reminders < '2018-09-02T00:00:00+00:00'",
 			},
-			args: defaultArgs,
-			want: []*Task{},
+			args:    defaultArgs,
+			want:    []*Task{},
 			wantErr: false,
 		},
 		{
