@@ -120,6 +120,7 @@
 			<text
 				:x="getBarTextX(bar)"
 				:y="24"
+				:text-anchor="bar.meta?.dateType === 'endOnly' ? 'end' : 'start'"
 				class="gantt-bar-text"
 				:fill="getBarTextColor(bar)"
 				:text-decoration="bar.meta?.isDone ? 'line-through' : 'none'"
@@ -239,6 +240,9 @@ const getBarWidth = computed(() => (bar: GanttBarModel) => {
 })
 
 const getBarTextX = computed(() => (bar: GanttBarModel) => {
+	if (bar.meta?.dateType === 'endOnly') {
+		return getBarX.value(bar) + getBarWidth.value(bar) - 8
+	}
 	return getBarX.value(bar) + 8
 })
 
