@@ -10,6 +10,7 @@ import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
 import {error, success} from '@/message'
 import {useAuthStore} from '@/stores/auth'
+import {useTaskStore} from '@/stores/tasks'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export interface UseGanttTaskListReturn {
@@ -68,6 +69,17 @@ export function useGanttTaskList<F extends Filters>(
 		filters,
 		() => loadTasks(),
 		{immediate: true, deep: true},
+	)
+
+	// Sync task updates from other views (e.g. task detail modal)
+	const taskStore = useTaskStore()
+	watch(
+		() => taskStore.lastUpdatedTask,
+		(updatedTask) => {
+			if (updatedTask && tasks.value.has(updatedTask.id)) {
+				tasks.value.set(updatedTask.id, updatedTask)
+			}
+		},
 	)
 
 	async function addTask(task: Partial<ITask>) {

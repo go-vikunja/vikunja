@@ -114,6 +114,7 @@ export const useTaskStore = defineStore('task', () => {
 	const tasks = ref<{ [id: ITask['id']]: ITask }>({}) // TODO: or is this ITask[]
 	const isLoading = ref(false)
 	const draggedTask = ref<ITask | null>(null)
+	const lastUpdatedTask = ref<ITask | null>(null)
 
 	const hasTasks = computed(() => Object.keys(tasks.value).length > 0)
 
@@ -163,6 +164,7 @@ export const useTaskStore = defineStore('task', () => {
 		try {
 			const updatedTask = await taskService.update(task)
 			kanbanStore.ensureTaskIsInCorrectBucket(updatedTask)
+			lastUpdatedTask.value = updatedTask
 			return updatedTask
 		} finally {
 			cancel()
@@ -541,6 +543,7 @@ export const useTaskStore = defineStore('task', () => {
 		tasks,
 		isLoading,
 		draggedTask,
+		lastUpdatedTask,
 
 		hasTasks,
 
