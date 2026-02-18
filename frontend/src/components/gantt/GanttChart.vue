@@ -155,12 +155,46 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date | strin
 }
 
 function transformTaskToGanttBar(t: ITask): GanttBarModel {
-	const startDate = getRoundedDate(t.startDate ?? undefined, props.defaultTaskStartDate, true)
-	const endDate = getRoundedDate(t.endDate ?? undefined, props.defaultTaskEndDate, false)
+	const DEFAULT_SPAN_DAYS = 7
+
+	// Determine the effective start and end dates
+	// If only dueDate is set (no startDate or endDate), treat dueDate as endDate
+	const effectiveEndDate = t.endDate || t.dueDate
+	const effectiveStartDate = t.startDate
+
+	let startDate: Date
+	let endDate: Date
+	let dateType: 'both' | 'startOnly' | 'endOnly'
+
+	if (effectiveStartDate && effectiveEndDate) {
+		// Both dates available
+		startDate = getRoundedDate(effectiveStartDate, effectiveStartDate, true)
+		endDate = getRoundedDate(effectiveEndDate, effectiveEndDate, false)
+		dateType = 'both'
+	} else if (effectiveStartDate && !effectiveEndDate) {
+		// Only start date — extend forward by DEFAULT_SPAN_DAYS
+		startDate = getRoundedDate(effectiveStartDate, effectiveStartDate, true)
+		const defaultEnd = new Date(startDate)
+		defaultEnd.setDate(defaultEnd.getDate() + DEFAULT_SPAN_DAYS)
+		endDate = getRoundedDate(defaultEnd, defaultEnd, false)
+		dateType = 'startOnly'
+	} else if (!effectiveStartDate && effectiveEndDate) {
+		// Only end date (or only due date) — extend backward by DEFAULT_SPAN_DAYS
+		endDate = getRoundedDate(effectiveEndDate, effectiveEndDate, false)
+		const defaultStart = new Date(endDate)
+		defaultStart.setDate(defaultStart.getDate() - DEFAULT_SPAN_DAYS)
+		startDate = getRoundedDate(defaultStart, defaultStart, true)
+		dateType = 'endOnly'
+	} else {
+		// No dates at all — use defaults (existing behavior)
+		startDate = getRoundedDate(undefined, props.defaultTaskStartDate, true)
+		endDate = getRoundedDate(undefined, props.defaultTaskEndDate, false)
+		dateType = 'both'
+	}
 
 	const taskColor = getHexColor(t.hexColor)
 
-	const bar = {
+	return {
 		id: String(t.id),
 		start: startDate,
 		end: endDate,
@@ -168,12 +202,11 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 			label: t.title,
 			task: t,
 			color: taskColor,
-			hasActualDates: Boolean(t.startDate && t.endDate),
+			hasActualDates: Boolean(t.startDate && (t.endDate || t.dueDate)),
+			dateType,
 			isDone: t.done,
 		},
 	}
-
-	return bar
 }
 
 watch(
@@ -184,16 +217,16 @@ watch(
 		const cells: Record<string, string[]> = {}
 
 		const filteredTasks = Array.from(tasks.value.values()).filter(task => {
-			if (!filters.value.showTasksWithoutDates && (!task.startDate || !task.endDate)) {
+			const hasAnyDate = Boolean(task.startDate || task.endDate || task.dueDate)
+
+			if (!filters.value.showTasksWithoutDates && !hasAnyDate) {
 				return false
 			}
 
-			const taskStart = getRoundedDate(task.startDate ?? undefined, props.defaultTaskStartDate, true)
-			const taskEnd = getRoundedDate(task.endDate ?? undefined, props.defaultTaskEndDate, false)
+			const bar = transformTaskToGanttBar(task)
 
 			// Task is visible if it overlaps with the current date range
-			return taskStart <= dateToDate.value
-&& taskEnd >= dateFromDate.value
+			return bar.start <= dateToDate.value && bar.end >= dateFromDate.value
 		})
 		
 		filteredTasks.forEach((t, index) => {
