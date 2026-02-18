@@ -87,10 +87,17 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 }
 
 function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
+	const dateFrom = isoToKebabDate(filters.dateFrom)
+	const dateTo = isoToKebabDate(filters.dateTo)
+
 	return {
 		sort_by: ['start_date', 'done', 'id'],
 		order_by: ['asc', 'asc', 'desc'],
-		filter: 'start_date >= "' + isoToKebabDate(filters.dateFrom) + '" && start_date <= "' + isoToKebabDate(filters.dateTo) + '"',
+		filter: '(' +
+			'(start_date >= "' + dateFrom + '" && start_date <= "' + dateTo + '") || ' +
+			'(end_date >= "' + dateFrom + '" && end_date <= "' + dateTo + '") || ' +
+			'(due_date >= "' + dateFrom + '" && due_date <= "' + dateTo + '")' +
+			')',
 		filter_include_nulls: filters.showTasksWithoutDates,
 	}
 }
