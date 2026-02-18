@@ -193,6 +193,12 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				Reminder: time.Unix(1543626824, 0).In(loc),
 				Created:  time.Unix(1543626724, 0).In(loc),
 			},
+			{
+				ID:       5,
+				TaskID:   2,
+				Reminder: time.Date(2019, 6, 1, 12, 0, 0, 0, loc),
+				Created:  time.Unix(1543626724, 0).In(loc),
+			},
 		},
 		Created: time.Unix(1543626724, 0).In(loc),
 		Updated: time.Unix(1543626724, 0).In(loc),
@@ -651,6 +657,32 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
+	task47 := &Task{
+		ID:          47,
+		Title:       "task #47 with reminders outside window",
+		Identifier:  "test1-32",
+		Index:       32,
+		CreatedByID: 1,
+		CreatedBy:   user1,
+		Reminders: []*TaskReminder{
+			{
+				ID:       6,
+				TaskID:   47,
+				Reminder: time.Date(2018, 8, 1, 12, 0, 0, 0, loc),
+				Created:  time.Unix(1543626724, 0).In(loc),
+			},
+			{
+				ID:       7,
+				TaskID:   47,
+				Reminder: time.Date(2019, 3, 1, 12, 0, 0, 0, loc),
+				Created:  time.Unix(1543626724, 0).In(loc),
+			},
+		},
+		ProjectID:    1,
+		RelatedTasks: map[RelationKind][]*Task{},
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
+	}
 
 	type fields struct {
 		ProjectID     int64
@@ -732,6 +764,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task33,
 				task35,
 				task39,
+				task47,
 			},
 			wantErr: false,
 		},
@@ -777,6 +810,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task33,
 				task35,
 				task39,
+				task47,
 			},
 			wantErr: false,
 		},
@@ -789,6 +823,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args: defaultArgs,
 			want: []*Task{
+				task47,
 				task35,
 				task33,
 				task32,
@@ -940,6 +975,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task32,
 				task33,
 				task35,
+				task47,
 			},
 			wantErr: false,
 		},
@@ -1006,6 +1042,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task33, // has nil dates
 				task35, // has nil dates
 				task39, // has nil dates
+				task47, // has nil dates
 			},
 			wantErr: false,
 		},
@@ -1037,6 +1074,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task30,
 				task31,
 				task33,
+				task47,
 			},
 			wantErr: false,
 		},
@@ -1056,6 +1094,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task30,
 				task31,
 				task33,
+				task47,
 			},
 			wantErr: false,
 		},
@@ -1069,6 +1108,27 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task2,
 				task27,
 			},
+			wantErr: false,
+		},
+		{
+			name: "filtered reminder dates should not match task with reminders outside window",
+			fields: fields{
+				Filter: "reminders > '2018-10-01T00:00:00+00:00' && reminders < '2018-12-10T00:00:00+00:00'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task2,
+				task27,
+			},
+			wantErr: false,
+		},
+		{
+			name: "filtered reminder dates narrow window excludes all",
+			fields: fields{
+				Filter: "reminders > '2018-09-01T00:00:00+00:00' && reminders < '2018-09-02T00:00:00+00:00'",
+			},
+			args: defaultArgs,
+			want: []*Task{},
 			wantErr: false,
 		},
 		{
@@ -1143,6 +1203,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task33,
 				task35,
 				task39,
+				task47,
 			},
 			wantErr: false,
 		},
@@ -1237,6 +1298,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task33,
 				task35,
 				task39,
+				task47,
 			},
 			wantErr: false,
 		},
@@ -1313,6 +1375,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task33,
 				task35,
 				task39,
+				task47,
 			},
 			wantErr: false,
 		},
@@ -1357,6 +1420,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				//task35,
 				// task 35 has a label 5 and 4
 				task39,
+				task47,
 			},
 			wantErr: false,
 		},
@@ -1401,6 +1465,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				//task35,
 				// task 35 has a label 5 and 4
 				task39,
+				task47,
 			},
 			wantErr: false,
 		},
@@ -1491,6 +1556,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task30,
 				task31,
 				task33,
+				task47,
 			},
 		},
 		{
@@ -1508,6 +1574,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task5,
 				task28,
 				// The other ones don't have a due date
+				task47,
 				task39,
 				task35,
 				task33,
