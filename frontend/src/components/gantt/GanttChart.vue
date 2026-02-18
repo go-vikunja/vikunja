@@ -75,7 +75,7 @@ import {getHexColor} from '@/models/task'
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
 import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
-import type {GanttBarModel} from '@/composables/useGanttBar'
+import type {GanttBarModel, GanttBarDateType} from '@/composables/useGanttBar'
 
 import GanttChartBody from '@/components/gantt/GanttChartBody.vue'
 import GanttRow from '@/components/gantt/GanttRow.vue'
@@ -164,7 +164,7 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 
 	let startDate: Date
 	let endDate: Date
-	let dateType: 'both' | 'startOnly' | 'endOnly'
+	let dateType: GanttBarDateType
 
 	if (effectiveStartDate && effectiveEndDate) {
 		// Both dates available

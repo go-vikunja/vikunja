@@ -1,5 +1,7 @@
 import { ref } from 'vue'
 
+export type GanttBarDateType = 'both' | 'startOnly' | 'endOnly'
+
 export interface GanttBarModel {
 	id: string
 	start: Date
@@ -8,7 +10,7 @@ export interface GanttBarModel {
 		label?: string
 		color?: string
 		hasActualDates?: boolean
-		dateType?: 'both' | 'startOnly' | 'endOnly'
+		dateType?: GanttBarDateType
 		isDone?: boolean
 		task?: unknown
 	}
