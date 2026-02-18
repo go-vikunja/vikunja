@@ -253,11 +253,23 @@ watch(
 )
 
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
-	emit('update:task', {
+	const task = tasks.value.get(Number(id))
+	if (!task) return
+
+	const update: ITaskPartialWithId = {
 		id: Number(id),
-		startDate: roundToNaturalDayBoundary(newStart, true),
-		endDate: roundToNaturalDayBoundary(newEnd),
-	})
+	}
+
+	// Always set the dates that were dragged/resized
+	update.startDate = roundToNaturalDayBoundary(newStart, true)
+	update.endDate = roundToNaturalDayBoundary(newEnd)
+
+	// If the task originally only had dueDate (no endDate), also update dueDate
+	if (!task.endDate && task.dueDate) {
+		update.dueDate = roundToNaturalDayBoundary(newEnd)
+	}
+
+	emit('update:task', update)
 }
 
 function openTask(bar: GanttBarModel) {
