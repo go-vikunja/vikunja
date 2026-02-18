@@ -8,6 +8,7 @@ export interface GanttBarModel {
 		label?: string
 		color?: string
 		hasActualDates?: boolean
+		dateType?: 'both' | 'startOnly' | 'endOnly'
 		isDone?: boolean
 		task?: unknown
 	}
