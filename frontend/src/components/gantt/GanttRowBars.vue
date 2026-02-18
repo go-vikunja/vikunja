@@ -144,8 +144,6 @@ import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundar
 
 import GanttBarPrimitive from './primitives/GanttBarPrimitive.vue'
 
-const {t} = useI18n({useScope: 'global'})
-
 const props = defineProps<{
 	bars: GanttBarModel[]
 	totalWidth: number
@@ -172,6 +170,8 @@ const emit = defineEmits<{
 	(e: 'startResize', bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent): void
 	(e: 'updateTask', id: string, newStart: Date, newEnd: Date): void
 }>()
+
+const {t} = useI18n({useScope: 'global'})
 
 const RESIZE_HANDLE_OFFSET = 3
 
