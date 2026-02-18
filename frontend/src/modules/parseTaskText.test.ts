@@ -5,7 +5,6 @@ import {parseDate} from '../helpers/time/parseDate'
 import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
-import type {IRepeatAfter} from '@/types/IRepeatAfter'
 
 describe('Parse Task Text', () => {
 	beforeEach(() => {
@@ -870,59 +869,58 @@ describe('Parse Task Text', () => {
 	})
 
 	describe('Recurring Dates', () => {
+		// Test cases now expect structured repeat objects {freq, interval}
 		const cases = {
-			'every 1 hour': {type: 'hours', amount: 1},
-			'every hour': {type: 'hours', amount: 1},
-			'every 5 hours': {type: 'hours', amount: 5},
-			'every 12 hours': {type: 'hours', amount: 12},
-			'every day': {type: 'days', amount: 1},
-			'every 1 day': {type: 'days', amount: 1},
-			'every 2 days': {type: 'days', amount: 2},
-			'every week': {type: 'weeks', amount: 1},
-			'every 1 week': {type: 'weeks', amount: 1},
-			'every 3 weeks': {type: 'weeks', amount: 3},
-			'every month': {type: 'months', amount: 1},
-			'every 1 month': {type: 'months', amount: 1},
-			'every 2 months': {type: 'months', amount: 2},
-			'every year': {type: 'years', amount: 1},
-			'every 1 year': {type: 'years', amount: 1},
-			'every 4 years': {type: 'years', amount: 4},
-			'every one hour': {type: 'hours', amount: 1}, // maybe unnesecary but better to include it for completeness sake
-			'every two hours': {type: 'hours', amount: 2},
-			'every three hours': {type: 'hours', amount: 3},
-			'every four hours': {type: 'hours', amount: 4},
-			'every five hours': {type: 'hours', amount: 5},
-			'every six hours': {type: 'hours', amount: 6},
-			'every seven hours': {type: 'hours', amount: 7},
-			'every eight hours': {type: 'hours', amount: 8},
-			'every nine hours': {type: 'hours', amount: 9},
-			'every ten hours': {type: 'hours', amount: 10},
-			'annually': {type: 'years', amount: 1},
-			'biannually': {type: 'months', amount: 6},
-			'semiannually': {type: 'months', amount: 6},
-			'biennially': {type: 'years', amount: 2},
-			'daily': {type: 'days', amount: 1},
-			'hourly': {type: 'hours', amount: 1},
-			'monthly': {type: 'months', amount: 1},
-			'weekly': {type: 'weeks', amount: 1},
-			'yearly': {type: 'years', amount: 1},
-		} as Record<string, IRepeatAfter>
+			'every 1 hour': {freq: 'hourly', interval: 1},
+			'every hour': {freq: 'hourly', interval: 1},
+			'every 5 hours': {freq: 'hourly', interval: 5},
+			'every 12 hours': {freq: 'hourly', interval: 12},
+			'every day': {freq: 'daily', interval: 1},
+			'every 1 day': {freq: 'daily', interval: 1},
+			'every 2 days': {freq: 'daily', interval: 2},
+			'every week': {freq: 'weekly', interval: 1},
+			'every 1 week': {freq: 'weekly', interval: 1},
+			'every 3 weeks': {freq: 'weekly', interval: 3},
+			'every month': {freq: 'monthly', interval: 1},
+			'every 1 month': {freq: 'monthly', interval: 1},
+			'every 2 months': {freq: 'monthly', interval: 2},
+			'every year': {freq: 'yearly', interval: 1},
+			'every 1 year': {freq: 'yearly', interval: 1},
+			'every 4 years': {freq: 'yearly', interval: 4},
+			'every one hour': {freq: 'hourly', interval: 1},
+			'every two hours': {freq: 'hourly', interval: 2},
+			'every three hours': {freq: 'hourly', interval: 3},
+			'every four hours': {freq: 'hourly', interval: 4},
+			'every five hours': {freq: 'hourly', interval: 5},
+			'every six hours': {freq: 'hourly', interval: 6},
+			'every seven hours': {freq: 'hourly', interval: 7},
+			'every eight hours': {freq: 'hourly', interval: 8},
+			'every nine hours': {freq: 'hourly', interval: 9},
+			'every ten hours': {freq: 'hourly', interval: 10},
+			'annually': {freq: 'yearly', interval: 1},
+			'biannually': {freq: 'monthly', interval: 6},
+			'semiannually': {freq: 'monthly', interval: 6},
+			'biennially': {freq: 'yearly', interval: 2},
+			'daily': {freq: 'daily', interval: 1},
+			'hourly': {freq: 'hourly', interval: 1},
+			'monthly': {freq: 'monthly', interval: 1},
+			'weekly': {freq: 'weekly', interval: 1},
+			'yearly': {freq: 'yearly', interval: 1},
+		} as Record<string, {freq: string, interval: number}>
 
 		for (const c in cases) {
-			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type}`, () => {
+			it(`should parse ${c} as recurring repeat {freq: ${cases[c].freq}, interval: ${cases[c].interval}}`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c}`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result?.repeats?.type).toBe(cases[c].type)
-				expect(result?.repeats?.amount).toBe(cases[c].amount)
+				expect(result?.repeat).toEqual(cases[c])
 			})
-		 	
-			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type} at 11:42`, () => {
+
+			it(`should parse ${c} as recurring repeat at 11:42`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c} at 11:42`)
 
 				expect(result.text).toBe('Lorem Ipsum')
-				expect(result?.repeats?.type).toBe(cases[c].type)
-				expect(result?.repeats?.amount).toBe(cases[c].amount)
+				expect(result?.repeat).toEqual(cases[c])
 				const now = new Date()
 				expect(`${result?.date?.getFullYear()}-${result?.date?.getMonth()}-${result?.date?.getDate()}`).toBe(`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`)
 				expect(`${result?.date?.getHours()}:${result?.date?.getMinutes()}`).toBe('11:42')
@@ -946,7 +944,7 @@ describe('Parse Task Text', () => {
 				const result = parseTaskText(`Lorem Ipsum word${c}notword`)
 
 				expect(result.text).toBe(`Lorem Ipsum word${c}notword`)
-				expect(result?.repeats).toBeNull()
+				expect(result?.repeat).toBeNull()
 			})
 		})
 	})

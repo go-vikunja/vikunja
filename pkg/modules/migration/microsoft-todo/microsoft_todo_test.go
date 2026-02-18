@@ -161,9 +161,9 @@ func TestConverting(t *testing.T) {
 				},
 				{
 					Task: models.Task{
-						Title:       "Task 7",
-						DueDate:     testtimeTime,
-						RepeatAfter: 60 * 60 * 24 * 7, // The amount of seconds in a week
+						Title:   "Task 7",
+						DueDate: testtimeTime,
+						Repeats: "FREQ=WEEKLY;INTERVAL=1",
 					},
 				},
 			},

@@ -349,18 +349,22 @@ func convertMicrosoftTodoData(todoData []*project) (vikunjsStructure []*models.P
 				task.DueDate = dueDate
 			}
 
-			// Repeating
+			// Repeating - convert to RRULE format
 			if t.Recurrence != nil && t.Recurrence.Pattern != nil {
 				log.Debugf("[Microsoft Todo Migration] Converting recurring pattern for task %s", t.ID)
+				interval := t.Recurrence.Pattern.Interval
+				if interval < 1 {
+					interval = 1
+				}
 				switch t.Recurrence.Pattern.Type {
 				case "daily":
-					task.RepeatAfter = t.Recurrence.Pattern.Interval * 60 * 60 * 24
+					task.Repeats = fmt.Sprintf("FREQ=DAILY;INTERVAL=%d", interval)
 				case "weekly":
-					task.RepeatAfter = t.Recurrence.Pattern.Interval * 60 * 60 * 24 * 7
+					task.Repeats = fmt.Sprintf("FREQ=WEEKLY;INTERVAL=%d", interval)
 				case "monthly":
-					task.RepeatAfter = t.Recurrence.Pattern.Interval * 60 * 60 * 24 * 30
+					task.Repeats = fmt.Sprintf("FREQ=MONTHLY;INTERVAL=%d", interval)
 				case "yearly":
-					task.RepeatAfter = t.Recurrence.Pattern.Interval * 60 * 60 * 24 * 365
+					task.Repeats = fmt.Sprintf("FREQ=YEARLY;INTERVAL=%d", interval)
 				}
 			}
 

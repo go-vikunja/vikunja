@@ -221,18 +221,17 @@ func GetCaldavTodosForTasks(project *models.ProjectWithTasksAndBuckets, projectT
 			Description: t.Description,
 			Completed:   t.DoneAt,
 			// Organizer:     &t.CreatedBy, // Disabled until we figure out how this works
-			Categories:  categories,
-			Priority:    t.Priority,
-			Start:       t.StartDate,
-			End:         t.EndDate,
-			Created:     t.Created,
-			Updated:     t.Updated,
-			DueDate:     t.DueDate,
-			Duration:    duration,
-			RepeatAfter: t.RepeatAfter,
-			RepeatMode:  t.RepeatMode,
-			Alarms:      alarms,
-			Relations:   relations,
+			Categories: categories,
+			Priority:   t.Priority,
+			Start:      t.StartDate,
+			End:        t.EndDate,
+			Created:    t.Created,
+			Updated:    t.Updated,
+			DueDate:    t.DueDate,
+			Duration:   duration,
+			Repeats:    t.Repeats,
+			Alarms:     alarms,
+			Relations:  relations,
 		})
 	}
 
@@ -363,6 +362,12 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		titleValue = summary.Value
 	}
 
+	// Parse RRULE for recurring tasks
+	var repeats string
+	if rrule, ok := task["RRULE"]; ok {
+		repeats = rrule.Value
+	}
+
 	vTask = &models.Task{
 		UID:         uidValue,
 		Title:       titleValue,
@@ -374,6 +379,7 @@ func ParseTaskFromVTODO(content string) (vTask *models.Task, err error) {
 		StartDate:   caldavTimeToTimestamp(task["DTSTART"]),
 		DoneAt:      caldavTimeToTimestamp(task["COMPLETED"]),
 		HexColor:    getHexColorFromCaldavColor(color),
+		Repeats:     repeats,
 	}
 
 	for _, c := range relations {
