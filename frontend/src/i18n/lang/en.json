@@ -390,7 +390,9 @@
       "dayLabel": "Day: {date}, {weekday}",
       "dayLabelToday": "Today: {date}, {weekday}",
       "taskAriaLabel": "Task: {task}",
-      "taskAriaLabelById": "Task {id}"
+      "taskAriaLabelById": "Task {id}",
+      "partialDatesStart": "Start date only (open-ended)",
+      "partialDatesEnd": "End date only (open-ended)"
     },
     "table": {
       "title": "Table",
