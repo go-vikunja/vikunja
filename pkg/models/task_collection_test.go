@@ -1132,6 +1132,18 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "filtered reminder dates with OR should match independently",
+			fields: fields{
+				Filter: "reminders > '2019-01-01T00:00:00+00:00' || reminders < '2018-09-01T00:00:00+00:00'",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task2,  // has reminder at 2019-06-01 (> 2019-01-01)
+				task47, // has reminder at 2019-03-01 (> 2019-01-01) and 2018-08-01 (< 2018-09-01)
+			},
+			wantErr: false,
+		},
+		{
 			name: "filter in keyword",
 			fields: fields{
 				Filter: "id in '1,2,34'", // user does not have permission to access task 34
