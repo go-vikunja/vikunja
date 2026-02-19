@@ -1482,6 +1482,63 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			// Regression: AND-joined equality filters on the same sub-table must
+			// NOT be merged into a single EXISTS (each label lives on a separate row).
+			name: "filter labels AND both must exist",
+			fields: fields{
+				Filter: "labels = 4 && labels = 5",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task35, // only task with both labels 4 and 5
+			},
+			wantErr: false,
+		},
+		{
+			// Regression: AND-joined negative filters must NOT be merged into a
+			// single NOT EXISTS (would produce trivially-true condition).
+			name: "filter labels not eq AND both excluded",
+			fields: fields{
+				Filter: "labels != 4 && labels != 5",
+			},
+			args: defaultArgs,
+			want: []*Task{
+				// Tasks that have neither label 4 nor label 5
+				task3,
+				task4,
+				task5,
+				task6,
+				task7,
+				task8,
+				task9,
+				task10,
+				task11,
+				task12,
+				task15,
+				task16,
+				task17,
+				task18,
+				task19,
+				task20,
+				task21,
+				task22,
+				task23,
+				task24,
+				task25,
+				task26,
+				task27,
+				task28,
+				task29,
+				task30,
+				task31,
+				task32,
+				task33,
+				task39,
+				task47,
+			},
+			wantErr: false,
+		},
+		{
 			name: "filter project_id",
 			fields: fields{
 				Filter: "project_id = 6",
