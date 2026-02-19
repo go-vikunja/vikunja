@@ -484,8 +484,6 @@ func (Test) E2E(args string) error {
 		"VIKUNJA_LOG_LEVEL=WARNING",
 		"VIKUNJA_MAILER_ENABLED=false",
 		"VIKUNJA_REDIS_ENABLED=false",
-		"VIKUNJA_CORS_ENABLE=true",
-		"VIKUNJA_CORS_ORIGINS=http://127.0.0.1:*,http://localhost:*",
 	)
 	apiCmd.Stdout = os.Stdout
 	apiCmd.Stderr = os.Stderr
@@ -546,7 +544,7 @@ func (Test) E2E(args string) error {
 	playwrightCmd := exec.Command("pnpm", playwrightArgs...)
 	playwrightCmd.Dir = "frontend"
 	playwrightCmd.Env = append(os.Environ(),
-		fmt.Sprintf("API_URL=%s", apiBase),
+		fmt.Sprintf("API_URL=%s/", apiBase),
 		fmt.Sprintf("BASE_URL=%s", frontendBase),
 		fmt.Sprintf("VIKUNJA_SERVICE_TESTINGTOKEN=%s", testingToken),
 		fmt.Sprintf("TEST_SECRET=%s", testingToken),
