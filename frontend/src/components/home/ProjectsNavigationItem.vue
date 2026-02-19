@@ -13,10 +13,7 @@
 				class="collapse-project-button"
 				@click="childProjectsOpen = !childProjectsOpen"
 			>
-				<Icon
-					icon="chevron-down"
-					:class="{ 'project-is-collapsed': !childProjectsOpen }"
-				/>
+				<PhCaretDown :class="{ 'project-is-collapsed': !childProjectsOpen }" />
 			</BaseButton>
 			<span
 				v-if="canEditOrder && project.id > 0 && project.maxPermission !== null && project.maxPermission > PERMISSIONS.READ"
@@ -25,7 +22,7 @@
 				@click.stop.prevent
 				@touchstart.stop
 			>
-				<Icon icon="grip-lines" />
+				<PhDotsSix />
 			</span>
 			<BaseButton
 				:to="{ name: 'project.index', params: { projectId: project.id} }"
@@ -46,7 +43,7 @@
 						v-else-if="project.id < -1"
 						class="saved-filter-icon icon menu-item-icon"
 					>
-						<Icon icon="filter" />
+						<PhFunnel />
 					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
@@ -58,7 +55,7 @@
 				@click="projectStore.toggleProjectFavorite(project)"
 			>
 				<span class="is-sr-only">{{ project.isFavorite ? $t('project.unfavorite') : $t('project.favorite') }}</span>
-				<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
+				<PhStar :weight="project.isFavorite ? 'fill' : 'regular'" />
 			</BaseButton>
 			<ProjectSettingsDropdown
 				v-if="project.maxPermission !== null && project.maxPermission > PERMISSIONS.READ"
@@ -72,10 +69,7 @@
 						@click="toggleOpen"
 					>
 						<span class="is-sr-only">{{ $t('project.openSettingsMenu') }}</span>
-						<Icon
-							icon="ellipsis-h"
-							class="icon"
-						/>
+						<PhDotsThree class="icon" />
 					</BaseButton>
 				</template>
 			</ProjectSettingsDropdown>
@@ -98,6 +92,7 @@ import {useStorage} from '@vueuse/core'
 
 import type {IProject} from '@/modelTypes/IProject'
 
+import {PhCaretDown, PhDotsThree, PhDotsSix, PhFunnel, PhStar} from '@phosphor-icons/vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
 import {getProjectTitle} from '@/helpers/getProjectTitle'

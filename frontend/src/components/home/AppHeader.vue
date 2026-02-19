@@ -31,7 +31,7 @@
 				class="project-title-button"
 			>
 				<span class="is-sr-only">{{ $t('project.description') }}</span>
-				<Icon icon="circle-info" />
+				<PhInfo />
 			</BaseButton>
 
 			<ProjectSettingsDropdown
@@ -45,10 +45,7 @@
 						@click="toggleOpen"
 					>
 						<span class="is-sr-only">{{ $t('project.openSettingsMenu') }}</span>
-						<Icon
-							icon="ellipsis-h"
-							class="icon"
-						/>
+						<PhDotsThree class="icon" />
 					</BaseButton>
 				</template>
 			</ProjectSettingsDropdown>
@@ -79,7 +76,7 @@
 								transform: open ? 'rotate(180deg)' : 'rotate(0)',
 							}"
 						>
-							<Icon icon="chevron-down" />
+							<PhCaretDown />
 						</span>
 					</BaseButton>
 				</template>
@@ -118,6 +115,7 @@ import { computed } from 'vue'
 
 import { PERMISSIONS as Permissions } from '@/constants/permissions'
 
+import {PhCaretDown, PhDotsThree, PhInfo} from '@phosphor-icons/vue'
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'

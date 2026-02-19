@@ -5,7 +5,7 @@
 			class="menu-hide-button d-print-none"
 			@click="baseStore.setMenuActive(false)"
 		>
-			<Icon icon="times" />
+			<PhX />
 		</BaseButton>
 		<div
 			class="app-container"
@@ -64,7 +64,7 @@
 					@click="showKeyboardShortcuts()"
 				>
 					<span class="is-sr-only">{{ $t('keyboardShortcuts.title') }}</span>
-					<Icon icon="keyboard" />
+					<PhKeyboard />
 				</BaseButton>
 			</main>
 		</div>
@@ -79,6 +79,7 @@ import Navigation from '@/components/home/Navigation.vue'
 import QuickActions from '@/components/quick-actions/QuickActions.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
+import {PhKeyboard, PhX} from '@phosphor-icons/vue'
 import {useBaseStore} from '@/stores/base'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'

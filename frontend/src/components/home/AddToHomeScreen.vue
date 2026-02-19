@@ -4,10 +4,7 @@
 		class="add-to-home-screen"
 		:class="{'has-update-available': hasUpdateAvailable}"
 	>
-		<Icon
-			icon="arrow-up-from-bracket"
-			class="add-icon"
-		/>
+		<PhUploadSimple class="add-icon" />
 		<p>
 			{{ $t('home.addToHomeScreen') }}
 		</p>
@@ -15,12 +12,13 @@
 			class="hide-button"
 			@click="() => hideMessage = true"
 		>
-			<Icon icon="x" />
+			<PhX />
 		</BaseButton>
 	</div>
 </template>
 
 <script lang="ts" setup>
+import {PhUploadSimple, PhX} from '@phosphor-icons/vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {useLocalStorage} from '@vueuse/core'
 import {computed} from 'vue'

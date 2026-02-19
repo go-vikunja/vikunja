@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue'
 import {useConfigStore} from '@/stores/config'
+import {PhX} from '@phosphor-icons/vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 const configStore = useConfigStore()
@@ -21,7 +22,7 @@ const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
 			class="hide-button"
 			@click="() => hide = true"
 		>
-			<Icon icon="times" />
+			<PhX />
 		</BaseButton>
 	</div>
 </template>
