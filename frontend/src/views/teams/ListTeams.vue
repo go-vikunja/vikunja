@@ -6,9 +6,10 @@
 		<XButton
 			:to="{name:'teams.create'}"
 			class="is-pulled-right"
-
 		>
-			<template #icon><PhPlus /></template>
+			<template #icon>
+				<PhPlus />
+			</template>
 			{{ $t('team.create.title') }}
 		</XButton>
 

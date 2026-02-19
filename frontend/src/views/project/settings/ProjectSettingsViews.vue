@@ -199,13 +199,17 @@ async function saveViewPosition(e) {
 										showDeleteModal = true
 									}"
 								>
-									<template #icon><PhTrash /></template>
+									<template #icon>
+										<PhTrash />
+									</template>
 								</XButton>
 								<XButton
 									v-if="isAdmin"
 									@click="viewToEdit = {...v}"
 								>
-									<template #icon><PhPencilSimple /></template>
+									<template #icon>
+										<PhPencilSimple />
+									</template>
 								</XButton>
 								<span class="icon handle">
 									<PhDotsSixVertical />

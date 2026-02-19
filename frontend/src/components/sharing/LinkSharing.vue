@@ -16,7 +16,9 @@
 				class="mbe-4"
 				@click="showNewForm = true"
 			>
-				<template #icon><PhPlus /></template>
+				<template #icon>
+					<PhPlus />
+				</template>
 				{{ $t('project.share.links.create') }}
 			</XButton>
 
@@ -62,7 +64,9 @@
 				<XButton
 					@click="add(projectId)"
 				>
-					<template #icon><PhPlus /></template>
+					<template #icon>
+						<PhPlus />
+					</template>
 					{{ $t('project.share.share') }}
 				</XButton>
 			</div>
@@ -164,7 +168,9 @@
 									}
 								"
 							>
-								<template #icon><PhTrash /></template>
+								<template #icon>
+									<PhTrash />
+								</template>
 							</XButton>
 						</td>
 					</tr>

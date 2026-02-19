@@ -386,7 +386,9 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			:loading="service.loading"
 			@click="() => showCreateForm = true"
 		>
-			<template #icon><PhPlus /></template>
+			<template #icon>
+				<PhPlus />
+			</template>
 			{{ $t('user.settings.apiTokens.createAToken') }}
 		</XButton>
 

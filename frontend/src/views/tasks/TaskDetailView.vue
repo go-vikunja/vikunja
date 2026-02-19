@@ -429,7 +429,9 @@
 							variant="secondary"
 							@click="toggleTaskDone()"
 						>
-							<template #icon><PhChecks /></template>
+							<template #icon>
+								<PhChecks />
+							</template>
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</XButton>
 						<TaskSubscription
@@ -443,7 +445,9 @@
 							variant="secondary"
 							@click="toggleFavorite"
 						>
-							<template #icon><PhStar :weight="task.isFavorite ? 'fill' : 'regular'" /></template>
+							<template #icon>
+								<PhStar :weight="task.isFavorite ? 'fill' : 'regular'" />
+							</template>
 							{{
 								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
 							}}
@@ -456,7 +460,9 @@
 							variant="secondary"
 							@click="setFieldActive('labels')"
 						>
-							<template #icon><PhTag /></template>
+							<template #icon>
+								<PhTag />
+							</template>
 							{{ $t('task.detail.actions.label') }}
 						</XButton>
 						<XButton
@@ -464,14 +470,18 @@
 							variant="secondary"
 							@click="setFieldActive('priority')"
 						>
-							<template #icon><PhWarningCircle /></template>
+							<template #icon>
+								<PhWarningCircle />
+							</template>
 							{{ $t('task.detail.actions.priority') }}
 						</XButton>
 						<XButton
 							variant="secondary"
 							@click="setFieldActive('percentDone')"
 						>
-							<template #icon><PhPercent /></template>
+							<template #icon>
+								<PhPercent />
+							</template>
 							{{ $t('task.detail.actions.percentDone') }}
 						</XButton>
 						<XButton
@@ -479,7 +489,9 @@
 							variant="secondary"
 							@click="setFieldActive('color')"
 						>
-							<template #icon><PhPaintBucket :style="{color}" /></template>
+							<template #icon>
+								<PhPaintBucket :style="{color}" />
+							</template>
 							{{ $t('task.detail.actions.color') }}
 						</XButton>
 						
@@ -491,7 +503,9 @@
 							variant="secondary"
 							@click="setFieldActive('assignees')"
 						>
-							<template #icon><PhUsers /></template>
+							<template #icon>
+								<PhUsers />
+							</template>
 							{{ $t('task.detail.actions.assign') }}
 						</XButton>
 						<XButton
@@ -499,7 +513,9 @@
 							variant="secondary"
 							@click="openAttachments()"
 						>
-							<template #icon><PhPaperclip /></template>
+							<template #icon>
+								<PhPaperclip />
+							</template>
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
@@ -507,7 +523,9 @@
 							variant="secondary"
 							@click="setRelatedTasksActive()"
 						>
-							<template #icon><PhTreeStructure /></template>
+							<template #icon>
+								<PhTreeStructure />
+							</template>
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</XButton>
 						<XButton
@@ -515,7 +533,9 @@
 							variant="secondary"
 							@click="setFieldActive('moveProject')"
 						>
-							<template #icon><PhList /></template>
+							<template #icon>
+								<PhList />
+							</template>
 							{{ $t('task.detail.actions.moveProject') }}
 						</XButton>
 						
@@ -526,21 +546,27 @@
 							variant="secondary"
 							@click="setFieldActive('dueDate')"
 						>
-							<template #icon><PhCalendar /></template>
+							<template #icon>
+								<PhCalendar />
+							</template>
 							{{ $t('task.detail.actions.dueDate') }}
 						</XButton>
 						<XButton
 							variant="secondary"
 							@click="setFieldActive('startDate')"
 						>
-							<template #icon><PhPlay /></template>
+							<template #icon>
+								<PhPlay />
+							</template>
 							{{ $t('task.detail.actions.startDate') }}
 						</XButton>
 						<XButton
 							variant="secondary"
 							@click="setFieldActive('endDate')"
 						>
-							<template #icon><PhStop /></template>
+							<template #icon>
+								<PhStop />
+							</template>
 							{{ $t('task.detail.actions.endDate') }}
 						</XButton>
 						<XButton
@@ -548,14 +574,18 @@
 							variant="secondary"
 							@click="setFieldActive('reminders')"
 						>
-							<template #icon><PhClock /></template>
+							<template #icon>
+								<PhClock />
+							</template>
 							{{ $t('task.detail.actions.reminders') }}
 						</XButton>
 						<XButton
 							variant="secondary"
 							@click="setFieldActive('repeatAfter')"
 						>
-							<template #icon><PhClockCounterClockwise /></template>
+							<template #icon>
+								<PhClockCounterClockwise />
+							</template>
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
 						<XButton
@@ -564,7 +594,9 @@
 							class="is-danger is-outlined has-no-border"
 							@click="showDeleteModal = true"
 						>
-							<template #icon><PhTrash /></template>
+							<template #icon>
+								<PhTrash />
+							</template>
 							{{ $t('task.detail.actions.delete') }}
 						</XButton>
 					</template>

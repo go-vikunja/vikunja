@@ -5,7 +5,9 @@
 		:primary-label="$t('project.duplicate.label')"
 		@primary="duplicate"
 	>
-		<template #primary-icon><PhClipboard /></template>
+		<template #primary-icon>
+			<PhClipboard />
+		</template>
 		<p>{{ $t('project.duplicate.text') }}</p>
 		<ProjectSearch v-model="parentProject" />
 	</CreateEdit>

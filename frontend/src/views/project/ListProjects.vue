@@ -15,17 +15,19 @@
 			<div class="action-buttons">
 				<XButton
 					:to="{name: 'filters.create'}"
-
 				>
-					<template #icon><PhFunnel /></template>
+					<template #icon>
+						<PhFunnel />
+					</template>
 					{{ $t('filters.create.title') }}
 				</XButton>
 				<XButton
 					v-cy="'new-project'"
 					:to="{name: 'project.create'}"
-
 				>
-					<template #icon><PhPlus /></template>
+					<template #icon>
+						<PhPlus />
+					</template>
 					{{ $t('project.create.header') }}
 				</XButton>
 			</div>

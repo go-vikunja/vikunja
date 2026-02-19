@@ -6,9 +6,10 @@
 		<XButton
 			:to="{name:'labels.create'}"
 			class="is-pulled-right"
-
 		>
-			<template #icon><PhPlus /></template>
+			<template #icon>
+				<PhPlus />
+			</template>
 			{{ $t('label.create.header') }}
 		</XButton>
 
@@ -88,7 +89,9 @@
 									danger
 									@click="showDeleteDialoge(labelEditLabel)"
 								>
-									<template #icon><PhTrash /></template>
+									<template #icon>
+										<PhTrash />
+									</template>
 								</XButton>
 							</div>
 						</div>

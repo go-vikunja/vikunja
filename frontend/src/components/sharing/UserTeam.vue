@@ -129,7 +129,9 @@
 								}
 							"
 						>
-							<template #icon><PhTrash /></template>
+							<template #icon>
+								<PhTrash />
+							</template>
 						</XButton>
 					</td>
 				</tr>

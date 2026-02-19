@@ -132,7 +132,9 @@ function validateSelectedEvents() {
 			class="mbe-4"
 			@click="showNewForm = true"
 		>
-			<template #icon><PhPlus /></template>
+			<template #icon>
+				<PhPlus />
+			</template>
 			{{ $t('project.webhooks.create') }}
 		</XButton>
 
@@ -242,7 +244,9 @@ function validateSelectedEvents() {
 			<XButton
 				@click="create"
 			>
-				<template #icon><PhPlus /></template>
+				<template #icon>
+					<PhPlus />
+				</template>
 				{{ $t('project.webhooks.create') }}
 			</XButton>
 		</div>
@@ -280,7 +284,9 @@ function validateSelectedEvents() {
 							danger
 							@click="() => {showDeleteModal = true;webhookIdToDelete = w.id}"
 						>
-							<template #icon><PhTrash /></template>
+							<template #icon>
+								<PhTrash />
+							</template>
 						</XButton>
 					</td>
 				</tr>

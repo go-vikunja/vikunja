@@ -17,7 +17,9 @@
 					:shadow="false"
 					@click="copy(caldavUrl)"
 				>
-					<template #icon><PhClipboard /></template>
+					<template #icon>
+						<PhClipboard />
+					</template>
 				</XButton>
 			</template>
 		</FormField>
@@ -80,7 +82,9 @@
 			:loading="service.loading"
 			@click="createToken"
 		>
-			<template #icon><PhPlus /></template>
+			<template #icon>
+				<PhPlus />
+			</template>
 			{{ $t('user.settings.caldav.createToken') }}
 		</XButton>
 

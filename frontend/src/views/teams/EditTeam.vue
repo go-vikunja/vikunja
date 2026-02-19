@@ -59,7 +59,9 @@
 						danger
 						@click="showDeleteModal = true"
 					>
-						<template #icon><PhTrash /></template>
+						<template #icon>
+							<PhTrash />
+						</template>
 					</XButton>
 				</div>
 			</div>
@@ -98,7 +100,9 @@
 						<XButton
 							@click="addUser"
 						>
-							<template #icon><PhPlus /></template>
+							<template #icon>
+								<PhPlus />
+							</template>
 							{{ $t('team.edit.addUser') }}
 						</XButton>
 					</div>
@@ -160,7 +164,9 @@
 								danger
 								@click="() => {memberToDelete = m; showUserDeleteModal = true}"
 							>
-								<template #icon><PhTrash /></template>
+								<template #icon>
+									<PhTrash />
+								</template>
 							</XButton>
 						</td>
 					</tr>
