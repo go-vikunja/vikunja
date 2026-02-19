@@ -8,7 +8,6 @@ import {createPinia} from 'pinia'
 
 import testid from '@/directives/testid'
 
-import FontAwesomeIcon from '@/components/misc/Icon'
 import XButton from '@/components/input/button.vue'
 import Modal from '@/components/misc/Modal.vue'
 import Card from '@/components/misc/Card.vue'
@@ -21,7 +20,6 @@ export const setupVue3 = defineSetupVue3(({ app }) => {
 
 	app.directive('cy', testid)
 
-	app.component('Icon', FontAwesomeIcon)
 	app.component('XButton', XButton)
 	app.component('Modal', Modal)
 	app.component('Card', Card)
