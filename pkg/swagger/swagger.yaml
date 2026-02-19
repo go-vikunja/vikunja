@@ -5114,6 +5114,11 @@ paths:
         name: taskID
         required: true
         type: integer
+      - description: Sort order. Can be 'asc' for ascending or 'desc' for descending.
+          Defaults to 'asc'.
+        in: query
+        name: order_by
+        type: string
       produces:
       - application/json
       responses:

@@ -5012,6 +5012,12 @@ const docTemplate = `{
                         "name": "taskID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order. Can be 'asc' for ascending or 'desc' for descending. Defaults to 'asc'.",
+                        "name": "order_by",
+                        "in": "query"
                     }
                 ],
                 "responses": {
