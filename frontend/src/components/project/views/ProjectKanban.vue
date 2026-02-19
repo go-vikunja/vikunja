@@ -50,7 +50,7 @@
 										class="icon is-small has-text-success mie-2"
 										@click.stop="() => collapseBucket(bucket)"
 									>
-										<Icon icon="check-double" />
+										<PhChecks />
 									</span>
 									<h2
 										class="title input"
@@ -73,9 +73,13 @@
 									<Dropdown
 										v-if="canWrite && !collapsedBuckets[bucket.id]"
 										class="is-right options"
-										trigger-icon="ellipsis-v"
 										@close="() => showSetLimitInput = false"
 									>
+										<template #trigger="tp">
+											<BaseButton @click="tp.toggleOpen">
+												<PhDotsThreeVertical class="icon" />
+											</BaseButton>
+										</template>
 										<div
 											v-if="showSetLimitInput"
 											class="field has-addons"
@@ -97,10 +101,13 @@
 												<XButton
 													v-cy="'setBucketLimit'"
 													:disabled="bucket.limit < 0"
-													:icon="['far', 'save']"
 													:shadow="false"
 													@click="() => {setBucketLimit(bucket.id, true); showSetLimitInput = false}"
-												/>
+												>
+													<template #icon>
+														<PhFloppyDisk />
+													</template>
+												</XButton>
 											</div>
 										</div>
 										<DropdownItem
@@ -114,23 +121,29 @@
 										<DropdownItem
 											v-tooltip="$t('project.kanban.doneBucketHintExtended')"
 											:icon-class="{'has-text-success': bucket.id === view?.doneBucketId}"
-											icon="check-double"
 											@click.stop="toggleDoneBucket(bucket)"
 										>
+											<template #icon>
+												<PhChecks />
+											</template>
 											{{ $t('project.kanban.doneBucket') }}
 										</DropdownItem>
 										<DropdownItem
 											v-tooltip="$t('project.kanban.defaultBucketHint')"
 											:icon-class="{'has-text-primary': bucket.id === view?.defaultBucketId}"
-											icon="th"
 											@click.stop="toggleDefaultBucket(bucket)"
 										>
+											<template #icon>
+												<PhSquaresFour />
+											</template>
 											{{ $t('project.kanban.defaultBucket') }}
 										</DropdownItem>
 										<DropdownItem
-											icon="angles-up"
 											@click.stop="() => collapseBucket(bucket)"
 										>
+											<template #icon>
+												<PhCaretDoubleUp />
+											</template>
 											{{ $t('project.kanban.collapse') }}
 										</DropdownItem>
 										<DropdownItem
@@ -138,9 +151,11 @@
 											class="has-text-danger"
 											:class="{'is-disabled': buckets.length <= 1}"
 											icon-class="has-text-danger"
-											icon="trash-alt"
 											@click.stop="() => deleteBucketModal(bucket.id)"
 										>
+											<template #icon>
+												<PhTrash />
+											</template>
 											{{ $t('misc.delete') }}
 										</DropdownItem>
 									</Dropdown>
@@ -197,11 +212,13 @@
 												v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
 												class="is-fullwidth has-text-centered"
 												:shadow="false"
-												icon="plus"
 												variant="secondary"
 												:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
 												@click="toggleShowNewTaskInput(bucket.id)"
 											>
+												<template #icon>
+													<PhPlus />
+												</template>
 												{{
 													bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
 												}}
@@ -250,9 +267,11 @@
 							:shadow="false"
 							class="is-transparent is-fullwidth has-text-centered"
 							variant="secondary"
-							icon="plus"
 							@click="() => showNewBucketInput = true"
 						>
+							<template #icon>
+								<PhPlus />
+							</template>
 							{{ $t('project.kanban.addBucket') }}
 						</XButton>
 					</div>
@@ -300,8 +319,10 @@ import {useAuthStore} from '@/stores/auth'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
+import {PhChecks, PhDotsThreeVertical, PhFloppyDisk, PhSquaresFour, PhCaretDoubleUp, PhTrash, PhPlus} from '@phosphor-icons/vue'
 
 import {
 	type CollapsedBuckets,

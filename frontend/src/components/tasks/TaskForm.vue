@@ -16,9 +16,11 @@
 		</CustomTransition>
 		<XButton
 			:shadow="false"
-			icon="plus"
 			@click="showCreateTaskOrCreate"
 		>
+			<template #icon>
+				<PhPlus />
+			</template>
 			{{ $t('task.new') }}
 		</XButton>
 	</form>
@@ -29,6 +31,7 @@ import {nextTick, ref} from 'vue'
 import type {ITask} from '@/modelTypes/ITask'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
+import {PhPlus} from '@phosphor-icons/vue'
 
 const emit = defineEmits<{
 	(e: 'createTask', title: string): Promise<ITask>

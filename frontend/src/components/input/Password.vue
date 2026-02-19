@@ -20,7 +20,7 @@
 			:aria-label="passwordFieldType === 'password' ? $t('user.auth.showPassword') : $t('user.auth.hidePassword')"
 			@click="togglePasswordFieldType"
 		>
-			<Icon :icon="passwordFieldType === 'password' ? 'eye' : 'eye-slash'" />
+			<PhEye v-if="passwordFieldType === 'password'" /><PhEyeSlash v-else />
 		</BaseButton>
 	</div>
 	<p
@@ -37,6 +37,7 @@ import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
 import {validatePassword} from '@/helpers/validatePasswort'
+import {PhEye, PhEyeSlash} from '@phosphor-icons/vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: string,

@@ -10,11 +10,13 @@
 				<Popup>
 					<template #trigger="{toggle}">
 						<XButton
-							icon="th"
 							variant="secondary"
 							class="mie-2"
 							@click.prevent.stop="toggle()"
 						>
+							<template #icon>
+								<PhSquaresFour />
+							</template>
 							{{ $t('project.table.columns') }}
 						</XButton>
 					</template>
@@ -316,6 +318,7 @@ import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import Popup from '@/components/misc/Popup.vue'
+import {PhSquaresFour} from '@phosphor-icons/vue'
 
 import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'

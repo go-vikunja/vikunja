@@ -4,7 +4,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('today')"
 	>
-		<span class="icon"><Icon :icon="['far', 'calendar-alt']" /></span>
+		<span class="icon"><PhCalendarBlank /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.today') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('today') }}</span>
@@ -14,7 +14,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('tomorrow')"
 	>
-		<span class="icon"><Icon :icon="['far', 'sun']" /></span>
+		<span class="icon"><PhSun /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.tomorrow') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('tomorrow') }}</span>
@@ -24,7 +24,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('nextMonday')"
 	>
-		<span class="icon"><Icon icon="coffee" /></span>
+		<span class="icon"><PhCoffee /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.nextMonday') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('nextMonday') }}</span>
@@ -35,7 +35,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('thisWeekend')"
 	>
-		<span class="icon"><Icon icon="cocktail" /></span>
+		<span class="icon"><PhMartini /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.thisWeekend') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('thisWeekend') }}</span>
@@ -45,7 +45,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('laterThisWeek')"
 	>
-		<span class="icon"><Icon icon="chess-knight" /></span>
+		<span class="icon"><PhHorse /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.laterThisWeek') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('laterThisWeek') }}</span>
@@ -55,7 +55,7 @@
 		class="datepicker__quick-select-date"
 		@click.stop="setDate('nextWeek')"
 	>
-		<span class="icon"><Icon icon="forward" /></span>
+		<span class="icon"><PhFastForward /></span>
 		<span class="text">
 			<span>{{ $t('input.datepicker.nextWeek') }}</span>
 			<span class="weekday">{{ getWeekdayFromStringInterval('nextWeek') }}</span>
@@ -77,6 +77,7 @@ import flatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import {PhCalendarBlank, PhSun, PhCoffee, PhMartini, PhHorse, PhFastForward} from '@phosphor-icons/vue'
 
 import {formatDate} from '@/helpers/time/formatDate'
 import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'

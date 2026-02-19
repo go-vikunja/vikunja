@@ -12,7 +12,7 @@
 					{{ $t('project.list.addPlaceholder') }}
 				</label>
 				<span class="icon is-small task-icon">
-					<Icon icon="tasks" />
+					<PhListChecks />
 				</span>
 				<textarea
 					:id="textareaId"
@@ -34,11 +34,13 @@
 				<XButton
 					class="add-task-button"
 					:disabled="newTaskTitle === '' || loading || undefined"
-					icon="plus"
 					:loading="loading"
 					:aria-label="$t('project.list.add')"
 					@click="addTask()"
 				>
+					<template #icon>
+						<PhPlus />
+					</template>
 					<span class="button-text">
 						{{ $t('project.list.add') }}
 					</span>
@@ -78,6 +80,7 @@ import {useTaskStore} from '@/stores/tasks'
 import {useAutoHeightTextarea} from '@/composables/useAutoHeightTextarea'
 import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
+import {PhListChecks, PhPlus} from '@phosphor-icons/vue'
 
 const props = withDefaults(defineProps<{
 	defaultPosition?: number,

@@ -28,7 +28,7 @@
 				v-if="project.id < -1"
 				class="saved-filter-icon icon"
 			>
-				<Icon icon="filter" />
+				<PhFunnel />
 			</span>
 			{{ getProjectTitle(project) }}
 		</div>
@@ -47,7 +47,7 @@
 			:class="{'is-favorite': project.isFavorite}"
 			@click.prevent.stop="projectStore.toggleProjectFavorite(project)"
 		>
-			<Icon :icon="project.isFavorite ? 'star' : ['far', 'star']" />
+			<PhStar :weight="project.isFavorite ? 'fill' : 'regular'" />
 		</BaseButton>
 	</div>
 </template>
@@ -57,6 +57,7 @@ import {computed} from 'vue'
 import type {IProject} from '@/modelTypes/IProject'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import {PhFunnel, PhStar} from '@phosphor-icons/vue'
 
 import {useProjectBackground} from '@/composables/useProjectBackground'
 import {useProjectStore} from '@/stores/projects'

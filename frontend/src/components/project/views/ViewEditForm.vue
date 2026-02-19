@@ -12,6 +12,7 @@ import XButton from '@/components/input/Button.vue'
 import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
 import FormField from '@/components/input/FormField.vue'
+import {PhTrash, PhPlus} from '@phosphor-icons/vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: IProjectView,
@@ -225,7 +226,7 @@ function handleBubbleSave() {
 						class="is-danger"
 						@click.prevent="() => view.bucketConfiguration.splice(index, 1)"
 					>
-						<Icon icon="trash-alt" />
+						<PhTrash />
 					</button>
 					<div class="filter-bucket-form">
 						<FormField
@@ -250,9 +251,11 @@ function handleBubbleSave() {
 				<div class="is-flex is-justify-content-end">
 					<XButton
 						variant="secondary"
-						icon="plus"
 						@click="() => view.bucketConfiguration.push({title: '', filter: {filter: ''}})"
 					>
+						<template #icon>
+							<PhPlus />
+						</template>
 						{{ $t('project.kanban.addBucket') }}
 					</XButton>
 				</div>
