@@ -89,6 +89,16 @@ var strictComparators = map[taskFilterComparator]bool{
 	taskFilterComparatorNotEquals: true,
 }
 
+// isRangeComparator returns true for comparators where combining multiple
+// conditions into a single EXISTS subquery is semantically correct (i.e. a
+// single row can satisfy both conditions simultaneously).
+func isRangeComparator(c taskFilterComparator) bool {
+	return c == taskFilterComparatorGreater ||
+		c == taskFilterComparatorGreateEquals ||
+		c == taskFilterComparatorLess ||
+		c == taskFilterComparatorLessEquals
+}
+
 type taskSearcher interface {
 	Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error)
 }
@@ -182,25 +192,26 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 				continue
 			}
 
-			// Collect all consecutive AND-joined filters targeting the same sub-table
+			// Collect all consecutive AND-joined range filters targeting the same sub-table.
+			// Only range comparators (>, >=, <, <=) are merged because they express
+			// conditions a single row can satisfy simultaneously (e.g. reminder > X AND
+			// reminder < Y). Equality/IN/NOT comparators must remain as separate EXISTS
+			// subqueries because each matching value lives in its own row (e.g.
+			// labels = 4 && labels = 5 means two different rows must each exist).
 			group := []*taskFilter{f}
-			for i+1 < len(rawFilters) {
-				next := rawFilters[i+1]
-				nextSubTable, nextOk := subTableFilters[next.field]
-				if !nextOk || nextSubTable.Table != subTableFilterParams.Table || next.join != filterConcatAnd {
-					break
+			if isRangeComparator(f.comparator) {
+				for i+1 < len(rawFilters) {
+					next := rawFilters[i+1]
+					nextSubTable, nextOk := subTableFilters[next.field]
+					if !nextOk || nextSubTable.Table != subTableFilterParams.Table || next.join != filterConcatAnd {
+						break
+					}
+					if !isRangeComparator(next.comparator) {
+						break
+					}
+					group = append(group, next)
+					i++
 				}
-				if next.field == "assignees" && next.comparator == taskFilterComparatorLike {
-					break
-				}
-				// Don't mix positive and negative filters (EXISTS vs NOT EXISTS)
-				currentIsNegative := f.comparator == taskFilterComparatorNotEquals || f.comparator == taskFilterComparatorNotIn
-				nextIsNegative := next.comparator == taskFilterComparatorNotEquals || next.comparator == taskFilterComparatorNotIn
-				if currentIsNegative != nextIsNegative {
-					break
-				}
-				group = append(group, next)
-				i++
 			}
 
 			// Build the combined condition for all filters in the group
@@ -232,7 +243,7 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 			filterSubQuery := subTableFilterParams.ToBaseSubQuery().And(combinedInnerCond)
 
 			var filter builder.Cond
-			if group[0].comparator == taskFilterComparatorNotEquals || group[0].comparator == taskFilterComparatorNotIn {
+			if f.comparator == taskFilterComparatorNotEquals || f.comparator == taskFilterComparatorNotIn {
 				filter = builder.NotExists(filterSubQuery)
 			} else {
 				filter = builder.Exists(filterSubQuery)
@@ -243,8 +254,10 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 			}
 
 			dbFilters = append(dbFilters, filter)
-			// Use the join from the last filter in the group (how this group connects to the next filter)
-			dbFilterJoins = append(dbFilterJoins, group[len(group)-1].join)
+			// Use the join from the first filter in the group: f.join describes how
+			// this group connects to the previous element (matches the convention
+			// where dbFilterJoins[i+1] combines dbFilters[i] with dbFilters[i+1]).
+			dbFilterJoins = append(dbFilterJoins, f.join)
 			continue
 		}
 
