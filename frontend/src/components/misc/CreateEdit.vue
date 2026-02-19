@@ -36,12 +36,19 @@
 					<XButton
 						v-if="hasPrimaryAction"
 						variant="primary"
-						:icon="primaryIcon"
 						:disabled="isBusy"
 						class="mis-2"
 						:loading="currentLoading"
 						@click.prevent.stop="primary"
 					>
+						<template
+							v-if="showPrimaryIcon"
+							#icon
+						>
+							<slot name="primary-icon">
+								<PhPlus />
+							</slot>
+						</template>
 						{{ primaryLabel || $t('misc.create') }}
 					</XButton>
 				</slot>
@@ -51,14 +58,14 @@
 </template>
 
 <script setup lang="ts">
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+import {PhPlus} from '@phosphor-icons/vue'
 
 import {computed, ref, toRef, watch} from 'vue'
 
 const props = withDefaults(defineProps<{
 	title: string,
 	primaryLabel?: string,
-	primaryIcon?: IconProp,
+	showPrimaryIcon?: boolean,
 	primaryDisabled?: boolean,
 	hasPrimaryAction?: boolean,
 	tertiary?: string,
@@ -66,7 +73,7 @@ const props = withDefaults(defineProps<{
 	loading?: boolean,
 }>(), {
 	primaryLabel: '',
-	primaryIcon: 'plus',
+	showPrimaryIcon: true,
 	primaryDisabled: false,
 	hasPrimaryAction: true,
 	tertiary: '',

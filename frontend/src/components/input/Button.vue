@@ -14,21 +14,17 @@
 			'--button-white-space': wrap ? 'break-spaces' : 'nowrap',
 		}"
 	>
-		<template v-if="icon">
-			<Icon
-				v-if="!$slots.default"
-				:icon="icon"
-				:style="{color: iconColor}"
-			/>
+		<template v-if="$slots.icon">
 			<span
-				v-else
+				v-if="$slots.default"
 				class="icon is-small"
 			>
-				<Icon
-					:icon="icon"
-					:style="{color: iconColor}"
-				/>
+				<slot name="icon" />
 			</span>
+			<slot
+				v-else
+				name="icon"
+			/>
 		</template>
 		<span>
 			<slot />
@@ -39,7 +35,6 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
 
 const props = defineProps<ButtonProps>()
 
@@ -53,8 +48,6 @@ export type ButtonTypes = keyof typeof VARIANT_CLASS_MAP
 
 export interface ButtonProps {
 	variant?: ButtonTypes
-	icon?: IconProp
-	iconColor?: string
 	loading?: boolean
 	disabled?: boolean
 	shadow?: boolean
@@ -64,7 +57,6 @@ export interface ButtonProps {
 
 defineOptions({name: 'XButton'})
 
-// @ts-expect-error - Complex union type from IconProp causes TS2590, but the code is correct
 const variant = computed(() => (props.variant ?? 'primary') as ButtonTypes)
 const shadow = computed(() => (props.shadow ?? true) as boolean)
 const wrap = computed(() => (props.wrap ?? true) as boolean)

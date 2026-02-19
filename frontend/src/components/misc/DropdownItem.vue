@@ -5,11 +5,11 @@
 		:class="{'is-disabled': disabled}"
 	>
 		<span
-			v-if="icon"
+			v-if="$slots.icon"
 			class="icon is-small"
 			:class="iconClass"
 		>
-			<Icon :icon="icon" />
+			<slot name="icon" />
 		</span>
 		<span>
 			<slot />
@@ -18,12 +18,9 @@
 </template>
 
 <script lang="ts" setup>
-import BaseButton, {type BaseButtonProps} from '@/components/base//BaseButton.vue'
-import Icon from '@/components/misc/Icon'
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+import BaseButton, {type BaseButtonProps} from '@/components/base/BaseButton.vue'
 
 export interface DropDownItemProps extends /* @vue-ignore */ BaseButtonProps {
-	icon?: IconProp,
 	iconClass?: object | string,
 	disabled?: boolean,
 }
