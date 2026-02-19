@@ -147,52 +147,34 @@ function hidePopup(e) {
 	}
 }
 
-const CLICKABLE_NOTIFICATIONS: string[] = [
-	names.TASK_COMMENT,
-	names.TASK_ASSIGNED,
-	names.TASK_REMINDER,
-	names.TASK_MENTIONED,
-	names.PROJECT_CREATED,
-	names.TEAM_MEMBER_ADDED,
-]
-
-function notificationHasRoute(n: INotification): boolean {
-	return CLICKABLE_NOTIFICATIONS.includes(n.name)
-}
-
-function to(n, index) {
-	const to: { name: string, params: Record<string, string | number> } = {
-		name: '',
-		params: {},
-	}
-
+function getNotificationRoute(n: INotification): object | null {
 	switch (n.name) {
 		case names.TASK_COMMENT:
 		case names.TASK_ASSIGNED:
 		case names.TASK_REMINDER:
 		case names.TASK_MENTIONED:
-			to.name = 'task.detail'
-			to.params.id = n.notification.task.id
-			break
-		case names.TASK_DELETED:
-			// Nothing
-			break
+			return {name: 'task.detail', params: {id: (n.notification as {task: {id: number}}).task.id}}
 		case names.PROJECT_CREATED:
-			to.name = 'task.index'
-			to.params.projectId = n.notification.project.id
-			break
+			return {name: 'task.index', params: {projectId: (n.notification as {project: {id: number}}).project.id}}
 		case names.TEAM_MEMBER_ADDED:
-			to.name = 'teams.edit'
-			to.params.id = n.notification.team.id
-			break
+			return {name: 'teams.edit', params: {id: (n.notification as {team: {id: number}}).team.id}}
+		default:
+			return null
 	}
+}
 
+function notificationHasRoute(n: INotification): boolean {
+	return getNotificationRoute(n) !== null
+}
+
+function to(n: INotification, index: number) {
 	return async () => {
-		if (to.name !== '') {
-			const failure = await router.push(to)
-			if (isNavigationFailure(failure, NavigationFailureType.duplicated)) {
-				router.go(0)
-			}
+		const route = getNotificationRoute(n)
+		if (route === null) return;
+		
+		const failure = await router.push(route)
+		if (isNavigationFailure(failure, NavigationFailureType.duplicated)) {
+			router.go(0)
 		}
 
 		n.read = true
