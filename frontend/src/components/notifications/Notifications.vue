@@ -29,8 +29,8 @@
 					v-for="(n, index) in notifications"
 					:key="n.id"
 					class="single-notification"
-					:class="{'is-task-notification': isTaskNotification(n)}"
-					@click="() => { if (isTaskNotification(n)) to(n, index)() }"
+					:class="{'is-clickable': notificationHasRoute(n)}"
+					@click="() => notificationHasRoute(n) && to(n, index)()"
 				>
 					<div
 						class="read-indicator"
@@ -50,16 +50,7 @@
 							>
 								{{ getDisplayName(n.notification.doer) }}
 							</span>
-							<template v-if="isTaskNotification(n)">
-								{{ n.toText(userInfo) }}
-							</template>
-							<BaseButton
-								v-else
-								class="has-text-start"
-								@click="() => to(n, index)()"
-							>
-								{{ n.toText(userInfo) }}
-							</BaseButton>
+							{{ n.toText(userInfo) }}
 						</div>
 						<span
 							v-tooltip="formatDateLong(n.created)"
@@ -93,7 +84,7 @@
 
 <script lang="ts" setup>
 import {computed, onMounted, onUnmounted, ref} from 'vue'
-import {useRouter} from 'vue-router'
+import {useRouter, isNavigationFailure, NavigationFailureType} from 'vue-router'
 
 import NotificationService from '@/services/notification'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -156,19 +147,21 @@ function hidePopup(e) {
 	}
 }
 
-const TASK_NOTIFICATION_NAMES = [
+const CLICKABLE_NOTIFICATIONS: string[] = [
 	names.TASK_COMMENT,
 	names.TASK_ASSIGNED,
 	names.TASK_REMINDER,
 	names.TASK_MENTIONED,
+	names.PROJECT_CREATED,
+	names.TEAM_MEMBER_ADDED,
 ]
 
-function isTaskNotification(n: INotification): boolean {
-	return TASK_NOTIFICATION_NAMES.includes(n.name)
+function notificationHasRoute(n: INotification): boolean {
+	return CLICKABLE_NOTIFICATIONS.includes(n.name)
 }
 
 function to(n, index) {
-	const to: any = {
+	const to: { name: string, params: Record<string, string | number> } = {
 		name: '',
 		params: {},
 	}
@@ -196,12 +189,17 @@ function to(n, index) {
 
 	return async () => {
 		if (to.name !== '') {
-			router.push(to)
+			const failure = await router.push(to)
+			if (isNavigationFailure(failure, NavigationFailureType.duplicated)) {
+				router.go(0)
+			}
 		}
 
 		n.read = true
-		const notificationService = new NotificationService()
-		allNotifications.value[index] = await notificationService.update(n)
+		if (allNotifications.value[index]) {
+			const notificationService = new NotificationService()
+			Object.assign(allNotifications.value[index], await notificationService.update(n))
+		}
 	}
 }
 
@@ -267,7 +265,7 @@ async function markAllRead() {
 
 			transition: background-color $transition;
 
-			&.is-task-notification {
+			&.is-clickable {
 				cursor: pointer;
 			}
 
