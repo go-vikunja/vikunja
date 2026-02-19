@@ -38,6 +38,8 @@ type TaskComment struct {
 
 	Reactions ReactionMap `xorm:"-" json:"reactions"`
 
+	OrderBy string `xorm:"-" json:"-" query:"order_by"`
+
 	Created time.Time `xorm:"created" json:"created"`
 	Updated time.Time `xorm:"updated" json:"updated"`
 
@@ -243,6 +245,7 @@ func (tc *TaskComment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param taskID path int true "Task ID"
+// @Param order_by query string false "Sort order. Can be 'asc' for ascending or 'desc' for descending. Defaults to 'asc'."
 // @Success 200 {array} models.TaskComment "The array with all task comments"
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments [get]
@@ -257,13 +260,13 @@ func (tc *TaskComment) ReadAll(s *xorm.Session, auth web.Auth, search string, pa
 		return nil, 0, 0, ErrGenericForbidden{}
 	}
 
-	return getAllCommentsForTasksWithoutPermissionCheck(s, []int64{tc.TaskID}, search, page, perPage)
+	return getAllCommentsForTasksWithoutPermissionCheck(s, []int64{tc.TaskID}, search, page, perPage, tc.OrderBy)
 }
 
 func addCommentsToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]*Task) (err error) {
 	// Only fetch the first page of comments when expanding tasks to avoid
 	// loading all comments for tasks with many comments.
-	comments, _, _, err := getAllCommentsForTasksWithoutPermissionCheck(s, taskIDs, "", 1, 50)
+	comments, _, _, err := getAllCommentsForTasksWithoutPermissionCheck(s, taskIDs, "", 1, 50, "asc")
 	if err != nil {
 		return err
 	}
@@ -317,12 +320,17 @@ func addCommentCountToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 	return nil
 }
 
-func getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Session, taskIDs []int64, search string, page int, perPage int) (result []*TaskComment, resultCount int, numberOfTotalItems int64, err error) {
+func getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Session, taskIDs []int64, search string, page int, perPage int, orderBy string) (result []*TaskComment, resultCount int, numberOfTotalItems int64, err error) {
 	// Because we can't extend the type in general, we need to do this here.
 	// Not a good solution, but saves performance.
 	type TaskCommentWithAuthor struct {
 		TaskComment
 		AuthorFromDB *user.User `xorm:"extends" json:"-"`
+	}
+
+	order := "asc"
+	if orderBy == "desc" {
+		order = "desc"
 	}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
@@ -337,7 +345,7 @@ func getAllCommentsForTasksWithoutPermissionCheck(s *xorm.Session, taskIDs []int
 	query := s.
 		Where(builder.And(where...)).
 		Join("LEFT", "users", "users.id = task_comments.author_id").
-		OrderBy("task_comments.created asc")
+		OrderBy("task_comments.created " + order)
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
