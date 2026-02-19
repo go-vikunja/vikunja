@@ -200,6 +200,8 @@ function to(n, index) {
 			const notificationService = new NotificationService()
 			Object.assign(allNotifications.value[index], await notificationService.update(n))
 		}
+
+		showNotifications.value = false
 	}
 }
 
