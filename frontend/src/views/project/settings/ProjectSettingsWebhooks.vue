@@ -9,6 +9,7 @@ import ProjectModel from '@/models/project'
 import type {IProject} from '@/modelTypes/IProject'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
+import {PhPlus, PhTrash} from '@phosphor-icons/vue'
 
 import {useBaseStore} from '@/stores/base'
 import type {IWebhook} from '@/modelTypes/IWebhook'
@@ -128,10 +129,10 @@ function validateSelectedEvents() {
 	>
 		<XButton
 			v-if="!(webhooks?.length === 0 || showNewForm)"
-			icon="plus"
 			class="mbe-4"
 			@click="showNewForm = true"
 		>
+			<template #icon><PhPlus /></template>
 			{{ $t('project.webhooks.create') }}
 		</XButton>
 
@@ -239,9 +240,9 @@ function validateSelectedEvents() {
 				</p>
 			</div>
 			<XButton
-				icon="plus"
 				@click="create"
 			>
+				<template #icon><PhPlus /></template>
 				{{ $t('project.webhooks.create') }}
 			</XButton>
 		</div>
@@ -277,9 +278,10 @@ function validateSelectedEvents() {
 					<td class="actions">
 						<XButton
 							danger
-							icon="trash-alt"
 							@click="() => {showDeleteModal = true;webhookIdToDelete = w.id}"
-						/>
+						>
+							<template #icon><PhTrash /></template>
+						</XButton>
 					</td>
 				</tr>
 			</tbody>

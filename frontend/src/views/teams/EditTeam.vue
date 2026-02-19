@@ -57,9 +57,10 @@
 					<XButton
 						:loading="teamService.loading"
 						danger
-						icon="trash-alt"
 						@click="showDeleteModal = true"
-					/>
+					>
+						<template #icon><PhTrash /></template>
+					</XButton>
 				</div>
 			</div>
 		</Card>
@@ -95,9 +96,9 @@
 					</div>
 					<div class="control">
 						<XButton
-							icon="plus"
 							@click="addUser"
 						>
+							<template #icon><PhPlus /></template>
 							{{ $t('team.edit.addUser') }}
 						</XButton>
 					</div>
@@ -130,13 +131,13 @@
 						<td class="type">
 							<template v-if="m.admin">
 								<span class="icon is-small">
-									<Icon icon="lock" />
+									<PhLock />
 								</span>
 								{{ $t('team.attributes.admin') }}
 							</template>
 							<template v-else>
 								<span class="icon is-small">
-									<Icon icon="user" />
+									<PhUser />
 								</span>
 								{{ $t('team.attributes.member') }}
 							</template>
@@ -157,9 +158,10 @@
 								v-if="m.id !== userInfo.id"
 								:loading="teamMemberService.loading"
 								danger
-								icon="trash-alt"
 								@click="() => {memberToDelete = m; showUserDeleteModal = true}"
-							/>
+							>
+								<template #icon><PhTrash /></template>
+							</XButton>
 						</td>
 					</tr>
 				</tbody>
@@ -236,6 +238,8 @@ import {useI18n} from 'vue-i18n'
 import {useRoute, useRouter} from 'vue-router'
 
 import Editor from '@/components/input/AsyncEditor'
+
+import {PhLock, PhPlus, PhTrash, PhUser} from '@phosphor-icons/vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FormField from '@/components/input/FormField.vue'
 import Multiselect from '@/components/input/Multiselect.vue'

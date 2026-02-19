@@ -7,6 +7,7 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 import ViewEditForm from '@/components/project/views/ViewEditForm.vue'
 import ProjectViewService from '@/services/projectViews'
 import XButton from '@/components/input/Button.vue'
+import {PhDotsSixVertical, PhPencilSimple, PhTrash} from '@phosphor-icons/vue'
 import {error, success} from '@/message'
 import {useI18n} from 'vue-i18n'
 import ProjectService from '@/services/project'
@@ -193,19 +194,21 @@ async function saveViewPosition(e) {
 								<XButton
 									v-if="isAdmin"
 									class="is-danger mie-2"
-									icon="trash-alt"
 									@click="() => {
 										viewIdToDelete = v.id
 										showDeleteModal = true
 									}"
-								/>
+								>
+									<template #icon><PhTrash /></template>
+								</XButton>
 								<XButton
 									v-if="isAdmin"
-									icon="pen"
 									@click="viewToEdit = {...v}"
-								/>
+								>
+									<template #icon><PhPencilSimple /></template>
+								</XButton>
 								<span class="icon handle">
-									<Icon icon="grip-lines" />
+									<PhDotsSixVertical />
 								</span>
 							</td>
 						</template>

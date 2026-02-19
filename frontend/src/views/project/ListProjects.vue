@@ -15,15 +15,17 @@
 			<div class="action-buttons">
 				<XButton
 					:to="{name: 'filters.create'}"
-					icon="filter"
+
 				>
+					<template #icon><PhFunnel /></template>
 					{{ $t('filters.create.title') }}
 				</XButton>
 				<XButton
 					v-cy="'new-project'"
 					:to="{name: 'project.create'}"
-					icon="plus"
+
 				>
+					<template #icon><PhPlus /></template>
 					{{ $t('project.create.header') }}
 				</XButton>
 			</div>
@@ -41,6 +43,8 @@ import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
+
+import {PhFunnel, PhPlus} from '@phosphor-icons/vue'
 import ProjectCardGrid from '@/components/project/partials/ProjectCardGrid.vue'
 
 import {useTitle} from '@/composables/useTitle'

@@ -27,9 +27,7 @@
 								{{ text }}
 							</span>
 							<span class="ml-1 has-text-grey-light is-size-7">
-								<Icon
-									icon="arrow-up-right-from-square"
-								/>
+								<PhArrowSquareOut />
 							</span>
 						</BaseButton>
 					</li>
@@ -51,6 +49,7 @@ import { useAuthStore } from '@/stores/auth'
 import {useRoute} from 'vue-router'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import {PhArrowSquareOut} from '@phosphor-icons/vue'
 
 const { t } = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.title'))

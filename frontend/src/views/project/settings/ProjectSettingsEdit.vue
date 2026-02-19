@@ -2,7 +2,7 @@
 	<CreateEdit
 		v-model:loading="loadingModel"
 		:title="$t('project.edit.header')"
-		primary-icon=""
+		:show-primary-icon="false"
 		:primary-label="$t('misc.save')"
 		:tertiary="project.maxPermission === PERMISSIONS.ADMIN ? $t('misc.delete') : undefined"
 		@primary="save"

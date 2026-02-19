@@ -17,7 +17,7 @@
 				class="back-button mbs-2"
 				@click="lastProject ? router.back() : router.push(projectRoute)"
 			>
-				<Icon icon="arrow-left" />
+				<PhArrowLeft />
 				{{ $t('task.detail.back') }}
 			</BaseButton>
 			<Heading
@@ -73,7 +73,7 @@
 						>
 							<!-- Assignees -->
 							<div class="detail-title">
-								<Icon icon="users" />
+								<PhUsers />
 								{{ $t('task.attributes.assignees') }}
 							</div>
 							<EditAssignees
@@ -99,7 +99,7 @@
 							>
 								<!-- Priority -->
 								<div class="detail-title">
-									<Icon icon="exclamation-circle" />
+									<PhWarningCircle />
 									{{ $t('task.attributes.priority') }}
 								</div>
 								<PrioritySelect
@@ -120,7 +120,7 @@
 							>
 								<!-- Due Date -->
 								<div class="detail-title">
-									<Icon icon="calendar" />
+									<PhCalendar />
 									{{ $t('task.attributes.dueDate') }}
 								</div>
 								<div class="date-input">
@@ -137,7 +137,7 @@
 										@click="() => {task.dueDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
-											<Icon icon="times" />
+											<PhX />
 										</span>
 									</BaseButton>
 								</div>
@@ -153,7 +153,7 @@
 							>
 								<!-- Progress -->
 								<div class="detail-title">
-									<Icon icon="percent" />
+									<PhPercent />
 									{{ $t('task.attributes.percentDone') }}
 								</div>
 								<PercentDoneSelect
@@ -174,7 +174,7 @@
 							>
 								<!-- Start Date -->
 								<div class="detail-title">
-									<Icon icon="play" />
+									<PhPlay />
 									{{ $t('task.attributes.startDate') }}
 								</div>
 								<div class="date-input">
@@ -191,7 +191,7 @@
 										@click="() => {task.startDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
-											<Icon icon="times" />
+											<PhX />
 										</span>
 									</BaseButton>
 								</div>
@@ -207,7 +207,7 @@
 							>
 								<!-- End Date -->
 								<div class="detail-title">
-									<Icon icon="stop" />
+									<PhStop />
 									{{ $t('task.attributes.endDate') }}
 								</div>
 								<div class="date-input">
@@ -224,7 +224,7 @@
 										@click="() => {task.endDate = null;saveTask()}"
 									>
 										<span class="icon is-small">
-											<Icon icon="times" />
+											<PhX />
 										</span>
 									</BaseButton>
 								</div>
@@ -240,7 +240,7 @@
 							>
 								<!-- Reminders -->
 								<div class="detail-title">
-									<Icon :icon="['far', 'clock']" />
+									<PhClock />
 									{{ $t('task.attributes.reminders') }}
 								</div>
 								<Reminders
@@ -262,7 +262,7 @@
 								<!-- Repeat after -->
 								<div class="is-flex is-justify-content-space-between">
 									<div class="detail-title">
-										<Icon icon="history" />
+										<PhClockCounterClockwise />
 										{{ $t('task.attributes.repeat') }}
 									</div>
 									<BaseButton
@@ -271,7 +271,7 @@
 										@click="removeRepeatAfter"
 									>
 										<span class="icon is-small">
-											<Icon icon="times" />
+											<PhX />
 										</span>
 									</BaseButton>
 								</div>
@@ -293,7 +293,7 @@
 							>
 								<!-- Color -->
 								<div class="detail-title">
-									<Icon icon="fill-drip" />
+									<PhPaintBucket />
 									{{ $t('task.attributes.color') }}
 								</div>
 								<ColorPicker
@@ -313,7 +313,7 @@
 					>
 						<div class="detail-title">
 							<span class="icon is-grey">
-								<Icon icon="tags" />
+								<PhTag />
 							</span>
 							{{ $t('task.attributes.labels') }}
 						</div>
@@ -365,7 +365,7 @@
 					>
 						<h3>
 							<span class="icon is-grey">
-								<Icon icon="sitemap" />
+								<PhTreeStructure />
 							</span>
 							{{ $t('task.attributes.relatedTasks') }}
 						</h3>
@@ -386,7 +386,7 @@
 					>
 						<h3>
 							<span class="icon is-grey">
-								<Icon icon="list" />
+								<PhList />
 							</span>
 							{{ $t('task.detail.move') }}
 						</h3>
@@ -426,10 +426,10 @@
 							v-shortcut="'t'"
 							:class="{'is-pending': !task.done}"
 							class="button--mark-done"
-							icon="check-double"
 							variant="secondary"
 							@click="toggleTaskDone()"
 						>
+							<template #icon><PhChecks /></template>
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</XButton>
 						<TaskSubscription
@@ -441,9 +441,9 @@
 						<XButton
 							v-shortcut="'s'"
 							variant="secondary"
-							:icon="task.isFavorite ? 'star' : ['far', 'star']"
 							@click="toggleFavorite"
 						>
+							<template #icon><PhStar :weight="task.isFavorite ? 'fill' : 'regular'" /></template>
 							{{
 								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
 							}}
@@ -454,33 +454,32 @@
 						<XButton
 							v-shortcut="'l'"
 							variant="secondary"
-							icon="tags"
 							@click="setFieldActive('labels')"
 						>
+							<template #icon><PhTag /></template>
 							{{ $t('task.detail.actions.label') }}
 						</XButton>
 						<XButton
 							v-shortcut="'p'"
 							variant="secondary"
-							icon="exclamation-circle"
 							@click="setFieldActive('priority')"
 						>
+							<template #icon><PhWarningCircle /></template>
 							{{ $t('task.detail.actions.priority') }}
 						</XButton>
 						<XButton
 							variant="secondary"
-							icon="percent"
 							@click="setFieldActive('percentDone')"
 						>
+							<template #icon><PhPercent /></template>
 							{{ $t('task.detail.actions.percentDone') }}
 						</XButton>
 						<XButton
 							v-shortcut="'c'"
 							variant="secondary"
-							icon="fill-drip"
-							:icon-color="color"
 							@click="setFieldActive('color')"
 						>
+							<template #icon><PhPaintBucket :style="{color}" /></template>
 							{{ $t('task.detail.actions.color') }}
 						</XButton>
 						
@@ -490,33 +489,33 @@
 							v-shortcut="'a'"
 							v-cy="'taskDetail.assign'"
 							variant="secondary"
-							icon="users"
 							@click="setFieldActive('assignees')"
 						>
+							<template #icon><PhUsers /></template>
 							{{ $t('task.detail.actions.assign') }}
 						</XButton>
 						<XButton
 							v-shortcut="'f'"
 							variant="secondary"
-							icon="paperclip"
 							@click="openAttachments()"
 						>
+							<template #icon><PhPaperclip /></template>
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
 							v-shortcut="'r'"
 							variant="secondary"
-							icon="sitemap"
 							@click="setRelatedTasksActive()"
 						>
+							<template #icon><PhTreeStructure /></template>
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</XButton>
 						<XButton
 							v-shortcut="'m'"
 							variant="secondary"
-							icon="list"
 							@click="setFieldActive('moveProject')"
 						>
+							<template #icon><PhList /></template>
 							{{ $t('task.detail.actions.moveProject') }}
 						</XButton>
 						
@@ -525,47 +524,47 @@
 						<XButton
 							v-shortcut="'d'"
 							variant="secondary"
-							icon="calendar"
 							@click="setFieldActive('dueDate')"
 						>
+							<template #icon><PhCalendar /></template>
 							{{ $t('task.detail.actions.dueDate') }}
 						</XButton>
 						<XButton
 							variant="secondary"
-							icon="play"
 							@click="setFieldActive('startDate')"
 						>
+							<template #icon><PhPlay /></template>
 							{{ $t('task.detail.actions.startDate') }}
 						</XButton>
 						<XButton
 							variant="secondary"
-							icon="stop"
 							@click="setFieldActive('endDate')"
 						>
+							<template #icon><PhStop /></template>
 							{{ $t('task.detail.actions.endDate') }}
 						</XButton>
 						<XButton
 							v-shortcut="reminderShortcut"
 							variant="secondary"
-							:icon="['far', 'clock']"
 							@click="setFieldActive('reminders')"
 						>
+							<template #icon><PhClock /></template>
 							{{ $t('task.detail.actions.reminders') }}
 						</XButton>
 						<XButton
 							variant="secondary"
-							icon="history"
 							@click="setFieldActive('repeatAfter')"
 						>
+							<template #icon><PhClockCounterClockwise /></template>
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
 						<XButton
 							v-shortcut="'Shift+Delete'"
-							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
 							@click="showDeleteModal = true"
 						>
+							<template #icon><PhTrash /></template>
 							{{ $t('task.detail.actions.delete') }}
 						</XButton>
 					</template>
@@ -588,7 +587,7 @@
 			:aria-label="$t('task.detail.scrollToBottom')"
 			@click="scrollToBottom"
 		>
-			<Icon icon="chevron-down" />
+			<PhCaretDown />
 		</BaseButton>
 
 		<Modal
@@ -630,6 +629,13 @@ import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {PERMISSIONS} from '@/constants/permissions'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+
+import {
+	PhArrowLeft, PhUsers, PhWarningCircle, PhCalendar, PhX, PhPercent,
+	PhPlay, PhStop, PhClock, PhClockCounterClockwise, PhPaintBucket,
+	PhTag, PhTreeStructure, PhList, PhChecks, PhStar, PhCaretDown,
+	PhTrash, PhPaperclip,
+} from '@phosphor-icons/vue'
 
 // partials
 import Attachments from '@/components/tasks/partials/Attachments.vue'

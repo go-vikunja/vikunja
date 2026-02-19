@@ -2,10 +2,10 @@
 	<CreateEdit
 		v-model:loading="loadingModel"
 		:title="$t('project.duplicate.title')"
-		primary-icon="paste"
 		:primary-label="$t('project.duplicate.label')"
 		@primary="duplicate"
 	>
+		<template #primary-icon><PhClipboard /></template>
 		<p>{{ $t('project.duplicate.text') }}</p>
 		<ProjectSearch v-model="parentProject" />
 	</CreateEdit>
@@ -17,6 +17,7 @@ import {useRoute} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
+import {PhClipboard} from '@phosphor-icons/vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 
 import {success} from '@/message'

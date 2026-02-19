@@ -6,8 +6,9 @@
 		<XButton
 			:to="{name:'labels.create'}"
 			class="is-pulled-right"
-			icon="plus"
+
 		>
+			<template #icon><PhPlus /></template>
 			{{ $t('label.create.header') }}
 		</XButton>
 
@@ -42,10 +43,7 @@
 						class="label-edit-button is-small"
 						@click.stop.prevent="editLabel(label)"
 					>
-						<Icon
-							icon="pen"
-							class="icon"
-						/>
+						<PhPencilSimple class="icon" />
 					</BaseButton>
 				</RouterLink>
 			</div>
@@ -87,10 +85,11 @@
 							</div>
 							<div class="control">
 								<XButton
-									icon="trash-alt"
 									danger
 									@click="showDeleteDialoge(labelEditLabel)"
-								/>
+								>
+									<template #icon><PhTrash /></template>
+								</XButton>
 							</div>
 						</div>
 					</form>
@@ -122,6 +121,7 @@ import {computed, nextTick, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import {PhPencilSimple, PhPlus, PhTrash} from '@phosphor-icons/vue'
 import Editor from '@/components/input/AsyncEditor'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import FormField from '@/components/input/FormField.vue'

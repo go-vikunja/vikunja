@@ -15,9 +15,10 @@
 				<XButton
 					v-tooltip="$t('misc.copy')"
 					:shadow="false"
-					icon="paste"
 					@click="copy(caldavUrl)"
-				/>
+				>
+					<template #icon><PhClipboard /></template>
+				</XButton>
 			</template>
 		</FormField>
 
@@ -75,11 +76,11 @@
 		</Message>
 
 		<XButton
-			icon="plus"
 			class="mbe-4"
 			:loading="service.loading"
 			@click="createToken"
 		>
+			<template #icon><PhPlus /></template>
 			{{ $t('user.settings.caldav.createToken') }}
 		</XButton>
 
@@ -103,6 +104,7 @@ import {useTitle} from '@/composables/useTitle'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
 import {success} from '@/message'
 import BaseButton from '@/components/base/BaseButton.vue'
+import {PhClipboard, PhPlus} from '@phosphor-icons/vue'
 import Message from '@/components/misc/Message.vue'
 import FormField from '@/components/input/FormField.vue'
 import CaldavTokenService from '@/services/caldavToken'

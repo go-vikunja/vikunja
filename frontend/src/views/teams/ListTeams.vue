@@ -6,8 +6,9 @@
 		<XButton
 			:to="{name:'teams.create'}"
 			class="is-pulled-right"
-			icon="plus"
+
 		>
+			<template #icon><PhPlus /></template>
 			{{ $t('team.create.title') }}
 		</XButton>
 
@@ -44,6 +45,7 @@ import {ref, shallowReactive} from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import TeamService from '@/services/team'
+import {PhPlus} from '@phosphor-icons/vue'
 import { useTitle } from '@/composables/useTitle'
 
 const { t } = useI18n({useScope: 'global'})

@@ -6,6 +6,7 @@ import {parseScopesFromQuery} from '@/helpers/parseScopesFromQuery'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import XButton from '@/components/input/Button.vue'
+import {PhPlus} from '@phosphor-icons/vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ApiTokenModel from '@/models/apiTokenModel'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
@@ -381,11 +382,11 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 
 		<XButton
 			v-else
-			icon="plus"
 			class="mbe-4"
 			:loading="service.loading"
 			@click="() => showCreateForm = true"
 		>
+			<template #icon><PhPlus /></template>
 			{{ $t('user.settings.apiTokens.createAToken') }}
 		</XButton>
 
