@@ -243,7 +243,9 @@ const getBarTextX = computed(() => (bar: GanttBarModel) => {
 	if (bar.meta?.dateType === 'endOnly') {
 		return getBarX.value(bar) + getBarWidth.value(bar) - 8
 	}
-	return getBarX.value(bar) + 8
+	// When the bar starts before the visible range, clamp text to the left edge
+	// so the title remains visible within the visible portion of the bar.
+	return Math.max(getBarX.value(bar) + 8, 8)
 })
 
 function isPartialDate(bar: GanttBarModel) {
