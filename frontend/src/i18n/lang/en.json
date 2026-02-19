@@ -928,7 +928,9 @@
       "deleteText1": "Are you sure you want to delete this comment?",
       "deleteSuccess": "The comment was deleted successfully.",
       "addedSuccess": "The comment was added successfully.",
-      "permalink": "Copy permalink to this comment"
+      "permalink": "Copy permalink to this comment",
+      "sortNewestFirst": "Newest first",
+      "sortOldestFirst": "Oldest first"
     },
     "mention": {
       "noUsersFound": "No users found"

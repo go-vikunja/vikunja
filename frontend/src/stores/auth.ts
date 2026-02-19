@@ -139,6 +139,7 @@ export const useAuthStore = defineStore('auth', () => {
 				defaultTaskRelationType: RELATION_KIND.RELATED,
 				backgroundBrightness: 100,
 				sidebarWidth: null,
+				commentSortOrder: 'asc',
 				...newSettings.frontendSettings,
 			},
 		})
