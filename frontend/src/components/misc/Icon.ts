@@ -5,8 +5,10 @@ import {
 	faAnglesUp,
 	faArchive,
 	faArrowLeft,
+	faArrowDownShortWide,
 	faArrowUpFromBracket,
 	faArrowUpRightFromSquare,
+	faArrowUpShortWide,
 	faBold,
 	faItalic,
 	faStrikethrough,
@@ -183,7 +185,9 @@ library.add(faTimesCircle)
 library.add(faTrashAlt)
 library.add(faUser)
 library.add(faUsers)
+library.add(faArrowDownShortWide)
 library.add(faArrowUpFromBracket)
+library.add(faArrowUpShortWide)
 library.add(faX)
 library.add(faAnglesUp)
 library.add(faBolt)

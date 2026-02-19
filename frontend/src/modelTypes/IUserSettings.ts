@@ -24,6 +24,7 @@ export interface IFrontendSettings {
 	backgroundBrightness: number | null
 	alwaysShowBucketTaskCount: boolean
 	sidebarWidth: number | null
+	commentSortOrder: 'asc' | 'desc'
 }
 
 export interface IExtraSettingsLink {
