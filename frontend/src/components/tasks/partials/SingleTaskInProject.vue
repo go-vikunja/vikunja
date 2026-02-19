@@ -111,19 +111,19 @@
 						v-if="task.attachments.length > 0"
 						class="project-task-icon"
 					>
-						<Icon icon="paperclip" />
+						<PhPaperclip />
 					</span>
 					<span
 						v-if="!isEditorContentEmpty(task.description)"
 						class="project-task-icon is-mirrored-rtl"
 					>
-						<Icon icon="align-left" />
+						<PhTextAlignLeft />
 					</span>
 					<span
 						v-if="isRepeating"
 						class="project-task-icon"
 					>
-						<Icon icon="history" />
+						<PhClockCounterClockwise />
 					</span>
 					<CommentCount
 						:task="task"
@@ -162,14 +162,7 @@
 				@click.stop="toggleFavorite"
 			>
 				<span class="is-sr-only">{{ task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite') }}</span>
-				<Icon
-					v-if="task.isFavorite"
-					icon="star"
-				/>
-				<Icon
-					v-else
-					:icon="['far', 'star']"
-				/>
+				<PhStar :weight="task.isFavorite ? 'fill' : 'regular'" />
 			</BaseButton>
 			<slot />
 		</div>
@@ -193,6 +186,7 @@
 <script setup lang="ts">
 import {ref, watch, shallowReactive, onMounted, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {PhPaperclip, PhTextAlignLeft, PhClockCounterClockwise, PhStar} from '@phosphor-icons/vue'
 
 import TaskModel, {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'

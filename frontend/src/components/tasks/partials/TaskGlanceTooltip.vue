@@ -27,7 +27,7 @@
 								v-if="task.attachments.length > 0"
 								class="task-glance-icon"
 							>
-								<Icon icon="paperclip" />
+								<PhPaperclip />
 							</span>
 							<CommentCount
 								:task="task"
@@ -58,7 +58,7 @@
 						v-if="task.dueDate"
 						class="task-glance-due"
 					>
-						<Icon icon="calendar" />
+						<PhCalendarBlank />
 						<span>{{ $t('task.detail.due', {at: formatDisplayDate(task.dueDate)}) }}</span>
 					</div>
 
@@ -82,6 +82,7 @@
 <script setup lang="ts">
 import {ref, computed, onUnmounted, nextTick} from 'vue'
 import {computePosition, flip, offset, shift} from '@floating-ui/dom'
+import {PhPaperclip, PhCalendarBlank} from '@phosphor-icons/vue'
 
 import type {ITask} from '@/modelTypes/ITask'
 import {getTaskIdentifier} from '@/models/task'

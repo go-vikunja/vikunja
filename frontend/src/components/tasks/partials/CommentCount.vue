@@ -5,7 +5,7 @@
 		class="comment-count"
 		:class="{'is-unread': task.isUnread}"
 	>
-		<Icon :icon="['far', 'comments']" />
+		<PhChats />
 		<span class="comment-count-badge">{{ task.commentCount }}</span>
 		<span
 			v-if="task.isUnread"
@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {PhChats} from '@phosphor-icons/vue'
 
 import type {ITask} from '@/modelTypes/ITask'
 

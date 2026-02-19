@@ -2,7 +2,7 @@
 	<div>
 		<h3>
 			<span class="icon is-grey">
-				<Icon icon="align-left" />
+				<PhTextAlignLeft />
 			</span>
 			{{ $t('task.attributes.description') }}
 			<CustomTransition name="fade">
@@ -17,7 +17,7 @@
 					v-else-if="!loading && saved"
 					class="is-small has-text-success"
 				>
-					<Icon icon="check" />
+					<PhCheck />
 					{{ $t('misc.saved') }}
 				</span>
 			</CustomTransition>
@@ -43,6 +43,7 @@
 <script setup lang="ts">
 import {ref, computed, watchEffect,  onBeforeUnmount} from 'vue'
 import {onBeforeRouteLeave} from 'vue-router'
+import {PhTextAlignLeft, PhCheck} from '@phosphor-icons/vue'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'

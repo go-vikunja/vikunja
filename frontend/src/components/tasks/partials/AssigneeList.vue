@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type {IUser} from '@/modelTypes/IUser'
+import {PhX} from '@phosphor-icons/vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import User from '@/components/misc/User.vue'
 
@@ -44,7 +45,7 @@ defineEmits<{
 				class="remove-assignee"
 				@click="$emit('remove', user)"
 			>
-				<Icon icon="times" />
+				<PhX />
 			</BaseButton>
 		</span>
 	</div>

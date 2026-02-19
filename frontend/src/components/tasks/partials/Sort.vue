@@ -1,25 +1,22 @@
 <template>
 	<BaseButton>
-		<Icon
+		<PhSortAscending
 			v-if="order === 'asc'"
-			icon="sort-up"
 			class="sort__icon"
 		/>
-		<Icon
+		<PhSortDescending
 			v-else-if="order === 'desc'"
-			icon="sort-up"
-			rotation="180"
 			class="sort__icon"
 		/>
-		<Icon
+		<PhArrowsDownUp
 			v-else
-			icon="sort"
 			class="sort__icon"
 		/>
 	</BaseButton>
 </template>
 
 <script setup lang="ts">
+import {PhSortAscending, PhSortDescending, PhArrowsDownUp} from '@phosphor-icons/vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 withDefaults(defineProps<{

@@ -9,13 +9,11 @@
 		class="priority-label"
 	>
 		<span class="icon">
-			<Icon
+			<PhWarningCircle
 				v-if="priority >= priorities.HIGH"
-				icon="exclamation-circle"
 			/>
-			<Icon
+			<PhWarning
 				v-else
-				icon="exclamation"
 			/>
 		</span>
 		<span>
@@ -31,6 +29,7 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
+import {PhWarningCircle, PhWarning} from '@phosphor-icons/vue'
 import {PRIORITIES as priorities} from '@/constants/priorities'
 import {useAuthStore} from '@/stores/auth'
 	
