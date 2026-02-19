@@ -1,5 +1,4 @@
 import type {Editor, Range} from '@tiptap/core'
-import type {Component} from 'vue'
 import {VueRenderer} from '@tiptap/vue-3'
 import {
 	PhTextAa, PhTextH, PhListBullets, PhListNumbers, PhListChecks,
