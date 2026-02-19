@@ -1,5 +1,10 @@
 import type {Editor, Range} from '@tiptap/core'
+import type {Component} from 'vue'
 import {VueRenderer} from '@tiptap/vue-3'
+import {
+	PhTextAa, PhTextH, PhListBullets, PhListNumbers, PhListChecks,
+	PhQuotes, PhCode, PhImage, PhRuler,
+} from '@phosphor-icons/vue'
 import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom'
 
 import CommandsList from './CommandsList.vue'
@@ -21,7 +26,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.text'),
 					description: t('input.editor.textTooltip'),
-					icon: 'fa-font',
+					icon: PhTextAa,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()
@@ -34,7 +39,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.heading1'),
 					description: t('input.editor.heading1Tooltip'),
-					icon: 'fa-header',
+					icon: PhTextH,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()
@@ -47,7 +52,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.heading2'),
 					description: t('input.editor.heading2Tooltip'),
-					icon: 'fa-header',
+					icon: PhTextH,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()
@@ -60,7 +65,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.heading3'),
 					description: t('input.editor.heading3Tooltip'),
-					icon: 'fa-header',
+					icon: PhTextH,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()
@@ -73,7 +78,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.bulletList'),
 					description: t('input.editor.bulletListTooltip'),
-					icon: 'fa-list-ul',
+					icon: PhListBullets,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()
@@ -86,7 +91,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.orderedList'),
 					description: t('input.editor.orderedListTooltip'),
-					icon: 'fa-list-ol',
+					icon: PhListNumbers,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()
@@ -99,7 +104,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.taskList'),
 					description: t('input.editor.taskListTooltip'),
-					icon: 'fa-list-check',
+					icon: PhListChecks,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()
@@ -112,7 +117,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.quote'),
 					description: t('input.editor.quoteTooltip'),
-					icon: 'fa-quote-right',
+					icon: PhQuotes,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()
@@ -125,7 +130,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.code'),
 					description: t('input.editor.codeTooltip'),
-					icon: 'fa-code',
+					icon: PhCode,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()
@@ -138,7 +143,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.image'),
 					description: t('input.editor.imageTooltip'),
-					icon: 'fa-image',
+					icon: PhImage,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()
@@ -154,7 +159,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 				{
 					title: t('input.editor.horizontalRule'),
 					description: t('input.editor.horizontalRuleTooltip'),
-					icon: 'fa-ruler-horizontal',
+					icon: PhRuler,
 					command: ({editor, range}: {editor: Editor, range: Range}) => {
 						editor
 							.chain()

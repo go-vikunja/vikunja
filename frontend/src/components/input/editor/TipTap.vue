@@ -23,7 +23,7 @@
 					:class="{ 'is-active': editor.isActive('bold') }"
 					@click="() => editor?.chain().focus().toggleBold().run()"
 				>
-					<Icon :icon="['fas', 'bold']" />
+					<PhTextB />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.italic')"
@@ -31,7 +31,7 @@
 					:class="{ 'is-active': editor.isActive('italic') }"
 					@click="() => editor?.chain().focus().toggleItalic().run()"
 				>
-					<Icon :icon="['fas', 'italic']" />
+					<PhTextItalic />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.underline')"
@@ -39,7 +39,7 @@
 					:class="{ 'is-active': editor.isActive('underline') }"
 					@click="() => editor?.chain().focus().toggleUnderline().run()"
 				>
-					<Icon :icon="['fas', 'underline']" />
+					<PhTextUnderline />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.strikethrough')"
@@ -47,7 +47,7 @@
 					:class="{ 'is-active': editor.isActive('strike') }"
 					@click="() => editor?.chain().focus().toggleStrike().run()"
 				>
-					<Icon :icon="['fas', 'strikethrough']" />
+					<PhTextStrikethrough />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.code')"
@@ -55,7 +55,7 @@
 					:class="{ 'is-active': editor.isActive('code') }"
 					@click="() => editor?.chain().focus().toggleCode().run()"
 				>
-					<Icon :icon="['fas', 'code']" />
+					<PhCode />
 				</BaseButton>
 				<BaseButton
 					v-tooltip="$t('input.editor.link')"
@@ -63,7 +63,7 @@
 					:class="{ 'is-active': editor.isActive('link') }"
 					@click="setLink"
 				>
-					<Icon :icon="['fas', 'link']" />
+					<PhLink />
 				</BaseButton>
 			</div>
 		</BubbleMenu>
@@ -145,6 +145,8 @@
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {eventToHotkeyString} from '@github/hotkey'
+
+import {PhTextB, PhTextItalic, PhTextUnderline, PhTextStrikethrough, PhCode, PhLink} from '@phosphor-icons/vue'
 
 import EditorToolbar from './EditorToolbar.vue'
 

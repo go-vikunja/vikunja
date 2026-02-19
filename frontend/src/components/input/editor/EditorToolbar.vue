@@ -8,7 +8,7 @@
 				@click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'header']" />
+					<PhTextH />
 					<span
 						class="icon__lower-text"
 						aria-hidden="true"
@@ -23,7 +23,7 @@
 				@click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'header']" />
+					<PhTextH />
 					<span
 						class="icon__lower-text"
 						aria-hidden="true"
@@ -38,7 +38,7 @@
 				@click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'header']" />
+					<PhTextH />
 					<span
 						class="icon__lower-text"
 						aria-hidden="true"
@@ -56,7 +56,7 @@
 				@click="editor.chain().focus().toggleBold().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'bold']" />
+					<PhTextB />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.bold') }}</span>
 			</BaseButton>
@@ -67,7 +67,7 @@
 				@click="editor.chain().focus().toggleItalic().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'italic']" />
+					<PhTextItalic />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.italic') }}</span>
 			</BaseButton>
@@ -78,7 +78,7 @@
 				@click="editor.chain().focus().toggleUnderline().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'underline']" />
+					<PhTextUnderline />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.underline') }}</span>
 			</BaseButton>
@@ -89,7 +89,7 @@
 				@click="editor.chain().focus().toggleStrike().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'strikethrough']" />
+					<PhTextStrikethrough />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.strikethrough') }}</span>
 			</BaseButton>
@@ -103,7 +103,7 @@
 				@click="editor.chain().focus().toggleCodeBlock().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'code']" />
+					<PhCode />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.code') }}</span>
 			</BaseButton>
@@ -114,7 +114,7 @@
 				@click="editor.chain().focus().toggleBlockquote().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'quote-right']" />
+					<PhQuotes />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.quote') }}</span>
 			</BaseButton>
@@ -128,7 +128,7 @@
 				@click="editor.chain().focus().toggleBulletList().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'list-ul']" />
+					<PhListBullets />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.bulletList') }}</span>
 			</BaseButton>
@@ -139,7 +139,7 @@
 				@click="editor.chain().focus().toggleOrderedList().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'list-ol']" />
+					<PhListNumbers />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.orderedList') }}</span>
 			</BaseButton>
@@ -150,7 +150,7 @@
 				@click="editor.chain().focus().toggleTaskList().run()"
 			>
 				<span class="icon">
-					<Icon icon="list-check" />
+					<PhListChecks />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.taskList') }}</span>
 			</BaseButton>
@@ -163,7 +163,7 @@
 				@click="e => emit('imageUploadClicked', e)"
 			>
 				<span class="icon">
-					<Icon icon="image" />
+					<PhImage />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.image') }}</span>
 			</BaseButton>
@@ -178,7 +178,7 @@
 				@click="setLink"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'link']" />
+					<PhLink />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.link') }}</span>
 			</BaseButton>
@@ -190,7 +190,7 @@
 				@click="editor.chain().focus().setParagraph().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'paragraph']" />
+					<PhParagraph />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.text') }}</span>
 			</BaseButton>
@@ -201,7 +201,7 @@
 				@click="editor.chain().focus().setHorizontalRule().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'ruler-horizontal']" />
+					<PhRuler />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.horizontalRule') }}</span>
 			</BaseButton>
@@ -214,7 +214,7 @@
 				@click="editor.chain().focus().undo().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'undo']" />
+					<PhArrowCounterClockwise />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.undo') }}</span>
 			</BaseButton>
@@ -224,7 +224,7 @@
 				@click="editor.chain().focus().redo().run()"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'redo']" />
+					<PhArrowClockwise />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.redo') }}</span>
 			</BaseButton>
@@ -239,7 +239,7 @@
 				@click="toggleTableMode"
 			>
 				<span class="icon">
-					<Icon :icon="['fas', 'table']" />
+					<PhTable />
 				</span>
 				<span class="is-sr-only">{{ $t('input.editor.table.title') }}</span>
 			</BaseButton>
@@ -365,6 +365,13 @@
 <script setup lang="ts">
 import {ref} from 'vue'
 import type {Editor} from '@tiptap/vue-3'
+
+import {
+	PhTextH, PhTextB, PhTextItalic, PhTextUnderline, PhTextStrikethrough,
+	PhCode, PhQuotes, PhListBullets, PhListNumbers, PhListChecks,
+	PhImage, PhLink, PhParagraph, PhRuler,
+	PhArrowCounterClockwise, PhArrowClockwise, PhTable,
+} from '@phosphor-icons/vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'

@@ -8,7 +8,7 @@
 				:class="{ 'is-selected': index === selectedIndex }"
 				@click="selectItem(index)"
 			>
-				<Icon :icon="item.icon" />
+				<component :is="item.icon" />
 				<div class="description">
 					<p>{{ item.title }}</p>
 					<p>{{ item.description }}</p>
@@ -27,10 +27,10 @@
 <script lang="ts">
 /* eslint-disable vue/component-api-style */
 import type {PropType} from 'vue'
-import type {IconProp} from '@fortawesome/fontawesome-svg-core'
+import type {Component} from 'vue'
 
 interface CommandItem {
-	icon: IconProp
+	icon: Component
 	title: string
 	description: string
 	command: () => void
