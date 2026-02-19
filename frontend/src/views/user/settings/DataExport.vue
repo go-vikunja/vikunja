@@ -93,7 +93,7 @@ const formattedExpiresDate = computed(() => exportInfo.value ? formatDisplayDate
 onMounted(async () => {
 	try {
 		const data = await dataExportService.status()
-		exportInfo.value = data
+		exportInfo.value = data?.id ? data : null
 	} catch {
 		exportInfo.value = null
 	}
