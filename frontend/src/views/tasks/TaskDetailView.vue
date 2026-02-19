@@ -351,7 +351,7 @@
 						class="content attachments"
 					>
 						<Attachments
-							:ref="e => setFieldRef('attachments', e)"
+							:ref="e => { setFieldRef('attachments', e); attachmentsRef = e as any }"
 							:edit-enabled="canWrite"
 							:task="task"
 							@taskChanged="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
@@ -499,7 +499,7 @@
 							v-shortcut="'f'"
 							variant="secondary"
 							icon="paperclip"
-							@click="setFieldActive('attachments')"
+							@click="openAttachments()"
 						>
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
@@ -793,6 +793,8 @@ async function scrollToHeading() {
 	scrollIntoView(unrefElement(heading))
 }
 
+const attachmentsRef = ref<InstanceType<typeof Attachments> | null>(null)
+
 const taskViewContainer = ref<HTMLElement | null>(null)
 const scrollContainer = ref<HTMLElement | null>(null)
 const contentBottomMarker = ref<HTMLElement | null>(null)
@@ -994,6 +996,17 @@ function setFieldActive(fieldName: keyof typeof activeFields) {
 
 		// scroll the field to the center of the screen if not in viewport already
 		scrollIntoView(el)
+	})
+}
+
+function openAttachments() {
+	activeFields.attachments = true
+	nextTick(() => {
+		const el = activeFieldElements.attachments
+		if (el) {
+			scrollIntoView(el)
+		}
+		attachmentsRef.value?.openFilePicker()
 	})
 }
 

@@ -383,6 +383,10 @@ async function setCoverImage(attachment: IAttachment | null) {
 	emit('taskChanged', updatedTask)
 	success({message: t('task.attachment.successfullyChangedCoverImage')})
 }
+
+defineExpose({
+	openFilePicker: () => filesRef.value?.click(),
+})
 </script>
 
 <style lang="scss" scoped>
