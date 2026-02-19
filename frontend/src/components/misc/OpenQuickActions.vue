@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BaseButton from '@/components/base/BaseButton.vue'
+import {PhMagnifyingGlass} from '@phosphor-icons/vue'
 import {useBaseStore} from '@/stores/base'
 import {onBeforeUnmount, onMounted} from 'vue'
 import {eventToHotkeyString} from '@github/hotkey'
@@ -40,6 +41,6 @@ function openQuickActions() {
 		:title="$t('keyboardShortcuts.quickSearch')"
 		@click="openQuickActions"
 	>
-		<Icon icon="search" />
+		<PhMagnifyingGlass />
 	</BaseButton>
 </template>

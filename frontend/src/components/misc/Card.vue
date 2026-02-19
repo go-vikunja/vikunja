@@ -17,7 +17,7 @@
 				@click="$emit('close')"
 			>	
 				<span class="icon">
-					<Icon icon="times" />
+					<PhX />
 				</span>
 			</BaseButton>
 		</header>
@@ -44,6 +44,7 @@
 
 <script setup lang="ts">
 import BaseButton from '@/components/base/BaseButton.vue'
+import {PhX} from '@phosphor-icons/vue'
 
 withDefaults(defineProps<{
 	title?: string

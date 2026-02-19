@@ -13,10 +13,10 @@
 		<div class="sharables-project">
 			<XButton
 				v-if="!showNewForm"
-				icon="plus"
 				class="mbe-4"
 				@click="showNewForm = true"
 			>
+				<template #icon><PhPlus /></template>
 				{{ $t('project.share.links.create') }}
 			</XButton>
 
@@ -60,9 +60,9 @@
 					:placeholder="$t('user.auth.passwordPlaceholder')"
 				/>
 				<XButton
-					icon="plus"
 					@click="add(projectId)"
 				>
+					<template #icon><PhPlus /></template>
 					{{ $t('project.share.share') }}
 				</XButton>
 			</div>
@@ -105,19 +105,19 @@
 							<p class="mbe-2">
 								<template v-if="s.permission === PERMISSIONS.ADMIN">
 									<span class="icon is-small">
-										<Icon icon="lock" />
+										<PhLock />
 									</span>&nbsp;
 									{{ $t('project.share.permission.admin') }}
 								</template>
 								<template v-else-if="s.permission === PERMISSIONS.READ_WRITE">
 									<span class="icon is-small">
-										<Icon icon="pen" />
+										<PhPen />
 									</span>&nbsp;
 									{{ $t('project.share.permission.readWrite') }}
 								</template>
 								<template v-else>
 									<span class="icon is-small">
-										<Icon icon="users" />
+										<PhUsers />
 									</span>&nbsp;
 									{{ $t('project.share.permission.read') }}
 								</template>
@@ -135,7 +135,7 @@
 										@click="copy(shareLinks[s.id])"
 									>
 										<span class="icon">
-											<Icon icon="paste" />
+											<PhClipboard />
 										</span>
 									</XButton>
 								</template>
@@ -157,14 +157,15 @@
 						<td class="actions">
 							<XButton
 								danger
-								icon="trash-alt"
 								@click="
 									() => {
 										linkIdToDelete = s.id
 										showDeleteModal = true
 									}
 								"
-							/>
+							>
+								<template #icon><PhTrash /></template>
+							</XButton>
 						</td>
 					</tr>
 				</tbody>
@@ -189,6 +190,7 @@
 
 <script setup lang="ts">
 import {ref, watch, computed, shallowReactive} from 'vue'
+import {PhLock, PhPen, PhUsers, PhClipboard, PhPlus, PhTrash} from '@phosphor-icons/vue'
 import {useI18n} from 'vue-i18n'
 
 import {PERMISSIONS} from '@/constants/permissions'

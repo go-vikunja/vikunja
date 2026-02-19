@@ -73,19 +73,19 @@
 					<td class="type">
 						<template v-if="s.permission === PERMISSIONS.ADMIN">
 							<span class="icon is-small">
-								<Icon icon="lock" />
+								<PhLock />
 							</span>
 							{{ $t('project.share.permission.admin') }}
 						</template>
 						<template v-else-if="s.permission === PERMISSIONS.READ_WRITE">
 							<span class="icon is-small">
-								<Icon icon="pen" />
+								<PhPen />
 							</span>
 							{{ $t('project.share.permission.readWrite') }}
 						</template>
 						<template v-else>
 							<span class="icon is-small">
-								<Icon icon="users" />
+								<PhUsers />
 							</span>
 							{{ $t('project.share.permission.read') }}
 						</template>
@@ -122,14 +122,15 @@
 						</div>
 						<XButton
 							danger
-							icon="trash-alt"
 							@click="
 								() => {
 									sharable = s
 									showDeleteModal = true
 								}
 							"
-						/>
+						>
+							<template #icon><PhTrash /></template>
+						</XButton>
 					</td>
 				</tr>
 			</tbody>
@@ -159,6 +160,7 @@
 
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, type Ref} from 'vue'
+import {PhLock, PhPen, PhUsers, PhTrash} from '@phosphor-icons/vue'
 import {useI18n} from 'vue-i18n'
 
 import UserProjectService from '@/services/userProject'

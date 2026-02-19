@@ -24,7 +24,7 @@
 						class="close"
 						@click="$emit('close')"
 					>
-						<Icon icon="times" />
+						<PhX />
 					</BaseButton>
 					<div
 						class="modal-content"
@@ -68,6 +68,7 @@
 <script lang="ts" setup>
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import {PhX} from '@phosphor-icons/vue'
 import {ref, useAttrs, watchEffect, onBeforeUnmount, watch} from 'vue'
 import {useScrollLock} from '@vueuse/core'
 

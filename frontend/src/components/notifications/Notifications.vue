@@ -14,7 +14,7 @@
 					v-if="unreadNotifications > 0"
 					class="unread-indicator"
 				/>
-				<Icon icon="bell" />
+				<PhBell />
 			</BaseButton>
 		</slot>
 
@@ -87,6 +87,7 @@
 
 <script lang="ts" setup>
 import {computed, onMounted, onUnmounted, ref} from 'vue'
+import {PhBell} from '@phosphor-icons/vue'
 import {useRouter} from 'vue-router'
 
 import NotificationService from '@/services/notification'

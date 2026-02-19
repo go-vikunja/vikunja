@@ -32,7 +32,7 @@
 					class="close"
 					@click="closeQuickActions"
 				>
-					<Icon icon="times" />
+					<PhX />
 				</BaseButton>
 			</div>
 
@@ -84,7 +84,7 @@
 									v-if="i.id < -1"
 									class="saved-filter-icon icon"
 								>
-									<Icon icon="filter" />
+									<PhFunnel />
 								</span>
 								{{ i.title }}
 							</template>
@@ -98,6 +98,7 @@
 
 <script setup lang="ts">
 import {type ComponentPublicInstance, computed, ref, shallowReactive, watchEffect} from 'vue'
+import {PhX, PhFunnel} from '@phosphor-icons/vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
