@@ -213,7 +213,7 @@ function getBuildConfig(env: Record<string, string>) {
 		},
 		server: {
 			host: '127.0.0.1', // see: https://github.com/vitejs/vite/pull/8543
-			port: 4173,
+			port: parseInt(env.VIKUNJA_FRONTEND_PORT || '4173', 10),
 			strictPort: true,
 		},
 		output: {
