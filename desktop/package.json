@@ -62,6 +62,9 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "electron"
-    ]
+    ],
+    "overrides": {
+      "minimatch": "^10.2.1"
+    }
   }
 }

@@ -167,6 +167,9 @@
       "esbuild",
       "puppeteer",
       "vue-demi"
-    ]
+    ],
+    "overrides": {
+      "minimatch": "^10.2.1"
+    }
   }
 }
