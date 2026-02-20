@@ -38,6 +38,14 @@
 					>
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
+					<FancyCheckbox
+						v-if="filters.projectId > 0"
+						v-model="filters.includeSubprojects"
+						v-tooltip="$t('project.views.includeSubprojectsHint')"
+						is-block
+					>
+						{{ $t('project.views.includeSubprojects') }}
+					</FancyCheckbox>
 				</div>
 			</Card>
 
