@@ -8,6 +8,7 @@ import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} fr
 import AvatarService from '@/services/avatar'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {useWebSocket} from '@/composables/useWebSocket'
 import {setModuleLoading} from '@/stores/helper'
 import {success, error} from '@/message'
 import {
@@ -441,6 +442,8 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	async function logout() {
+		const {disconnect} = useWebSocket()
+		disconnect()
 		removeToken()
 		const loggedInVia = getLoggedInVia()
 		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
