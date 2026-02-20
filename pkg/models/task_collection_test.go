@@ -1754,6 +1754,26 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 		},
 		{
+			name: "saved filter with sort order and include subprojects",
+			fields: fields{
+				ProjectID:          -2,
+				IncludeSubprojects: true,
+				SortBy:             []string{"title", "id"},
+				OrderBy:            []string{"desc", "asc"},
+			},
+			args: args{
+				a: &user.User{ID: 1},
+			},
+			want: []*Task{
+				task9,
+				task8,
+				task7,
+				task6,
+				task5,
+				task28,
+			},
+		},
+		{
 			name: "saved filter with sort order asc",
 			fields: fields{
 				ProjectID: -2,
@@ -1889,6 +1909,24 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetProjectAndDescendantIDs(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	t.Run("single project", func(t *testing.T) {
+		projectIDs, err := getProjectAndDescendantIDs(s, 1)
+		require.NoError(t, err)
+		assert.ElementsMatch(t, []int64{1}, projectIDs)
+	})
+
+	t.Run("recursive descendants", func(t *testing.T) {
+		projectIDs, err := getProjectAndDescendantIDs(s, 12)
+		require.NoError(t, err)
+		assert.ElementsMatch(t, []int64{12, 25, 26}, projectIDs)
+	})
 }
 
 func TestTaskCollection_SubtaskRemainsAfterMove(t *testing.T) {

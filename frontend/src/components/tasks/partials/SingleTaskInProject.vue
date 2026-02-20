@@ -290,37 +290,7 @@ const projectLabel = computed(() => {
 		return ''
 	}
 
-	const rootProjectID = currentProject.value?.id ?? 0
-	if (rootProjectID <= 0 || rootProjectID === task.value.projectId) {
-		return project.value.title
-	}
-
-	const segments: string[] = []
-	const visited = new Set<number>()
-	let projectID = task.value.projectId
-	let hasReachedRoot = false
-
-	while (projectID > 0 && !visited.has(projectID)) {
-		visited.add(projectID)
-		if (projectID === rootProjectID) {
-			hasReachedRoot = true
-			break
-		}
-
-		const current = projectStore.projects[projectID]
-		if (!current) {
-			break
-		}
-
-		segments.push(current.title)
-		projectID = current.parentProjectId
-	}
-
-	if (!hasReachedRoot || segments.length === 0) {
-		return project.value.title
-	}
-
-	return segments.reverse().join('/')
+	return project.value.title
 })
 
 const taskDetailRoute = computed(() => ({
