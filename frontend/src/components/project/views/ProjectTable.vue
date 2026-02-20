@@ -81,6 +81,14 @@
 					:project-id="projectId"
 					@update:modelValue="taskList.loadTasks()"
 				/>
+				<FancyCheckbox
+					v-if="projectId > 0"
+					v-model="includeSubprojects"
+					v-tooltip="$t('project.views.includeSubprojectsHint')"
+					class="include-subprojects-toggle"
+				>
+					{{ $t('project.views.includeSubprojects') }}
+				</FancyCheckbox>
 			</div>
 		</template>
 
@@ -226,6 +234,12 @@
 												{{ t.title }}
 											</RouterLink>
 										</TaskGlanceTooltip>
+										<span
+											v-if="includeSubprojects && t.projectId !== projectId && projectStore.projects[t.projectId]"
+											class="tag is-light is-info task-project-tag"
+										>
+											{{ projectStore.projects[t.projectId].title }}
+										</span>
 									</td>
 									<td v-if="activeColumns.priority">
 										<PriorityLabel
@@ -374,6 +388,7 @@ const {
 	totalPages,
 	currentPage,
 	sortByParam,
+	includeSubprojects,
 } = taskList
 const tasks: Ref<ITask[]> = taskList.tasks
 
@@ -466,5 +481,13 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 
 .filter-container :deep(.popup) {
 	inset-block-start: 7rem;
+}
+
+.include-subprojects-toggle {
+	margin-inline-start: .75rem;
+}
+
+.task-project-tag {
+	margin-inline-start: .5rem;
 }
 </style>
