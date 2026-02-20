@@ -17,6 +17,14 @@
 					:project-id="projectId"
 					@update:modelValue="loadTasks()"
 				/>
+				<FancyCheckbox
+					v-if="projectId > 0"
+					v-model="includeSubprojects"
+					v-tooltip="$t('project.views.includeSubprojectsHint')"
+					class="include-subprojects-toggle"
+				>
+					{{ $t('project.views.includeSubprojects') }}
+				</FancyCheckbox>
 			</div>
 		</template>
 
@@ -111,6 +119,7 @@ import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import SortPopup from '@/components/project/partials/SortPopup.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
@@ -150,6 +159,7 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
+	includeSubprojects,
 } = useTaskList(
 	() => projectId.value,
 	() => props.viewId,
@@ -190,7 +200,7 @@ onMounted(async () => {
 	ctaVisible.value = true
 })
 
-const canDragTasks = computed(() => canWrite.value || isSavedFilter(project.value))
+const canDragTasks = computed(() => (canWrite.value || isSavedFilter(project.value)) && !includeSubprojects.value)
 
 const isTouchDevice = ref(false)
 if (typeof window !== 'undefined') {
@@ -421,5 +431,9 @@ onBeforeUnmount(() => {
 	:deep(.card) {
 		margin-block-end: 0;
 	}
+}
+
+.include-subprojects-toggle {
+	margin-inline-start: .75rem;
 }
 </style>
