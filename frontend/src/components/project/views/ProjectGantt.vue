@@ -41,7 +41,7 @@
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
 					<FancyCheckbox
-						v-if="filters.projectId > 0"
+						v-if="filters.projectId > 0 && showIncludeSubprojectsToggle"
 						v-model="filters.includeSubprojects"
 						v-tooltip="$t('project.views.includeSubprojectsHint')"
 						is-block
@@ -80,6 +80,7 @@ import {computed, toRefs} from 'vue'
 import type {RouteLocationNormalized} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
+import {useAuthStore} from '@/stores/auth'
 
 import DateRangeInput from '@/components/input/DateRangeInput.vue'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -105,7 +106,9 @@ const props = defineProps<{
 
 
 const baseStore = useBaseStore()
+const authStore = useAuthStore()
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
+const showIncludeSubprojectsToggle = computed(() => authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false)
 
 const {route, projectId, viewId} = toRefs(props)
 const {
