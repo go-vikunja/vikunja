@@ -28,7 +28,7 @@
 				class="clear-filter-button"
 				@click="clearLabelFilter"
 			>
-				<Icon icon="times" />
+				<PhX />
 			</BaseButton>
 		</Message>
 		<p
@@ -102,7 +102,7 @@ import {formatDate} from '@/helpers/time/formatDate'
 import {setTitle} from '@/helpers/setTitle'
 
 import BaseButton from '@/components/base/BaseButton.vue'
-import Icon from '@/components/misc/Icon'
+import {PhX} from '@phosphor-icons/vue'
 import Message from '@/components/misc/Message.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'

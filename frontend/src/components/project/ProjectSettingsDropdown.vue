@@ -10,10 +10,7 @@
 					@click="triggerProps.toggleOpen"
 				>
 					<span class="is-sr-only">{{ $t('project.openSettingsMenu') }}</span>
-					<Icon
-						icon="ellipsis-h"
-						class="icon"
-					/>
+					<PhDotsThree class="icon" />
 				</BaseButton>
 			</slot>
 		</template>
@@ -21,21 +18,27 @@
 		<template v-if="isSavedFilter(project)">
 			<DropdownItem
 				:to="{ name: 'filter.settings.edit', params: { projectId: project.id } }"
-				icon="pen"
 			>
+				<template #icon>
+					<PhPen />
+				</template>
 				{{ $t('menu.edit') }}
 			</DropdownItem>
 			<DropdownItem
 				:to="{ name: 'project.settings.views', params: { projectId: project.id } }"
-				icon="eye"
 			>
+				<template #icon>
+					<PhEye />
+				</template>
 				{{ $t('menu.views') }}
 			</DropdownItem>
 			<DropdownItem
 				:to="{ name: 'filter.settings.delete', params: { projectId: project.id } }"
-				icon="trash-alt"
 				class="has-text-danger"
 			>
+				<template #icon>
+					<PhTrash />
+				</template>
 				{{ $t('misc.delete') }}
 			</DropdownItem>
 		</template>
@@ -43,51 +46,65 @@
 		<template v-else-if="project.isArchived">
 			<DropdownItem
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
-				icon="archive"
 			>
+				<template #icon>
+					<PhArchive />
+				</template>
 				{{ $t('menu.unarchive') }}
 			</DropdownItem>
 		</template>
 		<template v-else>
 			<DropdownItem
 				:to="{ name: 'project.settings.edit', params: { projectId: project.id } }"
-				icon="pen"
 			>
+				<template #icon>
+					<PhPen />
+				</template>
 				{{ $t('menu.edit') }}
 			</DropdownItem>
 			<DropdownItem
 				v-if="!simple"
 				:to="{ name: 'project.settings.views', params: { projectId: project.id } }"
-				icon="eye"
 			>
+				<template #icon>
+					<PhEye />
+				</template>
 				{{ $t('menu.views') }}
 			</DropdownItem>
 			<DropdownItem
 				v-if="backgroundsEnabled && !simple"
 				:to="{ name: 'project.settings.background', params: { projectId: project.id } }"
-				icon="image"
 			>
+				<template #icon>
+					<PhImage />
+				</template>
 				{{ $t('menu.setBackground') }}
 			</DropdownItem>
 			<DropdownItem
 				:to="{ name: 'project.settings.share', params: { projectId: project.id } }"
-				icon="share-alt"
 			>
+				<template #icon>
+					<PhShareNetwork />
+				</template>
 				{{ $t('menu.share') }}
 			</DropdownItem>
 			<DropdownItem
 				:to="{ name: 'project.settings.duplicate', params: { projectId: project.id } }"
-				icon="paste"
 			>
+				<template #icon>
+					<PhClipboard />
+				</template>
 				{{ $t('menu.duplicate') }}
 			</DropdownItem>
 			<DropdownItem
 				v-if="!simple"
 				v-tooltip="isDefaultProject ? $t('menu.cantArchiveIsDefault') : ''"
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
-				icon="archive"
 				:disabled="isDefaultProject"
 			>
+				<template #icon>
+					<PhArchive />
+				</template>
 				{{ $t('menu.archive') }}
 			</DropdownItem>
 			<Subscription
@@ -101,24 +118,30 @@
 			/>
 			<DropdownItem
 				:to="{ name: 'project.settings.webhooks', params: { projectId: project.id } }"
-				icon="bolt"
 			>
+				<template #icon>
+					<PhLightning />
+				</template>
 				{{ $t('project.webhooks.title') }}
 			</DropdownItem>
 			<DropdownItem
 				:to="{ name: 'project.createFromParent', params: { parentProjectId: project.id } }"
-				icon="layer-group"
 			>
+				<template #icon>
+					<PhStack />
+				</template>
 				{{ $t('menu.createProject') }}
 			</DropdownItem>
 			<DropdownItem
 				v-if="project.maxPermission === PERMISSIONS.ADMIN"
 				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
-				icon="trash-alt"
 				class="has-text-danger"
 				:disabled="isDefaultProject"
 			>
+				<template #icon>
+					<PhTrash />
+				</template>
 				{{ $t('menu.delete') }}
 			</DropdownItem>
 		</template>
@@ -140,6 +163,7 @@ import {useConfigStore} from '@/stores/config'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {PERMISSIONS} from '@/constants/permissions'
+import {PhDotsThree, PhPen, PhEye, PhTrash, PhArchive, PhImage, PhShareNetwork, PhClipboard, PhLightning, PhStack} from '@phosphor-icons/vue'
 
 const props = withDefaults(defineProps<{
 	project: IProject

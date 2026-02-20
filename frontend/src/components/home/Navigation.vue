@@ -22,7 +22,7 @@
 						:to="{ name: 'home'}"
 					>
 						<span class="menu-item-icon icon">
-							<Icon icon="calendar" />
+							<PhCalendar />
 						</span>
 						{{ $t('navigation.overview') }}
 					</RouterLink>
@@ -33,7 +33,7 @@
 						:to="{ name: 'tasks.range'}"
 					>
 						<span class="menu-item-icon icon">
-							<Icon :icon="['far', 'calendar-alt']" />
+							<PhCalendarBlank />
 						</span>
 						{{ $t('navigation.upcoming') }}
 					</RouterLink>
@@ -44,7 +44,7 @@
 						:to="{ name: 'projects.index'}"
 					>
 						<span class="menu-item-icon icon">
-							<Icon icon="layer-group" />
+							<PhStack />
 						</span>
 						{{ $t('project.projects') }}
 					</RouterLink>
@@ -55,7 +55,7 @@
 						:to="{ name: 'labels.index'}"
 					>
 						<span class="menu-item-icon icon">
-							<Icon icon="tags" />
+							<PhTag />
 						</span>
 						{{ $t('label.title') }}
 					</RouterLink>
@@ -66,7 +66,7 @@
 						:to="{ name: 'teams.index'}"
 					>
 						<span class="menu-item-icon icon">
-							<Icon icon="users" />
+							<PhUsers />
 						</span>
 						{{ $t('team.title') }}
 					</RouterLink>
@@ -130,6 +130,8 @@ import {computed} from 'vue'
 import PoweredByLink from '@/components/home/PoweredByLink.vue'
 import Logo from '@/components/home/Logo.vue'
 import Loading from '@/components/misc/Loading.vue'
+
+import {PhCalendar, PhCalendarBlank, PhStack, PhTag, PhUsers} from '@phosphor-icons/vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'

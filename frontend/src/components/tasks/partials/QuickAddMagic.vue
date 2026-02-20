@@ -7,7 +7,7 @@
 			:class="{'is-highlighted': highlightHintIcon}"
 			@click="() => visible = true"
 		>
-			<Icon :icon="['far', 'circle-question']" />
+			<PhQuestion />
 		</BaseButton>
 		<Modal
 			:enabled="visible"
@@ -101,6 +101,7 @@
 
 <script setup lang="ts">
 import {ref, computed} from 'vue'
+import {PhQuestion} from '@phosphor-icons/vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 

@@ -3,19 +3,23 @@
 		v-if="type === 'button'"
 		v-tooltip="tooltipText"
 		variant="secondary"
-		:icon="iconName"
 		:disabled="disabled"
 		@click="changeSubscription"
 	>
+		<template #icon>
+			<component :is="iconComponent" />
+		</template>
 		{{ buttonText }}
 	</XButton>
 	<DropdownItem
 		v-else-if="type === 'dropdown'"
 		v-tooltip="tooltipText"
 		:disabled="disabled"
-		:icon="iconName"
 		@click="changeSubscription"
 	>
+		<template #icon>
+			<component :is="iconComponent" />
+		</template>
 		{{ buttonText }}
 	</DropdownItem>
 	<BaseButton
@@ -26,7 +30,7 @@
 		@click="changeSubscription"
 	>
 		<span class="icon">
-			<Icon :icon="iconName" />
+			<component :is="iconComponent" />
 		</span>
 		{{ buttonText }}
 	</BaseButton>
@@ -44,7 +48,7 @@ import SubscriptionModel from '@/models/subscription'
 import type {ISubscription} from '@/modelTypes/ISubscription'
 
 import {success} from '@/message'
-import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import {PhBell, PhBellSlash} from '@phosphor-icons/vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: ISubscription | null,
@@ -91,7 +95,7 @@ const tooltipText = computed(() => {
 })
 
 const buttonText = computed(() => props.modelValue ? t('task.subscription.unsubscribe') : t('task.subscription.subscribe'))
-const iconName = computed<IconProp>(() => props.modelValue ? ['far', 'bell-slash'] : 'bell')
+const iconComponent = computed(() => props.modelValue ? PhBellSlash : PhBell)
 const disabled = computed(() => props.modelValue && subscriptionEntity.value !== props.entity || false)
 
 function changeSubscription() {

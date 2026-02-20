@@ -2,7 +2,7 @@
 	<CreateEdit
 		v-model:loading="loadingModel"
 		:title="$t('filters.edit.title')"
-		primary-icon=""
+		:show-primary-icon="false"
 		:primary-label="$t('misc.save')"
 		:tertiary="$t('misc.delete')"
 		@primary="handleSave"

@@ -2,7 +2,7 @@
 	<div class="attachments">
 		<h3>
 			<span class="icon is-grey">
-				<Icon icon="paperclip" />
+				<PhPaperclip />
 			</span>
 			{{ $t('task.attachment.title') }}
 		</h3>
@@ -77,14 +77,14 @@
 								class="attachment-info-meta-button"
 								@click.prevent.stop="downloadAttachment(a)"
 							>
-								<Icon icon="download" />
+								<PhDownload />
 							</BaseButton>
 							<BaseButton
 								v-tooltip="$t('task.attachment.copyUrlTooltip')"
 								class="attachment-info-meta-button"
 								@click.stop="copyUrl(a)"
 							>
-								<Icon icon="copy" />
+								<PhCopy />
 							</BaseButton>
 							<BaseButton
 								v-if="editEnabled"
@@ -92,7 +92,7 @@
 								class="attachment-info-meta-button"
 								@click.prevent.stop="setAttachmentToDelete(a)"
 							>
-								<Icon icon="trash-alt" />
+								<PhTrash />
 							</BaseButton>
 							<BaseButton
 								v-if="editEnabled && canPreview(a)"
@@ -102,7 +102,8 @@
 								class="attachment-info-meta-button"
 								@click.prevent.stop="setCoverImage(task.coverImageAttachmentId === a.id ? null : a)"
 							>
-								<Icon :icon="task.coverImageAttachmentId === a.id ? 'eye-slash' : 'eye'" />
+								<PhEyeSlash v-if="task.coverImageAttachmentId === a.id" />
+								<PhEye v-else />
 							</BaseButton>
 						</p>
 					</div>
@@ -114,11 +115,13 @@
 			v-if="editEnabled"
 			:disabled="loading"
 			class="mbe-4"
-			icon="cloud-upload-alt"
 			variant="secondary"
 			:shadow="false"
 			@click="filesRef?.click()"
 		>
+			<template #icon>
+				<PhCloudArrowUp />
+			</template>
 			{{ $t('task.attachment.upload') }}
 		</XButton>
 
@@ -131,7 +134,7 @@
 			>
 				<div class="drop-hint">
 					<div class="icon">
-						<Icon icon="cloud-upload-alt" />
+						<PhCloudArrowUp />
 					</div>
 					<div class="hint">
 						{{ $t('task.attachment.drop') }}
@@ -174,6 +177,7 @@
 <script setup lang="ts">
 import {ref, shallowReactive, computed, watch} from 'vue'
 import {useDropZone} from '@vueuse/core'
+import {PhPaperclip, PhDownload, PhCopy, PhTrash, PhEye, PhEyeSlash, PhCloudArrowUp} from '@phosphor-icons/vue'
 
 import User from '@/components/misc/User.vue'
 import ProgressBar from '@/components/misc/ProgressBar.vue'

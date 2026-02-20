@@ -11,15 +11,13 @@
 		v-else
 		class="icon-wrapper"
 	>
-		<Icon
-			size="6x"
-			icon="file"
-		/>
+		<PhFile size="6em" />
 	</div>
 </template>
 
 <script setup lang="ts">
 import {ref, shallowReactive, watchEffect} from 'vue'
+import {PhFile} from '@phosphor-icons/vue'
 import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import {canPreview} from '@/models/attachment'

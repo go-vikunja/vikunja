@@ -1,10 +1,12 @@
 <template>
 	<XButton
 		variant="secondary"
-		icon="filter"
 		:class="{'has-filters': hasFilters}"
 		@click="() => modalOpen = true"
 	>
+		<template #icon>
+			<PhFunnel />
+		</template>
 		{{ $t('filters.title') }}
 	</XButton>
 	<Modal
@@ -32,6 +34,7 @@
 import {computed, ref, watch, nextTick} from 'vue'
 
 import Filters from '@/components/project/partials/Filters.vue'
+import {PhFunnel} from '@phosphor-icons/vue'
 
 import {type TaskFilterParams} from '@/services/taskCollection'
 import {type IProjectView} from '@/modelTypes/IProjectView'

@@ -18,7 +18,7 @@
 				class="remove"
 				@click="removeReminderByIndex(index)"
 			>
-				<Icon icon="times" />
+				<PhX />
 			</BaseButton>
 		</div>
 
@@ -33,6 +33,7 @@
 
 <script setup lang="ts">
 import {ref, watch, computed} from 'vue'
+import {PhX} from '@phosphor-icons/vue'
 
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 

@@ -11,7 +11,7 @@
 		>
 			<span>
 				<span class="icon is-grey">
-					<Icon :icon="['far', 'comments']" />
+					<PhChats />
 				</span>
 				{{ $t('task.comment.title') }}
 			</span>
@@ -20,7 +20,8 @@
 				class="comment-sort-button"
 				@click="toggleSortOrder"
 			>
-				<Icon :icon="commentSortOrder === 'asc' ? 'arrow-down-short-wide' : 'arrow-up-short-wide'" />
+				<PhSortAscending v-if="commentSortOrder === 'asc'" />
+				<PhSortDescending v-else />
 				{{ commentSortOrder === 'asc' ? $t('task.comment.sortOldestFirst') : $t('task.comment.sortNewestFirst') }}
 			</BaseButton>
 		</h3>
@@ -80,7 +81,7 @@
 							@click.prevent.stop="copy(getCommentUrl(`${c.id}`))"
 						>
 							<span class="is-sr-only">{{ $t('task.comment.permalink') }}</span>
-							<Icon icon="link" />
+							<PhLink />
 						</a>
 						<CustomTransition name="fade">
 							<span
@@ -224,6 +225,7 @@
 <script setup lang="ts">
 import {ref, reactive, computed, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {PhChats, PhLink, PhSortAscending, PhSortDescending} from '@phosphor-icons/vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'

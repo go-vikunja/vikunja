@@ -44,7 +44,6 @@ import shortcut from '@/directives/shortcut'
 import testid from '@/directives/testid'
 
 // global components
-import FontAwesomeIcon from '@/components/misc/Icon'
 import Button from '@/components/input/Button.vue'
 import Modal from '@/components/misc/Modal.vue'
 import Card from '@/components/misc/Card.vue'
@@ -62,7 +61,6 @@ setLanguage(browserLanguage).then(() => {
 	app.directive('shortcut', shortcut)
 	app.directive('cy', testid)
 
-	app.component('Icon', FontAwesomeIcon)
 	app.component('XButton', Button)
 	app.component('Modal', Modal)
 	app.component('Card', Card)

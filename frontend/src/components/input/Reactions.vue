@@ -12,6 +12,7 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {useAuthStore} from '@/stores/auth'
 import {useColorScheme} from '@/composables/useColorScheme'
+import {PhSmiley} from '@phosphor-icons/vue'
 
 const props = withDefaults(defineProps<{
 	entityKind: ReactionKind,
@@ -167,7 +168,7 @@ async function toggleReaction(value: string | number) {
 			@click.stop="toggleEmojiPicker"
 		>
 			<span class="is-sr-only">{{ $t('reaction.add') }}</span>
-			<Icon :icon="['far', 'face-laugh']" />
+			<PhSmiley />
 		</BaseButton>
 		<CustomTransition name="fade">
 			<VuemojiPicker

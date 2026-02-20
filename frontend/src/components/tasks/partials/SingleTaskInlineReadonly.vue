@@ -67,19 +67,19 @@
 				v-if="task.attachments.length > 0"
 				class="project-task-icon"
 			>
-				<Icon icon="paperclip" />
+				<PhPaperclip />
 			</span>
 			<span
 				v-if="task.description"
 				class="project-task-icon"
 			>
-				<Icon icon="align-left" />
+				<PhTextAlignLeft />
 			</span>
 			<span
 				v-if="task.repeatAfter.amount > 0"
 				class="project-task-icon"
 			>
-				<Icon icon="history" />
+				<PhClockCounterClockwise />
 			</span>
 		</span>
 
@@ -98,6 +98,7 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
+import {PhPaperclip, PhTextAlignLeft, PhClockCounterClockwise} from '@phosphor-icons/vue'
 
 import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'

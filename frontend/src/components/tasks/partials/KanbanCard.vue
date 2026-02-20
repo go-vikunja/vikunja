@@ -48,7 +48,7 @@
 					class="due-date"
 				>
 					<span class="icon">
-						<Icon :icon="['far', 'calendar-alt']" />
+						<PhCalendarBlank />
 					</span>
 					<time :datetime="formatISO(task.dueDate)">
 						{{ formatDisplayDate(task.dueDate) }}
@@ -81,19 +81,19 @@
 					v-if="task.attachments.length > 0"
 					class="icon"
 				>
-					<Icon icon="paperclip" />
+					<PhPaperclip />
 				</span>
 				<span
 					v-if="!isEditorContentEmpty(task.description)"
 					class="icon"
 				>
-					<Icon icon="align-left" />
+					<PhTextAlignLeft />
 				</span>
 				<span
 					v-if="task.repeatAfter.amount > 0"
 					class="icon"
 				>
-					<Icon icon="history" />
+					<PhClockCounterClockwise />
 				</span>
 				<CommentCount
 					:task="task"
@@ -116,6 +116,7 @@
 <script lang="ts" setup>
 import {computed, ref, watch} from 'vue'
 import {useRouter} from 'vue-router'
+import {PhCalendarBlank, PhPaperclip, PhTextAlignLeft, PhClockCounterClockwise} from '@phosphor-icons/vue'
 
 import {useGlobalNow} from '@/composables/useGlobalNow'
 

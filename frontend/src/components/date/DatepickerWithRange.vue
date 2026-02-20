@@ -42,10 +42,11 @@
 								</div>
 								<div class="control">
 									<XButton
-										icon="calendar"
 										variant="secondary"
 										data-toggle
-									/>
+									>
+										<template #icon><PhCalendar /></template>
+									</XButton>
 								</div>
 							</div>
 						</label>
@@ -61,10 +62,11 @@
 								</div>
 								<div class="control">
 									<XButton
-										icon="calendar"
 										variant="secondary"
 										data-toggle
-									/>
+									>
+										<template #icon><PhCalendar /></template>
+									</XButton>
 								</div>
 							</div>
 						</label>
@@ -102,6 +104,7 @@
 
 <script lang="ts" setup>
 import {computed, ref, watch} from 'vue'
+import {PhCalendar} from '@phosphor-icons/vue'
 import {useI18n} from 'vue-i18n'
 
 import flatPickr from 'vue-flatpickr-component'

@@ -7,10 +7,13 @@
 			class="is-pulled-right add-task-relation-button d-print-none"
 			:class="{'is-active': showNewRelationForm}"
 			variant="secondary"
-			icon="plus"
 			:shadow="false"
 			@click="showNewRelationForm = !showNewRelationForm"
-		/>
+		>
+			<template #icon>
+				<PhPlus />
+			</template>
+		</XButton>
 		<transition-group name="fade">
 			<template v-if="editEnabled && showCreate">
 				<label
@@ -151,7 +154,7 @@
 							otherTaskId: task.id
 						})"
 					>
-						<Icon icon="trash-alt" />
+						<PhTrash />
 					</BaseButton>
 				</div>
 			</div>
@@ -186,6 +189,7 @@
 import {ref, reactive, shallowReactive, watch, computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRoute} from 'vue-router'
+import {PhPlus, PhTrash} from '@phosphor-icons/vue'
 
 import TaskService from '@/services/task'
 import TaskModel from '@/models/task'

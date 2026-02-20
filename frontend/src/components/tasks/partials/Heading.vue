@@ -20,7 +20,7 @@
 				class="close"
 				@click="$emit('close')"
 			>
-				<Icon icon="times" />
+				<PhX />
 			</BaseButton>
 		</div>
 		<h1
@@ -40,7 +40,7 @@
 			class="close"
 			@click="$emit('close')"
 		>
-			<Icon icon="times" />
+			<PhX />
 		</BaseButton>
 		<CustomTransition name="fade">
 			<span
@@ -54,10 +54,7 @@
 				v-else-if="!loading && showSavedMessage"
 				class="has-text-success is-inline-flex is-align-content-center"
 			>
-				<Icon
-					icon="check"
-					class="mie-2"
-				/>
+				<PhCheck class="mie-2" />
 				{{ $t('misc.saved') }}
 			</span>
 		</CustomTransition>
@@ -67,6 +64,7 @@
 <script setup lang="ts">
 import {ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
 import {useRouter} from 'vue-router'
+import {PhX, PhCheck} from '@phosphor-icons/vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
