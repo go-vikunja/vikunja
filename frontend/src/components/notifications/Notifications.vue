@@ -170,7 +170,7 @@ function notificationHasRoute(n: INotification): boolean {
 function to(n: INotification, index: number) {
 	return async () => {
 		const route = getNotificationRoute(n)
-		if (route === null) return;
+		if (route === null) return
 		
 		const failure = await router.push(route)
 		if (isNavigationFailure(failure, NavigationFailureType.duplicated)) {
