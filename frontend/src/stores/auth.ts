@@ -166,6 +166,7 @@ export const useAuthStore = defineStore('auth', () => {
 				defaultTaskRelationType: RELATION_KIND.RELATED,
 				backgroundBrightness: 100,
 				showLastViewed: true,
+				showIncludeSubprojectsToggle: false,
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
 				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
