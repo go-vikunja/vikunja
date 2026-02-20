@@ -206,54 +206,49 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 		return []*Project{{ID: tf.ProjectID}}, nil
 	}
 
-	projects, _, _, err = getRawProjectsForUser(
-		s,
-		&projectOptions{
-			user: &user.User{ID: a.GetID()},
-			page: -1,
-		},
-	)
+	projectIDs, err := getProjectAndDescendantIDs(s, tf.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 
-	return getProjectSubtree(projects, tf.ProjectID), nil
-}
+	u, err := user.GetUserByID(s, a.GetID())
+	if err != nil {
+		return nil, err
+	}
 
-func getProjectSubtree(projects []*Project, rootProjectID int64) []*Project {
-	projectsByParent := make(map[int64][]int64, len(projects))
-	for _, p := range projects {
-		if p == nil || p.ID <= 0 {
+	projectPermissions, err := checkPermissionsForProjects(s, u, projectIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	relevantProjects := make([]*Project, 0, len(projectIDs))
+	for _, projectID := range projectIDs {
+		permission, has := projectPermissions[projectID]
+		if !has || permission.MaxPermission < PermissionRead {
 			continue
 		}
-		projectsByParent[p.ParentProjectID] = append(projectsByParent[p.ParentProjectID], p.ID)
-	}
 
-	visited := map[int64]bool{rootProjectID: true}
-	queue := []int64{rootProjectID}
-	relevantProjectIDs := []int64{rootProjectID}
-
-	for len(queue) > 0 {
-		currentProjectID := queue[0]
-		queue = queue[1:]
-
-		for _, childProjectID := range projectsByParent[currentProjectID] {
-			if visited[childProjectID] {
-				continue
-			}
-
-			visited[childProjectID] = true
-			relevantProjectIDs = append(relevantProjectIDs, childProjectID)
-			queue = append(queue, childProjectID)
-		}
-	}
-
-	relevantProjects := make([]*Project, 0, len(relevantProjectIDs))
-	for _, projectID := range relevantProjectIDs {
 		relevantProjects = append(relevantProjects, &Project{ID: projectID})
 	}
 
-	return relevantProjects
+	return relevantProjects, nil
+}
+
+func getProjectAndDescendantIDs(s *xorm.Session, rootProjectID int64) (projectIDs []int64, err error) {
+	err = s.SQL(`
+WITH RECURSIVE descendant_projects (id) AS (
+    SELECT id
+    FROM projects
+    WHERE id = ?
+    UNION ALL
+    SELECT p.id
+    FROM projects p
+    INNER JOIN descendant_projects dp ON p.parent_project_id = dp.id
+)
+SELECT DISTINCT id
+FROM descendant_projects`, rootProjectID).
+		Find(&projectIDs)
+	return
 }
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {

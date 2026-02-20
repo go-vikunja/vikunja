@@ -157,7 +157,12 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date | strin
 }
 
 function getTaskLabel(task: ITask): string {
-	if (!filters.value.includeSubprojects || task.projectId === filters.value.projectId) {
+	if (!filters.value.includeSubprojects) {
+		return task.title
+	}
+
+	const isProjectContext = filters.value.projectId > 0
+	if (isProjectContext && task.projectId === filters.value.projectId) {
 		return task.title
 	}
 

@@ -94,6 +94,7 @@
         "playSoundWhenDone": "Play a sound when marking tasks as done",
         "allowIconChanges": "Show special logos during certain times",
         "alwaysShowBucketTaskCount": "Always show task count on Kanban buckets",
+        "showIncludeSubprojectsToggle": "Show \"Include subprojects\" toggle in project views",
         "defaultTaskRelationType": "Default task relation type",
         "weekStart": "Week starts on",
         "weekStartSunday": "Sunday",
