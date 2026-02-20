@@ -34,6 +34,17 @@ const DEFAULT_DATETO_DAY_OFFSET = +55
 
 const now = new Date()
 
+type RouteQueryValue = RouteLocationNormalized['query'][string]
+
+function normalizeRouteQueryValue(value: RouteQueryValue): string | undefined {
+	const normalizedValue = Array.isArray(value) ? value[0] : value
+	if (normalizedValue === null || typeof normalizedValue === 'undefined') {
+		return undefined
+	}
+
+	return String(normalizedValue)
+}
+
 function getDefaultDateFrom() {
 	return new Date(now.getFullYear(), now.getMonth(), now.getDate() + DEFAULT_DATEFROM_DAY_OFFSET).toISOString()
 }
@@ -48,10 +59,10 @@ function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilt
 	return {
 		projectId: Number(ganttRoute.params?.projectId),
 		viewId: Number(ganttRoute.params?.viewId),
-		dateFrom: parseDateProp(ganttRoute.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
-		dateTo: parseDateProp(ganttRoute.query?.dateTo as DateKebab) || getDefaultDateTo(),
-		showTasksWithoutDates: parseBooleanProp(ganttRoute.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
-		includeSubprojects: parseBooleanProp(ganttRoute.query?.includeSubprojects as string) || DEFAULT_INCLUDE_SUBPROJECTS,
+		dateFrom: parseDateProp(normalizeRouteQueryValue(ganttRoute.query?.dateFrom) as DateKebab) || getDefaultDateFrom(),
+		dateTo: parseDateProp(normalizeRouteQueryValue(ganttRoute.query?.dateTo) as DateKebab) || getDefaultDateTo(),
+		showTasksWithoutDates: parseBooleanProp(normalizeRouteQueryValue(ganttRoute.query?.showTasksWithoutDates)) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
+		includeSubprojects: parseBooleanProp(normalizeRouteQueryValue(ganttRoute.query?.includeSubprojects)) || DEFAULT_INCLUDE_SUBPROJECTS,
 	}
 }
 
@@ -64,15 +75,13 @@ function ganttGetDefaultFilters(route: Partial<RouteLocationNormalized>): GanttF
 
 // FIXME: use zod for this
 function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
-	let query: Record<string, string> = {}
+	const query: LocationQueryRaw = {}
 	if (
 		filters.dateFrom !== getDefaultDateFrom() ||
 		filters.dateTo !== getDefaultDateTo()
 	) {
-		query = {
-			dateFrom: isoToKebabDate(filters.dateFrom),
-			dateTo: isoToKebabDate(filters.dateTo),
-		}
+		query.dateFrom = isoToKebabDate(filters.dateFrom)
+		query.dateTo = isoToKebabDate(filters.dateTo)
 	}
 
 	if (filters.showTasksWithoutDates) {
@@ -80,7 +89,7 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 	}
 
 	if (filters.includeSubprojects) {
-		query.includeSubprojects = '1'
+		query.includeSubprojects = true
 	}
 
 	return {

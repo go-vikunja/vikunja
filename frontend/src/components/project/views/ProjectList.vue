@@ -15,7 +15,7 @@
 					@update:modelValue="prepareFiltersAndLoadTasks()"
 				/>
 				<FancyCheckbox
-					v-if="projectId > 0"
+					v-if="projectId > 0 && showIncludeSubprojectsToggle"
 					v-model="includeSubprojects"
 					v-tooltip="$t('project.views.includeSubprojectsHint')"
 					class="include-subprojects-toggle"
@@ -130,6 +130,7 @@ import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
+import {useAuthStore} from '@/stores/auth'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -195,8 +196,10 @@ const firstNewPosition = computed(() => {
 
 const baseStore = useBaseStore()
 const taskStore = useTaskStore()
+const authStore = useAuthStore()
 const {handleTaskDropToProject} = useTaskDragToProject()
 const project = computed(() => baseStore.currentProject)
+const showIncludeSubprojectsToggle = computed(() => authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false)
 
 const canWrite = computed(() => {
 	return project.value?.maxPermission > Permissions.READ && project.value?.id > 0

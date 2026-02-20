@@ -33,6 +33,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		defaultTaskRelationType: RELATION_KIND.RELATED,
 		backgroundBrightness: null,
 		alwaysShowBucketTaskCount: false,
+		showIncludeSubprojectsToggle: false,
 		sidebarWidth: null,
 		commentSortOrder: 'asc',
 	}
