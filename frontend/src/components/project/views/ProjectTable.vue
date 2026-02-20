@@ -82,7 +82,7 @@
 					@update:modelValue="taskList.loadTasks()"
 				/>
 				<FancyCheckbox
-					v-if="projectId > 0"
+					v-if="projectId > 0 && showIncludeSubprojectsToggle"
 					v-model="includeSubprojects"
 					v-tooltip="$t('project.views.includeSubprojectsHint')"
 					class="include-subprojects-toggle"
@@ -273,12 +273,6 @@
 												{{ t.title }}
 											</RouterLink>
 										</TaskGlanceTooltip>
-										<span
-											v-if="includeSubprojects && t.projectId !== projectId && projectStore.projects[t.projectId]"
-											class="tag is-light is-info task-project-tag"
-										>
-											{{ projectStore.projects[t.projectId].title }}
-										</span>
 									</td>
 									<td v-if="activeColumns.priority">
 										<PriorityLabel
@@ -380,6 +374,7 @@ import {getTaskIdentifier} from '@/models/task'
 import { camelCase } from 'change-case'
 import {isSavedFilter} from '@/services/savedFilter'
 import {useProjectStore} from '@/stores/projects'
+import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
@@ -388,6 +383,8 @@ const props = defineProps<{
 }>()
 
 const projectStore = useProjectStore()
+const authStore = useAuthStore()
+const showIncludeSubprojectsToggle = computed(() => authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false)
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -535,9 +532,5 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 
 .include-subprojects-toggle {
 	margin-inline-start: .75rem;
-}
-
-.task-project-tag {
-	margin-inline-start: .5rem;
 }
 </style>
