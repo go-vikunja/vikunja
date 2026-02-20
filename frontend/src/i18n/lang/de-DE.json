@@ -390,7 +390,9 @@
 			"dayLabel": "Tag: {date}, {weekday}",
 			"dayLabelToday": "Heute: {date}, {weekday}",
 			"taskAriaLabel": "Aufgabe: {task}",
-			"taskAriaLabelById": "Aufgabe {id}"
+			"taskAriaLabelById": "Aufgabe {id}",
+			"partialDatesStart": "Nur Startdatum (offen)",
+			"partialDatesEnd": "Nur Enddatum (offen)"
 		},
 		"table": {
 			"title": "Tabelle",
@@ -875,6 +877,7 @@
 			"labels": "Labels",
 			"percentDone": "Fortschritt",
 			"priority": "Priorität",
+			"project": "Projekt",
 			"relatedTasks": "Verwandte Aufgaben",
 			"reminders": "Erinnerungen",
 			"repeat": "Wiederholen",

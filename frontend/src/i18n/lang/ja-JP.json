@@ -390,7 +390,9 @@
 			"dayLabel": "日: {date} ({weekday})",
 			"dayLabelToday": "今日: {date} ({weekday})",
 			"taskAriaLabel": "タスク: {task}",
-			"taskAriaLabelById": "タスク {id}"
+			"taskAriaLabelById": "タスク {id}",
+			"partialDatesStart": "開始日のみ (終了未定)",
+			"partialDatesEnd": "終了日のみ (開始未定)"
 		},
 		"table": {
 			"title": "テーブル",
@@ -875,6 +877,7 @@
 			"labels": "ラベル",
 			"percentDone": "進捗状況",
 			"priority": "優先度",
+			"project": "プロジェクト",
 			"relatedTasks": "関連タスク",
 			"reminders": "リマインダー",
 			"repeat": "繰り返し間隔",
