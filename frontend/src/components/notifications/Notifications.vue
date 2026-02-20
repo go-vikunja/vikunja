@@ -84,13 +84,13 @@
 
 <script lang="ts" setup>
 import {computed, onMounted, onUnmounted, ref} from 'vue'
-import {useRouter, isNavigationFailure, NavigationFailureType} from 'vue-router'
+import {useRouter, isNavigationFailure, NavigationFailureType, RouteLocationRaw} from 'vue-router'
 
 import NotificationService from '@/services/notification'
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import User from '@/components/misc/User.vue'
-import { NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
+import {NOTIFICATION_NAMES as names, type INotification} from '@/modelTypes/INotification'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {formatDateLong, formatDisplayDate} from '@/helpers/time/formatDate'
 import {getDisplayName} from '@/models/user'
@@ -147,7 +147,7 @@ function hidePopup(e) {
 	}
 }
 
-function getNotificationRoute(n: INotification): object | null {
+function getNotificationRoute(n: INotification): RouteLocationRaw | null {
 	switch (n.name) {
 		case names.TASK_COMMENT:
 		case names.TASK_ASSIGNED:
