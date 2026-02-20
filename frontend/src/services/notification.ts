@@ -18,10 +18,12 @@ export default class NotificationService extends AbstractService<INotification> 
 		if (!model) {
 			return model
 		}
-		
-		model.created = new Date(model.created).toISOString()
-		model.readAt = new Date(model.readAt).toISOString()
-		return model
+
+		return {
+			...model,
+			created: new Date(model.created).toISOString(),
+			readAt: new Date(model.readAt).toISOString(),
+		}
 	}
 	
 	async markAllRead() {
