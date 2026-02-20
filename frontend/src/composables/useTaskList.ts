@@ -73,6 +73,14 @@ export function useTaskList(
 	const page = useRouteQuery('page', '1', { transform: Number })
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
+	const includeSubprojectsQuery = useRouteQuery('includeSubprojects')
+
+	const includeSubprojects = computed<boolean>({
+		get: () => includeSubprojectsQuery.value === '1' || includeSubprojectsQuery.value === 'true',
+		set: (value) => {
+			includeSubprojectsQuery.value = value ? '1' : undefined
+		},
+	})
 
 	watch(filter, v => { params.value.filter = v ?? '' }, { immediate: true })
 	watch(s, v => { params.value.s = v ?? '' }, { immediate: true })
@@ -89,7 +97,7 @@ export function useTaskList(
 	})
 
 	watch(
-		[params, sortBy, page],
+		[params, sortBy, page, includeSubprojects],
 		([, , newPage], [, , oldPage]) => {
 			if (newPage === oldPage) {
 				page.value = 1
@@ -108,6 +116,7 @@ export function useTaskList(
 			},
 			{
 				...allParams.value,
+				...(includeSubprojects.value ? {include_subprojects: true} : {}),
 				filter_timezone: authStore.settings.timezone,
 				expand: expandGetter(),
 			},
@@ -149,5 +158,6 @@ export function useTaskList(
 		loadTasks,
 		params,
 		sortByParam: sortBy,
+		includeSubprojects,
 	}
 }

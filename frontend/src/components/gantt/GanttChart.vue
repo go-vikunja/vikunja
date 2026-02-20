@@ -76,6 +76,7 @@ import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
 import type {GanttFilters} from '@/views/project/helpers/useGanttFilters'
 import type {GanttBarModel, GanttBarDateType} from '@/composables/useGanttBar'
+import {useProjectStore} from '@/stores/projects'
 
 import GanttChartBody from '@/components/gantt/GanttChartBody.vue'
 import GanttRow from '@/components/gantt/GanttRow.vue'
@@ -102,6 +103,7 @@ const emit = defineEmits<{
 const DAY_WIDTH_PIXELS = 30
 
 const {tasks, filters} = toRefs(props)
+const projectStore = useProjectStore()
 
 const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
 const ganttContainer = ref(null)
@@ -154,6 +156,19 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date | strin
 	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
 }
 
+function getTaskLabel(task: ITask): string {
+	if (!filters.value.includeSubprojects || task.projectId === filters.value.projectId) {
+		return task.title
+	}
+
+	const projectTitle = projectStore.projects[task.projectId]?.title
+	if (!projectTitle) {
+		return task.title
+	}
+
+	return `${task.title} · ${projectTitle}`
+}
+
 function transformTaskToGanttBar(t: ITask): GanttBarModel {
 	const DEFAULT_SPAN_DAYS = 7
 
@@ -199,7 +214,7 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 		start: startDate,
 		end: endDate,
 		meta: {
-			label: t.title,
+			label: getTaskLabel(t),
 			task: t,
 			color: taskColor,
 			hasActualDates: Boolean(t.startDate && (t.endDate || t.dueDate)),

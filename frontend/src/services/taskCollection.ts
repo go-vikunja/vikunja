@@ -11,6 +11,7 @@ export interface TaskFilterParams {
 	order_by: ('asc' | 'desc')[],
 	filter: string,
 	filter_include_nulls: boolean,
+	include_subprojects?: boolean,
 	filter_timezone?: string,
 	s: string,
 	per_page?: number,

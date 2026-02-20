@@ -23,9 +23,11 @@ export interface GanttFilters {
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
+	includeSubprojects: boolean
 }
 
 const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
+const DEFAULT_INCLUDE_SUBPROJECTS = false
 
 const DEFAULT_DATEFROM_DAY_OFFSET = -15
 const DEFAULT_DATETO_DAY_OFFSET = +55
@@ -49,6 +51,7 @@ function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilt
 		dateFrom: parseDateProp(ganttRoute.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
 		dateTo: parseDateProp(ganttRoute.query?.dateTo as DateKebab) || getDefaultDateTo(),
 		showTasksWithoutDates: parseBooleanProp(ganttRoute.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
+		includeSubprojects: parseBooleanProp(ganttRoute.query?.includeSubprojects as string) || DEFAULT_INCLUDE_SUBPROJECTS,
 	}
 }
 
@@ -76,6 +79,10 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 		query.showTasksWithoutDates = String(filters.showTasksWithoutDates)
 	}
 
+	if (filters.includeSubprojects) {
+		query.includeSubprojects = '1'
+	}
+
 	return {
 		name: 'project.view',
 		params: {
@@ -100,6 +107,7 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 			'(start_date <= "' + dateFrom + '" && end_date >= "' + dateTo + '")' +
 			')',
 		filter_include_nulls: filters.showTasksWithoutDates,
+		include_subprojects: filters.includeSubprojects,
 	}
 }
 
