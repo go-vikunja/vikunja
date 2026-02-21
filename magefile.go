@@ -37,6 +37,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/iancoleman/strcase"
@@ -337,6 +338,23 @@ func getRandomPort() (int, error) {
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
+// setProcessGroup configures a command to run in its own process group,
+// so that all child processes can be killed together.
+func setProcessGroup(cmd *exec.Cmd) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+}
+
+// killProcessGroup sends a signal to the entire process group of the given command.
+func killProcessGroup(cmd *exec.Cmd) {
+	if cmd.Process != nil {
+		pgid, err := syscall.Getpgid(cmd.Process.Pid)
+		if err == nil {
+			syscall.Kill(-pgid, syscall.SIGTERM)
+		}
+		cmd.Wait()
+	}
+}
+
 // waitForHTTP polls a URL until it returns a 200 status or the timeout expires.
 func waitForHTTP(url string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
@@ -487,15 +505,13 @@ func (Test) E2E(args string) error {
 	)
 	apiCmd.Stdout = os.Stdout
 	apiCmd.Stderr = os.Stderr
+	setProcessGroup(apiCmd)
 	if err := apiCmd.Start(); err != nil {
 		return fmt.Errorf("failed to start API: %w", err)
 	}
 	defer func() {
 		fmt.Println("\n--- Stopping API server ---")
-		if apiCmd.Process != nil {
-			apiCmd.Process.Signal(os.Interrupt)
-			apiCmd.Wait()
-		}
+		killProcessGroup(apiCmd)
 	}()
 
 	// Wait for API to be ready
@@ -506,25 +522,30 @@ func (Test) E2E(args string) error {
 	}
 	printSuccess("API is ready!")
 
-	// Start the frontend dev server
-	fmt.Println("\n--- Starting frontend dev server ---")
-	frontendCmd := exec.Command("pnpm", "dev", "--port", strconv.Itoa(frontendPort))
+	// Build the frontend
+	fmt.Println("\n--- Building frontend ---")
+	buildFrontendCmd := exec.Command("pnpm", "build:dev")
+	buildFrontendCmd.Dir = "frontend"
+	buildFrontendCmd.Stdout = os.Stdout
+	buildFrontendCmd.Stderr = os.Stderr
+	if err := buildFrontendCmd.Run(); err != nil {
+		return fmt.Errorf("failed to build frontend: %w", err)
+	}
+	printSuccess("Frontend built!")
+
+	// Serve the built frontend with vite preview (static, no file watchers)
+	fmt.Println("\n--- Starting frontend preview server ---")
+	frontendCmd := exec.Command("pnpm", "preview:dev", "--port", strconv.Itoa(frontendPort))
 	frontendCmd.Dir = "frontend"
-	frontendCmd.Env = append(os.Environ(),
-		fmt.Sprintf("VIKUNJA_FRONTEND_PORT=%d", frontendPort),
-		fmt.Sprintf("DEV_PROXY=http://127.0.0.1:%d", apiPort),
-	)
 	frontendCmd.Stdout = os.Stdout
 	frontendCmd.Stderr = os.Stderr
+	setProcessGroup(frontendCmd)
 	if err := frontendCmd.Start(); err != nil {
 		return fmt.Errorf("failed to start frontend: %w", err)
 	}
 	defer func() {
-		fmt.Println("\n--- Stopping frontend dev server ---")
-		if frontendCmd.Process != nil {
-			frontendCmd.Process.Signal(os.Interrupt)
-			frontendCmd.Wait()
-		}
+		fmt.Println("\n--- Stopping frontend preview server ---")
+		killProcessGroup(frontendCmd)
 	}()
 
 	// Wait for frontend to be ready
