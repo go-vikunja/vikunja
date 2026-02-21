@@ -300,6 +300,9 @@ export const useAuthStore = defineStore('auth', () => {
 				// where the display name briefly reverts to the username.
 				if (info.value === null || info.value.id !== jwtUser.id) {
 					setUser(jwtUser, false)
+				} else {
+					// Always keep exp in sync so token renewal checks stay accurate
+					info.value.exp = jwtUser.exp
 				}
 			} catch (_) {
 				logout()
