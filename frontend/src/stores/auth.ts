@@ -290,12 +290,17 @@ export const useAuthStore = defineStore('auth', () => {
 					.split('.')[1]
 					.replace(/-/g, '+')
 					.replace(/_/g, '/')
-				const info = new UserModel(JSON.parse(atob(base64)))
+				const jwtUser = new UserModel(JSON.parse(atob(base64)))
 				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
 
-				isAuthenticated = info.exp >= ts
-				// Settings should only be loaded from the api request, not via the jwt
-				setUser(info, false)
+				isAuthenticated = jwtUser.exp >= ts
+				// Only set user from JWT if we don't already have a fully loaded
+				// user with the same ID. The JWT lacks fields like `name`, so
+				// overwriting a complete user object causes a visible flash
+				// where the display name briefly reverts to the username.
+				if (info.value === null || info.value.id !== jwtUser.id) {
+					setUser(jwtUser, false)
+				}
 			} catch (_) {
 				logout()
 			}
