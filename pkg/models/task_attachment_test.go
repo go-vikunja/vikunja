@@ -113,6 +113,7 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	assert.Equal(t, testuser.ID, ta.File.CreatedByID)
 	assert.Equal(t, "testfile", ta.File.Name)
 	assert.Equal(t, uint64(100), ta.File.Size)
+	assert.NotEmpty(t, ta.File.Mime, "mime type should be detected and stored")
 
 	// Extra test for max size test
 }

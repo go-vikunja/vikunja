@@ -18,6 +18,8 @@ package files
 
 import (
 	"bytes"
+	"image"
+	"image/png"
 	"os"
 	"testing"
 
@@ -58,6 +60,37 @@ func TestCreate(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrFileIsTooLarge(err))
 	})
+}
+
+func TestCreateDetectsMimeType(t *testing.T) {
+	initFixtures(t)
+	ta := &testauth{id: 1}
+
+	// Minimal valid PNG (1x1 pixel)
+	pngData := createMinimalPNG(t)
+
+	f, err := Create(bytes.NewReader(pngData), "test.png", uint64(len(pngData)), ta)
+	require.NoError(t, err)
+	assert.Equal(t, "image/png", f.Mime)
+}
+
+func TestCreateDetectsMimeTypePlainText(t *testing.T) {
+	initFixtures(t)
+	ta := &testauth{id: 1}
+
+	textData := []byte("hello world this is plain text")
+
+	f, err := Create(bytes.NewReader(textData), "readme.txt", uint64(len(textData)), ta)
+	require.NoError(t, err)
+	assert.Equal(t, "text/plain; charset=utf-8", f.Mime)
+}
+
+func createMinimalPNG(t *testing.T) []byte {
+	t.Helper()
+	img := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	buf := &bytes.Buffer{}
+	require.NoError(t, png.Encode(buf, img))
+	return buf.Bytes()
 }
 
 func TestFile_Delete(t *testing.T) {
