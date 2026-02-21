@@ -204,8 +204,14 @@ func GetTaskAttachment(c *echo.Context) error {
 		_ = s.Rollback()
 		return err
 	}
+
+	mimeToReturn := taskAttachment.File.Mime
+	if mimeToReturn == "" {
+		mimeToReturn = "application/octet-stream"
+	}
+
 	c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+taskAttachment.File.Name+"\"")
-	c.Response().Header().Set("Content-Type", taskAttachment.File.Mime)
+	c.Response().Header().Set("Content-Type", mimeToReturn)
 	c.Response().Header().Set("Content-Length", strconv.FormatUint(taskAttachment.File.Size, 10))
 	c.Response().Header().Set("Last-Modified", taskAttachment.File.Created.UTC().Format(http.TimeFormat))
 
