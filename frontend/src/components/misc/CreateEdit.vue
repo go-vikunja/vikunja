@@ -23,6 +23,7 @@
 						v-if="tertiary !== ''"
 						:shadow="false"
 						variant="tertiary"
+						class="tw-mr-auto has-text-danger"
 						@click.prevent.stop="$emit('tertiary', $event)"
 					>
 						{{ tertiary }}
