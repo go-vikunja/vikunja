@@ -108,6 +108,15 @@
 			<div class="field">
 				<label class="checkbox">
 					<input
+						v-model="settings.frontendSettings.hideFutureTasks"
+						type="checkbox"
+					>
+					{{ $t('user.settings.general.hideFutureTasks') }}
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input
 						v-model="settings.emailRemindersEnabled"
 						type="checkbox"
 					>
