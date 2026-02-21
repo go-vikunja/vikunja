@@ -94,7 +94,7 @@ Navigate to `frontend/` directory:
 - **Lint Styles Fix**: `pnpm lint:styles:fix` - Stylelint with auto-fix
 - **Type Check**: `pnpm typecheck` - Vue TypeScript checking
 - **Test Unit**: `pnpm test:unit` - Vitest unit tests
-- **Test E2E**: `pnpm test:e2e` - Playwright end-to-end tests (located in `tests/e2e/`)
+- **Test E2E**: Do NOT run `pnpm test:e2e` directly. Use `mage test:e2e` instead (see below).
 
 ### Pre-commit Checks
 Always run both lint before committing:
@@ -195,6 +195,19 @@ Modern Vue 3 composition API application with TypeScript:
 - Frontend: Unit tests with Vitest, E2E tests with Playwright
 - Always test both positive and negative authorization scenarios
 - Use test fixtures in `pkg/db/fixtures/` for consistent test data
+
+### Running E2E Tests
+
+**IMPORTANT: ALWAYS use `mage test:e2e` to run end-to-end tests.** Do NOT run `pnpm test:e2e` directly. The mage command builds the API, starts it with an isolated SQLite database, builds and serves the frontend, runs the Playwright tests, and tears everything down automatically.
+
+```bash
+mage test:e2e ""                                      # run all tests
+mage test:e2e "tests/e2e/misc/menu.spec.ts"           # specific file
+mage test:e2e "--grep menu"                            # filter by name
+mage test:e2e "--headed tests/e2e/misc/menu.spec.ts"  # headed mode
+```
+
+Set `VIKUNJA_E2E_SKIP_BUILD=true` to skip rebuilding the API binary when iterating on frontend-only changes.
 
 ## Swagger API Documentation
 
