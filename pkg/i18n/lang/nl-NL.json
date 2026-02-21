@@ -79,7 +79,9 @@
 				"subject_to_assignee": "Je bent toegewezen aan \"%[1]s\" (%[2]s)",
 				"message_to_assignee": "%[1]s heeft je toegewezen aan \"%[2]s\".",
 				"subject_to_others": "\"%[1]s\" (%[2]s) is toegewezen aan %[3]s",
-				"message_to_others": "%[1]s heeft deze taak toegewezen aan %[2]s."
+				"message_to_others": "%[1]s heeft deze taak toegewezen aan %[2]s.",
+				"subject_to_others_self": "\"%[1]s\" (%[2]s) is toegewezen door %[3]s aan zichzelf",
+				"message_to_others_self": "%[1]s heeft deze taak aan zichzelf toegewezen."
 			},
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) is verwijderd",

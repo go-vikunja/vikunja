@@ -93,6 +93,7 @@
 				"discoverableByEmail": "Andere gebruikers toestaan mij als lid toe te voegen aan teams of projecten door mijn volledige e-mail te zoeken",
 				"playSoundWhenDone": "Een geluid afspelen wanneer taken als voltooid gemarkeerd worden",
 				"allowIconChanges": "Toon speciale logo's op bepaalde momenten",
+				"alwaysShowBucketTaskCount": "Toon altijd aantal taken bij Kanban categorieën",
 				"defaultTaskRelationType": "Standaard taak relatietype",
 				"weekStart": "Week begint op",
 				"weekStartSunday": "Zondag",
@@ -113,6 +114,11 @@
 					"mm/dd/yyyy": "MM/DD/YYYY",
 					"dd/mm/yyyy": "DD/MM/YYYY",
 					"yyyy/mm/dd": "YYYY/MM/DD"
+				},
+				"timeFormat": "Tijdnotatie",
+				"timeFormatOptions": {
+					"12h": "12-uurs (AM/PM)",
+					"24h": "24-uurs (UU:mm)"
 				},
 				"externalUserNameChange": "Je gebruikersnaam wordt beheerd via je inlogprovider ({provider}). Om het te wijzigen moet je het daar aanpassen."
 			},
@@ -175,6 +181,9 @@
 					"system": "Systeem",
 					"dark": "Donker"
 				}
+			},
+			"backgroundBrightness": {
+				"title": "Achtergrond helderheid"
 			},
 			"apiTokens": {
 				"title": "API tokens",
@@ -381,7 +390,9 @@
 			"dayLabel": "Dag: {date}, {weekday}",
 			"dayLabelToday": "Vandaag: {date}, {weekday}",
 			"taskAriaLabel": "Taak: {task}",
-			"taskAriaLabelById": "Taak {id}"
+			"taskAriaLabelById": "Taak {id}",
+			"partialDatesStart": "Alleen startdatum (open-einde)",
+			"partialDatesEnd": "Alleen einddatum (open-einde)"
 		},
 		"table": {
 			"title": "Tabel",
@@ -430,6 +441,9 @@
 			"deleteSuccess": "De webhook is succesvol verwijderd.",
 			"create": "Maak webhook",
 			"secret": "Geheim",
+			"basicauthuser": "Basic Auth gebruiker",
+			"basicauthpassword": "Basic Auth wachtwoord",
+			"basicauthlink": "Gebruik Basic Auth?",
 			"secretHint": "Indien opgegeven, zullen alle aanvragen naar de webhook doel-URL worden ondertekend via HMAC.",
 			"secretDocs": "Bekijk de documentatie voor meer informatie over het gebruik van geheimen."
 		},
@@ -791,6 +805,7 @@
 		"addReminder": "Herinnering toevoegen…",
 		"doneSuccess": "De taak is succesvol aangemerkt als voltooid.",
 		"undoneSuccess": "Het voltooien van de taak is succesvol teruggedraaid.",
+		"movedToProject": "De taak werd verplaatst naar {project}.",
 		"undo": "Ongedaan maken",
 		"openDetail": "Open taak detailweergave",
 		"checklistTotal": "{checked} van {total} taken",
@@ -802,7 +817,9 @@
 			"overdue": "Toon achterstallige taken",
 			"fromuntil": "Taken van {from} tot {until}",
 			"select": "Selecteer datumbereik",
-			"noTasks": "Niets te doen - fijne dag!"
+			"noTasks": "Niets te doen - fijne dag!",
+			"filterByLabel": "Gefilterd op label {label}",
+			"clearLabelFilter": "Wis labelfilter"
 		},
 		"detail": {
 			"chooseDueDate": "Klik hier om een vervaldatum in te stellen",
@@ -820,6 +837,7 @@
 			"back": "Terug naar project",
 			"due": "Vervalt {at}",
 			"closePopup": "Popup sluiten",
+			"scrollToBottom": "Scroll naar beneden",
 			"organization": "Organisatie",
 			"management": "Beheer",
 			"dateAndTime": "Datum en tijd",
@@ -859,9 +877,12 @@
 			"labels": "Labels",
 			"percentDone": "Voortgang",
 			"priority": "Prioriteit",
+			"project": "Project",
 			"relatedTasks": "Verwante Taken",
 			"reminders": "Herinneringen",
 			"repeat": "Herhalen",
+			"comment": "{count} opmerking | {count} opmerkingen",
+			"commentCount": "Aantal opmerkingen",
 			"startDate": "Begindatum",
 			"title": "Titel",
 			"updated": "Bijgewerkt",
@@ -907,7 +928,12 @@
 			"deleteText1": "Weet je zeker dat je deze reactie wilt verwijderen?",
 			"deleteSuccess": "De opmerking is succesvol verwijderd.",
 			"addedSuccess": "De reactie is succesvol toegevoegd.",
-			"permalink": "Kopieer permalink naar deze reactie"
+			"permalink": "Kopieer permalink naar deze reactie",
+			"sortNewestFirst": "Nieuwste eerst",
+			"sortOldestFirst": "Oudste eerst"
+		},
+		"mention": {
+			"noUsersFound": "Geen gebruikers gevonden"
 		},
 		"deferDueDate": {
 			"title": "Vervaldatum uitstellen",
@@ -1099,7 +1125,11 @@
 			"priority": "Wijzig de prioriteit van deze taak",
 			"favorite": "Markeer deze taak als favoriet / niet-favoriet",
 			"openProject": "Open het project van deze taak",
-			"save": "Huidige taak opslaan"
+			"save": "Huidige taak opslaan",
+			"copyIdentifier": "Kopieer taak-id naar klembord",
+			"copyIdentifierAndTitle": "Kopieer taak-id en titel naar klembord",
+			"copyIdentifierTitleAndUrl": "Kopieer taak-id, titel en URL naar klembord",
+			"copyUrl": "Kopieer taak-URL naar klembord"
 		},
 		"project": {
 			"title": "Projectweergaven",

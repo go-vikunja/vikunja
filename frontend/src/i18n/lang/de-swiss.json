@@ -928,7 +928,9 @@
 			"deleteText1": "Bisch du dir sicher, dass du de Kommentar chüble wetsch?",
 			"deleteSuccess": "Der Kommentar wurde erfolgreich gelöscht.",
 			"addedSuccess": "Din Kommentar isch erfolgriich hinzuegfüegt worde.",
-			"permalink": "Permalink zu diesem Kommentar kopieren"
+			"permalink": "Permalink zu diesem Kommentar kopieren",
+			"sortNewestFirst": "Neueste zuerst",
+			"sortOldestFirst": "Älteste zuerst"
 		},
 		"mention": {
 			"noUsersFound": "Keine Nutzer:innen gefunden"
