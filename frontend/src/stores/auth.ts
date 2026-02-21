@@ -272,12 +272,12 @@ export const useAuthStore = defineStore('auth', () => {
 	 */
 	async function checkAuth() {
 		const now = new Date()
-		const inOneMinute = new Date(new Date().setMinutes(now.getMinutes() + 1))
+		const oneMinuteAgo = new Date(new Date().setMinutes(now.getMinutes() - 1))
 		// This function can be called from multiple places at the same time and shortly after one another.
 		// To prevent hitting the api too frequently or race conditions, we check at most once per minute.
 		if (
 			lastUserInfoRefresh.value !== null &&
-			lastUserInfoRefresh.value > inOneMinute
+			lastUserInfoRefresh.value > oneMinuteAgo
 		) {
 			return
 		}
