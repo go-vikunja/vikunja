@@ -452,6 +452,7 @@ export const useAuthStore = defineStore('auth', () => {
 		removeToken()
 		const loggedInVia = getLoggedInVia()
 		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
+		lastUserInfoRefresh.value = null
 		await router.push({name: 'user.login'})
 		await checkAuth()
 
