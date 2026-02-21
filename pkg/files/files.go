@@ -37,6 +37,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/c2h5oh/datasize"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/spf13/afero"
 	"xorm.io/xorm"
 )
@@ -86,7 +87,14 @@ func (f *File) LoadFileMetaByID() (err error) {
 
 // Create creates a new file from an FileHeader
 func Create(f io.ReadSeeker, realname string, realsize uint64, a web.Auth) (file *File, err error) {
-	return CreateWithMime(f, realname, realsize, a, "")
+	mime, err := mimetype.DetectReader(f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to detect mime type: %w", err)
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return nil, fmt.Errorf("failed to seek after mime detection: %w", err)
+	}
+	return CreateWithMime(f, realname, realsize, a, mime.String())
 }
 
 // CreateWithMime creates a new file from an FileHeader and sets its mime type
