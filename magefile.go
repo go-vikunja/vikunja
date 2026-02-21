@@ -476,18 +476,22 @@ func (Test) E2E(args string) error {
 		}
 	}
 
-	// Create temp directory for the SQLite DB and file uploads
+	// Create temp directory for file uploads and rootpath
 	tmpDir, err := os.MkdirTemp("", "vikunja-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		fmt.Println("\n--- Cleaning up temp directory ---")
+		os.RemoveAll(tmpDir)
+	}()
 
 	if err := os.MkdirAll(filepath.Join(tmpDir, "files"), 0o755); err != nil {
 		return fmt.Errorf("failed to create files dir: %w", err)
 	}
 
 	// Start the API server — all config via env vars, no config file
+	// Uses in-memory SQLite (no DB file on disk)
 	fmt.Println("\n--- Starting API server ---")
 	apiCmd := exec.Command("./vikunja", "web")
 	apiCmd.Env = append(os.Environ(),
@@ -497,7 +501,7 @@ func (Test) E2E(args string) error {
 		fmt.Sprintf("VIKUNJA_SERVICE_ROOTPATH=%s", tmpDir),
 		"VIKUNJA_SERVICE_JWTSECRET=e2e-test-jwt-secret-do-not-use-in-production",
 		"VIKUNJA_DATABASE_TYPE=sqlite",
-		fmt.Sprintf("VIKUNJA_DATABASE_PATH=%s", filepath.Join(tmpDir, "vikunja-e2e.db")),
+		"VIKUNJA_DATABASE_PATH=memory",
 		fmt.Sprintf("VIKUNJA_FILES_BASEPATH=%s", filepath.Join(tmpDir, "files")),
 		"VIKUNJA_LOG_LEVEL=WARNING",
 		"VIKUNJA_MAILER_ENABLED=false",
