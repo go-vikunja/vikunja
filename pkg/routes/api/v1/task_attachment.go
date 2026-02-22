@@ -184,6 +184,13 @@ func GetTaskAttachment(c *echo.Context) error {
 		return err
 	}
 
+	// Open the file so its content is available for preview generation and download
+	err = taskAttachment.File.LoadFileByID()
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
 	// If the preview query parameter is set, get the preview (cached or generate)
 	previewSize := models.GetPreviewSizeFromString(c.QueryParam("preview_size"))
 	if previewSize != models.PreviewSizeUnknown && strings.HasPrefix(taskAttachment.File.Mime, "image") {
@@ -191,13 +198,6 @@ func GetTaskAttachment(c *echo.Context) error {
 		if previewFileBytes != nil {
 			return c.Blob(http.StatusOK, "image/png", previewFileBytes)
 		}
-	}
-
-	// Open and send the file to the client
-	err = taskAttachment.File.LoadFileByID()
-	if err != nil {
-		_ = s.Rollback()
-		return err
 	}
 
 	if err := s.Commit(); err != nil {
