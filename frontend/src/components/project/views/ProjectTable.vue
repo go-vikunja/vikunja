@@ -81,6 +81,16 @@
 					:project-id="projectId"
 					@update:modelValue="taskList.loadTasks()"
 				/>
+				<XButton
+					v-if="canWrite"
+					variant="secondary"
+					icon="layer-group"
+					:shadow="false"
+					class="mis-2"
+					@click="showCreateFromTemplateModal = true"
+				>
+					{{ $t('task.template.fromTemplate') }}
+				</XButton>
 			</div>
 		</template>
 
@@ -296,6 +306,13 @@
 			</div>
 		</template>
 	</ProjectWrapper>
+
+	<CreateFromTemplateModal
+		:enabled="showCreateFromTemplateModal"
+		:default-project-id="projectId"
+		@close="showCreateFromTemplateModal = false"
+		@created="handleTaskCreatedFromTemplate"
+	/>
 </template>
 
 <script setup lang="ts">
@@ -314,6 +331,7 @@ import CommentCount from '@/components/tasks/partials/CommentCount.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import CreateFromTemplateModal from '@/components/tasks/partials/CreateFromTemplateModal.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import Popup from '@/components/misc/Popup.vue'
 
@@ -334,6 +352,8 @@ const props = defineProps<{
 }>()
 
 const projectStore = useProjectStore()
+
+const showCreateFromTemplateModal = ref(false)
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -382,6 +402,12 @@ watch(
 	() => setActiveColumnsSortParam(),
 	{deep: true},
 )
+
+function handleTaskCreatedFromTemplate(createdTask: ITask) {
+	if (createdTask.projectId === props.projectId) {
+		taskList.loadTasks()
+	}
+}
 
 // Allow sorting by multiple columns only when ctrl is pressed
 function sort(property: keyof SortBy, event?: MouseEvent) {

@@ -66,6 +66,12 @@
 						>
 							{{ $t('task.duplicate.action') }}
 						</DropdownItem>
+						<DropdownItem
+							icon="layer-group"
+							@click.stop="$emit('saveAsTemplate', task)"
+						>
+							{{ $t('task.template.saveAsTemplate') }}
+						</DropdownItem>
 					</Dropdown>
 				</div>
 			</div>
@@ -168,6 +174,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
 	'taskCompletedRecurring': [task: ITask]
 	'duplicateTask': [task: ITask]
+	'saveAsTemplate': [task: ITask]
 }>()
 
 const router = useRouter()

@@ -62,6 +62,16 @@
 				</li>
 				<li>
 					<RouterLink
+						:to="{ name: 'templates.index'}"
+					>
+						<span class="menu-item-icon icon">
+							<Icon icon="layer-group" />
+						</span>
+						{{ $t('task.template.navTitle') }}
+					</RouterLink>
+				</li>
+				<li>
+					<RouterLink
 						v-shortcut="'g m'"
 						:to="{ name: 'teams.index'}"
 					>

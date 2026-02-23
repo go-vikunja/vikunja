@@ -364,6 +364,11 @@ const router = createRouter({
 			component: () => import('@/views/labels/ListLabels.vue'),
 		},
 		{
+			path: '/templates',
+			name: 'templates.index',
+			component: () => import('@/views/templates/ListTemplates.vue'),
+		},
+		{
 			path: '/labels/new',
 			name: 'labels.create',
 			component: () => import('@/views/labels/NewLabel.vue'),

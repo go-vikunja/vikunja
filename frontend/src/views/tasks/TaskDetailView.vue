@@ -526,6 +526,13 @@
 						>
 							{{ $t('task.detail.actions.duplicate') }}
 						</XButton>
+						<XButton
+							variant="secondary"
+							icon="layer-group"
+							@click="showSaveAsTemplateModal = true"
+						>
+							{{ $t('task.detail.actions.saveAsTemplate') }}
+						</XButton>
 						
 						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
 						
@@ -623,6 +630,13 @@
 			@close="showDuplicateModal = false"
 			@duplicated="handleTaskDuplicated"
 		/>
+
+		<SaveAsTemplateModal
+			:enabled="showSaveAsTemplateModal"
+			:task="task"
+			@close="showSaveAsTemplateModal = false"
+			@saved="showSaveAsTemplateModal = false"
+		/>
 	</div>
 </template>
 
@@ -667,6 +681,7 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import Reactions from '@/components/input/Reactions.vue'
 import DuplicateTaskModal from '@/components/tasks/partials/DuplicateTaskModal.vue'
+import SaveAsTemplateModal from '@/components/tasks/partials/SaveAsTemplateModal.vue'
 
 import {uploadFile} from '@/helpers/attachments'
 import {getProjectTitle} from '@/helpers/getProjectTitle'
@@ -1071,6 +1086,7 @@ useTaskDetailShortcuts({
 
 const showDeleteModal = ref(false)
 const showDuplicateModal = ref(false)
+const showSaveAsTemplateModal = ref(false)
 
 function handleTaskDuplicated(duplicatedTask: ITask) {
 	showDuplicateModal.value = false

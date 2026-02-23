@@ -450,6 +450,24 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/tasks/:task/duplicate", taskDuplicateHandler.CreateWeb)
 
+	taskTemplateHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskTemplate{}
+		},
+	}
+	a.GET("/tasktemplates", taskTemplateHandler.ReadAllWeb)
+	a.GET("/tasktemplates/:template", taskTemplateHandler.ReadOneWeb)
+	a.PUT("/tasktemplates", taskTemplateHandler.CreateWeb)
+	a.POST("/tasktemplates/:template", taskTemplateHandler.UpdateWeb)
+	a.DELETE("/tasktemplates/:template", taskTemplateHandler.DeleteWeb)
+
+	taskFromTemplateHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskFromTemplate{}
+		},
+	}
+	a.PUT("/tasktemplates/:template/tasks", taskFromTemplateHandler.CreateWeb)
+
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Task{}

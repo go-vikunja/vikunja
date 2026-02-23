@@ -14,6 +14,16 @@
 					:project-id="projectId"
 					@update:modelValue="prepareFiltersAndLoadTasks()"
 				/>
+				<XButton
+					v-if="canWrite"
+					variant="secondary"
+					icon="layer-group"
+					:shadow="false"
+					class="mis-2"
+					@click="showCreateFromTemplateModal = true"
+				>
+					{{ $t('task.template.fromTemplate') }}
+				</XButton>
 			</div>
 		</template>
 
@@ -95,6 +105,13 @@
 			</div>
 		</template>
 	</ProjectWrapper>
+
+	<CreateFromTemplateModal
+		:enabled="showCreateFromTemplateModal"
+		:default-project-id="projectId"
+		@close="showCreateFromTemplateModal = false"
+		@created="handleTaskCreatedFromTemplate"
+	/>
 </template>
 
 
@@ -107,6 +124,7 @@ import ButtonLink from '@/components/misc/ButtonLink.vue'
 import AddTask from '@/components/tasks/AddTask.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import CreateFromTemplateModal from '@/components/tasks/partials/CreateFromTemplateModal.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import {ALPHABETICAL_SORT} from '@/components/project/partials/Filters.vue'
@@ -138,6 +156,7 @@ const projectId = toRef(props, 'projectId')
 defineOptions({name: 'List'})
 
 const ctaVisible = ref(false)
+const showCreateFromTemplateModal = ref(false)
 
 const drag = ref(false)
 
@@ -211,6 +230,12 @@ const addTaskRef = ref<typeof AddTask | null>(null)
 
 function focusNewTaskInput() {
 	addTaskRef.value?.focusTaskInput()
+}
+
+function handleTaskCreatedFromTemplate(createdTask: ITask) {
+	if (createdTask.projectId === projectId.value) {
+		loadTasks()
+	}
 }
 
 function updateTaskList(task: ITask) {
