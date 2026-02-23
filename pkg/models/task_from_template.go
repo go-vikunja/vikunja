@@ -94,9 +94,18 @@ func (tft *TaskFromTemplate) Create(s *xorm.Session, doer web.Auth) (err error) 
 	}
 
 	// Create the task with template values
+	description := tt.Description
+	// Append a small note indicating this task was created from a template
+	templateNote := `<p><small style="color:#888">📋 Created from template: ` + tt.Title + `</small></p>`
+	if description != "" {
+		description = description + templateNote
+	} else {
+		description = templateNote
+	}
+
 	newTask := &Task{
 		Title:       title,
-		Description: tt.Description,
+		Description: description,
 		Priority:    tt.Priority,
 		HexColor:    tt.HexColor,
 		PercentDone: tt.PercentDone,

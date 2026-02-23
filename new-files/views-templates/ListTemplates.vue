@@ -27,6 +27,7 @@
 				v-for="tmpl in templates"
 				:key="tmpl.id"
 				class="template-card"
+				:style="tmpl.hexColor ? {borderLeftColor: '#' + tmpl.hexColor, borderLeftWidth: '4px'} : {}"
 			>
 				<div class="template-card-header">
 					<span class="template-card-title">{{ tmpl.title }}</span>
@@ -57,14 +58,26 @@
 						class="tag is-small"
 						:class="priorityClass(tmpl.priority)"
 					>
-						Priority {{ tmpl.priority }}
+						{{ priorityLabel(tmpl.priority) }}
 					</span>
 					<span
-						v-if="tmpl.labelIds && tmpl.labelIds.length > 0"
-						class="tag is-small is-info"
+						v-if="tmpl.percentDone > 0"
+						class="tag is-small"
 					>
-						{{ tmpl.labelIds.length }} label(s)
+						{{ Math.round(tmpl.percentDone * 100) }}%
 					</span>
+					<span
+						v-if="tmpl.repeatAfter > 0"
+						class="tag is-small"
+					>
+						<Icon icon="history" class="mie-1" />
+						Repeats
+					</span>
+					<span
+						v-if="tmpl.hexColor"
+						class="tag is-small color-tag"
+						:style="{backgroundColor: '#' + tmpl.hexColor}"
+					/>
 				</div>
 			</div>
 		</div>
@@ -78,7 +91,8 @@
 				<div class="modal-header">
 					{{ editingTemplate?.id ? $t('task.template.edit') : $t('task.template.createNew') }}
 				</div>
-				<div class="content">
+				<div class="edit-form">
+					<!-- Title -->
 					<div class="field">
 						<label class="label">{{ $t('task.template.templateName') }}</label>
 						<div class="control">
@@ -90,6 +104,8 @@
 							>
 						</div>
 					</div>
+
+					<!-- Description -->
 					<div class="field">
 						<label class="label">{{ $t('task.attributes.description') }}</label>
 						<div class="control editor-wrapper">
@@ -101,18 +117,43 @@
 							/>
 						</div>
 					</div>
-					<div class="field">
-						<label class="label">{{ $t('task.attributes.priority') }}</label>
-						<div class="control">
-							<PrioritySelect
-								v-model="editForm.priority"
-							/>
+
+					<!-- Two-column row: Priority + Progress -->
+					<div class="field-row">
+						<div class="field">
+							<label class="label">{{ $t('task.attributes.priority') }}</label>
+							<div class="control">
+								<PrioritySelect v-model="editForm.priority" />
+							</div>
+						</div>
+						<div class="field">
+							<label class="label">{{ $t('task.attributes.percentDone') }}</label>
+							<div class="control">
+								<PercentDoneSelect v-model="editForm.percentDone" />
+							</div>
 						</div>
 					</div>
-					<div class="field">
-						<label class="label">{{ $t('task.attributes.color') }}</label>
-						<div class="control">
-							<ColorPicker v-model="editForm.hexColor" />
+
+					<!-- Two-column row: Color + Repeat -->
+					<div class="field-row">
+						<div class="field">
+							<label class="label">{{ $t('task.attributes.color') }}</label>
+							<div class="control">
+								<ColorPicker v-model="editForm.hexColor" />
+							</div>
+						</div>
+						<div class="field">
+							<label class="label">{{ $t('task.attributes.repeat') }}</label>
+							<div class="control repeat-control">
+								<input
+									v-model.number="repeatDays"
+									class="input"
+									type="number"
+									min="0"
+									placeholder="0"
+								>
+								<span class="repeat-unit">days</span>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -169,13 +210,14 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, onMounted} from 'vue'
+import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Editor from '@/components/input/AsyncEditor'
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
+import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 
 import TaskTemplateService from '@/services/taskTemplateService'
@@ -184,6 +226,8 @@ import TaskTemplateModel from '@/models/taskTemplate'
 import type {ITaskTemplate} from '@/modelTypes/ITaskTemplate'
 
 import {success} from '@/message'
+
+const SECONDS_PER_DAY = 86400
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -201,7 +245,18 @@ const editForm = ref({
 	title: '',
 	description: '',
 	priority: 0,
+	percentDone: 0,
 	hexColor: '',
+	repeatAfter: 0,
+	repeatMode: 0,
+})
+
+// Convert repeatAfter (seconds) to/from days for the UI
+const repeatDays = computed({
+	get: () => Math.round(editForm.value.repeatAfter / SECONDS_PER_DAY),
+	set: (val: number) => {
+		editForm.value.repeatAfter = (val || 0) * SECONDS_PER_DAY
+	},
 })
 
 onMounted(() => loadTemplates())
@@ -224,7 +279,10 @@ function editTemplate(tmpl: ITaskTemplate) {
 		title: tmpl.title,
 		description: tmpl.description,
 		priority: tmpl.priority,
+		percentDone: tmpl.percentDone,
 		hexColor: tmpl.hexColor,
+		repeatAfter: tmpl.repeatAfter || 0,
+		repeatMode: tmpl.repeatMode || 0,
 	}
 	showEditModal.value = true
 }
@@ -283,6 +341,11 @@ function priorityClass(priority: number): string {
 	if (priority >= 4) return 'is-danger'
 	if (priority >= 3) return 'is-warning'
 	return 'is-info'
+}
+
+function priorityLabel(priority: number): string {
+	const labels: Record<number, string> = {1: 'Low', 2: 'Medium', 3: 'High', 4: 'Urgent', 5: 'DO NOW'}
+	return labels[priority] || `Priority ${priority}`
 }
 </script>
 
@@ -351,7 +414,14 @@ function priorityClass(priority: number): string {
 .template-card-meta {
 	display: flex;
 	gap: .5rem;
+	flex-wrap: wrap;
 	margin-block-start: .5rem;
+}
+
+.color-tag {
+	inline-size: 1.5rem;
+	block-size: 1.25rem;
+	border: 1px solid var(--grey-300);
 }
 
 .edit-template-content,
@@ -376,11 +446,41 @@ function priorityClass(priority: number): string {
 	}
 }
 
+.edit-form {
+	max-block-size: 70vh;
+	overflow-y: auto;
+	padding-inline-end: .25rem;
+}
+
+.field-row {
+	display: flex;
+	gap: 1rem;
+
+	.field {
+		flex: 1;
+	}
+}
+
 .editor-wrapper {
 	border: 1px solid var(--grey-200);
 	border-radius: $radius;
 	padding: .5rem;
-	min-block-size: 150px;
+	min-block-size: 120px;
+}
+
+.repeat-control {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+
+	.input {
+		max-inline-size: 80px;
+	}
+}
+
+.repeat-unit {
+	color: var(--grey-500);
+	font-size: .9rem;
 }
 
 .field .label {
