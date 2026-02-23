@@ -125,7 +125,7 @@
     "@vueuse/shared": "14.2.1",
     "autoprefixer": "10.4.24",
     "browserslist": "4.28.1",
-    "caniuse-lite": "1.0.30001772",
+    "caniuse-lite": "1.0.30001774",
     "csstype": "3.2.3",
     "esbuild": "0.27.3",
     "eslint": "9.39.3",
