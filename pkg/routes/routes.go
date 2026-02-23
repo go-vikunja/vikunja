@@ -443,6 +443,13 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/projects/:projectid/duplicate", projectDuplicateHandler.CreateWeb)
 
+	taskDuplicateHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskDuplicate{}
+		},
+	}
+	a.PUT("/tasks/:task/duplicate", taskDuplicateHandler.CreateWeb)
+
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Task{}

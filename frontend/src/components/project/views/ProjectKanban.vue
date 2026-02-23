@@ -229,6 +229,7 @@
 												:loading="taskUpdating[task.id] ?? false"
 												:project-id="projectId"
 												@taskCompletedRecurring="handleRecurringTaskCompletion"
+												@duplicateTask="openDuplicateTaskModal"
 											/>
 										</div>
 									</template>
@@ -283,6 +284,13 @@
 						</p>
 					</template>
 				</Modal>
+
+				<DuplicateTaskModal
+					:enabled="showDuplicateTaskModal"
+					:task="taskToDuplicate"
+					@close="showDuplicateTaskModal = false"
+					@duplicated="handleTaskDuplicated"
+				/>
 			</div>
 		</template>
 	</ProjectWrapper>
@@ -312,6 +320,7 @@ import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
+import DuplicateTaskModal from '@/components/tasks/partials/DuplicateTaskModal.vue'
 
 import {
 	type CollapsedBuckets,
@@ -379,6 +388,9 @@ const sourceBucket = ref(0)
 const showBucketDeleteModal = ref(false)
 const bucketToDelete = ref(0)
 const bucketTitleEditable = ref(false)
+
+const showDuplicateTaskModal = ref(false)
+const taskToDuplicate = ref<ITask | null>(null)
 
 const newTaskText = ref('')
 const showNewTaskInput = ref<IBucket['id'] | null>(null)
@@ -899,6 +911,18 @@ async function toggleDoneBucket(bucket: IBucket) {
 function collapseBucket(bucket: IBucket) {
 	collapsedBuckets.value[bucket.id] = true
 	saveCollapsedBucketState(projectIdWithFallback.value, collapsedBuckets.value)
+}
+
+function openDuplicateTaskModal(task: ITask) {
+	taskToDuplicate.value = task
+	showDuplicateTaskModal.value = true
+}
+
+function handleTaskDuplicated(duplicatedTask: ITask) {
+	// If the task was duplicated into the same project, reload the kanban board to show it
+	if (duplicatedTask.projectId === projectId.value) {
+		kanbanStore.loadBucketsForProject(projectId.value, props.viewId, params.value)
+	}
 }
 
 function unCollapseBucket(bucket: IBucket) {

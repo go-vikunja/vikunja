@@ -13,6 +13,7 @@
 		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"
+		@contextmenu.prevent="openContextMenu"
 	>
 		<img
 			v-if="coverImageBlobUrl"
@@ -41,19 +42,32 @@
 						{{ task.position }}
 					</span>
 				</span>
-				<span
-					v-if="task.dueDate > 0"
-					v-tooltip="formatDateLong(task.dueDate)"
-					:class="{'overdue': isOverdue}"
-					class="due-date"
-				>
-					<span class="icon">
-						<Icon :icon="['far', 'calendar-alt']" />
+				<div class="tw-flex tw-items-center tw-gap-1">
+					<span
+						v-if="task.dueDate > 0"
+						v-tooltip="formatDateLong(task.dueDate)"
+						:class="{'overdue': isOverdue}"
+						class="due-date"
+					>
+						<span class="icon">
+							<Icon :icon="['far', 'calendar-alt']" />
+						</span>
+						<time :datetime="formatISO(task.dueDate)">
+							{{ formatDisplayDate(task.dueDate) }}
+						</time>
 					</span>
-					<time :datetime="formatISO(task.dueDate)">
-						{{ formatDisplayDate(task.dueDate) }}
-					</time>
-				</span>
+					<Dropdown
+						class="card-menu"
+						trigger-icon="ellipsis-v"
+					>
+						<DropdownItem
+							icon="copy"
+							@click.stop="$emit('duplicateTask', task)"
+						>
+							{{ $t('task.duplicate.action') }}
+						</DropdownItem>
+					</Dropdown>
+				</div>
 			</div>
 			
 			<h3>{{ task.title }}</h3>
@@ -125,6 +139,8 @@ import Done from '@/components/misc/Done.vue'
 import Labels from '@/components/tasks/partials/Labels.vue'
 import ChecklistSummary from './ChecklistSummary.vue'
 import CommentCount from './CommentCount.vue'
+import Dropdown from '@/components/misc/Dropdown.vue'
+import DropdownItem from '@/components/misc/DropdownItem.vue'
 
 import {getHexColor} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
@@ -151,6 +167,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
 	'taskCompletedRecurring': [task: ITask]
+	'duplicateTask': [task: ITask]
 }>()
 
 const router = useRouter()
@@ -210,6 +227,10 @@ function openTaskDetail() {
 		params: {id: props.task.id},
 		state: {backdropView: router.currentRoute.value.fullPath},
 	})
+}
+
+function openContextMenu() {
+	emit('duplicateTask', props.task)
 }
 
 const coverImageBlobUrl = ref<string | null>(null)
@@ -389,6 +410,25 @@ $task-background: var(--white);
 
 .kanban-card__done {
 	margin-inline-end: .25rem;
+}
+
+.card-menu {
+	opacity: 0;
+	transition: opacity $transition-duration;
+
+	:deep(.dropdown-trigger) {
+		padding: 0 .15rem;
+		border-radius: $radius;
+
+		&:hover {
+			background: var(--grey-200);
+		}
+	}
+}
+
+.task:hover .card-menu,
+.task .card-menu:has(.dropdown-menu[style]) {
+	opacity: 1;
 }
 
 .task-progress {
