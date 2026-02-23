@@ -82,12 +82,21 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 			Order:       -109951627776,
 		},
 		{
-			TaskID:      4,
+			TaskID:        4,
+			ParentID:      0,
+			ProjectName:   "Project 1",
+			Title:         "Test task 4 - archived",
+			Status:        "2",
+			CompletedTime: time3,
+			Order:         -109951627777,
+		},
+		{
+			TaskID:      5,
 			ParentID:    0,
 			ProjectName: "Project 2",
-			Title:       "Test task 4",
+			Title:       "Test task 5",
 			Status:      "0",
-			Order:       -109951627777,
+			Order:       -109951627778,
 		},
 	}
 
@@ -98,7 +107,7 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 	assert.Equal(t, vikunjaTasks[1].ParentProjectID, vikunjaTasks[0].ID)
 	assert.Equal(t, vikunjaTasks[2].ParentProjectID, vikunjaTasks[0].ID)
 
-	assert.Len(t, vikunjaTasks[1].Tasks, 3)
+	assert.Len(t, vikunjaTasks[1].Tasks, 4)
 	assert.Equal(t, vikunjaTasks[1].Title, tickTickTasks[0].ProjectName)
 
 	assert.Equal(t, vikunjaTasks[1].Tasks[0].Title, tickTickTasks[0].Title)
@@ -142,11 +151,16 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 	assert.Equal(t, vikunjaTasks[1].Tasks[2].Position, tickTickTasks[2].Order)
 	assert.False(t, vikunjaTasks[1].Tasks[2].Done)
 
-	assert.Len(t, vikunjaTasks[2].Tasks, 1)
-	assert.Equal(t, vikunjaTasks[2].Title, tickTickTasks[3].ProjectName)
+	assert.Equal(t, vikunjaTasks[1].Tasks[3].Title, tickTickTasks[3].Title)
+	assert.Equal(t, vikunjaTasks[1].Tasks[3].Position, tickTickTasks[3].Order)
+	assert.True(t, vikunjaTasks[1].Tasks[3].Done)
+	assert.Equal(t, vikunjaTasks[1].Tasks[3].DoneAt, tickTickTasks[3].CompletedTime.Time)
 
-	assert.Equal(t, vikunjaTasks[2].Tasks[0].Title, tickTickTasks[3].Title)
-	assert.Equal(t, vikunjaTasks[2].Tasks[0].Position, tickTickTasks[3].Order)
+	assert.Len(t, vikunjaTasks[2].Tasks, 1)
+	assert.Equal(t, vikunjaTasks[2].Title, tickTickTasks[4].ProjectName)
+
+	assert.Equal(t, vikunjaTasks[2].Tasks[0].Title, tickTickTasks[4].Title)
+	assert.Equal(t, vikunjaTasks[2].Tasks[0].Position, tickTickTasks[4].Order)
 }
 
 func TestLinesToSkipBeforeHeader(t *testing.T) {
