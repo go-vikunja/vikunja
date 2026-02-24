@@ -40,6 +40,7 @@
 					</FancyCheckbox>
 					<SubprojectFilter
 						:project-id="filters.projectId"
+						:show-legend="true"
 						@update:includeSubprojects="onSubprojectToggle"
 						@update:excludeProjectIds="onExcludeChange"
 						@update:colorMap="onColorMapChange"
