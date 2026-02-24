@@ -210,7 +210,8 @@
 			"descriptionPasswordRequired": "Syötä salasanasi jatkaaksesi:",
 			"request": "Pyydä kopio Vikunja Tiedoistani",
 			"success": "Olet onnistuneesti pyytänyt Vikunja Tietosi! Lähetämme sinulle sähköpostiviestin, kun ne ovat valmiit ladattavaksi.",
-			"downloadTitle": "Lataa viedyt Vikunja tietosi"
+			"downloadTitle": "Lataa viedyt Vikunja tietosi",
+			"ready": "Tietosi ovat ladattavissa. Voi ladata ne {0} asti."
 		}
 	},
 	"project": {
@@ -862,6 +863,12 @@
 			"success": "Tiimi luotiin onnistuneesti."
 		},
 		"edit": {
+			"title": "Muokkaa Tiimiä \"{team}\"",
+			"members": "Tiimin Jäsenet",
+			"search": "Kirjoita hakeaksesi käyttäjää…",
+			"addUser": "Lisää tiimiin",
+			"makeMember": "Tee Jäseneksi",
+			"makeAdmin": "Tee Ylläpitäjäksi",
 			"success": "Tiimi päivitettiin onnistuneesti.",
 			"mustSelectUser": "Ole hyvä ja valitse käyttäjä.",
 			"delete": {
@@ -875,7 +882,8 @@
 			},
 			"leave": {
 				"title": "Poistu tiimistä",
-				"text1": "Haluatko varmasti poistua tästä tiimistä?"
+				"text1": "Haluatko varmasti poistua tästä tiimistä?",
+				"success": "Olet poistunut onnistuneesti tiimistä."
 			}
 		},
 		"attributes": {
