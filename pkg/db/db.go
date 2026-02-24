@@ -408,7 +408,9 @@ func WipeEverything() error {
 // s.Close() will auto-rollback any uncommitted transaction.
 func NewSession() *xorm.Session {
 	s := x.NewSession()
-	_ = s.Begin()
+	if err := s.Begin(); err != nil {
+		log.Fatalf("Failed to begin database transaction: %s", err)
+	}
 	return s
 }
 
