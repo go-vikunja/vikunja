@@ -111,15 +111,6 @@ type userWithTasks struct {
 
 // RegisterOverdueReminderCron registers a function which checks once a day for tasks that are overdue and not done.
 func RegisterOverdueReminderCron() {
-	if !config.ServiceEnableEmailReminders.GetBool() {
-		return
-	}
-
-	if !config.MailerEnabled.GetBool() {
-		log.Info("Mailer is disabled, not sending overdue per mail")
-		return
-	}
-
 	err := cron.Schedule("* * * * *", func() {
 		s := db.NewSession()
 		defer s.Close()
@@ -143,6 +134,28 @@ func RegisterOverdueReminderCron() {
 		projects, err := GetProjectsMapSimpleByTaskIDs(s, taskIDs)
 		if err != nil {
 			log.Errorf("[Undone Overdue Tasks Reminder] Could not get projects for tasks: %s", err)
+			return
+		}
+
+		// Dispatch webhook events, deduplicated by task ID across all users
+		dispatchedTasks := make(map[int64]bool)
+		for _, ut := range uts {
+			for _, t := range ut.tasks {
+				if dispatchedTasks[t.ID] {
+					continue
+				}
+				dispatchedTasks[t.ID] = true
+				err = events.Dispatch(&TaskOverdueEvent{
+					Task:    t,
+					Project: projects[t.ProjectID],
+				})
+				if err != nil {
+					log.Errorf("[Undone Overdue Tasks Reminder] Could not dispatch overdue event for task %d: %s", t.ID, err)
+				}
+			}
+		}
+
+		if !config.ServiceEnableEmailReminders.GetBool() || !config.MailerEnabled.GetBool() {
 			return
 		}
 
@@ -172,25 +185,6 @@ func RegisterOverdueReminderCron() {
 			}
 
 			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder email for %d tasks to user %d", len(ut.tasks), ut.user.ID)
-		}
-
-		// Dispatch webhook events, deduplicated by task ID across all users
-		dispatchedTasks := make(map[int64]bool)
-		for _, ut := range uts {
-			for _, t := range ut.tasks {
-				if dispatchedTasks[t.ID] {
-					continue
-				}
-				dispatchedTasks[t.ID] = true
-				err = events.Dispatch(&TaskOverdueEvent{
-					Task:    t,
-					Project: projects[t.ProjectID],
-				})
-				if err != nil {
-					log.Errorf("[Undone Overdue Tasks Reminder] Could not dispatch overdue event for task %d: %s", t.ID, err)
-					return
-				}
-			}
 		}
 	})
 	if err != nil {
