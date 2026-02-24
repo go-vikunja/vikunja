@@ -60,44 +60,49 @@
 					{{ enabledCount }}/{{ childProjects.length }}
 				</span>
 			</XButton>
-			<Popup v-if="includeSubprojects">
-				<template #trigger="{ toggle }">
-					<BaseButton
-						class="subproject-chevron"
-						@click.prevent.stop="toggle()"
-					>
-						<Icon icon="chevron-down" />
-					</BaseButton>
-				</template>
-				<template #content>
-					<Card class="subproject-popup">
-						<div
-							v-for="child in childLegendEntries"
-							:key="child.id"
-							class="subproject-item"
+			<div
+				v-if="includeSubprojects"
+				class="subproject-dropdown-wrap"
+			>
+				<Popup>
+					<template #trigger="{ toggle }">
+						<BaseButton
+							class="subproject-chevron"
+							@click.prevent.stop="toggle()"
 						>
-							<FancyCheckbox
-								:model-value="!excludedIds.has(child.id)"
-								@update:modelValue="toggleProject(child.id)"
+							<Icon icon="chevron-down" />
+						</BaseButton>
+					</template>
+					<template #content>
+						<Card class="subproject-popup">
+							<div
+								v-for="child in childLegendEntries"
+								:key="child.id"
+								class="subproject-item"
 							>
-								<span class="subproject-label">
-									<span
-										class="subproject-color-dot"
-										:style="{ backgroundColor: child.color }"
-									/>
-									{{ child.title }}
-								</span>
-							</FancyCheckbox>
-						</div>
-					</Card>
-				</template>
-			</Popup>
+								<FancyCheckbox
+									:model-value="!excludedIds.has(child.id)"
+									@update:modelValue="toggleProject(child.id)"
+								>
+									<span class="subproject-label">
+										<span
+											class="subproject-color-dot"
+											:style="{ backgroundColor: child.color }"
+										/>
+										{{ child.title }}
+									</span>
+								</FancyCheckbox>
+							</div>
+						</Card>
+					</template>
+				</Popup>
+			</div>
 		</template>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {ref, computed, watch} from 'vue'
+import {ref, computed, watch, onMounted} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Popup from '@/components/misc/Popup.vue'
@@ -124,8 +129,28 @@ const emit = defineEmits<{
 const projectIdRef = computed(() => props.projectId)
 const {childProjects, legend, colorMap} = useSubprojectColors(projectIdRef)
 
-const includeSubprojects = ref(false)
-const excludedIds = ref<Set<number>>(new Set())
+// Load persisted state from localStorage
+function loadState() {
+	try {
+		const raw = localStorage.getItem(`subprojectFilter_${props.projectId}`)
+		if (raw) {
+			const parsed = JSON.parse(raw)
+			return {enabled: !!parsed.enabled, excluded: new Set<number>(parsed.excluded || [])}
+		}
+	} catch { /* ignore */ }
+	return {enabled: false, excluded: new Set<number>()}
+}
+
+function saveState() {
+	localStorage.setItem(`subprojectFilter_${props.projectId}`, JSON.stringify({
+		enabled: includeSubprojects.value,
+		excluded: Array.from(excludedIds.value),
+	}))
+}
+
+const initial = loadState()
+const includeSubprojects = ref(initial.enabled)
+const excludedIds = ref<Set<number>>(initial.excluded)
 
 const childProjectsWithColors = computed(() => legend.value)
 
@@ -164,11 +189,20 @@ function emitUpdate() {
 	emit('update:includeSubprojects', includeSubprojects.value)
 	emit('update:excludeProjectIds', Array.from(excludedIds.value).join(','))
 	emit('update:colorMap', includeSubprojects.value ? colorMap.value : new Map())
+	saveState()
 }
+// Emit persisted state on mount so parent views load sub-project tasks
+onMounted(() => {
+	if (includeSubprojects.value) {
+		emitUpdate()
+	}
+})
 
+// Reload state when navigating to a different project
 watch(() => props.projectId, () => {
-	includeSubprojects.value = false
-	excludedIds.value = new Set()
+	const state = loadState()
+	includeSubprojects.value = state.enabled
+	excludedIds.value = state.excluded
 	emitUpdate()
 })
 </script>
@@ -194,7 +228,6 @@ watch(() => props.projectId, () => {
 	align-items: center;
 	justify-content: center;
 	padding: .4rem .3rem;
-	margin-inline-start: 2px;
 	background: var(--primary);
 	color: white;
 	border-radius: 4px;
@@ -204,6 +237,17 @@ watch(() => props.projectId, () => {
 
 	&:hover {
 		filter: brightness(1.15);
+	}
+}
+
+.subproject-dropdown-wrap {
+	position: relative;
+	display: inline-flex;
+
+	:deep(.popup) {
+		inset-inline-end: 0;
+		inset-inline-start: auto;
+		inset-block-start: 2rem;
 	}
 }
 
