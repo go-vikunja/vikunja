@@ -32,7 +32,7 @@
 								:key="chain.id"
 								class="chain-select-item"
 								:class="{ 'is-selected': selectedChainId === chain.id }"
-								@click="selectedChainId = chain.id"
+								@click="selectChain(chain)"
 							>
 								<Icon
 									icon="link"
@@ -74,20 +74,38 @@
 
 					<!-- Step preview with calculated dates -->
 					<div
-						v-if="selectedChain"
+						v-if="localSteps.length > 0"
 						class="field"
 					>
 						<label class="label">{{ $t('task.chain.preview') }}</label>
 						<div class="step-preview-list">
 							<div
-								v-for="(step, i) in previewSteps"
-								:key="i"
+								v-for="(step, i) in computedPreview"
+								:key="step._key"
 								class="step-preview-item"
 							>
 								<div class="step-preview-header">
 									<span class="step-preview-number">{{ i + 1 }}</span>
-									<span class="step-preview-title">{{ formatPreviewTitle(step.title) }}</span>
+									<div class="step-title-group">
+										<span
+											v-if="computedPrefix"
+											class="step-title-prefix"
+										>{{ computedPrefix }}</span>
+										<input
+											v-model="localSteps[i].title"
+											class="step-title-edit"
+											type="text"
+											:placeholder="$t('task.chain.stepTitle')"
+										>
+									</div>
 									<span class="step-preview-date">{{ step.calculatedDate }}</span>
+									<BaseButton
+										v-if="localSteps.length > 1"
+										class="step-remove-btn"
+										@click="removeStep(i)"
+									>
+										<Icon icon="times" />
+									</BaseButton>
 								</div>
 								<!-- Editable description toggle -->
 								<BaseButton
@@ -96,7 +114,7 @@
 								>
 									<Icon :icon="expandedDescriptions.has(i) ? 'chevron-up' : 'align-left'" />
 									<span v-if="!expandedDescriptions.has(i)">
-										{{ stepDescriptionOverrides[i] || step.description ? $t('task.chain.editDescription') : $t('task.chain.addDescription') }}
+										{{ step.description ? $t('task.chain.editDescription') : $t('task.chain.addDescription') }}
 									</span>
 									<span v-else>{{ $t('task.chain.hideDescription') }}</span>
 								</BaseButton>
@@ -104,12 +122,13 @@
 									v-if="expandedDescriptions.has(i)"
 									class="step-desc-editor"
 								>
-									<textarea
-										:value="stepDescriptionOverrides[i] ?? step.description ?? ''"
-										class="input textarea"
-										rows="3"
+									<Editor
+										:model-value="step.description || ''"
+										:is-edit-enabled="true"
+										:show-save="false"
 										:placeholder="$t('task.chain.stepDescriptionPlaceholder')"
-										@input="updateStepDescription(i, ($event.target as HTMLTextAreaElement).value)"
+										class="step-rich-editor"
+										@update:model-value="localSteps[i].description = $event"
 									/>
 								</div>
 								<div class="step-preview-attachments">
@@ -140,6 +159,14 @@
 								</div>
 							</div>
 						</div>
+						<!-- Add step button -->
+						<BaseButton
+							class="add-step-btn"
+							@click="addStep"
+						>
+							<Icon icon="plus" />
+							{{ $t('task.chain.addStepToPreview') }}
+						</BaseButton>
 					</div>
 				</div>
 
@@ -155,7 +182,7 @@
 						variant="primary"
 						:shadow="false"
 						:loading="creating"
-						:disabled="!selectedChainId || !anchorDate"
+						:disabled="!selectedChainId || !anchorDate || localSteps.length === 0"
 						@click="createFromChain"
 					>
 						{{ $t('task.chain.createTasks') }}
@@ -167,17 +194,22 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, computed, onMounted, watch} from 'vue'
+import {ref, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import Editor from '@/components/input/AsyncEditor'
 
 import {getAllChains, createTasksFromChain} from '@/services/taskChainApi'
-import type {ITaskChain} from '@/services/taskChainApi'
+import type {ITaskChain, ITaskChainStep} from '@/services/taskChainApi'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
 import {success} from '@/message'
+
+interface LocalStep extends ITaskChainStep {
+	_key: number // stable key for v-for
+}
 
 const props = defineProps<{
 	enabled: boolean
@@ -199,20 +231,43 @@ const selectedChainId = ref<number | null>(null)
 const anchorDate = ref(new Date().toISOString().split('T')[0])
 const titlePrefix = ref('')
 const stepFiles = ref<Record<number, File[]>>({})
-const stepDescriptionOverrides = reactive<Record<number, string>>({})
 const expandedDescriptions = ref<Set<number>>(new Set())
+
+// Mutable local copy of steps — initialized from chain, freely editable
+const localSteps = ref<LocalStep[]>([])
+let nextKey = 0
+
+function cloneStepsFromChain(chain: ITaskChain) {
+	nextKey = 0
+	localSteps.value = (chain.steps || []).map(s => ({
+		...s,
+		description: s.description || '',
+		_key: nextKey++,
+	}))
+}
+
+function selectChain(chain: ITaskChain) {
+	selectedChainId.value = chain.id ?? null
+	cloneStepsFromChain(chain)
+	stepFiles.value = {}
+	expandedDescriptions.value = new Set()
+}
 
 /**
  * Mirrors the backend separator logic from task_from_chain.go:
  * If the prefix doesn't end with a separator character, append "_"
  */
-function formatPreviewTitle(stepTitle: string): string {
+const computedPrefix = computed(() => {
 	const prefix = titlePrefix.value
-	if (!prefix) return stepTitle
+	if (!prefix) return ''
 	const separators = [' ', '_', '-', ':', '/', '.']
 	const lastChar = prefix[prefix.length - 1]
 	const sep = separators.includes(lastChar) ? '' : '_'
-	return prefix + sep + stepTitle
+	return prefix + sep
+})
+
+function formatPreviewTitle(stepTitle: string): string {
+	return computedPrefix.value + stepTitle
 }
 
 function toggleStepDescription(index: number) {
@@ -225,8 +280,46 @@ function toggleStepDescription(index: number) {
 	expandedDescriptions.value = s
 }
 
-function updateStepDescription(index: number, value: string) {
-	stepDescriptionOverrides[index] = value
+function removeStep(index: number) {
+	if (localSteps.value.length <= 1) return
+	localSteps.value.splice(index, 1)
+	// Shift file records down
+	const newFiles: Record<number, File[]> = {}
+	for (const [k, v] of Object.entries(stepFiles.value)) {
+		const ki = Number(k)
+		if (ki < index) {
+			newFiles[ki] = v
+		} else if (ki > index) {
+			newFiles[ki - 1] = v
+		}
+		// ki === index is dropped
+	}
+	stepFiles.value = newFiles
+	// Collapse expanded descriptions above removed index
+	const newExpanded = new Set<number>()
+	for (const idx of expandedDescriptions.value) {
+		if (idx < index) newExpanded.add(idx)
+		else if (idx > index) newExpanded.add(idx - 1)
+	}
+	expandedDescriptions.value = newExpanded
+}
+
+function addStep() {
+	const last = localSteps.value[localSteps.value.length - 1]
+	const nextOffset = last ? last.offset_days + last.duration_days : 0
+	localSteps.value.push({
+		sequence: localSteps.value.length,
+		title: '',
+		description: '',
+		offset_days: nextOffset,
+		duration_days: 1,
+		priority: 0,
+		hex_color: '',
+		label_ids: [],
+		_key: nextKey++,
+	})
+	// Auto-expand the new step so user can set title
+	expandedDescriptions.value = new Set([...expandedDescriptions.value, localSteps.value.length - 1])
 }
 
 function handleStepFiles(stepIndex: number, event: Event) {
@@ -248,11 +341,11 @@ const selectedChain = computed(() => {
 	return chains.value.find(c => c.id === selectedChainId.value) || null
 })
 
-const previewSteps = computed(() => {
-	if (!selectedChain.value || !anchorDate.value) return []
+const computedPreview = computed(() => {
+	if (!anchorDate.value || localSteps.value.length === 0) return []
 	const anchor = new Date(anchorDate.value + 'T00:00:00')
 	let cumulativeOffset = 0
-	return selectedChain.value.steps.map(step => {
+	return localSteps.value.map(step => {
 		cumulativeOffset += step.offset_days
 		const date = new Date(anchor)
 		date.setDate(date.getDate() + cumulativeOffset)
@@ -267,18 +360,10 @@ const previewSteps = computed(() => {
 	})
 })
 
-// Reset state when chain selection changes
-watch(selectedChainId, () => {
-	Object.keys(stepDescriptionOverrides).forEach(k => delete stepDescriptionOverrides[k])
-	expandedDescriptions.value = new Set()
-})
-
 watch(() => props.enabled, (val) => {
 	if (val) {
 		loadChains()
-		stepFiles.value = {}
-		Object.keys(stepDescriptionOverrides).forEach(k => delete stepDescriptionOverrides[k])
-		expandedDescriptions.value = new Set()
+		resetState()
 	}
 })
 
@@ -287,6 +372,14 @@ onMounted(() => {
 		loadChains()
 	}
 })
+
+function resetState() {
+	stepFiles.value = {}
+	expandedDescriptions.value = new Set()
+	if (selectedChain.value) {
+		cloneStepsFromChain(selectedChain.value)
+	}
+}
 
 async function loadChains() {
 	loadingChains.value = true
@@ -300,24 +393,26 @@ async function loadChains() {
 }
 
 async function createFromChain() {
-	if (!selectedChainId.value || !anchorDate.value) return
+	if (!selectedChainId.value || !anchorDate.value || localSteps.value.length === 0) return
 	creating.value = true
 	try {
-		// Build step_description_overrides map (only include changed descriptions)
-		const descOverrides: Record<number, string> = {}
-		for (const [key, val] of Object.entries(stepDescriptionOverrides)) {
-			const idx = Number(key)
-			const originalStep = selectedChain.value?.steps?.[idx]
-			if (val !== undefined && val !== (originalStep?.description ?? '')) {
-				descOverrides[idx] = val
-			}
-		}
+		// Build custom_steps from localSteps (strip _key)
+		const customSteps = localSteps.value.map((s, i) => ({
+			sequence: i,
+			title: s.title || `Step ${i + 1}`,
+			description: s.description || '',
+			offset_days: s.offset_days,
+			duration_days: s.duration_days,
+			priority: s.priority,
+			hex_color: s.hex_color,
+			label_ids: s.label_ids || [],
+		}))
 
 		const createdTasks = await createTasksFromChain(selectedChainId.value, {
 			target_project_id: props.projectId,
 			anchor_date: new Date(anchorDate.value + 'T00:00:00').toISOString(),
 			title_prefix: titlePrefix.value,
-			step_description_overrides: Object.keys(descOverrides).length > 0 ? descOverrides : undefined,
+			custom_steps: customSteps,
 		})
 
 		// Upload attachments per step to their corresponding created tasks
@@ -349,9 +444,7 @@ async function createFromChain() {
 		console.error('Failed to create tasks from chain:', e)
 	} finally {
 		creating.value = false
-		stepFiles.value = {}
-		Object.keys(stepDescriptionOverrides).forEach(k => delete stepDescriptionOverrides[k])
-		expandedDescriptions.value = new Set()
+		resetState()
 	}
 }
 </script>
@@ -452,6 +545,56 @@ async function createFromChain() {
 	gap: .5rem;
 }
 
+.step-title-group {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	gap: 0;
+	min-inline-size: 0;
+}
+
+.step-title-prefix {
+	font-size: .85rem;
+	color: var(--grey-400);
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.step-title-edit {
+	flex: 1;
+	font-size: .85rem;
+	font-weight: 500;
+	color: var(--text);
+	background: transparent;
+	border: none;
+	border-block-end: 1px solid transparent;
+	padding: .1rem .25rem;
+	min-inline-size: 60px;
+	outline: none;
+	transition: border-color $transition-duration;
+
+	&:hover,
+	&:focus {
+		border-block-end-color: var(--primary);
+	}
+
+	&::placeholder {
+		color: var(--grey-300);
+		font-style: italic;
+	}
+}
+
+.step-remove-btn {
+	color: var(--grey-400);
+	padding: .15rem .3rem;
+	flex-shrink: 0;
+	transition: color $transition-duration;
+
+	&:hover {
+		color: var(--danger);
+	}
+}
+
 .step-desc-toggle {
 	display: inline-flex;
 	align-items: center;
@@ -469,11 +612,29 @@ async function createFromChain() {
 
 .step-desc-editor {
 	padding-inline-start: 1.75rem;
+}
 
-	.textarea {
-		font-size: .85rem;
-		min-block-size: 60px;
-		resize: vertical;
+.step-rich-editor {
+	min-block-size: 80px;
+	border: 1px solid var(--grey-200);
+	border-radius: $radius;
+	padding: .25rem;
+}
+
+.add-step-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: .35rem;
+	font-size: .85rem;
+	color: var(--primary);
+	margin-block-start: .5rem;
+	cursor: pointer;
+	padding: .35rem .5rem;
+	border-radius: $radius;
+	transition: background $transition-duration;
+
+	&:hover {
+		background: var(--grey-50);
 	}
 }
 
@@ -529,12 +690,6 @@ async function createFromChain() {
 	font-size: .7rem;
 	font-weight: 700;
 	flex-shrink: 0;
-}
-
-.step-preview-title {
-	flex: 1;
-	font-size: .85rem;
-	color: var(--text);
 }
 
 .step-preview-date {

@@ -38,9 +38,10 @@ type TaskFromChain struct {
 	AnchorDate time.Time `json:"anchor_date"`
 	// Optional title prefix for all tasks (e.g. "Batch #42 - ")
 	TitlePrefix string `json:"title_prefix"`
-	// Optional per-step description overrides (key = step index 0-based, value = description).
-	// When provided, the override replaces the chain step's template description for that step.
-	StepDescriptionOverrides map[int]string `json:"step_description_overrides"`
+	// Optional custom step list. When provided, these steps are used instead
+	// of the chain's saved steps. This allows the caller to add, remove, or
+	// modify steps at creation time without changing the template.
+	CustomSteps []*TaskChainStep `json:"custom_steps"`
 
 	// The created tasks (returned after creation)
 	Tasks []*Task `json:"created_tasks,omitempty"`
@@ -73,6 +74,8 @@ func (tfc *TaskFromChain) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 // @Summary Create tasks from a chain template
 // @Description Creates all tasks defined in the chain template with dates calculated
 // @Description relative to the anchor date. Tasks are linked with precedes/follows relations.
+// @Description If custom_steps is provided, those steps are used instead of the chain's
+// @Description saved steps, allowing on-the-fly add/remove/edit without changing the template.
 // @tags task_chains
 // @Accept json
 // @Produce json
@@ -86,14 +89,21 @@ func (tfc *TaskFromChain) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 // @Router /taskchains/{chainID}/tasks [put]
 func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 
-	// Load the chain with steps
+	// Load the chain (for metadata like title, and saved step attachments)
 	tc := &TaskChain{ID: tfc.ChainID}
 	err = tc.ReadOne(s, doer)
 	if err != nil {
 		return err
 	}
 
-	if len(tc.Steps) == 0 {
+	// Decide which steps to use: custom overrides or saved template steps
+	steps := tc.Steps
+	if len(tfc.CustomSteps) > 0 {
+		steps = tfc.CustomSteps
+		log.Debugf("Using %d custom steps (template has %d)", len(steps), len(tc.Steps))
+	}
+
+	if len(steps) == 0 {
 		return &ErrTaskChainHasNoSteps{ID: tfc.ChainID}
 	}
 
@@ -104,12 +114,18 @@ func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 	}
 
 	log.Debugf("Creating %d tasks from chain %d (anchor: %s) in project %d",
-		len(tc.Steps), tfc.ChainID, anchorDate.Format("2006-01-02"), tfc.TargetProjectID)
+		len(steps), tfc.ChainID, anchorDate.Format("2006-01-02"), tfc.TargetProjectID)
+
+	// Build a map of saved step IDs for template attachment lookup
+	savedStepBySequence := map[int]*TaskChainStep{}
+	for _, savedStep := range tc.Steps {
+		savedStepBySequence[savedStep.Sequence] = savedStep
+	}
 
 	// Create all tasks — offsets are relative to the previous step
-	createdTasks := make([]*Task, 0, len(tc.Steps))
+	createdTasks := make([]*Task, 0, len(steps))
 	cumulativeOffset := 0
-	for stepIndex, step := range tc.Steps {
+	for stepIndex, step := range steps {
 		// Each step's offset_days is relative to the previous step's start
 		cumulativeOffset += step.OffsetDays
 
@@ -119,6 +135,9 @@ func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 		// Build title
 		title := step.Title
+		if title == "" {
+			title = fmt.Sprintf("Step %d", stepIndex+1)
+		}
 		if tfc.TitlePrefix != "" {
 			// Auto-append a separator if the prefix doesn't end with one
 			p := tfc.TitlePrefix
@@ -129,16 +148,11 @@ func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 			title = p + title
 		}
 
-		// Build description: use override if provided, otherwise use step template description
+		// Build description
 		description := step.Description
-		if tfc.StepDescriptionOverrides != nil {
-			if override, ok := tfc.StepDescriptionOverrides[stepIndex]; ok {
-				description = override
-			}
-		}
 
 		chainNote := `<p><small style="color:#888">🔗 Chain: ` + tc.Title +
-			` (step ` + fmt.Sprintf("%d", step.Sequence+1) + `/` + fmt.Sprintf("%d", len(tc.Steps)) + `)</small></p>`
+			` (step ` + fmt.Sprintf("%d", stepIndex+1) + `/` + fmt.Sprintf("%d", len(steps)) + `)</small></p>`
 		if description != "" {
 			description = description + chainNote
 		} else {
@@ -179,28 +193,38 @@ func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 		createdTasks = append(createdTasks, newTask)
 
-		// Copy step template attachments to the new task
-		stepAttachments := []*TaskChainStepAttachment{}
-		if err := s.Where("step_id = ?", step.ID).Find(&stepAttachments); err == nil {
-			for _, att := range stepAttachments {
-				srcFile := &files.File{ID: att.FileID}
-				if err := srcFile.LoadFileMetaByID(); err != nil {
-					continue
+		// Copy step template attachments to the new task.
+		// Look up by step ID if the step came from the template, or by sequence
+		// match if using custom steps (to preserve template attachments).
+		var lookupStepID int64
+		if step.ID > 0 {
+			lookupStepID = step.ID
+		} else if savedStep, ok := savedStepBySequence[stepIndex]; ok {
+			lookupStepID = savedStep.ID
+		}
+
+		if lookupStepID > 0 {
+			stepAttachments := []*TaskChainStepAttachment{}
+			if err := s.Where("step_id = ?", lookupStepID).Find(&stepAttachments); err == nil {
+				for _, att := range stepAttachments {
+					srcFile := &files.File{ID: att.FileID}
+					if err := srcFile.LoadFileMetaByID(); err != nil {
+						continue
+					}
+					if err := srcFile.LoadFileByID(); err != nil {
+						continue
+					}
+					copiedFile, err := files.Create(srcFile.File, att.FileName, uint64(srcFile.Size), doer)
+					if err != nil {
+						continue
+					}
+					taskAtt := &TaskAttachment{
+						TaskID:      newTask.ID,
+						FileID:      copiedFile.ID,
+						CreatedByID: doer.GetID(),
+					}
+					_, _ = s.Insert(taskAtt)
 				}
-				if err := srcFile.LoadFileByID(); err != nil {
-					continue
-				}
-				// Create a new file copy for the task
-				copiedFile, err := files.Create(srcFile.File, att.FileName, uint64(srcFile.Size), doer)
-				if err != nil {
-					continue
-				}
-				taskAtt := &TaskAttachment{
-					TaskID:      newTask.ID,
-					FileID:      copiedFile.ID,
-					CreatedByID: doer.GetID(),
-				}
-				_, _ = s.Insert(taskAtt)
 			}
 		}
 	}

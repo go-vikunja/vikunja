@@ -1421,5 +1421,6 @@
   "task.chain.chainsTab": "Chains",
   "task.chain.editDescription": "Edit description",
   "task.chain.addDescription": "Add description",
-  "task.chain.hideDescription": "Hide description"
+  "task.chain.hideDescription": "Hide description",
+  "task.chain.addStepToPreview": "Add step"
 }
