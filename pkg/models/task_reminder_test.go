@@ -20,8 +20,6 @@ import (
 	"testing"
 	"time"
 
-	"xorm.io/builder"
-
 	"code.vikunja.io/api/pkg/db"
 
 	"github.com/stretchr/testify/assert"
@@ -36,7 +34,7 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T01:12:00Z")
 		require.NoError(t, err)
-		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now, builder.Eq{"users.email_reminders_enabled": true})
+		notifications, err := getTasksWithRemindersDueAndTheirUsers(s, now)
 		require.NoError(t, err)
 		assert.Len(t, notifications, 1)
 		assert.Equal(t, int64(27), notifications[0].Task.ID)
@@ -48,7 +46,7 @@ func TestReminderGetTasksInTheNextMinute(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-02T01:13:00Z")
 		require.NoError(t, err)
-		taskIDs, err := getTasksWithRemindersDueAndTheirUsers(s, now, builder.Eq{"users.email_reminders_enabled": true})
+		taskIDs, err := getTasksWithRemindersDueAndTheirUsers(s, now)
 		require.NoError(t, err)
 		assert.Empty(t, taskIDs)
 	})

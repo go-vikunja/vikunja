@@ -724,6 +724,12 @@ func (wl *WebhookListener) Name() string {
 	return "webhook.listener"
 }
 
+type WebhookPayload struct {
+	EventName string      `json:"event_name"`
+	Time      time.Time   `json:"time"`
+	Data      interface{} `json:"data"`
+}
+
 func getIDAsInt64(id interface{}) int64 {
 	if id == nil {
 		return 0
