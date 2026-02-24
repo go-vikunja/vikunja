@@ -3,6 +3,7 @@
 .idea/httpRequests
 config.yml
 config.yaml
+config.yml.sample
 !docs/config.yml
 !.github/ISSUE_TEMPLATE/config.yml
 !.gitea/ISSUE_TEMPLATE/config.yml
