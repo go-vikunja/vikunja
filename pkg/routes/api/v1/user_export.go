@@ -34,11 +34,6 @@ func checkExportRequest(c *echo.Context) (s *xorm.Session, u *user.User, err err
 	s = db.NewSession()
 	defer s.Close()
 
-	err = s.Begin()
-	if err != nil {
-		return nil, nil, err
-	}
-
 	u, err = user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()

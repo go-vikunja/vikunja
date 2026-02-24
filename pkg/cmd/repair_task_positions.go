@@ -55,15 +55,6 @@ Use --dry-run to preview what would be fixed without making changes.`,
 
 		if dryRun {
 			log.Infof("Running in dry-run mode - no changes will be made")
-		} else {
-			if err := s.Begin(); err != nil {
-				log.Errorf("Failed to start transaction: %s", err)
-				return
-			}
-			defer func() {
-				// Rollback is a no-op if commit already succeeded
-				_ = s.Rollback()
-			}()
 		}
 
 		result, err := models.RepairTaskPositions(s, dryRun)

@@ -50,11 +50,6 @@ func UserRequestDeletion(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	err := s.Begin()
-	if err != nil {
-		return err
-	}
-
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
@@ -119,11 +114,6 @@ func UserConfirmDeletion(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	err = s.Begin()
-	if err != nil {
-		return err
-	}
-
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {
 		_ = s.Rollback()
@@ -160,11 +150,6 @@ func UserCancelDeletion(c *echo.Context) error {
 
 	s := db.NewSession()
 	defer s.Close()
-
-	err := s.Begin()
-	if err != nil {
-		return err
-	}
 
 	u, err := user.GetCurrentUserFromDB(s, c)
 	if err != nil {

@@ -65,26 +65,24 @@ func deleteUsers() {
 			continue
 		}
 
-		err = s.Begin()
-		if err != nil {
-			log.Errorf("Could not start transaction: %s", err)
-			return
-		}
+		func() {
+			us := db.NewSession()
+			defer us.Close()
 
-		err = DeleteUser(s, u)
-		if err != nil {
-			_ = s.Rollback()
-			log.Errorf("Could not delete u %d: %s", u.ID, err)
-			return
-		}
+			err = DeleteUser(us, u)
+			if err != nil {
+				_ = us.Rollback()
+				log.Errorf("Could not delete u %d: %s", u.ID, err)
+				return
+			}
 
-		log.Debugf("Deleted user %d", u.ID)
+			log.Debugf("Deleted user %d", u.ID)
 
-		err = s.Commit()
-		if err != nil {
-			log.Errorf("Could not commit transaction: %s", err)
-			return
-		}
+			err = us.Commit()
+			if err != nil {
+				log.Errorf("Could not commit transaction: %s", err)
+			}
+		}()
 	}
 }
 

@@ -1199,11 +1199,6 @@ func (l *CleanupTaskAssignmentsAfterTeamRemoval) Handle(msg *message.Message) (e
 		return nil
 	}
 
-	err = s.Begin()
-	if err != nil {
-		return err
-	}
-
 	err = cleanupTaskMembersAfterTeamRemoval(s, event.Team.ID, event.Member.ID)
 	if err != nil {
 		_ = s.Rollback()
@@ -1263,10 +1258,6 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 
 	sess := db.NewSession()
 	defer sess.Close()
-	err = sess.Begin()
-	if err != nil {
-		return
-	}
 
 	err = ExportUserData(sess, event.User)
 	if err != nil {
@@ -1276,8 +1267,7 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 
 	log.Debugf("Done exporting user data for user %d...", event.User.ID)
 
-	err = sess.Commit()
-	return err
+	return sess.Commit()
 }
 
 type MarkTaskUnreadOnComment struct {
@@ -1296,11 +1286,6 @@ func (s *MarkTaskUnreadOnComment) Handle(msg *message.Message) (err error) {
 
 	sess := db.NewSession()
 	defer sess.Close()
-
-	err = sess.Begin()
-	if err != nil {
-		return err
-	}
 
 	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
 	if err != nil {
