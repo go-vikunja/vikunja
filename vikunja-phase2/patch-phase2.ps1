@@ -41,11 +41,16 @@ Copy-Item "$PATCH\useDragReorder.ts" "$ROOT\frontend\src\composables\useDragReor
 Write-Host "[8/10] Template manager: tabs + NEW TEMPLATE button..." -ForegroundColor Green
 Copy-Item "$PATCH\ListTemplates.vue" "$ROOT\frontend\src\views\templates\ListTemplates.vue" -Force
 
-Write-Host "[9/10] i18n + subproject filter fix..." -ForegroundColor Green
+Write-Host "[9/13] i18n + subproject filter fix..." -ForegroundColor Green
 Copy-Item "$PATCH\en.json"              "$ROOT\frontend\src\i18n\lang\en.json" -Force
 Copy-Item "$PATCH\SubprojectFilter.vue" "$ROOT\frontend\src\components\project\partials\SubprojectFilter.vue" -Force
 
-Write-Host "[10/10] Building..." -ForegroundColor Green
+Write-Host "[10/13] Layout consistency: Labels, Teams, Projects..." -ForegroundColor Green
+Copy-Item "$PATCH\ListLabels.vue"   "$ROOT\frontend\src\views\labels\ListLabels.vue" -Force
+Copy-Item "$PATCH\ListTeams.vue"    "$ROOT\frontend\src\views\teams\ListTeams.vue" -Force
+Copy-Item "$PATCH\ListProjects.vue" "$ROOT\frontend\src\views\project\ListProjects.vue" -Force
+
+Write-Host "[11/13] Building..." -ForegroundColor Green
 Set-Location $ROOT
 docker buildx build --tag vikunja-custom:latest --load .
 
