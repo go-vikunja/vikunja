@@ -18,12 +18,23 @@ package db
 
 import (
 	"encoding/json"
+	"fmt"
+	"regexp"
 	"strings"
 
 	"code.vikunja.io/api/pkg/log"
 
 	"xorm.io/xorm/schemas"
 )
+
+var validTableName = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+
+func validateTableName(table string) error {
+	if !validTableName.MatchString(table) {
+		return fmt.Errorf("invalid table name: %q", table)
+	}
+	return nil
+}
 
 // Dump dumps all database tables
 func Dump() (data map[string][]byte, err error) {
@@ -50,6 +61,10 @@ func Dump() (data map[string][]byte, err error) {
 
 // Restore restores a table with all its entries
 func Restore(table string, contents []map[string]interface{}) (err error) {
+	if err := validateTableName(table); err != nil {
+		return err
+	}
+
 	if _, err := x.IsTableExist(table); err != nil {
 		return err
 	}
@@ -90,7 +105,7 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 
 	if Type() == schemas.POSTGRES {
 		idSequence := table + "_id_seq"
-		_, err = x.Query("SELECT setval('" + idSequence + "', COALESCE(MAX(id), 1) )")
+		_, err = x.Query(`SELECT setval('"` + idSequence + `"', COALESCE((SELECT MAX(id) FROM "` + table + `"), 1))`)
 		if err != nil {
 			log.Warningf("Could not reset id sequence for %s: %s", idSequence, err)
 			err = nil
@@ -102,12 +117,16 @@ func Restore(table string, contents []map[string]interface{}) (err error) {
 
 // RestoreAndTruncate removes all content from the table before restoring it from the contents map
 func RestoreAndTruncate(table string, contents []map[string]interface{}) (err error) {
+	if err := validateTableName(table); err != nil {
+		return err
+	}
+
 	if _, err := x.IsTableExist(table); err != nil {
 		return err
 	}
 
 	if x.Dialect().URI().DBType == schemas.SQLITE {
-		if _, err := x.Query("DELETE FROM " + table); err != nil {
+		if _, err := x.Query(`DELETE FROM "` + table + `"`); err != nil {
 			return err
 		}
 	} else {
