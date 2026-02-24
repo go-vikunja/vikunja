@@ -107,7 +107,8 @@ func CreateWithMime(f io.ReadSeeker, realname string, realsize uint64, a web.Aut
 		_ = s.Rollback()
 		return
 	}
-	return
+
+	return file, s.Commit()
 }
 
 func CreateWithMimeAndSession(s *xorm.Session, f io.ReadSeeker, realname string, realsize uint64, a web.Auth, mime string, checkFileSizeLimit bool) (file *File, err error) {

@@ -534,6 +534,10 @@ func RegisterAddTaskToFilterViewCron() {
 				log.Errorf("%sError recalculating task positions for view %d: %s", logPrefix, data.view.ID, err)
 			}
 		}
+
+		if err := s.Commit(); err != nil {
+			log.Errorf("%sError committing: %s", logPrefix, err)
+		}
 	})
 	if err != nil {
 		log.Fatalf("Could register add task to filter view cron: %s", err)

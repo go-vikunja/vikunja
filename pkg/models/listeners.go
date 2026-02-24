@@ -486,7 +486,12 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
-	return updateTaskLastUpdated(sess, &Task{ID: taskIDInt})
+	err = updateTaskLastUpdated(sess, &Task{ID: taskIDInt})
+	if err != nil {
+		return err
+	}
+
+	return sess.Commit()
 }
 
 // RemoveTaskFromTypesense represents a listener
@@ -751,10 +756,13 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		task := make(map[int64]*Task, 1)
 		task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
 
-		return reindexTasksInTypesense(s, task)
+		err = reindexTasksInTypesense(s, task)
+		if err != nil {
+			return err
+		}
 	}
 
-	return nil
+	return s.Commit()
 }
 
 ///////
