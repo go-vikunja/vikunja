@@ -77,6 +77,28 @@ create unique index UQE_teams_id
 				return
 			}
 
+			if tx.Dialect().URI().DBType == schemas.MYSQL {
+				var exists bool
+				exists, err = columnExists(tx, "teams", "oidc_id")
+				if err != nil {
+					return err
+				}
+				if !exists {
+					return nil
+				}
+
+				externalExists, err := columnExists(tx, "teams", "external_id")
+				if err != nil {
+					return err
+				}
+				if externalExists {
+					return nil
+				}
+
+				_, err = tx.Exec("ALTER TABLE `teams` CHANGE `oidc_id` `external_id` VARCHAR(250) NULL")
+				return err
+			}
+
 			return renameColumn(tx, "teams", "oidc_id", "external_id")
 		},
 		Rollback: func(tx *xorm.Engine) error {
