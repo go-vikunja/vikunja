@@ -17,6 +17,7 @@
 package user
 
 import (
+	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
@@ -50,6 +51,9 @@ func notifyUsersScheduledForDeletion() {
 		return
 	}
 
+	// Close the read-only session before processing each user in its own transaction.
+	s.Close()
+
 	log.Debugf("Found %d users scheduled for deletion to notify", len(users))
 
 	for _, user := range users {
@@ -67,27 +71,33 @@ func notifyUsersScheduledForDeletion() {
 
 		log.Debugf("Notifying user %d of the deletion of their account...", user.ID)
 
-		err = notifications.Notify(user, &AccountDeletionNotification{
-			User:               user,
-			NotificationNumber: number,
-		}, s)
-		if err != nil {
-			log.Errorf("Could not notify user %d of their deletion: %s", user.ID, err)
-			continue
-		}
-
-		user.DeletionLastReminderSent = time.Now()
-		_, err = s.Where("id = ?", user.ID).
-			Cols("deletion_last_reminder_sent").
-			Update(user)
-		if err != nil {
-			log.Errorf("Could update user %d last deletion reminder sent date: %s", user.ID, err)
+		if err := notifyUserOfDeletion(user, number); err != nil {
+			log.Errorf("Could not process deletion notification for user %d: %s", user.ID, err)
 		}
 	}
+}
 
-	if err := s.Commit(); err != nil {
-		log.Errorf("Could not commit user deletion notifications: %s", err)
+func notifyUserOfDeletion(user *User, number int) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	err := notifications.Notify(user, &AccountDeletionNotification{
+		User:               user,
+		NotificationNumber: number,
+	}, s)
+	if err != nil {
+		return fmt.Errorf("could not notify user: %w", err)
 	}
+
+	user.DeletionLastReminderSent = time.Now()
+	_, err = s.Where("id = ?", user.ID).
+		Cols("deletion_last_reminder_sent").
+		Update(user)
+	if err != nil {
+		return fmt.Errorf("could not update last deletion reminder sent date: %w", err)
+	}
+
+	return s.Commit()
 }
 
 // RequestDeletion creates a user deletion confirm token and sends a notification to the user
