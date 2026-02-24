@@ -182,6 +182,13 @@ function toggleProject(id: number) {
 		newSet.add(id)
 	}
 	excludedIds.value = newSet
+
+	// If all child projects are now excluded, auto-disable subprojects entirely
+	if (newSet.size >= childProjects.value.length && includeSubprojects.value) {
+		includeSubprojects.value = false
+		excludedIds.value = new Set()
+	}
+
 	emitUpdate()
 }
 

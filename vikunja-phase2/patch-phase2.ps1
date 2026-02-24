@@ -34,10 +34,13 @@ Copy-Item "$PATCH\useGanttTaskList.ts" "$ROOT\frontend\src\views\project\helpers
 Write-Host "  ~ useGanttTaskList.ts (cascade prompt, recursive shift, TaskModel fix)"
 
 Write-Host ""
-Write-Host "[5/5] Chain editor + i18n..." -ForegroundColor Green
+Write-Host "[5/6] Chain editor + i18n..." -ForegroundColor Green
 Copy-Item "$PATCH\ChainEditor.vue" "$ROOT\frontend\src\components\tasks\partials\ChainEditor.vue" -Force
 Copy-Item "$PATCH\CreateFromChainModal.vue" "$ROOT\frontend\src\components\tasks\partials\CreateFromChainModal.vue" -Force
 Copy-Item "$PATCH\en.json" "$ROOT\frontend\src\i18n\lang\en.json" -Force
+
+Write-Host "[6/6] Bugfix: subproject filter..." -ForegroundColor Green
+Copy-Item "$PATCH\SubprojectFilter.vue" "$ROOT\frontend\src\components\project\partials\SubprojectFilter.vue" -Force
 Write-Host "  ~ ChainEditor.vue (cumulative Day X + timespan)"
 Write-Host "  ~ CreateFromChainModal.vue (cumulative preview)"
 Write-Host "  ~ en.json (Before/After labels)"
