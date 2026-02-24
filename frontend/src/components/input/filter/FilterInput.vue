@@ -119,7 +119,9 @@ const editor = useEditor({
 	content: '',
 	onUpdate: ({editor}) => {
 		const content = editor.getText()
-		emit('update:modelValue', processContent(content))
+		const processed = processContent(content)
+		lastEmittedValue = processed
+		emit('update:modelValue', processed)
 	},
 })
 
@@ -135,10 +137,21 @@ const processContent = (content: string) => {
 	)
 }
 
-// Watch for changes to the model value
+let lastEmittedValue: string | undefined
+
+// Watch for changes to the model value from external sources.
+// Skip when the change originated from the editor itself (onUpdate emit)
+// to avoid a destructive round-trip where whitespace normalization in
+// transformFilterStringForApi changes the text and setContent resets the cursor.
 watch(
-	() => props.modelValue, 
- 	value => setEditorContentFromModelValue(value), 
+	() => props.modelValue,
+	value => {
+		if (value === lastEmittedValue) {
+			return
+		}
+		setEditorContentFromModelValue(value)
+		lastEmittedValue = undefined
+	},
 	{immediate: true},
 )
 
@@ -180,7 +193,9 @@ function updateDateInQuery(newDate: string | Date | null) {
 	editor.value.commands.setContent(newText, {
 		emitUpdate: false,
 	})
-	emit('update:modelValue', processContent(newText))
+	const processed = processContent(newText)
+	lastEmittedValue = processed
+	emit('update:modelValue', processed)
 }
 
 
