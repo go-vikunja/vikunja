@@ -11,6 +11,7 @@ import {checkAndSetApiUrl, ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUr
 import {useMenuActive} from '@/composables/useMenuActive'
 
 import {useAuthStore} from '@/stores/auth'
+import router from '@/router'
 import type {IProject} from '@/modelTypes/IProject'
 import type {Permission} from '@/constants/permissions'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -147,6 +148,7 @@ export const useBaseStore = defineStore('base', () => {
 		try {
 			await checkAndSetApiUrl(window.API_URL)
 			await authStore.checkAuth()
+			await router.isReady()
 			ready.value = true
 		} catch (e: unknown) {
 			if (e instanceof NoApiUrlProvidedError) {
