@@ -176,7 +176,7 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 
 	return notifications.Notify(u, &user.AccountDeletedNotification{
 		User: u,
-	})
+	}, s)
 }
 
 func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err error) {

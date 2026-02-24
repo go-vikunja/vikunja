@@ -383,7 +383,7 @@ func RegisterReminderCron() {
 		}
 
 		for _, n := range reminders {
-			err = notifications.Notify(n.User, n)
+			err = notifications.Notify(n.User, n, s)
 			if err != nil {
 				log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", n.User.ID, err)
 				return

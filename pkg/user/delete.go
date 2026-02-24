@@ -70,7 +70,7 @@ func notifyUsersScheduledForDeletion() {
 		err = notifications.Notify(user, &AccountDeletionNotification{
 			User:               user,
 			NotificationNumber: number,
-		})
+		}, s)
 		if err != nil {
 			log.Errorf("Could not notify user %d of their deletion: %s", user.ID, err)
 			continue
@@ -100,7 +100,7 @@ func RequestDeletion(s *xorm.Session, user *User) (err error) {
 	return notifications.Notify(user, &AccountDeletionConfirmNotification{
 		User:         user,
 		ConfirmToken: token.Token,
-	})
+	}, s)
 }
 
 // ConfirmDeletion ConformDeletion checks a token and schedules the user for deletion

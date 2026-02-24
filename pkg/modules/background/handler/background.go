@@ -282,7 +282,7 @@ func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project,
 		return err
 	}
 
-	f, err := files.Create(bytes.NewReader(buf.Bytes()), filename, filesize, auth)
+	f, err := files.CreateWithSession(s, bytes.NewReader(buf.Bytes()), filename, filesize, auth)
 	if err != nil {
 		return err
 	}
@@ -411,7 +411,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 		return err
 	}
 
-	err = project.DeleteBackgroundFileIfExists()
+	err = project.DeleteBackgroundFileIfExists(s)
 	if err != nil {
 		_ = s.Rollback()
 		return err
