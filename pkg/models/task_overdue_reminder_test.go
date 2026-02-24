@@ -35,7 +35,7 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-01-01T01:13:00Z")
 		require.NoError(t, err)
-		tasks, err := getUndoneOverdueTasks(s, now)
+		tasks, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
 		require.NoError(t, err)
 		assert.Empty(t, tasks)
 	})
@@ -46,7 +46,7 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-12-01T09:00:00Z")
 		require.NoError(t, err)
-		uts, err := getUndoneOverdueTasks(s, now)
+		uts, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
 		require.NoError(t, err)
 		require.Len(t, uts, 1)
 		assert.Len(t, uts[1].tasks, 2)
@@ -71,7 +71,7 @@ func TestGetUndoneOverDueTasks(t *testing.T) {
 
 		now, err := time.Parse(time.RFC3339Nano, "2018-11-01T01:13:00Z")
 		require.NoError(t, err)
-		tasks, err := getUndoneOverdueTasks(s, now)
+		tasks, err := getUndoneOverdueTasks(s, now, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
 		require.NoError(t, err)
 		assert.Empty(t, tasks)
 	})

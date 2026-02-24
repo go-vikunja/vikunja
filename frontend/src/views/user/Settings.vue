@@ -64,6 +64,7 @@ const caldavEnabled = computed(() => configStore.caldavEnabled)
 const migratorsEnabled = computed(() => configStore.migratorsEnabled)
 const isLocalUser = computed(() => authStore.info?.isLocalUser)
 const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
+const webhooksEnabled = computed(() => configStore.webhooksEnabled)
 
 const navigationItems = computed(() => {
 	const items = [
@@ -107,6 +108,11 @@ const navigationItems = computed(() => {
 		{
 			title: t('user.settings.apiTokens.title'),
 			routeName: 'user.settings.apiTokens',
+		},
+		{
+			title: t('user.settings.webhooks.title'),
+			routeName: 'user.settings.webhooks',
+			condition: webhooksEnabled.value,
 		},
 		{
 			title: t('user.deletion.title'),

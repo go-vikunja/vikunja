@@ -140,6 +140,11 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/ApiTokens.vue'),
 				},
 				{
+					path: '/user/settings/webhooks',
+					name: 'user.settings.webhooks',
+					component: () => import('@/views/user/settings/Webhooks.vue'),
+				},
+				{
 					path: '/user/settings/migrate',
 					name: 'migrate.start',
 					component: () => import('@/views/migrate/Migration.vue'),

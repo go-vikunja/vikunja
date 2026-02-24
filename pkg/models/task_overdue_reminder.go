@@ -31,7 +31,7 @@ import (
 	"xorm.io/xorm"
 )
 
-func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[int64]*userWithTasks, err error) {
+func getUndoneOverdueTasks(s *xorm.Session, now time.Time, cond builder.Cond) (usersWithTasks map[int64]*userWithTasks, err error) {
 	now = utils.GetTimeWithoutSeconds(now)
 	nextMinute := now.Add(1 * time.Minute)
 
@@ -54,7 +54,7 @@ func getUndoneOverdueTasks(s *xorm.Session, now time.Time) (usersWithTasks map[i
 		taskIDs = append(taskIDs, task.ID)
 	}
 
-	users, err := getTaskUsersForTasks(s, taskIDs, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+	users, err := getTaskUsersForTasks(s, taskIDs, cond)
 	if err != nil {
 		return
 	}
@@ -109,14 +109,27 @@ type userWithTasks struct {
 }
 
 // RegisterOverdueReminderCron registers a function which checks once a day for tasks that are overdue and not done.
+// It handles both email and webhook notifications.
 func RegisterOverdueReminderCron() {
-	if !config.ServiceEnableEmailReminders.GetBool() {
+	emailEnabled := config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool()
+	webhookEnabled := config.WebhooksEnabled.GetBool()
+
+	if !emailEnabled && !webhookEnabled {
+		if !config.ServiceEnableEmailReminders.GetBool() || !config.MailerEnabled.GetBool() {
+			log.Info("Mailer is disabled, not sending overdue reminders per mail")
+		}
+
+		if !config.WebhooksEnabled.GetBool() {
+			log.Info("Webhooks are disabled, not sending overdue reminders per webhook")
+		}
+
 		return
 	}
 
-	if !config.MailerEnabled.GetBool() {
-		log.Info("Mailer is disabled, not sending overdue per mail")
-		return
+	if config.ServiceEnableEmailReminders.GetBool() && !config.MailerEnabled.GetBool() {
+		log.Info("Mailer is disabled, not sending overdue reminders per mail")
+	} else if !config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool() {
+		log.Info("Mailer reminder is enabled, but mailer is disabled, not sending overdue reminders per mail")
 	}
 
 	err := cron.Schedule("* * * * *", func() {
@@ -124,9 +137,37 @@ func RegisterOverdueReminderCron() {
 		defer s.Close()
 
 		now := time.Now()
-		uts, err := getUndoneOverdueTasks(s, now)
+
+		// Build filter based on enabled notification types
+		var filters []builder.Cond
+		if emailEnabled {
+			filters = append(filters, builder.Eq{"users.overdue_tasks_reminders_enabled": true})
+		}
+		if webhookEnabled {
+			// Include users who have webhook settings configured for task.undone.overdue or all
+			filters = append(filters, builder.Exists(
+				builder.Select("1").
+					From("user_webhook_settings").
+					Where(builder.And(
+						builder.Expr("user_webhook_settings.user_id = users.id"),
+						builder.In("user_webhook_settings.notification_type", "task.undone.overdue", "all"),
+						builder.Eq{"user_webhook_settings.enabled": true},
+						builder.Neq{"user_webhook_settings.target_url": ""},
+					)),
+			))
+		}
+
+		if len(filters) == 0 {
+			return
+		}
+
+		uts, err := getUndoneOverdueTasks(s, now, builder.Or(filters...))
 		if err != nil {
 			log.Errorf("[Undone Overdue Tasks Reminder] Could not get undone overdue tasks in the next minute: %s", err)
+			return
+		}
+
+		if len(uts) == 0 {
 			return
 		}
 
@@ -160,6 +201,7 @@ func RegisterOverdueReminderCron() {
 						User:    ut.user,
 						Task:    t,
 						Project: projects[t.ProjectID],
+						Overdue: true,
 					}
 				}
 			}
@@ -170,7 +212,7 @@ func RegisterOverdueReminderCron() {
 				return
 			}
 
-			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder email for %d tasks to user %d", len(ut.tasks), ut.user.ID)
+			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder for %d tasks to user %d", len(ut.tasks), ut.user.ID)
 		}
 	})
 	if err != nil {

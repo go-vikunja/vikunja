@@ -240,7 +240,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 	return
 }
 
-func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (reminderNotifications []*ReminderDueNotification, err error) {
+func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time, cond builder.Cond) (reminderNotifications []*ReminderDueNotification, err error) {
 	now = utils.GetTimeWithoutNanoSeconds(now)
 	reminderNotifications = []*ReminderDueNotification{}
 
@@ -274,7 +274,7 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 		return
 	}
 
-	usersWithReminders, err := getTaskUsersForTasks(s, taskIDs, builder.Eq{"users.email_reminders_enabled": true})
+	usersWithReminders, err := getTaskUsersForTasks(s, taskIDs, cond)
 	if err != nil {
 		return
 	}
@@ -321,14 +321,17 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 				tzs[u.User.Timezone] = tz
 			}
 
-			actualReminder := r.Reminder.In(tz)
-			if (actualReminder.After(now) && actualReminder.Before(now.Add(time.Minute))) || actualReminder.Equal(now) {
+			actualReminder := r.Reminder.In(tz).Truncate(time.Minute)
+			nowTruncated := now.Truncate(time.Minute)
+
+			if (actualReminder.After(nowTruncated) && actualReminder.Before(nowTruncated.Add(time.Minute))) || actualReminder.Equal(nowTruncated) {
 				seen[r.TaskID][u.User.ID] = true
 
 				reminderNotifications = append(reminderNotifications, &ReminderDueNotification{
-					User:    u.User,
-					Task:    u.Task,
-					Project: projects[u.Task.ProjectID],
+					User:         u.User,
+					Task:         u.Task,
+					Project:      projects[u.Task.ProjectID],
+					TaskReminder: r,
 				})
 			}
 		}
@@ -338,15 +341,29 @@ func getTasksWithRemindersDueAndTheirUsers(s *xorm.Session, now time.Time) (remi
 }
 
 // RegisterReminderCron registers a cron function which runs every minute to check if any reminders are due the
-// next minute to send emails.
+// next minute to send emails and webhook notifications.
 func RegisterReminderCron() {
-	if !config.ServiceEnableEmailReminders.GetBool() {
+	emailEnabled := config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool()
+	webhookEnabled := config.WebhooksEnabled.GetBool()
+
+	if !emailEnabled && !webhookEnabled {
+		if !config.ServiceEnableEmailReminders.GetBool() || !config.MailerEnabled.GetBool() {
+			log.Info("Mailer is disabled, not sending reminders per mail")
+		}
+
+		if !config.WebhooksEnabled.GetBool() {
+			log.Info("Webhooks are disabled, not sending reminders per webhook")
+		}
+
 		return
 	}
 
-	if !config.MailerEnabled.GetBool() {
+	if config.ServiceEnableEmailReminders.GetBool() && !config.MailerEnabled.GetBool() {
 		log.Info("Mailer is disabled, not sending reminders per mail")
-		return
+	}
+
+	if !config.ServiceEnableEmailReminders.GetBool() && config.MailerEnabled.GetBool() {
+		log.Info("Mailer reminder is enabled, but mailer is disabled, not sending reminders per mail")
 	}
 
 	tz := config.GetTimeZone()
@@ -358,26 +375,48 @@ func RegisterReminderCron() {
 		defer s.Close()
 
 		now := time.Now()
-		reminders, err := getTasksWithRemindersDueAndTheirUsers(s, now)
+
+		// Build filter based on enabled notification types
+		var filters []builder.Cond
+		if emailEnabled {
+			filters = append(filters, builder.Eq{"users.email_reminders_enabled": true})
+		}
+		if webhookEnabled {
+			// Include users who have webhook settings configured for task.reminder or all
+			filters = append(filters, builder.Exists(
+				builder.Select("1").
+					From("user_webhook_settings").
+					Where(builder.And(
+						builder.Expr("user_webhook_settings.user_id = users.id"),
+						builder.In("user_webhook_settings.notification_type", "task.reminder", "all"),
+						builder.Eq{"user_webhook_settings.enabled": true},
+						builder.Neq{"user_webhook_settings.target_url": ""},
+					)),
+			))
+		}
+
+		if len(filters) == 0 {
+			return
+		}
+
+		reminders, err := getTasksWithRemindersDueAndTheirUsers(s, now, builder.Or(filters...))
 		if err != nil {
 			log.Errorf("[Task Reminder Cron] Could not get tasks with reminders in the next minute: %s", err)
 			return
 		}
 
-		if len(reminders) == 0 {
-			return
-		}
+		if len(reminders) > 0 {
+			log.Debugf("[Task Reminder Cron] Sending %d reminders", len(reminders))
 
-		log.Debugf("[Task Reminder Cron] Sending %d reminders", len(reminders))
+			for _, n := range reminders {
+				err = notifications.Notify(n.User, n)
+				if err != nil {
+					log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", n.User.ID, err)
+					return
+				}
 
-		for _, n := range reminders {
-			err = notifications.Notify(n.User, n)
-			if err != nil {
-				log.Errorf("[Task Reminder Cron] Could not notify user %d: %s", n.User.ID, err)
-				return
+				log.Debugf("[Task Reminder Cron] Sent reminder for task %d to user %d", n.Task.ID, n.User.ID)
 			}
-
-			log.Debugf("[Task Reminder Cron] Sent reminder email for task %d to user %d", n.Task.ID, n.User.ID)
 		}
 	})
 	if err != nil {
