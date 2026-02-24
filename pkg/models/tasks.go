@@ -1382,7 +1382,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 
 	_, err = s.ID(t.ID).
 		Cols(colsToUpdate...).
-		Update(ot)
+		Update(&ot)
 	*t = ot
 	if err != nil {
 		return err
