@@ -170,16 +170,38 @@ export const useTaskStore = defineStore('task', () => {
 				// If we can't get the old task, skip cascade
 			}
 
+			// Preserve duration: if one date changed, shift the other to maintain span
+			if (oldTask) {
+				const oldStart = oldTask.startDate ? new Date(oldTask.startDate).getTime() : 0
+				const oldEnd = oldTask.endDate ? new Date(oldTask.endDate).getTime() : 0
+				const newStart = task.startDate ? new Date(task.startDate).getTime() : 0
+				const newEnd = task.endDate ? new Date(task.endDate).getTime() : 0
+
+				if (oldStart && oldEnd) {
+					const duration = oldEnd - oldStart
+					const startChanged = oldStart !== newStart
+					const endChanged = oldEnd !== newEnd
+
+					if (endChanged && !startChanged && newEnd && duration > 0) {
+						// End date moved — shift start to preserve duration
+						task.startDate = new Date(newEnd - duration)
+					} else if (startChanged && !endChanged && newStart && duration > 0) {
+						// Start date moved — shift end to preserve duration
+						task.endDate = new Date(newStart + duration)
+					}
+				}
+			}
+
 			const updatedTask = await taskService.update(task)
 			kanbanStore.ensureTaskIsInCorrectBucket(updatedTask)
 			lastUpdatedTask.value = updatedTask
 
 			// Check for date cascade on related chain tasks
 			if (oldTask) {
-				const startChanged = oldTask.startDate?.toString() !== task.startDate?.toString()
-				const endChanged = oldTask.endDate?.toString() !== task.endDate?.toString()
+				const oldStart = oldTask.startDate ? new Date(oldTask.startDate).getTime() : 0
+				const newStart = updatedTask.startDate ? new Date(updatedTask.startDate).getTime() : 0
 
-				if (startChanged || endChanged) {
+				if (oldStart && newStart && oldStart !== newStart) {
 					await checkAndCascadeDates(taskService, updatedTask, oldTask)
 				}
 			}
