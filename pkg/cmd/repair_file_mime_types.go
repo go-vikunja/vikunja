@@ -44,14 +44,6 @@ on file creation. Only files with an empty or NULL mime column are affected.`,
 		s := db.NewSession()
 		defer s.Close()
 
-		if err := s.Begin(); err != nil {
-			log.Errorf("Failed to start transaction: %s", err)
-			return
-		}
-		defer func() {
-			_ = s.Rollback()
-		}()
-
 		result, err := files.RepairFileMimeTypes(s)
 		if err != nil {
 			log.Errorf("Failed to repair file MIME types: %s", err)

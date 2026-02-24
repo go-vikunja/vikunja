@@ -536,7 +536,6 @@ func SyncUpdatedTasksIntoTypesense() (err error) {
 	tasks := make(map[int64]*Task)
 
 	s := db.NewSession()
-	_ = s.Begin()
 	defer s.Close()
 
 	lastSync := &TypesenseSync{}
