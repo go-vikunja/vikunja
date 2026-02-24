@@ -21,21 +21,27 @@ import (
 	"xorm.io/xorm"
 )
 
-type webhooks20260123000717 struct {
-	BasicAuthUser     string `xorm:"null" json:"basicauthuser"`
-	BasicAuthPassword string `xorm:"null" json:"basicauthpassword"`
-}
-
-func (webhooks20260123000717) TableName() string {
-	return "webhooks"
-}
-
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20260123000717",
 		Description: "Add basic auth to webhooks",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(webhooks20260123000717{})
+			columns := []string{"basic_auth_user", "basic_auth_password"}
+			for _, col := range columns {
+				exists, err := columnExists(tx, "webhooks", col)
+				if err != nil {
+					return err
+				}
+				if exists {
+					continue
+				}
+
+				if _, err = tx.Exec("ALTER TABLE webhooks ADD COLUMN " + col + " TEXT NULL"); err != nil {
+					return err
+				}
+			}
+
+			return nil
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
