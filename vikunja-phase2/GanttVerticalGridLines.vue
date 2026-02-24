@@ -1,5 +1,5 @@
 <template>
-	<div class="gantt-grid-lines">
+	<div class="gantt-grid-lines" ref="gridEl">
 		<svg
 			class="gantt-vertical-lines"
 			:width="totalWidth"
@@ -19,7 +19,7 @@
 			/>
 		</svg>
 
-		<!-- Today column highlight: visual overlay, no pointer events -->
+		<!-- Today column highlight: visual overlay -->
 		<div
 			v-if="todayIndex >= 0"
 			class="today-overlay"
@@ -30,15 +30,16 @@
 				backgroundColor: highlightColor,
 			}"
 		/>
+	</div>
 
-		<!-- Color picker: separate interactive element, not inside the overlay -->
+	<!-- Teleported picker button + popover: escapes z-index stacking -->
+	<Teleport to="body">
 		<div
-			v-if="todayIndex >= 0"
-			class="today-picker-anchor"
+			v-if="todayIndex >= 0 && btnPos"
+			class="today-picker-teleported"
 			:style="{
-				left: (todayIndex * dayWidthPixels) + 'px',
-				width: dayWidthPixels + 'px',
-				height: height + 'px',
+				left: btnPos.x + 'px',
+				top: btnPos.y + 'px',
 			}"
 		>
 			<button
@@ -90,11 +91,11 @@
 				</div>
 			</div>
 		</div>
-	</div>
+	</Teleport>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, onMounted, onUnmounted} from 'vue'
+import {computed, ref, onMounted, onUnmounted, watch, nextTick} from 'vue'
 import {useStorage} from '@vueuse/core'
 
 const props = defineProps<{
@@ -103,6 +104,8 @@ const props = defineProps<{
 	height: number
 	dayWidthPixels: number
 }>()
+
+const gridEl = ref<HTMLElement | null>(null)
 
 // Persisted settings
 const storedHex = useStorage('ganttTodayHex', '#d4af37')
@@ -125,6 +128,55 @@ const todayIndex = computed(() => {
 	const now = new Date()
 	const todayStr = now.toDateString()
 	return props.timelineData.findIndex(d => d.toDateString() === todayStr)
+})
+
+// Compute the button's absolute position on the page
+const btnPos = ref<{ x: number; y: number } | null>(null)
+
+function updateBtnPos() {
+	if (!gridEl.value || todayIndex.value < 0) {
+		btnPos.value = null
+		return
+	}
+	const rect = gridEl.value.getBoundingClientRect()
+	// Position at the bottom-center of the today column
+	const colLeft = todayIndex.value * props.dayWidthPixels
+	const x = rect.left + colLeft + (props.dayWidthPixels / 2) - 8 // 8 = half btn width
+	const y = rect.top + props.height - 28 // 28px up from bottom
+	btnPos.value = { x: x + window.scrollX, y: y + window.scrollY }
+}
+
+// Update position on relevant changes
+watch([() => todayIndex.value, () => props.height, () => props.dayWidthPixels], () => {
+	nextTick(updateBtnPos)
+})
+
+let rafId = 0
+let scrollParent: HTMLElement | null = null
+
+function onScrollOrResize() {
+	cancelAnimationFrame(rafId)
+	rafId = requestAnimationFrame(updateBtnPos)
+}
+
+onMounted(() => {
+	updateBtnPos()
+	window.addEventListener('resize', onScrollOrResize)
+	// Find the scrollable gantt container and track its scroll
+	scrollParent = gridEl.value?.closest('.gantt-container') as HTMLElement | null
+	if (scrollParent) {
+		scrollParent.addEventListener('scroll', onScrollOrResize)
+	}
+	document.addEventListener('click', onDocClick)
+})
+
+onUnmounted(() => {
+	window.removeEventListener('resize', onScrollOrResize)
+	if (scrollParent) {
+		scrollParent.removeEventListener('scroll', onScrollOrResize)
+	}
+	cancelAnimationFrame(rafId)
+	document.removeEventListener('click', onDocClick)
 })
 
 const presets = [
@@ -154,8 +206,6 @@ function onOpacityChange(e: Event) {
 function onDocClick() {
 	showPicker.value = false
 }
-onMounted(() => document.addEventListener('click', onDocClick))
-onUnmounted(() => document.removeEventListener('click', onDocClick))
 </script>
 
 <style scoped lang="scss">
@@ -171,7 +221,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 	inset: 0;
 }
 
-// Today overlay: visual only, no interaction
+// Today overlay: visual only
 .today-overlay {
 	position: absolute;
 	inset-block-start: 0;
@@ -180,29 +230,24 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 	border-inline-start: 1.5px solid var(--warning);
 	border-inline-end: 1.5px solid var(--warning);
 }
+</style>
 
-// Picker anchor: interactive, sits above everything
-.today-picker-anchor {
+<!-- Unscoped styles for teleported elements -->
+<style lang="scss">
+.today-picker-teleported {
 	position: absolute;
-	inset-block-start: 0;
-	z-index: 10;
-	pointer-events: none;
+	z-index: 9999;
+	pointer-events: auto;
 }
 
-// Color picker button
 .today-color-btn {
-	pointer-events: auto;
-	position: absolute;
-	inset-block-end: 8px;
-	inset-inline-start: 50%;
-	transform: translateX(-50%);
-	background: var(--grey-800);
-	border: 2px solid var(--warning);
+	background: var(--grey-800, #2d2d2d);
+	border: 2px solid var(--warning, #d4af37);
 	border-radius: 50%;
 	padding: 0;
 	cursor: pointer;
-	inline-size: 16px;
-	block-size: 16px;
+	width: 16px;
+	height: 16px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -210,30 +255,28 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 	transition: transform 0.15s, opacity 0.15s;
 
 	&:hover {
-		transform: translateX(-50%) scale(1.3);
+		transform: scale(1.3);
 		opacity: 1;
 	}
 }
 
 .today-color-dot {
 	display: block;
-	inline-size: 10px;
-	block-size: 10px;
+	width: 10px;
+	height: 10px;
 	border-radius: 50%;
 }
 
-// Popover - opens upward from the bottom button
 .today-color-popover {
-	pointer-events: auto;
 	position: absolute;
-	inset-block-end: 24px;
-	inset-inline-start: calc(100% + 8px);
-	background: var(--grey-800);
-	border: 1px solid var(--grey-600);
+	bottom: 24px;
+	left: calc(100% + 8px);
+	background: var(--grey-800, #2d2d2d);
+	border: 1px solid var(--grey-600, #555);
 	border-radius: 8px;
 	padding: 10px 12px;
-	z-index: 20;
-	min-inline-size: 160px;
+	z-index: 10000;
+	min-width: 160px;
 	box-shadow: 0 4px 16px rgba(0, 0, 0, .4);
 	display: flex;
 	flex-direction: column;
@@ -243,7 +286,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .popover-label {
 	font-size: 11px;
 	font-weight: 600;
-	color: var(--grey-300);
+	color: var(--grey-300, #aaa);
 	text-transform: uppercase;
 	letter-spacing: .5px;
 }
@@ -255,9 +298,8 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .preset-swatch {
-	pointer-events: auto;
-	inline-size: 22px;
-	block-size: 22px;
+	width: 22px;
+	height: 22px;
 	border-radius: 4px;
 	border: 2px solid transparent;
 	cursor: pointer;
@@ -269,7 +311,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 	}
 
 	&.is-active {
-		border-color: var(--white);
+		border-color: #fff;
 	}
 }
 
@@ -281,13 +323,13 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 .popover-custom-label {
 	font-size: 11px;
-	color: var(--grey-400);
+	color: var(--grey-400, #888);
 	white-space: nowrap;
 }
 
 .popover-color-input {
-	inline-size: 28px;
-	block-size: 22px;
+	width: 28px;
+	height: 22px;
 	border: none;
 	padding: 0;
 	cursor: pointer;
@@ -299,7 +341,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 	}
 
 	&::-webkit-color-swatch {
-		border: 1px solid var(--grey-500);
+		border: 1px solid var(--grey-500, #666);
 		border-radius: 3px;
 	}
 }
@@ -312,20 +354,20 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 .popover-opacity-label {
 	font-size: 11px;
-	color: var(--grey-400);
+	color: var(--grey-400, #888);
 	white-space: nowrap;
 }
 
 .popover-opacity-slider {
 	flex: 1;
 	cursor: pointer;
-	accent-color: var(--warning);
+	accent-color: var(--warning, #d4af37);
 }
 
 .popover-opacity-val {
 	font-size: 11px;
-	color: var(--grey-400);
-	min-inline-size: 28px;
+	color: var(--grey-400, #888);
+	min-width: 28px;
 	text-align: end;
 }
 </style>

@@ -212,9 +212,12 @@
 							:multiple="true"
 							:search-results="filteredLabels"
 							label="title"
+							:creatable="true"
+							:create-placeholder="$t('task.label.createPlaceholder')"
 							:search-delay="10"
 							:close-after-select="false"
 							@search="labelQuery = $event"
+							@create="createAndAddLabel"
 						>
 							<template #tag="{item: label}">
 								<span
@@ -466,6 +469,8 @@ import Datepicker from '@/components/input/Datepicker.vue'
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
+import LabelModel from '@/models/label'
+import {getRandomColorHex} from '@/helpers/color/randomColor'
 import Editor from '@/components/input/AsyncEditor'
 
 import ProjectModel from '@/models/project'
@@ -524,6 +529,18 @@ function isDarkColor(hex: string): boolean {
 
 function removeSelectedLabel(label: any) {
 	selectedLabels.value = selectedLabels.value.filter(l => l.id !== label.id)
+}
+
+async function createAndAddLabel(title: string) {
+	try {
+		const newLabel = await labelStore.createLabel(new LabelModel({
+			title,
+			hexColor: getRandomColorHex(),
+		}))
+		selectedLabels.value = [...selectedLabels.value, newLabel]
+	} catch (e) {
+		console.error('Failed to create label:', e)
+	}
 }
 
 // Sync project object ↔ editForm.project_id
