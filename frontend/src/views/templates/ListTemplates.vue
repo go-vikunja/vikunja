@@ -425,7 +425,7 @@ function priorityLabel(priority: number): string {
 	display: flex;
 	gap: 0;
 	border-block-end: 2px solid var(--grey-200);
-	margin-block: 1rem 1.5rem;
+	margin-block: .5rem 1.5rem;
 }
 
 .template-tab {

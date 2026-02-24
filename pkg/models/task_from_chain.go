@@ -124,14 +124,14 @@ func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 	// Create all tasks — offsets are relative to the previous step
 	createdTasks := make([]*Task, 0, len(steps))
-	cumulativeOffset := 0
+	var cumulativeOffset time.Duration
 	for stepIndex, step := range steps {
-		// Each step's offset_days is relative to the previous step's start
-		cumulativeOffset += step.OffsetDays
+		// Each step's offset is relative to the previous step's start
+		cumulativeOffset += unitToDuration(step.OffsetDays, step.OffsetUnit)
 
 		// Calculate dates
-		startDate := anchorDate.AddDate(0, 0, cumulativeOffset)
-		endDate := startDate.AddDate(0, 0, step.DurationDays)
+		startDate := anchorDate.Add(cumulativeOffset)
+		endDate := startDate.Add(unitToDuration(step.DurationDays, step.DurationUnit))
 
 		// Build title
 		title := step.Title

@@ -13,6 +13,8 @@ export interface ITaskChainStepAttachment {
 	created?: string
 }
 
+export type TimeUnit = 'hours' | 'days' | 'weeks' | 'months'
+
 export interface ITaskChainStep {
 	id?: number
 	chain_id?: number
@@ -20,11 +22,33 @@ export interface ITaskChainStep {
 	title: string
 	description: string
 	offset_days: number
+	offset_unit?: TimeUnit
 	duration_days: number
+	duration_unit?: TimeUnit
 	priority: number
 	hex_color: string
 	label_ids: number[]
 	attachments?: ITaskChainStepAttachment[]
+}
+
+/** Convert a value in the given unit to fractional days */
+export function unitToDays(value: number, unit: TimeUnit | undefined): number {
+	switch (unit) {
+		case 'hours': return value / 24
+		case 'weeks': return value * 7
+		case 'months': return value * 30
+		default: return value
+	}
+}
+
+/** Convert fractional days to the display value for a given unit */
+export function daysToUnit(days: number, unit: TimeUnit | undefined): number {
+	switch (unit) {
+		case 'hours': return Math.round(days * 24)
+		case 'weeks': return +(days / 7).toFixed(1)
+		case 'months': return +(days / 30).toFixed(1)
+		default: return days
+	}
 }
 
 export interface ITaskChain {

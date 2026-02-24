@@ -154,21 +154,39 @@
 										:placeholder="$t('task.chain.stepTitle')"
 									>
 									<div class="step-timing">
-										<label class="step-label">{{ i === 0 ? $t('task.chain.offsetDays') : $t('task.chain.daysAfterPrev') }}</label>
+										<label class="step-label">{{ i === 0 ? $t('task.chain.offset') : $t('task.chain.afterPrev') }}</label>
 										<input
 											v-model.number="step.offset_days"
 											class="input step-small-input"
 											type="number"
 											min="0"
 										>
+										<select
+											v-model="step.offset_unit"
+											class="input step-unit-select"
+										>
+											<option value="hours">{{ $t('task.chain.units.hours') }}</option>
+											<option value="days">{{ $t('task.chain.units.days') }}</option>
+											<option value="weeks">{{ $t('task.chain.units.weeks') }}</option>
+											<option value="months">{{ $t('task.chain.units.months') }}</option>
+										</select>
 										<span class="step-day-indicator">→ Day {{ cumulativeDay(editForm.steps, i) }}</span>
-										<label class="step-label">{{ $t('task.chain.durationDays') }}</label>
+										<label class="step-label">{{ $t('task.chain.duration') }}</label>
 										<input
 											v-model.number="step.duration_days"
 											class="input step-small-input"
 											type="number"
 											min="1"
 										>
+										<select
+											v-model="step.duration_unit"
+											class="input step-unit-select"
+										>
+											<option value="hours">{{ $t('task.chain.units.hours') }}</option>
+											<option value="days">{{ $t('task.chain.units.days') }}</option>
+											<option value="weeks">{{ $t('task.chain.units.weeks') }}</option>
+											<option value="months">{{ $t('task.chain.units.months') }}</option>
+										</select>
 									</div>
 									<BaseButton
 										class="step-expand-btn"
@@ -317,8 +335,8 @@ import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Editor from '@/components/input/AsyncEditor'
 
-import {getAllChains, createChain, updateChain, deleteChain as deleteChainApi, uploadStepAttachment, deleteStepAttachment} from '@/services/taskChainApi'
-import type {ITaskChain, ITaskChainStep, ITaskChainStepAttachment} from '@/services/taskChainApi'
+import {getAllChains, createChain, updateChain, deleteChain as deleteChainApi, uploadStepAttachment, deleteStepAttachment, unitToDays} from '@/services/taskChainApi'
+import type {ITaskChain, ITaskChainStep, ITaskChainStepAttachment, TimeUnit} from '@/services/taskChainApi'
 
 import {success} from '@/message'
 import {useDragReorder} from '@/composables/useDragReorder'
@@ -397,7 +415,9 @@ function emptyStep(offset = 0): ITaskChainStep {
 		title: '',
 		description: '',
 		offset_days: offset,
+		offset_unit: 'days',
 		duration_days: 1,
+		duration_unit: 'days',
 		priority: 0,
 		hex_color: '',
 		label_ids: [],
@@ -448,7 +468,9 @@ function editChain(chain: ITaskChain) {
 	editForm.value = {
 		title: chain.title,
 		description: chain.description,
-		steps: chain.steps.length > 0 ? [...chain.steps] : [emptyStep(0)],
+		steps: chain.steps.length > 0
+			? chain.steps.map(s => ({...s, offset_unit: s.offset_unit || 'days', duration_unit: s.duration_unit || 'days'}))
+			: [emptyStep(0)],
 	}
 	expandedSteps.value = new Set()
 	stepFiles.value = {}
@@ -538,15 +560,15 @@ async function deleteChainConfirmed() {
 function cumulativeDay(steps: ITaskChainStep[], index: number): number {
 	let total = 0
 	for (let i = 0; i <= index; i++) {
-		total += steps[i]?.offset_days || 0
+		total += unitToDays(steps[i]?.offset_days || 0, steps[i]?.offset_unit)
 	}
-	return total
+	return Math.round(total * 10) / 10
 }
 
 function totalDays(steps: ITaskChainStep[]): number {
 	if (steps.length === 0) return 0
 	const lastIndex = steps.length - 1
-	return cumulativeDay(steps, lastIndex) + (steps[lastIndex]?.duration_days || 1)
+	return cumulativeDay(steps, lastIndex) + unitToDays(steps[lastIndex]?.duration_days || 1, steps[lastIndex]?.duration_unit)
 }
 
 function formatTimespan(days: number): string {
@@ -833,6 +855,13 @@ function truncate(text: string, length: number): string {
 
 .step-small-input {
 	max-inline-size: 70px;
+}
+
+.step-unit-select {
+	max-inline-size: 110px;
+	font-size: .85rem;
+	padding: .25rem .35rem;
+	cursor: pointer;
 }
 
 .step-remove-btn {

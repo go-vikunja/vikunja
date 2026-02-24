@@ -864,7 +864,8 @@
 			"noTasks": "Nothing to do — Have a nice day!",
 			"filterByLabel": "Filtering by label {label}",
 			"clearLabelFilter": "Clear label filter",
-			"pageDescription": "View your upcoming tasks across all projects. Filter by date range, overdue status, or tasks without dates."
+			"pageDescription": "Filter your tasks by assignee, labels, and more.",
+			"assignedToMe": "Assigned to me"
 		},
 		"detail": {
 			"chooseDueDate": "Click here to set a due date",
@@ -1425,5 +1426,12 @@
 	"task.chain.editDescription": "Edit description",
 	"task.chain.addDescription": "Add description",
 	"task.chain.hideDescription": "Hide description",
-	"task.chain.addStepToPreview": "Add step"
+	"task.chain.addStepToPreview": "Add step",
+	"task.chain.offset": "Offset",
+	"task.chain.afterPrev": "After prev",
+	"task.chain.duration": "Duration",
+	"task.chain.units.hours": "hours",
+	"task.chain.units.days": "days",
+	"task.chain.units.weeks": "weeks",
+	"task.chain.units.months": "months"
 }

@@ -62,10 +62,14 @@ type TaskChainStep struct {
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)"`
 	// Optional description for this step's task.
 	Description string `xorm:"longtext null" json:"description"`
-	// Offset in days from the anchor task's start date.
+	// Offset in days from the anchor task's start date (or raw value if unit is set).
 	OffsetDays int `xorm:"int not null default 0" json:"offset_days"`
-	// Duration of this step's task in days (used to set end_date = start_date + duration).
+	// The unit for offset: hours, days, weeks, months. Defaults to days.
+	OffsetUnit string `xorm:"varchar(10) null default 'days'" json:"offset_unit"`
+	// Duration of this step's task in days (or raw value if unit is set).
 	DurationDays int `xorm:"int not null default 1" json:"duration_days"`
+	// The unit for duration: hours, days, weeks, months. Defaults to days.
+	DurationUnit string `xorm:"varchar(10) null default 'days'" json:"duration_unit"`
 	// Task priority.
 	Priority int64 `xorm:"bigint null" json:"priority"`
 	// Task color in hex.
@@ -77,6 +81,20 @@ type TaskChainStep struct {
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
+}
+
+// unitToDuration converts a raw value and unit string to a time.Duration
+func unitToDuration(value int, unit string) time.Duration {
+	switch unit {
+	case "hours":
+		return time.Duration(value) * time.Hour
+	case "weeks":
+		return time.Duration(value) * 7 * 24 * time.Hour
+	case "months":
+		return time.Duration(value) * 30 * 24 * time.Hour
+	default: // "days" or empty
+		return time.Duration(value) * 24 * time.Hour
+	}
 }
 
 // TaskChainStepAttachment represents a file attached to a chain step template.

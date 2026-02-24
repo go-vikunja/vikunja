@@ -36,11 +36,11 @@
 
 		<hr class="page-separator">
 
-		<div
-			v-if="!showAll"
-			class="options-bar"
-		>
-			<DatepickerWithRange @update:modelValue="setDate">
+		<div class="options-bar">
+			<DatepickerWithRange
+				v-if="!showAll"
+				@update:modelValue="setDate"
+			>
 				<template #trigger="{toggle}">
 					<XButton
 						variant="primary"
@@ -53,16 +53,24 @@
 			</DatepickerWithRange>
 			<div class="options-checks">
 				<FancyCheckbox
+					v-if="!showAll"
 					:model-value="effectiveShowNulls"
 					@update:modelValue="setShowNulls"
 				>
 					{{ $t('task.show.noDates') }}
 				</FancyCheckbox>
 				<FancyCheckbox
+					v-if="!showAll"
 					:model-value="effectiveShowOverdue"
 					@update:modelValue="setShowOverdue"
 				>
 					{{ $t('task.show.overdue') }}
+				</FancyCheckbox>
+				<FancyCheckbox
+					:model-value="effectiveAssignedToMe"
+					@update:modelValue="setAssignedToMe"
+				>
+					{{ $t('task.show.assignedToMe') }}
 				</FancyCheckbox>
 			</div>
 		</div>
@@ -163,6 +171,7 @@ const taskCollectionService = ref(new TaskCollectionService())
 // Persist checkbox state so it survives navigation away and back
 const storedShowNulls = useStorage('upcomingShowNulls', false)
 const storedShowOverdue = useStorage('upcomingShowOverdue', false)
+const storedAssignedToMe = useStorage('upcomingAssignedToMe', false)
 
 // Effective values: use prop (from query param) if explicitly set, otherwise use stored
 const effectiveShowNulls = computed(() => {
@@ -182,6 +191,15 @@ const effectiveShowOverdue = computed(() => {
 		return val
 	}
 	return storedShowOverdue.value
+})
+
+const effectiveAssignedToMe = computed(() => {
+	if (route.query.assignedToMe !== undefined) {
+		const val = route.query.assignedToMe === 'true'
+		storedAssignedToMe.value = val
+		return val
+	}
+	return storedAssignedToMe.value
 })
 
 setTimeout(() => showNothingToDo.value = true, 100)
@@ -231,6 +249,7 @@ function setDate(dates: dateStrings) {
 			to: dates.dateTo ?? props.dateTo,
 			showOverdue: effectiveShowOverdue.value ? 'true' : 'false',
 			showNulls: effectiveShowNulls.value ? 'true' : 'false',
+			assignedToMe: effectiveAssignedToMe.value ? 'true' : 'false',
 		},
 	})
 }
@@ -253,6 +272,17 @@ function setShowNulls(show: boolean) {
 		query: {
 			...route.query,
 			showNulls: show ? 'true' : 'false',
+		},
+	})
+}
+
+function setAssignedToMe(show: boolean) {
+	storedAssignedToMe.value = show
+	router.push({
+		name: route.name as string,
+		query: {
+			...route.query,
+			assignedToMe: show ? 'true' : 'false',
 		},
 	})
 }
@@ -297,6 +327,14 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 		params.filter += params.filter ? ` && ${labelFilter}` : labelFilter
 	}
 
+	// Add "assigned to me" filtering
+	if (effectiveAssignedToMe.value) {
+		const userId = authStore.info?.id
+		if (userId) {
+			params.filter += ` && assignees = ${userId}`
+		}
+	}
+
 	let projectId = null
 	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined') {
 		projectId = filterId
@@ -328,7 +366,7 @@ function updateTasks(updatedTask: ITask) {
 // hasn't changed. Using watch with explicit dependencies and immediate:true gives us
 // the same behavior but only triggers when these specific values actually change.
 watch(
-	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview, effectiveShowNulls, effectiveShowOverdue],
+	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview, effectiveShowNulls, effectiveShowOverdue, effectiveAssignedToMe],
 	([from, to, filterId]) => loadPendingTasks(from, to, filterId),
 	{immediate: true},
 )
