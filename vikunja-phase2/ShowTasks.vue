@@ -34,6 +34,8 @@
 			</BaseButton>
 		</Message>
 
+		<hr class="page-separator">
+
 		<div
 			v-if="!showAll"
 			class="options-bar"
@@ -64,8 +66,6 @@
 				</FancyCheckbox>
 			</div>
 		</div>
-
-		<hr class="page-separator">
 
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<div class="has-text-centered p-4">
@@ -339,7 +339,7 @@ watchEffect(() => setTitle(pageTitle.value))
 .content-widescreen {
 	max-inline-size: 900px;
 	margin: 0 auto;
-	padding: 1.5rem;
+	padding: 1.5rem 1rem;
 }
 
 .options-bar {
@@ -347,7 +347,7 @@ watchEffect(() => setTitle(pageTitle.value))
 	align-items: center;
 	gap: 1rem;
 	flex-wrap: wrap;
-	margin-block-end: 1rem;
+	margin-block-end: 1.5rem;
 }
 
 .options-checks {
@@ -359,7 +359,7 @@ watchEffect(() => setTitle(pageTitle.value))
 .page-separator {
 	border: none;
 	border-block-start: 2px solid var(--grey-200);
-	margin-block-end: 1.5rem;
+	margin-block: 1rem 1.5rem;
 }
 
 .task-card {
@@ -367,9 +367,10 @@ watchEffect(() => setTitle(pageTitle.value))
 }
 
 .llama-cool {
-	margin: 2rem auto 0;
+	margin: 1.5rem auto 0;
 	display: block;
-	max-inline-size: 180px;
+	max-block-size: 250px;
+	overflow: visible;
 }
 
 .label-filter-info {

@@ -9,14 +9,9 @@
 			{{ $t('project.pageDescription') }}
 		</p>
 
-		<header class="project-header">
-			<FancyCheckbox
-				v-model="showArchived"
-				v-cy="'show-archived-check'"
-			>
-				{{ $t('project.showArchived') }}
-			</FancyCheckbox>
+		<hr class="page-separator">
 
+		<header class="project-header">
 			<div class="action-buttons">
 				<XButton
 					:to="{name: 'filters.create'}"
@@ -34,9 +29,13 @@
 					{{ $t('project.create.header') }}
 				</XButton>
 			</div>
+			<FancyCheckbox
+				v-model="showArchived"
+				v-cy="'show-archived-check'"
+			>
+				{{ $t('project.showArchived') }}
+			</FancyCheckbox>
 		</header>
-
-		<hr class="page-separator">
 
 		<ProjectCardGrid
 			:projects="projects"
@@ -75,7 +74,13 @@ const projects = computed(() => {
 .content-widescreen {
 	max-inline-size: 900px;
 	margin: 0 auto;
-	padding: 1.5rem;
+	padding: 1.5rem 1rem;
+}
+
+.page-separator {
+	border: none;
+	border-block-start: 2px solid var(--grey-200);
+	margin-block: 1rem 1.5rem;
 }
 
 .project-header {
@@ -83,17 +88,11 @@ const projects = computed(() => {
 	justify-content: space-between;
 	align-items: center;
 	gap: 1rem;
-	margin-block-end: 1rem;
+	margin-block-end: 1.5rem;
 
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
 	}
-}
-
-.page-separator {
-	border: none;
-	border-block-start: 2px solid var(--grey-200);
-	margin-block-end: 1.5rem;
 }
 
 .action-buttons {

@@ -418,14 +418,14 @@ function priorityLabel(priority: number): string {
 .content-widescreen {
 	max-inline-size: 900px;
 	margin: 0 auto;
-	padding: 1.5rem;
+	padding: 1.5rem 1rem;
 }
 
 .template-tabs {
 	display: flex;
 	gap: 0;
 	border-block-end: 2px solid var(--grey-200);
-	margin-block-end: 1.5rem;
+	margin-block: 1rem 1.5rem;
 }
 
 .template-tab {

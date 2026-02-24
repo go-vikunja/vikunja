@@ -8,6 +8,8 @@
 			{{ $t('team.description') }}
 		</p>
 
+		<hr class="page-separator">
+
 		<div class="tab-actions">
 			<XButton
 				:to="{name:'teams.create'}"
@@ -17,8 +19,6 @@
 				{{ $t('team.create.title') }}
 			</XButton>
 		</div>
-
-		<hr class="page-separator">
 
 		<ul
 			v-if="teams.length > 0"
@@ -68,16 +68,16 @@ teamService.getAll().then((result) => {
 .content-widescreen {
 	max-inline-size: 900px;
 	margin: 0 auto;
-	padding: 1.5rem;
-}
-
-.tab-actions {
-	margin-block-end: 1rem;
+	padding: 1.5rem 1rem;
 }
 
 .page-separator {
 	border: none;
 	border-block-start: 2px solid var(--grey-200);
+	margin-block: 1rem 1.5rem;
+}
+
+.tab-actions {
 	margin-block-end: 1.5rem;
 }
 
