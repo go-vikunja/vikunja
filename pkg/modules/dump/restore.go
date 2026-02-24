@@ -81,7 +81,10 @@ func Restore(filename string, overrideConfig bool) error {
 			continue
 		}
 		if strings.HasPrefix(file.Name, "database/") {
-			fname := strings.ReplaceAll(file.Name, "database/", "")
+			fname := strings.TrimPrefix(file.Name, "database/")
+			if !strings.HasSuffix(fname, ".json") || len(fname) <= 5 {
+				return fmt.Errorf("invalid database file name in zip archive: %q", file.Name)
+			}
 			dbfiles[fname[:len(fname)-5]] = file
 			continue
 		}
@@ -90,7 +93,7 @@ func Restore(filename string, overrideConfig bool) error {
 			continue
 		}
 		if strings.HasPrefix(file.Name, "files/") {
-			filesFiles[strings.ReplaceAll(file.Name, "files/", "")] = file
+			filesFiles[strings.TrimPrefix(file.Name, "files/")] = file
 			continue
 		}
 		if file.Name == "VERSION" {
