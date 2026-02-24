@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/web"
 
@@ -168,6 +169,31 @@ func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 		}
 
 		createdTasks = append(createdTasks, newTask)
+
+		// Copy step template attachments to the new task
+		stepAttachments := []*TaskChainStepAttachment{}
+		if err := s.Where("step_id = ?", step.ID).Find(&stepAttachments); err == nil {
+			for _, att := range stepAttachments {
+				srcFile := &files.File{ID: att.FileID}
+				if err := srcFile.LoadFileMetaByID(); err != nil {
+					continue
+				}
+				if err := srcFile.LoadFileByID(); err != nil {
+					continue
+				}
+				// Create a new file copy for the task
+				copiedFile, err := files.Create(srcFile.File, att.FileName, uint64(srcFile.Size), doer)
+				if err != nil {
+					continue
+				}
+				taskAtt := &TaskAttachment{
+					TaskID:      newTask.ID,
+					FileID:      copiedFile.ID,
+					CreatedByID: doer.GetID(),
+				}
+				_, _ = s.Insert(taskAtt)
+			}
+		}
 	}
 
 	// Create precedes/follows relations between consecutive tasks (both directions)

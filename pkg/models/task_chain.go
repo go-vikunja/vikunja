@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -71,9 +72,34 @@ type TaskChainStep struct {
 	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7"`
 	// Label IDs to apply to the created task.
 	LabelIDs []int64 `xorm:"json null" json:"label_ids"`
+	// Attachments associated with this step (loaded separately).
+	Attachments []*TaskChainStepAttachment `xorm:"-" json:"attachments"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
+}
+
+// TaskChainStepAttachment represents a file attached to a chain step template.
+type TaskChainStepAttachment struct {
+	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
+	StepID int64 `xorm:"bigint not null INDEX" json:"step_id"`
+	FileID int64 `xorm:"bigint not null" json:"-"`
+
+	FileName string `xorm:"varchar(250) not null" json:"file_name"`
+
+	CreatedByID int64      `xorm:"bigint not null" json:"-"`
+	CreatedBy   *user.User `xorm:"-" json:"created_by"`
+
+	File *files.File `xorm:"-" json:"file"`
+
+	Created time.Time `xorm:"created" json:"created"`
+
+	web.CRUDable    `xorm:"-" json:"-"`
+	web.Permissions `xorm:"-" json:"-"`
+}
+
+func (*TaskChainStepAttachment) TableName() string {
+	return "task_chain_step_attachments"
 }
 
 func (*TaskChain) TableName() string {
@@ -168,7 +194,20 @@ func (tc *TaskChain) ReadOne(s *xorm.Session, _ web.Auth) error {
 	// Load steps
 	tc.Steps = []*TaskChainStep{}
 	err = s.Where("chain_id = ?", tc.ID).OrderBy("sequence asc").Find(&tc.Steps)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Load attachments for each step
+	for _, step := range tc.Steps {
+		step.Attachments = []*TaskChainStepAttachment{}
+		_ = s.Where("step_id = ?", step.ID).Find(&step.Attachments)
+		for _, att := range step.Attachments {
+			att.File = &files.File{ID: att.FileID}
+			_ = att.File.LoadFileMetaByID()
+		}
+	}
+	return nil
 }
 
 func (tc *TaskChain) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
@@ -199,6 +238,14 @@ func (tc *TaskChain) ReadAll(s *xorm.Session, a web.Auth, search string, page in
 		c.Owner, _ = user.GetUserByID(s, c.OwnerID)
 		c.Steps = []*TaskChainStep{}
 		_ = s.Where("chain_id = ?", c.ID).OrderBy("sequence asc").Find(&c.Steps)
+		for _, step := range c.Steps {
+			step.Attachments = []*TaskChainStepAttachment{}
+			_ = s.Where("step_id = ?", step.ID).Find(&step.Attachments)
+			for _, att := range step.Attachments {
+				att.File = &files.File{ID: att.FileID}
+				_ = att.File.LoadFileMetaByID()
+			}
+		}
 	}
 
 	return chains, len(chains), totalCount, nil
@@ -233,7 +280,20 @@ func (tc *TaskChain) Update(s *xorm.Session, _ web.Auth) error {
 }
 
 func (tc *TaskChain) Delete(s *xorm.Session, _ web.Auth) error {
-	// Delete steps first
+	// Delete step attachments and their files
+	steps := []*TaskChainStep{}
+	_ = s.Where("chain_id = ?", tc.ID).Find(&steps)
+	for _, step := range steps {
+		attachments := []*TaskChainStepAttachment{}
+		_ = s.Where("step_id = ?", step.ID).Find(&attachments)
+		for _, att := range attachments {
+			f := &files.File{ID: att.FileID}
+			_ = f.Delete(s)
+		}
+		_, _ = s.Where("step_id = ?", step.ID).Delete(&TaskChainStepAttachment{})
+	}
+
+	// Delete steps
 	_, err := s.Where("chain_id = ?", tc.ID).Delete(&TaskChainStep{})
 	if err != nil {
 		return err

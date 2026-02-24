@@ -84,9 +84,44 @@
 								:key="i"
 								class="step-preview-item"
 							>
-								<span class="step-preview-number">{{ i + 1 }}</span>
-								<span class="step-preview-title">{{ titlePrefix }}{{ step.title }}</span>
-								<span class="step-preview-date">{{ step.calculatedDate }}</span>
+								<div class="step-preview-header">
+									<span class="step-preview-number">{{ i + 1 }}</span>
+									<span class="step-preview-title">{{ titlePrefix }}{{ step.title }}</span>
+									<span class="step-preview-date">{{ step.calculatedDate }}</span>
+								</div>
+								<div
+									v-if="step.description"
+									class="step-preview-desc"
+								>
+									<Icon icon="align-left" />
+									<span>{{ $t('task.chain.hasDescription') }}</span>
+								</div>
+								<div class="step-preview-attachments">
+									<div
+										v-for="(file, fi) in (stepFiles[i] || [])"
+										:key="fi"
+										class="step-file-tag"
+									>
+										<Icon icon="paperclip" />
+										{{ file.name }}
+										<BaseButton
+											class="step-file-remove"
+											@click="removeStepFile(i, fi)"
+										>
+											<Icon icon="times" />
+										</BaseButton>
+									</div>
+									<label class="step-file-add">
+										<Icon icon="plus" />
+										{{ $t('task.chain.addAttachment') }}
+										<input
+											type="file"
+											multiple
+											class="hidden-file-input"
+											@change="handleStepFiles(i, $event)"
+										>
+									</label>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -124,6 +159,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 import {getAllChains, createTasksFromChain} from '@/services/taskChainApi'
 import type {ITaskChain} from '@/services/taskChainApi'
+import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
 import {success} from '@/message'
 
@@ -146,6 +182,21 @@ const creating = ref(false)
 const selectedChainId = ref<number | null>(null)
 const anchorDate = ref(new Date().toISOString().split('T')[0])
 const titlePrefix = ref('')
+const stepFiles = ref<Record<number, File[]>>({})
+
+function handleStepFiles(stepIndex: number, event: Event) {
+	const input = event.target as HTMLInputElement
+	if (!input.files) return
+	if (!stepFiles.value[stepIndex]) {
+		stepFiles.value[stepIndex] = []
+	}
+	stepFiles.value[stepIndex].push(...Array.from(input.files))
+	input.value = ''
+}
+
+function removeStepFile(stepIndex: number, fileIndex: number) {
+	stepFiles.value[stepIndex]?.splice(fileIndex, 1)
+}
 
 const selectedChain = computed(() => {
 	if (!selectedChainId.value) return null
@@ -174,6 +225,7 @@ const previewSteps = computed(() => {
 watch(() => props.enabled, (val) => {
 	if (val) {
 		loadChains()
+		stepFiles.value = {}
 	}
 })
 
@@ -198,11 +250,34 @@ async function createFromChain() {
 	if (!selectedChainId.value || !anchorDate.value) return
 	creating.value = true
 	try {
-		await createTasksFromChain(selectedChainId.value, {
+		const createdTasks = await createTasksFromChain(selectedChainId.value, {
 			target_project_id: props.projectId,
 			anchor_date: new Date(anchorDate.value + 'T00:00:00').toISOString(),
 			title_prefix: titlePrefix.value,
 		})
+
+		// Upload attachments per step to their corresponding created tasks
+		if (createdTasks && Array.isArray(createdTasks)) {
+			const http = AuthenticatedHTTPFactory()
+			for (const [stepIndex, files] of Object.entries(stepFiles.value)) {
+				const taskIndex = Number(stepIndex)
+				if (taskIndex >= createdTasks.length || !files?.length) continue
+
+				const taskId = createdTasks[taskIndex].id
+				for (const file of files) {
+					const formData = new FormData()
+					formData.append('files', file)
+					try {
+						await http.put(`/tasks/${taskId}/attachments`, formData, {
+							headers: {'Content-Type': 'multipart/form-data'},
+						})
+					} catch (e) {
+						console.error(`Failed to upload ${file.name} to task ${taskId}:`, e)
+					}
+				}
+			}
+		}
+
 		success({message: t('task.chain.createTasksSuccess')})
 		emit('created')
 		emit('close')
@@ -210,6 +285,7 @@ async function createFromChain() {
 		console.error('Failed to create tasks from chain:', e)
 	} finally {
 		creating.value = false
+		stepFiles.value = {}
 	}
 }
 </script>
@@ -297,11 +373,66 @@ async function createFromChain() {
 
 .step-preview-item {
 	display: flex;
-	align-items: center;
-	gap: .5rem;
-	padding: .35rem .5rem;
+	flex-direction: column;
+	gap: .35rem;
+	padding: .5rem;
 	border-radius: $radius;
 	background: var(--grey-50);
+}
+
+.step-preview-header {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+}
+
+.step-preview-desc {
+	display: flex;
+	align-items: center;
+	gap: .3rem;
+	font-size: .78rem;
+	color: var(--grey-400);
+	padding-inline-start: 1.75rem;
+}
+
+.step-preview-attachments {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .35rem;
+	padding-inline-start: 1.75rem;
+}
+
+.step-file-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: .25rem;
+	font-size: .78rem;
+	background: var(--grey-100);
+	padding: .15rem .4rem;
+	border-radius: $radius;
+}
+
+.step-file-remove {
+	color: var(--danger);
+	cursor: pointer;
+	font-size: .7rem;
+}
+
+.step-file-add {
+	display: inline-flex;
+	align-items: center;
+	gap: .25rem;
+	font-size: .78rem;
+	color: var(--primary);
+	cursor: pointer;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+.hidden-file-input {
+	display: none;
 }
 
 .step-preview-number {

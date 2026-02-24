@@ -1,5 +1,18 @@
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
+export interface ITaskChainStepAttachment {
+	id: number
+	step_id: number
+	file_name: string
+	file?: {
+		id: number
+		name: string
+		size: number
+		mime: string
+	}
+	created?: string
+}
+
 export interface ITaskChainStep {
 	id?: number
 	chain_id?: number
@@ -11,6 +24,7 @@ export interface ITaskChainStep {
 	priority: number
 	hex_color: string
 	label_ids: number[]
+	attachments?: ITaskChainStepAttachment[]
 }
 
 export interface ITaskChain {
@@ -58,4 +72,17 @@ export async function deleteChain(id: number): Promise<void> {
 export async function createTasksFromChain(chainId: number, request: ITaskFromChainRequest): Promise<any> {
 	const response = await http.put(`/taskchains/${chainId}/tasks`, request)
 	return response.data
+}
+
+export async function uploadStepAttachment(stepId: number, file: File): Promise<ITaskChainStepAttachment> {
+	const formData = new FormData()
+	formData.append('files', file)
+	const response = await http.put(`/chainsteps/${stepId}/attachments`, formData, {
+		headers: {'Content-Type': 'multipart/form-data'},
+	})
+	return response.data
+}
+
+export async function deleteStepAttachment(stepId: number, attachmentId: number): Promise<void> {
+	await http.delete(`/chainsteps/${stepId}/attachments/${attachmentId}`)
 }

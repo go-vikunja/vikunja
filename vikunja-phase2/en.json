@@ -1410,5 +1410,12 @@
   "task.chain.tab": "Chains",
   "task.template.tabTemplates": "Templates",
   "task.template.tabChains": "Chains",
-  "task.chain.daysAfterPrev": "Days after prev"
+  "task.chain.daysAfterPrev": "Days after prev",
+  "task.chain.stepDescription": "Step Description",
+  "task.chain.stepDescriptionPlaceholder": "Add instructions, notes, or checklists for this step…",
+  "task.chain.stepAttachments": "Attachments",
+  "task.chain.addAttachment": "Add file",
+  "task.chain.showDetails": "Details",
+  "task.chain.hideDetails": "Hide details",
+  "task.chain.hasDescription": "Has description"
 }

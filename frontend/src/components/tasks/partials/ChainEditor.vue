@@ -160,6 +160,71 @@
 											min="1"
 										>
 									</div>
+									<BaseButton
+										class="step-expand-btn"
+										@click="toggleStepExpand(i)"
+									>
+										<Icon :icon="expandedSteps.has(i) ? 'chevron-up' : 'chevron-down'" />
+										{{ expandedSteps.has(i) ? $t('task.chain.hideDetails') : $t('task.chain.showDetails') }}
+									</BaseButton>
+									<div
+										v-if="expandedSteps.has(i)"
+										class="step-details"
+									>
+										<label class="step-label">{{ $t('task.chain.stepDescription') }}</label>
+										<Editor
+											v-model="step.description"
+											:is-edit-enabled="true"
+											:placeholder="$t('task.chain.stepDescriptionPlaceholder')"
+											class="step-editor"
+										/>
+										<label class="step-label step-attachments-label">
+											<Icon icon="paperclip" />
+											{{ $t('task.chain.stepAttachments') }}
+										</label>
+										<div class="step-attachment-list">
+											<!-- Persisted attachments -->
+											<div
+												v-for="(att, fi) in (step.attachments || [])"
+												:key="'saved-' + att.id"
+												class="step-attachment-item"
+											>
+												<Icon icon="file" />
+												<span>{{ att.file_name }}</span>
+												<BaseButton
+													class="step-attachment-remove"
+													@click="removeStepFile(i, fi)"
+												>
+													<Icon icon="times" />
+												</BaseButton>
+											</div>
+											<!-- In-memory files (unsaved steps) -->
+											<div
+												v-for="(file, fi) in (stepFiles[i] || [])"
+												:key="'mem-' + fi"
+												class="step-attachment-item is-pending"
+											>
+												<Icon icon="file" />
+												<span>{{ file.name }} <small>(unsaved)</small></span>
+												<BaseButton
+													class="step-attachment-remove"
+													@click="stepFiles[i]?.splice(fi, 1)"
+												>
+													<Icon icon="times" />
+												</BaseButton>
+											</div>
+										</div>
+										<label class="step-file-upload-btn">
+											<Icon icon="plus" />
+											{{ $t('task.chain.addAttachment') }}
+											<input
+												type="file"
+												multiple
+												class="hidden-file-input"
+												@change="handleStepFiles(i, $event)"
+											>
+										</label>
+									</div>
 								</div>
 								<BaseButton
 									class="step-remove-btn"
@@ -240,9 +305,10 @@ import {useI18n} from 'vue-i18n'
 
 import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import Editor from '@/components/input/AsyncEditor'
 
-import {getAllChains, createChain, updateChain, deleteChain as deleteChainApi} from '@/services/taskChainApi'
-import type {ITaskChain, ITaskChainStep} from '@/services/taskChainApi'
+import {getAllChains, createChain, updateChain, deleteChain as deleteChainApi, uploadStepAttachment, deleteStepAttachment} from '@/services/taskChainApi'
+import type {ITaskChain, ITaskChainStep, ITaskChainStepAttachment} from '@/services/taskChainApi'
 
 import {success} from '@/message'
 
@@ -257,6 +323,62 @@ const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const editingChain = ref<ITaskChain | null>(null)
 const deletingChain = ref<ITaskChain | null>(null)
+const expandedSteps = ref<Set<number>>(new Set())
+const stepFiles = ref<Record<number, File[]>>({})
+
+function toggleStepExpand(index: number) {
+	const s = new Set(expandedSteps.value)
+	if (s.has(index)) {
+		s.delete(index)
+	} else {
+		s.add(index)
+	}
+	expandedSteps.value = s
+}
+
+async function handleStepFiles(stepIndex: number, event: Event) {
+	const input = event.target as HTMLInputElement
+	if (!input.files) return
+
+	const step = editForm.value.steps[stepIndex]
+
+	// If step has an ID (already saved), upload via API immediately
+	if (step?.id) {
+		for (const file of Array.from(input.files)) {
+			try {
+				const att = await uploadStepAttachment(step.id, file)
+				if (!step.attachments) step.attachments = []
+				step.attachments.push(att)
+			} catch (e) {
+				console.error('Failed to upload:', e)
+			}
+		}
+	} else {
+		// Step not yet saved — hold in memory
+		if (!stepFiles.value[stepIndex]) {
+			stepFiles.value[stepIndex] = []
+		}
+		stepFiles.value[stepIndex].push(...Array.from(input.files))
+	}
+	input.value = ''
+}
+
+async function removeStepFile(stepIndex: number, fileIndex: number) {
+	const step = editForm.value.steps[stepIndex]
+
+	// Check if it's a persisted attachment
+	if (step?.id && step.attachments && step.attachments[fileIndex]) {
+		try {
+			await deleteStepAttachment(step.id, step.attachments[fileIndex].id)
+			step.attachments.splice(fileIndex, 1)
+		} catch (e) {
+			console.error('Failed to delete attachment:', e)
+		}
+	} else {
+		// Memory-only file
+		stepFiles.value[stepIndex]?.splice(fileIndex, 1)
+	}
+}
 
 function emptyStep(offset = 0): ITaskChainStep {
 	return {
@@ -301,6 +423,8 @@ function startCreateChain() {
 		description: '',
 		steps: [emptyStep(0)],
 	}
+	expandedSteps.value = new Set()
+	stepFiles.value = {}
 	showEditModal.value = true
 }
 
@@ -311,6 +435,8 @@ function editChain(chain: ITaskChain) {
 		description: chain.description,
 		steps: chain.steps.length > 0 ? [...chain.steps] : [emptyStep(0)],
 	}
+	expandedSteps.value = new Set()
+	stepFiles.value = {}
 	showEditModal.value = true
 }
 
@@ -331,8 +457,9 @@ async function saveChain() {
 		// Re-sequence steps
 		const steps = editForm.value.steps.map((s, i) => ({...s, sequence: i}))
 
+		let savedChain: ITaskChain
 		if (editingChain.value?.id) {
-			await updateChain({
+			savedChain = await updateChain({
 				id: editingChain.value.id,
 				title: editForm.value.title,
 				description: editForm.value.description,
@@ -340,13 +467,30 @@ async function saveChain() {
 			})
 			success({message: t('task.chain.updateSuccess')})
 		} else {
-			await createChain({
+			savedChain = await createChain({
 				title: editForm.value.title,
 				description: editForm.value.description,
 				steps,
 			})
 			success({message: t('task.chain.createSuccess')})
 		}
+
+		// Upload any pending memory files to their now-saved steps
+		if (savedChain?.steps && Object.keys(stepFiles.value).length > 0) {
+			for (const [indexStr, files] of Object.entries(stepFiles.value)) {
+				const idx = parseInt(indexStr)
+				const savedStep = savedChain.steps[idx]
+				if (!savedStep?.id || !files?.length) continue
+				for (const file of files) {
+					try {
+						await uploadStepAttachment(savedStep.id, file)
+					} catch (e) {
+						console.error(`Failed to upload ${file.name}:`, e)
+					}
+				}
+			}
+		}
+
 		showEditModal.value = false
 		await loadChains()
 	} catch (e) {
@@ -672,5 +816,82 @@ function truncate(text: string, length: number): string {
 .field .label {
 	color: var(--text);
 	font-weight: 600;
+}
+
+.step-expand-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: .3rem;
+	font-size: .78rem;
+	color: var(--grey-400);
+	margin-block-start: .25rem;
+	cursor: pointer;
+	transition: color $transition-duration;
+
+	&:hover {
+		color: var(--primary);
+	}
+}
+
+.step-details {
+	margin-block-start: .5rem;
+	padding-block-start: .5rem;
+	border-block-start: 1px dashed var(--grey-200);
+}
+
+.step-editor {
+	min-block-size: 80px;
+	margin-block: .25rem .5rem;
+	border: 1px solid var(--grey-200);
+	border-radius: $radius;
+	padding: .25rem;
+}
+
+.step-attachments-label {
+	display: inline-flex;
+	align-items: center;
+	gap: .3rem;
+}
+
+.step-attachment-list {
+	display: flex;
+	flex-direction: column;
+	gap: .25rem;
+	margin-block: .25rem;
+}
+
+.step-attachment-item {
+	display: inline-flex;
+	align-items: center;
+	gap: .35rem;
+	font-size: .85rem;
+	color: var(--text);
+	background: var(--grey-100);
+	padding: .2rem .5rem;
+	border-radius: $radius;
+}
+
+.step-attachment-remove {
+	color: var(--danger);
+	cursor: pointer;
+	margin-inline-start: auto;
+}
+
+.step-file-upload-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: .3rem;
+	font-size: .8rem;
+	color: var(--primary);
+	cursor: pointer;
+	margin-block-start: .25rem;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+.hidden-file-input {
+	display: none;
 }
 </style>

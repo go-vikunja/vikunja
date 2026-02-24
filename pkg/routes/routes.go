@@ -487,6 +487,10 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/taskchains/:chain/tasks", taskFromChainHandler.CreateWeb)
 
+	// Chain step attachments
+	a.PUT("/chainsteps/:step/attachments", apiv1.UploadChainStepAttachment)
+	a.DELETE("/chainsteps/:step/attachments/:attachment", apiv1.DeleteChainStepAttachment)
+
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Task{}
