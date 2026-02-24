@@ -207,6 +207,36 @@ describe('Filter Transformation', () => {
 
 			expect(transformed).toBe('( labels = 456 || project = 123 )')
 		})
+
+		it('should normalize spacing around operators', () => {
+			const transformed = transformFilterStringForApi(
+				'labels=ipsum',
+				nullTitleToIdResolver,
+				nullTitleToIdResolver,
+			)
+
+			expect(transformed).toBe('labels = ipsum')
+		})
+
+		it('should normalize missing space after operator', () => {
+			const transformed = transformFilterStringForApi(
+				'labels =ipsum',
+				nullTitleToIdResolver,
+				nullTitleToIdResolver,
+			)
+
+			expect(transformed).toBe('labels = ipsum')
+		})
+
+		it('should normalize missing space before operator', () => {
+			const transformed = transformFilterStringForApi(
+				'labels= ipsum',
+				nullTitleToIdResolver,
+				nullTitleToIdResolver,
+			)
+
+			expect(transformed).toBe('labels = ipsum')
+		})
 	})
 
 	describe('Special Characters', () => {
