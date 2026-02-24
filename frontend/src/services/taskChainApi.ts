@@ -41,6 +41,7 @@ export interface ITaskFromChainRequest {
 	target_project_id: number
 	anchor_date: string
 	title_prefix?: string
+	step_description_overrides?: Record<number, string>
 }
 
 const http = AuthenticatedHTTPFactory()

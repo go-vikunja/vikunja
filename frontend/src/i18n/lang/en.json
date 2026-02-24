@@ -1417,5 +1417,9 @@
   "task.chain.addAttachment": "Add file",
   "task.chain.showDetails": "Details",
   "task.chain.hideDetails": "Hide details",
-  "task.chain.hasDescription": "Has description"
+  "task.chain.hasDescription": "Has description",
+  "task.chain.chainsTab": "Chains",
+  "task.chain.editDescription": "Edit description",
+  "task.chain.addDescription": "Add description",
+  "task.chain.hideDescription": "Hide description"
 }

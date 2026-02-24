@@ -38,6 +38,9 @@ type TaskFromChain struct {
 	AnchorDate time.Time `json:"anchor_date"`
 	// Optional title prefix for all tasks (e.g. "Batch #42 - ")
 	TitlePrefix string `json:"title_prefix"`
+	// Optional per-step description overrides (key = step index 0-based, value = description).
+	// When provided, the override replaces the chain step's template description for that step.
+	StepDescriptionOverrides map[int]string `json:"step_description_overrides"`
 
 	// The created tasks (returned after creation)
 	Tasks []*Task `json:"created_tasks,omitempty"`
@@ -106,7 +109,7 @@ func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 	// Create all tasks — offsets are relative to the previous step
 	createdTasks := make([]*Task, 0, len(tc.Steps))
 	cumulativeOffset := 0
-	for _, step := range tc.Steps {
+	for stepIndex, step := range tc.Steps {
 		// Each step's offset_days is relative to the previous step's start
 		cumulativeOffset += step.OffsetDays
 
@@ -126,8 +129,14 @@ func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 			title = p + title
 		}
 
-		// Build description with chain info
+		// Build description: use override if provided, otherwise use step template description
 		description := step.Description
+		if tfc.StepDescriptionOverrides != nil {
+			if override, ok := tfc.StepDescriptionOverrides[stepIndex]; ok {
+				description = override
+			}
+		}
+
 		chainNote := `<p><small style="color:#888">🔗 Chain: ` + tc.Title +
 			` (step ` + fmt.Sprintf("%d", step.Sequence+1) + `/` + fmt.Sprintf("%d", len(tc.Steps)) + `)</small></p>`
 		if description != "" {

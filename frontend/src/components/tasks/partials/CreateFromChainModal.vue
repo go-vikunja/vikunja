@@ -86,15 +86,31 @@
 							>
 								<div class="step-preview-header">
 									<span class="step-preview-number">{{ i + 1 }}</span>
-									<span class="step-preview-title">{{ titlePrefix }}{{ step.title }}</span>
+									<span class="step-preview-title">{{ formatPreviewTitle(step.title) }}</span>
 									<span class="step-preview-date">{{ step.calculatedDate }}</span>
 								</div>
-								<div
-									v-if="step.description"
-									class="step-preview-desc"
+								<!-- Editable description toggle -->
+								<BaseButton
+									class="step-desc-toggle"
+									@click="toggleStepDescription(i)"
 								>
-									<Icon icon="align-left" />
-									<span>{{ $t('task.chain.hasDescription') }}</span>
+									<Icon :icon="expandedDescriptions.has(i) ? 'chevron-up' : 'align-left'" />
+									<span v-if="!expandedDescriptions.has(i)">
+										{{ stepDescriptionOverrides[i] || step.description ? $t('task.chain.editDescription') : $t('task.chain.addDescription') }}
+									</span>
+									<span v-else>{{ $t('task.chain.hideDescription') }}</span>
+								</BaseButton>
+								<div
+									v-if="expandedDescriptions.has(i)"
+									class="step-desc-editor"
+								>
+									<textarea
+										:value="stepDescriptionOverrides[i] ?? step.description ?? ''"
+										class="input textarea"
+										rows="3"
+										:placeholder="$t('task.chain.stepDescriptionPlaceholder')"
+										@input="updateStepDescription(i, ($event.target as HTMLTextAreaElement).value)"
+									/>
 								</div>
 								<div class="step-preview-attachments">
 									<div
@@ -151,7 +167,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed, onMounted, watch} from 'vue'
+import {ref, reactive, computed, onMounted, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import Modal from '@/components/misc/Modal.vue'
@@ -183,6 +199,35 @@ const selectedChainId = ref<number | null>(null)
 const anchorDate = ref(new Date().toISOString().split('T')[0])
 const titlePrefix = ref('')
 const stepFiles = ref<Record<number, File[]>>({})
+const stepDescriptionOverrides = reactive<Record<number, string>>({})
+const expandedDescriptions = ref<Set<number>>(new Set())
+
+/**
+ * Mirrors the backend separator logic from task_from_chain.go:
+ * If the prefix doesn't end with a separator character, append "_"
+ */
+function formatPreviewTitle(stepTitle: string): string {
+	const prefix = titlePrefix.value
+	if (!prefix) return stepTitle
+	const separators = [' ', '_', '-', ':', '/', '.']
+	const lastChar = prefix[prefix.length - 1]
+	const sep = separators.includes(lastChar) ? '' : '_'
+	return prefix + sep + stepTitle
+}
+
+function toggleStepDescription(index: number) {
+	const s = new Set(expandedDescriptions.value)
+	if (s.has(index)) {
+		s.delete(index)
+	} else {
+		s.add(index)
+	}
+	expandedDescriptions.value = s
+}
+
+function updateStepDescription(index: number, value: string) {
+	stepDescriptionOverrides[index] = value
+}
 
 function handleStepFiles(stepIndex: number, event: Event) {
 	const input = event.target as HTMLInputElement
@@ -222,10 +267,18 @@ const previewSteps = computed(() => {
 	})
 })
 
+// Reset state when chain selection changes
+watch(selectedChainId, () => {
+	Object.keys(stepDescriptionOverrides).forEach(k => delete stepDescriptionOverrides[k])
+	expandedDescriptions.value = new Set()
+})
+
 watch(() => props.enabled, (val) => {
 	if (val) {
 		loadChains()
 		stepFiles.value = {}
+		Object.keys(stepDescriptionOverrides).forEach(k => delete stepDescriptionOverrides[k])
+		expandedDescriptions.value = new Set()
 	}
 })
 
@@ -250,10 +303,21 @@ async function createFromChain() {
 	if (!selectedChainId.value || !anchorDate.value) return
 	creating.value = true
 	try {
+		// Build step_description_overrides map (only include changed descriptions)
+		const descOverrides: Record<number, string> = {}
+		for (const [key, val] of Object.entries(stepDescriptionOverrides)) {
+			const idx = Number(key)
+			const originalStep = selectedChain.value?.steps?.[idx]
+			if (val !== undefined && val !== (originalStep?.description ?? '')) {
+				descOverrides[idx] = val
+			}
+		}
+
 		const createdTasks = await createTasksFromChain(selectedChainId.value, {
 			target_project_id: props.projectId,
 			anchor_date: new Date(anchorDate.value + 'T00:00:00').toISOString(),
 			title_prefix: titlePrefix.value,
+			step_description_overrides: Object.keys(descOverrides).length > 0 ? descOverrides : undefined,
 		})
 
 		// Upload attachments per step to their corresponding created tasks
@@ -286,6 +350,8 @@ async function createFromChain() {
 	} finally {
 		creating.value = false
 		stepFiles.value = {}
+		Object.keys(stepDescriptionOverrides).forEach(k => delete stepDescriptionOverrides[k])
+		expandedDescriptions.value = new Set()
 	}
 }
 </script>
@@ -386,13 +452,29 @@ async function createFromChain() {
 	gap: .5rem;
 }
 
-.step-preview-desc {
-	display: flex;
+.step-desc-toggle {
+	display: inline-flex;
 	align-items: center;
-	gap: .3rem;
+	gap: .25rem;
 	font-size: .78rem;
 	color: var(--grey-400);
 	padding-inline-start: 1.75rem;
+	cursor: pointer;
+	transition: color $transition-duration;
+
+	&:hover {
+		color: var(--primary);
+	}
+}
+
+.step-desc-editor {
+	padding-inline-start: 1.75rem;
+
+	.textarea {
+		font-size: .85rem;
+		min-block-size: 60px;
+		resize: vertical;
+	}
 }
 
 .step-preview-attachments {
