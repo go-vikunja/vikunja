@@ -19,6 +19,7 @@ package v1
 import (
 	"errors"
 	"io"
+	"mime"
 	"net/http"
 	"strconv"
 	"strings"
@@ -210,9 +211,9 @@ func GetTaskAttachment(c *echo.Context) error {
 		mimeToReturn = "application/octet-stream"
 	}
 
-	filename := strings.ReplaceAll(taskAttachment.File.Name, `"`, `\"`)
-
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	c.Response().Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{
+		"filename": taskAttachment.File.Name,
+	}))
 	c.Response().Header().Set("Content-Type", mimeToReturn)
 	c.Response().Header().Set("Content-Length", strconv.FormatUint(taskAttachment.File.Size, 10))
 	c.Response().Header().Set("Last-Modified", taskAttachment.File.Created.UTC().Format(http.TimeFormat))
