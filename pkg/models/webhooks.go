@@ -320,8 +320,3 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	return
 }
 
-type WebhookPayload struct {
-	EventName string      `json:"event_name"`
-	Time      time.Time   `json:"time"`
-	Data      interface{} `json:"data"`
-}
