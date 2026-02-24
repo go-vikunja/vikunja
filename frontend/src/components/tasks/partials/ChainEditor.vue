@@ -340,8 +340,12 @@ import type {ITaskChain, ITaskChainStep, ITaskChainStepAttachment, TimeUnit} fro
 
 import {success} from '@/message'
 import {useDragReorder} from '@/composables/useDragReorder'
+import {useStorage} from '@vueuse/core'
 
 const {t} = useI18n({useScope: 'global'})
+
+// User preference for default time unit in chain steps
+const defaultTimeUnit = useStorage<TimeUnit>('chainDefaultTimeUnit', 'days')
 
 const chains = ref<ITaskChain[]>([])
 const loading = ref(false)
@@ -415,9 +419,9 @@ function emptyStep(offset = 0): ITaskChainStep {
 		title: '',
 		description: '',
 		offset_days: offset,
-		offset_unit: 'days',
+		offset_unit: defaultTimeUnit.value,
 		duration_days: 1,
-		duration_unit: 'days',
+		duration_unit: defaultTimeUnit.value,
 		priority: 0,
 		hex_color: '',
 		label_ids: [],

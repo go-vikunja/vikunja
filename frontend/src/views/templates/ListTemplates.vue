@@ -23,6 +23,14 @@
 				<Icon icon="link" />
 				{{ $t('task.chain.chainsTab') }}
 			</BaseButton>
+			<BaseButton
+				class="template-tab"
+				:class="{ 'is-active': activeTab === 'autotasks' }"
+				@click="activeTab = 'autotasks'"
+			>
+				<Icon icon="robot" />
+				{{ $t('task.autoTask.tab') }}
+			</BaseButton>
 		</div>
 
 		<!-- ═══════ Templates tab ═══════ -->
@@ -119,6 +127,21 @@
 		<!-- ═══════ Chains tab ═══════ -->
 		<template v-if="activeTab === 'chains'">
 			<ChainEditor />
+		</template>
+
+		<!-- ═══════ Auto-Generated tab ═══════ -->
+		<template v-if="activeTab === 'autotasks'">
+			<div class="tab-actions">
+				<XButton
+					variant="primary"
+					icon="plus"
+					:shadow="false"
+					@click="autoTaskEditorRef?.openCreate()"
+				>
+					{{ $t('task.autoTask.createNew') }}
+				</XButton>
+			</div>
+			<AutoTaskEditor ref="autoTaskEditorRef" />
 		</template>
 
 		<!-- Edit / Create template modal -->
@@ -260,6 +283,7 @@ import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import ChainEditor from '@/components/tasks/partials/ChainEditor.vue'
+import AutoTaskEditor from '@/components/tasks/partials/AutoTaskEditor.vue'
 
 import TaskTemplateService from '@/services/taskTemplateService'
 import TaskTemplateModel from '@/models/taskTemplate'
@@ -272,7 +296,8 @@ const SECONDS_PER_DAY = 86400
 
 const {t} = useI18n({useScope: 'global'})
 
-const activeTab = ref<'templates' | 'chains'>('templates')
+const activeTab = ref<'templates' | 'chains' | 'autotasks'>('templates')
+const autoTaskEditorRef = ref<InstanceType<typeof AutoTaskEditor> | null>(null)
 
 const templates = ref<ITaskTemplate[]>([])
 const loading = ref(false)

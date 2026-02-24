@@ -23,7 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/auth"
+	auth2 "code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/labstack/echo/v5"
 )
@@ -45,9 +45,9 @@ func UploadChainStepAttachment(c *echo.Context) error {
 	}
 
 	// Get current user
-	authUser, err := auth.GetAuthFromClaims(c)
+	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unable to authenticate")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
 	s := db.NewSession()
@@ -66,7 +66,7 @@ func UploadChainStepAttachment(c *echo.Context) error {
 	}
 
 	chain := &models.TaskChain{ID: step.ChainID}
-	can, _, err := chain.CanRead(s, authUser)
+	can, _, err := chain.CanRead(s, auth)
 	if err != nil || !can {
 		_ = s.Rollback()
 		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
@@ -87,7 +87,7 @@ func UploadChainStepAttachment(c *echo.Context) error {
 	defer src.Close()
 
 	// Store the file using Vikunja's file storage
-	storedFile, err := files.Create(src, file.Filename, uint64(file.Size), authUser)
+	storedFile, err := files.Create(src, file.Filename, uint64(file.Size), auth)
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -98,7 +98,7 @@ func UploadChainStepAttachment(c *echo.Context) error {
 		StepID:      stepID,
 		FileID:      storedFile.ID,
 		FileName:    file.Filename,
-		CreatedByID: authUser.GetID(),
+		CreatedByID: auth.GetID(),
 	}
 
 	if err := s.Begin(); err != nil {
@@ -138,9 +138,9 @@ func DeleteChainStepAttachment(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid attachment ID")
 	}
 
-	authUser, err := auth.GetAuthFromClaims(c)
+	auth, err := auth2.GetAuthFromClaims(c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unable to authenticate")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
 	s := db.NewSession()
@@ -154,7 +154,7 @@ func DeleteChainStepAttachment(c *echo.Context) error {
 	}
 
 	chain := &models.TaskChain{ID: step.ChainID}
-	can, _, err := chain.CanRead(s, authUser)
+	can, _, err := chain.CanRead(s, auth)
 	if err != nil || !can {
 		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 	}

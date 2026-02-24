@@ -480,6 +480,22 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/chainsteps/:step/attachments", apiv1.UploadChainStepAttachment)
 	a.DELETE("/chainsteps/:step/attachments/:attachment", apiv1.DeleteChainStepAttachment)
 
+	// --- Auto-Generated Tasks ---
+	autoTaskHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.AutoTaskTemplate{}
+		},
+	}
+	a.GET("/autotasks", autoTaskHandler.ReadAllWeb)
+	a.GET("/autotasks/:autotask", autoTaskHandler.ReadOneWeb)
+	a.PUT("/autotasks", autoTaskHandler.CreateWeb)
+	a.POST("/autotasks/:autotask", autoTaskHandler.UpdateWeb)
+	a.DELETE("/autotasks/:autotask", autoTaskHandler.DeleteWeb)
+
+	// Auto-task manual trigger and auto-check
+	a.POST("/autotasks/:autotask/trigger", apiv1.TriggerAutoTask)
+	a.POST("/autotasks/check", apiv1.CheckAutoTasks)
+
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Task{}

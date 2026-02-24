@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed} from 'vue'
+import {ref, computed, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 
 import Message from '@/components/misc/Message.vue'
@@ -60,6 +60,7 @@ import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
+import {checkAutoTasks} from '@/services/autoTaskApi'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
@@ -70,6 +71,21 @@ const authStore = useAuthStore()
 const projectStore = useProjectStore()
 const route = useRoute()
 const router = useRouter()
+
+// Trigger auto-task check on page load
+const showTasksKey = ref(0)
+onMounted(async () => {
+	if (!authStore.authenticated) return
+	try {
+		const result = await checkAutoTasks()
+		if (result?.created?.length > 0) {
+			// Refresh task list to show newly created tasks
+			showTasksKey.value++
+		}
+	} catch {
+		// Silent fail — auto-check is best-effort
+	}
+})
 
 const projectHistory = computed(() => {
 	// If we don't check this, it tries to load the project background right after logging out	
@@ -97,7 +113,6 @@ const labelIds = computed(() => {
 
 // This is to reload the tasks list after adding a new task through the global task add.
 // FIXME: Should use pinia (somehow?)
-const showTasksKey = ref(0)
 
 function updateTaskKey() {
 	showTasksKey.value++
