@@ -150,6 +150,7 @@ watch(
 			return
 		}
 		setEditorContentFromModelValue(value)
+		lastEmittedValue = undefined
 	},
 	{immediate: true},
 )
