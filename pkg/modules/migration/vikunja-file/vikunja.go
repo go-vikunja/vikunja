@@ -30,6 +30,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	vversion "code.vikunja.io/api/pkg/version"
 
 	"github.com/hashicorp/go-version"
@@ -80,8 +81,12 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	var versionFile *zip.File
 	storedFiles := make(map[int64]*zip.File)
 	for _, f := range r.File {
+		if utils.ContainsPathTraversal(f.Name) {
+			return fmt.Errorf("unsafe path in zip archive: %q", f.Name)
+		}
+
 		if strings.HasPrefix(f.Name, "files/") {
-			fname := strings.ReplaceAll(f.Name, "files/", "")
+			fname := strings.TrimPrefix(f.Name, "files/")
 			id, err := strconv.ParseInt(fname, 10, 64)
 			if err != nil {
 				return fmt.Errorf("could not convert file id: %w", err)
