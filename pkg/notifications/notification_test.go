@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
 )
 
@@ -65,7 +66,7 @@ func (t *testNotifiable) RouteForDB() int64 {
 	return 42
 }
 
-func (t *testNotifiable) ShouldNotify() (should bool, err error) {
+func (t *testNotifiable) ShouldNotify(_ ...*xorm.Session) (should bool, err error) {
 	return t.ShouldSendNotification, nil
 }
 
@@ -77,9 +78,10 @@ func TestNotify(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 
 		s := db.NewSession()
-		defer s.Close()
 		_, err := s.Exec("delete from notifications")
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
 
 		tn := &testNotification{
 			Test:       "somethingsomething",
@@ -112,9 +114,10 @@ func TestNotify(t *testing.T) {
 	t.Run("disabled notifiable", func(t *testing.T) {
 
 		s := db.NewSession()
-		defer s.Close()
 		_, err := s.Exec("delete from notifications")
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		s.Close()
 
 		tn := &testNotification{
 			Test:       "somethingsomething",

@@ -97,6 +97,18 @@ func Create(f io.ReadSeeker, realname string, realsize uint64, a web.Auth) (file
 	return CreateWithMime(f, realname, realsize, a, mime.String())
 }
 
+// CreateWithSession creates a new file using an existing session to avoid nested transactions
+func CreateWithSession(s *xorm.Session, f io.ReadSeeker, realname string, realsize uint64, a web.Auth) (file *File, err error) {
+	mime, err := mimetype.DetectReader(f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to detect mime type: %w", err)
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return nil, fmt.Errorf("failed to seek after mime detection: %w", err)
+	}
+	return CreateWithMimeAndSession(s, f, realname, realsize, a, mime.String(), true)
+}
+
 // CreateWithMime creates a new file from an FileHeader and sets its mime type
 func CreateWithMime(f io.ReadSeeker, realname string, realsize uint64, a web.Auth, mime string) (file *File, err error) {
 	s := db.NewSession()

@@ -172,7 +172,7 @@ func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 	attempts := a.(int64)
 
 	if attempts == 3 {
-		err = notifications.Notify(user, &InvalidTOTPNotification{User: user})
+		err = notifications.Notify(user, &InvalidTOTPNotification{User: user}, s)
 		if err != nil {
 			log.Errorf("Could not send failed TOTP notification to user %d: %s", user.ID, err)
 			return
@@ -191,7 +191,7 @@ func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 	}
 	err = notifications.Notify(user, &PasswordAccountLockedAfterInvalidTOTPNotification{
 		User: user,
-	})
+	}, s)
 	if err != nil {
 		log.Errorf("Could send password information mail to user %d after 10 failed TOTP attempts: %s", user.ID, err)
 		return

@@ -120,7 +120,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 		ConfirmToken: token.Token,
 	}
 
-	err = notifications.Notify(user, n)
+	err = notifications.Notify(user, n, s)
 	return newUserOut, err
 }
 

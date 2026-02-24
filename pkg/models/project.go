@@ -1191,7 +1191,7 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	err = fullProject.DeleteBackgroundFileIfExists()
+	err = fullProject.DeleteBackgroundFileIfExists(s)
 	if err != nil {
 		return
 	}
@@ -1278,25 +1278,18 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 // DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,
 // if one exists
-func (p *Project) DeleteBackgroundFileIfExists() (err error) {
+func (p *Project) DeleteBackgroundFileIfExists(s *xorm.Session) (err error) {
 	if p.BackgroundFileID == 0 {
 		return
 	}
-
-	s := db.NewSession()
-	defer s.Close()
 
 	file := files.File{ID: p.BackgroundFileID}
 	err = file.Delete(s)
 	if err != nil && files.IsErrFileDoesNotExist(err) {
 		return nil
 	}
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
 
-	return s.Commit()
+	return err
 }
 
 // SetProjectBackground sets a background file as project background in the db

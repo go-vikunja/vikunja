@@ -650,6 +650,9 @@ func TestConfirmDeletion(t *testing.T) {
 		err := ConfirmDeletion(s, user, token)
 		require.NoError(t, err)
 
+		err = s.Commit()
+		require.NoError(t, err)
+
 		db.AssertMissing(t, "user_tokens", map[string]interface{}{
 			"token": token,
 			"kind":  TokenAccountDeletion,

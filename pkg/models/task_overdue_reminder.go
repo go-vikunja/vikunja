@@ -178,7 +178,7 @@ func RegisterOverdueReminderCron() {
 				}
 			}
 
-			err = notifications.Notify(ut.user, n)
+			err = notifications.Notify(ut.user, n, s)
 			if err != nil {
 				log.Errorf("[Undone Overdue Tasks Reminder] Could not notify user %d: %s", ut.user.ID, err)
 				return
