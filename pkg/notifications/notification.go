@@ -109,6 +109,7 @@ func notifyDB(notifiable Notifiable, notification Notification) (err error) {
 	}
 
 	s := db.NewSession()
+	defer s.Close()
 	dbNotification := &DatabaseNotification{
 		NotifiableID: notifiable.RouteForDB(),
 		Notification: content,
