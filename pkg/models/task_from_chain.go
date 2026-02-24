@@ -116,7 +116,13 @@ func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 		// Build title
 		title := step.Title
 		if tfc.TitlePrefix != "" {
-			title = tfc.TitlePrefix + title
+			// Auto-append a separator if the prefix doesn't end with one
+			p := tfc.TitlePrefix
+			lastChar := p[len(p)-1]
+			if lastChar != ' ' && lastChar != '_' && lastChar != '-' && lastChar != ':' && lastChar != '/' && lastChar != '.' {
+				p = p + "_"
+			}
+			title = p + title
 		}
 
 		// Build description with chain info
@@ -164,15 +170,21 @@ func (tfc *TaskFromChain) Create(s *xorm.Session, doer web.Auth) (err error) {
 		createdTasks = append(createdTasks, newTask)
 	}
 
-	// Create precedes/follows relations between consecutive tasks
+	// Create precedes/follows relations between consecutive tasks (both directions)
 	for i := 0; i < len(createdTasks)-1; i++ {
-		relation := &TaskRelation{
+		forwardRelation := &TaskRelation{
 			TaskID:       createdTasks[i].ID,
 			OtherTaskID:  createdTasks[i+1].ID,
 			RelationKind: RelationKindPreceeds,
 			CreatedByID:  doer.GetID(),
 		}
-		if _, err := s.Insert(relation); err != nil {
+		inverseRelation := &TaskRelation{
+			TaskID:       createdTasks[i+1].ID,
+			OtherTaskID:  createdTasks[i].ID,
+			RelationKind: RelationKindFollows,
+			CreatedByID:  doer.GetID(),
+		}
+		if _, err := s.Insert(&[]*TaskRelation{forwardRelation, inverseRelation}); err != nil {
 			log.Debugf("Could not create chain relation between task %d and %d: %v",
 				createdTasks[i].ID, createdTasks[i+1].ID, err)
 		}
