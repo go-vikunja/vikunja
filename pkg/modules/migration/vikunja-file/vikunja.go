@@ -242,7 +242,11 @@ func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[i
 	if is {
 		bgid, has := bginfo["id"]
 		if has {
-			backgroundFileID = int64(bgid.(float64))
+			bgidFloat, ok := bgid.(float64)
+			if !ok {
+				return fmt.Errorf("invalid background file id type: expected number, got %T", bgid)
+			}
+			backgroundFileID = int64(bgidFloat)
 		}
 	}
 	if b, exists := storedFiles[backgroundFileID]; exists {
