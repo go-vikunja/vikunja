@@ -194,9 +194,7 @@
 					<!-- Project -->
 					<div class="field">
 						<label class="label">{{ $t('task.autoTask.targetProject') }}</label>
-						<ProjectSearch
-							v-model="editForm.project_id"
-						/>
+						<ProjectSearch v-model="selectedProject" />
 						<p class="help">{{ $t('task.autoTask.targetProjectHelp') }}</p>
 					</div>
 
@@ -210,7 +208,7 @@
 					<div class="field">
 						<label class="label">{{ $t('task.attributes.labels') }}</label>
 						<EditLabels
-							v-model="editForm.label_ids"
+							v-model="selectedLabels"
 							:creatable="false"
 						/>
 					</div>
@@ -218,18 +216,13 @@
 					<!-- Start date -->
 					<div class="field">
 						<label class="label">{{ $t('task.autoTask.startDate') }}</label>
-						<Datepicker
-							v-model="editForm.start_date"
-						/>
+						<Datepicker v-model="editStartDate" />
 					</div>
 
 					<!-- End date (optional) -->
 					<div class="field">
 						<label class="label">{{ $t('task.autoTask.endDate') }}</label>
-						<Datepicker
-							v-model="editForm.end_date"
-							:allow-clear="true"
-						/>
+						<Datepicker v-model="editEndDate" />
 						<p class="help">{{ $t('task.autoTask.endDateHelp') }}</p>
 					</div>
 
@@ -300,7 +293,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted} from 'vue'
+import {ref, computed, watch, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {
@@ -317,6 +310,14 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Modal from '@/components/misc/Modal.vue'
 import Card from '@/components/misc/Card.vue'
+import Datepicker from '@/components/input/Datepicker.vue'
+import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
+import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import EditLabels from '@/components/tasks/partials/EditLabels.vue'
+
+import ProjectModel from '@/models/project'
+import type {IProject} from '@/modelTypes/IProject'
+import type {ILabel} from '@/modelTypes/ILabel'
 
 import {success} from '@/message'
 import {useProjectStore} from '@/stores/projects'
@@ -334,6 +335,17 @@ const editingTemplate = ref<IAutoTaskTemplate | null>(null)
 const deletingTemplate = ref<IAutoTaskTemplate | null>(null)
 const editForm = ref<IAutoTaskTemplate>(emptyAutoTaskTemplate())
 const expandedLogs = ref<Set<number>>(new Set())
+
+// Typed v-model intermediaries for Vikunja components
+const selectedProject = ref<IProject>(new ProjectModel())
+const selectedLabels = ref<ILabel[]>([])
+const editStartDate = ref<Date | null>(new Date())
+const editEndDate = ref<Date | null>(null)
+
+// Sync project object ↔ editForm.project_id
+watch(selectedProject, (proj) => {
+	editForm.value.project_id = proj?.id || 0
+})
 
 onMounted(loadTemplates)
 
@@ -373,12 +385,31 @@ function toggleLog(id: number) {
 function openCreate() {
 	editingTemplate.value = null
 	editForm.value = emptyAutoTaskTemplate()
+	selectedProject.value = new ProjectModel()
+	selectedLabels.value = []
+	editStartDate.value = new Date()
+	editEndDate.value = null
 	showEditModal.value = true
 }
 
 function editTemplate(tmpl: IAutoTaskTemplate) {
 	editingTemplate.value = tmpl
 	editForm.value = {...tmpl}
+
+	// Load project object from store
+	if (tmpl.project_id && projectStore.projects[tmpl.project_id]) {
+		selectedProject.value = projectStore.projects[tmpl.project_id]
+	} else {
+		selectedProject.value = new ProjectModel()
+	}
+
+	// Labels: convert IDs to label objects from the store (best effort)
+	selectedLabels.value = []
+
+	// Dates
+	editStartDate.value = tmpl.start_date ? new Date(tmpl.start_date) : new Date()
+	editEndDate.value = tmpl.end_date ? new Date(tmpl.end_date) : null
+
 	showEditModal.value = true
 }
 
@@ -389,6 +420,17 @@ function closeModal() {
 
 async function saveTemplate() {
 	if (!editForm.value.title.trim()) return
+
+	// Sync typed values back to the flat form
+	editForm.value.project_id = selectedProject.value?.id || 0
+	editForm.value.label_ids = selectedLabels.value.map(l => l.id)
+	editForm.value.start_date = editStartDate.value
+		? editStartDate.value.toISOString()
+		: new Date().toISOString()
+	editForm.value.end_date = editEndDate.value
+		? editEndDate.value.toISOString()
+		: null
+
 	saving.value = true
 	try {
 		if (editingTemplate.value) {
@@ -422,7 +464,6 @@ async function triggerNow(tmpl: IAutoTaskTemplate) {
 		success({message: t('task.autoTask.triggeredSuccess')})
 		await loadTemplates()
 	} catch (e: any) {
-		// If there's already an open instance, show a friendly message
 		if (e?.response?.data?.message || e?.message) {
 			success({message: e?.response?.data?.message || e.message})
 		}
