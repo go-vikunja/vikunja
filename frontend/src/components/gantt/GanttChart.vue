@@ -32,6 +32,13 @@
 			>
 				<template #default="{ focusedRow, focusedCell }">
 					<div class="gantt-rows">
+						<GanttDependencyArrows
+							:bars-by-row="ganttBars"
+							:tasks="tasks"
+							:date-from="dateFromDate"
+							:day-width-pixels="DAY_WIDTH_PIXELS"
+							:total-width="totalWidth"
+						/>
 						<GanttRow
 							v-for="(rowId, index) in ganttRows"
 							:id="rowId"
@@ -82,6 +89,7 @@ import GanttRow from '@/components/gantt/GanttRow.vue'
 import GanttRowBars from '@/components/gantt/GanttRowBars.vue'
 import GanttVerticalGridLines from '@/components/gantt/GanttVerticalGridLines.vue'
 import GanttTimelineHeader from '@/components/gantt/GanttTimelineHeader.vue'
+import GanttDependencyArrows from '@/components/gantt/GanttDependencyArrows.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'

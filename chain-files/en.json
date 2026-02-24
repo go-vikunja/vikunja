@@ -1036,8 +1036,8 @@
         "duplicates": "Duplicates | Duplicates",
         "blocking": "Blocking | Blocking",
         "blocked": "Blocked By | Blocked By",
-        "precedes": "Precedes | Precedes",
-        "follows": "Follows | Follows",
+        "precedes": "Before | Before",
+        "follows": "After | After",
         "copiedfrom": "Copied From | Copied From",
         "copiedto": "Copied To | Copied To"
       }

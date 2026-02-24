@@ -114,10 +114,87 @@ export function useGanttTaskList<F extends Filters>(
 			// update the task with possible changes from server
 			tasks.value.set(updatedTask.id, updatedTask)
 			success('Saved')
+
+			// Check for date cascade: if start or end date changed, check for downstream chain tasks
+			const startChanged = oldTask.startDate?.toString() !== newTask.startDate?.toString()
+			const endChanged = oldTask.endDate?.toString() !== newTask.endDate?.toString()
+
+			if (startChanged || endChanged) {
+				await checkCascadeDownstream(updatedTask, oldTask)
+			}
 		} catch (_) {
 			error('Something went wrong saving the task')
 			// roll back changes
 			tasks.value.set(task.id, oldTask)
+		}
+	}
+
+	async function checkCascadeDownstream(updatedTask: ITask, oldTask: ITask) {
+		try {
+			// Fetch the full task with relations
+			const fullTask = await taskService.get(new TaskModel({id: updatedTask.id}))
+			const precedesTasks = fullTask?.relatedTasks?.precedes
+
+			if (!precedesTasks || !Array.isArray(precedesTasks) || precedesTasks.length === 0) return
+
+			// Calculate the delta in days
+			const oldStart = oldTask.startDate ? new Date(oldTask.startDate).getTime() : 0
+			const newStart = updatedTask.startDate ? new Date(updatedTask.startDate).getTime() : 0
+			if (oldStart === 0 || newStart === 0) return
+
+			const deltaDays = Math.round((newStart - oldStart) / (1000 * 60 * 60 * 24))
+			if (deltaDays === 0) return
+
+			const direction = deltaDays > 0 ? 'forward' : 'back'
+			const absDays = Math.abs(deltaDays)
+
+			// Prompt user
+			const confirmed = window.confirm(
+				`This task is part of a chain. Shift ${precedesTasks.length} downstream task(s) ${absDays} day(s) ${direction}?`,
+			)
+
+			if (!confirmed) return
+
+			// Cascade: shift all downstream tasks by the same delta
+			await cascadeShiftTasks(precedesTasks, deltaDays)
+		} catch (e) {
+			console.error('Failed to check cascade:', e)
+		}
+	}
+
+	async function cascadeShiftTasks(downstreamTasks: ITask[], deltaDays: number) {
+		const deltaMs = deltaDays * 24 * 60 * 60 * 1000
+
+		for (const downstream of downstreamTasks) {
+			const shiftedTask: Record<string, any> = {id: downstream.id}
+
+			if (downstream.startDate) {
+				shiftedTask.startDate = new Date(new Date(downstream.startDate).getTime() + deltaMs)
+			}
+			if (downstream.endDate) {
+				shiftedTask.endDate = new Date(new Date(downstream.endDate).getTime() + deltaMs)
+			}
+			if (downstream.dueDate) {
+				shiftedTask.dueDate = new Date(new Date(downstream.dueDate).getTime() + deltaMs)
+			}
+
+			try {
+				const updated = await taskService.update({...downstream, ...shiftedTask})
+				tasks.value.set(updated.id, updated)
+
+				// Recursively check if this task also precedes others
+				try {
+					const fullDownstream = await taskService.get(new TaskModel({id: updated.id}))
+					const nextTasks = fullDownstream?.relatedTasks?.precedes
+					if (nextTasks && Array.isArray(nextTasks) && nextTasks.length > 0) {
+						await cascadeShiftTasks(nextTasks, deltaDays)
+					}
+				} catch {
+					// No relations or fetch failed — end of chain
+				}
+			} catch (e) {
+				console.error(`Failed to cascade task ${downstream.id}:`, e)
+			}
 		}
 	}
 

@@ -69,7 +69,9 @@
 				:aria-label="getBarAriaLabel(bar)"
 				:aria-pressed="isRowFocused"
 				@pointerdown="handleBarPointerDown(bar, $event)"
-			/>
+			>
+				<title>{{ bar.meta?.label || bar.id }}</title>
+			</rect>
 
 			<!-- Left resize handle (hidden for endOnly bars) -->
 			<rect
