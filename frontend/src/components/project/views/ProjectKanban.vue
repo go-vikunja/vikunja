@@ -149,8 +149,7 @@
 								<draggable
 									v-bind="DRAG_OPTIONS"
 									:handle="taskDragHandle"
-									:delay-on-touch-only="!isTouchDevice"
-									:delay="isTouchDevice ? 0 : 1000"
+									:delay="isTouchDevice ? 300 : 1000"
 									:model-value="bucket.tasks"
 									:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
 									:disabled="!canWrite"
@@ -220,6 +219,9 @@
 											<span
 												v-if="canWrite && isTouchDevice"
 												class="handle"
+												@click="openTask(task)"
+												@touchstart.passive="onHandleTouchStart"
+												@touchmove.passive="onHandleTouchMove"
 											/>
 											<KanbanCard
 												class="kanban-card"
@@ -288,6 +290,7 @@
 
 <script setup lang="ts">
 import {computed, nextTick, ref, watch, toRef} from 'vue'
+import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 import {useI18n} from 'vue-i18n'
 import draggable from 'zhyswan-vuedraggable'
@@ -449,6 +452,34 @@ if (typeof window !== 'undefined') {
 	isTouchDevice.value = !window.matchMedia('(hover: hover) and (pointer: fine)').matches
 }
 const taskDragHandle = computed(() => isTouchDevice.value ? '.handle' : undefined)
+
+const router = useRouter()
+const touchStartY = ref(0)
+
+function openTask(task: ITask) {
+	router.push({
+		name: 'task.detail',
+		params: {id: task.id},
+		state: {backdropView: router.currentRoute.value.fullPath},
+	})
+}
+
+function onHandleTouchStart(e: TouchEvent) {
+	touchStartY.value = e.touches[0].clientY
+}
+
+function onHandleTouchMove(e: TouchEvent) {
+	if (drag.value) return
+
+	const currentY = e.touches[0].clientY
+	const deltaY = touchStartY.value - currentY
+	const scrollContainer = (e.target as HTMLElement).closest('.tasks') as HTMLElement | null
+	if (scrollContainer) {
+		scrollContainer.scrollTop += deltaY
+		touchStartY.value = currentY
+	}
+}
+
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
 const projectIdWithFallback = computed<number>(() => project.value?.id || projectId.value)
