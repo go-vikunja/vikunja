@@ -136,13 +136,21 @@ func convertBucketConfigurations20260224122023(configs []*bucketConfigFix2026022
 	return converted, changed, nil
 }
 
+func bucketConfigurationWhereClause20260224122023(dbType schemas.DBType) string {
+	if dbType == schemas.POSTGRES {
+		return "bucket_configuration IS NOT NULL AND bucket_configuration::text != '' AND bucket_configuration::text != '[]' AND bucket_configuration::text != 'null'"
+	}
+
+	return "bucket_configuration IS NOT NULL AND bucket_configuration != '' AND bucket_configuration != '[]' AND bucket_configuration != 'null'"
+}
+
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
 		ID:          "20260224122023",
 		Description: "comprehensive catchup for bucket_configuration and view filter format conversions",
 		Migrate: func(tx *xorm.Engine) (err error) {
 			allViews := []*projectViewFix20260224122023{}
-			err = tx.Where("bucket_configuration IS NOT NULL AND bucket_configuration != '' AND bucket_configuration != '[]' AND bucket_configuration != 'null'").
+			err = tx.Where(bucketConfigurationWhereClause20260224122023(tx.Dialect().URI().DBType)).
 				Find(&allViews)
 			if err != nil {
 				return
