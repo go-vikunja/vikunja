@@ -39,6 +39,7 @@ import (
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/migration"
+	"code.vikunja.io/api/pkg/utils"
 	vversion "code.vikunja.io/api/pkg/version"
 
 	"src.techknowlogick.com/xormigrate"
@@ -72,7 +73,7 @@ func Restore(filename string, overrideConfig bool) error {
 	dbfiles := make(map[string]*zip.File)
 	filesFiles := make(map[string]*zip.File)
 	for _, file := range r.File {
-		if containsPathTraversal(file.Name) {
+		if utils.ContainsPathTraversal(file.Name) {
 			return fmt.Errorf("unsafe path in zip archive: %q", file.Name)
 		}
 
@@ -445,17 +446,6 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 	}
 
 	return nil
-}
-
-// containsPathTraversal checks if a zip entry name contains directory traversal
-// sequences that could be used to write files outside the intended directory.
-func containsPathTraversal(name string) bool {
-	// Clean the path and check for traversal
-	cleanPath := filepath.ToSlash(filepath.Clean(name))
-	return strings.HasPrefix(cleanPath, "../") ||
-		strings.Contains(cleanPath, "/../") ||
-		cleanPath == ".." ||
-		strings.HasPrefix(name, "/")
 }
 
 func checkVikunjaVersion(versionFile *zip.File) error {
