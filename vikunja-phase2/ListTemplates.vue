@@ -28,7 +28,7 @@
 				:class="{ 'is-active': activeTab === 'autotasks' }"
 				@click="activeTab = 'autotasks'"
 			>
-				<Icon icon="robot" />
+				<Icon icon="bolt" />
 				{{ $t('task.autoTask.tab') }}
 			</BaseButton>
 		</div>
