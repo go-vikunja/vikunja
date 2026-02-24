@@ -1016,7 +1016,8 @@ func (Release) Compress(ctx context.Context) error {
 		if strings.Contains(info.Name(), "mips") ||
 			strings.Contains(info.Name(), "s390x") ||
 			strings.Contains(info.Name(), "riscv64") ||
-			strings.Contains(info.Name(), "darwin") {
+			strings.Contains(info.Name(), "darwin") ||
+			(strings.Contains(info.Name(), "windows") && strings.Contains(info.Name(), "arm64")) {
 			// not supported by upx
 			return nil
 		}
