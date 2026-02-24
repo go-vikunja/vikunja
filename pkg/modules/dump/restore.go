@@ -131,15 +131,14 @@ func Restore(filename string, overrideConfig bool) error {
 
 	///////
 	// Restore the db
-	// Start by wiping everything
-	if err := db.WipeEverything(); err != nil {
-		return fmt.Errorf("could not wipe database: %w", err)
-	}
-	log.Info("Wiped database.")
 
-	// Because we don't explicitly saved the table definitions, we take the last ran db migration from the dump
-	// and execute everything until that point.
+	// Validate archive contents before wiping to avoid leaving the database
+	// in a destroyed state when the archive is malformed.
 	migrations := dbfiles["migration"]
+	if migrations == nil {
+		return fmt.Errorf("dump does not contain database migration information")
+	}
+
 	rc, err := migrations.Open()
 	if err != nil {
 		return fmt.Errorf("could not open migrations: %w", err)
@@ -159,7 +158,17 @@ func Restore(filename string, overrideConfig bool) error {
 		return ms[i].ID < ms[j].ID
 	})
 
+	if len(ms) < 2 {
+		return fmt.Errorf("dump does not contain enough migration information")
+	}
+
 	lastMigration := ms[len(ms)-2]
+
+	// Start by wiping everything - only after we've validated the archive
+	if err := db.WipeEverything(); err != nil {
+		return fmt.Errorf("could not wipe database: %w", err)
+	}
+	log.Info("Wiped database.")
 	log.Debugf("Last migration: %s", lastMigration.ID)
 	if err := migration.MigrateTo(lastMigration.ID, nil); err != nil {
 		return fmt.Errorf("could not create db structure: %w", err)
