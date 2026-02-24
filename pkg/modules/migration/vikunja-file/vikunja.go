@@ -37,6 +37,7 @@ import (
 )
 
 const logPrefix = "[Vikunja File Import] "
+const maxZipEntrySize = 500 * 1024 * 1024 // 500 MB
 
 type FileMigrator struct {
 }
@@ -127,7 +128,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	}
 
 	var bufVersion bytes.Buffer
-	if _, err := bufVersion.ReadFrom(vf); err != nil {
+	if _, err := bufVersion.ReadFrom(io.LimitReader(vf, maxZipEntrySize)); err != nil {
 		return fmt.Errorf("could not read version file: %w", err)
 	}
 
@@ -158,7 +159,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	defer df.Close()
 
 	var bufData bytes.Buffer
-	if _, err := bufData.ReadFrom(df); err != nil {
+	if _, err := bufData.ReadFrom(io.LimitReader(df, maxZipEntrySize)); err != nil {
 		return fmt.Errorf("could not read data file: %w", err)
 	}
 
@@ -193,7 +194,7 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	defer ff.Close()
 
 	var bufFilter bytes.Buffer
-	if _, err := bufFilter.ReadFrom(ff); err != nil {
+	if _, err := bufFilter.ReadFrom(io.LimitReader(ff, maxZipEntrySize)); err != nil {
 		return fmt.Errorf("could not read filters file: %w", err)
 	}
 
@@ -250,7 +251,7 @@ func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[i
 			return fmt.Errorf("could not open project background file %d for reading: %w", l.BackgroundFileID, err)
 		}
 		var buf bytes.Buffer
-		if _, err := buf.ReadFrom(bf); err != nil {
+		if _, err := buf.ReadFrom(io.LimitReader(bf, maxZipEntrySize)); err != nil {
 			return fmt.Errorf("could not read project background file %d: %w", l.BackgroundFileID, err)
 		}
 
@@ -276,7 +277,7 @@ func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[i
 				continue
 			}
 			var buf bytes.Buffer
-			if _, err := buf.ReadFrom(af); err != nil {
+			if _, err := buf.ReadFrom(io.LimitReader(af, maxZipEntrySize)); err != nil {
 				log.Warningf(logPrefix+"Could not read attachment %d: %v, skipping", attachment.ID, err)
 				continue
 			}
