@@ -31,6 +31,12 @@
 				<Icon icon="filter" />
 			</span>
 			{{ getProjectTitle(project) }}
+			<span
+				v-if="parentProject"
+				class="parent-project-name"
+			>
+				{{ parentProject.title }}
+			</span>
 		</div>
 		<BaseButton
 			class="project-button"
@@ -69,6 +75,11 @@ const props = defineProps<{
 const {background, blurHashUrl} = useProjectBackground(() => props.project)
 
 const projectStore = useProjectStore()
+
+const parentProject = computed(() => {
+	if (!props.project.parentProjectId || props.project.parentProjectId <= 0) return null
+	return projectStore.projects[props.project.parentProjectId] || null
+})
 
 const textOnlyDescription = computed(() => {
 	return props.project.description ? props.project.description.replace(/<[^>]*>/g, '') : ''
@@ -147,6 +158,20 @@ const textOnlyDescription = computed(() => {
 
 .has-light-text .project-title {
 	color: var(--grey-100);
+}
+
+.parent-project-name {
+	display: block;
+	font-size: .75rem;
+	font-weight: 300;
+	color: var(--grey-400);
+	line-height: 1.3;
+	margin-block-start: .15rem;
+}
+
+.has-light-text .parent-project-name,
+.has-background .parent-project-name {
+	color: var(--grey-300);
 }
 
 .has-background .project-title {

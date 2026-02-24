@@ -27,6 +27,7 @@ export function useGanttTaskList<F extends Filters>(
 	filterToApiParams: (filters: F) => TaskFilterParams,
 	viewId: Ref<IProjectView['id']>,
 	loadAll: boolean = true,
+	extraParams?: Ref<Record<string, unknown>>,
 ) : UseGanttTaskListReturn {
 	const taskCollectionService = shallowReactive(new TaskCollectionService())
 	const taskService = shallowReactive(new TaskService())
@@ -41,8 +42,13 @@ export function useGanttTaskList<F extends Filters>(
 		if (params.filter_timezone === '') {
 			params.filter_timezone = authStore.settings.timezone
 		}
+
+		// Merge any extra params (e.g. include_subprojects, exclude_project_ids)
+		const mergedParams = extraParams?.value
+			? {...params, ...extraParams.value}
+			: params
 		
-		const tasks = await taskCollectionService.getAll({projectId: filters.value.projectId, viewId: viewId.value}, params, page) as ITask[]
+		const tasks = await taskCollectionService.getAll({projectId: filters.value.projectId, viewId: viewId.value}, mergedParams, page) as ITask[]
 		if (loadAll && page < taskCollectionService.totalPages) {
 			const nextTasks = await fetchTasks(params, page + 1)
 			return tasks.concat(nextTasks)

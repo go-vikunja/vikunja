@@ -91,6 +91,11 @@
 				>
 					{{ $t('task.template.fromTemplate') }}
 				</XButton>
+				<SubprojectFilter
+					:project-id="projectId"
+					@update:includeSubprojects="onSubprojectToggle"
+					@update:excludeProjectIds="onExcludeChange"
+				/>
 			</div>
 		</template>
 
@@ -331,6 +336,7 @@ import CommentCount from '@/components/tasks/partials/CommentCount.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import SubprojectFilter from '@/components/project/partials/SubprojectFilter.vue'
 import CreateFromTemplateModal from '@/components/tasks/partials/CreateFromTemplateModal.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import Popup from '@/components/misc/Popup.vue'
@@ -355,10 +361,30 @@ const projectStore = useProjectStore()
 
 const showCreateFromTemplateModal = ref(false)
 
+const subprojectParams = ref<Record<string, unknown>>({})
+
+function onSubprojectToggle(enabled: boolean) {
+	if (enabled) {
+		subprojectParams.value = {...subprojectParams.value, include_subprojects: true}
+	} else {
+		const {include_subprojects, exclude_project_ids, ...rest} = subprojectParams.value
+		subprojectParams.value = rest
+	}
+}
+
+function onExcludeChange(ids: string) {
+	if (ids) {
+		subprojectParams.value = {...subprojectParams.value, exclude_project_ids: ids}
+	} else {
+		const {exclude_project_ids, ...rest} = subprojectParams.value
+		subprojectParams.value = rest
+	}
+}
+
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
 	done: true,
-	project: false,
+	project: true,
 	title: true,
 	priority: false,
 	labels: true,
@@ -386,6 +412,7 @@ const taskList = useTaskList(
 	() => props.viewId, 
 	sortBy.value,
 	() => ['comment_count', 'is_unread'],
+	() => subprojectParams.value,
 )
 
 const {

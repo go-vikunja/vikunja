@@ -824,6 +824,8 @@
       "searchPlaceholder": "Search templates…",
       "noResults": "No templates match your search.",
       "noTemplates": "You haven't created any templates yet. Save a task as a template to get started.",
+      "subprojects": "Sub-projects",
+      "includeSubprojects": "Include all sub-projects",
       "backToList": "Back to templates",
       "taskTitle": "Task title",
       "titleHint": "Leave blank to use the template's title.",

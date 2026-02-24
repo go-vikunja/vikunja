@@ -87,13 +87,16 @@ import Loading from '@/components/misc/Loading.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
 	tasks: Map<ITask['id'], ITask>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
-}>()
+	subprojectColorMap?: Map<number, string>
+}>(), {
+	subprojectColorMap: () => new Map(),
+})
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
@@ -193,6 +196,9 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 	}
 
 	const taskColor = getHexColor(t.hexColor)
+	// Use sub-project color if the task doesn't have its own color
+	const subprojectColor = props.subprojectColorMap?.get(t.projectId) || null
+	const effectiveColor = taskColor || subprojectColor
 
 	return {
 		id: String(t.id),
@@ -201,7 +207,7 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 		meta: {
 			label: t.title,
 			task: t,
-			color: taskColor,
+			color: effectiveColor,
 			hasActualDates: Boolean(t.startDate && (t.endDate || t.dueDate)),
 			dateType,
 			isDone: t.done,
@@ -210,7 +216,7 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 }
 
 watch(
-	[tasks, filters],
+	[tasks, filters, () => props.subprojectColorMap],
 	() => {
 		const bars: GanttBarModel[] = []
 		const rows: string[] = []

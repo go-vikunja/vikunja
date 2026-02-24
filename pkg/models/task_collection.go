@@ -49,6 +49,11 @@ type TaskCollection struct {
 	// If set to true, the result will also include null values
 	FilterIncludeNulls bool `query:"filter_include_nulls" json:"filter_include_nulls"`
 
+	// If set to true, tasks from all child/sub-projects will be included in the results.
+	IncludeSubprojects bool `query:"include_subprojects" json:"include_subprojects"`
+	// Comma-separated list of child project IDs to exclude when include_subprojects is true.
+	ExcludeProjectIDs string `query:"exclude_project_ids" json:"exclude_project_ids"`
+
 	// If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a
 	// second step, will fetch all of these subtasks. This may result in more tasks than the
 	// pagination limit being returned, but all subtasks will be present in the response.
@@ -196,7 +201,34 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 		}
 	}
 
-	return []*Project{{ID: tf.ProjectID}}, nil
+	projects = []*Project{{ID: tf.ProjectID}}
+
+	// Include child/sub-project tasks when requested
+	if tf.IncludeSubprojects {
+		childIDs, err := GetAllChildProjectIDs(s, tf.ProjectID)
+		if err != nil {
+			return nil, err
+		}
+
+		// Parse excluded project IDs
+		excludeMap := make(map[int64]bool)
+		if tf.ExcludeProjectIDs != "" {
+			for _, idStr := range strings.Split(tf.ExcludeProjectIDs, ",") {
+				idStr = strings.TrimSpace(idStr)
+				if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+					excludeMap[id] = true
+				}
+			}
+		}
+
+		for _, childID := range childIDs {
+			if !excludeMap[childID] {
+				projects = append(projects, &Project{ID: childID})
+			}
+		}
+	}
+
+	return projects, nil
 }
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {

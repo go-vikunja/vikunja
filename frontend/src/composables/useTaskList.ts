@@ -63,6 +63,7 @@ export function useTaskList(
 	projectViewIdGetter: ComputedGetter<IProjectView['id']>,
 	sortByDefault: SortBy = SORT_BY_DEFAULT,
 	expandGetter: ComputedGetter<ExpandTaskFilterParam> = () => 'subtasks',
+	extraParams?: ComputedGetter<Record<string, unknown>>,
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
@@ -110,6 +111,7 @@ export function useTaskList(
 				...allParams.value,
 				filter_timezone: authStore.settings.timezone,
 				expand: expandGetter(),
+				...(extraParams ? extraParams() : {}),
 			},
 			page.value,
 		]

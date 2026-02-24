@@ -658,7 +658,33 @@ func GetAllParentProjects(s *xorm.Session, projectID int64) (allProjects map[int
 	return
 }
 
-// addProjectDetails adds owner user objects and project tasks to all projects in the slice
+// GetAllChildProjectIDs returns all descendant project IDs of a given project (recursive)
+func GetAllChildProjectIDs(s *xorm.Session, projectID int64) (childIDs []int64, err error) {
+	allProjects := make(map[int64]*Project)
+	err = s.SQL(`WITH RECURSIVE all_children AS (
+		    SELECT
+		        p.*
+		    FROM
+		        projects p
+		    WHERE
+		        p.parent_project_id = ?
+		    UNION ALL
+		    SELECT
+		        p.*
+		    FROM
+		        projects p
+		            INNER JOIN all_children pc ON p.parent_project_id = pc.id
+		)
+		SELECT DISTINCT * FROM all_children`, projectID).Find(&allProjects)
+	if err != nil {
+		return nil, err
+	}
+	for id := range allProjects {
+		childIDs = append(childIDs, id)
+	}
+	return
+}
+
 func addProjectDetails(s *xorm.Session, projects []*Project, a web.Auth) (err error) {
 	if len(projects) == 0 {
 		return

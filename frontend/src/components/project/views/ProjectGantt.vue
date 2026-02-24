@@ -38,6 +38,12 @@
 					>
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
+					<SubprojectFilter
+						:project-id="filters.projectId"
+						@update:includeSubprojects="onSubprojectToggle"
+						@update:excludeProjectIds="onExcludeChange"
+						@update:colorMap="onColorMapChange"
+					/>
 				</div>
 			</Card>
 
@@ -53,6 +59,7 @@
 						:is-loading="isLoading"
 						:default-task-start-date="defaultTaskStartDate"
 						:default-task-end-date="defaultTaskEndDate"
+						:subproject-color-map="subprojectColorMap"
 						@update:task="updateTask"
 					/>
 					<TaskForm
@@ -81,6 +88,7 @@ import TaskForm from '@/components/tasks/TaskForm.vue'
 import FormField from '@/components/input/FormField.vue'
 
 import GanttChart from '@/components/gantt/GanttChart.vue'
+import SubprojectFilter from '@/components/project/partials/SubprojectFilter.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {PERMISSIONS} from '@/constants/permissions'
 
@@ -101,6 +109,34 @@ const baseStore = useBaseStore()
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
 
 const {route, viewId} = toRefs(props)
+
+const subprojectParams = ref<Record<string, unknown>>({})
+const subprojectColorMap = ref<Map<number, string>>(new Map())
+
+function onSubprojectToggle(enabled: boolean) {
+	if (enabled) {
+		subprojectParams.value = {...subprojectParams.value, include_subprojects: true}
+	} else {
+		const {include_subprojects, exclude_project_ids, ...rest} = subprojectParams.value
+		subprojectParams.value = rest
+	}
+	loadTasks()
+}
+
+function onExcludeChange(ids: string) {
+	if (ids) {
+		subprojectParams.value = {...subprojectParams.value, exclude_project_ids: ids}
+	} else {
+		const {exclude_project_ids, ...rest} = subprojectParams.value
+		subprojectParams.value = rest
+	}
+	loadTasks()
+}
+
+function onColorMapChange(map: Map<number, string>) {
+	subprojectColorMap.value = map
+}
+
 const {
 	filters,
 	hasDefaultFilters,
@@ -109,7 +145,8 @@ const {
 	isLoading,
 	addTask,
 	updateTask,
-} = useGanttFilters(route, viewId)
+	loadTasks,
+} = useGanttFilters(route, viewId, subprojectParams)
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 
