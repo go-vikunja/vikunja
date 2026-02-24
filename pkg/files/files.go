@@ -146,15 +146,14 @@ func CreateWithMimeAndSession(s *xorm.Session, f io.ReadSeeker, realname string,
 	return
 }
 
-// Delete removes a file from the DB and the file system
+// Delete removes a file from the DB and the file system.
+// The caller is responsible for committing or rolling back the session.
 func (f *File) Delete(s *xorm.Session) (err error) {
 	deleted, err := s.Where("id = ?", f.ID).Delete(&File{})
 	if err != nil {
-		_ = s.Rollback()
 		return err
 	}
 	if deleted == 0 {
-		_ = s.Rollback()
 		return ErrFileDoesNotExist{FileID: f.ID}
 	}
 
@@ -164,10 +163,9 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 		if errors.As(err, &perr) {
 			// Don't fail when removing the file failed
 			log.Errorf("Error deleting file %d: %s", f.ID, err)
-			return s.Commit()
+			return nil
 		}
 
-		_ = s.Rollback()
 		return err
 	}
 
