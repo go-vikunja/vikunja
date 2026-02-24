@@ -49,6 +49,11 @@ func MarkAllNotificationsAsRead(c *echo.Context) error {
 
 	err = notifications.MarkAllNotificationsAsRead(s, a.GetID())
 	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	if err := s.Commit(); err != nil {
 		return err
 	}
 

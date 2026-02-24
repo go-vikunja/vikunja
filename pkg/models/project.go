@@ -1291,8 +1291,12 @@ func (p *Project) DeleteBackgroundFileIfExists() (err error) {
 	if err != nil && files.IsErrFileDoesNotExist(err) {
 		return nil
 	}
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
 
-	return err
+	return s.Commit()
 }
 
 // SetProjectBackground sets a background file as project background in the db

@@ -22,7 +22,13 @@ func GenerateNewCaldavToken(u *User) (token *Token, err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	return generateHashedToken(s, u, TokenCaldavAuth)
+	token, err = generateHashedToken(s, u, TokenCaldavAuth)
+	if err != nil {
+		_ = s.Rollback()
+		return
+	}
+
+	return token, s.Commit()
 }
 
 func GetCaldavTokens(u *User) (tokens []*Token, err error) {
@@ -36,5 +42,11 @@ func DeleteCaldavTokenByID(u *User, id int64) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	return removeTokenByID(s, u, TokenCaldavAuth, id)
+	err := removeTokenByID(s, u, TokenCaldavAuth, id)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	return s.Commit()
 }

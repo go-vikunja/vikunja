@@ -244,7 +244,7 @@ func ReindexAllTasks() (err error) {
 		return fmt.Errorf("could update last sync state: %s", err.Error())
 	}
 
-	return
+	return s.Commit()
 }
 
 func reindexTasksInTypesense(s *xorm.Session, tasks map[int64]*Task) (err error) {

@@ -37,6 +37,7 @@ func RegisterDeletionNotificationCron() {
 
 func notifyUsersScheduledForDeletion() {
 	s := db.NewSession()
+	defer s.Close()
 	users := []*User{}
 	err := s.Where(builder.NotNull{"deletion_scheduled_at"}).
 		Find(&users)
@@ -82,6 +83,10 @@ func notifyUsersScheduledForDeletion() {
 		if err != nil {
 			log.Errorf("Could update user %d last deletion reminder sent date: %s", user.ID, err)
 		}
+	}
+
+	if err := s.Commit(); err != nil {
+		log.Errorf("Could not commit user deletion notifications: %s", err)
 	}
 }
 

@@ -46,6 +46,11 @@ var deleteOrphanTaskPositions = &cobra.Command{
 			return
 		}
 
+		if err := s.Commit(); err != nil {
+			log.Errorf("Could not commit orphaned task position deletion: %s", err)
+			return
+		}
+
 		if count == 0 {
 			log.Infof("No orphaned task positions found.")
 			return

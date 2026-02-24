@@ -161,6 +161,10 @@ func (bp *BackgroundProvider) SetBackground(c *echo.Context) error {
 		return err
 	}
 
+	if err := s.Commit(); err != nil {
+		return err
+	}
+
 	return c.JSON(http.StatusOK, project)
 }
 
@@ -403,11 +407,13 @@ func RemoveProjectBackground(c *echo.Context) error {
 
 	project, auth, err := checkProjectBackgroundRights(s, c)
 	if err != nil {
+		_ = s.Rollback()
 		return err
 	}
 
 	err = project.DeleteBackgroundFileIfExists()
 	if err != nil {
+		_ = s.Rollback()
 		return err
 	}
 
@@ -416,6 +422,11 @@ func RemoveProjectBackground(c *echo.Context) error {
 	project.BackgroundBlurHash = ""
 	err = models.UpdateProject(s, project, auth, true)
 	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	if err := s.Commit(); err != nil {
 		return err
 	}
 
