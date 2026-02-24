@@ -1,6 +1,6 @@
 # ============================================================
 # patch-phase2.ps1 - Vikunja Custom Build: Full Patch + Build
-# Run from: C:\Users\antho\Downloads\vikunja-task-duplicate
+# Run from: your vikunja source directory
 # Usage: .\vikunja-phase2\patch-phase2.ps1              (build only)
 #        .\vikunja-phase2\patch-phase2.ps1 -Deploy      (build + deploy)
 # ============================================================
@@ -10,7 +10,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ROOT = "C:\Users\antho\Downloads\vikunja-task-duplicate"
+$ROOT = $PSScriptRoot | Split-Path -Parent
 $PATCH = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 $stepTotal = 21
@@ -210,8 +210,8 @@ if (-not $Deploy) {
     Write-Host "--- Deploy skipped (use -Deploy to push to server) ---" -ForegroundColor Yellow
     Write-Host "  Manual steps:" -ForegroundColor Gray
     Write-Host "  docker save vikunja-custom:latest -o vikunja-custom.tar" -ForegroundColor Gray
-    Write-Host "  scp vikunja-custom.tar root@agapp.io:/tmp/" -ForegroundColor Gray
-    Write-Host "  ssh root@agapp.io" -ForegroundColor Gray
+    Write-Host "  scp vikunja-custom.tar user@yourserver:/tmp/" -ForegroundColor Gray
+    Write-Host "  ssh user@yourserver" -ForegroundColor Gray
     Write-Host "  docker load -i /tmp/vikunja-custom.tar" -ForegroundColor Gray
     Write-Host "  cd /opt/vikunja" -ForegroundColor Gray
     Write-Host "  docker compose down" -ForegroundColor Gray
@@ -221,7 +221,7 @@ if (-not $Deploy) {
     Step "Export + upload + restart"
 
     $tarFile    = "$ROOT\vikunja-custom.tar"
-    $server     = "root@agapp.io"
+    $server     = "user@yourserver"
     $remotePath = "/tmp/vikunja-custom.tar"
     $composeDir = "/opt/vikunja"
 
@@ -252,7 +252,7 @@ if (-not $Deploy) {
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host ""
-        Write-Host "  DEPLOYED to tasks.agapp.io" -ForegroundColor Green
+        Write-Host "  DEPLOYED successfully" -ForegroundColor Green
     } else {
         Write-Host ""
         Write-Host "  [!] Remote restart failed - check server" -ForegroundColor Red
