@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -378,6 +379,23 @@ func RegisterReminderCron() {
 			}
 
 			log.Debugf("[Task Reminder Cron] Sent reminder email for task %d to user %d", n.Task.ID, n.User.ID)
+		}
+
+		// Dispatch webhook events, deduplicated by task ID
+		dispatchedTasks := make(map[int64]bool)
+		for _, n := range reminders {
+			if dispatchedTasks[n.Task.ID] {
+				continue
+			}
+			dispatchedTasks[n.Task.ID] = true
+			err = events.Dispatch(&TaskReminderFiredEvent{
+				Task:    n.Task,
+				Project: n.Project,
+			})
+			if err != nil {
+				log.Errorf("[Task Reminder Cron] Could not dispatch reminder event for task %d: %s", n.Task.ID, err)
+				return
+			}
 		}
 	})
 	if err != nil {
