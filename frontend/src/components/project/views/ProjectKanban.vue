@@ -967,7 +967,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		.tasks:not(.dragging-disabled) .task-item {
 			-webkit-touch-callout: none;
 			user-select: none;
-			touch-action: manipulation;
+			touch-action: none;
 		}
 
 		.no-move {
