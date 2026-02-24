@@ -18,6 +18,8 @@
 			</XButton>
 		</div>
 
+		<hr class="page-separator">
+
 		<p
 			v-if="labelStore.labelsArray.length === 0 && !loading"
 			class="has-text-centered has-text-grey p-4"
@@ -200,6 +202,12 @@ function showDeleteDialoge(label: ILabel) {
 }
 
 .tab-actions {
+	margin-block-end: 1rem;
+}
+
+.page-separator {
+	border: none;
+	border-block-start: 2px solid var(--grey-200);
 	margin-block-end: 1.5rem;
 }
 

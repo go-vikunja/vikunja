@@ -18,6 +18,8 @@
 			</XButton>
 		</div>
 
+		<hr class="page-separator">
+
 		<ul
 			v-if="teams.length > 0"
 			class="teams box"
@@ -70,6 +72,12 @@ teamService.getAll().then((result) => {
 }
 
 .tab-actions {
+	margin-block-end: 1rem;
+}
+
+.page-separator {
+	border: none;
+	border-block-start: 2px solid var(--grey-200);
 	margin-block-end: 1.5rem;
 }
 

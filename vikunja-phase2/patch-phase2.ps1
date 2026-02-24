@@ -50,7 +50,10 @@ Copy-Item "$PATCH\ListLabels.vue"   "$ROOT\frontend\src\views\labels\ListLabels.
 Copy-Item "$PATCH\ListTeams.vue"    "$ROOT\frontend\src\views\teams\ListTeams.vue" -Force
 Copy-Item "$PATCH\ListProjects.vue" "$ROOT\frontend\src\views\project\ListProjects.vue" -Force
 
-Write-Host "[11/13] Building..." -ForegroundColor Green
+Write-Host "[11/13] Fix: Upcoming page checkbox persistence..." -ForegroundColor Green
+Copy-Item "$PATCH\ShowTasks.vue" "$ROOT\frontend\src\views\tasks\ShowTasks.vue" -Force
+
+Write-Host "[12/13] Building..." -ForegroundColor Green
 Set-Location $ROOT
 docker buildx build --tag vikunja-custom:latest --load .
 

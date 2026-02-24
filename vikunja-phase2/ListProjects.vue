@@ -36,6 +36,8 @@
 			</div>
 		</header>
 
+		<hr class="page-separator">
+
 		<ProjectCardGrid
 			:projects="projects"
 			:show-archived="showArchived"
@@ -81,11 +83,17 @@ const projects = computed(() => {
 	justify-content: space-between;
 	align-items: center;
 	gap: 1rem;
-	margin-block-end: 1.5rem;
+	margin-block-end: 1rem;
 
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
 	}
+}
+
+.page-separator {
+	border: none;
+	border-block-start: 2px solid var(--grey-200);
+	margin-block-end: 1.5rem;
 }
 
 .action-buttons {

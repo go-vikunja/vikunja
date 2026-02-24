@@ -863,7 +863,8 @@
 			"select": "Select a date range",
 			"noTasks": "Nothing to do — Have a nice day!",
 			"filterByLabel": "Filtering by label {label}",
-			"clearLabelFilter": "Clear label filter"
+			"clearLabelFilter": "Clear label filter",
+			"pageDescription": "View your upcoming tasks across all projects. Filter by date range, overdue status, or tasks without dates."
 		},
 		"detail": {
 			"chooseDueDate": "Click here to set a due date",
