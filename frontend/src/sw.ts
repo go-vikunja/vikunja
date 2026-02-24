@@ -20,10 +20,14 @@ workbox.routing.registerRoute(
 	new workbox.strategies.StaleWhileRevalidate(),
 )
 
-// Always send api requests through the network
+// Always send api requests through the network and bypass the browser's HTTP cache
 workbox.routing.registerRoute(
 	new RegExp('api\\/v1\\/.*$'),
-	new workbox.strategies.NetworkOnly(),
+	new workbox.strategies.NetworkOnly({
+		fetchOptions: {
+			cache: 'no-store',
+		},
+	}),
 )
 
 // This code listens for the user's confirmation to update the app.
