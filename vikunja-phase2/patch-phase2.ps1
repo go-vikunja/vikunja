@@ -53,7 +53,13 @@ Copy-Item "$PATCH\ListProjects.vue" "$ROOT\frontend\src\views\project\ListProjec
 Write-Host "[11/13] Fix: Upcoming page checkbox persistence..." -ForegroundColor Green
 Copy-Item "$PATCH\ShowTasks.vue" "$ROOT\frontend\src\views\tasks\ShowTasks.vue" -Force
 
-Write-Host "[12/13] Building..." -ForegroundColor Green
+Write-Host "[12/14] Home page: tasks above last viewed..." -ForegroundColor Green
+Copy-Item "$PATCH\Home.vue" "$ROOT\frontend\src\views\Home.vue" -Force
+
+Write-Host "[13/14] Task row: title left, project right..." -ForegroundColor Green
+Copy-Item "$PATCH\SingleTaskInProject.vue" "$ROOT\frontend\src\components\tasks\partials\SingleTaskInProject.vue" -Force
+
+Write-Host "[14/14] Building..." -ForegroundColor Green
 Set-Location $ROOT
 docker buildx build --tag vikunja-custom:latest --load .
 
