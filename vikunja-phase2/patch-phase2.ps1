@@ -27,21 +27,25 @@ Copy-Item "$PATCH\GanttDependencyArrows.vue" "$ROOT\frontend\src\components\gant
 Copy-Item "$PATCH\GanttChart.vue"            "$ROOT\frontend\src\components\gantt\GanttChart.vue" -Force
 Copy-Item "$PATCH\GanttRowBars.vue"          "$ROOT\frontend\src\components\gantt\GanttRowBars.vue" -Force
 
-Write-Host "[6/9] Cascade + chain editor + attachments + create-from-chain..." -ForegroundColor Green
+Write-Host "[6/10] Cascade + chain editor + attachments + create-from-chain..." -ForegroundColor Green
 Copy-Item "$PATCH\useGanttTaskList.ts"      "$ROOT\frontend\src\views\project\helpers\useGanttTaskList.ts" -Force
 Copy-Item "$PATCH\tasks.ts"                 "$ROOT\frontend\src\stores\tasks.ts" -Force
 Copy-Item "$PATCH\taskChainApi.ts"          "$ROOT\frontend\src\services\taskChainApi.ts" -Force
 Copy-Item "$PATCH\ChainEditor.vue"          "$ROOT\frontend\src\components\tasks\partials\ChainEditor.vue" -Force
 Copy-Item "$PATCH\CreateFromChainModal.vue" "$ROOT\frontend\src\components\tasks\partials\CreateFromChainModal.vue" -Force
 
-Write-Host "[7/9] Template manager: tabs + NEW TEMPLATE button..." -ForegroundColor Green
+Write-Host "[7/10] Drag-to-reorder composable..." -ForegroundColor Green
+New-Item -ItemType Directory -Path "$ROOT\frontend\src\composables" -Force | Out-Null
+Copy-Item "$PATCH\useDragReorder.ts" "$ROOT\frontend\src\composables\useDragReorder.ts" -Force
+
+Write-Host "[8/10] Template manager: tabs + NEW TEMPLATE button..." -ForegroundColor Green
 Copy-Item "$PATCH\ListTemplates.vue" "$ROOT\frontend\src\views\templates\ListTemplates.vue" -Force
 
-Write-Host "[8/9] i18n + subproject filter fix..." -ForegroundColor Green
+Write-Host "[9/10] i18n + subproject filter fix..." -ForegroundColor Green
 Copy-Item "$PATCH\en.json"              "$ROOT\frontend\src\i18n\lang\en.json" -Force
 Copy-Item "$PATCH\SubprojectFilter.vue" "$ROOT\frontend\src\components\project\partials\SubprojectFilter.vue" -Force
 
-Write-Host "[9/9] Building..." -ForegroundColor Green
+Write-Host "[10/10] Building..." -ForegroundColor Green
 Set-Location $ROOT
 docker buildx build --tag vikunja-custom:latest --load .
 

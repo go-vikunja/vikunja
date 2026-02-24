@@ -83,8 +83,18 @@
 								v-for="(step, i) in computedPreview"
 								:key="step._key"
 								class="step-preview-item"
+								draggable="true"
+								:class="{ 'is-dragging': dragIndex === i, 'is-drag-over': dragOverIndex === i }"
+								@dragstart="onDragStart(i, $event)"
+								@dragover.prevent="onDragOver(i)"
+								@dragleave="onDragLeave()"
+								@drop.prevent="onDrop(i)"
+								@dragend="onDragEnd"
 							>
 								<div class="step-preview-header">
+									<span class="step-drag-handle">
+										<Icon icon="grip-vertical" />
+									</span>
 									<span class="step-preview-number">{{ i + 1 }}</span>
 									<div class="step-title-group">
 										<span
@@ -133,7 +143,7 @@
 								</div>
 								<div class="step-preview-attachments">
 									<div
-										v-for="(file, fi) in (stepFiles[i] || [])"
+										v-for="(file, fi) in localSteps[i]._files"
 										:key="fi"
 										class="step-file-tag"
 									>
@@ -206,9 +216,11 @@ import type {ITaskChain, ITaskChainStep} from '@/services/taskChainApi'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 
 import {success} from '@/message'
+import {useDragReorder} from '@/composables/useDragReorder'
 
 interface LocalStep extends ITaskChainStep {
 	_key: number // stable key for v-for
+	_files: File[] // in-memory file uploads for this step
 }
 
 const props = defineProps<{
@@ -230,12 +242,14 @@ const creating = ref(false)
 const selectedChainId = ref<number | null>(null)
 const anchorDate = ref(new Date().toISOString().split('T')[0])
 const titlePrefix = ref('')
-const stepFiles = ref<Record<number, File[]>>({})
 const expandedDescriptions = ref<Set<number>>(new Set())
 
 // Mutable local copy of steps — initialized from chain, freely editable
 const localSteps = ref<LocalStep[]>([])
 let nextKey = 0
+
+// Drag-to-reorder for steps in the preview
+const {dragIndex, dragOverIndex, onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd} = useDragReorder(localSteps)
 
 function cloneStepsFromChain(chain: ITaskChain) {
 	nextKey = 0
@@ -243,13 +257,13 @@ function cloneStepsFromChain(chain: ITaskChain) {
 		...s,
 		description: s.description || '',
 		_key: nextKey++,
+		_files: [],
 	}))
 }
 
 function selectChain(chain: ITaskChain) {
 	selectedChainId.value = chain.id ?? null
 	cloneStepsFromChain(chain)
-	stepFiles.value = {}
 	expandedDescriptions.value = new Set()
 }
 
@@ -283,19 +297,7 @@ function toggleStepDescription(index: number) {
 function removeStep(index: number) {
 	if (localSteps.value.length <= 1) return
 	localSteps.value.splice(index, 1)
-	// Shift file records down
-	const newFiles: Record<number, File[]> = {}
-	for (const [k, v] of Object.entries(stepFiles.value)) {
-		const ki = Number(k)
-		if (ki < index) {
-			newFiles[ki] = v
-		} else if (ki > index) {
-			newFiles[ki - 1] = v
-		}
-		// ki === index is dropped
-	}
-	stepFiles.value = newFiles
-	// Collapse expanded descriptions above removed index
+	// Adjust expanded descriptions indices
 	const newExpanded = new Set<number>()
 	for (const idx of expandedDescriptions.value) {
 		if (idx < index) newExpanded.add(idx)
@@ -317,6 +319,7 @@ function addStep() {
 		hex_color: '',
 		label_ids: [],
 		_key: nextKey++,
+		_files: [],
 	})
 	// Auto-expand the new step so user can set title
 	expandedDescriptions.value = new Set([...expandedDescriptions.value, localSteps.value.length - 1])
@@ -325,15 +328,12 @@ function addStep() {
 function handleStepFiles(stepIndex: number, event: Event) {
 	const input = event.target as HTMLInputElement
 	if (!input.files) return
-	if (!stepFiles.value[stepIndex]) {
-		stepFiles.value[stepIndex] = []
-	}
-	stepFiles.value[stepIndex].push(...Array.from(input.files))
+	localSteps.value[stepIndex]._files.push(...Array.from(input.files))
 	input.value = ''
 }
 
 function removeStepFile(stepIndex: number, fileIndex: number) {
-	stepFiles.value[stepIndex]?.splice(fileIndex, 1)
+	localSteps.value[stepIndex]._files.splice(fileIndex, 1)
 }
 
 const selectedChain = computed(() => {
@@ -374,7 +374,6 @@ onMounted(() => {
 })
 
 function resetState() {
-	stepFiles.value = {}
 	expandedDescriptions.value = new Set()
 	if (selectedChain.value) {
 		cloneStepsFromChain(selectedChain.value)
@@ -418,11 +417,11 @@ async function createFromChain() {
 		// Upload attachments per step to their corresponding created tasks
 		if (createdTasks && Array.isArray(createdTasks)) {
 			const http = AuthenticatedHTTPFactory()
-			for (const [stepIndex, files] of Object.entries(stepFiles.value)) {
-				const taskIndex = Number(stepIndex)
-				if (taskIndex >= createdTasks.length || !files?.length) continue
+			for (let i = 0; i < localSteps.value.length && i < createdTasks.length; i++) {
+				const files = localSteps.value[i]._files
+				if (!files?.length) continue
 
-				const taskId = createdTasks[taskIndex].id
+				const taskId = createdTasks[i].id
 				for (const file of files) {
 					const formData = new FormData()
 					formData.append('files', file)
@@ -537,6 +536,32 @@ async function createFromChain() {
 	padding: .5rem;
 	border-radius: $radius;
 	background: var(--grey-50);
+	border: 1px solid transparent;
+	transition: opacity 150ms, border-color 150ms, box-shadow 150ms;
+
+	&.is-dragging {
+		opacity: .4;
+	}
+
+	&.is-drag-over {
+		border-color: var(--primary);
+		box-shadow: 0 -2px 0 0 var(--primary);
+	}
+}
+
+.step-drag-handle {
+	color: var(--grey-300);
+	cursor: grab;
+	flex-shrink: 0;
+	transition: color $transition-duration;
+
+	&:hover {
+		color: var(--grey-500);
+	}
+
+	&:active {
+		cursor: grabbing;
+	}
 }
 
 .step-preview-header {

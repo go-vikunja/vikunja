@@ -132,7 +132,17 @@
 								v-for="(step, i) in editForm.steps"
 								:key="i"
 								class="step-row"
+								draggable="true"
+								:class="{ 'is-dragging': dragIndex === i, 'is-drag-over': dragOverIndex === i }"
+								@dragstart="onDragStart(i, $event)"
+								@dragover.prevent="onDragOver(i)"
+								@dragleave="onDragLeave()"
+								@drop.prevent="onDrop(i)"
+								@dragend="onDragEnd"
 							>
+								<div class="step-drag-handle">
+									<Icon icon="grip-vertical" />
+								</div>
 								<div class="step-number">
 									{{ i + 1 }}
 								</div>
@@ -311,6 +321,7 @@ import {getAllChains, createChain, updateChain, deleteChain as deleteChainApi, u
 import type {ITaskChain, ITaskChainStep, ITaskChainStepAttachment} from '@/services/taskChainApi'
 
 import {success} from '@/message'
+import {useDragReorder} from '@/composables/useDragReorder'
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -402,6 +413,10 @@ const editForm = ref<{
 	description: '',
 	steps: [emptyStep(0)],
 })
+
+// Drag-to-reorder for steps in the edit modal
+const stepsProxy = {get value() { return editForm.value.steps }, set value(v) { editForm.value.steps = v }}
+const {dragIndex, dragOverIndex, onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd} = useDragReorder(stepsProxy)
 
 onMounted(() => loadChains())
 
@@ -749,6 +764,32 @@ function truncate(text: string, length: number): string {
 	border: 1px solid var(--grey-200);
 	border-radius: $radius;
 	background: var(--grey-50);
+	transition: opacity 150ms, border-color 150ms, box-shadow 150ms;
+
+	&.is-dragging {
+		opacity: .4;
+	}
+
+	&.is-drag-over {
+		border-color: var(--primary);
+		box-shadow: 0 -2px 0 0 var(--primary);
+	}
+}
+
+.step-drag-handle {
+	color: var(--grey-300);
+	cursor: grab;
+	padding: .35rem .15rem;
+	flex-shrink: 0;
+	transition: color $transition-duration;
+
+	&:hover {
+		color: var(--grey-500);
+	}
+
+	&:active {
+		cursor: grabbing;
+	}
 }
 
 .step-number {
