@@ -93,10 +93,8 @@ func RegisterListeners() {
 		RegisterEventForWebhook(&ProjectDeletedEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithUserEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithTeamEvent{})
-		if config.ServiceEnableEmailReminders.GetBool() {
-			RegisterEventForWebhook(&TaskReminderFiredEvent{})
-			RegisterEventForWebhook(&TaskOverdueEvent{})
-		}
+		RegisterEventForWebhook(&TaskReminderFiredEvent{})
+		RegisterEventForWebhook(&TaskOverdueEvent{})
 	}
 }
 
