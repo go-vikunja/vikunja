@@ -60,8 +60,9 @@
 							type: 'transition-group'
 						}"
 						:animation="100"
-						:delay-on-touch-only="true"
-						:delay="1000"
+						:handle="dragHandle"
+						:delay-on-touch-only="!isTouchDevice"
+						:delay="isTouchDevice ? 0 : 1000"
 						ghost-class="task-ghost"
 						@start="handleDragStart"
 						@end="saveTaskPosition"
@@ -199,6 +200,12 @@ onMounted(async () => {
 })
 
 const canDragTasks = computed(() => canWrite.value || isSavedFilter(project.value))
+
+const isTouchDevice = ref(false)
+if (typeof window !== 'undefined') {
+	isTouchDevice.value = !window.matchMedia('(hover: hover) and (pointer: fine)').matches
+}
+const dragHandle = computed(() => isTouchDevice.value ? '.handle' : undefined)
 
 const addTaskRef = ref<typeof AddTask | null>(null)
 
