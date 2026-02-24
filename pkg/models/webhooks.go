@@ -52,7 +52,9 @@ type Webhook struct {
 	// The webhook events which should fire this webhook target
 	Events []string `xorm:"JSON not null" valid:"required" json:"events"`
 	// The project ID of the project this webhook target belongs to
-	ProjectID int64 `xorm:"bigint not null index" json:"project_id" param:"project"`
+	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project"`
+	// The user ID if this is a user-level webhook (mutually exclusive with ProjectID)
+	UserID int64 `xorm:"bigint null index" json:"user_id"`
 	// If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing
 	Secret string `xorm:"null" json:"secret"`
 	// If provided, webhook requests will be sent with a Basic Auth header.
@@ -119,6 +121,14 @@ func GetAvailableWebhookEvents() []string {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/webhooks [put]
 func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
+
+	// Validate that exactly one of ProjectID or UserID is set
+	if w.ProjectID == 0 && w.UserID == 0 {
+		return InvalidFieldError([]string{"project_id", "user_id"})
+	}
+	if w.ProjectID != 0 && w.UserID != 0 {
+		return InvalidFieldError([]string{"project_id", "user_id"})
+	}
 
 	if !strings.HasPrefix(w.TargetURL, "http") {
 		return InvalidFieldError([]string{"target_url"})
