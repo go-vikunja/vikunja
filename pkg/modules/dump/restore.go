@@ -379,7 +379,10 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 			return fmt.Errorf("config file too large, is %d, max size is %d", configFile.UncompressedSize64, maxConfigSize)
 		}
 
-		outFile, err := os.OpenFile(configFile.Name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, configFile.Mode())
+		// Use only the base name to prevent writing outside the working directory
+		sanitizedName := filepath.Base(configFile.Name)
+
+		outFile, err := os.OpenFile(sanitizedName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, configFile.Mode())
 		if err != nil {
 			return fmt.Errorf("could not open config file for writing: %w", err)
 		}
@@ -398,7 +401,7 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 		_ = cfgr.Close()
 		_ = outFile.Close()
 
-		log.Infof("The config file has been restored to '%s'.", configFile.Name)
+		log.Infof("The config file has been restored to '%s'.", sanitizedName)
 		log.Infof("You can now make changes to it, hit enter when you're done.")
 		if _, err := bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
 			return fmt.Errorf("could not read from stdin: %w", err)
