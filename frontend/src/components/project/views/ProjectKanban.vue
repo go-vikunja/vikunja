@@ -983,6 +983,8 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 				z-index: 1;
 				opacity: 0;
 				touch-action: none;
+				-webkit-touch-callout: none;
+				user-select: none;
 			}
 		}
 
