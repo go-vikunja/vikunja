@@ -75,7 +75,14 @@
 								:the-task="t"
 								:all-tasks="allTasks"
 								@taskUpdated="updateTasks"
-							/>
+							>
+								<span
+									v-if="canDragTasks"
+									class="icon handle"
+								>
+									<Icon icon="grip-lines" />
+								</span>
+							</SingleTaskInProject>
 						</template>
 					</draggable>
 
@@ -371,6 +378,18 @@ onBeforeUnmount(() => {
 .link-share-view .card {
 	border: none;
 	box-shadow: none;
+}
+
+:deep(.single-task .handle) {
+	cursor: grab;
+	margin-inline-end: .25rem;
+	color: var(--grey-400);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	:deep(.single-task .handle) {
+		display: none;
+	}
 }
 
 :deep(.tasks:not(.dragging-disabled) .single-task) {
