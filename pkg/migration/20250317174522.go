@@ -28,6 +28,15 @@ func init() {
 		Description: "",
 		Migrate: func(tx *xorm.Engine) (err error) {
 			if tx.Dialect().URI().DBType == schemas.SQLITE {
+				var exists bool
+				exists, err = columnExists(tx, "teams", "oidc_id")
+				if err != nil {
+					return err
+				}
+				if !exists {
+					return nil
+				}
+
 				_, err = tx.Exec(`create table teams_dg_tmp
 (
     id            INTEGER           not null
@@ -68,8 +77,7 @@ create unique index UQE_teams_id
 				return
 			}
 
-			_, err = tx.Exec("ALTER TABLE `teams` RENAME COLUMN `oidc_id` TO `external_id`")
-			return
+			return renameColumn(tx, "teams", "oidc_id", "external_id")
 		},
 		Rollback: func(tx *xorm.Engine) error {
 			return nil
