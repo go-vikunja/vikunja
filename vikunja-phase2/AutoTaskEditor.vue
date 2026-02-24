@@ -205,10 +205,38 @@
 					<!-- Labels -->
 					<div class="field">
 						<label class="label">{{ $t('task.attributes.labels') }}</label>
-						<EditLabels
+						<Multiselect
 							v-model="selectedLabels"
-							:creatable="false"
-						/>
+							:loading="labelStore.isLoading"
+							:placeholder="$t('task.label.placeholder')"
+							:multiple="true"
+							:search-results="filteredLabels"
+							label="title"
+							:search-delay="10"
+							:close-after-select="false"
+							@search="labelQuery = $event"
+						>
+							<template #tag="{item: label}">
+								<span
+									:style="getLabelStyle(label)"
+									class="tag"
+								>
+									<span>{{ label.title }}</span>
+									<BaseButton
+										class="delete is-small"
+										@click="removeSelectedLabel(label)"
+									/>
+								</span>
+							</template>
+							<template #searchResult="{option}">
+								<span
+									:style="getLabelStyle(option)"
+									class="tag"
+								>
+									<span>{{ option.title }}</span>
+								</span>
+							</template>
+						</Multiselect>
 					</div>
 
 					<!-- Start date -->
@@ -437,7 +465,7 @@ import Card from '@/components/misc/Card.vue'
 import Datepicker from '@/components/input/Datepicker.vue'
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
-import EditLabels from '@/components/tasks/partials/EditLabels.vue'
+import Multiselect from '@/components/input/Multiselect.vue'
 import Editor from '@/components/input/AsyncEditor'
 
 import ProjectModel from '@/models/project'
@@ -471,6 +499,33 @@ const editStartDate = ref<Date | null>(new Date())
 const editEndDate = ref<Date | null>(null)
 const generateAtTime = ref('02:00')
 
+// Label search
+const labelQuery = ref('')
+const filteredLabels = computed(() => {
+	return labelStore.filterLabelsByQuery(selectedLabels.value, labelQuery.value)
+})
+
+function getLabelStyle(label: any) {
+	if (!label?.hexColor) return {}
+	const hex = label.hexColor
+	return {
+		backgroundColor: hex,
+		color: isDarkColor(hex) ? '#fff' : '#1a1a1a',
+	}
+}
+
+function isDarkColor(hex: string): boolean {
+	if (!hex || hex.length < 7) return false
+	const r = parseInt(hex.slice(1, 3), 16)
+	const g = parseInt(hex.slice(3, 5), 16)
+	const b = parseInt(hex.slice(5, 7), 16)
+	return (r * 0.299 + g * 0.587 + b * 0.114) < 150
+}
+
+function removeSelectedLabel(label: any) {
+	selectedLabels.value = selectedLabels.value.filter(l => l.id !== label.id)
+}
+
 // Sync project object ↔ editForm.project_id
 watch(selectedProject, (proj) => {
 	editForm.value.project_id = proj?.id || 0
@@ -479,7 +534,7 @@ watch(selectedProject, (proj) => {
 onMounted(async () => {
 	await Promise.all([
 		loadTemplates(),
-		labelStore.loadAllLabels(),
+		labelStore.loadAllLabels({forceLoad: true}),
 	])
 })
 

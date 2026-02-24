@@ -19,7 +19,7 @@
 			/>
 		</svg>
 
-		<!-- Today column highlight: positioned ABOVE rows with mix-blend-mode -->
+		<!-- Today column highlight: visual overlay, no pointer events -->
 		<div
 			v-if="todayIndex >= 0"
 			class="today-overlay"
@@ -29,11 +29,21 @@
 				height: height + 'px',
 				backgroundColor: highlightColor,
 			}"
+		/>
+
+		<!-- Color picker: separate interactive element, not inside the overlay -->
+		<div
+			v-if="todayIndex >= 0"
+			class="today-picker-anchor"
+			:style="{
+				left: (todayIndex * dayWidthPixels) + 'px',
+				width: dayWidthPixels + 'px',
+				height: height + 'px',
+			}"
 		>
-			<!-- Color picker button at top of today column -->
 			<button
 				class="today-color-btn"
-				:title="'Change today highlight color'"
+				title="Change today highlight color"
 				@click.stop="showPicker = !showPicker"
 			>
 				<span class="today-color-dot" :style="{ backgroundColor: hexColor }" />
@@ -161,8 +171,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 	inset: 0;
 }
 
-// Today overlay: sits above rows (z-index 4) with low opacity
-// so project row colors remain clearly visible underneath
+// Today overlay: visual only, no interaction
 .today-overlay {
 	position: absolute;
 	inset-block-start: 0;
@@ -172,15 +181,23 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 	border-inline-end: 1.5px solid var(--warning);
 }
 
-// The button needs pointer events - sits at bottom of today column
+// Picker anchor: interactive, sits above everything
+.today-picker-anchor {
+	position: absolute;
+	inset-block-start: 0;
+	z-index: 10;
+	pointer-events: none;
+}
+
+// Color picker button
 .today-color-btn {
 	pointer-events: auto;
 	position: absolute;
-	inset-block-end: 4px;
+	inset-block-end: 8px;
 	inset-inline-start: 50%;
 	transform: translateX(-50%);
 	background: var(--grey-800);
-	border: 1.5px solid var(--warning);
+	border: 2px solid var(--warning);
 	border-radius: 50%;
 	padding: 0;
 	cursor: pointer;
@@ -189,8 +206,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 10;
-	opacity: 0.5;
+	opacity: 0.6;
 	transition: transform 0.15s, opacity 0.15s;
 
 	&:hover {
@@ -201,8 +217,8 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 .today-color-dot {
 	display: block;
-	inline-size: 8px;
-	block-size: 8px;
+	inline-size: 10px;
+	block-size: 10px;
 	border-radius: 50%;
 }
 
