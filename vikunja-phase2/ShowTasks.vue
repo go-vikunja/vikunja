@@ -329,9 +329,11 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 
 	// Add "assigned to me" filtering
 	if (effectiveAssignedToMe.value) {
-		const userId = authStore.info?.id
-		if (userId) {
-			params.filter += ` && assignees = ${userId}`
+		const username = authStore.info?.username
+		if (username) {
+			params.filter += params.filter
+				? ` && assignees = '${username}'`
+				: `assignees = '${username}'`
 		}
 	}
 
