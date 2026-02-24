@@ -148,6 +148,9 @@
 
 								<draggable
 									v-bind="DRAG_OPTIONS"
+									:handle="taskDragHandle"
+									:delay-on-touch-only="!isTouchDevice"
+									:delay="isTouchDevice ? 0 : 1000"
 									:model-value="bucket.tasks"
 									:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
 									:disabled="!canWrite"
@@ -214,6 +217,10 @@
 											class="task-item"
 											:data-task-id="task.id"
 										>
+											<span
+												v-if="canWrite && isTouchDevice"
+												class="handle"
+											/>
 											<KanbanCard
 												class="kanban-card"
 												:task="task"
@@ -436,6 +443,12 @@ const project = computed(() => projectId.value ? projectStore.projects[projectId
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
+
+const isTouchDevice = ref(false)
+if (typeof window !== 'undefined') {
+	isTouchDevice.value = !window.matchMedia('(hover: hover) and (pointer: fine)').matches
+}
+const taskDragHandle = computed(() => isTouchDevice.value ? '.handle' : undefined)
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
 const projectIdWithFallback = computed<number>(() => project.value?.id || projectId.value)
@@ -954,6 +967,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		.task-item {
 			background-color: var(--grey-100);
 			padding: .25rem .5rem;
+			position: relative;
 
 			&:first-of-type {
 				padding-block-start: .5rem;
@@ -962,12 +976,14 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			&:last-of-type {
 				padding-block-end: .5rem;
 			}
-		}
 
-		.tasks:not(.dragging-disabled) .task-item {
-			-webkit-touch-callout: none;
-			user-select: none;
-			touch-action: none;
+			.handle {
+				position: absolute;
+				inset: 0;
+				z-index: 1;
+				opacity: 0;
+				touch-action: none;
+			}
 		}
 
 		.no-move {
