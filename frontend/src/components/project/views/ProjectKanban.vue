@@ -148,9 +148,6 @@
 
 								<draggable
 									v-bind="DRAG_OPTIONS"
-									:handle="taskDragHandle"
-									:delay-on-touch-only="!isTouchDevice"
-									:delay="isTouchDevice ? 0 : 1000"
 									:model-value="bucket.tasks"
 									:group="{name: 'tasks', put: shouldAcceptDrop(bucket) && !dragBucket}"
 									:disabled="!canWrite"
@@ -217,12 +214,6 @@
 											class="task-item"
 											:data-task-id="task.id"
 										>
-											<span
-												v-if="canWrite"
-												class="icon handle"
-											>
-												<Icon icon="grip-lines" />
-											</span>
 											<KanbanCard
 												class="kanban-card"
 												:task="task"
@@ -445,12 +436,6 @@ const project = computed(() => projectId.value ? projectStore.projects[projectId
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
-
-const isTouchDevice = ref(false)
-if (typeof window !== 'undefined') {
-	isTouchDevice.value = !window.matchMedia('(hover: hover) and (pointer: fine)').matches
-}
-const taskDragHandle = computed(() => isTouchDevice.value ? '.handle' : undefined)
 const buckets = computed(() => kanbanStore.buckets)
 const loading = computed(() => kanbanStore.isLoading)
 const projectIdWithFallback = computed<number>(() => project.value?.id || projectId.value)
@@ -976,18 +961,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 			&:last-of-type {
 				padding-block-end: .5rem;
-			}
-
-			.handle {
-				cursor: grab;
-				display: flex;
-				justify-content: center;
-				color: var(--grey-400);
-				padding-block: .15rem;
-
-				@media (hover: hover) and (pointer: fine) {
-					display: none;
-				}
 			}
 		}
 
