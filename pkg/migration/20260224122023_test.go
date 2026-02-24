@@ -19,6 +19,8 @@ package migration
 import (
 	"encoding/json"
 	"testing"
+
+	"xorm.io/xorm/schemas"
 )
 
 func TestConvertBucketConfigurations20260224122023_ConvertsStringAndPreservesObject(t *testing.T) {
@@ -79,5 +81,23 @@ func TestConvertBucketConfigurations20260224122023_NoChangesWhenAlreadyObjects(t
 	}
 	if len(converted) != 1 || converted[0].Filter == nil || converted[0].Filter.Filter != "done = true" {
 		t.Fatalf("unexpected conversion result: %#v", converted)
+	}
+}
+
+func TestBucketConfigurationWhereClause20260224122023_PostgresUsesTextCast(t *testing.T) {
+	got := bucketConfigurationWhereClause20260224122023(schemas.POSTGRES)
+	want := "bucket_configuration IS NOT NULL AND bucket_configuration::text != '' AND bucket_configuration::text != '[]' AND bucket_configuration::text != 'null'"
+
+	if got != want {
+		t.Fatalf("unexpected clause\nwant: %s\ngot:  %s", want, got)
+	}
+}
+
+func TestBucketConfigurationWhereClause20260224122023_DefaultDoesNotCast(t *testing.T) {
+	got := bucketConfigurationWhereClause20260224122023(schemas.SQLITE)
+	want := "bucket_configuration IS NOT NULL AND bucket_configuration != '' AND bucket_configuration != '[]' AND bucket_configuration != 'null'"
+
+	if got != want {
+		t.Fatalf("unexpected clause\nwant: %s\ngot:  %s", want, got)
 	}
 }
