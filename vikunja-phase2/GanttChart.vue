@@ -32,13 +32,6 @@
 			>
 				<template #default="{ focusedRow, focusedCell }">
 					<div class="gantt-rows">
-						<GanttDependencyArrows
-							:bars-by-row="ganttBars"
-							:tasks="tasks"
-							:date-from="dateFromDate"
-							:day-width-pixels="DAY_WIDTH_PIXELS"
-							:total-width="totalWidth"
-						/>
 						<GanttRow
 							v-for="(rowId, index) in ganttRows"
 							:id="rowId"
@@ -78,6 +71,7 @@ import dayjs from 'dayjs'
 import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 
 import {getHexColor} from '@/models/task'
+import {useProjectStore} from '@/stores/projects'
 
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
@@ -89,22 +83,18 @@ import GanttRow from '@/components/gantt/GanttRow.vue'
 import GanttRowBars from '@/components/gantt/GanttRowBars.vue'
 import GanttVerticalGridLines from '@/components/gantt/GanttVerticalGridLines.vue'
 import GanttTimelineHeader from '@/components/gantt/GanttTimelineHeader.vue'
-import GanttDependencyArrows from '@/components/gantt/GanttDependencyArrows.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
 	tasks: Map<ITask['id'], ITask>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
-	subprojectColorMap?: Map<number, string>
-}>(), {
-	subprojectColorMap: () => new Map(),
-})
+}>()
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
@@ -115,6 +105,7 @@ const DAY_WIDTH_PIXELS = 30
 const {tasks, filters} = toRefs(props)
 
 const dayjsLanguageLoading = useDayjsLanguageSync(dayjs)
+const projectStore = useProjectStore()
 const ganttContainer = ref(null)
 const ganttChartBodyRef = ref<InstanceType<typeof GanttChartBody> | null>(null)
 const router = useRouter()
@@ -204,9 +195,7 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 	}
 
 	const taskColor = getHexColor(t.hexColor)
-	// Use sub-project color if the task doesn't have its own color
-	const subprojectColor = props.subprojectColorMap?.get(t.projectId) || null
-	const effectiveColor = taskColor || subprojectColor
+		|| getHexColor(projectStore.projects[t.projectId]?.hexColor ?? '')
 
 	return {
 		id: String(t.id),
@@ -215,7 +204,7 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 		meta: {
 			label: t.title,
 			task: t,
-			color: effectiveColor,
+			color: taskColor,
 			hasActualDates: Boolean(t.startDate && (t.endDate || t.dueDate)),
 			dateType,
 			isDone: t.done,
@@ -224,7 +213,7 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 }
 
 watch(
-	[tasks, filters, () => props.subprojectColorMap],
+	[tasks, filters],
 	() => {
 		const bars: GanttBarModel[] = []
 		const rows: string[] = []
