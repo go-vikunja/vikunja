@@ -14,7 +14,7 @@
 				v-for="monthGroup in monthGroups"
 				:key="monthGroup.key"
 				class="timeunit-month"
-				:style="{ width: `${monthGroup.width}px` }"
+				:style="{ width: `${dayWidthPixels}px` }"
 				role="columnheader"
 				:aria-label="$t('project.gantt.monthLabel', {month: monthGroup.label})"
 			>
@@ -47,6 +47,7 @@
 				<div
 					class="timeunit-wrapper"
 					:class="{'today': dateIsToday(date)}"
+					:style="dateIsToday(date) ? todayHeaderStyle : undefined"
 				>
 					<span>{{ date.getDate() }}</span>
 					<span class="weekday">
@@ -62,6 +63,7 @@
 import {computed} from 'vue'
 import {useGlobalNow} from '@/composables/useGlobalNow'
 import {useWeekDayFromDate} from '@/helpers/time/formatDate'
+import {useStorage} from '@vueuse/core'
 import dayjs from 'dayjs'
 
 const props = defineProps<{
@@ -71,6 +73,22 @@ const props = defineProps<{
 
 const weekDayFromDate = useWeekDayFromDate()
 const { now: today } = useGlobalNow()
+
+// Read the same color used by GanttVerticalGridLines for the today column
+const storedHex = useStorage('ganttTodayHex', '#d4af37')
+
+const todayHeaderStyle = computed(() => ({
+	background: storedHex.value,
+	color: isDark(storedHex.value) ? '#ffffff' : '#1a1a1a',
+}))
+
+// Simple luminance check for text contrast
+function isDark(hex: string): boolean {
+	const r = parseInt(hex.slice(1, 3), 16)
+	const g = parseInt(hex.slice(3, 5), 16)
+	const b = parseInt(hex.slice(5, 7), 16)
+	return (r * 0.299 + g * 0.587 + b * 0.114) < 150
+}
 
 const dateIsToday = computed(() => {
 	const todayStr = today.value.toDateString()
@@ -142,6 +160,7 @@ const monthGroups = computed(() => {
 			font-family: $vikunja-font;
 
 			&.today {
+				// Default fallback; overridden by inline style
 				background: var(--primary);
 				color: var(--white);
 				border-radius: 5px 5px 0 0;

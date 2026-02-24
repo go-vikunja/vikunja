@@ -78,6 +78,13 @@
 						{{ $t('task.autoTask.units.' + tmpl.interval_unit) }}
 					</span>
 					<span
+						v-if="tmpl.next_due_at"
+						class="meta-item"
+					>
+						<Icon icon="bell" class="meta-icon" />
+						{{ $t('task.autoTask.at') }} {{ formatTimeOfDay(tmpl.next_due_at) }}
+					</span>
+					<span
 						v-if="tmpl.project_id"
 						class="meta-item"
 					>
@@ -167,6 +174,19 @@
 								<option value="months">{{ $t('task.autoTask.units.months') }}</option>
 							</select>
 						</div>
+					</div>
+
+					<!-- Generate at time -->
+					<div class="field">
+						<label class="label">{{ $t('task.autoTask.generateAt') }}</label>
+						<div class="interval-row">
+							<input
+								v-model="generateAtTime"
+								class="input time-input"
+								type="time"
+							>
+						</div>
+						<p class="help">{{ $t('task.autoTask.generateAtHelp') }}</p>
 					</div>
 
 					<!-- Project -->
@@ -449,15 +469,18 @@ const selectedProject = ref<IProject>(new ProjectModel())
 const selectedLabels = ref<ILabel[]>([])
 const editStartDate = ref<Date | null>(new Date())
 const editEndDate = ref<Date | null>(null)
+const generateAtTime = ref('02:00')
 
 // Sync project object ↔ editForm.project_id
 watch(selectedProject, (proj) => {
 	editForm.value.project_id = proj?.id || 0
 })
 
-onMounted(() => {
-	loadTemplates()
-	labelStore.loadAllLabels()
+onMounted(async () => {
+	await Promise.all([
+		loadTemplates(),
+		labelStore.loadAllLabels(),
+	])
 })
 
 async function loadTemplates() {
@@ -476,6 +499,12 @@ function getProjectTitle(projectId: number): string {
 function formatDate(dateStr: string | null): string {
 	if (!dateStr) return '—'
 	return formatDateLong(new Date(dateStr))
+}
+
+function formatTimeOfDay(dateStr: string | null): string {
+	if (!dateStr) return '—'
+	const d = new Date(dateStr)
+	return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
 }
 
 function isOverdue(dateStr: string | null): boolean {
@@ -513,6 +542,7 @@ function openCreate() {
 	selectedLabels.value = []
 	editStartDate.value = new Date()
 	editEndDate.value = null
+	generateAtTime.value = '02:00'
 	showEditModal.value = true
 }
 
@@ -534,6 +564,16 @@ function editTemplate(tmpl: IAutoTaskTemplate) {
 	editStartDate.value = tmpl.start_date ? new Date(tmpl.start_date) : new Date()
 	editEndDate.value = tmpl.end_date ? new Date(tmpl.end_date) : null
 
+	// Extract time-of-day from next_due_at or start_date
+	const refDate = tmpl.next_due_at ? new Date(tmpl.next_due_at) : (tmpl.start_date ? new Date(tmpl.start_date) : null)
+	if (refDate) {
+		const hh = String(refDate.getHours()).padStart(2, '0')
+		const mm = String(refDate.getMinutes()).padStart(2, '0')
+		generateAtTime.value = `${hh}:${mm}`
+	} else {
+		generateAtTime.value = '02:00'
+	}
+
 	showEditModal.value = true
 }
 
@@ -545,12 +585,18 @@ function closeModal() {
 async function saveTemplate() {
 	if (!editForm.value.title.trim()) return
 
+	// Parse the generate-at time
+	const [hh, mm] = generateAtTime.value.split(':').map(Number)
+
 	// Sync typed values back to the flat form
 	editForm.value.project_id = selectedProject.value?.id || 0
 	editForm.value.label_ids = selectedLabels.value.map(l => l.id)
-	editForm.value.start_date = editStartDate.value
-		? editStartDate.value.toISOString()
-		: new Date().toISOString()
+
+	// Apply the chosen time-of-day to start_date
+	const startDate = editStartDate.value ? new Date(editStartDate.value) : new Date()
+	startDate.setHours(hh, mm, 0, 0)
+	editForm.value.start_date = startDate.toISOString()
+
 	editForm.value.end_date = editEndDate.value
 		? editEndDate.value.toISOString()
 		: null
@@ -880,6 +926,10 @@ defineExpose({openCreate})
 }
 
 .interval-select {
+	max-inline-size: 120px;
+}
+
+.time-input {
 	max-inline-size: 120px;
 }
 

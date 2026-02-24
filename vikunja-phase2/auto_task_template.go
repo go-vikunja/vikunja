@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/user"
@@ -185,11 +186,24 @@ func (a *AutoTaskTemplate) Create(s *xorm.Session, auth web.Auth) error {
 
 // Update saves changes to an auto-task template.
 func (a *AutoTaskTemplate) Update(s *xorm.Session, _ web.Auth) error {
+	// If the user changed the generate-at time, update next_due_at
+	// to preserve the new time-of-day while keeping the same date.
+	if a.NextDueAt != nil {
+		// Extract new hour/minute from start_date
+		newHour := a.StartDate.Hour()
+		newMin := a.StartDate.Minute()
+		updated := time.Date(
+			a.NextDueAt.Year(), a.NextDueAt.Month(), a.NextDueAt.Day(),
+			newHour, newMin, 0, 0, a.NextDueAt.Location(),
+		)
+		a.NextDueAt = &updated
+	}
+
 	_, err := s.ID(a.ID).Cols(
 		"title", "description", "project_id", "priority", "hex_color",
 		"label_ids", "assignee_ids",
 		"interval_value", "interval_unit", "start_date", "end_date",
-		"active",
+		"active", "next_due_at",
 	).Update(a)
 	return err
 }

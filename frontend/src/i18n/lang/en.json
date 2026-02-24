@@ -1486,5 +1486,8 @@
 	"task.autoTask.lastUpdated": "Updated",
 	"task.autoTask.comment": "comment",
 	"task.autoTask.comments": "comments",
-	"task.autoTask.logCompleted": "Completed"
+	"task.autoTask.logCompleted": "Completed",
+	"task.autoTask.generateAt": "Generate at",
+	"task.autoTask.generateAtHelp": "Time of day to generate new tasks. Default: 2:00 AM.",
+	"task.autoTask.at": "at"
 }
