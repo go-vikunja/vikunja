@@ -5,6 +5,32 @@
 			{{ $t('task.template.manageDescription') }}
 		</p>
 
+		<!-- Tab navigation -->
+		<div class="template-tabs">
+			<BaseButton
+				class="template-tab"
+				:class="{ 'is-active': activeTab === 'templates' }"
+				@click="activeTab = 'templates'"
+			>
+				<Icon icon="layer-group" />
+				{{ $t('task.template.tabTemplates') }}
+			</BaseButton>
+			<BaseButton
+				class="template-tab"
+				:class="{ 'is-active': activeTab === 'chains' }"
+				@click="activeTab = 'chains'"
+			>
+				<Icon icon="link" />
+				{{ $t('task.template.tabChains') }}
+			</BaseButton>
+		</div>
+
+		<!-- Chains tab -->
+		<ChainEditor v-if="activeTab === 'chains'" />
+
+		<!-- Templates tab (original content) -->
+		<template v-else>
+
 		<div
 			v-if="loading"
 			class="has-text-centered p-4"
@@ -206,6 +232,8 @@
 				</div>
 			</div>
 		</Modal>
+
+		</template><!-- end templates tab -->
 	</div>
 </template>
 
@@ -219,6 +247,7 @@ import Editor from '@/components/input/AsyncEditor'
 import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
+import ChainEditor from '@/components/tasks/partials/ChainEditor.vue'
 
 import TaskTemplateService from '@/services/taskTemplateService'
 import TaskTemplateModel from '@/models/taskTemplate'
@@ -231,6 +260,7 @@ const SECONDS_PER_DAY = 86400
 
 const {t} = useI18n({useScope: 'global'})
 
+const activeTab = ref<'templates' | 'chains'>('templates')
 const templates = ref<ITaskTemplate[]>([])
 const loading = ref(false)
 const saving = ref(false)
@@ -354,6 +384,37 @@ function priorityLabel(priority: number): string {
 	max-inline-size: 900px;
 	margin: 0 auto;
 	padding: 1.5rem;
+}
+
+.template-tabs {
+	display: flex;
+	gap: .5rem;
+	margin-block-end: 1.5rem;
+	border-block-end: 2px solid var(--grey-200);
+	padding-block-end: 0;
+}
+
+.template-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: .4rem;
+	padding: .6rem 1.25rem;
+	font-weight: 600;
+	font-size: .95rem;
+	color: var(--grey-500);
+	border-block-end: 2px solid transparent;
+	margin-block-end: -2px;
+	transition: color $transition-duration, border-color $transition-duration;
+	cursor: pointer;
+
+	&:hover {
+		color: var(--text);
+	}
+
+	&.is-active {
+		color: var(--primary);
+		border-block-end-color: var(--primary);
+	}
 }
 
 .template-grid {

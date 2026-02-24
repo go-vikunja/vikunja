@@ -91,6 +91,16 @@
 				>
 					{{ $t('task.template.fromTemplate') }}
 				</XButton>
+				<XButton
+					v-if="canWrite"
+					variant="secondary"
+					icon="link"
+					:shadow="false"
+					class="mis-2"
+					@click="showCreateFromChainModal = true"
+				>
+					{{ $t('task.chain.createFromChain') }}
+				</XButton>
 				<SubprojectFilter
 					:project-id="projectId"
 					@update:includeSubprojects="onSubprojectToggle"
@@ -318,6 +328,12 @@
 		@close="showCreateFromTemplateModal = false"
 		@created="handleTaskCreatedFromTemplate"
 	/>
+	<CreateFromChainModal
+		:enabled="showCreateFromChainModal"
+		:project-id="projectId"
+		@close="showCreateFromChainModal = false"
+		@created="loadTasks(1)"
+	/>
 </template>
 
 <script setup lang="ts">
@@ -338,6 +354,7 @@ import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import SubprojectFilter from '@/components/project/partials/SubprojectFilter.vue'
 import CreateFromTemplateModal from '@/components/tasks/partials/CreateFromTemplateModal.vue'
+import CreateFromChainModal from '@/components/tasks/partials/CreateFromChainModal.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import Popup from '@/components/misc/Popup.vue'
 
@@ -360,6 +377,7 @@ const props = defineProps<{
 const projectStore = useProjectStore()
 
 const showCreateFromTemplateModal = ref(false)
+const showCreateFromChainModal = ref(false)
 
 const subprojectParams = ref<Record<string, unknown>>({})
 

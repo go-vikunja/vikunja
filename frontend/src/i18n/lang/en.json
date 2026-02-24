@@ -111,9 +111,9 @@
           "mm-dd-yyyy": "MM-DD-YYYY",
           "dd-mm-yyyy": "DD-MM-YYYY",
           "yyyy-mm-dd": "YYYY-MM-DD",
-          "mm\/dd\/yyyy": "MM\/DD\/YYYY",
-          "dd\/mm\/yyyy": "DD\/MM\/YYYY",
-          "yyyy\/mm\/dd": "YYYY\/MM\/DD"
+          "mm/dd/yyyy": "MM/DD/YYYY",
+          "dd/mm/yyyy": "DD/MM/YYYY",
+          "yyyy/mm/dd": "YYYY/MM/DD"
         },
         "timeFormat": "Time format",
         "timeFormatOptions": {
@@ -1380,5 +1380,35 @@
       "months": "month|months",
       "years": "year|years"
     }
-  }
+  },
+  "task.chain.createNew": "New Chain",
+  "task.chain.edit": "Edit Chain",
+  "task.chain.noChains": "No chain workflows yet. Create one to define a sequence of tasks with relative timing.",
+  "task.chain.chainName": "Chain Name",
+  "task.chain.chainNamePlaceholder": "e.g. Clone Cutting Workflow",
+  "task.chain.descriptionPlaceholder": "Describe what this workflow does…",
+  "task.chain.steps": "Steps",
+  "task.chain.stepTitle": "Step title…",
+  "task.chain.offsetDays": "Offset (days)",
+  "task.chain.durationDays": "Duration (days)",
+  "task.chain.addStep": "Add Step",
+  "task.chain.deleteConfirmTitle": "Delete Chain",
+  "task.chain.deleteConfirmText": "Are you sure you want to delete the chain \"{title}\"? This cannot be undone.",
+  "task.chain.updateSuccess": "Chain updated successfully.",
+  "task.chain.createSuccess": "Chain created successfully.",
+  "task.chain.deleteSuccess": "Chain deleted successfully.",
+  "task.chain.createFromChain": "Create from Chain",
+  "task.chain.noChainsAvailable": "No chain workflows available. Create one in Templates → Chains.",
+  "task.chain.selectChain": "Select Chain",
+  "task.chain.anchorDate": "Start Date (Anchor)",
+  "task.chain.anchorDateHelp": "All task dates are calculated relative to this date.",
+  "task.chain.titlePrefix": "Title Prefix (optional)",
+  "task.chain.titlePrefixPlaceholder": "e.g. Batch #42 - ",
+  "task.chain.preview": "Preview",
+  "task.chain.createTasks": "Create All Tasks",
+  "task.chain.createTasksSuccess": "All chain tasks created successfully!",
+  "task.chain.tab": "Chains",
+  "task.template.tabTemplates": "Templates",
+  "task.template.tabChains": "Chains",
+  "task.chain.daysAfterPrev": "Days after prev"
 }

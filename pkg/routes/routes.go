@@ -468,6 +468,25 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/tasktemplates/:template/tasks", taskFromTemplateHandler.CreateWeb)
 
+	// --- Task Chains ---
+	taskChainHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskChain{}
+		},
+	}
+	a.GET("/taskchains", taskChainHandler.ReadAllWeb)
+	a.GET("/taskchains/:chain", taskChainHandler.ReadOneWeb)
+	a.PUT("/taskchains", taskChainHandler.CreateWeb)
+	a.POST("/taskchains/:chain", taskChainHandler.UpdateWeb)
+	a.DELETE("/taskchains/:chain", taskChainHandler.DeleteWeb)
+
+	taskFromChainHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.TaskFromChain{}
+		},
+	}
+	a.PUT("/taskchains/:chain/tasks", taskFromChainHandler.CreateWeb)
+
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Task{}
