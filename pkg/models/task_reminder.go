@@ -391,6 +391,10 @@ func RegisterReminderCron() {
 
 			log.Debugf("[Task Reminder Cron] Sent reminder email for task %d to user %d", n.Task.ID, n.User.ID)
 		}
+
+		if err := s.Commit(); err != nil {
+			log.Errorf("[Task Reminder Cron] Could not commit: %s", err)
+		}
 	})
 	if err != nil {
 		log.Fatalf("Could not register reminder cron: %s", err)

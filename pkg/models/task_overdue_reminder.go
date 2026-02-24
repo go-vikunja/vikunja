@@ -186,6 +186,10 @@ func RegisterOverdueReminderCron() {
 
 			log.Debugf("[Undone Overdue Tasks Reminder] Sent reminder email for %d tasks to user %d", len(ut.tasks), ut.user.ID)
 		}
+
+		if err := s.Commit(); err != nil {
+			log.Errorf("[Undone Overdue Tasks Reminder] Could not commit: %s", err)
+		}
 	})
 	if err != nil {
 		log.Fatalf("Could not register undone overdue tasks reminder cron: %s", err)

@@ -232,7 +232,7 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		}
 	}
 
-	return
+	return sess.Commit()
 }
 
 // HandleTaskCommentEditMentions  represents a listener
@@ -262,7 +262,10 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 		Mentioned: true,
 	}
 	_, err = notifyMentionedUsers(sess, event.Task, event.Comment.Comment, n)
-	return err
+	if err != nil {
+		return err
+	}
+	return sess.Commit()
 }
 
 // SendTaskAssignedNotification  represents a listener
@@ -323,7 +326,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		notifiedUsers[subscriber.UserID] = true
 	}
 
-	return nil
+	return sess.Commit()
 }
 
 // SendTaskDeletedNotification  represents a listener
@@ -374,7 +377,7 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		}
 	}
 
-	return nil
+	return sess.Commit()
 }
 
 // HandleTaskCreateMentions  represents a listener
@@ -403,7 +406,10 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 		IsNew: true,
 	}
 	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)
-	return err
+	if err != nil {
+		return err
+	}
+	return sess.Commit()
 }
 
 // HandleTaskUpdatedMentions  represents a listener
@@ -433,7 +439,10 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	}
 
 	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)
-	return err
+	if err != nil {
+		return err
+	}
+	return sess.Commit()
 }
 
 // HandleTaskUpdateLastUpdated  represents a listener
@@ -832,7 +841,7 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 		}
 	}
 
-	return nil
+	return sess.Commit()
 }
 
 // WebhookListener represents a listener
