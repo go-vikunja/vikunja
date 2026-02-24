@@ -53,14 +53,63 @@ func CheckAndCreateAutoTasks(s *xorm.Session, u *user.User) ([]*Task, error) {
 		}
 
 		// Check: does an open (not done) task already exist for this template?
-		// If so, skip — the user needs to complete it first. It will naturally
-		// appear as overdue in the task list.
+		// If so, skip — the user needs to complete it first.
 		openCount, err := s.Where("auto_template_id = ? AND done = ?", tmpl.ID, false).Count(&Task{})
 		if err != nil {
 			return nil, err
 		}
 		if openCount > 0 {
 			continue
+		}
+
+		// No open task exists. Before creating a new one, check if a task was
+		// recently completed that we haven't processed yet (OnAutoTaskCompleted
+		// isn't hooked into the task update path). Find the most recently
+		// completed task for this template and advance next_due_at from its
+		// completion time.
+		type doneInfo struct {
+			ID     int64     `xorm:"'id'"`
+			DoneAt time.Time `xorm:"'done_at'"`
+		}
+		lastDone := &doneInfo{}
+		hasDone, err := s.SQL(
+			"SELECT id, done_at FROM tasks WHERE auto_template_id = ? AND done = ? AND done_at IS NOT NULL ORDER BY done_at DESC LIMIT 1",
+			tmpl.ID, true,
+		).Get(lastDone)
+		if err != nil {
+			return nil, err
+		}
+
+		if hasDone && !lastDone.DoneAt.IsZero() {
+			// Compare: was this task completed AFTER the template's last_completed_at?
+			// If so, we need to advance next_due_at first.
+			needsAdvance := false
+			if tmpl.LastCompletedAt == nil {
+				needsAdvance = true
+			} else if lastDone.DoneAt.After(*tmpl.LastCompletedAt) {
+				needsAdvance = true
+			}
+
+			if needsAdvance {
+				completedAt := lastDone.DoneAt
+				tmpl.LastCompletedAt = &completedAt
+				nextDue := advanceFromTime(completedAt, tmpl.IntervalValue, tmpl.IntervalUnit)
+				tmpl.NextDueAt = &nextDue
+				_, _ = s.ID(tmpl.ID).Cols("last_completed_at", "next_due_at").Update(tmpl)
+
+				// Log the completion event
+				_, _ = s.Insert(&AutoTaskLog{
+					TemplateID:  tmpl.ID,
+					TaskID:      lastDone.ID,
+					TriggerType: "completed",
+				})
+
+				// After advancing, check if the NEW next_due_at is still in the past.
+				// If not, this template isn't due yet — skip it.
+				if nextDue.After(now) {
+					continue
+				}
+			}
 		}
 
 		task, err := createAutoTaskInstance(s, tmpl, u, "system")

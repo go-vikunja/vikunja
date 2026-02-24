@@ -68,11 +68,12 @@ func CheckAndCreateAutoTasks(s *xorm.Session, u *user.User) ([]*Task, error) {
 		// completed task for this template and advance next_due_at from its
 		// completion time.
 		type doneInfo struct {
+			ID     int64     `xorm:"'id'"`
 			DoneAt time.Time `xorm:"'done_at'"`
 		}
 		lastDone := &doneInfo{}
 		hasDone, err := s.SQL(
-			"SELECT done_at FROM tasks WHERE auto_template_id = ? AND done = ? AND done_at IS NOT NULL ORDER BY done_at DESC LIMIT 1",
+			"SELECT id, done_at FROM tasks WHERE auto_template_id = ? AND done = ? AND done_at IS NOT NULL ORDER BY done_at DESC LIMIT 1",
 			tmpl.ID, true,
 		).Get(lastDone)
 		if err != nil {
@@ -95,6 +96,13 @@ func CheckAndCreateAutoTasks(s *xorm.Session, u *user.User) ([]*Task, error) {
 				nextDue := advanceFromTime(completedAt, tmpl.IntervalValue, tmpl.IntervalUnit)
 				tmpl.NextDueAt = &nextDue
 				_, _ = s.ID(tmpl.ID).Cols("last_completed_at", "next_due_at").Update(tmpl)
+
+				// Log the completion event
+				_, _ = s.Insert(&AutoTaskLog{
+					TemplateID:  tmpl.ID,
+					TaskID:      lastDone.ID,
+					TriggerType: "completed",
+				})
 
 				// After advancing, check if the NEW next_due_at is still in the past.
 				// If not, this template isn't due yet — skip it.

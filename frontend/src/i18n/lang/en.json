@@ -1474,5 +1474,17 @@
 	"task.autoTask.generationLog": "Generation log",
 	"task.autoTask.logManual": "Manually triggered",
 	"task.autoTask.logSystem": "Auto-generated",
-	"task.autoTask.create": "Create Template"
+	"task.autoTask.create": "Create Template",
+	"task.autoTask.viewLog": "View generation log",
+	"task.autoTask.generationsRecorded": "generations recorded",
+	"task.autoTask.lastGenerated": "Last generated",
+	"task.autoTask.lastCompleted": "Last completed",
+	"task.autoTask.status": "Status",
+	"task.autoTask.noLogEntries": "No generation events recorded yet.",
+	"task.autoTask.completedAt": "Completed",
+	"task.autoTask.stillOpen": "Still open",
+	"task.autoTask.lastUpdated": "Updated",
+	"task.autoTask.comment": "comment",
+	"task.autoTask.comments": "comments",
+	"task.autoTask.logCompleted": "Completed"
 }

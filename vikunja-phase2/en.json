@@ -1480,5 +1480,11 @@
 	"task.autoTask.lastGenerated": "Last generated",
 	"task.autoTask.lastCompleted": "Last completed",
 	"task.autoTask.status": "Status",
-	"task.autoTask.noLogEntries": "No generation events recorded yet."
+	"task.autoTask.noLogEntries": "No generation events recorded yet.",
+	"task.autoTask.completedAt": "Completed",
+	"task.autoTask.stillOpen": "Still open",
+	"task.autoTask.lastUpdated": "Updated",
+	"task.autoTask.comment": "comment",
+	"task.autoTask.comments": "comments",
+	"task.autoTask.logCompleted": "Completed"
 }

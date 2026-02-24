@@ -329,19 +329,57 @@
 							v-for="entry in logTemplate.log"
 							:key="entry.id"
 							class="log-entry-modal"
+							:class="{
+								'is-completed-entry': entry.trigger_type === 'completed',
+								'is-generation-entry': entry.trigger_type !== 'completed',
+							}"
 						>
-							<div class="log-entry-icon">
-								<Icon :icon="entry.trigger_type === 'manual' ? 'user' : 'bolt'" />
+							<div
+								class="log-entry-icon"
+								:class="{
+									'is-completed': entry.trigger_type === 'completed',
+									'is-manual': entry.trigger_type === 'manual',
+								}"
+							>
+								<Icon :icon="logEntryIcon(entry)" />
 							</div>
 							<div class="log-entry-detail">
 								<span class="log-entry-type">
-									{{ entry.trigger_type === 'manual'
-										? $t('task.autoTask.logManual')
-										: $t('task.autoTask.logSystem') }}
+									{{ logEntryLabel(entry) }}
 								</span>
-								<span class="log-entry-task">
-									Task #{{ entry.task_id }}
+								<span class="log-entry-task-ref">
+									{{ entry.task_title || ('Task #' + entry.task_id) }}
 								</span>
+								<div class="log-entry-meta">
+									<span
+										v-if="entry.trigger_type !== 'completed' && entry.task_done && entry.task_done_at"
+										class="log-entry-completed"
+									>
+										<Icon icon="check" class="meta-inline-icon" />
+										{{ $t('task.autoTask.completedAt') }} {{ formatDate(entry.task_done_at) }}
+									</span>
+									<span
+										v-else-if="entry.trigger_type !== 'completed' && !entry.task_done"
+										class="log-entry-open"
+									>
+										<Icon :icon="['far', 'clock']" class="meta-inline-icon" />
+										{{ $t('task.autoTask.stillOpen') }}
+									</span>
+									<span
+										v-if="entry.task_updated"
+										class="log-entry-updated"
+									>
+										<Icon icon="pen" class="meta-inline-icon" />
+										{{ $t('task.autoTask.lastUpdated') }} {{ formatDate(entry.task_updated) }}
+									</span>
+									<span
+										v-if="entry.comment_count > 0"
+										class="log-entry-comments"
+									>
+										<Icon :icon="['far', 'comments']" class="meta-inline-icon" />
+										{{ entry.comment_count }} {{ entry.comment_count === 1 ? $t('task.autoTask.comment') : $t('task.autoTask.comments') }}
+									</span>
+								</div>
 							</div>
 							<span class="log-entry-date">{{ formatDate(entry.created) }}</span>
 						</div>
@@ -448,6 +486,22 @@ function isOverdue(dateStr: string | null): boolean {
 function openLogModal(tmpl: IAutoTaskTemplate) {
 	logTemplate.value = tmpl
 	showLogModal.value = true
+}
+
+function logEntryIcon(entry: any): string | string[] {
+	switch (entry.trigger_type) {
+		case 'completed': return 'check'
+		case 'manual': return 'user'
+		default: return 'bolt'
+	}
+}
+
+function logEntryLabel(entry: any): string {
+	switch (entry.trigger_type) {
+		case 'completed': return t('task.autoTask.logCompleted')
+		case 'manual': return t('task.autoTask.logManual')
+		default: return t('task.autoTask.logSystem')
+	}
 }
 
 // --- CRUD ---
@@ -741,22 +795,60 @@ defineExpose({openCreate})
 	justify-content: center;
 	font-size: .7rem;
 	color: var(--grey-500);
+
+	&.is-completed {
+		background: var(--success);
+		color: var(--white);
+	}
+
+	&.is-manual {
+		background: var(--primary);
+		color: var(--white);
+	}
 }
 
 .log-entry-detail {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: .1rem;
+	gap: .15rem;
 }
 
 .log-entry-type {
 	font-weight: 500;
+	font-size: .8rem;
+	color: var(--grey-500);
 }
 
-.log-entry-task {
+.log-entry-task-ref {
+	font-weight: 600;
+	font-size: .9rem;
+}
+
+.meta-inline-icon {
+	font-size: .65rem;
+	margin-inline-end: .15rem;
+}
+
+.log-entry-meta {
 	font-size: .75rem;
 	color: var(--grey-400);
+	display: flex;
+	flex-wrap: wrap;
+	gap: .35rem .75rem;
+	margin-block-start: .1rem;
+}
+
+.log-entry-open {
+	color: var(--warning);
+}
+
+.log-entry-completed {
+	color: var(--success);
+}
+
+.log-entry-comments {
+	color: var(--grey-500);
 }
 
 .log-entry-date {
