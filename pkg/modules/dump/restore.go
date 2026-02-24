@@ -45,7 +45,8 @@ import (
 	"src.techknowlogick.com/xormigrate"
 )
 
-const maxConfigSize = 5 * 1024 * 1024 // 5 MB, should be largely enough
+const maxConfigSize = 5 * 1024 * 1024    // 5 MB, should be largely enough
+const maxDumpEntrySize = 500 * 1024 * 1024 // 500 MB
 
 // Restore takes a zip file name and restores it
 func Restore(filename string, overrideConfig bool) error {
@@ -147,7 +148,7 @@ func Restore(filename string, overrideConfig bool) error {
 	defer rc.Close()
 
 	var buf bytes.Buffer
-	if _, err := buf.ReadFrom(rc); err != nil {
+	if _, err := buf.ReadFrom(io.LimitReader(rc, maxDumpEntrySize)); err != nil {
 		return fmt.Errorf("could not read migrations: %w", err)
 	}
 
@@ -375,7 +376,7 @@ func unmarshalFileToJSON(file *zip.File) (contents []map[string]interface{}, err
 	defer rc.Close()
 
 	var buf bytes.Buffer
-	if _, err := buf.ReadFrom(rc); err != nil {
+	if _, err := buf.ReadFrom(io.LimitReader(rc, maxDumpEntrySize)); err != nil {
 		return nil, err
 	}
 
@@ -432,7 +433,7 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 			return err
 		}
 		buf := bytes.Buffer{}
-		_, err = buf.ReadFrom(dotenv)
+		_, err = buf.ReadFrom(io.LimitReader(dotenv, maxDumpEntrySize))
 		if err != nil {
 			return err
 		}
@@ -458,7 +459,7 @@ func checkVikunjaVersion(versionFile *zip.File) error {
 	}
 
 	var bufVersion bytes.Buffer
-	if _, err := bufVersion.ReadFrom(vf); err != nil {
+	if _, err := bufVersion.ReadFrom(io.LimitReader(vf, maxDumpEntrySize)); err != nil {
 		return fmt.Errorf("could not read version file: %w", err)
 	}
 
