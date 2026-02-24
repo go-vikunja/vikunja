@@ -39,8 +39,11 @@ Copy-Item "$PATCH\ChainEditor.vue" "$ROOT\frontend\src\components\tasks\partials
 Copy-Item "$PATCH\CreateFromChainModal.vue" "$ROOT\frontend\src\components\tasks\partials\CreateFromChainModal.vue" -Force
 Copy-Item "$PATCH\en.json" "$ROOT\frontend\src\i18n\lang\en.json" -Force
 
-Write-Host "[6/6] Bugfix: subproject filter..." -ForegroundColor Green
+Write-Host "[6/7] Bugfix: subproject filter..." -ForegroundColor Green
 Copy-Item "$PATCH\SubprojectFilter.vue" "$ROOT\frontend\src\components\project\partials\SubprojectFilter.vue" -Force
+
+Write-Host "[7/7] Date cascade for List/Table/Detail views..." -ForegroundColor Green
+Copy-Item "$PATCH\tasks.ts" "$ROOT\frontend\src\stores\tasks.ts" -Force
 Write-Host "  ~ ChainEditor.vue (cumulative Day X + timespan)"
 Write-Host "  ~ CreateFromChainModal.vue (cumulative preview)"
 Write-Host "  ~ en.json (Before/After labels)"
