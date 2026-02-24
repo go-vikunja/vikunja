@@ -198,7 +198,11 @@ function emitUpdate() {
 	emit('update:colorMap', includeSubprojects.value ? colorMap.value : new Map())
 	saveState()
 }
-// Emit persisted state on mount so parent views load sub-project tasks
+// Emit persisted state immediately during setup so GanttChart has colors on first render
+if (includeSubprojects.value) {
+	emitUpdate()
+}
+// Also emit on mount in case colorMap was not yet computed during setup
 onMounted(() => {
 	if (includeSubprojects.value) {
 		emitUpdate()
@@ -211,6 +215,13 @@ watch(() => props.projectId, () => {
 	includeSubprojects.value = state.enabled
 	excludedIds.value = state.excluded
 	emitUpdate()
+})
+
+// Re-emit when colorMap updates (e.g., project store finishes loading)
+watch(colorMap, () => {
+	if (includeSubprojects.value) {
+		emitUpdate()
+	}
 })
 </script>
 
