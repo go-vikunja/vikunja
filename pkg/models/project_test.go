@@ -344,6 +344,7 @@ func TestProject_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		project := Project{
 			ID: 1,
 		}
@@ -362,6 +363,7 @@ func TestProject_Delete(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		files.InitTestFileFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		project := Project{
 			ID: 35,
 		}
@@ -379,6 +381,7 @@ func TestProject_Delete(t *testing.T) {
 	t.Run("default project of the same user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		project := Project{
 			ID: 4,
 		}
@@ -389,12 +392,46 @@ func TestProject_Delete(t *testing.T) {
 	t.Run("default project of a different user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		project := Project{
 			ID: 4,
 		}
 		err := project.Delete(s, &user.User{ID: 2})
 		require.Error(t, err)
 		assert.True(t, IsErrCannotDeleteDefaultProject(err))
+	})
+	t.Run("deletes archived parent and its child atomically", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 22 is archived (is_archived=1), owned by user 1
+		// Project 21 is a child of 22 (parent_project_id=22)
+		project := Project{ID: 22}
+		err := project.Delete(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 22})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 21})
+	})
+	t.Run("deletes deeply nested child projects recursively", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project hierarchy: 27 -> 12 -> 25 -> 26 (all owned by user 6)
+		project := Project{ID: 27}
+		err := project.Delete(s, &user.User{ID: 6})
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 27})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 12})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 25})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 26})
 	})
 }
 
