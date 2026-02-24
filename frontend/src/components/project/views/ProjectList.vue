@@ -60,8 +60,9 @@
 							type: 'transition-group'
 						}"
 						:animation="100"
-						:delay-on-touch-only="true"
-						:delay="1000"
+						:handle="dragHandle"
+						:delay-on-touch-only="!isTouchDevice"
+						:delay="isTouchDevice ? 0 : 1000"
 						ghost-class="task-ghost"
 						@start="handleDragStart"
 						@end="saveTaskPosition"
@@ -75,7 +76,14 @@
 								:the-task="t"
 								:all-tasks="allTasks"
 								@taskUpdated="updateTasks"
-							/>
+							>
+								<span
+									v-if="canDragTasks"
+									class="icon handle"
+								>
+									<Icon icon="grip-lines" />
+								</span>
+							</SingleTaskInProject>
 						</template>
 					</draggable>
 
@@ -192,6 +200,12 @@ onMounted(async () => {
 })
 
 const canDragTasks = computed(() => canWrite.value || isSavedFilter(project.value))
+
+const isTouchDevice = ref(false)
+if (typeof window !== 'undefined') {
+	isTouchDevice.value = !window.matchMedia('(hover: hover) and (pointer: fine)').matches
+}
+const dragHandle = computed(() => isTouchDevice.value ? '.handle' : undefined)
 
 const addTaskRef = ref<typeof AddTask | null>(null)
 
@@ -371,6 +385,18 @@ onBeforeUnmount(() => {
 .link-share-view .card {
 	border: none;
 	box-shadow: none;
+}
+
+:deep(.single-task .handle) {
+	cursor: grab;
+	margin-inline-end: .25rem;
+	color: var(--grey-400);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	:deep(.single-task .handle) {
+		display: none;
+	}
 }
 
 :deep(.tasks:not(.dragging-disabled) .single-task) {
