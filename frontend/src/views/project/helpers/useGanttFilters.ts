@@ -96,7 +96,8 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 		filter: '(' +
 			'(start_date >= "' + dateFrom + '" && start_date <= "' + dateTo + '") || ' +
 			'(end_date >= "' + dateFrom + '" && end_date <= "' + dateTo + '") || ' +
-			'(due_date >= "' + dateFrom + '" && due_date <= "' + dateTo + '")' +
+			'(due_date >= "' + dateFrom + '" && due_date <= "' + dateTo + '") || ' +
+			'(start_date <= "' + dateFrom + '" && end_date >= "' + dateTo + '")' +
 			')',
 		filter_include_nulls: filters.showTasksWithoutDates,
 	}
