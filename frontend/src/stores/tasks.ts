@@ -216,8 +216,12 @@ export const useTaskStore = defineStore('task', () => {
 		try {
 			const fullTask = await taskService.get(new TaskModel({id: updatedTask.id}))
 			const precedesTasks = fullTask?.relatedTasks?.precedes
+			const followsTasks = fullTask?.relatedTasks?.follows
 
-			if (!precedesTasks || !Array.isArray(precedesTasks) || precedesTasks.length === 0) return
+			const hasPrecedes = precedesTasks && Array.isArray(precedesTasks) && precedesTasks.length > 0
+			const hasFollows = followsTasks && Array.isArray(followsTasks) && followsTasks.length > 0
+
+			if (!hasPrecedes && !hasFollows) return
 
 			const oldStart = oldTask.startDate ? new Date(oldTask.startDate).getTime() : 0
 			const newStart = updatedTask.startDate ? new Date(updatedTask.startDate).getTime() : 0
@@ -226,60 +230,184 @@ export const useTaskStore = defineStore('task', () => {
 			const deltaDays = Math.round((newStart - oldStart) / (1000 * 60 * 60 * 24))
 			if (deltaDays === 0) return
 
-			const direction = deltaDays > 0 ? 'forward' : 'back'
+			const movedEarlier = deltaDays < 0
 			const absDays = Math.abs(deltaDays)
+			const today = new Date()
+			today.setHours(0, 0, 0, 0)
 
-			const confirmed = window.confirm(
-				`This task is part of a chain. Shift ${precedesTasks.length} downstream task(s) ${absDays} day(s) ${direction}?`,
-			)
-			if (!confirmed) return
+			// Check if task moved before its predecessor (upstream collision)
+			if (movedEarlier && hasFollows) {
+				for (const predecessor of followsTasks!) {
+					if (!predecessor.startDate) continue
+					const predStart = new Date(predecessor.startDate)
+					const taskNewStart = new Date(newStart)
 
-			await cascadeShiftTasks(taskService, precedesTasks, deltaDays)
+					if (taskNewStart <= predStart) {
+						// This task is now before or on its predecessor
+						// Check if shifting upstream would push anything into the past
+						const earliestUpstreamDate = await findEarliestUpstreamDate(taskService, followsTasks!)
+						if (earliestUpstreamDate) {
+							const shiftedEarliest = new Date(earliestUpstreamDate.getTime() + deltaDays * 24 * 60 * 60 * 1000)
+							if (shiftedEarliest < today) {
+								window.alert(
+									`Cannot shift upstream tasks — it would move tasks to ${shiftedEarliest.toLocaleDateString()}, which is in the past.`,
+								)
+								return
+							}
+						}
+
+						const confirmedUp = window.confirm(
+							`This task is now before its predecessor. Shift upstream task(s) ${absDays} day(s) back?`,
+						)
+						if (confirmedUp) {
+							await cascadeShiftTasks(taskService, followsTasks!, deltaDays, 'follows')
+						}
+						break
+					}
+				}
+			}
+
+			// Downstream cascade (normal)
+			if (hasPrecedes) {
+				// Check if shifting downstream would push anything into the past
+				if (movedEarlier) {
+					const earliestDownstreamDate = await findEarliestUpstreamDate(taskService, precedesTasks!)
+					if (earliestDownstreamDate) {
+						const shiftedEarliest = new Date(earliestDownstreamDate.getTime() + deltaDays * 24 * 60 * 60 * 1000)
+						if (shiftedEarliest < today) {
+							window.alert(
+								`Cannot shift downstream tasks — it would move tasks to ${shiftedEarliest.toLocaleDateString()}, which is in the past.`,
+							)
+							return
+						}
+					}
+				}
+
+				const direction = deltaDays > 0 ? 'forward' : 'back'
+				const confirmed = window.confirm(
+					`Shift ${precedesTasks!.length} downstream task(s) ${absDays} day(s) ${direction}?`,
+				)
+				if (confirmed) {
+					await cascadeShiftTasks(taskService, precedesTasks!, deltaDays, 'precedes')
+				}
+			}
 		} catch (e) {
 			console.error('Failed to check cascade:', e)
 		}
 	}
 
-	async function cascadeShiftTasks(taskService: TaskService, downstreamTasks: ITask[], deltaDays: number) {
+	async function findEarliestUpstreamDate(taskService: TaskService, tasks: ITask[]): Promise<Date | null> {
+		let earliest: Date | null = null
+		for (const t of tasks) {
+			if (t.startDate) {
+				const d = new Date(t.startDate)
+				if (!earliest || d < earliest) earliest = d
+			}
+			// Check recursively
+			try {
+				const full = await taskService.get(new TaskModel({id: t.id}))
+				const further = full?.relatedTasks?.follows
+				if (further && Array.isArray(further) && further.length > 0) {
+					const sub = await findEarliestUpstreamDate(taskService, further)
+					if (sub && (!earliest || sub < earliest)) earliest = sub
+				}
+			} catch { /* end of chain */ }
+		}
+		return earliest
+	}
+
+	async function cascadeShiftTasks(taskService: TaskService, tasks: ITask[], deltaDays: number, direction: 'precedes' | 'follows') {
 		const deltaMs = deltaDays * 24 * 60 * 60 * 1000
 
-		for (const downstream of downstreamTasks) {
+		for (const task of tasks) {
 			const shiftedFields: Partial<ITask> = {}
 
-			if (downstream.startDate) {
-				shiftedFields.startDate = new Date(new Date(downstream.startDate).getTime() + deltaMs)
+			if (task.startDate) {
+				shiftedFields.startDate = new Date(new Date(task.startDate).getTime() + deltaMs)
 			}
-			if (downstream.endDate) {
-				shiftedFields.endDate = new Date(new Date(downstream.endDate).getTime() + deltaMs)
+			if (task.endDate) {
+				shiftedFields.endDate = new Date(new Date(task.endDate).getTime() + deltaMs)
 			}
-			if (downstream.dueDate) {
-				shiftedFields.dueDate = new Date(new Date(downstream.dueDate).getTime() + deltaMs)
+			if (task.dueDate) {
+				shiftedFields.dueDate = new Date(new Date(task.dueDate).getTime() + deltaMs)
 			}
 
 			try {
-				await taskService.update({...downstream, ...shiftedFields})
+				await taskService.update({...task, ...shiftedFields})
 
-				// Recursively cascade further downstream
+				// Recursively cascade in the same direction
 				try {
-					const fullDownstream = await taskService.get(new TaskModel({id: downstream.id}))
-					const nextTasks = fullDownstream?.relatedTasks?.precedes
+					const fullTask = await taskService.get(new TaskModel({id: task.id}))
+					const nextTasks = fullTask?.relatedTasks?.[direction]
 					if (nextTasks && Array.isArray(nextTasks) && nextTasks.length > 0) {
-						await cascadeShiftTasks(taskService, nextTasks, deltaDays)
+						await cascadeShiftTasks(taskService, nextTasks, deltaDays, direction)
 					}
 				} catch {
 					// End of chain
 				}
 			} catch (e) {
-				console.error(`Failed to cascade task ${downstream.id}:`, e)
+				console.error(`Failed to cascade task ${task.id}:`, e)
 			}
 		}
 	}
 
 	async function deleteTask(task: ITask) {
 		const taskService = new TaskService()
+
+		// Check if this task is part of a chain (has downstream tasks)
+		try {
+			const fullTask = await taskService.get(new TaskModel({id: task.id}))
+			const precedesTasks = fullTask?.relatedTasks?.precedes
+
+			if (precedesTasks && Array.isArray(precedesTasks) && precedesTasks.length > 0) {
+				// Count all downstream tasks recursively
+				const allDownstream = await collectAllChainTasks(taskService, precedesTasks, 'precedes')
+
+				const deleteAll = window.confirm(
+					`This task has ${allDownstream.length} task(s) after it in the chain.\n\n` +
+					`• OK = Delete this task AND all ${allDownstream.length} downstream task(s)\n` +
+					`• Cancel = Delete only this task`,
+				)
+
+				if (deleteAll) {
+					// Delete downstream tasks in reverse order (last first)
+					for (let i = allDownstream.length - 1; i >= 0; i--) {
+						try {
+							await taskService.delete(allDownstream[i])
+							kanbanStore.removeTaskInBucket(allDownstream[i])
+						} catch (e) {
+							console.error(`Failed to delete chain task ${allDownstream[i].id}:`, e)
+						}
+					}
+				}
+			}
+		} catch {
+			// Couldn't fetch relations — just delete the single task
+		}
+
 		const response = await taskService.delete(task)
 		kanbanStore.removeTaskInBucket(task)
 		return response
+	}
+
+	async function collectAllChainTasks(taskService: TaskService, tasks: ITask[], direction: 'precedes' | 'follows'): Promise<ITask[]> {
+		const result: ITask[] = []
+
+		for (const t of tasks) {
+			result.push(t)
+			try {
+				const full = await taskService.get(new TaskModel({id: t.id}))
+				const nextTasks = full?.relatedTasks?.[direction]
+				if (nextTasks && Array.isArray(nextTasks) && nextTasks.length > 0) {
+					const further = await collectAllChainTasks(taskService, nextTasks, direction)
+					result.push(...further)
+				}
+			} catch {
+				// End of chain
+			}
+		}
+
+		return result
 	}
 
 	// Adds a task attachment in store.

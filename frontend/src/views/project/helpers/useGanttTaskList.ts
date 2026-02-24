@@ -131,13 +131,15 @@ export function useGanttTaskList<F extends Filters>(
 
 	async function checkCascadeDownstream(updatedTask: ITask, oldTask: ITask) {
 		try {
-			// Fetch the full task with relations
 			const fullTask = await taskService.get(new TaskModel({id: updatedTask.id}))
 			const precedesTasks = fullTask?.relatedTasks?.precedes
+			const followsTasks = fullTask?.relatedTasks?.follows
 
-			if (!precedesTasks || !Array.isArray(precedesTasks) || precedesTasks.length === 0) return
+			const hasPrecedes = precedesTasks && Array.isArray(precedesTasks) && precedesTasks.length > 0
+			const hasFollows = followsTasks && Array.isArray(followsTasks) && followsTasks.length > 0
 
-			// Calculate the delta in days
+			if (!hasPrecedes && !hasFollows) return
+
 			const oldStart = oldTask.startDate ? new Date(oldTask.startDate).getTime() : 0
 			const newStart = updatedTask.startDate ? new Date(updatedTask.startDate).getTime() : 0
 			if (oldStart === 0 || newStart === 0) return
@@ -145,52 +147,96 @@ export function useGanttTaskList<F extends Filters>(
 			const deltaDays = Math.round((newStart - oldStart) / (1000 * 60 * 60 * 24))
 			if (deltaDays === 0) return
 
-			const direction = deltaDays > 0 ? 'forward' : 'back'
+			const movedEarlier = deltaDays < 0
 			const absDays = Math.abs(deltaDays)
+			const today = new Date()
+			today.setHours(0, 0, 0, 0)
 
-			// Prompt user
-			const confirmed = window.confirm(
-				`This task is part of a chain. Shift ${precedesTasks.length} downstream task(s) ${absDays} day(s) ${direction}?`,
-			)
+			// Upstream collision: task moved before its predecessor
+			if (movedEarlier && hasFollows) {
+				for (const pred of followsTasks!) {
+					if (!pred.startDate) continue
+					if (new Date(newStart) <= new Date(pred.startDate)) {
+						// Check past-date safety
+						const earliest = findEarliestDate(followsTasks!)
+						if (earliest) {
+							const shifted = new Date(earliest.getTime() + deltaDays * 24 * 60 * 60 * 1000)
+							if (shifted < today) {
+								window.alert(`Cannot shift upstream — would move tasks to ${shifted.toLocaleDateString()}, which is in the past.`)
+								return
+							}
+						}
+						const confirmedUp = window.confirm(`This task is now before its predecessor. Shift upstream task(s) ${absDays} day(s) back?`)
+						if (confirmedUp) {
+							await cascadeShiftTasks(followsTasks!, deltaDays, 'follows')
+						}
+						break
+					}
+				}
+			}
 
-			if (!confirmed) return
-
-			// Cascade: shift all downstream tasks by the same delta
-			await cascadeShiftTasks(precedesTasks, deltaDays)
+			// Downstream cascade
+			if (hasPrecedes) {
+				if (movedEarlier) {
+					const earliest = findEarliestDate(precedesTasks!)
+					if (earliest) {
+						const shifted = new Date(earliest.getTime() + deltaDays * 24 * 60 * 60 * 1000)
+						if (shifted < today) {
+							window.alert(`Cannot shift downstream — would move tasks to ${shifted.toLocaleDateString()}, which is in the past.`)
+							return
+						}
+					}
+				}
+				const direction = deltaDays > 0 ? 'forward' : 'back'
+				const confirmed = window.confirm(`Shift ${precedesTasks!.length} downstream task(s) ${absDays} day(s) ${direction}?`)
+				if (confirmed) {
+					await cascadeShiftTasks(precedesTasks!, deltaDays, 'precedes')
+				}
+			}
 		} catch (e) {
 			console.error('Failed to check cascade:', e)
 		}
 	}
 
-	async function cascadeShiftTasks(downstreamTasks: ITask[], deltaDays: number) {
+	function findEarliestDate(tasks: ITask[]): Date | null {
+		let earliest: Date | null = null
+		for (const t of tasks) {
+			if (t.startDate) {
+				const d = new Date(t.startDate)
+				if (!earliest || d < earliest) earliest = d
+			}
+		}
+		return earliest
+	}
+
+	async function cascadeShiftTasks(chainTasks: ITask[], deltaDays: number, direction: 'precedes' | 'follows') {
 		const deltaMs = deltaDays * 24 * 60 * 60 * 1000
 
-		for (const downstream of downstreamTasks) {
-			const shiftedTask: Record<string, any> = {id: downstream.id}
+		for (const t of chainTasks) {
+			const shiftedTask: Record<string, any> = {id: t.id}
 
-			if (downstream.startDate) {
-				shiftedTask.startDate = new Date(new Date(downstream.startDate).getTime() + deltaMs)
+			if (t.startDate) {
+				shiftedTask.startDate = new Date(new Date(t.startDate).getTime() + deltaMs)
 			}
-			if (downstream.endDate) {
-				shiftedTask.endDate = new Date(new Date(downstream.endDate).getTime() + deltaMs)
+			if (t.endDate) {
+				shiftedTask.endDate = new Date(new Date(t.endDate).getTime() + deltaMs)
 			}
-			if (downstream.dueDate) {
-				shiftedTask.dueDate = new Date(new Date(downstream.dueDate).getTime() + deltaMs)
+			if (t.dueDate) {
+				shiftedTask.dueDate = new Date(new Date(t.dueDate).getTime() + deltaMs)
 			}
 
 			try {
-				const updated = await taskService.update({...downstream, ...shiftedTask})
+				const updated = await taskService.update({...t, ...shiftedTask})
 				tasks.value.set(updated.id, updated)
 
-				// Recursively check if this task also precedes others
 				try {
-					const fullDownstream = await taskService.get(new TaskModel({id: updated.id}))
-					const nextTasks = fullDownstream?.relatedTasks?.precedes
+					const full = await taskService.get(new TaskModel({id: updated.id}))
+					const nextTasks = full?.relatedTasks?.[direction]
 					if (nextTasks && Array.isArray(nextTasks) && nextTasks.length > 0) {
-						await cascadeShiftTasks(nextTasks, deltaDays)
+						await cascadeShiftTasks(nextTasks, deltaDays, direction)
 					}
 				} catch {
-					// No relations or fetch failed — end of chain
+					// End of chain
 				}
 			} catch (e) {
 				console.error(`Failed to cascade task ${downstream.id}:`, e)
