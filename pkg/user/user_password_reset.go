@@ -93,7 +93,6 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (userID int64, err err
 	return
 }
 
-
 // PasswordTokenRequest defines the request format for password reset resqest
 type PasswordTokenRequest struct {
 	Email string `json:"email" valid:"email,length(0|250)" maxLength:"250"`
