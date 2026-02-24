@@ -9,7 +9,7 @@ populate the board with future instances.
 ## Core Rules
 
 1. **One instance at a time** — Only one open (undone) task per template can exist.
-   If the previous task isn't completed, no new one is created.
+   If the previous task isn't completed, no new one is created — it goes overdue.
 
 2. **Completion-based scheduling** — `next_due_at` is recalculated from when the
    user COMPLETES the task, not when it was created. This prevents cascading
@@ -25,42 +25,44 @@ populate the board with future instances.
 ## Data Model
 
 ### auto_task_templates
-```sql
-id                BIGINT PK AUTO_INCREMENT
-owner_id          BIGINT NOT NULL INDEX     -- FK to users
-project_id        BIGINT NULL               -- FK to projects (NULL = default)
-title             VARCHAR(250) NOT NULL
-description       LONGTEXT NULL
-priority          BIGINT NULL
-hex_color         VARCHAR(7) NULL
-label_ids         JSON NULL                 -- [1, 5, 12]
-assignee_ids      JSON NULL                 -- [3, 7]
-interval_value    INT NOT NULL DEFAULT 1
-interval_unit     VARCHAR(10) NOT NULL DEFAULT 'days'  -- hours|days|weeks|months
-start_date        DATETIME NOT NULL
-end_date          DATETIME NULL
-active            BOOLEAN NOT NULL DEFAULT TRUE
-last_created_at   DATETIME NULL
-last_completed_at DATETIME NULL
-next_due_at       DATETIME NULL
-created           DATETIME NOT NULL
-updated           DATETIME NOT NULL
-```
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGINT PK | Auto-increment |
+| owner_id | BIGINT NOT NULL INDEX | FK to users |
+| project_id | BIGINT NULL | FK to projects (NULL = default) |
+| title | VARCHAR(250) NOT NULL | Task title |
+| description | LONGTEXT NULL | Task description |
+| priority | BIGINT NULL | 0-5 |
+| hex_color | VARCHAR(7) NULL | Color |
+| label_ids | JSON NULL | e.g. [1, 5, 12] |
+| assignee_ids | JSON NULL | e.g. [3, 7] |
+| interval_value | INT NOT NULL DEFAULT 1 | Repeat every N... |
+| interval_unit | VARCHAR(10) NOT NULL DEFAULT 'days' | hours/days/weeks/months |
+| start_date | DATETIME NOT NULL | First occurrence |
+| end_date | DATETIME NULL | Stop after (optional) |
+| active | BOOLEAN NOT NULL DEFAULT TRUE | FALSE = paused |
+| last_created_at | DATETIME NULL | Last task creation time |
+| last_completed_at | DATETIME NULL | Last task completion time |
+| next_due_at | DATETIME NULL | When next task should appear |
 
 ### auto_task_log
-```sql
-id                BIGINT PK AUTO_INCREMENT
-template_id       BIGINT NOT NULL INDEX     -- FK to auto_task_templates
-task_id           BIGINT NOT NULL           -- FK to tasks (the created task)
-trigger_type      VARCHAR(20) NOT NULL      -- 'system' | 'manual' | 'cron'
-triggered_by_id   BIGINT NULL               -- FK to users (NULL for system)
-created           DATETIME NOT NULL
-```
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGINT PK | Auto-increment |
+| template_id | BIGINT NOT NULL INDEX | FK to auto_task_templates |
+| task_id | BIGINT NOT NULL | FK to tasks (created task) |
+| trigger_type | VARCHAR(20) NOT NULL | 'system' / 'manual' / 'cron' |
+| triggered_by_id | BIGINT NULL | FK to users (NULL for system) |
+| created | DATETIME NOT NULL | Timestamp |
 
 ### tasks (modified)
-```sql
-auto_template_id  BIGINT NULL INDEX         -- FK to auto_task_templates
-```
+| Column | Type | Description |
+|--------|------|-------------|
+| auto_template_id | BIGINT NULL INDEX | FK to auto_task_templates |
+
+**Note:** `auto_template_id` is added as a DB column via migration but is NOT
+added to the Go `Task` struct. It is read/written via raw SQL to avoid modifying
+the large upstream `tasks.go` file.
 
 ## Auto-Creation Flow
 
@@ -75,16 +77,16 @@ CheckAndCreateAutoTasks(session, user):
         if end_date is set and NOW() > end_date:
             → deactivate template, skip
 
-        open_count = COUNT(*) FROM tasks
+        open_count = SELECT COUNT(*) FROM tasks
                      WHERE auto_template_id = template.id
                      AND done = false
 
         if open_count > 0:
             → skip (previous task still open, goes overdue naturally)
 
-        task = create_task(template properties)
+        task = createTask(template properties)
+        UPDATE tasks SET auto_template_id = template.id WHERE id = task.id
         INSERT INTO auto_task_log (template_id, task_id, trigger_type)
-
         UPDATE template SET last_created_at = NOW()
 ```
 
@@ -92,54 +94,39 @@ CheckAndCreateAutoTasks(session, user):
 
 ```
 OnAutoTaskCompleted(task):
-    if task.auto_template_id == 0: return
+    auto_template_id = SQL: SELECT auto_template_id FROM tasks WHERE id = task.id
+    if auto_template_id == 0: return
 
-    template = load(task.auto_template_id)
+    template = load(auto_template_id)
     template.last_completed_at = NOW()
-    template.next_due_at = NOW() + interval
+    template.next_due_at = NOW() + interval   ← key: from completion, not creation
     save(template)
-```
-
-Key: next_due_at is calculated from NOW (completion time), not from the
-original due date. If a task was due Monday and completed Wednesday,
-and interval is 1 day, next due = Thursday (not Tuesday).
-
-## Manual Trigger
-
-```
-TriggerAutoTask(template_id, user):
-    if open task exists for template:
-        → error "complete the previous task first"
-
-    task = create_task(template properties, due_date = NOW())
-    log(trigger_type = 'manual', triggered_by = user)
 ```
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | /api/v1/autotasks | List user's templates (with last 10 log entries) |
-| GET | /api/v1/autotasks/:id | Get one template (with last 20 log entries) |
+| GET | /api/v1/autotasks | List templates (with last 10 log entries) |
+| GET | /api/v1/autotasks/:id | Get one (with last 20 log entries) |
 | PUT | /api/v1/autotasks | Create template |
 | POST | /api/v1/autotasks/:id | Update template |
 | DELETE | /api/v1/autotasks/:id | Delete template + log + attachments |
 | POST | /api/v1/autotasks/:id/trigger | Manual "send now" |
 | POST | /api/v1/autotasks/check | Auto-check all due templates |
 
-## Frontend Components
+## Build Compatibility Notes
 
-### AutoTaskEditor.vue
-- Card list showing all templates with status dot (green=active, grey=paused)
-- Inline actions: pause/resume, send now, edit, delete
-- Metadata row: interval, project, next due date (red if overdue)
-- Collapsible generation log per template
-- Create/edit modal with full task properties
+The Vikunja codebase has specific patterns that must be followed:
 
-### Integration Points
-- `ListTemplates.vue` — Third tab "Auto-Generated" with robot icon
-- `Home.vue` — Calls `/autotasks/check` on mount, refreshes task list if new tasks created
-- `autoTaskApi.ts` — Frontend HTTP client
+- **Echo v5** — `github.com/labstack/echo/v5`, NOT v4
+- **Handler signatures** — `func Name(c *echo.Context) error` (pointer receiver)
+- **NewHTTPError** — Always two args: `echo.NewHTTPError(http.StatusXxx, "message")`
+- **Auth** — `auth2.GetAuthFromClaims(c)` from `code.vikunja.io/api/pkg/modules/auth`
+- **CObject interface** — `ReadAll` returns `(interface{}, int, int64, error)` (3rd is int64)
+- **createTask** — 5 args: `(session, task, auth, updateAssignees, setBucket)`
+- **TaskAssginee** — Note the typo; this is the upstream spelling
+- **Permissions** — Use `PermissionAdmin` from models package, not `web.RightAdmin`
 
 ## File Manifest
 
