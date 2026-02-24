@@ -455,9 +455,11 @@ watch(selectedProject, (proj) => {
 	editForm.value.project_id = proj?.id || 0
 })
 
-onMounted(() => {
-	loadTemplates()
-	labelStore.loadAllLabels()
+onMounted(async () => {
+	await Promise.all([
+		loadTemplates(),
+		labelStore.loadAllLabels(),
+	])
 })
 
 async function loadTemplates() {

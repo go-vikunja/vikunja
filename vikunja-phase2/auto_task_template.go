@@ -96,6 +96,13 @@ type AutoTaskLog struct {
 	// The user who triggered (null for system cron)
 	TriggeredByID int64  `xorm:"bigint null" json:"triggered_by_id"`
 	Created       time.Time `xorm:"created not null" json:"created"`
+
+	// Enrichment fields (populated after load, not in DB)
+	TaskTitle    string     `xorm:"-" json:"task_title"`
+	TaskDone     bool       `xorm:"-" json:"task_done"`
+	TaskDoneAt   *time.Time `xorm:"-" json:"task_done_at"`
+	TaskUpdated  *time.Time `xorm:"-" json:"task_updated"`
+	CommentCount int64      `xorm:"-" json:"comment_count"`
 }
 
 // TableName returns the table name for xorm.
@@ -129,11 +136,12 @@ func (a *AutoTaskTemplate) ReadAll(s *xorm.Session, auth web.Auth, _ string, _ i
 		return nil, 0, 0, err
 	}
 
-	// Load log entries for each template (last 10)
+	// Load log entries for each template (last 10) and enrich
 	for _, tmpl := range templates {
 		tmpl.Owner = u
 		logs := []*AutoTaskLog{}
 		_ = s.Where("template_id = ?", tmpl.ID).OrderBy("created DESC").Limit(10).Find(&logs)
+		enrichAutoTaskLogs(s, logs)
 		tmpl.Log = logs
 	}
 
@@ -154,6 +162,7 @@ func (a *AutoTaskTemplate) ReadOne(s *xorm.Session, _ web.Auth) error {
 	// Load log entries
 	logs := []*AutoTaskLog{}
 	_ = s.Where("template_id = ?", a.ID).OrderBy("created DESC").Limit(20).Find(&logs)
+	enrichAutoTaskLogs(s, logs)
 	tmpl.Log = logs
 
 	*a = *tmpl
@@ -239,4 +248,89 @@ func (e ErrAutoTaskTemplateNotFound) HTTPError() web.HTTPError {
 		Code:     15001,
 		Message:  "The auto-task template was not found.",
 	}
+}
+
+// enrichAutoTaskLogs populates task metadata on log entries by batch-querying the tasks table.
+func enrichAutoTaskLogs(s *xorm.Session, logs []*AutoTaskLog) {
+	if len(logs) == 0 {
+		return
+	}
+
+	// Collect unique task IDs
+	taskIDs := make([]int64, 0, len(logs))
+	seen := make(map[int64]bool)
+	for _, l := range logs {
+		if !seen[l.TaskID] {
+			taskIDs = append(taskIDs, l.TaskID)
+			seen[l.TaskID] = true
+		}
+	}
+
+	if len(taskIDs) == 0 {
+		return
+	}
+
+	ids := inClause(taskIDs)
+
+	// Batch load task info via raw SQL
+	type taskInfo struct {
+		ID      int64     `xorm:"'id'"`
+		Title   string    `xorm:"'title'"`
+		Done    int       `xorm:"'done'"`
+		DoneAt  time.Time `xorm:"'done_at'"`
+		Updated time.Time `xorm:"'updated'"`
+	}
+	tasks := make([]*taskInfo, 0)
+	_ = s.SQL("SELECT id, title, done, done_at, updated FROM tasks WHERE id IN (" + ids + ")").Find(&tasks)
+
+	taskMap := make(map[int64]*taskInfo)
+	for _, t := range tasks {
+		taskMap[t.ID] = t
+	}
+
+	// Batch load comment counts
+	type commentCount struct {
+		TaskID int64 `xorm:"'task_id'"`
+		Count  int64 `xorm:"'count'"`
+	}
+	counts := make([]*commentCount, 0)
+	_ = s.SQL(
+		"SELECT task_id, COUNT(*) as count FROM task_comments WHERE task_id IN (" + ids + ") GROUP BY task_id",
+	).Find(&counts)
+
+	countMap := make(map[int64]int64)
+	for _, c := range counts {
+		countMap[c.TaskID] = c.Count
+	}
+
+	// Enrich each log entry
+	for _, l := range logs {
+		if t, ok := taskMap[l.TaskID]; ok {
+			l.TaskTitle = t.Title
+			l.TaskDone = t.Done != 0
+			if !t.DoneAt.IsZero() {
+				doneAt := t.DoneAt
+				l.TaskDoneAt = &doneAt
+			}
+			if !t.Updated.IsZero() {
+				updated := t.Updated
+				l.TaskUpdated = &updated
+			}
+		}
+		if c, ok := countMap[l.TaskID]; ok {
+			l.CommentCount = c
+		}
+	}
+}
+
+// inClause generates a comma-separated list of int64s for SQL IN clauses.
+func inClause(ids []int64) string {
+	s := ""
+	for i, id := range ids {
+		if i > 0 {
+			s += ","
+		}
+		s += fmt.Sprintf("%d", id)
+	}
+	return s
 }
