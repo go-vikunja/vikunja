@@ -119,6 +119,7 @@ func TestSendingMentionNotification(t *testing.T) {
 		_, err = notifyMentionedUsers(s, &task, tc.Comment, n)
 		require.NoError(t, err)
 
+		require.NoError(t, s.Commit())
 		db.AssertExists(t, "notifications", map[string]interface{}{
 			"subject_id":    tc.ID,
 			"notifiable_id": 1,

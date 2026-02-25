@@ -40,12 +40,12 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		teams, _, _, err := tl.ReadAll(s, u, "", 1, 50)
 		require.NoError(t, err)
 		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
 		ts := reflect.ValueOf(teams)
 		assert.Equal(t, 1, ts.Len())
-		_ = s.Close()
 	})
 	t.Run("nonexistant project", func(t *testing.T) {
 		tl := TeamProject{
@@ -53,10 +53,10 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		_, _, _, err := tl.ReadAll(s, u, "", 1, 50)
 		require.Error(t, err)
 		assert.True(t, IsErrProjectDoesNotExist(err))
-		_ = s.Close()
 	})
 	t.Run("no access", func(t *testing.T) {
 		tl := TeamProject{
@@ -66,10 +66,10 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		_, _, _, err := tl.ReadAll(s, u, "", 1, 50)
 		require.Error(t, err)
 		assert.True(t, IsErrNeedToHaveProjectReadAccess(err))
-		_ = s.Close()
 	})
 	t.Run("search", func(t *testing.T) {
 		tl := TeamProject{
@@ -77,13 +77,13 @@ func TestTeamProject_ReadAll(t *testing.T) {
 		}
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		teams, _, _, err := tl.ReadAll(s, u, "TEAM9", 1, 50)
 		require.NoError(t, err)
 		assert.Equal(t, reflect.Slice, reflect.TypeOf(teams).Kind())
 		ts := teams.([]*TeamWithPermission)
 		assert.Len(t, ts, 1)
 		assert.Equal(t, int64(9), ts[0].ID)
-		_ = s.Close()
 	})
 }
 
@@ -92,6 +92,7 @@ func TestTeamProject_Create(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		tl := TeamProject{
 			TeamID:     1,
 			ProjectID:  1,
@@ -112,6 +113,7 @@ func TestTeamProject_Create(t *testing.T) {
 	t.Run("team already has access", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		tl := TeamProject{
 			TeamID:     1,
 			ProjectID:  3,
@@ -120,11 +122,11 @@ func TestTeamProject_Create(t *testing.T) {
 		err := tl.Create(s, u)
 		require.Error(t, err)
 		assert.True(t, IsErrTeamAlreadyHasAccess(err))
-		_ = s.Close()
 	})
 	t.Run("wrong permissions", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		tl := TeamProject{
 			TeamID:     1,
 			ProjectID:  1,
@@ -133,11 +135,11 @@ func TestTeamProject_Create(t *testing.T) {
 		err := tl.Create(s, u)
 		require.Error(t, err)
 		assert.True(t, IsErrInvalidPermission(err))
-		_ = s.Close()
 	})
 	t.Run("nonexistant team", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		tl := TeamProject{
 			TeamID:    9999,
 			ProjectID: 1,
@@ -145,11 +147,11 @@ func TestTeamProject_Create(t *testing.T) {
 		err := tl.Create(s, u)
 		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
-		_ = s.Close()
 	})
 	t.Run("nonexistant project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		tl := TeamProject{
 			TeamID:    1,
 			ProjectID: 9999,
@@ -157,7 +159,6 @@ func TestTeamProject_Create(t *testing.T) {
 		err := tl.Create(s, u)
 		require.Error(t, err)
 		assert.True(t, IsErrProjectDoesNotExist(err))
-		_ = s.Close()
 	})
 }
 
@@ -167,6 +168,7 @@ func TestTeamProject_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		tl := TeamProject{
 			TeamID:    1,
 			ProjectID: 3,
@@ -183,6 +185,7 @@ func TestTeamProject_Delete(t *testing.T) {
 	t.Run("nonexistant team", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		tl := TeamProject{
 			TeamID:    9999,
 			ProjectID: 1,
@@ -190,11 +193,11 @@ func TestTeamProject_Delete(t *testing.T) {
 		err := tl.Delete(s, user)
 		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotExist(err))
-		_ = s.Close()
 	})
 	t.Run("nonexistant project", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		tl := TeamProject{
 			TeamID:    1,
 			ProjectID: 9999,
@@ -202,7 +205,6 @@ func TestTeamProject_Delete(t *testing.T) {
 		err := tl.Delete(s, user)
 		require.Error(t, err)
 		assert.True(t, IsErrTeamDoesNotHaveAccessToProject(err))
-		_ = s.Close()
 	})
 }
 
@@ -262,6 +264,7 @@ func TestTeamProject_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 
 			tl := &TeamProject{
 				ID:          tt.fields.ID,

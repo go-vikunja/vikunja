@@ -80,6 +80,7 @@ func TestTaskComment_Create(t *testing.T) {
 		}
 		err = tc.Create(s, u)
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
 		ev := &TaskCommentCreatedEvent{
 			Task:    &task,
 			Doer:    u,
@@ -107,6 +108,7 @@ func TestTaskComment_Create(t *testing.T) {
 		}
 		err = tc.Create(s, u)
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
 
 		ev := &TaskCommentCreatedEvent{
 			Task:    &task,

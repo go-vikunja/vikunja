@@ -208,6 +208,7 @@ func TestReaction_Delete(t *testing.T) {
 		err = r.Delete(s, u)
 		require.NoError(t, err)
 
+		require.NoError(t, s.Commit())
 		db.AssertMissing(t, "reactions", map[string]interface{}{
 			"entity_id":   r.EntityID,
 			"entity_kind": ReactionKindTask,

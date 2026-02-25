@@ -169,6 +169,7 @@ func TestTask_Create(t *testing.T) {
 		}
 		err := task.Create(s, usr)
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
 		db.AssertExists(t, "task_buckets", map[string]interface{}{
 			"task_id":   task.ID,
 			"bucket_id": 22, // default bucket of project 6 but with a position of 2

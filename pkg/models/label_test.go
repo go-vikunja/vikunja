@@ -26,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/stretchr/testify/require"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
@@ -150,6 +151,7 @@ func TestLabel_ReadAll(t *testing.T) {
 			}
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			gotLs, _, _, err := l.ReadAll(s, tt.args.a, tt.args.search, tt.args.page, 0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Label.ReadAll() error = %v, wantErr %v", err, tt.wantErr)
@@ -161,7 +163,6 @@ func TestLabel_ReadAll(t *testing.T) {
 			if diff, equal := messagediff.PrettyDiff(got, tt.wantLs); !equal {
 				t.Errorf("Label.ReadAll() = %v, want %v, diff: %v", gotLs, tt.wantLs, diff)
 			}
-			s.Close()
 		})
 	}
 }
@@ -276,6 +277,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			}
 
 			s := db.NewSession()
+			defer s.Close()
 
 			allowed, _, _ := l.CanRead(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
@@ -291,8 +293,6 @@ func TestLabel_ReadOne(t *testing.T) {
 			if diff, equal := messagediff.PrettyDiff(l, tt.want); !equal && !tt.wantErr && !tt.wantForbidden {
 				t.Errorf("Label.ReadAll() = %v, want %v, diff: %v", l, tt.want, diff)
 			}
-
-			s.Close()
 		})
 	}
 }
@@ -347,6 +347,7 @@ func TestLabel_Create(t *testing.T) {
 				Permissions: tt.fields.Permissions,
 			}
 			s := db.NewSession()
+			defer s.Close()
 			allowed, _ := l.CanCreate(s, tt.args.a)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanCreate() forbidden, want %v", tt.wantForbidden)
@@ -355,6 +356,7 @@ func TestLabel_Create(t *testing.T) {
 				t.Errorf("Label.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
+				require.NoError(t, s.Commit())
 				db.AssertExists(t, "labels", map[string]interface{}{
 					"id":          l.ID,
 					"title":       l.Title,
@@ -362,7 +364,6 @@ func TestLabel_Create(t *testing.T) {
 					"hex_color":   l.HexColor,
 				}, false)
 			}
-			_ = s.Close()
 		})
 	}
 }
@@ -439,6 +440,7 @@ func TestLabel_Update(t *testing.T) {
 				Permissions: tt.fields.Permissions,
 			}
 			s := db.NewSession()
+			defer s.Close()
 			allowed, _ := l.CanUpdate(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanUpdate() forbidden, want %v", tt.wantForbidden)
@@ -447,12 +449,12 @@ func TestLabel_Update(t *testing.T) {
 				t.Errorf("Label.Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr && !tt.wantForbidden {
+				require.NoError(t, s.Commit())
 				db.AssertExists(t, "labels", map[string]interface{}{
 					"id":    tt.fields.ID,
 					"title": tt.fields.Title,
 				}, false)
 			}
-			_ = s.Close()
 		})
 	}
 }
@@ -525,6 +527,7 @@ func TestLabel_Delete(t *testing.T) {
 				Permissions: tt.fields.Permissions,
 			}
 			s := db.NewSession()
+			defer s.Close()
 			allowed, _ := l.CanDelete(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanDelete() forbidden, want %v", tt.wantForbidden)
@@ -533,11 +536,11 @@ func TestLabel_Delete(t *testing.T) {
 				t.Errorf("Label.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr && !tt.wantForbidden {
+				require.NoError(t, s.Commit())
 				db.AssertMissing(t, "labels", map[string]interface{}{
 					"id": l.ID,
 				})
 			}
-			_ = s.Close()
 		})
 	}
 }

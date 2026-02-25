@@ -106,6 +106,10 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	assert.False(t, os.IsNotExist(err))
 	assert.Equal(t, testuser.ID, ta.CreatedByID)
 
+	// Commit so that LoadFileMetaByID (which reads via the global engine) can see the data
+	err = s.Commit()
+	require.NoError(t, err)
+
 	// Check the file was inserted correctly
 	ta.File = &files.File{ID: ta.FileID}
 	err = ta.File.LoadFileMetaByID()

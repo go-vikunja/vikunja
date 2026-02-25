@@ -61,6 +61,7 @@ func TestSubscription_Create(t *testing.T) {
 		err = sb.Create(s, u)
 		require.NoError(t, err)
 
+		require.NoError(t, s.Commit())
 		db.AssertExists(t, "subscriptions", map[string]interface{}{
 			"entity_type": 3,
 			"entity_id":   1,
@@ -208,6 +209,7 @@ func TestSubscription_Delete(t *testing.T) {
 
 		err = sb.Delete(s, u)
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
 		db.AssertMissing(t, "subscriptions", map[string]interface{}{
 			"entity_type": 3,
 			"entity_id":   2,

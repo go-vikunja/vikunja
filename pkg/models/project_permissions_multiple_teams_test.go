@@ -97,8 +97,8 @@ func TestProjectPermissions_OwnerInMultipleTeamsWithDifferentPermissions(t *test
 
 	// Setup sharing with Team Y
 	s = db.NewSession()
+	defer s.Close()
 	prepareSharingY(s)
-	s.Close()
 
 	// Verify User A still has admin permissions after sharing with Team Y
 	t.Run("owner has admin permissions after sharing with team Y (admin)", func(t *testing.T) {
@@ -142,8 +142,8 @@ func TestProjectPermissions_OwnerInMultipleTeamsWithDifferentPermissions(t *test
 
 	// Setup sharing with Team Z
 	s = db.NewSession()
+	defer s.Close()
 	prepareTeamSharedMultiple(s)
-	s.Close()
 
 	// Verify User A STILL has admin permissions after sharing with Team Z
 	// user should retain highest permission (owner/admin), not be downgraded to read-only
