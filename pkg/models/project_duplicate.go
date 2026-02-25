@@ -301,7 +301,7 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 	}
 	defer f.File.Close()
 
-	file, err := files.Create(f.File, f.Name, f.Size, doer)
+	file, err := files.CreateWithSession(s, f.File, f.Name, f.Size, doer)
 	if err != nil {
 		return err
 	}
