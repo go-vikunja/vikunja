@@ -312,7 +312,7 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	}
 
 	// Save it as a file in vikunja
-	file, err := files.Create(tmpFile, "", uint64(written), auth)
+	file, err := files.CreateWithSession(s, tmpFile, "", uint64(written), auth)
 	if err != nil {
 		return
 	}
