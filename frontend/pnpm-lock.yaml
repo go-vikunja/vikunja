@@ -231,8 +231,8 @@ importers:
         specifier: 14.2.1
         version: 14.2.1(vue@3.5.27(typescript@5.9.3))
       autoprefixer:
-        specifier: 10.4.24
-        version: 10.4.24(postcss@8.5.6)
+        specifier: 10.4.26
+        version: 10.4.26(postcss@8.5.6)
       browserslist:
         specifier: 4.28.1
         version: 4.28.1
@@ -3011,8 +3011,8 @@ packages:
   atomically@2.1.0:
     resolution: {integrity: sha512-+gDffFXRW6sl/HCwbta7zK4uNqbPjv4YJEAdz7Vu+FLQHe77eZ4bvbJGi4hE0QPeJlMYMA3piXEr1UL3dAwx7Q==}
 
-  autoprefixer@10.4.24:
-    resolution: {integrity: sha512-uHZg7N9ULTVbutaIsDRoUkoS8/h3bdsmVJYZ5l3wv8Cp/6UIIoRDm90hZ+BwxUj/hGBEzLxdHNSKuFpn8WOyZw==}
+  autoprefixer@10.4.26:
+    resolution: {integrity: sha512-c6Hxv5eR12gQmANICaAGM967LGOXZ4SVAuwkiDrqPqZ5oReOnj/ZBtj3dyfwAnEV5qbzspNzjMM8lZENDK8f5A==}
     engines: {node: ^10 || ^12 || >=14}
     hasBin: true
     peerDependencies:
@@ -9626,7 +9626,7 @@ snapshots:
       stubborn-fs: 2.0.0
       when-exit: 2.1.5
 
-  autoprefixer@10.4.24(postcss@8.5.6):
+  autoprefixer@10.4.26(postcss@8.5.6):
     dependencies:
       browserslist: 4.28.1
       caniuse-lite: 1.0.30001774
@@ -11916,7 +11916,7 @@ snapshots:
       '@csstools/postcss-text-decoration-shorthand': 5.0.3(postcss@8.5.6)
       '@csstools/postcss-trigonometric-functions': 5.0.1(postcss@8.5.6)
       '@csstools/postcss-unset-value': 5.0.0(postcss@8.5.6)
-      autoprefixer: 10.4.24(postcss@8.5.6)
+      autoprefixer: 10.4.26(postcss@8.5.6)
       browserslist: 4.28.1
       css-blank-pseudo: 8.0.1(postcss@8.5.6)
       css-has-pseudo: 8.0.0(postcss@8.5.6)
