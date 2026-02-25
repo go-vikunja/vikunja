@@ -13,8 +13,8 @@ $ErrorActionPreference = "Stop"
 $ROOT = $PSScriptRoot | Split-Path -Parent
 $PATCH = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$stepTotal = 23
-if ($Deploy) { $stepTotal = 24 }
+$stepTotal = 20
+if ($Deploy) { $stepTotal = 21 }
 $step = 0
 
 function Step($msg) {
@@ -160,9 +160,10 @@ Copy-Item "$PATCH\SingleTaskInProject.vue" "$ROOT\frontend\src\components\tasks\
 # ===========================
 #  FRONTEND - i18n + Misc
 # ===========================
-Step "i18n + subproject filter"
+Step "i18n + subproject filter + version display"
 Copy-Item "$PATCH\en.json"              "$ROOT\frontend\src\i18n\lang\en.json" -Force
 Copy-Item "$PATCH\SubprojectFilter.vue" "$ROOT\frontend\src\components\project\partials\SubprojectFilter.vue" -Force
+Copy-Item "$PATCH\PoweredByLink.vue"    "$ROOT\frontend\src\components\home\PoweredByLink.vue" -Force
 
 # ===========================
 #  DOCUMENTATION
@@ -186,10 +187,10 @@ Write-Host "  Chain components     : 3 files" -ForegroundColor Gray
 Write-Host "  Auto-task components : 2 files" -ForegroundColor Gray
 Write-Host "  Stores/composables   : 4 files" -ForegroundColor Gray
 Write-Host "  View pages           : 7 files" -ForegroundColor Gray
-Write-Host "  i18n + misc          : 2 files" -ForegroundColor Gray
+Write-Host "  i18n + misc          : 3 files (en.json, SubprojectFilter, PoweredByLink)" -ForegroundColor Gray
 Write-Host "  Documentation        : 3 files" -ForegroundColor Gray
 Write-Host "  --------------------------------" -ForegroundColor DarkGray
-Write-Host "  TOTAL                : 44 files" -ForegroundColor White
+Write-Host "  TOTAL                : 45 files" -ForegroundColor White
 
 # ===========================
 #  BUILD
@@ -197,8 +198,12 @@ Write-Host "  TOTAL                : 44 files" -ForegroundColor White
 Step "Docker build"
 Write-Host ""
 Set-Location $ROOT
+$gitHash = (git rev-parse --short HEAD 2>$null)
+if (-not $gitHash) { $gitHash = "unknown" }
+$buildTag = "custom-$gitHash"
+Write-Host "  Build version: $buildTag" -ForegroundColor Cyan
 $buildStart = Get-Date
-docker buildx build --tag vikunja-custom:latest --load .
+docker buildx build --build-arg RELEASE_VERSION=$buildTag --tag vikunja-custom:latest --load .
 $buildEnd = Get-Date
 $buildSec = [math]::Round(($buildEnd - $buildStart).TotalSeconds)
 
