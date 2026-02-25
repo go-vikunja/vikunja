@@ -73,6 +73,52 @@
 				</div>
 
 				<!-- Bezier Controls -->
+				<!-- Exit/Entry Edge — applies to ALL modes -->
+				<div class="setting-section">
+					<div class="section-label exit-label">Exit (Source)</div>
+					<div class="setting-row">
+						<label>Edge</label>
+						<select v-model="config.exitDir" class="setting-select" :disabled="!config.enabled">
+							<option value="right">Right →</option>
+							<option value="bottom">Bottom ↓</option>
+						</select>
+					</div>
+					<div class="setting-row" v-if="config.pathMode !== 'bezier'">
+						<label>Anchor</label>
+						<input v-model.number="config.exitOffset" type="range" min="0" max="1" step="0.05" :disabled="!config.enabled">
+						<span class="setting-val">{{ config.exitOffset }}</span>
+					</div>
+					<div class="setting-hint" v-if="config.pathMode !== 'bezier'">0 = left/top, 0.5 = center, 1 = right/bottom</div>
+					<div class="setting-row" v-if="config.pathMode !== 'bezier'">
+						<label>Length</label>
+						<input v-model.number="config.exitLength" type="range" min="5" max="120" step="5" :disabled="!config.enabled">
+						<span class="setting-val">{{ config.exitLength }}</span>
+					</div>
+				</div>
+
+				<div class="setting-section">
+					<div class="section-label entry-label">Entry (Target)</div>
+					<div class="setting-row">
+						<label>Edge</label>
+						<select v-model="config.entryDir" class="setting-select" :disabled="!config.enabled">
+							<option value="left">Left ←</option>
+							<option value="top">Top ↑</option>
+						</select>
+					</div>
+					<div class="setting-row" v-if="config.pathMode !== 'bezier'">
+						<label>Anchor</label>
+						<input v-model.number="config.entryOffset" type="range" min="0" max="1" step="0.05" :disabled="!config.enabled">
+						<span class="setting-val">{{ config.entryOffset }}</span>
+					</div>
+					<div class="setting-hint" v-if="config.pathMode !== 'bezier'">0 = left/top, 0.5 = center, 1 = right/bottom</div>
+					<div class="setting-row" v-if="config.pathMode !== 'bezier'">
+						<label>Length</label>
+						<input v-model.number="config.entryLength" type="range" min="5" max="120" step="5" :disabled="!config.enabled">
+						<span class="setting-val">{{ config.entryLength }}</span>
+					</div>
+				</div>
+
+				<!-- Bezier-specific: curve control points -->
 				<template v-if="config.pathMode === 'bezier'">
 					<div class="setting-section">
 						<div class="section-label cp1-label">CP1 — Source Arc</div>
@@ -104,60 +150,15 @@
 					</div>
 				</template>
 
-				<!-- Stepped Controls -->
-				<template v-if="config.pathMode !== 'bezier'">
-					<div class="setting-section">
-						<div class="section-label exit-label">Exit (Source)</div>
-						<div class="setting-row">
-							<label>Edge</label>
-							<select v-model="config.exitDir" class="setting-select" :disabled="!config.enabled">
-								<option value="right">Right →</option>
-								<option value="bottom">Bottom ↓</option>
-							</select>
-						</div>
-						<div class="setting-row">
-							<label>Anchor</label>
-							<input v-model.number="config.exitOffset" type="range" min="0" max="1" step="0.05" :disabled="!config.enabled">
-							<span class="setting-val">{{ config.exitOffset }}</span>
-						</div>
-						<div class="setting-hint">0 = left/top, 0.5 = center, 1 = right/bottom</div>
-						<div class="setting-row">
-							<label>Length</label>
-							<input v-model.number="config.exitLength" type="range" min="5" max="120" step="5" :disabled="!config.enabled">
-							<span class="setting-val">{{ config.exitLength }}</span>
-						</div>
+				<!-- Stepped-specific: corner radius -->
+				<div class="setting-section" v-if="config.pathMode === 'stepRounded'">
+					<div class="section-label">Corners</div>
+					<div class="setting-row">
+						<label>Radius</label>
+						<input v-model.number="config.cornerRadius" type="range" min="0" max="20" step="1" :disabled="!config.enabled">
+						<span class="setting-val">{{ config.cornerRadius }}</span>
 					</div>
-
-					<div class="setting-section">
-						<div class="section-label entry-label">Entry (Target)</div>
-						<div class="setting-row">
-							<label>Edge</label>
-							<select v-model="config.entryDir" class="setting-select" :disabled="!config.enabled">
-								<option value="left">Left ←</option>
-								<option value="top">Top ↑</option>
-							</select>
-						</div>
-						<div class="setting-row">
-							<label>Anchor</label>
-							<input v-model.number="config.entryOffset" type="range" min="0" max="1" step="0.05" :disabled="!config.enabled">
-							<span class="setting-val">{{ config.entryOffset }}</span>
-						</div>
-						<div class="setting-hint">0 = left/top, 0.5 = center, 1 = right/bottom</div>
-						<div class="setting-row">
-							<label>Length</label>
-							<input v-model.number="config.entryLength" type="range" min="5" max="120" step="5" :disabled="!config.enabled">
-							<span class="setting-val">{{ config.entryLength }}</span>
-						</div>
-					</div>
-
-					<div class="setting-section" v-if="config.pathMode === 'stepRounded'">
-						<div class="section-label">Corners</div>
-						<div class="setting-row">
-							<label>Radius</label>
-							<input v-model.number="config.cornerRadius" type="range" min="0" max="20" step="1" :disabled="!config.enabled">
-							<span class="setting-val">{{ config.cornerRadius }}</span>
-						</div>
-					</div>
+				</div>
 				</template>
 
 				<!-- Appearance -->

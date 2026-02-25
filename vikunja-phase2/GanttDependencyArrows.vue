@@ -128,14 +128,14 @@ const barPositions = computed(() => {
 
 function getExitPoint(rightX: number, cy: number, barWidth: number) {
 	const halfH = BAR_HEIGHT / 2
-	if (cfg.pathMode !== 'bezier' && cfg.exitDir === 'bottom') {
+	if (cfg.exitDir === 'bottom') {
 		const left = rightX - barWidth
-		return {
-			x: left + barWidth * cfg.exitOffset,
-			y: cy + halfH,
-		}
+		const anchorX = cfg.pathMode === 'bezier'
+			? left + barWidth * 0.5  // center of bar for bezier
+			: left + barWidth * cfg.exitOffset
+		return { x: anchorX, y: cy + halfH }
 	}
-	// Right edge (default for bezier and right-exit stepped)
+	// Right edge
 	return {
 		x: rightX,
 		y: cfg.pathMode === 'bezier' ? cy : cy - halfH + BAR_HEIGHT * cfg.exitOffset,
@@ -144,13 +144,13 @@ function getExitPoint(rightX: number, cy: number, barWidth: number) {
 
 function getEntryPoint(leftX: number, cy: number, barWidth: number) {
 	const halfH = BAR_HEIGHT / 2
-	if (cfg.pathMode !== 'bezier' && cfg.entryDir === 'top') {
-		return {
-			x: leftX + barWidth * cfg.entryOffset,
-			y: cy - halfH,
-		}
+	if (cfg.entryDir === 'top') {
+		const anchorX = cfg.pathMode === 'bezier'
+			? leftX + barWidth * 0.5  // center of bar for bezier
+			: leftX + barWidth * cfg.entryOffset
+		return { x: anchorX, y: cy - halfH }
 	}
-	// Left edge (default for bezier and left-entry stepped)
+	// Left edge
 	return {
 		x: leftX,
 		y: cfg.pathMode === 'bezier' ? cy : cy - halfH + BAR_HEIGHT * cfg.entryOffset,
@@ -159,6 +159,41 @@ function getEntryPoint(leftX: number, cy: number, barWidth: number) {
 
 function buildBezierPath(sx: number, sy: number, tx: number, ty: number): string {
 	const dx = tx - sx
+	const dy = ty - sy
+
+	// Bottom → Left: hook shape (drop down, curve to left of target)
+	if (cfg.exitDir === 'bottom' && cfg.entryDir === 'left') {
+		const c1x = sx
+		const c1y = sy + Math.abs(dy) * cfg.cp1X + cfg.cp1Y
+		const c2x = tx + cfg.cp2Y  // cp2Y repurposed as horizontal approach distance
+		const c2y = ty
+		return `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${tx} ${ty}`
+	}
+
+	// Bottom → Top: S-curve dropping down then approaching from above
+	if (cfg.exitDir === 'bottom' && cfg.entryDir === 'top') {
+		const midY = (sy + ty) / 2
+		const c1x = sx
+		const c1y = midY + cfg.cp1Y
+		const c2x = tx
+		const c2y = midY + cfg.cp2Y
+		return `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${tx} ${ty}`
+	}
+
+	// Right → Top: curve from right side into top of target
+	if (cfg.exitDir === 'right' && cfg.entryDir === 'top') {
+		if (dx > 10) {
+			const c1x = sx + dx * cfg.cp1X
+			const c1y = sy + cfg.cp1Y
+			const c2x = tx
+			const c2y = ty - Math.abs(cfg.cp2Y || 30)
+			return `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${tx} ${ty}`
+		}
+		const detour = 15
+		return `M ${sx} ${sy} L ${sx + detour} ${sy} Q ${sx + detour + 10} ${sy}, ${sx + detour + 10} ${sy - detour} L ${sx + detour + 10} ${ty - detour} Q ${sx + detour + 10} ${ty - detour}, ${tx} ${ty - detour} L ${tx} ${ty}`
+	}
+
+	// Right → Left (default): standard horizontal bezier
 	if (dx > 10) {
 		const c1x = sx + dx * cfg.cp1X
 		const c1y = sy + cfg.cp1Y
@@ -166,7 +201,7 @@ function buildBezierPath(sx: number, sy: number, tx: number, ty: number): string
 		const c2y = ty + cfg.cp2Y
 		return `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${tx} ${ty}`
 	}
-	// Detour for overlapping
+	// Detour for overlapping (right → left when target is to the left)
 	const detour = 15
 	const dir = ty > sy ? 1 : -1
 	return `M ${sx} ${sy} L ${sx + detour} ${sy} Q ${sx + detour + 10} ${sy}, ${sx + detour + 10} ${sy + dir * detour} L ${sx + detour + 10} ${ty - dir * detour} Q ${sx + detour + 10} ${ty}, ${tx - detour} ${ty} L ${tx} ${ty}`
