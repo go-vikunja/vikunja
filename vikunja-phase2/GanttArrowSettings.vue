@@ -159,7 +159,6 @@
 						<span class="setting-val">{{ config.cornerRadius }}</span>
 					</div>
 				</div>
-				</template>
 
 				<!-- Appearance -->
 				<div class="setting-section">
