@@ -130,30 +130,30 @@ function getExitPoint(rightX: number, cy: number, barWidth: number) {
 	const halfH = BAR_HEIGHT / 2
 	if (cfg.exitDir === 'bottom') {
 		const left = rightX - barWidth
-		const anchorX = cfg.pathMode === 'bezier'
-			? left + barWidth * 0.5  // center of bar for bezier
-			: left + barWidth * cfg.exitOffset
-		return { x: anchorX, y: cy + halfH }
+		return {
+			x: left + barWidth * cfg.exitOffset,
+			y: cy + halfH,
+		}
 	}
 	// Right edge
 	return {
 		x: rightX,
-		y: cfg.pathMode === 'bezier' ? cy : cy - halfH + BAR_HEIGHT * cfg.exitOffset,
+		y: cy - halfH + BAR_HEIGHT * cfg.exitOffset,
 	}
 }
 
 function getEntryPoint(leftX: number, cy: number, barWidth: number) {
 	const halfH = BAR_HEIGHT / 2
 	if (cfg.entryDir === 'top') {
-		const anchorX = cfg.pathMode === 'bezier'
-			? leftX + barWidth * 0.5  // center of bar for bezier
-			: leftX + barWidth * cfg.entryOffset
-		return { x: anchorX, y: cy - halfH }
+		return {
+			x: leftX + barWidth * cfg.entryOffset,
+			y: cy - halfH,
+		}
 	}
 	// Left edge
 	return {
 		x: leftX,
-		y: cfg.pathMode === 'bezier' ? cy : cy - halfH + BAR_HEIGHT * cfg.entryOffset,
+		y: cy - halfH + BAR_HEIGHT * cfg.entryOffset,
 	}
 }
 

@@ -83,12 +83,12 @@
 							<option value="bottom">Bottom ↓</option>
 						</select>
 					</div>
-					<div class="setting-row" v-if="config.pathMode !== 'bezier'">
+					<div class="setting-row">
 						<label>Anchor</label>
 						<input v-model.number="config.exitOffset" type="range" min="0" max="1" step="0.05" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.exitOffset }}</span>
 					</div>
-					<div class="setting-hint" v-if="config.pathMode !== 'bezier'">0 = left/top, 0.5 = center, 1 = right/bottom</div>
+					<div class="setting-hint">{{ config.exitDir === 'bottom' ? '0 = left edge, 0.5 = center, 1 = right edge' : '0 = top, 0.5 = center, 1 = bottom' }}</div>
 					<div class="setting-row" v-if="config.pathMode !== 'bezier'">
 						<label>Length</label>
 						<input v-model.number="config.exitLength" type="range" min="5" max="120" step="5" :disabled="!config.enabled">
@@ -105,12 +105,12 @@
 							<option value="top">Top ↑</option>
 						</select>
 					</div>
-					<div class="setting-row" v-if="config.pathMode !== 'bezier'">
+					<div class="setting-row">
 						<label>Anchor</label>
 						<input v-model.number="config.entryOffset" type="range" min="0" max="1" step="0.05" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.entryOffset }}</span>
 					</div>
-					<div class="setting-hint" v-if="config.pathMode !== 'bezier'">0 = left/top, 0.5 = center, 1 = right/bottom</div>
+					<div class="setting-hint">{{ config.entryDir === 'left' ? '0 = top, 0.5 = center, 1 = bottom' : '0 = left edge, 0.5 = center, 1 = right edge' }}</div>
 					<div class="setting-row" v-if="config.pathMode !== 'bezier'">
 						<label>Length</label>
 						<input v-model.number="config.entryLength" type="range" min="5" max="120" step="5" :disabled="!config.enabled">
