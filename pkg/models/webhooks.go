@@ -80,10 +80,12 @@ func (w *Webhook) TableName() string {
 
 var availableWebhookEvents map[string]bool
 var availableWebhookEventsLock *sync.Mutex
+var userDirectedWebhookEvents map[string]bool
 
 func init() {
 	availableWebhookEvents = make(map[string]bool)
 	availableWebhookEventsLock = &sync.Mutex{}
+	userDirectedWebhookEvents = make(map[string]bool)
 }
 
 func RegisterEventForWebhook(event events.Event) {
@@ -104,6 +106,34 @@ func GetAvailableWebhookEvents() []string {
 
 	sort.Strings(evts)
 
+	return evts
+}
+
+// RegisterUserDirectedEventForWebhook registers an event as both a webhook event and a user-directed event
+func RegisterUserDirectedEventForWebhook(event events.Event) {
+	RegisterEventForWebhook(event)
+	availableWebhookEventsLock.Lock()
+	defer availableWebhookEventsLock.Unlock()
+	userDirectedWebhookEvents[event.Name()] = true
+}
+
+// IsUserDirectedEvent returns whether an event name is user-directed
+func IsUserDirectedEvent(eventName string) bool {
+	availableWebhookEventsLock.Lock()
+	defer availableWebhookEventsLock.Unlock()
+	return userDirectedWebhookEvents[eventName]
+}
+
+// GetUserDirectedWebhookEvents returns a sorted list of user-directed webhook event names
+func GetUserDirectedWebhookEvents() []string {
+	availableWebhookEventsLock.Lock()
+	defer availableWebhookEventsLock.Unlock()
+
+	evts := []string{}
+	for e := range userDirectedWebhookEvents {
+		evts = append(evts, e)
+	}
+	sort.Strings(evts)
 	return evts
 }
 
