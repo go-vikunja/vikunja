@@ -230,6 +230,10 @@ func RegisterSessionCleanupCron() {
 		if deleted > 0 {
 			log.Debugf(logPrefix+"Deleted %d stale sessions", deleted)
 		}
+
+		if err := s.Commit(); err != nil {
+			log.Errorf(logPrefix+"Could not commit: %s", err)
+		}
 	})
 	if err != nil {
 		log.Fatalf("Could not register session cleanup cron: %s", err)
