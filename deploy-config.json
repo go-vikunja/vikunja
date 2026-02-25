@@ -1,0 +1,7 @@
+﻿{
+    "port":  "22",
+    "host":  "192.168.2.102",
+    "remotePath":  "/tmp",
+    "user":  "superuser",
+    "keyPath":  "C:\\Users\\antho\\.ssh\\id_ed25519"
+}

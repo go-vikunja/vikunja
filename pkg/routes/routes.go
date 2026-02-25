@@ -283,17 +283,6 @@ func collectRoutesForAPITokens(e *echo.Echo) {
 
 func registerAPIRoutes(a *echo.Group) {
 
-	// Prevent browsers from caching API responses. Without an explicit
-	// Cache-Control header browsers may heuristically cache JSON responses
-	// which causes stale data (e.g. newly team-shared projects not appearing
-	// until a hard refresh).
-	a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
-			c.Response().Header().Set("Cache-Control", "no-store")
-			return next(c)
-		}
-	})
-
 	// This is the group with no auth
 	// It is its own group to be able to rate limit this based on different heuristics
 	n := a.Group("")
@@ -506,6 +495,7 @@ func registerAPIRoutes(a *echo.Group) {
 	// Auto-task manual trigger and auto-check
 	a.POST("/autotasks/:autotask/trigger", apiv1.TriggerAutoTask)
 	a.POST("/autotasks/check", apiv1.CheckAutoTasks)
+	a.POST("/autotasks/:autotask/log/truncate", apiv1.TruncateAutoTaskLog)
 
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

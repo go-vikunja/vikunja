@@ -14,7 +14,7 @@
 				v-for="monthGroup in monthGroups"
 				:key="monthGroup.key"
 				class="timeunit-month"
-				:style="{ width: `${dayWidthPixels}px` }"
+				:style="{ width: `${monthGroup.width}px` }"
 				role="columnheader"
 				:aria-label="$t('project.gantt.monthLabel', {month: monthGroup.label})"
 			>

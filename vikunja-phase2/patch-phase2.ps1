@@ -13,8 +13,8 @@ $ErrorActionPreference = "Stop"
 $ROOT = $PSScriptRoot | Split-Path -Parent
 $PATCH = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$stepTotal = 21
-if ($Deploy) { $stepTotal = 22 }
+$stepTotal = 23
+if ($Deploy) { $stepTotal = 24 }
 $step = 0
 
 function Step($msg) {
@@ -71,6 +71,9 @@ Step "Backend: auto-task model + creation logic"
 Copy-Item "$PATCH\auto_task_template.go" "$ROOT\pkg\models\auto_task_template.go" -Force
 Copy-Item "$PATCH\auto_task_create.go"   "$ROOT\pkg\models\auto_task_create.go" -Force
 
+Step "Backend: core task model (done_by_id tracking)"
+Copy-Item "$PATCH\tasks.go" "$ROOT\pkg\models\tasks.go" -Force
+
 # ===========================
 #  BACKEND - Handlers (echo v5)
 # ===========================
@@ -83,10 +86,12 @@ Copy-Item "$PATCH\auto_task_handler.go" "$ROOT\pkg\routes\api\v1\auto_task_handl
 # ===========================
 #  BACKEND - Migrations
 # ===========================
-Step "Migrations (3 files)"
+Step "Migrations (5 files)"
 Copy-Item "$PATCH\20260224050000.go" "$ROOT\pkg\migration\20260224050000.go" -Force
 Copy-Item "$PATCH\20260224060000.go" "$ROOT\pkg\migration\20260224060000.go" -Force
 Copy-Item "$PATCH\20260224070000.go" "$ROOT\pkg\migration\20260224070000.go" -Force
+Copy-Item "$PATCH\20260224080000.go" "$ROOT\pkg\migration\20260224080000.go" -Force
+Copy-Item "$PATCH\20260224090000.go" "$ROOT\pkg\migration\20260224090000.go" -Force
 
 # ===========================
 #  BACKEND - Routes
@@ -97,13 +102,15 @@ Copy-Item "$PATCH\routes.go" "$ROOT\pkg\routes\routes.go" -Force
 # ===========================
 #  FRONTEND - Gantt
 # ===========================
-Step "Gantt: arrows + tooltips + grid lines + header"
+Step "Gantt: arrows + settings + tooltips + grid lines + header"
 Copy-Item "$PATCH\GanttDependencyArrows.vue"  "$ROOT\frontend\src\components\gantt\GanttDependencyArrows.vue" -Force
+Copy-Item "$PATCH\GanttArrowSettings.vue"     "$ROOT\frontend\src\components\gantt\GanttArrowSettings.vue" -Force
 Copy-Item "$PATCH\GanttChart.vue"             "$ROOT\frontend\src\components\gantt\GanttChart.vue" -Force
 Copy-Item "$PATCH\GanttRowBars.vue"           "$ROOT\frontend\src\components\gantt\GanttRowBars.vue" -Force
 Copy-Item "$PATCH\GanttVerticalGridLines.vue" "$ROOT\frontend\src\components\gantt\GanttVerticalGridLines.vue" -Force
 Copy-Item "$PATCH\GanttTimelineHeader.vue"    "$ROOT\frontend\src\components\gantt\GanttTimelineHeader.vue" -Force
 Copy-Item "$PATCH\useGanttBar.ts"             "$ROOT\frontend\src\composables\useGanttBar.ts" -Force
+Copy-Item "$PATCH\useGanttArrowConfig.ts"     "$ROOT\frontend\src\composables\useGanttArrowConfig.ts" -Force
 Copy-Item "$PATCH\useGanttFilters.ts"         "$ROOT\frontend\src\views\project\helpers\useGanttFilters.ts" -Force
 Copy-Item "$PATCH\ProjectGantt.vue"           "$ROOT\frontend\src\components\project\views\ProjectGantt.vue" -Force
 
@@ -170,19 +177,19 @@ Copy-Item "$PATCH\PATCH_MANIFEST.md"  "$ROOT\docs\PATCH_MANIFEST.md" -Force
 # ===========================
 Write-Host ""
 Write-Host "--- Patch Summary ---" -ForegroundColor Yellow
-Write-Host "  Backend Go models    : 4 files" -ForegroundColor Gray
+Write-Host "  Backend Go models    : 5 files (incl. core tasks.go)" -ForegroundColor Gray
 Write-Host "  Backend handlers     : 2 files (echo v5)" -ForegroundColor Gray
-Write-Host "  Migrations           : 3 files" -ForegroundColor Gray
+Write-Host "  Migrations           : 5 files" -ForegroundColor Gray
 Write-Host "  Routes               : 1 file" -ForegroundColor Gray
-Write-Host "  Gantt components     : 5 files" -ForegroundColor Gray
+Write-Host "  Gantt components     : 7 files (arrows, settings, chart, bars, grid, header, config)" -ForegroundColor Gray
 Write-Host "  Chain components     : 3 files" -ForegroundColor Gray
 Write-Host "  Auto-task components : 2 files" -ForegroundColor Gray
-Write-Host "  Stores/composables   : 3 files" -ForegroundColor Gray
+Write-Host "  Stores/composables   : 4 files" -ForegroundColor Gray
 Write-Host "  View pages           : 7 files" -ForegroundColor Gray
 Write-Host "  i18n + misc          : 2 files" -ForegroundColor Gray
 Write-Host "  Documentation        : 3 files" -ForegroundColor Gray
 Write-Host "  --------------------------------" -ForegroundColor DarkGray
-Write-Host "  TOTAL                : 38 files" -ForegroundColor White
+Write-Host "  TOTAL                : 44 files" -ForegroundColor White
 
 # ===========================
 #  BUILD
@@ -211,23 +218,77 @@ Write-Host "  BUILD OK  ($buildSec sec)" -ForegroundColor Green
 if (-not $Deploy) {
     Write-Host ""
     Write-Host "--- Deploy skipped (use -Deploy to push to server) ---" -ForegroundColor Yellow
-    Write-Host "  Manual steps:" -ForegroundColor Gray
-    Write-Host "  docker save vikunja-custom:latest -o vikunja-custom.tar" -ForegroundColor Gray
-    Write-Host "  scp vikunja-custom.tar user@yourserver:/tmp/" -ForegroundColor Gray
-    Write-Host "  ssh user@yourserver" -ForegroundColor Gray
-    Write-Host "  docker load -i /tmp/vikunja-custom.tar" -ForegroundColor Gray
-    Write-Host "  cd /opt/vikunja" -ForegroundColor Gray
-    Write-Host "  docker compose down" -ForegroundColor Gray
-    Write-Host "  docker compose up -d" -ForegroundColor Gray
-    Write-Host "  rm /tmp/vikunja-custom.tar" -ForegroundColor Gray
+    Write-Host "  Tip: .\vikunja-phase2\patch-phase2.ps1 -Deploy" -ForegroundColor Gray
 } else {
     Step "Export + upload + restart"
 
-    $tarFile    = "$ROOT\vikunja-custom.tar"
-    $server     = "user@yourserver"
-    $remotePath = "/tmp/vikunja-custom.tar"
-    $composeDir = "/opt/vikunja"
+    $configFile = "$ROOT\deploy-config.json"
+    $cfg = $null
 
+    # Load saved config if it exists
+    if (Test-Path $configFile) {
+        try {
+            $cfg = Get-Content $configFile -Raw | ConvertFrom-Json
+            Write-Host "  Loaded saved deploy config from deploy-config.json" -ForegroundColor DarkGray
+        } catch {
+            $cfg = $null
+        }
+    }
+
+    # Prompt for details (with defaults from saved config or sensible fallbacks)
+    $defaultHost   = if ($cfg.host)       { $cfg.host }       else { "" }
+    $defaultUser   = if ($cfg.user)       { $cfg.user }       else { "root" }
+    $defaultPort   = if ($cfg.port)       { $cfg.port }       else { "22" }
+    $defaultRemote = if ($cfg.remotePath) { $cfg.remotePath } else { "/tmp" }
+    $defaultKey    = if ($cfg.keyPath)    { $cfg.keyPath }    else { "$env:USERPROFILE\.ssh\id_ed25519" }
+
+    Write-Host ""
+    Write-Host "--- Deploy Configuration ---" -ForegroundColor Yellow
+
+    $sshHost = Read-Host "  Server hostname or IP [$defaultHost]"
+    if ([string]::IsNullOrWhiteSpace($sshHost)) { $sshHost = $defaultHost }
+    if ([string]::IsNullOrWhiteSpace($sshHost)) {
+        Write-Host "  [!] Server hostname is required" -ForegroundColor Red
+        exit 1
+    }
+
+    $sshUser = Read-Host "  SSH username [$defaultUser]"
+    if ([string]::IsNullOrWhiteSpace($sshUser)) { $sshUser = $defaultUser }
+
+    $sshPort = Read-Host "  SSH port [$defaultPort]"
+    if ([string]::IsNullOrWhiteSpace($sshPort)) { $sshPort = $defaultPort }
+
+    $sshKey = Read-Host "  SSH key path [$defaultKey]"
+    if ([string]::IsNullOrWhiteSpace($sshKey)) { $sshKey = $defaultKey }
+
+    if (-not (Test-Path $sshKey)) {
+        Write-Host "  [!] SSH key not found at $sshKey" -ForegroundColor Red
+        Write-Host "  Generate one with: ssh-keygen -t ed25519" -ForegroundColor Yellow
+        Write-Host "  Then copy it with: ssh-copy-id -p $sshPort ${sshUser}@${sshHost}" -ForegroundColor Yellow
+        exit 1
+    }
+
+    $remoteFolder = Read-Host "  Remote folder to SCP tar into [$defaultRemote]"
+    if ([string]::IsNullOrWhiteSpace($remoteFolder)) { $remoteFolder = $defaultRemote }
+
+    # Ask to save for next time
+    $saveConfig = Read-Host "  Save for next time? [Y/n]"
+    if ($saveConfig -ne "n" -and $saveConfig -ne "N") {
+        @{
+            host       = $sshHost
+            user       = $sshUser
+            port       = $sshPort
+            keyPath    = $sshKey
+            remotePath = $remoteFolder
+        } | ConvertTo-Json | Set-Content $configFile -Encoding UTF8
+        Write-Host "  Saved to deploy-config.json" -ForegroundColor DarkGray
+    }
+
+    $server     = "${sshUser}@${sshHost}"
+    $tarFile    = "$ROOT\vikunja-custom.tar"
+    $remoteTar  = "${remoteFolder}/vikunja-custom.tar"
+
+    Write-Host ""
     Write-Host "  Saving image..." -ForegroundColor Gray
     docker save vikunja-custom:latest -o $tarFile
 
@@ -239,8 +300,8 @@ if (-not $Deploy) {
     $sizeMB = [math]::Round((Get-Item $tarFile).Length / 1MB, 1)
     Write-Host "  Image: $sizeMB MB" -ForegroundColor Gray
 
-    Write-Host "  Uploading to $server..." -ForegroundColor Gray
-    scp $tarFile "${server}:${remotePath}"
+    Write-Host "  Uploading to ${server}:${remoteTar} ..." -ForegroundColor Gray
+    scp -P $sshPort -i $sshKey $tarFile "${server}:${remoteTar}"
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host ""
@@ -249,16 +310,16 @@ if (-not $Deploy) {
         exit 1
     }
 
-    Write-Host "  Loading image + restarting..." -ForegroundColor Gray
-    $sshCmd = "docker load -i $remotePath; cd $composeDir; docker compose down; docker compose up -d; rm $remotePath"
-    ssh $server $sshCmd
+    Write-Host "  Loading image on server..." -ForegroundColor Gray
+    ssh -t -p $sshPort -i $sshKey $server "sudo docker load -i $remoteTar; rm $remoteTar"
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host ""
-        Write-Host "  DEPLOYED successfully" -ForegroundColor Green
+        Write-Host "  DEPLOYED - image loaded on server" -ForegroundColor Green
+        Write-Host "  Restart the stack in Portainer to apply." -ForegroundColor Yellow
     } else {
         Write-Host ""
-        Write-Host "  [!] Remote restart failed - check server" -ForegroundColor Red
+        Write-Host "  [!] Remote load failed - check server" -ForegroundColor Red
     }
 
     Remove-Item $tarFile -Force -ErrorAction SilentlyContinue

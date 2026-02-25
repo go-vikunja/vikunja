@@ -61,6 +61,8 @@ type Task struct {
 	Done bool `xorm:"INDEX null" json:"done"`
 	// The time when a task was marked as done. This field is system-controlled and cannot be set via API.
 	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at"`
+	// The ID of the user who marked the task as done. This field is system-controlled and cannot be set via API.
+	DoneByID int64 `xorm:"bigint null 'done_by_id'" json:"done_by_id"`
 	// The time when the task is due.
 	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
 	// An array of reminders that are associated with this task.
@@ -1261,6 +1263,13 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	updateDoneAt := updateDone(&ot, t)
 	if updateDoneAt {
 		colsToUpdate = append(colsToUpdate, "done_at")
+		// Track who completed (or uncompleted) the task
+		if t.Done {
+			t.DoneByID = a.GetID()
+		} else {
+			t.DoneByID = 0
+		}
+		colsToUpdate = append(colsToUpdate, "done_by_id")
 	}
 
 	// Update the reminders

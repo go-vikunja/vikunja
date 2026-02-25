@@ -18,20 +18,6 @@
 							:placeholder="$t('project.gantt.range')"
 						/>
 					</FormField>
-					<div
-						v-if="!hasDefaultFilters"
-						class="field"
-					>
-						<label
-							class="label"
-							for="range"
-						>Reset</label>
-						<div class="control">
-							<XButton @click="setDefaultFilters">
-								Reset
-							</XButton>
-						</div>
-					</div>
 					<FancyCheckbox
 						v-model="filters.showTasksWithoutDates"
 						is-block
@@ -42,7 +28,7 @@
 						v-model="filters.showDoneTasks"
 						is-block
 					>
-						Show completed tasks
+						{{ $t('task.show.completed') }}
 					</FancyCheckbox>
 					<SubprojectFilter
 						:project-id="filters.projectId"
@@ -51,6 +37,7 @@
 						@update:excludeProjectIds="onExcludeChange"
 						@update:colorMap="onColorMapChange"
 					/>
+					<GanttArrowSettings />
 				</div>
 			</Card>
 
@@ -69,14 +56,47 @@
 						:subproject-color-map="subprojectColorMap"
 						@update:task="updateTask"
 					/>
-					<TaskForm
-						v-if="canWrite"
-						@createTask="addGanttTask"
-					/>
+					<div class="gantt-bottom-bar">
+						<TaskForm
+							v-if="canWrite"
+							@createTask="addGanttTask"
+						/>
+						<XButton
+							v-if="canWrite"
+							variant="primary"
+							icon="layer-group"
+							class="gantt-action-btn"
+							@click="showCreateFromTemplateModal = true"
+						>
+							{{ $t('task.template.fromTemplate') }}
+						</XButton>
+						<XButton
+							v-if="canWrite"
+							variant="primary"
+							icon="link"
+							class="gantt-action-btn"
+							@click="showCreateFromChainModal = true"
+						>
+							{{ $t('task.chain.createFromChain') }}
+						</XButton>
+					</div>
 				</Card>
 			</div>
 		</template>
 	</ProjectWrapper>
+
+	<CreateFromTemplateModal
+		:enabled="showCreateFromTemplateModal"
+		:default-project-id="filters.projectId"
+		@close="showCreateFromTemplateModal = false"
+		@created="onTaskCreatedFromTemplate"
+	/>
+	<CreateFromChainModal
+		:enabled="showCreateFromChainModal"
+		:project-id="filters.projectId"
+		@close="showCreateFromChainModal = false"
+		@created="loadTasks()"
+	/>
 </template>
 
 <script setup lang="ts">
@@ -96,6 +116,9 @@ import FormField from '@/components/input/FormField.vue'
 
 import GanttChart from '@/components/gantt/GanttChart.vue'
 import SubprojectFilter from '@/components/project/partials/SubprojectFilter.vue'
+import GanttArrowSettings from '@/components/gantt/GanttArrowSettings.vue'
+import CreateFromTemplateModal from '@/components/tasks/partials/CreateFromTemplateModal.vue'
+import CreateFromChainModal from '@/components/tasks/partials/CreateFromChainModal.vue'
 import {useGanttFilters} from '../../../views/project/helpers/useGanttFilters'
 import {PERMISSIONS} from '@/constants/permissions'
 
@@ -119,6 +142,8 @@ const {route, viewId} = toRefs(props)
 
 const subprojectParams = ref<Record<string, unknown>>({})
 const subprojectColorMap = ref<Map<number, string>>(new Map())
+const showCreateFromTemplateModal = ref(false)
+const showCreateFromChainModal = ref(false)
 
 function onSubprojectToggle(enabled: boolean) {
 	if (enabled) {
@@ -144,10 +169,14 @@ function onColorMapChange(map: Map<number, string>) {
 	subprojectColorMap.value = map
 }
 
+function onTaskCreatedFromTemplate(createdTask: ITask) {
+	if (createdTask.projectId === filters.value.projectId) {
+		loadTasks()
+	}
+}
+
 const {
 	filters,
-	hasDefaultFilters,
-	setDefaultFilters,
 	tasks,
 	isLoading,
 	addTask,
@@ -206,6 +235,31 @@ const flatPickerConfig = computed(() => ({
 <style lang="scss" scoped>
 .gantt-chart-container {
 	padding-block-end: 1rem;
+}
+
+.gantt-bottom-bar {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	padding: .5rem;
+	flex-wrap: wrap;
+
+	:deep(.add-new-task) {
+		padding: 0;
+		margin: 0;
+
+		.button {
+			font-size: .8rem;
+			padding-block: .4rem;
+			padding-inline: .75rem;
+		}
+	}
+}
+
+.gantt-action-btn {
+	font-size: .8rem;
+	padding-block: .4rem;
+	padding-inline: .75rem;
 }
 
 .gantt-options {

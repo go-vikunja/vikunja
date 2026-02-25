@@ -408,6 +408,9 @@
 									>
 										<Icon icon="check" class="meta-inline-icon" />
 										{{ $t('task.autoTask.completedAt') }} {{ formatDate(entry.task_done_at) }}
+										<template v-if="entry.task_done_by_name">
+											{{ $t('task.autoTask.completedBy') }} {{ entry.task_done_by_name }}
+										</template>
 									</span>
 									<span
 										v-else-if="entry.trigger_type !== 'completed' && !entry.task_done"
@@ -441,6 +444,63 @@
 					>
 						{{ $t('task.autoTask.noLogEntries') }}
 					</p>
+
+					<!-- Log truncation actions -->
+					<div
+						v-if="logTemplate?.log?.length > 0"
+						class="log-actions"
+					>
+						<div class="log-divider" />
+						<div class="log-actions-row">
+							<span class="log-actions-label">{{ $t('task.autoTask.manageLog') }}</span>
+							<div class="log-actions-buttons">
+								<BaseButton
+									v-if="logTemplate.log.length > 5"
+									class="log-action-btn"
+									:class="{'is-loading': truncating}"
+									@click="truncateLog(5)"
+								>
+									<Icon icon="cut" class="mie-1" />
+									{{ $t('task.autoTask.keepRecent', {count: 5}) }}
+								</BaseButton>
+								<BaseButton
+									v-if="logTemplate.log.length > 10"
+									class="log-action-btn"
+									:class="{'is-loading': truncating}"
+									@click="truncateLog(10)"
+								>
+									<Icon icon="cut" class="mie-1" />
+									{{ $t('task.autoTask.keepRecent', {count: 10}) }}
+								</BaseButton>
+								<BaseButton
+									class="log-action-btn is-danger-btn"
+									:class="{'is-loading': truncating}"
+									@click="confirmClearLog"
+								>
+									<Icon icon="trash" class="mie-1" />
+									{{ $t('task.autoTask.clearAllLog') }}
+								</BaseButton>
+							</div>
+						</div>
+						<p
+							v-if="showClearConfirm"
+							class="log-clear-confirm"
+						>
+							<span class="has-text-danger">{{ $t('task.autoTask.clearLogConfirm') }}</span>
+							<BaseButton
+								class="log-action-btn is-danger-btn mis-2"
+								@click="truncateLog(0)"
+							>
+								{{ $t('task.autoTask.clearLogYes') }}
+							</BaseButton>
+							<BaseButton
+								class="log-action-btn mis-1"
+								@click="showClearConfirm = false"
+							>
+								{{ $t('task.autoTask.clearLogCancel') }}
+							</BaseButton>
+						</p>
+					</div>
 				</div>
 			</Card>
 		</Modal>
@@ -457,6 +517,7 @@ import {
 	updateAutoTask,
 	deleteAutoTask as deleteAutoTaskApi,
 	triggerAutoTask,
+	truncateAutoTaskLog,
 	emptyAutoTaskTemplate,
 } from '@/services/autoTaskApi'
 import type {IAutoTaskTemplate} from '@/services/autoTaskApi'
@@ -477,7 +538,7 @@ import ProjectModel from '@/models/project'
 import type {IProject} from '@/modelTypes/IProject'
 import type {ILabel} from '@/modelTypes/ILabel'
 
-import {success} from '@/message'
+import {success, error} from '@/message'
 import {useProjectStore} from '@/stores/projects'
 import {useLabelStore} from '@/stores/labels'
 import {formatDateLong} from '@/helpers/time/formatDate'
@@ -587,6 +648,37 @@ function isOverdue(dateStr: string | null): boolean {
 function openLogModal(tmpl: IAutoTaskTemplate) {
 	logTemplate.value = tmpl
 	showLogModal.value = true
+	showClearConfirm.value = false
+}
+
+const truncating = ref(false)
+const showClearConfirm = ref(false)
+
+function confirmClearLog() {
+	showClearConfirm.value = true
+}
+
+async function truncateLog(keep: number) {
+	if (!logTemplate.value?.id) return
+	truncating.value = true
+	showClearConfirm.value = false
+	try {
+		await truncateAutoTaskLog(logTemplate.value.id, keep)
+		// Reload templates to refresh log entries
+		await loadTemplates()
+		// Update the modal's reference to the refreshed template
+		const refreshed = templates.value.find((t: IAutoTaskTemplate) => t.id === logTemplate.value?.id)
+		if (refreshed) {
+			logTemplate.value = refreshed
+		} else {
+			showLogModal.value = false
+		}
+		success({message: t('task.autoTask.logTruncated')})
+	} catch (e: any) {
+		error({message: e?.message || t('task.autoTask.logTruncateError')})
+	} finally {
+		truncating.value = false
+	}
 }
 
 function logEntryIcon(entry: any): string | string[] {
@@ -1015,5 +1107,70 @@ defineExpose({openCreate})
 	font-size: .8rem;
 	color: var(--grey-400);
 	margin-block-start: .25rem;
+}
+
+.log-actions {
+	margin-block-start: .5rem;
+}
+
+.log-actions-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: .5rem;
+	padding-block: .5rem;
+}
+
+.log-actions-label {
+	font-size: .85rem;
+	color: var(--grey-500);
+	font-weight: 500;
+}
+
+.log-actions-buttons {
+	display: flex;
+	gap: .5rem;
+	flex-wrap: wrap;
+}
+
+.log-action-btn {
+	display: inline-flex;
+	align-items: center;
+	padding: .3rem .7rem;
+	font-size: .8rem;
+	border-radius: $radius;
+	border: 1px solid var(--grey-300);
+	background: var(--white);
+	color: var(--text);
+	cursor: pointer;
+	transition: all $transition;
+
+	&:hover {
+		background: var(--grey-100);
+		border-color: var(--grey-400);
+	}
+
+	&.is-danger-btn {
+		color: var(--danger);
+		border-color: var(--danger);
+
+		&:hover {
+			background: var(--danger);
+			color: var(--white);
+		}
+	}
+}
+
+.log-clear-confirm {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: .25rem;
+	margin-block-start: .5rem;
+	padding: .5rem;
+	border-radius: $radius;
+	background: hsla(var(--danger-h), var(--danger-s), var(--danger-l), .05);
+	border: 1px solid hsla(var(--danger-h), var(--danger-s), var(--danger-l), .2);
 }
 </style>

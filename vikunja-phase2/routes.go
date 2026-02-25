@@ -495,6 +495,7 @@ func registerAPIRoutes(a *echo.Group) {
 	// Auto-task manual trigger and auto-check
 	a.POST("/autotasks/:autotask/trigger", apiv1.TriggerAutoTask)
 	a.POST("/autotasks/check", apiv1.CheckAutoTasks)
+	a.POST("/autotasks/:autotask/log/truncate", apiv1.TruncateAutoTaskLog)
 
 	taskHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

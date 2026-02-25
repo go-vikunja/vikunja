@@ -99,11 +99,12 @@ type AutoTaskLog struct {
 	Created       time.Time `xorm:"created not null" json:"created"`
 
 	// Enrichment fields (populated after load, not in DB)
-	TaskTitle    string     `xorm:"-" json:"task_title"`
-	TaskDone     bool       `xorm:"-" json:"task_done"`
-	TaskDoneAt   *time.Time `xorm:"-" json:"task_done_at"`
-	TaskUpdated  *time.Time `xorm:"-" json:"task_updated"`
-	CommentCount int64      `xorm:"-" json:"comment_count"`
+	TaskTitle      string     `xorm:"-" json:"task_title"`
+	TaskDone       bool       `xorm:"-" json:"task_done"`
+	TaskDoneAt     *time.Time `xorm:"-" json:"task_done_at"`
+	TaskDoneByName string     `xorm:"-" json:"task_done_by_name"`
+	TaskUpdated    *time.Time `xorm:"-" json:"task_updated"`
+	CommentCount   int64      `xorm:"-" json:"comment_count"`
 }
 
 // TableName returns the table name for xorm.
@@ -264,6 +265,42 @@ func (e ErrAutoTaskTemplateNotFound) HTTPError() web.HTTPError {
 	}
 }
 
+// TruncateAutoTaskLog deletes all but the most recent `keep` log entries for a template.
+// If keep is 0, all log entries are deleted.
+func TruncateAutoTaskLog(s *xorm.Session, templateID int64, ownerID int64, keep int) (int64, error) {
+	// Verify ownership
+	tmpl := &AutoTaskTemplate{}
+	has, err := s.Where("id = ? AND owner_id = ?", templateID, ownerID).Get(tmpl)
+	if err != nil {
+		return 0, err
+	}
+	if !has {
+		return 0, ErrAutoTaskTemplateNotFound{ID: templateID}
+	}
+
+	if keep <= 0 {
+		// Delete all
+		deleted, err := s.Where("template_id = ?", templateID).Delete(&AutoTaskLog{})
+		return deleted, err
+	}
+
+	// Find the cutoff ID: get the Nth most recent entry
+	var cutoffLogs []*AutoTaskLog
+	err = s.Where("template_id = ?", templateID).OrderBy("created DESC").Limit(keep).Find(&cutoffLogs)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(cutoffLogs) < keep {
+		// Fewer entries than keep limit, nothing to delete
+		return 0, nil
+	}
+
+	cutoffID := cutoffLogs[len(cutoffLogs)-1].ID
+	deleted, err := s.Where("template_id = ? AND id < ?", templateID, cutoffID).Delete(&AutoTaskLog{})
+	return deleted, err
+}
+
 // enrichAutoTaskLogs populates task metadata on log entries by batch-querying the tasks table.
 func enrichAutoTaskLogs(s *xorm.Session, logs []*AutoTaskLog) {
 	if len(logs) == 0 {
@@ -288,18 +325,46 @@ func enrichAutoTaskLogs(s *xorm.Session, logs []*AutoTaskLog) {
 
 	// Batch load task info via raw SQL
 	type taskInfo struct {
-		ID      int64     `xorm:"'id'"`
-		Title   string    `xorm:"'title'"`
-		Done    int       `xorm:"'done'"`
-		DoneAt  time.Time `xorm:"'done_at'"`
-		Updated time.Time `xorm:"'updated'"`
+		ID       int64     `xorm:"'id'"`
+		Title    string    `xorm:"'title'"`
+		Done     int       `xorm:"'done'"`
+		DoneAt   time.Time `xorm:"'done_at'"`
+		DoneByID int64     `xorm:"'done_by_id'"`
+		Updated  time.Time `xorm:"'updated'"`
 	}
 	tasks := make([]*taskInfo, 0)
-	_ = s.SQL("SELECT id, title, done, done_at, updated FROM tasks WHERE id IN (" + ids + ")").Find(&tasks)
+	_ = s.SQL("SELECT id, title, done, done_at, COALESCE(done_by_id, 0) as done_by_id, updated FROM tasks WHERE id IN (" + ids + ")").Find(&tasks)
 
 	taskMap := make(map[int64]*taskInfo)
+	userIDs := make(map[int64]bool)
 	for _, t := range tasks {
 		taskMap[t.ID] = t
+		if t.DoneByID > 0 {
+			userIDs[t.DoneByID] = true
+		}
+	}
+
+	// Batch load usernames for done_by users
+	type userInfo struct {
+		ID       int64  `xorm:"'id'"`
+		Username string `xorm:"'username'"`
+		Name     string `xorm:"'name'"`
+	}
+	userMap := make(map[int64]string)
+	if len(userIDs) > 0 {
+		uids := make([]int64, 0, len(userIDs))
+		for uid := range userIDs {
+			uids = append(uids, uid)
+		}
+		users := make([]*userInfo, 0)
+		_ = s.SQL("SELECT id, username, name FROM users WHERE id IN (" + inClause(uids) + ")").Find(&users)
+		for _, u := range users {
+			displayName := u.Name
+			if displayName == "" {
+				displayName = u.Username
+			}
+			userMap[u.ID] = displayName
+		}
 	}
 
 	// Batch load comment counts
@@ -325,6 +390,11 @@ func enrichAutoTaskLogs(s *xorm.Session, logs []*AutoTaskLog) {
 			if !t.DoneAt.IsZero() {
 				doneAt := t.DoneAt
 				l.TaskDoneAt = &doneAt
+			}
+			if t.DoneByID > 0 {
+				if name, ok := userMap[t.DoneByID]; ok {
+					l.TaskDoneByName = name
+				}
 			}
 			if !t.Updated.IsZero() {
 				updated := t.Updated

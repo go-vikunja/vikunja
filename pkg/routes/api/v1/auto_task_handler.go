@@ -106,3 +106,57 @@ func CheckAutoTasks(c *echo.Context) error {
 		"count":   len(created),
 	})
 }
+
+// TruncateAutoTaskLog removes old log entries for a given auto-task template.
+// @Summary Truncate auto-task log
+// @tags autotask
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Auto-task template ID"
+// @Param keep query int false "Number of most recent entries to keep (0 = clear all)"
+// @Success 200 {object} map[string]interface{}
+// @Router /autotasks/{id}/log/truncate [post]
+func TruncateAutoTaskLog(c *echo.Context) error {
+	templateID, err := strconv.ParseInt(c.Param("autotask"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid template ID")
+	}
+
+	keep := 0
+	if keepStr := c.QueryParam("keep"); keepStr != "" {
+		keep, err = strconv.Atoi(keepStr)
+		if err != nil || keep < 0 {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid keep parameter")
+		}
+	}
+
+	auth, err := auth2.GetAuthFromClaims(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	if err := s.Begin(); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not start transaction")
+	}
+
+	deleted, err := models.TruncateAutoTaskLog(s, templateID, auth.GetID(), keep)
+	if err != nil {
+		_ = s.Rollback()
+		if _, ok := err.(models.ErrAutoTaskTemplateNotFound); ok {
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if err := s.Commit(); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not commit")
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"deleted": deleted,
+	})
+}

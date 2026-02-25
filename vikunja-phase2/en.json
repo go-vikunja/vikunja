@@ -858,6 +858,7 @@
 			"titleCurrent": "Current Tasks",
 			"titleDates": "Tasks from {from} until {to}",
 			"noDates": "Show tasks without date",
+			"completed": "Show completed tasks",
 			"overdue": "Show overdue tasks",
 			"fromuntil": "Tasks from {from} until {until}",
 			"select": "Select a date range",
@@ -1489,5 +1490,14 @@
 	"task.autoTask.logCompleted": "Completed",
 	"task.autoTask.generateAt": "Generate at",
 	"task.autoTask.generateAtHelp": "Time of day to generate new tasks. Default: 2:00 AM.",
-	"task.autoTask.at": "at"
+	"task.autoTask.at": "at",
+	"task.autoTask.manageLog": "Manage log",
+	"task.autoTask.keepRecent": "Keep last {count}",
+	"task.autoTask.clearAllLog": "Clear all",
+	"task.autoTask.clearLogConfirm": "Are you sure? This cannot be undone.",
+	"task.autoTask.clearLogYes": "Yes, clear all",
+	"task.autoTask.clearLogCancel": "Cancel",
+	"task.autoTask.logTruncated": "Log entries removed successfully.",
+	"task.autoTask.logTruncateError": "Failed to truncate log entries.",
+	"task.autoTask.completedBy": "by"
 }
