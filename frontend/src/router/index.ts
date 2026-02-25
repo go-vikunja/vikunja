@@ -140,6 +140,11 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/ApiTokens.vue'),
 				},
 				{
+					path: '/user/settings/sessions',
+					name: 'user.settings.sessions',
+					component: () => import('@/views/user/settings/Sessions.vue'),
+				},
+				{
 					path: '/user/settings/migrate',
 					name: 'migrate.start',
 					component: () => import('@/views/migrate/Migration.vue'),
