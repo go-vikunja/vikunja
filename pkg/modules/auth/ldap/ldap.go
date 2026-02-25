@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -251,7 +250,7 @@ func AuthenticateUserInLDAP(s *xorm.Session, username, password string, syncGrou
 		return
 	}
 
-	err = syncUserGroups(l, u, userdn)
+	err = syncUserGroups(s, l, u, userdn)
 
 	return u, err
 }
@@ -310,10 +309,7 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 	return
 }
 
-func syncUserGroups(l *ldap.Conn, u *user.User, userdn string) (err error) {
-	s := db.NewSession()
-	defer s.Close()
-
+func syncUserGroups(s *xorm.Session, l *ldap.Conn, u *user.User, userdn string) (err error) {
 	searchRequest := ldap.NewSearchRequest(
 		config.AuthLdapBaseDN.GetString(),
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
@@ -354,14 +350,5 @@ func syncUserGroups(l *ldap.Conn, u *user.User, userdn string) (err error) {
 	}
 
 	err = models.SyncExternalTeamsForUser(s, u, teams, user.IssuerLDAP, "LDAP")
-	if err != nil {
-		return
-	}
-
-	err = s.Commit()
-	if err != nil {
-		_ = s.Rollback()
-	}
-
 	return
 }
