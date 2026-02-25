@@ -49,7 +49,7 @@
 								title="Create tasks from this chain"
 								@click="$emit('createFromChain', chain)"
 							>
-								<Icon icon="share-alt" />
+								<Icon icon="forward" />
 							</BaseButton>
 							<BaseButton
 								class="action-btn"
