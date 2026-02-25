@@ -2155,3 +2155,32 @@ type ErrOpenIDBadRequestWithDetails struct {
 func (err *ErrOpenIDBadRequestWithDetails) Error() string {
 	return err.Message
 }
+
+// ==============
+// Session Errors
+// ==============
+
+// ErrSessionNotFound represents an error where a session was not found
+type ErrSessionNotFound struct{}
+
+// IsErrSessionNotFound checks if an error is ErrSessionNotFound.
+func IsErrSessionNotFound(err error) bool {
+	_, ok := err.(*ErrSessionNotFound)
+	return ok
+}
+
+func (err *ErrSessionNotFound) Error() string {
+	return "Session not found"
+}
+
+// ErrCodeSessionNotFound holds the unique world-error code of this error
+const ErrCodeSessionNotFound = 16001
+
+// HTTPError holds the http error description
+func (err *ErrSessionNotFound) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeSessionNotFound,
+		Message:  "The session does not exist.",
+	}
+}

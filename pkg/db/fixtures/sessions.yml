@@ -1,0 +1,27 @@
+- id: "550e8400-e29b-41d4-a716-446655440001"
+  user_id: 1
+  token_hash: "ab7459bbf90562c0412ff2b43b55e2a8aa705e243f3959d2ad1ed3d3ee4e164e"
+  device_info: "Mozilla/5.0 Test Browser"
+  ip_address: "192.168.1.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+  # refresh token in plaintext: testtoken_session1
+- id: "550e8400-e29b-41d4-a716-446655440002"
+  user_id: 1
+  token_hash: "87256b0b9dcb743578dbc84af87f53541ab2b57fa3cc863db026bc301a0d1e4c"
+  device_info: "Mobile App"
+  ip_address: "10.0.0.1"
+  is_long_session: true
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-02 00:00:00
+  # refresh token in plaintext: testtoken_session2
+- id: "550e8400-e29b-41d4-a716-446655440003"
+  user_id: 2
+  token_hash: "2f5a3a993aea0aae984f4810cdc5ce4358ed808fd5b7fb5a6886178349f2e7ad"
+  device_info: "Other User Browser"
+  ip_address: "172.16.0.1"
+  is_long_session: false
+  last_active: 2099-01-01 00:00:00
+  created: 2024-01-03 00:00:00
+  # refresh token in plaintext: testtoken_session3

@@ -74,6 +74,7 @@ func SetupTests() {
 		"project_views",
 		"task_positions",
 		"task_buckets",
+		"sessions",
 	)
 	if err != nil {
 		log.Fatal(err)
