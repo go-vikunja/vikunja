@@ -6089,6 +6089,19 @@ paths:
       summary: Request a user data export.
       tags:
       - user
+  /user/logout:
+    post:
+      description: Destroys the current session and clears the refresh token cookie.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully logged out.
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Logout
+      tags:
+      - auth
   /user/password:
     post:
       consumes:
@@ -6623,7 +6636,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Returns a new valid jwt user token with an extended length.
+      description: Returns a new valid jwt link share token. Only works for link share
+        tokens.
       produces:
       - application/json
       responses:
@@ -6632,12 +6646,29 @@ paths:
           schema:
             $ref: '#/definitions/auth.Token'
         "400":
-          description: Only user token are available for renew.
+          description: Only link share tokens can be renewed.
           schema:
             $ref: '#/definitions/models.Message'
-      summary: Renew user token
+      summary: Renew link share token
       tags:
-      - user
+      - auth
+  /user/token/refresh:
+    post:
+      description: Exchanges the refresh token cookie for a new short-lived JWT.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.Token'
+        "401":
+          description: Invalid or expired refresh token.
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Refresh user token
+      tags:
+      - auth
   /users:
     get:
       consumes:
