@@ -26,10 +26,16 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 
 	echojwt "github.com/labstack/echo-jwt/v5"
 	"github.com/labstack/echo/v5"
 )
+
+// ErrCodeInvalidToken is the error code returned when the JWT is missing,
+// malformed, or expired. The frontend uses this to distinguish "token expired,
+// try refreshing" from other 401s (disabled account, wrong API token, etc.).
+const ErrCodeInvalidToken = 11
 
 func SetupTokenMiddleware() echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
@@ -53,9 +59,13 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 
 			return false
 		},
-		ErrorHandler: func(_ *echo.Context, err error) error {
+		ErrorHandler: func(c *echo.Context, err error) error {
 			if err != nil {
-				return echo.NewHTTPError(http.StatusUnauthorized, "missing, malformed, expired or otherwise invalid token provided")
+				return c.JSON(http.StatusUnauthorized, web.HTTPError{
+					HTTPCode: http.StatusUnauthorized,
+					Code:     ErrCodeInvalidToken,
+					Message:  "missing, malformed, expired or otherwise invalid token provided",
+				})
 			}
 
 			return nil

@@ -47,8 +47,13 @@ func UserResetPassword(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	err := user.ResetPassword(s, &pwReset)
+	userID, err := user.ResetPassword(s, &pwReset)
 	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	if err := models.DeleteAllUserSessions(s, userID); err != nil {
 		_ = s.Rollback()
 		return err
 	}

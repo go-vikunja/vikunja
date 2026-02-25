@@ -77,6 +77,11 @@ func UserChangePassword(c *echo.Context) error {
 		return err
 	}
 
+	if err := models.DeleteAllUserSessions(s, doer.ID); err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err

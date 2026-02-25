@@ -227,7 +227,8 @@ func RegisterRoutes(e *echo.Echo) {
 			UnsafeAllowOriginFunc: func(_ *echo.Context, origin string) (string, bool, error) {
 				return matchCORSOrigin(origin, allowedOrigins)
 			},
-			MaxAge: config.CorsMaxAge.GetInt(),
+			AllowCredentials: true,
+			MaxAge:           config.CorsMaxAge.GetInt(),
 			Skipper: func(context *echo.Context) bool {
 				// Since it is not possible to register this middleware just for the api group,
 				// we just disable it when for caldav requests.
@@ -254,6 +255,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/user/password/reset":            true,
 	"/api/v1/user/confirm":                   true,
 	"/api/v1/login":                          true,
+	"/api/v1/user/token/refresh":             true,
 	"/api/v1/auth/openid/:provider/callback": true,
 	"/api/v1/test/:table":                    true,
 	"/api/v1/info":                           true,
@@ -326,6 +328,10 @@ func registerAPIRoutes(a *echo.Group) {
 		ur.POST("/login", apiv1.Login)
 	}
 
+	// Refresh token endpoint — unauthenticated because it uses the refresh
+	// token cookie instead of a JWT bearer token.
+	ur.POST("/user/token/refresh", apiv1.RefreshToken)
+
 	if config.AuthOpenIDEnabled.GetBool() {
 		ur.POST("/auth/openid/:provider/callback", openid.HandleCallback)
 	}
@@ -366,6 +372,7 @@ func registerAPIRoutes(a *echo.Group) {
 	u.POST("/password", apiv1.UserChangePassword)
 	u.GET("s", apiv1.UserList)
 	u.POST("/token", apiv1.RenewToken)
+	u.POST("/logout", apiv1.Logout)
 	u.POST("/settings/email", apiv1.UpdateUserEmail)
 	u.GET("/settings/avatar", apiv1.GetUserAvatarProvider)
 	u.POST("/settings/avatar", apiv1.ChangeUserAvatarProvider)
@@ -378,6 +385,14 @@ func registerAPIRoutes(a *echo.Group) {
 	u.PUT("/settings/token/caldav", apiv1.GenerateCaldavToken)
 	u.GET("/settings/token/caldav", apiv1.GetCaldavTokens)
 	u.DELETE("/settings/token/caldav/:id", apiv1.DeleteCaldavToken)
+
+	sessionProvider := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.Session{}
+		},
+	}
+	u.GET("/sessions", sessionProvider.ReadAllWeb)
+	u.DELETE("/sessions/:session", sessionProvider.DeleteWeb)
 
 	if config.ServiceEnableTotp.GetBool() {
 		u.GET("/settings/totp", apiv1.UserTOTP)

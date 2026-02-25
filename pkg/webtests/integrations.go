@@ -123,7 +123,7 @@ func newTestRequest(t *testing.T, method string, handler func(ctx *echo.Context)
 
 func addUserTokenToContext(t *testing.T, user *user.User, c *echo.Context) {
 	// Get the token as a string
-	token, err := auth.NewUserJWTAuthtoken(user, false)
+	token, err := auth.NewUserJWTAuthtoken(user, "test-session-id")
 	require.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(_ *jwt.Token) (interface{}, error) {
