@@ -343,10 +343,17 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 	}, nil
 }
 
-func DeleteOrphanedTaskPositions(s *xorm.Session) (count int64, err error) {
-	return s.
-		Where("task_id not in (select id from tasks) OR project_view_id not in (select id from project_views)").
-		Delete(&TaskPosition{})
+// DeleteOrphanedTaskPositions removes task position records that reference
+// tasks or project views that no longer exist.
+// If dryRun is true, it counts the orphaned records without deleting them.
+func DeleteOrphanedTaskPositions(s *xorm.Session, dryRun bool) (count int64, err error) {
+	whereClause := "task_id not in (select id from tasks) OR project_view_id not in (select id from project_views)"
+
+	if dryRun {
+		return s.Where(whereClause).Count(&TaskPosition{})
+	}
+
+	return s.Where(whereClause).Delete(&TaskPosition{})
 }
 
 // createPositionsForTasksInView creates position records for tasks that don't have them.

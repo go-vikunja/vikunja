@@ -35,7 +35,8 @@ type RepairMimeTypesResult struct {
 
 // RepairFileMimeTypes finds all files with no MIME type set, detects it from
 // the stored file content, and updates the database.
-func RepairFileMimeTypes(s *xorm.Session) (*RepairMimeTypesResult, error) {
+// If dryRun is true, it reports what would be fixed without making changes.
+func RepairFileMimeTypes(s *xorm.Session, dryRun bool) (*RepairMimeTypesResult, error) {
 	var files []*File
 	err := s.Where("mime = '' OR mime IS NULL").Find(&files)
 	if err != nil {
@@ -73,13 +74,15 @@ func RepairFileMimeTypes(s *xorm.Session) (*RepairMimeTypesResult, error) {
 		}
 
 		f.Mime = mime.String()
-		_, err = s.ID(f.ID).Cols("mime").Update(f)
-		if err != nil {
-			msg := fmt.Sprintf("file %d: failed to update mime type: %s", f.ID, err)
-			log.Errorf("file %d: failed to update mime type: %s", f.ID, err)
-			result.Errors = append(result.Errors, msg)
-			_ = bar.Add(1)
-			continue
+		if !dryRun {
+			_, err = s.ID(f.ID).Cols("mime").Update(f)
+			if err != nil {
+				msg := fmt.Sprintf("file %d: failed to update mime type: %s", f.ID, err)
+				log.Errorf("file %d: failed to update mime type: %s", f.ID, err)
+				result.Errors = append(result.Errors, msg)
+				_ = bar.Add(1)
+				continue
+			}
 		}
 
 		result.Updated++

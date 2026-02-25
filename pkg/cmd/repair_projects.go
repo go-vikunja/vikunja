@@ -27,11 +27,11 @@ import (
 
 func init() {
 	repairProjectsCmd.Flags().Bool("dry-run", false, "Preview repairs without making changes")
-	rootCmd.AddCommand(repairProjectsCmd)
+	repairCmd.AddCommand(repairProjectsCmd)
 }
 
 var repairProjectsCmd = &cobra.Command{
-	Use:   "repair-projects",
+	Use:   "projects",
 	Short: "Repair orphaned projects whose parent project no longer exists",
 	Long: `Finds projects whose parent_project_id references a project that no longer
 exists in the database and re-parents them to the top level (parent_project_id = 0).
