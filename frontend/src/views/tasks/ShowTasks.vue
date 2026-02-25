@@ -53,12 +53,14 @@
 			</DatepickerWithRange>
 			<div class="options-checks">
 				<FancyCheckbox
+					v-if="!showAll"
 					:model-value="effectiveShowNulls"
 					@update:modelValue="setShowNulls"
 				>
 					{{ $t('task.show.noDates') }}
 				</FancyCheckbox>
 				<FancyCheckbox
+					v-if="!showAll"
 					:model-value="effectiveShowOverdue"
 					@update:modelValue="setShowOverdue"
 				>
@@ -318,10 +320,10 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 			params.filter += ` && due_date > '${from instanceof Date ? from.toISOString() : from}'`
 		}
 	} else {
-		// In showAll mode, if overdue is unchecked, hide tasks with due_date in the past
-		if (!effectiveShowOverdue.value) {
-			params.filter += ` && due_date > '${new Date().toISOString()}'`
-		}
+		// In showAll mode (Home page): show all incomplete tasks.
+		// The "Show overdue" and "Show tasks without date" toggles only apply to
+		// the Upcoming page where a date range is defined. On the Home page the
+		// primary useful filter is "Assigned to me".
 	}
 
 	// Add label filtering
