@@ -53,12 +53,14 @@
 			</DatepickerWithRange>
 			<div class="options-checks">
 				<FancyCheckbox
+					v-if="!showAll"
 					:model-value="effectiveShowNulls"
 					@update:modelValue="setShowNulls"
 				>
 					{{ $t('task.show.noDates') }}
 				</FancyCheckbox>
 				<FancyCheckbox
+					v-if="!showAll"
 					:model-value="effectiveShowOverdue"
 					@update:modelValue="setShowOverdue"
 				>
@@ -375,26 +377,8 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 			return due < dateTo
 		})
 	} else {
-		// Home page: apply overdue/no-date toggles
-		const now = new Date()
-
-		tasks.value = tasks.value.filter((task: ITask) => {
-			const due = task.dueDate ? new Date(task.dueDate) : null
-			const isZero = due && due.getFullYear() < 2
-
-			// Task has no due date
-			if (!due || isZero) {
-				return effectiveShowNulls.value
-			}
-
-			// Task is overdue
-			if (due < now) {
-				return effectiveShowOverdue.value
-			}
-
-			// Task has a future due date — always show
-			return true
-		})
+		// Home page: no date filtering — show all incomplete tasks.
+		// Only "Assigned to me" applies (handled below).
 	}
 
 	// Client-side "Assigned to me" filtering
