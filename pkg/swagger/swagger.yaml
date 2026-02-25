@@ -1215,6 +1215,8 @@ definitions:
     properties:
       new_password:
         description: The new password for this user.
+        maxLength: 72
+        minLength: 8
         type: string
       token:
         description: The previously issued reset token.
@@ -1311,6 +1313,8 @@ definitions:
   v1.UserPassword:
     properties:
       new_password:
+        maxLength: 72
+        minLength: 8
         type: string
       old_password:
         type: string

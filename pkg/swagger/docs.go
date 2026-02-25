@@ -9430,7 +9430,9 @@ const docTemplate = `{
             "properties": {
                 "new_password": {
                     "description": "The new password for this user.",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 8
                 },
                 "token": {
                     "description": "The previously issued reset token.",
@@ -9563,7 +9565,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "new_password": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 8
                 },
                 "old_password": {
                     "type": "string"
