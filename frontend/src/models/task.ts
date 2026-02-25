@@ -86,6 +86,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	subscription: ISubscription = null
 
 	position = 0
+	autoTemplateId = 0
 	
 	reactions = {}
 	comments = []

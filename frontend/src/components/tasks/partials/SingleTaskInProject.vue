@@ -52,6 +52,14 @@
 						class="pis-2 mie-1"
 					/>
 
+					<span
+						v-if="task.autoTemplateId > 0"
+						v-tooltip="$t('task.autoTask.autoGenIndicator')"
+						class="auto-gen-indicator mie-1"
+					>
+						<icon icon="bolt" />
+					</span>
+
 					<TaskGlanceTooltip :task="task">
 						<RouterLink
 							ref="taskLinkRef"
@@ -453,6 +461,14 @@ defineExpose({
 		color: var(--grey-400);
 		font-size: .9rem;
 		white-space: nowrap;
+	}
+
+	.auto-gen-indicator {
+		color: var(--warning);
+		font-size: .75rem;
+		opacity: 0.7;
+		display: inline-flex;
+		align-items: center;
 	}
 
 	.avatar {

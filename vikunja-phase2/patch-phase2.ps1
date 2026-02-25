@@ -171,7 +171,7 @@ Copy-Item "$PATCH\SingleTaskInProject.vue" "$ROOT\frontend\src\components\tasks\
 #  FRONTEND - TODO Fixes (models + types)
 # ===========================
 Step "Frontend TODO: task model + interface (autoTemplateId field)"
-Copy-Item "$PATCH\task.model.ts" "$ROOT\frontend\src\models\task.ts" -Force
+Copy-Item "$PATCH\task.ts" "$ROOT\frontend\src\models\task.ts" -Force
 Copy-Item "$PATCH\ITask.ts"     "$ROOT\frontend\src\modelTypes\ITask.ts" -Force
 
 # ===========================

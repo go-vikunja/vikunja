@@ -47,6 +47,7 @@ export interface ITask extends IAbstract {
 	subscription: ISubscription
 
 	position: number
+	autoTemplateId: number
 	
 	reactions: IReactionPerEntity
 	comments: ITaskComment[]

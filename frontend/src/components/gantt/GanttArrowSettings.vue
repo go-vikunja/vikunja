@@ -3,7 +3,7 @@
 		<button
 			class="arrow-settings-toggle"
 			:class="{ active: isOpen }"
-			title="Dependency Arrow Settings"
+			:title="$t('gantt.arrows.toggleTitle')"
 			@click="isOpen = !isOpen"
 		>
 			<icon icon="sitemap" />
@@ -14,7 +14,7 @@
 			class="arrow-settings-panel"
 		>
 			<div class="panel-header">
-				<span class="panel-title">Dependency Arrows</span>
+				<span class="panel-title">{{ $t('gantt.arrows.panelTitle') }}</span>
 				<button class="panel-close" @click="isOpen = false">✕</button>
 			</div>
 
@@ -23,7 +23,7 @@
 				<div class="setting-row toggle-row">
 					<label>
 						<input v-model="config.enabled" type="checkbox">
-						<strong>Show dependency arrows</strong>
+						<strong>{{ $t('gantt.arrows.showArrows') }}</strong>
 					</label>
 				</div>
 			</div>
@@ -33,86 +33,85 @@
 
 				<!-- Path Mode -->
 				<div class="setting-section">
-					<div class="section-label">Path Mode</div>
+					<div class="section-label">{{ $t('gantt.arrows.pathMode') }}</div>
 					<select v-model="config.pathMode" class="setting-select" :disabled="!config.enabled">
-						<option value="bezier">Bezier (smooth)</option>
-						<option value="stepped">Stepped (sharp)</option>
-						<option value="stepRounded">Stepped + Rounded</option>
+						<option value="bezier">{{ $t('gantt.arrows.pathMode.bezier') }}</option>
+						<option value="stepped">{{ $t('gantt.arrows.pathMode.stepped') }}</option>
+						<option value="stepRounded">{{ $t('gantt.arrows.pathMode.stepRounded') }}</option>
 					</select>
 				</div>
 
 				<!-- Line Style -->
 				<div class="setting-section">
-					<div class="section-label">Line Style</div>
+					<div class="section-label">{{ $t('gantt.arrows.lineStyle') }}</div>
 					<div class="setting-row">
-						<label>Stroke</label>
+						<label>{{ $t('gantt.arrows.stroke') }}</label>
 						<input v-model.number="config.strokeWidth" type="range" min="0.5" max="4" step="0.25" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.strokeWidth }}</span>
 					</div>
 					<div class="setting-row">
-						<label>Dash</label>
+						<label>{{ $t('gantt.arrows.dash') }}</label>
 						<select v-model="config.dashArray" class="setting-select" :disabled="!config.enabled">
-							<option value="4,2">Default</option>
-							<option value="6,3">Long</option>
-							<option value="2,2">Short</option>
-							<option value="8,4">Wide</option>
-							<option value="4,2,1,2">Dot-dash</option>
-							<option value="none">Solid</option>
+							<option value="4,2">{{ $t('gantt.arrows.dash.default') }}</option>
+							<option value="6,3">{{ $t('gantt.arrows.dash.long') }}</option>
+							<option value="2,2">{{ $t('gantt.arrows.dash.short') }}</option>
+							<option value="8,4">{{ $t('gantt.arrows.dash.wide') }}</option>
+							<option value="4,2,1,2">{{ $t('gantt.arrows.dash.dotDash') }}</option>
+							<option value="none">{{ $t('gantt.arrows.dash.solid') }}</option>
 						</select>
 					</div>
 					<div class="setting-row">
-						<label>Opacity</label>
+						<label>{{ $t('gantt.arrows.opacity') }}</label>
 						<input v-model.number="config.opacity" type="range" min="0.1" max="1" step="0.05" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.opacity }}</span>
 					</div>
 					<div class="setting-row">
-						<label>Arrow</label>
+						<label>{{ $t('gantt.arrows.arrowSize') }}</label>
 						<input v-model.number="config.arrowSize" type="range" min="4" max="16" step="1" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.arrowSize }}</span>
 					</div>
 				</div>
 
-				<!-- Bezier Controls -->
 				<!-- Exit/Entry Edge — applies to ALL modes -->
 				<div class="setting-section">
-					<div class="section-label exit-label">Exit (Source)</div>
+					<div class="section-label exit-label">{{ $t('gantt.arrows.exitSource') }}</div>
 					<div class="setting-row">
-						<label>Edge</label>
+						<label>{{ $t('gantt.arrows.edge') }}</label>
 						<select v-model="config.exitDir" class="setting-select" :disabled="!config.enabled">
-							<option value="right">Right →</option>
-							<option value="bottom">Bottom ↓</option>
+							<option value="right">{{ $t('gantt.arrows.edge.right') }}</option>
+							<option value="bottom">{{ $t('gantt.arrows.edge.bottom') }}</option>
 						</select>
 					</div>
 					<div class="setting-row">
-						<label>Anchor</label>
+						<label>{{ $t('gantt.arrows.anchor') }}</label>
 						<input v-model.number="config.exitOffset" type="range" min="0" max="1" step="0.05" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.exitOffset }}</span>
 					</div>
-					<div class="setting-hint">{{ config.exitDir === 'bottom' ? '0 = left edge, 0.5 = center, 1 = right edge' : '0 = top, 0.5 = center, 1 = bottom' }}</div>
+					<div class="setting-hint">{{ config.exitDir === 'bottom' ? $t('gantt.arrows.anchorHint.vertical') : $t('gantt.arrows.anchorHint.horizontal') }}</div>
 					<div class="setting-row" v-if="config.pathMode !== 'bezier'">
-						<label>Length</label>
+						<label>{{ $t('gantt.arrows.length') }}</label>
 						<input v-model.number="config.exitLength" type="range" min="5" max="120" step="5" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.exitLength }}</span>
 					</div>
 				</div>
 
 				<div class="setting-section">
-					<div class="section-label entry-label">Entry (Target)</div>
+					<div class="section-label entry-label">{{ $t('gantt.arrows.entryTarget') }}</div>
 					<div class="setting-row">
-						<label>Edge</label>
+						<label>{{ $t('gantt.arrows.edge') }}</label>
 						<select v-model="config.entryDir" class="setting-select" :disabled="!config.enabled">
-							<option value="left">Left ←</option>
-							<option value="top">Top ↑</option>
+							<option value="left">{{ $t('gantt.arrows.edge.left') }}</option>
+							<option value="top">{{ $t('gantt.arrows.edge.top') }}</option>
 						</select>
 					</div>
 					<div class="setting-row">
-						<label>Anchor</label>
+						<label>{{ $t('gantt.arrows.anchor') }}</label>
 						<input v-model.number="config.entryOffset" type="range" min="0" max="1" step="0.05" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.entryOffset }}</span>
 					</div>
-					<div class="setting-hint">{{ config.entryDir === 'left' ? '0 = top, 0.5 = center, 1 = bottom' : '0 = left edge, 0.5 = center, 1 = right edge' }}</div>
+					<div class="setting-hint">{{ config.entryDir === 'left' ? $t('gantt.arrows.anchorHint.horizontal') : $t('gantt.arrows.anchorHint.vertical') }}</div>
 					<div class="setting-row" v-if="config.pathMode !== 'bezier'">
-						<label>Length</label>
+						<label>{{ $t('gantt.arrows.length') }}</label>
 						<input v-model.number="config.entryLength" type="range" min="5" max="120" step="5" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.entryLength }}</span>
 					</div>
@@ -121,40 +120,40 @@
 				<!-- Bezier-specific: curve control points -->
 				<template v-if="config.pathMode === 'bezier'">
 					<div class="setting-section">
-						<div class="section-label cp1-label">CP1 — Source Arc</div>
+						<div class="section-label cp1-label">{{ $t('gantt.arrows.cp1Label') }}</div>
 						<div class="setting-row">
-							<label>Horiz</label>
+							<label>{{ $t('gantt.arrows.horiz') }}</label>
 							<input v-model.number="config.cp1X" type="range" min="0.05" max="0.95" step="0.05" :disabled="!config.enabled">
 							<span class="setting-val">{{ config.cp1X }}</span>
 						</div>
 						<div class="setting-row">
-							<label>Vert ↕</label>
+							<label>{{ $t('gantt.arrows.vert') }}</label>
 							<input v-model.number="config.cp1Y" type="range" min="-200" max="200" step="5" :disabled="!config.enabled">
 							<span class="setting-val">{{ config.cp1Y }}</span>
 						</div>
-						<div class="setting-hint">Negative = UP above bars</div>
+						<div class="setting-hint">{{ $t('gantt.arrows.cp1Hint') }}</div>
 					</div>
 					<div class="setting-section">
-						<div class="section-label cp2-label">CP2 — Target Approach</div>
+						<div class="section-label cp2-label">{{ $t('gantt.arrows.cp2Label') }}</div>
 						<div class="setting-row">
-							<label>Horiz</label>
+							<label>{{ $t('gantt.arrows.horiz') }}</label>
 							<input v-model.number="config.cp2X" type="range" min="0.05" max="0.95" step="0.05" :disabled="!config.enabled">
 							<span class="setting-val">{{ config.cp2X }}</span>
 						</div>
 						<div class="setting-row">
-							<label>Vert ↕</label>
+							<label>{{ $t('gantt.arrows.vert') }}</label>
 							<input v-model.number="config.cp2Y" type="range" min="-200" max="200" step="5" :disabled="!config.enabled">
 							<span class="setting-val">{{ config.cp2Y }}</span>
 						</div>
-						<div class="setting-hint">Negative = from above. Positive = from below</div>
+						<div class="setting-hint">{{ $t('gantt.arrows.cp2Hint') }}</div>
 					</div>
 				</template>
 
 				<!-- Stepped-specific: corner radius -->
 				<div class="setting-section" v-if="config.pathMode === 'stepRounded'">
-					<div class="section-label">Corners</div>
+					<div class="section-label">{{ $t('gantt.arrows.corners') }}</div>
 					<div class="setting-row">
-						<label>Radius</label>
+						<label>{{ $t('gantt.arrows.radius') }}</label>
 						<input v-model.number="config.cornerRadius" type="range" min="0" max="20" step="1" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.cornerRadius }}</span>
 					</div>
@@ -162,44 +161,44 @@
 
 				<!-- Appearance -->
 				<div class="setting-section">
-					<div class="section-label">Appearance</div>
+					<div class="section-label">{{ $t('gantt.arrows.appearance') }}</div>
 					<div class="setting-row">
-						<label>Colors</label>
+						<label>{{ $t('gantt.arrows.colors') }}</label>
 						<select v-model="config.palette" class="setting-select" :disabled="!config.enabled">
-							<option value="multi">Multi-color</option>
-							<option value="mono">Mono</option>
+							<option value="multi">{{ $t('gantt.arrows.colors.multi') }}</option>
+							<option value="mono">{{ $t('gantt.arrows.colors.mono') }}</option>
 						</select>
 					</div>
 				</div>
 
 				<!-- Extras -->
 				<div class="setting-section">
-					<div class="section-label">Extras</div>
+					<div class="section-label">{{ $t('gantt.arrows.extras') }}</div>
 					<div class="setting-row toggle-row">
 						<label>
 							<input v-model="config.showDots" type="checkbox" :disabled="!config.enabled">
-							Source dots
+							{{ $t('gantt.arrows.sourceDots') }}
 						</label>
 					</div>
 					<div class="setting-row" v-if="config.showDots">
-						<label>Dot size</label>
+						<label>{{ $t('gantt.arrows.dotSize') }}</label>
 						<input v-model.number="config.dotRadius" type="range" min="1" max="6" step="0.5" :disabled="!config.enabled">
 						<span class="setting-val">{{ config.dotRadius }}</span>
 					</div>
 					<div class="setting-row toggle-row">
 						<label>
 							<input v-model="config.showShadow" type="checkbox" :disabled="!config.enabled">
-							Drop shadow
+							{{ $t('gantt.arrows.dropShadow') }}
 						</label>
 					</div>
 					<template v-if="config.showShadow">
 						<div class="setting-row">
-							<label>Width</label>
+							<label>{{ $t('gantt.arrows.shadowWidth') }}</label>
 							<input v-model.number="config.shadowWidth" type="range" min="2" max="8" step="0.5" :disabled="!config.enabled">
 							<span class="setting-val">{{ config.shadowWidth }}</span>
 						</div>
 						<div class="setting-row">
-							<label>Opacity</label>
+							<label>{{ $t('gantt.arrows.shadowOpacity') }}</label>
 							<input v-model.number="config.shadowOpacity" type="range" min="0.05" max="0.5" step="0.05" :disabled="!config.enabled">
 							<span class="setting-val">{{ config.shadowOpacity }}</span>
 						</div>
@@ -210,17 +209,17 @@
 
 			<!-- Actions -->
 			<div class="panel-actions">
-				<button class="action-btn" @click="resetToDefaults">↩ Reset</button>
-				<button class="action-btn" @click="copyConfig">📋 Copy</button>
-				<button class="action-btn" @click="showImport = !showImport">📥 Import</button>
+				<button class="action-btn" @click="resetToDefaults">{{ $t('gantt.arrows.reset') }}</button>
+				<button class="action-btn" @click="copyConfig">{{ $t('gantt.arrows.copy') }}</button>
+				<button class="action-btn" @click="showImport = !showImport">{{ $t('gantt.arrows.import') }}</button>
 			</div>
 			<div v-if="showImport" class="import-area">
 				<textarea
 					v-model="importJson"
-					placeholder="Paste config JSON here..."
+					:placeholder="$t('gantt.arrows.importPlaceholder')"
 					rows="3"
 				/>
-				<button class="action-btn" @click="doImport">Apply</button>
+				<button class="action-btn" @click="doImport">{{ $t('gantt.arrows.apply') }}</button>
 			</div>
 			<div v-if="statusMsg" class="status-msg">{{ statusMsg }}</div>
 		</div>
@@ -229,8 +228,10 @@
 
 <script setup lang="ts">
 import {ref} from 'vue'
+import {useI18n} from 'vue-i18n'
 import {useGanttArrowConfig} from '@/composables/useGanttArrowConfig'
 
+const {t} = useI18n({useScope: 'global'})
 const {config, resetToDefaults, importConfig, exportConfig} = useGanttArrowConfig()
 
 const isOpen = ref(false)
@@ -241,10 +242,10 @@ const statusMsg = ref('')
 function copyConfig() {
 	const json = exportConfig()
 	navigator.clipboard.writeText(json).then(() => {
-		statusMsg.value = '✓ Copied!'
+		statusMsg.value = t('gantt.arrows.copied')
 		setTimeout(() => statusMsg.value = '', 2000)
 	}).catch(() => {
-		statusMsg.value = 'Copy failed'
+		statusMsg.value = t('gantt.arrows.copyFailed')
 	})
 }
 
@@ -252,7 +253,7 @@ function doImport() {
 	importConfig(importJson.value)
 	showImport.value = false
 	importJson.value = ''
-	statusMsg.value = '✓ Imported!'
+	statusMsg.value = t('gantt.arrows.imported')
 	setTimeout(() => statusMsg.value = '', 2000)
 }
 </script>
