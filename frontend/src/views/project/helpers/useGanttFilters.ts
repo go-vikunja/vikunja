@@ -23,9 +23,11 @@ export interface GanttFilters {
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
+	showDoneTasks: boolean
 }
 
 const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
+const DEFAULT_SHOW_DONE_TASKS = false
 
 const DEFAULT_DATEFROM_DAY_OFFSET = -15
 const DEFAULT_DATETO_DAY_OFFSET = +55
@@ -49,6 +51,7 @@ function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilt
 		dateFrom: parseDateProp(ganttRoute.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
 		dateTo: parseDateProp(ganttRoute.query?.dateTo as DateKebab) || getDefaultDateTo(),
 		showTasksWithoutDates: parseBooleanProp(ganttRoute.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
+		showDoneTasks: parseBooleanProp(ganttRoute.query?.showDoneTasks as string) || DEFAULT_SHOW_DONE_TASKS,
 	}
 }
 
@@ -76,6 +79,10 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 		query.showTasksWithoutDates = String(filters.showTasksWithoutDates)
 	}
 
+	if (filters.showDoneTasks) {
+		query.showDoneTasks = String(filters.showDoneTasks)
+	}
+
 	return {
 		name: 'project.view',
 		params: {
@@ -90,15 +97,31 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 	const dateFrom = isoToKebabDate(filters.dateFrom)
 	const dateTo = isoToKebabDate(filters.dateTo)
 
+	// Date-range condition: tasks overlapping the visible window
+	const dateRangeFilter =
+		'(start_date >= "' + dateFrom + '" && start_date <= "' + dateTo + '") || ' +
+		'(end_date >= "' + dateFrom + '" && end_date <= "' + dateTo + '") || ' +
+		'(due_date >= "' + dateFrom + '" && due_date <= "' + dateTo + '")'
+
+	// Always include incomplete tasks (overdue / out-of-range but not done)
+	// When showDoneTasks is on, fetch everything (no done filter)
+	const filter = filters.showDoneTasks
+		? '(' + dateRangeFilter + ')'
+		: '((' + dateRangeFilter + ') || (done = false))'
+
 	return {
 		sort_by: ['start_date', 'done', 'id'],
 		order_by: ['asc', 'asc', 'desc'],
+<<<<<<< HEAD
 		filter: '(' +
 			'(start_date >= "' + dateFrom + '" && start_date <= "' + dateTo + '") || ' +
 			'(end_date >= "' + dateFrom + '" && end_date <= "' + dateTo + '") || ' +
 			'(due_date >= "' + dateFrom + '" && due_date <= "' + dateTo + '") || ' +
 			'(start_date <= "' + dateFrom + '" && end_date >= "' + dateTo + '")' +
 			')',
+=======
+		filter,
+>>>>>>> cbce06737 (feat: Gantt shows overdue tasks, hides done by default - API filter always fetches incomplete tasks regardless of date range - Out-of-range incomplete tasks clamped to left edge with overdue indicator - New 'Show completed tasks' checkbox (done hidden by default) - Striped pattern + red border + pulsing arrow on overdue bars)
 		filter_include_nulls: filters.showTasksWithoutDates,
 	}
 }

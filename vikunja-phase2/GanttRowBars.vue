@@ -52,6 +52,20 @@
 				</linearGradient>
 			</defs>
 
+			<!-- Overdue stripe pattern -->
+			<defs v-if="bar.meta?.isOverdue">
+				<pattern
+					:id="`overdue-stripe-${bar.id}`"
+					width="8"
+					height="8"
+					patternUnits="userSpaceOnUse"
+					patternTransform="rotate(45)"
+				>
+					<rect width="8" height="8" :fill="getBarFill(bar)" />
+					<rect width="3" height="8" fill="rgba(0,0,0,0.2)" />
+				</pattern>
+			</defs>
+
 			<!-- Main bar -->
 			<rect
 				:x="getBarX(bar)"
@@ -59,10 +73,10 @@
 				:width="getBarWidth(bar)"
 				:height="32"
 				:rx="4"
-				:fill="getBarFillAttr(bar)"
+				:fill="bar.meta?.isOverdue ? `url(#overdue-stripe-${bar.id})` : getBarFillAttr(bar)"
 				:opacity="bar.meta?.isDone ? 0.5 : 1"
-				:stroke="getBarStroke(bar)"
-				:stroke-width="getBarStrokeWidth(bar)"
+				:stroke="bar.meta?.isOverdue ? '#e74c3c' : getBarStroke(bar)"
+				:stroke-width="bar.meta?.isOverdue ? '2' : getBarStrokeWidth(bar)"
 				:stroke-dasharray="isDateless(bar) ? '5,5' : 'none'"
 				class="gantt-bar"
 				role="button"
@@ -70,12 +84,33 @@
 				:aria-pressed="isRowFocused"
 				@pointerdown="handleBarPointerDown(bar, $event)"
 			>
-				<title>{{ bar.meta?.label || bar.id }}</title>
+				<title v-if="bar.meta?.isOverdue">
+					{{ getOverdueTooltip(bar) }}
+				</title>
 			</rect>
 
-			<!-- Left resize handle (hidden for endOnly bars) -->
+			<!-- Overdue left-arrow indicator -->
+			<g v-if="bar.meta?.isOverdue">
+				<polygon
+					:points="getOverdueArrowPoints(bar)"
+					fill="#e74c3c"
+					class="overdue-arrow"
+				/>
+				<text
+					:x="getBarX(bar) + 16"
+					:y="24"
+					fill="#e74c3c"
+					font-size="11"
+					font-weight="bold"
+					class="overdue-label"
+				>
+					⏰ {{ getOverdueText(bar) }}
+				</text>
+			</g>
+
+			<!-- Left resize handle (hidden for endOnly and overdue bars) -->
 			<rect
-				v-if="bar.meta?.dateType !== 'endOnly'"
+				v-if="bar.meta?.dateType !== 'endOnly' && !bar.meta?.isOverdue"
 				:x="getBarX(bar) - RESIZE_HANDLE_OFFSET"
 				:y="4"
 				:width="6"
@@ -90,9 +125,9 @@
 				@pointerdown="startResize(bar, 'start', $event)"
 			/>
 
-			<!-- Right resize handle (hidden for startOnly bars) -->
+			<!-- Right resize handle (hidden for startOnly and overdue bars) -->
 			<rect
-				v-if="bar.meta?.dateType !== 'startOnly'"
+				v-if="bar.meta?.dateType !== 'startOnly' && !bar.meta?.isOverdue"
 				:x="getBarX(bar) + getBarWidth(bar) - RESIZE_HANDLE_OFFSET"
 				:y="4"
 				:width="6"
@@ -120,6 +155,7 @@
 				</clipPath>
 			</defs>
 			<text
+				v-if="!bar.meta?.isOverdue"
 				:x="getBarTextX(bar)"
 				:y="24"
 				:text-anchor="bar.meta?.dateType === 'endOnly' ? 'end' : 'start'"
@@ -336,6 +372,34 @@ function handleBarPointerDown(bar: GanttBarModel, event: PointerEvent) {
 function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent) {
 	emit('startResize', bar, edge, event)
 }
+
+function getOverdueArrowPoints(bar: GanttBarModel): string {
+	const x = getBarX.value(bar)
+	// Left-pointing chevron
+	return `${x},10 ${x - 8},20 ${x},30`
+}
+
+function getOverdueText(bar: GanttBarModel): string {
+	const originalEnd = bar.meta?.originalEnd as Date | undefined
+	if (!originalEnd) return 'Overdue'
+	const now = new Date()
+	const diffMs = now.getTime() - originalEnd.getTime()
+	const diffDays = Math.floor(diffMs / MILLISECONDS_A_DAY)
+	if (diffDays <= 0) return bar.meta?.label || 'Overdue'
+	if (diffDays === 1) return `${bar.meta?.label} (1 day overdue)`
+	if (diffDays < 30) return `${bar.meta?.label} (${diffDays}d overdue)`
+	const weeks = Math.floor(diffDays / 7)
+	if (diffDays < 60) return `${bar.meta?.label} (${weeks}w overdue)`
+	const months = Math.floor(diffDays / 30)
+	return `${bar.meta?.label} (${months}mo overdue)`
+}
+
+function getOverdueTooltip(bar: GanttBarModel): string {
+	const origStart = bar.meta?.originalStart as Date | undefined
+	const origEnd = bar.meta?.originalEnd as Date | undefined
+	if (!origStart || !origEnd) return 'Overdue task'
+	return `Overdue: was ${origStart.toLocaleDateString()} – ${origEnd.toLocaleDateString()}`
+}
 </script>
 
 <style scoped lang="scss">
@@ -369,6 +433,21 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	font-size: .85rem;
 	pointer-events: none;
 	user-select: none;
+}
+
+.overdue-arrow {
+	pointer-events: none;
+	animation: overdue-pulse 2s ease-in-out infinite;
+}
+
+.overdue-label {
+	pointer-events: none;
+	user-select: none;
+}
+
+@keyframes overdue-pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.5; }
 }
 
 :deep(.gantt-resize-handle) {

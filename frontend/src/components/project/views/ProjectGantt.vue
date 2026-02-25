@@ -38,6 +38,12 @@
 					>
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
+					<FancyCheckbox
+						v-model="filters.showDoneTasks"
+						is-block
+					>
+						Show completed tasks
+					</FancyCheckbox>
 					<SubprojectFilter
 						:project-id="filters.projectId"
 						:show-legend="true"

@@ -240,18 +240,47 @@ watch(
 		const filteredTasks = Array.from(tasks.value.values()).filter(task => {
 			const hasAnyDate = Boolean(task.startDate || task.endDate || task.dueDate)
 
+			// Hide done tasks unless checkbox is on
+			if (task.done && !filters.value.showDoneTasks) {
+				return false
+			}
+
 			if (!filters.value.showTasksWithoutDates && !hasAnyDate) {
 				return false
 			}
 
+			// Dateless tasks always visible when checkbox is on
+			if (!hasAnyDate && filters.value.showTasksWithoutDates) {
+				return true
+			}
+
+			// Incomplete tasks are always visible (clamped to left edge if out of range)
+			if (!task.done) {
+				return true
+			}
+
 			const bar = transformTaskToGanttBar(task)
 
-			// Task is visible if it overlaps with the current date range
+			// Done tasks only visible if they overlap the current date range
 			return bar.start <= dateToDate.value && bar.end >= dateFromDate.value
 		})
 		
 		filteredTasks.forEach((t, index) => {
 			const bar = transformTaskToGanttBar(t)
+
+			// Clamp out-of-range bars to the visible left edge
+			if (bar.end < dateFromDate.value) {
+				bar.meta.isOverdue = true
+				bar.meta.originalStart = new Date(bar.start)
+				bar.meta.originalEnd = new Date(bar.end)
+				bar.start = dateFromDate.value
+				const oneDay = new Date(dateFromDate.value)
+				oneDay.setDate(oneDay.getDate() + 1)
+				bar.end = oneDay
+			} else if (bar.start < dateFromDate.value) {
+				bar.start = dateFromDate.value
+			}
+
 			bars.push(bar)
 			
 			const rowId = `row-${index}`
@@ -390,6 +419,12 @@ function clearCursor(barElement?: Element | null) {
 
 function startDrag(bar: GanttBarModel, event: PointerEvent) {
 	event.preventDefault()
+
+	// Don't allow dragging overdue clamped bars
+	if (bar.meta?.isOverdue) {
+		openTask(bar)
+		return
+	}
 	
 	isDragging.value = true
 	dragState.value = {

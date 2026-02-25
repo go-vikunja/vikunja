@@ -13,6 +13,9 @@ export interface GanttBarModel {
 		dateType?: GanttBarDateType
 		isDone?: boolean
 		task?: unknown
+		isOverdue?: boolean
+		originalStart?: Date
+		originalEnd?: Date
 	}
 }
 export interface UseGanttBarOptions {

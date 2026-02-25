@@ -103,6 +103,9 @@ Copy-Item "$PATCH\GanttChart.vue"             "$ROOT\frontend\src\components\gan
 Copy-Item "$PATCH\GanttRowBars.vue"           "$ROOT\frontend\src\components\gantt\GanttRowBars.vue" -Force
 Copy-Item "$PATCH\GanttVerticalGridLines.vue" "$ROOT\frontend\src\components\gantt\GanttVerticalGridLines.vue" -Force
 Copy-Item "$PATCH\GanttTimelineHeader.vue"    "$ROOT\frontend\src\components\gantt\GanttTimelineHeader.vue" -Force
+Copy-Item "$PATCH\useGanttBar.ts"             "$ROOT\frontend\src\composables\useGanttBar.ts" -Force
+Copy-Item "$PATCH\useGanttFilters.ts"         "$ROOT\frontend\src\views\project\helpers\useGanttFilters.ts" -Force
+Copy-Item "$PATCH\ProjectGantt.vue"           "$ROOT\frontend\src\components\project\views\ProjectGantt.vue" -Force
 
 # ===========================
 #  FRONTEND - Chain System
@@ -179,7 +182,7 @@ Write-Host "  View pages           : 7 files" -ForegroundColor Gray
 Write-Host "  i18n + misc          : 2 files" -ForegroundColor Gray
 Write-Host "  Documentation        : 3 files" -ForegroundColor Gray
 Write-Host "  --------------------------------" -ForegroundColor DarkGray
-Write-Host "  TOTAL                : 35 files" -ForegroundColor White
+Write-Host "  TOTAL                : 38 files" -ForegroundColor White
 
 # ===========================
 #  BUILD
