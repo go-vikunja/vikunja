@@ -139,7 +139,7 @@
     "rollup": "4.59.0",
     "rollup-plugin-visualizer": "6.0.8",
     "sass-embedded": "1.97.3",
-    "stylelint": "17.3.0",
+    "stylelint": "17.4.0",
     "stylelint-config-property-sort-order-smacss": "10.0.0",
     "stylelint-config-recommended-vue": "1.6.1",
     "stylelint-config-standard-scss": "17.0.0",
