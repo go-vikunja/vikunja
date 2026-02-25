@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -205,12 +207,13 @@ func createAutoTaskInstance(s *xorm.Session, tmpl *AutoTaskTemplate, u *user.Use
 	}
 
 	task := &Task{
-		Title:       tmpl.Title,
-		Description: tmpl.Description,
-		Priority:    tmpl.Priority,
-		HexColor:    tmpl.HexColor,
-		ProjectID:   projectID,
-		DueDate:     dueDate,
+		Title:          tmpl.Title,
+		Description:    tmpl.Description,
+		Priority:       tmpl.Priority,
+		HexColor:       tmpl.HexColor,
+		ProjectID:      projectID,
+		DueDate:        dueDate,
+		AutoTemplateID: tmpl.ID,
 	}
 
 	err := createTask(s, task, u, false, false)
@@ -218,7 +221,7 @@ func createAutoTaskInstance(s *xorm.Session, tmpl *AutoTaskTemplate, u *user.Use
 		return nil, fmt.Errorf("auto-task create failed for template %d: %w", tmpl.ID, err)
 	}
 
-	// Set auto_template_id via SQL (column added by migration, not on Task struct)
+	// Ensure auto_template_id is persisted (createTask may not include it in default cols)
 	_, _ = s.Exec("UPDATE tasks SET auto_template_id = ? WHERE id = ?", tmpl.ID, task.ID)
 
 	// Add labels
@@ -232,6 +235,9 @@ func createAutoTaskInstance(s *xorm.Session, tmpl *AutoTaskTemplate, u *user.Use
 		ta := &TaskAssginee{TaskID: task.ID, UserID: assigneeID}
 		_, _ = s.Insert(ta)
 	}
+
+	// Copy attachments from template to the new task
+	copyAutoTaskTemplateAttachments(s, tmpl.ID, task.ID, u)
 
 	// Update template tracking
 	nowTime := time.Now()
@@ -278,4 +284,51 @@ func TriggerAutoTaskFromAuth(s *xorm.Session, templateID int64, auth web.Auth) (
 func CheckAutoTasksFromAuth(s *xorm.Session, auth web.Auth) ([]*Task, error) {
 	u := auth.(*user.User)
 	return CheckAndCreateAutoTasks(s, u)
+}
+
+// copyAutoTaskTemplateAttachments copies all file attachments from an auto-task
+// template to a newly generated task. Each file is duplicated in storage so that
+// the template and task attachments are independent.
+func copyAutoTaskTemplateAttachments(s *xorm.Session, templateID, taskID int64, u *user.User) {
+	templateAttachments := make([]*AutoTaskTemplateAttachment, 0)
+	err := s.Where("template_id = ?", templateID).Find(&templateAttachments)
+	if err != nil {
+		log.Errorf("[Auto-Task] Could not load template attachments for template %d: %s", templateID, err)
+		return
+	}
+
+	if len(templateAttachments) == 0 {
+		return
+	}
+
+	for _, tmplAttach := range templateAttachments {
+		// Load the source file metadata
+		srcFile := &files.File{ID: tmplAttach.FileID}
+		if err := srcFile.LoadFileMetaByID(); err != nil {
+			log.Debugf("[Auto-Task] Skipping attachment %d: file %d metadata not found: %s", tmplAttach.ID, tmplAttach.FileID, err)
+			continue
+		}
+
+		// Load the actual file content
+		if err := srcFile.LoadFileByID(); err != nil {
+			log.Debugf("[Auto-Task] Skipping attachment %d: could not load file %d: %s", tmplAttach.ID, tmplAttach.FileID, err)
+			continue
+		}
+
+		// Create a new task attachment by duplicating the file
+		newAttachment := &TaskAttachment{
+			TaskID: taskID,
+		}
+		err := newAttachment.NewAttachment(s, srcFile.File, srcFile.Name, srcFile.Size, u)
+		if err != nil {
+			log.Errorf("[Auto-Task] Could not copy attachment %d to task %d: %s", tmplAttach.ID, taskID, err)
+		}
+
+		if srcFile.File != nil {
+			_ = srcFile.File.Close()
+		}
+
+		log.Debugf("[Auto-Task] Copied attachment '%s' (file %d) to task %d as attachment %d",
+			srcFile.Name, tmplAttach.FileID, taskID, newAttachment.ID)
+	}
 }

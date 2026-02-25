@@ -13,8 +13,8 @@ $ErrorActionPreference = "Stop"
 $ROOT = $PSScriptRoot | Split-Path -Parent
 $PATCH = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$stepTotal = 20
-if ($Deploy) { $stepTotal = 21 }
+$stepTotal = 22
+if ($Deploy) { $stepTotal = 23 }
 $step = 0
 
 function Step($msg) {
@@ -24,7 +24,7 @@ function Step($msg) {
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "  Vikunja Custom Build - Phase 2 Full Patch" -ForegroundColor Cyan
+Write-Host "  Vikunja Custom Build - Phase 2 Full Patch + TODO Fixes" -ForegroundColor Cyan
 $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Write-Host "  $ts" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
@@ -41,6 +41,7 @@ $dirs = @(
     "$ROOT\pkg\routes\api\v1",
     "$ROOT\pkg\migration",
     "$ROOT\pkg\routes",
+    "$ROOT\pkg\initialize",
     "$ROOT\frontend\src\components\gantt",
     "$ROOT\frontend\src\components\tasks\partials",
     "$ROOT\frontend\src\components\project\partials",
@@ -54,6 +55,8 @@ $dirs = @(
     "$ROOT\frontend\src\stores",
     "$ROOT\frontend\src\composables",
     "$ROOT\frontend\src\i18n\lang",
+    "$ROOT\frontend\src\models",
+    "$ROOT\frontend\src\modelTypes",
     "$ROOT\docs"
 )
 foreach ($d in $dirs) {
@@ -71,7 +74,7 @@ Step "Backend: auto-task model + creation logic"
 Copy-Item "$PATCH\auto_task_template.go" "$ROOT\pkg\models\auto_task_template.go" -Force
 Copy-Item "$PATCH\auto_task_create.go"   "$ROOT\pkg\models\auto_task_create.go" -Force
 
-Step "Backend: core task model (done_by_id tracking)"
+Step "Backend: core task model (done_by_id + auto_template_id tracking)"
 Copy-Item "$PATCH\tasks.go" "$ROOT\pkg\models\tasks.go" -Force
 
 # ===========================
@@ -100,9 +103,16 @@ Step "Routes: all API endpoints"
 Copy-Item "$PATCH\routes.go" "$ROOT\pkg\routes\routes.go" -Force
 
 # ===========================
+#  BACKEND - TODO Fixes (Cron + Init)
+# ===========================
+Step "Backend TODO: auto-task cron goroutine + init registration"
+Copy-Item "$PATCH\auto_task_cron.go" "$ROOT\pkg\models\auto_task_cron.go" -Force
+Copy-Item "$PATCH\init.go"           "$ROOT\pkg\initialize\init.go" -Force
+
+# ===========================
 #  FRONTEND - Gantt
 # ===========================
-Step "Gantt: arrows + settings + tooltips + grid lines + header"
+Step "Gantt: arrows + settings (i18n) + tooltips + grid lines + header"
 Copy-Item "$PATCH\GanttDependencyArrows.vue"  "$ROOT\frontend\src\components\gantt\GanttDependencyArrows.vue" -Force
 Copy-Item "$PATCH\GanttArrowSettings.vue"     "$ROOT\frontend\src\components\gantt\GanttArrowSettings.vue" -Force
 Copy-Item "$PATCH\GanttChart.vue"             "$ROOT\frontend\src\components\gantt\GanttChart.vue" -Force
@@ -154,13 +164,20 @@ Copy-Item "$PATCH\ShowTasks.vue" "$ROOT\frontend\src\views\tasks\ShowTasks.vue" 
 Step "Home page: tasks first + auto-task check"
 Copy-Item "$PATCH\Home.vue" "$ROOT\frontend\src\views\Home.vue" -Force
 
-Step "Task row: title left, project right"
+Step "Task row: title left, project right, auto-gen indicator"
 Copy-Item "$PATCH\SingleTaskInProject.vue" "$ROOT\frontend\src\components\tasks\partials\SingleTaskInProject.vue" -Force
+
+# ===========================
+#  FRONTEND - TODO Fixes (models + types)
+# ===========================
+Step "Frontend TODO: task model + interface (autoTemplateId field)"
+Copy-Item "$PATCH\task.model.ts" "$ROOT\frontend\src\models\task.ts" -Force
+Copy-Item "$PATCH\ITask.ts"     "$ROOT\frontend\src\modelTypes\ITask.ts" -Force
 
 # ===========================
 #  FRONTEND - i18n + Misc
 # ===========================
-Step "i18n + subproject filter + version display"
+Step "i18n (arrow settings + auto-gen keys) + subproject filter + version"
 Copy-Item "$PATCH\en.json"              "$ROOT\frontend\src\i18n\lang\en.json" -Force
 Copy-Item "$PATCH\SubprojectFilter.vue" "$ROOT\frontend\src\components\project\partials\SubprojectFilter.vue" -Force
 Copy-Item "$PATCH\PoweredByLink.vue"    "$ROOT\frontend\src\components\home\PoweredByLink.vue" -Force
@@ -178,19 +195,28 @@ Copy-Item "$PATCH\PATCH_MANIFEST.md"  "$ROOT\docs\PATCH_MANIFEST.md" -Force
 # ===========================
 Write-Host ""
 Write-Host "--- Patch Summary ---" -ForegroundColor Yellow
-Write-Host "  Backend Go models    : 5 files (incl. core tasks.go)" -ForegroundColor Gray
+Write-Host "  Backend Go models    : 6 files (tasks.go, auto_task_*, task_chain*)" -ForegroundColor Gray
+Write-Host "  Backend cron + init  : 2 files (auto_task_cron.go, init.go)" -ForegroundColor Gray
 Write-Host "  Backend handlers     : 2 files (echo v5)" -ForegroundColor Gray
 Write-Host "  Migrations           : 5 files" -ForegroundColor Gray
 Write-Host "  Routes               : 1 file" -ForegroundColor Gray
-Write-Host "  Gantt components     : 7 files (arrows, settings, chart, bars, grid, header, config)" -ForegroundColor Gray
+Write-Host "  Gantt components     : 7 files (arrows, settings+i18n, chart, bars, grid, header, config)" -ForegroundColor Gray
 Write-Host "  Chain components     : 3 files" -ForegroundColor Gray
 Write-Host "  Auto-task components : 2 files" -ForegroundColor Gray
 Write-Host "  Stores/composables   : 4 files" -ForegroundColor Gray
 Write-Host "  View pages           : 7 files" -ForegroundColor Gray
-Write-Host "  i18n + misc          : 3 files (en.json, SubprojectFilter, PoweredByLink)" -ForegroundColor Gray
+Write-Host "  Frontend models      : 2 files (task.ts, ITask.ts - autoTemplateId)" -ForegroundColor Gray
+Write-Host "  i18n + misc          : 3 files (en.json+arrow keys, SubprojectFilter, PoweredByLink)" -ForegroundColor Gray
 Write-Host "  Documentation        : 3 files" -ForegroundColor Gray
 Write-Host "  --------------------------------" -ForegroundColor DarkGray
-Write-Host "  TOTAL                : 45 files" -ForegroundColor White
+Write-Host "  TOTAL                : 49 files" -ForegroundColor White
+Write-Host ""
+Write-Host "  TODO completions in this build:" -ForegroundColor Magenta
+Write-Host "    [x] Backend cron goroutine (auto_task_cron.go + init.go)" -ForegroundColor DarkCyan
+Write-Host "    [x] OnAutoTaskCompleted hook (tasks.go updateSingleTask)" -ForegroundColor DarkCyan
+Write-Host "    [x] Attachment copying template->task (auto_task_create.go)" -ForegroundColor DarkCyan
+Write-Host "    [x] Auto-gen indicator icon (SingleTaskInProject.vue + task model)" -ForegroundColor DarkCyan
+Write-Host "    [x] i18n arrow settings panel (GanttArrowSettings.vue + en.json)" -ForegroundColor DarkCyan
 
 # ===========================
 #  BUILD
