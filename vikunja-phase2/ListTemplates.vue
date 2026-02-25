@@ -74,6 +74,13 @@
 						<span class="template-card-title">{{ tmpl.title }}</span>
 						<div class="template-card-actions">
 							<BaseButton
+								class="action-btn is-create"
+								title="Create in project"
+								@click="openSendToProject(tmpl)"
+							>
+								<Icon icon="paper-plane" />
+							</BaseButton>
+							<BaseButton
 								class="action-btn"
 								@click="editTemplate(tmpl)"
 							>
@@ -269,12 +276,62 @@
 				</div>
 			</div>
 		</Modal>
+
+		<!-- Send to Project modal -->
+		<Modal
+			:enabled="showSendToProjectModal"
+			@close="showSendToProjectModal = false"
+		>
+			<div class="edit-template-content">
+				<div class="modal-header">
+					Create Task from Template
+				</div>
+				<p class="has-text-centered has-text-grey" style="margin-block-end: 1rem;">
+					<strong>{{ sendingTemplate?.title }}</strong>
+				</p>
+				<div class="field">
+					<label class="label">Target Project</label>
+					<div class="control">
+						<select
+							v-model="sendToProjectId"
+							class="input"
+						>
+							<option
+								v-for="project in availableProjects"
+								:key="project.id"
+								:value="project.id"
+							>
+								{{ project.title }}
+							</option>
+						</select>
+					</div>
+				</div>
+				<div class="actions">
+					<XButton
+						variant="tertiary"
+						@click="showSendToProjectModal = false"
+					>
+						{{ $t('misc.cancel') }}
+					</XButton>
+					<XButton
+						variant="primary"
+						:shadow="false"
+						:loading="creatingFromTemplate"
+						:disabled="!sendToProjectId"
+						@click="createTaskFromTemplate"
+					>
+						Create Task
+					</XButton>
+				</div>
+			</div>
+		</Modal>
 	</div>
 </template>
 
 <script lang="ts" setup>
 import {ref, computed, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 
 import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -287,14 +344,19 @@ import AutoTaskEditor from '@/components/tasks/partials/AutoTaskEditor.vue'
 
 import TaskTemplateService from '@/services/taskTemplateService'
 import TaskTemplateModel from '@/models/taskTemplate'
+import TaskService from '@/services/task'
+import TaskModel from '@/models/task'
 
 import type {ITaskTemplate} from '@/modelTypes/ITaskTemplate'
+import {useProjectStore} from '@/stores/projects'
 
 import {success} from '@/message'
 
 const SECONDS_PER_DAY = 86400
 
 const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
+const projectStore = useProjectStore()
 
 const activeTab = ref<'templates' | 'chains' | 'autotasks'>('templates')
 const autoTaskEditorRef = ref<InstanceType<typeof AutoTaskEditor> | null>(null)
@@ -303,11 +365,21 @@ const templates = ref<ITaskTemplate[]>([])
 const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
+const creatingFromTemplate = ref(false)
 
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
+const showSendToProjectModal = ref(false)
 const editingTemplate = ref<ITaskTemplate | null>(null)
 const deletingTemplate = ref<ITaskTemplate | null>(null)
+const sendingTemplate = ref<ITaskTemplate | null>(null)
+const sendToProjectId = ref<number | null>(null)
+
+const availableProjects = computed(() => {
+	return Object.values(projectStore.projects)
+		.filter((p: any) => !p.isArchived && p.id > 0)
+		.sort((a: any, b: any) => a.title.localeCompare(b.title))
+})
 
 const editForm = ref({
 	title: '',
@@ -414,6 +486,39 @@ async function deleteTemplate() {
 		console.error('Failed to delete template:', e)
 	} finally {
 		deleting.value = false
+	}
+}
+
+function openSendToProject(tmpl: ITaskTemplate) {
+	sendingTemplate.value = tmpl
+	sendToProjectId.value = availableProjects.value.length > 0 ? availableProjects.value[0].id : null
+	showSendToProjectModal.value = true
+}
+
+async function createTaskFromTemplate() {
+	if (!sendingTemplate.value || !sendToProjectId.value) return
+	creatingFromTemplate.value = true
+	try {
+		const taskService = new TaskService()
+		const newTask = new TaskModel({
+			title: sendingTemplate.value.title,
+			description: sendingTemplate.value.description,
+			priority: sendingTemplate.value.priority,
+			percentDone: sendingTemplate.value.percentDone,
+			hexColor: sendingTemplate.value.hexColor,
+			repeatAfter: sendingTemplate.value.repeatAfter,
+			repeatMode: sendingTemplate.value.repeatMode,
+			projectId: sendToProjectId.value,
+		})
+		const created = await taskService.create(newTask)
+		success({message: t('task.template.createFromTemplateSuccess')})
+		showSendToProjectModal.value = false
+		// Navigate to the created task
+		router.push({name: 'task.detail', params: {id: created.id}})
+	} catch (e) {
+		console.error('Failed to create task from template:', e)
+	} finally {
+		creatingFromTemplate.value = false
 	}
 }
 
@@ -525,6 +630,10 @@ function priorityLabel(priority: number): string {
 
 	&.is-danger:hover {
 		color: var(--danger);
+	}
+
+	&.is-create:hover {
+		color: var(--primary);
 	}
 }
 

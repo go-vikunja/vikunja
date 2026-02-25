@@ -40,10 +40,33 @@
 								/>
 								<div class="chain-select-info">
 									<span class="chain-select-title">{{ chain.title }}</span>
-									<span class="chain-select-meta">{{ chain.steps?.length || 0 }} steps</span>
+									<span class="chain-select-meta">
+										{{ chain.steps?.length || 0 }} steps · {{ formatChainDuration(chain) }}
+									</span>
 								</div>
 							</BaseButton>
 						</div>
+					</div>
+
+					<!-- Target project -->
+					<div class="field">
+						<label class="label">Target Project</label>
+						<div class="control">
+							<select
+								v-model="targetProjectId"
+								class="input"
+								@change="onProjectChanged"
+							>
+								<option
+									v-for="project in availableProjects"
+									:key="project.id"
+									:value="project.id"
+								>
+									{{ project.title }}
+								</option>
+							</select>
+						</div>
+						<p class="help">Tasks will be created in this project.</p>
 					</div>
 
 					<!-- Anchor date -->
@@ -59,17 +82,19 @@
 						<p class="help">{{ $t('task.chain.anchorDateHelp') }}</p>
 					</div>
 
-					<!-- Optional prefix -->
+					<!-- Title prefix (mandatory, auto-populated) -->
 					<div class="field">
-						<label class="label">{{ $t('task.chain.titlePrefix') }}</label>
+						<label class="label">{{ $t('task.chain.titlePrefix') }} <span class="has-text-danger">*</span></label>
 						<div class="control">
 							<input
 								v-model="titlePrefix"
 								class="input"
+								:class="{ 'is-danger': !titlePrefix.trim() }"
 								type="text"
 								:placeholder="$t('task.chain.titlePrefixPlaceholder')"
 							>
 						</div>
+						<p class="help">Auto-generated from project name + timestamp. Editable.</p>
 					</div>
 
 					<!-- Step preview with calculated dates -->
@@ -192,7 +217,7 @@
 						variant="primary"
 						:shadow="false"
 						:loading="creating"
-						:disabled="!selectedChainId || !anchorDate || localSteps.length === 0"
+						:disabled="!selectedChainId || !anchorDate || localSteps.length === 0 || !titlePrefix.trim()"
 						@click="createFromChain"
 					>
 						{{ $t('task.chain.createTasks') }}
@@ -211,9 +236,10 @@ import Modal from '@/components/misc/Modal.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Editor from '@/components/input/AsyncEditor'
 
-import {getAllChains, createTasksFromChain} from '@/services/taskChainApi'
+import {getAllChains, createTasksFromChain, unitToDays} from '@/services/taskChainApi'
 import type {ITaskChain, ITaskChainStep} from '@/services/taskChainApi'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
+import {useProjectStore} from '@/stores/projects'
 
 import {success} from '@/message'
 import {useDragReorder} from '@/composables/useDragReorder'
@@ -234,6 +260,7 @@ const emit = defineEmits<{
 }>()
 
 const {t} = useI18n({useScope: 'global'})
+const projectStore = useProjectStore()
 
 const chains = ref<ITaskChain[]>([])
 const loadingChains = ref(false)
@@ -242,7 +269,57 @@ const creating = ref(false)
 const selectedChainId = ref<number | null>(null)
 const anchorDate = ref(new Date().toISOString().split('T')[0])
 const titlePrefix = ref('')
+const targetProjectId = ref(props.projectId)
 const expandedDescriptions = ref<Set<number>>(new Set())
+
+// All non-archived projects for the target selector
+const availableProjects = computed(() => {
+	return Object.values(projectStore.projects)
+		.filter((p: any) => !p.isArchived && p.id > 0)
+		.sort((a: any, b: any) => a.title.localeCompare(b.title))
+})
+
+/**
+ * Generate a prefix from the project name + current timestamp.
+ * Format: ProjectName_YYMMDD-HHmm
+ */
+function generatePrefix(projId?: number): string {
+	const pid = projId ?? targetProjectId.value
+	const project = projectStore.projects[pid]
+	const name = project?.title || `P${pid}`
+	const now = new Date()
+	const yy = String(now.getFullYear()).slice(-2)
+	const mm = String(now.getMonth() + 1).padStart(2, '0')
+	const dd = String(now.getDate()).padStart(2, '0')
+	const hh = String(now.getHours()).padStart(2, '0')
+	const min = String(now.getMinutes()).padStart(2, '0')
+	return `${name}_${yy}${mm}${dd}-${hh}${min}`
+}
+
+/** Re-generate prefix when target project changes */
+function onProjectChanged() {
+	titlePrefix.value = generatePrefix()
+}
+
+/** Format total chain duration for display in selection list */
+function formatChainDuration(chain: ITaskChain): string {
+	if (!chain.steps || chain.steps.length === 0) return '0d'
+	const lastStep = chain.steps.reduce((max, s) => {
+		const end = unitToDays(s.offset_days, s.offset_unit) + unitToDays(s.duration_days, s.duration_unit)
+		return end > max ? end : max
+	}, 0)
+	if (lastStep < 1) {
+		const hours = Math.round(lastStep * 24)
+		return `${hours}h`
+	}
+	if (lastStep >= 7 && lastStep % 7 === 0) {
+		return `${lastStep / 7}w`
+	}
+	if (lastStep >= 30) {
+		return `~${Math.round(lastStep / 30)}mo`
+	}
+	return `${Math.round(lastStep)}d`
+}
 
 // Mutable local copy of steps — initialized from chain, freely editable
 const localSteps = ref<LocalStep[]>([])
@@ -364,6 +441,9 @@ watch(() => props.enabled, (val) => {
 	if (val) {
 		loadChains()
 		resetState()
+		// Reset target to current project and auto-populate prefix
+		targetProjectId.value = props.projectId
+		titlePrefix.value = generatePrefix()
 	}
 })
 
@@ -408,7 +488,7 @@ async function createFromChain() {
 		}))
 
 		const createdTasks = await createTasksFromChain(selectedChainId.value, {
-			target_project_id: props.projectId,
+			target_project_id: targetProjectId.value,
 			anchor_date: new Date(anchorDate.value + 'T00:00:00').toISOString(),
 			title_prefix: titlePrefix.value,
 			custom_steps: customSteps,
