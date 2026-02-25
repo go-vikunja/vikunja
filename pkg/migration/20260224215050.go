@@ -37,7 +37,7 @@ func init() {
 			}
 
 			if _, err = tx.Exec("CREATE INDEX IF NOT EXISTS IDX_webhooks_user_id ON webhooks (user_id)"); err != nil {
-				_ = err
+				return err
 			}
 
 			return nil

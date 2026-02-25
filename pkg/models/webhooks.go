@@ -168,6 +168,10 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 		if _, has := availableWebhookEvents[event]; !has {
 			return InvalidFieldError([]string{"events"})
 		}
+		// User-level webhooks can only subscribe to user-directed events
+		if w.UserID != 0 && !IsUserDirectedEvent(event) {
+			return InvalidFieldError([]string{"events"})
+		}
 	}
 
 	w.CreatedByID = a.GetID()
