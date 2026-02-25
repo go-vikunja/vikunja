@@ -41,7 +41,7 @@ issues with your Vikunja installation. It checks:
 - Configuration (config file, public URL, JWT secret, CORS)
 - Database connectivity and version
 - File storage (local or S3)
-- Optional services (Redis, Typesense, Mailer, LDAP, OpenID)
+- Optional services (Redis, Mailer, LDAP, OpenID)
 
 Exit codes:
   0 - All checks passed

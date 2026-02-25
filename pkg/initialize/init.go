@@ -91,9 +91,6 @@ func FullInitWithoutAsync() {
 	// Set Engine
 	InitEngines()
 
-	// Init Typesense
-	models.InitTypesense()
-
 	// Start the mail daemon
 	mail.StartMailDaemon()
 
