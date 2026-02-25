@@ -68,4 +68,3 @@ func RepairOrphanedProjects(s *xorm.Session, dryRun bool) (*RepairOrphanedProjec
 
 	return result, nil
 }
-

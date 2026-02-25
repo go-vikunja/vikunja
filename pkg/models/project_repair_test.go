@@ -80,4 +80,3 @@ func TestRepairOrphanedProjects(t *testing.T) {
 		assert.Equal(t, 0, result.Repaired)
 	})
 }
-
