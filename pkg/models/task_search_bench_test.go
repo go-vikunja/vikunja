@@ -107,21 +107,8 @@ func BenchmarkTaskSearch(b *testing.B) {
 
 	// Log database configuration
 	b.Logf("Database Type: %s", config.DatabaseType.GetString())
-	if config.TypesenseEnabled.GetBool() {
-		b.Log("Typesense is enabled")
-	}
 
 	auth := createBenchmarkData(b, needle)
-
-	if config.TypesenseEnabled.GetBool() {
-		InitTypesense()
-		if err := CreateTypesenseCollections(); err != nil {
-			b.Skipf("typesense server not available: %v", err)
-		}
-		if err := ReindexAllTasks(); err != nil {
-			b.Skipf("typesense server not available: %v", err)
-		}
-	}
 
 	// Get all projects for the user
 	s := db.NewSession()

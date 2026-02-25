@@ -202,11 +202,6 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 		a: a,
 	}
 
-	// We're directly using the db here, even if Typesense is configured, because in some edge cases Typesense
-	// does not know about all tasks. These tasks then won't have their position recalculated, which means they will
-	// seemingly jump around after reloading their project.
-	// The real fix here is of course to make sure all tasks are indexed in Typesense, but until that's fixed,
-	// this solves the issue of task positions not being saved.
 	allTasks, _, err := dbSearcher.Search(opts)
 	if err != nil {
 		return

@@ -17,7 +17,6 @@
 package models
 
 import (
-	"context"
 	"encoding/json"
 	"strconv"
 	"time"
@@ -70,12 +69,6 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &MarkTaskUnreadOnComment{})
-	if config.TypesenseEnabled.GetBool() {
-		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
-		events.RegisterListener((&TaskCreatedEvent{}).Name(), &AddTaskToTypesense{})
-		events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInTypesense{})
-		events.RegisterListener((&TaskPositionsRecalculatedEvent{}).Name(), &UpdateTaskPositionsInTypesense{})
-	}
 	if config.WebhooksEnabled.GetBool() {
 		RegisterEventForWebhook(&TaskCreatedEvent{})
 		RegisterEventForWebhook(&TaskUpdatedEvent{})
@@ -503,121 +496,6 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 	return sess.Commit()
 }
 
-// RemoveTaskFromTypesense represents a listener
-type RemoveTaskFromTypesense struct {
-}
-
-// Name defines the name for the RemoveTaskFromTypesense listener
-func (s *RemoveTaskFromTypesense) Name() string {
-	return "typesense.task.remove"
-}
-
-// Handle is executed when the event RemoveTaskFromTypesense listens on is fired
-func (s *RemoveTaskFromTypesense) Handle(msg *message.Message) (err error) {
-	event := &TaskDeletedEvent{}
-	err = json.Unmarshal(msg.Payload, event)
-	if err != nil {
-		return err
-	}
-
-	log.Debugf("[Typesense Sync] Removing task %d from Typesense", event.Task.ID)
-
-	_, err = typesenseClient.
-		Collection("tasks").
-		Document(strconv.FormatInt(event.Task.ID, 10)).
-		Delete(context.Background())
-	return err
-}
-
-// AddTaskToTypesense  represents a listener
-type AddTaskToTypesense struct {
-}
-
-// Name defines the name for the AddTaskToTypesense listener
-func (l *AddTaskToTypesense) Name() string {
-	return "typesense.task.add"
-}
-
-// Handle is executed when the event AddTaskToTypesense listens on is fired
-func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
-	event := &TaskCreatedEvent{}
-	err = json.Unmarshal(msg.Payload, event)
-	if err != nil {
-		return err
-	}
-
-	log.Debugf("New task %d created, adding to typesense…", event.Task.ID)
-
-	s := db.NewSession()
-	defer s.Close()
-
-	task := make(map[int64]*Task, 1)
-	task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
-
-	return reindexTasksInTypesense(s, task)
-}
-
-// UpdateTaskInTypesense  represents a listener
-type UpdateTaskInTypesense struct {
-}
-
-// Name defines the name for the UpdateTaskInTypesense listener
-func (l *UpdateTaskInTypesense) Name() string {
-	return "typesense.task.update"
-}
-
-// Handle is executed when the event UpdateTaskInTypesense listens on is fired
-func (l *UpdateTaskInTypesense) Handle(msg *message.Message) (err error) {
-	event := &TaskUpdatedEvent{}
-	err = json.Unmarshal(msg.Payload, event)
-	if err != nil {
-		return err
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	task := make(map[int64]*Task, 1)
-	task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
-
-	return reindexTasksInTypesense(s, task)
-}
-
-// UpdateTaskPositionsInTypesense  represents a listener
-type UpdateTaskPositionsInTypesense struct {
-}
-
-// Name defines the name for the UpdateTaskPositionsInTypesense listener
-func (l *UpdateTaskPositionsInTypesense) Name() string {
-	return "typesense.task.position.update"
-}
-
-// Handle is executed when the event UpdateTaskPositionsInTypesense listens on is fired
-func (l *UpdateTaskPositionsInTypesense) Handle(msg *message.Message) (err error) {
-	event := &TaskPositionsRecalculatedEvent{}
-	err = json.Unmarshal(msg.Payload, event)
-	if err != nil {
-		return err
-	}
-
-	taskIDs := []int64{}
-	for _, position := range event.NewTaskPositions {
-		taskIDs = append(taskIDs, position.TaskID)
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	tasks, err := GetTasksSimpleByIDs(s, taskIDs)
-
-	taskMap := make(map[int64]*Task, 1)
-	for _, task := range tasks {
-		taskMap[task.ID] = task
-	}
-
-	return reindexTasksInTypesense(s, taskMap)
-}
-
 // IncreaseAttachmentCounter  represents a listener
 type IncreaseAttachmentCounter struct {
 }
@@ -760,14 +638,6 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		_, err = s.Insert(taskPositions)
 		if err != nil {
 			return
-		}
-
-		task := make(map[int64]*Task, 1)
-		task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
-
-		err = reindexTasksInTypesense(s, task)
-		if err != nil {
-			return err
 		}
 	}
 

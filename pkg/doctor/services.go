@@ -36,10 +36,6 @@ func CheckOptionalServices() []CheckGroup {
 		groups = append(groups, checkRedis())
 	}
 
-	if config.TypesenseEnabled.GetBool() {
-		groups = append(groups, checkTypesense())
-	}
-
 	if config.MailerEnabled.GetBool() {
 		groups = append(groups, checkMailer())
 	}
@@ -96,70 +92,6 @@ func checkRedis() CheckGroup {
 				Name:   "Connection",
 				Passed: true,
 				Value:  fmt.Sprintf("OK (%s)", config.RedisHost.GetString()),
-			},
-		},
-	}
-}
-
-func checkTypesense() CheckGroup {
-	url := config.TypesenseURL.GetString()
-	healthURL := url + "/health"
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, healthURL, nil)
-	if err != nil {
-		return CheckGroup{
-			Name: "Typesense",
-			Results: []CheckResult{
-				{
-					Name:   "Connection",
-					Passed: false,
-					Error:  err.Error(),
-				},
-			},
-		}
-	}
-
-	req.Header.Set("X-TYPESENSE-API-KEY", config.TypesenseAPIKey.GetString())
-
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return CheckGroup{
-			Name: "Typesense",
-			Results: []CheckResult{
-				{
-					Name:   "Connection",
-					Passed: false,
-					Error:  err.Error(),
-				},
-			},
-		}
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return CheckGroup{
-			Name: "Typesense",
-			Results: []CheckResult{
-				{
-					Name:   "Connection",
-					Passed: false,
-					Error:  fmt.Sprintf("health check returned status %d", resp.StatusCode),
-				},
-			},
-		}
-	}
-
-	return CheckGroup{
-		Name: "Typesense",
-		Results: []CheckResult{
-			{
-				Name:   "Connection",
-				Passed: true,
-				Value:  fmt.Sprintf("OK (%s)", url),
 			},
 		},
 	}
