@@ -1040,7 +1040,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		userID := getUserIDFromAnyEvent(event)
 		if userID > 0 {
 			userWebhooks := []*Webhook{}
-			err = s.Where("user_id = ? AND project_id IS NULL", userID).
+			err = s.Where("user_id = ? AND (project_id IS NULL OR project_id = 0)", userID).
 				Find(&userWebhooks)
 			if err != nil {
 				return err

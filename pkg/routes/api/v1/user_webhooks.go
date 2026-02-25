@@ -52,9 +52,21 @@ func GetUserWebhooks(c *echo.Context) error {
 		return err
 	}
 
-	// Strip secrets from response
+	userIDs := []int64{}
+	for _, w := range ws {
+		userIDs = append(userIDs, w.CreatedByID)
+	}
+
+	users, err := user.GetUsersByIDs(s, userIDs)
+	if err != nil {
+		return err
+	}
+
 	for _, w := range ws {
 		w.Secret = ""
+		if createdBy, has := users[w.CreatedByID]; has {
+			w.CreatedBy = createdBy
+		}
 	}
 
 	return c.JSON(http.StatusOK, ws)
@@ -126,10 +138,18 @@ func UpdateUserWebhook(c *echo.Context) error {
 		return err
 	}
 
+	webhookID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return echo.ErrNotFound
+	}
+
 	w := &models.Webhook{}
 	if err := c.Bind(w); err != nil {
 		return err
 	}
+
+	// Use path param as canonical ID
+	w.ID = webhookID
 
 	s := db.NewSession()
 	defer s.Close()
