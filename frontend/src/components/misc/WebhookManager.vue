@@ -11,8 +11,6 @@ import User from '@/components/misc/User.vue'
 import {formatDateShort} from '@/helpers/time/formatDate'
 import {isValidHttpUrl} from '@/helpers/isValidHttpUrl'
 
-defineOptions({name: 'WebhookManager'})
-
 const props = defineProps<{
 	webhooks: IWebhook[]
 	availableEvents: string[]
@@ -23,6 +21,8 @@ const emit = defineEmits<{
 	create: [webhook: IWebhook]
 	delete: [webhookId: number]
 }>()
+
+defineOptions({name: 'WebhookManager'})
 
 const showNewForm = ref(false)
 const showBasicAuth = ref(false)
