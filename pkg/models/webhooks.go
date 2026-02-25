@@ -359,4 +359,3 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	log.Debugf("Sent webhook payload for webhook %d for event %s", w.ID, p.EventName)
 	return
 }
-
