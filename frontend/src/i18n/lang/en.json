@@ -843,7 +843,8 @@
 			"updateSuccess": "The template was updated.",
 			"deleteConfirmTitle": "Delete Template",
 			"deleteConfirmText": "Are you sure you want to delete the template \"{title}\"? This cannot be undone.",
-			"deleteSuccess": "The template was deleted."
+			"deleteSuccess": "The template was deleted.",
+			"createFromTemplateSuccess": "Task created from template."
 		},
 		"createSuccess": "The task was successfully created.",
 		"addReminder": "Add a reminder…",

@@ -45,6 +45,13 @@
 						</span>
 						<div class="chain-card-actions">
 							<BaseButton
+								class="action-btn is-create"
+								title="Create tasks from this chain"
+								@click="$emit('createFromChain', chain)"
+							>
+								<Icon icon="paper-plane" />
+							</BaseButton>
+							<BaseButton
 								class="action-btn"
 								@click="editChain(chain)"
 							>
@@ -341,6 +348,10 @@ import type {ITaskChain, ITaskChainStep, ITaskChainStepAttachment, TimeUnit} fro
 import {success} from '@/message'
 import {useDragReorder} from '@/composables/useDragReorder'
 import {useStorage} from '@vueuse/core'
+
+defineEmits<{
+	createFromChain: [chain: ITaskChain]
+}>()
 
 const {t} = useI18n({useScope: 'global'})
 
@@ -647,6 +658,10 @@ function truncate(text: string, length: number): string {
 
 	&.is-danger:hover {
 		color: var(--danger);
+	}
+
+	&.is-create:hover {
+		color: var(--primary);
 	}
 }
 
