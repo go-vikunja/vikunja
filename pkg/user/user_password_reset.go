@@ -27,7 +27,7 @@ type PasswordReset struct {
 	// The previously issued reset token.
 	Token string `json:"token"`
 	// The new password for this user.
-	NewPassword string `json:"new_password"`
+	NewPassword string `json:"new_password" valid:"bcrypt_password" minLength:"8" maxLength:"72"`
 }
 
 // ResetPassword resets a users password. It returns the ID of the user whose
