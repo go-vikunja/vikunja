@@ -133,8 +133,16 @@
 
 		<!-- ═══════ Chains tab ═══════ -->
 		<template v-if="activeTab === 'chains'">
-			<ChainEditor />
+			<ChainEditor @createFromChain="openCreateFromChain" />
 		</template>
+
+		<!-- Create from Chain modal (used from chains tab) -->
+		<CreateFromChainModal
+			:enabled="showCreateFromChainModal"
+			:project-id="createFromChainProjectId"
+			@close="showCreateFromChainModal = false"
+			@created="showCreateFromChainModal = false"
+		/>
 
 		<!-- ═══════ Auto-Generated tab ═══════ -->
 		<template v-if="activeTab === 'autotasks'">
@@ -341,6 +349,7 @@ import PercentDoneSelect from '@/components/tasks/partials/PercentDoneSelect.vue
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import ChainEditor from '@/components/tasks/partials/ChainEditor.vue'
 import AutoTaskEditor from '@/components/tasks/partials/AutoTaskEditor.vue'
+import CreateFromChainModal from '@/components/tasks/partials/CreateFromChainModal.vue'
 
 import TaskTemplateService from '@/services/taskTemplateService'
 import TaskTemplateModel from '@/models/taskTemplate'
@@ -374,6 +383,8 @@ const editingTemplate = ref<ITaskTemplate | null>(null)
 const deletingTemplate = ref<ITaskTemplate | null>(null)
 const sendingTemplate = ref<ITaskTemplate | null>(null)
 const sendToProjectId = ref<number | null>(null)
+const showCreateFromChainModal = ref(false)
+const createFromChainProjectId = ref(1)
 
 const availableProjects = computed(() => {
 	return Object.values(projectStore.projects)
@@ -493,6 +504,12 @@ function openSendToProject(tmpl: ITaskTemplate) {
 	sendingTemplate.value = tmpl
 	sendToProjectId.value = availableProjects.value.length > 0 ? availableProjects.value[0].id : null
 	showSendToProjectModal.value = true
+}
+
+function openCreateFromChain(_chain: any) {
+	// Use first available project as default, modal has its own project selector
+	createFromChainProjectId.value = availableProjects.value.length > 0 ? availableProjects.value[0].id : 1
+	showCreateFromChainModal.value = true
 }
 
 async function createTaskFromTemplate() {
