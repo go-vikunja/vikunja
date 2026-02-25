@@ -170,9 +170,18 @@ function setEditorContentFromModelValue(newValue: string | undefined) {
 		// Preserve cursor position before updating content
 		const currentPosition = editor.value.state.selection.from
 
-		editor.value.commands.setContent(content, {
-			emitUpdate: false,
-		})
+		// Use JSON content format instead of a plain string to prevent
+		// TipTap from parsing the value as HTML (reflected HTML injection
+		// via the ?filter= URL parameter).
+		editor.value.commands.setContent(content
+			? {
+				type: 'doc',
+				content: [{
+					type: 'paragraph',
+					content: [{type: 'text', text: content}],
+				}],
+			}
+			: '', {emitUpdate: false})
 
 		// Restore cursor position after content update
 		// Ensure position is within the new content bounds
@@ -190,9 +199,15 @@ function updateDateInQuery(newDate: string | Date | null) {
 	const newText = currentText.replace(currentOldDatepickerValue.value, dateStr)
 	currentOldDatepickerValue.value = dateStr
 
-	editor.value.commands.setContent(newText, {
-		emitUpdate: false,
-	})
+	editor.value.commands.setContent(newText
+		? {
+			type: 'doc',
+			content: [{
+				type: 'paragraph',
+				content: [{type: 'text', text: newText}],
+			}],
+		}
+		: '', {emitUpdate: false})
 	const processed = processContent(newText)
 	lastEmittedValue = processed
 	emit('update:modelValue', processed)
