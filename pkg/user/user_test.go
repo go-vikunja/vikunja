@@ -555,7 +555,7 @@ func TestUserPasswordReset(t *testing.T) {
 			Token:       "passwordresettesttoken",
 			NewPassword: "12345",
 		}
-		err := ResetPassword(s, reset)
+		_, err := ResetPassword(s, reset)
 		require.NoError(t, err)
 	})
 	t.Run("without password", func(t *testing.T) {
@@ -566,7 +566,7 @@ func TestUserPasswordReset(t *testing.T) {
 		reset := &PasswordReset{
 			Token: "passwordresettesttoken",
 		}
-		err := ResetPassword(s, reset)
+		_, err := ResetPassword(s, reset)
 		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
@@ -579,7 +579,7 @@ func TestUserPasswordReset(t *testing.T) {
 			Token:       "",
 			NewPassword: "12345",
 		}
-		err := ResetPassword(s, reset)
+		_, err := ResetPassword(s, reset)
 		require.Error(t, err)
 		assert.True(t, IsErrNoPasswordResetToken(err))
 	})
@@ -592,7 +592,7 @@ func TestUserPasswordReset(t *testing.T) {
 			Token:       "somethingsomething",
 			NewPassword: "12345",
 		}
-		err := ResetPassword(s, reset)
+		_, err := ResetPassword(s, reset)
 		require.Error(t, err)
 		assert.True(t, IsErrInvalidPasswordResetToken(err))
 	})

@@ -19,6 +19,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -29,6 +30,7 @@ import (
 
 	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"xorm.io/xorm"
 )
@@ -45,35 +47,85 @@ type Token struct {
 	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 }
 
+const RefreshTokenCookieName = "vikunja_refresh_token"      //nolint:gosec // not a credential
+const refreshTokenCookiePath = "/api/v1/user/token/refresh" //nolint:gosec // not a credential
+
+// SetRefreshTokenCookie sets an HttpOnly cookie containing the refresh token.
+// The cookie is path-scoped to the refresh endpoint so the browser only sends
+// it on refresh requests. HttpOnly prevents JavaScript access (XSS protection).
+func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
+	secure := strings.HasPrefix(config.ServicePublicURL.GetString(), "https")
+	c.SetCookie(&http.Cookie{
+		Name:     RefreshTokenCookieName,
+		Value:    token,
+		Path:     refreshTokenCookiePath,
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteStrictMode,
+	})
+}
+
+// ClearRefreshTokenCookie removes the refresh token cookie.
+func ClearRefreshTokenCookie(c *echo.Context) {
+	SetRefreshTokenCookie(c, "", -1)
+}
+
 // NewUserAuthTokenResponse creates a new user auth token response from a user object.
 func NewUserAuthTokenResponse(u *user.User, c *echo.Context, long bool) error {
-	t, err := NewUserJWTAuthtoken(u, long)
+	s := db.NewSession()
+	defer s.Close()
+
+	deviceInfo := c.Request().UserAgent()
+	ipAddress := c.RealIP()
+
+	session, err := models.CreateSession(s, u.ID, deviceInfo, ipAddress, long)
 	if err != nil {
+		_ = s.Rollback()
 		return err
 	}
 
+	t, err := NewUserJWTAuthtoken(u, session.ID)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	// Set the refresh token as an HttpOnly cookie. The cookie is path-scoped
+	// to the refresh endpoint, so the browser only sends it there. JavaScript
+	// never sees the refresh token — this protects it from XSS.
+	cookieMaxAge := int(config.ServiceJWTTTL.GetInt64())
+	if long {
+		cookieMaxAge = int(config.ServiceJWTTTLLong.GetInt64())
+	}
+	SetRefreshTokenCookie(c, session.RefreshToken, cookieMaxAge)
+
+	c.Response().Header().Set("Cache-Control", "no-store")
 	return c.JSON(http.StatusOK, Token{Token: t})
 }
 
-// NewUserJWTAuthtoken generates and signs a new jwt token for a user. This is a global function to be able to call it from web tests.
-func NewUserJWTAuthtoken(u *user.User, long bool) (token string, err error) {
+// NewUserJWTAuthtoken generates and signs a new short-lived jwt token for a user.
+// The token includes the session UUID as the `sid` claim. This is a global
+// function to be able to call it from web tests.
+func NewUserJWTAuthtoken(u *user.User, sessionID string) (token string, err error) {
 	t := jwt.New(jwt.SigningMethodHS256)
 
-	var ttl = time.Duration(config.ServiceJWTTTL.GetInt64())
-	if long {
-		ttl = time.Duration(config.ServiceJWTTTLLong.GetInt64())
-	}
+	var ttl = time.Duration(config.ServiceJWTTTLShort.GetInt64())
 	var exp = time.Now().Add(time.Second * ttl).Unix()
 
-	// Set claims
 	claims := t.Claims.(jwt.MapClaims)
 	claims["type"] = AuthTypeUser
 	claims["id"] = u.ID
 	claims["username"] = u.Username
 	claims["exp"] = exp
-	claims["long"] = long
+	claims["sid"] = sessionID
+	claims["jti"] = uuid.New().String()
 
-	// Generate encoded token and send it as response.
 	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))
 }
 

@@ -63,7 +63,9 @@ func TestAPIToken(t *testing.T) {
 		})
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_loremipsumdolorsitamet")
-		require.Error(t, h(c))
+		require.NoError(t, h(c))
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+		assert.Contains(t, res.Body.String(), `"code":11`)
 	})
 	t.Run("expired token", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -76,7 +78,9 @@ func TestAPIToken(t *testing.T) {
 		})
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_a5e6f92ddbad68f49ee2c63e52174db0235008c8") // Token 2
-		require.Error(t, h(c))
+		require.NoError(t, h(c))
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+		assert.Contains(t, res.Body.String(), `"code":11`)
 	})
 	t.Run("valid token, invalid scope", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -89,7 +93,9 @@ func TestAPIToken(t *testing.T) {
 		})
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
-		require.Error(t, h(c))
+		require.NoError(t, h(c))
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+		assert.Contains(t, res.Body.String(), `"code":11`)
 	})
 	t.Run("jwt", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -105,7 +111,7 @@ func TestAPIToken(t *testing.T) {
 		defer s.Close()
 		u, err := user.GetUserByID(s, 1)
 		require.NoError(t, err)
-		jwt, err := auth.NewUserJWTAuthtoken(u, false)
+		jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
 		require.NoError(t, err)
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
