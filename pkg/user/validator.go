@@ -54,7 +54,7 @@ func init() {
 			return false
 		}
 
-		return len([]byte(str)) < 72
+		return len([]byte(str)) <= 72
 	}
 
 	govalidator.TagMap["language"] = i18n.HasLanguage
