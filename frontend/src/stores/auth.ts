@@ -76,6 +76,7 @@ export const useAuthStore = defineStore('auth', () => {
 	const avatarUrl = ref('')
 	const settings = ref<IUserSettings>(new UserSettingsModel())
 	
+	const currentSessionId = ref<string | null>(null)
 	const lastUserInfoRefresh = ref<Date | null>(null)
 	const isLoading = ref(false)
 	const isLoadingGeneralSettings = ref(false)
@@ -290,19 +291,46 @@ export const useAuthStore = defineStore('auth', () => {
 					.split('.')[1]
 					.replace(/-/g, '+')
 					.replace(/_/g, '/')
-				const jwtUser = new UserModel(JSON.parse(atob(base64)))
+				const payload = JSON.parse(atob(base64))
+				const jwtUser = new UserModel(payload)
 				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
 
 				isAuthenticated = jwtUser.exp >= ts
-				// Only set user from JWT if we don't already have a fully loaded
-				// user with the same ID. The JWT lacks fields like `name`, so
-				// overwriting a complete user object causes a visible flash
-				// where the display name briefly reverts to the username.
-				if (info.value === null || info.value.id !== jwtUser.id) {
-					setUser(jwtUser, false)
-				} else {
-					// Always keep exp in sync so token renewal checks stay accurate
-					info.value.exp = jwtUser.exp
+				currentSessionId.value = payload.sid ?? null
+
+				if (isAuthenticated) {
+					// Only set user from JWT if we don't already have a fully loaded
+					// user with the same ID. The JWT lacks fields like `name`, so
+					// overwriting a complete user object causes a visible flash
+					// where the display name briefly reverts to the username.
+					if (info.value === null || info.value.id !== jwtUser.id) {
+						setUser(jwtUser, false)
+					} else {
+						// Always keep exp in sync so token renewal checks stay accurate
+						info.value.exp = jwtUser.exp
+					}
+				} else if (jwtUser.type === AUTH_TYPES.USER) {
+					// JWT expired but this is a user session — attempt a cookie-based
+					// refresh before giving up. This lets users who reopen the app
+					// after the short JWT TTL seamlessly resume their session.
+					try {
+						await refreshToken(true)
+						const freshJwt = getToken()
+						if (freshJwt) {
+							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+							const p = JSON.parse(atob(b64))
+							const freshUser = new UserModel(p)
+							isAuthenticated = freshUser.exp >= ts
+							currentSessionId.value = p.sid ?? null
+							if (info.value === null || info.value.id !== freshUser.id) {
+								setUser(freshUser, false)
+							} else {
+								info.value.exp = freshUser.exp
+							}
+						}
+					} catch {
+						// Refresh failed — stay unauthenticated
+					}
 				}
 			} catch (_) {
 				logout()
@@ -426,29 +454,44 @@ export const useAuthStore = defineStore('auth', () => {
 	/**
 	 * Renews the api token and saves it to local storage
 	 */
-	function renewToken() {
-		// FIXME: Timeout to avoid race conditions when authenticated as a user (=auth token in localStorage) and as a
-		// link share in another tab. Without the timeout both the token renew and link share auth are executed at
-		// the same time and one might win over the other.
-		setTimeout(async () => {
-			if (!authenticated.value) {
-				return
-			}
+	async function renewToken() {
+		if (!authenticated.value) {
+			return
+		}
 
-			try {
-				await refreshToken(!isLinkShareAuth.value)
-				await checkAuth()
-			} catch (e) {
-				// Don't logout on network errors as the user would then get logged out if they don't have
-				// internet for a short period of time - such as when the laptop is still reconnecting
-				if (e?.request?.status) {
-					await logout()
-				}
+		try {
+			if (isLinkShareAuth.value) {
+				// Link shares renew via the dedicated link-share endpoint (JWT-based).
+				const HTTP = AuthenticatedHTTPFactory()
+				const response = await HTTP.post('user/token')
+				saveToken(response.data.token, false)
+			} else {
+				// User sessions renew via the refresh-token cookie.
+				await refreshToken(true)
 			}
-		}, 5000)
+			await checkAuth()
+		} catch (e) {
+			// Only logout if the JWT has actually expired and we can't refresh.
+			// If the JWT is still valid, the proactive refresh failure is harmless
+			// — the 401 interceptor will handle it when the token really expires.
+			const nowInSeconds = Date.now() / MILLISECONDS_A_SECOND
+			const isExpired = !info.value?.exp || info.value.exp < nowInSeconds
+			if (isExpired && (e?.cause?.request?.status || e?.cause?.response?.status)) {
+				await logout()
+			}
+		}
 	}
 
 	async function logout() {
+		// Revoke the server session so the refresh token can't be reused.
+		// Best-effort: if the network call fails, still clean up locally.
+		try {
+			const HTTP = AuthenticatedHTTPFactory()
+			await HTTP.post('user/logout')
+		} catch (_e) {
+			// Ignore — session will expire naturally
+		}
+
 		removeToken()
 		const loggedInVia = getLoggedInVia()
 		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
@@ -472,6 +515,7 @@ export const useAuthStore = defineStore('auth', () => {
 		avatarUrl: readonly(avatarUrl),
 		settings: readonly(settings),
 
+		currentSessionId: readonly(currentSessionId),
 		lastUserInfoRefresh: readonly(lastUserInfoRefresh),
 
 		authUser,

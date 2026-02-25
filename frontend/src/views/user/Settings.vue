@@ -109,6 +109,10 @@ const navigationItems = computed(() => {
 			routeName: 'user.settings.apiTokens',
 		},
 		{
+			title: t('user.settings.sessions.title'),
+			routeName: 'user.settings.sessions',
+		},
+		{
 			title: t('user.deletion.title'),
 			routeName: 'user.settings.deletion',
 			condition: userDeletionEnabled.value,
