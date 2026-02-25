@@ -19,6 +19,11 @@
                     "comment": "The duration of the \"remember me\" time in seconds. When the login request is made with\nthe long param set, the token returned will be valid for this period.\nThe default is 2592000 seconds (30 Days)."
                 },
                 {
+                    "key": "jwtttlshort",
+                    "default_value": "600",
+                    "comment": "The duration of short-lived JWT tokens in seconds. These tokens are used together with\nrefresh tokens for session-based authentication.\nThe default is 600 seconds (10 minutes)."
+                },
+                {
                     "key": "interface",
                     "default_value": ":3456",
                     "comment": "The interface on which to run the webserver"
