@@ -78,7 +78,7 @@
 								title="Create in project"
 								@click="openSendToProject(tmpl)"
 							>
-								<Icon icon="paper-plane" />
+								<Icon icon="share-alt" />
 							</BaseButton>
 							<BaseButton
 								class="action-btn"
