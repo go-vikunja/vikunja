@@ -26,29 +26,44 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(deleteOrphanTaskPositions)
+	repairOrphanPositionsCmd.Flags().Bool("dry-run", false, "Preview repairs without making changes")
+	repairCmd.AddCommand(repairOrphanPositionsCmd)
 }
 
-var deleteOrphanTaskPositions = &cobra.Command{
-	Use:   "delete-orphan-task-positions",
-	Short: "Removes all task positions for tasks or project views which don't exist anymore.",
+var repairOrphanPositionsCmd = &cobra.Command{
+	Use:   "orphan-positions",
+	Short: "Remove orphaned task position records for deleted tasks or views",
+	Long: `Removes all task position records that reference tasks or project views
+which no longer exist in the database.
+
+This can happen when tasks or views are deleted but their position records
+are not fully cleaned up.
+
+Use --dry-run to preview what would be deleted without making changes.`,
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInitWithoutAsync()
 	},
-	Run: func(_ *cobra.Command, _ []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
 
 		s := db.NewSession()
 		defer s.Close()
 
-		count, err := models.DeleteOrphanedTaskPositions(s)
+		if dryRun {
+			log.Infof("Running in dry-run mode - no changes will be made")
+		}
+
+		count, err := models.DeleteOrphanedTaskPositions(s, dryRun)
 		if err != nil {
 			log.Errorf("Could not delete orphaned task positions: %s", err)
 			return
 		}
 
-		if err := s.Commit(); err != nil {
-			log.Errorf("Could not commit orphaned task position deletion: %s", err)
-			return
+		if !dryRun {
+			if err := s.Commit(); err != nil {
+				log.Errorf("Could not commit orphaned task position deletion: %s", err)
+				return
+			}
 		}
 
 		if count == 0 {
@@ -56,6 +71,10 @@ var deleteOrphanTaskPositions = &cobra.Command{
 			return
 		}
 
-		log.Infof("Successfully deleted %d orphaned task positions.", count)
+		if dryRun {
+			log.Infof("Would delete %d orphaned task positions.", count)
+		} else {
+			log.Infof("Successfully deleted %d orphaned task positions.", count)
+		}
 	},
 }

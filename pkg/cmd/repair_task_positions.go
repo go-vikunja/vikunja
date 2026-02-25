@@ -27,11 +27,11 @@ import (
 
 func init() {
 	repairTaskPositionsCmd.Flags().Bool("dry-run", false, "Preview repairs without making changes")
-	rootCmd.AddCommand(repairTaskPositionsCmd)
+	repairCmd.AddCommand(repairTaskPositionsCmd)
 }
 
 var repairTaskPositionsCmd = &cobra.Command{
-	Use:   "repair-task-positions",
+	Use:   "task-positions",
 	Short: "Detect and repair duplicate task positions across all views",
 	Long: `Scans all project views for tasks with duplicate position values and repairs them.
 

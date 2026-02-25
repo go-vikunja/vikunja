@@ -26,33 +26,44 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(repairFileMimeTypesCmd)
+	repairFileMimeTypesCmd.Flags().Bool("dry-run", false, "Preview repairs without making changes")
+	repairCmd.AddCommand(repairFileMimeTypesCmd)
 }
 
 var repairFileMimeTypesCmd = &cobra.Command{
-	Use:   "repair-file-mime-types",
+	Use:   "file-mime-types",
 	Short: "Detect and set MIME types for all files that have none",
 	Long: `Scans all files in the database that have no MIME type set,
 detects the type from the stored file content, and updates the database.
 
 This is useful after upgrading from a version that did not store MIME types
-on file creation. Only files with an empty or NULL mime column are affected.`,
+on file creation. Only files with an empty or NULL mime column are affected.
+
+Use --dry-run to preview what would be fixed without making changes.`,
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInitWithoutAsync()
 	},
-	Run: func(_ *cobra.Command, _ []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+
 		s := db.NewSession()
 		defer s.Close()
 
-		result, err := files.RepairFileMimeTypes(s)
+		if dryRun {
+			log.Infof("Running in dry-run mode - no changes will be made")
+		}
+
+		result, err := files.RepairFileMimeTypes(s, dryRun)
 		if err != nil {
 			log.Errorf("Failed to repair file MIME types: %s", err)
 			return
 		}
 
-		if err := s.Commit(); err != nil {
-			log.Errorf("Failed to commit changes: %s", err)
-			return
+		if !dryRun {
+			if err := s.Commit(); err != nil {
+				log.Errorf("Failed to commit changes: %s", err)
+				return
+			}
 		}
 
 		log.Infof("Repair complete:")
