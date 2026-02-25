@@ -194,8 +194,9 @@ func getTaskFiltersFromFilterString(filter string, filterTimezone string) (filte
 		value := strings.TrimSpace(parts[3])
 
 		// Check if the value is already quoted
-		if (strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'")) ||
-			(strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"")) {
+		if ((strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'")) ||
+			(strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\""))) &&
+			!strings.Contains(value, ",") {
 			return field + " " + comparator + " " + value
 		}
 
@@ -344,10 +345,24 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 
 	realFieldName := strings.ReplaceAll(strcase.ToCamel(fieldName), "Id", "ID")
 
+	// Helper function to clean comma separated values
+	cleanListValues := func(val string) []string {
+		vals := strings.Split(val, ",")
+		cleaned := make([]string, 0, len(vals))
+		for _, v := range vals {
+			v = strings.TrimSpace(v)
+			v = strings.Trim(v, "'\"")
+			cleaned = append(cleaned, v)
+		}
+		return cleaned
+	}
+
 	if realFieldName == "Assignees" {
-		vals := strings.Split(value, ",")
-		valueSlice := append([]string{}, vals...)
-		return nil, valueSlice, nil
+		return nil, cleanListValues(value), nil
+	}
+
+	if realFieldName == "Bucket" {
+		return nil, cleanListValues(value), nil
 	}
 
 	field, ok := reflect.TypeOf(&Task{}).Elem().FieldByName(realFieldName)
@@ -366,6 +381,10 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 		vals := strings.Split(value, ",")
 		valueSlice := []interface{}{}
 		for _, val := range vals {
+			// Clean the value before processing
+			val = strings.TrimSpace(val)
+			val = strings.Trim(val, "'\"")
+
 			v, err := getValueForField(field, val, loc)
 			if err != nil {
 				return nil, nil, err
@@ -373,6 +392,14 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 			valueSlice = append(valueSlice, v)
 		}
 		return nil, valueSlice, nil
+	}
+
+	// For the like operator on string fields, just return the pattern directly
+	// without type conversion to allow wildcards like %
+	if comparator == taskFilterComparatorLike && field.Type.Kind() == reflect.String {
+		value = strings.TrimSpace(value)
+		value = strings.Trim(value, "'\"")
+		return &field, value, nil
 	}
 
 	val, err := getValueForField(field, value, loc)

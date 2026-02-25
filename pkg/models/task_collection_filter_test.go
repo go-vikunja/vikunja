@@ -311,4 +311,65 @@ func TestParseFilter(t *testing.T) {
 		assert.Equal(t, taskFilterComparatorEquals, firstSet[1].comparator)
 		assert.Equal(t, int64(1), firstSet[1].value)
 	})
+	t.Run("bucket equals", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("bucket = 'Doing'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "bucket", result[0].field)
+		assert.Equal(t, taskFilterComparatorEquals, result[0].comparator)
+		assert.Equal(t, "Doing", result[0].value.([]string)[0])
+	})
+	t.Run("bucket not equals", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("bucket != 'Done'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "bucket", result[0].field)
+		assert.Equal(t, taskFilterComparatorNotEquals, result[0].comparator)
+		assert.Equal(t, "Done", result[0].value.([]string)[0])
+	})
+	t.Run("bucket in list", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("bucket in 'Todo', 'Doing'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "bucket", result[0].field)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		require.Len(t, result[0].value, 2)
+		assert.Equal(t, "Todo", result[0].value.([]string)[0])
+		assert.Equal(t, "Doing", result[0].value.([]string)[1])
+	})
+	t.Run("bucket not in list", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("bucket not in 'Done', 'Archived'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "bucket", result[0].field)
+		assert.Equal(t, taskFilterComparatorNotIn, result[0].comparator)
+		require.Len(t, result[0].value, 2)
+		assert.Equal(t, "Done", result[0].value.([]string)[0])
+		assert.Equal(t, "Archived", result[0].value.([]string)[1])
+	})
+	t.Run("bucket like", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("bucket like 'Prog%'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "bucket", result[0].field)
+		assert.Equal(t, taskFilterComparatorLike, result[0].comparator)
+		assert.Equal(t, "Prog%", result[0].value.([]string)[0])
+	})
+	t.Run("combined bucket and priority filter", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("bucket = 'Doing' && priority > 2", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 2)
+		assert.Equal(t, "bucket", result[0].field)
+		assert.Equal(t, taskFilterComparatorEquals, result[0].comparator)
+		assert.Equal(t, "Doing", result[0].value.([]string)[0])
+		assert.Equal(t, "priority", result[1].field)
+		assert.Equal(t, taskFilterComparatorGreater, result[1].comparator)
+		assert.Equal(t, int64(2), result[1].value)
+	})
 }
