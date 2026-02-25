@@ -38,10 +38,10 @@ func RegisterDeletionNotificationCron() {
 
 func notifyUsersScheduledForDeletion() {
 	s := db.NewSession()
-	defer s.Close()
 	users := []*User{}
 	err := s.Where(builder.NotNull{"deletion_scheduled_at"}).
 		Find(&users)
+	s.Close()
 	if err != nil {
 		log.Errorf("Could not get users scheduled for deletion: %s", err)
 		return
@@ -50,9 +50,6 @@ func notifyUsersScheduledForDeletion() {
 	if len(users) == 0 {
 		return
 	}
-
-	// Close the read-only session before processing each user in its own transaction.
-	s.Close()
 
 	log.Debugf("Found %d users scheduled for deletion to notify", len(users))
 

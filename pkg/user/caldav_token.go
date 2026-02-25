@@ -25,10 +25,14 @@ func GenerateNewCaldavToken(u *User) (token *Token, err error) {
 	token, err = generateHashedToken(s, u, TokenCaldavAuth)
 	if err != nil {
 		_ = s.Rollback()
-		return
+		return nil, err
 	}
 
-	return token, s.Commit()
+	if err = s.Commit(); err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }
 
 func GetCaldavTokens(u *User) (tokens []*Token, err error) {

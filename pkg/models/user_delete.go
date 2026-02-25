@@ -42,10 +42,10 @@ func RegisterUserDeletionCron() {
 
 func deleteUsers() {
 	s := db.NewSession()
-	defer s.Close()
 	users := []*user.User{}
 	err := s.Where(builder.Lt{"deletion_scheduled_at": time.Now()}).
 		Find(&users)
+	s.Close()
 	if err != nil {
 		log.Errorf("Could not get users scheduled for deletion: %s", err)
 		return
