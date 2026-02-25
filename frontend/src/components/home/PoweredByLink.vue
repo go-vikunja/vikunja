@@ -7,9 +7,15 @@
 		>
 			{{ $t('misc.poweredBy') }}
 		</BaseButton>
-		<span v-if="buildVersion && buildVersion !== 'dev'" class="build-version">
+		<a
+			v-if="buildVersion && buildVersion !== 'dev'"
+			class="build-version"
+			:href="commitUrl"
+			target="_blank"
+			rel="noopener"
+		>
 			{{ buildVersion }}
-		</span>
+		</a>
 	</div>
 </template>
 
@@ -25,6 +31,16 @@ const props = defineProps<{
 
 const computedUrl = computed(() => `${poweredByUrl}&utm_medium=${props.utmMedium}`)
 const buildVersion = computed(() => VERSION || '')
+const commitHash = computed(() => {
+	// Extract hash from format like "custom-cc068123c"
+	const match = buildVersion.value.match(/([0-9a-f]{7,})$/i)
+	return match ? match[1] : ''
+})
+const commitUrl = computed(() =>
+	commitHash.value
+		? `https://github.com/trbom5c/vikunja/commit/${commitHash.value}`
+		: '#',
+)
 </script>
 
 <style lang="scss">
@@ -48,5 +64,14 @@ const buildVersion = computed(() => VERSION || '')
 	opacity: 0.6;
 	font-family: monospace;
 	letter-spacing: 0.3px;
+	text-decoration: none;
+	cursor: pointer;
+	transition: opacity 0.15s, color 0.15s;
+
+	&:hover {
+		opacity: 1;
+		color: var(--primary);
+		text-decoration: underline;
+	}
 }
 </style>
