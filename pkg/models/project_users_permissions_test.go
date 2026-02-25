@@ -81,6 +81,7 @@ func TestProjectUser_CanDoSomething(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 
 			lu := &ProjectUser{
 				ID:          tt.fields.ID,
@@ -101,7 +102,6 @@ func TestProjectUser_CanDoSomething(t *testing.T) {
 			if got, _ := lu.CanUpdate(s, tt.args.a); got != tt.want["CanUpdate"] {
 				t.Errorf("ProjectUser.CanUpdate() = %v, want %v", got, tt.want["CanUpdate"])
 			}
-			_ = s.Close()
 		})
 	}
 }

@@ -37,6 +37,7 @@ func TestDeleteUser(t *testing.T) {
 		err := DeleteUser(s, u)
 
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
 		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 24}) // only user6 had access to this project
 		db.AssertExists(t, "projects", map[string]interface{}{"id": 6}, false)
@@ -68,6 +69,7 @@ func TestDeleteUser(t *testing.T) {
 		err := DeleteUser(s, u)
 
 		require.NoError(t, err)
+		require.NoError(t, s.Commit())
 		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 37}) // only user16 had access to this project, and it was their default
 	})
@@ -101,6 +103,7 @@ func TestDeleteUser(t *testing.T) {
 		err = DeleteUser(s, &user.User{ID: 4})
 		require.NoError(t, err)
 
+		require.NoError(t, s.Commit())
 		db.AssertMissing(t, "task_assignees", map[string]interface{}{"user_id": 4})
 		db.AssertMissing(t, "subscriptions", map[string]interface{}{"user_id": 4})
 		db.AssertMissing(t, "team_members", map[string]interface{}{"user_id": 4})

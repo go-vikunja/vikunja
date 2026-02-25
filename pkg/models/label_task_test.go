@@ -24,9 +24,10 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
-	"gopkg.in/d4l3k/messagediff.v1"
-
 	"code.vikunja.io/api/pkg/web"
+
+	"github.com/stretchr/testify/require"
+	"gopkg.in/d4l3k/messagediff.v1"
 )
 
 func TestLabelTask_ReadAll(t *testing.T) {
@@ -129,6 +130,7 @@ func TestLabelTask_ReadAll(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 
 			l := &LabelTask{
 				ID:          tt.fields.ID,
@@ -149,8 +151,6 @@ func TestLabelTask_ReadAll(t *testing.T) {
 			if diff, equal := messagediff.PrettyDiff(gotLabels, tt.wantLabels); !equal {
 				t.Errorf("LabelTask.ReadAll() = %v, want %v, diff: %v", l, tt.wantLabels, diff)
 			}
-
-			s.Close()
 		})
 	}
 }
@@ -227,6 +227,7 @@ func TestLabelTask_Create(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 
 			s := db.NewSession()
+			defer s.Close()
 
 			l := &LabelTask{
 				ID:          tt.fields.ID,
@@ -248,13 +249,13 @@ func TestLabelTask_Create(t *testing.T) {
 				t.Errorf("LabelTask.Create() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 			}
 			if !tt.wantErr {
+				require.NoError(t, s.Commit())
 				db.AssertExists(t, "label_tasks", map[string]interface{}{
 					"id":       l.ID,
 					"task_id":  l.TaskID,
 					"label_id": l.LabelID,
 				}, false)
 			}
-			s.Close()
 		})
 	}
 }
@@ -348,6 +349,7 @@ func TestLabelTask_Delete(t *testing.T) {
 				if (err != nil) && tt.wantErr && !tt.errType(err) {
 					t.Errorf("LabelTask.Delete() Wrong error type! Error = %v, want = %v", err, runtime.FuncForPC(reflect.ValueOf(tt.errType).Pointer()).Name())
 				}
+				require.NoError(t, s.Commit())
 				db.AssertMissing(t, "label_tasks", map[string]interface{}{
 					"label_id": l.LabelID,
 					"task_id":  l.TaskID,

@@ -39,6 +39,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 		t.Run("normal", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			project := Project{
 				Title:       "test",
 				Description: "Lorem Ipsum",
@@ -81,6 +82,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 		t.Run("kanban view creates To-Do, doing, done buckets", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			project := Project{
 				Title:       "test kanban buckets",
 				Description: "Lorem Ipsum",
@@ -119,6 +121,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 		t.Run("nonexistent parent", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			project := Project{
 				Title:           "test",
 				Description:     "Lorem Ipsum",
@@ -127,11 +130,11 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			err := project.Create(s, usr)
 			require.Error(t, err)
 			assert.True(t, IsErrProjectDoesNotExist(err))
-			_ = s.Close()
 		})
 		t.Run("nonexistent owner", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			usr := &user.User{ID: 9482385}
 			project := Project{
 				Title:       "test",
@@ -140,11 +143,11 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			err := project.Create(s, usr)
 			require.Error(t, err)
 			assert.True(t, user.IsErrUserDoesNotExist(err))
-			_ = s.Close()
 		})
 		t.Run("existing identifier", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			project := Project{
 				Title:       "test",
 				Description: "Lorem Ipsum",
@@ -153,11 +156,11 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			err := project.Create(s, usr)
 			require.Error(t, err)
 			assert.True(t, IsErrProjectIdentifierIsNotUnique(err))
-			_ = s.Close()
 		})
 		t.Run("non ascii characters", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			project := Project{
 				Title:       "приффки фсем",
 				Description: "Lorem Ipsum",
@@ -178,6 +181,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 		t.Run("normal", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			project := Project{
 				ID:          1,
 				Title:       "test",
@@ -197,6 +201,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 		t.Run("nonexistent", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			project := Project{
 				ID:    99999999,
 				Title: "test",
@@ -204,12 +209,11 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			err := project.Update(s, usr)
 			require.Error(t, err)
 			assert.True(t, IsErrProjectDoesNotExist(err))
-			_ = s.Close()
-
 		})
 		t.Run("existing identifier", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			project := Project{
 				Title:       "test",
 				Description: "Lorem Ipsum",
@@ -218,7 +222,6 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			err := project.Create(s, usr)
 			require.Error(t, err)
 			assert.True(t, IsErrProjectIdentifierIsNotUnique(err))
-			_ = s.Close()
 		})
 		t.Run("change parent project", func(t *testing.T) {
 			t.Run("own", func(t *testing.T) {
@@ -230,6 +233,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 
 				db.LoadAndAssertFixtures(t)
 				s := db.NewSession()
+				defer s.Close()
 				project := Project{
 					ID:              6,
 					Title:           "Test6",
@@ -253,6 +257,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 			t.Run("others", func(t *testing.T) {
 				db.LoadAndAssertFixtures(t)
 				s := db.NewSession()
+				defer s.Close()
 				project := Project{
 					ID:              1,
 					Title:           "Test1",
@@ -261,7 +266,6 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				}
 				can, _ := project.CanUpdate(s, usr)
 				assert.False(t, can) // project is not writeable by us
-				_ = s.Close()
 			})
 			t.Run("pseudo project", func(t *testing.T) {
 				usr := &user.User{
@@ -272,6 +276,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 
 				db.LoadAndAssertFixtures(t)
 				s := db.NewSession()
+				defer s.Close()
 				project := Project{
 					ID:              6,
 					Title:           "Test6",
@@ -286,6 +291,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 		t.Run("archive default project of the same user", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			project := Project{
 				ID:         4,
 				IsArchived: true,
@@ -297,6 +303,7 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 		t.Run("archive default project of another user", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 			project := Project{
 				ID:         4,
 				IsArchived: true,
@@ -481,14 +488,15 @@ func TestProject_ReadAll(t *testing.T) {
 	t.Run("all", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		projects, _, err := getAllProjectsForUser(s, 6, &projectOptions{})
 		require.NoError(t, err)
 		assert.Len(t, projects, 25)
-		_ = s.Close()
 	})
 	t.Run("all projects for user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		u := &user.User{ID: 1}
 		project := Project{}
 		projects3, _, _, err := project.ReadAll(s, u, "", 1, 50)
@@ -502,21 +510,21 @@ func TestProject_ReadAll(t *testing.T) {
 		assert.Equal(t, int64(6), ls[2].ID)
 		assert.Equal(t, int64(-1), ls[26].ID)
 		assert.Equal(t, int64(-2), ls[27].ID)
-		_ = s.Close()
 	})
 	t.Run("projects for nonexistent user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		usr := &user.User{ID: 999999}
 		project := Project{}
 		_, _, _, err := project.ReadAll(s, usr, "", 1, 50)
 		require.Error(t, err)
 		assert.True(t, user.IsErrUserDoesNotExist(err))
-		_ = s.Close()
 	})
 	t.Run("search", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		u := &user.User{ID: 1}
 		project := Project{}
 		projects3, _, _, err := project.ReadAll(s, u, "TEST10", 1, 50)
@@ -526,11 +534,11 @@ func TestProject_ReadAll(t *testing.T) {
 		require.Len(t, ls, 2)
 		assert.Equal(t, int64(10), ls[0].ID)
 		assert.Equal(t, int64(-1), ls[1].ID)
-		_ = s.Close()
 	})
 	t.Run("search returns filters as well", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
+		defer s.Close()
 		u := &user.User{ID: 1}
 		project := Project{}
 		projects3, _, _, err := project.ReadAll(s, u, "testfilter", 1, 50)
@@ -540,7 +548,6 @@ func TestProject_ReadAll(t *testing.T) {
 		require.Len(t, ls, 2)
 		assert.Equal(t, int64(-1), ls[0].ID)
 		assert.Equal(t, int64(-2), ls[1].ID)
-		_ = s.Close()
 	})
 }
 

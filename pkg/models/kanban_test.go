@@ -216,6 +216,9 @@ func TestBucket_Delete(t *testing.T) {
 		err := b.Delete(s, u)
 		require.NoError(t, err)
 
+		err = s.Commit()
+		require.NoError(t, err)
+
 		db.AssertExists(t, "project_views", map[string]interface{}{
 			"id":             b.ProjectViewID,
 			"done_bucket_id": 0,
