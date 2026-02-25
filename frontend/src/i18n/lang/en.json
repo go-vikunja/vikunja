@@ -187,25 +187,7 @@
       },
       "webhooks": {
         "title": "Webhook Notifications",
-        "description": "Configure webhook URLs to receive notifications via POST requests when certain events occur. Each notification type can have its own URL, or you can set a general webhook URL that receives all notifications.",
-        "general": {
-          "title": "General Webhook",
-          "description": "This webhook URL will receive all notification types that don't have a specific URL configured."
-        },
-        "specific": {
-          "title": "Specific Notification Types",
-          "description": "Configure specific URLs for individual notification types. These take precedence over the general webhook."
-        },
-        "url": "Webhook URL",
-        "urlPlaceholder": "https://example.com/webhook",
-        "usingGeneral": "Using general webhook URL",
-        "enabled": "Enabled",
-        "saved": "Webhook setting saved successfully.",
-        "deleted": "Webhook setting deleted successfully.",
-        "types": {
-          "taskReminder": "Task Reminder",
-          "taskOverdue": "Overdue Task"
-        }
+        "description": "Configure webhook URLs to receive POST requests when reminder or overdue events fire. These webhooks receive events from all your projects."
       },
       "apiTokens": {
         "title": "API Tokens",

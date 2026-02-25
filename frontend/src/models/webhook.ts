@@ -5,6 +5,7 @@ import UserModel from '@/models/user'
 export default class WebhookModel extends AbstractModel<IWebhook> implements IWebhook {
 	id = 0
 	projectId = 0
+	userId = 0
 	secret = ''
 	basicauthuser = ''
 	basicauthpassword = ''
