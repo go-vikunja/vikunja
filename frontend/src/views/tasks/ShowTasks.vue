@@ -53,14 +53,12 @@
 			</DatepickerWithRange>
 			<div class="options-checks">
 				<FancyCheckbox
-					v-if="!showAll"
 					:model-value="effectiveShowNulls"
 					@update:modelValue="setShowNulls"
 				>
 					{{ $t('task.show.noDates') }}
 				</FancyCheckbox>
 				<FancyCheckbox
-					v-if="!showAll"
 					:model-value="effectiveShowOverdue"
 					@update:modelValue="setShowOverdue"
 				>
@@ -169,28 +167,34 @@ const showNothingToDo = ref<boolean>(false)
 const taskCollectionService = ref(new TaskCollectionService())
 
 // Persist checkbox state so it survives navigation away and back
+// Home page defaults: show everything (both true)
+// Upcoming page defaults: show tasks without date, hide overdue (matches original Vikunja)
 const storedShowNulls = useStorage('upcomingShowNulls', false)
 const storedShowOverdue = useStorage('upcomingShowOverdue', false)
+const storedHomeShowNulls = useStorage('homeShowNulls', true)
+const storedHomeShowOverdue = useStorage('homeShowOverdue', true)
 const storedAssignedToMe = useStorage('upcomingAssignedToMe', false)
 
 // Effective values: use prop (from query param) if explicitly set, otherwise use stored
+// Home and Upcoming have separate storage with different defaults
 const effectiveShowNulls = computed(() => {
-	// If the query param is present, use it and sync to storage
 	if (route.query.showNulls !== undefined) {
 		const val = props.showNulls
-		storedShowNulls.value = val
+		if (showAll.value) storedHomeShowNulls.value = val
+		else storedShowNulls.value = val
 		return val
 	}
-	return storedShowNulls.value
+	return showAll.value ? storedHomeShowNulls.value : storedShowNulls.value
 })
 
 const effectiveShowOverdue = computed(() => {
 	if (route.query.showOverdue !== undefined) {
 		const val = props.showOverdue
-		storedShowOverdue.value = val
+		if (showAll.value) storedHomeShowOverdue.value = val
+		else storedShowOverdue.value = val
 		return val
 	}
-	return storedShowOverdue.value
+	return showAll.value ? storedHomeShowOverdue.value : storedShowOverdue.value
 })
 
 const effectiveAssignedToMe = computed(() => {
@@ -255,7 +259,8 @@ function setDate(dates: dateStrings) {
 }
 
 function setShowOverdue(show: boolean) {
-	storedShowOverdue.value = show
+	if (showAll.value) storedHomeShowOverdue.value = show
+	else storedShowOverdue.value = show
 	router.push({
 		name: route.name as string,
 		query: {
@@ -266,7 +271,8 @@ function setShowOverdue(show: boolean) {
 }
 
 function setShowNulls(show: boolean) {
-	storedShowNulls.value = show
+	if (showAll.value) storedHomeShowNulls.value = show
+	else storedShowNulls.value = show
 	router.push({
 		name: route.name as string,
 		query: {
@@ -300,33 +306,31 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 		return
 	}
 
+	// NEVER use filter_include_nulls — it adds "OR field IS NULL" to EVERY condition
+	// including "done = false", making all tasks leak through. We fetch all incomplete
+	// tasks and apply date/null filtering client-side.
+
 	const params: TaskFilterParams = {
 		sort_by: ['due_date', 'id'],
 		order_by: ['asc', 'desc'],
 		filter: 'done = false',
-		filter_include_nulls: effectiveShowNulls.value,
+		filter_include_nulls: false,
 		s: '',
 		expand: ['comment_count', 'is_unread'],
 	}
 
 	if (!showAll.value) {
+		// Upcoming page: use server-side date filter for the basic range,
+		// but handle "show tasks without date" and "show overdue" client-side
+		// because filter_include_nulls breaks the done=false condition.
 
-		params.filter += ` && due_date < '${to instanceof Date ? to.toISOString() : to}'`
-
-		// NOTE: Ideally we could also show tasks with a start or end date in the specified range, but the api
-		//       is not capable (yet) of combining multiple filters with 'and' and 'or'.
-
-		if (!effectiveShowOverdue.value) {
-			params.filter += ` && due_date > '${from instanceof Date ? from.toISOString() : from}'`
-		}
-	} else {
-		// Home page (showAll mode): just show all incomplete tasks.
-		// The Vikunja filter API's filter_include_nulls doesn't reliably
-		// combine with date conditions for tasks that have no due_date set.
-		// On the Home page, "Assigned to me" is the primary useful filter.
-		// "Show overdue" and "Show tasks without date" are functional on the
-		// Upcoming page where a date range provides meaningful context.
+		// We fetch a broad set: all incomplete tasks up to the end date,
+		// plus overdue tasks if that toggle is on. No-date tasks are always
+		// fetched (we can't exclude them server-side without filter_include_nulls).
+		// Client-side we then apply the precise filtering.
 	}
+	// Home page (showAll): no date filters, just done = false.
+	// "Assigned to me" is the primary useful filter here.
 
 	// Add label filtering
 	if (props.labelIds && props.labelIds.length > 0) {
@@ -350,6 +354,56 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 	}
 
 	tasks.value = await taskStore.loadTasks(params, projectId)
+
+	// Client-side date filtering.
+	// We can't use filter_include_nulls (it adds OR IS NULL to EVERY condition
+	// including done=false, making all tasks leak through). So we fetch all
+	// incomplete tasks and filter dates client-side.
+	if (!showAll.value) {
+		// Upcoming page: filter by date range + overdue/no-date toggles
+		const dateFrom = from instanceof Date ? from : new Date(from as string)
+		const dateTo = to instanceof Date ? to : new Date(to as string)
+
+		tasks.value = tasks.value.filter((task: ITask) => {
+			const due = task.dueDate ? new Date(task.dueDate) : null
+			const isZero = due && due.getFullYear() < 2
+
+			// Task has no due date (null or zero time)
+			if (!due || isZero) {
+				return effectiveShowNulls.value
+			}
+
+			// Task is overdue (due before range start)
+			if (due < dateFrom) {
+				return effectiveShowOverdue.value
+			}
+
+			// Task is within the date range
+			return due < dateTo
+		})
+	} else {
+		// Home page: apply overdue/no-date toggles
+		const now = new Date()
+
+		tasks.value = tasks.value.filter((task: ITask) => {
+			const due = task.dueDate ? new Date(task.dueDate) : null
+			const isZero = due && due.getFullYear() < 2
+
+			// Task has no due date
+			if (!due || isZero) {
+				return effectiveShowNulls.value
+			}
+
+			// Task is overdue
+			if (due < now) {
+				return effectiveShowOverdue.value
+			}
+
+			// Task has a future due date — always show
+			return true
+		})
+	}
+
 	emit('tasksLoaded', true)
 }
 
