@@ -306,17 +306,19 @@ if (-not $Deploy) {
     Write-Host "  Image: $sizeMB MB" -ForegroundColor Gray
 
     Write-Host "  Uploading to ${server}:${remoteTar} ..." -ForegroundColor Gray
-    scp -P $sshPort -i $sshKey $tarFile "${server}:${remoteTar}"
+    scp -P $sshPort -i $sshKey -o StrictHostKeyChecking=no -o PasswordAuthentication=no $tarFile "${server}:${remoteTar}"
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host ""
-        Write-Host "  [!] SCP upload failed" -ForegroundColor Red
+        Write-Host "  [!] SCP upload failed - SSH key auth may not be set up" -ForegroundColor Red
+        Write-Host "  Copy your key to the server with:" -ForegroundColor Yellow
+        Write-Host "    ssh-copy-id -i $sshKey -p $sshPort ${server}" -ForegroundColor Cyan
         Remove-Item $tarFile -Force -ErrorAction SilentlyContinue
         exit 1
     }
 
     Write-Host "  Loading image on server..." -ForegroundColor Gray
-    ssh -t -p $sshPort -i $sshKey $server "sudo docker load -i $remoteTar; rm $remoteTar"
+    ssh -t -p $sshPort -i $sshKey -o StrictHostKeyChecking=no -o PasswordAuthentication=no $server "docker load -i $remoteTar; rm $remoteTar"
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host ""
@@ -325,6 +327,10 @@ if (-not $Deploy) {
     } else {
         Write-Host ""
         Write-Host "  [!] Remote load failed - check server" -ForegroundColor Red
+        Write-Host "  To eliminate the sudo password prompt, run on the server:" -ForegroundColor Yellow
+        Write-Host "    sudo usermod -aG docker $sshUser" -ForegroundColor Cyan
+        Write-Host "  Then log out and back in. After that, change the load command to:" -ForegroundColor Yellow
+        Write-Host "    docker load (no sudo needed)" -ForegroundColor Cyan
     }
 
     Remove-Item $tarFile -Force -ErrorAction SilentlyContinue
