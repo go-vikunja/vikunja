@@ -506,6 +506,7 @@ func (Test) E2E(args string) error {
 		"VIKUNJA_LOG_LEVEL=WARNING",
 		"VIKUNJA_MAILER_ENABLED=false",
 		"VIKUNJA_REDIS_ENABLED=false",
+		"VIKUNJA_RATELIMIT_NOAUTHLIMIT=1000",
 	)
 	apiCmd.Stdout = os.Stdout
 	apiCmd.Stderr = os.Stderr
