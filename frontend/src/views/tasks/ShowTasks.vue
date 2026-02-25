@@ -53,12 +53,14 @@
 			</DatepickerWithRange>
 			<div class="options-checks">
 				<FancyCheckbox
+					v-if="!showAll"
 					:model-value="effectiveShowNulls"
 					@update:modelValue="setShowNulls"
 				>
 					{{ $t('task.show.noDates') }}
 				</FancyCheckbox>
 				<FancyCheckbox
+					v-if="!showAll"
 					:model-value="effectiveShowOverdue"
 					@update:modelValue="setShowOverdue"
 				>
@@ -318,23 +320,12 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 			params.filter += ` && due_date > '${from instanceof Date ? from.toISOString() : from}'`
 		}
 	} else {
-		// Home page (showAll mode) filter truth table:
-		// Overdue ON  + NoDates ON  → all incomplete (no date filter)
-		// Overdue ON  + NoDates OFF → only tasks with a due date
-		// Overdue OFF + NoDates ON  → future due + no-date tasks
-		// Overdue OFF + NoDates OFF → only future due (no overdue, no null)
-
-		if (!effectiveShowOverdue.value) {
-			// Exclude overdue: only show tasks with due_date in the future
-			params.filter += ` && due_date > '${new Date().toISOString()}'`
-			// Allow null due_dates through if "Show tasks without date" is checked
-			params.filter_include_nulls = effectiveShowNulls.value
-		} else if (!effectiveShowNulls.value) {
-			// Show overdue but hide no-date: need a due_date condition to trigger null exclusion
-			params.filter += ` && due_date > '0001-01-01'`
-			params.filter_include_nulls = false
-		}
-		// else: both checked → no date filter, show everything incomplete
+		// Home page (showAll mode): just show all incomplete tasks.
+		// The Vikunja filter API's filter_include_nulls doesn't reliably
+		// combine with date conditions for tasks that have no due_date set.
+		// On the Home page, "Assigned to me" is the primary useful filter.
+		// "Show overdue" and "Show tasks without date" are functional on the
+		// Upcoming page where a date range provides meaningful context.
 	}
 
 	// Add label filtering
