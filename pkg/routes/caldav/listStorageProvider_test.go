@@ -21,9 +21,7 @@ package caldav
 import (
 	"testing"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
@@ -39,11 +37,6 @@ func TestSubTask_Create(t *testing.T) {
 		Username: "user15",
 		Email:    "user15@example.com",
 	}
-
-	config.InitDefaultConfig()
-	files.InitTests()
-	user.InitTests()
-	models.SetupTests()
 
 	//
 	// Create a subtask
@@ -255,8 +248,6 @@ func TestSubTask_Update(t *testing.T) {
 	//
 	t.Run("edit subtask", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
 
 		// Edit the subtask:
 		const taskUID = "uid-caldav-test-child-task"
@@ -274,9 +265,15 @@ LAST-MODIFIED:20230301T073337Z
 RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task
 END:VTODO
 END:VCALENDAR`
+
+		// Read the task in its own session, then close it before UpdateResource
+		// which creates its own internal session (avoids SQLite lock conflict)
+		s := db.NewSession()
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
 		require.NoError(t, err)
 		task := tasks[0]
+		s.Close()
+
 		storage := &VikunjaCaldavProjectStorage{
 			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
 			task:    task,
@@ -292,7 +289,9 @@ END:VCALENDAR`
 		assert.Contains(t, content, "UID:"+taskUID)
 		assert.Contains(t, content, "RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task")
 
-		// Get the task from the DB:
+		// Get the task from the DB with a new session:
+		s = db.NewSession()
+		defer s.Close()
 		tasks, err = models.GetTasksByUIDs(s, []string{taskUID}, u)
 		require.NoError(t, err)
 		task = tasks[0]
@@ -308,8 +307,6 @@ END:VCALENDAR`
 	//
 	t.Run("edit parent", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
 
 		// Edit the parent task:
 		const taskUID = "uid-caldav-test-parent-task"
@@ -328,9 +325,13 @@ RELATED-TO;RELTYPE=CHILD:uid-caldav-test-child-task
 RELATED-TO;RELTYPE=CHILD:uid-caldav-test-child-task-2
 END:VTODO
 END:VCALENDAR`
+
+		s := db.NewSession()
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
 		require.NoError(t, err)
 		task := tasks[0]
+		s.Close()
+
 		storage := &VikunjaCaldavProjectStorage{
 			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
 			task:    task,
@@ -341,7 +342,9 @@ END:VCALENDAR`
 		_, err = storage.UpdateResource(taskUID, taskContent)
 		require.NoError(t, err)
 
-		// Get the task from the DB:
+		// Get the task from the DB with a new session:
+		s = db.NewSession()
+		defer s.Close()
 		tasks, err = models.GetTasksByUIDs(s, []string{taskUID}, u)
 		require.NoError(t, err)
 		task = tasks[0]
@@ -359,8 +362,6 @@ END:VCALENDAR`
 	//
 	t.Run("edit subtask change parent", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
 
 		// Edit the subtask:
 		const taskUID = "uid-caldav-test-child-task"
@@ -378,9 +379,13 @@ LAST-MODIFIED:20230301T073337Z
 RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task-2
 END:VTODO
 END:VCALENDAR`
+
+		s := db.NewSession()
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
 		require.NoError(t, err)
 		task := tasks[0]
+		s.Close()
+
 		storage := &VikunjaCaldavProjectStorage{
 			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
 			task:    task,
@@ -396,7 +401,9 @@ END:VCALENDAR`
 		assert.Contains(t, content, "UID:"+taskUID)
 		assert.Contains(t, content, "RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task-2")
 
-		// Get the task from the DB:
+		// Get the task from the DB with a new session:
+		s = db.NewSession()
+		defer s.Close()
 		tasks, err = models.GetTasksByUIDs(s, []string{taskUID}, u)
 		require.NoError(t, err)
 		task = tasks[0]
@@ -421,8 +428,6 @@ END:VCALENDAR`
 	//
 	t.Run("edit subtask remove parent", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
 
 		// Edit the subtask:
 		const taskUID = "uid-caldav-test-child-task"
@@ -439,9 +444,13 @@ CREATED:20230301T073337Z
 LAST-MODIFIED:20230301T073337Z
 END:VTODO
 END:VCALENDAR`
+
+		s := db.NewSession()
 		tasks, err := models.GetTasksByUIDs(s, []string{taskUID}, u)
 		require.NoError(t, err)
 		task := tasks[0]
+		s.Close()
+
 		storage := &VikunjaCaldavProjectStorage{
 			project: &models.ProjectWithTasksAndBuckets{Project: models.Project{ID: 36}},
 			task:    task,
@@ -457,7 +466,9 @@ END:VCALENDAR`
 		assert.Contains(t, content, "UID:"+taskUID)
 		assert.NotContains(t, content, "RELATED-TO;RELTYPE=PARENT:uid-caldav-test-parent-task")
 
-		// Get the task from the DB:
+		// Get the task from the DB with a new session:
+		s = db.NewSession()
+		defer s.Close()
 		tasks, err = models.GetTasksByUIDs(s, []string{taskUID}, u)
 		require.NoError(t, err)
 		task = tasks[0]
