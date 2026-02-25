@@ -338,15 +338,8 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 		params.filter += params.filter ? ` && ${labelFilter}` : labelFilter
 	}
 
-	// Add "assigned to me" filtering
-	if (effectiveAssignedToMe.value) {
-		const username = authStore.info?.username
-		if (username) {
-			params.filter += params.filter
-				? ` && assignees = '${username}'`
-				: `assignees = '${username}'`
-		}
-	}
+	// Add "assigned to me" filtering — done client-side below
+	// (server-side assignees filter is unreliable with some Vikunja versions)
 
 	let projectId = null
 	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined') {
@@ -402,6 +395,18 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 			// Task has a future due date — always show
 			return true
 		})
+	}
+
+	// Client-side "Assigned to me" filtering
+	if (effectiveAssignedToMe.value) {
+		const currentUserId = authStore.info?.id
+		if (currentUserId) {
+			tasks.value = tasks.value.filter((task: ITask) => {
+				return task.assignees && task.assignees.some(
+					(a: any) => a.id === currentUserId,
+				)
+			})
+		}
 	}
 
 	emit('tasksLoaded', true)
