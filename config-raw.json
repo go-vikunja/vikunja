@@ -251,26 +251,6 @@
             ]
         },
         {
-            "key": "typesense",
-            "children": [
-                {
-                    "key": "enabled",
-                    "default_value": "false",
-                    "comment": "Whether to enable the Typesense integration. If true, all tasks will be synced to the configured Typesense\ninstance and all search and filtering will run through Typesense instead of only through the database.\nTypesense allows fast fulltext search including fuzzy matching support. It may return different results than\nwhat you'd get with a database-only search."
-                },
-                {
-                    "key": "url",
-                    "default_value": "",
-                    "comment": "The url to the Typesense instance you want to use. Can be hosted locally or in Typesense Cloud as long as Vikunja is able to reach it. Must be a http(s) url."
-                },
-                {
-                    "key": "apikey",
-                    "default_value": "",
-                    "comment": "The Typesense API key you want to use."
-                }
-            ]
-        },
-        {
             "key": "redis",
             "children": [
                 {

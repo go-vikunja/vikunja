@@ -6627,6 +6627,26 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/logout": {
+            "post": {
+                "description": "Destroys the current session and clears the refresh token cookie.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout",
+                "responses": {
+                    "200": {
+                        "description": "Successfully logged out.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/user/password": {
             "post": {
                 "security": [
@@ -7447,7 +7467,7 @@ const docTemplate = `{
         },
         "/user/token": {
             "post": {
-                "description": "Returns a new valid jwt user token with an extended length.",
+                "description": "Returns a new valid jwt link share token. Only works for link share tokens.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7455,9 +7475,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "auth"
                 ],
-                "summary": "Renew user token",
+                "summary": "Renew link share token",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -7466,7 +7486,33 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Only user token are available for renew.",
+                        "description": "Only link share tokens can be renewed.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/token/refresh": {
+            "post": {
+                "description": "Exchanges the refresh token cookie for a new short-lived JWT.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh user token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.Token"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired refresh token.",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
                         }
@@ -9384,7 +9430,9 @@ const docTemplate = `{
             "properties": {
                 "new_password": {
                     "description": "The new password for this user.",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 8
                 },
                 "token": {
                     "description": "The previously issued reset token.",
@@ -9517,7 +9565,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "new_password": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 8
                 },
                 "old_password": {
                     "type": "string"

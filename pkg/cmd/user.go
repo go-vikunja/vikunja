@@ -369,10 +369,6 @@ var userDeleteCmd = &cobra.Command{
 		s := db.NewSession()
 		defer s.Close()
 
-		if err := s.Begin(); err != nil {
-			log.Fatalf("Count not start transaction: %s", err)
-		}
-
 		u := getUserFromArg(s, args[0])
 
 		if userFlagDeleteNow {

@@ -48,7 +48,12 @@ func StartMigration(m MigratorName, u *user.User) (status *Status, err error) {
 		StartedAt:    time.Now(),
 	}
 	_, err = s.Insert(status)
-	return
+	if err != nil {
+		_ = s.Rollback()
+		return
+	}
+
+	return status, s.Commit()
 }
 
 // FinishMigration sets the finished at time and calls it a day
@@ -59,7 +64,12 @@ func FinishMigration(status *Status) (err error) {
 	status.FinishedAt = time.Now()
 
 	_, err = s.Where("id = ?", status.ID).Update(status)
-	return
+	if err != nil {
+		_ = s.Rollback()
+		return
+	}
+
+	return s.Commit()
 }
 
 // GetMigrationStatus returns the migration status for a migration and a user

@@ -124,10 +124,6 @@ linters:
         path: pkg/migration/*
         text: parameter 'tx' seems to be unused, consider removing or renaming it as
       - linters:
-          - govet
-        path: pkg/models/typesense.go
-        text: 'structtag: struct field Position repeats json tag "position" also at'
-      - linters:
           - gosec
         path: pkg/cmd/user.go
         text: 'G115: integer overflow conversion uintptr -> int'

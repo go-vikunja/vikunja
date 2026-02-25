@@ -18,7 +18,14 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 		popupElement.style.borderRadius = '4px'
 		popupElement.style.padding = '8px'
 		popupElement.style.boxShadow = 'var(--shadow-md)'
-		popupElement.innerHTML = `<div><input class="input" placeholder="URL" id="${id}" value="${oldValue}"/></div>`
+		const wrapperDiv = document.createElement('div')
+		const inputElement = document.createElement('input')
+		inputElement.className = 'input'
+		inputElement.placeholder = 'URL'
+		inputElement.id = id
+		inputElement.value = oldValue
+		wrapperDiv.appendChild(inputElement)
+		popupElement.appendChild(wrapperDiv)
 		document.body.appendChild(popupElement)
 
 		// Create a local mutable copy of the position for scroll tracking

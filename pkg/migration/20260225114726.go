@@ -14,43 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package user
+package migration
 
-import "code.vikunja.io/api/pkg/db"
+import (
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
+)
 
-func GenerateNewCaldavToken(u *User) (token *Token, err error) {
-	s := db.NewSession()
-	defer s.Close()
-
-	token, err = generateHashedToken(s, u, TokenCaldavAuth)
-	if err != nil {
-		_ = s.Rollback()
-		return nil, err
-	}
-
-	if err = s.Commit(); err != nil {
-		return nil, err
-	}
-
-	return token, nil
-}
-
-func GetCaldavTokens(u *User) (tokens []*Token, err error) {
-	s := db.NewSession()
-	defer s.Close()
-
-	return getTokensForKind(s, u, TokenCaldavAuth)
-}
-
-func DeleteCaldavTokenByID(u *User, id int64) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	err := removeTokenByID(s, u, TokenCaldavAuth, id)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	return s.Commit()
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20260225114726",
+		Description: "Drop the typesense_sync table",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.DropTables("typesense_sync")
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }

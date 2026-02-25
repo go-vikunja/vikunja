@@ -30,12 +30,33 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	vversion "code.vikunja.io/api/pkg/version"
 
 	"github.com/hashicorp/go-version"
 )
 
 const logPrefix = "[Vikunja File Import] "
+const maxZipEntrySize = 500 * 1024 * 1024 // 500 MB
+
+// ErrFileTooLarge is returned when a file in the zip archive exceeds maxZipEntrySize
+var ErrFileTooLarge = fmt.Errorf("file exceeds maximum allowed size of %d bytes", maxZipEntrySize)
+
+// readZipEntry reads from r into a buffer, returning ErrFileTooLarge if the content exceeds maxZipEntrySize.
+// Unlike io.LimitReader which silently truncates, this function explicitly detects overflow.
+func readZipEntry(r io.Reader) (*bytes.Buffer, error) {
+	// Read one extra byte to detect overflow
+	limitedReader := io.LimitReader(r, maxZipEntrySize+1)
+	var buf bytes.Buffer
+	n, err := buf.ReadFrom(limitedReader)
+	if err != nil {
+		return nil, err
+	}
+	if n > maxZipEntrySize {
+		return nil, ErrFileTooLarge
+	}
+	return &buf, nil
+}
 
 type FileMigrator struct {
 }
@@ -80,8 +101,12 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	var versionFile *zip.File
 	storedFiles := make(map[int64]*zip.File)
 	for _, f := range r.File {
+		if utils.ContainsPathTraversal(f.Name) {
+			return fmt.Errorf("unsafe path in zip archive: %q", f.Name)
+		}
+
 		if strings.HasPrefix(f.Name, "files/") {
-			fname := strings.ReplaceAll(f.Name, "files/", "")
+			fname := strings.TrimPrefix(f.Name, "files/")
 			id, err := strconv.ParseInt(fname, 10, 64)
 			if err != nil {
 				return fmt.Errorf("could not convert file id: %w", err)
@@ -120,9 +145,10 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	if err != nil {
 		return fmt.Errorf("could not open version file: %w", err)
 	}
+	defer vf.Close()
 
-	var bufVersion bytes.Buffer
-	if _, err := bufVersion.ReadFrom(vf); err != nil {
+	bufVersion, err := readZipEntry(vf)
+	if err != nil {
 		return fmt.Errorf("could not read version file: %w", err)
 	}
 
@@ -152,8 +178,8 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	}
 	defer df.Close()
 
-	var bufData bytes.Buffer
-	if _, err := bufData.ReadFrom(df); err != nil {
+	bufData, err := readZipEntry(df)
+	if err != nil {
 		return fmt.Errorf("could not read data file: %w", err)
 	}
 
@@ -187,8 +213,8 @@ func (v *FileMigrator) Migrate(user *user.User, file io.ReaderAt, size int64) er
 	}
 	defer ff.Close()
 
-	var bufFilter bytes.Buffer
-	if _, err := bufFilter.ReadFrom(ff); err != nil {
+	bufFilter, err := readZipEntry(ff)
+	if err != nil {
 		return fmt.Errorf("could not read filters file: %w", err)
 	}
 
@@ -236,7 +262,11 @@ func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[i
 	if is {
 		bgid, has := bginfo["id"]
 		if has {
-			backgroundFileID = int64(bgid.(float64))
+			bgidFloat, ok := bgid.(float64)
+			if !ok {
+				return fmt.Errorf("invalid background file id type: expected number, got %T", bgid)
+			}
+			backgroundFileID = int64(bgidFloat)
 		}
 	}
 	if b, exists := storedFiles[backgroundFileID]; exists {
@@ -244,12 +274,13 @@ func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[i
 		if err != nil {
 			return fmt.Errorf("could not open project background file %d for reading: %w", l.BackgroundFileID, err)
 		}
-		var buf bytes.Buffer
-		if _, err := buf.ReadFrom(bf); err != nil {
+		buf, err := readZipEntry(bf)
+		bf.Close()
+		if err != nil {
 			return fmt.Errorf("could not read project background file %d: %w", l.BackgroundFileID, err)
 		}
 
-		l.BackgroundInformation = &buf
+		l.BackgroundInformation = buf
 	}
 
 	for _, t := range l.Tasks {
@@ -270,8 +301,9 @@ func addDetailsToProject(l *models.ProjectWithTasksAndBuckets, storedFiles map[i
 				log.Warningf(logPrefix+"Could not open attachment %d for reading: %v, skipping", attachment.ID, err)
 				continue
 			}
-			var buf bytes.Buffer
-			if _, err := buf.ReadFrom(af); err != nil {
+			buf, err := readZipEntry(af)
+			af.Close()
+			if err != nil {
 				log.Warningf(logPrefix+"Could not read attachment %d: %v, skipping", attachment.ID, err)
 				continue
 			}

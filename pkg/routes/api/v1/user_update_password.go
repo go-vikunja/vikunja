@@ -29,7 +29,7 @@ import (
 // UserPassword holds a user password. Used to update it.
 type UserPassword struct {
 	OldPassword string `json:"old_password"`
-	NewPassword string `json:"new_password"`
+	NewPassword string `json:"new_password" valid:"bcrypt_password" minLength:"8" maxLength:"72"`
 }
 
 // UserChangePassword is the handler to change a users password
@@ -56,6 +56,11 @@ func UserChangePassword(c *echo.Context) error {
 	var newPW UserPassword
 	if err := c.Bind(&newPW); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").Wrap(err)
+	}
+
+	// Validate the new password
+	if err := c.Validate(newPW); err != nil {
+		return err
 	}
 
 	if newPW.OldPassword == "" {

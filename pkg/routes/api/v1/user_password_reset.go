@@ -44,6 +44,11 @@ func UserResetPassword(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No password provided.").Wrap(err)
 	}
 
+	// Validate the password
+	if err := c.Validate(pwReset); err != nil {
+		return err
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 

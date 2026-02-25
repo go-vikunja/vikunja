@@ -57,4 +57,12 @@ func TestUserPasswordReset(t *testing.T) {
 		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeInvalidPasswordResetToken)
 	})
+	t.Run("Password too short", func(t *testing.T) {
+		_, err := newTestRequest(t, http.MethodPost, apiv1.UserResetPassword, `{
+	"new_password": "1234567",
+	"token": "passwordresettesttoken"
+}`, nil, nil)
+		require.Error(t, err)
+		assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
+	})
 }

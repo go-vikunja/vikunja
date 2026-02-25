@@ -71,12 +71,13 @@ func TestDoPostWithHeaders_GivesUpAfter3Retries(t *testing.T) {
 	if !strings.Contains(err.Error(), expectedBody) {
 		t.Errorf("expected error message to contain response body %q, got: %s", expectedBody, err.Error())
 	}
-	if resp == nil {
+	if resp != nil {
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusInternalServerError {
+			t.Errorf("expected status 500, got %d", resp.StatusCode)
+		}
+	} else {
 		t.Fatal("expected response to be returned with error, got nil")
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusInternalServerError {
-		t.Errorf("expected status 500, got %d", resp.StatusCode)
 	}
 	if attempts.Load() != 3 {
 		t.Errorf("expected 3 attempts, got %d", attempts.Load())

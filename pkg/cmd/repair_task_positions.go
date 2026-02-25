@@ -27,11 +27,11 @@ import (
 
 func init() {
 	repairTaskPositionsCmd.Flags().Bool("dry-run", false, "Preview repairs without making changes")
-	rootCmd.AddCommand(repairTaskPositionsCmd)
+	repairCmd.AddCommand(repairTaskPositionsCmd)
 }
 
 var repairTaskPositionsCmd = &cobra.Command{
-	Use:   "repair-task-positions",
+	Use:   "task-positions",
 	Short: "Detect and repair duplicate task positions across all views",
 	Long: `Scans all project views for tasks with duplicate position values and repairs them.
 
@@ -55,15 +55,6 @@ Use --dry-run to preview what would be fixed without making changes.`,
 
 		if dryRun {
 			log.Infof("Running in dry-run mode - no changes will be made")
-		} else {
-			if err := s.Begin(); err != nil {
-				log.Errorf("Failed to start transaction: %s", err)
-				return
-			}
-			defer func() {
-				// Rollback is a no-op if commit already succeeded
-				_ = s.Rollback()
-			}()
 		}
 
 		result, err := models.RepairTaskPositions(s, dryRun)

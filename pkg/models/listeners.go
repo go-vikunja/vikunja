@@ -17,7 +17,6 @@
 package models
 
 import (
-	"context"
 	"encoding/json"
 	"strconv"
 	"time"
@@ -70,12 +69,6 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskCreatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInSavedFilterViews{})
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &MarkTaskUnreadOnComment{})
-	if config.TypesenseEnabled.GetBool() {
-		events.RegisterListener((&TaskDeletedEvent{}).Name(), &RemoveTaskFromTypesense{})
-		events.RegisterListener((&TaskCreatedEvent{}).Name(), &AddTaskToTypesense{})
-		events.RegisterListener((&TaskUpdatedEvent{}).Name(), &UpdateTaskInTypesense{})
-		events.RegisterListener((&TaskPositionsRecalculatedEvent{}).Name(), &UpdateTaskPositionsInTypesense{})
-	}
 	if config.WebhooksEnabled.GetBool() {
 		RegisterEventForWebhook(&TaskCreatedEvent{})
 		RegisterEventForWebhook(&TaskUpdatedEvent{})
@@ -162,7 +155,7 @@ func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notific
 			continue
 		}
 
-		err = notifications.Notify(u, n)
+		err = notifications.Notify(u, n, sess)
 		if err != nil {
 			return users, err
 		}
@@ -226,13 +219,13 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 			Task:    event.Task,
 			Comment: event.Comment,
 		}
-		err = notifications.Notify(subscriber.User, n)
+		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
 			return
 		}
 	}
 
-	return
+	return sess.Commit()
 }
 
 // HandleTaskCommentEditMentions  represents a listener
@@ -262,7 +255,10 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 		Mentioned: true,
 	}
 	_, err = notifyMentionedUsers(sess, event.Task, event.Comment.Comment, n)
-	return err
+	if err != nil {
+		return err
+	}
+	return sess.Commit()
 }
 
 // SendTaskAssignedNotification  represents a listener
@@ -315,7 +311,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 			Assignee: event.Assignee,
 			Target:   subscriber.User,
 		}
-		err = notifications.Notify(subscriber.User, n)
+		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
 			return
 		}
@@ -323,7 +319,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		notifiedUsers[subscriber.UserID] = true
 	}
 
-	return nil
+	return sess.Commit()
 }
 
 // SendTaskDeletedNotification  represents a listener
@@ -368,13 +364,13 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 			Doer: event.Doer,
 			Task: event.Task,
 		}
-		err = notifications.Notify(subscriber.User, n)
+		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
 			return
 		}
 	}
 
-	return nil
+	return sess.Commit()
 }
 
 // HandleTaskCreateMentions  represents a listener
@@ -403,7 +399,10 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 		IsNew: true,
 	}
 	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)
-	return err
+	if err != nil {
+		return err
+	}
+	return sess.Commit()
 }
 
 // HandleTaskUpdatedMentions  represents a listener
@@ -433,7 +432,10 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	}
 
 	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)
-	return err
+	if err != nil {
+		return err
+	}
+	return sess.Commit()
 }
 
 // HandleTaskUpdateLastUpdated  represents a listener
@@ -486,122 +488,12 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
-	return updateTaskLastUpdated(sess, &Task{ID: taskIDInt})
-}
-
-// RemoveTaskFromTypesense represents a listener
-type RemoveTaskFromTypesense struct {
-}
-
-// Name defines the name for the RemoveTaskFromTypesense listener
-func (s *RemoveTaskFromTypesense) Name() string {
-	return "typesense.task.remove"
-}
-
-// Handle is executed when the event RemoveTaskFromTypesense listens on is fired
-func (s *RemoveTaskFromTypesense) Handle(msg *message.Message) (err error) {
-	event := &TaskDeletedEvent{}
-	err = json.Unmarshal(msg.Payload, event)
+	err = updateTaskLastUpdated(sess, &Task{ID: taskIDInt})
 	if err != nil {
 		return err
 	}
 
-	log.Debugf("[Typesense Sync] Removing task %d from Typesense", event.Task.ID)
-
-	_, err = typesenseClient.
-		Collection("tasks").
-		Document(strconv.FormatInt(event.Task.ID, 10)).
-		Delete(context.Background())
-	return err
-}
-
-// AddTaskToTypesense  represents a listener
-type AddTaskToTypesense struct {
-}
-
-// Name defines the name for the AddTaskToTypesense listener
-func (l *AddTaskToTypesense) Name() string {
-	return "typesense.task.add"
-}
-
-// Handle is executed when the event AddTaskToTypesense listens on is fired
-func (l *AddTaskToTypesense) Handle(msg *message.Message) (err error) {
-	event := &TaskCreatedEvent{}
-	err = json.Unmarshal(msg.Payload, event)
-	if err != nil {
-		return err
-	}
-
-	log.Debugf("New task %d created, adding to typesense…", event.Task.ID)
-
-	s := db.NewSession()
-	defer s.Close()
-
-	task := make(map[int64]*Task, 1)
-	task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
-
-	return reindexTasksInTypesense(s, task)
-}
-
-// UpdateTaskInTypesense  represents a listener
-type UpdateTaskInTypesense struct {
-}
-
-// Name defines the name for the UpdateTaskInTypesense listener
-func (l *UpdateTaskInTypesense) Name() string {
-	return "typesense.task.update"
-}
-
-// Handle is executed when the event UpdateTaskInTypesense listens on is fired
-func (l *UpdateTaskInTypesense) Handle(msg *message.Message) (err error) {
-	event := &TaskUpdatedEvent{}
-	err = json.Unmarshal(msg.Payload, event)
-	if err != nil {
-		return err
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	task := make(map[int64]*Task, 1)
-	task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
-
-	return reindexTasksInTypesense(s, task)
-}
-
-// UpdateTaskPositionsInTypesense  represents a listener
-type UpdateTaskPositionsInTypesense struct {
-}
-
-// Name defines the name for the UpdateTaskPositionsInTypesense listener
-func (l *UpdateTaskPositionsInTypesense) Name() string {
-	return "typesense.task.position.update"
-}
-
-// Handle is executed when the event UpdateTaskPositionsInTypesense listens on is fired
-func (l *UpdateTaskPositionsInTypesense) Handle(msg *message.Message) (err error) {
-	event := &TaskPositionsRecalculatedEvent{}
-	err = json.Unmarshal(msg.Payload, event)
-	if err != nil {
-		return err
-	}
-
-	taskIDs := []int64{}
-	for _, position := range event.NewTaskPositions {
-		taskIDs = append(taskIDs, position.TaskID)
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	tasks, err := GetTasksSimpleByIDs(s, taskIDs)
-
-	taskMap := make(map[int64]*Task, 1)
-	for _, task := range tasks {
-		taskMap[task.ID] = task
-	}
-
-	return reindexTasksInTypesense(s, taskMap)
+	return sess.Commit()
 }
 
 // IncreaseAttachmentCounter  represents a listener
@@ -747,14 +639,9 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		if err != nil {
 			return
 		}
-
-		task := make(map[int64]*Task, 1)
-		task[event.Task.ID] = event.Task // Will be filled with all data by the Typesense connector
-
-		return reindexTasksInTypesense(s, task)
 	}
 
-	return nil
+	return s.Commit()
 }
 
 ///////
@@ -818,13 +705,13 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 			Doer:    event.Doer,
 			Project: event.Project,
 		}
-		err = notifications.Notify(subscriber.User, n)
+		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
 			return
 		}
 	}
 
-	return nil
+	return sess.Commit()
 }
 
 // WebhookListener represents a listener
@@ -1191,11 +1078,6 @@ func (l *CleanupTaskAssignmentsAfterTeamRemoval) Handle(msg *message.Message) (e
 		return nil
 	}
 
-	err = s.Begin()
-	if err != nil {
-		return err
-	}
-
 	err = cleanupTaskMembersAfterTeamRemoval(s, event.Team.ID, event.Member.ID)
 	if err != nil {
 		_ = s.Rollback()
@@ -1255,10 +1137,6 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 
 	sess := db.NewSession()
 	defer sess.Close()
-	err = sess.Begin()
-	if err != nil {
-		return
-	}
 
 	err = ExportUserData(sess, event.User)
 	if err != nil {
@@ -1268,8 +1146,7 @@ func (s *HandleUserDataExport) Handle(msg *message.Message) (err error) {
 
 	log.Debugf("Done exporting user data for user %d...", event.User.ID)
 
-	err = sess.Commit()
-	return err
+	return sess.Commit()
 }
 
 type MarkTaskUnreadOnComment struct {
@@ -1288,11 +1165,6 @@ func (s *MarkTaskUnreadOnComment) Handle(msg *message.Message) (err error) {
 
 	sess := db.NewSession()
 	defer sess.Close()
-
-	err = sess.Begin()
-	if err != nil {
-		return err
-	}
 
 	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
 	if err != nil {

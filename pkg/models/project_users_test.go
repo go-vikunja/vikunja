@@ -110,6 +110,7 @@ func TestProjectUser_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 
 			ul := &ProjectUser{
 				ID:          tt.fields.ID,
@@ -240,6 +241,7 @@ func TestProjectUser_ReadAll(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 
 			ul := &ProjectUser{
 				ID:          tt.fields.ID,
@@ -261,7 +263,6 @@ func TestProjectUser_ReadAll(t *testing.T) {
 			if diff, equal := messagediff.PrettyDiff(got, tt.want); !equal {
 				t.Errorf("ProjectUser.ReadAll() = %v, want %v, diff: %v", got, tt.want, diff)
 			}
-			_ = s.Close()
 		})
 	}
 }
@@ -322,6 +323,7 @@ func TestProjectUser_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 
 			lu := &ProjectUser{
 				ID:          tt.fields.ID,
@@ -404,6 +406,7 @@ func TestProjectUser_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
+			defer s.Close()
 
 			lu := &ProjectUser{
 				ID:          tt.fields.ID,

@@ -21,6 +21,8 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+
+	"xorm.io/xorm"
 )
 
 // Notification is a notification which can be sent via mail or db.
@@ -50,20 +52,21 @@ type Notifiable interface {
 	// RouteForDB should return the id of the notifiable entity to save it in the database.
 	RouteForDB() int64
 	// ShouldNotify provides a last-minute way to cancel a notification. It will be called immediately before
-	// sending a notification.
-	ShouldNotify() (should bool, err error)
+	// sending a notification. An optional session can be passed to reuse an existing transaction.
+	ShouldNotify(sessions ...*xorm.Session) (should bool, err error)
 	// Lang provides the language which should be used for translations in the mail.
 	Lang() string
 }
 
-// Notify notifies a notifiable of a notification
-func Notify(notifiable Notifiable, notification Notification) (err error) {
+// Notify notifies a notifiable of a notification.
+// An optional xorm session can be passed to reuse an existing transaction for the DB notification.
+func Notify(notifiable Notifiable, notification Notification, sessions ...*xorm.Session) (err error) {
 	if isUnderTest {
 		sentTestNotifications = append(sentTestNotifications, notification)
 		return nil
 	}
 
-	should, err := notifiable.ShouldNotify()
+	should, err := notifiable.ShouldNotify(sessions...)
 	if err != nil || !should {
 		log.Debugf("Not notifying user %d because they are disabled", notifiable.RouteForDB())
 		return err
@@ -74,7 +77,12 @@ func Notify(notifiable Notifiable, notification Notification) (err error) {
 		return
 	}
 
-	return notifyDB(notifiable, notification)
+	var s *xorm.Session
+	if len(sessions) > 0 && sessions[0] != nil {
+		s = sessions[0]
+	}
+
+	return notifyDB(notifiable, notification, s)
 }
 
 func notifyMail(notifiable Notifiable, notification Notification) error {
@@ -96,7 +104,7 @@ func notifyMail(notifiable Notifiable, notification Notification) error {
 	return SendMail(mail, notifiable.Lang())
 }
 
-func notifyDB(notifiable Notifiable, notification Notification) (err error) {
+func notifyDB(notifiable Notifiable, notification Notification, existingSession *xorm.Session) (err error) {
 
 	dbContent := notification.ToDB()
 	if dbContent == nil {
@@ -108,7 +116,6 @@ func notifyDB(notifiable Notifiable, notification Notification) (err error) {
 		return err
 	}
 
-	s := db.NewSession()
 	dbNotification := &DatabaseNotification{
 		NotifiableID: notifiable.RouteForDB(),
 		Notification: content,
@@ -118,6 +125,14 @@ func notifyDB(notifiable Notifiable, notification Notification) (err error) {
 	if subject, is := notification.(SubjectID); is {
 		dbNotification.SubjectID = subject.SubjectID()
 	}
+
+	if existingSession != nil {
+		_, err = existingSession.Insert(dbNotification)
+		return err
+	}
+
+	s := db.NewSession()
+	defer s.Close()
 
 	_, err = s.Insert(dbNotification)
 	if err != nil {

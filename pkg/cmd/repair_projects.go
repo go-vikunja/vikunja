@@ -18,26 +18,29 @@ package cmd
 
 import (
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	repairFileMimeTypesCmd.Flags().Bool("dry-run", false, "Preview repairs without making changes")
-	repairCmd.AddCommand(repairFileMimeTypesCmd)
+	repairProjectsCmd.Flags().Bool("dry-run", false, "Preview repairs without making changes")
+	repairCmd.AddCommand(repairProjectsCmd)
 }
 
-var repairFileMimeTypesCmd = &cobra.Command{
-	Use:   "file-mime-types",
-	Short: "Detect and set MIME types for all files that have none",
-	Long: `Scans all files in the database that have no MIME type set,
-detects the type from the stored file content, and updates the database.
+var repairProjectsCmd = &cobra.Command{
+	Use:   "projects",
+	Short: "Repair orphaned projects whose parent project no longer exists",
+	Long: `Finds projects whose parent_project_id references a project that no longer
+exists in the database and re-parents them to the top level (parent_project_id = 0).
 
-This is useful after upgrading from a version that did not store MIME types
-on file creation. Only files with an empty or NULL mime column are affected.
+This can happen when a parent project is deleted but its sub-projects are not
+fully cleaned up, for example after importing from external services like Trello.
+
+Orphaned projects cannot be un-archived, modified, or deleted through the UI
+because permission checks fail when traversing the broken parent chain.
 
 Use --dry-run to preview what would be fixed without making changes.`,
 	PreRun: func(_ *cobra.Command, _ []string) {
@@ -53,9 +56,9 @@ Use --dry-run to preview what would be fixed without making changes.`,
 			log.Infof("Running in dry-run mode - no changes will be made")
 		}
 
-		result, err := files.RepairFileMimeTypes(s, dryRun)
+		result, err := models.RepairOrphanedProjects(s, dryRun)
 		if err != nil {
-			log.Errorf("Failed to repair file MIME types: %s", err)
+			log.Errorf("Failed to repair orphaned projects: %s", err)
 			return
 		}
 
@@ -67,18 +70,11 @@ Use --dry-run to preview what would be fixed without making changes.`,
 		}
 
 		log.Infof("Repair complete:")
-		log.Infof("  Files scanned: %d", result.Total)
-		log.Infof("  Files updated: %d", result.Updated)
+		log.Infof("  Orphaned projects found: %d", result.Found)
+		log.Infof("  Projects repaired: %d", result.Repaired)
 
-		if len(result.Errors) > 0 {
-			log.Errorf("Errors encountered (%d):", len(result.Errors))
-			for _, e := range result.Errors {
-				log.Errorf("  - %s", e)
-			}
-		}
-
-		if result.Total == 0 {
-			log.Infof("No files with missing MIME types found - all files are healthy!")
+		if result.Found == 0 {
+			log.Infof("No orphaned projects found - all parent references are valid!")
 		}
 	},
 }

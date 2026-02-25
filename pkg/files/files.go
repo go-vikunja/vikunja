@@ -97,6 +97,18 @@ func Create(f io.ReadSeeker, realname string, realsize uint64, a web.Auth) (file
 	return CreateWithMime(f, realname, realsize, a, mime.String())
 }
 
+// CreateWithSession creates a new file using an existing session to avoid nested transactions
+func CreateWithSession(s *xorm.Session, f io.ReadSeeker, realname string, realsize uint64, a web.Auth) (file *File, err error) {
+	mime, err := mimetype.DetectReader(f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to detect mime type: %w", err)
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return nil, fmt.Errorf("failed to seek after mime detection: %w", err)
+	}
+	return CreateWithMimeAndSession(s, f, realname, realsize, a, mime.String(), true)
+}
+
 // CreateWithMime creates a new file from an FileHeader and sets its mime type
 func CreateWithMime(f io.ReadSeeker, realname string, realsize uint64, a web.Auth, mime string) (file *File, err error) {
 	s := db.NewSession()
@@ -107,7 +119,8 @@ func CreateWithMime(f io.ReadSeeker, realname string, realsize uint64, a web.Aut
 		_ = s.Rollback()
 		return
 	}
-	return
+
+	return file, s.Commit()
 }
 
 func CreateWithMimeAndSession(s *xorm.Session, f io.ReadSeeker, realname string, realsize uint64, a web.Auth, mime string, checkFileSizeLimit bool) (file *File, err error) {
@@ -133,15 +146,14 @@ func CreateWithMimeAndSession(s *xorm.Session, f io.ReadSeeker, realname string,
 	return
 }
 
-// Delete removes a file from the DB and the file system
+// Delete removes a file from the DB and the file system.
+// The caller is responsible for committing or rolling back the session.
 func (f *File) Delete(s *xorm.Session) (err error) {
 	deleted, err := s.Where("id = ?", f.ID).Delete(&File{})
 	if err != nil {
-		_ = s.Rollback()
 		return err
 	}
 	if deleted == 0 {
-		_ = s.Rollback()
 		return ErrFileDoesNotExist{FileID: f.ID}
 	}
 
@@ -151,10 +163,9 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 		if errors.As(err, &perr) {
 			// Don't fail when removing the file failed
 			log.Errorf("Error deleting file %d: %s", f.ID, err)
-			return s.Commit()
+			return nil
 		}
 
-		_ = s.Rollback()
 		return err
 	}
 

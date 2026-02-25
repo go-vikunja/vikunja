@@ -130,7 +130,11 @@ func Login(c *echo.Context) (err error) {
 func RenewToken(c *echo.Context) (err error) {
 	jwtinf := c.Get("user").(*jwt.Token)
 	claims := jwtinf.Claims.(jwt.MapClaims)
-	typ := int(claims["type"].(float64))
+	typFloat, is := claims["type"].(float64)
+	if !is {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid JWT token.")
+	}
+	typ := int(typFloat)
 
 	if typ == auth.AuthTypeUser {
 		return echo.NewHTTPError(
@@ -147,7 +151,11 @@ func RenewToken(c *echo.Context) (err error) {
 	defer s.Close()
 
 	share := &models.LinkSharing{}
-	share.ID = int64(claims["id"].(float64))
+	idFloat, is := claims["id"].(float64)
+	if !is {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid JWT token.")
+	}
+	share.ID = int64(idFloat)
 	err = share.ReadOne(s, share)
 	if err != nil {
 		_ = s.Rollback()

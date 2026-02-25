@@ -335,3 +335,16 @@
   position: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Orphaned project: parent_project_id 999999 does not exist.
+# Used by TestRepairOrphanedProjects.
+-
+  id: 39
+  title: Orphaned project with deleted parent
+  description: This project has a parent_project_id pointing to a non-existent project
+  identifier: orph1
+  owner_id: 1
+  parent_project_id: 999999
+  is_archived: 1
+  position: 39
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

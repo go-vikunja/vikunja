@@ -140,6 +140,10 @@ func RegisterTokenCleanupCron() {
 		if deleted > 0 {
 			log.Debugf(logPrefix+"Deleted %d old password reset tokens", deleted)
 		}
+
+		if err := s.Commit(); err != nil {
+			log.Errorf(logPrefix+"Error committing token cleanup: %s", err)
+		}
 	})
 	if err != nil {
 		log.Fatalf("Could not register token cleanup cron: %s", err)

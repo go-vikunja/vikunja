@@ -45,6 +45,7 @@ func TestLinkSharing_Create(t *testing.T) {
 		assert.NotEmpty(t, share.Hash)
 		assert.NotEmpty(t, share.ID)
 		assert.Equal(t, SharingTypeWithoutPassword, share.SharingType)
+		require.NoError(t, s.Commit())
 		db.AssertExists(t, "link_shares", map[string]interface{}{
 			"id": share.ID,
 		}, false)
@@ -79,6 +80,7 @@ func TestLinkSharing_Create(t *testing.T) {
 		assert.NotEmpty(t, share.Hash)
 		assert.NotEmpty(t, share.ID)
 		assert.Empty(t, share.Password)
+		require.NoError(t, s.Commit())
 		db.AssertExists(t, "link_shares", map[string]interface{}{
 			"id":           share.ID,
 			"sharing_type": SharingTypeWithPassword,

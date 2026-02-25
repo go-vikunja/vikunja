@@ -65,6 +65,10 @@ func RegisterEmptyOpenIDTeamCleanupCron() {
 			log.Errorf(logPrefix+"Error removing empty openid team: %s", err)
 			return
 		}
+
+		if err := s.Commit(); err != nil {
+			log.Errorf(logPrefix+"Error committing: %s", err)
+		}
 	})
 	if err != nil {
 		log.Fatalf("Could not register empty openid teams cleanup cron: %s", err)

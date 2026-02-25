@@ -140,9 +140,14 @@ func (u *User) RouteForDB() int64 {
 	return u.ID
 }
 
-func (u *User) ShouldNotify() (bool, error) {
-	s := db.NewSession()
-	defer s.Close()
+func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
+	var s *xorm.Session
+	if len(sessions) > 0 && sessions[0] != nil {
+		s = sessions[0]
+	} else {
+		s = db.NewSession()
+		defer s.Close()
+	}
 	user, err := getUser(s, &User{ID: u.ID}, true)
 	if err != nil {
 		return false, err

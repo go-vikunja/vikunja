@@ -18,28 +18,28 @@ package cmd
 
 import (
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	repairFileMimeTypesCmd.Flags().Bool("dry-run", false, "Preview repairs without making changes")
-	repairCmd.AddCommand(repairFileMimeTypesCmd)
+	repairOrphanPositionsCmd.Flags().Bool("dry-run", false, "Preview repairs without making changes")
+	repairCmd.AddCommand(repairOrphanPositionsCmd)
 }
 
-var repairFileMimeTypesCmd = &cobra.Command{
-	Use:   "file-mime-types",
-	Short: "Detect and set MIME types for all files that have none",
-	Long: `Scans all files in the database that have no MIME type set,
-detects the type from the stored file content, and updates the database.
+var repairOrphanPositionsCmd = &cobra.Command{
+	Use:   "orphan-positions",
+	Short: "Remove orphaned task position records for deleted tasks or views",
+	Long: `Removes all task position records that reference tasks or project views
+which no longer exist in the database.
 
-This is useful after upgrading from a version that did not store MIME types
-on file creation. Only files with an empty or NULL mime column are affected.
+This can happen when tasks or views are deleted but their position records
+are not fully cleaned up.
 
-Use --dry-run to preview what would be fixed without making changes.`,
+Use --dry-run to preview what would be deleted without making changes.`,
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInitWithoutAsync()
 	},
@@ -53,32 +53,28 @@ Use --dry-run to preview what would be fixed without making changes.`,
 			log.Infof("Running in dry-run mode - no changes will be made")
 		}
 
-		result, err := files.RepairFileMimeTypes(s, dryRun)
+		count, err := models.DeleteOrphanedTaskPositions(s, dryRun)
 		if err != nil {
-			log.Errorf("Failed to repair file MIME types: %s", err)
+			log.Errorf("Could not delete orphaned task positions: %s", err)
 			return
 		}
 
 		if !dryRun {
 			if err := s.Commit(); err != nil {
-				log.Errorf("Failed to commit changes: %s", err)
+				log.Errorf("Could not commit orphaned task position deletion: %s", err)
 				return
 			}
 		}
 
-		log.Infof("Repair complete:")
-		log.Infof("  Files scanned: %d", result.Total)
-		log.Infof("  Files updated: %d", result.Updated)
-
-		if len(result.Errors) > 0 {
-			log.Errorf("Errors encountered (%d):", len(result.Errors))
-			for _, e := range result.Errors {
-				log.Errorf("  - %s", e)
-			}
+		if count == 0 {
+			log.Infof("No orphaned task positions found.")
+			return
 		}
 
-		if result.Total == 0 {
-			log.Infof("No files with missing MIME types found - all files are healthy!")
+		if dryRun {
+			log.Infof("Would delete %d orphaned task positions.", count)
+		} else {
+			log.Infof("Successfully deleted %d orphaned task positions.", count)
 		}
 	},
 }

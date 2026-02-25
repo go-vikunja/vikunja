@@ -155,7 +155,9 @@ func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 	// check if we have a token in context and use it if that's the case
 	if c.Get("api_token") != nil {
 		apiToken := c.Get("api_token").(*models.APIToken)
-		u, err := user.GetUserByID(db.NewSession(), apiToken.OwnerID)
+		s := db.NewSession()
+		defer s.Close()
+		u, err := user.GetUserByID(s, apiToken.OwnerID)
 		if err != nil {
 			return nil, err
 		}
@@ -167,7 +169,11 @@ func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 		return nil, fmt.Errorf("user in context is not jwt token")
 	}
 	claims := jwtinf.Claims.(jwt.MapClaims)
-	typ := int(claims["type"].(float64))
+	typFloat, is := claims["type"].(float64)
+	if !is {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid JWT token.")
+	}
+	typ := int(typFloat)
 	if typ == AuthTypeLinkShare && config.ServiceEnableLinkSharing.GetBool() {
 		return models.GetLinkShareFromClaims(claims)
 	}

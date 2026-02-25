@@ -84,6 +84,6 @@ func UpdateEmail(s *xorm.Session, update *EmailUpdate) (err error) {
 		ConfirmToken: token.Token,
 	}
 
-	err = notifications.Notify(update.User, n)
+	err = notifications.Notify(update.User, n, s)
 	return
 }

@@ -46,6 +46,7 @@ func TestLdapLogin(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, "professor", user.Username)
+		require.NoError(t, s.Commit())
 		db.AssertExists(t, "users", map[string]interface{}{
 			"username": "professor",
 			"issuer":   "ldap",
@@ -86,6 +87,7 @@ func TestLdapLogin(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, "professor", user.Username)
+		require.NoError(t, s.Commit())
 		db.AssertExists(t, "users", map[string]interface{}{
 			"username": "professor",
 			"issuer":   "ldap",
@@ -111,6 +113,7 @@ func TestLdapLogin(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, "professor", user.Username)
+		require.NoError(t, s.Commit())
 		db.AssertExists(t, "users", map[string]interface{}{
 			"username":        "professor",
 			"issuer":          "ldap",

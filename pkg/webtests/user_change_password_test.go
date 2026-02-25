@@ -38,7 +38,7 @@ func TestUserChangePassword(t *testing.T) {
 	})
 	t.Run("Wrong old password", func(t *testing.T) {
 		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserChangePassword, &testuser1, `{
-  "new_password": "12345",
+  "new_password": "12345678",
   "old_password": "invalid"
 }`, nil, nil)
 		require.Error(t, err)
@@ -46,7 +46,7 @@ func TestUserChangePassword(t *testing.T) {
 	})
 	t.Run("Empty old password", func(t *testing.T) {
 		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserChangePassword, &testuser1, `{
-  "new_password": "12345",
+  "new_password": "12345678",
   "old_password": ""
 }`, nil, nil)
 		require.Error(t, err)
@@ -59,5 +59,13 @@ func TestUserChangePassword(t *testing.T) {
 }`, nil, nil)
 		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeEmptyNewPassword)
+	})
+	t.Run("New password too short", func(t *testing.T) {
+		_, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserChangePassword, &testuser1, `{
+  "new_password": "1234567",
+  "old_password": "12345678"
+}`, nil, nil)
+		require.Error(t, err)
+		assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
 	})
 }

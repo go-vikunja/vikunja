@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -38,12 +39,27 @@ import (
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/migration"
+	"code.vikunja.io/api/pkg/utils"
 	vversion "code.vikunja.io/api/pkg/version"
 
 	"src.techknowlogick.com/xormigrate"
 )
 
-const maxConfigSize = 5 * 1024 * 1024 // 5 MB, should be largely enough
+const maxConfigSize = 5 * 1024 * 1024      // 5 MB, should be largely enough
+const maxDumpEntrySize = 500 * 1024 * 1024 // 500 MB
+
+// parseDbFileName validates and extracts the table name from a database dump filename.
+// Returns the table name and true if valid, or empty string and false if invalid.
+func parseDbFileName(fname string) (string, bool) {
+	if !strings.HasSuffix(fname, ".json") {
+		return "", false
+	}
+	tableName := strings.TrimSuffix(fname, ".json")
+	if tableName == "" || strings.ContainsAny(tableName, "/\\") {
+		return "", false
+	}
+	return tableName, true
+}
 
 // Restore takes a zip file name and restores it
 func Restore(filename string, overrideConfig bool) error {
@@ -71,13 +87,21 @@ func Restore(filename string, overrideConfig bool) error {
 	dbfiles := make(map[string]*zip.File)
 	filesFiles := make(map[string]*zip.File)
 	for _, file := range r.File {
+		if utils.ContainsPathTraversal(file.Name) {
+			return fmt.Errorf("unsafe path in zip archive: %q", file.Name)
+		}
+
 		if strings.HasPrefix(file.Name, "config") {
 			configFile = file
 			continue
 		}
 		if strings.HasPrefix(file.Name, "database/") {
-			fname := strings.ReplaceAll(file.Name, "database/", "")
-			dbfiles[fname[:len(fname)-5]] = file
+			fname := strings.TrimPrefix(file.Name, "database/")
+			tableName, valid := parseDbFileName(fname)
+			if !valid {
+				return fmt.Errorf("invalid database file name in zip archive: %q", file.Name)
+			}
+			dbfiles[tableName] = file
 			continue
 		}
 		if file.Name == ".env" {
@@ -85,7 +109,7 @@ func Restore(filename string, overrideConfig bool) error {
 			continue
 		}
 		if strings.HasPrefix(file.Name, "files/") {
-			filesFiles[strings.ReplaceAll(file.Name, "files/", "")] = file
+			filesFiles[strings.TrimPrefix(file.Name, "files/")] = file
 			continue
 		}
 		if file.Name == "VERSION" {
@@ -123,15 +147,14 @@ func Restore(filename string, overrideConfig bool) error {
 
 	///////
 	// Restore the db
-	// Start by wiping everything
-	if err := db.WipeEverything(); err != nil {
-		return fmt.Errorf("could not wipe database: %w", err)
-	}
-	log.Info("Wiped database.")
 
-	// Because we don't explicitly saved the table definitions, we take the last ran db migration from the dump
-	// and execute everything until that point.
+	// Validate archive contents before wiping to avoid leaving the database
+	// in a destroyed state when the archive is malformed.
 	migrations := dbfiles["migration"]
+	if migrations == nil {
+		return fmt.Errorf("dump does not contain database migration information")
+	}
+
 	rc, err := migrations.Open()
 	if err != nil {
 		return fmt.Errorf("could not open migrations: %w", err)
@@ -139,7 +162,7 @@ func Restore(filename string, overrideConfig bool) error {
 	defer rc.Close()
 
 	var buf bytes.Buffer
-	if _, err := buf.ReadFrom(rc); err != nil {
+	if _, err := buf.ReadFrom(io.LimitReader(rc, maxDumpEntrySize)); err != nil {
 		return fmt.Errorf("could not read migrations: %w", err)
 	}
 
@@ -151,7 +174,21 @@ func Restore(filename string, overrideConfig bool) error {
 		return ms[i].ID < ms[j].ID
 	})
 
+	if len(ms) < 2 {
+		return fmt.Errorf("dump does not contain enough migration information")
+	}
+
 	lastMigration := ms[len(ms)-2]
+
+	if err := preValidateTableData(dbfiles); err != nil {
+		return err
+	}
+
+	// Start by wiping everything - only after we've validated the archive
+	if err := db.WipeEverything(); err != nil {
+		return fmt.Errorf("could not wipe database: %w", err)
+	}
+	log.Info("Wiped database.")
 	log.Debugf("Last migration: %s", lastMigration.ID)
 	if err := migration.MigrateTo(lastMigration.ID, nil); err != nil {
 		return fmt.Errorf("could not create db structure: %w", err)
@@ -349,6 +386,32 @@ func restoreTableData(tables map[string]*zip.File) error {
 	return nil
 }
 
+// preValidateTableData checks that all table data JSON files in the archive
+// are parseable before wiping the database, to avoid leaving the database
+// in a destroyed state when the archive contains corrupted data.
+func preValidateTableData(dbfiles map[string]*zip.File) error {
+	for table, d := range dbfiles {
+		if table == "migration" {
+			continue
+		}
+		rc, err := d.Open()
+		if err != nil {
+			return fmt.Errorf("could not open table data for %s: %w", table, err)
+		}
+		var buf bytes.Buffer
+		if _, err := buf.ReadFrom(io.LimitReader(rc, maxDumpEntrySize)); err != nil {
+			rc.Close()
+			return fmt.Errorf("could not read table data for %s: %w", table, err)
+		}
+		rc.Close()
+		var test []map[string]interface{}
+		if err := json.Unmarshal(buf.Bytes(), &test); err != nil {
+			return fmt.Errorf("invalid JSON in table data for %s: %w", table, err)
+		}
+	}
+	return nil
+}
+
 func unmarshalFileToJSON(file *zip.File) (contents []map[string]interface{}, err error) {
 	rc, err := file.Open()
 	if err != nil {
@@ -357,7 +420,7 @@ func unmarshalFileToJSON(file *zip.File) (contents []map[string]interface{}, err
 	defer rc.Close()
 
 	var buf bytes.Buffer
-	if _, err := buf.ReadFrom(rc); err != nil {
+	if _, err := buf.ReadFrom(io.LimitReader(rc, maxDumpEntrySize)); err != nil {
 		return nil, err
 	}
 
@@ -374,7 +437,10 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 			return fmt.Errorf("config file too large, is %d, max size is %d", configFile.UncompressedSize64, maxConfigSize)
 		}
 
-		outFile, err := os.OpenFile(configFile.Name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, configFile.Mode())
+		// Use only the base name to prevent writing outside the working directory
+		sanitizedName := filepath.Base(configFile.Name)
+
+		outFile, err := os.OpenFile(sanitizedName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, configFile.Mode())
 		if err != nil {
 			return fmt.Errorf("could not open config file for writing: %w", err)
 		}
@@ -393,7 +459,7 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 		_ = cfgr.Close()
 		_ = outFile.Close()
 
-		log.Infof("The config file has been restored to '%s'.", configFile.Name)
+		log.Infof("The config file has been restored to '%s'.", sanitizedName)
 		log.Infof("You can now make changes to it, hit enter when you're done.")
 		if _, err := bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
 			return fmt.Errorf("could not read from stdin: %w", err)
@@ -411,7 +477,7 @@ func restoreConfig(configFile, dotEnvFile *zip.File) error {
 			return err
 		}
 		buf := bytes.Buffer{}
-		_, err = buf.ReadFrom(dotenv)
+		_, err = buf.ReadFrom(io.LimitReader(dotenv, maxDumpEntrySize))
 		if err != nil {
 			return err
 		}
@@ -437,7 +503,7 @@ func checkVikunjaVersion(versionFile *zip.File) error {
 	}
 
 	var bufVersion bytes.Buffer
-	if _, err := bufVersion.ReadFrom(vf); err != nil {
+	if _, err := bufVersion.ReadFrom(io.LimitReader(vf, maxDumpEntrySize)); err != nil {
 		return fmt.Errorf("could not read version file: %w", err)
 	}
 

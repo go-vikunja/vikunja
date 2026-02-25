@@ -60,8 +60,8 @@ func (*TaskAttachment) TableName() string {
 // NewAttachment creates a new task attachment
 func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realname string, realsize uint64, a web.Auth) error {
 
-	// Store the file
-	file, err := files.Create(f, realname, realsize, a)
+	// Store the file using the existing session to avoid nested transactions
+	file, err := files.CreateWithSession(s, f, realname, realsize, a)
 	if err != nil {
 		if files.IsErrFileIsTooLarge(err) {
 			return ErrTaskAttachmentIsTooLarge{Size: realsize}

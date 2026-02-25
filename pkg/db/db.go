@@ -403,9 +403,15 @@ func WipeEverything() error {
 	return nil
 }
 
-// NewSession creates a new xorm session
+// NewSession creates a new xorm session with an active transaction.
+// The caller must call s.Commit() on success or s.Rollback() on error.
+// s.Close() will auto-rollback any uncommitted transaction.
 func NewSession() *xorm.Session {
-	return x.NewSession()
+	s := x.NewSession()
+	if err := s.Begin(); err != nil {
+		log.Fatalf("Failed to begin database transaction: %s", err)
+	}
+	return s
 }
 
 // Type returns the db type of the currently configured db

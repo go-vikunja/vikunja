@@ -183,57 +183,57 @@ func TestTaskBucket_Update(t *testing.T) {
 		doneAt := time.Now().Round(time.Second)
 
 		// Set a done timestamp on the task
-		{
+		func() {
 			s := db.NewSession()
+			defer s.Close()
 			_, err := s.ID(2).Cols("done_at").Update(&Task{DoneAt: doneAt})
 			require.NoError(t, err)
 			err = s.Commit()
 			require.NoError(t, err)
-			s.Close()
-		}
+		}()
 
 		// Move the task to another project without a done bucket using Task.Update
-		{
+		func() {
 			s := db.NewSession()
+			defer s.Close()
 			task := &Task{ID: 2, Done: true, ProjectID: 9}
 			err := task.Update(s, u)
 			require.NoError(t, err)
 			err = s.Commit()
 			require.NoError(t, err)
-			s.Close()
-		}
+		}()
 
 		// Verify the task still has the same done timestamp
-		{
+		func() {
 			s := db.NewSession()
+			defer s.Close()
 			var task Task
 			_, err := s.ID(2).Get(&task)
 			require.NoError(t, err)
 			assert.True(t, task.Done)
 			assert.WithinDuration(t, doneAt, task.DoneAt, time.Second)
-			s.Close()
-		}
+		}()
 
 		// Move the task back to the original project with a done bucket using Task.Update
-		{
+		func() {
 			s := db.NewSession()
+			defer s.Close()
 			task := &Task{ID: 2, Done: true, ProjectID: 1}
 			err := task.Update(s, u)
 			require.NoError(t, err)
 			err = s.Commit()
 			require.NoError(t, err)
-			s.Close()
-		}
+		}()
 
 		// Verify the done timestamp is still preserved
-		{
+		func() {
 			s := db.NewSession()
+			defer s.Close()
 			var task Task
 			_, err := s.ID(2).Get(&task)
 			require.NoError(t, err)
 			assert.True(t, task.Done)
 			assert.WithinDuration(t, doneAt, task.DoneAt, time.Second)
-			s.Close()
-		}
+		}()
 	})
 }

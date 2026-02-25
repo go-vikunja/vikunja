@@ -32,16 +32,10 @@ import (
 
 func checkExportRequest(c *echo.Context) (s *xorm.Session, u *user.User, err error) {
 	s = db.NewSession()
-	defer s.Close()
-
-	err = s.Begin()
-	if err != nil {
-		return nil, nil, err
-	}
 
 	u, err = user.GetCurrentUserFromDB(s, c)
 	if err != nil {
-		_ = s.Rollback()
+		s.Close()
 		return nil, nil, err
 	}
 
@@ -52,17 +46,19 @@ func checkExportRequest(c *echo.Context) (s *xorm.Session, u *user.User, err err
 
 	var pass UserPasswordConfirmation
 	if err := c.Bind(&pass); err != nil {
+		s.Close()
 		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "No password provided.").Wrap(err)
 	}
 
 	err = c.Validate(pass)
 	if err != nil {
+		s.Close()
 		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, err.Error()).Wrap(err)
 	}
 
 	err = user.CheckUserPassword(u, pass.Password)
 	if err != nil {
-		_ = s.Rollback()
+		s.Close()
 		return nil, nil, err
 	}
 
@@ -85,6 +81,7 @@ func RequestUserDataExport(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer s.Close()
 
 	err = events.Dispatch(&models.UserDataExportRequestedEvent{
 		User: u,
@@ -120,6 +117,7 @@ func DownloadUserDataExport(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer s.Close()
 
 	err = s.Commit()
 	if err != nil {

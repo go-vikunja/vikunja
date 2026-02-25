@@ -115,7 +115,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	// Send a notification
 	return notifications.Notify(u, &DataExportReadyNotification{
 		User: u,
-	})
+	}, s)
 }
 
 func getRawTasksForExport(s *xorm.Session, projectIDs []int64, a web.Auth) (tasks []*Task, err error) {
@@ -452,6 +452,9 @@ func RegisterOldExportCleanupCron() {
 
 		log.Debugf(logPrefix+"Removed %d old user data exports...", len(fs))
 
+		if err := s.Commit(); err != nil {
+			log.Errorf(logPrefix+"Error committing export cleanup: %s", err)
+		}
 	})
 	if err != nil {
 		log.Fatalf("Could not register old export cleanup cron: %s", err)

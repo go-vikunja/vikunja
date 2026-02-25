@@ -7,6 +7,211 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [2.0.0] - 2026-02-25
+
+### Bug Fixes
+
+* *(attachments)* Use mime.FormatMediaType for Content-Disposition header
+* *(auth)* Use checked type assertions for all JWT claims
+* *(build)* Add osusergo tag to plugin build
+* *(build)* Use absolute path for zip output in release
+* *(db)* Validate table names and quote identifiers in raw SQL
+* *(gantt)* Render done tasks with strikethrough and reduced opacity
+* *(gantt)* Sync task updates from detail view back to gantt chart
+* *(gantt)* Only persist dates that actually exist on partial-date tasks
+* *(migration)* Make migration from Microsoft Todo work for those with previously migrated wunderlist accounts (#2126)
+* *(migration)* Reject zip entries with path traversal in vikunja-file import
+* *(migration)* Limit zip entry read size to prevent decompression bombs
+* *(migration)* Use checked type assertion for background file id
+* *(release)* Skip upx compression for windows arm64 binaries
+* *(restore)* Reject zip entries with path traversal sequences
+* *(restore)* Sanitize config file path to prevent zip slip
+* *(restore)* Validate database file names in zip archive
+* *(restore)* Validate migration data before wiping database
+* *(restore)* Limit zip entry read size to prevent decompression bombs
+* *(restore)* Pre-validate all table data JSON before wiping database
+* *(restore)* Extract preValidateTableData to reduce cyclomatic complexity
+* *(task)* Require explicit confirmation before saving reminders
+* *(task)* Disable Confirm button when no date is selected in absolute reminder picker
+* *(tasks)* Show drag handle icon on mobile devices (#2286)
+* *(test)* Update existing reminder tests to click Confirm after date selection
+* *(tests)* Update web test assertions for new task47 fixture
+* *(tests)* Properly assert sort order including task47 in web tests
+* Use DelPrefix in upload avatar FlushCache to clear all cached sizes ([79d0942](79d0942780269ffe423ab1333453ab3e940de0a2))
+* Reset group permission checkboxes when creating a new API token ([30e53db](30e53dbd9f6429cd3a6c7255cab0cef5ad422e1b))
+* Wrap API tokens table rows in thead and tbody elements ([b66b75f](b66b75f5be8c836758a2a68feb70de9c41371392))
+* Correct indentation in API tokens table after thead/tbody wrap ([17360a8](17360a820cfd662365dfa906f9e35241c6f9b7b6))
+* Add missing error checks in filepath.Walk and defer Close locations ([8dbff21](8dbff21834e06d572abae52abf1cf09f66ebb959))
+* Replace stray panic with return err ([122ba30](122ba303391ac1ee6fbba51707e08d491306cc1b))
+* Prevent duplicated sql condition in filters (#1546) ([8779a28](8779a28d1d1fb3aeb787d1f7b5d0b23fdacdf11f))
+* Merge AND-joined sub-table filters into single EXISTS subquery ([c034e43](c034e431cbdfb9c3bf0a99f7f025e2b30f6123c5))
+* Only merge range comparators in sub-table filter grouping ([1943d69](1943d6993cac80d3f441ebccdea5613f4f60ca83))
+* Don't show export ready message when no export exists ([7862651](7862651b125e37fff854f614eb839b8084c07122))
+* Clamp gantt bar title position when task starts before visible range ([df05c51](df05c51457ed2fede2071358d5e3f2663581fc4f))
+* Break long continuous strings in editor to prevent overflow ([bc2f7e5](bc2f7e5840b9a880b1a961c03cdf029dbf379f06))
+* Fix API_URL trailing slash and remove CORS env var overrides in test:e2e ([51a9f9c](51a9f9c9f8b3a41b875a5c33ac7751cd28f2da7a))
+* Use preview:dev for correct dist dir and kill process groups in test:e2e ([d008512](d00851292defebad0cc28defa603983cc7138550))
+* Use in-memory SQLite and log temp directory cleanup in test:e2e ([fec1c03](fec1c038ffa650b58cf5aa0b2f89c3725d3d7e64))
+* Correct broken throttle in checkAuth that never triggered ([a11cde1](a11cde1afca7f48c0ff146227d69878a98c75481))
+* Don't overwrite user info with incomplete JWT data on navigation ([1d420dd](1d420dd1dc6be8315789f89f00b9462ac2d4bdb8))
+* Keep token expiry in sync when skipping setUser from JWT ([65806df](65806df60577813dff0a6e1888d220e14a2249c0))
+* Reset throttle on logout so checkAuth clears auth state ([4cee2cf](4cee2cf128aa9e99cb5f78a6ec19090df6155812))
+* Detect and store mime type when creating file attachments ([519f66a](519f66a51f519a33751e88fc66be6f0cc5a9a436))
+* Add Content-Disposition attachment header to task attachment downloads ([4915f53](4915f535d0a815698ce1af43491b13b6683ec527))
+* Fall back to application/octet-stream when the file has no mime type stored ([c6370bb](c6370bb7396d3eb0b68a83728a1681985f1f8660))
+* Escape attachment download filename ([d222d45](d222d4502acdf9d235880d3675d2dcf7f18e1d85))
+* Load file content before generating attachment preview ([1ccc8dc](1ccc8dce3added764cda9eeec49359e1912ac0cd))
+* Treat archived TickTick tasks as done during import ([249b651](249b651692dfe6ab1afd6097a380e0cc65b5519c))
+* Prevent browser from caching API responses ([a13ecbd](a13ecbd3cc2caff7c4c5b9d5f2a74c6d95b51807))
+* Show tasks spanning entire gantt date range ([56eb5d3](56eb5d3740eef6b067b539185af4844255305466))
+* Prevent cursor reset when typing in filter input (#2287) ([f7a93e4](f7a93e4ca3c83a58fd037df6548be7c20c42aa09))
+* Wait for router before dismissing loading screen ([7c04d44](7c04d44e2e0fb91c16c10d6a75f57f73cd70f011))
+* Replace tx.Sync() with explicit ALTER TABLE in webhooks migration ([b1534f1](b1534f1cc827cd213d1f36372e010abe7e4ca886))
+* Make teams oidc_id rename migration idempotent ([4acad97](4acad97688a6c837ecbc0a6f0c0fb51337ed6bfe))
+* Add comprehensive catchup for bucket and filter format migrations ([99ac3e6](99ac3e65b82d880da8032228e8369ea39254648a))
+* Cast bucket_configuration to text in postgres catchup query ([3d6c527](3d6c527b64f4904ebdae5a206a4aa8ffd074408d))
+* Preserve teams external_id type when renaming on mysql ([0c7c07b](0c7c07b3b8a573399c62577c4a22c8a31129a7e5))
+* Decouple webhook dispatch from email/mailer config ([6de82db](6de82db7e4d36a544b5d25c28dec7e00869ccd5a))
+* Add transaction begin to db.NewSession() ([fd77e04](fd77e041a1ad96b17142690a5dba9ec3a62e244c))
+* Add missing Commit() to write callers ([c9c250f](c9c250fb1c6ed878a1bfbad6947ab66cac9d14d5))
+* Close leaked database sessions ([764d356](764d3569ce6584764b5f91e89e91a7623afd4f40))
+* Eliminate nested database sessions to prevent table locks ([49bba7f](49bba7f830ba3f82bad8e2dc57d54495772e9be6))
+* Handle Begin() error in db.NewSession() instead of ignoring it ([1167b08](1167b08e70b285b4293a6921a4ddb309b0c0be93))
+* Remove transaction control from File.Delete to prevent premature commit/rollback ([312648d](312648d7d639e6e5966f16248f94338a1bb33915))
+* Isolate deletion notifications into per-user transactions ([eea59c3](eea59c33c7fb132ece4a922d80186f4c64af5493))
+* Add missing Commit() to event listeners and cron jobs ([2188c7a](2188c7a79dd3ecb454a10e33042ee2dd6fc24cc7))
+* Pass pointer to xorm Update to avoid hash panic in transaction mode ([cbfd0e6](cbfd0e63edcc68691104040767db2e4d137a9b11))
+* Use session-aware file creation to avoid nested transactions ([2a10b22](2a10b22c5c784c9aaf82618f78bb6e57ecb73a60))
+* Prevent session leaks and visibility issues in model tests ([a7086e5](a7086e5e4918bd60e622959544bbe6561e9df936))
+* Add TestMain to caldav tests and fix session conflicts ([2f71820](2f718206f9b35e7543cb6759b4ec1d403f2f8c49))
+* Use caller's session in LDAP syncUserGroups to avoid nested transactions ([b3d8a56](b3d8a56364b1ddb9d564de1b1e901febc6918f5a))
+* Address review comments on session lifecycle ([2f680d0](2f680d041c7fcb931126b8e33bd32c1183a4c9c1))
+* Commit transaction in session cleanup cron ([107a92f](107a92f57304ab024b16898aae0345f9462f75dd))
+* Prevent reflected HTML injection via filter URL parameter ([a42b4f3](a42b4f37bde58596a3b69482cd5a67641a94f62d))
+* Prevent XSS via innerHTML injection in link edit prompt ([111ac9c](111ac9c7263294a9219cc7f991ae4a530982c2fc))
+* Detect and fail on oversized zip entries instead of silent truncation ([39da47e](39da47e43546f3cfd66ea41d33c5a20f79a9603d))
+
+### Dependencies
+
+* *(deps)* Update dev-dependencies
+* *(deps)* Update mcr.microsoft.com/playwright docker tag to v1.58.2
+* *(deps)* Bump axios from 1.13.2 to 1.13.5 in /frontend
+* *(deps)* Update dependency happy-dom to v20.5.1
+* *(deps)* Update dependency electron to v40.4.1
+* *(deps)* Update dependency eslint-plugin-vue to v10.8.0
+* *(deps)* Update dependency caniuse-lite to v1.0.30001770
+* *(deps)* Update dev-dependencies to v8.56.0
+* *(deps)* Pin dependency eslint-plugin-depend to 1.4.0
+* *(deps)* Update dependency @vue/eslint-config-typescript to v14.7.0
+* *(deps)* Bump github.com/labstack/echo/v5 from 5.0.0 to 5.0.3 (#2252)
+* *(deps)* Upgrade node-tar to 7.5.9
+* *(deps)* Upgrade qs to 6.15.0
+* *(deps)* Upgrade markdown-it to 14.1.1
+* *(deps)* Update dependency electron-builder to v26.8.0 (#2253)
+* *(deps)* Update dev-dependencies (#2257)
+* *(deps)* Bump filippo.io/edwards25519 from 1.1.0 to 1.1.1
+* *(deps)* Update minimatch to ^10.2.1 via pnpm overrides
+* *(deps)* Update dependency rollup-plugin-visualizer to v6.0.8
+* *(deps)* Update dependency caniuse-lite to v1.0.30001774
+* *(deps)* Update dev-dependencies to v8.56.1
+* *(deps)* Update ajv to 6.14.0
+* *(deps)* Update dependency electron to v40.6.1
+
+### Documentation
+
+* Document mage test:e2e in AGENTS.md ([8f6f8f9](8f6f8f9e213dff07ab3b35869e8becc7b0c0c989))
+* Instruct agents to save test output instead of re-running tests ([c8ea673](c8ea6736535bc8170eea1d5176d84fc4344ea6f7))
+
+### Features
+
+* *(api)* Enforce password validation on reset and update flows
+* *(attachments)* Open file picker directly from sidebar button
+* *(auth)* Allow LDAP authentication with anonymous bind (#2226)
+* *(cli)* Reorganize repair commands under unified 'vikunja repair' parent (#2300)
+* *(comments)* Support order_by query parameter in comments API
+* *(comments)* Add sort order toggle for task comments
+* *(dev)* Print commit statistics during tag-release
+* *(frontend)* Make dev server port configurable via VIKUNJA_FRONTEND_PORT env var
+* *(frontend)* Use Password component in password update settings
+* *(gantt)* Add dateType field to GanttBarModel meta
+* *(gantt)* Handle tasks with partial dates in transformation and filtering
+* *(gantt)* Render partial-date bars with gradient fade effect
+* *(gantt)* Update API filter to fetch tasks with due_date or end_date
+* *(gantt)* Add i18n strings for partial-date accessibility
+* *(gantt)* Update drag/resize to handle partial-date task updates
+* *(gantt)* Right-align text for endOnly partial-date bars
+* Use credentials when accessing PWA manifest (#2218) ([b196c98](b196c986cd110f286f318a86b6818c7e097c471d))
+* Add eslint-plugin-depend to frontend ([2fe66c8](2fe66c89446c969d3c966b864224c787b6b797cd))
+* Add dependency diff and provenance GitHub Action for PRs ([8f48b58](8f48b585b7d183bef539e04026c405f459b209e5))
+* Add Swedish for language selection (#2248) ([e3695c1](e3695c17c66b4ea728244fd48ae16de22043f0de))
+* Toggle test verbosity based on Mage verbose flag ([fc0e0f5](fc0e0f5ea07650c0db1d9e06cbcf4fd3ffee42cc))
+* Add optional project column to table view (#2182) ([48074d2](48074d23584544869f5ccdbe62cf6203c6b08b57))
+* Add discard and reload confirmation modal (#2154) ([bf8138e](bf8138ec3c08778006332063bee29459fec534a1))
+* Clickable task notifications (#2258) ([8fd256a](8fd256a5d98838ac5a9c0f8ecc166901c4107de5))
+* Add mage test:e2e for isolated end-to-end testing ([c5ae797](c5ae7974e1b4ed6138afd1a0fd6c97cce159511c))
+* Add repair-file-mime-types CLI command ([55c122f](55c122fb42f4a8946b0a532fb98dcdbd152a973c))
+* Add TaskReminderFiredEvent and TaskOverdueEvent types ([e04c1a3](e04c1a3d2e85f7ddb7b678c4ee80e2799200c10b))
+* Register reminder and overdue events for webhooks ([83dc753](83dc7537c4f975c9cd873bdcd3a3ba235d33f7b2))
+* Dispatch TaskReminderFiredEvent from reminder cron ([626e731](626e731ae4fe481188abc7d2c3475d0e995ecbe8))
+* Dispatch TaskOverdueEvent from overdue cron ([54aacd3](54aacd370773e18fc2176bf3e85bc01c2b697459))
+* Add sessions table migration ([04e6047](04e60472b78d0000a4ac2a41a846100ee6b095e0))
+* Add jwtttlshort config key for session tokens ([a6bdeb6](a6bdeb67b01ee171cb0bef2fad3f489c94c6170d))
+* Add Session model with CRUD, permissions, and cleanup cron ([b3d0b2f](b3d0b2f6971387bb202dd428b07b072172fbcaf2))
+* Add session-based auth with refresh token rotation ([8ee069a](8ee069a2a360a73bb50c95431ed8e86804a6b208))
+* Add frontend session management with refresh tokens ([be1db01](be1db018fe1c3768349808002ecdfa7fcf99749c))
+* Add RepairOrphanedProjects function ([ad307a3](ad307a3499e9c8821c384c9842eb8dfab25f38b4))
+* Add repair-projects CLI command ([71657fc](71657fce30cf43aae8f2b15a9bf949e2727ee328))
+
+### Miscellaneous Tasks
+
+* *(ci)* Update golangci-lint from v2.6.0 to v2.9.0
+* *(dev)* Add sample config to gitignore
+* *(i18n)* Update translations via Crowdin
+* *(lint)* Ignore revive var-naming for stdlib-conflicting package names
+* *(renovate)* Group playwright npm package and docker image together
+* Downgrade depend/ban-dependencies to warning ([e6ae87d](e6ae87d7036e1b48d031b5843c1c58f9a4b16cb0))
+* Fix lint issue from gantt partial dates feature ([2bf99cf](2bf99cf2d0bcd3dc29aba4dda116d256d1587b19))
+
+### Other
+
+* *(other)* [skip ci] Updated swagger docs
+
+### Refactor
+
+* *(gantt)* Extract GanttBarDateType as reusable type
+* *(utils)* Extract ContainsPathTraversal to shared utils package
+* Remove environment variable requirements for go test ([591a646](591a646f84eeb4f276a6c5d022d1a3344dc7eff1))
+* Remove root path in favor of Magefile default directory ([e19a614](e19a61479ef467978f53592acd87c66ca9049281))
+* Return errors to Mage instead of os.Exit and stream to stdout/stderr ([d8983b7](d8983b740afdb5c7fc665aa767770b720f5ce134))
+* Switch to native filepath.Walk for gofmt file discovery ([c773e2e](c773e2e828d5a9f2b29d7d0434efb2f1110474b6))
+* Use Go idioms for running tests ([b2715bb](b2715bb56ded3a2f34cce38319c3ef17f731f192))
+* Remove redundant Begin() calls after NewSession auto-begins ([a6e6f25](a6e6f252db36a0649ec3db8c97b533c1e0d71cb8))
+* Remove typesense support ([a5b1a90](a5b1a90c428ec21d7095e374c899f8f953b8a557))
+
+### Styling
+
+* Run gofmt -s to update octal literals ([65ef54f](65ef54f6232bb3b06057ee5283ac110d61d9372d))
+* Fix doc comments to match godoc style ([cba5f6b](cba5f6b2f4af6166b4af980b9ccf28b92c84283e))
+* Fix alignment in test case ([302b58d](302b58dac06fdc46023a5eba81097674a5181b8f))
+
+### Testing
+
+* *(api)* Add tests for password validation in reset and update flows
+* *(comments)* Add e2e tests for comment sort order
+* *(e2e)* Add Playwright test for avatar cache invalidation
+* *(task)* Add e2e tests for reminder confirm-before-save behavior
+* Add failing test for upload avatar FlushCache ([c93fa1b](c93fa1b4ae1e78537a21d7563534a571b43c86ea))
+* Add task #47 with reminders outside window for bug #2245 ([6733ac4](6733ac4e225ec6b75f680c6a69c4ec8e8020236b))
+* Add failing test for sub-table filter multi-row matching bug #2245 ([cd72231](cd722315025ed74f949d3fd53ec8d3447518570d))
+* Update expected task index after adding task #47 fixture ([d1901f4](d1901f46c31ad9f88612c25a42f068648bb4d80d))
+* Add OR-joined reminder filter regression test ([a93f6bf](a93f6bf1603bb4db7acdbdb3bb8f8358bec750bd))
+* Add unit tests for getDisplayName ([1dc625f](1dc625f9e867f3469a4d602857c64f3f1ba6bc07))
+* Add session lifecycle tests ([2ef693a](2ef693a7cf0280b70cc4fe8fa532241cdda0e86c))
+* Add e2e tests for session refresh and retry interceptor ([cb091f9](cb091f981d2a09031ee81a57c0b365258cdbf05a))
+* Add regression test for atomic parent project deletion ([23176bb](23176bb8e11130284bab1e70baa04556b86e5258))
+* Add orphaned project fixture for repair-projects command ([9e050fe](9e050fe40eeabfdf4a06eb8d019c2bae5b60e9c4))
+* Add failing tests for RepairOrphanedProjects ([963235c](963235c0ce3744c737344faa4a5597e63d85c03c))
+
 ## [1.1.0] - 2026-02-09
 
 ### Bug Fixes

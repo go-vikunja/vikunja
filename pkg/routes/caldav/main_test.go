@@ -14,43 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package user
+package caldav
 
-import "code.vikunja.io/api/pkg/db"
+import (
+	"os"
+	"testing"
 
-func GenerateNewCaldavToken(u *User) (token *Token, err error) {
-	s := db.NewSession()
-	defer s.Close()
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/files"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
+)
 
-	token, err = generateHashedToken(s, u, TokenCaldavAuth)
-	if err != nil {
-		_ = s.Rollback()
-		return nil, err
-	}
-
-	if err = s.Commit(); err != nil {
-		return nil, err
-	}
-
-	return token, nil
-}
-
-func GetCaldavTokens(u *User) (tokens []*Token, err error) {
-	s := db.NewSession()
-	defer s.Close()
-
-	return getTokensForKind(s, u, TokenCaldavAuth)
-}
-
-func DeleteCaldavTokenByID(u *User, id int64) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	err := removeTokenByID(s, u, TokenCaldavAuth, id)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	return s.Commit()
+func TestMain(m *testing.M) {
+	log.InitLogger()
+	config.InitDefaultConfig()
+	files.InitTests()
+	user.InitTests()
+	models.SetupTests()
+	events.Fake()
+	os.Exit(m.Run())
 }

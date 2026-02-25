@@ -17,6 +17,7 @@
 package user
 
 import (
+	"fmt"
 	"time"
 
 	"code.vikunja.io/api/pkg/cron"
@@ -40,6 +41,7 @@ func notifyUsersScheduledForDeletion() {
 	users := []*User{}
 	err := s.Where(builder.NotNull{"deletion_scheduled_at"}).
 		Find(&users)
+	s.Close()
 	if err != nil {
 		log.Errorf("Could not get users scheduled for deletion: %s", err)
 		return
@@ -66,23 +68,33 @@ func notifyUsersScheduledForDeletion() {
 
 		log.Debugf("Notifying user %d of the deletion of their account...", user.ID)
 
-		err = notifications.Notify(user, &AccountDeletionNotification{
-			User:               user,
-			NotificationNumber: number,
-		})
-		if err != nil {
-			log.Errorf("Could not notify user %d of their deletion: %s", user.ID, err)
-			continue
-		}
-
-		user.DeletionLastReminderSent = time.Now()
-		_, err = s.Where("id = ?", user.ID).
-			Cols("deletion_last_reminder_sent").
-			Update(user)
-		if err != nil {
-			log.Errorf("Could update user %d last deletion reminder sent date: %s", user.ID, err)
+		if err := notifyUserOfDeletion(user, number); err != nil {
+			log.Errorf("Could not process deletion notification for user %d: %s", user.ID, err)
 		}
 	}
+}
+
+func notifyUserOfDeletion(user *User, number int) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	err := notifications.Notify(user, &AccountDeletionNotification{
+		User:               user,
+		NotificationNumber: number,
+	}, s)
+	if err != nil {
+		return fmt.Errorf("could not notify user: %w", err)
+	}
+
+	user.DeletionLastReminderSent = time.Now()
+	_, err = s.Where("id = ?", user.ID).
+		Cols("deletion_last_reminder_sent").
+		Update(user)
+	if err != nil {
+		return fmt.Errorf("could not update last deletion reminder sent date: %w", err)
+	}
+
+	return s.Commit()
 }
 
 // RequestDeletion creates a user deletion confirm token and sends a notification to the user
@@ -95,7 +107,7 @@ func RequestDeletion(s *xorm.Session, user *User) (err error) {
 	return notifications.Notify(user, &AccountDeletionConfirmNotification{
 		User:         user,
 		ConfirmToken: token.Token,
-	})
+	}, s)
 }
 
 // ConfirmDeletion ConformDeletion checks a token and schedules the user for deletion

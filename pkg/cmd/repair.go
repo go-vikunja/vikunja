@@ -17,40 +17,24 @@
 package cmd
 
 import (
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/initialize"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/models"
-
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	rootCmd.AddCommand(deleteOrphanTaskPositions)
+	rootCmd.AddCommand(repairCmd)
 }
 
-var deleteOrphanTaskPositions = &cobra.Command{
-	Use:   "delete-orphan-task-positions",
-	Short: "Removes all task positions for tasks or project views which don't exist anymore.",
-	PreRun: func(_ *cobra.Command, _ []string) {
-		initialize.FullInitWithoutAsync()
-	},
-	Run: func(_ *cobra.Command, _ []string) {
+var repairCmd = &cobra.Command{
+	Use:   "repair",
+	Short: "Repair and fix data integrity issues",
+	Long: `The repair command provides subcommands to detect and fix various
+data integrity issues in your Vikunja installation.
 
-		s := db.NewSession()
-		defer s.Close()
+Available repair operations:
+  task-positions   - Fix duplicate task positions in project views
+  projects         - Fix orphaned projects with missing parents
+  file-mime-types  - Detect and set MIME types for files
+  orphan-positions - Remove orphaned task position records
 
-		count, err := models.DeleteOrphanedTaskPositions(s)
-		if err != nil {
-			log.Errorf("Could not delete orphaned task positions: %s", err)
-			return
-		}
-
-		if count == 0 {
-			log.Infof("No orphaned task positions found.")
-			return
-		}
-
-		log.Infof("Successfully deleted %d orphaned task positions.", count)
-	},
+Most subcommands support --dry-run to preview changes without applying them.`,
 }

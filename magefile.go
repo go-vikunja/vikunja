@@ -1713,6 +1713,59 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 	return nil
 }
 
+// printReleaseStats prints commit statistics for the range between two refs.
+func printReleaseStats(fromRef, toRef string) error {
+	output, err := runCmdWithOutput("git", "log", fromRef+".."+toRef, "--oneline")
+	if err != nil {
+		return fmt.Errorf("failed to get commit log: %w", err)
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	if len(lines) == 1 && lines[0] == "" {
+		fmt.Println("\nNo commits found in range.")
+		return nil
+	}
+
+	total := len(lines)
+	fixes := 0
+	features := 0
+	deps := 0
+	other := 0
+
+	depsRe := regexp.MustCompile(`(?i)(chore|build|ci)(\(deps\)|.*dependab|.*bump|.*update.*depend)`)
+
+	for _, line := range lines {
+		// Strip the short hash prefix to get the commit message
+		parts := strings.SplitN(line, " ", 2)
+		if len(parts) < 2 {
+			other++
+			continue
+		}
+		msg := parts[1]
+
+		switch {
+		case strings.HasPrefix(msg, "fix"):
+			fixes++
+		case strings.HasPrefix(msg, "feat"):
+			features++
+		case depsRe.MatchString(msg):
+			deps++
+		default:
+			other++
+		}
+	}
+
+	fmt.Printf("\nCommit statistics (%s..%s):\n", fromRef, toRef)
+	fmt.Printf("  Total:               %d\n", total)
+	fmt.Printf("  Fixes:               %d (%d%%)\n", fixes, fixes*100/total)
+	fmt.Printf("  Features:            %d (%d%%)\n", features, features*100/total)
+	fmt.Printf("  Dependency updates:  %d (%d%%)\n", deps, deps*100/total)
+	fmt.Printf("  Other:               %d (%d%%)\n", other, other*100/total)
+	fmt.Println()
+
+	return nil
+}
+
 // TagRelease creates a new release tag with changelog.
 // It updates the version badge in README.md, generates changelog using git-cliff,
 // commits the changes, and creates an annotated tag.
@@ -1735,6 +1788,11 @@ func (Dev) TagRelease(version string) error {
 	}
 	lastTag := strings.TrimSpace(string(lastTagBytes))
 	fmt.Printf("Last tag: %s\n", lastTag)
+
+	// Print commit statistics
+	if err := printReleaseStats(lastTag, "HEAD"); err != nil {
+		fmt.Printf("Warning: could not print release stats: %v\n", err)
+	}
 
 	// Generate changelog using git cliff
 	fmt.Println("Generating changelog...")
