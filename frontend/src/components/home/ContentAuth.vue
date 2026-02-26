@@ -59,7 +59,7 @@
 				</Modal>
 
 				<BaseButton
-					v-shortcut="'Shift+?'"
+					v-shortcut="'Shift+Slash'"
 					class="keyboard-shortcuts-button d-print-none"
 					@click="showKeyboardShortcuts()"
 				>

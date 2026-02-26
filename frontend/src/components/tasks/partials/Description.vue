@@ -29,7 +29,7 @@
 			:upload-callback="uploadCallback"
 			:placeholder="$t('task.description.placeholder')"
 			:show-save="true"
-			edit-shortcut="e"
+			edit-shortcut="KeyE"
 			:enable-discard-shortcut="true"
 			:enable-mentions="true"
 			:mention-project-id="modelValue.projectId"

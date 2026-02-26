@@ -18,7 +18,7 @@
 			<menu class="menu-list other-menu-items">
 				<li>
 					<RouterLink
-						v-shortcut="'g o'"
+						v-shortcut="'KeyG KeyO'"
 						:to="{ name: 'home'}"
 					>
 						<span class="menu-item-icon icon">
@@ -29,7 +29,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g u'"
+						v-shortcut="'KeyG KeyU'"
 						:to="{ name: 'tasks.range'}"
 					>
 						<span class="menu-item-icon icon">
@@ -40,7 +40,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g p'"
+						v-shortcut="'KeyG KeyP'"
 						:to="{ name: 'projects.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -51,7 +51,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g a'"
+						v-shortcut="'KeyG KeyA'"
 						:to="{ name: 'labels.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -62,7 +62,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g m'"
+						v-shortcut="'KeyG KeyM'"
 						:to="{ name: 'teams.index'}"
 					>
 						<span class="menu-item-icon icon">
