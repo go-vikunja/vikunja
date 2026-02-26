@@ -170,7 +170,8 @@
     ],
     "overrides": {
       "minimatch": "^10.2.1",
-      "rollup": "$rollup"
+      "rollup": "$rollup",
+      "basic-ftp": "5.2.0"
     }
   }
 }
