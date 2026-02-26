@@ -115,6 +115,12 @@ func handleAuthorizationCodeGrant(c *echo.Context, req *tokenRequest) error {
 		return err
 	}
 
+	// Check account status
+	if u.Status == user.StatusDisabled {
+		_ = s.Rollback()
+		return echo.NewHTTPError(http.StatusForbidden, "Account disabled.")
+	}
+
 	// Generate JWT
 	accessToken, err := auth.NewUserJWTAuthtoken(u, session.ID)
 	if err != nil {
