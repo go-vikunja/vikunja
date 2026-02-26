@@ -169,7 +169,7 @@
       "vue-demi"
     ],
     "overrides": {
-      "minimatch": "^10.2.1",
+      "minimatch": "^10.2.3",
       "rollup": "$rollup",
       "basic-ftp": "5.2.0"
     }
