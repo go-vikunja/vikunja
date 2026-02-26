@@ -1,7 +1,7 @@
 import {createRandomID} from '@/helpers/randomId'
 import {computePosition, flip, shift, offset} from '@floating-ui/dom'
 import {nextTick} from 'vue'
-import {eventToHotkeyString} from '@github/hotkey'
+import {eventToShortcutString} from '@/helpers/shortcut'
 
 export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Promise<string> {
 	return new Promise((resolve) => {
@@ -90,8 +90,8 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 		}
 
 		document.getElementById(id)?.addEventListener('keydown', event => {
-			const hotkeyString = eventToHotkeyString(event)
-			if (hotkeyString !== 'Enter') {
+			const shortcutString = eventToShortcutString(event)
+			if (shortcutString !== 'Enter') {
 				return
 			}
 

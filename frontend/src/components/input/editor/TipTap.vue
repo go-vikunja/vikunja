@@ -144,7 +144,7 @@
 <script setup lang="ts">
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {eventToHotkeyString} from '@github/hotkey'
+import {eventToShortcutString} from '@/helpers/shortcut'
 
 import EditorToolbar from './EditorToolbar.vue'
 
@@ -780,9 +780,9 @@ function setFocusToEditor(event: KeyboardEvent) {
 		return
 	}
 
-	const hotkeyString = eventToHotkeyString(event)
-	if (!hotkeyString) return
-	if (hotkeyString !== props.editShortcut ||
+	const shortcutString = eventToShortcutString(event)
+	if (!shortcutString) return
+	if (shortcutString !== props.editShortcut ||
 		event.target.tagName.toLowerCase() === 'input' ||
 		event.target.tagName.toLowerCase() === 'textarea' ||
 		event.target.contentEditable === 'true') {
