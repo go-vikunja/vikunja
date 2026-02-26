@@ -284,6 +284,18 @@ func getFilterComparatorFromOp(op fexpr.SignOp) (taskFilterComparator, error) {
 	}
 }
 
+// safeDatemathParse wraps datemath.Parse with a recover to catch panics from
+// the datemath lexer when given malformed input (e.g. "no" triggers a
+// "scanner internal error" panic in the generated lexer).
+func safeDatemathParse(s string) (expr datemath.Expression, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("datemath parse error: %v", r)
+		}
+	}()
+	return datemath.Parse(s)
+}
+
 func getValueForField(field reflect.StructField, rawValue string, loc *time.Location) (value interface{}, err error) {
 
 	if loc == nil {
@@ -305,7 +317,7 @@ func getValueForField(field reflect.StructField, rawValue string, loc *time.Loca
 		if field.Type == schemas.TimeType {
 			var t datemath.Expression
 			var tt time.Time
-			t, err = datemath.Parse(rawValue)
+			t, err = safeDatemathParse(rawValue)
 			if err == nil {
 				tt = t.Time(datemath.WithLocation(loc)).In(config.GetTimeZone())
 				tt = adjustDateForMysql(tt)

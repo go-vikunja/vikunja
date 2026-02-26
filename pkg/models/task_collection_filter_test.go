@@ -311,4 +311,11 @@ func TestParseFilter(t *testing.T) {
 		assert.Equal(t, taskFilterComparatorEquals, firstSet[1].comparator)
 		assert.Equal(t, int64(1), firstSet[1].value)
 	})
+	t.Run("invalid date value should not panic", func(t *testing.T) {
+		// "no" triggers a panic in the datemath lexer because it starts
+		// recognizing "now" but hits EOF after "no". The safeDatemathParse
+		// wrapper must recover from this panic and return an error instead.
+		_, err := getTaskFiltersFromFilterString("due_date = no", "UTC")
+		require.Error(t, err)
+	})
 }
