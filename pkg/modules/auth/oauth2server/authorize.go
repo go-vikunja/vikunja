@@ -148,10 +148,6 @@ func getUserFromRequest(c *echo.Context) (*user.User, error) {
 // buildAuthorizeURL reconstructs the full authorize URL from the current request
 // so we can pass it as a redirect parameter after login.
 func buildAuthorizeURL(c *echo.Context) string {
-	req := c.Request()
-	scheme := "https"
-	if strings.HasPrefix(config.ServicePublicURL.GetString(), "http://") {
-		scheme = "http"
-	}
-	return fmt.Sprintf("%s://%s%s?%s", scheme, req.Host, req.URL.Path, req.URL.RawQuery)
+	publicURL := strings.TrimSuffix(config.ServicePublicURL.GetString(), "/")
+	return fmt.Sprintf("%s%s?%s", publicURL, c.Request().URL.Path, c.Request().URL.RawQuery)
 }
