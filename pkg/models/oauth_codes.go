@@ -79,10 +79,15 @@ func GetAndDeleteOAuthCode(s *xorm.Session, code string) (*OAuthCode, error) {
 		return nil, &ErrOAuthCodeInvalid{}
 	}
 
-	// Delete immediately (single-use)
-	_, err = s.Where("id = ?", oauthCode.ID).Delete(&OAuthCode{})
+	// Delete immediately (single-use).
+	// Check affected rows to prevent a race where two concurrent requests
+	// both read the same code before either deletes it.
+	affected, err := s.Where("id = ?", oauthCode.ID).Delete(&OAuthCode{})
 	if err != nil {
 		return nil, err
+	}
+	if affected == 0 {
+		return nil, &ErrOAuthCodeInvalid{}
 	}
 
 	// Check expiry after deletion to prevent reuse of expired codes
