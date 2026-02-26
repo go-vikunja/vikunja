@@ -51,7 +51,7 @@ func CreateOAuthCode(s *xorm.Session, userID int64, clientID, redirectURI, codeC
 
 	oauthCode := &OAuthCode{
 		UserID:              userID,
-		Code:                rawCode,
+		Code:                HashSessionToken(rawCode),
 		ExpiresAt:           time.Now().Add(10 * time.Minute),
 		ClientID:            clientID,
 		RedirectURI:         redirectURI,
@@ -71,7 +71,7 @@ func CreateOAuthCode(s *xorm.Session, userID int64, clientID, redirectURI, codeC
 // Returns the code record or an error if not found or expired.
 func GetAndDeleteOAuthCode(s *xorm.Session, code string) (*OAuthCode, error) {
 	oauthCode := &OAuthCode{}
-	has, err := s.Where("code = ?", code).Get(oauthCode)
+	has, err := s.Where("code = ?", HashSessionToken(code)).Get(oauthCode)
 	if err != nil {
 		return nil, err
 	}
