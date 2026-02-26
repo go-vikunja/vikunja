@@ -94,6 +94,7 @@ interface Binding {
 }
 
 const bindings = new Set<Binding>()
+const elementBindings = new WeakMap<HTMLElement, Binding>()
 let sequenceBuffer: string[] = []
 let sequenceTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -110,7 +111,7 @@ function globalKeydownHandler(event: KeyboardEvent) {
 	if (event.isComposing) return
 	if (event.repeat) return
 
-	const target = (event as any).explicitOriginalTarget || event.target
+	const target = (event as KeyboardEvent & {explicitOriginalTarget?: EventTarget}).explicitOriginalTarget || event.target
 	if (target?.shadowRoot) return
 	if (isFormField(target)) return
 
@@ -188,7 +189,7 @@ export function install(el: HTMLElement, shortcut: string): void {
 
 	const binding: Binding = {keys, el}
 	bindings.add(binding)
-	;(el as any).__shortcutBinding = binding
+	elementBindings.set(el, binding)
 
 	ensureListener()
 }
@@ -197,10 +198,10 @@ export function install(el: HTMLElement, shortcut: string): void {
  * Remove an element's shortcut binding.
  */
 export function uninstall(el: HTMLElement): void {
-	const binding = (el as any).__shortcutBinding as Binding | undefined
+	const binding = elementBindings.get(el)
 	if (binding) {
 		bindings.delete(binding)
-		delete (el as any).__shortcutBinding
+		elementBindings.delete(el)
 	}
 
 	maybeRemoveListener()
