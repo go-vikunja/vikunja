@@ -61,31 +61,31 @@ export function useGanttBar(options: UseGanttBarOptions) {
 	function onKeyDown(e: KeyboardEvent) {
 		// task expanding
 		if (e.shiftKey) {
-			if (e.key === 'ArrowLeft') {
+			if (e.code === 'ArrowLeft') {
 				e.preventDefault()
 				changeSize('left', 1)
 			}
-			if (e.key === 'ArrowRight') {
+			if (e.code === 'ArrowRight') {
 				e.preventDefault()
 				changeSize('right', 1)
 			}
 		}
 		// task shrinking
 		else if (e.ctrlKey) {
-			if (e.key === 'ArrowLeft') {
+			if (e.code === 'ArrowLeft') {
 				e.preventDefault()
 				changeSize('left', -1)
 			}
-			if (e.key === 'ArrowRight') {
+			if (e.code === 'ArrowRight') {
 				e.preventDefault()
 				changeSize('right', -1)
 			}
 		}
 		// task movement
-		else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+		else if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
 			e.preventDefault()
 
-			const dir = e.key === 'ArrowRight' ? 1 : -1
+			const dir = e.code === 'ArrowRight' ? 1 : -1
 			const newStart = new Date(options.model.start)
 			newStart.setDate(newStart.getDate() + dir)
 			const newEnd = new Date(options.model.end)
