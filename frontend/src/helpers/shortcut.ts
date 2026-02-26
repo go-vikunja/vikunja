@@ -2,7 +2,7 @@ import {isAppleDevice} from '@/helpers/isAppleDevice'
 
 // --- Types ---
 
-interface ParsedKey {
+export interface ParsedKey {
 	code: string
 	ctrl: boolean
 	alt: boolean
@@ -13,7 +13,7 @@ interface ParsedKey {
 
 // --- Core functions ---
 
-function parseKey(keyStr: string): ParsedKey {
+export function parseKey(keyStr: string): ParsedKey {
 	const parts = keyStr.split('+')
 	const code = parts.pop() || ''
 	const modifiers = new Set(parts.map(m => m.toLowerCase()))
@@ -28,7 +28,7 @@ function parseKey(keyStr: string): ParsedKey {
 	}
 }
 
-function matchesKey(event: KeyboardEvent, parsed: ParsedKey): boolean {
+export function matchesKey(event: KeyboardEvent, parsed: ParsedKey): boolean {
 	if (event.code !== parsed.code) return false
 
 	const isMac = isAppleDevice()
@@ -74,7 +74,7 @@ export function eventToShortcutString(event: KeyboardEvent): string {
 
 // --- Form field detection ---
 
-function isFormField(target: EventTarget | null): boolean {
+export function isFormField(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false
 
 	const tagName = target.tagName.toLowerCase()
