@@ -156,7 +156,7 @@ func TestOAuth2TokenEndpoint(t *testing.T) {
 		assert.NotEmpty(t, tokenResp.AccessToken)
 		assert.Equal(t, "bearer", tokenResp.TokenType)
 		assert.NotEmpty(t, tokenResp.RefreshToken)
-		assert.Greater(t, tokenResp.ExpiresIn, int64(0))
+		assert.Positive(t, tokenResp.ExpiresIn)
 	})
 
 	t.Run("code is single-use", func(t *testing.T) {
