@@ -1,5 +1,5 @@
 import type {Directive} from 'vue'
-import {install, uninstall} from '@github/hotkey'
+import {install, uninstall} from '@/helpers/shortcut'
 
 const directive = <Directive<HTMLElement,string>>{
 	mounted(el, {value}) {
