@@ -6,6 +6,7 @@
 		<svg
 			width="12"
 			height="12"
+			:class="{'is-all-done': allDone}"
 		>
 			<circle
 				stroke-width="2"
@@ -51,9 +52,11 @@ const checklistCircleDone = computed(() => {
 	return ((100 - progress) / 100) * c
 })
 
+const allDone = computed(() => checklist.value.total === checklist.value.checked)
+
 const {t} = useI18n({useScope: 'global'})
 const label = computed(() => {
-	return checklist.value.total === checklist.value.checked 
+	return allDone.value
 		? t('task.checklistAllDone', checklist.value)
 		: t('task.checklistTotal', checklist.value)
 })
@@ -79,6 +82,12 @@ circle {
 
 	&:last-child {
 		stroke: var(--primary);
+	}
+}
+
+svg.is-all-done circle {
+	&:last-child {
+		stroke: var(--success);
 	}
 }
 </style>
