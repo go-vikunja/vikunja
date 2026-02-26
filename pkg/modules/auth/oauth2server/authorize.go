@@ -78,7 +78,18 @@ func HandleAuthorize(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	code, err := models.CreateOAuthCode(s, u.ID, clientID, redirectURI, codeChallenge, codeChallengeMethod)
+	// Verify the user account is still active
+	fullUser, err := user.GetUserByID(s, u.ID)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	if fullUser.Status == user.StatusDisabled {
+		_ = s.Rollback()
+		return echo.NewHTTPError(http.StatusForbidden, "Account disabled.")
+	}
+
+	code, err := models.CreateOAuthCode(s, fullUser.ID, clientID, redirectURI, codeChallenge, codeChallengeMethod)
 	if err != nil {
 		_ = s.Rollback()
 		return err
