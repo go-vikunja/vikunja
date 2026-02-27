@@ -1,9 +1,5 @@
 <template>
-	<div
-		v-for="kanbanView in kanbanViews"
-		:key="kanbanView.id"
-		class="bucket-select"
-	>
+	<template v-if="kanbanView">
 		<span class="has-text-grey-light"> &gt; </span>
 		<template v-if="canWrite">
 			<Dropdown>
@@ -12,11 +8,7 @@
 						class="bucket-name"
 						@click="toggleOpen"
 					>
-						<span
-							v-if="kanbanViews.length > 1"
-							class="view-title"
-						>{{ kanbanView.title }}:</span>
-						{{ currentBucketTitle(kanbanView) }}
+						{{ currentBucketTitle }}
 						<Icon
 							icon="pencil-alt"
 							class="change-indicator"
@@ -24,10 +16,10 @@
 					</BaseButton>
 				</template>
 				<DropdownItem
-					v-for="bucket in viewBuckets[kanbanView.id] || []"
+					v-for="bucket in buckets"
 					:key="bucket.id"
-					:class="{'is-active': isCurrentBucket(kanbanView, bucket)}"
-					@click="changeBucket(kanbanView, bucket)"
+					:class="{'is-active': currentBucket?.id === bucket.id}"
+					@click="changeBucket(bucket)"
 				>
 					{{ bucket.title }}
 				</DropdownItem>
@@ -35,15 +27,11 @@
 		</template>
 		<span
 			v-else
-			class="bucket-name is-readonly"
+			class="bucket-name"
 		>
-			<span
-				v-if="kanbanViews.length > 1"
-				class="view-title"
-			>{{ kanbanView.title }}:</span>
-			{{ currentBucketTitle(kanbanView) }}
+			{{ currentBucketTitle }}
 		</span>
-	</div>
+	</template>
 </template>
 
 <script lang="ts" setup>
@@ -57,6 +45,7 @@ import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
 
 import {useProjectStore} from '@/stores/projects'
 import {useKanbanStore} from '@/stores/kanban'
+import {useBaseStore} from '@/stores/base'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
@@ -81,106 +70,107 @@ const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
 const kanbanStore = useKanbanStore()
+const baseStore = useBaseStore()
 
 const project = computed(() => projectStore.projects[props.task.projectId])
 
-const kanbanViews = computed(() => {
+// Only show the bucket selector when the active view is a manual kanban view
+const kanbanView = computed(() => {
 	if (!project.value?.views) {
-		return []
+		return null
 	}
 
-	return project.value.views.filter(
-		v => v.viewKind === PROJECT_VIEW_KINDS.KANBAN
-			&& v.bucketConfigurationMode === 'manual',
-	)
+	const activeViewId = baseStore.currentProjectViewId
+	if (!activeViewId) {
+		return null
+	}
+
+	const activeView = project.value.views.find(v => v.id === activeViewId)
+	if (activeView
+		&& activeView.viewKind === PROJECT_VIEW_KINDS.KANBAN
+		&& activeView.bucketConfigurationMode === 'manual') {
+		return activeView
+	}
+
+	return null
 })
 
-const viewBuckets = ref<Record<number, IBucket[]>>({})
+const buckets = ref<IBucket[]>([])
 
 watch(
-	() => kanbanViews.value,
-	async (views) => {
+	() => kanbanView.value,
+	async (view) => {
+		if (!view) {
+			buckets.value = []
+			return
+		}
+
 		const bucketService = new BucketService()
-		for (const view of views) {
-			if (viewBuckets.value[view.id]) {
-				continue
-			}
-			try {
-				const buckets = await bucketService.getAll({
-					projectId: props.task.projectId,
-					projectViewId: view.id,
-				} as IBucket)
-				viewBuckets.value[view.id] = buckets
-			} catch {
-				// silently ignore if we cannot load buckets
-			}
+		try {
+			buckets.value = await bucketService.getAll({
+				projectId: props.task.projectId,
+				projectViewId: view.id,
+			} as IBucket)
+		} catch (e) {
+			console.error('Failed to load buckets:', e)
 		}
 	},
 	{immediate: true},
 )
 
-function currentBucketForView(view: {id: number}): IBucket | undefined {
-	return props.task.buckets?.find(b => b.projectViewId === view.id)
-}
+const currentBucket = computed(() => {
+	if (!kanbanView.value) {
+		return undefined
+	}
+	return props.task.buckets?.find(b => b.projectViewId === kanbanView.value.id)
+})
 
-function currentBucketTitle(view: {id: number}): string {
-	const bucket = currentBucketForView(view)
-	return bucket?.title || t('task.detail.noBucket')
-}
+const currentBucketTitle = computed(() => {
+	return currentBucket.value?.title || t('task.detail.noBucket')
+})
 
-function isCurrentBucket(view: {id: number}, bucket: IBucket): boolean {
-	const current = currentBucketForView(view)
-	return current?.id === bucket.id
-}
-
-async function changeBucket(view: {id: number}, bucket: IBucket) {
-	const current = currentBucketForView(view)
-	if (current?.id === bucket.id) {
+async function changeBucket(bucket: IBucket) {
+	if (!kanbanView.value || currentBucket.value?.id === bucket.id) {
 		return
 	}
 
 	const taskBucketService = new TaskBucketService()
-	try {
-		await taskBucketService.update(new TaskBucketModel({
-			taskId: props.task.id,
-			bucketId: bucket.id,
-			projectViewId: view.id,
-			projectId: props.task.projectId,
-		}))
+	const updatedTaskBucket = await taskBucketService.update(new TaskBucketModel({
+		taskId: props.task.id,
+		bucketId: bucket.id,
+		projectViewId: kanbanView.value.id,
+		projectId: props.task.projectId,
+	}))
 
-		const updatedBuckets = (props.task.buckets || []).map(b => {
-			if (b.projectViewId === view.id) {
-				return {...bucket}
-			}
-			return b
-		})
-
-		// If the task was not yet in this view, add the bucket
-		if (!updatedBuckets.find(b => b.projectViewId === view.id)) {
-			updatedBuckets.push({...bucket})
+	const updatedBuckets = (props.task.buckets || []).map(b => {
+		if (b.projectViewId === kanbanView.value.id) {
+			return {...bucket}
 		}
+		return b
+	})
 
-		// Update the kanban store if the board is loaded
-		kanbanStore.moveTaskToBucket(props.task, bucket.id)
-
-		emit('update:task', {
-			...props.task,
-			buckets: updatedBuckets,
-			bucketId: bucket.id,
-		})
-
-		success({message: t('task.detail.bucketChangedSuccess')})
-	} catch {
-		// error is handled by the service layer
+	if (!updatedBuckets.find(b => b.projectViewId === kanbanView.value.id)) {
+		updatedBuckets.push({...bucket})
 	}
+
+	kanbanStore.moveTaskToBucket(props.task, bucket.id)
+
+	// Use the task from the API response to pick up done state changes
+	// (moving to/from the done bucket toggles the done status)
+	const updatedTask = {
+		...props.task,
+		...updatedTaskBucket.task,
+		buckets: updatedBuckets,
+		bucketId: bucket.id,
+	}
+
+	emit('update:task', updatedTask)
+
+	success({message: t('task.detail.bucketChangedSuccess')})
 }
 </script>
 
 <style lang="scss" scoped>
-.bucket-select {
-	display: inline;
-}
-
 .bucket-name {
 	color: var(--grey-800);
 
