@@ -306,7 +306,9 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		t.ProjectID = project.ID
 		originalBucketID := t.BucketID
 		t.BucketID = 0
-		err = t.Create(s, user)
+
+		// Use CreateWithTimestamps to preserve original timestamps from migration source
+		err = t.CreateWithTimestamps(s, user)
 		if err != nil && models.IsErrTaskCannotBeEmpty(err) {
 			continue
 		}
@@ -454,6 +456,25 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				return
 			}
 			log.Debugf("[creating structure] Created new comment %d", comment.ID)
+		}
+
+		// Assignees
+		if len(t.Assignees) > 0 {
+			log.Debugf("[creating structure] Creating %d assignees for task %d", len(t.Assignees), t.ID)
+		}
+		for _, assignee := range t.Assignees {
+			if assignee == nil || assignee.ID == 0 {
+				continue
+			}
+			taskAssignee := &models.TaskAssginee{
+				TaskID: t.ID,
+				UserID: assignee.ID,
+			}
+			_, err = s.Insert(taskAssignee)
+			if err != nil {
+				return
+			}
+			log.Debugf("[creating structure] Assigned user %d to task %d", assignee.ID, t.ID)
 		}
 	}
 

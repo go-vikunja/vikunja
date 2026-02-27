@@ -866,10 +866,18 @@ func setNewTaskIndex(s *xorm.Session, t *Task) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{id}/tasks [put]
 func (t *Task) Create(s *xorm.Session, a web.Auth) (err error) {
-	return createTask(s, t, a, true, true)
+	return createTask(s, t, a, true, true, false)
 }
 
-func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setBucket bool) (err error) {
+// CreateWithTimestamps creates a task while preserving pre-set Created and Updated timestamps.
+// This is used during migration to preserve original timestamps from source systems like Nextcloud Deck.
+// Similar to TaskComment.CreateWithTimestamps().
+func (t *Task) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err error) {
+	preserveTimestamps := !t.Created.IsZero() && !t.Updated.IsZero()
+	return createTask(s, t, a, true, true, preserveTimestamps)
+}
+
+func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setBucket bool, preserveTimestamps bool) (err error) {
 
 	t.ID = 0
 
@@ -902,9 +910,45 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 
 	t.HexColor = utils.NormalizeHex(t.HexColor)
 
-	_, err = s.Insert(t)
+	// Debug logging for description field
+	if len(t.Description) > 0 {
+		log.Debugf("[createTask] Before XORM Insert: Task %q has description (%d chars)", t.Title, len(t.Description))
+		// Show a preview of the description
+		preview := t.Description
+		if len(preview) > 100 {
+			preview = preview[:100]
+		}
+		log.Debugf("[createTask] Description preview: %q", preview)
+	}
+
+	// Use NoAutoTime when preserving timestamps (e.g., during migration) to avoid XORM overwriting them
+	// Check if either Created or Updated is set (not just both)
+	if preserveTimestamps && (!t.Created.IsZero() || !t.Updated.IsZero()) {
+		_, err = s.NoAutoTime().Insert(t)
+	} else {
+		_, err = s.Insert(t)
+	}
 	if err != nil {
+		log.Errorf("[createTask] XORM Insert error: %v", err)
 		return err
+	}
+
+	// Verify the description was inserted by reading it back from the database immediately
+	if len(t.Description) > 0 {
+		log.Debugf("[createTask] After XORM Insert: Task ID %d description still in memory (%d chars)", t.ID, len(t.Description))
+
+		// Verify the description was actually stored in the database
+		var dbTask Task
+		has, err := s.ID(t.ID).Cols("description").Get(&dbTask)
+		if err != nil {
+			log.Warningf("[createTask] Failed to verify description in database: %v", err)
+		} else if has {
+			if len(dbTask.Description) > 0 {
+				log.Debugf("[createTask] Verified: Description stored in database (%d chars)", len(dbTask.Description))
+			} else {
+				log.Errorf("[createTask] ERROR: Description was NOT stored in database! Task ID: %d", t.ID)
+			}
+		}
 	}
 
 	var providedBucket *Bucket

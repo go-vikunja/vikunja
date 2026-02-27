@@ -87,7 +87,9 @@ func (tc *TaskComment) CreateWithTimestamps(s *xorm.Session, a web.Auth) (err er
 	}
 	tc.AuthorID = tc.Author.ID
 
-	if !tc.Created.IsZero() && !tc.Updated.IsZero() {
+	// Use NoAutoTime if either Created or Updated is explicitly set (e.g., during migration)
+	// Only use regular insert if both are zero (normal comment creation)
+	if !tc.Created.IsZero() || !tc.Updated.IsZero() {
 		_, err = s.NoAutoTime().Insert(tc)
 		if err != nil {
 			return

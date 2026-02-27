@@ -28,6 +28,115 @@
 						{{ $t('migrate.upload') }}
 					</XButton>
 				</template>
+				<template v-else-if="migrator.isNextcloudDeck">
+					<Message
+						v-if="migrationError"
+						variant="danger"
+						class="mbe-4"
+					>
+						{{ migrationError }}
+					</Message>
+					<div class="field">
+						<label
+							class="label"
+							for="serverUrl"
+						>
+							{{ $t('migrate.deck.serverUrl') }}
+						</label>
+						<div class="control">
+							<input
+								id="serverUrl"
+								v-model="serverUrl"
+								class="input"
+								type="url"
+								:placeholder="$t('migrate.deck.serverUrlPlaceholder')"
+								required
+							>
+						</div>
+						<p class="help">
+							{{ $t('migrate.deck.serverUrlDescription') }}
+						</p>
+					</div>
+					<div class="field">
+						<label
+							class="label"
+							for="clientId"
+						>
+							{{ $t('migrate.deck.clientId') }}
+						</label>
+						<div class="control">
+							<input
+								id="clientId"
+								v-model="clientId"
+								class="input"
+								type="text"
+								:placeholder="$t('migrate.deck.clientIdPlaceholder')"
+								required
+							>
+						</div>
+						<p class="help">
+							{{ $t('migrate.deck.clientIdDescription') }}
+						</p>
+					</div>
+					<div class="field">
+						<label
+							class="label"
+							for="clientSecret"
+						>
+							{{ $t('migrate.deck.clientSecret') }}
+						</label>
+						<div class="control">
+							<input
+								id="clientSecret"
+								v-model="clientSecret"
+								class="input"
+								type="password"
+								:placeholder="$t('migrate.deck.clientSecretPlaceholder')"
+								required
+							>
+						</div>
+						<p class="help">
+							{{ $t('migrate.deck.clientSecretDescription') }}
+						</p>
+					</div>
+					<Message class="mbe-4">
+						<p>
+							<strong>{{ $t('migrate.deck.oauthSetupTitle') }}</strong>
+						</p>
+						<p>{{ $t('migrate.deck.oauthSetupDescription') }}</p>
+						<p class="mt-2">
+							<strong>{{ $t('migrate.deck.redirectUrl') }}:</strong>
+							<code class="has-background-light p-1">{{ redirectUrl }}</code>
+						</p>
+					</Message>
+					<div class="field">
+						<label
+							class="label"
+							for="userMappings"
+						>
+							{{ $t('migrate.deck.userMappings') }}
+						</label>
+						<div class="control">
+							<textarea
+								id="userMappings"
+								v-model="userMappings"
+								class="textarea"
+								:placeholder="$t('migrate.deck.userMappingsPlaceholder')"
+								rows="4"
+							/>
+						</div>
+						<p class="help">
+							{{ $t('migrate.deck.userMappingsDescription') }}
+						</p>
+					</div>
+					<XButton
+						:loading="migrationService.loading"
+						:disabled="migrationService.loading || !serverUrl || !clientId || !clientSecret || undefined"
+						@click="startOAuthFlow"
+					>
+						{{ $t('migrate.getStarted') }}
+					</XButton>
+				</template>
 				<template v-else>
 					<p>{{ $t('migrate.authorize', {name: migrator.name}) }}</p>
 					<XButton
@@ -156,6 +265,13 @@ const message = ref('')
 const migratorAuthCode = ref('')
 const migrationJustStarted = ref(false)
 const migrationError = ref('')
+const serverUrl = ref('')
+const clientId = ref('')
+const clientSecret = ref('')
+const userMappings = ref('')
+
+// Auto-calculate redirect URL - this must be configured in Nextcloud OAuth app settings
+const redirectUrl = computed(() => window.location.origin + '/migrate/deck')
 
 const migrator = computed<Migrator>(() => MIGRATORS[props.service])
 
@@ -166,12 +282,53 @@ const migrationFileService = shallowReactive(new AbstractMigrationFileService(mi
 
 useTitle(() => t('migrate.titleService', {name: migrator.value.name}))
 
+async function startOAuthFlow() {
+	try {
+		migrationError.value = ''
+		// Store OAuth config in session storage so we can retrieve it after OAuth callback
+		sessionStorage.setItem('deckServerUrl', serverUrl.value)
+		sessionStorage.setItem('deckClientId', clientId.value)
+		sessionStorage.setItem('deckClientSecret', clientSecret.value)
+		sessionStorage.setItem('deckUserMappings', userMappings.value)
+
+		const {url} = await migrationService.getAuthUrl({
+			server_url: serverUrl.value,
+			client_id: clientId.value,
+			client_secret: clientSecret.value,
+			redirect_url: redirectUrl.value,
+		})
+		authUrl.value = url
+		window.location.href = authUrl.value
+	} catch (e) {
+		migrationError.value = getErrorText(e)
+	}
+}
+
 async function initMigration() {
 	if (migrator.value.isFileMigrator) {
 		return
 	}
 
-	authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
+	// For migrators that require custom OAuth, restore config from session storage
+	if (migrator.value.isNextcloudDeck) {
+		const storedServerUrl = sessionStorage.getItem('deckServerUrl')
+		const storedClientId = sessionStorage.getItem('deckClientId')
+		const storedClientSecret = sessionStorage.getItem('deckClientSecret')
+		const storedUserMappings = sessionStorage.getItem('deckUserMappings')
+
+		if (storedServerUrl) serverUrl.value = storedServerUrl
+		if (storedClientId) clientId.value = storedClientId
+		if (storedClientSecret) clientSecret.value = storedClientSecret
+		if (storedUserMappings) userMappings.value = storedUserMappings
+
+		// Clear sensitive data from sessionStorage immediately after retrieval
+		sessionStorage.removeItem('deckServerUrl')
+		sessionStorage.removeItem('deckClientId')
+		sessionStorage.removeItem('deckClientSecret')
+		sessionStorage.removeItem('deckUserMappings')
+	} else {
+		authUrl.value = await migrationService.getAuthUrl().then(({url}) => url)
+	}
 
 	const TOKEN_HASH_PREFIX = '#token='
 	migratorAuthCode.value = location.hash.startsWith(TOKEN_HASH_PREFIX)
@@ -218,6 +375,18 @@ async function migrate() {
 		migrationConfig = uploadInput.value?.files?.[0] as File
 	}
 
+	// For migrators that require custom OAuth, include all config in the migration config
+	if (migrator.value.isNextcloudDeck && serverUrl.value) {
+		migrationConfig = {
+			code: migratorAuthCode.value,
+			server_url: serverUrl.value,
+			client_id: clientId.value,
+			client_secret: clientSecret.value,
+			redirect_url: redirectUrl.value,
+			user_mappings: userMappings.value,
+		}
+	}
+
 	try {
 		if (migrator.value.isFileMigrator) {
 			const result = await migrationFileService.migrate(migrationConfig as File)
@@ -225,7 +394,7 @@ async function migrate() {
 			const projectStore = useProjectStore()
 			return projectStore.loadAllProjects()
 		}
-		
+
 		await migrationService.migrate(migrationConfig as MigrationConfig)
 		migrationJustStarted.value = true
 	} catch (e) {

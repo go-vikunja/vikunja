@@ -1,0 +1,14 @@
+<!--
+  Nextcloud Deck Icon
+  Source: https://github.com/nextcloud/deck/blob/main/img/deck.svg
+  Copyright (C) Nextcloud GmbH and contributors
+  License: GNU Affero General Public License or later (https://www.gnu.org/licenses/agpl-3.0.html)
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88">
+    <g fill="#fff">
+        <rect ry="5.5" height="44" width="77" y="38.5" x="5.5"/>
+        <rect ry="2.75" height="5.5" width="66" y="27.5" x="11"/>
+        <rect ry="2.75" height="5.5" width="55" y="16.5" x="16.5"/>
+        <rect ry="2.75" height="5.5" width="44" y="5.5" x="22"/>
+    </g>
+</svg>

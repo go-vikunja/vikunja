@@ -757,6 +757,125 @@
                 }
             }
         },
+        "/migration/deck/auth": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns empty as authentication is done via credentials in the migration request",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get auth instructions for Nextcloud Deck",
+                "responses": {
+                    "200": {
+                        "description": "The auth instructions",
+                        "schema": {
+                            "$ref": "#/definitions/handler.AuthURL"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/deck/migrate": {
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Migrates all boards, stacks, cards, labels, comments, and attachments from Nextcloud Deck",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Migrate from Nextcloud Deck",
+                "parameters": [
+                    {
+                        "description": "Nextcloud server credentials",
+                        "name": "migrationData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/deck.Migration"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Migration successful",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication failed",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/deck/status": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns if the current user already did the migation or not",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get migration status",
+                "responses": {
+                    "200": {
+                        "description": "The migration status",
+                        "schema": {
+                            "$ref": "#/definitions/migration.Status"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/migration/microsoft-todo/auth": {
             "get": {
                 "security": [
@@ -7894,6 +8013,26 @@
                 },
                 "username_fallback": {
                     "type": "boolean"
+                }
+            }
+        },
+        "deck.Migration": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
+                },
+                "server_url": {
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 10
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
                 }
             }
         },
