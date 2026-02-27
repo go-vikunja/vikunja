@@ -66,6 +66,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/api/pkg/modules/migration"
+	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
@@ -777,6 +778,10 @@ func registerMigrations(m *echo.Group) {
 		},
 	}
 	tickTickFileMigrator.RegisterRoutes(m)
+
+	// CSV File Migrator (always enabled - generic import)
+	csvFileMigrator := &csvmigrator.MigratorWeb{}
+	csvFileMigrator.RegisterRoutes(m)
 }
 
 func registerCalDavRoutes(c *echo.Group) {
