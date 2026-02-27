@@ -47,12 +47,13 @@ type Token struct {
 	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 }
 
-const RefreshTokenCookieName = "vikunja_refresh_token"      //nolint:gosec // not a credential
-const refreshTokenCookiePath = "/api/v1/user/token/refresh" //nolint:gosec // not a credential
+const RefreshTokenCookieName = "vikunja_refresh_token" //nolint:gosec // not a credential
+const refreshTokenCookiePath = "/api/v1/"              //nolint:gosec // not a credential
 
 // SetRefreshTokenCookie sets an HttpOnly cookie containing the refresh token.
-// The cookie is path-scoped to the refresh endpoint so the browser only sends
-// it on refresh requests. HttpOnly prevents JavaScript access (XSS protection).
+// The cookie is path-scoped to /api/v1/ so the browser sends it on all API
+// requests, including the OAuth authorize endpoint which uses it to detect
+// active browser sessions. HttpOnly prevents JavaScript access (XSS protection).
 func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 	secure := strings.HasPrefix(config.ServicePublicURL.GetString(), "https")
 	c.SetCookie(&http.Cookie{
