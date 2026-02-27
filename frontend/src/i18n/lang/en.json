@@ -847,6 +847,8 @@
       "doneAt": "Done {0}",
       "updateSuccess": "The task was saved successfully.",
       "deleteSuccess": "The task has been deleted successfully.",
+      "noBucket": "No bucket",
+      "bucketChangedSuccess": "The task bucket has been changed successfully.",
       "belongsToProject": "This task belongs to project '{project}'",
       "back": "Back to project",
       "due": "Due {at}",
