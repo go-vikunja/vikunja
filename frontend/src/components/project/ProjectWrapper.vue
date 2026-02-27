@@ -187,6 +187,7 @@ function getViewRoute(view: IProjectView) {
 
 <style lang="scss" scoped>
 .switch-view-container {
+	position: relative;
 	min-block-size: $switch-view-height;
 	margin-block-end: 1rem;
 	
@@ -215,6 +216,9 @@ function getViewRoute(view: IProjectView) {
 	visibility: hidden;
 	pointer-events: none;
 	white-space: nowrap;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	overflow: hidden;
 }
 
 .switch-view-dropdown-trigger {
