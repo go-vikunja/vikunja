@@ -14,7 +14,6 @@
 			ref="switchViewContainerRef"
 			class="switch-view-container d-print-none"
 			:class="{'is-justify-content-flex-end': views.length === 1}"
-			:style="{ visibility: overflowChecked ? 'visible' : 'hidden' }"
 		>
 			<!-- Dropdown mode when buttons overflow -->
 			<Dropdown
@@ -52,7 +51,7 @@
 				v-if="views.length > 1"
 				ref="switchViewRef"
 				class="switch-view"
-				:class="{'switch-view--hidden': isOverflowing}"
+				:class="{'switch-view--hidden': isOverflowing || !overflowChecked}"
 				:aria-hidden="isOverflowing || undefined"
 			>
 				<BaseButton
