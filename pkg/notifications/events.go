@@ -16,45 +16,17 @@
 
 package notifications
 
-import (
-	"os"
-	"testing"
+import "code.vikunja.io/api/pkg/events"
 
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/i18n"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/mail"
-)
-
-// SetupTests initializes all db tests
-func SetupTests() {
-	var err error
-	x, err := db.CreateTestEngine()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = x.Sync2(&DatabaseNotification{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	i18n.Init()
+// NotificationCreatedEvent is dispatched when a notification is saved to the database.
+type NotificationCreatedEvent struct {
+	Notification *DatabaseNotification `json:"notification"`
+	UserID       int64                 `json:"user_id"`
 }
 
-// TestMain is the main test function used to bootstrap the test env
-func TestMain(m *testing.M) {
-	// Initialize logger for tests
-	log.InitLogger()
-
-	// Set default config
-	config.InitDefaultConfig()
-
-	SetupTests()
-
-	mail.Fake()
-	events.Fake()
-	os.Exit(m.Run())
+// Name returns the event name.
+func (n *NotificationCreatedEvent) Name() string {
+	return "notification.created"
 }
+
+var _ events.Event = (*NotificationCreatedEvent)(nil)

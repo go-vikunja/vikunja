@@ -19,13 +19,11 @@ package routes
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/web"
 
 	echojwt "github.com/labstack/echo-jwt/v5"
@@ -74,26 +72,15 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 }
 
 func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-	token, err := models.GetTokenFromTokenString(s, strings.TrimPrefix(tokenHeaderValue, "Bearer "))
+	token, u, err := auth.ValidateAPITokenString(strings.TrimPrefix(tokenHeaderValue, "Bearer "))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error").Wrap(err)
-	}
-
-	if time.Now().After(token.ExpiresAt) {
-		log.Debugf("[auth] Tried authenticating with token %d but it expired on %s", token.ID, token.ExpiresAt.String())
+		log.Debugf("[auth] API token validation failed: %v", err)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
 	if !models.CanDoAPIRoute(c, token) {
 		log.Debugf("[auth] Tried authenticating with token %d but it does not have permission to do this route", token.ID)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
-	}
-
-	u, err := user.GetUserByID(s, token.OwnerID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error").Wrap(err)
 	}
 
 	c.Set("api_token", token)

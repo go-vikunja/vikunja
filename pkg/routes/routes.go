@@ -77,6 +77,7 @@ import (
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
+	ws "code.vikunja.io/api/pkg/websocket"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v5"
@@ -304,6 +305,9 @@ func registerAPIRoutes(a *echo.Group) {
 	// Docs
 	n.GET("/docs.json", apiv1.DocsJSON)
 	n.GET("/docs", apiv1.RedocUI)
+
+	// WebSocket (auth happens after upgrade via first message)
+	n.GET("/ws", ws.UpgradeHandler)
 
 	// Prometheus endpoint
 	setupMetrics(n)

@@ -36,6 +36,7 @@ import (
 	"code.vikunja.io/api/pkg/plugins"
 	"code.vikunja.io/api/pkg/red"
 	"code.vikunja.io/api/pkg/user"
+	ws "code.vikunja.io/api/pkg/websocket"
 )
 
 // LightInit will only init config, redis, logger but no db connection.
@@ -128,11 +129,15 @@ func FullInit() {
 	openid.CleanupSavedOpenIDProviders()
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
 
+	// Initialize WebSocket hub
+	ws.InitHub()
+
 	// Start processing events
 	go func() {
 		models.RegisterListeners()
 		user.RegisterListeners()
 		migrationHandler.RegisterListeners()
+		ws.RegisterListeners()
 		err := events.InitEvents()
 		if err != nil {
 			log.Fatal(err.Error())
