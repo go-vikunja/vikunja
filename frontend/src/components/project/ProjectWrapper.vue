@@ -15,22 +15,6 @@
 			class="switch-view-container d-print-none"
 			:class="{'is-justify-content-flex-end': views.length === 1}"
 		>
-			<!-- Hidden measurement element to detect total button width -->
-			<div
-				v-if="views.length > 1"
-				ref="measureRef"
-				class="switch-view switch-view--measure"
-				aria-hidden="true"
-			>
-				<span
-					v-for="view in views"
-					:key="'measure-' + view.id"
-					class="switch-view-button"
-				>
-					{{ getViewTitle(view) }}
-				</span>
-			</div>
-
 			<!-- Dropdown mode when buttons overflow -->
 			<Dropdown
 				v-if="isOverflowing && views.length > 1"
@@ -58,10 +42,13 @@
 				</DropdownItem>
 			</Dropdown>
 
-			<!-- Inline buttons when they fit -->
+			<!-- Inline buttons, hidden when overflowing but kept in DOM for width measurement -->
 			<div
-				v-else-if="views.length > 1"
+				v-if="views.length > 1"
+				ref="switchViewRef"
 				class="switch-view"
+				:class="{'switch-view--hidden': isOverflowing}"
+				:aria-hidden="isOverflowing || undefined"
 			>
 				<BaseButton
 					v-for="view in views"
@@ -69,6 +56,7 @@
 					class="switch-view-button"
 					:class="{'is-active': view.id === viewId}"
 					:to="getViewRoute(view)"
+					:tabindex="isOverflowing ? -1 : undefined"
 				>
 					{{ getViewTitle(view) }}
 				</BaseButton>
@@ -124,14 +112,14 @@ const projectStore = useProjectStore()
 const viewFiltersStore = useViewFiltersStore()
 
 const switchViewContainerRef = ref<HTMLElement>()
-const measureRef = ref<HTMLElement>()
+const switchViewRef = ref<HTMLElement>()
 const isOverflowing = ref(false)
 
 function checkOverflow() {
-	if (!measureRef.value || !switchViewContainerRef.value) {
+	if (!switchViewRef.value || !switchViewContainerRef.value) {
 		return
 	}
-	const buttonsWidth = measureRef.value.scrollWidth
+	const buttonsWidth = switchViewRef.value.scrollWidth
 	const containerWidth = switchViewContainerRef.value.clientWidth
 	isOverflowing.value = buttonsWidth > containerWidth
 }
@@ -212,14 +200,11 @@ function getViewRoute(view: IProjectView) {
 	padding: .5rem;
 }
 
-.switch-view--measure {
+.switch-view--hidden {
 	position: absolute;
 	visibility: hidden;
-	block-size: 0;
-	overflow: hidden;
 	pointer-events: none;
 	white-space: nowrap;
-	box-shadow: none;
 }
 
 .switch-view-dropdown-trigger {
