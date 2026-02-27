@@ -38,6 +38,14 @@
 					>
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
+					<FancyCheckbox
+						v-if="filters.projectId > 0 && showIncludeSubprojectsToggle"
+						v-model="filters.includeSubprojects"
+						v-tooltip="$t('project.views.includeSubprojectsHint')"
+						is-block
+					>
+						{{ $t('project.views.includeSubprojects') }}
+					</FancyCheckbox>
 				</div>
 			</Card>
 
@@ -72,6 +80,7 @@ import {useI18n} from 'vue-i18n'
 import type {RouteLocationNormalized} from 'vue-router'
 
 import {useBaseStore} from '@/stores/base'
+import {useAuthStore} from '@/stores/auth'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 import Foo from '@/components/misc/flatpickr/Flatpickr.vue'
@@ -98,7 +107,9 @@ const props = defineProps<{
 
 
 const baseStore = useBaseStore()
+const authStore = useAuthStore()
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > PERMISSIONS.READ)
+const showIncludeSubprojectsToggle = computed(() => authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false)
 
 const {route, viewId} = toRefs(props)
 const {
