@@ -7,6 +7,38 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [2.1.0] - 2026-02-27
+
+### Bug Fixes
+
+* *(auth)* Remove password reset token after use
+* *(auth)* Correctly delete older password reset tokens in cron
+* *(editor)* Use overflow-wrap instead of word-break for text wrapping
+* *(filter)* Recover from datemath panic on malformed date filter values
+
+### Dependencies
+
+* *(deps)* Update dependency stylelint to v17.4.0
+* *(deps)* Update dependency autoprefixer to v10.4.26
+* *(deps)* Update dev-dependencies
+* *(deps)* Override transitive rollup 2.x to use direct dependency version
+* *(deps)* Upgrade transitive basic-ftp from 5.0.5 to 5.2.0
+* *(deps)* Upgrade transitive minimatch from 10.2.1 to 10.2.3+
+
+### Features
+
+* *(checklist)* Show green progress circle when all checkboxes are done
+* *(multiselect)* Add green plus icon and always-visible hint to create option
+
+### Miscellaneous Tasks
+
+* *(i18n)* Update translations via Crowdin
+* Add opensourcefinder verification ([1eccb0e](1eccb0edb2e04ca2ba0b86eed3ba2b22510db385))
+
+### Other
+
+* *(other)* [skip ci] Updated swagger docs
+
 ## [2.0.0] - 2026-02-25
 
 ### Bug Fixes
