@@ -60,6 +60,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
@@ -263,6 +264,8 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/docs.json":                      true,
 	"/api/v1/docs":                           true,
 	"/api/v1/metrics":                        true,
+	"/api/v1/oauth/authorize":                true,
+	"/api/v1/oauth/token":                    true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
@@ -335,6 +338,12 @@ func registerAPIRoutes(a *echo.Group) {
 	if config.AuthOpenIDEnabled.GetBool() {
 		ur.POST("/auth/openid/:provider/callback", openid.HandleCallback)
 	}
+
+	// OAuth 2.0 authorization server endpoints.
+	// These are unauthenticated — the authorize endpoint handles its own auth
+	// check and redirect, and the token endpoint validates credentials itself.
+	ur.GET("/oauth/authorize", oauth2server.HandleAuthorize)
+	ur.POST("/oauth/token", oauth2server.HandleToken)
 
 	// Testing
 	if config.ServiceTestingtoken.GetString() != "" {
