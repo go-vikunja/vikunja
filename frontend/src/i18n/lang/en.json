@@ -185,6 +185,10 @@
       "backgroundBrightness": {
         "title": "Background brightness"
       },
+      "webhooks": {
+        "title": "Webhook Notifications",
+        "description": "Configure webhook URLs to receive POST requests when reminder or overdue events fire. These webhooks receive events from all your projects."
+      },
       "apiTokens": {
         "title": "API Tokens",
         "general": "API tokens allow you to use Vikunja's API without user credentials.",

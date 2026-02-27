@@ -17,36 +17,33 @@
 package migration
 
 import (
-	"time"
-
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
-type Session20260224113347 struct {
-	ID            string    `xorm:"varchar(36) not null unique pk"`
-	UserID        int64     `xorm:"bigint not null index"`
-	TokenHash     string    `xorm:"varchar(64) not null unique index"`
-	DeviceInfo    string    `xorm:"text"`
-	IPAddress     string    `xorm:"varchar(100)"`
-	IsLongSession bool      `xorm:"not null default false"`
-	LastActive    time.Time `xorm:"not null"`
-	Created       time.Time `xorm:"created not null"`
-}
-
-func (Session20260224113347) TableName() string {
-	return "sessions"
-}
-
 func init() {
 	migrations = append(migrations, &xormigrate.Migration{
-		ID:          "20260224113347",
-		Description: "Add sessions table",
+		ID:          "20260224215050",
+		Description: "Add user_id to webhooks table and make project_id nullable",
 		Migrate: func(tx *xorm.Engine) error {
-			return tx.Sync(Session20260224113347{})
+			exists, err := columnExists(tx, "webhooks", "user_id")
+			if err != nil {
+				return err
+			}
+			if !exists {
+				if _, err = tx.Exec("ALTER TABLE webhooks ADD COLUMN user_id bigint NULL"); err != nil {
+					return err
+				}
+			}
+
+			if _, err = tx.Exec("CREATE INDEX IF NOT EXISTS IDX_webhooks_user_id ON webhooks (user_id)"); err != nil {
+				return err
+			}
+
+			return nil
 		},
 		Rollback: func(tx *xorm.Engine) error {
-			return tx.DropTables(Session20260224113347{})
+			return nil
 		},
 	})
 }

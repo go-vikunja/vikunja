@@ -394,6 +394,15 @@ func registerAPIRoutes(a *echo.Group) {
 	u.GET("/sessions", sessionProvider.ReadAllWeb)
 	u.DELETE("/sessions/:session", sessionProvider.DeleteWeb)
 
+	// User-level webhooks
+	if config.WebhooksEnabled.GetBool() {
+		u.GET("/settings/webhooks", apiv1.GetUserWebhooks)
+		u.GET("/settings/webhooks/events", apiv1.GetUserDirectedWebhookEvents)
+		u.PUT("/settings/webhooks", apiv1.CreateUserWebhook)
+		u.POST("/settings/webhooks/:id", apiv1.UpdateUserWebhook)
+		u.DELETE("/settings/webhooks/:id", apiv1.DeleteUserWebhook)
+	}
+
 	if config.ServiceEnableTotp.GetBool() {
 		u.GET("/settings/totp", apiv1.UserTOTP)
 		u.POST("/settings/totp/enroll", apiv1.UserTOTPEnroll)

@@ -52,7 +52,9 @@ type Webhook struct {
 	// The webhook events which should fire this webhook target
 	Events []string `xorm:"JSON not null" valid:"required" json:"events"`
 	// The project ID of the project this webhook target belongs to
-	ProjectID int64 `xorm:"bigint not null index" json:"project_id" param:"project"`
+	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project"`
+	// The user ID if this is a user-level webhook (mutually exclusive with ProjectID)
+	UserID int64 `xorm:"bigint null index" json:"user_id"`
 	// If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing
 	Secret string `xorm:"null" json:"secret"`
 	// If provided, webhook requests will be sent with a Basic Auth header.
@@ -78,10 +80,12 @@ func (w *Webhook) TableName() string {
 
 var availableWebhookEvents map[string]bool
 var availableWebhookEventsLock *sync.Mutex
+var userDirectedWebhookEvents map[string]bool
 
 func init() {
 	availableWebhookEvents = make(map[string]bool)
 	availableWebhookEventsLock = &sync.Mutex{}
+	userDirectedWebhookEvents = make(map[string]bool)
 }
 
 func RegisterEventForWebhook(event events.Event) {
@@ -105,6 +109,34 @@ func GetAvailableWebhookEvents() []string {
 	return evts
 }
 
+// RegisterUserDirectedEventForWebhook registers an event as both a webhook event and a user-directed event
+func RegisterUserDirectedEventForWebhook(event events.Event) {
+	RegisterEventForWebhook(event)
+	availableWebhookEventsLock.Lock()
+	defer availableWebhookEventsLock.Unlock()
+	userDirectedWebhookEvents[event.Name()] = true
+}
+
+// IsUserDirectedEvent returns whether an event name is user-directed
+func IsUserDirectedEvent(eventName string) bool {
+	availableWebhookEventsLock.Lock()
+	defer availableWebhookEventsLock.Unlock()
+	return userDirectedWebhookEvents[eventName]
+}
+
+// GetUserDirectedWebhookEvents returns a sorted list of user-directed webhook event names
+func GetUserDirectedWebhookEvents() []string {
+	availableWebhookEventsLock.Lock()
+	defer availableWebhookEventsLock.Unlock()
+
+	evts := []string{}
+	for e := range userDirectedWebhookEvents {
+		evts = append(evts, e)
+	}
+	sort.Strings(evts)
+	return evts
+}
+
 // Create creates a webhook target
 // @Summary Create a webhook target
 // @Description Create a webhook target which receives POST requests about specified events from a project.
@@ -120,12 +152,24 @@ func GetAvailableWebhookEvents() []string {
 // @Router /projects/{id}/webhooks [put]
 func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 
+	// Validate that exactly one of ProjectID or UserID is set
+	if w.ProjectID == 0 && w.UserID == 0 {
+		return InvalidFieldError([]string{"project_id", "user_id"})
+	}
+	if w.ProjectID != 0 && w.UserID != 0 {
+		return InvalidFieldError([]string{"project_id", "user_id"})
+	}
+
 	if !strings.HasPrefix(w.TargetURL, "http") {
 		return InvalidFieldError([]string{"target_url"})
 	}
 
 	for _, event := range w.Events {
 		if _, has := availableWebhookEvents[event]; !has {
+			return InvalidFieldError([]string{"events"})
+		}
+		// User-level webhooks can only subscribe to user-directed events
+		if w.UserID != 0 && !IsUserDirectedEvent(event) {
 			return InvalidFieldError([]string{"events"})
 		}
 	}
