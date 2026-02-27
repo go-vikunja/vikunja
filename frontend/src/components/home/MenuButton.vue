@@ -1,6 +1,6 @@
 <template>
 	<BaseButton
-		v-shortcut="'Mod+e'"
+		v-shortcut="comboHotkey('Mod', 'e')"
 		class="menu-show-button"
 		:title="$t('keyboardShortcuts.toggleMenu')"
 		:aria-label="menuActive ? $t('misc.hideMenu') : $t('misc.showMenu')"
@@ -12,6 +12,7 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import {useBaseStore} from '@/stores/base'
+import {comboHotkey} from '@/components/misc/keyboard-shortcuts/shortcuts'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 

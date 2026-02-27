@@ -18,7 +18,7 @@
 			<menu class="menu-list other-menu-items">
 				<li>
 					<RouterLink
-						v-shortcut="'g o'"
+						v-shortcut="followHotkey('g', 'o')"
 						:to="{ name: 'home'}"
 					>
 						<span class="menu-item-icon icon">
@@ -29,7 +29,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g u'"
+						v-shortcut="followHotkey('g', 'u')"
 						:to="{ name: 'tasks.range'}"
 					>
 						<span class="menu-item-icon icon">
@@ -40,7 +40,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g p'"
+						v-shortcut="followHotkey('g', 'p')"
 						:to="{ name: 'projects.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -51,7 +51,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g a'"
+						v-shortcut="followHotkey('g', 'a')"
 						:to="{ name: 'labels.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -62,7 +62,7 @@
 				</li>
 				<li>
 					<RouterLink
-						v-shortcut="'g m'"
+						v-shortcut="followHotkey('g', 'm')"
 						:to="{ name: 'teams.index'}"
 					>
 						<span class="menu-item-icon icon">
@@ -136,6 +136,7 @@ import {useProjectStore} from '@/stores/projects'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import type {IProject} from '@/modelTypes/IProject'
 import {useSidebarResize} from '@/composables/useSidebarResize'
+import {followHotkey} from '@/components/misc/keyboard-shortcuts/shortcuts'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()

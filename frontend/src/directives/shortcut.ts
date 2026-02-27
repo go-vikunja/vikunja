@@ -1,12 +1,17 @@
 import type {Directive} from 'vue'
 import {install, uninstall} from '@github/hotkey'
 
-const directive = <Directive<HTMLElement,string>>{
-	mounted(el, {value}) {
-		if(value === '') {
+const directive = <Directive<HTMLElement, string | string[]>>{
+	mounted(el, { value }) {
+		if (typeof value === 'string')
+		{
+			if (value !== '') install(el, value)
 			return
 		}
-		install(el, value)
+
+		if (value.length === 0) return
+
+		install(el, value.join(', '))
 	},
 	beforeUnmount(el) {
 		uninstall(el)
