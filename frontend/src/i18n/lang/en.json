@@ -94,6 +94,7 @@
         "playSoundWhenDone": "Play a sound when marking tasks as done",
         "allowIconChanges": "Show special logos during certain times",
         "alwaysShowBucketTaskCount": "Always show task count on Kanban buckets",
+        "hideFutureTasks": "Hide future tasks on the overview by default",
         "defaultTaskRelationType": "Default task relation type",
         "weekStart": "Week starts on",
         "weekStartSunday": "Sunday",
@@ -831,6 +832,7 @@
       "overdue": "Show overdue tasks",
       "fromuntil": "Tasks from {from} until {until}",
       "select": "Select a date range",
+      "hideFuture": "Hide future tasks",
       "noTasks": "Nothing to do — Have a nice day!",
       "filterByLabel": "Filtering by label {label}",
       "clearLabelFilter": "Clear label filter"

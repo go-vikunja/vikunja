@@ -60,6 +60,13 @@
 			>
 				{{ $t('task.show.overdue') }}
 			</FancyCheckbox>
+			<FancyCheckbox
+				v-if="showAll"
+				:model-value="hideFuture"
+				@update:modelValue="setShowHideFuture"
+			>
+				{{ $t('task.show.hideFuture') }}
+			</FancyCheckbox>
 		</p>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="has-text-centered mbs-6">
@@ -123,10 +130,12 @@ const props = withDefaults(defineProps<{
 	dateTo?: Date | string,
 	showNulls?: boolean,
 	showOverdue?: boolean,
+	hideFuture?: boolean,
 	labelIds?: string[],
 }>(), {
 	showNulls: false,
 	showOverdue: false,
+	hideFuture: false,
 	dateFrom: undefined,
 	dateTo: undefined,
 	labelIds: undefined,
@@ -197,6 +206,7 @@ function setDate(dates: dateStrings) {
 			to: dates.dateTo ?? props.dateTo,
 			showOverdue: props.showOverdue ? 'true' : 'false',
 			showNulls: props.showNulls ? 'true' : 'false',
+			hideFuture: props.hideFuture ? 'true' : 'false',
 		},
 	})
 }
@@ -217,6 +227,16 @@ function setShowNulls(show: boolean) {
 		query: {
 			...route.query,
 			showNulls: show ? 'true' : 'false',
+		},
+	})
+}
+
+function setShowHideFuture(show: boolean) {
+	router.push({
+		name: route.name as string,
+		query: {
+			...route.query,
+			hideFuture: show ? 'true' : 'false',
 		},
 	})
 }
@@ -266,7 +286,19 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 		projectId = filterId
 	}
 
-	tasks.value = await taskStore.loadTasks(params, projectId)
+	const rawTasks = await taskStore.loadTasks(params, projectId)
+	if (props.hideFuture && showAll.value) {
+		const now = new Date()
+		tasks.value = rawTasks.filter(t => {
+			if (!t.startDate) {
+				return true
+			}
+			return new Date(t.startDate) <= now
+		})
+	} else {
+		tasks.value = rawTasks
+	}
+
 	emit('tasksLoaded', true)
 }
 
@@ -292,7 +324,7 @@ function updateTasks(updatedTask: ITask) {
 // hasn't changed. Using watch with explicit dependencies and immediate:true gives us
 // the same behavior but only triggers when these specific values actually change.
 watch(
-	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview],
+	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview, () => props.hideFuture, () => props.showNulls, () => props.showOverdue],
 	([from, to, filterId]) => loadPendingTasks(from, to, filterId),
 	{immediate: true},
 )
