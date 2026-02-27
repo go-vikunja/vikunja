@@ -14,6 +14,7 @@
 			ref="switchViewContainerRef"
 			class="switch-view-container d-print-none"
 			:class="{'is-justify-content-flex-end': views.length === 1}"
+			:style="{ visibility: overflowChecked ? 'visible' : 'hidden' }"
 		>
 			<!-- Dropdown mode when buttons overflow -->
 			<Dropdown
@@ -82,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, nextTick} from 'vue'
+import {computed, ref, watch, nextTick, onMounted} from 'vue'
 import {useResizeObserver} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 
@@ -118,6 +119,7 @@ const viewFiltersStore = useViewFiltersStore()
 const switchViewContainerRef = ref<HTMLElement>()
 const switchViewRef = ref<HTMLElement>()
 const isOverflowing = ref(false)
+const overflowChecked = ref(false)
 
 function checkOverflow() {
 	if (!switchViewRef.value || !switchViewContainerRef.value) {
@@ -126,7 +128,12 @@ function checkOverflow() {
 	const buttonsWidth = switchViewRef.value.scrollWidth
 	const containerWidth = switchViewContainerRef.value.clientWidth
 	isOverflowing.value = buttonsWidth > containerWidth
+	overflowChecked.value = true
 }
+
+onMounted(() => {
+	checkOverflow()
+})
 
 useResizeObserver(switchViewContainerRef, () => {
 	requestAnimationFrame(() => checkOverflow())
