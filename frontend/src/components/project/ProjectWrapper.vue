@@ -32,14 +32,18 @@
 						/>
 					</BaseButton>
 				</template>
-				<DropdownItem
-					v-for="view in views"
-					:key="view.id"
-					:to="getViewRoute(view)"
-					:class="{'is-active': view.id === viewId}"
-				>
-					{{ getViewTitle(view) }}
-				</DropdownItem>
+				<template #default="{ close }">
+					<div @click="close">
+						<DropdownItem
+							v-for="view in views"
+							:key="view.id"
+							:to="getViewRoute(view)"
+							:class="{'is-active': view.id === viewId}"
+						>
+							{{ getViewTitle(view) }}
+						</DropdownItem>
+					</div>
+				</template>
 			</Dropdown>
 
 			<!-- Inline buttons, hidden when overflowing but kept in DOM for width measurement -->
