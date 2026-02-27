@@ -558,6 +558,28 @@ func TestUserPasswordReset(t *testing.T) {
 		_, err := ResetPassword(s, reset)
 		require.NoError(t, err)
 	})
+	t.Run("removes password reset token after use", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		token := "passwordresettesttoken"
+
+		reset := &PasswordReset{
+			Token:       token,
+			NewPassword: "12345",
+		}
+		_, err := ResetPassword(s, reset)
+		require.NoError(t, err)
+
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "user_tokens", map[string]interface{}{
+			"token": token,
+			"kind":  TokenPasswordReset,
+		})
+	})
 	t.Run("without password", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
