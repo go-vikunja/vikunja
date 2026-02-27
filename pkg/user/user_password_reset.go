@@ -65,7 +65,7 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (userID int64, err err
 		return
 	}
 
-	err = removeTokens(s, user, TokenEmailConfirm)
+	err = removeTokens(s, user, TokenPasswordReset)
 	if err != nil {
 		return
 	}
