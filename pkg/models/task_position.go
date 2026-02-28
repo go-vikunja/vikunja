@@ -312,7 +312,7 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 			return nil, err
 		}
 		if exists {
-			if lowestPosition.Position == 0 {
+			if lowestPosition.Position < MinPositionSpacing {
 				err = RecalculateTaskPositions(s, view, a)
 				if err != nil {
 					return nil, err
