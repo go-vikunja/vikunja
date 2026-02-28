@@ -129,10 +129,15 @@ const (
 	MailerQueueTimeout  Key = `mailer.queuetimeout`
 	MailerForceSSL      Key = `mailer.forcessl`
 
-	RedisEnabled  Key = `redis.enabled`
-	RedisHost     Key = `redis.host`
-	RedisPassword Key = `redis.password`
-	RedisDB       Key = `redis.db`
+	RedisEnabled         Key = `redis.enabled`
+	RedisHost            Key = `redis.host`
+	RedisPassword        Key = `redis.password`
+	RedisDB              Key = `redis.db`
+	RedisTLS             Key = `redis.tls`
+	RedisTLSClientCert   Key = `redis.tlsclientcert`
+	RedisTLSClientKey    Key = `redis.tlsclientkey`
+	RedisTLSClientCACert Key = `redis.tlsclientcacert`
+	RedisTLSSkipVerify   Key = `redis.tlsskipverify`
 
 	LogEnabled       Key = `log.enabled`
 	LogStandard      Key = `log.standard`
@@ -411,6 +416,11 @@ func InitDefaultConfig() {
 	RedisHost.setDefault("localhost:6379")
 	RedisPassword.setDefault("")
 	RedisDB.setDefault(0)
+	RedisTLS.setDefault(false)
+	RedisTLSClientCert.setDefault("")
+	RedisTLSClientKey.setDefault("")
+	RedisTLSClientCACert.setDefault("")
+	RedisTLSSkipVerify.setDefault(false)
 	// Logger
 	LogEnabled.setDefault(true)
 	LogStandard.setDefault("stdout")
