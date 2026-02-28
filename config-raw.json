@@ -384,6 +384,21 @@
                     "key": "forcessl",
                     "default_value": "false",
                     "comment": "By default, Vikunja will try to connect with starttls, use this option to force it to use ssl."
+                },
+                {
+                    "key": "tlsclientcert",
+                    "default_value": "",
+                    "comment": "The path to a client certificate, if you choose to use one."
+                },
+                {
+                    "key": "tlsclientkey",
+                    "default_value": "",
+                    "comment": "The path to the client certificate's private key."
+                },
+                {
+                    "key": "tlscacert",
+                    "default_value": "",
+                    "comment": "The path to a certificate authority certificate, for verifying the server's certificate."
                 }
             ]
         },

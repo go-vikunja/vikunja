@@ -117,17 +117,20 @@ const (
 	DatabaseTLS                   Key = `database.tls`
 	DatabaseSchema                Key = `database.schema`
 
-	MailerEnabled       Key = `mailer.enabled`
-	MailerHost          Key = `mailer.host`
-	MailerPort          Key = `mailer.port`
-	MailerUsername      Key = `mailer.username`
-	MailerPassword      Key = `mailer.password`
-	MailerAuthType      Key = `mailer.authtype`
-	MailerSkipTLSVerify Key = `mailer.skiptlsverify`
-	MailerFromEmail     Key = `mailer.fromemail`
-	MailerQueuelength   Key = `mailer.queuelength`
-	MailerQueueTimeout  Key = `mailer.queuetimeout`
-	MailerForceSSL      Key = `mailer.forcessl`
+	MailerEnabled         Key = `mailer.enabled`
+	MailerHost            Key = `mailer.host`
+	MailerPort            Key = `mailer.port`
+	MailerUsername        Key = `mailer.username`
+	MailerPassword        Key = `mailer.password`
+	MailerAuthType        Key = `mailer.authtype`
+	MailerSkipTLSVerify   Key = `mailer.skiptlsverify`
+	MailerFromEmail       Key = `mailer.fromemail`
+	MailerQueuelength     Key = `mailer.queuelength`
+	MailerQueueTimeout    Key = `mailer.queuetimeout`
+	MailerForceSSL        Key = `mailer.forcessl`
+	MailerTLSClientCert   Key = `mailer.tlsclientcert`
+	MailerTLSClientKey    Key = `mailer.tlsclientkey`
+	MailerTLSClientCACert Key = `mailer.tlsclientcacert`
 
 	RedisEnabled         Key = `redis.enabled`
 	RedisHost            Key = `redis.host`
@@ -411,6 +414,9 @@ func InitDefaultConfig() {
 	MailerQueueTimeout.setDefault(30)
 	MailerForceSSL.setDefault(false)
 	MailerAuthType.setDefault("plain")
+	MailerTLSClientCert.setDefault("")
+	MailerTLSClientKey.setDefault("")
+	MailerTLSClientCACert.setDefault("")
 	// Redis
 	RedisEnabled.setDefault(false)
 	RedisHost.setDefault("localhost:6379")
