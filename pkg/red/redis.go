@@ -50,7 +50,9 @@ func InitRedis() {
 	}
 
 	if config.RedisTLS.GetBool() {
-		tlsConfig := &tls.Config{}
+		tlsConfig := &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
 		if config.RedisTLSClientCert.GetString() != "" && config.RedisTLSClientKey.GetString() != "" {
 			cert, err := tls.LoadX509KeyPair(config.RedisTLSClientCert.GetString(), config.RedisTLSClientKey.GetString())
 			if err != nil {
