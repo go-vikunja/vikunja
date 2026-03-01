@@ -18,6 +18,9 @@ package red
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"os"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
@@ -40,11 +43,39 @@ func InitRedis() {
 		log.Fatal("No redis host provided.")
 	}
 
-	r = redis.NewClient(&redis.Options{
+	redisOpts := &redis.Options{
 		Addr:     config.RedisHost.GetString(),
 		Password: config.RedisPassword.GetString(),
 		DB:       config.RedisDB.GetInt(),
-	})
+	}
+
+	if config.RedisTLS.GetBool() {
+		tlsConfig := &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
+		if config.RedisTLSClientCert.GetString() != "" && config.RedisTLSClientKey.GetString() != "" {
+			cert, err := tls.LoadX509KeyPair(config.RedisTLSClientCert.GetString(), config.RedisTLSClientKey.GetString())
+			if err != nil {
+				log.Fatal("Error loading client certificate and/or key.")
+			}
+			tlsConfig.Certificates = []tls.Certificate{cert}
+		}
+		if config.RedisTLSClientCACert.GetString() != "" {
+			caCert, err := os.ReadFile(config.RedisTLSClientCACert.GetString())
+			if err != nil {
+				log.Fatal("Error loading CA certificate.")
+			}
+			caCertPool := x509.NewCertPool()
+			caCertPool.AppendCertsFromPEM(caCert)
+			tlsConfig.RootCAs = caCertPool
+		}
+		if config.RedisTLSSkipVerify.GetBool() {
+			tlsConfig.InsecureSkipVerify = config.RedisTLSSkipVerify.GetBool()
+		}
+		redisOpts.TLSConfig = tlsConfig
+	}
+
+	r = redis.NewClient(redisOpts)
 
 	err := r.Ping(context.Background()).Err()
 	if err != nil {
