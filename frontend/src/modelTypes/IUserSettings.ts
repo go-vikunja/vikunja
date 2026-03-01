@@ -25,6 +25,7 @@ export interface IFrontendSettings {
 	alwaysShowBucketTaskCount: boolean
 	sidebarWidth: number | null
 	commentSortOrder: 'asc' | 'desc'
+	showOnlyMyTasks: boolean
 }
 
 export interface IExtraSettingsLink {
