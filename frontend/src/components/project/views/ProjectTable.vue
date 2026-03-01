@@ -305,6 +305,7 @@
 
 <script setup lang="ts">
 import {computed, type Ref, watch} from 'vue'
+import {useRouter} from 'vue-router'
 
 import {useStorage} from '@vueuse/core'
 
@@ -343,6 +344,7 @@ const props = defineProps<{
 
 const projectStore = useProjectStore()
 const baseStore = useBaseStore()
+const router = useRouter()
 const canWrite = computed(() => {
 	const project = baseStore.currentProject
 	return project?.maxPermission > PERMISSIONS.READ && project?.id > 0
@@ -390,9 +392,8 @@ const {
 } = taskList
 const tasks: Ref<ITask[]> = taskList.tasks
 
-function updateTaskList() {
-	currentPage.value = 1
-	taskList.loadTasks()
+function updateTaskList(task: ITask) {
+	router.push({name: 'task.detail', params: {id: task.id}})
 }
 
 watch(
