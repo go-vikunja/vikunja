@@ -93,6 +93,11 @@
 					:padding="false"
 					:has-content="false"
 				>
+					<AddTask
+						v-if="canWrite"
+						class="d-print-none"
+						@taskAdded="updateTaskList"
+					/>
 					<div class="has-horizontal-overflow">
 						<table class="table has-actions is-hoverable is-fullwidth mbe-0">
 							<thead>
@@ -326,6 +331,9 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 import { camelCase } from 'change-case'
 import {isSavedFilter} from '@/services/savedFilter'
 import {useProjectStore} from '@/stores/projects'
+import {useBaseStore} from '@/stores/base'
+import AddTask from '@/components/tasks/AddTask.vue'
+import {PERMISSIONS} from '@/constants/permissions'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
@@ -334,6 +342,11 @@ const props = defineProps<{
 }>()
 
 const projectStore = useProjectStore()
+const baseStore = useBaseStore()
+const canWrite = computed(() => {
+	const project = baseStore.currentProject
+	return project?.maxPermission > PERMISSIONS.READ && project?.id > 0
+})
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -376,6 +389,11 @@ const {
 	sortByParam,
 } = taskList
 const tasks: Ref<ITask[]> = taskList.tasks
+
+function updateTaskList() {
+	currentPage.value = 1
+	taskList.loadTasks()
+}
 
 watch(
 	() => activeColumns.value,
