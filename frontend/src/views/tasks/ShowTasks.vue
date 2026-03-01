@@ -3,9 +3,17 @@
 		v-cy="'showTasks'"
 		class="is-max-width-desktop has-text-start"
 	>
-		<h3 class="mbe-2 title">
-			{{ pageTitle }}
-		</h3>
+		<div class="show-tasks-header">
+			<h3 class="mbe-2 title">
+				{{ pageTitle }}
+			</h3>
+			<FancyCheckbox
+				v-model="showOnlyMyTasks"
+				class="show-only-my-tasks"
+			>
+				{{ $t('task.show.onlyMyTasks') }}
+			</FancyCheckbox>
+		</div>
 		<Message
 			v-if="filteredLabels.length > 0"
 			class="label-filter-info mbe-2"
@@ -150,6 +158,22 @@ const tasks = ref<ITask[]>([])
 const showNothingToDo = ref<boolean>(false)
 const taskCollectionService = ref(new TaskCollectionService())
 
+const showOnlyMyTasks = computed({
+	get: () => authStore.settings?.frontendSettings?.showOnlyMyTasks ?? false,
+	set: async (value: boolean) => {
+		await authStore.saveUserSettings({
+			settings: {
+				...authStore.settings,
+				frontendSettings: {
+					...authStore.settings.frontendSettings,
+					showOnlyMyTasks: value,
+				},
+			},
+			showMessage: false,
+		})
+	},
+})
+
 setTimeout(() => showNothingToDo.value = true, 100)
 
 const showAll = computed(() => typeof props.dateFrom === 'undefined' || typeof props.dateTo === 'undefined')
@@ -261,6 +285,11 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 		params.filter += params.filter ? ` && ${labelFilter}` : labelFilter
 	}
 
+	// Filter by current user's assignments
+	if (showOnlyMyTasks.value && authStore.info?.username) {
+		params.filter += ` && assignees = '${authStore.info.username}'`
+	}
+
 	let projectId = null
 	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined') {
 		projectId = filterId
@@ -292,7 +321,7 @@ function updateTasks(updatedTask: ITask) {
 // hasn't changed. Using watch with explicit dependencies and immediate:true gives us
 // the same behavior but only triggers when these specific values actually change.
 watch(
-	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview],
+	[() => props.dateFrom, () => props.dateTo, filterIdUsedOnOverview, showOnlyMyTasks],
 	([from, to, filterId]) => loadPendingTasks(from, to, filterId),
 	{immediate: true},
 )
@@ -300,6 +329,16 @@ watchEffect(() => setTitle(pageTitle.value))
 </script>
 
 <style lang="scss" scoped>
+.show-tasks-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.show-only-my-tasks {
+	font-size: .9rem;
+}
+
 .show-tasks-options {
 	display: flex;
 	flex-direction: column;

@@ -833,7 +833,8 @@
       "select": "Select a date range",
       "noTasks": "Nothing to do — Have a nice day!",
       "filterByLabel": "Filtering by label {label}",
-      "clearLabelFilter": "Clear label filter"
+      "clearLabelFilter": "Clear label filter",
+      "onlyMyTasks": "Only show tasks assigned to me"
     },
     "detail": {
       "chooseDueDate": "Click here to set a due date",
