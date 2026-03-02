@@ -12,7 +12,7 @@
 		<g
 			v-if="isParent && bars[0]"
 			class="gantt-collapse-toggle"
-			:transform="`translate(${getBarX(bars[0]) - 18}, 12)`"
+			:transform="`translate(${getBarX(bars[0]) - 14}, 14)`"
 			role="button"
 			:aria-label="isCollapsed
 				? $t('project.gantt.expandGroup', { task: bars[0]?.meta?.label || '' })
@@ -24,18 +24,18 @@
 			<rect
 				x="-2"
 				y="-2"
-				width="20"
-				height="20"
+				width="14"
+				height="14"
 				fill="transparent"
 			/>
 			<polygon
 				v-if="isCollapsed"
-				points="4,0 14,8 4,16"
+				points="2,0 10,5 2,10"
 				fill="var(--grey-500)"
 			/>
 			<polygon
 				v-else
-				points="0,4 16,4 8,14"
+				points="0,2 10,2 5,10"
 				fill="var(--grey-500)"
 			/>
 		</g>
