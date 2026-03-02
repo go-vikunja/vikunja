@@ -71,6 +71,7 @@ import dayjs from 'dayjs'
 import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 
 import {getHexColor} from '@/models/task'
+import {buildGanttTaskTree, type GanttTaskTreeNode} from '@/helpers/ganttTaskTree'
 
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
@@ -150,43 +151,102 @@ const ganttBars = ref<GanttBarModel[][]>([])
 const ganttRows = ref<string[]>([])
 const cellsByRow = ref<Record<string, string[]>>({})
 
+// Hierarchy state
+const collapsedTaskIds = ref(new Set<number>())
+const allNodes = ref<GanttTaskTreeNode[]>([])
+
+const visibleNodes = computed(() => {
+	const result: GanttTaskTreeNode[] = []
+	const hiddenParents = new Set<number>()
+
+	for (const node of allNodes.value) {
+		const parents = node.task.relatedTasks?.parenttask ?? []
+		const isHidden = parents.some(p =>
+			collapsedTaskIds.value.has(p.id) || hiddenParents.has(p.id),
+		)
+
+		if (isHidden) {
+			hiddenParents.add(node.task.id)
+			continue
+		}
+
+		result.push(node)
+	}
+
+	return result
+})
+
+// Used in Task 8 for arrow re-routing when children are collapsed
+const _hiddenToAncestor = computed(() => {
+	const map = new Map<number, number>()
+	const hiddenParents = new Set<number>()
+
+	for (const node of allNodes.value) {
+		const parents = node.task.relatedTasks?.parenttask ?? []
+		const collapsedParent = parents.find(p =>
+			collapsedTaskIds.value.has(p.id),
+		)
+
+		if (collapsedParent && tasks.value.has(collapsedParent.id)) {
+			map.set(node.task.id, collapsedParent.id)
+			hiddenParents.add(node.task.id)
+		} else {
+			const hiddenAncestor = parents.find(p => hiddenParents.has(p.id))
+			if (hiddenAncestor) {
+				const ancestorTarget = map.get(hiddenAncestor.id) ?? hiddenAncestor.id
+				map.set(node.task.id, ancestorTarget)
+				hiddenParents.add(node.task.id)
+			}
+		}
+	}
+
+	return map
+})
+
+// Used in Task 5 for collapse/expand toggle
+function _toggleCollapse(taskId: number) {
+	const newSet = new Set(collapsedTaskIds.value)
+	if (newSet.has(taskId)) {
+		newSet.delete(taskId)
+	} else {
+		newSet.add(taskId)
+	}
+	collapsedTaskIds.value = newSet
+}
+
 function getRoundedDate(value: string | Date | undefined, fallback: Date | string, isStart: boolean) {
 	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
 }
 
-function transformTaskToGanttBar(t: ITask): GanttBarModel {
+function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
+	const t = node.task
 	const DEFAULT_SPAN_DAYS = 7
 
-	// Determine the effective start and end dates
-	// If only dueDate is set (no startDate or endDate), treat dueDate as endDate
-	const effectiveEndDate = t.endDate || t.dueDate
-	const effectiveStartDate = t.startDate
+	// Use derived dates for dateless parents
+	const effectiveEndDate = t.endDate || t.dueDate || (node.hasDerivedDates ? node.derivedEndDate : null)
+	const effectiveStartDate = t.startDate || (node.hasDerivedDates ? node.derivedStartDate : null)
 
 	let startDate: Date
 	let endDate: Date
 	let dateType: GanttBarDateType
 
 	if (effectiveStartDate && effectiveEndDate) {
-		// Both dates available
 		startDate = getRoundedDate(effectiveStartDate, effectiveStartDate, true)
 		endDate = getRoundedDate(effectiveEndDate, effectiveEndDate, false)
 		dateType = 'both'
 	} else if (effectiveStartDate && !effectiveEndDate) {
-		// Only start date — extend forward by DEFAULT_SPAN_DAYS
 		startDate = getRoundedDate(effectiveStartDate, effectiveStartDate, true)
 		const defaultEnd = new Date(startDate)
 		defaultEnd.setDate(defaultEnd.getDate() + DEFAULT_SPAN_DAYS)
 		endDate = getRoundedDate(defaultEnd, defaultEnd, false)
 		dateType = 'startOnly'
 	} else if (!effectiveStartDate && effectiveEndDate) {
-		// Only end date (or only due date) — extend backward by DEFAULT_SPAN_DAYS
 		endDate = getRoundedDate(effectiveEndDate, effectiveEndDate, false)
 		const defaultStart = new Date(endDate)
 		defaultStart.setDate(defaultStart.getDate() - DEFAULT_SPAN_DAYS)
 		startDate = getRoundedDate(defaultStart, defaultStart, true)
 		dateType = 'endOnly'
 	} else {
-		// No dates at all — use defaults (existing behavior)
 		startDate = getRoundedDate(undefined, props.defaultTaskStartDate, true)
 		endDate = getRoundedDate(undefined, props.defaultTaskEndDate, false)
 		dateType = 'both'
@@ -205,49 +265,57 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 			hasActualDates: Boolean(t.startDate && (t.endDate || t.dueDate)),
 			dateType,
 			isDone: t.done,
+			isParent: node.isParent,
+			hasDerivedDates: node.hasDerivedDates,
+			indentLevel: node.indentLevel,
 		},
 	}
 }
 
+// Build the task tree when tasks change
 watch(
 	[tasks, filters],
+	() => {
+		allNodes.value = buildGanttTaskTree(tasks.value)
+	},
+	{deep: true, immediate: true},
+)
+
+// Derive bars, rows, and cells from visible nodes
+watch(
+	[visibleNodes, filters],
 	() => {
 		const bars: GanttBarModel[] = []
 		const rows: string[] = []
 		const cells: Record<string, string[]> = {}
 
-		const filteredTasks = Array.from(tasks.value.values()).filter(task => {
-			const hasAnyDate = Boolean(task.startDate || task.endDate || task.dueDate)
+		visibleNodes.value.forEach((node, index) => {
+			const bar = transformTaskToGanttBar(node)
 
+			// Check if task is visible in the current date range
+			const hasAnyDate = Boolean(node.task.startDate || node.task.endDate || node.task.dueDate || node.hasDerivedDates)
 			if (!filters.value.showTasksWithoutDates && !hasAnyDate) {
-				return false
+				return
+			}
+			if (bar.start > dateToDate.value || bar.end < dateFromDate.value) {
+				return
 			}
 
-			const bar = transformTaskToGanttBar(task)
-
-			// Task is visible if it overlaps with the current date range
-			return bar.start <= dateToDate.value && bar.end >= dateFromDate.value
-		})
-		
-		filteredTasks.forEach((t, index) => {
-			const bar = transformTaskToGanttBar(t)
 			bars.push(bar)
-			
+
 			const rowId = `row-${index}`
 			rows.push(rowId)
-			
+
 			const rowCells: string[] = []
-			timelineData.value.forEach((date, dayIndex) => {
+			timelineData.value.forEach((_, dayIndex) => {
 				rowCells.push(`${rowId}-cell-${dayIndex}`)
 			})
 			cells[rowId] = rowCells
 		})
-		
-		// Group bars by rows (one bar per row for now)
+
 		ganttBars.value = bars.map(bar => [bar])
 		ganttRows.value = rows
 		cellsByRow.value = cells
-		
 	},
 	{deep: true, immediate: true},
 )

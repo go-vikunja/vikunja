@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {buildGanttTaskTree, type GanttTaskTreeNode} from './ganttTaskTree'
+import {buildGanttTaskTree} from './ganttTaskTree'
 import type {ITask} from '@/modelTypes/ITask'
 
 function makeTask(id: number, overrides: Partial<ITask> = {}): ITask {

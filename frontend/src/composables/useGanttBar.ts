@@ -13,6 +13,9 @@ export interface GanttBarModel {
 		dateType?: GanttBarDateType
 		isDone?: boolean
 		task?: unknown
+		isParent?: boolean
+		hasDerivedDates?: boolean
+		indentLevel?: number
 	}
 }
 export interface UseGanttBarOptions {

@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {buildRelationArrows, type GanttArrow, type GanttBarPosition} from './ganttRelationArrows'
+import {buildRelationArrows, type GanttBarPosition} from './ganttRelationArrows'
 import type {ITask} from '@/modelTypes/ITask'
 
 function makeTask(id: number, overrides: Partial<ITask> = {}): ITask {
