@@ -32,6 +32,7 @@ export interface IProjectView extends IAbstract {
 
 	filter: IFilters|undefined
 	position: number
+	includeSubprojects?: boolean
 
 	bucketConfigurationMode: ProjectViewBucketConfigurationMode
 	bucketConfiguration: IProjectViewBucketConfiguration[]
