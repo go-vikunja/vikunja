@@ -81,6 +81,42 @@ export function buildRelationArrows(
 		}
 	}
 
+	return spreadOverlappingArrows(arrows)
+}
+
+const PREFERRED_SPREAD_PX = 6
+const MAX_TOTAL_SPREAD_PX = 24
+
+/**
+ * When multiple arrows share the same source or target task,
+ * offset their Y positions so they don't overlap visually.
+ * The spread is capped to stay within the row height.
+ */
+function spreadOverlappingArrows(arrows: GanttArrow[]): GanttArrow[] {
+	spreadByKey(arrows, 'fromTaskId', 'startY')
+	spreadByKey(arrows, 'toTaskId', 'endY')
 	return arrows
+}
+
+function spreadByKey(arrows: GanttArrow[], groupKey: 'fromTaskId' | 'toTaskId', yKey: 'startY' | 'endY') {
+	const groups = new Map<number, GanttArrow[]>()
+	for (const arrow of arrows) {
+		const id = arrow[groupKey]
+		let group = groups.get(id)
+		if (!group) {
+			group = []
+			groups.set(id, group)
+		}
+		group.push(arrow)
+	}
+
+	for (const group of groups.values()) {
+		if (group.length < 2) continue
+		const totalSpread = Math.min((group.length - 1) * PREFERRED_SPREAD_PX, MAX_TOTAL_SPREAD_PX)
+		const step = totalSpread / (group.length - 1)
+		for (let i = 0; i < group.length; i++) {
+			group[i][yKey] += -totalSpread / 2 + i * step
+		}
+	}
 }
 
