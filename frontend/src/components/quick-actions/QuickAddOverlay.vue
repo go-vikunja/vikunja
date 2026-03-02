@@ -33,5 +33,25 @@ watch(() => baseStore.quickActionsActive, (active) => {
 	display: flex;
 	align-items: flex-start;
 	justify-content: center;
+	overflow: hidden;
+}
+</style>
+
+<style lang="scss">
+// In quick-add mode the Electron window IS the overlay – hide the modal
+// backdrop, disable scroll, and collapse all extra spacing so the input
+// fills the window edge-to-edge.
+.quick-add-overlay {
+	.modal-mask {
+		background: transparent;
+	}
+
+	.modal-container {
+		overflow: hidden;
+	}
+
+	.modal-mask > .close {
+		display: none;
+	}
 }
 </style>
