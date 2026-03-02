@@ -339,13 +339,29 @@ const ROW_HEIGHT = 40
 
 const barPositions = computed(() => {
 	const positions = new Map<number, GanttBarPosition>()
+	const ds = dragState.value
+	const dragPixelOffset = ds ? ds.currentDays * DAY_WIDTH_PIXELS : 0
 
 	ganttBars.value.forEach((rowBars, rowIndex) => {
 		for (const bar of rowBars) {
 			const taskId = Number(bar.id)
-			const x = computeBarX(bar.start)
-			const width = computeBarWidth(bar)
+			let x = computeBarX(bar.start)
+			let width = computeBarWidth(bar)
 			const y = rowIndex * ROW_HEIGHT + ROW_HEIGHT / 2
+
+			// Apply drag/resize offset for the active bar
+			if (ds && bar.id === ds.barId && dragPixelOffset !== 0) {
+				if (isDragging.value) {
+					x += dragPixelOffset
+				} else if (isResizing.value) {
+					if (ds.edge === 'start') {
+						x += dragPixelOffset
+						width -= dragPixelOffset
+					} else {
+						width += dragPixelOffset
+					}
+				}
+			}
 
 			positions.set(taskId, {x, y, width, rowIndex})
 		}
