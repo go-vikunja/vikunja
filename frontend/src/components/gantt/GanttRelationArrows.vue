@@ -9,27 +9,27 @@
 		<defs>
 			<marker
 				id="arrowhead-danger"
-				markerWidth="8"
-				markerHeight="8"
-				refX="6"
-				refY="4"
+				markerWidth="6"
+				markerHeight="6"
+				refX="5"
+				refY="3"
 				orient="auto"
 			>
 				<polygon
-					points="0,0 8,4 0,8"
+					points="0,0 6,3 0,6"
 					fill="var(--danger)"
 				/>
 			</marker>
 			<marker
 				id="arrowhead-grey"
-				markerWidth="8"
-				markerHeight="8"
-				refX="6"
-				refY="4"
+				markerWidth="6"
+				markerHeight="6"
+				refX="5"
+				refY="3"
 				orient="auto"
 			>
 				<polygon
-					points="0,0 8,4 0,8"
+					points="0,0 6,3 0,6"
 					fill="var(--grey-500)"
 				/>
 			</marker>
@@ -40,8 +40,9 @@
 			:key="`arrow-${index}`"
 			:d="computePath(arrow)"
 			:stroke="arrow.color"
-			stroke-width="2"
+			stroke-width="1.5"
 			fill="none"
+			:stroke-dasharray="arrow.relationKind === 'precedes' ? '6,4' : 'none'"
 			:marker-end="getMarkerEnd(arrow)"
 			class="gantt-arrow"
 		/>
