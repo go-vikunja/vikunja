@@ -1067,6 +1067,7 @@
     },
     "quickAddMagic": {
       "hint": "Use magic prefixes to define due dates, assignees and other task properties.",
+      "quickEntryHint": "Use magic prefixes for dates, labels & more. Open the main Vikunja app and check the tooltip on the task input for more details.",
       "title": "Quick Add Magic",
       "intro": "When creating a task, you can use special keywords to directly add attributes to the newly created task. This allows to add commonly used attributes to tasks much faster.",
       "multiple": "You can use this multiple times.",
