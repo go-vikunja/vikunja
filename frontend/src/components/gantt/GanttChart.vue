@@ -31,44 +31,46 @@
 				@enterPressed="handleEnterPressed"
 			>
 				<template #default="{ focusedRow, focusedCell }">
-					<div class="gantt-rows">
-						<GanttRow
-							v-for="(rowId, index) in ganttRows"
-							:id="rowId"
-							:key="rowId"
-							:index="index"
-						>
-							<div class="gantt-row-content">
-								<GanttRowBars
-									:bars="ganttBars[index] ?? []"
-									:total-width="totalWidth"
-									:date-from-date="dateFromDate"
-									:date-to-date="dateToDate"
-									:day-width-pixels="DAY_WIDTH_PIXELS"
-									:is-dragging="isDragging"
-									:is-resizing="isResizing"
-									:drag-state="dragState"
-									:focused-row="focusedRow ?? null"
-									:focused-cell="focusedCell"
-									:row-id="rowId"
-									:indent-level="ganttBars[index]?.[0]?.meta?.indentLevel ?? 0"
-									:is-parent="ganttBars[index]?.[0]?.meta?.isParent ?? false"
-									:is-collapsed="collapsedTaskIds.has(Number(ganttBars[index]?.[0]?.id))"
-									@barPointerDown="handleBarPointerDown"
-									@startResize="startResize"
-									@updateTask="updateGanttTask"
-									@toggleCollapse="toggleCollapse(Number(ganttBars[index]?.[0]?.id))"
-								/>
-							</div>
-						</GanttRow>
+					<div class="gantt-rows-container">
+						<div class="gantt-rows">
+							<GanttRow
+								v-for="(rowId, index) in ganttRows"
+								:id="rowId"
+								:key="rowId"
+								:index="index"
+							>
+								<div class="gantt-row-content">
+									<GanttRowBars
+										:bars="ganttBars[index] ?? []"
+										:total-width="totalWidth"
+										:date-from-date="dateFromDate"
+										:date-to-date="dateToDate"
+										:day-width-pixels="DAY_WIDTH_PIXELS"
+										:is-dragging="isDragging"
+										:is-resizing="isResizing"
+										:drag-state="dragState"
+										:focused-row="focusedRow ?? null"
+										:focused-cell="focusedCell"
+										:row-id="rowId"
+										:indent-level="ganttBars[index]?.[0]?.meta?.indentLevel ?? 0"
+										:is-parent="ganttBars[index]?.[0]?.meta?.isParent ?? false"
+										:is-collapsed="collapsedTaskIds.has(Number(ganttBars[index]?.[0]?.id))"
+										@barPointerDown="handleBarPointerDown"
+										@startResize="startResize"
+										@updateTask="updateGanttTask"
+										@toggleCollapse="toggleCollapse(Number(ganttBars[index]?.[0]?.id))"
+									/>
+								</div>
+							</GanttRow>
+						</div>
+						<GanttRelationArrows
+							v-if="relationArrows.length > 0"
+							:arrows="relationArrows"
+							:width="totalWidth"
+							:height="totalHeight"
+							:row-height="ROW_HEIGHT"
+						/>
 					</div>
-					<GanttRelationArrows
-						v-if="showRelationArrows && relationArrows.length > 0"
-						:arrows="relationArrows"
-						:width="totalWidth"
-						:height="totalHeight"
-						:row-height="ROW_HEIGHT"
-					/>
 				</template>
 			</GanttChartBody>
 		</div>
@@ -101,16 +103,13 @@ import Loading from '@/components/misc/Loading.vue'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
 	tasks: Map<ITask['id'], ITask>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
-	showRelationArrows?: boolean
-}>(), {
-	showRelationArrows: false,
-})
+}>()
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
@@ -373,7 +372,6 @@ function computeBarWidth(bar: GanttBarModel): number {
 
 // Compute relation arrows
 const relationArrows = computed<GanttArrow[]>(() => {
-	if (!props.showRelationArrows) return []
 	return buildRelationArrows(tasks.value, barPositions.value, hiddenToAncestor.value)
 })
 
@@ -680,6 +678,10 @@ onUnmounted(() => {
 .gantt-chart-wrapper {
 	inline-size: max-content;
 	min-inline-size: 100%;
+	position: relative;
+}
+
+.gantt-rows-container {
 	position: relative;
 }
 
