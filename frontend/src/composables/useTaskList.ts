@@ -32,18 +32,6 @@ export interface SortBy {
 const SORT_BY_DEFAULT: SortBy = {
 	id: 'desc',
 }
-
-type RouteQueryBoolean = string | string[] | null | undefined
-
-function parseRouteBoolean(value: RouteQueryBoolean): boolean {
-	const routeValue = Array.isArray(value) ? value[0] : value
-	if (typeof routeValue !== 'string') {
-		return false
-	}
-
-	return routeValue === '1' || routeValue === 'true'
-}
-
 // This makes sure an id sort order is always sorted last.
 // When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 // precedence over everything else, making any other sort columns pretty useless.
@@ -74,6 +62,7 @@ export function useTaskList(
 	projectViewIdGetter: ComputedGetter<IProjectView['id']>,
 	sortByDefault: SortBy = SORT_BY_DEFAULT,
 	expandGetter: ComputedGetter<ExpandTaskFilterParam> = () => 'subtasks',
+	includeSubprojectsGetter: ComputedGetter<boolean> = () => false,
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
@@ -84,12 +73,7 @@ export function useTaskList(
 	const page = useRouteQuery('page', '1', { transform: Number })
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
-	const includeSubprojects = useRouteQuery<RouteQueryBoolean, boolean>('includeSubprojects', undefined, {
-		transform: {
-			get: parseRouteBoolean,
-			set: (value) => value ? 'true' : undefined,
-		},
-	})
+	const includeSubprojects = computed(() => includeSubprojectsGetter())
 
 	watch(filter, v => { params.value.filter = v ?? '' }, { immediate: true })
 	watch(s, v => { params.value.s = v ?? '' }, { immediate: true })

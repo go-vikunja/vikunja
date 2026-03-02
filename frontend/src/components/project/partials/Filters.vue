@@ -29,6 +29,14 @@
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
+			<FancyCheckbox
+				v-if="showIncludeSubprojectsToggle"
+				v-tooltip="$t('project.views.includeSubprojectsHint')"
+				:model-value="includeSubprojects"
+				@update:modelValue="(value: boolean) => emit('update:includeSubprojects', value)"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
 		</div>
 
 		<FilterInputDocs />
@@ -80,16 +88,21 @@ const props = withDefaults(defineProps<{
 	changeImmediately?: boolean,
 	filterFromView?: string,
 	showClose?: boolean,
+	showIncludeSubprojectsToggle?: boolean,
+	includeSubprojects?: boolean,
 }>(), {
 	hasTitle: false,
 	hasFooter: true,
 	changeImmediately: false,
 	filterFromView: undefined,
 	showClose: false,
+	showIncludeSubprojectsToggle: false,
+	includeSubprojects: false,
 })
 
 const emit = defineEmits<{
 	'update:modelValue': [value: TaskFilterParams],
+	'update:includeSubprojects': [value: boolean],
 	'showResults': [],
 	'close': [],
 }>()

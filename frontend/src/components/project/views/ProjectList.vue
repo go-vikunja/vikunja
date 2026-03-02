@@ -14,14 +14,6 @@
 					:project-id="projectId"
 					@update:modelValue="prepareFiltersAndLoadTasks()"
 				/>
-				<FancyCheckbox
-					v-if="projectId > 0 && showIncludeSubprojectsToggle"
-					v-model="includeSubprojects"
-					v-tooltip="$t('project.views.includeSubprojectsHint')"
-					class="include-subprojects-toggle"
-				>
-					{{ $t('project.views.includeSubprojects') }}
-				</FancyCheckbox>
 			</div>
 		</template>
 
@@ -117,7 +109,6 @@ import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
-import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import {ALPHABETICAL_SORT} from '@/components/project/partials/Filters.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
@@ -130,7 +121,6 @@ import {isSavedFilter, useSavedFilter} from '@/services/savedFilter'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
-import {useAuthStore} from '@/stores/auth'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -146,6 +136,10 @@ const props = defineProps<{
 const projectId = toRef(props, 'projectId')
 
 defineOptions({name: 'List'})
+
+const baseStore = useBaseStore()
+const project = computed(() => baseStore.currentProject)
+const currentView = computed(() => project.value?.views.find(v => v.id === props.viewId))
 
 const ctaVisible = ref(false)
 
@@ -167,6 +161,7 @@ const {
 	() => projectId.value === -1
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],
+	() => currentView.value?.includeSubprojects ?? false,
 )
 
 const taskPositionService = ref(new TaskPositionService())
@@ -194,12 +189,8 @@ const firstNewPosition = computed(() => {
 	return calculateItemPosition(null, tasks.value[0].position)
 })
 
-const baseStore = useBaseStore()
 const taskStore = useTaskStore()
-const authStore = useAuthStore()
 const {handleTaskDropToProject} = useTaskDragToProject()
-const project = computed(() => baseStore.currentProject)
-const showIncludeSubprojectsToggle = computed(() => authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false)
 
 const canWrite = computed(() => {
 	return project.value?.maxPermission > Permissions.READ && project.value?.id > 0
@@ -429,9 +420,5 @@ onBeforeUnmount(() => {
 	:deep(.card) {
 		margin-block-end: 0;
 	}
-}
-
-.include-subprojects-toggle {
-	margin-inline-start: .75rem;
 }
 </style>

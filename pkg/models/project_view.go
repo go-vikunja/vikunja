@@ -142,6 +142,8 @@ type ProjectView struct {
 	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter"`
 	// The position of this view in the list. The list of all views will be sorted by this parameter.
 	Position float64 `xorm:"double null" json:"position"`
+	// If enabled, this view also includes tasks from all descendant subprojects.
+	IncludeSubprojects bool `xorm:"default false not null" json:"include_subprojects"`
 
 	// The bucket configuration mode. Can be `none`, `manual` or `filter`. `manual` allows to move tasks between buckets as you normally would. `filter` creates buckets based on a filter for each bucket.
 	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode" swaggertype:"string" enums:"none,manual,filter,manual"`
@@ -424,6 +426,7 @@ func (pv *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 			"view_kind",
 			"filter",
 			"position",
+			"include_subprojects",
 			"bucket_configuration_mode",
 			"bucket_configuration",
 			"default_bucket_id",
