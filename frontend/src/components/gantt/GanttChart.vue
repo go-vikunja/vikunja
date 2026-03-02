@@ -62,6 +62,13 @@
 							</div>
 						</GanttRow>
 					</div>
+					<GanttRelationArrows
+						v-if="showRelationArrows && relationArrows.length > 0"
+						:arrows="relationArrows"
+						:width="totalWidth"
+						:height="totalHeight"
+						:row-height="ROW_HEIGHT"
+					/>
 				</template>
 			</GanttChartBody>
 		</div>
@@ -76,6 +83,7 @@ import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 
 import {getHexColor} from '@/models/task'
 import {buildGanttTaskTree, type GanttTaskTreeNode} from '@/helpers/ganttTaskTree'
+import {buildRelationArrows, type GanttBarPosition, type GanttArrow} from '@/helpers/ganttRelationArrows'
 
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
@@ -87,18 +95,22 @@ import GanttRow from '@/components/gantt/GanttRow.vue'
 import GanttRowBars from '@/components/gantt/GanttRowBars.vue'
 import GanttVerticalGridLines from '@/components/gantt/GanttVerticalGridLines.vue'
 import GanttTimelineHeader from '@/components/gantt/GanttTimelineHeader.vue'
+import GanttRelationArrows from '@/components/gantt/GanttRelationArrows.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundary'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
 	tasks: Map<ITask['id'], ITask>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
-}>()
+	showRelationArrows?: boolean
+}>(), {
+	showRelationArrows: false,
+})
 
 const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
@@ -180,8 +192,8 @@ const visibleNodes = computed(() => {
 	return result
 })
 
-// Used in Task 8 for arrow re-routing when children are collapsed
-const _hiddenToAncestor = computed(() => {
+// Map hidden tasks to their visible ancestor for arrow re-routing
+const hiddenToAncestor = computed(() => {
 	const map = new Map<number, number>()
 	const hiddenParents = new Set<number>()
 
@@ -322,6 +334,50 @@ watch(
 	},
 	{deep: true, immediate: true},
 )
+
+// Compute bar positions for arrow rendering
+const ROW_HEIGHT = 40
+
+const barPositions = computed(() => {
+	const positions = new Map<number, GanttBarPosition>()
+
+	ganttBars.value.forEach((rowBars, rowIndex) => {
+		for (const bar of rowBars) {
+			const taskId = Number(bar.id)
+			const x = computeBarX(bar.start)
+			const width = computeBarWidth(bar)
+			const y = rowIndex * ROW_HEIGHT + ROW_HEIGHT / 2
+
+			positions.set(taskId, {x, y, width, rowIndex})
+		}
+	})
+
+	return positions
+})
+
+function computeBarX(date: Date): number {
+	const diff = Math.ceil(
+		(roundToNaturalDayBoundary(date, true).getTime() - dateFromDate.value.getTime()) /
+		MILLISECONDS_A_DAY,
+	)
+	return diff * DAY_WIDTH_PIXELS
+}
+
+function computeBarWidth(bar: GanttBarModel): number {
+	const diff = Math.ceil(
+		(roundToNaturalDayBoundary(bar.end).getTime() - roundToNaturalDayBoundary(bar.start, true).getTime()) /
+		MILLISECONDS_A_DAY,
+	)
+	return diff * DAY_WIDTH_PIXELS
+}
+
+// Compute relation arrows
+const relationArrows = computed<GanttArrow[]>(() => {
+	if (!props.showRelationArrows) return []
+	return buildRelationArrows(tasks.value, barPositions.value, hiddenToAncestor.value)
+})
+
+const totalHeight = computed(() => ganttRows.value.length * ROW_HEIGHT)
 
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 	const task = tasks.value.get(Number(id))
