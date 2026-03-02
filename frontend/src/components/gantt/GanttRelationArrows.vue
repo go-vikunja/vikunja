@@ -122,11 +122,6 @@ function getMarkerEnd(arrow: GanttArrow): string {
 
 .gantt-arrow {
 	opacity: 0.7;
-	transition: opacity 0.2s ease;
-
-	&:hover {
-		opacity: 1;
-	}
 }
 </style>
 
