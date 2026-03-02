@@ -1,24 +1,34 @@
 <template>
 	<Ready>
-		<template v-if="showAuthLayout">
-			<AppHeader />
-			<ContentAuth />
+		<template v-if="isQuickAddMode && authStore.authUser">
+			<QuickAddOverlay />
 		</template>
-		<ContentLinkShare v-else-if="authStore.authLinkShare" />
-		<NoAuthWrapper
-			v-else
-			show-api-config
-		>
-			<RouterView />
-		</NoAuthWrapper>
-		
-		<KeyboardShortcuts v-if="keyboardShortcutsActive" />
-		
+		<template v-else-if="isQuickAddMode">
+			<div class="quick-add-not-logged-in">
+				<p>{{ $t('quickActions.notLoggedIn') }}</p>
+			</div>
+		</template>
+		<template v-else>
+			<template v-if="showAuthLayout">
+				<AppHeader />
+				<ContentAuth />
+			</template>
+			<ContentLinkShare v-else-if="authStore.authLinkShare" />
+			<NoAuthWrapper
+				v-else
+				show-api-config
+			>
+				<RouterView />
+			</NoAuthWrapper>
+		</template>
+
+		<KeyboardShortcuts v-if="keyboardShortcutsActive && !isQuickAddMode" />
+
 		<Teleport to="body">
-			<AddToHomeScreen />
-			<UpdateNotification />
+			<AddToHomeScreen v-if="!isQuickAddMode" />
+			<UpdateNotification v-if="!isQuickAddMode" />
 			<Notification />
-			<DemoMode />
+			<DemoMode v-if="!isQuickAddMode" />
 		</Teleport>
 	</Ready>
 </template>
@@ -46,15 +56,25 @@ import {useBaseStore} from '@/stores/base'
 
 import {useColorScheme} from '@/composables/useColorScheme'
 import {useBodyClass} from '@/composables/useBodyClass'
+import QuickAddOverlay from '@/components/quick-actions/QuickAddOverlay.vue'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
+import {useQuickAddMode} from '@/composables/useQuickAddMode'
 
 const importAccountDeleteService = () => import('@/services/accountDelete')
 import {success} from '@/message'
 
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
+
+const {isQuickAddMode} = useQuickAddMode()
+
+// Make the Electron frameless window transparent
+if (isQuickAddMode) {
+	document.documentElement.style.background = 'transparent'
+	document.body.style.background = 'transparent'
+}
 
 const route = useRoute()
 
