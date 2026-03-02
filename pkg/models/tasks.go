@@ -961,13 +961,10 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		}
 	}
 
-	err = events.Dispatch(&TaskCreatedEvent{
+	events.DispatchOnCommit(s, &TaskCreatedEvent{
 		Task: t,
 		Doer: createdBy,
 	})
-	if err != nil {
-		return err
-	}
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
@@ -1381,13 +1378,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	t.Updated = nt.Updated
 
 	doer, _ := user.GetFromAuth(a)
-	err = events.Dispatch(&TaskUpdatedEvent{
+	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: t,
 		Doer: doer,
 	})
-	if err != nil {
-		return err
-	}
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 }
@@ -1826,13 +1820,10 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	doer, _ := user.GetFromAuth(a)
-	err = events.Dispatch(&TaskDeletedEvent{
+	events.DispatchOnCommit(s, &TaskDeletedEvent{
 		Task: fullTask,
 		Doer: doer,
 	})
-	if err != nil {
-		return
-	}
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
 	return
@@ -1897,9 +1888,9 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 	}
 
 	doer, _ := user.GetFromAuth(auth)
-	err = events.Dispatch(&TaskUpdatedEvent{
+	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: &t,
 		Doer: doer,
 	})
-	return err
+	return nil
 }
