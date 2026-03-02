@@ -168,6 +168,8 @@ type ProjectView struct {
 	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter" doc:"The filter query used to match tasks shown in this view. See https://vikunja.io/docs/filters."`
 	// The position of this view in the list. The list of all views will be sorted by this parameter.
 	Position float64 `xorm:"double null" json:"position" doc:"The position of this view in the project's list of views. Views are sorted ascending by this value."`
+	// If enabled, this view also includes tasks from all descendant subprojects.
+	IncludeSubprojects bool `xorm:"default false not null" json:"include_subprojects" doc:"If enabled, this view also includes tasks from all descendant subprojects."`
 
 	// The bucket configuration mode. Can be `none`, `manual` or `filter`. `manual` allows to move tasks between buckets as you normally would. `filter` creates buckets based on a filter for each bucket.
 	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode" swaggertype:"string" enums:"none,manual,filter" doc:"The bucket configuration mode. One of none, manual or filter. manual lets you move tasks between buckets; filter creates a bucket per filter."`
@@ -660,6 +662,7 @@ func (pv *ProjectView) Update(s *xorm.Session, a web.Auth) (err error) {
 		"view_kind",
 		"filter",
 		"position",
+		"include_subprojects",
 		"bucket_configuration_mode",
 		"bucket_configuration",
 	}
