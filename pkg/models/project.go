@@ -918,10 +918,11 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 		}
 	}
 
-	return events.Dispatch(&ProjectCreatedEvent{
+	events.DispatchOnCommit(s, &ProjectCreatedEvent{
 		Project: project,
 		Doer:    doer,
 	})
+	return nil
 }
 
 // CreateNewProjectForUser creates a new inbox project for a user. To prevent import cycles, we can't do that
@@ -1018,13 +1019,10 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		return err
 	}
 
-	err = events.Dispatch(&ProjectUpdatedEvent{
+	events.DispatchOnCommit(s, &ProjectUpdatedEvent{
 		Project: project,
 		Doer:    auth,
 	})
-	if err != nil {
-		return err
-	}
 
 	l, err := GetProjectSimpleByID(s, project.ID)
 	if err != nil {
@@ -1252,13 +1250,10 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	err = events.Dispatch(&ProjectDeletedEvent{
+	events.DispatchOnCommit(s, &ProjectDeletedEvent{
 		Project: fullProject,
 		Doer:    a,
 	})
-	if err != nil {
-		return
-	}
 
 	childProjects := []*Project{}
 	err = s.Where("parent_project_id = ?", fullProject.ID).Find(&childProjects)
