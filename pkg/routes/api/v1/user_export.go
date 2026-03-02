@@ -83,19 +83,18 @@ func RequestUserDataExport(c *echo.Context) error {
 	}
 	defer s.Close()
 
-	err = events.Dispatch(&models.UserDataExportRequestedEvent{
+	events.DispatchOnCommit(s, &models.UserDataExportRequestedEvent{
 		User: u,
 	})
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
+
+	events.DispatchPending(s)
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully requested data export. We will send you an email when it's ready."})
 }
