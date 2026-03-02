@@ -8,38 +8,6 @@
 		:aria-label="$t('project.gantt.taskBarsForRow', { rowId })"
 		:data-row-id="rowId"
 	>
-		<!-- Collapse/expand chevron for parent tasks — positioned just before the bar -->
-		<g
-			v-if="isParent && bars[0]"
-			class="gantt-collapse-toggle"
-			:transform="`translate(${Math.max(0, getBarX(bars[0]) - 14)}, 14)`"
-			role="button"
-			:aria-label="isCollapsed
-				? $t('project.gantt.expandGroup', { task: bars[0]?.meta?.label || '' })
-				: $t('project.gantt.collapseGroup', { task: bars[0]?.meta?.label || '' })"
-			tabindex="0"
-			@pointerdown.stop="emit('toggleCollapse')"
-			@keydown.enter.stop="emit('toggleCollapse')"
-		>
-			<rect
-				x="-2"
-				y="-2"
-				width="14"
-				height="14"
-				fill="transparent"
-			/>
-			<polygon
-				v-if="isCollapsed"
-				points="2,0 10,5 2,10"
-				fill="var(--grey-500)"
-			/>
-			<polygon
-				v-else
-				points="0,2 10,2 5,10"
-				fill="var(--grey-500)"
-			/>
-		</g>
-
 		<GanttBarPrimitive
 			v-for="bar in bars"
 			:key="bar.id"
@@ -202,6 +170,38 @@
 				{{ bar.meta?.label || bar.id }}
 			</text>
 		</GanttBarPrimitive>
+
+		<!-- Collapse/expand chevron for parent tasks — rendered after bars so it paints on top -->
+		<g
+			v-if="isParent && bars[0]"
+			class="gantt-collapse-toggle"
+			:transform="`translate(${Math.max(0, getBarX(bars[0]) - 14)}, 14)`"
+			role="button"
+			:aria-label="isCollapsed
+				? $t('project.gantt.expandGroup', { task: bars[0]?.meta?.label || '' })
+				: $t('project.gantt.collapseGroup', { task: bars[0]?.meta?.label || '' })"
+			tabindex="0"
+			@pointerdown.stop="emit('toggleCollapse')"
+			@keydown.enter.stop="emit('toggleCollapse')"
+		>
+			<rect
+				x="-2"
+				y="-2"
+				width="14"
+				height="14"
+				fill="transparent"
+			/>
+			<polygon
+				v-if="isCollapsed"
+				points="2,0 10,5 2,10"
+				fill="var(--grey-500)"
+			/>
+			<polygon
+				v-else
+				points="0,2 10,2 5,10"
+				fill="var(--grey-500)"
+			/>
+		</g>
 	</svg>
 </template>
 
