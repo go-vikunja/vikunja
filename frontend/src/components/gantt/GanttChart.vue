@@ -118,6 +118,7 @@ import {roundToNaturalDayBoundary} from '@/helpers/time/roundToNaturalDayBoundar
 const props = defineProps<{
 	isLoading: boolean,
 	filters: GanttFilters,
+	includeSubprojects: boolean,
 	tasks: Map<ITask['id'], ITask>,
 	defaultTaskStartDate: DateISO
 	defaultTaskEndDate: DateISO
@@ -246,7 +247,7 @@ function getRoundedDate(value: string | Date | undefined, fallback: Date | strin
 }
 
 function getTaskLabel(task: ITask): string {
-	if (!filters.value.includeSubprojects) {
+	if (!props.includeSubprojects) {
 		return task.title
 	}
 

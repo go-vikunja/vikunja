@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onBeforeMount, ref} from 'vue'
+import {onBeforeMount, ref, computed} from 'vue'
 
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import type {IFilters} from '@/modelTypes/ISavedFilter'
@@ -7,11 +7,13 @@ import type {IFilters} from '@/modelTypes/ISavedFilter'
 import {hasFilterQuery, transformFilterStringForApi, transformFilterStringFromApi} from '@/helpers/filters'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
+import {useAuthStore} from '@/stores/auth'
 
 import XButton from '@/components/input/Button.vue'
 import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
 import FormField from '@/components/input/FormField.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: IProjectView,
@@ -31,6 +33,8 @@ const view = ref<IProjectView>()
 
 const labelStore = useLabelStore()
 const projectStore = useProjectStore()
+const authStore = useAuthStore()
+const showIncludeSubprojectsToggle = computed(() => authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false)
 
 onBeforeMount(() => {
 	const transformFilterFromApi = (filterInput: IFilters): IFilter => {
@@ -175,6 +179,15 @@ function handleBubbleSave() {
 		<div class="is-size-7 mbe-3">
 			<FilterInputDocs />
 		</div>
+
+		<FancyCheckbox
+			v-if="showIncludeSubprojectsToggle"
+			v-model="view.includeSubprojects"
+			v-tooltip="$t('project.views.includeSubprojectsHint')"
+			class="mbe-3"
+		>
+			{{ $t('project.views.includeSubprojects') }}
+		</FancyCheckbox>
 
 		<div
 			v-if="view.viewKind === 'kanban'"

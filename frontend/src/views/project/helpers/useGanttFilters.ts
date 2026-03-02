@@ -23,11 +23,9 @@ export interface GanttFilters {
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
-	includeSubprojects: boolean
 }
 
 const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
-const DEFAULT_INCLUDE_SUBPROJECTS = false
 
 const DEFAULT_DATEFROM_DAY_OFFSET = -15
 const DEFAULT_DATETO_DAY_OFFSET = +55
@@ -62,7 +60,6 @@ function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilt
 		dateFrom: parseDateProp(normalizeRouteQueryValue(ganttRoute.query?.dateFrom) as DateKebab) || getDefaultDateFrom(),
 		dateTo: parseDateProp(normalizeRouteQueryValue(ganttRoute.query?.dateTo) as DateKebab) || getDefaultDateTo(),
 		showTasksWithoutDates: parseBooleanProp(normalizeRouteQueryValue(ganttRoute.query?.showTasksWithoutDates)) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
-		includeSubprojects: parseBooleanProp(normalizeRouteQueryValue(ganttRoute.query?.includeSubprojects)) || DEFAULT_INCLUDE_SUBPROJECTS,
 	}
 }
 
@@ -88,10 +85,6 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 		query.showTasksWithoutDates = String(filters.showTasksWithoutDates)
 	}
 
-	if (filters.includeSubprojects) {
-		query.includeSubprojects = true
-	}
-
 	return {
 		name: 'project.view',
 		params: {
@@ -102,7 +95,7 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 	}
 }
 
-function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
+function ganttFiltersToApiParams(filters: GanttFilters, includeSubprojects: boolean): TaskFilterParams {
 	const dateFrom = isoToKebabDate(filters.dateFrom)
 	const dateTo = isoToKebabDate(filters.dateTo)
 
@@ -117,7 +110,7 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 			')',
 		filter_include_nulls: filters.showTasksWithoutDates,
 		expand: 'subtasks',
-		include_subprojects: filters.includeSubprojects,
+		include_subprojects: includeSubprojects,
 	}
 }
 
@@ -125,7 +118,11 @@ export type UseGanttFiltersReturn =
 	UseRouteFiltersReturn<GanttFilters> &
 	UseGanttTaskListReturn
 
-export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref<IProjectView['id']>): UseGanttFiltersReturn {
+export function useGanttFilters(
+	route: Ref<RouteLocationNormalized>,
+	viewId: Ref<IProjectView['id']>,
+	includeSubprojects: Ref<boolean>,
+): UseGanttFiltersReturn {
 	const viewFiltersStore = useViewFiltersStore()
 
 	const {
@@ -162,7 +159,15 @@ export function useGanttFilters(route: Ref<RouteLocationNormalized>, viewId: Ref
 		isLoading,
 		addTask,
 		updateTask,
-	} = useGanttTaskList<GanttFilters>(filters, ganttFiltersToApiParams, viewId)
+	} = useGanttTaskList<GanttFilters>(
+		filters,
+		currentFilters => ganttFiltersToApiParams(currentFilters, includeSubprojects.value),
+		viewId,
+	)
+
+	watch(includeSubprojects, () => {
+		loadTasks()
+	})
 
 	return {
 		filters,
