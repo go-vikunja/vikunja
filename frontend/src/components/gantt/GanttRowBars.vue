@@ -129,12 +129,16 @@
 				<polygon
 					:points="getLeftDiamondPoints(bar)"
 					:fill="getParentDiamondFill(bar)"
+					:stroke="getBarFillAttr(bar)"
+					stroke-width="1"
 					:opacity="bar.meta?.isDone ? 0.5 : 1"
 				/>
 				<!-- Right diamond -->
 				<polygon
 					:points="getRightDiamondPoints(bar)"
 					:fill="getParentDiamondFill(bar)"
+					:stroke="getBarFillAttr(bar)"
+					stroke-width="1"
 					:opacity="bar.meta?.isDone ? 0.5 : 1"
 				/>
 			</g>
@@ -323,13 +327,13 @@ const getBarTextX = computed(() => (bar: GanttBarModel) => {
 const DIAMOND_SIZE = 5
 
 function getLeftDiamondPoints(bar: GanttBarModel): string {
-	const x = getBarX.value(bar)
+	const x = getBarX.value(bar) - DIAMOND_SIZE
 	const cy = 20 // vertical center of the bar
 	return `${x},${cy} ${x + DIAMOND_SIZE},${cy - DIAMOND_SIZE} ${x + DIAMOND_SIZE * 2},${cy} ${x + DIAMOND_SIZE},${cy + DIAMOND_SIZE}`
 }
 
 function getRightDiamondPoints(bar: GanttBarModel): string {
-	const x = getBarX.value(bar) + getBarWidth.value(bar)
+	const x = getBarX.value(bar) + getBarWidth.value(bar) + DIAMOND_SIZE
 	const cy = 20
 	return `${x - DIAMOND_SIZE * 2},${cy} ${x - DIAMOND_SIZE},${cy - DIAMOND_SIZE} ${x},${cy} ${x - DIAMOND_SIZE},${cy + DIAMOND_SIZE}`
 }
@@ -483,14 +487,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 .gantt-parent-bar {
 	cursor: grab;
 	pointer-events: all;
-
-	&:hover {
-		opacity: 0.8;
-	}
-
-	&:active {
-		cursor: grabbing;
-	}
 }
 
 :deep(.gantt-resize-handle) {
