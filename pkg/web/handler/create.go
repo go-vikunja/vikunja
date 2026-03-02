@@ -22,6 +22,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -68,10 +69,12 @@ func (c *WebHandler) CreateWeb(ctx *echo.Context) error {
 	canCreate, err := currentStruct.CanCreate(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 	if !canCreate {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		log.Warningf("Tried to create while not having the permissions for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
 	}
@@ -80,13 +83,17 @@ func (c *WebHandler) CreateWeb(ctx *echo.Context) error {
 	err = currentStruct.Create(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 
 	err = s.Commit()
 	if err != nil {
+		events.CleanupPending(s)
 		return err
 	}
+
+	events.DispatchPending(s)
 
 	return ctx.JSON(http.StatusCreated, currentStruct)
 }
