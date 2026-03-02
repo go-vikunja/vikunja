@@ -100,6 +100,7 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 			'(start_date <= "' + dateFrom + '" && end_date >= "' + dateTo + '")' +
 			')',
 		filter_include_nulls: filters.showTasksWithoutDates,
+		expand: 'subtasks',
 	}
 }
 
