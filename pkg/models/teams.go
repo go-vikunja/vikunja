@@ -213,10 +213,11 @@ func (t *Team) CreateNewTeam(s *xorm.Session, a web.Auth, firstUserShouldBeAdmin
 		return err
 	}
 
-	return events.Dispatch(&TeamCreatedEvent{
+	events.DispatchOnCommit(s, &TeamCreatedEvent{
 		Team: t,
 		Doer: a,
 	})
+	return nil
 }
 
 // ReadOne implements the CRUD method to get one team
@@ -352,10 +353,11 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	return events.Dispatch(&TeamDeletedEvent{
+	events.DispatchOnCommit(s, &TeamDeletedEvent{
 		Team: t,
 		Doer: a,
 	})
+	return nil
 }
 
 // Update is the handler to create a team
