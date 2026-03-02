@@ -250,7 +250,13 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	}
 
 	if path == "memory" {
-		return xorm.NewEngine("sqlite3", "file::memory:?cache=shared")
+		engine, err = xorm.NewEngine("sqlite3", "file::memory:?cache=shared&_busy_timeout=5000")
+		if err != nil {
+			return
+		}
+		engine.SetMaxOpenConns(1)
+		engine.SetMaxIdleConns(1)
+		return
 	}
 
 	// Log the resolved database path
@@ -276,7 +282,13 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		_ = os.Remove(path) // Remove the file to not prevent the db from creating another one
 	}
 
-	return xorm.NewEngine("sqlite3", path)
+	engine, err = xorm.NewEngine("sqlite3", path+"?cache=shared&_busy_timeout=5000&_journal_mode=WAL")
+	if err != nil {
+		return
+	}
+	engine.SetMaxOpenConns(1)
+	engine.SetMaxIdleConns(1)
+	return
 }
 
 // getUserDataDir returns the platform-appropriate directory for application data
