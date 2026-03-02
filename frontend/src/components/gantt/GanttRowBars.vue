@@ -12,7 +12,7 @@
 		<g
 			v-if="isParent && bars[0]"
 			class="gantt-collapse-toggle"
-			:transform="`translate(${getBarX(bars[0]) - 14}, 14)`"
+			:transform="`translate(${Math.max(0, getBarX(bars[0]) - 14)}, 14)`"
 			role="button"
 			:aria-label="isCollapsed
 				? $t('project.gantt.expandGroup', { task: bars[0]?.meta?.label || '' })
