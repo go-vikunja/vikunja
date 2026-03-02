@@ -18,6 +18,10 @@
   },
   "build": {
     "appId": "io.vikunja.desktop",
+    "files": [
+      "**/*",
+      "preload-quick-entry.js"
+    ],
     "productName": "Vikunja Desktop",
     "artifactName": "${productName}-${version}.${ext}",
     "icon": "build/icon.icns",
