@@ -61,7 +61,7 @@ func checkUserCaldavTokens(s *xorm.Session, login *user.Login) (*user.User, erro
 		log.Warningf("Error while retrieving users from database: %v", err)
 		return nil, err
 	}
-	tokens, err := user.GetCaldavTokens(usr)
+	tokens, err := user.GetCaldavTokensWithSession(s, usr)
 	if err != nil {
 		log.Errorf("Error while getting tokens for caldav auth: %v", err)
 		return nil, err
