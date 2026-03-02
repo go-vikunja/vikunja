@@ -97,8 +97,9 @@
 				</linearGradient>
 			</defs>
 
-			<!-- Main bar -->
+			<!-- Main bar (regular task) -->
 			<rect
+				v-if="!bar.meta?.isParent"
 				:x="getBarX(bar)"
 				:y="4"
 				:width="getBarWidth(bar)"
@@ -115,6 +116,45 @@
 				:aria-pressed="isRowFocused"
 				@pointerdown="handleBarPointerDown(bar, $event)"
 			/>
+
+			<!-- Parent summary bar (thinner with diamond endpoints) -->
+			<g
+				v-if="bar.meta?.isParent"
+				class="gantt-bar gantt-parent-bar"
+				role="button"
+				:aria-label="getBarAriaLabel(bar)"
+				:aria-pressed="isRowFocused"
+				@pointerdown="handleBarPointerDown(bar, $event)"
+			>
+				<!-- Thin horizontal bar -->
+				<rect
+					:x="getBarX(bar) + 6"
+					:y="16"
+					:width="Math.max(0, getBarWidth(bar) - 12)"
+					:height="8"
+					:fill="getBarFillAttr(bar)"
+					:opacity="bar.meta?.isDone ? 0.5 : 1"
+					:stroke="getBarStroke(bar)"
+					:stroke-width="getBarStrokeWidth(bar)"
+					:stroke-dasharray="bar.meta?.hasDerivedDates ? '4,2' : 'none'"
+				/>
+				<!-- Left diamond -->
+				<polygon
+					:points="getLeftDiamondPoints(bar)"
+					:fill="getBarFillAttr(bar)"
+					:opacity="bar.meta?.isDone ? 0.5 : 1"
+					:stroke="getBarStroke(bar)"
+					:stroke-width="getBarStrokeWidth(bar)"
+				/>
+				<!-- Right diamond -->
+				<polygon
+					:points="getRightDiamondPoints(bar)"
+					:fill="getBarFillAttr(bar)"
+					:opacity="bar.meta?.isDone ? 0.5 : 1"
+					:stroke="getBarStroke(bar)"
+					:stroke-width="getBarStrokeWidth(bar)"
+				/>
+			</g>
 
 			<!-- Left resize handle (hidden for endOnly bars) -->
 			<rect
@@ -294,8 +334,25 @@ const getBarTextX = computed(() => (bar: GanttBarModel) => {
 	}
 	// When the bar starts before the visible range, clamp text to the left edge
 	// so the title remains visible within the visible portion of the bar.
-	return Math.max(getBarX.value(bar) + 8, 8)
+	// For parent bars, offset by the chevron width
+	const baseOffset = bar.meta?.isParent ? 24 : 8
+	return Math.max(getBarX.value(bar) + baseOffset, 8)
 })
+
+// Diamond endpoint helpers for parent summary bars
+const DIAMOND_SIZE = 6
+
+function getLeftDiamondPoints(bar: GanttBarModel): string {
+	const x = getBarX.value(bar)
+	const cy = 20 // vertical center of the thin bar
+	return `${x},${cy} ${x + DIAMOND_SIZE},${cy - DIAMOND_SIZE} ${x + DIAMOND_SIZE * 2},${cy} ${x + DIAMOND_SIZE},${cy + DIAMOND_SIZE}`
+}
+
+function getRightDiamondPoints(bar: GanttBarModel): string {
+	const x = getBarX.value(bar) + getBarWidth.value(bar)
+	const cy = 20
+	return `${x - DIAMOND_SIZE * 2},${cy} ${x - DIAMOND_SIZE},${cy - DIAMOND_SIZE} ${x},${cy} ${x - DIAMOND_SIZE},${cy + DIAMOND_SIZE}`
+}
 
 function isPartialDate(bar: GanttBarModel) {
 	return bar.meta?.dateType === 'startOnly' || bar.meta?.dateType === 'endOnly'
@@ -438,6 +495,19 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	font-size: .85rem;
 	pointer-events: none;
 	user-select: none;
+}
+
+.gantt-parent-bar {
+	cursor: grab;
+	pointer-events: all;
+
+	&:hover {
+		opacity: 0.8;
+	}
+
+	&:active {
+		cursor: grabbing;
+	}
 }
 
 :deep(.gantt-resize-handle) {
