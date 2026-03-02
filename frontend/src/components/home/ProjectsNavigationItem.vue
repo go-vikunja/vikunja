@@ -262,7 +262,7 @@ const canToggleFavorite = computed(() => {
 	z-index: 2;
 
 	position: absolute;
-	inset-inline-start: 1.75rem;
+	inset-inline-start: 2.15rem;
 
 	&:active {
 		cursor: grabbing;
