@@ -459,6 +459,97 @@ func assertLabelsMatch(t *testing.T, vikunjaTask *models.TaskWithComments, expec
 	}
 }
 
+func TestUnmarshalCSVTimeFormats(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected time.Time
+	}{
+		{
+			name:     "ISO format with timezone offset",
+			input:    "2022-10-09T15:09:48+0000",
+			expected: time.Date(2022, 10, 9, 15, 9, 48, 0, time.UTC),
+		},
+		{
+			name:     "Space-separated without timezone",
+			input:    "2026-02-27 14:59:52",
+			expected: time.Date(2026, 2, 27, 14, 59, 52, 0, time.UTC),
+		},
+		{
+			name:     "ISO format with Z suffix",
+			input:    "2022-10-09T15:09:48Z",
+			expected: time.Date(2022, 10, 9, 15, 9, 48, 0, time.UTC),
+		},
+		{
+			name:     "ISO format with positive offset",
+			input:    "2018-12-11T23:00:00+0100",
+			expected: time.Date(2018, 12, 11, 23, 0, 0, 0, time.FixedZone("", 3600)),
+		},
+		{
+			name:     "empty string",
+			input:    "",
+			expected: time.Time{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ttt tickTickTime
+			err := ttt.UnmarshalCSV(tt.input)
+			require.NoError(t, err)
+			assert.True(t, tt.expected.Equal(ttt.Time), "expected %v, got %v", tt.expected, ttt.Time)
+		})
+	}
+
+	t.Run("invalid format returns error", func(t *testing.T) {
+		var ttt tickTickTime
+		err := ttt.UnmarshalCSV("not-a-date")
+		require.Error(t, err)
+	})
+}
+
+func TestSpaceSeparatedDatesCSV(t *testing.T) {
+	file, err := os.Open("testdata_ticktick_space_dates.csv")
+	require.NoError(t, err)
+	defer file.Close()
+
+	stat, err := file.Stat()
+	require.NoError(t, err)
+
+	lines, err := linesToSkipBeforeHeader(file, stat.Size())
+	require.NoError(t, err)
+	assert.Equal(t, 6, lines)
+
+	_, err = file.Seek(0, io.SeekStart)
+	require.NoError(t, err)
+
+	dec, err := newLineSkipDecoder(file, lines)
+	require.NoError(t, err)
+	tasks := []*tickTickTask{}
+	err = gocsv.UnmarshalDecoder(dec, &tasks)
+	require.NoError(t, err)
+	require.Len(t, tasks, 2)
+
+	// First task: has start date, due date, and created time in space-separated format
+	assert.Equal(t, "Task with space dates", tasks[0].Title)
+	assert.Equal(t, time.Date(2026, 2, 20, 10, 0, 0, 0, time.UTC), tasks[0].StartDate.Time)
+	assert.Equal(t, time.Date(2026, 2, 27, 14, 59, 52, 0, time.UTC), tasks[0].DueDate.Time)
+	assert.Equal(t, time.Date(2026, 2, 15, 9, 30, 0, 0, time.UTC), tasks[0].CreatedTime.Time)
+	assert.True(t, tasks[0].CompletedTime.IsZero())
+
+	// Second task: completed, has created time and completed time
+	assert.Equal(t, "Completed task with space dates", tasks[1].Title)
+	assert.Equal(t, time.Date(2026, 2, 10, 8, 0, 0, 0, time.UTC), tasks[1].CreatedTime.Time)
+	assert.Equal(t, time.Date(2026, 2, 25, 16, 45, 30, 0, time.UTC), tasks[1].CompletedTime.Time)
+
+	// Verify the tasks convert to Vikunja format without error
+	for _, task := range tasks {
+		task.Tags = strings.Split(task.TagsList, ", ")
+	}
+	vikunjaTasks := convertTickTickToVikunja(tasks)
+	require.Greater(t, len(vikunjaTasks), 0)
+}
+
 func TestMultilineDescriptions(t *testing.T) {
 	// Test with a CSV fixture that contains actual multiline content in quoted fields
 	file, err := os.Open("testdata_ticktick_multiline.csv")

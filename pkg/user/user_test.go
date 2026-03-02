@@ -558,6 +558,28 @@ func TestUserPasswordReset(t *testing.T) {
 		_, err := ResetPassword(s, reset)
 		require.NoError(t, err)
 	})
+	t.Run("removes password reset token after use", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		token := "passwordresettesttoken"
+
+		reset := &PasswordReset{
+			Token:       token,
+			NewPassword: "12345",
+		}
+		_, err := ResetPassword(s, reset)
+		require.NoError(t, err)
+
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "user_tokens", map[string]interface{}{
+			"token": token,
+			"kind":  TokenPasswordReset,
+		})
+	})
 	t.Run("without password", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -595,6 +617,68 @@ func TestUserPasswordReset(t *testing.T) {
 		_, err := ResetPassword(s, reset)
 		require.Error(t, err)
 		assert.True(t, IsErrInvalidPasswordResetToken(err))
+	})
+}
+
+func TestCleanupOldTokens(t *testing.T) {
+	t.Run("deletes old tokens and keeps recent ones", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Insert a recent password reset token that should NOT be deleted
+		recentToken := &Token{
+			UserID: 1,
+			Token:  "recenttoken",
+			Kind:   TokenPasswordReset,
+		}
+		_, err := s.Insert(recentToken)
+		require.NoError(t, err)
+
+		deleted, err := CleanupOldTokens(s)
+		require.NoError(t, err)
+
+		// Fixtures have two old tokens that should be cleaned up:
+		// id=1 (kind=1, TokenPasswordReset, created 2021) and id=4 (kind=3, TokenAccountDeletion, created 2021)
+		assert.Equal(t, int64(2), deleted)
+
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// The old password reset token from fixtures should be gone
+		db.AssertMissing(t, "user_tokens", map[string]interface{}{
+			"id": 1,
+		})
+		// The old account deletion token from fixtures should be gone
+		db.AssertMissing(t, "user_tokens", map[string]interface{}{
+			"id": 4,
+		})
+		// The recent token should still exist
+		db.AssertExists(t, "user_tokens", map[string]interface{}{
+			"token": "recenttoken",
+			"kind":  TokenPasswordReset,
+		}, false)
+	})
+	t.Run("does not delete email confirm tokens", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := CleanupOldTokens(s)
+		require.NoError(t, err)
+
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// The old email confirm tokens (kind=2) from fixtures should still exist
+		db.AssertExists(t, "user_tokens", map[string]interface{}{
+			"id":   2,
+			"kind": TokenEmailConfirm,
+		}, false)
+		db.AssertExists(t, "user_tokens", map[string]interface{}{
+			"id":   3,
+			"kind": TokenEmailConfirm,
+		}, false)
 	})
 }
 

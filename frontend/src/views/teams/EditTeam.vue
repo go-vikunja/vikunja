@@ -109,61 +109,63 @@
 					{{ $t('team.edit.mustSelectUser') }}
 				</p>
 			</form>
-			<table class="table has-actions is-striped is-hoverable is-fullwidth">
-				<tbody>
-					<tr
-						v-for="m in team?.members"
-						:key="m.id"
-					>
-						<td>
-							<User
-								:avatar-size="24"
-								:user="m"
-								class="m-0"
-							/>
-						</td>
-						<td>
-							<template v-if="m.id === userInfo.id">
-								<b class="is-success">You</b>
-							</template>
-						</td>
-						<td class="type">
-							<template v-if="m.admin">
-								<span class="icon is-small">
-									<Icon icon="lock" />
-								</span>
-								{{ $t('team.attributes.admin') }}
-							</template>
-							<template v-else>
-								<span class="icon is-small">
-									<Icon icon="user" />
-								</span>
-								{{ $t('team.attributes.member') }}
-							</template>
-						</td>
-						<td
-							v-if="userIsAdmin"
-							class="actions"
+			<div class="has-horizontal-overflow">
+				<table class="table has-actions is-striped is-hoverable is-fullwidth">
+					<tbody>
+						<tr
+							v-for="m in team?.members"
+							:key="m.id"
 						>
-							<XButton
-								v-if="m.id !== userInfo.id"
-								:loading="teamMemberService.loading"
-								class="mie-2"
-								@click="() => toggleUserType(m)"
+							<td>
+								<User
+									:avatar-size="24"
+									:user="m"
+									class="m-0"
+								/>
+							</td>
+							<td>
+								<template v-if="m.id === userInfo.id">
+									<b class="is-success">You</b>
+								</template>
+							</td>
+							<td class="type">
+								<template v-if="m.admin">
+									<span class="icon is-small">
+										<Icon icon="lock" />
+									</span>
+									{{ $t('team.attributes.admin') }}
+								</template>
+								<template v-else>
+									<span class="icon is-small">
+										<Icon icon="user" />
+									</span>
+									{{ $t('team.attributes.member') }}
+								</template>
+							</td>
+							<td
+								v-if="userIsAdmin"
+								class="actions"
 							>
-								{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
-							</XButton>
-							<XButton
-								v-if="m.id !== userInfo.id"
-								:loading="teamMemberService.loading"
-								danger
-								icon="trash-alt"
-								@click="() => {memberToDelete = m; showUserDeleteModal = true}"
-							/>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+								<XButton
+									v-if="m.id !== userInfo.id"
+									:loading="teamMemberService.loading"
+									class="mie-2"
+									@click="() => toggleUserType(m)"
+								>
+									{{ m.admin ? $t('team.edit.makeMember') : $t('team.edit.makeAdmin') }}
+								</XButton>
+								<XButton
+									v-if="m.id !== userInfo.id"
+									:loading="teamMemberService.loading"
+									danger
+									icon="trash-alt"
+									@click="() => {memberToDelete = m; showUserDeleteModal = true}"
+								/>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</Card>
 
 		<XButton

@@ -45,48 +45,50 @@ async function deleteSession() {
 			{{ $t('user.settings.sessions.description') }}
 		</p>
 
-		<table
+		<div
 			v-if="sessions.length > 0"
-			class="table"
+			class="has-horizontal-overflow"
 		>
-			<thead>
-				<tr>
-					<th>{{ $t('user.settings.sessions.deviceInfo') }}</th>
-					<th>{{ $t('user.settings.sessions.ipAddress') }}</th>
-					<th>{{ $t('user.settings.sessions.lastActive') }}</th>
-					<th class="has-text-end">
-						{{ $t('misc.actions') }}
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="session in sessions"
-					:key="session.id"
-				>
-					<td>
-						{{ session.deviceInfo }}
-						<span
-							v-if="session.id === authStore.currentSessionId"
-							class="tag is-primary mis-2"
-						>
-							{{ $t('user.settings.sessions.current') }}
-						</span>
-					</td>
-					<td>{{ session.ipAddress }}</td>
-					<td>{{ formatDateSince(session.lastActive) }}</td>
-					<td class="has-text-end">
-						<XButton
-							v-if="session.id !== authStore.currentSessionId"
-							variant="secondary"
-							@click="confirmDelete(session)"
-						>
-							{{ $t('misc.delete') }}
-						</XButton>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>{{ $t('user.settings.sessions.deviceInfo') }}</th>
+						<th>{{ $t('user.settings.sessions.ipAddress') }}</th>
+						<th>{{ $t('user.settings.sessions.lastActive') }}</th>
+						<th class="has-text-end">
+							{{ $t('misc.actions') }}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="session in sessions"
+						:key="session.id"
+					>
+						<td>
+							{{ session.deviceInfo }}
+							<span
+								v-if="session.id === authStore.currentSessionId"
+								class="tag is-primary mis-2"
+							>
+								{{ $t('user.settings.sessions.current') }}
+							</span>
+						</td>
+						<td>{{ session.ipAddress }}</td>
+						<td>{{ formatDateSince(session.lastActive) }}</td>
+						<td class="has-text-end">
+							<XButton
+								v-if="session.id !== authStore.currentSessionId"
+								variant="secondary"
+								@click="confirmDelete(session)"
+							>
+								{{ $t('misc.delete') }}
+							</XButton>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 
 		<p v-else>
 			{{ $t('user.settings.sessions.noOtherSessions') }}

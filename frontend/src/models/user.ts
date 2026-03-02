@@ -24,9 +24,7 @@ export async function fetchAvatarBlobUrl(user: IUser, size = 50) {
 	if (pendingRequests.has(key)) {
 		return await pendingRequests.get(key) as string
 	}
-	
-	invalidateAvatarCache(user)
-	
+
 	// Create a new request
 	const requestPromise = avatarService.getBlobUrl(`/avatar/${user.username}?size=${size}`)
 		.then(url => {

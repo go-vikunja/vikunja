@@ -114,18 +114,18 @@
     "@tsconfig/node24": "24.0.4",
     "@types/codemirror": "5.60.17",
     "@types/is-touch-device": "1.0.3",
-    "@types/node": "24.10.13",
+    "@types/node": "24.11.0",
     "@types/sortablejs": "1.15.9",
     "@typescript-eslint/eslint-plugin": "8.56.1",
     "@typescript-eslint/parser": "8.56.1",
     "@vitejs/plugin-vue": "6.0.4",
     "@vue/eslint-config-typescript": "14.7.0",
     "@vue/test-utils": "2.4.6",
-    "@vue/tsconfig": "0.8.1",
+    "@vue/tsconfig": "0.9.0",
     "@vueuse/shared": "14.2.1",
-    "autoprefixer": "10.4.26",
+    "autoprefixer": "10.4.27",
     "browserslist": "4.28.1",
-    "caniuse-lite": "1.0.30001774",
+    "caniuse-lite": "1.0.30001775",
     "csstype": "3.2.3",
     "esbuild": "0.27.3",
     "eslint": "9.39.3",
@@ -149,7 +149,7 @@
     "vite": "7.3.1",
     "vite-plugin-pwa": "1.2.0",
     "vite-plugin-sentry": "1.4.1",
-    "vite-plugin-vue-devtools": "8.0.6",
+    "vite-plugin-vue-devtools": "8.0.7",
     "vite-svg-loader": "5.1.0",
     "vitest": "4.0.18",
     "vue-tsc": "3.2.5",
@@ -169,7 +169,10 @@
       "vue-demi"
     ],
     "overrides": {
-      "minimatch": "^10.2.1"
+      "minimatch": "^10.2.3",
+      "rollup": "$rollup",
+      "basic-ftp": "5.2.0",
+      "serialize-javascript": "^7.0.3"
     }
   }
 }

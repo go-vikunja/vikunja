@@ -101,13 +101,17 @@
 				<BaseButton
 					v-if="creatableAvailable"
 					:ref="(el) => setResult(el, filteredSearchResults.length)"
-					class="search-result-button is-fullwidth"
+					class="search-result-button is-fullwidth is-create-option"
 					@keydown.up.prevent="() => preSelect(filteredSearchResults.length - 1)"
 					@keydown.down.prevent="() => preSelect(filteredSearchResults.length + 1)"
 					@keyup.enter.prevent="create"
 					@click.prevent.stop="create"
 				>
 					<span>
+						<Icon
+							icon="plus"
+							class="create-icon"
+						/>
 						<slot
 							name="searchResult"
 							:option="query"
@@ -117,7 +121,7 @@
 							</span>
 						</slot>
 					</span>
-					<span class="hint-text">
+					<span class="hint-text is-always-visible">
 						{{ createPlaceholder }}
 					</span>
 				</BaseButton>
@@ -134,6 +138,7 @@ import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
+import Icon from '@/components/misc/Icon'
 
 const props = withDefaults(defineProps<{
 	/** The object with the value, updated every time an entry is selected */
@@ -610,6 +615,16 @@ function focus() {
 	color: transparent;
 	transition: color $transition;
 	padding-inline-start: .5rem;
+
+	&.is-always-visible {
+		color: var(--grey-500);
+	}
+}
+
+.create-icon {
+	color: var(--success);
+	margin-inline-end: .25rem;
+	font-size: .75rem;
 }
 
 .has-removal-button {

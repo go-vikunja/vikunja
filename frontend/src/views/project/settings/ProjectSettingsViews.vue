@@ -151,68 +151,70 @@ async function saveViewPosition(e) {
 			{{ $t('project.views.onlyAdminsCanEdit') }}
 		</Message>
 
-		<table
+		<div
 			v-if="views?.length > 0"
-			class="table has-actions is-striped is-hoverable is-fullwidth"
+			class="has-horizontal-overflow"
 		>
-			<thead>
-				<tr>
-					<th>{{ $t('project.views.title') }}</th>
-					<th>{{ $t('project.views.kind') }}</th>
-					<th class="has-text-end">
-						{{ $t('project.views.actions') }}
-					</th>
-				</tr>
-			</thead>
-			<draggable
-				v-model="views"
-				tag="tbody"
-				item-key="id"
-				handle=".handle"
-				:animation="100"
-				@end="saveViewPosition"
-			>
-				<template #item="{element: v}">
+			<table class="table has-actions is-striped is-hoverable is-fullwidth">
+				<thead>
 					<tr>
-						<template v-if="viewToEdit !== null && viewToEdit.id === v.id">
-							<td colspan="3">
-								<ViewEditForm
-									v-model="viewToEdit"
-									class="mbe-4"
-									:loading="projectViewService.loading"
-									:show-save-buttons="true"
-									@cancel="viewToEdit = null"
-									@update:modelValue="saveView(viewToEdit)"
-								/>
-							</td>
-						</template>
-						<template v-else>
-							<td>{{ v.title }}</td>
-							<td>{{ v.viewKind }}</td>
-							<td class="has-text-end actions">
-								<XButton
-									v-if="isAdmin"
-									class="is-danger mie-2"
-									icon="trash-alt"
-									@click="() => {
-										viewIdToDelete = v.id
-										showDeleteModal = true
-									}"
-								/>
-								<XButton
-									v-if="isAdmin"
-									icon="pen"
-									@click="viewToEdit = {...v}"
-								/>
-								<span class="icon handle">
-									<Icon icon="grip-lines" />
-								</span>
-							</td>
-						</template>
+						<th>{{ $t('project.views.title') }}</th>
+						<th>{{ $t('project.views.kind') }}</th>
+						<th class="has-text-end">
+							{{ $t('project.views.actions') }}
+						</th>
 					</tr>
-				</template>
-			</draggable>
-		</table>
+				</thead>
+				<draggable
+					v-model="views"
+					tag="tbody"
+					item-key="id"
+					handle=".handle"
+					:animation="100"
+					@end="saveViewPosition"
+				>
+					<template #item="{element: v}">
+						<tr>
+							<template v-if="viewToEdit !== null && viewToEdit.id === v.id">
+								<td colspan="3">
+									<ViewEditForm
+										v-model="viewToEdit"
+										class="mbe-4"
+										:loading="projectViewService.loading"
+										:show-save-buttons="true"
+										@cancel="viewToEdit = null"
+										@update:modelValue="saveView(viewToEdit)"
+									/>
+								</td>
+							</template>
+							<template v-else>
+								<td>{{ v.title }}</td>
+								<td>{{ v.viewKind }}</td>
+								<td class="has-text-end actions">
+									<XButton
+										v-if="isAdmin"
+										class="is-danger mie-2"
+										icon="trash-alt"
+										@click="() => {
+											viewIdToDelete = v.id
+											showDeleteModal = true
+										}"
+									/>
+									<XButton
+										v-if="isAdmin"
+										icon="pen"
+										@click="viewToEdit = {...v}"
+									/>
+									<span class="icon handle">
+										<Icon icon="grip-lines" />
+									</span>
+								</td>
+							</template>
+						</tr>
+					</template>
+				</draggable>
+			</table>
+		</div>
 	</CreateEdit>
 
 	<Modal

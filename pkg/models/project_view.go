@@ -308,6 +308,12 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 		return
 	}
 
+	p.Position = calculateDefaultPosition(p.ID, p.Position)
+	_, err = s.Where("id = ?", p.ID).Update(p)
+	if err != nil {
+		return
+	}
+
 	if p.ViewKind == ProjectViewKindKanban && createBacklogBucket && p.BucketConfigurationMode == BucketConfigurationModeManual {
 		// Create default buckets for kanban view
 		backlog := &Bucket{
