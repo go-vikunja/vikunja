@@ -72,7 +72,7 @@
 </template>
 
 <script lang="ts" setup>
-import {watch, computed} from 'vue'
+import {watch, computed, onBeforeUnmount} from 'vue'
 import {useRoute} from 'vue-router'
 
 import Navigation from '@/components/home/Navigation.vue'
@@ -140,6 +140,16 @@ labelStore.loadAllLabels()
 
 const projectStore = useProjectStore()
 projectStore.loadAllProjects()
+
+// Listen for task creation from the quick-entry window
+const taskUpdateChannel = new BroadcastChannel('vikunja-task-updates')
+taskUpdateChannel.onmessage = () => {
+	// Handled by later commits (e.g. open task in main window)
+}
+
+onBeforeUnmount(() => {
+	taskUpdateChannel.close()
+})
 </script>
 
 <style lang="scss" scoped>
