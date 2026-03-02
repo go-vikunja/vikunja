@@ -8,24 +8,11 @@
 		:aria-label="$t('project.gantt.taskBarsForRow', { rowId })"
 		:data-row-id="rowId"
 	>
-		<!-- Indent indicator: thin vertical lines for nesting depth -->
-		<line
-			v-for="level in indentLevel"
-			:key="`indent-${level}`"
-			:x1="(level - 1) * 16 + 8"
-			:y1="0"
-			:x2="(level - 1) * 16 + 8"
-			:y2="40"
-			stroke="var(--grey-300)"
-			stroke-width="1"
-			class="gantt-indent-line"
-		/>
-
-		<!-- Collapse/expand chevron for parent tasks -->
+		<!-- Collapse/expand chevron for parent tasks — positioned just before the bar -->
 		<g
-			v-if="isParent"
+			v-if="isParent && bars[0]"
 			class="gantt-collapse-toggle"
-			:transform="`translate(${indentLevel * 16 + 2}, 12)`"
+			:transform="`translate(${getBarX(bars[0]) - 18}, 12)`"
 			role="button"
 			:aria-label="isCollapsed
 				? $t('project.gantt.expandGroup', { task: bars[0]?.meta?.label || '' })
@@ -117,7 +104,7 @@
 				@pointerdown="handleBarPointerDown(bar, $event)"
 			/>
 
-			<!-- Parent summary bar (thinner with diamond endpoints) -->
+			<!-- Parent summary bar (full height with diamond endpoints) -->
 			<g
 				v-if="bar.meta?.isParent"
 				class="gantt-bar gantt-parent-bar"
@@ -126,12 +113,12 @@
 				:aria-pressed="isRowFocused"
 				@pointerdown="handleBarPointerDown(bar, $event)"
 			>
-				<!-- Thin horizontal bar -->
 				<rect
-					:x="getBarX(bar) + 6"
-					:y="16"
-					:width="Math.max(0, getBarWidth(bar) - 12)"
-					:height="8"
+					:x="getBarX(bar)"
+					:y="4"
+					:width="getBarWidth(bar)"
+					:height="32"
+					:rx="4"
 					:fill="getBarFillAttr(bar)"
 					:opacity="bar.meta?.isDone ? 0.5 : 1"
 					:stroke="getBarStroke(bar)"
@@ -141,18 +128,14 @@
 				<!-- Left diamond -->
 				<polygon
 					:points="getLeftDiamondPoints(bar)"
-					:fill="getBarFillAttr(bar)"
+					:fill="getParentDiamondFill(bar)"
 					:opacity="bar.meta?.isDone ? 0.5 : 1"
-					:stroke="getBarStroke(bar)"
-					:stroke-width="getBarStrokeWidth(bar)"
 				/>
 				<!-- Right diamond -->
 				<polygon
 					:points="getRightDiamondPoints(bar)"
-					:fill="getBarFillAttr(bar)"
+					:fill="getParentDiamondFill(bar)"
 					:opacity="bar.meta?.isDone ? 0.5 : 1"
-					:stroke="getBarStroke(bar)"
-					:stroke-width="getBarStrokeWidth(bar)"
 				/>
 			</g>
 
@@ -249,7 +232,6 @@ const props = defineProps<{
 	focusedRow: string | null
 	focusedCell: number | null
 	rowId: string
-	indentLevel: number
 	isParent: boolean
 	isCollapsed: boolean
 }>()
@@ -334,17 +316,15 @@ const getBarTextX = computed(() => (bar: GanttBarModel) => {
 	}
 	// When the bar starts before the visible range, clamp text to the left edge
 	// so the title remains visible within the visible portion of the bar.
-	// For parent bars, offset by the chevron width
-	const baseOffset = bar.meta?.isParent ? 24 : 8
-	return Math.max(getBarX.value(bar) + baseOffset, 8)
+	return Math.max(getBarX.value(bar) + 8, 8)
 })
 
 // Diamond endpoint helpers for parent summary bars
-const DIAMOND_SIZE = 6
+const DIAMOND_SIZE = 5
 
 function getLeftDiamondPoints(bar: GanttBarModel): string {
 	const x = getBarX.value(bar)
-	const cy = 20 // vertical center of the thin bar
+	const cy = 20 // vertical center of the bar
 	return `${x},${cy} ${x + DIAMOND_SIZE},${cy - DIAMOND_SIZE} ${x + DIAMOND_SIZE * 2},${cy} ${x + DIAMOND_SIZE},${cy + DIAMOND_SIZE}`
 }
 
@@ -352,6 +332,14 @@ function getRightDiamondPoints(bar: GanttBarModel): string {
 	const x = getBarX.value(bar) + getBarWidth.value(bar)
 	const cy = 20
 	return `${x - DIAMOND_SIZE * 2},${cy} ${x - DIAMOND_SIZE},${cy - DIAMOND_SIZE} ${x},${cy} ${x - DIAMOND_SIZE},${cy + DIAMOND_SIZE}`
+}
+
+function getParentDiamondFill(bar: GanttBarModel): string {
+	// Use a darker shade for contrast on the full-height bar
+	if (bar.meta?.color) {
+		return 'var(--white)'
+	}
+	return 'var(--white)'
 }
 
 function isPartialDate(bar: GanttBarModel) {
@@ -467,11 +455,6 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 		pointer-events: none;
 		user-select: none;
 	}
-}
-
-.gantt-indent-line {
-	pointer-events: none;
-	opacity: 0.5;
 }
 
 .gantt-collapse-toggle {

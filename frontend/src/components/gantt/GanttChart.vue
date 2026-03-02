@@ -32,6 +32,18 @@
 			>
 				<template #default="{ focusedRow, focusedCell }">
 					<div class="gantt-rows-container">
+						<!-- Group background bands for parent-child visual grouping -->
+						<div
+							v-for="(band, bandIndex) in parentGroupBands"
+							:key="`band-${bandIndex}`"
+							class="gantt-group-band"
+							:style="{
+								top: `${band.startIndex * ROW_HEIGHT}px`,
+								height: `${(band.endIndex - band.startIndex + 1) * ROW_HEIGHT}px`,
+								left: `${band.left}px`,
+								width: `${band.width}px`,
+							}"
+						/>
 						<div class="gantt-rows">
 							<GanttRow
 								v-for="(rowId, index) in ganttRows"
@@ -52,7 +64,6 @@
 										:focused-row="focusedRow ?? null"
 										:focused-cell="focusedCell"
 										:row-id="rowId"
-										:indent-level="ganttBars[index]?.[0]?.meta?.indentLevel ?? 0"
 										:is-parent="ganttBars[index]?.[0]?.meta?.isParent ?? false"
 										:is-collapsed="collapsedTaskIds.has(Number(ganttBars[index]?.[0]?.id))"
 										@barPointerDown="handleBarPointerDown"
@@ -393,6 +404,57 @@ const relationArrows = computed<GanttArrow[]>(() => {
 
 const totalHeight = computed(() => ganttRows.value.length * ROW_HEIGHT)
 
+// Compute parent-child group bands for visual grouping background
+const GROUP_BAND_PADDING = 12
+
+const parentGroupBands = computed(() => {
+	const bands: Array<{ startIndex: number; endIndex: number; left: number; width: number }> = []
+	const bars = ganttBars.value
+	const positions = barPositions.value
+
+	for (let i = 0; i < bars.length; i++) {
+		const bar = bars[i]?.[0]
+		if (!bar?.meta?.isParent) continue
+
+		const parentLevel = bar.meta.indentLevel ?? 0
+		let endIndex = i
+
+		// Find last consecutive child with deeper indent
+		for (let j = i + 1; j < bars.length; j++) {
+			const childBar = bars[j]?.[0]
+			const childLevel = childBar?.meta?.indentLevel ?? 0
+			if (childLevel <= parentLevel) break
+			endIndex = j
+		}
+
+		// Only create a band if there are actual children visible
+		if (endIndex > i) {
+			// Compute horizontal extent from bar positions
+			let minX = Infinity
+			let maxX = -Infinity
+
+			for (let k = i; k <= endIndex; k++) {
+				const taskId = Number(bars[k]?.[0]?.id)
+				const pos = positions.get(taskId)
+				if (!pos) continue
+				minX = Math.min(minX, pos.x)
+				maxX = Math.max(maxX, pos.x + pos.width)
+			}
+
+			if (minX < Infinity) {
+				bands.push({
+					startIndex: i,
+					endIndex,
+					left: minX - GROUP_BAND_PADDING,
+					width: maxX - minX + GROUP_BAND_PADDING * 2,
+				})
+			}
+		}
+	}
+
+	return bands
+})
+
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 	const task = tasks.value.get(Number(id))
 	if (!task) return
@@ -699,6 +761,15 @@ onUnmounted(() => {
 
 .gantt-rows-container {
 	position: relative;
+}
+
+.gantt-group-band {
+	position: absolute;
+	background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.06);
+	border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.12);
+	border-radius: 6px;
+	pointer-events: none;
+	z-index: 1;
 }
 
 .gantt-rows {
