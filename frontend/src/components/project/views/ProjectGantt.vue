@@ -38,12 +38,6 @@
 					>
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
-					<FancyCheckbox
-						v-model="showRelationArrows"
-						is-block
-					>
-						{{ $t('project.gantt.toggleRelationArrows') }}
-					</FancyCheckbox>
 				</div>
 			</Card>
 
@@ -59,7 +53,6 @@
 						:is-loading="isLoading"
 						:default-task-start-date="defaultTaskStartDate"
 						:default-task-end-date="defaultTaskEndDate"
-						:show-relation-arrows="showRelationArrows"
 						@update:task="updateTask"
 					/>
 					<TaskForm
@@ -117,8 +110,6 @@ const {
 	addTask,
 	updateTask,
 } = useGanttFilters(route, viewId)
-
-const showRelationArrows = ref(false)
 
 const DEFAULT_DATE_RANGE_DAYS = 7
 
