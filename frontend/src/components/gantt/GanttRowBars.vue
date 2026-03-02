@@ -8,6 +8,51 @@
 		:aria-label="$t('project.gantt.taskBarsForRow', { rowId })"
 		:data-row-id="rowId"
 	>
+		<!-- Indent indicator: thin vertical lines for nesting depth -->
+		<line
+			v-for="level in indentLevel"
+			:key="`indent-${level}`"
+			:x1="(level - 1) * 16 + 8"
+			:y1="0"
+			:x2="(level - 1) * 16 + 8"
+			:y2="40"
+			stroke="var(--grey-300)"
+			stroke-width="1"
+			class="gantt-indent-line"
+		/>
+
+		<!-- Collapse/expand chevron for parent tasks -->
+		<g
+			v-if="isParent"
+			class="gantt-collapse-toggle"
+			:transform="`translate(${indentLevel * 16 + 2}, 12)`"
+			role="button"
+			:aria-label="isCollapsed
+				? $t('project.gantt.expandGroup', { task: bars[0]?.meta?.label || '' })
+				: $t('project.gantt.collapseGroup', { task: bars[0]?.meta?.label || '' })"
+			tabindex="0"
+			@pointerdown.stop="emit('toggleCollapse')"
+			@keydown.enter.stop="emit('toggleCollapse')"
+		>
+			<rect
+				x="-2"
+				y="-2"
+				width="20"
+				height="20"
+				fill="transparent"
+			/>
+			<polygon
+				v-if="isCollapsed"
+				points="4,0 14,8 4,16"
+				fill="var(--grey-500)"
+			/>
+			<polygon
+				v-else
+				points="0,4 16,4 8,14"
+				fill="var(--grey-500)"
+			/>
+		</g>
+
 		<GanttBarPrimitive
 			v-for="bar in bars"
 			:key="bar.id"
@@ -164,12 +209,16 @@ const props = defineProps<{
 	focusedRow: string | null
 	focusedCell: number | null
 	rowId: string
+	indentLevel: number
+	isParent: boolean
+	isCollapsed: boolean
 }>()
 
 const emit = defineEmits<{
 	(e: 'barPointerDown', bar: GanttBarModel, event: PointerEvent): void
 	(e: 'startResize', bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent): void
 	(e: 'updateTask', id: string, newStart: Date, newEnd: Date): void
+	(e: 'toggleCollapse'): void
 }>()
 
 const {t} = useI18n({useScope: 'global'})
@@ -360,6 +409,28 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	:deep(text) {
 		pointer-events: none;
 		user-select: none;
+	}
+}
+
+.gantt-indent-line {
+	pointer-events: none;
+	opacity: 0.5;
+}
+
+.gantt-collapse-toggle {
+	pointer-events: all;
+	cursor: pointer;
+
+	&:hover polygon {
+		fill: var(--grey-700);
+	}
+
+	&:focus {
+		outline: none;
+
+		polygon {
+			fill: var(--primary);
+		}
 	}
 }
 

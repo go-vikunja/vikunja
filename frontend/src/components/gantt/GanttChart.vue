@@ -51,9 +51,13 @@
 									:focused-row="focusedRow ?? null"
 									:focused-cell="focusedCell"
 									:row-id="rowId"
+									:indent-level="ganttBars[index]?.[0]?.meta?.indentLevel ?? 0"
+									:is-parent="ganttBars[index]?.[0]?.meta?.isParent ?? false"
+									:is-collapsed="collapsedTaskIds.has(Number(ganttBars[index]?.[0]?.id))"
 									@barPointerDown="handleBarPointerDown"
 									@startResize="startResize"
 									@updateTask="updateGanttTask"
+									@toggleCollapse="toggleCollapse(Number(ganttBars[index]?.[0]?.id))"
 								/>
 							</div>
 						</GanttRow>
@@ -203,8 +207,7 @@ const _hiddenToAncestor = computed(() => {
 	return map
 })
 
-// Used in Task 5 for collapse/expand toggle
-function _toggleCollapse(taskId: number) {
+function toggleCollapse(taskId: number) {
 	const newSet = new Set(collapsedTaskIds.value)
 	if (newSet.has(taskId)) {
 		newSet.delete(taskId)
