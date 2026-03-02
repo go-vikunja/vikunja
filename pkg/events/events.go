@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -35,6 +36,19 @@ import (
 )
 
 var pubsub *gochannel.GoChannel
+
+// activeHandlers tracks in-flight event handler goroutines so the test
+// endpoint can wait for them to finish before truncating tables.
+var activeHandlers sync.WaitGroup
+
+// WaitForPendingHandlers blocks until all currently in-flight event handler
+// goroutines have completed (including retries). This is intended for the
+// testing endpoint to avoid connection starvation: async handlers from the
+// previous test can hold SQLite connections, starving the next test's seed
+// request.
+func WaitForPendingHandlers() {
+	activeHandlers.Wait()
+}
 
 // Event represents the event interface used by all events
 type Event interface {
@@ -90,7 +104,19 @@ func InitEvents() (err error) {
 		return nil
 	})
 
+	// handlerTracker is a middleware that tracks in-flight handlers via the
+	// activeHandlers WaitGroup. It wraps the entire processing chain
+	// (including retries) so WaitForPendingHandlers() can drain all work.
+	handlerTracker := func(h message.HandlerFunc) message.HandlerFunc {
+		return func(msg *message.Message) ([]*message.Message, error) {
+			activeHandlers.Add(1)
+			defer activeHandlers.Done()
+			return h(msg)
+		}
+	}
+
 	router.AddMiddleware(
+		handlerTracker,
 		poison,
 		middleware.Retry{
 			MaxRetries:          5,
