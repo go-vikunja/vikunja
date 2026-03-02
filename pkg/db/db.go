@@ -250,14 +250,22 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 	}
 
 	if path == "memory" {
-		engine, err = xorm.NewEngine("sqlite3", "file::memory:?cache=shared&_busy_timeout=5000")
+		// Use a temp file with WAL mode instead of in-memory shared cache.
+		// Shared cache (file::memory:?cache=shared) uses table-level locking
+		// where _busy_timeout is ineffective (returns SQLITE_LOCKED, not
+		// SQLITE_BUSY) and concurrent connections deadlock. A temp file with
+		// WAL mode provides proper concurrency: readers never block writers,
+		// and _busy_timeout handles write-write contention.
+		tmpDir, mkErr := os.MkdirTemp("", "vikunja-*")
+		if mkErr != nil {
+			return nil, fmt.Errorf("could not create temp directory for ephemeral database: %w", mkErr)
+		}
+		dbPath := filepath.Join(tmpDir, "vikunja.db")
+		engine, err = xorm.NewEngine("sqlite3", dbPath+"?_busy_timeout=5000&_journal_mode=WAL")
 		if err != nil {
 			return
 		}
-		// In-memory with shared cache requires a single connection to avoid
-		// "database is locked" since all connections share the same state.
-		engine.SetMaxOpenConns(1)
-		engine.SetMaxIdleConns(1)
+		log.Infof("Using ephemeral SQLite database at: %s", dbPath)
 		return
 	}
 
@@ -284,14 +292,10 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		_ = os.Remove(path) // Remove the file to not prevent the db from creating another one
 	}
 
-	// WAL mode allows concurrent readers alongside a single writer.
-	// _txlock=immediate makes transactions acquire the write lock upfront
-	// instead of deferring it (the default). Without this, two concurrent
-	// deferred transactions that both read then write cause a deadlock that
-	// SQLite detects instantly (SQLITE_BUSY, ignoring busy_timeout).
-	// With immediate locking the second transaction waits (up to
-	// busy_timeout ms) for the first to finish, avoiding the deadlock.
-	engine, err = xorm.NewEngine("sqlite3", path+"?_journal_mode=WAL&_txlock=immediate")
+	// WAL mode allows concurrent readers alongside a single writer without
+	// blocking each other. busy_timeout makes concurrent writers wait (up to
+	// 5 s) instead of failing immediately with SQLITE_BUSY.
+	engine, err = xorm.NewEngine("sqlite3", path+"?_busy_timeout=5000&_journal_mode=WAL")
 	return
 }
 
