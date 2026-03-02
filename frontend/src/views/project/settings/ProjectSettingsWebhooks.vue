@@ -246,44 +246,46 @@ function validateSelectedEvents() {
 			</XButton>
 		</div>
 
-		<table
+		<div
 			v-if="webhooks?.length > 0"
-			class="table has-actions is-striped is-hoverable is-fullwidth"
+			class="has-horizontal-overflow"
 		>
-			<thead>
-				<tr>
-					<th>{{ $t('project.webhooks.targetUrl') }}</th>
-					<th>{{ $t('project.webhooks.events') }}</th>
-					<th>{{ $t('misc.created') }}</th>
-					<th>{{ $t('misc.createdBy') }}</th>
-					<th />
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="w in webhooks"
-					:key="w.id"
-				>
-					<td>{{ w.targetUrl }}</td>
-					<td>{{ w.events.join(', ') }}</td>
-					<td>{{ formatDateShort(w.created) }}</td>
-					<td>
-						<User
-							:avatar-size="25"
-							:user="w.createdBy"
-						/>
-					</td>
+			<table class="table has-actions is-striped is-hoverable is-fullwidth">
+				<thead>
+					<tr>
+						<th>{{ $t('project.webhooks.targetUrl') }}</th>
+						<th>{{ $t('project.webhooks.events') }}</th>
+						<th>{{ $t('misc.created') }}</th>
+						<th>{{ $t('misc.createdBy') }}</th>
+						<th />
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="w in webhooks"
+						:key="w.id"
+					>
+						<td>{{ w.targetUrl }}</td>
+						<td>{{ w.events.join(', ') }}</td>
+						<td>{{ formatDateShort(w.created) }}</td>
+						<td>
+							<User
+								:avatar-size="25"
+								:user="w.createdBy"
+							/>
+						</td>
 
-					<td class="actions">
-						<XButton
-							danger
-							icon="trash-alt"
-							@click="() => {showDeleteModal = true;webhookIdToDelete = w.id}"
-						/>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+						<td class="actions">
+							<XButton
+								danger
+								icon="trash-alt"
+								@click="() => {showDeleteModal = true;webhookIdToDelete = w.id}"
+							/>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 
 		<Modal
 			:enabled="showDeleteModal"
