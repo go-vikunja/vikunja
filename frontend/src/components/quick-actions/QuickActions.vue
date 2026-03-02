@@ -98,6 +98,7 @@
 
 <script setup lang="ts">
 import {type ComponentPublicInstance, computed, ref, shallowReactive, watchEffect} from 'vue'
+import {useQuickAddMode} from '@/composables/useQuickAddMode'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
@@ -137,6 +138,8 @@ const labelStore = useLabelStore()
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
 
+const {isQuickAddMode} = useQuickAddMode()
+
 type DoAction<Type> = { type: ACTION_TYPE } & Type
 
 enum ACTION_TYPE {
@@ -174,6 +177,12 @@ const active = computed(() => baseStore.quickActionsActive)
 watchEffect(() => {
 	if (!active.value) {
 		reset()
+	}
+})
+
+watchEffect(() => {
+	if (active.value && isQuickAddMode) {
+		selectedCmd.value = commands.value.newTask
 	}
 })
 
@@ -459,24 +468,30 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 	switch (type) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
-			await router.push({
-				name: 'project.index',
-				params: {projectId: (item as DoAction<IProject>).id},
-			})
+			if (!isQuickAddMode) {
+				await router.push({
+					name: 'project.index',
+					params: {projectId: (item as DoAction<IProject>).id},
+				})
+			}
 			break
 		case ACTION_TYPE.TASK:
 			closeQuickActions()
-			await router.push({
-				name: 'task.detail',
-				params: {id: (item as DoAction<ITask>).id},
-			})
+			if (!isQuickAddMode) {
+				await router.push({
+					name: 'task.detail',
+					params: {id: (item as DoAction<ITask>).id},
+				})
+			}
 			break
 		case ACTION_TYPE.TEAM:
 			closeQuickActions()
-			await router.push({
-				name: 'teams.edit',
-				params: {id: (item as DoAction<ITeam>).id},
-			})
+			if (!isQuickAddMode) {
+				await router.push({
+					name: 'teams.edit',
+					params: {id: (item as DoAction<ITeam>).id},
+				})
+			}
 			break
 		case ACTION_TYPE.CMD:
 			query.value = ''
@@ -506,7 +521,9 @@ async function doCmd() {
 		return
 	}
 
-	closeQuickActions()
+	if (!isQuickAddMode) {
+		closeQuickActions()
+	}
 	await selectedCmd.value.action()
 }
 
@@ -520,6 +537,15 @@ async function newTask() {
 		projectId,
 	})
 	success({message: t('task.createSuccess')})
+
+	if (isQuickAddMode) {
+		const channel = new BroadcastChannel('vikunja-task-updates')
+		channel.postMessage({type: 'task-created', taskId: task.id})
+		channel.close()
+		closeQuickActions()
+		return
+	}
+
 	await router.push({name: 'task.detail', params: {id: task.id}})
 }
 
