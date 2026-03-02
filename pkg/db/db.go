@@ -254,6 +254,8 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		if err != nil {
 			return
 		}
+		// In-memory with shared cache requires a single connection to avoid
+		// "database is locked" since all connections share the same state.
 		engine.SetMaxOpenConns(1)
 		engine.SetMaxIdleConns(1)
 		return
@@ -282,12 +284,14 @@ func initSqliteEngine() (engine *xorm.Engine, err error) {
 		_ = os.Remove(path) // Remove the file to not prevent the db from creating another one
 	}
 
-	engine, err = xorm.NewEngine("sqlite3", path+"?cache=shared&_busy_timeout=5000&_journal_mode=WAL")
-	if err != nil {
-		return
-	}
-	engine.SetMaxOpenConns(1)
-	engine.SetMaxIdleConns(1)
+	// WAL mode allows concurrent readers alongside a single writer.
+	// _txlock=immediate makes transactions acquire the write lock upfront
+	// instead of deferring it (the default). Without this, two concurrent
+	// deferred transactions that both read then write cause a deadlock that
+	// SQLite detects instantly (SQLITE_BUSY, ignoring busy_timeout).
+	// With immediate locking the second transaction waits (up to
+	// busy_timeout ms) for the first to finish, avoiding the deadlock.
+	engine, err = xorm.NewEngine("sqlite3", path+"?_journal_mode=WAL&_txlock=immediate")
 	return
 }
 
