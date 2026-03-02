@@ -65,12 +65,13 @@ export function buildGanttTaskTree(tasks: Map<number, ITask>): GanttTaskTreeNode
 		// Calculate derived dates for dateless parents
 		let derivedStartDate: Date | null = null
 		let derivedEndDate: Date | null = null
-		const hasDerivedDates = isParent && !task.startDate && !task.endDate && !task.dueDate
+		let hasDerivedDates = false
 
-		if (hasDerivedDates) {
+		if (isParent && !task.startDate && !task.endDate && !task.dueDate) {
 			const dates = collectChildDates(childIds, tasks, childrenMap)
 			derivedStartDate = dates.minStart
 			derivedEndDate = dates.maxEnd
+			hasDerivedDates = derivedStartDate !== null || derivedEndDate !== null
 		}
 
 		result.push({
