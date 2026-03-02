@@ -406,7 +406,10 @@
       "taskAriaLabel": "Task: {task}",
       "taskAriaLabelById": "Task {id}",
       "partialDatesStart": "Start date only (open-ended)",
-      "partialDatesEnd": "End date only (open-ended)"
+      "partialDatesEnd": "End date only (open-ended)",
+      "expandGroup": "Expand group: {task}",
+      "collapseGroup": "Collapse group: {task}",
+      "toggleRelationArrows": "Toggle relation arrows"
     },
     "table": {
       "title": "Table",
