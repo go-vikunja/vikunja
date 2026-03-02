@@ -62,7 +62,7 @@ func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   secure,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteNoneMode,
 	})
 }
 
