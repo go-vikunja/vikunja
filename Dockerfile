@@ -31,6 +31,8 @@ RUN export PATH=$PATH:$GOPATH/bin && \
 	mage build:clean && \
     mage release:xgo "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}"
 
+RUN mkdir -p /tmp && chmod 1777 /tmp
+
 #  ┬─┐┬ ┐┌┐┐┌┐┐┬─┐┬─┐
 #  │┬┘│ │││││││├─ │┬┘
 #  ┘└┘┘─┘┘└┘┘└┘┴─┘┘└┘
@@ -48,6 +50,9 @@ LABEL org.opencontainers.image.title='Vikunja'
 WORKDIR /app/vikunja
 ENTRYPOINT [ "/app/vikunja/vikunja" ]
 EXPOSE 3456
+
+COPY --from=apibuilder /tmp /tmp
+
 USER 1000
 
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
