@@ -1,68 +1,242 @@
-const {app, BrowserWindow, shell} = require('electron')
+const {
+	app,
+	BrowserWindow,
+	globalShortcut,
+	ipcMain,
+	Menu,
+	nativeImage,
+	shell,
+	Tray,
+	screen,
+} = require('electron')
 const path = require('path')
 const express = require('express')
-const eApp = express()
 const portInUse = require('./portInUse.js')
 
 const frontendPath = 'frontend/'
 
-function createWindow() {
-	// Create the browser window.
-	const mainWindow = new BrowserWindow({
-		width: 1680,
-		height: 960,
-		webPreferences: {
-			nodeIntegration: true,
-		}
-	})
+// Module-scope state
+let mainWindow = null
+let quickEntryWindow = null
+let tray = null
+let serverPort = null
+let isQuitting = false
 
-	// Open external links in the browser
-	mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-  	shell.openExternal(url);
-	  return { action: 'deny' };
-	});
-
-	// Hide the toolbar
-	mainWindow.setMenuBarVisibility(false)
-
-	// We try to use the same port every time and only use a different one if that does not succeed.
+// ─── Express server ──────────────────────────────────────────────────
+function startServer(callback) {
+	const eApp = express()
 	let port = 45735
-	portInUse(port, used => {
-		if(used) {
+
+	portInUse(port, (used) => {
+		if (used) {
 			console.log(`Port ${port} already used, switching to a random one`)
-			port = 0 // This lets express choose a random port
+			port = 0
 		}
 
-		// Start a local express server to serve static files
 		eApp.use(express.static(path.join(__dirname, frontendPath)))
-		// Handle urls set by the frontend - use app.use as catch-all instead of route pattern
 		eApp.use((request, response) => {
 			response.sendFile(path.join(__dirname, frontendPath, 'index.html'))
 		})
-		const server = eApp.listen(port,  '127.0.0.1', () => {
-			console.log(`Server started on port ${server.address().port}`)
-			mainWindow.loadURL(`http://127.0.0.1:${server.address().port}`)
+
+		const server = eApp.listen(port, '127.0.0.1', () => {
+			serverPort = server.address().port
+			console.log(`Server started on port ${serverPort}`)
+			callback(serverPort)
 		})
 	})
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-	createWindow()
+// ─── Main window ─────────────────────────────────────────────────────
+function createMainWindow() {
+	mainWindow = new BrowserWindow({
+		width: 1680,
+		height: 960,
+		webPreferences: {
+			nodeIntegration: false,
+			contextIsolation: true,
+		},
+	})
 
-	app.on('activate', function () {
-		// On macOS it's common to re-create a window in the app when the
-		// dock icon is clicked and there are no other windows open.
-		if (BrowserWindow.getAllWindows().length === 0) createWindow()
+	mainWindow.webContents.setWindowOpenHandler(({url}) => {
+		shell.openExternal(url)
+		return {action: 'deny'}
+	})
+
+	mainWindow.setMenuBarVisibility(false)
+
+	mainWindow.on('close', (e) => {
+		if (!isQuitting && tray) {
+			e.preventDefault()
+			mainWindow.hide()
+		}
+	})
+
+	mainWindow.on('closed', () => {
+		mainWindow = null
+	})
+
+	mainWindow.loadURL(`http://127.0.0.1:${serverPort}`)
+}
+
+// ─── Quick Entry window ──────────────────────────────────────────────
+function createQuickEntryWindow() {
+	const display = screen.getPrimaryDisplay()
+	const {width: screenWidth, height: screenHeight} = display.workAreaSize
+	const winWidth = 680
+	const winHeight = 500
+
+	quickEntryWindow = new BrowserWindow({
+		width: winWidth,
+		height: winHeight,
+		x: Math.round((screenWidth - winWidth) / 2),
+		y: Math.round(screenHeight / 3 - winHeight / 2),
+		frame: false,
+		transparent: true,
+		alwaysOnTop: true,
+		skipTaskbar: true,
+		resizable: false,
+		show: false,
+		webPreferences: {
+			nodeIntegration: false,
+			contextIsolation: true,
+			preload: path.join(__dirname, 'preload-quick-entry.js'),
+		},
+	})
+
+	quickEntryWindow.loadURL(`http://127.0.0.1:${serverPort}/?mode=quick-add`)
+
+	// Hide on blur (user clicked outside)
+	let blurTimeout = null
+	quickEntryWindow.on('blur', () => {
+		// Debounce to avoid hiding during DevTools focus changes
+		blurTimeout = setTimeout(() => hideQuickEntry(), 100)
+	})
+	quickEntryWindow.on('focus', () => {
+		if (blurTimeout) {
+			clearTimeout(blurTimeout)
+			blurTimeout = null
+		}
+	})
+
+	quickEntryWindow.on('closed', () => {
+		quickEntryWindow = null
+	})
+}
+
+function showQuickEntry() {
+	if (!quickEntryWindow) {
+		createQuickEntryWindow()
+		quickEntryWindow.once('ready-to-show', () => {
+			quickEntryWindow.show()
+			quickEntryWindow.focus()
+		})
+		return
+	}
+
+	// Reload to reset Vue state (clear previous input)
+	quickEntryWindow.loadURL(`http://127.0.0.1:${serverPort}/?mode=quick-add`)
+	quickEntryWindow.show()
+	quickEntryWindow.focus()
+}
+
+function hideQuickEntry() {
+	if (quickEntryWindow && quickEntryWindow.isVisible()) {
+		quickEntryWindow.hide()
+	}
+}
+
+function toggleQuickEntry() {
+	if (quickEntryWindow && quickEntryWindow.isVisible()) {
+		hideQuickEntry()
+	} else {
+		showQuickEntry()
+	}
+}
+
+// ─── System tray ─────────────────────────────────────────────────────
+function setupTray() {
+	const iconPath = path.join(__dirname, 'build', 'icon.png')
+	const icon = nativeImage.createFromPath(iconPath).resize({width: 16, height: 16})
+	tray = new Tray(icon)
+
+	const contextMenu = Menu.buildFromTemplate([
+		{
+			label: 'Show Vikunja',
+			click: () => {
+				if (mainWindow) {
+					mainWindow.show()
+					mainWindow.focus()
+				} else {
+					createMainWindow()
+				}
+			},
+		},
+		{
+			label: 'Quick Add Task',
+			accelerator: 'CmdOrCtrl+Shift+A',
+			click: () => showQuickEntry(),
+		},
+		{type: 'separator'},
+		{
+			label: 'Quit',
+			click: () => {
+				isQuitting = true
+				app.quit()
+			},
+		},
+	])
+
+	tray.setToolTip('Vikunja')
+	tray.setContextMenu(contextMenu)
+
+	tray.on('click', () => {
+		if (mainWindow) {
+			mainWindow.show()
+			mainWindow.focus()
+		} else {
+			createMainWindow()
+		}
+	})
+}
+
+// ─── IPC handlers ────────────────────────────────────────────────────
+ipcMain.on('quick-entry:close', () => {
+	hideQuickEntry()
+})
+
+// ─── App lifecycle ───────────────────────────────────────────────────
+app.whenReady().then(() => {
+	startServer((port) => {
+		createMainWindow()
+		createQuickEntryWindow()
+		setupTray()
+
+		globalShortcut.register('CmdOrCtrl+Shift+A', toggleQuickEntry)
+	})
+
+	app.on('activate', () => {
+		if (BrowserWindow.getAllWindows().length === 0) {
+			if (serverPort) {
+				createMainWindow()
+			}
+		} else if (mainWindow) {
+			mainWindow.show()
+			mainWindow.focus()
+		}
 	})
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-	if (process.platform !== 'darwin') app.quit()
+app.on('before-quit', () => {
+	isQuitting = true
 })
 
+app.on('will-quit', () => {
+	globalShortcut.unregisterAll()
+})
+
+app.on('window-all-closed', () => {
+	// Don't quit if tray exists (user can still use global shortcut)
+	if (process.platform !== 'darwin' && !tray) {
+		app.quit()
+	}
+})
