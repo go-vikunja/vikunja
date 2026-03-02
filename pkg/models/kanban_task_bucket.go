@@ -240,8 +240,9 @@ func (b *TaskBucket) Update(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	doer, _ := user.GetFromAuth(a)
-	return events.Dispatch(&TaskUpdatedEvent{
+	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: b.Task,
 		Doer: doer,
 	})
+	return nil
 }
