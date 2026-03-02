@@ -81,14 +81,6 @@
 					:project-id="projectId"
 					@update:modelValue="taskList.loadTasks()"
 				/>
-				<FancyCheckbox
-					v-if="projectId > 0 && showIncludeSubprojectsToggle"
-					v-model="includeSubprojects"
-					v-tooltip="$t('project.views.includeSubprojectsHint')"
-					class="include-subprojects-toggle"
-				>
-					{{ $t('project.views.includeSubprojects') }}
-				</FancyCheckbox>
 			</div>
 		</template>
 
@@ -374,7 +366,6 @@ import {getTaskIdentifier} from '@/models/task'
 import { camelCase } from 'change-case'
 import {isSavedFilter} from '@/services/savedFilter'
 import {useProjectStore} from '@/stores/projects'
-import {useAuthStore} from '@/stores/auth'
 
 const props = defineProps<{
 	isLoadingProject: boolean,
@@ -383,8 +374,7 @@ const props = defineProps<{
 }>()
 
 const projectStore = useProjectStore()
-const authStore = useAuthStore()
-const showIncludeSubprojectsToggle = computed(() => authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false)
+const currentView = computed(() => projectStore.projects[props.projectId]?.views.find(v => v.id === props.viewId))
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -417,6 +407,7 @@ const taskList = useTaskList(
 	() => props.viewId, 
 	sortBy.value,
 	() => ['comment_count', 'is_unread'],
+	() => currentView.value?.includeSubprojects ?? false,
 )
 
 const {
@@ -425,7 +416,6 @@ const {
 	totalPages,
 	currentPage,
 	sortByParam,
-	includeSubprojects,
 } = taskList
 const tasks: Ref<ITask[]> = taskList.tasks
 
@@ -528,9 +518,5 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 
 .filter-container :deep(.popup) {
 	inset-block-start: 7rem;
-}
-
-.include-subprojects-toggle {
-	margin-inline-start: .75rem;
 }
 </style>

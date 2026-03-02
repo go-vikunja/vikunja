@@ -21,15 +21,18 @@
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
+			:show-include-subprojects-toggle="showIncludeSubprojectsToggle"
+			:include-subprojects="includeSubprojects"
 			show-close
 			@close="modalOpen = false"
+			@update:includeSubprojects="updateIncludeSubprojects"
 			@showResults="showResults"
 		/>
 	</Modal>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, nextTick} from 'vue'
+import {computed, ref, watch, nextTick, shallowReactive} from 'vue'
 
 import Filters from '@/components/project/partials/Filters.vue'
 
@@ -37,6 +40,10 @@ import {type TaskFilterParams} from '@/services/taskCollection'
 import {type IProjectView} from '@/modelTypes/IProjectView'
 import {type IProject} from '@/modelTypes/IProject'
 import {useProjectStore} from '@/stores/projects'
+import {useAuthStore} from '@/stores/auth'
+import ProjectViewService from '@/services/projectViews'
+import ProjectViewModel from '@/models/projectView'
+import {error} from '@/message'
 
 const props = defineProps<{
 	modelValue: TaskFilterParams,
@@ -49,6 +56,8 @@ const emit = defineEmits<{
 }>()
 
 const projectStore = useProjectStore()
+const authStore = useAuthStore()
+const projectViewService = shallowReactive(new ProjectViewService())
 
 const value = ref<TaskFilterParams>({})
 const filtersRef = ref()
@@ -87,6 +96,55 @@ function showResults() {
 		s: value.value.s,
 	})
 	modalOpen.value = false
+}
+
+const currentView = computed(() => {
+	if (!props.projectId || !props.viewId) {
+		return
+	}
+
+	return projectStore.projects[props.projectId]?.views.find(v => v.id === props.viewId)
+})
+
+const showIncludeSubprojectsToggle = computed(() => {
+	if (!props.projectId || props.projectId <= 0 || !props.viewId) {
+		return false
+	}
+
+	return authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false
+})
+
+const includeSubprojects = computed(() => currentView.value?.includeSubprojects ?? false)
+
+async function updateIncludeSubprojects(newValue: boolean) {
+	if (!currentView.value || !props.projectId) {
+		return
+	}
+
+	const oldView = currentView.value
+	const oldValue = oldView.includeSubprojects ?? false
+	if (oldValue === newValue) {
+		return
+	}
+
+	projectStore.setProjectView({
+		...oldView,
+		includeSubprojects: newValue,
+	})
+
+	try {
+		const updatedView = await projectViewService.update(new ProjectViewModel({
+			...oldView,
+			includeSubprojects: newValue,
+		}))
+		projectStore.setProjectView(updatedView)
+	} catch (e) {
+		projectStore.setProjectView({
+			...oldView,
+			includeSubprojects: oldValue,
+		})
+		error(e)
+	}
 }
 
 const filterFromView = computed(() => {
