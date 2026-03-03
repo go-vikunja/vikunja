@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import {type ComponentPublicInstance, computed, nextTick, ref, shallowReactive, watchEffect} from 'vue'
+import {type ComponentPublicInstance, computed, ref, shallowReactive, watchEffect} from 'vue'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
@@ -187,20 +187,18 @@ watchEffect(() => {
 	if (active.value && isQuickAddMode) {
 		selectedCmd.value = commands.value.newTask
 
-		// The Electron window may not be visible yet when Vue mounts
-		// (it's shown after did-finish-load). Try focusing now, and if
-		// the window doesn't have focus yet, wait for it.
-		nextTick(() => {
-			if (document.hasFocus()) {
-				searchInput.value?.focus()
-			} else {
-				const focusOnWindowReady = () => {
-					searchInput.value?.focus()
-					window.removeEventListener('focus', focusOnWindowReady)
-				}
-				window.addEventListener('focus', focusOnWindowReady)
+		// The input may not be focusable yet due to:
+		// 1. Modal transition (v-if + <Transition appear>) delaying DOM readiness
+		// 2. Electron window not yet visible (shown after did-finish-load)
+		// Retry with rAF until focus actually lands on the input.
+		const tryFocus = () => {
+			if (searchInput.value) {
+				searchInput.value.focus()
+				if (document.activeElement === searchInput.value) return
 			}
-		})
+			requestAnimationFrame(tryFocus)
+		}
+		requestAnimationFrame(tryFocus)
 	}
 })
 
