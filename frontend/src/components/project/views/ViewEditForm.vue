@@ -121,7 +121,10 @@ function handleBubbleSave() {
 </script>
 
 <template>
-	<form @focusout="handleBubbleSave">
+	<form
+		@focusout="handleBubbleSave"
+		@submit.prevent="save"
+	>
 		<FormField
 			id="title"
 			v-model="view.title"
@@ -271,7 +274,7 @@ function handleBubbleSave() {
 			</XButton>
 			<XButton
 				:loading="loading"
-				@click="save"
+				type="submit"
 			>
 				{{ $t('misc.save') }}
 			</XButton>
