@@ -1817,10 +1817,16 @@ func (Dev) TagRelease(version string) error {
 		return fmt.Errorf("failed to update CHANGELOG.md: %w", err)
 	}
 
+	// Update frontend package.json version
+	fmt.Println("Updating frontend package.json version...")
+	if err := updateFrontendPackageJSON(version); err != nil {
+		return fmt.Errorf("failed to update frontend package.json: %w", err)
+	}
+
 	// Commit the changes
 	fmt.Println("Committing changes...")
 	commitMsg := fmt.Sprintf("chore: %s release preparations", version)
-	cmd := exec.Command("git", "add", "README.md", "CHANGELOG.md")
+	cmd := exec.Command("git", "add", "README.md", "CHANGELOG.md", "frontend/package.json")
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to stage files: %w", err)
 	}
@@ -1936,6 +1942,27 @@ func updateReadmeBadge(version string) error {
 
 	if err := os.WriteFile(readmePath, []byte(newContent), 0o644); err != nil {
 		return fmt.Errorf("failed to write README.md: %w", err)
+	}
+
+	return nil
+}
+
+// updateFrontendPackageJSON updates the version field in frontend/package.json.
+func updateFrontendPackageJSON(version string) error {
+	// npm convention: no "v" prefix
+	npmVersion := strings.TrimPrefix(version, "v")
+
+	pkgPath := "frontend/package.json"
+	content, err := os.ReadFile(pkgPath)
+	if err != nil {
+		return fmt.Errorf("failed to read %s: %w", pkgPath, err)
+	}
+
+	re := regexp.MustCompile(`("version"\s*:\s*")([^"]+)(")`)
+	newContent := re.ReplaceAllString(string(content), "${1}"+npmVersion+"${3}")
+
+	if err := os.WriteFile(pkgPath, []byte(newContent), 0o644); err != nil {
+		return fmt.Errorf("failed to write %s: %w", pkgPath, err)
 	}
 
 	return nil
