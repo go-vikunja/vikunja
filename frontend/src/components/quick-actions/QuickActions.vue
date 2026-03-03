@@ -186,7 +186,21 @@ watchEffect(() => {
 watchEffect(() => {
 	if (active.value && isQuickAddMode) {
 		selectedCmd.value = commands.value.newTask
-		nextTick(() => searchInput.value?.focus())
+
+		// The Electron window may not be visible yet when Vue mounts
+		// (it's shown after did-finish-load). Try focusing now, and if
+		// the window doesn't have focus yet, wait for it.
+		nextTick(() => {
+			if (document.hasFocus()) {
+				searchInput.value?.focus()
+			} else {
+				const focusOnWindowReady = () => {
+					searchInput.value?.focus()
+					window.removeEventListener('focus', focusOnWindowReady)
+				}
+				window.addEventListener('focus', focusOnWindowReady)
+			}
+		})
 	}
 })
 
