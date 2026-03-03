@@ -75,8 +75,6 @@ jobs:
             const base = 'preview.vikunja.dev';
             const image = `ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}`;
             const marker = '<!-- vikunja-preview-comment -->';
-            const shaMarker = '<!-- sha-rows -->';
-            const shaMarkerEnd = '<!-- /sha-rows -->';
 
             const prTag = `pr-${prNumber}`;
             const shaTag = `sha-${fullSha}`;
@@ -92,15 +90,9 @@ jobs:
             const existing = comments.find(c => c.body.includes(marker));
 
             if (existing) {
-              const match = existing.body.match(
-                new RegExp(`${shaMarker}\\n([\\s\\S]*?)\\n${shaMarkerEnd}`)
-              );
-              if (match) {
-                previousShaRows = match[1]
-                  .split('\n')
-                  .map(l => l.trim())
-                  .filter(l => l.startsWith('|'));
-              }
+              previousShaRows = existing.body
+                .split('\n')
+                .filter(l => l.includes(`sha-`) && l.includes(`.${base}`));
             }
 
             // Remove duplicate if this SHA was already recorded
@@ -117,9 +109,7 @@ jobs:
               `| URL | Tag | Commit |`,
               `| --- | --- | --- |`,
               `| https://${prTag}.${base} | \`${image}:${prTag}\` | latest |`,
-              shaMarker,
               allShaRows,
-              shaMarkerEnd,
               ``,
               `The preview environment will start automatically on first visit. Subsequent pushes to this PR will update the \`${prTag}\` image — the preview picks up the new version on restart. The per-commit URLs point to a specific version and will not change.`,
               ``,
