@@ -14,6 +14,18 @@ const express = require('express')
 const portInUse = require('./portInUse.js')
 
 const frontendPath = 'frontend/'
+const SAFE_PROTOCOLS = new Set(['http:', 'https:', 'mailto:'])
+
+function safeOpenExternal(url) {
+	try {
+		const parsed = new URL(url)
+		if (SAFE_PROTOCOLS.has(parsed.protocol)) {
+			shell.openExternal(url)
+		}
+	} catch {
+		// Ignore malformed URLs
+	}
+}
 
 // Module-scope state
 let mainWindow = null
@@ -58,7 +70,7 @@ function createMainWindow() {
 	})
 
 	mainWindow.webContents.setWindowOpenHandler(({url}) => {
-		shell.openExternal(url)
+		safeOpenExternal(url)
 		return {action: 'deny'}
 	})
 
@@ -101,6 +113,11 @@ function createQuickEntryWindow() {
 			contextIsolation: true,
 			preload: path.join(__dirname, 'preload-quick-entry.js'),
 		},
+	})
+
+	quickEntryWindow.webContents.setWindowOpenHandler(({url}) => {
+		safeOpenExternal(url)
+		return {action: 'deny'}
 	})
 
 	quickEntryWindow.loadURL(`http://127.0.0.1:${serverPort}/?mode=quick-add`)
@@ -211,7 +228,10 @@ app.whenReady().then(() => {
 		createQuickEntryWindow()
 		setupTray()
 
-		globalShortcut.register('CmdOrCtrl+Shift+A', toggleQuickEntry)
+		const registered = globalShortcut.register('CmdOrCtrl+Shift+A', toggleQuickEntry)
+		if (!registered) {
+			console.warn('Failed to register global shortcut CmdOrCtrl+Shift+A — it may be in use by another application')
+		}
 	})
 
 	app.on('activate', () => {
