@@ -41,7 +41,7 @@
 				</div>
 				<div
 					v-if="item.data?.actions?.length > 0"
-					class="tw:flex tw:justify-end tw:gap-2"
+					class="notification-actions tw:flex tw:justify-end tw:gap-2"
 				>
 					<XButton
 						v-for="(action, i) in item.data.actions"
@@ -64,7 +64,7 @@
 	z-index: 9999;
 }
 
-.tw\:flex {
+.notification-actions {
 	margin-block-start: 0.5rem;
 }
 </style>
