@@ -19,6 +19,9 @@ const SAFE_PROTOCOLS = new Set([
 	'ftp:', 'git:', 'obsidian:', 'notion:', 'message:',
 ])
 
+const QUICK_ENTRY_WIDTH = 680
+const QUICK_ENTRY_COLLAPSED_HEIGHT = 120
+
 function safeOpenExternal(url) {
 	try {
 		const parsed = new URL(url)
@@ -111,14 +114,12 @@ function createMainWindow() {
 function createQuickEntryWindow() {
 	const display = screen.getPrimaryDisplay()
 	const {width: screenWidth, height: screenHeight} = display.workAreaSize
-	const winWidth = 680
-	const winHeight = 500
 
 	quickEntryWindow = new BrowserWindow({
-		width: winWidth,
-		height: winHeight,
-		x: Math.round((screenWidth - winWidth) / 2),
-		y: Math.round(screenHeight / 3 - winHeight / 2),
+		width: QUICK_ENTRY_WIDTH,
+		height: QUICK_ENTRY_COLLAPSED_HEIGHT,
+		x: Math.round((screenWidth - QUICK_ENTRY_WIDTH) / 2),
+		y: Math.round(screenHeight / 3 - QUICK_ENTRY_COLLAPSED_HEIGHT / 2),
 		frame: false,
 		transparent: true,
 		alwaysOnTop: true,
@@ -167,10 +168,16 @@ function showQuickEntry() {
 		return
 	}
 
+	// Reset to collapsed height for each new invocation
+	quickEntryWindow.setSize(QUICK_ENTRY_WIDTH, QUICK_ENTRY_COLLAPSED_HEIGHT)
+
 	// Reload to reset Vue state (clear previous input)
 	quickEntryWindow.loadURL(`http://127.0.0.1:${serverPort}/?mode=quick-add`)
-	quickEntryWindow.show()
-	quickEntryWindow.focus()
+	// Wait for page to finish loading before showing, so the input gets focused
+	quickEntryWindow.webContents.once('did-finish-load', () => {
+		quickEntryWindow.show()
+		quickEntryWindow.focus()
+	})
 }
 
 function hideQuickEntry() {
@@ -236,6 +243,12 @@ function setupTray() {
 // ─── IPC handlers ────────────────────────────────────────────────────
 ipcMain.on('quick-entry:close', () => {
 	hideQuickEntry()
+})
+
+ipcMain.on('quick-entry:resize', (_event, width, height) => {
+	if (quickEntryWindow) {
+		quickEntryWindow.setSize(width, height)
+	}
 })
 
 // ─── App lifecycle ───────────────────────────────────────────────────
