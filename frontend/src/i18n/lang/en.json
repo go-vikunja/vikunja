@@ -94,6 +94,7 @@
         "playSoundWhenDone": "Play a sound when marking tasks as done",
         "allowIconChanges": "Show special logos during certain times",
         "alwaysShowBucketTaskCount": "Always show task count on Kanban buckets",
+        "showIncludeSubprojectsToggle": "Show \"Include subprojects\" toggle in project views",
         "defaultTaskRelationType": "Default task relation type",
         "weekStart": "Week starts on",
         "weekStartSunday": "Sunday",
@@ -477,7 +478,9 @@
       "deleteText": "Are you sure you want to remove this view? It will no longer be possible to use it to view tasks in this project. This action won't delete any tasks. This cannot be undone!",
       "deleteSuccess": "The view was deleted successfully.",
       "onlyAdminsCanEdit": "Only project admins can edit views.",
-      "updateSuccess": "The view was updated successfully."
+      "updateSuccess": "The view was updated successfully.",
+      "includeSubprojects": "Include subprojects",
+      "includeSubprojectsHint": "Show tasks from all subprojects of this project."
     }
   },
   "filters": {

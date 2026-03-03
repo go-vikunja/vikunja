@@ -123,6 +123,15 @@
 					{{ $t('user.settings.general.overdueReminders') }}
 				</label>
 			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input
+						v-model="settings.frontendSettings.showIncludeSubprojectsToggle"
+						type="checkbox"
+					>
+					{{ $t('user.settings.general.showIncludeSubprojectsToggle') }}
+				</label>
+			</div>
 			<div
 				v-if="settings.overdueTasksRemindersEnabled"
 				class="field"
@@ -462,6 +471,7 @@ const settings = ref<IUserSettings>({
 		timeFormat: authStore.settings.frontendSettings.timeFormat ?? TIME_FORMAT.HOURS_12,
 		// Add fallback for old settings that don't have the default task relation type set
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
+		showIncludeSubprojectsToggle: authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false,
 	},
 })
 

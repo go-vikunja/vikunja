@@ -31,6 +31,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		timeFormat: TIME_FORMAT.HOURS_24,
 		defaultTaskRelationType: RELATION_KIND.RELATED,
 		alwaysShowBucketTaskCount: false,
+		showIncludeSubprojectsToggle: false,
 		sidebarWidth: null,
 		commentSortOrder: 'asc',
 	}

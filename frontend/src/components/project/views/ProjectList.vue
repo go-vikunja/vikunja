@@ -137,6 +137,10 @@ const projectId = toRef(props, 'projectId')
 
 defineOptions({name: 'List'})
 
+const baseStore = useBaseStore()
+const project = computed(() => baseStore.currentProject)
+const currentView = computed(() => project.value?.views.find(v => v.id === props.viewId))
+
 const ctaVisible = ref(false)
 
 const drag = ref(false)
@@ -149,6 +153,7 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
+	includeSubprojects,
 } = useTaskList(
 	() => projectId.value,
 	() => props.viewId,
@@ -156,6 +161,7 @@ const {
 	() => projectId.value === -1
 		? ['comment_count', 'is_unread']
 		: ['subtasks', 'comment_count', 'is_unread'],
+	() => currentView.value?.includeSubprojects ?? false,
 )
 
 const taskPositionService = ref(new TaskPositionService())
@@ -183,10 +189,8 @@ const firstNewPosition = computed(() => {
 	return calculateItemPosition(null, tasks.value[0].position)
 })
 
-const baseStore = useBaseStore()
 const taskStore = useTaskStore()
 const {handleTaskDropToProject} = useTaskDragToProject()
-const project = computed(() => baseStore.currentProject)
 
 const canWrite = computed(() => {
 	return project.value?.maxPermission > Permissions.READ && project.value?.id > 0
@@ -199,7 +203,7 @@ onMounted(async () => {
 	ctaVisible.value = true
 })
 
-const canDragTasks = computed(() => canWrite.value || isSavedFilter(project.value))
+const canDragTasks = computed(() => (canWrite.value || isSavedFilter(project.value)) && !includeSubprojects.value)
 
 const isTouchDevice = ref(false)
 if (typeof window !== 'undefined') {
