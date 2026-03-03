@@ -28,6 +28,11 @@
 					@keyup.prevent.enter="doCmd"
 					@keyup.prevent.esc="closeQuickActions"
 				>
+				<QuickAddMagic
+					v-if="isNewTaskCommand"
+					@opened="onHelpOpened"
+					@closed="onHelpClosed"
+				/>
 				<BaseButton
 					class="close"
 					@click="closeQuickActions"
@@ -42,8 +47,6 @@
 			>
 				{{ hintText }}
 			</div>
-
-			<QuickAddMagic v-if="isNewTaskCommand" />
 
 			<div
 				v-if="selectedCmd === null"
@@ -97,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import {type ComponentPublicInstance, computed, ref, shallowReactive, watchEffect} from 'vue'
+import {type ComponentPublicInstance, computed, nextTick, ref, shallowReactive, watchEffect} from 'vue'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
@@ -183,6 +186,7 @@ watchEffect(() => {
 watchEffect(() => {
 	if (active.value && isQuickAddMode) {
 		selectedCmd.value = commands.value.newTask
+		nextTick(() => searchInput.value?.focus())
 	}
 })
 
@@ -306,7 +310,7 @@ const currentProject = computed(() => {
 	if (Object.keys(baseStore.currentProject).length === 0 || isSavedFilter(baseStore.currentProject)) {
 		return null
 	}
-	
+
 	return baseStore.currentProject
 })
 
@@ -463,6 +467,21 @@ function search() {
 }
 
 const searchInput = ref<HTMLElement | null>(null)
+
+const QUICK_ENTRY_COLLAPSED_HEIGHT = 120
+const QUICK_ENTRY_EXPANDED_HEIGHT = 600
+
+function onHelpOpened() {
+	if (isQuickAddMode) {
+		window.quickEntry?.resize?.(680, QUICK_ENTRY_EXPANDED_HEIGHT)
+	}
+}
+
+function onHelpClosed() {
+	if (isQuickAddMode) {
+		window.quickEntry?.resize?.(680, QUICK_ENTRY_COLLAPSED_HEIGHT)
+	}
+}
 
 async function doAction(type: ACTION_TYPE, item: DoAction) {
 	switch (type) {
@@ -637,7 +656,7 @@ function reset() {
 	.input {
 		border: 0;
 		font-size: 1.5rem;
-		
+
 		@media screen and (max-width: $tablet) {
 			padding-inline-end: .25rem;
 		}
@@ -650,7 +669,7 @@ function reset() {
 	.close {
 		padding: 0 1rem 0 .5rem;
 		font-size: 1.5rem;
-		
+
 		@media screen and (min-width: $tablet + 1) {
 			display: none;
 		}
@@ -701,14 +720,14 @@ function reset() {
 	&:active {
 		background: var(--grey-100);
 	}
-	
+
 	.saved-filter-icon {
 		font-size: .75rem;
 		inline-size: .75rem;
 		margin-inline-end: .25rem;
 		color: var(--grey-400)
 	}
-	
+
 	&:has(.saved-filter-icon) {
 		display: inline-flex;
 		align-items: center;
