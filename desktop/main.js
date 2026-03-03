@@ -14,6 +14,21 @@ const express = require('express')
 const portInUse = require('./portInUse.js')
 
 const frontendPath = 'frontend/'
+const SAFE_PROTOCOLS = new Set([
+	'http:', 'https:', 'mailto:',
+	'ftp:', 'git:', 'obsidian:', 'notion:', 'message:',
+])
+
+function safeOpenExternal(url) {
+	try {
+		const parsed = new URL(url)
+		if (SAFE_PROTOCOLS.has(parsed.protocol)) {
+			shell.openExternal(url)
+		}
+	} catch {
+		// Ignore malformed URLs
+	}
+}
 
 // Module-scope state
 let mainWindow = null
@@ -60,23 +75,8 @@ function createMainWindow() {
 		},
 	})
 
-	// Open external links in the browser, but only allow protocols
-	// that the TipTap editor also allows (see frontend/src/components/input/editor/TipTap.vue).
-	// TipTap allows: http, https (built-in) + ftp, git, obsidian, notion, message
-	// We also allow mailto since it's a standard safe protocol for email links.
 	mainWindow.webContents.setWindowOpenHandler(({url}) => {
-		try {
-			const parsedUrl = new URL(url)
-			const allowedProtocols = [
-				'http:', 'https:', 'mailto:',
-				'ftp:', 'git:', 'obsidian:', 'notion:', 'message:',
-			]
-			if (allowedProtocols.includes(parsedUrl.protocol)) {
-				shell.openExternal(url)
-			}
-		} catch {
-			// Invalid URL, ignore silently
-		}
+		safeOpenExternal(url)
 		return {action: 'deny'}
 	})
 
@@ -130,6 +130,11 @@ function createQuickEntryWindow() {
 			contextIsolation: true,
 			preload: path.join(__dirname, 'preload-quick-entry.js'),
 		},
+	})
+
+	quickEntryWindow.webContents.setWindowOpenHandler(({url}) => {
+		safeOpenExternal(url)
+		return {action: 'deny'}
 	})
 
 	quickEntryWindow.loadURL(`http://127.0.0.1:${serverPort}/?mode=quick-add`)
@@ -240,7 +245,10 @@ app.whenReady().then(() => {
 		createQuickEntryWindow()
 		setupTray()
 
-		globalShortcut.register('CmdOrCtrl+Shift+A', toggleQuickEntry)
+		const registered = globalShortcut.register('CmdOrCtrl+Shift+A', toggleQuickEntry)
+		if (!registered) {
+			console.warn('Failed to register global shortcut CmdOrCtrl+Shift+A — it may be in use by another application')
+		}
 	})
 
 	app.on('activate', () => {
