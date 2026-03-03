@@ -28,6 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.10
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.2
+	github.com/aws/smithy-go v1.24.1
 	github.com/bbrks/go-blurhash v1.1.1
 	github.com/c2h5oh/datasize v0.0.0-20231215233829-aa82cc1e6500
 	github.com/coreos/go-oidc/v3 v3.17.0
@@ -36,7 +37,6 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
 	github.com/fatih/color v1.18.0
-	github.com/fclairamb/afero-s3 v0.4.0
 	github.com/gabriel-vasile/mimetype v1.4.12
 	github.com/ganigeorgiev/fexpr v0.5.0
 	github.com/getsentry/sentry-go v0.41.0
@@ -100,7 +100,6 @@ require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.5 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.18 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.18 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.18 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.4 // indirect
@@ -113,7 +112,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.7 // indirect
-	github.com/aws/smithy-go v1.24.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -213,4 +211,3 @@ tool (
 
 replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190610114120-2a4eb8b5dcc9+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
 
-replace github.com/fclairamb/afero-s3 => github.com/maggch97/afero-s3 v0.0.0-20260227031452-4db589f0d189
