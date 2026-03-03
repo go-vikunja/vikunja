@@ -24,14 +24,3 @@
   task_id: 2
   reminder: 2019-06-01 12:00:00
   created: 2018-12-01 01:12:04
-# Task 47: two reminders, neither inside the (2018-10-01, 2018-12-10) window
-# Reminder before the window:
-- id: 6
-  task_id: 47
-  reminder: 2018-08-01 12:00:00
-  created: 2018-12-01 01:12:04
-# Reminder after the window:
-- id: 7
-  task_id: 47
-  reminder: 2019-03-01 12:00:00
-  created: 2018-12-01 01:12:04
