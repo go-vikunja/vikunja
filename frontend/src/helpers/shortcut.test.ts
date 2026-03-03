@@ -1,7 +1,7 @@
-import {describe, it, expect, vi} from 'vitest'
+import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
 
 import * as appleDevice from '@/helpers/isAppleDevice'
-import {parseKey, matchesKey, eventToShortcutString, isFormField} from './shortcut'
+import {parseKey, matchesKey, eventToShortcutString, isFormField, install, uninstall} from './shortcut'
 
 // Helper to create a partial KeyboardEvent with sensible defaults
 function makeEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
@@ -326,5 +326,103 @@ describe('isFormField', () => {
 
 	it('should return false for null', () => {
 		expect(isFormField(null)).toBe(false)
+	})
+})
+
+// --- install / uninstall integration tests ---
+
+function fireKeydown(code: string, mods: Partial<Pick<KeyboardEvent, 'ctrlKey' | 'altKey' | 'shiftKey' | 'metaKey'>> = {}) {
+	const event = new KeyboardEvent('keydown', {
+		code,
+		key: code,
+		bubbles: true,
+		cancelable: true,
+		...mods,
+	})
+	document.dispatchEvent(event)
+	return event
+}
+
+describe('install / uninstall (sequence handling)', () => {
+	let elA: HTMLElement
+	let elB: HTMLElement
+	let clickA: ReturnType<typeof vi.fn>
+	let clickB: ReturnType<typeof vi.fn>
+
+	beforeEach(() => {
+		elA = document.createElement('button')
+		elB = document.createElement('button')
+		clickA = vi.fn()
+		clickB = vi.fn()
+		elA.addEventListener('click', clickA)
+		elB.addEventListener('click', clickB)
+	})
+
+	afterEach(() => {
+		uninstall(elA)
+		uninstall(elB)
+	})
+
+	it('should not fire single-key shortcut while a sequence is in progress', () => {
+		// KeyA is standalone, KeyG KeyA is a sequence
+		install(elA, 'KeyA')
+		install(elB, 'KeyG KeyA')
+
+		fireKeydown('KeyG') // starts sequence
+		fireKeydown('KeyA') // should complete sequence, NOT fire standalone
+
+		expect(clickB).toHaveBeenCalledTimes(1)
+		expect(clickA).not.toHaveBeenCalled()
+	})
+
+	it('should fire single-key shortcut when no sequence is in progress', () => {
+		install(elA, 'KeyA')
+		install(elB, 'KeyG KeyO')
+
+		fireKeydown('KeyA')
+
+		expect(clickA).toHaveBeenCalledTimes(1)
+		expect(clickB).not.toHaveBeenCalled()
+	})
+
+	it('should not misfire sequences with different prefixes', () => {
+		// KeyG KeyO and KeyH KeyO — pressing KeyH then KeyO should not fire KeyG KeyO
+		install(elA, 'KeyG KeyO')
+		install(elB, 'KeyH KeyO')
+
+		fireKeydown('KeyH')
+		fireKeydown('KeyO')
+
+		expect(clickB).toHaveBeenCalledTimes(1)
+		expect(clickA).not.toHaveBeenCalled()
+	})
+
+	it('should reset and allow single-key shortcuts after sequence timeout', async () => {
+		install(elA, 'KeyA')
+		install(elB, 'KeyG KeyA')
+
+		fireKeydown('KeyG') // starts sequence
+
+		// Wait for timeout (1500ms)
+		await new Promise(r => setTimeout(r, 1600))
+
+		fireKeydown('KeyA') // sequence timed out, should fire standalone
+
+		expect(clickA).toHaveBeenCalledTimes(1)
+		expect(clickB).not.toHaveBeenCalled()
+	}, 3000)
+
+	it('should reset when a non-matching key is pressed during a sequence', () => {
+		install(elA, 'KeyA')
+		install(elB, 'KeyG KeyO')
+
+		fireKeydown('KeyG') // starts sequence
+		fireKeydown('KeyX') // doesn't match any active sequence — resets
+
+		// Now KeyA should work as standalone
+		fireKeydown('KeyA')
+
+		expect(clickA).toHaveBeenCalledTimes(1)
+		expect(clickB).not.toHaveBeenCalled()
 	})
 })

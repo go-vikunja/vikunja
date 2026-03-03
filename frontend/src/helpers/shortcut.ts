@@ -95,11 +95,18 @@ interface Binding {
 
 const bindings = new Set<Binding>()
 const elementBindings = new WeakMap<HTMLElement, Binding>()
-let sequenceBuffer: string[] = []
+
+interface ActiveSequence {
+	binding: Binding
+	sequenceIndex: number
+	step: number
+}
+
+let activeSequences: ActiveSequence[] = []
 let sequenceTimer: ReturnType<typeof setTimeout> | null = null
 
 function resetSequence() {
-	sequenceBuffer = []
+	activeSequences = []
 	if (sequenceTimer !== null) {
 		clearTimeout(sequenceTimer)
 		sequenceTimer = null
@@ -115,45 +122,62 @@ function globalKeydownHandler(event: KeyboardEvent) {
 	if (target?.shadowRoot) return
 	if (isFormField(target)) return
 
-	for (const binding of bindings) {
-		for (const sequence of binding.keys) {
-			if (sequence.length === 1) {
-				// Single-key shortcut
-				if (matchesKey(event, sequence[0])) {
+	// If sequences are in progress, only advance those — skip single-key shortcuts
+	if (activeSequences.length > 0) {
+		const stillActive: ActiveSequence[] = []
+
+		for (const active of activeSequences) {
+			const sequence = active.binding.keys[active.sequenceIndex]
+			if (matchesKey(event, sequence[active.step])) {
+				if (active.step + 1 === sequence.length) {
+					// Sequence complete
 					event.preventDefault()
-					binding.el.click()
+					active.binding.el.click()
 					resetSequence()
 					return
 				}
-			} else {
-				// Sequence shortcut (e.g. 'KeyG KeyO')
-				const stepIndex = sequenceBuffer.length
-				if (stepIndex < sequence.length && matchesKey(event, sequence[stepIndex])) {
-					sequenceBuffer.push(event.code)
+				stillActive.push({...active, step: active.step + 1})
+			}
+		}
 
-					if (sequenceTimer !== null) {
-						clearTimeout(sequenceTimer)
-					}
-					sequenceTimer = setTimeout(resetSequence, SEQUENCE_TIMEOUT)
+		if (stillActive.length > 0) {
+			activeSequences = stillActive
+			if (sequenceTimer !== null) clearTimeout(sequenceTimer)
+			sequenceTimer = setTimeout(resetSequence, SEQUENCE_TIMEOUT)
+			event.preventDefault()
+			return
+		}
 
-					if (sequenceBuffer.length === sequence.length) {
-						event.preventDefault()
-						binding.el.click()
-						resetSequence()
-						return
-					}
+		// No active sequences matched this key — reset and fall through
+		resetSequence()
+	}
 
-					// Partial match — consume the event
-					event.preventDefault()
-					return
-				}
+	// Check single-key shortcuts
+	for (const binding of bindings) {
+		for (const sequence of binding.keys) {
+			if (sequence.length === 1 && matchesKey(event, sequence[0])) {
+				event.preventDefault()
+				binding.el.click()
+				return
 			}
 		}
 	}
 
-	// No match for any sequence step — reset
-	if (sequenceBuffer.length > 0) {
-		resetSequence()
+	// Try to start new sequences
+	const newActive: ActiveSequence[] = []
+	for (const binding of bindings) {
+		for (let i = 0; i < binding.keys.length; i++) {
+			const sequence = binding.keys[i]
+			if (sequence.length > 1 && matchesKey(event, sequence[0])) {
+				newActive.push({binding, sequenceIndex: i, step: 1})
+			}
+		}
+	}
+
+	if (newActive.length > 0) {
+		activeSequences = newActive
+		sequenceTimer = setTimeout(resetSequence, SEQUENCE_TIMEOUT)
+		event.preventDefault()
 	}
 }
 
