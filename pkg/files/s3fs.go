@@ -26,7 +26,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/smithy-go"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/spf13/afero"
 )
 
@@ -74,10 +74,19 @@ func (f *s3Fs) Stat(name string) (os.FileInfo, error) {
 		return nil, s3ToPathError("stat", name, err)
 	}
 
+	var size int64
+	if head.ContentLength != nil {
+		size = *head.ContentLength
+	}
+	var modTime time.Time
+	if head.LastModified != nil {
+		modTime = *head.LastModified
+	}
+
 	return &s3FileInfo{
 		name:    path.Base(name),
-		size:    *head.ContentLength,
-		modTime: *head.LastModified,
+		size:    size,
+		modTime: modTime,
 	}, nil
 }
 
@@ -97,24 +106,21 @@ func (f *s3Fs) Remove(name string) error {
 
 // Unsupported operations
 
-func (*s3Fs) Create(string) (afero.File, error)                      { return nil, ErrS3NotSupported }
-func (*s3Fs) Mkdir(string, os.FileMode) error                        { return ErrS3NotSupported }
-func (*s3Fs) MkdirAll(string, os.FileMode) error                     { return ErrS3NotSupported }
-func (*s3Fs) OpenFile(string, int, os.FileMode) (afero.File, error)  { return nil, ErrS3NotSupported }
-func (*s3Fs) RemoveAll(string) error                                  { return ErrS3NotSupported }
-func (*s3Fs) Rename(string, string) error                             { return ErrS3NotSupported }
-func (*s3Fs) Chmod(string, os.FileMode) error                         { return ErrS3NotSupported }
-func (*s3Fs) Chown(string, int, int) error                            { return ErrS3NotSupported }
-func (*s3Fs) Chtimes(string, time.Time, time.Time) error              { return ErrS3NotSupported }
+func (*s3Fs) Create(string) (afero.File, error)                     { return nil, ErrS3NotSupported }
+func (*s3Fs) Mkdir(string, os.FileMode) error                       { return ErrS3NotSupported }
+func (*s3Fs) MkdirAll(string, os.FileMode) error                    { return ErrS3NotSupported }
+func (*s3Fs) OpenFile(string, int, os.FileMode) (afero.File, error) { return nil, ErrS3NotSupported }
+func (*s3Fs) RemoveAll(string) error                                { return ErrS3NotSupported }
+func (*s3Fs) Rename(string, string) error                           { return ErrS3NotSupported }
+func (*s3Fs) Chmod(string, os.FileMode) error                       { return ErrS3NotSupported }
+func (*s3Fs) Chown(string, int, int) error                          { return ErrS3NotSupported }
+func (*s3Fs) Chtimes(string, time.Time, time.Time) error            { return ErrS3NotSupported }
 
 // s3ToPathError converts S3 SDK errors into os-compatible path errors.
 func s3ToPathError(op, name string, err error) error {
-	var opErr *smithy.OperationError
-	if errors.As(err, &opErr) {
-		// HeadObject on a non-existent key returns a 404
-		if opErr.OperationName == "HeadObject" {
-			return &os.PathError{Op: op, Path: name, Err: os.ErrNotExist}
-		}
+	var respErr *smithyhttp.ResponseError
+	if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+		return &os.PathError{Op: op, Path: name, Err: os.ErrNotExist}
 	}
 	return &os.PathError{Op: op, Path: name, Err: err}
 }
@@ -176,15 +182,15 @@ func (f *s3File) closeStream() {
 
 // Unsupported file operations
 
-func (*s3File) ReadAt([]byte, int64) (int, error)   { return 0, ErrS3NotSupported }
-func (*s3File) Seek(int64, int) (int64, error)      { return 0, ErrS3NotSupported }
-func (*s3File) Write([]byte) (int, error)            { return 0, ErrS3NotSupported }
-func (*s3File) WriteAt([]byte, int64) (int, error)   { return 0, ErrS3NotSupported }
-func (*s3File) WriteString(string) (int, error)      { return 0, ErrS3NotSupported }
-func (*s3File) Truncate(int64) error                   { return ErrS3NotSupported }
-func (*s3File) Sync() error                            { return nil }
-func (*s3File) Readdir(int) ([]os.FileInfo, error)     { return nil, ErrS3NotSupported }
-func (*s3File) Readdirnames(int) ([]string, error)     { return nil, ErrS3NotSupported }
+func (*s3File) ReadAt([]byte, int64) (int, error)  { return 0, ErrS3NotSupported }
+func (*s3File) Seek(int64, int) (int64, error)     { return 0, ErrS3NotSupported }
+func (*s3File) Write([]byte) (int, error)          { return 0, ErrS3NotSupported }
+func (*s3File) WriteAt([]byte, int64) (int, error) { return 0, ErrS3NotSupported }
+func (*s3File) WriteString(string) (int, error)    { return 0, ErrS3NotSupported }
+func (*s3File) Truncate(int64) error               { return ErrS3NotSupported }
+func (*s3File) Sync() error                        { return nil }
+func (*s3File) Readdir(int) ([]os.FileInfo, error) { return nil, ErrS3NotSupported }
+func (*s3File) Readdirnames(int) ([]string, error) { return nil, ErrS3NotSupported }
 
 // s3FileInfo implements os.FileInfo for S3 objects.
 type s3FileInfo struct {
@@ -193,9 +199,9 @@ type s3FileInfo struct {
 	modTime time.Time
 }
 
-func (fi *s3FileInfo) Name() string      { return fi.name }
-func (fi *s3FileInfo) Size() int64       { return fi.size }
-func (fi *s3FileInfo) Mode() os.FileMode { return 0664 }
+func (fi *s3FileInfo) Name() string       { return fi.name }
+func (fi *s3FileInfo) Size() int64        { return fi.size }
+func (fi *s3FileInfo) Mode() os.FileMode  { return 0664 }
 func (fi *s3FileInfo) ModTime() time.Time { return fi.modTime }
-func (fi *s3FileInfo) IsDir() bool       { return false }
-func (fi *s3FileInfo) Sys() interface{}  { return nil }
+func (fi *s3FileInfo) IsDir() bool        { return false }
+func (fi *s3FileInfo) Sys() interface{}   { return nil }
