@@ -380,9 +380,21 @@ func GetProjectBackground(c *echo.Context) error {
 		return err
 	}
 
+	// Override the global no-store directive so browsers can cache background images.
+	// no-cache allows caching but requires revalidation via If-Modified-Since.
+	c.Response().Header().Set("Cache-Control", "no-cache")
+
 	// Set Last-Modified header if we have the file stat, so clients can decide whether to use cached files
 	if stat != nil {
-		c.Response().Header().Set(echo.HeaderLastModified, stat.ModTime().UTC().Format(http.TimeFormat))
+		modTime := stat.ModTime().UTC()
+		c.Response().Header().Set(echo.HeaderLastModified, modTime.Format(http.TimeFormat))
+
+		// Check If-Modified-Since and return 304 if the file hasn't changed
+		if ifModSince := c.Request().Header.Get("If-Modified-Since"); ifModSince != "" {
+			if t, err := http.ParseTime(ifModSince); err == nil && !modTime.After(t) {
+				return c.NoContent(http.StatusNotModified)
+			}
+		}
 	}
 
 	// Serve the file
