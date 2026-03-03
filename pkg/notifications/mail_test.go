@@ -653,7 +653,7 @@ func TestConversationalMail(t *testing.T) {
 			Action("View Task", "https://example.com/task/123")
 
 		mailOpts, err := RenderMail(mail, "en")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Action link should have 14px font size to match main content
 		assert.Contains(t, mailOpts.HTMLMessage, `font-size: 14px; line-height: 1.5`) // Main content
