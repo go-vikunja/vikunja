@@ -157,8 +157,6 @@
     "workbox-cli": "7.4.0"
   },
   "pnpm": {
-    "patchedDependencies": {
-    },
     "onlyBuiltDependencies": [
       "@parcel/watcher",
       "@sentry/cli",
