@@ -577,9 +577,10 @@
     "title": "Sort Tasks",
     "sortBy": "Sort by",
     "order": "Order",
-    "position": "Position",
+    "manually": "Manually",
     "asc": "Ascending",
-    "desc": "Descending"
+    "desc": "Descending",
+    "description": "Choose how tasks in this list are sorted. When sorting manually, you can drag and drop tasks to reorder them."
   },
   "migrate": {
     "title": "Import from other services",
