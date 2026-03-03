@@ -240,6 +240,9 @@ async function submit() {
 				// Fallback to general error message if no field errors
 				errorMessage.value = t('user.auth.registrationFailed')
 			}
+		} else if (e instanceof Object && 'message' in e && typeof e.message === 'string') {
+			// Non-validation backend errors (e.g. duplicate username) - show their message
+			errorMessage.value = e.message
 		} else {
 			errorMessage.value = t('user.auth.registrationFailed')
 		}
