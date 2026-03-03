@@ -361,7 +361,7 @@ var userDeleteCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalf("could not read confirmation message: %s", err)
 			}
-			if text != "YES, I CONFIRM\n" {
+			if text != "YES, I CONFIRM\n" && text != "YES, I CONFIRM\r\n" {
 				log.Fatalf("invalid confirmation message")
 			}
 		}
