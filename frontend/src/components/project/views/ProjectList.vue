@@ -362,6 +362,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+.filter-container {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+}
+
 .tasks {
 	padding: .5rem;
 }
