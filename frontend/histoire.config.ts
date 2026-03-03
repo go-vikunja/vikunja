@@ -7,7 +7,7 @@ export default defineConfig({
 	storyIgnored: [
 		'**/node_modules/**',
 		'**/dist/**',
-		// see https://kolaente.dev/vikunja/frontend/pulls/2724#issuecomment-42012
+		// see https://code.vikunja.io/vikunja/pulls/2724#issuecomment-42012
 		'**/.direnv/**',
 	],
 	plugins: [

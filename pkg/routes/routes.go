@@ -118,7 +118,7 @@ func NewEcho() *echo.Echo {
 	// This is needed because Echo v5 does not unescape path params by default.
 	// Without this, path parameters like usernames with spaces or apostrophes
 	// would remain URL-encoded (e.g., "John%20D%27Urso" instead of "John D'Urso").
-	// See https://kolaente.dev/vikunja/vikunja/issues/1224
+	// See https://code.vikunja.io/vikunja/issues/1224
 	e := echo.NewWithConfig(echo.Config{
 		Router: echo.NewRouter(echo.RouterConfig{
 			UnescapePathParamValues: true,

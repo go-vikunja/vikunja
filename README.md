@@ -5,7 +5,7 @@
 [![Install](https://img.shields.io/badge/download-v2.1.0-brightgreen.svg)](https://vikunja.io/docs/installing)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vikunja/vikunja.svg)](https://hub.docker.com/r/vikunja/vikunja/)
 [![Swagger Docs](https://img.shields.io/badge/swagger-docs-brightgreen.svg)](https://try.vikunja.io/api/v1/docs)
-[![Go Report Card](https://goreportcard.com/badge/kolaente.dev/vikunja/vikunja)](https://goreportcard.com/report/kolaente.dev/vikunja/vikunja)
+[![Go Report Card](https://goreportcard.com/badge/code.vikunja.io/api)](https://goreportcard.com/report/code.vikunja.io/api)
 
 # Vikunja
 
