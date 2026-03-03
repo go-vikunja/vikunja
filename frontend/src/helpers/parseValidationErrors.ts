@@ -1,4 +1,4 @@
-interface ValidationError {
+export interface ValidationError {
 	message?: string
 	code?: number
 	invalid_fields?: string[]

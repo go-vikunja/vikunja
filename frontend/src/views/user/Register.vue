@@ -104,7 +104,7 @@ import Message from '@/components/misc/Message.vue'
 import {isEmail} from '@/helpers/isEmail'
 import Password from '@/components/input/Password.vue'
 import FormField from '@/components/input/FormField.vue'
-import {parseValidationErrors} from '@/helpers/parseValidationErrors'
+import {parseValidationErrors, type ValidationError} from '@/helpers/parseValidationErrors'
 
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {useAuthStore} from '@/stores/auth'
@@ -133,7 +133,7 @@ const credentials = reactive({
 const isLoading = computed(() => authStore.isLoading)
 const errorMessage = ref('')
 const validatePasswordInitially = ref(false)
-const serverValidationErrors = ref<Record<string, string>>({})
+const serverValidationErrors = ref<Partial<Record<string, string>>>({})
 
 const DEBOUNCE_TIME = 100
 
@@ -210,15 +210,10 @@ function handleEmailKeyup() {
 	delete serverValidationErrors.value.email
 }
 
-interface ApiValidationError {
-	message?: string
-	invalid_fields?: string[]
-}
-
-function isApiValidationError(error: unknown): error is ApiValidationError {
+function isApiValidationError(error: unknown): error is ValidationError {
 	return error !== null &&
 		typeof error === 'object' &&
-		('message' in error || 'invalid_fields' in error)
+		'invalid_fields' in error
 }
 
 async function submit() {
@@ -243,7 +238,7 @@ async function submit() {
 				serverValidationErrors.value = fieldErrors
 			} else {
 				// Fallback to general error message if no field errors
-				errorMessage.value = e.message || t('user.auth.registrationFailed')
+				errorMessage.value = t('user.auth.registrationFailed')
 			}
 		} else {
 			errorMessage.value = t('user.auth.registrationFailed')
