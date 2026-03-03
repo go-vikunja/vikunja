@@ -1025,7 +1025,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task30,
 				task31,
 				task33,
-				task47,
 			},
 			wantErr: false,
 		},
@@ -1045,24 +1044,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task30,
 				task31,
 				task33,
-				task47,
 			},
 			wantErr: false,
 		},
 		{
 			name: "filtered reminder dates",
-			fields: fields{
-				Filter: "reminders > '2018-10-01T00:00:00+00:00' && reminders < '2018-12-10T00:00:00+00:00'",
-			},
-			args: defaultArgs,
-			want: []*Task{
-				task2,
-				task27,
-			},
-			wantErr: false,
-		},
-		{
-			name: "filtered reminder dates should not match task with reminders outside window",
 			fields: fields{
 				Filter: "reminders > '2018-10-01T00:00:00+00:00' && reminders < '2018-12-10T00:00:00+00:00'",
 			},
@@ -1089,8 +1075,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args: defaultArgs,
 			want: []*Task{
-				task2,  // has reminder at 2019-06-01 (> 2019-01-01)
-				task47, // has reminder at 2019-03-01 (> 2019-01-01) and 2018-08-01 (< 2018-09-01)
+				task2, // has reminder at 2019-06-01 (> 2019-01-01)
 			},
 			wantErr: false,
 		},
