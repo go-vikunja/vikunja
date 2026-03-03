@@ -1,7 +1,7 @@
 /**
  * Returns a new date from any format in a way that all browsers, especially safari, can understand.
  *
- * @see https://code.vikunja.io/vikunja/issues/207
+ * @see https://kolaente.dev/vikunja/frontend/issues/207
  *
  * @param dateString
  * @returns {Date}
