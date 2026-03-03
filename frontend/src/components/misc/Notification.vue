@@ -34,14 +34,14 @@
 					</template>
 					<span
 						v-if="item.duplicates > 0"
-						class="tw-text-xs tw-font-bold tw-ml-1"
+						class="tw:text-xs tw:font-bold tw:ml-1"
 					>
 						×{{ item.duplicates + 1 }}
 					</span>
 				</div>
 				<div
 					v-if="item.data?.actions?.length > 0"
-					class="tw-flex tw-justify-end tw-gap-2"
+					class="tw:flex tw:justify-end tw:gap-2"
 				>
 					<XButton
 						v-for="(action, i) in item.data.actions"
@@ -64,7 +64,7 @@
 	z-index: 9999;
 }
 
-.tw-flex {
+.tw\:flex {
 	margin-block-start: 0.5rem;
 }
 </style>

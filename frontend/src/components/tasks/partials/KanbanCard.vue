@@ -18,10 +18,10 @@
 			v-if="coverImageBlobUrl"
 			:src="coverImageBlobUrl"
 			alt=""
-			class="tw-w-full"
+			class="tw:w-full"
 		>
 		<div class="p-2">
-			<div class="tw-flex tw-justify-between">
+			<div class="tw:flex tw:justify-between">
 				<span class="task-id">
 					<Done
 						class="kanban-card__done"
@@ -36,7 +36,7 @@
 					</template>
 					<span
 						v-if="showTaskPosition"
-						class="tw-text-red-600 tw-ps-2"
+						class="tw:text-red-600 tw:ps-2"
 					>
 						{{ task.position }}
 					</span>

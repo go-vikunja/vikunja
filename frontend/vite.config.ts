@@ -14,7 +14,7 @@ import viteSentry, {type ViteSentryPluginOptions} from 'vite-plugin-sentry'
 import svgLoader from 'vite-svg-loader'
 import postcssPresetEnv from 'postcss-preset-env'
 import postcssEasingGradients from 'postcss-easing-gradients'
-import tailwindcss from 'tailwindcss'
+import tailwindcss from '@tailwindcss/vite'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
 const pathSrc = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\', '/')
@@ -106,7 +106,6 @@ function getBuildConfig(env: Record<string, string>) {
 			},
 			postcss: {
 				plugins: [
-					tailwindcss(),
 					postcssEasingGradients(),
 					postcssPresetEnv({
 						features: {
@@ -117,6 +116,7 @@ function getBuildConfig(env: Record<string, string>) {
 			},
 		},
 		plugins: [
+			tailwindcss(),
 			vue(),
 			svgLoader({
 				// Since the svgs are already manually optimized via https://jakearchibald.github.io/svgomg/

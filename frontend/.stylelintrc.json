@@ -14,8 +14,12 @@
 			true,
 			{
 				"ignoreAtRules": [
-					"tailwind",
 					"apply",
+					"theme",
+					"utility",
+					"custom-variant",
+					"source",
+					"reference",
 					"variants",
 					"responsive",
 					"screen",
