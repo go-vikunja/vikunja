@@ -30,7 +30,7 @@ import (
 
 // UserList gets all information about a list of users
 // @Summary Get users
-// @Description Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings.
+// @Description Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings, unless both users share an external team (synced via OIDC/LDAP), in which case they can always find each other.
 // @tags user
 // @Accept json
 // @Produce json
