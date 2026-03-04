@@ -47,6 +47,15 @@ var (
 	paradedbInstalled bool
 )
 
+// registeredTables holds all table beans registered by Vikunja packages.
+var registeredTables []interface{}
+
+// RegisterTables registers table beans so that Dump and WipeEverything
+// only operate on known Vikunja tables.
+func RegisterTables(tables []interface{}) {
+	registeredTables = append(registeredTables, tables...)
+}
+
 // CreateDBEngine initializes a db engine from the config
 func CreateDBEngine() (engine *xorm.Engine, err error) {
 
