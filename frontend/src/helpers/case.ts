@@ -18,7 +18,11 @@ export function objectToCamelCase(object: Record<string, any>) {
 
 		// Recursive processing
 		// Prevent processing for some cases
-		if (object[m] === null) {
+		if (
+			object[m] === null ||
+			(object[m] instanceof Date) ||
+			(typeof object[m]?.getTime === 'function')
+		) {
 			continue
 		}
 
