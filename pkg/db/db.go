@@ -428,16 +428,10 @@ func isSystemDirectory(path string) bool {
 	return false
 }
 
-// WipeEverything wipes all tables and their data. Use with caution...
+// WipeEverything wipes all Vikunja tables and their data. Use with caution...
 func WipeEverything() error {
-
-	tables, err := x.DBMetas()
-	if err != nil {
-		return err
-	}
-
-	for _, t := range tables {
-		if err := x.DropTables(t.Name); err != nil {
+	for _, name := range RegisteredTableNames() {
+		if err := x.DropTables(name); err != nil {
 			return err
 		}
 	}
