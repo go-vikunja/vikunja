@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -54,6 +55,18 @@ var registeredTables []interface{}
 // only operate on known Vikunja tables.
 func RegisterTables(tables []interface{}) {
 	registeredTables = append(registeredTables, tables...)
+}
+
+// RegisteredTableNames returns the table names of all registered Vikunja tables.
+func RegisteredTableNames() []string {
+	mapper := x.GetTableMapper()
+	names := make([]string, 0, len(registeredTables)+1)
+	for _, bean := range registeredTables {
+		names = append(names, mapper.Obj2Table(reflect.Indirect(reflect.ValueOf(bean)).Type().Name()))
+	}
+	// The xormigrate migration tracking table is not registered via GetTables()
+	names = append(names, "migration")
+	return names
 }
 
 // CreateDBEngine initializes a db engine from the config
