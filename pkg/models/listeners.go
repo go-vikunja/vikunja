@@ -245,6 +245,10 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 		return err
 	}
 
+	if event.Task == nil || event.Comment == nil {
+		return nil
+	}
+
 	sess := db.NewSession()
 	defer sess.Close()
 
@@ -390,6 +394,10 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	if event.Task == nil {
+		return nil
+	}
+
 	sess := db.NewSession()
 	defer sess.Close()
 
@@ -420,6 +428,10 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
+	}
+
+	if event.Task == nil {
+		return nil
 	}
 
 	sess := db.NewSession()
@@ -539,6 +551,10 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
+	}
+
+	if event.Task == nil {
+		return nil
 	}
 
 	// This operation is potentially very resource-heavy, because we don't know if a task is included
