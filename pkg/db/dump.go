@@ -36,21 +36,18 @@ func validateTableName(table string) error {
 	return nil
 }
 
-// Dump dumps all database tables
+// Dump dumps all Vikunja database tables
 func Dump() (data map[string][]byte, err error) {
-	tables, err := x.DBMetas()
-	if err != nil {
-		return
-	}
+	tableNames := RegisteredTableNames()
 
-	data = make(map[string][]byte, len(tables))
-	for _, table := range tables {
+	data = make(map[string][]byte, len(tableNames))
+	for _, name := range tableNames {
 		entries := []map[string]interface{}{}
-		err := x.Table(table.Name).Find(&entries)
+		err := x.Table(name).Find(&entries)
 		if err != nil {
 			return nil, err
 		}
-		data[table.Name], err = json.Marshal(entries)
+		data[name], err = json.Marshal(entries)
 		if err != nil {
 			return nil, err
 		}
