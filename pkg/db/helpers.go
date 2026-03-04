@@ -52,25 +52,18 @@ func MultiFieldSearch(fields []string, search string) builder.Cond {
 // for non-ParadeDB queries and the id field for ParadeDB queries.
 func MultiFieldSearchWithTableAlias(fields []string, search, tableAlias string) builder.Cond {
 	if Type() == schemas.POSTGRES && paradedbInstalled {
-		if len(fields) == 1 {
-			// Single field search - use optimized match function
-			return builder.Expr("id @@@ paradedb.match(?, ?)", fields[0], search)
-		}
-		// Multi-field search - use disjunction_max for optimal performance
-		fieldMatches := make([]string, len(fields))
-		args := make([]interface{}, len(fields)*2)
+		conditions := make([]builder.Cond, len(fields))
 		for i, field := range fields {
-			fieldMatches[i] = "paradedb.match(?, ?)"
-			args[i*2] = field
-			args[i*2+1] = search
+			fieldName := field
+			if tableAlias != "" {
+				fieldName = tableAlias + "." + field
+			}
+			conditions[i] = builder.Expr(fieldName+" ||| ?::pdb.fuzzy(1, t)", search)
 		}
-
-		idField := "`id`"
-		if tableAlias != "" {
-			idField = "`" + tableAlias + "`.`id`"
+		if len(conditions) == 1 {
+			return conditions[0]
 		}
-
-		return builder.Expr(idField+" @@@ paradedb.disjunction_max(ARRAY["+strings.Join(fieldMatches, ", ")+"])", args...)
+		return builder.Or(conditions...)
 	}
 
 	// For non-PostgreSQL databases, use ILIKE on all fields
