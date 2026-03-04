@@ -519,9 +519,16 @@
 						>
 							{{ $t('task.detail.actions.moveProject') }}
 						</XButton>
-						
+						<XButton
+							variant="secondary"
+							icon="copy"
+							@click="duplicateCurrentTask"
+						>
+							{{ $t('task.detail.actions.duplicate') }}
+						</XButton>
+
 						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
-						
+
 						<XButton
 							v-shortcut="'KeyD'"
 							variant="secondary"
@@ -1092,6 +1099,17 @@ async function changeProject(project: IProject | null) {
 async function toggleFavorite() {
 	const newTask = await taskStore.toggleFavorite(task.value)
 	Object.assign(task.value, newTask)
+}
+
+async function duplicateCurrentTask() {
+	const duplicatedTask = await taskStore.duplicateTask(task.value.id)
+	if (duplicatedTask) {
+		success({message: t('task.detail.duplicateSuccess')})
+		router.push({
+			name: 'task.detail',
+			params: {id: duplicatedTask.id},
+		})
+	}
 }
 
 async function setPriority(priority: Priority) {
