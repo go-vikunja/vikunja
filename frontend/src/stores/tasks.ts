@@ -5,6 +5,8 @@ import router from '@/router'
 import TaskService from '@/services/task'
 import TaskAssigneeService from '@/services/taskAssignee'
 import LabelTaskService from '@/services/labelTask'
+import TaskDuplicateService from '@/services/taskDuplicateService'
+import TaskDuplicateModel from '@/models/taskDuplicateModel'
 
 import {cleanupItemText, parseTaskText, PREFIXES} from '@/modules/parseTaskText'
 
@@ -519,6 +521,17 @@ export const useTaskStore = defineStore('task', () => {
 		return task
 	}
 
+	async function duplicateTask(taskId: ITask['id']) {
+		const cancel = setModuleLoading(setIsLoading)
+		try {
+			const taskDuplicateService = new TaskDuplicateService()
+			const response = await taskDuplicateService.create(new TaskDuplicateModel({taskId}))
+			return response.duplicatedTask
+		} finally {
+			cancel()
+		}
+	}
+
 	async function markTaskAsRead(taskId: ITask['id']) {
 		const taskService = new TaskService()
 		await taskService.markTaskAsRead(taskId)
@@ -563,6 +576,7 @@ export const useTaskStore = defineStore('task', () => {
 		findProjectId,
 		ensureLabelsExist,
 		toggleFavorite,
+		duplicateTask,
 		markTaskAsRead,
 	}
 })
