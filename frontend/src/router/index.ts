@@ -173,6 +173,12 @@ const router = createRouter({
 			component: LinkSharingAuth,
 		},
 		{
+			path: '/projects/:projectId/tasks/new',
+			name: 'task.new',
+			component: () => import('@/views/tasks/TaskDetailView.vue'),
+			props: route => ({ taskId: 0, newTaskProjectId: Number(route.params.projectId as string) }),
+		},
+		{
 			path: '/tasks/:id',
 			name: 'task.detail',
 			component: () => import('@/views/tasks/TaskDetailView.vue'),

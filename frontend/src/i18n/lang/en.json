@@ -817,6 +817,7 @@
   "task": {
     "task": "Task",
     "new": "Create a task",
+    "newTask": "New Task",
     "delete": "Delete this task",
     "createSuccess": "The task was successfully created.",
     "addReminder": "Add a reminder…",
@@ -849,6 +850,9 @@
       "updated": "Updated {0}",
       "doneAt": "Done {0}",
       "updateSuccess": "The task was saved successfully.",
+      "createSuccess": "The task was created successfully.",
+      "newTaskIdentifier": "New",
+      "save": "Save",
       "deleteSuccess": "The task has been deleted successfully.",
       "belongsToProject": "This task belongs to project '{project}'",
       "back": "Back to project",

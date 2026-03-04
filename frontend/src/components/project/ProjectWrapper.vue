@@ -28,7 +28,19 @@
 					{{ getViewTitle(view) }}
 				</BaseButton>
 			</div>
-			<slot name="header" />
+			<div
+				class="is-flex is-align-items-center"
+				style="gap: .5rem"
+			>
+				<XButton
+					v-if="canWrite && !currentProject?.isArchived"
+					icon="plus"
+					:to="{name: 'task.new', params: {projectId: projectId}}"
+				>
+					{{ $t('task.newTask') }}
+				</XButton>
+				<slot name="header" />
+			</div>
 		</div>
 		<CustomTransition name="fade">
 			<Message
@@ -49,6 +61,7 @@ import {computed} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
+import XButton from '@/components/input/Button.vue'
 import Message from '@/components/misc/Message.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 
@@ -58,6 +71,8 @@ import {useTitle} from '@/composables/useTitle'
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
 import {useViewFiltersStore} from '@/stores/viewFilters'
+
+import {PERMISSIONS} from '@/constants/permissions'
 
 import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
@@ -83,6 +98,10 @@ const currentProject = computed<IProject>(() => {
 	}
 })
 useTitle(() => currentProject.value?.id ? getProjectTitle(currentProject.value) : '')
+
+const canWrite = computed(() => {
+	return (currentProject.value?.maxPermission ?? 0) > PERMISSIONS.READ && currentProject.value?.id > 0
+})
 
 const views = computed(() => projectStore.projects[props.projectId]?.views)
 
