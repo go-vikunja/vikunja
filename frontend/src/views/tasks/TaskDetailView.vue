@@ -1105,12 +1105,6 @@ async function saveTask(
 
 async function createNewTask() {
 	const t_ = task.value
-	const hexColor = taskColor.value
-
-	let endDate = t_.endDate
-	if (endDate === null && t_.startDate !== null && t_.dueDate !== null) {
-		endDate = t_.dueDate
-	}
 
 	const newTask = new TaskModel({
 		title: t_.title || t('task.newTask'),
@@ -1119,8 +1113,8 @@ async function createNewTask() {
 		priority: t_.priority,
 		dueDate: t_.dueDate,
 		startDate: t_.startDate,
-		endDate,
-		hexColor,
+		endDate: t_.endDate,
+		hexColor: taskColor.value,
 		percentDone: t_.percentDone,
 		reminders: t_.reminders,
 		repeatAfter: t_.repeatAfter?.amount ? periodToSeconds(t_.repeatAfter.amount, t_.repeatAfter.type) : 0,
