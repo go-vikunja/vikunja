@@ -31,32 +31,56 @@
 				@enterPressed="handleEnterPressed"
 			>
 				<template #default="{ focusedRow, focusedCell }">
-					<div class="gantt-rows">
-						<GanttRow
-							v-for="(rowId, index) in ganttRows"
-							:id="rowId"
-							:key="rowId"
-							:index="index"
-						>
-							<div class="gantt-row-content">
-								<GanttRowBars
-									:bars="ganttBars[index] ?? []"
-									:total-width="totalWidth"
-									:date-from-date="dateFromDate"
-									:date-to-date="dateToDate"
-									:day-width-pixels="DAY_WIDTH_PIXELS"
-									:is-dragging="isDragging"
-									:is-resizing="isResizing"
-									:drag-state="dragState"
-									:focused-row="focusedRow ?? null"
-									:focused-cell="focusedCell"
-									:row-id="rowId"
-									@barPointerDown="handleBarPointerDown"
-									@startResize="startResize"
-									@updateTask="updateGanttTask"
-								/>
-							</div>
-						</GanttRow>
+					<div class="gantt-rows-container">
+						<!-- Group background bands for parent-child visual grouping -->
+						<div
+							v-for="(band, bandIndex) in parentGroupBands"
+							:key="`band-${bandIndex}`"
+							class="gantt-group-band"
+							:style="{
+								top: `${band.startIndex * ROW_HEIGHT}px`,
+								height: `${(band.endIndex - band.startIndex + 1) * ROW_HEIGHT}px`,
+								left: `${band.left}px`,
+								width: `${band.width}px`,
+							}"
+						/>
+						<div class="gantt-rows">
+							<GanttRow
+								v-for="(rowId, index) in ganttRows"
+								:id="rowId"
+								:key="rowId"
+								:index="index"
+							>
+								<div class="gantt-row-content">
+									<GanttRowBars
+										:bars="ganttBars[index] ?? []"
+										:total-width="totalWidth"
+										:date-from-date="dateFromDate"
+										:date-to-date="dateToDate"
+										:day-width-pixels="DAY_WIDTH_PIXELS"
+										:is-dragging="isDragging"
+										:is-resizing="isResizing"
+										:drag-state="dragState"
+										:focused-row="focusedRow ?? null"
+										:focused-cell="focusedCell"
+										:row-id="rowId"
+										:is-parent="ganttBars[index]?.[0]?.meta?.isParent ?? false"
+										:is-collapsed="collapsedTaskIds.has(Number(ganttBars[index]?.[0]?.id))"
+										@barPointerDown="handleBarPointerDown"
+										@startResize="startResize"
+										@updateTask="updateGanttTask"
+										@toggleCollapse="toggleCollapse(Number(ganttBars[index]?.[0]?.id))"
+									/>
+								</div>
+							</GanttRow>
+						</div>
+						<GanttRelationArrows
+							v-if="relationArrows.length > 0"
+							:arrows="relationArrows"
+							:width="totalWidth"
+							:height="totalHeight"
+							:row-height="ROW_HEIGHT"
+						/>
 					</div>
 				</template>
 			</GanttChartBody>
@@ -71,6 +95,8 @@ import dayjs from 'dayjs'
 import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
 
 import {getHexColor} from '@/models/task'
+import {buildGanttTaskTree, type GanttTaskTreeNode} from '@/helpers/ganttTaskTree'
+import {buildRelationArrows, type GanttBarPosition, type GanttArrow} from '@/helpers/ganttRelationArrows'
 
 import type {ITask, ITaskPartialWithId} from '@/modelTypes/ITask'
 import type {DateISO} from '@/types/DateISO'
@@ -82,6 +108,7 @@ import GanttRow from '@/components/gantt/GanttRow.vue'
 import GanttRowBars from '@/components/gantt/GanttRowBars.vue'
 import GanttVerticalGridLines from '@/components/gantt/GanttVerticalGridLines.vue'
 import GanttTimelineHeader from '@/components/gantt/GanttTimelineHeader.vue'
+import GanttRelationArrows from '@/components/gantt/GanttRelationArrows.vue'
 import Loading from '@/components/misc/Loading.vue'
 
 import {MILLISECONDS_A_DAY} from '@/constants/date'
@@ -150,43 +177,101 @@ const ganttBars = ref<GanttBarModel[][]>([])
 const ganttRows = ref<string[]>([])
 const cellsByRow = ref<Record<string, string[]>>({})
 
+// Hierarchy state
+const collapsedTaskIds = ref(new Set<number>())
+const allNodes = ref<GanttTaskTreeNode[]>([])
+
+const visibleNodes = computed(() => {
+	const result: GanttTaskTreeNode[] = []
+	const hiddenParents = new Set<number>()
+
+	for (const node of allNodes.value) {
+		const parents = node.task.relatedTasks?.parenttask ?? []
+		const isHidden = parents.some(p =>
+			collapsedTaskIds.value.has(p.id) || hiddenParents.has(p.id),
+		)
+
+		if (isHidden) {
+			hiddenParents.add(node.task.id)
+			continue
+		}
+
+		result.push(node)
+	}
+
+	return result
+})
+
+// Map hidden tasks to their visible ancestor for arrow re-routing
+const hiddenToAncestor = computed(() => {
+	const map = new Map<number, number>()
+	const hiddenParents = new Set<number>()
+
+	for (const node of allNodes.value) {
+		const parents = node.task.relatedTasks?.parenttask ?? []
+		const collapsedParent = parents.find(p =>
+			collapsedTaskIds.value.has(p.id),
+		)
+
+		if (collapsedParent && tasks.value.has(collapsedParent.id)) {
+			map.set(node.task.id, collapsedParent.id)
+			hiddenParents.add(node.task.id)
+		} else {
+			const hiddenAncestor = parents.find(p => hiddenParents.has(p.id))
+			if (hiddenAncestor) {
+				const ancestorTarget = map.get(hiddenAncestor.id) ?? hiddenAncestor.id
+				map.set(node.task.id, ancestorTarget)
+				hiddenParents.add(node.task.id)
+			}
+		}
+	}
+
+	return map
+})
+
+function toggleCollapse(taskId: number) {
+	const newSet = new Set(collapsedTaskIds.value)
+	if (newSet.has(taskId)) {
+		newSet.delete(taskId)
+	} else {
+		newSet.add(taskId)
+	}
+	collapsedTaskIds.value = newSet
+}
+
 function getRoundedDate(value: string | Date | undefined, fallback: Date | string, isStart: boolean) {
 	return roundToNaturalDayBoundary(value ? new Date(value) : new Date(fallback), isStart)
 }
 
-function transformTaskToGanttBar(t: ITask): GanttBarModel {
+function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
+	const t = node.task
 	const DEFAULT_SPAN_DAYS = 7
 
-	// Determine the effective start and end dates
-	// If only dueDate is set (no startDate or endDate), treat dueDate as endDate
-	const effectiveEndDate = t.endDate || t.dueDate
-	const effectiveStartDate = t.startDate
+	// Use derived dates for dateless parents
+	const effectiveEndDate = t.endDate || t.dueDate || (node.hasDerivedDates ? node.derivedEndDate : null)
+	const effectiveStartDate = t.startDate || (node.hasDerivedDates ? node.derivedStartDate : null)
 
 	let startDate: Date
 	let endDate: Date
 	let dateType: GanttBarDateType
 
 	if (effectiveStartDate && effectiveEndDate) {
-		// Both dates available
 		startDate = getRoundedDate(effectiveStartDate, effectiveStartDate, true)
 		endDate = getRoundedDate(effectiveEndDate, effectiveEndDate, false)
 		dateType = 'both'
 	} else if (effectiveStartDate && !effectiveEndDate) {
-		// Only start date — extend forward by DEFAULT_SPAN_DAYS
 		startDate = getRoundedDate(effectiveStartDate, effectiveStartDate, true)
 		const defaultEnd = new Date(startDate)
 		defaultEnd.setDate(defaultEnd.getDate() + DEFAULT_SPAN_DAYS)
 		endDate = getRoundedDate(defaultEnd, defaultEnd, false)
 		dateType = 'startOnly'
 	} else if (!effectiveStartDate && effectiveEndDate) {
-		// Only end date (or only due date) — extend backward by DEFAULT_SPAN_DAYS
 		endDate = getRoundedDate(effectiveEndDate, effectiveEndDate, false)
 		const defaultStart = new Date(endDate)
 		defaultStart.setDate(defaultStart.getDate() - DEFAULT_SPAN_DAYS)
 		startDate = getRoundedDate(defaultStart, defaultStart, true)
 		dateType = 'endOnly'
 	} else {
-		// No dates at all — use defaults (existing behavior)
 		startDate = getRoundedDate(undefined, props.defaultTaskStartDate, true)
 		endDate = getRoundedDate(undefined, props.defaultTaskEndDate, false)
 		dateType = 'both'
@@ -205,52 +290,170 @@ function transformTaskToGanttBar(t: ITask): GanttBarModel {
 			hasActualDates: Boolean(t.startDate && (t.endDate || t.dueDate)),
 			dateType,
 			isDone: t.done,
+			isParent: node.isParent,
+			hasDerivedDates: node.hasDerivedDates,
+			indentLevel: node.indentLevel,
 		},
 	}
 }
 
+// Build the task tree when tasks change
 watch(
 	[tasks, filters],
+	() => {
+		allNodes.value = buildGanttTaskTree(tasks.value)
+	},
+	{deep: true, immediate: true},
+)
+
+// Derive bars, rows, and cells from visible nodes
+watch(
+	[visibleNodes, filters],
 	() => {
 		const bars: GanttBarModel[] = []
 		const rows: string[] = []
 		const cells: Record<string, string[]> = {}
 
-		const filteredTasks = Array.from(tasks.value.values()).filter(task => {
-			const hasAnyDate = Boolean(task.startDate || task.endDate || task.dueDate)
+		visibleNodes.value.forEach((node, index) => {
+			const bar = transformTaskToGanttBar(node)
 
+			// Check if task is visible in the current date range
+			const hasAnyDate = Boolean(node.task.startDate || node.task.endDate || node.task.dueDate || node.hasDerivedDates)
 			if (!filters.value.showTasksWithoutDates && !hasAnyDate) {
-				return false
+				return
+			}
+			if (bar.start > dateToDate.value || bar.end < dateFromDate.value) {
+				return
 			}
 
-			const bar = transformTaskToGanttBar(task)
-
-			// Task is visible if it overlaps with the current date range
-			return bar.start <= dateToDate.value && bar.end >= dateFromDate.value
-		})
-		
-		filteredTasks.forEach((t, index) => {
-			const bar = transformTaskToGanttBar(t)
 			bars.push(bar)
-			
+
 			const rowId = `row-${index}`
 			rows.push(rowId)
-			
+
 			const rowCells: string[] = []
-			timelineData.value.forEach((date, dayIndex) => {
+			timelineData.value.forEach((_, dayIndex) => {
 				rowCells.push(`${rowId}-cell-${dayIndex}`)
 			})
 			cells[rowId] = rowCells
 		})
-		
-		// Group bars by rows (one bar per row for now)
+
 		ganttBars.value = bars.map(bar => [bar])
 		ganttRows.value = rows
 		cellsByRow.value = cells
-		
 	},
 	{deep: true, immediate: true},
 )
+
+// Compute bar positions for arrow rendering
+const ROW_HEIGHT = 40
+
+const barPositions = computed(() => {
+	const positions = new Map<number, GanttBarPosition>()
+	const ds = dragState.value
+	const dragPixelOffset = ds ? ds.currentDays * DAY_WIDTH_PIXELS : 0
+
+	ganttBars.value.forEach((rowBars, rowIndex) => {
+		for (const bar of rowBars) {
+			const taskId = Number(bar.id)
+			let x = computeBarX(bar.start)
+			let width = computeBarWidth(bar)
+			const y = rowIndex * ROW_HEIGHT + ROW_HEIGHT / 2
+
+			// Apply drag/resize offset for the active bar
+			if (ds && bar.id === ds.barId && dragPixelOffset !== 0) {
+				if (isDragging.value) {
+					x += dragPixelOffset
+				} else if (isResizing.value) {
+					if (ds.edge === 'start') {
+						x += dragPixelOffset
+						width -= dragPixelOffset
+					} else {
+						width += dragPixelOffset
+					}
+				}
+			}
+
+			positions.set(taskId, {x, y, width, rowIndex})
+		}
+	})
+
+	return positions
+})
+
+function computeBarX(date: Date): number {
+	const diff = Math.ceil(
+		(roundToNaturalDayBoundary(date, true).getTime() - dateFromDate.value.getTime()) /
+		MILLISECONDS_A_DAY,
+	)
+	return diff * DAY_WIDTH_PIXELS
+}
+
+function computeBarWidth(bar: GanttBarModel): number {
+	const diff = Math.ceil(
+		(roundToNaturalDayBoundary(bar.end).getTime() - roundToNaturalDayBoundary(bar.start, true).getTime()) /
+		MILLISECONDS_A_DAY,
+	)
+	return diff * DAY_WIDTH_PIXELS
+}
+
+// Compute relation arrows
+const relationArrows = computed<GanttArrow[]>(() => {
+	return buildRelationArrows(tasks.value, barPositions.value, hiddenToAncestor.value)
+})
+
+const totalHeight = computed(() => ganttRows.value.length * ROW_HEIGHT)
+
+// Compute parent-child group bands for visual grouping background
+const GROUP_BAND_PADDING = 12
+
+const parentGroupBands = computed(() => {
+	const bands: Array<{ startIndex: number; endIndex: number; left: number; width: number }> = []
+	const bars = ganttBars.value
+	const positions = barPositions.value
+
+	for (let i = 0; i < bars.length; i++) {
+		const bar = bars[i]?.[0]
+		if (!bar?.meta?.isParent) continue
+
+		const parentLevel = bar.meta.indentLevel ?? 0
+		let endIndex = i
+
+		// Find last consecutive child with deeper indent
+		for (let j = i + 1; j < bars.length; j++) {
+			const childBar = bars[j]?.[0]
+			const childLevel = childBar?.meta?.indentLevel ?? 0
+			if (childLevel <= parentLevel) break
+			endIndex = j
+		}
+
+		// Only create a band if there are actual children visible
+		if (endIndex > i) {
+			// Compute horizontal extent from bar positions
+			let minX = Infinity
+			let maxX = -Infinity
+
+			for (let k = i; k <= endIndex; k++) {
+				const taskId = Number(bars[k]?.[0]?.id)
+				const pos = positions.get(taskId)
+				if (!pos) continue
+				minX = Math.min(minX, pos.x)
+				maxX = Math.max(maxX, pos.x + pos.width)
+			}
+
+			if (minX < Infinity) {
+				bands.push({
+					startIndex: i,
+					endIndex,
+					left: minX - GROUP_BAND_PADDING,
+					width: maxX - minX + GROUP_BAND_PADDING * 2,
+				})
+			}
+		}
+	}
+
+	return bands
+})
 
 function updateGanttTask(id: string, newStart: Date, newEnd: Date) {
 	const task = tasks.value.get(Number(id))
@@ -554,6 +757,19 @@ onUnmounted(() => {
 	inline-size: max-content;
 	min-inline-size: 100%;
 	position: relative;
+}
+
+.gantt-rows-container {
+	position: relative;
+}
+
+.gantt-group-band {
+	position: absolute;
+	background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.06);
+	border: 1px solid hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.12);
+	border-radius: 6px;
+	pointer-events: none;
+	z-index: 1;
 }
 
 .gantt-rows {

@@ -109,14 +109,11 @@ func (tl *TeamProject) Create(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	err = events.Dispatch(&ProjectSharedWithTeamEvent{
+	events.DispatchOnCommit(s, &ProjectSharedWithTeamEvent{
 		Project: l,
 		Team:    team,
 		Doer:    a,
 	})
-	if err != nil {
-		return err
-	}
 
 	err = updateProjectLastUpdated(s, l)
 	return

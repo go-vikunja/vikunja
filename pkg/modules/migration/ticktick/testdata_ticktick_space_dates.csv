@@ -1,0 +1,9 @@
+"Date: 2026-02-27+0000"
+"Version: 7.1"
+"Status:
+0 Normal
+1 Completed
+2 Archived"
+"Folder Name","List Name","Title","Kind","Tags","Content","Is Check list","Start Date","Due Date","Reminder","Repeat","Priority","Status","Created Time","Completed Time","Order","Timezone","Is All Day","Is Floating","Column Name","Column Order","View Mode","taskId","parentId"
+"Work","Project Beta","Task with space dates","TEXT","","A task exported with space-separated dates","N","2026-02-20 10:00:00","2026-02-27 14:59:52","","","0","0","2026-02-15 09:30:00","","-1099511627776","Europe/Berlin",,"false",,,"list","1",""
+"Work","Project Beta","Completed task with space dates","TEXT","","This task was completed","N","","","","","0","1","2026-02-10 08:00:00","2026-02-25 16:45:30","0","Europe/Berlin","false","false",,,"list","2",""

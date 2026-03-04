@@ -217,60 +217,62 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			.
 		</p>
 
-		<table
+		<div
 			v-if="tokens.length > 0"
-			class="table"
+			class="has-horizontal-overflow"
 		>
-			<thead>
-				<tr>
-					<th>{{ $t('misc.id') }}</th>
-					<th>{{ $t('user.settings.apiTokens.attributes.title') }}</th>
-					<th>{{ $t('user.settings.apiTokens.attributes.permissions') }}</th>
-					<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
-					<th>{{ $t('misc.created') }}</th>
-					<th class="has-text-end">
-						{{ $t('misc.actions') }}
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="tk in tokens"
-					:key="tk.id"
-				>
-					<td>{{ tk.id }}</td>
-					<td>{{ tk.title }}</td>
-					<td class="is-capitalized">
-						<template
-							v-for="(v, p) in tk.permissions"
-							:key="'permission-' + p"
-						>
-							<strong>{{ formatPermissionTitle(p) }}:</strong>
-							{{ v.map(formatPermissionTitle).join(', ') }}
-							<br>
-						</template>
-					</td>
-					<td>
-						{{ formatDisplayDate(tk.expiresAt) }}
-						<p
-							v-if="tk.expiresAt < new Date()"
-							class="has-text-danger"
-						>
-							{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
-						</p>
-					</td>
-					<td>{{ formatDisplayDate(tk.created) }}</td>
-					<td class="has-text-end">
-						<XButton
-							variant="secondary"
-							@click="() => {tokenToDelete = tk; showDeleteModal = true}"
-						>
-							{{ $t('misc.delete') }}
-						</XButton>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>{{ $t('misc.id') }}</th>
+						<th>{{ $t('user.settings.apiTokens.attributes.title') }}</th>
+						<th>{{ $t('user.settings.apiTokens.attributes.permissions') }}</th>
+						<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
+						<th>{{ $t('misc.created') }}</th>
+						<th class="has-text-end">
+							{{ $t('misc.actions') }}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="tk in tokens"
+						:key="tk.id"
+					>
+						<td>{{ tk.id }}</td>
+						<td>{{ tk.title }}</td>
+						<td class="is-capitalized">
+							<template
+								v-for="(v, p) in tk.permissions"
+								:key="'permission-' + p"
+							>
+								<strong>{{ formatPermissionTitle(p) }}:</strong>
+								{{ v.map(formatPermissionTitle).join(', ') }}
+								<br>
+							</template>
+						</td>
+						<td>
+							{{ formatDisplayDate(tk.expiresAt) }}
+							<p
+								v-if="tk.expiresAt < new Date()"
+								class="has-text-danger"
+							>
+								{{ $t('user.settings.apiTokens.expired', {ago: formatDateSince(tk.expiresAt)}) }}
+							</p>
+						</td>
+						<td>{{ formatDisplayDate(tk.created) }}</td>
+						<td class="has-text-end">
+							<XButton
+								variant="secondary"
+								@click="() => {tokenToDelete = tk; showDeleteModal = true}"
+							>
+								{{ $t('misc.delete') }}
+							</XButton>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 
 		<form
 			v-if="showCreateForm"
@@ -373,7 +375,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			</p>
 			<XButton
 				:loading="service.loading"
-				@click="createToken"
+				type="submit"
 			>
 				{{ $t('user.settings.apiTokens.createToken') }}
 			</XButton>

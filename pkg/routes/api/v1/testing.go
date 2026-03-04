@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/labstack/echo/v5"
@@ -60,6 +61,11 @@ func HandleTesting(c *echo.Context) error {
 			"message": err.Error(),
 		})
 	}
+
+	// Wait for all async event handlers from the previous test to complete
+	// before modifying the database. Without this, handlers hold SQLite
+	// connections and starve this request's truncate/insert operations.
+	events.WaitForPendingHandlers()
 
 	truncate := c.QueryParam("truncate")
 	if truncate == "true" || truncate == "" {

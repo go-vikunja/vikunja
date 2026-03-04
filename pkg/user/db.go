@@ -16,6 +16,12 @@
 
 package user
 
+import "code.vikunja.io/api/pkg/db"
+
+func init() {
+	db.RegisterTables(GetTables())
+}
+
 // GetTables returns all structs which are also a table.
 func GetTables() []interface{} {
 	return []interface{}{

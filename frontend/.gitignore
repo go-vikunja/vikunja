@@ -42,3 +42,5 @@ test-results/
 # histoire
 .histoire
 package-lock.json
+# Sentry Config File
+.env.sentry-build-plugin

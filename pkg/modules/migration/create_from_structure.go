@@ -22,6 +22,7 @@ import (
 	"xorm.io/xorm"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background/handler"
@@ -38,10 +39,18 @@ func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.Us
 	if err != nil {
 		log.Errorf("[creating structure] Error while creating structure: %s", err.Error())
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 
-	return s.Commit()
+	err = s.Commit()
+	if err != nil {
+		events.CleanupPending(s)
+		return err
+	}
+
+	events.DispatchPending(s)
+	return nil
 }
 
 func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBuckets, user *user.User) (err error) {

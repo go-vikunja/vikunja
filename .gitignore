@@ -9,6 +9,8 @@ config.yml.sample
 !.gitea/ISSUE_TEMPLATE/config.yml
 docs/themes/
 *.db
+*.db-shm
+*.db-wal
 Run
 dist/
 cover.*

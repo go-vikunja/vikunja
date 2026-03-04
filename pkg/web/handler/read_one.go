@@ -23,6 +23,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -63,10 +64,12 @@ func (c *WebHandler) ReadOneWeb(ctx *echo.Context) error {
 	canRead, maxPermission, err := currentStruct.CanRead(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 	if !canRead {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		log.Warningf("Tried to read while not having the permissions for it (User: %v)", currentAuth)
 		return echo.NewHTTPError(http.StatusForbidden, "You don't have the permission to see this")
 	}
@@ -75,6 +78,7 @@ func (c *WebHandler) ReadOneWeb(ctx *echo.Context) error {
 	err = currentStruct.ReadOne(s, currentAuth)
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 
@@ -86,8 +90,11 @@ func (c *WebHandler) ReadOneWeb(ctx *echo.Context) error {
 
 	err = s.Commit()
 	if err != nil {
+		events.CleanupPending(s)
 		return err
 	}
+
+	events.DispatchPending(s)
 
 	return ctx.JSON(http.StatusOK, currentStruct)
 }

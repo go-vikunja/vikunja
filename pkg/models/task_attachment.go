@@ -97,11 +97,12 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realna
 		return err
 	}
 
-	return events.Dispatch(&TaskAttachmentCreatedEvent{
+	events.DispatchOnCommit(s, &TaskAttachmentCreatedEvent{
 		Task:       &task,
 		Attachment: ta,
 		Doer:       ta.CreatedBy,
 	})
+	return nil
 }
 
 // ReadOne returns a task attachment
@@ -348,11 +349,12 @@ func (ta *TaskAttachment) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	return events.Dispatch(&TaskAttachmentDeletedEvent{
+	events.DispatchOnCommit(s, &TaskAttachmentDeletedEvent{
 		Task:       &task,
 		Attachment: ta,
 		Doer:       doer,
 	})
+	return nil
 }
 
 func getTaskAttachmentsByTaskIDs(s *xorm.Session, taskIDs []int64) (attachments []*TaskAttachment, err error) {

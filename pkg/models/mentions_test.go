@@ -22,6 +22,7 @@ import (
 	"regexp"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
@@ -92,6 +93,18 @@ func TestFindMentionedUsersInText(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHandleMentionsWithNilTask(t *testing.T) {
+	t.Run("HandleTaskUpdatedMentions should not panic with nil task", func(t *testing.T) {
+		events.TestListener(t, &TaskUpdatedEvent{Task: nil, Doer: nil}, &HandleTaskUpdatedMentions{})
+	})
+	t.Run("HandleTaskCreateMentions should not panic with nil task", func(t *testing.T) {
+		events.TestListener(t, &TaskCreatedEvent{Task: nil, Doer: nil}, &HandleTaskCreateMentions{})
+	})
+	t.Run("HandleTaskCommentEditMentions should not panic with nil task", func(t *testing.T) {
+		events.TestListener(t, &TaskCommentUpdatedEvent{Task: nil, Comment: nil, Doer: nil}, &HandleTaskCommentEditMentions{})
+	})
 }
 
 func TestSendingMentionNotification(t *testing.T) {

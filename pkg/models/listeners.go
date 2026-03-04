@@ -245,6 +245,10 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 		return err
 	}
 
+	if event.Task == nil || event.Comment == nil {
+		return nil
+	}
+
 	sess := db.NewSession()
 	defer sess.Close()
 
@@ -390,6 +394,10 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	if event.Task == nil {
+		return nil
+	}
+
 	sess := db.NewSession()
 	defer sess.Close()
 
@@ -420,6 +428,10 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	err = json.Unmarshal(msg.Payload, event)
 	if err != nil {
 		return err
+	}
+
+	if event.Task == nil {
+		return nil
 	}
 
 	sess := db.NewSession()
@@ -541,6 +553,10 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
+	if event.Task == nil {
+		return nil
+	}
+
 	// This operation is potentially very resource-heavy, because we don't know if a task is included
 	// in a filter until we evaluate that filter. We need to evaluate each filter individually - since
 	// there can be many filters, this can take a while to execute.
@@ -570,15 +586,15 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 
 	var fallbackTimezone string
 	if event.Doer != nil {
-		var u *user.User
-		u, err = user.GetUserByID(s, event.Doer.GetID())
-		if err == nil {
+		u, userErr := user.GetUserByID(s, event.Doer.GetID())
+		if userErr == nil {
 			fallbackTimezone = u.Timezone
-			// When a link share triggered this event, the user id will be 0, and thus this fails.
-			// Only passing the value along when the user was retrieved successfully ensures the whole handler
-			// does not fail because of that.
-			// When the fallback is empty, it will be handled later anyhow.
 		}
+		// When a link share triggered this event, the user id will be 0, and thus this fails.
+		// Similarly, when the doer has been deleted, the user will not exist.
+		// Only passing the value along when the user was retrieved successfully ensures the whole handler
+		// does not fail because of that.
+		// When the fallback is empty, it will be handled later anyhow.
 	}
 
 	taskBuckets := []*TaskBucket{}

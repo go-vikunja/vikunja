@@ -5277,6 +5277,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/tasks/{taskID}/duplicate": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Copies a task with all its properties (labels, assignees, attachments, reminders) into the same project. Creates a \"copied from\" relation between the new and original task.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Duplicate a task",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The task ID to duplicate",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The duplicated task.",
+                        "schema": {
+                            "$ref": "#/definitions/models.TaskDuplicate"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the task.",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/tasks/{taskID}/labels/bulk": {
             "post": {
                 "security": [
@@ -7527,7 +7576,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings.",
+                "description": "Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings, unless both users share an external team (synced via OIDC/LDAP), in which case they can always find each other.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8943,6 +8992,19 @@ const docTemplate = `{
                 },
                 "updated": {
                     "type": "string"
+                }
+            }
+        },
+        "models.TaskDuplicate": {
+            "type": "object",
+            "properties": {
+                "duplicated_task": {
+                    "description": "The duplicated task",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Task"
+                        }
+                    ]
                 }
             }
         },

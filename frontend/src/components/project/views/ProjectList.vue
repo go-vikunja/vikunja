@@ -322,13 +322,13 @@ function handleListNavigation(e: KeyboardEvent) {
 		return
 	}
 
-	if (e.key === 'j') {
+	if (e.code === 'KeyJ') {
 		e.preventDefault()
 		focusTask(Math.min(focusedIndex.value + 1, tasks.value.length - 1))
 		return
 	}
 
-	if (e.key === 'k') {
+	if (e.code === 'KeyK') {
 		e.preventDefault()
 		if (focusedIndex.value === -1) {
 			focusTask(tasks.value.length - 1)
@@ -345,7 +345,7 @@ function handleListNavigation(e: KeyboardEvent) {
 		return
 	}
 
-	if (e.key === 'Enter') {
+	if (e.code === 'Enter') {
 		if (e.isComposing) {
 			return
 		}

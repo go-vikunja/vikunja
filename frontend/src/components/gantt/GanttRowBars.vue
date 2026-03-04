@@ -52,8 +52,9 @@
 				</linearGradient>
 			</defs>
 
-			<!-- Main bar -->
+			<!-- Main bar (regular task) -->
 			<rect
+				v-if="!bar.meta?.isParent"
 				:x="getBarX(bar)"
 				:y="4"
 				:width="getBarWidth(bar)"
@@ -70,6 +71,45 @@
 				:aria-pressed="isRowFocused"
 				@pointerdown="handleBarPointerDown(bar, $event)"
 			/>
+
+			<!-- Parent summary bar (full height with diamond endpoints) -->
+			<g
+				v-if="bar.meta?.isParent"
+				class="gantt-bar gantt-parent-bar"
+				role="button"
+				:aria-label="getBarAriaLabel(bar)"
+				:aria-pressed="isRowFocused"
+				@pointerdown="handleBarPointerDown(bar, $event)"
+			>
+				<rect
+					:x="getBarX(bar)"
+					:y="4"
+					:width="getBarWidth(bar)"
+					:height="32"
+					:rx="4"
+					:fill="getBarFillAttr(bar)"
+					:opacity="bar.meta?.isDone ? 0.5 : 1"
+					:stroke="getBarStroke(bar)"
+					:stroke-width="getBarStrokeWidth(bar)"
+					:stroke-dasharray="bar.meta?.hasDerivedDates ? '4,2' : 'none'"
+				/>
+				<!-- Left diamond -->
+				<polygon
+					:points="getLeftDiamondPoints(bar)"
+					:fill="getParentDiamondFill(bar)"
+					:stroke="getBarFillAttr(bar)"
+					stroke-width="1"
+					:opacity="bar.meta?.isDone ? 0.5 : 1"
+				/>
+				<!-- Right diamond -->
+				<polygon
+					:points="getRightDiamondPoints(bar)"
+					:fill="getParentDiamondFill(bar)"
+					:stroke="getBarFillAttr(bar)"
+					stroke-width="1"
+					:opacity="bar.meta?.isDone ? 0.5 : 1"
+				/>
+			</g>
 
 			<!-- Left resize handle (hidden for endOnly bars) -->
 			<rect
@@ -130,6 +170,38 @@
 				{{ bar.meta?.label || bar.id }}
 			</text>
 		</GanttBarPrimitive>
+
+		<!-- Collapse/expand chevron for parent tasks — rendered after bars so it paints on top -->
+		<g
+			v-if="isParent && bars[0]"
+			class="gantt-collapse-toggle"
+			:transform="`translate(${Math.max(0, getBarX(bars[0]) - 14)}, 14)`"
+			role="button"
+			:aria-label="isCollapsed
+				? $t('project.gantt.expandGroup', { task: bars[0]?.meta?.label || '' })
+				: $t('project.gantt.collapseGroup', { task: bars[0]?.meta?.label || '' })"
+			tabindex="0"
+			@pointerdown.stop="emit('toggleCollapse')"
+			@keydown.enter.stop="emit('toggleCollapse')"
+		>
+			<rect
+				x="-2"
+				y="-2"
+				width="14"
+				height="14"
+				fill="transparent"
+			/>
+			<polygon
+				v-if="isCollapsed"
+				points="2,0 10,5 2,10"
+				fill="var(--grey-500)"
+			/>
+			<polygon
+				v-else
+				points="0,2 10,2 5,10"
+				fill="var(--grey-500)"
+			/>
+		</g>
 	</svg>
 </template>
 
@@ -164,12 +236,15 @@ const props = defineProps<{
 	focusedRow: string | null
 	focusedCell: number | null
 	rowId: string
+	isParent: boolean
+	isCollapsed: boolean
 }>()
 
 const emit = defineEmits<{
 	(e: 'barPointerDown', bar: GanttBarModel, event: PointerEvent): void
 	(e: 'startResize', bar: GanttBarModel, edge: 'start' | 'end', event: PointerEvent): void
 	(e: 'updateTask', id: string, newStart: Date, newEnd: Date): void
+	(e: 'toggleCollapse'): void
 }>()
 
 const {t} = useI18n({useScope: 'global'})
@@ -247,6 +322,29 @@ const getBarTextX = computed(() => (bar: GanttBarModel) => {
 	// so the title remains visible within the visible portion of the bar.
 	return Math.max(getBarX.value(bar) + 8, 8)
 })
+
+// Diamond endpoint helpers for parent summary bars
+const DIAMOND_SIZE = 5
+
+function getLeftDiamondPoints(bar: GanttBarModel): string {
+	const x = getBarX.value(bar) - DIAMOND_SIZE
+	const cy = 20 // vertical center of the bar
+	return `${x},${cy} ${x + DIAMOND_SIZE},${cy - DIAMOND_SIZE} ${x + DIAMOND_SIZE * 2},${cy} ${x + DIAMOND_SIZE},${cy + DIAMOND_SIZE}`
+}
+
+function getRightDiamondPoints(bar: GanttBarModel): string {
+	const x = getBarX.value(bar) + getBarWidth.value(bar) + DIAMOND_SIZE
+	const cy = 20
+	return `${x - DIAMOND_SIZE * 2},${cy} ${x - DIAMOND_SIZE},${cy - DIAMOND_SIZE} ${x},${cy} ${x - DIAMOND_SIZE},${cy + DIAMOND_SIZE}`
+}
+
+function getParentDiamondFill(bar: GanttBarModel): string {
+	// Use a darker shade for contrast on the full-height bar
+	if (bar.meta?.color) {
+		return 'var(--white)'
+	}
+	return 'var(--white)'
+}
 
 function isPartialDate(bar: GanttBarModel) {
 	return bar.meta?.dateType === 'startOnly' || bar.meta?.dateType === 'endOnly'
@@ -363,10 +461,32 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 	}
 }
 
+.gantt-collapse-toggle {
+	pointer-events: all;
+	cursor: pointer;
+
+	&:hover polygon {
+		fill: var(--grey-700);
+	}
+
+	&:focus {
+		outline: none;
+
+		polygon {
+			fill: var(--primary);
+		}
+	}
+}
+
 .gantt-bar-text {
 	font-size: .85rem;
 	pointer-events: none;
 	user-select: none;
+}
+
+.gantt-parent-bar {
+	cursor: grab;
+	pointer-events: all;
 }
 
 :deep(.gantt-resize-handle) {

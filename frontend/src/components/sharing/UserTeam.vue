@@ -41,99 +41,101 @@
 			</div>
 		</div>
 
-		<table
+		<div
 			v-if="sharables.length > 0"
-			class="table has-actions is-striped is-hoverable is-fullwidth mbe-4"
+			class="has-horizontal-overflow mbe-4"
 		>
-			<tbody>
-				<tr
-					v-for="s in sharables"
-					:key="s.id"
-				>
-					<template v-if="shareType === 'user'">
-						<td>{{ getDisplayName(s) }}</td>
-						<td>
-							<template v-if="s.id === userInfo.id">
-								<b class="is-success">{{ $t('project.share.userTeam.you') }}</b>
+			<table class="table has-actions is-striped is-hoverable is-fullwidth">
+				<tbody>
+					<tr
+						v-for="s in sharables"
+						:key="s.id"
+					>
+						<template v-if="shareType === 'user'">
+							<td>{{ getDisplayName(s) }}</td>
+							<td>
+								<template v-if="s.id === userInfo.id">
+									<b class="is-success">{{ $t('project.share.userTeam.you') }}</b>
+								</template>
+							</td>
+						</template>
+						<template v-if="shareType === 'team'">
+							<td>
+								<RouterLink
+									:to="{
+										name: 'teams.edit',
+										params: { id: s.id },
+									}"
+								>
+									{{ s.name }}
+								</RouterLink>
+							</td>
+						</template>
+						<td class="type">
+							<template v-if="s.permission === PERMISSIONS.ADMIN">
+								<span class="icon is-small">
+									<Icon icon="lock" />
+								</span>
+								{{ $t('project.share.permission.admin') }}
+							</template>
+							<template v-else-if="s.permission === PERMISSIONS.READ_WRITE">
+								<span class="icon is-small">
+									<Icon icon="pen" />
+								</span>
+								{{ $t('project.share.permission.readWrite') }}
+							</template>
+							<template v-else>
+								<span class="icon is-small">
+									<Icon icon="users" />
+								</span>
+								{{ $t('project.share.permission.read') }}
 							</template>
 						</td>
-					</template>
-					<template v-if="shareType === 'team'">
-						<td>
-							<RouterLink
-								:to="{
-									name: 'teams.edit',
-									params: { id: s.id },
-								}"
-							>
-								{{ s.name }}
-							</RouterLink>
+						<td
+							v-if="userIsAdmin"
+							class="actions"
+						>
+							<div class="select">
+								<select
+									v-model="selectedPermission[s.id]"
+									class="mie-2"
+									@change="toggleType(s)"
+								>
+									<option
+										:selected="s.permission === PERMISSIONS.READ"
+										:value="PERMISSIONS.READ"
+									>
+										{{ $t('project.share.permission.read') }}
+									</option>
+									<option
+										:selected="s.permission === PERMISSIONS.READ_WRITE"
+										:value="PERMISSIONS.READ_WRITE"
+									>
+										{{ $t('project.share.permission.readWrite') }}
+									</option>
+									<option
+										:selected="s.permission === PERMISSIONS.ADMIN"
+										:value="PERMISSIONS.ADMIN"
+									>
+										{{ $t('project.share.permission.admin') }}
+									</option>
+								</select>
+							</div>
+							<XButton
+								danger
+								icon="trash-alt"
+								@click="
+									() => {
+										sharable = s
+										showDeleteModal = true
+									}
+								"
+							/>
 						</td>
-					</template>
-					<td class="type">
-						<template v-if="s.permission === PERMISSIONS.ADMIN">
-							<span class="icon is-small">
-								<Icon icon="lock" />
-							</span>
-							{{ $t('project.share.permission.admin') }}
-						</template>
-						<template v-else-if="s.permission === PERMISSIONS.READ_WRITE">
-							<span class="icon is-small">
-								<Icon icon="pen" />
-							</span>
-							{{ $t('project.share.permission.readWrite') }}
-						</template>
-						<template v-else>
-							<span class="icon is-small">
-								<Icon icon="users" />
-							</span>
-							{{ $t('project.share.permission.read') }}
-						</template>
-					</td>
-					<td
-						v-if="userIsAdmin"
-						class="actions"
-					>
-						<div class="select">
-							<select
-								v-model="selectedPermission[s.id]"
-								class="mie-2"
-								@change="toggleType(s)"
-							>
-								<option
-									:selected="s.permission === PERMISSIONS.READ"
-									:value="PERMISSIONS.READ"
-								>
-									{{ $t('project.share.permission.read') }}
-								</option>
-								<option
-									:selected="s.permission === PERMISSIONS.READ_WRITE"
-									:value="PERMISSIONS.READ_WRITE"
-								>
-									{{ $t('project.share.permission.readWrite') }}
-								</option>
-								<option
-									:selected="s.permission === PERMISSIONS.ADMIN"
-									:value="PERMISSIONS.ADMIN"
-								>
-									{{ $t('project.share.permission.admin') }}
-								</option>
-							</select>
-						</div>
-						<XButton
-							danger
-							icon="trash-alt"
-							@click="
-								() => {
-									sharable = s
-									showDeleteModal = true
-								}
-							"
-						/>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 
 		<Nothing v-else>
 			{{ $t('project.share.userTeam.notShared', {type: shareTypeNames}) }}

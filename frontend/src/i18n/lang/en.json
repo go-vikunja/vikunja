@@ -68,7 +68,8 @@
       "alreadyHaveAnAccount": "Already have an account?",
       "remember": "Stay logged in",
       "registrationDisabled": "Registration is disabled.",
-      "passwordResetTokenMissing": "Password reset token is missing."
+      "passwordResetTokenMissing": "Password reset token is missing.",
+      "registrationFailed": "An error occurred during registration. Please check your input and try again."
     },
     "settings": {
       "title": "Settings",
@@ -406,7 +407,10 @@
       "taskAriaLabel": "Task: {task}",
       "taskAriaLabelById": "Task {id}",
       "partialDatesStart": "Start date only (open-ended)",
-      "partialDatesEnd": "End date only (open-ended)"
+      "partialDatesEnd": "End date only (open-ended)",
+      "expandGroup": "Expand group: {task}",
+      "collapseGroup": "Collapse group: {task}",
+      "toggleRelationArrows": "Toggle relation arrows"
     },
     "table": {
       "title": "Table",
@@ -847,6 +851,7 @@
       "doneAt": "Done {0}",
       "updateSuccess": "The task was saved successfully.",
       "deleteSuccess": "The task has been deleted successfully.",
+      "duplicateSuccess": "The task was duplicated successfully.",
       "belongsToProject": "This task belongs to project '{project}'",
       "back": "Back to project",
       "due": "Due {at}",
@@ -873,6 +878,7 @@
         "attachments": "Add Attachments",
         "relatedTasks": "Add Relation",
         "moveProject": "Move",
+        "duplicate": "Duplicate",
         "color": "Set Color",
         "delete": "Delete",
         "favorite": "Add to Favorites",

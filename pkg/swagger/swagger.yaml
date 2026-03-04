@@ -840,6 +840,13 @@ definitions:
       updated:
         type: string
     type: object
+  models.TaskDuplicate:
+    properties:
+      duplicated_task:
+        allOf:
+        - $ref: '#/definitions/models.Task'
+        description: The duplicated task
+    type: object
   models.TaskPosition:
     properties:
       position:
@@ -5299,6 +5306,39 @@ paths:
       summary: Update an existing task comment
       tags:
       - task
+  /tasks/{taskID}/duplicate:
+    put:
+      consumes:
+      - application/json
+      description: Copies a task with all its properties (labels, assignees, attachments,
+        reminders) into the same project. Creates a "copied from" relation between
+        the new and original task.
+      parameters:
+      - description: The task ID to duplicate
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The duplicated task.
+          schema:
+            $ref: '#/definitions/models.TaskDuplicate'
+        "403":
+          description: The user does not have access to the task.
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Duplicate a task
+      tags:
+      - task
   /tasks/{taskID}/labels/bulk:
     post:
       consumes:
@@ -6678,7 +6718,9 @@ paths:
       consumes:
       - application/json
       description: Search for a user by its username, name or full email. Name (not
-        username) or email require that the user has enabled this in their settings.
+        username) or email require that the user has enabled this in their settings,
+        unless both users share an external team (synced via OIDC/LDAP), in which
+        case they can always find each other.
       parameters:
       - description: The search criteria.
         in: query

@@ -7,8 +7,7 @@ ENV PNPM_CACHE_FOLDER=.cache/pnpm/
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV CYPRESS_INSTALL_BINARY=0
 
-COPY frontend/pnpm-lock.yaml frontend/package.json frontend/.npmrc ./ 
-COPY frontend/patches ./patches
+COPY frontend/pnpm-lock.yaml frontend/package.json frontend/.npmrc ./
 RUN npm install -g corepack && corepack enable && \
     pnpm install --frozen-lockfile
 COPY frontend/ ./
@@ -31,6 +30,8 @@ RUN export PATH=$PATH:$GOPATH/bin && \
 	mage build:clean && \
     mage release:xgo "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}"
 
+RUN mkdir -p /tmp && chmod 1777 /tmp
+
 #  ┬─┐┬ ┐┌┐┐┌┐┐┬─┐┬─┐
 #  │┬┘│ │││││││├─ │┬┘
 #  ┘└┘┘─┘┘└┘┘└┘┴─┘┘└┘
@@ -48,6 +49,9 @@ LABEL org.opencontainers.image.title='Vikunja'
 WORKDIR /app/vikunja
 ENTRYPOINT [ "/app/vikunja/vikunja" ]
 EXPOSE 3456
+
+COPY --from=apibuilder /tmp /tmp
+
 USER 1000
 
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/

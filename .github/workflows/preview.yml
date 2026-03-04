@@ -5,7 +5,8 @@ on:
   # This is safe because:
   # 1. We explicitly checkout the PR's head commit (no base branch code execution)
   # 2. We ONLY build a Docker image (isolated container, no workflow scripts from PR)
-  # 3. No actions that execute PR code in the workflow context (no github-script, etc)
+  # 3. The github-script step only uses safe PR metadata (number, SHA) — no PR-supplied
+  #    text (title, body, commit messages) is interpolated, so there is no injection risk
   # 4. Build happens in isolated Docker container with well-defined Dockerfile
   pull_request_target:
 
@@ -15,6 +16,7 @@ jobs:
     permissions:
       packages: write
       contents: read
+      pull-requests: write
     steps:
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
@@ -63,3 +65,78 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
+      - name: Comment on PR
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const fullSha = context.payload.pull_request.head.sha;
+            const shortSha = fullSha.substring(0, 7);
+            const base = 'preview.vikunja.dev';
+            const image = `ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}`;
+            const marker = '<!-- vikunja-preview-comment -->';
+
+            const prTag = `pr-${prNumber}`;
+            const shaTag = `sha-${fullSha}`;
+            const newShaRow = `| https://${shaTag}.${base} | \`${image}:${shaTag}\` | \`${shortSha}\` |`;
+
+            // Collect previous SHA rows from existing comment
+            let previousShaRows = [];
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              previousShaRows = existing.body
+                .split('\n')
+                .filter(l => l.includes(`sha-`) && l.includes(`.${base}`));
+            }
+
+            // Remove duplicate if this SHA was already recorded
+            previousShaRows = previousShaRows.filter(r => !r.includes(shaTag));
+
+            const allShaRows = [newShaRow, ...previousShaRows].join('\n');
+
+            const body = [
+              marker,
+              `### Preview Deployment`,
+              ``,
+              `Preview deployments for this PR are available at:`,
+              ``,
+              `| URL | Tag | Commit |`,
+              `| --- | --- | --- |`,
+              `| https://${prTag}.${base} | \`${image}:${prTag}\` | latest |`,
+              allShaRows,
+              ``,
+              `The preview environment will start automatically on first visit. Subsequent pushes to this PR will update the \`${prTag}\` image — the preview picks up the new version on restart. The per-commit URLs point to a specific version and will not change.`,
+              ``,
+              `<details>`,
+              `<summary>Run locally with Docker</summary>`,
+              ``,
+              '```bash',
+              `docker pull ${image}:${prTag}`,
+              `docker run -p 3456:3456 ${image}:${prTag}`,
+              '```',
+              `</details>`,
+              ``,
+              `_Last updated for commit ${shortSha}_`,
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+            }

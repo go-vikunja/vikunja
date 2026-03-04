@@ -483,3 +483,39 @@ func TestTask(t *testing.T) {
 		})
 	})
 }
+
+func TestTaskDuplicate(t *testing.T) {
+	testHandler := webHandlerTest{
+		user: &testuser1,
+		strFunc: func() handler.CObject {
+			return &models.TaskDuplicate{}
+		},
+		t: t,
+	}
+
+	t.Run("duplicate task", func(t *testing.T) {
+		rec, err := testHandler.testCreateWithUser(nil, map[string]string{"projecttask": "2"}, `{}`)
+		require.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `"title":"task #2 done"`)
+		assert.Contains(t, rec.Body.String(), `"duplicated_task"`)
+	})
+
+	t.Run("nonexistent task", func(t *testing.T) {
+		_, err := testHandler.testCreateWithUser(nil, map[string]string{"projecttask": "99999"}, `{}`)
+		require.Error(t, err)
+		assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
+	})
+
+	t.Run("no permission", func(t *testing.T) {
+		noAccessHandler := webHandlerTest{
+			user: &testuser15,
+			strFunc: func() handler.CObject {
+				return &models.TaskDuplicate{}
+			},
+			t: t,
+		}
+		_, err := noAccessHandler.testCreateWithUser(nil, map[string]string{"projecttask": "1"}, `{}`)
+		require.Error(t, err)
+		assert.Contains(t, getHTTPErrorMessage(err), "Forbidden")
+	})
+}

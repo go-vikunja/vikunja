@@ -1,5 +1,5 @@
 import {ref, onMounted, onBeforeUnmount} from 'vue'
-import {eventToHotkeyString} from '@github/hotkey'
+import {eventToShortcutString} from '@/helpers/shortcut'
 
 import {getTaskIdentifier} from '@/models/task'
 import type {ITask} from '@/modelTypes/ITask'
@@ -39,10 +39,10 @@ export function useTaskDetailShortcuts({
 
 	// See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 	async function handleTaskHotkey(event: KeyboardEvent) {
-		const hotkeyString = eventToHotkeyString(event)
-		if (!hotkeyString) return
+		const shortcutString = eventToShortcutString(event)
+		if (!shortcutString) return
 
-		if (hotkeyString === 'Control+s' || hotkeyString === 'Meta+s') {
+		if (shortcutString === 'Control+KeyS' || shortcutString === 'Meta+KeyS') {
 			event.preventDefault()
 			onSave()
 			return
@@ -58,12 +58,12 @@ export function useTaskDetailShortcuts({
 			return
 		}
 
-		if (hotkeyString === 'Control+.') {
+		if (shortcutString === 'Control+Period') {
 			await copySavely(window.location.href)
 			return
 		}
 
-		if (hotkeyString === '.') {
+		if (shortcutString === 'Period') {
 			dotKeyPressedTimes.value++
 			if (dotKeyPressedTimeout !== null) {
 				clearTimeout(dotKeyPressedTimeout)

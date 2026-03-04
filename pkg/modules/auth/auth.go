@@ -55,6 +55,15 @@ const refreshTokenCookiePath = "/api/v1/user/token/refresh" //nolint:gosec // no
 // it on refresh requests. HttpOnly prevents JavaScript access (XSS protection).
 func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 	secure := strings.HasPrefix(config.ServicePublicURL.GetString(), "https")
+	// SameSite=None allows cross-origin sending (needed for the Electron
+	// desktop app where the page is on localhost but the API is remote),
+	// however browsers require Secure=true for SameSite=None cookies.
+	// When running over plain HTTP (e.g. local dev or E2E tests), fall
+	// back to Lax so the cookie is still accepted by the browser.
+	sameSite := http.SameSiteLaxMode
+	if secure {
+		sameSite = http.SameSiteNoneMode
+	}
 	c.SetCookie(&http.Cookie{
 		Name:     RefreshTokenCookieName,
 		Value:    token,
@@ -62,7 +71,7 @@ func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   secure,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: sameSite,
 	})
 }
 

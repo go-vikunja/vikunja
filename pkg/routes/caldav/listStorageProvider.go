@@ -24,6 +24,7 @@ import (
 
 	"code.vikunja.io/api/pkg/caldav"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	user2 "code.vikunja.io/api/pkg/user"
@@ -311,6 +312,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to create task in CreateResource: %v, task: %+v", err, vTask)
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, err
 	}
 
@@ -319,6 +321,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to persist labels in CreateResource: %v, labels: %+v", err, vTask.Labels)
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, err
 	}
 
@@ -327,13 +330,17 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to persist relations in CreateResource: %v, relations: %+v", err, vTask.RelatedTasks)
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, err
 	}
 
 	if err := s.Commit(); err != nil {
 		log.Errorf("[CALDAV] Failed to commit transaction in CreateResource: %v", err)
+		events.CleanupPending(s)
 		return nil, err
 	}
+
+	events.DispatchPending(s)
 
 	// Build up the proper response
 	rr := VikunjaProjectResourceAdapter{
@@ -369,11 +376,13 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	if err != nil {
 		log.Errorf("[CALDAV] Permission check failed in UpdateResource for user %s, task %d: %v", vcls.user.Username, vcls.task.ID, err)
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, err
 	}
 	if !canUpdate {
 		log.Warningf("[CALDAV] User %s does not have permission to update task %d", vcls.user.Username, vcls.task.ID)
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, errs.ForbiddenError
 	}
 
@@ -382,6 +391,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to update task in UpdateResource: %v, task: %+v", err, vTask)
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, err
 	}
 
@@ -389,6 +399,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to persist labels in UpdateResource: %v, labels: %+v", err, vTask.Labels)
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, err
 	}
 
@@ -396,13 +407,17 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 	if err != nil {
 		log.Errorf("[CALDAV] Failed to persist relations in UpdateResource: %v, relations: %+v", err, vTask.RelatedTasks)
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return nil, err
 	}
 
 	if err := s.Commit(); err != nil {
 		log.Errorf("[CALDAV] Failed to commit transaction in UpdateResource: %v", err)
+		events.CleanupPending(s)
 		return nil, err
 	}
+
+	events.DispatchPending(s)
 
 	// Build up the proper response
 	rr := VikunjaProjectResourceAdapter{
@@ -423,9 +438,11 @@ func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
 		canDelete, err := vcls.task.CanDelete(s, vcls.user)
 		if err != nil {
 			_ = s.Rollback()
+			events.CleanupPending(s)
 			return err
 		}
 		if !canDelete {
+			events.CleanupPending(s)
 			return errs.ForbiddenError
 		}
 
@@ -433,10 +450,17 @@ func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
 		err = vcls.task.Delete(s, vcls.user)
 		if err != nil {
 			_ = s.Rollback()
+			events.CleanupPending(s)
 			return err
 		}
 
-		return s.Commit()
+		err = s.Commit()
+		if err != nil {
+			events.CleanupPending(s)
+			return err
+		}
+
+		events.DispatchPending(s)
 	}
 
 	return nil

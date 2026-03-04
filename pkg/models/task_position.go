@@ -238,9 +238,10 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 
 	log.Debugf("Inserted %d new positions for %d total tasks in view %d", count, len(allTasks), view.ID)
 
-	return events.Dispatch(&TaskPositionsRecalculatedEvent{
+	events.DispatchOnCommit(s, &TaskPositionsRecalculatedEvent{
 		NewTaskPositions: newPositions,
 	})
+	return nil
 }
 
 func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskPosition, err error) {
@@ -297,13 +298,15 @@ func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error
 
 	log.Debugf("Repair: inserted %d new positions for view %d", count, view.ID)
 
-	return events.Dispatch(&TaskPositionsRecalculatedEvent{
+	events.DispatchOnCommit(s, &TaskPositionsRecalculatedEvent{
 		NewTaskPositions: newPositions,
 	})
+	return nil
 }
 
 func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {
-	if t.Position == 0 {
+	position := t.Position
+	if position == 0 {
 		lowestPosition := &TaskPosition{}
 		exists, err := s.Where("project_view_id = ?", view.ID).
 			OrderBy("position asc").
@@ -312,7 +315,7 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 			return nil, err
 		}
 		if exists {
-			if lowestPosition.Position == 0 {
+			if lowestPosition.Position < MinPositionSpacing {
 				err = RecalculateTaskPositions(s, view, a)
 				if err != nil {
 					return nil, err
@@ -327,14 +330,14 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 				}
 			}
 
-			t.Position = lowestPosition.Position / 2
+			position = lowestPosition.Position / 2
 		}
 	}
 
 	return &TaskPosition{
 		TaskID:        t.ID,
 		ProjectViewID: view.ID,
-		Position:      calculateDefaultPosition(t.Index, t.Position),
+		Position:      calculateDefaultPosition(t.Index, position),
 	}, nil
 }
 

@@ -67,108 +67,110 @@
 				</XButton>
 			</div>
 
-			<table
+			<div
 				v-if="linkShares.length > 0"
-				class="table has-actions is-striped is-hoverable is-fullwidth"
+				class="has-horizontal-overflow"
 			>
-				<thead>
-					<tr>
-						<th />
-						<th v-if="availableViews.length > 0">
-							{{ $t('project.share.links.view') }}
-						</th>
-						<th>{{ $t('project.share.attributes.delete') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="s in linkShares"
-						:key="s.id"
-					>
-						<td>
-							<p
-								v-if="s.name !== ''"
-								class="mbe-2 is-italic"
-							>
-								{{ s.name }}
-							</p>
-
-							<p class="mbe-2">
-								<i18n-t
-									keypath="project.share.links.sharedBy"
-									scope="global"
+				<table class="table has-actions is-striped is-hoverable is-fullwidth">
+					<thead>
+						<tr>
+							<th />
+							<th v-if="availableViews.length > 0">
+								{{ $t('project.share.links.view') }}
+							</th>
+							<th>{{ $t('project.share.attributes.delete') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="s in linkShares"
+							:key="s.id"
+						>
+							<td>
+								<p
+									v-if="s.name !== ''"
+									class="mbe-2 is-italic"
 								>
-									<strong>{{ getDisplayName(s.sharedBy) }}</strong>
-								</i18n-t>
-							</p>
+									{{ s.name }}
+								</p>
 
-							<p class="mbe-2">
-								<template v-if="s.permission === PERMISSIONS.ADMIN">
-									<span class="icon is-small">
-										<Icon icon="lock" />
-									</span>&nbsp;
-									{{ $t('project.share.permission.admin') }}
-								</template>
-								<template v-else-if="s.permission === PERMISSIONS.READ_WRITE">
-									<span class="icon is-small">
-										<Icon icon="pen" />
-									</span>&nbsp;
-									{{ $t('project.share.permission.readWrite') }}
-								</template>
-								<template v-else>
-									<span class="icon is-small">
-										<Icon icon="users" />
-									</span>&nbsp;
-									{{ $t('project.share.permission.read') }}
-								</template>
-							</p>
+								<p class="mbe-2">
+									<i18n-t
+										keypath="project.share.links.sharedBy"
+										scope="global"
+									>
+										<strong>{{ getDisplayName(s.sharedBy) }}</strong>
+									</i18n-t>
+								</p>
+
+								<p class="mbe-2">
+									<template v-if="s.permission === PERMISSIONS.ADMIN">
+										<span class="icon is-small">
+											<Icon icon="lock" />
+										</span>&nbsp;
+										{{ $t('project.share.permission.admin') }}
+									</template>
+									<template v-else-if="s.permission === PERMISSIONS.READ_WRITE">
+										<span class="icon is-small">
+											<Icon icon="pen" />
+										</span>&nbsp;
+										{{ $t('project.share.permission.readWrite') }}
+									</template>
+									<template v-else>
+										<span class="icon is-small">
+											<Icon icon="users" />
+										</span>&nbsp;
+										{{ $t('project.share.permission.read') }}
+									</template>
+								</p>
 						
-							<FormField
-								:model-value="shareLinks[s.id]"
-								readonly
-								type="text"
-							>
-								<template #addon>
-									<XButton
-										v-tooltip="$t('misc.copy')"
-										:shadow="false"
-										@click="copy(shareLinks[s.id])"
-									>
-										<span class="icon">
-											<Icon icon="paste" />
-										</span>
-									</XButton>
-								</template>
-							</FormField>
-						</td>
-						<td v-if="availableViews.length > 0">
-							<div class="select">
-								<select v-model="selectedViews[s.id]">
-									<option
-										v-for="(view) in availableViews"
-										:key="view.id"
-										:value="view.id"
-									>
-										{{ view.title }}
-									</option>
-								</select>
-							</div>
-						</td>
-						<td class="actions">
-							<XButton
-								danger
-								icon="trash-alt"
-								@click="
-									() => {
-										linkIdToDelete = s.id
-										showDeleteModal = true
-									}
-								"
-							/>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+								<FormField
+									:model-value="shareLinks[s.id]"
+									readonly
+									type="text"
+								>
+									<template #addon>
+										<XButton
+											v-tooltip="$t('misc.copy')"
+											:shadow="false"
+											@click="copy(shareLinks[s.id])"
+										>
+											<span class="icon">
+												<Icon icon="paste" />
+											</span>
+										</XButton>
+									</template>
+								</FormField>
+							</td>
+							<td v-if="availableViews.length > 0">
+								<div class="select">
+									<select v-model="selectedViews[s.id]">
+										<option
+											v-for="(view) in availableViews"
+											:key="view.id"
+											:value="view.id"
+										>
+											{{ view.title }}
+										</option>
+									</select>
+								</div>
+							</td>
+							<td class="actions">
+								<XButton
+									danger
+									icon="trash-alt"
+									@click="
+										() => {
+											linkIdToDelete = s.id
+											showDeleteModal = true
+										}
+									"
+								/>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 
 		<Modal

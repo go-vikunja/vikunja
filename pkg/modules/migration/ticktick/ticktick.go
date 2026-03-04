@@ -34,7 +34,11 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
-const timeISO = "2006-01-02T15:04:05-0700"
+var timeFormats = []string{
+	"2006-01-02T15:04:05-0700",
+	"2006-01-02 15:04:05",
+	"2006-01-02T15:04:05Z",
+}
 
 type Migrator struct {
 }
@@ -71,7 +75,12 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 	if csv == "" {
 		return nil
 	}
-	date.Time, err = time.Parse(timeISO, csv)
+	for _, format := range timeFormats {
+		date.Time, err = time.Parse(format, csv)
+		if err == nil {
+			return nil
+		}
+	}
 	return err
 }
 

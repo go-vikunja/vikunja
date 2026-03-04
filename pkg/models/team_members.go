@@ -70,11 +70,12 @@ func (tm *TeamMember) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	doer, _ := user2.GetFromAuth(a)
-	return events.Dispatch(&TeamMemberAddedEvent{
+	events.DispatchOnCommit(s, &TeamMemberAddedEvent{
 		Team:   team,
 		Member: member,
 		Doer:   doer,
 	})
+	return nil
 }
 
 // Delete deletes a user from a team
@@ -119,17 +120,13 @@ func (tm *TeamMember) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	err = s.Commit()
-	if err != nil {
-		return err
-	}
-
 	doer, _ := user2.GetFromAuth(a)
-	return events.Dispatch(&TeamMemberRemovedEvent{
+	events.DispatchOnCommit(s, &TeamMemberRemovedEvent{
 		Team:   t,
 		Member: user,
 		Doer:   doer,
 	})
+	return nil
 }
 
 func (tm *TeamMember) MembershipExists(s *xorm.Session) (exists bool, err error) {
