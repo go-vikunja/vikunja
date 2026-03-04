@@ -18,7 +18,6 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/files"
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
@@ -70,8 +69,6 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		return err
 	}
 
-	log.Debugf("Duplicating task %d", td.TaskID)
-
 	// Create the new task
 	newTask := &Task{
 		Title:       originalTask.Title,
@@ -95,8 +92,6 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		return err
 	}
 
-	log.Debugf("Duplicated task %d into new task %d", td.TaskID, newTask.ID)
-
 	// Duplicate labels
 	labelTasks := []*LabelTask{}
 	err = s.Where("task_id = ?", td.TaskID).Find(&labelTasks)
@@ -111,8 +106,6 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		}
 	}
 
-	log.Debugf("Duplicated labels from task %d into %d", td.TaskID, newTask.ID)
-
 	// Duplicate attachments (copy underlying files)
 	attachments, err := getTaskAttachmentsByTaskIDs(s, []int64{td.TaskID})
 	if err != nil {
@@ -124,8 +117,7 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		attachment.File = &files.File{ID: attachment.FileID}
 		if err := attachment.File.LoadFileMetaByID(); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
-				log.Debugf("Not duplicating attachment (file %d) because it does not exist", attachment.FileID)
-				continue
+					continue
 			}
 			return err
 		}
@@ -141,8 +133,6 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 			_ = attachment.File.File.Close()
 		}
 	}
-
-	log.Debugf("Duplicated attachments from task %d into %d", td.TaskID, newTask.ID)
 
 	// Create "copied from/to" relation
 	rel := &TaskRelation{
@@ -163,8 +153,6 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	if _, err := s.Insert(reverseRel); err != nil {
 		return err
 	}
-
-	log.Debugf("Created copy relations between task %d and %d", td.TaskID, newTask.ID)
 
 	// Re-read the task to populate all fields for the response
 	td.Task = newTask
