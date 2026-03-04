@@ -2,6 +2,7 @@ import {defineSetupVue3} from '@histoire/plugin-vue'
 import {i18n} from './i18n'
 
 // import './histoire.css' // Import global CSS
+import './styles/tailwind.css'
 import './styles/global.scss'
 
 import {createPinia} from 'pinia'

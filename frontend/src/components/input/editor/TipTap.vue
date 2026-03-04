@@ -142,9 +142,9 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {eventToHotkeyString} from '@github/hotkey'
+import {eventToShortcutString} from '@/helpers/shortcut'
 
 import EditorToolbar from './EditorToolbar.vue'
 
@@ -168,8 +168,6 @@ import {TaskList} from '@tiptap/extension-list'
 import {TaskItemWithId} from './taskItemWithId'
 import HardBreak from '@tiptap/extension-hard-break'
 
-import {Node} from '@tiptap/pm/model'
-
 import Commands from './commands'
 import suggestionSetup from './suggestion'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
@@ -191,7 +189,6 @@ import {setLinkInEditor} from '@/components/input/editor/setLinkInEditor'
 import {saveEditorDraft, loadEditorDraft, clearEditorDraft} from '@/helpers/editorDraftStorage'
 
 const props = withDefaults(defineProps<{
-	modelValue: string,
 	uploadCallback?: UploadCallback,
 	isEditEnabled?: boolean,
 	bottomActions?: BottomAction[],
@@ -215,7 +212,9 @@ const props = withDefaults(defineProps<{
 	storageKey: '',
 })
 
-const emit = defineEmits(['update:modelValue', 'save'])
+const emit = defineEmits(['save'])
+
+const modelValue = defineModel<string>({ default: '' })
 
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 
@@ -286,7 +285,7 @@ const CustomImage = Image.extend({
 
 			nextTick(async () => {
 
-				const img = document.getElementById(id)
+				const img = document.getElementById(id) as HTMLImageElement | null
 
 				if (!img || !(img instanceof HTMLImageElement)) return
 
@@ -334,7 +333,7 @@ const UPLOAD_PLACEHOLDER_ELEMENT = '<p>UPLOAD_PLACEHOLDER</p>'
 let lastSavedState = ''
 
 watch(
-	() => props.modelValue,
+	modelValue,
 	(newValue) => {
 		if (!contentHasChanged.value) {
 			lastSavedState = newValue
@@ -344,7 +343,7 @@ watch(
 )
 
 watch(
-	() => internalMode.value,
+	internalMode,
 	mode => {
 		if (mode === 'preview') {
 			contentHasChanged.value = false
@@ -371,11 +370,10 @@ const PasteHandler = Extension.create({
 					handlePaste: (view, event) => {
 
 						// Handle images pasted from clipboard
-						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items && event.clipboardData.items.length > 0) {
+						if (typeof props.uploadCallback !== 'undefined' && event.clipboardData?.items?.length) {
 
-							for (let i = 0; i < event.clipboardData.items.length; i++) {
-								const item = event.clipboardData.items[i]
-								if (item && item.kind === 'file' && item.type.startsWith('image/')) {
+							for (const item of event.clipboardData.items) {
+								if (item.kind === 'file' && item.type.startsWith('image/')) {
 									const file = item.getAsFile()
 									if (file) {
 										uploadAndInsertFiles([file])
@@ -438,25 +436,19 @@ const extensions : Extensions = [
 	}),
 
 	Placeholder.configure({
-		placeholder: ({editor}) => {
-			if (!isEditing.value) {
+		placeholder({editor}) {
+			if (!isEditing.value || editor.getText() !== '' && !editor.isFocused) {
 				return ''
 			}
 
-			if (editor.getText() !== '' && !editor.isFocused) {
-				return ''
-			}
-
-			return props.placeholder !== ''
-				? props.placeholder
-				: t('input.editor.placeholder')
+			return props.placeholder || t('input.editor.placeholder')
 		},
 	}),
 	Typography,
 	Underline,
 	NonInclusiveLink.configure({
 		openOnClick: false,
-		validate: (href: string) => (new RegExp(
+		validate: (href) => (new RegExp(
 			`^(https?|${additionalLinkProtocols.join('|')}):\\/\\/`,
 			'i',
 		)).test(href),
@@ -475,7 +467,7 @@ const extensions : Extensions = [
 	TaskList,
 	TaskItemWithId.configure({
 		nested: true,
-		onReadOnlyChecked: (node: Node, checked: boolean): boolean => {
+		onReadOnlyChecked(node, checked) {
 			if (!props.isEditEnabled) {
 				return false
 			}
@@ -575,24 +567,16 @@ const editor = useEditor({
 	// eslint-disable-next-line vue/no-ref-object-reactivity-loss
 	editable: isEditing.value,
 	extensions: extensions,
-	onUpdate: () => {
-		bubbleNow()
-	},
+	onUpdate: bubbleNow,
 	parseOptions: {
 		preserveWhitespace: true,
 	},
 })
 
-watch(
-	() => isEditing.value,
-	() => {
-		editor.value?.setEditable(isEditing.value)
-	},
-	{immediate: true},
-)
+watchEffect(() => editor.value?.setEditable(isEditing.value, false))
 
 watch(
-	() => props.modelValue,
+	modelValue,
 	value => {
 		if (!editor?.value) return
 
@@ -606,20 +590,20 @@ watch(
 )
 
 function bubbleNow() {
-	if (editor.value?.getHTML() === props.modelValue ||
-		(editor.value?.getHTML() === '<p></p>') && props.modelValue === '') {
+	const editorVal = editor.value!.getHTML()
+	if (editorVal === modelValue.value ||
+		(editorVal === '<p></p>') && modelValue.value === '') {
 		return
 	}
 
 	contentHasChanged.value = true
-	const newContent = editor.value?.getHTML()
 
 	// Save to localStorage if storageKey is provided
 	if (props.storageKey) {
-		saveEditorDraft(props.storageKey, newContent || '')
+		saveEditorDraft(props.storageKey, editorVal)
 	}
 
-	emit('update:modelValue', newContent)
+	modelValue.value = editorVal
 }
 
 function bubbleSave() {
@@ -760,18 +744,18 @@ onMounted(async () => {
 	// Load draft from localStorage if available
 	if (props.storageKey) {
 		const draft = loadEditorDraft(props.storageKey)
-		if (draft && isEditorContentEmpty(props.modelValue)) {
+		if (draft && isEditorContentEmpty(modelValue.value)) {
 			// Only load draft if current content is empty
 			// Set content and force edit mode for immediate editing
 			editor.value?.commands.setContent(draft, {emitUpdate: false})
 			internalMode.value = 'edit'
-			// Emit the model update so parent sees the restored content
-			emit('update:modelValue', draft)
+			// Update the model so parent sees the restored content
+			modelValue.value = draft
 			return
 		}
 	}
 
-	setModeAndValue(props.modelValue)
+	setModeAndValue(modelValue.value)
 })
 
 onBeforeUnmount(() => {
@@ -796,9 +780,9 @@ function setFocusToEditor(event: KeyboardEvent) {
 		return
 	}
 
-	const hotkeyString = eventToHotkeyString(event)
-	if (!hotkeyString) return
-	if (hotkeyString !== props.editShortcut ||
+	const shortcutString = eventToShortcutString(event)
+	if (!shortcutString) return
+	if (shortcutString !== props.editShortcut ||
 		event.target.tagName.toLowerCase() === 'input' ||
 		event.target.tagName.toLowerCase() === 'textarea' ||
 		event.target.contentEditable === 'true') {

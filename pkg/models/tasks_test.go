@@ -70,6 +70,7 @@ func TestTask_Create(t *testing.T) {
 			"bucket_id": 1,
 		}, false)
 
+		events.DispatchPending(s)
 		events.AssertDispatched(t, &TaskCreatedEvent{})
 	})
 	t.Run("with reminders", func(t *testing.T) {
@@ -279,6 +280,7 @@ func TestTask_Update(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
+		events.DispatchPending(s)
 		// Verify exactly ONE task.updated event was dispatched
 		count := events.CountDispatchedEvents("task.updated")
 		assert.Equal(t, 1, count, "Expected exactly 1 task.updated event, got %d", count)

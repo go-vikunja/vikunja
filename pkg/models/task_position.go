@@ -238,9 +238,10 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 
 	log.Debugf("Inserted %d new positions for %d total tasks in view %d", count, len(allTasks), view.ID)
 
-	return events.Dispatch(&TaskPositionsRecalculatedEvent{
+	events.DispatchOnCommit(s, &TaskPositionsRecalculatedEvent{
 		NewTaskPositions: newPositions,
 	})
+	return nil
 }
 
 func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskPosition, err error) {
@@ -297,9 +298,10 @@ func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error
 
 	log.Debugf("Repair: inserted %d new positions for view %d", count, view.ID)
 
-	return events.Dispatch(&TaskPositionsRecalculatedEvent{
+	events.DispatchOnCommit(s, &TaskPositionsRecalculatedEvent{
 		NewTaskPositions: newPositions,
 	})
+	return nil
 }
 
 func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {

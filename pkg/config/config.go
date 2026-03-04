@@ -644,7 +644,9 @@ func InitConfig() {
 		MigrationMicrosoftTodoRedirectURL.Set(ServicePublicURL.GetString() + "migrate/microsoft-todo")
 	}
 
-	if DefaultSettingsTimezone.GetString() == "" {
+	if tz := DefaultSettingsTimezone.GetString(); tz == "" {
+		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
+	} else if _, err := time.LoadLocation(tz); err != nil {
 		DefaultSettingsTimezone.Set(ServiceTimeZone.GetString())
 	}
 

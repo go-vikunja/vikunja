@@ -32,6 +32,11 @@ export const test = base.extend<{
 	authenticatedPage: async ({page, apiContext, currentUser}, use) => {
 		const {token} = await login(page, apiContext, currentUser)
 		await use(page)
+		// Navigate away to stop all frontend requests (notification polling, token
+		// refresh, etc.) before the next test's fixture setup seeds the database.
+		// Without this, the previous test's page can hold DB connections via API
+		// requests, starving the next test's Factory.seed() PATCH call.
+		await page.goto('about:blank').catch(() => {})
 	},
 })
 

@@ -10,6 +10,7 @@
 		:style="{'background-color': color ?? undefined}"
 		:data-task-id="task.id"
 		:data-project-id="task.projectId"
+		:data-is-overdue="isOverdue || undefined"
 		@click.exact="openTaskDetail()"
 		@click.ctrl="() => toggleTaskDone(task)"
 		@click.meta="() => toggleTaskDone(task)"
@@ -18,10 +19,10 @@
 			v-if="coverImageBlobUrl"
 			:src="coverImageBlobUrl"
 			alt=""
-			class="tw-w-full"
+			class="tw:w-full"
 		>
 		<div class="p-2">
-			<div class="tw-flex tw-justify-between">
+			<div class="tw:flex tw:justify-between">
 				<span class="task-id">
 					<Done
 						class="kanban-card__done"
@@ -36,7 +37,7 @@
 					</template>
 					<span
 						v-if="showTaskPosition"
-						class="tw-text-red-600 tw-ps-2"
+						class="tw:text-red-600 tw:ps-2"
 					>
 						{{ task.position }}
 					</span>
@@ -44,7 +45,6 @@
 				<span
 					v-if="task.dueDate > 0"
 					v-tooltip="formatDateLong(task.dueDate)"
-					:class="{'overdue': isOverdue}"
 					class="due-date"
 				>
 					<span class="icon">
@@ -277,9 +277,10 @@ $task-background: var(--white);
 			margin-inline-end: .25rem;
 		}
 
-		&.overdue {
-			color: var(--danger);
-		}
+	}
+
+	&[data-is-overdue] .due-date {
+		color: var(--danger);
 	}
 
 	.label-wrapper .tag {

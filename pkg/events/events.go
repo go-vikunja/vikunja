@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -35,6 +36,19 @@ import (
 )
 
 var pubsub *gochannel.GoChannel
+
+// activeHandlers tracks in-flight event handler goroutines so the test
+// endpoint can wait for them to finish before truncating tables.
+var activeHandlers sync.WaitGroup
+
+// WaitForPendingHandlers blocks until all currently in-flight event handler
+// goroutines have completed (including retries). This is intended for the
+// testing endpoint to avoid connection starvation: async handlers from the
+// previous test can hold SQLite connections, starving the next test's seed
+// request.
+func WaitForPendingHandlers() {
+	activeHandlers.Wait()
+}
 
 // Event represents the event interface used by all events
 type Event interface {
@@ -90,7 +104,19 @@ func InitEvents() (err error) {
 		return nil
 	})
 
+	// handlerTracker is a middleware that tracks in-flight handlers via the
+	// activeHandlers WaitGroup. It wraps the entire processing chain
+	// (including retries) so WaitForPendingHandlers() can drain all work.
+	handlerTracker := func(h message.HandlerFunc) message.HandlerFunc {
+		return func(msg *message.Message) ([]*message.Message, error) {
+			activeHandlers.Add(1)
+			defer activeHandlers.Done()
+			return h(msg)
+		}
+	}
+
 	router.AddMiddleware(
+		handlerTracker,
 		poison,
 		middleware.Retry{
 			MaxRetries:          5,
@@ -127,4 +153,48 @@ func Dispatch(event Event) error {
 
 	msg := message.NewMessage(watermill.NewUUID(), content)
 	return pubsub.Publish(event.Name(), msg)
+}
+
+// pendingEventQueue holds the pending events and a mutex for thread-safe access
+type pendingEventQueue struct {
+	mu     sync.Mutex
+	events []Event
+}
+
+var pendingEvents sync.Map // map[any]*pendingEventQueue
+
+// DispatchOnCommit stores an event to be dispatched later, after a transaction commits.
+// The key should be the *xorm.Session pointer associated with the transaction.
+// Call DispatchPending(key) after s.Commit() to actually dispatch the events.
+// Call CleanupPending(key) on rollback to discard them.
+func DispatchOnCommit(key any, event Event) {
+	val, _ := pendingEvents.LoadOrStore(key, &pendingEventQueue{})
+	queue := val.(*pendingEventQueue)
+	queue.mu.Lock()
+	queue.events = append(queue.events, event)
+	queue.mu.Unlock()
+}
+
+// DispatchPending dispatches all events accumulated for the given key and removes them.
+// Call this after s.Commit(). Safe to call even if no events were registered.
+// If any event fails to dispatch, the error is logged but remaining events are still dispatched.
+func DispatchPending(key any) {
+	val, ok := pendingEvents.LoadAndDelete(key)
+	if !ok {
+		return
+	}
+	queue := val.(*pendingEventQueue)
+	// No need to lock here since we've already removed it from the map
+	// and this key won't receive new events
+	for _, event := range queue.events {
+		if err := Dispatch(event); err != nil {
+			log.Errorf("Failed to dispatch event %s: %v", event.Name(), err)
+		}
+	}
+}
+
+// CleanupPending discards all pending events for the given key without dispatching.
+// Call this when a transaction is rolled back.
+func CleanupPending(key any) {
+	pendingEvents.Delete(key)
 }

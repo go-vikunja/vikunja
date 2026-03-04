@@ -262,11 +262,12 @@ func (rel *TaskRelation) Create(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	return events.Dispatch(&TaskRelationCreatedEvent{
+	events.DispatchOnCommit(s, &TaskRelationCreatedEvent{
 		Task:     &task,
 		Relation: rel,
 		Doer:     doer,
 	})
+	return nil
 }
 
 // ReadOne returns a task relation
@@ -343,9 +344,10 @@ func (rel *TaskRelation) Delete(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	return events.Dispatch(&TaskRelationDeletedEvent{
+	events.DispatchOnCommit(s, &TaskRelationDeletedEvent{
 		Task:     &task,
 		Relation: rel,
 		Doer:     doer,
 	})
+	return nil
 }

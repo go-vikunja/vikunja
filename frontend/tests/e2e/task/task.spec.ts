@@ -217,7 +217,7 @@ test.describe('Task', () => {
 			await expect(page).toHaveURL(/\/projects\/1\/\d+/)
 		})
 
-		test('provides back navigation to the project in the kanban view on mobile', async ({authenticatedPage: page}) => {
+		test('provides close navigation to the project in the kanban view on mobile', async ({authenticatedPage: page}) => {
 			await page.setViewportSize({width: 375, height: 667}) // iphone-8
 
 			const tasks = await TaskFactory.create(1, {
@@ -237,8 +237,9 @@ test.describe('Task', () => {
 			const taskLocator = page.locator('.kanban-view .tasks .task').first()
 			await expect(taskLocator).toBeVisible({timeout: 10000})
 			await taskLocator.click()
-			await expect(page.locator('.task-view .back-button')).toBeVisible()
-			await page.locator('.task-view .back-button').click()
+			// On mobile, the task opens as a modal with a close button instead of a back button
+			await expect(page.locator('.task-view .task-properties .close')).toBeVisible()
+			await page.locator('.task-view .task-properties .close').click()
 			await expect(page).toHaveURL(/\/projects\/\d+\/\d+/)
 		})
 

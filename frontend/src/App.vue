@@ -83,4 +83,6 @@ setLanguage(authStore.settings.language ?? DEFAULT_LANGUAGE)
 useColorScheme()
 </script>
 
+<style src="@/styles/tailwind.css" />
+
 <style lang="scss" src="@/styles/global.scss" />
