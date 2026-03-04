@@ -57,7 +57,10 @@
 				</template>
 			</h6>
 
-			<ChecklistSummary :task="task" />
+			<ChecklistSummary
+				v-if="!isNewTask"
+				:task="task"
+			/>
 
 			<!-- Content and buttons -->
 			<div class="columns mbs-2">
@@ -308,7 +311,7 @@
 
 					<!-- Labels -->
 					<div
-						v-if="activeFields.labels"
+						v-if="activeFields.labels && !isNewTask"
 						class="labels-list details"
 					>
 						<div class="detail-title">
@@ -331,13 +334,14 @@
 						<Description
 							:model-value="task"
 							:can-write="canWrite"
-							:attachment-upload="attachmentUpload"
+							:attachment-upload="isNewTask ? undefined : attachmentUpload"
 							@update:modelValue="Object.assign(task, $event)"
 						/>
 					</div>
 					
 					<!-- Reactions -->
-					<Reactions 
+					<Reactions
+						v-if="!isNewTask"
 						v-model="task.reactions" 
 						entity-kind="tasks"
 						:entity-id="task.id"
@@ -347,7 +351,7 @@
 
 					<!-- Attachments -->
 					<div
-						v-show="activeFields.attachments || hasAttachments"
+						v-show="!isNewTask && (activeFields.attachments || hasAttachments)"
 						class="content attachments"
 					>
 						<Attachments
@@ -360,7 +364,7 @@
 
 					<!-- Related Tasks -->
 					<div
-						v-if="activeFields.relatedTasks"
+						v-if="activeFields.relatedTasks && !isNewTask"
 						class="content details mbe-0"
 					>
 						<h3>
@@ -381,7 +385,7 @@
 
 					<!-- Move Task -->
 					<div
-						v-if="activeFields.moveProject"
+						v-if="activeFields.moveProject && !isNewTask"
 						class="content details"
 					>
 						<h3>
@@ -403,6 +407,7 @@
 
 					<!-- Comments -->
 					<Comments
+						v-if="!isNewTask"
 						:can-write="canWrite"
 						:task-id="taskId"
 						:project-id="task.projectId"
@@ -421,7 +426,85 @@
 					v-if="canWrite || isModal"
 					class="column is-one-third action-buttons d-print-none"
 				>
-					<template v-if="canWrite">
+					<template v-if="canWrite && isNewTask">
+						<XButton
+							icon="check"
+							@click="createNewTask()"
+						>
+							{{ $t('task.detail.save') }}
+						</XButton>
+						
+						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
+						
+						<XButton
+							variant="secondary"
+							icon="users"
+							@click="setFieldActive('assignees')"
+						>
+							{{ $t('task.detail.actions.assign') }}
+						</XButton>
+						<XButton
+							variant="secondary"
+							icon="exclamation-circle"
+							@click="setFieldActive('priority')"
+						>
+							{{ $t('task.detail.actions.priority') }}
+						</XButton>
+						<XButton
+							variant="secondary"
+							icon="percent"
+							@click="setFieldActive('percentDone')"
+						>
+							{{ $t('task.detail.actions.percentDone') }}
+						</XButton>
+						<XButton
+							variant="secondary"
+							icon="fill-drip"
+							:icon-color="color"
+							@click="setFieldActive('color')"
+						>
+							{{ $t('task.detail.actions.color') }}
+						</XButton>
+						
+						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
+						
+						<XButton
+							variant="secondary"
+							icon="calendar"
+							@click="setFieldActive('dueDate')"
+						>
+							{{ $t('task.detail.actions.dueDate') }}
+						</XButton>
+						<XButton
+							variant="secondary"
+							icon="play"
+							@click="setFieldActive('startDate')"
+						>
+							{{ $t('task.detail.actions.startDate') }}
+						</XButton>
+						<XButton
+							variant="secondary"
+							icon="stop"
+							@click="setFieldActive('endDate')"
+						>
+							{{ $t('task.detail.actions.endDate') }}
+						</XButton>
+						<XButton
+							variant="secondary"
+							:icon="['far', 'clock']"
+							@click="setFieldActive('reminders')"
+						>
+							{{ $t('task.detail.actions.reminders') }}
+						</XButton>
+						<XButton
+							variant="secondary"
+							icon="history"
+							@click="setFieldActive('repeatAfter')"
+						>
+							{{ $t('task.detail.actions.repeatAfter') }}
+						</XButton>
+					</template>
+					<template v-else-if="canWrite">
 						<XButton
 							v-shortcut="'KeyT'"
 							:class="{'is-pending': !task.done}"
@@ -571,7 +654,10 @@
 					</template>
 
 					<!-- Created / Updated [by] -->
-					<CreatedUpdated :task="task" />
+					<CreatedUpdated
+						v-if="!isNewTask"
+						:task="task"
+					/>
 				</div>
 			</div>
 			<!-- Created / Updated [by] -->
@@ -613,7 +699,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted, provide} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
 import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
@@ -658,6 +744,7 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {periodToSeconds} from '@/helpers/time/period'
 import {playPopSound} from '@/helpers/playPop'
 
 import {useAttachmentStore} from '@/stores/attachments'
@@ -676,6 +763,7 @@ import type {Action as MessageAction} from '@/message'
 const props = defineProps<{
 	taskId: ITask['id'],
 	backdropView?: RouteLocation['fullPath'],
+	newTaskProjectId?: IProject['id'],
 }>()
 
 defineEmits<{
@@ -693,6 +781,9 @@ const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
+
+const isNewTask = computed(() => props.taskId === 0 && (props.newTaskProjectId ?? 0) > 0)
+provide('isNewTask', isNewTask)
 
 const task = ref<ITask>(new TaskModel())
 const taskNotFound = ref(false)
@@ -767,10 +858,14 @@ const projectRoute = computed(() => ({
 	hash: route.hash,
 }))
 
-const canWrite = computed(() => (
-	task.value.maxPermission !== null &&
-	task.value.maxPermission > PERMISSIONS.READ
-))
+const canWrite = computed(() => {
+	if (isNewTask.value) {
+		const p = projectStore.projects[props.newTaskProjectId!]
+		return p?.maxPermission !== null && p?.maxPermission > PERMISSIONS.READ
+	}
+	return task.value.maxPermission !== null &&
+		task.value.maxPermission > PERMISSIONS.READ
+})
 
 const color = computed(() => {
 	const color = task.value.getHexColor
@@ -877,6 +972,20 @@ watch(
 	() => props.taskId,
 	async (id) => {
 		if (id === undefined) {
+			return
+		}
+
+		// New task mode: initialize blank task
+		if (isNewTask.value) {
+			Object.assign(task.value, new TaskModel({
+				projectId: props.newTaskProjectId,
+			}))
+			taskColor.value = ''
+			await nextTick()
+			scrollToHeading()
+			resolveScrollContainer()
+			updateScrollable()
+			visible.value = true
 			return
 		}
 
@@ -1033,6 +1142,12 @@ async function saveTask(
 		currentTask.endDate = currentTask.dueDate
 	}
 
+	// In new task mode, saveTask is a no-op — field changes just update local state.
+	// Vue v-model already keeps task ref in sync, so nothing to do here.
+	if (isNewTask.value) {
+		return
+	}
+
 	const updatedTask = await taskStore.update(currentTask) // TODO: markraw ?
 	Object.assign(task.value, updatedTask)
 	setActiveFields()
@@ -1045,6 +1160,42 @@ async function saveTask(
 		}]
 	}
 	success({message: t('task.detail.updateSuccess')}, actions)
+}
+
+async function createNewTask() {
+	const t_ = task.value
+	const hexColor = taskColor.value
+
+	let endDate = t_.endDate
+	if (endDate === null && t_.startDate !== null && t_.dueDate !== null) {
+		endDate = t_.dueDate
+	}
+
+	const newTask = new TaskModel({
+		title: t_.title || t('task.newTask'),
+		description: t_.description,
+		projectId: t_.projectId,
+		priority: t_.priority,
+		dueDate: t_.dueDate,
+		startDate: t_.startDate,
+		endDate,
+		hexColor,
+		percentDone: t_.percentDone,
+		reminders: t_.reminders,
+		repeatAfter: t_.repeatAfter?.amount ? periodToSeconds(t_.repeatAfter.amount, t_.repeatAfter.type) : 0,
+		repeatMode: t_.repeatMode,
+	})
+	const createdTask = await taskService.create(newTask)
+
+	// Assign users after creation (assignees API requires a real task ID)
+	if (t_.assignees?.length > 0) {
+		for (const user of t_.assignees) {
+			await taskStore.addAssignee({user, taskId: createdTask.id})
+		}
+	}
+
+	success({message: t('task.detail.createSuccess')})
+	router.replace({name: 'task.detail', params: {id: createdTask.id}})
 }
 
 useTaskDetailShortcuts({

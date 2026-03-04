@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, watch, nextTick} from 'vue'
+import {ref, shallowReactive, watch, nextTick, inject} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import User from '@/components/misc/User.vue'
@@ -62,6 +62,7 @@ const emit = defineEmits<{
 
 const taskStore = useTaskStore()
 const {t} = useI18n({useScope: 'global'})
+const isNewTask = inject('isNewTask', ref(false))
 
 const projectUserService = shallowReactive(new ProjectUserService())
 const foundUsers = ref<IUser[]>([])
@@ -87,24 +88,30 @@ async function addAssignee(user: IUser) {
 	try {
 		nextTick(() => isAdding = true)
 
-		await taskStore.addAssignee({user: user, taskId: props.taskId})
+		if (!isNewTask.value) {
+			await taskStore.addAssignee({user: user, taskId: props.taskId})
+			success({message: t('task.assignee.assignSuccess')})
+		}
 		emit('update:modelValue', assignees.value)
-		success({message: t('task.assignee.assignSuccess')})
 	} finally {
 		nextTick(() => isAdding = false)
 	}
 }
 
 async function removeAssignee(user: IUser) {
-	await taskStore.removeAssignee({user: user, taskId: props.taskId})
+	if (!isNewTask.value) {
+		await taskStore.removeAssignee({user: user, taskId: props.taskId})
+	}
 
-	// Remove the assignee from the project
+	// Remove the assignee from the list
 	for (const a in assignees.value) {
 		if (assignees.value[a].id === user.id) {
 			assignees.value.splice(a, 1)
 		}
 	}
-	success({message: t('task.assignee.unassignSuccess')})
+	if (!isNewTask.value) {
+		success({message: t('task.assignee.unassignSuccess')})
+	}
 }
 
 async function findUser(query: string) {

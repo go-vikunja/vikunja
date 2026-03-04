@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watchEffect,  onBeforeUnmount} from 'vue'
+import {ref, computed, watchEffect, onBeforeUnmount, inject} from 'vue'
 import {onBeforeRouteLeave} from 'vue-router'
 
 import CustomTransition from '@/components/misc/CustomTransition.vue'
@@ -55,7 +55,7 @@ export type AttachmentUploadFunction = (file: File, onSuccess: (attachmentUrl: s
 
 const props = defineProps<{
 	modelValue: ITask,
-	attachmentUpload: AttachmentUploadFunction,
+	attachmentUpload?: AttachmentUploadFunction,
 	canWrite: boolean,
 }>()
 
@@ -63,6 +63,7 @@ const emit = defineEmits<{
 	'update:modelValue': [value: ITask]
 }>()
 
+const isNewTask = inject('isNewTask', ref(false))
 const description = ref<string>('')
 const hasChanges = ref(false)
 watchEffect(() => {
@@ -80,7 +81,10 @@ const loading = computed(() => taskStore.isLoading)
 
 const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
-const descriptionStorageKey = computed(() => `task-description-${props.modelValue.id}`)
+const descriptionStorageKey = computed(() => {
+	if (isNewTask.value) return ''
+	return `task-description-${props.modelValue.id}`
+})
 
 async function saveWithDelay() {
 	if (description.value === props.modelValue.description) {
@@ -119,6 +123,16 @@ async function save() {
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
+
+	// For new tasks, just update the local model without calling API
+	if (isNewTask.value) {
+		emit('update:modelValue', {
+			...props.modelValue,
+			description: description.value,
+		})
+		return
+	}
+
 	saved.value = false
 	saving.value = true
 
@@ -150,11 +164,13 @@ async function save() {
 }
 
 async function uploadCallback(files: File[] | FileList): Promise<string[]> {
+	if (!props.attachmentUpload) return []
+
 	const uploadPromises: Promise<string>[] = []
 
 	files.forEach((file: File) => {
 		const promise = new Promise<string>((resolve) => {
-			props.attachmentUpload(file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
+			props.attachmentUpload!(file, (uploadedFileUrl: string) => resolve(uploadedFileUrl))
 		})
 
 		uploadPromises.push(promise)
