@@ -83,4 +83,13 @@ func TestUserProject(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotContains(t, rec.Body.String(), `user2`)
 	})
+	t.Run("external team member email masked when searching by name", func(t *testing.T) {
+		// User 10 searches for "Some one else" (user 11's name).
+		// Even though user 11 is found via external team, their email should be masked
+		// because the search was by name, not by email.
+		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserList, &testuser10, "", map[string][]string{"s": {"Some one else"}}, nil)
+		require.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `user11`)
+		assert.NotContains(t, rec.Body.String(), `user11@example.com`)
+	})
 }
