@@ -137,7 +137,7 @@
     "postcss-easing-gradients": "3.0.1",
     "postcss-preset-env": "11.2.0",
     "rollup": "4.59.0",
-    "rollup-plugin-visualizer": "6.0.8",
+    "rollup-plugin-visualizer": "6.0.11",
     "sass-embedded": "1.97.3",
     "stylelint": "17.4.0",
     "stylelint-config-property-sort-order-smacss": "10.0.0",
