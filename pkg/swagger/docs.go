@@ -7576,7 +7576,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings.",
+                "description": "Search for a user by its username, name or full email. Name (not username) or email require that the user has enabled this in their settings, unless both users share an external team (synced via OIDC/LDAP), in which case they can always find each other.",
                 "consumes": [
                     "application/json"
                 ],
