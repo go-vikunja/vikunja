@@ -32,6 +32,7 @@
 				class="is-flex is-align-items-center"
 				style="gap: .5rem"
 			>
+				<slot name="header" />
 				<XButton
 					v-if="canWrite && !currentProject?.isArchived"
 					icon="plus"
@@ -39,7 +40,6 @@
 				>
 					{{ $t('task.newTask') }}
 				</XButton>
-				<slot name="header" />
 			</div>
 		</div>
 		<CustomTransition name="fade">
