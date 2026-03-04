@@ -158,7 +158,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 
 	creators := []*userWithTask{}
 	err = s.Table("tasks").
-		Select("DISTINCT tasks.id AS task_id, users.id, users.name, users.username, users.email, users.email_reminders_enabled, users.overdue_tasks_reminders_enabled, users.overdue_tasks_reminders_time, users.language, users.timezone, users.created, users.updated").
+		Select("DISTINCT tasks.id AS task_id, users.id, users.name, users.username, users.email, users.email_reminders_enabled, users.overdue_tasks_reminders_enabled, users.today_tasks_reminders_enabled, users.today_tasks_reminders_time, users.language, users.timezone, users.created, users.updated").
 		Join("INNER", "users", "tasks.created_by_id = users.id").
 		Where(builder.And(conditions...)).
 		Find(&creators)
@@ -182,7 +182,7 @@ func getTaskUsersForTasks(s *xorm.Session, taskIDs []int64, cond builder.Cond) (
 
 	assignees := []*TaskAssigneeWithUser{}
 	err = s.Table("task_assignees").
-		Select("DISTINCT task_assignees.task_id, users.id, users.name, users.username, users.email, users.email_reminders_enabled, users.overdue_tasks_reminders_enabled, users.overdue_tasks_reminders_time, users.language, users.timezone, users.created, users.updated").
+		Select("DISTINCT task_assignees.task_id, users.id, users.name, users.username, users.email, users.email_reminders_enabled, users.overdue_tasks_reminders_enabled, users.today_tasks_reminders_enabled, users.today_tasks_reminders_time, users.language, users.timezone, users.created, users.updated").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
 		Where(builder.And(assigneeConds...)).
 		Find(&assignees)
