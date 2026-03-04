@@ -37,7 +37,6 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	aferos3 "github.com/fclairamb/afero-s3"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -103,8 +102,8 @@ func initS3FileHandler() error {
 		}
 	})
 
-	// Initialize S3 filesystem using afero-s3
-	fs = aferos3.NewFsFromClient(bucket, client)
+	// Initialize S3 filesystem using our minimal S3 afero implementation
+	fs = newS3Fs(bucket, client)
 	afs = &afero.Afero{Fs: fs}
 
 	// Store S3 client and bucket for direct uploads with Content-Length
