@@ -21,6 +21,9 @@ export default class ProjectViewModel extends AbstractModel<IProjectView> implem
 	defaultBucketId = 0
 	doneBucketId = 0
 
+	bucketSortBy = ''
+	bucketSortOrder = ''
+
 	created: Date = new Date()
 	updated: Date = new Date()
 
