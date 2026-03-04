@@ -113,7 +113,9 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	if err != nil {
 		return err
 	}
+	oldToNewAttachmentIDs := make(map[int64]int64)
 	for _, attachment := range attachments {
+		oldAttachmentID := attachment.ID
 		attachment.ID = 0
 		attachment.TaskID = newTask.ID
 		attachment.File = &files.File{ID: attachment.FileID}
@@ -132,6 +134,19 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		err := attachment.NewAttachment(s, sourceFile, attachment.File.Name, attachment.File.Size, doer)
 		if err != nil {
 			return err
+		}
+		oldToNewAttachmentIDs[oldAttachmentID] = attachment.ID
+	}
+
+	// Re-set the cover image if the original task had one
+	if originalTask.CoverImageAttachmentID != 0 {
+		if newAttachmentID, ok := oldToNewAttachmentIDs[originalTask.CoverImageAttachmentID]; ok {
+			newTask.CoverImageAttachmentID = newAttachmentID
+			if _, err := s.Where("id = ?", newTask.ID).
+				Cols("cover_image_attachment_id").
+				Update(newTask); err != nil {
+				return err
+			}
 		}
 	}
 
