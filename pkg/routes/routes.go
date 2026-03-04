@@ -135,10 +135,12 @@ func NewEcho() *echo.Echo {
 			LogURI:      true,
 			LogMethod:   true,
 			LogLatency:  true,
+			LogRemoteIP: true,
 			HandleError: true,
 			LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
 				if v.Error == nil {
 					httpLogger.LogAttrs(context.Background(), slog.LevelInfo, "",
+						slog.String("remote_ip", v.RemoteIP),
 						slog.String("method", v.Method),
 						slog.String("uri", v.URI),
 						slog.Int("status", v.Status),
@@ -146,6 +148,7 @@ func NewEcho() *echo.Echo {
 					)
 				} else {
 					httpLogger.LogAttrs(context.Background(), slog.LevelError, "",
+						slog.String("remote_ip", v.RemoteIP),
 						slog.String("method", v.Method),
 						slog.String("uri", v.URI),
 						slog.Int("status", v.Status),
