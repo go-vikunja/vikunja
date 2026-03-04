@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, onBeforeUnmount, watch} from 'vue'
+import {ref, computed, onMounted, onBeforeUnmount, watch, inject} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
@@ -84,7 +84,6 @@ const props = defineProps<{
 	task: ITask,
 	canWrite: boolean,
 	hasClose: boolean,
-	isNewTask?: boolean,
 }>()
 
 const emit = defineEmits<{
@@ -95,9 +94,10 @@ const emit = defineEmits<{
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 const copy = useCopyToClipboard()
+const isNewTask = inject('isNewTask', ref(false))
 
 async function copyUrl() {
-	if (props.isNewTask) return
+	if (isNewTask.value) return
 	const route = router.resolve({name: 'task.detail', query: {taskId: props.task.id}})
 	const absoluteURL = new URL(route.href, window.location.href).href
 
@@ -108,7 +108,7 @@ const taskStore = useTaskStore()
 const loading = computed(() => taskStore.isLoading)
 
 const textIdentifier = computed(() => {
-	if (props.isNewTask) {
+	if (isNewTask.value) {
 		return t('task.detail.newTaskIdentifier')
 	}
 	return getTaskIdentifier(props.task)
@@ -157,7 +157,7 @@ async function save(title: string) {
 	}
 
 	// For new tasks, just emit the title change without saving to API
-	if (props.isNewTask) {
+	if (isNewTask.value) {
 		emit('update:task', {...props.task, title})
 		titleHasChanges.value = false
 		return
