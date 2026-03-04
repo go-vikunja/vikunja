@@ -96,6 +96,16 @@ async function saveWithDelay() {
 	}
 
 	hasChanges.value = true
+
+	// For new tasks, sync immediately since there's no API call
+	if (isNewTask.value) {
+		emit('update:modelValue', {
+			...props.modelValue,
+			description: description.value,
+		})
+		return
+	}
+
 	if (changeTimeout.value !== null) {
 		clearTimeout(changeTimeout.value)
 	}
