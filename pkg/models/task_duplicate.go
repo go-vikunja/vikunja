@@ -119,7 +119,7 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		attachment.File = &files.File{ID: attachment.FileID}
 		if err := attachment.File.LoadFileMetaByID(); err != nil {
 			if files.IsErrFileDoesNotExist(err) {
-					continue
+				continue
 			}
 			return err
 		}
@@ -127,12 +127,11 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 			return err
 		}
 
-		err := attachment.NewAttachment(s, attachment.File.File, attachment.File.Name, attachment.File.Size, doer)
+		sourceFile := attachment.File.File
+		defer sourceFile.Close()
+		err := attachment.NewAttachment(s, sourceFile, attachment.File.Name, attachment.File.Size, doer)
 		if err != nil {
 			return err
-		}
-		if attachment.File.File != nil {
-			_ = attachment.File.File.Close()
 		}
 	}
 
