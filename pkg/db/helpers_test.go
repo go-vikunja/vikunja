@@ -25,113 +25,97 @@ import (
 	"xorm.io/builder"
 )
 
-func TestMultiFieldSearchParadeDB(t *testing.T) {
-	// Save and restore global state
-	originalParadeDB := paradedbInstalled
-	defer func() { paradedbInstalled = originalParadeDB }()
-
-	// These tests verify the SQL generation for the ParadeDB path.
-	// Since Type() requires an initialized engine, and the test engine is SQLite,
-	// we cannot call MultiFieldSearchWithTableAlias directly for the ParadeDB path.
-	// Instead, we verify the builder.Expr conditions that would be generated.
-
-	t.Run("single field generates fuzzy disjunction", func(t *testing.T) {
-		// Simulate what MultiFieldSearchWithTableAlias generates for ParadeDB single field
-		cond := builder.Expr("title ||| ?::pdb.fuzzy(1, t)", "landing")
-
-		w := builder.NewWriter()
-		err := cond.WriteTo(w)
-		require.NoError(t, err)
-
-		assert.Equal(t, "title ||| ?::pdb.fuzzy(1, t)", w.String())
-		assert.Equal(t, []interface{}{"landing"}, w.Args())
-	})
-
-	t.Run("multi field generates OR of fuzzy disjunctions", func(t *testing.T) {
-		// Simulate what MultiFieldSearchWithTableAlias generates for ParadeDB multi field
-		cond := builder.Or(
-			builder.Expr("title ||| ?::pdb.fuzzy(1, t)", "landing"),
-			builder.Expr("description ||| ?::pdb.fuzzy(1, t)", "landing"),
-		)
-
-		w := builder.NewWriter()
-		err := cond.WriteTo(w)
-		require.NoError(t, err)
-
-		assert.Equal(t, "(title ||| ?::pdb.fuzzy(1, t)) OR (description ||| ?::pdb.fuzzy(1, t))", w.String())
-		assert.Equal(t, []interface{}{"landing", "landing"}, w.Args())
-	})
-
-	t.Run("table alias prefixes field name", func(t *testing.T) {
-		// Simulate what MultiFieldSearchWithTableAlias generates with table alias
-		cond := builder.Expr("tasks.title ||| ?::pdb.fuzzy(1, t)", "test")
-
-		w := builder.NewWriter()
-		err := cond.WriteTo(w)
-		require.NoError(t, err)
-
-		assert.Equal(t, "tasks.title ||| ?::pdb.fuzzy(1, t)", w.String())
-		assert.Equal(t, []interface{}{"test"}, w.Args())
-	})
-
-	t.Run("multi field with table alias", func(t *testing.T) {
-		cond := builder.Or(
-			builder.Expr("tasks.title ||| ?::pdb.fuzzy(1, t)", "test"),
-			builder.Expr("tasks.description ||| ?::pdb.fuzzy(1, t)", "test"),
-		)
-
-		w := builder.NewWriter()
-		err := cond.WriteTo(w)
-		require.NoError(t, err)
-
-		assert.Equal(t, "(tasks.title ||| ?::pdb.fuzzy(1, t)) OR (tasks.description ||| ?::pdb.fuzzy(1, t))", w.String())
-		assert.Equal(t, []interface{}{"test", "test"}, w.Args())
-	})
+// isParadeDB returns true when the test engine is running with ParadeDB.
+// It is safe to call even when no database engine is initialized (x == nil),
+// in which case it returns false.
+func isParadeDB() bool {
+	return x != nil && ParadeDBAvailable()
 }
 
-func TestMultiFieldSearchILIKEFallback(t *testing.T) {
-	// These tests verify the ILIKE fallback path (non-ParadeDB).
-	// Since Type() requires an initialized engine, we test the builder.Like
-	// conditions directly — this is what ILIKE returns for non-Postgres databases.
+func TestMultiFieldSearchSingleField(t *testing.T) {
+	if x == nil {
+		t.Skip("requires initialized database engine")
+	}
 
-	t.Run("single field generates LIKE condition", func(t *testing.T) {
-		// This is what ILIKE("title", "test") returns for SQLite/MySQL
-		cond := &builder.Like{"title", "%test%"}
+	cond := MultiFieldSearchWithTableAlias([]string{"title"}, "landing", "")
 
-		w := builder.NewWriter()
-		err := cond.WriteTo(w)
-		require.NoError(t, err)
+	w := builder.NewWriter()
+	err := cond.WriteTo(w)
+	require.NoError(t, err)
 
-		assert.Equal(t, "title LIKE ?", w.String())
-		assert.Equal(t, []interface{}{"%test%"}, w.Args())
-	})
-
-	t.Run("ILIKE wraps search with wildcards", func(t *testing.T) {
-		// This is what ILIKE("description", "landing") returns for SQLite/MySQL
-		cond := &builder.Like{"description", "%landing%"}
-
-		w := builder.NewWriter()
-		err := cond.WriteTo(w)
-		require.NoError(t, err)
-
-		assert.Equal(t, "description LIKE ?", w.String())
+	if isParadeDB() {
+		assert.Equal(t, "title ||| ?::pdb.fuzzy(1, t)", w.String())
+		assert.Equal(t, []interface{}{"landing"}, w.Args())
+	} else {
+		assert.Contains(t, w.String(), "title")
+		assert.Contains(t, w.String(), "LIKE")
 		assert.Equal(t, []interface{}{"%landing%"}, w.Args())
-	})
+	}
+}
 
-	t.Run("multi field ILIKE generates OR of LIKE conditions", func(t *testing.T) {
-		// This is what MultiFieldSearch generates for non-ParadeDB databases
-		cond := builder.Or(
-			&builder.Like{"title", "%landing%"},
-			&builder.Like{"description", "%landing%"},
-		)
+func TestMultiFieldSearchMultiField(t *testing.T) {
+	if x == nil {
+		t.Skip("requires initialized database engine")
+	}
 
-		w := builder.NewWriter()
-		err := cond.WriteTo(w)
-		require.NoError(t, err)
+	cond := MultiFieldSearchWithTableAlias([]string{"title", "description"}, "landing", "")
 
-		assert.Equal(t, "title LIKE ? OR description LIKE ?", w.String())
+	w := builder.NewWriter()
+	err := cond.WriteTo(w)
+	require.NoError(t, err)
+
+	if isParadeDB() {
+		assert.Equal(t, "(title ||| ?::pdb.fuzzy(1, t)) OR (description ||| ?::pdb.fuzzy(1, t))", w.String())
+		assert.Equal(t, []interface{}{"landing", "landing"}, w.Args())
+	} else {
+		assert.Contains(t, w.String(), "title")
+		assert.Contains(t, w.String(), "description")
+		assert.Contains(t, w.String(), "LIKE")
 		assert.Equal(t, []interface{}{"%landing%", "%landing%"}, w.Args())
-	})
+	}
+}
+
+func TestMultiFieldSearchWithTableAlias(t *testing.T) {
+	if x == nil {
+		t.Skip("requires initialized database engine")
+	}
+
+	cond := MultiFieldSearchWithTableAlias([]string{"title"}, "test", "tasks")
+
+	w := builder.NewWriter()
+	err := cond.WriteTo(w)
+	require.NoError(t, err)
+
+	if isParadeDB() {
+		assert.Equal(t, "tasks.title ||| ?::pdb.fuzzy(1, t)", w.String())
+		assert.Equal(t, []interface{}{"test"}, w.Args())
+	} else {
+		assert.Contains(t, w.String(), "tasks.title")
+		assert.Contains(t, w.String(), "LIKE")
+		assert.Equal(t, []interface{}{"%test%"}, w.Args())
+	}
+}
+
+func TestMultiFieldSearchMultiFieldWithTableAlias(t *testing.T) {
+	if x == nil {
+		t.Skip("requires initialized database engine")
+	}
+
+	cond := MultiFieldSearchWithTableAlias([]string{"title", "description"}, "test", "tasks")
+
+	w := builder.NewWriter()
+	err := cond.WriteTo(w)
+	require.NoError(t, err)
+
+	if isParadeDB() {
+		assert.Equal(t, "(tasks.title ||| ?::pdb.fuzzy(1, t)) OR (tasks.description ||| ?::pdb.fuzzy(1, t))", w.String())
+		assert.Equal(t, []interface{}{"test", "test"}, w.Args())
+	} else {
+		assert.Contains(t, w.String(), "tasks.title")
+		assert.Contains(t, w.String(), "tasks.description")
+		assert.Contains(t, w.String(), "LIKE")
+		assert.Equal(t, []interface{}{"%test%", "%test%"}, w.Args())
+	}
 }
 
 func TestIsMySQLDuplicateEntryError(t *testing.T) {
