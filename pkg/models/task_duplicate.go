@@ -101,7 +101,9 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	for _, lt := range labelTasks {
 		lt.ID = 0
 		lt.TaskID = newTask.ID
-		if _, err := s.Insert(lt); err != nil {
+	}
+	if len(labelTasks) > 0 {
+		if _, err := s.Insert(&labelTasks); err != nil {
 			return err
 		}
 	}
