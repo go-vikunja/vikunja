@@ -426,86 +426,16 @@
 					v-if="canWrite || isModal"
 					class="column is-one-third action-buttons d-print-none"
 				>
-					<template v-if="canWrite && isNewTask">
+					<template v-if="canWrite">
 						<XButton
+							v-if="isNewTask"
 							icon="check"
 							@click="createNewTask()"
 						>
 							{{ $t('task.detail.save') }}
 						</XButton>
-						
-						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
-						
 						<XButton
-							variant="secondary"
-							icon="users"
-							@click="setFieldActive('assignees')"
-						>
-							{{ $t('task.detail.actions.assign') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="exclamation-circle"
-							@click="setFieldActive('priority')"
-						>
-							{{ $t('task.detail.actions.priority') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="percent"
-							@click="setFieldActive('percentDone')"
-						>
-							{{ $t('task.detail.actions.percentDone') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="fill-drip"
-							:icon-color="color"
-							@click="setFieldActive('color')"
-						>
-							{{ $t('task.detail.actions.color') }}
-						</XButton>
-						
-						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
-						
-						<XButton
-							variant="secondary"
-							icon="calendar"
-							@click="setFieldActive('dueDate')"
-						>
-							{{ $t('task.detail.actions.dueDate') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="play"
-							@click="setFieldActive('startDate')"
-						>
-							{{ $t('task.detail.actions.startDate') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="stop"
-							@click="setFieldActive('endDate')"
-						>
-							{{ $t('task.detail.actions.endDate') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							:icon="['far', 'clock']"
-							@click="setFieldActive('reminders')"
-						>
-							{{ $t('task.detail.actions.reminders') }}
-						</XButton>
-						<XButton
-							variant="secondary"
-							icon="history"
-							@click="setFieldActive('repeatAfter')"
-						>
-							{{ $t('task.detail.actions.repeatAfter') }}
-						</XButton>
-					</template>
-					<template v-else-if="canWrite">
-						<XButton
+							v-if="!isNewTask"
 							v-shortcut="'t'"
 							:class="{'is-pending': !task.done}"
 							class="button--mark-done"
@@ -516,12 +446,14 @@
 							{{ task.done ? $t('task.detail.undone') : $t('task.detail.done') }}
 						</XButton>
 						<TaskSubscription
+							v-if="!isNewTask"
 							entity="task"
 							:entity-id="task.id"
 							:model-value="task.subscription"
 							@update:modelValue="sub => task.subscription = sub"
 						/>
 						<XButton
+							v-if="!isNewTask"
 							v-shortcut="'s'"
 							variant="secondary"
 							:icon="task.isFavorite ? 'star' : ['far', 'star']"
@@ -535,6 +467,7 @@
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
+							v-if="!isNewTask"
 							v-shortcut="'l'"
 							variant="secondary"
 							icon="tags"
@@ -567,7 +500,10 @@
 							{{ $t('task.detail.actions.color') }}
 						</XButton>
 						
-						<span class="action-heading">{{ $t('task.detail.management') }}</span>
+						<span
+							v-if="!isNewTask"
+							class="action-heading"
+						>{{ $t('task.detail.management') }}</span>
 
 						<XButton
 							v-shortcut="'a'"
@@ -579,6 +515,7 @@
 							{{ $t('task.detail.actions.assign') }}
 						</XButton>
 						<XButton
+							v-if="!isNewTask"
 							v-shortcut="'f'"
 							variant="secondary"
 							icon="paperclip"
@@ -587,6 +524,7 @@
 							{{ $t('task.detail.actions.attachments') }}
 						</XButton>
 						<XButton
+							v-if="!isNewTask"
 							v-shortcut="'r'"
 							variant="secondary"
 							icon="sitemap"
@@ -595,6 +533,7 @@
 							{{ $t('task.detail.actions.relatedTasks') }}
 						</XButton>
 						<XButton
+							v-if="!isNewTask"
 							v-shortcut="'m'"
 							variant="secondary"
 							icon="list"
@@ -643,6 +582,7 @@
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
 						<XButton
+							v-if="!isNewTask"
 							v-shortcut="'Shift+Delete'"
 							icon="trash-alt"
 							:shadow="false"
