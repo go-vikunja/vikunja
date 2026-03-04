@@ -217,8 +217,19 @@ func GetTaskAttachment(c *echo.Context) error {
 	c.Response().Header().Set("Content-Type", mimeToReturn)
 	c.Response().Header().Set("Content-Length", strconv.FormatUint(taskAttachment.File.Size, 10))
 	c.Response().Header().Set("Last-Modified", taskAttachment.File.Created.UTC().Format(http.TimeFormat))
+	// Override the global no-store directive so browsers can cache attachments.
+	// no-cache allows caching but requires revalidation via If-Modified-Since.
+	c.Response().Header().Set("Cache-Control", "no-cache")
 
 	if config.FilesType.GetString() == "s3" {
+		// Check If-Modified-Since and return 304 if the file hasn't changed.
+		// http.ServeContent handles this automatically for local files.
+		if ifModSince := c.Request().Header.Get("If-Modified-Since"); ifModSince != "" {
+			if t, parseErr := http.ParseTime(ifModSince); parseErr == nil && !taskAttachment.File.Created.UTC().After(t) {
+				return c.NoContent(http.StatusNotModified)
+			}
+		}
+
 		// s3 files cannot use http.ServeContent as it requires a Seekable file
 		// so we stream the file content directly to the response
 		_, err = io.Copy(c.Response(), taskAttachment.File.File)
