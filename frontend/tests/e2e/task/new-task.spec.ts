@@ -105,6 +105,27 @@ test.describe('New Task', () => {
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
+		test('Should create a task with a description without clicking editor save', async ({authenticatedPage: page}) => {
+			await page.goto('/projects/1/tasks/new')
+			await page.waitForLoadState('networkidle')
+
+			// Editor is already in edit mode for new tasks, type directly
+			const editor = page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror')
+			await expect(editor).toBeVisible({timeout: 10000})
+			await editor.fill('My task description')
+
+			// Directly click Save without clicking the editor's save button
+			const createPromise = page.waitForResponse(response =>
+				response.url().includes('/projects/1/tasks') && response.request().method() === 'PUT',
+			)
+			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Save'}).click()
+			await createPromise
+
+			// Should navigate and retain the description
+			await expect(page).toHaveURL(/\/tasks\/\d+/)
+			await expect(page.locator('.task-view .details.content.description')).toContainText('My task description')
+		})
+
 		test('Should create a task with a priority', async ({authenticatedPage: page}) => {
 			await page.goto('/projects/1/tasks/new')
 
