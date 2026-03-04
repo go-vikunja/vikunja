@@ -683,6 +683,19 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
+	task48 := &Task{
+		ID:           48,
+		Title:        "Landingpages update",
+		Description:  "Update all landingpages with new branding",
+		Identifier:   "test1-33",
+		Index:        33,
+		CreatedByID:  1,
+		CreatedBy:    user1,
+		ProjectID:    1,
+		RelatedTasks: map[RelationKind][]*Task{},
+		Created:      time.Unix(1543626724, 0).In(loc),
+		Updated:      time.Unix(1543626724, 0).In(loc),
+	}
 
 	type fields struct {
 		ProjectID     int64
@@ -765,6 +778,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task35,
 				task39,
 				task47,
+				task48,
 			},
 			wantErr: false,
 		},
@@ -811,6 +825,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task35,
 				task39,
 				task47,
+				task48,
 			},
 			wantErr: false,
 		},
@@ -823,6 +838,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args: defaultArgs,
 			want: []*Task{
+				task48,
 				task47,
 				task35,
 				task33,
@@ -976,6 +992,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task33,
 				task35,
 				task47,
+				task48,
 			},
 			wantErr: false,
 		},
@@ -1043,6 +1060,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task35, // has nil dates
 				task39, // has nil dates
 				task47, // has nil dates
+				task48, // has nil dates
 			},
 			wantErr: false,
 		},
@@ -1216,6 +1234,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task35,
 				task39,
 				task47,
+				task48,
 			},
 			wantErr: false,
 		},
@@ -1311,6 +1330,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task35,
 				task39,
 				task47,
+				task48,
 			},
 			wantErr: false,
 		},
@@ -1388,6 +1408,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task35,
 				task39,
 				task47,
+				task48,
 			},
 			wantErr: false,
 		},
@@ -1433,6 +1454,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				// task 35 has a label 5 and 4
 				task39,
 				task47,
+				task48,
 			},
 			wantErr: false,
 		},
@@ -1478,6 +1500,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				// task 35 has a label 5 and 4
 				task39,
 				task47,
+				task48,
 			},
 			wantErr: false,
 		},
@@ -1535,6 +1558,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task33,
 				task39,
 				task47,
+				task48,
 			},
 			wantErr: false,
 		},
@@ -1626,6 +1650,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task33,
 				task47,
+				task48,
 			},
 		},
 		{
@@ -1643,6 +1668,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task5,
 				task28,
 				// The other ones don't have a due date
+				task48,
 				task47,
 				task39,
 				task35,
