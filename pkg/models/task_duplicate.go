@@ -141,18 +141,8 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		TaskID:       newTask.ID,
 		OtherTaskID:  td.TaskID,
 		RelationKind: RelationKindCopiedFrom,
-		CreatedByID:  doer.GetID(),
 	}
-	if _, err := s.Insert(rel); err != nil {
-		return err
-	}
-	reverseRel := &TaskRelation{
-		TaskID:       td.TaskID,
-		OtherTaskID:  newTask.ID,
-		RelationKind: RelationKindCopiedTo,
-		CreatedByID:  doer.GetID(),
-	}
-	if _, err := s.Insert(reverseRel); err != nil {
+	if err := rel.Create(s, doer); err != nil {
 		return err
 	}
 
