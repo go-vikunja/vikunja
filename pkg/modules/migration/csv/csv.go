@@ -547,9 +547,7 @@ func parseDate(value, format string) time.Time {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/migrate [put]
 func (m *Migrator) Migrate(_ *user.User, _ io.ReaderAt, _ int64) error {
-	// This will be called with the standard file migrator handler
-	// The actual configuration will come through the handler
-	return &migration.ErrNotACSVFile{} // Need config, use MigrateWithConfig instead
+	return &migration.ErrCSVConfigRequired{}
 }
 
 // MigrateWithConfig imports CSV data into Vikunja with the provided configuration
