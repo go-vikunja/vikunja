@@ -60,6 +60,28 @@ func (err *ErrFileIsEmpty) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrCSVConfigRequired represents an error when the CSV migration endpoint
+// is called without the required configuration. The CSV migrator requires
+// a mapping configuration and must be used via /migration/csv/migrate with
+// a config form field.
+type ErrCSVConfigRequired struct{}
+
+func (err *ErrCSVConfigRequired) Error() string {
+	return "CSV import requires a configuration with column mappings. Use the /migration/csv/detect endpoint to get suggested mappings, then call /migration/csv/migrate with a config form field."
+}
+
+// ErrCodeCSVConfigRequired holds the unique world-error code of this error
+const ErrCodeCSVConfigRequired = 14004
+
+// HTTPError holds the http error description
+func (err *ErrCSVConfigRequired) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeCSVConfigRequired,
+		Message:  "CSV import requires a configuration with column mappings. Use the /migration/csv/detect endpoint to get suggested mappings, then call /migration/csv/migrate with a config form field.",
+	}
+}
+
 // ErrNotACSVFile represents a "ErrNotACSVFile" kind of error.
 type ErrNotACSVFile struct{}
 
