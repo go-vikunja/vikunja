@@ -336,6 +336,10 @@ func DetectCSVStructure(file io.ReaderAt, size int64) (*DetectionResult, error) 
 	// Parse CSV
 	headers, rows, err := parseCSV(data, delimiter, quoteChar)
 	if err != nil {
+		var emptyErr *migration.ErrFileIsEmpty
+		if errors.As(err, &emptyErr) {
+			return nil, err
+		}
 		return nil, &migration.ErrNotACSVFile{}
 	}
 
@@ -389,6 +393,10 @@ func PreviewImport(file io.ReaderAt, size int64, config ImportConfig) (*PreviewR
 
 	_, rows, err := parseCSV(data, config.Delimiter, config.QuoteChar)
 	if err != nil {
+		var emptyErr *migration.ErrFileIsEmpty
+		if errors.As(err, &emptyErr) {
+			return nil, err
+		}
 		return nil, &migration.ErrNotACSVFile{}
 	}
 
@@ -554,6 +562,10 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config Import
 
 	_, rows, err := parseCSV(data, config.Delimiter, config.QuoteChar)
 	if err != nil {
+		var emptyErr *migration.ErrFileIsEmpty
+		if errors.As(err, &emptyErr) {
+			return err
+		}
 		return &migration.ErrNotACSVFile{}
 	}
 
