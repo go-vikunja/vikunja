@@ -49,35 +49,39 @@
 				<div class="options-grid">
 					<div class="option-group">
 						<label for="delimiter">{{ $t('migrate.csv.delimiter') }}</label>
-						<select
-							id="delimiter"
-							v-model="config.delimiter"
-							@change="updatePreview"
-						>
-							<option
-								v-for="delim in SUPPORTED_DELIMITERS"
-								:key="delim"
-								:value="delim"
+						<div class="select is-fullwidth">
+							<select
+								id="delimiter"
+								v-model="config.delimiter"
+								@change="updatePreview"
 							>
-								{{ getDelimiterLabel(delim) }}
-							</option>
-						</select>
+								<option
+									v-for="delim in SUPPORTED_DELIMITERS"
+									:key="delim"
+									:value="delim"
+								>
+									{{ getDelimiterLabel(delim) }}
+								</option>
+							</select>
+						</div>
 					</div>
 					<div class="option-group">
 						<label for="dateFormat">{{ $t('migrate.csv.dateFormat') }}</label>
-						<select
-							id="dateFormat"
-							v-model="config.date_format"
-							@change="updatePreview"
-						>
-							<option
-								v-for="format in SUPPORTED_DATE_FORMATS"
-								:key="format"
-								:value="format"
+						<div class="select is-fullwidth">
+							<select
+								id="dateFormat"
+								v-model="config.date_format"
+								@change="updatePreview"
 							>
-								{{ getDateFormatLabel(format) }}
-							</option>
-						</select>
+								<option
+									v-for="format in SUPPORTED_DATE_FORMATS"
+									:key="format"
+									:value="format"
+								>
+									{{ getDateFormatLabel(format) }}
+								</option>
+							</select>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -100,18 +104,20 @@
 								{{ $t('migrate.csv.example') }}: {{ detectionResult.preview_rows[0][index] || '-' }}
 							</span>
 						</div>
-						<select
-							v-model="mapping.attribute"
-							@change="updatePreview"
-						>
-							<option
-								v-for="attr in TASK_ATTRIBUTES"
-								:key="attr"
-								:value="attr"
+						<div class="select is-fullwidth">
+							<select
+								v-model="mapping.attribute"
+								@change="updatePreview"
 							>
-								{{ getAttributeLabel(attr) }}
-							</option>
-						</select>
+								<option
+									v-for="attr in TASK_ATTRIBUTES"
+									:key="attr"
+									:value="attr"
+								>
+									{{ getAttributeLabel(attr) }}
+								</option>
+							</select>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -416,13 +422,6 @@ function resetToUpload() {
 
 	label {
 		font-weight: 500;
-	}
-
-	select {
-		padding: 0.5rem;
-		border: 1px solid var(--grey-300);
-		border-radius: var(--border-radius);
-		background: var(--white);
 	}
 }
 
