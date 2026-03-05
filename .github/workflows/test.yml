@@ -178,6 +178,16 @@ jobs:
         test:
           - feature
           - web
+          - e2e-api
+        exclude:
+          - db: sqlite
+            test: e2e-api
+          - db: postgres
+            test: e2e-api
+          - db: mysql
+            test: e2e-api
+          - db: paradedb
+            test: e2e-api
     services:
       db-mysql:
         image: ${{ matrix.db == 'mysql' && 'mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8' || '' }}
