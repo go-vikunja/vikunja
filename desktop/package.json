@@ -64,7 +64,9 @@
       "electron"
     ],
     "overrides": {
-      "minimatch": "^10.2.3"
+      "minimatch": "^10.2.3",
+      "tar": "^7.5.10",
+      "@tootallnate/once": "^3.0.1"
     }
   }
 }
