@@ -56,15 +56,15 @@ func getClient() (*mail.Client, error) {
 		MinVersion:         tls.VersionTLS12,
 	}
 
-	if config.MailerTLSClientCert.GetString() != "" && config.MailerTLSClientKey.GetString() != "" {
-		cert, err := tls.LoadX509KeyPair(config.MailerTLSClientCert.GetString(), config.MailerTLSClientKey.GetString())
+	if config.MailerTLSClientCertPath.GetString() != "" && config.MailerTLSClientKeyPath.GetString() != "" {
+		cert, err := tls.LoadX509KeyPair(config.MailerTLSClientCertPath.GetString(), config.MailerTLSClientKeyPath.GetString())
 		if err != nil {
 			log.Fatal("Error loading client certificate and/or key.")
 		}
 		tlsConfig.Certificates = []tls.Certificate{cert}
 	}
-	if config.MailerTLSClientCACert.GetString() != "" {
-		caCert, err := os.ReadFile(config.MailerTLSClientCACert.GetString())
+	if config.MailerTLSClientCACertPath.GetString() != "" {
+		caCert, err := os.ReadFile(config.MailerTLSClientCACertPath.GetString())
 		if err != nil {
 			log.Fatal("Error loading CA certificate.")
 		}

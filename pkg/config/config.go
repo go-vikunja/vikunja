@@ -117,30 +117,30 @@ const (
 	DatabaseTLS                   Key = `database.tls`
 	DatabaseSchema                Key = `database.schema`
 
-	MailerEnabled         Key = `mailer.enabled`
-	MailerHost            Key = `mailer.host`
-	MailerPort            Key = `mailer.port`
-	MailerUsername        Key = `mailer.username`
-	MailerPassword        Key = `mailer.password`
-	MailerAuthType        Key = `mailer.authtype`
-	MailerSkipTLSVerify   Key = `mailer.skiptlsverify`
-	MailerFromEmail       Key = `mailer.fromemail`
-	MailerQueuelength     Key = `mailer.queuelength`
-	MailerQueueTimeout    Key = `mailer.queuetimeout`
-	MailerForceSSL        Key = `mailer.forcessl`
-	MailerTLSClientCert   Key = `mailer.tlsclientcert`
-	MailerTLSClientKey    Key = `mailer.tlsclientkey`
-	MailerTLSClientCACert Key = `mailer.tlsclientcacert`
+	MailerEnabled             Key = `mailer.enabled`
+	MailerHost                Key = `mailer.host`
+	MailerPort                Key = `mailer.port`
+	MailerUsername            Key = `mailer.username`
+	MailerPassword            Key = `mailer.password`
+	MailerAuthType            Key = `mailer.authtype`
+	MailerSkipTLSVerify       Key = `mailer.skiptlsverify`
+	MailerFromEmail           Key = `mailer.fromemail`
+	MailerQueuelength         Key = `mailer.queuelength`
+	MailerQueueTimeout        Key = `mailer.queuetimeout`
+	MailerForceSSL            Key = `mailer.forcessl`
+	MailerTLSClientCertPath   Key = `mailer.tlsclientcertpath`
+	MailerTLSClientKeyPath    Key = `mailer.tlsclientkeypath`
+	MailerTLSClientCACertPath Key = `mailer.tlsclientcacertpath`
 
-	RedisEnabled         Key = `redis.enabled`
-	RedisHost            Key = `redis.host`
-	RedisPassword        Key = `redis.password`
-	RedisDB              Key = `redis.db`
-	RedisTLS             Key = `redis.tls`
-	RedisTLSClientCert   Key = `redis.tlsclientcert`
-	RedisTLSClientKey    Key = `redis.tlsclientkey`
-	RedisTLSClientCACert Key = `redis.tlsclientcacert`
-	RedisTLSSkipVerify   Key = `redis.tlsskipverify`
+	RedisEnabled             Key = `redis.enabled`
+	RedisHost                Key = `redis.host`
+	RedisPassword            Key = `redis.password`
+	RedisDB                  Key = `redis.db`
+	RedisTLS                 Key = `redis.tls`
+	RedisTLSClientCertPath   Key = `redis.tlsclientcertpath`
+	RedisTLSClientKeyPath    Key = `redis.tlsclientkeypath`
+	RedisTLSClientCACertPath Key = `redis.tlsclientcacertpath`
+	RedisTLSSkipVerify       Key = `redis.tlsskipverify`
 
 	LogEnabled       Key = `log.enabled`
 	LogStandard      Key = `log.standard`
@@ -414,18 +414,18 @@ func InitDefaultConfig() {
 	MailerQueueTimeout.setDefault(30)
 	MailerForceSSL.setDefault(false)
 	MailerAuthType.setDefault("plain")
-	MailerTLSClientCert.setDefault("")
-	MailerTLSClientKey.setDefault("")
-	MailerTLSClientCACert.setDefault("")
+	MailerTLSClientCertPath.setDefault("")
+	MailerTLSClientKeyPath.setDefault("")
+	MailerTLSClientCACertPath.setDefault("")
 	// Redis
 	RedisEnabled.setDefault(false)
 	RedisHost.setDefault("localhost:6379")
 	RedisPassword.setDefault("")
 	RedisDB.setDefault(0)
 	RedisTLS.setDefault(false)
-	RedisTLSClientCert.setDefault("")
-	RedisTLSClientKey.setDefault("")
-	RedisTLSClientCACert.setDefault("")
+	RedisTLSClientCertPath.setDefault("")
+	RedisTLSClientKeyPath.setDefault("")
+	RedisTLSClientCACertPath.setDefault("")
 	RedisTLSSkipVerify.setDefault(false)
 	// Logger
 	LogEnabled.setDefault(true)

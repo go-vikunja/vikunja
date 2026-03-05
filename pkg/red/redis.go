@@ -53,15 +53,15 @@ func InitRedis() {
 		tlsConfig := &tls.Config{
 			MinVersion: tls.VersionTLS12,
 		}
-		if config.RedisTLSClientCert.GetString() != "" && config.RedisTLSClientKey.GetString() != "" {
-			cert, err := tls.LoadX509KeyPair(config.RedisTLSClientCert.GetString(), config.RedisTLSClientKey.GetString())
+		if config.RedisTLSClientCertPath.GetString() != "" && config.RedisTLSClientKeyPath.GetString() != "" {
+			cert, err := tls.LoadX509KeyPair(config.RedisTLSClientCertPath.GetString(), config.RedisTLSClientKeyPath.GetString())
 			if err != nil {
 				log.Fatal("Error loading client certificate and/or key.")
 			}
 			tlsConfig.Certificates = []tls.Certificate{cert}
 		}
-		if config.RedisTLSClientCACert.GetString() != "" {
-			caCert, err := os.ReadFile(config.RedisTLSClientCACert.GetString())
+		if config.RedisTLSClientCACertPath.GetString() != "" {
+			caCert, err := os.ReadFile(config.RedisTLSClientCACertPath.GetString())
 			if err != nil {
 				log.Fatal("Error loading CA certificate.")
 			}

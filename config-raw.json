@@ -279,17 +279,17 @@
                     "comment": "Whether to enable TLS or not."
                 },
                 {
-                    "key": "tlsclientcert",
+                    "key": "tlsclientcertpath",
                     "default_value": "",
                     "comment": "The path to a client certificate, if you choose to use one."
                 },
                 {
-                    "key": "tlsclientkey",
+                    "key": "tlsclientkeypath",
                     "default_value": "",
                     "comment": "The path to the client certificate's private key."
                 },
                 {
-                    "key": "tlscacert",
+                    "key": "tlscacertpath",
                     "default_value": "",
                     "comment": "The path to a certificate authority certificate, for verifying the server's certificate."
                 },
@@ -386,17 +386,17 @@
                     "comment": "By default, Vikunja will try to connect with starttls, use this option to force it to use ssl."
                 },
                 {
-                    "key": "tlsclientcert",
+                    "key": "tlsclientcertpath",
                     "default_value": "",
                     "comment": "The path to a client certificate, if you choose to use one."
                 },
                 {
-                    "key": "tlsclientkey",
+                    "key": "tlsclientkeypath",
                     "default_value": "",
                     "comment": "The path to the client certificate's private key."
                 },
                 {
-                    "key": "tlscacert",
+                    "key": "tlscacertpath",
                     "default_value": "",
                     "comment": "The path to a certificate authority certificate, for verifying the server's certificate."
                 }
