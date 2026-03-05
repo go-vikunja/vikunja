@@ -3,18 +3,19 @@
 		<h1>{{ $t('migrate.titleService', {name: 'CSV'}) }}</h1>
 		<p>{{ $t('migrate.csv.description') }}</p>
 
+		<Message
+			v-if="error"
+			variant="danger"
+			class="mbe-4"
+		>
+			{{ error }}
+		</Message>
+
 		<!-- Step 1: File Upload -->
 		<div
 			v-if="step === 'upload'"
 			class="upload-step"
 		>
-			<Message
-				v-if="error"
-				variant="danger"
-				class="mbe-4"
-			>
-				{{ error }}
-			</Message>
 			<p>{{ $t('migrate.csv.uploadDescription') }}</p>
 			<input
 				ref="uploadInput"
@@ -122,15 +123,6 @@
 			>
 				<h3>{{ $t('migrate.csv.preview') }}</h3>
 				<p>{{ $t('migrate.csv.previewDescription', {count: previewResult.total_rows}) }}</p>
-
-				<div
-					v-if="previewResult.errors && previewResult.errors.length > 0"
-					class="preview-errors"
-				>
-					<Message variant="warning">
-						{{ $t('migrate.csv.previewErrors', {count: previewResult.error_count}) }}
-					</Message>
-				</div>
 
 				<div class="preview-tasks">
 					<div
@@ -472,10 +464,6 @@ function resetToUpload() {
 	h3 {
 		margin-block-end: 0.5rem;
 	}
-}
-
-.preview-errors {
-	margin-block: 1rem;
 }
 
 .preview-tasks {
