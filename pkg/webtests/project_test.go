@@ -61,8 +61,9 @@ func TestProject(t *testing.T) {
 				// Test2-Test9 (edit distance 1), Test10+ (prefix), etc.
 				require.Len(t, projects, 12)
 			} else {
-				require.Len(t, projects, 2)
-				assert.NotContains(t, rec.Body.String(), `Test2`)
+				// ILIKE '%Test1%' matches Test1, Test10, Test11, Test19, + favorites
+				require.Len(t, projects, 5)
+				assert.NotContains(t, rec.Body.String(), `Test2"`)
 				assert.NotContains(t, rec.Body.String(), `Test3`)
 				assert.NotContains(t, rec.Body.String(), `Test4`)
 				assert.NotContains(t, rec.Body.String(), `Test5`)
