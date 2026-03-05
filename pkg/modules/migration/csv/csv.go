@@ -126,6 +126,7 @@ type ImportConfig struct {
 	Delimiter  string          `json:"delimiter"`
 	QuoteChar  string          `json:"quote_char"`
 	DateFormat string          `json:"date_format"`
+	SkipRows   int             `json:"skip_rows"`
 	Mapping    []ColumnMapping `json:"mapping"`
 }
 
@@ -398,6 +399,11 @@ func PreviewImport(file io.ReaderAt, size int64, config ImportConfig) (*PreviewR
 		return nil, &migration.ErrNotACSVFile{}
 	}
 
+	// Skip rows if configured
+	if config.SkipRows > 0 && config.SkipRows < len(rows) {
+		rows = rows[config.SkipRows:]
+	}
+
 	result := &PreviewResult{
 		Tasks:     make([]PreviewTask, 0, minInt(5, len(rows))),
 		TotalRows: len(rows),
@@ -565,6 +571,11 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config Import
 			return err
 		}
 		return &migration.ErrNotACSVFile{}
+	}
+
+	// Skip rows if configured
+	if config.SkipRows > 0 && config.SkipRows < len(rows) {
+		rows = rows[config.SkipRows:]
 	}
 
 	if len(rows) == 0 {

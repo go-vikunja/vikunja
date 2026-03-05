@@ -46,6 +46,7 @@ export interface ImportConfig {
 	delimiter: string
 	quote_char: string
 	date_format: string
+	skip_rows: number
 	mapping: ColumnMapping[]
 }
 

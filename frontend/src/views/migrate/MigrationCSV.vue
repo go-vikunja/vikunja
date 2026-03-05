@@ -83,6 +83,17 @@
 							</select>
 						</div>
 					</div>
+					<div class="option-group">
+						<label for="skipRows">{{ $t('migrate.csv.skipRows') }}</label>
+						<input
+							id="skipRows"
+							v-model.number="config.skip_rows"
+							type="number"
+							class="input"
+							min="0"
+							@change="updatePreview"
+						>
+					</div>
 				</div>
 			</div>
 
@@ -240,6 +251,7 @@ const config = ref<ImportConfig>({
 	delimiter: ',',
 	quote_char: '"',
 	date_format: '2006-01-02',
+	skip_rows: 0,
 	mapping: [],
 })
 
@@ -314,6 +326,7 @@ async function handleFileUpload() {
 			delimiter: result.delimiter,
 			quote_char: result.quote_char,
 			date_format: result.date_format,
+			skip_rows: 0,
 			mapping: result.suggested_mapping,
 		}
 
@@ -376,6 +389,7 @@ function resetToUpload() {
 		delimiter: ',',
 		quote_char: '"',
 		date_format: '2006-01-02',
+		skip_rows: 0,
 		mapping: [],
 	}
 }
