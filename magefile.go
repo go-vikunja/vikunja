@@ -73,6 +73,7 @@ var (
 		"dev:prepare-worktree":        Dev.PrepareWorktree,
 		"dev:tag-release":             Dev.TagRelease,
 		"test:e2e":                    Test.E2E,
+		"test:e2e-api":                Test.E2EApi,
 		"plugins:build":               Plugins.Build,
 		"lint":                        Check.Golangci,
 		"lint:fix":                    Check.GolangciFix,
@@ -424,7 +425,15 @@ func (Test) Filter(filter string) error {
 
 func (Test) All() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Feature, Test.Web)
+	mg.Deps(Test.Feature, Test.Web, Test.E2EApi)
+}
+
+// E2EApi runs the end-to-end API tests in pkg/e2etests.
+// These tests use the real event system (not events.Fake()) to verify
+// the full async pipeline: web handler → DB → event dispatch → watermill → listener.
+func (Test) E2EApi() error {
+	mg.Deps(initVars)
+	return runAndStreamOutput("go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/e2etests")
 }
 
 // E2E builds the API, starts it with an in-memory database and the frontend dev server,
