@@ -204,7 +204,7 @@ jobs:
         ports:
           - 5432:5432
       db-paradedb:
-        image: ${{ matrix.db == 'paradedb' && 'paradedb/paradedb:latest-pg17@sha256:741010eaa8894d292203d9407d46fc95ee4d0cd587915513bf92e6bd70cbd65e' || '' }}
+        image: ${{ matrix.db == 'paradedb' && 'paradedb/paradedb:latest-pg17@sha256:5a60852994cb0663ed9cdb04796a487605f8b99266e3ad5057f10e09e1aa019d' || '' }}
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest
