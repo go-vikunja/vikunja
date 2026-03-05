@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/url"
 	"testing"
 
@@ -51,9 +52,16 @@ func TestProject(t *testing.T) {
 			rec, err := testHandler.testReadAllWithUser(url.Values{"s": []string{"Test1"}}, nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
-			if !db.ParadeDBAvailable() {
-				// ParadeDB fuzzy(1, prefix=true) matches Test2, Test3, etc.
-				// (edit distance 1 from "Test1"), so only check exclusions without ParadeDB.
+
+			var projects []models.Project
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &projects))
+
+			if db.ParadeDBAvailable() {
+				// ParadeDB fuzzy(1, prefix=true) on "Test1" also matches
+				// Test2-Test9 (edit distance 1), Test10+ (prefix), etc.
+				require.Len(t, projects, 12)
+			} else {
+				require.Len(t, projects, 2)
 				assert.NotContains(t, rec.Body.String(), `Test2`)
 				assert.NotContains(t, rec.Body.String(), `Test3`)
 				assert.NotContains(t, rec.Body.String(), `Test4`)

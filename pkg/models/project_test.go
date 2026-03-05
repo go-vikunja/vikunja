@@ -533,9 +533,9 @@ func TestProject_ReadAll(t *testing.T) {
 		ls := projects3.([]*Project)
 
 		if db.ParadeDBAvailable() {
-			// ParadeDB fuzzy prefix matching returns more results
-			// (e.g. "TEST10" also matches "test1", "test11", etc.)
-			require.NotEmpty(t, ls)
+			// ParadeDB fuzzy(1, prefix=true) on "TEST10" also matches
+			// "test1", "test11", "test19", "test30" (edit distance 1), etc.
+			require.Len(t, ls, 6)
 			projectIDs := make([]int64, len(ls))
 			for i, p := range ls {
 				projectIDs[i] = p.ID
