@@ -279,8 +279,16 @@ func suggestMapping(columns []string) []ColumnMapping {
 }
 
 // parseCSV parses CSV data with the given configuration
-func parseCSV(data []byte, delimiter, _ string) ([]string, [][]string, error) {
+func parseCSV(data []byte, delimiter, quoteChar string) ([]string, [][]string, error) {
 	data = stripBOM(data)
+
+	// Go's csv.Reader only supports double-quote as the quote character.
+	// If a different quote character is specified, replace it with double-quote
+	// before parsing so that quoted fields are handled correctly.
+	if quoteChar != "" && quoteChar != "\"" {
+		data = bytes.ReplaceAll(data, []byte(quoteChar), []byte("\""))
+	}
+
 	reader := csv.NewReader(bytes.NewReader(data))
 
 	if len(delimiter) > 0 {
