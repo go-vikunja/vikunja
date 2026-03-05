@@ -144,10 +144,8 @@ type PreviewTask struct {
 
 // PreviewResult contains preview data before import
 type PreviewResult struct {
-	Tasks      []PreviewTask `json:"tasks"`
-	TotalRows  int           `json:"total_rows"`
-	ErrorCount int           `json:"error_count"`
-	Errors     []string      `json:"errors,omitempty"`
+	Tasks     []PreviewTask `json:"tasks"`
+	TotalRows int           `json:"total_rows"`
 }
 
 // stripBOM removes the UTF-8 BOM from the beginning of a reader
