@@ -23,8 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	user2 "code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web/handler"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // MigratorWeb handles CSV migration HTTP routes
@@ -47,16 +46,16 @@ func (c *MigratorWeb) RegisterRoutes(g *echo.Group) {
 // @Success 200 {object} migration.Status "The migration status"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/status [get]
-func (c *MigratorWeb) Status(ctx echo.Context) error {
+func (c *MigratorWeb) Status(ctx *echo.Context) error {
 	u, err := user2.GetCurrentUser(ctx)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	m := &Migrator{}
 	s, err := migration.GetMigrationStatus(m, u)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return ctx.JSON(http.StatusOK, s)
@@ -74,10 +73,10 @@ func (c *MigratorWeb) Status(ctx echo.Context) error {
 // @Failure 400 {object} models.Message "Invalid CSV file"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/detect [put]
-func (c *MigratorWeb) Detect(ctx echo.Context) error {
+func (c *MigratorWeb) Detect(ctx *echo.Context) error {
 	_, err := user2.GetCurrentUser(ctx)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	file, err := ctx.FormFile("import")
@@ -87,13 +86,13 @@ func (c *MigratorWeb) Detect(ctx echo.Context) error {
 
 	src, err := file.Open()
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer src.Close()
 
 	result, err := DetectCSVStructure(src, file.Size)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return ctx.JSON(http.StatusOK, result)
@@ -112,10 +111,10 @@ func (c *MigratorWeb) Detect(ctx echo.Context) error {
 // @Failure 400 {object} models.Message "Invalid CSV file or configuration"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/preview [put]
-func (c *MigratorWeb) Preview(ctx echo.Context) error {
+func (c *MigratorWeb) Preview(ctx *echo.Context) error {
 	_, err := user2.GetCurrentUser(ctx)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	file, err := ctx.FormFile("import")
@@ -135,13 +134,13 @@ func (c *MigratorWeb) Preview(ctx echo.Context) error {
 
 	src, err := file.Open()
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer src.Close()
 
 	result, err := PreviewImport(src, file.Size, config)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return ctx.JSON(http.StatusOK, result)
@@ -160,10 +159,10 @@ func (c *MigratorWeb) Preview(ctx echo.Context) error {
 // @Failure 400 {object} models.Message "Invalid CSV file or configuration"
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /migration/csv/migrate [put]
-func (c *MigratorWeb) Migrate(ctx echo.Context) error {
+func (c *MigratorWeb) Migrate(ctx *echo.Context) error {
 	u, err := user2.GetCurrentUser(ctx)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	file, err := ctx.FormFile("import")
@@ -183,24 +182,24 @@ func (c *MigratorWeb) Migrate(ctx echo.Context) error {
 
 	src, err := file.Open()
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 	defer src.Close()
 
 	m := &Migrator{}
 	status, err := migration.StartMigration(m, u)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = MigrateWithConfig(u, src, file.Size, config)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	err = migration.FinishMigration(status)
 	if err != nil {
-		return handler.HandleHTTPError(err)
+		return err
 	}
 
 	return ctx.JSON(http.StatusOK, models.Message{Message: "Everything was migrated successfully."})
