@@ -1766,7 +1766,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	// Here we're explicitly testing search with and without paradeDB. Both return different results but that's
 	// expected - paradeDB returns more results than other databases with a naive like-search.
 
-	if db.ParadeDBAvailable() {
+	if !db.ParadeDBAvailable() {
 		tests = append(tests, testcase{
 			name:   "search for task index",
 			fields: fields{},
@@ -1776,24 +1776,30 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				page:   0,
 			},
 			want: []*Task{
-				task17, // has the text #17 in the title
 				task33, // has the index 17
 			},
 			wantErr: false,
 		})
-	} else {
-		tests = append(tests, testcase{
-			name:   "search for task index",
-			fields: fields{},
-			args: args{
-				search: "number #17",
-				a:      &user.User{ID: 1},
-				page:   0,
-			},
-			want: []*Task{
-				task33, // has the index 17
-			},
-			wantErr: false,
+	}
+
+	if db.ParadeDBAvailable() {
+		// ParadeDB fuzzy prefix matching returns more results than ILIKE,
+		// so we only check that expected tasks are contained in results.
+		t.Run("search for task index", func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
+			s := db.NewSession()
+			defer s.Close()
+
+			lt := &TaskCollection{}
+			got, _, _, err := lt.ReadAll(s, &user.User{ID: 1}, "number #17", 0, 50)
+			require.NoError(t, err)
+			gotTasks := got.([]*Task)
+			gotIDs := make([]int64, len(gotTasks))
+			for i, tsk := range gotTasks {
+				gotIDs[i] = tsk.ID
+			}
+			assert.Contains(t, gotIDs, task17.ID, "should contain task #17 (has #17 in title)")
+			assert.Contains(t, gotIDs, task33.ID, "should contain task #33 (has index 17)")
 		})
 	}
 
