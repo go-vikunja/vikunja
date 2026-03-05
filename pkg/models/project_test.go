@@ -531,9 +531,22 @@ func TestProject_ReadAll(t *testing.T) {
 
 		require.NoError(t, err)
 		ls := projects3.([]*Project)
-		require.Len(t, ls, 2)
-		assert.Equal(t, int64(10), ls[0].ID)
-		assert.Equal(t, int64(-1), ls[1].ID)
+
+		if db.ParadeDBAvailable() {
+			// ParadeDB fuzzy prefix matching returns more results
+			// (e.g. "TEST10" also matches "test1", "test11", etc.)
+			require.Greater(t, len(ls), 0)
+			projectIDs := make([]int64, len(ls))
+			for i, p := range ls {
+				projectIDs[i] = p.ID
+			}
+			assert.Contains(t, projectIDs, int64(10))
+			assert.Contains(t, projectIDs, int64(-1))
+		} else {
+			require.Len(t, ls, 2)
+			assert.Equal(t, int64(10), ls[0].ID)
+			assert.Equal(t, int64(-1), ls[1].ID)
+		}
 	})
 	t.Run("search returns filters as well", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
