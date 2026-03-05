@@ -64,8 +64,6 @@ export interface PreviewTask {
 export interface PreviewResult {
 	tasks: PreviewTask[]
 	total_rows: number
-	error_count: number
-	errors?: string[]
 }
 
 export interface MigrationStatus {
