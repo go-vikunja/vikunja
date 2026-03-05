@@ -651,6 +651,7 @@
       "parsingOptions": "Parsing Options",
       "delimiter": "Delimiter",
       "dateFormat": "Date Format",
+      "skipRows": "Skip Rows",
       "mapColumns": "Map Columns",
       "example": "e.g.",
       "preview": "Preview",
