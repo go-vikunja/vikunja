@@ -81,13 +81,13 @@ func (wc *webhookCapture) Close() {
 	wc.server.Close()
 }
 
-// waitForPayload waits for a webhook payload to arrive within the given timeout.
-func (wc *webhookCapture) waitForPayload(t *testing.T, timeout time.Duration) webhookDelivery {
+// waitForPayload waits for a webhook payload to arrive within 10 seconds.
+func (wc *webhookCapture) waitForPayload(t *testing.T) webhookDelivery {
 	t.Helper()
 	select {
 	case d := <-wc.payloads:
 		return d
-	case <-time.After(timeout):
+	case <-time.After(10 * time.Second):
 		t.Fatal("Webhook payload not received within timeout")
 		return webhookDelivery{} // unreachable
 	}
@@ -178,7 +178,7 @@ func TestUserWebhookTaskOverdueE2E(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	delivery := capture.waitForPayload(t, 10*time.Second)
+	delivery := capture.waitForPayload(t)
 	payload := parseWebhookPayload(t, delivery)
 
 	assert.Equal(t, "task.overdue", payload["event_name"])
@@ -214,7 +214,7 @@ func TestUserWebhookTaskReminderFiredE2E(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	delivery := capture.waitForPayload(t, 10*time.Second)
+	delivery := capture.waitForPayload(t)
 	payload := parseWebhookPayload(t, delivery)
 
 	assert.Equal(t, "task.reminder.fired", payload["event_name"])
@@ -296,11 +296,11 @@ func TestUserWebhookAndProjectWebhookBothFire(t *testing.T) {
 	require.NoError(t, err)
 
 	// Both should receive the payload
-	projectDelivery := projectCapture.waitForPayload(t, 10*time.Second)
+	projectDelivery := projectCapture.waitForPayload(t)
 	projectPayload := parseWebhookPayload(t, projectDelivery)
 	assert.Equal(t, "task.overdue", projectPayload["event_name"])
 
-	userDelivery := userCapture.waitForPayload(t, 10*time.Second)
+	userDelivery := userCapture.waitForPayload(t)
 	userPayload := parseWebhookPayload(t, userDelivery)
 	assert.Equal(t, "task.overdue", userPayload["event_name"])
 }
@@ -330,7 +330,7 @@ func TestUserWebhookHMACSigning(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	delivery := capture.waitForPayload(t, 10*time.Second)
+	delivery := capture.waitForPayload(t)
 
 	// Verify the HMAC signature header is present and correct
 	signature := delivery.Headers.Get("X-Vikunja-Signature")
@@ -422,7 +422,7 @@ func TestUserWebhookTasksOverdueBatchE2E(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	delivery := capture.waitForPayload(t, 10*time.Second)
+	delivery := capture.waitForPayload(t)
 	payload := parseWebhookPayload(t, delivery)
 
 	assert.Equal(t, "tasks.overdue", payload["event_name"])
