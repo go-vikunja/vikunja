@@ -68,7 +68,8 @@
 			"alreadyHaveAnAccount": "すでにアカウントをお持ちですか？",
 			"remember": "ログインしたままにする",
 			"registrationDisabled": "新規登録は無効化されています。",
-			"passwordResetTokenMissing": "パスワードリセットトークンがありません。"
+			"passwordResetTokenMissing": "パスワードリセットトークンがありません。",
+			"registrationFailed": "登録中にエラーが発生しました。入力内容を確認して、もう一度お試しください。"
 		},
 		"settings": {
 			"title": "設定",
@@ -212,6 +213,20 @@
 					"expiresAt": "有効期限:",
 					"permissions": "権限"
 				}
+			},
+			"sessions": {
+				"title": "セッション",
+				"description": "これらは現在ログインしているデバイスです。セッションを取り消すことでそのデバイスをログアウトできます。セッションの取り消しが完全に反映されるまで最大10分かかる場合があります。",
+				"deviceInfo": "デバイス",
+				"ipAddress": "IPアドレス",
+				"lastActive": "最終アクティブ",
+				"current": "現在のセッション",
+				"delete": {
+					"header": "セッションの取り消し",
+					"text": "このセッションを取り消しますか？そのデバイスはログアウトされます。セッションが完全に無効になるまで最大10分かかる場合があります。"
+				},
+				"deleteSuccess": "セッションが正常に取り消されました。セッションが完全に無効になるまで最大10分かかる場合があります。",
+				"noOtherSessions": "他にアクティブなセッションはありません。"
 			}
 		},
 		"deletion": {
@@ -392,7 +407,10 @@
 			"taskAriaLabel": "タスク: {task}",
 			"taskAriaLabelById": "タスク {id}",
 			"partialDatesStart": "開始日のみ (終了未定)",
-			"partialDatesEnd": "終了日のみ (開始未定)"
+			"partialDatesEnd": "終了日のみ (開始未定)",
+			"expandGroup": "グループを展開: {task}",
+			"collapseGroup": "グループを折りたたむ: {task}",
+			"toggleRelationArrows": "関連の矢印を切り替え"
 		},
 		"table": {
 			"title": "テーブル",

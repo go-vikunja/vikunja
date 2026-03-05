@@ -68,7 +68,8 @@
 			"alreadyHaveAnAccount": "Hast du bereits einen Account?",
 			"remember": "Angemeldet bleiben",
 			"registrationDisabled": "Registrierung ist deaktiviert.",
-			"passwordResetTokenMissing": "Das Passwort-Reset-Token fehlt."
+			"passwordResetTokenMissing": "Das Passwort-Reset-Token fehlt.",
+			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut."
 		},
 		"settings": {
 			"title": "Iihstellige",
@@ -406,7 +407,10 @@
 			"taskAriaLabel": "Aufgabe: {task}",
 			"taskAriaLabelById": "Aufgabe {id}",
 			"partialDatesStart": "Nur Startdatum (offen)",
-			"partialDatesEnd": "Nur Enddatum (offen)"
+			"partialDatesEnd": "Nur Enddatum (offen)",
+			"expandGroup": "Gruppe ausklappen: {task}",
+			"collapseGroup": "Gruppe einklappen: {task}",
+			"toggleRelationArrows": "Relations-Pfeile ein/aus"
 		},
 		"table": {
 			"title": "Tabelle",
