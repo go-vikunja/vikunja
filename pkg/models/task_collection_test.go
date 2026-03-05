@@ -1783,8 +1783,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	}
 
 	if db.ParadeDBAvailable() {
-		// ParadeDB fuzzy prefix matching returns more results than ILIKE,
-		// so we only check that expected tasks are contained in results.
+		// ParadeDB fuzzy(1, prefix=true) on "17" also matches tokens within
+		// edit distance 1 ("1", "7", "10"-"19", "27", "47"), returning more results.
 		t.Run("search for task index", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
 			s := db.NewSession()
@@ -1794,6 +1794,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			got, _, _, err := lt.ReadAll(s, &user.User{ID: 1}, "number #17", 0, 50)
 			require.NoError(t, err)
 			gotTasks := got.([]*Task)
+			require.Len(t, gotTasks, 14)
 			gotIDs := make([]int64, len(gotTasks))
 			for i, tsk := range gotTasks {
 				gotIDs[i] = tsk.ID
