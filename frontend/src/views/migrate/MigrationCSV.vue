@@ -363,6 +363,9 @@ function resetToUpload() {
 	detectionResult.value = null
 	previewResult.value = null
 	error.value = ''
+	if (uploadInput.value) {
+		uploadInput.value.value = ''
+	}
 	config.value = {
 		delimiter: ',',
 		quote_char: '"',
