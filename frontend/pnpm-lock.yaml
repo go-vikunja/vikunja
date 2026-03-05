@@ -307,8 +307,8 @@ importers:
         specifier: 8.0.7
         version: 8.0.7(vite@7.3.1(@types/node@24.11.0)(jiti@2.4.2)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)(yaml@2.5.0))(vue@3.5.27(typescript@5.9.3))
       vite-svg-loader:
-        specifier: 5.1.0
-        version: 5.1.0(vue@3.5.27(typescript@5.9.3))
+        specifier: 5.1.1
+        version: 5.1.1(vue@3.5.27(typescript@5.9.3))
       vitest:
         specifier: 4.0.18
         version: 4.0.18(@types/node@24.11.0)(happy-dom@20.8.3)(jiti@2.4.2)(jsdom@27.4.0)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)(yaml@2.5.0)
@@ -3624,9 +3624,6 @@ packages:
   dompurify@3.3.1:
     resolution: {integrity: sha512-qkdCKzLNtrgPFP1Vo+98FRzJnBRGe4ffyCea9IwHB1fyxPOeNTHpLKYGd4Uk9xvNoH0ZoOjwZxNptyMwqrId1Q==}
 
-  domutils@3.1.0:
-    resolution: {integrity: sha512-H78uMmQtI2AhgDJjWeQmHwJJ2bLPD3GMmO7Zja/ZZh84wkm+4ut+IUnUdRa8uCGX88DiVx1j6FRe1XfxEgjEZA==}
-
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
 
@@ -6467,8 +6464,8 @@ packages:
     peerDependencies:
       vite: ^3.0.0-0 || ^4.0.0-0 || ^5.0.0-0 || ^6.0.0-0 || ^7.0.0-0
 
-  vite-svg-loader@5.1.0:
-    resolution: {integrity: sha512-M/wqwtOEjgb956/+m5ZrYT/Iq6Hax0OakWbokj8+9PXOnB7b/4AxESHieEtnNEy7ZpjsjYW1/5nK8fATQMmRxw==}
+  vite-svg-loader@5.1.1:
+    resolution: {integrity: sha512-RPzcXA/EpKJA0585x58DBgs7my2VfeJ+j2j1EoHY4Zh82Y7hV4cR1fElgy2aZi85+QSrcLLoTStQ5uZjD68u+Q==}
     peerDependencies:
       vue: '>=3.2.13'
 
@@ -10155,7 +10152,7 @@ snapshots:
       boolbase: 1.0.0
       css-what: 6.1.0
       domhandler: 5.0.3
-      domutils: 3.1.0
+      domutils: 3.2.2
       nth-check: 2.1.1
 
   css-tree@2.2.1:
@@ -10311,12 +10308,6 @@ snapshots:
   dompurify@3.3.1:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
-
-  domutils@3.1.0:
-    dependencies:
-      dom-serializer: 2.0.0
-      domelementtype: 2.3.0
-      domhandler: 5.0.3
 
   domutils@3.2.2:
     dependencies:
@@ -13510,10 +13501,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vite-svg-loader@5.1.0(vue@3.5.27(typescript@5.9.3)):
+  vite-svg-loader@5.1.1(vue@3.5.27(typescript@5.9.3)):
     dependencies:
+      debug: 4.4.3
       svgo: 3.3.3
       vue: 3.5.27(typescript@5.9.3)
+    transitivePeerDependencies:
+      - supports-color
 
   vite@7.3.1(@types/node@24.11.0)(jiti@2.4.2)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.31.6)(yaml@2.5.0):
     dependencies:
