@@ -39,6 +39,14 @@ func Fake() {
 	dispatchedTestEvents = nil
 }
 
+// Unfake disables "test mode" so that events are dispatched through the real
+// watermill pub/sub instead of being recorded. Call this after Fake() when you
+// need the full event pipeline (e.g. in end-to-end tests).
+func Unfake() {
+	isUnderTest = false
+	dispatchedTestEvents = nil
+}
+
 // AssertDispatched asserts an event has been dispatched.
 func AssertDispatched(t *testing.T, event Event) {
 	var found bool
