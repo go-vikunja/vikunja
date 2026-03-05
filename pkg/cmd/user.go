@@ -361,7 +361,11 @@ var userDeleteCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalf("could not read confirmation message: %s", err)
 			}
-			if text != "YES, I CONFIRM\n" {
+
+			// On Windows <ENTER> a newline is \r\n, while on Linux it is only \n.
+			text = strings.TrimRight(text, "\r\n")
+
+			if text != "YES, I CONFIRM" {
 				log.Fatalf("invalid confirmation message")
 			}
 		}
