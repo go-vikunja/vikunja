@@ -4,10 +4,10 @@
 		<p>{{ $t('migrate.description') }}</p>
 		<div class="migration-services">
 			<RouterLink
-				v-for="{name, id, icon} in availableMigrators"
+				v-for="{name, id, icon, isCSVMigrator} in availableMigrators"
 				:key="id"
 				class="migration-service-link"
-				:to="{name: 'migrate.service', params: {service: id}}"
+				:to="isCSVMigrator ? {name: 'migrate.csv'} : {name: 'migrate.service', params: {service: id}}"
 			>
 				<img
 					class="migration-service-image"
