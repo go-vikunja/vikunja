@@ -57,9 +57,10 @@ func TestProject(t *testing.T) {
 			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &projects))
 
 			if db.ParadeDBAvailable() {
-				// ParadeDB fuzzy(1, prefix=true) on "Test1" also matches
-				// Test2-Test9 (edit distance 1), Test10+ (prefix), etc.
-				require.Len(t, projects, 12)
+				// ParadeDB fuzzy(1, prefix=true) on "Test1" matches Test2-Test9
+				// (edit distance 1), Test10+ (prefix), etc. The recursive CTE
+				// also pulls in child projects of matched parents.
+				require.Len(t, projects, 27)
 			} else {
 				// ILIKE '%Test1%' matches Test1, Test10, Test11, Test19, + favorites
 				require.Len(t, projects, 5)
