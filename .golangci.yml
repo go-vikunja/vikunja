@@ -1,6 +1,8 @@
 version: "2"
 run:
   tests: true
+  build-tags:
+    - mage
 linters:
   enable:
     - asasalint
@@ -146,6 +148,10 @@ linters:
       - linters:
           - revive
         text: 'var-naming: avoid package names that conflict with Go standard library package names'
+      - linters:
+          - err113
+        path: magefile.go
+        text: 'do not define dynamic errors, use wrapped static errors instead:'
     paths:
       - third_party$
       - builtin$
