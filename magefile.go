@@ -24,6 +24,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -60,7 +61,7 @@ var (
 	PkgVersion    = "unstable"
 
 	// Aliases are mage aliases of targets
-	Aliases = map[string]interface{}{
+	Aliases = map[string]any{
 		"build":                       Build.Build,
 		"check:got-swag":              Check.GotSwag,
 		"release":                     Release.Release,
@@ -86,14 +87,15 @@ func goDetectVerboseFlag() string {
 	return fmt.Sprintf("-v=%t", mg.Verbose())
 }
 
-func runCmdWithOutput(name string, arg ...string) (output []byte, err error) {
-	cmd := exec.Command(name, arg...)
+func runGitCommandWithOutput(arg ...string) (output []byte, err error) {
+	cmd := exec.Command("git", arg...)
 	output, err = cmd.Output()
 	if err != nil {
-		if ee, is := err.(*exec.ExitError); is {
-			return nil, fmt.Errorf("error running command: %s, %s", string(ee.Stderr), err)
+		var ee *exec.ExitError
+		if errors.As(err, &ee) {
+			return nil, fmt.Errorf("error running command: %s, %w", string(ee.Stderr), err)
 		}
-		return nil, fmt.Errorf("error running command: %s", err)
+		return nil, fmt.Errorf("error running command: %w", err)
 	}
 
 	return output, nil
@@ -130,7 +132,7 @@ func getRawVersionNumber() (version string, err error) {
 		return strings.Replace(os.Getenv("DRONE_BRANCH"), "release/v", "", 1), nil
 	}
 
-	versionBytes, err := runCmdWithOutput("git", "describe", "--tags", "--always", "--abbrev=10")
+	versionBytes, err := runGitCommandWithOutput("describe", "--tags", "--always", "--abbrev=10")
 	return string(versionBytes), err
 }
 
@@ -204,15 +206,15 @@ func runAndStreamOutput(cmd string, args ...string) error {
 
 // Will check if the tool exists and if not install it from the provided import path
 // If any errors occur, it will exit with a status code of 1.
-func checkAndInstallGoTool(tool, importPath string) {
+func checkAndInstallGoTool(tool, importPath string) error {
 	if err := exec.Command(tool).Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
 		fmt.Printf("%s not installed, installing %s...\n", tool, importPath)
-		if err := exec.Command("go", "install", goDetectVerboseFlag(), importPath).Run(); err != nil {
-			fmt.Printf("Error installing %s\n", tool)
-			os.Exit(1)
+		if err := exec.Command("go", "install", goDetectVerboseFlag(), importPath).Run(); err != nil { //nolint:gosec // Every caller to checkAndInstallGoTool is hard-coded at time of writing, so no injection possible.
+			return fmt.Errorf("error installing %s: %w", tool, err)
 		}
 		fmt.Println("Installed.")
 	}
+	return nil
 }
 
 // Calculates a hash of a file
@@ -269,19 +271,19 @@ func copyFile(src, dst string) error {
 func moveFile(src, dst string) error {
 	inputFile, err := os.Open(src)
 	if err != nil {
-		return fmt.Errorf("couldn't open source file: %s", err)
+		return fmt.Errorf("couldn't open source file: %w", err)
 	}
 	defer inputFile.Close()
 
 	outputFile, err := os.Create(dst)
 	if err != nil {
-		return fmt.Errorf("couldn't open dest file: %s", err)
+		return fmt.Errorf("couldn't open dest file: %w", err)
 	}
 	defer outputFile.Close()
 
 	_, err = io.Copy(outputFile, inputFile)
 	if err != nil {
-		return fmt.Errorf("writing to output file failed: %s", err)
+		return fmt.Errorf("writing to output file failed: %w", err)
 	}
 
 	// Make sure to copy copy the permissions of the original file as well
@@ -297,7 +299,7 @@ func moveFile(src, dst string) error {
 	// The copy was successful, so now delete the original file
 	err = os.Remove(src)
 	if err != nil {
-		return fmt.Errorf("failed removing original file: %s", err)
+		return fmt.Errorf("failed removing original file: %w", err)
 	}
 	return nil
 }
@@ -316,7 +318,7 @@ func appendToFile(filename, content string) error {
 
 const InfoColor = "\033[1;32m%s\033[0m"
 
-func printSuccess(text string, args ...interface{}) {
+func printSuccess(text string, args ...any) {
 	text = fmt.Sprintf(text, args...)
 	fmt.Printf(InfoColor+"\n", text)
 }
@@ -346,14 +348,17 @@ func setProcessGroup(cmd *exec.Cmd) {
 }
 
 // killProcessGroup sends a signal to the entire process group of the given command.
-func killProcessGroup(cmd *exec.Cmd) {
-	if cmd.Process != nil {
-		pgid, err := syscall.Getpgid(cmd.Process.Pid)
-		if err == nil {
-			syscall.Kill(-pgid, syscall.SIGTERM)
-		}
-		cmd.Wait()
+func killProcessGroup(cmd *exec.Cmd) error {
+	if cmd.Process == nil {
+		return nil
 	}
+	if pgid, err := syscall.Getpgid(cmd.Process.Pid); err == nil { // use best-effort to kill full process group
+		err = syscall.Kill(-pgid, syscall.SIGTERM)
+		if err != nil {
+			return err
+		}
+	}
+	return cmd.Wait()
 }
 
 // waitForHTTP polls a URL until it returns a 200 status or the timeout expires.
@@ -525,7 +530,9 @@ func (Test) E2E(args string) error {
 	}
 	defer func() {
 		fmt.Println("\n--- Stopping API server ---")
-		killProcessGroup(apiCmd)
+		if err := killProcessGroup(apiCmd); err != nil {
+			fmt.Println("Failed to stop API server:", err)
+		}
 	}()
 
 	// Wait for API to be ready
@@ -549,7 +556,7 @@ func (Test) E2E(args string) error {
 
 	// Serve the built frontend with vite preview (static, no file watchers)
 	fmt.Println("\n--- Starting frontend preview server ---")
-	frontendCmd := exec.Command("pnpm", "preview:dev", "--port", strconv.Itoa(frontendPort))
+	frontendCmd := exec.Command("pnpm", "preview:dev", "--port", strconv.Itoa(frontendPort)) //nolint:gosec // This mage task runs end to end tests with environment-based configuration, it must use the port environment variable to suit its current environment.
 	frontendCmd.Dir = "frontend"
 	frontendCmd.Stdout = os.Stdout
 	frontendCmd.Stderr = os.Stderr
@@ -559,7 +566,9 @@ func (Test) E2E(args string) error {
 	}
 	defer func() {
 		fmt.Println("\n--- Stopping frontend preview server ---")
-		killProcessGroup(frontendCmd)
+		if err := killProcessGroup(frontendCmd); err != nil {
+			fmt.Println("Failed to stop API server:", err)
+		}
 	}()
 
 	// Wait for frontend to be ready
@@ -600,7 +609,7 @@ func (Test) E2E(args string) error {
 type Check mg.Namespace
 
 // GotSwag checks if the swagger docs need to be re-generated from the code annotations
-func (Check) GotSwag() {
+func (Check) GotSwag() error {
 	mg.Deps(initVars)
 	// The check is pretty cheaply done: We take the hash of the swagger.json file, generate the docs,
 	// hash the file again and compare the two hashes to see if anything changed. If that's the case,
@@ -610,27 +619,26 @@ func (Check) GotSwag() {
 	// docs after the check. This behaviour is good enough for ci though.
 	oldHash, err := calculateSha256FileHash("./pkg/swagger/swagger.json")
 	if err != nil {
-		fmt.Printf("Error getting old hash of the swagger docs: %s", err)
-		os.Exit(1)
+		return fmt.Errorf("error getting old hash of the swagger docs: %w", err)
 	}
 
-	(Generate{}).SwaggerDocs()
+	if generateErr := (Generate{}).SwaggerDocs(); generateErr != nil {
+		return generateErr
+	}
 
 	newHash, err := calculateSha256FileHash("./pkg/swagger/swagger.json")
 	if err != nil {
-		fmt.Printf("Error getting new hash of the swagger docs: %s", err)
-		os.Exit(1)
+		return fmt.Errorf("error getting new hash of the swagger docs: %w", err)
 	}
 
 	if oldHash != newHash {
-		fmt.Println("Swagger docs are not up to date.")
-		fmt.Println("Please run 'mage generate:swagger-docs' and commit the result.")
-		os.Exit(1)
+		return fmt.Errorf("swagger docs are not up to date: run 'mage generate:swagger-docs' and commit the result")
 	}
+	return nil
 }
 
 // Translations checks if all translation keys used in the code exist in the English translation file
-func (Check) Translations() {
+func (Check) Translations() error {
 	mg.Deps(initVars)
 	fmt.Println("Checking for missing translation keys...")
 
@@ -638,8 +646,7 @@ func (Check) Translations() {
 	translationFile := "./pkg/i18n/lang/en.json"
 	translations, err := loadTranslations(translationFile)
 	if err != nil {
-		fmt.Printf("Error loading translations: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error loading translations: %w", err)
 	}
 
 	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
@@ -647,8 +654,7 @@ func (Check) Translations() {
 	// Extract keys from codebase
 	keys, err := walkCodebaseForTranslationKeys(".")
 	if err != nil {
-		fmt.Printf("Error walking codebase: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error walking codebase: %w", err)
 	}
 
 	fmt.Printf("Found %d translation keys in the codebase\n", len(keys))
@@ -663,17 +669,18 @@ func (Check) Translations() {
 
 	// Print results
 	if len(missingKeys) > 0 {
-		fmt.Printf("\nFound %d missing translation keys:\n", len(missingKeys))
+		var errs []error
 		for key, occurrences := range missingKeys {
-			fmt.Printf("\nKey: %s\n", key)
+			var keyErrs []error
 			for _, occurrence := range occurrences {
-				fmt.Printf("  - %s:%d\n", occurrence.FilePath, occurrence.Line)
+				keyErrs = append(keyErrs, fmt.Errorf("- %s:%d", occurrence.FilePath, occurrence.Line))
 			}
+			errs = append(errs, fmt.Errorf("missing key %s in files:\n%w", key, errors.Join(keyErrs...)))
 		}
-		os.Exit(1)
-	} else {
-		printSuccess("All translation keys are present in the translation file!")
+		return fmt.Errorf("found %d missing translation keys:\n%w", len(missingKeys), errors.Join(errs...))
 	}
+	printSuccess("All translation keys are present in the translation file!")
+	return nil
 }
 
 // TranslationKey represents a translation key found in the code
@@ -687,12 +694,12 @@ type TranslationKey struct {
 func loadTranslations(filePath string) (map[string]bool, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading translation file: %v", err)
+		return nil, fmt.Errorf("error reading translation file: %w", err)
 	}
 
-	var translationsMap map[string]interface{}
+	var translationsMap map[string]any
 	if err := json.Unmarshal(data, &translationsMap); err != nil {
-		return nil, fmt.Errorf("error parsing JSON: %v", err)
+		return nil, fmt.Errorf("error parsing JSON: %w", err)
 	}
 
 	// Flatten the nested structure
@@ -703,7 +710,7 @@ func loadTranslations(filePath string) (map[string]bool, error) {
 }
 
 // flattenTranslations recursively flattens a nested map structure into a flat map with dot-separated keys
-func flattenTranslations(prefix string, src map[string]interface{}, dest map[string]bool) {
+func flattenTranslations(prefix string, src map[string]any, dest map[string]bool) {
 	for k, v := range src {
 		key := k
 		if prefix != "" {
@@ -713,7 +720,7 @@ func flattenTranslations(prefix string, src map[string]interface{}, dest map[str
 		switch vv := v.(type) {
 		case string:
 			dest[key] = true
-		case map[string]interface{}:
+		case map[string]any:
 			flattenTranslations(key, vv, dest)
 		}
 	}
@@ -756,7 +763,7 @@ func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 	// Read the file content
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading file %s: %v", filePath, err)
+		return nil, fmt.Errorf("error reading file %s: %w", filePath, err)
 	}
 
 	var keys []TranslationKey
@@ -786,22 +793,25 @@ func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 	return keys, nil
 }
 
-func checkGolangCiLintInstalled() {
+func checkGolangCiLintInstalled() error {
 	mg.Deps(initVars)
 	if err := exec.Command("golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
-		fmt.Println("Please manually install golangci-lint by running")
-		fmt.Println("curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0")
-		os.Exit(1)
+		return fmt.Errorf("golangci-lint executable failed to run, please manually install golangci-lint by running the command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0")
 	}
+	return nil
 }
 
 func (Check) Golangci() error {
-	checkGolangCiLintInstalled()
+	if err := checkGolangCiLintInstalled(); err != nil {
+		return err
+	}
 	return runAndStreamOutput("golangci-lint", "run")
 }
 
 func (Check) GolangciFix() error {
-	checkGolangCiLintInstalled()
+	if err := checkGolangCiLintInstalled(); err != nil {
+		return err
+	}
 	return runAndStreamOutput("golangci-lint", "run", "--fix")
 }
 
@@ -842,8 +852,7 @@ func (Build) Build() error {
 	distPath := filepath.Join("frontend", "dist")
 	if _, err := os.Stat(distPath); os.IsNotExist(err) {
 		if err := os.MkdirAll(distPath, 0o755); err != nil {
-			fmt.Printf("Error creating %s: %s\n", distPath, err)
-			os.Exit(1)
+			return fmt.Errorf("error creating %s: %w", distPath, err)
 		}
 	}
 
@@ -851,8 +860,7 @@ func (Build) Build() error {
 	if _, err := os.Stat(indexFile); os.IsNotExist(err) {
 		f, err := os.Create(indexFile)
 		if err != nil {
-			fmt.Printf("Error creating %s: %s\n", indexFile, err)
-			os.Exit(1)
+			return fmt.Errorf("error creating %s: %w", indexFile, err)
 		}
 		f.Close()
 		fmt.Printf("Warning: %s not found, created empty file\n", indexFile)
@@ -928,7 +936,9 @@ func (Release) Dirs() error {
 
 func prepareXgo() error {
 	mg.Deps(initVars)
-	checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo")
+	if err := checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo"); err != nil {
+		return err
+	}
 
 	fmt.Println("Pulling latest xgo docker image...")
 	return runAndStreamOutput("docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
@@ -936,7 +946,9 @@ func prepareXgo() error {
 
 func runXgo(targets string) error {
 	mg.Deps(initVars)
-	checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo")
+	if err := checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo"); err != nil {
+		return err
+	}
 
 	extraLdflags := `-linkmode external -extldflags "-static" `
 
@@ -960,6 +972,9 @@ func runXgo(targets string) error {
 	}
 	if os.Getenv("DRONE_WORKSPACE") != "" {
 		return filepath.Walk("/build/", func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
 			// Skip directories
 			if info.IsDir() {
 				return nil
@@ -1018,7 +1033,10 @@ func (Release) Compress(ctx context.Context) error {
 
 	errs, _ := errgroup.WithContext(ctx)
 
-	filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
+	walkErr := filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		// Only executable files
 		if !strings.Contains(info.Name(), Executable) {
 			return nil
@@ -1042,13 +1060,18 @@ func (Release) Compress(ctx context.Context) error {
 
 		return nil
 	})
-
+	if walkErr != nil {
+		return walkErr
+	}
 	return errs.Wait()
 }
 
 // Copy copies all built binaries to dist/release/ in preparation for creating the os packages
 func (Release) Copy() error {
 	return filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		// Only executable files
 		if !strings.Contains(info.Name(), Executable) {
 			return nil
@@ -1096,6 +1119,9 @@ func (Release) OsPackage() error {
 	// over the newly created files, creating some kind of endless loop.
 	bins := make(map[string]os.FileInfo)
 	if err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if strings.Contains(info.Name(), ".sha256") || info.IsDir() {
 			return nil
 		}
@@ -1147,7 +1173,7 @@ func (Release) Zip() error {
 		fmt.Printf("Zipping %s...\n", info.Name())
 
 		zipFile := filepath.Join(rootDir, DIST, "zip", info.Name()+".zip")
-		c := exec.Command("zip", "-r", zipFile, ".", "-i", "*")
+		c := exec.Command("zip", "-r", zipFile, ".", "-i", "*") //nolint:gosec // This mage task creates zips of every directory recursively, it must use the directory name in the resulting file path to distinguish output files.
 		c.Dir = path
 		out, err := c.Output()
 		fmt.Print(string(out))
@@ -1203,9 +1229,7 @@ func (Release) Packages() error {
 		err = exec.Command(binpath).Run()
 	}
 	if err != nil && strings.Contains(err.Error(), "executable file not found") {
-		fmt.Println("Please manually install nfpm by running")
-		fmt.Println("curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh -s -- -b $(go env GOPATH)/bin")
-		os.Exit(1)
+		return fmt.Errorf("executable %s not found: please manually install nfpm by running the command: curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh -s -- -b $(go env GOPATH)/bin", binpath)
 	}
 
 	err = (Release{}).PrepareNFPMConfig()
@@ -1371,7 +1395,7 @@ func (s *` + name + `) Handle(msg *message.Message) (err error) {
 	}
 
 	scanner := bufio.NewScanner(file)
-	var idx int64 = 0
+	var idx int64
 	for scanner.Scan() {
 		if scanner.Text() == "}" {
 			// idx -= int64(len(scanner.Text()))
@@ -1398,9 +1422,15 @@ func (s *` + name + `) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
-	f.Seek(idx, 0)
-	f.Write([]byte(registerListenerCode))
-	f.Write(remainder)
+	if _, err := f.Seek(idx, 0); err != nil {
+		return err
+	}
+	if _, err := f.Write([]byte(registerListenerCode)); err != nil {
+		return err
+	}
+	if _, err := f.Write(remainder); err != nil {
+		return err
+	}
 
 	///////
 	// Append the listener code
@@ -1438,7 +1468,7 @@ func (n *` + name + `) ToMail(lang string) *notifications.Mail {
 }
 
 // ToDB returns the ` + name + ` notification in a format which can be saved in the db
-func (n *` + name + `) ToDB() interface{} {
+func (n *` + name + `) ToDB() any {
 	return nil
 }
 
@@ -1466,13 +1496,15 @@ const DefaultConfigYAMLSamplePath = "config.yml.sample"
 func (Generate) SwaggerDocs() error {
 	mg.Deps(initVars)
 
-	checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag")
+	if err := checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag"); err != nil {
+		return err
+	}
 	return runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", ".", "-o", "./pkg/swagger")
 }
 
 type ConfigNode struct {
 	Key      string        `json:"key,omitempty"`
-	Value    interface{}   `json:"default_value,omitempty"`
+	Value    any           `json:"default_value,omitempty"`
 	Comment  string        `json:"comment,omitempty"`
 	Children []*ConfigNode `json:"children,omitempty"`
 }
@@ -1523,14 +1555,15 @@ func convertConfigJSONToYAML(node *ConfigNode, indent int, isTopLevel bool, pare
 		isProviders := node.Key == "providers" && parentKey == "openid"
 		isArray := len(node.Children) > 0 && node.Children[0].Key == ""
 		for i, child := range node.Children {
-			if isProviders {
+			switch {
+			case isProviders:
 				writeComment(child.Comment, indent+1)
 				writeLine("-", indent+1)
 				result.WriteString(convertConfigJSONToYAML(child, indent+1, false, node.Key, commentOut))
-			} else if isArray {
+			case isArray:
 				writeComment(child.Comment, indent+1)
 				writeLine("- "+formatValue(child.Value), indent+1)
-			} else {
+			default:
 				result.WriteString(convertConfigJSONToYAML(child, indent+1, false, node.Key, commentOut))
 			}
 			if i == len(node.Children)-1 && !isProviders && !isArray {
@@ -1542,7 +1575,7 @@ func convertConfigJSONToYAML(node *ConfigNode, indent int, isTopLevel bool, pare
 	return result.String()
 }
 
-func formatValue(value interface{}) string {
+func formatValue(value any) string {
 	switch v := value.(type) {
 	case string:
 		if intValue, err := strconv.Atoi(v); err == nil {
@@ -1584,7 +1617,7 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 
 	yamlData := convertConfigJSONToYAML(&root, -1, true, "", commented)
 
-	err = os.WriteFile(yamlPath, []byte(yamlData), 0o644)
+	err = os.WriteFile(yamlPath, []byte(yamlData), 0o600)
 	if err != nil {
 		fmt.Println("Error writing YAML file:", err)
 		return
@@ -1640,7 +1673,7 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 		re2 := regexp.MustCompile(`(?m)^(\s*rootpath:\s*)(/[^\s\n]+)`)
 		newConfig = re2.ReplaceAllString(newConfig, `${1}"`+worktreePath+`"`)
 
-		if err := os.WriteFile(configDst, []byte(newConfig), 0o644); err != nil {
+		if err := os.WriteFile(configDst, []byte(newConfig), 0o600); err != nil {
 			return fmt.Errorf("failed to write config.yml: %w", err)
 		}
 		printSuccess("Config copied with updated rootpath!")
@@ -1724,7 +1757,7 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 
 // printReleaseStats prints commit statistics for the range between two refs.
 func printReleaseStats(fromRef, toRef string) error {
-	output, err := runCmdWithOutput("git", "log", fromRef+".."+toRef, "--oneline")
+	output, err := runGitCommandWithOutput("log", fromRef+".."+toRef, "--oneline")
 	if err != nil {
 		return fmt.Errorf("failed to get commit log: %w", err)
 	}
@@ -1791,7 +1824,7 @@ func (Dev) TagRelease(version string) error {
 	fmt.Printf("Creating release %s...\n", version)
 
 	// Get the last tag
-	lastTagBytes, err := runCmdWithOutput("git", "describe", "--tags", "--abbrev=0")
+	lastTagBytes, err := runGitCommandWithOutput("describe", "--tags", "--abbrev=0")
 	if err != nil {
 		return fmt.Errorf("failed to get last tag: %w", err)
 	}
@@ -1805,7 +1838,7 @@ func (Dev) TagRelease(version string) error {
 
 	// Generate changelog using git cliff
 	fmt.Println("Generating changelog...")
-	changelogBytes, err := runCmdWithOutput("git", "cliff", lastTag+"..HEAD", "--tag", version)
+	changelogBytes, err := runGitCommandWithOutput("cliff", lastTag+"..HEAD", "--tag", version)
 	if err != nil {
 		return fmt.Errorf("failed to generate changelog: %w", err)
 	}
@@ -1887,7 +1920,8 @@ func cleanupChangelog(changelog string) string {
 			strings.HasPrefix(trimmedLine, "### ") ||
 			trimmedLine == ""
 
-		if isNewEntry {
+		switch {
+		case isNewEntry:
 			// Flush the current entry if any
 			if currentEntry.Len() > 0 {
 				entryStr := strings.TrimSpace(currentEntry.String())
@@ -1899,22 +1933,23 @@ func cleanupChangelog(changelog string) string {
 			}
 
 			// Start a new entry or add empty line/header
-			if trimmedLine == "" {
+			switch {
+			case trimmedLine == "":
 				// Only add empty line if the previous line wasn't empty
 				if len(cleanedLines) > 0 && cleanedLines[len(cleanedLines)-1] != "" {
 					cleanedLines = append(cleanedLines, "")
 				}
-			} else if strings.HasPrefix(trimmedLine, "## ") || strings.HasPrefix(trimmedLine, "### ") {
+			case strings.HasPrefix(trimmedLine, "## ") || strings.HasPrefix(trimmedLine, "### "):
 				// Headers are never duplicates
 				cleanedLines = append(cleanedLines, trimmedLine)
-			} else {
+			default:
 				currentEntry.WriteString(trimmedLine)
 			}
-		} else if currentEntry.Len() > 0 {
+		case currentEntry.Len() > 0:
 			// This is a continuation of the current entry
 			currentEntry.WriteString(" ")
 			currentEntry.WriteString(trimmedLine)
-		} else if trimmedLine != "" {
+		case trimmedLine != "":
 			// Standalone line that's not part of an entry
 			if !seenLines[trimmedLine] {
 				cleanedLines = append(cleanedLines, trimmedLine)
@@ -1949,7 +1984,7 @@ func updateReadmeBadge(version string) error {
 	re := regexp.MustCompile(`(download-)(v[0-9a-zA-Z.]+)(-brightgreen)`)
 	newContent := re.ReplaceAllString(string(content), "${1}"+badgeVersion+"${3}")
 
-	if err := os.WriteFile(readmePath, []byte(newContent), 0o644); err != nil {
+	if err := os.WriteFile(readmePath, []byte(newContent), 0o600); err != nil {
 		return fmt.Errorf("failed to write README.md: %w", err)
 	}
 
@@ -1970,7 +2005,7 @@ func updateFrontendPackageJSON(version string) error {
 	re := regexp.MustCompile(`("version"\s*:\s*")([^"]+)(")`)
 	newContent := re.ReplaceAllString(string(content), "${1}"+npmVersion+"${3}")
 
-	if err := os.WriteFile(pkgPath, []byte(newContent), 0o644); err != nil {
+	if err := os.WriteFile(pkgPath, []byte(newContent), 0o600); err != nil {
 		return fmt.Errorf("failed to write %s: %w", pkgPath, err)
 	}
 
@@ -2005,7 +2040,7 @@ func prependChangelog(newChangelog string) error {
 		strings.TrimSpace(newChangelog) + "\n" +
 		existingVersions
 
-	if err := os.WriteFile(changelogPath, []byte(newContent), 0o644); err != nil {
+	if err := os.WriteFile(changelogPath, []byte(newContent), 0o600); err != nil {
 		return fmt.Errorf("failed to write CHANGELOG.md: %w", err)
 	}
 
@@ -2019,11 +2054,12 @@ func prepareTagMessage(changelog string) string {
 
 	for _, line := range lines {
 		// Remove ## and ### prefixes
-		if strings.HasPrefix(line, "### ") {
+		switch {
+		case strings.HasPrefix(line, "### "):
 			result = append(result, strings.TrimPrefix(line, "### "))
-		} else if strings.HasPrefix(line, "## ") {
+		case strings.HasPrefix(line, "## "):
 			result = append(result, strings.TrimPrefix(line, "## "))
-		} else {
+		default:
 			result = append(result, line)
 		}
 	}
@@ -2044,7 +2080,7 @@ func (Plugins) Build(pathToSourceFiles string) error {
 	if !strings.HasPrefix(pathToSourceFiles, "/") {
 		absPath, err := filepath.Abs(pathToSourceFiles)
 		if err != nil {
-			return fmt.Errorf("failed to resolve absolute path: %v", err)
+			return fmt.Errorf("failed to resolve absolute path: %w", err)
 		}
 		pathToSourceFiles = absPath
 	}
