@@ -87,8 +87,8 @@ func goDetectVerboseFlag() string {
 	return fmt.Sprintf("-v=%t", mg.Verbose())
 }
 
-func runGitCommandWithOutput(arg ...string) (output []byte, err error) {
-	cmd := exec.Command("git", arg...)
+func runGitCommandWithOutput(ctx context.Context, arg ...string) (output []byte, err error) {
+	cmd := exec.CommandContext(ctx, "git", arg...)
 	output, err = cmd.Output()
 	if err != nil {
 		var ee *exec.ExitError
@@ -101,8 +101,8 @@ func runGitCommandWithOutput(arg ...string) (output []byte, err error) {
 	return output, nil
 }
 
-func getRawVersionString() (version string, err error) {
-	version, err = getRawVersionNumber()
+func getRawVersionString(ctx context.Context) (version string, err error) {
+	version, err = getRawVersionNumber(ctx)
 	if err != nil {
 		return
 	}
@@ -118,7 +118,7 @@ func getRawVersionString() (version string, err error) {
 	return
 }
 
-func getRawVersionNumber() (version string, err error) {
+func getRawVersionNumber(ctx context.Context) (version string, err error) {
 	versionEnv := os.Getenv("RELEASE_VERSION")
 	if versionEnv != "" {
 		return versionEnv, nil
@@ -132,19 +132,19 @@ func getRawVersionNumber() (version string, err error) {
 		return strings.Replace(os.Getenv("DRONE_BRANCH"), "release/v", "", 1), nil
 	}
 
-	versionBytes, err := runGitCommandWithOutput("describe", "--tags", "--always", "--abbrev=10")
+	versionBytes, err := runGitCommandWithOutput(ctx, "describe", "--tags", "--always", "--abbrev=10")
 	return string(versionBytes), err
 }
 
-func setVersion() error {
-	versionNumber, err := getRawVersionNumber()
+func setVersion(ctx context.Context) error {
+	versionNumber, err := getRawVersionNumber(ctx)
 	if err != nil {
 		return err
 	}
 	VersionNumber = strings.Trim(versionNumber, "\n")
 	VersionNumber = strings.Replace(VersionNumber, "-g", "-", 1)
 
-	version, err := getRawVersionString()
+	version, err := getRawVersionString(ctx)
 	if err != nil {
 		return fmt.Errorf("error getting version: %w", err)
 	}
@@ -178,13 +178,13 @@ func init() {
 }
 
 // Some variables have external dependencies (like git) which may not always be available.
-func initVars() error {
+func initVars(ctx context.Context) error {
 	// Always include osusergo to use pure Go os/user implementation instead of CGO.
 	// This prevents SIGFPE crashes when running under systemd without HOME set,
 	// caused by glibc's getpwuid_r() failing in certain environments.
 	// See: https://github.com/go-vikunja/vikunja/issues/2170
 	Tags = "osusergo " + strings.ReplaceAll(os.Getenv("TAGS"), ",", " ")
-	if err := setVersion(); err != nil {
+	if err := setVersion(ctx); err != nil {
 		return err
 	}
 	setBinLocation()
@@ -193,8 +193,8 @@ func initVars() error {
 	return nil
 }
 
-func runAndStreamOutput(cmd string, args ...string) error {
-	c := exec.Command(cmd, args...)
+func runAndStreamOutput(ctx context.Context, cmd string, args ...string) error {
+	c := exec.CommandContext(ctx, cmd, args...)
 
 	c.Env = os.Environ()
 	c.Stdout = os.Stdout
@@ -206,10 +206,10 @@ func runAndStreamOutput(cmd string, args ...string) error {
 
 // Will check if the tool exists and if not install it from the provided import path
 // If any errors occur, it will exit with a status code of 1.
-func checkAndInstallGoTool(tool, importPath string) error {
-	if err := exec.Command(tool).Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
+func checkAndInstallGoTool(ctx context.Context, tool, importPath string) error {
+	if err := exec.CommandContext(ctx, tool).Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
 		fmt.Printf("%s not installed, installing %s...\n", tool, importPath)
-		if err := exec.Command("go", "install", goDetectVerboseFlag(), importPath).Run(); err != nil { //nolint:gosec // Every caller to checkAndInstallGoTool is hard-coded at time of writing, so no injection possible.
+		if err := exec.CommandContext(ctx, "go", "install", goDetectVerboseFlag(), importPath).Run(); err != nil { //nolint:gosec // Every caller to checkAndInstallGoTool is hard-coded at time of writing, so no injection possible.
 			return fmt.Errorf("error installing %s: %w", tool, err)
 		}
 		fmt.Println("Installed.")
@@ -324,16 +324,16 @@ func printSuccess(text string, args ...any) {
 }
 
 // getE2EPort returns the port from the given env var, or a random available port.
-func getE2EPort(envVar string) (int, error) {
+func getE2EPort(ctx context.Context, envVar string) (int, error) {
 	if v := os.Getenv(envVar); v != "" {
 		return strconv.Atoi(v)
 	}
-	return getRandomPort()
+	return getRandomPort(ctx)
 }
 
 // getRandomPort finds a random available TCP port.
-func getRandomPort() (int, error) {
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+func getRandomPort(ctx context.Context) (int, error) {
+	l, err := (&net.ListenConfig{}).Listen(ctx, "tcp", "127.0.0.1:0")
 	if err != nil {
 		return 0, err
 	}
@@ -362,11 +362,15 @@ func killProcessGroup(cmd *exec.Cmd) error {
 }
 
 // waitForHTTP polls a URL until it returns a 200 status or the timeout expires.
-func waitForHTTP(url string, timeout time.Duration) error {
+func waitForHTTP(ctx context.Context, url string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	client := &http.Client{Timeout: 2 * time.Second}
 	for time.Now().Before(deadline) {
-		resp, err := client.Get(url)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return err
+		}
+		resp, err := client.Do(req)
 		if err == nil {
 			resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
@@ -379,7 +383,7 @@ func waitForHTTP(url string, timeout time.Duration) error {
 }
 
 // Fmt formats the code using go fmt
-func Fmt() error {
+func Fmt(ctx context.Context) error {
 	mg.Deps(initVars)
 	var goFiles []string
 	err := filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
@@ -395,37 +399,37 @@ func Fmt() error {
 		return err
 	}
 	args := append([]string{"-s", "-w"}, goFiles...)
-	return runAndStreamOutput("gofmt", args...)
+	return runAndStreamOutput(ctx, "gofmt", args...)
 }
 
 type Test mg.Namespace
 
 // Feature runs the feature tests
-func (Test) Feature() error {
+func (Test) Feature(ctx context.Context) error {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	return runAndStreamOutput("go", "test", goDetectVerboseFlag(), "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m", "-short", "./...")
+	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-coverprofile", "cover.out", "-timeout", "45m", "-short", "./...")
 }
 
 // Coverage runs the tests and builds the coverage html file from coverage output
-func (Test) Coverage() error {
+func (Test) Coverage(ctx context.Context) error {
 	mg.Deps(initVars)
 	mg.Deps(Test.Feature)
-	return runAndStreamOutput("go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
+	return runAndStreamOutput(ctx, "go", "tool", "cover", "-html=cover.out", "-o", "cover.html")
 }
 
 // Web runs the web tests
-func (Test) Web() error {
+func (Test) Web(ctx context.Context) error {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
 	args := []string{"test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/webtests"}
-	return runAndStreamOutput("go", args...)
+	return runAndStreamOutput(ctx, "go", args...)
 }
 
-func (Test) Filter(filter string) error {
+func (Test) Filter(ctx context.Context, filter string) error {
 	mg.Deps(initVars)
 	// We run everything sequentially and not in parallel to prevent issues with real test databases
-	return runAndStreamOutput("go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, "-short", "./...")
+	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "-run", filter, "-short", "./...")
 }
 
 func (Test) All() {
@@ -436,9 +440,9 @@ func (Test) All() {
 // E2EApi runs the end-to-end API tests in pkg/e2etests.
 // These tests use the real event system (not events.Fake()) to verify
 // the full async pipeline: web handler → DB → event dispatch → watermill → listener.
-func (Test) E2EApi() error {
+func (Test) E2EApi(ctx context.Context) error {
 	mg.Deps(initVars)
-	return runAndStreamOutput("go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/e2etests")
+	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/e2etests")
 }
 
 // E2E builds the API, starts it with an in-memory database and the frontend dev server,
@@ -458,15 +462,15 @@ func (Test) E2EApi() error {
 //   - VIKUNJA_E2E_FRONTEND_PORT: Frontend port (default: random)
 //   - VIKUNJA_E2E_TESTING_TOKEN: Testing token for seed endpoints (default: random)
 //   - VIKUNJA_E2E_SKIP_BUILD: Set to "true" to skip rebuilding the API binary (default: false)
-func (Test) E2E(args string) error {
+func (Test) E2E(ctx context.Context, args string) error {
 	mg.Deps(initVars)
 
 	// Determine ports
-	apiPort, err := getE2EPort("VIKUNJA_E2E_API_PORT")
+	apiPort, err := getE2EPort(ctx, "VIKUNJA_E2E_API_PORT")
 	if err != nil {
 		return fmt.Errorf("could not get API port: %w", err)
 	}
-	frontendPort, err := getE2EPort("VIKUNJA_E2E_FRONTEND_PORT")
+	frontendPort, err := getE2EPort(ctx, "VIKUNJA_E2E_FRONTEND_PORT")
 	if err != nil {
 		return fmt.Errorf("could not get frontend port: %w", err)
 	}
@@ -485,7 +489,7 @@ func (Test) E2E(args string) error {
 	// Build the API binary (unless skipped)
 	if os.Getenv("VIKUNJA_E2E_SKIP_BUILD") != "true" {
 		fmt.Println("\n--- Building API binary ---")
-		if err := (Build{}).Build(); err != nil {
+		if err := (Build{}).Build(ctx); err != nil {
 			return fmt.Errorf("failed to build API: %w", err)
 		}
 	}
@@ -507,7 +511,7 @@ func (Test) E2E(args string) error {
 	// Start the API server — all config via env vars, no config file
 	// Uses in-memory SQLite (no DB file on disk)
 	fmt.Println("\n--- Starting API server ---")
-	apiCmd := exec.Command("./vikunja", "web")
+	apiCmd := exec.CommandContext(ctx, "./vikunja", "web")
 	apiCmd.Env = append(os.Environ(),
 		fmt.Sprintf("VIKUNJA_SERVICE_INTERFACE=:%d", apiPort),
 		fmt.Sprintf("VIKUNJA_SERVICE_PUBLICURL=http://127.0.0.1:%d/", apiPort),
@@ -538,14 +542,14 @@ func (Test) E2E(args string) error {
 	// Wait for API to be ready
 	apiBase := fmt.Sprintf("http://127.0.0.1:%d/api/v1", apiPort)
 	fmt.Printf("Waiting for API at %s ...\n", apiBase)
-	if err := waitForHTTP(apiBase+"/info", 30*time.Second); err != nil {
+	if err := waitForHTTP(ctx, apiBase+"/info", 30*time.Second); err != nil {
 		return fmt.Errorf("API failed to start: %w", err)
 	}
 	printSuccess("API is ready!")
 
 	// Build the frontend
 	fmt.Println("\n--- Building frontend ---")
-	buildFrontendCmd := exec.Command("pnpm", "build:dev")
+	buildFrontendCmd := exec.CommandContext(ctx, "pnpm", "build:dev")
 	buildFrontendCmd.Dir = "frontend"
 	buildFrontendCmd.Stdout = os.Stdout
 	buildFrontendCmd.Stderr = os.Stderr
@@ -556,7 +560,7 @@ func (Test) E2E(args string) error {
 
 	// Serve the built frontend with vite preview (static, no file watchers)
 	fmt.Println("\n--- Starting frontend preview server ---")
-	frontendCmd := exec.Command("pnpm", "preview:dev", "--port", strconv.Itoa(frontendPort)) //nolint:gosec // This mage task runs end to end tests with environment-based configuration, it must use the port environment variable to suit its current environment.
+	frontendCmd := exec.CommandContext(ctx, "pnpm", "preview:dev", "--port", strconv.Itoa(frontendPort)) //nolint:gosec // This mage task runs end to end tests with environment-based configuration, it must use the port environment variable to suit its current environment.
 	frontendCmd.Dir = "frontend"
 	frontendCmd.Stdout = os.Stdout
 	frontendCmd.Stderr = os.Stderr
@@ -574,7 +578,7 @@ func (Test) E2E(args string) error {
 	// Wait for frontend to be ready
 	frontendBase := fmt.Sprintf("http://127.0.0.1:%d", frontendPort)
 	fmt.Printf("Waiting for frontend at %s ...\n", frontendBase)
-	if err := waitForHTTP(frontendBase, 60*time.Second); err != nil {
+	if err := waitForHTTP(ctx, frontendBase, 60*time.Second); err != nil {
 		return fmt.Errorf("frontend failed to start: %w", err)
 	}
 	printSuccess("Frontend is ready!")
@@ -585,7 +589,7 @@ func (Test) E2E(args string) error {
 	if strings.TrimSpace(args) != "" {
 		playwrightArgs = append(playwrightArgs, strings.Fields(args)...)
 	}
-	playwrightCmd := exec.Command("pnpm", playwrightArgs...)
+	playwrightCmd := exec.CommandContext(ctx, "pnpm", playwrightArgs...)
 	playwrightCmd.Dir = "frontend"
 	playwrightCmd.Env = append(os.Environ(),
 		fmt.Sprintf("API_URL=%s/", apiBase),
@@ -609,7 +613,7 @@ func (Test) E2E(args string) error {
 type Check mg.Namespace
 
 // GotSwag checks if the swagger docs need to be re-generated from the code annotations
-func (Check) GotSwag() error {
+func (Check) GotSwag(ctx context.Context) error {
 	mg.Deps(initVars)
 	// The check is pretty cheaply done: We take the hash of the swagger.json file, generate the docs,
 	// hash the file again and compare the two hashes to see if anything changed. If that's the case,
@@ -622,7 +626,7 @@ func (Check) GotSwag() error {
 		return fmt.Errorf("error getting old hash of the swagger docs: %w", err)
 	}
 
-	if generateErr := (Generate{}).SwaggerDocs(); generateErr != nil {
+	if generateErr := (Generate{}).SwaggerDocs(ctx); generateErr != nil {
 		return generateErr
 	}
 
@@ -793,26 +797,26 @@ func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 	return keys, nil
 }
 
-func checkGolangCiLintInstalled() error {
+func checkGolangCiLintInstalled(ctx context.Context) error {
 	mg.Deps(initVars)
-	if err := exec.Command("golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
+	if err := exec.CommandContext(ctx, "golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
 		return fmt.Errorf("golangci-lint executable failed to run, please manually install golangci-lint by running the command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0")
 	}
 	return nil
 }
 
-func (Check) Golangci() error {
-	if err := checkGolangCiLintInstalled(); err != nil {
+func (Check) Golangci(ctx context.Context) error {
+	if err := checkGolangCiLintInstalled(ctx); err != nil {
 		return err
 	}
-	return runAndStreamOutput("golangci-lint", "run")
+	return runAndStreamOutput(ctx, "golangci-lint", "run")
 }
 
-func (Check) GolangciFix() error {
-	if err := checkGolangCiLintInstalled(); err != nil {
+func (Check) GolangciFix(ctx context.Context) error {
+	if err := checkGolangCiLintInstalled(ctx); err != nil {
 		return err
 	}
-	return runAndStreamOutput("golangci-lint", "run", "--fix")
+	return runAndStreamOutput(ctx, "golangci-lint", "run", "--fix")
 }
 
 // All runs golangci and the swagger test in parallel
@@ -828,9 +832,9 @@ func (Check) All() {
 type Build mg.Namespace
 
 // Clean cleans all build, executable and bindata files
-func (Build) Clean() error {
+func (Build) Clean(ctx context.Context) error {
 	mg.Deps(initVars)
-	if err := exec.Command("go", "clean", "./...").Run(); err != nil {
+	if err := exec.CommandContext(ctx, "go", "clean", "./...").Run(); err != nil {
 		return err
 	}
 	if err := os.Remove(Executable); err != nil && !os.IsNotExist(err) {
@@ -846,7 +850,7 @@ func (Build) Clean() error {
 }
 
 // Build builds a vikunja binary, ready to run
-func (Build) Build() error {
+func (Build) Build(ctx context.Context) error {
 	mg.Deps(initVars)
 	// Check if the frontend dist folder exists
 	distPath := filepath.Join("frontend", "dist")
@@ -866,7 +870,7 @@ func (Build) Build() error {
 		fmt.Printf("Warning: %s not found, created empty file\n", indexFile)
 	}
 
-	return runAndStreamOutput("go", "build", goDetectVerboseFlag(), "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
+	return runAndStreamOutput(ctx, "go", "build", goDetectVerboseFlag(), "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
 func (Build) SaveVersionToFile() error {
@@ -898,9 +902,9 @@ func (Release) Release(ctx context.Context) error {
 
 	// Run compiling in parallel to speed it up
 	errs, _ := errgroup.WithContext(ctx)
-	errs.Go((Release{}).Windows)
-	errs.Go((Release{}).Linux)
-	errs.Go((Release{}).Darwin)
+	errgroupGoWithContext(ctx, errs, (Release{}).Windows)
+	errgroupGoWithContext(ctx, errs, (Release{}).Linux)
+	errgroupGoWithContext(ctx, errs, (Release{}).Darwin)
 	if err := errs.Wait(); err != nil {
 		return err
 	}
@@ -917,11 +921,17 @@ func (Release) Release(ctx context.Context) error {
 	if err := (Release{}).OsPackage(); err != nil {
 		return err
 	}
-	if err := (Release{}).Zip(); err != nil {
+	if err := (Release{}).Zip(ctx); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func errgroupGoWithContext(ctx context.Context, errs *errgroup.Group, do func(context.Context) error) {
+	errs.Go(func() error {
+		return do(ctx)
+	})
 }
 
 // Dirs creates all directories needed to release vikunja
@@ -934,19 +944,19 @@ func (Release) Dirs() error {
 	return nil
 }
 
-func prepareXgo() error {
+func prepareXgo(ctx context.Context) error {
 	mg.Deps(initVars)
-	if err := checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo"); err != nil {
+	if err := checkAndInstallGoTool(ctx, "xgo", "src.techknowlogick.com/xgo"); err != nil {
 		return err
 	}
 
 	fmt.Println("Pulling latest xgo docker image...")
-	return runAndStreamOutput("docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
+	return runAndStreamOutput(ctx, "docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
 }
 
-func runXgo(targets string) error {
+func runXgo(ctx context.Context, targets string) error {
 	mg.Deps(initVars)
-	if err := checkAndInstallGoTool("xgo", "src.techknowlogick.com/xgo"); err != nil {
+	if err := checkAndInstallGoTool(ctx, "xgo", "src.techknowlogick.com/xgo"); err != nil {
 		return err
 	}
 
@@ -961,7 +971,7 @@ func runXgo(targets string) error {
 		outName = Executable + "-" + Version
 	}
 
-	if err := runAndStreamOutput("xgo",
+	if err := runAndStreamOutput(ctx, "xgo",
 		"-dest", "./"+DIST+"/binaries",
 		"-tags", "netgo "+Tags,
 		"-ldflags", extraLdflags+Ldflags,
@@ -987,12 +997,12 @@ func runXgo(targets string) error {
 }
 
 // Windows builds binaries for windows
-func (Release) Windows() error {
-	return runXgo("windows/*")
+func (Release) Windows(ctx context.Context) error {
+	return runXgo(ctx, "windows/*")
 }
 
 // Linux builds binaries for linux
-func (Release) Linux() error {
+func (Release) Linux(ctx context.Context) error {
 	targets := []string{
 		"linux/amd64",
 		"linux/arm-5",
@@ -1005,15 +1015,15 @@ func (Release) Linux() error {
 		"linux/mips64le",
 		"linux/riscv64",
 	}
-	return runXgo(strings.Join(targets, ","))
+	return runXgo(ctx, strings.Join(targets, ","))
 }
 
 // Darwin builds binaries for darwin
-func (Release) Darwin() error {
-	return runXgo("darwin-10.15/*")
+func (Release) Darwin(ctx context.Context) error {
+	return runXgo(ctx, "darwin-10.15/*")
 }
 
-func (Release) Xgo(target string) error {
+func (Release) Xgo(ctx context.Context, target string) error {
 	parts := strings.Split(target, "/")
 	if len(parts) < 2 {
 		return fmt.Errorf("invalid target")
@@ -1024,7 +1034,7 @@ func (Release) Xgo(target string) error {
 		variant = "-" + strings.ReplaceAll(parts[2], "v", "")
 	}
 
-	return runXgo(parts[0] + "/" + parts[1] + variant)
+	return runXgo(ctx, parts[0]+"/"+parts[1]+variant)
 }
 
 // Compress compresses the built binaries in dist/binaries/ to reduce their filesize
@@ -1052,10 +1062,10 @@ func (Release) Compress(ctx context.Context) error {
 
 		// Runs compressing in parallel since upx is single-threaded
 		errs.Go(func() error {
-			if err := runAndStreamOutput("chmod", "+x", path); err != nil { // Make sure all binaries are executable. Sometimes the CI does weird things and they're not.
+			if err := runAndStreamOutput(ctx, "chmod", "+x", path); err != nil { // Make sure all binaries are executable. Sometimes the CI does weird things and they're not.
 				return err
 			}
-			return runAndStreamOutput("upx", "-9", path)
+			return runAndStreamOutput(ctx, "upx", "-9", path)
 		})
 
 		return nil
@@ -1155,7 +1165,7 @@ func (Release) OsPackage() error {
 }
 
 // Zip creates a zip file from all os-package folders in dist/release
-func (Release) Zip() error {
+func (Release) Zip(ctx context.Context) error {
 	rootDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("could not get working directory: %w", err)
@@ -1173,7 +1183,7 @@ func (Release) Zip() error {
 		fmt.Printf("Zipping %s...\n", info.Name())
 
 		zipFile := filepath.Join(rootDir, DIST, "zip", info.Name()+".zip")
-		c := exec.Command("zip", "-r", zipFile, ".", "-i", "*") //nolint:gosec // This mage task creates zips of every directory recursively, it must use the directory name in the resulting file path to distinguish output files.
+		c := exec.CommandContext(ctx, "zip", "-r", zipFile, ".", "-i", "*") //nolint:gosec // This mage task creates zips of every directory recursively, it must use the directory name in the resulting file path to distinguish output files.
 		c.Dir = path
 		out, err := c.Output()
 		fmt.Print(string(out))
@@ -1186,9 +1196,9 @@ func (Release) Zip() error {
 }
 
 // Reprepro creates a debian repo structure
-func (Release) Reprepro() error {
+func (Release) Reprepro(ctx context.Context) error {
 	mg.Deps(setVersion, setBinLocation)
-	return runAndStreamOutput("reprepro_expect", "debian", "includedeb", "buster", "./"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
+	return runAndStreamOutput(ctx, "reprepro_expect", "debian", "includedeb", "buster", "./"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
 }
 
 // PrepareNFPMConfig prepares the nfpm config
@@ -1215,7 +1225,7 @@ func (Release) PrepareNFPMConfig() error {
 }
 
 // Packages creates deb, rpm and apk packages
-func (Release) Packages() error {
+func (Release) Packages(ctx context.Context) error {
 	mg.Deps(initVars)
 
 	var err error
@@ -1223,10 +1233,10 @@ func (Release) Packages() error {
 	if binpath == "" {
 		binpath = "nfpm"
 	}
-	err = exec.Command(binpath).Run()
+	err = exec.CommandContext(ctx, binpath).Run()
 	if err != nil && strings.Contains(err.Error(), "executable file not found") {
 		binpath = "/usr/bin/nfpm"
-		err = exec.Command(binpath).Run()
+		err = exec.CommandContext(ctx, binpath).Run()
 	}
 	if err != nil && strings.Contains(err.Error(), "executable file not found") {
 		return fmt.Errorf("executable %s not found: please manually install nfpm by running the command: curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh -s -- -b $(go env GOPATH)/bin", binpath)
@@ -1242,13 +1252,13 @@ func (Release) Packages() error {
 		return err
 	}
 
-	if err := runAndStreamOutput(binpath, "pkg", "--packager", "deb", "--target", releasePath); err != nil {
+	if err := runAndStreamOutput(ctx, binpath, "pkg", "--packager", "deb", "--target", releasePath); err != nil {
 		return err
 	}
-	if err := runAndStreamOutput(binpath, "pkg", "--packager", "rpm", "--target", releasePath); err != nil {
+	if err := runAndStreamOutput(ctx, binpath, "pkg", "--packager", "rpm", "--target", releasePath); err != nil {
 		return err
 	}
-	if err := runAndStreamOutput(binpath, "pkg", "--packager", "apk", "--target", releasePath); err != nil {
+	if err := runAndStreamOutput(ctx, binpath, "pkg", "--packager", "apk", "--target", releasePath); err != nil {
 		return err
 	}
 
@@ -1493,13 +1503,13 @@ type Generate mg.Namespace
 const DefaultConfigYAMLSamplePath = "config.yml.sample"
 
 // SwaggerDocs generates the swagger docs from the code annotations
-func (Generate) SwaggerDocs() error {
+func (Generate) SwaggerDocs(ctx context.Context) error {
 	mg.Deps(initVars)
 
-	if err := checkAndInstallGoTool("swag", "github.com/swaggo/swag/cmd/swag"); err != nil {
+	if err := checkAndInstallGoTool(ctx, "swag", "github.com/swaggo/swag/cmd/swag"); err != nil {
 		return err
 	}
-	return runAndStreamOutput("swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", ".", "-o", "./pkg/swagger")
+	return runAndStreamOutput(ctx, "swag", "init", "-g", "./pkg/routes/routes.go", "--parseDependency", "-d", ".", "-o", "./pkg/swagger")
 }
 
 type ConfigNode struct {
@@ -1636,7 +1646,7 @@ func (Generate) ConfigYAML(commented bool) {
 // The second argument is a path to a plan file that will be copied to the new worktree (pass "" to skip).
 // The worktree is created in the parent directory (../).
 // It also copies the current config.yml with an updated rootpath, and initializes the frontend.
-func (Dev) PrepareWorktree(name string, planPath string) error {
+func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) error {
 	if name == "" {
 		return fmt.Errorf("name is required: mage dev:prepare-worktree <name> <plan-path>")
 	}
@@ -1647,7 +1657,7 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 	fmt.Printf("Creating worktree at %s with branch %s...\n", worktreePath, name)
 
 	// Create the git worktree
-	cmd := exec.Command("git", "worktree", "add", worktreePath, "-b", name)
+	cmd := exec.CommandContext(ctx, "git", "worktree", "add", worktreePath, "-b", name)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -1728,7 +1738,7 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 	frontendDir := filepath.Join(worktreePath, "frontend")
 
 	// Run pnpm install
-	pnpmCmd := exec.Command("pnpm", "i")
+	pnpmCmd := exec.CommandContext(ctx, "pnpm", "i")
 	pnpmCmd.Dir = frontendDir
 	pnpmCmd.Stdout = os.Stdout
 	pnpmCmd.Stderr = os.Stderr
@@ -1737,7 +1747,7 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 	}
 
 	// Run patch-sass-embedded (shell alias from devenv)
-	patchCmd := exec.Command("bash", "-ic", "patch-sass-embedded")
+	patchCmd := exec.CommandContext(ctx, "bash", "-ic", "patch-sass-embedded")
 	patchCmd.Dir = frontendDir
 	patchCmd.Stdout = os.Stdout
 	patchCmd.Stderr = os.Stderr
@@ -1756,8 +1766,8 @@ func (Dev) PrepareWorktree(name string, planPath string) error {
 }
 
 // printReleaseStats prints commit statistics for the range between two refs.
-func printReleaseStats(fromRef, toRef string) error {
-	output, err := runGitCommandWithOutput("log", fromRef+".."+toRef, "--oneline")
+func printReleaseStats(ctx context.Context, fromRef, toRef string) error {
+	output, err := runGitCommandWithOutput(ctx, "log", fromRef+".."+toRef, "--oneline")
 	if err != nil {
 		return fmt.Errorf("failed to get commit log: %w", err)
 	}
@@ -1811,7 +1821,7 @@ func printReleaseStats(fromRef, toRef string) error {
 // TagRelease creates a new release tag with changelog.
 // It updates the version badge in README.md, generates changelog using git-cliff,
 // commits the changes, and creates an annotated tag.
-func (Dev) TagRelease(version string) error {
+func (Dev) TagRelease(ctx context.Context, version string) error {
 	if version == "" {
 		return fmt.Errorf("version is required: mage dev:tag-release <version>")
 	}
@@ -1824,7 +1834,7 @@ func (Dev) TagRelease(version string) error {
 	fmt.Printf("Creating release %s...\n", version)
 
 	// Get the last tag
-	lastTagBytes, err := runGitCommandWithOutput("describe", "--tags", "--abbrev=0")
+	lastTagBytes, err := runGitCommandWithOutput(ctx, "describe", "--tags", "--abbrev=0")
 	if err != nil {
 		return fmt.Errorf("failed to get last tag: %w", err)
 	}
@@ -1832,13 +1842,13 @@ func (Dev) TagRelease(version string) error {
 	fmt.Printf("Last tag: %s\n", lastTag)
 
 	// Print commit statistics
-	if err := printReleaseStats(lastTag, "HEAD"); err != nil {
+	if err := printReleaseStats(ctx, lastTag, "HEAD"); err != nil {
 		fmt.Printf("Warning: could not print release stats: %v\n", err)
 	}
 
 	// Generate changelog using git cliff
 	fmt.Println("Generating changelog...")
-	changelogBytes, err := runGitCommandWithOutput("cliff", lastTag+"..HEAD", "--tag", version)
+	changelogBytes, err := runGitCommandWithOutput(ctx, "cliff", lastTag+"..HEAD", "--tag", version)
 	if err != nil {
 		return fmt.Errorf("failed to generate changelog: %w", err)
 	}
@@ -1868,12 +1878,12 @@ func (Dev) TagRelease(version string) error {
 	// Commit the changes
 	fmt.Println("Committing changes...")
 	commitMsg := fmt.Sprintf("chore: %s release preparations", version)
-	cmd := exec.Command("git", "add", "README.md", "CHANGELOG.md", "frontend/package.json")
+	cmd := exec.CommandContext(ctx, "git", "add", "README.md", "CHANGELOG.md", "frontend/package.json")
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to stage files: %w", err)
 	}
 
-	cmd = exec.Command("git", "commit", "-m", commitMsg)
+	cmd = exec.CommandContext(ctx, "git", "commit", "-m", commitMsg)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -1885,7 +1895,7 @@ func (Dev) TagRelease(version string) error {
 
 	// Create the annotated tag
 	fmt.Printf("Creating tag %s...\n", version)
-	cmd = exec.Command("git", "tag", "-a", version, "-m", tagMessage)
+	cmd = exec.CommandContext(ctx, "git", "tag", "-a", version, "-m", tagMessage)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -2070,7 +2080,7 @@ func prepareTagMessage(changelog string) string {
 type Plugins mg.Namespace
 
 // Build compiles a Go plugin at the provided path.
-func (Plugins) Build(pathToSourceFiles string) error {
+func (Plugins) Build(ctx context.Context, pathToSourceFiles string) error {
 	mg.Deps(initVars)
 	if pathToSourceFiles == "" {
 		return fmt.Errorf("please provide a plugin path")
@@ -2086,5 +2096,5 @@ func (Plugins) Build(pathToSourceFiles string) error {
 	}
 
 	out := filepath.Join("plugins", filepath.Base(pathToSourceFiles)+".so")
-	return runAndStreamOutput("go", "build", "-buildmode=plugin", "-tags", Tags, "-o", out, pathToSourceFiles)
+	return runAndStreamOutput(ctx, "go", "build", "-buildmode=plugin", "-tags", Tags, "-o", out, pathToSourceFiles)
 }
