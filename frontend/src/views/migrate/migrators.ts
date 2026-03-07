@@ -4,11 +4,13 @@ import trelloIcon from './icons/trello.svg?url'
 import microsoftTodoIcon from './icons/microsoft-todo.svg?url'
 import vikunjaFileIcon from './icons/vikunja-file.png?url'
 import tickTickIcon from './icons/ticktick.svg?url'
+import nextcloudIcon from './icons/nextcloud.svg?url'
 
 export interface Migrator {
 	id: string
 	name: string
 	isFileMigrator?: boolean
+	isNextcloudDeck?: boolean
 	icon: string
 }
 
@@ -48,5 +50,11 @@ export const MIGRATORS = {
 		name: 'TickTick',
 		icon: tickTickIcon as string,
 		isFileMigrator: true,
+	},
+	deck: {
+		id: 'deck',
+		name: 'Nextcloud Deck',
+		icon: nextcloudIcon as string,
+		isNextcloudDeck: true,
 	},
 } as const satisfies IMigratorRecord

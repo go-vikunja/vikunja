@@ -83,7 +83,12 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realna
 	}
 	ta.CreatedByID = ta.CreatedBy.ID
 
-	_, err = s.Insert(ta)
+	// Use NoAutoTime when preserving timestamps (e.g., during migration) to avoid XORM overwriting them
+	if !ta.Created.IsZero() {
+		_, err = s.NoAutoTime().Insert(ta)
+	} else {
+		_, err = s.Insert(ta)
+	}
 	if err != nil {
 		// remove the  uploaded file if adding it to the db fails
 		if err2 := file.Delete(s); err2 != nil {
