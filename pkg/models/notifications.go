@@ -45,9 +45,10 @@ func getThreadID(taskID int64) string {
 
 // ReminderDueNotification represents a ReminderDueNotification notification
 type ReminderDueNotification struct {
-	User    *user.User `json:"user,omitempty"`
-	Task    *Task      `json:"task"`
-	Project *Project   `json:"project"`
+	User         *user.User    `json:"user,omitempty"`
+	Task         *Task         `json:"task"`
+	Project      *Project      `json:"project"`
+	TaskReminder *TaskReminder `json:"reminder"`
 }
 
 // ToMail returns the mail notification for ReminderDueNotification
