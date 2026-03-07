@@ -91,6 +91,7 @@
 				"discoverableByName": "Salli muiden käyttäjien lisätä minut jäseneksi tiimeihin tai projekteihin, kun he etsivät nimeäni",
 				"discoverableByEmail": "Salli muiden käyttäjien lisätä minut jäseneksi tiimeihin tai projekteihin, kun he etsivät koko sähköpostiani",
 				"playSoundWhenDone": "Toista ääni, kun tehtävä merkitään valmiiksi",
+				"alwaysShowBucketTaskCount": "Näytä aina tehtävien lukumäärä Kanban sarakkeissa",
 				"weekStart": "Viikon ensimmäinen päivä",
 				"weekStartSunday": "Sunnuntai",
 				"weekStartMonday": "Maanantai",
