@@ -47,15 +47,6 @@ func ValidateToken(tokenString string) (int64, error) {
 		return 0, jwt.ErrTokenInvalidClaims
 	}
 
-	// Check for API token
-	if tokenID, ok := claims["token_id"].(float64); ok && tokenID > 0 {
-		_, u, err := auth.ValidateAPITokenString(tokenString)
-		if err != nil {
-			return 0, err
-		}
-		return u.ID, nil
-	}
-
 	// Get user ID from claims
 	userIDFloat, ok := claims["id"].(float64)
 	if !ok {
