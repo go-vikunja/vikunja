@@ -4,12 +4,7 @@ import {TEST_PASSWORD} from '../../support/constants'
 
 test.describe('WebSocket Frontend Integration', () => {
 
-	// These two tests are marked fixme because they require fixing the WebSocket
-	// topic mismatch: the frontend subscribes to 'notifications' but the backend
-	// only accepts 'notification.created', and PublishForUser doesn't set Topic
-	// on outgoing messages so the frontend can't route them.
-
-	test.fixme('notification badge updates in real-time when added to team', async ({
+	test('notification badge updates in real-time when added to team', async ({
 		authenticatedPage: page,
 		apiContext,
 		currentUser,
@@ -47,7 +42,7 @@ test.describe('WebSocket Frontend Integration', () => {
 		})
 	})
 
-	test.fixme('notification appears in dropdown after real-time delivery', async ({
+	test('notification appears in dropdown after real-time delivery', async ({
 		authenticatedPage: page,
 		apiContext,
 		currentUser,
