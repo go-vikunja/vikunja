@@ -117,6 +117,8 @@ func TestSendingMentionNotification(t *testing.T) {
 
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
+		project, err := GetProjectSimpleByID(s, task.ProjectID)
+		require.NoError(t, err)
 		tc := &TaskComment{
 			Comment: `<p>Lorem Ipsum <mention-user data-id="user1">@user1</mention-user> <mention-user data-id="user2">@user2</mention-user> <mention-user data-id="user3">@user3</mention-user> <mention-user data-id="user4">@user4</mention-user> <mention-user data-id="user5">@user5</mention-user> <mention-user data-id="user6">@user6</mention-user></p>`,
 			TaskID:  32, // user2 has access to the project that task belongs to
@@ -127,6 +129,7 @@ func TestSendingMentionNotification(t *testing.T) {
 			Doer:    u,
 			Task:    &task,
 			Comment: tc,
+			Project: project,
 		}
 
 		_, err = notifyMentionedUsers(s, &task, tc.Comment, n)
@@ -171,6 +174,8 @@ func TestSendingMentionNotification(t *testing.T) {
 
 		task, err := GetTaskByIDSimple(s, 32)
 		require.NoError(t, err)
+		project, err := GetProjectSimpleByID(s, task.ProjectID)
+		require.NoError(t, err)
 		tc := &TaskComment{
 			Comment: `<p>Lorem Ipsum <mention-user data-id="user2">@user2</mention-user></p>`,
 			TaskID:  32, // user2 has access to the project that task belongs to
@@ -181,6 +186,7 @@ func TestSendingMentionNotification(t *testing.T) {
 			Doer:    u,
 			Task:    &task,
 			Comment: tc,
+			Project: project,
 		}
 
 		_, err = notifyMentionedUsers(s, &task, tc.Comment, n)
