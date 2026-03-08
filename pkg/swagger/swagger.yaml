@@ -1148,6 +1148,10 @@ definitions:
         description: A timestamp when this webhook target was last updated. You cannot
           change this value.
         type: string
+      user_id:
+        description: The user ID if this is a user-level webhook (mutually exclusive
+          with ProjectID)
+        type: integer
     type: object
   notifications.DatabaseNotification:
     properties:
@@ -6650,6 +6654,142 @@ paths:
       summary: Totp QR Code
       tags:
       - user
+  /user/settings/webhooks:
+    get:
+      consumes:
+      - application/json
+      description: Get all webhook targets configured for the current user (not project-specific).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The list of webhook targets
+          schema:
+            items:
+              $ref: '#/definitions/models.Webhook'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get all user-level webhook targets
+      tags:
+      - webhooks
+    put:
+      consumes:
+      - application/json
+      description: Create a webhook target for the current user that receives events
+        across all projects.
+      parameters:
+      - description: The webhook target
+        in: body
+        name: webhook
+        required: true
+        schema:
+          $ref: '#/definitions/models.Webhook'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The created webhook target
+          schema:
+            $ref: '#/definitions/models.Webhook'
+        "400":
+          description: Invalid webhook
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a user-level webhook target
+      tags:
+      - webhooks
+  /user/settings/webhooks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user-level webhook target.
+      parameters:
+      - description: Webhook ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: Webhook not found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a user-level webhook target
+      tags:
+      - webhooks
+    post:
+      consumes:
+      - application/json
+      description: Update the events for a user-level webhook target.
+      parameters:
+      - description: Webhook ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated webhook target
+          schema:
+            $ref: '#/definitions/models.Webhook'
+        "404":
+          description: Webhook not found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Update a user-level webhook target
+      tags:
+      - webhooks
+  /user/settings/webhooks/events:
+    get:
+      consumes:
+      - application/json
+      description: Get all webhook events that can be used with user-level webhook
+        targets.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The list of user-directed webhook events
+          schema:
+            items:
+              type: string
+            type: array
+      security:
+      - JWTKeyAuth: []
+      summary: Get available user-directed webhook events
+      tags:
+      - webhooks
   /user/timezones:
     get:
       consumes:
