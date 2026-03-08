@@ -136,10 +136,14 @@ onMounted(async () => {
 	document.addEventListener('click', hidePopup)
 
 	// Subscribe to real-time notifications
-	unsubscribeWs = subscribe('notifications', (msg) => {
+	unsubscribeWs = subscribe('notification.created', (msg) => {
 		if (msg.event === 'notification.created' && msg.data) {
 			const notification = new NotificationModel(msg.data as Partial<INotification>)
-			allNotifications.value = [notification, ...allNotifications.value]
+			// Avoid duplicates if the same notification was already loaded via REST
+			const exists = allNotifications.value.some(n => n.id === notification.id)
+			if (!exists) {
+				allNotifications.value = [notification, ...allNotifications.value]
+			}
 		}
 	})
 
