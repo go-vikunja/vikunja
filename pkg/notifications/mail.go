@@ -26,16 +26,18 @@ import (
 
 // Mail is a mail message
 type Mail struct {
-	from        string
-	to          string
-	subject     string
-	actionText  string
-	actionURL   string
-	greeting    string
-	introLines  []*mailLine
-	outroLines  []*mailLine
-	footerLines []*mailLine
-	threadID    string
+	from           string
+	to             string
+	subject        string
+	actionText     string
+	actionURL      string
+	greeting       string
+	headerLine     *mailLine
+	introLines     []*mailLine
+	outroLines     []*mailLine
+	footerLines    []*mailLine
+	threadID       string
+	conversational bool
 }
 
 type mailLine struct {
@@ -101,10 +103,48 @@ func (m *Mail) HTML(line string) *Mail {
 	return m.appendLine(line, true)
 }
 
+// HeaderLine sets the header line for conversational emails (e.g., "@user mentioned you")
+func (m *Mail) HeaderLine(line string) *Mail {
+	m.headerLine = &mailLine{Text: line, isHTML: true}
+	return m
+}
+
 // ThreadID sets the thread ID of the mail message for email threading
 func (m *Mail) ThreadID(threadID string) *Mail {
 	m.threadID = threadID
 	return m
+}
+
+// Conversational sets the email to use conversational styling
+func (m *Mail) Conversational() *Mail {
+	m.conversational = true
+	return m
+}
+
+// IsConversational returns whether the email uses conversational styling
+func (m *Mail) IsConversational() bool {
+	return m.conversational
+}
+
+// CreateConversationalHeader creates a GitHub-style header line with avatar, action text, and task reference.
+// The action string should already contain the doer's name (e.g. "alice left a comment").
+func CreateConversationalHeader(avatarDataURI, action, taskURL, projectTitle, taskIdentifier, taskTitle string) string {
+	avatarHTML := ""
+	if avatarDataURI != "" {
+		avatarHTML = fmt.Sprintf(
+			`<img src="%s" width="20" height="20" style="border-radius: 50%%; vertical-align: middle; margin-right: 6px"/>`,
+			avatarDataURI,
+		)
+	}
+	return fmt.Sprintf(
+		`%s%s <a href="%s" style="color: #0969da; text-decoration: none;">(%s &gt; %s) %s</a>`,
+		avatarHTML,
+		action,
+		taskURL,
+		projectTitle,
+		taskTitle,
+		taskIdentifier,
+	)
 }
 
 func (m *Mail) appendLine(line string, isHTML bool) *Mail {
