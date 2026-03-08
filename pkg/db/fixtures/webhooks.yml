@@ -1,0 +1,7 @@
+- id: 1
+  target_url: "https://example.com/webhook-fixture"
+  events: '["task.updated"]'
+  project_id: 1
+  created_by_id: 1
+  created: 2024-01-01 00:00:00
+  updated: 2024-01-01 00:00:00
