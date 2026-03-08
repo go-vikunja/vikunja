@@ -31,11 +31,11 @@ func TestConnectionSubscribeUnsubscribe(t *testing.T) {
 		send:          make(chan OutgoingMessage, 16),
 	}
 
-	conn.Subscribe("notifications")
-	assert.True(t, conn.IsSubscribed("notifications"))
+	conn.Subscribe("notification.created")
+	assert.True(t, conn.IsSubscribed("notification.created"))
 
-	conn.Unsubscribe("notifications")
-	assert.False(t, conn.IsSubscribed("notifications"))
+	conn.Unsubscribe("notification.created")
+	assert.False(t, conn.IsSubscribed("notification.created"))
 }
 
 func TestConnectionIsSubscribedReturnsFalseForUnknownTopic(t *testing.T) {
@@ -49,6 +49,37 @@ func TestConnectionIsSubscribedReturnsFalseForUnknownTopic(t *testing.T) {
 	assert.False(t, conn.IsSubscribed("something"))
 }
 
+func TestConnectionAcceptsEventNameTopic(t *testing.T) {
+	hub := NewHub()
+	conn := &Connection{
+		hub:           hub,
+		userID:        1,
+		authenticated: true,
+		subscriptions: make(map[string]bool),
+		send:          make(chan OutgoingMessage, 16),
+	}
+	hub.Register(conn)
+
+	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Topic: "notification.created"})
+
+	assert.True(t, conn.IsSubscribed("notification.created"))
+}
+
+func TestConnectionRejectsOldTopicName(t *testing.T) {
+	conn := &Connection{
+		userID:        1,
+		authenticated: true,
+		subscriptions: make(map[string]bool),
+		send:          make(chan OutgoingMessage, 16),
+	}
+
+	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Topic: "notifications"})
+
+	msg := <-conn.send
+	assert.Equal(t, "invalid_topic", msg.Error)
+	assert.False(t, conn.IsSubscribed("notifications"))
+}
+
 func TestConnectionRejectsActionsBeforeAuth(t *testing.T) {
 	conn := &Connection{
 		userID:        0, // not authenticated
@@ -58,10 +89,10 @@ func TestConnectionRejectsActionsBeforeAuth(t *testing.T) {
 	}
 
 	// Try to subscribe before auth - should be rejected
-	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Topic: "notifications"})
+	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Topic: "notification.created"})
 
 	// Should have sent an error
 	msg := <-conn.send
 	assert.Equal(t, "auth_required", msg.Error)
-	assert.False(t, conn.IsSubscribed("notifications"))
+	assert.False(t, conn.IsSubscribed("notification.created"))
 }

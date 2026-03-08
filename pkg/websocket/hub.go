@@ -61,20 +61,19 @@ func (h *Hub) Unregister(conn *Connection) {
 	log.Debugf("WebSocket: unregistered connection for user %d (remaining: %d)", conn.userID, remaining)
 }
 
-// PublishForUser sends an event to all connections of a specific user that are subscribed to the given topic.
-func (h *Hub) PublishForUser(userID int64, topic, event string, data any) {
+// PublishForUser sends an event to all connections of a specific user that are subscribed to the given event.
+func (h *Hub) PublishForUser(userID int64, event string, data any) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
 	conns := h.connections[userID]
 	msg := OutgoingMessage{
 		Event: event,
-		Topic: topic,
 		Data:  data,
 	}
 
 	for _, conn := range conns {
-		if !conn.IsSubscribed(topic) {
+		if !conn.IsSubscribed(event) {
 			continue
 		}
 		select {

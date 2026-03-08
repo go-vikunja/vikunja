@@ -46,13 +46,12 @@ func TestHubPublishToSubscribedConnection(t *testing.T) {
 		send:          make(chan OutgoingMessage, 16),
 	}
 	h.Register(conn)
-	conn.subscriptions["notifications"] = true
+	conn.subscriptions["notification.created"] = true
 
-	h.PublishForUser(1, "notifications", "notification.created", map[string]string{"id": "1"})
+	h.PublishForUser(1, "notification.created", map[string]string{"id": "1"})
 
 	msg := <-conn.send
 	assert.Equal(t, "notification.created", msg.Event)
-	assert.Equal(t, "notifications", msg.Topic)
 }
 
 func TestHubPublishSkipsUnsubscribedConnection(t *testing.T) {
@@ -63,9 +62,9 @@ func TestHubPublishSkipsUnsubscribedConnection(t *testing.T) {
 		send:          make(chan OutgoingMessage, 16),
 	}
 	h.Register(conn)
-	// Not subscribed to "notifications"
+	// Not subscribed to "notification.created"
 
-	h.PublishForUser(1, "notifications", "notification.created", map[string]string{"id": "1"})
+	h.PublishForUser(1, "notification.created", map[string]string{"id": "1"})
 
 	assert.Empty(t, conn.send)
 }
@@ -78,9 +77,9 @@ func TestHubPublishSkipsOtherUsers(t *testing.T) {
 		send:          make(chan OutgoingMessage, 16),
 	}
 	h.Register(conn)
-	conn.subscriptions["notifications"] = true
+	conn.subscriptions["notification.created"] = true
 
-	h.PublishForUser(1, "notifications", "notification.created", map[string]string{"id": "1"})
+	h.PublishForUser(1, "notification.created", map[string]string{"id": "1"})
 
 	assert.Empty(t, conn.send)
 }
