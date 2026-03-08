@@ -52,12 +52,11 @@ func TestTaskUpdateWebhookE2E(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	// Clean up any leftover webhook rows from previous test runs, then insert
+	// Reload fixtures to start from a clean state, then insert
 	// a fresh webhook for project 1 listening to "task.updated".
+	require.NoError(t, db.LoadFixtures())
 	s := db.NewSession()
 	defer s.Close()
-	_, err = s.Where("1=1").Delete(&models.Webhook{})
-	require.NoError(t, err)
 	_, err = s.Insert(&models.Webhook{
 		TargetURL:   ts.URL,
 		Events:      []string{"task.updated"},
