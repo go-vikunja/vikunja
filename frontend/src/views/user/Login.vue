@@ -125,7 +125,7 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {useRouter} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
 
 import Message from '@/components/misc/Message.vue'
@@ -144,6 +144,7 @@ import {useTitle} from '@/composables/useTitle'
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.auth.login'))
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const configStore = useConfigStore()
@@ -217,6 +218,23 @@ async function submit() {
 	try {
 		await authStore.login(credentials)
 		authStore.setNeedsTotpPasscode(false)
+
+		// Check for OAuth redirect parameter (used when returning from OAuth authorize)
+		const redirectParam = route.query.redirect as string
+		if (redirectParam) {
+			try {
+				const redirectUrl = new URL(redirectParam)
+				const appUrl = new URL(window.location.origin)
+				// Only allow redirects to same origin to prevent open redirect attacks
+				if (redirectUrl.origin === appUrl.origin) {
+					window.location.href = redirectParam
+					return
+				}
+			} catch {
+				// Invalid URL, fall through to normal redirect
+			}
+		}
+
 		redirectIfSaved()
 	} catch (e) {
 		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {

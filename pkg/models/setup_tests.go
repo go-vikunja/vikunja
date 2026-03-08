@@ -75,6 +75,7 @@ func SetupTests() {
 		"task_positions",
 		"task_buckets",
 		"sessions",
+		"oauth_codes",
 	)
 	if err != nil {
 		log.Fatal(err)

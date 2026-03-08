@@ -80,8 +80,25 @@ async function authenticateWithCode() {
 			provider: route.params.provider,
 			code: route.query.code,
 		})
+
+		// Check for OAuth redirect parameter (used when returning from OAuth authorize)
+		const redirectParam = route.query.redirect as string
+		if (redirectParam) {
+			try {
+				const redirectUrl = new URL(redirectParam)
+				const appUrl = new URL(window.location.origin)
+				// Only allow redirects to same origin to prevent open redirect attacks
+				if (redirectUrl.origin === appUrl.origin) {
+					window.location.href = redirectParam
+					return
+				}
+			} catch {
+				// Invalid URL, fall through to normal redirect
+			}
+		}
+
 		redirectIfSaved()
-	} catch(e) {
+	} catch (e) {
 		errorMessage.value = getErrorText(e)
 	} finally {
 		localStorage.removeItem('authenticating')
