@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"embed"
 	templatehtml "html/template"
+	"regexp"
+	"strings"
 	templatetext "text/template"
 
 	"code.vikunja.io/api/pkg/config"
@@ -45,11 +47,25 @@ const mailTemplatePlain = `
 {{ $line.Text }}
 {{ end }}`
 
+const mailTemplateConversationalPlain = `
+{{ if .HeaderLinePlain }}{{ .HeaderLinePlain }}
+{{ end }}{{ range $line := .IntroLines}}
+{{ $line.Text }}
+{{ end }}
+{{ if .ActionURL }}{{ .ActionText }}:
+{{ .ActionURL }}{{end}}
+{{ range $line := .OutroLines}}
+{{ $line.Text }}
+{{ end }}
+{{ range $line := .FooterLines}}
+{{ $line.Text }}
+{{ end }}`
+
 const mailTemplateHTML = `
 <!doctype html>
 <html style="width: 100%; height: 100%; padding: 0; margin: 0;">
 <head>
-    <meta name="viewport" content="width: display-width;">
+    <meta name="viewport" content="width=device-width">
     <meta name="color-scheme" content="light dark">
     <meta name="supported-color-schemes" content="light dark">
     <style>
@@ -120,6 +136,54 @@ const mailTemplateHTML = `
 </html>
 `
 
+const mailTemplateConversationalHTML = `
+<!doctype html>
+<html style="width: 100%; height: 100%; padding: 0; margin: 0;">
+<head>
+    <meta name="viewport" content="width=device-width">
+    <meta charset="utf-8">
+</head>
+<body style="width: 100%; padding: 0; margin: 0; background: #f6f8fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;">
+<div style="margin: 0 auto; background: #ffffff;">
+
+    {{ if .HeaderLineHTML }}
+    <div style="padding: 12px 20px 0; color: #57606a; font-size: 14px; line-height: 1.5;">
+        {{ .HeaderLineHTML }}
+    </div>
+    {{ end }}
+
+    {{ if or .IntroLinesHTML .OutroLinesHTML }}
+    <div style="padding-left: 20px; color: #24292f; font-size: 14px; line-height: 1.5;">
+
+        {{ range $line := .IntroLinesHTML}}
+            {{ $line }}
+        {{ end }}
+
+        {{ range $line := .OutroLinesHTML}}
+            {{ $line }}
+        {{ end }}
+    </div>
+    {{ end }}
+
+    {{ if or .ActionURL .FooterLinesHTML }}
+    <div style="padding: 4px 20px 8px 20px; border-top: 1px solid #d1d9e0; padding-top: 6px; font-size: 12px">
+        {{ if .ActionURL }}
+        <a href="{{ .ActionURL }}" style="color: #0969da; text-decoration: none; font-weight: 500; font-size: 12px;">
+            {{ .ActionText }} →
+        </a>
+        {{ end }}
+    	<div style="padding-top: 6px; color: #656d76;">
+    	    {{ range $line := .FooterLinesHTML }}
+    	        {{ $line }}
+    	    {{ end }}
+    	</div>
+    </div>
+    {{ end }}
+</div>
+</body>
+</html>
+`
+
 //go:embed logo.png
 var logo embed.FS
 
@@ -127,10 +191,45 @@ func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err e
 	p := bluemonday.UGCPolicy()
 	// Allow data URI images for inline avatars in mentions
 	p.AllowDataURIImages()
-	// Allow style attribute on img elements for avatar styling
-	p.AllowAttrs("style").OnElements("img")
+	// Allow style attribute on img and div elements for avatar and layout styling
+	p.AllowAttrs("style").OnElements("img", "div")
 	// Allow specific CSS properties for avatar styling
 	p.AllowStyles("border-radius", "vertical-align", "margin-right").OnElements("img")
+	// Allow padding styles on div elements for content spacing
+	p.AllowStyles("padding-top", "margin-bottom").OnElements("div")
+
+	for _, line := range lines {
+		if line.isHTML {
+			sanitized := p.Sanitize(line.Text)
+			if trimmed := strings.TrimSpace(sanitized); trimmed != "" && !startsWithBlockElement(trimmed) {
+				sanitized = "<p>" + sanitized + "</p>"
+			}
+			// #nosec G203 -- the html is sanitized
+			linesHTML = append(linesHTML, templatehtml.HTML(ensurePMargins(sanitized)))
+			continue
+		}
+
+		md := []byte(line.Text)
+		var buf bytes.Buffer
+		err = goldmark.Convert(md, &buf)
+		if err != nil {
+			return nil, err
+		}
+		// #nosec G203 -- the html is sanitized
+		linesHTML = append(linesHTML, templatehtml.HTML(ensurePMargins(p.Sanitize(buf.String()))))
+	}
+
+	return
+}
+
+// sanitizeLinesToHTML sanitizes lines without wrapping in <p> tags or adding margins.
+// Used for footer lines and other content that should not have paragraph styling.
+func sanitizeLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err error) {
+	p := bluemonday.UGCPolicy()
+	p.AllowDataURIImages()
+	p.AllowAttrs("style").OnElements("img", "div")
+	p.AllowStyles("border-radius", "vertical-align", "margin-right").OnElements("img")
+	p.AllowStyles("padding-top", "margin-bottom").OnElements("div")
 
 	for _, line := range lines {
 		if line.isHTML {
@@ -145,11 +244,70 @@ func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err e
 		if err != nil {
 			return nil, err
 		}
+		sanitized := p.Sanitize(buf.String())
+		// Strip <p> wrapping added by goldmark since the template already provides a container
+		sanitized = rePTagOpen.ReplaceAllString(sanitized, "")
+		sanitized = strings.ReplaceAll(sanitized, "</p>", "")
+		sanitized = strings.TrimSpace(sanitized)
 		// #nosec G203 -- the html is sanitized
-		linesHTML = append(linesHTML, templatehtml.HTML(p.Sanitize(buf.String())))
+		linesHTML = append(linesHTML, templatehtml.HTML(sanitized))
 	}
 
 	return
+}
+
+var rePTagOpen = regexp.MustCompile(`<p[^>]*>`)
+
+func startsWithBlockElement(html string) bool {
+	lower := strings.ToLower(html)
+	for _, tag := range []string{"<p", "<div", "<h1", "<h2", "<h3", "<h4", "<h5", "<h6", "<ul", "<ol", "<li", "<table", "<blockquote", "<pre", "<hr"} {
+		if strings.HasPrefix(lower, tag) {
+			return true
+		}
+	}
+	return false
+}
+
+var (
+	reLinks    = regexp.MustCompile(`<a[^>]+href="([^"]*)"[^>]*>([^<]*)</a>`)
+	reHTMLTags = regexp.MustCompile(`<[^>]+>`)
+	rePTag     = regexp.MustCompile(`<p(?:\s[^>]*)?>`)
+)
+
+const pMarginStyle = `style="margin-top: 10px; margin-bottom: 10px;"`
+
+// ensurePMargins replaces all <p> and <p ...> tags with a version
+// that has fixed 10px top/bottom margins, ensuring consistent spacing
+// across email clients.
+func ensurePMargins(html string) string {
+	return rePTag.ReplaceAllString(html, "<p "+pMarginStyle+">")
+}
+
+// convertLinesToPlain converts mail lines to plain text, stripping HTML from lines marked as HTML.
+func convertLinesToPlain(lines []*mailLine) []*mailLine {
+	plain := make([]*mailLine, 0, len(lines))
+	for _, line := range lines {
+		if !line.isHTML {
+			plain = append(plain, line)
+			continue
+		}
+
+		text := line.Text
+		// Convert <a href="url">text</a> to "text (url)"
+		text = reLinks.ReplaceAllString(text, "$2 ($1)")
+		// Strip remaining HTML tags
+		text = reHTMLTags.ReplaceAllString(text, "")
+		// Clean up HTML entities
+		text = strings.ReplaceAll(text, "&gt;", ">")
+		text = strings.ReplaceAll(text, "&lt;", "<")
+		text = strings.ReplaceAll(text, "&amp;", "&")
+		text = strings.TrimSpace(text)
+
+		if text != "" {
+			plain = append(plain, &mailLine{Text: text})
+		}
+	}
+	return plain
 }
 
 // RenderMail takes a precomposed mail message and renders it into a ready to send mail.Opts object
@@ -158,12 +316,22 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 	var htmlContent bytes.Buffer
 	var plainContent bytes.Buffer
 
-	plain, err := templatetext.New("mail-plain").Parse(mailTemplatePlain)
+	// Select template based on conversational flag
+	var plainTemplate, htmlTemplate string
+	if m.conversational {
+		plainTemplate = mailTemplateConversationalPlain
+		htmlTemplate = mailTemplateConversationalHTML
+	} else {
+		plainTemplate = mailTemplatePlain
+		htmlTemplate = mailTemplateHTML
+	}
+
+	plain, err := templatetext.New("mail-plain").Parse(plainTemplate)
 	if err != nil {
 		return nil, err
 	}
 
-	html, err := templatehtml.New("mail-plain").Parse(mailTemplateHTML)
+	html, err := templatehtml.New("mail-html").Parse(htmlTemplate)
 	if err != nil {
 		return nil, err
 	}
@@ -177,14 +345,34 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 	data := make(map[string]interface{})
 
 	data["Greeting"] = m.greeting
-	data["IntroLines"] = m.introLines
-	data["OutroLines"] = m.outroLines
+	if m.conversational {
+		data["IntroLines"] = convertLinesToPlain(m.introLines)
+		data["OutroLines"] = convertLinesToPlain(m.outroLines)
+		if m.headerLine != nil {
+			plainHeaders := convertLinesToPlain([]*mailLine{m.headerLine})
+			if len(plainHeaders) > 0 {
+				data["HeaderLinePlain"] = plainHeaders[0].Text
+			}
+		}
+	} else {
+		data["IntroLines"] = m.introLines
+		data["OutroLines"] = m.outroLines
+	}
 	data["FooterLines"] = m.footerLines
 	data["ActionText"] = m.actionText
 	data["ActionURL"] = m.actionURL
 	data["Boundary"] = boundary
 	data["FrontendURL"] = config.ServicePublicURL.GetString()
 	data["CopyURLText"] = i18n.T(lang, "notifications.common.copy_url")
+
+	if m.headerLine != nil {
+		p := bluemonday.UGCPolicy()
+		p.AllowDataURIImages()
+		p.AllowAttrs("style").OnElements("img", "div")
+		p.AllowStyles("border-radius", "vertical-align", "margin-right").OnElements("img")
+		// #nosec G203 -- the html is sanitized
+		data["HeaderLineHTML"] = templatehtml.HTML(p.Sanitize(m.headerLine.Text))
+	}
 
 	data["IntroLinesHTML"], err = convertLinesToHTML(m.introLines)
 	if err != nil {
@@ -196,7 +384,7 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 		return nil, err
 	}
 
-	data["FooterLinesHTML"], err = convertLinesToHTML(m.footerLines)
+	data["FooterLinesHTML"], err = sanitizeLinesToHTML(m.footerLines)
 	if err != nil {
 		return nil, err
 	}
