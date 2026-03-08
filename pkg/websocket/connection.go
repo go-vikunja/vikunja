@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/auth"
 
 	"github.com/coder/websocket"
 )
@@ -170,7 +171,7 @@ func (c *Connection) handleAuth(ctx context.Context, token string) bool {
 		return true
 	}
 
-	userID, err := ValidateToken(token)
+	userID, err := auth.GetUserIDFromToken(token)
 	if err != nil {
 		log.Debugf("WebSocket: auth failed: %v", err)
 		// Write the error directly to the websocket since ReadLoop will close the
