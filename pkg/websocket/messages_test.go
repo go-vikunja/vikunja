@@ -34,24 +34,23 @@ func TestIncomingAuthMessageDeserialization(t *testing.T) {
 }
 
 func TestIncomingSubscribeMessageDeserialization(t *testing.T) {
-	raw := `{"action":"subscribe","topic":"notifications"}`
+	raw := `{"action":"subscribe","topic":"notification.created"}`
 	var msg IncomingMessage
 	err := json.Unmarshal([]byte(raw), &msg)
 	require.NoError(t, err)
 	assert.Equal(t, ActionSubscribe, msg.Action)
-	assert.Equal(t, "notifications", msg.Topic)
+	assert.Equal(t, "notification.created", msg.Topic)
 }
 
 func TestOutgoingEventSerialization(t *testing.T) {
 	msg := OutgoingMessage{
 		Event: "notification.created",
-		Topic: "notifications",
 		Data:  map[string]string{"hello": "world"},
 	}
 	data, err := json.Marshal(msg)
 	require.NoError(t, err)
 	assert.Contains(t, string(data), `"event":"notification.created"`)
-	assert.Contains(t, string(data), `"topic":"notifications"`)
+	assert.NotContains(t, string(data), `"topic"`)
 	assert.Contains(t, string(data), `"hello":"world"`)
 }
 

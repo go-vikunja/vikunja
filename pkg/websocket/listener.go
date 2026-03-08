@@ -47,7 +47,7 @@ func (n *NotificationListener) Handle(msg *message.Message) error {
 		return nil
 	}
 
-	hub.PublishForUser(event.UserID, "notifications", "notification.created", event.Notification)
+	hub.PublishForUser(event.UserID, "notification.created", event.Notification)
 	return nil
 }
 

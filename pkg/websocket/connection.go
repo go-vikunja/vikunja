@@ -261,9 +261,9 @@ func (c *Connection) WriteLoop(ctx context.Context, cancel context.CancelFunc) {
 	}
 }
 
-// validTopics is the set of topics clients are allowed to subscribe to.
+// validTopics is the set of event names clients are allowed to subscribe to.
 var validTopics = map[string]bool{
-	"notifications": true,
+	"notification.created": true,
 }
 
 func isValidTopic(topic string) bool {
