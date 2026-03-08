@@ -69,6 +69,7 @@ func (h *Hub) PublishForUser(userID int64, event string, data any) {
 	conns := h.connections[userID]
 	msg := OutgoingMessage{
 		Event: event,
+		Topic: event,
 		Data:  data,
 	}
 
