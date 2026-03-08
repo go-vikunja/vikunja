@@ -216,6 +216,35 @@ func ValidateAPITokenString(tokenString string) (*models.APIToken, *user.User, e
 	return token, u, nil
 }
 
+// GetUserIDFromToken parses a raw JWT token string and returns the user ID.
+// Only regular user tokens are accepted (not link shares).
+// Returns 0 and an error if the token is invalid.
+func GetUserIDFromToken(tokenString string) (int64, error) {
+	token, err := jwt.Parse(tokenString, func(_ *jwt.Token) (any, error) {
+		return []byte(config.ServiceJWTSecret.GetString()), nil
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return 0, jwt.ErrTokenInvalidClaims
+	}
+
+	typ, ok := claims["type"].(float64)
+	if !ok || int(typ) != AuthTypeUser {
+		return 0, jwt.ErrTokenInvalidClaims
+	}
+
+	userIDFloat, ok := claims["id"].(float64)
+	if !ok {
+		return 0, jwt.ErrTokenInvalidClaims
+	}
+
+	return int64(userIDFloat), nil
+}
+
 func CreateUserWithRandomUsername(s *xorm.Session, uu *user.User) (u *user.User, err error) {
 	// Check if we actually have a preferred username and generate a random one right away if we don't
 	for {
