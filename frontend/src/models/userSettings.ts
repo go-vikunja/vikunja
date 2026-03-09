@@ -34,7 +34,6 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		backgroundBrightness: null,
 		alwaysShowBucketTaskCount: false,
 		showLastViewed: true,
-		showIncludeSubprojectsToggle: false,
 		sidebarWidth: null,
 		commentSortOrder: 'asc',
 		desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',

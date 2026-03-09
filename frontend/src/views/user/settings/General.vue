@@ -71,10 +71,6 @@
 				:label="$t('user.settings.general.showLastViewed')"
 			/>
 			<FormCheckbox
-				v-model="settings.frontendSettings.showIncludeSubprojectsToggle"
-				:label="$t('user.settings.general.showIncludeSubprojectsToggle')"
-			/>
-			<FormCheckbox
 				v-model="settings.emailRemindersEnabled"
 				:label="$t('user.settings.general.emailReminders')"
 			/>
@@ -435,7 +431,6 @@ const settings = ref<IUserSettings>({
 		// Clone to escape the store's readonly array type.
 		quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
 		timeTrackingDefaultStart: authStore.settings.frontendSettings.timeTrackingDefaultStart ?? '09:00',
-		showIncludeSubprojectsToggle: authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false,
 	},
 })
 
