@@ -287,37 +287,33 @@ func (k Key) setDefault(i interface{}) {
 	viper.SetDefault(string(k), i)
 }
 
-// Tries different methods to figure out the binary folder.
-// Copied and adopted from https://github.com/speedata/publisher/commit/3b668668d57edef04ea854d5bbd58f83eb1b799f
-func getBinaryDirLocation() string {
-	// First, check if the standard library gives us the path. This will work 99% of the time.
-	ex, err := os.Executable()
-	if err == nil {
+// getRootpathLocation determines the default root path for Vikunja data.
+// It prefers the current working directory, which respects systemd's
+// WorkingDirectory= setting and is the most intuitive default.
+// Falls back to the binary's directory if Getwd fails.
+func getRootpathLocation() string {
+	// Prefer working directory — this respects systemd WorkingDirectory=
+	// and is the intuitive default for most deployment scenarios.
+	if wd, err := os.Getwd(); err == nil {
+		return wd
+	}
+
+	// Fall back to the binary's directory.
+	if ex, err := os.Executable(); err == nil {
 		return filepath.Dir(ex)
 	}
 
-	// Then check if the binary was run with a full path and use that if that's the case.
-	if strings.Contains(os.Args[0], "/") {
-		binDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-		if err != nil {
-			log.Fatal(err)
-		}
-		return binDir
-	}
-
+	// Last resort: search $PATH.
 	exeSuffix := ""
 	if runtime.GOOS == "windows" {
 		exeSuffix = ".exe"
 	}
-
-	// All else failing, search for a vikunja binary in the current $PATH.
-	// This can give wrong results.
-	exeLocation, err := exec.LookPath("vikunja" + exeSuffix)
-	if err != nil {
-		log.Fatal(err)
+	if exeLocation, err := exec.LookPath("vikunja" + exeSuffix); err == nil {
+		return filepath.Dir(exeLocation)
 	}
 
-	return filepath.Dir(exeLocation)
+	log.Fatal("Could not determine root path. Set service.rootpath in your config.")
+	return ""
 }
 
 // InitDefaultConfig sets default config values
@@ -339,7 +335,7 @@ func InitDefaultConfig() {
 	ServicePublicURL.setDefault("")
 	ServiceEnableCaldav.setDefault(true)
 
-	ServiceRootpath.setDefault(getBinaryDirLocation())
+	ServiceRootpath.setDefault(getRootpathLocation())
 	ServiceMaxItemsPerPage.setDefault(50)
 	ServiceMotd.setDefault("")
 	ServiceEnableLinkSharing.setDefault(true)
