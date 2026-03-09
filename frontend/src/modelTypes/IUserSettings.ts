@@ -22,7 +22,6 @@ export interface IFrontendSettings {
 	defaultTaskRelationType: IRelationKind
 	backgroundBrightness: number | null
 	alwaysShowBucketTaskCount: boolean
-	showIncludeSubprojectsToggle?: boolean
 	sidebarWidth: number | null
 	commentSortOrder: 'asc' | 'desc'
 }

@@ -21,7 +21,7 @@
 			class="filter-popup"
 			:change-immediately="false"
 			:filter-from-view="filterFromView"
-			:show-include-subprojects-toggle="showIncludeSubprojectsToggle"
+			:show-include-subprojects-toggle="isProjectView"
 			:include-subprojects="includeSubprojects"
 			show-close
 			@close="modalOpen = false"
@@ -40,7 +40,6 @@ import {type TaskFilterParams} from '@/services/taskCollection'
 import {type IProjectView} from '@/modelTypes/IProjectView'
 import {type IProject} from '@/modelTypes/IProject'
 import {useProjectStore} from '@/stores/projects'
-import {useAuthStore} from '@/stores/auth'
 import ProjectViewService from '@/services/projectViews'
 import ProjectViewModel from '@/models/projectView'
 import {error} from '@/message'
@@ -56,7 +55,6 @@ const emit = defineEmits<{
 }>()
 
 const projectStore = useProjectStore()
-const authStore = useAuthStore()
 const projectViewService = shallowReactive(new ProjectViewService())
 
 const value = ref<TaskFilterParams>({})
@@ -99,20 +97,14 @@ function showResults() {
 }
 
 const currentView = computed(() => {
-	if (!props.projectId || !props.viewId) {
+	if (!isProjectView.value) {
 		return
 	}
 
 	return projectStore.projects[props.projectId]?.views.find(v => v.id === props.viewId)
 })
 
-const showIncludeSubprojectsToggle = computed(() => {
-	if (!props.projectId || props.projectId <= 0 || !props.viewId) {
-		return false
-	}
-
-	return authStore.settings.frontendSettings.showIncludeSubprojectsToggle ?? false
-})
+const isProjectView = computed(() => Boolean(props.projectId && props.projectId > 0 && props.viewId))
 
 const includeSubprojects = computed(() => currentView.value?.includeSubprojects ?? false)
 
