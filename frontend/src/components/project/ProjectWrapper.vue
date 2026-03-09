@@ -238,6 +238,7 @@ function getViewRoute(view: IProjectView) {
 .switch-view-button {
 	padding: .25rem .5rem;
 	display: block;
+	white-space: nowrap;
 	border-radius: $radius;
 	transition: all 100ms;
 
