@@ -71,8 +71,6 @@
 				"message": "Questo è un promemoria amichevole dell'attività \"%[1]s\" (%[2]s)."
 			},
 			"comment": {
-				"subject": "Riguardo a %[1]s",
-				"mentioned_subject": "%[1]s ti ha menzionato in un commento in \"%[2]s\"",
 				"mentioned_message": "**%[1]s** ti ha menzionato in un commento:"
 			},
 			"assigned": {
@@ -88,8 +86,6 @@
 				"message": "%[1]s ha eliminato l'attività \"%[2]s\" (%[3]s)"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s ti ha menzionato in una nuova attività \"%[2]s\"",
-				"subject": "%[1]s ti ha menzionato in un'attività \"%[2]s\"",
 				"message": "**%[1]s** ti ha menzionato in un'attività:"
 			},
 			"overdue": {
@@ -137,7 +133,6 @@
 			"have_nice_day": "Buona giornata!",
 			"copy_url": "Se il pulsante qui sopra non funziona, copia l'Url qui sotto e incollalo nella barra degli indirizzi del tuo browser:",
 			"actions": {
-				"open_task": "Apri attività",
 				"open_vikunja": "Apri Vikunja",
 				"open_project": "Apri progetto",
 				"open_team": "Apri Squadra",

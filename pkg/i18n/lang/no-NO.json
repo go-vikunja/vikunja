@@ -71,8 +71,6 @@
 				"message": "Dette er en påminnelse om oppgaven «%[1]» (%[2]s)."
 			},
 			"comment": {
-				"subject": "Sv: %[1]s",
-				"mentioned_subject": "%[1]s nevnte deg i en kommentar i \"%[2]s\"",
 				"mentioned_message": "**%[1]s nevnte deg i en kommentar i \"%[]s:"
 			},
 			"assigned": {
@@ -86,8 +84,6 @@
 				"message": "%[1]s har slettet oppgaven \"%[2]s\" (%[3]s)"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s nevnte deg i en kommentar i \"%[2]s\"",
-				"subject": "%[1]s nevnt deg i en oppgave \"%[2]s\"",
 				"message": "**%[1]s** nevnte deg i en oppgave:"
 			},
 			"overdue": {
@@ -133,7 +129,6 @@
 			"have_nice_day": "Ha en fin dag!",
 			"copy_url": "Hvis knappen over ikke fungerer, kopier nettadressen under og lim den inn i adresselinjen i nettleseren:",
 			"actions": {
-				"open_task": "Åpne oppgave",
 				"open_vikunja": "Åpne Vikunja",
 				"open_project": "Åpne prosjekt",
 				"open_team": "Åpne gruppe",

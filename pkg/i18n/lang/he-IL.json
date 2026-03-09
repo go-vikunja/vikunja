@@ -31,7 +31,6 @@
 		},
 		"common": {
 			"actions": {
-				"open_task": "פתיחת מטלה",
 				"open_project": "פתיחת פרויקט",
 				"open_team": "פתיחת צוות",
 				"download": "הורדה",

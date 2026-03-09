@@ -71,8 +71,6 @@
 				"message": "Ceci est un petit rappel de la tâche \"%[1]s\" (%[2]s)."
 			},
 			"comment": {
-				"subject": "Re: %[1]s",
-				"mentioned_subject": "%[1]s vous a mentionné dans un commentaire dans \"%[2]s\"",
 				"mentioned_message": "**%[1]s** vous a mentionné dans un commentaire :"
 			},
 			"assigned": {
@@ -86,8 +84,6 @@
 				"message": "%[1]s a supprimé la tâche \"%[2]s\" (%[3]s)"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s vous a mentionné dans une nouvelle tâche \"%[2]",
-				"subject": "%[1]s vous a mentionné dans une tâche \"%[2]",
 				"message": "**%[1]s** vous a mentionné dans une tâche :"
 			},
 			"overdue": {
@@ -135,7 +131,6 @@
 			"have_nice_day": "Passez une bonne journée !",
 			"copy_url": "Si le bouton ci-dessus ne fonctionne pas, copiez l'URL ci-dessous et collez-la dans la barre d'adresse de votre navigateur :",
 			"actions": {
-				"open_task": "Ouvrir la tâche",
 				"open_vikunja": "Ouvrir Vikunja",
 				"open_project": "Ouvrir le projet",
 				"open_team": "Ouvrir l'équipe",

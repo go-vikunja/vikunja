@@ -71,8 +71,6 @@
 				"message": "이것은 \"%[1]s\" (%[2]s) 작업에 대한 친절한 알림입니다."
 			},
 			"comment": {
-				"subject": "Re: %[1]s",
-				"mentioned_subject": "%[1]이 \"%[2]s\"의 댓글에서 귀하를 언급했습니다.",
 				"mentioned_message": "**%[1]s** 님이 댓글에서 귀하를 언급했습니다:"
 			},
 			"assigned": {
@@ -86,8 +84,6 @@
 				"message": "%[1]s 이(가) \"%[2]s\" (%[3]s) 작업을 삭제했습니다."
 			},
 			"mentioned": {
-				"subject_new": "%[1]이 새 작업 \"%[2]s\"에서 귀하를 언급했습니다.",
-				"subject": "%[1]이 “%[2]s”의 작업에서 귀하를 언급했습니다.",
 				"message": "**%[1]s**이(가) 작업에서 사용자를 언급했습니다:"
 			},
 			"overdue": {
@@ -135,7 +131,6 @@
 			"have_nice_day": "좋은 하루 보내세요!",
 			"copy_url": "위 버튼이 작동하지 않는 경우 아래 URL을 복사하여 브라우저 주소창에 붙여넣으세요:",
 			"actions": {
-				"open_task": "작업 열기",
 				"open_vikunja": "Vikunja 열기",
 				"open_project": "프로젝트 열기",
 				"open_team": "오픈팀",

@@ -67,13 +67,9 @@
 				"message": "Tämä on ystävällinen muistutus tehtävästä \"%[1]s\" (%[2]s)."
 			},
 			"comment": {
-				"subject": "Re: %[1]s",
-				"mentioned_subject": "%[1]s mainitsi sinut kommentissa \"%[2]s\"",
 				"mentioned_message": "**%[1]s** mainitsi sinut kommentissa:"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s mainitsi sinut uudessa tehtävässä \"%[2]s\"",
-				"subject": "%[1]s mainitsi sinut tehtävässä \"%[2]s\"",
 				"message": "**%[1]s** mainitsi sinut tehtävässä:"
 			},
 			"overdue": {
@@ -105,7 +101,6 @@
 			"have_nice_day": "Hauskaa päivän jatkoa!",
 			"copy_url": "Jos yläpuolella oleva nappi ei toimi, kopioi seuraava osoite selaimesi osoitepalkkiin:",
 			"actions": {
-				"open_task": "Avaa Tehtävä",
 				"open_vikunja": "Avaa Vikunja",
 				"open_project": "Avaa Projekti",
 				"open_team": "Avaa Tiimi",

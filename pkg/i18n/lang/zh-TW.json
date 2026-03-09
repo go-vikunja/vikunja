@@ -71,8 +71,6 @@
 				"message": "任務「%[1]s」(%[2]s) 提醒。"
 			},
 			"comment": {
-				"subject": "Re: %[1]s",
-				"mentioned_subject": "%[1]s 在「%[2]s」的評論中提到您",
 				"mentioned_message": "**%[1]s** 在評論中提到您："
 			},
 			"assigned": {
@@ -88,8 +86,6 @@
 				"message": "%[1]s 已刪除任務「%[2]s」(%[3]s)"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s 在新任務「%[2]s」中提到您",
-				"subject": "%[1]s 在任務「%[2]s」中提到您",
 				"message": "%[1]s 在任務中提到您："
 			},
 			"overdue": {
@@ -137,7 +133,6 @@
 			"have_nice_day": "祝您有美好的一天！",
 			"copy_url": "如果上方按鈕無法使用，請將以下網址複製到瀏覽器的網址列中：",
 			"actions": {
-				"open_task": "開啟任務",
 				"open_vikunja": "開啟 Vikunja",
 				"open_project": "開啟專案",
 				"open_team": "開啟團隊",

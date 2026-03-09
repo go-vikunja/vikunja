@@ -71,8 +71,6 @@
 				"message": "Dies ist eine freundliche Erinnerung an die Aufgabe „%[1]s“ (%[2]s)."
 			},
 			"comment": {
-				"subject": "Re: %[1]s",
-				"mentioned_subject": "%[1]s hat dich in einem Kommentar zu „%[2]s“ erwähnt",
 				"mentioned_message": "**%[1]s** hat dich in einem Kommentar erwähnt:"
 			},
 			"assigned": {
@@ -88,8 +86,6 @@
 				"message": "%[1]s hat die Aufgabe „%[2]s“ (%[3]s) gelöscht"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s hat dich in einer neuen Aufgabe „%[2]s“ erwähnt",
-				"subject": "%[1]s hat dich in einer Aufgabe „%[2]s“ erwähnt",
 				"message": "**%[1]s** hat dich in einer Aufgabe erwähnt:"
 			},
 			"overdue": {
@@ -137,7 +133,6 @@
 			"have_nice_day": "Hab einen schönen Tag!",
 			"copy_url": "Falls der Button oben nicht funktioniert, kopiere die untenstehende URL und füge sie in die Adressleiste deines Browsers ein:",
 			"actions": {
-				"open_task": "Aufgabe öffnen",
 				"open_vikunja": "Vikunja öffnen",
 				"open_project": "Projekt öffnen",
 				"open_team": "Team öffnen",
