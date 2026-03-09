@@ -32,3 +32,44 @@ func TestGetRootpathLocation(t *testing.T) {
 	result := getRootpathLocation()
 	assert.Equal(t, expected, result)
 }
+
+func TestResolvePath(t *testing.T) {
+	// Save and restore rootpath
+	original := ServiceRootpath.GetString()
+	defer ServiceRootpath.Set(original)
+	ServiceRootpath.Set("/var/lib/vikunja")
+
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "absolute path returned as-is",
+			input:    "/etc/vikunja/config.yml",
+			expected: "/etc/vikunja/config.yml",
+		},
+		{
+			name:     "relative path joined with rootpath",
+			input:    "files",
+			expected: "/var/lib/vikunja/files",
+		},
+		{
+			name:     "relative subdir path joined with rootpath",
+			input:    "data/vikunja.db",
+			expected: "/var/lib/vikunja/data/vikunja.db",
+		},
+		{
+			name:     "empty string returns rootpath",
+			input:    "",
+			expected: "/var/lib/vikunja",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ResolvePath(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

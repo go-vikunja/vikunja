@@ -473,6 +473,16 @@ func InitDefaultConfig() {
 	PluginsDir.setDefault(filepath.Join(ServiceRootpath.GetString(), "plugins"))
 }
 
+// ResolvePath resolves a path relative to service.rootpath.
+// If the path is already absolute, it is returned as-is (cleaned).
+// If the path is relative (or empty), it is joined with service.rootpath.
+func ResolvePath(p string) string {
+	if filepath.IsAbs(p) {
+		return filepath.Clean(p)
+	}
+	return filepath.Join(ServiceRootpath.GetString(), p)
+}
+
 func GetConfigValueFromFile(configKey string) string {
 	if !strings.HasSuffix(configKey, ".file") {
 		configKey += ".file"
