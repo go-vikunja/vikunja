@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -55,12 +54,7 @@ var s3Client s3PutObjectClient
 var s3Bucket string
 
 func setDefaultLocalConfig() {
-	if !strings.HasPrefix(config.FilesBasePath.GetString(), "/") {
-		config.FilesBasePath.Set(filepath.Join(
-			config.ServiceRootpath.GetString(),
-			config.FilesBasePath.GetString(),
-		))
-	}
+	config.FilesBasePath.Set(config.ResolvePath(config.FilesBasePath.GetString()))
 }
 
 // initS3FileHandler initializes the S3 file backend

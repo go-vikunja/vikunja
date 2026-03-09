@@ -379,7 +379,7 @@ func InitDefaultConfig() {
 	DatabaseUser.setDefault("vikunja")
 	DatabasePassword.setDefault("")
 	DatabaseDatabase.setDefault("vikunja")
-	DatabasePath.setDefault(filepath.Join(ServiceRootpath.GetString(), "vikunja.db"))
+	DatabasePath.setDefault(ResolvePath("vikunja.db"))
 	DatabaseMaxOpenConnections.setDefault(100)
 	DatabaseMaxIdleConnections.setDefault(50)
 	DatabaseMaxConnectionLifetime.setDefault(10000)
@@ -415,7 +415,7 @@ func InitDefaultConfig() {
 	LogDatabase.setDefault("off")
 	LogDatabaseLevel.setDefault("WARNING")
 	LogHTTP.setDefault("stdout")
-	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")
+	LogPath.setDefault(ResolvePath("logs"))
 	LogEvents.setDefault("off")
 	LogEventsLevel.setDefault("INFO")
 	LogMail.setDefault("off")
@@ -470,7 +470,7 @@ func InitDefaultConfig() {
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 	// Plugins
 	PluginsEnabled.setDefault(false)
-	PluginsDir.setDefault(filepath.Join(ServiceRootpath.GetString(), "plugins"))
+	PluginsDir.setDefault(ResolvePath("plugins"))
 }
 
 // ResolvePath resolves a path relative to service.rootpath.
@@ -492,9 +492,7 @@ func GetConfigValueFromFile(configKey string) string {
 		return ""
 	}
 
-	if !strings.HasPrefix(valuePath, "/") {
-		valuePath = path.Join(ServiceRootpath.GetString(), valuePath)
-	}
+	valuePath = ResolvePath(valuePath)
 
 	contents, err := os.ReadFile(valuePath)
 	if err == nil {
