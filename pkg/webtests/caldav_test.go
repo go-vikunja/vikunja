@@ -212,6 +212,202 @@ END:VTODO`
 		assert.Contains(t, rec.Body.String(), "RELATED-TO;RELTYPE=PARENT:uid_child_import")
 	})
 
+	t.Run("Import Task & Subtask (Reverse - Parent without RELATED-TO)", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		// Step 1: Subtask arrives FIRST, referencing a parent that doesn't exist yet.
+		// This is the standard Tasks.org behavior: only the child has RELATED-TO.
+		const vtodoSubtaskStub = `BEGIN:VTODO
+UID:uid_child_no_reltype
+DTSTAMP:20230301T073337Z
+SUMMARY:Subtask without parent RELTYPE
+CREATED:20230301T073337Z
+LAST-MODIFIED:20230301T073337Z
+RELATED-TO;RELTYPE=PARENT:uid_parent_no_reltype
+END:VTODO`
+
+		const subtaskVTODO = vtodoHeader + vtodoSubtaskStub + vtodoFooter
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, subtaskVTODO, nil, map[string]string{"project": "36", "task": "uid_child_no_reltype"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		// Step 2: Parent arrives with NO RELATED-TO at all.
+		// This is how Tasks.org sends parent tasks — no RELATED-TO;RELTYPE=CHILD.
+		const vtodoParentStub = `BEGIN:VTODO
+UID:uid_parent_no_reltype
+DTSTAMP:20230301T073337Z
+SUMMARY:Parent without RELTYPE
+CREATED:20230301T073337Z
+LAST-MODIFIED:20230301T073337Z
+END:VTODO`
+
+		const parentVTODO = vtodoHeader + vtodoParentStub + vtodoFooter
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_no_reltype"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		// Step 3: Verify the relations are intact.
+		// The subtask should still have RELATED-TO;RELTYPE=PARENT pointing to the parent.
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, 200, rec.Result().StatusCode)
+
+		body := rec.Body.String()
+
+		// Parent should exist with correct title (DUMMY should have been replaced)
+		assert.Contains(t, body, "UID:uid_parent_no_reltype")
+		assert.Contains(t, body, "SUMMARY:Parent without RELTYPE")
+
+		// Subtask should still reference the parent
+		assert.Contains(t, body, "UID:uid_child_no_reltype")
+		assert.Contains(t, body, "RELATED-TO;RELTYPE=PARENT:uid_parent_no_reltype")
+
+		// Parent should have the inverse child relation
+		assert.Contains(t, body, "RELATED-TO;RELTYPE=CHILD:uid_child_no_reltype")
+
+		// No DUMMY-UID tasks should remain
+		assert.NotContains(t, body, "DUMMY-UID-")
+	})
+
+	t.Run("Parent re-sync without RELATED-TO preserves child relations", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		// Step 1: Parent created first (no RELATED-TO).
+		const vtodoParentStub = `BEGIN:VTODO
+UID:uid_parent_resync
+DTSTAMP:20230301T073337Z
+SUMMARY:Parent for resync test
+CREATED:20230301T073337Z
+LAST-MODIFIED:20230301T073337Z
+END:VTODO`
+
+		const parentVTODO = vtodoHeader + vtodoParentStub + vtodoFooter
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_resync"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		// Step 2: Subtask arrives with RELATED-TO;RELTYPE=PARENT.
+		const vtodoSubtaskStub = `BEGIN:VTODO
+UID:uid_child_resync
+DTSTAMP:20230301T073337Z
+SUMMARY:Child for resync test
+CREATED:20230301T073337Z
+LAST-MODIFIED:20230301T073337Z
+RELATED-TO;RELTYPE=PARENT:uid_parent_resync
+END:VTODO`
+
+		const subtaskVTODO = vtodoHeader + vtodoSubtaskStub + vtodoFooter
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, subtaskVTODO, nil, map[string]string{"project": "36", "task": "uid_child_resync"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		// Step 3: Parent is re-synced (updated) — still no RELATED-TO.
+		// This simulates DAVx5 re-syncing the parent after a change (e.g., title update).
+		const vtodoParentUpdatedStub = `BEGIN:VTODO
+UID:uid_parent_resync
+DTSTAMP:20230302T073337Z
+SUMMARY:Parent for resync test (updated)
+CREATED:20230301T073337Z
+LAST-MODIFIED:20230302T073337Z
+END:VTODO`
+
+		const parentUpdatedVTODO = vtodoHeader + vtodoParentUpdatedStub + vtodoFooter
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentUpdatedVTODO, nil, map[string]string{"project": "36", "task": "uid_parent_resync"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		// Step 4: Verify relations still intact after parent re-sync.
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, 200, rec.Result().StatusCode)
+
+		body := rec.Body.String()
+
+		// Parent should have updated title
+		assert.Contains(t, body, "SUMMARY:Parent for resync test (updated)")
+
+		// Child should still reference parent
+		assert.Contains(t, body, "RELATED-TO;RELTYPE=PARENT:uid_parent_resync")
+
+		// Parent should still have inverse child relation
+		assert.Contains(t, body, "RELATED-TO;RELTYPE=CHILD:uid_child_resync")
+	})
+
+	t.Run("Multiple subtasks with same parent (one-sided RELATED-TO)", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		// Step 1: First subtask arrives, parent doesn't exist yet.
+		const vtodoSubtask1Stub = `BEGIN:VTODO
+UID:uid_multi_child_1
+DTSTAMP:20230301T073337Z
+SUMMARY:Multi child 1
+CREATED:20230301T073337Z
+LAST-MODIFIED:20230301T073337Z
+RELATED-TO;RELTYPE=PARENT:uid_multi_parent
+END:VTODO`
+
+		const subtask1VTODO = vtodoHeader + vtodoSubtask1Stub + vtodoFooter
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, subtask1VTODO, nil, map[string]string{"project": "36", "task": "uid_multi_child_1"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		// Step 2: Second subtask arrives, parent should exist as DUMMY now.
+		const vtodoSubtask2Stub = `BEGIN:VTODO
+UID:uid_multi_child_2
+DTSTAMP:20230301T073337Z
+SUMMARY:Multi child 2
+CREATED:20230301T073337Z
+LAST-MODIFIED:20230301T073337Z
+RELATED-TO;RELTYPE=PARENT:uid_multi_parent
+END:VTODO`
+
+		const subtask2VTODO = vtodoHeader + vtodoSubtask2Stub + vtodoFooter
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, subtask2VTODO, nil, map[string]string{"project": "36", "task": "uid_multi_child_2"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		// Step 3: Parent arrives with NO RELATED-TO.
+		const vtodoParentStub = `BEGIN:VTODO
+UID:uid_multi_parent
+DTSTAMP:20230301T073337Z
+SUMMARY:Multi parent
+CREATED:20230301T073337Z
+LAST-MODIFIED:20230301T073337Z
+END:VTODO`
+
+		const parentVTODO = vtodoHeader + vtodoParentStub + vtodoFooter
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodPut, caldav.TaskHandler, &testuser15, parentVTODO, nil, map[string]string{"project": "36", "task": "uid_multi_parent"})
+		require.NoError(t, err)
+		assert.Equal(t, 201, rec.Result().StatusCode)
+
+		// Step 4: Verify all relations intact and no DUMMY tasks.
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, 200, rec.Result().StatusCode)
+
+		body := rec.Body.String()
+
+		// Parent should have correct title
+		assert.Contains(t, body, "SUMMARY:Multi parent")
+
+		// Both subtasks should reference parent
+		assert.Contains(t, body, "UID:uid_multi_child_1")
+		assert.Contains(t, body, "UID:uid_multi_child_2")
+
+		// Count RELATED-TO;RELTYPE=PARENT:uid_multi_parent — should appear exactly twice
+		parentRelCount := strings.Count(body, "RELATED-TO;RELTYPE=PARENT:uid_multi_parent")
+		assert.Equal(t, 2, parentRelCount, "Both subtasks should reference the parent")
+
+		// Count RELATED-TO;RELTYPE=CHILD — parent should have exactly two child refs
+		child1RelCount := strings.Count(body, "RELATED-TO;RELTYPE=CHILD:uid_multi_child_1")
+		child2RelCount := strings.Count(body, "RELATED-TO;RELTYPE=CHILD:uid_multi_child_2")
+		assert.Equal(t, 1, child1RelCount, "Parent should reference child 1")
+		assert.Equal(t, 1, child2RelCount, "Parent should reference child 2")
+
+		// No DUMMY-UID tasks should remain
+		assert.NotContains(t, body, "DUMMY-UID-")
+	})
+
 	t.Run("Delete Subtask", func(t *testing.T) {
 		e, _ := setupTestEnv()
 
