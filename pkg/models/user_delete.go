@@ -169,14 +169,17 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		}
 	}
 
-	_, err = s.Where("id = ?", u.ID).Delete(&user.User{})
+	// Notify before deleting the user row, because ShouldNotify will try to
+	// look up the user and fail if the row is already gone.
+	err = notifications.Notify(u, &user.AccountDeletedNotification{
+		User: u,
+	}, s)
 	if err != nil {
 		return err
 	}
 
-	return notifications.Notify(u, &user.AccountDeletedNotification{
-		User: u,
-	}, s)
+	_, err = s.Where("id = ?", u.ID).Delete(&user.User{})
+	return err
 }
 
 func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err error) {
