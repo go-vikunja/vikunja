@@ -63,12 +63,12 @@ test.describe('WebSocket Protocol', () => {
 		})
 	})
 
-	test.describe('Subscribe / Unsubscribe', () => {
-		test('subscribes to valid topic', async ({userToken}) => {
+	test.describe('Subscribe / Unsubscribe Events', () => {
+		test('subscribes to valid event', async ({userToken}) => {
 			const ws = await openWs()
 			try {
 				await authenticateWs(ws, userToken)
-				sendMessage(ws, {action: 'subscribe', topic: 'notification.created'})
+				sendMessage(ws, {action: 'subscribe', event: 'notification.created'})
 				// No error response means success — verify by collecting messages
 				// for a short window. If there was an error, it would arrive.
 				const messages = await collectMessages(ws, 500)
@@ -79,14 +79,14 @@ test.describe('WebSocket Protocol', () => {
 			}
 		})
 
-		test('rejects invalid topic', async ({userToken}) => {
+		test('rejects invalid event', async ({userToken}) => {
 			const ws = await openWs()
 			try {
 				await authenticateWs(ws, userToken)
-				sendMessage(ws, {action: 'subscribe', topic: 'nonexistent.topic'})
+				sendMessage(ws, {action: 'subscribe', event: 'nonexistent.event'})
 				const msg = await waitForMessage(ws)
-				expect(msg.error).toBe('invalid_topic')
-				expect(msg.topic).toBe('nonexistent.topic')
+				expect(msg.error).toBe('invalid_event')
+				expect(msg.event).toBe('nonexistent.event')
 			} finally {
 				closeWs(ws)
 			}
@@ -95,7 +95,7 @@ test.describe('WebSocket Protocol', () => {
 		test('requires auth before subscribe', async () => {
 			const ws = await openWs()
 			try {
-				sendMessage(ws, {action: 'subscribe', topic: 'notification.created'})
+				sendMessage(ws, {action: 'subscribe', event: 'notification.created'})
 				const msg = await waitForMessage(ws)
 				expect(msg.error).toBe('auth_required')
 			} finally {
@@ -121,7 +121,7 @@ test.describe('WebSocket Protocol', () => {
 				const team = await teamResponse.json()
 
 				// Unsubscribe before the notification is triggered
-				sendMessage(ws, {action: 'unsubscribe', topic: 'notification.created'})
+				sendMessage(ws, {action: 'unsubscribe', event: 'notification.created'})
 				// Give the server a moment to process the unsubscribe
 				await new Promise(r => setTimeout(r, 200))
 

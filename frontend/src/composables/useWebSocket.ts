@@ -9,7 +9,6 @@ interface WebSocketEvent {
 	action?: string
 	success?: boolean
 	error?: string
-	topic?: string
 	data?: unknown
 }
 
@@ -44,8 +43,8 @@ function sendAuth() {
 }
 
 function resubscribeAll() {
-	for (const topic of subscriptions.keys()) {
-		sendMessage({action: 'subscribe', topic})
+	for (const event of subscriptions.keys()) {
+		sendMessage({action: 'subscribe', event})
 	}
 }
 
@@ -77,9 +76,9 @@ function handleMessage(event: MessageEvent) {
 		return
 	}
 
-	// Handle regular events
-	if (msg.topic) {
-		const callbacks = subscriptions.get(msg.topic)
+	// Handle regular events — route by event name
+	if (msg.event) {
+		const callbacks = subscriptions.get(msg.event)
 		if (callbacks) {
 			for (const cb of callbacks) {
 				cb(msg)
@@ -170,25 +169,25 @@ function disconnect() {
 	subscriptions.clear()
 }
 
-function subscribe(topic: string, callback: MessageCallback): () => void {
-	if (!subscriptions.has(topic)) {
-		subscriptions.set(topic, new Set())
+function subscribe(event: string, callback: MessageCallback): () => void {
+	if (!subscriptions.has(event)) {
+		subscriptions.set(event, new Set())
 	}
-	subscriptions.get(topic)!.add(callback)
+	subscriptions.get(event)!.add(callback)
 
 	// Only send subscribe if already authenticated
 	// (otherwise it will be sent after auth succeeds)
 	if (authenticated.value) {
-		sendMessage({action: 'subscribe', topic})
+		sendMessage({action: 'subscribe', event})
 	}
 
 	return () => {
-		const callbacks = subscriptions.get(topic)
+		const callbacks = subscriptions.get(event)
 		if (callbacks) {
 			callbacks.delete(callback)
 			if (callbacks.size === 0) {
-				subscriptions.delete(topic)
-				sendMessage({action: 'unsubscribe', topic})
+				subscriptions.delete(event)
+				sendMessage({action: 'unsubscribe', event})
 			}
 		}
 	}
