@@ -338,6 +338,12 @@ export const useAuthStore = defineStore('auth', () => {
 
 			if (isAuthenticated) {
 				await refreshUserInfo()
+				// refreshUserInfo() may have called logout() on a 4xx response,
+				// which clears the token. If that happened, the local
+				// isAuthenticated variable is stale — update it.
+				if (!getToken()) {
+					isAuthenticated = false
+				}
 			}
 		}
 
