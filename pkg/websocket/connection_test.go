@@ -38,7 +38,7 @@ func TestConnectionSubscribeUnsubscribe(t *testing.T) {
 	assert.False(t, conn.IsSubscribed("notification.created"))
 }
 
-func TestConnectionIsSubscribedReturnsFalseForUnknownTopic(t *testing.T) {
+func TestConnectionIsSubscribedReturnsFalseForUnknownEvent(t *testing.T) {
 	conn := &Connection{
 		userID:        1,
 		authenticated: true,
@@ -49,7 +49,7 @@ func TestConnectionIsSubscribedReturnsFalseForUnknownTopic(t *testing.T) {
 	assert.False(t, conn.IsSubscribed("something"))
 }
 
-func TestConnectionAcceptsEventNameTopic(t *testing.T) {
+func TestConnectionAcceptsValidEvent(t *testing.T) {
 	hub := NewHub()
 	conn := &Connection{
 		hub:           hub,
@@ -60,12 +60,12 @@ func TestConnectionAcceptsEventNameTopic(t *testing.T) {
 	}
 	hub.Register(conn)
 
-	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Topic: "notification.created"})
+	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Event: "notification.created"})
 
 	assert.True(t, conn.IsSubscribed("notification.created"))
 }
 
-func TestConnectionRejectsOldTopicName(t *testing.T) {
+func TestConnectionRejectsInvalidEvent(t *testing.T) {
 	conn := &Connection{
 		userID:        1,
 		authenticated: true,
@@ -73,10 +73,10 @@ func TestConnectionRejectsOldTopicName(t *testing.T) {
 		send:          make(chan OutgoingMessage, 16),
 	}
 
-	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Topic: "notifications"})
+	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Event: "notifications"})
 
 	msg := <-conn.send
-	assert.Equal(t, "invalid_topic", msg.Error)
+	assert.Equal(t, "invalid_event", msg.Error)
 	assert.False(t, conn.IsSubscribed("notifications"))
 }
 
@@ -89,7 +89,7 @@ func TestConnectionRejectsActionsBeforeAuth(t *testing.T) {
 	}
 
 	// Try to subscribe before auth - should be rejected
-	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Topic: "notification.created"})
+	conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Event: "notification.created"})
 
 	// Should have sent an error
 	msg := <-conn.send

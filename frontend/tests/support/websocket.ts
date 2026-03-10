@@ -7,7 +7,6 @@ export interface WsMessage {
 	action?: string
 	success?: boolean
 	error?: string
-	topic?: string
 	data?: unknown
 }
 
@@ -62,10 +61,10 @@ export async function authenticateWs(ws: WebSocket, token: string): Promise<WsMe
 }
 
 /**
- * Subscribes to a topic on an authenticated WebSocket connection.
+ * Subscribes to an event on an authenticated WebSocket connection.
  */
-export function subscribeWs(ws: WebSocket, topic: string): void {
-	sendMessage(ws, {action: 'subscribe', topic})
+export function subscribeWs(ws: WebSocket, event: string): void {
+	sendMessage(ws, {action: 'subscribe', event})
 }
 
 /**
