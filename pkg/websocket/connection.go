@@ -59,25 +59,25 @@ func NewConnection(ws *websocket.Conn, hub *Hub) *Connection {
 	}
 }
 
-// Subscribe adds a topic subscription.
-func (c *Connection) Subscribe(topic string) {
+// Subscribe adds an event subscription.
+func (c *Connection) Subscribe(event string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.subscriptions[topic] = true
+	c.subscriptions[event] = true
 }
 
-// Unsubscribe removes a topic subscription.
-func (c *Connection) Unsubscribe(topic string) {
+// Unsubscribe removes an event subscription.
+func (c *Connection) Unsubscribe(event string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	delete(c.subscriptions, topic)
+	delete(c.subscriptions, event)
 }
 
-// IsSubscribed checks if the connection is subscribed to a topic.
-func (c *Connection) IsSubscribed(topic string) bool {
+// IsSubscribed checks if the connection is subscribed to an event.
+func (c *Connection) IsSubscribed(event string) bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.subscriptions[topic]
+	return c.subscriptions[event]
 }
 
 // IsAuthenticated returns whether the connection is authenticated.
@@ -146,19 +146,19 @@ func (c *Connection) handleMessage(ctx context.Context, msg IncomingMessage) boo
 			c.sendError("auth_required", "")
 			return true
 		}
-		if !isValidTopic(msg.Topic) {
-			c.sendError("invalid_topic", msg.Topic)
+		if !isValidEvent(msg.Event) {
+			c.sendError("invalid_event", msg.Event)
 			return true
 		}
-		c.Subscribe(msg.Topic)
-		log.Debugf("WebSocket: user %d subscribed to %s", c.UserID(), msg.Topic)
+		c.Subscribe(msg.Event)
+		log.Debugf("WebSocket: user %d subscribed to %s", c.UserID(), msg.Event)
 	case ActionUnsubscribe:
 		if !c.IsAuthenticated() {
 			c.sendError("auth_required", "")
 			return true
 		}
-		c.Unsubscribe(msg.Topic)
-		log.Debugf("WebSocket: user %d unsubscribed from %s", c.UserID(), msg.Topic)
+		c.Unsubscribe(msg.Event)
+		log.Debugf("WebSocket: user %d unsubscribed from %s", c.UserID(), msg.Event)
 	default:
 		log.Warningf("WebSocket: unknown action %q", msg.Action)
 	}
@@ -213,9 +213,9 @@ func (c *Connection) writeMessageDirect(ctx context.Context, msg OutgoingMessage
 	}
 }
 
-func (c *Connection) sendError(errMsg, topic string) {
+func (c *Connection) sendError(errMsg, event string) {
 	select {
-	case c.send <- OutgoingMessage{Error: errMsg, Topic: topic}:
+	case c.send <- OutgoingMessage{Error: errMsg, Event: event}:
 	default:
 		log.Warningf("WebSocket: send buffer full, dropping error")
 	}
@@ -261,11 +261,11 @@ func (c *Connection) WriteLoop(ctx context.Context, cancel context.CancelFunc) {
 	}
 }
 
-// validTopics is the set of event names clients are allowed to subscribe to.
-var validTopics = map[string]bool{
+// validEvents is the set of event names clients are allowed to subscribe to.
+var validEvents = map[string]bool{
 	"notification.created": true,
 }
 
-func isValidTopic(topic string) bool {
-	return validTopics[topic]
+func isValidEvent(event string) bool {
+	return validEvents[event]
 }

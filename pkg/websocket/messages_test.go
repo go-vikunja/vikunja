@@ -34,12 +34,12 @@ func TestIncomingAuthMessageDeserialization(t *testing.T) {
 }
 
 func TestIncomingSubscribeMessageDeserialization(t *testing.T) {
-	raw := `{"action":"subscribe","topic":"notification.created"}`
+	raw := `{"action":"subscribe","event":"notification.created"}`
 	var msg IncomingMessage
 	err := json.Unmarshal([]byte(raw), &msg)
 	require.NoError(t, err)
 	assert.Equal(t, ActionSubscribe, msg.Action)
-	assert.Equal(t, "notification.created", msg.Topic)
+	assert.Equal(t, "notification.created", msg.Event)
 }
 
 func TestOutgoingEventSerialization(t *testing.T) {
@@ -57,11 +57,12 @@ func TestOutgoingEventSerialization(t *testing.T) {
 func TestOutgoingErrorSerialization(t *testing.T) {
 	msg := OutgoingMessage{
 		Error: "forbidden",
-		Topic: "project.tasks",
+		Event: "project.tasks",
 	}
 	data, err := json.Marshal(msg)
 	require.NoError(t, err)
 	assert.Contains(t, string(data), `"error":"forbidden"`)
+	assert.Contains(t, string(data), `"event":"project.tasks"`)
 }
 
 func TestOutgoingAuthSuccessSerialization(t *testing.T) {
