@@ -65,10 +65,11 @@ function handleMessage(event: MessageEvent) {
 		return
 	}
 
-	// Handle auth error - close the socket so callers see connected=false
-	// and fallback polling kicks in
+	// Handle auth error - treat as terminal (no reconnect) so we don't
+	// thrash the WS endpoint with a bad token. Fallback polling kicks in.
 	if (msg.error === 'invalid_token' || msg.error === 'auth_required') {
 		console.warn('WebSocket: auth failed:', msg.error)
+		manuallyDisconnected = true
 		authenticated.value = false
 		connected.value = false
 		socket?.close()
