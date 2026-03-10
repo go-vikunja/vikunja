@@ -186,6 +186,10 @@
 			"backgroundBrightness": {
 				"title": "Hintergrundhelligkeit"
 			},
+			"webhooks": {
+				"title": "Webhook-Benachrichtigungen",
+				"description": "Konfiguriere Webhook-URLs, um POST-Anfragen zu erhalten, wenn Erinnerungs- oder Fälligkeitsereignisse ausgelöst werden. Diese Webhooks empfangen Ereignisse aus allen deinen Projekten."
+			},
 			"apiTokens": {
 				"title": "API-Tokens",
 				"general": "Mit API-Token kannst du die API von Vikunja ohne Login-Daten verwenden.",
