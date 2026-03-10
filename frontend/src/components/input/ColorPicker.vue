@@ -82,7 +82,6 @@ const DEFAULT_COLORS = [
 ]
 
 const color = ref('')
-const lastChangeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 const defaultColors = ref(DEFAULT_COLORS)
 const colorListID = ref(createRandomID())
 
@@ -112,13 +111,7 @@ function update(force = false) {
 		return
 	}
 
-	if (lastChangeTimeout.value !== null) {
-		clearTimeout(lastChangeTimeout.value)
-	}
-
-	lastChangeTimeout.value = setTimeout(() => {
-		model.value = color.value
-	}, 500)
+	model.value = color.value
 }
 
 function reset() {
