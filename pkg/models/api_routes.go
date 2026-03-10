@@ -152,6 +152,14 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 		return true
 	}
 
+	// Check if this is a bulk variant of a known CRUD resource
+	if strings.HasSuffix(routeGroupName, "_bulk") {
+		parent := strings.TrimSuffix(routeGroupName, "_bulk")
+		if crudResources[parent] {
+			return true
+		}
+	}
+
 	// Also check the base resource for nested paths
 	if len(routeParts) > 0 && crudResources[routeParts[0]] {
 		// For single-segment paths, it's CRUD if it's a known resource
