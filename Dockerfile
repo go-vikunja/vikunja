@@ -50,7 +50,7 @@ WORKDIR /app/vikunja
 ENTRYPOINT [ "/app/vikunja/vikunja" ]
 EXPOSE 3456
 
-COPY --from=apibuilder /tmp /tmp
+COPY --from=apibuilder --chown=1000:1000 /tmp /tmp
 
 USER 1000
 
