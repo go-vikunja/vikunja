@@ -337,7 +337,14 @@ export const useAuthStore = defineStore('auth', () => {
 			}
 
 			if (isAuthenticated) {
-				await refreshUserInfo()
+				const user = await refreshUserInfo()
+				if (!user) {
+					// refreshUserInfo() did not return a user — either the
+					// token vanished or a 4xx triggered logout(). Bail out
+					// so the stale local `isAuthenticated` doesn't override
+					// the auth state that logout() already set.
+					return
+				}
 			}
 		}
 
