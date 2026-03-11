@@ -523,6 +523,25 @@ func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRel
 
 	for relationKind, relatedTasks := range existingTask.RelatedTasks {
 
+		// Only process CalDAV-compatible relation kinds (parenttask, subtask).
+		// Other kinds (related, blocking, etc.) are never set via CalDAV and
+		// should not be removed here.
+		if relationKind != models.RelationKindParenttask && relationKind != models.RelationKindSubtask {
+			continue
+		}
+
+		// For subtask relations: only consider removal if the VTODO explicitly
+		// declares RELATED-TO;RELTYPE=CHILD (i.e., subtask kind is a key in
+		// newRelations). Subtask relations are often auto-created as inverses
+		// when child tasks declare RELATED-TO;RELTYPE=PARENT pointing to this
+		// task. Removing them just because this task's VTODO doesn't mention
+		// RELATED-TO;RELTYPE=CHILD would break those child-declared links.
+		if relationKind == models.RelationKindSubtask {
+			if _, hasSubtaskKind := newRelations[models.RelationKindSubtask]; !hasSubtaskKind {
+				continue
+			}
+		}
+
 		for _, relatedTask := range relatedTasks {
 			relationInNewList := slices.ContainsFunc(newRelations[relationKind], func(newRelation *models.Task) bool { return newRelation.UID == relatedTask.UID })
 
