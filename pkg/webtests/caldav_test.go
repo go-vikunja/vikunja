@@ -22,6 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/routes/caldav"
 
 	ics "github.com/arran4/golang-ical"
@@ -246,27 +248,41 @@ END:VTODO`
 		require.NoError(t, err)
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
-		// Step 3: Verify the relations are intact.
-		// The subtask should still have RELATED-TO;RELTYPE=PARENT pointing to the parent.
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
+		// Step 3: Verify relations at the DB level.
+		s := db.NewSession()
+		defer s.Close()
+
+		childTasks, err := models.GetTasksByUIDs(s, []string{"uid_child_no_reltype"}, &testuser15)
 		require.NoError(t, err)
-		assert.Equal(t, 200, rec.Result().StatusCode)
+		require.Len(t, childTasks, 1)
+		childTask := childTasks[0]
 
-		body := rec.Body.String()
+		parentTasks, err := models.GetTasksByUIDs(s, []string{"uid_parent_no_reltype"}, &testuser15)
+		require.NoError(t, err)
+		require.Len(t, parentTasks, 1)
+		parentTask := parentTasks[0]
 
-		// Parent should exist with correct title (DUMMY should have been replaced)
-		assert.Contains(t, body, "UID:uid_parent_no_reltype")
-		assert.Contains(t, body, "SUMMARY:Parent without RELTYPE")
-
-		// Subtask should still reference the parent
-		assert.Contains(t, body, "UID:uid_child_no_reltype")
-		assert.Contains(t, body, "RELATED-TO;RELTYPE=PARENT:uid_parent_no_reltype")
-
-		// Parent should have the inverse child relation
-		assert.Contains(t, body, "RELATED-TO;RELTYPE=CHILD:uid_child_no_reltype")
+		// Parent should have correct title (DUMMY should have been replaced)
+		assert.Equal(t, "Parent without RELTYPE", parentTask.Title)
 
 		// No DUMMY-UID tasks should remain
-		assert.NotContains(t, body, "DUMMY-UID-")
+		db.AssertMissing(t, "tasks", map[string]interface{}{
+			"title": "DUMMY-UID-uid_parent_no_reltype",
+		})
+
+		// Subtask should still have parenttask relation to parent
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       childTask.ID,
+			"other_task_id": parentTask.ID,
+			"relation_kind": models.RelationKindParenttask,
+		}, false)
+
+		// Parent should have the inverse subtask relation
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       parentTask.ID,
+			"other_task_id": childTask.ID,
+			"relation_kind": models.RelationKindSubtask,
+		}, false)
 	})
 
 	t.Run("Parent re-sync without RELATED-TO preserves child relations", func(t *testing.T) {
@@ -317,20 +333,35 @@ END:VTODO`
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		// Step 4: Verify relations still intact after parent re-sync.
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
-		require.NoError(t, err)
-		assert.Equal(t, 200, rec.Result().StatusCode)
+		s := db.NewSession()
+		defer s.Close()
 
-		body := rec.Body.String()
+		parentTasks, err := models.GetTasksByUIDs(s, []string{"uid_parent_resync"}, &testuser15)
+		require.NoError(t, err)
+		require.Len(t, parentTasks, 1)
+		parentTask := parentTasks[0]
+
+		childTasks, err := models.GetTasksByUIDs(s, []string{"uid_child_resync"}, &testuser15)
+		require.NoError(t, err)
+		require.Len(t, childTasks, 1)
+		childTask := childTasks[0]
 
 		// Parent should have updated title
-		assert.Contains(t, body, "SUMMARY:Parent for resync test (updated)")
+		assert.Equal(t, "Parent for resync test (updated)", parentTask.Title)
 
-		// Child should still reference parent
-		assert.Contains(t, body, "RELATED-TO;RELTYPE=PARENT:uid_parent_resync")
+		// Child should still have parenttask relation to parent
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       childTask.ID,
+			"other_task_id": parentTask.ID,
+			"relation_kind": models.RelationKindParenttask,
+		}, false)
 
-		// Parent should still have inverse child relation
-		assert.Contains(t, body, "RELATED-TO;RELTYPE=CHILD:uid_child_resync")
+		// Parent should still have inverse subtask relation
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       parentTask.ID,
+			"other_task_id": childTask.ID,
+			"relation_kind": models.RelationKindSubtask,
+		}, false)
 	})
 
 	t.Run("Multiple subtasks with same parent (one-sided RELATED-TO)", func(t *testing.T) {
@@ -381,31 +412,57 @@ END:VTODO`
 		assert.Equal(t, 201, rec.Result().StatusCode)
 
 		// Step 4: Verify all relations intact and no DUMMY tasks.
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "36"})
-		require.NoError(t, err)
-		assert.Equal(t, 200, rec.Result().StatusCode)
+		s := db.NewSession()
+		defer s.Close()
 
-		body := rec.Body.String()
+		parentTasks, err := models.GetTasksByUIDs(s, []string{"uid_multi_parent"}, &testuser15)
+		require.NoError(t, err)
+		require.Len(t, parentTasks, 1)
+		parentTask := parentTasks[0]
+
+		child1Tasks, err := models.GetTasksByUIDs(s, []string{"uid_multi_child_1"}, &testuser15)
+		require.NoError(t, err)
+		require.Len(t, child1Tasks, 1)
+		child1Task := child1Tasks[0]
+
+		child2Tasks, err := models.GetTasksByUIDs(s, []string{"uid_multi_child_2"}, &testuser15)
+		require.NoError(t, err)
+		require.Len(t, child2Tasks, 1)
+		child2Task := child2Tasks[0]
 
 		// Parent should have correct title
-		assert.Contains(t, body, "SUMMARY:Multi parent")
-
-		// Both subtasks should reference parent
-		assert.Contains(t, body, "UID:uid_multi_child_1")
-		assert.Contains(t, body, "UID:uid_multi_child_2")
-
-		// Count RELATED-TO;RELTYPE=PARENT:uid_multi_parent — should appear exactly twice
-		parentRelCount := strings.Count(body, "RELATED-TO;RELTYPE=PARENT:uid_multi_parent")
-		assert.Equal(t, 2, parentRelCount, "Both subtasks should reference the parent")
-
-		// Count RELATED-TO;RELTYPE=CHILD — parent should have exactly two child refs
-		child1RelCount := strings.Count(body, "RELATED-TO;RELTYPE=CHILD:uid_multi_child_1")
-		child2RelCount := strings.Count(body, "RELATED-TO;RELTYPE=CHILD:uid_multi_child_2")
-		assert.Equal(t, 1, child1RelCount, "Parent should reference child 1")
-		assert.Equal(t, 1, child2RelCount, "Parent should reference child 2")
+		assert.Equal(t, "Multi parent", parentTask.Title)
 
 		// No DUMMY-UID tasks should remain
-		assert.NotContains(t, body, "DUMMY-UID-")
+		db.AssertMissing(t, "tasks", map[string]interface{}{
+			"title": "DUMMY-UID-uid_multi_parent",
+		})
+
+		// Child 1 should have parenttask relation to parent
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       child1Task.ID,
+			"other_task_id": parentTask.ID,
+			"relation_kind": models.RelationKindParenttask,
+		}, false)
+
+		// Child 2 should have parenttask relation to parent
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       child2Task.ID,
+			"other_task_id": parentTask.ID,
+			"relation_kind": models.RelationKindParenttask,
+		}, false)
+
+		// Parent should have inverse subtask relations to both children
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       parentTask.ID,
+			"other_task_id": child1Task.ID,
+			"relation_kind": models.RelationKindSubtask,
+		}, false)
+		db.AssertExists(t, "task_relations", map[string]interface{}{
+			"task_id":       parentTask.ID,
+			"other_task_id": child2Task.ID,
+			"relation_kind": models.RelationKindSubtask,
+		}, false)
 	})
 
 	t.Run("Delete Subtask", func(t *testing.T) {
