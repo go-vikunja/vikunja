@@ -337,12 +337,13 @@ export const useAuthStore = defineStore('auth', () => {
 			}
 
 			if (isAuthenticated) {
-				await refreshUserInfo()
-				// refreshUserInfo() may have called logout() on a 4xx response,
-				// which clears the token. If that happened, the local
-				// isAuthenticated variable is stale — update it.
-				if (!getToken()) {
-					isAuthenticated = false
+				const user = await refreshUserInfo()
+				if (!user) {
+					// refreshUserInfo() did not return a user — either the
+					// token vanished or a 4xx triggered logout(). Bail out
+					// so the stale local `isAuthenticated` doesn't override
+					// the auth state that logout() already set.
+					return
 				}
 			}
 		}
