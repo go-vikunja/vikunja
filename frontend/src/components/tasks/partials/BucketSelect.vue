@@ -158,11 +158,13 @@ async function changeBucket(bucket: IBucket) {
 
 	kanbanStore.moveTaskToBucket(props.task, bucket.id)
 
-	// Use the task from the API response to pick up done state changes
-	// (moving to/from the done bucket toggles the done status)
+	// Only pick up done state from the response since moving to/from the
+	// done bucket can toggle it. Spreading the full response task would
+	// overwrite fields like maxPermission that are not part of this endpoint.
 	const updatedTask = {
 		...props.task,
-		...updatedTaskBucket.task,
+		done: updatedTaskBucket.task?.done ?? props.task.done,
+		doneAt: updatedTaskBucket.task?.doneAt ?? props.task.doneAt,
 		buckets: updatedBuckets,
 		bucketId: bucket.id,
 	}
