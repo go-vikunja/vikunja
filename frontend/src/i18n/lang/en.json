@@ -385,7 +385,8 @@
       "addPlaceholder": "Add a task…",
       "empty": "This project is currently empty.",
       "newTaskCta": "Create a task.",
-      "editTask": "Edit Task"
+      "editTask": "Edit Task",
+      "sort": "Sort"
     },
     "gantt": {
       "title": "Gantt",
@@ -576,6 +577,15 @@
         }
       }
     }
+  },
+  "sorting": {
+    "title": "Sort Tasks",
+    "sortBy": "Sort by",
+    "order": "Order",
+    "manually": "Manually",
+    "asc": "Ascending",
+    "desc": "Descending",
+    "description": "Choose how tasks in this list are sorted. When sorting manually, you can drag and drop tasks to reorder them."
   },
   "migrate": {
     "title": "Import from other services",
