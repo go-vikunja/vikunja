@@ -34,6 +34,7 @@ func TestInfo(t *testing.T) {
 
 	expected := fmt.Sprintf(`{
   "version": "%s",
+  "api_min_compatible": "%s",
   "frontend_url": "https://localhost",
   "motd": "",
   "link_sharing_enabled": true,
@@ -72,7 +73,7 @@ func TestInfo(t *testing.T) {
   "demo_mode_enabled": false,
   "webhooks_enabled": true,
   "public_teams_enabled": false
-}`, version.Version)
+}`, version.Version, version.APIMinCompatible)
 
 	assert.JSONEq(t, expected, rec.Body.String())
 }

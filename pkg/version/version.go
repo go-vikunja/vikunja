@@ -24,6 +24,11 @@ import "code.vikunja.io/api/pkg/swagger"
 // Version sets the version to be printed to the user. Gets overwritten by "make release" or "make build" with last git commit or tag.
 var Version = "dev"
 
+// NOTE: Only bump this when a breaking API change ships (endpoint removal/rename,
+// changed request/response shape, removed fields). Non-breaking additions
+// (new endpoints, new optional fields) should NOT bump this.
+var APIMinCompatible = "2.1.0"
+
 func init() {
 	// Additional swagger information
 	swagger.SwaggerInfo.Version = Version
