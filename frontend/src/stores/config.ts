@@ -11,6 +11,7 @@ import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
 export interface ConfigState {
 	version: string,
+	apiMinCompatible: string,
 	frontendUrl: string,
 	motd: string,
 	linkSharingEnabled: boolean,
@@ -50,6 +51,7 @@ export const useConfigStore = defineStore('config', () => {
 	const state: ConfigState = reactive({
 		// These are the api defaults.
 		version: '',
+		apiMinCompatible: '',
 		frontendUrl: '',
 		motd: '',
 		linkSharingEnabled: true,
