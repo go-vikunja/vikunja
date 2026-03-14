@@ -33,47 +33,47 @@ func TestInfo(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := fmt.Sprintf(`{
-  "version": "%s",
-  "api_min_compatible": "%s",
-  "frontend_url": "https://localhost",
-  "motd": "",
-  "link_sharing_enabled": true,
-  "max_file_size": "20MB",
-  "max_items_per_page": 50,
-  "available_migrators": [
-    "vikunja-file",
-    "ticktick"
-  ],
-  "task_attachments_enabled": true,
-  "enabled_background_providers": [
-    "upload"
-  ],
-  "totp_enabled": true,
-  "legal": {
-    "imprint_url": "",
-    "privacy_policy_url": ""
-  },
-  "caldav_enabled": true,
-  "auth": {
-    "local": {
-      "enabled": true,
-      "registration_enabled": true
-    },
-    "ldap": {
-      "enabled": false
-    },
-    "openid_connect": {
-      "enabled": false,
-      "providers": null
-    }
-  },
-  "email_reminders_enabled": true,
-  "user_deletion_enabled": true,
-  "task_comments_enabled": true,
-  "demo_mode_enabled": false,
-  "webhooks_enabled": true,
-  "public_teams_enabled": false
-}`, version.Version, version.APIMinCompatible)
+		"version": "%s",
+		"api_min_compatible": "%s",
+		"frontend_url": "https://localhost",
+		"motd": "",
+		"link_sharing_enabled": true,
+		"max_file_size": "20MB",
+		"max_items_per_page": 50,
+		"available_migrators": [
+			"vikunja-file",
+			"ticktick"
+		],
+		"task_attachments_enabled": true,
+		"enabled_background_providers": [
+			"upload"
+		],
+		"totp_enabled": true,
+		"legal": {
+			"imprint_url": "",
+			"privacy_policy_url": ""
+		},
+		"caldav_enabled": true,
+		"auth": {
+			"local": {
+				"enabled": true,
+				"registration_enabled": true
+			},
+			"ldap": {
+				"enabled": false
+			},
+			"openid_connect": {
+				"enabled": false,
+				"providers": null
+			}
+		},
+		"email_reminders_enabled": true,
+		"user_deletion_enabled": true,
+		"task_comments_enabled": true,
+		"demo_mode_enabled": false,
+		"webhooks_enabled": true,
+		"public_teams_enabled": false
+	}`, version.Version, version.APIMinCompatible)
 
 	assert.JSONEq(t, expected, rec.Body.String())
 }
