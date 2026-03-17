@@ -86,7 +86,7 @@ func TestProject(t *testing.T) {
 			var projects []models.Project
 			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &projects))
 			for _, p := range projects {
-				if p.Title == "Test21 archived through parent list" {
+				if p.ID == 21 {
 					assert.True(t, p.IsArchived, "Project 21 should have is_archived=true because its parent is archived")
 				}
 			}
