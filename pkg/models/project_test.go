@@ -504,12 +504,12 @@ func TestProject_ReadAll(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, reflect.Slice, reflect.TypeOf(projects3).Kind())
 		ls := projects3.([]*Project)
-		assert.Len(t, ls, 28)
+		assert.Len(t, ls, 27)
 		assert.Equal(t, int64(3), ls[0].ID) // Project 3 has a position of 1 and should be sorted first
 		assert.Equal(t, int64(1), ls[1].ID)
 		assert.Equal(t, int64(6), ls[2].ID)
-		assert.Equal(t, int64(-1), ls[26].ID)
-		assert.Equal(t, int64(-2), ls[27].ID)
+		assert.Equal(t, int64(-1), ls[25].ID)
+		assert.Equal(t, int64(-2), ls[26].ID)
 	})
 	t.Run("projects for nonexistent user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
