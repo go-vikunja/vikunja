@@ -129,7 +129,9 @@ type Task struct {
 	CommentCount *int64 `xorm:"-" json:"comment_count,omitempty"`
 
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
-	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand[]"`
+	// Supports both array format (expand[]) for backward compatibility and CSV format (expand) as documented
+	ExpandCSV string                        `xorm:"-" json:"-" query:"expand"`
+	Expand    []TaskCollectionExpandable    `xorm:"-" json:"-" query:"expand[]"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
@@ -1844,20 +1846,18 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Router /tasks/{id} [get]
 func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
-	expand := t.Expand
+	// Process both CSV and array expand parameters for backward compatibility
+	expand, err := ParseExpandParameters(t.ExpandCSV, t.Expand)
+	if err != nil {
+		return err
+	}
+
 	*t, err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return
 	}
 	taskMap := make(map[int64]*Task, 1)
 	taskMap[t.ID] = t
-
-	for _, expandValue := range expand {
-		err = expandValue.Validate()
-		if err != nil {
-			return
-		}
-	}
 
 	err = addMoreInfoToTasks(s, taskMap, a, nil, expand)
 	if err != nil {

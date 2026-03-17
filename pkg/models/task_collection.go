@@ -56,7 +56,9 @@ type TaskCollection struct {
 	// If set to `reactions`, the reactions of each task will be present in the response.
 	// If set to `comments`, the first 50 comments of each task will be present in the response.
 	// You can set this multiple times with different values.
-	Expand []TaskCollectionExpandable `query:"expand[]" json:"-"`
+	// Supports both array format (expand[]) for backward compatibility and CSV format (expand) as documented
+	ExpandCSV string                        `query:"expand" json:"-"`
+	Expand    []TaskCollectionExpandable    `query:"expand[]" json:"-"`
 
 	isSavedFilter bool
 
@@ -91,6 +93,44 @@ func (t TaskCollectionExpandable) Validate() error {
 	}
 
 	return InvalidFieldErrorWithMessage([]string{"expand"}, "Expand must be one of the following values: subtasks, buckets, reactions, comments, comment_count, is_unread")
+}
+
+// ParseExpandParameters processes both CSV and array expand parameters into a single validated slice
+func ParseExpandParameters(csvExpand string, arrayExpand []TaskCollectionExpandable) ([]TaskCollectionExpandable, error) {
+	var result []TaskCollectionExpandable
+	seen := make(map[TaskCollectionExpandable]bool)
+
+	// First, process the array format (for backward compatibility)
+	for _, expandValue := range arrayExpand {
+		if err := expandValue.Validate(); err != nil {
+			return nil, err
+		}
+		if !seen[expandValue] {
+			result = append(result, expandValue)
+			seen[expandValue] = true
+		}
+	}
+
+	// Then, process the CSV format (as documented)
+	if csvExpand != "" {
+		csvValues := strings.Split(csvExpand, ",")
+		for _, value := range csvValues {
+			value = strings.TrimSpace(value)
+			if value == "" {
+				continue
+			}
+			expandValue := TaskCollectionExpandable(value)
+			if err := expandValue.Validate(); err != nil {
+				return nil, err
+			}
+			if !seen[expandValue] {
+				result = append(result, expandValue)
+				seen[expandValue] = true
+			}
+		}
+	}
+
+	return result, nil
 }
 
 func validateTaskField(fieldName string) error {
@@ -292,7 +332,13 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		tc.ProjectViewID = tf.ProjectViewID
 		tc.ProjectID = tf.ProjectID
 		tc.isSavedFilter = true
-		tc.Expand = tf.Expand
+		// Process both CSV and array expand parameters before assigning
+		expand, err := ParseExpandParameters(tf.ExpandCSV, tf.Expand)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		tc.Expand = expand
+		tc.ExpandCSV = ""
 
 		if tf.Filter != "" {
 			if tc.Filter != "" {
@@ -345,17 +391,16 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		return nil, 0, 0, err
 	}
 
-	for _, expandValue := range tf.Expand {
-		err = expandValue.Validate()
-		if err != nil {
-			return nil, 0, 0, err
-		}
+	// Process both CSV and array expand parameters for backward compatibility
+	expand, err := ParseExpandParameters(tf.ExpandCSV, tf.Expand)
+	if err != nil {
+		return nil, 0, 0, err
 	}
 
 	opts.search = search
 	opts.page = page
 	opts.perPage = perPage
-	opts.expand = tf.Expand
+	opts.expand = expand
 	opts.isSavedFilter = tf.isSavedFilter
 
 	if view != nil {
