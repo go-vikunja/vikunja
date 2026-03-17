@@ -188,6 +188,14 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	}
 
 	/////////////////
+	// Propagate is_archived from parent projects to children
+	prs, err = propagateArchivedState(s, prs, p.IsArchived)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	resultCount = len(prs)
+
+	/////////////////
 	// Add project details (favorite state, among other things)
 	err = addProjectDetails(s, prs, a)
 	if err != nil {
@@ -816,6 +824,81 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 	}
 
 	return nil
+}
+
+// propagateArchivedState sets IsArchived to true on any project whose ancestor is archived.
+// It returns a new slice with inherited-archived projects removed if getArchived is false.
+func propagateArchivedState(s *xorm.Session, projects []*Project, getArchived bool) ([]*Project, error) {
+	if len(projects) == 0 {
+		return projects, nil
+	}
+
+	// Build a map of project ID -> project from the result set
+	projectMap := make(map[int64]*Project, len(projects))
+	for _, p := range projects {
+		projectMap[p.ID] = p
+	}
+
+	// Cache for parents fetched from DB that aren't in the result set
+	parentCache := make(map[int64]*Project)
+
+	for _, p := range projects {
+		if p.IsArchived {
+			continue
+		}
+
+		// Walk up the parent chain to check if any ancestor is archived
+		currentParentID := p.ParentProjectID
+		for currentParentID > 0 {
+			// Check in result set first
+			if parent, exists := projectMap[currentParentID]; exists {
+				if parent.IsArchived {
+					p.IsArchived = true
+					break
+				}
+				currentParentID = parent.ParentProjectID
+				continue
+			}
+
+			// Check in cache of previously fetched parents
+			if parent, exists := parentCache[currentParentID]; exists {
+				if parent.IsArchived {
+					p.IsArchived = true
+					break
+				}
+				currentParentID = parent.ParentProjectID
+				continue
+			}
+
+			// Fetch from DB
+			parent, err := GetProjectSimpleByID(s, currentParentID)
+			if err != nil {
+				if IsErrProjectDoesNotExist(err) {
+					break
+				}
+				return nil, err
+			}
+			parentCache[currentParentID] = parent
+			if parent.IsArchived {
+				p.IsArchived = true
+				break
+			}
+			currentParentID = parent.ParentProjectID
+		}
+	}
+
+	if getArchived {
+		return projects, nil
+	}
+
+	// Filter out projects that inherited the archived state
+	filtered := make([]*Project, 0, len(projects))
+	for _, p := range projects {
+		if !p.IsArchived {
+			filtered = append(filtered, p)
+		}
+	}
+	return filtered, nil
 }
 
 func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err error) {
