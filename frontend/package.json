@@ -168,7 +168,8 @@
       "minimatch": "^10.2.3",
       "rollup": "$rollup",
       "basic-ftp": "5.2.0",
-      "serialize-javascript": "^7.0.3"
+      "serialize-javascript": "^7.0.3",
+      "flatted": "^3.4.1"
     }
   }
 }
