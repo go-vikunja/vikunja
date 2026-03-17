@@ -1448,7 +1448,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			fields: fields{
 				Filter: "labels = 4 && labels = 5",
 			},
-			args: defaultArgs,
+			args:    defaultArgs,
 			want:    []*Task{},
 			wantErr: false,
 		},

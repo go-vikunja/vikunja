@@ -587,7 +587,7 @@ GROUP BY `+groupByStr+` `+archivedFilter+`ORDER BY all_projects.position `+limit
 
 	totalCount, err = s.
 		SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT COUNT(*) FROM (SELECT all_projects.id FROM all_projects GROUP BY all_projects.id `+archivedFilter+`)`, args...).
+SELECT COUNT(*) FROM (SELECT all_projects.id FROM all_projects GROUP BY all_projects.id `+archivedFilter+`) sub`, args...).
 		Count(&Project{})
 	if err != nil {
 		return nil, 0, err
