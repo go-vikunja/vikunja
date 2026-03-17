@@ -65,7 +65,7 @@
     ],
     "overrides": {
       "minimatch": "^10.2.3",
-      "tar": "^7.5.10",
+      "tar": "^7.5.11",
       "@tootallnate/once": "^3.0.1"
     }
   }
