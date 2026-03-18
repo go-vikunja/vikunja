@@ -39,14 +39,14 @@ import (
 
 // These are the test users, the same way they are in the test database
 var (
-	testuser1 = user.User{
+	testuser1 = user.User{ //nolint:gosec // test fixture credentials
 		ID:       1,
 		Username: "user1",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
 		Email:    "user1@example.com",
 		Issuer:   "local",
 	}
-	testuser15 = user.User{
+	testuser15 = user.User{ //nolint:gosec // test fixture credentials
 		ID:       15,
 		Username: "user15",
 		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
@@ -143,12 +143,4 @@ func caldavDELETE(t *testing.T, e *echo.Echo, path string) *httptest.ResponseRec
 func caldavOPTIONS(t *testing.T, e *echo.Echo, path string) *httptest.ResponseRecorder {
 	t.Helper()
 	return caldavRequest(t, e, http.MethodOptions, path, "", nil)
-}
-
-// caldavRequestAsUser sends a request authenticated as a specific user.
-func caldavRequestAsUser(t *testing.T, e *echo.Echo, method, path, body string, u *user.User, password string) *httptest.ResponseRecorder {
-	t.Helper()
-	return caldavRequest(t, e, method, path, body, map[string]string{
-		"Authorization": basicAuthHeader(u.Username, password),
-	})
 }

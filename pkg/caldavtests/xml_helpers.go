@@ -83,18 +83,6 @@ func parseMultistatus(t *testing.T, rec *httptest.ResponseRecorder) Multistatus 
 	return ms
 }
 
-// findResponse finds a response in a multistatus by href substring match.
-func findResponse(t *testing.T, ms Multistatus, hrefSubstring string) Response {
-	t.Helper()
-	for _, r := range ms.Responses {
-		if strings.Contains(r.Href, hrefSubstring) {
-			return r
-		}
-	}
-	t.Fatalf("No response found with href containing %q in multistatus with %d responses", hrefSubstring, len(ms.Responses))
-	return Response{} // unreachable
-}
-
 // getSuccessfulProp returns the Prop from the first propstat with a 200 status.
 func getSuccessfulProp(t *testing.T, r Response) Prop {
 	t.Helper()
@@ -145,16 +133,7 @@ func getVTodoProperty(vtodo *ics.VTodo, prop ics.ComponentProperty) string {
 }
 
 // assertResponseStatus asserts the HTTP status code.
-func assertResponseStatus(t *testing.T, rec *httptest.ResponseRecorder, expectedStatus int) {
+func assertResponseStatus(t *testing.T, rec *httptest.ResponseRecorder, expectedStatus int) { //nolint:unparam
 	t.Helper()
 	assert.Equal(t, expectedStatus, rec.Code, "Response body:\n%s", rec.Body.String())
-}
-
-// assertMultistatusHasResponses asserts that a 207 response contains the expected number of responses.
-func assertMultistatusHasResponses(t *testing.T, rec *httptest.ResponseRecorder, expectedCount int) Multistatus {
-	t.Helper()
-	assertResponseStatus(t, rec, 207)
-	ms := parseMultistatus(t, rec)
-	assert.Len(t, ms.Responses, expectedCount, "Expected %d responses in multistatus, got %d.\nBody:\n%s", expectedCount, len(ms.Responses), rec.Body.String())
-	return ms
 }

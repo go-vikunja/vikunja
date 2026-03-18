@@ -120,7 +120,7 @@ func TestPropfindCollection(t *testing.T) {
 				assert.NotEmpty(t, uid, "Each VTODO should have a UID")
 			}
 		}
-		assert.Greater(t, taskCount, 0, "Should have at least one task with calendar-data")
+		assert.Positive(t, taskCount, "Should have at least one task with calendar-data")
 	})
 }
 
