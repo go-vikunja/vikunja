@@ -178,6 +178,7 @@ jobs:
         test:
           - feature
           - web
+          - caldav
           - e2e-api
         exclude:
           - db: sqlite

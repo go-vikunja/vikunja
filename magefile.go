@@ -434,7 +434,14 @@ func (Test) Filter(ctx context.Context, filter string) error {
 
 func (Test) All() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Feature, Test.Web, Test.E2EApi)
+	mg.Deps(Test.Feature, Test.Web, Test.Caldav, Test.E2EApi)
+}
+
+// Caldav runs the CalDAV protocol compliance tests in pkg/caldavtests.
+// These tests exercise the full HTTP router with WebDAV/CalDAV requests.
+func (Test) Caldav(ctx context.Context) error {
+	mg.Deps(initVars)
+	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/caldavtests")
 }
 
 // E2EApi runs the end-to-end API tests in pkg/e2etests.
