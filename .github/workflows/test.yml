@@ -178,17 +178,6 @@ jobs:
         test:
           - feature
           - web
-          - caldav
-          - e2e-api
-        exclude:
-          - db: sqlite
-            test: e2e-api
-          - db: postgres
-            test: e2e-api
-          - db: mysql
-            test: e2e-api
-          - db: paradedb
-            test: e2e-api
     services:
       db-mysql:
         image: ${{ matrix.db == 'mysql' && 'mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8' || '' }}
@@ -256,6 +245,48 @@ jobs:
           touch frontend/dist/index.html
           chmod +x mage-static
           ./mage-static test:${{ matrix.test }}
+
+  test-caldav:
+    runs-on: ubuntu-latest
+    needs:
+      - mage
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Download Mage Binary
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: mage_bin
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+      - name: test
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
+          chmod +x mage-static
+          ./mage-static test:caldav
+
+  test-e2e-api:
+    runs-on: ubuntu-latest
+    needs:
+      - mage
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Download Mage Binary
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: mage_bin
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+      - name: test
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
+          chmod +x mage-static
+          ./mage-static test:e2e-api
 
   test-s3-integration:
     runs-on: ubuntu-latest
