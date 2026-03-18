@@ -247,6 +247,11 @@
                     "key": "tls",
                     "default_value": "false",
                     "comment": "Enable SSL/TLS for mysql connections. Options: false, true, skip-verify, preferred"
+                },
+                {
+                    "key": "schema",
+                    "default_value": "public",
+                    "comment": "The PostgreSQL schema to use. Only used with postgres. If you have an existing Vikunja installation where the tables were created in a non-public schema (e.g. via the database user's search_path), you must set this to match that schema name."
                 }
             ]
         },
