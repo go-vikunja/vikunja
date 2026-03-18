@@ -806,6 +806,7 @@ func registerCalDavRoutes(c *echo.Group) {
 	// THIS is the entry point for caldav clients, otherwise projects will show up double
 	c.Any("", caldav.EntryHandler)
 	c.Any("/", caldav.EntryHandler)
+	c.Any("/principals/*", caldav.PrincipalHandler)
 	c.Any("/principals/*/", caldav.PrincipalHandler)
 	c.Any("/projects", caldav.ProjectHandler)
 	c.Any("/projects/", caldav.ProjectHandler)
