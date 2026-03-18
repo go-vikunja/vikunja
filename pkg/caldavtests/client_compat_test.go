@@ -57,7 +57,7 @@ func TestClientDAVx5Flow(t *testing.T) {
 		rec = caldavREPORT(t, e, "/dav/projects/36", ReportCalendarQuery)
 		assertResponseStatus(t, rec, 207)
 		ms = parseMultistatus(t, rec)
-		assert.Greater(t, len(ms.Responses), 0,
+		assert.NotEmpty(t, ms.Responses,
 			"Step 5: calendar-query should return tasks")
 
 		// Collect hrefs for multiget

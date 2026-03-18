@@ -144,11 +144,3 @@ func caldavOPTIONS(t *testing.T, e *echo.Echo, path string) *httptest.ResponseRe
 	t.Helper()
 	return caldavRequest(t, e, http.MethodOptions, path, "", nil)
 }
-
-// caldavRequestAsUser sends a request authenticated as a specific user.
-func caldavRequestAsUser(t *testing.T, e *echo.Echo, method, path, body string, u *user.User, password string) *httptest.ResponseRecorder {
-	t.Helper()
-	return caldavRequest(t, e, method, path, body, map[string]string{
-		"Authorization": basicAuthHeader(u.Username, password),
-	})
-}

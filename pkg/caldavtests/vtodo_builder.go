@@ -68,7 +68,7 @@ func NewVTodo(uid, summary string) *VTodoBuilder {
 	}
 }
 
-func (b *VTodoBuilder) Description(d string) *VTodoBuilder    { b.description = d; return b }
+func (b *VTodoBuilder) Description(d string) *VTodoBuilder     { b.description = d; return b }
 func (b *VTodoBuilder) Priority(p int) *VTodoBuilder           { b.priority = p; return b }
 func (b *VTodoBuilder) Due(t time.Time) *VTodoBuilder          { b.due = t; return b }
 func (b *VTodoBuilder) DtStart(t time.Time) *VTodoBuilder      { b.dtstart = t; return b }
@@ -83,7 +83,10 @@ func (b *VTodoBuilder) DtStamp(t time.Time) *VTodoBuilder      { b.dtstamp = t; 
 func (b *VTodoBuilder) Created(t time.Time) *VTodoBuilder      { b.created = t; return b }
 func (b *VTodoBuilder) LastModified(t time.Time) *VTodoBuilder { b.lastMod = t; return b }
 func (b *VTodoBuilder) PercentComplete(p int) *VTodoBuilder    { b.percentComplete = p; return b }
-func (b *VTodoBuilder) ExtraProp(line string) *VTodoBuilder    { b.extraProps = append(b.extraProps, line); return b }
+func (b *VTodoBuilder) ExtraProp(line string) *VTodoBuilder {
+	b.extraProps = append(b.extraProps, line)
+	return b
+}
 
 func (b *VTodoBuilder) RelatedToParent(uid string) *VTodoBuilder {
 	b.relatedTo = append(b.relatedTo, relatedToEntry{reltype: "PARENT", uid: uid})
@@ -134,60 +137,60 @@ func (b *VTodoBuilder) Build() string {
 	sb.WriteString("VERSION:2.0\r\n")
 	sb.WriteString("PRODID:-//Test//Test//EN\r\n")
 	sb.WriteString("BEGIN:VTODO\r\n")
-	sb.WriteString(fmt.Sprintf("UID:%s\r\n", b.uid))
-	sb.WriteString(fmt.Sprintf("DTSTAMP:%s\r\n", formatTime(b.dtstamp)))
-	sb.WriteString(fmt.Sprintf("SUMMARY:%s\r\n", b.summary))
-	sb.WriteString(fmt.Sprintf("CREATED:%s\r\n", formatTime(b.created)))
-	sb.WriteString(fmt.Sprintf("LAST-MODIFIED:%s\r\n", formatTime(b.lastMod)))
+	fmt.Fprintf(&sb, "UID:%s\r\n", b.uid)
+	fmt.Fprintf(&sb, "DTSTAMP:%s\r\n", formatTime(b.dtstamp))
+	fmt.Fprintf(&sb, "SUMMARY:%s\r\n", b.summary)
+	fmt.Fprintf(&sb, "CREATED:%s\r\n", formatTime(b.created))
+	fmt.Fprintf(&sb, "LAST-MODIFIED:%s\r\n", formatTime(b.lastMod))
 
 	if b.description != "" {
-		sb.WriteString(fmt.Sprintf("DESCRIPTION:%s\r\n", b.description))
+		fmt.Fprintf(&sb, "DESCRIPTION:%s\r\n", b.description)
 	}
 	if b.priority > 0 {
-		sb.WriteString(fmt.Sprintf("PRIORITY:%d\r\n", b.priority))
+		fmt.Fprintf(&sb, "PRIORITY:%d\r\n", b.priority)
 	}
 	if !b.due.IsZero() {
-		sb.WriteString(fmt.Sprintf("DUE:%s\r\n", formatTime(b.due)))
+		fmt.Fprintf(&sb, "DUE:%s\r\n", formatTime(b.due))
 	}
 	if !b.dtstart.IsZero() {
-		sb.WriteString(fmt.Sprintf("DTSTART:%s\r\n", formatTime(b.dtstart)))
+		fmt.Fprintf(&sb, "DTSTART:%s\r\n", formatTime(b.dtstart))
 	}
 	if !b.completed.IsZero() {
-		sb.WriteString(fmt.Sprintf("COMPLETED:%s\r\n", formatTime(b.completed)))
+		fmt.Fprintf(&sb, "COMPLETED:%s\r\n", formatTime(b.completed))
 	}
 	if b.status != "" {
-		sb.WriteString(fmt.Sprintf("STATUS:%s\r\n", b.status))
+		fmt.Fprintf(&sb, "STATUS:%s\r\n", b.status)
 	}
 	if len(b.categories) > 0 {
-		sb.WriteString(fmt.Sprintf("CATEGORIES:%s\r\n", strings.Join(b.categories, ",")))
+		fmt.Fprintf(&sb, "CATEGORIES:%s\r\n", strings.Join(b.categories, ","))
 	}
 	if b.rrule != "" {
-		sb.WriteString(fmt.Sprintf("RRULE:%s\r\n", b.rrule))
+		fmt.Fprintf(&sb, "RRULE:%s\r\n", b.rrule)
 	}
 	if b.color != "" {
-		sb.WriteString(fmt.Sprintf("X-APPLE-CALENDAR-COLOR:%s\r\n", b.color))
+		fmt.Fprintf(&sb, "X-APPLE-CALENDAR-COLOR:%s\r\n", b.color)
 	}
 	if b.percentComplete > 0 {
-		sb.WriteString(fmt.Sprintf("PERCENT-COMPLETE:%d\r\n", b.percentComplete))
+		fmt.Fprintf(&sb, "PERCENT-COMPLETE:%d\r\n", b.percentComplete)
 	}
 	if b.sequence > 0 {
-		sb.WriteString(fmt.Sprintf("SEQUENCE:%d\r\n", b.sequence))
+		fmt.Fprintf(&sb, "SEQUENCE:%d\r\n", b.sequence)
 	}
 	if b.duration != "" {
-		sb.WriteString(fmt.Sprintf("DURATION:%s\r\n", b.duration))
+		fmt.Fprintf(&sb, "DURATION:%s\r\n", b.duration)
 	}
 	for _, rel := range b.relatedTo {
 		if rel.reltype != "" {
-			sb.WriteString(fmt.Sprintf("RELATED-TO;RELTYPE=%s:%s\r\n", rel.reltype, rel.uid))
+			fmt.Fprintf(&sb, "RELATED-TO;RELTYPE=%s:%s\r\n", rel.reltype, rel.uid)
 		} else {
-			sb.WriteString(fmt.Sprintf("RELATED-TO:%s\r\n", rel.uid))
+			fmt.Fprintf(&sb, "RELATED-TO:%s\r\n", rel.uid)
 		}
 	}
 	for _, alarm := range b.alarms {
 		sb.WriteString("BEGIN:VALARM\r\n")
 		sb.WriteString(alarm.trigger + "\r\n")
-		sb.WriteString(fmt.Sprintf("ACTION:%s\r\n", alarm.action))
-		sb.WriteString(fmt.Sprintf("DESCRIPTION:%s\r\n", alarm.description))
+		fmt.Fprintf(&sb, "ACTION:%s\r\n", alarm.action)
+		fmt.Fprintf(&sb, "DESCRIPTION:%s\r\n", alarm.description)
 		sb.WriteString("END:VALARM\r\n")
 	}
 	for _, prop := range b.extraProps {

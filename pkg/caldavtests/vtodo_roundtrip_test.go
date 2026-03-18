@@ -28,7 +28,7 @@ import (
 
 func TestVTodoRoundTrip(t *testing.T) {
 	// Helper: PUT a VTODO, GET it back, parse the VTODO
-	putAndGet := func(t *testing.T, uid, path string, vtodoBody string) *ics.VTodo {
+	putAndGet := func(t *testing.T, _, path string, vtodoBody string) *ics.VTodo {
 		t.Helper()
 		e := setupTestEnv(t)
 
@@ -231,7 +231,7 @@ func TestVTodoRoundTrip(t *testing.T) {
 func TestVTodoRRuleRoundTrip(t *testing.T) {
 	// RFC 5545 §3.8.5.3 (rfc5545.txt line 6794)
 
-	putAndGet := func(t *testing.T, uid, path string, vtodoBody string) *ics.VTodo {
+	putAndGet := func(t *testing.T, _, path string, vtodoBody string) *ics.VTodo {
 		t.Helper()
 		e := setupTestEnv(t)
 		rec := caldavPUT(t, e, path, vtodoBody)
