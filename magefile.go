@@ -381,9 +381,28 @@ func waitForHTTP(ctx context.Context, url string, timeout time.Duration) error {
 	return fmt.Errorf("timed out waiting for %s after %s", url, timeout)
 }
 
+func ensureFrontendDistExists() error {
+	distPath := filepath.Join("frontend", "dist")
+	if _, err := os.Stat(distPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(distPath, 0o755); err != nil {
+			return fmt.Errorf("error creating %s: %w", distPath, err)
+		}
+	}
+
+	indexFile := filepath.Join(distPath, "index.html")
+	if _, err := os.Stat(indexFile); os.IsNotExist(err) {
+		f, err := os.Create(indexFile)
+		if err != nil {
+			return fmt.Errorf("error creating %s: %w", indexFile, err)
+		}
+		f.Close()
+	}
+	return nil
+}
+
 // Fmt formats the code using go fmt
 func Fmt(ctx context.Context) error {
-	mg.Deps(initVars)
+	mg.Deps(initVars, ensureFrontendDistExists)
 	out, err := exec.CommandContext(ctx, "git", "ls-files", "--cached", "--others", "--exclude-standard", "*.go").Output()
 	if err != nil {
 		return fmt.Errorf("failed to list go files from git: %w", err)
@@ -792,7 +811,7 @@ func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 }
 
 func checkGolangCiLintInstalled(ctx context.Context) error {
-	mg.Deps(initVars)
+	mg.Deps(initVars, ensureFrontendDistExists)
 	if err := exec.CommandContext(ctx, "golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
 		return fmt.Errorf("golangci-lint executable failed to run, please manually install golangci-lint by running the command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0")
 	}
@@ -845,25 +864,7 @@ func (Build) Clean(ctx context.Context) error {
 
 // Build builds a vikunja binary, ready to run
 func (Build) Build(ctx context.Context) error {
-	mg.Deps(initVars)
-	// Check if the frontend dist folder exists
-	distPath := filepath.Join("frontend", "dist")
-	if _, err := os.Stat(distPath); os.IsNotExist(err) {
-		if err := os.MkdirAll(distPath, 0o755); err != nil {
-			return fmt.Errorf("error creating %s: %w", distPath, err)
-		}
-	}
-
-	indexFile := filepath.Join(distPath, "index.html")
-	if _, err := os.Stat(indexFile); os.IsNotExist(err) {
-		f, err := os.Create(indexFile)
-		if err != nil {
-			return fmt.Errorf("error creating %s: %w", indexFile, err)
-		}
-		f.Close()
-		fmt.Printf("Warning: %s not found, created empty file\n", indexFile)
-	}
-
+	mg.Deps(initVars, ensureFrontendDistExists)
 	return runAndStreamOutput(ctx, "go", "build", goDetectVerboseFlag(), "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
