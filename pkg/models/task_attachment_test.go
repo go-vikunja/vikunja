@@ -49,6 +49,12 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		// Load the actual attachment file and check its content
 		err = ta.File.LoadFileByID()
 		require.NoError(t, err)
+
+		// Validate the file exists at the expected storage path
+		stat, err := files.FileStat(ta.File)
+		require.NoError(t, err)
+		assert.NotNil(t, stat)
+
 		content := make([]byte, 9)
 		read, err := ta.File.File.Read(content)
 		require.NoError(t, err)
