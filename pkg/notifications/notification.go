@@ -129,7 +129,14 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 
 	if existingSession != nil {
 		_, err = existingSession.Insert(dbNotification)
-		return err
+		if err != nil {
+			return err
+		}
+		events.DispatchOnCommit(existingSession, &NotificationCreatedEvent{
+			Notification: dbNotification,
+			UserID:       notifiable.RouteForDB(),
+		})
+		return nil
 	}
 
 	s := db.NewSession()
