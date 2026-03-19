@@ -152,7 +152,7 @@ func DownloadUserDataExport(c *echo.Context) error {
 
 	if config.FilesType.GetString() == "s3" {
 		c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+exportFile.Name+"\"")
-		c.Response().Header().Set("Content-Type", "application/zip")
+		c.Response().Header().Set("Content-Type", exportFile.Mime)
 		c.Response().Header().Set("Content-Length", strconv.FormatUint(exportFile.Size, 10))
 		c.Response().Header().Set("Last-Modified", exportFile.Created.UTC().Format(http.TimeFormat))
 		_, err = io.Copy(c.Response(), exportFile.File)
