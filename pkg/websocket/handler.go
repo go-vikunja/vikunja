@@ -29,9 +29,10 @@ import (
 
 var globalHub *Hub
 
-// InitHub creates the global hub. Must be called once at startup.
+// InitHub creates the global hub and registers notification hooks. Must be called once at startup.
 func InitHub() {
 	globalHub = NewHub()
+	RegisterNotifyHook()
 }
 
 // GetHub returns the global hub.

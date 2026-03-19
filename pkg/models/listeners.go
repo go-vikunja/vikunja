@@ -233,12 +233,7 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		}
 	}
 
-	err = sess.Commit()
-	if err != nil {
-		return err
-	}
-	events.DispatchPending(sess)
-	return nil
+	return sess.Commit()
 }
 
 // HandleTaskCommentEditMentions  represents a listener
@@ -281,12 +276,7 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 	if err != nil {
 		return err
 	}
-	err = sess.Commit()
-	if err != nil {
-		return err
-	}
-	events.DispatchPending(sess)
-	return nil
+	return sess.Commit()
 }
 
 // SendTaskAssignedNotification  represents a listener
@@ -353,12 +343,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		notifiedUsers[subscriber.UserID] = true
 	}
 
-	err = sess.Commit()
-	if err != nil {
-		return err
-	}
-	events.DispatchPending(sess)
-	return nil
+	return sess.Commit()
 }
 
 // SendTaskDeletedNotification  represents a listener
@@ -409,12 +394,7 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		}
 	}
 
-	err = sess.Commit()
-	if err != nil {
-		return err
-	}
-	events.DispatchPending(sess)
-	return nil
+	return sess.Commit()
 }
 
 // HandleTaskCreateMentions  represents a listener
@@ -456,12 +436,7 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
-	err = sess.Commit()
-	if err != nil {
-		return err
-	}
-	events.DispatchPending(sess)
-	return nil
+	return sess.Commit()
 }
 
 // HandleTaskUpdatedMentions  represents a listener
@@ -504,12 +479,7 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	if err != nil {
 		return err
 	}
-	err = sess.Commit()
-	if err != nil {
-		return err
-	}
-	events.DispatchPending(sess)
-	return nil
+	return sess.Commit()
 }
 
 // HandleTaskUpdateLastUpdated  represents a listener
@@ -789,12 +759,7 @@ func (s *SendProjectCreatedNotification) Handle(msg *message.Message) (err error
 		}
 	}
 
-	err = sess.Commit()
-	if err != nil {
-		return err
-	}
-	events.DispatchPending(sess)
-	return nil
+	return sess.Commit()
 }
 
 // WebhookListener represents a listener

@@ -137,7 +137,6 @@ func FullInit() {
 		models.RegisterListeners()
 		user.RegisterListeners()
 		migrationHandler.RegisterListeners()
-		ws.RegisterListeners()
 		err := events.InitEvents()
 		if err != nil {
 			log.Fatal(err.Error())
