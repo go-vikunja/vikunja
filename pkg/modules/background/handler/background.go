@@ -364,7 +364,7 @@ func GetProjectBackground(c *echo.Context) error {
 		_ = s.Rollback()
 		return err
 	}
-	stat, err := bgFile.File.Stat()
+	stat, err := files.FileStat(bgFile)
 	if err != nil {
 		_ = s.Rollback()
 		return err

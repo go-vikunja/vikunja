@@ -159,7 +159,7 @@ func DownloadUserDataExport(c *echo.Context) error {
 		return err
 	}
 
-	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File)
+	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File.(io.ReadSeeker))
 	return nil
 }
 

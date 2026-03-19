@@ -18,15 +18,12 @@ package files
 
 import (
 	"bytes"
-	"context"
-	"errors"
 	"io"
 	"os"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -49,7 +46,7 @@ func TestFileStorageIntegration(t *testing.T) {
 	t.Run("Initialize file handler with s3", func(t *testing.T) {
 		err := InitFileHandler()
 		require.NoError(t, err, "Failed to initialize file handler with type: s3")
-		assert.NotNil(t, afs, "File system should be initialized")
+		assert.NotNil(t, storage, "File storage should be initialized")
 	})
 
 	t.Run("Create and retrieve file with s3", func(t *testing.T) {
@@ -304,88 +301,6 @@ func TestInitFileHandler_LocalFilesystem(t *testing.T) {
 	err := InitFileHandler()
 	require.NoError(t, err)
 
-	// Verify that afs is initialized
-	assert.NotNil(t, afs)
-}
-
-type fakeS3PutObjectClient struct {
-	lastInput *s3.PutObjectInput
-	err       error
-}
-
-func (f *fakeS3PutObjectClient) PutObject(_ context.Context, input *s3.PutObjectInput, _ ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
-	f.lastInput = input
-	if f.err != nil {
-		return nil, f.err
-	}
-	return &s3.PutObjectOutput{}, nil
-}
-
-func TestFileSave_S3_UsesSeekableReader(t *testing.T) {
-	originalClient := s3Client
-	originalBucket := s3Bucket
-	t.Cleanup(func() {
-		s3Client = originalClient
-		s3Bucket = originalBucket
-	})
-
-	client := &fakeS3PutObjectClient{}
-	s3Client = client
-	s3Bucket = "test-bucket"
-
-	content := []byte("seekable-content")
-	file := &File{ID: 123, Size: uint64(len(content))}
-
-	err := file.Save(bytes.NewReader(content))
-	require.NoError(t, err)
-
-	require.NotNil(t, client.lastInput)
-	assert.Equal(t, "test-bucket", *client.lastInput.Bucket)
-	assert.Equal(t, file.getAbsoluteFilePath(), *client.lastInput.Key)
-	require.NotNil(t, client.lastInput.ContentLength)
-	assert.Equal(t, int64(len(content)), *client.lastInput.ContentLength)
-	assert.IsType(t, &bytes.Reader{}, client.lastInput.Body)
-}
-
-func TestFileSave_S3_ReturnsErrorOnPutObjectFailure(t *testing.T) {
-	originalClient := s3Client
-	originalBucket := s3Bucket
-	t.Cleanup(func() {
-		s3Client = originalClient
-		s3Bucket = originalBucket
-	})
-
-	client := &fakeS3PutObjectClient{err: errors.New("boom")}
-	s3Client = client
-	s3Bucket = "test-bucket"
-
-	content := []byte("test-content")
-	file := &File{ID: 789, Size: uint64(len(content))}
-
-	err := file.Save(bytes.NewReader(content))
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to upload file to S3")
-}
-
-func TestFileSave_S3_UsesActualReaderSizeOnMismatch(t *testing.T) {
-	originalClient := s3Client
-	originalBucket := s3Bucket
-	t.Cleanup(func() {
-		s3Client = originalClient
-		s3Bucket = originalBucket
-	})
-
-	client := &fakeS3PutObjectClient{}
-	s3Client = client
-	s3Bucket = "test-bucket"
-
-	content := []byte("mismatch-content")
-	file := &File{ID: 999, Size: uint64(len(content) + 10)}
-
-	err := file.Save(bytes.NewReader(content))
-	require.NoError(t, err)
-
-	require.NotNil(t, client.lastInput)
-	require.NotNil(t, client.lastInput.ContentLength)
-	assert.Equal(t, int64(len(content)), *client.lastInput.ContentLength)
+	// Verify that storage is initialized
+	assert.NotNil(t, storage)
 }

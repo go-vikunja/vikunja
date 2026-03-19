@@ -19,10 +19,8 @@ package models
 import (
 	"bytes"
 	"os"
-	"path/filepath"
 	"testing"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
@@ -51,7 +49,6 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		// Load the actual attachment file and check its content
 		err = ta.File.LoadFileByID()
 		require.NoError(t, err)
-		assert.Equal(t, filepath.Join(config.ServiceRootpath.GetString(), "files", "1"), ta.File.File.Name())
 		content := make([]byte, 9)
 		read, err := ta.File.File.Read(content)
 		require.NoError(t, err)
