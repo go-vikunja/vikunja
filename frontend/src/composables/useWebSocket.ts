@@ -98,10 +98,13 @@ function scheduleReconnect() {
 		reconnectTimer = null
 	}
 
-	const delay = Math.min(
+	const baseDelay = Math.min(
 		RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempt),
 		RECONNECT_MAX_DELAY,
 	)
+	// Add ±25% jitter to prevent thundering herd on server restart
+	const jitter = baseDelay * (0.75 + Math.random() * 0.5)
+	const delay = Math.round(jitter)
 	reconnectAttempt++
 	console.debug(`WebSocket: reconnecting in ${delay}ms (attempt ${reconnectAttempt})`)
 
