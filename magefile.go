@@ -27,7 +27,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"math"
 	"net"
 	"net/http"
@@ -385,18 +384,13 @@ func waitForHTTP(ctx context.Context, url string, timeout time.Duration) error {
 // Fmt formats the code using go fmt
 func Fmt(ctx context.Context) error {
 	mg.Deps(initVars)
-	var goFiles []string
-	err := filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() && filepath.Ext(path) == ".go" {
-			goFiles = append(goFiles, path)
-		}
-		return nil
-	})
+	out, err := exec.CommandContext(ctx, "git", "ls-files", "--cached", "--others", "--exclude-standard", "*.go").Output()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list go files from git: %w", err)
+	}
+	goFiles := strings.Split(strings.TrimSpace(string(out)), "\n")
+	if len(goFiles) == 0 || (len(goFiles) == 1 && goFiles[0] == "") {
+		return nil
 	}
 	args := append([]string{"-s", "-w"}, goFiles...)
 	return runAndStreamOutput(ctx, "gofmt", args...)
