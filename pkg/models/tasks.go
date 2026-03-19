@@ -1845,7 +1845,9 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Router /tasks/{id} [get]
 func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
-	expand := append(t.Expand, t.ExpandArr...)
+	expand := make([]TaskCollectionExpandable, 0, len(t.Expand)+len(t.ExpandArr))
+	expand = append(expand, t.Expand...)
+	expand = append(expand, t.ExpandArr...)
 	*t, err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return
