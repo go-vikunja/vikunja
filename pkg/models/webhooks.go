@@ -25,6 +25,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"sort"
@@ -39,6 +40,7 @@ import (
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web"
 
+	"code.dny.dev/ssrf"
 	"xorm.io/xorm"
 )
 
@@ -295,20 +297,29 @@ func getWebhookHTTPClient() (client *http.Client) {
 	client = &http.Client{}
 	client.Timeout = time.Duration(config.WebhooksTimeoutSeconds.GetInt()) * time.Second
 
-	if config.WebhooksProxyURL.GetString() == "" || config.WebhooksProxyPassword.GetString() == "" {
-		webhookClient = client
-		return
+	transport := &http.Transport{}
+
+	// SSRF protection: block connections to non-globally-routable IPs unless
+	// explicitly allowed. Uses daenney/ssrf which validates resolved IPs
+	// against IANA Special Purpose Registries after DNS resolution,
+	// preventing DNS rebinding attacks.
+	if !config.WebhooksAllowNonRoutableIPs.GetBool() {
+		guardian := ssrf.New(ssrf.WithAnyPort())
+		transport.DialContext = (&net.Dialer{
+			Control: guardian.Safe,
+		}).DialContext
 	}
 
-	proxyURL, _ := url.Parse(config.WebhooksProxyURL.GetString())
-
-	client.Transport = &http.Transport{
-		Proxy: http.ProxyURL(proxyURL),
-		ProxyConnectHeader: http.Header{
+	if config.WebhooksProxyURL.GetString() != "" && config.WebhooksProxyPassword.GetString() != "" {
+		proxyURL, _ := url.Parse(config.WebhooksProxyURL.GetString())
+		transport.Proxy = http.ProxyURL(proxyURL)
+		transport.ProxyConnectHeader = http.Header{
 			"Proxy-Authorization": []string{"Basic " + base64.StdEncoding.EncodeToString([]byte("vikunja:"+config.WebhooksProxyPassword.GetString()))},
 			"User-Agent":          []string{"Vikunja/" + version.Version},
-		},
+		}
 	}
+
+	client.Transport = transport
 
 	webhookClient = client
 

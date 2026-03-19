@@ -211,10 +211,11 @@ const (
 	DefaultSettingsTimezone                    Key = `defaultsettings.timezone`
 	DefaultSettingsOverdueTaskRemindersTime    Key = `defaultsettings.overdue_tasks_reminders_time`
 
-	WebhooksEnabled        Key = `webhooks.enabled`
-	WebhooksTimeoutSeconds Key = `webhooks.timeoutseconds`
-	WebhooksProxyURL       Key = `webhooks.proxyurl`
-	WebhooksProxyPassword  Key = `webhooks.proxypassword`
+	WebhooksEnabled             Key = `webhooks.enabled`
+	WebhooksTimeoutSeconds      Key = `webhooks.timeoutseconds`
+	WebhooksProxyURL            Key = `webhooks.proxyurl`
+	WebhooksProxyPassword       Key = `webhooks.proxypassword`
+	WebhooksAllowNonRoutableIPs Key = `webhooks.allownonroutableips`
 
 	AutoTLSEnabled     Key = `autotls.enabled`
 	AutoTLSEmail       Key = `autotls.email`
@@ -466,6 +467,7 @@ func InitDefaultConfig() {
 	// Webhook
 	WebhooksEnabled.setDefault(true)
 	WebhooksTimeoutSeconds.setDefault(30)
+	WebhooksAllowNonRoutableIPs.setDefault(false)
 	// AutoTLS
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 	// Plugins

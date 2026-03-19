@@ -62,6 +62,7 @@ func setupE2ETestEnv(ctx context.Context) (e *echo.Echo, err error) {
 	config.InitDefaultConfig()
 	config.ServicePublicURL.Set("https://localhost")
 	config.WebhooksEnabled.Set(true)
+	config.WebhooksAllowNonRoutableIPs.Set(true)
 
 	log.InitLogger()
 
