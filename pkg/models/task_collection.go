@@ -56,7 +56,8 @@ type TaskCollection struct {
 	// If set to `reactions`, the reactions of each task will be present in the response.
 	// If set to `comments`, the first 50 comments of each task will be present in the response.
 	// You can set this multiple times with different values.
-	Expand []TaskCollectionExpandable `query:"expand[]" json:"-"`
+	Expand    []TaskCollectionExpandable `query:"expand" json:"-"`
+	ExpandArr []TaskCollectionExpandable `query:"expand[]" json:"-"`
 
 	isSavedFilter bool
 
@@ -112,6 +113,10 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 
 	if len(tf.OrderByArr) > 0 {
 		tf.OrderBy = append(tf.OrderBy, tf.OrderByArr...)
+	}
+
+	if len(tf.ExpandArr) > 0 {
+		tf.Expand = append(tf.Expand, tf.ExpandArr...)
 	}
 
 	var sort = make([]*sortParam, 0, len(tf.SortBy))
@@ -241,7 +246,7 @@ func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter 
 // @Param filter query string false "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature."
 // @Param filter_timezone query string false "The time zone which should be used for date match (statements like "now" resolve to different actual times)"
 // @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
-// @Param expand query array false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values."
+// @Param expand query string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -292,7 +297,8 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		tc.ProjectViewID = tf.ProjectViewID
 		tc.ProjectID = tf.ProjectID
 		tc.isSavedFilter = true
-		tc.Expand = tf.Expand
+		tc.Expand = append(tf.Expand, tf.ExpandArr...)
+		tc.ExpandArr = nil
 
 		if tf.Filter != "" {
 			if tc.Filter != "" {

@@ -40,7 +40,7 @@ func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanRead determines if a user can read a task
 func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission int, err error) {
-	expand := t.Expand
+	expand := append(t.Expand, t.ExpandArr...)
 	// Get the task, error out if it doesn't exist
 	*t, err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
