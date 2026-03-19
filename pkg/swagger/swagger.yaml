@@ -3362,7 +3362,7 @@ paths:
           can set this multiple times with different values.
         in: query
         name: expand
-        type: array
+        type: string
       produces:
       - application/json
       responses:
@@ -4442,8 +4442,7 @@ paths:
         in: query
         name: filter_include_nulls
         type: string
-      - collectionFormat: csv
-        description: If set to `subtasks`, Vikunja will fetch only tasks which do
+      - description: If set to `subtasks`, Vikunja will fetch only tasks which do
           not have subtasks and then in a second step, will fetch all of these subtasks.
           This may result in more tasks than the pagination limit being returned,
           but all subtasks will be present in the response. If set to `buckets`, the
@@ -4452,10 +4451,8 @@ paths:
           the first 50 comments of each task will be present in the response. You
           can set this multiple times with different values.
         in: query
-        items:
-          type: string
         name: expand
-        type: array
+        type: string
       produces:
       - application/json
       responses:
@@ -4517,8 +4514,7 @@ paths:
         name: id
         required: true
         type: integer
-      - collectionFormat: csv
-        description: If set to `subtasks`, Vikunja will fetch only tasks which do
+      - description: If set to `subtasks`, Vikunja will fetch only tasks which do
           not have subtasks and then in a second step, will fetch all of these subtasks.
           This may result in more tasks than the pagination limit being returned,
           but all subtasks will be present in the response. If set to `buckets`, the
@@ -4527,10 +4523,8 @@ paths:
           the first 50 comments of each task will be present in the response. You
           can set this multiple times with different values.
         in: query
-        items:
-          type: string
         name: expand
-        type: array
+        type: string
       produces:
       - application/json
       responses:
