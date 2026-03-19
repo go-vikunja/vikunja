@@ -87,7 +87,7 @@ END:VCALENDAR`
 }
 
 func TestCaldavDiscovery(t *testing.T) {
-	t.Run("Project home set includes itself and child projects", func(t *testing.T) {
+	t.Run("Project home set depth 1 includes child projects but not itself", func(t *testing.T) {
 		e, _ := setupTestEnv()
 
 		propfindBody := `<?xml version="1.0" encoding="utf-8" ?>
@@ -113,8 +113,38 @@ func TestCaldavDiscovery(t *testing.T) {
 		assert.Equal(t, 207, rec.Result().StatusCode)
 
 		responseBody := rec.Body.String()
-		assert.Contains(t, responseBody, "/dav/projects/")
 		assert.Contains(t, responseBody, "/dav/projects/36")
+		assert.NotContains(t, responseBody, "<d:href>/dav/projects/</d:href>")
+		assert.NotContains(t, responseBody, "<D:href>/dav/projects/</D:href>")
+	})
+
+	t.Run("Project home set depth 0 returns the home set itself", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		propfindBody := `<?xml version="1.0" encoding="utf-8" ?>
+<A:propfind xmlns:A="DAV:" xmlns:B="urn:ietf:params:xml:ns:caldav">
+	<A:prop>
+		<A:current-user-principal />
+		<B:calendar-home-set />
+		<A:resourcetype />
+	</A:prop>
+</A:propfind>`
+
+		c, rec := createRequest(e, "PROPFIND", propfindBody, nil, nil)
+		c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextXML)
+		c.Request().Header.Set("Depth", "0")
+		c.Request().URL.Path = caldav.ProjectBasePath + "/"
+		c.Request().RequestURI = caldav.ProjectBasePath + "/"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.ProjectHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, 207, rec.Result().StatusCode)
+
+		responseBody := rec.Body.String()
+		assert.Contains(t, responseBody, "/dav/projects/")
 	})
 
 	t.Run("Principal discovery points to normalized project home set path", func(t *testing.T) {
@@ -141,7 +171,7 @@ func TestCaldavDiscovery(t *testing.T) {
 		assert.Equal(t, 207, rec.Result().StatusCode)
 
 		responseBody := rec.Body.String()
-		assert.Contains(t, responseBody, "/dav/projects/")
+		assert.Contains(t, responseBody, "<D:href>/dav/projects</D:href>")
 		assert.NotContains(t, responseBody, "/dav//projects/")
 	})
 }

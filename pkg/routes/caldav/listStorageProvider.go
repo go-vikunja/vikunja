@@ -131,14 +131,15 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	}
 	projects := theprojects.([]*models.Project)
 
-	resources := []data.Resource{data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
-		isPrincipal:  true,
-		isCollection: true,
-	})}
 	if !withChildren {
-		return resources, nil
+		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
+			isPrincipal:  true,
+			isCollection: true,
+		})
+		return []data.Resource{r}, nil
 	}
 
+	var resources []data.Resource
 	for _, l := range projects {
 		rr := VikunjaProjectResourceAdapter{
 			project: &models.ProjectWithTasksAndBuckets{
