@@ -82,7 +82,7 @@ func ProjectHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser(strings.TrimPrefix(projectHomeSetPath(), "/"))
+	caldav.SetupUser(strings.TrimPrefix(ProjectHomeSetPath, "/"))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 	response := caldav.HandleRequest(c.Request())
 	response.Write(c.Response())

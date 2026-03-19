@@ -43,6 +43,9 @@ const ProjectBasePath = DavBasePath + `/projects`
 // PrincipalBasePath is the base path for all principal resources
 const PrincipalBasePath = DavBasePath + `/principals`
 
+// ProjectHomeSetPath is the CalDAV home-set path Apple clients use after discovery.
+const ProjectHomeSetPath = ProjectBasePath + `/`
+
 // VikunjaCaldavProjectStorage represents a project storage
 type VikunjaCaldavProjectStorage struct {
 	// Used when handling a project
@@ -80,7 +83,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 
 	// If the request wants the principal url, we'll return that and nothing else
 	if vcls.isPrincipal {
-		r := data.NewResource(projectHomeSetPath(), &VikunjaProjectResourceAdapter{
+		r := data.NewResource(ProjectHomeSetPath, &VikunjaProjectResourceAdapter{
 			isPrincipal:  true,
 			isCollection: true,
 		})
@@ -157,7 +160,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 
 func withTrailingSlash(path string) string {
 	if path == "" {
-		return projectHomeSetPath()
+		return ProjectHomeSetPath
 	}
 	if strings.HasSuffix(path, "/") {
 		return path
@@ -167,10 +170,6 @@ func withTrailingSlash(path string) string {
 
 func principalPathForUser(username string) string {
 	return withTrailingSlash(PrincipalBasePath + `/` + username)
-}
-
-func projectHomeSetPath() string {
-	return ProjectBasePath + `/`
 }
 
 // GetResourcesByList fetches a list of resources from a slice of paths
