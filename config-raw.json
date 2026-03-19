@@ -974,6 +974,11 @@
                     "key": "proxypassword",
                     "default_value": "",
                     "comment": "The proxy password to use when authenticating against the proxy."
+                },
+                {
+                    "key": "allownonroutableips",
+                    "default_value": "false",
+                    "comment": "If set to true, webhook target URLs may resolve to non-globally-routable IP addresses (private networks, loopback, link-local, etc). When false (the default), Vikunja blocks outgoing webhook requests to these addresses to prevent SSRF attacks. Set this to true if you need webhooks to reach services on your internal network."
                 }
             ]
         },
