@@ -122,6 +122,11 @@ func UserTOTPEnable(c *echo.Context) error {
 		return err
 	}
 
+	if err := models.DeleteAllUserSessions(s, u.ID); err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err

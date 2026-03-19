@@ -23,6 +23,9 @@
 					alt=""
 				>
 			</p>
+			<p>
+				{{ $t('user.settings.totp.confirmNotice') }}
+			</p>
 			<FormField
 				id="totpConfirmPasscode"
 				v-model="totpConfirmPasscode"
@@ -145,8 +148,8 @@ async function totpEnroll() {
 
 async function totpConfirm() {
 	await totpService.enable({passcode: totpConfirmPasscode.value})
-	totp.value.enabled = true
 	success({message: t('user.settings.totp.confirmSuccess')})
+	await authStore.logout()
 }
 
 async function totpDisable() {
