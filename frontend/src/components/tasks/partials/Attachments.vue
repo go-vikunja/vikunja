@@ -184,7 +184,6 @@ import {canPreview} from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
-import {useAttachmentStore} from '@/stores/attachments'
 import {formatDisplayDate, formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
 import {getHumanSize} from '@/helpers/getHumanSize'
@@ -201,9 +200,9 @@ const props = withDefaults(defineProps<{
 	editEnabled: true,
 })
 
-// FIXME: this should go through the store
 const emit = defineEmits<{
 	'taskChanged': [ITask],
+	'update:attachments': [IAttachment[]],
 }>()
 
 const EDITOR_SELECTOR = '.tiptap, .tiptap__editor, [contenteditable]'
@@ -232,8 +231,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const attachmentService = shallowReactive(new AttachmentService())
 
-const attachmentStore = useAttachmentStore()
-const attachments = computed(() => attachmentStore.attachments)
+const attachments = computed(() => props.task.attachments ?? [])
 
 const loading = computed(() => attachmentService.loading || taskStore.isLoading)
 
@@ -335,7 +333,10 @@ function uploadNewAttachment() {
 
 async function uploadFilesToTask(files: File[] | FileList) {
 	try {
-		await uploadFiles(attachmentService, props.task.id, files)
+		const uploaded = await uploadFiles(attachmentService, props.task.id, files)
+		if (uploaded.length > 0) {
+			emit('update:attachments', [...attachments.value, ...uploaded])
+		}
 	} catch (e) {
 		error(e)
 	}
@@ -354,7 +355,8 @@ async function deleteAttachment() {
 
 	try {
 		const r = await attachmentService.delete(attachmentToDelete.value)
-		attachmentStore.removeById(attachmentToDelete.value.id)
+		const updated = attachments.value.filter(a => a.id !== attachmentToDelete.value!.id)
+		emit('update:attachments', updated)
 		success(r)
 		setAttachmentToDelete(null)
 	} catch (e) {
