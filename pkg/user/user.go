@@ -61,6 +61,8 @@ func (s Status) String() string {
 		return "Email Confirmation required"
 	case StatusDisabled:
 		return "Disabled"
+	case StatusAccountLocked:
+		return "Locked"
 	}
 
 	return "Unknown"
@@ -70,6 +72,7 @@ const (
 	StatusActive Status = iota
 	StatusEmailConfirmationRequired
 	StatusDisabled
+	StatusAccountLocked
 )
 
 // User holds information about an user
@@ -153,7 +156,7 @@ func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
 		return false, err
 	}
 
-	return user.Status != StatusDisabled, err
+	return user.Status != StatusDisabled && user.Status != StatusAccountLocked, err
 }
 
 func (u *User) Lang() string {
