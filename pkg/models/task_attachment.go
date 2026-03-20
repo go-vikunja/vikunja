@@ -18,6 +18,7 @@ package models
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/png"
 	"io"
@@ -221,6 +222,22 @@ func (ta *TaskAttachment) GetPreview(previewSize PreviewSize) []byte {
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
 
 	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
+		// Check image dimensions before full decode to prevent DoS
+		// from decompression bombs (small file, huge pixel dimensions)
+		const maxPixels = 50_000_000 // 50 megapixels
+		cfg, _, err := image.DecodeConfig(ta.File.File)
+		if err != nil {
+			return nil, err
+		}
+		if cfg.Width*cfg.Height > maxPixels {
+			return nil, fmt.Errorf("image dimensions %dx%d exceed maximum of %d pixels", cfg.Width, cfg.Height, maxPixels)
+		}
+
+		// Seek back to start for full decode
+		if _, err := ta.File.File.Seek(0, io.SeekStart); err != nil {
+			return nil, err
+		}
+
 		img, _, err := image.Decode(ta.File.File)
 		if err != nil {
 			return nil, err
