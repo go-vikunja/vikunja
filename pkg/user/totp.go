@@ -196,7 +196,7 @@ func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 		log.Errorf("Could send password information mail to user %d after 10 failed TOTP attempts: %s", user.ID, err)
 		return
 	}
-	err = user.SetStatus(s, StatusDisabled)
+	err = user.SetStatus(s, StatusAccountLocked)
 	if err != nil {
 		log.Errorf("Could not disable user %d: %s", user.ID, err)
 	}
