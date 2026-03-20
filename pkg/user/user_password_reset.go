@@ -116,6 +116,10 @@ func RequestUserPasswordResetTokenByEmail(s *xorm.Session, tr *PasswordTokenRequ
 		return
 	}
 
+	if user.Status == StatusDisabled {
+		return &ErrAccountDisabled{UserID: user.ID}
+	}
+
 	return RequestUserPasswordResetToken(s, user)
 }
 
