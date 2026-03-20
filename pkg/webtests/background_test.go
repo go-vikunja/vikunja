@@ -23,6 +23,7 @@ import (
 	bgHandler "code.vikunja.io/api/pkg/modules/background/handler"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProjectBackgroundDeletePermission(t *testing.T) {
@@ -41,7 +42,7 @@ func TestProjectBackgroundDeletePermission(t *testing.T) {
 		)
 
 		// Should be forbidden for a read-only user
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 	})
 }
