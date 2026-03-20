@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"image"
 	"image/png"
+	"io"
 	"os"
 	"testing"
 
@@ -27,7 +28,6 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -195,18 +195,10 @@ func TestAttachmentPreviewRejectsLargeImages(t *testing.T) {
 	err := png.Encode(&buf, img)
 	require.NoError(t, err)
 
-	// Write the PNG to an in-memory afero filesystem so we get an afero.File
-	memFs := afero.NewMemMapFs()
-	err = afero.WriteFile(memFs, "large.png", buf.Bytes(), 0644)
-	require.NoError(t, err)
-	f, err := memFs.Open("large.png")
-	require.NoError(t, err)
-	defer f.Close()
-
 	attachment := &TaskAttachment{
 		ID: 999999,
 		File: &files.File{
-			File: f,
+			File: io.NopCloser(bytes.NewReader(buf.Bytes())),
 		},
 	}
 
