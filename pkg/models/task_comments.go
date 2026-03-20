@@ -196,6 +196,7 @@ func (tc *TaskComment) Update(s *xorm.Session, _ web.Auth) error {
 func getTaskCommentSimple(s *xorm.Session, tc *TaskComment) error {
 	exists, err := s.
 		Where("id = ?", tc.ID).
+		And("task_id = ?", tc.TaskID).
 		NoAutoCondition().
 		Get(tc)
 	if err != nil {
