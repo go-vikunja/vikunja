@@ -328,7 +328,7 @@ func checkProjectBackgroundRights(s *xorm.Session, c *echo.Context) (project *mo
 	return
 }
 
-func checkProjectBackgroundWriteRights(s *xorm.Session, c *echo.Context) (project *models.Project, auth web.Auth, err error) {
+func checkProjectBackgroundWritePermissions(s *xorm.Session, c *echo.Context) (project *models.Project, auth web.Auth, err error) {
 	auth, err = auth2.GetAuthFromClaims(c)
 	if err != nil {
 		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error()).Wrap(err)
@@ -443,7 +443,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	project, auth, err := checkProjectBackgroundWriteRights(s, c)
+	project, auth, err := checkProjectBackgroundWritePermissions(s, c)
 	if err != nil {
 		_ = s.Rollback()
 		return err
