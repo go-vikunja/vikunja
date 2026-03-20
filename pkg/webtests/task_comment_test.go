@@ -330,7 +330,7 @@ func TestTaskCommentIDOR(t *testing.T) {
 			"task":      "1",  // task accessible to testuser1
 			"commentid": "18", // comment belonging to task 34, NOT accessible to testuser1
 		})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assertHandlerErrorCode(t, err, models.ErrCodeTaskCommentDoesNotExist)
 	})
 }
