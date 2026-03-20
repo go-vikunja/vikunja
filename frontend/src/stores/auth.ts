@@ -139,6 +139,7 @@ export const useAuthStore = defineStore('auth', () => {
 				timeFormat: TIME_FORMAT.HOURS_24,
 				defaultTaskRelationType: RELATION_KIND.RELATED,
 				backgroundBrightness: 100,
+				showLastViewed: true,
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
 				...newSettings.frontendSettings,
