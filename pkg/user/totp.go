@@ -17,7 +17,9 @@
 package user
 
 import (
+	"fmt"
 	"image"
+	"strconv"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
@@ -134,6 +136,22 @@ func ValidateTOTPPasscode(s *xorm.Session, passcode *TOTPPasscode) (t *TOTP, err
 
 	if !totp.Validate(passcode.Passcode, t.Secret) {
 		return nil, ErrInvalidTOTPPasscode{Passcode: passcode.Passcode}
+	}
+
+	// Prevent passcode reuse: check if this passcode was already used
+	usedKey := fmt.Sprintf("totp_used_%s_%s", strconv.FormatInt(passcode.User.ID, 10), passcode.Passcode)
+	_, exists, err := keyvalue.Get(usedKey)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, ErrTOTPPasscodeUsed{}
+	}
+
+	// Mark this passcode as used
+	err = keyvalue.Put(usedKey, true)
+	if err != nil {
+		return nil, err
 	}
 
 	return
