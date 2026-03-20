@@ -32,12 +32,13 @@ func TestTOTPPasscodeCannotBeReused(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Generate a valid TOTP passcode for user1's secret from the fixture
+	// Generate a valid TOTP passcode for user10's secret from the fixture
+	// user10 has TOTP enabled with this secret in pkg/db/fixtures/totp.yml
 	secret := "JBSWY3DPEHPK3PXP" //nolint:gosec
 	passcode, err := totp.GenerateCode(secret, time.Now())
 	require.NoError(t, err)
 
-	user := &User{ID: 1}
+	user := &User{ID: 10}
 
 	// First use should succeed
 	_, err = ValidateTOTPPasscode(s, &TOTPPasscode{
