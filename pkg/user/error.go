@@ -373,6 +373,32 @@ func (err ErrInvalidTOTPPasscode) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTOTPPasscodeUsed represents a "TOTPPasscodeUsed" kind of error.
+// This is returned when a TOTP passcode has already been used within its validity window.
+type ErrTOTPPasscodeUsed struct{}
+
+// IsErrTOTPPasscodeUsed checks if an error is a ErrTOTPPasscodeUsed.
+func IsErrTOTPPasscodeUsed(err error) bool {
+	_, ok := err.(ErrTOTPPasscodeUsed)
+	return ok
+}
+
+func (err ErrTOTPPasscodeUsed) Error() string {
+	return "This totp passcode has already been used"
+}
+
+// ErrCodeTOTPPasscodeUsed holds the unique world-error code of this error
+const ErrCodeTOTPPasscodeUsed = 1025
+
+// HTTPError holds the http error description
+func (err ErrTOTPPasscodeUsed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeTOTPPasscodeUsed,
+		Message:  "This totp passcode has already been used.",
+	}
+}
+
 // ErrInvalidAvatarProvider represents a "InvalidAvatarProvider" kind of error.
 type ErrInvalidAvatarProvider struct {
 	AvatarProvider string
