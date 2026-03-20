@@ -58,7 +58,7 @@ func TestListUsers(t *testing.T) {
 
 		all, err := user.ListAllUsers(s)
 		require.NoError(t, err)
-		assert.Len(t, all, 16)
+		assert.Len(t, all, 17)
 	})
 	t.Run("no search term", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -171,7 +171,7 @@ func TestListUsers(t *testing.T) {
 			MatchFuzzily: true,
 		})
 		require.NoError(t, err)
-		assert.Len(t, all, 16)
+		assert.Len(t, all, 17)
 	})
 
 	// External team discoverability bypass tests
