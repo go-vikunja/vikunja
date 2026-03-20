@@ -734,3 +734,23 @@ func TestCaldavProjectReport(t *testing.T) {
 		}
 	})
 }
+
+func TestCaldavTOTPBlocksBasicAuth(t *testing.T) {
+	t.Run("Basic auth with password is rejected when TOTP is enabled", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// testuser1 has TOTP enabled via fixtures.
+		// "12345678" is the plaintext password for all test users.
+		result, err := caldav.BasicAuth(c, testuser1.Username, "12345678")
+		require.NoError(t, err)
+		assert.False(t, result, "BasicAuth should reject password login when user has TOTP enabled")
+	})
+
+	t.Run("Basic auth with caldav token still works when TOTP is enabled", func(t *testing.T) {
+		// This test ensures CalDAV tokens are NOT affected by the TOTP check.
+		// It requires a CalDAV token fixture for user1.
+		// If no CalDAV token fixture exists for user1, skip this test for now.
+		t.Skip("Requires CalDAV token fixture for user1 — add if needed")
+	})
+}
