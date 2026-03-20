@@ -70,7 +70,13 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (userID int64, err err
 		return
 	}
 
-	user.Status = StatusActive
+	if user.Status == StatusDisabled {
+		return 0, &ErrAccountDisabled{UserID: user.ID}
+	}
+
+	if user.Status == StatusAccountLocked || user.Status == StatusEmailConfirmationRequired {
+		user.Status = StatusActive
+	}
 	_, err = s.
 		Cols("password", "status").
 		Where("id = ?", user.ID).
