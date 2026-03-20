@@ -33,7 +33,7 @@ func TestTOTPPasscodeCannotBeReused(t *testing.T) {
 	defer s.Close()
 
 	// Generate a valid TOTP passcode for user1's secret from the fixture
-	secret := "JBSWY3DPEHPK3PXP"
+	secret := "JBSWY3DPEHPK3PXP" //nolint:gosec
 	passcode, err := totp.GenerateCode(secret, time.Now())
 	require.NoError(t, err)
 
