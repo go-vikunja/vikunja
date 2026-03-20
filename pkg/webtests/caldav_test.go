@@ -748,9 +748,14 @@ func TestCaldavTOTPBlocksBasicAuth(t *testing.T) {
 	})
 
 	t.Run("Basic auth with caldav token still works when TOTP is enabled", func(t *testing.T) {
-		// This test ensures CalDAV tokens are NOT affected by the TOTP check.
-		// It requires a CalDAV token fixture for user1.
-		// If no CalDAV token fixture exists for user1, skip this test for now.
-		t.Skip("Requires CalDAV token fixture for user1 — add if needed")
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// testuser10 has TOTP enabled AND a CalDAV token (kind=4) in fixtures.
+		// "caldavtesttoken" is the plaintext of the bcrypt hash in user_tokens.yml.
+		// CalDAV token auth should bypass the TOTP check.
+		result, err := caldav.BasicAuth(c, testuser10.Username, "caldavtesttoken")
+		require.NoError(t, err)
+		assert.True(t, result, "BasicAuth with CalDAV token should succeed even when TOTP is enabled")
 	})
 }
