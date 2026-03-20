@@ -12,7 +12,11 @@ function createWindow() {
 		width: 1680,
 		height: 960,
 		webPreferences: {
-			nodeIntegration: true,
+			nodeIntegration: false,
+			contextIsolation: true,
+			sandbox: true,
+			webviewTag: false,
+			navigateOnDragDrop: false,
 		}
 	})
 
