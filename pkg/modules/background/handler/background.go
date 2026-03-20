@@ -328,6 +328,32 @@ func checkProjectBackgroundRights(s *xorm.Session, c *echo.Context) (project *mo
 	return
 }
 
+func checkProjectBackgroundWriteRights(s *xorm.Session, c *echo.Context) (project *models.Project, auth web.Auth, err error) {
+	auth, err = auth2.GetAuthFromClaims(c)
+	if err != nil {
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error()).Wrap(err)
+	}
+
+	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
+	if err != nil {
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error()).Wrap(err)
+	}
+
+	project = &models.Project{ID: projectID}
+	can, err := project.CanUpdate(s, auth)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, auth, err
+	}
+	if !can {
+		_ = s.Rollback()
+		log.Infof("Tried to modify project background of project %d while not having the permissions for it (User: %v)", projectID, auth)
+		return nil, auth, echo.NewHTTPError(http.StatusForbidden, "Forbidden")
+	}
+
+	return
+}
+
 // GetProjectBackground serves a previously set background from a project
 // It has no knowledge of the provider that was responsible for setting the background.
 // @Summary Get the project background
@@ -417,7 +443,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	project, auth, err := checkProjectBackgroundRights(s, c)
+	project, auth, err := checkProjectBackgroundWriteRights(s, c)
 	if err != nil {
 		_ = s.Rollback()
 		return err
