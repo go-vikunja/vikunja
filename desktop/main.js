@@ -40,6 +40,17 @@ function createWindow() {
 		return { action: 'deny' };
 	});
 
+	// Prevent same-window navigation to external origins.
+	// Only allow navigation to the local express server.
+	mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+		const parsedUrl = new URL(navigationUrl);
+		// Allow navigations to the local express server
+		if (parsedUrl.hostname === '127.0.0.1' || parsedUrl.hostname === 'localhost') {
+			return;
+		}
+		event.preventDefault();
+	});
+
 	// Hide the toolbar
 	mainWindow.setMenuBarVisibility(false)
 
