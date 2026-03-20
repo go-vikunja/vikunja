@@ -470,6 +470,33 @@ func TestUserPasswordReset(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrInvalidPasswordResetToken(err))
 	})
+	t.Run("disabled user cannot reset password", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		reset := &PasswordReset{
+			Token:       "disableduserpasswordresettoken",
+			NewPassword: "12345678",
+		}
+		_, err := ResetPassword(s, reset)
+		require.Error(t, err)
+		assert.True(t, IsErrAccountDisabled(err))
+	})
+}
+
+func TestRequestPasswordResetTokenDisabledUser(t *testing.T) {
+	t.Run("disabled user cannot request password reset token", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := RequestUserPasswordResetTokenByEmail(s, &PasswordTokenRequest{
+			Email: "user17@example.com",
+		})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountDisabled(err))
+	})
 }
 
 func TestCleanupOldTokens(t *testing.T) {

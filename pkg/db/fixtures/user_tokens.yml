@@ -22,3 +22,9 @@
   token: 'deletiontesttoken'
   kind: 3
   created: 2021-07-12 00:00:14
+-
+  id: 5
+  user_id: 17
+  token: 'disableduserpasswordresettoken'
+  kind: 1
+  created: 2024-01-01 00:00:00
