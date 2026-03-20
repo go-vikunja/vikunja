@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/modules/migration/deck"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
@@ -144,6 +145,10 @@ func Info(c *echo.Context) error {
 	}
 	if config.MigrationMicrosoftTodoEnable.GetBool() {
 		m := &microsofttodo.Migration{}
+		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
+	}
+	{
+		m := &deck.Migration{}
 		info.AvailableMigrators = append(info.AvailableMigrators, m.Name())
 	}
 
