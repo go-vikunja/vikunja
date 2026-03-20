@@ -355,7 +355,7 @@
 							:edit-enabled="canWrite"
 							:task="task"
 							@taskChanged="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
-							@update:attachments="attachments => task.attachments = attachments"
+							@update:attachments="onAttachmentsUpdated"
 						/>
 					</div>
 
@@ -631,6 +631,7 @@ import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
+import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
@@ -787,8 +788,20 @@ const color = computed(() => {
 
 const isModal = computed(() => Boolean(props.backdropView))
 
-function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(props.taskId, file, onSuccess)
+async function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
+	const uploaded = await uploadFile(props.taskId, file, onSuccess)
+	if (uploaded.length > 0) {
+		onAttachmentsUpdated([...task.value.attachments, ...uploaded])
+	}
+	return uploaded
+}
+
+function onAttachmentsUpdated(attachments: IAttachment[]) {
+	task.value.attachments = attachments
+	kanbanStore.setTaskInBucket({
+		...task.value,
+		attachments,
+	})
 }
 
 const heading = ref<HTMLElement | null>(null)
