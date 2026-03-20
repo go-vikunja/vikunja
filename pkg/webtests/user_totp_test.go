@@ -28,7 +28,8 @@ import (
 
 func TestUserTOTPLocalUser(t *testing.T) {
 	t.Run("Enroll TOTP for local user", func(t *testing.T) {
-		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPEnroll, &testuser1, "", nil, nil)
+		// Use testuser15 who has no TOTP enrollment in fixtures
+		rec, err := newTestRequestWithUser(t, http.MethodPost, apiv1.UserTOTPEnroll, &testuser15, "", nil, nil)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Body.String(), `"secret"`)
@@ -37,6 +38,7 @@ func TestUserTOTPLocalUser(t *testing.T) {
 	})
 
 	t.Run("Get TOTP QR Code for enrolled local user", func(t *testing.T) {
+		// user1 has TOTP enrolled (but not enabled) via fixtures
 		rec, err := newTestRequestWithUser(t, http.MethodGet, apiv1.UserTOTPQrCode, &testuser1, "", nil, nil)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -44,6 +46,7 @@ func TestUserTOTPLocalUser(t *testing.T) {
 	})
 
 	t.Run("Get TOTP settings for enrolled local user", func(t *testing.T) {
+		// user1 has TOTP enrolled (but not enabled) via fixtures
 		rec, err := newTestRequestWithUser(t, http.MethodGet, apiv1.UserTOTP, &testuser1, "", nil, nil)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
