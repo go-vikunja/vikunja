@@ -194,11 +194,17 @@ func (tc *TaskComment) Update(s *xorm.Session, _ web.Auth) error {
 }
 
 func getTaskCommentSimple(s *xorm.Session, tc *TaskComment) error {
-	exists, err := s.
+	query := s.
 		Where("id = ?", tc.ID).
-		And("task_id = ?", tc.TaskID).
-		NoAutoCondition().
-		Get(tc)
+		NoAutoCondition()
+
+	// When TaskID is provided (e.g. from URL parameters), verify the comment
+	// belongs to that task to prevent IDOR attacks.
+	if tc.TaskID != 0 {
+		query = query.And("task_id = ?", tc.TaskID)
+	}
+
+	exists, err := query.Get(tc)
 	if err != nil {
 		return err
 	}
