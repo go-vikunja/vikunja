@@ -147,6 +147,16 @@
                     "key": "enableopenidteamusersearch",
                     "default_value": "false",
                     "comment": "If enabled, users will only find other users who are part of an existing team when they are searching for a user by their partial name. The other existing team may be created from openid. It is still possible to add users to teams with their exact email address even when this is enabled."
+                },
+                {
+                    "key": "ipextractionmethod",
+                    "default_value": "direct",
+                    "comment": "Method for extracting client IP addresses. 'direct' (default) uses the TCP remote address and ignores forwarding headers — use this when Vikunja faces the internet directly. 'xff' extracts from the X-Forwarded-For header — use this behind proxies like nginx, Traefik, or cloud load balancers. 'realip' extracts from the X-Real-IP header. When using 'xff' or 'realip', configure 'service.trustedproxies' with your proxy CIDR ranges."
+                },
+                {
+                    "key": "trustedproxies",
+                    "default_value": "",
+                    "comment": "Comma-separated list of CIDR ranges for trusted reverse proxies. Only used when service.ipextractionmethod is 'xff' or 'realip'. X-Forwarded-For / X-Real-IP headers are only trusted from these addresses. Example: '127.0.0.1/32,::1/128,10.0.0.0/8,172.16.0.0/12'"
                 }
             ]
         },
