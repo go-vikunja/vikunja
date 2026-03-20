@@ -47,6 +47,10 @@ func ConfirmEmail(s *xorm.Session, c *EmailConfirm) (err error) {
 		return
 	}
 
+	if user.Status == StatusDisabled {
+		return &ErrAccountDisabled{UserID: user.ID}
+	}
+
 	user.Status = StatusActive
 	err = removeTokens(s, user, TokenEmailConfirm)
 	if err != nil {
