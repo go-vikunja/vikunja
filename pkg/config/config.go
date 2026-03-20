@@ -70,8 +70,8 @@ const (
 	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
-	ServiceIPExtractionMethod            Key = `service.ipextractionmethod`
-	ServiceTrustedProxies                Key = `service.trustedproxies`
+	ServiceIPExtractionMethod             Key = `service.ipextractionmethod`
+	ServiceTrustedProxies                 Key = `service.trustedproxies`
 
 	SentryEnabled         Key = `sentry.enabled`
 	SentryDsn             Key = `sentry.dsn`
