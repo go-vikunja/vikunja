@@ -18,6 +18,8 @@ package models
 
 import (
 	"bytes"
+	"image"
+	"image/png"
 	"os"
 	"testing"
 
@@ -25,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -182,6 +185,33 @@ func TestTaskAttachment_Delete(t *testing.T) {
 		err := ta.Delete(s, u)
 		require.NoError(t, err)
 	})
+}
+
+func TestAttachmentPreviewRejectsLargeImages(t *testing.T) {
+	// Create a 10000x10000 pixel image (100M pixels, well above the 50M limit)
+	// As a PNG this is small on disk but huge when decoded into memory
+	img := image.NewNRGBA(image.Rect(0, 0, 10000, 10000))
+	var buf bytes.Buffer
+	err := png.Encode(&buf, img)
+	require.NoError(t, err)
+
+	// Write the PNG to an in-memory afero filesystem so we get an afero.File
+	memFs := afero.NewMemMapFs()
+	err = afero.WriteFile(memFs, "large.png", buf.Bytes(), 0644)
+	require.NoError(t, err)
+	f, err := memFs.Open("large.png")
+	require.NoError(t, err)
+	defer f.Close()
+
+	attachment := &TaskAttachment{
+		ID: 999999,
+		File: &files.File{
+			File: f,
+		},
+	}
+
+	result := attachment.GetPreview(PreviewMedium)
+	assert.Nil(t, result, "Preview should be nil for images exceeding max pixel count")
 }
 
 func TestTaskAttachment_Permissions(t *testing.T) {
