@@ -141,7 +141,6 @@
 				"setupSuccess": "Du hast die Zwei-Faktor-Authentifizierung erfolgreich eingerichtet!",
 				"enterPassword": "Bitte gib dein Passwort ein",
 				"disable": "Zwei-Faktor-Authentifizierung deaktivieren",
-				"confirmSuccess": "TOTP wurde verifiziert und ist nun verwendbar!",
 				"disableSuccess": "Die Zwei-Faktor-Authentifizierung wurde erfolgreich deaktiviert."
 			},
 			"caldav": {

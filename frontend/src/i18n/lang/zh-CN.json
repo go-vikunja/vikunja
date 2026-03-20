@@ -120,7 +120,6 @@
 				"setupSuccess": "您已成功启用两步验证！",
 				"enterPassword": "请输入密码",
 				"disable": "禁用两步验证",
-				"confirmSuccess": "您已成功确认您的 TOTP 设置，并且可以从现在起使用！",
 				"disableSuccess": "两步验证已禁用。"
 			},
 			"caldav": {

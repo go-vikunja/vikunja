@@ -133,7 +133,6 @@
 				"setupSuccess": "Vous avez maintenant configuré l’authentification à deux facteurs !",
 				"enterPassword": "Saisissez votre mot de passe",
 				"disable": "Désactiver l’authentification à deux facteurs",
-				"confirmSuccess": "La configuration de l'A2F est confirmée et vous pouvez l’utiliser dès à présent !",
 				"disableSuccess": "L’authentification à deux facteurs a bien été désactivée."
 			},
 			"caldav": {

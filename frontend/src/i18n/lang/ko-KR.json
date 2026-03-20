@@ -114,7 +114,6 @@
 				"setupSuccess": "2단계 인증을 성공적으로 활성화했습니다!",
 				"enterPassword": "비밀번호를 입력하여 주십시오.",
 				"disable": "2단계 인증 비활성화",
-				"confirmSuccess": "TOTP 설정이 성공적으로 확인되었으며 이제부터 사용할 수 있습니다!",
 				"disableSuccess": "2단계 인증이 비활성화 되었습니다."
 			},
 			"caldav": {

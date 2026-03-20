@@ -135,7 +135,6 @@
 				"setupSuccess": "Olet määrittänyt kaksivaiheinen tunnistautumisen onnistuneesti!",
 				"enterPassword": "Ole Hyvä ja Syötä Salasanasi",
 				"disable": "Poista kaksivaiheinen tunnistautuminen käytöstä",
-				"confirmSuccess": "TOTP määritys on tehty onnistuneesti ja voit käyttää sitä tästä hetkestä lähtien!",
 				"disableSuccess": "Kaksivaiheinen tunnistautuminen poistettu käytöstä onnistuneesti."
 			},
 			"caldav": {

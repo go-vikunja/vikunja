@@ -134,7 +134,6 @@
 				"setupSuccess": "Du har nå deaktivert to-faktorautentisering!",
 				"enterPassword": "Skriv inn ditt passord",
 				"disable": "Skru av to-faktorautentisering",
-				"confirmSuccess": "Du har bekreftet ditt totp-oppsett og kan bruke det fra nå av!",
 				"disableSuccess": "To-faktorautentisering ble skrudd av."
 			},
 			"caldav": {

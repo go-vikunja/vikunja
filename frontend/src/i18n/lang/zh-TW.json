@@ -140,7 +140,6 @@
 				"setupSuccess": "您已成功啟用雙重驗證！",
 				"enterPassword": "請輸入密碼",
 				"disable": "停用雙重驗證",
-				"confirmSuccess": "您已成功確認您的 TOTP 設定，並且可以從現在起使用！",
 				"disableSuccess": "雙重驗證已停用。"
 			},
 			"caldav": {

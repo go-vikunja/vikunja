@@ -141,7 +141,6 @@
 				"setupSuccess": "2要素認証は正常に設定されました。",
 				"enterPassword": "パスワードを入力してください",
 				"disable": "2要素認証の無効化",
-				"confirmSuccess": "2要素認証のセットアップを完了しました。",
 				"disableSuccess": "2要素認証は無効化されました。"
 			},
 			"caldav": {
