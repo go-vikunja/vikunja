@@ -76,6 +76,7 @@ func SetupTests() {
 		"task_buckets",
 		"sessions",
 		"webhooks",
+		"totp",
 	)
 	if err != nil {
 		log.Fatal(err)
