@@ -71,7 +71,7 @@ func Login(c *echo.Context) (err error) {
 		}
 	}
 
-	if user.Status == user2.StatusDisabled {
+	if user.Status == user2.StatusDisabled || user.Status == user2.StatusAccountLocked {
 		_ = s.Rollback()
 		return &user2.ErrAccountDisabled{UserID: user.ID}
 	}
@@ -244,7 +244,7 @@ func RefreshToken(c *echo.Context) (err error) {
 		return err
 	}
 
-	if u.Status == user2.StatusDisabled {
+	if u.Status == user2.StatusDisabled || u.Status == user2.StatusAccountLocked {
 		if _, err := s.Where("id = ?", session.ID).Delete(&models.Session{}); err != nil {
 			_ = s.Rollback()
 			return err
