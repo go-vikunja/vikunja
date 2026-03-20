@@ -1,5 +1,5 @@
 - id: 1
-  user_id: 1
+  user_id: 10
   secret: 'JBSWY3DPEHPK3PXP'
   enabled: true
-  url: 'otpauth://totp/Vikunja:user1?secret=JBSWY3DPEHPK3PXP&issuer=Vikunja'
+  url: 'otpauth://totp/Vikunja:user10?secret=JBSWY3DPEHPK3PXP&issuer=Vikunja'
