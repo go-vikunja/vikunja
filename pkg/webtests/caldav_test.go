@@ -740,9 +740,9 @@ func TestCaldavTOTPBlocksBasicAuth(t *testing.T) {
 		e, _ := setupTestEnv()
 		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
 
-		// testuser1 has TOTP enabled via fixtures.
+		// testuser10 has TOTP enabled via fixtures.
 		// "12345678" is the plaintext password for all test users.
-		result, err := caldav.BasicAuth(c, testuser1.Username, "12345678")
+		result, err := caldav.BasicAuth(c, testuser10.Username, "12345678")
 		require.NoError(t, err)
 		assert.False(t, result, "BasicAuth should reject password login when user has TOTP enabled")
 	})
