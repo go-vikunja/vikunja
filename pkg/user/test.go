@@ -37,7 +37,7 @@ func InitTests() {
 		log.Fatal(err)
 	}
 
-	err = db.InitTestFixtures("users", "user_tokens")
+	err = db.InitTestFixtures("users", "user_tokens", "totp")
 	if err != nil {
 		log.Fatal(err)
 	}
