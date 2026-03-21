@@ -87,12 +87,13 @@ export const useConfigStore = defineStore('config', () => {
 
 	const migratorsEnabled = computed(() => state.availableMigrators?.length > 0)
 	const apiBase = computed(() => {
-		const {host, protocol, href} = parseURL(window.API_URL)
+		const {host, protocol, pathname} = parseURL(window.API_URL)
 
-		const cleanHref = href ? (href.endsWith('/') 
-			? href.slice(0, -1) 
-			: href) : ''
-		return `${protocol}//${host}${cleanHref ? `/${cleanHref}` : ''}`
+		// Strip the /api/v1 suffix (and optional trailing slash) to get the deployment base.
+		const basePath = pathname
+			.replace(/\/api\/v1\/?$/, '')
+			.replace(/\/+$/, '')
+		return `${protocol}//${host}${basePath}`
 	})
 
 	function setConfig(config: ConfigState) {
