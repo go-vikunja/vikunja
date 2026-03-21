@@ -138,9 +138,11 @@
 				"scanQR": "Alternativ chasch au de QR Code scanne:",
 				"passcode": "Code",
 				"passcodePlaceholder": "Ein von deiner TOTP-App generierter Code",
+				"confirmNotice": "Nach der Aktivierung der Zwei-Faktor-Authentifizierung wirst du überall abgemeldet und musst dich erneut anmelden.",
 				"setupSuccess": "Du hast die Zwei-Faktor-Authentifizierung erfolgreich eingerichtet!",
 				"enterPassword": "Bitte gib diis Passwort iih",
 				"disable": "Zweifaktor Authentifizierig uusschalte",
+				"confirmSuccess": "Du hast die Zwei-Faktor-Authentifizierung erfolgreich eingerichtet!",
 				"disableSuccess": "Die Zwei-Faktor-Authentifizierung wurde erfolgreich deaktiviert."
 			},
 			"caldav": {
