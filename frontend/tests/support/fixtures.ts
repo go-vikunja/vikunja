@@ -1,6 +1,7 @@
 import {test as base, type APIRequestContext, type Page} from '@playwright/test'
 import {Factory} from './factory'
 import {login, createFakeUser} from './authenticateUser'
+import {TEST_API_URL} from './constants'
 
 export const test = base.extend<{
 	apiContext: APIRequestContext;
@@ -9,7 +10,7 @@ export const test = base.extend<{
 	userToken: string;
 }>({
 	apiContext: async ({playwright}, use) => {
-		const baseURL = process.env.API_URL || 'http://localhost:3456/api/v1/'
+		const baseURL = TEST_API_URL.endsWith('/') ? TEST_API_URL : TEST_API_URL + '/'
 		const apiContext = await playwright.request.newContext({
 			baseURL,
 		})

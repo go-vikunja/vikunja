@@ -1,8 +1,9 @@
 import type {APIRequestContext} from '@playwright/test'
 import {objectToSnakeCase} from '../../src/helpers/case'
+import {TEST_API_URL} from './constants'
 
 export async function updateUserSettings(apiContext: APIRequestContext, token: string, settings: any) {
-	const apiUrl = process.env.API_URL || 'http://localhost:3456/api/v1'
+	const apiUrl = TEST_API_URL
 
 	const userResponse = await apiContext.get(`${apiUrl}/user`, {
 		headers: {
