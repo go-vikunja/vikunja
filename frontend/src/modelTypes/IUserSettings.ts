@@ -8,6 +8,7 @@ import type {Priority} from '@/constants/priorities'
 import type {DateDisplay} from '@/constants/dateDisplay'
 import type {TimeFormat} from '@/constants/timeFormat'
 import type {IRelationKind} from '@/types/IRelationKind'
+import type {DefaultPage} from '@/constants/defaultPage'
 
 export interface IFrontendSettings {
 	playSoundWhenDone: boolean
@@ -24,6 +25,7 @@ export interface IFrontendSettings {
 	alwaysShowBucketTaskCount: boolean
 	sidebarWidth: number | null
 	commentSortOrder: 'asc' | 'desc'
+	defaultPage: DefaultPage
 }
 
 export interface IExtraSettingsLink {
