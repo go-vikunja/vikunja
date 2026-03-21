@@ -14,6 +14,9 @@
 					:project-id="projectId"
 					@update:modelValue="prepareFiltersAndLoadTasks()"
 				/>
+				<SortPopup
+					v-model="sortByParam"
+				/>
 			</div>
 		</template>
 
@@ -49,13 +52,13 @@
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
 						:group="{name: 'tasks', put: false}"
-						:disabled="!canDragTasks"
+						:disabled="!canDragTasks || !isPositionSorting"
 						item-key="id"
 						tag="ul"
 						:component-data="{
 							class: {
 								tasks: true,
-								'dragging-disabled': !canDragTasks || isAlphabeticalSorting
+								'dragging-disabled': !canDragTasks || !isPositionSorting
 							},
 							type: 'transition-group'
 						}"
@@ -71,14 +74,14 @@
 							<SingleTaskInProject
 								:ref="(el) => setTaskRef(el, index)"
 								:show-list-color="false"
-								:disabled="!canDragTasks"
+								:disabled="!canDragTasks || !isPositionSorting"
 								:can-mark-as-done="canWrite || isPseudoProject"
 								:the-task="t"
 								:all-tasks="allTasks"
 								@taskUpdated="updateTasks"
 							>
 								<span
-									v-if="canDragTasks"
+									v-if="canDragTasks && isPositionSorting"
 									class="icon handle"
 								>
 									<Icon icon="grip-lines" />
@@ -109,7 +112,7 @@ import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
-import {ALPHABETICAL_SORT} from '@/components/project/partials/Filters.vue'
+import SortPopup from '@/components/project/partials/SortPopup.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
@@ -171,8 +174,8 @@ watch(
 	},
 )
 
-const isAlphabeticalSorting = computed(() => {
-	return params.value.sort_by.find(sortBy => sortBy === ALPHABETICAL_SORT) !== undefined
+const isPositionSorting = computed(() => {
+	return Object.keys(sortByParam.value).length === 0 || (Object.keys(sortByParam.value).length === 1 && typeof sortByParam.value.position !== 'undefined')
 })
 
 const firstNewPosition = computed(() => {
@@ -214,7 +217,7 @@ function focusNewTaskInput() {
 }
 
 function updateTaskList(task: ITask) {
-	if (isAlphabeticalSorting.value) {
+	if (!isPositionSorting.value) {
 		// reload tasks with current filter and sorting
 		loadTasks()
 	} else {
@@ -287,11 +290,6 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 }
 
 function prepareFiltersAndLoadTasks() {
-	if (isAlphabeticalSorting.value) {
-		sortByParam.value = {}
-		sortByParam.value[ALPHABETICAL_SORT] = 'asc'
-	}
-
 	loadTasks()
 }
 
@@ -364,6 +362,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+.filter-container {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+}
+
 .tasks {
 	padding: .5rem;
 }
