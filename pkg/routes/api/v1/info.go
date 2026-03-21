@@ -34,6 +34,7 @@ import (
 
 type vikunjaInfos struct {
 	Version                    string    `json:"version"`
+	APIMinCompatible           string    `json:"api_min_compatible"`
 	FrontendURL                string    `json:"frontend_url"`
 	Motd                       string    `json:"motd"`
 	LinkSharingEnabled         bool      `json:"link_sharing_enabled"`
@@ -89,6 +90,7 @@ type legalInfo struct {
 func Info(c *echo.Context) error {
 	info := vikunjaInfos{
 		Version:                version.Version,
+		APIMinCompatible:       version.APIMinCompatible,
 		FrontendURL:            config.ServicePublicURL.GetString(),
 		Motd:                   config.ServiceMotd.GetString(),
 		LinkSharingEnabled:     config.ServiceEnableLinkSharing.GetBool(),
