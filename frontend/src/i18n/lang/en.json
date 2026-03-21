@@ -445,7 +445,17 @@
       "bucketTitleSavedSuccess": "The bucket title has been saved successfully.",
       "bucketLimitSavedSuccess": "The bucket limit been saved successfully.",
       "collapse": "Collapse this bucket",
-      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks."
+      "bucketLimitReached": "You have reached the bucket limit. Remove tasks or increase the limit to add new tasks.",
+      "sortBy": "Sort tasks",
+      "sortManual": "Manual (drag & drop)",
+      "sortPriority": "Priority",
+      "sortDueDate": "Due date",
+      "sortCreated": "Date created",
+      "sortUpdated": "Date updated",
+      "sortTitle": "Title",
+      "sortAscending": "Ascending",
+      "sortDescending": "Descending",
+      "sortSavedSuccess": "The task sort order has been saved successfully."
     },
     "pseudo": {
       "favorites": {
