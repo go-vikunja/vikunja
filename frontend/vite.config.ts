@@ -141,6 +141,21 @@ function getBuildConfig(env: Record<string, string>) {
 				// we don't need to optimize them again.
 				svgo: false,
 			}),
+			// if BUILD_STANDALONE=true, replace __VIKUNJA_API_URL__ in index.html at build time
+			// with the configured base path + /api/v1.
+			// This only matters for standalone frontend deployments (via HTTP servers).
+			// Otherwise the Go backend will replace this at serve time with service.publicurl.
+			{
+				name: 'vikunja-api-url',
+				transformIndexHtml(html: string) {
+					if (env.BUILD_STANDALONE !== 'true') {
+						return html;
+					}
+					const base = (env.VIKUNJA_FRONTEND_BASE || '/').replace(/\/+$/, '')
+					const apiUrl = base + '/api/v1'
+					return html.replace('__VIKUNJA_API_URL__', apiUrl)
+				},
+			},
 			VueI18nPlugin({
 				// TODO: only install needed stuff
 				// Whether to install the full set of APIs, components, etc. provided by Vue I18n.
