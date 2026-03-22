@@ -10,5 +10,7 @@ export interface IApiToken extends IAbstract {
 	token: string
 	permissions: IApiPermission
 	expiresAt: Date
+	projectId: number
+	includeSubProjects: boolean
 	created: Date
 }

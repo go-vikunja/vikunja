@@ -34,6 +34,11 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
+	// Check project scope from API token
+	if scope := GetProjectScope(a); scope != nil && !ProjectScopeContains(scope, p.ID) {
+		return false, nil
+	}
+
 	// Get the project and check the permission
 	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
@@ -90,6 +95,11 @@ func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 	if GetSavedFilterIDFromProjectID(p.ID) > 0 {
 		sf := &SavedFilter{ID: GetSavedFilterIDFromProjectID(p.ID)}
 		return sf.CanRead(s, a)
+	}
+
+	// Check project scope from API token
+	if scope := GetProjectScope(a); scope != nil && !ProjectScopeContains(scope, p.ID) {
+		return false, 0, nil
 	}
 
 	// Check if the user is either owner or can read
@@ -165,12 +175,20 @@ func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 // CanCreate checks if the user can create a project
 func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 	if p.ParentProjectID != 0 {
+		// Check project scope: parent must be in scope
+		if scope := GetProjectScope(a); scope != nil && !ProjectScopeContains(scope, p.ParentProjectID) {
+			return false, nil
+		}
 		parent := &Project{ID: p.ParentProjectID}
 		return parent.CanWrite(s, a)
 	}
 	// Check if we're dealing with a share auth
 	_, is := a.(*LinkSharing)
 	if is {
+		return false, nil
+	}
+	// Project-scoped tokens cannot create top-level projects
+	if scope := GetProjectScope(a); scope != nil {
 		return false, nil
 	}
 	return true, nil
@@ -180,6 +198,11 @@ func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	// The favorite project can't be edited
 	if p.ID == FavoritesPseudoProject.ID {
+		return false, nil
+	}
+
+	// Check project scope from API token
+	if scope := GetProjectScope(a); scope != nil && !ProjectScopeContains(scope, p.ID) {
 		return false, nil
 	}
 

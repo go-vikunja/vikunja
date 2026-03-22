@@ -16,6 +16,9 @@ import {useI18n} from 'vue-i18n'
 import Message from '@/components/misc/Message.vue'
 import FormField from '@/components/input/FormField.vue'
 import type {IApiToken} from '@/modelTypes/IApiToken'
+import type {IProject} from '@/modelTypes/IProject'
+import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import {useProjectStore} from '@/stores/projects'
 
 const service = new ApiTokenService()
 const tokens = ref<IApiToken[]>([])
@@ -32,8 +35,13 @@ const newTokenPermissionValid = ref(true)
 const apiTokenTitle = ref()
 const tokenCreatedSuccessMessage = ref('')
 
+const selectedProject = ref<IProject | null>(null)
+const includeSubProjects = ref(false)
+
 const showDeleteModal = ref<boolean>(false)
 const tokenToDelete = ref<IApiToken>()
+
+const projectStore = useProjectStore()
 
 const {t} = useI18n()
 
@@ -158,11 +166,16 @@ async function createToken() {
 		newToken.value.expiresAt = new Date(newTokenExpiryCustom.value)
 	}
 
+	newToken.value.projectId = selectedProject.value?.id || 0
+	newToken.value.includeSubProjects = selectedProject.value ? includeSubProjects.value : false
+
 	const token = await service.create(newToken.value)
 	tokenCreatedSuccessMessage.value = t('user.settings.apiTokens.tokenCreatedSuccess', {token: token.token})
 	newToken.value = new ApiTokenModel()
 	newTokenExpiry.value = 30
 	newTokenExpiryCustom.value = new Date()
+	selectedProject.value = null
+	includeSubProjects.value = false
 	resetPermissions()
 	tokens.value.push(token)
 	showCreateForm.value = false
@@ -226,6 +239,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					<tr>
 						<th>{{ $t('misc.id') }}</th>
 						<th>{{ $t('user.settings.apiTokens.attributes.title') }}</th>
+						<th>{{ $t('user.settings.apiTokens.attributes.projectScope') }}</th>
 						<th>{{ $t('user.settings.apiTokens.attributes.permissions') }}</th>
 						<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
 						<th>{{ $t('misc.created') }}</th>
@@ -241,6 +255,23 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 					>
 						<td>{{ tk.id }}</td>
 						<td>{{ tk.title }}</td>
+						<td>
+							<template v-if="tk.projectId">
+								{{ projectStore.projects[tk.projectId]?.title || `#${tk.projectId}` }}
+								<span
+									v-if="tk.includeSubProjects"
+									class="has-text-grey"
+								>
+									({{ $t('user.settings.apiTokens.withSubProjects') }})
+								</span>
+							</template>
+							<span
+								v-else
+								class="has-text-grey"
+							>
+								{{ $t('user.settings.apiTokens.allProjects') }}
+							</span>
+						</td>
 						<td class="is-capitalized">
 							<template
 								v-for="(v, p) in tk.permissions"
@@ -328,6 +359,24 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 						:config="flatPickerConfig"
 					/>
 				</div>
+			</div>
+
+			<!-- Project Scope -->
+			<div class="field">
+				<label class="label">{{ $t('user.settings.apiTokens.attributes.projectScope') }}</label>
+				<p class="mbe-2">
+					{{ $t('user.settings.apiTokens.projectScopeExplanation') }}
+				</p>
+				<ProjectSearch
+					v-model="selectedProject"
+				/>
+				<FancyCheckbox
+					v-if="selectedProject && selectedProject.id"
+					v-model="includeSubProjects"
+					class="mbs-2"
+				>
+					{{ $t('user.settings.apiTokens.includeSubProjects') }}
+				</FancyCheckbox>
 			</div>
 
 			<!-- Permissions -->

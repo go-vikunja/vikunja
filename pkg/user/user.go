@@ -203,6 +203,11 @@ func (u *User) GetFailedPasswordAttemptsKey() string {
 // GetFromAuth returns a user object from a web.Auth object and returns an error if the underlying type
 // is not a user object
 func GetFromAuth(a web.Auth) (*User, error) {
+	// Unwrap wrapper types (e.g. ProjectScopedAuth) to get the underlying auth
+	if unwrapper, ok := a.(web.AuthUnwrapper); ok {
+		a = unwrapper.UnwrapAuth()
+	}
+
 	u, is := a.(*User)
 	if !is {
 		typ := reflect.TypeOf(a)

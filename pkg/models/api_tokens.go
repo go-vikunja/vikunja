@@ -48,6 +48,10 @@ type APIToken struct {
 	APIPermissions APIPermissions `xorm:"json not null permissions" json:"permissions" valid:"required"`
 	// The date when this key expires.
 	ExpiresAt time.Time `xorm:"not null" json:"expires_at" valid:"required"`
+	// When set, restricts this token to only access resources belonging to this project.
+	ProjectID int64 `xorm:"bigint null index" json:"project_id"`
+	// When true and ProjectID is set, the token also covers all descendant sub-projects.
+	IncludeSubProjects bool `xorm:"not null default false" json:"include_sub_projects"`
 
 	// A timestamp when this api key was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
@@ -103,6 +107,22 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	if err := PermissionsAreValid(t.APIPermissions); err != nil {
 		return err
+	}
+
+	if t.ProjectID != 0 {
+		// Verify the project exists and the token owner has at least read access
+		p := &Project{ID: t.ProjectID}
+		canRead, _, err := p.CanRead(s, a)
+		if err != nil {
+			return err
+		}
+		if !canRead {
+			return ErrProjectDoesNotExist{ID: t.ProjectID}
+		}
+	}
+
+	if t.IncludeSubProjects && t.ProjectID == 0 {
+		t.IncludeSubProjects = false
 	}
 
 	_, err = s.Insert(t)

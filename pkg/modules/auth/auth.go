@@ -170,6 +170,15 @@ func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Wrap with project scope if the token is project-scoped
+		if projectIDs, ok := c.Get("api_token_project_ids").([]int64); ok && len(projectIDs) > 0 {
+			return &models.ProjectScopedAuth{
+				Auth:       u,
+				ProjectIDs: projectIDs,
+			}, nil
+		}
+
 		return u, nil
 	}
 

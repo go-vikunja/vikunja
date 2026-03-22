@@ -48,5 +48,6 @@ devenv.local.nix
 # AI Tools
 /.claude/settings.local.json
 PLAN.md
+plans/
 /.crush/
 /.playwright-mcp

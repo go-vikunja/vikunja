@@ -61,6 +61,12 @@ type Auth interface {
 	GetID() int64
 }
 
+// AuthUnwrapper can be implemented by auth wrappers (e.g. project-scoped auth)
+// to allow unwrapping to the underlying auth object.
+type AuthUnwrapper interface {
+	UnwrapAuth() Auth
+}
+
 // Authprovider holds the implementation of an auth provider used by the application
 type Authprovider interface {
 	GetAuthObject(echo.Context) (Auth, error)

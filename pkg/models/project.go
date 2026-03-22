@@ -262,6 +262,19 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 		prs = append(prs, savedFiltersProject...)
 	}
 
+	// Filter by project scope if using a project-scoped API token
+	if scope := GetProjectScope(a); scope != nil {
+		filtered := make([]*Project, 0, len(prs))
+		for _, pr := range prs {
+			if ProjectScopeContains(scope, pr.ID) {
+				filtered = append(filtered, pr)
+			}
+		}
+		prs = filtered
+		resultCount = len(prs)
+		totalItems = int64(len(prs))
+	}
+
 	return prs, resultCount, totalItems, err
 }
 

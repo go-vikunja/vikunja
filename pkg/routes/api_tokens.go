@@ -99,5 +99,13 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context) er
 	c.Set("api_token", token)
 	c.Set("api_user", u)
 
+	if token.ProjectID != 0 {
+		projectIDs, err := models.GetProjectIDsForToken(s, token)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error").Wrap(err)
+		}
+		c.Set("api_token_project_ids", projectIDs)
+	}
+
 	return nil
 }

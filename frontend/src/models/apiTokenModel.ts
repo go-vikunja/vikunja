@@ -7,6 +7,8 @@ export default class ApiTokenModel extends AbstractModel<IApiToken> {
 	token = ''
 	permissions = null
 	expiresAt: Date = null
+	projectId = 0
+	includeSubProjects = false
 	created: Date = null
 	
 	constructor(data: Partial<IApiToken> = {}) {

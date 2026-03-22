@@ -28,3 +28,27 @@
   owner_id: 2
   created: 2023-09-01 07:00:00
   # token in plaintext is tk_5e29ae2ae079781ff73b0a3e0fe4d75a0b8dcb7c
+# Project-scoped token for user 1, scoped to project 1 (no sub-projects)
+- id: 4
+  title: 'project scoped token'
+  token_salt: abcTokenSlt
+  token_hash: 4f87c7025e7b4847c6eeeb89b4c258e3a0c4e7e2b8f3d1a6c5b9e2d4f7a8b3c1e6d5f4a3b2c1d0e9f8a7b6c5d4e3f2a1
+  token_last_eight: aabbccdd
+  permissions: '{"tasks":["read_all","update"],"projects":["read_all","read_one"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 1
+  project_id: 1
+  include_sub_projects: 0
+  created: 2023-09-01 07:00:00
+# Project-scoped token for user 1, scoped to project 1 (with sub-projects)
+- id: 5
+  title: 'project scoped token with sub-projects'
+  token_salt: defTokenSlt
+  token_hash: 5f87c7025e7b4847c6eeeb89b4c258e3a0c4e7e2b8f3d1a6c5b9e2d4f7a8b3c1e6d5f4a3b2c1d0e9f8a7b6c5d4e3f2a1
+  token_last_eight: ddeeffaa
+  permissions: '{"tasks":["read_all","update"],"projects":["read_all","read_one"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 1
+  project_id: 1
+  include_sub_projects: 1
+  created: 2023-09-01 07:00:00

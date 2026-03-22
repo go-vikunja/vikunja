@@ -212,11 +212,16 @@
           "text1": "Are you sure you want to delete the token \"{token}\"?",
           "text2": "This will revoke access to all applications or integrations using it. You cannot undo this."
         },
+        "projectScopeExplanation": "Optionally restrict this token to a specific project. Leave empty for access to all projects.",
+        "includeSubProjects": "Include sub-projects",
+        "allProjects": "All projects",
+        "withSubProjects": "+ sub-projects",
         "attributes": {
           "title": "Title",
           "titlePlaceholder": "Enter a title you will recognize later",
           "expiresAt": "Expires at",
-          "permissions": "Permissions"
+          "permissions": "Permissions",
+          "projectScope": "Project scope"
         }
       },
       "sessions": {

@@ -185,7 +185,22 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 				page: -1,
 			},
 		)
-		return projects, err
+		if err != nil {
+			return nil, err
+		}
+
+		// Filter by project scope if using a project-scoped API token
+		if scope := GetProjectScope(a); scope != nil {
+			filtered := make([]*Project, 0, len(projects))
+			for _, p := range projects {
+				if ProjectScopeContains(scope, p.ID) {
+					filtered = append(filtered, p)
+				}
+			}
+			projects = filtered
+		}
+
+		return projects, nil
 	}
 
 	// Check the project exists and the user has access on it
