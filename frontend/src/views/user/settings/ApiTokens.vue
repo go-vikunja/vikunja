@@ -417,7 +417,7 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 
 				<!-- Presets -->
 				<div class="preset-buttons mbe-4">
-					<label class="label is-small">{{ $t('user.settings.apiTokens.presets.title') }}</label>
+					<label class="label">{{ $t('user.settings.apiTokens.presets.title') }}</label>
 					<div
 						class="is-flex"
 						style="gap: .5rem; flex-wrap: wrap;"
