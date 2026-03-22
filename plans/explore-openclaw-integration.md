@@ -10,216 +10,283 @@ Both frameworks can connect to external services, execute code, and manage tasks
 
 ---
 
+## Design Principle
+
+**Assigning an agent to a task should feel exactly like assigning a coworker.**
+
+- Bot users appear in the same assignee picker as human users
+- You assign them the same way — search, click, done
+- Progress shows up as regular comments in the task thread
+- The task gets marked done when the bot finishes
+- The only visual difference is a small bot badge next to the name
+
+No separate "agent panels," no special buttons. The existing assignee UX *is* the interface.
+
+---
+
 ## Integration Concept
 
 The core idea: **assign an AI agent (via OpenClaw or NanoClaw) to a Vikunja task, and the agent autonomously works to complete it.**
 
 This requires two directions of communication:
 
-1. **Vikunja → Agent**: "Here's a task, go do it" (task assignment triggers agent work)
-2. **Agent → Vikunja**: "Here's my progress/result" (agent updates task status, adds comments, attaches files)
+1. **Vikunja → Agent**: Assigning a bot user to a task triggers a dispatch to the agent's endpoint
+2. **Agent → Vikunja**: The agent calls back via the standard Vikunja API to post comments, update the task, attach files, and mark it done
 
 ---
 
 ## What Already Exists in Vikunja That Helps
 
-### Webhooks (outbound notifications)
-- Project-level and user-level webhooks already exist
-- Events like `task.created`, `task.updated`, `task.assignee.created` can trigger HTTP calls
-- HMAC-SHA256 signing, Basic Auth support
-- **This handles Vikunja → Agent notifications**
+### Task Assignees (the primary UX surface)
+- Tasks can have multiple assignees (users)
+- Assignment dispatches `TaskAssigneeCreatedEvent`
+- Existing assignee picker UI with search
+- **This becomes the integration trigger** — assigning a bot user dispatches work to the agent
 
 ### REST API + API Tokens (inbound control)
 - Full CRUD API for tasks, comments, attachments, assignees
 - Scoped API tokens (`tk_` prefix) with per-route permissions
-- **This handles Agent → Vikunja updates**
+- **This handles Agent → Vikunja updates** — the bot user gets its own API token
 
 ### Event System (Watermill-based)
 - Async event dispatch with retry logic
 - Existing task lifecycle events (created, updated, deleted, assignee changes)
 - Listener registration pattern for extending behavior
+- **New listener on `TaskAssigneeCreatedEvent`** checks if assignee is a bot and dispatches
 
 ### Cron System
 - `robfig/cron/v3` for scheduled background work
 - Used for reminders, overdue checks, cleanup jobs
+- **Can monitor running agent tasks** for timeouts/failures
 
-### Task Assignees
-- Tasks can have multiple assignees (users)
-- Assignment dispatches `TaskAssigneeCreatedEvent`
+### Webhooks (outbound notifications)
+- Project-level and user-level webhooks already exist
+- HMAC-SHA256 signing, Basic Auth support
+- Could supplement the integration but not the primary mechanism
 
 ---
 
 ## What Would Need to Change
 
-### Option A: Lightweight / Webhook-Based Integration (Recommended Starting Point)
+### 1. Bot User Identity (`pkg/user/user.go`)
 
-This approach uses existing Vikunja primitives and puts the orchestration logic in an external bridge service.
+Add `IsBot` flag to the User struct:
+```go
+IsBot bool `xorm:"bool default false" json:"is_bot"`
+```
 
-#### New Components
+Bot users are real users with a special flag. They:
+- Appear in the assignee picker alongside regular users
+- Show a bot badge in the UI (avatar, comments, assignee lists)
+- Cannot log in via the web UI — API token only
+- Don't receive email notifications (reminders, overdue, etc.)
+- Don't need email confirmation, password, or TOTP
+- Have their own audit trail — every action is attributed to the bot
 
-1. **Agent Configuration Model** (`pkg/models/agents.go`)
-   - New database table `agents` storing agent connections:
-     ```go
-     type Agent struct {
-         ID          int64
-         Name        string     // "My OpenClaw Agent"
-         Type        string     // "openclaw" or "nanoclaw"
-         EndpointURL string     // Agent API base URL
-         APIKey      string     // Auth credential for the agent
-         ProjectID   int64      // Scoped to a project
-         CreatedByID int64
-         Created     time.Time
-         Updated     time.Time
-     }
-     ```
-   - CRUD + Permissions (project-level admin only)
-   - Migration file for the new table
+**Database migration:** Add `is_bot` column to `users` table.
 
-2. **Agent Assignment on Tasks** (`pkg/models/task_agent.go`)
-   - New table `task_agents` linking tasks to agents:
-     ```go
-     type TaskAgent struct {
-         ID       int64
-         TaskID   int64
-         AgentID  int64
-         Status   string // "pending", "running", "completed", "failed"
-         Created  time.Time
-         Updated  time.Time
-     }
-     ```
-   - When an agent is assigned to a task, Vikunja sends the task details to the agent's endpoint
-   - Agent status tracked and displayed on the task
+### 2. Agent Connection Config on Bot Users (`pkg/user/user.go` or new model)
 
-3. **Agent Dispatch Listener** (`pkg/models/listeners.go`)
-   - New event listener for `TaskAgentAssignedEvent`
-   - Sends HTTP POST to the agent's endpoint with task details:
-     ```json
-     {
-       "task_id": 123,
-       "title": "Fix the login bug",
-       "description": "Users report...",
-       "callback_url": "https://vikunja.example.com/api/v1",
-       "callback_token": "tk_..."
-     }
-     ```
-   - The callback URL and token let the agent call back into Vikunja's API
+Bot users need agent connection details. Two approaches:
 
-4. **Agent Callback API Token Generation**
-   - When dispatching to an agent, auto-generate a scoped API token
-   - Permissions limited to: update this task, add comments, add attachments
-   - Token expires when task is marked done or after a configurable TTL
+**Option A: Fields on the User model** (simpler)
+```go
+AgentEndpointURL string `xorm:"text null" json:"agent_endpoint_url,omitempty"`
+AgentAPIKey      string `xorm:"text null" json:"-"` // never exposed in API responses
+AgentType        string `xorm:"varchar(50) null" json:"agent_type,omitempty"` // "openclaw", "nanoclaw"
+```
 
-5. **API Routes** (`pkg/routes/api/v1/`)
-   - `GET /projects/{id}/agents` — list configured agents for a project
-   - `PUT /projects/{id}/agents` — add an agent configuration
-   - `POST /projects/{id}/agents/{agentID}` — update agent config
-   - `DELETE /projects/{id}/agents/{agentID}` — remove agent
-   - `PUT /tasks/{id}/agents` — assign agent to task
-   - `DELETE /tasks/{id}/agents/{agentID}` — unassign agent
-   - `GET /tasks/{id}/agents` — list agents on a task with status
-   - `POST /tasks/{id}/agents/{agentID}/status` — agent reports status back (webhook receiver)
+**Option B: Separate `bot_configs` table** (cleaner separation)
+```go
+type BotConfig struct {
+    ID          int64
+    UserID      int64  // FK to users, unique (one config per bot user)
+    EndpointURL string
+    APIKey      string // encrypted at rest
+    Type        string // "openclaw", "nanoclaw"
+    Created     time.Time
+    Updated     time.Time
+}
+```
 
-6. **Frontend Changes**
-   - **Agent config UI** in project settings (`frontend/src/views/project/settings/`)
-     - Form to add/edit agent connections (name, type, URL, API key)
-   - **Task detail agent panel** (`frontend/src/components/tasks/`)
-     - Show assigned agents and their status
-     - Button to assign an available agent to the task
-     - Live status indicator (pending/running/completed/failed)
-   - **New Pinia store** (`frontend/src/stores/agents.ts`)
-   - **New service** (`frontend/src/services/agent.ts`)
-   - **New model types** (`frontend/src/modelTypes/IAgent.ts`)
+**Recommendation: Option B** — keeps the User model clean, allows the config to be managed independently, and makes it easier to encrypt the API key at rest.
 
-#### Flow
+### 3. Agent Dispatch Listener (`pkg/models/listeners.go`)
+
+New listener on `TaskAssigneeCreatedEvent`:
 
 ```
-User assigns agent to task in Vikunja UI
-    → Vikunja creates TaskAgent record
-    → Vikunja generates scoped API token
-    → Vikunja POSTs task details + callback token to agent endpoint
-    → Agent starts working autonomously
-    → Agent calls back to Vikunja API:
-        - POST /tasks/{id}/comments → progress updates
-        - PUT /tasks/{id} → update status, mark done
-        - PUT /tasks/{id}/attachments → attach deliverables
-    → Vikunja shows agent progress in task detail view
+When a bot user is assigned to a task:
+  1. Load the bot's agent config (endpoint URL, API key, type)
+  2. Load full task context (title, description, comments, attachments, related tasks)
+  3. Generate a scoped API token for the bot user (if one doesn't exist)
+  4. POST to the agent endpoint with task details + callback token
+  5. The agent starts working autonomously
 ```
+
+Corresponding listener on `TaskAssigneeDeletedEvent`:
+```
+When a bot user is unassigned from a task:
+  1. POST a cancellation request to the agent endpoint
+  2. Agent stops work on that task
+```
+
+### 4. Agent Adapter Interface (`pkg/modules/agents/`)
+
+Generic interface with provider-specific implementations:
+
+```go
+type AgentProvider interface {
+    // Dispatch sends a task to the agent for processing
+    Dispatch(ctx context.Context, task *models.Task, callbackURL string, callbackToken string) error
+    // Cancel tells the agent to stop working on a task
+    Cancel(ctx context.Context, taskID int64) error
+    // Status checks if the agent is healthy
+    Status(ctx context.Context) (AgentStatus, error)
+}
+```
+
+Implementations:
+- `pkg/modules/agents/openclaw/` — OpenClaw HTTP API adapter
+- `pkg/modules/agents/nanoclaw/` — NanoClaw adapter
+
+### 5. Bot User Creation API
+
+New endpoint or flag on existing user creation:
+
+- `PUT /api/v1/bots` — create a bot user (admin or project admin only)
+  - Takes: name, username, agent type, endpoint URL, API key
+  - Creates user with `is_bot: true`
+  - Creates associated `BotConfig`
+  - Auto-generates an API token for the bot
+  - Returns the bot user + token (token shown only once)
+
+- `GET /api/v1/bots` — list bot users accessible to current user
+- `POST /api/v1/bots/{id}` — update bot config
+- `DELETE /api/v1/bots/{id}` — deactivate bot user
+
+### 6. Frontend Changes
+
+**Minimal — that's the point.** The UX piggybacks on existing patterns:
+
+#### Assignee Picker (modify existing)
+- Bot users already appear in the user list (they're real users)
+- Add a small bot icon/badge next to bot user names
+- No other changes needed — assignment works identically
+
+#### User/Avatar Display (`frontend/src/components/misc/User.vue`)
+- Show bot badge (small robot icon) on avatar
+- Applied everywhere users are displayed: assignee lists, comments, activity log
+
+#### Task Comments
+- Comments from bot users get a subtle "bot" indicator
+- No separate rendering — same comment thread, same layout
+- Users reply to bot comments naturally (the agent sees replies via API polling or webhooks)
+
+#### Bot Management UI (new, minimal)
+- Settings page for creating/managing bot users
+- Form: name, username, agent type, endpoint URL, API key
+- Shows the generated API token once on creation
+- Could live under team/workspace settings
+
+#### Model Types (`frontend/src/modelTypes/IUser.ts`)
+- Add `isBot: boolean` to `IUser`
+- Add `agentType?: string` to `IUser`
+
+### 7. Guard Rails & Edge Cases
+
+**Authentication:**
+- Bot users cannot authenticate via username/password or OIDC
+- Only API token auth is valid for bots
+- Login endpoint rejects users with `is_bot: true`
+
+**Notifications:**
+- Skip email notifications for bot users (reminders, overdue, mentions)
+- Bot users shouldn't trigger "user mentioned" notifications when they @-mention someone? Or should they? (configurable)
+
+**Permissions:**
+- Bot users need project access just like regular users (added to project/team)
+- Bot actions are scoped by the same permission system
+- Bot can only modify tasks in projects it has write access to
+
+**Rate Limiting:**
+- Consider rate limits on bot API calls to prevent runaway agents
+- Configurable per bot or globally
+
+**Failure Handling:**
+- Cron job checks for stalled agent tasks (assigned to bot, no activity for X minutes)
+- Notify the user who assigned the bot if the agent appears stuck
+- Auto-unassign after configurable timeout
 
 ---
 
-### Option B: Deep Integration (More Ambitious)
+## The User Experience, End to End
 
-Builds on Option A with additional capabilities:
+### Setup (one-time)
+1. Admin goes to Settings → Bots
+2. Creates a bot: "CodeReview Bot", type: OpenClaw, endpoint: `https://openclaw.example.com/api/agent`
+3. Vikunja creates a bot user, generates an API token, shows it once
+4. Admin adds the bot user to the relevant project(s)/team(s)
 
-7. **Agent Status Polling Cron**
-   - Background cron job checking agent health/status
-   - Polls agents with `status: "running"` to detect stalls
-   - Updates task status if agent becomes unreachable
-   - Auto-retry logic for transient failures
+### Daily Use
+1. User creates a task: "Review PR #42 for security issues"
+2. User clicks the assignee picker, sees both coworkers and bots
+3. User assigns "CodeReview Bot" — looks just like assigning a coworker
+4. Behind the scenes: Vikunja dispatches the task to OpenClaw
+5. Minutes later, comments start appearing on the task from the bot:
+   - "Started reviewing PR #42..."
+   - "Found 2 potential issues: SQL injection in `user_query.go:45`, missing auth check in `api/handler.go:112`"
+   - "Full report attached."
+6. Bot attaches a detailed report file
+7. Bot marks the task as done
+8. User sees it all in the normal task detail view — no special UI needed
 
-8. **Agent Chat Interface**
-   - Extend task comments to support "agent messages"
-   - Add a `source` field to `TaskComment` ("user" vs "agent")
-   - Frontend renders agent comments differently (distinct styling)
-   - Users can reply to agent comments to provide guidance
-
-9. **Agent Templates / Skills**
-   - Pre-configured agent profiles for common task types
-   - Map Vikunja labels/tags to agent skills
-   - "Code Review" agent, "Research" agent, "Writing" agent, etc.
-
-10. **Multi-Agent Orchestration**
-    - Multiple agents on a single task (one researches, another implements)
-    - Agent-to-agent handoff via task relations
-    - Parent task decomposition: agent creates subtasks and assigns sub-agents
+### Collaboration
+- User can reply to bot comments with clarifications
+- User can unassign the bot to stop it
+- User can assign a different bot or a human to take over
+- Multiple bots can be assigned (one researches, another implements)
 
 ---
 
-## Implementation Effort Estimate
+## Implementation Phases
 
-### Option A (Recommended MVP)
+### Phase 1: Bot User Foundation
+- Add `is_bot` field to User model + migration
+- Add `BotConfig` model + migration
+- Bot creation API endpoint
+- Skip email/password/TOTP requirements for bots
+- Block web login for bots
+- Skip email notifications for bots
+- Frontend: `isBot` on IUser, bot badge on User.vue
 
-| Component | Files to Create/Modify | Scope |
-|-----------|----------------------|-------|
-| Agent model + migration | 3-4 new Go files | New DB table, CRUD, permissions |
-| TaskAgent model + migration | 3-4 new Go files | New DB table, CRUD, permissions |
-| Agent dispatch listener | Modify `listeners.go`, new dispatch logic | HTTP client to agent |
-| API token generation | Modify `api_tokens.go` | Auto-scoped token creation |
-| API routes | Modify `routes.go`, new handler files | 8-10 new endpoints |
-| Frontend: model + service | 2-4 new TS files | Types, API service layer |
-| Frontend: store | 1 new file | Pinia store for agents |
-| Frontend: project settings UI | 1-2 new Vue components | Agent config form |
-| Frontend: task detail panel | 1-2 new Vue components | Agent status display |
-| Events | Modify `events.go` | New agent-related events |
-| i18n | Modify `en.json` | Translation strings |
+**~8-12 files changed**
 
-**Roughly 15-25 files to create or modify.**
+### Phase 2: Agent Dispatch
+- Agent provider interface (`pkg/modules/agents/`)
+- OpenClaw adapter
+- NanoClaw adapter
+- Listener on `TaskAssigneeCreatedEvent` to dispatch to agent
+- Listener on `TaskAssigneeDeletedEvent` to cancel agent work
+- Scoped API token auto-generation for bots
 
-### Key Decisions to Make
+**~6-10 new files**
 
-1. **OpenClaw vs NanoClaw vs Both?**
-   - OpenClaw has a documented HTTP API (`/api/agent/*` endpoints)
-   - NanoClaw is simpler, built on Claude Agent SDK
-   - Could support both via an adapter pattern (common interface, provider-specific implementations)
-   - Recommendation: **Start with a generic interface, implement OpenClaw adapter first** since it has the richer API
+### Phase 3: Monitoring & Resilience
+- Cron job for stalled agent detection
+- Notify assigning user on agent failure
+- Agent health check endpoint
+- Rate limiting for bot API calls
 
-2. **Security model for agent callbacks**
-   - Scoped API tokens (recommended) vs. separate agent auth mechanism
-   - Should agents get their own "user" identity or act as the assigning user?
-   - Recommendation: **Agents act as a special "agent" user type** — auditable, distinct from human users
+**~3-5 files**
 
-3. **Task context sent to agent**
-   - Just the task? Task + comments? Task + related tasks? Task + project context?
-   - Recommendation: **Task + description + comments**, expandable later
+### Phase 4: Polish
+- Bot management UI in frontend settings
+- Bot comment styling
+- Configuration for agent dispatch behavior (what context to send, timeouts)
+- Documentation
 
-4. **Agent failure handling**
-   - What happens when an agent fails or goes silent?
-   - Recommendation: **Configurable timeout, cron-based health check, notify assigning user on failure**
-
-5. **Where does the bridge service run?**
-   - Option A keeps it inside Vikunja (direct HTTP calls to agent endpoints)
-   - Could also be an external microservice that consumes Vikunja webhooks
-   - Recommendation: **Inside Vikunja** for simplicity (new `pkg/modules/agents/` package)
+**~4-6 files**
 
 ---
 
@@ -227,56 +294,62 @@ Builds on Option A with additional capabilities:
 
 ```
 pkg/
+├── user/
+│   └── user.go                          # + IsBot field
 ├── models/
-│   ├── agents.go                    # Agent configuration model
-│   ├── agents_permissions.go        # Agent permissions
-│   ├── task_agents.go               # Task-Agent assignment model
-│   ├── task_agents_permissions.go   # Task-Agent permissions
-│   └── events.go                    # + new agent events
+│   ├── bot_config.go                    # BotConfig model (endpoint, API key, type)
+│   ├── bot_config_permissions.go        # BotConfig permissions
+│   ├── events.go                        # + BotAssignedToTaskEvent
+│   └── listeners.go                     # + bot dispatch listener
 ├── modules/
 │   └── agents/
-│       ├── agent.go                 # Common agent interface
+│       ├── agent.go                     # AgentProvider interface
+│       ├── dispatch.go                  # Dispatch logic (called by listener)
 │       ├── openclaw/
-│       │   └── openclaw.go          # OpenClaw adapter
-│       ├── nanoclaw/
-│       │   └── nanoclaw.go          # NanoClaw adapter
-│       └── dispatch.go              # Task dispatch logic
+│       │   └── openclaw.go              # OpenClaw adapter
+│       └── nanoclaw/
+│           └── nanoclaw.go              # NanoClaw adapter
 ├── routes/
 │   └── api/v1/
-│       └── agents.go                # Agent API handlers
+│       └── bots.go                      # Bot CRUD endpoints
 
 frontend/src/
 ├── modelTypes/
-│   └── IAgent.ts                    # Agent TypeScript interfaces
-├── services/
-│   └── agent.ts                     # Agent API service
-├── stores/
-│   └── agents.ts                    # Pinia store
+│   └── IUser.ts                         # + isBot, agentType
+├── models/
+│   └── user.ts                          # + isBot default
 ├── components/
-│   └── tasks/
-│       └── partials/
-│           └── agentPanel.vue       # Agent status on task detail
+│   └── misc/
+│       └── User.vue                     # + bot badge
 ├── views/
-│   └── project/
-│       └── settings/
-│           └── agents.vue           # Agent configuration page
+│   └── settings/
+│       └── Bots.vue                     # Bot management page
 ```
+
+---
+
+## Key Design Decisions
+
+| Decision | Recommendation | Rationale |
+|----------|---------------|-----------|
+| Bot identity | `is_bot` flag on User | Bots are first-class citizens, appear in all user contexts naturally |
+| Agent config storage | Separate `BotConfig` table | Clean separation, easier to encrypt API keys |
+| UX surface | Existing assignee picker | "Assign work to a coworker" feeling — no new concepts to learn |
+| Dispatch trigger | `TaskAssigneeCreatedEvent` listener | Piggybacks on existing event system, zero new UI needed |
+| Agent communication | Standard Vikunja REST API | Bot uses same API as any other client — comments, updates, attachments |
+| Provider support | Adapter pattern with interface | Support OpenClaw and NanoClaw (and future providers) cleanly |
+| Progress reporting | Task comments | Shows up naturally in the existing task detail view |
+| Completion | Bot marks task done via API | Same as a human marking it done — no special mechanism |
 
 ---
 
 ## Summary
 
-The integration is very feasible because Vikunja already has the key building blocks:
-- **Webhooks** for outbound notifications
-- **API tokens** for secure inbound callbacks
-- **Event system** for reactive dispatch
-- **Cron** for health monitoring
+The integration is built on one core insight: **bot users are users.** By adding an `is_bot` flag and wiring up agent dispatch on assignment, the entire existing Vikunja UX — assignee picker, comments, task status, attachments — becomes the agent interface. No new UI paradigms needed.
 
-The core new work is:
-1. A new `Agent` model for storing agent configurations
-2. A new `TaskAgent` model for task-agent assignments
-3. HTTP dispatch logic to send tasks to agents
-4. Auto-generated scoped API tokens for callbacks
-5. Frontend UI for configuration and status display
+The new code is focused on:
+1. Bot user identity (`is_bot` flag + `BotConfig`)
+2. Agent dispatch (listener + provider adapters)
+3. Visual distinction (bot badge in frontend)
 
-Start with Option A (webhook-based, ~15-25 files), validate the concept, then expand to Option B features as needed.
+Everything else — permissions, API, events, comments, task lifecycle — already works.
