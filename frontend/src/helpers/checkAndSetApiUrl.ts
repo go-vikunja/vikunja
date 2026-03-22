@@ -46,7 +46,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 		throw new InvalidApiUrlProvidedError()
 	}
 
-	const origUrlToCheck = urlToCheck
+	const origPathname = urlToCheck.pathname
 
 	const oldUrl = window.API_URL
 	window.API_URL = urlToCheck.toString()
@@ -70,7 +70,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 		})
 		.catch(e => {
 			// Check if it is reachable at /api/v1 and https
-			urlToCheck.pathname = origUrlToCheck.pathname
+			urlToCheck.pathname = origPathname
 			if (
 				!urlToCheck.pathname.endsWith('/api/v1') &&
 				!urlToCheck.pathname.endsWith('/api/v1/')
@@ -92,7 +92,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 		})
 		.catch(e => {
 			// Check if it is reachable at :API_DEFAULT_PORT and /api/v1
-			urlToCheck.pathname = origUrlToCheck.pathname
+			urlToCheck.pathname = origPathname
 			if (
 				!urlToCheck.pathname.endsWith('/api/v1') &&
 				!urlToCheck.pathname.endsWith('/api/v1/')
