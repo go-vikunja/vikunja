@@ -103,8 +103,9 @@ export default defineConfig(({command, mode}) => {
 })
 
 function getBuildConfig(env: Record<string, string>) {
+	const base = env.VIKUNJA_FRONTEND_BASE || '/'
 	return {
-		base: env.VIKUNJA_FRONTEND_BASE,
+		base,
 		// https://vitest.dev/config/
 		test: {
 			environment: 'happy-dom',
@@ -142,17 +143,20 @@ function getBuildConfig(env: Record<string, string>) {
 				svgo: false,
 			}),
 			// if VIKUNJA_BUILD_STANDALONE=true, replace __VIKUNJA_API_URL__ in index.html
-			// at build time with the configured base path + /api/v1.
-			// This only matters for standalone frontend deployments (via HTTP servers).
-			// Otherwise the Go backend will replace this at serve time with service.publicurl.
+			// at build time. For standalone frontend deployments (e.g. nginx).
+			// - If VIKUNJA_API_URL is set, use it as API_BASE. This supports deployments
+			//   where the backend is at a different origin/path than the frontend.
+			// - Otherwise, derive the API URL from VIKUNJA_FRONTEND_BASE + /api/v1.
+			// When VIKUNJA_BUILD_STANDALONE is not set, the marker stays in the HTML
+			// so the Go backend can replace it at serve time with service.publicurl.
 			{
 				name: 'vikunja-api-url',
 				transformIndexHtml(html: string) {
 					if (env.VIKUNJA_BUILD_STANDALONE !== 'true') {
-						return html;
+						return html
 					}
-					const base = (env.VIKUNJA_FRONTEND_BASE || '/').replace(/\/+$/, '')
-					const apiUrl = base + '/api/v1'
+					const apiUrl = env.VIKUNJA_API_URL
+						|| (base.replace(/\/+$/, '') + '/api/v1')
 					return html.replace('__VIKUNJA_API_URL__', apiUrl)
 				},
 			},
