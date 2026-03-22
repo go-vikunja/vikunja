@@ -41,6 +41,86 @@ const route = useRoute()
 
 const now = new Date()
 
+interface TokenPreset {
+	id: string
+	groups: Record<string, string[] | '*'>
+}
+
+const presets: TokenPreset[] = [
+	{
+		id: 'readOnly',
+		groups: {
+			'*': ['read_one', 'read_all'],
+		},
+	},
+	{
+		id: 'tasks',
+		groups: {
+			'tasks': '*',
+			'tasks_attachments': '*',
+			'tasks_assignees': '*',
+			'tasks_labels': '*',
+			'tasks_comments': '*',
+			'tasks_relations': '*',
+			'labels': ['read_one', 'read_all', 'create'],
+			'projects': ['read_one', 'read_all'],
+			'projects_views': ['read_one', 'read_all'],
+			'projects_views_tasks': ['read_one', 'read_all'],
+		},
+	},
+	{
+		id: 'projects',
+		groups: {
+			'projects': '*',
+			'projects_views': '*',
+			'projects_teams': '*',
+			'projects_users': '*',
+			'projects_shares': '*',
+			'projects_webhooks': '*',
+			'projects_buckets': '*',
+			'projects_views_tasks': '*',
+			'tasks': ['read_one', 'read_all'],
+			'teams': ['read_one', 'read_all'],
+		},
+	},
+	{
+		id: 'fullAccess',
+		groups: {
+			'*': '*',
+		},
+	},
+]
+
+function applyPreset(preset: TokenPreset) {
+	resetPermissions()
+
+	for (const [groupKey, permissions] of Object.entries(preset.groups)) {
+		if (groupKey === '*') {
+			// Apply to all groups
+			for (const group of Object.keys(availableRoutes.value)) {
+				applyPermissionsToGroup(group, permissions)
+			}
+		} else if (availableRoutes.value[groupKey]) {
+			applyPermissionsToGroup(groupKey, permissions)
+		}
+	}
+}
+
+function applyPermissionsToGroup(group: string, permissions: string[] | '*') {
+	if (permissions === '*') {
+		// Select all permissions in this group
+		selectPermissionGroup(group, true)
+		newTokenPermissionsGroup.value[group] = true
+	} else {
+		for (const perm of permissions) {
+			if (newTokenPermissions.value[group]?.[perm] !== undefined) {
+				newTokenPermissions.value[group][perm] = true
+			}
+		}
+		toggleGroupPermissionsFromChild(group, true)
+	}
+}
+
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatLong'),
 	altInput: true,
@@ -334,6 +414,26 @@ function toggleGroupPermissionsFromChild(group: string, checked: boolean) {
 			<div class="field">
 				<label class="label">{{ $t('user.settings.apiTokens.attributes.permissions') }}</label>
 				<p>{{ $t('user.settings.apiTokens.permissionExplanation') }}</p>
+
+				<!-- Presets -->
+				<div class="preset-buttons mbe-4">
+					<label class="label is-small">{{ $t('user.settings.apiTokens.presets.title') }}</label>
+					<div
+						class="is-flex"
+						style="gap: .5rem; flex-wrap: wrap;"
+					>
+						<XButton
+							v-for="preset in presets"
+							:key="preset.id"
+							variant="secondary"
+							type="button"
+							@click="applyPreset(preset)"
+						>
+							{{ $t(`user.settings.apiTokens.presets.${preset.id}`) }}
+						</XButton>
+					</div>
+				</div>
+
 				<div
 					v-for="(routes, group) in availableRoutes"
 					:key="group"
