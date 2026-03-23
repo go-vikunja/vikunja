@@ -103,7 +103,7 @@ func doGet(url string, result ...interface{}) (err error) {
 
 	req.Header.Add("Authorization", "Client-ID "+config.BackgroundsUnsplashAccessToken.GetString())
 	hc := http.Client{}
-	resp, err := hc.Do(req)
+	resp, err := hc.Do(req) // #nosec G704 -- URL is constructed from hardcoded Unsplash API base
 	if err != nil {
 		return
 	}
@@ -260,7 +260,7 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	if err != nil {
 		return
 	}
-	resp, err := (&http.Client{}).Do(req)
+	resp, err := (&http.Client{}).Do(req) // #nosec G704 -- URL is from Unsplash API response
 	if err != nil {
 		return err
 	}
@@ -372,7 +372,7 @@ func pingbackByPhotoID(photoID string) {
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}
-	_, err = (&http.Client{}).Do(req)
+	_, err = (&http.Client{}).Do(req) // #nosec G704 -- URL is hardcoded to views.unsplash.com
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}

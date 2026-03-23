@@ -48,7 +48,7 @@ func DownloadFileWithHeaders(url string, headers http.Header) (buf *bytes.Buffer
 	}
 
 	hc := http.Client{}
-	resp, err := hc.Do(req)
+	resp, err := hc.Do(req) // #nosec G704 -- URL is from migration provider API
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func DoGetWithHeaders(urlStr string, headers map[string]string) (resp *http.Resp
 			req.Header.Add(key, value)
 		}
 
-		resp, err = hc.Do(req) //nolint:bodyclose // Caller is responsible for closing on success
+		resp, err = hc.Do(req) //nolint:bodyclose,gosec // Caller is responsible for closing on success, URL is from migration provider API
 		if err != nil {
 			return err
 		}
@@ -122,7 +122,7 @@ func DoPostWithHeaders(urlStr string, form url.Values, headers map[string]string
 			req.Header.Add(key, value)
 		}
 
-		resp, err = hc.Do(req) //nolint:bodyclose // Caller is responsible for closing on success
+		resp, err = hc.Do(req) //nolint:bodyclose,gosec // Caller is responsible for closing on success, URL is from migration provider API
 		if err != nil {
 			return err
 		}

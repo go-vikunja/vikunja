@@ -360,7 +360,7 @@ func getUserDataDir() (string, error) {
 	}
 
 	// Ensure the directory exists
-	if err := os.MkdirAll(dataDir, 0o700); err != nil {
+	if err := os.MkdirAll(dataDir, 0o700); err != nil { // #nosec G703 -- dataDir is from config or XDG standard paths
 		return "", fmt.Errorf("could not create data directory %s: %w", dataDir, err)
 	}
 

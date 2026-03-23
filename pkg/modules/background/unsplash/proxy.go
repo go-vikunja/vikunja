@@ -30,7 +30,7 @@ func unsplashImage(url string, c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, err := (&http.Client{}).Do(req)
+	resp, err := (&http.Client{}).Do(req) // #nosec G704 -- URL is hardcoded to images.unsplash.com
 	if err != nil {
 		return err
 	}
