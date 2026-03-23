@@ -81,7 +81,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	dumpWriter.Close()
 	dumpFile.Close()
 
-	exported, err := os.Open(tmpFilename)
+	exported, err := os.Open(tmpFilename) // #nosec G703 -- tmpFilename is generated internally, not from user input
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	}
 
 	// Remove the old file
-	err = os.Remove(exported.Name())
+	err = os.Remove(exported.Name()) // #nosec G703 -- path from internally created temp file
 	if err != nil {
 		return err
 	}

@@ -187,7 +187,7 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err := (&http.Client{}).Do(req)
+	resp, err := (&http.Client{}).Do(req) // #nosec G704 -- URL is constructed from a hardcoded API prefix
 	if err != nil {
 		return err
 	}

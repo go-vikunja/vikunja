@@ -101,7 +101,7 @@ func DownloadImage(url string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
-	resp, err := (&http.Client{}).Do(req)
+	resp, err := (&http.Client{}).Do(req) // #nosec G704 -- URL comes from OIDC provider picture claim
 	if err != nil {
 		return nil, fmt.Errorf("failed to download image: %w", err)
 	}
