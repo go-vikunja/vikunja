@@ -48,7 +48,7 @@ func DownloadFileWithHeaders(url string, headers http.Header) (buf *bytes.Buffer
 	}
 
 	hc := utils.NewSSRFSafeHTTPClient()
-	resp, err := hc.Do(req)
+	resp, err := hc.Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		return nil, err
 	}

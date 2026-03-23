@@ -46,7 +46,7 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 		client := NewSSRFSafeHTTPClient()
 		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, nil)
 		require.NoError(t, err)
-		resp, err := client.Do(req)
+		resp, err := client.Do(req) //nolint:gosec // testing SSRF-safe client
 		require.NoError(t, err)
 		defer resp.Body.Close()
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -59,7 +59,7 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 		// Attempt to connect to localhost (non-routable)
 		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://127.0.0.1:1/test", nil)
 		require.NoError(t, err)
-		_, err = client.Do(req) //nolint:bodyclose
+		_, err = client.Do(req) //nolint:bodyclose,gosec // testing SSRF-safe client
 		require.Error(t, err)
 	})
 
@@ -75,7 +75,7 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 		client := NewSSRFSafeHTTPClient()
 		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, nil)
 		require.NoError(t, err)
-		resp, err := client.Do(req)
+		resp, err := client.Do(req) //nolint:gosec // testing SSRF-safe client
 		require.NoError(t, err)
 		defer resp.Body.Close()
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
