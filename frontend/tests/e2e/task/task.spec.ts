@@ -73,8 +73,13 @@ async function uploadAttachmentAndVerify(page: Page, taskId: number) {
 	const uploadAttachmentPromise = page.waitForResponse(response =>
 		response.url().includes(`/tasks/${taskId}/attachments`) && response.request().method() === 'PUT',
 	)
+	// The "Add Attachments" button triggers openFilePicker() which may open
+	// a native file chooser (especially inside a <dialog>). Handle it via the
+	// filechooser event so it doesn't block the test.
+	const fileChooserPromise = page.waitForEvent('filechooser')
 	await page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Attachments'}).click()
-	await page.locator('input[type=file]#files').setInputFiles('tests/fixtures/image.jpg')
+	const fileChooser = await fileChooserPromise
+	await fileChooser.setFiles('tests/fixtures/image.jpg')
 	await uploadAttachmentPromise
 
 	await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
