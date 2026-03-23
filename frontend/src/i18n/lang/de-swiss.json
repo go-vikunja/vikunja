@@ -138,10 +138,11 @@
 				"scanQR": "Alternativ chasch au de QR Code scanne:",
 				"passcode": "Code",
 				"passcodePlaceholder": "Ein von deiner TOTP-App generierter Code",
+				"confirmNotice": "Nach der Aktivierung der Zwei-Faktor-Authentifizierung wirst du überall abgemeldet und musst dich erneut anmelden.",
 				"setupSuccess": "Du hast die Zwei-Faktor-Authentifizierung erfolgreich eingerichtet!",
 				"enterPassword": "Bitte gib diis Passwort iih",
 				"disable": "Zweifaktor Authentifizierig uusschalte",
-				"confirmSuccess": "TOTP wurde verifiziert und ist nun verwendbar!",
+				"confirmSuccess": "Du hast die Zwei-Faktor-Authentifizierung erfolgreich eingerichtet!",
 				"disableSuccess": "Die Zwei-Faktor-Authentifizierung wurde erfolgreich deaktiviert."
 			},
 			"caldav": {
@@ -185,6 +186,10 @@
 			},
 			"backgroundBrightness": {
 				"title": "Hintergrundhelligkeit"
+			},
+			"webhooks": {
+				"title": "Webhook-Benachrichtigungen",
+				"description": "Konfiguriere Webhook-URLs, um POST-Anfragen zu erhalten, wenn Erinnerungs- oder Fälligkeitsereignisse ausgelöst werden. Diese Webhooks empfangen Ereignisse aus allen deinen Projekten."
 			},
 			"apiTokens": {
 				"title": "API-Tokens",
@@ -851,6 +856,7 @@
 			"doneAt": "{0} erledigt",
 			"updateSuccess": "Die Uufgab isch erfolgriich g'speichered wore.",
 			"deleteSuccess": "Die Uufgab isch erfolgriich g'chüblet wore.",
+			"duplicateSuccess": "Die Aufgabe wurde erfolgreich dupliziert.",
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
 			"due": "Fällig bis {at}",
@@ -877,6 +883,7 @@
 				"attachments": "Anhänge hinzufügen",
 				"relatedTasks": "Beziehung hinzufügen",
 				"moveProject": "Verschieben",
+				"duplicate": "Duplizieren",
 				"color": "Farbe setzen",
 				"delete": "Löschen",
 				"favorite": "Zu Favoriten hinzufügen",

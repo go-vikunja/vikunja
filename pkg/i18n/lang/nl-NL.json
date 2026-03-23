@@ -71,8 +71,6 @@
 				"message": "Dit is een vriendelijke herinnering voor taak \"%[1]s\" (%[2]s)."
 			},
 			"comment": {
-				"subject": "Re: %[1]s",
-				"mentioned_subject": "%[1]s noemde je in een reactie in \"%[2]s\"",
 				"mentioned_message": "**%[1]s** noemde je in een reactie:"
 			},
 			"assigned": {
@@ -88,8 +86,6 @@
 				"message": "%[1]s verwijderde taak \"%[2]s\" (%[3]s)"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s noemde je in nieuwe taak \"%[2]s\"",
-				"subject": "%[1]s noemde je in een taak \"%[2]s\"",
 				"message": "**%[1]s** noemde je in een taak:"
 			},
 			"overdue": {
@@ -137,7 +133,6 @@
 			"have_nice_day": "Fijne dag!",
 			"copy_url": "Als bovenstaande knop niet werkt, kopieer dan onderstaande URL en plak deze in de adresbalk van je browser:",
 			"actions": {
-				"open_task": "Taak openen",
 				"open_vikunja": "Vikunja openen",
 				"open_project": "Project openen",
 				"open_team": "Team openen",

@@ -17,9 +17,11 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/url"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -50,10 +52,23 @@ func TestProject(t *testing.T) {
 			rec, err := testHandler.testReadAllWithUser(url.Values{"s": []string{"Test1"}}, nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
-			assert.NotContains(t, rec.Body.String(), `Test2`)
-			assert.NotContains(t, rec.Body.String(), `Test3`)
-			assert.NotContains(t, rec.Body.String(), `Test4`)
-			assert.NotContains(t, rec.Body.String(), `Test5`)
+
+			var projects []models.Project
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &projects))
+
+			if db.ParadeDBAvailable() {
+				// ParadeDB fuzzy(1, prefix=true) on "Test1" matches Test2-Test9
+				// (edit distance 1), Test10+ (prefix), etc. The recursive CTE
+				// also pulls in child projects of matched parents.
+				require.Len(t, projects, 27)
+			} else {
+				// ILIKE '%Test1%' matches Test1, Test10, Test11, Test19, + favorites
+				require.Len(t, projects, 5)
+				assert.NotContains(t, rec.Body.String(), `Test2"`)
+				assert.NotContains(t, rec.Body.String(), `Test3`)
+				assert.NotContains(t, rec.Body.String(), `Test4`)
+				assert.NotContains(t, rec.Body.String(), `Test5`)
+			}
 		})
 		t.Run("Normal with archived projects", func(t *testing.T) {
 			rec, err := testHandler.testReadAllWithUser(url.Values{"is_archived": []string{"true"}}, nil)

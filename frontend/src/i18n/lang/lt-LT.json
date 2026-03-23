@@ -113,7 +113,6 @@
 				"setupSuccess": "Sėkmingai nustatei dviejų faktorių identifikavimą!",
 				"enterPassword": "Prašome įvesti savo slaptažodį",
 				"disable": "Išjungti dviejų faktoriu identifikavimą",
-				"confirmSuccess": "Tu sėkmingai patvirtinai savo TOTP nustatymus ir gail naudotis nuo dabar!",
 				"disableSuccess": "Dviejų faktorių identifikavimas buvo sėkmingai išjungtas."
 			},
 			"caldav": {

@@ -82,7 +82,7 @@ func ProjectHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser("dav/projects")
+	caldav.SetupUser(strings.TrimPrefix(ProjectHomeSetPath, "/"))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 	response := caldav.HandleRequest(c.Request())
 	response.Write(c.Response())
@@ -137,7 +137,7 @@ func PrincipalHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser("dav/principals/" + u.Username)
+	caldav.SetupUser(strings.TrimPrefix(principalPathForUser(u.Username), "/"))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 
 	response := caldav.HandleRequest(c.Request())
@@ -166,7 +166,7 @@ func EntryHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser("dav/principals/" + u.Username)
+	caldav.SetupUser(strings.TrimPrefix(principalPathForUser(u.Username), "/"))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 
 	response := caldav.HandleRequest(c.Request())

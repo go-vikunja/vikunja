@@ -17,6 +17,9 @@
 package models
 
 import (
+	"bytes"
+	"io"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
@@ -301,7 +304,12 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 	}
 	defer f.File.Close()
 
-	file, err := files.CreateWithSession(s, f.File, f.Name, f.Size, doer)
+	buf, err := io.ReadAll(f.File)
+	if err != nil {
+		return err
+	}
+
+	file, err := files.CreateWithSession(s, bytes.NewReader(buf), f.Name, f.Size, doer)
 	if err != nil {
 		return err
 	}
@@ -388,13 +396,17 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 			return nil, err
 		}
 
-		err := attachment.NewAttachment(s, attachment.File.File, attachment.File.Name, attachment.File.Size, doer)
+		buf, err := io.ReadAll(attachment.File.File)
 		if err != nil {
 			return nil, err
 		}
-
 		if attachment.File.File != nil {
 			_ = attachment.File.File.Close()
+		}
+
+		err = attachment.NewAttachment(s, bytes.NewReader(buf), attachment.File.Name, attachment.File.Size, doer)
+		if err != nil {
+			return nil, err
 		}
 
 		log.Debugf("Duplicated attachment %d into %d from project %d into %d", oldAttachmentID, attachment.ID, ld.ProjectID, ld.Project.ID)

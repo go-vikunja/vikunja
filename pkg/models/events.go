@@ -178,8 +178,10 @@ func (t *TaskPositionsRecalculatedEvent) Name() string {
 
 // TaskReminderFiredEvent represents an event where a task reminder has fired
 type TaskReminderFiredEvent struct {
-	Task    *Task    `json:"task"`
-	Project *Project `json:"project"`
+	Task     *Task         `json:"task"`
+	User     *user.User    `json:"user"`
+	Project  *Project      `json:"project"`
+	Reminder *TaskReminder `json:"reminder"`
 }
 
 // Name defines the name for TaskReminderFiredEvent
@@ -189,13 +191,26 @@ func (t *TaskReminderFiredEvent) Name() string {
 
 // TaskOverdueEvent represents an event where a task is overdue
 type TaskOverdueEvent struct {
-	Task    *Task    `json:"task"`
-	Project *Project `json:"project"`
+	Task    *Task      `json:"task"`
+	User    *user.User `json:"user"`
+	Project *Project   `json:"project"`
 }
 
 // Name defines the name for TaskOverdueEvent
 func (t *TaskOverdueEvent) Name() string {
 	return "task.overdue"
+}
+
+// TasksOverdueEvent represents an event where multiple tasks are overdue for a user
+type TasksOverdueEvent struct {
+	Tasks    []*Task            `json:"tasks"`
+	User     *user.User         `json:"user"`
+	Projects map[int64]*Project `json:"projects"`
+}
+
+// Name defines the name for TasksOverdueEvent
+func (t *TasksOverdueEvent) Name() string {
+	return "tasks.overdue"
 }
 
 ////////////////////

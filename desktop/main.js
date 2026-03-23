@@ -12,14 +12,43 @@ function createWindow() {
 		width: 1680,
 		height: 960,
 		webPreferences: {
-			nodeIntegration: true,
+			nodeIntegration: false,
+			contextIsolation: true,
+			sandbox: true,
+			webviewTag: false,
+			navigateOnDragDrop: false,
 		}
 	})
 
-	// Open external links in the browser
+	// Open external links in the browser, but only allow protocols
+	// that the TipTap editor also allows (see frontend/src/components/input/editor/TipTap.vue).
+	// TipTap allows: http, https (built-in) + ftp, git, obsidian, notion, message
+	// We also allow mailto since it's a standard safe protocol for email links.
 	mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-  	shell.openExternal(url);
-	  return { action: 'deny' };
+		try {
+			const parsedUrl = new URL(url);
+			const allowedProtocols = [
+				'http:', 'https:', 'mailto:',
+				'ftp:', 'git:', 'obsidian:', 'notion:', 'message:',
+			];
+			if (allowedProtocols.includes(parsedUrl.protocol)) {
+				shell.openExternal(url);
+			}
+		} catch {
+			// Invalid URL, ignore silently
+		}
+		return { action: 'deny' };
+	});
+
+	// Prevent same-window navigation to external origins.
+	// Only allow navigation to the local express server.
+	mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+		const parsedUrl = new URL(navigationUrl);
+		// Allow navigations to the local express server
+		if (parsedUrl.hostname === '127.0.0.1' || parsedUrl.hostname === 'localhost') {
+			return;
+		}
+		event.preventDefault();
 	});
 
 	// Hide the toolbar

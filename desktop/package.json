@@ -52,7 +52,7 @@
     }
   },
   "devDependencies": {
-    "electron": "40.7.0",
+    "electron": "40.8.3",
     "electron-builder": "26.8.1",
     "unzipper": "0.12.3"
   },
@@ -64,7 +64,9 @@
       "electron"
     ],
     "overrides": {
-      "minimatch": "^10.2.3"
+      "minimatch": "^10.2.3",
+      "tar": "^7.5.11",
+      "@tootallnate/once": "^3.0.1"
     }
   }
 }

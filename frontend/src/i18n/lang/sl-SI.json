@@ -112,7 +112,6 @@
 				"setupSuccess": "Uspešno ste nastavili dvofaktorsko avtentikacijo!",
 				"enterPassword": "Prosim vnesite vaše geslo",
 				"disable": "Onemogoči dvofaktorsko avtentikacijo",
-				"confirmSuccess": "Uspešno ste potrdili svojo nastavitev TOTP in jo lahko od zdaj naprej uporabljate!",
 				"disableSuccess": "Dvofaktorska avtentikacija je bila uspešno onemogočena."
 			},
 			"caldav": {

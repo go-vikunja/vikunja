@@ -140,7 +140,6 @@
 				"setupSuccess": "Du har framgångsrikt konfigurerat tvåfaktorsautentisering!",
 				"enterPassword": "Vänligen ange ditt lösenord",
 				"disable": "Inaktivera tvåfaktorsautentisering",
-				"confirmSuccess": "Du har bekräftat din TOTP-konfiguration och kan använda den från och med nu!",
 				"disableSuccess": "Tvåfaktorsautentisering har blivit inaktiverad."
 			},
 			"caldav": {

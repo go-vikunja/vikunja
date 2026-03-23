@@ -71,8 +71,6 @@
 				"message": "Det här är en vänlig påminnelse om uppgiften \"%[1]s\" (%[2])."
 			},
 			"comment": {
-				"subject": "Ang: %[1]s",
-				"mentioned_subject": "%[1]s nämnde dig i en kommentar i \"%[2]s\"",
 				"mentioned_message": "**%[1]s** nämnde dig i en kommentar:"
 			},
 			"assigned": {
@@ -88,8 +86,6 @@
 				"message": "%[1]s har raderat uppgiften \"%[2]s\" (%[3]s)"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s nämnde dig i en ny uppgift \"%[2]s\"",
-				"subject": "%[1]s nämnde dig i en uppgift \"%[2]s\"",
 				"message": "**%[1]s** nämnde dig i en uppgift:"
 			},
 			"overdue": {
@@ -137,7 +133,6 @@
 			"have_nice_day": "Ha en trevlig dag!",
 			"copy_url": "Om knappen ovan inte fungerar, kopiera URL:en nedan och klistra in den i webbläsarens adressfält:",
 			"actions": {
-				"open_task": "Öppna uppgift",
 				"open_vikunja": "Öppna Vikunja",
 				"open_project": "Öppna projekt",
 				"open_team": "Öppna team",

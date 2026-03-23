@@ -56,14 +56,13 @@
 				{{ $t('menu.edit') }}
 			</DropdownItem>
 			<DropdownItem
-				v-if="!simple"
 				:to="{ name: 'project.settings.views', params: { projectId: project.id } }"
 				icon="eye"
 			>
 				{{ $t('menu.views') }}
 			</DropdownItem>
 			<DropdownItem
-				v-if="backgroundsEnabled && !simple"
+				v-if="backgroundsEnabled"
 				:to="{ name: 'project.settings.background', params: { projectId: project.id } }"
 				icon="image"
 			>
@@ -82,7 +81,6 @@
 				{{ $t('menu.duplicate') }}
 			</DropdownItem>
 			<DropdownItem
-				v-if="!simple"
 				v-tooltip="isDefaultProject ? $t('menu.cantArchiveIsDefault') : ''"
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
@@ -141,12 +139,9 @@ import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {PERMISSIONS} from '@/constants/permissions'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 	project: IProject
-	simple?: boolean
-}>(), {
-	simple: false,
-})
+}>()
 
 const projectStore = useProjectStore()
 const subscription = ref<ISubscription | null>(null)

@@ -71,8 +71,8 @@
                 "message": "This is a friendly reminder of the task \"%[1]s\" (%[2]s)."
             },
             "comment": {
-                "subject": "Re: %[1]s",
-                "mentioned_subject": "%[1]s mentioned you in a comment in \"%[2]s\"",
+                "subject": "Re: %[1]s (%[2]s)",
+                "mentioned_subject": "%[1]s mentioned you in a comment in \"%[2]s\" (%[3]s)",
                 "mentioned_message": "**%[1]s** mentioned you in a comment:"
             },
             "assigned": {
@@ -88,8 +88,8 @@
                 "message": "%[1]s has deleted the task \"%[2]s\" (%[3]s)"
             },
             "mentioned": {
-                "subject_new": "%[1]s mentioned you in a new task \"%[2]s\"",
-                "subject": "%[1]s mentioned you in a task \"%[2]s\"",
+                "subject_new": "%[1]s mentioned you in a new task \"%[2]s\" (%[3]s)",
+                "subject": "%[1]s mentioned you in a task \"%[2]s\" (%[3]s)",
                 "message": "**%[1]s** mentioned you in a task:"
             },
             "overdue": {
@@ -137,7 +137,7 @@
             "have_nice_day": "Have a nice day!",
             "copy_url": "If the button above doesn't work, copy the url below and paste it in your browser's address bar:",
             "actions": {
-                "open_task": "Open Task",
+                "open_task": "Open Task in Vikunja",
                 "open_vikunja": "Open Vikunja",
                 "open_project": "Open Project",
                 "open_team": "Open Team",
@@ -147,7 +147,14 @@
                 "confirm_email": "Confirm your email address",
                 "abort_deletion": "Abort the deletion",
                 "confirm_account_deletion": "Confirm the deletion of my account",
-                "change_notification_settings_link": "You can change your notification settings [here](%[1]s)."
+                "change_notification_settings_link": "You can change your notification settings [here](%[1]s).",
+                "left_comment": "%[1]s left a comment",
+                "mentioned_you_comment": "%[1]s mentioned you in a comment",
+                "mentioned_you": "%[1]s mentioned you",
+                "mentioned_you_new_task": "%[1]s mentioned you in a new task",
+                "assigned_you": "%[1]s assigned you",
+                "assigned_themselves": "%[1]s assigned themselves",
+                "assigned_user": "%[1]s assigned %[2]s"
             }
         }
     },

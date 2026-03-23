@@ -26,10 +26,21 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/i18n"
+	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 )
+
+// getDoerAvatarDataURI returns the avatar data URI for a user, for use in email headers.
+func getDoerAvatarDataURI(doer *user.User) string {
+	provider := avatar.GetProvider(doer)
+	dataURI, err := provider.AsDataURI(doer, 20)
+	if err != nil {
+		return ""
+	}
+	return dataURI
+}
 
 // getThreadID generates a Message-ID format thread ID for a task
 func getThreadID(taskID int64) string {
@@ -45,9 +56,10 @@ func getThreadID(taskID int64) string {
 
 // ReminderDueNotification represents a ReminderDueNotification notification
 type ReminderDueNotification struct {
-	User    *user.User `json:"user,omitempty"`
-	Task    *Task      `json:"task"`
-	Project *Project   `json:"project"`
+	User         *user.User    `json:"user,omitempty"`
+	Task         *Task         `json:"task"`
+	Project      *Project      `json:"project"`
+	TaskReminder *TaskReminder `json:"reminder"`
 }
 
 // ToMail returns the mail notification for ReminderDueNotification
@@ -86,6 +98,7 @@ type TaskCommentNotification struct {
 	Task      *Task        `json:"task"`
 	Comment   *TaskComment `json:"comment"`
 	Mentioned bool         `json:"mentioned"`
+	Project   *Project     `json:"project"`
 }
 
 func (n *TaskCommentNotification) SubjectID() int64 {
@@ -99,19 +112,33 @@ func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
 	formattedComment := formatMentionsForEmail(s, n.Comment.Comment)
 
 	mail := notifications.NewMail().
+		Conversational().
 		From(n.Doer.GetNameAndFromEmail()).
-		Subject(i18n.T(lang, "notifications.task.comment.subject", n.Task.Title))
+		Subject(i18n.T(lang, "notifications.task.comment.subject", n.Task.Title, n.Task.GetFullIdentifier()))
 
+	// Add header line
+	action := i18n.T(lang, "notifications.common.actions.left_comment", n.Doer.GetName())
 	if n.Mentioned {
-		mail.
-			Line(i18n.T(lang, "notifications.task.comment.mentioned_message", n.Doer.GetName())).
-			Subject(i18n.T(lang, "notifications.task.comment.mentioned_subject", n.Doer.GetName(), n.Task.Title))
+		action = i18n.T(lang, "notifications.common.actions.mentioned_you_comment", n.Doer.GetName())
+		mail.Subject(i18n.T(lang, "notifications.task.comment.mentioned_subject", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier()))
 	}
 
+	headerLine := notifications.CreateConversationalHeader(
+		getDoerAvatarDataURI(n.Doer),
+		action,
+		n.Task.GetFrontendURL(),
+		n.Project.Title,
+		n.Task.GetFullIdentifier(),
+		n.Task.Title,
+	)
+	mail.HeaderLine(headerLine)
+
+	// Add the actual comment content wrapped in a div for consistent spacing
 	mail.HTML(formattedComment)
 
 	return mail.
-		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
+		IncludeLinkToSettings(lang)
 }
 
 // ToDB returns the TaskCommentNotification notification in a format which can be saved in the db
@@ -135,29 +162,41 @@ type TaskAssignedNotification struct {
 	Task     *Task      `json:"task"`
 	Assignee *user.User `json:"assignee"`
 	Target   *user.User `json:"-"`
+	Project  *Project   `json:"project"`
 }
 
 // ToMail returns the mail notification for TaskAssignedNotification
 func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 	if n.Target.ID == n.Assignee.ID {
+		// Notification to the assignee
 		return notifications.NewMail().
+			From(n.Doer.GetNameAndFromEmail()).
 			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_assignee", n.Task.Title, n.Task.GetFullIdentifier())).
+			Greeting(i18n.T(lang, "notifications.greeting", n.Target.GetName())).
 			Line(i18n.T(lang, "notifications.task.assigned.message_to_assignee", n.Doer.GetName(), n.Task.Title)).
-			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
+			IncludeLinkToSettings(lang)
 	}
 
 	// Check if the doer assigned the task to themselves
 	if n.Doer.ID == n.Assignee.ID {
 		return notifications.NewMail().
+			From(n.Doer.GetNameAndFromEmail()).
 			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others_self", n.Task.Title, n.Task.GetFullIdentifier(), n.Doer.GetName())).
+			Greeting(i18n.T(lang, "notifications.greeting", n.Target.GetName())).
 			Line(i18n.T(lang, "notifications.task.assigned.message_to_others_self", n.Doer.GetName())).
-			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
+			IncludeLinkToSettings(lang)
 	}
 
+	// Notification to others about assignment
 	return notifications.NewMail().
+		From(n.Doer.GetNameAndFromEmail()).
 		Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())).
+		Greeting(i18n.T(lang, "notifications.greeting", n.Target.GetName())).
 		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", n.Doer.GetName(), n.Assignee.GetName())).
-		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
+		IncludeLinkToSettings(lang)
 }
 
 // ToDB returns the TaskAssignedNotification notification in a format which can be saved in the db
@@ -343,9 +382,10 @@ func (n *UndoneTasksOverdueNotification) Name() string {
 
 // UserMentionedInTaskNotification represents a UserMentionedInTaskNotification notification
 type UserMentionedInTaskNotification struct {
-	Doer  *user.User `json:"doer"`
-	Task  *Task      `json:"task"`
-	IsNew bool       `json:"is_new"`
+	Doer    *user.User `json:"doer"`
+	Task    *Task      `json:"task"`
+	IsNew   bool       `json:"is_new"`
+	Project *Project   `json:"project"`
 }
 
 func (n *UserMentionedInTaskNotification) SubjectID() int64 {
@@ -360,19 +400,39 @@ func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mai
 
 	var subject string
 	if n.IsNew {
-		subject = i18n.T(lang, "notifications.task.mentioned.subject_new", n.Doer.GetName(), n.Task.Title)
+		subject = i18n.T(lang, "notifications.task.mentioned.subject_new", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier())
 	} else {
-		subject = i18n.T(lang, "notifications.task.mentioned.subject", n.Doer.GetName(), n.Task.Title)
+		subject = i18n.T(lang, "notifications.task.mentioned.subject", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier())
 	}
 
 	mail := notifications.NewMail().
+		Conversational().
 		From(n.Doer.GetNameAndFromEmail()).
-		Subject(subject).
-		Line(i18n.T(lang, "notifications.task.mentioned.message", n.Doer.GetName())).
-		HTML(formattedDescription)
+		Subject(subject)
+
+	// Add header line
+	action := i18n.T(lang, "notifications.common.actions.mentioned_you", n.Doer.GetName())
+	if n.IsNew {
+		action = i18n.T(lang, "notifications.common.actions.mentioned_you_new_task", n.Doer.GetName())
+	}
+
+	headerLine := notifications.CreateConversationalHeader(
+		getDoerAvatarDataURI(n.Doer),
+		action,
+		n.Task.GetFrontendURL(),
+		n.Project.Title,
+		n.Task.GetFullIdentifier(),
+		n.Task.Title,
+	)
+	mail.HeaderLine(headerLine)
+
+	if formattedDescription != "" {
+		mail.HTML(formattedDescription)
+	}
 
 	return mail.
-		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL())
+		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
+		IncludeLinkToSettings(lang)
 }
 
 // ToDB returns the UserMentionedInTaskNotification notification in a format which can be saved in the db

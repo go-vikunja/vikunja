@@ -71,8 +71,6 @@
 				"message": "タスク「%[1]」(%[2]s) のリマインダーです。"
 			},
 			"comment": {
-				"subject": "Re: %[1]s",
-				"mentioned_subject": "%[1]s が「%[2]」のコメントであなたにメンションしました",
 				"mentioned_message": "**%[1]s** があなたにメンションしました:"
 			},
 			"assigned": {
@@ -88,8 +86,6 @@
 				"message": "%[1]s がタスク「%[2]」(%[3]s) を削除しました"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s が新しいタスク「%[2]」であなたにメンションしました",
-				"subject": "%[1]s がタスク「%[2]」であなたにメンションしました",
 				"message": "**%[1]s** があなたにメンションしました:"
 			},
 			"overdue": {
@@ -137,7 +133,6 @@
 			"have_nice_day": "よい一日を！",
 			"copy_url": "上のボタンが機能しない場合は、以下のURLをコピーし、ブラウザのアドレスバーに貼り付けてください:",
 			"actions": {
-				"open_task": "タスクを開く",
 				"open_vikunja": "Vikunjaを開く",
 				"open_project": "プロジェクトを開く",
 				"open_team": "チームを開く",

@@ -70,6 +70,8 @@ const (
 	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
+	ServiceIPExtractionMethod             Key = `service.ipextractionmethod`
+	ServiceTrustedProxies                 Key = `service.trustedproxies`
 
 	SentryEnabled         Key = `sentry.enabled`
 	SentryDsn             Key = `sentry.dsn`
@@ -211,10 +213,11 @@ const (
 	DefaultSettingsTimezone                    Key = `defaultsettings.timezone`
 	DefaultSettingsOverdueTaskRemindersTime    Key = `defaultsettings.overdue_tasks_reminders_time`
 
-	WebhooksEnabled        Key = `webhooks.enabled`
-	WebhooksTimeoutSeconds Key = `webhooks.timeoutseconds`
-	WebhooksProxyURL       Key = `webhooks.proxyurl`
-	WebhooksProxyPassword  Key = `webhooks.proxypassword`
+	WebhooksEnabled             Key = `webhooks.enabled`
+	WebhooksTimeoutSeconds      Key = `webhooks.timeoutseconds`
+	WebhooksProxyURL            Key = `webhooks.proxyurl`
+	WebhooksProxyPassword       Key = `webhooks.proxypassword`
+	WebhooksAllowNonRoutableIPs Key = `webhooks.allownonroutableips`
 
 	AutoTLSEnabled     Key = `autotls.enabled`
 	AutoTLSEmail       Key = `autotls.email`
@@ -287,37 +290,33 @@ func (k Key) setDefault(i interface{}) {
 	viper.SetDefault(string(k), i)
 }
 
-// Tries different methods to figure out the binary folder.
-// Copied and adopted from https://github.com/speedata/publisher/commit/3b668668d57edef04ea854d5bbd58f83eb1b799f
-func getBinaryDirLocation() string {
-	// First, check if the standard library gives us the path. This will work 99% of the time.
-	ex, err := os.Executable()
-	if err == nil {
+// getRootpathLocation determines the default root path for Vikunja data.
+// It prefers the current working directory, which respects systemd's
+// WorkingDirectory= setting and is the most intuitive default.
+// Falls back to the binary's directory if Getwd fails.
+func getRootpathLocation() string {
+	// Prefer working directory — this respects systemd WorkingDirectory=
+	// and is the intuitive default for most deployment scenarios.
+	if wd, err := os.Getwd(); err == nil {
+		return wd
+	}
+
+	// Fall back to the binary's directory.
+	if ex, err := os.Executable(); err == nil {
 		return filepath.Dir(ex)
 	}
 
-	// Then check if the binary was run with a full path and use that if that's the case.
-	if strings.Contains(os.Args[0], "/") {
-		binDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-		if err != nil {
-			log.Fatal(err)
-		}
-		return binDir
-	}
-
+	// Last resort: search $PATH.
 	exeSuffix := ""
 	if runtime.GOOS == "windows" {
 		exeSuffix = ".exe"
 	}
-
-	// All else failing, search for a vikunja binary in the current $PATH.
-	// This can give wrong results.
-	exeLocation, err := exec.LookPath("vikunja" + exeSuffix)
-	if err != nil {
-		log.Fatal(err)
+	if exeLocation, err := exec.LookPath("vikunja" + exeSuffix); err == nil {
+		return filepath.Dir(exeLocation)
 	}
 
-	return filepath.Dir(exeLocation)
+	log.Fatal("Could not determine root path. Set service.rootpath in your config.")
+	return ""
 }
 
 // InitDefaultConfig sets default config values
@@ -339,7 +338,7 @@ func InitDefaultConfig() {
 	ServicePublicURL.setDefault("")
 	ServiceEnableCaldav.setDefault(true)
 
-	ServiceRootpath.setDefault(getBinaryDirLocation())
+	ServiceRootpath.setDefault(getRootpathLocation())
 	ServiceMaxItemsPerPage.setDefault(50)
 	ServiceMotd.setDefault("")
 	ServiceEnableLinkSharing.setDefault(true)
@@ -356,6 +355,8 @@ func InitDefaultConfig() {
 	ServiceEnablePublicTeams.setDefault(false)
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
+	ServiceIPExtractionMethod.setDefault("direct")
+	ServiceTrustedProxies.setDefault("")
 
 	// Sentry
 	SentryDsn.setDefault("https://440eedc957d545a795c17bbaf477497c@o1047380.ingest.sentry.io/4504254983634944")
@@ -383,7 +384,7 @@ func InitDefaultConfig() {
 	DatabaseUser.setDefault("vikunja")
 	DatabasePassword.setDefault("")
 	DatabaseDatabase.setDefault("vikunja")
-	DatabasePath.setDefault(filepath.Join(ServiceRootpath.GetString(), "vikunja.db"))
+	DatabasePath.setDefault(ResolvePath("vikunja.db"))
 	DatabaseMaxOpenConnections.setDefault(100)
 	DatabaseMaxIdleConnections.setDefault(50)
 	DatabaseMaxConnectionLifetime.setDefault(10000)
@@ -419,7 +420,7 @@ func InitDefaultConfig() {
 	LogDatabase.setDefault("off")
 	LogDatabaseLevel.setDefault("WARNING")
 	LogHTTP.setDefault("stdout")
-	LogPath.setDefault(ServiceRootpath.GetString() + "/logs")
+	LogPath.setDefault(ResolvePath("logs"))
 	LogEvents.setDefault("off")
 	LogEventsLevel.setDefault("INFO")
 	LogMail.setDefault("off")
@@ -470,11 +471,22 @@ func InitDefaultConfig() {
 	// Webhook
 	WebhooksEnabled.setDefault(true)
 	WebhooksTimeoutSeconds.setDefault(30)
+	WebhooksAllowNonRoutableIPs.setDefault(false)
 	// AutoTLS
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 	// Plugins
 	PluginsEnabled.setDefault(false)
-	PluginsDir.setDefault(filepath.Join(ServiceRootpath.GetString(), "plugins"))
+	PluginsDir.setDefault(ResolvePath("plugins"))
+}
+
+// ResolvePath resolves a path relative to service.rootpath.
+// If the path is already absolute, it is returned as-is (cleaned).
+// If the path is relative (or empty), it is joined with service.rootpath.
+func ResolvePath(p string) string {
+	if filepath.IsAbs(p) {
+		return filepath.Clean(p)
+	}
+	return filepath.Join(ServiceRootpath.GetString(), p)
 }
 
 func GetConfigValueFromFile(configKey string) string {
@@ -486,9 +498,7 @@ func GetConfigValueFromFile(configKey string) string {
 		return ""
 	}
 
-	if !strings.HasPrefix(valuePath, "/") {
-		valuePath = path.Join(ServiceRootpath.GetString(), valuePath)
-	}
+	valuePath = ResolvePath(valuePath)
 
 	contents, err := os.ReadFile(valuePath)
 	if err == nil {

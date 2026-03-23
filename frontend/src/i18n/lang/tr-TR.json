@@ -140,7 +140,6 @@
 				"setupSuccess": "İki faktörlü kimlik doğrulamayı başarıyla kurdunuz!",
 				"enterPassword": "Lütfen Şifrenizi Girin",
 				"disable": "İki faktörlü kimlik doğrulamayı devre dışı bırak",
-				"confirmSuccess": "TOTP kurulumunuzu başarıyla onayladınız ve artık kullanabilirsiniz!",
 				"disableSuccess": "İki faktörlü kimlik doğrulama başarıyla devre dışı bırakıldı."
 			},
 			"caldav": {

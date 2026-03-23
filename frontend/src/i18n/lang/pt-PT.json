@@ -140,7 +140,6 @@
 				"setupSuccess": "Configuraste com sucesso a autenticação de dois fatores!",
 				"enterPassword": "Por favor, insere a tua palavra-passe",
 				"disable": "Desativar a autenticação de dois fatores",
-				"confirmSuccess": "Confirmaste com sucesso a tua configuração TOTP e podes utilizá-la de agora em diante!",
 				"disableSuccess": "A autenticação de dois fatores foi desativada com sucesso."
 			},
 			"caldav": {

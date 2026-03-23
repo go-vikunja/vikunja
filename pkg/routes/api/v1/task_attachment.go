@@ -236,6 +236,6 @@ func GetTaskAttachment(c *echo.Context) error {
 		return err
 	}
 
-	http.ServeContent(c.Response(), c.Request(), taskAttachment.File.Name, taskAttachment.File.Created, taskAttachment.File.File)
+	http.ServeContent(c.Response(), c.Request(), taskAttachment.File.Name, taskAttachment.File.Created, taskAttachment.File.File.(io.ReadSeeker))
 	return nil
 }

@@ -178,6 +178,16 @@ jobs:
         test:
           - feature
           - web
+          - e2e-api
+        exclude:
+          - db: sqlite
+            test: e2e-api
+          - db: postgres
+            test: e2e-api
+          - db: mysql
+            test: e2e-api
+          - db: paradedb
+            test: e2e-api
     services:
       db-mysql:
         image: ${{ matrix.db == 'mysql' && 'mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8' || '' }}
@@ -194,7 +204,7 @@ jobs:
         ports:
           - 5432:5432
       db-paradedb:
-        image: ${{ matrix.db == 'paradedb' && 'paradedb/paradedb:latest-pg17@sha256:741010eaa8894d292203d9407d46fc95ee4d0cd587915513bf92e6bd70cbd65e' || '' }}
+        image: ${{ matrix.db == 'paradedb' && 'paradedb/paradedb:latest-pg17@sha256:5a60852994cb0663ed9cdb04796a487605f8b99266e3ad5057f10e09e1aa019d' || '' }}
         env:
           POSTGRES_PASSWORD: vikunjatest
           POSTGRES_DB: vikunjatest

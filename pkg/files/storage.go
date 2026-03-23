@@ -14,16 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//go:build tools
-
-package tools
-
-// This file is needed for go mod to recognize the tools we use.
+package files
 
 import (
-	_ "github.com/cweill/gotests"
-	_ "github.com/swaggo/swag/cmd/swag"
-	_ "src.techknowlogick.com/xgo"
-
-	_ "github.com/magefile/mage"
+	"io"
+	"os"
 )
+
+// FileStorage abstracts file storage operations across local, S3, and in-memory backends.
+type FileStorage interface {
+	Open(path string) (io.ReadCloser, error)
+	Write(path string, content io.ReadSeeker, size uint64) error
+	Stat(path string) (os.FileInfo, error)
+	Remove(path string) error
+	MkdirAll(path string, perm os.FileMode) error
+}

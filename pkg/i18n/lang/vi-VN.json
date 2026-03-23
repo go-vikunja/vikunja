@@ -70,15 +70,12 @@
 				"subject": "Nhắc nhở cho \"%[1]s\" (%[2]s)"
 			},
 			"comment": {
-				"mentioned_subject": "%[1]s đã nhắc đến bạn trong một bình luận của \"%[2]s\"",
 				"mentioned_message": "**%[1]s** đã nhắc đến bạn trong một bình luận:"
 			},
 			"assigned": {
 				"message_to_others": "%[1]s đã giao tác vụ này cho %[2]s."
 			},
 			"mentioned": {
-				"subject_new": "%[1]s nhắc đến bạn trong một tác vụ mới \"%[2]s\"",
-				"subject": "%[1]s đã nhắc đến bạn trong một tác vụ \"%[2]s\"",
 				"message": "**%[1]s** đã nhắc đến bạn trong một tác vụ:"
 			},
 			"overdue": {

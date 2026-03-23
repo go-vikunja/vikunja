@@ -86,8 +86,9 @@ func RegisterListeners() {
 		RegisterEventForWebhook(&ProjectDeletedEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithUserEvent{})
 		RegisterEventForWebhook(&ProjectSharedWithTeamEvent{})
-		RegisterEventForWebhook(&TaskReminderFiredEvent{})
-		RegisterEventForWebhook(&TaskOverdueEvent{})
+		RegisterUserDirectedEventForWebhook(&TaskReminderFiredEvent{})
+		RegisterUserDirectedEventForWebhook(&TaskOverdueEvent{})
+		RegisterUserDirectedEventForWebhook(&TasksOverdueEvent{})
 	}
 }
 
@@ -187,11 +188,17 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	n := &TaskCommentNotification{
 		Doer:      event.Doer,
 		Task:      event.Task,
 		Comment:   event.Comment,
 		Mentioned: true,
+		Project:   project,
 	}
 	mentionedUsers, err := notifyMentionedUsers(sess, event.Task, event.Comment.Comment, n)
 	if err != nil {
@@ -218,6 +225,7 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 			Doer:    event.Doer,
 			Task:    event.Task,
 			Comment: event.Comment,
+			Project: project,
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
@@ -252,11 +260,17 @@ func (s *HandleTaskCommentEditMentions) Handle(msg *message.Message) (err error)
 	sess := db.NewSession()
 	defer sess.Close()
 
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	n := &TaskCommentNotification{
 		Doer:      event.Doer,
 		Task:      event.Task,
 		Comment:   event.Comment,
 		Mentioned: true,
+		Project:   project,
 	}
 	_, err = notifyMentionedUsers(sess, event.Task, event.Comment.Comment, n)
 	if err != nil {
@@ -297,6 +311,11 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 		return err
 	}
 
+	project, err := GetProjectSimpleByID(sess, task.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	notifiedUsers := make(map[int64]bool)
 
 	for _, subscriber := range subscribers {
@@ -314,6 +333,7 @@ func (s *SendTaskAssignedNotification) Handle(msg *message.Message) (err error) 
 			Task:     &task,
 			Assignee: event.Assignee,
 			Target:   subscriber.User,
+			Project:  project,
 		}
 		err = notifications.Notify(subscriber.User, n, sess)
 		if err != nil {
@@ -401,10 +421,16 @@ func (s *HandleTaskCreateMentions) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	n := &UserMentionedInTaskNotification{
-		Task:  event.Task,
-		Doer:  event.Doer,
-		IsNew: true,
+		Task:    event.Task,
+		Doer:    event.Doer,
+		IsNew:   true,
+		Project: project,
 	}
 	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)
 	if err != nil {
@@ -437,10 +463,16 @@ func (s *HandleTaskUpdatedMentions) Handle(msg *message.Message) (err error) {
 	sess := db.NewSession()
 	defer sess.Close()
 
+	project, err := GetProjectSimpleByID(sess, event.Task.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	n := &UserMentionedInTaskNotification{
-		Task:  event.Task,
-		Doer:  event.Doer,
-		IsNew: false,
+		Task:    event.Task,
+		Doer:    event.Doer,
+		IsNew:   false,
+		Project: project,
 	}
 
 	_, err = notifyMentionedUsers(sess, event.Task, event.Task.Description, n)
@@ -801,6 +833,20 @@ func getProjectIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
 	return 0
 }
 
+func getUserIDFromAnyEvent(eventPayload map[string]interface{}) int64 {
+	if u, has := eventPayload["user"]; has {
+		userMap, ok := u.(map[string]interface{})
+		if !ok {
+			return 0
+		}
+		if userID, has := userMap["id"]; has {
+			return getIDAsInt64(userID)
+		}
+	}
+
+	return 0
+}
+
 func reloadDoerInEvent(s *xorm.Session, event map[string]interface{}) (doerID int64, err error) {
 	doer, has := event["doer"]
 	if !has || doer == nil {
@@ -926,6 +972,33 @@ func reloadAssigneeInEvent(s *xorm.Session, event map[string]interface{}) error 
 	return nil
 }
 
+func reloadUserInEvent(s *xorm.Session, event map[string]interface{}) error {
+	u, has := event["user"]
+	if !has || u == nil {
+		return nil
+	}
+
+	userMap, ok := u.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	userID := getIDAsInt64(userMap["id"])
+	if userID <= 0 {
+		return nil
+	}
+
+	fullUser, err := user.GetUserByID(s, userID)
+	if err != nil && !user.IsErrUserDoesNotExist(err) {
+		return err
+	}
+	if err == nil {
+		event["user"] = fullUser
+	}
+
+	return nil
+}
+
 func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID int64) (eventWithData map[string]interface{}, doerID int64, err error) {
 	// Load event data again so that it is always populated in the webhook payload
 
@@ -949,6 +1022,11 @@ func reloadEventData(s *xorm.Session, event map[string]interface{}, projectID in
 		return nil, doerID, err
 	}
 
+	err = reloadUserInEvent(s, event)
+	if err != nil {
+		return nil, doerID, err
+	}
+
 	return event, doerID, nil
 }
 
@@ -960,46 +1038,73 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	s := db.NewSession()
+	defer s.Close()
+
 	projectID := getProjectIDFromAnyEvent(event)
-	if projectID == 0 {
+	isUserDirected := IsUserDirectedEvent(wl.EventName)
+
+	// For non-user-directed events, we need a project ID
+	if projectID == 0 && !isUserDirected {
 		log.Debugf("event %s does not contain a project id, not handling webhook", wl.EventName)
 		return nil
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	parents, err := GetAllParentProjects(s, projectID)
-	if err != nil {
-		return err
-	}
-
-	projectIDs := make([]int64, 0, len(parents)+1)
-	projectIDs = append(projectIDs, projectID)
-
-	for _, p := range parents {
-		projectIDs = append(projectIDs, p.ID)
-	}
-
-	ws := []*Webhook{}
-	err = s.In("project_id", projectIDs).
-		Find(&ws)
-	if err != nil {
-		return err
-	}
-
+	// Look up project-level webhooks
 	matchingWebhooks := []*Webhook{}
-	for _, w := range ws {
-		for _, e := range w.Events {
-			if e == wl.EventName {
-				matchingWebhooks = append(matchingWebhooks, w)
-				break
+	if projectID > 0 {
+		parents, err := GetAllParentProjects(s, projectID)
+		if err != nil {
+			return err
+		}
+
+		projectIDs := make([]int64, 0, len(parents)+1)
+		projectIDs = append(projectIDs, projectID)
+		for _, p := range parents {
+			projectIDs = append(projectIDs, p.ID)
+		}
+
+		ws := []*Webhook{}
+		err = s.In("project_id", projectIDs).
+			Find(&ws)
+		if err != nil {
+			return err
+		}
+
+		for _, w := range ws {
+			for _, e := range w.Events {
+				if e == wl.EventName {
+					matchingWebhooks = append(matchingWebhooks, w)
+					break
+				}
+			}
+		}
+	}
+
+	// Look up user-level webhooks for user-directed events
+	if isUserDirected {
+		userID := getUserIDFromAnyEvent(event)
+		if userID > 0 {
+			userWebhooks := []*Webhook{}
+			err = s.Where("user_id = ? AND (project_id IS NULL OR project_id = 0)", userID).
+				Find(&userWebhooks)
+			if err != nil {
+				return err
+			}
+
+			for _, w := range userWebhooks {
+				for _, e := range w.Events {
+					if e == wl.EventName {
+						matchingWebhooks = append(matchingWebhooks, w)
+						break
+					}
+				}
 			}
 		}
 	}
 
 	if len(matchingWebhooks) == 0 {
-		log.Debugf("Did not find any webhook for the %s event for project %d, not sending", wl.EventName, projectID)
+		log.Debugf("Did not find any webhook for the %s event, not sending", wl.EventName)
 		return nil
 	}
 
@@ -1010,8 +1115,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 	}
 
 	for _, webhook := range matchingWebhooks {
-
-		if _, has := event["project"]; !has {
+		if _, has := event["project"]; !has && webhook.ProjectID > 0 {
 			project, err := GetProjectSimpleByID(s, webhook.ProjectID)
 			if err != nil && !IsErrProjectDoesNotExist(err) {
 				log.Errorf("Could not load project for webhook %d: %s", webhook.ID, err)

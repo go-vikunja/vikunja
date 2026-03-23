@@ -140,7 +140,6 @@
 				"setupSuccess": "Je hebt tweestapsverificatie succesvol ingesteld!",
 				"enterPassword": "Voer alsjeblieft je wachtwoord in",
 				"disable": "Tweestapsverificatie uitschakelen",
-				"confirmSuccess": "Je hebt je TOTP-configuratie succesvol bevestigd en kunt het van nu gebruiken!",
 				"disableSuccess": "Uitschakelen tweestapsverificatie is geslaagd."
 			},
 			"caldav": {

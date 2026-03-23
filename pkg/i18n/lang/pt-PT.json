@@ -71,8 +71,6 @@
 				"message": "Este é um lembrete cordial da tarefa “%[1]s” (%[2]s)."
 			},
 			"comment": {
-				"subject": "Re: %[1]s",
-				"mentioned_subject": "%[1]s mencionou-te num comentário em \"%[2]s\"",
 				"mentioned_message": "**%[1]s** mencionou-te num comentário:"
 			},
 			"assigned": {
@@ -88,8 +86,6 @@
 				"message": "%[1]s eliminou a tarefa \"%[2]s\" (%[3]s)"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s mencionou-te numa nova tarefa \"%[2]s\"",
-				"subject": "%[1]s mencionou-te numa tarefa \"%[2]s\"",
 				"message": "**%[1]s** mencionou-te numa tarefa:"
 			},
 			"overdue": {
@@ -137,7 +133,6 @@
 			"have_nice_day": "Tem um ótimo dia!",
 			"copy_url": "Se o botão acima não funcionar, copia o url abaixo e cola-o na barra de endereços do teu browser:",
 			"actions": {
-				"open_task": "Abrir Tarefa",
 				"open_vikunja": "Abrir Vikunja",
 				"open_project": "Abrir Projeto",
 				"open_team": "Abrir Equipa",

@@ -71,8 +71,6 @@
 				"message": "Bu, \"%[1]s\" (%[2]s) görevi için dostça bir hatırlatmadır."
 			},
 			"comment": {
-				"subject": "Ynt: %[1]s",
-				"mentioned_subject": "%[1]s, \"%[2]s\" yorumunda sizden bahsetti",
 				"mentioned_message": "**%[1]s**, bir yorumda sizden bahsetti:"
 			},
 			"assigned": {
@@ -88,8 +86,6 @@
 				"message": "%[1]s, \"%[2]s\" (%[3]s) görevini sildi"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s, yeni bir görev olan \"%[2]s\" içinde sizden bahsetti",
-				"subject": "%[1]s, \"%[2]s\" görevinde sizden bahsetti",
 				"message": "**%[1]s**, bir görevde sizden bahsetti:"
 			},
 			"overdue": {
@@ -137,7 +133,6 @@
 			"have_nice_day": "İyi günler dileriz!",
 			"copy_url": "Yukarıdaki düğme çalışmazsa, aşağıdaki URL'yi kopyalayıp tarayıcınızın adres çubuğuna yapıştırın:",
 			"actions": {
-				"open_task": "Görevi Aç",
 				"open_vikunja": "Vikunja'yı Aç",
 				"open_project": "Projeyi Aç",
 				"open_team": "Takımı Aç",

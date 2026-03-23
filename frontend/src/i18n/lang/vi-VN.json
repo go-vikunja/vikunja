@@ -112,7 +112,6 @@
 				"setupSuccess": "Bạn đã thiết lập thành công xác thực hai lớp!",
 				"enterPassword": "Vui lòng nhập mật khẩu",
 				"disable": "Tắt xác thực 2 lớp",
-				"confirmSuccess": "Bạn đã xác nhận thành công cài đặt TOTP và có thể sự dụng từ bây giờ!",
 				"disableSuccess": "Xác thực hai lớp đã bị vô hiệu hóa thành công."
 			},
 			"caldav": {

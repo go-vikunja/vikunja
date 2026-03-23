@@ -69,8 +69,6 @@
 				"message": "这是一个友好的提醒任务\"%[1]s\" (%[2]s)。"
 			},
 			"comment": {
-				"subject": "回复：%[1]s",
-				"mentioned_subject": "%[1]s在\"%[2]s\"的评论中提到了你",
 				"mentioned_message": "**%[1]s**在评论中提到了您："
 			},
 			"assigned": {
@@ -84,8 +82,6 @@
 				"message": "%[1]s已删除任务\"%[2]s\" (%[3]s)"
 			},
 			"mentioned": {
-				"subject_new": "%[1]s在一个新任务\"%[2]s\"中提到了你",
-				"subject": "%[1]s在任务\"%[2]s\"中提到了你",
 				"message": "**%[1]s** 在任务中提到了您："
 			},
 			"overdue": {
@@ -132,7 +128,6 @@
 			"have_nice_day": "祝你有愉快的一天！",
 			"copy_url": "如果上面的按钮无法工作，请复制下面的URL并将其粘贴到您的浏览器地址栏：",
 			"actions": {
-				"open_task": "打开任务",
 				"open_vikunja": "打开 Vikunja",
 				"open_project": "打开项目",
 				"open_team": "打开团队",
