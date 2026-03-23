@@ -230,6 +230,11 @@ func (share *LinkSharing) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares [get]
 func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
+	// Don't allow link share authenticated users to list link shares
+	if _, is := a.(*LinkSharing); is {
+		return nil, 0, 0, ErrGenericForbidden{}
+	}
+
 	project := &Project{ID: share.ProjectID}
 	can, _, err := project.CanRead(s, a)
 	if err != nil {
