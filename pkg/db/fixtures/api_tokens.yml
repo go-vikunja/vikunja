@@ -28,3 +28,13 @@
   owner_id: 2
   created: 2023-09-01 07:00:00
   # token in plaintext is tk_5e29ae2ae079781ff73b0a3e0fe4d75a0b8dcb7c
+- id: 4
+  title: 'disabled user token'
+  token_salt: dU7sTe3pLz
+  token_hash: b33ee92606ff56201e6cdfbefab083562cb6efe9f1e187a4b1f0cf04e53d534bac52638f93be8cae1d98a5cc6fcffc500e60
+  token_last_eight: 1234abcd
+  permissions: '{"tasks":["read_all"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 17
+  created: 2023-09-01 07:00:00
+  # token in plaintext is tk_disabled_user_test_token_000000001234abcd
