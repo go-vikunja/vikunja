@@ -188,7 +188,7 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err := utils.NewSSRFSafeHTTPClient().Do(req)
+	resp, err := utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		return err
 	}

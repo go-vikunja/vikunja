@@ -261,7 +261,7 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	if err != nil {
 		return
 	}
-	resp, err := utils.NewSSRFSafeHTTPClient().Do(req)
+	resp, err := utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		return err
 	}
@@ -373,7 +373,7 @@ func pingbackByPhotoID(photoID string) {
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}
-	_, err = utils.NewSSRFSafeHTTPClient().Do(req)
+	_, err = utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}

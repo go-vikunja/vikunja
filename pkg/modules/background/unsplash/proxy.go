@@ -32,7 +32,7 @@ func unsplashImage(url string, c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, err := utils.NewSSRFSafeHTTPClient().Do(req)
+	resp, err := utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		return err
 	}
