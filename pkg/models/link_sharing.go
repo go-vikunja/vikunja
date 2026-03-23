@@ -236,7 +236,7 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	}
 
 	project := &Project{ID: share.ProjectID}
-	can, _, err := project.CanRead(s, a)
+	can, err := project.IsAdmin(s, a)
 	if err != nil {
 		return nil, 0, 0, err
 	}
