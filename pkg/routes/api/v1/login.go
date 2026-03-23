@@ -239,7 +239,7 @@ func RefreshToken(c *echo.Context) (err error) {
 	}
 
 	u, err := user2.GetUserWithEmail(s, &user2.User{ID: session.UserID})
-	if user2.IsErrAccountDisabled(err) || user2.IsErrAccountLocked(err) {
+	if user2.IsErrUserStatusError(err) {
 		if _, delErr := s.Where("id = ?", session.ID).Delete(&models.Session{}); delErr != nil {
 			_ = s.Rollback()
 			return delErr

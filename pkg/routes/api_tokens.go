@@ -92,7 +92,7 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context) er
 	}
 
 	u, err := user.GetUserByID(s, token.OwnerID)
-	if user.IsErrAccountDisabled(err) || user.IsErrAccountLocked(err) {
+	if user.IsErrUserStatusError(err) {
 		log.Debugf("[auth] Tried authenticating with token %d but the owner's account is disabled or locked", token.ID)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}

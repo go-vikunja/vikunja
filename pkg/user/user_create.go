@@ -84,7 +84,7 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 
 	// Get the  full new User
 	newUserOut, err := GetUserByID(s, user.ID)
-	if err != nil && !isErrUserStatusError(err) {
+	if err != nil && !IsErrUserStatusError(err) {
 		return nil, err
 	}
 
