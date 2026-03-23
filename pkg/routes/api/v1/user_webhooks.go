@@ -63,6 +63,8 @@ func GetUserWebhooks(c *echo.Context) error {
 
 	for _, w := range ws {
 		w.Secret = ""
+		w.BasicAuthUser = ""
+		w.BasicAuthPassword = ""
 		if createdBy, has := users[w.CreatedByID]; has {
 			w.CreatedBy = createdBy
 		}
