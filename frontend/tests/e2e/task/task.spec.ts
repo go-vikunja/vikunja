@@ -458,8 +458,8 @@ test.describe('Task', () => {
 
 			await expect(page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'})).toBeVisible()
 			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
-			await expect(page.locator('.modal-mask .modal-container .modal-content .modal-header')).toContainText('Delete this task')
-			await page.locator('.modal-mask .modal-container .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+			await expect(page.locator('dialog[open] .modal-content .modal-header')).toContainText('Delete this task')
+			await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 
 			await expect(page.locator('.global-notification')).toContainText('Success')
 			await expect(page).toHaveURL(new RegExp(`/projects/${tasks[0].project_id}/`))
@@ -580,7 +580,7 @@ test.describe('Task', () => {
 
 			await addLabelToTaskAndVerify(page, labels[0].title)
 
-			await page.locator('.modal-container > .close').click()
+			await page.locator('dialog[open] .modal-container > .close').click()
 
 			await expect(page.locator('.bucket .task')).toContainText(labels[0].title)
 		})
@@ -973,7 +973,7 @@ test.describe('Task', () => {
 
 			await uploadAttachmentAndVerify(page, tasks[0].id)
 
-			await page.locator('.modal-container > .close').click()
+			await page.locator('dialog[open] .modal-container > .close').click()
 
 			await expect(page.locator('.bucket .task .footer .icon svg.fa-paperclip')).toBeVisible()
 		})

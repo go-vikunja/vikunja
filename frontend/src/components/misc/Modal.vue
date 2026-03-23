@@ -1,57 +1,60 @@
 <template>
-	<dialog
-		ref="dialogRef"
-		class="modal-dialog"
-		:class="[
-			{ 'has-overflow': overflow },
-			variant,
-		]"
-		v-bind="attrs"
-		@cancel.prevent="$emit('close')"
-		@mousedown.self.prevent.stop="$emit('close')"
-	>
-		<div class="modal-container">
-			<BaseButton
-				class="close"
-				@click="$emit('close')"
-			>
-				<Icon icon="times" />
-			</BaseButton>
-			<div
-				class="modal-content"
-				:class="{
-					'has-overflow': overflow,
-					'is-wide': wide
-				}"
-			>
-				<slot>
-					<div class="modal-header">
-						<slot name="header" />
-					</div>
-					<div class="content">
-						<slot name="text" />
-					</div>
-					<div class="actions">
-						<XButton
-							variant="tertiary"
-							class="has-text-danger"
-							@click="$emit('close')"
-						>
-							{{ $t('misc.cancel') }}
-						</XButton>
-						<XButton
-							v-cy="'modalPrimary'"
-							variant="primary"
-							:shadow="false"
-							@click="$emit('submit')"
-						>
-							{{ $t('misc.doit') }}
-						</XButton>
-					</div>
-				</slot>
+	<Teleport to="body">
+		<dialog
+			v-if="showDialog"
+			ref="dialogRef"
+			class="modal-dialog"
+			:class="[
+				{ 'has-overflow': overflow },
+				variant,
+			]"
+			v-bind="attrs"
+			@cancel.prevent="$emit('close')"
+			@mousedown.self.prevent.stop="$emit('close')"
+		>
+			<div class="modal-container">
+				<BaseButton
+					class="close"
+					@click="$emit('close')"
+				>
+					<Icon icon="times" />
+				</BaseButton>
+				<div
+					class="modal-content"
+					:class="{
+						'has-overflow': overflow,
+						'is-wide': wide
+					}"
+				>
+					<slot>
+						<div class="modal-header">
+							<slot name="header" />
+						</div>
+						<div class="content">
+							<slot name="text" />
+						</div>
+						<div class="actions">
+							<XButton
+								variant="tertiary"
+								class="has-text-danger"
+								@click="$emit('close')"
+							>
+								{{ $t('misc.cancel') }}
+							</XButton>
+							<XButton
+								v-cy="'modalPrimary'"
+								variant="primary"
+								:shadow="false"
+								@click="$emit('submit')"
+							>
+								{{ $t('misc.doit') }}
+							</XButton>
+						</div>
+					</slot>
+				</div>
 			</div>
-		</div>
-	</dialog>
+		</dialog>
+	</Teleport>
 </template>
 
 <script lang="ts" setup>
@@ -78,42 +81,68 @@ defineOptions({
 	inheritAttrs: false,
 })
 
+const TRANSITION_DURATION = 150
+
 const attrs = useAttrs()
 const dialogRef = ref<HTMLDialogElement | null>(null)
 const previouslyFocused = ref<Element | null>(null)
+const showDialog = ref(false)
+let closeTimer: ReturnType<typeof setTimeout> | null = null
+
+function openDialog() {
+	if (closeTimer) {
+		clearTimeout(closeTimer)
+		closeTimer = null
+	}
+	previouslyFocused.value = document.activeElement
+	showDialog.value = true
+	nextTick(() => {
+		dialogRef.value?.showModal()
+		document.body.style.overflow = 'hidden'
+	})
+}
+
+function closeDialog() {
+	const dialog = dialogRef.value
+	if (dialog) {
+		dialog.close()
+	}
+	document.body.style.overflow = ''
+
+	// Keep the dialog in the DOM during the close transition
+	closeTimer = setTimeout(() => {
+		showDialog.value = false
+		closeTimer = null
+		if (previouslyFocused.value instanceof HTMLElement) {
+			previouslyFocused.value.focus()
+		}
+		previouslyFocused.value = null
+	}, TRANSITION_DURATION)
+}
 
 watch(
 	() => props.enabled,
-	async (isEnabled) => {
-		const dialog = dialogRef.value
-		if (!dialog) return
-
+	(isEnabled) => {
 		if (isEnabled) {
-			previouslyFocused.value = document.activeElement
-			dialog.showModal()
-			document.body.style.overflow = 'hidden'
+			openDialog()
 		} else {
-			dialog.close()
-			document.body.style.overflow = ''
-			if (previouslyFocused.value instanceof HTMLElement) {
-				await nextTick()
-				previouslyFocused.value.focus()
-			}
-			previouslyFocused.value = null
+			closeDialog()
 		}
 	},
 	{immediate: false},
 )
 
 onMounted(() => {
-	if (props.enabled && dialogRef.value) {
-		previouslyFocused.value = document.activeElement
-		dialogRef.value.showModal()
-		document.body.style.overflow = 'hidden'
+	if (props.enabled) {
+		openDialog()
 	}
 })
 
 onBeforeUnmount(() => {
+	if (closeTimer) {
+		clearTimeout(closeTimer)
+		closeTimer = null
+	}
 	document.body.style.overflow = ''
 	if (previouslyFocused.value instanceof HTMLElement) {
 		previouslyFocused.value.focus()
