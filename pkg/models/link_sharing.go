@@ -200,7 +200,11 @@ func (share *LinkSharing) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares/{share} [get]
 func (share *LinkSharing) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
-	exists, err := s.Where("id = ?", share.ID).Get(share)
+	query := s.Where("id = ?", share.ID)
+	if share.ProjectID != 0 {
+		query = query.And("project_id = ?", share.ProjectID)
+	}
+	exists, err := query.Get(share)
 	if err != nil {
 		return err
 	}
@@ -302,7 +306,7 @@ func (share *LinkSharing) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/shares/{share} [delete]
 func (share *LinkSharing) Delete(s *xorm.Session, _ web.Auth) (err error) {
-	_, err = s.Where("id = ?", share.ID).Delete(share)
+	_, err = s.Where("id = ? AND project_id = ?", share.ID, share.ProjectID).Delete(share)
 	return
 }
 
