@@ -19,6 +19,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -47,8 +48,21 @@ type Token struct {
 	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 }
 
-const RefreshTokenCookieName = "vikunja_refresh_token"      //nolint:gosec // not a credential
-const refreshTokenCookiePath = "/api/v1/user/token/refresh" //nolint:gosec // not a credential
+const RefreshTokenCookieName = "vikunja_refresh_token" //nolint:gosec // not a credential
+
+// getRefreshTokenCookiePath returns the cookie path for the refresh token,
+// derived from service.publicurl.
+func getRefreshTokenCookiePath() string {
+	publicURL := config.ServicePublicURL.GetString()
+	u, err := url.Parse(publicURL)
+	if err != nil || publicURL == "" || publicURL == "/" {
+		return "/api/v1/user/token/refresh"
+	}
+
+	// Extract the path component and append the refresh endpoint
+	basePath := strings.TrimRight(u.Path, "/")
+	return basePath + "/api/v1/user/token/refresh"
+}
 
 // SetRefreshTokenCookie sets an HttpOnly cookie containing the refresh token.
 // The cookie is path-scoped to the refresh endpoint so the browser only sends
@@ -67,7 +81,7 @@ func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 	c.SetCookie(&http.Cookie{
 		Name:     RefreshTokenCookieName,
 		Value:    token,
-		Path:     refreshTokenCookiePath,
+		Path:     getRefreshTokenCookiePath(),
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   secure,
