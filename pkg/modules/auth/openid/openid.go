@@ -158,6 +158,11 @@ func HandleCallback(c *echo.Context) error {
 		return err
 	}
 
+	if u.Status == user.StatusDisabled || u.Status == user.StatusAccountLocked {
+		_ = s.Rollback()
+		return &user.ErrAccountDisabled{UserID: u.ID}
+	}
+
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
 
 	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, "OIDC")
