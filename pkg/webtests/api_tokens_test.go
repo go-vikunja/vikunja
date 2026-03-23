@@ -112,6 +112,21 @@ func TestAPIToken(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 		assert.Contains(t, res.Body.String(), `"code":11`)
 	})
+	t.Run("locked user token rejected", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks", nil)
+		res := httptest.NewRecorder()
+		c := e.NewContext(req, res)
+		h := routes.SetupTokenMiddleware()(func(c *echo.Context) error {
+			return c.String(http.StatusOK, "test")
+		})
+
+		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_locked_user_test_token_0000000012345678") // Token 5 (locked user 18)
+		require.NoError(t, h(c))
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+		assert.Contains(t, res.Body.String(), `"code":11`)
+	})
 	t.Run("jwt", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)

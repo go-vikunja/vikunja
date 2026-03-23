@@ -329,6 +329,16 @@ func TestCheckUserCredentials(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrAccountDisabled(err))
 	})
+	t.Run("locked user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user18 is locked (status=3), password is "12345678"
+		_, err := CheckUserCredentials(s, &Login{Username: "user18", Password: "12345678"})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountLocked(err))
+	})
 }
 
 func TestUpdateUser(t *testing.T) {
