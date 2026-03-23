@@ -36,8 +36,8 @@ func TestWebhookSSRFProtection(t *testing.T) {
 	t.Run("blocks requests to loopback addresses", func(t *testing.T) {
 		resetWebhookClient()
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
-		config.WebhooksProxyURL.Set("")
-		config.WebhooksProxyPassword.Set("")
+		config.OutgoingRequestsProxyURL.Set("")
+		config.OutgoingRequestsProxyPassword.Set("")
 
 		w := &Webhook{
 			ID:        1,
@@ -54,8 +54,8 @@ func TestWebhookSSRFProtection(t *testing.T) {
 	t.Run("allows requests to public addresses", func(t *testing.T) {
 		resetWebhookClient()
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
-		config.WebhooksProxyURL.Set("")
-		config.WebhooksProxyPassword.Set("")
+		config.OutgoingRequestsProxyURL.Set("")
+		config.OutgoingRequestsProxyPassword.Set("")
 
 		// Start a test server (binds to 127.0.0.1 but we test
 		// separately that public IPs are allowed in principle)
@@ -81,8 +81,8 @@ func TestWebhookSSRFProtection(t *testing.T) {
 	t.Run("allows loopback when allownonroutableips is true", func(t *testing.T) {
 		resetWebhookClient()
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
-		config.WebhooksProxyURL.Set("")
-		config.WebhooksProxyPassword.Set("")
+		config.OutgoingRequestsProxyURL.Set("")
+		config.OutgoingRequestsProxyPassword.Set("")
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
@@ -103,8 +103,8 @@ func TestWebhookSSRFProtection(t *testing.T) {
 	t.Run("blocks requests to private RFC1918 addresses", func(t *testing.T) {
 		resetWebhookClient()
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
-		config.WebhooksProxyURL.Set("")
-		config.WebhooksProxyPassword.Set("")
+		config.OutgoingRequestsProxyURL.Set("")
+		config.OutgoingRequestsProxyPassword.Set("")
 
 		privateAddrs := []string{
 			"http://10.0.0.1:80/hook",
@@ -129,8 +129,8 @@ func TestWebhookSSRFProtection(t *testing.T) {
 	t.Run("blocks requests to metadata endpoint", func(t *testing.T) {
 		resetWebhookClient()
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
-		config.WebhooksProxyURL.Set("")
-		config.WebhooksProxyPassword.Set("")
+		config.OutgoingRequestsProxyURL.Set("")
+		config.OutgoingRequestsProxyPassword.Set("")
 
 		w := &Webhook{
 			ID:        1,
