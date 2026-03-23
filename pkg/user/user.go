@@ -314,7 +314,15 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 		userOut.OverdueTasksRemindersTime = "9:00"
 	}
 
-	return userOut, err
+	if userOut.Status == StatusDisabled {
+		return userOut, &ErrAccountDisabled{UserID: userOut.ID}
+	}
+
+	if userOut.Status == StatusAccountLocked {
+		return userOut, &ErrAccountLocked{UserID: userOut.ID}
+	}
+
+	return userOut, nil
 }
 
 func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User, err error) {
