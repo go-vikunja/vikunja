@@ -51,6 +51,66 @@ describe('Parse Task Text', () => {
 		expect(result.text).toBe(text)
 	})
 
+	describe('Quote-escaped text', () => {
+		it('should skip all parsing when text is wrapped in double quotes', () => {
+			const result = parseTaskText('"delete mails up to january 30th"')
+
+			expect(result.text).toBe('delete mails up to january 30th')
+			expect(result.date).toBeNull()
+			expect(result.labels).toHaveLength(0)
+			expect(result.project).toBeNull()
+			expect(result.priority).toBeNull()
+			expect(result.assignees).toHaveLength(0)
+			expect(result.repeats).toBeNull()
+		})
+
+		it('should skip all parsing when text is wrapped in single quotes', () => {
+			const result = parseTaskText("'buy mass tomorrow *label !2 @user'")
+
+			expect(result.text).toBe('buy mass tomorrow *label !2 @user')
+			expect(result.date).toBeNull()
+			expect(result.labels).toHaveLength(0)
+			expect(result.project).toBeNull()
+			expect(result.priority).toBeNull()
+			expect(result.assignees).toHaveLength(0)
+			expect(result.repeats).toBeNull()
+		})
+
+		it('should not skip parsing for unmatched quotes', () => {
+			const result = parseTaskText('"delete mails today')
+
+			expect(result.date).not.toBeNull()
+		})
+
+		it('should not skip parsing for mismatched quote types', () => {
+			const result = parseTaskText('"delete mails today\'')
+
+			expect(result.date).not.toBeNull()
+		})
+
+		it('should not skip parsing when quotes are in the middle', () => {
+			const result = parseTaskText('delete "mails" today')
+
+			expect(result.date).not.toBeNull()
+		})
+
+		it('should handle empty quoted string', () => {
+			const result = parseTaskText('""')
+
+			expect(result.text).toBe('')
+			expect(result.date).toBeNull()
+		})
+
+		it('should skip parsing in todoist mode too', () => {
+			const result = parseTaskText('"task today @label #project"', PrefixMode.Todoist)
+
+			expect(result.text).toBe('task today @label #project')
+			expect(result.date).toBeNull()
+			expect(result.labels).toHaveLength(0)
+			expect(result.project).toBeNull()
+		})
+	})
+
 	describe('Date Parsing', () => {
 		it('should not return any date if none was provided', () => {
 			const result = parseTaskText('Lorem Ipsum')
