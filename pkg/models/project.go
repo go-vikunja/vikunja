@@ -525,6 +525,26 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 		GroupBy("l.id")
 }
 
+// accessibleProjectIDsSubquery returns a builder.Cond that filters rows
+// where `column` is a project ID the given auth can access. For link shares
+// this is a simple equality check; for users it's a subquery using the
+// same recursive CTE as getUserProjectsStatement.
+func accessibleProjectIDsSubquery(a web.Auth, column string) builder.Cond {
+	if share, ok := a.(*LinkSharing); ok {
+		return builder.Eq{column: share.ProjectID}
+	}
+
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		// If we can't get a user, deny everything
+		return builder.Expr("1 = 0")
+	}
+
+	return builder.In(column,
+		getUserProjectsStatement(u.ID, "", false).Select("l.id"),
+	)
+}
+
 func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) (projects []*Project, totalCount int64, err error) {
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
