@@ -158,9 +158,13 @@ func HandleCallback(c *echo.Context) error {
 		return err
 	}
 
-	if u.Status == user.StatusDisabled || u.Status == user.StatusAccountLocked {
+	if u.Status == user.StatusDisabled {
 		_ = s.Rollback()
 		return &user.ErrAccountDisabled{UserID: u.ID}
+	}
+	if u.Status == user.StatusAccountLocked {
+		_ = s.Rollback()
+		return &user.ErrAccountLocked{UserID: u.ID}
 	}
 
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
@@ -288,6 +292,12 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 	}
 	alreadyCreatedFromIssuer = err == nil || user.IsErrUserStatusError(err)
 
+	// If the user exists but is disabled/locked, return early — don't update their profile or sync avatar.
+	// HandleCallback will reject the auth attempt.
+	if alreadyCreatedFromIssuer && user.IsErrUserStatusError(err) {
+		return u, nil
+	}
+
 	if !alreadyCreatedFromIssuer && (provider.EmailFallback || provider.UsernameFallback) {
 
 		// try finding the user on fallback mappingproperties
@@ -313,6 +323,11 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 			return nil, err
 		}
 		fallbackMatchFound = err == nil || user.IsErrUserStatusError(err)
+
+		// Same as above: disabled/locked user found via fallback — return early.
+		if fallbackMatchFound && user.IsErrUserStatusError(err) {
+			return u, nil
+		}
 	}
 
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
