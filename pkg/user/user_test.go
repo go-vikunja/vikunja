@@ -623,3 +623,28 @@ func TestConfirmDeletion(t *testing.T) {
 		})
 	})
 }
+
+func TestGetUserByID_DisabledUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// user17 is disabled (status=2)
+	u, err := GetUserByID(s, 17)
+	require.Error(t, err)
+	assert.True(t, IsErrAccountDisabled(err), "GetUserByID should return ErrAccountDisabled, got: %v", err)
+	// User should still be returned alongside the error
+	assert.NotNil(t, u)
+	assert.Equal(t, int64(17), u.ID)
+}
+
+func TestGetUserByID_ActiveUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// user1 is active
+	u, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), u.ID)
+}
