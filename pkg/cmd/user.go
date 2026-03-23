@@ -118,7 +118,7 @@ func getUserFromArg(s *xorm.Session, arg string) *user.User {
 	}
 
 	u, err := user.GetUserWithEmail(s, &filter)
-	if err != nil {
+	if err != nil && !user.IsErrAccountDisabled(err) && !user.IsErrAccountLocked(err) {
 		log.Fatalf("Could not get user: %s", err)
 	}
 	return u
@@ -143,7 +143,7 @@ var userListCmd = &cobra.Command{
 
 		if userFlagEmail != "" {
 			u, err := user.GetUserWithEmail(s, &user.User{Email: userFlagEmail})
-			if err != nil {
+			if err != nil && !user.IsErrAccountDisabled(err) && !user.IsErrAccountLocked(err) {
 				if user.IsErrUserDoesNotExist(err) {
 					log.Fatalf("No user found with email %s", userFlagEmail)
 				}

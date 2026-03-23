@@ -30,7 +30,7 @@ func (tm *TeamMember) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 // CanDelete checks if the user can delete a new team member
 func (tm *TeamMember) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	u, err := user.GetUserByUsername(s, tm.Username)
-	if err != nil {
+	if err != nil && !user.IsErrAccountDisabled(err) && !user.IsErrAccountLocked(err) {
 		return false, err
 	}
 	if u.ID == a.GetID() {

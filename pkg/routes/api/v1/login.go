@@ -239,21 +239,20 @@ func RefreshToken(c *echo.Context) (err error) {
 	}
 
 	u, err := user2.GetUserWithEmail(s, &user2.User{ID: session.UserID})
+	if user2.IsErrAccountDisabled(err) || user2.IsErrAccountLocked(err) {
+		if _, delErr := s.Where("id = ?", session.ID).Delete(&models.Session{}); delErr != nil {
+			_ = s.Rollback()
+			return delErr
+		}
+		if commitErr := s.Commit(); commitErr != nil {
+			return commitErr
+		}
+		auth.ClearRefreshTokenCookie(c)
+		return err
+	}
 	if err != nil {
 		_ = s.Rollback()
 		return err
-	}
-
-	if u.Status == user2.StatusDisabled || u.Status == user2.StatusAccountLocked {
-		if _, err := s.Where("id = ?", session.ID).Delete(&models.Session{}); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-		if err := s.Commit(); err != nil {
-			return err
-		}
-		auth.ClearRefreshTokenCookie(c)
-		return &user2.ErrAccountDisabled{UserID: u.ID}
 	}
 
 	if err := s.Commit(); err != nil {

@@ -278,10 +278,10 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		Issuer:  idToken.Issuer,
 		Subject: idToken.Subject,
 	})
-	if err != nil && !user.IsErrUserDoesNotExist(err) {
+	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrAccountDisabled(err) && !user.IsErrAccountLocked(err) {
 		return nil, err
 	}
-	alreadyCreatedFromIssuer = err == nil // found if no error, not found if we reach it here despite an error
+	alreadyCreatedFromIssuer = err == nil || user.IsErrAccountDisabled(err) || user.IsErrAccountLocked(err)
 
 	if !alreadyCreatedFromIssuer && (provider.EmailFallback || provider.UsernameFallback) {
 
@@ -304,10 +304,10 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 		// Check if the user exists for the given fallback matching options
 		u, err = user.GetUserWithEmail(s, searchUser)
-		if err != nil && !user.IsErrUserDoesNotExist(err) {
+		if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrAccountDisabled(err) && !user.IsErrAccountLocked(err) {
 			return nil, err
 		}
-		fallbackMatchFound = err == nil // found if no error, not found if we reach it here despite an error
+		fallbackMatchFound = err == nil || user.IsErrAccountDisabled(err) || user.IsErrAccountLocked(err)
 	}
 
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {

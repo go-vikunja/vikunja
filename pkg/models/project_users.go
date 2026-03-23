@@ -142,7 +142,7 @@ func (lu *ProjectUser) Delete(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the user exists
 	u, err := user.GetUserByUsername(s, lu.Username)
-	if err != nil {
+	if err != nil && !user.IsErrAccountDisabled(err) && !user.IsErrAccountLocked(err) {
 		return
 	}
 	lu.UserID = u.ID
@@ -249,7 +249,7 @@ func (lu *ProjectUser) Update(s *xorm.Session, _ web.Auth) (err error) {
 
 	// Check if the user exists
 	u, err := user.GetUserByUsername(s, lu.Username)
-	if err != nil {
+	if err != nil && !user.IsErrAccountDisabled(err) && !user.IsErrAccountLocked(err) {
 		return err
 	}
 	lu.UserID = u.ID
