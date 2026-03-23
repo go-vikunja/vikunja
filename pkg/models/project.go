@@ -797,12 +797,12 @@ func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 
 // CheckIsArchived returns an ErrProjectIsArchived if the project or any of its parent projects is archived.
 func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
-	if p.ParentProjectID > 0 {
-		p := &Project{ID: p.ParentProjectID}
-		return p.CheckIsArchived(s)
-	}
-
-	if p.ID == 0 { // don't check new projects
+	if p.ID == 0 {
+		// New project — skip checking the project itself but still check the parent.
+		if p.ParentProjectID > 0 {
+			parent := &Project{ID: p.ParentProjectID}
+			return parent.CheckIsArchived(s)
+		}
 		return nil
 	}
 
@@ -813,6 +813,11 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 
 	if project.IsArchived {
 		return ErrProjectIsArchived{ProjectID: p.ID}
+	}
+
+	if project.ParentProjectID > 0 {
+		parent := &Project{ID: project.ParentProjectID}
+		return parent.CheckIsArchived(s)
 	}
 
 	return nil
