@@ -1003,7 +1003,7 @@
                 {
                     "key": "proxyurl",
                     "default_value": "",
-                    "comment": "The URL of a proxy to use for outgoing HTTP requests. Applies to webhooks, avatar downloads, and migration imports. Must be used with `outgoingrequests.proxypassword`."
+                    "comment": "The URL of [a mole instance](https://github.com/frain-dev/mole) to use to proxy outgoing HTTP requests. Applies to webhooks, avatar downloads, and migration imports. You should use this and configure appropriately if you're not the only one using your Vikunja instance. More info about why: https://webhooks.fyi/best-practices/webhook-providers#implement-security-on-egress-communication. Must be used in combination with `outgoingrequests.proxypassword`."
                 },
                 {
                     "key": "proxypassword",
