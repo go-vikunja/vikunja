@@ -1008,6 +1008,39 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			// Tests that FilterIncludeNulls set on a view's saved filter config
+			// is properly applied when loading tasks through that view.
+			name: "range with nulls from view filter",
+			fields: fields{
+				ProjectViewID: 161,
+				ProjectID:     1,
+			},
+			args: defaultArgs,
+			want: []*Task{
+				task1,  // has nil dates
+				task2,  // has nil dates
+				task3,  // has nil dates
+				task4,  // has nil dates
+				task5,  // has nil dates
+				task6,  // has nil dates
+				task7,  // matches start_date filter
+				task8,  // matches end_date filter
+				task9,  // matches both
+				task10, // has nil dates
+				task11, // has nil dates
+				task12, // has nil dates
+				task27, // has start_date, matches filter
+				task28, // has dates, matches filter
+				task29, // has nil dates
+				task30, // has nil dates
+				task31, // has nil dates
+				task33, // has nil dates
+				task47, // has nil dates
+				task48, // has nil dates
+			},
+			wantErr: false,
+		},
+		{
 			name: "favorited tasks",
 			args: defaultArgs,
 			fields: fields{
