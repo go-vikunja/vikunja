@@ -35,7 +35,7 @@ func TestWebhookSSRFProtection(t *testing.T) {
 
 	t.Run("blocks requests to loopback addresses", func(t *testing.T) {
 		resetWebhookClient()
-		config.WebhooksAllowNonRoutableIPs.Set(false)
+		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
 		config.WebhooksProxyURL.Set("")
 		config.WebhooksProxyPassword.Set("")
 
@@ -53,7 +53,7 @@ func TestWebhookSSRFProtection(t *testing.T) {
 
 	t.Run("allows requests to public addresses", func(t *testing.T) {
 		resetWebhookClient()
-		config.WebhooksAllowNonRoutableIPs.Set(false)
+		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
 		config.WebhooksProxyURL.Set("")
 		config.WebhooksProxyPassword.Set("")
 
@@ -80,7 +80,7 @@ func TestWebhookSSRFProtection(t *testing.T) {
 
 	t.Run("allows loopback when allownonroutableips is true", func(t *testing.T) {
 		resetWebhookClient()
-		config.WebhooksAllowNonRoutableIPs.Set(true)
+		config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
 		config.WebhooksProxyURL.Set("")
 		config.WebhooksProxyPassword.Set("")
 
@@ -102,7 +102,7 @@ func TestWebhookSSRFProtection(t *testing.T) {
 
 	t.Run("blocks requests to private RFC1918 addresses", func(t *testing.T) {
 		resetWebhookClient()
-		config.WebhooksAllowNonRoutableIPs.Set(false)
+		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
 		config.WebhooksProxyURL.Set("")
 		config.WebhooksProxyPassword.Set("")
 
@@ -128,7 +128,7 @@ func TestWebhookSSRFProtection(t *testing.T) {
 
 	t.Run("blocks requests to metadata endpoint", func(t *testing.T) {
 		resetWebhookClient()
-		config.WebhooksAllowNonRoutableIPs.Set(false)
+		config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
 		config.WebhooksProxyURL.Set("")
 		config.WebhooksProxyPassword.Set("")
 
