@@ -770,4 +770,13 @@ func TestCaldavDisabledUserRejected(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, result, "disabled user should not be able to authenticate via CalDAV")
 	})
+	t.Run("locked user cannot authenticate via CalDAV", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// user18 is locked (status=3), password is "12345678"
+		result, err := caldav.BasicAuth(c, "user18", "12345678")
+		require.NoError(t, err)
+		assert.False(t, result, "locked user should not be able to authenticate via CalDAV")
+	})
 }
