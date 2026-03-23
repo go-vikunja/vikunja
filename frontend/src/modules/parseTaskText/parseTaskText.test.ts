@@ -1,8 +1,9 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
-import {ParsedTaskText, parseTaskText, PrefixMode} from './parseTaskText'
-import {parseDate} from '../helpers/time/parseDate'
-import {calculateDayInterval} from '../helpers/time/calculateDayInterval'
+import {parseTaskText, PrefixMode} from '.'
+import type {ParsedTaskText} from '.'
+import {parseDate} from './dateParser'
+import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
 import {PRIORITIES} from '@/constants/priorities'
 import {MILLISECONDS_A_DAY} from '@/constants/date'
 import type {IRepeatAfter} from '@/types/IRepeatAfter'

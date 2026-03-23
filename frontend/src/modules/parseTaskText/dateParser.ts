@@ -1,6 +1,6 @@
-import {calculateDayInterval} from './calculateDayInterval'
-import {calculateNearestHours} from './calculateNearestHours'
-import {replaceAll} from '../replaceAll'
+import {calculateDayInterval} from '@/helpers/time/calculateDayInterval'
+import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
+import {replaceAll} from '@/helpers/replaceAll'
 
 export interface dateParseResult {
 	newText: string,
@@ -196,7 +196,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 			result = `${month}/${day}/${tmp_year}`
 			result = !isNaN(new Date(result).getTime()) ? result : `${day}/${month}/${tmp_year}`
 			result = !isNaN(new Date(result).getTime()) ? result : null
-			
+
 			if(result !== null){
 				foundText = found
 				break
@@ -212,7 +212,7 @@ export const getDateFromText = (text: string, now: Date = new Date()) => {
 		foundText = results === null ? '' : results[0].trim()
 		containsYear = false
 	}
-	
+
 	if (result === null) {
 		return {
 			foundText,
@@ -328,7 +328,7 @@ const getDateFromWeekday = (text: string, date: Date = new Date()): dateFoundRes
 	const distance: number = (day + 7 - currentDay) % 7
 	date.setDate(date.getDate() + distance)
 
-	// This a space at the end of the found text to not break parsing suffix strings like "at 14:00" in cases where the 
+	// This a space at the end of the found text to not break parsing suffix strings like "at 14:00" in cases where the
 	// matched string comes with a space at the end (last part of the regex).
 	let foundText = results[0]
 	if (foundText.endsWith(' ')) {
@@ -357,9 +357,9 @@ const getDayFromText = (text: string, now: Date = new Date()) => {
 	const day = parseInt(results[0])
 	date.setDate(day)
 
-	// If the parsed day is the 31st (or 29+ and the next month is february) but the next month only has 30 days, 
+	// If the parsed day is the 31st (or 29+ and the next month is february) but the next month only has 30 days,
 	// setting the day to 31 will "overflow" the date to the next month, but the first.
-	// This would look like a very weired bug. Now, to prevent that, we check if the day is the same as parsed after 
+	// This would look like a very weired bug. Now, to prevent that, we check if the day is the same as parsed after
 	// setting it for the first time and set it again if it isn't - that would mean the month overflowed.
 	while (date < now) {
 		date.setMonth(date.getMonth() + 1)

@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -36,22 +35,11 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	aferos3 "github.com/fclairamb/afero-s3"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
 
 // This file handles storing and retrieving a file for different backends
-var fs afero.Fs
-var afs *afero.Afero
-
-// S3 client and bucket for direct uploads with Content-Length
-type s3PutObjectClient interface {
-	PutObject(ctx context.Context, input *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
-}
-
-var s3Client s3PutObjectClient
-var s3Bucket string
+var storage FileStorage
 
 func setDefaultLocalConfig() {
 	config.FilesBasePath.Set(config.ResolvePath(config.FilesBasePath.GetString()))
@@ -97,23 +85,15 @@ func initS3FileHandler() error {
 		}
 	})
 
-	// Initialize S3 filesystem using afero-s3
-	fs = aferos3.NewFsFromClient(bucket, client)
-	afs = &afero.Afero{Fs: fs}
-
-	// Store S3 client and bucket for direct uploads with Content-Length
-	s3Client = client
-	s3Bucket = bucket
+	storage = newS3Storage(bucket, config.FilesBasePath.GetString(), client)
 
 	return nil
 }
 
 // initLocalFileHandler initializes the local filesystem backend
 func initLocalFileHandler() {
-	fs = afero.NewOsFs()
-	afs = &afero.Afero{Fs: fs}
-	s3Client = nil
 	setDefaultLocalConfig()
+	storage = newLocalStorage(config.FilesBasePath.GetString())
 }
 
 // InitFileHandler creates a new file handler for the file backend we want to use
@@ -140,9 +120,8 @@ func InitFileHandler() error {
 
 // InitTestFileHandler initializes a new memory file system for testing
 func InitTestFileHandler() {
-	fs = afero.NewMemMapFs()
-	afs = &afero.Afero{Fs: fs}
 	setDefaultLocalConfig()
+	storage = newMemStorage()
 }
 
 func initFixtures(t *testing.T) {
@@ -157,7 +136,7 @@ func initFixtures(t *testing.T) {
 // InitTestFileFixtures initializes file fixtures
 func InitTestFileFixtures(t *testing.T) {
 	testfile := &File{ID: 1}
-	err := afero.WriteFile(afs, testfile.getAbsoluteFilePath(), []byte("testfile1"), 0644)
+	err := storage.Write(testfile.fileID(), bytes.NewReader([]byte("testfile1")), 9)
 	require.NoError(t, err)
 }
 
@@ -184,9 +163,9 @@ func InitTests() {
 	keyvalue.InitStorage()
 }
 
-// FileStat stats a file. This is an exported function to be able to test this from outide of the package
+// FileStat stats a file. This is an exported function to be able to test this from outside of the package
 func FileStat(file *File) (os.FileInfo, error) {
-	return afs.Stat(file.getAbsoluteFilePath())
+	return storage.Stat(file.fileID())
 }
 
 // ValidateFileStorage checks that the configured file storage is writable
@@ -201,36 +180,31 @@ func ValidateFileStorage() error {
 
 	// For local filesystem, ensure the base directory exists
 	if config.FilesType.GetString() == "local" {
-		// Check if directory exists
-		info, err := afs.Stat(basePath)
+		info, err := os.Stat(basePath)
 		if err != nil {
 			if !errors.Is(err, os.ErrNotExist) {
-				// Error other than "file doesn't exist"
 				return fmt.Errorf("failed to access file storage directory at %s: %w%s", basePath, err, diag)
 			}
 
-			// Directory doesn't exist, try to create it
-			err = afs.MkdirAll(basePath, 0755)
+			err = os.MkdirAll(basePath, 0755)
 			if err != nil {
 				return fmt.Errorf("failed to create file storage directory at %s: %w%s", basePath, err, diag)
 			}
 		} else if !info.IsDir() {
-			// Path exists but is not a directory
 			return fmt.Errorf("file storage path exists but is not a directory: %s", basePath)
 		}
 	}
 
 	filename := fmt.Sprintf(".vikunja-check-%d", time.Now().UnixNano())
-	path := filepath.Join(basePath, filename)
 
-	err := writeToStorage(path, bytes.NewReader([]byte{}), 0)
+	err := storage.Write(filename, bytes.NewReader([]byte{}), 0)
 	if err != nil {
-		return fmt.Errorf("failed to create test file at %s: %w%s", path, err, diag)
+		return fmt.Errorf("failed to create test file: %w%s", err, diag)
 	}
 
-	err = afs.Remove(path)
+	err = storage.Remove(filename)
 	if err != nil {
-		return fmt.Errorf("failed to remove test file at %s: %w", path, err)
+		return fmt.Errorf("failed to remove test file: %w", err)
 	}
 
 	return nil

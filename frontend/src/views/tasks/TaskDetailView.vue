@@ -355,6 +355,7 @@
 							:edit-enabled="canWrite"
 							:task="task"
 							@taskChanged="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
+							@update:attachments="onAttachmentsUpdated"
 						/>
 					</div>
 
@@ -622,7 +623,6 @@
 <script lang="ts" setup>
 import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
-import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMutationObserver} from '@vueuse/core'
 import {klona} from 'klona/lite'
@@ -631,6 +631,7 @@ import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
+import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
@@ -667,7 +668,6 @@ import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 import {playPopSound} from '@/helpers/playPop'
 
-import {useAttachmentStore} from '@/stores/attachments'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
 import {useProjectStore} from '@/stores/projects'
@@ -694,14 +694,13 @@ const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
-const attachmentStore = useAttachmentStore()
-const {hasAttachments} = storeToRefs(attachmentStore)
 const taskStore = useTaskStore()
 const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const task = ref<ITask>(new TaskModel())
+const hasAttachments = computed(() => (task.value.attachments?.length ?? 0) > 0)
 const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
@@ -789,8 +788,20 @@ const color = computed(() => {
 
 const isModal = computed(() => Boolean(props.backdropView))
 
-function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(props.taskId, file, onSuccess)
+async function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
+	const uploaded = await uploadFile(props.taskId, file, onSuccess)
+	if (uploaded.length > 0) {
+		onAttachmentsUpdated([...task.value.attachments, ...uploaded])
+	}
+	return uploaded
+}
+
+function onAttachmentsUpdated(attachments: IAttachment[]) {
+	task.value.attachments = attachments
+	kanbanStore.setTaskInBucket({
+		...task.value,
+		attachments,
+	})
 }
 
 const heading = ref<HTMLElement | null>(null)
@@ -890,7 +901,6 @@ watch(
 		try {
 			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments', 'is_unread']})
 			Object.assign(task.value, loaded)
-			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
 

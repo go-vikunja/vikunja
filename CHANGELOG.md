@@ -7,6 +7,258 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [2.2.0] - 2026-03-20
+
+### Bug Fixes
+
+* *(attachments)* Sync kanban store and task ref on attachment changes
+* *(auth)* Use SameSite=None for refresh token cookie to fix desktop app
+* *(auth)* Make SameSite=None conditional on HTTPS for refresh cookie
+* *(caldav)* Eliminate nested db session in CalDAV auth
+* *(caldav)* Parse timestamps in configured timezone
+* *(caldav)* Use /dav/projects/ as home to make iOS/MacOS reminders work (#2417)
+* *(ci)* Remove HTML comments inside table that break markdown rendering
+* *(cli)* Make user deletion confirmation check Windows compatible (#2339)
+* *(db)* Prevent SQLite "database is locked" errors under concurrent writes
+* *(db)* Use immediate txlock for SQLite instead of MaxOpenConns(1)
+* *(db)* Use WAL mode for SQLite and temp file for ephemeral databases
+* *(desktop)* Disable nodeIntegration and enable contextIsolation/sandbox
+* *(desktop)* Validate URL schemes before shell.openExternal
+* *(desktop)* Block same-window navigation to external origins
+* *(docker)* Remove COPY for deleted patches directory
+* *(e2e)* Drain event handlers and stop browser between tests
+* *(events)* Defer task event dispatch until after transaction commit
+* *(events)* Defer event dispatch for task sub-entities
+* *(events)* Defer event dispatch for project operations
+* *(events)* Defer event dispatch for team operations
+* *(events)* Defer event dispatch for user creation and task positions
+* *(events)* Dispatch pending events in CalDAV handlers after commit
+* *(events)* Dispatch pending events in migration and export handlers
+* *(frontend)* Add horizontal overflow handling to tables on mobile
+* *(frontend)* Use semantic class instead of targeting Tailwind utility
+* *(frontend)* Use mbs-2 utility class instead of scoped CSS
+* *(gantt)* Always show relation arrows and fix arrow Y positioning
+* *(gantt)* Update relation arrows in real-time during drag and resize
+* *(gantt)* Make relation arrows smaller and dash precedes lines
+* *(gantt)* Spread overlapping relation arrows at shared endpoints
+* *(gantt)* Improve parent task bar styling and visual grouping
+* *(gantt)* Make collapse/expand triangle smaller
+* *(gantt)* Move parent diamonds outward with stroke and remove hover effect
+* *(gantt)* Only set hasDerivedDates when children have actual dates
+* *(gantt)* Clamp collapse chevron x position to prevent negative offset
+* *(gantt)* Remove unreachable hover rule on relation arrows
+* *(gantt)* Render collapse chevron after bars for correct SVG paint order
+* *(menu)* Prevent dropdown from closing when cursor crosses offset gap (#2367)
+* *(menu)* Show all project menu items in sidebar dropdown
+* *(migration)* Support space-separated date format in TickTick importer
+* *(nav)* Project drag handle position
+* *(shortcuts)* Resolve lint errors in shortcut module
+* *(shortcuts)* Track active sequences explicitly to prevent misfires
+* *(tasks)* Support both expand and expand[] query parameter formats (#2415)
+* *(test)* Update mobile kanban test to use close button instead of back button
+* *(views)* Assign default position when creating new project views
+* Use MinPositionSpacing threshold in calculateNewPositionForTask (#2320) ([3ca4913](3ca4913fcb6dc287adec552dd62024a3b63f477a))
+* Remove invalidateAvatarCache call that broke request deduplication (#2317) ([7297682](7297682cadae3e2c48f2a09d20a6191b561c1eeb))
+* Add /tmp directory to Docker image to fix data export ([84d563c](84d563c51b6cd15000f4af6e058362c5e45c8dc2))
+* Update old kolaente.dev URLs to code.vikunja.io (#2342) ([a160048](a160048cc3259773405654746117bf6dc0565eee))
+* Validate default settings timezone on startup (#2345) ([40bcf2b](40bcf2b36f777c6338a40581a472333974770c93))
+* Correct package.json indentation after dependency removal ([f8763d8](f8763d812e2a7c7f9b2d28ff3e502693419f859e))
+* Remove duplicate close button on mobile task detail view ([8a4f3a9](8a4f3a916f2eae71f0106c42d257b5ee4dc77928))
+* Prevent nil pointer panic in mention notification listeners ([18f1687](18f16878a84952cf5d0ddb583385dc340d1f5ff3))
+* Only drop Vikunja-owned tables in WipeEverything ([14e2c95](14e2c95a830eb4206390a58f85b4bc49068f23cd))
+* Only dump Vikunja-owned tables ([cd7d405](cd7d40583aaa43e1d9445e9f54ea81d14eb12232))
+* Remove debug log statements from task duplicate ([6da0f68](6da0f685624c66806027070d537648be9b100e29))
+* Close source file handle when duplicating attachments ([7aad96b](7aad96b1991a981245cc119bce189de327ea36ce))
+* Preserve cover image when duplicating task ([9c23e19](9c23e196440830d0b94ca18bfb1002a0db27b54c))
+* Allow browser caching for file downloads (#2349) ([54d9775](54d977532e9e9a99281bc56965583d07f3913b21))
+* Handle deleted user in saved filter view event listener ([7288483](72884838790db52852c8643ab17be5f6fc0067f0))
+* Include remote IP address in HTTP request logs ([f9cb0a2](f9cb0a2de1d7ed64aa04f74f4209f117ea60186f))
+* Use ParadeDB v2 fuzzy prefix matching for search (#2346) ([0a38ec0](0a38ec08388c9d2716f9e41185af0bcfb0ed7f8d))
+* Prefer working directory for service.rootpath default ([d3cbc4f](d3cbc4fc4fb7d7fe054c4c022656f2b4d5c42bde))
+* Ensure /tmp is writable by container user in Docker image ([f497e8b](f497e8bb6d78f3b01c2a87540e28d7727e17676e))
+* Remove debounce from color picker to prevent stale color on save ([d196af0](d196af0503053d00e05afb8d2585a67b229a5144))
+* Send account deletion notification before deleting user row ([79a612a](79a612aa5d95f89cd84148295146a92ccddefa74))
+* Register bulk label route correctly for API token permissions ([e19bea8](e19bea8e3a2804485479748b1c91dc58719dbe11))
+* Prevent authenticated UI flash when server rejects JWT session (#2387) ([28cc9e0](28cc9e0571c98bb04d216e5fe47aaa503a1e887b))
+* Preserve CalDAV inverse relations when parent has no RELATED-TO (#2389) ([ada2eba](ada2ebab9e1738bb145db1c498d2dda84d11c10b))
+* Collapse view buttons into dropdown when overflowing (#2306) ([7b6b432](7b6b4323015239098a55adcb134d12dc9785f5cb))
+* Invalidate all sessions when enabling TOTP ([3bc0093](3bc009368628fb286632b456f9bf2d575a8bfa43))
+* Make mage fmt skip gitignored files ([e74265d](e74265d921b9b12bf89882e791743758b42f5f3d))
+* Ensure frontend dist directory exists for lint and fmt commands ([c62b7e6](c62b7e680f82253d89f8cefbfe4bb4b4bb64c5e9))
+* Handle S3 backend in user export download ([b0ede53](b0ede53c051d45a3e861450187e64c5342be5362))
+* Use file mime type instead of hardcoded application/zip in S3 export ([4cd63f9](4cd63f93a48d784dd2566c26a0642ec0c69d3d8f))
+* Configure Echo IPExtractor to prevent rate limit bypass via spoofed headers ([a498dd6](a498dd69915a006c07e9d82660a2185d7e8136ee))
+* Block login for StatusAccountLocked users ([4c80932](4c80932b6475ad54a2e2a81541d89a3b8471a762))
+* Prevent password reset from re-enabling admin-disabled accounts ([d8570c6](d8570c603da1f26635ce6048d6af85ede827abfb))
+* Reject password reset token requests for disabled users ([708ccab](708ccab895a23ed59b330db4a58a441bf5fbfcb2))
+* Prevent email confirmation from re-enabling admin-disabled accounts ([049f4a6](049f4a6be46f9460bd516f489ef9f569574bc70d))
+* Update test expectations for new disabled user fixture ([89923eb](89923ebe7090038c57ee3ad23eca86858c9c2eca))
+* Reject images exceeding 50M pixels before decode ([af61d0f](af61d0f1a0d6e9394546d2d64dff043cfbe641f7))
+* Adapt image preview DoS protection to new FileStorage interface ([be0aaa7](be0aaa70601af919f68fa1153f76bcf6335bc0b5))
+* Verify comment belongs to task in URL to prevent IDOR ([bc6d843](bc6d843ed4df82a6c89f10aa676a7a33d27bf2fd))
+* Require CanUpdate for project background deletion ([f066eb3](f066eb3ea4d1648ef925a745836e48a71b600a5f))
+* Only enforce task_id check when TaskID is provided ([4941961](49419619bd0052bdd7e727404a9284acd928a903))
+* Use require.Error instead of assert.Error for error assertions ([b7a1408](b7a14080983d2781e1428be9b77fae319e7788e4))
+* Reject CalDAV basic auth when TOTP is enabled ([cdf5d30](cdf5d30a425d032f749b78b98b828f25ad882615))
+* Use user10 instead of user1 for TOTP fixture to avoid breaking login tests ([659e73a](659e73af05af154dda315d025e8b3a12705e4a7e))
+* Update TOTP fixtures and tests to avoid conflicts with existing enrollment tests ([1ed813c](1ed813caf00224d90c3c89c5b8078788f5730f51))
+
+### Dependencies
+
+* *(deps)* Update dev-dependencies
+* *(deps)* Upgrade serialize-javascript to 7.0.3
+* *(deps)* Update dependency @vue/tsconfig to v0.9.0
+* *(deps)* Use forked afero-s3 to fix S3 read performance regression (#2313)
+* *(deps)* Update dependency flexsearch to v0.8.212
+* *(deps)* Remove obsolete flexsearch 0.7.43 patch
+* *(deps)* Remove @github/hotkey dependency
+* *(deps)* Update dependency rollup-plugin-visualizer to v6.0.11
+* *(deps)* Update dependency electron to v40.7.0
+* *(deps)* Update immutable to 5.1.5
+* *(deps)* Update svgo to 3.3.3
+* *(deps)* Update tar to 7.5.10 and @tootallnate/once to 3.0.1 in desktop
+* *(deps)* Update dependency vite-svg-loader to v5.1.1
+* *(deps)* Bump dompurify from 3.3.1 to 3.3.2 in /frontend
+* *(deps)* Update dependency eslint to v9.39.4
+* *(deps)* Update dev-dependencies to v8.57.0
+* *(deps)* Update dependency sass-embedded to v1.98.0
+* *(deps)* Update dev-dependencies (#2395)
+* *(deps)* Update dependency caniuse-lite to v1.0.30001779
+* *(deps)* Override flatted to 3.4.1 to fix unbounded recursion DoS
+* *(deps)* Update tar override to 7.5.11 to fix symlink path traversal
+* *(deps)* Update dependency vue-tsc to v3.2.6
+* *(deps)* Update dependency electron to v40.8.3
+* *(deps)* Update dev-dependencies to v4.2.2
+* *(deps)* Add daenney/ssrf for webhook SSRF protection
+* *(deps)* Update dependency stylelint to v17.5.0
+
+### Documentation
+
+* Update user search endpoint description for external team bypass ([b5086fe](b5086febc71a80467302584b9d41e10459d9d77e))
+* Update rootpath description to mention working directory default ([ddfc565](ddfc565c614761d3dda037902c8309bf5a27fdd1))
+* Document database.schema config option for PostgreSQL ([8868b21](8868b214ca2f0b34a6506066af1c4c96e13ca40d))
+* Document IP extraction and trusted proxy config options ([015a172](015a172c2a07d3fc3827645d9e1bfe986ee58a03))
+
+### Features
+
+* *(ci)* Post preview deployment comment on PRs
+* *(ci)* Enable merge queue trigger
+* *(config)* Add webhooks.allownonroutableips setting
+* *(events)* Add DispatchOnCommit/DispatchPending for deferred event dispatch
+* *(frontend)* Upgrade Tailwind CSS from v3 to v4
+* *(frontend)* Highlight overdue tasks consistently (#958)
+* *(gantt)* Add expand=subtasks to Gantt API params
+* *(gantt)* Add task tree builder utility for hierarchy
+* *(gantt)* Add dependency arrow data builder
+* *(gantt)* Integrate task tree into Gantt rendering with collapse
+* *(gantt)* Add collapse/expand chevron and indent indicators
+* *(gantt)* Render parent summary bars with diamond endpoints
+* *(gantt)* Create arrow SVG overlay component for relations
+* *(gantt)* Wire relation arrows into GanttChart with toggle
+* *(handlers)* Dispatch pending events after transaction commit
+* *(release)* Update frontend package.json version on release
+* *(shortcuts)* Add event.code-based shortcut module
+* *(webhooks)* Add built-in SSRF protection using daenney/ssrf
+* Ensure forms submit on Enter (#959) ([e1d1e7c](e1d1e7c848bb2f0062a5fa522c7a357a2d3c723f))
+* Use offical vite plugin for sentry (#873) ([0a9586e](0a9586e8d4351e47edacb63fa6667193d99ff7ee))
+* Mini tiptap improvements ([b92735b](b92735b0e907bf7613b106ea633b82efa7f1781a))
+* Surface API validation errors to registration form fields (#1902) ([c6f0d8b](c6f0d8babe6f36e6d25d22a932c9f0a075a5a359))
+* Add table registration to db package ([d26936f](d26936f869c8489b06b0d9377af489236765a9e1))
+* Register Vikunja tables with db package at init ([3dd2ba4](3dd2ba4aa4309b589e809621de2ecee89ee54159))
+* Add RegisteredTableNames helper to db package ([0a8534d](0a8534ded9fca162fb1721a86d835677b30f2cdb))
+* Add task duplicate backend model and tests ([d8f3a96](d8f3a96b06fc40d4b30954cc71a3bb43890f8cfc))
+* Register task duplicate API route ([77fdf1b](77fdf1b84b27f80f4f332a26e9d7cf1ad032f211))
+* Add task duplicate frontend model and service ([52bee37](52bee379d417d37b21b3d6f0cac8e67f83716925))
+* Add duplicateTask action to task store ([2014d50](2014d50b953f86fb5a66bf32c74035b8d42c2e7a))
+* Add duplicate button to task detail view ([6c9407c](6c9407c58f4ed01c0eac37aa51e7939cd5a11a1d))
+* Bypass discoverability settings for external team members ([28b913f](28b913f29f812ef51f3b8fe967d5560c1d8ed927))
+* Add InitEventsForTesting and Unfake for real event dispatch in tests ([1b1e8e5](1b1e8e5b19e9dd32a0d6089759d18c81883f8ffc))
+* Add mage test:e2e-api target for e2e API tests ([24b800d](24b800d48d27a90447bfb9765f23093e5b9bde41))
+* Add conversational email template and rendering ([d4b0302](d4b03026f0b98734a95e9cc22d3e77e89a7d3f4f))
+* Convert notifications to conversational email style ([b3572c5](b3572c5932ba9eb7159e48129c1e52f0333cf96e))
+* Add translation keys for conversational emails ([def73e2](def73e2f8eeadf807c9b2e2a422e2335444280dd))
+* Add user_id to webhooks and user-directed event infrastructure ([d4577c6](d4577c660f5550a59f1b90a2ef1f5fba49cb73c6))
+* Extend WebhookListener for user-level webhooks ([dbbc80a](dbbc80aea613779d43b015479fef0f7301d8e7e2))
+* Add API routes for user-level webhooks ([47a0775](47a0775c7378faf6c8b3af3cd1429d3be7c51e70))
+* Add user-level webhooks settings page ([2e1648e](2e1648ef4c7b1d1a05542567cd2a682f1038b03c))
+* Replace afero-s3 with minimal S3 afero.Fs implementation ([b065c62](b065c6200782bfd6e9eea889847e83f1dead906d))
+* Add service.ipextractionmethod and service.trustedproxies config options ([26324a7](26324a740a73d19748eea3c745c74f91f60cc86b))
+* Add StatusAccountLocked user status for TOTP lockouts ([f42a045](f42a045bdc175fbffee4f8ee9592fa8dfedbc8aa))
+
+### Miscellaneous Tasks
+
+* *(dev)* Update devenv
+* *(i18n)* Update translations via Crowdin
+* Remove feature request issue template ([06ead58](06ead58ea3bb366970473d587db82bb36db07887))
+
+### Other
+
+* *(other)* [skip ci] Updated swagger docs
+* *(other)* Add e2e API tests to CI pipeline
+* *(other)* Upgrade ParadeDB image to support v2 fuzzy search API
+
+### Refactor
+
+* *(attachments)* Read from task prop instead of global store
+* *(attachments)* Return uploaded attachments instead of writing to store
+* *(attachments)* Use local state instead of global attachment store
+* *(attachments)* Remove global attachment store
+* *(shortcuts)* Update directive to use new shortcut module
+* *(shortcuts)* Update v-shortcut values to event.code format
+* *(shortcuts)* Replace eventToHotkeyString with eventToShortcutString
+* *(shortcuts)* Use event.code for raw keyboard handlers
+* Batch label inserts during task duplication ([e07eeed](e07eeed21156ab2bdc6c02aceede9cbc91468a28))
+* Use TaskRelation.Create for copy relation ([692357a](692357a648367f1beb9ba192e3ed3425f8648893))
+* Move ListUsers tests from pkg/user to pkg/models ([54c7c4a](54c7c4aef2fbdf7d4c04630d75cd36a0d121daec))
+* Enable golangci-lint on magefile, fix errors ([cea8c78](cea8c7807d060e0a187c37c80ba42d02d4aa7637))
+* Fix contextcheck lint errors on magefile by passing mage context ([0a1104b](0a1104b75ce1a6fcadb0cd0678400cf3585a0eb1))
+* Merge last unique build tag "tools" into go.mod tools section ([1b5f3f4](1b5f3f4ccd15a954d1b3ac4fa49a99c2f299deff))
+* Add centralized ResolvePath for rootpath-relative paths ([2a7165a](2a7165aaba736c53be32bb8cf0cf77e6fb7cd501))
+* Use config.ResolvePath for all rootpath-relative paths ([a043940](a043940e14f686faa15339ecc06f91dd191d22d1))
+* Replace afero with FileStorage interface ([0e1f44e](0e1f44e57efe06d08a47d980fa49bdd260f5fac3))
+* Use StatusAccountLocked for TOTP lockouts ([7792bf6](7792bf6cea36ede6c38b9966f587222b476176cb))
+* Rename checkProjectBackgroundWriteRights to checkProjectBackgroundWritePermissions ([4b91e5e](4b91e5efa173c90346567d4b296ab6233a9cc093))
+
+### Styling
+
+* Fix alignment in config key declarations ([ddd9ef5](ddd9ef5f2206dc5936cc14d359c70312806de233))
+
+### Testing
+
+* *(shortcuts)* Add unit tests for shortcut parsing logic
+* *(webhooks)* Add SSRF protection tests
+* *(webhooks)* Allow non-routable IPs in E2E tests
+* Update event assertions to work with deferred dispatch ([f516bbe](f516bbe560a7b2a0d348e71ecdab00229c5cf554))
+* Add web integration tests for task duplication ([4d494ba](4d494ba442b7bc6b4d7d06a3a3919f8d1bc6e066))
+* Add user 11 to external team 14 for discoverability tests ([64e455a](64e455a613134b74c5734570eef19f3631253738))
+* Add tests for external team user discoverability bypass ([3a73016](3a730165bc15f0fa2593aa8961e27192e93fcafb))
+* Verify email masking for external team name search ([0661789](06617891fafa7c73c1c7110d404cb0a76812842d))
+* Add e2e API test package with webhook pipeline verification ([1f3509b](1f3509bf27a9102ac96578d441d3731fb444dfa9))
+* Add fixture task with compound word for prefix search testing ([275f714](275f714224cc93f0f9cd7b4590ba2b07a79398e4))
+* Add web tests for prefix/substring search (#2346) ([892b38b](892b38b3b696e024e673dba3c0e302d5afa714fe))
+* Rewrite MultiFieldSearch tests with SQL output verification ([ee2723d](ee2723d9cf3c603bd22be9e5411d67f1c9f38799))
+* Call real MultiFieldSearch function and branch on db engine ([e6cbd67](e6cbd67ab52e92afadeaf0e9b3dbd96de3b3e1c1))
+* Add task #48 to expected results in feature tests ([3568aaa](3568aaacee6d102ec8b749409cb1c8ca73c096f8))
+* Adjust ParadeDB search tests for fuzzy prefix match broadening ([6268c48](6268c48f15955d812c6a569edb9c2d56e454fc27))
+* Fix lint and adjust project search test for ParadeDB fuzzy matching ([b69705e](b69705e64bc45b93a834f877936aea5a7886bd9a))
+* Add result count assertions for ParadeDB search tests ([c7c63e8](c7c63e8eadb174d163516590ec5c7ed945670cd5))
+* Fix non-ParadeDB project search count assertion ([df0e3a8](df0e3a84a9cdf94b8a3f581ab7bf1690d36a6fe9))
+* Fix ParadeDB project search count to 27 ([d36ac9d](d36ac9ddda5ddbc781a06017ee6d45ff2f8a45d8))
+* Add tests for conversational email system ([aacf650](aacf650ec2c2817447107043620989d1b4c72130))
+* Add e2e tests for user-level webhooks ([05cc65f](05cc65fe9e4fa448cda437d58480a9f3f19d69ed))
+* Add web tests for bulk label task endpoint ([675dfb3](675dfb3ea47dd882de7e49ab1b0ace79a5e8bb9b))
+* Add failing test for bulk label API token route registration ([554593c](554593cdb6bc0d31a1809c4b969b4fda9423edc3))
+* Add FileStat assertion to validate storage path in attachment test ([17eccd8](17eccd848fd8688cd18f5dd46d1beb2c6ce96442))
+* Add tests for disabled user password reset prevention ([241b0e8](241b0e80b6d9e91cda1f03a9e3a6368710d1fe36))
+* Add web test for disabled user password reset rejection ([2260d76](2260d763b56290fcf8bfe5a9acfdee1a4332a65e))
+* Add failing test for image preview with oversized dimensions ([f7592e2](f7592e2cfdc11fb06441007a4fb1d2ca5a2f1c5a))
+* Add failing test for task comment IDOR ([2da8925](2da89258e53068253dcf8ef17d4dad141dba7d31))
+* Add failing test for project background delete with read-only access ([f60f3af](f60f3af70b6d8258dd342a9ac15b71f48326e9af))
+* Add TOTP fixture data for user1 ([27ef92b](27ef92b9bf36f437b151df13f801a504e73bddc8))
+* Add failing test for CalDAV 2FA bypass via basic auth ([bda16e7](bda16e770fa76f212d15b1faec5c83f9046a0bb3))
+* Register totp fixture in test setup ([a66bda2](a66bda2f51d4f7df8d353066a100de2d8c0aab32))
+* Verify CalDAV token auth bypasses TOTP check ([1f2aef7](1f2aef776ccdd0ac1405fc8bcbb47084091d42eb))
+
 ## [2.1.0] - 2026-02-27
 
 ### Bug Fixes

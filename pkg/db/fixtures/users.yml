@@ -127,3 +127,12 @@
   default_project_id: 37
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Disabled user for security tests
+- id: 17
+  username: 'user17'
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
+  email: 'user17@example.com'
+  status: 2
+  issuer: local
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

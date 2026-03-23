@@ -311,3 +311,26 @@ func TestTaskComments(t *testing.T) {
 		})
 	})
 }
+
+func TestTaskCommentIDOR(t *testing.T) {
+	t.Run("Cannot read comment from inaccessible task via accessible task ID", func(t *testing.T) {
+		// Comment 18 belongs to task 34 (owned by user 13, inaccessible to testuser1).
+		// Task 1 is accessible to testuser1.
+		// Requesting GET /tasks/1/comments/18 should fail because the comment
+		// does not belong to task 1.
+		testHandler := webHandlerTest{
+			user: &testuser1,
+			strFunc: func() handler.CObject {
+				return &models.TaskComment{}
+			},
+			t: t,
+		}
+
+		_, err := testHandler.testReadOneWithUser(nil, map[string]string{
+			"task":      "1",  // task accessible to testuser1
+			"commentid": "18", // comment belonging to task 34, NOT accessible to testuser1
+		})
+		require.Error(t, err)
+		assertHandlerErrorCode(t, err, models.ErrCodeTaskCommentDoesNotExist)
+	})
+}

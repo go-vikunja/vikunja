@@ -25,7 +25,6 @@ import type {IProject} from '@/modelTypes/IProject'
 import {setModuleLoading} from '@/stores/helper'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
-import {useAttachmentStore} from '@/stores/attachments'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
@@ -108,7 +107,6 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 export const useTaskStore = defineStore('task', () => {
 	const baseStore = useBaseStore()
 	const kanbanStore = useKanbanStore()
-	const attachmentStore = useAttachmentStore()
 	const labelStore = useLabelStore()
 	const projectStore = useProjectStore()
 	const authStore = useAuthStore()
@@ -205,7 +203,6 @@ export const useTaskStore = defineStore('task', () => {
 			}
 			kanbanStore.setTaskInBucketByIndex(newTask)
 		}
-		attachmentStore.add(attachment)
 	}
 
 	async function addAssignee({

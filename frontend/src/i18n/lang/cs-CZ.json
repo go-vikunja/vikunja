@@ -43,6 +43,7 @@
 			"forgotPassword": "Zapomenuté heslo?",
 			"resetPassword": "Obnovit heslo",
 			"resetPasswordAction": "Poslat odkaz na obnovení hesla",
+			"resetPasswordSuccess": "Zkontrolujte doručenou poštu! Měli byste obdržet email s pokyny, jak obnovit své heslo.",
 			"passwordsDontMatch": "Hesla se neshodují",
 			"confirmEmailSuccess": "Úspěšně jste potvrdili svůj e-mail! Nyní se můžete přihlásit.",
 			"totpTitle": "Kód dvoufaktorového ověření",
@@ -60,43 +61,88 @@
 			"usernameMustNotLookLikeUrl": "Uživatelské jméno nesmí vypadat jako adresa URL.",
 			"passwordRequired": "Zadejte prosím heslo.",
 			"passwordNotMin": "Heslo musí mít nejméně 8 znaků.",
+			"passwordNotMax": "Heslo může mít maximálně 72 znaků.",
 			"showPassword": "Ukázat heslo",
 			"hidePassword": "Skrýt heslo",
 			"noAccountYet": "Ještě nemáte účet?",
 			"alreadyHaveAnAccount": "Už máte svůj účet?",
-			"remember": "Zůstat trvale přihlášen"
+			"remember": "Zůstat trvale přihlášen",
+			"registrationDisabled": "Registrace je vypnuta.",
+			"passwordResetTokenMissing": "Chybí token pro obnovení hesla.",
+			"registrationFailed": "Při registraci došlo k chybě. Zkontrolujte prosím zadané údaje a zkuste to znovu."
 		},
 		"settings": {
 			"title": "Nastavení",
 			"newPasswordTitle": "Aktualizujte své heslo",
+			"newPassword": "Nové heslo",
+			"newPasswordConfirm": "Potvrzení nového hesla",
+			"currentPassword": "Stávající heslo",
 			"currentPasswordPlaceholder": "Vaše současné heslo",
 			"passwordsDontMatch": "Nové heslo se neshoduje s potvrzením hesla.",
 			"passwordUpdateSuccess": "Heslo bylo úspěšně změněno.",
 			"updateEmailTitle": "Aktualizujte svou e-mailovou adresu",
+			"updateEmailNew": "Nová emailová adresa",
 			"updateEmailSuccess": "Vaše e-mailová adresa byla úspěšně aktualizována. Poslali jsme vám odkaz pro její potvrzení.",
 			"general": {
 				"title": "Obecná nastavení",
+				"name": "Moje jméno",
+				"newName": "Nové jméno",
 				"savedSuccess": "Nastavení bylo úspěšně aktualizováno.",
+				"emailReminders": "Posílat mi připomenutí pro úkoly emailem",
 				"overdueReminders": "Pošlete mi každý den shrnutí mých zpožděných úkolů",
 				"discoverableByName": "Umožnit ostatním uživatelům přidat mě jako člena do týmů nebo projektů, když hledají mé jméno",
 				"discoverableByEmail": "Umožnit ostatním uživatelům, aby mě přidali jako člena do týmů nebo projektů, když hledají můj úplný e-mail",
 				"playSoundWhenDone": "Přehrát zvuk při označení úkolů jako hotovo",
+				"allowIconChanges": "Zobrazit speciální loga v určitých časech",
+				"alwaysShowBucketTaskCount": "Vždy zobrazit počet úkolů ve sloupcích Kanbanu",
+				"defaultTaskRelationType": "Výchozí typ vztahu úkolů",
 				"weekStart": "První den týdne",
 				"weekStartSunday": "Neděle",
 				"weekStartMonday": "Pondělí",
 				"language": "Jazyk",
+				"defaultProject": "Výchozí projekt",
+				"defaultView": "Výchozí zobrazení",
+				"timezone": "Časové pásmo",
 				"overdueTasksRemindersTime": "Čas odeslání emailu o zpožděných úkolech",
-				"filterUsedOnOverview": "Uložený filtr použitý na stránce přehledu"
+				"filterUsedOnOverview": "Uložený filtr použitý na stránce přehledu",
+				"minimumPriority": "Minimální viditelná priorita úkolu",
+				"dateDisplay": "Formát zobrazení data",
+				"dateDisplayOptions": {
+					"relative": "Relativní (např. před 3 dny)",
+					"mm-dd-yyyy": "MM-DD-RRRR",
+					"dd-mm-yyyy": "DD-MM-RRRR",
+					"yyyy-mm-dd": "RRRR-MM-DD",
+					"mm/dd/yyyy": "MM/DD/RRRR",
+					"dd/mm/yyyy": "DD/MM/RRRR",
+					"yyyy/mm/dd": "RRRR/MM/DD"
+				},
+				"timeFormat": "Formát času",
+				"timeFormatOptions": {
+					"12h": "12 hodinový (AM/PM)",
+					"24h": "24 hodinový (HH:mm)"
+				},
+				"externalUserNameChange": "Vaše jméno je spravováno vaším poskytovatelem přihlášení ({provider}). Chcete-li ho změnit, aktualizujte ho tam."
+			},
+			"sections": {
+				"personalInformation": "Osobní údaje",
+				"taskAndNotifications": "Projekty a úkoly",
+				"privacy": "Ochrana soukromí",
+				"localization": "Lokalizace",
+				"appearance": "Vzhled a chování"
 			},
 			"totp": {
 				"title": "Dvoufaktorové ověření",
 				"enroll": "Zápis",
+				"finishSetupPart1": "Chcete-li dokončit nastavení, použijte tento tajný klíč ve vaší TOTP aplikaci (Google Authenticator nebo podobné):",
 				"finishSetupPart2": "Poté zadejte kód z vaší aplikace.",
 				"scanQR": "Případně můžete naskenovat tento QR kód:",
 				"passcode": "Přístupový kód",
+				"passcodePlaceholder": "Kód vygenerovaný vaší TOTP aplikací",
+				"confirmNotice": "Po povolení dvoufázového ověřování budete odhlášeni ze všech relací a musíte se znovu přihlásit.",
 				"setupSuccess": "Úspěšně jste nastavili dvoufaktorové ověření!",
 				"enterPassword": "Zadejte prosím heslo",
 				"disable": "Zakázat dvoufaktorové ověření",
+				"confirmSuccess": "Úspěšně jste povolili dvoufázové ověřování!",
 				"disableSuccess": "Dvoufázové ověření bylo úspěšně vypnuto."
 			},
 			"caldav": {
@@ -119,7 +165,9 @@
 				"upload": "Nahrát",
 				"uploadAvatar": "Nahrát avatara",
 				"statusUpdateSuccess": "Stav avatara byl úspěšně aktualizován!",
-				"setSuccess": "Avatar byl úspěšně nastaven!"
+				"setSuccess": "Avatar byl úspěšně nastaven!",
+				"ldap": "Váš avatar je automaticky synchronizován s adresářovou službou vaší organizace (LDAP). Informujte se u vašeho IT týmu o tom, jak jej změnit.",
+				"openid": "Váš avatar je automaticky synchronizován s poskytovatelem přihlášení ({provider}). Chcete-li ho změnit, aktualizujte ho tam."
 			},
 			"quickAddMagic": {
 				"title": "Kouzelný režim pro rychlé přidání",
@@ -136,6 +184,13 @@
 					"dark": "Tmavý"
 				}
 			},
+			"backgroundBrightness": {
+				"title": "Jas pozadí"
+			},
+			"webhooks": {
+				"title": "Webhook oznámení",
+				"description": "Nastavte URL webhooků, který přijme POST požadavek při překročení termínu nebo připomenutí. Tyto webhooky přijímají události ze všech vašci projektů."
+			},
 			"apiTokens": {
 				"title": "API Tokeny",
 				"general": "API tokeny umožňují používat Vikunja API bez uživatelských údajů.",
@@ -147,6 +202,7 @@
 				"90d": "90 dní",
 				"permissionExplanation": "Oprávnění vám umožní nastavit, k čemu lze api token použít.",
 				"titleRequired": "Je vyžadován název",
+				"permissionRequired": "Vyberte prosím alespoň jedno oprávnění ze seznamu.",
 				"expired": "Platnost tohoto tokenu vypršela {ago}.",
 				"tokenCreatedSuccess": "Zde je tvůj nový api token: {token}",
 				"tokenCreatedNotSeeAgain": "Ulož jej na zabezpečeném místě, už ho znovu neuvidíš!",
@@ -162,6 +218,20 @@
 					"expiresAt": "Vyprší v",
 					"permissions": "Oprávnění"
 				}
+			},
+			"sessions": {
+				"title": "Relace",
+				"description": "Toto jsou všechna zařízení aktuálně přihlášená k vašemu účtu. Můžete zrušit jakoukoli relaci a odhlásit zařízení. Ukončení platnosti může trvat až 10 minut.",
+				"deviceInfo": "Zařízení",
+				"ipAddress": "IP adresa",
+				"lastActive": "Poslední aktivita",
+				"current": "Tato relace",
+				"delete": {
+					"header": "Zrušit relaci",
+					"text": "Opravdu chcete zrušit tuto relaci? Zařízení bude odhlášeno. Úplné vypršení platnosti relace může trvat až 10 minut."
+				},
+				"deleteSuccess": "Relace byla úspěšně zrušena. Úplné vypršení platnosti relace může trvat až 10 minut.",
+				"noOtherSessions": "Žádné další aktivní relace."
 			}
 		},
 		"deletion": {
@@ -186,13 +256,16 @@
 			"descriptionPasswordRequired": "Pokračujte zadáním vašeho hesla:",
 			"request": "Požádat o kopii mých dat",
 			"success": "Úspěšně jste požádali o svá data! Jakmile budou připravena ke stažení, pošleme Vám e-mail.",
-			"downloadTitle": "Stáhnout exportovaná Vikunja data"
+			"downloadTitle": "Stáhnout exportovaná Vikunja data",
+			"ready": "Váš export je připraven ke stažení. Můžete jej stáhnout do {0}.",
+			"requestNew": "Požádat o další export"
 		}
 	},
 	"project": {
 		"archivedMessage": "Tento projekt je archivován. Není možné vytvořit ani upravovat jeho úkoly.",
 		"archived": "Archivováno",
 		"showArchived": "Zobrazit archivované",
+		"title": "Název",
 		"color": "Barva",
 		"projects": "Projekty",
 		"parent": "Nadřazený projekt",
@@ -201,6 +274,11 @@
 		"shared": "Sdílené projekty",
 		"noDescriptionAvailable": "Není k dispozici žádný popis projektu.",
 		"inboxTitle": "Inbox",
+		"favorite": "Označit tento projekt jako oblíbený",
+		"unfavorite": "Odstranit tento projekt z oblíbených",
+		"openSettingsMenu": "Otevřít nastavení projektu",
+		"description": "Popis projektu",
+		"favoriteDescription": "Tento projekt má všechny úkoly označené jako oblíbené.",
 		"create": {
 			"header": "Nový projekt",
 			"titlePlaceholder": "Název projektu přijde sem…",
@@ -288,10 +366,19 @@
 				"addedSuccess": "{type} byl úspěšně přidán.",
 				"updatedSuccess": "{type} byl úspěšně přidán."
 			},
+			"permission": {
+				"title": "Oprávnění",
+				"read": "Pouze pro čtení",
+				"readWrite": "Čtení a zápis",
+				"admin": "Administrátor"
+			},
 			"attributes": {
 				"link": "Odkaz",
 				"delete": "Smazat"
 			}
+		},
+		"first": {
+			"title": "První pohled"
 		},
 		"list": {
 			"title": "Seznam",
@@ -308,7 +395,27 @@
 			"month": "Měsíc",
 			"day": "Den",
 			"hour": "Hodina",
-			"range": "Časové období"
+			"range": "Časové období",
+			"chartLabel": "Projektový Ganttův diagram",
+			"taskBarsForRow": "Chlívky pro řádek {rowId}",
+			"taskBarLabel": "Úkol: {task}. Od {startDate} do {endDate}. {dateType}. Klikněte pro úpravu, přetáhněte pro přesun.",
+			"scheduledDates": "Plánovaná data",
+			"estimatedDates": "Předpokládaná data",
+			"resizeStartDate": "Změňte počáteční datum pro {task}",
+			"resizeEndDate": "Změňte koncové datum pro {task}",
+			"timelineHeader": "Hlavička časového plánu s měsíci a dny",
+			"monthsRow": "Řádek měsíců",
+			"daysRow": "Řádek dnů",
+			"monthLabel": "Měsíc: {month}",
+			"dayLabel": "Den: {date}, {weekday}",
+			"dayLabelToday": "Dnes: {date}, {weekday}",
+			"taskAriaLabel": "Úkol: {task}",
+			"taskAriaLabelById": "Úkol {id}",
+			"partialDatesStart": "Pouze datum zahájení (otevřený konec)",
+			"partialDatesEnd": "Pouze datum konce (otevřený konec)",
+			"expandGroup": "Rozbalit skupinu: {task}",
+			"collapseGroup": "Sbalit skupinu: {task}",
+			"toggleRelationArrows": "Přepnout šipky relací"
 		},
 		"table": {
 			"title": "Tabulka",
@@ -337,7 +444,8 @@
 			"deleteBucketSuccess": "Sloupec byl úspěšně smazán.",
 			"bucketTitleSavedSuccess": "Název sloupce byl úspěšně uložen.",
 			"bucketLimitSavedSuccess": "Limit sloupce byl úspěšně uložen.",
-			"collapse": "Sbalit tento sloupec"
+			"collapse": "Sbalit tento sloupec",
+			"bucketLimitReached": "Dosáhli jste limitu sloupce. Odstraňte úkoly nebo zvýšte limit pro přidání nových úkolů."
 		},
 		"pseudo": {
 			"favorites": {
@@ -349,12 +457,16 @@
 			"targetUrl": "Cílová URL",
 			"targetUrlInvalid": "Zadejte prosím platnou URL adresu.",
 			"events": "Události",
+			"eventsHint": "Vyberte všechny události, pro které by tento webhook měl dostávat aktualizace (v rámci aktuálního projektu).",
 			"mustSelectEvents": "Musíte zvolit alespoň jednu událost.",
 			"delete": "Smazat tento webhook",
 			"deleteText": "Opravdu chcete odstranit tento webhook? Externí cíle již nebudou informovány o jeho událostech.",
 			"deleteSuccess": "Webhook byl úspěšně odstraněn.",
 			"create": "Vytvořit webhook",
 			"secret": "Tajný klíč",
+			"basicauthuser": "Uživatel pro Basic Auth",
+			"basicauthpassword": "Heslo pro Basic Auth",
+			"basicauthlink": "Použít Basic Auth?",
 			"secretHint": "Pokud je zadáno, všechny požadavky na cílovou adresu URL webhooku budou podepsány pomocí HMAC.",
 			"secretDocs": "Další podrobnosti o používání tajných klíčů naleznete v dokumentaci."
 		},
@@ -372,13 +484,18 @@
 			"titleRequired": "Zadejte prosím název.",
 			"delete": "Odstranit tento pohled",
 			"deleteText": "Jste si jisti, že chcete odstranit tento pohled? Nebude již možné jej použít k zobrazení úkolů v tomto projektu. Tato akce neodstraní žádné úkoly. Toto nelze vrátit zpět!",
-			"onlyAdminsCanEdit": "Pohledy mohou upravovat pouze správci projektu."
+			"deleteSuccess": "Pohled byl úspěšně odstraněn.",
+			"onlyAdminsCanEdit": "Pohledy mohou upravovat pouze správci projektu.",
+			"updateSuccess": "Pohled byl úspěšně upraven."
 		}
 	},
 	"filters": {
 		"title": "Filtry",
 		"clear": "Vymazat filtry",
 		"showResults": "Zobrazit výsledky",
+		"noResults": "Žádné výsledky",
+		"fromView": "Aktuální pohled má také nastavený filtr:",
+		"fromViewBoth": "Bude použito v kombinaci s tím, co zde zadáte.",
 		"attributes": {
 			"title": "Název",
 			"titlePlaceholder": "Název uloženého filtru přijde sem…",
@@ -416,6 +533,7 @@
 			"help": {
 				"intro": "K filtrování úkolů můžete použít syntaxi dotazů podobnou SQL. Dostupná pole pro filtrování zahrnují:",
 				"link": "Jak to funguje?",
+				"canUseDatemath": "Můžete použít matematiku a nastavit relativní data. Pro více informací klikněte na datum v dotazu.",
 				"fields": {
 					"done": "Zda je úkol dokončen nebo ne",
 					"priority": "Úroveň priority úkolu (1-5)",
@@ -426,7 +544,10 @@
 					"doneAt": "Datum a čas, kdy byl úkol dokončen",
 					"assignees": "Přiřazení uživatelé",
 					"labels": "Štítky přiřazené úkolu",
-					"project": "Projekt, do kterého úkol patří (k dispozici pouze pro uložené filtry, ne na úrovni projektu)"
+					"project": "Projekt, do kterého úkol patří (k dispozici pouze pro uložené filtry, ne na úrovni projektu)",
+					"reminders": "Připomenutí úlohy jako pole s datem, vrátí všechny úkoly s alespoň jednou upomínkou odpovídající dotazu",
+					"created": "Čas a datum, kdy byl úkol vytvořen",
+					"updated": "Čas a datum, kdy byl úkol naposledy změněn"
 				},
 				"operators": {
 					"intro": "Dostupné operátory pro filtrování zahrnují:",
@@ -436,7 +557,9 @@
 					"greaterThanOrEqual": "Větší nebo rovno než",
 					"lessThan": "Menší než",
 					"lessThanOrEqual": "Menší nebo rovno než",
-					"like": "Odpovídá vzoru (s použitím zástupného znaku %)"
+					"like": "Odpovídá vzoru (s použitím zástupného znaku %)",
+					"in": "Odpovídá libovolné hodnotě v seznamu hodnot oddělených čárkou",
+					"notIn": "Odpovídá libovolné hodnotě nepřítomné v seznamu hodnot oddělených čárkou"
 				},
 				"logicalOperators": {
 					"intro": "Pro kombinování více podmínek můžete použít tyto logické operátory:",
@@ -502,7 +625,11 @@
 		"authenticating": "Ověřování…",
 		"passwordRequired": "Tento sdílený projekt vyžaduje heslo. Zadejte jej níže:",
 		"error": "Došlo k chybě.",
-		"invalidPassword": "Neplatné heslo."
+		"invalidPassword": "Neplatné heslo.",
+		"accessDenied": "Přístup byl odepřen. Zkontrolujte svá oprávnění a zkuste to znovu.",
+		"serverError": "Došlo k chybě serveru. Opakujte akci později.",
+		"projectLoadError": "Nepodařilo se načíst informace o projektu.",
+		"retry": "Opakovat"
 	},
 	"navigation": {
 		"overview": "Přehled",
@@ -543,7 +670,8 @@
 		"created": "Vytvořeno",
 		"createdBy": "Vytvořil(a) {0}",
 		"actions": "Akce",
-		"cannotBeUndone": "Toto nelze vrátit!"
+		"cannotBeUndone": "Toto nelze vrátit!",
+		"avatarOfUser": "Profilový obrázek {user}"
 	},
 	"input": {
 		"resetColor": "Obnovit barvu",
@@ -700,6 +828,7 @@
 		"addReminder": "Přidat připomínku…",
 		"doneSuccess": "Úkol byl úspěšně označen jako dokončený.",
 		"undoneSuccess": "Úkol byl úspěšně znovu otevřen.",
+		"movedToProject": "Úkol byl přesunut do {project}.",
 		"undo": "Vrátit zpět",
 		"openDetail": "Otevřít zobrazení detailu úkolu",
 		"checklistTotal": "{checked} z {total} úkolů",
@@ -707,10 +836,13 @@
 		"show": {
 			"titleCurrent": "Aktuální úkoly",
 			"titleDates": "Úkoly od {from} do {to}",
+			"noDates": "Zobrazit úkoly bez datumu",
 			"overdue": "Zobrazit zpožděné úkoly",
 			"fromuntil": "Úkoly od {from} do {until}",
 			"select": "Vyberte rozsah dat",
-			"noTasks": "Nic na práci - užij si pěkný den!"
+			"noTasks": "Nic na práci - užij si pěkný den!",
+			"filterByLabel": "Filtrování podle štítku {label}",
+			"clearLabelFilter": "Vymazat filtr štítků"
 		},
 		"detail": {
 			"chooseDueDate": "Klikněte zde pro nastavení termínu dokončení",
@@ -724,9 +856,12 @@
 			"doneAt": "Dokončeno {0}",
 			"updateSuccess": "Úkol byl úspěšně uložen.",
 			"deleteSuccess": "Úkol byl úspěšně smazán.",
+			"duplicateSuccess": "Úkol byl úspěšně duplikován.",
 			"belongsToProject": "Tento úkol patří do projektu '{project}'",
+			"back": "Zpět k projektu",
 			"due": "Termín {at}",
 			"closePopup": "Zavřít vyskakovací okno",
+			"scrollToBottom": "Přejít na konec",
 			"organization": "Organizace",
 			"management": "Management",
 			"dateAndTime": "Datum a čas",
@@ -748,6 +883,7 @@
 				"attachments": "Přidat přílohy",
 				"relatedTasks": "Přidat vztah",
 				"moveProject": "Přesunout",
+				"duplicate": "Duplikovat",
 				"color": "Nastavit barvu",
 				"delete": "Smazat",
 				"favorite": "Přidat do oblíbených",
@@ -766,9 +902,12 @@
 			"labels": "Štítky",
 			"percentDone": "Průběh",
 			"priority": "Priorita",
+			"project": "Projekt",
 			"relatedTasks": "Související úkoly",
 			"reminders": "Připomínky",
 			"repeat": "Opakovat",
+			"comment": "{count} komentář | {count} komentáře",
+			"commentCount": "Počet komentářů",
 			"startDate": "Počáteční datum",
 			"title": "Název",
 			"updated": "Aktualizováno",
@@ -813,7 +952,13 @@
 			"delete": "Smazat tento komentář",
 			"deleteText1": "Opravdu chcete smazat tento komentář?",
 			"deleteSuccess": "Komentář byl úspěšně odstraněn.",
-			"addedSuccess": "Komentář byl úspěšně přidán."
+			"addedSuccess": "Komentář byl úspěšně přidán.",
+			"permalink": "Kopírovat trvalý odkaz na tento komentář",
+			"sortNewestFirst": "Od nejnovějších",
+			"sortOldestFirst": "Od nejstarších"
+		},
+		"mention": {
+			"noUsersFound": "Nenalezeni žádní uživatelé"
 		},
 		"deferDueDate": {
 			"title": "Odložit datum dokončení",
@@ -922,6 +1067,7 @@
 			"project4": "Například: {prefix}\"Projekt s mezerami\".",
 			"dateAndTime": "Datum a čas",
 			"date": "Jakékoliv datum bude použito jako datum dokončení nového úkolu. Můžete použít data v kterémkoli z těchto formátů:",
+			"dateWeekday": "jakýkoli pracovní den, použije se další datum s tímto dnem",
 			"dateCurrentYear": "použije aktuální rok",
 			"dateNth": "použije {day}. den aktuálního měsíce",
 			"dateTime": "Pro nastavení času zkombinujte libovolný formát data s \"{time}\" (nebo {timePM}).",
@@ -1003,7 +1149,12 @@
 			"delete": "Smazat tento úkol",
 			"priority": "Změnit prioritu tohoto úkolu",
 			"favorite": "Označit tuto úlohu jako oblíbenou / odebrat oblíbené",
-			"save": "Uložit aktuální úkol"
+			"openProject": "Otevřít projekt tohoto úkolu",
+			"save": "Uložit aktuální úkol",
+			"copyIdentifier": "Kopírovat identifikátor úkolu do schránky",
+			"copyIdentifierAndTitle": "Kopírovat identifikátor úkolu a název do schránky",
+			"copyIdentifierTitleAndUrl": "Kopírovat identifikátor úkolu, název a URL do schránky",
+			"copyUrl": "Kopírovat URL úkolu do schránky"
 		},
 		"project": {
 			"title": "Zobrazení projektu",
@@ -1019,6 +1170,21 @@
 			"labels": "Přejít na štítky",
 			"teams": "Přejít na týmy",
 			"projects": "Přejít na projekty"
+		},
+		"list": {
+			"title": "Seznam úkolů",
+			"navigateDown": "Zvýraznit další úkol",
+			"navigateUp": "Zvýraznit předchozí úkol",
+			"open": "Otevřít zvýrazněný úkol"
+		},
+		"gantt": {
+			"title": "Ganttův diagram",
+			"moveTaskLeft": "Přesunout úkol na dřívější datum",
+			"moveTaskRight": "Přesunout úkol na pozdější datum",
+			"expandTaskLeft": "Posuň počáteční datum na dříve",
+			"expandTaskRight": "Posuň koncové datum na později",
+			"shrinkTaskLeft": "Posuň počáteční datum na později",
+			"shrinkTaskRight": "Posuň koncové datum na dříve"
 		}
 	},
 	"update": {
@@ -1056,6 +1222,7 @@
 	"notification": {
 		"title": "Oznámení",
 		"none": "Nemáte žádná oznámení. Mějte příjemný den!",
+		"explainer": "Upozornění se zobrazí zde, když proběhne akce na projektech nebo úkolech, ke kterým jste se přihlásili.",
 		"markAllRead": "Označit všechna oznámení za přečtená",
 		"markAllReadSuccess": "Všechna oznámení byla označena jako přečtená."
 	},
@@ -1079,6 +1246,7 @@
 		}
 	},
 	"date": {
+		"altFormatLong": "j M Y, H:i",
 		"altFormatShort": "j M Y"
 	},
 	"reaction": {
@@ -1100,15 +1268,28 @@
 		"1012": "E-mailová adresa uživatele nebyla potvrzena.",
 		"1013": "Nové heslo je prázdné.",
 		"1014": "Staré heslo je prázdné.",
+		"1015": "TOTP je již pro tohoto uživatele povoleno.",
+		"1016": "Totp není pro tohoto uživatele povoleno.",
+		"1017": "Kód TOTP je neplatný.",
 		"1018": "Nastavení typu avatara uživatele je neplatné.",
+		"1019": "Poskytovatel OpenID neposkytl žádnou e-mailovou adresu. Ujistěte se, že poskytovatel openID veřejně poskytuje e-mailovou adresu pro váš účet.",
+		"1020": "Tento účet je zakázán. Zkontrolujte své e-maily nebo se zeptejte správce.",
+		"1021": "Tento účet je spravován poskytovatelem ověření třetí strany.",
+		"1022": "Uživatelské jméno nesmí obsahovat mezery.",
+		"1023": "To nemůžete udělat se sdíleným odkazem.",
+		"1024": "Neplatná žádost o data pro pole {field} typu {type}.",
+		"1025": "Časové pásmo '{timezone}' je neplatné. Zvolte prosím platné časové pásmo ze seznamu.",
 		"2001": "ID nemůže být prázdné nebo 0.",
 		"2002": "Některé údaje požadavku byly neplatné.",
+		"2003": "Časové pásmo '{timezone}' je neplatné.",
 		"3001": "Projekt neexistuje.",
 		"3004": "Pro provedení této akce musíte mít oprávnění ke čtení k tomuto projektu.",
 		"3005": "Název projektu nemůže být prázdný.",
 		"3006": "Sdílení projektu neexistuje.",
 		"3007": "Projekt s tímto identifikátorem již existuje.",
 		"3008": "Projekt je archivován, a proto je přístupný pouze pro čtení. To platí i pro všechny úkoly spojené s tímto projektem.",
+		"4001": "Název úkolu nemůže být prázdný.",
+		"4002": "Tento úkol neexistuje.",
 		"4003": "Všechny úkoly pro hromadnou úpravu musí patřit do stejného projektu.",
 		"4004": "Při hromadných úpravách úkolů je potřeba alespoň jeden úkol.",
 		"4005": "Nemáte právo vidět tento úkol.",
@@ -1126,12 +1307,18 @@
 		"4017": "Neplatný komparátor filtru úkolů.",
 		"4018": "Neplatné zřetězení filtru úkolů.",
 		"4019": "Neplatná hodnota filtru úkolů.",
+		"4020": "Tato příloha nepatří k tomu úkolu.",
+		"4021": "Tento uživatel je k tomuto úkolu již přiřazen.",
+		"4022": "Uveďte prosím datum, s nímž připomenutí souvisí.",
+		"4023": "Nelze vytvořit cyklus vztahů mezi úkoly.",
 		"6001": "Název týmu nemůže být prázdný.",
 		"6002": "Tým neexistuje.",
 		"6004": "Tým již má k tomuto projektu přístup.",
 		"6005": "Uživatel je již členem tohoto týmu.",
 		"6006": "Nelze odstranit posledního člena týmu.",
 		"6007": "Tým nemá přístup k seznamu pro provedení této akce.",
+		"6008": "Pro dané OIDC ID a vydavatele nebyl nalezen žádný tým.",
+		"6009": "Pro uživatele nebyly nalezeny žádné týmy s vlastností oidcId.",
 		"7002": "Uživatel již má přístup k tomuto projektu.",
 		"7003": "K tomuto projektu nemáte přístup.",
 		"8001": "Tento štítek již v tomto úkolu existuje.",
@@ -1147,14 +1334,21 @@
 		"11002": "Uložené filtry nejsou k dispozici pro sdílení odkazů.",
 		"12001": "Typ předplatného je neplatný.",
 		"12002": "Již jste přihlášeni k odběru samotného subjektu nebo nadřazeného subjektu.",
+		"12003": "Musíte zadat uživatele pro načtení odběru.",
 		"13001": "Tento sdílený odkaz vyžaduje heslo k ověření, ale žádné nebylo poskytnuto.",
+		"13002": "Zadané heslo pro sdílený odkaz je neplatné.",
+		"13003": "Zadaný token pro sdílený odkaz je neplatný.",
+		"14001": "Zadaný api token je neplatný.",
+		"14002": "Oprávnění {permission} skupiny {group} je neplatné.",
 		"error": "Chyba",
 		"success": "Úspěch",
 		"0001": "Nejste oprávněni to udělat."
 	},
 	"about": {
 		"title": "O aplikaci",
-		"version": "Verze: {version}"
+		"version": "Verze: {version}",
+		"frontendVersion": "Verze frontendu: {version}",
+		"apiVersion": "Verze API: {version}"
 	},
 	"time": {
 		"units": {

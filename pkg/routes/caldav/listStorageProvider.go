@@ -35,10 +35,16 @@ import (
 )
 
 // DavBasePath is the base url path
-const DavBasePath = `/dav/`
+const DavBasePath = `/dav`
 
 // ProjectBasePath is the base path for all projects resources
-const ProjectBasePath = DavBasePath + `projects`
+const ProjectBasePath = DavBasePath + `/projects`
+
+// PrincipalBasePath is the base path for all principal resources
+const PrincipalBasePath = DavBasePath + `/principals`
+
+// ProjectHomeSetPath is the CalDAV home-set path Apple clients use after discovery.
+const ProjectHomeSetPath = ProjectBasePath + `/`
 
 // VikunjaCaldavProjectStorage represents a project storage
 type VikunjaCaldavProjectStorage struct {
@@ -68,7 +74,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	// and not /dav/projects. I'm not sure if thats a bug in the client or in caldav-go.
 
 	if vcls.isEntry {
-		r := data.NewResource(rpath, &VikunjaProjectResourceAdapter{
+		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
 			isPrincipal:  true,
 			isCollection: true,
 		})
@@ -77,7 +83,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 
 	// If the request wants the principal url, we'll return that and nothing else
 	if vcls.isPrincipal {
-		r := data.NewResource(DavBasePath+`/projects/`, &VikunjaProjectResourceAdapter{
+		r := data.NewResource(ProjectHomeSetPath, &VikunjaProjectResourceAdapter{
 			isPrincipal:  true,
 			isCollection: true,
 		})
@@ -128,6 +134,14 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	}
 	projects := theprojects.([]*models.Project)
 
+	if !withChildren {
+		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
+			isPrincipal:  true,
+			isCollection: true,
+		})
+		return []data.Resource{r}, nil
+	}
+
 	var resources []data.Resource
 	for _, l := range projects {
 		rr := VikunjaProjectResourceAdapter{
@@ -142,6 +156,20 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	}
 
 	return resources, nil
+}
+
+func withTrailingSlash(path string) string {
+	if path == "" {
+		return ProjectHomeSetPath
+	}
+	if strings.HasSuffix(path, "/") {
+		return path
+	}
+	return path + "/"
+}
+
+func principalPathForUser(username string) string {
+	return withTrailingSlash(PrincipalBasePath + `/` + username)
 }
 
 // GetResourcesByList fetches a list of resources from a slice of paths
