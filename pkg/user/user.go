@@ -547,8 +547,8 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 		user.Username = theUser.Username // Dont change the username if we dont have one
 	} else {
 		// Check if the new username already exists
-		uu, err := GetUserByUsername(s, user.Username)
-		if err != nil && !IsErrUserDoesNotExist(err) && !IsErrUserStatusError(err) {
+		uu, err := getUser(s, &User{Username: user.Username}, false)
+		if err != nil && !IsErrUserDoesNotExist(err) {
 			return nil, err
 		}
 		if uu.ID != 0 && uu.ID != user.ID {
@@ -570,7 +570,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			Issuer:  user.Issuer,
 			Subject: user.Subject,
 		}, true)
-		if err != nil && !IsErrUserDoesNotExist(err) && !IsErrUserStatusError(err) {
+		if err != nil && !IsErrUserDoesNotExist(err) {
 			return nil, err
 		}
 		if uu.ID != 0 && uu.ID != user.ID {
