@@ -521,7 +521,7 @@ func (err *ErrAccountLocked) Error() string {
 }
 
 // ErrCodeAccountLocked holds the unique world-error code of this error
-const ErrCodeAccountLocked = 1025
+const ErrCodeAccountLocked = 1026
 
 // HTTPError holds the http error description
 func (err *ErrAccountLocked) HTTPError() web.HTTPError {
