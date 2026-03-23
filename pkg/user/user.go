@@ -381,6 +381,14 @@ func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 		return user, err
 	}
 
+	// After successful password verification, check if the account is disabled or locked
+	if user.Status == StatusDisabled {
+		return nil, &ErrAccountDisabled{UserID: user.ID}
+	}
+	if user.Status == StatusAccountLocked {
+		return nil, &ErrAccountLocked{UserID: user.ID}
+	}
+
 	return user, nil
 }
 

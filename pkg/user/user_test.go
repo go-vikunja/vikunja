@@ -319,6 +319,16 @@ func TestCheckUserCredentials(t *testing.T) {
 		_, err := CheckUserCredentials(s, &Login{Username: "user1@example.com", Password: "12345678"})
 		require.NoError(t, err)
 	})
+	t.Run("disabled user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user17 is disabled (status=2), password is "12345678"
+		_, err := CheckUserCredentials(s, &Login{Username: "user17", Password: "12345678"})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountDisabled(err))
+	})
 }
 
 func TestUpdateUser(t *testing.T) {
