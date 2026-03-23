@@ -97,6 +97,26 @@ func TestAPIToken(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 		assert.Contains(t, res.Body.String(), `"code":11`)
 	})
+	t.Run("disabled user token rejected", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/tasks", nil)
+		res := httptest.NewRecorder()
+		c := e.NewContext(req, res)
+		h := routes.SetupTokenMiddleware()(func(c *echo.Context) error {
+			u, err := auth.GetAuthFromClaims(c)
+			if err != nil {
+				return err
+			}
+
+			return c.JSON(http.StatusOK, u)
+		})
+
+		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_disabled_user_test_token_000000001234abcd") // Token 4 (disabled user 17)
+		err = h(c)
+		require.Error(t, err)
+		assert.True(t, user.IsErrAccountDisabled(err), "expected ErrAccountDisabled, got: %v", err)
+	})
 	t.Run("jwt", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
