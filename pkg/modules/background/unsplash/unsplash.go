@@ -37,6 +37,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 )
 
@@ -260,7 +261,7 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	if err != nil {
 		return
 	}
-	resp, err := (&http.Client{}).Do(req) // #nosec G704 -- URL is from Unsplash API response
+	resp, err := utils.NewSSRFSafeHTTPClient().Do(req)
 	if err != nil {
 		return err
 	}
@@ -372,7 +373,7 @@ func pingbackByPhotoID(photoID string) {
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}
-	_, err = (&http.Client{}).Do(req) // #nosec G704 -- URL is hardcoded to views.unsplash.com
+	_, err = utils.NewSSRFSafeHTTPClient().Do(req)
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}
