@@ -48,6 +48,12 @@ const router = createRouter({
 					return
 				}
 
+				const redirectKey = 'defaultPageRedirectDone'
+				if (sessionStorage.getItem(redirectKey)) {
+					return
+				}
+				sessionStorage.setItem(redirectKey, 'true')
+
 				const authStore = useAuthStore()
 				const defaultPage = authStore.settings?.frontendSettings?.defaultPage
 
