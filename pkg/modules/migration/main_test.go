@@ -36,6 +36,8 @@ func TestMain(m *testing.M) {
 
 	// Set default config
 	config.InitDefaultConfig()
+	// Allow non-routable IPs in tests so httptest.NewServer (127.0.0.1) works
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
 
 	// Some tests use the file engine, so we'll need to initialize that
 	files.InitTests()
