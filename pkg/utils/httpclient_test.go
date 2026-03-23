@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -37,13 +38,15 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
 		defer config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
 
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		}))
 		defer server.Close()
 
 		client := NewSSRFSafeHTTPClient()
-		resp, err := client.Get(server.URL)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, nil)
+		require.NoError(t, err)
+		resp, err := client.Do(req)
 		require.NoError(t, err)
 		defer resp.Body.Close()
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -54,7 +57,9 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 		client := NewSSRFSafeHTTPClient()
 
 		// Attempt to connect to localhost (non-routable)
-		_, err := client.Get("http://127.0.0.1:1/test")
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://127.0.0.1:1/test", nil)
+		require.NoError(t, err)
+		_, err = client.Do(req) //nolint:bodyclose
 		require.Error(t, err)
 	})
 
@@ -62,13 +67,15 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 		config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
 		defer config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
 
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		}))
 		defer server.Close()
 
 		client := NewSSRFSafeHTTPClient()
-		resp, err := client.Get(server.URL)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, nil)
+		require.NoError(t, err)
+		resp, err := client.Do(req)
 		require.NoError(t, err)
 		defer resp.Body.Close()
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
