@@ -108,7 +108,15 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realna
 
 // ReadOne returns a task attachment
 func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
-	exists, err := s.Where("id = ?", ta.ID).Get(ta)
+	query := s.Where("id = ?", ta.ID).NoAutoCondition()
+
+	// When TaskID is provided (e.g. from URL parameters), verify the attachment
+	// belongs to that task to prevent IDOR attacks.
+	if ta.TaskID != 0 {
+		query = query.And("task_id = ?", ta.TaskID)
+	}
+
+	exists, err := query.Get(ta)
 	if err != nil {
 		return
 	}
