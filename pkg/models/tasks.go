@@ -511,7 +511,9 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 	}
 
 	fullRelatedTasks := make(map[int64]*Task)
-	err = s.In("id", relatedTaskIDs).Find(&fullRelatedTasks)
+	err = s.In("id", relatedTaskIDs).
+		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		Find(&fullRelatedTasks)
 	if err != nil {
 		return
 	}
