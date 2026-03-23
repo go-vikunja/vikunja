@@ -41,6 +41,9 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 	if user.IsErrUserDoesNotExist(err) {
 		return false, nil
 	}
+	if user.IsErrAccountDisabled(err) || user.IsErrAccountLocked(err) {
+		return false, nil
+	}
 	if u == nil {
 		u, err = user.CheckUserCredentials(s, credentials)
 		if err != nil {

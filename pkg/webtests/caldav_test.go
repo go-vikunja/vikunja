@@ -759,3 +759,15 @@ func TestCaldavTOTPBlocksBasicAuth(t *testing.T) {
 		assert.True(t, result, "BasicAuth with CalDAV token should succeed even when TOTP is enabled")
 	})
 }
+
+func TestCaldavDisabledUserRejected(t *testing.T) {
+	t.Run("disabled user cannot authenticate via CalDAV", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// user17 is disabled (status=2), password is "12345678"
+		result, err := caldav.BasicAuth(c, "user17", "12345678")
+		require.NoError(t, err)
+		assert.False(t, result, "disabled user should not be able to authenticate via CalDAV")
+	})
+}
