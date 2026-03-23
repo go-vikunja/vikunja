@@ -7,6 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [2.2.2] - 2026-03-23
+
+### Bug Fixes
+
+* Require admin access to list link shares ([5cd5dc4](5cd5dc409bfc807f79dac5e4ef4aec54b6efd6e2))
+* Hide link sharing section in UI for non-admin users ([74d1bdd](74d1bddb3ab32fc8983d778bb65e89b1d50227d6))
+
 ## [2.2.1] - 2026-03-23
 
 ### Bug Fixes
