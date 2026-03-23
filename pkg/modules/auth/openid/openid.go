@@ -377,6 +377,14 @@ func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 		cl.Picture = cl2.Picture
 	}
 
+	if (forceUserInfo && len(cl2.VikunjaGroups) > 0) || len(cl.VikunjaGroups) == 0 {
+		cl.VikunjaGroups = cl2.VikunjaGroups
+	}
+
+	if (forceUserInfo && len(cl2.ExtraSettingsLinks) > 0) || len(cl.ExtraSettingsLinks) == 0 {
+		cl.ExtraSettingsLinks = cl2.ExtraSettingsLinks
+	}
+
 	if cl.Email == "" {
 		return &user.ErrNoOpenIDEmailProvided{}
 	}
