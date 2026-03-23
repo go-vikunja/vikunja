@@ -219,6 +219,10 @@ const (
 	WebhooksProxyPassword       Key = `webhooks.proxypassword`
 	WebhooksAllowNonRoutableIPs Key = `webhooks.allownonroutableips`
 
+	OutgoingRequestsAllowNonRoutableIPs Key = `outgoingrequests.allownonroutableips`
+	OutgoingRequestsProxyURL            Key = `outgoingrequests.proxyurl`
+	OutgoingRequestsProxyPassword       Key = `outgoingrequests.proxypassword`
+
 	AutoTLSEnabled     Key = `autotls.enabled`
 	AutoTLSEmail       Key = `autotls.email`
 	AutoTLSRenewBefore Key = `autotls.renewbefore`
@@ -472,11 +476,28 @@ func InitDefaultConfig() {
 	WebhooksEnabled.setDefault(true)
 	WebhooksTimeoutSeconds.setDefault(30)
 	WebhooksAllowNonRoutableIPs.setDefault(false)
+	// Outgoing Requests
+	OutgoingRequestsAllowNonRoutableIPs.setDefault(false)
 	// AutoTLS
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 	// Plugins
 	PluginsEnabled.setDefault(false)
 	PluginsDir.setDefault(ResolvePath("plugins"))
+
+	// Migrate deprecated webhook config keys to outgoingrequests.*
+	// This allows removing the old keys in a single place later.
+	if WebhooksAllowNonRoutableIPs.GetBool() && !OutgoingRequestsAllowNonRoutableIPs.GetBool() {
+		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksAllowNonRoutableIPs, OutgoingRequestsAllowNonRoutableIPs)
+		OutgoingRequestsAllowNonRoutableIPs.Set("true")
+	}
+	if proxyURL := WebhooksProxyURL.GetString(); proxyURL != "" && OutgoingRequestsProxyURL.GetString() == "" {
+		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyURL, OutgoingRequestsProxyURL)
+		OutgoingRequestsProxyURL.Set(proxyURL)
+	}
+	if proxyPassword := WebhooksProxyPassword.GetString(); proxyPassword != "" && OutgoingRequestsProxyPassword.GetString() == "" {
+		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyPassword, OutgoingRequestsProxyPassword)
+		OutgoingRequestsProxyPassword.Set(proxyPassword)
+	}
 }
 
 // ResolvePath resolves a path relative to service.rootpath.
