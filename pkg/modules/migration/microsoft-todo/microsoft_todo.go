@@ -31,6 +31,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 const apiScopes = `tasks.read tasks.read.shared`
@@ -187,7 +188,7 @@ func makeAuthenticatedGetRequest(token, urlPart string, v interface{}) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err := (&http.Client{}).Do(req) // #nosec G704 -- URL is constructed from a hardcoded API prefix
+	resp, err := utils.NewSSRFSafeHTTPClient().Do(req)
 	if err != nil {
 		return err
 	}
