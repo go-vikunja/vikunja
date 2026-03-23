@@ -55,12 +55,12 @@ func GetAvatar(c *echo.Context) error {
 
 	// Get the user
 	u, err := user.GetUserWithEmail(s, &user.User{Username: username})
-	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrAccountDisabled(err) && !user.IsErrAccountLocked(err) {
+	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
 		log.Errorf("Error getting user for avatar: %v", err)
 		return err
 	}
 
-	found := err == nil || user.IsErrAccountDisabled(err) || user.IsErrAccountLocked(err)
+	found := err == nil || user.IsErrUserStatusError(err)
 
 	avatarProvider := avatar.GetProvider(u)
 

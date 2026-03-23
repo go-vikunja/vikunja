@@ -39,8 +39,8 @@ import (
 	"xorm.io/xorm"
 )
 
-// isErrUserStatusError returns true if the error is an ErrAccountDisabled or ErrAccountLocked.
-func isErrUserStatusError(err error) bool {
+// IsErrUserStatusError returns true if the error is an ErrAccountDisabled or ErrAccountLocked.
+func IsErrUserStatusError(err error) bool {
 	return IsErrAccountDisabled(err) || IsErrAccountLocked(err)
 }
 
@@ -134,7 +134,7 @@ func (u *User) RouteForMail() (string, error) {
 		s := db.NewSession()
 		defer s.Close()
 		user, err := getUser(s, &User{ID: u.ID}, true)
-		if err != nil && !isErrUserStatusError(err) {
+		if err != nil && !IsErrUserStatusError(err) {
 			return "", err
 		}
 		return user.Email, nil
@@ -157,7 +157,7 @@ func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
 		defer s.Close()
 	}
 	_, err := getUser(s, &User{ID: u.ID}, true)
-	if isErrUserStatusError(err) {
+	if IsErrUserStatusError(err) {
 		return false, nil
 	}
 	if err != nil {
@@ -538,7 +538,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 
 	// Check if it exists
 	theUser, err := GetUserWithEmail(s, &User{ID: user.ID})
-	if err != nil && !isErrUserStatusError(err) {
+	if err != nil && !IsErrUserStatusError(err) {
 		return &User{}, err
 	}
 
@@ -548,7 +548,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 	} else {
 		// Check if the new username already exists
 		uu, err := GetUserByUsername(s, user.Username)
-		if err != nil && !IsErrUserDoesNotExist(err) && !isErrUserStatusError(err) {
+		if err != nil && !IsErrUserDoesNotExist(err) && !IsErrUserStatusError(err) {
 			return nil, err
 		}
 		if uu.ID != 0 && uu.ID != user.ID {
@@ -570,7 +570,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 			Issuer:  user.Issuer,
 			Subject: user.Subject,
 		}, true)
-		if err != nil && !IsErrUserDoesNotExist(err) && !isErrUserStatusError(err) {
+		if err != nil && !IsErrUserDoesNotExist(err) && !IsErrUserStatusError(err) {
 			return nil, err
 		}
 		if uu.ID != 0 && uu.ID != user.ID {
@@ -636,7 +636,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 
 	// Get the newly updated user
 	updatedUser, err = GetUserByID(s, user.ID)
-	if err != nil && !isErrUserStatusError(err) {
+	if err != nil && !IsErrUserStatusError(err) {
 		return &User{}, err
 	}
 
@@ -659,7 +659,7 @@ func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err er
 
 	// Get all user details
 	theUser, err := GetUserByID(s, user.ID)
-	if err != nil && !isErrUserStatusError(err) {
+	if err != nil && !IsErrUserStatusError(err) {
 		return err
 	}
 

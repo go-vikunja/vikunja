@@ -110,7 +110,7 @@ func (tm *TeamMember) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	// Find the numeric user id
 	user, err := user2.GetUserByUsername(s, tm.Username)
-	if err != nil && !user2.IsErrAccountDisabled(err) && !user2.IsErrAccountLocked(err) {
+	if err != nil && !user2.IsErrUserStatusError(err) {
 		return
 	}
 	tm.UserID = user.ID
@@ -149,7 +149,7 @@ func (tm *TeamMember) MembershipExists(s *xorm.Session) (exists bool, err error)
 func (tm *TeamMember) Update(s *xorm.Session, _ web.Auth) (err error) {
 	// Find the numeric user id
 	user, err := user2.GetUserByUsername(s, tm.Username)
-	if err != nil && !user2.IsErrAccountDisabled(err) && !user2.IsErrAccountLocked(err) {
+	if err != nil && !user2.IsErrUserStatusError(err) {
 		return
 	}
 	tm.UserID = user.ID
