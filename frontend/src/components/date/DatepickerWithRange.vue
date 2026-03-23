@@ -86,7 +86,6 @@
 
 						<Modal
 							:enabled="showHowItWorks"
-							transition-name="fade"
 							:overflow="true"
 							variant="hint-modal"
 							@close="() => showHowItWorks = false"
