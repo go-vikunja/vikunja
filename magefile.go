@@ -564,6 +564,10 @@ func (Test) E2E(ctx context.Context, args string) error {
 	fmt.Println("\n--- Building frontend ---")
 	buildFrontendCmd := exec.CommandContext(ctx, "pnpm", "build:dev")
 	buildFrontendCmd.Dir = "frontend"
+	buildFrontendCmd.Env = append(os.Environ(),
+		"VIKUNJA_BUILD_STANDALONE=true",
+		fmt.Sprintf("VIKUNJA_API_URL=%s", apiBase),
+	)
 	buildFrontendCmd.Stdout = os.Stdout
 	buildFrontendCmd.Stderr = os.Stderr
 	if err := buildFrontendCmd.Run(); err != nil {
