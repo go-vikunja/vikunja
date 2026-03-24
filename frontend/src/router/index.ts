@@ -213,6 +213,11 @@ const router = createRouter({
 			component: () => import('@/views/project/ListProjects.vue'),
 		},
 		{
+			path: '/templates',
+			name: 'templates.index',
+			component: () => import('@/views/project/ListTemplates.vue'),
+		},
+		{
 			path: '/projects/new',
 			name: 'project.create',
 			component: () => import('@/views/project/NewProject.vue'),
