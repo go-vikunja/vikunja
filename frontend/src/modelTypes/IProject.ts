@@ -12,6 +12,7 @@ export interface IProject extends IAbstract {
 	owner: IUser
 	tasks: ITask[]
 	isArchived: boolean
+	isTemplate: boolean
 	hexColor: string
 	identifier: string
 	backgroundInformation: unknown | null // FIXME: improve type
