@@ -369,6 +369,14 @@
       "text": "Select a parent project which should hold the duplicated project:",
       "success": "The project was successfully duplicated."
     },
+    "template": {
+      "title": "Templates",
+      "saveAsTemplate": "Save as Template",
+      "saveAsTemplateSuccess": "Project saved as template successfully.",
+      "useTemplate": "Use a template",
+      "selectTemplate": "Select a template...",
+      "createFromTemplate": "Creating project from template..."
+    },
     "edit": {
       "header": "Edit This Project",
       "title": "Edit \"{project}\"",
