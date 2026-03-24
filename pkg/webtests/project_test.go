@@ -91,6 +91,20 @@ func TestProject(t *testing.T) {
 				}
 			}
 		})
+		t.Run("Templates excluded by default", func(t *testing.T) {
+			rec, err := testHandler.testReadAllWithUser(nil, nil)
+			require.NoError(t, err)
+			assert.NotContains(t, rec.Body.String(), `"is_template":true`)
+			assert.NotContains(t, rec.Body.String(), `Template Project`)
+			assert.NotContains(t, rec.Body.String(), `Shared Template`)
+		})
+		t.Run("Templates only", func(t *testing.T) {
+			rec, err := testHandler.testReadAllWithUser(url.Values{"is_template": []string{"true"}}, nil)
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `Template Project`)
+			assert.Contains(t, rec.Body.String(), `Shared Template`)
+			assert.NotContains(t, rec.Body.String(), `"title":"Test1"`)
+		})
 	})
 	t.Run("ReadOne", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
@@ -462,5 +476,45 @@ func TestProject(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			})
 		})
+		t.Run("Template cannot have parent project", func(t *testing.T) {
+			_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Test Template","is_template":true,"parent_project_id":1}`)
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeTemplateCannotHaveParentProject)
+		})
+		t.Run("Template as top-level project", func(t *testing.T) {
+			rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Test Template","is_template":true}`)
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `"title":"Test Template"`)
+			assert.Contains(t, rec.Body.String(), `"is_template":true`)
+		})
+	})
+}
+
+func TestProjectTemplate(t *testing.T) {
+	testHandler := webHandlerTest{
+		user: &testuser1,
+		strFunc: func() handler.CObject {
+			return &models.ProjectTemplate{}
+		},
+		t: t,
+	}
+
+	t.Run("Save as template", func(t *testing.T) {
+		rec, err := testHandler.testCreateWithUser(nil, map[string]string{"projectid": "3"}, `{}`)
+		require.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `"is_template":true`)
+	})
+
+	t.Run("No access to source project", func(t *testing.T) {
+		noAccessHandler := webHandlerTest{
+			user: &testuser15,
+			strFunc: func() handler.CObject {
+				return &models.ProjectTemplate{}
+			},
+			t: t,
+		}
+		_, err := noAccessHandler.testCreateWithUser(nil, map[string]string{"projectid": "1"}, `{}`)
+		require.Error(t, err)
+		assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 	})
 }
