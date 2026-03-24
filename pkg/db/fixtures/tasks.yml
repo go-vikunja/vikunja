@@ -429,3 +429,21 @@
   index: 33
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
+- id: 49
+  title: 'trashed task'
+  done: false
+  created_by_id: 1
+  project_id: 1
+  index: 34
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+  deleted_at: 2026-03-01 00:00:00
+- id: 50
+  title: 'old trashed task for purge'
+  done: false
+  created_by_id: 1
+  project_id: 1
+  index: 35
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+  deleted_at: 2025-01-01 00:00:00
