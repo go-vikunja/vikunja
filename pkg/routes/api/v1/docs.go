@@ -19,9 +19,13 @@
 package v1
 
 import (
+	"bytes"
 	_ "embed"
+	"html/template"
 	"net/http"
+	"strings"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	_ "code.vikunja.io/api/pkg/swagger" // To make sure the swag files are properly registered
 
@@ -42,10 +46,22 @@ func DocsJSON(c *echo.Context) error {
 
 // RedocUI serves everything needed to provide the redoc ui
 func RedocUI(c *echo.Context) error {
-	return c.HTML(http.StatusOK, RedocUITemplate)
+	publicURL := config.ServicePublicURL.GetString()
+	docsURL := strings.TrimRight(publicURL, "/") + "/api/v1/docs.json"
+
+	var buf bytes.Buffer
+	data := map[string]string{"Url": docsURL}
+
+	if err := RedocUITemplate.Execute(&buf, data); err != nil {
+		return err
+	}
+
+	return c.HTML(http.StatusOK, buf.String())
 }
 
-// RedocUITemplate contains the html + js needed for redoc ui
-//
-//go:embed templates/redoc.html
-var RedocUITemplate string
+var (
+	//go:embed templates/redoc.html
+	// redocUITemplate contains the html + js needed for redoc ui
+	redocUITemplate string
+	RedocUITemplate = template.Must(template.New("redoc").Delims("[[[", "]]]").Parse(redocUITemplate))
+)
