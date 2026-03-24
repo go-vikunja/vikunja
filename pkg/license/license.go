@@ -108,10 +108,9 @@ func (f *Feature) UnmarshalJSON(data []byte) error {
 
 // Status represents the license_status table.
 type Status struct {
-	ID          int64     `xorm:"bigint autoincr not null unique pk" json:"id"`
-	InstanceID  string    `xorm:"varchar(36) not null" json:"instance_id"`
-	LicenseKey  string    `xorm:"text not null" json:"-"`
-	Response    string    `xorm:"text not null" json:"response"`
+	ID         int64  `xorm:"bigint autoincr not null unique pk" json:"id"`
+	InstanceID string `xorm:"varchar(36) not null" json:"instance_id"`
+	Response   string `xorm:"text not null" json:"response"`
 	ValidatedAt time.Time `xorm:"datetime null" json:"validated_at"`
 	Created     time.Time `xorm:"created not null" json:"created"`
 	Updated     time.Time `xorm:"updated not null" json:"updated"`
@@ -163,12 +162,6 @@ func Init() {
 		log.Errorf("Error loading cached license status: %s", err)
 	}
 
-	// If cache exists but key changed, invalidate it
-	if cached != nil && cached.LicenseKey != key {
-		log.Infof("License key changed, invalidating cache.")
-		cached = nil
-	}
-
 	log.Debugf("Performing initial license check...")
 
 	// Perform initial license check
@@ -188,7 +181,7 @@ func Init() {
 		log.Warningf("License key is invalid: %s. Pro features will not be available.", resp.Message)
 	default:
 		applyResponse(resp)
-		if err := cacheResponse(key, resp); err != nil {
+		if err := cacheResponse(resp); err != nil {
 			log.Errorf("Error caching license response: %s", err)
 		}
 		log.Infof("License valid. Pro features enabled.")
@@ -254,7 +247,6 @@ func loadOrCreateInstanceID() (string, error) {
 	id := uuid.New().String()
 	_, err = s.Insert(&Status{
 		InstanceID: id,
-		LicenseKey: "",
 		Response:   "{}",
 	})
 	if err != nil {
@@ -321,7 +313,7 @@ func degradeToFree(reason string) {
 	log.Warningf("%s Pro features have been disabled.", reason)
 }
 
-func cacheResponse(key string, resp *Response) error {
+func cacheResponse(resp *Response) error {
 	raw, err := serializeResponse(resp)
 	if err != nil {
 		return err
@@ -331,8 +323,7 @@ func cacheResponse(key string, resp *Response) error {
 	defer s.Close()
 
 	// Update the existing row
-	_, err = s.Where("1=1").Update(&Status{
-		LicenseKey:  key,
+	_, err = s.Where("instance_id = ?", instanceID).Update(&Status{
 		Response:    raw,
 		ValidatedAt: time.Now(),
 	})
@@ -394,7 +385,7 @@ func backgroundLoop(key string) {
 		currentState.mu.RUnlock()
 
 		applyResponse(resp)
-		if err := cacheResponse(key, resp); err != nil {
+		if err := cacheResponse(resp); err != nil {
 			log.Errorf("Error caching license response: %s", err)
 		}
 
@@ -408,8 +399,7 @@ func clearCache() error {
 	s := db.NewSession()
 	defer s.Close()
 
-	_, err := s.Where("1=1").Update(&Status{
-		LicenseKey:  "",
+	_, err := s.Where("instance_id = ?", instanceID).Update(&Status{
 		Response:    "{}",
 		ValidatedAt: time.Time{},
 	})
