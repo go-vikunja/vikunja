@@ -143,6 +143,71 @@ func (t *Task) Restore(s *xorm.Session, a web.Auth) (err error) {
 	return updateProjectLastUpdated(s, &Project{ID: task.ProjectID})
 }
 
+// GetTrashedTasks returns all trashed tasks the user has read access to.
+func GetTrashedTasks(s *xorm.Session, a web.Auth, projectID int64, page int, perPage int) (tasks []*Task, totalCount int64, err error) {
+	query := s.Where("tasks.deleted_at IS NOT NULL").
+		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`"))
+
+	if projectID > 0 {
+		query = query.And("tasks.project_id = ?", projectID)
+	}
+
+	totalCount, err = query.Count(&Task{})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	query = s.Where("tasks.deleted_at IS NOT NULL").
+		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`"))
+
+	if projectID > 0 {
+		query = query.And("tasks.project_id = ?", projectID)
+	}
+
+	if perPage == 0 {
+		perPage = 50
+	}
+	if page == 0 {
+		page = 1
+	}
+
+	tasks = []*Task{}
+	err = query.
+		OrderBy("tasks.deleted_at DESC").
+		Limit(perPage, (page-1)*perPage).
+		Find(&tasks)
+	return
+}
+
+// EmptyTrash permanently deletes all trashed tasks the user has delete access to.
+func EmptyTrash(s *xorm.Session, a web.Auth) (count int64, err error) {
+	var tasks []*Task
+	err = s.Where("tasks.deleted_at IS NOT NULL").
+		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		Find(&tasks)
+	if err != nil {
+		return 0, err
+	}
+
+	for _, task := range tasks {
+		canDo, err := CanDoTrashOperation(s, task, a)
+		if err != nil && !IsErrTaskIsNotTrashed(err) {
+			return count, err
+		}
+		if !canDo {
+			continue
+		}
+
+		err = task.HardDelete(s, a)
+		if err != nil {
+			return count, err
+		}
+		count++
+	}
+
+	return count, nil
+}
+
 // RegisterTrashPurgeJob registers a daily cron job that permanently deletes
 // tasks that have been in the trash for more than 30 days.
 func RegisterTrashPurgeJob() {

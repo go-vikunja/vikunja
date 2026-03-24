@@ -125,6 +125,7 @@ func FullInit() {
 	user.RegisterTokenCleanupCron()
 	models.RegisterSessionCleanupCron()
 	user.RegisterDeletionNotificationCron()
+	models.RegisterTrashPurgeJob()
 	openid.CleanupSavedOpenIDProviders()
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
 

@@ -695,6 +695,12 @@ func registerAPIRoutes(a *echo.Group) {
 	a.POST("/notifications/:notificationid", notificationHandler.UpdateWeb)
 	a.POST("/notifications", apiv1.MarkAllNotificationsAsRead)
 
+	// Trash
+	a.GET("/trash", apiv1.GetTrashedTasks)
+	a.POST("/trash/:taskID/restore", apiv1.RestoreTrashedTask)
+	a.DELETE("/trash/:taskID", apiv1.PermanentlyDeleteTrashedTask)
+	a.DELETE("/trash", apiv1.EmptyTrash)
+
 	// Migrations
 	m := a.Group("/migration")
 	registerMigrations(m)
