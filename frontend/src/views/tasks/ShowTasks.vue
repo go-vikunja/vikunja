@@ -262,7 +262,8 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 	}
 
 	let projectId = null
-	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined') {
+	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined'
+		&& (!props.labelIds || props.labelIds.length === 0)) {
 		projectId = filterId
 	}
 
