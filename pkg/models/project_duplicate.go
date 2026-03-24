@@ -38,6 +38,11 @@ type ProjectDuplicate struct {
 	// The copied project
 	Project *Project `json:"duplicated_project,omitempty"`
 
+	// If true, skip copying user/team permissions and link shares
+	SkipPermissions bool `json:"-"`
+	// If true, skip copying task assignees and comments
+	SkipAssigneesAndComments bool `json:"-"`
+
 	web.Permissions `json:"-"`
 	web.CRUDable    `json:"-"`
 }
@@ -117,56 +122,58 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		return
 	}
 
-	// Permissions / Shares
-	// To keep it simple(r) we will only copy permissions which are directly used with the project, not the parent
-	users := []*ProjectUser{}
-	err = s.Where("project_id = ?", pd.ProjectID).Find(&users)
-	if err != nil {
-		return
-	}
-	for _, u := range users {
-		u.ID = 0
-		u.ProjectID = pd.Project.ID
-		if _, err := s.Insert(u); err != nil {
-			return err
-		}
-	}
-
-	log.Debugf("Duplicated user shares from project %d into %d", pd.ProjectID, pd.Project.ID)
-
-	teams := []*TeamProject{}
-	err = s.Where("project_id = ?", pd.ProjectID).Find(&teams)
-	if err != nil {
-		return
-	}
-	for _, t := range teams {
-		t.ID = 0
-		t.ProjectID = pd.Project.ID
-		if _, err := s.Insert(t); err != nil {
-			return err
-		}
-	}
-
-	// Generate new link shares if any are available
-	linkShares := []*LinkSharing{}
-	err = s.Where("project_id = ?", pd.ProjectID).Find(&linkShares)
-	if err != nil {
-		return
-	}
-	for _, share := range linkShares {
-		share.ID = 0
-		share.ProjectID = pd.Project.ID
-		hash, err := utils.CryptoRandomString(40)
+	if !pd.SkipPermissions {
+		// Permissions / Shares
+		// To keep it simple(r) we will only copy permissions which are directly used with the project, not the parent
+		users := []*ProjectUser{}
+		err = s.Where("project_id = ?", pd.ProjectID).Find(&users)
 		if err != nil {
-			return err
+			return
 		}
-		share.Hash = hash
-		if _, err := s.Insert(share); err != nil {
-			return err
+		for _, u := range users {
+			u.ID = 0
+			u.ProjectID = pd.Project.ID
+			if _, err := s.Insert(u); err != nil {
+				return err
+			}
 		}
-	}
 
-	log.Debugf("Duplicated all link shares from project %d into %d", pd.ProjectID, pd.Project.ID)
+		log.Debugf("Duplicated user shares from project %d into %d", pd.ProjectID, pd.Project.ID)
+
+		teams := []*TeamProject{}
+		err = s.Where("project_id = ?", pd.ProjectID).Find(&teams)
+		if err != nil {
+			return
+		}
+		for _, t := range teams {
+			t.ID = 0
+			t.ProjectID = pd.Project.ID
+			if _, err := s.Insert(t); err != nil {
+				return err
+			}
+		}
+
+		// Generate new link shares if any are available
+		linkShares := []*LinkSharing{}
+		err = s.Where("project_id = ?", pd.ProjectID).Find(&linkShares)
+		if err != nil {
+			return
+		}
+		for _, share := range linkShares {
+			share.ID = 0
+			share.ProjectID = pd.Project.ID
+			hash, err := utils.CryptoRandomString(40)
+			if err != nil {
+				return err
+			}
+			share.Hash = hash
+			if _, err := s.Insert(share); err != nil {
+				return err
+			}
+		}
+
+		log.Debugf("Duplicated all link shares from project %d into %d", pd.ProjectID, pd.Project.ID)
+	}
 
 	err = pd.Project.ReadOne(s, doer)
 	return
@@ -431,43 +438,45 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 
 	log.Debugf("Duplicated all labels from project %d into %d", ld.ProjectID, ld.Project.ID)
 
-	// Assignees
-	// Only copy those assignees who have access to the task
-	assignees := []*TaskAssginee{}
-	err = s.In("task_id", oldTaskIDs).Find(&assignees)
-	if err != nil {
-		return
-	}
-	for _, a := range assignees {
-		t := &Task{
-			ID:        newTaskIDs[a.TaskID],
-			ProjectID: ld.Project.ID,
+	if !ld.SkipAssigneesAndComments {
+		// Assignees
+		// Only copy those assignees who have access to the task
+		assignees := []*TaskAssginee{}
+		err = s.In("task_id", oldTaskIDs).Find(&assignees)
+		if err != nil {
+			return
 		}
-		if err := t.addNewAssigneeByID(s, a.UserID, ld.Project, doer); err != nil {
-			if IsErrUserDoesNotHaveAccessToProject(err) {
-				continue
+		for _, a := range assignees {
+			t := &Task{
+				ID:        newTaskIDs[a.TaskID],
+				ProjectID: ld.Project.ID,
 			}
-			return nil, err
+			if err := t.addNewAssigneeByID(s, a.UserID, ld.Project, doer); err != nil {
+				if IsErrUserDoesNotHaveAccessToProject(err) {
+					continue
+				}
+				return nil, err
+			}
 		}
-	}
 
-	log.Debugf("Duplicated all assignees from project %d into %d", ld.ProjectID, ld.Project.ID)
+		log.Debugf("Duplicated all assignees from project %d into %d", ld.ProjectID, ld.Project.ID)
 
-	// Comments
-	comments := []*TaskComment{}
-	err = s.In("task_id", oldTaskIDs).Find(&comments)
-	if err != nil {
-		return
-	}
-	for _, c := range comments {
-		c.ID = 0
-		c.TaskID = newTaskIDs[c.TaskID]
-		if _, err := s.Insert(c); err != nil {
-			return nil, err
+		// Comments
+		comments := []*TaskComment{}
+		err = s.In("task_id", oldTaskIDs).Find(&comments)
+		if err != nil {
+			return
 		}
-	}
+		for _, c := range comments {
+			c.ID = 0
+			c.TaskID = newTaskIDs[c.TaskID]
+			if _, err := s.Insert(c); err != nil {
+				return nil, err
+			}
+		}
 
-	log.Debugf("Duplicated all comments from project %d into %d", ld.ProjectID, ld.Project.ID)
+		log.Debugf("Duplicated all comments from project %d into %d", ld.ProjectID, ld.Project.ID)
+	}
 
 	// Relations in that project
 	// Low-Effort: Only copy those relations which are between tasks in the same project
