@@ -98,12 +98,12 @@ func TestProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `Template Project`)
 			assert.NotContains(t, rec.Body.String(), `Shared Template`)
 		})
-		t.Run("Templates only", func(t *testing.T) {
+		t.Run("Including templates", func(t *testing.T) {
 			rec, err := testHandler.testReadAllWithUser(url.Values{"is_template": []string{"true"}}, nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Template Project`)
 			assert.Contains(t, rec.Body.String(), `Shared Template`)
-			assert.NotContains(t, rec.Body.String(), `"title":"Test1"`)
+			assert.Contains(t, rec.Body.String(), `Test1`)
 		})
 	})
 	t.Run("ReadOne", func(t *testing.T) {
