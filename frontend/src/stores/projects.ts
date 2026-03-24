@@ -264,18 +264,10 @@ export const useProjectStore = defineStore('project', () => {
 		let page = 1
 		try {
 			do {
-				const newProjects = await projectService.getAll({}, {is_archived: true, expand: 'permissions'}, page) as IProject[]
+				const newProjects = await projectService.getAll({}, {is_archived: true, is_template: true, expand: 'permissions'}, page) as IProject[]
 				loadedProjects.push(...newProjects)
 				page++
 			} while (page <= projectService.totalPages)
-
-			// Fetch templates separately
-			let templatePage = 1
-			do {
-				const newTemplates = await projectService.getAll({}, {is_template: true, expand: 'permissions'}, templatePage) as IProject[]
-				loadedProjects.push(...newTemplates)
-				templatePage++
-			} while (templatePage <= projectService.totalPages)
 
 		} finally {
 			cancel()
