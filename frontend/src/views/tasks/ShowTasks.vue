@@ -31,6 +31,12 @@
 				<Icon icon="times" />
 			</BaseButton>
 		</Message>
+		<Message
+			v-if="savedFilterIgnored"
+			class="mbe-2"
+		>
+			{{ $t('task.show.savedFilterIgnored') }}
+		</Message>
 		<p
 			v-if="!showAll"
 			class="show-tasks-options"
@@ -161,6 +167,12 @@ const filteredLabels = computed(() => {
 	return props.labelIds
 		.map(id => labelStore.getLabelById(Number(id)))
 		.filter(label => label !== null && label !== undefined)
+})
+
+const savedFilterIgnored = computed(() => {
+	return filteredLabels.value.length > 0
+		&& filterIdUsedOnOverview.value
+		&& typeof projectStore.projects[filterIdUsedOnOverview.value] !== 'undefined'
 })
 
 const pageTitle = computed(() => {
