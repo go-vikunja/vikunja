@@ -347,7 +347,7 @@ func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 // GetTaskSimple returns a raw task without extra data
 func GetTaskSimple(s *xorm.Session, t *Task) (task Task, err error) {
 	task = *t
-	exists, err := s.Get(&task)
+	exists, err := s.Where("deleted_at IS NULL").Get(&task)
 	if err != nil {
 		return Task{}, err
 	}
@@ -359,7 +359,7 @@ func GetTaskSimple(s *xorm.Session, t *Task) (task Task, err error) {
 }
 
 func GetTasksSimpleByIDs(s *xorm.Session, ids []int64) (tasks []*Task, err error) {
-	err = s.In("id", ids).Find(&tasks)
+	err = s.In("id", ids).And("deleted_at IS NULL").Find(&tasks)
 	return
 }
 
@@ -367,7 +367,7 @@ func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 	var has bool
 	task = &Task{}
 
-	has, err = s.In("uid", uid).Get(task)
+	has, err = s.In("uid", uid).And("deleted_at IS NULL").Get(task)
 	if !has || err != nil {
 		return &Task{}, ErrTaskDoesNotExist{}
 	}
@@ -378,7 +378,7 @@ func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 // GetTasksByUIDs gets all tasks from a bunch of uids
 func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, err error) {
 	tasks = []*Task{}
-	err = s.In("uid", uids).Find(&tasks)
+	err = s.In("uid", uids).And("deleted_at IS NULL").Find(&tasks)
 	if err != nil {
 		return
 	}
@@ -516,6 +516,7 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 	fullRelatedTasks := make(map[int64]*Task)
 	err = s.In("id", relatedTaskIDs).
 		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		And("tasks.deleted_at IS NULL").
 		Find(&fullRelatedTasks)
 	if err != nil {
 		return

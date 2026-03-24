@@ -1203,7 +1203,20 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	for _, task := range tasks {
-		err = task.Delete(s, a)
+		err = task.HardDelete(s, a)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Also hard-delete any already-trashed tasks in this project
+	var trashedTasks []*Task
+	err = s.Where("project_id = ? AND deleted_at IS NOT NULL", p.ID).Find(&trashedTasks)
+	if err != nil {
+		return err
+	}
+	for _, task := range trashedTasks {
+		err = task.HardDelete(s, a)
 		if err != nil {
 			return err
 		}

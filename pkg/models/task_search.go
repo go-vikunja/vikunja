@@ -351,7 +351,8 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
+	notTrashedCond := builder.IsNull{"tasks.deleted_at"}
+	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond, notTrashedCond)
 
 	var distinct = "tasks.*"
 	if strings.Contains(orderby, "task_positions.") {
