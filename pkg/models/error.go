@@ -528,6 +528,60 @@ func (err *ErrProjectViewDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTemplateCannotHaveParentProject represents an error where a template project is being assigned a parent
+type ErrTemplateCannotHaveParentProject struct {
+	ProjectID int64
+}
+
+// IsErrTemplateCannotHaveParentProject checks if an error is a ErrTemplateCannotHaveParentProject.
+func IsErrTemplateCannotHaveParentProject(err error) bool {
+	_, ok := err.(*ErrTemplateCannotHaveParentProject)
+	return ok
+}
+
+func (err *ErrTemplateCannotHaveParentProject) Error() string {
+	return fmt.Sprintf("Template project cannot have a parent project [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeTemplateCannotHaveParentProject holds the unique world-error code of this error
+const ErrCodeTemplateCannotHaveParentProject = 3015
+
+// HTTPError holds the http error description
+func (err *ErrTemplateCannotHaveParentProject) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeTemplateCannotHaveParentProject,
+		Message:  "Template projects cannot have a parent project.",
+	}
+}
+
+// ErrCannotMakeDefaultProjectTemplate represents an error where the default project is being made a template
+type ErrCannotMakeDefaultProjectTemplate struct {
+	ProjectID int64
+}
+
+// IsErrCannotMakeDefaultProjectTemplate checks if an error is a ErrCannotMakeDefaultProjectTemplate.
+func IsErrCannotMakeDefaultProjectTemplate(err error) bool {
+	_, ok := err.(*ErrCannotMakeDefaultProjectTemplate)
+	return ok
+}
+
+func (err *ErrCannotMakeDefaultProjectTemplate) Error() string {
+	return fmt.Sprintf("Default project cannot be made a template [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeCannotMakeDefaultProjectTemplate holds the unique world-error code of this error
+const ErrCodeCannotMakeDefaultProjectTemplate = 3016
+
+// HTTPError holds the http error description
+func (err *ErrCannotMakeDefaultProjectTemplate) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeCannotMakeDefaultProjectTemplate,
+		Message:  "This project cannot be made a template because it is the default project of a user.",
+	}
+}
+
 // ==============
 // Task errors
 // ==============
