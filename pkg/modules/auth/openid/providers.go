@@ -28,6 +28,26 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// ErrDuplicateOIDCIssuer is returned when two configured providers resolve to the same issuer URL.
+type ErrDuplicateOIDCIssuer struct {
+	Issuer    string
+	Provider1 string
+	Provider2 string
+}
+
+func (e *ErrDuplicateOIDCIssuer) Error() string {
+	return fmt.Sprintf(
+		"duplicate OpenID Connect issuer %q: providers %q and %q resolve to the same issuer, which will cause team sync conflicts",
+		e.Issuer, e.Provider1, e.Provider2,
+	)
+}
+
+// IsErrDuplicateOIDCIssuer checks if an error is a duplicate issuer error.
+func IsErrDuplicateOIDCIssuer(err error) bool {
+	_, ok := err.(*ErrDuplicateOIDCIssuer)
+	return ok
+}
+
 // GetAllProviders returns all configured providers
 func GetAllProviders() (providers []*Provider, err error) {
 	if !config.AuthOpenIDEnabled.GetBool() {
@@ -97,6 +117,25 @@ func GetAllProviders() (providers []*Provider, err error) {
 				return nil, err
 			}
 		}
+
+		// Check for duplicate issuers across providers
+		issuerToKey := make(map[string]string)
+		for _, p := range providers {
+			issuer, issuerErr := p.Issuer()
+			if issuerErr != nil {
+				// Provider failed OIDC discovery, skip issuer check
+				continue
+			}
+			if existingKey, exists := issuerToKey[issuer]; exists {
+				return nil, &ErrDuplicateOIDCIssuer{
+					Issuer:    issuer,
+					Provider1: existingKey,
+					Provider2: p.Key,
+				}
+			}
+			issuerToKey[issuer] = p.Key
+		}
+
 		err = keyvalue.Put("openid_providers", providers)
 	}
 

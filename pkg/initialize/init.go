@@ -100,6 +100,9 @@ func FullInitWithoutAsync() {
 	// Check all OpenID Connect providers at startup
 	_, err = openid.GetAllProviders()
 	if err != nil {
+		if openid.IsErrDuplicateOIDCIssuer(err) {
+			log.Fatalf("OpenID Connect configuration error: %s", err)
+		}
 		log.Errorf("Error initializing OpenID Connect providers: %s", err)
 	}
 
