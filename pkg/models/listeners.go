@@ -42,6 +42,8 @@ func RegisterListeners() {
 		events.RegisterListener((&ProjectDeletedEvent{}).Name(), &DecreaseProjectCounter{})
 		events.RegisterListener((&TaskCreatedEvent{}).Name(), &IncreaseTaskCounter{})
 		events.RegisterListener((&TaskDeletedEvent{}).Name(), &DecreaseTaskCounter{})
+		events.RegisterListener((&TaskTrashedEvent{}).Name(), &DecreaseTaskCounter{})
+		events.RegisterListener((&TaskRestoredEvent{}).Name(), &IncreaseTaskCounter{})
 		events.RegisterListener((&TeamDeletedEvent{}).Name(), &DecreaseTeamCounter{})
 		events.RegisterListener((&TeamCreatedEvent{}).Name(), &IncreaseTeamCounter{})
 		events.RegisterListener((&TaskAttachmentCreatedEvent{}).Name(), &IncreaseAttachmentCounter{})
@@ -50,6 +52,8 @@ func RegisterListeners() {
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
+	events.RegisterListener((&TaskTrashedEvent{}).Name(), &SendTaskTrashedNotification{})
+	events.RegisterListener((&TaskRestoredEvent{}).Name(), &SendTaskRestoredNotification{})
 	events.RegisterListener((&ProjectCreatedEvent{}).Name(), &SendProjectCreatedNotification{})
 	events.RegisterListener((&TeamMemberAddedEvent{}).Name(), &SendTeamMemberAddedNotification{})
 	events.RegisterListener((&TeamMemberRemovedEvent{}).Name(), &CleanupTaskAssignmentsAfterTeamRemoval{})
@@ -73,6 +77,8 @@ func RegisterListeners() {
 		RegisterEventForWebhook(&TaskCreatedEvent{})
 		RegisterEventForWebhook(&TaskUpdatedEvent{})
 		RegisterEventForWebhook(&TaskDeletedEvent{})
+		RegisterEventForWebhook(&TaskTrashedEvent{})
+		RegisterEventForWebhook(&TaskRestoredEvent{})
 		RegisterEventForWebhook(&TaskAssigneeCreatedEvent{})
 		RegisterEventForWebhook(&TaskAssigneeDeletedEvent{})
 		RegisterEventForWebhook(&TaskCommentCreatedEvent{})
@@ -385,6 +391,100 @@ func (s *SendTaskDeletedNotification) Handle(msg *message.Message) (err error) {
 		}
 
 		n := &TaskDeletedNotification{
+			Doer: event.Doer,
+			Task: event.Task,
+		}
+		err = notifications.Notify(subscriber.User, n, sess)
+		if err != nil {
+			return
+		}
+	}
+
+	return sess.Commit()
+}
+
+// SendTaskTrashedNotification  represents a listener
+type SendTaskTrashedNotification struct {
+}
+
+// Name defines the name for the SendTaskTrashedNotification listener
+func (s *SendTaskTrashedNotification) Name() string {
+	return "task.trashed.notification.send"
+}
+
+// Handle is executed when the event SendTaskTrashedNotification listens on is fired
+func (s *SendTaskTrashedNotification) Handle(msg *message.Message) (err error) {
+	event := &TaskTrashedEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	var subscribers []*SubscriptionWithUser
+	subscribers, err = GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
+	if err != nil && (IsErrTaskDoesNotExist(err) || IsErrProjectDoesNotExist(err)) {
+		subscribers, err = GetSubscriptionsForEntity(sess, SubscriptionEntityProject, event.Task.ProjectID)
+	}
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Sending task trashed notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
+
+	for _, subscriber := range subscribers {
+		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		n := &TaskTrashedNotification{
+			Doer: event.Doer,
+			Task: event.Task,
+		}
+		err = notifications.Notify(subscriber.User, n, sess)
+		if err != nil {
+			return
+		}
+	}
+
+	return sess.Commit()
+}
+
+// SendTaskRestoredNotification  represents a listener
+type SendTaskRestoredNotification struct {
+}
+
+// Name defines the name for the SendTaskRestoredNotification listener
+func (s *SendTaskRestoredNotification) Name() string {
+	return "task.restored.notification.send"
+}
+
+// Handle is executed when the event SendTaskRestoredNotification listens on is fired
+func (s *SendTaskRestoredNotification) Handle(msg *message.Message) (err error) {
+	event := &TaskRestoredEvent{}
+	err = json.Unmarshal(msg.Payload, event)
+	if err != nil {
+		return err
+	}
+
+	sess := db.NewSession()
+	defer sess.Close()
+
+	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Sending task restored notifications to %d subscribers for task %d", len(subscribers), event.Task.ID)
+
+	for _, subscriber := range subscribers {
+		if subscriber.UserID == event.Doer.ID {
+			continue
+		}
+
+		n := &TaskRestoredNotification{
 			Doer: event.Doer,
 			Task: event.Task,
 		}

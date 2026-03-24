@@ -58,6 +58,28 @@ func (t *TaskDeletedEvent) Name() string {
 	return "task.deleted"
 }
 
+// TaskTrashedEvent represents a TaskTrashedEvent event
+type TaskTrashedEvent struct {
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for TaskTrashedEvent
+func (t *TaskTrashedEvent) Name() string {
+	return "task.trashed"
+}
+
+// TaskRestoredEvent represents a TaskRestoredEvent event
+type TaskRestoredEvent struct {
+	Task *Task      `json:"task"`
+	Doer *user.User `json:"doer"`
+}
+
+// Name defines the name for TaskRestoredEvent
+func (t *TaskRestoredEvent) Name() string {
+	return "task.restored"
+}
+
 // TaskAssigneeCreatedEvent represents an event where a task has been assigned to a user
 type TaskAssigneeCreatedEvent struct {
 	Task     *Task      `json:"task"`

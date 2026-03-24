@@ -179,17 +179,3 @@ func RegisterTrashPurgeJob() {
 	}
 }
 
-// TODO: These will be moved to events.go in Task 4
-type TaskTrashedEvent struct {
-	Task *Task      `json:"task"`
-	Doer *user.User `json:"doer"`
-}
-
-func (t *TaskTrashedEvent) Name() string { return "task.trashed" }
-
-type TaskRestoredEvent struct {
-	Task *Task      `json:"task"`
-	Doer *user.User `json:"doer"`
-}
-
-func (t *TaskRestoredEvent) Name() string { return "task.restored" }

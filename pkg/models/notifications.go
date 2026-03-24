@@ -242,6 +242,62 @@ func (n *TaskDeletedNotification) ThreadID() string {
 	return getThreadID(n.Task.ID)
 }
 
+// TaskTrashedNotification represents a TaskTrashedNotification notification
+type TaskTrashedNotification struct {
+	Doer *user.User `json:"doer"`
+	Task *Task      `json:"task"`
+}
+
+// ToMail returns the mail notification for TaskTrashedNotification
+func (n *TaskTrashedNotification) ToMail(lang string) *notifications.Mail {
+	return notifications.NewMail().
+		Subject(i18n.T(lang, "notifications.task.trashed.subject", n.Task.Title, n.Task.GetFullIdentifier())).
+		Line(i18n.T(lang, "notifications.task.trashed.message", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier()))
+}
+
+// ToDB returns the TaskTrashedNotification notification in a format which can be saved in the db
+func (n *TaskTrashedNotification) ToDB() interface{} {
+	return n
+}
+
+// Name returns the name of the notification
+func (n *TaskTrashedNotification) Name() string {
+	return "task.trashed"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *TaskTrashedNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
+}
+
+// TaskRestoredNotification represents a TaskRestoredNotification notification
+type TaskRestoredNotification struct {
+	Doer *user.User `json:"doer"`
+	Task *Task      `json:"task"`
+}
+
+// ToMail returns the mail notification for TaskRestoredNotification
+func (n *TaskRestoredNotification) ToMail(lang string) *notifications.Mail {
+	return notifications.NewMail().
+		Subject(i18n.T(lang, "notifications.task.restored.subject", n.Task.Title, n.Task.GetFullIdentifier())).
+		Line(i18n.T(lang, "notifications.task.restored.message", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier()))
+}
+
+// ToDB returns the TaskRestoredNotification notification in a format which can be saved in the db
+func (n *TaskRestoredNotification) ToDB() interface{} {
+	return n
+}
+
+// Name returns the name of the notification
+func (n *TaskRestoredNotification) Name() string {
+	return "task.restored"
+}
+
+// ThreadID returns the thread ID for email threading
+func (n *TaskRestoredNotification) ThreadID() string {
+	return getThreadID(n.Task.ID)
+}
+
 // ProjectCreatedNotification represents a ProjectCreatedNotification notification
 type ProjectCreatedNotification struct {
 	Doer    *user.User `json:"doer"`

@@ -87,6 +87,14 @@
                 "subject": "\"%[1]s\" (%[2]s) has been deleted",
                 "message": "%[1]s has deleted the task \"%[2]s\" (%[3]s)"
             },
+            "trashed": {
+                "subject": "\"%[1]s\" (%[2]s) was moved to trash",
+                "message": "%[1]s moved the task \"%[2]s\" (%[3]s) to the trash."
+            },
+            "restored": {
+                "subject": "\"%[1]s\" (%[2]s) was restored from trash",
+                "message": "%[1]s restored the task \"%[2]s\" (%[3]s) from the trash."
+            },
             "mentioned": {
                 "subject_new": "%[1]s mentioned you in a new task \"%[2]s\" (%[3]s)",
                 "subject": "%[1]s mentioned you in a task \"%[2]s\" (%[3]s)",
