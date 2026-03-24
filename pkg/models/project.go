@@ -521,9 +521,7 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool, get
 		)
 	}
 
-	if len(getTemplates) > 0 && getTemplates[0] {
-		conds = append(conds, builder.Eq{"l.is_template": true})
-	} else {
+	if len(getTemplates) == 0 || !getTemplates[0] {
 		conds = append(conds, builder.Eq{"l.is_template": false})
 	}
 

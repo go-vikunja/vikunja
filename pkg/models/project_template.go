@@ -35,7 +35,7 @@ type ProjectTemplate struct {
 	web.CRUDable    `json:"-"`
 }
 
-// CanCreate checks if a user has the right to create a template from a project
+// CanCreate checks if a user has the permission to create a template from a project
 func (pt *ProjectTemplate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bool, err error) {
 	p := &Project{ID: pt.ProjectID}
 	canCreate, _, err = p.CanRead(s, a)
@@ -57,56 +57,23 @@ func (pt *ProjectTemplate) CanCreate(s *xorm.Session, a web.Auth) (canCreate boo
 func (pt *ProjectTemplate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	log.Debugf("Creating template from project %d", pt.ProjectID)
 
-	// Use ProjectDuplicate to copy the project
 	pd := &ProjectDuplicate{
-		ProjectID:                pt.ProjectID,
-		SkipPermissions:          true,
-		SkipAssigneesAndComments: true,
+		ProjectID:  pt.ProjectID,
+		IsTemplate: true,
 	}
 
-	// Read the source project
+	// Read the source project so the duplicate has something to work with
 	pd.Project = &Project{ID: pt.ProjectID}
 	err = pd.Project.ReadOne(s, doer)
 	if err != nil {
 		return err
 	}
 
-	// Reset and mark as template
-	pd.Project.ID = 0
-	pd.Project.Identifier = ""
-	pd.Project.ParentProjectID = 0
-	pd.Project.OwnerID = doer.GetID()
-	pd.Project.IsTemplate = true
-
-	err = CreateProject(s, pd.Project, doer, false, false)
+	err = pd.Create(s, doer)
 	if err != nil {
-		if IsErrProjectIdentifierIsNotUnique(err) {
-			pd.Project.Identifier = ""
-			err = CreateProject(s, pd.Project, doer, false, false)
-		}
-		if err != nil {
-			return err
-		}
-	}
-
-	log.Debugf("Created template project %d from project %d", pd.Project.ID, pt.ProjectID)
-
-	newTaskIDs, err := duplicateTasks(s, doer, pd)
-	if err != nil {
-		return
-	}
-
-	err = duplicateViews(s, pd, doer, newTaskIDs)
-	if err != nil {
-		return
-	}
-
-	err = duplicateProjectBackground(s, pd, doer)
-	if err != nil {
-		return
+		return err
 	}
 
 	pt.Project = pd.Project
-	err = pt.Project.ReadOne(s, doer)
 	return
 }
