@@ -369,6 +369,11 @@ const router = createRouter({
 			component: () => import('@/views/teams/EditTeam.vue'),
 		},
 		{
+			path: '/trash',
+			name: 'trash',
+			component: () => import('@/views/trash/TrashView.vue'),
+		},
+		{
 			path: '/labels',
 			name: 'labels.index',
 			component: () => import('@/views/labels/ListLabels.vue'),

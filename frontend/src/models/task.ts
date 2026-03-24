@@ -90,6 +90,8 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 	reactions = {}
 	comments = []
 
+	deletedAt: Date | null = null
+
 	createdBy: IUser = UserModel
 	created: Date = null
 	updated: Date = null
@@ -104,6 +106,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 		this.id = Number(this.id)
 		this.title = this.title?.trim()
 		this.doneAt = parseDateOrNull(this.doneAt)
+		this.deletedAt = parseDateOrNull(this.deletedAt)
 
 		this.labels = this.labels
 			.map(l => new LabelModel(l))

@@ -52,6 +52,8 @@ export interface ITask extends IAbstract {
 	comments: ITaskComment[]
 	commentCount?: number
 
+	deletedAt: Date | null
+
 	createdBy: IUser
 	created: Date
 	updated: Date

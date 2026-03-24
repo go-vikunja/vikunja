@@ -1132,6 +1132,23 @@
       "isPublicDescription": "Make the team publicly discoverable. When enabled, anyone can share projects with this team even when not being a direct member."
     }
   },
+  "trash": {
+    "title": "Trash",
+    "subtitle": "Items are permanently deleted after 30 days",
+    "empty": "Empty Trash",
+    "emptyConfirm": "This will permanently delete all items in the trash. This cannot be undone.",
+    "emptySuccess": "Trash emptied successfully.",
+    "restore": "Restore",
+    "restoreSuccess": "Task restored successfully.",
+    "deletePermanently": "Delete Permanently",
+    "deletePermanentlyConfirm": "This will permanently delete this task. This cannot be undone.",
+    "deletePermanentlySuccess": "Task permanently deleted.",
+    "noItems": "Trash is empty",
+    "deletedAgo": "Deleted {days} days ago",
+    "daysRemaining": "{days} days remaining",
+    "movedToTrash": "Task moved to trash",
+    "undo": "Undo"
+  },
   "keyboardShortcuts": {
     "title": "Keyboard Shortcuts",
     "general": "General",
