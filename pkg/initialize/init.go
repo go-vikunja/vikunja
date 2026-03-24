@@ -25,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/i18n"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/migration"
@@ -92,6 +93,9 @@ func FullInitWithoutAsync() {
 
 	// Set Engine
 	InitEngines()
+
+	// Initialize license validation
+	license.Init()
 
 	// Start the mail daemon
 	mail.StartMailDaemon()
