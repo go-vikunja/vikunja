@@ -1016,6 +1016,16 @@
                     "comment": "The directory where plugins are stored."
                 }
             ]
+        },
+        {
+            "key": "license",
+            "children": [
+                {
+                    "key": "key",
+                    "default_value": "",
+                    "comment": "The license key for Vikunja. If empty or absent, Vikunja runs in community mode with all non-licensed features available."
+                }
+            ]
         }
     ]
 }

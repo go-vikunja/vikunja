@@ -223,6 +223,8 @@ const (
 
 	PluginsEnabled Key = `plugins.enabled`
 	PluginsDir     Key = `plugins.dir`
+
+	LicenseKey Key = `license.key`
 )
 
 var maxFileSizeInBytes uint64
@@ -473,6 +475,8 @@ func InitDefaultConfig() {
 	// Plugins
 	PluginsEnabled.setDefault(false)
 	PluginsDir.setDefault(ResolvePath("plugins"))
+	// License
+	LicenseKey.setDefault("")
 }
 
 // ResolvePath resolves a path relative to service.rootpath.
