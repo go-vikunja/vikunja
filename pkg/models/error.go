@@ -1277,6 +1277,33 @@ func (err *ErrNeedsFullRecalculation) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTaskIsNotTrashed represents a "TaskIsNotTrashed" kind of error.
+type ErrTaskIsNotTrashed struct {
+	TaskID int64
+}
+
+// IsErrTaskIsNotTrashed checks if an error is a ErrTaskIsNotTrashed.
+func IsErrTaskIsNotTrashed(err error) bool {
+	_, ok := err.(*ErrTaskIsNotTrashed)
+	return ok
+}
+
+func (err *ErrTaskIsNotTrashed) Error() string {
+	return fmt.Sprintf("Task is not in the trash [TaskID: %d]", err.TaskID)
+}
+
+// ErrCodeTaskIsNotTrashed holds the unique world-error code of this error
+const ErrCodeTaskIsNotTrashed = 4029
+
+// HTTPError holds the http error description
+func (err *ErrTaskIsNotTrashed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeTaskIsNotTrashed,
+		Message:  "This task is not in the trash.",
+	}
+}
+
 // ============
 // Team errors
 // ============

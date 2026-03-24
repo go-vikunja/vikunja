@@ -115,6 +115,9 @@ type Task struct {
 	// A timestamp when this task was last updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 
+	// A timestamp when this task was soft-deleted (moved to trash). Null means not deleted.
+	DeletedAt *time.Time `xorm:"datetime null index 'deleted_at'" json:"deleted_at,omitempty"`
+
 	// The bucket id. Will only be populated when the task is accessed via a view with buckets.
 	// Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
 	BucketID int64 `xorm:"-" json:"bucket_id"`
@@ -1730,94 +1733,26 @@ func updateTaskLastUpdated(s *xorm.Session, task *Task) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{id} [delete]
 func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
-
-	// duplicate the task for the event
 	fullTask := &Task{ID: t.ID}
 	err = fullTask.ReadOne(s, a)
 	if err != nil {
 		return err
 	}
 
-	// Delete assignees
-	if _, err = s.Where("task_id = ?", t.ID).Delete(&TaskAssginee{}); err != nil {
-		return err
-	}
-
-	// Delete Favorites
-	err = removeFromFavorite(s, t.ID, a, FavoriteKindTask)
-	if err != nil {
-		return
-	}
-
-	// Delete label associations
-	_, err = s.Where("task_id = ?", t.ID).Delete(&LabelTask{})
-	if err != nil {
-		return
-	}
-
-	// Delete task attachments
-	attachments, err := getTaskAttachmentsByTaskIDs(s, []int64{t.ID})
-	if err != nil {
-		return err
-	}
-	for _, attachment := range attachments {
-		// Using the attachment delete method here because that takes care of removing all files properly
-		err = attachment.Delete(s, a)
-		if err != nil && !IsErrTaskAttachmentDoesNotExist(err) {
-			return err
-		}
-	}
-
-	// Delete all comments
-	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskComment{})
-	if err != nil {
-		return
-	}
-
-	// Delete all task unread statuses
-	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskUnreadStatus{})
-	if err != nil {
-		return err
-	}
-
-	// Delete all relations
-	_, err = s.Where("task_id = ? OR other_task_id = ?", t.ID, t.ID).Delete(&TaskRelation{})
-	if err != nil {
-		return
-	}
-
-	// Delete all reminders
-	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskReminder{})
-	if err != nil {
-		return
-	}
-
-	// Delete all positions
-	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskPosition{})
-	if err != nil {
-		return
-	}
-
-	// Delete all bucket relations
-	_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
-	if err != nil {
-		return
-	}
-
-	// Actually delete the task
-	_, err = s.ID(t.ID).Delete(Task{})
+	now := time.Now()
+	fullTask.DeletedAt = &now
+	_, err = s.ID(t.ID).Cols("deleted_at").Update(fullTask)
 	if err != nil {
 		return err
 	}
 
 	doer, _ := user.GetFromAuth(a)
-	events.DispatchOnCommit(s, &TaskDeletedEvent{
+	events.DispatchOnCommit(s, &TaskTrashedEvent{
 		Task: fullTask,
 		Doer: doer,
 	})
 
-	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
-	return
+	return updateProjectLastUpdated(s, &Project{ID: fullTask.ProjectID})
 }
 
 // ReadOne gets one task by its ID
