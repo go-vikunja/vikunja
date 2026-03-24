@@ -108,6 +108,20 @@
 					:can-collapse="true"
 				/>
 			</nav>
+
+			<nav
+				v-if="templateProjects.length"
+				class="menu"
+			>
+				<span class="menu-label">
+					{{ $t('project.template.title') }}
+				</span>
+				<ProjectsNavigation
+					:model-value="templateProjects"
+					:can-edit-order="false"
+					:can-collapse="true"
+				/>
+			</nav>
 		</template>
 
 		<PoweredByLink
@@ -146,6 +160,7 @@ const {sidebarWidth, isResizing, startResize, isMobile} = useSidebarResize()
 const projects = computed(() => projectStore.notArchivedRootProjects as IProject[])
 const favoriteProjects = computed(() => projectStore.favoriteProjects as IProject[])
 const savedFilterProjects = computed(() => projectStore.savedFilterProjects as IProject[])
+const templateProjects = computed(() => projectStore.templateProjects as IProject[])
 </script>
 
 <style lang="scss" scoped>
