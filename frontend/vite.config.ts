@@ -157,7 +157,7 @@ function getBuildConfig(env: Record<string, string>) {
 					}
 					const apiUrl = env.VIKUNJA_API_URL
 						|| (base.replace(/\/+$/, '') + '/api/v1')
-					return html.replace('__VIKUNJA_API_URL__', apiUrl)
+					return html.replaceAll('__VIKUNJA_API_URL__', apiUrl)
 				},
 			},
 			VueI18nPlugin({
