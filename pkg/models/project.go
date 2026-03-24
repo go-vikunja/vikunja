@@ -514,7 +514,7 @@ func getUserProjectsStatement(userID int64, search string) *builder.Builder {
 	}
 
 	return builder.Dialect(dialect).
-		Select("l.id, l.title, l.description, l.identifier, l.hex_color, l.owner_id, l.parent_project_id, l.is_archived, l.background_file_id, l.background_blur_hash, l.position, l.created, l.updated").
+		Select("l.id, l.title, l.description, l.identifier, l.hex_color, l.owner_id, l.parent_project_id, l.is_archived, l.is_template, l.background_file_id, l.background_blur_hash, l.position, l.created, l.updated").
 		From("projects", "l").
 		Join("LEFT", "team_projects tl", "tl.project_id = l.id").
 		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
@@ -560,7 +560,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 
 	baseQuery := querySQLString + `
 UNION ALL
-SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, (ap.is_archived OR p.is_archived) AS is_archived, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
+SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, (ap.is_archived OR p.is_archived) AS is_archived, p.is_template, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
 INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	columnStr := strings.Join([]string{

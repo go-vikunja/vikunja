@@ -340,8 +340,9 @@
       "saveAsTemplate": "Save as Template",
       "saveAsTemplateSuccess": "Project saved as template successfully.",
       "useTemplate": "Use a template",
-      "selectTemplate": "Select a template...",
-      "createFromTemplate": "Creating project from template..."
+      "selectTemplate": "Select a template\u2026",
+      "createFromTemplate": "Creating project from template\u2026",
+      "none": "You don't have any templates yet. Save a project as a template to get started."
     },
     "edit": {
       "header": "Edit This Project",
