@@ -81,6 +81,13 @@
 				{{ $t('menu.duplicate') }}
 			</DropdownItem>
 			<DropdownItem
+				v-if="!project.isTemplate"
+				icon="copy"
+				@click="saveAsTemplate"
+			>
+				{{ $t('project.template.saveAsTemplate') }}
+			</DropdownItem>
+			<DropdownItem
 				v-tooltip="isDefaultProject ? $t('menu.cantArchiveIsDefault') : ''"
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
@@ -138,6 +145,9 @@ import {useConfigStore} from '@/stores/config'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {PERMISSIONS} from '@/constants/permissions'
+import ProjectTemplateService from '@/services/projectTemplateService'
+import {success} from '@/message'
+import {useI18n} from 'vue-i18n'
 
 const props = defineProps<{
 	project: IProject
@@ -163,4 +173,16 @@ function setSubscriptionInStore(sub: ISubscription) {
 
 const authStore = useAuthStore()
 const isDefaultProject = computed(() => props.project?.id === authStore.settings.defaultProjectId)
+
+const {t} = useI18n({useScope: 'global'})
+
+async function saveAsTemplate() {
+	const templateService = new ProjectTemplateService()
+	const response = await templateService.create({projectId: props.project.id})
+	if (response.project) {
+		projectStore.setProject(response.project)
+	}
+	await projectStore.loadAllProjects()
+	success({message: t('project.template.saveAsTemplateSuccess')})
+}
 </script>

@@ -6,6 +6,18 @@
 		@create="createProject()"
 	>
 		<FormField
+			v-if="projectStore.hasTemplates"
+			:label="$t('project.template.useTemplate')"
+		>
+			<Multiselect
+				v-model="selectedTemplate"
+				:options="templateOptions"
+				:placeholder="$t('project.template.selectTemplate')"
+				label="title"
+				track-by="id"
+			/>
+		</FormField>
+		<FormField
 			v-model="project.title"
 			v-focus
 			:label="$t('project.title')"
@@ -31,14 +43,18 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, shallowReactive, watch} from 'vue'
+import {ref, reactive, shallowReactive, computed, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
 
 import ProjectService from '@/services/project'
 import ProjectModel from '@/models/project'
+import ProjectDuplicateService from '@/services/projectDuplicateService'
+import ProjectDuplicateModel from '@/models/projectDuplicateModel'
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import FormField from '@/components/input/FormField.vue'
+import Multiselect from '@/components/input/Multiselect.vue'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
@@ -51,6 +67,7 @@ const props = defineProps<{
 }>()
 
 const {t} = useI18n({useScope: 'global'})
+const router = useRouter()
 
 useTitle(() => t('project.create.header'))
 
@@ -60,6 +77,9 @@ const projectService = shallowReactive(new ProjectService())
 const projectStore = useProjectStore()
 const parentProject = ref<IProject | null>(null)
 const isSubmitting = ref(false)
+const selectedTemplate = ref<IProject | null>(null)
+
+const templateOptions = computed(() => projectStore.templateProjects as IProject[])
 
 watch(
 	() => props.parentProjectId,
@@ -85,8 +105,28 @@ async function createProject() {
 	}
 
 	try {
-		await projectStore.createProject(project)
-		success({message: t('project.create.createdSuccess')})
+		if (selectedTemplate.value) {
+			const duplicateService = new ProjectDuplicateService()
+			const duplicate = new ProjectDuplicateModel({
+				projectId: selectedTemplate.value.id,
+				parentProjectId: project.parentProjectId,
+			})
+			const response = await duplicateService.create(duplicate)
+			const newProject = response.duplicatedProject
+			if (newProject) {
+				if (project.title !== selectedTemplate.value.title) {
+					const updatedProject = await projectService.update({...newProject, title: project.title})
+					projectStore.setProject(updatedProject)
+				} else {
+					projectStore.setProject(newProject)
+				}
+				router.push({name: 'project.index', params: {projectId: newProject.id}})
+			}
+			success({message: t('project.create.createdSuccess')})
+		} else {
+			await projectStore.createProject(project)
+			success({message: t('project.create.createdSuccess')})
+		}
 	} finally {
 		isSubmitting.value = false
 	}
