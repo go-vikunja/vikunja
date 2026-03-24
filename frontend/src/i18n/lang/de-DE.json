@@ -207,6 +207,13 @@
 				"tokenCreatedSuccess": "Hier ist dein neues API Token: {token}",
 				"tokenCreatedNotSeeAgain": "Speichere es an einem sicheren Ort, du wirst es nicht mehr sehen!",
 				"selectAll": "Alle auswählen",
+				"presets": {
+					"title": "Voreinstellungen",
+					"readOnly": "Nur Leserechte",
+					"tasks": "Aufgabenverwaltung",
+					"projects": "Projektverwaltung",
+					"fullAccess": "Voller Zugriff"
+				},
 				"delete": {
 					"header": "Dieses Token löschen",
 					"text1": "Bist Du sicher, dass Du das Token \"{token}\" löschen möchtest?",
