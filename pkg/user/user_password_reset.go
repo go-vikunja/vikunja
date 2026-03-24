@@ -54,10 +54,14 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (userID int64, err err
 	}
 
 	user, err := GetUserByID(s, token.UserID)
-	if err != nil && !IsErrAccountLocked(err) {
+	if err != nil && !IsErrAccountLocked(err) && !IsErrAccountDisabled(err) {
 		return 0, err
 	}
 	userID = user.ID
+
+	if user.Status == StatusDisabled {
+		return 0, &ErrAccountDisabled{UserID: user.ID}
+	}
 
 	// Hash the password
 	user.Password, err = HashPassword(reset.NewPassword)
