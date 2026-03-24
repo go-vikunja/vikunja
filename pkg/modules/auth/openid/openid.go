@@ -169,7 +169,7 @@ func HandleCallback(c *echo.Context) error {
 
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
 
-	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, "OIDC")
+	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, provider.Name)
 	if err != nil {
 		return err
 	}

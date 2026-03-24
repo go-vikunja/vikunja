@@ -124,14 +124,14 @@ func TestGetOrCreateUser(t *testing.T) {
 			},
 		}
 
-		provider := &Provider{}
+		provider := &Provider{Name: "Vikunja Login"}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
 		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
 		require.NoError(t, err)
-		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
+		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", provider.Name)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -141,7 +141,7 @@ func TestGetOrCreateUser(t *testing.T) {
 			"email": cl.Email,
 		}, false)
 		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        team + " (OIDC)",
+			"name":        team + " (" + provider.Name + ")",
 			"external_id": oidcID,
 			"is_public":   false,
 		}, false)
@@ -161,19 +161,19 @@ func TestGetOrCreateUser(t *testing.T) {
 			},
 		}
 
-		provider := &Provider{}
+		provider := &Provider{Name: "Vikunja Login"}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
 		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
+		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", provider.Name)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
 
 		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        team + " (OIDC)",
+			"name":        team + " (" + provider.Name + ")",
 			"external_id": oidcID,
 			"is_public":   true,
 		}, false)
@@ -195,7 +195,7 @@ func TestGetOrCreateUser(t *testing.T) {
 
 		u := &user.User{ID: 10}
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
+		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "Vikunja Login")
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -216,7 +216,7 @@ func TestGetOrCreateUser(t *testing.T) {
 
 		u := &user.User{ID: 10}
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
+		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "Vikunja Login")
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
