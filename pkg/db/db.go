@@ -21,7 +21,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -59,14 +58,13 @@ func RegisterTables(tables []interface{}) {
 
 // RegisteredTableNames returns the table names of all registered Vikunja tables.
 func RegisteredTableNames() []string {
-	mapper := x.GetTableMapper()
 	tableNames := make([]string, 0, len(registeredTables)+1)
 	for _, bean := range registeredTables {
-		if tn, ok := bean.(interface{ TableName() string }); ok {
-			tableNames = append(tableNames, tn.TableName())
-		} else {
-			tableNames = append(tableNames, mapper.Obj2Table(reflect.Indirect(reflect.ValueOf(bean)).Type().Name()))
+		tableInfo, err := x.TableInfo(bean)
+		if err != nil {
+			log.Fatalf("Could not get table info for bean: %v", err)
 		}
+		tableNames = append(tableNames, tableInfo.Name)
 	}
 	// The xormigrate migration tracking table is not registered via GetTables()
 	tableNames = append(tableNames, "migration")
