@@ -42,6 +42,8 @@ type ProjectDuplicate struct {
 	SkipPermissions bool `json:"-"`
 	// If true, skip copying task assignees and comments
 	SkipAssigneesAndComments bool `json:"-"`
+	// If true, the duplicated project will be marked as a template
+	IsTemplate bool `json:"-"`
 
 	web.Permissions `json:"-"`
 	web.CRUDable    `json:"-"`
@@ -90,7 +92,15 @@ func (pd *ProjectDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 	pd.Project.ParentProjectID = pd.ParentProjectID
 	// Set the owner to the current user
 	pd.Project.OwnerID = doer.GetID()
-	pd.Project.Title += " - duplicate"
+
+	if pd.IsTemplate {
+		pd.Project.IsTemplate = true
+		pd.Project.ParentProjectID = 0
+		pd.SkipPermissions = true
+		pd.SkipAssigneesAndComments = true
+	} else {
+		pd.Project.Title += " - duplicate"
+	}
 	err = CreateProject(s, pd.Project, doer, false, false)
 	if err != nil {
 		// If there is no available unique project identifier, just reset it.
