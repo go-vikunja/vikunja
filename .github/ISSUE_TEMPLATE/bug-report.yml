@@ -5,17 +5,15 @@ body:
   - type: markdown
     attributes:
       value: |
-        NOTE: If your issue is a security concern, please send an email to security@vikunja.io instead of opening a public issue. [More information about our security policy](https://vikunja.io/contact/#security).
+        Chaku is a fork of [Vikunja](https://vikunja.io). If your bug exists in upstream Vikunja as well, please consider reporting it there too.
   - type: markdown
     attributes:
       value: |
         Please fill out this issue template to report a bug.
-        
-        1. If you want to propose a new feature, please use the Feature template or open a discussion thread in the forum: https://community.vikunja.io
-        2. Please ask questions or configuration/deploy problems on our [Matrix Room](https://matrix.to/#/#vikunja:matrix.org) or forum (https://community.vikunja.io).
-        3. Make sure you are using the latest release and
+
+        1. Make sure you are using the latest release and
            take a moment to check that your issue hasn't been reported before.
-        4. Please give all relevant information below for bug reports, because
+        2. Please give all relevant information below for bug reports, because
            incomplete details will be handled as an invalid report and closed.
   - type: checkboxes
     id: searched
@@ -33,8 +31,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: Vikunja Version
-      description: Vikunja version (or commit reference) of your instance
+      label: Chaku Version
+      description: Chaku version (or commit reference) of your instance
     validations:
       required: true
   - type: input
@@ -42,16 +40,6 @@ body:
     attributes:
       label: Browser and version
       description: If your issue is related to a frontend problem, please provide the browser and version you used to reproduce it.
-  - type: dropdown
-    id: can-reproduce
-    attributes:
-      label: Can you reproduce the bug on the Vikunja demo site?
-      options:
-        - "Please select"
-        - "Yes"
-        - "No"
-    validations:
-      required: true
   - type: textarea
     id: screenshots
     attributes:
