@@ -131,7 +131,7 @@
     "eslint": "9.39.4",
     "eslint-plugin-depend": "1.5.0",
     "eslint-plugin-vue": "10.8.0",
-    "happy-dom": "20.8.7",
+    "happy-dom": "20.8.8",
     "histoire": "1.0.0-beta.1",
     "postcss": "8.5.8",
     "postcss-easing-gradients": "3.0.1",
