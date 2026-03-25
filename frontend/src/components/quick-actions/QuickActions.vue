@@ -119,7 +119,7 @@ import {useTaskStore} from '@/stores/tasks'
 import {useAuthStore} from '@/stores/auth'
 
 import {getHistory} from '@/modules/projectHistory'
-import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/parseTaskText'
+import {parseTaskText, PREFIXES, PrefixMode} from '@/modules/quickAddMagic'
 import {success} from '@/message'
 
 import type {ITeam} from '@/modelTypes/ITeam'

@@ -104,7 +104,7 @@ import {ref, computed} from 'vue'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
-import {PREFIXES} from '@/modules/parseTaskText'
+import {PREFIXES} from '@/modules/quickAddMagic'
 import {useAuthStore} from '@/stores/auth'
 
 defineProps<{

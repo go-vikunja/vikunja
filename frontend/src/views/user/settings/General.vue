@@ -390,7 +390,7 @@ import {computed, watch, ref, onBeforeMount} from 'vue'
 import {useI18n} from 'vue-i18n'
 import isEqual from 'fast-deep-equal'
 
-import {PrefixMode} from '@/modules/parseTaskText'
+import {PrefixMode} from '@/modules/quickAddMagic'
 
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
