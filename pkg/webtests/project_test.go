@@ -46,6 +46,7 @@ func TestProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `Test3`)  // Shared directly via users_project
 			assert.Contains(t, rec.Body.String(), `Test12`) // Shared via parent project
 			assert.NotContains(t, rec.Body.String(), `Test5`)
+			assert.NotContains(t, rec.Body.String(), `Test21`) // Archived through parent project
 			assert.NotContains(t, rec.Body.String(), `Test22`) // Archived directly
 		})
 		t.Run("Search", func(t *testing.T) {
@@ -60,7 +61,7 @@ func TestProject(t *testing.T) {
 				// ParadeDB fuzzy(1, prefix=true) on "Test1" matches Test2-Test9
 				// (edit distance 1), Test10+ (prefix), etc. The recursive CTE
 				// also pulls in child projects of matched parents.
-				require.Len(t, projects, 28)
+				require.Len(t, projects, 26)
 			} else {
 				// ILIKE '%Test1%' matches Test1, Test10, Test11, Test19, + favorites
 				require.Len(t, projects, 5)
@@ -80,6 +81,15 @@ func TestProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `Test5`)
 			assert.Contains(t, rec.Body.String(), `Test21`) // Archived through project
 			assert.Contains(t, rec.Body.String(), `Test22`) // Archived directly
+
+			// Verify is_archived is propagated to child projects of archived parents
+			var projects []models.Project
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &projects))
+			for _, p := range projects {
+				if p.ID == 21 {
+					assert.True(t, p.IsArchived, "Project 21 should have is_archived=true because its parent is archived")
+				}
+			}
 		})
 	})
 	t.Run("ReadOne", func(t *testing.T) {
