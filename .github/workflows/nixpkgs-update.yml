@@ -1,0 +1,79 @@
+name: Update nixpkgs
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  update-nixpkgs:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.release.prerelease == false &&
+       startsWith(github.event.release.tag_name, 'v'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Nix
+        uses: cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72 # v30
+
+      - name: Clone nixpkgs fork
+        env:
+          NIXPKGS_TOKEN: ${{ secrets.NIXPKGS_TOKEN }}
+        run: |
+          git clone --depth 1 "https://x-access-token:${NIXPKGS_TOKEN}@github.com/go-vikunja/nixpkgs.git" nixpkgs
+          cd nixpkgs
+          git remote add upstream https://github.com/NixOS/nixpkgs.git
+          git fetch upstream master --depth 1
+
+      - name: Update packages
+        working-directory: nixpkgs
+        env:
+          GITHUB_TOKEN: ${{ secrets.NIXPKGS_TOKEN }}
+        run: |
+          CURRENT=$(grep -oP 'version = "\K[^"]+' pkgs/by-name/vi/vikunja/package.nix | head -1)
+
+          # Check if there's already an open PR updating vikunja (from us or r-ryantm)
+          EXISTING=$(gh pr list --repo NixOS/nixpkgs --state open --search "vikunja in:title" --json number,title --jq '.[] | select(.title | test("vikunja:.*->")) | .number' | head -1)
+          if [ -n "$EXISTING" ]; then
+            echo "PR #$EXISTING already updates vikunja, skipping."
+            exit 0
+          fi
+
+          git checkout -b "vikunja-update" upstream/master
+          git config user.name "Vikunja Bot"
+          git config user.email "bot@vikunja.io"
+
+          # Update both packages using the nixpkgs update infrastructure
+          PACKAGES=""
+          for pkg in vikunja vikunja-desktop; do
+            nix-shell maintainers/scripts/update.nix --argstr package "$pkg"
+            if ! git diff --quiet; then
+              git add -A
+              NEW=$(grep -oP 'version = "\K[^"]+' "pkgs/by-name/vi/$pkg/package.nix" | head -1)
+              git commit -m "$pkg: $CURRENT -> $NEW"
+              PACKAGES="${PACKAGES:+$PACKAGES, }$pkg"
+            fi
+          done
+
+          if [ -z "$PACKAGES" ]; then
+            echo "No changes — packages may already be up to date."
+            exit 0
+          fi
+
+          # Push to fork
+          BRANCH="vikunja-update-$NEW"
+          git branch -m "$BRANCH"
+          git push -u origin "$BRANCH" --force
+
+          # Create PR
+          gh pr create \
+            --repo NixOS/nixpkgs \
+            --head "go-vikunja:$BRANCH" \
+            --base master \
+            --title "$PACKAGES: $CURRENT -> $NEW" \
+            --body "$(cat <<EOF
+          [Release notes](https://github.com/go-vikunja/vikunja/releases/tag/v$NEW)
+
+          This PR was automatically created by the [Vikunja release pipeline](https://github.com/go-vikunja/vikunja/actions/workflows/nixpkgs-update.yml).
+          EOF
+          )"
