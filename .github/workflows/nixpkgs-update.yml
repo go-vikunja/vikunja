@@ -74,6 +74,8 @@ jobs:
             --body "$(cat <<EOF
           [Release notes](https://github.com/go-vikunja/vikunja/releases/tag/v$NEW)
 
+          Pinging @kolaente as bot owner and package maintainer.
+
           This PR was automatically created by the [Vikunja release pipeline](https://github.com/go-vikunja/vikunja/actions/workflows/nixpkgs-update.yml).
           EOF
           )"
