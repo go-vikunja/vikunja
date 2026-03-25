@@ -15,8 +15,8 @@ jobs:
           app-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
 
-      - name: Check if issue was closed by commit
-        id: check-commit
+      - name: Find closing PR or commit
+        id: find-closer
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ steps.generate-token.outputs.token }}
@@ -33,116 +33,94 @@ jobs:
             // Find the most recent "closed" event
             const closedEvent = events
               .filter(event => event.event === 'closed')
-              .pop(); // Get the last (most recent) closed event
+              .pop();
             // Find the most recent "referenced" event
             const referencedEvent = events
               .filter(event => event.event === 'referenced')
-              .pop(); // Get the last (most recent) referenced event
+              .pop();
 
-            console.log({closedEvent, referencedEvent});
-            if (closedEvent && (closedEvent.commit_id || referencedEvent)) {
-              const commitId = closedEvent.commit_id ?? referencedEvent.commit_id
+            const commitId = closedEvent?.commit_id ?? referencedEvent?.commit_id;
+
+            if (commitId) {
+              // Closed by a direct commit or regular merge
               console.log(`✅ Issue #${issueNumber} was closed by commit: ${commitId}`);
-              
-              // Get commit details
-              const { data: commit } = await github.rest.git.getCommit({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                commit_sha: commitId
-              });
-              
-              core.setOutput('closed_by_commit', 'true');
+              core.setOutput('closed_by_code', 'true');
               core.setOutput('commit_sha', commitId);
-              // Escape backslashes, backticks and ${ to prevent breaking JS template strings
-              const escapedMessage = commit.message.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
-              core.setOutput('commit_message', escapedMessage);
               core.setOutput('commit_url', closedEvent.commit_url);
-            } else {
-              console.log(`ℹ️  Issue #${issueNumber} was closed manually (not by commit)`);
-              core.setOutput('closed_by_commit', 'false');
+              return;
             }
 
-      - name: Determine closure method and comment on issue
-        if: steps.check-commit.outputs.closed_by_commit == 'true'
+            // No commit_id — this happens with merge queue.
+            // Use GraphQL to check if a PR closed this issue.
+            const query = `query($owner: String!, $repo: String!, $number: Int!) {
+              repository(owner: $owner, name: $repo) {
+                issue(number: $number) {
+                  closedByPullRequestsReferences(first: 1) {
+                    nodes { number }
+                  }
+                }
+              }
+            }`;
+
+            const result = await github.graphql(query, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              number: issueNumber,
+            });
+
+            const prNodes = result.repository.issue.closedByPullRequestsReferences.nodes;
+            if (prNodes.length > 0) {
+              const prNumber = prNodes[0].number;
+              console.log(`✅ Issue #${issueNumber} was closed by PR #${prNumber} (via merge queue)`);
+              core.setOutput('closed_by_code', 'true');
+              core.setOutput('closing_pr', String(prNumber));
+              return;
+            }
+
+            console.log(`ℹ️  Issue #${issueNumber} was closed manually (not by commit or PR)`);
+            core.setOutput('closed_by_code', 'false');
+
+      - name: Comment on issue
+        if: steps.find-closer.outputs.closed_by_code == 'true'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ steps.generate-token.outputs.token }}
           script: |
             const issueNumber = context.payload.issue.number;
-            const commitSha = '${{ steps.check-commit.outputs.commit_sha }}';
-            const commitMessage = `${{ steps.check-commit.outputs.commit_message }}`;
-            const commitUrl = '${{ steps.check-commit.outputs.commit_url }}';
+            const closingPrNumber = '${{ steps.find-closer.outputs.closing_pr }}';
+            const commitSha = '${{ steps.find-closer.outputs.commit_sha }}';
+            const commitUrl = '${{ steps.find-closer.outputs.commit_url }}';
 
-            try {
-              // Find PRs that include this commit
-              const { data: prs } = await github.rest.pulls.list({
+            let closedRef;
+
+            if (closingPrNumber) {
+              // Already know the PR (merge queue path or GraphQL found it)
+              closedRef = `#${closingPrNumber}`;
+              console.log(`Using PR #${closingPrNumber} from previous step`);
+            } else if (commitSha) {
+              // Have a commit SHA — try to find the PR that contains it
+              const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                state: 'all',
-                sort: 'updated',
-                direction: 'desc',
-                per_page: 100
+                commit_sha: commitSha,
               });
-              
-              let closingPR = null;
-              
-              // Check each PR to see if it contains our commit
-              for (const pr of prs) {
-                try {
-                  const { data: commits } = await github.rest.pulls.listCommits({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: pr.number
-                  });
-                  
-                  if (commits.some(commit => commit.sha === commitSha)) {
-                    closingPR = pr;
-                    console.log(`✅ Found PR #${pr.number} containing commit ${commitSha.substring(0, 7)}`);
-                    break;
-                  }
-                } catch (error) {
-                  console.log(`Error checking commits for PR #${pr.number}: ${error.message}`);
-                }
-              }
-              
-              // If no PR found with the exact commit, try alternative approaches
-              if (!closingPR) {
-                console.log(`🔍 No PR found with exact commit ${commitSha.substring(0, 7)}, trying alternative search...`);
-                
-                // Try to find a merged PR that mentions this issue
-                const relatedPRs = prs.filter(pr => 
-                  pr.state === 'closed' && 
-                  pr.merged_at &&
-                  (pr.title.includes(`#${issueNumber}`) || 
-                   pr.body?.includes(`#${issueNumber}`))
-                );
-                
-                if (relatedPRs.length > 0) {
-                  closingPR = relatedPRs[0];
-                  console.log(`✅ Found related PR #${closingPR.number} that mentions issue #${issueNumber}`);
-                }
-              }
-              
-              const closedRef = closingPR
-                ? `#${closingPR.number}`
-                : `[\`${commitSha.substring(0, 7)}\`](${commitUrl})`
-              
-              const comment = `This issue has been fixed in ${closedRef}, please check with the next unstable build (should be ready for deployment in ~30min, also on [the demo](https://try.vikunja.io)).`
-              
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueNumber,
-                body: comment,
-              });
-              
-              if (closingPR) {
-                console.log(`✅ Added comment to issue #${issueNumber} (closed by PR #${closingPR.number})`);
+              const mergedPR = prs.find(pr => pr.merged_at);
+              if (mergedPR) {
+                closedRef = `#${mergedPR.number}`;
+                console.log(`Found PR #${mergedPR.number} for commit ${commitSha.substring(0, 7)}`);
               } else {
-                console.log(`✅ Added comment to issue #${issueNumber} (closed by direct commit ${commitSha.substring(0, 7)})`);
+                closedRef = `[\`${commitSha.substring(0, 7)}\`](${commitUrl})`;
+                console.log(`No PR found, using commit ${commitSha.substring(0, 7)}`);
               }
-              
-            } catch (error) {
-              console.error(`❌ Error processing issue #${issueNumber}: ${error.message}`);
-              throw error;
             }
+
+            const comment = `This issue has been fixed in ${closedRef}, please check with the next unstable build (should be ready for deployment in ~30min, also on [the demo](https://try.vikunja.io)).`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: comment,
+            });
+
+            console.log(`✅ Added comment to issue #${issueNumber}: fixed in ${closedRef}`);
