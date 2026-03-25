@@ -10,6 +10,7 @@ import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 import {DEFAULT_PAGE} from '@/constants/defaultPage'
 
 import {useAuthStore} from '@/stores/auth'
+import {useProjectStore} from '@/stores/projects'
 
 import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
@@ -43,7 +44,7 @@ const router = createRouter({
 			path: '/',
 			name: 'home',
 			component: () => import('@/views/Home.vue'),
-			beforeEnter(_to, from) {
+			async beforeEnter(_to, from) {
 				if (from.name !== undefined) {
 					return
 				}
@@ -63,7 +64,12 @@ const router = createRouter({
 					case DEFAULT_PAGE.DEFAULT_PROJECT: {
 						const projectId = authStore.settings?.defaultProjectId
 						if (projectId) {
-							return {name: 'project.index', params: {projectId}}
+							try {
+								await useProjectStore().loadProject(projectId)
+								return {name: 'project.index', params: {projectId}}
+							} catch {
+								break
+							}
 						}
 						break
 					}

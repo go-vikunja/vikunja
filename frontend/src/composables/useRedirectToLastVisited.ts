@@ -1,6 +1,7 @@
 import {useRouter} from 'vue-router'
 import {getLastVisited, clearLastVisited, getLastVisitedPage} from '@/helpers/saveLastVisited'
 import {useAuthStore} from '@/stores/auth'
+import {useProjectStore} from '@/stores/projects'
 import {DEFAULT_PAGE} from '@/constants/defaultPage'
 
 export function useRedirectToLastVisited() {
@@ -30,7 +31,7 @@ export function useRedirectToLastVisited() {
 				return {name: 'tasks.range'}
 			case DEFAULT_PAGE.DEFAULT_PROJECT: {
 				const projectId = authStore.settings?.defaultProjectId
-				if (projectId) {
+				if (projectId && useProjectStore().projects[projectId]) {
 					return {name: 'project.index', params: {projectId}}
 				}
 				return {name: 'home'}
