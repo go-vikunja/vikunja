@@ -8,7 +8,7 @@ import LabelTaskService from '@/services/labelTask'
 import TaskDuplicateService from '@/services/taskDuplicateService'
 import TaskDuplicateModel from '@/models/taskDuplicateModel'
 
-import {cleanupItemText, parseTaskText, PREFIXES} from '@/modules/parseTaskText'
+import {cleanupItemText, parseTaskText, PREFIXES} from '@/modules/quickAddMagic'
 
 import TaskAssigneeModel from '@/models/taskAssignee'
 import LabelTaskModel from '@/models/labelTask'
