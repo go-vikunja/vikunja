@@ -98,7 +98,7 @@ func NewPlugin() plugins.Plugin { return &ExamplePlugin{} }
 // Yaegi wraps return values per the declared return type, so sub-interface type
 // assertions (Plugin -> AuthenticatedRouterPlugin) don't work. These typed
 // factories ensure Yaegi wraps the value with the correct interface wrapper.
-func NewAuthenticatedRouterPlugin() plugins.AuthenticatedRouterPlugin   { return &ExamplePlugin{} }
+func NewAuthenticatedRouterPlugin() plugins.AuthenticatedRouterPlugin     { return &ExamplePlugin{} }
 func NewUnauthenticatedRouterPlugin() plugins.UnauthenticatedRouterPlugin { return &ExamplePlugin{} }
 
 type TestListener struct{}

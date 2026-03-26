@@ -38,9 +38,9 @@ import (
 //   - NewAuthenticatedRouterPlugin() plugins.AuthenticatedRouterPlugin    (optional)
 //   - NewUnauthenticatedRouterPlugin() plugins.UnauthenticatedRouterPlugin (optional)
 type LoadedPlugin struct {
-	Plugin          plugins.Plugin
-	AuthRouter      plugins.AuthenticatedRouterPlugin
-	UnauthRouter    plugins.UnauthenticatedRouterPlugin
+	Plugin       plugins.Plugin
+	AuthRouter   plugins.AuthenticatedRouterPlugin
+	UnauthRouter plugins.UnauthenticatedRouterPlugin
 }
 
 // LoadPlugin loads a plugin from a directory of Go source files using the Yaegi interpreter.
@@ -55,8 +55,12 @@ func LoadPlugin(dir string) (plugins.Plugin, error) {
 // LoadPluginFull loads a plugin and all its optional capabilities via typed factory functions.
 func LoadPluginFull(dir string) (*LoadedPlugin, error) {
 	i := interp.New(interp.Options{})
-	i.Use(stdlib.Symbols)
-	i.Use(yaegi_symbols.Symbols)
+	if err := i.Use(stdlib.Symbols); err != nil {
+		return nil, fmt.Errorf("loading stdlib symbols: %w", err)
+	}
+	if err := i.Use(yaegi_symbols.Symbols); err != nil {
+		return nil, fmt.Errorf("loading vikunja symbols: %w", err)
+	}
 
 	// Read all .go files in the directory
 	entries, err := os.ReadDir(dir)

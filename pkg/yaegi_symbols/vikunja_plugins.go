@@ -13,11 +13,11 @@ import (
 func init() {
 	Symbols["code.vikunja.io/api/pkg/plugins/plugins"] = map[string]reflect.Value{
 		// function, constant and variable definitions
-		"Initialize":          reflect.ValueOf(plugins.Initialize),
-		"ManagerInstance":     reflect.ValueOf(plugins.ManagerInstance),
-		"NewRegistry":         reflect.ValueOf(plugins.NewRegistry),
+		"Initialize":           reflect.ValueOf(plugins.Initialize),
+		"ManagerInstance":      reflect.ValueOf(plugins.ManagerInstance),
+		"NewRegistry":          reflect.ValueOf(plugins.NewRegistry),
 		"RegisterPluginRoutes": reflect.ValueOf(plugins.RegisterPluginRoutes),
-		"Shutdown":            reflect.ValueOf(plugins.Shutdown),
+		"Shutdown":             reflect.ValueOf(plugins.Shutdown),
 
 		// type definitions
 		"AuthenticatedRouterPlugin":   reflect.ValueOf((*plugins.AuthenticatedRouterPlugin)(nil)),
@@ -75,7 +75,7 @@ func (W _code_vikunja_io_api_pkg_plugins_MigrationPlugin) Init() error {
 func (W _code_vikunja_io_api_pkg_plugins_MigrationPlugin) Migrations() []*xormigrate.Migration {
 	return W.WMigrations()
 }
-func (W _code_vikunja_io_api_pkg_plugins_MigrationPlugin) Name() string  { return W.WName() }
+func (W _code_vikunja_io_api_pkg_plugins_MigrationPlugin) Name() string    { return W.WName() }
 func (W _code_vikunja_io_api_pkg_plugins_MigrationPlugin) Shutdown() error { return W.WShutdown() }
 func (W _code_vikunja_io_api_pkg_plugins_MigrationPlugin) Version() string { return W.WVersion() }
 
@@ -87,8 +87,8 @@ type _code_vikunja_io_api_pkg_plugins_Plugin struct {
 	WVersion  func() string
 }
 
-func (W _code_vikunja_io_api_pkg_plugins_Plugin) Init() error    { return W.WInit() }
-func (W _code_vikunja_io_api_pkg_plugins_Plugin) Name() string   { return W.WName() }
+func (W _code_vikunja_io_api_pkg_plugins_Plugin) Init() error     { return W.WInit() }
+func (W _code_vikunja_io_api_pkg_plugins_Plugin) Name() string    { return W.WName() }
 func (W _code_vikunja_io_api_pkg_plugins_Plugin) Shutdown() error { return W.WShutdown() }
 func (W _code_vikunja_io_api_pkg_plugins_Plugin) Version() string { return W.WVersion() }
 

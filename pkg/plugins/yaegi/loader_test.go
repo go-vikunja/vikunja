@@ -25,7 +25,7 @@ import (
 const examplePluginDir = "../../../examples/plugins/example"
 
 func TestLoadPlugin(t *testing.T) {
-	pluginDir := filepath.Join(examplePluginDir)
+	pluginDir := examplePluginDir
 
 	mainGo := filepath.Join(pluginDir, "main.go")
 	if _, err := os.Stat(mainGo); err != nil {

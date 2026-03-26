@@ -11,14 +11,14 @@ import (
 
 func init() {
 	Symbols["code.vikunja.io/api/pkg/events/events"] = map[string]reflect.Value{
-		"AssertDispatched":     reflect.ValueOf(events.AssertDispatched),
+		"AssertDispatched":      reflect.ValueOf(events.AssertDispatched),
 		"ClearDispatchedEvents": reflect.ValueOf(events.ClearDispatchedEvents),
 		"CountDispatchedEvents": reflect.ValueOf(events.CountDispatchedEvents),
-		"Dispatch":             reflect.ValueOf(events.Dispatch),
-		"Fake":                 reflect.ValueOf(events.Fake),
-		"InitEvents":           reflect.ValueOf(events.InitEvents),
-		"RegisterListener":     reflect.ValueOf(events.RegisterListener),
-		"TestListener":         reflect.ValueOf(events.TestListener),
+		"Dispatch":              reflect.ValueOf(events.Dispatch),
+		"Fake":                  reflect.ValueOf(events.Fake),
+		"InitEvents":            reflect.ValueOf(events.InitEvents),
+		"RegisterListener":      reflect.ValueOf(events.RegisterListener),
+		"TestListener":          reflect.ValueOf(events.TestListener),
 
 		// type definitions
 		"Event":    reflect.ValueOf((*events.Event)(nil)),
