@@ -149,6 +149,7 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 
 	err = s.
 		Where(cond).
+		OrderBy("id").
 		Find(&users)
 
 outer:
