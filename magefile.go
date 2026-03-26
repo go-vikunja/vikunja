@@ -2090,6 +2090,6 @@ func (Plugins) Build(ctx context.Context, pathToSourceFiles string) error {
 		pathToSourceFiles = absPath
 	}
 
-	out := filepath.Join(RootPath, "plugins", filepath.Base(pathToSourceFiles)+".so")
+	out := filepath.Join("plugins", filepath.Base(pathToSourceFiles)+".so")
 	return runAndStreamOutput(ctx, "go", "build", "-buildmode=plugin", "-tags", Tags, "-o", out, pathToSourceFiles)
 }
