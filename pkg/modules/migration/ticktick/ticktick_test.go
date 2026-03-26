@@ -163,6 +163,55 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 	assert.Equal(t, vikunjaTasks[2].Tasks[0].Position, tickTickTasks[4].Order)
 }
 
+func TestConvertTicktickTasksChildBeforeParent(t *testing.T) {
+	// Child appears BEFORE parent in the input — this is the order that
+	// causes the import to fail in create_from_structure.go because the
+	// placeholder for the not-yet-created parent has no title.
+	tickTickTasks := []*tickTickTask{
+		{
+			TaskID:      2,
+			ParentID:    1,
+			ProjectName: "Project 1",
+			Title:       "Child task",
+			Status:      "0",
+			Order:       -1099511626,
+		},
+		{
+			TaskID:      1,
+			ParentID:    0,
+			ProjectName: "Project 1",
+			Title:       "Parent task",
+			Status:      "0",
+			Order:       -1099511627776,
+		},
+	}
+
+	vikunjaTasks := convertTickTickToVikunja(tickTickTasks)
+
+	// Find the project with tasks
+	var projectTasks []*models.TaskWithComments
+	for _, p := range vikunjaTasks {
+		if len(p.Tasks) > 0 {
+			projectTasks = p.Tasks
+			break
+		}
+	}
+
+	require.Len(t, projectTasks, 2)
+
+	// The parent (TaskID=1) must come before the child (TaskID=2) in the
+	// output so that create_from_structure.go processes it first.
+	assert.Equal(t, "Parent task", projectTasks[0].Title)
+	assert.Equal(t, "Child task", projectTasks[1].Title)
+
+	// The child still has the correct parent relation
+	assert.Equal(t, models.RelatedTaskMap{
+		models.RelationKindParenttask: []*models.Task{
+			{ID: 1},
+		},
+	}, projectTasks[1].RelatedTasks)
+}
+
 func TestLinesToSkipBeforeHeader(t *testing.T) {
 	csvContent := "Date: 2024-01-01+0000\nVersion: 7.1\n" +
 		"\"Folder Name\",\"List Name\",\"Title\",\"Kind\",\"Tags\",\"Content\",\"Is Check list\",\"Start Date\",\"Due Date\",\"Reminder\",\"Repeat\",\"Priority\",\"Status\",\"Created Time\",\"Completed Time\",\"Order\",\"Timezone\",\"Is All Day\",\"Is Floating\",\"Column Name\",\"Column Order\",\"View Mode\",\"taskId\",\"parentId\"\n" +
