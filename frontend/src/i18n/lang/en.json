@@ -151,7 +151,7 @@
         "more": "More information about CalDAV in Vikunja",
         "tokens": "CalDAV Tokens",
         "tokensHowTo": "For CalDAV authentication you can use either your normal account password or a dedicated CalDAV token.",
-        "createToken": "Create a new CalDAV token",
+        "createToken": "Create a CalDAV token",
         "tokenCreated": "Here is your new token: {token}",
         "wontSeeItAgain": "Write it down or save it securely — you will not be able to see it again.",
         "mustUseToken": "You need to create a CalDAV token to use CalDAV with any third-party client. Enter the token in the password field of your client.",
