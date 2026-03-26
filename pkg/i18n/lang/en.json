@@ -136,7 +136,7 @@
         "api_token": {
             "expiring": {
                 "week": {
-                    "subject": "Your API token \"%[1]s\" expires in 7 days",
+                    "subject": "Your API token \"%[1]s\" expires soon",
                     "message": "Your API token \"%[1]s\" will expire on %[2]s. If you still need it, please create a new token before it expires."
                 },
                 "day": {

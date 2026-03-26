@@ -37,14 +37,10 @@ func RegisterAPITokenExpiryCheckCron() {
 		return
 	}
 
-	err := cron.Schedule("0 * * * *", checkForExpiringAPITokens)
+	err := cron.Schedule("0 * * * *", func() { checkForExpiringAPITokensAt(time.Now()) })
 	if err != nil {
 		log.Fatalf("Could not register API token expiry check cron: %s", err)
 	}
-}
-
-func checkForExpiringAPITokens() {
-	checkForExpiringAPITokensAt(time.Now())
 }
 
 func checkForExpiringAPITokensAt(now time.Time) {
@@ -92,32 +88,34 @@ func checkForExpiringAPITokensAt(now time.Time) {
 			continue
 		}
 
-		// Determine which thresholds apply
-		expiresWithinOneDay := token.ExpiresAt.Before(oneDay) || token.ExpiresAt.Equal(oneDay)
-
-		if expiresWithinOneDay {
-			if err := sendTokenExpiryNotificationIfNew(s, u, token, &APITokenExpiringDayNotification{
+		// Send only the most urgent notification: 1-day if within 24h, otherwise 7-day
+		if token.ExpiresAt.Before(oneDay) || token.ExpiresAt.Equal(oneDay) {
+			if err := sendTokenExpiryNotificationIfNew(s, u, &APITokenExpiringDayNotification{
 				User:  u,
 				Token: token,
 			}); err != nil {
 				log.Errorf(logPrefix+"Error sending 1-day notification for token %d: %s", token.ID, err)
 			}
+			continue
 		}
 
-		// Always check the 7-day notification (token is within 7 days by the query)
-		if err := sendTokenExpiryNotificationIfNew(s, u, token, &APITokenExpiringWeekNotification{
+		if err := sendTokenExpiryNotificationIfNew(s, u, &APITokenExpiringWeekNotification{
 			User:  u,
 			Token: token,
 		}); err != nil {
 			log.Errorf(logPrefix+"Error sending 7-day notification for token %d: %s", token.ID, err)
 		}
 	}
+
+	if err := s.Commit(); err != nil {
+		log.Errorf(logPrefix+"Error committing session: %s", err)
+	}
 }
 
 // sendTokenExpiryNotificationIfNew checks whether a notification with the same
 // name and subject (token ID) has already been sent for this user. If not, it
 // sends the notification (both email and DB).
-func sendTokenExpiryNotificationIfNew(s *xorm.Session, u *user.User, _ *APIToken, n notifications.NotificationWithSubject) error {
+func sendTokenExpiryNotificationIfNew(s *xorm.Session, u *user.User, n notifications.NotificationWithSubject) error {
 	existing, err := notifications.GetNotificationsForNameAndUser(s, u.ID, n.Name(), n.SubjectID())
 	if err != nil {
 		return err

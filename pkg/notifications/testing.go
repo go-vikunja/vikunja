@@ -32,6 +32,13 @@ func Fake() {
 	sentTestNotifications = nil
 }
 
+// Unfake disables test mode so that subsequent calls to Notify write to the
+// database again. Call this (or use t.Cleanup) after tests that use Fake().
+func Unfake() {
+	isUnderTest = false
+	sentTestNotifications = nil
+}
+
 // AssertSent asserts a notification has been sent
 func AssertSent(t *testing.T, n Notification) {
 	var found bool
