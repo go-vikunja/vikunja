@@ -36,6 +36,19 @@
 			</i18n-t>
 		</p>
 
+		<p class="mbs-2">
+			<i18n-t
+				keypath="user.settings.caldav.apiTokenHint"
+				scope="global"
+			>
+				<template #link>
+					<RouterLink :to="{name: 'user.settings.apiTokens'}">
+						{{ $t('user.settings.apiTokens.title') }}
+					</RouterLink>
+				</template>
+			</i18n-t>
+		</p>
+
 		<table
 			v-if="tokens.length > 0"
 			class="table"
