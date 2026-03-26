@@ -127,8 +127,6 @@ func (m *Manager) loadPlugins(paths []string) error {
 				if err := m.loadYaegiPlugin(full); err != nil {
 					log.Errorf("Failed to load yaegi plugin %s: %s", e.Name(), err)
 				}
-			default:
-				return errors.New("invalid plugins.loader value: must be \"yaegi\" or \"native\"")
 			}
 		}
 	}
