@@ -64,13 +64,13 @@ var subTableFilters = SubTableFilters{
 	},
 	"parent_project": {
 		Table:           "projects",
-		BaseFilter:      "tasks.project_id = id",
+		BaseFilter:      "tasks.project_id = id AND deleted_at IS NULL",
 		FilterableField: "parent_project_id",
 		AllowNullCheck:  false,
 	},
 	"parent_project_id": {
 		Table:           "projects",
-		BaseFilter:      "tasks.project_id = id",
+		BaseFilter:      "tasks.project_id = id AND deleted_at IS NULL",
 		FilterableField: "parent_project_id",
 		AllowNullCheck:  false,
 	},

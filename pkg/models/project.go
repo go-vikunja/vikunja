@@ -1649,8 +1649,7 @@ func RestoreProject(s *xorm.Session, projectID int64, a web.Auth) (project *Proj
 		return nil, ErrProjectDoesNotExist{ID: projectID}
 	}
 
-	// Check admin permission (using Unscoped so the permission check can find the deleted project)
-	isAdmin, err := checkProjectAdminUnscoped(s, projectID, a)
+	isAdmin, err := isProjectAdminIncludingDeleted(s, project, a)
 	if err != nil {
 		return nil, err
 	}
@@ -1702,47 +1701,25 @@ SELECT id FROM descendant_ids`,
 	return project, nil
 }
 
-// checkProjectAdminUnscoped checks if a user has admin permission on a project,
-// including soft-deleted projects.
-func checkProjectAdminUnscoped(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
-	// Check if the user is the owner
-	project := &Project{}
-	exists, err := s.Unscoped().
-		Where("id = ?", projectID).
-		Get(project)
-	if err != nil {
-		return false, err
-	}
-	if !exists {
-		return false, nil
-	}
-	if project.OwnerID == a.GetID() {
+// isProjectAdminIncludingDeleted is Project.IsAdmin for a project that is
+// soft-deleted, where the regular path can no longer resolve the row.
+func isProjectAdminIncludingDeleted(s *xorm.Session, project *Project, a web.Auth) (bool, error) {
+	if isInstanceAdmin(s, a) {
 		return true, nil
 	}
 
-	// Check direct user shares with admin permission
-	var count int64
-	count, err = s.Where("project_id = ? AND user_id = ? AND `right` = ?", projectID, a.GetID(), PermissionAdmin).
-		Count(&ProjectUser{})
-	if err != nil {
-		return false, err
-	}
-	if count > 0 {
+	// Link shares can't reach the bin, so only real users get here
+	u := &user.User{ID: a.GetID()}
+	if project.isOwner(u) {
 		return true, nil
 	}
 
-	// Check team shares with admin permission
-	count, err = s.SQL(
-		`SELECT COUNT(*) FROM team_projects tp
-		 INNER JOIN team_members tm ON tp.team_id = tm.team_id
-		 WHERE tp.project_id = ? AND tm.user_id = ? AND tp.`+"`right`"+` = ?`,
-		projectID, a.GetID(), PermissionAdmin,
-	).Count()
+	permissions, err := checkPermissionsForProjectsIncludingDeleted(s, u, []int64{project.ID}, true)
 	if err != nil {
 		return false, err
 	}
-
-	return count > 0, nil
+	permission, has := permissions[project.ID]
+	return has && permission.MaxPermission == PermissionAdmin, nil
 }
 
 // GetDeletedProjects returns all soft-deleted projects the user has admin access to.

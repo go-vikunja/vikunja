@@ -365,6 +365,12 @@ type projectPermission struct {
 }
 
 func checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int64) (projectPermissionMap map[int64]*projectPermission, err error) {
+	return checkPermissionsForProjectsIncludingDeleted(s, u, projectIDs, false)
+}
+
+// includeDeleted is only for the restore path, where the project is soft-deleted
+// by definition and its permissions still have to be resolved.
+func checkPermissionsForProjectsIncludingDeleted(s *xorm.Session, u *user.User, projectIDs []int64, includeDeleted bool) (projectPermissionMap map[int64]*projectPermission, err error) {
 	projectPermissionMap = make(map[int64]*projectPermission)
 
 	if len(projectIDs) < 1 {
@@ -380,6 +386,13 @@ func checkPermissionsForProjects(s *xorm.Session, u *user.User, projectIDs []int
 		u.ID,
 	}
 
+	baseNotDeleted := " AND deleted_at IS NULL"
+	recursiveNotDeleted := "WHERE p.deleted_at IS NULL"
+	if includeDeleted {
+		baseNotDeleted = ""
+		recursiveNotDeleted = ""
+	}
+
 	err = s.SQL(`
 WITH RECURSIVE
     project_hierarchy AS (
@@ -389,7 +402,7 @@ WITH RECURSIVE
                0  AS level,
                id AS original_project_id
         FROM projects
-        WHERE id IN (`+utils.JoinInt64Slice(projectIDs, ", ")+`)
+        WHERE id IN (`+utils.JoinInt64Slice(projectIDs, ", ")+`)`+baseNotDeleted+`
 
         UNION ALL
 
@@ -399,7 +412,8 @@ WITH RECURSIVE
                ph.level + 1,
                ph.original_project_id
         FROM projects p
-                 INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id),
+                 INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id
+        `+recursiveNotDeleted+`),
 
     -- Calculate max team permission for each project/user combination
     max_team_permissions AS (
