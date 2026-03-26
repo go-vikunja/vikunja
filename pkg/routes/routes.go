@@ -478,10 +478,12 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.GET("/projects", projectHandler.ReadAllWeb)
+	a.GET("/projects/deleted", apiv1.ListDeletedProjects)
 	a.GET("/projects/:project", projectHandler.ReadOneWeb)
 	a.POST("/projects/:project", projectHandler.UpdateWeb)
 	a.DELETE("/projects/:project", projectHandler.DeleteWeb)
 	a.PUT("/projects", projectHandler.CreateWeb)
+	a.POST("/projects/:project/restore", apiv1.RestoreProject)
 	a.GET("/projects/:project/projectusers", apiv1.ListUsersForProject)
 
 	if config.ServiceEnableLinkSharing.GetBool() {
