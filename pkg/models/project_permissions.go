@@ -261,7 +261,7 @@ WITH RECURSIVE
                0  AS level,
                id AS original_project_id
         FROM projects
-        WHERE id IN (`+utils.JoinInt64Slice(projectIDs, ", ")+`)
+        WHERE id IN (`+utils.JoinInt64Slice(projectIDs, ", ")+`) AND deleted_at IS NULL
 
         UNION ALL
 
@@ -271,7 +271,8 @@ WITH RECURSIVE
                ph.level + 1,
                ph.original_project_id
         FROM projects p
-                 INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id),
+                 INNER JOIN project_hierarchy ph ON p.id = ph.parent_project_id
+        WHERE p.deleted_at IS NULL),
 
     -- Calculate max team permission for each project/user combination
     max_team_permissions AS (
