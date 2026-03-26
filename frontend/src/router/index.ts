@@ -395,6 +395,11 @@ const router = createRouter({
 			component: OpenIdAuth,
 		},
 		{
+			path: '/oauth/authorize',
+			name: 'oauth.authorize',
+			component: () => import('@/views/user/OAuthAuthorize.vue'),
+		},
+		{
 			path: '/about',
 			name: 'about',
 			component: () => import('@/views/About.vue'),
