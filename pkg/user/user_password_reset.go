@@ -54,8 +54,8 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (userID int64, err err
 	}
 
 	user, err := GetUserByID(s, token.UserID)
-	if err != nil {
-		return
+	if err != nil && !IsErrAccountLocked(err) {
+		return 0, err
 	}
 	userID = user.ID
 
@@ -70,7 +70,9 @@ func ResetPassword(s *xorm.Session, reset *PasswordReset) (userID int64, err err
 		return
 	}
 
-	user.Status = StatusActive
+	if user.Status == StatusAccountLocked || user.Status == StatusEmailConfirmationRequired {
+		user.Status = StatusActive
+	}
 	_, err = s.
 		Cols("password", "status").
 		Where("id = ?", user.ID).
@@ -106,8 +108,8 @@ func RequestUserPasswordResetTokenByEmail(s *xorm.Session, tr *PasswordTokenRequ
 
 	// Check if the user exists
 	user, err := GetUserWithEmail(s, &User{Email: tr.Email})
-	if err != nil {
-		return
+	if err != nil && !IsErrAccountLocked(err) {
+		return err
 	}
 
 	return RequestUserPasswordResetToken(s, user)

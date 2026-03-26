@@ -39,6 +39,11 @@ import (
 	"xorm.io/xorm"
 )
 
+// IsErrUserStatusError returns true if the error is an ErrAccountDisabled or ErrAccountLocked.
+func IsErrUserStatusError(err error) bool {
+	return IsErrAccountDisabled(err) || IsErrAccountLocked(err)
+}
+
 // Login Object to recive user credentials in JSON format
 type Login struct {
 	// The username used to log in.
@@ -61,6 +66,8 @@ func (s Status) String() string {
 		return "Email Confirmation required"
 	case StatusDisabled:
 		return "Disabled"
+	case StatusAccountLocked:
+		return "Locked"
 	}
 
 	return "Unknown"
@@ -70,6 +77,7 @@ const (
 	StatusActive Status = iota
 	StatusEmailConfirmationRequired
 	StatusDisabled
+	StatusAccountLocked
 )
 
 // User holds information about an user
@@ -126,7 +134,7 @@ func (u *User) RouteForMail() (string, error) {
 		s := db.NewSession()
 		defer s.Close()
 		user, err := getUser(s, &User{ID: u.ID}, true)
-		if err != nil {
+		if err != nil && !IsErrUserStatusError(err) {
 			return "", err
 		}
 		return user.Email, nil
@@ -148,12 +156,14 @@ func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
 		s = db.NewSession()
 		defer s.Close()
 	}
-	user, err := getUser(s, &User{ID: u.ID}, true)
+	_, err := getUser(s, &User{ID: u.ID}, true)
+	if IsErrUserStatusError(err) {
+		return false, nil
+	}
 	if err != nil {
 		return false, err
 	}
-
-	return user.Status != StatusDisabled, err
+	return true, nil
 }
 
 func (u *User) Lang() string {
@@ -311,7 +321,15 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 		userOut.OverdueTasksRemindersTime = "9:00"
 	}
 
-	return userOut, err
+	if userOut.Status == StatusDisabled {
+		return userOut, &ErrAccountDisabled{UserID: userOut.ID}
+	}
+
+	if userOut.Status == StatusAccountLocked {
+		return userOut, &ErrAccountLocked{UserID: userOut.ID}
+	}
+
+	return userOut, nil
 }
 
 func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User, err error) {
@@ -361,6 +379,14 @@ func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 			handleFailedPassword(user)
 		}
 		return user, err
+	}
+
+	// After successful password verification, check if the account is disabled or locked
+	if user.Status == StatusDisabled {
+		return nil, &ErrAccountDisabled{UserID: user.ID}
+	}
+	if user.Status == StatusAccountLocked {
+		return nil, &ErrAccountLocked{UserID: user.ID}
 	}
 
 	return user, nil
@@ -520,7 +546,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 
 	// Check if it exists
 	theUser, err := GetUserWithEmail(s, &User{ID: user.ID})
-	if err != nil {
+	if err != nil && !IsErrUserStatusError(err) {
 		return &User{}, err
 	}
 
@@ -529,7 +555,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 		user.Username = theUser.Username // Dont change the username if we dont have one
 	} else {
 		// Check if the new username already exists
-		uu, err := GetUserByUsername(s, user.Username)
+		uu, err := getUser(s, &User{Username: user.Username}, false)
 		if err != nil && !IsErrUserDoesNotExist(err) {
 			return nil, err
 		}
@@ -618,7 +644,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 
 	// Get the newly updated user
 	updatedUser, err = GetUserByID(s, user.ID)
-	if err != nil {
+	if err != nil && !IsErrUserStatusError(err) {
 		return &User{}, err
 	}
 
@@ -641,7 +667,7 @@ func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err er
 
 	// Get all user details
 	theUser, err := GetUserByID(s, user.ID)
-	if err != nil {
+	if err != nil && !IsErrUserStatusError(err) {
 		return err
 	}
 

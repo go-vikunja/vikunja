@@ -312,7 +312,7 @@ func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
 	}
 
 	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) // #nosec G704 -- URL is from configured OIDC provider endpoints
 	if err != nil {
 		return CheckResult{
 			Name:   fmt.Sprintf("Provider: %s", name),

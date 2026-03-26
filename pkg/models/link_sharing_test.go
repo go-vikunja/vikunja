@@ -123,6 +123,32 @@ func TestLinkSharing_ReadAll(t *testing.T) {
 		assert.Len(t, shares, 1)
 		assert.Equal(t, int64(4), shares[0].ID)
 	})
+	t.Run("should forbid read-only users from listing link shares", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 1 has only read access to project 3
+		share := &LinkSharing{
+			ProjectID: 3,
+		}
+		_, _, _, err := share.ReadAll(s, doer, "", 1, -1)
+		require.Error(t, err)
+		assert.True(t, IsErrGenericForbidden(err))
+	})
+	t.Run("should forbid write users from listing link shares", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 1 has write access to project 10
+		share := &LinkSharing{
+			ProjectID: 10,
+		}
+		_, _, _, err := share.ReadAll(s, doer, "", 1, -1)
+		require.Error(t, err)
+		assert.True(t, IsErrGenericForbidden(err))
+	})
 }
 
 func TestLinkSharing_ReadOne(t *testing.T) {

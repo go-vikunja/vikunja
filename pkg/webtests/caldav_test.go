@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/routes/caldav"
 
 	ics "github.com/arran4/golang-ical"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -82,6 +83,96 @@ END:VCALENDAR`
 		assert.Contains(t, rec.Body.String(), "TRIGGER;VALUE=DATE-TIME:20230304T150000Z")
 		assert.Contains(t, rec.Body.String(), "ACTION:DISPLAY")
 		assert.Contains(t, rec.Body.String(), "END:VALARM")
+	})
+}
+
+func TestCaldavDiscovery(t *testing.T) {
+	t.Run("Project home set depth 1 includes child projects but not itself", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		propfindBody := `<?xml version="1.0" encoding="utf-8" ?>
+<A:propfind xmlns:A="DAV:" xmlns:B="urn:ietf:params:xml:ns:caldav">
+	<A:prop>
+		<A:current-user-principal />
+		<B:calendar-home-set />
+		<A:resourcetype />
+	</A:prop>
+</A:propfind>`
+
+		c, rec := createRequest(e, "PROPFIND", propfindBody, nil, nil)
+		c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextXML)
+		c.Request().Header.Set("Depth", "1")
+		c.Request().URL.Path = caldav.ProjectBasePath + "/"
+		c.Request().RequestURI = caldav.ProjectBasePath + "/"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.ProjectHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, 207, rec.Result().StatusCode)
+
+		responseBody := rec.Body.String()
+		assert.Contains(t, responseBody, "/dav/projects/36")
+		assert.NotContains(t, responseBody, "<d:href>/dav/projects/</d:href>")
+		assert.NotContains(t, responseBody, "<D:href>/dav/projects/</D:href>")
+	})
+
+	t.Run("Project home set depth 0 returns the home set itself", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		propfindBody := `<?xml version="1.0" encoding="utf-8" ?>
+<A:propfind xmlns:A="DAV:" xmlns:B="urn:ietf:params:xml:ns:caldav">
+	<A:prop>
+		<A:current-user-principal />
+		<B:calendar-home-set />
+		<A:resourcetype />
+	</A:prop>
+</A:propfind>`
+
+		c, rec := createRequest(e, "PROPFIND", propfindBody, nil, nil)
+		c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextXML)
+		c.Request().Header.Set("Depth", "0")
+		c.Request().URL.Path = caldav.ProjectBasePath + "/"
+		c.Request().RequestURI = caldav.ProjectBasePath + "/"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.ProjectHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, 207, rec.Result().StatusCode)
+
+		responseBody := rec.Body.String()
+		assert.Contains(t, responseBody, "/dav/projects/")
+	})
+
+	t.Run("Principal discovery points to normalized project home set path", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		propfindBody := `<?xml version="1.0" encoding="utf-8" ?>
+<A:propfind xmlns:A="DAV:" xmlns:B="urn:ietf:params:xml:ns:caldav">
+	<A:prop>
+		<A:current-user-principal />
+		<B:calendar-home-set />
+	</A:prop>
+</A:propfind>`
+
+		c, rec := createRequest(e, "PROPFIND", propfindBody, nil, nil)
+		c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextXML)
+		c.Request().URL.Path = caldav.PrincipalBasePath + "/user15/"
+		c.Request().RequestURI = caldav.PrincipalBasePath + "/user15/"
+
+		result, _ := caldav.BasicAuth(c, testuser15.Username, "12345678")
+		require.True(t, result)
+
+		err := caldav.PrincipalHandler(c)
+		require.NoError(t, err)
+		assert.Equal(t, 207, rec.Result().StatusCode)
+
+		responseBody := rec.Body.String()
+		assert.Contains(t, responseBody, "<D:href>/dav/projects</D:href>")
+		assert.NotContains(t, responseBody, "/dav//projects/")
 	})
 }
 
@@ -641,5 +732,51 @@ func TestCaldavProjectReport(t *testing.T) {
 			summary := vtodo.GetProperty(ics.ComponentPropertySummary)
 			assert.NotEmpty(t, summary.Value, "Response %d VTODO SUMMARY should not be empty", i)
 		}
+	})
+}
+
+func TestCaldavTOTPBlocksBasicAuth(t *testing.T) {
+	t.Run("Basic auth with password is rejected when TOTP is enabled", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// testuser10 has TOTP enabled via fixtures.
+		// "12345678" is the plaintext password for all test users.
+		result, err := caldav.BasicAuth(c, testuser10.Username, "12345678")
+		require.NoError(t, err)
+		assert.False(t, result, "BasicAuth should reject password login when user has TOTP enabled")
+	})
+
+	t.Run("Basic auth with caldav token still works when TOTP is enabled", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// testuser10 has TOTP enabled AND a CalDAV token (kind=4) in fixtures.
+		// "caldavtesttoken" is the plaintext of the bcrypt hash in user_tokens.yml.
+		// CalDAV token auth should bypass the TOTP check.
+		result, err := caldav.BasicAuth(c, testuser10.Username, "caldavtesttoken")
+		require.NoError(t, err)
+		assert.True(t, result, "BasicAuth with CalDAV token should succeed even when TOTP is enabled")
+	})
+}
+
+func TestCaldavDisabledUserRejected(t *testing.T) {
+	t.Run("disabled user cannot authenticate via CalDAV", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// user17 is disabled (status=2), password is "12345678"
+		result, err := caldav.BasicAuth(c, "user17", "12345678")
+		require.NoError(t, err)
+		assert.False(t, result, "disabled user should not be able to authenticate via CalDAV")
+	})
+	t.Run("locked user cannot authenticate via CalDAV", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// user18 is locked (status=3), password is "12345678"
+		result, err := caldav.BasicAuth(c, "user18", "12345678")
+		require.NoError(t, err)
+		assert.False(t, result, "locked user should not be able to authenticate via CalDAV")
 	})
 }

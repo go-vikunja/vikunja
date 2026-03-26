@@ -319,6 +319,26 @@ func TestCheckUserCredentials(t *testing.T) {
 		_, err := CheckUserCredentials(s, &Login{Username: "user1@example.com", Password: "12345678"})
 		require.NoError(t, err)
 	})
+	t.Run("disabled user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user17 is disabled (status=2), password is "12345678"
+		_, err := CheckUserCredentials(s, &Login{Username: "user17", Password: "12345678"})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountDisabled(err))
+	})
+	t.Run("locked user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user18 is locked (status=3), password is "12345678"
+		_, err := CheckUserCredentials(s, &Login{Username: "user18", Password: "12345678"})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountLocked(err))
+	})
 }
 
 func TestUpdateUser(t *testing.T) {
@@ -470,6 +490,33 @@ func TestUserPasswordReset(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrInvalidPasswordResetToken(err))
 	})
+	t.Run("disabled user cannot reset password", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		reset := &PasswordReset{
+			Token:       "disableduserpasswordresettoken",
+			NewPassword: "12345678",
+		}
+		_, err := ResetPassword(s, reset)
+		require.Error(t, err)
+		assert.True(t, IsErrAccountDisabled(err))
+	})
+}
+
+func TestRequestPasswordResetTokenDisabledUser(t *testing.T) {
+	t.Run("disabled user cannot request password reset token", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := RequestUserPasswordResetTokenByEmail(s, &PasswordTokenRequest{
+			Email: "user17@example.com",
+		})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountDisabled(err))
+	})
 }
 
 func TestCleanupOldTokens(t *testing.T) {
@@ -490,9 +537,10 @@ func TestCleanupOldTokens(t *testing.T) {
 		deleted, err := CleanupOldTokens(s)
 		require.NoError(t, err)
 
-		// Fixtures have two old tokens that should be cleaned up:
-		// id=1 (kind=1, TokenPasswordReset, created 2021) and id=4 (kind=3, TokenAccountDeletion, created 2021)
-		assert.Equal(t, int64(2), deleted)
+		// Fixtures have three old tokens that should be cleaned up:
+		// id=1 (kind=1, TokenPasswordReset, created 2021), id=4 (kind=3, TokenAccountDeletion, created 2021),
+		// and id=5 (kind=1, TokenPasswordReset for disabled user, created 2024)
+		assert.Equal(t, int64(3), deleted)
 
 		err = s.Commit()
 		require.NoError(t, err)
@@ -594,4 +642,29 @@ func TestConfirmDeletion(t *testing.T) {
 			"kind":  TokenAccountDeletion,
 		})
 	})
+}
+
+func TestGetUserByID_DisabledUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// user17 is disabled (status=2)
+	u, err := GetUserByID(s, 17)
+	require.Error(t, err)
+	assert.True(t, IsErrAccountDisabled(err), "GetUserByID should return ErrAccountDisabled, got: %v", err)
+	// User should still be returned alongside the error
+	assert.NotNil(t, u)
+	assert.Equal(t, int64(17), u.ID)
+}
+
+func TestGetUserByID_ActiveUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// user1 is active
+	u, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), u.ID)
 }

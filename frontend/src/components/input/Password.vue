@@ -60,12 +60,12 @@ const password = ref('')
 const isValid = ref<true | string>(props.validateInitially === true ? true : '')
 const validateAfterFirst = ref(false)
 
-watchEffect(() => props.validateInitially && validate())
-
 const validate = useDebounceFn(() => {
 	const valid = validatePassword(password.value, props.validateMinLength)
 	isValid.value = valid === true ? true : t(valid)
 }, 100)
+
+watchEffect(() => props.validateInitially && validate())
 
 function togglePasswordFieldType() {
 	passwordFieldType.value = passwordFieldType.value === 'password'

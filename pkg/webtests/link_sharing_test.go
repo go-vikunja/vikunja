@@ -739,19 +739,19 @@ func TestLinkSharing(t *testing.T) {
 		}
 		t.Run("ReadAll", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				rec, err := testHandlerLinkShareReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"hash":"test"`)
+				_, err := testHandlerLinkShareReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
+				require.Error(t, err)
+				assert.Contains(t, getHTTPErrorMessage(err), `not allowed`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerLinkShareWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"hash":"test2"`)
+				_, err := testHandlerLinkShareWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
+				require.Error(t, err)
+				assert.Contains(t, getHTTPErrorMessage(err), `not allowed`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				rec, err := testHandlerLinkShareAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"hash":"test3"`)
+				_, err := testHandlerLinkShareAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
+				require.Error(t, err)
+				assert.Contains(t, getHTTPErrorMessage(err), `not allowed`)
 			})
 		})
 		t.Run("Create", func(t *testing.T) {

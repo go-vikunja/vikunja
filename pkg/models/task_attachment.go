@@ -18,6 +18,7 @@ package models
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/png"
 	"io"
@@ -107,7 +108,15 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realna
 
 // ReadOne returns a task attachment
 func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
-	exists, err := s.Where("id = ?", ta.ID).Get(ta)
+	query := s.Where("id = ?", ta.ID).NoAutoCondition()
+
+	// When TaskID is provided (e.g. from URL parameters), verify the attachment
+	// belongs to that task to prevent IDOR attacks.
+	if ta.TaskID != 0 {
+		query = query.And("task_id = ?", ta.TaskID)
+	}
+
+	exists, err := query.Get(ta)
 	if err != nil {
 		return
 	}
@@ -221,7 +230,25 @@ func (ta *TaskAttachment) GetPreview(previewSize PreviewSize) []byte {
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
 
 	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
-		img, _, err := image.Decode(ta.File.File)
+		// Read all bytes up front so we can inspect dimensions without seeking.
+		// The file is an io.ReadCloser (no Seek), so we buffer it once.
+		data, err := io.ReadAll(ta.File.File)
+		if err != nil {
+			return nil, err
+		}
+
+		// Check image dimensions before full decode to prevent DoS
+		// from decompression bombs (small file, huge pixel dimensions)
+		const maxPixels = 50_000_000 // 50 megapixels
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+		if err != nil {
+			return nil, err
+		}
+		if cfg.Width*cfg.Height > maxPixels {
+			return nil, fmt.Errorf("image dimensions %dx%d exceed maximum of %d pixels", cfg.Width, cfg.Height, maxPixels)
+		}
+
+		img, _, err := image.Decode(bytes.NewReader(data))
 		if err != nil {
 			return nil, err
 		}

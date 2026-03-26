@@ -17,10 +17,13 @@
 package v1
 
 import (
+	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/files"
@@ -147,7 +150,16 @@ func DownloadUserDataExport(c *echo.Context) error {
 		return err
 	}
 
-	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File)
+	if config.FilesType.GetString() == "s3" {
+		c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+exportFile.Name+"\"")
+		c.Response().Header().Set("Content-Type", exportFile.Mime)
+		c.Response().Header().Set("Content-Length", strconv.FormatUint(exportFile.Size, 10))
+		c.Response().Header().Set("Last-Modified", exportFile.Created.UTC().Format(http.TimeFormat))
+		_, err = io.Copy(c.Response(), exportFile.File)
+		return err
+	}
+
+	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File.(io.ReadSeeker))
 	return nil
 }
 

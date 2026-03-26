@@ -208,6 +208,13 @@
         "tokenCreatedSuccess": "Here is your new api token: {token}",
         "tokenCreatedNotSeeAgain": "Store it in a secure location, you won't see it again!",
         "selectAll": "Select all",
+        "presets": {
+          "title": "Quick presets",
+          "readOnly": "Read only",
+          "tasks": "Task management",
+          "projects": "Project management",
+          "fullAccess": "Full access"
+        },
         "delete": {
           "header": "Delete this token",
           "text1": "Are you sure you want to delete the token \"{token}\"?",
@@ -843,7 +850,8 @@
       "select": "Select a date range",
       "noTasks": "Nothing to do — Have a nice day!",
       "filterByLabel": "Filtering by label {label}",
-      "clearLabelFilter": "Clear label filter"
+      "clearLabelFilter": "Clear label filter",
+      "savedFilterIgnored": "Your saved homepage filter is not applied while viewing tasks by label."
     },
     "detail": {
       "chooseDueDate": "Click here to set a due date",

@@ -101,7 +101,7 @@ func DownloadImage(url string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
-	resp, err := (&http.Client{}).Do(req)
+	resp, err := NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		return nil, fmt.Errorf("failed to download image: %w", err)
 	}

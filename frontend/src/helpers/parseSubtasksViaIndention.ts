@@ -1,4 +1,4 @@
-import {getProjectFromPrefix, PrefixMode} from '@/modules/parseTaskText'
+import {getProjectFromPrefix, PrefixMode} from '@/modules/quickAddMagic'
 
 export interface TaskWithParent {
 	title: string,

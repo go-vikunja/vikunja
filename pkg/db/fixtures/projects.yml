@@ -348,3 +348,16 @@
   position: 39
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Child project that is archived individually, but its parent (project 1) is NOT archived.
+# Used by TestArchived to verify that CheckIsArchived checks the child's own flag.
+-
+  id: 40
+  title: Test40 child archived individually
+  description: Lorem Ipsum
+  identifier: test40
+  owner_id: 1
+  parent_project_id: 3
+  is_archived: 1
+  position: 40
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

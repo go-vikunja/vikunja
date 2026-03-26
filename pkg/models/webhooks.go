@@ -25,9 +25,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
-	"net"
 	"net/http"
-	"net/url"
 	"sort"
 	"strings"
 	"sync"
@@ -37,10 +35,10 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web"
 
-	"code.dny.dev/ssrf"
 	"xorm.io/xorm"
 )
 
@@ -236,6 +234,8 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 
 	for _, webhook := range ws {
 		webhook.Secret = ""
+		webhook.BasicAuthUser = ""
+		webhook.BasicAuthPassword = ""
 		if createdBy, has := users[webhook.CreatedByID]; has {
 			webhook.CreatedBy = createdBy
 		}
@@ -289,40 +289,14 @@ func (w *Webhook) Delete(s *xorm.Session, _ web.Auth) (err error) {
 }
 
 func getWebhookHTTPClient() (client *http.Client) {
-
 	if webhookClient != nil {
 		return webhookClient
 	}
 
-	client = &http.Client{}
+	client = utils.NewSSRFSafeHTTPClient()
 	client.Timeout = time.Duration(config.WebhooksTimeoutSeconds.GetInt()) * time.Second
 
-	transport := &http.Transport{}
-
-	// SSRF protection: block connections to non-globally-routable IPs unless
-	// explicitly allowed. Uses daenney/ssrf which validates resolved IPs
-	// against IANA Special Purpose Registries after DNS resolution,
-	// preventing DNS rebinding attacks.
-	if !config.WebhooksAllowNonRoutableIPs.GetBool() {
-		guardian := ssrf.New(ssrf.WithAnyPort())
-		transport.DialContext = (&net.Dialer{
-			Control: guardian.Safe,
-		}).DialContext
-	}
-
-	if config.WebhooksProxyURL.GetString() != "" && config.WebhooksProxyPassword.GetString() != "" {
-		proxyURL, _ := url.Parse(config.WebhooksProxyURL.GetString())
-		transport.Proxy = http.ProxyURL(proxyURL)
-		transport.ProxyConnectHeader = http.Header{
-			"Proxy-Authorization": []string{"Basic " + base64.StdEncoding.EncodeToString([]byte("vikunja:"+config.WebhooksProxyPassword.GetString()))},
-			"User-Agent":          []string{"Vikunja/" + version.Version},
-		}
-	}
-
-	client.Transport = transport
-
 	webhookClient = client
-
 	return
 }
 
@@ -355,7 +329,7 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	req.Header.Add("Content-Type", "application/json")
 
 	client := getWebhookHTTPClient()
-	res, err := client.Do(req)
+	res, err := client.Do(req) // #nosec G704 -- URL is user-configured webhook target
 	if err != nil {
 		return err
 	}

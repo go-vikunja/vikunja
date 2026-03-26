@@ -17,6 +17,9 @@
 package models
 
 import (
+	"bytes"
+	"io"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/web"
 
@@ -131,7 +134,11 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 		sourceFile := attachment.File.File
 		defer sourceFile.Close()
-		err := attachment.NewAttachment(s, sourceFile, attachment.File.Name, attachment.File.Size, doer)
+		buf, err := io.ReadAll(sourceFile)
+		if err != nil {
+			return err
+		}
+		err = attachment.NewAttachment(s, bytes.NewReader(buf), attachment.File.Name, attachment.File.Size, doer)
 		if err != nil {
 			return err
 		}

@@ -70,3 +70,17 @@
   relation_kind: 'parenttask'
   created_by_id: 15
   created: 2018-12-01 15:13:12
+# Cross-project relation: task 1 (project 1, user 1) -> task 41 (project 36, user 15)
+# User 1 should NOT see task 41 in the related tasks response
+- id: 13
+  task_id: 1
+  other_task_id: 41
+  relation_kind: 'related'
+  created_by_id: 1
+  created: 2018-12-01 15:13:12
+- id: 14
+  task_id: 41
+  other_task_id: 1
+  relation_kind: 'related'
+  created_by_id: 1
+  created: 2018-12-01 15:13:12

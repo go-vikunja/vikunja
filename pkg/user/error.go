@@ -373,6 +373,32 @@ func (err ErrInvalidTOTPPasscode) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTOTPPasscodeUsed represents a "TOTPPasscodeUsed" kind of error.
+// This is returned when a TOTP passcode has already been used within its validity window.
+type ErrTOTPPasscodeUsed struct{}
+
+// IsErrTOTPPasscodeUsed checks if an error is a ErrTOTPPasscodeUsed.
+func IsErrTOTPPasscodeUsed(err error) bool {
+	_, ok := err.(ErrTOTPPasscodeUsed)
+	return ok
+}
+
+func (err ErrTOTPPasscodeUsed) Error() string {
+	return "This totp passcode has already been used"
+}
+
+// ErrCodeTOTPPasscodeUsed holds the unique world-error code of this error
+const ErrCodeTOTPPasscodeUsed = 1025
+
+// HTTPError holds the http error description
+func (err ErrTOTPPasscodeUsed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeTOTPPasscodeUsed,
+		Message:  "This totp passcode has already been used.",
+	}
+}
+
 // ErrInvalidAvatarProvider represents a "InvalidAvatarProvider" kind of error.
 type ErrInvalidAvatarProvider struct {
 	AvatarProvider string
@@ -476,6 +502,33 @@ func (err *ErrAccountDisabled) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeAccountDisabled,
 		Message:  "This account is disabled. Check your emails or ask your administrator.",
+	}
+}
+
+// ErrAccountLocked represents an "AccountLocked" kind of error.
+type ErrAccountLocked struct {
+	UserID int64
+}
+
+// IsErrAccountLocked checks if an error is a ErrAccountLocked.
+func IsErrAccountLocked(err error) bool {
+	_, ok := err.(*ErrAccountLocked)
+	return ok
+}
+
+func (err *ErrAccountLocked) Error() string {
+	return "Account is locked"
+}
+
+// ErrCodeAccountLocked holds the unique world-error code of this error
+const ErrCodeAccountLocked = 1026
+
+// HTTPError holds the http error description
+func (err *ErrAccountLocked) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeAccountLocked,
+		Message:  "This account is locked due to too many failed login attempts. You can reset your password to unlock it.",
 	}
 }
 

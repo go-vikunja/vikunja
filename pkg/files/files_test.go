@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"image"
 	"image/png"
+	"io"
 	"os"
 	"testing"
 
@@ -128,6 +129,30 @@ func TestFile_LoadFileByID(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, os.IsNotExist(err))
 	})
+}
+
+func TestFileSave_UsesStorage(t *testing.T) {
+	originalStorage := storage
+	t.Cleanup(func() {
+		storage = originalStorage
+	})
+
+	mem := newMemStorage()
+	storage = mem
+
+	content := []byte("test-content")
+	file := &File{ID: 123, Size: uint64(len(content))}
+
+	err := file.Save(bytes.NewReader(content))
+	require.NoError(t, err)
+
+	rc, err := mem.Open(file.fileID())
+	require.NoError(t, err)
+	defer rc.Close()
+
+	written, err := io.ReadAll(rc)
+	require.NoError(t, err)
+	assert.Equal(t, content, written)
 }
 
 func TestFile_LoadFileMetaByID(t *testing.T) {
