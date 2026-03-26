@@ -20,6 +20,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"slices"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
@@ -167,6 +168,15 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 	_, err = s.Where("id = ? AND owner_id = ?", t.ID, a.GetID()).Delete(&APIToken{})
 	return err
+}
+
+// HasCaldavAccess checks whether the token has the caldav access permission.
+func (t *APIToken) HasCaldavAccess() bool {
+	perms, has := t.APIPermissions["caldav"]
+	if !has {
+		return false
+	}
+	return slices.Contains(perms, "access")
 }
 
 // GetTokenFromTokenString returns the full token object from the original token string.
