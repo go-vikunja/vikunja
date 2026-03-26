@@ -212,6 +212,48 @@ func TestConvertTicktickTasksChildBeforeParent(t *testing.T) {
 	}, projectTasks[1].RelatedTasks)
 }
 
+func TestConvertTicktickTasksDeeplyNested(t *testing.T) {
+	// Grandchild -> child -> parent, all in reverse order
+	tickTickTasks := []*tickTickTask{
+		{
+			TaskID:      3,
+			ParentID:    2,
+			ProjectName: "Project 1",
+			Title:       "Grandchild",
+			Status:      "0",
+		},
+		{
+			TaskID:      2,
+			ParentID:    1,
+			ProjectName: "Project 1",
+			Title:       "Child",
+			Status:      "0",
+		},
+		{
+			TaskID:      1,
+			ParentID:    0,
+			ProjectName: "Project 1",
+			Title:       "Root",
+			Status:      "0",
+		},
+	}
+
+	vikunjaTasks := convertTickTickToVikunja(tickTickTasks)
+
+	var projectTasks []*models.TaskWithComments
+	for _, p := range vikunjaTasks {
+		if len(p.Tasks) > 0 {
+			projectTasks = p.Tasks
+			break
+		}
+	}
+
+	require.Len(t, projectTasks, 3)
+	assert.Equal(t, "Root", projectTasks[0].Title)
+	assert.Equal(t, "Child", projectTasks[1].Title)
+	assert.Equal(t, "Grandchild", projectTasks[2].Title)
+}
+
 func TestLinesToSkipBeforeHeader(t *testing.T) {
 	csvContent := "Date: 2024-01-01+0000\nVersion: 7.1\n" +
 		"\"Folder Name\",\"List Name\",\"Title\",\"Kind\",\"Tags\",\"Content\",\"Is Check list\",\"Start Date\",\"Due Date\",\"Reminder\",\"Repeat\",\"Priority\",\"Status\",\"Created Time\",\"Completed Time\",\"Order\",\"Timezone\",\"Is All Day\",\"Is Floating\",\"Column Name\",\"Column Order\",\"View Mode\",\"taskId\",\"parentId\"\n" +
