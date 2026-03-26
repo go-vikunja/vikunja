@@ -61,6 +61,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
@@ -306,6 +307,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/docs.json":                      true,
 	"/api/v1/docs":                           true,
 	"/api/v1/metrics":                        true,
+	"/api/v1/oauth/token":                    true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
@@ -379,6 +381,10 @@ func registerAPIRoutes(a *echo.Group) {
 		ur.POST("/auth/openid/:provider/callback", openid.HandleCallback)
 	}
 
+	// OAuth 2.0 token endpoint — unauthenticated because it validates
+	// credentials (authorization code or refresh token) itself.
+	ur.POST("/oauth/token", oauth2server.HandleToken)
+
 	// Testing
 	if config.ServiceTestingtoken.GetString() != "" {
 		n.PATCH("/test/:table", apiv1.HandleTesting)
@@ -404,6 +410,9 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)
 	a.GET("/routes", models.GetAvailableAPIRoutesForToken)
+
+	// OAuth 2.0 authorize endpoint — requires authentication.
+	a.POST("/oauth/authorize", oauth2server.HandleAuthorize)
 
 	// Avatar endpoint
 	a.GET("/avatar/:username", apiv1.GetAvatar)
