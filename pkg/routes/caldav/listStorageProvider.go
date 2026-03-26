@@ -675,8 +675,8 @@ func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 	// any task in the project is added, modified, or deleted.
 	latest := vlra.project.Updated
 	for _, t := range vlra.projectTasks {
-		if t.Task.Updated.After(latest) {
-			latest = t.Task.Updated
+		if t.Updated.After(latest) {
+			latest = t.Updated
 		}
 	}
 
