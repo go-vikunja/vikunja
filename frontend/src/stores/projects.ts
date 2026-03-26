@@ -257,6 +257,30 @@ export const useProjectStore = defineStore('project', () => {
 		}
 	}
 
+	async function restoreProject(projectId: IProject['id']) {
+		const cancel = setModuleLoading(setIsLoading)
+		const projectService = new ProjectService()
+
+		try {
+			const restoredProject = await projectService.restore(projectId)
+			setProject(restoredProject)
+			return restoredProject
+		} finally {
+			cancel()
+		}
+	}
+
+	async function fetchDeletedProjects(): Promise<IProject[]> {
+		const cancel = setModuleLoading(setIsLoading)
+		const projectService = new ProjectService()
+
+		try {
+			return await projectService.getDeletedProjects()
+		} finally {
+			cancel()
+		}
+	}
+
 	async function loadAllProjects() {
 		const cancel = setModuleLoading(setIsLoading)
 
@@ -353,6 +377,8 @@ export const useProjectStore = defineStore('project', () => {
 		createProject,
 		updateProject,
 		deleteProject,
+		restoreProject,
+		fetchDeletedProjects,
 		getAncestors,
 		setProjectView,
 		removeProjectView,
