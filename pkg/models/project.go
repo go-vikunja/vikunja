@@ -80,6 +80,9 @@ type Project struct {
 	Expand        ProjectExpandable `xorm:"-" json:"-" query:"expand"`
 	MaxPermission Permission        `xorm:"-" json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this project (0 = read, 1 = read/write, 2 = admin)."`
 
+	// A timestamp when this project was deleted. If null, the project has not been deleted.
+	DeletedAt *time.Time `xorm:"deleted datetime null INDEX 'deleted_at'" json:"deleted_at" readOnly:"true" doc:"When this project was soft-deleted. Soft-deleted projects are kept for 30 days before they are removed permanently."`
+
 	// A timestamp when this project was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this project was created. You cannot change this value."`
 	// A timestamp when this project was last updated. You cannot change this value.
@@ -594,6 +597,7 @@ func getUserProjectsStatement(userID int64, search string) *builder.Builder {
 			builder.Eq{"ul.user_id": userID},
 			builder.Eq{"l.owner_id": userID},
 		),
+		builder.IsNull{"l.deleted_at"},
 	}
 
 	ids := []int64{}
@@ -705,7 +709,8 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 	baseQuery := querySQLString + `
 UNION ALL
 SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, (ap.is_archived OR p.is_archived) AS is_archived, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
-INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
+INNER JOIN all_projects ap ON p.parent_project_id = ap.id
+WHERE p.deleted_at IS NULL`
 
 	columnStr := strings.Join([]string{
 		"all_projects.id",
@@ -838,13 +843,14 @@ func GetAllParentProjects(s *xorm.Session, projectID int64) (allProjects map[int
 		    FROM
 		        projects p
 		    WHERE
-		        p.id = ?
+		        p.id = ? AND p.deleted_at IS NULL
 		    UNION ALL
 		    SELECT
 		        p.*
 		    FROM
 		        projects p
 		            INNER JOIN all_projects pc ON p.ID = pc.parent_project_id
+		    WHERE p.deleted_at IS NULL
 		)
 		SELECT DISTINCT * FROM all_projects`, projectID).Find(&allProjects)
 	return
@@ -1459,6 +1465,69 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return &ErrCannotDeleteDefaultProject{ProjectID: p.ID}
 	}
 
+	// The receiver only has the id from the route param
+	fullProject, err := GetProjectSimpleByID(s, p.ID)
+	if err != nil {
+		return
+	}
+
+	// XORM's Delete() auto-sets deleted_at = NOW() because of the `deleted` tag
+	_, err = s.ID(p.ID).Delete(&Project{})
+	if err != nil {
+		return
+	}
+
+	events.DispatchOnCommit(s, &ProjectDeletedEvent{
+		Project: fullProject,
+		Doer:    doerFromAuth(s, a),
+	})
+
+	return softDeleteProjectDescendants(s, p.ID)
+}
+
+// softDeleteProjectDescendants uses a recursive CTE to find and soft-delete all descendant projects.
+func softDeleteProjectDescendants(s *xorm.Session, parentProjectID int64) error {
+	var descendantIDs []int64
+	err := s.SQL(
+		`
+WITH RECURSIVE descendant_ids (id) AS (
+    SELECT id
+    FROM projects
+    WHERE parent_project_id = ? AND deleted_at IS NULL
+    UNION ALL
+    SELECT p.id
+    FROM projects p
+    INNER JOIN descendant_ids di ON p.parent_project_id = di.id
+    WHERE p.deleted_at IS NULL
+)
+SELECT id FROM descendant_ids`,
+		parentProjectID,
+	).Find(&descendantIDs)
+	if err != nil {
+		return fmt.Errorf("failed to find descendant projects for parent ID %d: %w", parentProjectID, err)
+	}
+
+	if len(descendantIDs) == 0 {
+		return nil
+	}
+
+	now := time.Now()
+	_, err = s.Unscoped().
+		In("id", descendantIDs).
+		Cols("deleted_at").
+		Update(&Project{DeletedAt: &now})
+	if err != nil {
+		return fmt.Errorf("failed to soft-delete descendant projects for parent ID %d: %w", parentProjectID, err)
+	}
+
+	return nil
+}
+
+// PermanentDelete permanently removes a project and all its related entities.
+// It does not dispatch a ProjectDeletedEvent — that already happened when the
+// project was soft-deleted by the user.
+func (p *Project) PermanentDelete(s *xorm.Session) (err error) {
+
 	// Hard-delete all tasks on that project, including soft-deleted ones —
 	// there is nothing to restore them into once the project is gone.
 	// Using the loop to make sure all related entities to all tasks are properly deleted as well.
@@ -1475,9 +1544,14 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		}
 	}
 
-	fullProject, err := GetProjectSimpleByID(s, p.ID)
+	// Unscoped: the project is soft-deleted by the time the purge runs
+	fullProject := &Project{}
+	exists, err := s.Unscoped().Where("id = ?", p.ID).Get(fullProject)
 	if err != nil {
 		return
+	}
+	if !exists {
+		return ErrProjectDoesNotExist{ID: p.ID}
 	}
 
 	err = fullProject.DeleteBackgroundFileIfExists(s)
@@ -1486,6 +1560,10 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	// If we're deleting a default project, remove it as default
+	isDefaultProject, err := p.isDefaultProject(s)
+	if err != nil {
+		return err
+	}
 	if isDefaultProject {
 		_, err = s.Where("default_project_id = ?", p.ID).
 			Cols("default_project_id").
@@ -1515,7 +1593,8 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	err = removeFromFavorite(s, p.ID, a, FavoriteKindProject)
+	// Favorites of all users, not just the doer's
+	_, err = s.Where("entity_id = ? AND kind = ?", p.ID, FavoriteKindProject).Delete(&Favorite{})
 	if err != nil {
 		return
 	}
@@ -1535,31 +1614,148 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	// Delete the project
-	_, err = s.ID(p.ID).Delete(&Project{})
+	// Permanently delete the project row (bypass soft-delete)
+	_, err = s.Unscoped().ID(p.ID).Delete(&Project{})
 	if err != nil {
 		return
 	}
 
-	events.DispatchOnCommit(s, &ProjectDeletedEvent{
-		Project: fullProject,
-		Doer:    doerFromAuth(s, a),
-	})
-
 	childProjects := []*Project{}
-	err = s.Where("parent_project_id = ?", fullProject.ID).Find(&childProjects)
+	err = s.Unscoped().Where("parent_project_id = ?", fullProject.ID).Find(&childProjects)
 	if err != nil {
 		return
 	}
 
 	for _, child := range childProjects {
-		err = child.Delete(s, a)
+		err = child.PermanentDelete(s)
 		if err != nil {
 			return
 		}
 	}
 
 	return
+}
+
+// RestoreProject restores a soft-deleted project and all its descendants that were soft-deleted.
+func RestoreProject(s *xorm.Session, projectID int64, a web.Auth) (project *Project, err error) {
+	project = &Project{}
+	exists, err := s.Unscoped().
+		Where("id = ? AND deleted_at IS NOT NULL", projectID).
+		Get(project)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, ErrProjectDoesNotExist{ID: projectID}
+	}
+
+	// Check admin permission (using Unscoped so the permission check can find the deleted project)
+	isAdmin, err := checkProjectAdminUnscoped(s, projectID, a)
+	if err != nil {
+		return nil, err
+	}
+	if !isAdmin {
+		return nil, ErrGenericForbidden{}
+	}
+
+	// Restore the project itself
+	_, err = s.Unscoped().
+		Where("id = ?", projectID).
+		Cols("deleted_at").
+		Update(&Project{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Restore all descendant projects that are soft-deleted
+	var descendantIDs []int64
+	err = s.SQL(
+		`
+WITH RECURSIVE descendant_ids (id) AS (
+    SELECT id
+    FROM projects
+    WHERE parent_project_id = ?
+    UNION ALL
+    SELECT p.id
+    FROM projects p
+    INNER JOIN descendant_ids di ON p.parent_project_id = di.id
+)
+SELECT id FROM descendant_ids`,
+		projectID,
+	).Find(&descendantIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find descendant projects for restore: %w", err)
+	}
+
+	if len(descendantIDs) > 0 {
+		_, err = s.Unscoped().
+			In("id", descendantIDs).
+			Where("deleted_at IS NOT NULL").
+			Cols("deleted_at").
+			Update(&Project{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to restore descendant projects: %w", err)
+		}
+	}
+
+	project.DeletedAt = nil
+	return project, nil
+}
+
+// checkProjectAdminUnscoped checks if a user has admin permission on a project,
+// including soft-deleted projects.
+func checkProjectAdminUnscoped(s *xorm.Session, projectID int64, a web.Auth) (bool, error) {
+	// Check if the user is the owner
+	project := &Project{}
+	exists, err := s.Unscoped().
+		Where("id = ?", projectID).
+		Get(project)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return false, nil
+	}
+	if project.OwnerID == a.GetID() {
+		return true, nil
+	}
+
+	// Check direct user shares with admin permission
+	var count int64
+	count, err = s.Where("project_id = ? AND user_id = ? AND `right` = ?", projectID, a.GetID(), PermissionAdmin).
+		Count(&ProjectUser{})
+	if err != nil {
+		return false, err
+	}
+	if count > 0 {
+		return true, nil
+	}
+
+	// Check team shares with admin permission
+	count, err = s.SQL(
+		`SELECT COUNT(*) FROM team_projects tp
+		 INNER JOIN team_members tm ON tp.team_id = tm.team_id
+		 WHERE tp.project_id = ? AND tm.user_id = ? AND tp.`+"`right`"+` = ?`,
+		projectID, a.GetID(), PermissionAdmin,
+	).Count()
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+// GetDeletedProjects returns all soft-deleted projects the user has admin access to.
+func GetDeletedProjects(s *xorm.Session, a web.Auth) (projects []*Project, err error) {
+	projects = []*Project{}
+	err = s.Unscoped().
+		Where("deleted_at IS NOT NULL AND owner_id = ?", a.GetID()).
+		Find(&projects)
+	if err != nil {
+		return nil, err
+	}
+
+	return projects, nil
 }
 
 // DeleteBackgroundFileIfExists deletes the list's background file from the db and the filesystem,
@@ -1609,11 +1805,12 @@ func setArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64
 WITH RECURSIVE descendant_ids (id) AS (
     SELECT id
     FROM projects
-    WHERE parent_project_id = ?
+    WHERE parent_project_id = ? AND deleted_at IS NULL
     UNION ALL
     SELECT p.id
     FROM projects p
     INNER JOIN descendant_ids di ON p.parent_project_id = di.id
+    WHERE p.deleted_at IS NULL
 )
 SELECT id FROM descendant_ids`,
 		parentProjectID,

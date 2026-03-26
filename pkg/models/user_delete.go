@@ -97,6 +97,13 @@ func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Pro
 		return nil, err
 	}
 
+	// getAllProjectsForUser filters out soft-deleted projects, but those must go too
+	deletedProjects, err := GetDeletedProjects(s, u)
+	if err != nil {
+		return nil, err
+	}
+	projects = append(projects, deletedProjects...)
+
 	for _, l := range projects {
 		if l.ID < 0 {
 			continue
@@ -146,10 +153,11 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 
 	for _, p := range projectsToDelete {
 		if p.parentID() != 0 {
-			// Child projects are deleted by p.Delete
+			// Child projects are deleted by p.PermanentDelete
 			continue
 		}
-		err = p.Delete(s, u)
+		// The account is going away entirely, so there is nothing to restore into
+		err = p.PermanentDelete(s)
 		// If the user is the owner of the default project it will be deleted, if they are not the owner
 		// we can ignore the error as the project was shared in that case.
 		if err != nil && !IsErrCannotDeleteDefaultProject(err) {
