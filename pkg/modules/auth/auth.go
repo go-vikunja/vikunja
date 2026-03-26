@@ -216,3 +216,95 @@ func CreateUserWithRandomUsername(s *xorm.Session, uu *user.User) (u *user.User,
 	err = models.CreateNewProjectForUser(s, u)
 	return
 }
+
+// RefreshResult holds the result of a successful session refresh.
+type RefreshResult struct {
+	AccessToken     string
+	NewRefreshToken string
+	ExpiresIn       int64
+	IsLongSession   bool
+	SessionID       string
+}
+
+// RefreshSession looks up a session by its raw refresh token, validates it,
+// rotates the refresh token, fetches the user, and generates a new JWT.
+// It handles its own DB session (open/commit/rollback).
+//
+// On user status errors (disabled/locked), the session is deleted before
+// returning the error so the caller can handle cleanup (e.g. clearing cookies).
+func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	session, err := models.GetSessionByRefreshToken(s, rawRefreshToken)
+	if err != nil {
+		_ = s.Rollback()
+		if models.IsErrSessionNotFound(err) {
+			return nil, echo.NewHTTPError(http.StatusUnauthorized, "Invalid or expired refresh token.")
+		}
+		return nil, err
+	}
+
+	maxAge := time.Duration(config.ServiceJWTTTL.GetInt64()) * time.Second
+	if session.IsLongSession {
+		maxAge = time.Duration(config.ServiceJWTTTLLong.GetInt64()) * time.Second
+	}
+	if time.Since(session.LastActive) > maxAge {
+		if _, err := s.Where("id = ?", session.ID).Delete(&models.Session{}); err != nil {
+			_ = s.Rollback()
+			return nil, err
+		}
+		if err := s.Commit(); err != nil {
+			return nil, err
+		}
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "Session expired.")
+	}
+
+	if err := models.UpdateSessionLastActive(s, session.ID); err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	newRawToken, err := models.RotateRefreshToken(s, session)
+	if err != nil {
+		_ = s.Rollback()
+		if models.IsErrSessionNotFound(err) {
+			return nil, echo.NewHTTPError(http.StatusUnauthorized, "Refresh token already used.")
+		}
+		return nil, err
+	}
+
+	u, err := user.GetUserByID(s, session.UserID)
+	if err != nil {
+		if user.IsErrUserStatusError(err) {
+			if _, delErr := s.Where("id = ?", session.ID).Delete(&models.Session{}); delErr != nil {
+				_ = s.Rollback()
+				return nil, delErr
+			}
+			if commitErr := s.Commit(); commitErr != nil {
+				return nil, commitErr
+			}
+			return nil, err
+		}
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	accessToken, err := NewUserJWTAuthtoken(u, session.ID)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	if err := s.Commit(); err != nil {
+		return nil, err
+	}
+
+	return &RefreshResult{
+		AccessToken:     accessToken,
+		NewRefreshToken: newRawToken,
+		ExpiresIn:       config.ServiceJWTTTLShort.GetInt64(),
+		IsLongSession:   session.IsLongSession,
+		SessionID:       session.ID,
+	}, nil
+}
