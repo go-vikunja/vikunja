@@ -95,6 +95,36 @@ func TestAPIToken_Create(t *testing.T) {
 	})
 }
 
+func TestAPIToken_HasCaldavAccess(t *testing.T) {
+	t.Run("has caldav access", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"caldav": {"access"}},
+		}
+		assert.True(t, token.HasCaldavAccess())
+	})
+	t.Run("no caldav group", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"tasks": {"read_all"}},
+		}
+		assert.False(t, token.HasCaldavAccess())
+	})
+	t.Run("caldav group but wrong permission", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"caldav": {"read_all"}},
+		}
+		assert.False(t, token.HasCaldavAccess())
+	})
+	t.Run("caldav access among other permissions", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{
+				"tasks":  {"read_all", "update"},
+				"caldav": {"access"},
+			},
+		}
+		assert.True(t, token.HasCaldavAccess())
+	})
+}
+
 func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
 		s := db.NewSession()
