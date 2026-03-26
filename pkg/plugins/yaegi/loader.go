@@ -29,18 +29,8 @@ import (
 	"github.com/traefik/yaegi/stdlib"
 )
 
-// LoadedPlugin holds a plugin loaded via Yaegi along with its optional capabilities.
-// Because Yaegi wraps interpreted values per return type, sub-interface type assertions
-// (e.g. Plugin -> AuthenticatedRouterPlugin) do not work. Instead, plugins must export
-// typed factory functions for each capability they implement:
-//
-//   - NewPlugin() plugins.Plugin                                          (required)
-//   - NewAuthenticatedRouterPlugin() plugins.AuthenticatedRouterPlugin    (optional)
-//   - NewUnauthenticatedRouterPlugin() plugins.UnauthenticatedRouterPlugin (optional)
-type LoadedPlugin struct {
-	Plugin       plugins.Plugin
-	AuthRouter   plugins.AuthenticatedRouterPlugin
-	UnauthRouter plugins.UnauthenticatedRouterPlugin
+func init() {
+	plugins.YaegiPluginLoader = LoadPluginFull
 }
 
 // LoadPlugin loads a plugin from a directory of Go source files using the Yaegi interpreter.
@@ -53,7 +43,15 @@ func LoadPlugin(dir string) (plugins.Plugin, error) {
 }
 
 // LoadPluginFull loads a plugin and all its optional capabilities via typed factory functions.
-func LoadPluginFull(dir string) (*LoadedPlugin, error) {
+//
+// Because Yaegi wraps interpreted values per return type, sub-interface type assertions
+// (e.g. Plugin -> AuthenticatedRouterPlugin) do not work. Instead, plugins must export
+// typed factory functions for each capability they implement:
+//
+//   - NewPlugin() plugins.Plugin                                          (required)
+//   - NewAuthenticatedRouterPlugin() plugins.AuthenticatedRouterPlugin    (optional)
+//   - NewUnauthenticatedRouterPlugin() plugins.UnauthenticatedRouterPlugin (optional)
+func LoadPluginFull(dir string) (*plugins.LoadedYaegiPlugin, error) {
 	i := interp.New(interp.Options{})
 	if err := i.Use(stdlib.Symbols); err != nil {
 		return nil, fmt.Errorf("loading stdlib symbols: %w", err)
@@ -82,7 +80,7 @@ func LoadPluginFull(dir string) (*LoadedPlugin, error) {
 		}
 	}
 
-	loaded := &LoadedPlugin{}
+	loaded := &plugins.LoadedYaegiPlugin{}
 
 	// Required: NewPlugin
 	v, err := i.Eval("main.NewPlugin")

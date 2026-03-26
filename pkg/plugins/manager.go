@@ -29,6 +29,17 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// YaegiPluginLoader is a function that loads a plugin from a directory of Go source files.
+// It is set by the yaegi package's init() to avoid an import cycle.
+var YaegiPluginLoader func(dir string) (*LoadedYaegiPlugin, error)
+
+// LoadedYaegiPlugin holds a plugin loaded via Yaegi along with its optional capabilities.
+type LoadedYaegiPlugin struct {
+	Plugin       Plugin
+	AuthRouter   AuthenticatedRouterPlugin
+	UnauthRouter UnauthenticatedRouterPlugin
+}
+
 // Manager handles loading and managing plugins.
 type Manager struct {
 	plugins                    []Plugin
@@ -90,6 +101,7 @@ func RegisterPluginRoutes(authenticated *echo.Group, unauthenticated *echo.Group
 }
 
 func (m *Manager) loadPlugins(paths []string) error {
+	loader := config.PluginsLoader.GetString()
 	for _, p := range paths {
 		entries, err := os.ReadDir(p)
 		if err != nil {
@@ -99,19 +111,31 @@ func (m *Manager) loadPlugins(paths []string) error {
 			return err
 		}
 		for _, e := range entries {
-			if filepath.Ext(e.Name()) != ".so" {
-				continue
-			}
 			full := filepath.Join(p, e.Name())
-			if err := m.loadPlugin(full); err != nil {
-				log.Errorf("Failed to load plugin %s: %s", e.Name(), err)
+			switch loader {
+			case "native":
+				if filepath.Ext(e.Name()) != ".so" {
+					continue
+				}
+				if err := m.loadNativePlugin(full); err != nil {
+					log.Errorf("Failed to load native plugin %s: %s", e.Name(), err)
+				}
+			case "yaegi":
+				if !e.IsDir() {
+					continue
+				}
+				if err := m.loadYaegiPlugin(full); err != nil {
+					log.Errorf("Failed to load yaegi plugin %s: %s", e.Name(), err)
+				}
+			default:
+				return errors.New("invalid plugins.loader value: must be \"yaegi\" or \"native\"")
 			}
 		}
 	}
 	return nil
 }
 
-func (m *Manager) loadPlugin(path string) error {
+func (m *Manager) loadNativePlugin(path string) error {
 	pl, err := goplugin.Open(path)
 	if err != nil {
 		return err
@@ -125,7 +149,7 @@ func (m *Manager) loadPlugin(path string) error {
 		return errors.New("invalid plugin entry point")
 	}
 	p := newPlugin()
-	m.plugins = append(m.plugins, p)
+	m.registerPlugin(p)
 
 	if mp, ok := p.(MigrationPlugin); ok {
 		m.migrationPlugs = append(m.migrationPlugs, mp)
@@ -140,7 +164,33 @@ func (m *Manager) loadPlugin(path string) error {
 		m.unauthenticatedRouterPlugs = append(m.unauthenticatedRouterPlugs, urp)
 	}
 
-	log.Infof("Loaded plugin %s", p.Name())
+	return nil
+}
+
+func (m *Manager) loadYaegiPlugin(dir string) error {
+	if YaegiPluginLoader == nil {
+		return errors.New("yaegi plugin loader not registered")
+	}
+
+	loaded, err := YaegiPluginLoader(dir)
+	if err != nil {
+		return err
+	}
+
+	m.registerPlugin(loaded.Plugin)
+
+	if loaded.AuthRouter != nil {
+		m.authenticatedRouterPlugs = append(m.authenticatedRouterPlugs, loaded.AuthRouter)
+	}
+
+	if loaded.UnauthRouter != nil {
+		m.unauthenticatedRouterPlugs = append(m.unauthenticatedRouterPlugs, loaded.UnauthRouter)
+	}
 
 	return nil
+}
+
+func (m *Manager) registerPlugin(p Plugin) {
+	m.plugins = append(m.plugins, p)
+	log.Infof("Loaded plugin %s v%s", p.Name(), p.Version())
 }
