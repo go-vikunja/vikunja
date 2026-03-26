@@ -150,7 +150,7 @@
         "howTo": "You can connect Vikunja to CalDAV clients to view and manage all your tasks from different clients. Enter this URL into your client:",
         "more": "More information about CalDAV in Vikunja",
         "tokens": "CalDAV Tokens",
-        "tokensHowTo": "CalDAV requires a dedicated token for authentication. You must use a CalDAV token as the password (your normal account password will not work).",
+        "tokensHowTo": "For CalDAV authentication you can use either your normal account password or a dedicated CalDAV token.",
         "createToken": "Create a new CalDAV token",
         "tokenCreated": "Here is your new token: {token}",
         "wontSeeItAgain": "Write it down or save it securely — you will not be able to see it again.",
