@@ -208,4 +208,4 @@ tool (
 	src.techknowlogick.com/xgo
 )
 
-replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20190610114120-2a4eb8b5dcc9+incompatible // Branch: feature/dynamic-supported-components, PR: https://github.com/samedi/caldav-go/pull/6 and https://github.com/samedi/caldav-go/pull/7
+replace github.com/samedi/caldav-go => github.com/kolaente/caldav-go v3.0.1-0.20260326091743-a55d55891017+incompatible

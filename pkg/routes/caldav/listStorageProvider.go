@@ -662,15 +662,6 @@ func (vlra *VikunjaProjectResourceAdapter) IsCollection() bool {
 // CalculateEtag returns the etag of a resource
 func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 
-	// If we're updating a task, the client sends the etag of the project instead of the one from the task.
-	// And therefore, updating the task fails since these etags don't match.
-	// To fix that, we use this extra field to determine if we're currently updating a task and return the
-	// etag of the project instead.
-	// if vlra.project != nil {
-	//	 return `"` + strconv.FormatInt(vlra.project.ID, 10) + `-` + strconv.FormatInt(vlra.project.Updated, 10) + `"`
-	// }
-
-	// Return the etag of a task if we have one
 	if vlra.task != nil {
 		return `"` + strconv.FormatInt(vlra.task.ID, 10) + `-` + strconv.FormatInt(vlra.task.Updated.Unix(), 10) + `"`
 	}
@@ -679,10 +670,17 @@ func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 		return ""
 	}
 
-	// This also returns the etag of the project, and not of the task,
-	// which becomes problematic because the client uses this etag (= the one from the project) to make
-	// Requests to update a task. These do not match and thus updating a task fails.
-	return `"` + strconv.FormatInt(vlra.project.ID, 10) + `-` + strconv.FormatInt(vlra.project.Updated.Unix(), 10) + `"`
+	// For collections, use the latest modification time across all tasks
+	// so that the etag (and derived ctag/sync-token) changes whenever
+	// any task in the project is added, modified, or deleted.
+	latest := vlra.project.Updated
+	for _, t := range vlra.projectTasks {
+		if t.Task.Updated.After(latest) {
+			latest = t.Task.Updated
+		}
+	}
+
+	return `"` + strconv.FormatInt(vlra.project.ID, 10) + `-` + strconv.FormatInt(latest.Unix(), 10) + `"`
 }
 
 // GetContent returns the content string of a resource (a task in our case)
