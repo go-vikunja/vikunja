@@ -25,7 +25,7 @@
 			/>
 
 			<p>
-				{{ $t('misc.cannotBeUndone') }}
+				{{ $t('project.delete.text2') }}
 			</p>
 		</template>
 	</Modal>
@@ -88,8 +88,17 @@ async function deleteProject() {
 		return
 	}
 
-	await projectStore.deleteProject(project.value)
-	success({message: t('project.delete.success')})
+	const deletedProject = project.value
+	await projectStore.deleteProject(deletedProject)
+	success({message: t('project.delete.success')}, [
+		{
+			title: t('project.delete.undo'),
+			callback: async () => {
+				await projectStore.restoreProject(deletedProject.id)
+				success({message: t('project.delete.undoSuccess')})
+			},
+		},
+	])
 	router.push({name: 'home'})
 }
 </script>
