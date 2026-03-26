@@ -70,6 +70,7 @@ func GetTables() []interface{} {
 		&TaskBucket{},
 		&TaskUnreadStatus{},
 		&Session{},
+		&OAuthCode{},
 	}
 }
 
