@@ -849,7 +849,8 @@
 			"select": "Datumsbereich wählen",
 			"noTasks": "Nichts zu tun – Einen schönen Tag noch!",
 			"filterByLabel": "Filtern nach Label {label}",
-			"clearLabelFilter": "Label-Filter leeren"
+			"clearLabelFilter": "Label-Filter leeren",
+			"savedFilterIgnored": "Dein gespeicherter Homepage-Filter wird während der Anzeige von Aufgaben per Label nicht angewendet."
 		},
 		"detail": {
 			"chooseDueDate": "Klicke hier, um ein Fälligkeitsdatum zu setzen",
