@@ -514,7 +514,7 @@ func GetConfigValueFromFile(configKey string) string {
 	if !strings.HasSuffix(configKey, ".file") {
 		configKey += ".file"
 	}
-	var valuePath = viper.GetString(configKey)
+	var valuePath = os.ExpandEnv(viper.GetString(configKey))
 	if valuePath == "" {
 		return ""
 	}
