@@ -155,7 +155,8 @@
         "tokenCreated": "Here is your token: {token}",
         "wontSeeItAgain": "Write it down, you won't be able to see it again.",
         "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
-        "usernameIs": "Your username is: {0}"
+        "usernameIs": "Your username is: {0}",
+        "apiTokenHint": "You can also use an API token with CalDAV permission. Create one in {link}."
       },
       "avatar": {
         "title": "Avatar",
