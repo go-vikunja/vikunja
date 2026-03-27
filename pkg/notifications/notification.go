@@ -25,6 +25,17 @@ import (
 	"xorm.io/xorm"
 )
 
+// NotifyHookFunc is called after a notification is persisted to the database.
+// It receives the target user ID and the stored notification record.
+type NotifyHookFunc func(userID int64, notification *DatabaseNotification)
+
+var notifyHooks []NotifyHookFunc
+
+// RegisterNotifyHook adds a hook that is called after every DB notification insert.
+func RegisterNotifyHook(fn NotifyHookFunc) {
+	notifyHooks = append(notifyHooks, fn)
+}
+
 // Notification is a notification which can be sent via mail or db.
 type Notification interface {
 	ToMail(lang string) *Mail
@@ -118,7 +129,7 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 
 	dbNotification := &DatabaseNotification{
 		NotifiableID: notifiable.RouteForDB(),
-		Notification: content,
+		Notification: json.RawMessage(content),
 		Name:         notification.Name(),
 	}
 
@@ -128,7 +139,11 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 
 	if existingSession != nil {
 		_, err = existingSession.Insert(dbNotification)
-		return err
+		if err != nil {
+			return err
+		}
+		runNotifyHooks(notifiable.RouteForDB(), dbNotification)
+		return nil
 	}
 
 	s := db.NewSession()
@@ -140,5 +155,18 @@ func notifyDB(notifiable Notifiable, notification Notification, existingSession 
 		return err
 	}
 
-	return s.Commit()
+	err = s.Commit()
+	if err != nil {
+		return err
+	}
+
+	runNotifyHooks(notifiable.RouteForDB(), dbNotification)
+
+	return nil
+}
+
+func runNotifyHooks(userID int64, notification *DatabaseNotification) {
+	for _, fn := range notifyHooks {
+		fn(userID, notification)
+	}
 }

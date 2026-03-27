@@ -205,6 +205,9 @@ importers:
       '@types/sortablejs':
         specifier: 1.15.9
         version: 1.15.9
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
       '@typescript-eslint/eslint-plugin':
         specifier: 8.57.2
         version: 8.57.2(@typescript-eslint/parser@8.57.2(eslint@9.39.4(jiti@2.4.2))(typescript@5.9.3))(eslint@9.39.4(jiti@2.4.2))(typescript@5.9.3)
@@ -322,6 +325,9 @@ importers:
       workbox-cli:
         specifier: 7.4.0
         version: 7.4.0
+      ws:
+        specifier: ^8.19.0
+        version: 8.19.0
 
 packages:
 

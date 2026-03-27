@@ -14,47 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package notifications
+package websocket
 
 import (
-	"os"
-	"testing"
-
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/i18n"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/mail"
+	"code.vikunja.io/api/pkg/notifications"
 )
 
-// SetupTests initializes all db tests
-func SetupTests() {
-	var err error
-	x, err := db.CreateTestEngine()
-	if err != nil {
-		log.Fatal(err)
-	}
+// RegisterNotifyHook registers a notification hook that pushes new
+// notifications to connected WebSocket clients.
+func RegisterNotifyHook() {
+	notifications.RegisterNotifyHook(func(userID int64, notification *notifications.DatabaseNotification) {
+		hub := GetHub()
+		if hub == nil {
+			log.Warningf("WebSocket: hub not initialized, skipping notification push")
+			return
+		}
 
-	err = x.Sync2(&DatabaseNotification{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	i18n.Init()
-}
-
-// TestMain is the main test function used to bootstrap the test env
-func TestMain(m *testing.M) {
-	// Initialize logger for tests
-	log.InitLogger()
-
-	// Set default config
-	config.InitDefaultConfig()
-
-	SetupTests()
-
-	mail.Fake()
-	events.Fake()
-	os.Exit(m.Run())
+		hub.PublishForUser(userID, "notification.created", notification)
+	})
 }
