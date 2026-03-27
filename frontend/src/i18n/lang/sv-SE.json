@@ -144,15 +144,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Du kan ansluta Vikunja till CalDAV-klienter för att visa och hantera alla uppgifter från olika klienter. Ange denna URL i din klient:",
 				"more": "Mer information om CalDAV i Vikunja",
-				"tokens": "CalDAV-token",
-				"tokensHowTo": "Du kan använda en CalDAV-token för att använda istället för ett lösenord för att logga in på ovanstående slutpunkt.",
-				"createToken": "Skapa ny token",
-				"tokenCreated": "Här är din token: {token}",
-				"wontSeeItAgain": "Skriv ner den, du kommer inte att kunna se den igen.",
-				"mustUseToken": "Du måste skapa en CalDAV-token om du vill använda CalDAV med en tredjepartsklient. Använd token som lösenord.",
-				"usernameIs": "Ditt användarnamn är: {0}"
+				"tokens": "CalDAV-token"
 			},
 			"avatar": {
 				"title": "Avatar",

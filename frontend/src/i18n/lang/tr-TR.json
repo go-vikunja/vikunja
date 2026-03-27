@@ -144,15 +144,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Vikunja’yı CalDAV istemcilerine bağlayarak tüm görevleri farklı istemcilerden görüntüleyebilir ve yönetebilirsiniz. İstemcinize bu URL’yi girin:",
 				"more": "Vikunja’da CalDAV hakkında daha fazla bilgi",
-				"tokens": "CalDAV Token’ları",
-				"tokensHowTo": "Yukarıdaki uç noktada oturum açmak için şifre yerine bir CalDAV token’ı kullanabilirsiniz.",
-				"createToken": "Token oluştur",
-				"tokenCreated": "İşte token’ınız: {token}",
-				"wontSeeItAgain": "Bunu not edin, tekrar göremeyeceksiniz.",
-				"mustUseToken": "Üçüncü taraf bir istemciyle CalDAV kullanmak istiyorsanız bir CalDAV token’ı oluşturmanız gerekir. Token’ı şifre olarak kullanın.",
-				"usernameIs": "Kullanıcı adınız: {0}"
+				"tokens": "CalDAV Token’ları"
 			},
 			"avatar": {
 				"title": "Avatar",

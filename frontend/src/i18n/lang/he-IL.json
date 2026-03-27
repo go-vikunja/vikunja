@@ -118,15 +118,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "ניתן לחבר Vikunja לקליינטים CalDEV כדי לצפות ולנהל כל המטלות מקליינטים שונים. הכנס url זה לקליינט שלך:",
 				"more": "עוד מידע על CalDAV ב-Vikunja",
-				"tokens": "אסימוני CalDAV",
-				"tokensHowTo": "ניתן להשתמש באסימון CalDAV במקום סיסמה כדי להיכנס ל-endpoint לעיל.",
-				"createToken": "ליצור אסימון",
-				"tokenCreated": "זה האסימון שלך: {token}",
-				"wontSeeItAgain": "לרשום אותו היטב, לא ניתן לראותו שוב.",
-				"mustUseToken": "חייב ליצור אסימון CalDAV אם ברצונך להשתמש ב-CalDAV עם גורם קליינט צד שלישי. יש להשתמש באסימון כסיסמה.",
-				"usernameIs": "שם משתמש שלך הוא: {0}"
+				"tokens": "אסימוני CalDAV"
 			},
 			"avatar": {
 				"title": "אווטאר",

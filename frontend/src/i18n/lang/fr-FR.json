@@ -137,15 +137,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Vous pouvez connecter Vikunja à des clients CalDAV pour visualiser et gérer toutes les tâches de différents clients. Saisissez cette adresse dans votre client :",
 				"more": "Plus d'informations sur CalDAV dans Vikunja",
-				"tokens": "Jetons CalDAV",
-				"tokensHowTo": "Vous pouvez utiliser un jeton CalDAV à la place d’un mot de passe pour vous connecter au point de terminaison ci-dessus.",
-				"createToken": "Créer un jeton",
-				"tokenCreated": "Voici votre jeton : {token}",
-				"wontSeeItAgain": "Écrivez-le, vous ne pourrez plus le revoir.",
-				"mustUseToken": "Vous devez créer un jeton CalDAV si vous voulez utiliser CalDAV avec un client tiers. Utilisez le jeton comme mot de passe.",
-				"usernameIs": "Votre nom d’utilisateur ou d’utilisatrice est : {0}"
+				"tokens": "Jetons CalDAV"
 			},
 			"avatar": {
 				"title": "Avatar",

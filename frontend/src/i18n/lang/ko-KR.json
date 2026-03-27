@@ -118,15 +118,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Vikunja를 CalDAV 클라이언트와 연계하여 다양한 클라이언트의 모든 할 일을 표시 및 관리할 수 있습니다. CalDAV 클라이언트에서 연결하려면 다음 엔드포인트를 복사하여 클라이언트에 입력합니다.",
 				"more": "Vikunja의 CalDAV에 대한 자세한 정보",
-				"tokens": "CalDAV Tokens",
-				"tokensHowTo": "위의 엔드포인트에 로그인할 때 비밀번호 대신 CalDAV 토큰을 사용할 수 있습니다.",
-				"createToken": "토큰 생성하기",
-				"tokenCreated": "생성된 토큰 정보: {token}",
-				"wontSeeItAgain": "적어두세요 다시 볼 수 없습니다.",
-				"mustUseToken": "타사 클라이언트에서 CalDAV를 사용하려면 CalDAV 토큰을 만들어야 합니다. 토큰을 비밀번호로 사용합니다.",
-				"usernameIs": "당신의 사용자명은: {0}"
+				"tokens": "CalDAV Tokens"
 			},
 			"avatar": {
 				"title": "아바타",

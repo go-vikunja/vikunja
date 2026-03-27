@@ -116,15 +116,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Da si ogledate in upravljate vse naloge iz različnih odjemalcev, lahko Vikunjo povežete z odjemalci CalDAV. Vnesite ta URL v svojega odjemalca:",
 				"more": "Več informacij o CalDAV v Vikunji",
-				"tokens": "CalDAV žetoni",
-				"tokensHowTo": "Namesto gesla za prijavo v zgornjo končno povezavo, lahko uporabite žeton CalDAV.",
-				"createToken": "Ustvarite žeton",
-				"tokenCreated": "Tu je vaš žeton: {token}",
-				"wontSeeItAgain": "Zapišite ga, ker ga ne boste več ponovno videli.",
-				"mustUseToken": "Če želite uporabljati CalDAV z drugim odjemalcem, morate ustvariti žeton CalDAV. Uporabite žeton namesto gesla.",
-				"usernameIs": "Vaše uporabniško ime je: {0}"
+				"tokens": "CalDAV žetoni"
 			},
 			"avatar": {
 				"title": "Avatar",
