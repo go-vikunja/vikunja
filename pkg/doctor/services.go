@@ -18,7 +18,9 @@ package doctor
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"time"
@@ -243,9 +245,30 @@ func checkOpenID() CheckGroup {
 	}
 
 	var results []CheckResult
+	type providerIssuer struct {
+		key    string
+		issuer string
+	}
+	var providerIssuers []providerIssuer
 	for key, p := range providerMap {
-		result := checkOpenIDProvider(key, p)
+		result, issuer := checkOpenIDProvider(key, p)
 		results = append(results, result)
+		if issuer != "" {
+			providerIssuers = append(providerIssuers, providerIssuer{key: key, issuer: issuer})
+		}
+	}
+
+	// Check for duplicate issuers among successful providers
+	issuerToKey := make(map[string]string)
+	for _, pi := range providerIssuers {
+		if existingKey, exists := issuerToKey[pi.issuer]; exists {
+			results = append(results, CheckResult{
+				Name:   "Duplicate Issuer",
+				Passed: false,
+				Error:  fmt.Sprintf("providers %q and %q share issuer %q - this will cause team sync conflicts", existingKey, pi.key, pi.issuer),
+			})
+		}
+		issuerToKey[pi.issuer] = pi.key
 	}
 
 	return CheckGroup{
@@ -254,7 +277,7 @@ func checkOpenID() CheckGroup {
 	}
 }
 
-func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
+func checkOpenIDProvider(key string, rawProvider interface{}) (CheckResult, string) {
 	// Extract provider config
 	var pi map[string]interface{}
 	switch p := rawProvider.(type) {
@@ -272,7 +295,7 @@ func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
 			Name:   fmt.Sprintf("Provider: %s", key),
 			Passed: false,
 			Error:  "invalid configuration format",
-		}
+		}, ""
 	}
 
 	// Get provider name
@@ -288,7 +311,7 @@ func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
 			Name:   fmt.Sprintf("Provider: %s", name),
 			Passed: false,
 			Error:  "authurl not configured",
-		}
+		}, ""
 	}
 
 	// Check if the provider's discovery endpoint is reachable
@@ -308,7 +331,7 @@ func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
 			Name:   fmt.Sprintf("Provider: %s", name),
 			Passed: false,
 			Error:  err.Error(),
-		}
+		}, ""
 	}
 
 	client := &http.Client{Timeout: 5 * time.Second}
@@ -318,7 +341,7 @@ func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
 			Name:   fmt.Sprintf("Provider: %s", name),
 			Passed: false,
 			Error:  err.Error(),
-		}
+		}, ""
 	}
 	defer resp.Body.Close()
 
@@ -327,6 +350,18 @@ func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
 			Name:   fmt.Sprintf("Provider: %s", name),
 			Passed: false,
 			Error:  fmt.Sprintf("discovery endpoint returned status %d", resp.StatusCode),
+		}, ""
+	}
+
+	// Parse the issuer from the discovery response for duplicate detection
+	var issuer string
+	body, err := io.ReadAll(resp.Body)
+	if err == nil {
+		var discovery struct {
+			Issuer string `json:"issuer"`
+		}
+		if json.Unmarshal(body, &discovery) == nil {
+			issuer = discovery.Issuer
 		}
 	}
 
@@ -334,5 +369,5 @@ func checkOpenIDProvider(key string, rawProvider interface{}) CheckResult {
 		Name:   fmt.Sprintf("Provider: %s", name),
 		Passed: true,
 		Value:  "OK",
-	}
+	}, issuer
 }
