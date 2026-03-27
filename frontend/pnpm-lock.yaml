@@ -8,7 +8,7 @@ overrides:
   minimatch: ^10.2.3
   rollup: 4.60.0
   basic-ftp: 5.2.0
-  serialize-javascript: ^7.0.3
+  serialize-javascript: ^7.0.5
   flatted: ^3.4.1
 
 importers:
@@ -5783,8 +5783,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  serialize-javascript@7.0.3:
-    resolution: {integrity: sha512-h+cZ/XXarqDgCjo+YSyQU/ulDEESGGf8AMK9pPNmhNSl/FzPl6L8pMp1leca5z6NuG6tvV/auC8/43tmovowww==}
+  serialize-javascript@7.0.5:
+    resolution: {integrity: sha512-F4LcB0UqUl1zErq+1nYEEzSHJnIwb3AF2XWB94b+afhrekOUijwooAYqFyRbjYkm2PAKBabx6oYv/xDxNi8IBw==}
     engines: {node: '>=20.0.0'}
 
   set-function-length@1.2.2:
@@ -8656,7 +8656,7 @@ snapshots:
 
   '@rollup/plugin-terser@0.4.4(rollup@4.60.0)':
     dependencies:
-      serialize-javascript: 7.0.3
+      serialize-javascript: 7.0.5
       smob: 1.5.0
       terser: 5.31.6
     optionalDependencies:
@@ -12708,7 +12708,7 @@ snapshots:
 
   semver@7.7.3: {}
 
-  serialize-javascript@7.0.3: {}
+  serialize-javascript@7.0.5: {}
 
   set-function-length@1.2.2:
     dependencies:
