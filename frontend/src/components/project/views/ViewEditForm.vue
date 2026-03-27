@@ -12,6 +12,7 @@ import XButton from '@/components/input/Button.vue'
 import FilterInputDocs from '@/components/input/filter/FilterInputDocs.vue'
 import FilterInput from '@/components/input/filter/FilterInput.vue'
 import FormField from '@/components/input/FormField.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: IProjectView,
@@ -175,6 +176,14 @@ function handleBubbleSave() {
 		<div class="is-size-7 mbe-3">
 			<FilterInputDocs />
 		</div>
+
+		<FancyCheckbox
+			v-model="view.includeSubprojects"
+			v-tooltip="$t('project.views.includeSubprojectsHint')"
+			class="mbe-3"
+		>
+			{{ $t('project.views.includeSubprojects') }}
+		</FancyCheckbox>
 
 		<div
 			v-if="view.viewKind === 'kanban'"
