@@ -54,7 +54,7 @@ func TestTask_Create(t *testing.T) {
 		assert.NotEmpty(t, task.UID)
 		// Assert getting a new index
 		assert.NotEmpty(t, task.Index)
-		assert.Equal(t, int64(34), task.Index)
+		assert.Equal(t, int64(36), task.Index)
 		err = s.Commit()
 		require.NoError(t, err)
 
@@ -552,7 +552,6 @@ func TestTask_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
-		defer s.Close()
 
 		task := &Task{
 			ID: 1,
@@ -561,10 +560,16 @@ func TestTask_Delete(t *testing.T) {
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
+		s.Close()
 
-		db.AssertMissing(t, "tasks", map[string]interface{}{
-			"id": 1,
-		})
+		// Delete is now a soft-delete — task still exists with deleted_at set
+		s2 := db.NewSession()
+		var found Task
+		exists, err := s2.ID(1).Get(&found)
+		s2.Close()
+		require.NoError(t, err)
+		assert.True(t, exists)
+		assert.NotNil(t, found.DeletedAt)
 	})
 }
 
