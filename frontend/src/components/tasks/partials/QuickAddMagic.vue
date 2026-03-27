@@ -5,7 +5,7 @@
 			class="icon is-small show-helper-text quick-add-magic-trigger-btn"
 			:aria-label="$t('task.quickAddMagic.hint')"
 			:class="{'is-highlighted': highlightHintIcon}"
-			@click="() => visible = true"
+			@click="open"
 		>
 			<Icon :icon="['far', 'circle-question']" />
 		</BaseButton>
@@ -14,13 +14,13 @@
 			transition-name="fade"
 			:overflow="true"
 			variant="hint-modal"
-			@close="() => visible = false"
+			@close="close"
 		>
 			<Card
 				class="has-no-shadow"
 				:title="$t('task.quickAddMagic.title')"
 				:show-close="true"
-				@close="() => visible = false"
+				@close="close"
 			>
 				<p>{{ $t('task.quickAddMagic.intro') }}</p>
 
@@ -111,12 +111,27 @@ defineProps<{
 	highlightHintIcon?: boolean,
 }>()
 
+const emit = defineEmits<{
+	opened: []
+	closed: []
+}>()
+
 const authStore = useAuthStore()
 
 const visible = ref(false)
 const mode = computed(() => authStore.settings.frontendSettings.quickAddMagicMode)
 
 const prefixes = computed(() => PREFIXES[mode.value])
+
+function open() {
+	visible.value = true
+	emit('opened')
+}
+
+function close() {
+	visible.value = false
+	emit('closed')
+}
 </script>
 
 <style lang="scss" scoped>
