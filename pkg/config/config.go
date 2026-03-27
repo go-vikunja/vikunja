@@ -229,6 +229,7 @@ const (
 
 	PluginsEnabled Key = `plugins.enabled`
 	PluginsDir     Key = `plugins.dir`
+	PluginsLoader  Key = `plugins.loader`
 )
 
 var maxFileSizeInBytes uint64
@@ -483,6 +484,10 @@ func InitDefaultConfig() {
 	// Plugins
 	PluginsEnabled.setDefault(false)
 	PluginsDir.setDefault(ResolvePath("plugins"))
+	PluginsLoader.setDefault("native")
+	if loader := PluginsLoader.GetString(); loader != "yaegi" && loader != "native" {
+		log.Fatalf("Invalid value for plugins.loader: %q (must be \"yaegi\" or \"native\")", loader)
+	}
 
 	// Migrate deprecated webhook config keys to outgoingrequests.*
 	// This allows removing the old keys in a single place later.
