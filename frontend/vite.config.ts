@@ -103,8 +103,9 @@ export default defineConfig(({command, mode}) => {
 })
 
 function getBuildConfig(env: Record<string, string>) {
+	const base = env.VIKUNJA_FRONTEND_BASE || '/'
 	return {
-		base: env.VIKUNJA_FRONTEND_BASE,
+		base,
 		// https://vitest.dev/config/
 		test: {
 			environment: 'happy-dom',
@@ -141,6 +142,24 @@ function getBuildConfig(env: Record<string, string>) {
 				// we don't need to optimize them again.
 				svgo: false,
 			}),
+			// if VIKUNJA_BUILD_STANDALONE=true, replace __VIKUNJA_API_URL__ in index.html
+			// at build time. For standalone frontend deployments (e.g. nginx).
+			// - If VIKUNJA_API_URL is set, use it as API_BASE. This supports deployments
+			//   where the backend is at a different origin/path than the frontend.
+			// - Otherwise, derive the API URL from VIKUNJA_FRONTEND_BASE + /api/v1.
+			// When VIKUNJA_BUILD_STANDALONE is not set, the marker stays in the HTML
+			// so the Go backend can replace it at serve time with service.publicurl.
+			{
+				name: 'vikunja-api-url',
+				transformIndexHtml(html: string) {
+					if (env.VIKUNJA_BUILD_STANDALONE !== 'true') {
+						return html
+					}
+					const apiUrl = env.VIKUNJA_API_URL
+						|| (base.replace(/\/+$/, '') + '/api/v1')
+					return html.replaceAll('__VIKUNJA_API_URL__', apiUrl)
+				},
+			},
 			VueI18nPlugin({
 				// TODO: only install needed stuff
 				// Whether to install the full set of APIs, components, etc. provided by Vue I18n.
@@ -262,18 +281,29 @@ function getBuildConfig(env: Record<string, string>) {
 function getServeConfig(env: Record<string, string>) {
 	// get some default settings from prod mod
 	const buildConfig = getBuildConfig(env)
+
+	// Build the proxy pattern from VIKUNJA_FRONTEND_BASE so that custom base
+	// paths like /vikunja proxy /vikunja/api/* correctly.
+	// Falls back to /api.
+	const base = (env.VIKUNJA_FRONTEND_BASE || '/').replace(/\/+$/, '')
+	const proxyPath = `${base}/api`
+
 	// override prod settings with dev settings
 	return {
 		...buildConfig,
 		server: {
 			...buildConfig.server,
-			...(env.DEV_PROXY && { proxy: {
-				'/api': {
-					target: env.DEV_PROXY,
-					changeOrigin: true,
-					secure: false,
-				},
-			}}),
+			...(env.DEV_PROXY && {
+				proxy: {
+					[proxyPath]: {
+						target: env.DEV_PROXY,
+						changeOrigin: true,
+						secure: false,
+						// Strips prefix for the backend
+						rewrite: (path: string) => path.replace(new RegExp(`^${base}`), ''),
+					},
+				}
+			}),
 		},
 	}
 }

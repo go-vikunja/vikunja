@@ -1,4 +1,5 @@
 import type {APIRequestContext} from '@playwright/test'
+import {TEST_API_URL} from './constants'
 
 /**
  * Seeds a db table with data. If a data object is provided as the second argument, it will load the fixtures
@@ -15,7 +16,7 @@ export async function seed(apiContext: APIRequestContext, table: string, data: a
 		data = []
 	}
 
-	const apiUrl = process.env.API_URL || 'http://localhost:3456/api/v1'
+	const apiUrl = TEST_API_URL
 	const testSecret = process.env.TEST_SECRET || 'averyLongSecretToSe33dtheDB'
 
 	await apiContext.patch(`${apiUrl}/test/${table}?truncate=${truncate ? 'true' : 'false'}`, {

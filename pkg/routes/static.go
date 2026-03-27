@@ -118,7 +118,10 @@ func serveIndexFile(c *echo.Context, assetFs http.FileSystem) (err error) {
 			publicURL = "/"
 		}
 
-		scriptConfigString = strings.ReplaceAll(scriptConfigString, "'http://localhost:3456/api/v1'", "'"+publicURL+"api/v1'")
+		// Replace the __VIKUNJA_API_URL__ placeholder in the built index.html
+		// with the configured public URL + /api/v1.
+		apiURL := strings.TrimRight(publicURL, "/") + "/api/v1"
+		scriptConfigString = strings.ReplaceAll(scriptConfigString, "__VIKUNJA_API_URL__", apiURL)
 	}
 
 	reader := strings.NewReader(scriptConfigString)

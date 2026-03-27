@@ -1,6 +1,6 @@
 import type {Page, APIRequestContext} from '@playwright/test'
 import {UserFactory} from '../factories/user'
-import {TEST_PASSWORD} from './constants'
+import {TEST_PASSWORD, TEST_API_URL} from './constants'
 
 /**
  * This authenticates a user and puts the token in local storage which allows us to perform authenticated requests.
@@ -29,7 +29,7 @@ export async function login(page: Page | null, apiContext: APIRequestContext, us
 	// Set token and API_URL before navigating (only if page is provided)
 	if (page) {
 		// Use 127.0.0.1 instead of localhost to match the frontend's origin for CORS
-		const apiUrl = process.env.API_URL || 'http://127.0.0.1:3456/api/v1'
+		const apiUrl = TEST_API_URL.replace('localhost', '127.0.0.1')
 		await page.addInitScript(({token, apiUrl}) => {
 			// Set both localStorage AND window.API_URL
 			// The app uses window.API_URL for initialization (in base.ts loadApp)

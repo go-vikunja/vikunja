@@ -1,10 +1,10 @@
 import {test, expect} from '../../support/fixtures'
 import {UserFactory} from '../../factories/user'
-import {TEST_PASSWORD} from '../../support/constants'
+import {TEST_PASSWORD, TEST_API_URL} from '../../support/constants'
 
 async function loginViaBrowser(page, username: string) {
 	// Set the API URL so the frontend knows where to send requests.
-	const apiUrl = process.env.API_URL || 'http://127.0.0.1:3456/api/v1'
+	const apiUrl = TEST_API_URL.replace('localhost', '127.0.0.1')
 	await page.addInitScript(({apiUrl}) => {
 		window.localStorage.setItem('API_URL', apiUrl)
 		window.API_URL = apiUrl
