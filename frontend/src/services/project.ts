@@ -52,6 +52,28 @@ export default class ProjectService extends AbstractService<IProject> {
 		return window.URL.createObjectURL(new Blob([response.data]))
 	}
 
+	async restore(projectId: IProject['id']): Promise<IProject> {
+		const cancel = this.setLoading()
+
+		try {
+			const response = await this.http.post(`/projects/${projectId}/restore`)
+			return this.modelFactory(response.data)
+		} finally {
+			cancel()
+		}
+	}
+
+	async getDeletedProjects(): Promise<IProject[]> {
+		const cancel = this.setLoading()
+
+		try {
+			const response = await this.http.get('/projects/deleted')
+			return response.data.map((p: IProject) => this.modelFactory(p))
+		} finally {
+			cancel()
+		}
+	}
+
 	async removeBackground(project: IProject) {
 		const cancel = this.setLoading()
 

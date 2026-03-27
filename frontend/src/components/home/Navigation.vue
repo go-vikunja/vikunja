@@ -71,6 +71,16 @@
 						{{ $t('team.title') }}
 					</RouterLink>
 				</li>
+				<li>
+					<RouterLink
+						:to="{ name: 'projects.bin'}"
+					>
+						<span class="menu-item-icon icon">
+							<Icon icon="trash-alt" />
+						</span>
+						{{ $t('project.bin.title') }}
+					</RouterLink>
+				</li>
 			</menu>
 		</nav>
 
