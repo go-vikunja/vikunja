@@ -271,7 +271,7 @@
                 {
                     "key": "enabled",
                     "default_value": "false",
-                    "comment": "Whether to enable redis or not"
+                    "comment": "Whether to enable redis or not."
                 },
                 {
                     "key": "host",
@@ -281,12 +281,37 @@
                 {
                     "key": "password",
                     "default_value": "",
-                    "comment": "The password used to authenticate against the redis server"
+                    "comment": "The password used to authenticate against the redis server."
                 },
                 {
                     "key": "db",
                     "default_value": "0",
                     "comment": "0 means default database"
+                },
+                {
+                    "key": "tls",
+                    "default_value": "false",
+                    "comment": "Whether to enable TLS or not."
+                },
+                {
+                    "key": "tlsclientcertpath",
+                    "default_value": "",
+                    "comment": "The path to a client certificate, if you choose to use one."
+                },
+                {
+                    "key": "tlsclientkeypath",
+                    "default_value": "",
+                    "comment": "The path to the client certificate's private key."
+                },
+                {
+                    "key": "tlscacertpath",
+                    "default_value": "",
+                    "comment": "The path to a certificate authority certificate, for verifying the server's certificate."
+                },
+                {
+                    "key": "tlsskipverify",
+                    "default_value": "true",
+                    "comment": "Whether to skip verification of the server's TLS certificate."
                 }
             ]
         },
@@ -374,6 +399,21 @@
                     "key": "forcessl",
                     "default_value": "false",
                     "comment": "By default, Vikunja will try to connect with starttls, use this option to force it to use ssl."
+                },
+                {
+                    "key": "tlsclientcertpath",
+                    "default_value": "",
+                    "comment": "The path to a client certificate, if you choose to use one."
+                },
+                {
+                    "key": "tlsclientkeypath",
+                    "default_value": "",
+                    "comment": "The path to the client certificate's private key."
+                },
+                {
+                    "key": "tlscacertpath",
+                    "default_value": "",
+                    "comment": "The path to a certificate authority certificate, for verifying the server's certificate."
                 }
             ]
         },
