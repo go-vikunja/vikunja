@@ -44,3 +44,16 @@ func AssertSent(t *testing.T, n Notification) {
 
 	assert.True(t, found, "Failed to assert "+n.Name()+" has been sent.")
 }
+
+// AssertNotSent asserts a notification has not been sent
+func AssertNotSent(t *testing.T, n Notification) {
+	var found bool
+	for _, testNotification := range sentTestNotifications {
+		if n.Name() == testNotification.Name() {
+			found = true
+			break
+		}
+	}
+
+	assert.False(t, found, "Expected "+n.Name()+" to not have been sent, but it was.")
+}

@@ -127,6 +127,7 @@ func FullInit() {
 	user.RegisterDeletionNotificationCron()
 	openid.CleanupSavedOpenIDProviders()
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
+	models.RegisterAPITokenExpiryCheckCron()
 
 	// Start processing events
 	go func() {
