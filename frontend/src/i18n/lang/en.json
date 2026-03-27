@@ -121,6 +121,13 @@
           "12h": "12-hour (AM/PM)",
           "24h": "24-hour (HH:mm)"
         },
+        "defaultPage": "Default page",
+        "defaultPageOptions": {
+          "overview": "Overview",
+          "upcoming": "Upcoming",
+          "defaultProject": "Default project",
+          "lastVisited": "Last visited"
+        },
         "externalUserNameChange": "Your name is managed by your login provider ({provider}). To change it, please update it there instead."
       },
       "sections": {

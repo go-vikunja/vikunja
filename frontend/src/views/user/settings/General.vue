@@ -50,6 +50,24 @@
 			<div class="field">
 				<label class="two-col">
 					<span>
+						{{ $t('user.settings.general.defaultPage') }}
+					</span>
+					<div class="select">
+						<select v-model="settings.frontendSettings.defaultPage">
+							<option
+								v-for="(label, value) in defaultPageSettings"
+								:key="value"
+								:value="value"
+							>
+								{{ label }}
+							</option>
+						</select>
+					</div>
+				</label>
+			</div>
+			<div class="field">
+				<label class="two-col">
+					<span>
 						{{ $t('user.settings.general.defaultView') }}
 					</span>
 					<div class="select">
@@ -412,6 +430,7 @@ import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KINDS} from '@/types/IRelationKind'
+import {DEFAULT_PAGE} from '@/constants/defaultPage'
 
 defineOptions({name: 'UserSettingsGeneral'})
 
@@ -419,6 +438,13 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
 
 const DEFAULT_PROJECT_ID = 0
+
+const defaultPageSettings = computed(() => ({
+	[DEFAULT_PAGE.OVERVIEW]: t('user.settings.general.defaultPageOptions.overview'),
+	[DEFAULT_PAGE.UPCOMING]: t('user.settings.general.defaultPageOptions.upcoming'),
+	[DEFAULT_PAGE.DEFAULT_PROJECT]: t('user.settings.general.defaultPageOptions.defaultProject'),
+	[DEFAULT_PAGE.LAST_VISITED]: t('user.settings.general.defaultPageOptions.lastVisited'),
+}))
 
 const colorSchemeSettings = computed(() => ({
 	light: t('user.settings.appearance.colorScheme.light'),
@@ -462,6 +488,7 @@ const settings = ref<IUserSettings>({
 		timeFormat: authStore.settings.frontendSettings.timeFormat ?? TIME_FORMAT.HOURS_12,
 		// Add fallback for old settings that don't have the default task relation type set
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
+		defaultPage: authStore.settings.frontendSettings.defaultPage ?? DEFAULT_PAGE.LAST_VISITED,
 	},
 })
 

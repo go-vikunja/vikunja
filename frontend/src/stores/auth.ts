@@ -25,6 +25,7 @@ import {PrefixMode} from '@/modules/quickAddMagic'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
+import {DEFAULT_PAGE} from '@/constants/defaultPage'
 import type {IProvider} from '@/types/IProvider'
 
 function redirectToSpecifiedProvider() {
@@ -141,6 +142,7 @@ export const useAuthStore = defineStore('auth', () => {
 				backgroundBrightness: 100,
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
+				defaultPage: DEFAULT_PAGE.LAST_VISITED,
 				...newSettings.frontendSettings,
 			},
 		})
