@@ -1064,11 +1064,6 @@
                     "key": "port",
                     "default_value": "8484",
                     "comment": "The port for the MCP server."
-                },
-                {
-                    "key": "authtoken",
-                    "default_value": "",
-                    "comment": "Optional API token for MCP authentication. If set, all MCP requests must include this token in the Authorization header."
                 }
             ]
         }
