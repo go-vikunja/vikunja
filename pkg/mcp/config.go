@@ -20,15 +20,15 @@ import (
 	"code.vikunja.io/api/pkg/config"
 )
 
-type MCPConfig struct {
+type Config struct {
 	Enabled   bool
 	Host      string
 	Port      int
 	AuthToken string
 }
 
-func GetMCPConfig() MCPConfig {
-	return MCPConfig{
+func GetMCPConfig() Config {
+	return Config{
 		Enabled:   config.MCPEnabled.GetBool(),
 		Host:      config.MCPHost.GetString(),
 		Port:      config.MCPPort.GetInt(),

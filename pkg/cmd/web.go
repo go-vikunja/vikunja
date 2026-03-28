@@ -185,7 +185,7 @@ var webCmd = &cobra.Command{
 		}()
 
 		// Start MCP server if enabled
-		var mcpServer *mcp.MCPServerWrapper
+		var mcpServer *mcp.ServerWrapper
 		if config.MCPEnabled.GetBool() {
 			mcpCfg := mcp.GetMCPConfig()
 			mcpServer = mcp.NewMCPServerWrapper(mcpCfg.AuthToken)

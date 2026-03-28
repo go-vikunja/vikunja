@@ -29,15 +29,15 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-type MCPServer struct {
+type Server struct {
 	authToken string
 }
 
-func NewMCPServer(authToken string) *MCPServer {
-	return &MCPServer{authToken: authToken}
+func NewMCPServer(authToken string) *Server {
+	return &Server{authToken: authToken}
 }
 
-func (s *MCPServer) authenticate(token string) (*user.User, error) {
+func (s *Server) authenticate(token string) (*user.User, error) {
 	if s.authToken != "" && token != s.authToken {
 		return nil, fmt.Errorf("invalid token")
 	}
@@ -65,7 +65,7 @@ func (s *MCPServer) authenticate(token string) (*user.User, error) {
 	return u, nil
 }
 
-func (s *MCPServer) HandleGetTasks(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
+func (s *Server) HandleGetTasks(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
 	u, err := s.authenticate(authToken)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -129,7 +129,7 @@ func (s *MCPServer) HandleGetTasks(params json.RawMessage, authToken string) (*m
 	return mcp.NewToolResultText(toJSON(tasks)), nil
 }
 
-func (s *MCPServer) HandleGetTask(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
+func (s *Server) HandleGetTask(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
 	u, err := s.authenticate(authToken)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -158,7 +158,7 @@ func (s *MCPServer) HandleGetTask(params json.RawMessage, authToken string) (*mc
 	return mcp.NewToolResultText(toJSON(task)), nil
 }
 
-func (s *MCPServer) HandleCreateTask(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
+func (s *Server) HandleCreateTask(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
 	u, err := s.authenticate(authToken)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -213,7 +213,7 @@ func (s *MCPServer) HandleCreateTask(params json.RawMessage, authToken string) (
 	return mcp.NewToolResultText(toJSON(task)), nil
 }
 
-func (s *MCPServer) HandleUpdateTask(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
+func (s *Server) HandleUpdateTask(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
 	u, err := s.authenticate(authToken)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -276,7 +276,7 @@ func (s *MCPServer) HandleUpdateTask(params json.RawMessage, authToken string) (
 	return mcp.NewToolResultText(toJSON(task)), nil
 }
 
-func (s *MCPServer) HandleDeleteTask(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
+func (s *Server) HandleDeleteTask(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
 	u, err := s.authenticate(authToken)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -315,7 +315,7 @@ func (s *MCPServer) HandleDeleteTask(params json.RawMessage, authToken string) (
 	return mcp.NewToolResultText(`{"success": true, "message": "Task deleted successfully"}`), nil
 }
 
-func (s *MCPServer) HandleGetProjects(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
+func (s *Server) HandleGetProjects(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
 	u, err := s.authenticate(authToken)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -355,7 +355,7 @@ func (s *MCPServer) HandleGetProjects(params json.RawMessage, authToken string) 
 	return mcp.NewToolResultText(toJSON(projects)), nil
 }
 
-func (s *MCPServer) HandleGetLists(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
+func (s *Server) HandleGetLists(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
 	u, err := s.authenticate(authToken)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -405,7 +405,7 @@ func (s *MCPServer) HandleGetLists(params json.RawMessage, authToken string) (*m
 	return mcp.NewToolResultText(toJSON(result)), nil
 }
 
-func (s *MCPServer) HandleGetKanbanBoard(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
+func (s *Server) HandleGetKanbanBoard(params json.RawMessage, authToken string) (*mcp.CallToolResult, error) {
 	u, err := s.authenticate(authToken)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil

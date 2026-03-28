@@ -27,12 +27,12 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-type MCPServerWrapper struct {
+type ServerWrapper struct {
 	httpServer *server.StreamableHTTPServer
-	handler    *MCPServer
+	handler    *Server
 }
 
-func NewMCPServerWrapper(authToken string) *MCPServerWrapper {
+func NewMCPServerWrapper(authToken string) *ServerWrapper {
 	srv := server.NewMCPServer("Vikunja", "1.0.0")
 
 	mcpHandler := NewMCPServer(authToken)
@@ -51,7 +51,7 @@ func NewMCPServerWrapper(authToken string) *MCPServerWrapper {
 				"search":     map[string]any{"type": "string", "description": "Search tasks by title"},
 			},
 		},
-	}, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		token := extractToken(request)
 		paramsBytes, _ := json.Marshal(request.Params.Arguments)
 		return mcpHandler.HandleGetTasks(paramsBytes, token)
@@ -67,7 +67,7 @@ func NewMCPServerWrapper(authToken string) *MCPServerWrapper {
 			},
 			Required: []string{"id"},
 		},
-	}, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		token := extractToken(request)
 		paramsBytes, _ := json.Marshal(request.Params.Arguments)
 		return mcpHandler.HandleGetTask(paramsBytes, token)
@@ -87,7 +87,7 @@ func NewMCPServerWrapper(authToken string) *MCPServerWrapper {
 			},
 			Required: []string{"title", "project_id"},
 		},
-	}, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		token := extractToken(request)
 		paramsBytes, _ := json.Marshal(request.Params.Arguments)
 		return mcpHandler.HandleCreateTask(paramsBytes, token)
@@ -108,7 +108,7 @@ func NewMCPServerWrapper(authToken string) *MCPServerWrapper {
 			},
 			Required: []string{"id"},
 		},
-	}, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		token := extractToken(request)
 		paramsBytes, _ := json.Marshal(request.Params.Arguments)
 		return mcpHandler.HandleUpdateTask(paramsBytes, token)
@@ -124,7 +124,7 @@ func NewMCPServerWrapper(authToken string) *MCPServerWrapper {
 			},
 			Required: []string{"id"},
 		},
-	}, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		token := extractToken(request)
 		paramsBytes, _ := json.Marshal(request.Params.Arguments)
 		return mcpHandler.HandleDeleteTask(paramsBytes, token)
@@ -140,7 +140,7 @@ func NewMCPServerWrapper(authToken string) *MCPServerWrapper {
 				"offset": map[string]any{"type": "integer", "description": "Number of results to skip"},
 			},
 		},
-	}, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		token := extractToken(request)
 		paramsBytes, _ := json.Marshal(request.Params.Arguments)
 		return mcpHandler.HandleGetProjects(paramsBytes, token)
@@ -158,7 +158,7 @@ func NewMCPServerWrapper(authToken string) *MCPServerWrapper {
 			},
 			Required: []string{"project_id"},
 		},
-	}, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		token := extractToken(request)
 		paramsBytes, _ := json.Marshal(request.Params.Arguments)
 		return mcpHandler.HandleGetLists(paramsBytes, token)
@@ -174,7 +174,7 @@ func NewMCPServerWrapper(authToken string) *MCPServerWrapper {
 			},
 			Required: []string{"project_id"},
 		},
-	}, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		token := extractToken(request)
 		paramsBytes, _ := json.Marshal(request.Params.Arguments)
 		return mcpHandler.HandleGetKanbanBoard(paramsBytes, token)
@@ -182,7 +182,7 @@ func NewMCPServerWrapper(authToken string) *MCPServerWrapper {
 
 	httpServer := server.NewStreamableHTTPServer(srv)
 
-	return &MCPServerWrapper{
+	return &ServerWrapper{
 		httpServer: httpServer,
 		handler:    mcpHandler,
 	}
@@ -192,7 +192,7 @@ func extractToken(request mcp.CallToolRequest) string {
 	return request.Header.Get("Authorization")
 }
 
-func (w *MCPServerWrapper) RunHTTP(host string, port int) error {
+func (w *ServerWrapper) RunHTTP(host string, port int) error {
 	addr := fmt.Sprintf("%s:%d", host, port)
 	log.Infof("MCP server listening on %s", addr)
 	return w.httpServer.Start(addr)
