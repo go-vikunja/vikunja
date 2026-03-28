@@ -36,6 +36,10 @@ func NewMCPServer() *Server {
 }
 
 func (s *Server) authenticate(token string) (*user.User, error) {
+	if token == "" {
+		return nil, fmt.Errorf("invalid token")
+	}
+
 	session := db.NewSession()
 	defer session.Close()
 
