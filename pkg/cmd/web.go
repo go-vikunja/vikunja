@@ -188,7 +188,7 @@ var webCmd = &cobra.Command{
 		var mcpServer *mcp.ServerWrapper
 		if config.MCPEnabled.GetBool() {
 			mcpCfg := mcp.GetMCPConfig()
-			mcpServer = mcp.NewMCPServerWrapper(mcpCfg.AuthToken)
+			mcpServer = mcp.NewMCPServerWrapper()
 			go func() {
 				if err := mcpServer.RunHTTP(mcpCfg.Host, mcpCfg.Port); err != nil {
 					log.Errorf("MCP server error: %v", err)

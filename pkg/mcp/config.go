@@ -21,17 +21,15 @@ import (
 )
 
 type Config struct {
-	Enabled   bool
-	Host      string
-	Port      int
-	AuthToken string
+	Enabled bool
+	Host    string
+	Port    int
 }
 
 func GetMCPConfig() Config {
 	return Config{
-		Enabled:   config.MCPEnabled.GetBool(),
-		Host:      config.MCPHost.GetString(),
-		Port:      config.MCPPort.GetInt(),
-		AuthToken: config.MCPAuthToken.GetString(),
+		Enabled: config.MCPEnabled.GetBool(),
+		Host:    config.MCPHost.GetString(),
+		Port:    config.MCPPort.GetInt(),
 	}
 }

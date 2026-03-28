@@ -29,19 +29,13 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-type Server struct {
-	authToken string
-}
+type Server struct{}
 
-func NewMCPServer(authToken string) *Server {
-	return &Server{authToken: authToken}
+func NewMCPServer() *Server {
+	return &Server{}
 }
 
 func (s *Server) authenticate(token string) (*user.User, error) {
-	if s.authToken != "" && token != s.authToken {
-		return nil, fmt.Errorf("invalid token")
-	}
-
 	session := db.NewSession()
 	defer session.Close()
 

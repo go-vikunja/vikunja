@@ -32,10 +32,10 @@ type ServerWrapper struct {
 	handler    *Server
 }
 
-func NewMCPServerWrapper(authToken string) *ServerWrapper {
+func NewMCPServerWrapper() *ServerWrapper {
 	srv := server.NewMCPServer("Vikunja", "1.0.0")
 
-	mcpHandler := NewMCPServer(authToken)
+	mcpHandler := NewMCPServer()
 
 	srv.AddTool(mcp.Tool{
 		Name:        "get_tasks",

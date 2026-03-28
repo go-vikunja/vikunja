@@ -230,10 +230,9 @@ const (
 	PluginsEnabled Key = `plugins.enabled`
 	PluginsDir     Key = `plugins.dir`
 
-	MCPEnabled   Key = `mcp.enabled`
-	MCPHost      Key = `mcp.host`
-	MCPPort      Key = `mcp.port`
-	MCPAuthToken Key = `mcp.authtoken`
+	MCPEnabled Key = `mcp.enabled`
+	MCPHost    Key = `mcp.host`
+	MCPPort    Key = `mcp.port`
 )
 
 var maxFileSizeInBytes uint64
@@ -493,7 +492,6 @@ func InitDefaultConfig() {
 	MCPEnabled.setDefault(false)
 	MCPHost.setDefault("127.0.0.1")
 	MCPPort.setDefault(8484)
-	MCPAuthToken.setDefault("")
 
 	// Migrate deprecated webhook config keys to outgoingrequests.*
 	// This allows removing the old keys in a single place later.
