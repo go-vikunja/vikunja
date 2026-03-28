@@ -5094,7 +5094,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Remove a task comment. The user doing this need to have at least read access to the task this comment belongs to.",
+                "description": "Get a task comment. The user doing this need to have at least read access to the task this comment belongs to.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5104,7 +5104,7 @@ const docTemplate = `{
                 "tags": [
                     "task"
                 ],
-                "summary": "Remove a task comment",
+                "summary": "Get a task comment",
                 "parameters": [
                     {
                         "type": "integer",
