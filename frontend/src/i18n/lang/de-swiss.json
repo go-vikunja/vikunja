@@ -54,6 +54,7 @@
 			"authenticating": "Authentifiziere…",
 			"openIdStateError": "Status stimmt nid überiih, ich verweigerä wiiter zmache!",
 			"openIdGeneralError": "Es ist ein Fehler bei der externen Authentifizierung aufgetreten.",
+			"oauthMissingParams": "Erforderliche OAuth-Parameter fehlen: {params}",
 			"logout": "Uuslogge",
 			"emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
 			"usernameRequired": "Bitte gib einen Anmeldenamen ein.",
