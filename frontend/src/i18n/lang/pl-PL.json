@@ -102,15 +102,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Możesz połączyć Vikunję z klientami CalDAV, aby przeglądać i zarządzać wszystkimi zadaniami z różnych klientów. Wprowadź ten adres URL do swojego klienta:",
 				"more": "Więcej informacji o CalDAV w Vikunji",
-				"tokens": "Tokeny CalDAV",
-				"tokensHowTo": "Możesz użyć tokenu CalDAV zamiast hasła do logowania się w powyższym punkcie końcowym.",
-				"createToken": "Utwórz token",
-				"tokenCreated": "Oto twój token: {token}",
-				"wontSeeItAgain": "Zapisz to, nie będziesz mógł tego zobaczyć ponownie.",
-				"mustUseToken": "Musisz utworzyć token CalDAV, jeśli chcesz używać CalDAV z klientem zewnętrznym. Użyj tokena jako hasła.",
-				"usernameIs": "Twoja nazwa użytkownika to: {0}"
+				"tokens": "Tokeny CalDAV"
 			},
 			"avatar": {
 				"title": "Awatar",

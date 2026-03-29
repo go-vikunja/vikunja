@@ -139,14 +139,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Voit yhdistää Vikunjan CalDAV asiakasohjelmiin nähdäksesi ja hallitaksesi kaikkia tehtäviä eri asiakasohjelmilla. Syötä tämä url asiakasohjelmaasi:",
 				"more": "Lisätietoja CalDAVista Vikunjassa",
-				"tokens": "CalDAV Tokenit",
-				"createToken": "Luo tokeni",
-				"tokenCreated": "Tässä on tokenisi: {token}",
-				"wontSeeItAgain": "Kirjoita se ylös, et voi nähdä sitä uudelleen.",
-				"mustUseToken": "Sinun täytyy luoda CalDAV token, jos haluat käyttää CalDAVia kolmannen osapuolen asiakasohjelman kanssa. Käytä tokenia salasanana.",
-				"usernameIs": "Käyttäjänimesi on: {0}"
+				"tokens": "CalDAV Tokenit"
 			},
 			"avatar": {
 				"title": "Profiilikuva",

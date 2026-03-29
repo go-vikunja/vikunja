@@ -2184,3 +2184,182 @@ func (err *ErrSessionNotFound) HTTPError() web.HTTPError {
 		Message:  "The session does not exist.",
 	}
 }
+
+// ====================
+// OAuth Server Errors
+// ====================
+
+// ErrOAuthClientNotFound represents an error where the OAuth client ID is not recognized.
+type ErrOAuthClientNotFound struct{}
+
+// IsErrOAuthClientNotFound checks if an error is ErrOAuthClientNotFound.
+func IsErrOAuthClientNotFound(err error) bool {
+	_, ok := err.(*ErrOAuthClientNotFound)
+	return ok
+}
+
+func (err *ErrOAuthClientNotFound) Error() string {
+	return "OAuth client not found"
+}
+
+// ErrCodeOAuthClientNotFound holds the unique world-error code of this error
+const ErrCodeOAuthClientNotFound = 17001
+
+// HTTPError holds the http error description
+func (err *ErrOAuthClientNotFound) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthClientNotFound,
+		Message:  "The OAuth client ID is not recognized.",
+	}
+}
+
+// ErrOAuthInvalidRedirectURI represents an error where the redirect URI is not allowed.
+type ErrOAuthInvalidRedirectURI struct{}
+
+// IsErrOAuthInvalidRedirectURI checks if an error is ErrOAuthInvalidRedirectURI.
+func IsErrOAuthInvalidRedirectURI(err error) bool {
+	_, ok := err.(*ErrOAuthInvalidRedirectURI)
+	return ok
+}
+
+func (err *ErrOAuthInvalidRedirectURI) Error() string {
+	return "Invalid redirect URI"
+}
+
+// ErrCodeOAuthInvalidRedirectURI holds the unique world-error code of this error
+const ErrCodeOAuthInvalidRedirectURI = 17002
+
+// HTTPError holds the http error description
+func (err *ErrOAuthInvalidRedirectURI) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthInvalidRedirectURI,
+		Message:  "The redirect URI is not allowed for this client.",
+	}
+}
+
+// ErrOAuthMissingPKCE represents an error where PKCE parameters are missing or invalid.
+type ErrOAuthMissingPKCE struct{}
+
+// IsErrOAuthMissingPKCE checks if an error is ErrOAuthMissingPKCE.
+func IsErrOAuthMissingPKCE(err error) bool {
+	_, ok := err.(*ErrOAuthMissingPKCE)
+	return ok
+}
+
+func (err *ErrOAuthMissingPKCE) Error() string {
+	return "PKCE is required"
+}
+
+// ErrCodeOAuthMissingPKCE holds the unique world-error code of this error
+const ErrCodeOAuthMissingPKCE = 17003
+
+// HTTPError holds the http error description
+func (err *ErrOAuthMissingPKCE) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthMissingPKCE,
+		Message:  "PKCE (code_challenge with S256 method) is required.",
+	}
+}
+
+// ErrOAuthCodeInvalid represents an error where the authorization code is invalid or already used.
+type ErrOAuthCodeInvalid struct{}
+
+// IsErrOAuthCodeInvalid checks if an error is ErrOAuthCodeInvalid.
+func IsErrOAuthCodeInvalid(err error) bool {
+	_, ok := err.(*ErrOAuthCodeInvalid)
+	return ok
+}
+
+func (err *ErrOAuthCodeInvalid) Error() string {
+	return "Invalid authorization code"
+}
+
+// ErrCodeOAuthCodeInvalid holds the unique world-error code of this error
+const ErrCodeOAuthCodeInvalid = 17004
+
+// HTTPError holds the http error description
+func (err *ErrOAuthCodeInvalid) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthCodeInvalid,
+		Message:  "The authorization code is invalid or has already been used.",
+	}
+}
+
+// ErrOAuthCodeExpired represents an error where the authorization code has expired.
+type ErrOAuthCodeExpired struct{}
+
+// IsErrOAuthCodeExpired checks if an error is ErrOAuthCodeExpired.
+func IsErrOAuthCodeExpired(err error) bool {
+	_, ok := err.(*ErrOAuthCodeExpired)
+	return ok
+}
+
+func (err *ErrOAuthCodeExpired) Error() string {
+	return "Authorization code expired"
+}
+
+// ErrCodeOAuthCodeExpired holds the unique world-error code of this error
+const ErrCodeOAuthCodeExpired = 17005
+
+// HTTPError holds the http error description
+func (err *ErrOAuthCodeExpired) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthCodeExpired,
+		Message:  "The authorization code has expired.",
+	}
+}
+
+// ErrOAuthPKCEVerifyFailed represents an error where the PKCE code_verifier does not match.
+type ErrOAuthPKCEVerifyFailed struct{}
+
+// IsErrOAuthPKCEVerifyFailed checks if an error is ErrOAuthPKCEVerifyFailed.
+func IsErrOAuthPKCEVerifyFailed(err error) bool {
+	_, ok := err.(*ErrOAuthPKCEVerifyFailed)
+	return ok
+}
+
+func (err *ErrOAuthPKCEVerifyFailed) Error() string {
+	return "PKCE verification failed"
+}
+
+// ErrCodeOAuthPKCEVerifyFailed holds the unique world-error code of this error
+const ErrCodeOAuthPKCEVerifyFailed = 17006
+
+// HTTPError holds the http error description
+func (err *ErrOAuthPKCEVerifyFailed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthPKCEVerifyFailed,
+		Message:  "The code_verifier does not match the code_challenge.",
+	}
+}
+
+// ErrOAuthInvalidGrantType represents an error where the grant_type is not supported.
+type ErrOAuthInvalidGrantType struct{}
+
+// IsErrOAuthInvalidGrantType checks if an error is ErrOAuthInvalidGrantType.
+func IsErrOAuthInvalidGrantType(err error) bool {
+	_, ok := err.(*ErrOAuthInvalidGrantType)
+	return ok
+}
+
+func (err *ErrOAuthInvalidGrantType) Error() string {
+	return "Invalid grant type"
+}
+
+// ErrCodeOAuthInvalidGrantType holds the unique world-error code of this error
+const ErrCodeOAuthInvalidGrantType = 17007
+
+// HTTPError holds the http error description
+func (err *ErrOAuthInvalidGrantType) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthInvalidGrantType,
+		Message:  "The grant_type is not supported. Use 'authorization_code' or 'refresh_token'.",
+	}
+}

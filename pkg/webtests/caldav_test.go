@@ -662,6 +662,136 @@ END:VCALENDAR`
 	})
 }
 
+func TestCaldavCollectionProperties(t *testing.T) {
+	t.Run("PROPFIND returns getetag, getctag, and sync-token for collections", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		propfindBody := `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:" xmlns:CS="http://calendarserver.org/ns/">
+    <D:prop>
+        <D:getetag/>
+        <CS:getctag/>
+        <D:sync-token/>
+        <D:displayname/>
+    </D:prop>
+</D:propfind>`
+
+		rec, err := newCaldavTestRequestWithUser(t, e, "PROPFIND", caldav.ProjectHandler, &testuser15, propfindBody,
+			nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, 207, rec.Result().StatusCode)
+
+		responseBody := rec.Body.String()
+
+		type Propstat struct {
+			Prop struct {
+				Getetag     string `xml:"getetag"`
+				Getctag     string `xml:"http://calendarserver.org/ns/ getctag"`
+				SyncToken   string `xml:"sync-token"`
+				Displayname string `xml:"displayname"`
+			} `xml:"prop"`
+			Status string `xml:"status"`
+		}
+		type Response struct {
+			Href      string     `xml:"href"`
+			Propstats []Propstat `xml:"propstat"`
+		}
+		type Multistatus struct {
+			Responses []Response `xml:"response"`
+		}
+
+		var multistatus Multistatus
+		err = xml.Unmarshal([]byte(responseBody), &multistatus)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, multistatus.Responses, "Should have at least one response")
+
+		collectionResp := multistatus.Responses[0]
+
+		var foundEtag, foundCtag, foundSyncToken bool
+		for _, ps := range collectionResp.Propstats {
+			if strings.Contains(ps.Status, "200") {
+				if ps.Prop.Getetag != "" {
+					foundEtag = true
+					assert.Contains(t, ps.Prop.Getetag, "36-", "Collection etag should contain the project ID")
+				}
+				if ps.Prop.Getctag != "" {
+					foundCtag = true
+					assert.Contains(t, ps.Prop.Getctag, "36-", "Collection ctag should contain the project ID")
+				}
+				if ps.Prop.SyncToken != "" {
+					foundSyncToken = true
+					assert.Contains(t, ps.Prop.SyncToken, "data:,", "Sync token should be a data: URI")
+				}
+			}
+		}
+
+		assert.True(t, foundEtag, "Collection should have getetag")
+		assert.True(t, foundCtag, "Collection should have getctag")
+		assert.True(t, foundSyncToken, "Collection should have sync-token")
+	})
+
+	t.Run("Each collection has a unique etag", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		propfindBody := `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:">
+    <D:prop>
+        <D:getetag/>
+    </D:prop>
+</D:propfind>`
+
+		rec1, err := newCaldavTestRequestWithUser(t, e, "PROPFIND", caldav.ProjectHandler, &testuser15, propfindBody,
+			nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, 207, rec1.Result().StatusCode)
+
+		rec2, err := newCaldavTestRequestWithUser(t, e, "PROPFIND", caldav.ProjectHandler, &testuser15, propfindBody,
+			nil, map[string]string{"project": "38"})
+		require.NoError(t, err)
+		assert.Equal(t, 207, rec2.Result().StatusCode)
+
+		type Propstat struct {
+			Prop struct {
+				Getetag string `xml:"getetag"`
+			} `xml:"prop"`
+			Status string `xml:"status"`
+		}
+		type Response struct {
+			Href      string     `xml:"href"`
+			Propstats []Propstat `xml:"propstat"`
+		}
+		type Multistatus struct {
+			Responses []Response `xml:"response"`
+		}
+
+		var ms1, ms2 Multistatus
+		err = xml.Unmarshal(rec1.Body.Bytes(), &ms1)
+		require.NoError(t, err)
+		err = xml.Unmarshal(rec2.Body.Bytes(), &ms2)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, ms1.Responses)
+		require.NotEmpty(t, ms2.Responses)
+
+		var etag1, etag2 string
+		for _, ps := range ms1.Responses[0].Propstats {
+			if strings.Contains(ps.Status, "200") && ps.Prop.Getetag != "" {
+				etag1 = ps.Prop.Getetag
+			}
+		}
+		for _, ps := range ms2.Responses[0].Propstats {
+			if strings.Contains(ps.Status, "200") && ps.Prop.Getetag != "" {
+				etag2 = ps.Prop.Getetag
+			}
+		}
+
+		assert.NotEmpty(t, etag1, "Project 36 should have an etag")
+		assert.NotEmpty(t, etag2, "Project 38 should have an etag")
+		assert.NotEqual(t, etag1, etag2, "Different projects should have different etags")
+	})
+}
+
 func TestCaldavProjectReport(t *testing.T) {
 	t.Run("REPORT calendar-query returns all tasks", func(t *testing.T) {
 		e, _ := setupTestEnv()

@@ -100,15 +100,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Vikunju možete povezati s CalDAV klijentima za pregled i upravljanje svim zadacima različitih klijenata. Unesite ovaj url u svoj klijent:",
 				"more": "Više informacija o CalDAV-u u Vikunji",
-				"tokens": "CalDAV tokeni",
-				"tokensHowTo": "Možete koristiti CalDAV token umjesto lozinke za prijavu u gornju kranjnju točku.",
-				"createToken": "Stvorite token",
-				"tokenCreated": "Evo vašeg tokena: {token}",
-				"wontSeeItAgain": "Zapišite, nećete ga više moći vidjeti.",
-				"mustUseToken": "Morate izraditi CalDAV token ako želite koristiti CalDAV s klijentom treće strane. Koristite token kao lozinku.",
-				"usernameIs": "Vaše korisničko ime je: {0}"
+				"tokens": "CalDAV tokeni"
 			},
 			"avatar": {
 				"title": "Avatar",

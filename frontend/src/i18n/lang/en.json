@@ -54,6 +54,7 @@
       "authenticating": "Authenticating…",
       "openIdStateError": "State does not match, refusing to continue!",
       "openIdGeneralError": "An error occurred while authenticating against the third party.",
+      "oauthMissingParams": "Missing required OAuth parameters: {params}",
       "logout": "Logout",
       "emailInvalid": "Please enter a valid email address.",
       "usernameRequired": "Please provide a username.",
@@ -147,15 +148,15 @@
       },
       "caldav": {
         "title": "CalDAV",
-        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all tasks from different clients. Enter this url into your client:",
+        "howTo": "You can connect Vikunja to CalDAV clients to view and manage all your tasks from different clients. Enter this URL into your client:",
         "more": "More information about CalDAV in Vikunja",
         "tokens": "CalDAV Tokens",
-        "tokensHowTo": "You can use a CalDAV token to use instead of a password to log in the above endpoint.",
-        "createToken": "Create a token",
-        "tokenCreated": "Here is your token: {token}",
-        "wontSeeItAgain": "Write it down, you won't be able to see it again.",
-        "mustUseToken": "You need to create a CalDAV token if you want to use CalDAV with a third party client. Use the token as the password.",
-        "usernameIs": "Your username is: {0}"
+        "tokensHowTo": "For CalDAV authentication you can use either your normal account password or a dedicated CalDAV token.",
+        "createToken": "Create a CalDAV token",
+        "tokenCreated": "Here is your new token: {token}",
+        "wontSeeItAgain": "Write it down or save it securely — you will not be able to see it again.",
+        "mustUseToken": "You need to create a CalDAV token to use CalDAV with any third-party client. Enter the token in the password field of your client.",
+        "usernameIs": "Your username for CalDAV is: {0}"
       },
       "avatar": {
         "title": "Avatar",
@@ -849,7 +850,8 @@
       "select": "Select a date range",
       "noTasks": "Nothing to do — Have a nice day!",
       "filterByLabel": "Filtering by label {label}",
-      "clearLabelFilter": "Clear label filter"
+      "clearLabelFilter": "Clear label filter",
+      "savedFilterIgnored": "Your saved homepage filter is not applied while viewing tasks by label."
     },
     "detail": {
       "chooseDueDate": "Click here to set a due date",

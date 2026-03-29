@@ -147,15 +147,15 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese Url in deine Client ein:",
+				"howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese URL in deinen Client ein:",
 				"more": "Weitere Informationen über CalDAV in Vikunja",
 				"tokens": "CalDAV-Token",
-				"tokensHowTo": "Du kannst für den obigen Endpunkt einen CalDAV Token anstelle deines Passwortes verwenden.",
-				"createToken": "Token erstellen",
-				"tokenCreated": "Hier ist dein Token: {token}",
-				"wontSeeItAgain": "Notiere dir den Token, er kann nicht wieder angezeigt werden.",
-				"mustUseToken": "Du musst einen CalDAV Token erstellen um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
-				"usernameIs": "Dein Benutzername lautet: {0}"
+				"tokensHowTo": "Für die CalDAV-Authentifizierung kannst du entweder dein normales Passwort oder einen CalDAV-Token verwenden.",
+				"createToken": "CalDAV-Token erstellen",
+				"tokenCreated": "Hier ist dein neues Token: {token}",
+				"wontSeeItAgain": "Schreib es auf oder speicher es sicher — du wirst es nicht nochmal sehen können.",
+				"mustUseToken": "Du musst einen CalDAV Token erstellen, um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
+				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}"
 			},
 			"avatar": {
 				"title": "Avatar",
@@ -849,7 +849,8 @@
 			"select": "Datumsbereich wählen",
 			"noTasks": "Nichts zu tun – Einen schönen Tag noch!",
 			"filterByLabel": "Filtern nach Label {label}",
-			"clearLabelFilter": "Label-Filter leeren"
+			"clearLabelFilter": "Label-Filter leeren",
+			"savedFilterIgnored": "Dein gespeicherter Homepage-Filter wird während der Anzeige von Aufgaben per Label nicht angewendet."
 		},
 		"detail": {
 			"chooseDueDate": "Klicke hier, um ein Fälligkeitsdatum zu setzen",

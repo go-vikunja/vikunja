@@ -138,15 +138,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Du kan koble Vikunja til CalDAV-klienter for å se og administrere alle oppgaver fra forskjellige kunder. Skriv inn denne Url'en til din klient:",
 				"more": "Mer informasjon om CalDAV i Vikunja",
-				"tokens": "CalDAV-plassholdere",
-				"tokensHowTo": "Du kan bruke en CalDAV-plassholder til å bruke istedet for passord for å logge på det ovennevnte endepunktet.",
-				"createToken": "Opprett plassholder",
-				"tokenCreated": "Her er din plassholder: {token}",
-				"wontSeeItAgain": "Skriv den ned, du vil ikke kunne se den igjen.",
-				"mustUseToken": "Du må opprette et CalDAV-plassholder hvis du ønsker å bruke CalDAV med en tredjeparts klient. Bruk plassholderen som passord.",
-				"usernameIs": "Brukernavnet ditt er: {0}"
+				"tokens": "CalDAV-plassholdere"
 			},
 			"avatar": {
 				"title": "Profilbilde",

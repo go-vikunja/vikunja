@@ -115,16 +115,6 @@ func TestLabel_ReadAll(t *testing.T) {
 						CreatedBy:   user2,
 					},
 				},
-				{
-					Label: Label{
-						ID:          5,
-						Title:       "Label #5",
-						CreatedByID: 2,
-						CreatedBy:   user2,
-						Created:     testCreatedTime,
-						Updated:     testUpdatedTime,
-					},
-				},
 			},
 		},
 		{
