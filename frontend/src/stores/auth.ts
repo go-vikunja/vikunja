@@ -258,6 +258,18 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
+	async function handleDesktopOAuthTokens(tokens: {access_token: string, refresh_token: string, expires_in: number}) {
+		setIsLoading(true)
+		try {
+			removeToken()
+			saveToken(tokens.access_token, true)
+			localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
+			await checkAuth()
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
 	async function linkShareAuth({hash, password}) {
 		const HTTP = HTTPFactory()
 		const response = await HTTP.post('/shares/' + hash + '/auth', {
@@ -547,6 +559,7 @@ export const useAuthStore = defineStore('auth', () => {
 		login,
 		register,
 		openIdAuth,
+		handleDesktopOAuthTokens,
 		linkShareAuth,
 		checkAuth,
 		refreshUserInfo,
