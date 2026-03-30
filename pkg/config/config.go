@@ -335,7 +335,6 @@ func InitDefaultConfig() {
 
 	// Service
 	ServiceSecret.setDefault(random)
-	ServiceJWTSecret.setDefault(random)
 	ServiceJWTTTL.setDefault(259200)      // 72 hours
 	ServiceJWTTTLLong.setDefault(2592000) // 30 days
 	ServiceJWTTTLShort.setDefault(600)    // 10 minutes
@@ -637,11 +636,11 @@ func InitConfig() {
 
 	readConfigValuesFromFiles()
 
-	// Deprecation: if service.JWTSecret is explicitly set but service.secret is not,
-	// migrate the value and warn the user.
-	if ServiceJWTSecret.GetString() != ServiceSecret.GetString() {
+	// Deprecation: if service.JWTSecret is explicitly set, migrate its value
+	// to service.secret and warn the user.
+	if jwtSecret := ServiceJWTSecret.GetString(); jwtSecret != "" {
 		log.Warning("config: service.jwtsecret is deprecated and will be removed in a future release. Please use service.secret instead.")
-		ServiceSecret.Set(ServiceJWTSecret.GetString())
+		ServiceSecret.Set(jwtSecret)
 	}
 
 	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
