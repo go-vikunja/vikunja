@@ -135,7 +135,7 @@ func NewUserJWTAuthtoken(u *user.User, sessionID string) (token string, err erro
 	claims["sid"] = sessionID
 	claims["jti"] = uuid.New().String()
 
-	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))
+	return t.SignedString([]byte(config.ServiceSecret.GetString()))
 }
 
 // NewLinkShareJWTAuthtoken creates a new jwt token from a link share
@@ -156,7 +156,7 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 	claims["exp"] = exp
 
 	// Generate encoded token and send it as response.
-	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))
+	return t.SignedString([]byte(config.ServiceSecret.GetString()))
 }
 
 // GetAuthFromClaims returns a web.Auth object from jwt claims

@@ -39,7 +39,7 @@ const ErrCodeInvalidToken = 11
 
 func SetupTokenMiddleware() echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
-		SigningKey: []byte(config.ServiceJWTSecret.GetString()),
+		SigningKey: []byte(config.ServiceSecret.GetString()),
 		Skipper: func(c *echo.Context) bool {
 			authHeader := c.Request().Header.Values("Authorization")
 			if len(authHeader) == 0 {
