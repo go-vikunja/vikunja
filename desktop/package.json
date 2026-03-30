@@ -21,6 +21,10 @@
     "productName": "Vikunja Desktop",
     "artifactName": "${productName}-${version}.${ext}",
     "icon": "build/icon.icns",
+    "protocols": {
+      "name": "Vikunja Desktop",
+      "schemes": ["vikunja-desktop"]
+    },
     "linux": {
       "target": [
         "deb",
