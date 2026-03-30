@@ -42,7 +42,7 @@ type Key string
 const (
 	// #nosec
 	ServiceSecret                         Key = `service.secret`
-	ServiceJWTSecret                      Key = `service.JWTSecret` // Deprecated: use ServiceSecret
+	ServiceJWTSecret                      Key = `service.JWTSecret` // #nosec G101 -- Deprecated config key alias, not a credential
 	ServiceJWTTTL                         Key = `service.jwtttl`
 	ServiceJWTTTLLong                     Key = `service.jwtttllong`
 	ServiceJWTTTLShort                    Key = `service.jwtttlshort`
@@ -636,11 +636,10 @@ func InitConfig() {
 
 	readConfigValuesFromFiles()
 
-	// Deprecation: if service.JWTSecret is explicitly set, migrate its value
-	// to service.secret and warn the user.
-	if jwtSecret := ServiceJWTSecret.GetString(); jwtSecret != "" {
+	// Deprecation: migrate service.JWTSecret → service.secret
+	if ServiceJWTSecret.GetString() != "" {
 		log.Warning("config: service.jwtsecret is deprecated and will be removed in a future release. Please use service.secret instead.")
-		ServiceSecret.Set(jwtSecret)
+		ServiceSecret.Set(ServiceJWTSecret.GetString())
 	}
 
 	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
