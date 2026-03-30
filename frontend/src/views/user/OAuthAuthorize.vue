@@ -6,7 +6,10 @@
 		>
 			{{ errorMessage }}
 		</Message>
-		<Message v-if="loading">
+		<Message v-if="redirectedToApp">
+			{{ $t('user.auth.oauthRedirectedToApp') }}
+		</Message>
+		<Message v-else-if="loading">
 			{{ $t('user.auth.authenticating') }}
 		</Message>
 	</div>
@@ -28,6 +31,7 @@ const route = useRoute()
 
 const loading = ref(true)
 const errorMessage = ref('')
+const redirectedToApp = ref(false)
 
 const requiredParams = [
 	'response_type',
@@ -65,10 +69,12 @@ async function authorize() {
 			redirectUrl.searchParams.set('state', state)
 		}
 
+		redirectedToApp.value = true
+		loading.value = false
+
 		window.location.href = redirectUrl.toString()
 	} catch (e) {
 		errorMessage.value = getErrorText(e)
-	} finally {
 		loading.value = false
 	}
 }
