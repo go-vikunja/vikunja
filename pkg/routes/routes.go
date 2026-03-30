@@ -195,6 +195,12 @@ func NewEcho() *echo.Echo {
 	// #nosec G115 - maxFileSize is a configuration value that won't exceed int64 max in practice
 	e.Use(middleware.BodyLimit((int64(maxFileSize) + 2) * 1024 * 1024))
 
+	// Use a custom JSON serializer that always sets Content-Length.
+	// This mitigates a macOS curl bug where piping curl output to another
+	// program (e.g. curl | jq) can produce empty stdin when responses use
+	// chunked transfer encoding without Content-Length.
+	e.JSONSerializer = ContentLengthJSONSerializer{}
+
 	// Set up centralized error handler
 	e.HTTPErrorHandler = CreateHTTPErrorHandler(e, config.SentryEnabled.GetBool())
 

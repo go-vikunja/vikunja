@@ -17,7 +17,6 @@
 package webtests
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -53,7 +52,6 @@ func TestContentLengthOnListEndpoints(t *testing.T) {
 
 		clInt, err := strconv.Atoi(cl)
 		require.NoError(t, err)
-		assert.Equal(t, rec.Body.Len(), clInt,
-			fmt.Sprintf("Content-Length (%d) must match actual body size (%d)", clInt, rec.Body.Len()))
+		assert.Equal(t, rec.Body.Len(), clInt, "Content-Length must match actual body size")
 	})
 }
