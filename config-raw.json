@@ -5,8 +5,8 @@
             "children": [
                 {
                     "key": "secret",
-                    "default_value": "\u003cjwt-secret\u003e",
-                    "comment": "This token is used to verify issued JWT tokens.\nDefault is a random token which will be generated at each startup of Vikunja.\n(This means all already issued tokens will be invalid once you restart Vikunja)"
+                    "default_value": "\u003ca-secret\u003e",
+                    "comment": "This secret is used to sign JWT tokens and for other cryptographic operations.\nDefault is a random secret which will be generated at each startup of Vikunja.\n(This means all already issued tokens will be invalid once you restart Vikunja)"
                 },
                 {
                     "key": "JWTSecret",
