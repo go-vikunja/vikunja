@@ -589,7 +589,7 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.owner_id",
 		"CASE WHEN all_projects.parent_project_id IS NULL THEN 0 ELSE all_projects.parent_project_id END AS parent_project_id",
 		"MAX(CAST(all_projects.is_archived AS int)) AS is_archived",
-		"all_projects.is_template",
+		"MAX(CAST(all_projects.is_template AS int)) AS is_template",
 		"all_projects.background_file_id",
 		"all_projects.background_blur_hash",
 		"all_projects.position",
@@ -607,7 +607,6 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.parent_project_id",
 		"all_projects.background_file_id",
 		"all_projects.background_blur_hash",
-		"all_projects.is_template",
 		"all_projects.position",
 		"all_projects.created",
 		"all_projects.updated",
@@ -618,7 +617,7 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		havingClauses = append(havingClauses, "MAX(CAST(all_projects.is_archived AS int)) = 0")
 	}
 	if !opts.getTemplates {
-		havingClauses = append(havingClauses, "all_projects.is_template = 0")
+		havingClauses = append(havingClauses, "MAX(CAST(all_projects.is_template AS int)) = 0")
 	}
 	var havingFilter string
 	if len(havingClauses) > 0 {
