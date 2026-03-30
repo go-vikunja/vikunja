@@ -119,6 +119,21 @@
 				{{ $t('user.auth.loginWith', {provider: p.name}) }}
 			</XButton>
 		</div>
+
+		<div
+			v-if="hasSAMLProviders"
+			class="mbs-4"
+		>
+			<XButton
+				v-for="(p, k) in samlProviders.providers"
+				:key="k"
+				variant="secondary"
+				class="is-fullwidth mbs-2"
+				@click="redirectToSAMLProvider(p)"
+			>
+				{{ $t('user.auth.loginWith', {provider: p.name}) }}
+			</XButton>
+		</div>
 	</div>
 </template>
 
@@ -155,6 +170,13 @@ const ldapAuthEnabled = computed(() => configStore.auth.ldap.enabled)
 
 const openidConnect = computed(() => configStore.auth.openidConnect)
 const hasOpenIdProviders = computed(() => openidConnect.value.enabled && openidConnect.value.providers?.length > 0)
+
+const samlProviders = computed(() => configStore.auth.saml)
+const hasSAMLProviders = computed(() => samlProviders.value.enabled && samlProviders.value.providers?.length > 0)
+
+function redirectToSAMLProvider(provider: {name: string, key: string}) {
+	window.location.href = `${window.API_URL}/auth/saml/${provider.key}/login`
+}
 
 const isLoading = computed(() => authStore.isLoading)
 

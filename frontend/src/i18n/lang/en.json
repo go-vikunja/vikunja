@@ -54,6 +54,7 @@
       "authenticating": "Authenticating…",
       "openIdStateError": "State does not match, refusing to continue!",
       "openIdGeneralError": "An error occurred while authenticating against the third party.",
+      "samlError": "An error occurred while authenticating via SAML.",
       "oauthMissingParams": "Missing required OAuth parameters: {params}",
       "logout": "Logout",
       "emailInvalid": "Please enter a valid email address.",
