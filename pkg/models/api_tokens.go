@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
@@ -197,4 +198,33 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	}
 
 	return nil, &ErrAPITokenInvalid{}
+}
+
+// ValidateTokenAndGetOwner looks up a raw token string, checks it is not expired,
+// and returns both the APIToken and its owner. Callers are responsible for checking
+// permissions on the returned token (e.g. CanDoAPIRoute or HasCaldavAccess).
+// Returns (nil, nil, nil) if the token is invalid or expired, or if the owner
+// account is disabled/locked.
+func ValidateTokenAndGetOwner(s *xorm.Session, rawToken string) (*APIToken, *user.User, error) {
+	apiToken, err := GetTokenFromTokenString(s, rawToken)
+	if err != nil {
+		if IsErrAPITokenInvalid(err) {
+			return nil, nil, nil
+		}
+		return nil, nil, err
+	}
+
+	if time.Now().After(apiToken.ExpiresAt) {
+		return nil, nil, nil
+	}
+
+	u, err := user.GetUserByID(s, apiToken.OwnerID)
+	if err != nil {
+		if user.IsErrUserStatusError(err) {
+			return nil, nil, nil
+		}
+		return nil, nil, err
+	}
+
+	return apiToken, u, nil
 }

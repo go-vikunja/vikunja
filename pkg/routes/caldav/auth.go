@@ -19,7 +19,6 @@ package caldav
 import (
 	"errors"
 	"strings"
-	"time"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
@@ -32,32 +31,17 @@ import (
 )
 
 func checkAPIToken(s *xorm.Session, username, token string) (*user.User, error) {
-	apiToken, err := models.GetTokenFromTokenString(s, token)
+	apiToken, u, err := models.ValidateTokenAndGetOwner(s, token)
 	if err != nil {
-		if models.IsErrAPITokenInvalid(err) {
-			log.Debugf("[caldav auth] Invalid API token provided for user %s", username)
-			return nil, nil
-		}
 		return nil, err
 	}
-
-	if time.Now().After(apiToken.ExpiresAt) {
-		log.Debugf("[caldav auth] API token %d has expired", apiToken.ID)
+	if apiToken == nil || u == nil {
 		return nil, nil
 	}
 
 	if !apiToken.HasCaldavAccess() {
 		log.Debugf("[caldav auth] API token %d does not have caldav access permission", apiToken.ID)
 		return nil, nil
-	}
-
-	u, err := user.GetUserByID(s, apiToken.OwnerID)
-	if err != nil {
-		if user.IsErrUserStatusError(err) {
-			log.Debugf("[caldav auth] API token %d owner account is disabled or locked", apiToken.ID)
-			return nil, nil
-		}
-		return nil, err
 	}
 
 	if u.Username != username {
