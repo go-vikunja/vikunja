@@ -636,8 +636,9 @@ func InitConfig() {
 
 	readConfigValuesFromFiles()
 
-	// Deprecation: migrate service.JWTSecret → service.secret
-	if ServiceJWTSecret.GetString() != "" {
+	// Deprecation: migrate service.JWTSecret → service.secret only when the
+	// user has not explicitly set service.secret (so the new key takes precedence).
+	if ServiceJWTSecret.GetString() != "" && !viper.IsSet(string(ServiceSecret)) {
 		log.Warning("config: service.jwtsecret is deprecated and will be removed in a future release. Please use service.secret instead.")
 		ServiceSecret.Set(ServiceJWTSecret.GetString())
 	}
