@@ -9,7 +9,8 @@ import type {IUser} from '@/modelTypes/IUser'
 export default class BucketModel extends AbstractModel<IBucket> implements IBucket {
 	id = 0
 	title = ''
-	projectId = ''
+	projectId = 0
+	projectViewId = 0
 	limit = 0
 	tasks: ITask[] = []
 	position = 0

@@ -69,6 +69,7 @@ import type {IProjectView} from '@/modelTypes/IProjectView'
 import type {IBucket} from '@/modelTypes/IBucket'
 import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
 
+import BucketModel from '@/models/bucket'
 import BucketService from '@/services/bucket'
 import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
@@ -101,18 +102,18 @@ const loading = ref(false)
 const bucketsByView = ref<Record<number, IBucket[]>>({})
 const selectedBucketByView = ref<Record<number, number>>({})
 
-const kanbanViews = computed<IProjectView[]>(() => {
+const kanbanViews = computed(() => {
 	const project = projectStore.projects[props.task.projectId]
-	if (!project?.views) return []
-	return project.views.filter(v => v.viewKind === PROJECT_VIEW_KINDS.KANBAN)
+	if (!project?.views) return [] as IProjectView[]
+	return project.views.filter(v => v.viewKind === PROJECT_VIEW_KINDS.KANBAN) as IProjectView[]
 })
 
 async function loadBucketsForView(view: IProjectView) {
 	const bucketService = new BucketService()
-	const buckets = await bucketService.getAll({
+	const buckets = await bucketService.getAll(new BucketModel({
 		projectId: props.task.projectId,
 		projectViewId: view.id,
-	})
+	}))
 	bucketsByView.value[view.id] = buckets
 }
 
