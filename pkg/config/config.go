@@ -41,7 +41,8 @@ type Key string
 // These constants hold all config value keys
 const (
 	// #nosec
-	ServiceJWTSecret                      Key = `service.JWTSecret`
+	ServiceSecret                         Key = `service.secret`
+	ServiceJWTSecret                      Key = `service.JWTSecret` // #nosec G101 -- Deprecated config key alias, not a credential
 	ServiceJWTTTL                         Key = `service.jwtttl`
 	ServiceJWTTTLLong                     Key = `service.jwtttllong`
 	ServiceJWTTTLShort                    Key = `service.jwtttlshort`
@@ -333,7 +334,7 @@ func InitDefaultConfig() {
 	}
 
 	// Service
-	ServiceJWTSecret.setDefault(random)
+	ServiceSecret.setDefault(random)
 	ServiceJWTTTL.setDefault(259200)      // 72 hours
 	ServiceJWTTTLLong.setDefault(2592000) // 30 days
 	ServiceJWTTTLShort.setDefault(600)    // 10 minutes
@@ -634,6 +635,17 @@ func InitConfig() {
 	}
 
 	readConfigValuesFromFiles()
+
+	// Deprecation: migrate service.JWTSecret → service.secret only when the
+	// user has not explicitly set service.secret (so the new key takes precedence).
+	if ServiceJWTSecret.GetString() != "" {
+		if viper.IsSet(string(ServiceSecret)) {
+			log.Warning("config: both service.secret and service.jwtsecret are set. Using service.secret. Please remove service.jwtsecret, it is deprecated and will be removed in a future release.")
+		} else {
+			log.Warning("config: service.jwtsecret is deprecated and will be removed in a future release. Please use service.secret instead.")
+			ServiceSecret.Set(ServiceJWTSecret.GetString())
+		}
+	}
 
 	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
 		log.Fatalf("Could not parse gravatarbaseurl: %s", err)
