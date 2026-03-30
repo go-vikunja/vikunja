@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/version"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -33,7 +34,7 @@ type ServerWrapper struct {
 }
 
 func NewMCPServerWrapper() *ServerWrapper {
-	srv := server.NewMCPServer("Vikunja", "1.0.0")
+	srv := server.NewMCPServer("Vikunja", version.Version)
 
 	mcpHandler := NewMCPServer()
 
