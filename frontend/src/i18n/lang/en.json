@@ -897,7 +897,12 @@
         "color": "Set Color",
         "delete": "Delete",
         "favorite": "Add to Favorites",
-        "unfavorite": "Remove from Favorites"
+        "unfavorite": "Remove from Favorites",
+        "bucket": "Set Bucket"
+      },
+      "bucket": {
+        "placeholder": "Select a bucket…",
+        "updateSuccess": "The task was moved to the selected bucket."
       }
     },
     "attributes": {
@@ -921,7 +926,8 @@
       "startDate": "Start Date",
       "title": "Title",
       "updated": "Updated",
-      "doneAt": "Done At"
+      "doneAt": "Done At",
+      "bucket": "Bucket"
     },
     "subscription": {
       "subscribedTaskThroughParentProject": "You can't unsubscribe here because you are subscribed to this task through its project.",

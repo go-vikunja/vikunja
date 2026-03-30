@@ -169,6 +169,27 @@
 							appear
 						>
 							<div
+								v-if="activeFields.bucket"
+								class="column"
+							>
+								<!-- Bucket -->
+								<div class="detail-title">
+									<Icon icon="th-large" />
+									{{ $t('task.attributes.bucket') }}
+								</div>
+								<BucketSelect
+									:ref="e => setFieldRef('bucket', e)"
+									:task="task"
+									:disabled="!canWrite"
+									@update:task="Object.assign(task, $event)"
+								/>
+							</div>
+						</CustomTransition>
+						<CustomTransition
+							name="flash-background"
+							appear
+						>
+							<div
 								v-if="activeFields.startDate"
 								class="column"
 							>
@@ -484,7 +505,16 @@
 						>
 							{{ $t('task.detail.actions.color') }}
 						</XButton>
-						
+						<XButton
+							v-if="hasKanbanViews"
+							v-shortcut="'KeyB'"
+							variant="secondary"
+							icon="th-large"
+							@click="setFieldActive('bucket')"
+						>
+							{{ $t('task.detail.actions.bucket') }}
+						</XButton>
+
 						<span class="action-heading">{{ $t('task.detail.management') }}</span>
 
 						<XButton
@@ -656,6 +686,8 @@ import PrioritySelect from '@/components/tasks/partials/PrioritySelect.vue'
 import RelatedTasks from '@/components/tasks/partials/RelatedTasks.vue'
 import Reminders from '@/components/tasks/partials/Reminders.vue'
 import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
+import BucketSelect from '@/components/tasks/partials/BucketSelect.vue'
+import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
 import TaskSubscription from '@/components/misc/Subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
@@ -804,6 +836,11 @@ function onAttachmentsUpdated(attachments: IAttachment[]) {
 	})
 }
 
+const hasKanbanViews = computed(() => {
+	if (!project.value?.views) return false
+	return project.value.views.some(v => v.viewKind === PROJECT_VIEW_KINDS.KANBAN)
+})
+
 const heading = ref<HTMLElement | null>(null)
 
 async function scrollToHeading() {
@@ -932,6 +969,7 @@ watch(
 type FieldType =
 	| 'assignees'
 	| 'attachments'
+	| 'bucket'
 	| 'color'
 	| 'dueDate'
 	| 'endDate'
@@ -947,6 +985,7 @@ type FieldType =
 const activeFields: { [type in FieldType]: boolean } = reactive({
 	assignees: false,
 	attachments: false,
+	bucket: false,
 	color: false,
 	dueDate: false,
 	endDate: false,
@@ -982,6 +1021,7 @@ function setActiveFields() {
 const activeFieldElements: { [id in FieldType]: HTMLElement | null } = reactive({
 	assignees: null,
 	attachments: null,
+	bucket: null,
 	color: null,
 	dueDate: null,
 	endDate: null,
