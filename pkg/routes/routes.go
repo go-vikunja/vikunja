@@ -60,6 +60,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	vikunjaMcp "code.vikunja.io/api/pkg/mcp"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
@@ -79,7 +80,6 @@ import (
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
-
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -286,6 +286,13 @@ func RegisterRoutes(e *echo.Echo) {
 	// API Routes
 	a := e.Group("/api/v1")
 	registerAPIRoutes(a)
+
+	// Start MCP server if enabled
+	if config.MCPEnabled.GetBool() {
+		mcpCfg := vikunjaMcp.GetMCPConfig()
+		mcpServer := vikunjaMcp.NewMCPServerWrapper(mcpCfg)
+		e.Any("/mcp", mcpServer.HandleRequest)
+	}
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()

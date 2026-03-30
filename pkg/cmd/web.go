@@ -33,7 +33,6 @@ import (
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/initialize"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/mcp"
 	"code.vikunja.io/api/pkg/plugins"
 	"code.vikunja.io/api/pkg/routes"
 	"code.vikunja.io/api/pkg/utils"
@@ -183,18 +182,6 @@ var webCmd = &cobra.Command{
 			}
 			log.Info("shutting down...")
 		}()
-
-		// Start MCP server if enabled
-		var mcpServer *mcp.ServerWrapper
-		if config.MCPEnabled.GetBool() {
-			mcpCfg := mcp.GetMCPConfig()
-			mcpServer = mcp.NewMCPServerWrapper()
-			go func() {
-				if err := mcpServer.RunHTTP(mcpCfg.Host, mcpCfg.Port); err != nil {
-					log.Errorf("MCP server error: %v", err)
-				}
-			}()
-		}
 
 		// Wait for interrupt signal to gracefully shut down the server with
 		// a timeout of 10 seconds.

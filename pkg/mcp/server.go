@@ -19,10 +19,9 @@ package mcp
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/version"
+	"github.com/labstack/echo/v5"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -33,7 +32,7 @@ type ServerWrapper struct {
 	handler    *Server
 }
 
-func NewMCPServerWrapper() *ServerWrapper {
+func NewMCPServerWrapper(Config) *ServerWrapper {
 	srv := server.NewMCPServer("Vikunja", version.Version)
 
 	mcpHandler := NewMCPServer()
@@ -193,8 +192,7 @@ func extractToken(request mcp.CallToolRequest) string {
 	return request.Header.Get("Authorization")
 }
 
-func (w *ServerWrapper) RunHTTP(host string, port int) error {
-	addr := fmt.Sprintf("%s:%d", host, port)
-	log.Infof("MCP server listening on %s", addr)
-	return w.httpServer.Start(addr)
+func (w *ServerWrapper) HandleRequest(c *echo.Context) error {
+	w.httpServer.ServeHTTP(c.Response(), c.Request())
+	return nil
 }

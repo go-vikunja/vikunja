@@ -22,14 +22,10 @@ import (
 
 type Config struct {
 	Enabled bool
-	Host    string
-	Port    int
 }
 
 func GetMCPConfig() Config {
 	return Config{
 		Enabled: config.MCPEnabled.GetBool(),
-		Host:    config.MCPHost.GetString(),
-		Port:    config.MCPPort.GetInt(),
 	}
 }
