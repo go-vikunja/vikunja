@@ -30,7 +30,7 @@
 					@keyup="search"
 					@keydown.down.prevent="select(0, 0)"
 					@keyup.prevent.delete="unselectCmd"
-					@keyup.prevent.enter="doCmd"
+					@keydown.prevent.enter="onEnter"
 					@keyup.prevent.esc="closeQuickActions"
 				>
 				<QuickAddMagic
@@ -572,14 +572,23 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 	}
 }
 
+let openTaskAfterCreate = false
+
+function onEnter(event: KeyboardEvent) {
+	openTaskAfterCreate = event.ctrlKey || event.metaKey
+	doCmd()
+}
+
 async function doCmd() {
 	if (results.value.length === 1 && results.value[0].items.length === 1) {
 		const result = results.value[0]
 		doAction(result.type, result.items[0])
+		openTaskAfterCreate = false
 		return
 	}
 
 	if (selectedCmd.value === null || query.value === '') {
+		openTaskAfterCreate = false
 		return
 	}
 
@@ -602,9 +611,16 @@ async function newTask() {
 
 	if (isQuickAddMode) {
 		const channel = new BroadcastChannel('vikunja-task-updates')
-		channel.postMessage({type: 'task-created', taskId: task.id})
+		const type = openTaskAfterCreate ? 'task-created-open' : 'task-created'
+		channel.postMessage({type, taskId: task.id})
 		channel.close()
+
+		if (openTaskAfterCreate) {
+			window.quickEntry?.showMainWindow()
+		}
+
 		closeQuickActions()
+		openTaskAfterCreate = false
 		return
 	}
 
