@@ -32,6 +32,11 @@ const authStore = useAuthStore()
 const loading = computed(() => authStore.isLoading)
 const errorMessage = ref('')
 
+const samlErrorMessages: Record<string, string> = {
+	saml_assertion_failed: 'user.auth.samlAssertionFailed',
+	no_email: 'user.auth.samlNoEmail',
+}
+
 async function authenticateWithToken() {
 	if (localStorage.getItem('authenticating')) {
 		return
@@ -40,9 +45,10 @@ async function authenticateWithToken() {
 
 	errorMessage.value = ''
 
-	if (typeof route.query.error !== 'undefined') {
+	const errorCode = Array.isArray(route.query.error) ? route.query.error[0] : route.query.error
+	if (typeof errorCode !== 'undefined') {
 		localStorage.removeItem('authenticating')
-		errorMessage.value = t('user.auth.samlError')
+		errorMessage.value = t(samlErrorMessages[errorCode] ?? 'user.auth.samlError')
 		return
 	}
 

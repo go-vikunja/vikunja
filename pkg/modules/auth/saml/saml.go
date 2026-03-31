@@ -370,6 +370,8 @@ func HandleACS(c *echo.Context) error {
 		possibleRequestIDs = append(possibleRequestIDs, tr.SAMLRequestID)
 	}
 
+	frontendURL := strings.TrimRight(config.ServicePublicURL.GetString(), "/")
+
 	assertion, err := provider.Middleware.ServiceProvider.ParseResponse(r, possibleRequestIDs)
 	if err != nil {
 		if invalidErr, ok := err.(*saml.InvalidResponseError); ok {
@@ -377,8 +379,6 @@ func HandleACS(c *echo.Context) error {
 		} else {
 			log.Errorf("SAML assertion parse error for provider %s: %v", provider.Name, err)
 		}
-		// Redirect back to frontend with error
-		frontendURL := strings.TrimRight(config.ServicePublicURL.GetString(), "/")
 		return c.Redirect(http.StatusFound, frontendURL+"/auth/saml/"+providerKey+"?error=saml_assertion_failed")
 	}
 
@@ -388,16 +388,14 @@ func HandleACS(c *echo.Context) error {
 			c.Response(), c.Request(), relayState,
 		)
 	}
-	frontendURL := strings.TrimRight(config.ServicePublicURL.GetString(), "/")
 
-	// Extract attributes from the assertion
+	// We require a subject NameID and treat it as the stable SAML account identifier.
 	if assertion.Subject == nil || assertion.Subject.NameID == nil {
 		return c.Redirect(http.StatusFound, frontendURL+"/auth/saml/"+providerKey+"?error=no_email")
 	}
 
 	email := strings.TrimSpace(assertion.Subject.NameID.Value)
 
-	//Validate email format
 	if !strings.Contains(email, "@") {
 		return c.Redirect(http.StatusFound, frontendURL+"/auth/saml/"+providerKey+"?error=no_email")
 	}
@@ -460,7 +458,6 @@ func HandleACS(c *echo.Context) error {
 		return err
 	}
 
-	// Generate JWT token
 	session, err := models.CreateSession(s, u.ID, "SAML Login", "", false)
 	if err != nil {
 		_ = s.Rollback()
@@ -535,13 +532,11 @@ func getAttributeValue(assertion *saml.Assertion, names ...string) string {
 }
 
 func getOrCreateUser(s *xorm.Session, email, name, issuer, subject string) (u *user.User, err error) {
-	// Check if user already exists by issuer+subject
 	u, err = user.GetUserWithEmail(s, &user.User{
 		Issuer:  issuer,
 		Subject: subject,
 	})
 	if err == nil {
-		// User exists, update if needed
 		if email != u.Email {
 			u.Email = email
 		}
@@ -558,13 +553,12 @@ func getOrCreateUser(s *xorm.Session, email, name, issuer, subject string) (u *u
 		return u, nil
 	}
 
-	// Try to find by email
+	// Link an existing local account when the email already exists.
 	u, err = user.GetUserWithEmail(s, &user.User{
 		Email:  email,
 		Issuer: user.IssuerLocal,
 	})
 	if err == nil {
-		// Found by email, link to SAML
 		u.Issuer = issuer
 		u.Subject = subject
 		u, err = user.UpdateUser(s, u, false)
@@ -577,7 +571,6 @@ func getOrCreateUser(s *xorm.Session, email, name, issuer, subject string) (u *u
 		return u, nil
 	}
 
-	// Create new user
 	uu := &user.User{
 		Email:   email,
 		Name:    name,
