@@ -52,6 +52,17 @@ test.describe('Bucket Select in Task Detail', () => {
 		// Should show success notification
 		await expect(page.locator('.global-notification')).toContainText('Success')
 
+		// Verify that the task detail sidebar still shows all UI elements after bucket change
+		// (regression test for bug where Object.assign overwrote relations with empty values)
+		const actionButtons = page.locator('.task-view .action-buttons')
+		await expect(actionButtons).toBeVisible()
+		// The action buttons section should still contain multiple buttons (not be empty)
+		const buttonCount = await actionButtons.locator('.button').count()
+		expect(buttonCount).toBeGreaterThan(2)
+
+		// Screenshot: sidebar still intact after bucket change (cropped to action buttons area)
+		await actionButtons.screenshot({path: '../screenshots/sidebar-intact-after-bucket-change.png'})
+
 		// Screenshot: bucket changed with success notification
 		await page.screenshot({path: '../screenshots/bucket-changed-success.png'})
 	})
