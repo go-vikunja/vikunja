@@ -135,7 +135,13 @@
         "taskAndNotifications": "Projects & Tasks",
         "privacy": "Privacy",
         "localization": "Localization",
-        "appearance": "Appearance & Behavior"
+        "appearance": "Appearance & Behavior",
+        "desktop": "Desktop App"
+      },
+      "desktop": {
+        "quickEntryShortcut": "Quick Entry Shortcut",
+        "shortcutRecorderPlaceholder": "Click to set shortcut",
+        "shortcutRecorderRecording": "Press a key combination…"
       },
       "totp": {
         "title": "Two Factor Authentication",
