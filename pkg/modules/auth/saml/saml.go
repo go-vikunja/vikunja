@@ -388,32 +388,57 @@ func HandleACS(c *echo.Context) error {
 			c.Response(), c.Request(), relayState,
 		)
 	}
+	frontendURL := strings.TrimRight(config.ServicePublicURL.GetString(), "/")
 
 	// Extract attributes from the assertion
-	email := getAttributeValue(assertion, "email", "urn:oid:0.9.2342.19200300.100.1.3", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")
-	name := getAttributeValue(assertion, "displayName", "urn:oid:2.16.840.1.113730.3.1.241", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")
-	username := getAttributeValue(assertion, "uid", "urn:oid:0.9.2342.19200300.100.1.1", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn")
-
-	if email == "" {
-		frontendURL := strings.TrimRight(config.ServicePublicURL.GetString(), "/")
+	if assertion.Subject == nil || assertion.Subject.NameID == nil {
 		return c.Redirect(http.StatusFound, frontendURL+"/auth/saml/"+providerKey+"?error=no_email")
 	}
 
-	// Use the NameID as the subject identifier
-	subject := ""
-	if assertion.Subject != nil && assertion.Subject.NameID != nil {
-		subject = assertion.Subject.NameID.Value
-	}
-	if subject == "" {
-		subject = email
+	email := strings.TrimSpace(assertion.Subject.NameID.Value)
+
+	//Validate email format
+	if !strings.Contains(email, "@") {
+		return c.Redirect(http.StatusFound, frontendURL+"/auth/saml/"+providerKey+"?error=no_email")
 	}
 
-	issuer := assertion.Issuer.Value
+	name := strings.TrimSpace(getAttributeValue(
+		assertion,
+		"displayName",
+		"urn:oid:2.16.840.1.113730.3.1.241",
+		"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+	))
+	if name == "" {
+		givenName := strings.TrimSpace(getAttributeValue(
+			assertion,
+			"givenName",
+			"urn:oid:2.5.4.42",
+			"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname",
+		))
+		surname := strings.TrimSpace(getAttributeValue(
+			assertion,
+			"sn",
+			"surname",
+			"urn:oid:2.5.4.4",
+			"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname",
+		))
+
+		switch {
+		case givenName != "" && surname != "":
+			name = givenName + " " + surname
+		case givenName != "":
+			name = givenName
+		case surname != "":
+			name = surname
+		default:
+			name = email
+		}
+	}
 
 	s := db.NewSession()
 	defer s.Close()
 
-	u, err := getOrCreateUser(s, email, name, username, issuer, subject)
+	u, err := getOrCreateUser(s, email, name, assertion.Issuer.Value, assertion.Subject.NameID.Value)
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating user for SAML provider %s: %v", provider.Name, err)
@@ -448,8 +473,6 @@ func HandleACS(c *echo.Context) error {
 		return err
 	}
 
-	// Redirect to frontend with the token
-	frontendURL := strings.TrimRight(config.ServicePublicURL.GetString(), "/")
 	return c.Redirect(http.StatusFound, frontendURL+"/auth/saml/"+providerKey+"?token="+token)
 }
 
@@ -511,7 +534,7 @@ func getAttributeValue(assertion *saml.Assertion, names ...string) string {
 	return ""
 }
 
-func getOrCreateUser(s *xorm.Session, email, name, username, issuer, subject string) (u *user.User, err error) {
+func getOrCreateUser(s *xorm.Session, email, name, issuer, subject string) (u *user.User, err error) {
 	// Check if user already exists by issuer+subject
 	u, err = user.GetUserWithEmail(s, &user.User{
 		Issuer:  issuer,
@@ -555,18 +578,12 @@ func getOrCreateUser(s *xorm.Session, email, name, username, issuer, subject str
 	}
 
 	// Create new user
-	if username == "" {
-		username = strings.ReplaceAll(email, "@", "-")
-	}
-	username = strings.ReplaceAll(username, " ", "-")
-
 	uu := &user.User{
-		Username: username,
-		Email:    email,
-		Name:     name,
-		Status:   user.StatusActive,
-		Issuer:   issuer,
-		Subject:  subject,
+		Email:   email,
+		Name:    name,
+		Status:  user.StatusActive,
+		Issuer:  issuer,
+		Subject: subject,
 	}
 
 	u, err = auth.CreateUserWithRandomUsername(s, uu)
