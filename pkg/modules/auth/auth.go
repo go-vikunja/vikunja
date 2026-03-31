@@ -53,15 +53,17 @@ const RefreshTokenCookieName = "vikunja_refresh_token" //nolint:gosec // not a c
 // getRefreshTokenCookiePath returns the cookie path for the refresh token,
 // derived from service.publicurl.
 func getRefreshTokenCookiePath() string {
+	refreshURL := "/api/v1/user/token/refresh"
+
 	publicURL := config.ServicePublicURL.GetString()
 	u, err := url.Parse(publicURL)
-	if err != nil || publicURL == "" || publicURL == "/" {
-		return "/api/v1/user/token/refresh"
+	if err != nil {
+		return refreshURL
 	}
 
 	// Extract the path component and append the refresh endpoint
 	basePath := strings.TrimRight(u.Path, "/")
-	return basePath + "/api/v1/user/token/refresh"
+	return basePath + refreshURL
 }
 
 // SetRefreshTokenCookie sets an HttpOnly cookie containing the refresh token.
