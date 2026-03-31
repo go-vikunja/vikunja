@@ -51,6 +51,9 @@ let serverPort = null
 let isQuitting = false
 let pendingDeepLinkUrl = null
 let pendingApiUrl = null
+let currentShortcut = null
+const DEFAULT_QUICK_ENTRY_SHORTCUT = 'CmdOrCtrl+Shift+A'
+const launchedWithQuickEntry = process.argv.includes('--quick-entry')
 
 // Ensure single instance so deep links reach the running app on Windows/Linux
 const gotTheLock = app.requestSingleInstanceLock()
@@ -84,6 +87,14 @@ app.on('open-url', (event, url) => {
 
 // Handle deep link on Windows/Linux when a second instance is launched
 app.on('second-instance', (_event, argv) => {
+	// Handle --quick-entry flag from second instance
+	if (argv.includes('--quick-entry')) {
+		if (serverPort) {
+			toggleQuickEntry()
+		}
+		return
+	}
+
 	// Focus the main window
 	if (mainWindow) {
 		if (mainWindow.isMinimized()) mainWindow.restore()
@@ -342,7 +353,7 @@ function setupTray() {
 		},
 		{
 			label: 'Quick Add Task',
-			accelerator: 'CmdOrCtrl+Shift+A',
+			accelerator: currentShortcut || undefined,
 			click: () => showQuickEntry(),
 		},
 		{type: 'separator'},
@@ -386,16 +397,55 @@ ipcMain.on('quick-entry:resize', (_event, width, height) => {
 	quickEntryWindow.setSize(w, h)
 })
 
+ipcMain.on('quick-entry:show-main-window', () => {
+	if (mainWindow) {
+		mainWindow.show()
+		mainWindow.focus()
+	} else {
+		createMainWindow()
+	}
+})
+
+// ─── Shortcut management ────────────────────────────────────────────
+function registerQuickEntryShortcut(shortcut) {
+	if (currentShortcut) {
+		globalShortcut.unregister(currentShortcut)
+	}
+
+	if (!shortcut) {
+		currentShortcut = null
+		return
+	}
+
+	const registered = globalShortcut.register(shortcut, toggleQuickEntry)
+	if (registered) {
+		currentShortcut = shortcut
+	} else {
+		console.warn(`Failed to register global shortcut ${shortcut} — it may be in use by another application`)
+		currentShortcut = null
+	}
+}
+
+ipcMain.on('desktop:update-quick-entry-shortcut', (_event, shortcut) => {
+	registerQuickEntryShortcut(shortcut)
+	// Rebuild tray menu to reflect the new accelerator
+	if (tray) {
+		setupTray()
+	}
+})
+
 // ─── App lifecycle ───────────────────────────────────────────────────
 app.whenReady().then(() => {
-	startServer((port) => {
+	startServer(() => {
 		createMainWindow()
 		createQuickEntryWindow()
 		setupTray()
 
-		const registered = globalShortcut.register('CmdOrCtrl+Shift+A', toggleQuickEntry)
-		if (!registered) {
-			console.warn('Failed to register global shortcut CmdOrCtrl+Shift+A — it may be in use by another application')
+		registerQuickEntryShortcut(DEFAULT_QUICK_ENTRY_SHORTCUT)
+
+		// If launched with --quick-entry, show the quick entry window immediately
+		if (launchedWithQuickEntry) {
+			showQuickEntry()
 		}
 	})
 
