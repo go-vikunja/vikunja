@@ -141,10 +141,15 @@ export const useAuthStore = defineStore('auth', () => {
 				backgroundBrightness: 100,
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
+				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
 				...newSettings.frontendSettings,
 			},
 		})
-		// console.log('settings from auth store', {...settings.value.frontendSettings})
+
+		// Sync the quick entry shortcut to the desktop app when settings are loaded
+		window.vikunjaDesktop?.updateQuickEntryShortcut(
+			settings.value.frontendSettings.desktopQuickEntryShortcut || '',
+		)
 	}
 
 	function setAuthenticated(newAuthenticated: boolean) {
