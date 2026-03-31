@@ -89,7 +89,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-	'update:task': [task: ITask],
+	'update:task': [task: Partial<ITask>],
 }>()
 
 const {t} = useI18n({useScope: 'global'})
@@ -187,9 +187,16 @@ async function changeBucket(view: IProjectView, newBucketIdStr: string) {
 			}
 		}
 
-		// Emit updated task
+		// Only propagate fields that the bucket move can change (done state
+		// when moving to/from a done bucket). We must not emit the full API
+		// response task because it lacks expanded relations (labels, assignees,
+		// attachments, etc.) and would overwrite them with empty values.
 		if (updatedTaskBucket.task) {
-			emit('update:task', updatedTaskBucket.task)
+			emit('update:task', {
+				done: updatedTaskBucket.task.done,
+				doneAt: updatedTaskBucket.task.doneAt,
+				bucketId: updatedTaskBucket.bucketId,
+			})
 		}
 
 		success({message: t('task.detail.bucket.updateSuccess')})
