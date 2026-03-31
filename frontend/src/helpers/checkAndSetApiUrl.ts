@@ -1,7 +1,7 @@
 import {useConfigStore} from '@/stores/config'
 
 const API_DEFAULT_PORT = '3456'
-const API_DEFAULT_PATH = '/api/v1'
+const API_PATH_SUFFIX = '/api/v1'
 
 export const ERROR_NO_API_URL = 'noApiUrlProvided'
 
@@ -35,7 +35,7 @@ function joinPath(base: string, suffix: string): string {
  */
 function hasApiPath(pathname: string): boolean {
 	const clean = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname
-	return clean.endsWith(API_DEFAULT_PATH)
+	return clean.endsWith(API_PATH_SUFFIX)
 }
 
 export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<string> => {
@@ -77,7 +77,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 			console.warn(`Could not fetch 'info' from the provided endpoint ${pUrl} on ${window.API_URL}/info. Some automatic fallback will be tried.`)
 			// Check if it is reachable at the base path + /api/v1 via http
 			if (!hasApiPath(urlToCheck.pathname)) {
-				urlToCheck.pathname = joinPath(urlToCheck.pathname, API_DEFAULT_PATH)
+				urlToCheck.pathname = joinPath(urlToCheck.pathname, API_PATH_SUFFIX)
 				window.API_URL = urlToCheck.toString()
 				return configStore.update()
 			}
@@ -87,7 +87,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 			// Check if it is reachable at the base path + /api/v1 via https
 			urlToCheck.pathname = origPathname
 			if (!hasApiPath(urlToCheck.pathname)) {
-				urlToCheck.pathname = joinPath(urlToCheck.pathname, API_DEFAULT_PATH)
+				urlToCheck.pathname = joinPath(urlToCheck.pathname, API_PATH_SUFFIX)
 				window.API_URL = urlToCheck.toString()
 				return configStore.update()
 			}
@@ -106,7 +106,7 @@ export const checkAndSetApiUrl = (pUrl: string | undefined | null): Promise<stri
 			// Check if it is reachable at :API_DEFAULT_PORT with base path + /api/v1
 			urlToCheck.pathname = origPathname
 			if (!hasApiPath(urlToCheck.pathname)) {
-				urlToCheck.pathname = joinPath(urlToCheck.pathname, API_DEFAULT_PATH)
+				urlToCheck.pathname = joinPath(urlToCheck.pathname, API_PATH_SUFFIX)
 				window.API_URL = urlToCheck.toString()
 				return configStore.update()
 			}
