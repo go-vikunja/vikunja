@@ -43,8 +43,8 @@ test.describe('Bucket Select in Task Detail', () => {
 		const bucketSelect = bucketColumn.locator('[data-cy="bucket-select"]')
 		await expect(bucketSelect).toBeVisible()
 
-		// Screenshot: bucket selector visible in task detail
-		await page.screenshot({path: '../screenshots/bucket-selector-visible.png'})
+		// Screenshot: bucket selector visible in task detail (cropped to bucket field)
+		await bucketColumn.screenshot({path: '../screenshots/bucket-selector-visible.png'})
 
 		// Change to the second bucket
 		await bucketSelect.selectOption({label: buckets[1].title})
@@ -63,8 +63,8 @@ test.describe('Bucket Select in Task Detail', () => {
 		// Screenshot: sidebar still intact after bucket change (cropped to action buttons area)
 		await actionButtons.screenshot({path: '../screenshots/sidebar-intact-after-bucket-change.png'})
 
-		// Screenshot: bucket changed with success notification
-		await page.screenshot({path: '../screenshots/bucket-changed-success.png'})
+		// Screenshot: bucket changed (cropped to action buttons showing Set Bucket is still present)
+		await actionButtons.screenshot({path: '../screenshots/bucket-changed-success.png'})
 	})
 
 	test('Bucket selector is hidden for projects without kanban views', async ({authenticatedPage: page}) => {
@@ -89,8 +89,10 @@ test.describe('Bucket Select in Task Detail', () => {
 		// The "Set Bucket" button should NOT be visible
 		await expect(page.locator('.task-view .action-buttons .button').filter({hasText: 'Set Bucket'})).not.toBeVisible()
 
-		// Screenshot: no bucket selector for non-kanban project
-		await page.screenshot({path: '../screenshots/bucket-selector-hidden-no-kanban.png'})
+		// Screenshot: no bucket selector for non-kanban project (cropped to action buttons area)
+		const actionButtons = page.locator('.task-view .action-buttons')
+		await expect(actionButtons).toBeVisible()
+		await actionButtons.screenshot({path: '../screenshots/bucket-selector-hidden-no-kanban.png'})
 	})
 
 	test('Changing bucket reflects on kanban board', async ({authenticatedPage: page}) => {
@@ -142,7 +144,9 @@ test.describe('Bucket Select in Task Detail', () => {
 		const secondBucket = page.locator('.kanban .bucket').filter({hasText: buckets[1].title})
 		await expect(secondBucket.locator('.tasks .task').filter({hasText: tasks[0].title})).toBeVisible({timeout: 10000})
 
-		// Screenshot: kanban board reflecting the bucket change
-		await page.screenshot({path: '../screenshots/kanban-board-bucket-changed.png'})
+		// Screenshot: kanban board reflecting the bucket change (cropped to kanban area)
+		const kanbanArea = page.locator('.kanban')
+		await expect(kanbanArea).toBeVisible()
+		await kanbanArea.screenshot({path: '../screenshots/kanban-board-bucket-changed.png'})
 	})
 })
