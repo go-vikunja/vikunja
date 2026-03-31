@@ -73,7 +73,7 @@
 
 <script lang="ts" setup>
 import {watch, computed, onBeforeUnmount} from 'vue'
-import {useRoute} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 
 import Navigation from '@/components/home/Navigation.vue'
 import QuickActions from '@/components/quick-actions/QuickActions.vue'
@@ -107,6 +107,7 @@ function showKeyboardShortcuts() {
 }
 
 const route = useRoute()
+const router = useRouter()
 
 // FIXME: this is really error prone
 // Reset the current project highlight in menu if the current route is not project related.
@@ -143,8 +144,10 @@ projectStore.loadAllProjects()
 
 // Listen for task creation from the quick-entry window
 const taskUpdateChannel = new BroadcastChannel('vikunja-task-updates')
-taskUpdateChannel.onmessage = () => {
-	// Handled by later commits (e.g. open task in main window)
+taskUpdateChannel.onmessage = (event) => {
+	if (event.data?.type === 'task-created-open' && event.data?.taskId) {
+		router.push({name: 'task.detail', params: {id: event.data.taskId}})
+	}
 }
 
 onBeforeUnmount(() => {
