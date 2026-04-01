@@ -1,12 +1,34 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package oauth2server
 
 import (
 	"crypto/rand"
+	"strings"
+
 	"net/http"
 	"time"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"github.com/labstack/echo/v5"
 	"github.com/ulule/limiter/v3"
+	"xorm.io/xorm"
 )
 
 type DynamicClientRegistrationResponse struct {
@@ -29,12 +51,38 @@ func RegisterHandler(c *echo.Context) error {
 	request := DynamicClientRegistrationResponse{}
 	err := c.Bind(&request)
 	if err != nil {
-		return err
+		log.Warningf("error parsing request: %v", err)
+		return c.JSON(400, map[string]interface{}{"error": "Error parsing request"})
 	}
 
-	request.ClientID = rand.Text()
+	s := db.NewSession()
+	defer func(s *xorm.Session) {
+		err := s.Close()
+		if err != nil {
+			log.Warningf("Failed to close session: %v", err)
+		}
+	}(s)
+
+	client := models.OAuthClient{
+		ClientID:     rand.Text(),
+		ClientName:   request.ClientName,
+		RedirectURIs: strings.Join(request.RedirectURIs, ","),
+	}
+
+	err = models.CreateOAuthClient(s, &client)
+	if err != nil {
+		log.Warningf("Failed to create OAuth client: %v", err)
+		return c.JSON(400, map[string]interface{}{"error": "Failed to persist client"})
+	}
+
+	request.ClientID = client.ClientID
 	request.GrantTypes = []string{"authorization_code", "refresh_token"}
 
+	err = s.Commit()
+	if err != nil {
+		log.Warningf("Failed to commit session: %v", err)
+		return c.JSON(400, map[string]interface{}{"error": "Failed to persist client"})
+	}
 	return c.JSON(http.StatusOK, request)
 }
 

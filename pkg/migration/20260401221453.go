@@ -14,29 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package oauth2server
+package migration
 
 import (
-	"net/url"
-	"strings"
+	"time"
 
-	"code.vikunja.io/api/pkg/models"
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
-// ValidateRedirectURI checks that the redirect_uri uses a scheme starting with
-// "vikunja-". This allowlists only Vikunja native app schemes (e.g.
-// vikunja-flutter://callback) and rejects dangerous schemes like javascript:,
-// data:, http:, https:, etc.
-func ValidateRedirectURI(req authorizeRequest, client *models.OAuthClient) bool {
+type OAuthClient20260401221453 struct {
+	ClientID     string    `xorm:"varchar(50) not null unique pk" json:"client_id"`
+	ClientName   string    `xorm:"varchar(255) not null" json:"client_name"`
+	RedirectURIs string    `xorm:"text not null" json:"redirect_uris"`
+	Created      time.Time `xorm:"created not null" json:"created"`
+}
 
-	if client != nil && strings.Contains(client.RedirectURIs, req.RedirectURI) {
-		return true
-	}
+func (OAuthClient20260401221453) TableName() string {
+	return "oauth_clients"
+}
 
-	u, err := url.Parse(req.RedirectURI)
-	if err != nil || u.Scheme == "" {
-		return false
-	}
-
-	return strings.HasPrefix(u.Scheme, "vikunja-")
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20260401221453",
+		Description: "",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.Sync(OAuthClient20260401221453{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }
