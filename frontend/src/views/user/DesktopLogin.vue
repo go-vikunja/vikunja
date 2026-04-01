@@ -18,7 +18,7 @@
 			<XButton
 				:loading="waitingForAuth"
 				class="is-fullwidth"
-				@click="loginWithServer(window.API_URL)"
+				@click="loginWithServer(storedServerUrl!)"
 			>
 				{{ $t('user.auth.login') }}
 			</XButton>
@@ -87,7 +87,8 @@ const {redirectIfSaved} = useRedirectToLastVisited()
 
 const waitingForAuth = ref(false)
 const errorMessage = ref('')
-const hasStoredServer = localStorage.getItem('API_URL') !== null
+const storedServerUrl = localStorage.getItem('API_URL')
+const hasStoredServer = storedServerUrl !== null
 const showCustomServerInput = ref(false)
 
 listenForDesktopOAuthTokens(async (tokens) => {
