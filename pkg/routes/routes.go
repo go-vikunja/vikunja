@@ -53,10 +53,8 @@ package routes
 
 import (
 	"context"
-	"crypto/rand"
 	"log/slog"
 	"net"
-	"net/http"
 	"strings"
 	"time"
 
@@ -243,66 +241,6 @@ func setupSentry(e *echo.Echo) {
 	}))
 }
 
-type OIDCWellKnownResponse struct {
-	Issuer                            string   `json:"issuer"`
-	AuthorizationEndpoint             string   `json:"authorization_endpoint"`
-	TokenEndpoint                     string   `json:"token_endpoint"`
-	UserInfoEndpoint                  string   `json:"userinfo_endpoint"`
-	JwksURI                           string   `json:"jwks_uri"`
-	EndSessionEndpoint                string   `json:"end_session_endpoint,omitempty"`
-	ResponseTypesSupported            []string `json:"response_types_supported"`
-	SubjectTypesSupported             []string `json:"subject_types_supported"`
-	IDTokenSigningAlgValuesSupported  []string `json:"id_token_signing_alg_values_supported"`
-	ScopesSupported                   []string `json:"scopes_supported"`
-	TokenEndpointAuthMethodsSupported []string `json:"token_endpoint_auth_methods_supported"`
-	ClaimsSupported                   []string `json:"claims_supported"`
-	CodeChallengeMethodsSupported     []string `json:"code_challenge_methods_supported"`
-	GrantTypesSupported               []string `json:"grant_types_supported"`
-	RegistrationEndpoint              string   `json:"registration_endpoint"`
-}
-
-type DynamicClientRegistrationResponse struct {
-	ClientID                string            `json:"client_id"`
-	ClientSecret            string            `json:"client_secret,omitempty"`
-	RegistrationAccessToken string            `json:"registration_access_token,omitempty"`
-	RegistrationClientURI   string            `json:"registration_client_uri,omitempty"`
-	ClientIDIssuedAt        int64             `json:"client_id_issued_at,omitempty"`
-	ClientSecretExpiresAt   int64             `json:"client_secret_expires_at,omitempty"`
-	ClientName              string            `json:"client_name,omitempty"`
-	ClientNameLocalized     map[string]string `json:"-"`
-	RedirectURIs            []string          `json:"redirect_uris,omitempty"`
-	GrantTypes              []string          `json:"grant_types,omitempty"`
-	TokenEndpointAuthMethod string            `json:"token_endpoint_auth_method,omitempty"`
-	LogoURI                 string            `json:"logo_uri,omitempty"`
-	JwksURI                 string            `json:"jwks_uri,omitempty"`
-}
-
-func oidHandler(c *echo.Context) error {
-	publicURL := strings.TrimSuffix(config.ServicePublicURL.GetString(), "/")
-
-	response := OIDCWellKnownResponse{
-		Issuer:                            publicURL,
-		AuthorizationEndpoint:             publicURL + "/oauth/authorize",
-		TokenEndpoint:                     publicURL + "/api/v1/oauth/token",
-		UserInfoEndpoint:                  publicURL + "/api/v1/user",
-		JwksURI:                           publicURL + "/api/v1/.well-known/jwks.json",
-		ResponseTypesSupported:            []string{"code"},
-		SubjectTypesSupported:             []string{"public"},
-		IDTokenSigningAlgValuesSupported:  []string{"RS256"},
-		ScopesSupported:                   []string{"openid", "profile", "email"},
-		TokenEndpointAuthMethodsSupported: []string{"client_secret_post", "client_secret_basic"},
-		ClaimsSupported: []string{
-			"sub", "name", "email", "email_verified",
-		},
-		CodeChallengeMethodsSupported: []string{"S256"},
-		GrantTypesSupported:           []string{"authorization_code", "refresh_token"},
-		EndSessionEndpoint:            publicURL + "/api/v1/auth/openid/logout",
-		RegistrationEndpoint:          publicURL + "/api/v1/auth/openid/register",
-	}
-
-	return c.JSON(http.StatusOK, response)
-}
-
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
 
@@ -316,21 +254,12 @@ func RegisterRoutes(e *echo.Echo) {
 		registerCalDavRoutes(c)
 	}
 
-	e.GET("/.well-known/openid-configuration", oidHandler)
-	e.GET("/.well-known/oauth-authorization-server", oidHandler)
-	e.POST("/api/v1/auth/openid/register", func(c *echo.Context) error {
+	e.GET("/.well-known/openid-configuration", oauth2server.OidHandler)
+	e.GET("/.well-known/oauth-authorization-server", oauth2server.OidHandler)
 
-		request := DynamicClientRegistrationResponse{}
-		err := c.Bind(&request)
-		if err != nil {
-			return err
-		}
-
-		request.ClientID = rand.Text()
-		request.GrantTypes = []string{"authorization_code", "refresh_token"}
-
-		return c.JSON(http.StatusOK, request)
-	})
+	e.POST("/api/v1/auth/openid/register",
+		oauth2server.RegisterHandler,
+		RateLimit(createRateLimiter(oauth2server.RateLimit()), "ip"))
 
 	// healthcheck
 	e.GET("/health", HealthcheckHandler)
