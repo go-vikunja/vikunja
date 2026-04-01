@@ -126,7 +126,7 @@ func addUserTokenToContext(t *testing.T, u *user.User, c *echo.Context) {
 	token, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
 	require.NoError(t, err)
 	tken, err := jwt.Parse(token, func(_ *jwt.Token) (interface{}, error) {
-		return []byte(config.ServiceJWTSecret.GetString()), nil
+		return []byte(config.ServiceSecret.GetString()), nil
 	})
 	require.NoError(t, err)
 	c.Set("user", tken)

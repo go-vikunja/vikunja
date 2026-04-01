@@ -7,6 +7,7 @@ import {getBlobFromBlurHash} from '@/helpers/getBlobFromBlurHash'
 import ProjectModel from '@/models/project'
 import ProjectService from '@/services/project'
 import {checkAndSetApiUrl, ERROR_NO_API_URL, InvalidApiUrlProvidedError, NoApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
+import {isDesktopApp} from '@/helpers/desktopAuth'
 
 import {useMenuActive} from '@/composables/useMenuActive'
 
@@ -146,6 +147,19 @@ export const useBaseStore = defineStore('base', () => {
 
 	async function loadApp() {
 		try {
+			if (isDesktopApp()) {
+				// On desktop, ignore the default window.API_URL (set by index.html)
+				// and only use a previously stored API URL from localStorage.
+				const storedApiUrl = localStorage.getItem('API_URL')
+				if (storedApiUrl) {
+					window.API_URL = storedApiUrl
+					await authStore.checkAuth()
+				}
+				await router.isReady()
+				ready.value = true
+				return
+			}
+
 			await checkAndSetApiUrl(window.API_URL)
 			await authStore.checkAuth()
 			await router.isReady()

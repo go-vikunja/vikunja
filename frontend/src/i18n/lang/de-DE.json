@@ -54,6 +54,13 @@
 			"authenticating": "Authentifizierung…",
 			"openIdStateError": "Zustand stimmt nicht überein, fahre nicht fort!",
 			"openIdGeneralError": "Es ist ein Fehler bei der externen Authentifizierung aufgetreten.",
+			"oauthMissingParams": "Erforderliche OAuth-Parameter fehlen: {params}",
+			"oauthRedirectedToApp": "Du wurdest zur App weitergeleitet. Du kannst diesen Tab jetzt schließen.",
+			"desktopTryDemo": "Demo ausprobieren",
+			"desktopCustomServer": "Eigene Server-URL",
+			"desktopCustomServerDescription": "Gib die URL deines Vikunja Servers ein, um loszulegen.",
+			"desktopWaitingForAuth": "Warte auf Authentifizierung…",
+			"desktopOAuthError": "Authentifizierung fehlgeschlagen: {error}",
 			"logout": "Abmelden",
 			"emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
 			"usernameRequired": "Bitte gib einen Anmeldenamen ein.",
@@ -155,7 +162,8 @@
 				"tokenCreated": "Hier ist dein neues Token: {token}",
 				"wontSeeItAgain": "Schreib es auf oder speicher es sicher — du wirst es nicht nochmal sehen können.",
 				"mustUseToken": "Du musst einen CalDAV Token erstellen, um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
-				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}"
+				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}",
+				"apiTokenHint": "Du kannst auch ein API-Token mit CalDAV-Berechtigung verwenden. Erstelle eins unter {link}."
 			},
 			"avatar": {
 				"title": "Avatar",

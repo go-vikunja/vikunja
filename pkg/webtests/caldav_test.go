@@ -910,3 +910,41 @@ func TestCaldavDisabledUserRejected(t *testing.T) {
 		assert.False(t, result, "locked user should not be able to authenticate via CalDAV")
 	})
 }
+
+func TestCaldavAPITokenAuth(t *testing.T) {
+	t.Run("API token with caldav permission succeeds", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// API token fixture id 6: owner_id=15, permissions={"caldav":["access"]}
+		result, err := caldav.BasicAuth(c, testuser15.Username, "tk_caldav_api_token_test_00000000aabbccdd")
+		require.NoError(t, err)
+		assert.True(t, result, "API token with caldav permission should authenticate")
+	})
+	t.Run("API token without caldav permission rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// API token fixture id 7: owner_id=15, permissions={"tasks":["read_all"]}
+		result, err := caldav.BasicAuth(c, testuser15.Username, "tk_nocaldav_token_test_000000005678efab")
+		require.NoError(t, err)
+		assert.False(t, result, "API token without caldav permission should be rejected")
+	})
+	t.Run("API token with wrong username rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// Token belongs to user15 but we provide user1's username
+		result, err := caldav.BasicAuth(c, testuser1.Username, "tk_caldav_api_token_test_00000000aabbccdd")
+		require.NoError(t, err)
+		assert.False(t, result, "API token with mismatched username should be rejected")
+	})
+	t.Run("invalid API token rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		result, err := caldav.BasicAuth(c, testuser15.Username, "tk_this_is_totally_not_a_valid_token_at_all")
+		require.NoError(t, err)
+		assert.False(t, result, "invalid API token should be rejected")
+	})
+}

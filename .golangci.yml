@@ -171,6 +171,7 @@ linters:
       - builtin$
       - examples$
       - pkg/routes/api/v1/docs.go
+      - pkg/yaegi_symbols/..*
       - plugins-dev/..*
 formatters:
   enable:
@@ -182,3 +183,4 @@ formatters:
       - third_party$
       - builtin$
       - examples$
+      - pkg/yaegi_symbols/..*

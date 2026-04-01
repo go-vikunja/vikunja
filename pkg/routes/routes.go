@@ -320,6 +320,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/shares/:share/auth":             true,
 	"/api/v1/docs.json":                      true,
 	"/api/v1/docs":                           true,
+	"/api/v1/docs/redoc.standalone.js":       true,
 	"/api/v1/metrics":                        true,
 	"/api/v1/oauth/token":                    true,
 }
@@ -363,6 +364,7 @@ func registerAPIRoutes(a *echo.Group) {
 	// Docs
 	n.GET("/docs.json", apiv1.DocsJSON)
 	n.GET("/docs", apiv1.RedocUI)
+	n.GET("/docs/redoc.standalone.js", apiv1.RedocJS)
 
 	// Prometheus endpoint
 	setupMetrics(n)

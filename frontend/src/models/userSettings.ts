@@ -35,6 +35,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		alwaysShowBucketTaskCount: false,
 		sidebarWidth: null,
 		commentSortOrder: 'asc',
+		desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
 	}
 	extraSettingsLinks = {}
 

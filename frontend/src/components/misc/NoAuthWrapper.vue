@@ -25,7 +25,7 @@
 					>
 						{{ title }}
 					</h2>
-					<ApiConfig v-if="showApiConfig" />
+					<ApiConfig v-if="shouldShowApiConfig" />
 					<Message
 						v-if="motd !== ''"
 						class="is-hidden-tablet mbe-4"
@@ -52,8 +52,9 @@ import ApiConfig from '@/components/misc/ApiConfig.vue'
 
 import { useTitle } from '@/composables/useTitle'
 import { useConfigStore } from '@/stores/config'
+import { isDesktopApp } from '@/helpers/desktopAuth'
 
-withDefaults(
+const props = withDefaults(
 	defineProps<{
 		showApiConfig?: boolean;
 	}>(),
@@ -61,6 +62,11 @@ withDefaults(
 		showApiConfig: false,
 	},
 )
+
+const isDesktop = isDesktopApp()
+const hasStoredApiUrl = isDesktop && localStorage.getItem('API_URL') !== null
+const shouldShowApiConfig = computed(() => props.showApiConfig && (!isDesktop || hasStoredApiUrl))
+
 const configStore = useConfigStore()
 const motd = computed(() => configStore.motd)
 
