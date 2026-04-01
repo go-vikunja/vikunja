@@ -9,7 +9,6 @@
 	</XButton>
 	<Modal
 		:enabled="modalOpen"
-		transition-name="fade"
 		:overflow="true"
 		variant="hint-modal"
 		@close="() => modalOpen = false"
