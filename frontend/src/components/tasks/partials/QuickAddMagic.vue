@@ -19,7 +19,6 @@
 			</BaseButton>
 			<Modal
 				:enabled="visible"
-				transition-name="fade"
 				:overflow="true"
 				variant="hint-modal"
 				@close="close"

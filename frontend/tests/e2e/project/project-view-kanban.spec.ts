@@ -126,8 +126,8 @@ test.describe('Project View Kanban', () => {
 
 		await page.locator('.kanban .bucket .bucket-header .dropdown.options .dropdown-trigger').first().click()
 		await page.locator('.kanban .bucket .bucket-header .dropdown.options .dropdown-menu .dropdown-item').filter({hasText: 'Delete'}).click()
-		await expect(page.locator('.modal-mask .modal-container .modal-content .modal-header')).toContainText('Delete the bucket')
-		await page.locator('.modal-mask .modal-container .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+		await expect(page.locator('dialog[open] .modal-content .modal-header')).toContainText('Delete the bucket')
+		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 
 		await expect(page.locator('.kanban .bucket .title').filter({hasText: buckets[0].title})).not.toBeVisible()
 		await expect(page.locator('.kanban .bucket .title').filter({hasText: buckets[1].title})).toBeVisible()
@@ -208,8 +208,8 @@ test.describe('Project View Kanban', () => {
 		await page.locator('.kanban .bucket .tasks .task').filter({hasText: task.title}).click()
 		await expect(page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'})).toBeVisible()
 		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
-		await expect(page.locator('.modal-mask .modal-container .modal-content .modal-header')).toContainText('Delete this task')
-		await page.locator('.modal-mask .modal-container .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+		await expect(page.locator('dialog[open] .modal-content .modal-header')).toContainText('Delete this task')
+		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 
 		await expect(page.locator('.global-notification')).toContainText('Success')
 
