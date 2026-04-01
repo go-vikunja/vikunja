@@ -17,13 +17,12 @@
 package mcp
 
 import (
-	"context"
-	"encoding/json"
-
+	"code.vikunja.io/api/pkg/mcp/handler"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/version"
+
 	"github.com/labstack/echo/v5"
 
-	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
@@ -37,148 +36,26 @@ func NewMCPServerWrapper(Config) *ServerWrapper {
 
 	mcpHandler := NewMCPServer()
 
-	srv.AddTool(mcp.Tool{
-		Name:        "get_tasks",
-		Description: "Get tasks from Vikunja with optional filters",
-		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]any{
-				"project_id": map[string]any{"type": "integer", "description": "Filter by project ID"},
-				"list_id":    map[string]any{"type": "integer", "description": "Filter by list ID"},
-				"is_done":    map[string]any{"type": "boolean", "description": "Filter by completion status"},
-				"limit":      map[string]any{"type": "integer", "description": "Maximum number of results"},
-				"offset":     map[string]any{"type": "integer", "description": "Number of results to skip"},
-				"search":     map[string]any{"type": "string", "description": "Search tasks by title"},
-			},
+	taskHandler := &handler.McpHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.Task{}
 		},
-	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		token := extractToken(request)
-		paramsBytes, _ := json.Marshal(request.Params.Arguments)
-		return mcpHandler.HandleGetTasks(paramsBytes, token)
-	})
+	}
+	srv.AddTool(taskHandler.CreateTool(), taskHandler.CreateHandler)
+	srv.AddTool(taskHandler.ReadOneTool(), taskHandler.ReadOneHandler)
+	srv.AddTool(taskHandler.UpdateTool(), taskHandler.UpdateHandler)
+	srv.AddTool(taskHandler.DeleteTool(), taskHandler.DeleteHandler)
 
-	srv.AddTool(mcp.Tool{
-		Name:        "get_task",
-		Description: "Get a single task by ID",
-		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]any{
-				"id": map[string]any{"type": "integer", "description": "The task ID"},
-			},
-			Required: []string{"id"},
+	projectHandler := &handler.McpHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.Project{}
 		},
-	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		token := extractToken(request)
-		paramsBytes, _ := json.Marshal(request.Params.Arguments)
-		return mcpHandler.HandleGetTask(paramsBytes, token)
-	})
-
-	srv.AddTool(mcp.Tool{
-		Name:        "create_task",
-		Description: "Create a new task in Vikunja",
-		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]any{
-				"title":       map[string]any{"type": "string", "description": "Task title"},
-				"description": map[string]any{"type": "string", "description": "Task description"},
-				"project_id":  map[string]any{"type": "integer", "description": "Project ID"},
-				"due_date":    map[string]any{"type": "string", "description": "Due date in ISO 8601 format"},
-				"priority":    map[string]any{"type": "integer", "description": "Task priority"},
-			},
-			Required: []string{"title", "project_id"},
-		},
-	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		token := extractToken(request)
-		paramsBytes, _ := json.Marshal(request.Params.Arguments)
-		return mcpHandler.HandleCreateTask(paramsBytes, token)
-	})
-
-	srv.AddTool(mcp.Tool{
-		Name:        "update_task",
-		Description: "Update an existing task in Vikunja",
-		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]any{
-				"id":          map[string]any{"type": "integer", "description": "The task ID"},
-				"title":       map[string]any{"type": "string", "description": "Task title"},
-				"description": map[string]any{"type": "string", "description": "Task description"},
-				"done":        map[string]any{"type": "boolean", "description": "Whether task is done"},
-				"due_date":    map[string]any{"type": "string", "description": "Due date in ISO 8601 format"},
-				"priority":    map[string]any{"type": "integer", "description": "Task priority"},
-			},
-			Required: []string{"id"},
-		},
-	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		token := extractToken(request)
-		paramsBytes, _ := json.Marshal(request.Params.Arguments)
-		return mcpHandler.HandleUpdateTask(paramsBytes, token)
-	})
-
-	srv.AddTool(mcp.Tool{
-		Name:        "delete_task",
-		Description: "Delete a task from Vikunja",
-		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]any{
-				"id": map[string]any{"type": "integer", "description": "The task ID to delete"},
-			},
-			Required: []string{"id"},
-		},
-	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		token := extractToken(request)
-		paramsBytes, _ := json.Marshal(request.Params.Arguments)
-		return mcpHandler.HandleDeleteTask(paramsBytes, token)
-	})
-
-	srv.AddTool(mcp.Tool{
-		Name:        "get_projects",
-		Description: "Get all projects the authenticated user has access to",
-		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]any{
-				"limit":  map[string]any{"type": "integer", "description": "Maximum number of results"},
-				"offset": map[string]any{"type": "integer", "description": "Number of results to skip"},
-			},
-		},
-	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		token := extractToken(request)
-		paramsBytes, _ := json.Marshal(request.Params.Arguments)
-		return mcpHandler.HandleGetProjects(paramsBytes, token)
-	})
-
-	srv.AddTool(mcp.Tool{
-		Name:        "get_lists",
-		Description: "Get all lists in a project",
-		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]any{
-				"project_id": map[string]any{"type": "integer", "description": "The project ID"},
-				"limit":      map[string]any{"type": "integer", "description": "Maximum number of results"},
-				"offset":     map[string]any{"type": "integer", "description": "Number of results to skip"},
-			},
-			Required: []string{"project_id"},
-		},
-	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		token := extractToken(request)
-		paramsBytes, _ := json.Marshal(request.Params.Arguments)
-		return mcpHandler.HandleGetLists(paramsBytes, token)
-	})
-
-	srv.AddTool(mcp.Tool{
-		Name:        "get_kanban_board",
-		Description: "Get kanban board data for a project including buckets and tasks",
-		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]any{
-				"project_id": map[string]any{"type": "integer", "description": "The project ID"},
-			},
-			Required: []string{"project_id"},
-		},
-	}, func(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		token := extractToken(request)
-		paramsBytes, _ := json.Marshal(request.Params.Arguments)
-		return mcpHandler.HandleGetKanbanBoard(paramsBytes, token)
-	})
+	}
+	srv.AddTool(projectHandler.CreateTool(), projectHandler.CreateHandler)
+	srv.AddTool(projectHandler.ReadOneTool(), projectHandler.ReadOneHandler)
+	srv.AddTool(projectHandler.ReadAllTool(), projectHandler.ReadAllMCP)
+	srv.AddTool(projectHandler.UpdateTool(), projectHandler.UpdateHandler)
+	srv.AddTool(projectHandler.DeleteTool(), projectHandler.DeleteHandler)
 
 	httpServer := server.NewStreamableHTTPServer(srv)
 
@@ -186,10 +63,6 @@ func NewMCPServerWrapper(Config) *ServerWrapper {
 		httpServer: httpServer,
 		handler:    mcpHandler,
 	}
-}
-
-func extractToken(request mcp.CallToolRequest) string {
-	return request.Header.Get("Authorization")
 }
 
 func (w *ServerWrapper) HandleRequest(c *echo.Context) error {

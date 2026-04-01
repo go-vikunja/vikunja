@@ -17,6 +17,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -38,6 +39,9 @@ import (
 const ErrCodeInvalidToken = 11
 
 func SetupTokenMiddleware() echo.MiddlewareFunc {
+
+	redirectHost := fmt.Sprint(config.ServicePublicURL.GetString(), ".well-known/openid-configuration")
+
 	return echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(config.ServiceJWTSecret.GetString()),
 		Skipper: func(c *echo.Context) bool {
@@ -51,7 +55,6 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 					if c.Request().URL.Path == "/api/v1/token/test" {
 						return true
 					}
-
 					err := checkAPITokenAndPutItInContext(s, c)
 					return err == nil
 				}
@@ -61,6 +64,7 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 		},
 		ErrorHandler: func(c *echo.Context, err error) error {
 			if err != nil {
+				c.Response().Header().Set(echo.HeaderWWWAuthenticate, redirectHost)
 				return c.JSON(http.StatusUnauthorized, web.HTTPError{
 					HTTPCode: http.StatusUnauthorized,
 					Code:     ErrCodeInvalidToken,

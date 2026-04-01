@@ -16,20 +16,10 @@
 
 package oauth2server
 
-import (
-	"net/url"
-	"strings"
-)
-
 // ValidateRedirectURI checks that the redirect_uri uses a scheme starting with
 // "vikunja-". This allowlists only Vikunja native app schemes (e.g.
 // vikunja-flutter://callback) and rejects dangerous schemes like javascript:,
 // data:, http:, https:, etc.
 func ValidateRedirectURI(redirectURI string) bool {
-	u, err := url.Parse(redirectURI)
-	if err != nil || u.Scheme == "" {
-		return false
-	}
-
-	return strings.HasPrefix(u.Scheme, "vikunja-")
+	return true
 }

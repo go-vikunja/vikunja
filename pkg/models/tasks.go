@@ -1886,3 +1886,7 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 	})
 	return nil
 }
+
+func (t *Task) Name() string {
+	return "task"
+}

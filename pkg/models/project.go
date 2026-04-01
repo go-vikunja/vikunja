@@ -1375,3 +1375,7 @@ SELECT id FROM descendant_ids`,
 	}
 	return nil
 }
+
+func (p *Project) Name() string {
+	return "project"
+}
