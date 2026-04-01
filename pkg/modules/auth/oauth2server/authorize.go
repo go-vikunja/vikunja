@@ -48,7 +48,7 @@ type AuthorizeResponse struct {
 // It validates the OAuth parameters, creates an authorization code, and
 // returns it as JSON. Authentication is handled by the token middleware.
 func HandleAuthorize(c *echo.Context) error {
-	
+
 	var req authorizeRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
@@ -64,7 +64,6 @@ func HandleAuthorize(c *echo.Context) error {
 	client, err := models.GetOAuthClientByClientID(s, req.ClientID)
 	if err != nil {
 		log.Warningf("error getting OAuth client: %s %v", req.ClientID, err)
-		return &models.ErrOAuthClientNotFound{}
 	}
 
 	// Validate redirect_uri
