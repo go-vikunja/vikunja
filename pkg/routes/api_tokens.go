@@ -21,9 +21,9 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/web"
 
 	echojwt "github.com/labstack/echo-jwt/v5"
@@ -72,14 +72,9 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 }
 
 func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	token, u, err := models.ValidateTokenAndGetOwner(s, strings.TrimPrefix(tokenHeaderValue, "Bearer "))
+	token, u, err := auth.ValidateAPITokenString(strings.TrimPrefix(tokenHeaderValue, "Bearer "))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error").Wrap(err)
-	}
-	if token == nil || u == nil {
+		log.Debugf("[auth] API token validation failed: %v", err)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
