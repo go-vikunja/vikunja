@@ -14,7 +14,7 @@
 		>
 			<FancyCheckbox
 				v-model="task.done"
-				:disabled="(isArchived || disabled) && !canMarkAsDone"
+				:disabled="isArchived || disabled || !canMarkAsDone"
 				@update:modelValue="markAsDone"
 				@click.stop
 			/>
