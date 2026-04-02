@@ -1013,8 +1013,6 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		"hex_color",
 		"parent_project_id",
 		"position",
-		"done_bucket_id",
-		"default_bucket_id",
 	}
 	if project.Description != "" {
 		colsToUpdate = append(colsToUpdate, "description")
