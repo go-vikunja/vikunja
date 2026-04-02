@@ -371,6 +371,13 @@ jobs:
         image: ghcr.io/go-vikunja/dex-testing:main@sha256:d401c06a9f8fd36ece446a07499b827232af7f21eb36872a76c9eac4d0c77bab
         ports:
           - 5556:5556
+      saml-idp:
+        image: kristophjunge/test-saml-idp:1.15
+        ports:
+          - 8080:8080
+        env:
+          SIMPLESAMLPHP_SP_ENTITY_ID: http://127.0.0.1:3456/api/v1/auth/saml/test/metadata
+          SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE: http://127.0.0.1:3456/api/v1/auth/saml/test/acs
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-jammy@sha256:4698a73749c5848d3f5fcd42a2174d172fcad2b2283e087843b115424303a565
       options: --user 1001
@@ -418,6 +425,9 @@ jobs:
           VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_AUTHURL: http://dex:5556
           VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTID: vikunja
           VIKUNJA_AUTH_OPENID_PROVIDERS_DEX_CLIENTSECRET: secret
+          VIKUNJA_AUTH_SAML_ENABLED: 1
+          VIKUNJA_AUTH_SAML_PROVIDERS_TEST_NAME: Test SAML IDP
+          VIKUNJA_AUTH_SAML_PROVIDERS_TEST_METADATAURL: http://saml-idp:8080/simplesaml/saml2/idp/metadata.php
       - name: Upload Playwright Report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()

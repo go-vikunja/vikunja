@@ -470,6 +470,10 @@ func HandleACS(c *echo.Context) error {
 		return err
 	}
 
+	cookieMaxAge := int(config.ServiceJWTTTL.GetInt64())
+
+	auth.SetRefreshTokenCookie(c, session.RefreshToken, cookieMaxAge)
+
 	return c.Redirect(http.StatusFound, frontendURL+"/auth/saml/"+providerKey+"?token="+token)
 }
 
