@@ -4,6 +4,7 @@ import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {ProjectViewFactory} from '../../factories/project_view'
 import {TaskBucketFactory} from '../../factories/task_buckets'
+import {TaskRelationFactory} from '../../factories/task_relation'
 
 async function createKanbanTaskInBucket() {
 	const projects = await ProjectFactory.create(1)
@@ -62,6 +63,11 @@ test.describe('Task Bucket Select', () => {
 	})
 
 	test('Does not show the bucket selector when project has no kanban view', async ({authenticatedPage: page}) => {
+		// Truncate leftover data from previous tests
+		await BucketFactory.truncate()
+		await TaskBucketFactory.truncate()
+		await TaskRelationFactory.truncate()
+
 		const projects = await ProjectFactory.create(1)
 		// Only create a list view, no kanban view
 		const views = await ProjectViewFactory.create(1, {
@@ -82,6 +88,9 @@ test.describe('Task Bucket Select', () => {
 
 	test.describe('Multiple kanban views', () => {
 		async function createTaskWithMultipleKanbanViews() {
+			// Truncate leftover task relations from previous tests
+			await TaskRelationFactory.truncate()
+
 			const projects = await ProjectFactory.create(1)
 			const listView = (await ProjectViewFactory.create(1, {
 				id: 1,
