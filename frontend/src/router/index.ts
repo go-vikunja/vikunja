@@ -56,6 +56,7 @@ const router = createRouter({
 				sessionStorage.setItem(redirectKey, 'true')
 
 				const authStore = useAuthStore()
+				const projectStore = useProjectStore()
 				const defaultPage = authStore.settings?.frontendSettings?.defaultPage
 
 				switch (defaultPage) {
@@ -65,7 +66,7 @@ const router = createRouter({
 						const projectId = authStore.settings?.defaultProjectId
 						if (projectId) {
 							try {
-								await useProjectStore().loadProject(projectId)
+								await projectStore.loadProject(projectId)
 								return {name: 'project.index', params: {projectId}}
 							} catch {
 								break

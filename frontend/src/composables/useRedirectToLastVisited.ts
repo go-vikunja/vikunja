@@ -24,6 +24,7 @@ export function useRedirectToLastVisited() {
 
 	function getDefaultPageRoute() {
 		const authStore = useAuthStore()
+		const projectStore = useProjectStore()
 		const defaultPage = authStore.settings?.frontendSettings?.defaultPage
 
 		switch (defaultPage) {
@@ -31,7 +32,7 @@ export function useRedirectToLastVisited() {
 				return {name: 'tasks.range'}
 			case DEFAULT_PAGE.DEFAULT_PROJECT: {
 				const projectId = authStore.settings?.defaultProjectId
-				if (projectId && useProjectStore().projects[projectId]) {
+				if (projectId && projectStore.projects[projectId]) {
 					return {name: 'project.index', params: {projectId}}
 				}
 				return {name: 'home'}
