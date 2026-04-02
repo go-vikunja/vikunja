@@ -243,9 +243,13 @@ export const useAuthStore = defineStore('auth', () => {
 
 		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
 
+		const codeVerifier = sessionStorage.getItem('pkceCodeVerifier')
+		sessionStorage.removeItem('pkceCodeVerifier')
+
 		const data = {
 			code: code,
 			redirect_url: getRedirectUrlFromCurrentFrontendPath(fullProvider),
+			...(codeVerifier && {code_verifier: codeVerifier}),
 		}
 
 		// Delete an eventually preexisting old token
