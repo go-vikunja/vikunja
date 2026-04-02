@@ -73,8 +73,13 @@ async function uploadAttachmentAndVerify(page: Page, taskId: number) {
 	const uploadAttachmentPromise = page.waitForResponse(response =>
 		response.url().includes(`/tasks/${taskId}/attachments`) && response.request().method() === 'PUT',
 	)
+	// The "Add Attachments" button triggers openFilePicker() which may open
+	// a native file chooser (especially inside a <dialog>). Handle it via the
+	// filechooser event so it doesn't block the test.
+	const fileChooserPromise = page.waitForEvent('filechooser')
 	await page.locator('.task-view .action-buttons .button').filter({hasText: 'Add Attachments'}).click()
-	await page.locator('input[type=file]#files').setInputFiles('tests/fixtures/image.jpg')
+	const fileChooser = await fileChooserPromise
+	await fileChooser.setFiles('tests/fixtures/image.jpg')
 	await uploadAttachmentPromise
 
 	await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
@@ -458,8 +463,8 @@ test.describe('Task', () => {
 
 			await expect(page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'})).toBeVisible()
 			await page.locator('.task-view .action-buttons .button').filter({hasText: 'Delete'}).click()
-			await expect(page.locator('.modal-mask .modal-container .modal-content .modal-header')).toContainText('Delete this task')
-			await page.locator('.modal-mask .modal-container .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+			await expect(page.locator('dialog[open] .modal-content .modal-header')).toContainText('Delete this task')
+			await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
 
 			await expect(page.locator('.global-notification')).toContainText('Success')
 			await expect(page).toHaveURL(new RegExp(`/projects/${tasks[0].project_id}/`))
@@ -580,7 +585,7 @@ test.describe('Task', () => {
 
 			await addLabelToTaskAndVerify(page, labels[0].title)
 
-			await page.locator('.modal-container > .close').click()
+			await page.locator('dialog[open] .modal-container > .close').click()
 
 			await expect(page.locator('.bucket .task')).toContainText(labels[0].title)
 		})
@@ -973,7 +978,7 @@ test.describe('Task', () => {
 
 			await uploadAttachmentAndVerify(page, tasks[0].id)
 
-			await page.locator('.modal-container > .close').click()
+			await page.locator('dialog[open] .modal-container > .close').click()
 
 			await expect(page.locator('.bucket .task .footer .icon svg.fa-paperclip')).toBeVisible()
 		})

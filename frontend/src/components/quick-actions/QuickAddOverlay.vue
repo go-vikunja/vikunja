@@ -42,7 +42,11 @@ watch(() => baseStore.quickActionsActive, (active) => {
 // backdrop, disable scroll, and collapse all extra spacing so the input
 // fills the window edge-to-edge.
 .quick-add-overlay {
-	.modal-mask {
+	dialog.modal-dialog {
+		background: transparent;
+	}
+
+	dialog.modal-dialog::backdrop {
 		background: transparent;
 	}
 
@@ -50,7 +54,7 @@ watch(() => baseStore.quickActionsActive, (active) => {
 		overflow: hidden;
 	}
 
-	.modal-mask > .close {
+	dialog.modal-dialog .close {
 		display: none;
 	}
 }
