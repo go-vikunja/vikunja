@@ -116,15 +116,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Bạn có thể kết nối Vikunja tới các khách hàng trên CalDAV để xem và quản lý các tác vụ từ nhiều khách hàng khác nhau. Nhập url vào phần khách hàng:",
 				"more": "Tìm hiểu thêm về CalDAV trên Vikunja",
-				"tokens": "CalDAV Tokens",
-				"tokensHowTo": "Bạn có thể sử dụng mã token CalDAV thay cho mật khẩu để đăng nhập ở bước vừa rồi.",
-				"createToken": "Tạo mã token",
-				"tokenCreated": "Đây là mã token của bạn: {token}",
-				"wontSeeItAgain": "Ghi lại, bạn sẽ không thể thấy nó thêm lần nữa.",
-				"mustUseToken": "Bạn cần tạo mã token CalDAV nếu như muốn sử dụng CalDAV với dịch vụ bên thứ ba. Sử dụng mã token như mật khẩu.",
-				"usernameIs": "Tên đăng nhập của bạn là: {0}"
+				"tokens": "CalDAV Tokens"
 			},
 			"avatar": {
 				"title": "Avatar",

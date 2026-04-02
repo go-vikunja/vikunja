@@ -142,10 +142,15 @@ export const useAuthStore = defineStore('auth', () => {
 				showLastViewed: true,
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
+				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
 				...newSettings.frontendSettings,
 			},
 		})
-		// console.log('settings from auth store', {...settings.value.frontendSettings})
+
+		// Sync the quick entry shortcut to the desktop app when settings are loaded
+		window.vikunjaDesktop?.updateQuickEntryShortcut(
+			settings.value.frontendSettings.desktopQuickEntryShortcut || '',
+		)
 	}
 
 	function setAuthenticated(newAuthenticated: boolean) {
@@ -253,6 +258,18 @@ export const useAuthStore = defineStore('auth', () => {
 			setLoggedInVia(provider)
 
 			// Tell others the user is authenticated
+			await checkAuth()
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	async function handleDesktopOAuthTokens(tokens: {access_token: string, refresh_token: string, expires_in: number}) {
+		setIsLoading(true)
+		try {
+			removeToken()
+			saveToken(tokens.access_token, true)
+			localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
 			await checkAuth()
 		} finally {
 			setIsLoading(false)
@@ -548,6 +565,7 @@ export const useAuthStore = defineStore('auth', () => {
 		login,
 		register,
 		openIdAuth,
+		handleDesktopOAuthTokens,
 		linkShareAuth,
 		checkAuth,
 		refreshUserInfo,

@@ -145,15 +145,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "VikunjaをCalDAVクライアントと連携することでさまざまなクライアントからのすべてのタスクを表示および管理できます。CalDAVクライアントから接続するには次のエンドポイントをコピーしてクライアントに入力します:",
 				"more": "VikunjaのCalDAVに関する詳細情報",
-				"tokens": "CalDAVトークン",
-				"tokensHowTo": "上記のエンドポイントからログインする際にパスワードの代わりにCalDAVトークンを使用できます。",
-				"createToken": "トークンの生成",
-				"tokenCreated": "トークン: {token}",
-				"wontSeeItAgain": "このトークンをコピーしてください。二度と見ることができなくなります。",
-				"mustUseToken": "サードパーティーのクライアントからCalDAVを使用する場合、パスワードの代わりにCalDAVトークンを生成して使用する必要があります。",
-				"usernameIs": "ユーザー名: {0}"
+				"tokens": "CalDAVトークン"
 			},
 			"avatar": {
 				"title": "プロフィール画像",

@@ -15,8 +15,11 @@
 		>
 			{{ errorMessage }}
 		</Message>
+
+		<DesktopLogin v-if="isDesktop" />
+
 		<form
-			v-if="localAuthEnabled || ldapAuthEnabled"
+			v-if="!isDesktop && (localAuthEnabled || ldapAuthEnabled)"
 			id="loginform"
 			@submit.prevent="submit"
 		>
@@ -106,7 +109,7 @@
 		</form>
 
 		<div
-			v-if="hasOpenIdProviders"
+			v-if="!isDesktop && hasOpenIdProviders"
 			class="mbs-4"
 		>
 			<XButton
@@ -131,10 +134,12 @@ import {useDebounceFn} from '@vueuse/core'
 import Message from '@/components/misc/Message.vue'
 import Password from '@/components/input/Password.vue'
 import FormField from '@/components/input/FormField.vue'
+import DesktopLogin from '@/views/user/DesktopLogin.vue'
 
 import {getErrorText} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
+import {isDesktopApp} from '@/helpers/desktopAuth'
 
 import {useAuthStore} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
@@ -157,6 +162,7 @@ const openidConnect = computed(() => configStore.auth.openidConnect)
 const hasOpenIdProviders = computed(() => openidConnect.value.enabled && openidConnect.value.providers?.length > 0)
 
 const isLoading = computed(() => authStore.isLoading)
+const isDesktop = isDesktopApp()
 
 const confirmedEmailSuccess = ref(false)
 const errorMessage = ref('')
@@ -189,6 +195,7 @@ const validateUsernameField = useDebounceFn(() => {
 	usernameValid.value = usernameRef.value?.value !== ''
 }, 100)
 
+
 const needsTotpPasscode = computed(() => authStore.needsTotpPasscode)
 const totpPasscode = ref<HTMLInputElement | null>(null)
 
@@ -217,6 +224,7 @@ async function submit() {
 	try {
 		await authStore.login(credentials)
 		authStore.setNeedsTotpPasscode(false)
+
 		redirectIfSaved()
 	} catch (e) {
 		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {

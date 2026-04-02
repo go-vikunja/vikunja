@@ -25,6 +25,7 @@ export interface IFrontendSettings {
 	showLastViewed: boolean
 	sidebarWidth: number | null
 	commentSortOrder: 'asc' | 'desc'
+	desktopQuickEntryShortcut: string
 }
 
 export interface IExtraSettingsLink {

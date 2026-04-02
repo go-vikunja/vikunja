@@ -5227,8 +5227,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Remove a task comment. The user doing this need to have at least
-        read access to the task this comment belongs to.
+      description: Get a task comment. The user doing this need to have at least read
+        access to the task this comment belongs to.
       parameters:
       - description: Task ID
         in: path
@@ -5261,7 +5261,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Remove a task comment
+      summary: Get a task comment
       tags:
       - task
     post:

@@ -84,7 +84,47 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 	return err
 }
 
+// sortParentsBeforeChildren reorders tasks so that every parent task
+// appears before any of its children. Tasks without a parent come first.
+// The relative order of siblings / unrelated tasks is preserved.
+func sortParentsBeforeChildren(tasks []*tickTickTask) []*tickTickTask {
+	tasksByID := make(map[int64]*tickTickTask, len(tasks))
+	for _, t := range tasks {
+		tasksByID[t.TaskID] = t
+	}
+
+	placed := make(map[int64]bool, len(tasks))
+	result := make([]*tickTickTask, 0, len(tasks))
+
+	var place func(t *tickTickTask)
+	place = func(t *tickTickTask) {
+		if placed[t.TaskID] {
+			return
+		}
+		// If this task has a parent that we know about, place the parent first.
+		if t.ParentID != 0 {
+			if parent, ok := tasksByID[t.ParentID]; ok {
+				place(parent)
+			}
+		}
+		placed[t.TaskID] = true
+		result = append(result, t)
+	}
+
+	for _, t := range tasks {
+		place(t)
+	}
+
+	return result
+}
+
 func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWithTasksAndBuckets) {
+	// Sort tasks so that parent tasks always come before their children.
+	// Without this, create_from_structure.go would try to create a
+	// placeholder for a not-yet-seen parent, which fails because the
+	// placeholder has no title.  (go-vikunja/vikunja#2487)
+	tasks = sortParentsBeforeChildren(tasks)
+
 	var pseudoParentID int64 = 1
 	result = []*models.ProjectWithTasksAndBuckets{
 		{

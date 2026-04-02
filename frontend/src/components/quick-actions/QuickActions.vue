@@ -4,7 +4,12 @@
 		:overflow="isNewTaskCommand"
 		@close="closeQuickActions"
 	>
-		<div class="card quick-actions">
+		<div
+			ref="quickActionsCard"
+			class="card quick-actions"
+			:class="{'is-quick-add-mode': isQuickAddMode}"
+			:style="isQuickAddMode ? {maxHeight: quickEntryMaxHeight + 'px', overflowY: 'auto'} : undefined"
+		>
 			<div
 				class="action-input"
 				:class="{'has-active-cmd': selectedCmd !== null}"
@@ -25,9 +30,12 @@
 					@keyup="search"
 					@keydown.down.prevent="select(0, 0)"
 					@keyup.prevent.delete="unselectCmd"
-					@keyup.prevent.enter="doCmd"
+					@keydown.prevent.enter="onEnter"
 					@keyup.prevent.esc="closeQuickActions"
 				>
+				<QuickAddMagic
+					v-if="isNewTaskCommand"
+				/>
 				<BaseButton
 					class="close"
 					@click="closeQuickActions"
@@ -42,8 +50,6 @@
 			>
 				{{ hintText }}
 			</div>
-
-			<QuickAddMagic v-if="isNewTaskCommand" />
 
 			<div
 				v-if="selectedCmd === null"
@@ -97,7 +103,8 @@
 </template>
 
 <script setup lang="ts">
-import {type ComponentPublicInstance, computed, ref, shallowReactive, watchEffect} from 'vue'
+import {type ComponentPublicInstance, computed, ref, shallowReactive, watch, watchEffect, onBeforeUnmount} from 'vue'
+import {useQuickAddMode} from '@/composables/useQuickAddMode'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 
@@ -137,6 +144,8 @@ const labelStore = useLabelStore()
 const taskStore = useTaskStore()
 const authStore = useAuthStore()
 
+const {isQuickAddMode} = useQuickAddMode()
+
 type DoAction<Type> = { type: ACTION_TYPE } & Type
 
 enum ACTION_TYPE {
@@ -174,6 +183,37 @@ const active = computed(() => baseStore.quickActionsActive)
 watchEffect(() => {
 	if (!active.value) {
 		reset()
+	}
+})
+
+let focusRafId: number | null = null
+
+watchEffect(() => {
+	if (active.value && isQuickAddMode) {
+		selectedCmd.value = commands.value.newTask
+
+		// The input may not be focusable yet due to:
+		// 1. Modal transition (v-if + <Transition appear>) delaying DOM readiness
+		// 2. Electron window not yet visible (shown after did-finish-load)
+		// Retry with rAF until focus actually lands on the input.
+		const tryFocus = () => {
+			if (!active.value) {
+				focusRafId = null
+				return
+			}
+			if (searchInput.value) {
+				searchInput.value.focus()
+				if (document.activeElement === searchInput.value) {
+					focusRafId = null
+					return
+				}
+			}
+			focusRafId = requestAnimationFrame(tryFocus)
+		}
+		focusRafId = requestAnimationFrame(tryFocus)
+	} else if (focusRafId !== null) {
+		cancelAnimationFrame(focusRafId)
+		focusRafId = null
 	}
 })
 
@@ -297,7 +337,7 @@ const currentProject = computed(() => {
 	if (Object.keys(baseStore.currentProject).length === 0 || isSavedFilter(baseStore.currentProject)) {
 		return null
 	}
-	
+
 	return baseStore.currentProject
 })
 
@@ -454,29 +494,66 @@ function search() {
 }
 
 const searchInput = ref<HTMLElement | null>(null)
+const quickActionsCard = ref<HTMLElement | null>(null)
+
+const QUICK_ENTRY_WIDTH = 680
+const quickEntryMaxHeight = Math.round(window.screen.availHeight * 0.7)
+let resizeObserver: ResizeObserver | null = null
+
+if (isQuickAddMode) {
+	watch(quickActionsCard, (el) => {
+		resizeObserver?.disconnect()
+		if (!el) return
+		resizeObserver = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				const height = Math.min(
+					Math.ceil(entry.borderBoxSize[0].blockSize),
+					quickEntryMaxHeight,
+				)
+				window.quickEntry?.resize?.(QUICK_ENTRY_WIDTH, height)
+			}
+		})
+		resizeObserver.observe(el)
+	})
+
+	onBeforeUnmount(() => {
+		resizeObserver?.disconnect()
+	})
+}
 
 async function doAction(type: ACTION_TYPE, item: DoAction) {
 	switch (type) {
 		case ACTION_TYPE.PROJECT:
 			closeQuickActions()
-			await router.push({
-				name: 'project.index',
-				params: {projectId: (item as DoAction<IProject>).id},
-			})
+			if (!isQuickAddMode) {
+				await router.push({
+					name: 'project.index',
+					params: {projectId: (item as DoAction<IProject>).id},
+				})
+			}
 			break
 		case ACTION_TYPE.TASK:
+			if (isQuickAddMode) {
+				const channel = new BroadcastChannel('vikunja-task-updates')
+				channel.postMessage({type: 'task-created-open', taskId: (item as DoAction<ITask>).id})
+				channel.close()
+				window.quickEntry?.showMainWindow()
+			} else {
+				await router.push({
+					name: 'task.detail',
+					params: {id: (item as DoAction<ITask>).id},
+				})
+			}
 			closeQuickActions()
-			await router.push({
-				name: 'task.detail',
-				params: {id: (item as DoAction<ITask>).id},
-			})
 			break
 		case ACTION_TYPE.TEAM:
 			closeQuickActions()
-			await router.push({
-				name: 'teams.edit',
-				params: {id: (item as DoAction<ITeam>).id},
-			})
+			if (!isQuickAddMode) {
+				await router.push({
+					name: 'teams.edit',
+					params: {id: (item as DoAction<ITeam>).id},
+				})
+			}
 			break
 		case ACTION_TYPE.CMD:
 			query.value = ''
@@ -495,18 +572,29 @@ async function doAction(type: ACTION_TYPE, item: DoAction) {
 	}
 }
 
+let openTaskAfterCreate = false
+
+function onEnter(event: KeyboardEvent) {
+	openTaskAfterCreate = event.ctrlKey || event.metaKey
+	doCmd()
+}
+
 async function doCmd() {
 	if (results.value.length === 1 && results.value[0].items.length === 1) {
 		const result = results.value[0]
 		doAction(result.type, result.items[0])
+		openTaskAfterCreate = false
 		return
 	}
 
 	if (selectedCmd.value === null || query.value === '') {
+		openTaskAfterCreate = false
 		return
 	}
 
-	closeQuickActions()
+	if (!isQuickAddMode) {
+		closeQuickActions()
+	}
 	await selectedCmd.value.action()
 }
 
@@ -520,6 +608,22 @@ async function newTask() {
 		projectId,
 	})
 	success({message: t('task.createSuccess')})
+
+	if (isQuickAddMode) {
+		const channel = new BroadcastChannel('vikunja-task-updates')
+		const type = openTaskAfterCreate ? 'task-created-open' : 'task-created'
+		channel.postMessage({type, taskId: task.id})
+		channel.close()
+
+		if (openTaskAfterCreate) {
+			window.quickEntry?.showMainWindow()
+		}
+
+		closeQuickActions()
+		openTaskAfterCreate = false
+		return
+	}
+
 	await router.push({name: 'task.detail', params: {id: task.id}})
 }
 
@@ -602,6 +706,13 @@ function reset() {
 		inset-block-start: 3rem;
 		transform: translate(-50%, 0);
 	}
+
+	&.is-quick-add-mode {
+		padding: 0;
+		margin: 0;
+		border: none;
+		box-shadow: none;
+	}
 }
 
 .action-input {
@@ -611,7 +722,7 @@ function reset() {
 	.input {
 		border: 0;
 		font-size: 1.5rem;
-		
+
 		@media screen and (max-width: $tablet) {
 			padding-inline-end: .25rem;
 		}
@@ -624,7 +735,7 @@ function reset() {
 	.close {
 		padding: 0 1rem 0 .5rem;
 		font-size: 1.5rem;
-		
+
 		@media screen and (min-width: $tablet + 1) {
 			display: none;
 		}
@@ -675,14 +786,14 @@ function reset() {
 	&:active {
 		background: var(--grey-100);
 	}
-	
+
 	.saved-filter-icon {
 		font-size: .75rem;
 		inline-size: .75rem;
 		margin-inline-end: .25rem;
 		color: var(--grey-400)
 	}
-	
+
 	&:has(.saved-filter-icon) {
 		display: inline-flex;
 		align-items: center;

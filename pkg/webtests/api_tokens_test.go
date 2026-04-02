@@ -31,6 +31,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAPITokenRoutesIncludesCaldav(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	s := db.NewSession()
+	defer s.Close()
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/routes", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
+	res := httptest.NewRecorder()
+	e.ServeHTTP(res, req)
+
+	assert.Equal(t, http.StatusOK, res.Code)
+	assert.Contains(t, res.Body.String(), `"caldav"`)
+	assert.Contains(t, res.Body.String(), `"access"`)
+}
+
 func TestAPIToken(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
 		e, err := setupTestEnv()

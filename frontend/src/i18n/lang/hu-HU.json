@@ -100,15 +100,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "A Vikunja a CalDAV kliensekhez csatlakoztatható, hogy megtekinthesse és kezelhesse a különböző kliensektől származó összes feladatot. Írja be ezt az URL-t a kliensébe:",
 				"more": "További információ a CalDAV-ról a Vikunjában",
-				"tokens": "CalDAV Tokenek",
-				"tokensHowTo": "Jelszó helyett CalDAV Token is használható a bejelentkezéshez a fenti végponton.",
-				"createToken": "Token létrehozása",
-				"tokenCreated": "Íme a tokenje: {token}",
-				"wontSeeItAgain": "Kérjük írja le, nem fogja tudni újra megnézni.",
-				"mustUseToken": "Létre kell hoznia egy CalDAV Tokent, ha harmadik féltől származó klienssel szeretné használni. Használja a tokent jelszóként.",
-				"usernameIs": "A felhasználó neve: {0}"
+				"tokens": "CalDAV Tokenek"
 			},
 			"avatar": {
 				"title": "Profilkép",

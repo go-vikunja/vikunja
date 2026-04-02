@@ -36,6 +36,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		showLastViewed: true,
 		sidebarWidth: null,
 		commentSortOrder: 'asc',
+		desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
 	}
 	extraSettingsLinks = {}
 

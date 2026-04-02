@@ -133,6 +133,19 @@
 				"working_on_it": "Wir haben die Fehlermeldung auf dem Schirm und arbeiten daran, das Problem bald zu beheben."
 			}
 		},
+		"api_token": {
+			"expiring": {
+				"week": {
+					"subject": "Dein API-Token „%[1]s“ läuft bald ab",
+					"message": "Dein API-Token „%[1]s“ läuft am %[2]s ab. Wenn du es noch brauchst, erstelle bitte ein neues bevor es abläuft."
+				},
+				"day": {
+					"subject": "Dein API-Token „%[1]s“ läuft morgen ab",
+					"message": "Dein API-Token „%[1]s“ läuft am %[2]s ab. Wenn du es noch brauchst, erstelle bitte ein neues bevor es abläuft."
+				},
+				"action": "API-Token verwalten"
+			}
+		},
 		"common": {
 			"have_nice_day": "Hab einen schönen Tag!",
 			"copy_url": "Falls der Button oben nicht funktioniert, kopiere die untenstehende URL und füge sie in die Adressleiste deines Browsers ein:",

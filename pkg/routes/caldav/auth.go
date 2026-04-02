@@ -18,9 +18,11 @@ package caldav
 
 import (
 	"errors"
+	"strings"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"xorm.io/xorm"
 
@@ -28,9 +30,46 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func checkAPIToken(s *xorm.Session, username, token string) (*user.User, error) {
+	apiToken, u, err := models.ValidateTokenAndGetOwner(s, token)
+	if err != nil {
+		return nil, err
+	}
+	if apiToken == nil || u == nil {
+		return nil, nil
+	}
+
+	if !apiToken.HasCaldavAccess() {
+		log.Debugf("[caldav auth] API token %d does not have caldav access permission", apiToken.ID)
+		return nil, nil
+	}
+
+	if u.Username != username {
+		log.Debugf("[caldav auth] API token %d owner %s does not match provided username %s", apiToken.ID, u.Username, username)
+		return nil, nil
+	}
+
+	return u, nil
+}
+
 func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 	s := db.NewSession()
 	defer s.Close()
+
+	// If the password looks like an API token, validate it as one.
+	// Don't fall through to other auth methods — tk_ prefix is unambiguous.
+	if strings.HasPrefix(password, models.APITokenPrefix) {
+		u, err := checkAPIToken(s, username, password)
+		if err != nil {
+			log.Errorf("Error during API token auth for caldav: %v", err)
+			return false, nil
+		}
+		if u != nil {
+			c.Set("userBasicAuth", u)
+			return true, nil
+		}
+		return false, nil
+	}
 
 	credentials := &user.Login{
 		Username: username,

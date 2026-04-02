@@ -19,13 +19,11 @@ package routes
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	echojwt "github.com/labstack/echo-jwt/v5"
@@ -39,7 +37,7 @@ const ErrCodeInvalidToken = 11
 
 func SetupTokenMiddleware() echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
-		SigningKey: []byte(config.ServiceJWTSecret.GetString()),
+		SigningKey: []byte(config.ServiceSecret.GetString()),
 		Skipper: func(c *echo.Context) bool {
 			authHeader := c.Request().Header.Values("Authorization")
 			if len(authHeader) == 0 {
@@ -76,28 +74,18 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
-	token, err := models.GetTokenFromTokenString(s, strings.TrimPrefix(tokenHeaderValue, "Bearer "))
+
+	token, u, err := models.ValidateTokenAndGetOwner(s, strings.TrimPrefix(tokenHeaderValue, "Bearer "))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error").Wrap(err)
 	}
-
-	if time.Now().After(token.ExpiresAt) {
-		log.Debugf("[auth] Tried authenticating with token %d but it expired on %s", token.ID, token.ExpiresAt.String())
+	if token == nil || u == nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
 	if !models.CanDoAPIRoute(c, token) {
 		log.Debugf("[auth] Tried authenticating with token %d but it does not have permission to do this route", token.ID)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
-	}
-
-	u, err := user.GetUserByID(s, token.OwnerID)
-	if user.IsErrUserStatusError(err) {
-		log.Debugf("[auth] Tried authenticating with token %d but the owner's account is disabled or locked", token.ID)
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
-	}
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error").Wrap(err)
 	}
 
 	c.Set("api_token", token)

@@ -34,6 +34,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	"code.vikunja.io/api/pkg/plugins"
+	_ "code.vikunja.io/api/pkg/plugins/yaegi" // register yaegi plugin loader
 	"code.vikunja.io/api/pkg/red"
 	"code.vikunja.io/api/pkg/user"
 )
@@ -100,6 +101,9 @@ func FullInitWithoutAsync() {
 	// Check all OpenID Connect providers at startup
 	_, err = openid.GetAllProviders()
 	if err != nil {
+		if openid.IsErrDuplicateOIDCIssuer(err) {
+			log.Fatalf("OpenID Connect configuration error: %s", err)
+		}
 		log.Errorf("Error initializing OpenID Connect providers: %s", err)
 	}
 
@@ -127,6 +131,7 @@ func FullInit() {
 	user.RegisterDeletionNotificationCron()
 	openid.CleanupSavedOpenIDProviders()
 	openid.RegisterEmptyOpenIDTeamCleanupCron()
+	models.RegisterAPITokenExpiryCheckCron()
 
 	// Start processing events
 	go func() {
