@@ -231,7 +231,7 @@ const (
 	PluginsEnabled Key = `plugins.enabled`
 	PluginsDir     Key = `plugins.dir`
 	PluginsLoader  Key = `plugins.loader`
-	MCPEnabled Key = `mcp.enabled`
+	MCPEnabled     Key = `mcp.enabled`
 )
 
 var maxFileSizeInBytes uint64
