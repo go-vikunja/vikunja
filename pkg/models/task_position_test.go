@@ -486,8 +486,8 @@ func TestCreateTaskPositionConflictResolution(t *testing.T) {
 		_, err = s.Where("task_id = ? AND project_view_id = ?", 701, 1).Get(&updated2)
 		require.NoError(t, err)
 
-		assert.Equal(t, 11111.0, updated1.Position)
-		assert.Equal(t, 22222.0, updated2.Position)
+		assert.InDelta(t, 11111.0, updated1.Position, 0)
+		assert.InDelta(t, 22222.0, updated2.Position, 0)
 	})
 }
 
