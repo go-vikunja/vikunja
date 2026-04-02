@@ -86,7 +86,7 @@ func TestAPIToken(t *testing.T) {
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_loremipsumdolorsitamet")
 		require.NoError(t, h(c))
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
-		assert.Contains(t, res.Body.String(), `"code":11`)
+		assert.Contains(t, res.Body.String(), `"code":14001`)
 	})
 	t.Run("expired token", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -101,7 +101,7 @@ func TestAPIToken(t *testing.T) {
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_a5e6f92ddbad68f49ee2c63e52174db0235008c8") // Token 2
 		require.NoError(t, h(c))
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
-		assert.Contains(t, res.Body.String(), `"code":11`)
+		assert.Contains(t, res.Body.String(), `"code":14001`)
 	})
 	t.Run("valid token, invalid scope", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -115,8 +115,8 @@ func TestAPIToken(t *testing.T) {
 
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
 		require.NoError(t, h(c))
-		assert.Equal(t, http.StatusUnauthorized, res.Code)
-		assert.Contains(t, res.Body.String(), `"code":11`)
+		assert.Equal(t, http.StatusForbidden, res.Code)
+		assert.Contains(t, res.Body.String(), `"code":14002`)
 	})
 	t.Run("disabled user token rejected", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -131,7 +131,7 @@ func TestAPIToken(t *testing.T) {
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_disabled_user_test_token_000000001234abcd") // Token 4 (disabled user 17)
 		require.NoError(t, h(c))
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
-		assert.Contains(t, res.Body.String(), `"code":11`)
+		assert.Contains(t, res.Body.String(), `"code":14001`)
 	})
 	t.Run("locked user token rejected", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -146,7 +146,7 @@ func TestAPIToken(t *testing.T) {
 		req.Header.Set(echo.HeaderAuthorization, "Bearer tk_locked_user_test_token_0000000012345678") // Token 5 (locked user 18)
 		require.NoError(t, h(c))
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
-		assert.Contains(t, res.Body.String(), `"code":11`)
+		assert.Contains(t, res.Body.String(), `"code":14001`)
 	})
 	t.Run("jwt", func(t *testing.T) {
 		e, err := setupTestEnv()

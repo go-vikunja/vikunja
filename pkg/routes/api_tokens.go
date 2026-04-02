@@ -34,6 +34,7 @@ import (
 // malformed, or expired. The frontend uses this to distinguish "token expired,
 // try refreshing" from other 401s (disabled account, wrong API token, etc.).
 const ErrCodeInvalidToken = 11
+const apiTokenAuthErrorContextKey = "api_token_auth_error"
 
 func SetupTokenMiddleware() echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
@@ -51,6 +52,9 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 					}
 
 					err := checkAPITokenAndPutItInContext(s, c)
+					if err != nil {
+						c.Set(apiTokenAuthErrorContextKey, err)
+					}
 					return err == nil
 				}
 			}
@@ -58,6 +62,29 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 			return false
 		},
 		ErrorHandler: func(c *echo.Context, err error) error {
+			if apiTokenErr, ok := c.Get(apiTokenAuthErrorContextKey).(*echo.HTTPError); ok {
+				statusCode := http.StatusUnauthorized
+				if code, isCode := apiTokenErr.Code.(int); isCode {
+					statusCode = code
+				}
+
+				message := http.StatusText(statusCode)
+				if msg, hasMsg := apiTokenErr.Message.(string); hasMsg && msg != "" {
+					message = msg
+				}
+
+				errorCode := models.ErrCodeAPITokenInvalid
+				if statusCode == http.StatusForbidden {
+					errorCode = models.ErrCodeInvalidAPITokenPermission
+				}
+
+				return c.JSON(statusCode, web.HTTPError{
+					HTTPCode: statusCode,
+					Code:     errorCode,
+					Message:  message,
+				})
+			}
+
 			if err != nil {
 				return c.JSON(http.StatusUnauthorized, web.HTTPError{
 					HTTPCode: http.StatusUnauthorized,
@@ -80,12 +107,12 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context) er
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal Server Error").Wrap(err)
 	}
 	if token == nil || u == nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Invalid or expired API token.")
 	}
 
 	if !models.CanDoAPIRoute(c, token) {
 		log.Debugf("[auth] Tried authenticating with token %d but it does not have permission to do this route", token.ID)
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+		return echo.NewHTTPError(http.StatusForbidden, "API token does not have permission for this route.")
 	}
 
 	c.Set("api_token", token)
