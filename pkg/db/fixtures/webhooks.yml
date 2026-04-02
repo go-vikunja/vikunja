@@ -2,6 +2,9 @@
   target_url: "https://example.com/webhook-fixture"
   events: '["task.updated"]'
   project_id: 1
+  secret: "webhook-secret-fixture"
+  basic_auth_user: "webhook-user"
+  basic_auth_password: "webhook-password"
   created_by_id: 1
   created: 2024-01-01 00:00:00
   updated: 2024-01-01 00:00:00

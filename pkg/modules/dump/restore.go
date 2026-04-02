@@ -247,7 +247,7 @@ func restoreFile(id int64, zipFile *zip.File) error {
 	}
 	defer func() {
 		_ = tmpFile.Close()
-		_ = os.Remove(tmpFile.Name())
+		_ = os.Remove(tmpFile.Name()) // #nosec G703 -- path from os.CreateTemp, not user input
 	}()
 
 	// Limit copy size to prevent decompression bombs

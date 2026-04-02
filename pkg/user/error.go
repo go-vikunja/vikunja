@@ -505,6 +505,33 @@ func (err *ErrAccountDisabled) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrAccountLocked represents an "AccountLocked" kind of error.
+type ErrAccountLocked struct {
+	UserID int64
+}
+
+// IsErrAccountLocked checks if an error is a ErrAccountLocked.
+func IsErrAccountLocked(err error) bool {
+	_, ok := err.(*ErrAccountLocked)
+	return ok
+}
+
+func (err *ErrAccountLocked) Error() string {
+	return "Account is locked"
+}
+
+// ErrCodeAccountLocked holds the unique world-error code of this error
+const ErrCodeAccountLocked = 1026
+
+// HTTPError holds the http error description
+func (err *ErrAccountLocked) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeAccountLocked,
+		Message:  "This account is locked due to too many failed login attempts. You can reset your password to unlock it.",
+	}
+}
+
 // ErrAccountIsNotLocal represents a "AccountIsNotLocal" kind of error.
 type ErrAccountIsNotLocal struct {
 	UserID int64

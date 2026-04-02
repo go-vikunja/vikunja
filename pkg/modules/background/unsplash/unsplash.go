@@ -37,6 +37,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 )
 
@@ -103,7 +104,7 @@ func doGet(url string, result ...interface{}) (err error) {
 
 	req.Header.Add("Authorization", "Client-ID "+config.BackgroundsUnsplashAccessToken.GetString())
 	hc := http.Client{}
-	resp, err := hc.Do(req)
+	resp, err := hc.Do(req) // #nosec G704 -- URL is constructed from hardcoded Unsplash API base
 	if err != nil {
 		return
 	}
@@ -260,7 +261,7 @@ func (p *Provider) Set(s *xorm.Session, image *background.Image, project *models
 	if err != nil {
 		return
 	}
-	resp, err := (&http.Client{}).Do(req)
+	resp, err := utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		return err
 	}
@@ -372,7 +373,7 @@ func pingbackByPhotoID(photoID string) {
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}
-	_, err = (&http.Client{}).Do(req)
+	_, err = utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		log.Errorf("Unsplash Pingback Failed: %s", err.Error())
 	}

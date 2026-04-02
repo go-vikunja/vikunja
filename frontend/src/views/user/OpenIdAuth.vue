@@ -80,8 +80,9 @@ async function authenticateWithCode() {
 			provider: route.params.provider,
 			code: route.query.code,
 		})
+
 		redirectIfSaved()
-	} catch(e) {
+	} catch (e) {
 		errorMessage.value = getErrorText(e)
 	} finally {
 		localStorage.removeItem('authenticating')

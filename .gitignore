@@ -35,6 +35,9 @@ mage-static
 /plugins/*
 /plugins-dev/*
 
+# pnpm
+.pnpm-store/
+
 # Devenv
 .devenv*
 devenv.local.nix
@@ -48,5 +51,6 @@ devenv.local.nix
 # AI Tools
 /.claude/settings.local.json
 PLAN.md
+plans/
 /.crush/
 /.playwright-mcp

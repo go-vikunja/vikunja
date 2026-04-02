@@ -17,7 +17,7 @@
 		</template>
 
 		<LinkSharing
-			v-if="linkSharingEnabled"
+			v-if="linkSharingEnabled && userIsAdmin"
 			:project-id="projectId"
 			class="mbs-4"
 		/>

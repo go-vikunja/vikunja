@@ -43,12 +43,8 @@ func ConfirmEmail(s *xorm.Session, c *EmailConfirm) (err error) {
 	}
 
 	user, err := GetUserByID(s, token.UserID)
-	if err != nil {
-		return
-	}
-
-	if user.Status == StatusDisabled {
-		return &ErrAccountDisabled{UserID: user.ID}
+	if err != nil && !IsErrAccountLocked(err) {
+		return err
 	}
 
 	user.Status = StatusActive

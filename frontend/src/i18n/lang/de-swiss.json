@@ -54,6 +54,13 @@
 			"authenticating": "Authentifiziere…",
 			"openIdStateError": "Status stimmt nid überiih, ich verweigerä wiiter zmache!",
 			"openIdGeneralError": "Es ist ein Fehler bei der externen Authentifizierung aufgetreten.",
+			"oauthMissingParams": "Erforderliche OAuth-Parameter fehlen: {params}",
+			"oauthRedirectedToApp": "Du wurdest zur App weitergeleitet. Du kannst diesen Tab jetzt schließen.",
+			"desktopTryDemo": "Demo ausprobieren",
+			"desktopCustomServer": "Eigene Server-URL",
+			"desktopCustomServerDescription": "Gib die URL deines Vikunja Servers ein, um loszulegen.",
+			"desktopWaitingForAuth": "Warte auf Authentifizierung…",
+			"desktopOAuthError": "Authentifizierung fehlgeschlagen: {error}",
 			"logout": "Uuslogge",
 			"emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
 			"usernameRequired": "Bitte gib einen Anmeldenamen ein.",
@@ -147,15 +154,16 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese Url in deine Client ein:",
+				"howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese URL in deinen Client ein:",
 				"more": "Weitere Informationen über CalDAV in Vikunja",
 				"tokens": "CalDAV-Token",
-				"tokensHowTo": "Du kannst für den obigen Endpunkt einen CalDAV Token anstelle deines Passwortes verwenden.",
-				"createToken": "Token erstellen",
-				"tokenCreated": "Hier ist dein Token: {token}",
-				"wontSeeItAgain": "Notiere dir den Token, er kann nicht wieder angezeigt werden.",
-				"mustUseToken": "Du musst einen CalDAV Token erstellen um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
-				"usernameIs": "Dein Benutzername lautet: {0}"
+				"tokensHowTo": "Für die CalDAV-Authentifizierung kannst du entweder dein normales Passwort oder einen CalDAV-Token verwenden.",
+				"createToken": "CalDAV-Token erstellen",
+				"tokenCreated": "Hier ist dein neues Token: {token}",
+				"wontSeeItAgain": "Schreib es auf oder speicher es sicher — du wirst es nicht nochmal sehen können.",
+				"mustUseToken": "Du musst einen CalDAV Token erstellen, um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
+				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}",
+				"apiTokenHint": "Du kannst auch ein API-Token mit CalDAV-Berechtigung verwenden. Erstelle eins unter {link}."
 			},
 			"avatar": {
 				"title": "Herr Der Elemente",
@@ -207,6 +215,13 @@
 				"tokenCreatedSuccess": "Hier ist dein neues API Token: {token}",
 				"tokenCreatedNotSeeAgain": "Speichere es an einem sicheren Ort, du wirst es nicht mehr sehen!",
 				"selectAll": "Alle auswählen",
+				"presets": {
+					"title": "Voreinstellungen",
+					"readOnly": "Nur Leserechte",
+					"tasks": "Aufgabenverwaltung",
+					"projects": "Projektverwaltung",
+					"fullAccess": "Voller Zugriff"
+				},
 				"delete": {
 					"header": "Dieses Token löschen",
 					"text1": "Bist Du sicher, dass Du das Token \"{token}\" löschen möchtest?",
@@ -842,7 +857,8 @@
 			"select": "Datumsbereich wählen",
 			"noTasks": "Nichts zu tun – Einen schönen Tag noch!",
 			"filterByLabel": "Filtern nach Label {label}",
-			"clearLabelFilter": "Label-Filter leeren"
+			"clearLabelFilter": "Label-Filter leeren",
+			"savedFilterIgnored": "Dein gespeicherter Homepage-Filter wird während der Anzeige von Aufgaben per Label nicht angewendet."
 		},
 		"detail": {
 			"chooseDueDate": "Druck da, um es Fälligkeitsdatum z'setze",

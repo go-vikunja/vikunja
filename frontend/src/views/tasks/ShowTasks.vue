@@ -31,6 +31,12 @@
 				<Icon icon="times" />
 			</BaseButton>
 		</Message>
+		<Message
+			v-if="savedFilterIgnored"
+			class="mbe-2"
+		>
+			{{ $t('task.show.savedFilterIgnored') }}
+		</Message>
 		<p
 			v-if="!showAll"
 			class="show-tasks-options"
@@ -163,6 +169,12 @@ const filteredLabels = computed(() => {
 		.filter(label => label !== null && label !== undefined)
 })
 
+const savedFilterIgnored = computed(() => {
+	return filteredLabels.value.length > 0
+		&& filterIdUsedOnOverview.value
+		&& typeof projectStore.projects[filterIdUsedOnOverview.value] !== 'undefined'
+})
+
 const pageTitle = computed(() => {
 	// We need to define "key" because it is the first parameter in the array and we need the second
 	const predefinedRange = Object.entries(DATE_RANGES)
@@ -262,7 +274,8 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 	}
 
 	let projectId = null
-	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined') {
+	if (showAll.value && filterId && typeof projectStore.projects[filterId] !== 'undefined'
+		&& (!props.labelIds || props.labelIds.length === 0)) {
 		projectId = filterId
 	}
 

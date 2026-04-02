@@ -147,15 +147,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Můžete propojit Vikunja s klienty CalDAV a prohlížet a spravovat všechny úkoly v nich. Zadejte tuto url do klienta:",
 				"more": "Více informací o CalDAV ve Vikunja",
-				"tokens": "CalDAV tokeny",
-				"tokensHowTo": "Pro přihlášení do výše uvedeného koncového bodu můžete použít CalDAV token místo hesla.",
-				"createToken": "Vytvořit token",
-				"tokenCreated": "Tady je váš token: {token}",
-				"wontSeeItAgain": "Poznamenejte si ho, znovu ho už neuvidíte.",
-				"mustUseToken": "Musíte vytvořit CalDAV token, pokud chcete používat CalDAV s klientem třetí strany. Jako heslo použijte token.",
-				"usernameIs": "Vaše uživatelské jméno je: {0}"
+				"tokens": "CalDAV tokeny"
 			},
 			"avatar": {
 				"title": "Avatar",

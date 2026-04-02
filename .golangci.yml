@@ -152,11 +152,26 @@ linters:
           - err113
         path: magefile.go
         text: 'do not define dynamic errors, use wrapped static errors instead:'
+      - linters:
+          - gosec
+        text: 'G117:' # Struct fields named Password/Secret/AccessToken are intentional data model fields
+      - linters:
+          - gosec
+        text: 'G101:'
+        path: (pkg/webtests/|pkg/e2etests/|_test\.go) # Test fixtures with bcrypt hashes, not real credentials
+      - linters:
+          - gosec
+        text: 'G70[24]:'
+        path: magefile.go # Build tooling, not user-facing code
+      - linters:
+          - goheader
+        path: plugins/
     paths:
       - third_party$
       - builtin$
       - examples$
       - pkg/routes/api/v1/docs.go
+      - pkg/yaegi_symbols/..*
       - plugins-dev/..*
 formatters:
   enable:
@@ -168,3 +183,4 @@ formatters:
       - third_party$
       - builtin$
       - examples$
+      - pkg/yaegi_symbols/..*

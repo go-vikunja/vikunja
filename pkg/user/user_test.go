@@ -319,6 +319,26 @@ func TestCheckUserCredentials(t *testing.T) {
 		_, err := CheckUserCredentials(s, &Login{Username: "user1@example.com", Password: "12345678"})
 		require.NoError(t, err)
 	})
+	t.Run("disabled user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user17 is disabled (status=2), password is "12345678"
+		_, err := CheckUserCredentials(s, &Login{Username: "user17", Password: "12345678"})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountDisabled(err))
+	})
+	t.Run("locked user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user18 is locked (status=3), password is "12345678"
+		_, err := CheckUserCredentials(s, &Login{Username: "user18", Password: "12345678"})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountLocked(err))
+	})
 }
 
 func TestUpdateUser(t *testing.T) {
@@ -622,4 +642,29 @@ func TestConfirmDeletion(t *testing.T) {
 			"kind":  TokenAccountDeletion,
 		})
 	})
+}
+
+func TestGetUserByID_DisabledUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// user17 is disabled (status=2)
+	u, err := GetUserByID(s, 17)
+	require.Error(t, err)
+	assert.True(t, IsErrAccountDisabled(err), "GetUserByID should return ErrAccountDisabled, got: %v", err)
+	// User should still be returned alongside the error
+	assert.NotNil(t, u)
+	assert.Equal(t, int64(17), u.ID)
+}
+
+func TestGetUserByID_ActiveUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// user1 is active
+	u, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), u.ID)
 }

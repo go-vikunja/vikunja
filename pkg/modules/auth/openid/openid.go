@@ -158,9 +158,18 @@ func HandleCallback(c *echo.Context) error {
 		return err
 	}
 
+	if u.Status == user.StatusDisabled {
+		_ = s.Rollback()
+		return &user.ErrAccountDisabled{UserID: u.ID}
+	}
+	if u.Status == user.StatusAccountLocked {
+		_ = s.Rollback()
+		return &user.ErrAccountLocked{UserID: u.ID}
+	}
+
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
 
-	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, "OIDC")
+	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, provider.Name)
 	if err != nil {
 		return err
 	}
@@ -278,10 +287,16 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		Issuer:  idToken.Issuer,
 		Subject: idToken.Subject,
 	})
-	if err != nil && !user.IsErrUserDoesNotExist(err) {
+	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
 		return nil, err
 	}
-	alreadyCreatedFromIssuer = err == nil // found if no error, not found if we reach it here despite an error
+	alreadyCreatedFromIssuer = err == nil || user.IsErrUserStatusError(err)
+
+	// If the user exists but is disabled/locked, return early — don't update their profile or sync avatar.
+	// HandleCallback will reject the auth attempt.
+	if alreadyCreatedFromIssuer && user.IsErrUserStatusError(err) {
+		return u, nil
+	}
 
 	if !alreadyCreatedFromIssuer && (provider.EmailFallback || provider.UsernameFallback) {
 
@@ -304,10 +319,15 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 		// Check if the user exists for the given fallback matching options
 		u, err = user.GetUserWithEmail(s, searchUser)
-		if err != nil && !user.IsErrUserDoesNotExist(err) {
+		if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
 			return nil, err
 		}
-		fallbackMatchFound = err == nil // found if no error, not found if we reach it here despite an error
+		fallbackMatchFound = err == nil || user.IsErrUserStatusError(err)
+
+		// Same as above: disabled/locked user found via fallback — return early.
+		if fallbackMatchFound && user.IsErrUserStatusError(err) {
+			return u, nil
+		}
 	}
 
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
@@ -375,6 +395,14 @@ func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 
 	if (forceUserInfo && cl2.Picture != "") || cl.Picture == "" {
 		cl.Picture = cl2.Picture
+	}
+
+	if (forceUserInfo && len(cl2.VikunjaGroups) > 0) || len(cl.VikunjaGroups) == 0 {
+		cl.VikunjaGroups = cl2.VikunjaGroups
+	}
+
+	if (forceUserInfo && len(cl2.ExtraSettingsLinks) > 0) || len(cl.ExtraSettingsLinks) == 0 {
+		cl.ExtraSettingsLinks = cl2.ExtraSettingsLinks
 	}
 
 	if cl.Email == "" {

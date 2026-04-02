@@ -18,7 +18,6 @@ package v1
 
 import (
 	"net/http"
-	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
@@ -189,91 +188,23 @@ func RefreshToken(c *echo.Context) (err error) {
 	if err != nil || cookie.Value == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, "No refresh token provided.")
 	}
-	rawToken := cookie.Value
 
-	s := db.NewSession()
-	defer s.Close()
-
-	session, err := models.GetSessionByRefreshToken(s, rawToken)
+	result, err := auth.RefreshSession(cookie.Value)
 	if err != nil {
-		_ = s.Rollback()
-		if models.IsErrSessionNotFound(err) {
-			// Don't clear the cookie here — another tab may have already
-			// rotated the token, and clearing would overwrite the new cookie.
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid or expired refresh token.")
+		if user2.IsErrUserStatusError(err) {
+			auth.ClearRefreshTokenCookie(c)
 		}
-		return err
-	}
-
-	// Check if the session has expired based on its type
-	maxAge := time.Duration(config.ServiceJWTTTL.GetInt64()) * time.Second
-	if session.IsLongSession {
-		maxAge = time.Duration(config.ServiceJWTTTLLong.GetInt64()) * time.Second
-	}
-	if time.Since(session.LastActive) > maxAge {
-		if _, err := s.Where("id = ?", session.ID).Delete(&models.Session{}); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-		if err := s.Commit(); err != nil {
-			return err
-		}
-		auth.ClearRefreshTokenCookie(c)
-		return echo.NewHTTPError(http.StatusUnauthorized, "Session expired.")
-	}
-
-	if err := models.UpdateSessionLastActive(s, session.ID); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	newRawToken, err := models.RotateRefreshToken(s, session)
-	if err != nil {
-		_ = s.Rollback()
-		if models.IsErrSessionNotFound(err) {
-			// Don't clear the cookie — a concurrent request in another tab
-			// may have already rotated the token successfully.
-			return echo.NewHTTPError(http.StatusUnauthorized, "Refresh token already used.")
-		}
-		return err
-	}
-
-	u, err := user2.GetUserWithEmail(s, &user2.User{ID: session.UserID})
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if u.Status == user2.StatusDisabled || u.Status == user2.StatusAccountLocked {
-		if _, err := s.Where("id = ?", session.ID).Delete(&models.Session{}); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-		if err := s.Commit(); err != nil {
-			return err
-		}
-		auth.ClearRefreshTokenCookie(c)
-		return &user2.ErrAccountDisabled{UserID: u.ID}
-	}
-
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	t, err := auth.NewUserJWTAuthtoken(u, session.ID)
-	if err != nil {
 		return err
 	}
 
 	cookieMaxAge := int(config.ServiceJWTTTL.GetInt64())
-	if session.IsLongSession {
+	if result.IsLongSession {
 		cookieMaxAge = int(config.ServiceJWTTTLLong.GetInt64())
 	}
-	auth.SetRefreshTokenCookie(c, newRawToken, cookieMaxAge)
+	auth.SetRefreshTokenCookie(c, result.NewRefreshToken, cookieMaxAge)
 
 	c.Response().Header().Set("Cache-Control", "no-store")
-	return c.JSON(http.StatusOK, auth.Token{Token: t})
+	return c.JSON(http.StatusOK, auth.Token{Token: result.AccessToken})
 }
 
 // Logout deletes the current session from the server.

@@ -22,6 +22,16 @@ export const parseTaskText = (text: string, prefixesMode: PrefixMode = PrefixMod
 		repeats: null,
 	}
 
+	// If the entire text is wrapped in quotes, strip them and skip all parsing
+	if (
+		text.length >= 2
+		&& ((text.startsWith('"') && text.endsWith('"'))
+			|| (text.startsWith('\'') && text.endsWith('\'')))
+	) {
+		result.text = text.slice(1, -1)
+		return result
+	}
+
 	const prefixes = PREFIXES[prefixesMode]
 	if (prefixes === undefined) {
 		return result

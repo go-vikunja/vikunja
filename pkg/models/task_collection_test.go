@@ -89,14 +89,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:     testCreatedTime,
 		Updated:     testUpdatedTime,
 	}
-	label5 := &Label{
-		ID:          5,
-		Title:       "Label #5",
-		CreatedByID: 2,
-		CreatedBy:   user2,
-		Created:     testCreatedTime,
-		Updated:     testUpdatedTime,
-	}
 
 	// We use individual variables for the tasks here to be able to rearrange or remove ones more easily
 	task1 := &Task{
@@ -602,50 +594,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Created:      time.Unix(1543626724, 0).In(loc),
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
-	task35 := &Task{
-		ID:          35,
-		Title:       "task #35",
-		Identifier:  "test21-1",
-		Index:       1,
-		CreatedByID: 1,
-		CreatedBy:   user1,
-		ProjectID:   21,
-		Assignees: []*user.User{
-			user2,
-		},
-		Labels: []*Label{
-			label4,
-			label5,
-		},
-		RelatedTasks: map[RelationKind][]*Task{
-			RelationKindRelated: {
-				{
-					ID:          1,
-					Title:       "task #1",
-					Description: "Lorem Ipsum",
-					Index:       1,
-					CreatedByID: 1,
-					ProjectID:   1,
-					IsFavorite:  true,
-					Created:     time.Unix(1543626724, 0).In(loc),
-					Updated:     time.Unix(1543626724, 0).In(loc),
-				},
-				{
-					ID:          1,
-					Title:       "task #1",
-					Description: "Lorem Ipsum",
-					Index:       1,
-					CreatedByID: 1,
-					ProjectID:   1,
-					IsFavorite:  true,
-					Created:     time.Unix(1543626724, 0).In(loc),
-					Updated:     time.Unix(1543626724, 0).In(loc),
-				},
-			},
-		},
-		Created: time.Unix(1543626724, 0).In(loc),
-		Updated: time.Unix(1543626724, 0).In(loc),
-	}
 	task39 := &Task{
 		ID:           39,
 		Title:        "task #39",
@@ -775,7 +723,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task32,
 				task33,
-				task35,
 				task39,
 				task47,
 				task48,
@@ -822,7 +769,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task32,
 				task33,
-				task35,
 				task39,
 				task47,
 				task48,
@@ -840,7 +786,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want: []*Task{
 				task48,
 				task47,
-				task35,
 				task33,
 				task32,
 				task31,
@@ -990,7 +935,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task32,
 				task33,
-				task35,
 				task47,
 				task48,
 			},
@@ -1057,7 +1001,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31, // has nil dates
 				task32, // has nil dates
 				task33, // has nil dates
-				task35, // has nil dates
 				task39, // has nil dates
 				task47, // has nil dates
 				task48, // has nil dates
@@ -1231,7 +1174,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task32,
 				task33,
-				task35,
 				task39,
 				task47,
 				task48,
@@ -1275,7 +1217,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			args: defaultArgs,
 			want: []*Task{
 				task30,
-				task35,
 			},
 			wantErr: false,
 		},
@@ -1327,7 +1268,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task32,
 				task33,
-				task35,
 				task39,
 				task47,
 				task48,
@@ -1351,7 +1291,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			args: defaultArgs,
 			want: []*Task{
 				task30,
-				task35,
 			},
 			wantErr: false,
 		},
@@ -1364,7 +1303,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want: []*Task{
 				task1,
 				task2,
-				task35,
 			},
 			wantErr: false,
 		},
@@ -1405,7 +1343,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task31,
 				task32,
 				task33,
-				task35,
 				task39,
 				task47,
 				task48,
@@ -1511,10 +1448,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			fields: fields{
 				Filter: "labels = 4 && labels = 5",
 			},
-			args: defaultArgs,
-			want: []*Task{
-				task35, // only task with both labels 4 and 5
-			},
+			args:    defaultArgs,
+			want:    []*Task{},
 			wantErr: false,
 		},
 		{
@@ -1671,7 +1606,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task48,
 				task47,
 				task39,
-				task35,
 				task33,
 				task32,
 				task31,

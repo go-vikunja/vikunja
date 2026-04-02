@@ -134,7 +134,7 @@ func addUserTokenToContext(t *testing.T, user *user.User, c *echo.Context) {
 	require.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(_ *jwt.Token) (interface{}, error) {
-		return []byte(config.ServiceJWTSecret.GetString()), nil
+		return []byte(config.ServiceSecret.GetString()), nil
 	})
 	require.NoError(t, err)
 	c.Set("user", tken)
@@ -146,7 +146,7 @@ func addLinkShareTokenToContext(t *testing.T, share *models.LinkSharing, c *echo
 	require.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(_ *jwt.Token) (interface{}, error) {
-		return []byte(config.ServiceJWTSecret.GetString()), nil
+		return []byte(config.ServiceSecret.GetString()), nil
 	})
 	require.NoError(t, err)
 	c.Set("user", tken)

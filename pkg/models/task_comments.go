@@ -219,8 +219,8 @@ func getTaskCommentSimple(s *xorm.Session, tc *TaskComment) error {
 }
 
 // ReadOne handles getting a single comment
-// @Summary Remove a task comment
-// @Description Remove a task comment. The user doing this need to have at least read access to the task this comment belongs to.
+// @Summary Get a task comment
+// @Description Get a task comment. The user doing this need to have at least read access to the task this comment belongs to.
 // @tags task
 // @Accept json
 // @Produce json

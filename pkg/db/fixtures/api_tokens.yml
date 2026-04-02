@@ -28,3 +28,43 @@
   owner_id: 2
   created: 2023-09-01 07:00:00
   # token in plaintext is tk_5e29ae2ae079781ff73b0a3e0fe4d75a0b8dcb7c
+- id: 4
+  title: 'disabled user token'
+  token_salt: dU7sTe3pLz
+  token_hash: b33ee92606ff56201e6cdfbefab083562cb6efe9f1e187a4b1f0cf04e53d534bac52638f93be8cae1d98a5cc6fcffc500e60
+  token_last_eight: 1234abcd
+  permissions: '{"tasks":["read_all"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 17
+  created: 2023-09-01 07:00:00
+  # token in plaintext is tk_disabled_user_test_token_000000001234abcd
+- id: 5
+  title: 'locked user token'
+  token_salt: xK9mPr2sNq
+  token_hash: ee3fb2381e42ec87430519de0b59ce5fbe6ad7e0f0be40948ac28100167ed6f26fc6999f53958f589536d6291418c9419aef
+  token_last_eight: 12345678
+  permissions: '{"tasks":["read_all"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 18
+  created: 2023-09-01 07:00:00
+  # token in plaintext is tk_locked_user_test_token_0000000012345678
+- id: 6
+  title: 'caldav access token for user 15'
+  token_salt: cDvTk9sR2m
+  token_hash: 41f673b144dd743df03de7fb3770766d09f0ac11619cbcca1849310bf71093b872258d5f3b5fc0308ac23910c5570e602b25
+  token_last_eight: aabbccdd
+  permissions: '{"caldav":["access"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 15
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_caldav_api_token_test_00000000aabbccdd
+- id: 7
+  title: 'non-caldav token for user 15'
+  token_salt: xY7mNp3qRs
+  token_hash: 844f04afac4479a690b303dbc96795f83526aba0dce11f917e918699542e7ae53f869a9d6e03e147e12350bdf1a710e09cc9
+  token_last_eight: 5678efab
+  permissions: '{"tasks":["read_all"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 15
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_nocaldav_token_test_000000005678efab

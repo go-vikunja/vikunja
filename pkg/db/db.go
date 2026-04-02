@@ -21,7 +21,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -59,14 +58,17 @@ func RegisterTables(tables []interface{}) {
 
 // RegisteredTableNames returns the table names of all registered Vikunja tables.
 func RegisteredTableNames() []string {
-	mapper := x.GetTableMapper()
-	names := make([]string, 0, len(registeredTables)+1)
+	tableNames := make([]string, 0, len(registeredTables)+1)
 	for _, bean := range registeredTables {
-		names = append(names, mapper.Obj2Table(reflect.Indirect(reflect.ValueOf(bean)).Type().Name()))
+		tableInfo, err := x.TableInfo(bean)
+		if err != nil {
+			log.Fatalf("Could not get table info for bean: %v", err)
+		}
+		tableNames = append(tableNames, tableInfo.Name)
 	}
 	// The xormigrate migration tracking table is not registered via GetTables()
-	names = append(names, "migration")
-	return names
+	tableNames = append(tableNames, "migration")
+	return tableNames
 }
 
 // CreateDBEngine initializes a db engine from the config
@@ -360,7 +362,7 @@ func getUserDataDir() (string, error) {
 	}
 
 	// Ensure the directory exists
-	if err := os.MkdirAll(dataDir, 0o700); err != nil {
+	if err := os.MkdirAll(dataDir, 0o700); err != nil { // #nosec G703 -- dataDir is from config or XDG standard paths
 		return "", fmt.Errorf("could not create data directory %s: %w", dataDir, err)
 	}
 

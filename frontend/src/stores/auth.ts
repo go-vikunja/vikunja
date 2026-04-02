@@ -21,7 +21,7 @@ import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
 import {MILLISECONDS_A_SECOND} from '@/constants/date'
-import {PrefixMode} from '@/modules/parseTaskText'
+import {PrefixMode} from '@/modules/quickAddMagic'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
@@ -143,10 +143,15 @@ export const useAuthStore = defineStore('auth', () => {
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
 				defaultPage: DEFAULT_PAGE.LAST_VISITED,
+				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
 				...newSettings.frontendSettings,
 			},
 		})
-		// console.log('settings from auth store', {...settings.value.frontendSettings})
+
+		// Sync the quick entry shortcut to the desktop app when settings are loaded
+		window.vikunjaDesktop?.updateQuickEntryShortcut(
+			settings.value.frontendSettings.desktopQuickEntryShortcut || '',
+		)
 	}
 
 	function setAuthenticated(newAuthenticated: boolean) {
@@ -254,6 +259,18 @@ export const useAuthStore = defineStore('auth', () => {
 			setLoggedInVia(provider)
 
 			// Tell others the user is authenticated
+			await checkAuth()
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	async function handleDesktopOAuthTokens(tokens: {access_token: string, refresh_token: string, expires_in: number}) {
+		setIsLoading(true)
+		try {
+			removeToken()
+			saveToken(tokens.access_token, true)
+			localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
 			await checkAuth()
 		} finally {
 			setIsLoading(false)
@@ -549,6 +566,7 @@ export const useAuthStore = defineStore('auth', () => {
 		login,
 		register,
 		openIdAuth,
+		handleDesktopOAuthTokens,
 		linkShareAuth,
 		checkAuth,
 		refreshUserInfo,

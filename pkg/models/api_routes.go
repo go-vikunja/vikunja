@@ -29,6 +29,12 @@ var apiTokenRoutes = map[string]APITokenRoute{}
 
 func init() {
 	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutes["caldav"] = APITokenRoute{
+		"access": &RouteDetail{
+			Path:   "/dav/*",
+			Method: "ANY",
+		},
+	}
 }
 
 type APITokenRoute map[string]*RouteDetail

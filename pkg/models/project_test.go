@@ -504,12 +504,12 @@ func TestProject_ReadAll(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, reflect.Slice, reflect.TypeOf(projects3).Kind())
 		ls := projects3.([]*Project)
-		assert.Len(t, ls, 28)
+		assert.Len(t, ls, 27)
 		assert.Equal(t, int64(3), ls[0].ID) // Project 3 has a position of 1 and should be sorted first
 		assert.Equal(t, int64(1), ls[1].ID)
 		assert.Equal(t, int64(6), ls[2].ID)
-		assert.Equal(t, int64(-1), ls[26].ID)
-		assert.Equal(t, int64(-2), ls[27].ID)
+		assert.Equal(t, int64(-1), ls[25].ID)
+		assert.Equal(t, int64(-2), ls[26].ID)
 	})
 	t.Run("projects for nonexistent user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -592,5 +592,51 @@ func TestProject_ReadOne(t *testing.T) {
 		err = l.ReadOne(s, u)
 		require.NoError(t, err)
 		assert.NotNil(t, l.Subscription)
+	})
+}
+
+func TestCheckIsArchived(t *testing.T) {
+	t.Run("child project archived individually with non-archived parent", func(t *testing.T) {
+		// Project 40 is archived individually (is_archived=true) but its parent
+		// (project 1) is not archived. CheckIsArchived must still return an error.
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		p := &Project{ID: 40, ParentProjectID: 3}
+		err := p.CheckIsArchived(s)
+		require.Error(t, err)
+		assert.True(t, IsErrProjectIsArchived(err))
+	})
+	t.Run("root project archived", func(t *testing.T) {
+		// Project 22 is archived individually with no parent.
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		p := &Project{ID: 22}
+		err := p.CheckIsArchived(s)
+		require.Error(t, err)
+		assert.True(t, IsErrProjectIsArchived(err))
+	})
+	t.Run("child project inherits archived from parent", func(t *testing.T) {
+		// Project 21's parent (project 22) is archived.
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		p := &Project{ID: 21, ParentProjectID: 22}
+		err := p.CheckIsArchived(s)
+		require.Error(t, err)
+		assert.True(t, IsErrProjectIsArchived(err))
+	})
+	t.Run("non-archived project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		p := &Project{ID: 1}
+		err := p.CheckIsArchived(s)
+		require.NoError(t, err)
 	})
 }

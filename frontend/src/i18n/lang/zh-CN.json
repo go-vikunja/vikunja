@@ -124,15 +124,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "您可以将 Vikunja 连接到 CalDAV 客户端来查看和管理来自不同客户端的所有任务。请将此URL输入您的客户端：",
 				"more": "更多关于 Vikunja 的 CalDAV 信息",
-				"tokens": "CalDAV Tokens",
-				"tokensHowTo": "您可以使用 CalDAV Tokens 代替密码登录上述端点。",
-				"createToken": "创建令牌",
-				"tokenCreated": "这是您的令牌: {token}",
-				"wontSeeItAgain": "将其写下，您将无法再次看到。",
-				"mustUseToken": "如果您想要通过第三方客户端来登录使用 CalDAV，则需要创建一个 CalDAV 令牌，并使用该令牌作为密码。",
-				"usernameIs": "您的用户名是: {0}"
+				"tokens": "CalDAV Tokens"
 			},
 			"avatar": {
 				"title": "头像",

@@ -7,6 +7,106 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [2.2.2] - 2026-03-23
+
+### Bug Fixes
+
+* Require admin access to list link shares ([5cd5dc4](5cd5dc409bfc807f79dac5e4ef4aec54b6efd6e2))
+* Hide link sharing section in UI for non-admin users ([74d1bdd](74d1bddb3ab32fc8983d778bb65e89b1d50227d6))
+
+## [2.2.1] - 2026-03-23
+
+### Bug Fixes
+
+* *(auth)* Reject disabled/locked users in OIDC callback
+* *(auth)* Reject disabled/locked users in API token middleware
+* *(auth)* Return correct error type for locked users in OIDC callback
+* *(auth)* Reject disabled/locked users in CheckUserCredentials
+* *(auth)* Skip profile updates for disabled LDAP users
+* *(caldav)* Replace href with pathname from parseURL for api base
+* *(frontend)* OrigUrlToCheck references the same object as urlToCheck
+* *(openid)* Merge VikunjaGroups and ExtraSettingsLinks from userinfo
+* *(user)* Reject disabled/locked users in getUser by default
+* *(user)* Handle status errors in pkg/user callers, remove redundant checks
+* *(user)* Handle status errors across the codebase, remove redundant checks
+* *(user)* Use getUser directly for uniqueness checks in UpdateUser
+* *(user)* Use unique error code for ErrCodeAccountLocked
+* Remove small class from preset label ([652eb9b](652eb9bba3701b72cbb26f5e60f7fc559c452eb7))
+* Include kanban bucket move permission in tasks preset ([0085772](0085772b63b12747b804a7caac2ab4c846b664b3))
+* Prevent TOTP passcode reuse within validity window ([5f06e1d](5f06e1dce56ca2b1845c9adb7aacab8777296e1f))
+* Update TOTP reuse test to use user10 matching rebased fixture ([acafa6d](acafa6db10b238dae5b66851cc2c5dedbd51bbd1))
+* Add TTL-based expiry and cleanup for used TOTP passcode entries ([0f98c19](0f98c19ab66215200facebd8fac58d5aedc8c0ef))
+* Check child project's own IsArchived flag in CheckIsArchived ([d0606ea](d0606eadea06669326f9f39747d2fc49191c2e69))
+* Update ParadeDB search test count for new fixture ([595002b](595002bf96556e9f1d16fb4e2016d16d7a2e2564))
+* Filter related tasks by project access to prevent cross-project info disclosure ([67a4778](67a47787fa12ff61ff80be0c79032bec71e3e63d))
+* Prevent attachment IDOR by validating task_id in ReadOne (GHSA-jfmm-mjcp-8wq2) ([b8edc8f](b8edc8f17f47222e439bbac8725758a02782e943))
+* Prevent link share IDOR by validating project_id in Delete and ReadOne ([654d2c7](654d2c7042f912f662bb49e05b7f9bb74e6ae1b4))
+* Prevent SSRF via OpenID Connect avatar download (GHSA-g9xj-752q-xh63) ([363aa66](363aa6642352b08fc8bc6aaff2f3a550393af1cf))
+* Prevent SSRF via migration file attachment URLs (GHSA-g66v-54v9-52pr) ([9329774](93297742236e3d33af72c993e5da960db01d259e))
+* Prevent SSRF via Microsoft Todo migration pagination links ([73edbb6](73edbb6d467bb1c01f928568c6f28f3d5eabe807))
+* Prevent SSRF via Unsplash background image download ([a94109e](a94109e1beab683277fb1524514fcd7368cd071d))
+* Block link share users from listing link shares in ReadAll ([9efe1fa](9efe1fadba817923c7c7f5953c3e9e9c5683bbf3))
+* Correct error message assertion in linkshare ReadAll tests ([a0478a0](a0478a0d96befef4583fdf10ac7a02eff4d8e435))
+* Strip BasicAuth credentials from project webhook API responses ([75c9b75](75c9b753a8e4feed8f681ad76fe8f125b0016366))
+* Strip BasicAuth credentials from user webhook API responses ([6aef5af](6aef5aff62f58edd178d954e30981b18c2348bc2))
+* Use MySQL-compatible CREATE INDEX in migration 20260224215050 ([867c527](867c52745f595f9fb00e868ed3a81a31e2c89672))
+* Skip quick add magic parsing when text is wrapped in quotes ([07b9742](07b9742d98d8068ae14f752babfe2715f031fc0b))
+
+### Dependencies
+
+* *(deps)* Update dependency rollup to v4.60.0
+* *(deps)* Update dependency caniuse-lite to v1.0.30001781
+* *(deps)* Update flatted to 3.4.2 to fix prototype pollution vulnerability
+* *(deps)* Update dev-dependencies
+* *(deps)* Update dev-dependencies to v8.57.2
+
+### Documentation
+
+* Mention mole proxy in outgoingrequests config docs ([701e3f9](701e3f952514cb12f4cec5b533b38ce81b1cc60f))
+
+### Features
+
+* *(user)* Add ErrAccountLocked error type
+* Add quick presets for API token permission selection ([68097cf](68097cf7004f3d7f1d6e5ff57f7adf5b001f513d))
+* Add outgoingrequests config keys for centralized SSRF protection ([f96b53f](f96b53fe998e9a7484507d4a31dd79f86dd556c6))
+* Add shared SSRF-safe HTTP client utility ([0266fff](0266fffad2fcf9a81c2eb3d0466734633fdf7fb7))
+
+### Miscellaneous Tasks
+
+* *(ci)* Update golangci-lint to v2.10.1
+* *(i18n)* Update translations via Crowdin
+* *(lint)* Suppress known gosec false positives
+* *(lint)* Suppress additional gosec false positives
+* *(lint)* Suppress gosec false positives on SSRF-safe HTTP client calls
+
+### Refactor
+
+* *(user)* Export IsErrUserStatusError for use across packages
+* Reorganize quick add magic into focused modules ([cb81cf1](cb81cf1aa83d006ac83f74556c1b195f22a1335f))
+* Add accessibleProjectIDsSubquery helper for project-level authz filtering ([e2683bb](e2683bb2bcffa879054474e702ea8c2c405c8b8d))
+* Use accessibleProjectIDsSubquery in addBucketsToTasks ([833f2ae](833f2aec006ac0f6643c41872e45dd79220b9174))
+* Use shared SSRF-safe HTTP client in webhook code ([e5a1c05](e5a1c057719dd768e5101787830dce585aeaf460))
+
+### Testing
+
+* *(auth)* Add comprehensive disabled/locked user auth tests
+* Add TOTP fixture and load it in user test bootstrap ([de58f63](de58f630ee41d8672c7a4c644edb8b0b8b9c97e8))
+* Add failing test for TOTP passcode reuse prevention ([5591ca9](5591ca94baf8cdece3f5ca6a1968fa96886e7de1))
+* Add API token fixture for disabled user ([198322c](198322c8e153d41b37ae761fb0ebe71059c87e12))
+* Verify disabled user's API token is rejected ([e4379ef](e4379eff108b4061d39a63dbe7a60fd6ab2793a7))
+* Verify disabled user is rejected via CalDAV auth ([8b614a4](8b614a4cb3226a9816da6ec46b81b2234e88760a))
+* Verify GetUserByID rejects disabled users and returns user with error ([525f5ee](525f5ee407b74db31d0476882a89d359641f83a6))
+* Add cross-project task relation fixture for authz test ([589d2a5](589d2a55561601d26c043db6c8b33893ce738ccc))
+* Add failing test for cross-project task relation info disclosure ([50c3eeb](50c3eebd235896fce0984a242c97385bc77458c4))
+* Add attachment fixture on inaccessible task for IDOR test ([b2c3c36](b2c3c36b6fdf05caefd223067ec7d1ebdf7d66fd))
+* Add IDOR test for task attachment ReadOne (GHSA-jfmm-mjcp-8wq2) ([3111f3d](3111f3d70ce08764b18f887b1824205b9f133503))
+* Use new outgoingrequests config keys in SSRF tests ([d4d88c0](d4d88c0f5935c51a8f9c0b205e9b517537792228))
+* Remove redundant webhook SSRF tests ([848a4e7](848a4e7f0757bc6a18bcdbc0205f23fe226a1866))
+* Add BasicAuth credentials to webhook fixture ([094ff5f](094ff5f1efe403df5c5e63ba99144cddff293059))
+* Add failing test for webhook BasicAuth credential exposure ([751ab2c](751ab2c63505119d9c3b1f458100147d26f49b94))
+* Update user count assertions for new locked user fixture ([c1418c1](c1418c1619b15fb9a9707ab4820528e087ddd354))
+* Add failing tests for quote-escaped task text parsing ([8538b4c](8538b4c885d03789061161772233ea60be8bbe37))
+
 ## [2.2.0] - 2026-03-20
 
 ### Bug Fixes

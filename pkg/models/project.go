@@ -454,7 +454,7 @@ type projectOptions struct {
 	getArchived bool
 }
 
-func getUserProjectsStatement(userID int64, search string, getArchived bool) *builder.Builder {
+func getUserProjectsStatement(userID int64, search string) *builder.Builder {
 	dialect := db.GetDialect()
 
 	conds := []builder.Cond{
@@ -507,16 +507,8 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 		conds = append(conds, filterCond, parentCondition)
 	}
 
-	if !getArchived {
-		conds = append(conds,
-			builder.And(
-				builder.Eq{"l.is_archived": false},
-			),
-		)
-	}
-
 	return builder.Dialect(dialect).
-		Select("l.*").
+		Select("l.id, l.title, l.description, l.identifier, l.hex_color, l.owner_id, l.parent_project_id, l.is_archived, l.background_file_id, l.background_blur_hash, l.position, l.created, l.updated").
 		From("projects", "l").
 		Join("LEFT", "team_projects tl", "tl.project_id = l.id").
 		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
@@ -525,10 +517,30 @@ func getUserProjectsStatement(userID int64, search string, getArchived bool) *bu
 		GroupBy("l.id")
 }
 
+// accessibleProjectIDsSubquery returns a builder.Cond that filters rows
+// where `column` is a project ID the given auth can access. For link shares
+// this is a simple equality check; for users it's a subquery using the
+// same recursive CTE as getUserProjectsStatement.
+func accessibleProjectIDsSubquery(a web.Auth, column string) builder.Cond {
+	if share, ok := a.(*LinkSharing); ok {
+		return builder.Eq{column: share.ProjectID}
+	}
+
+	u, err := user.GetFromAuth(a)
+	if err != nil {
+		// If we can't get a user, deny everything
+		return builder.Expr("1 = 0")
+	}
+
+	return builder.In(column,
+		getUserProjectsStatement(u.ID, "").Select("l.id"),
+	)
+}
+
 func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) (projects []*Project, totalCount int64, err error) {
 
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	query := getUserProjectsStatement(userID, opts.search, opts.getArchived)
+	query := getUserProjectsStatement(userID, opts.search)
 
 	querySQLString, args, err := query.ToSQL()
 	if err != nil {
@@ -542,7 +554,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 
 	baseQuery := querySQLString + `
 UNION ALL
-SELECT p.* FROM projects p
+SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, (ap.is_archived OR p.is_archived) AS is_archived, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
 INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	columnStr := strings.Join([]string{
@@ -553,17 +565,38 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.hex_color",
 		"all_projects.owner_id",
 		"CASE WHEN all_projects.parent_project_id IS NULL THEN 0 ELSE all_projects.parent_project_id END AS parent_project_id",
-		"all_projects.is_archived",
+		"MAX(CAST(all_projects.is_archived AS int)) AS is_archived",
 		"all_projects.background_file_id",
 		"all_projects.background_blur_hash",
 		"all_projects.position",
 		"all_projects.created",
 		"all_projects.updated",
 	}, ", ")
+
+	groupByStr := strings.Join([]string{
+		"all_projects.id",
+		"all_projects.title",
+		"all_projects.description",
+		"all_projects.identifier",
+		"all_projects.hex_color",
+		"all_projects.owner_id",
+		"all_projects.parent_project_id",
+		"all_projects.background_file_id",
+		"all_projects.background_blur_hash",
+		"all_projects.position",
+		"all_projects.created",
+		"all_projects.updated",
+	}, ", ")
+
+	var archivedFilter string
+	if !opts.getArchived {
+		archivedFilter = "HAVING MAX(CAST(all_projects.is_archived AS int)) = 0 "
+	}
+
 	currentProjects := []*Project{}
 	err = s.SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT DISTINCT `+columnStr+` FROM all_projects
-ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
+SELECT `+columnStr+` FROM all_projects
+GROUP BY `+groupByStr+` `+archivedFilter+`ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
 	if err != nil {
 		return
 	}
@@ -574,7 +607,7 @@ ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
 
 	totalCount, err = s.
 		SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT COUNT(DISTINCT all_projects.id) FROM all_projects`, args...).
+SELECT COUNT(*) FROM (SELECT all_projects.id FROM all_projects GROUP BY all_projects.id `+archivedFilter+`) sub`, args...).
 		Count(&Project{})
 	if err != nil {
 		return nil, 0, err
@@ -797,12 +830,12 @@ func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 
 // CheckIsArchived returns an ErrProjectIsArchived if the project or any of its parent projects is archived.
 func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
-	if p.ParentProjectID > 0 {
-		p := &Project{ID: p.ParentProjectID}
-		return p.CheckIsArchived(s)
-	}
-
-	if p.ID == 0 { // don't check new projects
+	if p.ID == 0 {
+		// New project — skip checking the project itself but still check the parent.
+		if p.ParentProjectID > 0 {
+			parent := &Project{ID: p.ParentProjectID}
+			return parent.CheckIsArchived(s)
+		}
 		return nil
 	}
 
@@ -813,6 +846,11 @@ func (p *Project) CheckIsArchived(s *xorm.Session) (err error) {
 
 	if project.IsArchived {
 		return ErrProjectIsArchived{ProjectID: p.ID}
+	}
+
+	if project.ParentProjectID > 0 {
+		parent := &Project{ID: project.ParentProjectID}
+		return parent.CheckIsArchived(s)
 	}
 
 	return nil

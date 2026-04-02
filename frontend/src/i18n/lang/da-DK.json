@@ -83,15 +83,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Du kan forbinde Vikunja til CalDAV klienter for at vise og administrere alle opgaver fra forskellige klienter. Indtast dette url i din klient:",
 				"more": "Mere information om CalDAV i Vikunja",
-				"tokens": "CalDAV Tokens",
-				"tokensHowTo": "Du kan bruge et CalDAV-token i stedet for en adgangskode til at logge på ovenstående slutpunkt.",
-				"createToken": "Opret et token",
-				"tokenCreated": "Her er dit token: {token}",
-				"wontSeeItAgain": "Skriv det ned; du vil ikke være i stand til at få det vist igen.",
-				"mustUseToken": "Du skal oprette et CalDAV-token hvis du ønsker at bruge CalDAV med en tredjeparts klient. Brug token som adgangskode.",
-				"usernameIs": "Dit brugernavn er: {0}"
+				"tokens": "CalDAV Tokens"
 			},
 			"avatar": {
 				"title": "Profilbillede",
