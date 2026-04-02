@@ -146,13 +146,11 @@ const flatPickerDateRange = computed<Date[]>({
 	},
 })
 
-const initialDateRange = [filters.value.dateFrom, filters.value.dateTo]
-
 const {t} = useI18n({useScope: 'global'})
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatShort'),
 	altInput: true,
-	defaultDate: initialDateRange,
+	defaultDate: [filters.value.dateFrom, filters.value.dateTo],
 	enableTime: false,
 	mode: 'range',
 	locale: useFlatpickrLanguage().value,
