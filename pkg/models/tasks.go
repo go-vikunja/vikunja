@@ -921,6 +921,11 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		if err != nil {
 			return
 		}
+
+		err = resolvePositionConflictsAfterInsert(s, positions)
+		if err != nil {
+			return
+		}
 	}
 
 	if len(taskBuckets) > 0 {
