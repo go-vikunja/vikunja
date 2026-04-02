@@ -162,6 +162,8 @@ const flatPickerConfig = computed(() => ({
 <style lang="scss" scoped>
 .gantt-chart-container {
 	padding-block-end: 1rem;
+	position: relative;
+	z-index: 0;
 }
 
 .gantt-options {
