@@ -94,3 +94,10 @@
   permission: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Team 16 has read access on project 41 (the parent) — hierarchy permission test
+- id: 16
+  team_id: 16
+  project_id: 41
+  permission: 0
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
