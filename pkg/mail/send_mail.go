@@ -17,7 +17,9 @@
 package mail
 
 import (
+	"crypto/rand"
 	"embed"
+	"encoding/hex"
 	"fmt"
 	"io"
 
@@ -78,6 +80,13 @@ func SendTestMail(opts *Opts) error {
 func getMessage(opts *Opts) *mail.Msg {
 	m := mail.NewMsg()
 	m.SetUserAgent("Vikunja " + version.Version)
+
+	// Set an RFC 5322 compliant Message-ID using the public URL domain
+	// instead of relying on os.Hostname() which is unreliable in containers.
+	randBytes := make([]byte, 16)
+	_, _ = rand.Read(randBytes)
+	messageID := hex.EncodeToString(randBytes) + "@" + GetMailDomain()
+	m.SetMessageIDWithValue(messageID)
 	if opts.From == "" {
 		opts.From = "Vikunja <" + config.MailerFromEmail.GetString() + ">"
 	}
