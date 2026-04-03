@@ -135,7 +135,13 @@
 				"taskAndNotifications": "Projekte & Aufgaben",
 				"privacy": "Privatsphäre",
 				"localization": "Sprachauswahl",
-				"appearance": "Aussehen & Verhalten"
+				"appearance": "Aussehen & Verhalten",
+				"desktop": "Desktop-App"
+			},
+			"desktop": {
+				"quickEntryShortcut": "Quick Entry Tastenkombination",
+				"shortcutRecorderPlaceholder": "Klicken, um Tastenkombination zu setzen",
+				"shortcutRecorderRecording": "Tastenkombination eingeben…"
 			},
 			"totp": {
 				"title": "Zwei-Faktor-Authentifizierung",
@@ -1067,6 +1073,7 @@
 		},
 		"quickAddMagic": {
 			"hint": "Verwende magische Präfixe, um Fälligkeitsdaten, Zuweisungen und andere Aufgabeneigenschaften zu definieren.",
+			"quickEntryHint": "Verwende magische Präfixe für Datum, Labels & mehr. Öffne die Hauptanwendung von Vikunja und überprüfe den Tooltip bei der Aufgabeneingabe für weitere Details.",
 			"title": "Quick Add Magic",
 			"intro": "Beim Erstellen einer Aufgabe kannst du spezielle Schlüsselwörter verwenden, um Attribute direkt zu der neu erstellten Aufgabe hinzuzufügen. Dadurch können häufig verwendete Attribute schneller zu Aufgaben hinzugefügt werden.",
 			"multiple": "Du kannst das mehrmals benutzen.",
@@ -1243,6 +1250,7 @@
 		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert."
 	},
 	"quickActions": {
+		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
 		"commands": "Befehle",
 		"placeholder": "Gib einen Befehl oder eine Suche ein …",
 		"hint": "Du kannst {project} verwenden, um die Suche auf ein Projekt zu beschränken. Kombiniere {project} oder {label} (Labels) mit einer Suchabfrage, um eine Aufgabe mit diesen Labels oder auf diesem Projekt zu suchen. Verwende {assignee}, um nur nach Teams zu suchen.",

@@ -69,6 +69,24 @@ func HandleTesting(c *echo.Context) error {
 
 	truncate := c.QueryParam("truncate")
 	if truncate == "true" || truncate == "" {
+		// When truncating certain tables, also truncate dependent tables
+		// whose rows reference the truncated table by user/entity ID.
+		// Without foreign key cascades, stale rows would persist and
+		// pollute subsequent tests that reuse the same auto-increment IDs.
+		dependentTables := map[string][]string{
+			"users": {"notifications"},
+		}
+		if deps, ok := dependentTables[table]; ok {
+			for _, dep := range deps {
+				if err = db.RestoreAndTruncate(dep, nil); err != nil {
+					log.Errorf("Error truncating dependent table %s: %v", dep, err)
+					return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+						"error":   true,
+						"message": err.Error(),
+					})
+				}
+			}
+		}
 		err = db.RestoreAndTruncate(table, content)
 	} else {
 		err = db.Restore(table, content)
