@@ -603,18 +603,16 @@ func resolveTaskPositionConflicts(s *xorm.Session, projectViewID int64, conflict
 func resolvePositionConflictsAfterInsert(s *xorm.Session, positions []*TaskPosition) error {
 	// Track which (viewID, position) pairs we've already checked to avoid
 	// resolving the same conflict group twice.
-	type viewPos struct {
-		viewID   int64
-		position float64
-	}
-	checked := make(map[viewPos]bool)
+	checked := make(map[int64]map[float64]bool)
 
 	for _, pos := range positions {
-		key := viewPos{viewID: pos.ProjectViewID, position: pos.Position}
-		if checked[key] {
+		if checked[pos.ProjectViewID] != nil && checked[pos.ProjectViewID][pos.Position] {
 			continue
 		}
-		checked[key] = true
+		if checked[pos.ProjectViewID] == nil {
+			checked[pos.ProjectViewID] = make(map[float64]bool)
+		}
+		checked[pos.ProjectViewID][pos.Position] = true
 
 		conflicts, err := findPositionConflicts(s, pos.ProjectViewID, pos.Position)
 		if err != nil {
