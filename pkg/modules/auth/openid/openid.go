@@ -44,9 +44,10 @@ import (
 
 // Callback contains the callback after an auth request was made and redirected
 type Callback struct {
-	Code        string `query:"code" json:"code"`
-	Scope       string `query:"scope" json:"scope"`
-	RedirectURL string `json:"redirect_url"`
+	Code         string `query:"code" json:"code"`
+	Scope        string `query:"scope" json:"scope"`
+	RedirectURL  string `json:"redirect_url"`
+	CodeVerifier string `json:"code_verifier"`
 }
 
 // Provider is the structure of an OpenID Connect provider
@@ -468,7 +469,11 @@ func getProviderAndOidcTokens(c *echo.Context) (*Provider, *oauth2.Token, *oidc.
 
 	provider.Oauth2Config.RedirectURL = cb.RedirectURL
 	// Parse the access & ID token
-	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code)
+	var exchangeOpts []oauth2.AuthCodeOption
+	if cb.CodeVerifier != "" {
+		exchangeOpts = append(exchangeOpts, oauth2.SetAuthURLParam("code_verifier", cb.CodeVerifier))
+	}
+	oauth2Token, err := provider.Oauth2Config.Exchange(context.Background(), cb.Code, exchangeOpts...)
 	if err != nil {
 		var rerr *oauth2.RetrieveError
 		if errors.As(err, &rerr) {
