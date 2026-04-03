@@ -421,9 +421,9 @@ test.describe('Task', () => {
 
 		test('Can move a task to another project', async ({authenticatedPage: page}) => {
 			const projects = await ProjectFactory.create(2)
-			const views = await createDefaultViews(projects[0].id)
+			const views = await createDefaultViews(projects[0].id, 10)
 			// Also create views for the target project
-			await createDefaultViews(projects[1].id, 5)
+			await createDefaultViews(projects[1].id, 14)
 			await BucketFactory.create(2, {
 				project_view_id: views[3].id,
 			})
