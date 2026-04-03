@@ -328,12 +328,22 @@
     "delete": {
       "title": "Delete \"{project}\"",
       "header": "Delete this project",
-      "text1": "Are you sure you want to delete this project and all of its contents?",
-      "text2": "This includes all tasks and CANNOT BE UNDONE!",
-      "success": "The project was successfully deleted.",
-      "tasksToDelete": "This will irrevocably remove approx. {count} tasks.",
-      "tasksAndChildProjectsToDelete": "This will irrevocably remove approx. {tasks} tasks and {projects} projects.",
-      "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete."
+      "text1": "Are you sure you want to move this project to the bin?",
+      "text2": "It will be permanently deleted after 30 days.",
+      "success": "The project was moved to the bin.",
+      "tasksToDelete": "This will affect approx. {count} tasks.",
+      "tasksAndChildProjectsToDelete": "This will affect approx. {tasks} tasks and {projects} projects.",
+      "noTasksToDelete": "This project does not contain any tasks, it should be safe to delete.",
+      "undoSuccess": "The project was restored.",
+      "undo": "Undo"
+    },
+    "bin": {
+      "title": "Bin",
+      "empty": "No deleted projects.",
+      "daysRemaining": "{days} days remaining",
+      "deletedOn": "Deleted on {date}",
+      "restore": "Restore",
+      "restoreSuccess": "The project was restored successfully."
     },
     "duplicate": {
       "title": "Duplicate this project",

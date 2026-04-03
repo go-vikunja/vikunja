@@ -66,6 +66,7 @@ func ListUsersFromProject(s *xorm.Session, l *Project, currentUser *user.User, s
 					builder.Or(builder.Eq{"tl.permission": PermissionAdmin}),
 				),
 				builder.Eq{"l.id": currentProject.ID},
+				builder.IsNull{"l.deleted_at"},
 			).
 			Find(&currentUserIDs)
 		if err != nil {

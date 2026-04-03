@@ -48,6 +48,9 @@ func TestProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `Test5`)
 			assert.NotContains(t, rec.Body.String(), `Test21`) // Archived through parent project
 			assert.NotContains(t, rec.Body.String(), `Test22`) // Archived directly
+			assert.NotContains(t, rec.Body.String(), `Test41`) // Soft-deleted
+			assert.NotContains(t, rec.Body.String(), `Test42`) // Soft-deleted parent
+			assert.NotContains(t, rec.Body.String(), `Test43`) // Soft-deleted child
 		})
 		t.Run("Search", func(t *testing.T) {
 			rec, err := testHandler.testReadAllWithUser(url.Values{"s": []string{"Test1"}}, nil)

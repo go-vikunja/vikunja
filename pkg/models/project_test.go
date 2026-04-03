@@ -347,6 +347,31 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 	})
 }
 
+func assertSoftDeleted(t *testing.T, projectID int64) {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+
+	// Use Unscoped to bypass soft-delete filter
+	p := &Project{}
+	exists, err := s.Unscoped().Where("id = ?", projectID).Get(p)
+	require.NoError(t, err)
+	require.True(t, exists, "Project %d should still exist in db after soft-delete", projectID)
+	assert.NotNil(t, p.DeletedAt, "Project %d should have deleted_at set", projectID)
+}
+
+func assertNotSoftDeleted(t *testing.T, projectID int64) {
+	t.Helper()
+	s := db.NewSession()
+	defer s.Close()
+
+	p := &Project{}
+	exists, err := s.Unscoped().Where("id = ?", projectID).Get(p)
+	require.NoError(t, err)
+	require.True(t, exists, "Project %d should exist in db", projectID)
+	assert.Nil(t, p.DeletedAt, "Project %d should not have deleted_at set", projectID)
+}
+
 func TestProject_Delete(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -359,12 +384,12 @@ func TestProject_Delete(t *testing.T) {
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
-		db.AssertMissing(t, "projects", map[string]interface{}{
+		// With soft-delete, project row still exists but has deleted_at set
+		assertSoftDeleted(t, 1)
+		// Tasks should still exist (not permanently deleted)
+		db.AssertExists(t, "tasks", map[string]interface{}{
 			"id": 1,
-		})
-		db.AssertMissing(t, "tasks", map[string]interface{}{
-			"id": 1,
-		})
+		}, false)
 	})
 	t.Run("with background", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -378,12 +403,11 @@ func TestProject_Delete(t *testing.T) {
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
-		db.AssertMissing(t, "projects", map[string]interface{}{
-			"id": 35,
-		})
-		db.AssertMissing(t, "files", map[string]interface{}{
+		// Project is soft-deleted, background file still exists
+		assertSoftDeleted(t, 35)
+		db.AssertExists(t, "files", map[string]interface{}{
 			"id": 1,
-		})
+		}, false)
 	})
 	t.Run("default project of the same user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -407,7 +431,7 @@ func TestProject_Delete(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrCannotDeleteDefaultProject(err))
 	})
-	t.Run("deletes archived parent and its child atomically", func(t *testing.T) {
+	t.Run("soft-deletes archived parent and its child", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -420,10 +444,10 @@ func TestProject_Delete(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
-		db.AssertMissing(t, "projects", map[string]interface{}{"id": 22})
-		db.AssertMissing(t, "projects", map[string]interface{}{"id": 21})
+		assertSoftDeleted(t, 22)
+		assertSoftDeleted(t, 21)
 	})
-	t.Run("deletes deeply nested child projects recursively", func(t *testing.T) {
+	t.Run("soft-deletes deeply nested child projects recursively", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -435,10 +459,151 @@ func TestProject_Delete(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
-		db.AssertMissing(t, "projects", map[string]interface{}{"id": 27})
-		db.AssertMissing(t, "projects", map[string]interface{}{"id": 12})
-		db.AssertMissing(t, "projects", map[string]interface{}{"id": 25})
-		db.AssertMissing(t, "projects", map[string]interface{}{"id": 26})
+		assertSoftDeleted(t, 27)
+		assertSoftDeleted(t, 12)
+		assertSoftDeleted(t, 25)
+		assertSoftDeleted(t, 26)
+	})
+	t.Run("soft-deleted projects are excluded from ReadAll", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 41 is soft-deleted and owned by user 1
+		p := &Project{}
+		projects, _, _, err := p.ReadAll(s, &user.User{ID: 1}, "", 1, 50)
+		require.NoError(t, err)
+
+		projectList := projects.([]*Project)
+		for _, proj := range projectList {
+			assert.NotEqual(t, int64(41), proj.ID, "Soft-deleted project 41 should not appear in ReadAll")
+			assert.NotEqual(t, int64(42), proj.ID, "Soft-deleted project 42 should not appear in ReadAll")
+			assert.NotEqual(t, int64(43), proj.ID, "Soft-deleted project 43 should not appear in ReadAll")
+		}
+	})
+	t.Run("soft-deleted projects return no permission", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 41 is soft-deleted and owned by user 1
+		// XORM auto-filters soft-deleted projects, so CanRead will error with "Project does not exist"
+		p := &Project{ID: 41}
+		canRead, _, err := p.CanRead(s, &user.User{ID: 1})
+		if err != nil {
+			assert.True(t, IsErrProjectDoesNotExist(err), "Expected project not found error for soft-deleted project")
+		} else {
+			assert.False(t, canRead, "Should not be able to read soft-deleted project")
+		}
+	})
+}
+
+func TestProject_Restore(t *testing.T) {
+	t.Run("restore soft-deleted project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 41 is soft-deleted and owned by user 1
+		project, err := RestoreProject(s, 41, &user.User{ID: 1})
+		require.NoError(t, err)
+		require.NotNil(t, project)
+		assert.Nil(t, project.DeletedAt)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assertNotSoftDeleted(t, 41)
+	})
+	t.Run("restore soft-deleted parent restores children", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 42 is soft-deleted parent, 43 is soft-deleted child
+		_, err := RestoreProject(s, 42, &user.User{ID: 1})
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assertNotSoftDeleted(t, 42)
+		assertNotSoftDeleted(t, 43)
+	})
+	t.Run("restore non-existent project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := RestoreProject(s, 999, &user.User{ID: 1})
+		require.Error(t, err)
+		assert.True(t, IsErrProjectDoesNotExist(err))
+	})
+	t.Run("restore project without admin access", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 41 is owned by user 1, user 2 has no access
+		_, err := RestoreProject(s, 41, &user.User{ID: 2})
+		require.Error(t, err)
+	})
+}
+
+func TestProject_GetDeletedProjects(t *testing.T) {
+	t.Run("returns deleted projects for user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 1 owns soft-deleted projects 41, 42, 43
+		projects, err := GetDeletedProjects(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		assert.Len(t, projects, 3)
+
+		ids := make(map[int64]bool)
+		for _, p := range projects {
+			ids[p.ID] = true
+		}
+		assert.True(t, ids[41])
+		assert.True(t, ids[42])
+		assert.True(t, ids[43])
+	})
+	t.Run("returns empty for user with no deleted projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// User 2 owns no soft-deleted projects
+		projects, err := GetDeletedProjects(s, &user.User{ID: 2})
+		require.NoError(t, err)
+		assert.Empty(t, projects)
+	})
+}
+
+func TestProject_PermanentDelete(t *testing.T) {
+	t.Run("permanently deletes project and all related entities", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// First soft-delete the project
+		project := Project{ID: 1}
+		err := project.Delete(s, &user.User{ID: 1})
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// Now permanently delete it
+		s2 := db.NewSession()
+		defer s2.Close()
+
+		p := &Project{ID: 1}
+		err = p.PermanentDelete(s2, &user.User{ID: 1})
+		require.NoError(t, err)
+		err = s2.Commit()
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": 1})
+		db.AssertMissing(t, "tasks", map[string]interface{}{"id": 1})
 	})
 }
 
