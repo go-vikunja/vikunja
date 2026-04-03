@@ -6,7 +6,6 @@ test.describe('Project History', () => {
 	test('should show a project history on the home page', async ({authenticatedPage: page}) => {
 		test.setTimeout(60000)
 		const projects = await ProjectFactory.create(7)
-		await ProjectViewFactory.truncate()
 		for (const p of projects) {
 			await ProjectViewFactory.create(1, {
 				id: p.id,
