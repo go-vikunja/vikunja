@@ -18,7 +18,6 @@ package models
 
 import (
 	"fmt"
-	"net/url"
 	"sort"
 	"strconv"
 	"time"
@@ -26,6 +25,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/i18n"
+	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -44,14 +44,7 @@ func getDoerAvatarDataURI(doer *user.User) string {
 
 // getThreadID generates a Message-ID format thread ID for a task
 func getThreadID(taskID int64) string {
-	domain := "vikunja"
-	publicURL := config.ServicePublicURL.GetString()
-	if publicURL != "" {
-		if parsedURL, err := url.Parse(publicURL); err == nil && parsedURL.Hostname() != "" {
-			domain = parsedURL.Hostname()
-		}
-	}
-	return fmt.Sprintf("<task-%d@%s>", taskID, domain)
+	return fmt.Sprintf("<task-%d@%s>", taskID, mail.GetMailDomain())
 }
 
 // ReminderDueNotification represents a ReminderDueNotification notification
