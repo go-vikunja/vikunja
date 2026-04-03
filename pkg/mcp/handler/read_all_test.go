@@ -23,7 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMcpHandler_ReadAllTool(t *testing.T) {
@@ -34,9 +34,9 @@ func TestMcpHandler_ReadAllTool(t *testing.T) {
 			},
 		}
 		tool := h.ReadAllTool()
-		assert.Equal(t, "get_projects", tool.Name)
-		assert.Contains(t, tool.Description, "projects")
-		assert.NotEmpty(t, tool.InputSchema.Properties)
+		require.Equal(t, "get_projects", tool.Name)
+		require.Contains(t, tool.Description, "projects")
+		require.NotEmpty(t, tool.InputSchema.Properties)
 	})
 
 	t.Run("tool has limit and offset properties", func(t *testing.T) {
@@ -47,8 +47,8 @@ func TestMcpHandler_ReadAllTool(t *testing.T) {
 		}
 		tool := h.ReadAllTool()
 		props := tool.InputSchema.Properties
-		assert.Contains(t, props, "limit")
-		assert.Contains(t, props, "offset")
+		require.Contains(t, props, "limit")
+		require.Contains(t, props, "offset")
 	})
 
 	t.Run("limit has correct type and description", func(t *testing.T) {
@@ -59,8 +59,8 @@ func TestMcpHandler_ReadAllTool(t *testing.T) {
 		}
 		tool := h.ReadAllTool()
 		limitProp := tool.InputSchema.Properties["limit"].(map[string]any)
-		assert.Equal(t, "integer", limitProp["type"])
-		assert.Contains(t, limitProp["description"], "Maximum")
+		require.Equal(t, "integer", limitProp["type"])
+		require.Contains(t, limitProp["description"], "Maximum")
 	})
 
 	t.Run("offset has correct type and description", func(t *testing.T) {
@@ -71,8 +71,8 @@ func TestMcpHandler_ReadAllTool(t *testing.T) {
 		}
 		tool := h.ReadAllTool()
 		offsetProp := tool.InputSchema.Properties["offset"].(map[string]any)
-		assert.Equal(t, "integer", offsetProp["type"])
-		assert.Contains(t, offsetProp["description"], "skip")
+		require.Equal(t, "integer", offsetProp["type"])
+		require.Contains(t, offsetProp["description"], "skip")
 	})
 }
 
@@ -89,8 +89,8 @@ func TestMcpHandler_ReadAllMCPValidation(t *testing.T) {
 			},
 		}
 		result, err := h.ReadAllMCP(context.Background(), request)
-		assert.Error(t, err)
-		assert.Nil(t, result)
+		require.Error(t, err)
+		require.Nil(t, result)
 	})
 
 	t.Run("invalid arguments type should return error", func(t *testing.T) {
@@ -105,7 +105,7 @@ func TestMcpHandler_ReadAllMCPValidation(t *testing.T) {
 			},
 		}
 		result, err := h.ReadAllMCP(context.Background(), request)
-		assert.Error(t, err)
-		assert.Nil(t, result)
+		require.Error(t, err)
+		require.Nil(t, result)
 	})
 }

@@ -56,6 +56,14 @@ func RegisterHandler(c *echo.Context) error {
 		return c.JSON(400, map[string]interface{}{"error": "Error parsing request"})
 	}
 
+	if request.ClientName == "" {
+		return c.JSON(400, map[string]interface{}{"error": "client_name is required"})
+	}
+
+	if len(request.RedirectURIs) == 0 {
+		return c.JSON(400, map[string]interface{}{"error": "redirect_uris is required"})
+	}
+
 	s := db.NewSession()
 	defer func(s *xorm.Session) {
 		err := s.Close()

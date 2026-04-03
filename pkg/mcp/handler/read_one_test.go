@@ -23,7 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMcpHandler_ReadOneTool(t *testing.T) {
@@ -34,9 +34,9 @@ func TestMcpHandler_ReadOneTool(t *testing.T) {
 			},
 		}
 		tool := h.ReadOneTool()
-		assert.Equal(t, "get_task", tool.Name)
-		assert.Contains(t, tool.Description, "task")
-		assert.NotEmpty(t, tool.InputSchema.Properties)
+		require.Equal(t, "get_task", tool.Name)
+		require.Contains(t, tool.Description, "task")
+		require.NotEmpty(t, tool.InputSchema.Properties)
 	})
 
 	t.Run("project handler returns get_project tool", func(t *testing.T) {
@@ -46,9 +46,9 @@ func TestMcpHandler_ReadOneTool(t *testing.T) {
 			},
 		}
 		tool := h.ReadOneTool()
-		assert.Equal(t, "get_project", tool.Name)
-		assert.Contains(t, tool.Description, "project")
-		assert.NotEmpty(t, tool.InputSchema.Properties)
+		require.Equal(t, "get_project", tool.Name)
+		require.Contains(t, tool.Description, "project")
+		require.NotEmpty(t, tool.InputSchema.Properties)
 	})
 
 	t.Run("tool has id property", func(t *testing.T) {
@@ -59,7 +59,7 @@ func TestMcpHandler_ReadOneTool(t *testing.T) {
 		}
 		tool := h.ReadOneTool()
 		props := tool.InputSchema.Properties
-		assert.Contains(t, props, "id")
+		require.Contains(t, props, "id")
 	})
 
 	t.Run("id has correct type and description", func(t *testing.T) {
@@ -70,9 +70,9 @@ func TestMcpHandler_ReadOneTool(t *testing.T) {
 		}
 		tool := h.ReadOneTool()
 		idProp := tool.InputSchema.Properties["id"].(map[string]any)
-		assert.Equal(t, "integer", idProp["type"])
-		assert.Contains(t, idProp["description"], "id")
-		assert.Contains(t, idProp["description"], "task")
+		require.Equal(t, "integer", idProp["type"])
+		require.Contains(t, idProp["description"], "id")
+		require.Contains(t, idProp["description"], "task")
 	})
 }
 
@@ -89,8 +89,8 @@ func TestMcpHandler_ReadOneHandlerValidation(t *testing.T) {
 			},
 		}
 		result, err := h.ReadOneHandler(context.Background(), request)
-		assert.Error(t, err)
-		assert.Nil(t, result)
+		require.Error(t, err)
+		require.Nil(t, result)
 	})
 
 	t.Run("invalid id type should return error", func(t *testing.T) {
@@ -107,8 +107,8 @@ func TestMcpHandler_ReadOneHandlerValidation(t *testing.T) {
 			},
 		}
 		result, err := h.ReadOneHandler(context.Background(), request)
-		assert.Error(t, err)
-		assert.Nil(t, result)
+		require.Error(t, err)
+		require.Nil(t, result)
 	})
 
 	t.Run("invalid arguments type should return error", func(t *testing.T) {
@@ -123,7 +123,7 @@ func TestMcpHandler_ReadOneHandlerValidation(t *testing.T) {
 			},
 		}
 		result, err := h.ReadOneHandler(context.Background(), request)
-		assert.Error(t, err)
-		assert.Nil(t, result)
+		require.Error(t, err)
+		require.Nil(t, result)
 	})
 }

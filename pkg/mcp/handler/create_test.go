@@ -48,17 +48,6 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func getResultText(result *mcp.CallToolResult) string {
-	if len(result.Content) == 0 {
-		return ""
-	}
-	textContent, ok := mcp.AsTextContent(result.Content[0])
-	if !ok {
-		return ""
-	}
-	return textContent.Text
-}
-
 func TestMcpHandler_CreateTool(t *testing.T) {
 	t.Run("task handler", func(t *testing.T) {
 		h := &McpHandler{

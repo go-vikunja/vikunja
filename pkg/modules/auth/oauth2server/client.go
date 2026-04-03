@@ -36,7 +36,7 @@ func ValidateRedirectURI(req authorizeRequest, client *models.OAuthClient) bool 
 			return true
 		}
 	}
-	
+
 	u, err := url.Parse(req.RedirectURI)
 	if err != nil || u.Scheme == "" {
 		return false
