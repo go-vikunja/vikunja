@@ -84,3 +84,16 @@
   relation_kind: 'related'
   created_by_id: 1
   created: 2018-12-01 15:13:12
+# Subtask relation: task 49 -> task 50 (cross parent/child project, hierarchy test)
+- id: 15
+  task_id: 49
+  other_task_id: 50
+  relation_kind: 'subtask'
+  created_by_id: 6
+  created: 2018-12-01 15:13:12
+- id: 16
+  task_id: 50
+  other_task_id: 49
+  relation_kind: 'parenttask'
+  created_by_id: 6
+  created: 2018-12-01 15:13:12

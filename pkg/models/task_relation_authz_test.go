@@ -26,6 +26,76 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAddRelatedTasksToTasks_InheritedProjectAccess(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// User 14 has access to project 41 via team 16.
+	// Project 42 is a child of project 41.
+	// Task 49 is in project 41, task 50 is in project 42.
+	// Task 49 has a subtask relation to task 50.
+	// User 14 should see task 50 as a related task of task 49
+	// because they inherit access to project 42 through project 41.
+	u := &user.User{ID: 14}
+
+	taskMap := map[int64]*Task{
+		49: {
+			ID:           49,
+			ProjectID:    41,
+			RelatedTasks: make(RelatedTaskMap),
+		},
+	}
+	taskIDs := []int64{49}
+
+	err := addRelatedTasksToTasks(s, taskIDs, taskMap, u)
+	require.NoError(t, err)
+
+	foundTask50 := false
+	for _, relatedTasks := range taskMap[49].RelatedTasks {
+		for _, rt := range relatedTasks {
+			if rt.ID == 50 {
+				foundTask50 = true
+			}
+		}
+	}
+
+	assert.True(t, foundTask50, "Task 50 (child project 42) should be visible via inherited access from parent project 41")
+}
+
+func TestAddRelatedTasksToTasks_NoAccessToHierarchy(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// User 13 has NO access to project 41 or 42.
+	// They should NOT see task 50 even though a relation exists.
+	u := &user.User{ID: 13}
+
+	taskMap := map[int64]*Task{
+		49: {
+			ID:           49,
+			ProjectID:    41,
+			RelatedTasks: make(RelatedTaskMap),
+		},
+	}
+	taskIDs := []int64{49}
+
+	err := addRelatedTasksToTasks(s, taskIDs, taskMap, u)
+	require.NoError(t, err)
+
+	foundTask50 := false
+	for _, relatedTasks := range taskMap[49].RelatedTasks {
+		for _, rt := range relatedTasks {
+			if rt.ID == 50 {
+				foundTask50 = true
+			}
+		}
+	}
+
+	assert.False(t, foundTask50, "Task 50 should NOT be visible to user 13 who has no access to the hierarchy")
+}
+
 func TestAddRelatedTasksToTasks_FiltersInaccessibleProjects(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
