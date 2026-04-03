@@ -18,6 +18,7 @@ package oauth2server
 
 import (
 	"crypto/rand"
+	"net/url"
 	"strings"
 
 	"net/http"
@@ -66,7 +67,7 @@ func RegisterHandler(c *echo.Context) error {
 	client := models.OAuthClient{
 		ClientID:     rand.Text(),
 		ClientName:   request.ClientName,
-		RedirectURIs: strings.Join(request.RedirectURIs, ","),
+		RedirectURIs: urlEncodeRedirectURIs(request.RedirectURIs),
 	}
 
 	err = models.CreateOAuthClient(s, &client)
@@ -92,4 +93,12 @@ func RateLimit() limiter.Rate {
 		Period: 60 * time.Second,
 		Limit:  1,
 	}
+}
+
+func urlEncodeRedirectURIs(uris []string) string {
+	encoded := make([]string, len(uris))
+	for i, uri := range uris {
+		encoded[i] = url.QueryEscape(uri)
+	}
+	return strings.Join(encoded, ",")
 }

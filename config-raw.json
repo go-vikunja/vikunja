@@ -1064,16 +1064,6 @@
                     "key": "enabled",
                     "default_value": "false",
                     "comment": "Enable the MCP server for AI integrations."
-                },
-                {
-                    "key": "host",
-                    "default_value": "127.0.0.1",
-                    "comment": "The host address for the MCP server."
-                },
-                {
-                    "key": "port",
-                    "default_value": "8484",
-                    "comment": "The port for the MCP server."
                 }
             ]
         }

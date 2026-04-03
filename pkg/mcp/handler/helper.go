@@ -52,7 +52,7 @@ func (c *McpHandler) getUser(request mcp.CallToolRequest) (*user.User, error) {
 
 	token := strings.TrimPrefix(request.Header.Get("Authorization"), "Bearer ")
 	jwtinf, err := jwt.Parse(token, func(_ *jwt.Token) (interface{}, error) {
-		return []byte(config.ServiceJWTSecret.GetString()), nil
+		return []byte(config.ServiceSecret.GetString()), nil
 	})
 	if err != nil {
 		return nil, err

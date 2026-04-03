@@ -26,10 +26,12 @@ import (
 // ValidateRedirectURI checks that the redirect_uri uses a scheme starting with
 // "vikunja-". This allowlists only Vikunja native app schemes (e.g.
 // vikunja-flutter://callback) and rejects dangerous schemes like javascript:,
-// data:, http:, https:, etc.
+// data:, http:, https:, etc. The stored redirect URIs are URL-encoded to prevent
+// injection attacks, so they are decoded before comparison.
 func ValidateRedirectURI(req authorizeRequest, client *models.OAuthClient) bool {
 
-	if client != nil && strings.Contains(client.RedirectURIs, req.RedirectURI) {
+	decodedStored := urlDecodeRedirectURIs(client.RedirectURIs)
+	if contains(decodedStored, req.RedirectURI) {
 		return true
 	}
 
@@ -39,4 +41,25 @@ func ValidateRedirectURI(req authorizeRequest, client *models.OAuthClient) bool 
 	}
 
 	return strings.HasPrefix(u.Scheme, "vikunja-")
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+func urlDecodeRedirectURIs(encoded string) []string {
+	if encoded == "" {
+		return nil
+	}
+	parts := strings.Split(encoded, ",")
+	decoded := make([]string, len(parts))
+	for i, part := range parts {
+		decoded[i], _ = url.QueryUnescape(part)
+	}
+	return decoded
 }
