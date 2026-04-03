@@ -18,8 +18,10 @@ package mail
 
 import (
 	"net/url"
+	"os"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 )
 
 // GetMailDomain returns the hostname from the configured public URL,
@@ -32,5 +34,10 @@ func GetMailDomain() string {
 			return parsedURL.Hostname()
 		}
 	}
+	if hostname, err := os.Hostname(); err == nil && hostname != "" {
+		log.Warningf("Could not determine mail domain from public URL, falling back to hostname %q", hostname)
+		return hostname
+	}
+	log.Warningf("Could not determine mail domain from public URL or hostname, falling back to %q", "vikunja")
 	return "vikunja"
 }
