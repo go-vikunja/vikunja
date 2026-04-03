@@ -423,7 +423,7 @@ test.describe('Task', () => {
 			const projects = await ProjectFactory.create(2)
 			const views = await createDefaultViews(projects[0].id)
 			// Also create views for the target project
-			await createDefaultViews(projects[1].id)
+			await createDefaultViews(projects[1].id, 5)
 			await BucketFactory.create(2, {
 				project_view_id: views[3].id,
 			})

@@ -15,12 +15,12 @@ export const test = base.extend<{
 		})
 
 		Factory.setRequestContext(apiContext)
+		await Factory.truncateAll()
 		await use(apiContext)
 		await apiContext.dispose()
 	},
 
 	currentUser: async ({apiContext}, use) => {
-		await Factory.truncateAll()
 		const user = await createFakeUser()
 		await use(user)
 	},
