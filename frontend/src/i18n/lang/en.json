@@ -849,6 +849,7 @@
     "addReminder": "Add a reminder…",
     "doneSuccess": "The task was successfully marked as done.",
     "undoneSuccess": "The task was successfully un-marked as done.",
+    "readOnlyCheckbox": "You only have read access to this task and cannot mark it as done.",
     "movedToProject": "The task was moved to {project}.",
     "undo": "Undo",
     "openDetail": "Open task detail view",
