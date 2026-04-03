@@ -96,4 +96,17 @@ export class Factory {
 	static async truncate() {
 		await this.seed(this.table, null)
 	}
+
+	static async truncateAll() {
+		const response = await this.request.delete('test/all', {
+			headers: {
+				'Authorization': process.env.VIKUNJA_SERVICE_TESTINGTOKEN || 'averyLongSecretToSe33dtheDB',
+			},
+		})
+
+		if (!response.ok()) {
+			const body = await response.json()
+			throw new Error(`Failed to truncate all tables (${response.status()}): ${body.message}`)
+		}
+	}
 }
