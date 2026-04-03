@@ -3,9 +3,17 @@ import type {AxiosRequestConfig} from 'axios'
 import {getToken, refreshToken} from '@/helpers/auth'
 import {AUTH_TYPES} from '@/modelTypes/IUser'
 
+/**
+ * Returns the API base URL with a guaranteed trailing slash.
+ */
+export function getApiBaseUrl(): string {
+	const url = window.API_URL
+	return url?.endsWith('/') ? url : url + '/'
+}
+
 export function HTTPFactory() {
 	const instance = axios.create({
-		baseURL: window.API_URL,
+		baseURL: getApiBaseUrl(),
 		// Ensure the browser sends and accepts cookies (e.g. the HttpOnly
 		// refresh token) even when the API is on a different origin.
 		withCredentials: true,
@@ -14,7 +22,7 @@ export function HTTPFactory() {
 	instance.interceptors.request.use((config) => {
 		// by setting the baseURL fresh for every request
 		// we make sure that it is never outdated in case it is updated
-		config.baseURL = window.API_URL
+		config.baseURL = getApiBaseUrl()
 
 		return config
 	})
