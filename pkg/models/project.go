@@ -58,6 +58,9 @@ type Project struct {
 	// Whether a project is archived.
 	IsArchived bool `xorm:"not null default false" json:"is_archived" query:"is_archived"`
 
+	// Whether a project is a template.
+	IsTemplate bool `xorm:"not null default false" json:"is_template" query:"is_template"`
+
 	// The id of the file this project has set as background
 	BackgroundFileID int64 `xorm:"null" json:"-"`
 	// Holds extra information about the background set since some background providers require attribution or similar. If not null, the background can be accessed at /projects/{projectID}/background
@@ -168,6 +171,7 @@ var FavoritesPseudoProject = Project{
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search projects by title."
 // @Param is_archived query bool false "If true, also returns all archived projects."
+// @Param is_template query bool false "If true, returns only template projects. If false (default), excludes templates."
 // @Param expand query string false "If set to `permissions`, Vikunja will return the max permission the current user has on this project. You can currently only set this to `permissions`."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Project "The projects"
@@ -175,7 +179,7 @@ var FavoritesPseudoProject = Project{
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [get]
 func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	prs, resultCount, totalItems, err := getAllRawProjects(s, a, search, page, perPage, p.IsArchived)
+	prs, resultCount, totalItems, err := getAllRawProjects(s, a, search, page, perPage, p.IsArchived, p.IsTemplate)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -216,7 +220,7 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	return prs, resultCount, totalItems, err
 }
 
-func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
+func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool, isTemplate bool) (projects []*Project, resultCount int, totalItems int64, err error) {
 	// Check if we're dealing with a share auth
 	shareAuth, is := a.(*LinkSharing)
 	if is {
@@ -240,11 +244,12 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 	prs, resultCount, totalItems, err := getRawProjectsForUser(
 		s,
 		&projectOptions{
-			search:      search,
-			user:        doer,
-			page:        page,
-			perPage:     perPage,
-			getArchived: isArchived,
+			search:       search,
+			user:         doer,
+			page:         page,
+			perPage:      perPage,
+			getArchived:  isArchived,
+			getTemplates: isTemplate,
 		})
 	if err != nil {
 		return nil, 0, 0, err
@@ -447,11 +452,12 @@ func GetProjectsByIDs(s *xorm.Session, projectIDs []int64) (projects []*Project,
 }
 
 type projectOptions struct {
-	search      string
-	user        *user.User
-	page        int
-	perPage     int
-	getArchived bool
+	search       string
+	user         *user.User
+	page         int
+	perPage      int
+	getArchived  bool
+	getTemplates bool
 }
 
 func getUserProjectsStatement(userID int64, search string) *builder.Builder {
@@ -508,7 +514,7 @@ func getUserProjectsStatement(userID int64, search string) *builder.Builder {
 	}
 
 	return builder.Dialect(dialect).
-		Select("l.id, l.title, l.description, l.identifier, l.hex_color, l.owner_id, l.parent_project_id, l.is_archived, l.background_file_id, l.background_blur_hash, l.position, l.created, l.updated").
+		Select("l.id, l.title, l.description, l.identifier, l.hex_color, l.owner_id, l.parent_project_id, l.is_archived, l.is_template, l.background_file_id, l.background_blur_hash, l.position, l.created, l.updated").
 		From("projects", "l").
 		Join("LEFT", "team_projects tl", "tl.project_id = l.id").
 		Join("LEFT", "team_members tm2", "tm2.team_id = tl.team_id").
@@ -554,7 +560,7 @@ func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) 
 
 	baseQuery := querySQLString + `
 UNION ALL
-SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, (ap.is_archived OR p.is_archived) AS is_archived, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
+SELECT p.id, p.title, p.description, p.identifier, p.hex_color, p.owner_id, p.parent_project_id, (ap.is_archived OR p.is_archived) AS is_archived, p.is_template, p.background_file_id, p.background_blur_hash, p.position, p.created, p.updated FROM projects p
 INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	columnStr := strings.Join([]string{
@@ -566,6 +572,7 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.owner_id",
 		"CASE WHEN all_projects.parent_project_id IS NULL THEN 0 ELSE all_projects.parent_project_id END AS parent_project_id",
 		"MAX(CAST(all_projects.is_archived AS int)) AS is_archived",
+		"MAX(CAST(all_projects.is_template AS int)) AS is_template",
 		"all_projects.background_file_id",
 		"all_projects.background_blur_hash",
 		"all_projects.position",
@@ -588,15 +595,22 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.updated",
 	}, ", ")
 
-	var archivedFilter string
+	var havingClauses []string
 	if !opts.getArchived {
-		archivedFilter = "HAVING MAX(CAST(all_projects.is_archived AS int)) = 0 "
+		havingClauses = append(havingClauses, "MAX(CAST(all_projects.is_archived AS int)) = 0")
+	}
+	if !opts.getTemplates {
+		havingClauses = append(havingClauses, "MAX(CAST(all_projects.is_template AS int)) = 0")
+	}
+	var havingFilter string
+	if len(havingClauses) > 0 {
+		havingFilter = "HAVING " + strings.Join(havingClauses, " AND ") + " "
 	}
 
 	currentProjects := []*Project{}
 	err = s.SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
 SELECT `+columnStr+` FROM all_projects
-GROUP BY `+groupByStr+` `+archivedFilter+`ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
+GROUP BY `+groupByStr+` `+havingFilter+`ORDER BY all_projects.position `+limitSQL, args...).Find(&currentProjects)
 	if err != nil {
 		return
 	}
@@ -607,7 +621,7 @@ GROUP BY `+groupByStr+` `+archivedFilter+`ORDER BY all_projects.position `+limit
 
 	totalCount, err = s.
 		SQL(`WITH RECURSIVE all_projects as (`+baseQuery+`)
-SELECT COUNT(*) FROM (SELECT all_projects.id FROM all_projects GROUP BY all_projects.id `+archivedFilter+`) sub`, args...).
+SELECT COUNT(*) FROM (SELECT all_projects.id FROM all_projects GROUP BY all_projects.id `+havingFilter+`) sub`, args...).
 		Count(&Project{})
 	if err != nil {
 		return nil, 0, err
@@ -861,6 +875,10 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 		return &ErrProjectCannotBelongToAPseudoParentProject{ProjectID: project.ID, ParentProjectID: project.ParentProjectID}
 	}
 
+	if project.IsTemplate && project.ParentProjectID != 0 {
+		return &ErrTemplateCannotHaveParentProject{ProjectID: project.ID}
+	}
+
 	// Check if the parent project exists
 	if project.ParentProjectID > 0 {
 		if project.ParentProjectID == project.ID {
@@ -1000,6 +1018,17 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		}
 	}
 
+	if project.IsTemplate {
+		isDefaultProject, err := project.isDefaultProject(s)
+		if err != nil {
+			return err
+		}
+
+		if isDefaultProject {
+			return &ErrCannotMakeDefaultProjectTemplate{ProjectID: project.ID}
+		}
+	}
+
 	err = setArchiveStateForProjectDescendants(s, project.ID, project.IsArchived)
 	if err != nil {
 		return err
@@ -1009,6 +1038,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 	colsToUpdate := []string{
 		"title",
 		"is_archived",
+		"is_template",
 		"identifier",
 		"hex_color",
 		"parent_project_id",
