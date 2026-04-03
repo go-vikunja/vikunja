@@ -157,8 +157,6 @@ test.describe('Home Page Task Overview', () => {
 	})
 
 	test('Should show the cta buttons for new project when there are no tasks', async ({authenticatedPage: page}) => {
-		await TaskFactory.truncate()
-
 		await page.goto('/')
 
 		await expect(page.locator('.home.app-content .content')).toContainText('Import your projects and tasks from other services into Vikunja:')
