@@ -361,3 +361,24 @@
   position: 40
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Parent project for hierarchy permission test (issue #2490)
+-
+  id: 41
+  title: HierarchyParent
+  description: Parent project for subtask permission hierarchy test
+  identifier: hier1
+  owner_id: 6
+  position: 41
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+# Child project — inherits access from parent 41
+-
+  id: 42
+  title: HierarchyChild
+  description: Child project for subtask permission hierarchy test
+  identifier: hier2
+  owner_id: 6
+  parent_project_id: 41
+  position: 42
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

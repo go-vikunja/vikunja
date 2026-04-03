@@ -491,7 +491,7 @@ func TestProject_ReadAll(t *testing.T) {
 		defer s.Close()
 		projects, _, err := getAllProjectsForUser(s, 6, &projectOptions{})
 		require.NoError(t, err)
-		assert.Len(t, projects, 25)
+		assert.Len(t, projects, 27)
 	})
 	t.Run("all projects for user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
