@@ -30,11 +30,13 @@ import (
 // injection attacks, so they are decoded before comparison.
 func ValidateRedirectURI(req authorizeRequest, client *models.OAuthClient) bool {
 
-	decodedStored := urlDecodeRedirectURIs(client.RedirectURIs)
-	if contains(decodedStored, req.RedirectURI) {
-		return true
+	if client != nil {
+		decodedStored := urlDecodeRedirectURIs(client.RedirectURIs)
+		if contains(decodedStored, req.RedirectURI) {
+			return true
+		}
 	}
-
+	
 	u, err := url.Parse(req.RedirectURI)
 	if err != nil || u.Scheme == "" {
 		return false
