@@ -511,38 +511,39 @@ func TestSetTaskInBucketInViewsResolvesConflicts(t *testing.T) {
 		Get(lowestPosition)
 	require.NoError(t, err)
 
-	if exists && lowestPosition.Position >= MinPositionSpacing {
-		predictedPosition := lowestPosition.Position / 2
+	require.True(t, exists)
+	require.GreaterOrEqual(t, lowestPosition.Position, MinPositionSpacing)
 
-		// Insert a conflicting position at the predicted value
-		_, err = s.Insert(&TaskPosition{
-			TaskID:        999,
-			ProjectViewID: view.ID,
-			Position:      predictedPosition,
-		})
-		require.NoError(t, err)
+	predictedPosition := lowestPosition.Position / 2
 
-		// Now create positions as task creation would
-		newPos := &TaskPosition{
-			TaskID:        998,
-			ProjectViewID: view.ID,
-			Position:      predictedPosition,
-		}
-		_, err = s.Insert(newPos)
-		require.NoError(t, err)
+	// Insert a conflicting position at the predicted value
+	_, err = s.Insert(&TaskPosition{
+		TaskID:        999,
+		ProjectViewID: view.ID,
+		Position:      predictedPosition,
+	})
+	require.NoError(t, err)
 
-		// Resolve conflicts
-		err = resolvePositionConflictsAfterInsert(s, []*TaskPosition{newPos})
-		require.NoError(t, err)
-
-		// Verify they have different positions
-		var p1, p2 TaskPosition
-		_, err = s.Where("task_id = ? AND project_view_id = ?", 999, view.ID).Get(&p1)
-		require.NoError(t, err)
-		_, err = s.Where("task_id = ? AND project_view_id = ?", 998, view.ID).Get(&p2)
-		require.NoError(t, err)
-
-		assert.NotEqual(t, p1.Position, p2.Position,
-			"Positions should be unique after conflict resolution")
+	// Now create positions as task creation would
+	newPos := &TaskPosition{
+		TaskID:        998,
+		ProjectViewID: view.ID,
+		Position:      predictedPosition,
 	}
+	_, err = s.Insert(newPos)
+	require.NoError(t, err)
+
+	// Resolve conflicts
+	err = resolvePositionConflictsAfterInsert(s, []*TaskPosition{newPos})
+	require.NoError(t, err)
+
+	// Verify they have different positions
+	var p1, p2 TaskPosition
+	_, err = s.Where("task_id = ? AND project_view_id = ?", 999, view.ID).Get(&p1)
+	require.NoError(t, err)
+	_, err = s.Where("task_id = ? AND project_view_id = ?", 998, view.ID).Get(&p2)
+	require.NoError(t, err)
+
+	assert.NotEqual(t, p1.Position, p2.Position,
+		"Positions should be unique after conflict resolution")
 }
