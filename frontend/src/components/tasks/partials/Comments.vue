@@ -506,7 +506,9 @@ async function deleteComment(commentToDelete: ITaskComment) {
 
 function getCommentUrl(commentId: string) {
 	const baseUrl = frontendUrl.value.endsWith('/') ? frontendUrl.value.slice(0, -1) : frontendUrl.value
-	return `${baseUrl}${location.pathname}${location.search}#comment-${commentId}`
+	const url = new URL(location.pathname + location.search, baseUrl)
+	url.hash = `comment-${commentId}`
+	return url.toString()
 }
 </script>
 
