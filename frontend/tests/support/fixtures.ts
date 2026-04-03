@@ -20,6 +20,7 @@ export const test = base.extend<{
 	},
 
 	currentUser: async ({apiContext}, use) => {
+		await Factory.truncateAll()
 		const user = await createFakeUser()
 		await use(user)
 	},
