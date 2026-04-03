@@ -156,7 +156,7 @@
     "vue-tsc": "3.2.6",
     "wait-on": "9.0.4",
     "workbox-cli": "7.4.0",
-    "ws": "8.19.0"
+    "ws": "8.20.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
