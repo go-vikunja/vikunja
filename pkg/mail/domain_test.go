@@ -17,6 +17,7 @@
 package mail
 
 import (
+	"os"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -24,9 +25,14 @@ import (
 )
 
 func TestGetMailDomain(t *testing.T) {
-	t.Run("returns fallback when public URL is empty", func(t *testing.T) {
+	t.Run("falls back to os.Hostname when public URL is empty", func(t *testing.T) {
 		config.ServicePublicURL.Set("")
-		assert.Equal(t, "vikunja", GetMailDomain())
+		expectedHostname, err := os.Hostname()
+		if err != nil || expectedHostname == "" {
+			assert.Equal(t, "vikunja", GetMailDomain())
+		} else {
+			assert.Equal(t, expectedHostname, GetMailDomain())
+		}
 	})
 
 	t.Run("extracts hostname from public URL", func(t *testing.T) {
@@ -39,8 +45,13 @@ func TestGetMailDomain(t *testing.T) {
 		assert.Equal(t, "tasks.example.com", GetMailDomain())
 	})
 
-	t.Run("returns fallback for invalid URL", func(t *testing.T) {
+	t.Run("falls back to os.Hostname for invalid URL", func(t *testing.T) {
 		config.ServicePublicURL.Set("://bad")
-		assert.Equal(t, "vikunja", GetMailDomain())
+		expectedHostname, err := os.Hostname()
+		if err != nil || expectedHostname == "" {
+			assert.Equal(t, "vikunja", GetMailDomain())
+		} else {
+			assert.Equal(t, expectedHostname, GetMailDomain())
+		}
 	})
 }
