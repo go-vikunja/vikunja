@@ -35,9 +35,13 @@ func GetMailDomain() string {
 		}
 	}
 	if hostname, err := os.Hostname(); err == nil && hostname != "" {
-		log.Warningf("Could not determine mail domain from public URL, falling back to hostname %q", hostname)
+		if log.IsInitialized() {
+			log.Warningf("Could not determine mail domain from public URL, falling back to hostname %q", hostname)
+		}
 		return hostname
 	}
-	log.Warningf("Could not determine mail domain from public URL or hostname, falling back to %q", "vikunja")
+	if log.IsInitialized() {
+		log.Warningf("Could not determine mail domain from public URL or hostname, falling back to %q", "vikunja")
+	}
 	return "vikunja"
 }

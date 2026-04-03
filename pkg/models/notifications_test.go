@@ -17,6 +17,7 @@
 package models
 
 import (
+	"os"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -33,7 +34,11 @@ func TestGetThreadID(t *testing.T) {
 	t.Run("default domain when no public URL", func(t *testing.T) {
 		config.ServicePublicURL.Set("")
 		threadID := getThreadID(123)
-		assert.Equal(t, "<task-123@vikunja>", threadID)
+		expectedDomain := "vikunja"
+		if hostname, err := os.Hostname(); err == nil && hostname != "" {
+			expectedDomain = hostname
+		}
+		assert.Equal(t, "<task-123@"+expectedDomain+">", threadID)
 	})
 
 	t.Run("simple domain without port", func(t *testing.T) {
@@ -73,7 +78,11 @@ func TestGetThreadID(t *testing.T) {
 	t.Run("invalid URL falls back to default", func(t *testing.T) {
 		config.ServicePublicURL.Set("not a valid url")
 		threadID := getThreadID(333)
-		assert.Equal(t, "<task-333@vikunja>", threadID)
+		expectedDomain := "vikunja"
+		if hostname, err := os.Hostname(); err == nil && hostname != "" {
+			expectedDomain = hostname
+		}
+		assert.Equal(t, "<task-333@"+expectedDomain+">", threadID)
 	})
 
 	t.Run("URL with path", func(t *testing.T) {
