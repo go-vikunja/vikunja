@@ -760,6 +760,15 @@ func getRawProjectsForUser(s *xorm.Session, opts *projectOptions) (projects []*P
 	return allProjects, len(allProjects), totalItems, err
 }
 
+func CreateDefaultSavedFiltersForUser(s *xorm.Session, u *user.User) error {
+	sf := &SavedFilter{
+		Title:   "My Open Tasks",
+		Filters: &TaskCollection{Filter: fmt.Sprintf("done = false && assignees = %s", u.Username)},
+	}
+
+	return sf.Create(s, u)
+}
+
 func getSavedFilterProjects(s *xorm.Session, doer *user.User, search string) (savedFiltersProjects []*Project, err error) {
 	savedFilters, err := getSavedFiltersForUser(s, doer, search)
 	if err != nil {
@@ -1105,6 +1114,10 @@ func RegisterUser(s *xorm.Session, u *user.User) (*user.User, error) {
 	}
 
 	if err := CreateNewProjectForUser(s, newUser); err != nil {
+		return nil, err
+	}
+
+	if err := CreateDefaultSavedFiltersForUser(s, newUser); err != nil {
 		return nil, err
 	}
 
