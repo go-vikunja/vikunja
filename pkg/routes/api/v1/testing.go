@@ -96,3 +96,33 @@ func HandleTesting(c *echo.Context) error {
 
 	return c.JSON(http.StatusCreated, data)
 }
+
+// HandleTestingTruncateAll truncates all tables in the database
+// @Summary Truncate all tables
+// @Description Removes all data from every Vikunja table. Used by e2e tests to ensure clean state before each test. Requires the testing token.
+// @tags testing
+// @Produce json
+// @Success 200 {object} map[string]string "All tables truncated."
+// @Failure 403 {object} web.HTTPError "Forbidden"
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /test/all [delete]
+func HandleTestingTruncateAll(c *echo.Context) error {
+	token := c.Request().Header.Get("Authorization")
+	if token != config.ServiceTestingtoken.GetString() {
+		return echo.ErrForbidden
+	}
+
+	events.WaitForPendingHandlers()
+
+	if err := db.TruncateAllTables(); err != nil {
+		log.Errorf("Error truncating all tables: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   true,
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "ok",
+	})
+}
