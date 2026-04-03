@@ -38,11 +38,20 @@ async function doRefresh(): Promise<string | null> {
 	try {
 		await refreshToken(true)
 		return getToken()
-	} catch {
-		// Refresh failed. Don't remove the token here — in a multi-tab scenario,
-		// another tab may have successfully rotated the refresh token, and clearing
-		// localStorage would log out that tab too. Let the caller decide.
-		return null
+	} catch (_e) {
+		// Single retry after a short delay for transient failures (network
+		// blip, server restart). If this also fails, give up.
+		try {
+			await new Promise(resolve => setTimeout(resolve, 1000))
+			await refreshToken(true)
+			return getToken()
+		} catch (retryErr) {
+			// Refresh failed. Don't remove the token here — in a multi-tab scenario,
+			// another tab may have successfully rotated the refresh token, and clearing
+			// localStorage would log out that tab too. Let the caller decide.
+			console.warn('[Vikunja] Token refresh failed:', retryErr)
+			return null
+		}
 	}
 }
 
