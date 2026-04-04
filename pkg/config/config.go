@@ -79,9 +79,10 @@ const (
 	SentryFrontendEnabled Key = `sentry.frontendenabled`
 	SentryFrontendDsn     Key = `sentry.frontenddsn`
 
-	AuthLocalEnabled    Key = `auth.local.enabled`
-	AuthOpenIDEnabled   Key = `auth.openid.enabled`
-	AuthOpenIDProviders Key = `auth.openid.providers`
+	AuthLocalEnabled                    Key = `auth.local.enabled`
+	AuthOpenIDEnabled                   Key = `auth.openid.enabled`
+	AuthOpenIDProviders                 Key = `auth.openid.providers`
+	AuthEnableDynamicClientRegistration Key = `auth.enabledynamicclientregistration`
 
 	AuthLdapEnabled    Key = `auth.ldap.enabled`
 	AuthLdapHost       Key = `auth.ldap.host`
@@ -231,6 +232,7 @@ const (
 	PluginsEnabled Key = `plugins.enabled`
 	PluginsDir     Key = `plugins.dir`
 	PluginsLoader  Key = `plugins.loader`
+	MCPEnabled     Key = `mcp.enabled`
 )
 
 var maxFileSizeInBytes uint64
@@ -486,6 +488,9 @@ func InitDefaultConfig() {
 	PluginsEnabled.setDefault(false)
 	PluginsDir.setDefault(ResolvePath("plugins"))
 	PluginsLoader.setDefault("native")
+
+	// MCP
+	MCPEnabled.setDefault(false)
 
 	// Migrate deprecated webhook config keys to outgoingrequests.*
 	// This allows removing the old keys in a single place later.
