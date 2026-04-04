@@ -114,9 +114,6 @@ importers:
       flatpickr:
         specifier: 4.6.13
         version: 4.6.13
-      flexsearch:
-        specifier: 0.8.212
-        version: 0.8.212
       floating-vue:
         specifier: 5.2.2
         version: 5.2.2(vue@3.5.27(typescript@5.9.3))
@@ -4139,9 +4136,6 @@ packages:
 
   flatted@3.4.2:
     resolution: {integrity: sha512-PjDse7RzhcPkIJwy5t7KPWQSZ9cAbzQXcafsetQoD7sOJRQlGikNbx7yZp2OotDnJyrDcbyRq3Ttb18iYOqkxA==}
-
-  flexsearch@0.8.212:
-    resolution: {integrity: sha512-wSyJr1GUWoOOIISRu+X2IXiOcVfg9qqBRyCPRUdLMIGJqPzMo+jMRlvE83t14v1j0dRMEaBbER/adQjp6Du2pw==}
 
   floating-vue@5.2.2:
     resolution: {integrity: sha512-afW+h2CFafo+7Y9Lvw/xsqjaQlKLdJV7h1fCHfcYQ1C4SVMlu7OAekqWgu5d4SgvkBVU0pVpLlVsrSTBURFRkg==}
@@ -11046,8 +11040,6 @@ snapshots:
   flatpickr@4.6.13: {}
 
   flatted@3.4.2: {}
-
-  flexsearch@0.8.212: {}
 
   floating-vue@5.2.2(vue@3.5.27(typescript@5.9.3)):
     dependencies:
