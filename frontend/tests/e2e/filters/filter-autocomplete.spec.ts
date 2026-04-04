@@ -2,7 +2,6 @@ import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 import {ProjectViewFactory} from '../../factories/project_view'
-import {SavedFilterFactory} from '../../factories/saved_filter'
 
 /**
  * Tests for filter autocomplete functionality, specifically for:
@@ -31,11 +30,6 @@ function getFilterInput(page) {
 test.describe('Filter Autocomplete', () => {
 	test.beforeEach(async ({authenticatedPage, currentUser}) => {
 		// authenticatedPage fixture triggers apiContext which sets up Factory.request
-		await ProjectFactory.truncate()
-		await TaskFactory.truncate()
-		await ProjectViewFactory.truncate()
-		await SavedFilterFactory.truncate()
-
 		const userId = currentUser.id
 
 		// Create projects - one with spaces in name (the bug case)

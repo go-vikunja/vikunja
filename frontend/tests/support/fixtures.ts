@@ -8,16 +8,17 @@ export const test = base.extend<{
 	currentUser: any;
 	userToken: string;
 }>({
-	apiContext: async ({playwright}, use) => {
+	apiContext: [async ({playwright}, use) => {
 		const baseURL = process.env.API_URL || 'http://localhost:3456/api/v1/'
 		const apiContext = await playwright.request.newContext({
 			baseURL,
 		})
 
 		Factory.setRequestContext(apiContext)
+		await Factory.truncateAll()
 		await use(apiContext)
 		await apiContext.dispose()
-	},
+	}, {auto: true}],
 
 	currentUser: async ({apiContext}, use) => {
 		const user = await createFakeUser()
