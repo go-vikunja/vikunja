@@ -152,6 +152,11 @@ type ProjectView struct {
 	// If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.
 	DoneBucketID int64 `xorm:"bigint INDEX null" json:"done_bucket_id"`
 
+	// The field to sort tasks by within kanban buckets. Valid values are `position`, `priority`, `due_date`, `created`, `updated`, `title`. Defaults to `position` (manual drag order).
+	BucketSortBy string `xorm:"varchar(50) null default null" json:"bucket_sort_by" swaggertype:"string" enums:"position,priority,due_date,created,updated,title"`
+	// The order in which to sort tasks within kanban buckets. Valid values are `asc` and `desc`. Defaults to `asc`.
+	BucketSortOrder string `xorm:"varchar(4) null default null" json:"bucket_sort_order" swaggertype:"string" enums:"asc,desc"`
+
 	// A timestamp when this view was updated. You cannot change this value.
 	Updated time.Time `xorm:"updated not null" json:"updated"`
 	// A timestamp when this reaction was created. You cannot change this value.
@@ -434,6 +439,8 @@ func (pv *ProjectView) Update(s *xorm.Session, _ web.Auth) (err error) {
 			"bucket_configuration",
 			"default_bucket_id",
 			"done_bucket_id",
+			"bucket_sort_by",
+			"bucket_sort_order",
 		).
 		Update(pv)
 	return
