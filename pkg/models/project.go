@@ -19,6 +19,7 @@ package models
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -532,9 +533,33 @@ func accessibleProjectIDsSubquery(a web.Auth, column string) builder.Cond {
 		return builder.Expr("1 = 0")
 	}
 
-	return builder.In(column,
-		getUserProjectsStatement(u.ID, "").Select("l.id"),
-	)
+	// Build the base query SQL from getUserProjectsStatement
+	baseQuery := getUserProjectsStatement(u.ID, "")
+	baseSQLStr, baseArgs, err := baseQuery.Select("l.id").ToSQL()
+	if err != nil {
+		return builder.Expr("1 = 0")
+	}
+
+	// Normalize Postgres $N placeholders back to ? so that builder.Expr
+	// can re-number them correctly when the condition is embedded in a
+	// larger query.
+	baseSQLStr = regexp.MustCompile(`\$\d+`).ReplaceAllString(baseSQLStr, "?")
+
+	// Wrap in a recursive CTE that walks child projects down the hierarchy.
+	// This ensures that if a user has access to a parent project, they also
+	// have access to all its child projects (matching the permission model
+	// used in getAllProjectsForUser).
+	recursiveSQL := column + ` IN (
+		WITH RECURSIVE accessible_projects AS (
+			` + baseSQLStr + `
+			UNION ALL
+			SELECT p.id FROM projects p
+			INNER JOIN accessible_projects ap ON p.parent_project_id = ap.id
+		)
+		SELECT id FROM accessible_projects
+	)`
+
+	return builder.Expr(recursiveSQL, baseArgs...)
 }
 
 func getAllProjectsForUser(s *xorm.Session, userID int64, opts *projectOptions) (projects []*Project, totalCount int64, err error) {
