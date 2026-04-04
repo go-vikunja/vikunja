@@ -22,7 +22,7 @@ test.describe('Default Landing Page', () => {
 		await login(page, apiContext, user)
 
 		await page.goto('/')
-		await page.waitForURL('**/tasks/range**')
+		await page.waitForURL('**/tasks/by/upcoming**')
 	})
 
 	test('redirects to default project when set as default page', async ({page, apiContext}) => {
