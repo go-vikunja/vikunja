@@ -21,8 +21,12 @@
 	//
 	// This variable points the frontend to the api.
 	// It has to be the full url, including the last /api/v1 part and port.
-	// You can change this if your api is not reachable on the same port as the frontend.
-	window.API_URL = '/api/v1'
+	//
+	// At build time, Vite replaces VIKUNJA_API_URL with
+	// the configured API URL or base path (e.g. "/vikunja").
+	// At serve time, the Go backend replaces the VIKUNJA_API_URL marker
+	// with service.publicurl + "/api/v1".
+	window.API_URL = '__VIKUNJA_API_URL__'
 	window.ALLOW_ICON_CHANGES = true
 </script>
 </body>

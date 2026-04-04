@@ -20,9 +20,11 @@ workbox.routing.registerRoute(
 	new workbox.strategies.StaleWhileRevalidate(),
 )
 
+// Construct pattern with full base URL
+const apiRoutePattern = new RegExp(`${fullBaseUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}api\\/v1\\/.*$`)
 // Always send api requests through the network and bypass the browser's HTTP cache
 workbox.routing.registerRoute(
-	new RegExp('api\\/v1\\/.*$'),
+	apiRoutePattern,
 	new workbox.strategies.NetworkOnly({
 		fetchOptions: {
 			cache: 'no-store',

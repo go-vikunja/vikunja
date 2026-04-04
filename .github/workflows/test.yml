@@ -381,6 +381,8 @@ jobs:
           echo "{\"VERSION\": \"${{ steps.ghd.outputs.describe }}\"}" > src/version.json
       - name: Build frontend
         working-directory: frontend
+        env:
+          VIKUNJA_BUILD_STANDALONE: true
         run: pnpm build
       - name: Store Frontend
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
