@@ -17,6 +17,7 @@
 package caldavtests
 
 import (
+	"context"
 	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
@@ -88,7 +89,7 @@ func basicAuthHeader(username, password string) string {
 func caldavRequest(t *testing.T, e *echo.Echo, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {
 	t.Helper()
 
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	req := httptest.NewRequestWithContext(context.Background(), method, path, strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/xml; charset=utf-8")
 
 	// Default to testuser15 basic auth (the caldav test user) unless overridden

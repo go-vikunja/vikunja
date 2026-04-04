@@ -17,6 +17,7 @@
 package caldavtests
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -38,7 +39,7 @@ func TestAuth(t *testing.T) {
 	t.Run("No auth returns 401", func(t *testing.T) {
 		e := setupTestEnv(t)
 
-		req := httptest.NewRequest(http.MethodGet, "/dav/projects/36", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/dav/projects/36", nil)
 		rec := httptest.NewRecorder()
 		e.ServeHTTP(rec, req)
 
@@ -71,7 +72,7 @@ func TestAuth(t *testing.T) {
 	t.Run("Empty Authorization header returns 401", func(t *testing.T) {
 		e := setupTestEnv(t)
 
-		req := httptest.NewRequest(http.MethodGet, "/dav/projects/36", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/dav/projects/36", nil)
 		req.Header.Set("Authorization", "")
 		rec := httptest.NewRecorder()
 		e.ServeHTTP(rec, req)
@@ -96,7 +97,7 @@ func TestAuth(t *testing.T) {
 		e := setupTestEnv(t)
 
 		// Without auth
-		req := httptest.NewRequest("PROPFIND", "/.well-known/caldav", strings.NewReader(PropfindCurrentUserPrincipal))
+		req := httptest.NewRequestWithContext(context.Background(), "PROPFIND", "/.well-known/caldav", strings.NewReader(PropfindCurrentUserPrincipal))
 		req.Header.Set("Depth", "0")
 		rec := httptest.NewRecorder()
 		e.ServeHTTP(rec, req)

@@ -18,6 +18,7 @@ package webtests
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -92,7 +93,7 @@ func TestTaskAttachmentUploadSize(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create request
-			req := httptest.NewRequest(http.MethodPut, "/api/v1/tasks/1/attachments", body)
+			req := httptest.NewRequestWithContext(context.Background(), http.MethodPut, "/api/v1/tasks/1/attachments", body)
 			req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
 
 			// Add JWT token to request header for authentication

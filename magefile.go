@@ -1217,6 +1217,7 @@ func (Release) PrepareNFPMConfig() error {
 
 	fixedConfig := strings.ReplaceAll(string(nfpmconfig), "<version>", VersionNumber)
 	fixedConfig = strings.ReplaceAll(fixedConfig, "<binlocation>", BinLocation)
+	//nolint:gosec
 	if err := os.WriteFile(nfpmConfigPath, []byte(fixedConfig), 0); err != nil {
 		return err
 	}
@@ -1684,7 +1685,7 @@ func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) er
 		// Also handle unquoted rootpath values
 		re2 := regexp.MustCompile(`(?m)^(\s*rootpath:\s*)(/[^\s\n]+)`)
 		newConfig = re2.ReplaceAllString(newConfig, `${1}"`+worktreePath+`"`)
-
+		//nolint:gosec
 		if err := os.WriteFile(configDst, []byte(newConfig), 0o600); err != nil {
 			return fmt.Errorf("failed to write config.yml: %w", err)
 		}
@@ -1995,7 +1996,7 @@ func updateReadmeBadge(version string) error {
 	// Update the badge - match the pattern: download-vX.X.X...-brightgreen
 	re := regexp.MustCompile(`(download-)(v[0-9a-zA-Z.]+)(-brightgreen)`)
 	newContent := re.ReplaceAllString(string(content), "${1}"+badgeVersion+"${3}")
-
+	//nolint:gosec
 	if err := os.WriteFile(readmePath, []byte(newContent), 0o600); err != nil {
 		return fmt.Errorf("failed to write README.md: %w", err)
 	}
@@ -2016,7 +2017,7 @@ func updateFrontendPackageJSON(version string) error {
 
 	re := regexp.MustCompile(`("version"\s*:\s*")([^"]+)(")`)
 	newContent := re.ReplaceAllString(string(content), "${1}"+npmVersion+"${3}")
-
+	//nolint:gosec
 	if err := os.WriteFile(pkgPath, []byte(newContent), 0o600); err != nil {
 		return fmt.Errorf("failed to write %s: %w", pkgPath, err)
 	}

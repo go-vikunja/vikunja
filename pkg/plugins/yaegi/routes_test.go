@@ -17,6 +17,7 @@
 package yaegi
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -43,7 +44,7 @@ func TestPluginRoutesServeHTTP(t *testing.T) {
 	loaded.UnauthRouter.RegisterUnauthenticatedRoutes(g)
 
 	// Make an HTTP request to the plugin's /status endpoint
-	req := httptest.NewRequest(http.MethodGet, "/plugins/status", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/plugins/status", nil)
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 

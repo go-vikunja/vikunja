@@ -17,6 +17,7 @@
 package caldavtests
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -63,7 +64,7 @@ func TestDiscovery(t *testing.T) {
 	t.Run("well-known/caldav without auth returns 401", func(t *testing.T) {
 		e := setupTestEnv(t)
 
-		req := httptest.NewRequest("PROPFIND", "/.well-known/caldav", strings.NewReader(PropfindCurrentUserPrincipal))
+		req := httptest.NewRequestWithContext(context.Background(), "PROPFIND", "/.well-known/caldav", strings.NewReader(PropfindCurrentUserPrincipal))
 		req.Header.Set("Content-Type", "application/xml; charset=utf-8")
 		req.Header.Set("Depth", "0")
 

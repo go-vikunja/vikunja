@@ -105,7 +105,7 @@ func setupE2ETestEnv(ctx context.Context) (e *echo.Echo, err error) {
 
 // createRequest builds an httptest request and echo context, mirroring webtests.createRequest
 func createRequest(e *echo.Echo, method string, payload string, queryParam url.Values, urlParams map[string]string) (c *echo.Context, rec *httptest.ResponseRecorder) {
-	req := httptest.NewRequest(method, "/", strings.NewReader(payload))
+	req := httptest.NewRequestWithContext(context.Background(), method, "/", strings.NewReader(payload))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.URL.RawQuery = queryParam.Encode()
 	rec = httptest.NewRecorder()

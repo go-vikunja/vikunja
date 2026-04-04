@@ -18,6 +18,7 @@ package webtests
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -48,7 +49,7 @@ func authorizeRequestBody(responseType, clientID, redirectURI, codeChallenge, co
 // doAuthorize performs a POST to /api/v1/oauth/authorize with the given JWT token and returns the recorder.
 func doAuthorize(e http.Handler, token string, body []byte) *httptest.ResponseRecorder {
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/oauth/authorize", bytes.NewReader(body))
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/v1/oauth/authorize", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
 	e.ServeHTTP(rec, req)
@@ -59,7 +60,7 @@ func doAuthorize(e http.Handler, token string, body []byte) *httptest.ResponseRe
 func doTokenRequest(e http.Handler, params map[string]string) *httptest.ResponseRecorder {
 	body, _ := json.Marshal(params) //nolint:errchkjson
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/oauth/token", bytes.NewReader(body))
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/v1/oauth/token", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	e.ServeHTTP(rec, req)
 	return rec
@@ -72,7 +73,7 @@ func TestOAuth2AuthorizeEndpoint(t *testing.T) {
 
 		body := authorizeRequestBody("code", "vikunja", "vikunja-flutter://callback", "abc123", "S256", "teststate")
 		rec := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/oauth/authorize", bytes.NewReader(body))
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/v1/oauth/authorize", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		e.ServeHTTP(rec, req)
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)

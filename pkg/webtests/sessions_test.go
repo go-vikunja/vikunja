@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -80,7 +81,7 @@ func TestSessions(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/user/token/refresh", strings.NewReader(""))
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/v1/user/token/refresh", strings.NewReader(""))
 		req.Header.Set("Content-Type", "application/json")
 		req.AddCookie(&http.Cookie{
 			Name:  auth.RefreshTokenCookieName,
@@ -99,7 +100,7 @@ func TestSessions(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/user/token/refresh", strings.NewReader(""))
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/v1/user/token/refresh", strings.NewReader(""))
 		req.Header.Set("Content-Type", "application/json")
 		req.AddCookie(&http.Cookie{
 			Name:  auth.RefreshTokenCookieName,
@@ -117,7 +118,7 @@ func TestSessions(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/login", strings.NewReader(`{
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/v1/login", strings.NewReader(`{
   "username": "user1",
   "password": "12345678"
 }`))

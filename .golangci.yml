@@ -164,6 +164,10 @@ linters:
         text: 'G70[24]:'
         path: magefile.go # Build tooling, not user-facing code
       - linters:
+          - gosec
+        text: 'G703:'
+        path: magefile.go # Build tooling, not user-facing code
+      - linters:
           - goheader
         path: plugins/
     paths:

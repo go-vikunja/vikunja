@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -54,7 +55,7 @@ func TestErrorResponseFormats(t *testing.T) {
 
 	t.Run("validation error returns invalid_fields in JSON body", func(t *testing.T) {
 		// Update a project with empty title - this should trigger validation error
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/projects/1", strings.NewReader(`{"title":""}`))
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/v1/projects/1", strings.NewReader(`{"title":""}`))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+token)
 
@@ -77,7 +78,7 @@ func TestErrorResponseFormats(t *testing.T) {
 
 	t.Run("bind error returns 400 with message", func(t *testing.T) {
 		// Send malformed JSON
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/projects/1", strings.NewReader(`{invalid json`))
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/v1/projects/1", strings.NewReader(`{invalid json`))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+token)
 
@@ -89,7 +90,7 @@ func TestErrorResponseFormats(t *testing.T) {
 
 	t.Run("not found error returns 404 with correct structure", func(t *testing.T) {
 		// Try to get a project that doesn't exist
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/projects/99999", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v1/projects/99999", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 
 		rec := httptest.NewRecorder()
@@ -108,7 +109,7 @@ func TestErrorResponseFormats(t *testing.T) {
 
 	t.Run("forbidden error returns 403", func(t *testing.T) {
 		// Try to access a project owned by user13 (project 20)
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/projects/20", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v1/projects/20", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 
 		rec := httptest.NewRecorder()
@@ -119,7 +120,7 @@ func TestErrorResponseFormats(t *testing.T) {
 
 	t.Run("domain error returns correct code and message", func(t *testing.T) {
 		// Try to create a project with a nonexistent parent
-		req := httptest.NewRequest(http.MethodPut, "/api/v1/projects", strings.NewReader(`{"title":"Test","parent_project_id":99999}`))
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPut, "/api/v1/projects", strings.NewReader(`{"title":"Test","parent_project_id":99999}`))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+token)
 
@@ -140,7 +141,7 @@ func TestErrorResponseFormats(t *testing.T) {
 
 	t.Run("unauthorized request returns 401", func(t *testing.T) {
 		// Make request without auth token
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/projects/1", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v1/projects/1", nil)
 
 		rec := httptest.NewRecorder()
 		e.ServeHTTP(rec, req)
