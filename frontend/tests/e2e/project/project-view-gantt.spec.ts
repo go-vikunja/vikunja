@@ -132,4 +132,29 @@ test.describe('Project View Gantt', () => {
 
 		await expect(page).toHaveURL(new RegExp(`/tasks/${tasks[0].id}`))
 	})
+
+	test('Should preserve date range query parameters after opening and closing a task modal', async ({authenticatedPage: page}) => {
+		await ProjectFactory.create(1)
+		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
+		await TaskFactory.create(1, {
+			start_date: new Date(2022, 9, 1).toISOString(),
+			end_date: new Date(2022, 9, 5).toISOString(),
+		})
+		await page.goto('/projects/1/2?dateFrom=2022-09-25&dateTo=2022-11-05')
+
+		// Verify the date range is shown
+		await expect(page).toHaveURL(/dateFrom=2022-09-25/)
+		await expect(page).toHaveURL(/dateTo=2022-11-05/)
+
+		// Double-click the task to open the modal
+		await page.locator('.gantt-container .gantt-row-bars .gantt-bar').dblclick()
+		await expect(page).toHaveURL(/\/tasks\//)
+
+		// Close the modal
+		await page.locator('.modal-mask .close').click()
+
+		// Verify the date range query parameters are preserved
+		await expect(page).toHaveURL(/dateFrom=2022-09-25/)
+		await expect(page).toHaveURL(/dateTo=2022-11-05/)
+	})
 })
