@@ -114,9 +114,9 @@
     "@tsconfig/node24": "24.0.4",
     "@types/codemirror": "5.60.17",
     "@types/is-touch-device": "1.0.3",
-    "@types/node": "24.12.0",
+    "@types/node": "24.12.2",
     "@types/sortablejs": "1.15.9",
-    "@types/ws": "^8.18.1",
+    "@types/ws": "8.18.1",
     "@typescript-eslint/eslint-plugin": "8.58.0",
     "@typescript-eslint/parser": "8.58.0",
     "@vitejs/plugin-vue": "6.0.5",
@@ -128,7 +128,7 @@
     "browserslist": "4.28.2",
     "caniuse-lite": "1.0.30001784",
     "csstype": "3.2.3",
-    "esbuild": "0.27.5",
+    "esbuild": "0.28.0",
     "eslint": "9.39.4",
     "eslint-plugin-depend": "1.5.0",
     "eslint-plugin-vue": "10.8.0",
@@ -139,7 +139,7 @@
     "postcss-preset-env": "11.2.0",
     "rollup": "4.60.1",
     "rollup-plugin-visualizer": "6.0.11",
-    "sass-embedded": "1.98.0",
+    "sass-embedded": "1.99.0",
     "stylelint": "17.6.0",
     "stylelint-config-property-sort-order-smacss": "10.0.0",
     "stylelint-config-recommended-vue": "1.6.1",
@@ -156,7 +156,7 @@
     "vue-tsc": "3.2.6",
     "wait-on": "9.0.4",
     "workbox-cli": "7.4.0",
-    "ws": "^8.19.0"
+    "ws": "8.20.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

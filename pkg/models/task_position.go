@@ -596,3 +596,38 @@ func resolveTaskPositionConflicts(s *xorm.Session, projectViewID int64, conflict
 
 	return nil
 }
+
+// resolvePositionConflictsAfterInsert checks a batch of newly inserted task positions
+// for conflicts (duplicate position values within the same view) and resolves them.
+// This is called after bulk-inserting positions during task creation.
+func resolvePositionConflictsAfterInsert(s *xorm.Session, positions []*TaskPosition) error {
+	// Track which (viewID, position) pairs we've already checked to avoid
+	// resolving the same conflict group twice.
+	checked := make(map[int64]map[float64]bool)
+
+	for _, pos := range positions {
+		if checked[pos.ProjectViewID] != nil && checked[pos.ProjectViewID][pos.Position] {
+			continue
+		}
+		if checked[pos.ProjectViewID] == nil {
+			checked[pos.ProjectViewID] = make(map[float64]bool)
+		}
+		checked[pos.ProjectViewID][pos.Position] = true
+
+		conflicts, err := findPositionConflicts(s, pos.ProjectViewID, pos.Position)
+		if err != nil {
+			return err
+		}
+
+		if len(conflicts) <= 1 {
+			continue
+		}
+
+		err = resolveTaskPositionConflicts(s, pos.ProjectViewID, conflicts)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
