@@ -19,6 +19,7 @@ package oauth2server
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -61,9 +62,13 @@ func HandleAuthorize(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	client, err := models.GetOAuthClientByClientID(s, req.ClientID)
-	if err != nil {
-		log.Warningf("error getting OAuth client: %s %v", req.ClientID, err)
+	var client *models.OAuthClient
+	if config.AuthEnableDynamicClientRegistration.GetBool() {
+		var err error
+		client, err = models.GetOAuthClientByClientID(s, req.ClientID)
+		if err != nil {
+			log.Warningf("error getting OAuth client: %s %v", req.ClientID, err)
+		}
 	}
 
 	// Validate redirect_uri

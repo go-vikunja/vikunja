@@ -26,6 +26,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
@@ -178,6 +179,9 @@ func TestAPIToken(t *testing.T) {
 }
 
 func TestOAuth2ClientRegistration(t *testing.T) {
+	config.AuthEnableDynamicClientRegistration.Set("true")
+	defer config.AuthEnableDynamicClientRegistration.Set("false")
+
 	t.Run("successful registration and token flow", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)

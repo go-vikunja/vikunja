@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -49,6 +50,11 @@ type DynamicClientRegistrationResponse struct {
 }
 
 func RegisterHandler(c *echo.Context) error {
+
+	if !config.AuthEnableDynamicClientRegistration.GetBool() {
+		return c.JSON(400, map[string]interface{}{"error": "Dynamic client registration is disabled"})
+	}
+
 	request := DynamicClientRegistrationResponse{}
 	err := c.Bind(&request)
 	if err != nil {

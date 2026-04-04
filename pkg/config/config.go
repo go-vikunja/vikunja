@@ -79,9 +79,10 @@ const (
 	SentryFrontendEnabled Key = `sentry.frontendenabled`
 	SentryFrontendDsn     Key = `sentry.frontenddsn`
 
-	AuthLocalEnabled    Key = `auth.local.enabled`
-	AuthOpenIDEnabled   Key = `auth.openid.enabled`
-	AuthOpenIDProviders Key = `auth.openid.providers`
+	AuthLocalEnabled                    Key = `auth.local.enabled`
+	AuthOpenIDEnabled                   Key = `auth.openid.enabled`
+	AuthOpenIDProviders                 Key = `auth.openid.providers`
+	AuthEnableDynamicClientRegistration Key = `auth.enabledynamicclientregistration`
 
 	AuthLdapEnabled    Key = `auth.ldap.enabled`
 	AuthLdapHost       Key = `auth.ldap.host`
