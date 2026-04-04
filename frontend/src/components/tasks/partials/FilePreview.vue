@@ -33,7 +33,7 @@
 import {computed, ref, shallowReactive, watchEffect} from 'vue'
 import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import {canPreview, canPreviewPdf} from '@/models/attachment'
+import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
 
 const props = defineProps<{
 	modelValue?: IAttachment
@@ -44,7 +44,7 @@ const blobUrl = ref<string | undefined>(undefined)
 const isPdf = computed(() => props.modelValue && canPreviewPdf(props.modelValue))
 
 watchEffect(async () => {
-	if (props.modelValue && canPreview(props.modelValue)) {
+	if (props.modelValue && canPreviewImage(props.modelValue)) {
 		blobUrl.value = await attachmentService.getBlobUrl(props.modelValue, PREVIEW_SIZE.MD)
 	}
 })
