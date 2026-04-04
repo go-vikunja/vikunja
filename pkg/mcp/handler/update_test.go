@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"regexp"
 	"testing"
 
 	"code.vikunja.io/api/pkg/models"
@@ -25,6 +26,8 @@ import (
 )
 
 func TestMcpHandler_UpdateTool(t *testing.T) {
+	keyPattern := regexp.MustCompile(`^[a-zA-Z0-9_.-]{1,64}$`)
+
 	t.Run("task handler", func(t *testing.T) {
 		h := &McpHandler{
 			EmptyStruct: func() CObject {
@@ -37,6 +40,10 @@ func TestMcpHandler_UpdateTool(t *testing.T) {
 		assert.Contains(t, tool.InputSchema.Properties, "id")
 		assert.Contains(t, tool.InputSchema.Properties, "title")
 		assert.Contains(t, tool.InputSchema.Properties, "description")
+
+		for key := range tool.InputSchema.Properties {
+			assert.True(t, keyPattern.MatchString(key), "key %q should match pattern ^[a-zA-Z0-9_.-]{1,64}$", key)
+		}
 	})
 
 	t.Run("project handler", func(t *testing.T) {
@@ -50,5 +57,9 @@ func TestMcpHandler_UpdateTool(t *testing.T) {
 		assert.Contains(t, tool.Description, "project")
 		assert.Contains(t, tool.InputSchema.Properties, "id")
 		assert.Contains(t, tool.InputSchema.Properties, "title")
+
+		for key := range tool.InputSchema.Properties {
+			assert.True(t, keyPattern.MatchString(key), "key %q should match pattern ^[a-zA-Z0-9_.-]{1,64}$", key)
+		}
 	})
 }

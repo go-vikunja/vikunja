@@ -127,7 +127,8 @@ func (c *McpHandler) getObjectMcpProperties() map[string]any {
 	t := reflect.TypeOf(c.EmptyStruct()).Elem()
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		properties[field.Tag.Get("json")] = map[string]any{
+		jsonKey := strings.Split(field.Tag.Get("json"), ",")[0]
+		properties[jsonKey] = map[string]any{
 			"type":        c.goToMCPType(field.Type),
 			"description": field.Tag.Get("description")}
 	}
