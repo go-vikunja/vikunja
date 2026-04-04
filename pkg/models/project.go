@@ -19,6 +19,7 @@ package models
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -538,6 +539,11 @@ func accessibleProjectIDsSubquery(a web.Auth, column string) builder.Cond {
 	if err != nil {
 		return builder.Expr("1 = 0")
 	}
+
+	// Normalize Postgres $N placeholders back to ? so that builder.Expr
+	// can re-number them correctly when the condition is embedded in a
+	// larger query.
+	baseSQLStr = regexp.MustCompile(`\$\d+`).ReplaceAllString(baseSQLStr, "?")
 
 	// Wrap in a recursive CTE that walks child projects down the hierarchy.
 	// This ensures that if a user has access to a parent project, they also
