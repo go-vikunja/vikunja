@@ -101,7 +101,9 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 	t.TokenHash = HashToken(t.Token, t.TokenSalt)
 	t.TokenLastEight = t.Token[len(t.Token)-8:]
 
-	t.OwnerID = a.GetID()
+	if t.OwnerID == 0 {
+		t.OwnerID = a.GetID()
+	}
 
 	if err := PermissionsAreValid(t.APIPermissions); err != nil {
 		return err
