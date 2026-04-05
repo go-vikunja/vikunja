@@ -15,6 +15,10 @@
 			v-if="showUsername"
 			class="username"
 		>{{ displayName }}</span>
+		<span
+			v-if="isBot"
+			class="bot-badge"
+		>{{ $t('user.bot.badge') }}</span>
 	</div>
 </template>
 
@@ -36,6 +40,7 @@ const props = withDefaults(defineProps<{
 })
 
 const displayName = computed(() => getDisplayName(props.user))
+const isBot = computed(() => ((props.user as IUser & {botOwnerId?: number}).botOwnerId ?? 0) > 0)
 const avatarSrc = ref('')
 
 async function loadAvatar() {
@@ -59,5 +64,18 @@ watch(() => [props.user, props.avatarSize], loadAvatar, { immediate: true })
 	border-radius: 100%;
 	vertical-align: middle;
 	margin-inline-end: .5rem;
+}
+
+.bot-badge {
+	display: inline-block;
+	align-self: center;
+	margin-inline-start: .5rem;
+	padding: 0 .4rem;
+	font-size: .75rem;
+	line-height: 1.2;
+	color: var(--grey-700);
+	background: var(--grey-200);
+	border-radius: 4px;
+	text-transform: uppercase;
 }
 </style>

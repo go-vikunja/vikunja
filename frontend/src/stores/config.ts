@@ -44,6 +44,7 @@ export interface ConfigState {
 		},
 	},
 	publicTeamsEnabled: boolean,
+	botUsersEnabled: boolean,
 }
 
 export const useConfigStore = defineStore('config', () => {
@@ -83,6 +84,7 @@ export const useConfigStore = defineStore('config', () => {
 			},
 		},
 		publicTeamsEnabled: false,
+		botUsersEnabled: false,
 	})
 
 	const migratorsEnabled = computed(() => state.availableMigrators?.length > 0)
