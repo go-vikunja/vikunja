@@ -121,6 +121,63 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	return newUserOut, err
 }
 
+// CreateBotUser creates a bot user owned by the given owner.
+// Bots have no email or password and cannot authenticate interactively.
+// It intentionally bypasses checkIfUserIsValid / checkIfUserExists because
+// those enforce email+password and would flag duplicate empty emails.
+func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
+	if owner == nil || owner.ID == 0 {
+		return nil, ErrNoUsernamePassword{}
+	}
+	if owner.IsBot() {
+		return nil, &ErrBotNotOwned{UserID: owner.ID}
+	}
+
+	if bot.Username == "" {
+		return nil, ErrNoUsernamePassword{}
+	}
+	if strings.Contains(bot.Username, " ") {
+		return nil, &ErrUsernameMustNotContainSpaces{Username: bot.Username}
+	}
+	if !strings.HasPrefix(bot.Username, "bot-") {
+		return nil, &ErrBotUsernameMustHavePrefix{Username: bot.Username}
+	}
+
+	if _, err := GetUserByUsername(s, bot.Username); err == nil {
+		return nil, ErrUsernameExists{Username: bot.Username}
+	} else if !IsErrUserDoesNotExist(err) {
+		return nil, err
+	}
+
+	bot.ID = 0
+	bot.BotOwnerID = owner.ID
+	bot.Status = StatusActive
+	bot.Issuer = IssuerLocal
+	bot.Password = ""
+	bot.Email = ""
+	bot.EmailRemindersEnabled = false
+	bot.OverdueTasksRemindersEnabled = false
+	bot.AvatarProvider = config.DefaultSettingsAvatarProvider.GetString()
+	bot.AvatarFileID = config.DefaultSettingsAvatarFileID.GetInt64()
+	bot.WeekStart = config.DefaultSettingsWeekStart.GetInt()
+	bot.Timezone = config.DefaultSettingsTimezone.GetString()
+	if bot.Language == "" {
+		bot.Language = config.DefaultSettingsLanguage.GetString()
+	}
+
+	if _, err := s.Insert(bot); err != nil {
+		return nil, err
+	}
+
+	newBot, err := GetUserByID(s, bot.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	events.DispatchOnCommit(s, &CreatedEvent{User: newBot})
+	return newBot, nil
+}
+
 // HashPassword hashes a password
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), config.ServiceBcryptRounds.GetInt())
