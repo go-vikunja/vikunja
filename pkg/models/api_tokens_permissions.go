@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/xorm"
 )
@@ -27,12 +28,25 @@ func (t *APIToken) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	if token.OwnerID != a.GetID() {
-		return false, nil
+	if token.OwnerID == a.GetID() {
+		*t = *token
+		return true, nil
 	}
 
-	*t = *token
-	return true, nil
+	// Allow deletion if the token belongs to a bot owned by the caller.
+	botUser, err := user.GetUserByID(s, token.OwnerID)
+	if err != nil {
+		if user.IsErrUserDoesNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	if botUser.IsBot() && botUser.BotOwnerID == a.GetID() {
+		*t = *token
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (t *APIToken) CanCreate(_ *xorm.Session, _ web.Auth) (bool, error) {
