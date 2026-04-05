@@ -75,6 +75,11 @@ func Login(c *echo.Context) (err error) {
 		return &user2.ErrAccountDisabled{UserID: user.ID}
 	}
 
+	if user.IsBot() {
+		_ = s.Rollback()
+		return &user2.ErrAccountIsBot{UserID: user.ID}
+	}
+
 	totpEnabled, err := user2.TOTPEnabledForUser(s, user)
 	if err != nil {
 		_ = s.Rollback()
