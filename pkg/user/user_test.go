@@ -25,6 +25,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestCreateUser_RejectsBotPrefix(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := CreateUser(s, &User{
+		Username: "bot-evil",
+		Password: "12345678",
+		Email:    "x@example.com",
+	})
+	require.Error(t, err)
+	assert.True(t, IsErrUsernameReserved(err))
+}
+
 func TestUser_IsBot(t *testing.T) {
 	t.Run("regular user", func(t *testing.T) {
 		u := &User{ID: 1}
