@@ -59,6 +59,9 @@
     "text": "Please check your network connection and try again."
   },
   "user": {
+    "bot": {
+      "badge": "Bot"
+    },
     "auth": {
       "username": "Username",
       "usernameEmail": "Username Or Email Address",
