@@ -25,6 +25,75 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestCreateBotUser(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+
+		bot, err := CreateBotUser(s, &User{Username: "bot-reviewer"}, owner)
+		require.NoError(t, err)
+		assert.True(t, bot.IsBot())
+		assert.Equal(t, owner.ID, bot.BotOwnerID)
+		assert.Equal(t, StatusActive, bot.Status)
+		assert.Empty(t, bot.Email)
+		assert.Empty(t, bot.Password)
+	})
+	t.Run("empty username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: ""}, owner)
+		require.Error(t, err)
+	})
+	t.Run("username with spaces", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: "bot- name"}, owner)
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameMustNotContainSpaces(err))
+	})
+	t.Run("missing bot- prefix", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: "reviewer"}, owner)
+		require.Error(t, err)
+		assert.True(t, IsErrBotUsernameMustHavePrefix(err))
+	})
+	t.Run("duplicate username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: "bot-dup"}, owner)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: "bot-dup"}, owner)
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameExists(err))
+	})
+	t.Run("bot cannot create bot", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		botOwner := &User{ID: 999, BotOwnerID: 1}
+		_, err := CreateBotUser(s, &User{Username: "bot-child"}, botOwner)
+		require.Error(t, err)
+		assert.True(t, IsErrBotNotOwned(err))
+	})
+}
+
 func TestCreateUser_RejectsBotPrefix(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
