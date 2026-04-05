@@ -25,6 +25,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestUser_IsBot(t *testing.T) {
+	t.Run("regular user", func(t *testing.T) {
+		u := &User{ID: 1}
+		assert.False(t, u.IsBot())
+	})
+	t.Run("bot user", func(t *testing.T) {
+		u := &User{ID: 2, BotOwnerID: 1}
+		assert.True(t, u.IsBot())
+	})
+}
+
 func TestCreateUser(t *testing.T) {
 	// Our dummy user for testing
 	dummyuser := &User{
