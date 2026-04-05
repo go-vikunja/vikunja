@@ -164,6 +164,11 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/Webhooks.vue'),
 				},
 				{
+					path: '/user/settings/bots',
+					name: 'user.settings.bots',
+					component: () => import('@/views/user/settings/Bots.vue'),
+				},
+				{
 					path: '/user/settings/migrate',
 					name: 'migrate.start',
 					component: () => import('@/views/migrate/Migration.vue'),
