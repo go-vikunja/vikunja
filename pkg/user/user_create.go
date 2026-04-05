@@ -149,6 +149,13 @@ func checkIfUserIsValid(user *User) error {
 		}
 	}
 
+	// Reserve the bot- prefix for bot users (created via CreateBotUser)
+	if strings.HasPrefix(user.Username, "bot-") {
+		return ErrUsernameReserved{
+			Username: user.Username,
+		}
+	}
+
 	return nil
 }
 
