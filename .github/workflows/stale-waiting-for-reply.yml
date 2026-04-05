@@ -1,0 +1,29 @@
+name: Close stale "waiting for reply" issues
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          only-labels: 'waiting for reply'
+          days-before-issue-stale: 30
+          days-before-issue-close: 0
+          stale-issue-label: 'waiting for reply'
+          remove-stale-when-updated: false
+          close-issue-message: >
+            Closing this for now since we haven't heard back on the follow-up
+            questions. If you're still seeing this on a recent version, just
+            drop a comment with the requested info and we'll reopen. Thanks
+            for the report!
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+          operations-per-run: 100
