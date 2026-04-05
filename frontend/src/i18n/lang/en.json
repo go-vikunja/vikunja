@@ -59,9 +59,6 @@
     "text": "Please check your network connection and try again."
   },
   "user": {
-    "bot": {
-      "badge": "Bot"
-    },
     "auth": {
       "username": "Username",
       "usernameEmail": "Username Or Email Address",
@@ -110,6 +107,19 @@
       "registrationFailed": "An error occurred during registration. Please check your input and try again."
     },
     "settings": {
+      "bots": {
+        "title": "Bot Users",
+        "description": "Bot users are API-only users you own. They can be added to projects, assigned tasks, and authenticated with API tokens. They cannot log in interactively.",
+        "namePlaceholder": "My Assistant",
+        "create": "Create bot",
+        "enable": "Enable",
+        "badge": "Bot",
+        "delete": {
+          "header": "Delete this bot user",
+          "text1": "Are you sure you want to delete the bot user \"{username}\"?",
+          "text2": "This is irreversible. Any API tokens belonging to this bot will be revoked."
+        }
+      },
       "title": "Settings",
       "newPasswordTitle": "Update Your Password",
       "newPassword": "New password",
