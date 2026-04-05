@@ -792,3 +792,109 @@ func (err ErrLastAdmin) HTTPError() web.HTTPError {
 		Message:  "Cannot remove the last remaining instance admin.",
 	}
 }
+
+// ErrAccountIsBot represents an error where a bot user tried to authenticate interactively.
+type ErrAccountIsBot struct {
+	UserID int64
+}
+
+// IsErrAccountIsBot checks if an error is a ErrAccountIsBot.
+func IsErrAccountIsBot(err error) bool {
+	_, ok := err.(*ErrAccountIsBot)
+	return ok
+}
+
+func (err *ErrAccountIsBot) Error() string {
+	return fmt.Sprintf("Account is a bot [UserID: %d]", err.UserID)
+}
+
+// ErrCodeAccountIsBot holds the unique world-error code of this error
+const ErrCodeAccountIsBot = 1031
+
+// HTTPError holds the http error description
+func (err *ErrAccountIsBot) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeAccountIsBot,
+		Message:  "This account is a bot and cannot log in interactively.",
+	}
+}
+
+// ErrBotUsersDisabled represents an error where the bot users feature is disabled.
+type ErrBotUsersDisabled struct{}
+
+// IsErrBotUsersDisabled checks if an error is a ErrBotUsersDisabled.
+func IsErrBotUsersDisabled(err error) bool {
+	_, ok := err.(*ErrBotUsersDisabled)
+	return ok
+}
+
+func (err *ErrBotUsersDisabled) Error() string {
+	return "Bot users feature is disabled"
+}
+
+// ErrCodeBotUsersDisabled holds the unique world-error code of this error
+const ErrCodeBotUsersDisabled = 1032
+
+// HTTPError holds the http error description
+func (err *ErrBotUsersDisabled) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeBotUsersDisabled,
+		Message:  "Bot users are disabled on this instance.",
+	}
+}
+
+// ErrBotNotOwned represents an error where a user tried to operate on a bot they do not own.
+type ErrBotNotOwned struct {
+	UserID int64
+}
+
+// IsErrBotNotOwned checks if an error is a ErrBotNotOwned.
+func IsErrBotNotOwned(err error) bool {
+	_, ok := err.(*ErrBotNotOwned)
+	return ok
+}
+
+func (err *ErrBotNotOwned) Error() string {
+	return fmt.Sprintf("Bot not owned by caller [UserID: %d]", err.UserID)
+}
+
+// ErrCodeBotNotOwned holds the unique world-error code of this error
+const ErrCodeBotNotOwned = 1033
+
+// HTTPError holds the http error description
+func (err *ErrBotNotOwned) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeBotNotOwned,
+		Message:  "You do not own this bot user.",
+	}
+}
+
+// ErrBotUsernameMustHavePrefix represents an error where a bot username is missing the bot- prefix.
+type ErrBotUsernameMustHavePrefix struct {
+	Username string
+}
+
+// IsErrBotUsernameMustHavePrefix checks if an error is a ErrBotUsernameMustHavePrefix.
+func IsErrBotUsernameMustHavePrefix(err error) bool {
+	_, ok := err.(*ErrBotUsernameMustHavePrefix)
+	return ok
+}
+
+func (err *ErrBotUsernameMustHavePrefix) Error() string {
+	return fmt.Sprintf("Bot username must start with 'bot-' [Username: %s]", err.Username)
+}
+
+// ErrCodeBotUsernameMustHavePrefix holds the unique world-error code of this error
+const ErrCodeBotUsernameMustHavePrefix = 1034
+
+// HTTPError holds the http error description
+func (err *ErrBotUsernameMustHavePrefix) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeBotUsernameMustHavePrefix,
+		Message:  "Bot usernames must start with the 'bot-' prefix.",
+	}
+}
