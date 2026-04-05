@@ -112,10 +112,10 @@ type User struct {
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
 	// BotOwnerID is the ID of the owning (human) user if this user is a bot.
 	// A non-zero value means this user is a bot and cannot authenticate via password.
-	BotOwnerID int64 `xorm:"bigint null index" json:"bot_owner_id,omitempty"`
-	WeekStart                    int    `xorm:"null" json:"-"`
-	Language                     string `xorm:"varchar(50) null" json:"-" valid:"language"`
-	Timezone                     string `xorm:"varchar(255) null" json:"-"`
+	BotOwnerID int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty"`
+	WeekStart  int    `xorm:"null" json:"-"`
+	Language   string `xorm:"varchar(50) null" json:"-" valid:"language"`
+	Timezone   string `xorm:"varchar(255) null" json:"-"`
 
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
