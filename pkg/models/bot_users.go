@@ -29,6 +29,9 @@ import (
 // for bot-management endpoints. Ownership lives on users.bot_owner_id, so there is
 // no separate table.
 type BotUser struct {
+	// ID shadows user.User.ID so the generic WebHandler can bind the :bot path parameter.
+	ID int64 `xorm:"-" json:"id" param:"bot"`
+
 	user.User `xorm:"extends"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
@@ -44,11 +47,14 @@ func (b *BotUser) Create(s *xorm.Session, a web.Auth) error {
 	if !ok {
 		return ErrGenericForbidden{}
 	}
+	// Reset embedded ID before insert so xorm does not try to reuse the shadowed value.
+	b.User.ID = 0
 	created, err := user.CreateBotUser(s, &b.User, owner)
 	if err != nil {
 		return err
 	}
 	b.User = *created
+	b.ID = created.ID
 	return nil
 }
 
@@ -80,6 +86,7 @@ func (b *BotUser) ReadOne(s *xorm.Session, a web.Auth) error {
 		return &user.ErrBotNotOwned{UserID: b.ID}
 	}
 	b.User = *u
+	b.ID = u.ID
 	return nil
 }
 
@@ -104,6 +111,7 @@ func (b *BotUser) Update(s *xorm.Session, a web.Auth) error {
 	}
 	_, err = s.ID(existing.ID).Cols("name", "status", "username").Update(existing)
 	b.User = *existing
+	b.ID = existing.ID
 	return err
 }
 
