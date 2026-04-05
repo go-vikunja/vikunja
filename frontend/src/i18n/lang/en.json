@@ -82,6 +82,27 @@
       "registrationFailed": "An error occurred during registration. Please check your input and try again."
     },
     "settings": {
+      "bots": {
+        "title": "Bot Users",
+        "description": "Bot users are API-only users you own. They can be added to projects, assigned tasks, and authenticated with API tokens. They cannot log in interactively.",
+        "usernameLabel": "Username",
+        "usernamePlaceholder": "bot-myassistant",
+        "create": "Create bot",
+        "createSuccess": "Bot user created successfully.",
+        "prefixRequired": "Bot usernames must start with 'bot-'.",
+        "delete": "Delete",
+        "deleteConfirm": "Permanently delete the bot user '{username}'? This is irreversible.",
+        "disable": "Disable",
+        "enable": "Enable",
+        "statusActive": "Active",
+        "statusDisabled": "Disabled",
+        "tokens": {
+          "title": "API tokens",
+          "create": "Create token",
+          "showOnce": "This token is only shown once. Copy it now:",
+          "delete": "Delete"
+        }
+      },
       "title": "Settings",
       "newPasswordTitle": "Update Your Password",
       "newPassword": "New password",
