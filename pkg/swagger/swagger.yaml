@@ -5805,6 +5805,30 @@ paths:
       summary: Reset the db to a defined state
       tags:
       - testing
+  /test/all:
+    delete:
+      description: Removes all data from every Vikunja table. Used by e2e tests to
+        ensure clean state before each test. Requires the testing token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All tables truncated.
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Truncate all tables
+      tags:
+      - testing
   /tokens:
     get:
       consumes:
