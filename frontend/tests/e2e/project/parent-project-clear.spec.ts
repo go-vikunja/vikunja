@@ -17,7 +17,7 @@ test.describe('Parent Project Clear', () => {
 			title: 'Child Project',
 			parent_project_id: parentProjects[0].id,
 		}, false)
-		const childViews = await createDefaultViews(childProjects[0].id, 104, false)
+		const childViews = await createDefaultViews(childProjects[0].id, 104)
 
 		// Navigate to the child project first
 		await page.goto(`/projects/${childProjects[0].id}/${childViews[0].id}`)
@@ -75,7 +75,7 @@ test.describe('Parent Project Clear', () => {
 			title: 'Test Child',
 			parent_project_id: parentProjects[0].id,
 		}, false)
-		const childViews = await createDefaultViews(childProjects[0].id, 204, false)
+		const childViews = await createDefaultViews(childProjects[0].id, 204)
 
 		// Navigate to the child project first
 		await page.goto(`/projects/${childProjects[0].id}/${childViews[0].id}`)

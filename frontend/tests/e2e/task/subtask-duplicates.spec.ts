@@ -20,13 +20,6 @@ test.describe('Subtask duplicate handling', () => {
 	let subtask
 
 	test.beforeEach(async ({authenticatedPage: page, apiContext}) => {
-		await Promise.all([
-			ProjectFactory.truncate(),
-			ProjectViewFactory.truncate(),
-			TaskFactory.truncate(),
-			TaskRelationFactory.truncate(),
-		])
-
 		projectA = (await ProjectFactory.create(1, {id: 1, title: 'Project A'}))[0]
 		await createViews(projectA.id, 1)
 		projectB = (await ProjectFactory.create(1, {id: 2, title: 'Project B'}, false))[0]

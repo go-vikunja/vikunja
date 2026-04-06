@@ -6110,6 +6110,41 @@
                 }
             }
         },
+        "/test/all": {
+            "delete": {
+                "description": "Removes all data from every Vikunja table. Used by e2e tests to ensure clean state before each test. Requires the testing token.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Truncate all tables",
+                "responses": {
+                    "200": {
+                        "description": "All tables truncated.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/test/{table}": {
             "patch": {
                 "description": "Fills the specified table with the content provided in the payload. You need to enable the testing endpoint before doing this and provide the `Authorization: \u003ctoken\u003e` secret when making requests to this endpoint. See docs for more details.",

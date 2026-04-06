@@ -72,8 +72,8 @@
 </template>
 
 <script lang="ts" setup>
-import {watch, computed} from 'vue'
-import {useRoute} from 'vue-router'
+import {watch, computed, onBeforeUnmount} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
 
 import Navigation from '@/components/home/Navigation.vue'
 import QuickActions from '@/components/quick-actions/QuickActions.vue'
@@ -86,6 +86,7 @@ import {useProjectStore} from '@/stores/projects'
 import {useRouteWithModal} from '@/composables/useRouteWithModal'
 import {useRenewTokenOnFocus} from '@/composables/useRenewTokenOnFocus'
 import {useSidebarResize} from '@/composables/useSidebarResize'
+import {useWebSocket} from '@/composables/useWebSocket'
 import {useAuthStore} from '@/stores/auth'
 
 const authStore = useAuthStore()
@@ -107,6 +108,7 @@ function showKeyboardShortcuts() {
 }
 
 const route = useRoute()
+const router = useRouter()
 
 // FIXME: this is really error prone
 // Reset the current project highlight in menu if the current route is not project related.
@@ -135,11 +137,26 @@ watch(() => route.name as string, (routeName) => {
 
 useRenewTokenOnFocus()
 
+const {connect} = useWebSocket()
+connect()
+
 const labelStore = useLabelStore()
 labelStore.loadAllLabels()
 
 const projectStore = useProjectStore()
 projectStore.loadAllProjects()
+
+// Listen for task creation from the quick-entry window
+const taskUpdateChannel = new BroadcastChannel('vikunja-task-updates')
+taskUpdateChannel.onmessage = (event) => {
+	if (event.data?.type === 'task-created-open' && event.data?.taskId) {
+		router.push({name: 'task.detail', params: {id: event.data.taskId}})
+	}
+}
+
+onBeforeUnmount(() => {
+	taskUpdateChannel.close()
+})
 </script>
 
 <style lang="scss" scoped>

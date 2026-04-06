@@ -55,6 +55,12 @@
 			"openIdStateError": "Zustand stimmt nicht überein, fahre nicht fort!",
 			"openIdGeneralError": "Es ist ein Fehler bei der externen Authentifizierung aufgetreten.",
 			"oauthMissingParams": "Erforderliche OAuth-Parameter fehlen: {params}",
+			"oauthRedirectedToApp": "Du wurdest zur App weitergeleitet. Du kannst diesen Tab jetzt schließen.",
+			"desktopTryDemo": "Demo ausprobieren",
+			"desktopCustomServer": "Eigene Server-URL",
+			"desktopCustomServerDescription": "Gib die URL deines Vikunja Servers ein, um loszulegen.",
+			"desktopWaitingForAuth": "Warte auf Authentifizierung…",
+			"desktopOAuthError": "Authentifizierung fehlgeschlagen: {error}",
 			"logout": "Abmelden",
 			"emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
 			"usernameRequired": "Bitte gib einen Anmeldenamen ein.",
@@ -129,7 +135,13 @@
 				"taskAndNotifications": "Projekte & Aufgaben",
 				"privacy": "Privatsphäre",
 				"localization": "Sprachauswahl",
-				"appearance": "Aussehen & Verhalten"
+				"appearance": "Aussehen & Verhalten",
+				"desktop": "Desktop-App"
+			},
+			"desktop": {
+				"quickEntryShortcut": "Quick Entry Tastenkombination",
+				"shortcutRecorderPlaceholder": "Klicken, um Tastenkombination zu setzen",
+				"shortcutRecorderRecording": "Tastenkombination eingeben…"
 			},
 			"totp": {
 				"title": "Zwei-Faktor-Authentifizierung",
@@ -156,7 +168,8 @@
 				"tokenCreated": "Hier ist dein neues Token: {token}",
 				"wontSeeItAgain": "Schreib es auf oder speicher es sicher — du wirst es nicht nochmal sehen können.",
 				"mustUseToken": "Du musst einen CalDAV Token erstellen, um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
-				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}"
+				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}",
+				"apiTokenHint": "Du kannst auch ein API-Token mit CalDAV-Berechtigung verwenden. Erstelle eins unter {link}."
 			},
 			"avatar": {
 				"title": "Avatar",
@@ -1060,6 +1073,7 @@
 		},
 		"quickAddMagic": {
 			"hint": "Verwende magische Präfixe, um Fälligkeitsdaten, Zuweisungen und andere Aufgabeneigenschaften zu definieren.",
+			"quickEntryHint": "Verwende magische Präfixe für Datum, Labels & mehr. Öffne die Hauptanwendung von Vikunja und überprüfe den Tooltip bei der Aufgabeneingabe für weitere Details.",
 			"title": "Quick Add Magic",
 			"intro": "Beim Erstellen einer Aufgabe kannst du spezielle Schlüsselwörter verwenden, um Attribute direkt zu der neu erstellten Aufgabe hinzuzufügen. Dadurch können häufig verwendete Attribute schneller zu Aufgaben hinzugefügt werden.",
 			"multiple": "Du kannst das mehrmals benutzen.",
@@ -1236,6 +1250,7 @@
 		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert."
 	},
 	"quickActions": {
+		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
 		"commands": "Befehle",
 		"placeholder": "Gib einen Befehl oder eine Suche ein …",
 		"hint": "Du kannst {project} verwenden, um die Suche auf ein Projekt zu beschränken. Kombiniere {project} oder {label} (Labels) mit einer Suchabfrage, um eine Aufgabe mit diesen Labels oder auf diesem Projekt zu suchen. Verwende {assignee}, um nur nach Teams zu suchen.",

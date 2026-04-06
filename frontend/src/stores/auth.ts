@@ -8,6 +8,7 @@ import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} fr
 import AvatarService from '@/services/avatar'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {useWebSocket} from '@/composables/useWebSocket'
 import {setModuleLoading} from '@/stores/helper'
 import {success, error} from '@/message'
 import {
@@ -141,10 +142,15 @@ export const useAuthStore = defineStore('auth', () => {
 				backgroundBrightness: 100,
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
+				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
 				...newSettings.frontendSettings,
 			},
 		})
-		// console.log('settings from auth store', {...settings.value.frontendSettings})
+
+		// Sync the quick entry shortcut to the desktop app when settings are loaded
+		window.vikunjaDesktop?.updateQuickEntryShortcut(
+			settings.value.frontendSettings.desktopQuickEntryShortcut || '',
+		)
 	}
 
 	function setAuthenticated(newAuthenticated: boolean) {
@@ -502,6 +508,9 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	async function logout() {
+		const {disconnect} = useWebSocket()
+		disconnect()
+
 		// Revoke the server session so the refresh token can't be reused.
 		// Best-effort: if the network call fails, still clean up locally.
 		try {

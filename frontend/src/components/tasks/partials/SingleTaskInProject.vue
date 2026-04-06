@@ -12,12 +12,16 @@
 			@click="openTaskDetail"
 			@keyup.enter="openTaskDetail"
 		>
-			<FancyCheckbox
-				v-model="task.done"
-				:disabled="(isArchived || disabled) && !canMarkAsDone"
-				@update:modelValue="markAsDone"
-				@click.stop
-			/>
+			<span
+				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : ''"
+			>
+				<FancyCheckbox
+					v-model="task.done"
+					:disabled="isArchived || disabled || !canMarkAsDone"
+					@update:modelValue="markAsDone"
+					@click.stop
+				/>
+			</span>
 
 			<ColorBubble
 				v-if="!showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"

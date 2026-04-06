@@ -80,6 +80,7 @@ import (
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
+	ws "code.vikunja.io/api/pkg/websocket"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v5"
@@ -356,6 +357,9 @@ func registerAPIRoutes(a *echo.Group) {
 	n.GET("/docs", apiv1.RedocUI)
 	n.GET("/docs/redoc.standalone.js", apiv1.RedocJS)
 
+	// WebSocket (auth happens after upgrade via first message)
+	n.GET("/ws", ws.UpgradeHandler)
+
 	// Prometheus endpoint
 	setupMetrics(n)
 
@@ -399,6 +403,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// Testing
 	if config.ServiceTestingtoken.GetString() != "" {
+		n.DELETE("/test/all", apiv1.HandleTestingTruncateAll)
 		n.PATCH("/test/:table", apiv1.HandleTesting)
 	}
 

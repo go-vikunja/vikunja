@@ -37,6 +37,7 @@ import {
 	faEyeSlash,
 	faFile,
 	faFileImage,
+	faFilePdf,
 	faFillDrip,
 	faFilter,
 	faForward,
@@ -111,6 +112,7 @@ library.add(faSquareCheck)
 library.add(faTable)
 library.add(faFile)
 library.add(faFileImage)
+library.add(faFilePdf)
 library.add(faCheckSquare)
 library.add(faStrikethrough)
 library.add(faCode)

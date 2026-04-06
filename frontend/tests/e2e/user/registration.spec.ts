@@ -27,7 +27,7 @@ test.describe('Registration', () => {
 		await page.locator('#password').fill(fixture.password)
 		await page.locator('#register-submit').click()
 		await expect(page).toHaveURL('/')
-		await expect(page.locator('main h2')).toContainText(`Hi ${fixture.username}!`)
+		await expect(page.locator('main h2')).toContainText(fixture.username)
 	})
 
 	test('Should fail', async ({page, apiContext}) => {

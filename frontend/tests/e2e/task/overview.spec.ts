@@ -157,7 +157,10 @@ test.describe('Home Page Task Overview', () => {
 	})
 
 	test('Should show the cta buttons for new project when there are no tasks', async ({authenticatedPage: page}) => {
-		await TaskFactory.truncate()
+		// Need a project so that ShowTasks renders (which sets tasksLoaded=true),
+		// but no tasks so the ImportHint becomes visible.
+		const project = (await ProjectFactory.create())[0]
+		await createDefaultViews(project.id)
 
 		await page.goto('/')
 

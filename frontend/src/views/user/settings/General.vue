@@ -343,6 +343,30 @@
 	</Card>
 
 	<Card
+		v-if="isDesktop"
+		:title="$t('user.settings.sections.desktop')"
+		class="general-settings section-block"
+		:loading="loading"
+	>
+		<div class="field-group">
+			<div class="field">
+				<label
+					:for="`quickEntryShortcut${id}`"
+					class="two-col"
+				>
+					<span>
+						{{ $t('user.settings.desktop.quickEntryShortcut') }}
+					</span>
+					<ShortcutRecorder
+						v-model="settings.frontendSettings.desktopQuickEntryShortcut"
+						@update:modelValue="updateSettings"
+					/>
+				</label>
+			</div>
+		</div>
+	</Card>
+
+	<Card
 		:title="$t('user.settings.sections.privacy')"
 		class="general-settings section-block"
 		:loading="loading"
@@ -412,8 +436,12 @@ import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KINDS} from '@/types/IRelationKind'
+import {isDesktopApp} from '@/helpers/desktopAuth'
+import ShortcutRecorder from '@/components/misc/ShortcutRecorder.vue'
 
 defineOptions({name: 'UserSettingsGeneral'})
+
+const isDesktop = isDesktopApp()
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
