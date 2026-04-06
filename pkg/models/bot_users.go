@@ -32,14 +32,15 @@ type BotUser struct {
 	// ID shadows user.User.ID so the generic WebHandler can bind the :bot path parameter.
 	ID int64 `xorm:"-" json:"id" param:"bot"`
 
+	// Status shadows user.User.Status so it is included in JSON responses
+	// (the original has json:"-").
+	Status user.Status `xorm:"-" json:"status"`
+
 	user.User `xorm:"extends"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
-
-// TableName returns the table name for bot users (shared with users).
-func (*BotUser) TableName() string { return "users" }
 
 // Create creates a new bot user.
 func (b *BotUser) Create(s *xorm.Session, a web.Auth) error {
@@ -55,13 +56,14 @@ func (b *BotUser) Create(s *xorm.Session, a web.Auth) error {
 	}
 	b.User = *created
 	b.ID = created.ID
+	b.Status = created.Status
 	return nil
 }
 
 // ReadAll returns all bots owned by the calling user.
-func (b *BotUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
+func (b *BotUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result any, resultCount int, numberOfTotalItems int64, err error) {
 	limit, start := getLimitFromPageIndex(page, perPage)
-	var bots []*user.User
+	var bots []*BotUser
 	q := s.Where("bot_owner_id = ?", a.GetID())
 	if search != "" {
 		q = q.And("(username LIKE ? OR name LIKE ?)", "%"+search+"%", "%"+search+"%")
@@ -73,31 +75,32 @@ func (b *BotUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	if err != nil {
 		return nil, 0, 0, err
 	}
+	for _, bot := range bots {
+		bot.ID = bot.User.ID
+		bot.Status = bot.User.Status
+	}
 	return bots, len(bots), total, nil
 }
 
-// ReadOne returns a single bot user if owned by the caller.
-func (b *BotUser) ReadOne(s *xorm.Session, a web.Auth) error {
+// ReadOne returns a single bot user.
+// Ownership is verified in CanRead.
+func (b *BotUser) ReadOne(s *xorm.Session, _ web.Auth) error {
 	u, err := user.GetUserByID(s, b.ID)
 	if err != nil {
 		return err
 	}
-	if u.BotOwnerID != a.GetID() {
-		return &user.ErrBotNotOwned{UserID: b.ID}
-	}
 	b.User = *u
 	b.ID = u.ID
+	b.Status = u.Status
 	return nil
 }
 
 // Update allows a narrow set of fields to be changed on an owned bot.
-func (b *BotUser) Update(s *xorm.Session, a web.Auth) error {
+// Ownership is verified in CanUpdate.
+func (b *BotUser) Update(s *xorm.Session, _ web.Auth) error {
 	existing, err := user.GetUserByID(s, b.ID)
 	if err != nil {
 		return err
-	}
-	if existing.BotOwnerID != a.GetID() {
-		return &user.ErrBotNotOwned{UserID: b.ID}
 	}
 	existing.Name = b.Name
 	if b.Status == user.StatusActive || b.Status == user.StatusDisabled {
@@ -112,17 +115,16 @@ func (b *BotUser) Update(s *xorm.Session, a web.Auth) error {
 	_, err = s.ID(existing.ID).Cols("name", "status", "username").Update(existing)
 	b.User = *existing
 	b.ID = existing.ID
+	b.Status = existing.Status
 	return err
 }
 
 // Delete completely removes the bot user and all associated data.
-func (b *BotUser) Delete(s *xorm.Session, a web.Auth) error {
+// Ownership is verified in CanDelete.
+func (b *BotUser) Delete(s *xorm.Session, _ web.Auth) error {
 	existing, err := user.GetUserByID(s, b.ID)
 	if err != nil {
 		return err
-	}
-	if existing.BotOwnerID != a.GetID() {
-		return &user.ErrBotNotOwned{UserID: b.ID}
 	}
 	return DeleteUser(s, existing)
 }

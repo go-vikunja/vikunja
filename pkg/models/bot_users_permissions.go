@@ -17,7 +17,6 @@
 package models
 
 import (
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -26,9 +25,6 @@ import (
 
 // CanCreate checks if a user can create a bot user.
 func (b *BotUser) CanCreate(_ *xorm.Session, a web.Auth) (bool, error) {
-	if !config.ServiceEnableBotUsers.GetBool() {
-		return false, &user.ErrBotUsersDisabled{}
-	}
 	u, ok := a.(*user.User)
 	if !ok || u.IsBot() {
 		return false, nil
@@ -49,9 +45,6 @@ func (b *BotUser) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) { return 
 func (b *BotUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) { return b.isOwner(s, a) }
 
 func (b *BotUser) isOwner(s *xorm.Session, a web.Auth) (bool, error) {
-	if !config.ServiceEnableBotUsers.GetBool() {
-		return false, &user.ErrBotUsersDisabled{}
-	}
 	u, err := user.GetUserByID(s, b.ID)
 	if err != nil {
 		if user.IsErrUserDoesNotExist(err) {
