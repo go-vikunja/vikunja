@@ -27,6 +27,32 @@ export interface SortBy {
 	created?: Order
 	updated?: Order
 	done_at?: Order,
+	position?: Order,
+}
+
+const VALID_SORT_FIELDS = new Set<string>(
+	['id', 'index', 'done', 'title', 'priority', 'due_date', 'start_date',
+		'end_date', 'percent_done', 'created', 'updated', 'done_at', 'position'],
+)
+
+function parseSortQuery(raw: string, fallback: SortBy): SortBy {
+	const result: Record<string, Order> = {}
+	for (const part of raw.split(',')) {
+		const [field, order] = part.split(':')
+		if (!VALID_SORT_FIELDS.has(field)) continue
+		if (order !== 'asc' && order !== 'desc') continue
+		result[field] = order
+	}
+	return Object.keys(result).length > 0 ? result as SortBy : {...fallback}
+}
+
+function serializeSortBy(sortBy: SortBy, defaultSort: SortBy): string | undefined {
+	const keys = Object.keys(sortBy) as (keyof SortBy)[]
+	const defaultKeys = Object.keys(defaultSort) as (keyof SortBy)[]
+	const isDefault = keys.length === defaultKeys.length &&
+		keys.every(k => sortBy[k] === defaultSort[k])
+	if (isDefault) return undefined
+	return keys.map(k => `${k}:${sortBy[k]}`).join(',')
 }
 
 const SORT_BY_DEFAULT: SortBy = {
@@ -80,8 +106,19 @@ export function useTaskList(
 	watch(() => params.value.filter, v => { filter.value = v || undefined })
 	watch(() => params.value.s, v => { s.value = v || undefined })
 
-	const sortBy = ref({ ...sortByDefault })
-	
+	const sortQuery = useRouteQuery('sort')
+
+	const sortBy = computed<SortBy>({
+		get() {
+			const raw = sortQuery.value as string | undefined
+			if (!raw) return {...sortByDefault}
+			return parseSortQuery(raw, sortByDefault)
+		},
+		set(val: SortBy) {
+			sortQuery.value = serializeSortBy(val, sortByDefault) || undefined
+		},
+	})
+
 	const allParams = computed(() => {
 		const loadParams = {...params.value}
 
