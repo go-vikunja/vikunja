@@ -49,6 +49,7 @@ func TestBotUser_Create(t *testing.T) {
 		bot := &BotUser{User: user.User{Username: "bot-child"}}
 		err := bot.Create(s, botOwner)
 		require.Error(t, err)
+		assert.True(t, user.IsErrBotNotOwned(err))
 	})
 }
 
@@ -66,7 +67,7 @@ func TestBotUser_ReadAll(t *testing.T) {
 	list := &BotUser{}
 	result, _, _, err := list.ReadAll(s, owner, "", 1, 50)
 	require.NoError(t, err)
-	bots, ok := result.([]*user.User)
+	bots, ok := result.([]*BotUser)
 	require.True(t, ok)
 	found := false
 	for _, u := range bots {
@@ -77,7 +78,7 @@ func TestBotUser_ReadAll(t *testing.T) {
 	assert.True(t, found)
 }
 
-func TestBotUser_ReadOne_NotOwned(t *testing.T) {
+func TestBotUser_CanRead_NotOwned(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
@@ -91,9 +92,9 @@ func TestBotUser_ReadOne_NotOwned(t *testing.T) {
 	require.NoError(t, bot.Create(s, owner))
 
 	view := &BotUser{ID: bot.ID}
-	err = view.ReadOne(s, other)
-	require.Error(t, err)
-	assert.True(t, user.IsErrBotNotOwned(err))
+	canRead, _, err := view.CanRead(s, other)
+	require.NoError(t, err)
+	assert.False(t, canRead)
 }
 
 func TestBotUser_Update_Status(t *testing.T) {
@@ -107,7 +108,7 @@ func TestBotUser_Update_Status(t *testing.T) {
 	bot := &BotUser{User: user.User{Username: "bot-update"}}
 	require.NoError(t, bot.Create(s, owner))
 
-	upd := &BotUser{ID: bot.ID, User: user.User{Status: user.StatusDisabled, Name: "Renamed"}}
+	upd := &BotUser{ID: bot.ID, Status: user.StatusDisabled, User: user.User{Name: "Renamed"}}
 	require.NoError(t, upd.Update(s, owner))
 	assert.Equal(t, user.StatusDisabled, upd.Status)
 	assert.Equal(t, "Renamed", upd.Name)
