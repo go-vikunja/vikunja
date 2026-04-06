@@ -133,11 +133,9 @@ func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
 		return nil, &ErrBotNotOwned{UserID: owner.ID}
 	}
 
-	if bot.Username == "" {
-		return nil, ErrNoUsernamePassword{}
-	}
-	if strings.Contains(bot.Username, " ") {
-		return nil, &ErrUsernameMustNotContainSpaces{Username: bot.Username}
+	// Reuse the same username format rules as regular user creation
+	if err := checkUsernameFormat(bot.Username); err != nil {
+		return nil, err
 	}
 	if !strings.HasPrefix(bot.Username, "bot-") {
 		return nil, &ErrBotUsernameMustHavePrefix{Username: bot.Username}
@@ -155,15 +153,6 @@ func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
 	bot.Issuer = IssuerLocal
 	bot.Password = ""
 	bot.Email = ""
-	bot.EmailRemindersEnabled = false
-	bot.OverdueTasksRemindersEnabled = false
-	bot.AvatarProvider = config.DefaultSettingsAvatarProvider.GetString()
-	bot.AvatarFileID = config.DefaultSettingsAvatarFileID.GetInt64()
-	bot.WeekStart = config.DefaultSettingsWeekStart.GetInt()
-	bot.Timezone = config.DefaultSettingsTimezone.GetString()
-	if bot.Language == "" {
-		bot.Language = config.DefaultSettingsLanguage.GetString()
-	}
 
 	if _, err := s.Insert(bot); err != nil {
 		return nil, err
@@ -184,6 +173,29 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
+// checkUsernameFormat validates username format rules shared by regular and bot users.
+func checkUsernameFormat(username string) error {
+	if username == "" {
+		return ErrNoUsernamePassword{}
+	}
+
+	if strings.Contains(username, " ") {
+		return &ErrUsernameMustNotContainSpaces{
+			Username: username,
+		}
+	}
+
+	// Check if username matches the reserved link-share pattern
+	linkSharePattern := regexp.MustCompile(`^link-share-\d+$`)
+	if linkSharePattern.MatchString(username) {
+		return ErrUsernameReserved{
+			Username: username,
+		}
+	}
+
+	return nil
+}
+
 func checkIfUserIsValid(user *User) error {
 	if user.Email == "" ||
 		(user.Issuer != IssuerLocal && user.Subject == "") ||
@@ -192,18 +204,8 @@ func checkIfUserIsValid(user *User) error {
 		return ErrNoUsernamePassword{}
 	}
 
-	if strings.Contains(user.Username, " ") {
-		return &ErrUsernameMustNotContainSpaces{
-			Username: user.Username,
-		}
-	}
-
-	// Check if username matches the reserved link-share pattern
-	linkSharePattern := regexp.MustCompile(`^link-share-\d+$`)
-	if linkSharePattern.MatchString(user.Username) {
-		return ErrUsernameReserved{
-			Username: user.Username,
-		}
+	if err := checkUsernameFormat(user.Username); err != nil {
+		return err
 	}
 
 	// Reserve the bot- prefix for bot users (created via CreateBotUser)
