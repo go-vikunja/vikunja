@@ -37,8 +37,7 @@ func init() {
 			return tx.Sync(users20260405194817{})
 		},
 		Rollback: func(tx *xorm.Engine) error {
-			_, err := tx.Exec("ALTER TABLE users DROP COLUMN bot_owner_id")
-			return err
+			return nil
 		},
 	})
 }
