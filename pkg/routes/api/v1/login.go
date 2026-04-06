@@ -62,6 +62,15 @@ func Login(c *echo.Context) (err error) {
 	}
 
 	if user == nil {
+		// Check if the user is a bot before attempting password verification,
+		// because bots have no password hash and bcrypt would fail with a
+		// misleading error.
+		existingUser, lookupErr := user2.GetUserByUsername(s, u.Username)
+		if lookupErr == nil && existingUser.IsBot() {
+			_ = s.Rollback()
+			return &user2.ErrAccountIsBot{UserID: existingUser.ID}
+		}
+
 		// This allows us to still have local users while ldap is enabled
 		user, err = user2.CheckUserCredentials(s, &u)
 		if err != nil {
@@ -73,11 +82,6 @@ func Login(c *echo.Context) (err error) {
 	if user.Status == user2.StatusDisabled || user.Status == user2.StatusAccountLocked {
 		_ = s.Rollback()
 		return &user2.ErrAccountDisabled{UserID: user.ID}
-	}
-
-	if user.IsBot() {
-		_ = s.Rollback()
-		return &user2.ErrAccountIsBot{UserID: user.ID}
 	}
 
 	totpEnabled, err := user2.TOTPEnabledForUser(s, user)
