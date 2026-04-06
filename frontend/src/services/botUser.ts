@@ -1,8 +1,8 @@
 import AbstractService from '@/services/abstractService'
-import type {IBotUser} from '@/modelTypes/IBotUser'
-import BotUserModel from '@/models/botUser'
+import type {IUser} from '@/modelTypes/IUser'
+import UserModel from '@/models/user'
 
-export default class BotUserService extends AbstractService<IBotUser> {
+export default class BotUserService extends AbstractService<IUser> {
 	constructor() {
 		super({
 			create: '/user/bots',
@@ -13,7 +13,7 @@ export default class BotUserService extends AbstractService<IBotUser> {
 		})
 	}
 
-	modelFactory(data: Partial<IBotUser>) {
-		return new BotUserModel(data)
+	modelFactory(data: Partial<IUser>) {
+		return new UserModel(data)
 	}
 }
