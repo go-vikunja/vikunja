@@ -18,7 +18,7 @@
 		<span
 			v-if="isBot"
 			class="bot-badge"
-		>{{ $t('user.bot.badge') }}</span>
+		>Bot</span>
 	</div>
 </template>
 

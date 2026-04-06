@@ -59,9 +59,6 @@
     "text": "Please check your network connection and try again."
   },
   "user": {
-    "bot": {
-      "badge": "Bot"
-    },
     "auth": {
       "username": "Username",
       "usernameEmail": "Username Or Email Address",
@@ -127,6 +124,10 @@
         "tokens": {
           "title": "API tokens",
           "create": "Create token",
+          "createConfirm": "Create",
+          "titleLabel": "Token title",
+          "titlePlaceholder": "e.g. CI pipeline",
+          "expiryLabel": "Expires at",
           "showOnce": "This token is only shown once. Copy it now:",
           "delete": "Delete"
         }
