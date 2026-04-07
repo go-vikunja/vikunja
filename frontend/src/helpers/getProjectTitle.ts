@@ -10,5 +10,9 @@ export function getProjectTitle(project: IProject) {
 		return i18n.global.t('project.inboxTitle')
 	}
 
+	if (project.title === 'My Open Tasks') {
+		return i18n.global.t('project.myOpenTasksFilterTitle')
+	}
+
 	return project.title
 }
