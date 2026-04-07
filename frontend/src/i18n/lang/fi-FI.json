@@ -54,6 +54,9 @@
 			"authenticating": "Todennetaan…",
 			"openIdStateError": "Tila ei täsmää, kieltäydytään jatkamasta!",
 			"openIdGeneralError": "Tapahtui virhe todennettaessa kolmatta osapuolta vastaan.",
+			"desktopTryDemo": "Kokeile Demoa",
+			"desktopWaitingForAuth": "Odotetaan autentikointia…",
+			"desktopOAuthError": "Autentikointi epäonnistui: {error}",
 			"logout": "Kirjaudu ulos",
 			"emailInvalid": "Ole hyvä ja syötä kelvollinen sähköpostiosoite.",
 			"usernameRequired": "Ole hyvä ja anna käyttäjätunnus.",
@@ -199,7 +202,9 @@
 			},
 			"sessions": {
 				"deviceInfo": "Laite",
-				"ipAddress": "IP-Osoite"
+				"ipAddress": "IP-Osoite",
+				"lastActive": "Viimeksi Aktiivinen",
+				"noOtherSessions": "Ei muita aktiivisia sessioita."
 			}
 		},
 		"deletion": {

@@ -4,10 +4,10 @@
 		<p>{{ $t('migrate.description') }}</p>
 		<div class="migration-services">
 			<RouterLink
-				v-for="{name, id, icon} in availableMigrators"
+				v-for="{name, id, icon, isCSVMigrator} in availableMigrators"
 				:key="id"
 				class="migration-service-link"
-				:to="{name: 'migrate.service', params: {service: id}}"
+				:to="isCSVMigrator ? {name: 'migrate.csv'} : {name: 'migrate.service', params: {service: id}}"
 			>
 				<img
 					class="migration-service-image"
@@ -45,7 +45,10 @@ const availableMigrators = computed(() => configStore.availableMigrators
 }
 
 .migration-service-link {
-    display: inline-block;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
     inline-size: 100px;
     text-transform: capitalize;
     margin-inline-end: 1rem;
@@ -53,5 +56,8 @@ const availableMigrators = computed(() => configStore.availableMigrators
 
 .migration-service-image {
 	display: block;
+	max-block-size: 80px;
+	inline-size: auto;
+	margin-block-end: 0.5rem;
 }
 </style>

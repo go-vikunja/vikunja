@@ -8,9 +8,6 @@ test.describe('Email Confirmation', () => {
 	let confirmationToken
 
 	test.beforeEach(async ({page, apiContext}) => {
-		await UserFactory.truncate()
-		await TokenFactory.truncate()
-
 		// Create a user with status = 1 (StatusEmailConfirmationRequired)
 		const users = await UserFactory.create(1, {
 			username: 'unconfirmeduser',

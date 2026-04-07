@@ -55,10 +55,6 @@
 	</Card>
 </template>
 
-<script lang="ts">
-export const ALPHABETICAL_SORT = 'title'
-</script>
-
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
