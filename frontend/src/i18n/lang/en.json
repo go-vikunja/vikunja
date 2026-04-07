@@ -96,10 +96,6 @@
         "tokens": {
           "title": "API tokens",
           "create": "Create token",
-          "createConfirm": "Create",
-          "titleLabel": "Token title",
-          "titlePlaceholder": "e.g. CI pipeline",
-          "expiryLabel": "Expires at",
           "showOnce": "This token is only shown once. Copy it now:",
           "delete": "Delete"
         }
