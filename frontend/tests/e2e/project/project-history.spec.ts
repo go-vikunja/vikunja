@@ -109,6 +109,10 @@ test.describe('Project History', () => {
 			}, false)
 		}
 
+		// Navigate to app first so localStorage is accessible
+		await page.goto('/')
+		await page.waitForLoadState('networkidle')
+
 		// Disable the setting first
 		const token = await page.evaluate(() => localStorage.getItem('token'))
 		await updateUserSettings(apiContext, token!, {
