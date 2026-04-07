@@ -29,9 +29,6 @@ import (
 // for bot-management endpoints. Ownership lives on users.bot_owner_id, so there is
 // no separate table.
 type BotUser struct {
-	// ID shadows user.User.ID so the generic WebHandler can bind the :bot path parameter.
-	ID int64 `xorm:"-" json:"id" param:"bot"`
-
 	// Status shadows user.User.Status so it is included in JSON responses
 	// (the original has json:"-").
 	Status user.Status `xorm:"-" json:"status"`
@@ -48,14 +45,12 @@ func (b *BotUser) Create(s *xorm.Session, a web.Auth) error {
 	if !ok {
 		return ErrGenericForbidden{}
 	}
-	// Reset embedded ID before insert so xorm does not try to reuse the shadowed value.
-	b.User.ID = 0
+	b.ID = 0
 	created, err := user.CreateBotUser(s, &b.User, owner)
 	if err != nil {
 		return err
 	}
 	b.User = *created
-	b.ID = created.ID
 	b.Status = created.Status
 	return nil
 }
@@ -76,7 +71,6 @@ func (b *BotUser) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 		return nil, 0, 0, err
 	}
 	for _, bot := range bots {
-		bot.ID = bot.User.ID
 		bot.Status = bot.User.Status
 	}
 	return bots, len(bots), total, nil
@@ -90,7 +84,6 @@ func (b *BotUser) ReadOne(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 	b.User = *u
-	b.ID = u.ID
 	b.Status = u.Status
 	return nil
 }
@@ -102,19 +95,32 @@ func (b *BotUser) Update(s *xorm.Session, _ web.Auth) error {
 	if err != nil {
 		return err
 	}
-	existing.Name = b.Name
-	if b.Status == user.StatusActive || b.Status == user.StatusDisabled {
+
+	cols := []string{}
+
+	if b.Name != "" {
+		existing.Name = b.Name
+		cols = append(cols, "name")
+	}
+	if b.Status == user.StatusDisabled {
 		existing.Status = b.Status
+		cols = append(cols, "status")
+	} else if b.Status == user.StatusActive && existing.Status != user.StatusActive {
+		existing.Status = b.Status
+		cols = append(cols, "status")
 	}
 	if b.Username != "" && b.Username != existing.Username {
 		if !strings.HasPrefix(b.Username, "bot-") {
 			return &user.ErrBotUsernameMustHavePrefix{Username: b.Username}
 		}
 		existing.Username = b.Username
+		cols = append(cols, "username")
 	}
-	_, err = s.ID(existing.ID).Cols("name", "status", "username").Update(existing)
+
+	if len(cols) > 0 {
+		_, err = s.ID(existing.ID).Cols(cols...).Update(existing)
+	}
 	b.User = *existing
-	b.ID = existing.ID
 	b.Status = existing.Status
 	return err
 }

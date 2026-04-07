@@ -84,7 +84,7 @@ const (
 // User holds information about an user
 type User struct {
 	// The unique, numeric id of this user.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"bot"`
 	// The full name of the user.
 	Name string `xorm:"text null" json:"name"`
 	// The username of the user. Is always unique.
