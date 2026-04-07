@@ -597,18 +597,36 @@ func MigrateWithConfig(u *user.User, file io.ReaderAt, size int64, config *Impor
 	return migration.InsertFromStructure(vikunjaTasks, u)
 }
 
+// hasProjectMapping returns true if any column is mapped to the project attribute
+func hasProjectMapping(config *ImportConfig) bool {
+	for _, mapping := range config.Mapping {
+		if mapping.Attribute == AttrProject {
+			return true
+		}
+	}
+	return false
+}
+
 // convertToVikunja converts CSV rows to Vikunja project/task structure
 func convertToVikunja(rows [][]string, config *ImportConfig) []*models.ProjectWithTasksAndBuckets {
 	var pseudoParentID int64 = 1
-	result := []*models.ProjectWithTasksAndBuckets{
-		{
-			Project: models.Project{
-				ID:    pseudoParentID,
-				Title: "Imported from CSV",
-			},
+	parentProject := &models.ProjectWithTasksAndBuckets{
+		Project: models.Project{
+			ID:    pseudoParentID,
+			Title: "Imported from CSV",
 		},
 	}
 
+	// If no project column is mapped, put all tasks directly in the parent project
+	if !hasProjectMapping(config) {
+		for i, row := range rows {
+			task := rowToTask(row, config, int64(i+1))
+			parentProject.Tasks = append(parentProject.Tasks, &models.TaskWithComments{Task: task})
+		}
+		return []*models.ProjectWithTasksAndBuckets{parentProject}
+	}
+
+	// Collect tasks by project name
 	projects := make(map[string]*models.ProjectWithTasksAndBuckets)
 	defaultProjectName := "Tasks"
 
@@ -618,7 +636,7 @@ func convertToVikunja(rows [][]string, config *ImportConfig) []*models.ProjectWi
 		// Determine project name
 		projectName := defaultProjectName
 		for _, mapping := range config.Mapping {
-			if mapping.Attribute == AttrProject && mapping.ColumnIndex < len(row) {
+			if mapping.Attribute == AttrProject && mapping.ColumnIndex >= 0 && mapping.ColumnIndex < len(row) {
 				if pn := strings.TrimSpace(row[mapping.ColumnIndex]); pn != "" {
 					projectName = pn
 				}
@@ -640,7 +658,16 @@ func convertToVikunja(rows [][]string, config *ImportConfig) []*models.ProjectWi
 		projects[projectName].Tasks = append(projects[projectName].Tasks, &models.TaskWithComments{Task: task})
 	}
 
-	// Collect all projects
+	// If only one project exists, put all tasks directly in the parent project
+	if len(projects) == 1 {
+		for _, p := range projects {
+			parentProject.Tasks = p.Tasks
+		}
+		return []*models.ProjectWithTasksAndBuckets{parentProject}
+	}
+
+	// Multiple projects: create sub-projects under the parent
+	result := []*models.ProjectWithTasksAndBuckets{parentProject}
 	for _, p := range projects {
 		result = append(result, p)
 	}
