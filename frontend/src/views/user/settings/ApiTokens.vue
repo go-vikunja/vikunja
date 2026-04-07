@@ -23,6 +23,9 @@ const {t} = useI18n()
 
 const route = useRoute()
 
+const initialTitle = ref('')
+const initialScopes = ref('')
+
 onMounted(async () => {
 	tokens.value = await service.getAll()
 
@@ -30,6 +33,12 @@ onMounted(async () => {
 	const titleParam = Array.isArray(route.query.title) ? route.query.title[0] : route.query.title
 	const scopesParam = Array.isArray(route.query.scopes) ? route.query.scopes[0] : route.query.scopes
 
+	if (titleParam) {
+		initialTitle.value = titleParam
+	}
+	if (scopesParam) {
+		initialScopes.value = scopesParam
+	}
 	if (titleParam || scopesParam) {
 		showCreateForm.value = true
 	}
@@ -135,6 +144,8 @@ function onTokenCreated(token: IApiToken) {
 		<ApiTokenForm
 			v-if="showCreateForm"
 			:loading="service.loading"
+			:initial-title="initialTitle"
+			:initial-scopes="initialScopes"
 			@created="onTokenCreated"
 		/>
 
