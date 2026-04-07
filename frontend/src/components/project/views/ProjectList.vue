@@ -360,6 +360,12 @@ onBeforeUnmount(() => {
 	display: flex;
 	align-items: center;
 	gap: .5rem;
+
+	:deep(.popup) {
+		inset-block-start: 3rem;
+		inset-inline-end: 0;
+		max-inline-size: 300px;
+	}
 }
 
 .tasks {
