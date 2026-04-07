@@ -15,9 +15,13 @@ import type {IApiToken} from '@/modelTypes/IApiToken'
 const props = withDefaults(defineProps<{
 	ownerId?: number,
 	loading?: boolean,
+	initialTitle?: string,
+	initialScopes?: string,
 }>(), {
 	ownerId: 0,
 	loading: false,
+	initialTitle: '',
+	initialScopes: '',
 })
 
 const emit = defineEmits<{
@@ -110,6 +114,35 @@ onMounted(async () => {
 
 	availableRoutes.value = routesAvailable
 	resetPermissions()
+
+	// Apply initial values from props (e.g. from query parameters)
+	if (props.initialTitle) {
+		newToken.value.title = props.initialTitle
+		newTokenTitleValid.value = true
+	}
+
+	if (props.initialScopes) {
+		const requestedScopes: Record<string, string[]> = {}
+		for (const scope of props.initialScopes.split(',')) {
+			const [group, permission] = scope.split(':')
+			if (group && permission) {
+				if (!requestedScopes[group]) {
+					requestedScopes[group] = []
+				}
+				requestedScopes[group].push(permission)
+			}
+		}
+		for (const [group, permissions] of Object.entries(requestedScopes)) {
+			if (newTokenPermissions.value[group]) {
+				for (const permission of permissions) {
+					if (newTokenPermissions.value[group][permission] !== undefined) {
+						newTokenPermissions.value[group][permission] = true
+					}
+				}
+				toggleGroupPermissionsFromChild(group, true)
+			}
+		}
+	}
 })
 
 function resetPermissions() {
