@@ -91,7 +91,7 @@ func TestBotUser_CanRead_NotOwned(t *testing.T) {
 	bot := &BotUser{User: user.User{Username: "bot-notowned"}}
 	require.NoError(t, bot.Create(s, owner))
 
-	view := &BotUser{ID: bot.ID}
+	view := &BotUser{User: user.User{ID: bot.ID}}
 	canRead, _, err := view.CanRead(s, other)
 	require.NoError(t, err)
 	assert.False(t, canRead)
@@ -108,7 +108,7 @@ func TestBotUser_Update_Status(t *testing.T) {
 	bot := &BotUser{User: user.User{Username: "bot-update"}}
 	require.NoError(t, bot.Create(s, owner))
 
-	upd := &BotUser{ID: bot.ID, Status: user.StatusDisabled, User: user.User{Name: "Renamed"}}
+	upd := &BotUser{Status: user.StatusDisabled, User: user.User{ID: bot.ID, Name: "Renamed"}}
 	require.NoError(t, upd.Update(s, owner))
 	assert.Equal(t, user.StatusDisabled, upd.Status)
 	assert.Equal(t, "Renamed", upd.Name)
@@ -125,6 +125,6 @@ func TestBotUser_Delete(t *testing.T) {
 	bot := &BotUser{User: user.User{Username: "bot-delete"}}
 	require.NoError(t, bot.Create(s, owner))
 
-	del := &BotUser{ID: bot.ID}
+	del := &BotUser{User: user.User{ID: bot.ID}}
 	require.NoError(t, del.Delete(s, owner))
 }
