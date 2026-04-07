@@ -329,7 +329,7 @@ func (n *DailyTasksReminderNotification) ToMail(lang string) *notifications.Mail
 
 	todayLine := ""
 	for _, task := range sortedToday {
-		todayLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `)\n`
+		todayLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + ")\n"
 	}
 
 	subject := i18n.T(lang, "notifications.task.overdue.multiple_subject")
