@@ -611,8 +611,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task47 := &Task{
 		ID:           47,
 		Title:        "task #47 due today",
-		Identifier:   "test1-13",
-		Index:        13,
+		Identifier:   "test1-32",
+		Index:        32,
 		CreatedByID:  1,
 		CreatedBy:    user1,
 		ProjectID:    1,
