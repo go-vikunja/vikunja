@@ -54,7 +54,9 @@ type APIToken struct {
 	// A timestamp when this api key was created. You cannot change this value.
 	Created time.Time `xorm:"created not null" json:"created"`
 
-	OwnerID int64 `xorm:"bigint not null" json:"-"`
+	// The user ID of the token owner. When creating a token for a bot user, set this
+	// to the bot's ID. If omitted, defaults to the authenticated user.
+	OwnerID int64 `xorm:"bigint not null" json:"owner_id,omitempty"`
 
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`
@@ -103,6 +105,15 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 
 	if t.OwnerID == 0 {
 		t.OwnerID = a.GetID()
+	} else if t.OwnerID != a.GetID() {
+		// If OwnerID is set to someone else, verify it's a bot owned by the caller.
+		botUser, err := user.GetUserByID(s, t.OwnerID)
+		if err != nil {
+			return err
+		}
+		if !botUser.IsBot() || botUser.BotOwnerID != a.GetID() {
+			return &user.ErrBotNotOwned{UserID: t.OwnerID}
+		}
 	}
 
 	if err := PermissionsAreValid(t.APIPermissions); err != nil {
@@ -135,7 +146,20 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 
 	tokens := []*APIToken{}
 
-	var where builder.Cond = builder.Eq{"owner_id": a.GetID()}
+	ownerID := a.GetID()
+	if t.OwnerID != 0 && t.OwnerID != a.GetID() {
+		// If filtering by a different owner, verify it's a bot owned by the caller.
+		botUser, lookupErr := user.GetUserByID(s, t.OwnerID)
+		if lookupErr != nil {
+			return nil, 0, 0, lookupErr
+		}
+		if !botUser.IsBot() || botUser.BotOwnerID != a.GetID() {
+			return nil, 0, 0, &user.ErrBotNotOwned{UserID: t.OwnerID}
+		}
+		ownerID = t.OwnerID
+	}
+
+	var where builder.Cond = builder.Eq{"owner_id": ownerID}
 
 	if search != "" {
 		where = builder.And(
@@ -168,8 +192,9 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 // @Failure 404 {object} web.HTTPError "The token does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tokens/{tokenID} [delete]
-func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
-	_, err = s.Where("id = ? AND owner_id = ?", t.ID, a.GetID()).Delete(&APIToken{})
+func (t *APIToken) Delete(s *xorm.Session, _ web.Auth) (err error) {
+	// Ownership is verified in CanDelete; delete by ID only.
+	_, err = s.Where("id = ?", t.ID).Delete(&APIToken{})
 	return err
 }
 
