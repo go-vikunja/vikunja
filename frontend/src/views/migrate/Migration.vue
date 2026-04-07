@@ -45,7 +45,10 @@ const availableMigrators = computed(() => configStore.availableMigrators
 }
 
 .migration-service-link {
-    display: inline-block;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
     inline-size: 100px;
     text-transform: capitalize;
     margin-inline-end: 1rem;
@@ -53,5 +56,8 @@ const availableMigrators = computed(() => configStore.availableMigrators
 
 .migration-service-image {
 	display: block;
+	max-block-size: 80px;
+	inline-size: auto;
+	margin-block-end: 0.5rem;
 }
 </style>
