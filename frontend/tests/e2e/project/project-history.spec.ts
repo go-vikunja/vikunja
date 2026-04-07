@@ -2,6 +2,24 @@ import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
 import {ProjectViewFactory} from '../../factories/project_view'
 import {updateUserSettings} from '../../support/updateUserSettings'
+import type {Page} from '@playwright/test'
+
+async function visitProjectsToBuildHistory(page: Page, projects: any[]) {
+	for (const project of projects) {
+		const loadProjectPromise = page.waitForResponse(response =>
+			response.url().includes(`/projects/${project.id}`) && response.request().method() === 'GET',
+		)
+		await page.goto(`/projects/${project.id}/${project.id}`)
+		await loadProjectPromise
+		await page.waitForFunction(
+			(projectId) => {
+				const history = JSON.parse(localStorage.getItem('projectHistory') || '[]')
+				return history.some((h: any) => h.id === projectId)
+			},
+			project.id,
+		)
+	}
+}
 
 test.describe('Project History', () => {
 	test('should show a project history on the home page', async ({authenticatedPage: page}) => {
@@ -60,20 +78,7 @@ test.describe('Project History', () => {
 		}
 
 		// Visit projects to build up history
-		for (const project of projects) {
-			const loadProjectPromise = page.waitForResponse(response =>
-				response.url().includes(`/projects/${project.id}`) && response.request().method() === 'GET',
-			)
-			await page.goto(`/projects/${project.id}/${project.id}`)
-			await loadProjectPromise
-			await page.waitForFunction(
-				(projectId) => {
-					const history = JSON.parse(localStorage.getItem('projectHistory') || '[]')
-					return history.some((h: any) => h.id === projectId)
-				},
-				project.id,
-			)
-		}
+		await visitProjectsToBuildHistory(page, projects)
 
 		// Go to overview and verify section is visible
 		await page.goto('/')
@@ -113,20 +118,7 @@ test.describe('Project History', () => {
 		})
 
 		// Visit projects to build up history
-		for (const project of projects) {
-			const loadProjectPromise = page.waitForResponse(response =>
-				response.url().includes(`/projects/${project.id}`) && response.request().method() === 'GET',
-			)
-			await page.goto(`/projects/${project.id}/${project.id}`)
-			await loadProjectPromise
-			await page.waitForFunction(
-				(projectId) => {
-					const history = JSON.parse(localStorage.getItem('projectHistory') || '[]')
-					return history.some((h: any) => h.id === projectId)
-				},
-				project.id,
-			)
-		}
+		await visitProjectsToBuildHistory(page, projects)
 
 		// Verify section is hidden
 		await page.goto('/')
