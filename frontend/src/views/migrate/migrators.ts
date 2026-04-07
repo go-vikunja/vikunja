@@ -4,6 +4,7 @@ import trelloIcon from './icons/trello.svg?url'
 import microsoftTodoIcon from './icons/microsoft-todo.svg?url'
 import vikunjaFileIcon from './icons/vikunja-file.png?url'
 import tickTickIcon from './icons/ticktick.svg?url'
+import wekanIcon from './icons/wekan.png?url'
 
 export interface Migrator {
 	id: string
@@ -47,6 +48,12 @@ export const MIGRATORS = {
 		id: 'ticktick',
 		name: 'TickTick',
 		icon: tickTickIcon as string,
+		isFileMigrator: true,
+	},
+	wekan: {
+		id: 'wekan',
+		name: 'WeKan ®',
+		icon: wekanIcon,
 		isFileMigrator: true,
 	},
 } as const satisfies IMigratorRecord
