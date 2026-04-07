@@ -6,13 +6,14 @@ import {useTitle} from '@/composables/useTitle'
 import XButton from '@/components/input/Button.vue'
 import FormField from '@/components/input/FormField.vue'
 import Message from '@/components/misc/Message.vue'
+import ApiTokenForm from '@/components/token/ApiTokenForm.vue'
 
 import BotUserService from '@/services/botUser'
-import BotTokenService from '@/services/botToken'
+import ApiTokenService from '@/services/apiToken'
 import UserModel from '@/models/user'
-import ApiTokenModel from '@/models/apiTokenModel'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IApiToken} from '@/modelTypes/IApiToken'
+import {formatDisplayDate} from '@/helpers/time/formatDate'
 
 const STATUS_ACTIVE = 0
 const STATUS_DISABLED = 2
@@ -21,14 +22,13 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.settings.bots.title'))
 
 const botService = new BotUserService()
+const tokenService = new ApiTokenService()
 const bots = ref<IUser[]>([])
 const newBotUsername = ref('')
 const createError = ref<string | null>(null)
 
 const tokensByBot = ref<Record<number, IApiToken[]>>({})
 const newTokensByBot = ref<Record<number, string>>({})
-const newTokenTitle = ref<Record<number, string>>({})
-const newTokenExpiry = ref<Record<number, string>>({})
 const showTokenForm = ref<Record<number, boolean>>({})
 
 async function loadBots() {
@@ -39,8 +39,7 @@ async function loadBots() {
 }
 
 async function loadTokens(botId: number) {
-	const svc = new BotTokenService(botId)
-	tokensByBot.value[botId] = await svc.getAll() as IApiToken[]
+	tokensByBot.value[botId] = await tokenService.getAll({}, {owner_id: botId}) as IApiToken[]
 }
 
 async function createBot() {
@@ -79,31 +78,14 @@ async function deleteBot(bot: IUser) {
 	bots.value = bots.value.filter(b => b.id !== bot.id)
 }
 
-function toggleTokenForm(botId: number) {
-	showTokenForm.value[botId] = !showTokenForm.value[botId]
-	if (showTokenForm.value[botId]) {
-		newTokenTitle.value[botId] = ''
-		const defaultExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-		newTokenExpiry.value[botId] = defaultExpiry.toISOString().slice(0, 16)
-	}
-}
-
-async function createBotToken(bot: IUser) {
-	const svc = new BotTokenService(bot.id)
-	const token = new ApiTokenModel({
-		title: newTokenTitle.value[bot.id] || 'default',
-		permissions: {'*': '*'},
-		expiresAt: new Date(newTokenExpiry.value[bot.id]),
-	})
-	const created = await svc.create(token) as IApiToken
-	newTokensByBot.value[bot.id] = created.token
+function onTokenCreated(bot: IUser, token: IApiToken) {
+	newTokensByBot.value[bot.id] = token.token
 	showTokenForm.value[bot.id] = false
-	await loadTokens(bot.id)
+	loadTokens(bot.id)
 }
 
-async function deleteBotToken(bot: IUser, token: IApiToken) {
-	const svc = new BotTokenService(bot.id)
-	await svc.delete(token)
+async function deleteToken(bot: IUser, token: IApiToken) {
+	await tokenService.delete(token)
 	await loadTokens(bot.id)
 }
 
@@ -159,31 +141,6 @@ onMounted(loadBots)
 
 			<div class="tokens">
 				<h4>{{ $t('user.settings.bots.tokens.title') }}</h4>
-				<XButton @click="toggleTokenForm(bot.id)">
-					{{ $t('user.settings.bots.tokens.create') }}
-				</XButton>
-				<div
-					v-if="showTokenForm[bot.id]"
-					class="token-form"
-				>
-					<FormField :label="$t('user.settings.bots.tokens.titleLabel')">
-						<input
-							v-model="newTokenTitle[bot.id]"
-							class="input"
-							:placeholder="$t('user.settings.bots.tokens.titlePlaceholder')"
-						>
-					</FormField>
-					<FormField :label="$t('user.settings.bots.tokens.expiryLabel')">
-						<input
-							v-model="newTokenExpiry[bot.id]"
-							class="input"
-							type="datetime-local"
-						>
-					</FormField>
-					<XButton @click="createBotToken(bot)">
-						{{ $t('user.settings.bots.tokens.createConfirm') }}
-					</XButton>
-				</div>
 				<Message
 					v-if="newTokensByBot[bot.id]"
 					variant="warning"
@@ -191,21 +148,54 @@ onMounted(loadBots)
 					{{ $t('user.settings.bots.tokens.showOnce') }}
 					<code>{{ newTokensByBot[bot.id] }}</code>
 				</Message>
-				<ul>
-					<li
-						v-for="token in tokensByBot[bot.id] ?? []"
-						:key="token.id"
-					>
-						{{ token.title }}
-						<XButton
-							variant="tertiary"
-							class="is-danger is-small"
-							@click="deleteBotToken(bot, token)"
-						>
-							{{ $t('user.settings.bots.tokens.delete') }}
-						</XButton>
-					</li>
-				</ul>
+				<div
+					v-if="(tokensByBot[bot.id] ?? []).length > 0"
+					class="has-horizontal-overflow"
+				>
+					<table class="table">
+						<thead>
+							<tr>
+								<th>{{ $t('user.settings.apiTokens.attributes.title') }}</th>
+								<th>{{ $t('user.settings.apiTokens.attributes.expiresAt') }}</th>
+								<th>{{ $t('misc.created') }}</th>
+								<th class="has-text-end">
+									{{ $t('misc.actions') }}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr
+								v-for="token in tokensByBot[bot.id] ?? []"
+								:key="token.id"
+							>
+								<td>{{ token.title }}</td>
+								<td>{{ formatDisplayDate(token.expiresAt) }}</td>
+								<td>{{ formatDisplayDate(token.created) }}</td>
+								<td class="has-text-end">
+									<XButton
+										variant="secondary"
+										@click="deleteToken(bot, token)"
+									>
+										{{ $t('user.settings.bots.tokens.delete') }}
+									</XButton>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<ApiTokenForm
+					v-if="showTokenForm[bot.id]"
+					:owner-id="bot.id"
+					@created="(token: IApiToken) => onTokenCreated(bot, token)"
+				/>
+				<XButton
+					v-else
+					icon="plus"
+					class="mbe-4"
+					@click="showTokenForm[bot.id] = true"
+				>
+					{{ $t('user.settings.bots.tokens.create') }}
+				</XButton>
 			</div>
 		</div>
 	</div>
@@ -242,16 +232,6 @@ onMounted(loadBots)
 	margin-block-start: 1rem;
 	padding-block-start: 1rem;
 	border-block-start: 1px solid var(--grey-200);
-}
-
-.token-form {
-	display: flex;
-	flex-direction: column;
-	gap: .5rem;
-	margin-block: 1rem;
-	padding: 1rem;
-	border: 1px solid var(--grey-200);
-	border-radius: 4px;
 }
 
 .create-form {

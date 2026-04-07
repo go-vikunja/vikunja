@@ -56,7 +56,7 @@ type APIToken struct {
 
 	// The user ID of the token owner. When creating a token for a bot user, set this
 	// to the bot's ID. If omitted, defaults to the authenticated user.
-	OwnerID int64 `xorm:"bigint not null" json:"owner_id,omitempty"`
+	OwnerID int64 `xorm:"bigint not null" json:"owner_id,omitempty" query:"owner_id"`
 
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`
