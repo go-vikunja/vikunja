@@ -171,7 +171,7 @@ var FavoritesPseudoProject = Project{
 // @Param per_page query int false "The maximum number of items per page. Note this parameter is limited by the configured maximum of items per page."
 // @Param s query string false "Search projects by title."
 // @Param is_archived query bool false "If true, also returns all archived projects."
-// @Param is_template query bool false "If true, returns only template projects. If false (default), excludes templates."
+// @Param is_template query bool false "If true, also returns all template projects."
 // @Param expand query string false "If set to `permissions`, Vikunja will return the max permission the current user has on this project. You can currently only set this to `permissions`."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Project "The projects"
