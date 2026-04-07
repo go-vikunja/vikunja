@@ -74,6 +74,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
+	"code.vikunja.io/api/pkg/modules/migration/wekan"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
@@ -852,6 +853,14 @@ func registerMigrations(m *echo.Group) {
 		},
 	}
 	tickTickFileMigrator.RegisterRoutes(m)
+
+	// WeKan File Migrator
+	wekanFileMigrator := migrationHandler.FileMigratorWeb{
+		MigrationStruct: func() migration.FileMigrator {
+			return &wekan.Migrator{}
+		},
+	}
+	wekanFileMigrator.RegisterRoutes(m)
 }
 
 func registerCalDavRoutes(c *echo.Group) {
