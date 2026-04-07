@@ -2270,7 +2270,7 @@ paths:
       tags:
       - migration
   /migration/ticktick/migrate:
-    post:
+    put:
       consumes:
       - application/x-www-form-urlencoded
       description: Imports all projects, tasks, notes, reminders, subtasks and files
@@ -2491,6 +2491,55 @@ paths:
   /migration/vikunja-file/status:
     get:
       description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
+      tags:
+      - migration
+  /migration/wekan/migrate:
+    put:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Imports all projects, tasks, labels, checklists, and comments from
+        a WeKan board JSON export into Vikunja.
+      parameters:
+      - description: The WeKan board JSON export file.
+        in: formData
+        name: import
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Import all projects, tasks etc. from a WeKan board export
+      tags:
+      - migration
+  /migration/wekan/status:
+    get:
+      description: Returns if the current user already did the migration or not. This
         is useful to show a confirmation message in the frontend if the user is trying
         to do the same migration again.
       produces:
