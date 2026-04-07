@@ -139,6 +139,7 @@
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Overdue tasks reminder email time",
         "filterUsedOnOverview": "Saved filter used on the overview page",
+        "showLastViewed": "Show last viewed projects on the overview page",
         "minimumPriority": "Minimum visible task priority",
         "dateDisplay": "Date display format",
         "dateDisplayOptions": {
