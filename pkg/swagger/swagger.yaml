@@ -41,6 +41,96 @@ definitions:
       username_fallback:
         type: boolean
     type: object
+  csv.ColumnMapping:
+    properties:
+      attribute:
+        $ref: '#/definitions/csv.TaskAttribute'
+      column_index:
+        type: integer
+      column_name:
+        type: string
+    type: object
+  csv.DetectionResult:
+    properties:
+      columns:
+        items:
+          type: string
+        type: array
+      date_format:
+        type: string
+      delimiter:
+        type: string
+      preview_rows:
+        items:
+          items:
+            type: string
+          type: array
+        type: array
+      quote_char:
+        type: string
+      suggested_mapping:
+        items:
+          $ref: '#/definitions/csv.ColumnMapping'
+        type: array
+    type: object
+  csv.PreviewResult:
+    properties:
+      tasks:
+        items:
+          $ref: '#/definitions/csv.PreviewTask'
+        type: array
+      total_rows:
+        type: integer
+    type: object
+  csv.PreviewTask:
+    properties:
+      description:
+        type: string
+      done:
+        type: boolean
+      due_date:
+        type: string
+      end_date:
+        type: string
+      labels:
+        items:
+          type: string
+        type: array
+      priority:
+        type: integer
+      project:
+        type: string
+      start_date:
+        type: string
+      title:
+        type: string
+    type: object
+  csv.TaskAttribute:
+    enum:
+    - title
+    - description
+    - due_date
+    - start_date
+    - end_date
+    - done
+    - priority
+    - labels
+    - project
+    - reminder
+    - ignore
+    type: string
+    x-enum-varnames:
+    - AttrTitle
+    - AttrDescription
+    - AttrDueDate
+    - AttrStartDate
+    - AttrEndDate
+    - AttrDone
+    - AttrPriority
+    - AttrLabels
+    - AttrProject
+    - AttrReminder
+    - AttrIgnore
   files.File:
     properties:
       created:
@@ -2198,6 +2288,130 @@ paths:
       summary: Login
       tags:
       - auth
+  /migration/csv/detect:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Analyzes a CSV file and returns auto-detected columns, delimiter,
+        quote character, and date format with suggested column mappings.
+      parameters:
+      - description: The CSV file to analyze
+        in: formData
+        name: import
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Detection results with suggested mappings
+          schema:
+            $ref: '#/definitions/csv.DetectionResult'
+        "400":
+          description: Invalid CSV file
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Detect CSV structure
+      tags:
+      - migration
+  /migration/csv/migrate:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Imports tasks from a CSV file into Vikunja with the provided configuration.
+      parameters:
+      - description: The CSV file to import
+        in: formData
+        name: import
+        required: true
+        type: file
+      - description: The import configuration JSON
+        in: formData
+        name: config
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid CSV file or configuration
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Import CSV file
+      tags:
+      - migration
+  /migration/csv/preview:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Generates a preview of the first 5 tasks that would be imported
+        with the given configuration.
+      parameters:
+      - description: The CSV file to preview
+        in: formData
+        name: import
+        required: true
+        type: file
+      - description: The import configuration JSON
+        in: formData
+        name: config
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Preview of tasks to import
+          schema:
+            $ref: '#/definitions/csv.PreviewResult'
+        "400":
+          description: Invalid CSV file or configuration
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Preview CSV import
+      tags:
+      - migration
+  /migration/csv/status:
+    get:
+      description: Returns if the current user already did the CSV migration or not.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get CSV migration status
+      tags:
+      - migration
   /migration/microsoft-todo/auth:
     get:
       description: Returns the auth url where the user needs to get its auth code.

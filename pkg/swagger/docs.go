@@ -765,6 +765,198 @@ const docTemplate = `{
                 }
             }
         },
+        "/migration/csv/detect": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Analyzes a CSV file and returns auto-detected columns, delimiter, quote character, and date format with suggested column mappings.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Detect CSV structure",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "The CSV file to analyze",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detection results with suggested mappings",
+                        "schema": {
+                            "$ref": "#/definitions/csv.DetectionResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid CSV file",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/csv/migrate": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Imports tasks from a CSV file into Vikunja with the provided configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Import CSV file",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "The CSV file to import",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The import configuration JSON",
+                        "name": "config",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A message telling you everything was migrated successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid CSV file or configuration",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/csv/preview": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Generates a preview of the first 5 tasks that would be imported with the given configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Preview CSV import",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "The CSV file to preview",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The import configuration JSON",
+                        "name": "config",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Preview of tasks to import",
+                        "schema": {
+                            "$ref": "#/definitions/csv.PreviewResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid CSV file or configuration",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/csv/status": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns if the current user already did the CSV migration or not.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get CSV migration status",
+                "responses": {
+                    "200": {
+                        "description": "The migration status",
+                        "schema": {
+                            "$ref": "#/definitions/migration.Status"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/migration/microsoft-todo/auth": {
             "get": {
                 "security": [
@@ -8267,6 +8459,133 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
+        },
+        "csv.ColumnMapping": {
+            "type": "object",
+            "properties": {
+                "attribute": {
+                    "$ref": "#/definitions/csv.TaskAttribute"
+                },
+                "column_index": {
+                    "type": "integer"
+                },
+                "column_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "csv.DetectionResult": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "date_format": {
+                    "type": "string"
+                },
+                "delimiter": {
+                    "type": "string"
+                },
+                "preview_rows": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "quote_char": {
+                    "type": "string"
+                },
+                "suggested_mapping": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/csv.ColumnMapping"
+                    }
+                }
+            }
+        },
+        "csv.PreviewResult": {
+            "type": "object",
+            "properties": {
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/csv.PreviewTask"
+                    }
+                },
+                "total_rows": {
+                    "type": "integer"
+                }
+            }
+        },
+        "csv.PreviewTask": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "done": {
+                    "type": "boolean"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "project": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "csv.TaskAttribute": {
+            "type": "string",
+            "enum": [
+                "title",
+                "description",
+                "due_date",
+                "start_date",
+                "end_date",
+                "done",
+                "priority",
+                "labels",
+                "project",
+                "reminder",
+                "ignore"
+            ],
+            "x-enum-varnames": [
+                "AttrTitle",
+                "AttrDescription",
+                "AttrDueDate",
+                "AttrStartDate",
+                "AttrEndDate",
+                "AttrDone",
+                "AttrPriority",
+                "AttrLabels",
+                "AttrProject",
+                "AttrReminder",
+                "AttrIgnore"
+            ]
         },
         "files.File": {
             "type": "object",
