@@ -295,6 +295,7 @@
     "shared": "Shared Projects",
     "noDescriptionAvailable": "No project description is available.",
     "inboxTitle": "Inbox",
+    "myOpenTasksFilterTitle": "My Open Tasks",
     "favorite": "Mark this project as favorite",
     "unfavorite": "Remove this project from favorites",
     "openSettingsMenu": "Open project settings menu",
