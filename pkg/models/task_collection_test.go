@@ -43,7 +43,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersEnabled:   true,
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 		ExportFileID:                 1,
@@ -55,7 +56,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersEnabled:   false,
+		TodayTasksRemindersTime:      "09:00",
 		DefaultProjectID:             4,
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
@@ -67,7 +69,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Issuer:                       "local",
 		EmailRemindersEnabled:        true,
 		OverdueTasksRemindersEnabled: true,
-		OverdueTasksRemindersTime:    "09:00",
+		TodayTasksRemindersEnabled:   false,
+		TodayTasksRemindersTime:      "09:00",
 		Created:                      testCreatedTime,
 		Updated:                      testUpdatedTime,
 	}
@@ -606,30 +609,17 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 		Updated:      time.Unix(1543626724, 0).In(loc),
 	}
 	task47 := &Task{
-		ID:          47,
-		Title:       "task #47 with reminders outside window",
-		Identifier:  "test1-32",
-		Index:       32,
-		CreatedByID: 1,
-		CreatedBy:   user1,
-		Reminders: []*TaskReminder{
-			{
-				ID:       6,
-				TaskID:   47,
-				Reminder: time.Date(2018, 8, 1, 12, 0, 0, 0, loc),
-				Created:  time.Unix(1543626724, 0).In(loc),
-			},
-			{
-				ID:       7,
-				TaskID:   47,
-				Reminder: time.Date(2019, 3, 1, 12, 0, 0, 0, loc),
-				Created:  time.Unix(1543626724, 0).In(loc),
-			},
-		},
+		ID:           47,
+		Title:        "task #47 due today",
+		Identifier:   "test1-32",
+		Index:        32,
+		CreatedByID:  1,
+		CreatedBy:    user1,
 		ProjectID:    1,
+		DueDate:      time.Date(2018, 12, 1, 23, 0, 0, 0, loc),
 		RelatedTasks: map[RelationKind][]*Task{},
-		Created:      time.Unix(1543626724, 0).In(loc),
-		Updated:      time.Unix(1543626724, 0).In(loc),
+		Created:      time.Date(2018, 12, 1, 1, 12, 4, 0, loc),
+		Updated:      time.Date(2018, 12, 1, 1, 12, 4, 0, loc),
 	}
 	task48 := &Task{
 		ID:           48,
@@ -1002,7 +992,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task32, // has nil dates
 				task33, // has nil dates
 				task39, // has nil dates
-				task47, // has nil dates
+				task47,
 				task48, // has nil dates
 			},
 			wantErr: false,
@@ -1035,7 +1025,6 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task30,
 				task31,
 				task33,
-				task47,
 			},
 			wantErr: false,
 		},
@@ -1055,24 +1044,11 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task30,
 				task31,
 				task33,
-				task47,
 			},
 			wantErr: false,
 		},
 		{
 			name: "filtered reminder dates",
-			fields: fields{
-				Filter: "reminders > '2018-10-01T00:00:00+00:00' && reminders < '2018-12-10T00:00:00+00:00'",
-			},
-			args: defaultArgs,
-			want: []*Task{
-				task2,
-				task27,
-			},
-			wantErr: false,
-		},
-		{
-			name: "filtered reminder dates should not match task with reminders outside window",
 			fields: fields{
 				Filter: "reminders > '2018-10-01T00:00:00+00:00' && reminders < '2018-12-10T00:00:00+00:00'",
 			},
@@ -1099,8 +1075,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			args: defaultArgs,
 			want: []*Task{
-				task2,  // has reminder at 2019-06-01 (> 2019-01-01)
-				task47, // has reminder at 2019-03-01 (> 2019-01-01) and 2018-08-01 (< 2018-09-01)
+				task2, // has reminder at 2019-06-01 (> 2019-01-01)
 			},
 			wantErr: false,
 		},
@@ -1601,10 +1576,10 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				// The only tasks with a due date
 				task6,
 				task5,
+				task47,
 				task28,
 				// The other ones don't have a due date
 				task48,
-				task47,
 				task39,
 				task33,
 				task32,
@@ -1652,6 +1627,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 				task7,
 				task6,
 				task5,
+				task47,
 				task28,
 			},
 		},
@@ -1667,6 +1643,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			},
 			want: []*Task{
 				task28,
+				task47,
 				task5,
 				task6,
 				task7,
@@ -1687,6 +1664,7 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 			want: []*Task{
 				task6,
 				task5,
+				task47,
 				task28,
 				task7,
 				task8,

@@ -127,7 +127,7 @@ test.describe('Home Page Task Overview', () => {
 
 		await updateUserSettings(apiContext, token, {
 			default_project_id: project.id,
-			overdue_tasks_reminders_time: '9:00',
+			today_tasks_reminders_time: '9:00',
 		})
 
 		const newTaskTitle = 'New Task'
