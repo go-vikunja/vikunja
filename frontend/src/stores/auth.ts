@@ -283,6 +283,9 @@ export const useAuthStore = defineStore('auth', () => {
 			password: password,
 		})
 		saveToken(response.data.token, false)
+		// Reset the debounce so checkAuth() actually parses the new link share
+		// JWT instead of silently returning due to the 1-minute throttle.
+		lastUserInfoRefresh.value = null
 		await checkAuth()
 		return response.data
 	}
