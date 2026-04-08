@@ -462,6 +462,6 @@ func TestSyncUserAvatarFromOpenID(t *testing.T) {
 		defer s2.Close()
 		updatedUser, err := user.GetUserByID(s2, 1)
 		require.NoError(t, err)
-		assert.Equal(t, "", updatedUser.AvatarProvider, "avatar provider should remain empty for non-openid user")
+		assert.Empty(t, updatedUser.AvatarProvider, "avatar provider should remain empty for non-openid user")
 	})
 }
