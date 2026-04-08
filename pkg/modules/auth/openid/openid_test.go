@@ -419,3 +419,49 @@ func TestMergeClaims(t *testing.T) {
 		assert.ErrorAs(t, err, &expectedErr)
 	})
 }
+
+func TestSyncUserAvatarFromOpenID(t *testing.T) {
+	t.Run("empty picture URL resets openid provider to default", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Use the fixture user that has avatar_provider = "openid"
+		u, err := user.GetUserByID(s, 19)
+		require.NoError(t, err)
+		assert.Equal(t, "openid", u.AvatarProvider, "precondition: user should have openid avatar provider")
+
+		err = syncUserAvatarFromOpenID(s, u, "")
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// Verify the avatar provider was reset to default in the database
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":              19,
+			"avatar_provider": "default",
+		}, false)
+	})
+
+	t.Run("empty picture URL does not reset non-openid provider", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Use a regular user (avatar_provider is empty/"default")
+		u, err := user.GetUserByID(s, 1)
+		require.NoError(t, err)
+
+		err = syncUserAvatarFromOpenID(s, u, "")
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// Verify the avatar provider was NOT changed to "default" or anything else
+		s2 := db.NewSession()
+		defer s2.Close()
+		updatedUser, err := user.GetUserByID(s2, 1)
+		require.NoError(t, err)
+		assert.Equal(t, "", updatedUser.AvatarProvider, "avatar provider should remain empty for non-openid user")
+	})
+}
