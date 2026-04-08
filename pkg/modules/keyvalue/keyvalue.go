@@ -110,3 +110,31 @@ func Remember(key string, fn func() (any, error)) (any, error) {
 
 	return val, nil
 }
+
+// RememberValue is a type-safe version of Remember that uses GetWithValue
+// for proper deserialization (required for Redis gob-encoded values).
+// T must be a concrete (non-pointer) type.
+func RememberValue[T any](key string, fn func() (T, error)) (T, error) {
+	var cached T
+	exists, err := GetWithValue(key, &cached)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	if exists {
+		return cached, nil
+	}
+
+	val, err := fn()
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	if err := Put(key, val); err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return val, nil
+}
