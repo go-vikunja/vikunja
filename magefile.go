@@ -1877,10 +1877,16 @@ func (Dev) TagRelease(ctx context.Context, version string) error {
 		return fmt.Errorf("failed to update frontend package.json: %w", err)
 	}
 
+	// Update publiccode.yml version and release date
+	fmt.Println("Updating publiccode.yml...")
+	if err := updatePublicCodeYml(version); err != nil {
+		return fmt.Errorf("failed to update publiccode.yml: %w", err)
+	}
+
 	// Commit the changes
 	fmt.Println("Committing changes...")
 	commitMsg := fmt.Sprintf("chore: %s release preparations", version)
-	cmd := exec.CommandContext(ctx, "git", "add", "README.md", "CHANGELOG.md", "frontend/package.json")
+	cmd := exec.CommandContext(ctx, "git", "add", "README.md", "CHANGELOG.md", "frontend/package.json", "publiccode.yml")
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to stage files: %w", err)
 	}
@@ -2019,6 +2025,27 @@ func updateFrontendPackageJSON(version string) error {
 
 	if err := os.WriteFile(pkgPath, []byte(newContent), 0o600); err != nil {
 		return fmt.Errorf("failed to write %s: %w", pkgPath, err)
+	}
+
+	return nil
+}
+
+// updatePublicCodeYml updates the softwareVersion and releaseDate in publiccode.yml.
+func updatePublicCodeYml(version string) error {
+	filePath := "publiccode.yml"
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read %s: %w", filePath, err)
+	}
+
+	reVersion := regexp.MustCompile(`(softwareVersion:\s*')([^']+)(')`)
+	newContent := reVersion.ReplaceAllString(string(content), "${1}"+version+"${3}")
+
+	reDate := regexp.MustCompile(`(releaseDate:\s*')([^']+)(')`)
+	newContent = reDate.ReplaceAllString(newContent, "${1}"+time.Now().Format("2006-01-02")+"${3}")
+
+	if err := os.WriteFile(filePath, []byte(newContent), 0o600); err != nil {
+		return fmt.Errorf("failed to write %s: %w", filePath, err)
 	}
 
 	return nil
