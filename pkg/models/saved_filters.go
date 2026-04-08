@@ -541,6 +541,12 @@ func RegisterAddTaskToFilterViewCron() {
 	}
 }
 
+// deleteCondBatchSize is the maximum number of OR conditions in a single delete query.
+// SQLite has a hard limit of 1000 expression tree nodes; each builder.And(...) with two
+// Eq conditions contributes ~3 nodes to the Or-tree, so 500 conditions stays safely
+// under the limit on all supported databases.
+const deleteCondBatchSize = 500
+
 func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBuckets []*TaskBucket, newTaskPositions []*TaskPosition, deleteCond []builder.Cond) {
 	var err error
 	if len(newTaskBuckets) > 0 {
@@ -556,13 +562,21 @@ func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBucke
 		}
 	}
 	if len(deleteCond) > 0 {
-		_, err = s.Where(builder.Or(deleteCond...)).Delete(&TaskBucket{})
-		if err != nil {
-			log.Errorf("%sError deleting task buckets: %s", logPrefix, err)
-		}
-		_, err = s.Where(builder.Or(deleteCond...)).Delete(&TaskPosition{})
-		if err != nil {
-			log.Errorf("%sError deleting task positions: %s", logPrefix, err)
+		for i := 0; i < len(deleteCond); i += deleteCondBatchSize {
+			end := i + deleteCondBatchSize
+			if end > len(deleteCond) {
+				end = len(deleteCond)
+			}
+			batch := deleteCond[i:end]
+
+			_, err = s.Where(builder.Or(batch...)).Delete(&TaskBucket{})
+			if err != nil {
+				log.Errorf("%sError deleting task buckets: %s", logPrefix, err)
+			}
+			_, err = s.Where(builder.Or(batch...)).Delete(&TaskPosition{})
+			if err != nil {
+				log.Errorf("%sError deleting task positions: %s", logPrefix, err)
+			}
 		}
 	}
 }
