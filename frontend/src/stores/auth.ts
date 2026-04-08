@@ -307,6 +307,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 		const jwt = getToken()
 		let isAuthenticated = false
+		let jwtUserType: number | undefined
 		if (jwt) {
 			try {
 				const base64 = jwt
@@ -315,6 +316,7 @@ export const useAuthStore = defineStore('auth', () => {
 					.replace(/_/g, '/')
 				const payload = JSON.parse(atob(base64))
 				const jwtUser = new UserModel(payload)
+				jwtUserType = jwtUser.type
 				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
 
 				isAuthenticated = jwtUser.exp >= ts
@@ -358,7 +360,7 @@ export const useAuthStore = defineStore('auth', () => {
 				logout()
 			}
 
-			if (isAuthenticated) {
+			if (isAuthenticated && jwtUserType !== AUTH_TYPES.LINK_SHARE) {
 				const user = await refreshUserInfo()
 				if (!user) {
 					// refreshUserInfo() did not return a user — either the
