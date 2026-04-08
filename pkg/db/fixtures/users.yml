@@ -145,3 +145,13 @@
   issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# User with openid avatar provider for SSO avatar reset tests
+- id: 19
+  username: 'user_openid_avatar'
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6'
+  email: 'user_openid_avatar@example.com'
+  issuer: 'https://some.service.com'
+  subject: 'openid-avatar-test'
+  avatar_provider: 'openid'
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
