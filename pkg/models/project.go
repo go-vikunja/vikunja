@@ -1354,6 +1354,15 @@ func SetProjectBackground(s *xorm.Session, projectID int64, background *files.Fi
 	return
 }
 
+// ClearProjectBackground clears the background fields for a project without touching other columns.
+func ClearProjectBackground(s *xorm.Session, projectID int64) (err error) {
+	_, err = s.
+		Where("id = ?", projectID).
+		Cols("background_file_id", "background_blur_hash").
+		Update(&Project{})
+	return
+}
+
 // setArchiveStateForProjectDescendants uses a recursive CTE to find and set the archived status of all descendant projects.
 func setArchiveStateForProjectDescendants(s *xorm.Session, parentProjectID int64, shouldBeArchived bool) error {
 	var descendantIDs []int64
