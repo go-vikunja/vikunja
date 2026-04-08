@@ -67,6 +67,13 @@ var (
 		Email:    "user15@example.com",
 		Issuer:   "local",
 	}
+	testuser6 = user.User{
+		ID:       6,
+		Username: "user6",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Email:    "user6@example.com",
+		Issuer:   "local",
+	}
 )
 
 func setupTestEnv() (e *echo.Echo, err error) {
