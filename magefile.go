@@ -1645,7 +1645,7 @@ func (Generate) ConfigYAML(commented bool) {
 
 // PrepareWorktree creates a new git worktree for development.
 // The first argument is the name, which becomes both the folder name and branch name.
-// The second argument is a path to a plan file that will be copied to the new worktree (pass "" to skip).
+// The second argument is a path to a plan file that will be moved to the new worktree (pass "" to skip).
 // The worktree is created in the parent directory (../).
 // It also copies the current config.yml with an updated rootpath, and initializes the frontend.
 func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) error {
@@ -1728,10 +1728,10 @@ func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) er
 			}
 
 			dstPlanPath := filepath.Join(plansDir, filepath.Base(planPath))
-			if err := copyFile(srcPlanPath, dstPlanPath); err != nil {
-				return fmt.Errorf("failed to copy plan file: %w", err)
+			if err := os.Rename(srcPlanPath, dstPlanPath); err != nil {
+				return fmt.Errorf("failed to move plan file: %w", err)
 			}
-			printSuccess("Plan file copied to %s!", dstPlanPath)
+			printSuccess("Plan file moved to %s!", dstPlanPath)
 		}
 	}
 
