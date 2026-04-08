@@ -223,6 +223,7 @@ const (
 	OutgoingRequestsAllowNonRoutableIPs Key = `outgoingrequests.allownonroutableips`
 	OutgoingRequestsProxyURL            Key = `outgoingrequests.proxyurl`
 	OutgoingRequestsProxyPassword       Key = `outgoingrequests.proxypassword`
+	OutgoingRequestsTimeoutSeconds      Key = `outgoingrequests.timeoutseconds`
 
 	AutoTLSEnabled     Key = `autotls.enabled`
 	AutoTLSEmail       Key = `autotls.email`
@@ -480,6 +481,7 @@ func InitDefaultConfig() {
 	WebhooksAllowNonRoutableIPs.setDefault(false)
 	// Outgoing Requests
 	OutgoingRequestsAllowNonRoutableIPs.setDefault(false)
+	OutgoingRequestsTimeoutSeconds.setDefault(30)
 	// AutoTLS
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 	// Plugins
