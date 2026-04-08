@@ -242,9 +242,17 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 
 // Download and store a user's avatar from an OpenID provider
 func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) (err error) {
-	// Don't sync avatar if no picture URL is provided
+	// If no picture URL is provided, reset the avatar provider if it was set to openid
 	if pictureURL == "" {
-		return fmt.Errorf("no picture URL provided")
+		if u.AvatarProvider == "openid" {
+			u.AvatarProvider = "default"
+			_, err = s.Where("id = ?", u.ID).Cols("avatar_provider").Update(&user.User{AvatarProvider: "default"})
+			if err != nil {
+				return fmt.Errorf("error resetting avatar provider: %w", err)
+			}
+			avatar.FlushAllCaches(u)
+		}
+		return nil
 	}
 
 	log.Debugf("Found avatar URL for user %s: %s", u.Username, pictureURL)
