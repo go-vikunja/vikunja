@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/version"
@@ -37,7 +38,9 @@ import (
 // config init time (see config.InitDefaultConfig), so this function only
 // reads the new keys.
 func NewSSRFSafeHTTPClient() *http.Client {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Duration(config.OutgoingRequestsTimeoutSeconds.GetInt()) * time.Second,
+	}
 	transport := &http.Transport{}
 
 	if !config.OutgoingRequestsAllowNonRoutableIPs.GetBool() {

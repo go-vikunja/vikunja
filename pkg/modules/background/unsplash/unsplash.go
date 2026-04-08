@@ -103,7 +103,7 @@ func doGet(url string, result ...interface{}) (err error) {
 	}
 
 	req.Header.Add("Authorization", "Client-ID "+config.BackgroundsUnsplashAccessToken.GetString())
-	hc := http.Client{}
+	hc := http.Client{Timeout: 10 * time.Second}
 	resp, err := hc.Do(req) // #nosec G704 -- URL is constructed from hardcoded Unsplash API base
 	if err != nil {
 		return

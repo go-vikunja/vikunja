@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/config"
 
@@ -61,6 +62,40 @@ func TestNewSSRFSafeHTTPClient(t *testing.T) {
 		require.NoError(t, err)
 		_, err = client.Do(req) //nolint:bodyclose,gosec // testing SSRF-safe client
 		require.Error(t, err)
+	})
+
+	t.Run("has default timeout from config", func(t *testing.T) {
+		config.OutgoingRequestsTimeoutSeconds.Set("30")
+		client := NewSSRFSafeHTTPClient()
+		assert.Equal(t, 30*time.Second, client.Timeout)
+	})
+
+	t.Run("respects custom timeout config", func(t *testing.T) {
+		config.OutgoingRequestsTimeoutSeconds.Set("15")
+		defer config.OutgoingRequestsTimeoutSeconds.Set("30")
+
+		client := NewSSRFSafeHTTPClient()
+		assert.Equal(t, 15*time.Second, client.Timeout)
+	})
+
+	t.Run("timeout fires on slow server", func(t *testing.T) {
+		config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+		config.OutgoingRequestsTimeoutSeconds.Set("1")
+		defer config.OutgoingRequestsAllowNonRoutableIPs.Set("false")
+		defer config.OutgoingRequestsTimeoutSeconds.Set("30")
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			time.Sleep(3 * time.Second)
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer server.Close()
+
+		client := NewSSRFSafeHTTPClient()
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, nil)
+		require.NoError(t, err)
+		_, err = client.Do(req) //nolint:bodyclose,gosec
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "Client.Timeout")
 	})
 
 	t.Run("allows non-routable IPs when config is true", func(t *testing.T) {
