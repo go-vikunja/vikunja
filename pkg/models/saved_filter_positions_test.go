@@ -24,7 +24,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"xorm.io/builder"
 )
 
 func TestSavedFilterUpdateInsertsNonZeroPosition(t *testing.T) {
@@ -304,42 +303,4 @@ func TestIssue724_SortingOnFilteredViews(t *testing.T) {
 	require.NoError(t, err)
 	assert.Zero(t, zeroCount,
 		"No position=0 records should exist in database for view %d", view.ID)
-}
-
-func TestUpsertRelatedTaskPropertiesBatchesDeletes(t *testing.T) {
-	db.LoadAndAssertFixtures(t)
-	s := db.NewSession()
-	defer s.Close()
-
-	viewID := int64(1)
-
-	// Insert many task buckets and positions that we'll then delete
-	for i := int64(1); i <= 1200; i++ {
-		_, err := s.Insert(&TaskBucket{TaskID: 10000 + i, ProjectViewID: viewID, BucketID: 1})
-		require.NoError(t, err)
-		_, err = s.Insert(&TaskPosition{TaskID: 10000 + i, ProjectViewID: viewID, Position: float64(i)})
-		require.NoError(t, err)
-	}
-
-	// Build 1200 delete conditions -- this would exceed SQLite's 1000-node limit
-	// if passed as a single builder.Or()
-	deleteCond := make([]builder.Cond, 0, 1200)
-	for i := int64(1); i <= 1200; i++ {
-		deleteCond = append(deleteCond, builder.And(
-			builder.Eq{"task_id": 10000 + i},
-			builder.Eq{"project_view_id": viewID},
-		))
-	}
-
-	// This should not panic or error -- it should batch the deletes
-	upsertRelatedTaskProperties(s, "[test] ", nil, nil, deleteCond)
-
-	// Verify all were deleted
-	count, err := s.Where("project_view_id = ? AND task_id > 10000", viewID).Count(&TaskBucket{})
-	require.NoError(t, err)
-	assert.Equal(t, int64(0), count)
-
-	count, err = s.Where("project_view_id = ? AND task_id > 10000", viewID).Count(&TaskPosition{})
-	require.NoError(t, err)
-	assert.Equal(t, int64(0), count)
 }

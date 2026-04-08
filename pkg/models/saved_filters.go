@@ -429,7 +429,7 @@ func RegisterAddTaskToFilterViewCron() {
 		filterTasksCache := make(map[int64][]*Task)
 		newTaskBuckets := []*TaskBucket{}
 		newTaskPositions := []*TaskPosition{}
-		deleteCond := []builder.Cond{}
+
 		viewsToRecalc := map[int64]struct {
 			view    *ProjectView
 			ownerID int64
@@ -507,24 +507,10 @@ func RegisterAddTaskToFilterViewCron() {
 			}
 
 			// Remove tasks that should not be there
-			for taskID := range savedTaskBucketMap {
-				found := false
-				for _, task := range tasks {
-					if task.ID == taskID {
-						found = true
-						break
-					}
-				}
-				if !found {
-					deleteCond = append(deleteCond, builder.And(
-						builder.Eq{"task_id": taskID},
-						builder.Eq{"project_view_id": view.ID},
-					))
-				}
-			}
+			deleteStaleFilterTasks(s, logPrefix, savedTaskBucketMap, tasks, view.ID)
 		}
 
-		upsertRelatedTaskProperties(s, logPrefix, newTaskBuckets, newTaskPositions, deleteCond)
+		upsertRelatedTaskProperties(s, logPrefix, newTaskBuckets, newTaskPositions)
 
 		for _, data := range viewsToRecalc {
 			if err := RecalculateTaskPositions(s, data.view, &user.User{ID: data.ownerID}); err != nil {
@@ -541,13 +527,7 @@ func RegisterAddTaskToFilterViewCron() {
 	}
 }
 
-// deleteCondBatchSize is the maximum number of OR conditions in a single delete query.
-// SQLite has a hard limit of 1000 expression tree nodes; each builder.And(...) with two
-// Eq conditions contributes ~3 nodes to the Or-tree, so 500 conditions stays safely
-// under the limit on all supported databases.
-const deleteCondBatchSize = 500
-
-func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBuckets []*TaskBucket, newTaskPositions []*TaskPosition, deleteCond []builder.Cond) {
+func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBuckets []*TaskBucket, newTaskPositions []*TaskPosition) {
 	var err error
 	if len(newTaskBuckets) > 0 {
 		_, err = s.Insert(newTaskBuckets)
@@ -561,22 +541,34 @@ func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBucke
 			log.Errorf("%sError inserting task positions: %s", logPrefix, err)
 		}
 	}
-	if len(deleteCond) > 0 {
-		for i := 0; i < len(deleteCond); i += deleteCondBatchSize {
-			end := i + deleteCondBatchSize
-			if end > len(deleteCond) {
-				end = len(deleteCond)
-			}
-			batch := deleteCond[i:end]
+}
 
-			_, err = s.Where(builder.Or(batch...)).Delete(&TaskBucket{})
-			if err != nil {
-				log.Errorf("%sError deleting task buckets: %s", logPrefix, err)
+func deleteStaleFilterTasks(s *xorm.Session, logPrefix string, savedTaskBucketMap map[int64]*TaskBucket, tasks []*Task, viewID int64) {
+	var taskIDsToDelete []int64
+	for taskID := range savedTaskBucketMap {
+		found := false
+		for _, task := range tasks {
+			if task.ID == taskID {
+				found = true
+				break
 			}
-			_, err = s.Where(builder.Or(batch...)).Delete(&TaskPosition{})
-			if err != nil {
-				log.Errorf("%sError deleting task positions: %s", logPrefix, err)
-			}
+		}
+		if !found {
+			taskIDsToDelete = append(taskIDsToDelete, taskID)
+		}
+	}
+	if len(taskIDsToDelete) > 0 {
+		_, err := s.Where(builder.Eq{"project_view_id": viewID}).
+			And(builder.In("task_id", taskIDsToDelete)).
+			Delete(&TaskBucket{})
+		if err != nil {
+			log.Errorf("%sError deleting task buckets: %s", logPrefix, err)
+		}
+		_, err = s.Where(builder.Eq{"project_view_id": viewID}).
+			And(builder.In("task_id", taskIDsToDelete)).
+			Delete(&TaskPosition{})
+		if err != nil {
+			log.Errorf("%sError deleting task positions: %s", logPrefix, err)
 		}
 	}
 }
