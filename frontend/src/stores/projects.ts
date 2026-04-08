@@ -8,7 +8,6 @@ import ProjectDuplicateService from '@/services/projectDuplicateService'
 import ProjectDuplicateModel from '@/models/projectDuplicateModel'
 import {setModuleLoading} from '@/stores/helper'
 import {removeProjectFromHistory} from '@/modules/projectHistory'
-import {createNewIndexer} from '@/indexes'
 
 import type {IProject} from '@/modelTypes/IProject'
 
@@ -20,8 +19,6 @@ import {getSavedFilterIdFromProjectId, isSavedFilter} from '@/services/savedFilt
 import SavedFilterModel from '@/models/savedFilter'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import {PERMISSIONS} from '@/constants/permissions.ts'
-
-const {add, remove, search, update} = createNewIndexer('projects', ['title', 'description'])
 
 export const useProjectStore = defineStore('project', () => {
 	const baseStore = useBaseStore()
@@ -99,32 +96,33 @@ export const useProjectStore = defineStore('project', () => {
 		}
 	})
 
+	function searchByQuery(query: string): IProject[] {
+		if (query === '') return []
+		const q = query.toLowerCase()
+		return projectsArray.value.filter(p =>
+			p.title.toLowerCase().includes(q) || (p.description ?? '').toLowerCase().includes(q),
+		)
+	}
+
 	const searchProjectAndFilter = computed(() => {
 		return (query: string, includeArchived = false) => {
-			return search(query)
-				?.map(id => projects.value[id])
-				.filter(project => project?.isArchived === includeArchived)
-				|| []
+			return searchByQuery(query).filter(project => project.isArchived === includeArchived)
 		}
 	})
 
 	const searchProject = computed(() => {
 		return (query: string, includeArchived = false) => {
-			return search(query)
-				?.filter(value => value > 0)
-				.map(id => projects.value[id])
-				.filter(project => project?.isArchived === includeArchived)
-			|| []
+			return searchByQuery(query)
+				.filter(p => p.id > 0)
+				.filter(project => project.isArchived === includeArchived)
 		}
 	})
-	
+
 	const searchSavedFilter = computed(() => {
 		return (query: string, includeArchived = false) => {
-			return search(query)
-				?.filter(value => getSavedFilterIdFromProjectId(value) > 0)
-				.map(id => projects.value[id])
-				.filter(project => project?.isArchived === includeArchived)
-				|| []
+			return searchByQuery(query)
+				.filter(p => getSavedFilterIdFromProjectId(p.id) > 0)
+				.filter(project => project.isArchived === includeArchived)
 		}
 	})
 
@@ -134,7 +132,6 @@ export const useProjectStore = defineStore('project', () => {
 
 	function setProject(project: IProject) {
 		projects.value[project.id] = project
-		update(project)
 
 		// FIXME: This should be a watcher, but using a watcher instead will sometimes crash browser processes.
 		// Reverted from 31b7c1f217532bf388ba95a03f469508bee46f6a
@@ -154,7 +151,6 @@ export const useProjectStore = defineStore('project', () => {
 			.filter(p => p.parentProjectId === project.id)
 			.forEach(p => removeProjectById(p))
 		
-		remove(project)
 		delete projects.value[project.id]
 	}
 
@@ -276,7 +272,6 @@ export const useProjectStore = defineStore('project', () => {
 		
 		projects.value = {}
 		setProjects(loadedProjects)
-		loadedProjects.forEach(p => add(p))
 
 		return loadedProjects
 	}

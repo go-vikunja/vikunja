@@ -134,3 +134,24 @@ func RestoreAndTruncate(table string, contents []map[string]interface{}) (err er
 
 	return Restore(table, contents)
 }
+
+// TruncateAllTables deletes all data from every registered Vikunja table.
+// Used by e2e tests to ensure a clean database state before each test.
+func TruncateAllTables() error {
+	for _, name := range RegisteredTableNames() {
+		if err := validateTableName(name); err != nil {
+			return err
+		}
+
+		if x.Dialect().URI().DBType == schemas.SQLITE {
+			if _, err := x.Query(`DELETE FROM "` + name + `"`); err != nil {
+				return err
+			}
+		} else {
+			if _, err := x.Query("TRUNCATE TABLE ?", name); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}

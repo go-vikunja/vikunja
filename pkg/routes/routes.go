@@ -68,17 +68,20 @@ import (
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/api/pkg/modules/migration"
+	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
+	"code.vikunja.io/api/pkg/modules/migration/wekan"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
+	ws "code.vikunja.io/api/pkg/websocket"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v5"
@@ -352,6 +355,9 @@ func registerAPIRoutes(a *echo.Group) {
 	n.GET("/docs", apiv1.RedocUI)
 	n.GET("/docs/redoc.standalone.js", apiv1.RedocJS)
 
+	// WebSocket (auth happens after upgrade via first message)
+	n.GET("/ws", ws.UpgradeHandler)
+
 	// Prometheus endpoint
 	setupMetrics(n)
 
@@ -389,6 +395,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// Testing
 	if config.ServiceTestingtoken.GetString() != "" {
+		n.DELETE("/test/all", apiv1.HandleTestingTruncateAll)
 		n.PATCH("/test/:table", apiv1.HandleTesting)
 	}
 
@@ -847,6 +854,18 @@ func registerMigrations(m *echo.Group) {
 		},
 	}
 	tickTickFileMigrator.RegisterRoutes(m)
+
+	// WeKan File Migrator
+	wekanFileMigrator := migrationHandler.FileMigratorWeb{
+		MigrationStruct: func() migration.FileMigrator {
+			return &wekan.Migrator{}
+		},
+	}
+	wekanFileMigrator.RegisterRoutes(m)
+
+	// CSV File Migrator (always enabled - generic import)
+	csvFileMigrator := &csvmigrator.MigratorWeb{}
+	csvFileMigrator.RegisterRoutes(m)
 }
 
 func registerCalDavRoutes(c *echo.Group) {

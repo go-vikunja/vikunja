@@ -23,6 +23,7 @@ export interface IFrontendSettings {
 	defaultTaskRelationType: IRelationKind
 	backgroundBrightness: number | null
 	alwaysShowBucketTaskCount: boolean
+	showLastViewed: boolean
 	sidebarWidth: number | null
 	commentSortOrder: 'asc' | 'desc'
 	defaultPage: DefaultPage

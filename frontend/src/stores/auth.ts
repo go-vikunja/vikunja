@@ -8,6 +8,7 @@ import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} fr
 import AvatarService from '@/services/avatar'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {useWebSocket} from '@/composables/useWebSocket'
 import {setModuleLoading} from '@/stores/helper'
 import {success, error} from '@/message'
 import {
@@ -140,6 +141,7 @@ export const useAuthStore = defineStore('auth', () => {
 				timeFormat: TIME_FORMAT.HOURS_24,
 				defaultTaskRelationType: RELATION_KIND.RELATED,
 				backgroundBrightness: 100,
+				showLastViewed: true,
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
 				defaultPage: DEFAULT_PAGE.LAST_VISITED,
@@ -509,6 +511,9 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	async function logout() {
+		const {disconnect} = useWebSocket()
+		disconnect()
+
 		// Revoke the server session so the refresh token can't be reused.
 		// Best-effort: if the network call fails, still clean up locally.
 		try {

@@ -126,6 +126,15 @@
 			<div class="field">
 				<label class="checkbox">
 					<input
+						v-model="settings.frontendSettings.showLastViewed"
+						type="checkbox"
+					>
+					{{ $t('user.settings.general.showLastViewed') }}
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input
 						v-model="settings.emailRemindersEnabled"
 						type="checkbox"
 					>

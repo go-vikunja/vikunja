@@ -2,8 +2,6 @@ import {TaskFactory} from '../factories/task'
 import {TaskBucketFactory} from '../factories/task_buckets'
 
 export async function createTasksWithPriorities(buckets?: any[]) {
-	await TaskFactory.truncate()
-
 	const highPriorityTask1 = (await TaskFactory.create(1, {
 		id: 1,
 		project_id: 1,
@@ -34,7 +32,6 @@ export async function createTasksWithPriorities(buckets?: any[]) {
 
 	// If buckets are provided (for Kanban), add tasks to buckets
 	if (buckets && buckets.length > 0) {
-		await TaskBucketFactory.truncate()
 		await TaskBucketFactory.create(1, {
 			task_id: highPriorityTask1.id,
 			bucket_id: buckets[0].id,
@@ -64,8 +61,6 @@ export async function createTasksWithPriorities(buckets?: any[]) {
 }
 
 export async function createTasksWithSearch(buckets?: any[]) {
-	await TaskFactory.truncate()
-
 	const task1 = (await TaskFactory.create(1, {
 		id: 1,
 		project_id: 1,
@@ -92,7 +87,6 @@ export async function createTasksWithSearch(buckets?: any[]) {
 
 	// If buckets are provided (for Kanban), add tasks to buckets
 	if (buckets && buckets.length > 0) {
-		await TaskBucketFactory.truncate()
 		await TaskBucketFactory.create(1, {
 			task_id: task1.id,
 			bucket_id: buckets[0].id,

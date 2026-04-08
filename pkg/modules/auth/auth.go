@@ -192,6 +192,62 @@ func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 	return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid JWT token.")
 }
 
+// ValidateAPITokenString looks up an API token by its raw string, checks expiry,
+// and returns the token and its owner. This is the shared validation logic used
+// by both the HTTP middleware and WebSocket auth.
+func ValidateAPITokenString(tokenString string) (*models.APIToken, *user.User, error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	token, err := models.GetTokenFromTokenString(s, tokenString)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if time.Now().After(token.ExpiresAt) {
+		return nil, nil, fmt.Errorf("API token %d expired on %s", token.ID, token.ExpiresAt.String())
+	}
+
+	u, err := user.GetUserByID(s, token.OwnerID)
+	if err != nil {
+		if user.IsErrUserStatusError(err) {
+			return nil, nil, fmt.Errorf("API token %d owner account is disabled or locked", token.ID)
+		}
+		return nil, nil, err
+	}
+
+	return token, u, nil
+}
+
+// GetUserIDFromToken parses a raw JWT token string and returns the user ID.
+// Only regular user tokens are accepted (not link shares).
+// Returns 0 and an error if the token is invalid.
+func GetUserIDFromToken(tokenString string) (int64, error) {
+	token, err := jwt.Parse(tokenString, func(_ *jwt.Token) (any, error) {
+		return []byte(config.ServiceSecret.GetString()), nil
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return 0, jwt.ErrTokenInvalidClaims
+	}
+
+	typ, ok := claims["type"].(float64)
+	if !ok || int(typ) != AuthTypeUser {
+		return 0, jwt.ErrTokenInvalidClaims
+	}
+
+	userIDFloat, ok := claims["id"].(float64)
+	if !ok {
+		return 0, jwt.ErrTokenInvalidClaims
+	}
+
+	return int64(userIDFloat), nil
+}
+
 func CreateUserWithRandomUsername(s *xorm.Session, uu *user.User) (u *user.User, err error) {
 	// Check if we actually have a preferred username and generate a random one right away if we don't
 	for {

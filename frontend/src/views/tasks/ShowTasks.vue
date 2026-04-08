@@ -87,6 +87,7 @@
 					:key="task.id"
 					:show-project="true"
 					:the-task="task"
+					:can-mark-as-done="(projectStore.projects[task.projectId]?.maxPermission ?? 0) > PERMISSIONS.READ"
 					@taskUpdated="updateTasks"
 				/>
 			</div>
@@ -123,6 +124,7 @@ import {useProjectStore} from '@/stores/projects'
 import {useLabelStore} from '@/stores/labels'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import TaskCollectionService from '@/services/taskCollection'
+import {PERMISSIONS} from '@/constants/permissions'
 
 const props = withDefaults(defineProps<{
 	dateFrom?: Date | string,

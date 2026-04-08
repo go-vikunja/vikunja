@@ -34,6 +34,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		defaultTaskRelationType: RELATION_KIND.RELATED,
 		backgroundBrightness: null,
 		alwaysShowBucketTaskCount: false,
+		showLastViewed: true,
 		sidebarWidth: null,
 		commentSortOrder: 'asc',
 		defaultPage: DEFAULT_PAGE.LAST_VISITED,

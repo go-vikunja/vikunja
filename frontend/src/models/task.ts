@@ -96,6 +96,7 @@ export default class TaskModel extends AbstractModel<ITask> implements ITask {
 
 	projectId: IProject['id'] = 0
 	bucketId: IBucket['id'] = 0
+	buckets: IBucket[] = []
 
 	constructor(data: Partial<ITask> = {}) {
 		super()

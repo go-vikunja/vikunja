@@ -38,7 +38,6 @@ async function createTaskWithBuckets(buckets, count = 1) {
 	const data = await TaskFactory.create(count, {
 		project_id: 1,
 	})
-	await TaskBucketFactory.truncate()
 	for (const t of data) {
 		await TaskBucketFactory.create(1, {
 			task_id: t.id,
