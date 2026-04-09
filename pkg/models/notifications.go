@@ -62,7 +62,7 @@ func (n *ReminderDueNotification) ToMail(lang string) *notifications.Mail {
 		To(n.User.Email).
 		Subject(i18n.T(lang, "notifications.task.reminder.subject", n.Task.Title, n.Project.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.task.reminder.message", n.Task.Title, n.Project.Title)).
+		Line(i18n.T(lang, "notifications.task.reminder.message", notifications.EscapeMarkdown(n.Task.Title), notifications.EscapeMarkdown(n.Project.Title))).
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
@@ -166,7 +166,7 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 			From(n.Doer.GetNameAndFromEmail()).
 			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_assignee", n.Task.Title, n.Task.GetFullIdentifier())).
 			Greeting(i18n.T(lang, "notifications.greeting", n.Target.GetName())).
-			Line(i18n.T(lang, "notifications.task.assigned.message_to_assignee", n.Doer.GetName(), n.Task.Title)).
+			Line(i18n.T(lang, "notifications.task.assigned.message_to_assignee", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Task.Title))).
 			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
 			IncludeLinkToSettings(lang)
 	}
@@ -177,7 +177,7 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 			From(n.Doer.GetNameAndFromEmail()).
 			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others_self", n.Task.Title, n.Task.GetFullIdentifier(), n.Doer.GetName())).
 			Greeting(i18n.T(lang, "notifications.greeting", n.Target.GetName())).
-			Line(i18n.T(lang, "notifications.task.assigned.message_to_others_self", n.Doer.GetName())).
+			Line(i18n.T(lang, "notifications.task.assigned.message_to_others_self", notifications.EscapeMarkdown(n.Doer.GetName()))).
 			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
 			IncludeLinkToSettings(lang)
 	}
@@ -187,7 +187,7 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 		From(n.Doer.GetNameAndFromEmail()).
 		Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())).
 		Greeting(i18n.T(lang, "notifications.greeting", n.Target.GetName())).
-		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", n.Doer.GetName(), n.Assignee.GetName())).
+		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Assignee.GetName()))).
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
 		IncludeLinkToSettings(lang)
 }
@@ -217,7 +217,7 @@ type TaskDeletedNotification struct {
 func (n *TaskDeletedNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.task.deleted.subject", n.Task.Title, n.Task.GetFullIdentifier())).
-		Line(i18n.T(lang, "notifications.task.deleted.message", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier()))
+		Line(i18n.T(lang, "notifications.task.deleted.message", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Task.Title), notifications.EscapeMarkdown(n.Task.GetFullIdentifier())))
 }
 
 // ToDB returns the TaskDeletedNotification notification in a format which can be saved in the db
@@ -245,7 +245,7 @@ type ProjectCreatedNotification struct {
 func (n *ProjectCreatedNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.project.created", n.Doer.GetName(), n.Project.Title)).
-		Line(i18n.T(lang, "notifications.project.created", n.Doer.GetName(), n.Project.Title)).
+		Line(i18n.T(lang, "notifications.project.created", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Project.Title))).
 		Action(i18n.T(lang, "notifications.common.actions.open_project"), config.ServicePublicURL.GetString()+"projects/")
 }
 
@@ -272,7 +272,7 @@ func (n *TeamMemberAddedNotification) ToMail(lang string) *notifications.Mail {
 		Subject(i18n.T(lang, "notifications.team.member_added.subject", n.Doer.GetName(), n.Team.Name)).
 		From(n.Doer.GetNameAndFromEmail()).
 		Greeting(i18n.T(lang, "notifications.greeting", n.Member.GetName())).
-		Line(i18n.T(lang, "notifications.team.member_added.message", n.Doer.GetName(), n.Team.Name)).
+		Line(i18n.T(lang, "notifications.team.member_added.message", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Team.Name))).
 		Action(i18n.T(lang, "notifications.common.actions.open_team"), config.ServicePublicURL.GetString()+"teams/"+strconv.FormatInt(n.Team.ID, 10)+"/edit")
 }
 
@@ -308,7 +308,7 @@ func (n *UndoneTaskOverdueNotification) ToMail(lang string) *notifications.Mail 
 		IncludeLinkToSettings(lang).
 		Subject(i18n.T(lang, "notifications.task.overdue.subject", n.Task.Title, n.Project.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.task.overdue.message", n.Task.Title, n.Project.Title, getOverdueSinceString(until, n.User.Language))).
+		Line(i18n.T(lang, "notifications.task.overdue.message", notifications.EscapeMarkdown(n.Task.Title), notifications.EscapeMarkdown(n.Project.Title), getOverdueSinceString(until, n.User.Language))).
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
@@ -350,7 +350,7 @@ func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail
 	overdueLine := ""
 	for _, task := range sortedTasks {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
-		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), ` + i18n.T("notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
+		overdueLine += `* [` + notifications.EscapeMarkdown(task.Title) + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + notifications.EscapeMarkdown(n.Projects[task.ProjectID].Title) + `), ` + i18n.T("notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
 	}
 
 	return notifications.NewMail().
