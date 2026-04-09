@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -214,5 +215,134 @@ func TestLinkSharing_toUser(t *testing.T) {
 		assert.Equal(t, "link-share-2", user.Username)
 		assert.Equal(t, "My Test Share (Link Share)", user.Name)
 		assert.Equal(t, int64(-2), user.ID)
+	})
+}
+
+func TestGetLinkShareFromClaims(t *testing.T) {
+	// Mirrors NewLinkShareJWTAuthtoken, including the legacy `permission`
+	// and `sharedByID` claims so the tests below can prove they're ignored.
+	buildClaims := func(id int64, hash string, projectID int64, permission Permission, sharedByID int64) jwt.MapClaims {
+		return jwt.MapClaims{
+			"type":       float64(2), // AuthTypeLinkShare
+			"id":         float64(id),
+			"hash":       hash,
+			"project_id": float64(projectID),
+			"permission": float64(permission),
+			"sharedByID": float64(sharedByID),
+		}
+	}
+
+	t.Run("valid share returns DB values", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		dbShare, err := GetLinkShareByID(s, 1)
+		require.NoError(t, err)
+
+		claims := buildClaims(dbShare.ID, dbShare.Hash, dbShare.ProjectID, dbShare.Permission, dbShare.SharedByID)
+
+		got, err := GetLinkShareFromClaims(s, claims)
+		require.NoError(t, err)
+		assert.Equal(t, dbShare.ID, got.ID)
+		assert.Equal(t, dbShare.Hash, got.Hash)
+		assert.Equal(t, dbShare.ProjectID, got.ProjectID)
+		assert.Equal(t, dbShare.Permission, got.Permission)
+		assert.Equal(t, dbShare.SharedByID, got.SharedByID)
+	})
+
+	t.Run("deleted share is rejected", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		dbShare, err := GetLinkShareByID(s, 1)
+		require.NoError(t, err)
+		claims := buildClaims(dbShare.ID, dbShare.Hash, dbShare.ProjectID, dbShare.Permission, dbShare.SharedByID)
+
+		_, err = s.Where("id = ?", dbShare.ID).Delete(&LinkSharing{})
+		require.NoError(t, err)
+
+		_, err = GetLinkShareFromClaims(s, claims)
+		require.Error(t, err)
+		assert.True(t, IsErrLinkShareTokenInvalid(err),
+			"expected ErrLinkShareTokenInvalid for deleted share, got %T: %v", err, err)
+	})
+
+	t.Run("permission downgrade takes effect immediately", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		dbShare, err := GetLinkShareByID(s, 3)
+		require.NoError(t, err)
+		require.Equal(t, PermissionAdmin, dbShare.Permission,
+			"fixture precondition: share id=3 must start as admin")
+
+		// Capture claims while the share is still admin, then downgrade.
+		claims := buildClaims(dbShare.ID, dbShare.Hash, dbShare.ProjectID, PermissionAdmin, dbShare.SharedByID)
+
+		_, err = s.Where("id = ?", dbShare.ID).Cols("permission").Update(&LinkSharing{Permission: PermissionRead})
+		require.NoError(t, err)
+
+		got, err := GetLinkShareFromClaims(s, claims)
+		require.NoError(t, err)
+		assert.Equal(t, PermissionRead, got.Permission,
+			"permission must come from DB, not from the (stale) JWT claim")
+	})
+
+	t.Run("hash mismatch is rejected", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		dbShare, err := GetLinkShareByID(s, 1)
+		require.NoError(t, err)
+
+		claims := buildClaims(dbShare.ID, "not-the-real-hash", dbShare.ProjectID, dbShare.Permission, dbShare.SharedByID)
+
+		_, err = GetLinkShareFromClaims(s, claims)
+		require.Error(t, err)
+		assert.True(t, IsErrLinkShareTokenInvalid(err))
+	})
+
+	t.Run("sharedByID comes from DB not from claim", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		dbShare, err := GetLinkShareByID(s, 1)
+		require.NoError(t, err)
+
+		// Bogus sharedByID in the claim must be ignored in favor of the DB value.
+		claims := buildClaims(dbShare.ID, dbShare.Hash, dbShare.ProjectID, dbShare.Permission, 9999999)
+
+		got, err := GetLinkShareFromClaims(s, claims)
+		require.NoError(t, err)
+		assert.Equal(t, dbShare.SharedByID, got.SharedByID)
+	})
+
+	t.Run("missing id claim is rejected", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		claims := jwt.MapClaims{
+			"hash": "whatever",
+		}
+		_, err := GetLinkShareFromClaims(s, claims)
+		require.Error(t, err)
+		assert.True(t, IsErrLinkShareTokenInvalid(err))
+	})
+
+	t.Run("missing hash claim is rejected", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+
+		claims := jwt.MapClaims{
+			"id": float64(1),
+		}
+		_, err := GetLinkShareFromClaims(s, claims)
+		require.Error(t, err)
+		assert.True(t, IsErrLinkShareTokenInvalid(err))
 	})
 }
