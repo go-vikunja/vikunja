@@ -4,6 +4,7 @@ import {isAppleDevice} from '@/helpers/isAppleDevice'
 
 const ctrl = isAppleDevice() ? '⌘' : 'ctrl'
 const reminderModifier = isAppleDevice() ? 'shift' : 'alt'
+const deleteKey = isAppleDevice() ? 'backspace' : 'delete'
 
 export interface Shortcut {
 	title: string
@@ -195,7 +196,7 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 			},
 			{
 				title: 'keyboardShortcuts.task.delete',
-				keys: ['shift', 'delete'],
+				keys: [deleteKey],
 			},
 			{
 				title: 'keyboardShortcuts.task.favorite',
