@@ -18,6 +18,7 @@ package e2etests
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -28,6 +29,8 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -230,4 +233,33 @@ func TestWebhookFlakyRetriesSucceed(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 	assert.Equal(t, int32(3), atomic.LoadInt32(&hits),
 		"expected exactly 3 attempts (2 failures + 1 success)")
+}
+
+// TestWebhookDeletedBetweenFanoutAndDelivery is a unit-level test of the
+// delivery listener: if the underlying webhook row is gone by the time the
+// delivery listener runs, Handle must return nil (no retry) and not error.
+func TestWebhookDeletedBetweenFanoutAndDelivery(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	_, err := setupE2ETestEnv(ctx)
+	require.NoError(t, err)
+
+	// Build a delivery event for a webhook id that does not exist.
+	evt := &models.WebhookDeliveryEvent{
+		WebhookID: 9_999_999,
+		Payload: &models.WebhookPayload{
+			EventName: "task.updated",
+			Time:      time.Now(),
+			Data:      map[string]interface{}{},
+		},
+	}
+	body, err := json.Marshal(evt)
+	require.NoError(t, err)
+
+	msg := message.NewMessage(watermill.NewUUID(), body)
+	listener := &models.WebhookDeliveryListener{}
+
+	// Handle must return nil (quiet drop, no retry).
+	require.NoError(t, listener.Handle(msg))
 }
