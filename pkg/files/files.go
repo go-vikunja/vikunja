@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"strconv"
 	"time"
@@ -114,15 +115,59 @@ func CreateWithMime(f io.ReadSeeker, realname string, realsize uint64, a web.Aut
 	return file, s.Commit()
 }
 
+// measureReaderSize returns the byte length of r and leaves r seeked to
+// 0, so the size we check matches what storage backends will write
+// (they also Seek(0, io.SeekStart) before reading).
+func measureReaderSize(r io.ReadSeeker) (uint64, error) {
+	if _, err := r.Seek(0, io.SeekStart); err != nil {
+		return 0, err
+	}
+	end, err := r.Seek(0, io.SeekEnd)
+	if err != nil {
+		return 0, err
+	}
+	if _, err := r.Seek(0, io.SeekStart); err != nil {
+		return 0, err
+	}
+	if end < 0 {
+		return 0, fmt.Errorf("reader end %d is negative", end)
+	}
+	return uint64(end), nil
+}
+
 func CreateWithMimeAndSession(s *xorm.Session, f io.ReadSeeker, realname string, realsize uint64, a web.Auth, mime string, checkFileSizeLimit bool) (file *File, err error) {
-	if realsize > config.GetMaxFileSizeInMBytes()*uint64(datasize.MB) && checkFileSizeLimit {
-		return nil, ErrFileIsTooLarge{Size: realsize}
+	// Authoritative size comes from the reader, not the caller: the
+	// migration import path accepts attacker-controlled metadata
+	// (GHSA-qh78-rvg3-cv54) and several other callers pass stale values.
+	measured, mErr := measureReaderSize(f)
+	if mErr != nil {
+		return nil, fmt.Errorf("failed to measure file size: %w", mErr)
+	}
+
+	if checkFileSizeLimit {
+		// Overflow-safe: exabyte-range configs would wrap uint64.
+		maxMB := config.GetMaxFileSizeInMBytes()
+		var maxBytes uint64
+		if maxMB > math.MaxUint64/uint64(datasize.MB) {
+			maxBytes = math.MaxUint64
+		} else {
+			maxBytes = maxMB * uint64(datasize.MB)
+		}
+		if measured > maxBytes {
+			return nil, ErrFileIsTooLarge{Size: measured}
+		}
+	}
+
+	// Surface buggy callers that lie about size.
+	if realsize != 0 && realsize != measured {
+		log.Debugf("files.Create: caller-supplied size %d does not match measured size %d for %q",
+			realsize, measured, realname)
 	}
 
 	// We first insert the file into the db to get it's ID
 	file = &File{
 		Name:        realname,
-		Size:        realsize,
+		Size:        measured,
 		CreatedByID: a.GetID(),
 		Mime:        mime,
 	}
