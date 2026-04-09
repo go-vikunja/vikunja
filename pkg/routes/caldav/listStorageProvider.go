@@ -280,6 +280,13 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 		}
 		vcls.task = tasks[0]
 
+		// Reject reads where the URL project (set by TaskHandler in handler.go
+		// from the :project param) doesn't match the task's real project
+		// (GHSA-48ch-p4gq-x46x).
+		if vcls.project != nil && vcls.project.ID != 0 && vcls.task.ProjectID != vcls.project.ID {
+			return nil, false, errs.ResourceNotFoundError
+		}
+
 		if updated.Unix() > 0 {
 			vcls.task.Updated = updated
 		}
