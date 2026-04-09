@@ -3,6 +3,7 @@ import {LinkShareFactory} from '../../factories/link_sharing'
 import {TaskFactory} from '../../factories/task'
 import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
+import {setupApiUrl} from '../../support/authenticateUser'
 
 async function prepareLinkShare() {
 	await UserFactory.create()
@@ -23,6 +24,14 @@ async function prepareLinkShare() {
 }
 
 test.describe('Link shares', () => {
+	// The anonymous link share tests below don't use the `authenticatedPage`
+	// fixture (which wires up the API URL via `login()`), so they'd otherwise
+	// hit the default `window.API_URL = '/api/v1'` relative path baked into
+	// index.html and never reach the API running on a different port.
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
 	test('Can view a link share', async ({page, apiContext}) => {
 		const {share, project, tasks} = await prepareLinkShare()
 
