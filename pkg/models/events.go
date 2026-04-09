@@ -337,3 +337,28 @@ type UserDataExportRequestedEvent struct {
 func (t *UserDataExportRequestedEvent) Name() string {
 	return "user.export.requested"
 }
+
+/////////////////////
+// Webhook Events  //
+/////////////////////
+
+// WebhookDeliveryEvent is an internal event used to fan out a single
+// webhook delivery. One of these is dispatched per matching webhook by
+// WebhookListener; the WebhookDeliveryListener performs the actual HTTP
+// call. This event is intentionally not exposed via RegisterEventForWebhook
+// — users cannot subscribe to it.
+type WebhookDeliveryEvent struct {
+	// WebhookID is the id of the webhook row to deliver to. The delivery
+	// listener loads the webhook at delivery time so secrets are never
+	// embedded in the message bus.
+	WebhookID int64 `json:"webhook_id"`
+	// Payload is the fully prepared webhook payload, including the already
+	// expanded event.Data map. Build-once semantics: retries replay the
+	// same payload rather than rebuilding it.
+	Payload *WebhookPayload `json:"payload"`
+}
+
+// Name defines the name for WebhookDeliveryEvent
+func (w *WebhookDeliveryEvent) Name() string {
+	return "webhook.delivery"
+}
