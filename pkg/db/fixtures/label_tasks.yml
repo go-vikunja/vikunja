@@ -18,7 +18,14 @@
   task_id: 40
   label_id: 4
   created: 2018-12-01 15:13:12
-- id: 6 
+- id: 6
   task_id: 35
   label_id: 5
+  created: 2018-12-01 15:13:12
+# Attaches label #6 to task #34 (project 20, owned by user 13 and not shared
+# with user 1). Regression fixture for GHSA-hj5c-mhh2-g7jq — without this
+# row the label cannot reproduce the precedence leak.
+- id: 7
+  task_id: 34
+  label_id: 6
   created: 2018-12-01 15:13:12
