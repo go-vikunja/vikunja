@@ -107,6 +107,42 @@ END:VCALENDAR`
 		assert.NotContains(t, rec.Body.String(), "Title Caldav Test")
 		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
 	})
+	t.Run("Multiget rejects UIDs from other projects", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		// href claims project 38, but uid-caldav-test lives in project 36.
+		reportBody := `<?xml version="1.0" encoding="utf-8" ?>
+<C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+	<D:prop>
+		<D:getetag/>
+		<C:calendar-data/>
+	</D:prop>
+	<D:href>/dav/projects/38/uid-caldav-test.ics</D:href>
+</C:calendar-multiget>`
+
+		rec, err := newCaldavTestRequestWithUser(t, e, "REPORT", caldav.ProjectHandler, &testuser15, reportBody, nil, map[string]string{"project": "38"})
+		require.NoError(t, err)
+		assert.NotContains(t, rec.Body.String(), "Title Caldav Test")
+		assert.NotContains(t, rec.Body.String(), "Description Caldav Test")
+	})
+	t.Run("Multiget cross-user UID read is rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		reportBody := `<?xml version="1.0" encoding="utf-8" ?>
+<C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+	<D:prop>
+		<D:getetag/>
+		<C:calendar-data/>
+	</D:prop>
+	<D:href>/dav/projects/36/uid-caldav-test.ics</D:href>
+</C:calendar-multiget>`
+
+		// testuser6 cannot access project 36 where uid-caldav-test lives.
+		rec, err := newCaldavTestRequestWithUser(t, e, "REPORT", caldav.ProjectHandler, &testuser6, reportBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.NotContains(t, rec.Body.String(), "Title Caldav Test")
+		assert.NotContains(t, rec.Body.String(), "Description Caldav Test")
+	})
 }
 
 func TestCaldavDiscovery(t *testing.T) {
