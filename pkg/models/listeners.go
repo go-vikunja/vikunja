@@ -1166,8 +1166,17 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	now := time.Now()
 	for _, webhook := range matchingWebhooks {
-		if _, has := event["project"]; !has && webhook.ProjectID > 0 {
+		// Clone the event map so each webhook gets its own, isolated payload.
+		// Otherwise adding event["project"] for one webhook would leak into
+		// payloads dispatched for later webhooks.
+		perWebhookEvent := make(map[string]interface{}, len(event)+1)
+		for k, v := range event {
+			perWebhookEvent[k] = v
+		}
+
+		if _, has := perWebhookEvent["project"]; !has && webhook.ProjectID > 0 {
 			project, err := GetProjectSimpleByID(s, webhook.ProjectID)
 			if err != nil && !IsErrProjectDoesNotExist(err) {
 				log.Errorf("Could not load project for webhook %d: %s", webhook.ID, err)
@@ -1178,22 +1187,29 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 					log.Errorf("Could not load project for webhook %d: %s", webhook.ID, err)
 				}
 				if err == nil {
-					event["project"] = project
+					perWebhookEvent["project"] = project
 				}
 			}
 		}
 
-		err = webhook.sendWebhookPayload(&WebhookPayload{
-			EventName: wl.EventName,
-			Time:      time.Now(),
-			Data:      event,
+		dispatchErr := events.Dispatch(&WebhookDeliveryEvent{
+			WebhookID: webhook.ID,
+			Payload: &WebhookPayload{
+				EventName: wl.EventName,
+				Time:      now,
+				Data:      perWebhookEvent,
+			},
 		})
-		if err != nil {
-			return err
+		if dispatchErr != nil {
+			// A dispatch failure here means the in-process event bus is broken —
+			// there is nothing useful to retry per-webhook and we do not want
+			// to fail the parent message (which would re-fan-out and duplicate
+			// any deliveries that did succeed). Log and move on.
+			log.Errorf("Could not dispatch webhook.delivery for webhook %d: %s", webhook.ID, dispatchErr)
 		}
 	}
 
-	return
+	return nil
 }
 
 ///////
