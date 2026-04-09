@@ -382,3 +382,26 @@
   position: 42
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+
+# Template project owned by user 1
+-
+  id: 43
+  title: Template Project
+  description: A template project for testing
+  identifier: tmpl1
+  owner_id: 1
+  is_template: 1
+  position: 43
+  updated: 2024-01-01 00:00:00
+  created: 2024-01-01 00:00:00
+# Template project owned by user 6, shared with user 1 via users_projects
+-
+  id: 44
+  title: Shared Template
+  description: A template shared with user 1
+  identifier: stmpl
+  owner_id: 6
+  is_template: 1
+  position: 44
+  updated: 2024-01-01 00:00:00
+  created: 2024-01-01 00:00:00

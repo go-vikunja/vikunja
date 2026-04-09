@@ -37,14 +37,17 @@ export const useProjectStore = defineStore('project', () => {
 	}
 
 	const notArchivedRootProjects = computed(() => projectsArray.value
-		.filter(p => !p.isArchived && p.id > 0 && (
+		.filter(p => !p.isArchived && !p.isTemplate && p.id > 0 && (
 			p.parentProjectId === 0 || isOrphanedSubProject(p)
 		)))
 	const favoriteProjects = computed(() => projectsArray.value
-		.filter(p => !p.isArchived && p.isFavorite))
+		.filter(p => !p.isArchived && !p.isTemplate && p.isFavorite))
 	const savedFilterProjects = computed(() => projectsArray.value
 		.filter(p => !p.isArchived && p.id < -1))
 	const hasProjects = computed(() => projectsArray.value.length > 0)
+	const templateProjects = computed(() => projectsArray.value
+		.filter(p => !p.isArchived && p.isTemplate))
+	const hasTemplates = computed(() => templateProjects.value.length > 0)
 
 	const getChildProjects = computed(() => {
 		return (id: IProject['id']) => projectsArray.value.filter(p => p.parentProjectId === id)
@@ -261,15 +264,15 @@ export const useProjectStore = defineStore('project', () => {
 		let page = 1
 		try {
 			do {
-				const newProjects = await projectService.getAll({}, {is_archived: true, expand: 'permissions'}, page) as IProject[]
+				const newProjects = await projectService.getAll({}, {is_archived: true, is_template: true, expand: 'permissions'}, page) as IProject[]
 				loadedProjects.push(...newProjects)
 				page++
 			} while (page <= projectService.totalPages)
-			
+
 		} finally {
 			cancel()
 		}
-		
+
 		projects.value = {}
 		setProjects(loadedProjects)
 
@@ -329,6 +332,8 @@ export const useProjectStore = defineStore('project', () => {
 		favoriteProjects: readonly(favoriteProjects),
 		hasProjects: readonly(hasProjects),
 		savedFilterProjects: readonly(savedFilterProjects),
+		templateProjects: readonly(templateProjects),
+		hasTemplates: readonly(hasTemplates),
 
 		getChildProjects,
 		isOrphanedSubProject,

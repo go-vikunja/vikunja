@@ -17,6 +17,7 @@ export default class ProjectModel extends AbstractModel<IProject> implements IPr
 	owner: IUser = UserModel
 	tasks: ITask[] = []
 	isArchived = false
+	isTemplate = false
 	hexColor = ''
 	identifier = ''
 	backgroundInformation: unknown | null = null
