@@ -558,9 +558,10 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						Attachments: []*models.TaskAttachment{
 							{
 								File: &files.File{
-									Name:        "file.md",
-									Mime:        "text/plain",
-									Size:        12345,
+									Name: "file.md",
+									Mime: "text/plain",
+									// Size from content, not API metadata (GHSA-qh78-rvg3-cv54 defense-in-depth).
+									Size:        uint64(len(exampleFile)),
 									Created:     time1,
 									FileContent: exampleFile,
 								},
