@@ -988,6 +988,34 @@ func TestUpdateDone(t *testing.T) {
 	})
 }
 
+func TestUpdateDone_DoSRegression_AncientDueDate(t *testing.T) {
+	// GHSA-r4fg-73rc-hhh7: ancient due_date + 1s interval used to spin
+	// for billions of iterations. The <1s assertion catches a regression
+	// to the O(n) loop.
+	oldTask := &Task{
+		Done:        false,
+		RepeatAfter: 1,
+		RepeatMode:  TaskRepeatModeDefault,
+		DueDate:     time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+		StartDate:   time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+		EndDate:     time.Date(1900, 1, 2, 0, 0, 0, 0, time.UTC),
+		Reminders: []*TaskReminder{
+			{Reminder: time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)},
+		},
+	}
+	newTask := &Task{Done: true}
+
+	start := time.Now()
+	updateDone(oldTask, newTask)
+	elapsed := time.Since(start)
+
+	require.Less(t, elapsed, time.Second, "updateDone must not take seconds for ancient due dates")
+	assert.True(t, newTask.DueDate.After(start), "new due date must be strictly after now")
+	assert.True(t, newTask.StartDate.After(start), "new start date must be strictly after now")
+	assert.True(t, newTask.EndDate.After(start), "new end date must be strictly after now")
+	assert.False(t, newTask.Done, "repeating task should be unmarked as done")
+}
+
 func TestAddRepeatIntervalToTime(t *testing.T) {
 	now := time.Date(2026, 4, 9, 12, 0, 0, 0, time.UTC)
 	day := 24 * time.Hour
