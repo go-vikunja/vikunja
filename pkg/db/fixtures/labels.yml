@@ -23,18 +23,23 @@
   created_by_id: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
-# Label #6 is owned by user 13 and attached only to task #34, which lives in
-# project 20 (owned by user 13 and not shared with anyone). User 1 must NOT
-# be able to read this label. Regression fixture for GHSA-hj5c-mhh2-g7jq.
+# Regression for GHSA-hj5c-mhh2-g7jq: only attached to task #34
+# (project 20, user 13 only), must be unreachable for everyone else.
 - id: 6
   title: 'Label #6 - private, attached only to private task'
   created_by_id: 13
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
-# Label #7 is owned by user 1 but has no label_tasks row. Protects the
-# "creator can still see their own unattached labels" path.
+# Covers the creator-can-read-own-unattached-label path.
 - id: 7
   title: 'Label #7 - created by user 1, no task attachment'
+  created_by_id: 1
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+# Covers the creator-branch maxPermission fallback: user 1's label whose
+# only label_tasks row points at task #34 (inaccessible to user 1).
+- id: 8
+  title: 'Label #8 - user 1 creator, only attached to inaccessible task'
   created_by_id: 1
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12

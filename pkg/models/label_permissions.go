@@ -60,23 +60,17 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 	return lorig.CreatedByID == a.GetID(), nil
 }
 
-// Helper method to check if a user can see a specific label.
+// hasAccessToLabel reports whether the caller can read a label and, if so,
+// the caller's maximum permission on it.
 //
-// A user can read a label when at least one of the following is true:
-//
-//  1. The auth is a real user and the user created the label, OR
-//  2. The label is attached to a task in a project the auth can access.
-//
-// The implementation uses explicit builder.And / builder.Or grouping so
-// the boolean precedence is unambiguous. A previous implementation chained
-// xorm session .Where / .Or / .And calls which SQL flattened to
-// `WHERE A OR B OR C AND D`, leaking any label with any label_tasks row
+// The access cond is assembled with explicit builder.And / builder.Or.
+// Chaining xorm's session .Where/.Or/.And instead flattens the SQL to
+// `A OR B OR C AND D`, which leaked any label with any label_tasks row
 // to any authenticated user (GHSA-hj5c-mhh2-g7jq).
 func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPermission int, err error) {
 
 	linkShare, isLinkShare := a.(*LinkSharing)
 
-	// Build the "task is in a project the caller can access" subquery.
 	var accessibleProjects builder.Cond
 	if isLinkShare {
 		accessibleProjects = builder.Eq{"project_id": linkShare.ProjectID}
@@ -95,11 +89,6 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 			Where(accessibleProjects),
 	)
 
-	// A user can see a label if:
-	//   - they created it (only when the auth is an actual user), OR
-	//   - it is attached to a task in a project they have access to.
-	//
-	// The outer AND enforces that the result is scoped to the requested label ID.
 	accessBranches := []builder.Cond{labelAttachedToAccessibleTask}
 	if !isLinkShare {
 		accessBranches = append(accessBranches, builder.Eq{"labels.created_by_id": a.GetID()})
@@ -110,28 +99,48 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 		builder.Or(accessBranches...),
 	)
 
-	ll := &LabelTask{}
 	has, err = s.Table("labels").
-		Select("label_tasks.*").
 		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
 		Where(cond).
-		Get(ll)
+		Exist(&Label{})
 	if err != nil || !has {
 		return
 	}
 
-	// If the label was matched via an attached task, compute the caller's
-	// permission level from that task. Otherwise (creator-only branch with
-	// no attachment) default to read permission.
-	if ll.TaskID > 0 {
-		t := &Task{ID: ll.TaskID}
-		_, maxPermission, err = t.CanRead(s, a)
-		if err != nil {
-			return
-		}
+	// maxPermission is derived only from label_tasks rows whose task is
+	// actually accessible. The pre-fix code used Get(ll) against the
+	// unrestricted LEFT JOIN, so it could return an inaccessible row and
+	// yield a wrong (or errored) permission.
+	accessibleTaskIDs := []int64{}
+	err = s.Table("label_tasks").
+		Join("INNER", "tasks", "tasks.id = label_tasks.task_id").
+		Where(builder.And(
+			builder.Eq{"label_tasks.label_id": l.ID},
+			accessibleProjects,
+		)).
+		Cols("label_tasks.task_id").
+		Find(&accessibleTaskIDs)
+	if err != nil {
 		return
 	}
 
-	maxPermission = int(PermissionRead)
+	for _, taskID := range accessibleTaskIDs {
+		t := &Task{ID: taskID}
+		_, taskPermission, tErr := t.CanRead(s, a)
+		if tErr != nil {
+			err = tErr
+			return
+		}
+		if taskPermission > maxPermission {
+			maxPermission = taskPermission
+		}
+	}
+
+	// Creator-branch fallback: access came from created_by_id with no
+	// accessible task to derive a permission from.
+	if len(accessibleTaskIDs) == 0 {
+		maxPermission = int(PermissionRead)
+	}
+
 	return
 }

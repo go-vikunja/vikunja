@@ -125,6 +125,16 @@ func TestLabel_ReadAll(t *testing.T) {
 						Updated:     testUpdatedTime,
 					},
 				},
+				{
+					Label: Label{
+						ID:          8,
+						Title:       "Label #8 - user 1 creator, only attached to inaccessible task",
+						CreatedByID: 1,
+						CreatedBy:   user1,
+						Created:     testCreatedTime,
+						Updated:     testUpdatedTime,
+					},
+				},
 			},
 		},
 		{
@@ -193,13 +203,15 @@ func TestLabel_ReadOne(t *testing.T) {
 		ExportFileID:                 1,
 	}
 	tests := []struct {
-		name          string
-		fields        fields
-		want          *Label
-		wantErr       bool
-		errType       func(error) bool
-		auth          web.Auth
-		wantForbidden bool
+		name                string
+		fields              fields
+		want                *Label
+		wantErr             bool
+		errType             func(error) bool
+		auth                web.Auth
+		wantForbidden       bool
+		assertMaxPermission bool
+		wantMaxPermission   int
 	}{
 		{
 			name: "Get label #1",
@@ -214,7 +226,9 @@ func TestLabel_ReadOne(t *testing.T) {
 				Created:     testCreatedTime,
 				Updated:     testUpdatedTime,
 			},
-			auth: &user.User{ID: 1},
+			auth:                &user.User{ID: 1},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionRead),
 		},
 		{
 			name: "Get nonexistant label",
@@ -235,6 +249,8 @@ func TestLabel_ReadOne(t *testing.T) {
 			auth:          &user.User{ID: 1},
 		},
 		{
+			// Label 4 is attached to tasks in project 1 (user 1 is admin),
+			// so the accessible-tasks iteration must yield PermissionAdmin.
 			name: "Get label #4 - other user",
 			fields: fields{
 				ID: 4,
@@ -258,13 +274,13 @@ func TestLabel_ReadOne(t *testing.T) {
 				Created: testCreatedTime,
 				Updated: testUpdatedTime,
 			},
-			auth: &user.User{ID: 1},
+			auth:                &user.User{ID: 1},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionAdmin),
 		},
 		{
-			// Regression for GHSA-hj5c-mhh2-g7jq: label 6 is owned by user 13
-			// and attached only to task 34 (project 20, not shared with user 1).
-			// The old hasAccessToLabel query leaked any label with any
-			// label_tasks row to any authenticated user.
+			// PoC for GHSA-hj5c-mhh2-g7jq: label 6 is reachable only via task
+			// 34 in the private project 20, user 1 must not see it.
 			name: "PoC GHSA-hj5c-mhh2-g7jq: label 6 attached only to unreachable task must be forbidden",
 			fields: fields{
 				ID: 6,
@@ -286,7 +302,29 @@ func TestLabel_ReadOne(t *testing.T) {
 				Created:     testCreatedTime,
 				Updated:     testUpdatedTime,
 			},
-			auth: &user.User{ID: 1},
+			auth:                &user.User{ID: 1},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionRead),
+		},
+		{
+			// Label 8's only label_tasks row points at inaccessible task 34,
+			// so access must come from the creator branch and the
+			// maxPermission fallback to PermissionRead must kick in.
+			name: "creator can read own label only attached to inaccessible task",
+			fields: fields{
+				ID: 8,
+			},
+			want: &Label{
+				ID:          8,
+				Title:       "Label #8 - user 1 creator, only attached to inaccessible task",
+				CreatedByID: 1,
+				CreatedBy:   user1,
+				Created:     testCreatedTime,
+				Updated:     testUpdatedTime,
+			},
+			auth:                &user.User{ID: 1},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionRead),
 		},
 		{
 			// Non-creator must not be able to read an unattached label owned
@@ -318,12 +356,15 @@ func TestLabel_ReadOne(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			allowed, _, _ := l.CanRead(s, tt.auth)
+			allowed, maxPermission, _ := l.CanRead(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanRead() forbidden, want %v", tt.wantForbidden)
 			}
 			if allowed && tt.wantForbidden {
 				t.Errorf("Label.CanRead() allowed, want forbidden")
+			}
+			if tt.assertMaxPermission && maxPermission != tt.wantMaxPermission {
+				t.Errorf("Label.CanRead() maxPermission = %d, want %d", maxPermission, tt.wantMaxPermission)
 			}
 			err := l.ReadOne(s, tt.auth)
 			if (err != nil) != tt.wantErr {
