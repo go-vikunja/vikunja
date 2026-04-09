@@ -168,7 +168,7 @@
     "overrides": {
       "minimatch": "^10.2.3",
       "rollup": "$rollup",
-      "basic-ftp": "5.2.0",
+      "basic-ftp": "5.2.1",
       "serialize-javascript": "^7.0.5",
       "flatted": "^3.4.1"
     }
