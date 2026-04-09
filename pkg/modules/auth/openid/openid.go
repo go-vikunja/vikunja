@@ -47,6 +47,10 @@ type Callback struct {
 	Code        string `query:"code" json:"code"`
 	Scope       string `query:"scope" json:"scope"`
 	RedirectURL string `json:"redirect_url"`
+	// TOTPPasscode is required when the resolved user has TOTP enabled.
+	// Clients must restart the OIDC flow and populate this field after
+	// receiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.
+	TOTPPasscode string `json:"totp_passcode"`
 }
 
 // Provider is the structure of an OpenID Connect provider
