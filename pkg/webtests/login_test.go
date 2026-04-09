@@ -19,10 +19,13 @@ package webtests
 import (
 	"net/http"
 	"testing"
+	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -65,4 +68,48 @@ func TestLogin(t *testing.T) {
 		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeEmailNotConfirmed)
 	})
+}
+
+func TestLoginTOTPLockout(t *testing.T) {
+	// user10 fixture: TOTP secret JBSWY3DPEHPK3PXP, password 12345678.
+	const totpSecret = "JBSWY3DPEHPK3PXP" //nolint:gosec
+
+	// Share one env across requests: setupTestEnv re-inits keyvalue on each
+	// call, so using newTestRequest would reset the attempt counter every
+	// iteration and the lockout would never trigger.
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	invalidPayload := `{
+  "username": "user10",
+  "password": "12345678",
+  "totp_passcode": "000000"
+}`
+
+	for i := 0; i < 11; i++ {
+		c, _ := createRequest(e, http.MethodPost, invalidPayload, nil, nil)
+		err := apiv1.Login(c)
+		require.Error(t, err)
+	}
+
+	s := db.NewSession()
+	locked := &user.User{}
+	exists, err := s.Where("id = ?", 10).Get(locked)
+	require.NoError(t, err)
+	require.True(t, exists)
+	require.NoError(t, s.Close())
+	assert.Equal(t, user.StatusAccountLocked, locked.Status,
+		"user10 should be locked after 10 failed TOTP attempts")
+
+	validCode, err := totp.GenerateCode(totpSecret, time.Now())
+	require.NoError(t, err)
+	validPayload := `{
+  "username": "user10",
+  "password": "12345678",
+  "totp_passcode": "` + validCode + `"
+}`
+	c, _ := createRequest(e, http.MethodPost, validPayload, nil, nil)
+	err = apiv1.Login(c)
+	require.Error(t, err)
+	assertHandlerErrorCode(t, err, user.ErrCodeAccountLocked)
 }
