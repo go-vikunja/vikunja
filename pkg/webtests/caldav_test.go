@@ -84,6 +84,29 @@ END:VCALENDAR`
 		assert.Contains(t, rec.Body.String(), "ACTION:DISPLAY")
 		assert.Contains(t, rec.Body.String(), "END:VALARM")
 	})
+	t.Run("Cross-user task read by UID is rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		// testuser6 has no access to project 36, where uid-caldav-test lives.
+		rec, err := newCaldavTestRequestWithUser(
+			t, e, http.MethodGet, caldav.TaskHandler, &testuser6, ``, nil,
+			map[string]string{"project": "36", "task": "uid-caldav-test"},
+		)
+		require.NoError(t, err)
+		assert.NotContains(t, rec.Body.String(), "Title Caldav Test")
+		assert.NotContains(t, rec.Body.String(), "Description Caldav Test")
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+	t.Run("Wrong project in URL for existing task is rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		// testuser15 owns both project 36 (where uid-caldav-test lives) and project 38.
+		rec, err := newCaldavTestRequestWithUser(
+			t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil,
+			map[string]string{"project": "38", "task": "uid-caldav-test"},
+		)
+		require.NoError(t, err)
+		assert.NotContains(t, rec.Body.String(), "Title Caldav Test")
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
 }
 
 func TestCaldavDiscovery(t *testing.T) {
@@ -563,7 +586,8 @@ END:VTODO`
 		require.NoError(t, err)
 		assert.Equal(t, 204, rec.Result().StatusCode)
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task-2"})
+		// uid-caldav-test-child-task-2 lives in project 38 (see fixtures/tasks.yml).
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "38", "task": "uid-caldav-test-child-task-2"})
 		require.NoError(t, err)
 		assert.Equal(t, 204, rec.Result().StatusCode)
 
