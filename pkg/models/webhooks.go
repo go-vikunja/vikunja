@@ -24,6 +24,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"sort"
@@ -337,12 +338,13 @@ func (w *Webhook) sendWebhookPayload(p *WebhookPayload) (err error) {
 	defer res.Body.Close()
 
 	if res.StatusCode > 399 {
-		responseBody, err := io.ReadAll(res.Body)
-		if err != nil {
-			return err
+		responseBody, readErr := io.ReadAll(res.Body)
+		if readErr != nil {
+			return fmt.Errorf("webhook %d returned status %d and reading its body failed: %w", w.ID, res.StatusCode, readErr)
 		}
 
 		log.Errorf("Got response with status %d from webhook %d: %s", res.StatusCode, w.ID, responseBody)
+		return fmt.Errorf("webhook %d returned non-success status %d", w.ID, res.StatusCode)
 	}
 
 	log.Debugf("Sent webhook payload for webhook %d for event %s", w.ID, p.EventName)
