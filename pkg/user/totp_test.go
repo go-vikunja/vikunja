@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
@@ -54,4 +55,72 @@ func TestTOTPPasscodeCannotBeReused(t *testing.T) {
 	})
 	require.Error(t, err)
 	assert.True(t, IsErrTOTPPasscodeUsed(err), "expected ErrTOTPPasscodeUsed, got: %v", err)
+}
+
+func TestHandleFailedTOTPAuthLocksAccount(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
+	user := &User{ID: 10}
+
+	// keyvalue store is process-global; reset counter between runs.
+	_ = keyvalue.Del(user.GetFailedTOTPAttemptsKey())
+
+	for i := 0; i < 10; i++ {
+		s := db.NewSession()
+		HandleFailedTOTPAuth(user)
+		require.NoError(t, s.Rollback())
+		require.NoError(t, s.Close())
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+	fresh, err := GetUserByID(s, user.ID)
+	require.Error(t, err)
+	assert.True(t, IsErrAccountLocked(err), "expected ErrAccountLocked, got: %v", err)
+	assert.Equal(t, StatusAccountLocked, fresh.Status)
+}
+
+func TestHandleFailedTOTPAuthLockoutCanBeUnlockedByPasswordReset(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+
+	user := &User{ID: 10}
+	// keyvalue store is process-global; reset counter between runs.
+	_ = keyvalue.Del(user.GetFailedTOTPAttemptsKey())
+
+	for i := 0; i < 10; i++ {
+		s := db.NewSession()
+		HandleFailedTOTPAuth(user)
+		require.NoError(t, s.Rollback())
+		require.NoError(t, s.Close())
+	}
+
+	// Fetch the token from the DB (not a fresh one) so regressions where
+	// the lockout flow fails to persist a reset token are caught.
+	s := db.NewSession()
+	defer s.Close()
+	full, err := GetUserByID(s, user.ID)
+	require.Error(t, err)
+	require.True(t, IsErrAccountLocked(err))
+	require.Equal(t, StatusAccountLocked, full.Status)
+
+	tokens, err := getTokensForKind(s, full, TokenPasswordReset)
+	require.NoError(t, err)
+	require.NotEmpty(t, tokens, "HandleFailedTOTPAuth should have persisted a password reset token")
+	token := tokens[len(tokens)-1]
+	require.NoError(t, s.Commit())
+
+	s2 := db.NewSession()
+	defer s2.Close()
+	_, err = ResetPassword(s2, &PasswordReset{
+		Token:       token.Token,
+		NewPassword: "new-password-123",
+	})
+	require.NoError(t, err)
+	require.NoError(t, s2.Commit())
+
+	s3 := db.NewSession()
+	defer s3.Close()
+	unlocked, err := GetUserByID(s3, user.ID)
+	require.NoError(t, err)
+	assert.Equal(t, StatusActive, unlocked.Status)
 }
