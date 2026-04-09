@@ -1172,7 +1172,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 
 	views := []*ProjectView{}
-	if (!t.isRepeating() && t.Done != ot.Done) || t.ProjectID != ot.ProjectID {
+	if t.Done != ot.Done || t.ProjectID != ot.ProjectID {
 		err = s.
 			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ?",
 				t.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual).
@@ -1228,6 +1228,16 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// When a task changed its done status, make sure it is in the correct bucket
 	if t.ProjectID == ot.ProjectID && !t.isRepeating() && t.Done != ot.Done {
 		err = t.moveTaskToDoneBuckets(s, a, views)
+		if err != nil {
+			return
+		}
+	}
+
+	// Repeating tasks don't stay in the done bucket — route them back
+	// to the default bucket so the next iteration shows up in the
+	// "To-Do" column. See #2573.
+	if t.ProjectID == ot.ProjectID && t.isRepeating() && !ot.Done && t.Done {
+		err = t.moveTaskToDefaultBuckets(s, a, views)
 		if err != nil {
 			return
 		}
