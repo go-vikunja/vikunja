@@ -89,6 +89,9 @@ func RegisterListeners() {
 		RegisterUserDirectedEventForWebhook(&TaskReminderFiredEvent{})
 		RegisterUserDirectedEventForWebhook(&TaskOverdueEvent{})
 		RegisterUserDirectedEventForWebhook(&TasksOverdueEvent{})
+
+		// Internal delivery listener — one message per webhook with its own retry lifecycle
+		events.RegisterListener((&WebhookDeliveryEvent{}).Name(), &WebhookDeliveryListener{})
 	}
 }
 
