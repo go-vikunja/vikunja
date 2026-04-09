@@ -324,10 +324,21 @@ export const useAuthStore = defineStore('auth', () => {
 
 				if (isAuthenticated) {
 					// Only set user from JWT if we don't already have a fully loaded
-					// user with the same ID. The JWT lacks fields like `name`, so
-					// overwriting a complete user object causes a visible flash
-					// where the display name briefly reverts to the username.
-					if (info.value === null || info.value.id !== jwtUser.id) {
+					// user with the same ID *and* type. The JWT lacks fields like
+					// `name`, so overwriting a complete user object causes a visible
+					// flash where the display name briefly reverts to the username.
+					// Comparing on type as well is essential: regular users and link
+					// shares share the same numeric ID space, so a USER and a
+					// LINK_SHARE can have the same `id`. Without the type check, a
+					// logged-in user opening a link share whose id collides with
+					// their user id would keep the USER `info.value` and never flip
+					// `authLinkShare` to true, causing the router guard to bounce
+					// between /share/:hash/auth and the project view forever.
+					if (
+						info.value === null ||
+						info.value.id !== jwtUser.id ||
+						info.value.type !== jwtUser.type
+					) {
 						setUser(jwtUser, false)
 					} else {
 						// Always keep exp in sync so token renewal checks stay accurate
