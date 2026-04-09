@@ -18,7 +18,6 @@ package e2etests
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -32,38 +31,57 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTaskUpdateWebhookE2E(t *testing.T) {
+// TestWebhookFailingSiblingDoesNotBlockOthers reproduces bug #2569:
+// When two webhooks are configured on a project and the first one fails,
+// the second one must still receive its payload.
+func TestWebhookFailingSiblingDoesNotBlockOthers(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	e, err := setupE2ETestEnv(ctx)
 	require.NoError(t, err)
 
-	// Start a test HTTP server to capture webhook payloads.
-	// Use a non-blocking send so retries or duplicate deliveries don't hang.
-	webhookReceived := make(chan []byte, 1)
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Good webhook server — captures the delivered payload.
+	goodReceived := make(chan []byte, 4)
+	good := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		select {
-		case webhookReceived <- body:
+		case goodReceived <- body:
 		default:
 		}
 		w.WriteHeader(http.StatusOK)
 	}))
-	defer ts.Close()
+	defer good.Close()
 
-	// Reload fixtures to start from a clean state, then insert
-	// a fresh webhook for project 1 listening to "task.updated".
-	// Delete the fixture webhook id=1 first — it targets example.com
-	// which responds with 405, so leaving it in place would produce
-	// noisy retry errors for every task.updated delivery.
+	// Bad webhook server — always responds 500 so sendWebhookPayload errors out.
+	badHits := make(chan struct{}, 16)
+	bad := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		select {
+		case badHits <- struct{}{}:
+		default:
+		}
+		http.Error(w, "boom", http.StatusInternalServerError)
+	}))
+	defer bad.Close()
+
+	// Clean slate + insert two webhooks listening on task.updated for project 1.
+	// Insert bad FIRST so it has the lower id and would be iterated before good.
+	// Delete the fixture webhook id=1 (example.com target) first so it
+	// does not pollute this test with unrelated delivery failures.
 	require.NoError(t, db.LoadFixtures())
 	s := db.NewSession()
 	defer s.Close()
 	_, err = s.Where("id = ?", 1).Delete(&models.Webhook{})
 	require.NoError(t, err)
 	_, err = s.Insert(&models.Webhook{
-		TargetURL:   ts.URL,
+		TargetURL:   bad.URL,
+		Events:      []string{"task.updated"},
+		ProjectID:   1,
+		CreatedByID: 1,
+	})
+	require.NoError(t, err)
+	_, err = s.Insert(&models.Webhook{
+		TargetURL:   good.URL,
 		Events:      []string{"task.updated"},
 		ProjectID:   1,
 		CreatedByID: 1,
@@ -71,31 +89,20 @@ func TestTaskUpdateWebhookE2E(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 
-	// Update task 1 via the web handler — this triggers the full pipeline:
-	// UpdateWeb → Task.Update() → DispatchOnCommit → s.Commit() →
-	// DispatchPending → Dispatch → watermill → WebhookListener.Handle →
-	// HTTP POST to ts.URL
+	// Trigger task.updated — this drives the full async pipeline.
 	rec, err := testUpdateWithUser(e, t, &testuser1,
 		map[string]string{"projecttask": "1"},
-		`{"title":"E2E webhook test"}`,
+		`{"title":"2569 sibling test"}`,
 	)
 	require.NoError(t, err)
-	assert.Contains(t, rec.Body.String(), `"title":"E2E webhook test"`)
+	assert.Contains(t, rec.Body.String(), `"title":"2569 sibling test"`)
 
-	// Wait for the webhook payload to arrive via the real async pipeline
+	// The good webhook MUST receive the payload, even though the bad one
+	// is iterated first and fails.
 	select {
-	case body := <-webhookReceived:
-		var payload map[string]interface{}
-		require.NoError(t, json.Unmarshal(body, &payload))
-		assert.Equal(t, "task.updated", payload["event_name"])
-
-		data, ok := payload["data"].(map[string]interface{})
-		require.True(t, ok, "payload.data should be a map")
-		task, ok := data["task"].(map[string]interface{})
-		require.True(t, ok, "payload.data.task should be a map")
-		assert.Equal(t, "E2E webhook test", task["title"])
-
+	case <-goodReceived:
+		// success
 	case <-time.After(10 * time.Second):
-		t.Fatal("Webhook payload not received within 10s timeout")
+		t.Fatal("good webhook did not receive payload within 10s — #2569 regression")
 	}
 }
