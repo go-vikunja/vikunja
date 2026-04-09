@@ -1121,6 +1121,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 
 		ws := []*Webhook{}
 		err = s.In("project_id", projectIDs).
+			OrderBy("id ASC").
 			Find(&ws)
 		if err != nil {
 			return err
@@ -1142,6 +1143,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		if userID > 0 {
 			userWebhooks := []*Webhook{}
 			err = s.Where("user_id = ? AND (project_id IS NULL OR project_id = 0)", userID).
+				OrderBy("id ASC").
 				Find(&userWebhooks)
 			if err != nil {
 				return err

@@ -69,15 +69,18 @@ func TestWebhookFailingSiblingDoesNotBlockOthers(t *testing.T) {
 	defer bad.Close()
 
 	// Clean slate + insert two webhooks listening on task.updated for project 1.
-	// Insert bad FIRST so it has the lower id and would be iterated before good.
-	// Delete the fixture webhook id=1 (example.com target) first so it
-	// does not pollute this test with unrelated delivery failures.
+	// Use explicit ids so the bad webhook (id=10) is strictly ordered before
+	// the good one (id=11) once WebhookListener.Handle applies its ORDER BY id.
+	// This makes the test independent of auto-increment state and DB insert
+	// ordering. Delete the fixture webhook id=1 (example.com target) first so
+	// it does not pollute this test with unrelated delivery failures.
 	require.NoError(t, db.LoadFixtures())
 	s := db.NewSession()
 	defer s.Close()
 	_, err = s.Where("id = ?", 1).Delete(&models.Webhook{})
 	require.NoError(t, err)
 	_, err = s.Insert(&models.Webhook{
+		ID:          10,
 		TargetURL:   bad.URL,
 		Events:      []string{"task.updated"},
 		ProjectID:   1,
@@ -85,6 +88,7 @@ func TestWebhookFailingSiblingDoesNotBlockOthers(t *testing.T) {
 	})
 	require.NoError(t, err)
 	_, err = s.Insert(&models.Webhook{
+		ID:          11,
 		TargetURL:   good.URL,
 		Events:      []string{"task.updated"},
 		ProjectID:   1,
