@@ -32,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 
@@ -117,6 +118,38 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 		return "", err
 	}
 	return iss.Issuer, nil
+}
+
+// enforceTOTPIfRequired mirrors the TOTP gate from pkg/routes/api/v1/login.go
+// for the OIDC flow. Returns nil when the user does not have TOTP enabled.
+// See GHSA-8jvc-mcx6-r4cg.
+func enforceTOTPIfRequired(s *xorm.Session, u *user.User, totpPasscode string) error {
+	totpEnabled, err := user.TOTPEnabledForUser(s, u)
+	if err != nil {
+		return err
+	}
+	if !totpEnabled {
+		return nil
+	}
+
+	if totpPasscode == "" {
+		return user.ErrInvalidTOTPPasscode{}
+	}
+
+	_, err = user.ValidateTOTPPasscode(s, &user.TOTPPasscode{
+		User:     u,
+		Passcode: totpPasscode,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Reset the counter so old failed attempts don't trip a later lockout.
+	if err := keyvalue.Del(u.GetFailedTOTPAttemptsKey()); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // HandleCallback handles the auth request callback after redirecting from the provider with an auth code
