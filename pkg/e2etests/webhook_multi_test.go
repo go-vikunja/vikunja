@@ -170,3 +170,64 @@ func TestWebhookGoodDeliveredOnceDespiteSiblingRetries(t *testing.T) {
 	assert.Equal(t, int32(1), got,
 		"good webhook should be delivered exactly once; got %d deliveries", got)
 }
+
+// TestWebhookFlakyRetriesSucceed verifies that a webhook which fails a
+// couple of times before succeeding is eventually delivered via the
+// watermill retry middleware — proving that returning an error from the
+// delivery listener still triggers retries.
+func TestWebhookFlakyRetriesSucceed(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	e, err := setupE2ETestEnv(ctx)
+	require.NoError(t, err)
+
+	var hits int32
+	done := make(chan struct{}, 1)
+	flaky := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		n := atomic.AddInt32(&hits, 1)
+		if n < 3 {
+			http.Error(w, "try again", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		select {
+		case done <- struct{}{}:
+		default:
+		}
+	}))
+	defer flaky.Close()
+
+	require.NoError(t, db.LoadFixtures())
+	s := db.NewSession()
+	defer s.Close()
+	_, err = s.Where("id = ?", 1).Delete(&models.Webhook{})
+	require.NoError(t, err)
+	_, err = s.Insert(&models.Webhook{
+		TargetURL:   flaky.URL,
+		Events:      []string{"task.updated"},
+		ProjectID:   1,
+		CreatedByID: 1,
+	})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	rec, err := testUpdateWithUser(e, t, &testuser1,
+		map[string]string{"projecttask": "1"},
+		`{"title":"2569 flaky test"}`,
+	)
+	require.NoError(t, err)
+	assert.Contains(t, rec.Body.String(), `"title":"2569 flaky test"`)
+
+	select {
+	case <-done:
+		// Third attempt succeeded — retries worked.
+	case <-time.After(10 * time.Second):
+		t.Fatalf("flaky webhook never succeeded after %d attempts", atomic.LoadInt32(&hits))
+	}
+
+	// A little grace for any late in-flight retries before we drop the server.
+	time.Sleep(200 * time.Millisecond)
+	assert.Equal(t, int32(3), atomic.LoadInt32(&hits),
+		"expected exactly 3 attempts (2 failures + 1 success)")
+}
