@@ -1454,6 +1454,42 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 	return nil
 }
 
+// moveTaskToDefaultBuckets moves the task to the default bucket of
+// every provided view. It's the counterpart to moveTaskToDoneBuckets
+// and is used when a repeating task is marked done: repeating tasks
+// don't stay in the done bucket, so they should be routed back to
+// the default ("To-Do") bucket so the next iteration is visible there.
+func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
+	for _, view := range views {
+		defaultBucketID, err := getDefaultBucketID(s, view)
+		if err != nil {
+			return err
+		}
+
+		tb := &TaskBucket{
+			BucketID:      defaultBucketID,
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			ProjectID:     t.ProjectID,
+		}
+		err = updateTaskBucket(s, a, tb)
+		if err != nil {
+			return err
+		}
+
+		tp := TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			Position:      calculateDefaultPosition(t.Index, t.Position),
+		}
+		err = updateTaskPosition(s, a, &tp)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func addOneMonthToDate(d time.Time) time.Time {
 	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
 }
