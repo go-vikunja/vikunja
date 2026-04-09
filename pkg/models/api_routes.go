@@ -287,6 +287,12 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 }
 
+// GetAPITokenRoutes exposes the registered scoped-token routes so tests
+// and the /api/v1/routes handler share a single source of truth.
+func GetAPITokenRoutes() map[string]APITokenRoute {
+	return apiTokenRoutes
+}
+
 // GetAvailableAPIRoutesForToken returns a list of all API routes which are available for token usage.
 // @Summary Get a list of all token api routes
 // @Description Returns a list of all API routes which are available to use with an api token, not a user login.
@@ -296,10 +302,15 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 // @Success 200 {array} models.APITokenRoute "The list of all routes."
 // @Router /routes [get]
 func GetAvailableAPIRoutesForToken(c *echo.Context) error {
-	return c.JSON(http.StatusOK, apiTokenRoutes)
+	return c.JSON(http.StatusOK, GetAPITokenRoutes())
 }
 
-// CanDoAPIRoute checks if a token is allowed to use the current api route
+// CanDoAPIRoute checks if a token is allowed to use the current api route.
+//
+// Each permission is authoritative: the request is allowed only if the
+// stored (Path, Method) for that permission matches exactly. This closes
+// GHSA-v479-vf79-mg83 and the wider method/sub-resource confusion it
+// enabled. The one exception is the tasks.read_all quirk handled below.
 func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	path := c.Path()
 	if path == "" {
@@ -307,50 +318,32 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 		// the route used during registration which is what we need.
 		path = c.Request().URL.Path
 	}
+	method := c.Request().Method
 
-	routeGroupName, routeParts := getRouteGroupName(path)
-
-	routeGroupName = strings.TrimSuffix(routeGroupName, "_bulk")
-
-	if routeGroupName == "user" ||
-		routeGroupName == "users" ||
-		routeGroupName == "routes" {
-		routeGroupName = "other"
-	}
-
-	group, hasGroup := token.APIPermissions[routeGroupName]
-	if !hasGroup {
-		group, hasGroup = token.APIPermissions[routeParts[0]]
-		if !hasGroup {
-			return false
-		}
-	}
-
-	var route string
-	routes, has := apiTokenRoutes[routeGroupName]
-	if !has {
-		routes, has = apiTokenRoutes[routeParts[0]]
+	for group, perms := range token.APIPermissions {
+		routes, has := apiTokenRoutes[group]
 		if !has {
-			return false
+			continue
 		}
-		route = strings.Join(routeParts[1:], "_")
+		for _, p := range perms {
+			rd := routes[p]
+			if rd == nil {
+				continue
+			}
+			if rd.Method == method && rd.Path == path {
+				return true
+			}
+			// Two list endpoints share tasks.read_all but only one
+			// survives collection, so allow either explicitly.
+			if group == "tasks" && p == "read_all" && method == http.MethodGet &&
+				(path == "/api/v1/tasks" || path == "/api/v1/projects/:project/tasks") {
+				return true
+			}
+		}
 	}
 
-	// The tasks read_all route is available as /:project/tasks and /tasks/all - therefore we need this workaround here.
-	if routeGroupName == "tasks" && path == "/api/v1/projects/:project/tasks" && c.Request().Method == http.MethodGet {
-		route = "read_all"
-	}
-
-	for _, p := range group {
-		if route == "" && routes[p] != nil && routes[p].Path == path && routes[p].Method == c.Request().Method {
-			return true
-		}
-		if route != "" && p == route {
-			return true
-		}
-	}
-
-	log.Debugf("[auth] Token %d tried to use route %s which requires permission %s but has only %v", token.ID, path, route, token.APIPermissions)
+	log.Debugf("[auth] Token %d tried to use route %s %s which is not covered by its permissions %v",
+		token.ID, method, path, token.APIPermissions)
 
 	return false
 }
