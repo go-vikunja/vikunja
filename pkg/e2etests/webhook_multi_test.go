@@ -134,8 +134,12 @@ func TestWebhookGoodDeliveredOnceDespiteSiblingRetries(t *testing.T) {
 	}))
 	defer good.Close()
 
-	// Bad webhook: always 500 — will exhaust all retries.
+	// Bad webhook: always 500 — will exhaust all retries. Count every hit so
+	// we can assert the watermill retry middleware actually retried the
+	// failing delivery rather than giving up after one attempt.
+	var badCount int32
 	bad := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		atomic.AddInt32(&badCount, 1)
 		http.Error(w, "boom", http.StatusInternalServerError)
 	}))
 	defer bad.Close()
@@ -176,6 +180,16 @@ func TestWebhookGoodDeliveredOnceDespiteSiblingRetries(t *testing.T) {
 	got := atomic.LoadInt32(&goodCount)
 	assert.Equal(t, int32(1), got,
 		"good webhook should be delivered exactly once; got %d deliveries", got)
+
+	// The bad webhook should have been retried by the watermill retry
+	// middleware. We assert at least 3 attempts (1 initial + 2 retries) to
+	// prove retries actually fired — we don't assert an exact count because
+	// watermill's gochannel pubsub resends nacked messages, so a permanently
+	// failing delivery runs through multiple retry cycles within the wait
+	// window rather than stopping at MaxRetries+1.
+	gotBad := atomic.LoadInt32(&badCount)
+	assert.GreaterOrEqual(t, gotBad, int32(3),
+		"bad webhook should be retried at least 3 times; got %d", gotBad)
 }
 
 // TestWebhookFlakyRetriesSucceed verifies that a webhook which fails a
