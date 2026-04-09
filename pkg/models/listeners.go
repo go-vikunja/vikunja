@@ -18,6 +18,7 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -800,6 +801,9 @@ func (wdl *WebhookDeliveryListener) Name() string {
 // Special cases:
 //   - If the webhook row no longer exists (deleted between fan-out and
 //     delivery), Handle returns nil so the message is not retried.
+//   - A nil payload is treated as data corruption / version skew and
+//     returned as an error so the message is retried and eventually
+//     parked in the poison queue rather than silently dropped.
 //   - Any other error is returned so the watermill retry middleware
 //     retries this delivery with exponential backoff, and eventually
 //     parks it in the poison queue if all retries fail.
@@ -810,8 +814,7 @@ func (wdl *WebhookDeliveryListener) Handle(msg *message.Message) error {
 	}
 
 	if evt.Payload == nil {
-		log.Errorf("webhook delivery event for webhook %d has no payload", evt.WebhookID)
-		return nil
+		return fmt.Errorf("webhook delivery event for webhook %d has no payload", evt.WebhookID)
 	}
 
 	s := db.NewSession()
