@@ -988,6 +988,65 @@ func TestUpdateDone(t *testing.T) {
 	})
 }
 
+func TestTask_RepeatAfterCap(t *testing.T) {
+	const maxRepeat int64 = 10 * 365 * 24 * 3600
+
+	t.Run("create rejects repeat_after above cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		usr := &user.User{ID: 1, Username: "user1"}
+		task := &Task{
+			Title:       "nope",
+			ProjectID:   1,
+			RepeatAfter: maxRepeat + 1,
+		}
+		err := task.Create(s, usr)
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidTaskRepeatInterval(err))
+	})
+
+	t.Run("create accepts repeat_after at cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		usr := &user.User{ID: 1, Username: "user1"}
+		task := &Task{
+			Title:       "ok",
+			ProjectID:   1,
+			RepeatAfter: maxRepeat,
+		}
+		require.NoError(t, task.Create(s, usr))
+		require.NoError(t, s.Commit())
+	})
+
+	t.Run("update rejects repeat_after above cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		usr := &user.User{ID: 1, Username: "user1"}
+		task := &Task{
+			ID:          1,
+			RepeatAfter: maxRepeat + 1,
+		}
+		err := task.Update(s, usr)
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidTaskRepeatInterval(err))
+	})
+}
+
+func TestErrInvalidTaskRepeatInterval(t *testing.T) {
+	err := ErrInvalidTaskRepeatInterval{RepeatAfter: 999999999999}
+	assert.True(t, IsErrInvalidTaskRepeatInterval(err))
+	assert.False(t, IsErrInvalidTaskRepeatInterval(ErrTaskCannotBeEmpty{}))
+	httpErr := err.HTTPError()
+	assert.Equal(t, 400, httpErr.HTTPCode)
+	assert.Equal(t, ErrCodeInvalidTaskRepeatInterval, httpErr.Code)
+}
+
 func TestUpdateDone_DoSRegression_AncientDueDate(t *testing.T) {
 	// GHSA-r4fg-73rc-hhh7: ancient due_date + 1s interval used to spin
 	// for billions of iterations. The <1s assertion catches a regression

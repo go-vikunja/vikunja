@@ -47,6 +47,18 @@ const (
 	TaskRepeatModeFromCurrentDate
 )
 
+// MaxTaskRepeatAfterSeconds caps repeat_after at ten years. Sized to
+// stay far from int64 overflow when multiplied out in nanoseconds, and
+// ten years is already well past any legitimate recurrence.
+const MaxTaskRepeatAfterSeconds int64 = 10 * 365 * 24 * 3600
+
+func validateRepeatAfter(repeatAfter int64) error {
+	if repeatAfter < 0 || repeatAfter > MaxTaskRepeatAfterSeconds {
+		return ErrInvalidTaskRepeatInterval{RepeatAfter: repeatAfter}
+	}
+	return nil
+}
+
 // Task represents a task in a project
 type Task struct {
 	// The unique, numeric id of this task.
@@ -873,6 +885,10 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		return ErrTaskCannotBeEmpty{}
 	}
 
+	if err := validateRepeatAfter(t.RepeatAfter); err != nil {
+		return err
+	}
+
 	// Check if the project exists
 	p, err := GetProjectSimpleByID(s, t.ProjectID)
 	if err != nil {
@@ -1163,6 +1179,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		if !fieldSet["cover_image_attachment_id"] {
 			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
 		}
+	}
+
+	if err := validateRepeatAfter(t.RepeatAfter); err != nil {
+		return err
 	}
 
 	// If the task is being moved between projects, make sure to move the bucket + index as well
