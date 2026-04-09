@@ -163,11 +163,12 @@ func enforceTOTPIfRequired(s *xorm.Session, u *user.User, totpPasscode string) e
 // @Param callback body openid.Callback true "The openid callback"
 // @Param provider path int true "The OpenID Connect provider key as returned by the /info endpoint"
 // @Success 200 {object} auth.Token
+// @Failure 412 {object} models.Message "Invalid totp passcode."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /auth/openid/{provider}/callback [post]
 func HandleCallback(c *echo.Context) error {
 
-	provider, oauthToken, idToken, err := getProviderAndOidcTokens(c)
+	provider, cb, oauthToken, idToken, err := getProviderAndOidcTokens(c)
 	if err != nil {
 		var detailedErr *models.ErrOpenIDBadRequestWithDetails
 		if errors.As(err, &detailedErr) {
@@ -202,6 +203,20 @@ func HandleCallback(c *echo.Context) error {
 	if u.Status == user.StatusAccountLocked {
 		_ = s.Rollback()
 		return &user.ErrAccountLocked{UserID: u.ID}
+	}
+
+	// Must run before team sync so a failed 2FA attempt cannot mutate team
+	// membership. Commit before HandleFailedTOTPAuth so the getOrCreateUser
+	// writes persist and the SQLite write lock is released — its dedicated
+	// session needs to acquire its own. See GHSA-fgfv-pv97-6cmj.
+	if err := enforceTOTPIfRequired(s, u, cb.TOTPPasscode); err != nil {
+		if commitErr := s.Commit(); commitErr != nil {
+			log.Errorf("Error committing session after failed OIDC TOTP attempt for user %d: %v", u.ID, commitErr)
+		}
+		if user.IsErrInvalidTOTPPasscode(err) {
+			user.HandleFailedTOTPAuth(u)
+		}
+		return err
 	}
 
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
@@ -492,21 +507,21 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 	return cl, nil
 }
 
-func getProviderAndOidcTokens(c *echo.Context) (*Provider, *oauth2.Token, *oidc.IDToken, error) {
+func getProviderAndOidcTokens(c *echo.Context) (*Provider, *Callback, *oauth2.Token, *oidc.IDToken, error) {
 
 	cb := &Callback{}
 	if err := c.Bind(cb); err != nil {
-		return nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Bad data"}
+		return nil, nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Bad data"}
 	}
 
 	// Check if the provider exists
 	providerKey := c.Param("provider")
 	provider, err := GetProvider(providerKey)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, cb, nil, nil, err
 	}
 	if provider == nil {
-		return nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Provider does not exist"}
+		return nil, cb, nil, nil, &models.ErrOpenIDBadRequest{Message: "Provider does not exist"}
 	}
 
 	log.Debugf("Trying to authenticate user using provider: %s", provider.Key)
@@ -522,25 +537,25 @@ func getProviderAndOidcTokens(c *echo.Context) (*Provider, *oauth2.Token, *oidc.
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
 				log.Errorf("Error unmarshalling token for provider %s: %v", provider.Name, err)
 				log.Debugf("Raw token value is %s", rerr.Body)
-				return nil, nil, nil, err
+				return nil, cb, nil, nil, err
 			}
 
 			log.Errorf("Error retrieving token: %s", err)
 			log.Debugf("Raw token value is %s", rerr.Body)
-			return nil, nil, nil, &models.ErrOpenIDBadRequestWithDetails{
+			return nil, cb, nil, nil, &models.ErrOpenIDBadRequestWithDetails{
 				Message: "Could not authenticate against third party.",
 				Details: details,
 			}
 		}
 
-		return nil, nil, nil, err
+		return nil, cb, nil, nil, err
 	}
 
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
 		log.Debugf("Could not get id_token, raw token is %v", oauth2Token)
-		return nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Missing token"}
+		return nil, cb, nil, nil, &models.ErrOpenIDBadRequest{Message: "Missing token"}
 	}
 
 	verifier := provider.openIDProvider.Verifier(&oidc.Config{ClientID: provider.ClientID})
@@ -549,8 +564,8 @@ func getProviderAndOidcTokens(c *echo.Context) (*Provider, *oauth2.Token, *oidc.
 	idToken, err := verifier.Verify(context.Background(), rawIDToken)
 	if err != nil {
 		log.Errorf("Error verifying token for provider %s: %v", provider.Name, err)
-		return nil, nil, nil, err
+		return nil, cb, nil, nil, err
 	}
 
-	return provider, oauth2Token, idToken, nil
+	return provider, cb, oauth2Token, idToken, nil
 }
