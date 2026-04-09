@@ -1089,3 +1089,46 @@ func Test_getTaskIndexFromSearchString(t *testing.T) {
 		})
 	}
 }
+
+func TestGetTasksByUIDs(t *testing.T) {
+	t.Run("returns task for authorized user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		owner := &user.User{ID: 15}
+		tasks, err := GetTasksByUIDs(s, []string{"uid-caldav-test"}, owner)
+		require.NoError(t, err)
+		require.Len(t, tasks, 1)
+		assert.Equal(t, int64(40), tasks[0].ID)
+		assert.Equal(t, "Title Caldav Test", tasks[0].Title)
+	})
+
+	t.Run("does not return task for unauthorized user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user 6 has no access to project 36 where uid-caldav-test lives
+		outsider := &user.User{ID: 6}
+		tasks, err := GetTasksByUIDs(s, []string{"uid-caldav-test"}, outsider)
+		require.NoError(t, err)
+		assert.Empty(t, tasks, "unauthorized user must not receive tasks by UID")
+	})
+
+	t.Run("mixed authorized and unauthorized UIDs returns only authorized", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Give task 1 (project 1, owned by user 1) a UID so we can look it up.
+		_, err := s.ID(1).Cols("uid").Update(&Task{UID: "uid-user1-test"})
+		require.NoError(t, err)
+
+		user1 := &user.User{ID: 1}
+		tasks, err := GetTasksByUIDs(s, []string{"uid-user1-test", "uid-caldav-test"}, user1)
+		require.NoError(t, err)
+		require.Len(t, tasks, 1)
+		assert.Equal(t, int64(1), tasks[0].ID, "only user 1's task should be returned")
+	})
+}

@@ -372,10 +372,14 @@ func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 	return
 }
 
-// GetTasksByUIDs gets all tasks from a bunch of uids
+// GetTasksByUIDs gets all tasks from a bunch of uids, filtering out any
+// task whose project the provided auth does not have access to.
 func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, err error) {
 	tasks = []*Task{}
-	err = s.In("uid", uids).Find(&tasks)
+	err = s.
+		In("uid", uids).
+		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		Find(&tasks)
 	if err != nil {
 		return
 	}
