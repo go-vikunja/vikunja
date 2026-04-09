@@ -3,7 +3,7 @@ import {LinkShareFactory} from '../../factories/link_sharing'
 import {TaskFactory} from '../../factories/task'
 import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
-import {setupApiUrl} from '../../support/authenticateUser'
+import {login, setupApiUrl} from '../../support/authenticateUser'
 
 async function prepareLinkShare() {
 	await UserFactory.create()
@@ -60,5 +60,53 @@ test.describe('Link shares', () => {
 		await page.goto(`/tasks/${tasks[0].id}#share-auth-token=${share.hash}`)
 
 		await expect(page.locator('h1.title.input')).toContainText(tasks[0].title)
+	})
+
+	// Regression test for #2546: a logged-in user opening a public link share URL
+	// used to get stuck on an empty NoAuthWrapper shell because the router
+	// guard bounced between /share/:hash/auth and the project view. Two
+	// underlying issues produced the same symptom:
+	//
+	//   1. The 1-minute debounce in `checkAuth()` skipped re-parsing the new
+	//      link share JWT when the user was already authenticated.
+	//   2. `checkAuth()` skipped `setUser()` when the new JWT's `id` matched
+	//      the current `info.value.id`. Because users and link shares share
+	//      the same numeric id space, a user whose id happened to match the
+	//      link share's id would keep the old USER `info.value.type` and
+	//      `authLinkShare` would never flip to true.
+	//
+	// This test forces the id collision scenario so it covers both issues.
+	test('Can view a link share while logged in as a user with a colliding id', async ({page, apiContext}) => {
+		// Build the link share setup inline so we can pin the share id and
+		// the logged-in user id to the same value, reproducing the real-world
+		// bug where `info.value.id === jwtUser.id` is a false positive.
+		const collidingId = 42
+
+		const [linkShareOwner] = await UserFactory.create(1, {id: 1})
+		const projects = await createProjects()
+		const tasks = await TaskFactory.create(10, {
+			project_id: projects[0].id,
+		})
+		const [share] = await LinkShareFactory.create(1, {
+			id: collidingId,
+			project_id: projects[0].id,
+			shared_by_id: linkShareOwner.id,
+			permission: 0,
+		})
+		const project = projects[0]
+
+		// Create the logged-in user with the SAME numeric id as the link share.
+		// `truncate=false` so the link share owner (id 1) stays put.
+		const [loggedInUser] = await UserFactory.create(1, {id: collidingId}, false)
+
+		await login(page, apiContext, loggedInUser)
+
+		await page.goto(`/share/${share.hash}/auth`)
+
+		// Should successfully land on the shared project view instead of
+		// bouncing back to /share/:hash/auth forever.
+		await expect(page.locator('h1.title')).toContainText(project.title)
+		await expect(page.locator('.tasks')).toContainText(tasks[0].title)
+		await expect(page).toHaveURL(`/projects/${project.id}/1#share-auth-token=${share.hash}`)
 	})
 })
