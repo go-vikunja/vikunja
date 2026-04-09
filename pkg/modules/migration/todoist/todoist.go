@@ -441,7 +441,7 @@ func convertTodoistToVikunja(sync *sync, doneItems map[string]*doneItem) (fullVi
 				File: &files.File{
 					Name:    n.FileAttachment.FileName,
 					Mime:    n.FileAttachment.FileType,
-					Size:    uint64(n.FileAttachment.FileSize),
+					Size:    uint64(buf.Len()),
 					Created: n.Posted,
 					// We directly pass the file contents here to have a way to link the attachment to the file later.
 					// Because we don't have an ID for our task at this point of the migration, we cannot just throw all
