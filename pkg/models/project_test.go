@@ -287,6 +287,95 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				require.Error(t, err)
 				assert.True(t, IsErrProjectCannotBelongToAPseudoParentProject(err))
 			})
+			t.Run("attacker with direct Write on victim project cannot reparent it (GHSA-2vq4-854f-5c72)", func(t *testing.T) {
+				// User 1 has direct Write (permission=1) on project 10 (owner=6) via
+				// users_projects id=4. User 1 also owns project 1 (a root project).
+				// Under the pre-fix code, user 1 could POST /projects/10 with
+				// parent_project_id=1 and CanUpdate would return true because both
+				// CanWrite checks passed; the CTE would then cascade Admin on 10
+				// via ownership of the new parent. This test locks that down.
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+				project := Project{
+					ID:              10,
+					Title:           "Test10",
+					ParentProjectID: 1, // attacker-owned root
+				}
+				can, err := project.CanUpdate(s, usr)
+				require.Error(t, err)
+				assert.False(t, can)
+				assert.True(t, IsErrGenericForbidden(err))
+			})
+			t.Run("attacker with inherited Write cannot reparent child to attacker root (GHSA-2vq4-854f-5c72)", func(t *testing.T) {
+				// User 1 has Write on project 10 and therefore inherits Write on its
+				// child (project 43, added in the fixture above) via the CTE. User 1
+				// owns project 1. Reparenting 43 under 1 must be rejected.
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+				project := Project{
+					ID:              43,
+					Title:           "Reparent Escalation Test Child",
+					ParentProjectID: 1,
+				}
+				can, err := project.CanUpdate(s, usr)
+				require.Error(t, err)
+				assert.False(t, can)
+				assert.True(t, IsErrGenericForbidden(err))
+			})
+			t.Run("attacker with Write cannot detach project to root (GHSA-2vq4-854f-5c72)", func(t *testing.T) {
+				// Detach-to-root path: posting parent_project_id=0 used to bypass
+				// the reparent check entirely. User 1 has Write on project 43's
+				// parent chain but no Admin — detach must be rejected.
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+				project := Project{
+					ID:              43,
+					Title:           "Reparent Escalation Test Child",
+					ParentProjectID: 0, // detach
+				}
+				can, err := project.CanUpdate(s, usr)
+				require.Error(t, err)
+				assert.False(t, can)
+				assert.True(t, IsErrGenericForbidden(err))
+			})
+			t.Run("non-reparent update with Write still permitted (regression)", func(t *testing.T) {
+				// User 1 has Write on project 10. Renaming must still be permitted
+				// when parent_project_id is unchanged (sent as the current DB value).
+				// Project 10 has no parent in the fixture, so sending 0 matches.
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+				project := Project{
+					ID:              10,
+					Title:           "Test10 renamed",
+					ParentProjectID: 0, // project 10 currently has no parent
+				}
+				can, err := project.CanUpdate(s, usr)
+				require.NoError(t, err)
+				assert.True(t, can)
+			})
+			t.Run("owner can detach their own project to root", func(t *testing.T) {
+				// User 6 owns project 12 (child of 27). Detach must still work.
+				usr6 := &user.User{
+					ID:       6,
+					Username: "user6",
+					Email:    "user6@example.com",
+				}
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+				project := Project{
+					ID:              12,
+					Title:           "Test12",
+					ParentProjectID: 0,
+				}
+				can, err := project.CanUpdate(s, usr6)
+				require.NoError(t, err)
+				assert.True(t, can)
+			})
 		})
 		t.Run("archive default project of the same user", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
