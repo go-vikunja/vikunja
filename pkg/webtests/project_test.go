@@ -61,10 +61,13 @@ func TestProject(t *testing.T) {
 				// ParadeDB fuzzy(1, prefix=true) on "Test1" matches Test2-Test9
 				// (edit distance 1), Test10+ (prefix), etc. The recursive CTE
 				// also pulls in child projects of matched parents.
-				require.Len(t, projects, 26)
+				// +1 for the reparent-escalation fixture child (project 43).
+				require.Len(t, projects, 27)
 			} else {
-				// ILIKE '%Test1%' matches Test1, Test10, Test11, Test19, + favorites
-				require.Len(t, projects, 5)
+				// ILIKE '%Test1%' matches Test1, Test10, Test11, Test19, + favorites.
+				// The recursive CTE also pulls in project 43 as a child of the
+				// matched project 10 (reparent-escalation fixture).
+				require.Len(t, projects, 6)
 				assert.NotContains(t, rec.Body.String(), `Test2"`)
 				assert.NotContains(t, rec.Body.String(), `Test3`)
 				assert.NotContains(t, rec.Body.String(), `Test4`)

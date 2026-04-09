@@ -136,6 +136,12 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 
 	// Check if we're moving the project to a different parent project.
 	// If that is the case, we need to verify permissions to do so.
+	//
+	// The reparent Admin gate for GHSA-2vq4-854f-5c72 / CVE-2026-35595
+	// lives in UpdateProject, not here: CanUpdate is reused by
+	// permission-check-only callers (buckets, webhooks, task ops) that
+	// pass stub &Project{ID: ...} values with ParentProjectID=0 and never
+	// commit a reparent, which would spuriously trip the gate.
 	if p.ParentProjectID != 0 && p.ParentProjectID != ol.ParentProjectID {
 		newProject := &Project{ID: p.ParentProjectID}
 		can, err := newProject.CanWrite(s, a)

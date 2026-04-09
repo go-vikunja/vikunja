@@ -1006,6 +1006,40 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		return
 	}
 
+	// GHSA-2vq4-854f-5c72 / CVE-2026-35595: the recursive permission CTE
+	// cascades Admin from any owned ancestor, so moving a shared child
+	// under an attacker-owned root grants Admin on the child. Require
+	// Admin on both sides of a reparent.
+	//
+	// Only gate on non-zero ParentProjectID: the generic update handler
+	// binds a fresh struct, so an omitted parent_project_id is
+	// indistinguishable from an explicit 0. Detach-to-root is therefore
+	// out of scope here — a proper fix needs a pointer field.
+	if project.ParentProjectID > 0 {
+		storedProject, err := GetProjectSimpleByID(s, project.ID)
+		if err != nil {
+			return err
+		}
+		if project.ParentProjectID != storedProject.ParentProjectID {
+			canAdminMoved, err := project.IsAdmin(s, auth)
+			if err != nil {
+				return err
+			}
+			if !canAdminMoved {
+				return ErrGenericForbidden{}
+			}
+
+			newParent := &Project{ID: project.ParentProjectID}
+			canAdminNewParent, err := newParent.IsAdmin(s, auth)
+			if err != nil {
+				return err
+			}
+			if !canAdminNewParent {
+				return ErrGenericForbidden{}
+			}
+		}
+	}
+
 	if project.IsArchived {
 		isDefaultProject, err := project.isDefaultProject(s)
 		if err != nil {
