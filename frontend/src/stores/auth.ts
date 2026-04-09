@@ -238,16 +238,19 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function openIdAuth({provider, code}) {
+	async function openIdAuth({provider, code, totpPasscode}: {provider: string, code: string, totpPasscode?: string}) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		setLoggedInVia(null)
 
 		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
 
-		const data = {
+		const data: Record<string, string> = {
 			code: code,
 			redirect_url: getRedirectUrlFromCurrentFrontendPath(fullProvider),
+		}
+		if (totpPasscode) {
+			data.totp_passcode = totpPasscode
 		}
 
 		// Delete an eventually preexisting old token
