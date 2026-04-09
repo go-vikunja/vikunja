@@ -115,6 +115,16 @@ func TestLabel_ReadAll(t *testing.T) {
 						CreatedBy:   user2,
 					},
 				},
+				{
+					Label: Label{
+						ID:          7,
+						Title:       "Label #7 - created by user 1, no task attachment",
+						CreatedByID: 1,
+						CreatedBy:   user1,
+						Created:     testCreatedTime,
+						Updated:     testUpdatedTime,
+					},
+				},
 			},
 		},
 		{
@@ -250,9 +260,48 @@ func TestLabel_ReadOne(t *testing.T) {
 			},
 			auth: &user.User{ID: 1},
 		},
+		{
+			// Regression for GHSA-hj5c-mhh2-g7jq: label 6 is owned by user 13
+			// and attached only to task 34 (project 20, not shared with user 1).
+			// The old hasAccessToLabel query leaked any label with any
+			// label_tasks row to any authenticated user.
+			name: "PoC GHSA-hj5c-mhh2-g7jq: label 6 attached only to unreachable task must be forbidden",
+			fields: fields{
+				ID: 6,
+			},
+			wantForbidden: true,
+			auth:          &user.User{ID: 1},
+		},
+		{
+			// Creator of an unattached label must still be able to read it.
+			name: "creator can read own label with no task attachment",
+			fields: fields{
+				ID: 7,
+			},
+			want: &Label{
+				ID:          7,
+				Title:       "Label #7 - created by user 1, no task attachment",
+				CreatedByID: 1,
+				CreatedBy:   user1,
+				Created:     testCreatedTime,
+				Updated:     testUpdatedTime,
+			},
+			auth: &user.User{ID: 1},
+		},
+		{
+			// Non-creator must not be able to read an unattached label owned
+			// by someone else — label 3 in fixtures.
+			name: "non-creator cannot read label with no task attachment",
+			fields: fields{
+				ID: 3,
+			},
+			wantForbidden: true,
+			auth:          &user.User{ID: 1},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			l := &Label{
 				ID:          tt.fields.ID,
 				Title:       tt.fields.Title,
@@ -272,6 +321,9 @@ func TestLabel_ReadOne(t *testing.T) {
 			allowed, _, _ := l.CanRead(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanRead() forbidden, want %v", tt.wantForbidden)
+			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("Label.CanRead() allowed, want forbidden")
 			}
 			err := l.ReadOne(s, tt.auth)
 			if (err != nil) != tt.wantErr {

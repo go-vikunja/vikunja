@@ -60,47 +60,78 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 	return lorig.CreatedByID == a.GetID(), nil
 }
 
-// Helper method to check if a user can see a specific label
+// Helper method to check if a user can see a specific label.
+//
+// A user can read a label when at least one of the following is true:
+//
+//  1. The auth is a real user and the user created the label, OR
+//  2. The label is attached to a task in a project the auth can access.
+//
+// The implementation uses explicit builder.And / builder.Or grouping so
+// the boolean precedence is unambiguous. A previous implementation chained
+// xorm session .Where / .Or / .And calls which SQL flattened to
+// `WHERE A OR B OR C AND D`, leaking any label with any label_tasks row
+// to any authenticated user (GHSA-hj5c-mhh2-g7jq).
 func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPermission int, err error) {
 
 	linkShare, isLinkShare := a.(*LinkSharing)
 
-	var where builder.Cond
-	var createdByID int64
+	// Build the "task is in a project the caller can access" subquery.
+	var accessibleProjects builder.Cond
 	if isLinkShare {
-		where = builder.Eq{"project_id": linkShare.ProjectID}
+		accessibleProjects = builder.Eq{"project_id": linkShare.ProjectID}
 	} else {
-		where = builder.In("project_id", getUserProjectsStatement(a.GetID(), "").Select("l.id"))
-		createdByID = a.GetID()
+		accessibleProjects = builder.In(
+			"project_id",
+			getUserProjectsStatement(a.GetID(), "").Select("l.id"),
+		)
 	}
 
-	cond := builder.In("label_tasks.task_id",
+	labelAttachedToAccessibleTask := builder.In(
+		"label_tasks.task_id",
 		builder.
 			Select("id").
 			From("tasks").
-			Where(where),
+			Where(accessibleProjects),
+	)
+
+	// A user can see a label if:
+	//   - they created it (only when the auth is an actual user), OR
+	//   - it is attached to a task in a project they have access to.
+	//
+	// The outer AND enforces that the result is scoped to the requested label ID.
+	accessBranches := []builder.Cond{labelAttachedToAccessibleTask}
+	if !isLinkShare {
+		accessBranches = append(accessBranches, builder.Eq{"labels.created_by_id": a.GetID()})
+	}
+
+	cond := builder.And(
+		builder.Eq{"labels.id": l.ID},
+		builder.Or(accessBranches...),
 	)
 
 	ll := &LabelTask{}
 	has, err = s.Table("labels").
 		Select("label_tasks.*").
 		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
-		Where("label_tasks.label_id is not null OR labels.created_by_id = ?", createdByID).
-		Or(cond).
-		And("labels.id = ?", l.ID).
-		Exist(ll)
-	if err != nil {
+		Where(cond).
+		Get(ll)
+	if err != nil || !has {
 		return
 	}
 
-	// Since the permission depends on the task the label is associated with, we need to check that too.
+	// If the label was matched via an attached task, compute the caller's
+	// permission level from that task. Otherwise (creator-only branch with
+	// no attachment) default to read permission.
 	if ll.TaskID > 0 {
 		t := &Task{ID: ll.TaskID}
 		_, maxPermission, err = t.CanRead(s, a)
 		if err != nil {
 			return
 		}
+		return
 	}
 
+	maxPermission = int(PermissionRead)
 	return
 }

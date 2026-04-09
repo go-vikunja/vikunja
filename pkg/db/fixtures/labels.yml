@@ -23,3 +23,18 @@
   created_by_id: 2
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Label #6 is owned by user 13 and attached only to task #34, which lives in
+# project 20 (owned by user 13 and not shared with anyone). User 1 must NOT
+# be able to read this label. Regression fixture for GHSA-hj5c-mhh2-g7jq.
+- id: 6
+  title: 'Label #6 - private, attached only to private task'
+  created_by_id: 13
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+# Label #7 is owned by user 1 but has no label_tasks row. Protects the
+# "creator can still see their own unattached labels" path.
+- id: 7
+  title: 'Label #7 - created by user 1, no task attachment'
+  created_by_id: 1
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
