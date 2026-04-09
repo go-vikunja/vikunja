@@ -67,6 +67,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/auth.Token"
                         }
                     },
+                    "412": {
+                        "description": "Invalid totp passcode.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
                     "500": {
                         "description": "Internal error",
                         "schema": {
@@ -10061,6 +10067,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "scope": {
+                    "type": "string"
+                },
+                "totp_passcode": {
+                    "description": "TOTPPasscode is required when the resolved user has TOTP enabled.\nClients must restart the OIDC flow and populate this field after\nreceiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.",
                     "type": "string"
                 }
             }
