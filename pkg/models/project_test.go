@@ -491,7 +491,8 @@ func TestProject_ReadAll(t *testing.T) {
 		defer s.Close()
 		projects, _, err := getAllProjectsForUser(s, 6, &projectOptions{})
 		require.NoError(t, err)
-		assert.Len(t, projects, 27)
+		// +1 for the reparent-escalation fixture child (project 43, owner=6).
+		assert.Len(t, projects, 28)
 	})
 	t.Run("all projects for user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -504,12 +505,14 @@ func TestProject_ReadAll(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, reflect.Slice, reflect.TypeOf(projects3).Kind())
 		ls := projects3.([]*Project)
-		assert.Len(t, ls, 27)
+		// +1 for the reparent-escalation fixture child (project 43) that
+		// user 1 inherits Write on via project 10.
+		assert.Len(t, ls, 28)
 		assert.Equal(t, int64(3), ls[0].ID) // Project 3 has a position of 1 and should be sorted first
 		assert.Equal(t, int64(1), ls[1].ID)
 		assert.Equal(t, int64(6), ls[2].ID)
-		assert.Equal(t, int64(-1), ls[25].ID)
-		assert.Equal(t, int64(-2), ls[26].ID)
+		assert.Equal(t, int64(-1), ls[26].ID)
+		assert.Equal(t, int64(-2), ls[27].ID)
 	})
 	t.Run("projects for nonexistent user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -543,9 +546,17 @@ func TestProject_ReadAll(t *testing.T) {
 			assert.Contains(t, projectIDs, int64(10))
 			assert.Contains(t, projectIDs, int64(-1))
 		} else {
-			require.Len(t, ls, 2)
-			assert.Equal(t, int64(10), ls[0].ID)
-			assert.Equal(t, int64(-1), ls[1].ID)
+			// Expect project 10 (the search target), project 43 (its child —
+			// reparent-escalation fixture, pulled in as a descendant so tree
+			// navigation stays intact) and the favorites pseudo project -1.
+			require.Len(t, ls, 3)
+			projectIDs := make([]int64, len(ls))
+			for i, p := range ls {
+				projectIDs[i] = p.ID
+			}
+			assert.Contains(t, projectIDs, int64(10))
+			assert.Contains(t, projectIDs, int64(43))
+			assert.Contains(t, projectIDs, int64(-1))
 		}
 	})
 	t.Run("search returns filters as well", func(t *testing.T) {
