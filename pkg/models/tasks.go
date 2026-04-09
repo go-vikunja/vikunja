@@ -1508,15 +1508,36 @@ func addOneMonthToDate(d time.Time) time.Time {
 	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
 }
 
+// addRepeatIntervalToTime advances t by whole multiples of duration until
+// it is strictly after now. The previous O(n) loop made a one-second
+// interval with an ancient due_date trivial DoS (GHSA-r4fg-73rc-hhh7);
+// this computes the answer in constant time.
 func addRepeatIntervalToTime(now, t time.Time, duration time.Duration) time.Time {
-	for {
-		t = t.Add(duration)
-		if t.After(now) {
-			break
-		}
+	if duration <= 0 {
+		return t
 	}
 
-	return t
+	// Preserve the original contract: always advance t by at least one
+	// interval, even when t is already at or after now.
+	if !t.Before(now) {
+		return t.Add(duration)
+	}
+
+	// time.Time.Sub saturates at math.MaxInt64 nanoseconds (~292 years).
+	// Fall back to "one interval past now" for pathologically old t.
+	diff := now.Sub(t)
+	if diff == math.MaxInt64 {
+		return now.Add(duration)
+	}
+
+	intervals := int64(diff/duration) + 1
+
+	// Guard against int64 overflow when multiplying intervals by duration.
+	if intervals > math.MaxInt64/int64(duration) {
+		return now.Add(duration)
+	}
+
+	return t.Add(time.Duration(intervals) * duration)
 }
 
 func setTaskDatesDefault(oldTask, newTask *Task) {

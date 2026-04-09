@@ -988,6 +988,90 @@ func TestUpdateDone(t *testing.T) {
 	})
 }
 
+func TestAddRepeatIntervalToTime(t *testing.T) {
+	now := time.Date(2026, 4, 9, 12, 0, 0, 0, time.UTC)
+	day := 24 * time.Hour
+
+	tests := []struct {
+		name     string
+		now      time.Time
+		t        time.Time
+		duration time.Duration
+		want     time.Time
+	}{
+		{
+			name:     "one day interval, t one day before now",
+			now:      now,
+			t:        now.Add(-day),
+			duration: day,
+			want:     now.Add(day),
+		},
+		{
+			name:     "one day interval, t exactly one week before now",
+			now:      now,
+			t:        now.Add(-7 * day),
+			duration: day,
+			want:     now.Add(day),
+		},
+		{
+			name:     "t in the far past (PoC case) completes with sane result",
+			now:      now,
+			t:        time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+			duration: time.Second,
+			want:     now.Add(time.Second),
+		},
+		{
+			name:     "zero t saturates and falls back",
+			now:      now,
+			t:        time.Time{},
+			duration: time.Hour,
+			want:     now.Add(time.Hour),
+		},
+		{
+			name:     "t after now still advances by one interval",
+			now:      now,
+			t:        now.Add(time.Hour),
+			duration: day,
+			want:     now.Add(time.Hour + day),
+		},
+		{
+			name:     "t equals now still advances",
+			now:      now,
+			t:        now,
+			duration: day,
+			want:     now.Add(day),
+		},
+		{
+			name:     "zero duration returns t unchanged",
+			now:      now,
+			t:        now.Add(-day),
+			duration: 0,
+			want:     now.Add(-day),
+		},
+		{
+			name:     "negative duration returns t unchanged",
+			now:      now,
+			t:        now.Add(-day),
+			duration: -time.Hour,
+			want:     now.Add(-day),
+		},
+		{
+			name:     "tiny duration on ancient date does not overflow",
+			now:      now,
+			t:        time.Date(1800, 1, 1, 0, 0, 0, 0, time.UTC),
+			duration: 1,
+			want:     now.Add(1),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := addRepeatIntervalToTime(tc.now, tc.t, tc.duration)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
 func TestTask_ReadOne(t *testing.T) {
 	u := &user.User{ID: 1}
 
