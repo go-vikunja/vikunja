@@ -21,6 +21,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -105,4 +106,67 @@ func TestWebhookFailingSiblingDoesNotBlockOthers(t *testing.T) {
 	case <-time.After(10 * time.Second):
 		t.Fatal("good webhook did not receive payload within 10s — #2569 regression")
 	}
+}
+
+// TestWebhookGoodDeliveredOnceDespiteSiblingRetries verifies that when one
+// webhook keeps failing and retries via the watermill middleware, a
+// sibling webhook that succeeds on the first attempt is NOT re-delivered
+// as a side effect of those retries.
+func TestWebhookGoodDeliveredOnceDespiteSiblingRetries(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	e, err := setupE2ETestEnv(ctx)
+	require.NoError(t, err)
+
+	// Count how many times the good webhook is invoked.
+	var goodCount int32
+	good := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		atomic.AddInt32(&goodCount, 1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer good.Close()
+
+	// Bad webhook: always 500 — will exhaust all retries.
+	bad := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "boom", http.StatusInternalServerError)
+	}))
+	defer bad.Close()
+
+	require.NoError(t, db.LoadFixtures())
+	s := db.NewSession()
+	defer s.Close()
+	_, err = s.Where("id = ?", 1).Delete(&models.Webhook{})
+	require.NoError(t, err)
+	_, err = s.Insert(&models.Webhook{
+		TargetURL:   good.URL,
+		Events:      []string{"task.updated"},
+		ProjectID:   1,
+		CreatedByID: 1,
+	})
+	require.NoError(t, err)
+	_, err = s.Insert(&models.Webhook{
+		TargetURL:   bad.URL,
+		Events:      []string{"task.updated"},
+		ProjectID:   1,
+		CreatedByID: 1,
+	})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+
+	rec, err := testUpdateWithUser(e, t, &testuser1,
+		map[string]string{"projecttask": "1"},
+		`{"title":"2569 no-duplicate test"}`,
+	)
+	require.NoError(t, err)
+	assert.Contains(t, rec.Body.String(), `"title":"2569 no-duplicate test"`)
+
+	// Wait long enough for the bad webhook to exhaust its retries.
+	// InitEventsForTesting configures 3 retries at 50ms initial, 2x multiplier,
+	// max 1s — so the total window is ~350ms. Wait 3s to be safe.
+	time.Sleep(3 * time.Second)
+
+	got := atomic.LoadInt32(&goodCount)
+	assert.Equal(t, int32(1), got,
+		"good webhook should be delivered exactly once; got %d deliveries", got)
 }
