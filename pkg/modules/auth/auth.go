@@ -184,7 +184,9 @@ func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 	}
 	typ := int(typFloat)
 	if typ == AuthTypeLinkShare && config.ServiceEnableLinkSharing.GetBool() {
-		return models.GetLinkShareFromClaims(claims)
+		s := db.NewSession()
+		defer s.Close()
+		return models.GetLinkShareFromClaims(s, claims)
 	}
 	if typ == AuthTypeUser {
 		return user.GetUserFromClaims(claims)
