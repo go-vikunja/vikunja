@@ -31,6 +31,139 @@ import (
 // MinPositionSpacing is the smallest gap we allow between positions.
 const MinPositionSpacing = 0.01
 
+// getRootProjectID returns the root project ID for a given project by traversing
+// up the parent chain iteratively.
+func getRootProjectID(s *xorm.Session, projectID int64) (int64, error) {
+	currentID := projectID
+	for {
+		project := &Project{}
+		exists, err := s.ID(currentID).Cols("parent_project_id").Get(project)
+		if err != nil {
+			return 0, err
+		}
+		if !exists || project.ParentProjectID == 0 {
+			return currentID, nil
+		}
+		currentID = project.ParentProjectID
+	}
+}
+
+// getRootProjectViewID returns the corresponding view ID in the root project
+// that matches the ViewKind of the given view. This is used to store positions
+// at the root level for hierarchical task display.
+//
+// IMPORTANT: All task position storage must use root view IDs to ensure consistent
+// ordering across project hierarchies. Functions that store positions should either:
+// - Call getRootProjectViewID directly, or
+// - Use resolveToRootView to get the full view object
+func getRootProjectViewID(s *xorm.Session, viewID int64) (int64, error) {
+	// Get the current view
+	view, err := GetProjectViewByID(s, viewID)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the root project ID
+	rootProjectID, err := getRootProjectID(s, view.ProjectID)
+	if err != nil {
+		return 0, err
+	}
+
+	// If already at root, return the current view ID
+	if rootProjectID == view.ProjectID {
+		return viewID, nil
+	}
+
+	// Find a matching view (same ViewKind) in the root project
+	rootView := &ProjectView{}
+	exists, err := s.Where("project_id = ? AND view_kind = ?", rootProjectID, view.ViewKind).Get(rootView)
+	if err != nil {
+		return 0, err
+	}
+
+	// If no matching view exists in root project, fall back to current view
+	if !exists {
+		return viewID, nil
+	}
+
+	return rootView.ID, nil
+}
+
+// resolveToRootView returns the corresponding view in the root project that matches
+// the ViewKind of the given view. If the view is already in a root project, it returns
+// the same view. This should be called at the start of any function that stores positions.
+func resolveToRootView(s *xorm.Session, view *ProjectView) (*ProjectView, error) {
+	rootViewID, err := getRootProjectViewID(s, view.ID)
+	if err != nil {
+		return nil, err
+	}
+	if rootViewID == view.ID {
+		return view, nil
+	}
+	return GetProjectViewByID(s, rootViewID)
+}
+
+// StoreTaskPosition is the single entry point for storing a task position.
+// It resolves the viewID to the root project view and upserts the position.
+// All code that needs to store positions MUST use this function.
+func StoreTaskPosition(s *xorm.Session, taskID, viewID int64, position float64) error {
+	rootViewID, err := getRootProjectViewID(s, viewID)
+	if err != nil {
+		return err
+	}
+
+	exists, err := s.
+		Where("task_id = ? AND project_view_id = ?", taskID, rootViewID).
+		Exist(&TaskPosition{})
+	if err != nil {
+		return err
+	}
+
+	tp := &TaskPosition{
+		TaskID:        taskID,
+		ProjectViewID: rootViewID,
+		Position:      position,
+	}
+
+	if !exists {
+		_, err = s.Insert(tp)
+	} else {
+		_, err = s.
+			Where("task_id = ? AND project_view_id = ?", taskID, rootViewID).
+			Cols("position").
+			Update(tp)
+	}
+	return err
+}
+
+// ReplaceAllPositionsForView removes all positions for a view and bulk inserts new ones.
+// It resolves the view to the root project view first. Used for recalculation operations.
+// All code that needs to replace positions in bulk MUST use this function.
+func ReplaceAllPositionsForView(s *xorm.Session, view *ProjectView, newPositions []*TaskPosition) error {
+	rootView, err := resolveToRootView(s, view)
+	if err != nil {
+		return err
+	}
+
+	// Delete all existing positions for this view
+	_, err = s.Where("project_view_id = ?", rootView.ID).Delete(&TaskPosition{})
+	if err != nil {
+		return err
+	}
+
+	if len(newPositions) == 0 {
+		return nil
+	}
+
+	// Update all positions to use root view ID
+	for _, p := range newPositions {
+		p.ProjectViewID = rootView.ID
+	}
+
+	_, err = s.Insert(newPositions)
+	return err
+}
+
 type TaskPosition struct {
 	// The ID of the task this position is for
 	TaskID int64 `xorm:"bigint not null index" json:"task_id" param:"task"`
@@ -72,27 +205,20 @@ func (tp *TaskPosition) refresh(s *xorm.Session) (err error) {
 
 // updateTaskPosition is the internal function that performs the task position update logic
 // without dispatching events. This is used by moveTaskToDoneBuckets to avoid duplicate events.
+// It delegates to StoreTaskPosition for the actual storage, then handles position spacing
+// and conflict resolution.
 func updateTaskPosition(s *xorm.Session, a web.Auth, tp *TaskPosition) (err error) {
-	exists, err := s.
-		Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).
-		Exist(&TaskPosition{})
+	// Resolve to root view - we need to know it for the post-storage checks
+	rootViewID, err := getRootProjectViewID(s, tp.ProjectViewID)
 	if err != nil {
 		return err
 	}
+	tp.ProjectViewID = rootViewID
 
-	if !exists {
-		_, err = s.Insert(tp)
-		if err != nil {
-			return
-		}
-	} else {
-		_, err = s.
-			Where("task_id = ? AND project_view_id = ?", tp.TaskID, tp.ProjectViewID).
-			Cols("project_view_id", "position").
-			Update(tp)
-		if err != nil {
-			return
-		}
+	// Use the central storage function
+	err = StoreTaskPosition(s, tp.TaskID, tp.ProjectViewID, tp.Position)
+	if err != nil {
+		return err
 	}
 
 	if tp.Position < MinPositionSpacing {
@@ -149,6 +275,11 @@ func (tp *TaskPosition) Update(s *xorm.Session, a web.Auth) (err error) {
 }
 
 func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (err error) {
+	// Resolve to root view for hierarchical position storage
+	view, err = resolveToRootView(s, view)
+	if err != nil {
+		return err
+	}
 
 	log.Debugf("Recalculating task positions for view %d", view.ID)
 
@@ -224,19 +355,13 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 		})
 	}
 
-	_, err = s.
-		Where("project_view_id = ?", view.ID).
-		Delete(&TaskPosition{})
+	// Use the central function for bulk position replacement
+	err = ReplaceAllPositionsForView(s, view, newPositions)
 	if err != nil {
-		return
+		return err
 	}
 
-	count, err := s.Insert(newPositions)
-	if err != nil {
-		return
-	}
-
-	log.Debugf("Inserted %d new positions for %d total tasks in view %d", count, len(allTasks), view.ID)
+	log.Debugf("Inserted %d new positions for %d total tasks in view %d", len(newPositions), len(allTasks), view.ID)
 
 	events.DispatchOnCommit(s, &TaskPositionsRecalculatedEvent{
 		NewTaskPositions: newPositions,
@@ -257,11 +382,18 @@ func getPositionsForView(s *xorm.Session, view *ProjectView) (positions []*TaskP
 // Unlike RecalculateTaskPositions, this only operates on tasks that already have
 // positions in the view (doesn't discover new tasks).
 func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error {
+	// Resolve to root view for hierarchical position storage
+	var err error
+	view, err = resolveToRootView(s, view)
+	if err != nil {
+		return err
+	}
+
 	log.Debugf("Recalculating task positions for view %d (repair mode)", view.ID)
 
 	// Get all existing positions for this view, ordered by current position then task ID
 	var existingPositions []*TaskPosition
-	err := s.Where("project_view_id = ?", view.ID).
+	err = s.Where("project_view_id = ?", view.ID).
 		OrderBy("position ASC, task_id ASC").
 		Find(&existingPositions)
 	if err != nil {
@@ -270,12 +402,6 @@ func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error
 
 	if len(existingPositions) == 0 {
 		return nil
-	}
-
-	// Delete all existing positions
-	_, err = s.Where("project_view_id = ?", view.ID).Delete(&TaskPosition{})
-	if err != nil {
-		return err
 	}
 
 	// Reassign evenly spaced positions
@@ -291,12 +417,13 @@ func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error
 		})
 	}
 
-	count, err := s.Insert(newPositions)
+	// Use the central function for bulk position replacement
+	err = ReplaceAllPositionsForView(s, view, newPositions)
 	if err != nil {
 		return err
 	}
 
-	log.Debugf("Repair: inserted %d new positions for view %d", count, view.ID)
+	log.Debugf("Repair: inserted %d new positions for view %d", len(newPositions), view.ID)
 
 	events.DispatchOnCommit(s, &TaskPositionsRecalculatedEvent{
 		NewTaskPositions: newPositions,
@@ -305,10 +432,16 @@ func recalculateTaskPositionsForRepair(s *xorm.Session, view *ProjectView) error
 }
 
 func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *ProjectView) (*TaskPosition, error) {
+	// Resolve to root view for hierarchical position storage
+	rootViewID, err := getRootProjectViewID(s, view.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	position := t.Position
 	if position == 0 {
 		lowestPosition := &TaskPosition{}
-		exists, err := s.Where("project_view_id = ?", view.ID).
+		exists, err := s.Where("project_view_id = ?", rootViewID).
 			OrderBy("position asc").
 			Get(lowestPosition)
 		if err != nil {
@@ -316,13 +449,17 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 		}
 		if exists {
 			if lowestPosition.Position < MinPositionSpacing {
-				err = RecalculateTaskPositions(s, view, a)
+				rootView, err := GetProjectViewByID(s, rootViewID)
+				if err != nil {
+					return nil, err
+				}
+				err = RecalculateTaskPositions(s, rootView, a)
 				if err != nil {
 					return nil, err
 				}
 
 				lowestPosition = &TaskPosition{}
-				_, err = s.Where("project_view_id = ?", view.ID).
+				_, err = s.Where("project_view_id = ?", rootViewID).
 					OrderBy("position asc").
 					Get(lowestPosition)
 				if err != nil {
@@ -336,7 +473,7 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 
 	return &TaskPosition{
 		TaskID:        t.ID,
-		ProjectViewID: view.ID,
+		ProjectViewID: rootViewID,
 		Position:      calculateDefaultPosition(t.Index, position),
 	}, nil
 }
@@ -361,6 +498,13 @@ func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *Project
 		return nil
 	}
 
+	// Resolve to root view for hierarchical position storage
+	var err error
+	view, err = resolveToRootView(s, view)
+	if err != nil {
+		return err
+	}
+
 	// Get the current lowest position to place new tasks at the top
 	lowestPosition := &TaskPosition{}
 	has, err := s.
@@ -380,17 +524,16 @@ func createPositionsForTasksInView(s *xorm.Session, tasks []*Task, view *Project
 	basePosition = lowestPosition.Position
 	spacing := basePosition / float64(len(tasks)+1)
 
-	newPositions := make([]*TaskPosition, 0, len(tasks))
+	// Use the central function to store each position
 	for i, task := range tasks {
-		newPositions = append(newPositions, &TaskPosition{
-			TaskID:        task.ID,
-			ProjectViewID: view.ID,
-			Position:      spacing * float64(i+1),
-		})
+		position := spacing * float64(i+1)
+		err = StoreTaskPosition(s, task.ID, view.ID, position)
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = s.Insert(&newPositions)
-	return err
+	return nil
 }
 
 // findPositionConflicts returns all task positions that share the same position value

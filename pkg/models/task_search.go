@@ -374,6 +374,20 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		))
 	}
 
+	// Resolve root view ID for position sorting BEFORE building the query.
+	// xorm session state gets corrupted when mixing different query patterns,
+	// so we must do this lookup before calling Distinct().Where().
+	var rootViewIDForPosition int64
+	for _, param := range opts.sortby {
+		if param.sortBy == taskPropertyPosition {
+			rootViewIDForPosition, err = getRootProjectViewID(d.s, param.projectViewID)
+			if err != nil {
+				return nil, 0, err
+			}
+			break
+		}
+	}
+
 	query := d.s.
 		Distinct(distinct).
 		Where(cond)
@@ -381,11 +395,8 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		query = query.Limit(limit, start)
 	}
 
-	for _, param := range opts.sortby {
-		if param.sortBy == taskPropertyPosition {
-			query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
-			break
-		}
+	if rootViewIDForPosition > 0 {
+		query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", rootViewIDForPosition)
 	}
 
 	if joinTaskBuckets {
