@@ -648,7 +648,14 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 
 	var positionsMap = make(map[int64]*TaskPosition)
 	if view != nil {
-		positions, err := getPositionsForView(s, view)
+		// Resolve to root view for hierarchical position fetching
+		rootViewID, err := getRootProjectViewID(s, view.ID)
+		if err != nil {
+			return err
+		}
+		rootView := &ProjectView{ID: rootViewID}
+
+		positions, err := getPositionsForView(s, rootView)
 		if err != nil {
 			return err
 		}
@@ -674,7 +681,7 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				}
 
 				// Reload positions after creation
-				positions, err = getPositionsForView(s, view)
+				positions, err = getPositionsForView(s, rootView)
 				if err != nil {
 					return err
 				}

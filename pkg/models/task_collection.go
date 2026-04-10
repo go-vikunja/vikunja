@@ -176,6 +176,29 @@ func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, v
 	return getTasksForProjects(s, projects, a, opts, view)
 }
 
+// getDescendantProjectIDs returns all descendant project IDs for a given parent project
+// by traversing the project hierarchy iteratively using breadth-first search.
+func getDescendantProjectIDs(s *xorm.Session, parentProjectID int64) ([]int64, error) {
+	var allDescendants []int64
+	queue := []int64{parentProjectID}
+
+	for len(queue) > 0 {
+		currentID := queue[0]
+		queue = queue[1:]
+
+		var childIDs []int64
+		err := s.Table("projects").Cols("id").Where("parent_project_id = ?", currentID).Find(&childIDs)
+		if err != nil {
+			return nil, err
+		}
+
+		allDescendants = append(allDescendants, childIDs...)
+		queue = append(queue, childIDs...)
+	}
+
+	return allDescendants, nil
+}
+
 func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskCollection) (projects []*Project, err error) {
 	if tf.ProjectID == 0 || tf.isSavedFilter {
 		projects, _, _, err = getRawProjectsForUser(
@@ -201,7 +224,20 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 		}
 	}
 
-	return []*Project{{ID: tf.ProjectID}}, nil
+	// Start with the requested project
+	projects = []*Project{{ID: tf.ProjectID}}
+
+	// Fetch all descendant project IDs and include them
+	descendantIDs, err := getDescendantProjectIDs(s, tf.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, id := range descendantIDs {
+		projects = append(projects, &Project{ID: id})
+	}
+
+	return projects, nil
 }
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
