@@ -319,7 +319,7 @@ func RecalculateTaskPositions(s *xorm.Session, view *ProjectView, a web.Auth) (e
 		}
 	}
 
-	projects, err := getRelevantProjectsFromCollection(s, a, tc)
+	projects, err := getRelevantProjectsFromCollection(s, a, tc, view)
 	if err != nil {
 		return err
 	}
