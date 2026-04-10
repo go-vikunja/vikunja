@@ -1303,3 +1303,63 @@ func TestGetTasksByUIDs(t *testing.T) {
 		assert.Equal(t, int64(1), tasks[0].ID, "only user 1's task should be returned")
 	})
 }
+
+func TestGetTaskByProjectAndIndex(t *testing.T) {
+	t.Run("existing task", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task, err := GetTaskByProjectAndIndex(s, 1, 1)
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), task.ID)
+		assert.Equal(t, "task #1", task.Title)
+	})
+
+	t.Run("nonexistent index", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := GetTaskByProjectAndIndex(s, 1, 99999)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+
+	t.Run("wrong project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 4 has no tasks at all.
+		_, err := GetTaskByProjectAndIndex(s, 4, 1)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+
+	t.Run("index exists only in another project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 2 has indexes 1 and 2; index 5 lives under project 1 (task 5).
+		// A non-scoped WHERE clause would leak task 5 here.
+		_, err := GetTaskByProjectAndIndex(s, 2, 5)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+
+	t.Run("invalid input", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := GetTaskByProjectAndIndex(s, 0, 1)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+
+		_, err = GetTaskByProjectAndIndex(s, 1, 0)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+}

@@ -99,7 +99,7 @@ type Task struct {
 	// The task identifier, based on the project identifier and the task's index
 	Identifier string `xorm:"-" json:"identifier"`
 	// The task index, calculated per project
-	Index int64 `xorm:"bigint not null default 0" json:"index"`
+	Index int64 `xorm:"bigint not null default 0" json:"index" param:"index"`
 
 	// The UID is currently not used for anything other than CalDAV, which is why we don't expose it over json
 	UID string `xorm:"varchar(250) null" json:"-"`
@@ -351,6 +351,41 @@ func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 	}
 
 	return GetTaskSimple(s, &Task{ID: taskID})
+}
+
+// GetTaskByProjectAndIndex returns a task by its per-project index.
+// Returns ErrTaskDoesNotExist if nothing matches.
+func GetTaskByProjectAndIndex(s *xorm.Session, projectID, index int64) (task Task, err error) {
+	if projectID < 1 || index < 1 {
+		return Task{}, ErrTaskDoesNotExist{}
+	}
+
+	has, err := s.
+		Where("project_id = ? AND `index` = ?", projectID, index).
+		Get(&task)
+	if err != nil {
+		return Task{}, err
+	}
+	if !has {
+		return Task{}, ErrTaskDoesNotExist{}
+	}
+
+	return task, nil
+}
+
+// resolveIDFromProjectAndIndex populates t.ID from (ProjectID, Index) for the
+// by-index route, which binds project+index from the URL but not id. No-op
+// when id is already set.
+func (t *Task) resolveIDFromProjectAndIndex(s *xorm.Session) error {
+	if t.ID != 0 || t.ProjectID < 1 || t.Index < 1 {
+		return nil
+	}
+	resolved, err := GetTaskByProjectAndIndex(s, t.ProjectID, t.Index)
+	if err != nil {
+		return err
+	}
+	t.ID = resolved.ID
+	return nil
 }
 
 // GetTaskSimple returns a raw task without extra data
@@ -1933,6 +1968,9 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	t.Expand = append(t.Expand, t.ExpandArr...)
 	expand := t.Expand
+	if err = t.resolveIDFromProjectAndIndex(s); err != nil {
+		return
+	}
 	*t, err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return
