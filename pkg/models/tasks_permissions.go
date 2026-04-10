@@ -42,7 +42,9 @@ func (t *Task) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 func (t *Task) CanRead(s *xorm.Session, a web.Auth) (canRead bool, maxPermission int, err error) {
 	t.Expand = append(t.Expand, t.ExpandArr...)
 	expand := t.Expand
-	// Get the task, error out if it doesn't exist
+	if err = t.resolveIDFromProjectAndIndex(s); err != nil {
+		return
+	}
 	*t, err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return
