@@ -53,10 +53,10 @@ func DocsJSON(c *echo.Context) error {
 // RedocUI serves everything needed to provide the redoc ui
 func RedocUI(c *echo.Context) error {
 	publicURL := config.ServicePublicURL.GetString()
-	docsURL := strings.TrimRight(publicURL, "/") + "/api/v1/docs.json"
+	docsBase := strings.TrimRight(publicURL, "/") + "/"
 
 	var buf bytes.Buffer
-	data := map[string]string{"Url": docsURL}
+	data := map[string]string{"Base": docsBase}
 
 	if err := redocUITemplate.Execute(&buf, data); err != nil {
 		return err
