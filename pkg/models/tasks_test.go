@@ -1363,3 +1363,18 @@ func TestGetTaskByProjectAndIndex(t *testing.T) {
 		assert.True(t, IsErrTaskDoesNotExist(err))
 	})
 }
+
+func TestTaskIndexUniqueConstraint(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// (project_id=1, index=1) is already taken by task 1 in fixtures.
+	_, err := s.Insert(&Task{
+		Title:       "duplicate index",
+		ProjectID:   1,
+		Index:       1,
+		CreatedByID: 1,
+	})
+	require.Error(t, err, "unique constraint on (project_id, index) must reject duplicates")
+}

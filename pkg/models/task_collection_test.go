@@ -472,8 +472,8 @@ func TestTaskCollection_ReadAll(t *testing.T) {
 	task27 := &Task{
 		ID:          27,
 		Title:       "task #27 with reminders and start_date",
-		Identifier:  "test1-12",
-		Index:       12,
+		Identifier:  "test1-18",
+		Index:       18,
 		CreatedByID: 1,
 		CreatedBy:   user1,
 		Reminders: []*TaskReminder{
