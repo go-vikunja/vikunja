@@ -147,9 +147,12 @@ watch(
 // Actually call showModal() the moment the <dialog> element is mounted.
 // `dialogRef` is populated by Vue during the render flush after
 // `showDialog.value = true`, so this fires deterministically, no matter
-// how many flushes the renderer needs (see #2590).
+// how many flushes the renderer needs (see #2590). We re-check
+// `props.enabled` here because the prop can flip back to `false` between
+// `openDialog()` and the mount flush, in which case we must not open.
 watch(dialogRef, (dialog) => {
 	if (!dialog) return
+	if (!props.enabled) return
 	delete dialog.dataset.closing
 	dialog.showModal()
 })

@@ -154,6 +154,34 @@ describe('Modal.vue — open race condition (#2590)', () => {
 		wrapper.unmount()
 	})
 
+	it('does not open the dialog if enabled flips back to false before mount', async () => {
+		// Regression guard: the dialogRef watcher fires once the <dialog>
+		// element mounts. If props.enabled has flipped back to false by the
+		// time the mount happens, the watcher must not call showModal().
+		const wrapper = mount(Modal, {
+			attachTo: document.body,
+			props: {enabled: false},
+			slots: {default: '<p class="test-body">hi</p>'},
+		})
+
+		// Flip enabled true then false within the same tick, before the mount
+		// flush can complete.
+		wrapper.setProps({enabled: true})
+		wrapper.setProps({enabled: false})
+		await flushPromises()
+		await nextTick()
+		await new Promise(resolve => setTimeout(resolve, 200))
+		await flushPromises()
+		await nextTick()
+
+		// showModal must not have been called — the final prop state is
+		// disabled.
+		expect(showModalSpy).not.toHaveBeenCalled()
+		expect(document.querySelector('dialog.modal-dialog')).toBeNull()
+
+		wrapper.unmount()
+	})
+
 	it('clears data-closing when re-opened mid-close transition', async () => {
 		// Regression guard: if the user toggles enabled back to true while the
 		// 150ms close transition is still in flight, the <dialog> is still
