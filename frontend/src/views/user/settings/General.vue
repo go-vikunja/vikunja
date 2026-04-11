@@ -499,6 +499,8 @@ const settings = ref<IUserSettings>({
 		timeFormat: authStore.settings.frontendSettings.timeFormat ?? TIME_FORMAT.HOURS_12,
 		// Add fallback for old settings that don't have the default task relation type set
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
+		// Clone to escape the store's readonly array type.
+		quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
 	},
 })
 
@@ -630,7 +632,13 @@ watch(
 		if (Object.keys(settings.value).length !== 0) {
 			return
 		}
-		settings.value = {...authStore.settings}
+		settings.value = {
+			...authStore.settings,
+			frontendSettings: {
+				...authStore.settings.frontendSettings,
+				quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
+			},
+		}
 	},
 	{immediate: true},
 )

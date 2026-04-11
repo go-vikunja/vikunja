@@ -134,6 +134,7 @@ export function useSidebarResize() {
 			frontendSettings: {
 				...authStore.settings.frontendSettings,
 				sidebarWidth: currentWidth.value,
+				quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
 			},
 		}
 		await authStore.saveUserSettings({
