@@ -180,6 +180,28 @@ func GetProvider(key string) (provider *Provider, err error) {
 	return
 }
 
+// parseBoolField reads a boolean-valued config field from a provider map,
+// tolerating both native bools (from YAML/JSON) and strings (from env vars or
+// the GetConfigValueFromFile path, which always return strings). Missing or
+// empty values default to false with no error.
+func parseBoolField(pi map[string]interface{}, key string) (val bool, err error) {
+	raw, exists := pi[key]
+	if !exists {
+		return false, nil
+	}
+	switch v := raw.(type) {
+	case bool:
+		return v, nil
+	case string:
+		if v == "" {
+			return false, nil
+		}
+		return strconv.ParseBool(v)
+	default:
+		return false, fmt.Errorf("expected bool, got %T", raw)
+	}
+}
+
 func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provider, err error) {
 
 	requiredKeys := []string{
@@ -236,43 +258,21 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		scope = "openid profile email"
 	}
 
-	var emailFallback = false
-	emailFallbackValue, exists := pi["emailfallback"]
-	if exists {
-		emailFallbackTypedValue, ok := emailFallbackValue.(bool)
-		if ok {
-			emailFallback = emailFallbackTypedValue
-		}
+	emailFallback, err := parseBoolField(pi, "emailfallback")
+	if err != nil {
+		log.Errorf("emailfallback is not a boolean for provider %s: %s", key, err)
 	}
-	var usernameFallback = false
-	usernameFallbackValue, exists := pi["usernamefallback"]
-	if exists {
-		usernameFallbackTypedValue, ok := usernameFallbackValue.(bool)
-		if ok {
-			usernameFallback = usernameFallbackTypedValue
-		}
+	usernameFallback, err := parseBoolField(pi, "usernamefallback")
+	if err != nil {
+		log.Errorf("usernamefallback is not a boolean for provider %s: %s", key, err)
 	}
-
-	var forceUserInfo = false
-	forceUserInfoValue, exists := pi["forceuserinfo"]
-	if exists {
-		forceUserInfoTypedValue, ok := forceUserInfoValue.(bool)
-		if ok {
-			forceUserInfo = forceUserInfoTypedValue
-		} else {
-			log.Errorf("forceuserinfo is not a boolean for provider %s, value: %v", key, forceUserInfoValue)
-		}
+	forceUserInfo, err := parseBoolField(pi, "forceuserinfo")
+	if err != nil {
+		log.Errorf("forceuserinfo is not a boolean for provider %s: %s", key, err)
 	}
-
-	var requireAvailability = false
-	requireAvailabilityValue, exists := pi["requireavailability"]
-	if exists {
-		requireAvailabilityTypedValue, ok := requireAvailabilityValue.(bool)
-		if ok {
-			requireAvailability = requireAvailabilityTypedValue
-		} else {
-			log.Errorf("requireavailability is not a boolean for provider %s, value: %v", key, requireAvailabilityValue)
-		}
+	requireAvailability, err := parseBoolField(pi, "requireavailability")
+	if err != nil {
+		log.Errorf("requireavailability is not a boolean for provider %s: %s", key, err)
 	}
 
 	provider = &Provider{
