@@ -97,7 +97,14 @@ function openDialog() {
 	previouslyFocused.value = document.activeElement
 	showDialog.value = true
 	document.body.style.overflow = 'hidden'
-	// The actual `showModal()` call happens in the `watch(dialogRef, …)`
+	// If we're re-opening while the previous close transition is still in
+	// flight the <dialog> is still mounted and [open], so the dialogRef
+	// watcher below won't re-fire. Clear the data-closing flag here so the
+	// dialog doesn't stay stuck at opacity 0.
+	if (dialogRef.value) {
+		delete dialogRef.value.dataset.closing
+	}
+	// The initial `showModal()` call happens in the `watch(dialogRef, …)`
 	// below, which fires the moment Vue mounts the <dialog>. We cannot call
 	// it synchronously here because the element is not in the DOM yet
 	// (v-if="showDialog" only just became true), and we cannot rely on a

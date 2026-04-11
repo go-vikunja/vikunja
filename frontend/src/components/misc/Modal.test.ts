@@ -153,4 +153,36 @@ describe('Modal.vue — open race condition (#2590)', () => {
 
 		wrapper.unmount()
 	})
+
+	it('clears data-closing when re-opened mid-close transition', async () => {
+		// Regression guard: if the user toggles enabled back to true while the
+		// 150ms close transition is still in flight, the <dialog> is still
+		// mounted and [open], so the dialogRef watcher does not re-fire. Make
+		// sure openDialog() clears the leftover data-closing flag itself;
+		// otherwise the dialog stays stuck at opacity 0.
+		const wrapper = mount(Modal, {
+			attachTo: document.body,
+			props: {enabled: true},
+			slots: {default: '<p class="test-body">hi</p>'},
+		})
+		await flushPromises()
+		await nextTick()
+
+		const dialog = document.querySelector('dialog.modal-dialog') as HTMLDialogElement
+		expect(dialog.hasAttribute('open')).toBe(true)
+
+		// Start closing — this sets data-closing and schedules the unmount.
+		await wrapper.setProps({enabled: false})
+		await nextTick()
+		expect(dialog.dataset.closing).toBe('')
+
+		// Re-open well before the 150ms close timer fires.
+		await wrapper.setProps({enabled: true})
+		await nextTick()
+
+		expect(dialog.dataset.closing).toBeUndefined()
+		expect(dialog.hasAttribute('open')).toBe(true)
+
+		wrapper.unmount()
+	})
 })
