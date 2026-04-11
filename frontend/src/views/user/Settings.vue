@@ -65,6 +65,7 @@ const migratorsEnabled = computed(() => configStore.migratorsEnabled)
 const isLocalUser = computed(() => authStore.info?.isLocalUser)
 const userDeletionEnabled = computed(() => configStore.userDeletionEnabled)
 const webhooksEnabled = computed(() => configStore.webhooksEnabled)
+const botUsersEnabled = computed(() => configStore.botUsersEnabled)
 
 const navigationItems = computed(() => {
 	const items = [
@@ -117,6 +118,11 @@ const navigationItems = computed(() => {
 			title: t('user.settings.webhooks.title'),
 			routeName: 'user.settings.webhooks',
 			condition: webhooksEnabled.value,
+		},
+		{
+			title: t('user.settings.bots.title'),
+			routeName: 'user.settings.bots',
+			condition: botUsersEnabled.value,
 		},
 		{
 			title: t('user.deletion.title'),
