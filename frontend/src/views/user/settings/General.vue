@@ -288,6 +288,23 @@
 					</div>
 				</label>
 			</div>
+			<div
+				v-if="settings.frontendSettings.quickAddMagicMode !== PrefixMode.Disabled"
+				class="field"
+			>
+				<label class="label">{{ $t('user.settings.general.quickAddDefaultReminders') }}</label>
+				<p class="help">
+					{{ $t('user.settings.general.quickAddDefaultRemindersDescription') }}
+				</p>
+				<p class="help">
+					{{ $t('user.settings.general.quickAddDefaultRemindersHint') }}
+				</p>
+				<Reminders
+					v-model="settings.frontendSettings.quickAddDefaultReminders"
+					:default-relative-to="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE"
+					:allow-absolute="false"
+				/>
+			</div>
 			<div class="field">
 				<label class="two-col">
 					<span>
@@ -447,6 +464,8 @@ import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KINDS} from '@/types/IRelationKind'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 import ShortcutRecorder from '@/components/misc/ShortcutRecorder.vue'
+import Reminders from '@/components/tasks/partials/Reminders.vue'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 defineOptions({name: 'UserSettingsGeneral'})
 
