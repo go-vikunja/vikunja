@@ -629,6 +629,52 @@ func TestProject_ReadAll(t *testing.T) {
 		assert.Equal(t, int64(-1), ls[0].ID)
 		assert.Equal(t, int64(-2), ls[1].ID)
 	})
+	t.Run("archived propagation aggregation", func(t *testing.T) {
+		// Regression test for #2589. getAllProjectsForUser must:
+		//   1. Expose inherited is_archived for child projects whose parent is archived
+		//      (exercises the MAX(...) AS is_archived column expression).
+		//   2. Hide those inherited-archived rows when getArchived=false
+		//      (exercises the HAVING MAX(...) = 0 filter).
+		// The CTE must use dialect-agnostic SQL — no CAST(... AS int), which MySQL 8 rejects.
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		findByID := func(ps []*Project, id int64) *Project {
+			for _, p := range ps {
+				if p.ID == id {
+					return p
+				}
+			}
+			return nil
+		}
+
+		// getArchived=true: project 21 (child of archived 22) must appear and carry is_archived=true.
+		withArchived, _, err := getAllProjectsForUser(s, 1, &projectOptions{getArchived: true})
+		require.NoError(t, err)
+
+		parent := findByID(withArchived, 22)
+		require.NotNil(t, parent, "archived parent project 22 must be returned when getArchived=true")
+		assert.True(t, parent.IsArchived, "project 22 is archived in fixtures")
+
+		child := findByID(withArchived, 21)
+		require.NotNil(t, child, "child project 21 must be returned when getArchived=true")
+		assert.True(t, child.IsArchived, "project 21 must inherit is_archived from its archived parent (22)")
+
+		// getArchived=false: both rows must be filtered out by the HAVING clause.
+		withoutArchived, _, err := getAllProjectsForUser(s, 1, &projectOptions{getArchived: false})
+		require.NoError(t, err)
+
+		assert.Nil(t, findByID(withoutArchived, 22),
+			"archived project 22 must be filtered when getArchived=false")
+		assert.Nil(t, findByID(withoutArchived, 21),
+			"child of archived project (21) must be filtered when getArchived=false (inherited archived state)")
+
+		// Sanity: a non-archived project owned by user 1 is still present in the filtered list.
+		assert.NotNil(t, findByID(withoutArchived, 1),
+			"non-archived project 1 must still be present when getArchived=false")
+	})
 }
 
 func TestProject_ReadOne(t *testing.T) {
