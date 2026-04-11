@@ -81,6 +81,8 @@
 			"authenticating": "Authentifizierung…",
 			"openIdStateError": "Zustand stimmt nicht überein, fahre nicht fort!",
 			"openIdGeneralError": "Es ist ein Fehler bei der externen Authentifizierung aufgetreten.",
+			"openIdTotpRequired": "Dein Account erfordert eine Zwei-Faktor-Authentifizierung. Bitte gib deinen TOTP-Code ein und probiere dann erneut, dich anzumelden.",
+			"openIdTotpSubmit": "Weiter",
 			"oauthMissingParams": "Erforderliche OAuth-Parameter fehlen: {params}",
 			"oauthRedirectedToApp": "Du wurdest zur App weitergeleitet. Du kannst diesen Tab jetzt schließen.",
 			"desktopTryDemo": "Demo ausprobieren",
@@ -139,6 +141,7 @@
 				"timezone": "Zeitzone",
 				"overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
 				"filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird",
+				"showLastViewed": "Zuletzt angesehene Projekte auf der Übersichtsseite anzeigen",
 				"minimumPriority": "Minimal sichtbare Aufgaben-Priorität",
 				"dateDisplay": "Datumsformat",
 				"dateDisplayOptions": {
@@ -434,7 +437,8 @@
 			"addPlaceholder": "Aufgabe hinzufügen…",
 			"empty": "Dieses Projekt ist derzeit leer.",
 			"newTaskCta": "Aufgabe erstellen.",
-			"editTask": "Aufgabe bearbeiten"
+			"editTask": "Aufgabe bearbeiten",
+			"sort": "Sortieren"
 		},
 		"gantt": {
 			"title": "Gantt",
@@ -626,6 +630,29 @@
 			}
 		}
 	},
+	"sorting": {
+		"manually": "Manuell",
+		"apply": "Sortieren",
+		"description": "Wähle, wie Aufgaben in dieser Liste sortiert werden. Beim manuellen Sortieren kannst du Aufgaben per Drag and Drop verschieben, um sie neu zu ordnen.",
+		"options": {
+			"titleAsc": "Titel (A–Z)",
+			"titleDesc": "Titel (Z–A)",
+			"priorityDesc": "Priorität (höchste zuerst)",
+			"priorityAsc": "Priorität (niedrigste zuerst)",
+			"dueDateAsc": "Fälligkeitsdatum (frühestes zuerst)",
+			"dueDateDesc": "Fälligkeitsdatum (spätestes zuerst)",
+			"startDateAsc": "Startdatum (frühestes zuerst)",
+			"startDateDesc": "Enddatum (frühestes zuerst)",
+			"endDateAsc": "Enddatum (frühestes zuerst)",
+			"endDateDesc": "Endkeitsdatum (spätestes zuerst)",
+			"percentDoneDesc": "% erledigt (am meisten erledigt zuerst)",
+			"percentDoneAsc": "% erledigt (am wenigsten erledigt zuerst)",
+			"createdDesc": "Erstellt (neueste zuerst)",
+			"createdAsc": "Erstellt (älteste zuerst)",
+			"updatedDesc": "Aktualisiert (neueste zuerst)",
+			"updatedAsc": "Aktualisiert (älteste zuerst)"
+		}
+	},
 	"migrate": {
 		"title": "Aus anderen Diensten importieren",
 		"titleService": "Importiere deine Daten von {name} in Vikunja",
@@ -641,7 +668,33 @@
 		"importUpload": "Um Daten von {name} in Vikunja zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
 		"upload": "Datei hochladen",
 		"migrationStartedWillReciveEmail": "Vikunja wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
-		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist."
+		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist.",
+		"csv": {
+			"description": "Importiere Aufgaben aus einer CSV-Datei mit eigener Spaltenzuordnung.",
+			"uploadDescription": "Wähle eine CSV-Datei, um sie zu importieren. Die Datei sollte Aufgabendaten mit Kopfzeilen in der ersten Zeile enthalten.",
+			"selectFile": "CSV-Datei auswählen",
+			"columnMapping": "Spaltenzuordnung",
+			"columnMappingDescription": "Du kannst jede Spalte in der CSV-Datei einem Task-Attribut zu. Vikunja hat die wahrscheinlichsten Zuordnungen automatisch erkannt. Die Vorschau unten wird automatisch aktualisiert, wenn Du die Einstellungen änderst.",
+			"parsingOptions": "Parsing-Optionen",
+			"delimiter": "Trennzeichen",
+			"dateFormat": "Datumsformat",
+			"skipRows": "Zeilen überspringen",
+			"mapColumns": "Spalten zuordnen",
+			"example": "z.B.",
+			"preview": "Vorschau",
+			"previewDescription": "Die ersten 5 von {count} Aufgaben werden angezeigt.",
+			"previewErrors": "{count} Zeilen hatten Fehler beim Parsen und werden übersprungen.",
+			"import": "Aufgaben importieren",
+			"untitled": "Unbenannte Aufgabe",
+			"completed": "Abgeschlossen",
+			"ignore": "Ignorieren",
+			"delimiters": {
+				"comma": "Komma (,)",
+				"semicolon": "Semikolon (;)",
+				"tab": "Tab",
+				"pipe": "Pipe (|)"
+			}
+		}
 	},
 	"label": {
 		"title": "Labels",
