@@ -378,6 +378,7 @@ async function toggleSortOrder() {
 				frontendSettings: {
 					...authStore.settings.frontendSettings,
 					commentSortOrder: newOrder,
+					quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
 				},
 			},
 			showMessage: false,

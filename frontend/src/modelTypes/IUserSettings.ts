@@ -1,5 +1,6 @@
 import type {IAbstract} from './IAbstract'
 import type {IProject} from './IProject'
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {PrefixMode} from '@/modules/quickAddMagic'
 import type {BasicColorSchema} from '@vueuse/core'
 import type {SupportedLocale} from '@/i18n'
@@ -26,6 +27,7 @@ export interface IFrontendSettings {
 	sidebarWidth: number | null
 	commentSortOrder: 'asc' | 'desc'
 	desktopQuickEntryShortcut: string
+	quickAddDefaultReminders: ITaskReminder[]
 }
 
 export interface IExtraSettingsLink {
