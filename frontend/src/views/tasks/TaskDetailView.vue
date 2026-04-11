@@ -250,7 +250,8 @@
 								</div>
 								<Reminders
 									:ref="e => setFieldRef('reminders', e)"
-									v-model="task"
+									v-model="task.reminders"
+									:default-relative-to="remindersDefaultRelativeTo"
 									:disabled="!canWrite"
 									@update:modelValue="saveTask()"
 								/>
@@ -672,6 +673,7 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
 
 import {useTaskStore} from '@/stores/tasks'
@@ -707,6 +709,18 @@ const baseStore = useBaseStore()
 
 const task = ref<ITask>(new TaskModel())
 const hasAttachments = computed(() => (task.value.attachments?.length ?? 0) > 0)
+const remindersDefaultRelativeTo = computed(() => {
+	if (task.value.dueDate) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
+	}
+	if (task.value.startDate) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE
+	}
+	if (task.value.endDate) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE
+	}
+	return null
+})
 const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
