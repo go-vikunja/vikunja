@@ -96,7 +96,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - api-build
-    continue-on-error: ${{ matrix.experimental == true }}
     strategy:
       matrix:
         db:
@@ -104,9 +103,6 @@ jobs:
           - postgres
           - mariadb
           - mysql-8
-        include:
-          - db: mysql-8
-            experimental: true
     services:
       migration-smoke-db-mariadb:
         image: ${{ matrix.db == 'mariadb' && 'mariadb:12@sha256:f54db0cb3ccfe9431aba6d08c65a1763c499789b116b4cb651dd7fcf325965b3' || '' }}
@@ -179,7 +175,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - mage
-    continue-on-error: ${{ matrix.experimental == true }}
     strategy:
       matrix:
         db:
@@ -192,9 +187,6 @@ jobs:
         test:
           - feature
           - web
-        include:
-          - db: mysql-8
-            experimental: true
     services:
       db-mariadb:
         image: ${{ matrix.db == 'mariadb' && 'mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8' || '' }}
