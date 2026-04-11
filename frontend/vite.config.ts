@@ -269,16 +269,25 @@ function getBuildConfig(env: Record<string, string>) {
 function getServeConfig(env: Record<string, string>) {
 	// get some default settings from prod mod
 	const buildConfig = getBuildConfig(env)
+
+	// Build the proxy pattern from VIKUNJA_FRONTEND_BASE so that custom base
+	// paths like /vikunja proxy /vikunja/api/* correctly.
+	// Falls back to /api.
+	const base = (env.VIKUNJA_FRONTEND_BASE || '/').replace(/\/+$/, '')
+	const proxyPath = `${base}/api`
+
 	// override prod settings with dev settings
 	return {
 		...buildConfig,
 		server: {
 			...buildConfig.server,
 			...(env.DEV_PROXY && { proxy: {
-				'/api': {
+				[proxyPath]: {
 					target: env.DEV_PROXY,
 					changeOrigin: true,
 					secure: false,
+					// Strips prefix for the backend
+					rewrite: (path: string) => path.replace(new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), ''),
 				},
 			}}),
 		},
