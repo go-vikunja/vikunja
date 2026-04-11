@@ -582,7 +582,7 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.hex_color",
 		"all_projects.owner_id",
 		"CASE WHEN all_projects.parent_project_id IS NULL THEN 0 ELSE all_projects.parent_project_id END AS parent_project_id",
-		"MAX(CAST(all_projects.is_archived AS int)) AS is_archived",
+		"MAX(CASE WHEN all_projects.is_archived THEN 1 ELSE 0 END) AS is_archived",
 		"all_projects.background_file_id",
 		"all_projects.background_blur_hash",
 		"all_projects.position",
@@ -607,7 +607,7 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	var archivedFilter string
 	if !opts.getArchived {
-		archivedFilter = "HAVING MAX(CAST(all_projects.is_archived AS int)) = 0 "
+		archivedFilter = "HAVING MAX(CASE WHEN all_projects.is_archived THEN 1 ELSE 0 END) = 0 "
 	}
 
 	currentProjects := []*Project{}
