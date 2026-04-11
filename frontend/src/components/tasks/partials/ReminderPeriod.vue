@@ -44,7 +44,10 @@
 			</select>
 		</div>
 
-		<div class="select">
+		<div
+			v-if="lockRelativeTo === null"
+			class="select"
+		>
 			<select
 				v-model="period.relativeTo"
 				@change="updateData"
@@ -73,9 +76,12 @@ import TaskReminderModel from '@/models/taskReminder'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import {type IReminderPeriodRelativeTo, REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	modelValue: ITaskReminder,
-}>()
+	lockRelativeTo?: IReminderPeriodRelativeTo | null,
+}>(), {
+	lockRelativeTo: null,
+})
 
 const emit = defineEmits<{
 	'update:modelValue': [ITaskReminder]
@@ -103,7 +109,7 @@ watch(
 		const p = secondsToPeriod(value?.relativePeriod)
 		period.value.durationUnit = p.unit
 		period.value.duration = Math.abs(p.amount)
-		period.value.relativeTo = value?.relativeTo || REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
+		period.value.relativeTo = props.lockRelativeTo ?? value?.relativeTo ?? REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
 	},
 	{
 		immediate: true,
