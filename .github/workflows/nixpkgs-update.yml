@@ -46,7 +46,7 @@ jobs:
           # Update both packages using the nixpkgs update infrastructure
           PACKAGES=""
           for pkg in vikunja vikunja-desktop; do
-            nix-shell maintainers/scripts/update.nix --argstr package "$pkg"
+            nix-shell maintainers/scripts/update.nix --argstr package "$pkg" --argstr skip-prompt true
             if ! git diff --quiet; then
               git add -A
               NEW=$(grep -oP 'version = "\K[^"]+' "pkgs/by-name/vi/$pkg/package.nix" | head -1)
