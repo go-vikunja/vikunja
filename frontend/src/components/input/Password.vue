@@ -7,7 +7,7 @@
 			:placeholder="$t('user.auth.passwordPlaceholder')"
 			required
 			:type="passwordFieldType"
-			autocomplete="current-password"
+			:autocomplete="autocomplete"
 			:tabindex="tabindex"
 			@keyup.enter="e => $emit('submit', e)"
 			@focusout="() => {validate(); validateAfterFirst = true}"
@@ -44,9 +44,11 @@ const props = withDefaults(defineProps<{
 	// This prop is a workaround to trigger validation from the outside when the user never had focus in the input.
 	validateInitially?: boolean,
 	validateMinLength?: boolean,
+	autocomplete?: string,
 }>(), {
 	tabindex: undefined,
 	validateMinLength: true,
+	autocomplete: 'current-password',
 })
 
 const emit = defineEmits<{
