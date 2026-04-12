@@ -277,8 +277,8 @@ test.describe('Task', () => {
 			await page.goto(`/tasks/${tasks[0].id}`)
 
 			await expect(page.locator('.task-view h1.title.input')).toContainText(tasks[0].title)
-			await expect(page.locator('.task-view h1.title.task-id')).toContainText('#1')
-			await expect(page.locator('.task-view h6.subtitle')).toContainText(projects[0].title)
+			await expect(page.locator('.task-view span.title.task-id')).toContainText('#1')
+			await expect(page.locator('.task-view nav.subtitle')).toContainText(projects[0].title)
 			await expect(page.locator('.task-view .details.content.description')).toContainText(tasks[0].description)
 			await expect(page.locator('.task-view .action-buttons p.created')).toContainText('Created')
 		})
@@ -327,7 +327,7 @@ test.describe('Task', () => {
 
 			await page.goto(`/tasks/${tasks[0].id}`)
 
-			await expect(page.locator('.task-view h1.title.task-id')).toContainText(`${projects[0].identifier}-${tasks[0].index}`)
+			await expect(page.locator('.task-view span.title.task-id')).toContainText(`${projects[0].identifier}-${tasks[0].index}`)
 		})
 
 		test('Can edit the description', async ({authenticatedPage: page}) => {
@@ -366,7 +366,7 @@ test.describe('Task', () => {
 			await page.locator('.task-view .details.content.description .tiptap button.done-edit', {timeout: 30_000}).click()
 			await page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror').fill('New Description')
 
-			await page.locator('.task-view h6.subtitle a').first().click()
+			await page.locator('.task-view nav.subtitle a').first().click()
 
 			await page.goto('/tasks/1')
 			await expect(page.locator('.task-view .details.content.description')).toContainText('New Description')
@@ -442,7 +442,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .content.details .field .multiselect.control .search-results')).toBeVisible({timeout: 5000})
 			await page.locator('.task-view .content.details .field .multiselect.control .search-results').locator('> *').first().click()
 
-			await expect(page.locator('.task-view h6.subtitle')).toContainText(projects[1].title)
+			await expect(page.locator('.task-view nav.subtitle')).toContainText(projects[1].title)
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
