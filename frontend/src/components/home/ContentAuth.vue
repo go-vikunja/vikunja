@@ -53,6 +53,7 @@
 					:enabled="typeof currentModal !== 'undefined'"
 					variant="scrolling"
 					class="task-detail-view-modal"
+					:aria-label="$t('task.detail.title')"
 					@close="closeModal()"
 				>
 					<component

@@ -979,6 +979,7 @@
       "due": "Due {at}",
       "closePopup": "Close popup",
       "closeTaskDetail": "Close task detail",
+      "title": "Task detail",
       "markAsDone": "Mark '{task}' as done",
       "scrollToBottom": "Scroll to bottom",
       "organization": "Organization",
