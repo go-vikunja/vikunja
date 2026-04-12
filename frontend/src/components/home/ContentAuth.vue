@@ -22,6 +22,7 @@
 			/>
 			<Navigation class="d-print-none" />
 			<main
+				id="main-content"
 				class="app-content"
 				:class="[
 					{ 'is-menu-enabled': menuActive },
