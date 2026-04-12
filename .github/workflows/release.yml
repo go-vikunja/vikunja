@@ -259,6 +259,13 @@ jobs:
           gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
           gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
 
+      - name: Configure GPG for non-interactive signing
+        run: |
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpgconf --kill gpg-agent
+          gpg-connect-agent reloadagent /bye
+
       - name: Export GPG public key
         run: |
           mkdir -p dist/repo-output
