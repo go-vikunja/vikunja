@@ -152,6 +152,16 @@ jobs:
           - deb
           - apk
           - archlinux
+        arch:
+          - go_name: linux-amd64
+            nfpm: amd64
+            pkg: x86_64
+          - go_name: linux-arm64
+            nfpm: arm64
+            pkg: aarch64
+          - go_name: linux-arm-7
+            nfpm: armhf
+            pkg: armv7
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
@@ -159,7 +169,6 @@ jobs:
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: vikunja_bins
-          pattern: vikunja-*-linux-amd64
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
@@ -170,18 +179,19 @@ jobs:
       - name: Prepare
         env:
           RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
+          NFPM_ARCH: ${{ matrix.arch.nfpm }}
         run: |
           chmod +x ./mage-static
           ./mage-static release:prepare-nfpm-config
           mkdir -p ./dist/os-packages
-          mv ./vikunja-*-linux-amd64 ./vikunja
+          mv ./vikunja-*-${{ matrix.arch.go_name }} ./vikunja
           chmod +x ./vikunja
       - name: Create package
         id: nfpm
         uses: kolaente/action-gh-nfpm@master
         with:
           packager: ${{ matrix.package }}
-          target: ./dist/os-packages/vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-x86_64.${{ matrix.package }}
+          target: ./dist/os-packages/vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
           config: ./nfpm.yaml
       - name: Upload
         uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
@@ -198,7 +208,7 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: ${{ github.ref_type == 'tag' }}
         with:
-          name: vikunja_os_package_${{ matrix.package }}
+          name: vikunja_os_package_${{ matrix.package }}_${{ matrix.arch.pkg }}
           path: ./dist/os-packages/*
 
   config-yaml:
@@ -347,25 +357,11 @@ jobs:
         with:
           name: vikunja_bin_packages
 
-      - name: Download OS Package rpm
+      - name: Download OS Packages
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: vikunja_os_package_rpm
-
-      - name: Download OS Package deb
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: vikunja_os_package_deb
-
-      - name: Download OS Package apk
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: vikunja_os_package_apk
-
-      - name: Download OS Package archlinux
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: vikunja_os_package_archlinux
+          pattern: vikunja_os_package_*
+          merge-multiple: true
 
       - name: Download Desktop Package Linux
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
