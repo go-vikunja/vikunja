@@ -1197,10 +1197,267 @@ func (Release) Zip(ctx context.Context) error {
 	return nil
 }
 
-// Reprepro creates a debian repo structure
-func (Release) Reprepro(ctx context.Context) error {
-	mg.Deps(setVersion, setBinLocation)
-	return runAndStreamOutput(ctx, "reprepro_expect", "debian", "includedeb", "buster", "./"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
+// repoSuite returns a validated suite name from the REPO_SUITE env var.
+// Only "stable" and "unstable" are allowed to prevent path traversal.
+func repoSuite() string {
+	suite := os.Getenv("REPO_SUITE")
+	switch suite {
+	case "stable", "unstable":
+		return suite
+	default:
+		return "stable"
+	}
+}
+
+// RepoApt generates APT repository metadata using reprepro.
+// It expects .deb files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/apt/.
+// The reprepro config is read from build/reprepro-dist-conf.
+// Environment: REPO_SUITE controls the target suite (default: "stable").
+func (Release) RepoApt(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	suite := repoSuite()
+
+	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
+	outputBase := filepath.Join(DIST, "repo-output", "apt")
+
+	// Set up reprepro conf directory
+	confDir := filepath.Join(outputBase, "conf")
+	if err := os.MkdirAll(confDir, 0o755); err != nil {
+		return fmt.Errorf("creating reprepro conf dir: %w", err)
+	}
+
+	// Copy distributions config
+	distConf, err := os.ReadFile("build/reprepro-dist-conf")
+	if err != nil {
+		return fmt.Errorf("reading reprepro-dist-conf: %w", err)
+	}
+	if err := os.WriteFile(filepath.Join(confDir, "distributions"), distConf, 0o600); err != nil {
+		return fmt.Errorf("writing distributions config: %w", err)
+	}
+
+	// Include all .deb files into the target suite
+	debs, err := filepath.Glob(filepath.Join(incomingDir, "*.deb"))
+	if err != nil {
+		return err
+	}
+	for _, deb := range debs {
+		abs, _ := filepath.Abs(deb)
+		if err := runAndStreamOutput(ctx, "reprepro",
+			"-b", outputBase,
+			"includedeb", suite,
+			abs,
+		); err != nil {
+			return fmt.Errorf("reprepro includedeb %s: %w", filepath.Base(deb), err)
+		}
+	}
+
+	fmt.Println("APT repo metadata generated in", outputBase)
+	return nil
+}
+
+// RepoRpm generates RPM repository metadata for all .rpm files in the work directory.
+// Expects .rpm files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/rpm/<suite>/.
+// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
+// Environment: REPO_SUITE controls the target suite (default: "stable").
+func (Release) RepoRpm(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	suite := repoSuite()
+
+	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
+	outputBase := filepath.Join(DIST, "repo-output", "rpm", suite)
+
+	archMap := map[string]string{
+		"x86_64":  "x86_64",
+		"aarch64": "aarch64",
+		"armv7":   "armv7",
+	}
+
+	gpgKey := os.Getenv("RELEASE_GPG_KEY")
+	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
+
+	for pkgArch, repoArch := range archMap {
+		repoDir := filepath.Join(outputBase, repoArch)
+		if err := os.MkdirAll(repoDir, 0o755); err != nil {
+			return err
+		}
+
+		// Symlink matching RPMs
+		pattern := filepath.Join(incomingDir, "*-"+pkgArch+".rpm")
+		rpms, _ := filepath.Glob(pattern)
+		if len(rpms) == 0 {
+			continue
+		}
+		for _, rpm := range rpms {
+			abs, _ := filepath.Abs(rpm)
+			dst := filepath.Join(repoDir, filepath.Base(rpm))
+			os.Remove(dst)
+			if err := os.Symlink(abs, dst); err != nil {
+				return err
+			}
+		}
+
+		// createrepo_c (--update if repodata already exists)
+		args := []string{repoDir}
+		if _, err := os.Stat(filepath.Join(repoDir, "repodata")); err == nil {
+			args = []string{"--update", repoDir}
+		}
+		if err := runAndStreamOutput(ctx, "createrepo_c", args...); err != nil {
+			return fmt.Errorf("createrepo_c for %s: %w", repoArch, err)
+		}
+
+		// Sign repomd.xml
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--detach-sign", "--armor",
+			"-o", filepath.Join(repoDir, "repodata", "repomd.xml.asc"),
+			filepath.Join(repoDir, "repodata", "repomd.xml"),
+		); err != nil {
+			return fmt.Errorf("signing repomd.xml for %s: %w", repoArch, err)
+		}
+	}
+
+	fmt.Println("RPM repo metadata generated in", outputBase)
+	return nil
+}
+
+// RepoApk generates Alpine APK repository index for all .apk files in the work directory.
+// Expects .apk files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/apk/<suite>/main/.
+// Environment: APK_SIGNING_KEY_PATH must point to an RSA private key for abuild-sign.
+// Environment: REPO_SUITE controls the target suite (default: "stable").
+func (Release) RepoApk(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	suite := repoSuite()
+
+	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
+	outputBase := filepath.Join(DIST, "repo-output", "apk", suite, "main")
+	signingKey := os.Getenv("APK_SIGNING_KEY_PATH")
+
+	archMap := map[string]string{
+		"x86_64":  "x86_64",
+		"aarch64": "aarch64",
+		"armv7":   "armv7",
+	}
+
+	for pkgArch, repoArch := range archMap {
+		repoDir := filepath.Join(outputBase, repoArch)
+		if err := os.MkdirAll(repoDir, 0o755); err != nil {
+			return err
+		}
+
+		pattern := filepath.Join(incomingDir, "*-"+pkgArch+".apk")
+		apks, _ := filepath.Glob(pattern)
+		if len(apks) == 0 {
+			continue
+		}
+		for _, apk := range apks {
+			abs, _ := filepath.Abs(apk)
+			dst := filepath.Join(repoDir, filepath.Base(apk))
+			os.Remove(dst)
+			if err := os.Symlink(abs, dst); err != nil {
+				return err
+			}
+		}
+
+		// Collect all .apk paths in repo dir for apk index
+		repoApks, _ := filepath.Glob(filepath.Join(repoDir, "*.apk"))
+		indexArgs := append([]string{"index", "-o", filepath.Join(repoDir, "APKINDEX.tar.gz")}, repoApks...)
+		if err := runAndStreamOutput(ctx, "apk", indexArgs...); err != nil {
+			return fmt.Errorf("apk index for %s: %w", repoArch, err)
+		}
+
+		// Sign with abuild-sign
+		if err := runAndStreamOutput(ctx, "abuild-sign",
+			"-k", signingKey,
+			filepath.Join(repoDir, "APKINDEX.tar.gz"),
+		); err != nil {
+			return fmt.Errorf("abuild-sign for %s: %w", repoArch, err)
+		}
+	}
+
+	fmt.Println("APK repo metadata generated in", outputBase)
+	return nil
+}
+
+// RepoPacman generates Pacman repository database for all .archlinux files in the work directory.
+// Expects .archlinux files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/pacman/<suite>/.
+// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
+// Environment: REPO_SUITE controls the target suite (default: "stable").
+func (Release) RepoPacman(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	suite := repoSuite()
+
+	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
+	outputBase := filepath.Join(DIST, "repo-output", "pacman", suite)
+
+	archMap := map[string]string{
+		"x86_64":  "x86_64",
+		"aarch64": "aarch64",
+		"armv7":   "armv7",
+	}
+
+	gpgKey := os.Getenv("RELEASE_GPG_KEY")
+	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
+
+	for pkgArch, repoArch := range archMap {
+		repoDir := filepath.Join(outputBase, repoArch)
+		if err := os.MkdirAll(repoDir, 0o755); err != nil {
+			return err
+		}
+
+		pattern := filepath.Join(incomingDir, "*-"+pkgArch+".archlinux")
+		pkgs, _ := filepath.Glob(pattern)
+		if len(pkgs) == 0 {
+			continue
+		}
+		for _, pkg := range pkgs {
+			abs, _ := filepath.Abs(pkg)
+			dst := filepath.Join(repoDir, filepath.Base(pkg))
+			os.Remove(dst)
+			if err := os.Symlink(abs, dst); err != nil {
+				return err
+			}
+		}
+
+		// repo-add creates vikunja.db.tar.gz and vikunja.files.tar.gz
+		dbPath := filepath.Join(repoDir, "vikunja.db.tar.gz")
+		repoPkgs, _ := filepath.Glob(filepath.Join(repoDir, "*.archlinux"))
+		repoAddArgs := append([]string{dbPath}, repoPkgs...)
+		if err := runAndStreamOutput(ctx, "repo-add", repoAddArgs...); err != nil {
+			return fmt.Errorf("repo-add for %s: %w", repoArch, err)
+		}
+
+		// Create conventional symlinks (vikunja.db -> vikunja.db.tar.gz)
+		for _, name := range []string{"vikunja.db", "vikunja.files"} {
+			link := filepath.Join(repoDir, name)
+			os.Remove(link)
+			if err := os.Symlink(name+".tar.gz", link); err != nil {
+				return fmt.Errorf("creating symlink %s: %w", name, err)
+			}
+		}
+
+		// Sign the database
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--detach-sign",
+			"-o", filepath.Join(repoDir, "vikunja.db.sig"),
+			dbPath,
+		); err != nil {
+			return fmt.Errorf("signing db for %s: %w", repoArch, err)
+		}
+	}
+
+	fmt.Println("Pacman repo metadata generated in", outputBase)
+	return nil
 }
 
 // PrepareNFPMConfig prepares the nfpm config
