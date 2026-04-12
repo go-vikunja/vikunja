@@ -1216,7 +1216,9 @@ func repoSuite() string {
 // RepoApt generates APT repository metadata using reprepro.
 // It expects .deb files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/apt/.
 // The reprepro config is read from build/reprepro-dist-conf.
+// Signing is done manually after reprepro finishes to avoid gpgme pinentry issues in CI.
 // Environment: REPO_SUITE controls the target suite (default: "stable").
+// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
 func (Release) RepoApt(ctx context.Context) error {
 	mg.Deps(initVars)
 
@@ -1253,6 +1255,39 @@ func (Release) RepoApt(ctx context.Context) error {
 			abs,
 		); err != nil {
 			return fmt.Errorf("reprepro includedeb %s: %w", filepath.Base(deb), err)
+		}
+	}
+
+	// Sign Release files manually (reprepro's gpgme signing doesn't work in CI)
+	gpgKey := os.Getenv("RELEASE_GPG_KEY")
+	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
+
+	releaseFile := filepath.Join(outputBase, "dists", suite, "Release")
+	if _, err := os.Stat(releaseFile); err == nil {
+		// Generate Release.gpg (detached signature)
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--detach-sign", "--armor",
+			"-o", releaseFile+".gpg",
+			releaseFile,
+		); err != nil {
+			return fmt.Errorf("signing Release (detached): %w", err)
+		}
+
+		// Generate InRelease (clearsigned)
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--clearsign",
+			"-o", filepath.Join(filepath.Dir(releaseFile), "InRelease"),
+			releaseFile,
+		); err != nil {
+			return fmt.Errorf("signing Release (clearsign): %w", err)
 		}
 	}
 

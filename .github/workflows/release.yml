@@ -259,19 +259,15 @@ jobs:
           gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
           gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
 
-      - name: Configure GPG for non-interactive signing
-        run: |
-          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          gpgconf --kill gpg-agent
-          gpg-connect-agent reloadagent /bye
-
       - name: Export GPG public key
         run: |
           mkdir -p dist/repo-output
           gpg --export --armor 7D061A4AA61436B40713D42EFF054DACD908493A > dist/repo-output/gpg.key
 
       - name: Generate APT repo metadata
+        env:
+          RELEASE_GPG_KEY: 7D061A4AA61436B40713D42EFF054DACD908493A
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
         run: |
           chmod +x ./mage-static
           ./mage-static release:repo-apt
