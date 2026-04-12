@@ -7,9 +7,9 @@
 					:color="getHexColor(task.hexColor)"
 				/>
 				<BaseButton @click="copyUrl">
-					<h1 class="title task-id">
+					<span class="title task-id">
 						{{ textIdentifier }}
-					</h1>
+					</span>
 				</BaseButton>
 			</div>
 			<Done
