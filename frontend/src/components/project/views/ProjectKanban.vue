@@ -304,7 +304,7 @@ import type {ITask} from '@/modelTypes/ITask'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
-import {useKanbanStore} from '@/stores/kanban'
+import {useBucketStore} from '@/stores/buckets'
 import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -356,7 +356,7 @@ const MIN_SCROLL_HEIGHT_PERCENT = 0.25
 const {t} = useI18n({useScope: 'global'})
 
 const baseStore = useBaseStore()
-const kanbanStore = useKanbanStore()
+const bucketStore = useBucketStore()
 const taskStore = useTaskStore()
 const projectStore = useProjectStore()
 const authStore = useAuthStore()
@@ -480,8 +480,8 @@ function onHandleTouchMove(e: TouchEvent) {
 	}
 }
 
-const buckets = computed(() => kanbanStore.buckets)
-const loading = computed(() => kanbanStore.isLoading)
+const buckets = computed(() => bucketStore.buckets)
+const loading = computed(() => bucketStore.isLoading)
 const projectIdWithFallback = computed<number>(() => project.value?.id || projectId.value)
 
 const taskLoading = computed(() => taskStore.isLoading || taskPositionService.value.loading)
@@ -497,7 +497,7 @@ watch(
 			return
 		}
 		collapsedBuckets.value = getCollapsedBucketState(projectId)
-		kanbanStore.loadBucketsForProject(projectId, viewId, params)
+		bucketStore.loadBucketsForProject(projectId, viewId, params)
 	},
 	{
 		immediate: true,
@@ -520,7 +520,7 @@ function handleTaskContainerScroll(id: IBucket['id'], el: HTMLElement) {
 		return
 	}
 
-	kanbanStore.loadNextTasksForBucket(
+	bucketStore.loadNextTasksForBucket(
 		projectId.value,
 		props.viewId,
 		params.value,
@@ -529,13 +529,13 @@ function handleTaskContainerScroll(id: IBucket['id'], el: HTMLElement) {
 }
 
 function updateTasks(bucketId: IBucket['id'], tasks: IBucket['tasks']) {
-	const bucket = kanbanStore.getBucketById(bucketId)
+	const bucket = bucketStore.getBucketById(bucketId)
 
 	if (bucket === undefined) {
 		return
 	}
 
-	kanbanStore.setBucketById({
+	bucketStore.setBucketById({
 		...bucket,
 		tasks,
 	})
@@ -546,7 +546,7 @@ async function updateTaskPosition(e) {
 
 	// Check if dropped on a sidebar project
 	const {moved} = await handleTaskDropToProject(e, (task) => {
-		kanbanStore.removeTaskInBucket(task)
+		bucketStore.removeTaskInBucket(task)
 	})
 
 	if (moved) {
@@ -596,11 +596,11 @@ async function updateTaskPosition(e) {
 		oldBucket !== undefined && // This shouldn't actually be `undefined`, but let's play it safe.
 		newBucket.id !== oldBucket.id
 	) {
-		kanbanStore.setBucketById({
+		bucketStore.setBucketById({
 			...oldBucket,
 			count: oldBucket.count - 1,
 		})
-		kanbanStore.setBucketById({
+		bucketStore.setBucketById({
 			...newBucket,
 			count: newBucket.count + 1,
 		})
@@ -626,13 +626,13 @@ async function updateTaskPosition(e) {
 			Object.assign(newTask, updatedTaskBucket.task)
 			newTask.bucketId = updatedTaskBucket.bucketId
 			if (updatedTaskBucket.bucketId !== newTask.bucketId) {
-				kanbanStore.moveTaskToBucket(newTask, updatedTaskBucket.bucketId)
+				bucketStore.moveTaskToBucket(newTask, updatedTaskBucket.bucketId)
 			}
 			if (updatedTaskBucket.bucket) {
-				kanbanStore.setBucketById(updatedTaskBucket.bucket, false)
+				bucketStore.setBucketById(updatedTaskBucket.bucket, false)
 			}
 		}
-		kanbanStore.setTaskInBucket(newTask)
+		bucketStore.setTaskInBucket(newTask)
 
 		// Make sure the first and second task don't both get position 0 assigned
 		if (newTaskIndex === 0 && taskAfter !== null && taskAfter.position === 0) {
@@ -675,10 +675,10 @@ async function addTaskToBucket(bucketId: IBucket['id']) {
 		projectId: projectIdWithFallback.value,
 	})
 	newTaskText.value = ''
-	kanbanStore.addTaskToBucket(task)
+	bucketStore.addTaskToBucket(task)
 	scrollTaskContainerToTop(bucketId)
 
-	const bucket = kanbanStore.getBucketById(bucketId)
+	const bucket = bucketStore.getBucketById(bucketId)
 	if (bucket && bucket.limit && bucket.count >= bucket.limit) {
 		toggleShowNewTaskInput(bucketId)
 	}
@@ -697,7 +697,7 @@ async function createNewBucket() {
 		return
 	}
 
-	await kanbanStore.createBucket(new BucketModel({
+	await bucketStore.createBucket(new BucketModel({
 		title: newBucketTitle.value,
 		projectId: projectIdWithFallback.value,
 		projectViewId: props.viewId,
@@ -716,7 +716,7 @@ function deleteBucketModal(bucketId: IBucket['id']) {
 
 async function deleteBucket() {
 	try {
-		await kanbanStore.deleteBucket({
+		await bucketStore.deleteBucket({
 			bucket: new BucketModel({
 				id: bucketToDelete.value,
 				projectId: projectIdWithFallback.value,
@@ -740,13 +740,13 @@ async function focusBucketTitle(e: Event) {
 
 async function saveBucketTitle(bucketId: IBucket['id'], bucketTitle: string) {
 	
-	const bucket = kanbanStore.getBucketById(bucketId)
+	const bucket = bucketStore.getBucketById(bucketId)
 	if (bucket?.title === bucketTitle) {
 		bucketTitleEditable.value = false
 		return
 	}
 	
-	await kanbanStore.updateBucket({
+	await bucketStore.updateBucket({
 		id: bucketId,
 		title: bucketTitle,
 		projectId: projectId.value,
@@ -757,7 +757,7 @@ async function saveBucketTitle(bucketId: IBucket['id'], bucketTitle: string) {
 
 function updateBuckets(value: IBucket[]) {
 	// (1) buckets get updated in store and tasks positions get invalidated
-	kanbanStore.setBuckets(value)
+	bucketStore.setBuckets(value)
 }
 
 function handleRecurringTaskCompletion() {
@@ -772,7 +772,7 @@ function handleRecurringTaskCompletion() {
 		
 	if (filterContainsDateFields) {
 		// Reload the kanban board to refresh tasks that now match/don't match the filter
-		kanbanStore.loadBucketsForProject(projectId.value, props.viewId, params.value)
+		bucketStore.loadBucketsForProject(projectId.value, props.viewId, params.value)
 	}
 }
 
@@ -785,7 +785,7 @@ function updateBucketPosition(e: { newIndex: number }) {
 	const bucketBefore = buckets.value[e.newIndex - 1] ?? null
 	const bucketAfter = buckets.value[e.newIndex + 1] ?? null
 
-	kanbanStore.updateBucket({
+	bucketStore.updateBucket({
 		id: bucket.id,
 		projectId: projectId.value,
 		position: calculateItemPosition(
@@ -800,8 +800,8 @@ async function saveBucketLimit(bucketId: IBucket['id'], limit: number) {
 		return
 	}
 
-	await kanbanStore.updateBucket({
-		...kanbanStore.getBucketById(bucketId),
+	await bucketStore.updateBucket({
+		...bucketStore.getBucketById(bucketId),
 		projectId: projectId.value,
 		limit,
 	})

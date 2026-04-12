@@ -44,7 +44,7 @@ import type {IBucket} from '@/modelTypes/IBucket'
 import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
 
 import {useProjectStore} from '@/stores/projects'
-import {useKanbanStore} from '@/stores/kanban'
+import {useBucketStore} from '@/stores/buckets'
 import {useBaseStore} from '@/stores/base'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -69,7 +69,7 @@ const emit = defineEmits<{
 const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
-const kanbanStore = useKanbanStore()
+const bucketStore = useBucketStore()
 const baseStore = useBaseStore()
 
 const project = computed(() => projectStore.projects[props.task.projectId])
@@ -156,7 +156,7 @@ async function changeBucket(bucket: IBucket) {
 		updatedBuckets.push({...bucket})
 	}
 
-	kanbanStore.moveTaskToBucket(props.task, bucket.id)
+	bucketStore.moveTaskToBucket(props.task, bucket.id)
 
 	// Only pick up done state from the response since moving to/from the
 	// done bucket can toggle it. Spreading the full response task would
