@@ -441,7 +441,17 @@
       "empty": "This project is currently empty.",
       "newTaskCta": "Create a task.",
       "editTask": "Edit Task",
-      "sort": "Sort"
+      "sort": "Sort",
+      "loadMore": "Show {remaining} more tasks",
+      "addSection": "Add section",
+      "addSectionPlaceholder": "Enter the new section title…",
+      "deleteSection": "Delete this section",
+      "deleteSectionText1": "Are you sure you want to delete this section?",
+      "deleteSectionText2": "This will not delete any tasks but move them into the default section.",
+      "deleteSectionSuccess": "The section has been deleted successfully.",
+      "sectionTitleSavedSuccess": "The section title has been saved successfully.",
+      "sectionLimitSavedSuccess": "The section limit has been saved successfully.",
+      "collapseSection": "Collapse this section"
     },
     "gantt": {
       "title": "Gantt",
