@@ -18,6 +18,7 @@ package keyvalue
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue/memory"
 	"code.vikunja.io/api/pkg/modules/keyvalue/redis"
 )
@@ -40,6 +41,9 @@ var store Storage
 func InitStorage() {
 	switch config.KeyvalueType.GetString() {
 	case "redis":
+		if !config.RedisEnabled.GetBool() {
+			log.Fatalf("keyvalue.type is set to %q but redis is not enabled. Please set redis.enabled to true in your configuration.", config.KeyvalueType.GetString())
+		}
 		store = redis.NewStorage()
 	case "memory":
 		fallthrough
