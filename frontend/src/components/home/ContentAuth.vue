@@ -2,6 +2,7 @@
 	<div class="content-auth">
 		<BaseButton
 			v-show="menuActive"
+			:aria-label="$t('navigation.closeSidebar')"
 			class="menu-hide-button d-print-none"
 			@click="baseStore.setMenuActive(false)"
 		>
@@ -32,6 +33,7 @@
 			>
 				<BaseButton
 					v-show="menuActive"
+					:aria-label="$t('navigation.closeSidebar')"
 					class="mobile-overlay d-print-none"
 					@click="baseStore.setMenuActive(false)"
 				/>
