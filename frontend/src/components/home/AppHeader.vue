@@ -21,9 +21,9 @@
 			v-if="currentProject?.id"
 			class="project-title-wrapper"
 		>
-			<h1 class="project-title">
+			<span class="project-title">
 				{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
-			</h1>
+			</span>
 
 			<BaseButton
 				v-if="!isEditorContentEmpty(currentProject.description)"
