@@ -1215,8 +1215,21 @@ func (Release) PrepareNFPMConfig() error {
 		return err
 	}
 
+	var nfpmArch string
+	switch os.Getenv("NFPM_ARCH") {
+	case "arm64":
+		nfpmArch = "arm64"
+	case "arm7":
+		nfpmArch = "arm7"
+	case "386":
+		nfpmArch = "386"
+	default:
+		nfpmArch = "amd64"
+	}
+
 	fixedConfig := strings.ReplaceAll(string(nfpmconfig), "<version>", VersionNumber)
 	fixedConfig = strings.ReplaceAll(fixedConfig, "<binlocation>", BinLocation)
+	fixedConfig = strings.ReplaceAll(fixedConfig, "<arch>", nfpmArch)
 	if err := os.WriteFile(nfpmConfigPath, []byte(fixedConfig), 0); err != nil {
 		return err
 	}
