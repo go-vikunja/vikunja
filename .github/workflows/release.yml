@@ -206,10 +206,109 @@ jobs:
           strip-path-prefix: dist/os-packages/
       - name: Store OS Packages
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ github.ref_type == 'tag' }}
         with:
           name: vikunja_os_package_${{ matrix.package }}_${{ matrix.arch.pkg }}
           path: ./dist/os-packages/*
+
+  publish-repos:
+    runs-on: ubuntu-latest
+    needs:
+      - os-package
+      - desktop
+    env:
+      REPO_SUITE: ${{ github.ref_type == 'tag' && 'stable' || 'unstable' }}
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Download Mage Binary
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: mage_bin
+
+      - name: Download all server OS packages
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: vikunja_os_package_*
+          merge-multiple: true
+          path: dist/repo-work/incoming
+
+      - name: Download desktop packages (Linux)
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: vikunja_desktop_packages_ubuntu-latest
+          path: dist/repo-work/incoming-desktop
+
+      - name: Copy desktop repo packages to incoming
+        run: |
+          # Copy only the repo-compatible formats from desktop builds
+          for ext in deb rpm apk pacman; do
+            cp dist/repo-work/incoming-desktop/*."$ext" dist/repo-work/incoming/ 2>/dev/null || true
+          done
+
+      - name: Install repository tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            reprepro \
+            createrepo-c \
+            pacman-package-manager
+
+      - name: GPG setup
+        uses: kolaente/action-gpg@main
+        with:
+          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
+          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
+
+      - name: Export GPG public key
+        run: |
+          mkdir -p dist/repo-output
+          gpg --export --armor 7D061A4AA61436B40713D42EFF054DACD908493A > dist/repo-output/gpg.key
+
+      - name: Generate APT repo metadata
+        run: |
+          chmod +x ./mage-static
+          ./mage-static release:repo-apt
+
+      - name: Generate RPM repo metadata
+        env:
+          RELEASE_GPG_KEY: 7D061A4AA61436B40713D42EFF054DACD908493A
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+        run: ./mage-static release:repo-rpm
+
+      - name: Generate Pacman repo metadata
+        env:
+          RELEASE_GPG_KEY: 7D061A4AA61436B40713D42EFF054DACD908493A
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+        run: ./mage-static release:repo-pacman
+
+      - name: Install apk-tools
+        run: |
+          wget -q https://gitlab.alpinelinux.org/alpine/apk-tools/-/releases/v2.14.6/downloads/apk.static-x86_64
+          chmod +x apk.static-x86_64
+          sudo mv apk.static-x86_64 /usr/local/bin/apk
+
+      - name: Setup APK signing key
+        run: |
+          mkdir -p ~/.abuild
+          echo "${{ secrets.APK_SIGNING_KEY }}" > ~/.abuild/vikunja-apk.rsa
+          echo "PACKAGER_PRIVKEY=$HOME/.abuild/vikunja-apk.rsa" > ~/.abuild/abuild.conf
+
+      - name: Generate APK repo metadata
+        env:
+          APK_SIGNING_KEY_PATH: ~/.abuild/vikunja-apk.rsa
+        run: ./mage-static release:repo-apk
+
+      - name: Upload repo metadata to R2
+        uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
+        with:
+          s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
+          s3-endpoint: ${{ secrets.S3_ENDPOINT }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}
+          s3-region: ${{ secrets.S3_REGION }}
+          target-path: /repos
+          files: "dist/repo-output/**/*"
+          strip-path-prefix: dist/repo-output/
 
   config-yaml:
     runs-on: ubuntu-latest
@@ -290,7 +389,6 @@ jobs:
           exclude: "desktop/dist/*.blockmap"
       - name: Store Desktop Package
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ github.ref_type == 'tag' }}
         with:
           name: vikunja_desktop_packages_${{ matrix.os }}
           path: |
@@ -348,6 +446,7 @@ jobs:
       - binaries
       - os-package
       - desktop
+      - publish-repos
     if: ${{ github.ref_type == 'tag' }}
     permissions:
       contents: write
