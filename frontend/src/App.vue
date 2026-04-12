@@ -9,6 +9,12 @@
 			</div>
 		</template>
 		<template v-else>
+			<a
+				href="#main-content"
+				class="skip-to-content"
+			>
+				{{ $t('misc.skipToContent') }}
+			</a>
 			<template v-if="showAuthLayout">
 				<AppHeader />
 				<ContentAuth />
