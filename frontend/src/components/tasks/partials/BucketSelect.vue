@@ -74,25 +74,25 @@ const baseStore = useBaseStore()
 
 const project = computed(() => projectStore.projects[props.task.projectId])
 
-// If the project has exactly one manual kanban view, always use it.
+// If the project has exactly one manual bucket view (kanban or list), always use it.
 // If there are multiple, only show the selector when the active view is one of them.
 const kanbanView = computed(() => {
 	if (!project.value?.views) {
 		return null
 	}
 
-	const manualKanbanViews = project.value.views.filter(
-		v => v.viewKind === PROJECT_VIEW_KINDS.KANBAN
+	const manualBucketViews = project.value.views.filter(
+		v => (v.viewKind === PROJECT_VIEW_KINDS.KANBAN || v.viewKind === PROJECT_VIEW_KINDS.LIST)
 			&& v.bucketConfigurationMode === 'manual',
 	)
 
-	if (manualKanbanViews.length === 1) {
-		return manualKanbanViews[0]
+	if (manualBucketViews.length === 1) {
+		return manualBucketViews[0]
 	}
 
-	if (manualKanbanViews.length > 1) {
+	if (manualBucketViews.length > 1) {
 		const activeViewId = baseStore.currentProjectViewId
-		return manualKanbanViews.find(v => v.id === activeViewId) || null
+		return manualBucketViews.find(v => v.id === activeViewId) || null
 	}
 
 	return null
