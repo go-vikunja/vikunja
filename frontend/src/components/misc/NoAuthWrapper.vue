@@ -17,7 +17,10 @@
 					{{ $t("misc.welcomeBack") }}
 				</h2>
 			</section>
-			<main id="main-content" class="content">
+			<main
+				id="main-content"
+				class="content"
+			>
 				<div>
 					<h2
 						v-if="title"

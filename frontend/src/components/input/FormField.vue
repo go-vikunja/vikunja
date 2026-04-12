@@ -87,7 +87,10 @@ defineExpose({
 		</label>
 
 		<div :class="controlClasses">
-			<slot :id="inputId" :error-id="errorId">
+			<slot
+				:id="inputId"
+				:error-id="errorId"
+			>
 				<input
 					:id="inputId"
 					ref="inputRef"
