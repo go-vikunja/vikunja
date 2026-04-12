@@ -1457,7 +1457,9 @@ func (Release) RepoPacman(ctx context.Context) error {
 		}
 		for _, pkg := range pkgs {
 			abs, _ := filepath.Abs(pkg)
-			dst := filepath.Join(repoDir, filepath.Base(pkg))
+			// repo-add requires .pkg.tar.zst extension, nfpm archlinux files are .archlinux
+			base := strings.TrimSuffix(filepath.Base(pkg), ".archlinux") + ".pkg.tar.zst"
+			dst := filepath.Join(repoDir, base)
 			os.Remove(dst)
 			if err := os.Symlink(abs, dst); err != nil {
 				return err
@@ -1466,7 +1468,7 @@ func (Release) RepoPacman(ctx context.Context) error {
 
 		// repo-add creates vikunja.db.tar.gz and vikunja.files.tar.gz
 		dbPath := filepath.Join(repoDir, "vikunja.db.tar.gz")
-		repoPkgs, _ := filepath.Glob(filepath.Join(repoDir, "*.archlinux"))
+		repoPkgs, _ := filepath.Glob(filepath.Join(repoDir, "*.pkg.tar.zst"))
 		repoAddArgs := append([]string{dbPath}, repoPkgs...)
 		if err := runAndStreamOutput(ctx, "repo-add", repoAddArgs...); err != nil {
 			return fmt.Errorf("repo-add for %s: %w", repoArch, err)
