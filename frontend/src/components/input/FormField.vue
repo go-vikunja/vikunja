@@ -35,6 +35,7 @@ const slots = useSlots()
 const generatedId = useId()
 
 const inputId = computed(() => props.id ?? generatedId)
+const errorId = computed(() => props.error ? `${inputId.value}-error` : undefined)
 const hasAddon = computed(() => !!slots.addon)
 
 const fieldClasses = computed(() => [
@@ -82,13 +83,18 @@ defineExpose({
 				class="two-col"
 			>
 				<span>{{ label }}</span>
-				<slot :id="inputId">
+				<slot
+					:id="inputId"
+					:error-id="errorId"
+				>
 					<input
 						:id="inputId"
 						ref="inputRef"
 						v-bind="{ ...$attrs, ...inputBindings }"
 						:class="inputClasses"
 						:disabled="disabled || undefined"
+						:aria-invalid="error ? true : undefined"
+						:aria-describedby="errorId"
 						@input="handleInput"
 					>
 				</slot>
@@ -109,13 +115,18 @@ defineExpose({
 				{{ label }}
 			</label>
 			<div :class="controlClasses">
-				<slot :id="inputId">
+				<slot
+					:id="inputId"
+					:error-id="errorId"
+				>
 					<input
 						:id="inputId"
 						ref="inputRef"
 						v-bind="{ ...$attrs, ...inputBindings }"
 						:class="inputClasses"
 						:disabled="disabled || undefined"
+						:aria-invalid="error ? true : undefined"
+						:aria-describedby="errorId"
 						@input="handleInput"
 					>
 				</slot>
@@ -129,7 +140,9 @@ defineExpose({
 		</template>
 		<p
 			v-if="error"
+			:id="errorId"
 			class="help is-danger"
+			role="alert"
 		>
 			{{ error }}
 		</p>
