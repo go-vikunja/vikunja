@@ -1,8 +1,15 @@
 Origin: dl.vikunja.io
 Label: Vikunja
-Codename: buster
-Architectures: amd64
+Codename: stable
+Architectures: amd64 arm64 armhf
 Components: main
-Description: The debian repo for Vikunja builds.
-SignWith: yes
-Pull: buster
+Description: The Vikunja package repository.
+SignWith: 7D061A4AA61436B40713D42EFF054DACD908493A
+
+Origin: dl.vikunja.io
+Label: Vikunja
+Codename: unstable
+Architectures: amd64 arm64 armhf
+Components: main
+Description: The Vikunja unstable package repository.
+SignWith: 7D061A4AA61436B40713D42EFF054DACD908493A
