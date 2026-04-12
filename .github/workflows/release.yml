@@ -245,6 +245,15 @@ jobs:
             cp dist/repo-work/incoming-desktop/*."$ext" dist/repo-work/incoming/ 2>/dev/null || true
           done
 
+      - name: Debug - list incoming files
+        run: |
+          echo "=== incoming directory ==="
+          ls -lah dist/repo-work/incoming/ || true
+          echo "=== incoming-desktop directory ==="
+          ls -lah dist/repo-work/incoming-desktop/ || true
+          echo "=== file types ==="
+          file dist/repo-work/incoming/* || true
+
       - name: Install repository tools
         run: |
           sudo apt-get update
