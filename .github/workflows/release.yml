@@ -251,7 +251,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             reprepro \
             createrepo-c \
-            pacman-package-manager
+            pacman-package-manager \
+            makepkg
 
       - name: GPG setup
         uses: kolaente/action-gpg@main
