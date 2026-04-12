@@ -37,6 +37,7 @@
 					v-if="isNewTaskCommand"
 				/>
 				<BaseButton
+					:aria-label="$t('misc.closeQuickActions')"
 					class="close"
 					@click="closeQuickActions"
 				>
