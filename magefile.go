@@ -1215,10 +1215,14 @@ func (Release) PrepareNFPMConfig() error {
 		return err
 	}
 
-	nfpmArch := os.Getenv("NFPM_ARCH")
-	switch nfpmArch {
-	case "amd64", "arm64", "armhf", "386":
-		// valid arch, use as-is
+	var nfpmArch string
+	switch os.Getenv("NFPM_ARCH") {
+	case "arm64":
+		nfpmArch = "arm64"
+	case "arm7":
+		nfpmArch = "arm7"
+	case "386":
+		nfpmArch = "386"
 	default:
 		nfpmArch = "amd64"
 	}

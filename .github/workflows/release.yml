@@ -160,7 +160,7 @@ jobs:
             nfpm: arm64
             pkg: aarch64
           - go_name: linux-arm-7
-            nfpm: armhf
+            nfpm: arm7
             pkg: armv7
 
     steps:
