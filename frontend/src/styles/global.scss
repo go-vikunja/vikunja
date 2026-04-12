@@ -86,3 +86,19 @@
 @import "components";
 
 @import "custom-properties";
+
+.skip-to-content {
+	position: absolute;
+	inset-block-start: -100%;
+	inset-inline-start: 0;
+	z-index: 10000;
+	padding: .5rem 1rem;
+	background: var(--primary);
+	color: var(--white);
+	font-weight: 700;
+	text-decoration: none;
+
+	&:focus {
+		inset-block-start: 0;
+	}
+}

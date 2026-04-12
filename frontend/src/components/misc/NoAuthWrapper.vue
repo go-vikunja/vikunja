@@ -17,7 +17,7 @@
 					{{ $t("misc.welcomeBack") }}
 				</h2>
 			</section>
-			<section class="content">
+			<main id="main-content" class="content">
 				<div>
 					<h2
 						v-if="title"
@@ -35,7 +35,7 @@
 					<slot />
 				</div>
 				<Legal />
-			</section>
+			</main>
 		</div>
 	</div>
 </template>
