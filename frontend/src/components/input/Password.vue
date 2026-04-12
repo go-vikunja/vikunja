@@ -9,6 +9,8 @@
 			:type="passwordFieldType"
 			:autocomplete="autocomplete"
 			:tabindex="tabindex"
+			:aria-invalid="isValid !== true ? true : undefined"
+			:aria-describedby="errorId"
 			@keyup.enter="e => $emit('submit', e)"
 			@focusout="() => {validate(); validateAfterFirst = true}"
 			@keyup="() => {validateAfterFirst ? validate() : null}"
@@ -25,14 +27,16 @@
 	</div>
 	<p
 		v-if="isValid !== true"
+		:id="errorId"
 		class="help is-danger"
+		role="alert"
 	>
 		{{ isValid }}
 	</p>
 </template>
 
 <script lang="ts" setup>
-import {ref, watchEffect} from 'vue'
+import {computed, ref, watchEffect} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -61,6 +65,7 @@ const password = ref('')
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const isValid = ref<true | string>(props.validateInitially === true ? true : '')
 const validateAfterFirst = ref(false)
+const errorId = computed(() => isValid.value !== true ? 'password-error' : undefined)
 
 const validate = useDebounceFn(() => {
 	const valid = validatePassword(password.value, props.validateMinLength)
