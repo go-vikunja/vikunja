@@ -74,6 +74,7 @@
 										v-if="canWrite && !collapsedBuckets[bucket.id]"
 										class="is-right options"
 										trigger-icon="ellipsis-v"
+										:trigger-label="$t('project.kanban.bucketOptions')"
 										@close="() => showSetLimitInput = false"
 									>
 										<div

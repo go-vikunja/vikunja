@@ -17,6 +17,7 @@
 			/>
 			<BaseButton
 				v-if="hasClose"
+				:aria-label="$t('task.detail.closeTaskDetail')"
 				class="close"
 				@click="$emit('close')"
 			>
@@ -37,6 +38,7 @@
 		</h1>
 		<BaseButton
 			v-if="hasClose"
+			:aria-label="$t('task.detail.closeTaskDetail')"
 			class="close"
 			@click="$emit('close')"
 		>
