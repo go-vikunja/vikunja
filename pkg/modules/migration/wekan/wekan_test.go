@@ -141,6 +141,57 @@ func TestConvertWekanToVikunja(t *testing.T) {
 	assert.Equal(t, int64(1), task3.BucketID) // To Do
 }
 
+func TestParseWekanJSON_ParsesAttachments(t *testing.T) {
+	raw := []byte(`{
+		"_id": "b1",
+		"title": "B",
+		"lists": [],
+		"cards": [],
+		"attachments": [
+			{"_id": "a1", "cardId": "c1", "file": "aGVsbG8=", "name": "hi.txt", "type": "text/plain"}
+		]
+	}`)
+
+	board, err := parseWekanJSON(bytes.NewReader(raw))
+	require.NoError(t, err)
+	require.Len(t, board.Attachments, 1)
+	assert.Equal(t, "a1", board.Attachments[0].ID)
+	assert.Equal(t, "c1", board.Attachments[0].CardID)
+	assert.Equal(t, "aGVsbG8=", board.Attachments[0].File)
+	assert.Equal(t, "hi.txt", board.Attachments[0].Name)
+	assert.Equal(t, "text/plain", board.Attachments[0].Type)
+}
+
+func TestConvertWekanToVikunja_Attachments(t *testing.T) {
+	// "hello" in base64 is "aGVsbG8="
+	board := &wekanBoard{
+		ID:    "b1",
+		Title: "B",
+		Lists: []wekanList{{ID: "l1", Title: "L", Sort: 0}},
+		Cards: []wekanCard{{ID: "c1", Title: "Card", ListID: "l1"}},
+		Attachments: []wekanAttachment{
+			{ID: "a1", CardID: "c1", File: "aGVsbG8=", Name: "hi.txt", Type: "text/plain"},
+			{ID: "a2", CardID: "c1", File: "d29ybGQ=", Name: "w.txt", Type: "text/plain"},
+			{ID: "a3", CardID: "missing", File: "aGVsbG8=", Name: "orphan.txt", Type: "text/plain"},
+		},
+	}
+
+	projects := convertWekanToVikunja(board)
+	require.Len(t, projects, 1)
+	require.Len(t, projects[0].Tasks, 1)
+
+	task := projects[0].Tasks[0]
+	require.Len(t, task.Attachments, 2)
+
+	assert.Equal(t, "hi.txt", task.Attachments[0].File.Name)
+	assert.Equal(t, "text/plain", task.Attachments[0].File.Mime)
+	assert.Equal(t, []byte("hello"), task.Attachments[0].File.FileContent)
+	assert.Equal(t, uint64(5), task.Attachments[0].File.Size)
+
+	assert.Equal(t, "w.txt", task.Attachments[1].File.Name)
+	assert.Equal(t, []byte("world"), task.Attachments[1].File.FileContent)
+}
+
 func TestMigrateValidJSON(t *testing.T) {
 	validJSON := `{
 		"_id": "board1",
@@ -314,6 +365,12 @@ func TestConvertWekanFromFixtureFile(t *testing.T) {
 	require.Len(t, task1.Labels, 2)
 	require.Len(t, task1.Comments, 1)
 	assert.False(t, task1.Done)
+
+	// Attachment on card 1
+	require.Len(t, task1.Attachments, 1)
+	assert.Equal(t, "note.txt", task1.Attachments[0].File.Name)
+	assert.Equal(t, "text/plain", task1.Attachments[0].File.Mime)
+	assert.Equal(t, []byte("hello wekan"), task1.Attachments[0].File.FileContent)
 
 	// Card 3 - archived
 	task3 := project.Tasks[2]

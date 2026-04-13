@@ -63,5 +63,14 @@
   "rules": [],
   "triggers": [],
   "actions": [],
-  "customFields": []
+  "customFields": [],
+  "attachments": [
+    {
+      "_id": "att-1",
+      "cardId": "card-1",
+      "file": "aGVsbG8gd2VrYW4=",
+      "name": "note.txt",
+      "type": "text/plain"
+    }
+  ]
 }

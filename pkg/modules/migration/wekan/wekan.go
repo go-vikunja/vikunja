@@ -18,11 +18,13 @@ package wekan
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"sort"
 	"time"
 
+	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/migration"
@@ -42,6 +44,7 @@ type wekanBoard struct {
 	Checklists     []wekanChecklist     `json:"checklists"`
 	ChecklistItems []wekanChecklistItem `json:"checklistItems"`
 	Comments       []wekanComment       `json:"comments"`
+	Attachments    []wekanAttachment    `json:"attachments"`
 }
 
 type wekanLabel struct {
@@ -94,6 +97,14 @@ type wekanComment struct {
 	Text      string     `json:"text"`
 	CreatedAt *time.Time `json:"createdAt"`
 	CardID    string     `json:"cardId"`
+}
+
+type wekanAttachment struct {
+	ID     string `json:"_id"`
+	CardID string `json:"cardId"`
+	File   string `json:"file"` // base64-encoded file contents
+	Name   string `json:"name"`
+	Type   string `json:"type"` // MIME type
 }
 
 // wekanColorMap maps WeKan label color names to hex values.
@@ -172,6 +183,12 @@ func convertWekanToVikunja(board *wekanBoard) []*models.ProjectWithTasksAndBucke
 	commentsByCardID := make(map[string][]wekanComment)
 	for _, c := range board.Comments {
 		commentsByCardID[c.CardID] = append(commentsByCardID[c.CardID], c)
+	}
+
+	// Build attachments grouped by card ID
+	attachmentsByCardID := make(map[string][]wekanAttachment)
+	for _, a := range board.Attachments {
+		attachmentsByCardID[a.CardID] = append(attachmentsByCardID[a.CardID], a)
 	}
 
 	// Create buckets from lists, maintaining sort order
@@ -283,6 +300,25 @@ func convertWekanToVikunja(board *wekanBoard) []*models.ProjectWithTasksAndBucke
 			}
 		}
 
+		// Attachments
+		if attachments, ok := attachmentsByCardID[card.ID]; ok {
+			for _, a := range attachments {
+				decoded, err := base64.StdEncoding.DecodeString(a.File)
+				if err != nil {
+					log.Errorf("[WeKan migration] Error decoding attachment %s on card %s: %s", a.ID, card.ID, err.Error())
+					continue
+				}
+				task.Attachments = append(task.Attachments, &models.TaskAttachment{
+					File: &files.File{
+						Name:        a.Name,
+						Mime:        a.Type,
+						Size:        uint64(len(decoded)),
+						FileContent: decoded,
+					},
+				})
+			}
+		}
+
 		tasks = append(tasks, task)
 	}
 
@@ -330,7 +366,7 @@ func (m *Migrator) Name() string {
 
 // Migrate takes a WeKan board JSON export and imports it into Vikunja.
 // @Summary Import all projects, tasks etc. from a WeKan board export
-// @Description Imports all projects, tasks, labels, checklists, and comments from a WeKan board JSON export into Vikunja.
+// @Description Imports all projects, tasks, labels, checklists, comments, and attachments from a WeKan board JSON export into Vikunja.
 // @tags migration
 // @Accept x-www-form-urlencoded
 // @Produce json
