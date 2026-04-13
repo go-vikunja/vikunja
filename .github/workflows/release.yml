@@ -235,6 +235,7 @@ jobs:
       image: ${{ matrix.image }}
     env:
       REPO_SUITE: ${{ github.ref_type == 'tag' && 'stable' || 'unstable' }}
+      RELEASE_VERSION: unstable
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
