@@ -1405,7 +1405,7 @@ func (Release) RepoApk(ctx context.Context) error {
 
 		// Collect all .apk paths in repo dir for apk index
 		repoApks, _ := filepath.Glob(filepath.Join(repoDir, "*.apk"))
-		indexArgs := append([]string{"index", "-o", filepath.Join(repoDir, "APKINDEX.tar.gz")}, repoApks...)
+		indexArgs := append([]string{"index", "--allow-untrusted", "-o", filepath.Join(repoDir, "APKINDEX.tar.gz")}, repoApks...)
 		if err := runAndStreamOutput(ctx, "apk", indexArgs...); err != nil {
 			return fmt.Errorf("apk index for %s: %w", repoArch, err)
 		}

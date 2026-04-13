@@ -215,6 +215,24 @@ jobs:
     needs:
       - os-package
       - desktop
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - format: apt
+            image: ubuntu:noble
+            mage_target: release:repo-apt
+          - format: rpm
+            image: fedora:latest
+            mage_target: release:repo-rpm
+          - format: pacman
+            image: archlinux:latest
+            mage_target: release:repo-pacman
+          - format: apk
+            image: alpine:latest
+            mage_target: release:repo-apk
+    container:
+      image: ${{ matrix.image }}
     env:
       REPO_SUITE: ${{ github.ref_type == 'tag' && 'stable' || 'unstable' }}
     steps:
@@ -238,70 +256,75 @@ jobs:
           name: vikunja_desktop_packages_ubuntu-latest
           path: dist/repo-work/incoming-desktop
 
-      - name: Copy desktop repo packages to incoming
+      - name: Copy desktop packages to incoming
         run: |
-          # Copy only the repo-compatible formats from desktop builds
-          for ext in deb rpm apk pacman; do
-            cp dist/repo-work/incoming-desktop/*."$ext" dist/repo-work/incoming/ 2>/dev/null || true
-          done
+          cd dist/repo-work/incoming-desktop
+          case "${{ matrix.format }}" in
+            apt)
+              cp *.deb ../incoming/ 2>/dev/null || true
+              ;;
+            rpm)
+              # Add arch suffix so the mage target's *-x86_64.rpm glob matches
+              for f in *.rpm; do
+                [ -f "$f" ] && cp "$f" "../incoming/${f%.rpm}-x86_64.rpm"
+              done
+              ;;
+            pacman)
+              # Rename .pacman to .archlinux with arch suffix
+              for f in *.pacman; do
+                [ -f "$f" ] && cp "$f" "../incoming/${f%.pacman}-x86_64.archlinux"
+              done
+              ;;
+            apk)
+              # Add arch suffix so the mage target's *-x86_64.apk glob matches
+              for f in *.apk; do
+                [ -f "$f" ] && cp "$f" "../incoming/${f%.apk}-x86_64.apk"
+              done
+              ;;
+          esac
 
-      - name: Install repository tools
+      - name: Install tools (apt)
+        if: matrix.format == 'apt'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            reprepro \
-            createrepo-c \
-            pacman-package-manager \
-            makepkg \
-            libarchive-tools
+          apt-get update
+          apt-get install -y --no-install-recommends reprepro
+
+      - name: Install tools (rpm)
+        if: matrix.format == 'rpm'
+        run: dnf install -y createrepo_c
+
+      - name: Install tools (apk)
+        if: matrix.format == 'apk'
+        run: apk add --no-cache abuild
 
       - name: GPG setup
+        if: matrix.format != 'apk'
         uses: kolaente/action-gpg@main
         with:
           gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
           gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
 
       - name: Export GPG public key
+        if: matrix.format == 'apt'
         run: |
           mkdir -p dist/repo-output
           gpg --export --armor 7D061A4AA61436B40713D42EFF054DACD908493A > dist/repo-output/gpg.key
 
-      - name: Generate APT repo metadata
-        env:
-          RELEASE_GPG_KEY: 7D061A4AA61436B40713D42EFF054DACD908493A
-          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
-        run: |
-          chmod +x ./mage-static
-          ./mage-static release:repo-apt
-
-      - name: Generate RPM repo metadata
-        env:
-          RELEASE_GPG_KEY: 7D061A4AA61436B40713D42EFF054DACD908493A
-          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
-        run: ./mage-static release:repo-rpm
-
-      - name: Generate Pacman repo metadata
-        env:
-          RELEASE_GPG_KEY: 7D061A4AA61436B40713D42EFF054DACD908493A
-          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
-        run: ./mage-static release:repo-pacman
-
-      - name: Install apk-tools
-        run: |
-          wget -q https://gitlab.alpinelinux.org/alpine/apk-tools/-/releases/v2.14.6/downloads/apk.static-x86_64
-          chmod +x apk.static-x86_64
-          sudo mv apk.static-x86_64 /usr/local/bin/apk
-
       - name: Setup APK signing key
+        if: matrix.format == 'apk'
         run: |
           mkdir -p ~/.abuild
           echo "${{ secrets.APK_SIGNING_KEY }}" > ~/.abuild/vikunja-apk.rsa
           echo "PACKAGER_PRIVKEY=$HOME/.abuild/vikunja-apk.rsa" > ~/.abuild/abuild.conf
 
-      - name: Generate APK repo metadata
+      - name: Generate repo metadata
         env:
-          APK_SIGNING_KEY_PATH: ~/.abuild/vikunja-apk.rsa
-        run: ./mage-static release:repo-apk
+          RELEASE_GPG_KEY: ${{ matrix.format != 'apk' && '7D061A4AA61436B40713D42EFF054DACD908493A' || '' }}
+          RELEASE_GPG_PASSPHRASE: ${{ matrix.format != 'apk' && secrets.RELEASE_GPG_PASSPHRASE || '' }}
+          APK_SIGNING_KEY_PATH: ${{ matrix.format == 'apk' && '~/.abuild/vikunja-apk.rsa' || '' }}
+        run: |
+          chmod +x ./mage-static
+          ./mage-static ${{ matrix.mage_target }}
 
       - name: Upload repo metadata to R2
         uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
