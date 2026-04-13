@@ -296,7 +296,7 @@ jobs:
 
       - name: Install tools (apk)
         if: matrix.format == 'apk'
-        run: apk add --no-cache abuild
+        run: apk add --no-cache abuild libc6-compat
 
       - name: GPG setup
         if: matrix.format != 'apk'
@@ -318,6 +318,14 @@ jobs:
           echo "${{ secrets.APK_SIGNING_KEY }}" > ~/.abuild/vikunja-apk.rsa
           echo "PACKAGER_PRIVKEY=$HOME/.abuild/vikunja-apk.rsa" > ~/.abuild/abuild.conf
 
+      - name: Debug mage-static binary
+        if: matrix.format == 'apk'
+        run: |
+          ls -la ./mage-static || true
+          file ./mage-static || true
+          readelf -l ./mage-static 2>/dev/null | grep -i interpreter || echo "no interpreter"
+          ldd ./mage-static 2>&1 || true
+
       - name: Generate repo metadata
         env:
           RELEASE_GPG_KEY: ${{ matrix.format != 'apk' && '7D061A4AA61436B40713D42EFF054DACD908493A' || '' }}
@@ -326,6 +334,9 @@ jobs:
         run: |
           chmod +x ./mage-static
           ./mage-static ${{ matrix.mage_target }}
+
+      - name: Debug - repo output structure
+        run: find dist/repo-output -type f 2>/dev/null || ls -laR dist/repo-output/ || true
 
       - name: Upload repo metadata to R2
         uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
@@ -336,7 +347,7 @@ jobs:
           s3-bucket: ${{ secrets.S3_BUCKET }}
           s3-region: ${{ secrets.S3_REGION }}
           target-path: /repos
-          files: "dist/repo-output/**/*"
+          files: "dist/repo-output/**/*.*"
           strip-path-prefix: dist/repo-output/
 
   config-yaml:
