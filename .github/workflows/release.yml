@@ -277,10 +277,7 @@ jobs:
               done
               ;;
             apk)
-              # Add arch suffix so the mage target's *-x86_64.apk glob matches
-              for f in *.apk; do
-                [ -f "$f" ] && cp "$f" "../incoming/${f%.apk}-x86_64.apk"
-              done
+              # Desktop .apk is not an Alpine package, skip
               ;;
           esac
 
