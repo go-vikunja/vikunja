@@ -318,22 +318,37 @@ jobs:
           echo "${{ secrets.APK_SIGNING_KEY }}" > ~/.abuild/vikunja-apk.rsa
           echo "PACKAGER_PRIVKEY=$HOME/.abuild/vikunja-apk.rsa" > ~/.abuild/abuild.conf
 
-      - name: Debug mage-static binary
-        if: matrix.format == 'apk'
-        run: |
-          ls -la ./mage-static || true
-          file ./mage-static || true
-          readelf -l ./mage-static 2>/dev/null | grep -i interpreter || echo "no interpreter"
-          ldd ./mage-static 2>&1 || true
-
       - name: Generate repo metadata
+        if: matrix.format != 'apk'
         env:
-          RELEASE_GPG_KEY: ${{ matrix.format != 'apk' && '7D061A4AA61436B40713D42EFF054DACD908493A' || '' }}
-          RELEASE_GPG_PASSPHRASE: ${{ matrix.format != 'apk' && secrets.RELEASE_GPG_PASSPHRASE || '' }}
-          APK_SIGNING_KEY_PATH: ${{ matrix.format == 'apk' && '~/.abuild/vikunja-apk.rsa' || '' }}
+          RELEASE_GPG_KEY: 7D061A4AA61436B40713D42EFF054DACD908493A
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
         run: |
           chmod +x ./mage-static
           ./mage-static ${{ matrix.mage_target }}
+
+      - name: Generate APK repo metadata
+        if: matrix.format == 'apk'
+        run: |
+          incoming=dist/repo-work/incoming
+          output_base=dist/repo-output/apk/$REPO_SUITE/main
+          signing_key=~/.abuild/vikunja-apk.rsa
+          for arch in x86_64 aarch64 armv7; do
+            repo_dir="$output_base/$arch"
+            mkdir -p "$repo_dir"
+            # Symlink matching packages
+            found=false
+            for pkg in "$incoming"/*-"$arch".apk; do
+              [ -f "$pkg" ] || continue
+              found=true
+              ln -sf "$(realpath "$pkg")" "$repo_dir/$(basename "$pkg")"
+            done
+            $found || continue
+            # Create index and sign
+            apk index --allow-untrusted -o "$repo_dir/APKINDEX.tar.gz" "$repo_dir"/*.apk
+            abuild-sign -k "$signing_key" "$repo_dir/APKINDEX.tar.gz"
+          done
+          echo "APK repo metadata generated in $output_base"
 
       - name: Debug - repo output structure
         run: find dist/repo-output -type f 2>/dev/null || ls -laR dist/repo-output/ || true

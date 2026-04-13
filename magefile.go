@@ -67,7 +67,6 @@ var (
 		"release:os-package":          Release.OsPackage,
 		"release:prepare-nfpm-config": Release.PrepareNFPMConfig,
 		"release:repo-apt":            Release.RepoApt,
-		"release:repo-apk":            Release.RepoApk,
 		"release:repo-rpm":            Release.RepoRpm,
 		"release:repo-pacman":         Release.RepoPacman,
 		"dev:make-migration":          Dev.MakeMigration,
@@ -1361,65 +1360,6 @@ func (Release) RepoRpm(ctx context.Context) error {
 	}
 
 	fmt.Println("RPM repo metadata generated in", outputBase)
-	return nil
-}
-
-// RepoApk generates Alpine APK repository index for all .apk files in the work directory.
-// Expects .apk files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/apk/<suite>/main/.
-// Environment: APK_SIGNING_KEY_PATH must point to an RSA private key for abuild-sign.
-// Environment: REPO_SUITE controls the target suite (default: "stable").
-func (Release) RepoApk(ctx context.Context) error {
-	mg.Deps(initVars)
-
-	suite := repoSuite()
-
-	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
-	outputBase := filepath.Join(DIST, "repo-output", "apk", suite, "main")
-	signingKey := os.Getenv("APK_SIGNING_KEY_PATH")
-
-	archMap := map[string]string{
-		"x86_64":  "x86_64",
-		"aarch64": "aarch64",
-		"armv7":   "armv7",
-	}
-
-	for pkgArch, repoArch := range archMap {
-		repoDir := filepath.Join(outputBase, repoArch)
-		if err := os.MkdirAll(repoDir, 0o755); err != nil {
-			return err
-		}
-
-		pattern := filepath.Join(incomingDir, "*-"+pkgArch+".apk")
-		apks, _ := filepath.Glob(pattern)
-		if len(apks) == 0 {
-			continue
-		}
-		for _, apk := range apks {
-			abs, _ := filepath.Abs(apk)
-			dst := filepath.Join(repoDir, filepath.Base(apk))
-			os.Remove(dst)
-			if err := os.Symlink(abs, dst); err != nil {
-				return err
-			}
-		}
-
-		// Collect all .apk paths in repo dir for apk index
-		repoApks, _ := filepath.Glob(filepath.Join(repoDir, "*.apk"))
-		indexArgs := append([]string{"index", "--allow-untrusted", "-o", filepath.Join(repoDir, "APKINDEX.tar.gz")}, repoApks...)
-		if err := runAndStreamOutput(ctx, "apk", indexArgs...); err != nil {
-			return fmt.Errorf("apk index for %s: %w", repoArch, err)
-		}
-
-		// Sign with abuild-sign
-		if err := runAndStreamOutput(ctx, "abuild-sign",
-			"-k", signingKey,
-			filepath.Join(repoDir, "APKINDEX.tar.gz"),
-		); err != nil {
-			return fmt.Errorf("abuild-sign for %s: %w", repoArch, err)
-		}
-	}
-
-	fmt.Println("APK repo metadata generated in", outputBase)
 	return nil
 }
 
