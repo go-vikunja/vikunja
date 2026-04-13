@@ -1439,7 +1439,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Imports all projects, tasks, labels, checklists, and comments from a WeKan board JSON export into Vikunja.",
+                "description": "Imports all projects, tasks, labels, checklists, comments, and attachments from a WeKan board JSON export into Vikunja.",
                 "consumes": [
                     "application/x-www-form-urlencoded"
                 ],
