@@ -253,6 +253,18 @@ jobs:
           ls -lah dist/repo-work/incoming-desktop/ || true
           echo "=== file types ==="
           file dist/repo-work/incoming/* || true
+          echo "=== archlinux package contents (first x86_64) ==="
+          pkg=$(ls dist/repo-work/incoming/*-x86_64.archlinux 2>/dev/null | head -1)
+          if [ -n "$pkg" ]; then
+            echo "Inspecting: $pkg"
+            zstd -d "$pkg" -o /tmp/pkg.tar 2>&1 && tar tf /tmp/pkg.tar | head -20 || true
+          fi
+          echo "=== desktop pacman package contents ==="
+          dpkg=$(ls dist/repo-work/incoming-desktop/*.pacman 2>/dev/null | head -1)
+          if [ -n "$dpkg" ]; then
+            echo "Inspecting: $dpkg"
+            xz -d -c "$dpkg" | tar tf - | head -20 || true
+          fi
 
       - name: Install repository tools
         run: |
