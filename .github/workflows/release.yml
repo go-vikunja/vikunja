@@ -119,7 +119,7 @@ jobs:
             gpg -v --default-key 7D061A4AA61436B40713D42EFF054DACD908493A -b --batch --yes --passphrase "${{ secrets.RELEASE_GPG_PASSPHRASE }}" --pinentry-mode loopback --sign "$file"
           done
       - name: Upload
-        uses: kolaente/s3-action@89a9be2f8d91dfea6e059a9dbb2b1e29eb5a09c7 # v1.2.2
+        uses: kolaente/s3-action@main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
@@ -194,7 +194,7 @@ jobs:
           target: ./dist/os-packages/vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
           config: ./nfpm.yaml
       - name: Upload
-        uses: kolaente/s3-action@89a9be2f8d91dfea6e059a9dbb2b1e29eb5a09c7 # v1.2.2
+        uses: kolaente/s3-action@main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
@@ -356,7 +356,7 @@ jobs:
           rm -rf dist/repo-output/apt/db dist/repo-output/apt/conf 2>/dev/null || true
 
       - name: Upload to R2
-        uses: kolaente/s3-action@89a9be2f8d91dfea6e059a9dbb2b1e29eb5a09c7 # v1.2.2
+        uses: kolaente/s3-action@main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
@@ -383,7 +383,7 @@ jobs:
           chmod +x ./mage-static
           ./mage-static generate:config-yaml 1
       - name: Upload to S3
-        uses: kolaente/s3-action@89a9be2f8d91dfea6e059a9dbb2b1e29eb5a09c7 # v1.2.2
+        uses: kolaente/s3-action@main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
@@ -433,7 +433,7 @@ jobs:
           pnpm install  --frozen-lockfile --prefer-offline --fetch-timeout 100000
           node build.js "${{ steps.ghd.outputs.describe }}" ${{ github.ref_type == 'tag' }}
       - name: Upload to S3
-        uses: kolaente/s3-action@89a9be2f8d91dfea6e059a9dbb2b1e29eb5a09c7 # v1.2.2
+        uses: kolaente/s3-action@main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
