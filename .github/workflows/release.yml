@@ -360,11 +360,19 @@ jobs:
         run: |
           # Remove reprepro internal state (not needed for serving)
           rm -rf dist/repo-output/apt/db dist/repo-output/apt/conf 2>/dev/null || true
+          # Resolve symlinks into real files (S3 can't store symlinks)
+          find dist/repo-output -type l | while IFS= read -r link; do
+            target=$(readlink -f "$link")
+            if [ -f "$target" ]; then
+              rm "$link"
+              cp "$target" "$link"
+            else
+              rm "$link"
+            fi
+          done
           # Remove actual package files — the worker redirects these to the
           # existing artifacts so we don't need to store them twice.
           find dist/repo-output -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.apk' -o -name '*.archlinux' -o -name '*.pacman' -o -name '*.pkg.tar.zst' \) -delete 2>/dev/null || true
-          # Remove symlinks to package files (rpm/pacman/apk use symlinks)
-          find dist/repo-output -type l -delete 2>/dev/null || true
           # Remove now-empty directories
           find dist/repo-output -type d -empty -delete 2>/dev/null || true
 
