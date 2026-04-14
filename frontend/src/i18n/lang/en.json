@@ -844,6 +844,9 @@
         "toggleHeaderCell": "Toggle header cell",
         "mergeOrSplit": "Merge or split",
         "fixTables": "Fix tables"
+      },
+      "emoji": {
+        "empty": "No emoji found"
       }
     },
     "multiselect": {
