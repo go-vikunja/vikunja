@@ -12,8 +12,12 @@
 			>
 				<span class="emoji-glyph">{{ item.emoji }}</span>
 				<div class="emoji-info">
-					<p class="emoji-shortcode">:{{ item.shortcode }}:</p>
-					<p class="emoji-annotation">{{ item.annotation }}</p>
+					<p class="emoji-shortcode">
+						:{{ item.shortcode }}:
+					</p>
+					<p class="emoji-annotation">
+						{{ item.annotation }}
+					</p>
 				</div>
 			</button>
 		</template>
