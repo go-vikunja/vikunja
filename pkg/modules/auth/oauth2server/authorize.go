@@ -19,7 +19,9 @@ package oauth2server
 import (
 	"net/http"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
@@ -47,6 +49,7 @@ type AuthorizeResponse struct {
 // It validates the OAuth parameters, creates an authorization code, and
 // returns it as JSON. Authentication is handled by the token middleware.
 func HandleAuthorize(c *echo.Context) error {
+
 	var req authorizeRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
@@ -56,9 +59,20 @@ func HandleAuthorize(c *echo.Context) error {
 	if req.ResponseType != "code" {
 		return echo.NewHTTPError(http.StatusBadRequest, "response_type must be 'code'")
 	}
+	s := db.NewSession()
+	defer s.Close()
+
+	var client *models.OAuthClient
+	if config.AuthEnableDynamicClientRegistration.GetBool() {
+		var err error
+		client, err = models.GetOAuthClientByClientID(s, req.ClientID)
+		if err != nil {
+			log.Warningf("error getting OAuth client: %s %v", req.ClientID, err)
+		}
+	}
 
 	// Validate redirect_uri
-	if !ValidateRedirectURI(req.RedirectURI) {
+	if !ValidateRedirectURI(req, client) {
 		return &models.ErrOAuthInvalidRedirectURI{}
 	}
 
@@ -72,9 +86,6 @@ func HandleAuthorize(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-
-	s := db.NewSession()
-	defer s.Close()
 
 	fullUser, err := user.GetUserByID(s, u.ID)
 	if err != nil {

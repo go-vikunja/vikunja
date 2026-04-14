@@ -36,14 +36,14 @@ type TokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// tokenRequest holds the JSON body of a POST /oauth/token request.
+// tokenRequest holds the form and JSON body of a POST /oauth/token request.
 type tokenRequest struct {
-	GrantType    string `json:"grant_type"`
-	Code         string `json:"code"`
-	ClientID     string `json:"client_id"`
-	RedirectURI  string `json:"redirect_uri"`
-	CodeVerifier string `json:"code_verifier"`
-	RefreshToken string `json:"refresh_token"`
+	GrantType    string `json:"grant_type" form:"grant_type"`
+	Code         string `json:"code" form:"code"`
+	ClientID     string `json:"client_id" form:"client_id"`
+	RedirectURI  string `json:"redirect_uri" form:"redirect_uri"`
+	CodeVerifier string `json:"code_verifier" form:"code_verifier"`
+	RefreshToken string `json:"refresh_token" form:"refresh_token"`
 }
 
 // HandleToken handles POST /oauth/token.

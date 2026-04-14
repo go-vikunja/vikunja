@@ -60,6 +60,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	vikunjaMcp "code.vikunja.io/api/pkg/mcp"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
@@ -247,15 +248,22 @@ func setupSentry(e *echo.Echo) {
 // RegisterRoutes registers all routes for the application
 func RegisterRoutes(e *echo.Echo) {
 
+	wkg := e.Group("/.well-known")
 	if config.ServiceEnableCaldav.GetBool() {
 		// Caldav routes
-		wkg := e.Group("/.well-known")
 		wkg.Use(middleware.BasicAuth(caldav.BasicAuth))
 		wkg.Any("/caldav", caldav.PrincipalHandler)
 		wkg.Any("/caldav/", caldav.PrincipalHandler)
 		c := e.Group("/dav")
 		registerCalDavRoutes(c)
 	}
+
+	e.GET("/.well-known/openid-configuration", oauth2server.OidHandler)
+	e.GET("/.well-known/oauth-authorization-server", oauth2server.OidHandler)
+
+	e.POST("/api/v1/auth/openid/register",
+		oauth2server.RegisterHandler,
+		RateLimit(createRateLimiter(oauth2server.RateLimit()), "ip"))
 
 	// healthcheck
 	e.GET("/health", HealthcheckHandler)
@@ -289,6 +297,13 @@ func RegisterRoutes(e *echo.Echo) {
 	// API Routes
 	a := e.Group("/api/v1")
 	registerAPIRoutes(a)
+
+	// Start MCP server if enabled
+	if config.MCPEnabled.GetBool() {
+		mcpCfg := vikunjaMcp.GetMCPConfig()
+		mcpServer := vikunjaMcp.NewMCPServerWrapper(mcpCfg)
+		e.Any("/mcp", mcpServer.HandleRequest, SetupTokenMiddleware())
+	}
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
