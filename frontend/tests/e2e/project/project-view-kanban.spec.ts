@@ -152,17 +152,11 @@ test.describe('Project View Kanban', () => {
 			project_id: projects[0].id,
 			view_kind: 3,
 			bucket_configuration_mode: 1,
+			done_bucket_id: 2,
 		})
 		const localBuckets = await BucketFactory.create(2, {
+			id: '{increment}',
 			project_view_id: 10,
-		})
-		// Re-seed the view with done_bucket_id set now that the bucket exists
-		await ProjectViewFactory.create(1, {
-			id: 10,
-			project_id: projects[0].id,
-			view_kind: 3,
-			bucket_configuration_mode: 1,
-			done_bucket_id: localBuckets[1].id,
 		})
 
 		const tomorrow = new Date()
