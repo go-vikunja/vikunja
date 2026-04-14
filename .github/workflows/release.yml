@@ -179,6 +179,12 @@ jobs:
       - name: Write GPG key for nfpm
         if: matrix.package == 'rpm'
         run: echo -n "${{ secrets.RELEASE_GPG_SIGN_KEY }}" > /tmp/nfpm-signing-key.gpg
+      - name: GPG setup for package signing
+        if: matrix.package == 'archlinux'
+        uses: kolaente/action-gpg@main
+        with:
+          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
+          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
       - name: Prepare
         env:
           RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
@@ -199,6 +205,15 @@ jobs:
         env:
           NFPM_GPG_KEY_FILE: ${{ (matrix.package == 'rpm') && '/tmp/nfpm-signing-key.gpg' || '' }}
           NFPM_PASSPHRASE: ${{ (matrix.package == 'rpm') && secrets.RELEASE_GPG_PASSPHRASE || '' }}
+      - name: Sign package
+        if: matrix.package == 'archlinux'
+        run: |
+          gpg --default-key 7D061A4AA61436B40713D42EFF054DACD908493A \
+            --batch --yes \
+            --passphrase "${{ secrets.RELEASE_GPG_PASSPHRASE }}" \
+            --pinentry-mode loopback \
+            --detach-sign \
+            ./dist/os-packages/vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
       - name: Upload
         uses: kolaente/s3-action@main
         with:
