@@ -350,6 +350,13 @@ jobs:
       - name: Debug - repo output structure
         run: find dist/repo-output -type f 2>/dev/null || ls -laR dist/repo-output/ || true
 
+      - name: Remove directories and internal db from repo output
+        run: |
+          # Remove reprepro internal database (not needed for serving)
+          rm -rf dist/repo-output/apt/db dist/repo-output/apt/conf 2>/dev/null || true
+          # Remove symlinks to directories that confuse the S3 upload
+          find dist/repo-output -type l -exec sh -c 'test -d "$1" && rm "$1"' _ {} \; 2>/dev/null || true
+
       - name: Upload repo metadata to R2
         uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
         with:
@@ -359,7 +366,7 @@ jobs:
           s3-bucket: ${{ secrets.S3_BUCKET }}
           s3-region: ${{ secrets.S3_REGION }}
           target-path: /repos
-          files: "dist/repo-output/**/*.*"
+          files: "dist/repo-output/**/*"
           strip-path-prefix: dist/repo-output/
 
   config-yaml:
