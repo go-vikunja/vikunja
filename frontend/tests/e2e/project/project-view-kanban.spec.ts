@@ -144,6 +144,55 @@ test.describe('Project View Kanban', () => {
 		await expect(page.locator('.kanban .bucket:nth-child(1) .tasks')).not.toContainText(tasks[0].title)
 	})
 
+	test('Recurring task dropped on done bucket moves back to the default bucket', async ({authenticatedPage: page}) => {
+		// Reproduces https://github.com/go-vikunja/vikunja/issues/2618
+		const projects = await ProjectFactory.create(1)
+		await ProjectViewFactory.create(1, {
+			id: 10,
+			project_id: projects[0].id,
+			view_kind: 3,
+			bucket_configuration_mode: 1,
+		})
+		const localBuckets = await BucketFactory.create(2, {
+			project_view_id: 10,
+		})
+		// Re-seed the view with done_bucket_id set now that the bucket exists
+		await ProjectViewFactory.create(1, {
+			id: 10,
+			project_id: projects[0].id,
+			view_kind: 3,
+			bucket_configuration_mode: 1,
+			done_bucket_id: localBuckets[1].id,
+		})
+
+		const tomorrow = new Date()
+		tomorrow.setDate(tomorrow.getDate() + 1)
+		const tasks = await TaskFactory.create(1, {
+			id: 100,
+			project_id: projects[0].id,
+			title: 'Recurring Task',
+			repeat_after: 604800,
+			repeat_mode: 2,
+			due_date: tomorrow.toISOString(),
+		})
+		await TaskBucketFactory.create(1, {
+			task_id: tasks[0].id,
+			bucket_id: localBuckets[0].id,
+			project_view_id: 10,
+		})
+
+		await page.goto(`/projects/${projects[0].id}/10`)
+
+		const sourceTask = page.locator('.kanban .bucket .tasks .task').filter({hasText: tasks[0].title}).first()
+		const doneBucket = page.locator('.kanban .bucket:nth-child(2) .tasks')
+		await sourceTask.dragTo(doneBucket)
+
+		// After the drop, the backend's recurrence redirect must be honored in the UI:
+		// the card appears back in the first (default/backlog) bucket with no refresh.
+		await expect(page.locator('.kanban .bucket:nth-child(1) .tasks')).toContainText(tasks[0].title)
+		await expect(page.locator('.kanban .bucket:nth-child(2) .tasks')).not.toContainText(tasks[0].title)
+	})
+
 	test('Should navigate to the task when the task card is clicked', async ({authenticatedPage: page}) => {
 		const tasks = await createTaskWithBuckets(buckets, 5)
 		await page.goto('/projects/1/4')
