@@ -1,10 +1,12 @@
 import {VueRenderer} from '@tiptap/vue-3'
 import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom'
 import type {Editor, Range} from '@tiptap/core'
-import type {EditorState} from '@tiptap/pm/state'
+import {PluginKey, type EditorState} from '@tiptap/pm/state'
 
 import EmojiList from './EmojiList.vue'
 import {loadEmojis, filterEmojis, type EmojiEntry} from './emojiData'
+
+export const EmojiSuggestionPluginKey = new PluginKey('emojiSuggestion')
 
 interface SuggestionProps {
 	editor: Editor
@@ -20,6 +22,7 @@ const SHORTCODE_RE = /^[a-zA-Z0-9_]*$/
 
 export default function emojiSuggestionSetup() {
 	return {
+		pluginKey: EmojiSuggestionPluginKey,
 		char: ':',
 		allowedPrefixes: [' ', '\t', '\n'],
 		startOfLine: false,
