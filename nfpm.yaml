@@ -10,6 +10,9 @@ priority: "extra"
 license: "AGPLv3"
 depends:
   - systemd
+rpm:
+  signature:
+    key_file: ${NFPM_GPG_KEY_FILE}
 overrides:
   apk:
     depends:
