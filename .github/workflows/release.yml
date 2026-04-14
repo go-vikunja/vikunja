@@ -176,16 +176,9 @@ jobs:
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: mage_bin
-      - name: GPG setup
+      - name: Write GPG key for nfpm
         if: matrix.package == 'rpm'
-        uses: kolaente/action-gpg@main
-        with:
-          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
-          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
-      - name: Export GPG key for nfpm
-        if: matrix.package == 'rpm'
-        run: |
-          gpg --export-secret-keys --armor 7D061A4AA61436B40713D42EFF054DACD908493A > /tmp/nfpm-signing-key.gpg
+        run: echo -n "${{ secrets.RELEASE_GPG_SIGN_KEY }}" > /tmp/nfpm-signing-key.gpg
       - name: Prepare
         env:
           RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
