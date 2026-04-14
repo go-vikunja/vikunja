@@ -170,6 +170,7 @@ import HardBreak from '@tiptap/extension-hard-break'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
+import {EmojiExtension} from './emoji/emojiExtension'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
 import MentionUser from './mention/MentionUser.vue'
 
@@ -514,6 +515,8 @@ const extensions : Extensions = [
 	Commands.configure({
 		suggestion: suggestionSetup(t),
 	}),
+
+	EmojiExtension,
 
 	PasteHandler,
 ]
