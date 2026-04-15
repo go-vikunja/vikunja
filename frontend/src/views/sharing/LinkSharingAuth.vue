@@ -3,10 +3,7 @@
 		<Message v-if="loading">
 			{{ $t('sharing.authenticating') }}
 		</Message>
-		<div
-			v-if="authenticateWithPassword"
-			class="box"
-		>
+		<Card v-if="authenticateWithPassword">
 			<p class="pbe-2">
 				{{ $t('sharing.passwordRequired') }}
 			</p>
@@ -33,7 +30,7 @@
 			>
 				{{ errorMessage }}
 			</Message>
-		</div>
+		</Card>
 	</div>
 </template>
 
@@ -43,6 +40,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useTitle} from '@vueuse/core'
 
+import Card from '@/components/misc/Card.vue'
 import Message from '@/components/misc/Message.vue'
 import FormField from '@/components/input/FormField.vue'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'

@@ -29,9 +29,9 @@ test.describe('Team', () => {
 
 		await page.goto('/teams')
 
-		await expect(page.locator('.teams.box')).not.toBeEmpty()
+		await expect(page.locator('ul.teams')).not.toBeEmpty()
 		for (const t of teams) {
-			await expect(page.locator('.teams.box')).toContainText(t.name)
+			await expect(page.locator('ul.teams')).toContainText(t.name)
 		}
 	})
 
