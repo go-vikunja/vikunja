@@ -24,7 +24,7 @@ function convertObject(o: unknown) {
 }
 
 function prepareParams(params: Record<string, unknown | unknown[]>) {
-	if (typeof params !== 'object') {
+	if (typeof params !== 'object' || params === null) {
 		return params
 	}
 

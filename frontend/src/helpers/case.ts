@@ -7,7 +7,7 @@ import {camelCase, snakeCase} from 'change-case'
 export function objectToCamelCase(object: Record<string, any>) {
 
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
-	if (typeof object !== 'object') {
+	if (typeof object !== 'object' || object === null) {
 		return object
 	}
 
@@ -45,7 +45,7 @@ export function objectToCamelCase(object: Record<string, any>) {
 export function objectToSnakeCase(object: Record<string, any>) {
 
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
-	if (typeof object !== 'object') {
+	if (typeof object !== 'object' || object === null) {
 		return object
 	}
 
