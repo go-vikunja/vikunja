@@ -49,7 +49,7 @@
 @import "bulma-css-variables/sass/components/media"; 
 @import "bulma-css-variables/sass/components/menu";
 //@import "bulma-css-variables/sass/components/message"; // not used
-@import "bulma-css-variables/sass/components/modal";
+// @import "bulma-css-variables/sass/components/modal"; // not used; Modal.vue owns its own dialog-based styles
 @import "bulma-css-variables/sass/components/navbar";
 @import "bulma-css-variables/sass/components/pagination";
 // @import "bulma-css-variables/sass/components/panel"; // not used
