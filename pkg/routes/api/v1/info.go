@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
@@ -54,6 +55,7 @@ type vikunjaInfos struct {
 	DemoModeEnabled            bool      `json:"demo_mode_enabled"`
 	WebhooksEnabled            bool      `json:"webhooks_enabled"`
 	PublicTeamsEnabled         bool      `json:"public_teams_enabled"`
+	EnabledProFeatures         []string  `json:"enabled_pro_features"`
 }
 
 type authInfo struct {
@@ -105,6 +107,7 @@ func Info(c *echo.Context) error {
 		DemoModeEnabled:        config.ServiceDemoMode.GetBool(),
 		WebhooksEnabled:        config.WebhooksEnabled.GetBool(),
 		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
+		EnabledProFeatures:     license.EnabledProFeatures(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),
