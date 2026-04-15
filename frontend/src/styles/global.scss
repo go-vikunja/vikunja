@@ -64,7 +64,7 @@
 // imports from "bulma-css-variables/sass/helpers/_all";
 @import "bulma-css-variables/sass/helpers/color";
 @import "bulma-css-variables/sass/helpers/flexbox";
-@import "bulma-css-variables/sass/helpers/float";
+// float: ported locally to theme/helpers.scss; only .is-pulled-right is used
 // @import "bulma-css-variables/sass/helpers/other"; // not used
 // @import "bulma-css-variables/sass/helpers/overflow";
 // @import "bulma-css-variables/sass/helpers/position";
