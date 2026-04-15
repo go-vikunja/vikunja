@@ -48,6 +48,8 @@ var (
 	userFlagDisableUser           bool
 	userFlagDeleteNow             bool
 	userFlagDeleteConfirm         bool
+	userFlagMakeAdmin             bool
+	userFlagRemoveAdmin           bool
 )
 
 func init() {
@@ -81,8 +83,57 @@ func init() {
 	// Bypass confirm prompt
 	userDeleteCmd.Flags().BoolVarP(&userFlagDeleteConfirm, "confirm", "c", false, "Bypasses any prompts confirming the deletion request, use with caution!")
 
-	userCmd.AddCommand(userListCmd, userCreateCmd, userUpdateCmd, userResetPasswordCmd, userChangeStatusCmd, userDeleteCmd)
+	// Set admin flags
+	userSetAdminCmd.Flags().BoolVar(&userFlagMakeAdmin, "admin", false, "Promote the user to site admin.")
+	userSetAdminCmd.Flags().BoolVar(&userFlagRemoveAdmin, "no-admin", false, "Revoke site admin from the user.")
+	userSetAdminCmd.MarkFlagsMutuallyExclusive("admin", "no-admin")
+	userSetAdminCmd.MarkFlagsOneRequired("admin", "no-admin")
+
+	userCmd.AddCommand(userListCmd, userCreateCmd, userUpdateCmd, userResetPasswordCmd, userChangeStatusCmd, userDeleteCmd, userSetAdminCmd)
 	rootCmd.AddCommand(userCmd)
+}
+
+func setUserAdmin(s *xorm.Session, identifier string, value bool) error {
+	filter := &user.User{}
+	id, err := strconv.ParseInt(identifier, 10, 64)
+	if err != nil {
+		filter.Username = identifier
+	} else {
+		filter.ID = id
+	}
+	u, err := user.GetUserWithEmail(s, filter)
+	if err != nil && !user.IsErrUserStatusError(err) {
+		return err
+	}
+	u.IsAdmin = value
+	_, err = s.ID(u.ID).Cols("is_admin").Update(u)
+	return err
+}
+
+var userSetAdminCmd = &cobra.Command{
+	Use:   "set-admin [username-or-id]",
+	Short: "Set or remove the site-admin flag on a user.",
+	Args:  cobra.ExactArgs(1),
+	PreRun: func(_ *cobra.Command, _ []string) {
+		initialize.FullInit()
+	},
+	Run: func(_ *cobra.Command, args []string) {
+		s := db.NewSession()
+		defer s.Close()
+		value := userFlagMakeAdmin // false when --no-admin was set
+		if err := setUserAdmin(s, args[0], value); err != nil {
+			_ = s.Rollback()
+			log.Fatalf("Could not update admin flag: %s", err)
+		}
+		if err := s.Commit(); err != nil {
+			log.Fatalf("Could not commit: %s", err)
+		}
+		if value {
+			fmt.Printf("User %q is now a site admin.\n", args[0])
+		} else {
+			fmt.Printf("User %q is no longer a site admin.\n", args[0])
+		}
+	},
 }
 
 func getPasswordFromFlagOrInput() (pw string) {
