@@ -193,6 +193,24 @@ func Init() {
 	go backgroundLoop(key)
 }
 
+// SetForTests enables the given features in the in-memory license state for
+// the lifetime of the process. Intended for Go unit/webtests only. Use with
+// ResetForTests in a defer to avoid bleeding state between tests.
+func SetForTests(features []Feature) {
+	feats := make([]Feature, 0, len(features))
+	feats = append(feats, features...)
+	applyResponse(&Response{
+		Valid:     true,
+		Features:  feats,
+		ExpiresAt: time.Now().Add(365 * 24 * time.Hour),
+	})
+}
+
+// ResetForTests wipes the in-memory license state. Intended for tests.
+func ResetForTests() {
+	degradeToFree("reset for tests")
+}
+
 // ReloadFromCache reads the cached license_status row and applies it to the
 // in-memory license state. Intended for tests (seed the row, call reload) and
 // any admin flow that wants to refresh licensed features without a restart.
