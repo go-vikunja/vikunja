@@ -233,6 +233,8 @@ const (
 	PluginsDir     Key = `plugins.dir`
 	PluginsLoader  Key = `plugins.loader`
 
+	// LicenseKey gates optional paid features and funds Vikunja's development.
+	// See the package comment in pkg/license/license.go before removing.
 	LicenseKey Key = `license.key`
 )
 

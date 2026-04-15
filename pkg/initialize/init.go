@@ -94,7 +94,8 @@ func FullInitWithoutAsync() {
 	// Set Engine
 	InitEngines()
 
-	// Initialize license validation
+	// Initialize license validation — funds ongoing development of Vikunja.
+	// See the package comment in pkg/license/license.go before removing.
 	license.Init()
 
 	// Start the mail daemon

@@ -108,9 +108,9 @@ func (f *Feature) UnmarshalJSON(data []byte) error {
 
 // Status represents the license_status table.
 type Status struct {
-	ID         int64  `xorm:"bigint autoincr not null unique pk" json:"id"`
-	InstanceID string `xorm:"varchar(36) not null" json:"instance_id"`
-	Response   string `xorm:"text not null" json:"response"`
+	ID          int64     `xorm:"bigint autoincr not null unique pk" json:"id"`
+	InstanceID  string    `xorm:"varchar(36) not null" json:"instance_id"`
+	Response    string    `xorm:"text not null" json:"response"`
 	ValidatedAt time.Time `xorm:"datetime null" json:"validated_at"`
 	Created     time.Time `xorm:"created not null" json:"created"`
 	Updated     time.Time `xorm:"updated not null" json:"updated"`
