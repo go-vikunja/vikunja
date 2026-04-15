@@ -12,7 +12,11 @@
 		</XButton>
 
 		<h1>{{ $t('team.title') }}</h1>
-		<Card v-if="teams.length > 0">
+		<Card
+			v-if="teams.length > 0"
+			:padding="false"
+			:has-content="false"
+		>
 			<ul class="teams">
 				<li
 					v-for="team in teams"
