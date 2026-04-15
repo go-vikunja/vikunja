@@ -193,6 +193,22 @@ func Init() {
 	go backgroundLoop(key)
 }
 
+// ReloadFromCache reads the cached license_status row and applies it to the
+// in-memory license state. Intended for tests (seed the row, call reload) and
+// any admin flow that wants to refresh licensed features without a restart.
+// If the cached response is empty or missing, the instance degrades to free mode.
+func ReloadFromCache() error {
+	cached, err := loadCachedStatus()
+	if err != nil {
+		return err
+	}
+	if cached == nil || cached.Response == "" || cached.Response == "{}" {
+		degradeToFree("License cache is empty.")
+		return nil
+	}
+	return applyFromCache(cached)
+}
+
 // EnabledProFeatures returns the string keys of all currently enabled licensed features.
 // Returns an empty slice in free mode.
 func EnabledProFeatures() []string {
