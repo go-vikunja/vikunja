@@ -42,6 +42,10 @@ func (lu *ProjectUser) canDoProjectUser(s *xorm.Session, a web.Auth) (bool, erro
 		return false, nil
 	}
 
+	if isSiteAdmin(a) {
+		return true, nil
+	}
+
 	// Get the project and check if the user has write access on it
 	l := Project{ID: lu.ProjectID}
 	return l.IsAdmin(s, a)

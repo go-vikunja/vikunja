@@ -51,6 +51,10 @@ func (tm *TeamMember) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
+	if isSiteAdmin(a) {
+		return true, nil
+	}
+
 	// A user can add a member to a team if he is admin of that team
 	exists, err := s.
 		Where("user_id = ? AND team_id = ? AND admin = ?", a.GetID(), tm.TeamID, true).

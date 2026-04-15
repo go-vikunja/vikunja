@@ -34,6 +34,10 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
+	if isSiteAdmin(a) {
+		return true, nil
+	}
+
 	// Get the project and check the permission
 	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
@@ -73,6 +77,14 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanRead checks if a user has read access to a project
 func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+
+	if isSiteAdmin(a) {
+		originalProject, err := GetProjectSimpleByID(s, p.ID)
+		if err == nil {
+			*p = *originalProject
+		}
+		return true, int(PermissionAdmin), nil
+	}
 
 	// The favorite project needs a special treatment
 	if p.ID == FavoritesPseudoProject.ID {
@@ -116,6 +128,10 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 	// The favorite project can't be edited
 	if p.ID == FavoritesPseudoProject.ID {
 		return false, nil
+	}
+
+	if isSiteAdmin(a) {
+		return true, nil
 	}
 
 	fid := GetSavedFilterIDFromProjectID(p.ID)
@@ -165,11 +181,17 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 
 // CanDelete checks if the user can delete a project
 func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if isSiteAdmin(a) {
+		return true, nil
+	}
 	return p.IsAdmin(s, a)
 }
 
 // CanCreate checks if the user can create a project
 func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if isSiteAdmin(a) {
+		return true, nil
+	}
 	if p.ParentProjectID != 0 {
 		parent := &Project{ID: p.ParentProjectID}
 		return parent.CanWrite(s, a)
@@ -187,6 +209,10 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	// The favorite project can't be edited
 	if p.ID == FavoritesPseudoProject.ID {
 		return false, nil
+	}
+
+	if isSiteAdmin(a) {
+		return true, nil
 	}
 
 	originalProject, err := GetProjectSimpleByID(s, p.ID)

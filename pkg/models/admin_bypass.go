@@ -17,35 +17,15 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
-	"xorm.io/xorm"
 )
 
-// CanCreate checks if the user can create a team <-> project relation
-func (tl *TeamProject) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamProject(s, a)
-}
-
-// CanDelete checks if the user can delete a team <-> project relation
-func (tl *TeamProject) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamProject(s, a)
-}
-
-// CanUpdate checks if the user can update a team <-> project relation
-func (tl *TeamProject) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamProject(s, a)
-}
-
-func (tl *TeamProject) canDoTeamProject(s *xorm.Session, a web.Auth) (bool, error) {
-	// Link shares aren't allowed to do anything
-	if _, is := a.(*LinkSharing); is {
-		return false, nil
-	}
-
-	if isSiteAdmin(a) {
-		return true, nil
-	}
-
-	l := Project{ID: tl.ProjectID}
-	return l.IsAdmin(s, a)
+// isSiteAdmin returns true when the auth belongs to a site admin user.
+// Link-share auths are not *user.User and therefore fall through (return false)
+// — they must continue through the normal permission flow.
+// IsAdmin is populated from JWT claims (no DB hit).
+func isSiteAdmin(a web.Auth) bool {
+	u, ok := a.(*user.User)
+	return ok && u.IsAdmin
 }

@@ -22,6 +22,9 @@ import (
 )
 
 func (pv *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	if isSiteAdmin(a) {
+		return true, int(PermissionAdmin), nil
+	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
@@ -33,6 +36,9 @@ func (pv *ProjectView) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 }
 
 func (pv *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if isSiteAdmin(a) {
+		return true, nil
+	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
@@ -44,6 +50,9 @@ func (pv *ProjectView) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (pv *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
+	if isSiteAdmin(a) {
+		return true, nil
+	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
@@ -55,6 +64,9 @@ func (pv *ProjectView) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (pv *ProjectView) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if isSiteAdmin(a) {
+		return true, nil
+	}
 	filterID := GetSavedFilterIDFromProjectID(pv.ProjectID)
 	if filterID > 0 {
 		sf := &SavedFilter{ID: filterID}
