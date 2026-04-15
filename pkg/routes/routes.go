@@ -59,6 +59,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
@@ -78,6 +79,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration/wekan"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	adminapi "code.vikunja.io/api/pkg/routes/api/v1/admin"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -796,6 +798,14 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
+
+	// Admin panel routes — gated by license feature and site-admin flag.
+	// Both gates return 404 so unlicensed/unauthorized callers can't probe the surface.
+	admin := a.Group("/admin",
+		RequireFeature(license.FeatureAdminPanel),
+		RequireSiteAdmin(),
+	)
+	admin.GET("/ping", adminapi.Ping)
 
 	// Plugin routes
 	if config.PluginsEnabled.GetBool() {
