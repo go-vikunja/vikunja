@@ -1,4 +1,7 @@
-// Vikunja colors as CSS custom properties
+// Vikunja colors as CSS custom properties.
+// Defines the full color token system (Bulma scheme variables, Vikunja --grey-* scale,
+// semantic colors like --primary/--success/--danger) and their dark-mode overrides.
+// See frontend/src/styles/README.md for the token conventions.
 
 :root {
   // Core Bulma color variables
