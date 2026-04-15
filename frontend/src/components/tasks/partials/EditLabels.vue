@@ -124,10 +124,9 @@ async function removeLabel(label: ILabel) {
 		await taskStore.removeLabel({label, taskId: props.taskId})
 	}
 
-	for (let l = labels.value.length - 1; l >= 0; l--) {
-		if (labels.value[l].id === label.id) {
-			labels.value.splice(l, 1)
-		}
+	const idx = labels.value.findIndex(l => l.id === label.id)
+	if (idx !== -1) {
+		labels.value.splice(idx, 1)
 	}
 	emit('update:modelValue', labels.value)
 	success({message: t('task.label.removeSuccess')})

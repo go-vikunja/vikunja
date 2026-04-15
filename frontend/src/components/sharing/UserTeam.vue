@@ -291,13 +291,12 @@ async function deleteSharable() {
 
 	await stuffService.delete(stuffModel)
 	showDeleteModal.value = false
-	for (let i = sharables.value.length - 1; i >= 0; i--) {
-		if (
-			(sharables.value[i].username === stuffModel.username && props.shareType === 'user') ||
-			(sharables.value[i].id === stuffModel.teamId && props.shareType === 'team')
-		) {
-			sharables.value.splice(i, 1)
-		}
+	const idx = sharables.value.findIndex(s =>
+		(props.shareType === 'user' && s.username === stuffModel.username) ||
+		(props.shareType === 'team' && s.id === stuffModel.teamId),
+	)
+	if (idx !== -1) {
+		sharables.value.splice(idx, 1)
 	}
 	success({
 		message: t('project.share.userTeam.removeSuccess', {
