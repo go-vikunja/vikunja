@@ -103,6 +103,12 @@ const router = createRouter({
 					path: '/user/settings/caldav',
 					name: 'user.settings.caldav',
 					component: () => import('@/views/user/settings/Caldav.vue'),
+					beforeEnter: async () => {
+						const {useConfigStore} = await import('@/stores/config')
+						if (!useConfigStore().caldavEnabled) {
+							return {name: 'user.settings.general'}
+						}
+					},
 				},
 				{
 					path: '/user/settings/data-export',
@@ -133,6 +139,12 @@ const router = createRouter({
 					path: '/user/settings/totp',
 					name: 'user.settings.totp',
 					component: () => import('@/views/user/settings/TOTP.vue'),
+					beforeEnter: async () => {
+						const {useConfigStore} = await import('@/stores/config')
+						if (!useConfigStore().totpEnabled || !useAuthStore().info?.isLocalUser) {
+							return {name: 'user.settings.general'}
+						}
+					},
 				},
 				{
 					path: '/user/settings/api-tokens',
