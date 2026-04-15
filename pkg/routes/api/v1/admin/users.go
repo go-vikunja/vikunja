@@ -26,8 +26,8 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// AdminUser re-exposes fields that the default User JSON view hides.
-type AdminUser struct {
+// User re-exposes fields that the default User JSON view hides.
+type User struct {
 	*user.User
 	IsAdmin bool        `json:"is_admin"`
 	Status  user.Status `json:"status"`
@@ -42,7 +42,7 @@ type AdminUser struct {
 // @Param s query string false "Search string matched against username and email."
 // @Param page query int false "Page number, defaults to 1."
 // @Param per_page query int false "Items per page, defaults to the service setting."
-// @Success 200 {array} admin.AdminUser
+// @Success 200 {array} admin.User
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/users [get]
 func ListUsers(c *echo.Context) error {
@@ -70,9 +70,9 @@ func ListUsers(c *echo.Context) error {
 		return err
 	}
 
-	out := make([]*AdminUser, 0, len(users))
+	out := make([]*User, 0, len(users))
 	for _, u := range users {
-		out = append(out, &AdminUser{User: u, IsAdmin: u.IsAdmin, Status: u.Status})
+		out = append(out, &User{User: u, IsAdmin: u.IsAdmin, Status: u.Status})
 	}
 
 	return c.JSON(http.StatusOK, out)

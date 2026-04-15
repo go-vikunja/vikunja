@@ -1,18 +1,38 @@
 <template>
 	<div class="admin-overview">
-		<p v-if="loading">{{ $t('misc.loading') }}</p>
-		<p v-else-if="error" class="has-text-danger">{{ error }}</p>
-		<div v-else-if="data" class="admin-overview__grid">
+		<p v-if="loading">
+			{{ $t('misc.loading') }}
+		</p>
+		<p
+			v-else-if="error"
+			class="has-text-danger"
+		>
+			{{ error }}
+		</p>
+		<div
+			v-else-if="data"
+			class="admin-overview__grid"
+		>
 			<div class="admin-overview__card">
-				<h2 class="admin-overview__card-title">{{ $t('admin.overview.users') }}</h2>
-				<p class="admin-overview__card-value">{{ data.users }}</p>
+				<h2 class="admin-overview__card-title">
+					{{ $t('admin.overview.users') }}
+				</h2>
+				<p class="admin-overview__card-value">
+					{{ data.users }}
+				</p>
 			</div>
 			<div class="admin-overview__card">
-				<h2 class="admin-overview__card-title">{{ $t('admin.overview.projects') }}</h2>
-				<p class="admin-overview__card-value">{{ data.projects }}</p>
+				<h2 class="admin-overview__card-title">
+					{{ $t('admin.overview.projects') }}
+				</h2>
+				<p class="admin-overview__card-value">
+					{{ data.projects }}
+				</p>
 			</div>
 			<div class="admin-overview__card">
-				<h2 class="admin-overview__card-title">{{ $t('admin.overview.shares') }}</h2>
+				<h2 class="admin-overview__card-title">
+					{{ $t('admin.overview.shares') }}
+				</h2>
 				<ul class="admin-overview__card-list">
 					<li>{{ $t('admin.overview.linkShares') }}: {{ data.shares.linkShares }}</li>
 					<li>{{ $t('admin.overview.teamShares') }}: {{ data.shares.teamShares }}</li>
@@ -20,15 +40,31 @@
 				</ul>
 			</div>
 			<div class="admin-overview__card">
-				<h2 class="admin-overview__card-title">{{ $t('admin.overview.version') }}</h2>
-				<p class="admin-overview__card-value">{{ data.version }}</p>
+				<h2 class="admin-overview__card-title">
+					{{ $t('admin.overview.version') }}
+				</h2>
+				<p class="admin-overview__card-value">
+					{{ data.version }}
+				</p>
 			</div>
 			<div class="admin-overview__card">
-				<h2 class="admin-overview__card-title">{{ $t('admin.overview.license') }}</h2>
-				<ul v-if="data.license.enabledProFeatures.length" class="admin-overview__card-list">
-					<li v-for="f in data.license.enabledProFeatures" :key="f">{{ f }}</li>
+				<h2 class="admin-overview__card-title">
+					{{ $t('admin.overview.license') }}
+				</h2>
+				<ul
+					v-if="data.license.enabledProFeatures.length"
+					class="admin-overview__card-list"
+				>
+					<li
+						v-for="f in data.license.enabledProFeatures"
+						:key="f"
+					>
+						{{ f }}
+					</li>
 				</ul>
-				<p v-else>{{ $t('admin.overview.freeMode') }}</p>
+				<p v-else>
+					{{ $t('admin.overview.freeMode') }}
+				</p>
 			</div>
 		</div>
 	</div>

@@ -25,8 +25,8 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// AdminPatch is the request body for PATCH /admin/users/:id/admin.
-type AdminPatch struct {
+// Patch is the request body for PATCH /admin/users/:id/admin.
+type Patch struct {
 	IsAdmin bool `json:"is_admin"`
 }
 
@@ -40,8 +40,8 @@ type AdminPatch struct {
 // @Produce json
 // @Security JWTKeyAuth
 // @Param id path int true "User ID"
-// @Param body body admin.AdminPatch true "New admin value"
-// @Success 200 {object} admin.AdminUser
+// @Param body body admin.Patch true "New admin value"
+// @Success 200 {object} admin.User
 // @Failure 400 {object} web.HTTPError
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/users/{id}/admin [patch]
@@ -52,7 +52,7 @@ func PatchAdmin(c *echo.Context) error {
 		return echo.ErrNotFound
 	}
 
-	body := &AdminPatch{}
+	body := &Patch{}
 	if err := c.Bind(body); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid body")
 	}
@@ -90,5 +90,5 @@ func PatchAdmin(c *echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, &AdminUser{User: target, IsAdmin: target.IsAdmin, Status: target.Status})
+	return c.JSON(http.StatusOK, &User{User: target, IsAdmin: target.IsAdmin, Status: target.Status})
 }

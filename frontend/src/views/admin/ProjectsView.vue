@@ -1,25 +1,41 @@
 <template>
 	<div class="admin-projects">
-		<p v-if="loading">{{ $t('misc.loading') }}</p>
-		<p v-else-if="error" class="has-text-danger">{{ error }}</p>
-		<table v-else class="admin-projects__table">
+		<p v-if="loading">
+			{{ $t('misc.loading') }}
+		</p>
+		<p
+			v-else-if="error"
+			class="has-text-danger"
+		>
+			{{ error }}
+		</p>
+		<table
+			v-else
+			class="admin-projects__table"
+		>
 			<thead>
 				<tr>
 					<th>{{ $t('admin.projects.id') }}</th>
 					<th>{{ $t('admin.projects.title') }}</th>
 					<th>{{ $t('admin.projects.owner') }}</th>
 					<th>{{ $t('admin.projects.created') }}</th>
-					<th></th>
+					<th />
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="p in projects" :key="p.id">
+				<tr
+					v-for="p in projects"
+					:key="p.id"
+				>
 					<td>{{ p.id }}</td>
 					<td>{{ p.title }}</td>
 					<td>{{ p.owner?.username ?? p.owner?.id }}</td>
 					<td>{{ p.created }}</td>
 					<td>
-						<button class="button is-small" @click="promptReassign(p)">
+						<button
+							class="button is-small"
+							@click="promptReassign(p)"
+						>
 							{{ $t('admin.projects.reassignOwner') }}
 						</button>
 					</td>

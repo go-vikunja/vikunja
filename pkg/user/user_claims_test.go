@@ -21,6 +21,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetUserFromClaims_IsAdmin(t *testing.T) {
@@ -30,7 +31,7 @@ func TestGetUserFromClaims_IsAdmin(t *testing.T) {
 		"is_admin": true,
 	}
 	u, err := GetUserFromClaims(claims)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, u.IsAdmin)
 }
 
@@ -40,6 +41,6 @@ func TestGetUserFromClaims_IsAdminMissing(t *testing.T) {
 		"username": "u1",
 	}
 	u, err := GetUserFromClaims(claims)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, u.IsAdmin)
 }

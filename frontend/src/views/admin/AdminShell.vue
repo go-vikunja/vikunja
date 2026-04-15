@@ -5,25 +5,33 @@
 				{{ $t('admin.title') }}
 			</h1>
 			<nav class="admin-shell__nav">
-				<router-link :to="{name: 'admin.overview'}" class="admin-shell__nav-item">
+				<RouterLink
+					:to="{name: 'admin.overview'}"
+					class="admin-shell__nav-item"
+				>
 					{{ $t('admin.nav.overview') }}
-				</router-link>
-				<router-link :to="{name: 'admin.users'}" class="admin-shell__nav-item">
+				</RouterLink>
+				<RouterLink
+					:to="{name: 'admin.users'}"
+					class="admin-shell__nav-item"
+				>
 					{{ $t('admin.nav.users') }}
-				</router-link>
-				<router-link :to="{name: 'admin.projects'}" class="admin-shell__nav-item">
+				</RouterLink>
+				<RouterLink
+					:to="{name: 'admin.projects'}"
+					class="admin-shell__nav-item"
+				>
 					{{ $t('admin.nav.projects') }}
-				</router-link>
+				</RouterLink>
 			</nav>
 		</div>
 		<div class="admin-shell__body">
-			<router-view />
+			<RouterView />
 		</div>
 	</div>
 </template>
 
-<script setup lang="ts">
-</script>
+
 
 <style lang="scss" scoped>
 .admin-shell {

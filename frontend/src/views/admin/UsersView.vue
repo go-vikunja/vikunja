@@ -7,12 +7,22 @@
 				type="text"
 				:placeholder="$t('admin.users.searchPlaceholder')"
 				@input="onSearch"
-			/>
+			>
 		</div>
 
-		<p v-if="loading">{{ $t('misc.loading') }}</p>
-		<p v-else-if="error" class="has-text-danger">{{ error }}</p>
-		<table v-else class="admin-users__table">
+		<p v-if="loading">
+			{{ $t('misc.loading') }}
+		</p>
+		<p
+			v-else-if="error"
+			class="has-text-danger"
+		>
+			{{ error }}
+		</p>
+		<table
+			v-else
+			class="admin-users__table"
+		>
 			<thead>
 				<tr>
 					<th>{{ $t('admin.users.id') }}</th>
@@ -20,11 +30,14 @@
 					<th>{{ $t('admin.users.email') }}</th>
 					<th>{{ $t('admin.users.status') }}</th>
 					<th>{{ $t('admin.users.admin') }}</th>
-					<th></th>
+					<th />
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="u in users" :key="u.id">
+				<tr
+					v-for="u in users"
+					:key="u.id"
+				>
 					<td>{{ u.id }}</td>
 					<td>{{ u.username }}</td>
 					<td>{{ u.email }}</td>
@@ -35,9 +48,9 @@
 							:checked="u.isAdmin"
 							:disabled="togglingId === u.id"
 							@change="toggleAdmin(u)"
-						/>
+						>
 					</td>
-					<td></td>
+					<td />
 				</tr>
 			</tbody>
 		</table>

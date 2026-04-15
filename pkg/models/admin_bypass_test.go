@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAdminBypass_Project(t *testing.T) {
@@ -34,18 +35,18 @@ func TestAdminBypass_Project(t *testing.T) {
 	p := &Project{ID: 1}
 
 	can, _, err := p.CanRead(s, stranger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, can, "admin must be able to read any project")
 
 	can, err = p.CanWrite(s, stranger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, can)
 
 	can, err = p.CanUpdate(s, stranger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, can)
 
 	can, err = p.CanDelete(s, stranger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, can)
 }
