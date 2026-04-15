@@ -115,7 +115,7 @@ defineEmits<{
 
 .card-content {
 	background-color: transparent;
-	padding: 1rem;
+	padding: 1.5rem;
 
 	&:first-child {
 		border-start-start-radius: $radius;
@@ -125,6 +125,12 @@ defineEmits<{
 	&:last-child {
 		border-end-start-radius: $radius;
 		border-end-end-radius: $radius;
+	}
+
+	// Utility classes like .p-0 are defined globally with lower specificity
+	// than Vue-scoped selectors; restore precedence explicitly.
+	&.p-0 {
+		padding: 0;
 	}
 }
 
