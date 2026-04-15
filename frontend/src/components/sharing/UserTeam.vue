@@ -291,7 +291,7 @@ async function deleteSharable() {
 
 	await stuffService.delete(stuffModel)
 	showDeleteModal.value = false
-	for (const i in sharables.value) {
+	for (let i = sharables.value.length - 1; i >= 0; i--) {
 		if (
 			(sharables.value[i].username === stuffModel.username && props.shareType === 'user') ||
 			(sharables.value[i].id === stuffModel.teamId && props.shareType === 'team')
@@ -344,15 +344,15 @@ async function toggleType(sharable) {
 	}
 
 	const r = await stuffService.update(stuffModel)
-	for (const i in sharables.value) {
+	for (const sharableEntry of sharables.value) {
 		if (
-			(sharables.value[i].username ===
+			(sharableEntry.username ===
 				stuffModel.username &&
 				props.shareType === 'user') ||
-			(sharables.value[i].id === stuffModel.teamId &&
+			(sharableEntry.id === stuffModel.teamId &&
 				props.shareType === 'team')
 		) {
-			sharables.value[i].permission = r.permission
+			sharableEntry.permission = r.permission
 		}
 	}
 	success({message: t('project.share.userTeam.updatedSuccess', {type: shareTypeName.value})})

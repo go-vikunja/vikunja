@@ -15,7 +15,7 @@ interface Paths {
 	reset?: string
 }
 
-function convertObject(o: Record<string, unknown>) {
+function convertObject(o: unknown) {
 	if (o instanceof Date) {
 		return o.toISOString()
 	}
@@ -28,13 +28,14 @@ function prepareParams(params: Record<string, unknown | unknown[]>) {
 		return params
 	}
 
-	for (const p in params) {
-		if (Array.isArray(params[p])) {
-			params[p] = params[p].map(convertObject)
+	for (const p of Object.keys(params)) {
+		const val = params[p]
+		if (Array.isArray(val)) {
+			params[p] = val.map(convertObject)
 			continue
 		}
 
-		params[p] = convertObject(params[p])
+		params[p] = convertObject(val)
 	}
 
 	return objectToSnakeCase(params)

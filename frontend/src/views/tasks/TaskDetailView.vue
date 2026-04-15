@@ -1174,9 +1174,12 @@ function setRelatedTasksActive() {
 
 	// If the related tasks are already available, show the form again
 	const el = activeFieldElements['relatedTasks']
-	for (const child in el?.children) {
-		if (el?.children[child]?.id === 'showRelatedTasksFormButton') {
-			el?.children[child]?.click()
+	if (!el) {
+		return
+	}
+	for (const child of Array.from(el.children)) {
+		if ((child as HTMLElement).id === 'showRelatedTasksFormButton') {
+			(child as HTMLElement).click()
 			break
 		}
 	}

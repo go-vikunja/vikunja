@@ -478,7 +478,7 @@ async function editComment() {
 	commentEdit.taskId = props.taskId
 	try {
 		const comment = await taskCommentService.update(commentEdit)
-		for (const c in comments.value) {
+		for (let c = 0; c < comments.value.length; c++) {
 			if (comments.value[c].id === commentEdit.id) {
 				comments.value[c] = comment
 			}
