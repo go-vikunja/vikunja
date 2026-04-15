@@ -57,3 +57,66 @@ func ListProjects(c *echo.Context) error {
 
 	return c.JSON(http.StatusOK, projects)
 }
+
+// OwnerPatch is the body for PATCH /admin/projects/:id/owner.
+type OwnerPatch struct {
+	OwnerID int64 `json:"owner_id"`
+}
+
+// PatchProjectOwner reassigns the owner of a project. Admin-only.
+// @Summary Reassign project owner (admin)
+// @Description Reassign a project's owner. The existing update endpoint doesn't allow owner changes — this is the admin-only escape hatch.
+// @tags admin
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "Project ID"
+// @Param body body admin.OwnerPatch true "New owner"
+// @Success 200 {object} models.Project
+// @Failure 400 {object} web.HTTPError
+// @Failure 404 {object} web.HTTPError
+// @Router /admin/projects/{id}/owner [patch]
+func PatchProjectOwner(c *echo.Context) error {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id < 1 {
+		return echo.ErrNotFound
+	}
+
+	body := &OwnerPatch{}
+	if err := c.Bind(body); err != nil || body.OwnerID < 1 {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid body")
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	p := &models.Project{ID: id}
+	has, err := s.Get(p)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return echo.ErrNotFound
+	}
+
+	// Verify new owner exists.
+	newOwnerExists, err := s.Table("users").Where("id = ?", body.OwnerID).Exist()
+	if err != nil {
+		return err
+	}
+	if !newOwnerExists {
+		return echo.NewHTTPError(http.StatusBadRequest, "new owner does not exist")
+	}
+
+	p.OwnerID = body.OwnerID
+	if _, err := s.ID(p.ID).Cols("owner_id").Update(p); err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	if err := s.Commit(); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, p)
+}

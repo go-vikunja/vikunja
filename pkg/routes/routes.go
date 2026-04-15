@@ -810,6 +810,7 @@ func registerAPIRoutes(a *echo.Group) {
 	admin.GET("/users", adminapi.ListUsers)
 	admin.PATCH("/users/:id/admin", adminapi.PatchAdmin)
 	admin.GET("/projects", adminapi.ListProjects)
+	admin.PATCH("/projects/:id/owner", adminapi.PatchProjectOwner)
 
 	// Plugin routes
 	if config.PluginsEnabled.GetBool() {
