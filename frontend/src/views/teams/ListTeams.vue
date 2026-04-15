@@ -63,7 +63,9 @@ teamService.getAll().then((result) => {
 <style lang="scss" scoped>
 ul.teams {
   padding: 0;
+  margin-block-start: 0;
   margin-inline-start: 0;
+  border-radius: $radius;
   overflow: hidden;
 
   li {
