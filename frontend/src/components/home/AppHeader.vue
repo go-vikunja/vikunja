@@ -88,6 +88,12 @@
 					{{ $t('user.settings.title') }}
 				</DropdownItem>
 				<DropdownItem
+					v-if="adminPanelEnabled && authStore.info?.isAdmin"
+					:to="{ name: 'admin.overview' }"
+				>
+					{{ $t('admin.menuLabel') }}
+				</DropdownItem>
+				<DropdownItem
 					v-if="imprintUrl"
 					:href="imprintUrl"
 				>
@@ -150,6 +156,7 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const imprintUrl = computed(() => configStore.legal.imprintUrl)
 const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
+const adminPanelEnabled = computed(() => configStore.enabledProFeatures?.includes('admin_panel') ?? false)
 </script>
 
 <style lang="scss" scoped>

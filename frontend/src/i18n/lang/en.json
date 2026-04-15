@@ -1473,5 +1473,40 @@
       "months": "month|months",
       "years": "year|years"
     }
+  },
+  "admin": {
+    "title": "Administration",
+    "menuLabel": "Admin",
+    "nav": {
+      "overview": "Overview",
+      "users": "Users",
+      "projects": "Projects"
+    },
+    "overview": {
+      "users": "Users",
+      "projects": "Projects",
+      "shares": "Shares",
+      "linkShares": "Link shares",
+      "teamShares": "Team shares",
+      "userShares": "User shares",
+      "version": "Version",
+      "license": "License",
+      "freeMode": "Free mode — no pro features enabled"
+    },
+    "users": {
+      "searchPlaceholder": "Search by username or email…",
+      "id": "ID",
+      "username": "Username",
+      "email": "Email",
+      "status": "Status",
+      "admin": "Admin"
+    },
+    "projects": {
+      "id": "ID",
+      "title": "Title",
+      "owner": "Owner",
+      "created": "Created",
+      "reassignOwner": "Reassign owner"
+    }
   }
 }
