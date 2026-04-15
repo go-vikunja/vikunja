@@ -1,0 +1,94 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+package admin
+
+import (
+	"net/http"
+	"strconv"
+
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/user"
+	"github.com/labstack/echo/v5"
+)
+
+// AdminPatch is the request body for PATCH /admin/users/:id/admin.
+type AdminPatch struct {
+	IsAdmin bool `json:"is_admin"`
+}
+
+// PatchAdmin promotes or demotes a user's site-admin flag.
+// It refuses to demote the last remaining admin to avoid locking the instance
+// out of the admin panel.
+// @Summary Promote or demote a user (admin)
+// @Description Toggle the site-admin flag on a user. Demoting the last remaining admin is refused with 400.
+// @tags admin
+// @Accept json
+// @Produce json
+// @Security JWTKeyAuth
+// @Param id path int true "User ID"
+// @Param body body admin.AdminPatch true "New admin value"
+// @Success 200 {object} admin.AdminUser
+// @Failure 400 {object} web.HTTPError
+// @Failure 404 {object} web.HTTPError
+// @Router /admin/users/{id}/admin [patch]
+func PatchAdmin(c *echo.Context) error {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id < 1 {
+		return echo.ErrNotFound
+	}
+
+	body := &AdminPatch{}
+	if err := c.Bind(body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid body")
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	target := &user.User{ID: id}
+	has, err := s.Get(target)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return echo.ErrNotFound
+	}
+
+	// Last-admin guard: only fires when we're demoting a currently-admin user.
+	if !body.IsAdmin && target.IsAdmin {
+		count, err := s.Where("is_admin = ?", true).Count(&user.User{})
+		if err != nil {
+			return err
+		}
+		if count <= 1 {
+			_ = s.Rollback()
+			return echo.NewHTTPError(http.StatusBadRequest, "cannot demote the last remaining site admin")
+		}
+	}
+
+	target.IsAdmin = body.IsAdmin
+	if _, err := s.ID(target.ID).Cols("is_admin").Update(target); err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	if err := s.Commit(); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, &AdminUser{User: target, IsAdmin: target.IsAdmin, Status: target.Status})
+}

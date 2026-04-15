@@ -807,6 +807,9 @@ func registerAPIRoutes(a *echo.Group) {
 	)
 	admin.GET("/ping", adminapi.Ping)
 	admin.GET("/overview", adminapi.GetOverview)
+	admin.GET("/users", adminapi.ListUsers)
+	admin.PATCH("/users/:id/admin", adminapi.PatchAdmin)
+	admin.GET("/projects", adminapi.ListProjects)
 
 	// Plugin routes
 	if config.PluginsEnabled.GetBool() {
