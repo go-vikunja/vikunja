@@ -250,3 +250,25 @@
   position: 10
   created: 2020-04-18 21:13:52
   updated: 2020-04-18 21:13:52
+# Buckets for list view with manual bucket configuration (project_view 161)
+- id: 41
+  title: Backlog
+  project_view_id: 161
+  created_by_id: 1
+  position: 1
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
+- id: 42
+  title: In Progress
+  project_view_id: 161
+  created_by_id: 1
+  position: 2
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52
+- id: 43
+  title: Review
+  project_view_id: 161
+  created_by_id: 1
+  position: 3
+  created: 2020-04-18 21:13:52
+  updated: 2020-04-18 21:13:52

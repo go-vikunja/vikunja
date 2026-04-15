@@ -677,7 +677,7 @@ import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelative
 import {playPopSound} from '@/helpers/playPop'
 
 import {useTaskStore} from '@/stores/tasks'
-import {useKanbanStore} from '@/stores/kanban'
+import {useBucketStore} from '@/stores/buckets'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
@@ -703,7 +703,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
-const kanbanStore = useKanbanStore()
+const bucketStore = useBucketStore()
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
@@ -821,7 +821,7 @@ async function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
 
 function onAttachmentsUpdated(attachments: IAttachment[]) {
 	task.value.attachments = attachments
-	kanbanStore.setTaskInBucket({
+	bucketStore.setTaskInBucket({
 		...task.value,
 		attachments,
 	})
@@ -1121,7 +1121,7 @@ async function changeProject(project: IProject | null) {
 	if (project === null) {
 		return
 	}
-	kanbanStore.removeTaskInBucket(task.value)
+	bucketStore.removeTaskInBucket(task.value)
 	await saveTask({
 		...task.value,
 		projectId: project.id,

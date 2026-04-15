@@ -32,10 +32,10 @@ function getTaskIndicesById(buckets: IBucket[], taskId: ITask['id']) {
 }
 
 /**
- * This store is intended to hold the currently active kanban view.
+ * This store is intended to hold the buckets for the currently active bucketed view (kanban or list).
  * It should hold only the current buckets.
  */
-export const useKanbanStore = defineStore('kanban', () => {
+export const useBucketStore = defineStore('buckets', () => {
 	const authStore = useAuthStore()
 	const baseStore = useBaseStore()
 
@@ -399,5 +399,5 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 // support hot reloading
 if (import.meta.hot) {
-	import.meta.hot.accept(acceptHMRUpdate(useKanbanStore, import.meta.hot))
+	import.meta.hot.accept(acceptHMRUpdate(useBucketStore, import.meta.hot))
 }

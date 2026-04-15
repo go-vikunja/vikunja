@@ -115,6 +115,16 @@
 #- task_id: 39
 #  project_view_id: 100
 #  bucket_id: null
+# Task-bucket mappings for list view with manual buckets (project_view 161)
+- task_id: 1
+  project_view_id: 161
+  bucket_id: 41
+- task_id: 2
+  project_view_id: 161
+  bucket_id: 42
+- task_id: 3
+  project_view_id: 161
+  bucket_id: 43
 - task_id: 40
   project_view_id: 144
   bucket_id: 38

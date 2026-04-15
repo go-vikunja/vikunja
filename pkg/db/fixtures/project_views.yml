@@ -1007,3 +1007,13 @@
   updated: '2024-03-18 15:14:13'
   created: '2018-03-18 15:14:13'
   bucket_configuration_mode: 1
+# List view with manual bucket configuration (for testing list view sections)
+- id: 161
+  title: Sectioned List
+  project_id: 1
+  view_kind: 0
+  bucket_configuration_mode: 1
+  default_bucket_id: 41
+  position: 5
+  updated: '2024-03-18 15:14:13'
+  created: '2018-03-18 15:14:13'

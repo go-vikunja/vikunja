@@ -65,7 +65,7 @@ async function createView() {
 	}
 
 	try {
-		newView.value.bucketConfigurationMode = newView.value.viewKind === 'kanban'
+		newView.value.bucketConfigurationMode = (newView.value.viewKind === 'kanban' || newView.value.viewKind === 'list')
 			? newView.value.bucketConfigurationMode
 			: 'none'
 		newView.value.projectId = props.projectId
@@ -96,7 +96,7 @@ async function deleteView(viewId: number) {
 }
 
 async function saveView(view: IProjectView) {
-	if (view?.viewKind !== 'kanban') {
+	if (view?.viewKind !== 'kanban' && view?.viewKind !== 'list') {
 		view.bucketConfigurationMode = 'none'
 	}
 	const result = await projectViewService.update(view)

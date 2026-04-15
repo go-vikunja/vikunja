@@ -29,7 +29,7 @@ import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelative
 import {setModuleLoading} from '@/stores/helper'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
-import {useKanbanStore} from '@/stores/kanban'
+import {useBucketStore} from '@/stores/buckets'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
 import {useAuthStore} from '@/stores/auth'
@@ -127,7 +127,7 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 
 export const useTaskStore = defineStore('task', () => {
 	const baseStore = useBaseStore()
-	const kanbanStore = useKanbanStore()
+	const bucketStore = useBucketStore()
 	const labelStore = useLabelStore()
 	const projectStore = useProjectStore()
 	const authStore = useAuthStore()
@@ -184,7 +184,7 @@ export const useTaskStore = defineStore('task', () => {
 		const taskService = new TaskService()
 		try {
 			const updatedTask = await taskService.update(task)
-			kanbanStore.ensureTaskIsInCorrectBucket(updatedTask)
+			bucketStore.ensureTaskIsInCorrectBucket(updatedTask)
 			lastUpdatedTask.value = updatedTask
 			return updatedTask
 		} finally {
@@ -195,7 +195,7 @@ export const useTaskStore = defineStore('task', () => {
 	async function deleteTask(task: ITask) {
 		const taskService = new TaskService()
 		const response = await taskService.delete(task)
-		kanbanStore.removeTaskInBucket(task)
+		bucketStore.removeTaskInBucket(task)
 		return response
 	}
 
@@ -208,7 +208,7 @@ export const useTaskStore = defineStore('task', () => {
 		taskId: ITask['id']
 		attachment: IAttachment
 	}) {
-		const t = kanbanStore.getTaskById(taskId)
+		const t = bucketStore.getTaskById(taskId)
 		if (t.task !== null) {
 			const attachments = [
 				...t.task.attachments,
@@ -222,7 +222,7 @@ export const useTaskStore = defineStore('task', () => {
 					attachments,
 				},
 			}
-			kanbanStore.setTaskInBucketByIndex(newTask)
+			bucketStore.setTaskInBucketByIndex(newTask)
 		}
 	}
 
@@ -241,7 +241,7 @@ export const useTaskStore = defineStore('task', () => {
 				userId: user.id,
 				taskId: taskId,
 			}))
-			const t = kanbanStore.getTaskById(taskId)
+			const t = bucketStore.getTaskById(taskId)
 			if (t.task === null) {
 				// Don't try further adding a label if the task is not in kanban
 				// Usually this means the kanban board hasn't been accessed until now.
@@ -250,7 +250,7 @@ export const useTaskStore = defineStore('task', () => {
 				return r
 			}
 
-			kanbanStore.setTaskInBucketByIndex({
+			bucketStore.setTaskInBucketByIndex({
 				...t,
 				task: {
 					...t.task,
@@ -279,7 +279,7 @@ export const useTaskStore = defineStore('task', () => {
 			userId: user.id,
 			taskId: taskId,
 		}))
-		const t = kanbanStore.getTaskById(taskId)
+		const t = bucketStore.getTaskById(taskId)
 		if (t.task === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
@@ -290,7 +290,7 @@ export const useTaskStore = defineStore('task', () => {
 
 		const assignees = t.task.assignees.filter(({ id }) => id !== user.id)
 
-		kanbanStore.setTaskInBucketByIndex({
+		bucketStore.setTaskInBucketByIndex({
 			...t,
 			task: {
 				...t.task,
@@ -313,7 +313,7 @@ export const useTaskStore = defineStore('task', () => {
 			taskId,
 			labelId: label.id,
 		}))
-		const t = kanbanStore.getTaskById(taskId)
+		const t = bucketStore.getTaskById(taskId)
 		if (t.task === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
@@ -322,7 +322,7 @@ export const useTaskStore = defineStore('task', () => {
 			return r
 		}
 
-		kanbanStore.setTaskInBucketByIndex({
+		bucketStore.setTaskInBucketByIndex({
 			...t,
 			task: {
 				...t.task,
@@ -345,7 +345,7 @@ export const useTaskStore = defineStore('task', () => {
 			taskId, labelId:
 			label.id,
 		}))
-		const t = kanbanStore.getTaskById(taskId)
+		const t = bucketStore.getTaskById(taskId)
 		if (t.task === null) {
 			// Don't try further adding a label if the task is not in kanban
 			// Usually this means the kanban board hasn't been accessed until now.
@@ -357,7 +357,7 @@ export const useTaskStore = defineStore('task', () => {
 		// Remove the label from the project
 		const labels = t.task.labels.filter(({ id }) => id !== label.id)
 
-		kanbanStore.setTaskInBucketByIndex({
+		bucketStore.setTaskInBucketByIndex({
 			...t,
 			task: {
 				...t.task,
@@ -558,9 +558,9 @@ export const useTaskStore = defineStore('task', () => {
 		const taskService = new TaskService()
 		await taskService.markTaskAsRead(taskId)
 		
-		const t = kanbanStore.getTaskById(taskId)
+		const t = bucketStore.getTaskById(taskId)
 		if (t.task !== null) {
-			kanbanStore.setTaskInBucket({
+			bucketStore.setTaskInBucket({
 				...t.task,
 				isUnread: false,
 			})

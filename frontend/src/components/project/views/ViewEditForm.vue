@@ -177,7 +177,7 @@ function handleBubbleSave() {
 		</div>
 
 		<div
-			v-if="view.viewKind === 'kanban'"
+			v-if="view.viewKind === 'kanban' || view.viewKind === 'list'"
 			class="field"
 		>
 			<label
@@ -212,7 +212,7 @@ function handleBubbleSave() {
 		</div>
 
 		<div
-			v-if="view.viewKind === 'kanban' && view.bucketConfigurationMode === 'filter'"
+			v-if="(view.viewKind === 'kanban' || view.viewKind === 'list') && view.bucketConfigurationMode === 'filter'"
 			class="field"
 		>
 			<label class="label">

@@ -44,7 +44,7 @@ import type {IBucket} from '@/modelTypes/IBucket'
 import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
 
 import {useProjectStore} from '@/stores/projects'
-import {useKanbanStore} from '@/stores/kanban'
+import {useBucketStore} from '@/stores/buckets'
 import {useBaseStore} from '@/stores/base'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -69,30 +69,30 @@ const emit = defineEmits<{
 const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
-const kanbanStore = useKanbanStore()
+const bucketStore = useBucketStore()
 const baseStore = useBaseStore()
 
 const project = computed(() => projectStore.projects[props.task.projectId])
 
-// If the project has exactly one manual kanban view, always use it.
+// If the project has exactly one manual bucket view (kanban or list), always use it.
 // If there are multiple, only show the selector when the active view is one of them.
 const kanbanView = computed(() => {
 	if (!project.value?.views) {
 		return null
 	}
 
-	const manualKanbanViews = project.value.views.filter(
-		v => v.viewKind === PROJECT_VIEW_KINDS.KANBAN
+	const manualBucketViews = project.value.views.filter(
+		v => (v.viewKind === PROJECT_VIEW_KINDS.KANBAN || v.viewKind === PROJECT_VIEW_KINDS.LIST)
 			&& v.bucketConfigurationMode === 'manual',
 	)
 
-	if (manualKanbanViews.length === 1) {
-		return manualKanbanViews[0]
+	if (manualBucketViews.length === 1) {
+		return manualBucketViews[0]
 	}
 
-	if (manualKanbanViews.length > 1) {
+	if (manualBucketViews.length > 1) {
 		const activeViewId = baseStore.currentProjectViewId
-		return manualKanbanViews.find(v => v.id === activeViewId) || null
+		return manualBucketViews.find(v => v.id === activeViewId) || null
 	}
 
 	return null
@@ -156,7 +156,7 @@ async function changeBucket(bucket: IBucket) {
 		updatedBuckets.push({...bucket})
 	}
 
-	kanbanStore.moveTaskToBucket(props.task, bucket.id)
+	bucketStore.moveTaskToBucket(props.task, bucket.id)
 
 	// Only pick up done state from the response since moving to/from the
 	// done bucket can toggle it. Spreading the full response task would

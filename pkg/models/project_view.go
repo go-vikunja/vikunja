@@ -312,7 +312,7 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 		return
 	}
 
-	if p.ViewKind == ProjectViewKindKanban && createBacklogBucket && p.BucketConfigurationMode == BucketConfigurationModeManual {
+	if createBacklogBucket && p.BucketConfigurationMode == BucketConfigurationModeManual {
 		// Create default buckets for kanban view
 		backlog := &Bucket{
 			ProjectViewID: p.ID,
@@ -344,9 +344,11 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 			return
 		}
 
-		// Set Backlog as default bucket and Done as done bucket
+		// Set Backlog as default bucket and Done as done bucket (only kanban views use done buckets)
 		p.DefaultBucketID = backlog.ID
-		p.DoneBucketID = done.ID
+		if p.ViewKind == ProjectViewKindKanban {
+			p.DoneBucketID = done.ID
+		}
 		_, err = s.ID(p.ID).Cols("default_bucket_id", "done_bucket_id").Update(p)
 		if err != nil {
 			return

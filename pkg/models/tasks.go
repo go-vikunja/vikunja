@@ -1034,7 +1034,6 @@ func setTaskInBucketInViews(s *xorm.Session, t *Task, a web.Auth, setBucket bool
 
 	for _, view := range views {
 		if setBucket && !moveToDone &&
-			view.ViewKind == ProjectViewKindKanban &&
 			view.BucketConfigurationMode == BucketConfigurationModeManual {
 
 			bucketID := view.DoneBucketID
