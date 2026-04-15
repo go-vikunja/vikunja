@@ -806,6 +806,7 @@ func registerAPIRoutes(a *echo.Group) {
 		RequireSiteAdmin(),
 	)
 	admin.GET("/ping", adminapi.Ping)
+	admin.GET("/overview", adminapi.GetOverview)
 
 	// Plugin routes
 	if config.PluginsEnabled.GetBool() {
