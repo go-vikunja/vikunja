@@ -196,7 +196,7 @@ var webCmd = &cobra.Command{
 			log.Fatalf("Server shutdown failed: %v", err)
 		}
 		cron.Stop()
-		license.Shutdown()
+		license.Shutdown() // See the package comment in pkg/license/license.go before removing.
 		plugins.Shutdown()
 	},
 }
