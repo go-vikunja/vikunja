@@ -18,3 +18,12 @@ export async function setAdmin(id: number, isAdmin: boolean): Promise<AdminUser>
 	const {data} = await AuthenticatedHTTPFactory().patch(`/admin/users/${id}/admin`, {is_admin: isAdmin})
 	return objectToCamelCase(data) as unknown as AdminUser
 }
+
+export async function setStatus(id: number, status: number): Promise<AdminUser> {
+	const {data} = await AuthenticatedHTTPFactory().patch(`/admin/users/${id}/status`, {status})
+	return objectToCamelCase(data) as unknown as AdminUser
+}
+
+export async function deleteUser(id: number): Promise<void> {
+	await AuthenticatedHTTPFactory().delete(`/admin/users/${id}`)
+}

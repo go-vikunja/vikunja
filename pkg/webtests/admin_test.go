@@ -223,6 +223,59 @@ func TestAdmin_ListProjects(t *testing.T) {
 	assert.Contains(t, body, `"title":`)
 }
 
+func TestAdmin_PatchStatus(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	// user.Status: 0=Active, 2=Disabled
+	res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/2/status", admin, `{"status":2}`)
+	assert.Equal(t, http.StatusOK, res.Code)
+
+	// GetUserByID refuses disabled accounts, so assert against the raw row.
+	s := db.NewSession()
+	defer s.Close()
+	var row struct {
+		Status int `xorm:"status"`
+	}
+	_, err = s.Table("users").Where("id = ?", 2).Get(&row)
+	require.NoError(t, err)
+	assert.Equal(t, 2, row.Status)
+}
+
+func TestAdmin_DeleteUser(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	t.Run("deletes a regular user", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/15", admin, "")
+		assert.Equal(t, http.StatusNoContent, res.Code)
+
+		s := db.NewSession()
+		defer s.Close()
+		_, err := user.GetUserByID(s, 15)
+		assert.Error(t, err, "deleted user must no longer be fetchable")
+	})
+
+	t.Run("last-admin guard refuses self-delete", func(t *testing.T) {
+		// user 1 is currently the only admin (no one else was promoted in this test).
+		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/1", admin, "")
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+	})
+
+	t.Run("unknown user returns 404", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/9999999", admin, "")
+		assert.Equal(t, http.StatusNotFound, res.Code)
+	})
+}
+
 func TestAdmin_ReassignProjectOwner(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)

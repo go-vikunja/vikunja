@@ -1499,14 +1499,23 @@
       "username": "Username",
       "email": "Email",
       "status": "Status",
-      "admin": "Admin"
+      "admin": "Admin",
+      "actions": "Actions",
+      "enable": "Enable",
+      "disable": "Disable",
+      "delete": "Delete",
+      "confirmDeleteTitle": "Delete user?",
+      "confirmDeleteBody": "User {username} will be deleted immediately. This cannot be undone."
     },
     "projects": {
       "id": "ID",
       "title": "Title",
       "owner": "Owner",
       "created": "Created",
-      "reassignOwner": "Reassign owner"
+      "reassignOwner": "Reassign owner",
+      "reassignTitle": "Reassign {title}",
+      "newOwnerLabel": "New owner",
+      "newOwnerPlaceholder": "Search by username or email…"
     }
   }
 }

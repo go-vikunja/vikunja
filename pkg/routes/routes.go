@@ -809,6 +809,8 @@ func registerAPIRoutes(a *echo.Group) {
 	admin.GET("/overview", adminapi.GetOverview)
 	admin.GET("/users", adminapi.ListUsers)
 	admin.PATCH("/users/:id/admin", adminapi.PatchAdmin)
+	admin.PATCH("/users/:id/status", adminapi.PatchStatus)
+	admin.DELETE("/users/:id", adminapi.DeleteUser)
 	admin.GET("/projects", adminapi.ListProjects)
 	admin.PATCH("/projects/:id/owner", adminapi.PatchProjectOwner)
 
