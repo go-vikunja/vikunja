@@ -1,4 +1,4 @@
-import {HTTPFactory} from '@/helpers/fetcher'
+import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
 import {objectToCamelCase} from '@/helpers/case'
 
 export interface AdminOverview {
@@ -16,6 +16,6 @@ export interface AdminOverview {
 }
 
 export async function getAdminOverview(): Promise<AdminOverview> {
-	const {data} = await HTTPFactory().get('/admin/overview')
+	const {data} = await AuthenticatedHTTPFactory().get('/admin/overview')
 	return objectToCamelCase(data) as unknown as AdminOverview
 }
