@@ -99,7 +99,7 @@ async function removeAssignee(user: IUser) {
 	await taskStore.removeAssignee({user: user, taskId: props.taskId})
 
 	// Remove the assignee from the project
-	for (const a in assignees.value) {
+	for (let a = assignees.value.length - 1; a >= 0; a--) {
 		if (assignees.value[a].id === user.id) {
 			assignees.value.splice(a, 1)
 		}

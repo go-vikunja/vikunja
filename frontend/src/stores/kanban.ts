@@ -124,9 +124,9 @@ export const useKanbanStore = defineStore('kanban', () => {
 
 		let found = false
 
-		const findAndUpdate = b => {
-			for (const t in buckets.value[b].tasks) {
-				if (buckets.value[b].tasks[t].id === task.id) {
+		const findAndUpdate = (b: number) => {
+			for (const [t, taskInBucket] of buckets.value[b].tasks.entries()) {
+				if (taskInBucket.id === task.id) {
 					const bucket = buckets.value[b]
 					bucket.tasks[t] = task
 
@@ -138,7 +138,7 @@ export const useKanbanStore = defineStore('kanban', () => {
 			}
 		}
 
-		for (const b in buckets.value) {
+		for (let b = 0; b < buckets.value.length; b++) {
 			findAndUpdate(b)
 			if (found) {
 				return

@@ -13,7 +13,7 @@ export function objectToCamelCase(object: Record<string, any>) {
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const parsedObject: Record<string, any> = {}
-	for (const m in object) {
+	for (const m of Object.keys(object)) {
 		parsedObject[camelCase(m)] = object[m]
 
 		// Recursive processing
@@ -51,7 +51,7 @@ export function objectToSnakeCase(object: Record<string, any>) {
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const parsedObject: Record<string, any> = {}
-	for (const m in object) {
+	for (const m of Object.keys(object)) {
 		parsedObject[snakeCase(m)] = object[m]
 
 		// Recursive processing

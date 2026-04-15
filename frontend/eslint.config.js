@@ -112,6 +112,11 @@ export default [
 
 			'depend/ban-dependencies': 'warn',
 
+			'no-restricted-syntax': ['error', {
+				selector: 'ForInStatement',
+				message: 'Use for...of with Object.keys/entries, or .forEach, instead of for...in. See https://github.com/go-vikunja/vikunja/issues/513',
+			}],
+
 			'@typescript-eslint/no-unused-vars': [
 				'error',
 				{
