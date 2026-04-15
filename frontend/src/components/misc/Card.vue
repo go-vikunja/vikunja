@@ -97,7 +97,7 @@ defineEmits<{
 	color: var(--text-strong);
 	display: flex;
 	flex-grow: 1;
-	font-weight: var(--weight-bold);
+	font-weight: 700;
 	padding: 0.75rem 1rem;
 
 	&.is-centered {
@@ -115,7 +115,7 @@ defineEmits<{
 
 .card-content {
 	background-color: transparent;
-	padding: 1.5rem;
+	padding: 1rem;
 
 	&:first-child {
 		border-start-start-radius: $radius;
