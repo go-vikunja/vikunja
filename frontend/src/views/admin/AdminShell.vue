@@ -77,7 +77,7 @@ const navigationItems = computed(() => [
 	border-inline-start: 3px solid transparent;
 
 	&:hover,
-	&.router-link-active {
+	&.router-link-exact-active {
 		background: var(--white);
 		border-color: var(--primary);
 	}
