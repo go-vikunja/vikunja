@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
 
@@ -80,12 +81,12 @@ func PatchProjectOwner(c *echo.Context) error {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil || id < 1 {
-		return echo.ErrNotFound
+		return models.ErrProjectDoesNotExist{ID: id}
 	}
 
 	body := &OwnerPatch{}
 	if err := c.Bind(body); err != nil || body.OwnerID < 1 {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid body")
+		return models.ErrInvalidData{Message: "invalid body"}
 	}
 
 	s := db.NewSession()
@@ -97,7 +98,7 @@ func PatchProjectOwner(c *echo.Context) error {
 		return err
 	}
 	if !has {
-		return echo.ErrNotFound
+		return models.ErrProjectDoesNotExist{ID: id}
 	}
 
 	// Verify new owner exists.
@@ -106,7 +107,7 @@ func PatchProjectOwner(c *echo.Context) error {
 		return err
 	}
 	if !newOwnerExists {
-		return echo.NewHTTPError(http.StatusBadRequest, "new owner does not exist")
+		return user.ErrUserDoesNotExist{UserID: body.OwnerID}
 	}
 
 	p.OwnerID = body.OwnerID

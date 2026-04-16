@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
@@ -50,12 +51,12 @@ func PatchAdmin(c *echo.Context) error {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil || id < 1 {
-		return echo.ErrNotFound
+		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
 	body := &Patch{}
 	if err := c.Bind(body); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid body")
+		return models.ErrInvalidData{Message: "invalid body"}
 	}
 
 	s := db.NewSession()
@@ -67,7 +68,7 @@ func PatchAdmin(c *echo.Context) error {
 		return err
 	}
 	if !has {
-		return echo.ErrNotFound
+		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
 	// Last-admin guard: only fires when we're demoting a currently-admin user.

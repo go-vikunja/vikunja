@@ -49,11 +49,11 @@ type StatusPatch struct {
 func PatchStatus(c *echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id < 1 {
-		return echo.ErrNotFound
+		return user.ErrUserDoesNotExist{UserID: id}
 	}
 	body := &StatusPatch{}
 	if err := c.Bind(body); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid body")
+		return models.ErrInvalidData{Message: "invalid body"}
 	}
 
 	s := db.NewSession()
@@ -65,7 +65,7 @@ func PatchStatus(c *echo.Context) error {
 		return err
 	}
 	if !has {
-		return echo.ErrNotFound
+		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
 	if err := user.SetUserStatus(s, target, body.Status); err != nil {
@@ -101,7 +101,7 @@ func PatchStatus(c *echo.Context) error {
 func DeleteUser(c *echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id < 1 {
-		return echo.ErrNotFound
+		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
 	s := db.NewSession()
@@ -113,7 +113,7 @@ func DeleteUser(c *echo.Context) error {
 		return err
 	}
 	if !has {
-		return echo.ErrNotFound
+		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
 	// Last-admin guard: mirror the demote guard. Deleting the only admin is
