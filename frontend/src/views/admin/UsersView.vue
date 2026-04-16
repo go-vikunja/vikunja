@@ -60,232 +60,234 @@
 
 			<Modal
 				v-if="detailTarget && !pendingDelete"
+				variant="hint-modal"
 				@close="closeDetail"
 			>
-				<template #header>
-					<h3>{{ $t('admin.users.detailsTitle', {username: detailTarget.username}) }}</h3>
-				</template>
-				<template #text>
-					<div class="admin-users__detail">
-						<dl class="admin-users__meta">
-							<dt>{{ $t('admin.users.id') }}</dt>
-							<dd>{{ detailTarget.id }}</dd>
-							<dt>{{ $t('admin.users.emailLabel') }}</dt>
-							<dd>{{ detailTarget.email }}</dd>
-							<dt>{{ $t('admin.users.createdLabel') }}</dt>
-							<dd>
-								<time :datetime="formatISO(detailTarget.created)">{{ formatDisplayDate(detailTarget.created) }}</time>
-							</dd>
-							<dt>{{ $t('admin.users.updatedLabel') }}</dt>
-							<dd>
-								<time :datetime="formatISO(detailTarget.updated)">{{ formatDisplayDate(detailTarget.updated) }}</time>
-							</dd>
-						</dl>
+				<Card
+					class="has-no-shadow"
+					:title="$t('admin.users.detailsTitle', {username: detailTarget.username})"
+				>
+					<dl class="admin-users__meta">
+						<dt>{{ $t('admin.users.id') }}</dt>
+						<dd>{{ detailTarget.id }}</dd>
+						<dt>{{ $t('admin.users.emailLabel') }}</dt>
+						<dd>{{ detailTarget.email }}</dd>
+						<dt>{{ $t('admin.users.createdLabel') }}</dt>
+						<dd>
+							<time :datetime="formatISO(detailTarget.created)">{{ formatDisplayDate(detailTarget.created) }}</time>
+						</dd>
+						<dt>{{ $t('admin.users.updatedLabel') }}</dt>
+						<dd>
+							<time :datetime="formatISO(detailTarget.updated)">{{ formatDisplayDate(detailTarget.updated) }}</time>
+						</dd>
+					</dl>
 
-						<div class="field">
-							<label class="checkbox">
-								<input
-									v-model="editable.isAdmin"
-									type="checkbox"
-								>
-								{{ $t('admin.users.isAdminLabel') }}
-							</label>
-						</div>
+					<div class="field">
+						<label class="checkbox">
+							<input
+								v-model="editable.isAdmin"
+								type="checkbox"
+							>
+							{{ $t('admin.users.isAdminLabel') }}
+						</label>
+					</div>
 
-						<div class="field">
-							<label
-								class="label"
-								for="admin-user-status"
-							>{{ $t('admin.users.statusLabel') }}</label>
-							<div class="select">
-								<select
-									id="admin-user-status"
-									v-model.number="editable.status"
-								>
-									<option :value="0">
-										{{ $t('admin.users.statusActive') }}
-									</option>
-									<option :value="1">
-										{{ $t('admin.users.statusEmailConfirmation') }}
-									</option>
-									<option :value="2">
-										{{ $t('admin.users.statusDisabled') }}
-									</option>
-									<option :value="3">
-										{{ $t('admin.users.statusLocked') }}
-									</option>
-								</select>
-							</div>
+					<div class="field">
+						<label
+							class="label"
+							for="admin-user-status"
+						>{{ $t('admin.users.statusLabel') }}</label>
+						<div class="select">
+							<select
+								id="admin-user-status"
+								v-model.number="editable.status"
+							>
+								<option :value="0">
+									{{ $t('admin.users.statusActive') }}
+								</option>
+								<option :value="1">
+									{{ $t('admin.users.statusEmailConfirmation') }}
+								</option>
+								<option :value="2">
+									{{ $t('admin.users.statusDisabled') }}
+								</option>
+								<option :value="3">
+									{{ $t('admin.users.statusLocked') }}
+								</option>
+							</select>
 						</div>
 					</div>
-				</template>
-				<template #footer>
-					<XButton
-						variant="tertiary"
-						@click="closeDetail"
-					>
-						{{ $t('misc.cancel') }}
-					</XButton>
-					<XButton
-						v-if="detailTarget.id !== currentUserId"
-						variant="secondary"
-						:danger="true"
-						@click="pendingDelete = detailTarget"
-					>
-						{{ $t('admin.users.delete') }}
-					</XButton>
-					<XButton
-						variant="primary"
-						:disabled="!hasChanges || saving"
-						:loading="saving"
-						@click="saveChanges"
-					>
-						{{ $t('admin.users.saveButton') }}
-					</XButton>
-				</template>
+
+					<template #footer>
+						<XButton
+							variant="tertiary"
+							@click="closeDetail"
+						>
+							{{ $t('misc.cancel') }}
+						</XButton>
+						<XButton
+							v-if="detailTarget.id !== currentUserId"
+							variant="secondary"
+							:danger="true"
+							@click="pendingDelete = detailTarget"
+						>
+							{{ $t('admin.users.delete') }}
+						</XButton>
+						<XButton
+							variant="primary"
+							:disabled="!hasChanges || saving"
+							:loading="saving"
+							@click="saveChanges"
+						>
+							{{ $t('admin.users.saveButton') }}
+						</XButton>
+					</template>
+				</Card>
 			</Modal>
 
 			<Modal
 				v-if="createOpen"
+				variant="hint-modal"
 				@close="closeCreate"
 			>
-				<template #header>
-					<h3>{{ $t('admin.users.createTitle') }}</h3>
-				</template>
-				<template #text>
-					<div class="admin-users__detail">
-						<div class="field">
-							<label
-								class="label"
-								for="admin-create-username"
-							>{{ $t('admin.users.usernameLabel') }}</label>
-							<input
-								id="admin-create-username"
-								v-model="createForm.username"
-								class="input"
-								type="text"
-								required
-							>
-						</div>
-						<div class="field">
-							<label
-								class="label"
-								for="admin-create-email"
-							>{{ $t('admin.users.emailLabel') }}</label>
-							<input
-								id="admin-create-email"
-								v-model="createForm.email"
-								class="input"
-								type="email"
-								required
-							>
-						</div>
-						<div class="field">
-							<label
-								class="label"
-								for="admin-create-name"
-							>{{ $t('admin.users.nameLabel') }}</label>
-							<input
-								id="admin-create-name"
-								v-model="createForm.name"
-								class="input"
-								type="text"
-							>
-						</div>
-						<div class="field">
-							<label
-								class="label"
-								for="admin-create-password"
-							>{{ $t('admin.users.passwordLabel') }}</label>
-							<input
-								id="admin-create-password"
-								v-model="createForm.password"
-								class="input"
-								type="password"
-								autocomplete="new-password"
-							>
-							<p class="help">
-								{{ $t('admin.users.passwordHelp') }}
-							</p>
-						</div>
-						<div class="field">
-							<label
-								class="label"
-								for="admin-create-language"
-							>{{ $t('admin.users.languageLabel') }}</label>
-							<input
-								id="admin-create-language"
-								v-model="createForm.language"
-								class="input"
-								type="text"
-							>
-						</div>
-						<div class="field">
-							<label class="checkbox">
-								<input
-									v-model="createForm.isAdmin"
-									type="checkbox"
-								>
-								{{ $t('admin.users.isAdminLabel') }}
-							</label>
-						</div>
-						<div class="field">
-							<label class="checkbox">
-								<input
-									v-model="createForm.skipEmailConfirm"
-									type="checkbox"
-								>
-								{{ $t('admin.users.skipEmailConfirm') }}
-							</label>
-						</div>
+				<Card
+					class="has-no-shadow"
+					:title="$t('admin.users.createTitle')"
+				>
+					<div class="field">
+						<label
+							class="label"
+							for="admin-create-username"
+						>{{ $t('admin.users.usernameLabel') }}</label>
+						<input
+							id="admin-create-username"
+							v-model="createForm.username"
+							class="input"
+							type="text"
+							required
+						>
 					</div>
-				</template>
-				<template #footer>
-					<XButton
-						variant="tertiary"
-						@click="closeCreate"
-					>
-						{{ $t('misc.cancel') }}
-					</XButton>
-					<XButton
-						variant="primary"
-						:disabled="creating || !createForm.username || !createForm.email"
-						:loading="creating"
-						@click="submitCreate"
-					>
-						{{ $t('admin.users.createSubmit') }}
-					</XButton>
-				</template>
+					<div class="field">
+						<label
+							class="label"
+							for="admin-create-email"
+						>{{ $t('admin.users.emailLabel') }}</label>
+						<input
+							id="admin-create-email"
+							v-model="createForm.email"
+							class="input"
+							type="email"
+							required
+						>
+					</div>
+					<div class="field">
+						<label
+							class="label"
+							for="admin-create-name"
+						>{{ $t('admin.users.nameLabel') }}</label>
+						<input
+							id="admin-create-name"
+							v-model="createForm.name"
+							class="input"
+							type="text"
+						>
+					</div>
+					<div class="field">
+						<label
+							class="label"
+							for="admin-create-password"
+						>{{ $t('admin.users.passwordLabel') }}</label>
+						<input
+							id="admin-create-password"
+							v-model="createForm.password"
+							class="input"
+							type="password"
+							autocomplete="new-password"
+						>
+						<p class="help">
+							{{ $t('admin.users.passwordHelp') }}
+						</p>
+					</div>
+					<div class="field">
+						<label
+							class="label"
+							for="admin-create-language"
+						>{{ $t('admin.users.languageLabel') }}</label>
+						<input
+							id="admin-create-language"
+							v-model="createForm.language"
+							class="input"
+							type="text"
+						>
+					</div>
+					<div class="field">
+						<label class="checkbox">
+							<input
+								v-model="createForm.isAdmin"
+								type="checkbox"
+							>
+							{{ $t('admin.users.isAdminLabel') }}
+						</label>
+					</div>
+					<div class="field">
+						<label class="checkbox">
+							<input
+								v-model="createForm.skipEmailConfirm"
+								type="checkbox"
+							>
+							{{ $t('admin.users.skipEmailConfirm') }}
+						</label>
+					</div>
+
+					<template #footer>
+						<XButton
+							variant="tertiary"
+							@click="closeCreate"
+						>
+							{{ $t('misc.cancel') }}
+						</XButton>
+						<XButton
+							variant="primary"
+							:disabled="creating || !createForm.username || !createForm.email"
+							:loading="creating"
+							@click="submitCreate"
+						>
+							{{ $t('admin.users.createSubmit') }}
+						</XButton>
+					</template>
+				</Card>
 			</Modal>
 
 			<Modal
 				v-if="pendingDelete"
+				variant="hint-modal"
 				@close="pendingDelete = null"
 			>
-				<template #header>
-					<h3>{{ $t('admin.users.confirmDeleteTitle') }}</h3>
-				</template>
-				<template #text>
+				<Card
+					class="has-no-shadow"
+					:title="$t('admin.users.confirmDeleteTitle')"
+				>
 					<p>
 						{{ $t('admin.users.confirmDeleteBody', {username: pendingDelete.username}) }}
 					</p>
-				</template>
-				<template #footer>
-					<XButton
-						variant="tertiary"
-						@click="pendingDelete = null"
-					>
-						{{ $t('misc.cancel') }}
-					</XButton>
-					<XButton
-						variant="primary"
-						:danger="true"
-						:loading="deleting"
-						@click="doDelete()"
-					>
-						{{ $t('admin.users.delete') }}
-					</XButton>
-				</template>
+
+					<template #footer>
+						<XButton
+							variant="tertiary"
+							@click="pendingDelete = null"
+						>
+							{{ $t('misc.cancel') }}
+						</XButton>
+						<XButton
+							variant="primary"
+							:danger="true"
+							:loading="deleting"
+							@click="doDelete()"
+						>
+							{{ $t('admin.users.delete') }}
+						</XButton>
+					</template>
+				</Card>
 			</Modal>
 		</div>
 	</Card>
