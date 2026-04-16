@@ -1,7 +1,10 @@
 <template>
 	<div class="content-widescreen">
 		<div class="admin-shell">
-			<nav class="navigation">
+			<nav
+				class="navigation"
+				data-cy="admin-shell-nav"
+			>
 				<ul>
 					<li
 						v-for="({routeName, title}, index) in navigationItems"
