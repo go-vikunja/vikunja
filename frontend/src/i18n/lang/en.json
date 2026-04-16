@@ -1538,10 +1538,13 @@
       "title": "Projects",
       "id": "ID",
       "projectTitle": "Title",
-      "owner": "Owner",
-      "created": "Created",
+      "ownerLabel": "Owner",
+      "createdLabel": "Created",
+      "updatedLabel": "Updated",
+      "settings": "Settings",
       "reassignOwner": "Reassign owner",
       "reassignTitle": "Reassign {title}",
+      "reassignedSuccess": "Project owner reassigned.",
       "newOwnerLabel": "New owner",
       "newOwnerPlaceholder": "Search by username or email…"
     }
