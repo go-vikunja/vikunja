@@ -222,33 +222,6 @@ func ValidateAPITokenString(tokenString string) (*models.APIToken, *user.User, e
 	return token, u, nil
 }
 
-// ParseJWTForOptionalAuth parses a raw JWT token string and returns the caller
-// as a *user.User populated from the claims (same shape as GetUserFromClaims).
-// Used by endpoints in the public (no-auth) route group that want to detect an
-// authenticated caller without requiring one. Only user tokens are accepted.
-// Returns an error for invalid or non-user tokens — callers should treat any
-// error as "not authenticated" rather than surfacing it.
-func ParseJWTForOptionalAuth(tokenString string) (*user.User, error) {
-	token, err := jwt.Parse(tokenString, func(_ *jwt.Token) (any, error) {
-		return []byte(config.ServiceSecret.GetString()), nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		return nil, jwt.ErrTokenInvalidClaims
-	}
-
-	typ, ok := claims["type"].(float64)
-	if !ok || int(typ) != AuthTypeUser {
-		return nil, jwt.ErrTokenInvalidClaims
-	}
-
-	return user.GetUserFromClaims(claims)
-}
-
 // GetUserIDFromToken parses a raw JWT token string and returns the user ID.
 // Only regular user tokens are accepted (not link shares).
 // Returns 0 and an error if the token is invalid.

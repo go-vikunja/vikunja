@@ -22,7 +22,6 @@ import (
 	"strings"
 	"testing"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -274,91 +273,6 @@ func TestAdmin_DeleteUser(t *testing.T) {
 	t.Run("unknown user returns 404", func(t *testing.T) {
 		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/9999999", admin, "")
 		assert.Equal(t, http.StatusNotFound, res.Code)
-	})
-}
-
-// TestAdmin_RegisterBypass covers the admin bypass on the public /register
-// endpoint: a site admin's bearer token lets them create users even when
-// ServiceEnableRegistration is false, and carries the admin-only is_admin /
-// skip_email_confirm fields. Non-admin callers keep the original behavior.
-func TestAdmin_RegisterBypass(t *testing.T) {
-	e, err := setupTestEnv()
-	require.NoError(t, err)
-	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
-	defer license.ResetForTests()
-
-	// Turn off public registration to prove the bypass works. The default is true,
-	// so remember to restore it for any subsequent test run.
-	prev := config.ServiceEnableRegistration.GetBool()
-	config.ServiceEnableRegistration.Set(false)
-	defer config.ServiceEnableRegistration.Set(prev)
-
-	admin := promoteToAdmin(t, 1)
-
-	s := db.NewSession()
-	u2, err := user.GetUserByID(s, 2)
-	require.NoError(t, err)
-	require.False(t, u2.IsAdmin, "user2 must be a non-admin for these tests")
-	s.Close()
-
-	t.Run("admin bearer bypasses ServiceEnableRegistration=false", func(t *testing.T) {
-		body := `{"username":"byp-admin-1","password":"averyl0ngpassword","email":"byp-admin-1@example.com"}`
-		res := adminReq(t, e, http.MethodPost, "/api/v1/register", admin, body)
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-		assert.Contains(t, res.Body.String(), `"username":"byp-admin-1"`)
-	})
-
-	t.Run("admin bearer creates is_admin user", func(t *testing.T) {
-		body := `{"username":"byp-admin-2","password":"averyl0ngpassword","email":"byp-admin-2@example.com","is_admin":true}`
-		res := adminReq(t, e, http.MethodPost, "/api/v1/register", admin, body)
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-
-		s := db.NewSession()
-		defer s.Close()
-		u, err := user.GetUserByUsername(s, "byp-admin-2")
-		require.NoError(t, err)
-		assert.True(t, u.IsAdmin, "new user should have been promoted")
-	})
-
-	t.Run("admin bearer skip_email_confirm forces Status=Active", func(t *testing.T) {
-		body := `{"username":"byp-admin-3","password":"averyl0ngpassword","email":"byp-admin-3@example.com","skip_email_confirm":true}`
-		res := adminReq(t, e, http.MethodPost, "/api/v1/register", admin, body)
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-
-		s := db.NewSession()
-		defer s.Close()
-		u, err := user.GetUserByUsername(s, "byp-admin-3")
-		require.NoError(t, err)
-		assert.Equal(t, user.StatusActive, u.Status)
-	})
-
-	t.Run("no bearer with registration disabled returns 404", func(t *testing.T) {
-		body := `{"username":"nobearer","password":"averyl0ngpassword","email":"nobearer@example.com"}`
-		res := adminReq(t, e, http.MethodPost, "/api/v1/register", nil, body)
-		assert.Equal(t, http.StatusNotFound, res.Code)
-	})
-
-	t.Run("non-admin bearer with registration disabled returns 404", func(t *testing.T) {
-		body := `{"username":"nonadminbearer","password":"averyl0ngpassword","email":"nonadminbearer@example.com"}`
-		res := adminReq(t, e, http.MethodPost, "/api/v1/register", u2, body)
-		assert.Equal(t, http.StatusNotFound, res.Code)
-	})
-
-	t.Run("non-admin bearer cannot set is_admin", func(t *testing.T) {
-		// Re-enable registration so the non-admin request reaches the handler body;
-		// the flag should still be silently ignored.
-		config.ServiceEnableRegistration.Set(true)
-		defer config.ServiceEnableRegistration.Set(false)
-
-		body := `{"username":"sneaky-admin","password":"averyl0ngpassword","email":"sneaky-admin@example.com","is_admin":true}`
-		res := adminReq(t, e, http.MethodPost, "/api/v1/register", u2, body)
-		assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-
-		s := db.NewSession()
-		defer s.Close()
-		u, err := user.GetUserByUsername(s, "sneaky-admin")
-		require.NoError(t, err)
-		assert.False(t, u.IsAdmin, "non-admin caller must not be able to promote")
 	})
 }
 
