@@ -33,17 +33,19 @@
 							<time :datetime="toISO(p.updated)">{{ formatDisplayDate(p.updated) }}</time>
 						</td>
 						<td class="admin-projects__actions">
-							<XButton
-								variant="secondary"
-								:shadow="false"
-								@click="openReassign(p)"
-							>
-								{{ $t('admin.projects.reassignOwner') }}
-							</XButton>
 							<ProjectSettingsDropdown
 								:project="p"
 								:force-all-actions="true"
-							/>
+							>
+								<template #extra>
+									<DropdownItem
+										icon="user-edit"
+										@click="openReassign(p)"
+									>
+										{{ $t('admin.projects.reassignOwner') }}
+									</DropdownItem>
+								</template>
+							</ProjectSettingsDropdown>
 						</td>
 					</tr>
 				</tbody>
@@ -111,6 +113,7 @@ import XButton from '@/components/input/Button.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/User.vue'
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
+import DropdownItem from '@/components/misc/DropdownItem.vue'
 import {formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import {error, success} from '@/message'
 import {useI18n} from 'vue-i18n'
