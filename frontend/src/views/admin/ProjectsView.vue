@@ -10,12 +10,12 @@
 			>
 				<thead>
 					<tr>
-						<th>{{ $t('admin.projects.id') }}</th>
-						<th>{{ $t('admin.projects.projectTitle') }}</th>
+						<th>{{ $t('misc.id') }}</th>
+						<th>{{ $t('project.title') }}</th>
 						<th>{{ $t('admin.projects.ownerLabel') }}</th>
-						<th>{{ $t('admin.projects.createdLabel') }}</th>
-						<th>{{ $t('admin.projects.updatedLabel') }}</th>
-						<th>{{ $t('admin.projects.settings') }}</th>
+						<th>{{ $t('task.attributes.created') }}</th>
+						<th>{{ $t('task.attributes.updated') }}</th>
+						<th>{{ $t('navigation.settings') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -66,7 +66,7 @@
 						<Multiselect
 							v-model="selectedUser"
 							:loading="userSearchLoading"
-							:placeholder="$t('admin.projects.newOwnerPlaceholder')"
+							:placeholder="$t('admin.searchUsersPlaceholder')"
 							:search-results="userResults"
 							label="username"
 							@search="searchUsers"

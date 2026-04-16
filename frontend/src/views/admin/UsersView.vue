@@ -6,7 +6,7 @@
 					v-model="searchTerm"
 					class="input"
 					type="text"
-					:placeholder="$t('admin.users.searchPlaceholder')"
+					:placeholder="$t('admin.searchUsersPlaceholder')"
 					@input="onSearch"
 				>
 				<XButton
@@ -26,12 +26,12 @@
 			>
 				<thead>
 					<tr>
-						<th>{{ $t('admin.users.id') }}</th>
-						<th>{{ $t('admin.users.username') }}</th>
-						<th>{{ $t('admin.users.email') }}</th>
+						<th>{{ $t('misc.id') }}</th>
+						<th>{{ $t('user.auth.username') }}</th>
+						<th>{{ $t('user.auth.email') }}</th>
 						<th>{{ $t('admin.users.issuer') }}</th>
 						<th>{{ $t('admin.users.status') }}</th>
-						<th>{{ $t('admin.users.created') }}</th>
+						<th>{{ $t('task.attributes.created') }}</th>
 						<th />
 					</tr>
 				</thead>
@@ -70,9 +70,9 @@
 					:title="$t('admin.users.detailsTitle', {username: detailTarget.username})"
 				>
 					<dl class="admin-users__meta">
-						<dt>{{ $t('admin.users.id') }}</dt>
+						<dt>{{ $t('misc.id') }}</dt>
 						<dd>{{ detailTarget.id }}</dd>
-						<dt>{{ $t('admin.users.emailLabel') }}</dt>
+						<dt>{{ $t('user.auth.email') }}</dt>
 						<dd>{{ detailTarget.email }}</dd>
 						<dt>{{ $t('admin.users.issuer') }}</dt>
 						<dd>
@@ -90,11 +90,11 @@
 								{{ detailTarget.subject }}
 							</dd>
 						</template>
-						<dt>{{ $t('admin.users.createdLabel') }}</dt>
+						<dt>{{ $t('task.attributes.created') }}</dt>
 						<dd>
 							<time :datetime="formatISO(detailTarget.created)">{{ formatDisplayDate(detailTarget.created) }}</time>
 						</dd>
-						<dt>{{ $t('admin.users.updatedLabel') }}</dt>
+						<dt>{{ $t('task.attributes.updated') }}</dt>
 						<dd>
 							<time :datetime="formatISO(detailTarget.updated)">{{ formatDisplayDate(detailTarget.updated) }}</time>
 						</dd>
@@ -114,7 +114,7 @@
 						<label
 							class="label"
 							for="admin-user-status"
-						>{{ $t('admin.users.statusLabel') }}</label>
+						>{{ $t('admin.users.status') }}</label>
 						<div class="select">
 							<select
 								id="admin-user-status"
@@ -149,7 +149,7 @@
 							:danger="true"
 							@click="pendingDelete = detailTarget"
 						>
-							{{ $t('admin.users.delete') }}
+							{{ $t('misc.delete') }}
 						</XButton>
 						<XButton
 							variant="primary"
@@ -176,7 +176,7 @@
 						<label
 							class="label"
 							for="admin-create-username"
-						>{{ $t('admin.users.usernameLabel') }}</label>
+						>{{ $t('user.auth.username') }}</label>
 						<input
 							id="admin-create-username"
 							v-model="createForm.username"
@@ -189,7 +189,7 @@
 						<label
 							class="label"
 							for="admin-create-email"
-						>{{ $t('admin.users.emailLabel') }}</label>
+						>{{ $t('user.auth.email') }}</label>
 						<input
 							id="admin-create-email"
 							v-model="createForm.email"
@@ -214,7 +214,7 @@
 						<label
 							class="label"
 							for="admin-create-password"
-						>{{ $t('admin.users.passwordLabel') }}</label>
+						>{{ $t('user.auth.password') }}</label>
 						<input
 							id="admin-create-password"
 							v-model="createForm.password"
@@ -230,7 +230,7 @@
 						<label
 							class="label"
 							for="admin-create-language"
-						>{{ $t('admin.users.languageLabel') }}</label>
+						>{{ $t('user.settings.general.language') }}</label>
 						<input
 							id="admin-create-language"
 							v-model="createForm.language"
@@ -302,7 +302,7 @@
 							:loading="deleting"
 							@click="doDelete()"
 						>
-							{{ $t('admin.users.delete') }}
+							{{ $t('misc.delete') }}
 						</XButton>
 					</template>
 				</Card>
