@@ -26,6 +26,14 @@
 				</div>
 				<div class="admin-overview__card">
 					<h2 class="admin-overview__card-title">
+						{{ $t('admin.overview.tasks') }}
+					</h2>
+					<p class="admin-overview__card-value">
+						{{ data.tasks }}
+					</p>
+				</div>
+				<div class="admin-overview__card">
+					<h2 class="admin-overview__card-title">
 						{{ $t('admin.overview.shares') }}
 					</h2>
 					<ul class="admin-overview__card-list">

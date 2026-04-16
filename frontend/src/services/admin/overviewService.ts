@@ -4,6 +4,7 @@ import {objectToCamelCase} from '@/helpers/case'
 export interface AdminOverview {
 	users: number
 	projects: number
+	tasks: number
 	shares: {
 		linkShares: number
 		teamShares: number
