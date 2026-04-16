@@ -53,12 +53,13 @@
 
 			<Modal
 				v-if="reassignTarget"
+				variant="hint-modal"
 				@close="reassignTarget = null"
 			>
-				<template #header>
-					<h3>{{ $t('admin.projects.reassignTitle', {title: reassignTarget.title}) }}</h3>
-				</template>
-				<template #text>
+				<Card
+					class="has-no-shadow"
+					:title="$t('admin.projects.reassignTitle', {title: reassignTarget.title})"
+				>
 					<div class="field">
 						<label class="label">
 							{{ $t('admin.projects.newOwnerLabel') }}
@@ -81,22 +82,23 @@
 							</template>
 						</Multiselect>
 					</div>
-				</template>
-				<template #footer>
-					<XButton
-						variant="tertiary"
-						@click="reassignTarget = null"
-					>
-						{{ $t('misc.cancel') }}
-					</XButton>
-					<XButton
-						variant="primary"
-						:disabled="!selectedUser"
-						@click="doReassign()"
-					>
-						{{ $t('admin.projects.reassignOwner') }}
-					</XButton>
-				</template>
+
+					<template #footer>
+						<XButton
+							variant="tertiary"
+							@click="reassignTarget = null"
+						>
+							{{ $t('misc.cancel') }}
+						</XButton>
+						<XButton
+							variant="primary"
+							:disabled="!selectedUser"
+							@click="doReassign()"
+						>
+							{{ $t('admin.projects.reassignOwner') }}
+						</XButton>
+					</template>
+				</Card>
 			</Modal>
 		</div>
 	</Card>
