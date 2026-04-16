@@ -17,6 +17,7 @@
 package admin
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 
@@ -25,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
+	"xorm.io/builder"
 )
 
 // User re-exposes fields that the default User JSON view hides.
@@ -98,13 +100,22 @@ func ListUsers(c *echo.Context) error {
 
 	query := c.QueryParam("s")
 
-	var users []*user.User
-	sess := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
+	var where builder.Cond
 	if query != "" {
 		q := "%" + query + "%"
-		sess = sess.Where("username LIKE ? OR email LIKE ?", q, q)
+		where = builder.Or(
+			builder.Like{"username", q},
+			builder.Like{"email", q},
+		)
 	}
-	if err := sess.Find(&users); err != nil {
+
+	var users []*user.User
+	if err := s.Where(where).Limit(perPage, (page-1)*perPage).OrderBy("id ASC").Find(&users); err != nil {
+		return err
+	}
+
+	totalCount, err := s.Where(where).Count(&user.User{})
+	if err != nil {
 		return err
 	}
 
@@ -118,5 +129,17 @@ func ListUsers(c *echo.Context) error {
 		out = append(out, newAdminUser(u, providers))
 	}
 
+	writePaginationHeaders(c, int64(len(out)), totalCount, perPage)
 	return c.JSON(http.StatusOK, out)
+}
+
+// writePaginationHeaders matches the header contract used by web/handler.ReadAllWeb.
+func writePaginationHeaders(c *echo.Context, resultCount, totalCount int64, perPage int) {
+	numberOfPages := math.Ceil(float64(totalCount) / float64(perPage))
+	if totalCount == 0 {
+		numberOfPages = 0
+	}
+	c.Response().Header().Set("x-pagination-total-pages", strconv.FormatFloat(numberOfPages, 'f', 0, 64))
+	c.Response().Header().Set("x-pagination-result-count", strconv.FormatInt(resultCount, 10))
+	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
 }

@@ -56,6 +56,12 @@ func ListProjects(c *echo.Context) error {
 		return err
 	}
 
+	totalCount, err := s.Count(&models.Project{})
+	if err != nil {
+		return err
+	}
+
+	writePaginationHeaders(c, int64(len(projects)), totalCount, perPage)
 	return c.JSON(http.StatusOK, projects)
 }
 
