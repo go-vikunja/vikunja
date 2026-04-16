@@ -808,7 +808,6 @@ func registerAPIRoutes(a *echo.Group) {
 	admin.GET("/ping", adminapi.Ping)
 	admin.GET("/overview", adminapi.GetOverview)
 	admin.GET("/users", adminapi.ListUsers)
-	admin.POST("/users", adminapi.CreateUser)
 	admin.PATCH("/users/:id/admin", adminapi.PatchAdmin)
 	admin.PATCH("/users/:id/status", adminapi.PatchStatus)
 	admin.DELETE("/users/:id", adminapi.DeleteUser)
