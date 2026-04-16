@@ -1892,8 +1892,19 @@ func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
 }
 
+func localBranchExists(ctx context.Context, name string) bool {
+	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/heads/"+name).Run() == nil
+}
+
+func remoteBranchExists(ctx context.Context, name string) bool {
+	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/remotes/"+name).Run() == nil
+}
+
 // PrepareWorktree creates a new git worktree for development.
 // The first argument is the name, which becomes both the folder name and branch name.
+// If a local branch with that name exists, it is checked out.
+// If a remote branch origin/<name> exists, a local tracking branch is created.
+// Otherwise a new branch is created.
 // The second argument is a path to a plan file that will be moved to the new worktree (pass "" to skip).
 // The worktree is created in the parent directory (../).
 // It also copies the current config.yml with an updated rootpath, and initializes the frontend.
@@ -1907,8 +1918,28 @@ func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) er
 
 	fmt.Printf("Creating worktree at %s with branch %s...\n", worktreePath, name)
 
-	// Create the git worktree
-	cmd := exec.CommandContext(ctx, "git", "worktree", "add", worktreePath, "-b", name)
+	// Refresh remote refs so remote-branch detection is reliable.
+	fetchCmd := exec.CommandContext(ctx, "git", "fetch", "origin")
+	fetchCmd.Stdout = os.Stdout
+	fetchCmd.Stderr = os.Stderr
+	if err := fetchCmd.Run(); err != nil {
+		fmt.Printf("Warning: git fetch failed: %v\n", err)
+	}
+
+	var worktreeArgs []string
+	switch {
+	case localBranchExists(ctx, name):
+		fmt.Printf("Local branch %s exists, checking it out.\n", name)
+		worktreeArgs = []string{"worktree", "add", worktreePath, name}
+	case remoteBranchExists(ctx, "origin/"+name):
+		fmt.Printf("Remote branch origin/%s exists, creating tracking branch.\n", name)
+		worktreeArgs = []string{"worktree", "add", "--track", "-b", name, worktreePath, "origin/" + name}
+	default:
+		fmt.Printf("Creating new branch %s.\n", name)
+		worktreeArgs = []string{"worktree", "add", worktreePath, "-b", name}
+	}
+
+	cmd := exec.CommandContext(ctx, "git", worktreeArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
