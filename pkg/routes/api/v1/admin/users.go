@@ -35,12 +35,12 @@ type User struct {
 	Issuer  string      `json:"issuer"`
 	// Subject is the external identifier for federated accounts (OIDC `sub` claim or LDAP DN). Empty for local accounts.
 	Subject string `json:"subject,omitempty"`
-	// AuthProvider is the configured friendly name of the OIDC provider (e.g. "Keycloak") for federated accounts. Falls back to the raw issuer URL if no configured provider matches.
+	// AuthProvider is a display-ready label for the account's auth source. Empty for local accounts (caller is expected to render "Local"), "LDAP" for LDAP, the configured friendly name for OIDC accounts (e.g. "Keycloak"), or the raw issuer URL for OIDC accounts whose issuer no longer matches any configured provider.
 	AuthProvider string `json:"auth_provider,omitempty"`
 }
 
 // newAdminUser wraps a user.User with the extra admin-only fields, resolving
-// the OIDC provider's friendly name when applicable.
+// the auth provider label when applicable.
 func newAdminUser(u *user.User, providers []*openid.Provider) *User {
 	return &User{
 		User:         u,
@@ -48,14 +48,16 @@ func newAdminUser(u *user.User, providers []*openid.Provider) *User {
 		Status:       u.Status,
 		Issuer:       u.Issuer,
 		Subject:      u.Subject,
-		AuthProvider: resolveAuthProviderName(u, providers),
+		AuthProvider: resolveAuthProvider(u, providers),
 	}
 }
 
-func resolveAuthProviderName(u *user.User, providers []*openid.Provider) string {
+func resolveAuthProvider(u *user.User, providers []*openid.Provider) string {
 	switch u.Issuer {
-	case "", user.IssuerLocal, user.IssuerLDAP:
+	case "", user.IssuerLocal:
 		return ""
+	case user.IssuerLDAP:
+		return "LDAP"
 	}
 	for _, provider := range providers {
 		issuerURL, err := provider.Issuer()
@@ -66,7 +68,7 @@ func resolveAuthProviderName(u *user.User, providers []*openid.Provider) string 
 			return provider.Name
 		}
 	}
-	return ""
+	return u.Issuer
 }
 
 // ListUsers returns paginated users for the admin panel with optional search.

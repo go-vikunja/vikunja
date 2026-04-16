@@ -43,7 +43,7 @@
 						<td>{{ u.id }}</td>
 						<td>{{ u.username }}</td>
 						<td>{{ u.email }}</td>
-						<td>{{ issuerSource(u) }}</td>
+						<td>{{ u.authProvider || $t('admin.users.issuerLocal') }}</td>
 						<td>{{ statusLabel(u.status) }}</td>
 						<td>
 							<time :datetime="formatISO(u.created)">{{ formatDisplayDate(u.created) }}</time>
@@ -76,9 +76,9 @@
 						<dd>{{ detailTarget.email }}</dd>
 						<dt>{{ $t('admin.users.issuer') }}</dt>
 						<dd>
-							{{ issuerSource(detailTarget) }}
+							{{ detailTarget.authProvider || $t('admin.users.issuerLocal') }}
 						</dd>
-						<template v-if="isOpenidIssuer(detailTarget.issuer)">
+						<template v-if="detailTarget.issuer?.startsWith('http')">
 							<dt>{{ $t('admin.users.issuerUrl') }}</dt>
 							<dd class="admin-users__issuer-url-value">
 								{{ detailTarget.issuer }}
@@ -367,16 +367,6 @@ watch(detailTarget, (u) => {
 	editable.isAdmin = !!u.isAdmin
 	editable.status = u.status
 })
-
-function issuerSource(u: Pick<IAdminUser, 'issuer' | 'authProvider'>): string {
-	if (!u.issuer || u.issuer === 'local') return t('admin.users.issuerLocal')
-	if (u.issuer === 'ldap') return t('admin.users.issuerLdap')
-	return u.authProvider || t('admin.users.issuerOpenid')
-}
-
-function isOpenidIssuer(issuer: string): boolean {
-	return !!issuer && issuer !== 'local' && issuer !== 'ldap'
-}
 
 function statusLabel(status: number): string {
 	switch (status) {
