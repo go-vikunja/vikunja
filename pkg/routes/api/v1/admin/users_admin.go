@@ -90,5 +90,5 @@ func PatchAdmin(c *echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, &User{User: target, IsAdmin: target.IsAdmin, Status: target.Status})
+	return c.JSON(http.StatusOK, &User{User: target, IsAdmin: target.IsAdmin, Status: target.Status, Issuer: target.Issuer})
 }

@@ -78,7 +78,7 @@ func PatchStatus(c *echo.Context) error {
 	// The target struct was loaded pre-update; reflect the new status on it
 	// locally instead of re-fetching (GetUserByID refuses disabled accounts).
 	target.Status = body.Status
-	return c.JSON(http.StatusOK, &User{User: target, IsAdmin: target.IsAdmin, Status: target.Status})
+	return c.JSON(http.StatusOK, &User{User: target, IsAdmin: target.IsAdmin, Status: target.Status, Issuer: target.Issuer})
 }
 
 // DeleteUser removes a user immediately. Admin-only escape hatch — skips the

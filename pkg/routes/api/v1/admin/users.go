@@ -31,6 +31,7 @@ type User struct {
 	*user.User
 	IsAdmin bool        `json:"is_admin"`
 	Status  user.Status `json:"status"`
+	Issuer  string      `json:"issuer"`
 }
 
 // ListUsers returns paginated users for the admin panel with optional search.
@@ -72,7 +73,7 @@ func ListUsers(c *echo.Context) error {
 
 	out := make([]*User, 0, len(users))
 	for _, u := range users {
-		out = append(out, &User{User: u, IsAdmin: u.IsAdmin, Status: u.Status})
+		out = append(out, &User{User: u, IsAdmin: u.IsAdmin, Status: u.Status, Issuer: u.Issuer})
 	}
 
 	return c.JSON(http.StatusOK, out)
