@@ -48,25 +48,6 @@
 						{{ data.version }}
 					</p>
 				</div>
-				<div class="admin-overview__card">
-					<h2 class="admin-overview__card-title">
-						{{ $t('admin.overview.license') }}
-					</h2>
-					<ul
-						v-if="data.license.enabledProFeatures.length"
-						class="admin-overview__card-list"
-					>
-						<li
-							v-for="f in data.license.enabledProFeatures"
-							:key="f"
-						>
-							{{ f }}
-						</li>
-					</ul>
-					<p v-else>
-						{{ $t('admin.overview.freeMode') }}
-					</p>
-				</div>
 			</div>
 		</div>
 	</Card>
