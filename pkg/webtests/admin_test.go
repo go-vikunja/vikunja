@@ -128,6 +128,7 @@ func TestAdmin_Overview(t *testing.T) {
 	body := res.Body.String()
 	assert.Contains(t, body, `"users"`)
 	assert.Contains(t, body, `"projects"`)
+	assert.Contains(t, body, `"tasks"`)
 	assert.Contains(t, body, `"shares"`)
 	assert.Contains(t, body, `"version"`)
 	assert.Contains(t, body, `"enabled_pro_features"`)

@@ -41,6 +41,7 @@ type LicenseInfo struct {
 type Overview struct {
 	Users    int64       `json:"users"`
 	Projects int64       `json:"projects"`
+	Tasks    int64       `json:"tasks"`
 	Shares   ShareCounts `json:"shares"`
 	Version  string      `json:"version"`
 	License  LicenseInfo `json:"license"`
@@ -67,6 +68,10 @@ func GetOverview(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
+	tasks, err := s.Table("tasks").Count()
+	if err != nil {
+		return err
+	}
 	linkShares, err := s.Table("link_shares").Count()
 	if err != nil {
 		return err
@@ -83,6 +88,7 @@ func GetOverview(c *echo.Context) error {
 	return c.JSON(http.StatusOK, Overview{
 		Users:    users,
 		Projects: projects,
+		Tasks:    tasks,
 		Shares: ShareCounts{
 			LinkShares: linkShares,
 			TeamShares: teamShares,
