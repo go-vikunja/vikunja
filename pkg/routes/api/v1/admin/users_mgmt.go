@@ -116,16 +116,9 @@ func DeleteUser(c *echo.Context) error {
 		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
-	// Last-admin guard: mirror the demote guard. Deleting the only admin is
-	// equivalent to demoting them — refuse.
-	if target.IsAdmin {
-		count, err := s.Where("is_admin = ?", true).Count(&user.User{})
-		if err != nil {
-			return err
-		}
-		if count <= 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, "cannot delete the last remaining site admin")
-		}
+	// Deleting the only admin is equivalent to demoting them — refuse.
+	if err := user.GuardLastAdmin(s, target); err != nil {
+		return err
 	}
 
 	if err := models.DeleteUser(s, target); err != nil {

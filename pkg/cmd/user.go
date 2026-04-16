@@ -105,6 +105,11 @@ func setUserAdmin(s *xorm.Session, identifier string, value bool) error {
 	if err != nil && !user.IsErrUserStatusError(err) {
 		return err
 	}
+	if !value {
+		if err := user.GuardLastAdmin(s, u); err != nil {
+			return err
+		}
+	}
 	u.IsAdmin = value
 	_, err = s.ID(u.ID).Cols("is_admin").Update(u)
 	return err
@@ -427,6 +432,10 @@ var userDeleteCmd = &cobra.Command{
 		u := getUserFromArg(s, args[0])
 
 		if userFlagDeleteNow {
+			if err := user.GuardLastAdmin(s, u); err != nil {
+				_ = s.Rollback()
+				log.Fatalf("Error removing the user: %s", err)
+			}
 			err := models.DeleteUser(s, u)
 			if err != nil {
 				_ = s.Rollback()

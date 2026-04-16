@@ -767,3 +767,29 @@ func (err ErrTokenUserMismatch) HTTPError() web.HTTPError {
 		Message:  "This deletion token does not belong to your account.",
 	}
 }
+
+// ErrLastAdmin represents an attempt to remove the site-admin flag from the
+// only remaining site admin, which would leave the instance without one.
+type ErrLastAdmin struct{}
+
+// IsErrLastAdmin checks if an error is a ErrLastAdmin.
+func IsErrLastAdmin(err error) bool {
+	_, ok := err.(ErrLastAdmin)
+	return ok
+}
+
+func (err ErrLastAdmin) Error() string {
+	return "Cannot remove the last remaining site admin"
+}
+
+// ErrCodeLastAdmin holds the unique world-error code of this error
+const ErrCodeLastAdmin = 1030
+
+// HTTPError holds the http error description
+func (err ErrLastAdmin) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeLastAdmin,
+		Message:  "Cannot remove the last remaining site admin.",
+	}
+}

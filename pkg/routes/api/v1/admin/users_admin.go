@@ -71,15 +71,11 @@ func PatchAdmin(c *echo.Context) error {
 		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
-	// Last-admin guard: only fires when we're demoting a currently-admin user.
-	if !body.IsAdmin && target.IsAdmin {
-		count, err := s.Where("is_admin = ?", true).Count(&user.User{})
-		if err != nil {
-			return err
-		}
-		if count <= 1 {
+	// Only run the last-admin guard when we're actually demoting.
+	if !body.IsAdmin {
+		if err := user.GuardLastAdmin(s, target); err != nil {
 			_ = s.Rollback()
-			return echo.NewHTTPError(http.StatusBadRequest, "cannot demote the last remaining site admin")
+			return err
 		}
 	}
 

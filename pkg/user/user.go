@@ -664,6 +664,24 @@ func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
 	return
 }
 
+// GuardLastAdmin returns ErrLastAdmin when removing the target user's
+// site-admin privileges (by demotion or deletion) would leave the instance
+// without any site admin. It's a no-op when the target isn't an admin.
+// Callers should invoke this before performing the destructive operation.
+func GuardLastAdmin(s *xorm.Session, target *User) error {
+	if !target.IsAdmin {
+		return nil
+	}
+	count, err := s.Where("is_admin = ?", true).Count(&User{})
+	if err != nil {
+		return err
+	}
+	if count <= 1 {
+		return ErrLastAdmin{}
+	}
+	return nil
+}
+
 // UpdateUserPassword updates the password of a user
 func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err error) {
 
