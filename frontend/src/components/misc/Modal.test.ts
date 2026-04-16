@@ -3,6 +3,14 @@ import {mount, flushPromises} from '@vue/test-utils'
 import {nextTick} from 'vue'
 import Modal from './Modal.vue'
 
+const globalMocks = {
+	global: {
+		mocks: {
+			$t: (key: string) => key,
+		},
+	},
+}
+
 // jsdom does not implement HTMLDialogElement.showModal/close.
 // Provide stubs so that the [open] attribute — which CSS and our tests
 // check — is flipped the same way the real browser would.
@@ -50,6 +58,7 @@ afterEach(() => {
 describe('Modal.vue — open race condition (#2590)', () => {
 	it('opens the dialog when enabled flips false → true', async () => {
 		const wrapper = mount(Modal, {
+			...globalMocks,
 			attachTo: document.body,
 			props: {enabled: false},
 			slots: {default: '<p class="test-body">hi</p>'},
@@ -84,6 +93,7 @@ describe('Modal.vue — open race condition (#2590)', () => {
 		// resolves after the first state change, the dialog must already have
 		// [open] set — no additional flushPromises or extra ticks required.
 		const wrapper = mount(Modal, {
+			...globalMocks,
 			attachTo: document.body,
 			props: {enabled: false},
 			slots: {default: '<p class="test-body">hi</p>'},
@@ -111,6 +121,7 @@ describe('Modal.vue — open race condition (#2590)', () => {
 		// nextTick callback whose timing could fire before the dialog mounted,
 		// skipping the showModal() call entirely and leaving .open === false.
 		const wrapper = mount(Modal, {
+			...globalMocks,
 			attachTo: document.body,
 			props: {enabled: true},
 			slots: {default: '<p class="test-body">hi</p>'},
@@ -132,6 +143,7 @@ describe('Modal.vue — open race condition (#2590)', () => {
 
 	it('closes the dialog when enabled flips true → false', async () => {
 		const wrapper = mount(Modal, {
+			...globalMocks,
 			attachTo: document.body,
 			props: {enabled: true},
 			slots: {default: '<p class="test-body">hi</p>'},
@@ -159,6 +171,7 @@ describe('Modal.vue — open race condition (#2590)', () => {
 		// element mounts. If props.enabled has flipped back to false by the
 		// time the mount happens, the watcher must not call showModal().
 		const wrapper = mount(Modal, {
+			...globalMocks,
 			attachTo: document.body,
 			props: {enabled: false},
 			slots: {default: '<p class="test-body">hi</p>'},
@@ -189,6 +202,7 @@ describe('Modal.vue — open race condition (#2590)', () => {
 		// sure openDialog() clears the leftover data-closing flag itself;
 		// otherwise the dialog stays stuck at opacity 0.
 		const wrapper = mount(Modal, {
+			...globalMocks,
 			attachTo: document.body,
 			props: {enabled: true},
 			slots: {default: '<p class="test-body">hi</p>'},

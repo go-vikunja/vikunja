@@ -1,8 +1,8 @@
 <template>
 	<div class="content has-text-centered">
-		<h2 v-if="salutation">
+		<h1 v-if="salutation">
 			{{ salutation }}
-		</h2>
+		</h1>
 
 		<Message
 			v-if="deletionScheduledAt !== null"
