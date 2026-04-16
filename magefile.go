@@ -1893,11 +1893,11 @@ func (Generate) ConfigYAML(commented bool) {
 }
 
 func localBranchExists(ctx context.Context, name string) bool {
-	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/heads/"+name).Run() == nil
+	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/heads/"+name).Run() == nil //nolint:gosec // This is a dev-only mage task and the branch name is supplied by the developer running it.
 }
 
 func remoteBranchExists(ctx context.Context, name string) bool {
-	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/remotes/"+name).Run() == nil
+	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/remotes/"+name).Run() == nil //nolint:gosec // This is a dev-only mage task and the branch name is supplied by the developer running it.
 }
 
 // PrepareWorktree creates a new git worktree for development.
