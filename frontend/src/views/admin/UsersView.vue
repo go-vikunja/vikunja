@@ -9,6 +9,12 @@
 					:placeholder="$t('admin.users.searchPlaceholder')"
 					@input="onSearch"
 				>
+				<XButton
+					variant="primary"
+					@click="openCreate"
+				>
+					{{ $t('admin.users.addUser') }}
+				</XButton>
 			</div>
 
 			<p v-if="loading">
@@ -140,6 +146,119 @@
 			</Modal>
 
 			<Modal
+				v-if="createOpen"
+				@close="closeCreate"
+			>
+				<template #header>
+					<h3>{{ $t('admin.users.createTitle') }}</h3>
+				</template>
+				<template #text>
+					<div class="admin-users__detail">
+						<div class="field">
+							<label
+								class="label"
+								for="admin-create-username"
+							>{{ $t('admin.users.usernameLabel') }}</label>
+							<input
+								id="admin-create-username"
+								v-model="createForm.username"
+								class="input"
+								type="text"
+								required
+							>
+						</div>
+						<div class="field">
+							<label
+								class="label"
+								for="admin-create-email"
+							>{{ $t('admin.users.emailLabel') }}</label>
+							<input
+								id="admin-create-email"
+								v-model="createForm.email"
+								class="input"
+								type="email"
+								required
+							>
+						</div>
+						<div class="field">
+							<label
+								class="label"
+								for="admin-create-name"
+							>{{ $t('admin.users.nameLabel') }}</label>
+							<input
+								id="admin-create-name"
+								v-model="createForm.name"
+								class="input"
+								type="text"
+							>
+						</div>
+						<div class="field">
+							<label
+								class="label"
+								for="admin-create-password"
+							>{{ $t('admin.users.passwordLabel') }}</label>
+							<input
+								id="admin-create-password"
+								v-model="createForm.password"
+								class="input"
+								type="password"
+								autocomplete="new-password"
+							>
+							<p class="help">
+								{{ $t('admin.users.passwordHelp') }}
+							</p>
+						</div>
+						<div class="field">
+							<label
+								class="label"
+								for="admin-create-language"
+							>{{ $t('admin.users.languageLabel') }}</label>
+							<input
+								id="admin-create-language"
+								v-model="createForm.language"
+								class="input"
+								type="text"
+							>
+						</div>
+						<div class="field">
+							<label class="checkbox">
+								<input
+									v-model="createForm.isAdmin"
+									type="checkbox"
+								>
+								{{ $t('admin.users.isAdminLabel') }}
+							</label>
+						</div>
+						<div class="field">
+							<label class="checkbox">
+								<input
+									v-model="createForm.skipEmailConfirm"
+									type="checkbox"
+								>
+								{{ $t('admin.users.skipEmailConfirm') }}
+							</label>
+						</div>
+					</div>
+				</template>
+				<template #footer>
+					<XButton
+						variant="tertiary"
+						@click="closeCreate"
+					>
+						{{ $t('misc.cancel') }}
+					</XButton>
+					<XButton
+						variant="primary"
+						:disabled="creating || !createForm.username || !createForm.email"
+						:loading="creating"
+						@click="submitCreate"
+					>
+						{{ $t('admin.users.createSubmit') }}
+					</XButton>
+				</template>
+			</Modal>
+
+			<Modal
 				v-if="pendingDelete"
 				@close="pendingDelete = null"
 			>
@@ -176,7 +295,7 @@
 import {ref, computed, onMounted, reactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
-import {listAdminUsers, setAdmin, setStatus, deleteUser, type AdminUser} from '@/services/admin/userService'
+import {listAdminUsers, setAdmin, setStatus, deleteUser, createAdminUser, type AdminUser, type CreateAdminUserBody} from '@/services/admin/userService'
 import {error, success} from '@/message'
 import {formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import Card from '@/components/misc/Card.vue'
@@ -194,7 +313,23 @@ const detailTarget = ref<AdminUser | null>(null)
 const pendingDelete = ref<AdminUser | null>(null)
 const saving = ref(false)
 const deleting = ref(false)
+const createOpen = ref(false)
+const creating = ref(false)
 const editable = reactive({isAdmin: false, status: 0})
+
+function emptyCreateForm(): Required<Pick<CreateAdminUserBody, 'username' | 'email'>> & CreateAdminUserBody {
+	return {
+		username: '',
+		email: '',
+		name: '',
+		password: '',
+		language: '',
+		isAdmin: false,
+		skipEmailConfirm: false,
+	}
+}
+
+const createForm = reactive(emptyCreateForm())
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 const hasChanges = computed(() => {
@@ -241,6 +376,38 @@ function openDetails(u: AdminUser) {
 
 function closeDetail() {
 	detailTarget.value = null
+}
+
+function openCreate() {
+	Object.assign(createForm, emptyCreateForm())
+	createOpen.value = true
+}
+
+function closeCreate() {
+	createOpen.value = false
+}
+
+async function submitCreate() {
+	creating.value = true
+	try {
+		const body: CreateAdminUserBody = {
+			username: createForm.username,
+			email: createForm.email,
+		}
+		if (createForm.name) body.name = createForm.name
+		if (createForm.password) body.password = createForm.password
+		if (createForm.language) body.language = createForm.language
+		if (createForm.isAdmin) body.isAdmin = true
+		if (createForm.skipEmailConfirm) body.skipEmailConfirm = true
+		const created = await createAdminUser(body)
+		users.value = [created, ...users.value]
+		success(t('admin.users.createdSuccess', {username: created.username}))
+		createOpen.value = false
+	} catch (e) {
+		error(e)
+	} finally {
+		creating.value = false
+	}
 }
 
 function replaceUser(updated: AdminUser) {
