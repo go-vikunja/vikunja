@@ -26,7 +26,6 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
-	"xorm.io/builder"
 )
 
 // User re-exposes fields that the default User JSON view hides.
@@ -100,21 +99,22 @@ func ListUsers(c *echo.Context) error {
 
 	query := c.QueryParam("s")
 
-	var where builder.Cond
+	var users []*user.User
+	finder := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
 	if query != "" {
 		q := "%" + query + "%"
-		where = builder.Or(
-			builder.Like{"username", q},
-			builder.Like{"email", q},
-		)
+		finder = finder.Where("username LIKE ? OR email LIKE ?", q, q)
 	}
-
-	var users []*user.User
-	if err := s.Where(where).Limit(perPage, (page-1)*perPage).OrderBy("id ASC").Find(&users); err != nil {
+	if err := finder.Find(&users); err != nil {
 		return err
 	}
 
-	totalCount, err := s.Where(where).Count(&user.User{})
+	counter := s
+	if query != "" {
+		q := "%" + query + "%"
+		counter = s.Where("username LIKE ? OR email LIKE ?", q, q)
+	}
+	totalCount, err := counter.Count(&user.User{})
 	if err != nil {
 		return err
 	}
