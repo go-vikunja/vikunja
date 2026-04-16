@@ -4,12 +4,6 @@
 			<p v-if="loading">
 				{{ $t('misc.loading') }}
 			</p>
-			<p
-				v-else-if="error"
-				class="has-text-danger"
-			>
-				{{ error }}
-			</p>
 			<table
 				v-else
 				class="admin-projects__table"
@@ -18,9 +12,10 @@
 					<tr>
 						<th>{{ $t('admin.projects.id') }}</th>
 						<th>{{ $t('admin.projects.projectTitle') }}</th>
-						<th>{{ $t('admin.projects.owner') }}</th>
-						<th>{{ $t('admin.projects.created') }}</th>
-						<th />
+						<th>{{ $t('admin.projects.ownerLabel') }}</th>
+						<th>{{ $t('admin.projects.createdLabel') }}</th>
+						<th>{{ $t('admin.projects.updatedLabel') }}</th>
+						<th>{{ $t('admin.projects.settings') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -31,14 +26,24 @@
 						<td>{{ p.id }}</td>
 						<td>{{ p.title }}</td>
 						<td>{{ p.owner?.username ?? p.owner?.id }}</td>
-						<td>{{ p.created }}</td>
 						<td>
-							<button
-								class="button is-small"
+							<time :datetime="toISO(p.created)">{{ formatDisplayDate(p.created) }}</time>
+						</td>
+						<td>
+							<time :datetime="toISO(p.updated)">{{ formatDisplayDate(p.updated) }}</time>
+						</td>
+						<td class="admin-projects__actions">
+							<XButton
+								variant="secondary"
+								:shadow="false"
 								@click="openReassign(p)"
 							>
 								{{ $t('admin.projects.reassignOwner') }}
-							</button>
+							</XButton>
+							<ProjectSettingsDropdown
+								:project="p"
+								:force-all-actions="true"
+							/>
 						</td>
 					</tr>
 				</tbody>
@@ -52,29 +57,27 @@
 					<h3>{{ $t('admin.projects.reassignTitle', {title: reassignTarget.title}) }}</h3>
 				</template>
 				<template #text>
-					<div>
-						<label for="admin-reassign-input">{{ $t('admin.projects.newOwnerLabel') }}</label>
-						<input
-							id="admin-reassign-input"
-							v-model="newOwnerQuery"
-							class="input"
-							type="text"
+					<div class="field">
+						<label class="label">
+							{{ $t('admin.projects.newOwnerLabel') }}
+						</label>
+						<Multiselect
+							v-model="selectedUser"
+							:loading="userSearchLoading"
 							:placeholder="$t('admin.projects.newOwnerPlaceholder')"
-							@input="searchUsers"
+							:search-results="userResults"
+							label="username"
+							@search="searchUsers"
 						>
-						<ul
-							v-if="userResults.length"
-							class="admin-projects__results"
-						>
-							<li
-								v-for="u in userResults"
-								:key="u.id"
-								:class="{selected: selectedUserId === u.id}"
-								@click="selectedUserId = u.id"
-							>
-								{{ u.username }} ({{ u.email }})
-							</li>
-						</ul>
+							<template #searchResult="{option}">
+								<User
+									v-if="typeof option !== 'string'"
+									:avatar-size="24"
+									:show-username="true"
+									:user="option"
+								/>
+							</template>
+						</Multiselect>
 					</div>
 				</template>
 				<template #footer>
@@ -86,7 +89,7 @@
 					</XButton>
 					<XButton
 						variant="primary"
-						:disabled="!selectedUserId"
+						:disabled="!selectedUser"
 						@click="doReassign()"
 					>
 						{{ $t('admin.projects.reassignOwner') }}
@@ -105,24 +108,30 @@ import {listAdminUsers, type AdminUser} from '@/services/admin/userService'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import XButton from '@/components/input/Button.vue'
+import Multiselect from '@/components/input/Multiselect.vue'
+import User from '@/components/misc/User.vue'
+import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
+import {formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
+import {error, success} from '@/message'
+import {useI18n} from 'vue-i18n'
+
+const {t} = useI18n({useScope: 'global'})
 
 const projects = ref<IProject[]>([])
 const loading = ref(false)
-const error = ref('')
 
 const reassignTarget = ref<IProject | null>(null)
-const newOwnerQuery = ref('')
 const userResults = ref<AdminUser[]>([])
-const selectedUserId = ref<number | null>(null)
+const userSearchLoading = ref(false)
+const selectedUser = ref<AdminUser | null>(null)
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 async function load() {
 	loading.value = true
-	error.value = ''
 	try {
 		projects.value = await listAdminProjects()
 	} catch (e) {
-		error.value = e instanceof Error ? e.message : String(e)
+		error(e)
 	} finally {
 		loading.value = false
 	}
@@ -130,39 +139,45 @@ async function load() {
 
 function openReassign(p: IProject) {
 	reassignTarget.value = p
-	newOwnerQuery.value = ''
 	userResults.value = []
-	selectedUserId.value = null
+	selectedUser.value = null
 }
 
-function searchUsers() {
+function searchUsers(query: string) {
 	if (searchTimer) clearTimeout(searchTimer)
-	const q = newOwnerQuery.value
-	if (!q || q.length < 2) {
+	if (!query || query.length < 2) {
 		userResults.value = []
 		return
 	}
+	userSearchLoading.value = true
 	searchTimer = setTimeout(async () => {
 		try {
-			userResults.value = await listAdminUsers({s: q})
+			userResults.value = await listAdminUsers({s: query})
 		} catch (e) {
-			error.value = e instanceof Error ? e.message : String(e)
+			error(e)
+		} finally {
+			userSearchLoading.value = false
 		}
 	}, 200)
 }
 
 async function doReassign() {
-	if (!reassignTarget.value || !selectedUserId.value) return
+	if (!reassignTarget.value || !selectedUser.value) return
 	const target = reassignTarget.value
-	const newOwnerId = selectedUserId.value
+	const newOwnerId = selectedUser.value.id
 	reassignTarget.value = null
 	try {
 		const updated = await reassignProjectOwner(target.id, newOwnerId)
 		const idx = projects.value.findIndex(x => x.id === target.id)
 		if (idx !== -1) projects.value[idx] = updated
+		success({message: t('admin.projects.reassignedSuccess')})
 	} catch (e) {
-		error.value = e instanceof Error ? e.message : String(e)
+		error(e)
 	}
+}
+
+function toISO(date: Date | string | null | undefined): string {
+	return date ? formatISO(date) : ''
 }
 
 onMounted(load)
@@ -180,23 +195,10 @@ onMounted(load)
 	}
 }
 
-.admin-projects__results {
-	list-style: none;
-	padding: 0;
-	margin: 0.5rem 0 0;
-	border: 1px solid var(--grey-200);
-	border-radius: 4px;
-	max-block-size: 200px;
-	overflow-y: auto;
-
-	li {
-		padding: 0.5rem 0.75rem;
-		cursor: pointer;
-
-		&:hover,
-		&.selected {
-			background: var(--grey-100);
-		}
-	}
+.admin-projects__actions {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+	justify-content: flex-end;
 }
 </style>
