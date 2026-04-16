@@ -4,12 +4,6 @@
 			<p v-if="loading">
 				{{ $t('misc.loading') }}
 			</p>
-			<p
-				v-else-if="error"
-				class="has-text-danger"
-			>
-				{{ error }}
-			</p>
 			<div
 				v-else-if="data"
 				class="admin-overview__grid"
@@ -57,17 +51,17 @@
 import {ref, onMounted} from 'vue'
 import Card from '@/components/misc/Card.vue'
 import {getAdminOverview, type AdminOverview} from '@/services/admin/overviewService'
+import {error} from '@/message'
 
 const data = ref<AdminOverview | null>(null)
 const loading = ref(false)
-const error = ref('')
 
 onMounted(async () => {
 	loading.value = true
 	try {
 		data.value = await getAdminOverview()
 	} catch (e) {
-		error.value = e instanceof Error ? e.message : String(e)
+		error(e)
 	} finally {
 		loading.value = false
 	}
