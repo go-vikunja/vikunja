@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
@@ -78,7 +79,11 @@ func PatchStatus(c *echo.Context) error {
 	// The target struct was loaded pre-update; reflect the new status on it
 	// locally instead of re-fetching (GetUserByID refuses disabled accounts).
 	target.Status = body.Status
-	return c.JSON(http.StatusOK, &User{User: target, IsAdmin: target.IsAdmin, Status: target.Status, Issuer: target.Issuer})
+	providers, err := openid.GetAllProviders()
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, newAdminUser(target, providers))
 }
 
 // DeleteUser removes a user immediately. Admin-only escape hatch — skips the

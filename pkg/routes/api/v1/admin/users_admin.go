@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
@@ -90,5 +91,9 @@ func PatchAdmin(c *echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, &User{User: target, IsAdmin: target.IsAdmin, Status: target.Status, Issuer: target.Issuer})
+	providers, err := openid.GetAllProviders()
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, newAdminUser(target, providers))
 }

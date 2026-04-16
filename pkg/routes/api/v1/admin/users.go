@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
@@ -32,6 +33,40 @@ type User struct {
 	IsAdmin bool        `json:"is_admin"`
 	Status  user.Status `json:"status"`
 	Issuer  string      `json:"issuer"`
+	// Subject is the external identifier for federated accounts (OIDC `sub` claim or LDAP DN). Empty for local accounts.
+	Subject string `json:"subject,omitempty"`
+	// AuthProvider is the configured friendly name of the OIDC provider (e.g. "Keycloak") for federated accounts. Falls back to the raw issuer URL if no configured provider matches.
+	AuthProvider string `json:"auth_provider,omitempty"`
+}
+
+// newAdminUser wraps a user.User with the extra admin-only fields, resolving
+// the OIDC provider's friendly name when applicable.
+func newAdminUser(u *user.User, providers []*openid.Provider) *User {
+	return &User{
+		User:         u,
+		IsAdmin:      u.IsAdmin,
+		Status:       u.Status,
+		Issuer:       u.Issuer,
+		Subject:      u.Subject,
+		AuthProvider: resolveAuthProviderName(u, providers),
+	}
+}
+
+func resolveAuthProviderName(u *user.User, providers []*openid.Provider) string {
+	switch u.Issuer {
+	case "", user.IssuerLocal, user.IssuerLDAP:
+		return ""
+	}
+	for _, provider := range providers {
+		issuerURL, err := provider.Issuer()
+		if err != nil {
+			continue
+		}
+		if issuerURL == u.Issuer {
+			return provider.Name
+		}
+	}
+	return ""
 }
 
 // ListUsers returns paginated users for the admin panel with optional search.
@@ -71,9 +106,14 @@ func ListUsers(c *echo.Context) error {
 		return err
 	}
 
+	providers, err := openid.GetAllProviders()
+	if err != nil {
+		return err
+	}
+
 	out := make([]*User, 0, len(users))
 	for _, u := range users {
-		out = append(out, &User{User: u, IsAdmin: u.IsAdmin, Status: u.Status, Issuer: u.Issuer})
+		out = append(out, newAdminUser(u, providers))
 	}
 
 	return c.JSON(http.StatusOK, out)
