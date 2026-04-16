@@ -131,7 +131,11 @@ func TestAdmin_Overview(t *testing.T) {
 	assert.Contains(t, body, `"tasks"`)
 	assert.Contains(t, body, `"shares"`)
 	assert.Contains(t, body, `"version"`)
-	assert.Contains(t, body, `"enabled_pro_features"`)
+	assert.Contains(t, body, `"license"`)
+	assert.Contains(t, body, `"licensed":true`)
+	assert.Contains(t, body, `"features"`)
+	assert.Contains(t, body, `"expires_at"`)
+	assert.Contains(t, body, `"instance_id"`)
 }
 
 func TestAdmin_ListUsers(t *testing.T) {

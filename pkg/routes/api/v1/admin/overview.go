@@ -32,19 +32,14 @@ type ShareCounts struct {
 	UserShares int64 `json:"user_shares"`
 }
 
-// LicenseInfo describes the currently-applied license state.
-type LicenseInfo struct {
-	EnabledProFeatures []string `json:"enabled_pro_features"`
-}
-
 // Overview is the aggregate payload returned by GET /admin/overview.
 type Overview struct {
-	Users    int64       `json:"users"`
-	Projects int64       `json:"projects"`
-	Tasks    int64       `json:"tasks"`
-	Shares   ShareCounts `json:"shares"`
-	Version  string      `json:"version"`
-	License  LicenseInfo `json:"license"`
+	Users    int64        `json:"users"`
+	Projects int64        `json:"projects"`
+	Tasks    int64        `json:"tasks"`
+	Shares   ShareCounts  `json:"shares"`
+	Version  string       `json:"version"`
+	License  license.Info `json:"license"`
 }
 
 // GetOverview returns aggregate instance counts and metadata for the admin panel.
@@ -95,8 +90,6 @@ func GetOverview(c *echo.Context) error {
 			UserShares: userShares,
 		},
 		Version: version.Version,
-		License: LicenseInfo{
-			EnabledProFeatures: license.EnabledProFeatures(),
-		},
+		License: license.CurrentInfo(),
 	})
 }
