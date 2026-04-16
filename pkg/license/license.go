@@ -227,6 +227,46 @@ func ReloadFromCache() error {
 	return applyFromCache(cached)
 }
 
+// Info is a read-only snapshot of the current license state intended for the
+// admin panel. It composes every field we want to surface to site admins.
+type Info struct {
+	Licensed        bool      `json:"licensed"`
+	InstanceID      string    `json:"instance_id"`
+	Features        []string  `json:"features"`
+	MaxUsers        int64     `json:"max_users"`
+	ExpiresAt       time.Time `json:"expires_at"`
+	ValidatedAt     time.Time `json:"validated_at"`
+	LastCheckFailed bool      `json:"last_check_failed"`
+}
+
+// CurrentInfo returns a snapshot of the current license state. Never returns
+// an error — on DB hiccups it omits the cache-backed fields and returns what
+// in-memory state we have.
+func CurrentInfo() Info {
+	currentState.mu.RLock()
+	info := Info{
+		Licensed:        currentState.licensed,
+		InstanceID:      instanceID,
+		Features:        make([]string, 0, len(currentState.features)),
+		MaxUsers:        currentState.maxUsers,
+		ExpiresAt:       currentState.expiresAt,
+		LastCheckFailed: currentState.lastCheckFailed,
+	}
+	for f, on := range currentState.features {
+		if !on {
+			continue
+		}
+		info.Features = append(info.Features, f.String())
+	}
+	currentState.mu.RUnlock()
+	sort.Strings(info.Features)
+
+	if cached, err := loadCachedStatus(); err == nil && cached != nil {
+		info.ValidatedAt = cached.ValidatedAt
+	}
+	return info
+}
+
 // EnabledProFeatures returns the string keys of all currently enabled licensed features.
 // Returns an empty slice in free mode.
 func EnabledProFeatures() []string {
