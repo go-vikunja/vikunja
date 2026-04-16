@@ -276,6 +276,94 @@ func TestAdmin_DeleteUser(t *testing.T) {
 	})
 }
 
+func TestAdmin_CreateUser(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	t.Run("creates regular user with password", func(t *testing.T) {
+		body := `{"username":"newuser1","email":"newuser1@example.com","password":"averyl0ngpassword","name":"New User"}`
+		res := adminReq(t, e, http.MethodPost, "/api/v1/admin/users", admin, body)
+		assert.Equal(t, http.StatusOK, res.Code)
+		assert.Contains(t, res.Body.String(), `"username":"newuser1"`)
+
+		s := db.NewSession()
+		defer s.Close()
+		u, err := user.GetUserByUsername(s, "newuser1")
+		require.NoError(t, err)
+		assert.False(t, u.IsAdmin)
+		// Mailer off in tests + password provided → status forced Active.
+		assert.Equal(t, user.StatusActive, u.Status)
+
+		// An Inbox project must have been created so the user has somewhere to land.
+		has, err := s.Table("projects").Where("owner_id = ? AND title = ?", u.ID, "Inbox").Exist()
+		require.NoError(t, err)
+		assert.True(t, has, "inbox project must exist for new user")
+	})
+
+	t.Run("creates admin user when is_admin true", func(t *testing.T) {
+		body := `{"username":"newadmin","email":"newadmin@example.com","password":"averyl0ngpassword","is_admin":true}`
+		res := adminReq(t, e, http.MethodPost, "/api/v1/admin/users", admin, body)
+		assert.Equal(t, http.StatusOK, res.Code)
+		assert.Contains(t, res.Body.String(), `"is_admin":true`)
+
+		s := db.NewSession()
+		defer s.Close()
+		u, err := user.GetUserByUsername(s, "newadmin")
+		require.NoError(t, err)
+		assert.True(t, u.IsAdmin)
+	})
+
+	t.Run("rejects duplicate username", func(t *testing.T) {
+		// user1 already exists in fixtures.
+		body := `{"username":"user1","email":"dupe@example.com","password":"averyl0ngpassword"}`
+		res := adminReq(t, e, http.MethodPost, "/api/v1/admin/users", admin, body)
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+	})
+
+	t.Run("rejects duplicate email", func(t *testing.T) {
+		// user1@example.com already exists in fixtures.
+		body := `{"username":"fresh-username","email":"user1@example.com","password":"averyl0ngpassword"}`
+		res := adminReq(t, e, http.MethodPost, "/api/v1/admin/users", admin, body)
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+	})
+
+	t.Run("rejects missing password when mailer disabled", func(t *testing.T) {
+		body := `{"username":"nopassword","email":"nopassword@example.com"}`
+		res := adminReq(t, e, http.MethodPost, "/api/v1/admin/users", admin, body)
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+		assert.Contains(t, res.Body.String(), "password is required when mailer is disabled")
+	})
+
+	t.Run("rejects invalid email", func(t *testing.T) {
+		body := `{"username":"bademail","email":"not-an-email","password":"averyl0ngpassword"}`
+		res := adminReq(t, e, http.MethodPost, "/api/v1/admin/users", admin, body)
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+	})
+
+	t.Run("rejects username with spaces", func(t *testing.T) {
+		body := `{"username":"has space","email":"space@example.com","password":"averyl0ngpassword"}`
+		res := adminReq(t, e, http.MethodPost, "/api/v1/admin/users", admin, body)
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+	})
+
+	t.Run("unauthorized non-admin caller gets 404", func(t *testing.T) {
+		s := db.NewSession()
+		defer s.Close()
+		u, err := user.GetUserByID(s, 2)
+		require.NoError(t, err)
+		// user2 is not an admin in this test's state.
+		assert.False(t, u.IsAdmin)
+
+		body := `{"username":"sneaky","email":"sneaky@example.com","password":"averyl0ngpassword"}`
+		res := adminReq(t, e, http.MethodPost, "/api/v1/admin/users", u, body)
+		assert.Equal(t, http.StatusNotFound, res.Code)
+	})
+}
+
 func TestAdmin_ReassignProjectOwner(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
