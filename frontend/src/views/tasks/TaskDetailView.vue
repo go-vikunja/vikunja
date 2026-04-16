@@ -454,7 +454,17 @@
 								task.isFavorite ? $t('task.detail.actions.unfavorite') : $t('task.detail.actions.favorite')
 							}}
 						</XButton>
-						
+						<XButton
+							variant="secondary"
+							icon="heart"
+							:class="{'is-primary': task.needsHelp}"
+							@click="toggleNeedsHelp"
+						>
+							{{
+								task.needsHelp ? $t('task.needsHelp.buttonActive') : $t('task.needsHelp.button')
+							}}
+						</XButton>
+
 						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
@@ -1117,6 +1127,11 @@ async function changeProject(project: IProject | null) {
 
 async function toggleFavorite() {
 	const newTask = await taskStore.toggleFavorite(task.value)
+	Object.assign(task.value, newTask)
+}
+
+async function toggleNeedsHelp() {
+	const newTask = await taskStore.toggleNeedsHelp(task.value)
 	Object.assign(task.value, newTask)
 }
 

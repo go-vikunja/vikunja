@@ -511,10 +511,17 @@ export const useTaskStore = defineStore('task', () => {
 		const taskService = new TaskService()
 		task.isFavorite = !task.isFavorite
 		task = await taskService.update(task)
-		
+
 		// reloading the projects list so that the Favorites project shows up or is hidden when there are (or are not) favorite tasks
-		await projectStore.loadAllProjects() 
-		
+		await projectStore.loadAllProjects()
+
+		return task
+	}
+
+	async function toggleNeedsHelp(task: ITask) {
+		const taskService = new TaskService()
+		task.needsHelp = !task.needsHelp
+		task = await taskService.update(task)
 		return task
 	}
 
@@ -573,6 +580,7 @@ export const useTaskStore = defineStore('task', () => {
 		findProjectId,
 		ensureLabelsExist,
 		toggleFavorite,
+		toggleNeedsHelp,
 		duplicateTask,
 		markTaskAsRead,
 	}

@@ -27,7 +27,7 @@
   --code-background: var(--background, whitesmoke);
   --pre: var(--text, #4a4a4a);
   --pre-background: var(--background, whitesmoke);
-  --link-visited: #b86bff;
+  --link-visited: #c490e8;
   //--link-hover: #363636;
   --link-hover-border: #b5b5b5;
   --link-focus: #363636;
@@ -89,9 +89,9 @@
   --primary-light: hsla(var(--primary-h), var(--primary-s), var(--primary-light-l), var(--primary-a));
   --primary-dark-l: 29%;
   --primary-dark: hsla(var(--primary-h), var(--primary-s), var(--primary-dark-l), var(--primary-a));
-  --link-h: 229deg;
-  --link-s: 53%;
-  --link-l: 53%;
+  --link-h: 338deg;
+  --link-s: 68%;
+  --link-l: 55%;
   --link-a: 1;
   //--link: hsla(var(--link-h), var(--link-s), var(--link-l), var(--link-a));
   --link-invert-l: 100%;
@@ -186,7 +186,7 @@
   --grey-700: hsl(216.9, 19.1%, 26.7%);
   --grey-800: hsl(215, 27.9%, 16.9%);
   --grey-900: hsl(220.9, 39.3%, 11%);
-  --site-background: var(--grey-100);
+  --site-background: hsl(338, 25%, 96%);
 
   // Overrides of Bulma defaults
   --scheme-main: var(--white);
@@ -232,10 +232,10 @@
   --danger-a: 1;
   --danger: hsla(var(--danger-h), var(--danger-s), var(--danger-l), var(--danger-a));
 
-  // var(--primary) / $blue is #1973ff
-  --primary-h: 217deg;
-  --primary-s: 98%;
-  --primary-l: 53%;
+  // var(--primary) / mogpendium rose pink ~#d44479
+  --primary-h: 338deg;
+  --primary-s: 68%;
+  --primary-l: 55%;
   --primary-a: 1;
   --primary-hsl: var(--primary-h), var(--primary-s), var(--primary-l);
   --primary: hsla(var(--primary-h), var(--primary-s), var(--primary-l), var(--primary-a));
@@ -308,10 +308,10 @@
       --card-border-color: hsla(var(--grey-100-hsl), 0.3);
       --logo-text-color: var(--grey-700);
 
-      // Slightly different primary color to make sure it has a sufficient contrast ratio
-      --primary-h: 217deg;
-      --primary-s: 98%;
-      --primary-l: 58%;
+      // Slightly lighter pink for sufficient contrast on dark backgrounds
+      --primary-h: 338deg;
+      --primary-s: 80%;
+      --primary-l: 70%;
 
       --scheme-main-bis: var(--grey-100);
       --scheme-main-ter: var(--grey-100);

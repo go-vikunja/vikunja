@@ -116,6 +116,9 @@ type Task struct {
 	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" project. This value depends on the user making the call to the api.
 	IsFavorite bool `xorm:"-" json:"is_favorite"`
 
+	// If true, someone has indicated they could use help with this task. Other members can offer to pick it up.
+	NeedsHelp bool `xorm:"bool default false null" json:"needs_help"`
+
 	IsUnread *bool `xorm:"-" json:"is_unread,omitempty"`
 
 	// The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
@@ -1117,6 +1120,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		"bucket_id",
 		"repeat_mode",
 		"cover_image_attachment_id",
+		"needs_help",
 	}
 
 	// Validate fields if provided
@@ -1178,6 +1182,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 		if !fieldSet["cover_image_attachment_id"] {
 			t.CoverImageAttachmentID = ot.CoverImageAttachmentID
+		}
+		if !fieldSet["needs_help"] {
+			t.NeedsHelp = ot.NeedsHelp
 		}
 	}
 
@@ -1389,6 +1396,8 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	if t.CoverImageAttachmentID == 0 {
 		ot.CoverImageAttachmentID = 0
 	}
+	// Needs Help flag — ensure false is written explicitly
+	ot.NeedsHelp = t.NeedsHelp
 
 	_, err = s.ID(t.ID).
 		Cols(colsToUpdate...).

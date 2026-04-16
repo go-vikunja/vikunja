@@ -170,9 +170,9 @@ function getBuildConfig(env: Record<string, string>) {
 				injectRegister: false,
 				useCredentials: true,
 				manifest: {
-					name: 'Vikunja',
-					short_name: 'Vikunja',
-					theme_color: '#1973ff',
+					name: 'mogpendium',
+					short_name: 'mogpendium',
+					theme_color: '#d44479',
 					icons: [
 						{
 							src: './images/icons/android-chrome-192x192.png',

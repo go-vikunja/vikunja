@@ -162,6 +162,15 @@
 			</RouterLink>
 
 			<BaseButton
+				v-tooltip="task.needsHelp ? $t('task.needsHelp.buttonActive') : $t('task.needsHelp.button')"
+				:class="{'needs-help-active': task.needsHelp}"
+				class="needs-help"
+				@click.stop="toggleNeedsHelp"
+			>
+				<span class="is-sr-only">{{ task.needsHelp ? $t('task.needsHelp.buttonActive') : $t('task.needsHelp.button') }}</span>
+				<Icon icon="heart" />
+			</BaseButton>
+			<BaseButton
 				:class="{'is-favorite': task.isFavorite}"
 				class="favorite"
 				@click.stop="toggleFavorite"
@@ -372,6 +381,11 @@ async function toggleFavorite() {
 	emit('taskUpdated', task.value)
 }
 
+async function toggleNeedsHelp() {
+	task.value = await taskStore.toggleNeedsHelp(task.value)
+	emit('taskUpdated', task.value)
+}
+
 const taskRoot = ref<HTMLElement | null>(null)
 const taskLinkRef = ref<HTMLElement | null>(null)
 
@@ -494,6 +508,42 @@ defineExpose({
 		&:hover {
 			color: var(--grey-900);
 		}
+	}
+
+	.needs-help {
+		opacity: 1;
+		text-align: center;
+		inline-size: 27px;
+		color: var(--grey-400);
+		transition: opacity $transition, color $transition;
+		border-radius: $radius;
+
+		&:hover {
+			color: var(--primary);
+		}
+
+		&.needs-help-active {
+			opacity: 1;
+			color: var(--primary);
+		}
+	}
+
+	@media(hover: hover) and (pointer: fine) {
+		& .needs-help {
+			opacity: 0;
+		}
+
+		&:hover .needs-help {
+			opacity: 1;
+		}
+
+		& .needs-help.needs-help-active {
+			opacity: 1;
+		}
+	}
+
+	.needs-help:focus {
+		opacity: 1;
 	}
 
 	.favorite {

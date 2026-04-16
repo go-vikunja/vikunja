@@ -71,6 +71,14 @@
 				:value="task.percentDone * 100"
 			/>
 			<div class="footer">
+				<span
+					v-if="task.needsHelp"
+					v-tooltip="$t('task.needsHelp.tooltip')"
+					class="needs-help-badge"
+				>
+					<Icon icon="heart" />
+					{{ $t('task.needsHelp.label') }}
+				</span>
 				<Labels :labels="task.labels" />
 				<PriorityLabel
 					:priority="task.priority"
@@ -323,6 +331,18 @@ $task-background: var(--white);
 				margin-block-start: 0;
 			}
 		}
+	}
+
+	.needs-help-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: .25rem;
+		background: hsla(338, 80%, 60%, 0.12);
+		color: var(--primary);
+		border-radius: $radius;
+		padding: 0 .5rem;
+		font-size: .75rem;
+		font-weight: 600;
 	}
 
 	.footer .icon,
