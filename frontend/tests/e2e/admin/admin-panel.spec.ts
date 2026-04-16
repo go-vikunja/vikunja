@@ -19,7 +19,8 @@ test.describe('Admin panel', () => {
 
 			await page.goto('/admin')
 
-			await expect(page.locator('.admin-shell .navigation')).toBeVisible()
+			await expect(page.getByTestId('admin-shell-nav')).toBeVisible()
+			await expect(page.locator('.card-header-title', {hasText: 'Overview'})).toBeVisible()
 			await expect(page.locator('.admin-overview__card').first()).toBeVisible()
 		})
 
@@ -34,7 +35,7 @@ test.describe('Admin panel', () => {
 			await login(page, apiContext, admin)
 			await page.goto('/admin')
 
-			const nav = page.locator('.admin-shell .navigation')
+			const nav = page.getByTestId('admin-shell-nav')
 			await nav.getByRole('link', {name: /users/i}).click()
 			await expect(page).toHaveURL(/\/admin\/users/)
 
