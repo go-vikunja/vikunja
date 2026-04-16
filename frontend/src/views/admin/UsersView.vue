@@ -14,12 +14,6 @@
 			<p v-if="loading">
 				{{ $t('misc.loading') }}
 			</p>
-			<p
-				v-else-if="error"
-				class="has-text-danger"
-			>
-				{{ error }}
-			</p>
 			<table
 				v-else
 				class="admin-users__table"
@@ -30,8 +24,8 @@
 						<th>{{ $t('admin.users.username') }}</th>
 						<th>{{ $t('admin.users.email') }}</th>
 						<th>{{ $t('admin.users.status') }}</th>
-						<th>{{ $t('admin.users.admin') }}</th>
-						<th>{{ $t('admin.users.actions') }}</th>
+						<th>{{ $t('admin.users.created') }}</th>
+						<th />
 					</tr>
 				</thead>
 				<tbody>
@@ -44,32 +38,106 @@
 						<td>{{ u.email }}</td>
 						<td>{{ statusLabel(u.status) }}</td>
 						<td>
-							<input
-								type="checkbox"
-								:checked="u.isAdmin"
-								:disabled="busyId === u.id"
-								@change="toggleAdmin(u)"
-							>
+							<time :datetime="formatISO(u.created)">{{ formatDisplayDate(u.created) }}</time>
 						</td>
 						<td class="admin-users__actions">
-							<button
-								class="button is-small"
-								:disabled="busyId === u.id"
-								@click="toggleStatus(u)"
+							<XButton
+								variant="secondary"
+								@click="openDetails(u)"
 							>
-								{{ u.status === STATUS_DISABLED ? $t('admin.users.enable') : $t('admin.users.disable') }}
-							</button>
-							<button
-								class="button is-small is-danger"
-								:disabled="busyId === u.id || u.id === currentUserId"
-								@click="confirmDelete(u)"
-							>
-								{{ $t('admin.users.delete') }}
-							</button>
+								{{ $t('admin.users.details') }}
+							</XButton>
 						</td>
 					</tr>
 				</tbody>
 			</table>
+
+			<Modal
+				v-if="detailTarget && !pendingDelete"
+				@close="closeDetail"
+			>
+				<template #header>
+					<h3>{{ $t('admin.users.detailsTitle', {username: detailTarget.username}) }}</h3>
+				</template>
+				<template #text>
+					<div class="admin-users__detail">
+						<dl class="admin-users__meta">
+							<dt>{{ $t('admin.users.id') }}</dt>
+							<dd>{{ detailTarget.id }}</dd>
+							<dt>{{ $t('admin.users.emailLabel') }}</dt>
+							<dd>{{ detailTarget.email }}</dd>
+							<dt>{{ $t('admin.users.createdLabel') }}</dt>
+							<dd>
+								<time :datetime="formatISO(detailTarget.created)">{{ formatDisplayDate(detailTarget.created) }}</time>
+							</dd>
+							<dt>{{ $t('admin.users.updatedLabel') }}</dt>
+							<dd>
+								<time :datetime="formatISO(detailTarget.updated)">{{ formatDisplayDate(detailTarget.updated) }}</time>
+							</dd>
+						</dl>
+
+						<div class="field">
+							<label class="checkbox">
+								<input
+									v-model="editable.isAdmin"
+									type="checkbox"
+								>
+								{{ $t('admin.users.isAdminLabel') }}
+							</label>
+						</div>
+
+						<div class="field">
+							<label
+								class="label"
+								for="admin-user-status"
+							>{{ $t('admin.users.statusLabel') }}</label>
+							<div class="select">
+								<select
+									id="admin-user-status"
+									v-model.number="editable.status"
+								>
+									<option :value="0">
+										{{ $t('admin.users.statusActive') }}
+									</option>
+									<option :value="1">
+										{{ $t('admin.users.statusEmailConfirmation') }}
+									</option>
+									<option :value="2">
+										{{ $t('admin.users.statusDisabled') }}
+									</option>
+									<option :value="3">
+										{{ $t('admin.users.statusLocked') }}
+									</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</template>
+				<template #footer>
+					<XButton
+						variant="tertiary"
+						@click="closeDetail"
+					>
+						{{ $t('misc.cancel') }}
+					</XButton>
+					<XButton
+						v-if="detailTarget.id !== currentUserId"
+						variant="secondary"
+						:danger="true"
+						@click="pendingDelete = detailTarget"
+					>
+						{{ $t('admin.users.delete') }}
+					</XButton>
+					<XButton
+						variant="primary"
+						:disabled="!hasChanges || saving"
+						:loading="saving"
+						@click="saveChanges"
+					>
+						{{ $t('admin.users.saveButton') }}
+					</XButton>
+				</template>
+			</Modal>
 
 			<Modal
 				v-if="pendingDelete"
@@ -92,6 +160,8 @@
 					</XButton>
 					<XButton
 						variant="primary"
+						:danger="true"
+						:loading="deleting"
 						@click="doDelete()"
 					>
 						{{ $t('admin.users.delete') }}
@@ -103,44 +173,58 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, computed} from 'vue'
+import {ref, computed, onMounted, reactive, watch} from 'vue'
+import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
 import {listAdminUsers, setAdmin, setStatus, deleteUser, type AdminUser} from '@/services/admin/userService'
+import {error, success} from '@/message'
+import {formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import XButton from '@/components/input/Button.vue'
 
-const STATUS_ACTIVE = 0
-const STATUS_DISABLED = 2
-
+const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.info?.id)
 
 const users = ref<AdminUser[]>([])
 const loading = ref(false)
-const error = ref('')
 const searchTerm = ref('')
-const busyId = ref<number | null>(null)
+const detailTarget = ref<AdminUser | null>(null)
 const pendingDelete = ref<AdminUser | null>(null)
+const saving = ref(false)
+const deleting = ref(false)
+const editable = reactive({isAdmin: false, status: 0})
 let searchTimer: ReturnType<typeof setTimeout> | null = null
+
+const hasChanges = computed(() => {
+	if (!detailTarget.value) return false
+	return editable.isAdmin !== !!detailTarget.value.isAdmin
+		|| editable.status !== detailTarget.value.status
+})
+
+watch(detailTarget, (u) => {
+	if (!u) return
+	editable.isAdmin = !!u.isAdmin
+	editable.status = u.status
+})
 
 function statusLabel(status: number): string {
 	switch (status) {
-		case 0: return 'Active'
-		case 1: return 'Email confirmation required'
-		case 2: return 'Disabled'
-		case 3: return 'Account locked'
+		case 0: return t('admin.users.statusActive')
+		case 1: return t('admin.users.statusEmailConfirmation')
+		case 2: return t('admin.users.statusDisabled')
+		case 3: return t('admin.users.statusLocked')
 		default: return String(status)
 	}
 }
 
 async function load() {
 	loading.value = true
-	error.value = ''
 	try {
 		users.value = await listAdminUsers({s: searchTerm.value || undefined})
 	} catch (e) {
-		error.value = e instanceof Error ? e.message : String(e)
+		error(e)
 	} finally {
 		loading.value = false
 	}
@@ -151,49 +235,55 @@ function onSearch() {
 	searchTimer = setTimeout(load, 300)
 }
 
-async function toggleAdmin(u: AdminUser) {
-	busyId.value = u.id
-	try {
-		const updated = await setAdmin(u.id, !u.isAdmin)
-		const idx = users.value.findIndex(x => x.id === u.id)
-		if (idx !== -1) users.value[idx] = updated
-	} catch (e) {
-		error.value = e instanceof Error ? e.message : String(e)
-	} finally {
-		busyId.value = null
-	}
+function openDetails(u: AdminUser) {
+	detailTarget.value = u
 }
 
-async function toggleStatus(u: AdminUser) {
-	busyId.value = u.id
-	try {
-		const newStatus = u.status === STATUS_DISABLED ? STATUS_ACTIVE : STATUS_DISABLED
-		const updated = await setStatus(u.id, newStatus)
-		const idx = users.value.findIndex(x => x.id === u.id)
-		if (idx !== -1) users.value[idx] = updated
-	} catch (e) {
-		error.value = e instanceof Error ? e.message : String(e)
-	} finally {
-		busyId.value = null
-	}
+function closeDetail() {
+	detailTarget.value = null
 }
 
-function confirmDelete(u: AdminUser) {
-	pendingDelete.value = u
+function replaceUser(updated: AdminUser) {
+	const idx = users.value.findIndex(x => x.id === updated.id)
+	if (idx !== -1) users.value[idx] = updated
+}
+
+async function saveChanges() {
+	if (!detailTarget.value) return
+	const target = detailTarget.value
+	saving.value = true
+	try {
+		let latest: AdminUser = target
+		if (editable.isAdmin !== !!target.isAdmin) {
+			latest = await setAdmin(target.id, editable.isAdmin)
+		}
+		if (editable.status !== target.status) {
+			latest = await setStatus(target.id, editable.status)
+		}
+		replaceUser(latest)
+		success(t('admin.users.updatedSuccess', {username: latest.username}))
+		detailTarget.value = null
+	} catch (e) {
+		error(e)
+	} finally {
+		saving.value = false
+	}
 }
 
 async function doDelete() {
 	if (!pendingDelete.value) return
 	const target = pendingDelete.value
-	pendingDelete.value = null
-	busyId.value = target.id
+	deleting.value = true
 	try {
 		await deleteUser(target.id)
 		users.value = users.value.filter(x => x.id !== target.id)
+		success(t('admin.users.deletedSuccess', {username: target.username}))
+		pendingDelete.value = null
+		detailTarget.value = null
 	} catch (e) {
-		error.value = e instanceof Error ? e.message : String(e)
+		error(e)
 	} finally {
-		busyId.value = null
+		deleting.value = false
 	}
 }
 
@@ -202,6 +292,8 @@ onMounted(load)
 
 <style lang="scss" scoped>
 .admin-users__toolbar {
+	display: flex;
+	gap: 0.5rem;
 	margin-block-end: 1rem;
 }
 
@@ -226,5 +318,27 @@ onMounted(load)
 .admin-users__actions {
 	display: flex;
 	gap: 0.5rem;
+	justify-content: flex-end;
+}
+
+.admin-users__detail {
+	text-align: start;
+}
+
+.admin-users__meta {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	column-gap: 1rem;
+	row-gap: 0.25rem;
+	margin-block-end: 1rem;
+
+	dt {
+		font-weight: 600;
+		color: var(--grey-700);
+	}
+
+	dd {
+		margin: 0;
+	}
 }
 </style>
