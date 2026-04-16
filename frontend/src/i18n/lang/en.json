@@ -1511,6 +1511,8 @@
       "created": "Created",
       "createdLabel": "Created",
       "updatedLabel": "Updated",
+      "issuer": "Issuer",
+      "issuerLocal": "local",
       "statusLabel": "Status",
       "statusActive": "Active",
       "statusEmailConfirmation": "Email confirmation required",

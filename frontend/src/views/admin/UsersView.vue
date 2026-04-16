@@ -29,6 +29,7 @@
 						<th>{{ $t('admin.users.id') }}</th>
 						<th>{{ $t('admin.users.username') }}</th>
 						<th>{{ $t('admin.users.email') }}</th>
+						<th>{{ $t('admin.users.issuer') }}</th>
 						<th>{{ $t('admin.users.status') }}</th>
 						<th>{{ $t('admin.users.created') }}</th>
 						<th />
@@ -42,6 +43,7 @@
 						<td>{{ u.id }}</td>
 						<td>{{ u.username }}</td>
 						<td>{{ u.email }}</td>
+						<td>{{ issuerLabel(u.issuer) }}</td>
 						<td>{{ statusLabel(u.status) }}</td>
 						<td>
 							<time :datetime="formatISO(u.created)">{{ formatDisplayDate(u.created) }}</time>
@@ -72,6 +74,8 @@
 						<dd>{{ detailTarget.id }}</dd>
 						<dt>{{ $t('admin.users.emailLabel') }}</dt>
 						<dd>{{ detailTarget.email }}</dd>
+						<dt>{{ $t('admin.users.issuer') }}</dt>
+						<dd>{{ issuerLabel(detailTarget.issuer) }}</dd>
 						<dt>{{ $t('admin.users.createdLabel') }}</dt>
 						<dd>
 							<time :datetime="formatISO(detailTarget.created)">{{ formatDisplayDate(detailTarget.created) }}</time>
@@ -345,6 +349,11 @@ watch(detailTarget, (u) => {
 	editable.isAdmin = !!u.isAdmin
 	editable.status = u.status
 })
+
+function issuerLabel(issuer: string): string {
+	if (!issuer || issuer === 'local') return t('admin.users.issuerLocal')
+	return issuer
+}
 
 function statusLabel(status: number): string {
 	switch (status) {
