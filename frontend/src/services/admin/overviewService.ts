@@ -12,7 +12,13 @@ export interface AdminOverview {
 	}
 	version: string
 	license: {
-		enabledProFeatures: string[]
+		licensed: boolean
+		instanceId: string
+		features: string[]
+		maxUsers: number
+		expiresAt: string
+		validatedAt: string
+		lastCheckFailed: boolean
 	}
 }
 

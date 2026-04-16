@@ -1493,7 +1493,15 @@
       "userShares": "User shares",
       "version": "Version",
       "license": "License",
-      "freeMode": "Free mode — no pro features enabled"
+      "freeMode": "Free mode — no pro features enabled",
+      "licenseValidUntil": "Valid until",
+      "licenseExpiresIn": "in {days} days",
+      "licenseLastVerified": "Last verified",
+      "licenseNever": "never",
+      "licenseLastCheckFailed": "last check failed",
+      "licenseFeatures": "Features",
+      "licenseInstance": "Instance ID",
+      "licenseManage": "Manage on console.vikunja.io"
     },
     "users": {
       "title": "Users",

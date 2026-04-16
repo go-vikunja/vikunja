@@ -50,19 +50,80 @@
 						{{ data.version }}
 					</p>
 				</div>
+				<div class="admin-overview__card admin-overview__card--wide">
+					<h2 class="admin-overview__card-title">
+						{{ $t('admin.overview.license') }}
+					</h2>
+					<dl class="admin-overview__kv">
+						<dt>{{ $t('admin.overview.licenseValidUntil') }}</dt>
+						<dd>
+							<time :datetime="data.license.expiresAt">{{ formatDisplayDate(data.license.expiresAt) }}</time>
+							<span
+								v-if="expiresInDays !== null"
+								class="admin-overview__hint"
+							>
+								({{ $t('admin.overview.licenseExpiresIn', {days: expiresInDays}) }})
+							</span>
+						</dd>
+						<dt>{{ $t('admin.overview.licenseLastVerified') }}</dt>
+						<dd>
+							<time
+								v-if="data.license.validatedAt"
+								:datetime="data.license.validatedAt"
+							>
+								{{ formatDateSince(data.license.validatedAt) }}
+							</time>
+							<span v-else>{{ $t('admin.overview.licenseNever') }}</span>
+							<span
+								v-if="data.license.lastCheckFailed"
+								class="has-text-danger admin-overview__hint"
+							>
+								({{ $t('admin.overview.licenseLastCheckFailed') }})
+							</span>
+						</dd>
+						<template v-if="data.license.features.length">
+							<dt>{{ $t('admin.overview.licenseFeatures') }}</dt>
+							<dd>{{ data.license.features.join(', ') }}</dd>
+						</template>
+						<template v-if="data.license.instanceId">
+							<dt>{{ $t('admin.overview.licenseInstance') }}</dt>
+							<dd><code>{{ data.license.instanceId }}</code></dd>
+						</template>
+					</dl>
+					<p class="admin-overview__card-action">
+						<a
+							href="https://console.vikunja.io"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							{{ $t('admin.overview.licenseManage') }}
+						</a>
+					</p>
+				</div>
 			</div>
 		</div>
 	</Card>
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from 'vue'
+import {ref, computed, onMounted} from 'vue'
 import Card from '@/components/misc/Card.vue'
 import {getAdminOverview, type AdminOverview} from '@/services/admin/overviewService'
 import {error} from '@/message'
+import {formatDisplayDate, formatDateSince} from '@/helpers/time/formatDate'
 
 const data = ref<AdminOverview | null>(null)
 const loading = ref(false)
+
+const expiresInDays = computed<number | null>(() => {
+	const raw = data.value?.license?.expiresAt
+	if (!raw) return null
+	const t = new Date(raw).getTime()
+	if (!Number.isFinite(t)) return null
+	const diffMs = t - Date.now()
+	if (diffMs <= 0) return 0
+	return Math.ceil(diffMs / (24 * 60 * 60 * 1000))
+})
 
 onMounted(async () => {
 	loading.value = true
@@ -101,6 +162,37 @@ onMounted(async () => {
 .admin-overview__card-value {
 	font-size: 1.75rem;
 	font-weight: 600;
+}
+
+.admin-overview__card--wide {
+	grid-column: 1 / -1;
+}
+
+.admin-overview__kv {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	column-gap: 1rem;
+	row-gap: 0.25rem;
+	margin-block-start: 1rem;
+	font-size: 0.9rem;
+
+	dt {
+		font-weight: 600;
+		color: var(--grey-700);
+	}
+
+	dd {
+		margin: 0;
+	}
+}
+
+.admin-overview__hint {
+	color: var(--grey-600);
+	margin-inline-start: 0.25rem;
+}
+
+.admin-overview__card-action {
+	margin-block-start: 1rem;
 }
 
 .admin-overview__card-list {

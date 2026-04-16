@@ -16,19 +16,31 @@ describe('overviewService.getAdminOverview', () => {
 		get.mockResolvedValue({data: {
 			users: 3,
 			projects: 5,
+			tasks: 42,
 			shares: {link_shares: 1, team_shares: 2, user_shares: 3},
 			version: 'v2.3.0',
-			license: {enabled_pro_features: ['admin_panel']},
+			license: {
+				licensed: true,
+				instance_id: 'inst-1',
+				features: ['admin_panel'],
+				max_users: 0,
+				expires_at: '2099-01-01T00:00:00Z',
+				validated_at: '2026-04-01T00:00:00Z',
+				last_check_failed: false,
+			},
 		}})
 
 		const out = await getAdminOverview()
 
 		expect(get).toHaveBeenCalledWith('/admin/overview')
 		expect(out.users).toBe(3)
+		expect(out.tasks).toBe(42)
 		expect(out.shares.linkShares).toBe(1)
 		expect(out.shares.teamShares).toBe(2)
 		expect(out.shares.userShares).toBe(3)
-		expect(out.license.enabledProFeatures).toEqual(['admin_panel'])
+		expect(out.license.licensed).toBe(true)
+		expect(out.license.features).toEqual(['admin_panel'])
+		expect(out.license.instanceId).toBe('inst-1')
 	})
 
 	it('propagates request errors', async () => {
