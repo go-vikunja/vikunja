@@ -1483,6 +1483,7 @@
       "projects": "Projects"
     },
     "overview": {
+      "title": "Overview",
       "users": "Users",
       "projects": "Projects",
       "shares": "Shares",
@@ -1494,6 +1495,7 @@
       "freeMode": "Free mode — no pro features enabled"
     },
     "users": {
+      "title": "Users",
       "searchPlaceholder": "Search by username or email…",
       "id": "ID",
       "username": "Username",
@@ -1508,8 +1510,9 @@
       "confirmDeleteBody": "User {username} will be deleted immediately. This cannot be undone."
     },
     "projects": {
+      "title": "Projects",
       "id": "ID",
-      "title": "Title",
+      "projectTitle": "Title",
       "owner": "Owner",
       "created": "Created",
       "reassignOwner": "Reassign owner",
