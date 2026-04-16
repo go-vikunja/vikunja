@@ -27,3 +27,18 @@ export async function setStatus(id: number, status: number): Promise<AdminUser> 
 export async function deleteUser(id: number): Promise<void> {
 	await AuthenticatedHTTPFactory().delete(`/admin/users/${id}`)
 }
+
+export interface CreateAdminUserBody {
+	username: string
+	email: string
+	name?: string
+	password?: string
+	language?: string
+	isAdmin?: boolean
+	skipEmailConfirm?: boolean
+}
+
+export async function createAdminUser(body: CreateAdminUserBody): Promise<AdminUser> {
+	const {data} = await AuthenticatedHTTPFactory().post('/register', objectToSnakeCase(body))
+	return objectToCamelCase(data) as unknown as AdminUser
+}
