@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -212,6 +213,8 @@ func HandleCallback(c *echo.Context) error {
 	if err := enforceTOTPIfRequired(s, u, cb.TOTPPasscode); err != nil {
 		if commitErr := s.Commit(); commitErr != nil {
 			log.Errorf("Error committing session after failed OIDC TOTP attempt for user %d: %v", u.ID, commitErr)
+		} else {
+			events.DispatchPending(s)
 		}
 		if user.IsErrInvalidTOTPPasscode(err) {
 			user.HandleFailedTOTPAuth(u)
@@ -232,6 +235,8 @@ func HandleCallback(c *echo.Context) error {
 		log.Errorf("Error creating new team for provider %s: %v", provider.Name, err)
 		return err
 	}
+
+	events.DispatchPending(s)
 
 	// Create token
 	return auth.NewUserAuthTokenResponse(u, c, false)
