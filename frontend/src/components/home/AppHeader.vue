@@ -164,10 +164,12 @@ $user-dropdown-width-mobile: 5rem;
 	inset-block-start: 0;
 	inset-inline-start: 0;
 	inset-inline-end: 0;
+	z-index: 30;
 
 	display: flex;
 	justify-content: space-between;
 	gap: var(--navbar-gap-width);
+	min-block-size: $navbar-height;
 
 	background: var(--site-background);
 
@@ -257,8 +259,6 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .navbar-end {
-	margin-inline-start: 0; // overrides bulma core styles
-	margin-inline-end: 0; // overrides bulma core styles
 	flex: 0 0 auto;
 	display: flex;
 	align-items: stretch;
