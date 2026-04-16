@@ -43,7 +43,7 @@
 						<td>{{ u.id }}</td>
 						<td>{{ u.username }}</td>
 						<td>{{ u.email }}</td>
-						<td>{{ issuerSource(u.issuer) }}</td>
+						<td>{{ issuerSource(u) }}</td>
 						<td>{{ statusLabel(u.status) }}</td>
 						<td>
 							<time :datetime="formatISO(u.created)">{{ formatDisplayDate(u.created) }}</time>
@@ -76,7 +76,7 @@
 						<dd>{{ detailTarget.email }}</dd>
 						<dt>{{ $t('admin.users.issuer') }}</dt>
 						<dd>
-							{{ issuerSource(detailTarget.issuer) }}
+							{{ issuerSource(detailTarget) }}
 						</dd>
 						<template v-if="isOpenidIssuer(detailTarget.issuer)">
 							<dt>{{ $t('admin.users.issuerUrl') }}</dt>
@@ -364,10 +364,10 @@ watch(detailTarget, (u) => {
 	editable.status = u.status
 })
 
-function issuerSource(issuer: string): string {
-	if (!issuer || issuer === 'local') return t('admin.users.issuerLocal')
-	if (issuer === 'ldap') return t('admin.users.issuerLdap')
-	return t('admin.users.issuerOpenid')
+function issuerSource(u: Pick<AdminUser, 'issuer' | 'authProvider'>): string {
+	if (!u.issuer || u.issuer === 'local') return t('admin.users.issuerLocal')
+	if (u.issuer === 'ldap') return t('admin.users.issuerLdap')
+	return u.authProvider || t('admin.users.issuerOpenid')
 }
 
 function isOpenidIssuer(issuer: string): boolean {
