@@ -1,98 +1,100 @@
 <template>
-	<div class="admin-projects">
-		<p v-if="loading">
-			{{ $t('misc.loading') }}
-		</p>
-		<p
-			v-else-if="error"
-			class="has-text-danger"
-		>
-			{{ error }}
-		</p>
-		<table
-			v-else
-			class="admin-projects__table"
-		>
-			<thead>
-				<tr>
-					<th>{{ $t('admin.projects.id') }}</th>
-					<th>{{ $t('admin.projects.title') }}</th>
-					<th>{{ $t('admin.projects.owner') }}</th>
-					<th>{{ $t('admin.projects.created') }}</th>
-					<th />
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="p in projects"
-					:key="p.id"
-				>
-					<td>{{ p.id }}</td>
-					<td>{{ p.title }}</td>
-					<td>{{ p.owner?.username ?? p.owner?.id }}</td>
-					<td>{{ p.created }}</td>
-					<td>
-						<button
-							class="button is-small"
-							@click="openReassign(p)"
-						>
-							{{ $t('admin.projects.reassignOwner') }}
-						</button>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+	<Card :title="$t('admin.projects.title')">
+		<div class="admin-projects">
+			<p v-if="loading">
+				{{ $t('misc.loading') }}
+			</p>
+			<p
+				v-else-if="error"
+				class="has-text-danger"
+			>
+				{{ error }}
+			</p>
+			<table
+				v-else
+				class="admin-projects__table"
+			>
+				<thead>
+					<tr>
+						<th>{{ $t('admin.projects.id') }}</th>
+						<th>{{ $t('admin.projects.projectTitle') }}</th>
+						<th>{{ $t('admin.projects.owner') }}</th>
+						<th>{{ $t('admin.projects.created') }}</th>
+						<th />
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="p in projects"
+						:key="p.id"
+					>
+						<td>{{ p.id }}</td>
+						<td>{{ p.title }}</td>
+						<td>{{ p.owner?.username ?? p.owner?.id }}</td>
+						<td>{{ p.created }}</td>
+						<td>
+							<button
+								class="button is-small"
+								@click="openReassign(p)"
+							>
+								{{ $t('admin.projects.reassignOwner') }}
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
 
-		<Modal
-			v-if="reassignTarget"
-			@close="reassignTarget = null"
-		>
-			<template #header>
-				<h3>{{ $t('admin.projects.reassignTitle', {title: reassignTarget.title}) }}</h3>
-			</template>
-			<template #text>
-				<div>
-					<label for="admin-reassign-input">{{ $t('admin.projects.newOwnerLabel') }}</label>
-					<input
-						id="admin-reassign-input"
-						v-model="newOwnerQuery"
-						class="input"
-						type="text"
-						:placeholder="$t('admin.projects.newOwnerPlaceholder')"
-						@input="searchUsers"
-					>
-					<ul
-						v-if="userResults.length"
-						class="admin-projects__results"
-					>
-						<li
-							v-for="u in userResults"
-							:key="u.id"
-							:class="{selected: selectedUserId === u.id}"
-							@click="selectedUserId = u.id"
+			<Modal
+				v-if="reassignTarget"
+				@close="reassignTarget = null"
+			>
+				<template #header>
+					<h3>{{ $t('admin.projects.reassignTitle', {title: reassignTarget.title}) }}</h3>
+				</template>
+				<template #text>
+					<div>
+						<label for="admin-reassign-input">{{ $t('admin.projects.newOwnerLabel') }}</label>
+						<input
+							id="admin-reassign-input"
+							v-model="newOwnerQuery"
+							class="input"
+							type="text"
+							:placeholder="$t('admin.projects.newOwnerPlaceholder')"
+							@input="searchUsers"
 						>
-							{{ u.username }} ({{ u.email }})
-						</li>
-					</ul>
-				</div>
-			</template>
-			<template #footer>
-				<XButton
-					variant="tertiary"
-					@click="reassignTarget = null"
-				>
-					{{ $t('misc.cancel') }}
-				</XButton>
-				<XButton
-					variant="primary"
-					:disabled="!selectedUserId"
-					@click="doReassign()"
-				>
-					{{ $t('admin.projects.reassignOwner') }}
-				</XButton>
-			</template>
-		</Modal>
-	</div>
+						<ul
+							v-if="userResults.length"
+							class="admin-projects__results"
+						>
+							<li
+								v-for="u in userResults"
+								:key="u.id"
+								:class="{selected: selectedUserId === u.id}"
+								@click="selectedUserId = u.id"
+							>
+								{{ u.username }} ({{ u.email }})
+							</li>
+						</ul>
+					</div>
+				</template>
+				<template #footer>
+					<XButton
+						variant="tertiary"
+						@click="reassignTarget = null"
+					>
+						{{ $t('misc.cancel') }}
+					</XButton>
+					<XButton
+						variant="primary"
+						:disabled="!selectedUserId"
+						@click="doReassign()"
+					>
+						{{ $t('admin.projects.reassignOwner') }}
+					</XButton>
+				</template>
+			</Modal>
+		</div>
+	</Card>
 </template>
 
 <script setup lang="ts">
@@ -100,6 +102,7 @@ import {ref, onMounted} from 'vue'
 import type {IProject} from '@/modelTypes/IProject'
 import {listAdminProjects, reassignProjectOwner} from '@/services/admin/projectService'
 import {listAdminUsers, type AdminUser} from '@/services/admin/userService'
+import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import XButton from '@/components/input/Button.vue'
 
@@ -167,13 +170,13 @@ onMounted(load)
 
 <style lang="scss" scoped>
 .admin-projects__table {
-	width: 100%;
+	inline-size: 100%;
 	border-collapse: collapse;
 
 	th, td {
 		padding: 0.5rem 0.75rem;
 		text-align: start;
-		border-bottom: 1px solid var(--grey-200);
+		border-block-end: 1px solid var(--grey-200);
 	}
 }
 
@@ -183,7 +186,7 @@ onMounted(load)
 	margin: 0.5rem 0 0;
 	border: 1px solid var(--grey-200);
 	border-radius: 4px;
-	max-height: 200px;
+	max-block-size: 200px;
 	overflow-y: auto;
 
 	li {

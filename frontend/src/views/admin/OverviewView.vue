@@ -1,77 +1,80 @@
 <template>
-	<div class="admin-overview">
-		<p v-if="loading">
-			{{ $t('misc.loading') }}
-		</p>
-		<p
-			v-else-if="error"
-			class="has-text-danger"
-		>
-			{{ error }}
-		</p>
-		<div
-			v-else-if="data"
-			class="admin-overview__grid"
-		>
-			<div class="admin-overview__card">
-				<h2 class="admin-overview__card-title">
-					{{ $t('admin.overview.users') }}
-				</h2>
-				<p class="admin-overview__card-value">
-					{{ data.users }}
-				</p>
-			</div>
-			<div class="admin-overview__card">
-				<h2 class="admin-overview__card-title">
-					{{ $t('admin.overview.projects') }}
-				</h2>
-				<p class="admin-overview__card-value">
-					{{ data.projects }}
-				</p>
-			</div>
-			<div class="admin-overview__card">
-				<h2 class="admin-overview__card-title">
-					{{ $t('admin.overview.shares') }}
-				</h2>
-				<ul class="admin-overview__card-list">
-					<li>{{ $t('admin.overview.linkShares') }}: {{ data.shares.linkShares }}</li>
-					<li>{{ $t('admin.overview.teamShares') }}: {{ data.shares.teamShares }}</li>
-					<li>{{ $t('admin.overview.userShares') }}: {{ data.shares.userShares }}</li>
-				</ul>
-			</div>
-			<div class="admin-overview__card">
-				<h2 class="admin-overview__card-title">
-					{{ $t('admin.overview.version') }}
-				</h2>
-				<p class="admin-overview__card-value">
-					{{ data.version }}
-				</p>
-			</div>
-			<div class="admin-overview__card">
-				<h2 class="admin-overview__card-title">
-					{{ $t('admin.overview.license') }}
-				</h2>
-				<ul
-					v-if="data.license.enabledProFeatures.length"
-					class="admin-overview__card-list"
-				>
-					<li
-						v-for="f in data.license.enabledProFeatures"
-						:key="f"
+	<Card :title="$t('admin.overview.title')">
+		<div class="admin-overview">
+			<p v-if="loading">
+				{{ $t('misc.loading') }}
+			</p>
+			<p
+				v-else-if="error"
+				class="has-text-danger"
+			>
+				{{ error }}
+			</p>
+			<div
+				v-else-if="data"
+				class="admin-overview__grid"
+			>
+				<div class="admin-overview__card">
+					<h2 class="admin-overview__card-title">
+						{{ $t('admin.overview.users') }}
+					</h2>
+					<p class="admin-overview__card-value">
+						{{ data.users }}
+					</p>
+				</div>
+				<div class="admin-overview__card">
+					<h2 class="admin-overview__card-title">
+						{{ $t('admin.overview.projects') }}
+					</h2>
+					<p class="admin-overview__card-value">
+						{{ data.projects }}
+					</p>
+				</div>
+				<div class="admin-overview__card">
+					<h2 class="admin-overview__card-title">
+						{{ $t('admin.overview.shares') }}
+					</h2>
+					<ul class="admin-overview__card-list">
+						<li>{{ $t('admin.overview.linkShares') }}: {{ data.shares.linkShares }}</li>
+						<li>{{ $t('admin.overview.teamShares') }}: {{ data.shares.teamShares }}</li>
+						<li>{{ $t('admin.overview.userShares') }}: {{ data.shares.userShares }}</li>
+					</ul>
+				</div>
+				<div class="admin-overview__card">
+					<h2 class="admin-overview__card-title">
+						{{ $t('admin.overview.version') }}
+					</h2>
+					<p class="admin-overview__card-value">
+						{{ data.version }}
+					</p>
+				</div>
+				<div class="admin-overview__card">
+					<h2 class="admin-overview__card-title">
+						{{ $t('admin.overview.license') }}
+					</h2>
+					<ul
+						v-if="data.license.enabledProFeatures.length"
+						class="admin-overview__card-list"
 					>
-						{{ f }}
-					</li>
-				</ul>
-				<p v-else>
-					{{ $t('admin.overview.freeMode') }}
-				</p>
+						<li
+							v-for="f in data.license.enabledProFeatures"
+							:key="f"
+						>
+							{{ f }}
+						</li>
+					</ul>
+					<p v-else>
+						{{ $t('admin.overview.freeMode') }}
+					</p>
+				</div>
 			</div>
 		</div>
-	</div>
+	</Card>
 </template>
 
 <script setup lang="ts">
 import {ref, onMounted} from 'vue'
+import Card from '@/components/misc/Card.vue'
 import {getAdminOverview, type AdminOverview} from '@/services/admin/overviewService'
 
 const data = ref<AdminOverview | null>(null)
@@ -109,7 +112,7 @@ onMounted(async () => {
 	color: var(--grey-600);
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
-	margin-bottom: 0.5rem;
+	margin-block-end: 0.5rem;
 }
 
 .admin-overview__card-value {

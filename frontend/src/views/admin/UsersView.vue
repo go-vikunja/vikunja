@@ -1,109 +1,112 @@
 <template>
-	<div class="admin-users">
-		<div class="admin-users__toolbar">
-			<input
-				v-model="searchTerm"
-				class="input"
-				type="text"
-				:placeholder="$t('admin.users.searchPlaceholder')"
-				@input="onSearch"
+	<Card :title="$t('admin.users.title')">
+		<div class="admin-users">
+			<div class="admin-users__toolbar">
+				<input
+					v-model="searchTerm"
+					class="input"
+					type="text"
+					:placeholder="$t('admin.users.searchPlaceholder')"
+					@input="onSearch"
+				>
+			</div>
+
+			<p v-if="loading">
+				{{ $t('misc.loading') }}
+			</p>
+			<p
+				v-else-if="error"
+				class="has-text-danger"
 			>
+				{{ error }}
+			</p>
+			<table
+				v-else
+				class="admin-users__table"
+			>
+				<thead>
+					<tr>
+						<th>{{ $t('admin.users.id') }}</th>
+						<th>{{ $t('admin.users.username') }}</th>
+						<th>{{ $t('admin.users.email') }}</th>
+						<th>{{ $t('admin.users.status') }}</th>
+						<th>{{ $t('admin.users.admin') }}</th>
+						<th>{{ $t('admin.users.actions') }}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="u in users"
+						:key="u.id"
+					>
+						<td>{{ u.id }}</td>
+						<td>{{ u.username }}</td>
+						<td>{{ u.email }}</td>
+						<td>{{ statusLabel(u.status) }}</td>
+						<td>
+							<input
+								type="checkbox"
+								:checked="u.isAdmin"
+								:disabled="busyId === u.id"
+								@change="toggleAdmin(u)"
+							>
+						</td>
+						<td class="admin-users__actions">
+							<button
+								class="button is-small"
+								:disabled="busyId === u.id"
+								@click="toggleStatus(u)"
+							>
+								{{ u.status === STATUS_DISABLED ? $t('admin.users.enable') : $t('admin.users.disable') }}
+							</button>
+							<button
+								class="button is-small is-danger"
+								:disabled="busyId === u.id || u.id === currentUserId"
+								@click="confirmDelete(u)"
+							>
+								{{ $t('admin.users.delete') }}
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<Modal
+				v-if="pendingDelete"
+				@close="pendingDelete = null"
+			>
+				<template #header>
+					<h3>{{ $t('admin.users.confirmDeleteTitle') }}</h3>
+				</template>
+				<template #text>
+					<p>
+						{{ $t('admin.users.confirmDeleteBody', {username: pendingDelete.username}) }}
+					</p>
+				</template>
+				<template #footer>
+					<XButton
+						variant="tertiary"
+						@click="pendingDelete = null"
+					>
+						{{ $t('misc.cancel') }}
+					</XButton>
+					<XButton
+						variant="primary"
+						@click="doDelete()"
+					>
+						{{ $t('admin.users.delete') }}
+					</XButton>
+				</template>
+			</Modal>
 		</div>
-
-		<p v-if="loading">
-			{{ $t('misc.loading') }}
-		</p>
-		<p
-			v-else-if="error"
-			class="has-text-danger"
-		>
-			{{ error }}
-		</p>
-		<table
-			v-else
-			class="admin-users__table"
-		>
-			<thead>
-				<tr>
-					<th>{{ $t('admin.users.id') }}</th>
-					<th>{{ $t('admin.users.username') }}</th>
-					<th>{{ $t('admin.users.email') }}</th>
-					<th>{{ $t('admin.users.status') }}</th>
-					<th>{{ $t('admin.users.admin') }}</th>
-					<th>{{ $t('admin.users.actions') }}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="u in users"
-					:key="u.id"
-				>
-					<td>{{ u.id }}</td>
-					<td>{{ u.username }}</td>
-					<td>{{ u.email }}</td>
-					<td>{{ statusLabel(u.status) }}</td>
-					<td>
-						<input
-							type="checkbox"
-							:checked="u.isAdmin"
-							:disabled="busyId === u.id"
-							@change="toggleAdmin(u)"
-						>
-					</td>
-					<td class="admin-users__actions">
-						<button
-							class="button is-small"
-							:disabled="busyId === u.id"
-							@click="toggleStatus(u)"
-						>
-							{{ u.status === STATUS_DISABLED ? $t('admin.users.enable') : $t('admin.users.disable') }}
-						</button>
-						<button
-							class="button is-small is-danger"
-							:disabled="busyId === u.id || u.id === currentUserId"
-							@click="confirmDelete(u)"
-						>
-							{{ $t('admin.users.delete') }}
-						</button>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-
-		<Modal
-			v-if="pendingDelete"
-			@close="pendingDelete = null"
-		>
-			<template #header>
-				<h3>{{ $t('admin.users.confirmDeleteTitle') }}</h3>
-			</template>
-			<template #text>
-				<p>
-					{{ $t('admin.users.confirmDeleteBody', {username: pendingDelete.username}) }}
-				</p>
-			</template>
-			<template #footer>
-				<XButton
-					variant="tertiary"
-					@click="pendingDelete = null"
-				>
-					{{ $t('misc.cancel') }}
-				</XButton>
-				<XButton
-					variant="primary"
-					@click="doDelete()"
-				>
-					{{ $t('admin.users.delete') }}
-				</XButton>
-			</template>
-		</Modal>
-	</div>
+	</Card>
 </template>
 
 <script setup lang="ts">
 import {ref, onMounted, computed} from 'vue'
 import {useAuthStore} from '@/stores/auth'
 import {listAdminUsers, setAdmin, setStatus, deleteUser, type AdminUser} from '@/services/admin/userService'
+import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import XButton from '@/components/input/Button.vue'
 
@@ -199,17 +202,17 @@ onMounted(load)
 
 <style lang="scss" scoped>
 .admin-users__toolbar {
-	margin-bottom: 1rem;
+	margin-block-end: 1rem;
 }
 
 .admin-users__table {
-	width: 100%;
+	inline-size: 100%;
 	border-collapse: collapse;
 
 	th, td {
 		padding: 0.5rem 0.75rem;
 		text-align: start;
-		border-bottom: 1px solid var(--grey-200);
+		border-block-end: 1px solid var(--grey-200);
 	}
 
 	th {
