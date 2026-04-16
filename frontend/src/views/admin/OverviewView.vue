@@ -107,6 +107,7 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
+import dayjs from 'dayjs'
 import Card from '@/components/misc/Card.vue'
 import AdminOverviewService from '@/services/admin/overviewService'
 import type {IAdminOverview} from '@/modelTypes/IAdminOverview'
@@ -121,9 +122,7 @@ const loading = ref(false)
 const expiresInDays = computed<number | null>(() => {
 	const expiresAt = data.value?.license?.expiresAt
 	if (!expiresAt) return null
-	const diffMs = expiresAt.getTime() - Date.now()
-	if (diffMs <= 0) return 0
-	return Math.ceil(diffMs / (24 * 60 * 60 * 1000))
+	return Math.max(0, dayjs(expiresAt).diff(dayjs(), 'day'))
 })
 
 onMounted(async () => {

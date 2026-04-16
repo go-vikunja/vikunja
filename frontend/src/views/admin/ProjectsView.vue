@@ -27,10 +27,10 @@
 						<td>{{ p.title }}</td>
 						<td>{{ p.owner?.username ?? p.owner?.id }}</td>
 						<td>
-							<time :datetime="toISO(p.created)">{{ formatDisplayDate(p.created) }}</time>
+							<time :datetime="formatISO(p.created)">{{ formatDisplayDate(p.created) }}</time>
 						</td>
 						<td>
-							<time :datetime="toISO(p.updated)">{{ formatDisplayDate(p.updated) }}</time>
+							<time :datetime="formatISO(p.updated)">{{ formatDisplayDate(p.updated) }}</time>
 						</td>
 						<td class="admin-projects__actions">
 							<ProjectSettingsDropdown
@@ -133,7 +133,6 @@ const reassignTarget = ref<IProject | null>(null)
 const userResults = ref<IAdminUser[]>([])
 const userSearchLoading = ref(false)
 const selectedUser = ref<IAdminUser | null>(null)
-let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 async function load() {
 	loading.value = true
@@ -152,22 +151,19 @@ function openReassign(p: IProject) {
 	selectedUser.value = null
 }
 
-function searchUsers(query: string) {
-	if (searchTimer) clearTimeout(searchTimer)
+async function searchUsers(query: string) {
 	if (!query || query.length < 2) {
 		userResults.value = []
 		return
 	}
 	userSearchLoading.value = true
-	searchTimer = setTimeout(async () => {
-		try {
-			userResults.value = await adminUserService.getAll(new AdminUserModel(), {s: query})
-		} catch (e) {
-			error(e)
-		} finally {
-			userSearchLoading.value = false
-		}
-	}, 200)
+	try {
+		userResults.value = await adminUserService.getAll(new AdminUserModel(), {s: query})
+	} catch (e) {
+		error(e)
+	} finally {
+		userSearchLoading.value = false
+	}
 }
 
 async function doReassign() {
@@ -183,10 +179,6 @@ async function doReassign() {
 	} catch (e) {
 		error(e)
 	}
-}
-
-function toISO(date: Date | string | null | undefined): string {
-	return date ? formatISO(date) : ''
 }
 
 onMounted(load)

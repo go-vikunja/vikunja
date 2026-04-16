@@ -313,6 +313,7 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted, reactive, watch} from 'vue'
+import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
 import AdminUserService, {type CreateAdminUserBody} from '@/services/admin/userService'
@@ -354,7 +355,6 @@ function emptyCreateForm(): Required<Pick<CreateAdminUserBody, 'username' | 'ema
 }
 
 const createForm = reactive(emptyCreateForm())
-let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 const hasChanges = computed(() => {
 	if (!detailTarget.value) return false
@@ -390,10 +390,7 @@ async function load() {
 	}
 }
 
-function onSearch() {
-	if (searchTimer) clearTimeout(searchTimer)
-	searchTimer = setTimeout(load, 300)
-}
+const onSearch = useDebounceFn(load, 300)
 
 function openDetails(u: IAdminUser) {
 	detailTarget.value = u
