@@ -1,35 +1,6 @@
-import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
-import {objectToCamelCase, objectToSnakeCase} from '@/helpers/case'
-import type {IUser} from '@/modelTypes/IUser'
-
-export interface AdminUser extends IUser {
-	status: number
-	isAdmin: boolean
-	issuer: string
-	subject?: string
-	authProvider?: string
-}
-
-export async function listAdminUsers(params: {s?: string; page?: number; perPage?: number} = {}): Promise<AdminUser[]> {
-	const {data} = await AuthenticatedHTTPFactory().get('/admin/users', {
-		params: objectToSnakeCase(params),
-	})
-	return (data as unknown[]).map(u => objectToCamelCase(u as Record<string, unknown>)) as AdminUser[]
-}
-
-export async function setAdmin(id: number, isAdmin: boolean): Promise<AdminUser> {
-	const {data} = await AuthenticatedHTTPFactory().patch(`/admin/users/${id}/admin`, {is_admin: isAdmin})
-	return objectToCamelCase(data) as unknown as AdminUser
-}
-
-export async function setStatus(id: number, status: number): Promise<AdminUser> {
-	const {data} = await AuthenticatedHTTPFactory().patch(`/admin/users/${id}/status`, {status})
-	return objectToCamelCase(data) as unknown as AdminUser
-}
-
-export async function deleteUser(id: number): Promise<void> {
-	await AuthenticatedHTTPFactory().delete(`/admin/users/${id}`)
-}
+import AbstractService from '@/services/abstractService'
+import AdminUserModel from '@/models/adminUser'
+import type {IAdminUser} from '@/modelTypes/IAdminUser'
 
 export interface CreateAdminUserBody {
 	username: string
@@ -41,7 +12,30 @@ export interface CreateAdminUserBody {
 	skipEmailConfirm?: boolean
 }
 
-export async function createAdminUser(body: CreateAdminUserBody): Promise<AdminUser> {
-	const {data} = await AuthenticatedHTTPFactory().post('/register', objectToSnakeCase(body))
-	return objectToCamelCase(data) as unknown as AdminUser
+export default class AdminUserService extends AbstractService<IAdminUser> {
+	constructor() {
+		super({
+			getAll: '/admin/users',
+			delete: '/admin/users/{id}',
+		})
+	}
+
+	modelFactory(data: Partial<IAdminUser>) {
+		return new AdminUserModel(data)
+	}
+
+	async setAdmin(id: IAdminUser['id'], isAdmin: boolean) {
+		const {data} = await this.http.patch(`/admin/users/${id}/admin`, {is_admin: isAdmin})
+		return this.modelUpdateFactory(data)
+	}
+
+	async setStatus(id: IAdminUser['id'], status: number) {
+		const {data} = await this.http.patch(`/admin/users/${id}/status`, {status})
+		return this.modelUpdateFactory(data)
+	}
+
+	async createUser(body: CreateAdminUserBody) {
+		const {data} = await this.http.post('/register', body)
+		return this.modelCreateFactory(data)
+	}
 }

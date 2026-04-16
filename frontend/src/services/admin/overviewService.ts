@@ -1,28 +1,14 @@
-import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
-import {objectToCamelCase} from '@/helpers/case'
+import AbstractService from '@/services/abstractService'
+import AdminOverviewModel from '@/models/adminOverview'
+import type {IAdminOverview} from '@/modelTypes/IAdminOverview'
 
-export interface AdminOverview {
-	users: number
-	projects: number
-	tasks: number
-	shares: {
-		linkShares: number
-		teamShares: number
-		userShares: number
+export default class AdminOverviewService extends AbstractService<IAdminOverview> {
+	modelFactory(data: Partial<IAdminOverview>) {
+		return new AdminOverviewModel(data)
 	}
-	version: string
-	license: {
-		licensed: boolean
-		instanceId: string
-		features: string[]
-		maxUsers: number
-		expiresAt: string
-		validatedAt: string
-		lastCheckFailed: boolean
-	}
-}
 
-export async function getAdminOverview(): Promise<AdminOverview> {
-	const {data} = await AuthenticatedHTTPFactory().get('/admin/overview')
-	return objectToCamelCase(data) as unknown as AdminOverview
+	async getOverview() {
+		const {data} = await this.http.get('/admin/overview')
+		return this.modelGetFactory(data)
+	}
 }

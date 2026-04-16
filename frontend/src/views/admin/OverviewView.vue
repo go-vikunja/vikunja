@@ -57,7 +57,7 @@
 					<dl class="admin-overview__kv">
 						<dt>{{ $t('admin.overview.licenseValidUntil') }}</dt>
 						<dd>
-							<time :datetime="data.license.expiresAt">{{ formatDisplayDate(data.license.expiresAt) }}</time>
+							<time :datetime="formatISO(data.license.expiresAt)">{{ formatDisplayDate(data.license.expiresAt) }}</time>
 							<span
 								v-if="expiresInDays !== null"
 								class="admin-overview__hint"
@@ -69,7 +69,7 @@
 						<dd>
 							<time
 								v-if="data.license.validatedAt"
-								:datetime="data.license.validatedAt"
+								:datetime="formatISO(data.license.validatedAt)"
 							>
 								{{ formatDateSince(data.license.validatedAt) }}
 							</time>
@@ -108,19 +108,20 @@
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
 import Card from '@/components/misc/Card.vue'
-import {getAdminOverview, type AdminOverview} from '@/services/admin/overviewService'
+import AdminOverviewService from '@/services/admin/overviewService'
+import type {IAdminOverview} from '@/modelTypes/IAdminOverview'
 import {error} from '@/message'
-import {formatDisplayDate, formatDateSince} from '@/helpers/time/formatDate'
+import {formatDisplayDate, formatDateSince, formatISO} from '@/helpers/time/formatDate'
 
-const data = ref<AdminOverview | null>(null)
+const adminOverviewService = new AdminOverviewService()
+
+const data = ref<IAdminOverview | null>(null)
 const loading = ref(false)
 
 const expiresInDays = computed<number | null>(() => {
-	const raw = data.value?.license?.expiresAt
-	if (!raw) return null
-	const t = new Date(raw).getTime()
-	if (!Number.isFinite(t)) return null
-	const diffMs = t - Date.now()
+	const expiresAt = data.value?.license?.expiresAt
+	if (!expiresAt) return null
+	const diffMs = expiresAt.getTime() - Date.now()
 	if (diffMs <= 0) return 0
 	return Math.ceil(diffMs / (24 * 60 * 60 * 1000))
 })
@@ -128,7 +129,7 @@ const expiresInDays = computed<number | null>(() => {
 onMounted(async () => {
 	loading.value = true
 	try {
-		data.value = await getAdminOverview()
+		data.value = await adminOverviewService.getOverview()
 	} catch (e) {
 		error(e)
 	} finally {

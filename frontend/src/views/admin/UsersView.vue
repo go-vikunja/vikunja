@@ -315,7 +315,9 @@
 import {ref, computed, onMounted, reactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
-import {listAdminUsers, setAdmin, setStatus, deleteUser, createAdminUser, type AdminUser, type CreateAdminUserBody} from '@/services/admin/userService'
+import AdminUserService, {type CreateAdminUserBody} from '@/services/admin/userService'
+import AdminUserModel from '@/models/adminUser'
+import type {IAdminUser} from '@/modelTypes/IAdminUser'
 import {error, success} from '@/message'
 import {formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
 import Card from '@/components/misc/Card.vue'
@@ -326,11 +328,13 @@ const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.info?.id)
 
-const users = ref<AdminUser[]>([])
+const adminUserService = new AdminUserService()
+
+const users = ref<IAdminUser[]>([])
 const loading = ref(false)
 const searchTerm = ref('')
-const detailTarget = ref<AdminUser | null>(null)
-const pendingDelete = ref<AdminUser | null>(null)
+const detailTarget = ref<IAdminUser | null>(null)
+const pendingDelete = ref<IAdminUser | null>(null)
 const saving = ref(false)
 const deleting = ref(false)
 const createOpen = ref(false)
@@ -364,7 +368,7 @@ watch(detailTarget, (u) => {
 	editable.status = u.status
 })
 
-function issuerSource(u: Pick<AdminUser, 'issuer' | 'authProvider'>): string {
+function issuerSource(u: Pick<IAdminUser, 'issuer' | 'authProvider'>): string {
 	if (!u.issuer || u.issuer === 'local') return t('admin.users.issuerLocal')
 	if (u.issuer === 'ldap') return t('admin.users.issuerLdap')
 	return u.authProvider || t('admin.users.issuerOpenid')
@@ -387,7 +391,8 @@ function statusLabel(status: number): string {
 async function load() {
 	loading.value = true
 	try {
-		users.value = await listAdminUsers({s: searchTerm.value || undefined})
+		const params = searchTerm.value ? {s: searchTerm.value} : {}
+		users.value = await adminUserService.getAll(new AdminUserModel(), params)
 	} catch (e) {
 		error(e)
 	} finally {
@@ -400,7 +405,7 @@ function onSearch() {
 	searchTimer = setTimeout(load, 300)
 }
 
-function openDetails(u: AdminUser) {
+function openDetails(u: IAdminUser) {
 	detailTarget.value = u
 }
 
@@ -429,7 +434,7 @@ async function submitCreate() {
 		if (createForm.language) body.language = createForm.language
 		if (createForm.isAdmin) body.isAdmin = true
 		if (createForm.skipEmailConfirm) body.skipEmailConfirm = true
-		const created = await createAdminUser(body)
+		const created = await adminUserService.createUser(body)
 		users.value = [created, ...users.value]
 		success(t('admin.users.createdSuccess', {username: created.username}))
 		createOpen.value = false
@@ -440,7 +445,7 @@ async function submitCreate() {
 	}
 }
 
-function replaceUser(updated: AdminUser) {
+function replaceUser(updated: IAdminUser) {
 	const idx = users.value.findIndex(x => x.id === updated.id)
 	if (idx !== -1) users.value[idx] = updated
 }
@@ -450,12 +455,12 @@ async function saveChanges() {
 	const target = detailTarget.value
 	saving.value = true
 	try {
-		let latest: AdminUser = target
+		let latest: IAdminUser = target
 		if (editable.isAdmin !== !!target.isAdmin) {
-			latest = await setAdmin(target.id, editable.isAdmin)
+			latest = await adminUserService.setAdmin(target.id, editable.isAdmin)
 		}
 		if (editable.status !== target.status) {
-			latest = await setStatus(target.id, editable.status)
+			latest = await adminUserService.setStatus(target.id, editable.status)
 		}
 		replaceUser(latest)
 		success(t('admin.users.updatedSuccess', {username: latest.username}))
@@ -472,7 +477,7 @@ async function doDelete() {
 	const target = pendingDelete.value
 	deleting.value = true
 	try {
-		await deleteUser(target.id)
+		await adminUserService.delete(target)
 		users.value = users.value.filter(x => x.id !== target.id)
 		success(t('admin.users.deletedSuccess', {username: target.username}))
 		pendingDelete.value = null

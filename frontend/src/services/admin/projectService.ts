@@ -1,15 +1,20 @@
-import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
-import {objectToCamelCase} from '@/helpers/case'
+import AbstractService from '@/services/abstractService'
+import ProjectModel from '@/models/project'
 import type {IProject} from '@/modelTypes/IProject'
 
-export async function listAdminProjects(params: {page?: number; perPage?: number} = {}): Promise<IProject[]> {
-	const {data} = await AuthenticatedHTTPFactory().get('/admin/projects', {
-		params: {page: params.page, per_page: params.perPage},
-	})
-	return (data as unknown[]).map(p => objectToCamelCase(p as Record<string, unknown>)) as unknown as IProject[]
-}
+export default class AdminProjectService extends AbstractService<IProject> {
+	constructor() {
+		super({
+			getAll: '/admin/projects',
+		})
+	}
 
-export async function reassignProjectOwner(projectId: number, newOwnerId: number): Promise<IProject> {
-	const {data} = await AuthenticatedHTTPFactory().patch(`/admin/projects/${projectId}/owner`, {owner_id: newOwnerId})
-	return objectToCamelCase(data) as unknown as IProject
+	modelFactory(data: Partial<IProject>) {
+		return new ProjectModel(data)
+	}
+
+	async reassignOwner(projectId: IProject['id'], newOwnerId: IProject['owner']['id']) {
+		const {data} = await this.http.patch(`/admin/projects/${projectId}/owner`, {owner_id: newOwnerId})
+		return this.modelUpdateFactory(data)
+	}
 }

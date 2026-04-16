@@ -105,8 +105,11 @@
 <script setup lang="ts">
 import {ref, onMounted} from 'vue'
 import type {IProject} from '@/modelTypes/IProject'
-import {listAdminProjects, reassignProjectOwner} from '@/services/admin/projectService'
-import {listAdminUsers, type AdminUser} from '@/services/admin/userService'
+import type {IAdminUser} from '@/modelTypes/IAdminUser'
+import AdminProjectService from '@/services/admin/projectService'
+import AdminUserService from '@/services/admin/userService'
+import AdminUserModel from '@/models/adminUser'
+import ProjectModel from '@/models/project'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import XButton from '@/components/input/Button.vue'
@@ -120,19 +123,22 @@ import {useI18n} from 'vue-i18n'
 
 const {t} = useI18n({useScope: 'global'})
 
+const adminProjectService = new AdminProjectService()
+const adminUserService = new AdminUserService()
+
 const projects = ref<IProject[]>([])
 const loading = ref(false)
 
 const reassignTarget = ref<IProject | null>(null)
-const userResults = ref<AdminUser[]>([])
+const userResults = ref<IAdminUser[]>([])
 const userSearchLoading = ref(false)
-const selectedUser = ref<AdminUser | null>(null)
+const selectedUser = ref<IAdminUser | null>(null)
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 async function load() {
 	loading.value = true
 	try {
-		projects.value = await listAdminProjects()
+		projects.value = await adminProjectService.getAll(new ProjectModel())
 	} catch (e) {
 		error(e)
 	} finally {
@@ -155,7 +161,7 @@ function searchUsers(query: string) {
 	userSearchLoading.value = true
 	searchTimer = setTimeout(async () => {
 		try {
-			userResults.value = await listAdminUsers({s: query})
+			userResults.value = await adminUserService.getAll(new AdminUserModel(), {s: query})
 		} catch (e) {
 			error(e)
 		} finally {
@@ -170,7 +176,7 @@ async function doReassign() {
 	const newOwnerId = selectedUser.value.id
 	reassignTarget.value = null
 	try {
-		const updated = await reassignProjectOwner(target.id, newOwnerId)
+		const updated = await adminProjectService.reassignOwner(target.id, newOwnerId)
 		const idx = projects.value.findIndex(x => x.id === target.id)
 		if (idx !== -1) projects.value[idx] = updated
 		success({message: t('admin.projects.reassignedSuccess')})
