@@ -11,8 +11,8 @@ export interface IAdminOverviewLicense {
 	instanceId: string
 	features: string[]
 	maxUsers: number
-	expiresAt: Date | null
-	validatedAt: Date | null
+	expiresAt: Date
+	validatedAt: Date
 	lastCheckFailed: boolean
 }
 
