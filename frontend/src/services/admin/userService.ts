@@ -6,6 +6,8 @@ export interface AdminUser extends IUser {
 	status: number
 	isAdmin: boolean
 	issuer: string
+	subject?: string
+	authProvider?: string
 }
 
 export async function listAdminUsers(params: {s?: string; page?: number; perPage?: number} = {}): Promise<AdminUser[]> {

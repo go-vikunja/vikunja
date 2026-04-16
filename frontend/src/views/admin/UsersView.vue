@@ -43,7 +43,7 @@
 						<td>{{ u.id }}</td>
 						<td>{{ u.username }}</td>
 						<td>{{ u.email }}</td>
-						<td>{{ issuerLabel(u.issuer) }}</td>
+						<td>{{ issuerSource(u.issuer) }}</td>
 						<td>{{ statusLabel(u.status) }}</td>
 						<td>
 							<time :datetime="formatISO(u.created)">{{ formatDisplayDate(u.created) }}</time>
@@ -75,7 +75,21 @@
 						<dt>{{ $t('admin.users.emailLabel') }}</dt>
 						<dd>{{ detailTarget.email }}</dd>
 						<dt>{{ $t('admin.users.issuer') }}</dt>
-						<dd>{{ issuerLabel(detailTarget.issuer) }}</dd>
+						<dd>
+							{{ issuerSource(detailTarget.issuer) }}
+						</dd>
+						<template v-if="isOpenidIssuer(detailTarget.issuer)">
+							<dt>{{ $t('admin.users.issuerUrl') }}</dt>
+							<dd class="admin-users__issuer-url-value">
+								{{ detailTarget.issuer }}
+							</dd>
+						</template>
+						<template v-if="detailTarget.subject">
+							<dt>{{ $t('admin.users.subject') }}</dt>
+							<dd class="admin-users__subject">
+								{{ detailTarget.subject }}
+							</dd>
+						</template>
 						<dt>{{ $t('admin.users.createdLabel') }}</dt>
 						<dd>
 							<time :datetime="formatISO(detailTarget.created)">{{ formatDisplayDate(detailTarget.created) }}</time>
@@ -350,9 +364,14 @@ watch(detailTarget, (u) => {
 	editable.status = u.status
 })
 
-function issuerLabel(issuer: string): string {
+function issuerSource(issuer: string): string {
 	if (!issuer || issuer === 'local') return t('admin.users.issuerLocal')
-	return issuer
+	if (issuer === 'ldap') return t('admin.users.issuerLdap')
+	return t('admin.users.issuerOpenid')
+}
+
+function isOpenidIssuer(issuer: string): boolean {
+	return !!issuer && issuer !== 'local' && issuer !== 'ldap'
 }
 
 function statusLabel(status: number): string {
@@ -518,5 +537,19 @@ onMounted(load)
 	dd {
 		margin: 0;
 	}
+}
+
+.admin-users__issuer-url {
+	margin-inline-start: 0.35rem;
+	color: var(--grey-600);
+	font-size: 0.85rem;
+	word-break: break-all;
+}
+
+.admin-users__issuer-url-value,
+.admin-users__subject {
+	font-family: monospace;
+	font-size: 0.85rem;
+	word-break: break-all;
 }
 </style>
