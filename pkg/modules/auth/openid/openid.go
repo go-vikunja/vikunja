@@ -32,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 
@@ -47,6 +48,10 @@ type Callback struct {
 	Code        string `query:"code" json:"code"`
 	Scope       string `query:"scope" json:"scope"`
 	RedirectURL string `json:"redirect_url"`
+	// TOTPPasscode is required when the resolved user has TOTP enabled.
+	// Clients must restart the OIDC flow and populate this field after
+	// receiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.
+	TOTPPasscode string `json:"totp_passcode"`
 }
 
 // Provider is the structure of an OpenID Connect provider
@@ -115,6 +120,38 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 	return iss.Issuer, nil
 }
 
+// enforceTOTPIfRequired mirrors the TOTP gate from pkg/routes/api/v1/login.go
+// for the OIDC flow. Returns nil when the user does not have TOTP enabled.
+// See GHSA-8jvc-mcx6-r4cg.
+func enforceTOTPIfRequired(s *xorm.Session, u *user.User, totpPasscode string) error {
+	totpEnabled, err := user.TOTPEnabledForUser(s, u)
+	if err != nil {
+		return err
+	}
+	if !totpEnabled {
+		return nil
+	}
+
+	if totpPasscode == "" {
+		return user.ErrInvalidTOTPPasscode{}
+	}
+
+	_, err = user.ValidateTOTPPasscode(s, &user.TOTPPasscode{
+		User:     u,
+		Passcode: totpPasscode,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Reset the counter so old failed attempts don't trip a later lockout.
+	if err := keyvalue.Del(u.GetFailedTOTPAttemptsKey()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // HandleCallback handles the auth request callback after redirecting from the provider with an auth code
 // @Summary Authenticate a user with OpenID Connect
 // @Description After a redirect from the OpenID Connect provider to the frontend has been made with the authentication `code`, this endpoint can be used to obtain a jwt token for that user and thus log them in.
@@ -126,11 +163,12 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 // @Param callback body openid.Callback true "The openid callback"
 // @Param provider path int true "The OpenID Connect provider key as returned by the /info endpoint"
 // @Success 200 {object} auth.Token
+// @Failure 412 {object} models.Message "Invalid totp passcode."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /auth/openid/{provider}/callback [post]
 func HandleCallback(c *echo.Context) error {
 
-	provider, oauthToken, idToken, err := getProviderAndOidcTokens(c)
+	provider, cb, oauthToken, idToken, err := getProviderAndOidcTokens(c)
 	if err != nil {
 		var detailedErr *models.ErrOpenIDBadRequestWithDetails
 		if errors.As(err, &detailedErr) {
@@ -165,6 +203,20 @@ func HandleCallback(c *echo.Context) error {
 	if u.Status == user.StatusAccountLocked {
 		_ = s.Rollback()
 		return &user.ErrAccountLocked{UserID: u.ID}
+	}
+
+	// Must run before team sync so a failed 2FA attempt cannot mutate team
+	// membership. Commit before HandleFailedTOTPAuth so the getOrCreateUser
+	// writes persist and the SQLite write lock is released — its dedicated
+	// session needs to acquire its own. See GHSA-fgfv-pv97-6cmj.
+	if err := enforceTOTPIfRequired(s, u, cb.TOTPPasscode); err != nil {
+		if commitErr := s.Commit(); commitErr != nil {
+			log.Errorf("Error committing session after failed OIDC TOTP attempt for user %d: %v", u.ID, commitErr)
+		}
+		if user.IsErrInvalidTOTPPasscode(err) {
+			user.HandleFailedTOTPAuth(u)
+		}
+		return err
 	}
 
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
@@ -242,9 +294,17 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 
 // Download and store a user's avatar from an OpenID provider
 func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) (err error) {
-	// Don't sync avatar if no picture URL is provided
+	// If no picture URL is provided, reset the avatar provider if it was set to openid
 	if pictureURL == "" {
-		return fmt.Errorf("no picture URL provided")
+		if u.AvatarProvider == "openid" {
+			u.AvatarProvider = "default"
+			_, err = s.Where("id = ?", u.ID).Cols("avatar_provider").Update(&user.User{AvatarProvider: "default"})
+			if err != nil {
+				return fmt.Errorf("error resetting avatar provider: %w", err)
+			}
+			avatar.FlushAllCaches(u)
+		}
+		return nil
 	}
 
 	log.Debugf("Found avatar URL for user %s: %s", u.Username, pictureURL)
@@ -447,21 +507,21 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 	return cl, nil
 }
 
-func getProviderAndOidcTokens(c *echo.Context) (*Provider, *oauth2.Token, *oidc.IDToken, error) {
+func getProviderAndOidcTokens(c *echo.Context) (*Provider, *Callback, *oauth2.Token, *oidc.IDToken, error) {
 
 	cb := &Callback{}
 	if err := c.Bind(cb); err != nil {
-		return nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Bad data"}
+		return nil, nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Bad data"}
 	}
 
 	// Check if the provider exists
 	providerKey := c.Param("provider")
 	provider, err := GetProvider(providerKey)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, cb, nil, nil, err
 	}
 	if provider == nil {
-		return nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Provider does not exist"}
+		return nil, cb, nil, nil, &models.ErrOpenIDBadRequest{Message: "Provider does not exist"}
 	}
 
 	log.Debugf("Trying to authenticate user using provider: %s", provider.Key)
@@ -477,25 +537,25 @@ func getProviderAndOidcTokens(c *echo.Context) (*Provider, *oauth2.Token, *oidc.
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
 				log.Errorf("Error unmarshalling token for provider %s: %v", provider.Name, err)
 				log.Debugf("Raw token value is %s", rerr.Body)
-				return nil, nil, nil, err
+				return nil, cb, nil, nil, err
 			}
 
 			log.Errorf("Error retrieving token: %s", err)
 			log.Debugf("Raw token value is %s", rerr.Body)
-			return nil, nil, nil, &models.ErrOpenIDBadRequestWithDetails{
+			return nil, cb, nil, nil, &models.ErrOpenIDBadRequestWithDetails{
 				Message: "Could not authenticate against third party.",
 				Details: details,
 			}
 		}
 
-		return nil, nil, nil, err
+		return nil, cb, nil, nil, err
 	}
 
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
 		log.Debugf("Could not get id_token, raw token is %v", oauth2Token)
-		return nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Missing token"}
+		return nil, cb, nil, nil, &models.ErrOpenIDBadRequest{Message: "Missing token"}
 	}
 
 	verifier := provider.openIDProvider.Verifier(&oidc.Config{ClientID: provider.ClientID})
@@ -504,8 +564,8 @@ func getProviderAndOidcTokens(c *echo.Context) (*Provider, *oauth2.Token, *oidc.
 	idToken, err := verifier.Verify(context.Background(), rawIDToken)
 	if err != nil {
 		log.Errorf("Error verifying token for provider %s: %v", provider.Name, err)
-		return nil, nil, nil, err
+		return nil, cb, nil, nil, err
 	}
 
-	return provider, oauth2Token, idToken, nil
+	return provider, cb, oauth2Token, idToken, nil
 }

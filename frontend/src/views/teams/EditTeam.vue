@@ -349,9 +349,9 @@ async function toggleUserType(member: ITeamMember) {
 	member.admin = !member.admin
 	member.teamId = teamId.value
 	const r = await teamMemberService.value.update(member)
-	for (const tm in team.value.members) {
-		if (team.value.members[tm].id === member.id) {
-			team.value.members[tm].admin = r.admin
+	for (const tm of team.value.members) {
+		if (tm.id === member.id) {
+			tm.admin = r.admin
 			break
 		}
 	}

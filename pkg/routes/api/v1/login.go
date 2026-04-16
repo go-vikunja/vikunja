@@ -92,10 +92,14 @@ func Login(c *echo.Context) (err error) {
 			Passcode: u.TOTPPasscode,
 		})
 		if err != nil {
-			if user2.IsErrInvalidTOTPPasscode(err) {
-				user2.HandleFailedTOTPAuth(s, user)
-			}
+			// Rollback before HandleFailedTOTPAuth so its dedicated session
+			// can acquire a write lock on SQLite shared-cache. The lockout
+			// write is decoupled from this handler's transaction — see
+			// GHSA-fgfv-pv97-6cmj.
 			_ = s.Rollback()
+			if user2.IsErrInvalidTOTPPasscode(err) {
+				user2.HandleFailedTOTPAuth(user)
+			}
 			return err
 		}
 	}

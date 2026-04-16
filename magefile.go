@@ -66,6 +66,9 @@ var (
 		"release":                     Release.Release,
 		"release:os-package":          Release.OsPackage,
 		"release:prepare-nfpm-config": Release.PrepareNFPMConfig,
+		"release:repo-apt":            Release.RepoApt,
+		"release:repo-rpm":            Release.RepoRpm,
+		"release:repo-pacman":         Release.RepoPacman,
 		"dev:make-migration":          Dev.MakeMigration,
 		"dev:make-event":              Dev.MakeEvent,
 		"dev:make-listener":           Dev.MakeListener,
@@ -1197,10 +1200,243 @@ func (Release) Zip(ctx context.Context) error {
 	return nil
 }
 
-// Reprepro creates a debian repo structure
-func (Release) Reprepro(ctx context.Context) error {
-	mg.Deps(setVersion, setBinLocation)
-	return runAndStreamOutput(ctx, "reprepro_expect", "debian", "includedeb", "buster", "./"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
+// repoSuite returns a validated suite name from the REPO_SUITE env var.
+// Only "stable" and "unstable" are allowed to prevent path traversal.
+func repoSuite() string {
+	suite := os.Getenv("REPO_SUITE")
+	switch suite {
+	case "stable", "unstable":
+		return suite
+	default:
+		return "stable"
+	}
+}
+
+// RepoApt generates APT repository metadata using reprepro.
+// It expects .deb files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/apt/.
+// The reprepro config is read from build/reprepro-dist-conf.
+// Signing is done manually after reprepro finishes to avoid gpgme pinentry issues in CI.
+// Environment: REPO_SUITE controls the target suite (default: "stable").
+// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
+func (Release) RepoApt(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	suite := repoSuite()
+
+	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
+	outputBase := filepath.Join(DIST, "repo-output", "apt")
+
+	// Set up reprepro conf directory
+	confDir := filepath.Join(outputBase, "conf")
+	if err := os.MkdirAll(confDir, 0o755); err != nil {
+		return fmt.Errorf("creating reprepro conf dir: %w", err)
+	}
+
+	// Copy distributions config
+	distConf, err := os.ReadFile("build/reprepro-dist-conf")
+	if err != nil {
+		return fmt.Errorf("reading reprepro-dist-conf: %w", err)
+	}
+	if err := os.WriteFile(filepath.Join(confDir, "distributions"), distConf, 0o600); err != nil {
+		return fmt.Errorf("writing distributions config: %w", err)
+	}
+
+	// Include all .deb files into the target suite
+	debs, err := filepath.Glob(filepath.Join(incomingDir, "*.deb"))
+	if err != nil {
+		return err
+	}
+	for _, deb := range debs {
+		abs, _ := filepath.Abs(deb)
+		if err := runAndStreamOutput(ctx, "reprepro",
+			"-b", outputBase,
+			"includedeb", suite,
+			abs,
+		); err != nil {
+			return fmt.Errorf("reprepro includedeb %s: %w", filepath.Base(deb), err)
+		}
+	}
+
+	// Sign Release files manually (reprepro's gpgme signing doesn't work in CI)
+	gpgKey := os.Getenv("RELEASE_GPG_KEY")
+	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
+
+	releaseFile := filepath.Join(outputBase, "dists", suite, "Release")
+	if _, err := os.Stat(releaseFile); err == nil {
+		// Generate Release.gpg (detached signature)
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--detach-sign", "--armor",
+			"-o", releaseFile+".gpg",
+			releaseFile,
+		); err != nil {
+			return fmt.Errorf("signing Release (detached): %w", err)
+		}
+
+		// Generate InRelease (clearsigned)
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--clearsign",
+			"-o", filepath.Join(filepath.Dir(releaseFile), "InRelease"),
+			releaseFile,
+		); err != nil {
+			return fmt.Errorf("signing Release (clearsign): %w", err)
+		}
+	}
+
+	fmt.Println("APT repo metadata generated in", outputBase)
+	return nil
+}
+
+// RepoRpm generates RPM repository metadata for all .rpm files in the work directory.
+// Expects .rpm files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/rpm/<suite>/.
+// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
+// Environment: REPO_SUITE controls the target suite (default: "stable").
+func (Release) RepoRpm(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	suite := repoSuite()
+
+	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
+	outputBase := filepath.Join(DIST, "repo-output", "rpm", suite)
+
+	archMap := map[string]string{
+		"x86_64":  "x86_64",
+		"aarch64": "aarch64",
+		"armv7":   "armv7",
+	}
+
+	gpgKey := os.Getenv("RELEASE_GPG_KEY")
+	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
+
+	for pkgArch, repoArch := range archMap {
+		repoDir := filepath.Join(outputBase, repoArch)
+		if err := os.MkdirAll(repoDir, 0o755); err != nil {
+			return err
+		}
+
+		// Symlink matching RPMs
+		pattern := filepath.Join(incomingDir, "*-"+pkgArch+".rpm")
+		rpms, _ := filepath.Glob(pattern)
+		if len(rpms) == 0 {
+			continue
+		}
+		for _, rpm := range rpms {
+			abs, _ := filepath.Abs(rpm)
+			dst := filepath.Join(repoDir, filepath.Base(rpm))
+			os.Remove(dst)
+			if err := os.Symlink(abs, dst); err != nil {
+				return err
+			}
+		}
+
+		// createrepo_c (--update if repodata already exists)
+		args := []string{repoDir}
+		if _, err := os.Stat(filepath.Join(repoDir, "repodata")); err == nil {
+			args = []string{"--update", repoDir}
+		}
+		if err := runAndStreamOutput(ctx, "createrepo_c", args...); err != nil {
+			return fmt.Errorf("createrepo_c for %s: %w", repoArch, err)
+		}
+
+		// Sign repomd.xml
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--detach-sign", "--armor",
+			"-o", filepath.Join(repoDir, "repodata", "repomd.xml.asc"),
+			filepath.Join(repoDir, "repodata", "repomd.xml"),
+		); err != nil {
+			return fmt.Errorf("signing repomd.xml for %s: %w", repoArch, err)
+		}
+	}
+
+	fmt.Println("RPM repo metadata generated in", outputBase)
+	return nil
+}
+
+// RepoPacman generates Pacman repository database for all .archlinux files in the work directory.
+// Expects .archlinux files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/pacman/<suite>/.
+// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
+// Environment: REPO_SUITE controls the target suite (default: "stable").
+func (Release) RepoPacman(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	suite := repoSuite()
+
+	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
+	outputBase := filepath.Join(DIST, "repo-output", "pacman", suite)
+
+	archMap := map[string]string{
+		"x86_64":  "x86_64",
+		"aarch64": "aarch64",
+		"armv7":   "armv7",
+	}
+
+	gpgKey := os.Getenv("RELEASE_GPG_KEY")
+	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
+
+	for pkgArch, repoArch := range archMap {
+		repoDir := filepath.Join(outputBase, repoArch)
+		if err := os.MkdirAll(repoDir, 0o755); err != nil {
+			return err
+		}
+
+		pattern := filepath.Join(incomingDir, "*-"+pkgArch+".archlinux")
+		pkgs, _ := filepath.Glob(pattern)
+		if len(pkgs) == 0 {
+			continue
+		}
+		for _, pkg := range pkgs {
+			abs, _ := filepath.Abs(pkg)
+			dst := filepath.Join(repoDir, filepath.Base(pkg))
+			os.Remove(dst)
+			if err := os.Symlink(abs, dst); err != nil {
+				return err
+			}
+		}
+
+		// repo-add creates vikunja.db.tar.gz and vikunja.files.tar.gz
+		dbPath := filepath.Join(repoDir, "vikunja.db.tar.gz")
+		repoPkgs, _ := filepath.Glob(filepath.Join(repoDir, "*.archlinux"))
+		repoAddArgs := append([]string{dbPath}, repoPkgs...)
+		if err := runAndStreamOutput(ctx, "repo-add", repoAddArgs...); err != nil {
+			return fmt.Errorf("repo-add for %s: %w", repoArch, err)
+		}
+
+		// Create conventional symlinks (vikunja.db -> vikunja.db.tar.gz)
+		for _, name := range []string{"vikunja.db", "vikunja.files"} {
+			link := filepath.Join(repoDir, name)
+			os.Remove(link)
+			if err := os.Symlink(name+".tar.gz", link); err != nil {
+				return fmt.Errorf("creating symlink %s: %w", name, err)
+			}
+		}
+
+		// Sign the database
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--detach-sign",
+			"-o", filepath.Join(repoDir, "vikunja.db.sig"),
+			dbPath,
+		); err != nil {
+			return fmt.Errorf("signing db for %s: %w", repoArch, err)
+		}
+	}
+
+	fmt.Println("Pacman repo metadata generated in", outputBase)
+	return nil
 }
 
 // PrepareNFPMConfig prepares the nfpm config
@@ -1215,8 +1451,21 @@ func (Release) PrepareNFPMConfig() error {
 		return err
 	}
 
+	var nfpmArch string
+	switch os.Getenv("NFPM_ARCH") {
+	case "arm64":
+		nfpmArch = "arm64"
+	case "arm7":
+		nfpmArch = "arm7"
+	case "386":
+		nfpmArch = "386"
+	default:
+		nfpmArch = "amd64"
+	}
+
 	fixedConfig := strings.ReplaceAll(string(nfpmconfig), "<version>", VersionNumber)
 	fixedConfig = strings.ReplaceAll(fixedConfig, "<binlocation>", BinLocation)
+	fixedConfig = strings.ReplaceAll(fixedConfig, "<arch>", nfpmArch)
 	if err := os.WriteFile(nfpmConfigPath, []byte(fixedConfig), 0); err != nil {
 		return err
 	}
@@ -1643,9 +1892,20 @@ func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
 }
 
+func localBranchExists(ctx context.Context, name string) bool {
+	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/heads/"+name).Run() == nil //nolint:gosec // This is a dev-only mage task and the branch name is supplied by the developer running it.
+}
+
+func remoteBranchExists(ctx context.Context, name string) bool {
+	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/remotes/"+name).Run() == nil //nolint:gosec // This is a dev-only mage task and the branch name is supplied by the developer running it.
+}
+
 // PrepareWorktree creates a new git worktree for development.
 // The first argument is the name, which becomes both the folder name and branch name.
-// The second argument is a path to a plan file that will be copied to the new worktree (pass "" to skip).
+// If a local branch with that name exists, it is checked out.
+// If a remote branch origin/<name> exists, a local tracking branch is created.
+// Otherwise a new branch is created.
+// The second argument is a path to a plan file that will be moved to the new worktree (pass "" to skip).
 // The worktree is created in the parent directory (../).
 // It also copies the current config.yml with an updated rootpath, and initializes the frontend.
 func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) error {
@@ -1658,8 +1918,28 @@ func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) er
 
 	fmt.Printf("Creating worktree at %s with branch %s...\n", worktreePath, name)
 
-	// Create the git worktree
-	cmd := exec.CommandContext(ctx, "git", "worktree", "add", worktreePath, "-b", name)
+	// Refresh remote refs so remote-branch detection is reliable.
+	fetchCmd := exec.CommandContext(ctx, "git", "fetch", "origin")
+	fetchCmd.Stdout = os.Stdout
+	fetchCmd.Stderr = os.Stderr
+	if err := fetchCmd.Run(); err != nil {
+		fmt.Printf("Warning: git fetch failed: %v\n", err)
+	}
+
+	var worktreeArgs []string
+	switch {
+	case localBranchExists(ctx, name):
+		fmt.Printf("Local branch %s exists, checking it out.\n", name)
+		worktreeArgs = []string{"worktree", "add", worktreePath, name}
+	case remoteBranchExists(ctx, "origin/"+name):
+		fmt.Printf("Remote branch origin/%s exists, creating tracking branch.\n", name)
+		worktreeArgs = []string{"worktree", "add", "--track", "-b", name, worktreePath, "origin/" + name}
+	default:
+		fmt.Printf("Creating new branch %s.\n", name)
+		worktreeArgs = []string{"worktree", "add", worktreePath, "-b", name}
+	}
+
+	cmd := exec.CommandContext(ctx, "git", worktreeArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -1728,10 +2008,10 @@ func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) er
 			}
 
 			dstPlanPath := filepath.Join(plansDir, filepath.Base(planPath))
-			if err := copyFile(srcPlanPath, dstPlanPath); err != nil {
-				return fmt.Errorf("failed to copy plan file: %w", err)
+			if err := os.Rename(srcPlanPath, dstPlanPath); err != nil {
+				return fmt.Errorf("failed to move plan file: %w", err)
 			}
-			printSuccess("Plan file copied to %s!", dstPlanPath)
+			printSuccess("Plan file moved to %s!", dstPlanPath)
 		}
 	}
 
@@ -1877,10 +2157,16 @@ func (Dev) TagRelease(ctx context.Context, version string) error {
 		return fmt.Errorf("failed to update frontend package.json: %w", err)
 	}
 
+	// Update publiccode.yml version and release date
+	fmt.Println("Updating publiccode.yml...")
+	if err := updatePublicCodeYml(version); err != nil {
+		return fmt.Errorf("failed to update publiccode.yml: %w", err)
+	}
+
 	// Commit the changes
 	fmt.Println("Committing changes...")
 	commitMsg := fmt.Sprintf("chore: %s release preparations", version)
-	cmd := exec.CommandContext(ctx, "git", "add", "README.md", "CHANGELOG.md", "frontend/package.json")
+	cmd := exec.CommandContext(ctx, "git", "add", "README.md", "CHANGELOG.md", "frontend/package.json", "publiccode.yml")
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to stage files: %w", err)
 	}
@@ -2019,6 +2305,27 @@ func updateFrontendPackageJSON(version string) error {
 
 	if err := os.WriteFile(pkgPath, []byte(newContent), 0o600); err != nil {
 		return fmt.Errorf("failed to write %s: %w", pkgPath, err)
+	}
+
+	return nil
+}
+
+// updatePublicCodeYml updates the softwareVersion and releaseDate in publiccode.yml.
+func updatePublicCodeYml(version string) error {
+	filePath := "publiccode.yml"
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read %s: %w", filePath, err)
+	}
+
+	reVersion := regexp.MustCompile(`(softwareVersion:\s*')([^']+)(')`)
+	newContent := reVersion.ReplaceAllString(string(content), "${1}"+version+"${3}")
+
+	reDate := regexp.MustCompile(`(releaseDate:\s*')([^']+)(')`)
+	newContent = reDate.ReplaceAllString(newContent, "${1}"+time.Now().Format("2006-01-02")+"${3}")
+
+	if err := os.WriteFile(filePath, []byte(newContent), 0o600); err != nil {
+		return fmt.Errorf("failed to write %s: %w", filePath, err)
 	}
 
 	return nil

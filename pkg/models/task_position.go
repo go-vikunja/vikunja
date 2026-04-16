@@ -600,12 +600,20 @@ func resolveTaskPositionConflicts(s *xorm.Session, projectViewID int64, conflict
 // resolvePositionConflictsAfterInsert checks a batch of newly inserted task positions
 // for conflicts (duplicate position values within the same view) and resolves them.
 // This is called after bulk-inserting positions during task creation.
+// If resolveTaskPositionConflicts returns ErrNeedsFullRecalculation for a view,
+// it falls back to a full recalculation of all positions in that view.
 func resolvePositionConflictsAfterInsert(s *xorm.Session, positions []*TaskPosition) error {
 	// Track which (viewID, position) pairs we've already checked to avoid
 	// resolving the same conflict group twice.
 	checked := make(map[int64]map[float64]bool)
+	// Track views that have already been fully recalculated so we skip
+	// further conflict checks for them.
+	recalculated := make(map[int64]bool)
 
 	for _, pos := range positions {
+		if recalculated[pos.ProjectViewID] {
+			continue
+		}
 		if checked[pos.ProjectViewID] != nil && checked[pos.ProjectViewID][pos.Position] {
 			continue
 		}
@@ -624,6 +632,15 @@ func resolvePositionConflictsAfterInsert(s *xorm.Session, positions []*TaskPosit
 		}
 
 		err = resolveTaskPositionConflicts(s, pos.ProjectViewID, conflicts)
+		if IsErrNeedsFullRecalculation(err) {
+			view := &ProjectView{ID: pos.ProjectViewID}
+			err = recalculateTaskPositionsForRepair(s, view)
+			if err != nil {
+				return err
+			}
+			recalculated[pos.ProjectViewID] = true
+			continue
+		}
 		if err != nil {
 			return err
 		}

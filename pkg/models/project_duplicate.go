@@ -404,7 +404,7 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 			_ = attachment.File.File.Close()
 		}
 
-		err = attachment.NewAttachment(s, bytes.NewReader(buf), attachment.File.Name, attachment.File.Size, doer)
+		err = attachment.NewAttachment(s, bytes.NewReader(buf), attachment.File.Name, uint64(len(buf)), doer)
 		if err != nil {
 			return nil, err
 		}

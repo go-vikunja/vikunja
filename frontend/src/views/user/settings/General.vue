@@ -108,6 +108,15 @@
 			<div class="field">
 				<label class="checkbox">
 					<input
+						v-model="settings.frontendSettings.showLastViewed"
+						type="checkbox"
+					>
+					{{ $t('user.settings.general.showLastViewed') }}
+				</label>
+			</div>
+			<div class="field">
+				<label class="checkbox">
+					<input
 						v-model="settings.emailRemindersEnabled"
 						type="checkbox"
 					>
@@ -279,6 +288,23 @@
 					</div>
 				</label>
 			</div>
+			<div
+				v-if="settings.frontendSettings.quickAddMagicMode !== PrefixMode.Disabled"
+				class="field"
+			>
+				<label class="label">{{ $t('user.settings.general.quickAddDefaultReminders') }}</label>
+				<p class="help">
+					{{ $t('user.settings.general.quickAddDefaultRemindersDescription') }}
+				</p>
+				<p class="help">
+					{{ $t('user.settings.general.quickAddDefaultRemindersHint') }}
+				</p>
+				<Reminders
+					v-model="settings.frontendSettings.quickAddDefaultReminders"
+					:default-relative-to="REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE"
+					:allow-absolute="false"
+				/>
+			</div>
 			<div class="field">
 				<label class="two-col">
 					<span>
@@ -438,6 +464,8 @@ import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KINDS} from '@/types/IRelationKind'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 import ShortcutRecorder from '@/components/misc/ShortcutRecorder.vue'
+import Reminders from '@/components/tasks/partials/Reminders.vue'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 defineOptions({name: 'UserSettingsGeneral'})
 
@@ -490,6 +518,8 @@ const settings = ref<IUserSettings>({
 		timeFormat: authStore.settings.frontendSettings.timeFormat ?? TIME_FORMAT.HOURS_12,
 		// Add fallback for old settings that don't have the default task relation type set
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
+		// Clone to escape the store's readonly array type.
+		quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
 	},
 })
 
@@ -621,7 +651,13 @@ watch(
 		if (Object.keys(settings.value).length !== 0) {
 			return
 		}
-		settings.value = {...authStore.settings}
+		settings.value = {
+			...authStore.settings,
+			frontendSettings: {
+				...authStore.settings.frontendSettings,
+				quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
+			},
+		}
 	},
 	{immediate: true},
 )

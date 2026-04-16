@@ -84,6 +84,8 @@
       "samlError": "An error occurred while authenticating via SAML.",
       "samlAssertionFailed": "The SAML response could not be validated. Please try again or contact your administrator.",
       "samlNoEmail": "No valid email address was provided by your identity provider.",
+      "openIdTotpRequired": "Your account requires two-factor authentication. Enter your TOTP code and sign in again.",
+      "openIdTotpSubmit": "Continue",
       "oauthMissingParams": "Missing required OAuth parameters: {params}",
       "oauthRedirectedToApp": "You have been redirected to the app. You can close this tab now.",
       "desktopTryDemo": "Try the Demo",
@@ -141,7 +143,11 @@
         "defaultView": "Default view",
         "timezone": "Time zone",
         "overdueTasksRemindersTime": "Overdue tasks reminder email time",
+        "quickAddDefaultReminders": "Default reminders for quick add",
+        "quickAddDefaultRemindersDescription": "These reminders will be added automatically to every task created via quick add magic that has a due date.",
+        "quickAddDefaultRemindersHint": "Add one or more reminders relative to the task's due date. Leave empty to disable.",
         "filterUsedOnOverview": "Saved filter used on the overview page",
+        "showLastViewed": "Show last viewed projects on the overview page",
         "minimumPriority": "Minimum visible task priority",
         "dateDisplay": "Date display format",
         "dateDisplayOptions": {
@@ -437,7 +443,8 @@
       "addPlaceholder": "Add a task…",
       "empty": "This project is currently empty.",
       "newTaskCta": "Create a task.",
-      "editTask": "Edit Task"
+      "editTask": "Edit Task",
+      "sort": "Sort"
     },
     "gantt": {
       "title": "Gantt",
@@ -629,6 +636,29 @@
       }
     }
   },
+  "sorting": {
+    "manually": "Manually",
+    "apply": "Apply sort",
+    "description": "Choose how tasks in this list are sorted. When sorting manually, you can drag and drop tasks to reorder them.",
+    "options": {
+      "titleAsc": "Title (A–Z)",
+      "titleDesc": "Title (Z–A)",
+      "priorityDesc": "Priority (Highest first)",
+      "priorityAsc": "Priority (Lowest first)",
+      "dueDateAsc": "Due date (Earliest first)",
+      "dueDateDesc": "Due date (Latest first)",
+      "startDateAsc": "Start date (Earliest first)",
+      "startDateDesc": "Start date (Latest first)",
+      "endDateAsc": "End date (Earliest first)",
+      "endDateDesc": "End date (Latest first)",
+      "percentDoneDesc": "% done (Most done first)",
+      "percentDoneAsc": "% done (Least done first)",
+      "createdDesc": "Created (Newest first)",
+      "createdAsc": "Created (Oldest first)",
+      "updatedDesc": "Updated (Newest first)",
+      "updatedAsc": "Updated (Oldest first)"
+    }
+  },
   "migrate": {
     "title": "Import from other services",
     "titleService": "Import your data from {name} into Vikunja",
@@ -644,7 +674,33 @@
     "importUpload": "To import data from {name} into Vikunja, click the button below to select a file.",
     "upload": "Upload file",
     "migrationStartedWillReciveEmail": "Vikunja will now import your lists/projects, tasks, notes, reminders and files from {service}. As this will take a while, we will send you an email once done. You can close this window now.",
-    "migrationInProgress": "A migration is currently in progress. Please wait until it is done."
+    "migrationInProgress": "A migration is currently in progress. Please wait until it is done.",
+    "csv": {
+      "description": "Import tasks from a CSV file with custom column mapping.",
+      "uploadDescription": "Select a CSV file to import. The file should contain task data with headers in the first row.",
+      "selectFile": "Select CSV file",
+      "columnMapping": "Column Mapping",
+      "columnMappingDescription": "Map each column in your CSV file to a task attribute. Vikunja has auto-detected the most likely mappings. The preview below will update automatically when you change settings.",
+      "parsingOptions": "Parsing Options",
+      "delimiter": "Delimiter",
+      "dateFormat": "Date Format",
+      "skipRows": "Skip Rows",
+      "mapColumns": "Map Columns",
+      "example": "e.g.",
+      "preview": "Preview",
+      "previewDescription": "Showing first 5 of {count} tasks that will be imported.",
+      "previewErrors": "{count} rows had parsing errors and will be skipped.",
+      "import": "Import Tasks",
+      "untitled": "Untitled Task",
+      "completed": "Completed",
+      "ignore": "Ignore",
+      "delimiters": {
+        "comma": "Comma (,)",
+        "semicolon": "Semicolon (;)",
+        "tab": "Tab",
+        "pipe": "Pipe (|)"
+      }
+    }
   },
   "label": {
     "title": "Labels",
@@ -791,6 +847,9 @@
         "toggleHeaderCell": "Toggle header cell",
         "mergeOrSplit": "Merge or split",
         "fixTables": "Fix tables"
+      },
+      "emoji": {
+        "empty": "No emoji found"
       }
     },
     "multiselect": {

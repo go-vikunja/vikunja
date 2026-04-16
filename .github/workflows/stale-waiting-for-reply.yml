@@ -16,7 +16,7 @@ jobs:
         with:
           only-labels: 'waiting for reply'
           days-before-issue-stale: 30
-          days-before-issue-close: 0
+          days-before-issue-close: 30
           stale-issue-label: 'waiting for reply'
           remove-stale-when-updated: false
           close-issue-message: >

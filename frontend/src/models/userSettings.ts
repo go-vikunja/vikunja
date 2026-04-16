@@ -33,9 +33,11 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		defaultTaskRelationType: RELATION_KIND.RELATED,
 		backgroundBrightness: null,
 		alwaysShowBucketTaskCount: false,
+		showLastViewed: true,
 		sidebarWidth: null,
 		commentSortOrder: 'asc',
 		desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
+		quickAddDefaultReminders: [],
 	}
 	extraSettingsLinks = {}
 

@@ -582,7 +582,7 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 		"all_projects.hex_color",
 		"all_projects.owner_id",
 		"CASE WHEN all_projects.parent_project_id IS NULL THEN 0 ELSE all_projects.parent_project_id END AS parent_project_id",
-		"MAX(CAST(all_projects.is_archived AS int)) AS is_archived",
+		"MAX(CASE WHEN all_projects.is_archived THEN 1 ELSE 0 END) AS is_archived",
 		"all_projects.background_file_id",
 		"all_projects.background_blur_hash",
 		"all_projects.position",
@@ -607,7 +607,7 @@ INNER JOIN all_projects ap ON p.parent_project_id = ap.id`
 
 	var archivedFilter string
 	if !opts.getArchived {
-		archivedFilter = "HAVING MAX(CAST(all_projects.is_archived AS int)) = 0 "
+		archivedFilter = "HAVING MAX(CASE WHEN all_projects.is_archived THEN 1 ELSE 0 END) = 0 "
 	}
 
 	currentProjects := []*Project{}
@@ -1006,6 +1006,40 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		return
 	}
 
+	// GHSA-2vq4-854f-5c72 / CVE-2026-35595: the recursive permission CTE
+	// cascades Admin from any owned ancestor, so moving a shared child
+	// under an attacker-owned root grants Admin on the child. Require
+	// Admin on both sides of a reparent.
+	//
+	// Only gate on non-zero ParentProjectID: the generic update handler
+	// binds a fresh struct, so an omitted parent_project_id is
+	// indistinguishable from an explicit 0. Detach-to-root is therefore
+	// out of scope here — a proper fix needs a pointer field.
+	if project.ParentProjectID > 0 {
+		storedProject, err := GetProjectSimpleByID(s, project.ID)
+		if err != nil {
+			return err
+		}
+		if project.ParentProjectID != storedProject.ParentProjectID {
+			canAdminMoved, err := project.IsAdmin(s, auth)
+			if err != nil {
+				return err
+			}
+			if !canAdminMoved {
+				return ErrGenericForbidden{}
+			}
+
+			newParent := &Project{ID: project.ParentProjectID}
+			canAdminNewParent, err := newParent.IsAdmin(s, auth)
+			if err != nil {
+				return err
+			}
+			if !canAdminNewParent {
+				return ErrGenericForbidden{}
+			}
+		}
+	}
+
 	if project.IsArchived {
 		isDefaultProject, err := project.isDefaultProject(s)
 		if err != nil {
@@ -1351,6 +1385,15 @@ func SetProjectBackground(s *xorm.Session, projectID int64, background *files.Fi
 		Where("id = ?", l.ID).
 		Cols("background_file_id", "background_blur_hash").
 		Update(l)
+	return
+}
+
+// ClearProjectBackground clears the background fields for a project without touching other columns.
+func ClearProjectBackground(s *xorm.Session, projectID int64) (err error) {
+	_, err = s.
+		Where("id = ?", projectID).
+		Cols("background_file_id", "background_blur_hash").
+		Update(&Project{})
 	return
 }
 

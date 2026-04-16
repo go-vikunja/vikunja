@@ -23,11 +23,13 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/auth/saml"
+	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
+	"code.vikunja.io/api/pkg/modules/migration/wekan"
 	"code.vikunja.io/api/pkg/version"
 
 	"github.com/labstack/echo/v5"
@@ -113,6 +115,8 @@ func Info(c *echo.Context) error {
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),
+			(&wekan.Migrator{}).Name(),
+			(&csvmigrator.Migrator{}).Name(),
 		},
 		Legal: legalInfo{
 			ImprintURL:       config.LegalImprintURL.GetString(),

@@ -18,6 +18,7 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -89,6 +90,9 @@ func RegisterListeners() {
 		RegisterUserDirectedEventForWebhook(&TaskReminderFiredEvent{})
 		RegisterUserDirectedEventForWebhook(&TaskOverdueEvent{})
 		RegisterUserDirectedEventForWebhook(&TasksOverdueEvent{})
+
+		// Internal delivery listener — one message per webhook with its own retry lifecycle
+		events.RegisterListener((&WebhookDeliveryEvent{}).Name(), &WebhookDeliveryListener{})
 	}
 }
 
@@ -778,6 +782,57 @@ type WebhookPayload struct {
 	Data      interface{} `json:"data"`
 }
 
+// WebhookDeliveryListener delivers one webhook per message. It is the
+// consumer for WebhookDeliveryEvent and owns the retry semantics: any
+// error returned from Handle triggers the watermill retry middleware
+// independently for this single delivery, with no effect on other
+// webhooks on the same parent event.
+type WebhookDeliveryListener struct{}
+
+// Name defines the name for the WebhookDeliveryListener listener
+func (wdl *WebhookDeliveryListener) Name() string {
+	return "webhook.delivery.listener"
+}
+
+// Handle is executed when a WebhookDeliveryEvent is fired. It reloads the
+// webhook from the database by id (so secrets, target_url, and basic auth
+// credentials are always current) and performs the HTTP delivery.
+//
+// Special cases:
+//   - If the webhook row no longer exists (deleted between fan-out and
+//     delivery), Handle returns nil so the message is not retried.
+//   - A nil payload is treated as data corruption / version skew and
+//     returned as an error so the message is retried and eventually
+//     parked in the poison queue rather than silently dropped.
+//   - Any other error is returned so the watermill retry middleware
+//     retries this delivery with exponential backoff, and eventually
+//     parks it in the poison queue if all retries fail.
+func (wdl *WebhookDeliveryListener) Handle(msg *message.Message) error {
+	evt := &WebhookDeliveryEvent{}
+	if err := json.Unmarshal(msg.Payload, evt); err != nil {
+		return err
+	}
+
+	if evt.Payload == nil {
+		return fmt.Errorf("webhook delivery event for webhook %d has no payload", evt.WebhookID)
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	webhook := &Webhook{}
+	has, err := s.Where("id = ?", evt.WebhookID).Get(webhook)
+	if err != nil {
+		return err
+	}
+	if !has {
+		log.Debugf("webhook %d no longer exists, skipping delivery of %s", evt.WebhookID, evt.Payload.EventName)
+		return nil
+	}
+
+	return webhook.sendWebhookPayload(evt.Payload)
+}
+
 func getIDAsInt64(id interface{}) int64 {
 	if id == nil {
 		return 0
@@ -1066,6 +1121,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 
 		ws := []*Webhook{}
 		err = s.In("project_id", projectIDs).
+			OrderBy("id ASC").
 			Find(&ws)
 		if err != nil {
 			return err
@@ -1087,6 +1143,7 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		if userID > 0 {
 			userWebhooks := []*Webhook{}
 			err = s.Where("user_id = ? AND (project_id IS NULL OR project_id = 0)", userID).
+				OrderBy("id ASC").
 				Find(&userWebhooks)
 			if err != nil {
 				return err
@@ -1114,8 +1171,17 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	now := time.Now()
 	for _, webhook := range matchingWebhooks {
-		if _, has := event["project"]; !has && webhook.ProjectID > 0 {
+		// Clone the event map so each webhook gets its own, isolated payload.
+		// Otherwise adding event["project"] for one webhook would leak into
+		// payloads dispatched for later webhooks.
+		perWebhookEvent := make(map[string]interface{}, len(event)+1)
+		for k, v := range event {
+			perWebhookEvent[k] = v
+		}
+
+		if _, has := perWebhookEvent["project"]; !has && webhook.ProjectID > 0 {
 			project, err := GetProjectSimpleByID(s, webhook.ProjectID)
 			if err != nil && !IsErrProjectDoesNotExist(err) {
 				log.Errorf("Could not load project for webhook %d: %s", webhook.ID, err)
@@ -1126,22 +1192,29 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 					log.Errorf("Could not load project for webhook %d: %s", webhook.ID, err)
 				}
 				if err == nil {
-					event["project"] = project
+					perWebhookEvent["project"] = project
 				}
 			}
 		}
 
-		err = webhook.sendWebhookPayload(&WebhookPayload{
-			EventName: wl.EventName,
-			Time:      time.Now(),
-			Data:      event,
+		dispatchErr := events.Dispatch(&WebhookDeliveryEvent{
+			WebhookID: webhook.ID,
+			Payload: &WebhookPayload{
+				EventName: wl.EventName,
+				Time:      now,
+				Data:      perWebhookEvent,
+			},
 		})
-		if err != nil {
-			return err
+		if dispatchErr != nil {
+			// A dispatch failure here means the in-process event bus is broken —
+			// there is nothing useful to retry per-webhook and we do not want
+			// to fail the parent message (which would re-fan-out and duplicate
+			// any deliveries that did succeed). Log and move on.
+			log.Errorf("Could not dispatch webhook.delivery for webhook %d: %s", webhook.ID, dispatchErr)
 		}
 	}
 
-	return
+	return nil
 }
 
 ///////

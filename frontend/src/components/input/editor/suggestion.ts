@@ -3,6 +3,7 @@ import {VueRenderer} from '@tiptap/vue-3'
 import {computePosition, flip, shift, offset, autoUpdate} from '@floating-ui/dom'
 
 import CommandsList from './CommandsList.vue'
+import {getPopupContainer} from './popupContainer'
 
 type TranslateFunction = (key: string) => string
 
@@ -206,7 +207,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 					popupElement.style.left = '0'
 					popupElement.style.zIndex = '4700'
 					popupElement.appendChild(component.element!)
-					document.body.appendChild(popupElement)
+					getPopupContainer(props.editor).appendChild(popupElement)
 
 					// Update virtual reference
 					const rect = props.clientRect()
@@ -266,7 +267,7 @@ export default function suggestionSetup(t: TranslateFunction) {
 						cleanupFloating()
 					}
 					if (popupElement) {
-						document.body.removeChild(popupElement)
+						popupElement.remove()
 						popupElement = null
 					}
 					component.destroy()

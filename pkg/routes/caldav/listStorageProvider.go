@@ -175,16 +175,32 @@ func principalPathForUser(username string) string {
 // GetResourcesByList fetches a list of resources from a slice of paths
 func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (resources []data.Resource, err error) {
 
-	// Parse the set of resourcepaths into usable uids
-	// A path looks like this: /dav/projects/10/a6eb526d5748a5c499da202fe74f36ed1aea2aef.ics
-	// So we split the url in parts, take the last one and strip the ".ics" at the end
+	// Path format: /dav/projects/{projectID}/{uid}.ics.
+	// Remember the href's project ID per uid so the consistency check below
+	// can drop tasks requested via the wrong project (GHSA-48ch-p4gq-x46x).
 	var uids []string
+	uidURLProjects := map[string]int64{}
 	for _, path := range rpaths {
 		parts := strings.Split(path, "/")
 		if len(parts) < 5 {
 			continue
 		}
-		uids = append(uids, strings.TrimSuffix(parts[4], ".ics"))
+		// Skip malformed hrefs: without these guards an empty/non-numeric
+		// project would bypass the consistency check, and an empty UID
+		// would query for tasks with empty/NULL uids.
+		if !strings.HasSuffix(parts[4], ".ics") {
+			continue
+		}
+		uid := strings.TrimSuffix(parts[4], ".ics")
+		if uid == "" {
+			continue
+		}
+		urlProjectID, perr := strconv.ParseInt(parts[3], 10, 64)
+		if perr != nil {
+			continue
+		}
+		uids = append(uids, uid)
+		uidURLProjects[uid] = urlProjectID
 	}
 
 	if len(uids) == 0 {
@@ -207,6 +223,11 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 	}
 
 	for _, t := range tasks {
+		// Closes the URL-path leak for calendar-multiget REPORTs
+		// (GHSA-48ch-p4gq-x46x).
+		if urlProjectID, ok := uidURLProjects[t.UID]; ok && urlProjectID != t.ProjectID {
+			continue
+		}
 		rr := VikunjaProjectResourceAdapter{
 			task: t,
 		}
@@ -279,6 +300,13 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 			return nil, false, errs.ResourceNotFoundError
 		}
 		vcls.task = tasks[0]
+
+		// Reject reads where the URL project (set by TaskHandler in handler.go
+		// from the :project param) doesn't match the task's real project
+		// (GHSA-48ch-p4gq-x46x).
+		if vcls.project != nil && vcls.project.ID != 0 && vcls.task.ProjectID != vcls.project.ID {
+			return nil, false, errs.ResourceNotFoundError
+		}
 
 		if updated.Unix() > 0 {
 			vcls.task.Updated = updated

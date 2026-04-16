@@ -624,10 +624,10 @@ async function updateTaskPosition(e) {
 				projectId: projectIdWithFallback.value,
 			}))
 			Object.assign(newTask, updatedTaskBucket.task)
-			newTask.bucketId = updatedTaskBucket.bucketId
 			if (updatedTaskBucket.bucketId !== newTask.bucketId) {
 				kanbanStore.moveTaskToBucket(newTask, updatedTaskBucket.bucketId)
 			}
+			newTask.bucketId = updatedTaskBucket.bucketId
 			if (updatedTaskBucket.bucket) {
 				kanbanStore.setBucketById(updatedTaskBucket.bucket, false)
 			}

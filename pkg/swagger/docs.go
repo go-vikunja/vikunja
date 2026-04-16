@@ -67,6 +67,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/auth.Token"
                         }
                     },
+                    "412": {
+                        "description": "Invalid totp passcode.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
                     "500": {
                         "description": "Internal error",
                         "schema": {
@@ -765,6 +771,198 @@ const docTemplate = `{
                 }
             }
         },
+        "/migration/csv/detect": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Analyzes a CSV file and returns auto-detected columns, delimiter, quote character, and date format with suggested column mappings.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Detect CSV structure",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "The CSV file to analyze",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detection results with suggested mappings",
+                        "schema": {
+                            "$ref": "#/definitions/csv.DetectionResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid CSV file",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/csv/migrate": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Imports tasks from a CSV file into Vikunja with the provided configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Import CSV file",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "The CSV file to import",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The import configuration JSON",
+                        "name": "config",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A message telling you everything was migrated successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid CSV file or configuration",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/csv/preview": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Generates a preview of the first 5 tasks that would be imported with the given configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Preview CSV import",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "The CSV file to preview",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The import configuration JSON",
+                        "name": "config",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Preview of tasks to import",
+                        "schema": {
+                            "$ref": "#/definitions/csv.PreviewResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid CSV file or configuration",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/csv/status": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns if the current user already did the CSV migration or not.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get CSV migration status",
+                "responses": {
+                    "200": {
+                        "description": "The migration status",
+                        "schema": {
+                            "$ref": "#/definitions/migration.Status"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/migration/microsoft-todo/auth": {
             "get": {
                 "security": [
@@ -873,7 +1071,7 @@ const docTemplate = `{
             }
         },
         "/migration/ticktick/migrate": {
-            "post": {
+            "put": {
                 "security": [
                     {
                         "JWTKeyAuth": []
@@ -1211,6 +1409,80 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get migration status",
+                "responses": {
+                    "200": {
+                        "description": "The migration status",
+                        "schema": {
+                            "$ref": "#/definitions/migration.Status"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/wekan/migrate": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Imports all projects, tasks, labels, checklists, comments, and attachments from a WeKan board JSON export into Vikunja.",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Import all projects, tasks etc. from a WeKan board export",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The WeKan board JSON export file.",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A message telling you everything was migrated successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/wekan/status": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns if the current user already did the migration or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.",
                 "produces": [
                     "application/json"
                 ],
@@ -3456,6 +3728,80 @@ const docTemplate = `{
                         "description": "Share Link not found.",
                         "schema": {
                             "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{project}/tasks/by-index/{index}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns a single task identified by its per-project index. Useful when resolving human-readable references like \"PROJ-42\" to a canonical task object. Note that task indexes are reassigned when a task is moved between projects, so long-lived references should use the returned task id instead.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get one task by its per-project index",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The project ID",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The task's per-project index",
+                        "name": "index",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "If set to ` + "`" + `subtasks` + "`" + `, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. You can only set this to ` + "`" + `subtasks` + "`" + `.",
+                        "name": "expand",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The task",
+                        "schema": {
+                            "$ref": "#/definitions/models.Task"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid project ID or index",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the task",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Task not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
                         }
                     },
                     "500": {
@@ -8194,6 +8540,133 @@ const docTemplate = `{
                 }
             }
         },
+        "csv.ColumnMapping": {
+            "type": "object",
+            "properties": {
+                "attribute": {
+                    "$ref": "#/definitions/csv.TaskAttribute"
+                },
+                "column_index": {
+                    "type": "integer"
+                },
+                "column_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "csv.DetectionResult": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "date_format": {
+                    "type": "string"
+                },
+                "delimiter": {
+                    "type": "string"
+                },
+                "preview_rows": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "quote_char": {
+                    "type": "string"
+                },
+                "suggested_mapping": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/csv.ColumnMapping"
+                    }
+                }
+            }
+        },
+        "csv.PreviewResult": {
+            "type": "object",
+            "properties": {
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/csv.PreviewTask"
+                    }
+                },
+                "total_rows": {
+                    "type": "integer"
+                }
+            }
+        },
+        "csv.PreviewTask": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "done": {
+                    "type": "boolean"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "project": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "csv.TaskAttribute": {
+            "type": "string",
+            "enum": [
+                "title",
+                "description",
+                "due_date",
+                "start_date",
+                "end_date",
+                "done",
+                "priority",
+                "labels",
+                "project",
+                "reminder",
+                "ignore"
+            ],
+            "x-enum-varnames": [
+                "AttrTitle",
+                "AttrDescription",
+                "AttrDueDate",
+                "AttrStartDate",
+                "AttrEndDate",
+                "AttrDone",
+                "AttrPriority",
+                "AttrLabels",
+                "AttrProject",
+                "AttrReminder",
+                "AttrIgnore"
+            ]
+        },
         "files.File": {
             "type": "object",
             "properties": {
@@ -9668,6 +10141,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "scope": {
+                    "type": "string"
+                },
+                "totp_passcode": {
+                    "description": "TOTPPasscode is required when the resolved user has TOTP enabled.\nClients must restart the OIDC flow and populate this field after\nreceiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.",
                     "type": "string"
                 }
             }

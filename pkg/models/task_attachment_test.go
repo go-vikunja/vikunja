@@ -104,7 +104,8 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	}
 	testuser := &user.User{ID: 1}
 
-	err := ta.NewAttachment(s, bytes.NewReader([]byte("testingstuff")), "testfile", 100, testuser)
+	content := []byte("testingstuff")
+	err := ta.NewAttachment(s, bytes.NewReader(content), "testfile", uint64(len(content)), testuser)
 	require.NoError(t, err)
 	assert.NotEqual(t, 0, ta.FileID)
 	_, err = files.FileStat(ta.File)
@@ -122,7 +123,7 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, testuser.ID, ta.File.CreatedByID)
 	assert.Equal(t, "testfile", ta.File.Name)
-	assert.Equal(t, uint64(100), ta.File.Size)
+	assert.Equal(t, uint64(len(content)), ta.File.Size)
 	assert.NotEmpty(t, ta.File.Mime, "mime type should be detected and stored")
 
 	// Extra test for max size test

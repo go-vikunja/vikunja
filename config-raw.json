@@ -1056,6 +1056,16 @@
                     "comment": "The plugin loader to use. \"yaegi\" loads plugins from Go source files (directories of .go files). \"native\" (deprecated) loads compiled Go plugin shared libraries (.so files)."
                 }
             ]
+        },
+        {
+            "key": "license",
+            "children": [
+                {
+                    "key": "key",
+                    "default_value": "",
+                    "comment": "The license key for Vikunja. If empty or absent, Vikunja runs in community mode with all non-licensed features available."
+                }
+            ]
         }
     ]
 }

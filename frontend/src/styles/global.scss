@@ -17,7 +17,7 @@
 
 
 // imports from "bulma-css-variables/sass/elements/_all";
-@import "bulma-css-variables/sass/elements/box";
+// @import "bulma-css-variables/sass/elements/box"; // not used; migrated to <Card>
 // @import "bulma-css-variables/sass/elements/button"; // Moved to Button.vue component
 @import "bulma-css-variables/sass/elements/container";
 @import "bulma-css-variables/sass/elements/content";
@@ -37,19 +37,19 @@
 @import "bulma-css-variables/sass/form/input-textarea";
 @import "bulma-css-variables/sass/form/checkbox-radio";
 @import "bulma-css-variables/sass/form/select";
-@import "bulma-css-variables/sass/form/file";
+// @import "bulma-css-variables/sass/form/file"; // not used; every file input is hidden and triggered via a custom button
 @import "bulma-css-variables/sass/form/tools";
 
 
 // imports from "bulma-css-variables/sass/components/_all";
 // @import "bulma-css-variables/sass/components/breadcrumb"; // not used
-@import "bulma-css-variables/sass/components/card";
+// not used; ported into Card.vue
 // @import "bulma-css-variables/sass/components/dropdown"; // moved to component
 // @import "bulma-css-variables/sass/components/level"; // not used
-@import "bulma-css-variables/sass/components/media"; 
+// @import "bulma-css-variables/sass/components/media"; // ported into Comments.vue
 @import "bulma-css-variables/sass/components/menu";
 //@import "bulma-css-variables/sass/components/message"; // not used
-@import "bulma-css-variables/sass/components/modal";
+// @import "bulma-css-variables/sass/components/modal"; // not used; Modal.vue owns its own dialog-based styles
 @import "bulma-css-variables/sass/components/navbar";
 @import "bulma-css-variables/sass/components/pagination";
 // @import "bulma-css-variables/sass/components/panel"; // not used
@@ -64,7 +64,7 @@
 // imports from "bulma-css-variables/sass/helpers/_all";
 @import "bulma-css-variables/sass/helpers/color";
 @import "bulma-css-variables/sass/helpers/flexbox";
-@import "bulma-css-variables/sass/helpers/float";
+// float: ported locally to theme/helpers.scss; only .is-pulled-right is used
 // @import "bulma-css-variables/sass/helpers/other"; // not used
 // @import "bulma-css-variables/sass/helpers/overflow";
 // @import "bulma-css-variables/sass/helpers/position";

@@ -392,6 +392,52 @@ func TestTask_Update(t *testing.T) {
 		assert.False(t, updatedTask.Done)
 		assert.False(t, updatedTask.DoneAt.IsZero(), "done_at should be persisted in database for repeating tasks")
 	})
+	t.Run("repeating tasks marked done from a non-default bucket are moved to the default bucket", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Pre-position task 28 in bucket 2 (non-default, non-done) via a
+		// raw update to bypass the bucket-limit check.
+		_, err := s.Where("task_id = ? AND project_view_id = ?", 28, 4).
+			Cols("bucket_id").
+			Update(&TaskBucket{BucketID: 2})
+		require.NoError(t, err)
+
+		// Mark the repeating task as done via Task.Update (same code path
+		// the frontend hits when the user clicks "Done" in the task
+		// detail pane).
+		task := &Task{
+			ID:          28,
+			Done:        true,
+			RepeatAfter: 3600,
+		}
+		err = task.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// updateDone should have re-opened the task for the next iteration.
+		assert.False(t, task.Done)
+
+		// And the task should now be sitting in the default bucket (1),
+		// not left in bucket 2 or moved to the done bucket (3).
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":         28,
+			"project_view_id": 4,
+			"bucket_id":       1,
+		}, false)
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{
+			"task_id":         28,
+			"project_view_id": 4,
+			"bucket_id":       2,
+		})
+		db.AssertMissing(t, "task_buckets", map[string]interface{}{
+			"task_id":         28,
+			"project_view_id": 4,
+			"bucket_id":       3,
+		})
+	})
 	t.Run("moving a task between projects should give it a correct index", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
@@ -942,6 +988,177 @@ func TestUpdateDone(t *testing.T) {
 	})
 }
 
+func TestTask_RepeatAfterCap(t *testing.T) {
+	const maxRepeat int64 = 10 * 365 * 24 * 3600
+
+	t.Run("create rejects repeat_after above cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		usr := &user.User{ID: 1, Username: "user1"}
+		task := &Task{
+			Title:       "nope",
+			ProjectID:   1,
+			RepeatAfter: maxRepeat + 1,
+		}
+		err := task.Create(s, usr)
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidTaskRepeatInterval(err))
+	})
+
+	t.Run("create accepts repeat_after at cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		usr := &user.User{ID: 1, Username: "user1"}
+		task := &Task{
+			Title:       "ok",
+			ProjectID:   1,
+			RepeatAfter: maxRepeat,
+		}
+		require.NoError(t, task.Create(s, usr))
+		require.NoError(t, s.Commit())
+	})
+
+	t.Run("update rejects repeat_after above cap", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		usr := &user.User{ID: 1, Username: "user1"}
+		task := &Task{
+			ID:          1,
+			RepeatAfter: maxRepeat + 1,
+		}
+		err := task.Update(s, usr)
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidTaskRepeatInterval(err))
+	})
+}
+
+func TestErrInvalidTaskRepeatInterval(t *testing.T) {
+	err := ErrInvalidTaskRepeatInterval{RepeatAfter: 999999999999}
+	assert.True(t, IsErrInvalidTaskRepeatInterval(err))
+	assert.False(t, IsErrInvalidTaskRepeatInterval(ErrTaskCannotBeEmpty{}))
+	httpErr := err.HTTPError()
+	assert.Equal(t, 400, httpErr.HTTPCode)
+	assert.Equal(t, ErrCodeInvalidTaskRepeatInterval, httpErr.Code)
+}
+
+func TestUpdateDone_DoSRegression_AncientDueDate(t *testing.T) {
+	// GHSA-r4fg-73rc-hhh7: ancient due_date + 1s interval used to spin
+	// for billions of iterations. The <1s assertion catches a regression
+	// to the O(n) loop.
+	oldTask := &Task{
+		Done:        false,
+		RepeatAfter: 1,
+		RepeatMode:  TaskRepeatModeDefault,
+		DueDate:     time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+		StartDate:   time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+		EndDate:     time.Date(1900, 1, 2, 0, 0, 0, 0, time.UTC),
+		Reminders: []*TaskReminder{
+			{Reminder: time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)},
+		},
+	}
+	newTask := &Task{Done: true}
+
+	start := time.Now()
+	updateDone(oldTask, newTask)
+	elapsed := time.Since(start)
+
+	require.Less(t, elapsed, time.Second, "updateDone must not take seconds for ancient due dates")
+	assert.True(t, newTask.DueDate.After(start), "new due date must be strictly after now")
+	assert.True(t, newTask.StartDate.After(start), "new start date must be strictly after now")
+	assert.True(t, newTask.EndDate.After(start), "new end date must be strictly after now")
+	assert.False(t, newTask.Done, "repeating task should be unmarked as done")
+}
+
+func TestAddRepeatIntervalToTime(t *testing.T) {
+	now := time.Date(2026, 4, 9, 12, 0, 0, 0, time.UTC)
+	day := 24 * time.Hour
+
+	tests := []struct {
+		name     string
+		now      time.Time
+		t        time.Time
+		duration time.Duration
+		want     time.Time
+	}{
+		{
+			name:     "one day interval, t one day before now",
+			now:      now,
+			t:        now.Add(-day),
+			duration: day,
+			want:     now.Add(day),
+		},
+		{
+			name:     "one day interval, t exactly one week before now",
+			now:      now,
+			t:        now.Add(-7 * day),
+			duration: day,
+			want:     now.Add(day),
+		},
+		{
+			name:     "t in the far past (PoC case) completes with sane result",
+			now:      now,
+			t:        time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+			duration: time.Second,
+			want:     now.Add(time.Second),
+		},
+		{
+			name:     "zero t saturates and falls back",
+			now:      now,
+			t:        time.Time{},
+			duration: time.Hour,
+			want:     now.Add(time.Hour),
+		},
+		{
+			name:     "t after now still advances by one interval",
+			now:      now,
+			t:        now.Add(time.Hour),
+			duration: day,
+			want:     now.Add(time.Hour + day),
+		},
+		{
+			name:     "t equals now still advances",
+			now:      now,
+			t:        now,
+			duration: day,
+			want:     now.Add(day),
+		},
+		{
+			name:     "zero duration returns t unchanged",
+			now:      now,
+			t:        now.Add(-day),
+			duration: 0,
+			want:     now.Add(-day),
+		},
+		{
+			name:     "negative duration returns t unchanged",
+			now:      now,
+			t:        now.Add(-day),
+			duration: -time.Hour,
+			want:     now.Add(-day),
+		},
+		{
+			name:     "tiny duration on ancient date does not overflow",
+			now:      now,
+			t:        time.Date(1800, 1, 1, 0, 0, 0, 0, time.UTC),
+			duration: 1,
+			want:     now.Add(1),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := addRepeatIntervalToTime(tc.now, tc.t, tc.duration)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
 func TestTask_ReadOne(t *testing.T) {
 	u := &user.User{ID: 1}
 
@@ -1042,4 +1259,122 @@ func Test_getTaskIndexFromSearchString(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetTasksByUIDs(t *testing.T) {
+	t.Run("returns task for authorized user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		owner := &user.User{ID: 15}
+		tasks, err := GetTasksByUIDs(s, []string{"uid-caldav-test"}, owner)
+		require.NoError(t, err)
+		require.Len(t, tasks, 1)
+		assert.Equal(t, int64(40), tasks[0].ID)
+		assert.Equal(t, "Title Caldav Test", tasks[0].Title)
+	})
+
+	t.Run("does not return task for unauthorized user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user 6 has no access to project 36 where uid-caldav-test lives
+		outsider := &user.User{ID: 6}
+		tasks, err := GetTasksByUIDs(s, []string{"uid-caldav-test"}, outsider)
+		require.NoError(t, err)
+		assert.Empty(t, tasks, "unauthorized user must not receive tasks by UID")
+	})
+
+	t.Run("mixed authorized and unauthorized UIDs returns only authorized", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Give task 1 (project 1, owned by user 1) a UID so we can look it up.
+		_, err := s.ID(1).Cols("uid").Update(&Task{UID: "uid-user1-test"})
+		require.NoError(t, err)
+
+		user1 := &user.User{ID: 1}
+		tasks, err := GetTasksByUIDs(s, []string{"uid-user1-test", "uid-caldav-test"}, user1)
+		require.NoError(t, err)
+		require.Len(t, tasks, 1)
+		assert.Equal(t, int64(1), tasks[0].ID, "only user 1's task should be returned")
+	})
+}
+
+func TestGetTaskByProjectAndIndex(t *testing.T) {
+	t.Run("existing task", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		task, err := GetTaskByProjectAndIndex(s, 1, 1)
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), task.ID)
+		assert.Equal(t, "task #1", task.Title)
+	})
+
+	t.Run("nonexistent index", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := GetTaskByProjectAndIndex(s, 1, 99999)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+
+	t.Run("wrong project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 4 has no tasks at all.
+		_, err := GetTaskByProjectAndIndex(s, 4, 1)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+
+	t.Run("index exists only in another project", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 2 has indexes 1 and 2; index 5 lives under project 1 (task 5).
+		// A non-scoped WHERE clause would leak task 5 here.
+		_, err := GetTaskByProjectAndIndex(s, 2, 5)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+
+	t.Run("invalid input", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := GetTaskByProjectAndIndex(s, 0, 1)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+
+		_, err = GetTaskByProjectAndIndex(s, 1, 0)
+		require.Error(t, err)
+		assert.True(t, IsErrTaskDoesNotExist(err))
+	})
+}
+
+func TestTaskIndexUniqueConstraint(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// (project_id=1, index=1) is already taken by task 1 in fixtures.
+	_, err := s.Insert(&Task{
+		Title:       "duplicate index",
+		ProjectID:   1,
+		Index:       1,
+		CreatedByID: 1,
+	})
+	require.Error(t, err, "unique constraint on (project_id, index) must reject duplicates")
 }

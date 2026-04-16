@@ -547,3 +547,49 @@ func TestSetTaskInBucketInViewsResolvesConflicts(t *testing.T) {
 	assert.NotEqual(t, p1.Position, p2.Position,
 		"Positions should be unique after conflict resolution")
 }
+
+func TestResolvePositionConflictsAfterInsertFallsBackToRecalculation(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	viewID := int64(1)
+
+	// Clear existing positions for this view
+	_, err := s.Where("project_view_id = ?", viewID).Delete(&TaskPosition{})
+	require.NoError(t, err)
+
+	// Set up extremely tight spacing that forces ErrNeedsFullRecalculation:
+	// Two existing positions with a gap smaller than MinPositionSpacing * (conflicts+1)
+	basePos := 100.0
+	tinyGap := MinPositionSpacing * 0.1 // Much smaller than needed
+	_, err = s.Insert(&TaskPosition{TaskID: 800, ProjectViewID: viewID, Position: basePos})
+	require.NoError(t, err)
+	_, err = s.Insert(&TaskPosition{TaskID: 801, ProjectViewID: viewID, Position: basePos + tinyGap})
+	require.NoError(t, err)
+	_, err = s.Insert(&TaskPosition{TaskID: 802, ProjectViewID: viewID, Position: basePos + tinyGap})
+	require.NoError(t, err)
+	_, err = s.Insert(&TaskPosition{TaskID: 803, ProjectViewID: viewID, Position: basePos + 2*tinyGap})
+	require.NoError(t, err)
+
+	// The conflicting positions that would trigger ErrNeedsFullRecalculation
+	conflictPositions := []*TaskPosition{
+		{TaskID: 801, ProjectViewID: viewID, Position: basePos + tinyGap},
+		{TaskID: 802, ProjectViewID: viewID, Position: basePos + tinyGap},
+	}
+
+	// This should NOT return an error -- it should fall back to full recalculation
+	err = resolvePositionConflictsAfterInsert(s, conflictPositions)
+	require.NoError(t, err)
+
+	// Verify all positions are now unique
+	var positions []*TaskPosition
+	err = s.Where("project_view_id = ?", viewID).OrderBy("position ASC").Find(&positions)
+	require.NoError(t, err)
+
+	seen := make(map[float64]bool)
+	for _, p := range positions {
+		assert.False(t, seen[p.Position], "duplicate position found: %f for task %d", p.Position, p.TaskID)
+		seen[p.Position] = true
+	}
+}

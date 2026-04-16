@@ -553,6 +553,34 @@ func (err ErrTaskCannotBeEmpty) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTaskCannotBeEmpty, Message: "You must provide at least a task title."}
 }
 
+// ErrInvalidTaskRepeatInterval represents an error where the provided
+// task repeat interval is outside the allowed range.
+type ErrInvalidTaskRepeatInterval struct {
+	RepeatAfter int64
+}
+
+// IsErrInvalidTaskRepeatInterval checks if an error is ErrInvalidTaskRepeatInterval.
+func IsErrInvalidTaskRepeatInterval(err error) bool {
+	_, ok := err.(ErrInvalidTaskRepeatInterval)
+	return ok
+}
+
+func (err ErrInvalidTaskRepeatInterval) Error() string {
+	return fmt.Sprintf("Invalid task repeat interval. [RepeatAfter: %d]", err.RepeatAfter)
+}
+
+// ErrCodeInvalidTaskRepeatInterval holds the unique world-error code of this error.
+const ErrCodeInvalidTaskRepeatInterval = 4029
+
+// HTTPError holds the http error description.
+func (err ErrInvalidTaskRepeatInterval) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskRepeatInterval,
+		Message:  fmt.Sprintf("The task repeat interval must be between 0 and %d seconds (10 years).", MaxTaskRepeatAfterSeconds),
+	}
+}
+
 // ErrTaskDoesNotExist represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.
 type ErrTaskDoesNotExist struct {
 	ID int64

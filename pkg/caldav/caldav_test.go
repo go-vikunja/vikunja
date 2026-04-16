@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/user"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -367,12 +368,123 @@ RELATED-TO;RELTYPE=CHILD:subtaskuid
 END:VTODO
 END:VCALENDAR`,
 		},
+		{
+			name: "GHSA-2g7h-7rqr-9p4r: CRLF injection in Summary is escaped",
+			args: args{
+				config: &Config{
+					Name:   "test",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:   "Meeting\r\nATTACH:https://evil.com/malware.exe\r\nX-INJECTED:pwned",
+						UID:       "randommduid",
+						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:test
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randommduid
+DTSTAMP:20181201T011204Z
+SUMMARY:Meeting\nATTACH:https://evil.com/malware.exe\nX-INJECTED:pwned
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
+		{
+			name: "GHSA-2g7h-7rqr-9p4r: semicolons and commas in Summary are escaped",
+			args: args{
+				config: &Config{
+					Name:   "te;st,ed",
+					ProdID: "RandomProdID which is not random",
+				},
+				todos: []*Todo{
+					{
+						Summary:    "a;b,c\\d",
+						UID:        "randommduid",
+						Timestamp:  time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Categories: []string{"lab;el1", "lab,el2"},
+						Organizer:  &user.User{Username: "al;ic,e"},
+					},
+				},
+			},
+			wantCaldavtasks: `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:te\;st\,ed
+PRODID:-//RandomProdID which is not random//EN
+BEGIN:VTODO
+UID:randommduid
+DTSTAMP:20181201T011204Z
+SUMMARY:a\;b\,c\\d
+ORGANIZER;CN=:al\;ic\,e
+CATEGORIES:lab\;el1,lab\,el2
+LAST-MODIFIED:00010101T000000Z
+END:VTODO
+END:VCALENDAR`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotCaldavtasks := ParseTodos(tt.args.config, tt.args.todos)
 			assert.Equal(t, tt.wantCaldavtasks, gotCaldavtasks)
 			assert.NotContains(t, gotCaldavtasks, "METHOD:")
+		})
+	}
+}
+
+func TestGetCaldavColor(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"empty", "", ""},
+		{"plain hex", "ff8800", "\nX-APPLE-CALENDAR-COLOR:#ff8800FF\nX-OUTLOOK-COLOR:#ff8800FF\nX-FUNAMBOL-COLOR:#ff8800FF\nCOLOR:#ff8800FF"},
+		{"leading hash", "#ff8800", "\nX-APPLE-CALENDAR-COLOR:#ff8800FF\nX-OUTLOOK-COLOR:#ff8800FF\nX-FUNAMBOL-COLOR:#ff8800FF\nCOLOR:#ff8800FF"},
+		{"mixed case", "AaBbCc", "\nX-APPLE-CALENDAR-COLOR:#AaBbCcFF\nX-OUTLOOK-COLOR:#AaBbCcFF\nX-FUNAMBOL-COLOR:#AaBbCcFF\nCOLOR:#AaBbCcFF"},
+		{"CRLF injection stripped", "a\r\nB", "\nX-APPLE-CALENDAR-COLOR:#aBFF\nX-OUTLOOK-COLOR:#aBFF\nX-FUNAMBOL-COLOR:#aBFF\nCOLOR:#aBFF"},
+		{"property injection stripped", "ff\r\nATTACH:https://evil.com", "\nX-APPLE-CALENDAR-COLOR:#ffAACecFF\nX-OUTLOOK-COLOR:#ffAACecFF\nX-FUNAMBOL-COLOR:#ffAACecFF\nCOLOR:#ffAACecFF"},
+		{"non-hex chars dropped entirely", "zz!@#", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getCaldavColor(tt.in)
+			assert.Equal(t, tt.want, got)
+			// No output may ever contain CR or LF inside a property value.
+			assert.NotContains(t, got, "\r")
+		})
+	}
+}
+
+func TestEscapeICalText(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"empty", "", ""},
+		{"plain ASCII", "Hello World", "Hello World"},
+		{"backslash", `a\b`, `a\\b`},
+		{"semicolon", "a;b", `a\;b`},
+		{"comma", "a,b", `a\,b`},
+		{"newline LF", "a\nb", `a\nb`},
+		{"carriage return LF pair", "a\r\nb", `a\nb`},
+		{"lone carriage return", "a\rb", `a\nb`},
+		{"multiple specials", `a\;b,c` + "\n" + "d", `a\\\;b\,c\nd`},
+		{"backslash-n in source stays separate", `a\nb`, `a\\nb`},
+		{"advisory PoC (CRLF + ATTACH)", "Meeting\r\nATTACH:https://evil.com/malware.exe", `Meeting\nATTACH:https://evil.com/malware.exe`},
+		{"colon is NOT escaped (not a TEXT special)", "a:b", "a:b"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := escapeICalText(tt.in)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

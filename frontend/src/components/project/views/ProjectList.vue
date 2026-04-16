@@ -7,12 +7,15 @@
 	>
 		<template #header>
 			<div class="filter-container">
+				<SortPopup
+					v-model="sortByParam"
+				/>
 				<FilterPopup
 					v-if="!isSavedFilter(project)"
 					v-model="params"
 					:view-id="viewId"
 					:project-id="projectId"
-					@update:modelValue="prepareFiltersAndLoadTasks()"
+					@update:modelValue="loadTasks()"
 				/>
 			</div>
 		</template>
@@ -49,13 +52,13 @@
 						v-if="tasks && tasks.length > 0"
 						v-model="tasks"
 						:group="{name: 'tasks', put: false}"
-						:disabled="!canDragTasks"
+						:disabled="!canDragTasks || !isPositionSorting"
 						item-key="id"
 						tag="ul"
 						:component-data="{
 							class: {
 								tasks: true,
-								'dragging-disabled': !canDragTasks || isAlphabeticalSorting
+								'dragging-disabled': !canDragTasks || !isPositionSorting
 							},
 							type: 'transition-group'
 						}"
@@ -71,14 +74,13 @@
 							<SingleTaskInProject
 								:ref="(el) => setTaskRef(el, index)"
 								:show-list-color="false"
-								:disabled="!canDragTasks"
 								:can-mark-as-done="canWrite || isPseudoProject"
 								:the-task="t"
 								:all-tasks="allTasks"
 								@taskUpdated="updateTasks"
 							>
 								<span
-									v-if="canDragTasks"
+									v-if="canDragTasks && isPositionSorting"
 									class="icon handle"
 								>
 									<Icon icon="grip-lines" />
@@ -109,7 +111,7 @@ import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
-import {ALPHABETICAL_SORT} from '@/components/project/partials/Filters.vue'
+import SortPopup from '@/components/project/partials/SortPopup.vue'
 
 import {useTaskList} from '@/composables/useTaskList'
 import {useTaskDragToProject} from '@/composables/useTaskDragToProject'
@@ -172,9 +174,7 @@ watch(
 	},
 )
 
-const isAlphabeticalSorting = computed(() => {
-	return params.value.sort_by.find(sortBy => sortBy === ALPHABETICAL_SORT) !== undefined
-})
+const isPositionSorting = computed(() => 'position' in sortByParam.value)
 
 const firstNewPosition = computed(() => {
 	if (tasks.value.length === 0) {
@@ -215,7 +215,7 @@ function focusNewTaskInput() {
 }
 
 function updateTaskList(task: ITask) {
-	if (isAlphabeticalSorting.value) {
+	if (!isPositionSorting.value) {
 		// reload tasks with current filter and sorting
 		loadTasks()
 	} else {
@@ -235,7 +235,7 @@ function updateTasks(updatedTask: ITask) {
 		return
 	}
 
-	for (const t in tasks.value) {
+	for (let t = 0; t < tasks.value.length; t++) {
 		if (tasks.value[t].id === updatedTask.id) {
 			tasks.value[t] = updatedTask
 			break
@@ -285,15 +285,6 @@ async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement
 		...task,
 		position,
 	}
-}
-
-function prepareFiltersAndLoadTasks() {
-	if (isAlphabeticalSorting.value) {
-		sortByParam.value = {}
-		sortByParam.value[ALPHABETICAL_SORT] = 'asc'
-	}
-
-	loadTasks()
 }
 
 const taskRefs = ref<(InstanceType<typeof SingleTaskInProject> | null)[]>([])
@@ -365,6 +356,18 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+.filter-container {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+
+	:deep(.popup) {
+		inset-block-start: 3rem;
+		inset-inline-end: 0;
+		max-inline-size: 300px;
+	}
+}
+
 .tasks {
 	padding: .5rem;
 }

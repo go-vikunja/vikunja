@@ -88,17 +88,15 @@ func deleteUsers() {
 
 func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Project, err error) {
 	projectsToDelete = []*Project{}
-	lm := &Project{IsArchived: true}
-	res, _, _, err := lm.ReadAll(s, u, "", 0, -1)
+	projects, _, err := getAllProjectsForUser(s, u.ID, &projectOptions{
+		page:        0,
+		perPage:     -1,
+		getArchived: true,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	if res == nil {
-		return nil, nil
-	}
-
-	projects := res.([]*Project)
 	for _, l := range projects {
 		if l.ID < 0 {
 			continue

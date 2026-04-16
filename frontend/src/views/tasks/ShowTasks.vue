@@ -287,7 +287,7 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 
 // FIXME: this modification should happen in the store
 function updateTasks(updatedTask: ITask) {
-	for (const t in tasks.value) {
+	for (let t = 0; t < tasks.value.length; t++) {
 		if (tasks.value[t].id === updatedTask.id) {
 			tasks.value[t] = updatedTask
 			// Move the task to the end of the done tasks if it is now done

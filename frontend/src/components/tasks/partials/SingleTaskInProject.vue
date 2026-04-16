@@ -14,6 +14,7 @@
 		>
 			<span
 				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : ''"
+				class="is-inline-flex is-align-items-center"
 			>
 				<FancyCheckbox
 					v-model="task.done"

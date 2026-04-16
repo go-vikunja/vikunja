@@ -5,9 +5,36 @@
 	},
 	"home": {
 		"welcomeNight": "Gute Nacht, {username}!",
+		"welcomeNightOwl": "Hallo, Nacht-Eule {username}",
+		"welcomeNightBurning": "Machst du mal wieder die Nacht zum Tag, {username}?",
+		"welcomeNightQuiet": "Ruhezeit, {username}",
+		"welcomeNightLate": "Es ist spät, {username}",
+		"welcomeNightMoonlit": "Mondlicht-Planung, {username}?",
 		"welcomeMorning": "Guten Morgen, {username}!",
+		"welcomeMorningHey": "Hey {username}, los geht's?",
+		"welcomeMorningFresh": "Frisch in den Tag, {username}",
+		"welcomeMorningCoffee": "Kaffee und Aufgaben, {username}?",
+		"welcomeMorningRise": "Morgenplan hat Gold im Mund, {username}",
+		"welcomeMorningBack": "Willkommen zurück, {username}",
+		"welcomeMondayFresh": "Frische Woche, {username}",
+		"welcomeTuesday": "Fröhlichen Dienstag, {username}",
+		"welcomeWednesdayMid": "Bergfest, {username}",
+		"welcomeThursday": "Fast geschafft, {username}",
+		"welcomeFridayPush": "Endspurt ins Wochenende, {username}?",
+		"welcomeSaturday": "Wochenendmodus, {username}",
+		"welcomeSundaySession": "Sonntagsschicht, {username}?",
 		"welcomeDay": "Hallo {username}!",
+		"welcomeDayBack": "Wieder zurück, {username}",
+		"welcomeDayFocus": "Fokus, {username}",
+		"welcomeDayKeepGoing": "Weiter geht's, {username}",
+		"welcomeDayWhatsNext": "Was kommt als Nächstes, {username}?",
+		"welcomeDayGood": "Guten Nachmittag, {username}",
 		"welcomeEvening": "Guten Abend, {username}!",
+		"welcomeEveningWind": "Feierabend, {username}?",
+		"welcomeEveningReturns": "{username} kehrt zurück",
+		"welcomeEveningWrap": "Feierabend in Sicht, {username}?",
+		"welcomeEveningOneMore": "Noch eine Sache, {username}?",
+		"welcomeEveningStill": "Immer noch da, {username}?",
 		"lastViewed": "Zletscht ahglueget",
 		"addToHomeScreen": "Füge diese App deinem Startbildschirm hinzu, um schneller darauf zuzugreifen und das Erlebnis zu verbessern.",
 		"goToOverview": "Zur Übersicht",
@@ -54,6 +81,8 @@
 			"authenticating": "Authentifiziere…",
 			"openIdStateError": "Status stimmt nid überiih, ich verweigerä wiiter zmache!",
 			"openIdGeneralError": "Es ist ein Fehler bei der externen Authentifizierung aufgetreten.",
+			"openIdTotpRequired": "Dein Account erfordert eine Zwei-Faktor-Authentifizierung. Bitte gib deinen TOTP-Code ein und probiere dann erneut, dich anzumelden.",
+			"openIdTotpSubmit": "Weiter",
 			"oauthMissingParams": "Erforderliche OAuth-Parameter fehlen: {params}",
 			"oauthRedirectedToApp": "Du wurdest zur App weitergeleitet. Du kannst diesen Tab jetzt schließen.",
 			"desktopTryDemo": "Demo ausprobieren",
@@ -111,7 +140,11 @@
 				"defaultView": "Standardansicht",
 				"timezone": "Zeitzone",
 				"overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
+				"quickAddDefaultReminders": "Standard Erinnerungen für Quick Add",
+				"quickAddDefaultRemindersDescription": "Diese Erinnerungen werden automatisch zu jeder Aufgabe hinzugefügt, die mit Quick Add Magic mit einem Fälligkeitsdatum erstellt wurde.",
+				"quickAddDefaultRemindersHint": "Füge eine oder mehrere Erinnerungen relativ zum Fälligkeitsdatum der Aufgabe hinzu. Zum Deaktivieren leer lassen.",
 				"filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird",
+				"showLastViewed": "Zuletzt angesehene Projekte auf der Übersichtsseite anzeigen",
 				"minimumPriority": "Minimal sichtbare Aufgaben-Priorität",
 				"dateDisplay": "Datumsformat",
 				"dateDisplayOptions": {
@@ -407,7 +440,8 @@
 			"addPlaceholder": "Aufgabe hinzufügen…",
 			"empty": "Dieses Projekt ist derzeit leer.",
 			"newTaskCta": "Aufgabe erstellen.",
-			"editTask": "Aufgabe bearbeiten"
+			"editTask": "Aufgabe bearbeiten",
+			"sort": "Sortieren"
 		},
 		"gantt": {
 			"title": "Gantt",
@@ -599,6 +633,29 @@
 			}
 		}
 	},
+	"sorting": {
+		"manually": "Manuell",
+		"apply": "Sortieren",
+		"description": "Wähle, wie Aufgaben in dieser Liste sortiert werden. Beim manuellen Sortieren kannst du Aufgaben per Drag and Drop verschieben, um sie neu zu ordnen.",
+		"options": {
+			"titleAsc": "Titel (A–Z)",
+			"titleDesc": "Titel (Z–A)",
+			"priorityDesc": "Priorität (höchste zuerst)",
+			"priorityAsc": "Priorität (niedrigste zuerst)",
+			"dueDateAsc": "Fälligkeitsdatum (frühestes zuerst)",
+			"dueDateDesc": "Fälligkeitsdatum (spätestes zuerst)",
+			"startDateAsc": "Startdatum (frühestes zuerst)",
+			"startDateDesc": "Enddatum (frühestes zuerst)",
+			"endDateAsc": "Enddatum (frühestes zuerst)",
+			"endDateDesc": "Endkeitsdatum (spätestes zuerst)",
+			"percentDoneDesc": "% erledigt (am meisten erledigt zuerst)",
+			"percentDoneAsc": "% erledigt (am wenigsten erledigt zuerst)",
+			"createdDesc": "Erstellt (neueste zuerst)",
+			"createdAsc": "Erstellt (älteste zuerst)",
+			"updatedDesc": "Aktualisiert (neueste zuerst)",
+			"updatedAsc": "Aktualisiert (älteste zuerst)"
+		}
+	},
 	"migrate": {
 		"title": "Aus anderen Diensten importieren",
 		"titleService": "Dini Date vo {name} in Vikunja importiere",
@@ -614,7 +671,33 @@
 		"importUpload": "Um Daten von {name} in Vikunja zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
 		"upload": "Datei hochladen",
 		"migrationStartedWillReciveEmail": "Vikunja wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
-		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist."
+		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist.",
+		"csv": {
+			"description": "Importiere Aufgaben aus einer CSV-Datei mit eigener Spaltenzuordnung.",
+			"uploadDescription": "Wähle eine CSV-Datei, um sie zu importieren. Die Datei sollte Aufgabendaten mit Kopfzeilen in der ersten Zeile enthalten.",
+			"selectFile": "CSV-Datei auswählen",
+			"columnMapping": "Spaltenzuordnung",
+			"columnMappingDescription": "Du kannst jede Spalte in der CSV-Datei einem Task-Attribut zu. Vikunja hat die wahrscheinlichsten Zuordnungen automatisch erkannt. Die Vorschau unten wird automatisch aktualisiert, wenn Du die Einstellungen änderst.",
+			"parsingOptions": "Parsing-Optionen",
+			"delimiter": "Trennzeichen",
+			"dateFormat": "Datumsformat",
+			"skipRows": "Zeilen überspringen",
+			"mapColumns": "Spalten zuordnen",
+			"example": "z.B.",
+			"preview": "Vorschau",
+			"previewDescription": "Die ersten 5 von {count} Aufgaben werden angezeigt.",
+			"previewErrors": "{count} Zeilen hatten Fehler beim Parsen und werden übersprungen.",
+			"import": "Aufgaben importieren",
+			"untitled": "Unbenannte Aufgabe",
+			"completed": "Abgeschlossen",
+			"ignore": "Ignorieren",
+			"delimiters": {
+				"comma": "Komma (,)",
+				"semicolon": "Semikolon (;)",
+				"tab": "Tab",
+				"pipe": "Pipe (|)"
+			}
+		}
 	},
 	"label": {
 		"title": "Labels",
@@ -761,6 +844,9 @@
 				"toggleHeaderCell": "Headerzelle ein/aus",
 				"mergeOrSplit": "Verbinden oder teilen",
 				"fixTables": "Tabellen reparieren"
+			},
+			"emoji": {
+				"empty": "Kein Emojis gefunden"
 			}
 		},
 		"multiselect": {
@@ -849,6 +935,7 @@
 		"addReminder": "Eine Erinnerung hinzufügen…",
 		"doneSuccess": "Die Uufgab isch erfolgriich als \"Fertig\" markiert wordä.",
 		"undoneSuccess": "Die Uufgaab isch nüme als fertig markiert.",
+		"readOnlyCheckbox": "Du hast nur Lesezugriff auf diese Aufgabe und kannst sie nicht als erledigt markieren.",
 		"movedToProject": "Die Aufgabe wurde nach {project} verschoben.",
 		"undo": "Rückgängig",
 		"openDetail": "Uufgab i de Detailaahsicht öffne",
@@ -879,6 +966,8 @@
 			"updateSuccess": "Die Uufgab isch erfolgriich g'speichered wore.",
 			"deleteSuccess": "Die Uufgab isch erfolgriich g'chüblet wore.",
 			"duplicateSuccess": "Die Aufgabe wurde erfolgreich dupliziert.",
+			"noBucket": "Keine Spalte",
+			"bucketChangedSuccess": "Die Spalte der Aufgabe wurde erfolgreich geändert.",
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
 			"due": "Fällig bis {at}",

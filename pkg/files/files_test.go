@@ -24,6 +24,7 @@ import (
 	"os"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 
 	"github.com/stretchr/testify/assert"
@@ -42,7 +43,8 @@ func TestCreate(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		initFixtures(t)
 		ta := &testauth{id: 1}
-		createdFile, err := Create(bytes.NewReader([]byte("testfile")), "testfile", 100, ta)
+		content := []byte("testfile")
+		createdFile, err := Create(bytes.NewReader(content), "testfile", uint64(len(content)), ta)
 		require.NoError(t, err)
 
 		// Check the file was created correctly
@@ -51,15 +53,64 @@ func TestCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(1), file.CreatedByID)
 		assert.Equal(t, "testfile", file.Name)
-		assert.Equal(t, uint64(100), file.Size)
+		assert.Equal(t, uint64(len(content)), file.Size)
 
 	})
 	t.Run("Too Large", func(t *testing.T) {
 		initFixtures(t)
+		// initFixtures resets FilesMaxSize, so override afterwards.
+		oldMax := config.FilesMaxSize.GetString()
+		require.NoError(t, config.SetMaxFileSizeMBytesFromString("1MB"))
+		t.Cleanup(func() { _ = config.SetMaxFileSizeMBytesFromString(oldMax) })
+
 		ta := &testauth{id: 1}
-		_, err := Create(bytes.NewReader([]byte("testfile")), "testfile", 99999999999, ta)
+		_, err := Create(bytes.NewReader(make([]byte, 2*1024*1024)), "big.bin", 0, ta)
 		require.Error(t, err)
 		assert.True(t, IsErrFileIsTooLarge(err))
+	})
+}
+
+func TestCreate_HardenedAgainstLyingCaller(t *testing.T) {
+	// Regression: GHSA-qh78-rvg3-cv54. Caller's claimed size must not
+	// influence the limit check or the stored size.
+
+	// setLimit must run AFTER initFixtures since initFixtures resets it.
+	setLimit := func(t *testing.T, size string) {
+		t.Helper()
+		oldMax := config.FilesMaxSize.GetString()
+		require.NoError(t, config.SetMaxFileSizeMBytesFromString(size))
+		t.Cleanup(func() {
+			_ = config.SetMaxFileSizeMBytesFromString(oldMax)
+		})
+	}
+
+	ta := &testauth{id: 1}
+
+	t.Run("content over limit, claimed size under limit", func(t *testing.T) {
+		initFixtures(t)
+		setLimit(t, "1MB")
+		payload := make([]byte, 2*1024*1024)
+		_, err := Create(bytes.NewReader(payload), "sneaky.bin", 1, ta)
+		require.Error(t, err)
+		assert.True(t, IsErrFileIsTooLarge(err))
+	})
+
+	t.Run("content under limit, claimed size over limit", func(t *testing.T) {
+		initFixtures(t)
+		setLimit(t, "1MB")
+		payload := []byte("hi")
+		f, err := Create(bytes.NewReader(payload), "honest.txt", 99999999999, ta)
+		require.NoError(t, err)
+		assert.Equal(t, uint64(len(payload)), f.Size)
+	})
+
+	t.Run("content exactly at limit", func(t *testing.T) {
+		initFixtures(t)
+		setLimit(t, "1MB")
+		payload := make([]byte, 1*1024*1024)
+		f, err := Create(bytes.NewReader(payload), "edge.bin", 0, ta)
+		require.NoError(t, err)
+		assert.Equal(t, uint64(1*1024*1024), f.Size)
 	})
 }
 

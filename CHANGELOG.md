@@ -7,6 +7,293 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 All releases can be found on https://code.vikunja.io/vikunja/releases.
 
+## [2.3.0] - 2026-04-09
+
+### Bug Fixes
+
+* *(auth)* Normalize API base URL to prevent refresh cookie path mismatch
+* *(auth)* Add retry and logging for token refresh failures
+* *(auth)* Enforce TOTP on OIDC callback for users with 2FA enabled
+* *(background)* Use targeted column update when removing background
+* *(caldav)* Add tags and sync token to collections (#2482)
+* *(caldav)* Resolve lint issues in caldavtests package
+* *(caldav)* Skip tests for known CalDAV bugs and fix timing issues
+* *(caldav)* Escape user-controlled strings per RFC 5545 in VCALENDAR output
+* *(caldav)* Enforce task read authorization on GetTasksByUIDs
+* *(caldav)* Reject GetResource when URL project mismatches task project
+* *(caldav)* Enforce URL project match in GetResourcesByList
+* *(ci)* Use actual docker meta tags for preview comment SHA links
+* *(desktop)* Use stored URL instead of window.API_URL in template
+* *(e2e)* Truncate bucket data in bucket-select tests
+* *(e2e)* Seed project in empty-tasks overview test
+* *(files)* Derive file size from reader at creation boundary
+* *(frontend)* Prevent drag handle from overlapping project color in sidebar
+* *(gantt)* Ensure chart container fills viewport width for narrow date ranges
+* *(gantt)* Isolate chart stacking context so date picker renders above it
+* *(gantt)* Use reactive date range in Flatpickr config to prevent reset on task update
+* *(gantt)* Preserve query parameters when closing task modal
+* *(kanban)* Route repeating tasks to default bucket when dropped on done (#2573)
+* *(kanban)* Skip upsert when repeating task already in default bucket (#2573)
+* *(labels)* Correct broken access-control query for label reads (GHSA-hj5c-mhh2-g7jq)
+* *(labels)* Derive label max permission from accessible tasks only
+* *(mail)* Set RFC 5322 compliant Message-ID using public URL domain
+* *(mail)* Fall back to os.Hostname() before hardcoded domain
+* *(mail)* Guard log calls in GetMailDomain and fix hostname-dependent tests
+* *(migration)* Center and style migrator logos on migration page
+* *(migration)* Correct TickTick swagger annotation to PUT
+* *(migration)* Delete all default buckets when migration provides its own
+* *(migration)* Compute attachment size from content during import
+* *(migration)* Bound per-entry zip cap by configured files.maxsize
+* *(notifications)* Escape markdown in user-controlled strings in email lines
+* *(overview)* Disable checkbox for read-only tasks on overview page
+* *(project)* Remove non-existent columns from UpdateProject column list
+* *(security)* Enforce HTTP method and path in scoped API token matcher
+* *(security)* Validate link share JWTs against DB on every request
+* *(security)* Persist TOTP lockout across login rollback
+* *(security)* Move reparent Admin gate into UpdateProject
+* *(tasks)* Include tasks with deleted parents in subtask-expanded queries
+* *(tasks)* Route repeating tasks to default bucket when marked done (#2573)
+* *(tasks)* Vertically center checkbox in project task row
+* *(tasks)* Replace O(n) loop in repeating-task handler with arithmetic
+* *(webhook)* Return error from sendWebhookPayload on non-2xx responses
+* *(webhook)* Dispatch one delivery event per webhook (#2569)
+* *(webhook)* Return error from delivery listener on nil payload
+* *(webhook)* Order matching webhooks by id for deterministic fan-out
+* Resolve TDZ error on password update settings page ([6d2bf1f](6d2bf1f0847fa61897f7c39f8c2d40d43df0d58d))
+* Use custom TableName() for dump/restore table resolution ([1e0d29e](1e0d29e0908ac9ccb299ff9f2e91610645928b41))
+* Ignore saved homepage filter when browsing by label ([fd4f7ac](fd4f7accc3fe216382da9bcf5a775674711d13e8))
+* Propagate is_archived from parent to child projects in ReadAll CTE ([e3045df](e3045dfd00059145bede25274c1a9f42ba4f8f02))
+* Support merge queue in issue-closed-comment workflow ([752ae42](752ae428790dfb060e5f29f7a6c884a9ada8830b))
+* Sort TickTick tasks so parents come before children ([9b1c52e](9b1c52e9e30d89f9ebcc5f0cffa3934fada6db6a))
+* Add ORDER BY to ListUsers query for deterministic ordering ([39e1665](39e16653aaa4aebcef76d11002b3b832c68bb7d2))
+* Add proper autocomplete and name attributes to email update form ([cdd46c0](cdd46c0d6c31fd53b161a7a722dd5b8c8f7e7a55))
+* Add position conflict resolution for batch-inserted positions ([c6e7992](c6e79926f00e36ea993bc7a8fa9317bb79159d79))
+* Detect and resolve position conflicts during task creation ([0c3d010](0c3d01099f7927311e0a5b57691292f429eb6d4c))
+* Use InDelta for float comparison in tests ([104c8ea](104c8eadaeec1c0df082ac09d0b83b51cc1da582))
+* Show subtasks in saved filter views regardless of parent presence ([d895053](d895053d2eb9a14b344bb557bfd4ecf2fbe78089))
+* Pass saved filter context to subtask visibility check ([841b458](841b458a5f59fc0b45d5851f23fbc5077a82e5ff))
+* Move truncateAll to apiContext fixture and fix view ID conflicts ([4888b1d](4888b1d8ca3bbdd70e2c47dc8fd2dc856937e06a))
+* Make apiContext auto-fixture and fix remaining view ID conflicts ([adcc74b](adcc74b056823f691039dafcfa2fdf995ec516e9))
+* Use recursive CTE in accessibleProjectIDsSubquery for inherited project permissions ([ac76bce](ac76bce5cd0f99de8d96b1d67946685e0a6481dd))
+* Derive workbox version from package.json at build time ([10e7d25](10e7d2532ea060606b30a69eb2a954a0fb8f645c))
+* Register gob types and use RememberValue for avatar and unsplash cache ([59b047f](59b047f76a866824988fa28e260b82024bed22b4))
+* Use RememberValue for task attachment preview cache ([0f54dc4](0f54dc43d0f4946b32c61c4915d05223bb238339))
+* Update publiccode.yml to current version v2.2.2 ([f775f7d](f775f7de7946fea43f46954248ee23b70cbf5906))
+* Reset SSO avatar provider to default when picture claim is removed ([a5fb01c](a5fb01cc3d00653ed61ec4b96bdc2b3e2d94d706))
+* Use assert.Empty instead of assert.Equal for empty string check ([119d7df](119d7df79665f22b73f6a1af8777e077e998b37d))
+* Update user list test expectations for new fixture user ([c5450fb](c5450fb55f5192508638cbb3a6956438452a712e))
+* Catch ErrNeedsFullRecalculation in task creation position conflict resolution ([2014343](20143435579c4b3c3a1cf18337f2227848db963d))
+* Batch delete conditions in filter view cron to avoid SQLite expression depth limit ([bfdcea6](bfdcea6bd2aa66dc9f35d2f12e6dfe0cf09b3408))
+* Add timeouts to Gravatar, Unsplash, and SSRF-safe HTTP clients ([699c766](699c766049131eff16bce1c005d12cb7cba76de0))
+* Reset checkAuth debounce in linkShareAuth to prevent redirect loop ([1d3a234](1d3a234b0537968076cb9eb4fdb61ce1b276b899))
+* Skip refreshUserInfo for link share tokens to prevent logout loop ([2000732](2000732e350bd76f4f3b3da8919d09f23fb3875d))
+* Include type in checkAuth's same-user skip check ([432c5f2](432c5f2817d9d6be28dfaec780d88cf48a6418b2))
+
+### Dependencies
+
+* *(deps)* Update dev-dependencies
+* *(deps)* Update picomatch to fix ReDoS and method injection vulnerabilities
+* *(deps)* Update yaml to fix stack overflow vulnerability
+* *(deps)* Override picomatch in desktop to fix ReDoS and method injection vulnerabilities
+* *(deps)* Bump serialize-javascript from 7.0.3 to 7.0.5 in /frontend
+* *(deps)* Bump golang.org/x/image from 0.35.0 to 0.38.0
+* *(deps)* Update dependency @typescript-eslint/eslint-plugin to v8.58.0
+* *(deps)* Update dependency @typescript-eslint/parser to v8.58.0
+* *(deps)* Update dependency browserslist to v4.28.2
+* *(deps)* Update dependency caniuse-lite to v1.0.30001784
+* *(deps)* Resolve dependabot security alerts
+* *(deps)* Update dependency esbuild to v0.27.5
+* *(deps)* Bump github.com/go-jose/go-jose/v4 from 4.1.3 to 4.1.4
+* *(deps)* Pin dependencies
+* *(deps)* Update dependency ws to v8.20.0
+* *(deps)* Update dependency caniuse-lite to v1.0.30001785
+* *(deps)* Update defu to 6.1.7
+* *(deps)* Update lodash to 4.18.1
+* *(deps)* Update brace-expansion to 5.0.5
+* *(deps)* Update dependency vitest to v4.1.3
+* *(deps)* Bump github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream
+* *(deps)* Bump github.com/aws/aws-sdk-go-v2/service/s3
+* *(deps)* Update dependency vitest to v4.1.4
+* *(deps)* Bump basic-ftp override to 5.2.1 to patch CRLF injection
+
+### Documentation
+
+* *(helpers)* Explain djb2 seed constant in stringHash
+* *(shortcuts)* Show platform-aware delete key in keyboard shortcuts panel
+* Rewrite CONTRIBUTING.md with setup, workflow, and style guides ([58d086d](58d086d5532457cb35fa4bc9ac12674c849b6d8b))
+* Correct task comment endpoint description and title (#2498) ([23415c5](23415c57aa7c56305e32ee1339c7766a494a4d2e))
+
+### Features
+
+* *(auth)* Enforce OpenID Connect issuer uniqueness across providers
+* *(auth)* Add enforceTOTPIfRequired helper for OIDC flow
+* *(auth)* Plumb totp passcode through openIdAuth action
+* *(auth)* Prompt for TOTP code in the OIDC callback flow
+* *(desktop)* Add preload script for quick entry window
+* *(desktop)* Add quick entry window, global shortcut, and system tray
+* *(desktop)* Open task in main window with Ctrl/Cmd+Enter
+* *(desktop)* Configurable shortcut, --quick-entry CLI arg, show-main-window IPC
+* *(frontend)* Add useQuickAddMode composable for quick-add detection
+* *(frontend)* Add QuickAddOverlay component for quick-entry window
+* *(frontend)* Route quick-add mode to QuickAddOverlay in App.vue
+* *(frontend)* Adapt QuickActions for quick-add mode behavior
+* *(frontend)* Listen for cross-window task creation via BroadcastChannel
+* *(frontend)* Add configurable quick entry shortcut setting
+* *(helpers)* Add deterministic stringHash for stable daily selection
+* *(home)* Rotate greetings from a deterministic per-user daily pool
+* *(mail)* Add GetMailDomain helper for RFC 5322 compliant email IDs
+* *(migration)* Add WeKan board JSON import
+* *(migration)* Register WeKan migration routes
+* *(migration)* Add WeKan to migration page with logo
+* *(migration)* Add generic CSV import with column mapping
+* *(migration)* Add skip rows option to CSV import
+* *(migration)* Flatten project hierarchy for single-project imports
+* *(models)* Add ClearProjectBackground for scoped column update
+* *(plugins)* Add plugin system interfaces and manager
+* *(plugins)* Add plugin config options
+* *(plugins)* Extract vikunja package symbols for yaegi
+* *(plugins)* Extract third-party symbols for yaegi
+* *(plugins)* Add yaegi interpreter-based plugin loader
+* *(plugins)* Add example plugin
+* *(sort)* Add sorting popup for list view
+* *(sort)* Persist sort selection to URL query parameter
+* *(task)* Allow changing bucket from task detail view (#2233)
+* *(tasks)* Use platform-aware delete shortcut on task detail view
+* *(tasks)* Cap repeat_after at 10 years to harden repeating-task handler
+* *(user)* Add option to hide last viewed projects on overview page (#2429)
+* *(webhook)* Add WebhookDeliveryEvent for per-webhook fan out
+* *(webhook)* Add WebhookDeliveryListener for per-webhook delivery
+* *(webhook)* Register WebhookDeliveryListener on startup
+* *(websocket)* Add coder/websocket dependency
+* *(websocket)* Add message types, connection hub, and connection handler
+* *(websocket)* Add HTTP upgrade handler and /api/v1/ws route
+* *(websocket)* Add notification event with XORM AfterInsert dispatch
+* *(websocket)* Add frontend WebSocket support
+* Use openid provider name instead of generic "OIDC" in synced team names ([121fd3c](121fd3c9f1449ddf8568227afc3deb71433f2c92))
+* Add translation for saved filter ignored message ([7208c11](7208c11556591ad65a160b1891f5389338bb9240))
+* Show info when saved homepage filter is ignored for label browsing ([dca0414](dca041459fae68735f1dc1164b58d396ca744d28))
+* Add CI workflow to auto-update nixpkgs on release ([cb07b66](cb07b6608cfbc9e2486281f0dec9591c0086b292))
+* Improve wording and UX around CalDAV tokens (#2476) ([b89b402](b89b402bc2d273d87b7a33db5001f3274e5ddfbc))
+* Add OAuth 2.0 authorization code model and migration ([71282dc](71282dcffdbd2e68c1a261208924e3a41230557b))
+* Add OAuth client validation and PKCE verification ([a6e7475](a6e74751539f5a9f0fa2d82a2d912009dbfe2d42))
+* Add OAuth 2.0 authorize endpoint ([8b379b7](8b379b7466ea6a3cb2f9d91b28c16d450f6a5987))
+* Add OAuth 2.0 token endpoint ([7827ff6](7827ff64b9e419b3d6febc840937b7141f21b909))
+* Register OAuth authorize and token routes ([e5987ac](e5987acf806f5eb32a638d1c27af9c0e0d89c592))
+* Add frontend OAuth authorize route and component ([0471f8a](0471f8a7291c7f7f65e4dfa560573f3dc56997de))
+* Rename ServiceJWTSecret to ServiceSecret with deprecation (#2502) ([83bac15](83bac158411d9564840e536578986738782f22c0))
+* Register caldav permission group for API tokens ([b0b7c52](b0b7c52b155568e7b7206219d936e64a967eaa4d))
+* Add HasCaldavAccess method to APIToken ([ebec91b](ebec91b356f05e142c6532e725544f4d34b70e64))
+* Accept API tokens for CalDAV basic auth ([6207705](620770592800a984010386be491d4fb6b3f92bcd))
+* Add API token hint to CalDAV settings page ([c2cfcb4](c2cfcb4684774eae082072ee335f8481a0b2cce2))
+* Add i18n keys for API token expiry notifications ([d3f9bb4](d3f9bb4ee852a6622c113928a238707e3f154745))
+* Add API token expiry notification types ([8ea0dd1](8ea0dd1610b456b507351f25ae0139340d070447))
+* Add cron job for API token expiry notifications ([f308584](f30858403385cf7aec30bb7e7894488ec88067cb))
+* Register API token expiry check cron on startup ([04f94a5](04f94a5801410a65b2d424c36ac9afa19d37b946))
+* Add AssertNotSent helper to notification testing ([6dc46c1](6dc46c1898dce728f0b16ab8156026dc99d20b4e))
+* Add OAuth PKCE authentication flow to desktop app ([dd7532a](dd7532a57ac0b733f0e58256d4b0629397624e5c))
+* Add server selection UI for desktop OAuth login ([a12002d](a12002de6dbd5e68dc3fe31b82b89c7887e80417))
+* Show close-tab message after OAuth redirect ([495f34f](495f34f60e208234bbec582467b58de3a4bc6af2))
+* Update application icons for desktop build (#2516) ([831e4f2](831e4f29d1e388f4f4191f5c20b38b6d8435b78b))
+* Add tooltip to readonly checkbox explaining why it's not clickable ([a57cbd3](a57cbd3e51dd58d0534bbd470ca31b267b791fbc))
+* Add inline PDF viewer for task attachments (#2541) ([f5752b9](f5752b97e9f1293696232f197bd8684f3e782d1e))
+* Remove flexsearch dependency and replace with simple string filtering (#2542) ([0834d19](0834d19f9c5f22ed1d00bb68292c69e9566e6620))
+* Add TruncateAllTables function for e2e test isolation ([6a3dd8b](6a3dd8b28132d17858171ff35adbcb7910761675))
+* Add DELETE /test/all endpoint to truncate all tables ([e9a26b9](e9a26b908865587172fbd4be8ad7b047d1bef64f))
+* Add Factory.truncateAll() helper for e2e tests ([f477da4](f477da48ecd23e5ff195a1b671575ae77c29b508))
+* Truncate all tables before each e2e test for clean isolation ([2ee8ad4](2ee8ad4109bdbc40ba11b9d9b342a9aa7ca40858))
+* Add generic RememberValue[T] for type-safe keyvalue caching ([e2de681](e2de681b71af23e595073fd2fda8e8a28eaa7954))
+* Update publiccode.yml automatically during release ([415d5d2](415d5d23ad785fb71e2a32d7d004a31a9ebc56cc))
+
+### Miscellaneous Tasks
+
+* *(ci)* Update nix update PR message [skip ci]
+* *(desktop)* Add dev command to build and copy
+* *(frontend)* Deduplicate pnpm dependencies
+* *(i18n)* Update translations via Crowdin
+* Add .pnpm-store to .gitignore ([73eb827](73eb8279ae816cc8dface89c594b05e5fc6c1e3f))
+* Add plans/ directory to .gitignore ([6566f98](6566f98103cb83bc955c38d6da4d2c4c42dba18a))
+* Remove redundant truncate calls now that all tables are wiped before each test ([aa1202f](aa1202fea8cbf6024075cd77779e9c78aa49d448))
+
+### Other
+
+* *(other)* [skip ci] Updated swagger docs
+* *(other)* Expand environment variables in some.config.value.path.file inputs for better secret management
+* *(other)* Move caldav and e2e-api tests to dedicated CI jobs
+* *(other)* Auto-close 'waiting for reply' issues after 30 days of inactivity
+* *(other)* Add rotating home greeting variants
+
+### Refactor
+
+* *(auth)* Extract shared token validation into auth package
+* *(auth)* Add TOTPPasscode to OIDC Callback payload
+* *(files)* Derive attachment size from content in sibling callers
+* *(mail)* Use CryptoRandomString for Message-ID generation
+* *(models)* Use shared GetMailDomain in getThreadID
+* *(tasks)* Add moveTaskToDefaultBuckets helper (#2573)
+* Use xorm's TableInfo to resolve table names ([8567808](85678082f92bb4ed2ad3f1872e2461aadf11fa84))
+* Rename parseTaskText module to quickAddMagic ([44d01a0](44d01a0f82eebc36b6299baefc912660e649e9ff))
+* Extract shared RefreshSession helper ([7a258f6](7a258f67c7bc248ea2a8573553cef023b9bd3468))
+* Extract shared API token validation into ValidateTokenAndGetOwner ([9884d93](9884d933fc543c7881b3d9be26bc932cd67001e3))
+* Use embed fs for redoc UI and update to latest version ([111090d](111090d12c7319ab7124548f33c1cff013a36ae3))
+* Replace Modal div-based implementation with native dialog element ([cef03cb](cef03cb2a02cbc6d2b0aec11de0e3aefe44e9eb3))
+* Use nested map for position conflict tracking ([ce3e56f](ce3e56f1927273b6115dc6a09b248352919572ab))
+* Move plan file instead of copying in prepare-worktree ([a7bc3d6](a7bc3d6497e5e3dfa2e6832d34bdeafe9c097af7))
+* Use per-view IN clause for filter task deletion instead of batching ([17a97ca](17a97cacfabcfd0d2bf91e660f71c3b99158d566))
+
+### Styling
+
+* *(sort)* Position popup aligned to header right edge
+
+### Testing
+
+* *(auth)* Add failing unit tests for OIDC TOTP enforcement
+* *(caldav)* Add caldavtests package with infrastructure, helpers, and mage target
+* *(caldav)* Add PROPFIND tests (RFC 4918 §9.1)
+* *(caldav)* Add discovery flow tests (RFC 6764, RFC 5397, RFC 4791)
+* *(caldav)* Add REPORT query tests (RFC 4791 §7.8, §7.9)
+* *(caldav)* Add CRUD operation tests (RFC 4791 §5.3.2)
+* *(caldav)* Add authentication and permission tests
+* *(caldav)* Add sync semantics tests (ETag, CTag, conditional requests)
+* *(caldav)* Add client compatibility and bug reproduction tests
+* *(caldav)* Add relation and subtask tests (RFC 5545 §3.8.4.5)
+* *(caldav)* Add VTODO field round-trip tests (RFC 5545 §3.6.2)
+* *(e2e)* Add test for read-only checkbox on overview page
+* *(e2e)* Relax home greeting assertions for rotating pool
+* *(fixtures)* Add child project for reparent escalation tests
+* *(gantt)* Add e2e test for date range preservation after task modal close
+* *(kanban)* Add failing test for repeating task bucket routing on done (#2573)
+* *(migration)* Add WeKan migration tests and fixture
+* *(migration)* Regression test for forged attachment size
+* *(plugins)* Add yaegi plugin integration tests
+* *(project)* Add regression tests for reparent privilege escalation
+* *(project)* Fix ParadeDB search expectation for fixture child
+* *(security)* Webtest that a deleted link share rejects its still-valid JWT
+* *(tasks)* Add failing test for repeating task bucket routing via Task.Update (#2573)
+* *(tasks)* Add DoS regression test for ancient repeating due dates
+* *(todoist)* Serve attachment from local test server
+* *(user)* Cover TOTP lockout persistence and password-reset unlock
+* *(webhook)* Add failing test for #2569 sibling webhook blocking
+* *(webhook)* Assert good webhook delivered once despite sibling retries
+* *(webhook)* Assert flaky webhook is retried until it succeeds
+* *(webhook)* Handle deleted webhook gracefully between fan-out and delivery
+* *(webhook)* Assert bad webhook is retried in no-duplicate test
+* *(webtests)* Add end-to-end TOTP lockout test
+* Update expected results for archived project propagation ([13be01d](13be01de9f05e3992a9b2e222f00f896014147e0))
+* Add failing test for TickTick child-before-parent CSV order ([c496364](c49636430f9da3ecb24626b1a2f9178bae28af05))
+* Add test for deeply nested TickTick task ordering ([112e486](112e4863147ed35c1de9fab23cb014f64f032b0e))
+* Add tests for OAuth 2.0 authorization flow ([649043a](649043aceb0efaf5575327b26829260a83087dfc))
+* Add integration tests for CalDAV API token auth ([194bec8](194bec8b9ff12142ca57ef36fa034218e6f8f2b2))
+* Verify caldav permission group appears in /routes ([390957b](390957b3f5d7790d0ecbe3dde68b388632da7118))
+* Add tests for API token expiry notifications and cron ([6b225bb](6b225bb0bae1bda574c89c5fb0f597a8a112666a))
+* Add WebSocket e2e tests ([4cd7908](4cd79088d1b971d974a44cd82b1542edde91682c))
+* Assert position existence instead of conditional skip ([a628c99](a628c990062da7d76091ad11a432eef753d2804e))
+* Add failing tests for subtask visibility in filtered views ([616ac8b](616ac8b95fdebd1884b73dc7c0af41a1af1afe9f))
+* Remove obsolete invalid-cache-type test for avatar upload ([c166eff](c166eff95fca24852839a546d8314ac487e974db))
+* Verify background removal preserves project title ([7679034](76790348f7282fab0a1d115151b9802f315725e8))
+* Add tests for SSO avatar provider reset on empty picture URL ([1065bdd](1065bdd84ced09506f7fdc02405134ea58f8a29b))
+* Wire up API URL for anonymous link share e2e tests ([91728c0](91728c0273b40a436ae8528f5b25c290bcb3acf9))
+* Add e2e regression test for link share loop while logged in ([a574d62](a574d623b14d83928f2c1e42f381fc8d12054045))
+
 ## [2.2.2] - 2026-03-23
 
 ### Bug Fixes
