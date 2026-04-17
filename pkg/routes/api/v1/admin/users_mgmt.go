@@ -55,6 +55,9 @@ func PatchStatus(c *echo.Context) error {
 	if err := c.Bind(body); err != nil {
 		return models.ErrInvalidData{Message: "invalid body"}
 	}
+	if body.Status < user.StatusActive || body.Status > user.StatusAccountLocked {
+		return models.ErrInvalidData{Message: "invalid status"}
+	}
 
 	s := db.NewSession()
 	defer s.Close()

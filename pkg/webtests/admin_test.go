@@ -269,6 +269,12 @@ func TestAdmin_PatchStatus(t *testing.T) {
 		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/1/status", admin, `{"status":3}`)
 		assert.Equal(t, http.StatusBadRequest, res.Code)
 	})
+
+	t.Run("rejects invalid status value", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/2/status", admin, `{"status":99}`)
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+		assert.Contains(t, res.Body.String(), "invalid status")
+	})
 }
 
 // TestAdmin_GuardLastAdmin_IgnoresNonActive verifies that non-active admins
