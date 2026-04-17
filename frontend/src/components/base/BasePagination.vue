@@ -69,7 +69,7 @@ function createPagination(totalPages: number, currentPage: number): PaginationPa
 			}
 			continue
 		}
-		
+
 		pages.push({
 			number: i + 1,
 			isEllipsis: false,
@@ -82,10 +82,10 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 </script>
 
 <style lang="scss" scoped>
-// Rules ported from bulma-css-variables/sass/components/pagination.sass.
-// Slot content (.pagination-previous, .pagination-next, .pagination-link) is
-// rendered by Pagination.vue / PaginationEmit.vue, so scoped attributes don't
-// reach them — we use :deep() to style across the slot boundary.
+// Layout/scaffold rules ported from bulma-css-variables/sass/components/pagination.sass.
+// BasePagination only owns .pagination / .pagination-list / .pagination-ellipsis —
+// the actual pagination items (.pagination-previous / -next / -link) and their
+// styles live in PaginationItem.vue.
 
 .pagination {
 	align-items: center;
@@ -113,9 +113,6 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 	}
 }
 
-:deep(.pagination-previous),
-:deep(.pagination-next),
-:deep(.pagination-link),
 .pagination-ellipsis {
 	appearance: none;
 	align-items: center;
@@ -136,64 +133,6 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 	-webkit-touch-callout: none;
 	user-select: none;
 
-	&:focus,
-	&:active {
-		outline: none;
-	}
-
-	&[disabled],
-	fieldset[disabled] & {
-		cursor: not-allowed;
-	}
-}
-
-:deep(.pagination-previous),
-:deep(.pagination-next),
-:deep(.pagination-link) {
-	border-color: var(--border);
-	color: var(--text-strong);
-	min-inline-size: 2.5em;
-
-	&:hover {
-		border-color: var(--link-hover-border);
-		color: var(--link-hover);
-	}
-
-	&:focus {
-		border-color: var(--link-focus-border);
-	}
-
-	&:active {
-		box-shadow: inset 0 1px 2px rgba($scheme-invert, 0.2);
-	}
-
-	&[disabled] {
-		background-color: var(--border);
-		border-color: var(--border);
-		box-shadow: none;
-		color: var(--text-light);
-		opacity: 0.5;
-	}
-}
-
-:deep(.pagination-previous),
-:deep(.pagination-next) {
-	padding-inline: 0.75em;
-	white-space: nowrap;
-
-	&:not(:disabled):hover {
-		background: $scheme-main;
-		cursor: pointer;
-	}
-}
-
-:deep(.pagination-link.is-current) {
-	background-color: var(--link);
-	border-color: var(--link);
-	color: var(--link-invert);
-}
-
-.pagination-ellipsis {
 	color: var(--grey-light);
 	pointer-events: none;
 }
@@ -201,12 +140,6 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 @media screen and (max-width: $tablet - 1px) {
 	.pagination {
 		flex-wrap: wrap;
-	}
-
-	:deep(.pagination-previous),
-	:deep(.pagination-next) {
-		flex-grow: 1;
-		flex-shrink: 1;
 	}
 
 	.pagination-list li {
@@ -221,9 +154,6 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 		flex-shrink: 1;
 	}
 
-	:deep(.pagination-previous),
-	:deep(.pagination-next),
-	:deep(.pagination-link),
 	.pagination-ellipsis {
 		margin-block: 0;
 	}
@@ -239,14 +169,3 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 	}
 }
 </style>
-
-<style lang="scss">
-// Unscoped: this rule relies on ancestors (.app-container.has-background /
-// .link-share-container.has-background) that live outside BasePagination.
-// Previously lived in styles/theme/background.scss.
-.app-container.has-background .pagination-link:not(.is-current),
-.link-share-container.has-background .pagination-link:not(.is-current) {
-	background: var(--grey-100);
-}
-</style>
-
