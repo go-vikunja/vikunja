@@ -56,15 +56,15 @@ func callerIsInstanceAdmin(c *echo.Context) bool {
 	if tokenStr == "" {
 		return false
 	}
-	u, err := auth.ParseJWTForOptionalAuth(tokenStr)
-	if err != nil || u == nil || u.ID <= 0 || !u.IsAdmin {
+	userID, err := auth.GetUserIDFromToken(tokenStr)
+	if err != nil || userID <= 0 {
 		return false
 	}
 
 	// Close before returning; the handler opens its own session and SQLite
 	// deadlocks on overlapping sessions on the users table.
 	s := db.NewSession()
-	fresh, err := user.GetUserByID(s, u.ID)
+	fresh, err := user.GetUserByID(s, userID)
 	_ = s.Close()
 	if err != nil {
 		return false
