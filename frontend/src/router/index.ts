@@ -503,7 +503,7 @@ router.beforeEach(async (to, from) => {
 
 	if (to.meta?.requiresAdminPanel) {
 		const configStore = useConfigStore()
-		const featureOn = configStore.enabledProFeatures?.includes('admin_panel') ?? false
+		const featureOn = configStore.isProFeatureEnabled('admin_panel')
 		// `isAdmin` is populated from the `/user` endpoint, not the JWT. If a
 		// concurrent `checkAuth()` call short-circuited via its debounce, the
 		// store may still be hydrating, so fetch directly to avoid a false 404.

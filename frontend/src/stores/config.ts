@@ -102,6 +102,10 @@ export const useConfigStore = defineStore('config', () => {
 		Object.assign(state, config)
 	}
 
+	function isProFeatureEnabled(name: string): boolean {
+		return state.enabledProFeatures?.includes(name) ?? false
+	}
+
 	async function update(): Promise<boolean> {
 		const HTTP = HTTPFactory()
 		const {data: config} = await HTTP.get('info')
@@ -120,6 +124,7 @@ export const useConfigStore = defineStore('config', () => {
 		migratorsEnabled,
 		apiBase,
 		setConfig,
+		isProFeatureEnabled,
 		update,
 	}
 

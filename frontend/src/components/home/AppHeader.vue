@@ -156,7 +156,7 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const imprintUrl = computed(() => configStore.legal.imprintUrl)
 const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
-const adminPanelEnabled = computed(() => configStore.enabledProFeatures?.includes('admin_panel') ?? false)
+const adminPanelEnabled = computed(() => configStore.isProFeatureEnabled('admin_panel'))
 </script>
 
 <style lang="scss" scoped>
