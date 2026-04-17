@@ -140,8 +140,20 @@ onMounted(async () => {
 <style lang="scss" scoped>
 .admin-overview__grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	grid-template-columns: 1fr;
 	gap: 1rem;
+}
+
+@media (width >= 600px) {
+	.admin-overview__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (width >= 1000px) {
+	.admin-overview__grid {
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+	}
 }
 
 .admin-overview__card {
