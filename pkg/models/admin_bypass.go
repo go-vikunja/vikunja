@@ -19,13 +19,27 @@ package models
 import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+
+	"xorm.io/xorm"
 )
 
 // isSiteAdmin returns true when the auth belongs to a site admin user.
 // Link-share auths are not *user.User and therefore fall through (return false)
 // — they must continue through the normal permission flow.
-// IsAdmin is populated from JWT claims (no DB hit).
-func isSiteAdmin(a web.Auth) bool {
+//
+// The IsAdmin flag on a.(*user.User) is populated from JWT claims and must
+// not be trusted on its own: a demoted or deleted admin would keep site-admin
+// authority until their outstanding token expired. Re-check against the DB
+// so the bypass reflects the user's current state. A disabled/locked/missing
+// user is not an admin.
+func isSiteAdmin(s *xorm.Session, a web.Auth) bool {
 	u, ok := a.(*user.User)
-	return ok && u.IsAdmin
+	if !ok {
+		return false
+	}
+	fresh, err := user.GetUserByID(s, u.ID)
+	if err != nil {
+		return false
+	}
+	return fresh.IsAdmin
 }

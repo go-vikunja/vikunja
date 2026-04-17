@@ -44,6 +44,11 @@ type UserRegister struct {
 // site-admin user. The /register route is in the public group so we parse the
 // header ourselves. Any parse error is treated as "not authenticated" — we
 // never surface it, the absence of a bearer is legitimate.
+//
+// The is_admin claim on the JWT is only a hint: a demoted or deleted admin
+// keeps the claim until their token expires. We re-read is_admin from the DB
+// so a stale token cannot be used to bypass registration gates or mint new
+// admins. Disabled/locked/missing users are treated as not admin.
 func callerIsSiteAdmin(c *echo.Context) bool {
 	header := c.Request().Header.Get(echo.HeaderAuthorization)
 	if header == "" {
@@ -58,10 +63,19 @@ func callerIsSiteAdmin(c *echo.Context) bool {
 		return false
 	}
 	u, err := auth.ParseJWTForOptionalAuth(tokenStr)
-	if err != nil || u == nil {
+	if err != nil || u == nil || u.ID <= 0 || !u.IsAdmin {
 		return false
 	}
-	return u.IsAdmin && u.ID > 0
+
+	// Close the session before returning — the handler opens its own session
+	// immediately after, and keeping this one alive deadlocks on SQLite.
+	s := db.NewSession()
+	fresh, err := user.GetUserByID(s, u.ID)
+	_ = s.Close()
+	if err != nil {
+		return false
+	}
+	return fresh.IsAdmin
 }
 
 // RegisterUser is the register handler

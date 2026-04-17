@@ -20,7 +20,9 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -83,16 +85,21 @@ func TestAdminBypass_CanDeleteUserShare(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.Code)
 }
 
-// Negative: without the admin flag, the same user hits a permission error,
-// proving the bypass is what makes the positive tests above pass.
+// Negative: without the admin flag in the DB, the same user hits a permission
+// error, proving the bypass is what makes the positive tests above pass.
+// The bypass reads is_admin from the DB (to defeat stale JWTs), so the test
+// must demote the user in the DB rather than flipping the local struct field.
 func TestAdminBypass_NonAdminCannotDeleteLinkShare(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
 	defer license.ResetForTests()
 
-	nonAdmin := promoteToAdmin(t, 1)
-	nonAdmin.IsAdmin = false // issue token without the admin claim
+	s := db.NewSession()
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	require.False(t, u.IsAdmin, "fixture precondition: user1 is not a site admin")
+	s.Close()
 
-	res := adminReq(t, e, http.MethodDelete, "/api/v1/projects/2/shares/2", nonAdmin, "")
+	res := adminReq(t, e, http.MethodDelete, "/api/v1/projects/2/shares/2", u, "")
 	assert.NotEqual(t, http.StatusOK, res.Code, "non-admin must not be able to delete a share on a project they don't own")
 }

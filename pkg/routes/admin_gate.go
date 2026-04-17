@@ -17,14 +17,22 @@
 package routes
 
 import (
+	"code.vikunja.io/api/pkg/db"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/labstack/echo/v5"
 )
 
 // RequireSiteAdmin returns a middleware that serves 404 when the caller is not
 // a site admin. Same 404 treatment as RequireFeature — the route should look
 // identical to an unregistered one from the outside.
+//
+// The is_admin claim on the JWT is only a hint: a demoted or deleted admin
+// keeps the claim until their token expires (up to ServiceJWTTTLShort). We
+// therefore re-read is_admin from the DB on every admin-gated request so
+// revocation takes effect immediately. A disabled/locked/missing user fails
+// the gate as well (GetUserByID surfaces those as errors).
 func RequireSiteAdmin() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
@@ -33,7 +41,19 @@ func RequireSiteAdmin() echo.MiddlewareFunc {
 				return echo.ErrNotFound
 			}
 			u, ok := a.(*user.User)
-			if !ok || !u.IsAdmin {
+			if !ok {
+				return echo.ErrNotFound
+			}
+
+			// Close the session before handing off to the downstream handler.
+			// On SQLite (used in tests) keeping a read session open while the
+			// next handler opens its own write session deadlocks on the users
+			// table. The admin check is a single PK lookup — we do not need
+			// to hold the session.
+			s := db.NewSession()
+			fresh, err := user.GetUserByID(s, u.ID)
+			_ = s.Close()
+			if err != nil || !fresh.IsAdmin {
 				return echo.ErrNotFound
 			}
 			return next(c)

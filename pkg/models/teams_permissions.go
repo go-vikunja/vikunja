@@ -54,7 +54,7 @@ func (t *Team) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, err
 	}
 
-	if isSiteAdmin(a) {
+	if isSiteAdmin(s, a) {
 		return true, nil
 	}
 
@@ -66,7 +66,7 @@ func (t *Team) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanRead returns true if the user has read access to the team
 func (t *Team) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
-	if isSiteAdmin(a) {
+	if isSiteAdmin(s, a) {
 		return true, int(PermissionAdmin), nil
 	}
 	// Check if the user is in the team

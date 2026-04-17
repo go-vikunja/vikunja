@@ -51,7 +51,7 @@ func (tm *TeamMember) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	if isSiteAdmin(a) {
+	if isSiteAdmin(s, a) {
 		return true, nil
 	}
 

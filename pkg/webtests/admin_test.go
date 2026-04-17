@@ -456,3 +456,105 @@ func TestAdmin_ReassignProjectOwner(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, res.Code)
 	})
 }
+
+// TestAdmin_StaleAdminJWT_Gate proves the gate does not rely on the JWT's
+// is_admin claim alone. A user who was admin at token-mint time but has since
+// been demoted in the DB must be rejected the next time they hit /admin/*.
+func TestAdmin_StaleAdminJWT_Gate(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	// Mint a token with is_admin=true while the DB says the user is admin...
+	admin := promoteToAdmin(t, 1)
+
+	// ...then flip is_admin=false in the DB behind the token's back.
+	s := db.NewSession()
+	_, err = s.ID(int64(1)).Cols("is_admin").Update(&user.User{IsAdmin: false})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	// The stale JWT still claims admin, but the gate re-checks the DB and denies.
+	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/ping", admin, "")
+	assert.Equal(t, http.StatusNotFound, res.Code, "demoted admin with stale JWT must be rejected")
+}
+
+// TestAdmin_StaleAdminJWT_DeletedUser covers the case where the admin was
+// deleted (not just demoted) — the gate must treat "user does not exist" the
+// same as "not admin".
+func TestAdmin_StaleAdminJWT_DeletedUser(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	// Delete the admin row directly. The JWT is still valid and carries is_admin=true.
+	s := db.NewSession()
+	_, err = s.ID(int64(1)).Delete(&user.User{})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/ping", admin, "")
+	assert.Equal(t, http.StatusNotFound, res.Code, "deleted admin with stale JWT must be rejected")
+}
+
+// TestAdmin_StaleAdminJWT_PermissionBypass proves the model-level permission
+// bypass (used by project/team/view CRUD) also re-checks the DB. A demoted
+// admin's stale JWT must not let them access a project they do not otherwise
+// have permissions on.
+func TestAdmin_StaleAdminJWT_PermissionBypass(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	defer license.ResetForTests()
+
+	// Project 2 is owned by user 3; user 1 has no share on it. Without the
+	// admin bypass, reading it must fail.
+	admin := promoteToAdmin(t, 1)
+
+	// Sanity: while still admin, user 1 can read project 2.
+	res := adminReq(t, e, http.MethodGet, "/api/v1/projects/2", admin, "")
+	require.Equal(t, http.StatusOK, res.Code, "fresh admin must be able to read a project they do not own")
+
+	// Demote in DB, keep the JWT.
+	s := db.NewSession()
+	_, err = s.ID(int64(1)).Cols("is_admin").Update(&user.User{IsAdmin: false})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	// Same token, same request — must now fail because the bypass re-reads the DB.
+	res = adminReq(t, e, http.MethodGet, "/api/v1/projects/2", admin, "")
+	assert.NotEqual(t, http.StatusOK, res.Code, "demoted admin must lose project bypass after DB update")
+}
+
+// TestAdmin_StaleAdminJWT_Register covers the admin bypass on the public
+// /register endpoint: after demotion, a stale admin JWT can no longer bypass
+// ServiceEnableRegistration=false or set admin-only fields.
+func TestAdmin_StaleAdminJWT_Register(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	prev := config.ServiceEnableRegistration.GetBool()
+	config.ServiceEnableRegistration.Set(false)
+	defer config.ServiceEnableRegistration.Set(prev)
+
+	admin := promoteToAdmin(t, 1)
+
+	// Demote in DB — JWT still carries is_admin=true.
+	s := db.NewSession()
+	_, err = s.ID(int64(1)).Cols("is_admin").Update(&user.User{IsAdmin: false})
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	body := `{"username":"stale-admin","password":"averyl0ngpassword","email":"stale-admin@example.com","is_admin":true}`
+	res := adminReq(t, e, http.MethodPost, "/api/v1/register", admin, body)
+	assert.Equal(t, http.StatusNotFound, res.Code, "demoted admin must not bypass registration toggle")
+}
