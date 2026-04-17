@@ -65,7 +65,10 @@
 					<dl class="admin-overview__kv">
 						<dt>{{ $t('admin.overview.licenseValidUntil') }}</dt>
 						<dd>
-							<time :datetime="formatISO(data.license.expiresAt)">{{ formatDisplayDate(data.license.expiresAt) }}</time>
+							<time
+								v-tooltip="formatDateLong(data.license.expiresAt)"
+								:datetime="formatISO(data.license.expiresAt)"
+							>{{ formatDisplayDate(data.license.expiresAt) }}</time>
 							<span
 								v-if="expiresInDays !== null"
 								class="admin-overview__hint"
@@ -77,6 +80,7 @@
 						<dd>
 							<time
 								v-if="data.license.validatedAt"
+								v-tooltip="formatDateLong(data.license.validatedAt)"
 								:datetime="formatISO(data.license.validatedAt)"
 							>
 								{{ formatDateSince(data.license.validatedAt) }}
@@ -120,7 +124,7 @@ import Card from '@/components/misc/Card.vue'
 import AdminOverviewService from '@/services/admin/overviewService'
 import type {IAdminOverview} from '@/modelTypes/IAdminOverview'
 import {error} from '@/message'
-import {formatDisplayDate, formatDateSince, formatISO} from '@/helpers/time/formatDate'
+import {formatDisplayDate, formatDateSince, formatDateLong, formatISO} from '@/helpers/time/formatDate'
 
 const adminOverviewService = new AdminOverviewService()
 

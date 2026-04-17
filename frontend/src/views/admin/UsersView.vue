@@ -46,7 +46,10 @@
 						<td>{{ u.authProvider || $t('admin.users.issuerLocal') }}</td>
 						<td>{{ statusLabel(u.status) }}</td>
 						<td>
-							<time :datetime="formatISO(u.created)">{{ formatDisplayDate(u.created) }}</time>
+							<time
+								v-tooltip="formatDateLong(u.created)"
+								:datetime="formatISO(u.created)"
+							>{{ formatDisplayDate(u.created) }}</time>
 						</td>
 						<td class="actions">
 							<XButton
@@ -92,11 +95,17 @@
 						</template>
 						<dt>{{ $t('task.attributes.created') }}</dt>
 						<dd>
-							<time :datetime="formatISO(detailTarget.created)">{{ formatDisplayDate(detailTarget.created) }}</time>
+							<time
+								v-tooltip="formatDateLong(detailTarget.created)"
+								:datetime="formatISO(detailTarget.created)"
+							>{{ formatDisplayDate(detailTarget.created) }}</time>
 						</dd>
 						<dt>{{ $t('task.attributes.updated') }}</dt>
 						<dd>
-							<time :datetime="formatISO(detailTarget.updated)">{{ formatDisplayDate(detailTarget.updated) }}</time>
+							<time
+								v-tooltip="formatDateLong(detailTarget.updated)"
+								:datetime="formatISO(detailTarget.updated)"
+							>{{ formatDisplayDate(detailTarget.updated) }}</time>
 						</dd>
 					</dl>
 
@@ -320,7 +329,7 @@ import AdminUserService, {type CreateAdminUserBody} from '@/services/admin/userS
 import AdminUserModel from '@/models/adminUser'
 import type {IAdminUser} from '@/modelTypes/IAdminUser'
 import {error, success} from '@/message'
-import {formatDisplayDate, formatISO} from '@/helpers/time/formatDate'
+import {formatDisplayDate, formatDateLong, formatISO} from '@/helpers/time/formatDate'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import XButton from '@/components/input/Button.vue'
