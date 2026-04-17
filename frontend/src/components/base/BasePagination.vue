@@ -159,11 +159,13 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 	}
 
 	.pagination {
+		justify-content: space-between;
 		margin-block: 0;
 
 		&.is-centered {
 			.pagination-list {
 				justify-content: center;
+				order: 2;
 			}
 		}
 	}

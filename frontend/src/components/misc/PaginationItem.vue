@@ -132,6 +132,16 @@ const emit = defineEmits<{
 	.pagination-link {
 		margin-block: 0;
 	}
+
+	// BasePagination hardcodes `.is-centered`, so prev and next are flex-ordered
+	// around the centered page list (prev left, list middle, next right).
+	.pagination-previous {
+		order: 1;
+	}
+
+	.pagination-next {
+		order: 3;
+	}
 }
 </style>
 
