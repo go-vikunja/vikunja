@@ -80,9 +80,10 @@ func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 
 	if isSiteAdmin(s, a) {
 		originalProject, err := GetProjectSimpleByID(s, p.ID)
-		if err == nil {
-			*p = *originalProject
+		if err != nil {
+			return false, 0, err
 		}
+		*p = *originalProject
 		return true, int(PermissionAdmin), nil
 	}
 

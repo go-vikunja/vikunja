@@ -85,6 +85,25 @@ func TestAdminBypass_CanDeleteUserShare(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.Code)
 }
 
+// Regression for bug_002: the site-admin short-circuit in Project.CanRead used
+// to swallow GetProjectSimpleByID errors, so a nonexistent project ID fell
+// through to Project.ReadOne on a zero-valued project and surfaced a misleading
+// "user does not exist" (1005) instead of the correct "project does not exist"
+// (3001).
+func TestAdminBypass_NonexistentProjectReturns404(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	defer license.ResetForTests()
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+
+	admin := promoteToAdmin(t, 1)
+	res := adminReq(t, e, http.MethodGet, "/api/v1/projects/99999", admin, "")
+	assert.Equal(t, http.StatusNotFound, res.Code)
+	body := res.Body.String()
+	assert.Contains(t, body, `"code":3001`, "must surface ErrCodeProjectDoesNotExist, not user-not-found")
+	assert.NotContains(t, body, `"code":1005`, "must not surface ErrUserDoesNotExist when the project is missing")
+}
+
 // Negative: without the admin flag in the DB, the same user hits a permission
 // error, proving the bypass is what makes the positive tests above pass.
 // The bypass reads is_admin from the DB (to defeat stale JWTs), so the test
