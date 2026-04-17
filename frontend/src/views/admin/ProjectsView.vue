@@ -186,3 +186,12 @@ async function doReassign() {
 onMounted(load)
 </script>
 
+<style lang="scss" scoped>
+// `.table.has-actions` sets overflow: hidden to clip rounded corners; that
+// also clips the project settings dropdown menu. The dropdown is more
+// important than the corner rounding on this screen.
+.admin-projects :deep(.table.has-actions) {
+	overflow: visible;
+}
+</style>
+
