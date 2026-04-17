@@ -37,6 +37,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/builder"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 // IsErrUserStatusError returns true if the error is an ErrAccountDisabled or ErrAccountLocked.
@@ -666,17 +667,35 @@ func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
 
 // GuardLastAdmin returns ErrLastAdmin when removing the target user's
 // site-admin privileges (by demotion or deletion) would leave the instance
-// without any site admin. It's a no-op when the target isn't an admin.
-// Callers should invoke this before performing the destructive operation.
+// without any reachable site admin. It's a no-op when the target isn't an
+// admin.
+//
+// Only active, non-deletion-scheduled admins are counted — disabled, locked,
+// or deletion-scheduled admins cannot log in and must not satisfy the
+// invariant. Callers should invoke this before performing the destructive
+// operation.
+//
+// On MySQL and Postgres the candidate admin rows are locked with
+// SELECT ... FOR UPDATE to close the TOCTOU race where two concurrent
+// demotions each observe count > 1 and both commit. SQLite serializes writes
+// at the database level, so no explicit lock is needed (and xorm's
+// .ForUpdate() is MySQL-only anyway).
 func GuardLastAdmin(s *xorm.Session, target *User) error {
 	if !target.IsAdmin {
 		return nil
 	}
-	count, err := s.Where("is_admin = ?", true).Count(&User{})
+
+	const baseQuery = "SELECT id FROM users WHERE is_admin = ? AND status = ? AND deletion_scheduled_at IS NULL"
+	query := baseQuery
+	if db.Type() != schemas.SQLITE {
+		query += " FOR UPDATE"
+	}
+
+	rows, err := s.SQL(query, true, StatusActive).Query()
 	if err != nil {
 		return err
 	}
-	if count <= 1 {
+	if len(rows) <= 1 {
 		return ErrLastAdmin{}
 	}
 	return nil

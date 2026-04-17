@@ -250,6 +250,62 @@ func TestAdmin_PatchStatus(t *testing.T) {
 	_, err = s.Table("users").Where("id = ?", 2).Get(&row)
 	require.NoError(t, err)
 	assert.Equal(t, 2, row.Status)
+
+	t.Run("last-admin guard refuses self-disable", func(t *testing.T) {
+		// user1 is still the only admin — disabling them would lock the instance
+		// out once the JWT expires.
+		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/1/status", admin, `{"status":2}`)
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+
+		var row struct {
+			Status int `xorm:"status"`
+		}
+		_, err := s.Table("users").Where("id = ?", 1).Get(&row)
+		require.NoError(t, err)
+		assert.Equal(t, int(user.StatusActive), row.Status, "last admin must stay active after refused disable")
+	})
+
+	t.Run("last-admin guard refuses self-lock", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/1/status", admin, `{"status":3}`)
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+	})
+}
+
+// TestAdmin_GuardLastAdmin_IgnoresNonActive verifies that non-active admins
+// (disabled, locked, or scheduled for deletion) are not counted as reachable
+// admins — demoting the only active admin must fail even if another admin
+// row exists with status != StatusActive.
+func TestAdmin_GuardLastAdmin_IgnoresNonActive(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
+	defer license.ResetForTests()
+
+	admin := promoteToAdmin(t, 1)
+
+	// Promote user17 (status=2, disabled per fixtures) to admin. They cannot
+	// log in, so they must not count toward the last-admin invariant.
+	s := db.NewSession()
+	u17 := &user.User{ID: 17}
+	has, err := s.Get(u17)
+	require.NoError(t, err)
+	require.True(t, has)
+	require.Equal(t, user.StatusDisabled, u17.Status, "fixture precondition: user17 is disabled")
+	u17.IsAdmin = true
+	_, err = s.ID(u17.ID).Cols("is_admin").Update(u17)
+	require.NoError(t, err)
+	require.NoError(t, s.Commit())
+	s.Close()
+
+	// Demoting user1 would leave only the disabled user17 as admin — refuse.
+	res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/1/admin", admin, `{"is_admin":false}`)
+	assert.Equal(t, http.StatusBadRequest, res.Code)
+
+	s = db.NewSession()
+	defer s.Close()
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.True(t, u.IsAdmin, "active admin must not be demoted when the only other admin is disabled")
 }
 
 func TestAdmin_DeleteUser(t *testing.T) {

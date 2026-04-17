@@ -68,6 +68,15 @@ func PatchStatus(c *echo.Context) error {
 		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
+	// Flipping an admin to a non-active status locks them out just like a
+	// demotion or deletion would, so refuse if they're the last admin.
+	if target.IsAdmin && (body.Status == user.StatusDisabled || body.Status == user.StatusAccountLocked) {
+		if err := user.GuardLastAdmin(s, target); err != nil {
+			_ = s.Rollback()
+			return err
+		}
+	}
+
 	if err := user.SetUserStatus(s, target, body.Status); err != nil {
 		_ = s.Rollback()
 		return err
