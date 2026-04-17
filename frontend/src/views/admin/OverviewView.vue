@@ -44,17 +44,22 @@
 					<h2 class="admin-overview__card-title">
 						{{ $t('admin.overview.shares') }}
 					</h2>
-					<ul class="admin-overview__card-list">
-						<li>{{ $t('admin.overview.linkShares') }}: {{ data.shares.linkShares }}</li>
-						<li>{{ $t('admin.overview.teamShares') }}: {{ data.shares.teamShares }}</li>
-						<li>{{ $t('admin.overview.userShares') }}: {{ data.shares.userShares }}</li>
-					</ul>
+					<p class="admin-overview__card-value">
+						{{ totalShares }}
+					</p>
+					<p class="admin-overview__hint admin-overview__shares-breakdown">
+						{{ data.shares.linkShares }} {{ $t('admin.overview.linkSharesShort') }}
+						<span aria-hidden="true">·</span>
+						{{ data.shares.teamShares }} {{ $t('admin.overview.teamSharesShort') }}
+						<span aria-hidden="true">·</span>
+						{{ data.shares.userShares }} {{ $t('admin.overview.userSharesShort') }}
+					</p>
 				</div>
-				<div class="admin-overview__card">
+				<div class="admin-overview__card admin-overview__card--version">
 					<h2 class="admin-overview__card-title">
 						{{ $t('admin.overview.version') }}
 					</h2>
-					<p class="admin-overview__card-value">
+					<p class="admin-overview__card-value admin-overview__card-value--version">
 						{{ data.version }}
 					</p>
 				</div>
@@ -137,6 +142,12 @@ const expiresInDays = computed<number | null>(() => {
 	return Math.max(0, dayjs(expiresAt).diff(dayjs(), 'day'))
 })
 
+const totalShares = computed<number>(() => {
+	const shares = data.value?.shares
+	if (!shares) return 0
+	return shares.linkShares + shares.teamShares + shares.userShares
+})
+
 onMounted(async () => {
 	loading.value = true
 	try {
@@ -175,6 +186,10 @@ onMounted(async () => {
 	padding: 1.25rem;
 }
 
+.admin-overview__card--version {
+	container-type: inline-size;
+}
+
 .admin-overview__card-title {
 	font-size: 0.85rem;
 	color: var(--grey-600);
@@ -186,6 +201,12 @@ onMounted(async () => {
 .admin-overview__card-value {
 	font-size: 1.75rem;
 	font-weight: 600;
+}
+
+.admin-overview__card-value--version {
+	font-size: clamp(0.9rem, 8cqi, 1.75rem);
+	word-break: break-all;
+	overflow-wrap: anywhere;
 }
 
 .admin-overview__card--wide {
@@ -219,9 +240,9 @@ onMounted(async () => {
 	margin-block-start: 1rem;
 }
 
-.admin-overview__card-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
+.admin-overview__shares-breakdown {
+	margin-block-start: 0.25rem;
+	margin-inline-start: 0;
+	font-size: 0.85rem;
 }
 </style>
