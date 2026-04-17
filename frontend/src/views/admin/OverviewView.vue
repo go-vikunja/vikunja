@@ -192,6 +192,10 @@ onMounted(async () => {
 	padding: 1.25rem;
 }
 
+.admin-overview__card:not(.admin-overview__card--wide) {
+	min-block-size: 7.5rem;
+}
+
 .admin-overview__card--version {
 	container-type: inline-size;
 }
