@@ -122,8 +122,6 @@
 				{{ $t('menu.delete') }}
 			</DropdownItem>
 		</template>
-
-		<slot name="extra" />
 	</Dropdown>
 </template>
 
