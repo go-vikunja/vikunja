@@ -35,6 +35,7 @@ import (
 // @Security JWTKeyAuth
 // @Param page query int false "Page number, defaults to 1."
 // @Param per_page query int false "Items per page, defaults to the service setting."
+// @Param s query string false "Search projects by title, description or identifier."
 // @Success 200 {array} models.Project
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/projects [get]
@@ -51,32 +52,12 @@ func ListProjects(c *echo.Context) error {
 		perPage = config.ServiceMaxItemsPerPage.GetInt()
 	}
 
-	var projects []*models.Project
-	if err := s.Limit(perPage, (page-1)*perPage).OrderBy("id DESC").Find(&projects); err != nil {
-		return err
-	}
-
-	// Owner is xorm:"-", hydrate from users in one batch lookup.
-	ownerIDs := make([]int64, 0, len(projects))
-	for _, p := range projects {
-		ownerIDs = append(ownerIDs, p.OwnerID)
-	}
-	owners, err := user.GetUsersByIDs(s, ownerIDs)
-	if err != nil {
-		return err
-	}
-	for _, p := range projects {
-		if o, ok := owners[p.OwnerID]; ok {
-			p.Owner = o
-		}
-	}
-
-	totalCount, err := s.Count(&models.Project{})
+	projects, resultCount, totalCount, err := models.ListAllProjects(s, c.QueryParam("s"), page, perPage, true)
 	if err != nil {
 		return err
 	}
 
-	writePaginationHeaders(c, int64(len(projects)), totalCount, perPage)
+	writePaginationHeaders(c, int64(resultCount), totalCount, perPage)
 	return c.JSON(http.StatusOK, projects)
 }
 
