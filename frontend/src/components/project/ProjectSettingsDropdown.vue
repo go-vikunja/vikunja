@@ -31,6 +31,7 @@
 			>
 				{{ $t('menu.views') }}
 			</DropdownItem>
+			<slot name="before-delete" />
 			<DropdownItem
 				:to="{ name: 'filter.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
@@ -109,6 +110,7 @@
 			>
 				{{ $t('menu.createProject') }}
 			</DropdownItem>
+			<slot name="before-delete" />
 			<DropdownItem
 				v-if="forceAllActions || project.maxPermission === PERMISSIONS.ADMIN"
 				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"

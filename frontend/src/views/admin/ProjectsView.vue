@@ -37,7 +37,7 @@
 								:project="p"
 								:force-all-actions="true"
 							>
-								<template #extra>
+								<template #before-delete>
 									<DropdownItem
 										icon="user-edit"
 										@click="openReassign(p)"
