@@ -91,7 +91,7 @@
 					v-if="adminPanelEnabled && authStore.info?.isAdmin"
 					:to="{ name: 'admin.overview' }"
 				>
-					{{ $t('admin.menuLabel') }}
+					{{ $t('admin.title') }}
 				</DropdownItem>
 				<DropdownItem
 					v-if="imprintUrl"
