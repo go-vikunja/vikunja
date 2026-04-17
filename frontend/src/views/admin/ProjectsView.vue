@@ -60,10 +60,7 @@
 					class="has-no-shadow"
 					:title="$t('admin.projects.reassignTitle', {title: reassignTarget.title})"
 				>
-					<div class="field">
-						<label class="label">
-							{{ $t('admin.projects.newOwnerLabel') }}
-						</label>
+					<FormField :label="$t('admin.projects.newOwnerLabel')">
 						<Multiselect
 							v-model="selectedUser"
 							:loading="userSearchLoading"
@@ -81,7 +78,7 @@
 								/>
 							</template>
 						</Multiselect>
-					</div>
+					</FormField>
 
 					<template #footer>
 						<XButton
@@ -115,6 +112,7 @@ import ProjectModel from '@/models/project'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import XButton from '@/components/input/Button.vue'
+import FormField from '@/components/input/FormField.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/User.vue'
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'

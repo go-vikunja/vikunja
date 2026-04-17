@@ -2,13 +2,12 @@
 	<Card>
 		<div class="admin-users">
 			<div class="admin-users__toolbar">
-				<input
+				<FormInput
 					v-model="searchTerm"
-					class="input"
 					type="text"
 					:placeholder="$t('admin.searchUsersPlaceholder')"
 					@input="onSearch"
-				>
+				/>
 				<XButton
 					variant="primary"
 					@click="openCreate"
@@ -100,41 +99,20 @@
 						</dd>
 					</dl>
 
-					<div class="field">
-						<label class="checkbox">
-							<input
-								v-model="editable.isAdmin"
-								type="checkbox"
-							>
-							{{ $t('admin.users.isAdminLabel') }}
-						</label>
-					</div>
+					<FormCheckbox
+						v-model="editable.isAdmin"
+						:label="$t('admin.users.isAdminLabel')"
+					/>
 
-					<div class="field">
-						<label
-							class="label"
-							for="admin-user-status"
-						>{{ $t('admin.users.status') }}</label>
-						<div class="select">
-							<select
-								id="admin-user-status"
+					<FormField :label="$t('admin.users.status')">
+						<template #default="{id}">
+							<FormSelect
+								:id="id"
 								v-model.number="editable.status"
-							>
-								<option :value="0">
-									{{ $t('admin.users.statusActive') }}
-								</option>
-								<option :value="1">
-									{{ $t('admin.users.statusEmailConfirmation') }}
-								</option>
-								<option :value="2">
-									{{ $t('admin.users.statusDisabled') }}
-								</option>
-								<option :value="3">
-									{{ $t('admin.users.statusLocked') }}
-								</option>
-							</select>
-						</div>
-					</div>
+								:options="statusOptions"
+							/>
+						</template>
+					</FormField>
 
 					<template #footer>
 						<XButton
@@ -172,90 +150,65 @@
 					class="has-no-shadow"
 					:title="$t('admin.users.createTitle')"
 				>
-					<div class="field">
-						<label
-							class="label"
-							for="admin-create-username"
-						>{{ $t('user.auth.username') }}</label>
-						<input
-							id="admin-create-username"
-							v-model="createForm.username"
-							class="input"
-							type="text"
-							required
-						>
-					</div>
-					<div class="field">
-						<label
-							class="label"
-							for="admin-create-email"
-						>{{ $t('user.auth.email') }}</label>
-						<input
-							id="admin-create-email"
-							v-model="createForm.email"
-							class="input"
-							type="email"
-							required
-						>
-					</div>
-					<div class="field">
-						<label
-							class="label"
-							for="admin-create-name"
-						>{{ $t('admin.users.nameLabel') }}</label>
-						<input
-							id="admin-create-name"
-							v-model="createForm.name"
-							class="input"
-							type="text"
-						>
-					</div>
-					<div class="field">
-						<label
-							class="label"
-							for="admin-create-password"
-						>{{ $t('user.auth.password') }}</label>
-						<input
-							id="admin-create-password"
-							v-model="createForm.password"
-							class="input"
-							type="password"
-							autocomplete="new-password"
-						>
-						<p class="help">
-							{{ $t('admin.users.passwordHelp') }}
-						</p>
-					</div>
-					<div class="field">
-						<label
-							class="label"
-							for="admin-create-language"
-						>{{ $t('user.settings.general.language') }}</label>
-						<input
-							id="admin-create-language"
-							v-model="createForm.language"
-							class="input"
-							type="text"
-						>
-					</div>
-					<div class="field">
-						<label class="checkbox">
-							<input
-								v-model="createForm.isAdmin"
-								type="checkbox"
-							>
-							{{ $t('admin.users.isAdminLabel') }}
-						</label>
-					</div>
-					<div class="field">
-						<label class="checkbox">
-							<input
-								v-model="createForm.skipEmailConfirm"
-								type="checkbox"
-							>
-							{{ $t('admin.users.skipEmailConfirm') }}
-						</label>
-					</div>
+					<FormField :label="$t('user.auth.username')">
+						<template #default="{id}">
+							<FormInput
+								:id="id"
+								v-model="createForm.username"
+								type="text"
+								required
+							/>
+						</template>
+					</FormField>
+					<FormField :label="$t('user.auth.email')">
+						<template #default="{id}">
+							<FormInput
+								:id="id"
+								v-model="createForm.email"
+								type="email"
+								required
+							/>
+						</template>
+					</FormField>
+					<FormField :label="$t('admin.users.nameLabel')">
+						<template #default="{id}">
+							<FormInput
+								:id="id"
+								v-model="createForm.name"
+								type="text"
+							/>
+						</template>
+					</FormField>
+					<FormField :label="$t('user.auth.password')">
+						<template #default="{id}">
+							<FormInput
+								:id="id"
+								v-model="createForm.password"
+								type="password"
+								autocomplete="new-password"
+							/>
+						</template>
+					</FormField>
+					<p class="help">
+						{{ $t('admin.users.passwordHelp') }}
+					</p>
+					<FormField :label="$t('user.settings.general.language')">
+						<template #default="{id}">
+							<FormInput
+								:id="id"
+								v-model="createForm.language"
+								type="text"
+							/>
+						</template>
+					</FormField>
+					<FormCheckbox
+						v-model="createForm.isAdmin"
+						:label="$t('admin.users.isAdminLabel')"
+					/>
+					<FormCheckbox
+						v-model="createForm.skipEmailConfirm"
+						:label="$t('admin.users.skipEmailConfirm')"
+					/>
 
 					<template #footer>
 						<XButton
@@ -323,6 +276,10 @@ import {error, success} from '@/message'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import XButton from '@/components/input/Button.vue'
+import FormField from '@/components/input/FormField.vue'
+import FormInput from '@/components/input/FormInput.vue'
+import FormSelect from '@/components/input/FormSelect.vue'
+import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 
 const {t} = useI18n({useScope: 'global'})
@@ -377,6 +334,13 @@ function statusLabel(status: number): string {
 		default: return String(status)
 	}
 }
+
+const statusOptions = computed(() => [
+	{value: 0, label: t('admin.users.statusActive')},
+	{value: 1, label: t('admin.users.statusEmailConfirmation')},
+	{value: 2, label: t('admin.users.statusDisabled')},
+	{value: 3, label: t('admin.users.statusLocked')},
+])
 
 async function load() {
 	loading.value = true
