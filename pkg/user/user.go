@@ -674,17 +674,18 @@ func GuardLastAdmin(s *xorm.Session, target *User) error {
 		return nil
 	}
 
-	const baseQuery = "SELECT id FROM users WHERE is_admin = ? AND status = ? AND deletion_scheduled_at IS NULL"
-	query := baseQuery
+	session := s.Where("is_admin = ?", true).
+		And("status = ?", StatusActive).
+		And("deletion_scheduled_at IS NULL")
 	if db.Type() != schemas.SQLITE {
-		query += " FOR UPDATE"
+		session = session.ForUpdate()
 	}
 
-	rows, err := s.SQL(query, true, StatusActive).Query()
+	count, err := session.Count(&User{})
 	if err != nil {
 		return err
 	}
-	if len(rows) <= 1 {
+	if count <= 1 {
 		return ErrLastAdmin{}
 	}
 	return nil
