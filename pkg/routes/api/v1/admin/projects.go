@@ -144,5 +144,6 @@ func PatchProjectOwner(c *echo.Context) error {
 		return err
 	}
 
+	p.Owner = newOwner
 	return c.JSON(http.StatusOK, p)
 }
