@@ -107,13 +107,17 @@ func PatchProjectOwner(c *echo.Context) error {
 		return models.ErrProjectDoesNotExist{ID: id}
 	}
 
-	// Verify new owner exists.
-	newOwnerExists, err := s.Table("users").Where("id = ?", body.OwnerID).Exist()
+	// Verify the new owner exists and is actually usable. GetUserByID surfaces
+	// ErrUserDoesNotExist / ErrAccountDisabled / ErrAccountLocked for us. Guarding
+	// against deletion-scheduled users is critical: models.DeleteUser cascades to
+	// projects they own, so "rescuing" a project to a soon-to-be-deleted user
+	// silently destroys it ~14 days later.
+	newOwner, err := user.GetUserByID(s, body.OwnerID)
 	if err != nil {
 		return err
 	}
-	if !newOwnerExists {
-		return user.ErrUserDoesNotExist{UserID: body.OwnerID}
+	if !newOwner.DeletionScheduledAt.IsZero() {
+		return models.ErrInvalidData{Message: "new owner is scheduled for deletion"}
 	}
 
 	p.OwnerID = body.OwnerID

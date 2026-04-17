@@ -455,6 +455,25 @@ func TestAdmin_ReassignProjectOwner(t *testing.T) {
 		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/projects/99999/owner", admin, `{"owner_id":1}`)
 		assert.Equal(t, http.StatusNotFound, res.Code)
 	})
+
+	t.Run("rejects disabled user as new owner", func(t *testing.T) {
+		// user17 has status=2 (disabled) per fixtures. ErrAccountDisabled -> 412.
+		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/projects/2/owner", admin, `{"owner_id":17}`)
+		assert.Equal(t, http.StatusPreconditionFailed, res.Code)
+	})
+
+	t.Run("rejects locked user as new owner", func(t *testing.T) {
+		// user18 has status=3 (locked) per fixtures. ErrAccountLocked -> 412.
+		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/projects/2/owner", admin, `{"owner_id":18}`)
+		assert.Equal(t, http.StatusPreconditionFailed, res.Code)
+	})
+
+	t.Run("rejects deletion-scheduled user as new owner", func(t *testing.T) {
+		// user20 has deletion_scheduled_at set. Handing a project to a user whose
+		// row is about to be deleted would cascade-delete the project.
+		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/projects/2/owner", admin, `{"owner_id":20}`)
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+	})
 }
 
 // TestAdmin_StaleAdminJWT_Gate proves the gate does not rely on the JWT's
