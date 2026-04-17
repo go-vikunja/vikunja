@@ -114,6 +114,10 @@
 							rel="noopener noreferrer"
 						>
 							{{ $t('admin.overview.licenseManage') }}
+							<Icon
+								icon="arrow-up-right-from-square"
+								class="admin-overview__external-icon"
+							/>
 						</a>
 					</p>
 				</div>
@@ -126,6 +130,7 @@
 import {ref, computed, onMounted} from 'vue'
 import dayjs from 'dayjs'
 import Card from '@/components/misc/Card.vue'
+import Icon from '@/components/misc/Icon'
 import AdminOverviewService from '@/services/admin/overviewService'
 import type {IAdminOverview} from '@/modelTypes/IAdminOverview'
 import {error} from '@/message'
@@ -244,5 +249,11 @@ onMounted(async () => {
 	margin-block-start: 0.25rem;
 	margin-inline-start: 0;
 	font-size: 0.85rem;
+}
+
+.admin-overview__external-icon {
+	margin-inline-start: 0.35em;
+	font-size: 0.85em;
+	opacity: 0.7;
 }
 </style>

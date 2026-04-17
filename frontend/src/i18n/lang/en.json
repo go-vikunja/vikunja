@@ -1504,7 +1504,7 @@
       "licenseLastCheckFailed": "last check failed",
       "licenseFeatures": "Features",
       "licenseInstance": "Instance ID",
-      "licenseManage": "Manage on console.vikunja.io"
+      "licenseManage": "Manage"
     },
     "searchUsersPlaceholder": "Search by username or email…",
     "users": {
