@@ -70,10 +70,7 @@
 					<dl class="admin-overview__kv">
 						<dt>{{ $t('admin.overview.licenseValidUntil') }}</dt>
 						<dd>
-							<time
-								v-tooltip="formatDateLong(data.license.expiresAt)"
-								:datetime="formatISO(data.license.expiresAt)"
-							>{{ formatDisplayDate(data.license.expiresAt) }}</time>
+							<TimeDisplay :date="data.license.expiresAt" />
 							<span
 								v-if="expiresInDays !== null"
 								class="admin-overview__hint"
@@ -83,14 +80,11 @@
 						</dd>
 						<dt>{{ $t('admin.overview.licenseLastVerified') }}</dt>
 						<dd>
-							<time
-								v-if="data.license.validatedAt"
-								v-tooltip="formatDateLong(data.license.validatedAt)"
-								:datetime="formatISO(data.license.validatedAt)"
-							>
-								{{ formatDateSince(data.license.validatedAt) }}
-							</time>
-							<span v-else>{{ $t('admin.overview.licenseNever') }}</span>
+							<TimeDisplay
+								:date="data.license.validatedAt"
+								mode="relative"
+								:fallback="$t('admin.overview.licenseNever')"
+							/>
 							<span
 								v-if="data.license.lastCheckFailed"
 								class="has-text-danger admin-overview__hint"
@@ -131,10 +125,10 @@ import {ref, computed, onMounted} from 'vue'
 import dayjs from 'dayjs'
 import Card from '@/components/misc/Card.vue'
 import Icon from '@/components/misc/Icon'
+import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 import AdminOverviewService from '@/services/admin/overviewService'
 import type {IAdminOverview} from '@/modelTypes/IAdminOverview'
 import {error} from '@/message'
-import {formatDisplayDate, formatDateSince, formatDateLong, formatISO} from '@/helpers/time/formatDate'
 
 const adminOverviewService = new AdminOverviewService()
 

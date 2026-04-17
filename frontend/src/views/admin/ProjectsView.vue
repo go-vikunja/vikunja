@@ -27,16 +27,10 @@
 						<td>{{ p.title }}</td>
 						<td>{{ p.owner?.username ?? p.owner?.id }}</td>
 						<td>
-							<time
-								v-tooltip="formatDateLong(p.created)"
-								:datetime="formatISO(p.created)"
-							>{{ formatDisplayDate(p.created) }}</time>
+							<TimeDisplay :date="p.created" />
 						</td>
 						<td>
-							<time
-								v-tooltip="formatDateLong(p.updated)"
-								:datetime="formatISO(p.updated)"
-							>{{ formatDisplayDate(p.updated) }}</time>
+							<TimeDisplay :date="p.updated" />
 						</td>
 						<td class="actions">
 							<ProjectSettingsDropdown
@@ -125,7 +119,7 @@ import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/User.vue'
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
-import {formatDisplayDate, formatDateLong, formatISO} from '@/helpers/time/formatDate'
+import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 import {error, success} from '@/message'
 import {useI18n} from 'vue-i18n'
 

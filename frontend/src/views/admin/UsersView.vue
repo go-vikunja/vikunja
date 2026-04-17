@@ -46,10 +46,7 @@
 						<td>{{ u.authProvider || $t('admin.users.issuerLocal') }}</td>
 						<td>{{ statusLabel(u.status) }}</td>
 						<td>
-							<time
-								v-tooltip="formatDateLong(u.created)"
-								:datetime="formatISO(u.created)"
-							>{{ formatDisplayDate(u.created) }}</time>
+							<TimeDisplay :date="u.created" />
 						</td>
 						<td class="actions">
 							<XButton
@@ -95,17 +92,11 @@
 						</template>
 						<dt>{{ $t('task.attributes.created') }}</dt>
 						<dd>
-							<time
-								v-tooltip="formatDateLong(detailTarget.created)"
-								:datetime="formatISO(detailTarget.created)"
-							>{{ formatDisplayDate(detailTarget.created) }}</time>
+							<TimeDisplay :date="detailTarget.created" />
 						</dd>
 						<dt>{{ $t('task.attributes.updated') }}</dt>
 						<dd>
-							<time
-								v-tooltip="formatDateLong(detailTarget.updated)"
-								:datetime="formatISO(detailTarget.updated)"
-							>{{ formatDisplayDate(detailTarget.updated) }}</time>
+							<TimeDisplay :date="detailTarget.updated" />
 						</dd>
 					</dl>
 
@@ -329,10 +320,10 @@ import AdminUserService, {type CreateAdminUserBody} from '@/services/admin/userS
 import AdminUserModel from '@/models/adminUser'
 import type {IAdminUser} from '@/modelTypes/IAdminUser'
 import {error, success} from '@/message'
-import {formatDisplayDate, formatDateLong, formatISO} from '@/helpers/time/formatDate'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
 import XButton from '@/components/input/Button.vue'
+import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 
 const {t} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
