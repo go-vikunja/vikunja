@@ -75,16 +75,10 @@
 				inputmode="numeric"
 				@keyup.enter="submit"
 			/>
-			<div class="field">
-				<label class="label">
-					<input
-						v-model="rememberMe"
-						type="checkbox"
-						class="mie-1"
-					>
-					{{ $t('user.auth.remember') }}
-				</label>
-			</div>
+			<FormCheckbox
+				v-model="rememberMe"
+				:label="$t('user.auth.remember')"
+			/>
 
 			<XButton
 				:loading="isLoading"
@@ -134,6 +128,7 @@ import {useDebounceFn} from '@vueuse/core'
 import Message from '@/components/misc/Message.vue'
 import Password from '@/components/input/Password.vue'
 import FormField from '@/components/input/FormField.vue'
+import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import DesktopLogin from '@/views/user/DesktopLogin.vue'
 
 import {getErrorText} from '@/message'
