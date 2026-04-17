@@ -17,15 +17,11 @@
 package admin
 
 import (
-	"math"
-	"net/http"
-	"strconv"
-
-	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/user"
-	"github.com/labstack/echo/v5"
+	"code.vikunja.io/api/pkg/web"
+
+	"xorm.io/xorm"
 )
 
 // User re-exposes fields hidden by the default User JSON view.
@@ -68,7 +64,12 @@ func resolveAuthProvider(u *user.User, providers []*openid.Provider) string {
 	return u.Issuer
 }
 
-// ListUsers returns paginated users, optionally filtered by search string.
+// UserList is the CRUDable wrapper backing the admin list-users route via
+// handler.ReadAllWeb. Only ReadAll is used; everything else is gated by
+// the RequireInstanceAdmin middleware.
+type UserList struct{}
+
+// ReadAll returns paginated users, optionally filtered by username/email.
 // @Summary List users (admin)
 // @Description Paginated list of all users on the instance. Supports search by username/email. Exposes fields hidden from the normal user API (is_admin, status).
 // @tags admin
@@ -80,61 +81,42 @@ func resolveAuthProvider(u *user.User, providers []*openid.Provider) string {
 // @Success 200 {array} admin.User
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/users [get]
-func ListUsers(c *echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	page, _ := strconv.Atoi(c.QueryParam("page"))
-	if page < 1 {
-		page = 1
-	}
-	perPage, _ := strconv.Atoi(c.QueryParam("per_page"))
-	if perPage < 1 {
-		perPage = config.ServiceMaxItemsPerPage.GetInt()
-	}
-
-	query := c.QueryParam("s")
-
-	var users []*user.User
+func (*UserList) ReadAll(s *xorm.Session, _ web.Auth, search string, page, perPage int) (interface{}, int, int64, error) {
 	finder := s.Limit(perPage, (page-1)*perPage).OrderBy("id ASC")
-	if query != "" {
-		q := "%" + query + "%"
-		finder = finder.Where("username LIKE ? OR email LIKE ?", q, q)
-	}
-	if err := finder.Find(&users); err != nil {
-		return err
-	}
-
 	counter := s
-	if query != "" {
-		q := "%" + query + "%"
+	if search != "" {
+		q := "%" + search + "%"
+		finder = finder.Where("username LIKE ? OR email LIKE ?", q, q)
 		counter = s.Where("username LIKE ? OR email LIKE ?", q, q)
 	}
+
+	var users []*user.User
+	if err := finder.Find(&users); err != nil {
+		return nil, 0, 0, err
+	}
+
 	totalCount, err := counter.Count(&user.User{})
 	if err != nil {
-		return err
+		return nil, 0, 0, err
 	}
 
 	providers, err := openid.GetAllProviders()
 	if err != nil {
-		return err
+		return nil, 0, 0, err
 	}
 
 	out := make([]*User, 0, len(users))
 	for _, u := range users {
 		out = append(out, newAdminUser(u, providers))
 	}
-
-	writePaginationHeaders(c, int64(len(out)), totalCount, perPage)
-	return c.JSON(http.StatusOK, out)
+	return out, len(out), totalCount, nil
 }
 
-func writePaginationHeaders(c *echo.Context, resultCount, totalCount int64, perPage int) {
-	numberOfPages := math.Ceil(float64(totalCount) / float64(perPage))
-	if totalCount == 0 {
-		numberOfPages = 0
-	}
-	c.Response().Header().Set("x-pagination-total-pages", strconv.FormatFloat(numberOfPages, 'f', 0, 64))
-	c.Response().Header().Set("x-pagination-result-count", strconv.FormatInt(resultCount, 10))
-	c.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
-}
+func (*UserList) ReadOne(*xorm.Session, web.Auth) error              { return nil }
+func (*UserList) Create(*xorm.Session, web.Auth) error               { return nil }
+func (*UserList) Update(*xorm.Session, web.Auth) error               { return nil }
+func (*UserList) Delete(*xorm.Session, web.Auth) error               { return nil }
+func (*UserList) CanCreate(*xorm.Session, web.Auth) (bool, error)    { return false, nil }
+func (*UserList) CanDelete(*xorm.Session, web.Auth) (bool, error)    { return false, nil }
+func (*UserList) CanUpdate(*xorm.Session, web.Auth) (bool, error)    { return false, nil }
+func (*UserList) CanRead(*xorm.Session, web.Auth) (bool, int, error) { return true, 0, nil }

@@ -808,8 +808,13 @@ func registerAPIRoutes(a *echo.Group) {
 			return &models.AdminProjectList{}
 		},
 	}
+	adminUserListHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &adminapi.UserList{}
+		},
+	}
 	admin.GET("/overview", adminapi.GetOverview)
-	admin.GET("/users", adminapi.ListUsers)
+	admin.GET("/users", adminUserListHandler.ReadAllWeb)
 	admin.PATCH("/users/:id/admin", adminapi.PatchAdmin)
 	admin.PATCH("/users/:id/status", adminapi.PatchStatus)
 	admin.DELETE("/users/:id", adminapi.DeleteUser)
