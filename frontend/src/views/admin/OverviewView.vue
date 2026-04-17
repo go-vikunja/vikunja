@@ -34,6 +34,14 @@
 				</div>
 				<div class="admin-overview__card">
 					<h2 class="admin-overview__card-title">
+						{{ $t('admin.overview.teams') }}
+					</h2>
+					<p class="admin-overview__card-value">
+						{{ data.teams }}
+					</p>
+				</div>
+				<div class="admin-overview__card">
+					<h2 class="admin-overview__card-title">
 						{{ $t('admin.overview.shares') }}
 					</h2>
 					<ul class="admin-overview__card-list">
@@ -152,7 +160,7 @@ onMounted(async () => {
 
 @media (width >= 1000px) {
 	.admin-overview__grid {
-		grid-template-columns: repeat(5, minmax(0, 1fr));
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
 

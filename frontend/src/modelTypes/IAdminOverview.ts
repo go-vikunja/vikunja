@@ -20,6 +20,7 @@ export interface IAdminOverview extends IAbstract {
 	users: number
 	projects: number
 	tasks: number
+	teams: number
 	shares: IAdminOverviewShares
 	version: string
 	license: IAdminOverviewLicense
