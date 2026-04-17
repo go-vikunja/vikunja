@@ -94,13 +94,14 @@ func PatchStatus(c *echo.Context) error {
 	return c.JSON(http.StatusOK, newAdminUser(target, providers))
 }
 
-// DeleteUser removes a user immediately, skipping the self-deletion confirmation flow.
+// DeleteUser removes a user either immediately or through the self-deletion flow.
 // @Summary Delete a user (admin)
-// @Description Delete a user immediately, bypassing the confirmation flow.
+// @Description Delete a user. With mode=now the user is removed immediately. With mode=scheduled (the default, matching the CLI) the user receives a confirmation email and is scheduled for deletion just like a self-initiated account deletion.
 // @tags admin
 // @Produce json
 // @Security JWTKeyAuth
 // @Param id path int true "User ID"
+// @Param mode query string false "Deletion mode: 'now' for immediate deletion, 'scheduled' (default) to trigger the email-confirmation self-deletion flow."
 // @Success 204
 // @Failure 400 {object} web.HTTPError
 // @Failure 404 {object} web.HTTPError
@@ -109,6 +110,14 @@ func DeleteUser(c *echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id < 1 {
 		return user.ErrUserDoesNotExist{UserID: id}
+	}
+
+	mode := c.QueryParam("mode")
+	if mode == "" {
+		mode = "scheduled"
+	}
+	if mode != "now" && mode != "scheduled" {
+		return models.ErrInvalidData{Message: "invalid mode, expected 'now' or 'scheduled'"}
 	}
 
 	s := db.NewSession()
@@ -123,14 +132,22 @@ func DeleteUser(c *echo.Context) error {
 		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
-	if err := user.GuardLastAdmin(s, target); err != nil {
-		return err
+	if mode == "now" {
+		if err := user.GuardLastAdmin(s, target); err != nil {
+			_ = s.Rollback()
+			return err
+		}
+		if err := models.DeleteUser(s, target); err != nil {
+			_ = s.Rollback()
+			return err
+		}
+	} else {
+		if err := user.RequestDeletion(s, target); err != nil {
+			_ = s.Rollback()
+			return err
+		}
 	}
 
-	if err := models.DeleteUser(s, target); err != nil {
-		_ = s.Rollback()
-		return err
-	}
 	if err := s.Commit(); err != nil {
 		return err
 	}

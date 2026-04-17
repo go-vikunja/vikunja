@@ -232,30 +232,39 @@
 			<Modal
 				v-if="pendingDelete"
 				variant="hint-modal"
-				@close="pendingDelete = null"
+				@close="cancelDelete"
 			>
 				<Card
 					class="has-no-shadow"
 					:title="$t('admin.users.confirmDeleteTitle')"
 				>
-					<p>
-						{{ $t('admin.users.confirmDeleteBody', {username: pendingDelete.username}) }}
-					</p>
+					<p>{{ $t('admin.users.confirmDeleteIntro', {username: pendingDelete.username}) }}</p>
+					<p>{{ $t('admin.users.deleteModeScheduledHelp') }}</p>
+					<p>{{ $t('admin.users.deleteModeNowHelp') }}</p>
 
 					<template #footer>
 						<XButton
 							variant="tertiary"
-							@click="pendingDelete = null"
+							@click="cancelDelete"
 						>
 							{{ $t('misc.cancel') }}
 						</XButton>
 						<XButton
+							variant="secondary"
+							:loading="deleting && deleteMode === 'scheduled'"
+							:disabled="deleting"
+							@click="doDelete('scheduled')"
+						>
+							{{ $t('admin.users.deleteModeScheduled') }}
+						</XButton>
+						<XButton
 							variant="primary"
 							:danger="true"
-							:loading="deleting"
-							@click="doDelete()"
+							:loading="deleting && deleteMode === 'now'"
+							:disabled="deleting"
+							@click="doDelete('now')"
 						>
-							{{ $t('misc.delete') }}
+							{{ $t('admin.users.deleteModeNow') }}
 						</XButton>
 					</template>
 				</Card>
@@ -269,7 +278,7 @@ import {ref, computed, onMounted, reactive, watch} from 'vue'
 import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
-import AdminUserService, {type CreateAdminUserBody} from '@/services/admin/userService'
+import AdminUserService, {type CreateAdminUserBody, type DeleteUserMode} from '@/services/admin/userService'
 import AdminUserModel from '@/models/adminUser'
 import type {IAdminUser} from '@/modelTypes/IAdminUser'
 import {error, success} from '@/message'
@@ -295,6 +304,7 @@ const detailTarget = ref<IAdminUser | null>(null)
 const pendingDelete = ref<IAdminUser | null>(null)
 const saving = ref(false)
 const deleting = ref(false)
+const deleteMode = ref<DeleteUserMode | null>(null)
 const createOpen = ref(false)
 const creating = ref(false)
 const editable = reactive({isAdmin: false, status: 0})
@@ -423,20 +433,32 @@ async function saveChanges() {
 	}
 }
 
-async function doDelete() {
-	if (!pendingDelete.value) return
+function cancelDelete() {
+	if (deleting.value) return
+	pendingDelete.value = null
+	deleteMode.value = null
+}
+
+async function doDelete(mode: DeleteUserMode) {
+	if (!pendingDelete.value || deleting.value) return
 	const target = pendingDelete.value
 	deleting.value = true
+	deleteMode.value = mode
 	try {
-		await adminUserService.delete(target)
-		users.value = users.value.filter(x => x.id !== target.id)
-		success(t('admin.users.deletedSuccess', {username: target.username}))
+		await adminUserService.deleteUser(target.id, mode)
+		if (mode === 'now') {
+			users.value = users.value.filter(x => x.id !== target.id)
+			success(t('admin.users.deletedSuccess', {username: target.username}))
+		} else {
+			success(t('admin.users.deleteScheduledSuccess', {username: target.username}))
+		}
 		pendingDelete.value = null
 		detailTarget.value = null
 	} catch (e) {
 		error(e)
 	} finally {
 		deleting.value = false
+		deleteMode.value = null
 	}
 }
 

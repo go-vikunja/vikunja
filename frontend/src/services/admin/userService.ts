@@ -12,11 +12,12 @@ export interface CreateAdminUserBody {
 	skipEmailConfirm?: boolean
 }
 
+export type DeleteUserMode = 'now' | 'scheduled'
+
 export default class AdminUserService extends AbstractService<IAdminUser> {
 	constructor() {
 		super({
 			getAll: '/admin/users',
-			delete: '/admin/users/{id}',
 		})
 	}
 
@@ -37,5 +38,9 @@ export default class AdminUserService extends AbstractService<IAdminUser> {
 	async createUser(body: CreateAdminUserBody) {
 		const {data} = await this.http.post('/register', body)
 		return this.modelCreateFactory(data)
+	}
+
+	async deleteUser(id: IAdminUser['id'], mode: DeleteUserMode) {
+		await this.http.delete(`/admin/users/${id}`, {params: {mode}})
 	}
 }

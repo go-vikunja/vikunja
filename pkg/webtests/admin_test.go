@@ -298,8 +298,8 @@ func TestAdmin_DeleteUser(t *testing.T) {
 
 	admin := promoteToAdmin(t, 1)
 
-	t.Run("deletes a regular user", func(t *testing.T) {
-		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/15", admin, "")
+	t.Run("mode=now deletes a regular user immediately", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/15?mode=now", admin, "")
 		assert.Equal(t, http.StatusNoContent, res.Code)
 
 		s := db.NewSession()
@@ -308,13 +308,45 @@ func TestAdmin_DeleteUser(t *testing.T) {
 		assert.Error(t, err, "deleted user must no longer be fetchable")
 	})
 
-	t.Run("last-admin guard refuses self-delete", func(t *testing.T) {
-		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/1", admin, "")
+	t.Run("mode=scheduled triggers RequestDeletion without removing the user", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/16?mode=scheduled", admin, "")
+		assert.Equal(t, http.StatusNoContent, res.Code)
+
+		s := db.NewSession()
+		defer s.Close()
+
+		// User must still exist — scheduled deletion only records a token and
+		// notifies the user; the actual row is not removed.
+		u := &user.User{ID: 16}
+		has, err := s.Get(u)
+		require.NoError(t, err)
+		assert.True(t, has, "scheduled deletion must not remove the user row")
+	})
+
+	t.Run("default (no mode) is scheduled", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/2", admin, "")
+		assert.Equal(t, http.StatusNoContent, res.Code)
+
+		s := db.NewSession()
+		defer s.Close()
+		u := &user.User{ID: 2}
+		has, err := s.Get(u)
+		require.NoError(t, err)
+		assert.True(t, has, "default mode must not remove the user row")
+	})
+
+	t.Run("rejects invalid mode", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/3?mode=bogus", admin, "")
+		assert.Equal(t, http.StatusBadRequest, res.Code)
+	})
+
+	t.Run("mode=now last-admin guard refuses self-delete", func(t *testing.T) {
+		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/1?mode=now", admin, "")
 		assert.Equal(t, http.StatusBadRequest, res.Code)
 	})
 
 	t.Run("unknown user returns 404", func(t *testing.T) {
-		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/9999999", admin, "")
+		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/9999999?mode=now", admin, "")
 		assert.Equal(t, http.StatusNotFound, res.Code)
 	})
 }

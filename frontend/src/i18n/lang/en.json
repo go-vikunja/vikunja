@@ -1523,8 +1523,13 @@
       "createdSuccess": "User {username} created.",
       "updatedSuccess": "User {username} updated.",
       "deletedSuccess": "User {username} deleted.",
+      "deleteScheduledSuccess": "User {username} will receive a confirmation email to schedule the deletion.",
       "confirmDeleteTitle": "Delete user?",
-      "confirmDeleteBody": "User {username} will be deleted immediately. This cannot be undone."
+      "confirmDeleteIntro": "How should user {username} be deleted?",
+      "deleteModeScheduled": "Schedule deletion",
+      "deleteModeScheduledHelp": "Schedule deletion sends the user a confirmation email, mirroring a self-initiated account deletion.",
+      "deleteModeNow": "Delete now",
+      "deleteModeNowHelp": "Delete now removes the user and all their data immediately. This cannot be undone."
     },
     "projects": {
       "ownerLabel": "Owner",
