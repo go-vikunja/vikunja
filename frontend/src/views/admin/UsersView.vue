@@ -22,7 +22,7 @@
 			</p>
 			<table
 				v-else
-				class="admin-users__table"
+				class="table has-actions is-striped is-hoverable is-fullwidth"
 			>
 				<thead>
 					<tr>
@@ -48,7 +48,7 @@
 						<td>
 							<time :datetime="formatISO(u.created)">{{ formatDisplayDate(u.created) }}</time>
 						</td>
-						<td class="admin-users__actions">
+						<td class="actions">
 							<XButton
 								variant="secondary"
 								@click="openDetails(u)"
@@ -484,34 +484,6 @@ onMounted(load)
 	display: flex;
 	gap: 0.5rem;
 	margin-block-end: 1rem;
-}
-
-.admin-users__table {
-	inline-size: 100%;
-	border-collapse: collapse;
-
-	th, td {
-		padding: 0.5rem 0.75rem;
-		text-align: start;
-		border-block-end: 1px solid var(--grey-200);
-	}
-
-	th {
-		font-weight: 600;
-		font-size: 0.85rem;
-		text-transform: uppercase;
-		color: var(--grey-600);
-	}
-}
-
-.admin-users__actions {
-	display: flex;
-	gap: 0.5rem;
-	justify-content: flex-end;
-}
-
-.admin-users__detail {
-	text-align: start;
 }
 
 .admin-users__meta {

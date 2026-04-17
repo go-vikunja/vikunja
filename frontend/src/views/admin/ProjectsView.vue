@@ -6,7 +6,7 @@
 			</p>
 			<table
 				v-else
-				class="admin-projects__table"
+				class="table has-actions is-striped is-hoverable is-fullwidth"
 			>
 				<thead>
 					<tr>
@@ -32,7 +32,7 @@
 						<td>
 							<time :datetime="formatISO(p.updated)">{{ formatDisplayDate(p.updated) }}</time>
 						</td>
-						<td class="admin-projects__actions">
+						<td class="actions">
 							<ProjectSettingsDropdown
 								:project="p"
 								:force-all-actions="true"
@@ -186,22 +186,3 @@ async function doReassign() {
 onMounted(load)
 </script>
 
-<style lang="scss" scoped>
-.admin-projects__table {
-	inline-size: 100%;
-	border-collapse: collapse;
-
-	th, td {
-		padding: 0.5rem 0.75rem;
-		text-align: start;
-		border-block-end: 1px solid var(--grey-200);
-	}
-}
-
-.admin-projects__actions {
-	display: flex;
-	gap: 0.5rem;
-	align-items: center;
-	justify-content: flex-end;
-}
-</style>
