@@ -22,7 +22,6 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
 
@@ -44,8 +43,7 @@ type OwnerPatch struct {
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/projects/{id}/owner [patch]
 func PatchProjectOwner(c *echo.Context) error {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id < 1 {
 		return models.ErrProjectDoesNotExist{ID: id}
 	}
@@ -58,34 +56,12 @@ func PatchProjectOwner(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	p := &models.Project{ID: id}
-	has, err := s.Get(p)
+	p, err := models.ReassignProjectOwner(s, id, body.OwnerID)
 	if err != nil {
-		return err
-	}
-	if !has {
-		return models.ErrProjectDoesNotExist{ID: id}
-	}
-
-	// Reject deletion-scheduled users: DeleteUser cascades to their projects,
-	// so reassigning to one silently destroys the project ~14 days later.
-	newOwner, err := user.GetUserByID(s, body.OwnerID)
-	if err != nil {
-		return err
-	}
-	if !newOwner.DeletionScheduledAt.IsZero() {
-		return models.ErrInvalidData{Message: "new owner is scheduled for deletion"}
-	}
-
-	p.OwnerID = body.OwnerID
-	if _, err := s.ID(p.ID).Cols("owner_id").Update(p); err != nil {
-		_ = s.Rollback()
 		return err
 	}
 	if err := s.Commit(); err != nil {
 		return err
 	}
-
-	p.Owner = newOwner
 	return c.JSON(http.StatusOK, p)
 }

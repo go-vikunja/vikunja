@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
@@ -27,6 +28,31 @@ import (
 // everything else is gated by the RequireInstanceAdmin middleware.
 type AdminProjectList struct {
 	IsArchived bool `query:"is_archived"`
+}
+
+// ReassignProjectOwner sets owner_id on the given project to newOwnerID,
+// refusing if the new owner is scheduled for deletion (since DeleteUser
+// later cascades to their projects).
+func ReassignProjectOwner(s *xorm.Session, projectID, newOwnerID int64) (*Project, error) {
+	p, err := GetProjectSimpleByID(s, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	newOwner, err := user.GetUserByID(s, newOwnerID)
+	if err != nil {
+		return nil, err
+	}
+	if !newOwner.DeletionScheduledAt.IsZero() {
+		return nil, ErrInvalidData{Message: "new owner is scheduled for deletion"}
+	}
+
+	p.OwnerID = newOwnerID
+	if _, err := s.ID(p.ID).Cols("owner_id").Update(p); err != nil {
+		return nil, err
+	}
+	p.Owner = newOwner
+	return p, nil
 }
 
 // ReadAll returns every project on the instance, archived included.
