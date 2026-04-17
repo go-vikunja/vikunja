@@ -262,23 +262,24 @@ func CurrentInfo() Info {
 	return info
 }
 
-// EnabledProFeatures returns the string keys of all enabled licensed features,
-// or an empty slice in free mode.
-func EnabledProFeatures() []string {
+// EnabledProFeatures returns all enabled licensed features, or an empty slice
+// in free mode. Feature values marshal to their JSON string key.
+func EnabledProFeatures() []Feature {
 	currentState.mu.RLock()
 	defer currentState.mu.RUnlock()
 	if !currentState.licensed {
-		return []string{}
+		return []Feature{}
 	}
-	out := make([]string, 0, len(currentState.features))
+	out := make([]Feature, 0, len(currentState.features))
 	for f, on := range currentState.features {
 		if !on {
 			continue
 		}
-		name := f.String()
-		out = append(out, name)
+		out = append(out, f)
 	}
-	sort.Strings(out)
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].String() < out[j].String()
+	})
 	return out
 }
 
