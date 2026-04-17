@@ -185,6 +185,7 @@ onMounted(async () => {
 }
 
 .admin-overview__card {
+	position: relative;
 	background: var(--white);
 	border: 1px solid var(--grey-200);
 	border-radius: 6px;
@@ -246,9 +247,13 @@ onMounted(async () => {
 }
 
 .admin-overview__shares-breakdown {
-	margin-block-start: 0.25rem;
-	margin-inline-start: 0;
-	font-size: 0.85rem;
+	position: absolute;
+	inset-block-end: 1.25rem;
+	inset-inline: 1.25rem;
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--grey-500);
+	text-align: end;
 }
 
 .admin-overview__external-icon {
