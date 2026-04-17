@@ -803,12 +803,17 @@ func registerAPIRoutes(a *echo.Group) {
 		RequireFeature(license.FeatureAdminPanel),
 		RequireInstanceAdmin(),
 	)
+	adminProjectListHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.AdminProjectList{}
+		},
+	}
 	admin.GET("/overview", adminapi.GetOverview)
 	admin.GET("/users", adminapi.ListUsers)
 	admin.PATCH("/users/:id/admin", adminapi.PatchAdmin)
 	admin.PATCH("/users/:id/status", adminapi.PatchStatus)
 	admin.DELETE("/users/:id", adminapi.DeleteUser)
-	admin.GET("/projects", adminapi.ListProjects)
+	admin.GET("/projects", adminProjectListHandler.ReadAllWeb)
 	admin.PATCH("/projects/:id/owner", adminapi.PatchProjectOwner)
 
 	// Plugin routes

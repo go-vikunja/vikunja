@@ -20,46 +20,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
 )
-
-// ListProjects returns all projects on the instance, paginated.
-// @Summary List projects (admin)
-// @Description Paginated list of every project on the instance, regardless of ownership.
-// @tags admin
-// @Produce json
-// @Security JWTKeyAuth
-// @Param page query int false "Page number, defaults to 1."
-// @Param per_page query int false "Items per page, defaults to the service setting."
-// @Param s query string false "Search projects by title, description or identifier."
-// @Success 200 {array} models.Project
-// @Failure 404 {object} web.HTTPError
-// @Router /admin/projects [get]
-func ListProjects(c *echo.Context) error {
-	s := db.NewSession()
-	defer s.Close()
-
-	page, _ := strconv.Atoi(c.QueryParam("page"))
-	if page < 1 {
-		page = 1
-	}
-	perPage, _ := strconv.Atoi(c.QueryParam("per_page"))
-	if perPage < 1 {
-		perPage = config.ServiceMaxItemsPerPage.GetInt()
-	}
-
-	projects, resultCount, totalCount, err := models.ListAllProjects(s, c.QueryParam("s"), page, perPage, true)
-	if err != nil {
-		return err
-	}
-
-	writePaginationHeaders(c, int64(resultCount), totalCount, perPage)
-	return c.JSON(http.StatusOK, projects)
-}
 
 type OwnerPatch struct {
 	OwnerID int64 `json:"owner_id"`
