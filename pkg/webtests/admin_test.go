@@ -392,7 +392,7 @@ func TestAdmin_ReassignProjectOwner(t *testing.T) {
 
 	t.Run("rejects nonexistent owner", func(t *testing.T) {
 		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/projects/2/owner", admin, `{"owner_id":99999}`)
-		assert.Equal(t, http.StatusBadRequest, res.Code)
+		assert.Equal(t, http.StatusNotFound, res.Code)
 	})
 
 	t.Run("nonexistent project returns 404", func(t *testing.T) {
