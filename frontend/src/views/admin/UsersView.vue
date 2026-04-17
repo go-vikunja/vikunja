@@ -1,5 +1,5 @@
 <template>
-	<Card :title="$t('admin.users.title')">
+	<Card>
 		<div class="admin-users">
 			<div class="admin-users__toolbar">
 				<input

@@ -1,5 +1,5 @@
 <template>
-	<Card :title="$t('admin.projects.title')">
+	<Card>
 		<div class="admin-projects">
 			<p v-if="loading">
 				{{ $t('misc.loading') }}
