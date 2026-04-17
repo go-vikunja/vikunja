@@ -83,7 +83,6 @@ func init() {
 	// Bypass confirm prompt
 	userDeleteCmd.Flags().BoolVarP(&userFlagDeleteConfirm, "confirm", "c", false, "Bypasses any prompts confirming the deletion request, use with caution!")
 
-	// Set admin flags
 	userSetAdminCmd.Flags().BoolVar(&userFlagMakeAdmin, "admin", false, "Promote the user to site admin.")
 	userSetAdminCmd.Flags().BoolVar(&userFlagRemoveAdmin, "no-admin", false, "Revoke site admin from the user.")
 	userSetAdminCmd.MarkFlagsMutuallyExclusive("admin", "no-admin")
@@ -125,7 +124,7 @@ var userSetAdminCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		s := db.NewSession()
 		defer s.Close()
-		value := userFlagMakeAdmin // false when --no-admin was set
+		value := userFlagMakeAdmin
 		if err := setUserAdmin(s, args[0], value); err != nil {
 			_ = s.Rollback()
 			log.Fatalf("Could not update admin flag: %s", err)

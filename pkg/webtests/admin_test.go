@@ -33,8 +33,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// promoteToAdmin flips is_admin on the given user in the DB so a freshly-issued
-// JWT carries the claim. Webtests use this to simulate "CLI set-admin was run".
 func promoteToAdmin(t *testing.T, userID int64) *user.User {
 	s := db.NewSession()
 	defer s.Close()
@@ -71,7 +69,6 @@ func TestAdmin_GateUnlicensed(t *testing.T) {
 
 	admin := promoteToAdmin(t, 1)
 
-	// 404 — feature not enabled. Gate must look like the route doesn't exist.
 	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/ping", admin, "")
 	assert.Equal(t, http.StatusNotFound, res.Code)
 }
@@ -82,7 +79,6 @@ func TestAdmin_GateNonAdmin(t *testing.T) {
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 	defer license.ResetForTests()
 
-	// user1 is not admin in fixtures.
 	s := db.NewSession()
 	defer s.Close()
 	u, err := user.GetUserByID(s, 1)
@@ -98,8 +94,7 @@ func TestAdmin_GateUnauthenticated(t *testing.T) {
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 	defer license.ResetForTests()
 
-	// No token at all — the echojwt middleware rejects with 401 before the
-	// license/admin gates ever see the request.
+	// echojwt rejects with 401 before the license/admin gates see the request.
 	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/ping", nil, "")
 	assert.Equal(t, http.StatusUnauthorized, res.Code)
 }
@@ -185,7 +180,6 @@ func TestAdmin_PatchAdmin(t *testing.T) {
 	})
 
 	t.Run("demote when another admin exists is allowed", func(t *testing.T) {
-		// user1 and user2 are both admin at this point.
 		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/2/admin", admin, `{"is_admin":false}`)
 		assert.Equal(t, http.StatusOK, res.Code)
 
@@ -197,7 +191,6 @@ func TestAdmin_PatchAdmin(t *testing.T) {
 	})
 
 	t.Run("last-admin guard refuses demotion", func(t *testing.T) {
-		// Only user1 is admin now.
 		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/1/admin", admin, `{"is_admin":false}`)
 		assert.Equal(t, http.StatusBadRequest, res.Code)
 
@@ -223,11 +216,10 @@ func TestAdmin_ListProjects(t *testing.T) {
 	admin := promoteToAdmin(t, 1)
 	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/projects", admin, "")
 	assert.Equal(t, http.StatusOK, res.Code)
-	// Fixture projects exist across many users — admin sees them all regardless of ownership.
 	body := res.Body.String()
 	assert.Contains(t, body, `"id":`)
 	assert.Contains(t, body, `"title":`)
-	// Owner is an xorm:"-" field and must be hydrated explicitly.
+	// Owner is xorm:"-" and must be hydrated explicitly.
 	assert.Contains(t, body, `"username":"user1"`)
 	assert.NotContains(t, body, `"owner":null`)
 }
@@ -240,7 +232,6 @@ func TestAdmin_PatchStatus(t *testing.T) {
 
 	admin := promoteToAdmin(t, 1)
 
-	// user.Status: 0=Active, 2=Disabled
 	res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/2/status", admin, `{"status":2}`)
 	assert.Equal(t, http.StatusOK, res.Code)
 
@@ -255,8 +246,6 @@ func TestAdmin_PatchStatus(t *testing.T) {
 	assert.Equal(t, 2, row.Status)
 
 	t.Run("last-admin guard refuses self-disable", func(t *testing.T) {
-		// user1 is still the only admin — disabling them would lock the instance
-		// out once the JWT expires.
 		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/1/status", admin, `{"status":2}`)
 		assert.Equal(t, http.StatusBadRequest, res.Code)
 
@@ -280,10 +269,7 @@ func TestAdmin_PatchStatus(t *testing.T) {
 	})
 }
 
-// TestAdmin_GuardLastAdmin_IgnoresNonActive verifies that non-active admins
-// (disabled, locked, or scheduled for deletion) are not counted as reachable
-// admins — demoting the only active admin must fail even if another admin
-// row exists with status != StatusActive.
+// Non-active admins must not count toward the last-admin invariant.
 func TestAdmin_GuardLastAdmin_IgnoresNonActive(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -292,8 +278,8 @@ func TestAdmin_GuardLastAdmin_IgnoresNonActive(t *testing.T) {
 
 	admin := promoteToAdmin(t, 1)
 
-	// Promote user17 (status=2, disabled per fixtures) to admin. They cannot
-	// log in, so they must not count toward the last-admin invariant.
+	// Promote a disabled user to admin; they cannot log in, so they must not
+	// satisfy the last-admin check.
 	s := db.NewSession()
 	u17 := &user.User{ID: 17}
 	has, err := s.Get(u17)
@@ -306,7 +292,6 @@ func TestAdmin_GuardLastAdmin_IgnoresNonActive(t *testing.T) {
 	require.NoError(t, s.Commit())
 	s.Close()
 
-	// Demoting user1 would leave only the disabled user17 as admin — refuse.
 	res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/users/1/admin", admin, `{"is_admin":false}`)
 	assert.Equal(t, http.StatusBadRequest, res.Code)
 
@@ -336,7 +321,6 @@ func TestAdmin_DeleteUser(t *testing.T) {
 	})
 
 	t.Run("last-admin guard refuses self-delete", func(t *testing.T) {
-		// user 1 is currently the only admin (no one else was promoted in this test).
 		res := adminReq(t, e, http.MethodDelete, "/api/v1/admin/users/1", admin, "")
 		assert.Equal(t, http.StatusBadRequest, res.Code)
 	})
@@ -347,18 +331,12 @@ func TestAdmin_DeleteUser(t *testing.T) {
 	})
 }
 
-// TestAdmin_RegisterBypass covers the admin bypass on the public /register
-// endpoint: a site admin's bearer token lets them create users even when
-// ServiceEnableRegistration is false, and carries the admin-only is_admin /
-// skip_email_confirm fields. Non-admin callers keep the original behavior.
 func TestAdmin_RegisterBypass(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 	defer license.ResetForTests()
 
-	// Turn off public registration to prove the bypass works. The default is true,
-	// so remember to restore it for any subsequent test run.
 	prev := config.ServiceEnableRegistration.GetBool()
 	config.ServiceEnableRegistration.Set(false)
 	defer config.ServiceEnableRegistration.Set(prev)
@@ -415,8 +393,8 @@ func TestAdmin_RegisterBypass(t *testing.T) {
 	})
 
 	t.Run("non-admin bearer cannot set is_admin", func(t *testing.T) {
-		// Re-enable registration so the non-admin request reaches the handler body;
-		// the flag should still be silently ignored.
+		// Re-enable registration so the request reaches the handler body; the
+		// flag should still be silently ignored.
 		config.ServiceEnableRegistration.Set(true)
 		defer config.ServiceEnableRegistration.Set(false)
 
@@ -441,7 +419,6 @@ func TestAdmin_ReassignProjectOwner(t *testing.T) {
 	admin := promoteToAdmin(t, 1)
 
 	t.Run("updates owner_id", func(t *testing.T) {
-		// Project 2 is owned by user 1 in fixtures. Reassign to user 2.
 		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/projects/2/owner", admin, `{"owner_id":2}`)
 		assert.Equal(t, http.StatusOK, res.Code)
 
@@ -466,52 +443,43 @@ func TestAdmin_ReassignProjectOwner(t *testing.T) {
 	})
 
 	t.Run("rejects disabled user as new owner", func(t *testing.T) {
-		// user17 has status=2 (disabled) per fixtures. ErrAccountDisabled -> 412.
 		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/projects/2/owner", admin, `{"owner_id":17}`)
 		assert.Equal(t, http.StatusPreconditionFailed, res.Code)
 	})
 
 	t.Run("rejects locked user as new owner", func(t *testing.T) {
-		// user18 has status=3 (locked) per fixtures. ErrAccountLocked -> 412.
 		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/projects/2/owner", admin, `{"owner_id":18}`)
 		assert.Equal(t, http.StatusPreconditionFailed, res.Code)
 	})
 
 	t.Run("rejects deletion-scheduled user as new owner", func(t *testing.T) {
-		// user20 has deletion_scheduled_at set. Handing a project to a user whose
-		// row is about to be deleted would cascade-delete the project.
+		// DeleteUser cascades to their projects — reassigning to one would
+		// silently destroy the project once the delayed deletion runs.
 		res := adminReq(t, e, http.MethodPatch, "/api/v1/admin/projects/2/owner", admin, `{"owner_id":20}`)
 		assert.Equal(t, http.StatusBadRequest, res.Code)
 	})
 }
 
-// TestAdmin_StaleAdminJWT_Gate proves the gate does not rely on the JWT's
-// is_admin claim alone. A user who was admin at token-mint time but has since
-// been demoted in the DB must be rejected the next time they hit /admin/*.
+// The gate must not rely on the JWT's is_admin claim alone: a demoted admin
+// must lose access immediately.
 func TestAdmin_StaleAdminJWT_Gate(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 	defer license.ResetForTests()
 
-	// Mint a token with is_admin=true while the DB says the user is admin...
 	admin := promoteToAdmin(t, 1)
 
-	// ...then flip is_admin=false in the DB behind the token's back.
 	s := db.NewSession()
 	_, err = s.ID(int64(1)).Cols("is_admin").Update(&user.User{IsAdmin: false})
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	s.Close()
 
-	// The stale JWT still claims admin, but the gate re-checks the DB and denies.
 	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/ping", admin, "")
 	assert.Equal(t, http.StatusNotFound, res.Code, "demoted admin with stale JWT must be rejected")
 }
 
-// TestAdmin_StaleAdminJWT_DeletedUser covers the case where the admin was
-// deleted (not just demoted) — the gate must treat "user does not exist" the
-// same as "not admin".
 func TestAdmin_StaleAdminJWT_DeletedUser(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -520,7 +488,6 @@ func TestAdmin_StaleAdminJWT_DeletedUser(t *testing.T) {
 
 	admin := promoteToAdmin(t, 1)
 
-	// Delete the admin row directly. The JWT is still valid and carries is_admin=true.
 	s := db.NewSession()
 	_, err = s.ID(int64(1)).Delete(&user.User{})
 	require.NoError(t, err)
@@ -531,38 +498,28 @@ func TestAdmin_StaleAdminJWT_DeletedUser(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.Code, "deleted admin with stale JWT must be rejected")
 }
 
-// TestAdmin_StaleAdminJWT_PermissionBypass proves the model-level permission
-// bypass (used by project/team/view CRUD) also re-checks the DB. A demoted
-// admin's stale JWT must not let them access a project they do not otherwise
-// have permissions on.
+// The model-level permission bypass must also re-check the DB, not just the JWT.
 func TestAdmin_StaleAdminJWT_PermissionBypass(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
 	defer license.ResetForTests()
 
-	// Project 2 is owned by user 3; user 1 has no share on it. Without the
-	// admin bypass, reading it must fail.
+	// Project 2 is owned by user 3; user 1 has no share without the bypass.
 	admin := promoteToAdmin(t, 1)
 
-	// Sanity: while still admin, user 1 can read project 2.
 	res := adminReq(t, e, http.MethodGet, "/api/v1/projects/2", admin, "")
 	require.Equal(t, http.StatusOK, res.Code, "fresh admin must be able to read a project they do not own")
 
-	// Demote in DB, keep the JWT.
 	s := db.NewSession()
 	_, err = s.ID(int64(1)).Cols("is_admin").Update(&user.User{IsAdmin: false})
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	s.Close()
 
-	// Same token, same request — must now fail because the bypass re-reads the DB.
 	res = adminReq(t, e, http.MethodGet, "/api/v1/projects/2", admin, "")
 	assert.NotEqual(t, http.StatusOK, res.Code, "demoted admin must lose project bypass after DB update")
 }
 
-// TestAdmin_StaleAdminJWT_Register covers the admin bypass on the public
-// /register endpoint: after demotion, a stale admin JWT can no longer bypass
-// ServiceEnableRegistration=false or set admin-only fields.
 func TestAdmin_StaleAdminJWT_Register(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -575,7 +532,6 @@ func TestAdmin_StaleAdminJWT_Register(t *testing.T) {
 
 	admin := promoteToAdmin(t, 1)
 
-	// Demote in DB — JWT still carries is_admin=true.
 	s := db.NewSession()
 	_, err = s.ID(int64(1)).Cols("is_admin").Update(&user.User{IsAdmin: false})
 	require.NoError(t, err)

@@ -28,10 +28,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// These tests pin down Task 15 from the admin-panel plan: site admins use
-// existing per-project share endpoints via the Can* bypass — there are no
-// dedicated admin share endpoints. Project 2 is owned by user 3; user 1 has
-// no read/write/admin access to it without the site-admin flag.
+// Site admins manage shares through the existing per-project endpoints via
+// the Can* bypass; there are no dedicated admin share endpoints. Project 2
+// is owned by user 3; user 1 has no share on it.
 
 func TestAdminBypass_CanListProjectShares(t *testing.T) {
 	e, err := setupTestEnv()
@@ -42,7 +41,6 @@ func TestAdminBypass_CanListProjectShares(t *testing.T) {
 	admin := promoteToAdmin(t, 1)
 	res := adminReq(t, e, http.MethodGet, "/api/v1/projects/2/shares", admin, "")
 	assert.Equal(t, http.StatusOK, res.Code)
-	// Fixture link share id=2 belongs to project 2.
 	assert.Contains(t, res.Body.String(), `"hash":"test2"`)
 }
 
@@ -53,7 +51,6 @@ func TestAdminBypass_CanDeleteLinkShare(t *testing.T) {
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 
 	admin := promoteToAdmin(t, 1)
-	// Link share id=2 on project 2 (owned by user 3).
 	res := adminReq(t, e, http.MethodDelete, "/api/v1/projects/2/shares/2", admin, "")
 	assert.Equal(t, http.StatusOK, res.Code)
 }
@@ -65,9 +62,8 @@ func TestAdminBypass_CanDeleteTeamShare(t *testing.T) {
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 
 	admin := promoteToAdmin(t, 1)
-	// team_projects id=1: team 1 shared on project 3. User 1 has only read
-	// access to project 3 (users_projects id=1 permission=0), so removing a
-	// team share would be forbidden without the site-admin bypass.
+	// User 1 has only read access to project 3; removing a team share would
+	// be forbidden without the site-admin bypass.
 	res := adminReq(t, e, http.MethodDelete, "/api/v1/projects/3/teams/1", admin, "")
 	assert.Equal(t, http.StatusOK, res.Code)
 }
@@ -79,17 +75,14 @@ func TestAdminBypass_CanDeleteUserShare(t *testing.T) {
 	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
 
 	admin := promoteToAdmin(t, 1)
-	// users_projects id=2: user2 shared on project 3 with read permission.
 	// The delete endpoint keys by username, not numeric ID.
 	res := adminReq(t, e, http.MethodDelete, "/api/v1/projects/3/users/user2", admin, "")
 	assert.Equal(t, http.StatusOK, res.Code)
 }
 
-// Regression for bug_002: the site-admin short-circuit in Project.CanRead used
-// to swallow GetProjectSimpleByID errors, so a nonexistent project ID fell
-// through to Project.ReadOne on a zero-valued project and surfaced a misleading
-// "user does not exist" (1005) instead of the correct "project does not exist"
-// (3001).
+// Regression: the site-admin short-circuit in Project.CanRead used to swallow
+// GetProjectSimpleByID errors, surfacing user-not-found (1005) instead of
+// project-not-found (3001) for missing project IDs.
 func TestAdminBypass_NonexistentProjectReturns404(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
@@ -104,10 +97,8 @@ func TestAdminBypass_NonexistentProjectReturns404(t *testing.T) {
 	assert.NotContains(t, body, `"code":1005`, "must not surface ErrUserDoesNotExist when the project is missing")
 }
 
-// Negative: without the admin flag in the DB, the same user hits a permission
-// error, proving the bypass is what makes the positive tests above pass.
-// The bypass reads is_admin from the DB (to defeat stale JWTs), so the test
-// must demote the user in the DB rather than flipping the local struct field.
+// The bypass reads is_admin from the DB, so the test must demote in the DB
+// rather than flipping the local struct field.
 func TestAdminBypass_NonAdminCannotDeleteLinkShare(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)

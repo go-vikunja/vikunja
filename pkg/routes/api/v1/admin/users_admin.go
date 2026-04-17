@@ -27,14 +27,11 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// Patch is the request body for PATCH /admin/users/:id/admin.
 type Patch struct {
 	IsAdmin bool `json:"is_admin"`
 }
 
-// PatchAdmin promotes or demotes a user's site-admin flag.
-// It refuses to demote the last remaining admin to avoid locking the instance
-// out of the admin panel.
+// PatchAdmin toggles a user's site-admin flag.
 // @Summary Promote or demote a user (admin)
 // @Description Toggle the site-admin flag on a user. Demoting the last remaining admin is refused with 400.
 // @tags admin
@@ -71,7 +68,6 @@ func PatchAdmin(c *echo.Context) error {
 		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
-	// Only run the last-admin guard when we're actually demoting.
 	if !body.IsAdmin {
 		if err := user.GuardLastAdmin(s, target); err != nil {
 			_ = s.Rollback()

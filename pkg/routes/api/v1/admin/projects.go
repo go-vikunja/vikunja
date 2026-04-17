@@ -56,7 +56,7 @@ func ListProjects(c *echo.Context) error {
 		return err
 	}
 
-	// Owner is an xorm:"-" field, so hydrate it from users in one batch lookup.
+	// Owner is xorm:"-", hydrate from users in one batch lookup.
 	ownerIDs := make([]int64, 0, len(projects))
 	for _, p := range projects {
 		ownerIDs = append(ownerIDs, p.OwnerID)
@@ -80,12 +80,11 @@ func ListProjects(c *echo.Context) error {
 	return c.JSON(http.StatusOK, projects)
 }
 
-// OwnerPatch is the body for PATCH /admin/projects/:id/owner.
 type OwnerPatch struct {
 	OwnerID int64 `json:"owner_id"`
 }
 
-// PatchProjectOwner reassigns the owner of a project. Admin-only.
+// PatchProjectOwner reassigns a project's owner.
 // @Summary Reassign project owner (admin)
 // @Description Reassign a project's owner. The existing update endpoint doesn't allow owner changes — this is the admin-only escape hatch.
 // @tags admin
@@ -122,11 +121,8 @@ func PatchProjectOwner(c *echo.Context) error {
 		return models.ErrProjectDoesNotExist{ID: id}
 	}
 
-	// Verify the new owner exists and is actually usable. GetUserByID surfaces
-	// ErrUserDoesNotExist / ErrAccountDisabled / ErrAccountLocked for us. Guarding
-	// against deletion-scheduled users is critical: models.DeleteUser cascades to
-	// projects they own, so "rescuing" a project to a soon-to-be-deleted user
-	// silently destroys it ~14 days later.
+	// Reject deletion-scheduled users: DeleteUser cascades to their projects,
+	// so reassigning to one silently destroys the project ~14 days later.
 	newOwner, err := user.GetUserByID(s, body.OwnerID)
 	if err != nil {
 		return err

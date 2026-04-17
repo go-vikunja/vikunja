@@ -1,9 +1,5 @@
 import {Factory} from '../support/factory'
 
-/**
- * Seeds the license_status row. The backend re-applies the cached response
- * on this seed call, so licensed features take effect immediately.
- */
 export class LicenseFactory extends Factory {
 	static table = 'license_status'
 

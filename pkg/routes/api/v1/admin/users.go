@@ -28,20 +28,16 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// User re-exposes fields that the default User JSON view hides.
+// User re-exposes fields hidden by the default User JSON view.
 type User struct {
 	*user.User
-	IsAdmin bool        `json:"is_admin"`
-	Status  user.Status `json:"status"`
-	Issuer  string      `json:"issuer"`
-	// Subject is the external identifier for federated accounts (OIDC `sub` claim or LDAP DN). Empty for local accounts.
-	Subject string `json:"subject,omitempty"`
-	// AuthProvider is a display-ready label for the account's auth source. Empty for local accounts (caller is expected to render "Local"), "LDAP" for LDAP, the configured friendly name for OIDC accounts (e.g. "Keycloak"), or the raw issuer URL for OIDC accounts whose issuer no longer matches any configured provider.
-	AuthProvider string `json:"auth_provider,omitempty"`
+	IsAdmin      bool        `json:"is_admin"`
+	Status       user.Status `json:"status"`
+	Issuer       string      `json:"issuer"`
+	Subject      string      `json:"subject,omitempty"`
+	AuthProvider string      `json:"auth_provider,omitempty"`
 }
 
-// newAdminUser wraps a user.User with the extra admin-only fields, resolving
-// the auth provider label when applicable.
 func newAdminUser(u *user.User, providers []*openid.Provider) *User {
 	return &User{
 		User:         u,
@@ -72,7 +68,7 @@ func resolveAuthProvider(u *user.User, providers []*openid.Provider) string {
 	return u.Issuer
 }
 
-// ListUsers returns paginated users for the admin panel with optional search.
+// ListUsers returns paginated users, optionally filtered by search string.
 // @Summary List users (admin)
 // @Description Paginated list of all users on the instance. Supports search by username/email. Exposes fields hidden from the normal user API (is_admin, status).
 // @tags admin
@@ -133,7 +129,6 @@ func ListUsers(c *echo.Context) error {
 	return c.JSON(http.StatusOK, out)
 }
 
-// writePaginationHeaders matches the header contract used by web/handler.ReadAllWeb.
 func writePaginationHeaders(c *echo.Context, resultCount, totalCount int64, perPage int) {
 	numberOfPages := math.Ceil(float64(totalCount) / float64(perPage))
 	if totalCount == 0 {

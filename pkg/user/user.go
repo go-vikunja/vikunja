@@ -95,7 +95,6 @@ type User struct {
 
 	Status Status `xorm:"default 0" json:"-"`
 
-	// Whether this user is a site-wide admin. Managed via CLI only.
 	IsAdmin bool `xorm:"not null default false" json:"-"`
 
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
@@ -665,21 +664,11 @@ func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
 	return
 }
 
-// GuardLastAdmin returns ErrLastAdmin when removing the target user's
-// site-admin privileges (by demotion or deletion) would leave the instance
-// without any reachable site admin. It's a no-op when the target isn't an
-// admin.
-//
-// Only active, non-deletion-scheduled admins are counted — disabled, locked,
-// or deletion-scheduled admins cannot log in and must not satisfy the
-// invariant. Callers should invoke this before performing the destructive
-// operation.
-//
-// On MySQL and Postgres the candidate admin rows are locked with
-// SELECT ... FOR UPDATE to close the TOCTOU race where two concurrent
-// demotions each observe count > 1 and both commit. SQLite serializes writes
-// at the database level, so no explicit lock is needed (and xorm's
-// .ForUpdate() is MySQL-only anyway).
+// GuardLastAdmin returns ErrLastAdmin when demoting or deleting target would
+// leave the instance without a reachable site admin. Only active,
+// non-deletion-scheduled admins count — the rest cannot log in.
+// SELECT ... FOR UPDATE closes the TOCTOU race where two concurrent demotions
+// each see count > 1 and both commit; SQLite serializes writes so it's skipped.
 func GuardLastAdmin(s *xorm.Session, target *User) error {
 	if !target.IsAdmin {
 		return nil

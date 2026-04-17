@@ -25,14 +25,12 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// ShareCounts breaks down the different kinds of project shares present on the instance.
 type ShareCounts struct {
 	LinkShares int64 `json:"link_shares"`
 	TeamShares int64 `json:"team_shares"`
 	UserShares int64 `json:"user_shares"`
 }
 
-// Overview is the aggregate payload returned by GET /admin/overview.
 type Overview struct {
 	Users    int64        `json:"users"`
 	Projects int64        `json:"projects"`
@@ -43,7 +41,7 @@ type Overview struct {
 	License  license.Info `json:"license"`
 }
 
-// GetOverview returns aggregate instance counts and metadata for the admin panel.
+// GetOverview returns aggregate instance counts and metadata.
 // @Summary Admin overview
 // @Description Returns per-instance counts (users, projects, shares) plus version and license info. Site-admin only, gated by the admin_panel feature.
 // @tags admin

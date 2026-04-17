@@ -768,8 +768,7 @@ func (err ErrTokenUserMismatch) HTTPError() web.HTTPError {
 	}
 }
 
-// ErrLastAdmin represents an attempt to remove the site-admin flag from the
-// only remaining site admin, which would leave the instance without one.
+// ErrLastAdmin represents a "LastAdmin" kind of error.
 type ErrLastAdmin struct{}
 
 // IsErrLastAdmin checks if an error is a ErrLastAdmin.

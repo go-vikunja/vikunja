@@ -101,9 +101,7 @@ func HandleTesting(c *echo.Context) error {
 		})
 	}
 
-	// Seeding the license_status table only updates the DB row — the in-memory
-	// license state is populated once at startup. Re-apply from cache so tests
-	// that seed a valid Response get the licensed features without restarting.
+	// License state is cached at startup; re-apply so tests take effect without a restart.
 	if table == "license_status" {
 		if err := license.ReloadFromCache(); err != nil {
 			log.Errorf("Error reloading license from seeded cache: %v", err)

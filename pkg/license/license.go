@@ -193,9 +193,8 @@ func Init() {
 	go backgroundLoop(key)
 }
 
-// SetForTests enables the given features in the in-memory license state for
-// the lifetime of the process. Intended for Go unit/webtests only. Use with
-// ResetForTests in a defer to avoid bleeding state between tests.
+// SetForTests enables the given features in the in-memory license state.
+// Pair with ResetForTests in a defer to avoid bleeding state between tests.
 func SetForTests(features []Feature) {
 	feats := make([]Feature, 0, len(features))
 	feats = append(feats, features...)
@@ -206,15 +205,13 @@ func SetForTests(features []Feature) {
 	})
 }
 
-// ResetForTests wipes the in-memory license state. Intended for tests.
+// ResetForTests wipes the in-memory license state.
 func ResetForTests() {
 	degradeToFree("reset for tests")
 }
 
-// ReloadFromCache reads the cached license_status row and applies it to the
-// in-memory license state. Intended for tests (seed the row, call reload) and
-// any admin flow that wants to refresh licensed features without a restart.
-// If the cached response is empty or missing, the instance degrades to free mode.
+// ReloadFromCache applies the cached license_status row to the in-memory
+// license state. An empty or missing cached response degrades to free mode.
 func ReloadFromCache() error {
 	cached, err := loadCachedStatus()
 	if err != nil {
@@ -227,8 +224,7 @@ func ReloadFromCache() error {
 	return applyFromCache(cached)
 }
 
-// Info is a read-only snapshot of the current license state intended for the
-// admin panel. It composes every field we want to surface to site admins.
+// Info is a read-only snapshot of the current license state.
 type Info struct {
 	Licensed        bool      `json:"licensed"`
 	InstanceID      string    `json:"instance_id"`
@@ -239,9 +235,8 @@ type Info struct {
 	LastCheckFailed bool      `json:"last_check_failed"`
 }
 
-// CurrentInfo returns a snapshot of the current license state. Never returns
-// an error — on DB hiccups it omits the cache-backed fields and returns what
-// in-memory state we have.
+// CurrentInfo returns a snapshot of the current license state. On DB errors
+// it omits the cache-backed fields rather than failing.
 func CurrentInfo() Info {
 	currentState.mu.RLock()
 	info := Info{
@@ -267,8 +262,8 @@ func CurrentInfo() Info {
 	return info
 }
 
-// EnabledProFeatures returns the string keys of all currently enabled licensed features.
-// Returns an empty slice in free mode.
+// EnabledProFeatures returns the string keys of all enabled licensed features,
+// or an empty slice in free mode.
 func EnabledProFeatures() []string {
 	currentState.mu.RLock()
 	defer currentState.mu.RUnlock()

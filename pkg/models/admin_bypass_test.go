@@ -31,8 +31,7 @@ func TestAdminBypass_Project(t *testing.T) {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Use a real fixture user (user 2 owns nothing involving project 1) and
-	// promote them in the DB — the bypass now reads is_admin from the DB.
+	// User 2 owns nothing involving project 1.
 	_, err := s.ID(int64(2)).Cols("is_admin").Update(&user.User{IsAdmin: true})
 	require.NoError(t, err)
 
@@ -56,19 +55,15 @@ func TestAdminBypass_Project(t *testing.T) {
 	assert.True(t, can)
 }
 
-// TestAdminBypass_StaleJWT_Demoted covers the core of bug_003: an auth
-// object carrying IsAdmin=true (as if from a freshly-minted JWT) must not
-// grant the bypass once the underlying user has been demoted in the DB.
+// A stale admin-claim auth (as if from a JWT minted before demotion) must
+// not grant the bypass once the DB row is demoted.
 func TestAdminBypass_StaleJWT_Demoted(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
 
-	// user 3 is not an admin in fixtures. Construct an auth object that claims
-	// to be admin (as a stale JWT would) but does not match the DB.
+	// User 3 is not admin in fixtures; project 1 is owned by user 1.
 	stale := &user.User{ID: 3, IsAdmin: true}
-
-	// Project 1 is owned by user 1 — user 3 has no share on it.
 	p := &Project{ID: 1}
 
 	can, _, err := p.CanRead(s, stale)
@@ -84,14 +79,11 @@ func TestAdminBypass_StaleJWT_Demoted(t *testing.T) {
 	assert.False(t, can)
 }
 
-// TestAdminBypass_StaleJWT_DeletedUser covers the case where a stale admin
-// JWT belongs to a user that has been removed from the DB entirely.
 func TestAdminBypass_StaleJWT_DeletedUser(t *testing.T) {
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
 
-	// No user with this ID exists in fixtures.
 	stale := &user.User{ID: 99999, IsAdmin: true}
 	p := &Project{ID: 1}
 

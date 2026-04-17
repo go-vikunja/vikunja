@@ -27,13 +27,11 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// StatusPatch is the body for PATCH /admin/users/:id/status.
 type StatusPatch struct {
-	// Status accepts the raw user.Status int: 0=Active, 1=EmailConfirmationRequired, 2=Disabled, 3=AccountLocked.
 	Status user.Status `json:"status"`
 }
 
-// PatchStatus sets a user's status (active/disabled/etc.) on behalf of an admin.
+// PatchStatus sets a user's status.
 // @Summary Set a user's status (admin)
 // @Description Change a user's status without requiring them to log in.
 // @tags admin
@@ -71,8 +69,7 @@ func PatchStatus(c *echo.Context) error {
 		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
-	// Flipping an admin to a non-active status locks them out just like a
-	// demotion or deletion would, so refuse if they're the last admin.
+	// Disabling/locking an admin is equivalent to demoting them.
 	if target.IsAdmin && (body.Status == user.StatusDisabled || body.Status == user.StatusAccountLocked) {
 		if err := user.GuardLastAdmin(s, target); err != nil {
 			_ = s.Rollback()
@@ -88,8 +85,7 @@ func PatchStatus(c *echo.Context) error {
 		return err
 	}
 
-	// The target struct was loaded pre-update; reflect the new status on it
-	// locally instead of re-fetching (GetUserByID refuses disabled accounts).
+	// Refresh locally; GetUserByID refuses disabled accounts.
 	target.Status = body.Status
 	providers, err := openid.GetAllProviders()
 	if err != nil {
@@ -98,8 +94,7 @@ func PatchStatus(c *echo.Context) error {
 	return c.JSON(http.StatusOK, newAdminUser(target, providers))
 }
 
-// DeleteUser removes a user immediately. Admin-only escape hatch — skips the
-// 14-day email confirmation flow that normal self-deletion uses.
+// DeleteUser removes a user immediately, skipping the self-deletion confirmation flow.
 // @Summary Delete a user (admin)
 // @Description Delete a user immediately, bypassing the confirmation flow.
 // @tags admin
@@ -128,7 +123,6 @@ func DeleteUser(c *echo.Context) error {
 		return user.ErrUserDoesNotExist{UserID: id}
 	}
 
-	// Deleting the only admin is equivalent to demoting them — refuse.
 	if err := user.GuardLastAdmin(s, target); err != nil {
 		return err
 	}

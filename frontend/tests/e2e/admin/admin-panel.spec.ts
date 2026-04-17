@@ -26,7 +26,6 @@ test.describe('Admin panel', () => {
 
 		test('a non-admin user visiting /admin lands on the not-found page', async ({authenticatedPage: page}) => {
 			await page.goto('/admin')
-			// Router guard redirects to not-found.
 			await expect(page).not.toHaveURL(/\/admin$/)
 		})
 
@@ -55,7 +54,6 @@ test.describe('Admin panel', () => {
 
 			await page.goto('/admin')
 
-			// Guard redirects to not-found; the admin shell should not render.
 			await expect(page.locator('.side-nav-shell')).not.toBeVisible()
 		})
 	})

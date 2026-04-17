@@ -34,21 +34,15 @@ type UserRegister struct {
 	// The language of the new user. Must be a valid IETF BCP 47 language code and exist in Vikunja.
 	Language string `json:"language" valid:"language"`
 	user.APIUserPassword
-	// Mark the new user as a site admin. Ignored unless the caller is an authenticated site admin.
-	IsAdmin bool `json:"is_admin"`
-	// Activate the new user immediately without email confirmation. Ignored unless the caller is an authenticated site admin.
+	// Admin-only. Silently ignored unless the caller is an authenticated site admin.
+	IsAdmin          bool `json:"is_admin"`
 	SkipEmailConfirm bool `json:"skip_email_confirm"`
 }
 
-// callerIsSiteAdmin detects whether the request carries a valid bearer for a
-// site-admin user. The /register route is in the public group so we parse the
-// header ourselves. Any parse error is treated as "not authenticated" — we
-// never surface it, the absence of a bearer is legitimate.
-//
-// The is_admin claim on the JWT is only a hint: a demoted or deleted admin
-// keeps the claim until their token expires. We re-read is_admin from the DB
-// so a stale token cannot be used to bypass registration gates or mint new
-// admins. Disabled/locked/missing users are treated as not admin.
+// callerIsSiteAdmin reports whether the request carries a bearer for a
+// site-admin user. /register is in the public group, so the header is parsed
+// here; any error means "not authenticated". is_admin is re-read from the DB
+// so a stale token cannot be used to bypass gates or mint new admins.
 func callerIsSiteAdmin(c *echo.Context) bool {
 	header := c.Request().Header.Get(echo.HeaderAuthorization)
 	if header == "" {
@@ -67,8 +61,8 @@ func callerIsSiteAdmin(c *echo.Context) bool {
 		return false
 	}
 
-	// Close the session before returning — the handler opens its own session
-	// immediately after, and keeping this one alive deadlocks on SQLite.
+	// Close before returning; the handler opens its own session and SQLite
+	// deadlocks on overlapping sessions on the users table.
 	s := db.NewSession()
 	fresh, err := user.GetUserByID(s, u.ID)
 	_ = s.Close()
@@ -133,9 +127,6 @@ func RegisterUser(c *echo.Context) error {
 		return err
 	}
 
-	// Admin-only fields are honored only when the caller is an authenticated site admin.
-	// The is_admin / skip_email_confirm body fields are silently ignored otherwise; we
-	// never trust them from the public register endpoint.
 	if isAdmin {
 		if userIn.IsAdmin {
 			if _, err := s.ID(newUser.ID).Cols("is_admin").Update(&user.User{IsAdmin: true}); err != nil {
@@ -144,9 +135,6 @@ func RegisterUser(c *echo.Context) error {
 			}
 			newUser.IsAdmin = true
 		}
-		// CreateUser flips status to EmailConfirmationRequired only when the mailer is
-		// enabled. Skipping is meaningful in that case; when the mailer is off the user
-		// is already Active and this is a harmless no-op.
 		if userIn.SkipEmailConfirm || !config.MailerEnabled.GetBool() {
 			if err := user.SetUserStatus(s, newUser, user.StatusActive); err != nil {
 				_ = s.Rollback()

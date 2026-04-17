@@ -24,14 +24,8 @@ import (
 )
 
 // isSiteAdmin returns true when the auth belongs to a site admin user.
-// Link-share auths are not *user.User and therefore fall through (return false)
-// — they must continue through the normal permission flow.
-//
-// The IsAdmin flag on a.(*user.User) is populated from JWT claims and must
-// not be trusted on its own: a demoted or deleted admin would keep site-admin
-// authority until their outstanding token expired. Re-check against the DB
-// so the bypass reflects the user's current state. A disabled/locked/missing
-// user is not an admin.
+// The IsAdmin flag on the auth is claim-derived and stale until the JWT
+// expires; re-read from the DB so demotion/deletion takes effect immediately.
 func isSiteAdmin(s *xorm.Session, a web.Auth) bool {
 	u, ok := a.(*user.User)
 	if !ok {

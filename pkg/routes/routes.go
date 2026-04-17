@@ -799,8 +799,6 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
 
-	// Admin panel routes — gated by license feature and site-admin flag.
-	// Both gates return 404 so unlicensed/unauthorized callers can't probe the surface.
 	admin := a.Group("/admin",
 		RequireFeature(license.FeatureAdminPanel),
 		RequireSiteAdmin(),
