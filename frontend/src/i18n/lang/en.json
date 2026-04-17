@@ -1476,7 +1476,7 @@
   },
   "admin": {
     "title": "Administration",
-    "menuLabel": "Admin",
+    "menuLabel": "Administration",
     "nav": {
       "overview": "Overview",
       "users": "Users",
