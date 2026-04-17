@@ -69,7 +69,7 @@ func TestAdmin_GateUnlicensed(t *testing.T) {
 
 	admin := promoteToAdmin(t, 1)
 
-	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/ping", admin, "")
+	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/overview", admin, "")
 	assert.Equal(t, http.StatusNotFound, res.Code)
 }
 
@@ -84,7 +84,7 @@ func TestAdmin_GateNonAdmin(t *testing.T) {
 	u, err := user.GetUserByID(s, 1)
 	require.NoError(t, err)
 
-	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/ping", u, "")
+	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/overview", u, "")
 	assert.Equal(t, http.StatusNotFound, res.Code)
 }
 
@@ -95,20 +95,8 @@ func TestAdmin_GateUnauthenticated(t *testing.T) {
 	defer license.ResetForTests()
 
 	// echojwt rejects with 401 before the license/admin gates see the request.
-	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/ping", nil, "")
+	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/overview", nil, "")
 	assert.Equal(t, http.StatusUnauthorized, res.Code)
-}
-
-func TestAdmin_PingSucceedsWhenLicensedAndAdmin(t *testing.T) {
-	e, err := setupTestEnv()
-	require.NoError(t, err)
-	license.SetForTests([]license.Feature{license.FeatureAdminPanel})
-	defer license.ResetForTests()
-
-	admin := promoteToAdmin(t, 1)
-	res := adminReq(t, e, http.MethodGet, "/api/v1/admin/ping", admin, "")
-	assert.Equal(t, http.StatusOK, res.Code)
-	assert.Contains(t, res.Body.String(), `"status":"ok"`)
 }
 
 func TestAdmin_Overview(t *testing.T) {
