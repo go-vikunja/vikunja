@@ -227,6 +227,9 @@ func TestAdmin_ListProjects(t *testing.T) {
 	body := res.Body.String()
 	assert.Contains(t, body, `"id":`)
 	assert.Contains(t, body, `"title":`)
+	// Owner is an xorm:"-" field and must be hydrated explicitly.
+	assert.Contains(t, body, `"username":"user1"`)
+	assert.NotContains(t, body, `"owner":null`)
 }
 
 func TestAdmin_PatchStatus(t *testing.T) {

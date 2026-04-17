@@ -56,6 +56,21 @@ func ListProjects(c *echo.Context) error {
 		return err
 	}
 
+	// Owner is an xorm:"-" field, so hydrate it from users in one batch lookup.
+	ownerIDs := make([]int64, 0, len(projects))
+	for _, p := range projects {
+		ownerIDs = append(ownerIDs, p.OwnerID)
+	}
+	owners, err := user.GetUsersByIDs(s, ownerIDs)
+	if err != nil {
+		return err
+	}
+	for _, p := range projects {
+		if o, ok := owners[p.OwnerID]; ok {
+			p.Owner = o
+		}
+	}
+
 	totalCount, err := s.Count(&models.Project{})
 	if err != nil {
 		return err
