@@ -172,13 +172,13 @@ onMounted(async () => {
 	gap: 1rem;
 }
 
-@media (width >= 600px) {
+@media screen and (min-width: $tablet) {
 	.admin-overview__grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
-@media (width >= 1000px) {
+@media screen and (min-width: $desktop) {
 	.admin-overview__grid {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
