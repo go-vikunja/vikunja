@@ -1476,17 +1476,11 @@
   },
   "admin": {
     "title": "Administration",
-    "nav": {
-      "overview": "Overview",
+    "labels": {
       "users": "Users",
-      "projects": "Projects"
+      "tasks": "Tasks"
     },
     "overview": {
-      "title": "Overview",
-      "users": "Users",
-      "projects": "Projects",
-      "tasks": "Tasks",
-      "teams": "Teams",
       "shares": "Shares",
       "linkShares": "Link shares",
       "teamShares": "Team shares",
@@ -1507,7 +1501,6 @@
     },
     "searchUsersPlaceholder": "Search by username or email…",
     "users": {
-      "title": "Users",
       "status": "Status",
       "details": "Details",
       "detailsTitle": "User: {username}",
@@ -1534,7 +1527,6 @@
       "confirmDeleteBody": "User {username} will be deleted immediately. This cannot be undone."
     },
     "projects": {
-      "title": "Projects",
       "ownerLabel": "Owner",
       "reassignOwner": "Reassign owner",
       "reassignTitle": "Reassign {title}",

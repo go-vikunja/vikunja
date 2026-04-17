@@ -17,15 +17,15 @@ useTitle(() => t('admin.title'))
 
 const navigationItems = computed(() => [
 	{
-		title: t('admin.nav.overview'),
+		title: t('navigation.overview'),
 		routeName: 'admin.overview',
 	},
 	{
-		title: t('admin.nav.users'),
+		title: t('admin.labels.users'),
 		routeName: 'admin.users',
 	},
 	{
-		title: t('admin.nav.projects'),
+		title: t('project.projects'),
 		routeName: 'admin.projects',
 	},
 ])

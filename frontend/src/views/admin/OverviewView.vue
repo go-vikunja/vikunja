@@ -1,5 +1,5 @@
 <template>
-	<Card :title="$t('admin.overview.title')">
+	<Card :title="$t('navigation.overview')">
 		<div class="admin-overview">
 			<p v-if="loading">
 				{{ $t('misc.loading') }}
@@ -10,7 +10,7 @@
 			>
 				<div class="admin-overview__card">
 					<h2 class="admin-overview__card-title">
-						{{ $t('admin.overview.users') }}
+						{{ $t('admin.labels.users') }}
 					</h2>
 					<p class="admin-overview__card-value">
 						{{ data.users }}
@@ -18,7 +18,7 @@
 				</div>
 				<div class="admin-overview__card">
 					<h2 class="admin-overview__card-title">
-						{{ $t('admin.overview.projects') }}
+						{{ $t('project.projects') }}
 					</h2>
 					<p class="admin-overview__card-value">
 						{{ data.projects }}
@@ -26,7 +26,7 @@
 				</div>
 				<div class="admin-overview__card">
 					<h2 class="admin-overview__card-title">
-						{{ $t('admin.overview.tasks') }}
+						{{ $t('admin.labels.tasks') }}
 					</h2>
 					<p class="admin-overview__card-value">
 						{{ data.tasks }}
@@ -34,7 +34,7 @@
 				</div>
 				<div class="admin-overview__card">
 					<h2 class="admin-overview__card-title">
-						{{ $t('admin.overview.teams') }}
+						{{ $t('team.title') }}
 					</h2>
 					<p class="admin-overview__card-value">
 						{{ data.teams }}
