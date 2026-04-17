@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Site admins manage shares through the existing per-project endpoints via
+// Instance admins manage shares through the existing per-project endpoints via
 // the Can* bypass; there are no dedicated admin share endpoints. Project 2
 // is owned by user 3; user 1 has no share on it.
 
@@ -63,7 +63,7 @@ func TestAdminBypass_CanDeleteTeamShare(t *testing.T) {
 
 	admin := promoteToAdmin(t, 1)
 	// User 1 has only read access to project 3; removing a team share would
-	// be forbidden without the site-admin bypass.
+	// be forbidden without the instance-admin bypass.
 	res := adminReq(t, e, http.MethodDelete, "/api/v1/projects/3/teams/1", admin, "")
 	assert.Equal(t, http.StatusOK, res.Code)
 }
@@ -80,7 +80,7 @@ func TestAdminBypass_CanDeleteUserShare(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.Code)
 }
 
-// Regression: the site-admin short-circuit in Project.CanRead used to swallow
+// Regression: the instance-admin short-circuit in Project.CanRead used to swallow
 // GetProjectSimpleByID errors, surfacing user-not-found (1005) instead of
 // project-not-found (3001) for missing project IDs.
 func TestAdminBypass_NonexistentProjectReturns404(t *testing.T) {
@@ -107,7 +107,7 @@ func TestAdminBypass_NonAdminCannotDeleteLinkShare(t *testing.T) {
 	s := db.NewSession()
 	u, err := user.GetUserByID(s, 1)
 	require.NoError(t, err)
-	require.False(t, u.IsAdmin, "fixture precondition: user1 is not a site admin")
+	require.False(t, u.IsAdmin, "fixture precondition: user1 is not an instance admin")
 	s.Close()
 
 	res := adminReq(t, e, http.MethodDelete, "/api/v1/projects/2/shares/2", u, "")

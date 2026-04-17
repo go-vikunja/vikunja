@@ -31,9 +31,9 @@ type Patch struct {
 	IsAdmin bool `json:"is_admin"`
 }
 
-// PatchAdmin toggles a user's site-admin flag.
+// PatchAdmin toggles a user's instance-admin flag.
 // @Summary Promote or demote a user (admin)
-// @Description Toggle the site-admin flag on a user. Demoting the last remaining admin is refused with 400.
+// @Description Toggle the instance-admin flag on a user. Demoting the last remaining admin is refused with 400.
 // @tags admin
 // @Accept json
 // @Produce json

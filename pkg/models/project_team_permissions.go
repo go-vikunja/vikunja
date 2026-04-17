@@ -42,7 +42,7 @@ func (tl *TeamProject) canDoTeamProject(s *xorm.Session, a web.Auth) (bool, erro
 		return false, nil
 	}
 
-	if isSiteAdmin(s, a) {
+	if isInstanceAdmin(s, a) {
 		return true, nil
 	}
 

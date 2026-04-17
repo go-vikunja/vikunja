@@ -23,10 +23,10 @@ import (
 	"xorm.io/xorm"
 )
 
-// isSiteAdmin returns true when the auth belongs to a site admin user.
+// isInstanceAdmin returns true when the auth belongs to an instance admin user.
 // The IsAdmin flag on the auth is claim-derived and stale until the JWT
 // expires; re-read from the DB so demotion/deletion takes effect immediately.
-func isSiteAdmin(s *xorm.Session, a web.Auth) bool {
+func isInstanceAdmin(s *xorm.Session, a web.Auth) bool {
 	u, ok := a.(*user.User)
 	if !ok {
 		return false

@@ -801,7 +801,7 @@ func registerAPIRoutes(a *echo.Group) {
 
 	admin := a.Group("/admin",
 		RequireFeature(license.FeatureAdminPanel),
-		RequireSiteAdmin(),
+		RequireInstanceAdmin(),
 	)
 	admin.GET("/ping", adminapi.Ping)
 	admin.GET("/overview", adminapi.GetOverview)

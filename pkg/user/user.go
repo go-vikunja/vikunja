@@ -665,7 +665,7 @@ func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
 }
 
 // GuardLastAdmin returns ErrLastAdmin when demoting or deleting target would
-// leave the instance without a reachable site admin. Only active,
+// leave the instance without a reachable instance admin. Only active,
 // non-deletion-scheduled admins count — the rest cannot log in.
 // SELECT ... FOR UPDATE closes the TOCTOU race where two concurrent demotions
 // each see count > 1 and both commit; SQLite serializes writes so it's skipped.

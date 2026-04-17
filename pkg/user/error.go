@@ -778,7 +778,7 @@ func IsErrLastAdmin(err error) bool {
 }
 
 func (err ErrLastAdmin) Error() string {
-	return "Cannot remove the last remaining site admin"
+	return "Cannot remove the last remaining instance admin"
 }
 
 // ErrCodeLastAdmin holds the unique world-error code of this error
@@ -789,6 +789,6 @@ func (err ErrLastAdmin) HTTPError() web.HTTPError {
 	return web.HTTPError{
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeLastAdmin,
-		Message:  "Cannot remove the last remaining site admin.",
+		Message:  "Cannot remove the last remaining instance admin.",
 	}
 }

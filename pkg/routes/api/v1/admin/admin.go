@@ -24,7 +24,7 @@ import (
 
 // Ping is a smoke-test handler for the admin route group.
 // @Summary Admin ping
-// @Description Returns ok when the admin panel is licensed and the caller is a site admin. Used to verify gate wiring.
+// @Description Returns ok when the admin panel is licensed and the caller is an instance admin. Used to verify gate wiring.
 // @tags admin
 // @Produce json
 // @Security JWTKeyAuth

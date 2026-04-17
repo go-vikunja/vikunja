@@ -34,7 +34,7 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	if isSiteAdmin(s, a) {
+	if isInstanceAdmin(s, a) {
 		return true, nil
 	}
 
@@ -78,7 +78,7 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 // CanRead checks if a user has read access to a project
 func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 
-	if isSiteAdmin(s, a) {
+	if isInstanceAdmin(s, a) {
 		originalProject, err := GetProjectSimpleByID(s, p.ID)
 		if err != nil {
 			return false, 0, err
@@ -131,7 +131,7 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		return false, nil
 	}
 
-	if isSiteAdmin(s, a) {
+	if isInstanceAdmin(s, a) {
 		return true, nil
 	}
 
@@ -182,7 +182,7 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 
 // CanDelete checks if the user can delete a project
 func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	if isSiteAdmin(s, a) {
+	if isInstanceAdmin(s, a) {
 		return true, nil
 	}
 	return p.IsAdmin(s, a)
@@ -190,7 +190,7 @@ func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanCreate checks if the user can create a project
 func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	if isSiteAdmin(s, a) {
+	if isInstanceAdmin(s, a) {
 		return true, nil
 	}
 	if p.ParentProjectID != 0 {
@@ -212,7 +212,7 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
-	if isSiteAdmin(s, a) {
+	if isInstanceAdmin(s, a) {
 		return true, nil
 	}
 

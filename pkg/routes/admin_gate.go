@@ -24,10 +24,10 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// RequireSiteAdmin serves 404 (not 403) so the route is indistinguishable from
+// RequireInstanceAdmin serves 404 (not 403) so the route is indistinguishable from
 // an unregistered one. is_admin is re-read from the DB every request so demoted
 // or deleted admins lose access immediately, without waiting for JWT expiry.
-func RequireSiteAdmin() echo.MiddlewareFunc {
+func RequireInstanceAdmin() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
 			a, err := auth2.GetAuthFromClaims(c)

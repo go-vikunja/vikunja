@@ -83,8 +83,8 @@ func init() {
 	// Bypass confirm prompt
 	userDeleteCmd.Flags().BoolVarP(&userFlagDeleteConfirm, "confirm", "c", false, "Bypasses any prompts confirming the deletion request, use with caution!")
 
-	userSetAdminCmd.Flags().BoolVar(&userFlagMakeAdmin, "admin", false, "Promote the user to site admin.")
-	userSetAdminCmd.Flags().BoolVar(&userFlagRemoveAdmin, "no-admin", false, "Revoke site admin from the user.")
+	userSetAdminCmd.Flags().BoolVar(&userFlagMakeAdmin, "admin", false, "Promote the user to instance admin.")
+	userSetAdminCmd.Flags().BoolVar(&userFlagRemoveAdmin, "no-admin", false, "Revoke instance admin from the user.")
 	userSetAdminCmd.MarkFlagsMutuallyExclusive("admin", "no-admin")
 	userSetAdminCmd.MarkFlagsOneRequired("admin", "no-admin")
 
@@ -116,7 +116,7 @@ func setUserAdmin(s *xorm.Session, identifier string, value bool) error {
 
 var userSetAdminCmd = &cobra.Command{
 	Use:   "set-admin [username-or-id]",
-	Short: "Set or remove the site-admin flag on a user.",
+	Short: "Set or remove the instance-admin flag on a user.",
 	Args:  cobra.ExactArgs(1),
 	PreRun: func(_ *cobra.Command, _ []string) {
 		initialize.FullInit()
@@ -133,9 +133,9 @@ var userSetAdminCmd = &cobra.Command{
 			log.Fatalf("Could not commit: %s", err)
 		}
 		if value {
-			fmt.Printf("User %q is now a site admin.\n", args[0])
+			fmt.Printf("User %q is now an instance admin.\n", args[0])
 		} else {
-			fmt.Printf("User %q is no longer a site admin.\n", args[0])
+			fmt.Printf("User %q is no longer an instance admin.\n", args[0])
 		}
 	},
 }

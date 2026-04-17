@@ -34,16 +34,16 @@ type UserRegister struct {
 	// The language of the new user. Must be a valid IETF BCP 47 language code and exist in Vikunja.
 	Language string `json:"language" valid:"language"`
 	user.APIUserPassword
-	// Admin-only. Silently ignored unless the caller is an authenticated site admin.
+	// Admin-only. Silently ignored unless the caller is an authenticated instance admin.
 	IsAdmin          bool `json:"is_admin"`
 	SkipEmailConfirm bool `json:"skip_email_confirm"`
 }
 
-// callerIsSiteAdmin reports whether the request carries a bearer for a
-// site-admin user. /register is in the public group, so the header is parsed
+// callerIsInstanceAdmin reports whether the request carries a bearer for an
+// instance-admin user. /register is in the public group, so the header is parsed
 // here; any error means "not authenticated". is_admin is re-read from the DB
 // so a stale token cannot be used to bypass gates or mint new admins.
-func callerIsSiteAdmin(c *echo.Context) bool {
+func callerIsInstanceAdmin(c *echo.Context) bool {
 	header := c.Request().Header.Get(echo.HeaderAuthorization)
 	if header == "" {
 		return false
@@ -74,7 +74,7 @@ func callerIsSiteAdmin(c *echo.Context) bool {
 
 // RegisterUser is the register handler
 // @Summary Register
-// @Description Creates a new user account. When called by an authenticated site admin, the public registration toggle is bypassed and the admin-only fields `is_admin` and `skip_email_confirm` are honored.
+// @Description Creates a new user account. When called by an authenticated instance admin, the public registration toggle is bypassed and the admin-only fields `is_admin` and `skip_email_confirm` are honored.
 // @tags auth
 // @Accept json
 // @Produce json
@@ -84,7 +84,7 @@ func callerIsSiteAdmin(c *echo.Context) bool {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /register [post]
 func RegisterUser(c *echo.Context) error {
-	isAdmin := callerIsSiteAdmin(c)
+	isAdmin := callerIsInstanceAdmin(c)
 	if !isAdmin && !config.ServiceEnableRegistration.GetBool() {
 		return echo.ErrNotFound
 	}
