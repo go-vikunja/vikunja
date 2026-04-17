@@ -14,7 +14,7 @@ describe('FormField', () => {
 		const wrapper = mount(FormField, {
 			props: {
 				modelValue: 'initial',
-				'onUpdate:modelValue': (val: string) => wrapper.setProps({modelValue: val}),
+				'onUpdate:modelValue': (val: string | number) => wrapper.setProps({modelValue: val}),
 			},
 		})
 		const input = wrapper.find('input')
@@ -198,5 +198,64 @@ describe('FormField', () => {
 		const input = wrapper.find('input')
 		await input.setValue('test value')
 		expect(wrapper.vm.value).toBe('test value')
+	})
+
+	it('renders two-col layout with wrapping label', () => {
+		const wrapper = mount(FormField, {
+			props: {label: 'Name', layout: 'two-col'},
+			slots: {
+				default: '<input class="input" />',
+			},
+		})
+		const label = wrapper.find('label.two-col')
+		expect(label.exists()).toBe(true)
+		expect(label.find('span').text()).toBe('Name')
+		expect(label.find('input.input').exists()).toBe(true)
+	})
+
+	it('two-col layout exposes id via slot scope', () => {
+		const wrapper = mount({
+			components: {FormField},
+			template: `
+				<FormField label="X" layout="two-col" id="custom-id" v-slot="{id}">
+					<input :id="id" />
+				</FormField>
+			`,
+		})
+		expect(wrapper.find('input').attributes('id')).toBe('custom-id')
+	})
+
+	it('two-col layout omits the for attribute so implicit nesting labels any slotted control', () => {
+		const wrapper = mount(FormField, {
+			props: {label: 'Name', layout: 'two-col'},
+			slots: {
+				default: '<input id="some-generated-id" />',
+			},
+		})
+		const label = wrapper.find('label.two-col')
+		// for would point to a different id than the slotted control generates,
+		// so omit it entirely and rely on the label wrapping the control.
+		expect(label.attributes('for')).toBeUndefined()
+		expect(label.find('input').exists()).toBe(true)
+	})
+
+	it('renders the error message in two-col layout', () => {
+		const wrapper = mount(FormField, {
+			props: {label: 'Name', layout: 'two-col', error: 'Required'},
+		})
+		const help = wrapper.find('p.help.is-danger')
+		expect(help.exists()).toBe(true)
+		expect(help.text()).toBe('Required')
+	})
+
+	it('renders the addon slot in two-col layout', () => {
+		const wrapper = mount(FormField, {
+			props: {label: 'Name', layout: 'two-col'},
+			slots: {
+				addon: '<button>Copy</button>',
+			},
+		})
+		expect(wrapper.find('.field.has-addons').exists()).toBe(true)
+		expect(wrapper.find('button').text()).toBe('Copy')
 	})
 })
