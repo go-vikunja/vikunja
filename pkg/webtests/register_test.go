@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/events"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	"code.vikunja.io/api/pkg/user"
 
@@ -29,6 +30,7 @@ import (
 
 func TestRegister(t *testing.T) {
 	t.Run("normal register", func(t *testing.T) {
+		events.ClearDispatchedEvents()
 		rec, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{
   "username": "newUser",
   "password": "12345678",
@@ -36,6 +38,7 @@ func TestRegister(t *testing.T) {
 }`, nil, nil)
 		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `"username":"newUser"`)
+		assert.Equal(t, 1, events.CountDispatchedEvents("user.created"))
 	})
 	t.Run("Empty payload", func(t *testing.T) {
 		_, err := newTestRequest(t, http.MethodPost, apiv1.RegisterUser, `{}`, nil, nil)

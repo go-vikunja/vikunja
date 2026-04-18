@@ -17,9 +17,14 @@
 package models
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
@@ -120,5 +125,42 @@ func TestDeleteUser(t *testing.T) {
 		db.AssertMissing(t, "task_assignees", map[string]interface{}{"user_id": 4})
 		db.AssertMissing(t, "subscriptions", map[string]interface{}{"user_id": 4})
 		db.AssertMissing(t, "team_members", map[string]interface{}{"user_id": 4})
+	})
+	t.Run("decrements user count after committed delete is dispatched", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+		events.Unfake()
+		t.Cleanup(events.Fake)
+		user.RegisterListeners()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		ready, err := events.InitEventsForTesting(ctx)
+		require.NoError(t, err)
+		<-ready
+
+		require.NoError(t, keyvalue.Put(metrics.UserCountKey, int64(2)))
+		t.Cleanup(func() {
+			_ = keyvalue.Del(metrics.UserCountKey)
+		})
+
+		err = DeleteUser(s, &user.User{ID: 4})
+		require.NoError(t, err)
+
+		require.NoError(t, s.Commit())
+		events.DispatchPending(s)
+
+		require.Eventually(t, func() bool {
+			value, exists, err := keyvalue.Get(metrics.UserCountKey)
+			if err != nil || !exists {
+				return false
+			}
+
+			count, ok := value.(int64)
+			return ok && count == 1
+		}, time.Second, 10*time.Millisecond)
 	})
 }
