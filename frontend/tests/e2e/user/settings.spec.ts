@@ -109,4 +109,33 @@ test.describe('User Settings', () => {
 		await expect(page.locator('.global-notification')).toContainText('Success')
 		await expect(page.locator('.navbar .username-dropdown-trigger .username')).toContainText('Lorem Ipsum')
 	})
+
+	test('Updates the week start day', async ({authenticatedPage: page}) => {
+		await page.goto('/user/settings/general')
+		await page.waitForLoadState('networkidle')
+
+		// Wait for the settings page to be fully loaded and find the select by its label
+		const weekStartSelect = page.getByLabel('Week starts on')
+		await weekStartSelect.scrollIntoViewIfNeeded()
+		await expect(weekStartSelect).toBeVisible({timeout: 10000})
+
+		// Select Wednesday (value 3) - one of the newly added days
+		await weekStartSelect.selectOption({value: '3'})
+
+		// The save button only appears when isDirty becomes true (settings changed)
+		// We use the data-cy here as it's the standard in this project, 
+		// though it might require window.TESTING=true in some environments.
+		const saveButton = page.locator('[data-cy="saveGeneralSettings"]')
+		await expect(saveButton).toBeVisible({timeout: 10000})
+		await saveButton.click()
+
+		await expect(page.locator('.global-notification')).toContainText('Success')
+
+		// Verify the setting was saved by reloading the page
+		await page.reload()
+		await page.waitForLoadState('networkidle')
+		const weekStartSelectAfterReload = page.getByLabel('Week starts on')
+		await weekStartSelectAfterReload.scrollIntoViewIfNeeded()
+		await expect(weekStartSelectAfterReload).toHaveValue('3')
+	})
 })
