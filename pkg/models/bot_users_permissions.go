@@ -19,36 +19,38 @@ package models
 import (
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
 )
 
-func (t *APIToken) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	token, err := GetAPITokenByID(s, t.ID)
-	if err != nil {
-		return false, err
+// CanCreate checks if a user can create a bot user.
+func (b *BotUser) CanCreate(_ *xorm.Session, a web.Auth) (bool, error) {
+	u, ok := a.(*user.User)
+	if !ok || u.IsBot() {
+		return false, nil
 	}
+	return true, nil
+}
 
-	if token.OwnerID == a.GetID() {
-		*t = *token
-		return true, nil
-	}
+// CanRead checks if a user can read a bot user.
+func (b *BotUser) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+	ok, err := b.isOwner(s, a)
+	return ok, 0, err
+}
 
-	// Allow deletion if the token belongs to a bot owned by the caller.
-	botUser, err := user.GetUserByID(s, token.OwnerID)
+// CanUpdate checks if a user can update a bot user.
+func (b *BotUser) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) { return b.isOwner(s, a) }
+
+// CanDelete checks if a user can delete a bot user.
+func (b *BotUser) CanDelete(s *xorm.Session, a web.Auth) (bool, error) { return b.isOwner(s, a) }
+
+func (b *BotUser) isOwner(s *xorm.Session, a web.Auth) (bool, error) {
+	u, err := user.GetUserByID(s, b.ID)
 	if err != nil {
 		if user.IsErrUserDoesNotExist(err) {
 			return false, nil
 		}
 		return false, err
 	}
-	if botUser.IsBot() && botUser.BotOwnerID == a.GetID() {
-		*t = *token
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (t *APIToken) CanCreate(_ *xorm.Session, _ web.Auth) (bool, error) {
-	return true, nil
+	return u.BotOwnerID == a.GetID(), nil
 }

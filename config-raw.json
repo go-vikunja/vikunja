@@ -114,6 +114,11 @@
                     "comment": "If true, will allow users to request the complete deletion of their account. When using external authentication methods\nit may be required to coordinate with them in order to delete the account. This setting will not affect the cli commands\nfor user deletion."
                 },
                 {
+                    "key": "enablebotusers",
+                    "default_value": "true",
+                    "comment": "If enabled (default), users can create bot users that interact with Vikunja via the API only. Set to false to disable the feature entirely."
+                },
+                {
                     "key": "maxavatarsize",
                     "default_value": "1024",
                     "comment": "The maximum size clients will be able to request for user avatars.\nIf clients request a size bigger than this, it will be changed on the fly."
