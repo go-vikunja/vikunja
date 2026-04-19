@@ -18,6 +18,9 @@ I'm also offering [a hosted version of Vikunja](https://vikunja.cloud/) if you w
 
 - [Security Reports](#security-reports)
 - [Features](#features)
+- [Docker Workflows](#docker-workflows)
+	- [Run Only (No Code Changes)](#run-only-no-code-changes)
+	- [Development (Hot Reload)](#development-hot-reload)
 - [Docs](#docs)
 	- [Roadmap](#roadmap)
 - [Contributing](#contributing)
@@ -32,6 +35,99 @@ If you find any security-related issues you don't want to disclose publicly, ple
 
 See [the features page](https://vikunja.io/features/) on our website for a more exhaustive list or 
 try it on [try.vikunja.io](https://try.vikunja.io)!
+
+## Docker Workflows
+
+Use one of the two workflows below depending on your goal.
+
+### Run Only (No Code Changes)
+
+Use this when you only want to run Vikunja and stop it later.
+
+1. Build the image:
+
+```bash
+docker build -t vikunja .
+```
+
+2. Start Vikunja:
+
+```bash
+docker run --name vikunja-run \
+	-p 3456:3456 \
+	-e VIKUNJA_SERVICE_PUBLICURL=http://localhost:3456/ \
+	-v ~/vikunja-files:/app/vikunja/files \
+	-v ~/vikunja-db:/db \
+	vikunja
+```
+
+3. Open the app:
+
+- http://localhost:3456
+
+4. Stop and remove the container:
+
+```bash
+docker stop vikunja-run
+docker rm vikunja-run
+```
+
+5. Check logs (while running):
+
+```bash
+docker logs -f vikunja-run
+```
+
+Notes:
+
+- `~/vikunja-files` stores uploaded files.
+- `~/vikunja-db` stores the SQLite database.
+- If port `3456` is already in use, stop the existing container or map to a different host port (for example `-p 3457:3456`).
+
+### Development (Hot Reload)
+
+Use this when you plan to change code.
+
+This repository includes a dev compose setup in `docker-compose.dev.yml`:
+
+- Frontend runs Vite with HMR (auto-refresh in browser).
+- Backend runs with Air (auto rebuild/restart on Go file changes).
+- Source code is mounted into containers so edits are reflected immediately.
+
+1. Start development stack:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+2. Open the app:
+
+- Frontend (dev): http://localhost:4173
+- Backend API: http://localhost:3456
+
+3. View logs:
+
+```bash
+docker compose -f docker-compose.dev.yml logs -f api frontend
+```
+
+4. Stop development stack:
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
+5. Rebuild/restart if needed:
+
+```bash
+docker compose -f docker-compose.dev.yml restart
+```
+
+What refreshes automatically:
+
+- Frontend changes under `frontend/`: Vite HMR updates instantly.
+- Backend Go changes: Air rebuilds and restarts the API service.
+- For config or dependency changes, restart the affected service.
 
 ## Docs
 

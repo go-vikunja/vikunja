@@ -1,0 +1,41 @@
+services:
+  api:
+    image: golang:1.25
+    working_dir: /workspace
+    command: sh -lc "/usr/local/go/bin/go install github.com/air-verse/air@latest && /go/bin/air -c .air.toml"
+    environment:
+      VIKUNJA_SERVICE_INTERFACE: :3456
+      VIKUNJA_SERVICE_PUBLICURL: http://localhost:3456/
+      VIKUNJA_DATABASE_TYPE: sqlite
+      VIKUNJA_DATABASE_PATH: /db/vikunja.db
+      VIKUNJA_FILES_BASEPATH: /files
+      VIKUNJA_MAILER_ENABLED: "false"
+      VIKUNJA_REDIS_ENABLED: "false"
+    ports:
+      - "3456:3456"
+    volumes:
+      - .:/workspace
+      - ./dev-data/db:/db
+      - ./dev-data/files:/files
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+  frontend:
+    image: node:24
+    working_dir: /workspace/frontend
+    command: sh -lc "corepack enable && pnpm install && pnpm dev --host 0.0.0.0 --port 4173"
+    environment:
+      DEV_PROXY: http://api:3456
+      VIKUNJA_FRONTEND_PORT: "4173"
+    depends_on:
+      - api
+    ports:
+      - "4173:4173"
+    volumes:
+      - .:/workspace
+      - frontend-node-modules:/workspace/frontend/node_modules
+
+volumes:
+  go-mod-cache:
+  go-build-cache:
+  frontend-node-modules:
