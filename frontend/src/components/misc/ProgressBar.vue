@@ -74,7 +74,7 @@ withDefaults(defineProps<{
 	// Colors
 	@each $name, $pair in $colors {
 		// stylelint-disable-next-line function-no-unknown
-		$color: nth($pair, 1);
+		$color: list.nth($pair, 1);
 		&.is-#{$name} {
 			--progress-value-background-color: var(--#{$name}, #{$color});
 

@@ -22,7 +22,9 @@ const pathSrc = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\'
 
 // the @use rules have to be the first in the compiled stylesheets
 const PREFIXED_SCSS_STYLES = `@use "sass:math";
-@import "${pathSrc}/styles/common-imports.scss";`
+@use "sass:list";
+@use "${pathSrc}/styles/common-imports" as *;
+`
 
 /*
 ** Configure sentry plugin
@@ -122,11 +124,13 @@ function getBuildConfig(env: Record<string, string>) {
 			preprocessorOptions: {
 				sass: {
 					quietDeps: true, // silence deprecation warnings
+					silenceDeprecations: ['import'],
 				},
 				scss: {
 					additionalData: PREFIXED_SCSS_STYLES,
 					charset: false, // fixes  "@charset" must be the first rule in the file" warnings,
 					quietDeps: true, // silence deprecation warnings
+					silenceDeprecations: ['import'],
 				},
 			},
 			postcss: {

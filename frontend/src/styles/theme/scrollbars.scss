@@ -1,3 +1,5 @@
+@use "../common-imports" as *;
+
 $scrollbar-height: 8px;
 $scrollbar-track-color: var(--grey-200);
 $scrollbar-thumb-color: var(--grey-300);
