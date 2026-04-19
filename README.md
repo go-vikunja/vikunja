@@ -22,6 +22,7 @@ I'm also offering [a hosted version of Vikunja](https://vikunja.cloud/) if you w
 	- [Run Only (No Code Changes)](#run-only-no-code-changes)
 	- [Development (Hot Reload)](#development-hot-reload)
 	- [Development (Local Frontend + Docker Backend)](#development-local-frontend--docker-backend)
+	- [Development (Fully Local — No Docker)](#development-fully-local--no-docker)
 - [Docs](#docs)
 	- [Roadmap](#roadmap)
 - [Contributing](#contributing)
@@ -173,6 +174,48 @@ How it works:
 docker compose -f docker-compose.dev.yml down
 ```
 
+### Development (Fully Local — No Docker)
+
+Use this when you have Go and Node.js installed and don't want Docker at all.
+
+Requirements:
+
+- [Go](https://go.dev/dl/) (install via `brew install go` on macOS)
+- [Node.js](https://nodejs.org/) + [pnpm](https://pnpm.io/)
+
+1. Build the frontend static files (required for the backend to compile):
+
+```bash
+cd frontend && pnpm install && pnpm build && cd ..
+```
+
+2. Start the backend:
+
+```bash
+VIKUNJA_SERVICE_PUBLICURL=http://localhost:3456/ go run . web
+```
+
+The backend starts on `http://localhost:3456` and uses SQLite by default (no separate database needed).
+
+3. In a second terminal, start the frontend dev server:
+
+```bash
+cd frontend && pnpm dev
+```
+
+4. Open the app:
+
+- http://localhost:4173
+
+Note: `frontend/.env.local` must contain `DEV_PROXY=http://localhost:3456` so Vite proxies API calls to the backend. See `frontend/.env.local.example`.
+
+For backend hot-reload on Go file changes, install [Air](https://github.com/air-verse/air) and run `air` instead of `go run . web`:
+
+```bash
+go install github.com/air-verse/air@latest
+VIKUNJA_SERVICE_PUBLICURL=http://localhost:3456/ air -c .air.toml
+```
+
 ## Docs
 
 * [Installing](https://vikunja.io/docs/installing/)
@@ -200,3 +243,16 @@ The contents of [`desktop/`](desktop/) are licensed under
 ### Unsplash Images
 
 Background images from Unsplash are distributed under the [Unsplash License](https://unsplash.com/license). The license requires giving credit to the photographer and Unsplash. See [Unsplash’s terms](https://unsplash.com/terms) for more information.
+
+
+
+
+run locally
+-------------
+backend:
+cd /Users/mac/vikunja/vikunja
+VIKUNJA_SERVICE_PUBLICURL=http://localhost:3456/ /opt/homebrew/bin/go run . web
+
+frontend:
+cd /Users/mac/vikunja/vikunja/frontend
+pnpm dev
