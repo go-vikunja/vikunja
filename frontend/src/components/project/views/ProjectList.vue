@@ -384,6 +384,84 @@ onBeforeUnmount(() => {
 
 .list-view__add-task {
 	padding: 1rem 1rem 0;
+
+	:deep(.add-task__field) {
+		gap: .625rem;
+	}
+
+	:deep(.task-input-wrapper) {
+		background: #13141a;
+		border: .5px solid #2a2b35;
+		border-radius: 10px;
+		padding-inline: .125rem;
+		min-block-size: 44px;
+	}
+
+	:deep(.add-task-textarea) {
+		background: transparent;
+		border: 0;
+		box-shadow: none;
+		min-block-size: 44px;
+		font-size: 15px;
+		font-weight: 400;
+		line-height: 1.35;
+		color: #d0cdc8;
+		padding-block: .65rem;
+
+		&::placeholder {
+			color: #3a3b48;
+		}
+
+		&:focus {
+			border: 0;
+			box-shadow: none;
+		}
+	}
+
+	:deep(.task-input-wrapper:focus-within) {
+		border-color: #6c63f5;
+	}
+
+	:deep(.task-icon),
+	:deep(.quick-add-magic-trigger-btn) {
+		color: #4a4b57;
+	}
+
+	:deep(.add-task-button) {
+		border: 0;
+		border-radius: 10px;
+		padding-inline: 20px;
+		min-block-size: 44px !important;
+		font-size: 15px;
+		font-weight: 500;
+		letter-spacing: .03em;
+		background: linear-gradient(135deg, #6c63f5, #8b83f7);
+		color: #fff;
+		box-shadow: none;
+		transition: opacity .15s, filter .15s;
+
+		:deep(.icon),
+		.button-text {
+			color: #fff;
+		}
+
+		&:hover:not(:disabled) {
+			opacity: .92;
+			filter: brightness(1.05);
+			background: linear-gradient(135deg, #6c63f5, #8b83f7);
+			color: #fff;
+
+			:deep(.icon),
+			.button-text {
+				color: #fff;
+			}
+		}
+
+		&:disabled {
+			opacity: .5;
+			background: linear-gradient(135deg, #4a4b57, #5a5b66);
+		}
+	}
 }
 
 .link-share-view .card {

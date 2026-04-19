@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, computed, onMounted, onBeforeUnmount} from 'vue'
+import {ref, computed} from 'vue'
 
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 import {useProjectStore} from '@/stores/projects'
@@ -56,9 +56,6 @@ function toggleTask(task: LocalTask) {
 function priorityClass(p: LocalTask['priority']) {
 	return {high: 'chip-high', medium: 'chip-med', low: 'chip-low'}[p]
 }
-
-onMounted(() => document.body.classList.add('vk-dark-page'))
-onBeforeUnmount(() => document.body.classList.remove('vk-dark-page'))
 </script>
 
 <template>
@@ -614,86 +611,5 @@ onBeforeUnmount(() => document.body.classList.remove('vk-dark-page'))
 	font-size: 15px;
 	color: var(--text-secondary);
 	flex: 1;
-}
-</style>
-
-<!-- Global overrides: strip the app's background/padding when this page is active -->
-<style>
-body.vk-dark-page,
-body.vk-dark-page .app-container,
-body.vk-dark-page .content-auth {
-	background: #0e0f13 !important;
-}
-
-body.vk-dark-page .app-content {
-	background: #0e0f13 !important;
-	padding: 0 !important;
-	margin-inline-start: 0 !important;
-}
-
-body.vk-dark-page .app-content.is-menu-enabled {
-	margin-inline-start: var(--sidebar-width) !important;
-}
-
-/* ── Navbar ── */
-body.vk-dark-page .navbar {
-	background: #13141a !important;
-	border-bottom: 0.5px solid #2a2b35 !important;
-	box-shadow: none !important;
-}
-
-body.vk-dark-page .navbar .logo-link svg path,
-body.vk-dark-page .navbar .logo-link svg rect,
-body.vk-dark-page .navbar .logo-link svg polygon {
-	fill: #f0ede8 !important;
-}
-
-body.vk-dark-page .navbar .project-title {
-	color: #c0bdb8 !important;
-}
-
-body.vk-dark-page .navbar .username {
-	color: #8a8a9a !important;
-}
-
-body.vk-dark-page .navbar .trigger-button,
-body.vk-dark-page .navbar .username-dropdown-trigger {
-	color: #4a4b57 !important;
-}
-
-body.vk-dark-page .navbar .trigger-button:hover,
-body.vk-dark-page .navbar .username-dropdown-trigger:hover {
-	color: #a78bfa !important;
-}
-
-/* ── Sidebar ── */
-body.vk-dark-page .menu-container {
-	background: #13141a !important;
-	border-right: 0.5px solid #2a2b35 !important;
-}
-
-body.vk-dark-page .menu-container .menu-list li > a,
-body.vk-dark-page .menu-container .menu-list .list-menu-link {
-	color: #8a8a9a !important;
-}
-
-body.vk-dark-page .menu-container .menu-list li > a:hover,
-body.vk-dark-page .menu-container .menu-list .list-menu-link:hover {
-	background: #1e1f28 !important;
-	color: #d0cdc8 !important;
-}
-
-body.vk-dark-page .menu-container .menu-list li > a.router-link-active,
-body.vk-dark-page .menu-container .menu-list .router-link-active {
-	background: #1e1b3a !important;
-	color: #a78bfa !important;
-}
-
-body.vk-dark-page .menu-container .menu-label {
-	color: #4a4b57 !important;
-}
-
-body.vk-dark-page .menu-container .resize-handle:hover {
-	background-color: #6c63f5 !important;
 }
 </style>

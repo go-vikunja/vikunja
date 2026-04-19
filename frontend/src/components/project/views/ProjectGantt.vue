@@ -6,7 +6,10 @@
 		:view-id
 	>
 		<template #default>
-			<Card :has-content="false">
+			<Card
+				:has-content="false"
+				class="gantt-options-card"
+			>
 				<div class="gantt-options">
 					<FormField :label="$t('project.gantt.range')">
 						<Foo
@@ -14,7 +17,7 @@
 							ref="flatPickerEl"
 							v-model="flatPickerDateRange"
 							:config="flatPickerConfig"
-							class="input"
+							class="input gantt-range-input"
 							:placeholder="$t('project.gantt.range')"
 						/>
 					</FormField>
@@ -27,7 +30,10 @@
 							for="range"
 						>Reset</label>
 						<div class="control">
-							<XButton @click="setDefaultFilters">
+							<XButton
+								class="gantt-reset-button"
+								@click="setDefaultFilters"
+							>
 								Reset
 							</XButton>
 						</div>
@@ -45,7 +51,7 @@
 				<Card
 					:has-content="false"
 					:padding="false"
-					class="has-overflow"
+					class="has-overflow gantt-chart-card"
 				>
 					<GanttChart
 						:filters="filters"
@@ -164,14 +170,63 @@ const flatPickerConfig = computed(() => ({
 	z-index: 0;
 }
 
+.gantt-options-card,
+.gantt-chart-card {
+	background: #13141a;
+	border: .5px solid #1e1f28;
+	border-radius: 12px;
+	box-shadow: none;
+}
+
+.gantt-chart-card {
+	overflow: hidden;
+}
+
 .gantt-options {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	margin-block-end: 1rem;
+	padding: .75rem 1rem;
+	background: #0f1016;
+	border: .5px solid #1e1f28;
+	border-radius: 10px;
 
 	@media screen and (max-width: $tablet) {
 		flex-direction: column;
+	}
+}
+
+.gantt-range-input {
+	background: #13141a;
+	border: .5px solid #2a2b35;
+	border-radius: 10px;
+	color: #c0bdb8;
+	font-size: 15px;
+	box-shadow: none;
+
+	&::placeholder {
+		color: #3a3b48;
+	}
+
+	&:focus {
+		border-color: #6c63f5;
+		box-shadow: none;
+	}
+}
+
+.gantt-reset-button {
+	border: .5px dashed #2a2b35 !important;
+	background: transparent !important;
+	color: #8a8a9a !important;
+	border-radius: 8px;
+	transition: all .12s;
+	box-shadow: none !important;
+
+	&:hover {
+		border-color: #6c63f5 !important;
+		background: #13141a !important;
+		color: #d0cdc8 !important;
 	}
 }
 
@@ -212,6 +267,120 @@ const flatPickerConfig = computed(() => ({
 
 	.label {
 		font-size: .9rem;
+		color: #8a8a9a;
+	}
+}
+
+.project-gantt {
+	:deep(.gantt-container),
+	:deep(.gantt-chart-wrapper),
+	:deep(.gantt-rows-container) {
+		background: #0f1016;
+	}
+
+	:deep(.fancycheckbox) {
+		color: #c0bdb8;
+	}
+
+	:deep(.gantt-timeline) {
+		background: #13141a;
+		border-block-end: .5px solid #2a2b35;
+	}
+
+	:deep(.gantt-timeline-months .timeunit-month) {
+		background: #13141a;
+		color: #8a8a9a;
+		border-inline-end: .5px solid #2a2b35;
+		font-size: .85rem;
+		font-weight: 600;
+	}
+
+	:deep(.gantt-timeline-days .timeunit-wrapper) {
+		color: #4a4b57;
+		font-size: .9rem;
+
+		.weekday {
+			color: #3a3b48;
+		}
+
+		&.today {
+			background: #1e1b3a;
+			color: #a78bfa;
+			border-radius: 6px 6px 0 0;
+		}
+	}
+
+	:deep(.gantt-group-band) {
+		background: rgb(108 99 245 / 7%);
+		border-color: rgb(108 99 245 / 18%);
+		border-radius: 8px;
+	}
+
+	:deep(.bg-row) {
+		background: rgb(19 20 26 / 70%);
+	}
+
+	:deep(.bg-row-alt) {
+		background: rgb(15 16 22 / 82%);
+	}
+
+	:deep(.gantt-vertical-lines line) {
+		stroke: #2a2b35;
+		opacity: .75;
+	}
+
+	:deep(.gantt-arrow) {
+		opacity: .7;
+	}
+
+	:deep(.gantt-bar) {
+		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 20%));
+	}
+
+	:deep(.gantt-bar-text) {
+		font-size: 12px;
+		font-weight: 500;
+		letter-spacing: .01em;
+	}
+
+	:deep(.gantt-resize-handle) {
+		fill: #f0ede8;
+		stroke: #6c63f5;
+	}
+
+	:deep(.gantt-collapse-toggle polygon) {
+		fill: #8a8a9a;
+	}
+
+	:deep(.task-form .input),
+	:deep(.task-form textarea) {
+		background: #13141a;
+		border: .5px solid #2a2b35;
+		border-radius: 10px;
+		color: #d0cdc8;
+		box-shadow: none;
+
+		&::placeholder {
+			color: #3a3b48;
+		}
+
+		&:focus {
+			border-color: #6c63f5;
+			box-shadow: none;
+		}
+	}
+
+	:deep(.task-form .button),
+	:deep(.task-form .x-button) {
+		background: linear-gradient(135deg, #6c63f5, #8b83f7);
+		color: #fff;
+		border: 0;
+		border-radius: 10px;
+		box-shadow: none;
+
+		&:hover {
+			opacity: .9;
+		}
 	}
 }
 </style>

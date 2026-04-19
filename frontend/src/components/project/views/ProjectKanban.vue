@@ -41,38 +41,46 @@
 								:class="{'is-collapsed': collapsedBuckets[bucket.id]}"
 							>
 								<div
-									class="bucket-header"
+									class="bucket-header kb-col-head"
 									@click="() => unCollapseBucket(bucket)"
 								>
-									<span
-										v-if="bucket.id !== 0 && view?.doneBucketId === bucket.id"
-										v-tooltip="$t('project.kanban.doneBucketHint')"
-										class="icon is-small has-text-success mie-2"
-										@click.stop="() => collapseBucket(bucket)"
-									>
-										<Icon icon="check-double" />
-									</span>
-									<h2
-										class="title input"
-										:contenteditable="(bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]) ? true : undefined"
-										:spellcheck="false"
-										@keydown.enter.prevent.stop="!$event.isComposing && ($event.target as HTMLElement).blur()"
-										@keydown.esc.prevent.stop="!$event.isComposing && ($event.target as HTMLElement).blur()"
-										@blur="saveBucketTitle(bucket.id, ($event.target as HTMLElement).textContent as string)"
-										@click="focusBucketTitle"
-									>
-										{{ bucket.title }}
-									</h2>
-									<span
-										v-if="bucket.limit > 0 || alwaysShowBucketTaskCount"
-										:class="{'is-max': bucket.limit > 0 && bucket.count >= bucket.limit}"
-										class="limit"
-									>
-										{{ bucket.limit > 0 ? `${bucket.count}/${bucket.limit}` : bucket.count }}
-									</span>
+									<div class="kb-col-title-wrap">
+										<div class="kb-col-title">
+											<span
+												class="kb-col-dot"
+												:style="{background: getBucketColor(bucket, bucketIndex)}"
+											/>
+											<h2
+												class="title input"
+												:contenteditable="(bucketTitleEditable && canWrite && !collapsedBuckets[bucket.id]) ? true : undefined"
+												:spellcheck="false"
+												@keydown.enter.prevent.stop="!$event.isComposing && ($event.target as HTMLElement).blur()"
+												@keydown.esc.prevent.stop="!$event.isComposing && ($event.target as HTMLElement).blur()"
+												@blur="saveBucketTitle(bucket.id, ($event.target as HTMLElement).textContent as string)"
+												@click.stop="focusBucketTitle"
+											>
+												{{ bucket.title }}
+											</h2>
+											<span
+												v-if="bucket.limit > 0 || alwaysShowBucketTaskCount"
+												:class="{'is-max': bucket.limit > 0 && bucket.count >= bucket.limit}"
+												class="limit kb-col-count"
+											>
+												{{ bucket.limit > 0 ? `${bucket.count}/${bucket.limit}` : bucket.count }}
+											</span>
+											<span
+												v-if="bucket.id !== 0 && view?.doneBucketId === bucket.id"
+												v-tooltip="$t('project.kanban.doneBucketHint')"
+												class="kb-done-indicator"
+												@click.stop="() => collapseBucket(bucket)"
+											>
+												<Icon icon="check-double" />
+											</span>
+										</div>
+									</div>
 									<Dropdown
 										v-if="canWrite && !collapsedBuckets[bucket.id]"
-										class="is-right options"
+										class="is-right options kb-col-menu-dropdown"
 										trigger-icon="ellipsis-v"
 										@close="() => showSetLimitInput = false"
 									>
@@ -85,7 +93,7 @@
 													ref="bucketLimitInputRef"
 													v-focus.always
 													:value="bucket.limit"
-													class="input"
+													class="input kb-plain-input"
 													type="number"
 													min="0"
 													@keyup.esc="() => showSetLimitInput = false"
@@ -168,7 +176,7 @@
 										>
 											<div
 												v-if="showNewTaskInput === bucket.id"
-												class="field"
+												class="kb-inline-add"
 											>
 												<div
 													class="control"
@@ -177,7 +185,7 @@
 													<input
 														v-model="newTaskText"
 														v-focus.always
-														class="input"
+														class="input kb-inline-input"
 														:disabled="loading || taskLoading || undefined"
 														:placeholder="$t('project.kanban.addTaskPlaceholder')"
 														type="text"
@@ -197,39 +205,57 @@
 											<XButton
 												v-else
 												v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
-												class="is-fullwidth has-text-centered"
+												class="kb-add-btn"
 												:shadow="false"
 												icon="plus"
 												variant="secondary"
 												:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
 												@click="toggleShowNewTaskInput(bucket.id)"
 											>
-												{{
-													bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
-												}}
+												{{ $t('project.kanban.addTask') }}
 											</XButton>
 										</div>
 									</template>
 
 									<template #item="{element: task}">
 										<div
-											class="task-item"
+											class="task-item kb-card"
 											:data-task-id="task.id"
+											@click="openTask(task)"
 										>
 											<span
 												v-if="canWrite && isTouchDevice"
 												class="handle"
-												@click="openTask(task)"
+												@click.stop="openTask(task)"
 												@touchstart.passive="onHandleTouchStart"
 												@touchmove.passive="onHandleTouchMove"
 											/>
-											<KanbanCard
-												class="kanban-card"
-												:task="task"
-												:loading="taskUpdating[task.id] ?? false"
-												:project-id="projectId"
-												@taskCompletedRecurring="handleRecurringTaskCompletion"
-											/>
+											<p class="kb-card-id">#{{ task.identifier || task.id }}</p>
+											<p class="kb-card-title">{{ task.title }}</p>
+											<div class="kb-card-sep" />
+											<div class="kb-card-foot">
+												<span
+													v-for="label in task.labels"
+													:key="label.id"
+													class="kb-tag"
+													:style="getLabelStyle(label)"
+												>
+													{{ label.title }}
+												</span>
+												<span
+													v-if="task.priority > 0"
+													class="kb-tag"
+													:class="getPriorityClass(task.priority)"
+												>
+													{{ getPriorityLabel(task.priority) }}
+												</span>
+												<div
+													v-if="task.assignees.length > 0"
+													class="kb-assignee"
+												>
+													{{ getAssigneeInitials(task.assignees[0]) }}
+												</div>
+											</div>
 										</div>
 									</template>
 								</draggable>
@@ -247,7 +273,7 @@
 							v-focus.always
 							:class="{'is-loading': loading}"
 							:disabled="loading || undefined"
-							class="input"
+							class="input kb-plain-input"
 							:placeholder="$t('project.kanban.addBucketPlaceholder')"
 							type="text"
 							@blur="() => showNewBucketInput = false"
@@ -257,7 +283,7 @@
 						<XButton
 							v-else
 							:shadow="false"
-							class="is-transparent is-fullwidth has-text-centered"
+							class="kb-new-bucket"
 							variant="secondary"
 							icon="plus"
 							@click="() => showNewBucketInput = true"
@@ -297,10 +323,13 @@ import draggable from 'zhyswan-vuedraggable'
 import {klona} from 'klona/lite'
 
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
+import {PRIORITIES} from '@/constants/priorities'
 import BucketModel from '@/models/bucket'
 
 import type {IBucket} from '@/modelTypes/IBucket'
+import type {ILabel} from '@/modelTypes/ILabel'
 import type {ITask} from '@/modelTypes/ITask'
+import type {IUser} from '@/modelTypes/IUser'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
@@ -309,7 +338,6 @@ import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
-import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 
@@ -350,6 +378,8 @@ const DRAG_OPTIONS = {
 	delayOnTouchOnly: true,
 	delay: 1000,
 } as const
+
+const BUCKET_COLORS = ['#6c63f5', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#f97316']
 
 const MIN_SCROLL_HEIGHT_PERCENT = 0.25
 
@@ -462,6 +492,65 @@ function openTask(task: ITask) {
 		params: {id: task.id},
 		state: {backdropView: router.currentRoute.value.fullPath},
 	})
+}
+
+function getBucketColor(bucket: IBucket, bucketIndex: number): string {
+	if (bucket.id !== 0 && view.value?.doneBucketId === bucket.id) {
+		return '#10b981'
+	}
+
+	if (bucket.limit > 0 && bucket.count >= bucket.limit) {
+		return '#ef4444'
+	}
+
+	return BUCKET_COLORS[bucketIndex % BUCKET_COLORS.length]
+}
+
+function getLabelStyle(label: ILabel) {
+	return {
+		borderColor: `${label.hexColor}40`,
+		color: label.textColor || label.hexColor,
+		background: `${label.hexColor}14`,
+	}
+}
+
+function getPriorityClass(priority: ITask['priority']) {
+	if (priority >= PRIORITIES.HIGH) {
+		return 'tag--high'
+	}
+
+	if (priority === PRIORITIES.MEDIUM) {
+		return 'tag--med'
+	}
+
+	return 'tag--low'
+}
+
+function getPriorityLabel(priority: ITask['priority']) {
+	if (priority >= PRIORITIES.HIGH) {
+		return t('task.priority.high')
+	}
+
+	if (priority === PRIORITIES.MEDIUM) {
+		return t('task.priority.medium')
+	}
+
+	return t('task.priority.low')
+}
+
+function getAssigneeInitials(user: IUser) {
+	const source = user.name || user.username || user.email || ''
+	const parts = source.trim().split(/\s+/).filter(Boolean)
+
+	if (parts.length === 0) {
+		return '?'
+	}
+
+	if (parts.length === 1) {
+		return parts[0].slice(0, 2).toUpperCase()
+	}
+
+	return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
 }
 
 function onHandleTouchStart(e: TouchEvent) {
@@ -926,19 +1015,21 @@ function unCollapseBucket(bucket: IBucket) {
 
 <style lang="scss">
 $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
-$bucket-width: 300px;
-$bucket-header-height: 60px;
-$bucket-right-margin: 1rem;
+$bucket-width: 256px;
+$bucket-header-height: auto;
+$bucket-right-margin: 16px;
 $crazy-height-calculation: '100vh - 4.5rem - 1.5rem - 1rem - 1.5rem - 11px';
-$crazy-height-calculation-tasks: '#{$crazy-height-calculation} - 1rem - 2.5rem - 2rem - #{$button-height} - 1rem';
 $filter-container-height: '1rem - #{$switch-view-height}';
 
 .kanban {
 	overflow-x: auto;
 	overflow-y: hidden;
 	block-size: calc(#{$crazy-height-calculation});
-	margin: 0 -1.5rem;
-	padding: 0 1.5rem;
+	margin: 0;
+	padding: 20px 24px;
+	align-items: flex-start;
+	gap: $bucket-right-margin;
+	background: #0f1016;
 
 	&:focus, .bucket .tasks:focus {
 		box-shadow: none;
@@ -947,11 +1038,14 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	@media screen and (max-width: $tablet) {
 		block-size: calc(#{$crazy-height-calculation} - #{$filter-container-height} + 9px);
 		scroll-snap-type: x mandatory;
-		margin: 0 -0.5rem;
+		margin: 0;
+		padding: 16px 12px;
 	}
 
 	&-bucket-container {
 		display: flex;
+		align-items: flex-start;
+		gap: $bucket-right-margin;
 	}
 
 	.ghost {
@@ -975,16 +1069,15 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket {
-		border-radius: $radius;
 		position: relative;
-
-		margin: 0 $bucket-right-margin 0 0;
-		max-block-size: calc(100% - 1rem); // 1rem spacing to the bottom
-		min-block-size: 20px;
+		margin: 0;
+		max-block-size: 100%;
 		inline-size: $bucket-width;
 		display: flex;
 		flex-direction: column;
-		overflow: hidden; // Make sure the edges are always rounded
+		gap: 10px;
+		flex-shrink: 0;
+		overflow: visible;
 
 		@media screen and (max-width: $tablet) {
 			scroll-snap-align: center;
@@ -993,19 +1086,27 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		.tasks {
 			overflow: hidden auto;
 			block-size: 100%;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			padding: 0;
+			margin: 0;
+			list-style: none;
 		}
 
 		.task-item {
-			background-color: var(--grey-100);
-			padding: .25rem .5rem;
 			position: relative;
+			padding: 13px 14px;
+			margin: 0;
+			background: #13141a;
+			border: .5px solid #1e1f28;
+			border-radius: 10px;
+			cursor: pointer;
+			transition: border-color .15s, background .15s;
 
-			&:first-of-type {
-				padding-block-start: .5rem;
-			}
-
-			&:last-of-type {
-				padding-block-end: .5rem;
+			&:hover {
+				border-color: #2a2b35;
+				background: #161720;
 			}
 
 			.handle {
@@ -1024,22 +1125,17 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		}
 
 		h2 {
-			font-size: 1rem;
+			font-size: 12.5px;
 			margin: 0;
-			font-weight: 600 !important;
+			font-weight: 500 !important;
 		}
 
 		&.new-bucket {
-			// Because of reasons, this button ignores the margin we gave it to the right.
-			// To make it still look like it has some, we modify the container to have a padding of 1rem,
-			// which is the same as the margin it should have. Then we make the container itself bigger
-			// to hide the fact we just made the button smaller.
-			min-inline-size: calc(#{$bucket-width} + 1rem);
+			min-inline-size: auto;
 			background: transparent;
 
 			.button {
-				background: var(--grey-100);
-				inline-size: 100%;
+				inline-size: auto;
 			}
 		}
 
@@ -1047,7 +1143,6 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			align-self: flex-start;
 			transform: rotate(90deg) translateY(-100%);
 			transform-origin: top left;
-			// Using negative margins instead of translateY here to make all other buckets fill the empty space
 			margin-inline-end: calc((#{$bucket-width} - #{$bucket-header-height} - #{$bucket-right-margin}) * -1);
 			cursor: pointer;
 
@@ -1058,55 +1153,324 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	}
 
 	.bucket-header {
-		background-color: var(--grey-100);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: .5rem;
+		padding: 0 2px;
 		block-size: $bucket-header-height;
+		background: transparent;
 
 		.icon.has-text-success {
 			cursor: pointer;
 		}
 
 		.limit {
-			padding: 0 .5rem;
-			font-weight: bold;
+			padding: 1px 7px;
+			font-weight: 500;
 
 			&.is-max {
-				color: var(--danger);
+				color: #f87171;
 			}
 		}
 
 		.title.input {
 			block-size: auto;
-			padding: .4rem .5rem;
+			padding: 0;
 			display: inline-block;
 			cursor: pointer;
+			background: transparent;
+			border: 0;
+			color: #8a8a9a;
 		}
 	}
 
 	:deep(.dropdown-trigger) {
-		padding: .5rem;
+		padding: 0;
+	}
+
+	:deep(.dropdown-trigger .button) {
+		inline-size: 26px;
+		block-size: 26px;
+		padding: 0;
+		border: 0;
+		border-radius: 6px;
+		background: transparent;
+		color: #3a3b48;
+		box-shadow: none;
+		transition: all .12s;
+
+		&:hover,
+		&:focus-visible {
+			background: #1a1b22;
+			color: #8a8a9a;
+		}
 	}
 
 	.bucket-footer {
-		position: sticky;
-		inset-block-end: 0;
+		position: static;
 		block-size: min-content;
-		padding: .5rem;
-		background-color: var(--grey-100);
-		border-end-start-radius: $radius;
-		border-end-end-radius: $radius;
+		padding: 0;
+		background: transparent;
 		transform: none;
 
 		.button {
 			background-color: transparent;
-
-			&:hover {
-				background-color: var(--white);
-			}
 		}
+	}
+}
+
+.kanban-view {
+	background: #0f1016;
+	border-radius: 12px;
+}
+
+.kb-col-title-wrap {
+	min-inline-size: 0;
+	flex: 1;
+}
+
+.kb-col-title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 12.5px;
+	font-weight: 500;
+	color: #8a8a9a;
+	min-inline-size: 0;
+}
+
+.kb-col-dot {
+	inline-size: 7px;
+	block-size: 7px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.kb-col-count {
+	font-size: 11px;
+	color: #3a3b48;
+	background: #1a1b22;
+	border-radius: 10px;
+	line-height: 1.4;
+}
+
+.kb-col-menu-dropdown {
+	flex-shrink: 0;
+}
+
+.kb-done-indicator {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: #34d399;
+	font-size: 12px;
+	flex-shrink: 0;
+}
+
+.kb-card {
+	box-sizing: border-box;
+}
+
+.kb-card-id {
+	font-size: 10.5px;
+	color: #4a4b57;
+	margin: 0 0 6px;
+}
+
+.kb-card-title {
+	font-size: 13px;
+	color: #c0bdb8;
+	line-height: 1.45;
+	margin: 0 0 11px;
+	font-weight: 400;
+}
+
+.kb-card-sep {
+	block-size: .5px;
+	background: #1a1b22;
+	margin-block-end: 10px;
+}
+
+.kb-card-foot {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	flex-wrap: wrap;
+}
+
+.kb-tag {
+	font-size: 10.5px;
+	padding: 2px 8px;
+	border-radius: 20px;
+	border: .5px solid;
+	white-space: nowrap;
+	text-transform: capitalize;
+	line-height: 1.4;
+}
+
+.tag--high {
+	border-color: rgb(224 72 72 / 25%);
+	color: #f87171;
+	background: rgb(224 72 72 / 8%);
+}
+
+.tag--med {
+	border-color: rgb(245 158 11 / 25%);
+	color: #fbbf24;
+	background: rgb(245 158 11 / 8%);
+}
+
+.tag--low {
+	border-color: rgb(16 185 129 / 25%);
+	color: #34d399;
+	background: rgb(16 185 129 / 8%);
+}
+
+.kb-assignee {
+	inline-size: 20px;
+	block-size: 20px;
+	border-radius: 50%;
+	background: #6c63f5;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 9px;
+	color: #fff;
+	font-weight: 600;
+	margin-inline-start: auto;
+	flex-shrink: 0;
+	text-transform: uppercase;
+}
+
+.kb-inline-add {
+	background: #13141a;
+	border: .5px solid #6c63f5;
+	border-radius: 10px;
+	padding: 10px 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.kb-inline-input {
+	background: transparent;
+	border: 0;
+	outline: none;
+	font-size: 13px;
+	color: #c0bdb8;
+	font-family: inherit;
+	inline-size: 100%;
+	box-shadow: none;
+	padding: 0;
+
+	&::placeholder {
+		color: #3a3b48;
+	}
+}
+
+.kb-plain-input {
+	background: #13141a;
+	border: .5px solid #2a2b35;
+	border-radius: 8px;
+	font-size: 13px;
+	color: #c0bdb8;
+	font-family: inherit;
+	box-shadow: none;
+	padding: 8px 10px;
+
+	&::placeholder {
+		color: #3a3b48;
+	}
+
+	&:focus {
+		border-color: #6c63f5;
+		box-shadow: none;
+	}
+}
+
+.kb-inline-actions {
+	display: flex;
+	gap: 6px;
+}
+
+.kb-btn-confirm,
+.kb-btn-cancel {
+	border-radius: 6px;
+	font-size: 12px;
+	font-family: inherit;
+	cursor: pointer;
+	padding: 4px 12px;
+	transition: all .12s;
+}
+
+.kb-btn-confirm {
+	background: #6c63f5;
+	color: #fff;
+	border: 0;
+	padding-inline: 14px;
+
+	&:hover:not(:disabled) {
+		opacity: .85;
+	}
+
+	&:disabled {
+		opacity: .5;
+		cursor: not-allowed;
+	}
+}
+
+.kb-btn-cancel {
+	background: transparent;
+	color: #8a8a9a;
+	border: .5px solid #2a2b35;
+
+	&:hover {
+		background: #1e1f28;
+	}
+}
+
+.kb-add-btn,
+.kb-new-bucket {
+	border: .5px dashed #2a2b35 !important;
+	background: transparent !important;
+	color: #3a3b48 !important;
+	border-radius: 8px;
+	transition: all .12s;
+	box-shadow: none !important;
+	justify-content: flex-start;
+}
+
+.kb-add-btn {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	padding: 8px 10px;
+	font-size: 12.5px;
+	font-family: inherit;
+	inline-size: 100%;
+	margin-block-start: 2px;
+
+	&:hover:not(:disabled) {
+		border-color: #6c63f5 !important;
+		color: #8a8a9a !important;
+		background: #13141a !important;
+	}
+}
+
+.kb-new-bucket {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 14px;
+	font-size: 12.5px;
+	font-family: inherit;
+	height: 42px;
+	white-space: nowrap;
+	flex-shrink: 0;
+
+	&:hover {
+		border-color: #6c63f5 !important;
+		color: #a78bfa !important;
 	}
 }
 

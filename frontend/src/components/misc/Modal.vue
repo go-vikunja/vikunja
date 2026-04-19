@@ -166,7 +166,7 @@ $modal-width: 1024px;
 	padding: 0;
 	border: none;
 	background: transparent;
-	color: #ffffff;
+	color: #c0bdb8;
 	// Fill viewport
 	position: fixed;
 	inset: 0;
@@ -195,7 +195,7 @@ $modal-width: 1024px;
 	}
 
 	&[open]:not([data-closing])::backdrop {
-		background-color: rgba(0, 0, 0, .8);
+		background-color: rgba(3, 4, 8, .88);
 
 		@starting-style {
 			background-color: rgba(0, 0, 0, 0);
@@ -212,6 +212,30 @@ $modal-width: 1024px;
 	padding-block-start: env(safe-area-inset-top);
 	padding-block-end: env(safe-area-inset-bottom);
 
+}
+
+.modal-content,
+.modal-card {
+	background: #13141a;
+	border: .5px solid #2a2b35;
+	border-radius: 12px;
+	color: #c0bdb8;
+	box-shadow: none;
+}
+
+.modal-header,
+.modal-card-title {
+	color: #f0ede8;
+}
+
+.modal-content .content,
+.modal-card-body {
+	color: #8a8a9a;
+}
+
+.modal-content .actions,
+.modal-card-foot {
+	border-block-start: .5px solid #2a2b35;
 }
 
 .default .modal-content,
@@ -287,8 +311,13 @@ $modal-width: 1024px;
 	position: fixed;
 	inset-block-start: .5rem;
 	inset-inline-end: $close-button-padding;
-	color: var(--white);
+	color: #8a8a9a;
 	font-size: 2rem;
+	transition: color .12s;
+
+	&:hover {
+		color: #a78bfa;
+	}
 
 	@media screen and (min-width: $desktop) and (width <= calc(#{$desktop	} + #{$close-button-min-space})) {
 		inset-block-start: calc(5px + $modal-margin);
@@ -354,7 +383,7 @@ $modal-width: 1024px;
 <style lang="scss">
 // Close icon SVG uses currentColor, change the color to keep it visible
 .dark .modal-dialog .close {
-	color: var(--grey-900);
+	color: #8a8a9a;
 }
 
 @media print, screen and (max-width: $tablet) {

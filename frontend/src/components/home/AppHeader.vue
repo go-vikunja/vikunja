@@ -25,15 +25,6 @@
 				{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
 			</h1>
 
-			<BaseButton
-				v-if="!isEditorContentEmpty(currentProject.description)"
-				:to="{ name: 'project.info', params: { projectId: currentProject.id } }"
-				class="project-title-button"
-			>
-				<span class="is-sr-only">{{ $t('project.description') }}</span>
-				<Icon icon="circle-info" />
-			</BaseButton>
-
 			<ProjectSettingsDropdown
 				v-if="canWriteCurrentProject && currentProject.id !== -1"
 				class="project-title-dropdown"
@@ -52,6 +43,30 @@
 					</BaseButton>
 				</template>
 			</ProjectSettingsDropdown>
+
+			<div
+				v-if="projectViews.length > 1"
+				class="project-view-switch"
+			>
+				<BaseButton
+					v-for="view in projectViews"
+					:key="view.id"
+					class="project-view-chip"
+					:class="{'is-active': view.id === currentProjectViewId}"
+					:to="getViewRoute(view.id)"
+				>
+					{{ getViewTitle(view.title) }}
+				</BaseButton>
+			</div>
+
+			<BaseButton
+				v-if="!isEditorContentEmpty(currentProject.description)"
+				:to="{ name: 'project.info', params: { projectId: currentProject.id } }"
+				class="project-title-button"
+			>
+				<span class="is-sr-only">{{ $t('project.description') }}</span>
+				<Icon icon="circle-info" />
+			</BaseButton>
 		</div>
 
 		<div class="navbar-end">
@@ -114,9 +129,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import {computed} from 'vue'
 
-import { PERMISSIONS as Permissions } from '@/constants/permissions'
+import {PERMISSIONS as Permissions} from '@/constants/permissions'
 
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
@@ -127,29 +142,62 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
 import OpenQuickActions from '@/components/misc/OpenQuickActions.vue'
 
-import { getProjectTitle } from '@/helpers/getProjectTitle'
-import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
+import {getProjectTitle} from '@/helpers/getProjectTitle'
+import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 
-import { useBaseStore } from '@/stores/base'
-import { useConfigStore } from '@/stores/config'
-import { useAuthStore } from '@/stores/auth'
-import type { IProject } from '@/modelTypes/IProject'
+import {useBaseStore} from '@/stores/base'
+import {useConfigStore} from '@/stores/config'
+import {useAuthStore} from '@/stores/auth'
+import {useViewFiltersStore} from '@/stores/viewFilters'
+import type {IProject} from '@/modelTypes/IProject'
+import type {IProjectView} from '@/modelTypes/IProjectView'
 
 const baseStore = useBaseStore()
 // Create a mutable copy to satisfy type requirements (readonly deep -> mutable)
 const currentProject = computed<IProject | null>(() => {
 	const project = baseStore.currentProject
-	return project ? { ...project } as IProject : null
+	return project ? {...project} as IProject : null
 })
 const background = computed(() => baseStore.background)
 const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission !== null && baseStore.currentProject?.maxPermission !== undefined && baseStore.currentProject.maxPermission > Permissions.READ)
 const menuActive = computed(() => baseStore.menuActive)
+const currentProjectViewId = computed(() => baseStore.currentProjectViewId)
+
+const projectViews = computed(() => currentProject.value?.views ?? [])
 
 const authStore = useAuthStore()
+const viewFiltersStore = useViewFiltersStore()
 
 const configStore = useConfigStore()
 const imprintUrl = computed(() => configStore.legal.imprintUrl)
 const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
+
+function getViewTitle(viewTitle: IProjectView['title']) {
+	switch (viewTitle) {
+		case 'List':
+			return 'List'
+		case 'Gantt':
+			return 'Gantt'
+		case 'Table':
+			return 'Table'
+		case 'Kanban':
+			return 'Kanban'
+		default:
+			return viewTitle
+	}
+}
+
+function getViewRoute(viewId: IProjectView['id']) {
+	if (!currentProject.value) {
+		return {name: 'home'}
+	}
+
+	return {
+		name: 'project.view',
+		params: {projectId: currentProject.value.id, viewId},
+		query: viewFiltersStore.getViewQuery(viewId),
+	}
+}
 </script>
 
 <style lang="scss" scoped>
@@ -216,6 +264,7 @@ $user-dropdown-width-mobile: 5rem;
 	margin-inline: auto;
 	display: flex;
 	align-items: center;
+	gap: .5rem;
 
 	// this makes the truncated text of the project title work
 	// inside the flexbox parent
@@ -235,6 +284,43 @@ $user-dropdown-width-mobile: 5rem;
 
 	@media screen and (min-width: $tablet) {
 		font-size: 1.75rem;
+	}
+}
+
+.project-view-switch {
+	display: none;
+	align-items: center;
+	gap: .35rem;
+	padding: .3rem;
+	border: .5px solid #2a2b35;
+	border-radius: 10px;
+	background: #13141a;
+
+	@media screen and (min-width: $tablet) {
+		display: inline-flex;
+	}
+}
+
+.project-view-chip {
+	padding: .22rem .55rem;
+	font-size: .75rem;
+	font-weight: 600;
+	line-height: 1.2;
+	border-radius: 8px;
+	color: #8a8a9a;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	transition: all .12s;
+
+	&:hover {
+		color: #d0cdc8;
+		background: #1e1f28;
+	}
+
+	&.is-active {
+		background: #1e1b3a;
+		color: #a78bfa;
 	}
 }
 

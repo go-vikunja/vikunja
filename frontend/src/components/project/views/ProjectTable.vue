@@ -12,7 +12,7 @@
 						<XButton
 							icon="th"
 							variant="secondary"
-							class="mie-2"
+							class="mie-2 table-columns-trigger"
 							@click.prevent.stop="toggle()"
 						>
 							{{ $t('project.table.columns') }}
@@ -92,9 +92,10 @@
 				<Card
 					:padding="false"
 					:has-content="false"
+					class="table-shell"
 				>
-					<div class="has-horizontal-overflow">
-						<table class="table has-actions is-hoverable is-fullwidth mbe-0">
+					<div class="has-horizontal-overflow table-scroll">
+						<table class="table has-actions is-hoverable is-fullwidth mbe-0 vk-table">
 							<thead>
 								<tr>
 									<th v-if="activeColumns.index">
@@ -432,13 +433,61 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 </script>
 
 <style lang="scss" scoped>
-.table {
+
+.table-shell {
+	background: #13141a;
+	border: .5px solid #1e1f28;
+	border-radius: 12px;
+	box-shadow: none;
+}
+
+.table-scroll {
+	padding: .5rem;
+	border-radius: 10px;
+	background: #0f1016;
+	border: .5px solid #1e1f28;
+}
+
+.vk-table {
 	background: transparent;
 	overflow-x: auto;
 	overflow-y: hidden;
+	color: #c0bdb8;
+
+	th,
+	td {
+		border-color: #1e1f28;
+	}
 
 	th {
 		white-space: nowrap;
+		font-size: 12px;
+		font-weight: 600;
+		letter-spacing: .02em;
+		text-transform: uppercase;
+		color: #8a8a9a;
+		background: #13141a;
+	}
+
+	td {
+		font-size: 13px;
+		color: #c0bdb8;
+	}
+
+	tbody tr {
+		transition: background-color .12s;
+	}
+
+	tbody tr:hover {
+		background: #161720;
+	}
+
+	a {
+		color: #d0cdc8;
+
+		&:hover {
+			color: #a78bfa;
+		}
 	}
 
 	.user {
@@ -446,12 +495,37 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	}
 }
 
+.table-columns-trigger {
+	border: .5px dashed #2a2b35 !important;
+	background: transparent !important;
+	color: #3a3b48 !important;
+	border-radius: 8px;
+	transition: all .12s;
+	box-shadow: none !important;
+
+	&:hover {
+		border-color: #6c63f5 !important;
+		color: #8a8a9a !important;
+		background: #13141a !important;
+	}
+}
+
 .columns-filter {
 	margin: 0;
+	background: #13141a;
+	border: .5px solid #2a2b35;
+	border-radius: 10px;
+	box-shadow: none;
+	color: #c0bdb8;
 
 	:deep(.card-content .content) {
 		display: flex;
 		flex-direction: column;
+		gap: .25rem;
+	}
+
+	:deep(.fancycheckbox) {
+		color: #c0bdb8;
 	}
 
 	&.is-open {
@@ -466,5 +540,38 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 
 .filter-container :deep(.popup) {
 	inset-block-start: 7rem;
+}
+
+.project-table {
+	:deep(.filter-container .button),
+	:deep(.filter-container .x-button) {
+		border: .5px dashed #2a2b35;
+		background: transparent;
+		color: #8a8a9a;
+		box-shadow: none;
+
+		&:hover {
+			border-color: #6c63f5;
+			background: #13141a;
+			color: #d0cdc8;
+		}
+	}
+
+	:deep(.pagination-link) {
+		background: #13141a;
+		border-color: #2a2b35;
+		color: #8a8a9a;
+
+		&:hover {
+			border-color: #6c63f5;
+			color: #d0cdc8;
+		}
+
+		&.is-current {
+			background: #1e1b3a;
+			border-color: #6c63f5;
+			color: #a78bfa;
+		}
+	}
 }
 </style>

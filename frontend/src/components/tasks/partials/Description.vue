@@ -169,5 +169,40 @@ async function uploadCallback(files: File[] | FileList): Promise<string[]> {
 	// The exact amount of pixels we need to make the description icon align with the buttons and the form inside the editor.
 	// The icon is not exactly the same length on all sides so we need to hack our way around it.
 	margin-inline-start: 4px;
+
+	:deep(ul.tiptap__editor-actions) {
+		margin-block-start: .5rem;
+
+		li::after {
+			display: none;
+		}
+	}
+
+	:deep(.done-edit),
+	:deep(.button.mbs-4) {
+		border: .5px dashed #2a2b35;
+		background: transparent;
+		color: #8a8a9a;
+		border-radius: 8px;
+		box-shadow: none;
+		font-weight: 500;
+		padding: .35rem .75rem;
+		transition: border-color .2s ease, background-color .2s ease, color .2s ease;
+
+		&:hover,
+		&:focus {
+			border-color: #6c63f5;
+			background: #13141a;
+			color: #d0cdc8;
+		}
+
+		&:disabled,
+		&.is-disabled {
+			opacity: .45;
+			cursor: not-allowed;
+			border-color: #2a2b35;
+			color: #5f6270;
+		}
+	}
 }
 </style>

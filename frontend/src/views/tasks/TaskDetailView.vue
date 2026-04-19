@@ -71,7 +71,10 @@
 					:class="{'is-two-thirds': canWrite}"
 					class="column detail-content"
 				>
-					<div class="columns details">
+					<div
+						v-if="hasPrimaryDetails"
+						class="columns details"
+					>
 						<div
 							v-if="activeFields.assignees"
 							class="column assignees"
@@ -455,7 +458,7 @@
 							}}
 						</XButton>
 						
-						<span class="action-heading">{{ $t('task.detail.organization') }}</span>
+						<span class="action-heading action-heading--organization">{{ $t('task.detail.organization') }}</span>
 						
 						<XButton
 							v-shortcut="'KeyL'"
@@ -490,7 +493,7 @@
 							{{ $t('task.detail.actions.color') }}
 						</XButton>
 						
-						<span class="action-heading">{{ $t('task.detail.management') }}</span>
+						<span class="action-heading action-heading--management">{{ $t('task.detail.management') }}</span>
 
 						<XButton
 							v-shortcut="'KeyA'"
@@ -533,7 +536,7 @@
 							{{ $t('task.detail.actions.duplicate') }}
 						</XButton>
 
-						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
+						<span class="action-heading action-heading--date-time">{{ $t('task.detail.dateAndTime') }}</span>
 
 						<XButton
 							v-shortcut="'KeyD'"
@@ -969,6 +972,18 @@ const activeFields: { [type in FieldType]: boolean } = reactive({
 	startDate: false,
 })
 
+const hasPrimaryDetails = computed(() => (
+	activeFields.assignees ||
+	activeFields.priority ||
+	activeFields.dueDate ||
+	activeFields.percentDone ||
+	activeFields.startDate ||
+	activeFields.endDate ||
+	activeFields.reminders ||
+	activeFields.repeatAfter ||
+	activeFields.color
+))
+
 function setActiveFields() {
 	// FIXME: are these lines necessary?
 	// task.startDate = task.startDate || null
@@ -1191,13 +1206,27 @@ function setRelatedTasksActive() {
 }
 
 .is-modal .task-view {
-	border-radius: $radius;
+	border-radius: 12px;
 	padding: 1rem;
-	color: var(--text);
-	background-color: var(--site-background) !important;
+	color: #c0bdb8;
+	background: #13141a !important;
+	border: .5px solid #2a2b35;
+	box-shadow: none;
 
 	@media screen and (width <= calc(#{$desktop} + 1px)) {
 		border-radius: 0;
+	}
+}
+
+.is-modal .subtitle {
+	color: #8a8a9a;
+
+	a {
+		color: #d0cdc8;
+
+		&:hover {
+			color: #a78bfa;
+		}
 	}
 }
 
@@ -1282,6 +1311,22 @@ h3 .button {
 		break-after: always; // New syntax
 	}
 
+}
+
+.is-modal .details,
+.is-modal .description,
+.is-modal .attachments,
+.is-modal .content.details {
+	background: #0f1016;
+	border: .5px solid #1e1f28;
+	border-radius: 10px;
+	padding: .75rem;
+	margin-block-end: .75rem;
+}
+
+.is-modal .detail-title,
+.is-modal .action-heading {
+	color: #8a8a9a;
 }
 
 .details.labels-list,
@@ -1377,6 +1422,70 @@ h3 .button {
 	}
 }
 
+.is-modal .action-buttons .button {
+	border: .5px dashed #2a2b35;
+	background: transparent;
+	color: #8a8a9a;
+	border-radius: 8px;
+	box-shadow: none;
+
+	&:hover {
+		border-color: #6c63f5;
+		background: #13141a;
+		color: #d0cdc8;
+	}
+
+	&.button--mark-done.is-pending {
+		color: #34d399;
+
+		&:hover,
+		&:focus {
+			background: #0f2a24;
+			border-color: #34d399;
+			color: #a7f3d0;
+		}
+	}
+}
+
+.is-modal .action-buttons .button.is-danger {
+	border-color: #ef4444;
+	color: #f87171;
+
+	&:hover,
+	&:focus {
+		border-color: #ef4444;
+		background: #2b1113;
+		color: #fca5a5;
+	}
+}
+
+.is-modal :deep(.heading),
+.is-modal :deep(.details),
+.is-modal :deep(.description) {
+	.input,
+	.textarea,
+	.select select {
+		background: #13141a;
+		border: .5px solid #2a2b35;
+		border-radius: 10px;
+		color: #d0cdc8;
+		box-shadow: none;
+
+		&::placeholder {
+			color: #3a3b48;
+		}
+
+		&:hover,
+		&:focus,
+		&:active {
+			border-color: #6c63f5 !important;
+			background: #13141a;
+			color: #d0cdc8;
+			box-shadow: none;
+		}
+	}
+}
+
 .is-modal .action-buttons {
 	// we need same top margin for the modal close button 
 	@media screen and (min-width: $tablet) {
@@ -1406,6 +1515,18 @@ h3 .button {
 	font-weight: 700;
 	margin: .5rem 0;
 	display: inline-block;
+}
+
+.is-modal .action-heading--organization {
+	color: #9a8bbf;
+}
+
+.is-modal .action-heading--management {
+	color: #6ea892;
+}
+
+.is-modal .action-heading--date-time {
+	color: #b89a68;
 }
 
 .scroll-to-comments-button {

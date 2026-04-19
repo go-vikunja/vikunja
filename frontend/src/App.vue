@@ -81,6 +81,10 @@ const route = useRoute()
 const showAuthLayout = computed(() => authStore.authUser && typeof route.name === 'string' && !AUTH_ROUTE_NAMES.has(route.name))
 
 useBodyClass('is-touch', isTouchDevice())
+const isDarkAppTheme = useBodyClass('vk-dark-page')
+watch(showAuthLayout, (enabled) => {
+	isDarkAppTheme.value = enabled
+}, {immediate: true})
 const keyboardShortcutsActive = computed(() => baseStore.keyboardShortcutsActive)
 
 const {t} = useI18n({useScope: 'global'})
