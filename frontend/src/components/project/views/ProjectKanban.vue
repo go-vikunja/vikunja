@@ -508,9 +508,9 @@ function getBucketColor(bucket: IBucket, bucketIndex: number): string {
 
 function getLabelStyle(label: ILabel) {
 	return {
-		borderColor: `${label.hexColor}40`,
+		borderColor: `${label.hexColor}66`,
 		color: label.textColor || label.hexColor,
-		background: `${label.hexColor}14`,
+		background: `${label.hexColor}2b`,
 	}
 }
 

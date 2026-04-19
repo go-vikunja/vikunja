@@ -78,11 +78,12 @@ const textOnlyDescription = computed(() => {
 <style lang="scss" scoped>
 .project-card {
 	--project-card-padding: 1rem;
-	background: var(--white);
+	background: linear-gradient(165deg, #171821 0%, #12131a 100%);
 	padding: var(--project-card-padding);
-	border-radius: $radius;
-	box-shadow: var(--shadow-sm);
-	transition: box-shadow $transition;
+	border-radius: 12px;
+	border: .5px solid #2a2b35;
+	box-shadow: none;
+	transition: border-color .2s ease, transform .2s ease, background-color .2s ease;
 	position: relative;
 	overflow: hidden; // hide background
 
@@ -90,13 +91,27 @@ const textOnlyDescription = computed(() => {
 	justify-content: space-between;
 	flex-wrap: wrap;
 
+	&::before {
+		content: '';
+		position: absolute;
+		inset-block-start: 0;
+		inset-inline-start: 0;
+		inset-inline-end: 0;
+		block-size: 2px;
+		background: linear-gradient(90deg, #6c63f5 0%, #34d399 50%, #f59e0b 100%);
+		opacity: .5;
+	}
+
 	&:hover {
-		box-shadow: var(--shadow-md);
+		border-color: #3a3b48;
+		transform: translateY(-2px);
+		background: linear-gradient(165deg, #1a1b26 0%, #14151d 100%);
 	}
 
 	&:active,
 	&:focus {
-		box-shadow: var(--shadow-xs) !important;
+		transform: translateY(0);
+		border-color: #6c63f5;
 	}
 
 	> * {
@@ -122,17 +137,24 @@ const textOnlyDescription = computed(() => {
 }
 
 .is-archived {
-	font-size: .75rem;
+	font-size: .7rem;
 	float: inline-start;
+	padding: 2px 7px;
+	border-radius: 999px;
+	background: rgb(18 19 26 / 75%);
+	border: .5px solid #2a2b35;
+	color: #8a8a9a;
+	font-weight: 600;
+	letter-spacing: .02em;
 }
 
 .project-title {
 	align-self: flex-end;
 	font-family: $vikunja-font;
-	font-weight: 400;
-	font-size: 1.5rem;
+	font-weight: 500;
+	font-size: 1.125rem;
 	line-height: var(--title-line-height);
-	color: var(--text);
+	color: #d0cdc8;
 	inline-size: 100%;
 	margin-block-end: 0;
 	max-block-size: calc(100% - (var(--project-card-padding) + 1rem)); // padding & height of the "is archived" badge
@@ -143,17 +165,17 @@ const textOnlyDescription = computed(() => {
 	display: -webkit-box;
 	-webkit-line-clamp: 3;
 	-webkit-box-orient: vertical;
+	text-wrap: balance;
 }
 
 .has-light-text .project-title {
-	color: var(--grey-100);
+	color: #f3f4f6;
 }
 
 .has-background .project-title {
 	text-shadow:
-		0 0 10px var(--black),
-		1px 1px 5px var(--grey-700),
-		-1px -1px 5px var(--grey-700);
+		0 8px 20px rgb(0 0 0 / 70%),
+		0 2px 6px rgb(0 0 0 / 60%);
 	color: var(--white);
 }
 
@@ -161,17 +183,30 @@ const textOnlyDescription = computed(() => {
 	position: absolute;
 	inset-block-start: var(--project-card-padding);
 	inset-inline-end: var(--project-card-padding);
-	transition: opacity $transition, color $transition;
+	transition: opacity $transition, color $transition, border-color $transition, background-color $transition;
 	opacity: 1;
+	background: rgb(18 19 26 / 85%);
+	border: .5px solid #2a2b35;
+	border-radius: 999px;
+	inline-size: 1.9rem;
+	block-size: 1.9rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: #8a8a9a;
 
 	&:hover {
-		color: var(--warning);
+		border-color: #f59e0b;
+		background: rgb(245 158 11 / 12%);
+		color: #fbbf24;
 	}
 
 	&.is-favorite {
 		display: inline-block;
 		opacity: 1;
-		color: var(--warning);
+		border-color: #f59e0b;
+		background: rgb(245 158 11 / 12%);
+		color: #fbbf24;
 	}
 }
 
@@ -196,7 +231,7 @@ const textOnlyDescription = computed(() => {
 }
 
 .saved-filter-icon {
-	color: var(--grey-300);
+	color: #8a8a9a;
 	font-size: .75em;
 }
 </style>

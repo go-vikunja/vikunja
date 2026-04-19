@@ -208,15 +208,21 @@ body.vk-dark-page {
 
 	.modal-content,
 	.modal-card {
-		background: transparent;
+		background: #13141a;
+		border: 0.5px solid #2a2b35;
+		border-radius: 12px;
 		color: #c0bdb8;
 	}
 
 	.modal-content .card,
 	.modal-card {
-		background: #13141a;
-		border: 0.5px solid #2a2b35;
-		border-radius: 12px;
+		background: transparent;
+	}
+
+	.modal-content .card {
+		border: 0;
+		border-radius: 0;
+		box-shadow: none;
 	}
 
 	.modal-content .modal-header,
