@@ -102,8 +102,13 @@ docker compose -f docker-compose.dev.yml up -d
 
 2. Open the app:
 
-- Frontend (dev): http://localhost:4173
-- Backend API: http://localhost:3456
+- Frontend (dev UI): http://localhost:4173
+- Backend/API URL (for install/setup checks): http://localhost:3456
+
+Important:
+
+- If the UI asks for your Vikunja URL during setup, use `http://localhost:3456`.
+- `http://localhost:4173` is only the Vite dev frontend.
 
 3. View logs:
 

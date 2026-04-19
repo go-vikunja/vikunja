@@ -4,8 +4,9 @@ tmp_dir = "tmp"
 testdata_dir = "testdata"
 
 [build]
-  cmd = "go build -o ./tmp/vikunja ."
-  bin = "./tmp/vikunja web"
+  cmd = "/usr/local/go/bin/go build -o ./tmp/vikunja ."
+  bin = "./tmp/vikunja"
+  args_bin = ["web"]
   include_ext = ["go", "tpl", "tmpl", "html", "yaml", "yml", "json"]
   exclude_dir = ["frontend", "desktop", "docs", "tmp", "dist", "node_modules", ".git"]
   delay = 500
