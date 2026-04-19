@@ -230,8 +230,12 @@
 												@touchstart.passive="onHandleTouchStart"
 												@touchmove.passive="onHandleTouchMove"
 											/>
-											<p class="kb-card-id">#{{ task.identifier || task.id }}</p>
-											<p class="kb-card-title">{{ task.title }}</p>
+											<p class="kb-card-id">
+												#{{ task.identifier || task.id }}
+											</p>
+											<p class="kb-card-title">
+												{{ task.title }}
+											</p>
 											<div class="kb-card-sep" />
 											<div class="kb-card-foot">
 												<span

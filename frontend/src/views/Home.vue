@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import {ref, computed} from 'vue'
+import {ref, computed, watch, onMounted} from 'vue'
 
 import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
+import {useTaskStore} from '@/stores/tasks'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
 import Message from '@/components/misc/Message.vue'
-
-interface LocalTask {
-	id: number
-	title: string
-	priority: 'high' | 'medium' | 'low'
-	done: boolean
-}
+import type {ITask} from '@/modelTypes/ITask'
+import type {IProject} from '@/modelTypes/IProject'
+import TaskCollectionService from '@/services/taskCollection'
+import TaskModel from '@/models/task'
 
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
+const taskStore = useTaskStore()
 
 const salutation = useDaytimeSalutation()
 const deletionScheduledAt = computed(() => parseDateOrNull(authStore.info?.deletionScheduledAt))
@@ -28,34 +27,114 @@ const todayLabel = computed(() =>
 		weekday: 'long',
 		month: 'long',
 		day: 'numeric',
-	})
+	}),
 )
 
 const activeProjects = computed(() =>
-	Object.values(projectStore.projects).filter(p => !p.isArchived)
+	Object.values(projectStore.projects).filter(p => !p.isArchived),
 )
 
-// Local quick-add tasks (not persisted — use the full task view for real tasks)
+// Task management
 const newTaskTitle = ref('')
-const localTasks = ref<LocalTask[]>([])
+const displayedTasks = ref<ITask[]>([])
+const showProjectModal = ref(false)
+const selectedProject = ref<IProject | null>(null)
+const isLoading = ref(false)
 
-const pendingCount = computed(() => localTasks.value.filter(t => !t.done).length)
-const doneCount = computed(() => localTasks.value.filter(t => t.done).length)
+const pendingCount = computed(() => displayedTasks.value.filter(t => !t.done).length)
+const doneCount = computed(() => displayedTasks.value.filter(t => t.done).length)
 
-function addTask() {
+// Fetch tasks from backend
+async function fetchTasks() {
+	try {
+		isLoading.value = true
+		const taskCollectionService = new TaskCollectionService()
+		// Fetch all tasks and filter to show recent/today's tasks
+		const allTasks = await taskCollectionService.getAll(new TaskModel({}), {
+			sort_by: ['due_date'],
+			order_by: ['asc'],
+			per_page: 50,
+		})
+		displayedTasks.value = allTasks.filter(t => !t.done)
+	} catch (error) {
+		console.error('Failed to fetch tasks:', error)
+	} finally {
+		isLoading.value = false
+	}
+}
+
+// Show project selection modal
+function initiateAddTask() {
 	const title = newTaskTitle.value.trim()
 	if (!title) return
-	localTasks.value.unshift({id: Date.now(), title, priority: 'medium', done: false})
-	newTaskTitle.value = ''
+	
+	if (activeProjects.value.length === 0) {
+		alert('Please create a project first')
+		return
+	}
+	
+	// If only one project, use it directly
+	if (activeProjects.value.length === 1) {
+		selectedProject.value = activeProjects.value[0]
+		createTask()
+	} else {
+		// Show modal to select project
+		showProjectModal.value = true
+	}
 }
 
-function toggleTask(task: LocalTask) {
+// Create task with selected project
+async function createTask() {
+	if (!selectedProject.value) return
+	
+	const title = newTaskTitle.value.trim()
+	if (!title) return
+	
+	try {
+		isLoading.value = true
+		await taskStore.createNewTask({
+			title,
+			projectId: selectedProject.value.id,
+		})
+		newTaskTitle.value = ''
+		selectedProject.value = null
+		showProjectModal.value = false
+		await fetchTasks()
+	} catch (error) {
+		console.error('Failed to create task:', error)
+	} finally {
+		isLoading.value = false
+	}
+}
+
+function selectProject(project: IProject) {
+	selectedProject.value = project
+	createTask()
+}
+
+function toggleTask(task: ITask) {
 	task.done = !task.done
+	taskStore.update(task)
+	fetchTasks()
 }
 
-function priorityClass(p: LocalTask['priority']) {
-	return {high: 'chip-high', medium: 'chip-med', low: 'chip-low'}[p]
+function priorityClass(priority?: number) {
+	if (!priority) return 'chip-med'
+	if (priority >= 3) return 'chip-high'
+	if (priority === 2) return 'chip-med'
+	return 'chip-low'
 }
+
+onMounted(() => {
+	fetchTasks()
+})
+
+// Refresh tasks when showing modal closes
+watch(() => showProjectModal.value, (isOpen) => {
+	if (!isOpen) {
+		fetchTasks()
+	}
+})
 </script>
 
 <template>
@@ -80,15 +159,30 @@ function priorityClass(p: LocalTask['priority']) {
 		<!-- Topbar -->
 		<header class="vk-topbar">
 			<div>
-				<h1 class="vk-topbar-title">{{ salutation }}, {{ username }}</h1>
+				<h1 class="vk-topbar-title">
+					{{ salutation }}, {{ username }}
+				</h1>
 				<p class="vk-topbar-sub">
 					{{ todayLabel }} ·
 					{{ pendingCount === 0 ? 'Nothing due today' : `${pendingCount} tasks pending` }}
 				</p>
 			</div>
 			<div class="vk-topbar-actions">
-				<RouterLink :to="{name: 'filters.index'}" class="vk-icon-btn" title="Filters" aria-label="Filters">
-					<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+				<RouterLink
+					:to="{name: 'filters.index'}"
+					class="vk-icon-btn"
+					title="Filters"
+					aria-label="Filters"
+				>
+					<svg
+						width="14"
+						height="14"
+						viewBox="0 0 16 16"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+					>
 						<path d="M2 4h12M4 8h8M6 12h4" />
 					</svg>
 				</RouterLink>
@@ -103,7 +197,12 @@ function priorityClass(p: LocalTask['priority']) {
 				<p class="vk-import-text">
 					<strong>Import your data</strong> — bring projects and tasks from Todoist, Trello, or Asana
 				</p>
-				<RouterLink :to="{name: 'migrate.start'}" class="vk-btn-ghost">Import</RouterLink>
+				<RouterLink
+					:to="{name: 'migrate.start'}"
+					class="vk-btn-ghost"
+				>
+					Import
+				</RouterLink>
 			</div>
 
 			<!-- Quick add -->
@@ -113,26 +212,42 @@ function priorityClass(p: LocalTask['priority']) {
 					class="vk-input"
 					type="text"
 					placeholder="Add a task… (Enter to save)"
-					@keydown.enter="addTask"
-				/>
-				<button class="vk-btn-primary" @click="addTask">
-					+ Add task
+					@keydown.enter="initiateAddTask"
+				>
+				<button
+					class="vk-btn-primary"
+					:disabled="isLoading"
+					@click="initiateAddTask"
+				>
+					{{ isLoading ? '⏳ Adding...' : '+ Add task' }}
 				</button>
 			</div>
 
 			<!-- Stats -->
 			<div class="vk-stats">
 				<div class="vk-stat vk-stat--purple">
-					<p class="vk-stat-num">{{ pendingCount }}</p>
-					<p class="vk-stat-label">Tasks today</p>
+					<p class="vk-stat-num">
+						{{ pendingCount }}
+					</p>
+					<p class="vk-stat-label">
+						Tasks today
+					</p>
 				</div>
 				<div class="vk-stat vk-stat--green">
-					<p class="vk-stat-num">{{ doneCount }}</p>
-					<p class="vk-stat-label">Completed this week</p>
+					<p class="vk-stat-num">
+						{{ doneCount }}
+					</p>
+					<p class="vk-stat-label">
+						Completed this week
+					</p>
 				</div>
 				<div class="vk-stat vk-stat--amber">
-					<p class="vk-stat-num">{{ activeProjects.length }}</p>
-					<p class="vk-stat-label">Projects active</p>
+					<p class="vk-stat-num">
+						{{ activeProjects.length }}
+					</p>
+					<p class="vk-stat-label">
+						Projects active
+					</p>
 				</div>
 			</div>
 
@@ -142,32 +257,69 @@ function priorityClass(p: LocalTask['priority']) {
 				<div class="vk-panel">
 					<div class="vk-panel-head">
 						<span class="vk-panel-title">Current Tasks</span>
-						<RouterLink :to="{name: 'tasks.range'}" class="vk-panel-action">View all</RouterLink>
+						<RouterLink
+							:to="{name: 'tasks.range'}"
+							class="vk-panel-action"
+						>
+							View all
+						</RouterLink>
 					</div>
 
-					<template v-if="localTasks.length === 0">
+					<template v-if="displayedTasks.length === 0 && !isLoading">
 						<div class="vk-empty">
-							<div class="vk-empty-icon">🦙</div>
-							<p class="vk-empty-title">Nothing to do — have a nice day!</p>
-							<p class="vk-empty-sub">Your tasks will appear here once added</p>
+							<div class="vk-empty-icon">
+								🦙
+							</div>
+							<p class="vk-empty-title">
+								Nothing to do — have a nice day!
+							</p>
+							<p class="vk-empty-sub">
+								Your tasks will appear here once added
+							</p>
+						</div>
+					</template>
+
+					<template v-else-if="isLoading">
+						<div class="vk-empty">
+							<p class="vk-empty-title">
+								Loading tasks...
+							</p>
 						</div>
 					</template>
 
 					<template v-else>
 						<div
-							v-for="task in localTasks"
+							v-for="task in displayedTasks"
 							:key="task.id"
 							class="vk-task-item"
 							:class="{'vk-task-item--done': task.done}"
 							@click="toggleTask(task)"
 						>
-							<div class="vk-check" :class="{'vk-check--done': task.done}">
-								<svg v-if="task.done" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+							<div
+								class="vk-check"
+								:class="{'vk-check--done': task.done}"
+							>
+								<svg
+									v-if="task.done"
+									width="10"
+									height="10"
+									viewBox="0 0 10 10"
+									fill="none"
+									stroke="#fff"
+									stroke-width="2"
+									stroke-linecap="round"
+								>
 									<path d="M2 5l2.5 2.5L8 3" />
 								</svg>
 							</div>
 							<span class="vk-task-text">{{ task.title }}</span>
-							<span class="vk-chip" :class="priorityClass(task.priority)">{{ task.priority }}</span>
+							<span
+								v-if="task.priority"
+								class="vk-chip"
+								:class="priorityClass(task.priority)"
+							>
+								{{ task.priority === 1 ? 'low' : task.priority === 2 ? 'med' : 'high' }}
+							</span>
 						</div>
 					</template>
 				</div>
@@ -178,11 +330,24 @@ function priorityClass(p: LocalTask['priority']) {
 					<div class="vk-panel">
 						<div class="vk-panel-head">
 							<span class="vk-panel-title">Projects</span>
-							<RouterLink :to="{name: 'project.create'}" class="vk-panel-action">+ New</RouterLink>
+							<RouterLink
+								:to="{name: 'project.create'}"
+								class="vk-panel-action"
+							>
+								+ New
+							</RouterLink>
 						</div>
-						<div v-if="activeProjects.length === 0" class="vk-empty" style="padding: 24px 20px">
-							<p class="vk-empty-title">No projects yet</p>
-							<p class="vk-empty-sub">Create one to get started</p>
+						<div
+							v-if="activeProjects.length === 0"
+							class="vk-empty"
+							style="padding: 24px 20px"
+						>
+							<p class="vk-empty-title">
+								No projects yet
+							</p>
+							<p class="vk-empty-sub">
+								Create one to get started
+							</p>
 						</div>
 						<div v-else>
 							<RouterLink
@@ -191,7 +356,10 @@ function priorityClass(p: LocalTask['priority']) {
 								:to="{name: 'project.index', params: {projectId: project.id}}"
 								class="vk-project-item"
 							>
-								<span class="vk-project-dot" :style="{background: project.hexColor || '#6c63f5'}" />
+								<span
+									class="vk-project-dot"
+									:style="{background: project.hexColor || '#6c63f5'}"
+								/>
 								<span class="vk-project-name">{{ project.title }}</span>
 							</RouterLink>
 						</div>
@@ -201,11 +369,61 @@ function priorityClass(p: LocalTask['priority']) {
 					<div class="vk-panel">
 						<div class="vk-panel-head">
 							<span class="vk-panel-title">Upcoming</span>
-							<RouterLink :to="{name: 'tasks.range'}" class="vk-panel-action">View all</RouterLink>
+							<RouterLink
+								:to="{name: 'tasks.range'}"
+								class="vk-panel-action"
+							>
+								View all
+							</RouterLink>
 						</div>
-						<div class="vk-empty" style="padding: 24px 20px">
-							<p class="vk-empty-title">No upcoming deadlines</p>
-							<p class="vk-empty-sub">Enjoy the calm</p>
+						<div
+							class="vk-empty"
+							style="padding: 24px 20px"
+						>
+							<p class="vk-empty-title">
+								No upcoming deadlines
+							</p>
+							<p class="vk-empty-sub">
+								Enjoy the calm
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Project Selection Modal -->
+			<div
+				v-if="showProjectModal"
+				class="vk-modal-overlay"
+				@click.self="showProjectModal = false"
+			>
+				<div class="vk-modal">
+					<div class="vk-modal-header">
+						<h3>Select Project</h3>
+						<button
+							class="vk-modal-close"
+							@click="showProjectModal = false"
+						>
+							✕
+						</button>
+					</div>
+					<div class="vk-modal-content">
+						<p class="vk-modal-subtitle">
+							Choose which project to add "<strong>{{ newTaskTitle }}</strong>" to:
+						</p>
+						<div class="vk-project-list">
+							<button
+								v-for="project in activeProjects"
+								:key="project.id"
+								class="vk-project-option"
+								@click="selectProject(project)"
+							>
+								<span
+									class="vk-project-dot"
+									:style="{background: project.hexColor || '#6c63f5'}"
+								/>
+								<span class="vk-project-name">{{ project.title }}</span>
+							</button>
 						</div>
 					</div>
 				</div>
@@ -391,6 +609,11 @@ function priorityClass(p: LocalTask['priority']) {
 
 .vk-btn-primary:hover {
 	opacity: 0.85;
+
+.vk-btn-primary:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
 }
 
 .vk-btn-ghost {
@@ -524,6 +747,132 @@ function priorityClass(p: LocalTask['priority']) {
 	font-size: 15px;
 	color: var(--text-secondary);
 	margin-bottom: 4px;
+}
+
+/* ─── Modal ─── */
+.vk-modal-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.7);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+	animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+.vk-modal {
+	background: var(--bg-panel);
+	border: 0.5px solid var(--border);
+	border-radius: 12px;
+	max-width: 400px;
+	width: 90%;
+	max-height: 80vh;
+	overflow-y: auto;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+	animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+	from {
+		transform: translateY(20px);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+.vk-modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 20px 24px;
+	border-bottom: 0.5px solid var(--border);
+}
+
+.vk-modal-header h3 {
+	margin: 0;
+	font-size: 18px;
+	color: var(--text-primary);
+	font-weight: 500;
+}
+
+.vk-modal-close {
+	background: transparent;
+	border: none;
+	color: var(--text-muted);
+	font-size: 20px;
+	cursor: pointer;
+	padding: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: color 0.15s;
+}
+
+.vk-modal-close:hover {
+	color: var(--text-primary);
+}
+
+.vk-modal-content {
+	padding: 24px;
+}
+
+.vk-modal-subtitle {
+	margin: 0 0 16px 0;
+	font-size: 14px;
+	color: var(--text-muted);
+}
+
+.vk-modal-subtitle strong {
+	color: var(--text-primary);
+}
+
+.vk-project-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.vk-project-option {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 14px;
+	background: var(--bg-active);
+	border: 0.5px solid var(--border-mid);
+	border-radius: 8px;
+	cursor: pointer;
+	color: var(--text-secondary);
+	transition: all 0.15s;
+	text-align: left;
+	font-family: 'DM Sans', sans-serif;
+	font-size: 15px;
+}
+
+.vk-project-option:hover {
+	background: var(--bg-hover);
+	border-color: var(--accent);
+	color: var(--text-primary);
+}
+
+.vk-project-option .vk-project-dot {
+	width: 10px;
+	height: 10px;
+}
+
+.vk-project-option .vk-project-name {
+	flex: 1;
+	color: inherit;
 }
 
 .vk-empty-sub {
