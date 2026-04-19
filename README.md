@@ -21,6 +21,7 @@ I'm also offering [a hosted version of Vikunja](https://vikunja.cloud/) if you w
 - [Docker Workflows](#docker-workflows)
 	- [Run Only (No Code Changes)](#run-only-no-code-changes)
 	- [Development (Hot Reload)](#development-hot-reload)
+	- [Development (Local Frontend + Docker Backend)](#development-local-frontend--docker-backend)
 - [Docs](#docs)
 	- [Roadmap](#roadmap)
 - [Contributing](#contributing)
@@ -133,6 +134,44 @@ What refreshes automatically:
 - Frontend changes under `frontend/`: Vite HMR updates instantly.
 - Backend Go changes: Air rebuilds and restarts the API service.
 - For config or dependency changes, restart the affected service.
+
+### Development (Local Frontend + Docker Backend)
+
+Use this when you want the fastest frontend hot-reload (native Vite HMR) while keeping the backend isolated in Docker.
+
+1. Start only the backend:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d api
+```
+
+2. Install frontend dependencies (first time only):
+
+```bash
+cd frontend && pnpm install
+```
+
+3. Start the local Vite dev server:
+
+```bash
+cd frontend && pnpm dev
+```
+
+4. Open the app:
+
+- http://localhost:4173
+
+How it works:
+
+- `frontend/.env.local` sets `DEV_PROXY=http://localhost:3456`, which tells Vite to proxy all `/api` requests to the Docker backend automatically.
+- No CORS issues — the browser only ever talks to `localhost:4173`.
+- Backend Go changes still auto-rebuild via Air inside Docker.
+
+5. Stop the backend when done:
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
 
 ## Docs
 
