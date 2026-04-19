@@ -88,6 +88,13 @@ func RegisterUser(c *echo.Context) error {
 		return err
 	}
 
+	// Create the default My Open Tasks saved filter
+	err = models.CreateDefaultSavedFiltersForUser(s, newUser)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err

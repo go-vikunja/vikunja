@@ -16,6 +16,7 @@ func init() {
 		"BucketConfigurationModeNone":                      reflect.ValueOf(models.BucketConfigurationModeNone),
 		"CanDoAPIRoute":                                    reflect.ValueOf(models.CanDoAPIRoute),
 		"CollectRoutesForAPITokenUsage":                    reflect.ValueOf(models.CollectRoutesForAPITokenUsage),
+		"CreateDefaultSavedFiltersForUser":                 reflect.ValueOf(models.CreateDefaultSavedFiltersForUser),
 		"CreateDefaultViewsForProject":                     reflect.ValueOf(models.CreateDefaultViewsForProject),
 		"CreateNewProjectForUser":                          reflect.ValueOf(models.CreateNewProjectForUser),
 		"CreateProject":                                    reflect.ValueOf(models.CreateProject),
