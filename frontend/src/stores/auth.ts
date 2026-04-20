@@ -18,6 +18,7 @@ import {
 } from '@/helpers/redirectToProvider'
 import {AUTH_TYPES, type IUser} from '@/modelTypes/IUser'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import {DEFAULT_INLINE_QUICK_ADD_FIELDS} from '@/modelTypes/IUserSettings'
 import router from '@/router'
 import {useConfigStore} from '@/stores/config'
 import UserSettingsModel from '@/models/userSettings'
@@ -144,6 +145,7 @@ export const useAuthStore = defineStore('auth', () => {
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
 				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
+				inlineQuickAddFields: DEFAULT_INLINE_QUICK_ADD_FIELDS,
 				...newSettings.frontendSettings,
 			},
 		})
