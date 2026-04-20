@@ -25,8 +25,6 @@ const SAFE_PROTOCOLS = new Set([
 const QUICK_ENTRY_WIDTH = 680
 const QUICK_ENTRY_COLLAPSED_HEIGHT = 56
 
-const ZOOM_MIN = -7
-const ZOOM_MAX = 7
 const ZOOM_STEP = 0.5
 const ZOOM_CONFIG_FILE = 'zoom.json'
 
@@ -189,7 +187,7 @@ function loadZoomLevel() {
 		const raw = fs.readFileSync(zoomConfigPath(), 'utf8')
 		const parsed = JSON.parse(raw)
 		if (typeof parsed.zoomLevel === 'number' && Number.isFinite(parsed.zoomLevel)) {
-			return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, parsed.zoomLevel))
+			return parsed.zoomLevel
 		}
 	} catch {
 		// First run or unreadable file, fall back to default
@@ -206,10 +204,9 @@ function saveZoomLevel(level) {
 }
 
 function applyZoom(webContents, level) {
-	const clamped = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, level))
-	zoomLevel = clamped
-	webContents.setZoomLevel(clamped)
-	saveZoomLevel(clamped)
+	zoomLevel = level
+	webContents.setZoomLevel(level)
+	saveZoomLevel(level)
 }
 
 function wireZoomHandlers(win) {
@@ -502,6 +499,7 @@ ipcMain.on('desktop:update-quick-entry-shortcut', (_event, shortcut) => {
 // ─── App lifecycle ───────────────────────────────────────────────────
 app.whenReady().then(() => {
 	zoomLevel = loadZoomLevel()
+
 	startServer(() => {
 		createMainWindow()
 		createQuickEntryWindow()
