@@ -447,6 +447,10 @@ var userDeleteCmd = &cobra.Command{
 				log.Fatalf("Error removing the user: %s", err)
 			}
 		} else {
+			if err := user.GuardLastAdmin(s, u); err != nil {
+				_ = s.Rollback()
+				log.Fatalf("Could not request user deletion: %s", err)
+			}
 			err := user.RequestDeletion(s, u)
 			if err != nil {
 				_ = s.Rollback()
