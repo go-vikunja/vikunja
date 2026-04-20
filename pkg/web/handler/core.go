@@ -66,3 +66,43 @@ func DoCreate(_ context.Context, obj CObject, a web.Auth) error {
 	events.DispatchPending(s)
 	return nil
 }
+
+// DoReadOne runs the permission check + model ReadOne + commit pipeline for a
+// CObject. obj should have its identifying fields set before call. On success,
+// obj is fully populated. maxPermission is exposed via the x-max-permission
+// header in the Echo wrapper; Huma wrapper may ignore it.
+func DoReadOne(_ context.Context, obj CObject, a web.Auth) (maxPermission int, err error) {
+	s := db.NewSession()
+	defer func() {
+		if cerr := s.Close(); cerr != nil {
+			log.Errorf("Could not close session: %s", cerr)
+		}
+	}()
+
+	canRead, maxPermission, err := obj.CanRead(s, a)
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return 0, err
+	}
+	if !canRead {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		log.Warningf("Tried to read while not having the permissions for it (User: %v)", a)
+		return 0, echo.NewHTTPError(http.StatusForbidden, "You don't have the permission to see this")
+	}
+
+	if err := obj.ReadOne(s, a); err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return 0, err
+	}
+
+	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
+		return 0, err
+	}
+
+	events.DispatchPending(s)
+	return maxPermission, nil
+}
