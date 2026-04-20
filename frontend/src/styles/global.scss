@@ -91,67 +91,67 @@ body.vk-dark-page,
 body.vk-dark-page .app-container,
 body.vk-dark-page .content-auth,
 body.vk-dark-page .app-content {
-	background: #0e0f13 !important;
+	background: var(--vk-bg) !important;
 }
 
 body.vk-dark-page .navbar {
-	background: #13141a !important;
-	border-bottom: 0.5px solid #2a2b35 !important;
+	background: var(--vk-bg-panel) !important;
+	border-bottom: 0.5px solid var(--vk-border-mid) !important;
 	box-shadow: none !important;
 }
 
 body.vk-dark-page .navbar .logo-link svg path,
 body.vk-dark-page .navbar .logo-link svg rect,
 body.vk-dark-page .navbar .logo-link svg polygon {
-	fill: #f0ede8 !important;
+	fill: var(--vk-text-primary) !important;
 }
 
 body.vk-dark-page .navbar .project-title {
-	color: #c0bdb8 !important;
+	color: var(--vk-panel-title) !important;
 }
 
 body.vk-dark-page .navbar .username {
-	color: #8a8a9a !important;
+	color: var(--vk-text-secondary) !important;
 }
 
 body.vk-dark-page .navbar .trigger-button,
 body.vk-dark-page .navbar .username-dropdown-trigger {
-	color: #4a4b57 !important;
+	color: var(--vk-text-muted) !important;
 }
 
 body.vk-dark-page .navbar .trigger-button:hover,
 body.vk-dark-page .navbar .username-dropdown-trigger:hover {
-	color: #a78bfa !important;
+	color: var(--vk-accent-light) !important;
 }
 
 body.vk-dark-page .menu-container {
-	background: #13141a !important;
-	border-right: 0.5px solid #2a2b35 !important;
+	background: var(--vk-bg-panel) !important;
+	border-right: 0.5px solid var(--vk-border-mid) !important;
 }
 
 body.vk-dark-page .menu-container .menu-list li > a,
 body.vk-dark-page .menu-container .menu-list .list-menu-link {
-	color: #8a8a9a !important;
+	color: var(--vk-text-secondary) !important;
 }
 
 body.vk-dark-page .menu-container .menu-list li > a:hover,
 body.vk-dark-page .menu-container .menu-list .list-menu-link:hover {
-	background: #1e1f28 !important;
-	color: #d0cdc8 !important;
+	background: var(--vk-bg-hover) !important;
+	color: var(--vk-text-primary) !important;
 }
 
 body.vk-dark-page .menu-container .menu-list li > a.router-link-active,
 body.vk-dark-page .menu-container .menu-list .router-link-active {
-	background: #1e1b3a !important;
-	color: #a78bfa !important;
+	background: var(--vk-badge-pending-bg) !important;
+	color: var(--vk-badge-pending-color) !important;
 }
 
 body.vk-dark-page .menu-container .menu-label {
-	color: #4a4b57 !important;
+	color: var(--vk-text-muted) !important;
 }
 
 body.vk-dark-page .menu-container .resize-handle:hover {
-	background-color: #6c63f5 !important;
+	background-color: var(--vk-accent) !important;
 }
 
 body.vk-dark-page {
@@ -162,7 +162,7 @@ body.vk-dark-page {
 	}
 
 	.button.is-primary {
-		background: linear-gradient(135deg, #6c63f5, #8b83f7);
+		background: linear-gradient(135deg, var(--vk-accent), var(--vk-accent-light));
 		color: #fff;
 		border: 0;
 
@@ -174,32 +174,32 @@ body.vk-dark-page {
 
 	.button.is-outlined {
 		background: transparent;
-		border: 0.5px dashed #2a2b35;
-		color: #8a8a9a;
+		border: 0.5px dashed var(--vk-action-btn-border);
+		color: var(--vk-text-secondary);
 
 		&:hover:not([disabled]) {
-			border-color: #6c63f5;
-			background: #13141a;
-			color: #d0cdc8;
+			border-color: var(--vk-accent);
+			background: var(--vk-bg-panel);
+			color: var(--vk-text-primary);
 		}
 	}
 
 	.button.is-text {
-		color: #8a8a9a;
+		color: var(--vk-text-secondary);
 
 		&:hover:not([disabled]) {
-			background: #1e1f28;
-			color: #d0cdc8;
+			background: var(--vk-bg-hover);
+			color: var(--vk-text-primary);
 		}
 	}
 
 	.card,
 	.box {
-		background: #13141a;
-		border: 0.5px solid #1e1f28;
+		background: var(--vk-bg-panel);
+		border: 0.5px solid var(--vk-border);
 		border-radius: 12px;
 		box-shadow: none;
-		color: #c0bdb8;
+		color: var(--vk-text-secondary);
 	}
 
 	.modal-dialog::backdrop {
@@ -208,10 +208,10 @@ body.vk-dark-page {
 
 	.modal-content,
 	.modal-card {
-		background: #13141a;
-		border: 0.5px solid #2a2b35;
+		background: var(--vk-bg-panel);
+		border: 0.5px solid var(--vk-border-mid);
 		border-radius: 12px;
-		color: #c0bdb8;
+		color: var(--vk-text-secondary);
 	}
 
 	.modal-content .card,
@@ -227,11 +227,11 @@ body.vk-dark-page {
 
 	.modal-content .modal-header,
 	.modal-card-title {
-		color: #f0ede8;
+		color: var(--vk-text-primary);
 	}
 
 	.modal-content .content,
 	.modal-card-body {
-		color: #8a8a9a;
+		color: var(--vk-text-secondary);
 	}
 }

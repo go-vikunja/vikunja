@@ -180,9 +180,9 @@ async function uploadCallback(files: File[] | FileList): Promise<string[]> {
 
 	:deep(.done-edit),
 	:deep(.button.mbs-4) {
-		border: .5px dashed #2a2b35;
+		border: .5px dashed var(--vk-action-btn-border);
 		background: transparent;
-		color: #8a8a9a;
+		color: var(--vk-text-secondary);
 		border-radius: 8px;
 		box-shadow: none;
 		font-weight: 500;
@@ -191,16 +191,16 @@ async function uploadCallback(files: File[] | FileList): Promise<string[]> {
 
 		&:hover,
 		&:focus {
-			border-color: #6c63f5;
-			background: #13141a;
-			color: #d0cdc8;
+			border-color: var(--vk-accent);
+			background: var(--vk-bg-panel);
+			color: var(--vk-text-primary);
 		}
 
 		&:disabled,
 		&.is-disabled {
 			opacity: .45;
 			cursor: not-allowed;
-			border-color: #2a2b35;
+			border-color: var(--vk-border-mid);
 			color: #5f6270;
 		}
 	}

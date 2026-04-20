@@ -172,8 +172,8 @@ const flatPickerConfig = computed(() => ({
 
 .gantt-options-card,
 .gantt-chart-card {
-	background: #13141a;
-	border: .5px solid #1e1f28;
+	background: var(--vk-bg-panel);
+	border: .5px solid var(--vk-border);
 	border-radius: 12px;
 	box-shadow: none;
 }
@@ -188,8 +188,8 @@ const flatPickerConfig = computed(() => ({
 	align-items: center;
 	margin-block-end: 1rem;
 	padding: .75rem 1rem;
-	background: #0f1016;
-	border: .5px solid #1e1f28;
+	background: var(--vk-bg);
+	border: .5px solid var(--vk-border);
 	border-radius: 10px;
 
 	@media screen and (max-width: $tablet) {
@@ -198,35 +198,35 @@ const flatPickerConfig = computed(() => ({
 }
 
 .gantt-range-input {
-	background: #13141a;
-	border: .5px solid #2a2b35;
+	background: var(--vk-bg-panel);
+	border: .5px solid var(--vk-border-mid);
 	border-radius: 10px;
-	color: #c0bdb8;
+	color: var(--vk-text-secondary);
 	font-size: 15px;
 	box-shadow: none;
 
 	&::placeholder {
-		color: #3a3b48;
+		color: var(--vk-input-placeholder);
 	}
 
 	&:focus {
-		border-color: #6c63f5;
+		border-color: var(--vk-accent);
 		box-shadow: none;
 	}
 }
 
 .gantt-reset-button {
-	border: .5px dashed #2a2b35 !important;
+	border: .5px dashed var(--vk-action-btn-border) !important;
 	background: transparent !important;
-	color: #8a8a9a !important;
+	color: var(--vk-text-secondary) !important;
 	border-radius: 8px;
 	transition: all .12s;
 	box-shadow: none !important;
 
 	&:hover {
-		border-color: #6c63f5 !important;
-		background: #13141a !important;
-		color: #d0cdc8 !important;
+		border-color: var(--vk-accent) !important;
+		background: var(--vk-bg-panel) !important;
+		color: var(--vk-text-primary) !important;
 	}
 }
 
@@ -267,7 +267,7 @@ const flatPickerConfig = computed(() => ({
 
 	.label {
 		font-size: .9rem;
-		color: #8a8a9a;
+		color: var(--vk-text-secondary);
 	}
 }
 
@@ -275,22 +275,22 @@ const flatPickerConfig = computed(() => ({
 	:deep(.gantt-container),
 	:deep(.gantt-chart-wrapper),
 	:deep(.gantt-rows-container) {
-		background: #0f1016;
+		background: var(--vk-bg);
 	}
 
 	:deep(.fancycheckbox) {
-		color: #c0bdb8;
+		color: var(--vk-text-secondary);
 	}
 
 	:deep(.gantt-timeline) {
-		background: #13141a;
-		border-block-end: .5px solid #2a2b35;
+		background: var(--vk-bg-panel);
+		border-block-end: .5px solid var(--vk-border-mid);
 	}
 
 	:deep(.gantt-timeline-months .timeunit-month) {
-		background: #13141a;
-		color: #8a8a9a;
-		border-inline-end: .5px solid #2a2b35;
+		background: var(--vk-bg-panel);
+		color: var(--vk-text-secondary);
+		border-inline-end: .5px solid var(--vk-border-mid);
 		font-size: .85rem;
 		font-weight: 600;
 	}
@@ -325,7 +325,7 @@ const flatPickerConfig = computed(() => ({
 	}
 
 	:deep(.gantt-vertical-lines line) {
-		stroke: #2a2b35;
+		stroke: var(--vk-border-mid);
 		opacity: .75;
 	}
 
@@ -344,24 +344,24 @@ const flatPickerConfig = computed(() => ({
 	}
 
 	:deep(.gantt-resize-handle) {
-		fill: #f0ede8;
-		stroke: #6c63f5;
+		fill: var(--vk-text-primary);
+		stroke: var(--vk-accent);
 	}
 
 	:deep(.gantt-collapse-toggle polygon) {
-		fill: #8a8a9a;
+		fill: var(--vk-text-secondary);
 	}
 
 	:deep(.task-form .input),
 	:deep(.task-form textarea) {
-		background: #13141a;
-		border: .5px solid #2a2b35;
+		background: var(--vk-bg-panel);
+		border: .5px solid var(--vk-border-mid);
 		border-radius: 10px;
-		color: #d0cdc8;
+		color: var(--vk-text-primary);
 		box-shadow: none;
 
 		&::placeholder {
-			color: #3a3b48;
+			color: var(--vk-input-placeholder);
 		}
 
 		&:focus {

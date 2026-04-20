@@ -78,10 +78,10 @@ const textOnlyDescription = computed(() => {
 <style lang="scss" scoped>
 .project-card {
 	--project-card-padding: 1rem;
-	background: linear-gradient(165deg, #171821 0%, #12131a 100%);
+	background: var(--vk-bg-panel);
 	padding: var(--project-card-padding);
 	border-radius: 12px;
-	border: .5px solid #2a2b35;
+	border: .5px solid var(--vk-border-mid);
 	box-shadow: none;
 	transition: border-color .2s ease, transform .2s ease, background-color .2s ease;
 	position: relative;
@@ -103,15 +103,15 @@ const textOnlyDescription = computed(() => {
 	}
 
 	&:hover {
-		border-color: #3a3b48;
+		border-color: var(--vk-border-mid);
 		transform: translateY(-2px);
-		background: linear-gradient(165deg, #1a1b26 0%, #14151d 100%);
+		background: var(--vk-bg-hover);
 	}
 
 	&:active,
 	&:focus {
 		transform: translateY(0);
-		border-color: #6c63f5;
+		border-color: var(--vk-accent);
 	}
 
 	> * {
@@ -141,9 +141,9 @@ const textOnlyDescription = computed(() => {
 	float: inline-start;
 	padding: 2px 7px;
 	border-radius: 999px;
-	background: rgb(18 19 26 / 75%);
-	border: .5px solid #2a2b35;
-	color: #8a8a9a;
+	background: var(--vk-bg-panel);
+	border: .5px solid var(--vk-border-mid);
+	color: var(--vk-text-secondary);
 	font-weight: 600;
 	letter-spacing: .02em;
 }
@@ -154,7 +154,7 @@ const textOnlyDescription = computed(() => {
 	font-weight: 500;
 	font-size: 1.125rem;
 	line-height: var(--title-line-height);
-	color: #d0cdc8;
+	color: var(--vk-text-primary);
 	inline-size: 100%;
 	margin-block-end: 0;
 	max-block-size: calc(100% - (var(--project-card-padding) + 1rem)); // padding & height of the "is archived" badge
@@ -185,15 +185,15 @@ const textOnlyDescription = computed(() => {
 	inset-inline-end: var(--project-card-padding);
 	transition: opacity $transition, color $transition, border-color $transition, background-color $transition;
 	opacity: 1;
-	background: rgb(18 19 26 / 85%);
-	border: .5px solid #2a2b35;
+	background: var(--vk-bg-panel);
+	border: .5px solid var(--vk-border-mid);
 	border-radius: 999px;
 	inline-size: 1.9rem;
 	block-size: 1.9rem;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	color: #8a8a9a;
+	color: var(--vk-text-secondary);
 
 	&:hover {
 		border-color: #f59e0b;
@@ -231,7 +231,7 @@ const textOnlyDescription = computed(() => {
 }
 
 .saved-filter-icon {
-	color: #8a8a9a;
+	color: var(--vk-text-secondary);
 	font-size: .75em;
 }
 </style>

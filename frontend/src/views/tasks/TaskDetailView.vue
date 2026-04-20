@@ -1203,50 +1203,50 @@ function setRelatedTasksActive() {
 .task-view {
 	padding-block-start: 1rem;
 	padding-inline: .5rem;
-	background-color: #0e0f13;
-	color: #f0ede8;
+	background-color: var(--vk-bg);
+	color: var(--vk-text-primary);
 	min-height: 100vh;
 
 	@media screen and (min-width: $desktop) {
 		padding: 1rem;
 	}
 
-	// Dark-palette overrides for standalone page (non-modal)
+	// Palette overrides for standalone page (non-modal)
 	.subtitle {
-		color: #8a8a9a;
+		color: var(--vk-detail-subtitle-color);
 
 		a {
-			color: #d0cdc8;
+			color: var(--vk-detail-subtitle-link);
 
 			&:hover {
-				color: #a78bfa;
+				color: var(--vk-detail-subtitle-link-hover);
 			}
 		}
 	}
 
 	.detail-title,
 	.action-heading {
-		color: #8a8a9a;
+		color: var(--vk-detail-title-color);
 	}
 
 	.action-heading--organization {
-		color: #9a8bbf;
+		color: var(--vk-action-heading-org);
 	}
 
 	.action-heading--management {
-		color: #6ea892;
+		color: var(--vk-action-heading-mgmt);
 	}
 
 	.action-heading--date-time {
-		color: #b89a68;
+		color: var(--vk-action-heading-dt);
 	}
 
 	.details,
 	.description,
 	.attachments,
 	.content.details {
-		background: #13141a;
-		border: .5px solid #1e1f28;
+		background: var(--vk-detail-panel-bg);
+		border: .5px solid var(--vk-detail-panel-border);
 		border-radius: 10px;
 		padding: .75rem;
 		margin-block-end: .75rem;
@@ -1256,9 +1256,9 @@ function setRelatedTasksActive() {
 .is-modal .task-view {
 	border-radius: 12px;
 	padding: 1rem;
-	color: #c0bdb8;
-	background: #13141a !important;
-	border: .5px solid #2a2b35;
+	color: var(--vk-text-secondary);
+	background: var(--vk-bg-panel) !important;
+	border: .5px solid var(--vk-border-mid);
 	box-shadow: none;
 
 	@media screen and (width <= calc(#{$desktop} + 1px)) {
@@ -1269,16 +1269,16 @@ function setRelatedTasksActive() {
 // Action buttons — applied to both modal and standalone
 .task-view .action-buttons .button,
 .is-modal .action-buttons .button {
-	border: .5px dashed #2a2b35;
+	border: .5px dashed var(--vk-action-btn-border);
 	background: transparent;
-	color: #8a8a9a;
+	color: var(--vk-action-btn-color);
 	border-radius: 8px;
 	box-shadow: none;
 
 	&:hover {
-		border-color: #6c63f5;
-		background: #13141a;
-		color: #d0cdc8;
+		border-color: var(--vk-action-btn-hover-border);
+		background: var(--vk-action-btn-hover-bg);
+		color: var(--vk-action-btn-hover-color);
 	}
 
 	&.button--mark-done.is-pending {
@@ -1286,8 +1286,8 @@ function setRelatedTasksActive() {
 
 		&:hover,
 		&:focus {
-			background: #0f2a24;
-			border-color: #34d399;
+			background: var(--vk-done-hover-bg);
+			border-color: var(--vk-green);
 			color: #a7f3d0;
 		}
 	}
@@ -1295,14 +1295,14 @@ function setRelatedTasksActive() {
 
 .task-view .action-buttons .button.is-danger,
 .is-modal .action-buttons .button.is-danger {
-	border-color: #ef4444;
-	color: #f87171;
+	border-color: var(--vk-danger-btn-border);
+	color: var(--vk-danger-btn-color);
 
 	&:hover,
 	&:focus {
-		border-color: #ef4444;
-		background: #2b1113;
-		color: #fca5a5;
+		border-color: var(--vk-danger-btn-border);
+		background: var(--vk-danger-btn-hover-bg);
+		color: var(--vk-danger-btn-hover-color);
 	}
 }
 
@@ -1313,22 +1313,22 @@ function setRelatedTasksActive() {
 	.input,
 	.textarea,
 	.select select {
-		background: #13141a;
-		border: .5px solid #2a2b35;
+		background: var(--vk-input-field-bg);
+		border: .5px solid var(--vk-input-field-border);
 		border-radius: 10px;
-		color: #d0cdc8;
+		color: var(--vk-input-field-color);
 		box-shadow: none;
 
 		&::placeholder {
-			color: #3a3b48;
+			color: var(--vk-input-field-placeholder);
 		}
 
 		&:hover,
 		&:focus,
 		&:active {
-			border-color: #6c63f5 !important;
-			background: #13141a;
-			color: #d0cdc8;
+			border-color: var(--vk-input-field-hover-border) !important;
+			background: var(--vk-input-field-bg);
+			color: var(--vk-input-field-color);
 			box-shadow: none;
 		}
 	}
@@ -1340,35 +1340,35 @@ function setRelatedTasksActive() {
 	.input,
 	.textarea,
 	.select select {
-		background: #13141a;
-		border: .5px solid #2a2b35;
+		background: var(--vk-input-field-bg);
+		border: .5px solid var(--vk-input-field-border);
 		border-radius: 10px;
-		color: #d0cdc8;
+		color: var(--vk-input-field-color);
 		box-shadow: none;
 
 		&::placeholder {
-			color: #3a3b48;
+			color: var(--vk-input-field-placeholder);
 		}
 
 		&:hover,
 		&:focus,
 		&:active {
-			border-color: #6c63f5 !important;
-			background: #13141a;
-			color: #d0cdc8;
+			border-color: var(--vk-input-field-hover-border) !important;
+			background: var(--vk-input-field-bg);
+			color: var(--vk-input-field-color);
 			box-shadow: none;
 		}
 	}
 }
 
 .is-modal .subtitle {
-	color: #8a8a9a;
+	color: var(--vk-detail-subtitle-color);
 
 	a {
-		color: #d0cdc8;
+		color: var(--vk-detail-subtitle-link);
 
 		&:hover {
-			color: #a78bfa;
+			color: var(--vk-detail-subtitle-link-hover);
 		}
 	}
 }
@@ -1377,8 +1377,8 @@ function setRelatedTasksActive() {
 .is-modal .description,
 .is-modal .attachments,
 .is-modal .content.details {
-	background: #0f1016;
-	border: .5px solid #1e1f28;
+	background: var(--vk-detail-panel-bg);
+	border: .5px solid var(--vk-detail-panel-border);
 	border-radius: 10px;
 	padding: .75rem;
 	margin-block-end: .75rem;
@@ -1386,7 +1386,7 @@ function setRelatedTasksActive() {
 
 .is-modal .detail-title,
 .is-modal .action-heading {
-	color: #8a8a9a;
+	color: var(--vk-detail-title-color);
 }
 
 .task-view * {
@@ -1597,15 +1597,15 @@ h3 .button {
 }
 
 .is-modal .action-heading--organization {
-	color: #9a8bbf;
+	color: var(--vk-action-heading-org);
 }
 
 .is-modal .action-heading--management {
-	color: #6ea892;
+	color: var(--vk-action-heading-mgmt);
 }
 
 .is-modal .action-heading--date-time {
-	color: #b89a68;
+	color: var(--vk-action-heading-dt);
 }
 
 .scroll-to-comments-button {

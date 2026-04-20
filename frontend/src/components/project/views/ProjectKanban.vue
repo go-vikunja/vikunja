@@ -1102,15 +1102,15 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			position: relative;
 			padding: 13px 14px;
 			margin: 0;
-			background: #13141a;
-			border: .5px solid #1e1f28;
+			background: var(--vk-bg-panel);
+			border: .5px solid var(--vk-border);
 			border-radius: 10px;
 			cursor: pointer;
 			transition: border-color .15s, background .15s;
 
 			&:hover {
-				border-color: #2a2b35;
-				background: #161720;
+				border-color: var(--vk-border-mid);
+				background: var(--vk-bg-hover);
 			}
 
 			.handle {
@@ -1184,7 +1184,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			cursor: pointer;
 			background: transparent;
 			border: 0;
-			color: #8a8a9a;
+			color: var(--vk-text-secondary);
 		}
 	}
 
@@ -1199,14 +1199,14 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		border: 0;
 		border-radius: 6px;
 		background: transparent;
-		color: #3a3b48;
+		color: var(--vk-text-muted);
 		box-shadow: none;
 		transition: all .12s;
 
 		&:hover,
 		&:focus-visible {
-			background: #1a1b22;
-			color: #8a8a9a;
+			background: var(--vk-bg-hover);
+			color: var(--vk-text-secondary);
 		}
 	}
 
@@ -1224,7 +1224,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 }
 
 .kanban-view {
-	background: #0f1016;
+	background: var(--vk-bg);
 	border-radius: 12px;
 }
 
@@ -1239,7 +1239,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	gap: 8px;
 	font-size: 12.5px;
 	font-weight: 500;
-	color: #8a8a9a;
+	color: var(--vk-text-secondary);
 	min-inline-size: 0;
 }
 
@@ -1252,8 +1252,8 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 .kb-col-count {
 	font-size: 11px;
-	color: #3a3b48;
-	background: #1a1b22;
+	color: var(--vk-text-muted);
+	background: var(--vk-bg-hover);
 	border-radius: 10px;
 	line-height: 1.4;
 }
@@ -1277,13 +1277,13 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 .kb-card-id {
 	font-size: 10.5px;
-	color: #4a4b57;
+	color: var(--vk-text-muted);
 	margin: 0 0 6px;
 }
 
 .kb-card-title {
 	font-size: 13px;
-	color: #c0bdb8;
+	color: var(--vk-text-secondary);
 	line-height: 1.45;
 	margin: 0 0 11px;
 	font-weight: 400;
@@ -1347,7 +1347,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 }
 
 .kb-inline-add {
-	background: #13141a;
+	background: var(--vk-bg-panel);
 	border: .5px solid #6c63f5;
 	border-radius: 10px;
 	padding: 10px 12px;
@@ -1361,33 +1361,33 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	border: 0;
 	outline: none;
 	font-size: 13px;
-	color: #c0bdb8;
+	color: var(--vk-text-secondary);
 	font-family: inherit;
 	inline-size: 100%;
 	box-shadow: none;
 	padding: 0;
 
 	&::placeholder {
-		color: #3a3b48;
+		color: var(--vk-input-placeholder);
 	}
 }
 
 .kb-plain-input {
-	background: #13141a;
-	border: .5px solid #2a2b35;
+	background: var(--vk-bg-panel);
+	border: .5px solid var(--vk-border-mid);
 	border-radius: 8px;
 	font-size: 13px;
-	color: #c0bdb8;
+	color: var(--vk-text-secondary);
 	font-family: inherit;
 	box-shadow: none;
 	padding: 8px 10px;
 
 	&::placeholder {
-		color: #3a3b48;
+		color: var(--vk-input-placeholder);
 	}
 
 	&:focus {
-		border-color: #6c63f5;
+		border-color: var(--vk-accent);
 		box-shadow: none;
 	}
 }
@@ -1425,19 +1425,19 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 
 .kb-btn-cancel {
 	background: transparent;
-	color: #8a8a9a;
-	border: .5px solid #2a2b35;
+	color: var(--vk-text-secondary);
+	border: .5px solid var(--vk-border-mid);
 
 	&:hover {
-		background: #1e1f28;
+		background: var(--vk-bg-hover);
 	}
 }
 
 .kb-add-btn,
 .kb-new-bucket {
-	border: .5px dashed #2a2b35 !important;
+	border: .5px dashed var(--vk-action-btn-border) !important;
 	background: transparent !important;
-	color: #3a3b48 !important;
+	color: var(--vk-text-muted) !important;
 	border-radius: 8px;
 	transition: all .12s;
 	box-shadow: none !important;
@@ -1455,9 +1455,9 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	margin-block-start: 2px;
 
 	&:hover:not(:disabled) {
-		border-color: #6c63f5 !important;
-		color: #8a8a9a !important;
-		background: #13141a !important;
+		border-color: var(--vk-accent) !important;
+		color: var(--vk-text-secondary) !important;
+		background: var(--vk-bg-panel) !important;
 	}
 }
 

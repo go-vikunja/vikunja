@@ -435,8 +435,8 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 <style lang="scss" scoped>
 
 .table-shell {
-	background: #13141a;
-	border: .5px solid #1e1f28;
+	background: var(--vk-bg-panel);
+	border: .5px solid var(--vk-border);
 	border-radius: 12px;
 	box-shadow: none;
 }
@@ -444,19 +444,19 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 .table-scroll {
 	padding: .5rem;
 	border-radius: 10px;
-	background: #0f1016;
-	border: .5px solid #1e1f28;
+	background: var(--vk-bg);
+	border: .5px solid var(--vk-border);
 }
 
 .vk-table {
 	background: transparent;
 	overflow-x: auto;
 	overflow-y: hidden;
-	color: #c0bdb8;
+	color: var(--vk-text-secondary);
 
 	th,
 	td {
-		border-color: #1e1f28;
+		border-color: var(--vk-border);
 	}
 
 	th {
@@ -465,13 +465,13 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 		font-weight: 600;
 		letter-spacing: .02em;
 		text-transform: uppercase;
-		color: #8a8a9a;
-		background: #13141a;
+		color: var(--vk-text-secondary);
+		background: var(--vk-bg-panel);
 	}
 
 	td {
 		font-size: 13px;
-		color: #c0bdb8;
+		color: var(--vk-text-secondary);
 	}
 
 	tbody tr {
@@ -479,14 +479,14 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	}
 
 	tbody tr:hover {
-		background: #161720;
+		background: var(--vk-bg-hover);
 	}
 
 	a {
-		color: #d0cdc8;
+		color: var(--vk-text-primary);
 
 		&:hover {
-			color: #a78bfa;
+			color: var(--vk-accent-light);
 		}
 	}
 
@@ -496,27 +496,27 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 }
 
 .table-columns-trigger {
-	border: .5px dashed #2a2b35 !important;
+	border: .5px dashed var(--vk-action-btn-border) !important;
 	background: transparent !important;
-	color: #3a3b48 !important;
+	color: var(--vk-text-muted) !important;
 	border-radius: 8px;
 	transition: all .12s;
 	box-shadow: none !important;
 
 	&:hover {
-		border-color: #6c63f5 !important;
-		color: #8a8a9a !important;
-		background: #13141a !important;
+		border-color: var(--vk-accent) !important;
+		color: var(--vk-text-secondary) !important;
+		background: var(--vk-bg-panel) !important;
 	}
 }
 
 .columns-filter {
 	margin: 0;
-	background: #13141a;
-	border: .5px solid #2a2b35;
+	background: var(--vk-bg-panel);
+	border: .5px solid var(--vk-border-mid);
 	border-radius: 10px;
 	box-shadow: none;
-	color: #c0bdb8;
+	color: var(--vk-text-secondary);
 
 	:deep(.card-content .content) {
 		display: flex;
@@ -525,7 +525,7 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	}
 
 	:deep(.fancycheckbox) {
-		color: #c0bdb8;
+		color: var(--vk-text-secondary);
 	}
 
 	&.is-open {
@@ -545,32 +545,32 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 .project-table {
 	:deep(.filter-container .button),
 	:deep(.filter-container .x-button) {
-		border: .5px dashed #2a2b35;
+		border: .5px dashed var(--vk-action-btn-border);
 		background: transparent;
-		color: #8a8a9a;
+		color: var(--vk-text-secondary);
 		box-shadow: none;
 
 		&:hover {
-			border-color: #6c63f5;
-			background: #13141a;
-			color: #d0cdc8;
+			border-color: var(--vk-accent);
+			background: var(--vk-bg-panel);
+			color: var(--vk-text-primary);
 		}
 	}
 
 	:deep(.pagination-link) {
-		background: #13141a;
-		border-color: #2a2b35;
-		color: #8a8a9a;
+		background: var(--vk-bg-panel);
+		border-color: var(--vk-border-mid);
+		color: var(--vk-text-secondary);
 
 		&:hover {
-			border-color: #6c63f5;
-			color: #d0cdc8;
+			border-color: var(--vk-accent);
+			color: var(--vk-text-primary);
 		}
 
 		&.is-current {
-			background: #1e1b3a;
-			border-color: #6c63f5;
-			color: #a78bfa;
+			background: var(--vk-badge-pending-bg);
+			border-color: var(--vk-accent);
+			color: var(--vk-badge-pending-color);
 		}
 	}
 }

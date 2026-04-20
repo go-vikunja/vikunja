@@ -294,8 +294,8 @@ async function createProject() {
 .vk-modal {
 	width: 100%;
 	max-width: 460px;
-	background: #13141a;
-	border: 0.5px solid #2a2b35;
+	background: var(--vk-bg-panel);
+	border: 0.5px solid var(--vk-border-mid);
 	border-radius: 14px;
 	overflow: hidden;
 	font-family: 'DM Sans', sans-serif;
@@ -307,14 +307,14 @@ async function createProject() {
 	align-items: center;
 	justify-content: space-between;
 	padding: 18px 20px;
-	border-bottom: 0.5px solid #1e1f28;
+	border-bottom: 0.5px solid var(--vk-border);
 }
 
 .vk-modal-title {
 	font-family: 'Playfair Display', serif;
 	font-size: 16px;
 	font-weight: 400;
-	color: #f0ede8;
+	color: var(--vk-text-primary);
 	margin: 0;
 	padding: 0;
 	border: none;
@@ -330,13 +330,13 @@ async function createProject() {
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	color: #4a4b57;
+	color: var(--vk-text-muted);
 	transition: all 0.12s;
 }
 
 .vk-modal-close:hover {
-	background: #1e1f28;
-	color: #a0a0b0;
+	background: var(--vk-bg-hover);
+	color: var(--vk-text-secondary);
 }
 
 .vk-modal-body {
@@ -349,7 +349,7 @@ async function createProject() {
 	justify-content: flex-end;
 	gap: 8px;
 	padding: 14px 20px;
-	border-top: 0.5px solid #1e1f28;
+	border-top: 0.5px solid var(--vk-border);
 }
 
 .vk-field {
@@ -364,7 +364,7 @@ async function createProject() {
 	display: block;
 	font-size: 11px;
 	font-weight: 500;
-	color: #6a6a7a;
+	color: var(--vk-text-secondary);
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
 	margin-bottom: 7px;
@@ -372,12 +372,12 @@ async function createProject() {
 
 .vk-input {
 	width: 100%;
-	background: #0e0f13;
-	border: 0.5px solid #2a2b35;
+	background: var(--vk-bg);
+	border: 0.5px solid var(--vk-border-mid);
 	border-radius: 8px;
 	padding: 10px 13px;
 	font-size: 13px;
-	color: #c0bdb8;
+	color: var(--vk-text-secondary);
 	font-family: 'DM Sans', sans-serif;
 	outline: none;
 	transition: border-color 0.15s;
@@ -386,11 +386,11 @@ async function createProject() {
 }
 
 .vk-input::placeholder {
-	color: #3a3b48;
+	color: var(--vk-input-placeholder);
 }
 
 .vk-input:focus {
-	border-color: #6c63f5;
+	border-color: var(--vk-accent);
 	box-shadow: none;
 }
 
@@ -403,8 +403,8 @@ async function createProject() {
 	left: 0;
 	right: 0;
 	top: calc(100% + 6px);
-	background: #13141a;
-	border: 0.5px solid #2a2b35;
+	background: var(--vk-bg-panel);
+	border: 0.5px solid var(--vk-border-mid);
 	border-radius: 8px;
 	overflow: hidden;
 	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
@@ -418,7 +418,7 @@ async function createProject() {
 	border: 0;
 	padding: 9px 12px;
 	text-align: left;
-	color: #c0bdb8;
+	color: var(--vk-text-secondary);
 	font-family: 'DM Sans', sans-serif;
 	font-size: 13px;
 	cursor: pointer;
@@ -426,7 +426,7 @@ async function createProject() {
 }
 
 .vk-parent-suggestion:hover {
-	background: #1e1f28;
+	background: var(--vk-bg-hover);
 }
 
 .vk-input-icon {
@@ -434,7 +434,7 @@ async function createProject() {
 	left: 11px;
 	top: 50%;
 	transform: translateY(-50%);
-	color: #3a3b48;
+	color: var(--vk-input-placeholder);
 	pointer-events: none;
 }
 
@@ -475,26 +475,26 @@ async function createProject() {
 
 .vk-btn-cancel {
 	background: transparent;
-	border: 0.5px solid #2a2b35;
+	border: 0.5px solid var(--vk-border-mid);
 	border-radius: 8px;
 	padding: 7px 16px;
 	font-size: 12.5px;
-	color: #6a6a7a;
+	color: var(--vk-text-secondary);
 	font-family: 'DM Sans', sans-serif;
 	cursor: pointer;
 	transition: all 0.12s;
 }
 
 .vk-btn-cancel:hover {
-	background: #1e1f28;
-	color: #a0a0b0;
+	background: var(--vk-bg-hover);
+	color: var(--vk-text-secondary);
 }
 
 .vk-btn-primary {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	background: #6c63f5;
+	background: var(--vk-accent);
 	border: none;
 	border-radius: 8px;
 	padding: 7px 18px;

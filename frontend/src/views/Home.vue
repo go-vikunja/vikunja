@@ -450,19 +450,19 @@ watch(() => showProjectModal.value, (isOpen) => {
 }
 
 .vk-home {
-	--bg: #0e0f13;
-	--bg-panel: #13141a;
-	--bg-hover: #181920;
-	--bg-active: #1e1b3a;
-	--border: #1e1f28;
-	--border-mid: #2a2b35;
-	--text-primary: #f0ede8;
-	--text-secondary: #8a8a9a;
-	--text-muted: #4a4b57;
-	--accent: #6c63f5;
-	--accent-light: #a78bfa;
-	--green: #10b981;
-	--amber: #f59e0b;
+	--bg: var(--vk-bg);
+	--bg-panel: var(--vk-bg-panel);
+	--bg-hover: var(--vk-bg-hover);
+	--bg-active: var(--vk-bg-active);
+	--border: var(--vk-border);
+	--border-mid: var(--vk-border-mid);
+	--text-primary: var(--vk-text-primary);
+	--text-secondary: var(--vk-text-secondary);
+	--text-muted: var(--vk-text-muted);
+	--accent: var(--vk-accent);
+	--accent-light: var(--vk-accent-light);
+	--green: var(--vk-green);
+	--amber: var(--vk-amber);
 
 	font-family: 'DM Sans', sans-serif;
 	background: var(--bg);
@@ -529,7 +529,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 }
 
 .vk-icon-btn:hover {
-	background: #22232e;
+	background: var(--vk-icon-hover-bg);
 	color: var(--accent-light);
 	border-color: var(--accent);
 }
@@ -545,8 +545,8 @@ watch(() => showProjectModal.value, (isOpen) => {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	background: #1a1b3a;
-	border: 0.5px solid #2e2b55;
+	background: var(--vk-import-banner-bg);
+	border: 0.5px solid var(--vk-import-banner-border);
 	border-radius: 10px;
 	padding: 12px 16px;
 	margin-bottom: 22px;
@@ -560,12 +560,12 @@ watch(() => showProjectModal.value, (isOpen) => {
 
 .vk-import-text {
 	font-size: 14px;
-	color: #7070a0;
+	color: var(--vk-import-text);
 	flex: 1;
 }
 
 .vk-import-text strong {
-	color: #a0a0c0;
+	color: var(--vk-import-text-strong);
 	font-weight: 500;
 }
 
@@ -582,7 +582,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 	border-radius: 10px;
 	padding: 12px 16px;
 	font-size: 15px;
-	color: #d0cdc8;
+	color: var(--vk-input-text);
 	font-family: 'DM Sans', sans-serif;
 	outline: none;
 	transition: border-color 0.15s;
@@ -591,7 +591,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 }
 
 .vk-input::placeholder {
-	color: #3a3b48;
+	color: var(--vk-input-placeholder);
 }
 
 .vk-input:focus {
@@ -626,7 +626,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 
 .vk-btn-ghost {
 	background: transparent;
-	border: 0.5px solid #4040a0;
+	border: 0.5px solid rgba(108, 99, 245, 0.35);
 	color: var(--accent-light);
 	border-radius: 6px;
 	padding: 6px 14px;
@@ -730,7 +730,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 .vk-panel-title {
 	font-size: 15px;
 	font-weight: 500;
-	color: #c0bdb8;
+	color: var(--vk-panel-title);
 }
 
 .vk-panel-action {
@@ -897,7 +897,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 
 .vk-empty-sub {
 	font-size: 13px;
-	color: #3a3b48;
+	color: var(--vk-empty-sub);
 }
 
 /* ─── Task items ─── */
@@ -906,7 +906,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 	align-items: center;
 	gap: 12px;
 	padding: 12px 18px;
-	border-bottom: 0.5px solid #1a1b22;
+	border-bottom: 0.5px solid var(--vk-task-item-border);
 	cursor: pointer;
 	transition: background 0.1s;
 }
@@ -923,7 +923,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 	width: 17px;
 	height: 17px;
 	border-radius: 50%;
-	border: 1.5px solid #3a3b48;
+	border: 1.5px solid var(--vk-check-border);
 	flex-shrink: 0;
 	display: flex;
 	align-items: center;
@@ -940,7 +940,7 @@ watch(() => showProjectModal.value, (isOpen) => {
 
 .vk-task-text {
 	font-size: 15px;
-	color: #a0a0b0;
+	color: var(--vk-task-text);
 	flex: 1;
 }
 
@@ -952,9 +952,9 @@ watch(() => showProjectModal.value, (isOpen) => {
 	text-transform: capitalize;
 }
 
-.chip-high  { border-color: rgba(224,72,72,.3);   color: #f87171; background: rgba(224,72,72,.08); }
+.chip-high  { border-color: rgba(224,72,72,.3);   color: var(--vk-badge-critical-color); background: rgba(224,72,72,.08); }
 .chip-med   { border-color: rgba(108,99,245,.3);  color: var(--accent-light); background: rgba(108,99,245,.08); }
-.chip-low   { border-color: rgba(16,185,129,.3);  color: #34d399; background: rgba(16,185,129,.08); }
+.chip-low   { border-color: rgba(16,185,129,.3);  color: var(--vk-green); background: rgba(16,185,129,.08); }
 
 /* ─── Projects list ─── */
 .vk-project-item {

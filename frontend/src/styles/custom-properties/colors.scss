@@ -252,6 +252,76 @@
   // Define custom color variable to prevent change in dark mode
   --switch-view-color: hsla(var(--white-h), var(--white-s), var(--white-l), var(--white-a));
 
+  // ─── Custom UI palette (Home, TasksTableView, TaskDetailView) ───────────────
+  --vk-bg: #f4f5f7;
+  --vk-bg-panel: #ffffff;
+  --vk-bg-hover: #f1f2f5;
+  --vk-bg-active: rgba(108, 99, 245, 0.06);
+  --vk-border: #e2e4ea;
+  --vk-border-mid: #d1d5db;
+  --vk-text-primary: #1a1b2e;
+  --vk-text-secondary: #6b7280;
+  --vk-text-muted: #9ca3af;
+  --vk-text-body: #4b5563;
+  --vk-accent: #6c63f5;
+  --vk-accent-light: #7c6ff0;
+  --vk-green: #10b981;
+  --vk-amber: #f59e0b;
+  --vk-icon-hover-bg: #e8eaed;
+  --vk-import-banner-bg: #f0f0ff;
+  --vk-import-banner-border: #d4d0f5;
+  --vk-import-text: #6b68a0;
+  --vk-import-text-strong: #4a4790;
+  --vk-input-text: #1a1b2e;
+  --vk-input-placeholder: #9ca3af;
+  --vk-panel-title: #374151;
+  --vk-empty-sub: #9ca3af;
+  --vk-task-item-border: #e2e4ea;
+  --vk-check-border: #d1d5db;
+  --vk-task-text: #374151;
+  --vk-select-bg: #f8f9fb;
+  // Badges
+  --vk-badge-done-bg: rgba(16, 185, 129, 0.12);
+  --vk-badge-done-color: #059669;
+  --vk-badge-pending-bg: rgba(108, 99, 245, 0.1);
+  --vk-badge-pending-color: #5b52d6;
+  --vk-badge-low-bg: rgba(107, 114, 128, 0.08);
+  --vk-badge-low-color: #6b7280;
+  --vk-badge-med-bg: rgba(16, 185, 129, 0.08);
+  --vk-badge-med-color: #059669;
+  --vk-badge-high-bg: rgba(245, 158, 11, 0.1);
+  --vk-badge-high-color: #d97706;
+  --vk-badge-critical-bg: rgba(239, 68, 68, 0.1);
+  --vk-badge-critical-color: #dc2626;
+  --vk-badge-assignee-bg: #ede9fe;
+  --vk-badge-assignee-color: #5b52d6;
+  // Task detail page
+  --vk-detail-subtitle-color: #6b7280;
+  --vk-detail-subtitle-link: #1a1b2e;
+  --vk-detail-subtitle-link-hover: #6c63f5;
+  --vk-detail-title-color: #6b7280;
+  --vk-detail-panel-bg: #f8f9fb;
+  --vk-detail-panel-border: #e2e4ea;
+  --vk-action-heading-color: #6b7280;
+  --vk-action-heading-org: #7b6dac;
+  --vk-action-heading-mgmt: #2d7a62;
+  --vk-action-heading-dt: #8a6b2a;
+  --vk-action-btn-border: #d1d5db;
+  --vk-action-btn-color: #6b7280;
+  --vk-action-btn-hover-border: #6c63f5;
+  --vk-action-btn-hover-bg: #f0effe;
+  --vk-action-btn-hover-color: #1a1b2e;
+  --vk-done-hover-bg: rgba(16, 185, 129, 0.1);
+  --vk-danger-btn-border: #dc2626;
+  --vk-danger-btn-color: #ef4444;
+  --vk-danger-btn-hover-bg: rgba(239, 68, 68, 0.1);
+  --vk-danger-btn-hover-color: #dc2626;
+  --vk-input-field-bg: #ffffff;
+  --vk-input-field-border: #e2e4ea;
+  --vk-input-field-color: #1a1b2e;
+  --vk-input-field-placeholder: #9ca3af;
+  --vk-input-field-hover-border: #6c63f5;
+
   // Define custom color variable to allow change in dark mode
   --card-border-color: var(--grey-200);
   --logo-text-color: hsl(180, 1%, 15%);
@@ -325,6 +395,76 @@
       --code-symbol: #b9f18d;
       --code-section: #faf594;
       --code-keyword: #70cff8;
+
+      // ─── Custom UI palette (dark overrides) ───────────────────────────────
+      --vk-bg: #0e0f13;
+      --vk-bg-panel: #13141a;
+      --vk-bg-hover: #181920;
+      --vk-bg-active: #1e1b3a;
+      --vk-border: #1e1f28;
+      --vk-border-mid: #2a2b35;
+      --vk-text-primary: #f0ede8;
+      --vk-text-secondary: #8a8a9a;
+      --vk-text-muted: #4a4b57;
+      --vk-text-body: #a0a0b0;
+      --vk-accent: #6c63f5;
+      --vk-accent-light: #a78bfa;
+      --vk-green: #10b981;
+      --vk-amber: #f59e0b;
+      --vk-icon-hover-bg: #22232e;
+      --vk-import-banner-bg: #1a1b3a;
+      --vk-import-banner-border: #2e2b55;
+      --vk-import-text: #7070a0;
+      --vk-import-text-strong: #a0a0c0;
+      --vk-input-text: #d0cdc8;
+      --vk-input-placeholder: #3a3b48;
+      --vk-panel-title: #c0bdb8;
+      --vk-empty-sub: #3a3b48;
+      --vk-task-item-border: #1a1b22;
+      --vk-check-border: #3a3b48;
+      --vk-task-text: #a0a0b0;
+      --vk-select-bg: #1a1b24;
+      // Badges
+      --vk-badge-done-bg: #0d3024;
+      --vk-badge-done-color: #10b981;
+      --vk-badge-pending-bg: #1e1b3a;
+      --vk-badge-pending-color: #a78bfa;
+      --vk-badge-low-bg: #1a1a2e;
+      --vk-badge-low-color: #8a8a9a;
+      --vk-badge-med-bg: #1e2a10;
+      --vk-badge-med-color: #86efac;
+      --vk-badge-high-bg: #2a1a0e;
+      --vk-badge-high-color: #f59e0b;
+      --vk-badge-critical-bg: #2a0e0e;
+      --vk-badge-critical-color: #ef4444;
+      --vk-badge-assignee-bg: #1e1f28;
+      --vk-badge-assignee-color: #c4b5fd;
+      // Task detail page
+      --vk-detail-subtitle-color: #8a8a9a;
+      --vk-detail-subtitle-link: #d0cdc8;
+      --vk-detail-subtitle-link-hover: #a78bfa;
+      --vk-detail-title-color: #8a8a9a;
+      --vk-detail-panel-bg: #13141a;
+      --vk-detail-panel-border: #1e1f28;
+      --vk-action-heading-color: #8a8a9a;
+      --vk-action-heading-org: #9a8bbf;
+      --vk-action-heading-mgmt: #6ea892;
+      --vk-action-heading-dt: #b89a68;
+      --vk-action-btn-border: #2a2b35;
+      --vk-action-btn-color: #8a8a9a;
+      --vk-action-btn-hover-border: #6c63f5;
+      --vk-action-btn-hover-bg: #13141a;
+      --vk-action-btn-hover-color: #d0cdc8;
+      --vk-done-hover-bg: #0f2a24;
+      --vk-danger-btn-border: #ef4444;
+      --vk-danger-btn-color: #f87171;
+      --vk-danger-btn-hover-bg: #2b1113;
+      --vk-danger-btn-hover-color: #fca5a5;
+      --vk-input-field-bg: #13141a;
+      --vk-input-field-border: #2a2b35;
+      --vk-input-field-color: #d0cdc8;
+      --vk-input-field-placeholder: #3a3b48;
+      --vk-input-field-hover-border: #6c63f5;
     }
   }
 }

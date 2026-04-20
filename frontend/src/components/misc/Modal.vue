@@ -216,26 +216,26 @@ $modal-width: 1024px;
 
 .modal-content,
 .modal-card {
-	background: #13141a;
-	border: .5px solid #2a2b35;
+	background: var(--vk-bg-panel);
+	border: .5px solid var(--vk-border-mid);
 	border-radius: 12px;
-	color: #c0bdb8;
+	color: var(--vk-text-secondary);
 	box-shadow: none;
 }
 
 .modal-header,
 .modal-card-title {
-	color: #f0ede8;
+	color: var(--vk-text-primary);
 }
 
 .modal-content .content,
 .modal-card-body {
-	color: #8a8a9a;
+	color: var(--vk-text-secondary);
 }
 
 .modal-content .actions,
 .modal-card-foot {
-	border-block-start: .5px solid #2a2b35;
+	border-block-start: .5px solid var(--vk-border-mid);
 }
 
 .default .modal-content,
@@ -311,12 +311,12 @@ $modal-width: 1024px;
 	position: fixed;
 	inset-block-start: .5rem;
 	inset-inline-end: $close-button-padding;
-	color: #8a8a9a;
+	color: var(--vk-text-secondary);
 	font-size: 2rem;
 	transition: color .12s;
 
 	&:hover {
-		color: #a78bfa;
+		color: var(--vk-accent-light);
 	}
 
 	@media screen and (min-width: $desktop) and (width <= calc(#{$desktop	} + #{$close-button-min-space})) {
@@ -383,7 +383,7 @@ $modal-width: 1024px;
 <style lang="scss">
 // Close icon SVG uses currentColor, change the color to keep it visible
 .dark .modal-dialog .close {
-	color: #8a8a9a;
+	color: var(--vk-text-secondary);
 }
 
 @media print, screen and (max-width: $tablet) {

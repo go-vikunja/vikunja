@@ -292,9 +292,9 @@ $user-dropdown-width-mobile: 5rem;
 	align-items: center;
 	gap: .35rem;
 	padding: .3rem;
-	border: .5px solid #2a2b35;
+	border: .5px solid var(--vk-border-mid);
 	border-radius: 10px;
-	background: #13141a;
+	background: var(--vk-bg-panel);
 
 	@media screen and (min-width: $tablet) {
 		display: inline-flex;
@@ -307,20 +307,20 @@ $user-dropdown-width-mobile: 5rem;
 	font-weight: 600;
 	line-height: 1.2;
 	border-radius: 8px;
-	color: #8a8a9a;
+	color: var(--vk-text-secondary);
 	background: transparent;
 	border: 0;
 	box-shadow: none;
 	transition: all .12s;
 
 	&:hover {
-		color: #d0cdc8;
-		background: #1e1f28;
+		color: var(--vk-text-primary);
+		background: var(--vk-bg-hover);
 	}
 
 	&.is-active {
-		background: #1e1b3a;
-		color: #a78bfa;
+		background: var(--vk-badge-pending-bg);
+		color: var(--vk-badge-pending-color);
 	}
 }
 

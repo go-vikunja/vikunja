@@ -282,8 +282,8 @@ function handleLabelTitleClick(label: ILabel) {
 .vk-modal {
 	width: 100%;
 	max-width: 520px;
-	background: #13141a;
-	border: 0.5px solid #2a2b35;
+	background: var(--vk-bg-panel);
+	border: 0.5px solid var(--vk-border-mid);
 	border-radius: 14px;
 	overflow: hidden;
 	font-family: 'DM Sans', sans-serif;
@@ -295,14 +295,14 @@ function handleLabelTitleClick(label: ILabel) {
 	align-items: center;
 	justify-content: space-between;
 	padding: 18px 20px;
-	border-bottom: 0.5px solid #1e1f28;
+	border-bottom: 0.5px solid var(--vk-border);
 }
 
 .vk-modal-title {
 	font-family: 'Playfair Display', serif;
 	font-size: 16px;
 	font-weight: 400;
-	color: #f0ede8;
+	color: var(--vk-text-primary);
 	margin: 0;
 	padding: 0;
 	border: none;
@@ -318,13 +318,13 @@ function handleLabelTitleClick(label: ILabel) {
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	color: #4a4b57;
+	color: var(--vk-text-muted);
 	transition: all 0.12s;
 }
 
 .vk-modal-close:hover {
-	background: #1e1f28;
-	color: #a0a0b0;
+	background: var(--vk-bg-hover);
+	color: var(--vk-text-secondary);
 }
 
 .vk-modal-body {
@@ -337,7 +337,7 @@ function handleLabelTitleClick(label: ILabel) {
 	justify-content: flex-end;
 	gap: 8px;
 	padding: 14px 20px;
-	border-top: 0.5px solid #1e1f28;
+	border-top: 0.5px solid var(--vk-border);
 }
 
 .vk-field {
@@ -352,7 +352,7 @@ function handleLabelTitleClick(label: ILabel) {
 	display: block;
 	font-size: 11px;
 	font-weight: 500;
-	color: #6a6a7a;
+	color: var(--vk-text-secondary);
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
 	margin-bottom: 7px;
@@ -360,12 +360,12 @@ function handleLabelTitleClick(label: ILabel) {
 
 .vk-input {
 	width: 100%;
-	background: #0e0f13;
-	border: 0.5px solid #2a2b35;
+	background: var(--vk-bg);
+	border: 0.5px solid var(--vk-border-mid);
 	border-radius: 8px;
 	padding: 10px 13px;
 	font-size: 13px;
-	color: #c0bdb8;
+	color: var(--vk-text-secondary);
 	font-family: 'DM Sans', sans-serif;
 	outline: none;
 	transition: border-color 0.15s;
@@ -374,11 +374,11 @@ function handleLabelTitleClick(label: ILabel) {
 }
 
 .vk-input::placeholder {
-	color: #3a3b48;
+	color: var(--vk-input-placeholder);
 }
 
 .vk-input:focus {
-	border-color: #6c63f5;
+	border-color: var(--vk-accent);
 	box-shadow: none;
 }
 
@@ -433,26 +433,26 @@ function handleLabelTitleClick(label: ILabel) {
 
 .vk-btn-cancel {
 	background: transparent;
-	border: 0.5px solid #2a2b35;
+	border: 0.5px solid var(--vk-border-mid);
 	border-radius: 8px;
 	padding: 7px 16px;
 	font-size: 12.5px;
-	color: #6a6a7a;
+	color: var(--vk-text-secondary);
 	font-family: 'DM Sans', sans-serif;
 	cursor: pointer;
 	transition: all 0.12s;
 }
 
 .vk-btn-cancel:hover {
-	background: #1e1f28;
-	color: #a0a0b0;
+	background: var(--vk-bg-hover);
+	color: var(--vk-text-secondary);
 }
 
 .vk-btn-primary {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	background: #6c63f5;
+	background: var(--vk-accent);
 	border: none;
 	border-radius: 8px;
 	padding: 7px 18px;

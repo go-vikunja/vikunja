@@ -390,8 +390,8 @@ onBeforeUnmount(() => {
 	}
 
 	:deep(.task-input-wrapper) {
-		background: #13141a;
-		border: .5px solid #2a2b35;
+		background: var(--vk-bg-panel);
+		border: .5px solid var(--vk-border-mid);
 		border-radius: 10px;
 		padding-inline: .125rem;
 		min-block-size: 44px;
@@ -405,11 +405,11 @@ onBeforeUnmount(() => {
 		font-size: 15px;
 		font-weight: 400;
 		line-height: 1.35;
-		color: #d0cdc8;
+		color: var(--vk-text-primary);
 		padding-block: .65rem;
 
 		&::placeholder {
-			color: #3a3b48;
+			color: var(--vk-input-placeholder);
 		}
 
 		&:focus {

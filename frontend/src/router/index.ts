@@ -95,6 +95,11 @@ const router = createRouter({
 			redirect: {name: 'user.settings.general'},
 			children: [
 				{
+					path: '/user/settings/appearance',
+					name: 'user.settings.appearance',
+					component: () => import('@/views/user/settings/Appearance.vue'),
+				},
+				{
 					path: '/user/settings/avatar',
 					name: 'user.settings.avatar',
 					component: () => import('@/views/user/settings/Avatar.vue'),
