@@ -155,9 +155,7 @@ describe('FormSelect', () => {
 			},
 		})
 		const select = wrapper.find('select')
-		// Without an explicit value binding, the native select defaults to the
-		// first option. If the component forced :value="undefined" that default
-		// would be broken.
+		// Forcing :value="undefined" would break the native default-to-first-option behavior.
 		expect((select.element as HTMLSelectElement).value).toBe('')
 	})
 
