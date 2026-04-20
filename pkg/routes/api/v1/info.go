@@ -36,26 +36,26 @@ import (
 )
 
 type vikunjaInfos struct {
-	Version                    string    `json:"version"`
-	FrontendURL                string    `json:"frontend_url"`
-	Motd                       string    `json:"motd"`
-	LinkSharingEnabled         bool      `json:"link_sharing_enabled"`
-	MaxFileSize                string    `json:"max_file_size"`
-	MaxItemsPerPage            int       `json:"max_items_per_page"`
-	AvailableMigrators         []string  `json:"available_migrators"`
-	TaskAttachmentsEnabled     bool      `json:"task_attachments_enabled"`
-	EnabledBackgroundProviders []string  `json:"enabled_background_providers"`
-	TotpEnabled                bool      `json:"totp_enabled"`
-	Legal                      legalInfo `json:"legal"`
-	CaldavEnabled              bool      `json:"caldav_enabled"`
-	AuthInfo                   authInfo  `json:"auth"`
-	EmailRemindersEnabled      bool      `json:"email_reminders_enabled"`
-	UserDeletionEnabled        bool      `json:"user_deletion_enabled"`
-	TaskCommentsEnabled        bool      `json:"task_comments_enabled"`
-	DemoModeEnabled            bool      `json:"demo_mode_enabled"`
-	WebhooksEnabled            bool      `json:"webhooks_enabled"`
-	PublicTeamsEnabled         bool      `json:"public_teams_enabled"`
-	EnabledProFeatures         []string  `json:"enabled_pro_features"`
+	Version                    string            `json:"version"`
+	FrontendURL                string            `json:"frontend_url"`
+	Motd                       string            `json:"motd"`
+	LinkSharingEnabled         bool              `json:"link_sharing_enabled"`
+	MaxFileSize                string            `json:"max_file_size"`
+	MaxItemsPerPage            int               `json:"max_items_per_page"`
+	AvailableMigrators         []string          `json:"available_migrators"`
+	TaskAttachmentsEnabled     bool              `json:"task_attachments_enabled"`
+	EnabledBackgroundProviders []string          `json:"enabled_background_providers"`
+	TotpEnabled                bool              `json:"totp_enabled"`
+	Legal                      legalInfo         `json:"legal"`
+	CaldavEnabled              bool              `json:"caldav_enabled"`
+	AuthInfo                   authInfo          `json:"auth"`
+	EmailRemindersEnabled      bool              `json:"email_reminders_enabled"`
+	UserDeletionEnabled        bool              `json:"user_deletion_enabled"`
+	TaskCommentsEnabled        bool              `json:"task_comments_enabled"`
+	DemoModeEnabled            bool              `json:"demo_mode_enabled"`
+	WebhooksEnabled            bool              `json:"webhooks_enabled"`
+	PublicTeamsEnabled         bool              `json:"public_teams_enabled"`
+	EnabledProFeatures         []license.Feature `json:"enabled_pro_features"`
 }
 
 type authInfo struct {
