@@ -131,6 +131,8 @@
         "playSoundWhenDone": "Play a sound when marking tasks as done",
         "allowIconChanges": "Show special logos during certain times",
         "alwaysShowBucketTaskCount": "Always show task count on Kanban buckets",
+        "useMarkdownEditor": "Use plain Markdown editor",
+        "useMarkdownEditorHint": "When enabled, the editor stores and displays content as plain Markdown instead of rich text.",
         "defaultTaskRelationType": "Default task relation type",
         "weekStart": "Week starts on",
         "weekStartSunday": "Sunday",

@@ -145,6 +145,7 @@
 import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {eventToShortcutString} from '@/helpers/shortcut'
+import {useAuthStore} from '@/stores/auth'
 
 import EditorToolbar from './EditorToolbar.vue'
 
@@ -153,6 +154,7 @@ import {Extension, mergeAttributes, type SetContentOptions} from '@tiptap/core'
 import {EditorContent, type Extensions, useEditor, VueNodeViewRenderer} from '@tiptap/vue-3'
 import {Plugin, PluginKey} from '@tiptap/pm/state'
 import {marked} from 'marked'
+import {Markdown} from '@tiptap/markdown'
 import {BubbleMenu} from '@tiptap/vue-3/menus'
 
 import Link from '@tiptap/extension-link'
@@ -220,6 +222,8 @@ const modelValue = defineModel<string>({ default: '' })
 const tiptapInstanceRef = ref<HTMLInputElement | null>(null)
 
 const {t} = useI18n()
+const authStore = useAuthStore()
+const useMarkdown = computed(() => authStore.settings.frontendSettings.useMarkdownEditor ?? false)
 
 const defaultSetContentOptions: SetContentOptions = {
 	parseOptions: {
@@ -333,6 +337,13 @@ const UPLOAD_PLACEHOLDER_ELEMENT = '<p>UPLOAD_PLACEHOLDER</p>'
 
 let lastSavedState = ''
 
+function getContent(): string {
+	if (useMarkdown.value) {
+		return editor.value!.getMarkdown()
+	}
+	return editor.value!.getHTML()
+}
+
 watch(
 	modelValue,
 	(newValue) => {
@@ -386,6 +397,11 @@ const PasteHandler = Extension.create({
 
 						const text = event.clipboardData?.getData('text/plain') || ''
 						if (!text) {
+							return false
+						}
+
+						// In markdown mode the Markdown extension handles paste natively
+						if (useMarkdown.value) {
 							return false
 						}
 
@@ -519,6 +535,8 @@ const extensions : Extensions = [
 	EmojiExtension,
 
 	PasteHandler,
+
+	Markdown,
 ]
 
 // Add mention extension if enabled
@@ -583,7 +601,7 @@ watch(
 	value => {
 		if (!editor?.value) return
 
-		if (editor.value.getHTML() === value) {
+		if (getContent() === value) {
 			return
 		}
 
@@ -593,9 +611,11 @@ watch(
 )
 
 function bubbleNow() {
-	const editorVal = editor.value!.getHTML()
-	if (editorVal === modelValue.value ||
-		(editorVal === '<p></p>') && modelValue.value === '') {
+	const editorVal = getContent()
+	const isEmpty = useMarkdown.value
+		? editorVal.trim() === ''
+		: editorVal === '<p></p>'
+	if (editorVal === modelValue.value || (isEmpty && modelValue.value === '')) {
 		return
 	}
 
@@ -611,7 +631,7 @@ function bubbleNow() {
 
 function bubbleSave() {
 	bubbleNow()
-	lastSavedState = editor.value?.getHTML() ?? ''
+	lastSavedState = editor.value ? getContent() : ''
 
 	// Clear draft from localStorage when saved
 	if (props.storageKey) {
@@ -627,6 +647,7 @@ function bubbleSave() {
 function exitEditMode() {
 	editor.value?.commands.setContent(lastSavedState, {
 		...defaultSetContentOptions,
+		...(useMarkdown.value ? {contentType: 'markdown'} : {}),
 		emitUpdate: false,
 	})
 
@@ -750,7 +771,10 @@ onMounted(async () => {
 		if (draft && isEditorContentEmpty(modelValue.value)) {
 			// Only load draft if current content is empty
 			// Set content and force edit mode for immediate editing
-			editor.value?.commands.setContent(draft, {emitUpdate: false})
+			editor.value?.commands.setContent(draft, {
+				emitUpdate: false,
+				...(useMarkdown.value ? {contentType: 'markdown'} : {}),
+			})
 			internalMode.value = 'edit'
 			// Update the model so parent sees the restored content
 			modelValue.value = draft
@@ -771,6 +795,7 @@ function setModeAndValue(value: string) {
 	internalMode.value = isEditorContentEmpty(value) ? 'edit' : 'preview'
 	editor.value?.commands.setContent(value, {
 		...defaultSetContentOptions,
+		...(useMarkdown.value ? {contentType: 'markdown'} : {}),
 		emitUpdate: false,
 	})
 }

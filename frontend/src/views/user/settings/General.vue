@@ -215,6 +215,11 @@
 				v-model="settings.frontendSettings.alwaysShowBucketTaskCount"
 				:label="$t('user.settings.general.alwaysShowBucketTaskCount')"
 			/>
+			<FormCheckbox
+				v-model="settings.frontendSettings.useMarkdownEditor"
+				:label="$t('user.settings.general.useMarkdownEditor')"
+				:description="$t('user.settings.general.useMarkdownEditorHint')"
+			/>
 			<FormField
 				:label="$t('user.settings.backgroundBrightness.title')"
 				layout="two-col"
