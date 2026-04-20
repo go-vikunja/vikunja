@@ -146,6 +146,71 @@
 									</Dropdown>
 								</div>
 
+								<div
+									v-if="canCreateTasks"
+									class="bucket-top"
+								>
+									<div
+										v-if="showNewTaskInput === bucket.id"
+										class="field add-task-inline"
+										:class="{'has-task-color': inlineFieldsRef?.taskColor, 'has-light-text': inlineFieldsRef?.taskColor && !colorIsDark(inlineFieldsRef.taskColor)}"
+										:style="inlineFieldsRef?.taskColor ? {'--task-color': inlineFieldsRef.taskColor} : undefined"
+										@focusout="handleAddTaskFocusOut($event, bucket.id)"
+									>
+										<div
+											class="control add-task-inline__control"
+											:class="{'is-loading': loading || taskLoading}"
+										>
+											<input
+												v-model="newTaskText"
+												v-focus.always
+												class="input"
+												:disabled="loading || taskLoading || undefined"
+												:placeholder="$t('project.kanban.addTaskPlaceholder')"
+												type="text"
+												@focusin="() => newTaskInputFocused = true"
+												@keyup.enter="addTaskToBucket(bucket.id)"
+												@keyup.esc="toggleShowNewTaskInput(bucket.id)"
+											>
+											<button
+												v-if="newTaskText.trim() !== ''"
+												type="button"
+												class="add-task-inline__submit"
+												:disabled="loading || taskLoading || undefined"
+												:title="$t('misc.save')"
+												@click="addTaskToBucket(bucket.id)"
+											>
+												<Icon icon="check" />
+											</button>
+										</div>
+										<p
+											v-if="newTaskError[bucket.id] && newTaskText === ''"
+											class="help is-danger"
+										>
+											{{ $t('project.create.addTitleRequired') }}
+										</p>
+										<InlineQuickAddFields
+											ref="inlineFieldsRef"
+											:project-id="projectIdWithFallback"
+											:disabled="loading || taskLoading"
+										/>
+									</div>
+									<XButton
+										v-else
+										v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
+										class="is-fullwidth has-text-centered"
+										:shadow="false"
+										icon="plus"
+										variant="secondary"
+										:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
+										@click="toggleShowNewTaskInput(bucket.id)"
+									>
+										{{
+											bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
+										}}
+									</XButton>
+								</div>
+
 								<draggable
 									v-bind="DRAG_OPTIONS"
 									:handle="taskDragHandle"
@@ -161,56 +226,6 @@
 									@start="handleTaskDragStart"
 									@end="updateTaskPosition"
 								>
-									<template #footer>
-										<div
-											v-if="canCreateTasks"
-											class="bucket-footer"
-										>
-											<div
-												v-if="showNewTaskInput === bucket.id"
-												class="field"
-											>
-												<div
-													class="control"
-													:class="{'is-loading': loading || taskLoading}"
-												>
-													<input
-														v-model="newTaskText"
-														v-focus.always
-														class="input"
-														:disabled="loading || taskLoading || undefined"
-														:placeholder="$t('project.kanban.addTaskPlaceholder')"
-														type="text"
-														@focusout="toggleShowNewTaskInput(bucket.id)"
-														@focusin="() => newTaskInputFocused = true"
-														@keyup.enter="addTaskToBucket(bucket.id)"
-														@keyup.esc="toggleShowNewTaskInput(bucket.id)"
-													>
-												</div>
-												<p
-													v-if="newTaskError[bucket.id] && newTaskText === ''"
-													class="help is-danger"
-												>
-													{{ $t('project.create.addTitleRequired') }}
-												</p>
-											</div>
-											<XButton
-												v-else
-												v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
-												class="is-fullwidth has-text-centered"
-												:shadow="false"
-												icon="plus"
-												variant="secondary"
-												:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
-												@click="toggleShowNewTaskInput(bucket.id)"
-											>
-												{{
-													bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
-												}}
-											</XButton>
-										</div>
-									</template>
-
 									<template #item="{element: task}">
 										<div
 											class="task-item"
@@ -297,11 +312,11 @@ import draggable from 'zhyswan-vuedraggable'
 import {klona} from 'klona/lite'
 
 import {PERMISSIONS as Permissions} from '@/constants/permissions'
+import type {Priority} from '@/constants/priorities'
 import BucketModel from '@/models/bucket'
 
 import type {IBucket} from '@/modelTypes/IBucket'
 import type {ITask} from '@/modelTypes/ITask'
-
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
@@ -310,8 +325,16 @@ import {useAuthStore} from '@/stores/auth'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
+import InlineQuickAddFields from '@/components/project/views/InlineQuickAddFields.vue'
+import {colorIsDark} from '@/helpers/color/colorIsDark'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
+
+const props = defineProps<{
+	isLoadingProject: boolean,
+	projectId: number,
+	viewId: IProjectView['id'],
+}>()
 
 import {
 	type CollapsedBuckets,
@@ -333,12 +356,6 @@ import ProjectViewService from '@/services/projectViews'
 import ProjectViewModel from '@/models/projectView'
 import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
-
-const props = defineProps<{
-	isLoadingProject: boolean,
-	projectId: number,
-	viewId: IProjectView['id'],
-}>()
 
 const projectId = toRef(props, 'projectId')
 
@@ -387,6 +404,8 @@ const newBucketTitle = ref('')
 const showNewBucketInput = ref(false)
 const newTaskError = ref<{ [id: IBucket['id']]: boolean }>({})
 const newTaskInputFocused = ref(false)
+
+const inlineFieldsRef = ref<InstanceType<typeof InlineQuickAddFields> | null>(null)
 
 const showSetLimitInput = ref(false)
 const collapsedBuckets = ref<CollapsedBuckets>({})
@@ -656,10 +675,35 @@ function toggleShowNewTaskInput(bucketId: IBucket['id']) {
 	if (loading.value || taskLoading.value) {
 		return
 	}
-	showNewTaskInput.value = showNewTaskInput.value === bucketId 
+	showNewTaskInput.value = showNewTaskInput.value === bucketId
 		? null
 		: bucketId
 	newTaskInputFocused.value = false
+	// Whether the user is opening or closing the form, start from a clean
+	// slate. This also fixes a stale-title bug where dismissing the form
+	// (by clicking outside) left newTaskText around, so the next opening
+	// pre-filled the old draft.
+	newTaskText.value = ''
+	newTaskError.value[bucketId] = false
+	inlineFieldsRef.value?.reset()
+}
+
+function handleAddTaskFocusOut(event: FocusEvent, bucketId: IBucket['id']) {
+	// Inline quick-add popups are teleported to <body>, so focus legitimately
+	// moves outside this container while one is open. Treat the popup as part
+	// of the add-task workflow and keep the form alive until the popup closes.
+	if (inlineFieldsRef.value?.isPopupOpen) {
+		return
+	}
+	const container = event.currentTarget as HTMLElement | null
+	const nextFocus = event.relatedTarget as HTMLElement | null
+	if (container && nextFocus && container.contains(nextFocus)) {
+		return
+	}
+	if (nextFocus && inlineFieldsRef.value?.containsElement(nextFocus)) {
+		return
+	}
+	toggleShowNewTaskInput(bucketId)
 }
 
 async function addTaskToBucket(bucketId: IBucket['id']) {
@@ -669,18 +713,49 @@ async function addTaskToBucket(bucketId: IBucket['id']) {
 	}
 	newTaskError.value[bucketId] = false
 
+	// Capture inline field values before resetting so the follow-up attach
+	// calls aren't affected by the UI state being cleared.
+	const fieldValues = inlineFieldsRef.value?.getFieldValues()
+
 	const task = await taskStore.createNewTask({
 		title: newTaskText.value,
 		bucketId,
 		projectId: projectIdWithFallback.value,
+		dueDate: fieldValues?.dueDate,
+		startDate: fieldValues?.startDate,
+		endDate: fieldValues?.endDate,
+		priority: fieldValues?.priority as Priority | undefined,
+		hexColor: fieldValues?.hexColor,
+		percentDone: fieldValues?.percentDone,
 	})
-	newTaskText.value = ''
+
+	const capturedAssignees = fieldValues?.assignees ?? []
+	const capturedLabels = fieldValues?.labels ?? []
+	const capturedReminders = fieldValues?.reminders ?? []
 	kanbanStore.addTaskToBucket(task)
 	scrollTaskContainerToTop(bucketId)
-
-	const bucket = kanbanStore.getBucketById(bucketId)
-	if (bucket && bucket.limit && bucket.count >= bucket.limit) {
+	// Close the add-task form after a successful submission. Upstream keeps
+	// it open for rapid entry; we intentionally diverge because a new task
+	// popping into the bucket while the user is still looking at the form
+	// was jarring — each submit should be an explicit action.
+	// Also clears newTaskText and the inline quick-add fields via the
+	// shared reset path.
+	if (showNewTaskInput.value === bucketId) {
 		toggleShowNewTaskInput(bucketId)
+	}
+
+	// Attach multi-valued fields that the create endpoint doesn't accept
+	// directly. Sequential to keep ordering stable and errors isolated; the
+	// task itself is already saved, so a failed extra attach should not
+	// block the rest.
+	for (const user of capturedAssignees) {
+		await taskStore.addAssignee({user, taskId: task.id})
+	}
+	for (const label of capturedLabels) {
+		await taskStore.addLabel({label, taskId: task.id})
+	}
+	if (capturedReminders.length > 0) {
+		await taskStore.update({...task, reminders: capturedReminders})
 	}
 }
 
@@ -921,6 +996,441 @@ function unCollapseBucket(bucket: IBucket) {
 	--loader-border-color: var(--grey-500);
   }
 }
+
+.add-task-inline {
+	padding: .5rem;
+	background: var(--grey-200);
+	border-radius: $radius;
+	transition: background-color $transition;
+
+	&.has-task-color {
+		background-color: var(--task-color);
+
+		.inline-quick-add-chip,
+		.inline-quick-add-chip__icon,
+		.add-task-inline__submit {
+			color: rgba(0, 0, 0, .7);
+		}
+
+		.inline-quick-add-chip.is-set {
+			background: rgba(255, 255, 255, .35);
+			color: rgba(0, 0, 0, .8);
+		}
+
+		:deep(.input) {
+			color: rgba(0, 0, 0, .85);
+
+			&::placeholder {
+				color: rgba(0, 0, 0, .45);
+			}
+		}
+	}
+
+	&.has-light-text {
+		.inline-quick-add-chip,
+		.inline-quick-add-chip__icon,
+		.add-task-inline__submit {
+			color: rgba(255, 255, 255, .85);
+		}
+
+		.inline-quick-add-chip.is-set {
+			background: rgba(255, 255, 255, .2);
+			color: #ffffff;
+		}
+
+		:deep(.input) {
+			color: #ffffff;
+
+			&::placeholder {
+				color: rgba(255, 255, 255, .6);
+			}
+		}
+	}
+
+	// Let the title input blend into the container rather than stand on its own.
+	:deep(.input) {
+		background: transparent;
+		border-color: transparent;
+		box-shadow: none;
+		// Reserve space on the right for the inline submit button.
+		padding-inline-end: 2.25rem;
+
+		&:focus {
+			border-color: var(--primary);
+		}
+	}
+}
+
+.add-task-inline__control {
+	position: relative;
+}
+
+.add-task-inline__submit {
+	position: absolute;
+	inset-block-start: 50%;
+	inset-inline-end: .25rem;
+	transform: translateY(-50%);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	padding: 0;
+	border: 0;
+	border-radius: $radius;
+	background: transparent;
+	color: var(--success);
+	cursor: pointer;
+	transition: background-color $transition, color $transition;
+
+	&:hover:not(:disabled) {
+		background: var(--success-light);
+		color: var(--success-dark);
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: .5;
+	}
+}
+
+.inline-quick-add-chip-bar {
+	// Two-column grid with equal-width tracks. Chips stretch to fill their
+	// column so full rows occupy the whole bar (not floating as an island),
+	// and a partial last row lands in column 1 — left-aligned half-width.
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: .375rem;
+	margin-block-start: .5rem;
+}
+
+.inline-quick-add-chip {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: .4rem;
+	padding: .3rem .65rem;
+	border: 1px solid transparent;
+	border-radius: $radius;
+	background: transparent;
+	color: var(--grey-700);
+	font-size: .8rem;
+	font-weight: 500;
+	line-height: 1.2;
+	cursor: pointer;
+	transition: background-color $transition, color $transition, border-color $transition, box-shadow $transition;
+
+	&:hover:not(:disabled) {
+		background: var(--white);
+		color: var(--grey-900);
+		box-shadow: 0 1px 3px hsla(var(--grey-900-hsl), .12);
+	}
+
+	&:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 2px var(--primary-light);
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: .5;
+	}
+}
+
+// Semantic icon tint, applied whether the chip is set or not.
+.inline-quick-add-chip__icon {
+	font-size: .85rem;
+
+	&--due {
+		color: var(--danger);
+	}
+
+	&--start {
+		color: var(--success);
+	}
+
+	&--priority {
+		color: var(--warning);
+	}
+
+	&--assignee {
+		color: var(--primary);
+	}
+
+	&--labels {
+		color: var(--primary);
+	}
+
+	&--reminder {
+		color: var(--primary);
+	}
+
+	&--end {
+		color: var(--grey-500);
+	}
+
+	&--color {
+		color: var(--grey-500);
+	}
+
+	&--percent {
+		color: var(--grey-500);
+	}
+}
+
+.inline-quick-add-chip__swatch {
+	display: inline-block;
+	inline-size: .85rem;
+	block-size: .85rem;
+	border-radius: .2rem;
+	border: 1px solid var(--grey-300);
+	flex-shrink: 0;
+}
+
+.inline-quick-add-chip__clear {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	position: absolute;
+	inset-inline-end: 0;
+	inset-block-start: 0;
+	block-size: 100%;
+	padding-inline: .25rem;
+	font-size: .65rem;
+	background: transparent;
+	border-radius: 0 $radius $radius 0;
+	z-index: 1;
+	color: inherit;
+
+	&:hover {
+		color: var(--danger);
+	}
+}
+
+.inline-quick-add-chip:hover .inline-quick-add-chip__clear {
+	display: flex;
+}
+
+// Set state: chip fills with the field's semantic light background and
+// text shifts to the matching dark tone. No border — the color does the work.
+.inline-quick-add-chip--due.is-set {
+	background: var(--danger-light);
+	color: var(--danger-dark);
+}
+
+.inline-quick-add-chip--start.is-set {
+	background: var(--success-light);
+	color: var(--success-dark);
+}
+
+.inline-quick-add-chip--priority.is-set {
+	background: var(--warning-light);
+	color: var(--warning-dark);
+}
+
+.inline-quick-add-chip--assignee.is-set,
+.inline-quick-add-chip--labels.is-set,
+.inline-quick-add-chip--reminder.is-set,
+.inline-quick-add-chip--percent.is-set {
+	background: var(--primary-light);
+	color: var(--primary-dark);
+}
+
+.inline-quick-add-chip--end.is-set {
+	background: var(--success-light);
+	color: var(--success-dark);
+}
+
+.inline-quick-add-chip--color.is-set {
+	background: var(--primary-light);
+	color: var(--primary-dark);
+}
+
+.inline-quick-add-popup {
+	position: fixed;
+	z-index: 50;
+	padding: .5rem;
+	background: var(--white);
+	border: 1px solid var(--grey-200);
+	border-radius: $radius;
+	box-shadow: var(--shadow-md);
+}
+
+// Picker variant hosts assignee/label/reminder/priority components. The
+// default compact width suits assignee, labels and priority. Reminder
+// opts in to the wider variant so its nested two-column date form fits.
+.inline-quick-add-popup--picker.inline-quick-add-popup--wide {
+	inline-size: min(28rem, calc(100vw - 2rem));
+}
+
+// Keep the popup in the DOM but invisible until the clamp has positioned
+// it. Using visibility (not display) preserves getBoundingClientRect so
+// the clamp can measure the real size.
+.inline-quick-add-popup--measuring {
+	visibility: hidden;
+}
+
+.inline-quick-add-priority-options {
+	display: flex;
+	flex-direction: column;
+	gap: .125rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.inline-quick-add-priority-option {
+	inline-size: 100%;
+	padding: .5rem .75rem;
+	border: 0;
+	border-radius: $radius;
+	background: transparent;
+	color: var(--text);
+	text-align: start;
+	font-size: .9rem;
+	cursor: pointer;
+
+	&:hover {
+		background: var(--primary-light);
+		color: var(--primary-dark);
+	}
+
+	&.is-active {
+		background: var(--primary-light);
+		color: var(--primary-dark);
+		font-weight: 600;
+	}
+}
+
+.inline-quick-add-percent-done {
+	display: flex;
+	align-items: center;
+	gap: .75rem;
+	padding: .5rem .25rem;
+
+	&__slider {
+		flex: 1;
+		accent-color: var(--primary);
+	}
+
+	&__label {
+		min-inline-size: 3rem;
+		text-align: end;
+		font-weight: 600;
+		font-size: .9rem;
+	}
+}
+
+.inline-quick-add-popup--picker {
+	inline-size: min(18rem, calc(100vw - 2rem));
+
+	:deep(.color-picker-container) {
+		justify-content: start;
+	}
+
+	// The nested reminder Popup's .popup container defaults to natural
+	// inline position (right-of-trigger), which can push the date form
+	// past the outer popup's right edge. Pin it to the outer popup's
+	// left edge instead so it stays within our already-clamped bounds.
+	// !important is needed because Popup.vue's scoped .popup style wins
+	// the specificity tie otherwise.
+	:deep(.popup) {
+		inset-inline-start: 0 !important;
+		inset-inline-end: auto !important;
+		inline-size: 100%;
+	}
+
+	// Constrain the nested card to the outer popup's content width so it
+	// cannot overflow horizontally. The card's own scoped 310px width
+	// (from ReminderDetail) is overridden here.
+	:deep(.reminder-options-popup) {
+		inline-size: 100% !important;
+		max-inline-size: 100%;
+	}
+
+	:deep(.reminder-options-popup .datepicker-inline) {
+		flex-direction: row;
+		gap: .75rem;
+		align-items: stretch;
+	}
+
+	:deep(.reminder-options-popup .datepicker-inline__shortcuts) {
+		display: flex;
+		flex-direction: column;
+		flex-shrink: 0;
+	}
+
+	:deep(.reminder-options-popup .datepicker-inline__shortcuts .datepicker__quick-select-date) {
+		flex: 1 1 auto;
+		block-size: auto;
+	}
+
+	:deep(.reminder-options-popup .flatpickr-container) {
+		flex: 0 1 auto;
+	}
+
+	:deep(.reminder-options-popup .flatpickr-container > input) {
+		display: none;
+	}
+
+	@media (width <= 520px) {
+		:deep(.reminder-options-popup .datepicker-inline) {
+			flex-direction: column;
+		}
+	}
+}
+
+.inline-quick-add-popup--date {
+	display: flex;
+	flex-direction: column;
+	max-inline-size: calc(100vw - 1rem);
+}
+
+// Two-column layout: shortcuts (auto width) on the left, calendar on the
+// right. flex: 1 on each shortcut makes them share the full calendar
+// height, so the shortcut column stretches exactly as tall as the
+// calendar+time regardless of whether 4, 5 or 6 shortcuts are rendered.
+.inline-quick-add-popup--date :deep(.datepicker-inline) {
+	flex-direction: row;
+	gap: .75rem;
+	align-items: stretch;
+}
+
+.inline-quick-add-popup--date :deep(.datepicker-inline__shortcuts) {
+	display: flex;
+	flex-direction: column;
+	flex-shrink: 0;
+}
+
+.inline-quick-add-popup--date :deep(.datepicker-inline__shortcuts .datepicker__quick-select-date) {
+	flex: 1 1 auto;
+	block-size: auto;
+}
+
+.inline-quick-add-popup--date :deep(.flatpickr-container) {
+	flex: 0 1 auto;
+}
+
+// Hide only flatpickr's top-level text input (duplicates the picker
+// value as plain text). Time hour/minute inputs live inside
+// .flatpickr-calendar and must stay visible — hence the direct-child
+// selector.
+.inline-quick-add-popup--date :deep(.flatpickr-container > input) {
+	display: none;
+}
+
+.inline-quick-add-popup__confirm {
+	inline-size: 100%;
+	margin-block-start: .5rem;
+}
+
+// Fall back to vertical (original) layout when the viewport is too narrow
+// to reasonably fit two columns.
+@media (width <= 520px) {
+	.inline-quick-add-popup--date :deep(.datepicker-inline) {
+		flex-direction: column;
+	}
+}
 </style>
 
 
@@ -1051,7 +1561,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			margin-inline-end: calc((#{$bucket-width} - #{$bucket-header-height} - #{$bucket-right-margin}) * -1);
 			cursor: pointer;
 
-			.tasks, .bucket-footer {
+			.tasks, .bucket-top {
 				display: none;
 			}
 		}
@@ -1090,15 +1600,13 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		padding: .5rem;
 	}
 
-	.bucket-footer {
+	.bucket-top {
 		position: sticky;
-		inset-block-end: 0;
+		inset-block-start: 0;
+		z-index: 2;
 		block-size: min-content;
 		padding: .5rem;
 		background-color: var(--grey-100);
-		border-end-start-radius: $radius;
-		border-end-end-radius: $radius;
-		transform: none;
 
 		.button {
 			background-color: transparent;

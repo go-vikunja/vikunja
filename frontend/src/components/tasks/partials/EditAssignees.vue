@@ -49,6 +49,9 @@ import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 
 const props = withDefaults(defineProps<{
 	modelValue: IUser[] | undefined,
+	// Pass 0 to use this picker in pre-creation contexts (e.g. inline
+	// quick-add). Assignees are then emitted via v-model only — the caller
+	// is responsible for persisting them once the task exists.
 	taskId: number,
 	projectId: number,
 	disabled?: boolean,
@@ -84,6 +87,12 @@ async function addAssignee(user: IUser) {
 		return
 	}
 
+	if (props.taskId === 0) {
+		// taskId 0 means the task doesn't exist yet; skip the API call and let the caller persist on creation.
+		emit('update:modelValue', assignees.value)
+		return
+	}
+
 	try {
 		nextTick(() => isAdding = true)
 
@@ -96,14 +105,19 @@ async function addAssignee(user: IUser) {
 }
 
 async function removeAssignee(user: IUser) {
-	await taskStore.removeAssignee({user: user, taskId: props.taskId})
+	if (props.taskId !== 0) {
+		await taskStore.removeAssignee({user: user, taskId: props.taskId})
+	}
 
 	// Remove the assignee from the project
 	const idx = assignees.value.findIndex(a => a.id === user.id)
 	if (idx !== -1) {
 		assignees.value.splice(idx, 1)
 	}
-	success({message: t('task.assignee.unassignSuccess')})
+	emit('update:modelValue', assignees.value)
+	if (props.taskId !== 0) {
+		success({message: t('task.assignee.unassignSuccess')})
+	}
 }
 
 async function findUser(query: string) {
