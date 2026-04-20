@@ -147,6 +147,7 @@ func NewUserJWTAuthtoken(u *user.User, sessionID string) (token string, err erro
 	claims["type"] = AuthTypeUser
 	claims["id"] = u.ID
 	claims["username"] = u.Username
+	claims["is_admin"] = u.IsAdmin
 	claims["exp"] = exp
 	claims["sid"] = sessionID
 	claims["jti"] = uuid.New().String()
