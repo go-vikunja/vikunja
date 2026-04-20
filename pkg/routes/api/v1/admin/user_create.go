@@ -103,6 +103,15 @@ func CreateUser(c *echo.Context) error {
 		return err
 	}
 
+	// Reload the user so the returned status reflects what was actually persisted
+	// (e.g. StatusEmailConfirmationRequired on mail-enabled instances).
+	rs := db.NewSession()
+	defer rs.Close()
+	newUser, err = user.GetUserByID(rs, newUser.ID)
+	if err != nil {
+		return err
+	}
+
 	providers, err := openid.GetAllProviders()
 	if err != nil {
 		return err
