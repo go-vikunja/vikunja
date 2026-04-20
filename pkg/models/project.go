@@ -175,7 +175,7 @@ var FavoritesPseudoProject = Project{
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects [get]
 func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, perPage int) (result interface{}, resultCount int, totalItems int64, err error) {
-	prs, resultCount, totalItems, err := getAllRawProjects(s, a, search, page, perPage, p.IsArchived)
+	prs, resultCount, totalItems, err := getAllRawProjects(s, a, search, page, perPage, p.IsArchived, false)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -216,7 +216,11 @@ func (p *Project) ReadAll(s *xorm.Session, a web.Auth, search string, page int, 
 	return prs, resultCount, totalItems, err
 }
 
-func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
+func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, perPage int, isArchived, listAll bool) (projects []*Project, resultCount int, totalItems int64, err error) {
+	if listAll {
+		return getRawProjectsUnscoped(s, search, page, perPage, isArchived)
+	}
+
 	// Check if we're dealing with a share auth
 	shareAuth, is := a.(*LinkSharing)
 	if is {
@@ -263,6 +267,80 @@ func getAllRawProjects(s *xorm.Session, a web.Auth, search string, page int, per
 	}
 
 	return prs, resultCount, totalItems, err
+}
+
+// ListAllProjects returns every project with owners hydrated; callers must authorize since this bypasses the per-user permission filter.
+func ListAllProjects(s *xorm.Session, search string, page, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
+	projects, resultCount, totalItems, err = getAllRawProjects(s, nil, search, page, perPage, isArchived, true)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	ownerIDs := make([]int64, 0, len(projects))
+	for _, p := range projects {
+		ownerIDs = append(ownerIDs, p.OwnerID)
+	}
+	owners, err := user.GetUsersByIDs(s, ownerIDs)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	for _, p := range projects {
+		if o, ok := owners[p.OwnerID]; ok {
+			p.Owner = o
+		}
+	}
+
+	return projects, resultCount, totalItems, nil
+}
+
+func getRawProjectsUnscoped(s *xorm.Session, search string, page, perPage int, isArchived bool) (projects []*Project, resultCount int, totalItems int64, err error) {
+	limit, start := getLimitFromPageIndex(page, perPage)
+
+	conds := []builder.Cond{}
+	if !isArchived {
+		conds = append(conds, builder.Eq{"is_archived": false})
+	}
+	if search != "" {
+		ids := []int64{}
+		for _, val := range strings.Split(search, ",") {
+			v, parseErr := strconv.ParseInt(val, 10, 64)
+			if parseErr != nil {
+				log.Debugf("Project search string part '%s' is not a number: %s", val, parseErr)
+				continue
+			}
+			ids = append(ids, v)
+		}
+		if len(ids) > 0 {
+			conds = append(conds, builder.In("id", ids))
+		} else {
+			conds = append(conds, db.MultiFieldSearchWithTableAlias(
+				[]string{"title", "description", "identifier"},
+				search,
+				"",
+			))
+		}
+	}
+	var where = builder.Expr("1 = 1")
+	if len(conds) > 0 {
+		where = builder.And(conds...)
+	}
+
+	query := s.Where(where).OrderBy("id DESC")
+	if limit > 0 {
+		query = query.Limit(limit, start)
+	}
+
+	projects = []*Project{}
+	if err = query.Find(&projects); err != nil {
+		return nil, 0, 0, err
+	}
+
+	totalItems, err = s.Where(where).Count(&Project{})
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	return projects, len(projects), totalItems, nil
 }
 
 // ReadOne gets one project by its ID
@@ -998,6 +1076,20 @@ func CreateNewProjectForUser(s *xorm.Session, u *user.User) (err error) {
 	u.DefaultProjectID = p.ID
 	_, err = user.UpdateUser(s, u, false)
 	return err
+}
+
+// RegisterUser creates a user plus their default inbox project; shared by /register and the admin create-user route.
+func RegisterUser(s *xorm.Session, u *user.User) (*user.User, error) {
+	newUser, err := user.CreateUser(s, u)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := CreateNewProjectForUser(s, newUser); err != nil {
+		return nil, err
+	}
+
+	return newUser, nil
 }
 
 func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProjectBackground bool) (err error) {

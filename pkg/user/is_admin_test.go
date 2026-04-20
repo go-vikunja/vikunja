@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUser_IsAdminField(t *testing.T) {
@@ -30,6 +31,6 @@ func TestUser_IsAdminField(t *testing.T) {
 
 	u := &User{ID: 1}
 	_, err := s.Get(u)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, u.IsAdmin, "fixture user 1 should not be admin by default")
 }
