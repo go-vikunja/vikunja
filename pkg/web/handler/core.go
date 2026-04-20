@@ -134,3 +134,42 @@ func DoReadAll(_ context.Context, obj CObject, a web.Auth, search string, page, 
 	events.DispatchPending(s)
 	return result, resultCount, total, nil
 }
+
+// DoUpdate runs the permission check + model Update + commit pipeline for a
+// CObject. Framework-agnostic. Caller is responsible for body/path binding
+// and validation before calling.
+func DoUpdate(_ context.Context, obj CObject, a web.Auth) error {
+	s := db.NewSession()
+	defer func() {
+		if err := s.Close(); err != nil {
+			log.Errorf("Could not close session: %s", err)
+		}
+	}()
+
+	canUpdate, err := obj.CanUpdate(s, a)
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return err
+	}
+	if !canUpdate {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		log.Warningf("Tried to update while not having the permissions for it (User: %v)", a)
+		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
+	}
+
+	if err := obj.Update(s, a); err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return err
+	}
+
+	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
+		return err
+	}
+
+	events.DispatchPending(s)
+	return nil
+}
