@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/labstack/echo/v5"
@@ -100,6 +101,17 @@ func HandleTesting(c *echo.Context) error {
 		})
 	}
 
+	// License state is cached at startup; re-apply so tests take effect without a restart.
+	if table == "license_status" {
+		if err := license.ReloadFromCache(); err != nil {
+			log.Errorf("Error reloading license from seeded cache: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"error":   true,
+				"message": err.Error(),
+			})
+		}
+	}
+
 	s := db.NewSession()
 	defer s.Close()
 	data := []map[string]interface{}{}
@@ -138,6 +150,11 @@ func HandleTestingTruncateAll(c *echo.Context) error {
 			"error":   true,
 			"message": err.Error(),
 		})
+	}
+
+	// Reload after truncate; otherwise features enabled by a prior test outlive the now-empty license_status table.
+	if err := license.ReloadFromCache(); err != nil {
+		log.Errorf("Error reloading license after truncate: %v", err)
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
