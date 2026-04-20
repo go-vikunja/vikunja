@@ -670,6 +670,11 @@ func GuardLastAdmin(s *xorm.Session, target *User) error {
 	if !target.IsAdmin {
 		return nil
 	}
+	// target is not in the counted "reachable admin" set — removing them
+	// doesn't change the invariant, so the guard is a no-op.
+	if target.Status != StatusActive || !target.DeletionScheduledAt.IsZero() {
+		return nil
+	}
 
 	session := s.Where("is_admin = ?", true).
 		And("status = ?", StatusActive).
