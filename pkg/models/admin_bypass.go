@@ -17,35 +17,28 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
 )
 
-// CanCreate checks if the user can create a team <-> project relation
-func (tl *TeamProject) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamProject(s, a)
-}
-
-// CanDelete checks if the user can delete a team <-> project relation
-func (tl *TeamProject) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamProject(s, a)
-}
-
-// CanUpdate checks if the user can update a team <-> project relation
-func (tl *TeamProject) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
-	return tl.canDoTeamProject(s, a)
-}
-
-func (tl *TeamProject) canDoTeamProject(s *xorm.Session, a web.Auth) (bool, error) {
-	// Link shares aren't allowed to do anything
-	if _, is := a.(*LinkSharing); is {
-		return false, nil
+// isInstanceAdmin gates cross-user access on both is_admin and the admin-panel
+// license so flipping is_admin on a free instance cannot recover the paid bypass.
+// is_admin is re-read from the DB because the auth's flag is claim-derived and
+// stale until the JWT expires.
+func isInstanceAdmin(s *xorm.Session, a web.Auth) bool {
+	if !license.IsFeatureEnabled(license.FeatureAdminPanel) {
+		return false
 	}
-
-	if isInstanceAdmin(s, a) {
-		return true, nil
+	u, ok := a.(*user.User)
+	if !ok {
+		return false
 	}
-
-	l := Project{ID: tl.ProjectID}
-	return l.IsAdmin(s, a)
+	fresh, err := user.GetUserByID(s, u.ID)
+	if err != nil {
+		return false
+	}
+	return fresh.IsAdmin
 }
