@@ -15,7 +15,7 @@
 			<BaseButton
 				v-if="!isModal"
 				class="back-button mbs-2"
-				@click="lastProject ? router.back() : router.push(projectRoute)"
+				@click="hasBackRoute ? router.back() : router.push(projectRoute)"
 			>
 				<Icon icon="arrow-left" />
 				{{ $t('task.detail.back') }}
@@ -714,6 +714,11 @@ const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
 
+const hasBackRoute = computed(() => {
+	const backRoute = router.options.history.state?.back
+	return typeof backRoute === 'string' && backRoute.length > 0
+})
+
 const lastProject = computed(() => {
 	const backRoute = router.options.history.state?.back
 	if (!backRoute || typeof backRoute !== 'string') {
@@ -1198,10 +1203,53 @@ function setRelatedTasksActive() {
 .task-view {
 	padding-block-start: 1rem;
 	padding-inline: .5rem;
-	background-color: var(--site-background);
+	background-color: #0e0f13;
+	color: #f0ede8;
+	min-height: 100vh;
 
 	@media screen and (min-width: $desktop) {
 		padding: 1rem;
+	}
+
+	// Dark-palette overrides for standalone page (non-modal)
+	.subtitle {
+		color: #8a8a9a;
+
+		a {
+			color: #d0cdc8;
+
+			&:hover {
+				color: #a78bfa;
+			}
+		}
+	}
+
+	.detail-title,
+	.action-heading {
+		color: #8a8a9a;
+	}
+
+	.action-heading--organization {
+		color: #9a8bbf;
+	}
+
+	.action-heading--management {
+		color: #6ea892;
+	}
+
+	.action-heading--date-time {
+		color: #b89a68;
+	}
+
+	.details,
+	.description,
+	.attachments,
+	.content.details {
+		background: #13141a;
+		border: .5px solid #1e1f28;
+		border-radius: 10px;
+		padding: .75rem;
+		margin-block-end: .75rem;
 	}
 }
 
@@ -1218,6 +1266,101 @@ function setRelatedTasksActive() {
 	}
 }
 
+// Action buttons — applied to both modal and standalone
+.task-view .action-buttons .button,
+.is-modal .action-buttons .button {
+	border: .5px dashed #2a2b35;
+	background: transparent;
+	color: #8a8a9a;
+	border-radius: 8px;
+	box-shadow: none;
+
+	&:hover {
+		border-color: #6c63f5;
+		background: #13141a;
+		color: #d0cdc8;
+	}
+
+	&.button--mark-done.is-pending {
+		color: #34d399;
+
+		&:hover,
+		&:focus {
+			background: #0f2a24;
+			border-color: #34d399;
+			color: #a7f3d0;
+		}
+	}
+}
+
+.task-view .action-buttons .button.is-danger,
+.is-modal .action-buttons .button.is-danger {
+	border-color: #ef4444;
+	color: #f87171;
+
+	&:hover,
+	&:focus {
+		border-color: #ef4444;
+		background: #2b1113;
+		color: #fca5a5;
+	}
+}
+
+// Inputs — applied to both modal and standalone
+.task-view :deep(.heading),
+.task-view :deep(.details),
+.task-view :deep(.description) {
+	.input,
+	.textarea,
+	.select select {
+		background: #13141a;
+		border: .5px solid #2a2b35;
+		border-radius: 10px;
+		color: #d0cdc8;
+		box-shadow: none;
+
+		&::placeholder {
+			color: #3a3b48;
+		}
+
+		&:hover,
+		&:focus,
+		&:active {
+			border-color: #6c63f5 !important;
+			background: #13141a;
+			color: #d0cdc8;
+			box-shadow: none;
+		}
+	}
+}
+
+.is-modal :deep(.heading),
+.is-modal :deep(.details),
+.is-modal :deep(.description) {
+	.input,
+	.textarea,
+	.select select {
+		background: #13141a;
+		border: .5px solid #2a2b35;
+		border-radius: 10px;
+		color: #d0cdc8;
+		box-shadow: none;
+
+		&::placeholder {
+			color: #3a3b48;
+		}
+
+		&:hover,
+		&:focus,
+		&:active {
+			border-color: #6c63f5 !important;
+			background: #13141a;
+			color: #d0cdc8;
+			box-shadow: none;
+		}
+	}
+}
+
 .is-modal .subtitle {
 	color: #8a8a9a;
 
@@ -1228,6 +1371,22 @@ function setRelatedTasksActive() {
 			color: #a78bfa;
 		}
 	}
+}
+
+.is-modal .details,
+.is-modal .description,
+.is-modal .attachments,
+.is-modal .content.details {
+	background: #0f1016;
+	border: .5px solid #1e1f28;
+	border-radius: 10px;
+	padding: .75rem;
+	margin-block-end: .75rem;
+}
+
+.is-modal .detail-title,
+.is-modal .action-heading {
+	color: #8a8a9a;
 }
 
 .task-view * {
@@ -1311,22 +1470,6 @@ h3 .button {
 		break-after: always; // New syntax
 	}
 
-}
-
-.is-modal .details,
-.is-modal .description,
-.is-modal .attachments,
-.is-modal .content.details {
-	background: #0f1016;
-	border: .5px solid #1e1f28;
-	border-radius: 10px;
-	padding: .75rem;
-	margin-block-end: .75rem;
-}
-
-.is-modal .detail-title,
-.is-modal .action-heading {
-	color: #8a8a9a;
 }
 
 .details.labels-list,
@@ -1418,70 +1561,6 @@ h3 .button {
 					color: #ffffff;
 				}
 			}
-		}
-	}
-}
-
-.is-modal .action-buttons .button {
-	border: .5px dashed #2a2b35;
-	background: transparent;
-	color: #8a8a9a;
-	border-radius: 8px;
-	box-shadow: none;
-
-	&:hover {
-		border-color: #6c63f5;
-		background: #13141a;
-		color: #d0cdc8;
-	}
-
-	&.button--mark-done.is-pending {
-		color: #34d399;
-
-		&:hover,
-		&:focus {
-			background: #0f2a24;
-			border-color: #34d399;
-			color: #a7f3d0;
-		}
-	}
-}
-
-.is-modal .action-buttons .button.is-danger {
-	border-color: #ef4444;
-	color: #f87171;
-
-	&:hover,
-	&:focus {
-		border-color: #ef4444;
-		background: #2b1113;
-		color: #fca5a5;
-	}
-}
-
-.is-modal :deep(.heading),
-.is-modal :deep(.details),
-.is-modal :deep(.description) {
-	.input,
-	.textarea,
-	.select select {
-		background: #13141a;
-		border: .5px solid #2a2b35;
-		border-radius: 10px;
-		color: #d0cdc8;
-		box-shadow: none;
-
-		&::placeholder {
-			color: #3a3b48;
-		}
-
-		&:hover,
-		&:focus,
-		&:active {
-			border-color: #6c63f5 !important;
-			background: #13141a;
-			color: #d0cdc8;
-			box-shadow: none;
 		}
 	}
 }

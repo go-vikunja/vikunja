@@ -227,22 +227,28 @@ watch(() => showProjectModal.value, (isOpen) => {
 
 			<!-- Stats -->
 			<div class="vk-stats">
-				<div class="vk-stat vk-stat--purple">
+				<RouterLink
+					:to="{name: 'tasks.table', query: {filter: 'today'}}"
+					class="vk-stat vk-stat--purple vk-stat--link"
+				>
 					<p class="vk-stat-num">
 						{{ pendingCount }}
 					</p>
 					<p class="vk-stat-label">
 						Tasks today
 					</p>
-				</div>
-				<div class="vk-stat vk-stat--green">
+				</RouterLink>
+				<RouterLink
+					:to="{name: 'tasks.table', query: {filter: 'completed'}}"
+					class="vk-stat vk-stat--green vk-stat--link"
+				>
 					<p class="vk-stat-num">
 						{{ doneCount }}
 					</p>
 					<p class="vk-stat-label">
 						Completed this week
 					</p>
-				</div>
+				</RouterLink>
 				<div class="vk-stat vk-stat--amber">
 					<p class="vk-stat-num">
 						{{ activeProjects.length }}
@@ -651,6 +657,18 @@ watch(() => showProjectModal.value, (isOpen) => {
 	padding: 16px 20px;
 	position: relative;
 	overflow: hidden;
+}
+
+.vk-stat--link {
+	display: block;
+	text-decoration: none;
+	cursor: pointer;
+	transition: border-color 0.15s, background 0.15s;
+}
+
+.vk-stat--link:hover {
+	border-color: var(--border-mid);
+	background: var(--bg-hover);
 }
 
 .vk-stat::before {
