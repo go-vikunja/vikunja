@@ -36,13 +36,14 @@ const activeProjects = computed(() =>
 
 // Task management
 const newTaskTitle = ref('')
+const allFetchedTasks = ref<ITask[]>([])
 const displayedTasks = ref<ITask[]>([])
 const showProjectModal = ref(false)
 const selectedProject = ref<IProject | null>(null)
 const isLoading = ref(false)
 
-const pendingCount = computed(() => displayedTasks.value.filter(t => !t.done).length)
-const doneCount = computed(() => displayedTasks.value.filter(t => t.done).length)
+const pendingCount = computed(() => allFetchedTasks.value.filter(t => !t.done).length)
+const doneCount = computed(() => allFetchedTasks.value.filter(t => t.done).length)
 
 // Fetch tasks from backend
 async function fetchTasks() {
@@ -55,6 +56,7 @@ async function fetchTasks() {
 			order_by: ['asc'],
 			per_page: 50,
 		})
+		allFetchedTasks.value = allTasks
 		displayedTasks.value = allTasks.filter(t => !t.done)
 	} catch (error) {
 		console.error('Failed to fetch tasks:', error)
