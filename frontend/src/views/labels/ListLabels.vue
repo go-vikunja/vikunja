@@ -29,73 +29,144 @@
 
 		<div class="columns">
 			<div class="labels-list column">
-				<RouterLink
+				<div
 					v-for="label in labelStore.labelsArray"
 					:key="label.id"
-					:to="{name: 'home', query: {labels: label.id.toString()}}"
 					:style="getLabelStyles(label)"
-					class="tag"
+					class="tag label-row"
 				>
-					<span>{{ label.title }}</span>
-					<BaseButton
+					<button
+						type="button"
+						class="label-row-link"
+						:class="{'label-row-link--editable': userInfo.id === label.createdBy.id}"
+						@click="handleLabelTitleClick(label)"
+					>
+						<span>{{ label.title }}</span>
+					</button>
+					<button
 						v-if="userInfo.id === label.createdBy.id"
+						type="button"
 						class="label-edit-button is-small"
+						aria-label="Edit label"
 						@click.stop.prevent="editLabel(label)"
 					>
 						<Icon
 							icon="pen"
 							class="icon"
 						/>
-					</BaseButton>
-				</RouterLink>
+					</button>
+				</div>
 			</div>
-			<div
-				v-if="isLabelEdit"
-				class="column is-4"
-			>
-				<Card
-					:title="$t('label.edit.header')"
-					:show-close="true"
-					@close="() => isLabelEdit = false"
+
+			<Teleport to="body">
+				<div
+					v-if="isLabelEdit"
+					class="vk-overlay"
+					@click.self="isLabelEdit = false"
 				>
-					<form @submit.prevent="editLabelSubmit()">
-						<FormField
-							v-model="labelEditLabel.title"
-							:label="$t('label.attributes.title')"
-							:placeholder="$t('label.attributes.titlePlaceholder')"
-							type="text"
-						/>
-						<FormField :label="$t('label.attributes.description')">
-							<Editor
-								v-if="editorActive"
-								v-model="labelEditLabel.description"
-								:placeholder="$t('label.attributes.description')"
-							/>
-						</FormField>
-						<FormField :label="$t('label.attributes.color')">
-							<ColorPicker v-model="labelEditLabel.hexColor" />
-						</FormField>
-						<div class="field has-addons">
-							<div class="control is-expanded">
-								<XButton
-									:loading="loading"
-									class="is-fullwidth"
+					<div
+						class="vk-modal"
+						role="dialog"
+						aria-modal="true"
+						aria-labelledby="edit-label-modal-title"
+					>
+						<div class="vk-modal-head">
+							<h2
+								id="edit-label-modal-title"
+								class="vk-modal-title"
+							>
+								{{ $t('label.edit.header') }}
+							</h2>
+							<button
+								class="vk-modal-close"
+								aria-label="Close"
+								@click="isLabelEdit = false"
+							>
+								<svg
+									width="14"
+									height="14"
+									viewBox="0 0 16 16"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.5"
+									stroke-linecap="round"
+								>
+									<path d="M3 3l10 10M13 3L3 13" />
+								</svg>
+							</button>
+						</div>
+
+						<form @submit.prevent="editLabelSubmit()">
+							<div class="vk-modal-body">
+								<div class="vk-field">
+									<label
+										class="vk-label"
+										for="edit-label-title"
+									>
+										{{ $t('label.attributes.title') }}
+									</label>
+									<input
+										id="edit-label-title"
+										v-model="labelEditLabel.title"
+										class="vk-input"
+										type="text"
+										:placeholder="$t('label.attributes.titlePlaceholder')"
+									/>
+								</div>
+
+								<div class="vk-field">
+									<label class="vk-label">{{ $t('label.attributes.description') }}</label>
+									<textarea
+										v-model="labelEditLabel.description"
+										class="vk-input vk-textarea"
+										:placeholder="$t('label.attributes.description')"
+									/>
+								</div>
+
+								<div class="vk-field">
+									<label class="vk-label">{{ $t('label.attributes.color') }}</label>
+									<div class="vk-swatches">
+										<button
+											v-for="color in colors"
+											:key="color"
+											type="button"
+											class="vk-swatch"
+											:class="{'vk-swatch--active': selectedEditColor === color}"
+											:style="{background: color}"
+											:aria-label="`Select color ${color}`"
+											@click="selectedEditColor = color"
+										/>
+									</div>
+								</div>
+							</div>
+
+							<div class="vk-modal-foot">
+								<button
+									type="button"
+									class="vk-btn-delete"
+									@click="showDeleteDialoge(labelEditLabel)"
+								>
+									<Icon icon="trash-alt" />
+								</button>
+								<button
+									type="button"
+									class="vk-btn-cancel"
+									@click="isLabelEdit = false"
+								>
+									{{ $t('misc.cancel') }}
+								</button>
+								<button
 									type="submit"
+									class="vk-btn-primary"
+									:disabled="labelEditLabel.title.trim() === ''"
 								>
 									{{ $t('misc.save') }}
-								</XButton>
+								</button>
 							</div>
-							<div class="control">
-								<XButton
-									icon="trash-alt"
-									danger
-									@click="showDeleteDialoge(labelEditLabel)"
-								/>
-							</div>
-						</div>
-					</form>
-				</Card>
-			</div>
+						</form>
+					</div>
+				</div>
+			</Teleport>
 
 			<Modal
 				:enabled="showDeleteModal"
@@ -118,13 +189,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref} from 'vue'
+import {computed, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-
-import BaseButton from '@/components/base/BaseButton.vue'
-import Editor from '@/components/input/AsyncEditor'
-import ColorPicker from '@/components/input/ColorPicker.vue'
-import FormField from '@/components/input/FormField.vue'
 
 import LabelModel from '@/models/label'
 import type {ILabel} from '@/modelTypes/ILabel'
@@ -138,9 +204,14 @@ const {t} = useI18n({useScope: 'global'})
 
 const labelEditLabel = ref<ILabel>(new LabelModel())
 const isLabelEdit = ref(false)
-const editorActive = ref(false)
 const showDeleteModal = ref(false)
 const labelToDelete = ref<ILabel | undefined>(undefined)
+const selectedEditColor = ref('#6c63f5')
+
+const colors = [
+	'#6c63f5', '#10b981', '#f59e0b', '#ef4444',
+	'#ec4899', '#06b6d4', '#8b5cf6', '#f97316',
+]
 
 useTitle(() => t('label.title'))
 
@@ -164,6 +235,7 @@ function deleteLabel(label?: ILabel) {
 }
 
 function editLabelSubmit() {
+	labelEditLabel.value.hexColor = selectedEditColor.value
 	return labelStore.updateLabel(labelEditLabel.value)
 }
 
@@ -179,37 +251,288 @@ function editLabel(label: ILabel) {
 		created: +label.created,
 		updated: +label.updated,
 	})
+	selectedEditColor.value = labelEditLabel.value.hexColor || colors[0]
 	isLabelEdit.value = true
-
-	// This makes the editor trigger its mounted function again which makes it forget every input
-	// it currently has in its textarea. This is a counter-hack to a hack inside of vue-easymde
-	// which made it impossible to detect change from the outside. Therefore the component would
-	// not update if new content from the outside was made available.
-	// See https://github.com/NikulinIlya/vue-easymde/issues/3
-	editorActive.value = false
-	nextTick(() => editorActive.value = true)
 }
 
 function showDeleteDialoge(label: ILabel) {
 	labelToDelete.value = label
 	showDeleteModal.value = true
 }
+
+function handleLabelTitleClick(label: ILabel) {
+	if (label.createdBy.id === userInfo.value.id) {
+		editLabel(label)
+	}
+}
 </script>
 
 <style lang="scss" scoped>
-.label-edit-button {
-	border-radius: 100%;
-	background-color: rgba(0,0,0,0.2);
-	inline-size: 1rem;
-	block-size: 1rem;
+.vk-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.6);
 	display: flex;
-  	align-items: center;
-  	justify-content: center;
-	color: #ffffff; // always white
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+	padding: 24px;
+}
+
+.vk-modal {
+	width: 100%;
+	max-width: 520px;
+	background: #13141a;
+	border: 0.5px solid #2a2b35;
+	border-radius: 14px;
+	overflow: hidden;
+	font-family: 'DM Sans', sans-serif;
+	box-shadow: 0 22px 70px rgba(0, 0, 0, 0.55);
+}
+
+.vk-modal-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 18px 20px;
+	border-bottom: 0.5px solid #1e1f28;
+}
+
+.vk-modal-title {
+	font-family: 'Playfair Display', serif;
+	font-size: 16px;
+	font-weight: 400;
+	color: #f0ede8;
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+.vk-modal-close {
+	width: 28px;
+	height: 28px;
+	border-radius: 7px;
+	background: transparent;
+	border: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	color: #4a4b57;
+	transition: all 0.12s;
+}
+
+.vk-modal-close:hover {
+	background: #1e1f28;
+	color: #a0a0b0;
+}
+
+.vk-modal-body {
+	padding: 20px;
+}
+
+.vk-modal-foot {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	padding: 14px 20px;
+	border-top: 0.5px solid #1e1f28;
+}
+
+.vk-field {
+	margin-bottom: 18px;
+}
+
+.vk-field:last-child {
+	margin-bottom: 0;
+}
+
+.vk-label {
+	display: block;
+	font-size: 11px;
+	font-weight: 500;
+	color: #6a6a7a;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	margin-bottom: 7px;
+}
+
+.vk-input {
+	width: 100%;
+	background: #0e0f13;
+	border: 0.5px solid #2a2b35;
+	border-radius: 8px;
+	padding: 10px 13px;
+	font-size: 13px;
+	color: #c0bdb8;
+	font-family: 'DM Sans', sans-serif;
+	outline: none;
+	transition: border-color 0.15s;
+	box-shadow: none;
+	height: auto;
+}
+
+.vk-input::placeholder {
+	color: #3a3b48;
+}
+
+.vk-input:focus {
+	border-color: #6c63f5;
+	box-shadow: none;
+}
+
+.vk-textarea {
+	min-height: 110px;
+	resize: vertical;
+}
+
+.vk-swatches {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.vk-swatch {
+	width: 26px;
+	height: 26px;
+	border-radius: 6px;
+	cursor: pointer;
+	border: 2px solid transparent;
+	transition: all 0.15s;
+	outline: none;
+}
+
+.vk-swatch:hover {
+	transform: scale(1.12);
+}
+
+.vk-swatch--active {
+	border-color: #fff;
+	transform: scale(1.08);
+}
+
+.vk-btn-delete {
+	inline-size: 34px;
+	block-size: 34px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(239, 68, 68, 0.15);
+	border: 0.5px solid rgba(239, 68, 68, 0.35);
+	color: #ef4444;
+	border-radius: 8px;
+	cursor: pointer;
+	margin-inline-end: auto;
+	transition: background 0.12s;
+}
+
+.vk-btn-delete:hover {
+	background: rgba(239, 68, 68, 0.25);
+}
+
+.vk-btn-cancel {
+	background: transparent;
+	border: 0.5px solid #2a2b35;
+	border-radius: 8px;
+	padding: 7px 16px;
+	font-size: 12.5px;
+	color: #6a6a7a;
+	font-family: 'DM Sans', sans-serif;
+	cursor: pointer;
+	transition: all 0.12s;
+}
+
+.vk-btn-cancel:hover {
+	background: #1e1f28;
+	color: #a0a0b0;
+}
+
+.vk-btn-primary {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: #6c63f5;
+	border: none;
+	border-radius: 8px;
+	padding: 7px 18px;
+	font-size: 12.5px;
+	color: #fff;
+	font-family: 'DM Sans', sans-serif;
+	cursor: pointer;
+	font-weight: 500;
+	transition: opacity 0.12s;
+}
+
+.vk-btn-primary:hover {
+	opacity: 0.85;
+}
+
+.vk-btn-primary:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.label-edit-button {
+	inline-size: 1.45rem;
+	block-size: 1.45rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	color: #ffffff;
 	margin-inline-start: .25rem;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	cursor: pointer;
 
 	.icon {
+		inline-size: 1rem;
 		block-size: .5rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 999px;
+		background-color: rgba(0,0,0,0.2);
+	}
+}
+
+.label-row {
+	display: inline-flex;
+	align-items: center;
+	gap: 0;
+	padding-right: .15rem;
+}
+
+.label-row-link {
+	color: inherit;
+	text-decoration: none;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	font: inherit;
+	cursor: default;
+}
+
+.label-row-link--editable {
+	cursor: pointer;
+}
+
+@media (max-width: 640px) {
+	.vk-overlay {
+		padding: 14px;
+	}
+
+	.vk-modal {
+		max-width: 100%;
+	}
+
+	.vk-modal-body,
+	.vk-modal-foot,
+	.vk-modal-head {
+		padding-left: 16px;
+		padding-right: 16px;
 	}
 }
 </style>
