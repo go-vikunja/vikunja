@@ -35,6 +35,7 @@ package license
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -190,6 +191,26 @@ func Init() {
 	// Start background goroutine
 	stopCh = make(chan struct{})
 	go backgroundLoop(key)
+}
+
+// EnabledProFeatures returns the string keys of all currently enabled licensed features.
+// Returns an empty slice in free mode.
+func EnabledProFeatures() []string {
+	currentState.mu.RLock()
+	defer currentState.mu.RUnlock()
+	if !currentState.licensed {
+		return []string{}
+	}
+	out := make([]string, 0, len(currentState.features))
+	for f, on := range currentState.features {
+		if !on {
+			continue
+		}
+		name := f.String()
+		out = append(out, name)
+	}
+	sort.Strings(out)
+	return out
 }
 
 // IsFeatureEnabled returns whether a specific licensed feature is enabled.
