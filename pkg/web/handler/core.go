@@ -173,3 +173,42 @@ func DoUpdate(_ context.Context, obj CObject, a web.Auth) error {
 	events.DispatchPending(s)
 	return nil
 }
+
+// DoDelete runs the permission check + model Delete + commit pipeline for a
+// CObject. Framework-agnostic. Caller is responsible for path binding before
+// calling.
+func DoDelete(_ context.Context, obj CObject, a web.Auth) error {
+	s := db.NewSession()
+	defer func() {
+		if err := s.Close(); err != nil {
+			log.Errorf("Could not close session: %s", err)
+		}
+	}()
+
+	canDelete, err := obj.CanDelete(s, a)
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return err
+	}
+	if !canDelete {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		log.Warningf("Tried to delete while not having the permissions for it (User: %v)", a)
+		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
+	}
+
+	if err := obj.Delete(s, a); err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return err
+	}
+
+	if err := s.Commit(); err != nil {
+		events.CleanupPending(s)
+		return err
+	}
+
+	events.DispatchPending(s)
+	return nil
+}
