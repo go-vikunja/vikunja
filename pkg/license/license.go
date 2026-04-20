@@ -180,10 +180,13 @@ func Init() {
 				log.Fatalf("Could not apply cached license: %s", err)
 			}
 		} else {
-			log.Warningf("Could not reach any license server and no cached validation exists. Pro features will not be available. Please check your network connectivity.")
+			// Clear any persisted Licensed=true state from a previous run
+			// (e.g. via Redis keyvalue) so a now-unreachable server can't
+			// leave stale entitlements active.
+			degradeToFree("Could not reach any license server and no cached validation exists. Pro features will not be available.")
 		}
 	case !resp.Valid:
-		log.Warningf("License key is invalid: %s. Pro features will not be available.", resp.Message)
+		degradeToFree(fmt.Sprintf("License key is invalid: %s.", resp.Message))
 	default:
 		applyResponse(resp)
 		if err := cacheResponse(resp); err != nil {
