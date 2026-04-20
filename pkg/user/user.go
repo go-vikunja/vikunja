@@ -94,6 +94,9 @@ type User struct {
 
 	Status Status `xorm:"default 0" json:"-"`
 
+	// Whether this user is a site-wide admin. Managed via CLI only.
+	IsAdmin bool `xorm:"not null default false" json:"-"`
+
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
 	AvatarFileID   int64  `xorm:"null" json:"-"`
 
