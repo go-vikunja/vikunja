@@ -28,11 +28,32 @@ function handleChange(event: Event) {
 </template>
 
 <style lang="scss" scoped>
+// Ported from bulma-css-variables/sass/form/checkbox-radio.sass
+// (the %checkbox-radio placeholder, scoped to .checkbox since this
+// component is the sole consumer of that class).
 label.checkbox {
+	cursor: pointer;
+	line-height: 1.25;
+	position: relative;
+
 	display: flex;
 	align-items: center;
 	gap: .5rem;
 	inline-size: fit-content;
+
+	&:hover {
+		color: var(--input-hover-color);
+	}
+
+	&[disabled],
+	input[disabled] {
+		color: var(--input-disabled-color);
+		cursor: not-allowed;
+	}
+
+	input {
+		cursor: pointer;
+	}
 
 	&:not(:last-child) {
 		margin-block-end: .75rem;

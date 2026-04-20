@@ -35,7 +35,7 @@
 // imports from "bulma-css-variables/sass/form/_all";
 @import "bulma-css-variables/sass/form/shared";
 @import "bulma-css-variables/sass/form/input-textarea";
-@import "bulma-css-variables/sass/form/checkbox-radio";
+// @import "bulma-css-variables/sass/form/checkbox-radio"; // ported into FormCheckbox.vue and local scoped styles in Avatar.vue + ViewEditForm.vue
 @import "bulma-css-variables/sass/form/select";
 // @import "bulma-css-variables/sass/form/file"; // not used; every file input is hidden and triggered via a custom button
 @import "bulma-css-variables/sass/form/tools";
