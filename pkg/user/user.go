@@ -37,6 +37,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/builder"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 // IsErrUserStatusError returns true if the error is an ErrAccountDisabled or ErrAccountLocked.
@@ -94,7 +95,6 @@ type User struct {
 
 	Status Status `xorm:"default 0" json:"-"`
 
-	// Whether this user is a site-wide admin. Managed via CLI only.
 	IsAdmin bool `xorm:"not null default false" json:"-"`
 
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
@@ -662,6 +662,30 @@ func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
 		Cols("status").
 		Update(&User{Status: status})
 	return
+}
+
+// GuardLastAdmin refuses demoting or deleting the last reachable admin; only active, non-deletion-scheduled admins count since the rest cannot log in.
+// SELECT ... FOR UPDATE closes the TOCTOU race between concurrent demotions on MySQL (xorm only emits it for MySQL; SQLite serializes writes, postgres relies on serializable isolation).
+func GuardLastAdmin(s *xorm.Session, target *User) error {
+	if !target.IsAdmin {
+		return nil
+	}
+
+	session := s.Where("is_admin = ?", true).
+		And("status = ?", StatusActive).
+		And("deletion_scheduled_at IS NULL")
+	if db.Type() == schemas.MYSQL {
+		session = session.ForUpdate()
+	}
+
+	count, err := session.Count(&User{})
+	if err != nil {
+		return err
+	}
+	if count <= 1 {
+		return ErrLastAdmin{}
+	}
+	return nil
 }
 
 // UpdateUserPassword updates the password of a user
