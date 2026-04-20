@@ -106,3 +106,31 @@ func DoReadOne(_ context.Context, obj CObject, a web.Auth) (maxPermission int, e
 	events.DispatchPending(s)
 	return maxPermission, nil
 }
+
+// DoReadAll runs the ReadAll + commit pipeline for a CObject. obj may carry
+// scoping context (e.g., TaskID on LabelTask). Returns the result slice/
+// interface, the result count, and total count. Pagination header math and
+// nil-slice normalization remain the caller's responsibility.
+func DoReadAll(_ context.Context, obj CObject, a web.Auth, search string, page, perPage int) (result any, resultCount int, total int64, err error) {
+	s := db.NewSession()
+	defer func() {
+		if cerr := s.Close(); cerr != nil {
+			log.Errorf("Could not close session: %s", cerr)
+		}
+	}()
+
+	result, resultCount, total, err = obj.ReadAll(s, a, search, page, perPage)
+	if err != nil {
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return nil, 0, 0, err
+	}
+
+	if err = s.Commit(); err != nil {
+		events.CleanupPending(s)
+		return nil, 0, 0, err
+	}
+
+	events.DispatchPending(s)
+	return result, resultCount, total, nil
+}
