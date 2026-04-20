@@ -89,7 +89,7 @@ func TestHumaLabel_Create_ReadOne_via_OAS31Route(t *testing.T) {
 	var fetched map[string]any
 	require.NoError(t, json.Unmarshal(readRec.Body.Bytes(), &fetched))
 	assert.Equal(t, "spike", fetched["title"])
-	assert.Equal(t, idFloat, fetched["id"])
+	assert.InDelta(t, idFloat, fetched["id"], 0)
 }
 
 // TestHumaLabel_OpenAPISpecContainsLabelPaths proves the spec is served
