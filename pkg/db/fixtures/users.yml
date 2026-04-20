@@ -145,6 +145,15 @@
   issuer: local
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# User scheduled for deletion — used by admin reassign-owner guard tests.
+- id: 20
+  username: 'user20'
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6' # 12345678
+  email: 'user20@example.com'
+  issuer: local
+  deletion_scheduled_at: 2099-01-01 00:00:00
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
 # User with openid avatar provider for SSO avatar reset tests
 - id: 19
   username: 'user_openid_avatar'
