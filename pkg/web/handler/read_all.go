@@ -25,8 +25,6 @@ import (
 	"strconv"
 
 	vconfig "code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -91,22 +89,11 @@ func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 		perPageNumber = vconfig.ServiceMaxItemsPerPage.GetInt()
 	}
 
-	// Create the db session
-	s := db.NewSession()
-	defer func() {
-		err = s.Close()
-		if err != nil {
-			log.Errorf("Could not close session: %s", err)
-		}
-	}()
-
 	// Search
 	search := ctx.QueryParam("s")
 
-	result, resultCount, numberOfItems, err := currentStruct.ReadAll(s, currentAuth, search, pageNumber, perPageNumber)
+	result, resultCount, numberOfItems, err := DoReadAll(ctx.Request().Context(), currentStruct, currentAuth, search, pageNumber, perPageNumber)
 	if err != nil {
-		_ = s.Rollback()
-		events.CleanupPending(s)
 		return err
 	}
 
@@ -126,14 +113,6 @@ func (c *WebHandler) ReadAllWeb(ctx *echo.Context) error {
 	ctx.Response().Header().Set("x-pagination-total-pages", strconv.FormatFloat(numberOfPages, 'f', 0, 64))
 	ctx.Response().Header().Set("x-pagination-result-count", strconv.FormatInt(int64(resultCount), 10))
 	ctx.Response().Header().Set("Access-Control-Expose-Headers", "x-pagination-total-pages, x-pagination-result-count")
-
-	err = s.Commit()
-	if err != nil {
-		events.CleanupPending(s)
-		return err
-	}
-
-	events.DispatchPending(s)
 
 	// Ensure we return an empty array instead of null when there are no results.
 	// We need to use reflection here because a nil slice wrapped in an interface{}
