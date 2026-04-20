@@ -55,6 +55,7 @@ import (
 	"context"
 	"log/slog"
 	"net"
+	"net/http"
 	"strings"
 	"time"
 
@@ -313,9 +314,9 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/docs.json":                      true,
 	"/api/v1/docs":                           true,
 	"/api/v1/docs/redoc.standalone.js":       true,
-	"/api/v1/openapi":                        true,
-	"/api/v1/openapi.json":                   true,
-	"/api/v1/openapi.yaml":                   true,
+	"/api/v1/oas3/openapi":                   true,
+	"/api/v1/oas3/openapi.json":              true,
+	"/api/v1/oas3/openapi.yaml":              true,
 	"/api/v1/metrics":                        true,
 	"/api/v1/oauth/token":                    true,
 }
@@ -425,12 +426,47 @@ func registerAPIRoutes(e *echo.Echo, a *echo.Group) {
 	// ===== Huma OAS 3.1 spike wiring =====
 	// Registers the Vikunja error formatter globally and mounts a parallel
 	// Huma API on the same /api/v1 group, so the legacy routes keep working
-	// and the new registrations produce the 3.1 spec at /api/v1/openapi.json.
+	// and the new registrations produce the 3.1 spec at /api/v1/oas3/openapi.json.
 	humaapi.Install()
 	humaConfig := huma.DefaultConfig("Vikunja API (OAS 3.1 spike)", "0.0.1")
-	humaConfig.OpenAPIPath = "/openapi"
-	humaAPI := humaecho5.NewWithGroup(e, a, humaConfig)
+	// Serve the spec ourselves on the unauth group below; disabling Huma's
+	// built-in registration prevents the JWT middleware from covering it.
+	humaConfig.OpenAPIPath = ""
+	// Disable Huma's built-in docs UI — Vikunja already serves its own at
+	// /api/v1/docs (Redoc, legacy swagger 2.0).
+	humaConfig.DocsPath = ""
+	// Match the legacy handler's forgiving body contract: all fields optional
+	// unless explicitly tagged `required`. Huma defaults to strict-required
+	// for every non-omitempty field, which would reject PUT /labels bodies
+	// that omit derived timestamps / created_by. The legacy govalidator tags
+	// on the model still enforce the real rules during Create/Update.
+	humaConfig.FieldsOptionalByDefault = true
+	// Echo v5 panics on duplicate (method, path) registrations. The legacy
+	// Label routes live at /api/v1/labels, so Huma is mounted under a
+	// sub-group (/api/v1/oas3) to avoid the collision while still exercising
+	// the adapter + JWT middleware inherited from `a`. Full migration will
+	// reclaim the real paths once the legacy handlers are deleted.
+	humaGroup := a.Group("/oas3")
+	humaAPI := humaecho5.NewWithGroup(e, humaGroup, humaConfig)
 	humaapi.RegisterLabelRoutes(humaAPI)
+	// Expose the spec on the unauthenticated group so the frontend and tools
+	// can fetch it without a bearer token (matches the legacy /docs.json
+	// treatment). Echo routes registered on `n` before JWT middleware was
+	// attached to `a` escape the auth requirement.
+	n.GET("/oas3/openapi.json", func(c *echo.Context) error {
+		body, err := humaAPI.OpenAPI().MarshalJSON()
+		if err != nil {
+			return err
+		}
+		return c.Blob(http.StatusOK, "application/json", body)
+	})
+	n.GET("/oas3/openapi.yaml", func(c *echo.Context) error {
+		body, err := humaAPI.OpenAPI().YAML()
+		if err != nil {
+			return err
+		}
+		return c.Blob(http.StatusOK, "application/yaml", body)
+	})
 
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)

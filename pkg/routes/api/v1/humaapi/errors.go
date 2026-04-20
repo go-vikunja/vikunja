@@ -19,7 +19,7 @@ func (e *vikunjaError) GetStatus() int { return e.StatusCode }
 // (`{"message": "..."}` for plain errors; `{"code": X, "message": "..."}` when
 // a domain code is supplied). Registered as huma.NewError so every Huma
 // handler's error return routes through here.
-func NewVikunjaError(status int, msg string, errs ...error) huma.StatusError {
+func NewVikunjaError(status int, msg string, _ ...error) huma.StatusError {
 	return &vikunjaError{StatusCode: status, Message: msg}
 }
 

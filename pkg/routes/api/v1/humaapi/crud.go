@@ -2,13 +2,46 @@ package humaapi
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/labstack/echo/v5"
 )
+
+// translateError converts errors returned by the shared Do* pipeline (which
+// originate from Echo handlers and Vikunja domain types) into Huma
+// StatusErrors so Huma emits the right HTTP status + Vikunja-shaped body.
+// Any unrecognised error is returned as-is (Huma will wrap it as 500).
+func translateError(err error) error {
+	if err == nil {
+		return nil
+	}
+	// Vikunja domain errors — keep the {code, message} shape but lift the
+	// HTTP status.
+	var proc web.HTTPErrorProcessor
+	if errors.As(err, &proc) {
+		he := proc.HTTPError()
+		status := he.HTTPCode
+		if status == 0 {
+			status = http.StatusInternalServerError
+		}
+		ve := &vikunjaError{StatusCode: status, Code: he.Code, Message: he.Message}
+		return ve
+	}
+	// Forbidden / NotFound etc. raised via echo.NewHTTPError.
+	var hErr *echo.HTTPError
+	if errors.As(err, &hErr) {
+		msg := fmt.Sprint(hErr.Message)
+		return &vikunjaError{StatusCode: hErr.Code, Message: msg}
+	}
+	return err
+}
 
 // SingleID is the common path shape for /resource/{id} endpoints.
 type SingleID struct {
@@ -96,7 +129,7 @@ func Register[T handler.CObject](api huma.API, cfg Config[T, SingleID]) {
 			return nil, huma.Error401Unauthorized(err.Error())
 		}
 		if err := handler.DoCreate(ctx, in.Body, a); err != nil {
-			return nil, err
+			return nil, translateError(err)
 		}
 		return &bodyOutput[T]{Body: in.Body}, nil
 	})
@@ -116,7 +149,7 @@ func Register[T handler.CObject](api huma.API, cfg Config[T, SingleID]) {
 		obj := cfg.New()
 		cfg.ApplyPath(obj, in.SingleID)
 		if _, err := handler.DoReadOne(ctx, obj, a); err != nil {
-			return nil, err
+			return nil, translateError(err)
 		}
 		return &bodyOutput[T]{Body: obj}, nil
 	})
@@ -136,7 +169,7 @@ func Register[T handler.CObject](api huma.API, cfg Config[T, SingleID]) {
 		obj := cfg.New()
 		result, _, _, err := handler.DoReadAll(ctx, obj, a, in.Search, in.Page, in.PerPage)
 		if err != nil {
-			return nil, err
+			return nil, translateError(err)
 		}
 		// Best-effort cast; ReadAll returns interface{}. For the spike
 		// we assume []T. Resources returning a different list item type
@@ -163,7 +196,7 @@ func Register[T handler.CObject](api huma.API, cfg Config[T, SingleID]) {
 		}
 		cfg.ApplyPath(in.Body, in.SingleID)
 		if err := handler.DoUpdate(ctx, in.Body, a); err != nil {
-			return nil, err
+			return nil, translateError(err)
 		}
 		return &bodyOutput[T]{Body: in.Body}, nil
 	})
@@ -183,7 +216,7 @@ func Register[T handler.CObject](api huma.API, cfg Config[T, SingleID]) {
 		obj := cfg.New()
 		cfg.ApplyPath(obj, in.SingleID)
 		if err := handler.DoDelete(ctx, obj, a); err != nil {
-			return nil, err
+			return nil, translateError(err)
 		}
 		return &bodyOutput[deleteMessage]{Body: deleteMessage{Message: "Successfully deleted."}}, nil
 	})
