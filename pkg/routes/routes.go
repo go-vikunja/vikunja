@@ -77,12 +77,15 @@ import (
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
 	"code.vikunja.io/api/pkg/modules/migration/wekan"
 	"code.vikunja.io/api/pkg/plugins"
+	"code.vikunja.io/api/pkg/modules/humaecho5"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	"code.vikunja.io/api/pkg/routes/api/v1/humaapi"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
 	ws "code.vikunja.io/api/pkg/websocket"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -288,7 +291,7 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// API Routes
 	a := e.Group("/api/v1")
-	registerAPIRoutes(a)
+	registerAPIRoutes(e, a)
 
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
@@ -310,6 +313,9 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/docs.json":                      true,
 	"/api/v1/docs":                           true,
 	"/api/v1/docs/redoc.standalone.js":       true,
+	"/api/v1/openapi":                        true,
+	"/api/v1/openapi.json":                   true,
+	"/api/v1/openapi.yaml":                   true,
 	"/api/v1/metrics":                        true,
 	"/api/v1/oauth/token":                    true,
 }
@@ -332,7 +338,7 @@ func collectRoutesForAPITokens(e *echo.Echo) {
 	}
 }
 
-func registerAPIRoutes(a *echo.Group) {
+func registerAPIRoutes(e *echo.Echo, a *echo.Group) {
 
 	// Prevent browsers from caching API responses. Without an explicit
 	// Cache-Control header browsers may heuristically cache JSON responses
@@ -415,6 +421,16 @@ func registerAPIRoutes(a *echo.Group) {
 
 	// Middleware to collect metrics
 	setupMetricsMiddleware(a)
+
+	// ===== Huma OAS 3.1 spike wiring =====
+	// Registers the Vikunja error formatter globally and mounts a parallel
+	// Huma API on the same /api/v1 group, so the legacy routes keep working
+	// and the new registrations produce the 3.1 spec at /api/v1/openapi.json.
+	humaapi.Install()
+	humaConfig := huma.DefaultConfig("Vikunja API (OAS 3.1 spike)", "0.0.1")
+	humaConfig.OpenAPIPath = "/openapi"
+	humaAPI := humaecho5.NewWithGroup(e, a, humaConfig)
+	humaapi.RegisterLabelRoutes(humaAPI)
 
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)
