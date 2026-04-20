@@ -146,6 +146,100 @@
 									</Dropdown>
 								</div>
 
+								<div
+									v-if="canCreateTasks"
+									class="bucket-top"
+								>
+									<div
+										v-if="showNewTaskInput === bucket.id"
+										class="field add-task-inline"
+										:class="{'has-task-color': newTaskColor !== '', 'has-light-text': newTaskColor !== '' && !colorIsDark(newTaskColor)}"
+										:style="newTaskColor ? {'--task-color': newTaskColor} : undefined"
+										@focusout="handleAddTaskFocusOut($event, bucket.id)"
+									>
+										<div
+											class="control add-task-inline__control"
+											:class="{'is-loading': loading || taskLoading}"
+										>
+											<input
+												v-model="newTaskText"
+												v-focus.always
+												class="input"
+												:disabled="loading || taskLoading || undefined"
+												:placeholder="$t('project.kanban.addTaskPlaceholder')"
+												type="text"
+												@focusin="() => newTaskInputFocused = true"
+												@keyup.enter="addTaskToBucket(bucket.id)"
+												@keyup.esc="toggleShowNewTaskInput(bucket.id)"
+											>
+											<button
+												v-if="newTaskText.trim() !== ''"
+												type="button"
+												class="add-task-inline__submit"
+												:disabled="loading || taskLoading || undefined"
+												:title="$t('misc.save')"
+												@click="addTaskToBucket(bucket.id)"
+											>
+												<Icon icon="check" />
+											</button>
+										</div>
+										<p
+											v-if="newTaskError[bucket.id] && newTaskText === ''"
+											class="help is-danger"
+										>
+											{{ $t('project.create.addTitleRequired') }}
+										</p>
+										<div
+											v-if="hasAnyInlineQuickAddField"
+											class="inline-quick-add-chip-bar"
+										>
+											<button
+												v-for="chip in inlineChips"
+												:key="chip.field"
+												type="button"
+												class="inline-quick-add-chip"
+												:class="[`inline-quick-add-chip--${chip.modifier}`, {'is-set': chip.isSet}]"
+												:disabled="loading || taskLoading || undefined"
+												@click.stop="toggleInlinePopup(chip.popup, $event)"
+											>
+												<span
+													v-if="chip.colorValue"
+													class="inline-quick-add-chip__swatch"
+													:style="{background: chip.colorValue}"
+												/>
+												<Icon
+													v-else
+													:icon="chip.icon"
+													class="inline-quick-add-chip__icon"
+													:class="`inline-quick-add-chip__icon--${chip.modifier}`"
+												/>
+												<span>{{ chip.label }}</span>
+												<span
+													v-if="chip.isSet"
+													class="inline-quick-add-chip__clear"
+													@click.stop="clearInlineField(chip.field)"
+												>
+													<Icon icon="times" />
+												</span>
+											</button>
+										</div>
+									</div>
+									<XButton
+										v-else
+										v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
+										class="is-fullwidth has-text-centered"
+										:shadow="false"
+										icon="plus"
+										variant="secondary"
+										:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
+										@click="toggleShowNewTaskInput(bucket.id)"
+									>
+										{{
+											bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
+										}}
+									</XButton>
+								</div>
+
 								<draggable
 									v-bind="DRAG_OPTIONS"
 									:handle="taskDragHandle"
@@ -161,56 +255,6 @@
 									@start="handleTaskDragStart"
 									@end="updateTaskPosition"
 								>
-									<template #footer>
-										<div
-											v-if="canCreateTasks"
-											class="bucket-footer"
-										>
-											<div
-												v-if="showNewTaskInput === bucket.id"
-												class="field"
-											>
-												<div
-													class="control"
-													:class="{'is-loading': loading || taskLoading}"
-												>
-													<input
-														v-model="newTaskText"
-														v-focus.always
-														class="input"
-														:disabled="loading || taskLoading || undefined"
-														:placeholder="$t('project.kanban.addTaskPlaceholder')"
-														type="text"
-														@focusout="toggleShowNewTaskInput(bucket.id)"
-														@focusin="() => newTaskInputFocused = true"
-														@keyup.enter="addTaskToBucket(bucket.id)"
-														@keyup.esc="toggleShowNewTaskInput(bucket.id)"
-													>
-												</div>
-												<p
-													v-if="newTaskError[bucket.id] && newTaskText === ''"
-													class="help is-danger"
-												>
-													{{ $t('project.create.addTitleRequired') }}
-												</p>
-											</div>
-											<XButton
-												v-else
-												v-tooltip="bucket.limit > 0 && bucket.count >= bucket.limit ? $t('project.kanban.bucketLimitReached') : ''"
-												class="is-fullwidth has-text-centered"
-												:shadow="false"
-												icon="plus"
-												variant="secondary"
-												:disabled="bucket.limit > 0 && bucket.count >= bucket.limit"
-												@click="toggleShowNewTaskInput(bucket.id)"
-											>
-												{{
-													bucket.tasks.length === 0 ? $t('project.kanban.addTask') : $t('project.kanban.addAnotherTask')
-												}}
-											</XButton>
-										</div>
-									</template>
-
 									<template #item="{element: task}">
 										<div
 											class="task-item"
@@ -286,10 +330,97 @@
 			</div>
 		</template>
 	</ProjectWrapper>
+	<Teleport to="body">
+		<div
+			v-if="openInlinePopup !== null"
+			ref="inlinePopupRef"
+			class="inline-quick-add-popup"
+			:class="[
+				`inline-quick-add-popup--${popupVariant}`,
+				openInlinePopup === 'reminder' ? 'inline-quick-add-popup--wide' : null,
+				isPopupReady ? null : 'inline-quick-add-popup--measuring',
+			]"
+			:style="{top: `${inlinePopupPosition.top}px`, left: `${inlinePopupPosition.left}px`}"
+		>
+			<DatepickerInline
+				v-if="openInlinePopup === 'due'"
+				v-model="newTaskDueDate"
+			/>
+			<DatepickerInline
+				v-else-if="openInlinePopup === 'start'"
+				v-model="newTaskStartDate"
+			/>
+			<ul
+				v-else-if="openInlinePopup === 'priority'"
+				class="inline-quick-add-priority-options"
+			>
+				<li
+					v-for="option in PRIORITY_OPTIONS"
+					:key="option.value"
+				>
+					<button
+						type="button"
+						class="inline-quick-add-priority-option"
+						:class="{'is-active': newTaskPriority === option.value}"
+						@click="selectPriority(option.value)"
+					>
+						{{ $t(option.labelKey) }}
+					</button>
+				</li>
+			</ul>
+			<EditAssignees
+				v-else-if="openInlinePopup === 'assignee'"
+				v-model="newTaskAssignees"
+				:task-id="0"
+				:project-id="projectIdWithFallback"
+			/>
+			<EditLabels
+				v-else-if="openInlinePopup === 'labels'"
+				v-model="newTaskLabels"
+				:task-id="0"
+				:creatable="false"
+			/>
+			<Reminders
+				v-else-if="openInlinePopup === 'reminder'"
+				v-model="newTaskReminders"
+				:default-relative-to="reminderDefaultRelativeTo"
+			/>
+			<DatepickerInline
+				v-else-if="openInlinePopup === 'endDate'"
+				v-model="newTaskEndDate"
+			/>
+			<ColorPicker
+				v-else-if="openInlinePopup === 'color'"
+				v-model="newTaskColor"
+			/>
+			<div
+				v-else-if="openInlinePopup === 'percentDone'"
+				class="inline-quick-add-percent-done"
+			>
+				<input
+					v-model.number="newTaskPercentDone"
+					type="range"
+					min="0"
+					max="100"
+					step="10"
+					class="inline-quick-add-percent-done__slider"
+				>
+				<span class="inline-quick-add-percent-done__label">{{ newTaskPercentDone }}%</span>
+			</div>
+			<XButton
+				v-if="openInlinePopup !== 'priority'"
+				class="inline-quick-add-popup__confirm"
+				:shadow="false"
+				@click="openInlinePopup = null"
+			>
+				{{ $t('misc.confirm') }}
+			</XButton>
+		</div>
+	</Teleport>
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref, watch, toRef} from 'vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch, toRef} from 'vue'
 import {useRouter} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 import {useI18n} from 'vue-i18n'
@@ -301,6 +432,11 @@ import BucketModel from '@/models/bucket'
 
 import type {IBucket} from '@/modelTypes/IBucket'
 import type {ITask} from '@/modelTypes/ITask'
+import type {IUser} from '@/modelTypes/IUser'
+import type {ILabel} from '@/modelTypes/ILabel'
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
+import type {IReminderPeriodRelativeTo} from '@/types/IReminderPeriodRelativeTo'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 import {useBaseStore} from '@/stores/base'
 import {useTaskStore} from '@/stores/tasks'
@@ -310,6 +446,28 @@ import {useAuthStore} from '@/stores/auth'
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
+import DatepickerInline from '@/components/input/DatepickerInline.vue'
+import EditAssignees from '@/components/tasks/partials/EditAssignees.vue'
+import EditLabels from '@/components/tasks/partials/EditLabels.vue'
+import Reminders from '@/components/tasks/partials/Reminders.vue'
+import ColorPicker from '@/components/input/ColorPicker.vue'
+import {colorIsDark} from '@/helpers/color/colorIsDark'
+import {DEFAULT_INLINE_QUICK_ADD_FIELDS} from '@/modelTypes/IUserSettings'
+import {formatDateShort} from '@/helpers/time/formatDate'
+import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
+
+const props = defineProps<{
+	isLoadingProject: boolean,
+	projectId: number,
+	viewId: IProjectView['id'],
+}>()
+const PRIORITY_LABEL_KEYS: Record<number, string> = {
+	1: 'low',
+	2: 'medium',
+	3: 'high',
+	4: 'urgent',
+	5: 'doNow',
+}
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 
@@ -333,12 +491,6 @@ import ProjectViewService from '@/services/projectViews'
 import ProjectViewModel from '@/models/projectView'
 import TaskBucketService from '@/services/taskBucket'
 import TaskBucketModel from '@/models/taskBucket'
-
-const props = defineProps<{
-	isLoadingProject: boolean,
-	projectId: number,
-	viewId: IProjectView['id'],
-}>()
 
 const projectId = toRef(props, 'projectId')
 
@@ -387,6 +539,286 @@ const newBucketTitle = ref('')
 const showNewBucketInput = ref(false)
 const newTaskError = ref<{ [id: IBucket['id']]: boolean }>({})
 const newTaskInputFocused = ref(false)
+
+// Inline quick-add field state. Only one bucket's add-task form is open at
+// a time, so a single value per field is enough.
+const newTaskDueDate = ref<Date | null>(null)
+const newTaskStartDate = ref<Date | null>(null)
+const newTaskEndDate = ref<Date | null>(null)
+const newTaskPriority = ref<number>(0)
+const newTaskAssignees = ref<IUser[]>([])
+const newTaskLabels = ref<ILabel[]>([])
+const newTaskReminders = ref<ITaskReminder[]>([])
+const newTaskColor = ref<string>('')
+const newTaskPercentDone = ref<number>(0)
+
+type InlinePopup = 'due' | 'start' | 'endDate' | 'assignee' | 'labels' | 'reminder' | 'priority' | 'color' | 'percentDone' | null
+const openInlinePopup = ref<InlinePopup>(null)
+const inlinePopupRef = ref<HTMLElement | null>(null)
+const inlinePopupPosition = ref<{top: number, left: number}>({top: 0, left: 0})
+// Hides the popup for its first render frame so the position clamp can
+// run before the user sees it. Without this, the popup briefly flashes
+// at the un-clamped position and then jumps into place.
+const isPopupReady = ref(false)
+
+const PRIORITY_OPTIONS = [
+	{value: 0, labelKey: 'task.priority.unset'},
+	{value: 1, labelKey: 'task.priority.low'},
+	{value: 2, labelKey: 'task.priority.medium'},
+	{value: 3, labelKey: 'task.priority.high'},
+	{value: 4, labelKey: 'task.priority.urgent'},
+	{value: 5, labelKey: 'task.priority.doNow'},
+] as const
+
+function selectPriority(value: number) {
+	newTaskPriority.value = value
+	openInlinePopup.value = null
+}
+
+// Dates render the two-column shortcuts+calendar layout; the pickers
+// (assignee/labels/reminder) use the simpler padded card layout. With the
+// add-task form moved to the top of the bucket, both have plenty of room
+// to expand downward, so a viewport-scale fallback is no longer needed.
+const popupVariant = computed(() => {
+	if (openInlinePopup.value === 'due' || openInlinePopup.value === 'start' || openInlinePopup.value === 'endDate') {
+		return 'date'
+	}
+	return 'picker'
+})
+
+// Default new reminders relative to the due date if one is set; otherwise
+// leave absolute so the reminder detail input picks its own default.
+const reminderDefaultRelativeTo = computed<IReminderPeriodRelativeTo | null>(
+	() => newTaskDueDate.value !== null ? REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE : null,
+)
+
+const anchorChipRect = ref<DOMRect | null>(null)
+let popupResizeObserver: ResizeObserver | null = null
+
+function toggleInlinePopup(which: Exclude<InlinePopup, null>, event: MouseEvent) {
+	if (openInlinePopup.value === which) {
+		openInlinePopup.value = null
+		return
+	}
+	const chip = event.currentTarget as HTMLElement
+	const rect = chip.getBoundingClientRect()
+	anchorChipRect.value = rect
+	// Initial placement; clampInlinePopupToViewport refines it once the
+	// popup has rendered and we know its actual dimensions.
+	inlinePopupPosition.value = {
+		top: rect.bottom + 4,
+		left: rect.left,
+	}
+	isPopupReady.value = false
+	openInlinePopup.value = which
+	nextTick(() => {
+		clampInlinePopupToViewport()
+		// Reveal after the clamp has written the final position so the
+		// popup never renders at the wrong spot.
+		isPopupReady.value = true
+		observePopupResize()
+	})
+}
+
+function clampInlinePopupToViewport() {
+	const popup = inlinePopupRef.value
+	const chipRect = anchorChipRect.value
+	if (!popup || !chipRect) {
+		return
+	}
+	const margin = 8
+	const popupRect = popup.getBoundingClientRect()
+	const top = chipRect.bottom + 4
+	let left = chipRect.left
+
+	// Shift left so the right edge stays inside the viewport. If the popup
+	// is wider than the viewport itself (rare — very narrow windows), pin
+	// it to the left margin; CSS max-inline-size keeps it from overflowing
+	// the right edge in that case.
+	if (left + popupRect.width + margin > window.innerWidth) {
+		left = Math.max(margin, window.innerWidth - popupRect.width - margin)
+	}
+
+	inlinePopupPosition.value = {top, left}
+}
+
+function observePopupResize() {
+	disconnectPopupResize()
+	const popup = inlinePopupRef.value
+	if (!popup || typeof ResizeObserver === 'undefined') {
+		return
+	}
+	// The popup can grow after its initial render (Multiselect dropdown
+	// opens, ReminderDetail switches to the date+time form, etc.). Re-clamp
+	// on every resize so horizontal overflow is always corrected.
+	// Defer the position update to the next animation frame so we never
+	// write to layout inside the ResizeObserver callback itself — doing so
+	// triggers "ResizeObserver loop completed with undelivered notifications".
+	popupResizeObserver = new ResizeObserver(() => {
+		requestAnimationFrame(() => clampInlinePopupToViewport())
+	})
+	popupResizeObserver.observe(popup)
+}
+
+function disconnectPopupResize() {
+	if (popupResizeObserver) {
+		popupResizeObserver.disconnect()
+		popupResizeObserver = null
+	}
+}
+
+watch(openInlinePopup, (value) => {
+	if (value === null) {
+		disconnectPopupResize()
+		anchorChipRect.value = null
+		isPopupReady.value = false
+	}
+})
+
+// Auto-close the assignee picker after a selection is made. Picking an
+// assignee is usually a single action; leaving the picker open makes the
+// form feel stuck. Users who want more assignees can reopen the chip.
+watch(() => newTaskAssignees.value.length, (newLen, oldLen) => {
+	if (newLen > oldLen && openInlinePopup.value === 'assignee') {
+		openInlinePopup.value = null
+	}
+})
+
+function onDocumentClickForInlinePopup(e: MouseEvent) {
+	if (openInlinePopup.value !== null && inlinePopupRef.value) {
+		closeWhenClickedOutside(e, inlinePopupRef.value, () => {
+			openInlinePopup.value = null
+		})
+	}
+}
+
+onMounted(() => document.addEventListener('click', onDocumentClickForInlinePopup))
+onBeforeUnmount(() => {
+	document.removeEventListener('click', onDocumentClickForInlinePopup)
+	disconnectPopupResize()
+})
+
+const enabledInlineQuickAddFields = computed(
+	() => authStore.settings.frontendSettings.inlineQuickAddFields ?? DEFAULT_INLINE_QUICK_ADD_FIELDS,
+)
+const showInlineAssignee = computed(() => enabledInlineQuickAddFields.value.includes('assignee'))
+const showInlineDueDate = computed(() => enabledInlineQuickAddFields.value.includes('dueDate'))
+const showInlineStartDate = computed(() => enabledInlineQuickAddFields.value.includes('startDate'))
+const showInlinePriority = computed(() => enabledInlineQuickAddFields.value.includes('priority'))
+const showInlineLabels = computed(() => enabledInlineQuickAddFields.value.includes('labels'))
+const showInlineReminder = computed(() => enabledInlineQuickAddFields.value.includes('reminder'))
+const showInlineEndDate = computed(() => enabledInlineQuickAddFields.value.includes('endDate'))
+const showInlineColor = computed(() => enabledInlineQuickAddFields.value.includes('color'))
+const showInlinePercentDone = computed(() => enabledInlineQuickAddFields.value.includes('percentDone'))
+const hasAnyInlineQuickAddField = computed(() => enabledInlineQuickAddFields.value.length > 0)
+
+const assigneeChipLabel = computed(() => {
+	const count = newTaskAssignees.value.length
+	if (count === 0) return t('task.attributes.assignees')
+	if (count === 1) return newTaskAssignees.value[0].name || newTaskAssignees.value[0].username
+	return t('task.attributes.assigneesN', count)
+})
+
+const labelsChipLabel = computed(() => {
+	const count = newTaskLabels.value.length
+	if (count === 0) return t('task.attributes.labels')
+	if (count === 1) return newTaskLabels.value[0].title
+	return t('task.attributes.labelsN', count)
+})
+
+const reminderChipLabel = computed(() => {
+	const count = newTaskReminders.value.length
+	if (count === 0) return t('task.attributes.reminders')
+	return t('task.attributes.remindersN', count)
+})
+
+type InlineChip = {
+	field: string
+	modifier: string
+	icon: string
+	popup: Exclude<InlinePopup, null>
+	isSet: boolean
+	label: string
+	colorValue?: string
+}
+
+const CHIP_CONFIG: Record<string, {modifier: string, icon: string, popup: Exclude<InlinePopup, null>}> = {
+	assignee: {modifier: 'assignee', icon: 'user', popup: 'assignee'},
+	dueDate: {modifier: 'due', icon: 'calendar', popup: 'due'},
+	startDate: {modifier: 'start', icon: 'play', popup: 'start'},
+	endDate: {modifier: 'end', icon: 'stop', popup: 'endDate'},
+	priority: {modifier: 'priority', icon: 'exclamation', popup: 'priority'},
+	labels: {modifier: 'labels', icon: 'tags', popup: 'labels'},
+	reminder: {modifier: 'reminder', icon: 'bell', popup: 'reminder'},
+	color: {modifier: 'color', icon: 'fill-drip', popup: 'color'},
+	percentDone: {modifier: 'percent', icon: 'percent', popup: 'percentDone'},
+}
+
+const inlineChips = computed<InlineChip[]>(() => {
+	const chipLabel: Record<string, () => string> = {
+		assignee: () => assigneeChipLabel.value,
+		dueDate: () => newTaskDueDate.value !== null ? formatDateShort(newTaskDueDate.value) : t('task.attributes.dueDate'),
+		startDate: () => newTaskStartDate.value !== null ? formatDateShort(newTaskStartDate.value) : t('task.attributes.startDate'),
+		endDate: () => newTaskEndDate.value !== null ? formatDateShort(newTaskEndDate.value) : t('task.attributes.endDate'),
+		priority: () => newTaskPriority.value !== 0 ? t(`task.priority.${PRIORITY_LABEL_KEYS[newTaskPriority.value]}`) : t('task.attributes.priority'),
+		labels: () => labelsChipLabel.value,
+		reminder: () => reminderChipLabel.value,
+		color: () => t('task.attributes.color'),
+		percentDone: () => newTaskPercentDone.value > 0 ? `${newTaskPercentDone.value}%` : t('task.attributes.percentDone'),
+	}
+	const chipIsSet: Record<string, () => boolean> = {
+		assignee: () => newTaskAssignees.value.length > 0,
+		dueDate: () => newTaskDueDate.value !== null,
+		startDate: () => newTaskStartDate.value !== null,
+		endDate: () => newTaskEndDate.value !== null,
+		priority: () => newTaskPriority.value !== 0,
+		labels: () => newTaskLabels.value.length > 0,
+		reminder: () => newTaskReminders.value.length > 0,
+		color: () => newTaskColor.value !== '',
+		percentDone: () => newTaskPercentDone.value > 0,
+	}
+
+	return enabledInlineQuickAddFields.value.map(field => {
+		const cfg = CHIP_CONFIG[field]
+		return {
+			field,
+			modifier: cfg.modifier,
+			icon: cfg.icon,
+			popup: cfg.popup,
+			isSet: chipIsSet[field](),
+			label: chipLabel[field](),
+			colorValue: field === 'color' && newTaskColor.value ? newTaskColor.value : undefined,
+		}
+	})
+})
+
+function clearInlineField(field: string) {
+	const clearMap: Record<string, () => void> = {
+		assignee: () => { newTaskAssignees.value = [] },
+		dueDate: () => { newTaskDueDate.value = null },
+		startDate: () => { newTaskStartDate.value = null },
+		endDate: () => { newTaskEndDate.value = null },
+		priority: () => { newTaskPriority.value = 0 },
+		labels: () => { newTaskLabels.value = [] },
+		reminder: () => { newTaskReminders.value = [] },
+		color: () => { newTaskColor.value = '' },
+		percentDone: () => { newTaskPercentDone.value = 0 },
+	}
+	clearMap[field]?.()
+}
+
+function resetNewTaskInlineFields() {
+	newTaskDueDate.value = null
+	newTaskStartDate.value = null
+	newTaskEndDate.value = null
+	newTaskPriority.value = 0
+	newTaskAssignees.value = []
+	newTaskLabels.value = []
+	newTaskReminders.value = []
+	newTaskColor.value = ''
+	newTaskPercentDone.value = 0
+	openInlinePopup.value = null
+}
 
 const showSetLimitInput = ref(false)
 const collapsedBuckets = ref<CollapsedBuckets>({})
@@ -656,10 +1088,35 @@ function toggleShowNewTaskInput(bucketId: IBucket['id']) {
 	if (loading.value || taskLoading.value) {
 		return
 	}
-	showNewTaskInput.value = showNewTaskInput.value === bucketId 
+	showNewTaskInput.value = showNewTaskInput.value === bucketId
 		? null
 		: bucketId
 	newTaskInputFocused.value = false
+	// Whether the user is opening or closing the form, start from a clean
+	// slate. This also fixes a stale-title bug where dismissing the form
+	// (by clicking outside) left newTaskText around, so the next opening
+	// pre-filled the old draft.
+	newTaskText.value = ''
+	newTaskError.value[bucketId] = false
+	resetNewTaskInlineFields()
+}
+
+function handleAddTaskFocusOut(event: FocusEvent, bucketId: IBucket['id']) {
+	// Inline quick-add popups are teleported to <body>, so focus legitimately
+	// moves outside this container while one is open. Treat the popup as part
+	// of the add-task workflow and keep the form alive until the popup closes.
+	if (openInlinePopup.value !== null) {
+		return
+	}
+	const container = event.currentTarget as HTMLElement | null
+	const nextFocus = event.relatedTarget as HTMLElement | null
+	if (container && nextFocus && container.contains(nextFocus)) {
+		return
+	}
+	if (nextFocus && inlinePopupRef.value?.contains(nextFocus)) {
+		return
+	}
+	toggleShowNewTaskInput(bucketId)
 }
 
 async function addTaskToBucket(bucketId: IBucket['id']) {
@@ -669,18 +1126,59 @@ async function addTaskToBucket(bucketId: IBucket['id']) {
 	}
 	newTaskError.value[bucketId] = false
 
+	// Capture inline field values before resetting so the follow-up attach
+	// calls aren't affected by the UI state being cleared.
+	const capturedAssignees = showInlineAssignee.value ? [...newTaskAssignees.value] : []
+	const capturedLabels = showInlineLabels.value ? [...newTaskLabels.value] : []
+	const capturedReminders = showInlineReminder.value ? [...newTaskReminders.value] : []
+
 	const task = await taskStore.createNewTask({
 		title: newTaskText.value,
 		bucketId,
 		projectId: projectIdWithFallback.value,
+		dueDate: showInlineDueDate.value && newTaskDueDate.value !== null
+			? newTaskDueDate.value
+			: undefined,
+		startDate: showInlineStartDate.value && newTaskStartDate.value !== null
+			? newTaskStartDate.value
+			: undefined,
+		endDate: showInlineEndDate.value && newTaskEndDate.value !== null
+			? newTaskEndDate.value
+			: undefined,
+		priority: showInlinePriority.value && newTaskPriority.value !== 0
+			? newTaskPriority.value
+			: undefined,
+		hexColor: showInlineColor.value && newTaskColor.value !== ''
+			? newTaskColor.value
+			: undefined,
+		percentDone: showInlinePercentDone.value && newTaskPercentDone.value > 0
+			? newTaskPercentDone.value
+			: undefined,
 	})
-	newTaskText.value = ''
 	kanbanStore.addTaskToBucket(task)
 	scrollTaskContainerToTop(bucketId)
-
-	const bucket = kanbanStore.getBucketById(bucketId)
-	if (bucket && bucket.limit && bucket.count >= bucket.limit) {
+	// Close the add-task form after a successful submission. Upstream keeps
+	// it open for rapid entry; we intentionally diverge because a new task
+	// popping into the bucket while the user is still looking at the form
+	// was jarring — each submit should be an explicit action.
+	// Also clears newTaskText and the inline quick-add fields via the
+	// shared reset path.
+	if (showNewTaskInput.value === bucketId) {
 		toggleShowNewTaskInput(bucketId)
+	}
+
+	// Attach multi-valued fields that the create endpoint doesn't accept
+	// directly. Sequential to keep ordering stable and errors isolated; the
+	// task itself is already saved, so a failed extra attach should not
+	// block the rest.
+	for (const user of capturedAssignees) {
+		await taskStore.addAssignee({user, taskId: task.id})
+	}
+	for (const label of capturedLabels) {
+		await taskStore.addLabel({label, taskId: task.id})
+	}
+	if (capturedReminders.length > 0) {
+		await taskStore.update({...task, reminders: capturedReminders})
 	}
 }
 
@@ -921,6 +1419,441 @@ function unCollapseBucket(bucket: IBucket) {
 	--loader-border-color: var(--grey-500);
   }
 }
+
+.add-task-inline {
+	padding: .5rem;
+	background: var(--grey-200);
+	border-radius: $radius;
+	transition: background-color $transition;
+
+	&.has-task-color {
+		background-color: var(--task-color);
+
+		.inline-quick-add-chip,
+		.inline-quick-add-chip__icon,
+		.add-task-inline__submit {
+			color: rgba(0, 0, 0, .7);
+		}
+
+		.inline-quick-add-chip.is-set {
+			background: rgba(255, 255, 255, .35);
+			color: rgba(0, 0, 0, .8);
+		}
+
+		:deep(.input) {
+			color: rgba(0, 0, 0, .85);
+
+			&::placeholder {
+				color: rgba(0, 0, 0, .45);
+			}
+		}
+	}
+
+	&.has-light-text {
+		.inline-quick-add-chip,
+		.inline-quick-add-chip__icon,
+		.add-task-inline__submit {
+			color: rgba(255, 255, 255, .85);
+		}
+
+		.inline-quick-add-chip.is-set {
+			background: rgba(255, 255, 255, .2);
+			color: #ffffff;
+		}
+
+		:deep(.input) {
+			color: #ffffff;
+
+			&::placeholder {
+				color: rgba(255, 255, 255, .6);
+			}
+		}
+	}
+
+	// Let the title input blend into the container rather than stand on its own.
+	:deep(.input) {
+		background: transparent;
+		border-color: transparent;
+		box-shadow: none;
+		// Reserve space on the right for the inline submit button.
+		padding-inline-end: 2.25rem;
+
+		&:focus {
+			border-color: var(--primary);
+		}
+	}
+}
+
+.add-task-inline__control {
+	position: relative;
+}
+
+.add-task-inline__submit {
+	position: absolute;
+	inset-block-start: 50%;
+	inset-inline-end: .25rem;
+	transform: translateY(-50%);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	padding: 0;
+	border: 0;
+	border-radius: $radius;
+	background: transparent;
+	color: var(--success);
+	cursor: pointer;
+	transition: background-color $transition, color $transition;
+
+	&:hover:not(:disabled) {
+		background: var(--success-light);
+		color: var(--success-dark);
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: .5;
+	}
+}
+
+.inline-quick-add-chip-bar {
+	// Two-column grid with equal-width tracks. Chips stretch to fill their
+	// column so full rows occupy the whole bar (not floating as an island),
+	// and a partial last row lands in column 1 — left-aligned half-width.
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: .375rem;
+	margin-block-start: .5rem;
+}
+
+.inline-quick-add-chip {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: .4rem;
+	padding: .3rem .65rem;
+	border: 1px solid transparent;
+	border-radius: $radius;
+	background: transparent;
+	color: var(--grey-700);
+	font-size: .8rem;
+	font-weight: 500;
+	line-height: 1.2;
+	cursor: pointer;
+	transition: background-color $transition, color $transition, border-color $transition, box-shadow $transition;
+
+	&:hover:not(:disabled) {
+		background: var(--white);
+		color: var(--grey-900);
+		box-shadow: 0 1px 3px hsla(var(--grey-900-hsl), .12);
+	}
+
+	&:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 2px var(--primary-light);
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: .5;
+	}
+}
+
+// Semantic icon tint, applied whether the chip is set or not.
+.inline-quick-add-chip__icon {
+	font-size: .85rem;
+
+	&--due {
+		color: var(--danger);
+	}
+
+	&--start {
+		color: var(--success);
+	}
+
+	&--priority {
+		color: var(--warning);
+	}
+
+	&--assignee {
+		color: var(--primary);
+	}
+
+	&--labels {
+		color: var(--primary);
+	}
+
+	&--reminder {
+		color: var(--primary);
+	}
+
+	&--end {
+		color: var(--grey-500);
+	}
+
+	&--color {
+		color: var(--grey-500);
+	}
+
+	&--percent {
+		color: var(--grey-500);
+	}
+}
+
+.inline-quick-add-chip__swatch {
+	display: inline-block;
+	inline-size: .85rem;
+	block-size: .85rem;
+	border-radius: .2rem;
+	border: 1px solid var(--grey-300);
+	flex-shrink: 0;
+}
+
+.inline-quick-add-chip__clear {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	position: absolute;
+	inset-inline-end: 0;
+	inset-block-start: 0;
+	block-size: 100%;
+	padding-inline: .25rem;
+	font-size: .65rem;
+	background: transparent;
+	border-radius: 0 $radius $radius 0;
+	z-index: 1;
+	color: inherit;
+
+	&:hover {
+		color: var(--danger);
+	}
+}
+
+.inline-quick-add-chip:hover .inline-quick-add-chip__clear {
+	display: flex;
+}
+
+// Set state: chip fills with the field's semantic light background and
+// text shifts to the matching dark tone. No border — the color does the work.
+.inline-quick-add-chip--due.is-set {
+	background: var(--danger-light);
+	color: var(--danger-dark);
+}
+
+.inline-quick-add-chip--start.is-set {
+	background: var(--success-light);
+	color: var(--success-dark);
+}
+
+.inline-quick-add-chip--priority.is-set {
+	background: var(--warning-light);
+	color: var(--warning-dark);
+}
+
+.inline-quick-add-chip--assignee.is-set,
+.inline-quick-add-chip--labels.is-set,
+.inline-quick-add-chip--reminder.is-set,
+.inline-quick-add-chip--percent.is-set {
+	background: var(--primary-light);
+	color: var(--primary-dark);
+}
+
+.inline-quick-add-chip--end.is-set {
+	background: var(--success-light);
+	color: var(--success-dark);
+}
+
+.inline-quick-add-chip--color.is-set {
+	background: var(--primary-light);
+	color: var(--primary-dark);
+}
+
+.inline-quick-add-popup {
+	position: fixed;
+	z-index: 50;
+	padding: .5rem;
+	background: var(--white);
+	border: 1px solid var(--grey-200);
+	border-radius: $radius;
+	box-shadow: var(--shadow-md);
+}
+
+// Picker variant hosts assignee/label/reminder/priority components. The
+// default compact width suits assignee, labels and priority. Reminder
+// opts in to the wider variant so its nested two-column date form fits.
+.inline-quick-add-popup--picker.inline-quick-add-popup--wide {
+	inline-size: min(28rem, calc(100vw - 2rem));
+}
+
+// Keep the popup in the DOM but invisible until the clamp has positioned
+// it. Using visibility (not display) preserves getBoundingClientRect so
+// the clamp can measure the real size.
+.inline-quick-add-popup--measuring {
+	visibility: hidden;
+}
+
+.inline-quick-add-priority-options {
+	display: flex;
+	flex-direction: column;
+	gap: .125rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.inline-quick-add-priority-option {
+	inline-size: 100%;
+	padding: .5rem .75rem;
+	border: 0;
+	border-radius: $radius;
+	background: transparent;
+	color: var(--text);
+	text-align: start;
+	font-size: .9rem;
+	cursor: pointer;
+
+	&:hover {
+		background: var(--primary-light);
+		color: var(--primary-dark);
+	}
+
+	&.is-active {
+		background: var(--primary-light);
+		color: var(--primary-dark);
+		font-weight: 600;
+	}
+}
+
+.inline-quick-add-percent-done {
+	display: flex;
+	align-items: center;
+	gap: .75rem;
+	padding: .5rem .25rem;
+
+	&__slider {
+		flex: 1;
+		accent-color: var(--primary);
+	}
+
+	&__label {
+		min-inline-size: 3rem;
+		text-align: end;
+		font-weight: 600;
+		font-size: .9rem;
+	}
+}
+
+.inline-quick-add-popup--picker {
+	inline-size: min(18rem, calc(100vw - 2rem));
+
+	:deep(.color-picker-container) {
+		justify-content: start;
+	}
+
+	// The nested reminder Popup's .popup container defaults to natural
+	// inline position (right-of-trigger), which can push the date form
+	// past the outer popup's right edge. Pin it to the outer popup's
+	// left edge instead so it stays within our already-clamped bounds.
+	// !important is needed because Popup.vue's scoped .popup style wins
+	// the specificity tie otherwise.
+	:deep(.popup) {
+		inset-inline-start: 0 !important;
+		inset-inline-end: auto !important;
+		inline-size: 100%;
+	}
+
+	// Constrain the nested card to the outer popup's content width so it
+	// cannot overflow horizontally. The card's own scoped 310px width
+	// (from ReminderDetail) is overridden here.
+	:deep(.reminder-options-popup) {
+		inline-size: 100% !important;
+		max-inline-size: 100%;
+	}
+
+	:deep(.reminder-options-popup .datepicker-inline) {
+		flex-direction: row;
+		gap: .75rem;
+		align-items: stretch;
+	}
+
+	:deep(.reminder-options-popup .datepicker-inline__shortcuts) {
+		display: flex;
+		flex-direction: column;
+		flex-shrink: 0;
+	}
+
+	:deep(.reminder-options-popup .datepicker-inline__shortcuts .datepicker__quick-select-date) {
+		flex: 1 1 auto;
+		block-size: auto;
+	}
+
+	:deep(.reminder-options-popup .flatpickr-container) {
+		flex: 0 1 auto;
+	}
+
+	:deep(.reminder-options-popup .flatpickr-container > input) {
+		display: none;
+	}
+
+	@media (width <= 520px) {
+		:deep(.reminder-options-popup .datepicker-inline) {
+			flex-direction: column;
+		}
+	}
+}
+
+.inline-quick-add-popup--date {
+	display: flex;
+	flex-direction: column;
+	max-inline-size: calc(100vw - 1rem);
+}
+
+// Two-column layout: shortcuts (auto width) on the left, calendar on the
+// right. flex: 1 on each shortcut makes them share the full calendar
+// height, so the shortcut column stretches exactly as tall as the
+// calendar+time regardless of whether 4, 5 or 6 shortcuts are rendered.
+.inline-quick-add-popup--date :deep(.datepicker-inline) {
+	flex-direction: row;
+	gap: .75rem;
+	align-items: stretch;
+}
+
+.inline-quick-add-popup--date :deep(.datepicker-inline__shortcuts) {
+	display: flex;
+	flex-direction: column;
+	flex-shrink: 0;
+}
+
+.inline-quick-add-popup--date :deep(.datepicker-inline__shortcuts .datepicker__quick-select-date) {
+	flex: 1 1 auto;
+	block-size: auto;
+}
+
+.inline-quick-add-popup--date :deep(.flatpickr-container) {
+	flex: 0 1 auto;
+}
+
+// Hide only flatpickr's top-level text input (duplicates the picker
+// value as plain text). Time hour/minute inputs live inside
+// .flatpickr-calendar and must stay visible — hence the direct-child
+// selector.
+.inline-quick-add-popup--date :deep(.flatpickr-container > input) {
+	display: none;
+}
+
+.inline-quick-add-popup__confirm {
+	inline-size: 100%;
+	margin-block-start: .5rem;
+}
+
+// Fall back to vertical (original) layout when the viewport is too narrow
+// to reasonably fit two columns.
+@media (width <= 520px) {
+	.inline-quick-add-popup--date :deep(.datepicker-inline) {
+		flex-direction: column;
+	}
+}
 </style>
 
 
@@ -1051,7 +1984,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 			margin-inline-end: calc((#{$bucket-width} - #{$bucket-header-height} - #{$bucket-right-margin}) * -1);
 			cursor: pointer;
 
-			.tasks, .bucket-footer {
+			.tasks, .bucket-top {
 				display: none;
 			}
 		}
@@ -1090,15 +2023,13 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 		padding: .5rem;
 	}
 
-	.bucket-footer {
+	.bucket-top {
 		position: sticky;
-		inset-block-end: 0;
+		inset-block-start: 0;
+		z-index: 2;
 		block-size: min-content;
 		padding: .5rem;
 		background-color: var(--grey-100);
-		border-end-start-radius: $radius;
-		border-end-end-radius: $radius;
-		transform: none;
 
 		.button {
 			background-color: transparent;

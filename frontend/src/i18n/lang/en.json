@@ -1019,6 +1019,9 @@
     },
     "attributes": {
       "assignees": "Assignees",
+      "assigneesN": "{count} assignee | {count} assignees",
+      "labelsN": "{count} label | {count} labels",
+      "remindersN": "{count} reminder | {count} reminders",
       "color": "Color",
       "created": "Created",
       "createdBy": "Created By",
