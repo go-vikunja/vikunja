@@ -500,9 +500,12 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 		return nil, err
 	}
 
+	isAdmin, _ := claims["is_admin"].(bool)
+
 	return &User{
 		ID:       userID,
 		Username: username,
+		IsAdmin:  isAdmin,
 	}, nil
 }
 
