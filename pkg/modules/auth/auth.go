@@ -17,6 +17,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -25,6 +26,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/humaecho5"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -365,4 +367,17 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 		IsLongSession:   session.IsLongSession,
 		SessionID:       session.ID,
 	}, nil
+}
+
+// GetAuthFromContext retrieves the authenticated web.Auth from a Go
+// context.Context. This bridges Huma handlers (which receive a plain
+// context.Context) to Vikunja's echo-based JWT flow. The humaecho5
+// adapter stashes the underlying *echo.Context under
+// humaecho5.EchoContextKey before invoking the Huma handler.
+func GetAuthFromContext(ctx context.Context) (web.Auth, error) {
+	ec, ok := ctx.Value(humaecho5.EchoContextKey).(*echo.Context)
+	if !ok {
+		return nil, fmt.Errorf("no echo.Context on request context; are you calling GetAuthFromContext from a Huma handler dispatched by humaecho5?")
+	}
+	return GetAuthFromClaims(ec)
 }
