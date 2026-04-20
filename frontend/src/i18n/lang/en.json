@@ -1473,5 +1473,69 @@
       "months": "month|months",
       "years": "year|years"
     }
+  },
+  "admin": {
+    "title": "Administration",
+    "labels": {
+      "users": "Users",
+      "tasks": "Tasks"
+    },
+    "overview": {
+      "shares": "Shares",
+      "linkShares": "Link shares",
+      "teamShares": "Team shares",
+      "userShares": "User shares",
+      "linkSharesShort": "link",
+      "teamSharesShort": "team",
+      "userSharesShort": "user",
+      "version": "Version",
+      "license": "License",
+      "licenseValidUntil": "Valid until",
+      "licenseExpiresIn": "in {days} days",
+      "licenseLastVerified": "Last verified",
+      "licenseNever": "never",
+      "licenseLastCheckFailed": "last check failed",
+      "licenseFeatures": "Features",
+      "licenseInstance": "Instance ID",
+      "licenseManage": "Manage"
+    },
+    "searchUsersPlaceholder": "Search by username or email…",
+    "users": {
+      "status": "Status",
+      "details": "Details",
+      "detailsTitle": "User: {username}",
+      "issuer": "Issuer",
+      "issuerLocal": "Local",
+      "issuerUrl": "Issuer URL",
+      "subject": "Subject",
+      "statusActive": "Active",
+      "statusEmailConfirmation": "Email confirmation required",
+      "statusDisabled": "Disabled",
+      "statusLocked": "Account locked",
+      "isAdminLabel": "Administrator",
+      "addUser": "Add user",
+      "createTitle": "Create user",
+      "nameLabel": "Name",
+      "skipEmailConfirm": "Skip email confirmation",
+      "createSubmit": "Create user",
+      "saveButton": "Save changes",
+      "createdSuccess": "User {username} created.",
+      "updatedSuccess": "User {username} updated.",
+      "deletedSuccess": "User {username} deleted.",
+      "deleteScheduledSuccess": "User {username} will receive a confirmation email to schedule the deletion.",
+      "confirmDeleteTitle": "Delete user?",
+      "confirmDeleteIntro": "How should user {username} be deleted?",
+      "deleteModeScheduled": "Schedule deletion",
+      "deleteModeScheduledHelp": "Schedule deletion sends the user a confirmation email, mirroring a self-initiated account deletion.",
+      "deleteModeNow": "Delete now",
+      "deleteModeNowHelp": "Delete now removes the user and all their data immediately. This cannot be undone."
+    },
+    "projects": {
+      "ownerLabel": "Owner",
+      "reassignOwner": "Reassign owner",
+      "reassignTitle": "Reassign {title}",
+      "reassignedSuccess": "Project owner reassigned.",
+      "newOwnerLabel": "New owner"
+    }
   }
 }
