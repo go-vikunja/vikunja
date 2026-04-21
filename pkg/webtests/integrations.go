@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -341,4 +342,144 @@ func (h *webHandlerTest) testUpdateWithLinkShare(queryParams url.Values, urlPara
 func (h *webHandlerTest) testDeleteWithLinkShare(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
 	hndl := h.getHandler()
 	return newTestRequestWithLinkShare(h.t, http.MethodDelete, hndl.DeleteWeb, h.linkShare, "", queryParams, urlParams)
+}
+
+// webHandlerTestV2 mirrors webHandlerTest's signatures but dispatches
+// through the full Echo+Huma stack, so v2 tests read side-by-side with v1.
+// urlParams keys match v1 so the same map can be reused.
+type webHandlerTestV2 struct {
+	user     *user.User
+	basePath string
+	idParam  string // matches v1 urlParams keys, e.g. "label"
+	t        *testing.T
+	e        *echo.Echo
+}
+
+// v2HTTPError implements web.HTTPErrorProcessor so existing
+// getHTTPErrorCode / assertHandlerErrorCode helpers work against v2.
+type v2HTTPError struct {
+	httpCode int
+	code     int
+	message  string
+}
+
+func (e *v2HTTPError) Error() string {
+	return e.message
+}
+
+func (e *v2HTTPError) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: e.httpCode,
+		Code:     e.code,
+		Message:  e.message,
+	}
+}
+
+// v2ProblemJSON is the subset of the RFC 9457 body the harness reads.
+type v2ProblemJSON struct {
+	Status int    `json:"status"`
+	Title  string `json:"title"`
+	Detail string `json:"detail"`
+	// Domain errors with web.HTTPErrorProcessor carry a numeric code; 0 otherwise.
+	Code int `json:"code"`
+}
+
+// newV2Error wraps a >=400 recorder so v1-style assertions keep working.
+// Non-JSON / non-problem bodies fall back to the raw body string.
+func newV2Error(rec *httptest.ResponseRecorder) error {
+	msg := strings.TrimSpace(rec.Body.String())
+	var body v2ProblemJSON
+	if jsonErr := json.Unmarshal(rec.Body.Bytes(), &body); jsonErr == nil {
+		if body.Detail != "" {
+			msg = body.Detail
+		} else if body.Title != "" {
+			msg = body.Title
+		}
+	}
+	return &v2HTTPError{
+		httpCode: rec.Code,
+		code:     body.Code,
+		message:  msg,
+	}
+}
+
+func (h *webHandlerTestV2) ensureEnv() error {
+	if h.e != nil {
+		return nil
+	}
+	e, err := setupTestEnv()
+	if err != nil {
+		return err
+	}
+	h.e = e
+	return nil
+}
+
+// buildURL assembles basePath[/{id}]?query using the idParam lookup.
+func (h *webHandlerTestV2) buildURL(queryParams url.Values, urlParams map[string]string, withID bool) string {
+	u := h.basePath
+	if withID {
+		id := ""
+		if h.idParam != "" {
+			id = urlParams[h.idParam]
+		}
+		if id == "" {
+			// Fallback for tests that pass a differently-named key or omit idParam.
+			for _, v := range urlParams {
+				id = v
+				break
+			}
+		}
+		u += "/" + id
+	}
+	if q := queryParams.Encode(); q != "" {
+		u += "?" + q
+	}
+	return u
+}
+
+func (h *webHandlerTestV2) serve(method, path, payload string) (*httptest.ResponseRecorder, error) {
+	require.NoError(h.t, h.ensureEnv())
+	token, err := auth.NewUserJWTAuthtoken(h.user, "test-session-id")
+	require.NoError(h.t, err)
+	var reader *strings.Reader
+	if payload != "" {
+		reader = strings.NewReader(payload)
+	} else {
+		reader = strings.NewReader("")
+	}
+	req := httptest.NewRequest(method, path, reader)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+	h.e.ServeHTTP(rec, req)
+	if rec.Code >= 400 {
+		return rec, newV2Error(rec)
+	}
+	return rec, nil
+}
+
+func (h *webHandlerTestV2) testReadAllWithUser(queryParams url.Values, urlParams map[string]string) (*httptest.ResponseRecorder, error) {
+	return h.serve(http.MethodGet, h.buildURL(queryParams, urlParams, false), "")
+}
+
+func (h *webHandlerTestV2) testReadOneWithUser(queryParams url.Values, urlParams map[string]string) (*httptest.ResponseRecorder, error) {
+	return h.serve(http.MethodGet, h.buildURL(queryParams, urlParams, true), "")
+}
+
+// v2 uses POST for create; otherwise identical to v1's testCreateWithUser.
+func (h *webHandlerTestV2) testCreateWithUser(queryParams url.Values, urlParams map[string]string, payload string) (*httptest.ResponseRecorder, error) {
+	return h.serve(http.MethodPost, h.buildURL(queryParams, urlParams, false), payload)
+}
+
+func (h *webHandlerTestV2) testUpdateWithUser(queryParams url.Values, urlParams map[string]string, payload string) (*httptest.ResponseRecorder, error) {
+	return h.serve(http.MethodPut, h.buildURL(queryParams, urlParams, true), payload)
+}
+
+func (h *webHandlerTestV2) testDeleteWithUser(queryParams url.Values, urlParams map[string]string, payload ...string) (*httptest.ResponseRecorder, error) {
+	pl := ""
+	if len(payload) > 0 {
+		pl = payload[0]
+	}
+	return h.serve(http.MethodDelete, h.buildURL(queryParams, urlParams, true), pl)
 }
