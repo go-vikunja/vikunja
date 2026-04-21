@@ -959,6 +959,35 @@ test.describe('Task', () => {
 			await expect(page.locator('.bucket .task .footer .icon svg.fa-paperclip')).toBeVisible()
 		})
 
+		test('Can delete an attachment', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await uploadAttachmentAndVerify(page, tasks[0].id)
+
+			// The delete control is the third `.attachment-info-meta-button`
+			// (download, copy URL, delete) inside the attachment row. Attachments.vue
+			// requests `trash-alt` but FontAwesome renders it as `trash-can`.
+			const deleteButton = page.locator(
+				'.attachments .attachments .files button.attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
+			).first()
+			await expect(deleteButton).toBeVisible()
+
+			const deleted = page.waitForResponse(r =>
+				/\/tasks\/\d+\/attachments\/\d+/.test(r.url()) && r.request().method() === 'DELETE',
+			)
+			await deleteButton.click()
+
+			// Confirm in the modal ("Do it!").
+			await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+			await deleted
+
+			await expect(page.locator('.attachments .attachments .files button.attachment')).toHaveCount(0)
+		})
+
 		test('Can check items off a checklist', async ({authenticatedPage: page}) => {
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
