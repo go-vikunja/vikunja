@@ -26,4 +26,36 @@ test.describe('Task recurrence', () => {
 		const body = r.request().postDataJSON()
 		expect(body.repeat_after).toBe(86400)
 	})
+
+	test('completing a recurring task reopens with advanced due date', async ({
+		authenticatedPage: page, apiContext, userToken,
+	}) => {
+		const originalDue = new Date(Date.now() + 86_400_000)
+		const [task] = await TaskFactory.create(1, {
+			id: 1,
+			project_id: 1,
+			due_date: originalDue.toISOString(),
+			repeat_after: 86400,
+		}, false)
+
+		await page.goto(`/tasks/${task.id}`)
+
+		const completed = page.waitForResponse(r =>
+			r.url().includes(`/tasks/${task.id}`) && r.request().method() === 'POST',
+		)
+		await page.locator('.task-view .action-buttons .button').filter({hasText: 'Mark task done!'}).click()
+		await completed
+
+		// Fetch fresh state from the API to verify the backend regenerated the task.
+		const resp = await apiContext.get(`tasks/${task.id}`, {
+			headers: {Authorization: `Bearer ${userToken}`},
+		})
+		expect(resp.ok()).toBe(true)
+		const refreshed = await resp.json()
+		expect(refreshed.done).toBe(false)
+		const newDue = new Date(refreshed.due_date).getTime()
+		// addRepeatIntervalToTime: when the original due date is still in the
+		// future, the backend advances it by exactly one interval (86400s here).
+		expect(newDue - originalDue.getTime()).toBeCloseTo(86_400_000, -3)
+	})
 })
