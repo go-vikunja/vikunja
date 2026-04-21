@@ -3,7 +3,7 @@ import {ProjectFactory} from '../../factories/project'
 import {TaskFactory} from '../../factories/task'
 
 test.describe('Task recurrence', () => {
-	test.beforeEach(async ({authenticatedPage}) => {
+	test.beforeEach(async () => {
 		await ProjectFactory.create(1, {id: 1})
 	})
 
