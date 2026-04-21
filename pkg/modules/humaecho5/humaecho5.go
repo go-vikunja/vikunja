@@ -139,6 +139,24 @@ type router interface {
 type echoAdapter struct {
 	http.Handler
 	router router
+	// groupPrefix is the Echo group's URL prefix (e.g. "/api/v2"). When
+	// set, internal dispatches (ServeHTTP calls from huma machinery such
+	// as autopatch) whose path does not already start with the prefix get
+	// the prefix prepended before routing — this keeps autopatch's
+	// relative path resolution working even when the adapter is mounted
+	// on a sub-group.
+	groupPrefix string
+}
+
+func (a *echoAdapter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if a.groupPrefix != "" && !strings.HasPrefix(r.URL.Path, a.groupPrefix) {
+		r = r.Clone(r.Context())
+		r.URL.Path = a.groupPrefix + r.URL.Path
+		if r.URL.RawPath != "" {
+			r.URL.RawPath = a.groupPrefix + r.URL.RawPath
+		}
+	}
+	a.Handler.ServeHTTP(w, r)
 }
 
 func (a *echoAdapter) Handle(op *huma.Operation, handler func(huma.Context)) {
@@ -158,7 +176,12 @@ func New(r *echo.Echo, config huma.Config) huma.API {
 	return huma.NewAPI(config, &echoAdapter{Handler: r, router: r})
 }
 
-// NewWithGroup creates a new Huma API using the provided Echo router and group.
-func NewWithGroup(r *echo.Echo, g *echo.Group, config huma.Config) huma.API {
-	return huma.NewAPI(config, &echoAdapter{Handler: r, router: g})
+// NewWithGroup creates a new Huma API using the provided Echo router and
+// group. Handlers registered through the returned API land on `g`, so they
+// inherit the group's middleware stack. `groupPrefix` must equal the
+// prefix `g` was constructed with (e.g. "/api/v2"); the adapter uses it
+// to rewrite internal Huma dispatches (notably autopatch's GET+PUT round
+// trip) back onto the absolute URLs Echo routes on.
+func NewWithGroup(r *echo.Echo, g *echo.Group, groupPrefix string, config huma.Config) huma.API {
+	return huma.NewAPI(config, &echoAdapter{Handler: r, router: g, groupPrefix: groupPrefix})
 }
