@@ -45,4 +45,10 @@ test.describe('Sessions', () => {
 		})
 		expect(after.status()).toBe(401)
 	})
+
+	test('current session cannot be deleted from the UI', async ({authenticatedPage: page}) => {
+		await gotoUserSettings(page, 'sessions')
+		const currentRow = page.locator('tr', {has: page.locator('.tag.is-primary')})
+		await expect(currentRow.getByRole('button', {name: 'Delete'})).toHaveCount(0)
+	})
 })
