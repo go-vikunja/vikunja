@@ -58,4 +58,20 @@ test.describe('Task recurrence', () => {
 		// future, the backend advances it by exactly one interval (86400s here).
 		expect(newDue - originalDue.getTime()).toBeCloseTo(86_400_000, -3)
 	})
+
+	test('monthly repeat mode hides the amount field', async ({authenticatedPage: page}) => {
+		const [task] = await TaskFactory.create(1, {id: 1, project_id: 1}, false)
+		await page.goto(`/tasks/${task.id}`)
+
+		// Reveal the RepeatAfter component (hidden until the user activates it)
+		await page.getByRole('button', {name: 'Set Repeating Interval'}).click()
+
+		await expect(page.locator('#repeatMode')).toBeVisible()
+		// Amount input is visible in the default repeat mode
+		await expect(page.locator('input[placeholder*="amount" i]')).toHaveCount(1)
+
+		await page.locator('#repeatMode').selectOption({label: 'Monthly'})
+
+		await expect(page.locator('input[placeholder*="amount" i]')).toHaveCount(0)
+	})
 })
