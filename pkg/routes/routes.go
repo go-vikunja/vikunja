@@ -81,6 +81,7 @@ import (
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	adminapi "code.vikunja.io/api/pkg/routes/api/v1/admin"
 	"code.vikunja.io/api/pkg/routes/caldav"
+	vmiddleware "code.vikunja.io/api/pkg/routes/middleware"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
 	ws "code.vikunja.io/api/pkg/websocket"
@@ -188,6 +189,10 @@ func NewEcho() *echo.Echo {
 
 	// panic recover
 	e.Use(middleware.Recover())
+
+	// Normalize PHP-style `foo[]=...` query params to `foo=...` before any
+	// handler binds them. Runs globally so both /api/v1 and /api/v2 benefit.
+	e.Use(vmiddleware.NormalizeArrayParams())
 
 	setupSentry(e)
 
