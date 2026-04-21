@@ -2185,7 +2185,13 @@ func (Generate) ScalarBundle() error {
 	url := fmt.Sprintf("https://unpkg.com/@scalar/api-reference@%s/dist/browser/standalone.js", version)
 
 	fmt.Printf("Downloading Scalar bundle %s from %s\n", version, url)
-	resp, err := http.Get(url) //nolint:gosec // This is a dev-only mage task and the URL is hard-coded above.
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil) //nolint:gosec // This is a dev-only mage task and the URL is hard-coded above.
+	if err != nil {
+		return fmt.Errorf("build scalar bundle request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("download scalar bundle: %w", err)
 	}
