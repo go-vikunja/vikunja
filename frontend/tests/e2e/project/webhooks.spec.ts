@@ -2,7 +2,7 @@ import {test, expect} from '../../support/fixtures'
 import {ProjectFactory} from '../../factories/project'
 
 test.describe('Project webhooks', () => {
-	test.beforeEach(async ({authenticatedPage, currentUser}) => {
+	test.beforeEach(async ({currentUser}) => {
 		await ProjectFactory.create(1, {id: 1, owner_id: currentUser.id}, false)
 	})
 
