@@ -35,7 +35,11 @@ test.describe('Sessions', () => {
 		await gotoUserSettings(page, 'sessions')
 		await page.locator('tr', {hasText: /192\.0\.2\.5/})
 			.getByRole('button', {name: 'Delete'}).click()
+		const deleted = page.waitForResponse(r =>
+			/\/user\/sessions\/[^/]+/.test(r.url()) && r.request().method() === 'DELETE',
+		)
 		await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+		await deleted
 		await expect(page.locator('table.table tbody tr')).toHaveCount(1)
 
 		// After revoke, the refresh request must fail. Refresh tokens live in the
