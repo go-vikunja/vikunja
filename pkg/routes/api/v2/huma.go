@@ -25,6 +25,11 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// GroupPrefix is the URL prefix the Echo group for /api/v2 is mounted at.
+// Exported for tests and to keep humaecho5's internal dispatch aligned
+// with the real router paths.
+const GroupPrefix = "/api/v2"
+
 // NewAPI mounts Huma on the /api/v2 group and returns the Huma API for
 // route registration. Configuration lives in this function; per-resource
 // Register* calls happen in sibling files (labels.go, projects.go, ...).
@@ -41,7 +46,7 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	// govalidator enforces real field-level rules later).
 	cfg.FieldsOptionalByDefault = true
 
-	api := humaecho5.NewWithGroup(e, g, cfg)
+	api := humaecho5.NewWithGroup(e, g, GroupPrefix, cfg)
 	if api.OpenAPI().Components.SecuritySchemes == nil {
 		api.OpenAPI().Components.SecuritySchemes = map[string]*huma.SecurityScheme{}
 	}
@@ -50,6 +55,13 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 		Scheme:       "bearer",
 		BearerFormat: "JWT",
 	}
-	autopatch.AutoPatch(api)
 	return api
+}
+
+// EnableAutoPatch registers a PATCH operation for every resource that has
+// both a GET and a PUT already registered. Must be called AFTER all
+// per-resource Register* calls — AutoPatch walks the already-registered
+// operations to synthesize its PATCH counterparts.
+func EnableAutoPatch(api huma.API) {
+	autopatch.AutoPatch(api)
 }

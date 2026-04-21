@@ -22,7 +22,6 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -52,8 +51,11 @@ type labelReadBody struct {
 	Body *models.Label
 }
 
+// labelListBody wraps the paginated list response. The v1 ReadAll returns
+// the hydrated LabelWithTaskID rows (label fields plus the task_id it's
+// attached to) and we keep that shape here for contract parity.
 type labelListBody struct {
-	Body Paginated[*models.Label]
+	Body Paginated[*models.LabelWithTaskID]
 }
 
 type emptyBody struct{}
@@ -114,29 +116,29 @@ func labelsList(ctx context.Context, in *struct {
 	PerPage int    `query:"per_page" default:"50" minimum:"1" maximum:"1000"`
 	Q       string `query:"q"`
 }) (*labelListBody, error) {
-	a, err := auth.GetAuthFromContext(ctx)
+	a, err := authFromCtx(ctx)
 	if err != nil {
-		return nil, huma.Error401Unauthorized(err.Error())
+		return nil, err
 	}
 	result, _, total, err := handler.DoReadAll(ctx, &models.Label{}, a, in.Q, in.Page, in.PerPage)
 	if err != nil {
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	// Concrete type cast — prevents the generic-any silent-empty trap the
 	// spike hit, where an `interface{}` slice marshalled to an empty JSON
 	// array without a loud failure.
-	items, ok := result.([]*models.Label)
+	items, ok := result.([]*models.LabelWithTaskID)
 	if !ok {
-		return nil, fmt.Errorf("labels.ReadAll returned unexpected type %T (expected []*models.Label)", result)
+		return nil, fmt.Errorf("labels.ReadAll returned unexpected type %T (expected []*models.LabelWithTaskID)", result)
 	}
 	if items == nil {
-		items = []*models.Label{}
+		items = []*models.LabelWithTaskID{}
 	}
 	totalPages := int64(0)
 	if in.PerPage > 0 {
 		totalPages = (total + int64(in.PerPage) - 1) / int64(in.PerPage)
 	}
-	return &labelListBody{Body: Paginated[*models.Label]{
+	return &labelListBody{Body: Paginated[*models.LabelWithTaskID]{
 		Items:      items,
 		Total:      total,
 		Page:       in.Page,
@@ -149,17 +151,19 @@ func labelsRead(ctx context.Context, in *struct {
 	ID int64 `path:"id"`
 	conditional.Params
 }) (*labelReadBody, error) {
-	a, err := auth.GetAuthFromContext(ctx)
+	a, err := authFromCtx(ctx)
 	if err != nil {
-		return nil, huma.Error401Unauthorized(err.Error())
+		return nil, err
 	}
 	label := &models.Label{ID: in.ID}
 	if _, err := handler.DoReadOne(ctx, label, a); err != nil {
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	// ETag derives from the ID + last-updated timestamp so any edit
-	// invalidates downstream caches. RFC 9110 requires the quoted form.
-	etag := fmt.Sprintf(`"%d-%d"`, label.ID, label.Updated.UnixNano())
+	// invalidates downstream caches. conditional.PreconditionFailed
+	// expects the unquoted value; the response header uses the RFC 9110
+	// quoted form.
+	etag := fmt.Sprintf("%d-%d", label.ID, label.Updated.UnixNano())
 	if in.HasConditionalParams() {
 		// PreconditionFailed returns a 304 (reads) or 412 (writes) when
 		// conditions aren't met; nil means continue.
@@ -167,18 +171,18 @@ func labelsRead(ctx context.Context, in *struct {
 			return nil, err
 		}
 	}
-	return &labelReadBody{ETag: etag, Body: label}, nil
+	return &labelReadBody{ETag: `"` + etag + `"`, Body: label}, nil
 }
 
 func labelsCreate(ctx context.Context, in *struct {
 	Body models.Label
 }) (*labelBody, error) {
-	a, err := auth.GetAuthFromContext(ctx)
+	a, err := authFromCtx(ctx)
 	if err != nil {
-		return nil, huma.Error401Unauthorized(err.Error())
+		return nil, err
 	}
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	return &labelBody{Body: &in.Body}, nil
 }
@@ -187,13 +191,13 @@ func labelsUpdate(ctx context.Context, in *struct {
 	ID   int64 `path:"id"`
 	Body models.Label
 }) (*labelBody, error) {
-	a, err := auth.GetAuthFromContext(ctx)
+	a, err := authFromCtx(ctx)
 	if err != nil {
-		return nil, huma.Error401Unauthorized(err.Error())
+		return nil, err
 	}
 	in.Body.ID = in.ID // URL wins over body
 	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	return &labelBody{Body: &in.Body}, nil
 }
@@ -201,12 +205,12 @@ func labelsUpdate(ctx context.Context, in *struct {
 func labelsDelete(ctx context.Context, in *struct {
 	ID int64 `path:"id"`
 }) (*emptyBody, error) {
-	a, err := auth.GetAuthFromContext(ctx)
+	a, err := authFromCtx(ctx)
 	if err != nil {
-		return nil, huma.Error401Unauthorized(err.Error())
+		return nil, err
 	}
 	if err := handler.DoDelete(ctx, &models.Label{ID: in.ID}, a); err != nil {
-		return nil, err
+		return nil, translateDomainError(err)
 	}
 	return &emptyBody{}, nil
 }
