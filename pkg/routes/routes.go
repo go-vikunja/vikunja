@@ -327,6 +327,8 @@ var unauthenticatedAPIPaths = map[string]bool{
 
 	"/api/v2/openapi.json":              true,
 	"/api/v2/openapi.yaml":              true,
+	"/api/v2/openapi-3.0.json":          true,
+	"/api/v2/openapi-3.0.yaml":          true,
 	"/api/v2/docs":                      true,
 	"/api/v2/docs/scalar.standalone.js": true,
 }
@@ -350,15 +352,24 @@ func collectRoutesForAPITokens(e *echo.Echo) {
 }
 
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Huma and per-resource
-// route registrations land here in later sub-phases.
+// route registrations land here.
+//
+// The JWT middleware is attached before any route registration so Huma's
+// own spec routes (/openapi.{json,yaml}) and our Scalar docs pages are
+// covered by the same middleware stack as the resource handlers. Routes
+// listed in `unauthenticatedAPIPaths` are skipped by `SetupTokenMiddleware`
+// so the spec + docs remain public.
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
-	_ = apiv2.NewAPI(e, a)
+	a.Use(SetupTokenMiddleware())
+
+	api := apiv2.NewAPI(e, a)
 
 	// Scalar docs UI — embedded, no CDN. See pkg/routes/api/v2/docs.go.
 	a.GET("/docs", apiv2.ScalarUI)
 	a.GET("/docs/scalar.standalone.js", apiv2.ScalarJS)
 
-	// Resource registrations go here in later sub-phases.
+	// Resource registrations.
+	apiv2.RegisterLabelRoutes(api)
 }
 
 func registerAPIRoutes(a *echo.Group) {
