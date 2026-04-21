@@ -1,6 +1,8 @@
 import {test, expect} from '../../../support/fixtures'
 import {authenticator} from 'otplib'
 import {gotoUserSettings} from '../../../support/userSettings'
+import {TotpFactory} from '../../../factories/totp'
+import {TEST_PASSWORD} from '../../../support/constants'
 
 test.describe('TOTP', () => {
 	test('enrolls TOTP and forces re-login', async ({authenticatedPage: page}) => {
@@ -18,5 +20,19 @@ test.describe('TOTP', () => {
 
 		// TOTP.vue:152 calls authStore.logout() on confirm success.
 		await expect(page).toHaveURL(/\/login/)
+	})
+
+	test('disables an enabled TOTP', async ({authenticatedPage: page, currentUser}) => {
+		await TotpFactory.create(1, {user_id: currentUser.id}, false)
+		await gotoUserSettings(page, 'totp')
+
+		await page.getByRole('button', {name: 'Disable'}).click()
+		await page.locator('#currentPassword').fill(TEST_PASSWORD)
+
+		// Second "Disable" inside the form submits it.
+		await page.locator('.card').getByRole('button', {name: 'Disable'}).last().click()
+
+		await expect(page.locator('.global-notification')).toContainText('Success')
+		await expect(page.getByRole('button', {name: 'Enroll'})).toBeVisible()
 	})
 })
