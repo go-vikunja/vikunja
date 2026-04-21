@@ -32,10 +32,22 @@ func NormalizeArrayParams() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
 			req := (*c).Request()
-			if !strings.Contains(req.URL.RawQuery, "[]=") {
+			rq := req.URL.RawQuery
+			if rq == "" {
 				return next(c)
 			}
-			values, err := url.ParseQuery(req.URL.RawQuery)
+			// Fast path: skip parsing when the query carries no `[]` suffix in
+			// any of its possible encodings (raw or percent-encoded by browsers
+			// via URLSearchParams).
+			if !strings.Contains(rq, "[]=") &&
+				!strings.Contains(rq, "%5B%5D=") &&
+				!strings.Contains(rq, "%5b%5d=") &&
+				!strings.HasSuffix(rq, "[]") &&
+				!strings.HasSuffix(rq, "%5B%5D") &&
+				!strings.HasSuffix(rq, "%5b%5d") {
+				return next(c)
+			}
+			values, err := url.ParseQuery(rq)
 			if err != nil {
 				return next(c) // malformed; let downstream handle it
 			}

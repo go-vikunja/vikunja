@@ -27,21 +27,37 @@ import (
 )
 
 func TestNormalizeArrayParams(t *testing.T) {
-	e := echo.New()
-	e.Use(middleware.NormalizeArrayParams())
-	e.GET("/", func(c *echo.Context) error {
-		got := (*c).Request().URL.RawQuery
-		return (*c).String(200, got)
-	})
+	cases := []struct {
+		name     string
+		rawQuery string
+	}{
+		{"literal brackets", "foo[]=a&foo[]=b&bar=x"},
+		{"percent-encoded uppercase", "foo%5B%5D=a&foo%5B%5D=b&bar=x"},
+		{"percent-encoded lowercase", "foo%5b%5d=a&foo%5b%5d=b&bar=x"},
+		{"mixed plain and bracketed", "foo=a&foo%5B%5D=b&bar=x"},
+	}
 
-	req := httptest.NewRequest("GET", "/?foo[]=a&foo[]=b&bar=x", nil)
-	rec := httptest.NewRecorder()
-	e.ServeHTTP(rec, req)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			e := echo.New()
+			e.Use(middleware.NormalizeArrayParams())
+			e.GET("/", func(c *echo.Context) error {
+				got := (*c).Request().URL.RawQuery
+				return (*c).String(200, got)
+			})
 
-	assert.Equal(t, 200, rec.Code)
-	// foo[] should have been rewritten to foo; relative order preserved
-	assert.Contains(t, rec.Body.String(), "foo=a")
-	assert.Contains(t, rec.Body.String(), "foo=b")
-	assert.Contains(t, rec.Body.String(), "bar=x")
-	assert.NotContains(t, rec.Body.String(), "foo[]")
+			req := httptest.NewRequest("GET", "/?"+tc.rawQuery, nil)
+			rec := httptest.NewRecorder()
+			e.ServeHTTP(rec, req)
+
+			assert.Equal(t, 200, rec.Code)
+			body := rec.Body.String()
+			assert.Contains(t, body, "foo=a")
+			assert.Contains(t, body, "foo=b")
+			assert.Contains(t, body, "bar=x")
+			assert.NotContains(t, body, "foo[]")
+			assert.NotContains(t, body, "%5B%5D")
+			assert.NotContains(t, body, "%5b%5d")
+		})
+	}
 }
