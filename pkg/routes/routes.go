@@ -384,6 +384,10 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 
 	api := apiv2.NewAPI(e, a)
 
+	// Scalar docs UI — embedded, no CDN. See pkg/routes/api/v2/docs.go.
+	a.GET("/docs", apiv2.ScalarUI)
+	a.GET("/docs/scalar.standalone.js", apiv2.ScalarJS)
+
 	// Resource registrations.
 	apiv2.RegisterLabelRoutes(api)
 
