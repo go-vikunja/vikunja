@@ -21,6 +21,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/humaecho5"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/autopatch"
 	"github.com/labstack/echo/v5"
 )
 
@@ -49,5 +50,6 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 		Scheme:       "bearer",
 		BearerFormat: "JWT",
 	}
+	autopatch.AutoPatch(api)
 	return api
 }
