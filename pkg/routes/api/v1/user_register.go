@@ -69,20 +69,12 @@ func RegisterUser(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Insert the user
-	newUser, err := user.CreateUser(s, &user.User{
+	newUser, err := models.RegisterUser(s, &user.User{
 		Username: userIn.Username,
 		Password: userIn.Password,
 		Email:    userIn.Email,
 		Language: userIn.Language,
 	})
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	// Create their initial project
-	err = models.CreateNewProjectForUser(s, newUser)
 	if err != nil {
 		_ = s.Rollback()
 		return err

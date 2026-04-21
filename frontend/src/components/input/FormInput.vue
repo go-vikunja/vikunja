@@ -22,6 +22,7 @@ defineOptions({inheritAttrs: false})
 
 const fallbackId = useId()
 const inputId = computed(() => props.id ?? fallbackId)
+const errorId = computed(() => props.error ? `${inputId.value}-error` : undefined)
 
 const inputClasses = computed(() => [
 	'input',
@@ -67,11 +68,15 @@ defineExpose({
 		v-bind="{ ...$attrs, ...inputBindings }"
 		:class="inputClasses"
 		:disabled="disabled || undefined"
+		:aria-invalid="error ? true : undefined"
+		:aria-describedby="errorId"
 		@input="handleInput"
 	>
 	<p
 		v-if="error"
+		:id="errorId"
 		class="help is-danger"
+		role="alert"
 	>
 		{{ error }}
 	</p>

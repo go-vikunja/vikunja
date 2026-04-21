@@ -258,6 +258,7 @@ func init() {
 		"RegisterOverdueReminderCron":                      reflect.ValueOf(models.RegisterOverdueReminderCron),
 		"RegisterReminderCron":                             reflect.ValueOf(models.RegisterReminderCron),
 		"RegisterSessionCleanupCron":                       reflect.ValueOf(models.RegisterSessionCleanupCron),
+		"RegisterUser":                                     reflect.ValueOf(models.RegisterUser),
 		"RegisterUserDeletionCron":                         reflect.ValueOf(models.RegisterUserDeletionCron),
 		"RegisterUserDirectedEventForWebhook":              reflect.ValueOf(models.RegisterUserDirectedEventForWebhook),
 		"RelationKindBlocked":                              reflect.ValueOf(models.RelationKindBlocked),

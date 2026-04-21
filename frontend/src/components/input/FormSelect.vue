@@ -27,6 +27,7 @@ defineOptions({inheritAttrs: false})
 
 const fallbackId = useId()
 const selectId = computed(() => props.id ?? fallbackId)
+const errorId = computed(() => props.error ? `${selectId.value}-error` : undefined)
 
 const wrapperClasses = computed(() => [
 	'select',
@@ -70,6 +71,8 @@ function handleChange(event: Event) {
 			:id="selectId"
 			v-bind="{ ...$attrs, ...selectBindings }"
 			:disabled="disabled || undefined"
+			:aria-invalid="error ? true : undefined"
+			:aria-describedby="errorId"
 			@change="handleChange"
 		>
 			<template v-if="normalizedOptions">
@@ -87,7 +90,9 @@ function handleChange(event: Event) {
 	</div>
 	<p
 		v-if="error"
+		:id="errorId"
 		class="help is-danger"
+		role="alert"
 	>
 		{{ error }}
 	</p>

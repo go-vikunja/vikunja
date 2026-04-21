@@ -18,6 +18,7 @@ import {TaskReminderFactory} from '../../factories/task_reminders'
 import {createDefaultViews} from '../project/prepareProjects'
 import {TaskBucketFactory} from '../../factories/task_buckets'
 import {pasteFile} from '../../support/commands'
+import {login} from '../../support/authenticateUser'
 import type {Page} from '@playwright/test'
 import {readFileSync} from 'fs'
 import {join, dirname} from 'path'
@@ -277,8 +278,8 @@ test.describe('Task', () => {
 			await page.goto(`/tasks/${tasks[0].id}`)
 
 			await expect(page.locator('.task-view h1.title.input')).toContainText(tasks[0].title)
-			await expect(page.locator('.task-view h1.title.task-id')).toContainText('#1')
-			await expect(page.locator('.task-view h6.subtitle')).toContainText(projects[0].title)
+			await expect(page.locator('.task-view span.title.task-id')).toContainText('#1')
+			await expect(page.locator('.task-view nav.subtitle')).toContainText(projects[0].title)
 			await expect(page.locator('.task-view .details.content.description')).toContainText(tasks[0].description)
 			await expect(page.locator('.task-view .action-buttons p.created')).toContainText('Created')
 		})
@@ -327,7 +328,7 @@ test.describe('Task', () => {
 
 			await page.goto(`/tasks/${tasks[0].id}`)
 
-			await expect(page.locator('.task-view h1.title.task-id')).toContainText(`${projects[0].identifier}-${tasks[0].index}`)
+			await expect(page.locator('.task-view span.title.task-id')).toContainText(`${projects[0].identifier}-${tasks[0].index}`)
 		})
 
 		test('Can edit the description', async ({authenticatedPage: page}) => {
@@ -366,7 +367,7 @@ test.describe('Task', () => {
 			await page.locator('.task-view .details.content.description .tiptap button.done-edit', {timeout: 30_000}).click()
 			await page.locator('.task-view .details.content.description .tiptap__editor .tiptap.ProseMirror').fill('New Description')
 
-			await page.locator('.task-view h6.subtitle a').first().click()
+			await page.locator('.task-view nav.subtitle a').first().click()
 
 			await page.goto('/tasks/1')
 			await expect(page.locator('.task-view .details.content.description')).toContainText('New Description')
@@ -442,7 +443,7 @@ test.describe('Task', () => {
 			await expect(page.locator('.task-view .content.details .field .multiselect.control .search-results')).toBeVisible({timeout: 5000})
 			await page.locator('.task-view .content.details .field .multiselect.control .search-results').locator('> *').first().click()
 
-			await expect(page.locator('.task-view h6.subtitle')).toContainText(projects[1].title)
+			await expect(page.locator('.task-view nav.subtitle')).toContainText(projects[1].title)
 			await expect(page.locator('.global-notification')).toContainText('Success')
 		})
 
@@ -957,6 +958,94 @@ test.describe('Task', () => {
 			await page.locator('dialog[open] .modal-container > .close').click()
 
 			await expect(page.locator('.bucket .task .footer .icon svg.fa-paperclip')).toBeVisible()
+		})
+
+		test('Can delete an attachment', async ({authenticatedPage: page}) => {
+			const tasks = await TaskFactory.create(1, {
+				id: 1,
+				project_id: projects[0].id,
+			})
+			await page.goto(`/tasks/${tasks[0].id}`)
+
+			await uploadAttachmentAndVerify(page, tasks[0].id)
+
+			// The delete control is the third `.attachment-info-meta-button`
+			// (download, copy URL, delete) inside the attachment row. Attachments.vue
+			// requests `trash-alt` but FontAwesome renders it as `trash-can`.
+			const deleteButton = page.locator(
+				'.attachments .attachments .files button.attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
+			).first()
+			await expect(deleteButton).toBeVisible()
+
+			const deleted = page.waitForResponse(r =>
+				/\/tasks\/\d+\/attachments\/\d+/.test(r.url()) && r.request().method() === 'DELETE',
+			)
+			await deleteButton.click()
+
+			// Confirm in the modal ("Do it!").
+			await page.locator('dialog[open] .modal-content .actions .button').filter({hasText: 'Do it!'}).click()
+			await deleted
+
+			await expect(page.locator('.attachments .attachments .files button.attachment')).toHaveCount(0)
+		})
+
+		test('read-only shared user cannot delete attachments', async ({authenticatedPage: page, apiContext, currentUser}) => {
+			// Second user who will own the project and upload the attachment.
+			const [owner] = await UserFactory.create(1, {
+				id: 200,
+			}, false)
+
+			// Project owned by the owner, shared read-only with currentUser.
+			const [sharedProject] = await ProjectFactory.create(1, {
+				id: 500,
+				title: 'Read-Only Shared Project',
+				owner_id: owner.id,
+			}, false)
+
+			const [sharedTask] = await TaskFactory.create(1, {
+				id: 500,
+				title: 'Shared task with attachment',
+				project_id: sharedProject.id,
+				created_by_id: owner.id,
+			}, false)
+
+			await UserProjectFactory.create(1, {
+				id: 500,
+				project_id: sharedProject.id,
+				user_id: currentUser.id,
+				permission: 0,
+			}, false)
+
+			// Upload an attachment as the owner via the real API so the files
+			// table gets populated correctly.
+			const {token: ownerToken} = await login(null, apiContext, owner)
+			const filePath = join(__dirname, '../../fixtures/image.jpg')
+			const fileBuffer = readFileSync(filePath)
+			const uploadResp = await apiContext.put(`tasks/${sharedTask.id}/attachments`, {
+				multipart: {
+					files: {
+						name: 'image.jpg',
+						mimeType: 'image/jpeg',
+						buffer: fileBuffer,
+					},
+				},
+				headers: {
+					'Authorization': `Bearer ${ownerToken}`,
+				},
+			})
+			expect(uploadResp.ok()).toBe(true)
+
+			// currentUser is already authenticated in the page via the fixture.
+			await page.goto(`/tasks/${sharedTask.id}`)
+
+			// The attachment must be visible to the reader.
+			await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+
+			// The delete control renders only when editEnabled is true
+			// (see Attachments.vue). A read-only viewer should not see it.
+			await expect(page.locator(
+				'.attachments .attachments .files button.attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
+			)).toHaveCount(0)
 		})
 
 		test('Can check items off a checklist', async ({authenticatedPage: page}) => {

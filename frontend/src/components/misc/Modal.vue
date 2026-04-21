@@ -16,6 +16,7 @@
 				@mousedown.self.prevent.stop="$emit('close')"
 			>
 				<BaseButton
+					:aria-label="$t('misc.closeDialog')"
 					class="close"
 					@click="$emit('close')"
 				>

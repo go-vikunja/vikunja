@@ -233,8 +233,7 @@ describe('FormField', () => {
 			},
 		})
 		const label = wrapper.find('label.two-col')
-		// for would point to a different id than the slotted control generates,
-		// so omit it entirely and rely on the label wrapping the control.
+		// for="" would mismatch the slotted control's id; rely on the label wrapping instead.
 		expect(label.attributes('for')).toBeUndefined()
 		expect(label.find('input').exists()).toBe(true)
 	})
