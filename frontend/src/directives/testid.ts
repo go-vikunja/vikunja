@@ -10,7 +10,7 @@ declare global {
 // In dev mode, always enable. In production, check window.TESTING which can be
 // injected into index.html before serving (e.g., by CI or test runner)
 function isTestingEnabled(): boolean {
-	return import.meta.env.DEV || window.TESTING === true
+	return import.meta.env.MODE === 'development' || window.TESTING === true
 }
 
 const testIdDirective = <Directive<HTMLElement,string>>{
