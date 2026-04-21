@@ -35,4 +35,14 @@ test.describe('TOTP', () => {
 		await expect(page.locator('.global-notification')).toContainText('Success')
 		await expect(page.getByRole('button', {name: 'Enroll'})).toBeVisible()
 	})
+
+	test('rejects wrong passcode during enrollment', async ({authenticatedPage: page}) => {
+		await gotoUserSettings(page, 'totp')
+		await page.getByRole('button', {name: 'Enroll'}).click()
+		await page.locator('#totpConfirmPasscode').fill('000000')
+		await page.getByRole('button', {name: 'Confirm'}).click()
+
+		await expect(page.locator('.global-notification .vue-notification.error')).toBeVisible()
+		await expect(page).not.toHaveURL(/\/login/)
+	})
 })
