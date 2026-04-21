@@ -56,7 +56,9 @@ test.describe('Task recurrence', () => {
 		const newDue = new Date(refreshed.due_date).getTime()
 		// addRepeatIntervalToTime: when the original due date is still in the
 		// future, the backend advances it by exactly one interval (86400s here).
-		expect(newDue - originalDue.getTime()).toBeCloseTo(86_400_000, -3)
+		// Tolerance of <5s absorbs sub-second timestamp round-tripping between
+		// the JS Date → ISO string → backend time.Time → JSON response path.
+		expect(newDue - originalDue.getTime()).toBeCloseTo(86_400_000, -4)
 	})
 
 	test('monthly repeat mode hides the amount field', async ({authenticatedPage: page}) => {
