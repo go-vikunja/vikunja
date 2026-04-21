@@ -292,6 +292,10 @@ func RegisterRoutes(e *echo.Echo) {
 	a := e.Group("/api/v1")
 	registerAPIRoutes(a)
 
+	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
+	a2 := e.Group("/api/v2")
+	registerAPIRoutesV2(e, a2)
+
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
 	collectRoutesForAPITokens(e)
@@ -314,6 +318,11 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/docs/redoc.standalone.js":       true,
 	"/api/v1/metrics":                        true,
 	"/api/v1/oauth/token":                    true,
+
+	"/api/v2/openapi.json":              true,
+	"/api/v2/openapi.yaml":              true,
+	"/api/v2/docs":                      true,
+	"/api/v2/docs/scalar.standalone.js": true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
@@ -323,7 +332,7 @@ func collectRoutesForAPITokens(e *echo.Echo) {
 	log.Debugf("Collecting %d routes for API token usage", len(routeList))
 	for _, route := range routeList {
 		// Only process API routes
-		if !strings.HasPrefix(route.Path, "/api/v1") {
+		if !strings.HasPrefix(route.Path, "/api/v1") && !strings.HasPrefix(route.Path, "/api/v2") {
 			continue
 		}
 
@@ -332,6 +341,12 @@ func collectRoutesForAPITokens(e *echo.Echo) {
 
 		models.CollectRoutesForAPITokenUsage(route, requiresJWT)
 	}
+}
+
+// registerAPIRoutesV2 wires the /api/v2 Echo group. Huma and per-resource
+// route registrations land here in later sub-phases.
+func registerAPIRoutesV2(_ *echo.Echo, _ *echo.Group) {
+	// Huma API setup and route registrations land here in later sub-phases.
 }
 
 func registerAPIRoutes(a *echo.Group) {
