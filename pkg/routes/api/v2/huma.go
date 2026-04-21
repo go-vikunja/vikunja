@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/version"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/autopatch"
 	"github.com/labstack/echo/v5"
 )
 
@@ -62,5 +63,6 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 		{"JWTKeyAuth": {}},
 		{"APITokenAuth": {}},
 	}
+	autopatch.AutoPatch(api)
 	return api
 }
