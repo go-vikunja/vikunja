@@ -27,8 +27,16 @@ import (
 
 var apiTokenRoutes = map[string]APITokenRoute{}
 
+// apiTokenRoutesV2 is a shadow routing table for /api/v2 routes keyed under the
+// same (group, permission) names as their /api/v1 equivalents. The frontend
+// token UI keeps listing only v1 routes via apiTokenRoutes; CanDoAPIRoute
+// consults this second table so a token granted e.g. `labels.read_one` also
+// authorizes the v2 endpoint.
+var apiTokenRoutesV2 = map[string]APITokenRoute{}
+
 func init() {
 	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
 	apiTokenRoutes["caldav"] = APITokenRoute{
 		"access": &RouteDetail{
 			Path:   "/dav/*",
@@ -44,8 +52,25 @@ type RouteDetail struct {
 	Method string `json:"method"`
 }
 
+// isV2Path reports whether the given route path lives under /api/v2.
+func isV2Path(path string) bool {
+	return strings.HasPrefix(path, "/api/v2/") || path == "/api/v2"
+}
+
+// stripAPIVersion removes the /api/v1/ or /api/v2/ prefix, so both versions
+// are normalized to the same group name for token permission purposes.
+func stripAPIVersion(path string) string {
+	if stripped := strings.TrimPrefix(path, "/api/v1/"); stripped != path {
+		return stripped
+	}
+	if stripped := strings.TrimPrefix(path, "/api/v2/"); stripped != path {
+		return stripped
+	}
+	return path
+}
+
 func getRouteGroupName(path string) (finalName string, filteredParts []string) {
-	parts := strings.Split(strings.TrimPrefix(path, "/api/v1/"), "/")
+	parts := strings.Split(stripAPIVersion(path), "/")
 	filteredParts = []string{}
 	for _, part := range parts {
 		if strings.HasPrefix(part, ":") {
@@ -69,6 +94,9 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 // getRouteDetail determines the API permission type from the route's HTTP method and path.
 // In Echo v5, route.Name is auto-generated as METHOD:PATH, so we derive permissions from
 // the HTTP method and path structure instead of the handler function name.
+//
+// v1 and v2 have inverted create/update verbs: v1 uses PUT for create and POST
+// for update, v2 follows REST conventions (POST create, PUT/PATCH update).
 func getRouteDetail(route echo.RouteInfo) (method string, detail *RouteDetail) {
 	detail = &RouteDetail{
 		Path:   route.Path,
@@ -82,6 +110,7 @@ func getRouteDetail(route echo.RouteInfo) (method string, detail *RouteDetail) {
 		lastPart = pathParts[len(pathParts)-1]
 	}
 	endsWithParam := strings.HasPrefix(lastPart, ":")
+	v2 := isV2Path(route.Path)
 
 	switch route.Method {
 	case http.MethodGet:
@@ -90,10 +119,22 @@ func getRouteDetail(route echo.RouteInfo) (method string, detail *RouteDetail) {
 		}
 		return "read_all", detail
 	case http.MethodPut:
-		// PUT is used for creating resources in this codebase
+		if v2 {
+			// v2: PUT replaces an existing resource → update.
+			return "update", detail
+		}
+		// v1: PUT is used for creating resources.
 		return "create", detail
 	case http.MethodPost:
-		// POST is used for updating resources
+		if v2 {
+			// v2: POST creates a new resource on the collection.
+			return "create", detail
+		}
+		// v1: POST is used for updating resources.
+		return "update", detail
+	case http.MethodPatch:
+		// Both v1 and v2 use PATCH for partial updates; v2 introduces
+		// PATCH via Huma's AutoPatch synthesizer.
 		return "update", detail
 	case http.MethodDelete:
 		return "delete", detail
@@ -177,6 +218,32 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 	return false
 }
 
+// collectV2Route stores a /api/v2 route in the v2 shadow table under the
+// same (group, permission) keys that its v1 counterpart would use. If no
+// permission can be derived from the method (e.g. OPTIONS), the route is
+// skipped.
+func collectV2Route(route echo.RouteInfo, routeGroupName string) {
+	permission, detail := getRouteDetail(route)
+	if permission == "" {
+		return
+	}
+
+	// bulk endpoints (if any appear in v2 later) get the same treatment as v1.
+	if strings.HasSuffix(routeGroupName, "_bulk") {
+		parent := strings.TrimSuffix(routeGroupName, "_bulk")
+		if _, has := apiTokenRoutesV2[parent]; !has {
+			apiTokenRoutesV2[parent] = make(APITokenRoute)
+		}
+		apiTokenRoutesV2[parent][permission+"_bulk"] = detail
+		return
+	}
+
+	if _, has := apiTokenRoutesV2[routeGroupName]; !has {
+		apiTokenRoutesV2[routeGroupName] = make(APITokenRoute)
+	}
+	apiTokenRoutesV2[routeGroupName][permission] = detail
+}
+
 // CollectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
 // The requiresJWT parameter indicates if this route is protected by JWT authentication.
 func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
@@ -196,6 +263,15 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		routeGroupName == "tokens" ||
 		routeGroupName == "*" ||
 		strings.HasPrefix(routeGroupName, "user_") {
+		return
+	}
+
+	// v2 routes are stored in a shadow table keyed identically to their v1
+	// equivalents. This keeps apiTokenRoutes stable for the frontend token
+	// UI while still allowing CanDoAPIRoute to authorize v2 requests with
+	// tokens that were scoped on v1 permission names.
+	if isV2Path(route.Path) {
+		collectV2Route(route, routeGroupName)
 		return
 	}
 
@@ -311,6 +387,11 @@ func GetAvailableAPIRoutesForToken(c *echo.Context) error {
 // stored (Path, Method) for that permission matches exactly. This closes
 // GHSA-v479-vf79-mg83 and the wider method/sub-resource confusion it
 // enabled. The one exception is the tasks.read_all quirk handled below.
+//
+// Tokens are granted by (group, permission) name (e.g. labels.read_one),
+// so a single permission can legitimately match both the v1 and v2 routes
+// for the same resource. We consult apiTokenRoutes for v1 and the
+// apiTokenRoutesV2 shadow map for v2.
 func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	path := c.Path()
 	if path == "" {
@@ -321,23 +402,25 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	method := c.Request().Method
 
 	for group, perms := range token.APIPermissions {
-		routes, has := apiTokenRoutes[group]
-		if !has {
-			continue
-		}
-		for _, p := range perms {
-			rd := routes[p]
-			if rd == nil {
+		tables := []APITokenRoute{apiTokenRoutes[group], apiTokenRoutesV2[group]}
+		for _, routes := range tables {
+			if routes == nil {
 				continue
 			}
-			if rd.Method == method && rd.Path == path {
-				return true
-			}
-			// Two list endpoints share tasks.read_all but only one
-			// survives collection, so allow either explicitly.
-			if group == "tasks" && p == "read_all" && method == http.MethodGet &&
-				(path == "/api/v1/tasks" || path == "/api/v1/projects/:project/tasks") {
-				return true
+			for _, p := range perms {
+				rd := routes[p]
+				if rd == nil {
+					continue
+				}
+				if rd.Method == method && rd.Path == path {
+					return true
+				}
+				// Two list endpoints share tasks.read_all but only one
+				// survives collection, so allow either explicitly.
+				if group == "tasks" && p == "read_all" && method == http.MethodGet &&
+					(path == "/api/v1/tasks" || path == "/api/v1/projects/:project/tasks") {
+					return true
+				}
 			}
 		}
 	}
