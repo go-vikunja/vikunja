@@ -80,6 +80,7 @@ import (
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	adminapi "code.vikunja.io/api/pkg/routes/api/v1/admin"
+	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -345,8 +346,9 @@ func collectRoutesForAPITokens(e *echo.Echo) {
 
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Huma and per-resource
 // route registrations land here in later sub-phases.
-func registerAPIRoutesV2(_ *echo.Echo, _ *echo.Group) {
-	// Huma API setup and route registrations land here in later sub-phases.
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
+	_ = apiv2.NewAPI(e, a)
+	// Resource registrations go here in later sub-phases.
 }
 
 func registerAPIRoutes(a *echo.Group) {
