@@ -138,4 +138,45 @@ test.describe('Team permission tiers on shared projects', () => {
 		await expect(page.locator('.project-title')).toContainText('First Project')
 		await expect(page.locator('.task-add textarea')).toBeVisible()
 	})
+
+	test('owner can revoke team share and member loses access', async ({page, apiContext}) => {
+		const [owner, member] = await UserFactory.create(2)
+		await createProjects(1)
+		const [team] = await TeamFactory.create(1, {id: 1, name: 'Shared Team', created_by_id: owner.id}, false)
+		await TeamMemberFactory.create(1, {team_id: team.id, user_id: member.id, admin: false}, false)
+		await TeamProjectFactory.create(1, {team_id: team.id, project_id: 1, permission: 1}, false)
+
+		// Sanity check: member can see the project before revocation.
+		await login(page, apiContext, member)
+		await page.goto('/projects/1/1')
+		await expect(page.locator('.project-title')).toContainText('First Project')
+
+		// Owner opens the share settings and removes the team.
+		await login(page, apiContext, owner)
+		await page.goto('/projects/1/settings/share')
+
+		const teamRow = page.locator('table.table tbody tr').filter({hasText: team.name})
+		await expect(teamRow).toBeVisible()
+		await teamRow.locator('.button.is-danger, button.is-danger').first().click()
+
+		const deleteRequest = page.waitForResponse(r =>
+			r.url().includes('/projects/1/teams/') && r.request().method() === 'DELETE',
+		)
+		await page.locator('dialog[open] .modal-content .actions .button')
+			.filter({hasText: 'Do it!'}).click()
+		await deleteRequest
+
+		await expect(teamRow).toHaveCount(0)
+
+		// Member can no longer open the project: the API returns a permission
+		// error and the frontend never renders the project title.
+		await login(page, apiContext, member)
+		const projectResponse = page.waitForResponse(r =>
+			r.url().endsWith('/projects/1') && r.request().method() === 'GET',
+		)
+		await page.goto('/projects/1/1')
+		const resp = await projectResponse
+		expect(resp.status()).toBeGreaterThanOrEqual(400)
+		await expect(page.locator('.project-title').filter({hasText: 'First Project'})).toHaveCount(0)
+	})
 })
