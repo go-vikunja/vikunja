@@ -338,6 +338,8 @@ var unauthenticatedAPIPaths = map[string]bool{
 
 	"/api/v2/openapi.json":              true,
 	"/api/v2/openapi.yaml":              true,
+	"/api/v2/openapi-3.0.json":          true,
+	"/api/v2/openapi-3.0.yaml":          true,
 	"/api/v2/docs":                      true,
 	"/api/v2/docs/scalar.standalone.js": true,
 }
@@ -373,12 +375,21 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
-// registerAPIRoutesV2 wires the /api/v2 Echo group. Huma and per-resource
-// route registrations land here in later sub-phases.
+// registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
+// attached before any route so Huma's spec and Scalar docs share the
+// resource handlers' stack; unauthenticatedAPIPaths keeps them public.
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	a.Use(noStoreCacheControl())
-	_ = apiv2.NewAPI(e, a)
-	// Resource registrations go here in later sub-phases.
+	a.Use(SetupTokenMiddleware())
+
+	api := apiv2.NewAPI(e, a)
+
+	// Resource registrations.
+	apiv2.RegisterLabelRoutes(api)
+
+	// AutoPatch must run AFTER all GET/PUT pairs are registered so it can
+	// synthesize their PATCH counterparts.
+	apiv2.EnableAutoPatch(api)
 }
 
 func registerAPIRoutes(a *echo.Group) {
