@@ -35,10 +35,32 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	cfg.OpenAPIPath = "/openapi"
 	// Huma's built-in docs would load from unpkg.com — we serve Scalar locally instead.
 	cfg.DocsPath = ""
-	// Partial-update permissive: non-pointer fields do not become required
-	// at the schema layer (legacy /v1 handlers are permissive by convention;
-	// govalidator enforces real field-level rules later).
+	// Match v1's permissive partial-update convention; govalidator enforces real rules.
 	cfg.FieldsOptionalByDefault = true
 
-	return humaecho5.NewWithGroup(e, g, GroupPrefix, cfg)
+	api := humaecho5.NewWithGroup(e, g, GroupPrefix, cfg)
+	oapi := api.OpenAPI()
+	if oapi.Components.SecuritySchemes == nil {
+		oapi.Components.SecuritySchemes = map[string]*huma.SecurityScheme{}
+	}
+	// v1 conflated JWTs and tk_-prefixed API tokens under JWTKeyAuth; v2
+	// declares them separately so SDK generators and /api/v2/docs distinguish them.
+	oapi.Components.SecuritySchemes["JWTKeyAuth"] = &huma.SecurityScheme{
+		Type:         "http",
+		Scheme:       "bearer",
+		BearerFormat: "JWT",
+		Description:  "User session JWT issued via /api/v1/login.",
+	}
+	oapi.Components.SecuritySchemes["APITokenAuth"] = &huma.SecurityScheme{
+		Type:        "http",
+		Scheme:      "bearer",
+		Description: "Vikunja API token (tk_ prefix) with scoped permissions. Created via /api/v1/tokens.",
+	}
+	// Applied globally to every registered operation; the handful of public
+	// endpoints (spec, docs) explicitly opt out with Security: []map[...]{}.
+	oapi.Security = []map[string][]string{
+		{"JWTKeyAuth": {}},
+		{"APITokenAuth": {}},
+	}
+	return api
 }
