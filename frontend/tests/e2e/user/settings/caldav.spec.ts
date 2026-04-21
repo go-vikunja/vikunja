@@ -43,7 +43,11 @@ test.describe('CalDAV', () => {
 		const dataRows = page.locator('table.table tr').filter({has: page.locator('td')})
 		await expect(dataRows).toHaveCount(1)
 
+		const deleted = page.waitForResponse(r =>
+			/\/user\/settings\/token\/caldav\/\d+/.test(r.url()) && r.request().method() === 'DELETE',
+		)
 		await dataRows.getByRole('button', {name: 'Delete'}).click()
+		await deleted
 		await expect(dataRows).toHaveCount(0)
 
 		// NOTE: the factory seeds the plaintext token as-is, but caldav tokens are
