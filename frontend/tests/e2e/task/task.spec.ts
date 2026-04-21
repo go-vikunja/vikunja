@@ -18,6 +18,7 @@ import {TaskReminderFactory} from '../../factories/task_reminders'
 import {createDefaultViews} from '../project/prepareProjects'
 import {TaskBucketFactory} from '../../factories/task_buckets'
 import {pasteFile} from '../../support/commands'
+import {login} from '../../support/authenticateUser'
 import type {Page} from '@playwright/test'
 import {readFileSync} from 'fs'
 import {join, dirname} from 'path'
@@ -986,6 +987,65 @@ test.describe('Task', () => {
 			await deleted
 
 			await expect(page.locator('.attachments .attachments .files button.attachment')).toHaveCount(0)
+		})
+
+		test('read-only shared user cannot delete attachments', async ({authenticatedPage: page, apiContext, currentUser}) => {
+			// Second user who will own the project and upload the attachment.
+			const [owner] = await UserFactory.create(1, {
+				id: 200,
+			}, false)
+
+			// Project owned by the owner, shared read-only with currentUser.
+			const [sharedProject] = await ProjectFactory.create(1, {
+				id: 500,
+				title: 'Read-Only Shared Project',
+				owner_id: owner.id,
+			}, false)
+
+			const [sharedTask] = await TaskFactory.create(1, {
+				id: 500,
+				title: 'Shared task with attachment',
+				project_id: sharedProject.id,
+				created_by_id: owner.id,
+			}, false)
+
+			await UserProjectFactory.create(1, {
+				id: 500,
+				project_id: sharedProject.id,
+				user_id: currentUser.id,
+				permission: 0,
+			}, false)
+
+			// Upload an attachment as the owner via the real API so the files
+			// table gets populated correctly.
+			const {token: ownerToken} = await login(null, apiContext, owner)
+			const filePath = join(__dirname, '../../fixtures/image.jpg')
+			const fileBuffer = readFileSync(filePath)
+			const uploadResp = await apiContext.put(`tasks/${sharedTask.id}/attachments`, {
+				multipart: {
+					files: {
+						name: 'image.jpg',
+						mimeType: 'image/jpeg',
+						buffer: fileBuffer,
+					},
+				},
+				headers: {
+					'Authorization': `Bearer ${ownerToken}`,
+				},
+			})
+			expect(uploadResp.ok()).toBe(true)
+
+			// currentUser is already authenticated in the page via the fixture.
+			await page.goto(`/tasks/${sharedTask.id}`)
+
+			// The attachment must be visible to the reader.
+			await expect(page.locator('.attachments .attachments .files button.attachment')).toBeVisible()
+
+			// The delete control renders only when editEnabled is true
+			// (see Attachments.vue). A read-only viewer should not see it.
+			await expect(page.locator(
+				'.attachments .attachments .files button.attachment .attachment-info-meta-button:has(svg[data-icon="trash-can"])',
+			)).toHaveCount(0)
 		})
 
 		test('Can check items off a checklist', async ({authenticatedPage: page}) => {
