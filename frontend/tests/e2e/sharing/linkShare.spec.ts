@@ -178,3 +178,48 @@ test.describe('Link share: password protection', () => {
 	})
 })
 
+test.describe('Link share: permission tiers', () => {
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('READ link share hides add-task', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		await TaskFactory.create(3, {
+			project_id: projects[0].id,
+		})
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			permission: 0,
+		})
+
+		await page.goto(`/share/${share.hash}/auth`)
+
+		// Wait for the project view to actually render so the assertion isn't
+		// vacuously true during the loading shell.
+		await expect(page.locator('h1.title')).toContainText(projects[0].title)
+		await expect(page).toHaveURL(`/projects/${projects[0].id}/1#share-auth-token=${share.hash}`)
+
+		await expect(page.locator('.input[placeholder="Add a task…"]')).toHaveCount(0)
+	})
+
+	test('READ_WRITE link share shows add-task', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		await TaskFactory.create(3, {
+			project_id: projects[0].id,
+		})
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			permission: 1,
+		})
+
+		await page.goto(`/share/${share.hash}/auth`)
+
+		await expect(page.locator('h1.title')).toContainText(projects[0].title)
+		await expect(page).toHaveURL(`/projects/${projects[0].id}/1#share-auth-token=${share.hash}`)
+
+		await expect(page.locator('.input[placeholder="Add a task…"]')).toBeVisible()
+	})
+})
