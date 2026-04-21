@@ -1,7 +1,10 @@
 import {test, expect} from '../../support/fixtures'
 import {TeamFactory} from '../../factories/team'
 import {TeamMemberFactory} from '../../factories/team_member'
+import {TeamProjectFactory} from '../../factories/team_project'
 import {UserFactory} from '../../factories/user'
+import {createProjects} from '../project/prepareProjects'
+import {login, setupApiUrl} from '../../support/authenticateUser'
 
 test.describe('Team', () => {
 	test('Creates a new team', async ({authenticatedPage: page}) => {
@@ -98,5 +101,27 @@ test.describe('Team', () => {
 		await expect(newMemberRow).toBeVisible()
 		await expect(newMemberRow).toContainText('Member')
 		await expect(page.locator('.global-notification')).toContainText('Success')
+	})
+})
+
+test.describe('Team permission tiers on shared projects', () => {
+	// These tests log in as the second user (the team member), so we can't use
+	// the `authenticatedPage` fixture which auto-logs in as user 1.
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('READ: team member cannot add tasks on a shared project', async ({page, apiContext}) => {
+		const [, member] = await UserFactory.create(2)
+		await createProjects(1)
+		await TeamFactory.create(1, {id: 1, created_by_id: 1}, false)
+		await TeamMemberFactory.create(1, {team_id: 1, user_id: member.id, admin: false}, false)
+		await TeamProjectFactory.create(1, {team_id: 1, project_id: 1, permission: 0}, false)
+
+		await login(page, apiContext, member)
+		await page.goto('/projects/1/1')
+
+		await expect(page.locator('.project-title')).toContainText('First Project')
+		await expect(page.locator('input.input[placeholder="Add a task…"]')).not.toBeVisible()
 	})
 })
