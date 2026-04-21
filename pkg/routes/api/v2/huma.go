@@ -34,10 +34,20 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	// Huma's built-in docs would load from unpkg.com — unacceptable for
 	// self-hosted Vikunja. Disable and serve Scalar ourselves (see Task D1).
 	cfg.DocsPath = ""
+	// Error shape is RFC 9457 problem+json by default — no override needed.
 	// Partial-update permissive: non-pointer fields do not become required
 	// at the schema layer (legacy /v1 handlers are permissive by convention;
 	// govalidator enforces real field-level rules later).
 	cfg.FieldsOptionalByDefault = true
 
-	return humaecho5.NewWithGroup(e, g, cfg)
+	api := humaecho5.NewWithGroup(e, g, cfg)
+	if api.OpenAPI().Components.SecuritySchemes == nil {
+		api.OpenAPI().Components.SecuritySchemes = map[string]*huma.SecurityScheme{}
+	}
+	api.OpenAPI().Components.SecuritySchemes["JWTKeyAuth"] = &huma.SecurityScheme{
+		Type:         "http",
+		Scheme:       "bearer",
+		BearerFormat: "JWT",
+	}
+	return api
 }
