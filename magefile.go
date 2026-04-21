@@ -1892,6 +1892,40 @@ func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
 }
 
+// ScalarBundle downloads the Scalar API reference standalone JS bundle into
+// pkg/routes/api/v2/scalar/. Version is pinned to match the Scalar version
+// used in Huma's internal docs at the time of last update.
+func (Generate) ScalarBundle() error {
+	const (
+		version = "1.44.20"
+		dest    = "pkg/routes/api/v2/scalar/scalar.standalone.js"
+	)
+	url := fmt.Sprintf("https://unpkg.com/@scalar/api-reference@%s/dist/browser/standalone.js", version)
+
+	fmt.Printf("Downloading Scalar bundle %s from %s\n", version, url)
+	resp, err := http.Get(url) //nolint:gosec // This is a dev-only mage task and the URL is hard-coded above.
+	if err != nil {
+		return fmt.Errorf("download scalar bundle: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("download scalar bundle: unexpected status %s", resp.Status)
+	}
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, resp.Body); err != nil {
+		return fmt.Errorf("read scalar bundle body: %w", err)
+	}
+
+	if err := os.WriteFile(dest, buf.Bytes(), 0o600); err != nil {
+		return fmt.Errorf("write %s: %w", dest, err)
+	}
+
+	fmt.Printf("Wrote %d bytes to %s\n", buf.Len(), dest)
+	return nil
+}
+
 func localBranchExists(ctx context.Context, name string) bool {
 	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/heads/"+name).Run() == nil //nolint:gosec // This is a dev-only mage task and the branch name is supplied by the developer running it.
 }
