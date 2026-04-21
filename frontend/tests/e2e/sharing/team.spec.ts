@@ -124,4 +124,18 @@ test.describe('Team permission tiers on shared projects', () => {
 		await expect(page.locator('.project-title')).toContainText('First Project')
 		await expect(page.locator('input.input[placeholder="Add a task…"]')).not.toBeVisible()
 	})
+
+	test('READ_WRITE: team member can add tasks on a shared project', async ({page, apiContext}) => {
+		const [, member] = await UserFactory.create(2)
+		await createProjects(1)
+		await TeamFactory.create(1, {id: 1, created_by_id: 1}, false)
+		await TeamMemberFactory.create(1, {team_id: 1, user_id: member.id, admin: false}, false)
+		await TeamProjectFactory.create(1, {team_id: 1, project_id: 1, permission: 1}, false)
+
+		await login(page, apiContext, member)
+		await page.goto('/projects/1/1')
+
+		await expect(page.locator('.project-title')).toContainText('First Project')
+		await expect(page.locator('.task-add textarea')).toBeVisible()
+	})
 })
