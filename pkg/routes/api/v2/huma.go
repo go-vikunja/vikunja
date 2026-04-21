@@ -18,6 +18,9 @@
 package apiv2
 
 import (
+	"context"
+	"net/http"
+
 	"code.vikunja.io/api/pkg/modules/humaecho5"
 	"code.vikunja.io/api/pkg/version"
 
@@ -57,12 +60,30 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 		Scheme:      "bearer",
 		Description: "Vikunja API token (tk_ prefix) with scoped permissions. Created via /api/v1/tokens.",
 	}
-	// Applied globally to every registered operation; the handful of public
-	// endpoints (spec, docs) explicitly opt out with Security: []map[...]{}.
+	// Applied globally; public endpoints (spec, docs) opt out with an empty Security list.
 	oapi.Security = []map[string][]string{
 		{"JWTKeyAuth": {}},
 		{"APITokenAuth": {}},
 	}
-	autopatch.AutoPatch(api)
 	return api
+}
+
+// Register wraps huma.Register with verb-based DefaultStatus: POST → 201,
+// DELETE → 204. Anything else (including an explicit op.DefaultStatus) is untouched.
+func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Context, *I) (*O, error)) {
+	if op.DefaultStatus == 0 {
+		switch op.Method {
+		case http.MethodPost:
+			op.DefaultStatus = http.StatusCreated
+		case http.MethodDelete:
+			op.DefaultStatus = http.StatusNoContent
+		}
+	}
+	huma.Register(api, op, handler)
+}
+
+// EnableAutoPatch synthesises a PATCH for every resource that already
+// registered GET + PUT. Must be called AFTER all Register* calls.
+func EnableAutoPatch(api huma.API) {
+	autopatch.AutoPatch(api)
 }
