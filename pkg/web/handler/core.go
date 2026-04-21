@@ -18,14 +18,11 @@ package handler
 
 import (
 	"context"
-	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/web"
-
-	"github.com/labstack/echo/v5"
 )
 
 // DoCreate runs the permission check + model Create + commit pipeline for a
@@ -49,7 +46,7 @@ func DoCreate(_ context.Context, obj CObject, a web.Auth) error {
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		log.Warningf("Tried to create while not having the permissions for it (User: %v)", a)
-		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
+		return ErrGenericForbidden{}
 	}
 
 	if err := obj.Create(s, a); err != nil {
@@ -89,7 +86,7 @@ func DoReadOne(_ context.Context, obj CObject, a web.Auth) (maxPermission int, e
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		log.Warningf("Tried to read while not having the permissions for it (User: %v)", a)
-		return 0, echo.NewHTTPError(http.StatusForbidden, "You don't have the permission to see this")
+		return 0, ErrGenericForbidden{Message: "You don't have the permission to see this"}
 	}
 
 	if err := obj.ReadOne(s, a); err != nil {
@@ -156,7 +153,7 @@ func DoUpdate(_ context.Context, obj CObject, a web.Auth) error {
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		log.Warningf("Tried to update while not having the permissions for it (User: %v)", a)
-		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
+		return ErrGenericForbidden{}
 	}
 
 	if err := obj.Update(s, a); err != nil {
@@ -195,7 +192,7 @@ func DoDelete(_ context.Context, obj CObject, a web.Auth) error {
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		log.Warningf("Tried to delete while not having the permissions for it (User: %v)", a)
-		return echo.NewHTTPError(http.StatusForbidden, "Forbidden")
+		return ErrGenericForbidden{}
 	}
 
 	if err := obj.Delete(s, a); err != nil {
