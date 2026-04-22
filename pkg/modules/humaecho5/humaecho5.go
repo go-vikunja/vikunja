@@ -14,6 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// Package humaecho5 is a Huma adapter for labstack/echo/v5.
+//
+// Huma ships an official echo adapter at
+// github.com/danielgtaylor/huma/v2/adapters/humaecho, but it targets
+// echo/v4. The echo/v5 port lives on an unmerged upstream branch
+// (https://github.com/danielgtaylor/huma/pull/959) so we vendor it
+// locally until that PR lands. Once it does, delete this package and
+// switch imports back to the upstream adapter.
+//
+// We also add one piece of Vikunja-specific glue: every request stashes
+// its underlying *echo.Context on context.Context under EchoContextKey,
+// so Huma-dispatched handlers can reach the echo context via
+// auth.GetAuthFromContext without the adapter needing per-handler wiring.
 package humaecho5
 
 import (
