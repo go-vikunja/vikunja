@@ -61,4 +61,3 @@ func TestNormalizeArrayParams(t *testing.T) {
 		})
 	}
 }
-

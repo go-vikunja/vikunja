@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -341,4 +342,159 @@ func (h *webHandlerTest) testUpdateWithLinkShare(queryParams url.Values, urlPara
 func (h *webHandlerTest) testDeleteWithLinkShare(queryParams url.Values, urlParams map[string]string) (rec *httptest.ResponseRecorder, err error) {
 	hndl := h.getHandler()
 	return newTestRequestWithLinkShare(h.t, http.MethodDelete, hndl.DeleteWeb, h.linkShare, "", queryParams, urlParams)
+}
+
+// webHandlerTestV2 mirrors webHandlerTest's signatures but dispatches HTTP
+// requests through the full Echo+Huma stack. It lets v2 tests reuse the same
+// per-resource harness shape the v1 tests use so they can be read side-by-side
+// for contract parity.
+//
+// Callers pass the same urlParams map they'd pass to webHandlerTest (e.g.
+// {"label": "1"}). The harness pulls the ID out with the configured
+// idParam key and builds the final URL as basePath[/{id}].
+type webHandlerTestV2 struct {
+	user     *user.User
+	basePath string // e.g. "/api/v2/labels"
+	idParam  string // url-param key, e.g. "label" — matches v1 urlParams keys so tests can pass the same map
+	t        *testing.T
+	e        *echo.Echo // lazily constructed via setupTestEnv()
+}
+
+// v2HTTPError is a synthetic error carrying the HTTP status + message
+// extracted from a Huma problem+json response. It implements
+// web.HTTPErrorProcessor so the existing assertHandlerErrorCode /
+// getHTTPErrorMessage / getHTTPErrorCode helpers still work against v2.
+type v2HTTPError struct {
+	httpCode int
+	code     int
+	message  string
+}
+
+func (e *v2HTTPError) Error() string {
+	return e.message
+}
+
+func (e *v2HTTPError) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: e.httpCode,
+		Code:     e.code,
+		Message:  e.message,
+	}
+}
+
+// v2ProblemJSON captures the RFC 9457 shape Huma emits. Only the fields the
+// harness cares about are modelled — everything else is silently ignored.
+type v2ProblemJSON struct {
+	Status int    `json:"status"`
+	Title  string `json:"title"`
+	Detail string `json:"detail"`
+	// Vikunja domain errors translated via translateDomainError include a
+	// numeric code on the problem body (when the underlying err implements
+	// web.HTTPErrorProcessor). If absent the field stays 0 — good enough for
+	// tests that only care about HTTP status.
+	Code int `json:"code"`
+}
+
+// newV2Error inspects a >=400 recorder and returns a synthetic error that
+// carries the HTTP status + message so existing v1-style assertions keep
+// working. The body is best-effort JSON — non-JSON or non-problem bodies
+// fall back to the raw body string as the message.
+func newV2Error(rec *httptest.ResponseRecorder) error {
+	msg := strings.TrimSpace(rec.Body.String())
+	var body v2ProblemJSON
+	if jsonErr := json.Unmarshal(rec.Body.Bytes(), &body); jsonErr == nil {
+		if body.Detail != "" {
+			msg = body.Detail
+		} else if body.Title != "" {
+			msg = body.Title
+		}
+	}
+	return &v2HTTPError{
+		httpCode: rec.Code,
+		code:     body.Code,
+		message:  msg,
+	}
+}
+
+func (h *webHandlerTestV2) ensureEnv() error {
+	if h.e != nil {
+		return nil
+	}
+	e, err := setupTestEnv()
+	if err != nil {
+		return err
+	}
+	h.e = e
+	return nil
+}
+
+// buildURL assembles basePath[/{id}]?query using the idParam lookup.
+func (h *webHandlerTestV2) buildURL(queryParams url.Values, urlParams map[string]string, withID bool) string {
+	u := h.basePath
+	if withID {
+		id := ""
+		if h.idParam != "" {
+			id = urlParams[h.idParam]
+		}
+		if id == "" {
+			// Fall back to any single-entry urlParams value so tests that
+			// pass a differently-named key (or omit idParam) still work.
+			for _, v := range urlParams {
+				id = v
+				break
+			}
+		}
+		u += "/" + id
+	}
+	if q := queryParams.Encode(); q != "" {
+		u += "?" + q
+	}
+	return u
+}
+
+func (h *webHandlerTestV2) serve(method, path, payload string) (*httptest.ResponseRecorder, error) {
+	require.NoError(h.t, h.ensureEnv())
+	token, err := auth.NewUserJWTAuthtoken(h.user, "test-session-id")
+	require.NoError(h.t, err)
+	var reader *strings.Reader
+	if payload != "" {
+		reader = strings.NewReader(payload)
+	} else {
+		reader = strings.NewReader("")
+	}
+	req := httptest.NewRequest(method, path, reader)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+	h.e.ServeHTTP(rec, req)
+	if rec.Code >= 400 {
+		return rec, newV2Error(rec)
+	}
+	return rec, nil
+}
+
+func (h *webHandlerTestV2) testReadAllWithUser(queryParams url.Values, urlParams map[string]string) (*httptest.ResponseRecorder, error) {
+	return h.serve(http.MethodGet, h.buildURL(queryParams, urlParams, false), "")
+}
+
+func (h *webHandlerTestV2) testReadOneWithUser(queryParams url.Values, urlParams map[string]string) (*httptest.ResponseRecorder, error) {
+	return h.serve(http.MethodGet, h.buildURL(queryParams, urlParams, true), "")
+}
+
+// testCreateWithUser — v2 uses POST for create (one of the "changed verbs"
+// the v2 plan calls out). Otherwise identical to v1's testCreateWithUser.
+func (h *webHandlerTestV2) testCreateWithUser(queryParams url.Values, urlParams map[string]string, payload string) (*httptest.ResponseRecorder, error) {
+	return h.serve(http.MethodPost, h.buildURL(queryParams, urlParams, false), payload)
+}
+
+func (h *webHandlerTestV2) testUpdateWithUser(queryParams url.Values, urlParams map[string]string, payload string) (*httptest.ResponseRecorder, error) {
+	return h.serve(http.MethodPut, h.buildURL(queryParams, urlParams, true), payload)
+}
+
+func (h *webHandlerTestV2) testDeleteWithUser(queryParams url.Values, urlParams map[string]string, payload ...string) (*httptest.ResponseRecorder, error) {
+	pl := ""
+	if len(payload) > 0 {
+		pl = payload[0]
+	}
+	return h.serve(http.MethodDelete, h.buildURL(queryParams, urlParams, true), pl)
 }
