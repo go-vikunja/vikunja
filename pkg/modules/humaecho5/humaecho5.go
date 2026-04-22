@@ -1,9 +1,32 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // Package humaecho5 is a Huma adapter for labstack/echo/v5.
 //
-// Adapted from github.com/danielgtaylor/huma/v2/adapters/humaecho (MIT)
-// with the echo/v5 port proposed in https://github.com/danielgtaylor/huma/pull/959.
-// Remove this package once the upstream PR lands and the official adapter
-// supports echo/v5.
+// Huma ships an official echo adapter at
+// github.com/danielgtaylor/huma/v2/adapters/humaecho, but it targets
+// echo/v4. The echo/v5 port lives on an unmerged upstream branch
+// (https://github.com/danielgtaylor/huma/pull/959) so we vendor it
+// locally until that PR lands. Once it does, delete this package and
+// switch imports back to the upstream adapter.
+//
+// We also add one piece of Vikunja-specific glue: every request stashes
+// its underlying *echo.Context on context.Context under EchoContextKey,
+// so Huma-dispatched handlers can reach the echo context via
+// auth.GetAuthFromContext without the adapter needing per-handler wiring.
 package humaecho5
 
 import (
@@ -57,7 +80,7 @@ type echoCtx struct {
 
 var _ huma.Context = &echoCtx{}
 
-func (c *echoCtx) Unwrap() *echo.Context     { return c.orig }
+func (c *echoCtx) Unwrap() *echo.Context      { return c.orig }
 func (c *echoCtx) Operation() *huma.Operation { return c.op }
 
 func (c *echoCtx) Context() context.Context {
@@ -129,6 +152,24 @@ type router interface {
 type echoAdapter struct {
 	http.Handler
 	router router
+	// groupPrefix is the Echo group's URL prefix (e.g. "/api/v2"). When
+	// set, internal dispatches (ServeHTTP calls from huma machinery such
+	// as autopatch) whose path does not already start with the prefix get
+	// the prefix prepended before routing — this keeps autopatch's
+	// relative path resolution working even when the adapter is mounted
+	// on a sub-group.
+	groupPrefix string
+}
+
+func (a *echoAdapter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if a.groupPrefix != "" && !strings.HasPrefix(r.URL.Path, a.groupPrefix) {
+		r = r.Clone(r.Context())
+		r.URL.Path = a.groupPrefix + r.URL.Path
+		if r.URL.RawPath != "" {
+			r.URL.RawPath = a.groupPrefix + r.URL.RawPath
+		}
+	}
+	a.Handler.ServeHTTP(w, r)
 }
 
 func (a *echoAdapter) Handle(op *huma.Operation, handler func(huma.Context)) {
@@ -148,7 +189,12 @@ func New(r *echo.Echo, config huma.Config) huma.API {
 	return huma.NewAPI(config, &echoAdapter{Handler: r, router: r})
 }
 
-// NewWithGroup creates a new Huma API using the provided Echo router and group.
-func NewWithGroup(r *echo.Echo, g *echo.Group, config huma.Config) huma.API {
-	return huma.NewAPI(config, &echoAdapter{Handler: r, router: g})
+// NewWithGroup creates a new Huma API using the provided Echo router and
+// group. Handlers registered through the returned API land on `g`, so they
+// inherit the group's middleware stack. `groupPrefix` must equal the
+// prefix `g` was constructed with (e.g. "/api/v2"); the adapter uses it
+// to rewrite internal Huma dispatches (notably autopatch's GET+PUT round
+// trip) back onto the absolute URLs Echo routes on.
+func NewWithGroup(r *echo.Echo, g *echo.Group, groupPrefix string, config huma.Config) huma.API {
+	return huma.NewAPI(config, &echoAdapter{Handler: r, router: g, groupPrefix: groupPrefix})
 }
