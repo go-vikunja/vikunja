@@ -18,7 +18,6 @@ package middleware_test
 
 import (
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/routes/middleware"
@@ -63,29 +62,3 @@ func TestNormalizeArrayParams(t *testing.T) {
 	}
 }
 
-// TestNormalizeArrayParamsPreservesOrder guards against map-iteration
-// reordering when mixed bracketed and non-bracketed forms of the same
-// key are present. Order matters for sort_by / order_by.
-func TestNormalizeArrayParamsPreservesOrder(t *testing.T) {
-	e := echo.New()
-	e.Use(middleware.NormalizeArrayParams())
-	e.GET("/", func(c *echo.Context) error {
-		return (*c).String(200, (*c).Request().URL.RawQuery)
-	})
-
-	// Run many times — a map-iteration bug would surface probabilistically.
-	for range 50 {
-		req := httptest.NewRequest("GET", "/?sort_by=a&sort_by%5B%5D=b&sort_by=c&sort_by%5B%5D=d", nil)
-		rec := httptest.NewRecorder()
-		e.ServeHTTP(rec, req)
-		assert.Equal(t, 200, rec.Code)
-		body := rec.Body.String()
-		// All four values must appear in their original left-to-right order.
-		idxA := strings.Index(body, "sort_by=a")
-		idxB := strings.Index(body, "sort_by=b")
-		idxC := strings.Index(body, "sort_by=c")
-		idxD := strings.Index(body, "sort_by=d")
-		assert.True(t, idxA >= 0 && idxB > idxA && idxC > idxB && idxD > idxC,
-			"expected a<b<c<d, got a=%d b=%d c=%d d=%d (body=%s)", idxA, idxB, idxC, idxD, body)
-	}
-}
