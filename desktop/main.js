@@ -10,6 +10,7 @@ const {
 	screen,
 } = require('electron')
 const path = require('path')
+const fs = require('fs')
 const express = require('express')
 const portInUse = require('./portInUse.js')
 const oauth = require('./oauth.js')
@@ -23,6 +24,9 @@ const SAFE_PROTOCOLS = new Set([
 
 const QUICK_ENTRY_WIDTH = 680
 const QUICK_ENTRY_COLLAPSED_HEIGHT = 56
+
+const ZOOM_STEP = 0.5
+const ZOOM_CONFIG_FILE = 'zoom.json'
 
 const BASE_WEB_PREFERENCES = {
 	nodeIntegration: false,
@@ -52,6 +56,7 @@ let isQuitting = false
 let pendingDeepLinkUrl = null
 let pendingApiUrl = null
 let currentShortcut = null
+let zoomLevel = 0
 const DEFAULT_QUICK_ENTRY_SHORTCUT = 'CmdOrCtrl+Shift+A'
 const launchedWithQuickEntry = process.argv.includes('--quick-entry')
 
@@ -172,6 +177,60 @@ function startServer(callback) {
 	})
 }
 
+// ─── Zoom ────────────────────────────────────────────────────────────
+function zoomConfigPath() {
+	return path.join(app.getPath('userData'), ZOOM_CONFIG_FILE)
+}
+
+function loadZoomLevel() {
+	try {
+		const raw = fs.readFileSync(zoomConfigPath(), 'utf8')
+		const parsed = JSON.parse(raw)
+		if (typeof parsed.zoomLevel === 'number' && Number.isFinite(parsed.zoomLevel)) {
+			return parsed.zoomLevel
+		}
+	} catch {
+		// First run or unreadable file, fall back to default
+	}
+	return 0
+}
+
+function saveZoomLevel(level) {
+	try {
+		fs.writeFileSync(zoomConfigPath(), JSON.stringify({zoomLevel: level}))
+	} catch (err) {
+		console.warn('Failed to persist zoom level:', err.message)
+	}
+}
+
+function applyZoom(webContents, level) {
+	zoomLevel = level
+	webContents.setZoomLevel(level)
+	saveZoomLevel(level)
+}
+
+function wireZoomHandlers(win) {
+	win.webContents.on('before-input-event', (event, input) => {
+		if (input.type !== 'keyDown' || !input.control || input.alt || input.meta) return
+		const key = input.key
+		if (key === '=' || key === '+') {
+			applyZoom(win.webContents, zoomLevel + ZOOM_STEP)
+			event.preventDefault()
+		} else if (key === '-') {
+			applyZoom(win.webContents, zoomLevel - ZOOM_STEP)
+			event.preventDefault()
+		} else if (key === '0') {
+			applyZoom(win.webContents, 0)
+			event.preventDefault()
+		}
+	})
+
+	win.webContents.on('zoom-changed', (_event, direction) => {
+		const delta = direction === 'in' ? ZOOM_STEP : -ZOOM_STEP
+		applyZoom(win.webContents, zoomLevel + delta)
+	})
+}
+
 // ─── Main window ─────────────────────────────────────────────────────
 function createMainWindow() {
 	mainWindow = new BrowserWindow({
@@ -212,6 +271,11 @@ function createMainWindow() {
 	})
 
 	mainWindow.loadURL(`http://127.0.0.1:${serverPort}`)
+
+	wireZoomHandlers(mainWindow)
+	mainWindow.webContents.on('did-finish-load', () => {
+		mainWindow.webContents.setZoomLevel(zoomLevel)
+	})
 
 	// Process any deep link that arrived before the page was ready,
 	// either buffered from open-url or passed via process.argv on first launch
@@ -434,6 +498,8 @@ ipcMain.on('desktop:update-quick-entry-shortcut', (_event, shortcut) => {
 
 // ─── App lifecycle ───────────────────────────────────────────────────
 app.whenReady().then(() => {
+	zoomLevel = loadZoomLevel()
+
 	startServer(() => {
 		createMainWindow()
 		createQuickEntryWindow()
