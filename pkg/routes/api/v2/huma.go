@@ -47,13 +47,31 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	cfg.FieldsOptionalByDefault = true
 
 	api := humaecho5.NewWithGroup(e, g, GroupPrefix, cfg)
-	if api.OpenAPI().Components.SecuritySchemes == nil {
-		api.OpenAPI().Components.SecuritySchemes = map[string]*huma.SecurityScheme{}
+	oapi := api.OpenAPI()
+	if oapi.Components.SecuritySchemes == nil {
+		oapi.Components.SecuritySchemes = map[string]*huma.SecurityScheme{}
 	}
-	api.OpenAPI().Components.SecuritySchemes["JWTKeyAuth"] = &huma.SecurityScheme{
+	// Two security schemes share the Authorization: Bearer header: JWT
+	// (issued via /api/v1/login, refresh tokens rotated via cookie) and
+	// Vikunja API tokens (tk_... prefix, scoped permissions). v1 declared
+	// only JWTKeyAuth and conflated both under it; v2 declares them
+	// separately so generated SDKs and /api/v2/docs distinguish them.
+	oapi.Components.SecuritySchemes["JWTKeyAuth"] = &huma.SecurityScheme{
 		Type:         "http",
 		Scheme:       "bearer",
 		BearerFormat: "JWT",
+		Description:  "User session JWT issued via /api/v1/login.",
+	}
+	oapi.Components.SecuritySchemes["APITokenAuth"] = &huma.SecurityScheme{
+		Type:        "http",
+		Scheme:      "bearer",
+		Description: "Vikunja API token (tk_ prefix) with scoped permissions. Created via /api/v1/tokens.",
+	}
+	// Applied globally to every registered operation; the handful of public
+	// endpoints (spec, docs) explicitly opt out with Security: []map[...]{}.
+	oapi.Security = []map[string][]string{
+		{"JWTKeyAuth": {}},
+		{"APITokenAuth": {}},
 	}
 	return api
 }
