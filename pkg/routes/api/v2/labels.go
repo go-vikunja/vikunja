@@ -37,34 +37,31 @@ type labelListBody struct {
 	Body Paginated[*models.LabelWithTaskID]
 }
 
-// jwtSecurity is the security requirement entry applied to every Label
-// operation. Mirrors the "JWTKeyAuth" scheme declared in huma.go.
-var jwtSecurity = []map[string][]string{{"JWTKeyAuth": {}}}
-
 // RegisterLabelRoutes wires Label CRUD operations onto the given Huma API.
+// Auth is supplied globally via huma.Config (see NewAPI), so operations
+// don't declare Security per-call.
 func RegisterLabelRoutes(api huma.API) {
+	tags := []string{"labels"}
+
 	huma.Register(api, huma.Operation{
 		OperationID: "labels-list",
 		Method:      http.MethodGet,
 		Path:        "/labels",
-		Tags:        []string{"labels"},
-		Security:    jwtSecurity,
+		Tags:        tags,
 	}, labelsList)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "labels-read",
 		Method:      http.MethodGet,
 		Path:        "/labels/{id}",
-		Tags:        []string{"labels"},
-		Security:    jwtSecurity,
+		Tags:        tags,
 	}, labelsRead)
 
 	huma.Register(api, huma.Operation{
 		OperationID:   "labels-create",
 		Method:        http.MethodPost,
 		Path:          "/labels",
-		Tags:          []string{"labels"},
-		Security:      jwtSecurity,
+		Tags:          tags,
 		DefaultStatus: http.StatusCreated,
 	}, labelsCreate)
 
@@ -72,16 +69,14 @@ func RegisterLabelRoutes(api huma.API) {
 		OperationID: "labels-update",
 		Method:      http.MethodPut,
 		Path:        "/labels/{id}",
-		Tags:        []string{"labels"},
-		Security:    jwtSecurity,
+		Tags:        tags,
 	}, labelsUpdate)
 
 	huma.Register(api, huma.Operation{
 		OperationID:   "labels-delete",
 		Method:        http.MethodDelete,
 		Path:          "/labels/{id}",
-		Tags:          []string{"labels"},
-		Security:      jwtSecurity,
+		Tags:          tags,
 		DefaultStatus: http.StatusNoContent,
 	}, labelsDelete)
 }
