@@ -28,37 +28,14 @@ import (
 	"github.com/danielgtaylor/huma/v2/conditional"
 )
 
-// Paginated is the standard list-response envelope for /api/v2.
-type Paginated[T any] struct {
-	Items      []T   `json:"items"`
-	Total      int64 `json:"total"`
-	Page       int   `json:"page"`
-	PerPage    int   `json:"per_page"`
-	TotalPages int64 `json:"total_pages"`
-}
-
 // --- Label ---
 
-// labelBody is the standard single-Label response envelope (no cache headers).
-type labelBody struct {
-	Body *models.Label
-}
-
-// labelReadBody is the read-operation response envelope, carrying an ETag
-// header so clients can issue If-None-Match for subsequent reads.
-type labelReadBody struct {
-	ETag string `header:"ETag"`
-	Body *models.Label
-}
-
-// labelListBody wraps the paginated list response. The v1 ReadAll returns
+// labelListBody wraps the paginated list response. v1's ReadAll returns
 // the hydrated LabelWithTaskID rows (label fields plus the task_id it's
 // attached to) and we keep that shape here for contract parity.
 type labelListBody struct {
 	Body Paginated[*models.LabelWithTaskID]
 }
-
-type emptyBody struct{}
 
 // jwtSecurity is the security requirement entry applied to every Label
 // operation. Mirrors the "JWTKeyAuth" scheme declared in huma.go.
@@ -112,9 +89,7 @@ func RegisterLabelRoutes(api huma.API) {
 // --- handlers ---
 
 func labelsList(ctx context.Context, in *struct {
-	Page    int    `query:"page"     default:"1"  minimum:"1"`
-	PerPage int    `query:"per_page" default:"50" minimum:"1" maximum:"1000"`
-	Q       string `query:"q"`
+	ListParams
 }) (*labelListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -131,26 +106,13 @@ func labelsList(ctx context.Context, in *struct {
 	if !ok {
 		return nil, fmt.Errorf("labels.ReadAll returned unexpected type %T (expected []*models.LabelWithTaskID)", result)
 	}
-	if items == nil {
-		items = []*models.LabelWithTaskID{}
-	}
-	totalPages := int64(0)
-	if in.PerPage > 0 {
-		totalPages = (total + int64(in.PerPage) - 1) / int64(in.PerPage)
-	}
-	return &labelListBody{Body: Paginated[*models.LabelWithTaskID]{
-		Items:      items,
-		Total:      total,
-		Page:       in.Page,
-		PerPage:    in.PerPage,
-		TotalPages: totalPages,
-	}}, nil
+	return &labelListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
 
 func labelsRead(ctx context.Context, in *struct {
 	ID int64 `path:"id"`
 	conditional.Params
-}) (*labelReadBody, error) {
+}) (*singleReadBody[models.Label], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -171,12 +133,12 @@ func labelsRead(ctx context.Context, in *struct {
 			return nil, err
 		}
 	}
-	return &labelReadBody{ETag: `"` + etag + `"`, Body: label}, nil
+	return &singleReadBody[models.Label]{ETag: `"` + etag + `"`, Body: label}, nil
 }
 
 func labelsCreate(ctx context.Context, in *struct {
 	Body models.Label
-}) (*labelBody, error) {
+}) (*singleBody[models.Label], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -184,13 +146,13 @@ func labelsCreate(ctx context.Context, in *struct {
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &labelBody{Body: &in.Body}, nil
+	return &singleBody[models.Label]{Body: &in.Body}, nil
 }
 
 func labelsUpdate(ctx context.Context, in *struct {
 	ID   int64 `path:"id"`
 	Body models.Label
-}) (*labelBody, error) {
+}) (*singleBody[models.Label], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -199,7 +161,7 @@ func labelsUpdate(ctx context.Context, in *struct {
 	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &labelBody{Body: &in.Body}, nil
+	return &singleBody[models.Label]{Body: &in.Body}, nil
 }
 
 func labelsDelete(ctx context.Context, in *struct {
