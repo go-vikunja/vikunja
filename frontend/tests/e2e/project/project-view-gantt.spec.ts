@@ -150,8 +150,8 @@ test.describe('Project View Gantt', () => {
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		const now = new Date()
 		const tasks = await TaskFactory.create(1, {
-			start_date: dayjs(now).format(),
-			end_date: dayjs(now.setDate(now.getDate() + 4)).format(),
+			start_date: dayjs(now).toISOString(),
+			end_date: dayjs(now.setDate(now.getDate() + 4)).toISOString(),
 		})
 		await page.goto('/projects/1/2')
 
