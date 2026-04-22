@@ -6,6 +6,7 @@ import WebhookModel from '@/models/webhook'
 import BaseButton from '@/components/base/BaseButton.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FormField from '@/components/input/FormField.vue'
+import FormInput from '@/components/input/FormInput.vue'
 import Expandable from '@/components/base/Expandable.vue'
 import User from '@/components/misc/User.vue'
 import {formatDateShort} from '@/helpers/time/formatDate'
@@ -116,27 +117,20 @@ function doDelete() {
 				:error="webhookTargetUrlValid ? null : $t('project.webhooks.targetUrlInvalid')"
 				@focusout="validateTargetUrl"
 			/>
-			<div class="field">
-				<label
-					class="label"
-					for="secret"
-				>
-					{{ $t('project.webhooks.secret') }}
-				</label>
-				<div class="control">
-					<input
-						id="secret"
+			<FormField :label="$t('project.webhooks.secret')">
+				<template #default="{id}">
+					<FormInput
+						:id="id"
 						v-model="newWebhook.secret"
-						class="input"
-					>
-				</div>
-				<p class="help">
-					{{ $t('project.webhooks.secretHint') }}
-					<BaseButton href="https://vikunja.io/docs/webhooks/">
-						{{ $t('project.webhooks.secretDocs') }}
-					</BaseButton>
-				</p>
-			</div>
+					/>
+				</template>
+			</FormField>
+			<p class="help">
+				{{ $t('project.webhooks.secretHint') }}
+				<BaseButton href="https://vikunja.io/docs/webhooks/">
+					{{ $t('project.webhooks.secretDocs') }}
+				</BaseButton>
+			</p>
 			<BaseButton
 				class="mbe-2 has-text-primary"
 				@click="showBasicAuth = !showBasicAuth"
@@ -147,36 +141,22 @@ function doDelete() {
 				:open="showBasicAuth"
 				class="content"
 			>
-				<div class="field">
-					<label
-						class="label"
-						for="basicauthuser"
-					>
-						{{ $t('project.webhooks.basicauthuser') }}
-					</label>
-					<div class="control">
-						<input
-							id="basicauthuser"
+				<FormField :label="$t('project.webhooks.basicauthuser')">
+					<template #default="{id}">
+						<FormInput
+							:id="id"
 							v-model="newWebhook.basicauthuser"
-							class="input"
-						>
-					</div>
-				</div>
-				<div class="field">
-					<label
-						class="label"
-						for="basicauthpassword"
-					>
-						{{ $t('project.webhooks.basicauthpassword') }}
-					</label>
-					<div class="control">
-						<input
-							id="basicauthpassword"
+						/>
+					</template>
+				</FormField>
+				<FormField :label="$t('project.webhooks.basicauthpassword')">
+					<template #default="{id}">
+						<FormInput
+							:id="id"
 							v-model="newWebhook.basicauthpassword"
-							class="input"
-						>
-					</div>
-				</div>
+						/>
+					</template>
+				</FormField>
 			</Expandable>
 			<div class="field">
 				<label

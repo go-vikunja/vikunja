@@ -844,6 +844,9 @@
 				"toggleHeaderCell": "Headerzelle ein/aus",
 				"mergeOrSplit": "Verbinden oder teilen",
 				"fixTables": "Tabellen reparieren"
+			},
+			"emoji": {
+				"empty": "Kein Emojis gefunden"
 			}
 		},
 		"multiselect": {

@@ -28,8 +28,9 @@
 				@update:task="Object.assign(task, $event)"
 				@close="$emit('close')"
 			/>
-			<h6
+			<nav
 				v-if="project?.id"
+				aria-label="Breadcrumb"
 				class="subtitle"
 			>
 				<template
@@ -60,7 +61,7 @@
 					:can-write="canWrite"
 					@update:task="Object.assign(task, $event)"
 				/>
-			</h6>
+			</nav>
 
 			<ChecklistSummary :task="task" />
 
@@ -1174,9 +1175,12 @@ function setRelatedTasksActive() {
 
 	// If the related tasks are already available, show the form again
 	const el = activeFieldElements['relatedTasks']
-	for (const child in el?.children) {
-		if (el?.children[child]?.id === 'showRelatedTasksFormButton') {
-			el?.children[child]?.click()
+	if (!el) {
+		return
+	}
+	for (const child of Array.from(el.children)) {
+		if ((child as HTMLElement).id === 'showRelatedTasksFormButton') {
+			(child as HTMLElement).click()
 			break
 		}
 	}

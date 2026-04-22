@@ -181,3 +181,33 @@ function cropAvatar() {
 	background: var(--white);
 }
 </style>
+
+<style lang="scss" scoped>
+// Ported from bulma-css-variables/sass/form/checkbox-radio.sass
+// (the %checkbox-radio placeholder), scoped to this component so we can
+// drop the global Bulma import.
+label.radio {
+	cursor: pointer;
+	display: inline-block;
+	line-height: 1.25;
+	position: relative;
+
+	input {
+		cursor: pointer;
+	}
+
+	&:hover {
+		color: var(--input-hover-color);
+	}
+
+	&[disabled],
+	input[disabled] {
+		color: var(--input-disabled-color);
+		cursor: not-allowed;
+	}
+
+	& + .radio {
+		margin-inline-start: .5em;
+	}
+}
+</style>

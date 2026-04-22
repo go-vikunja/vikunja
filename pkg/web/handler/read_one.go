@@ -22,8 +22,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -52,49 +50,14 @@ func (c *WebHandler) ReadOneWeb(ctx *echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not determine the current user.").Wrap(err)
 	}
 
-	// Create the db session
-	s := db.NewSession()
-	defer func() {
-		err = s.Close()
-		if err != nil {
-			log.Errorf("Could not close session: %s", err)
-		}
-	}()
-
-	canRead, maxPermission, err := currentStruct.CanRead(s, currentAuth)
+	maxPermission, err := DoReadOne(ctx.Request().Context(), currentStruct, currentAuth)
 	if err != nil {
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		return err
-	}
-	if !canRead {
-		_ = s.Rollback()
-		events.CleanupPending(s)
-		log.Warningf("Tried to read while not having the permissions for it (User: %v)", currentAuth)
-		return echo.NewHTTPError(http.StatusForbidden, "You don't have the permission to see this")
-	}
-
-	// Get our object
-	err = currentStruct.ReadOne(s, currentAuth)
-	if err != nil {
-		_ = s.Rollback()
-		events.CleanupPending(s)
 		return err
 	}
 
 	// Set the headers
-	if canRead {
-		ctx.Response().Header().Set("x-max-permission", strconv.FormatInt(int64(maxPermission), 10))
-		ctx.Response().Header().Set("Access-Control-Expose-Headers", "x-max-permission")
-	}
-
-	err = s.Commit()
-	if err != nil {
-		events.CleanupPending(s)
-		return err
-	}
-
-	events.DispatchPending(s)
+	ctx.Response().Header().Set("x-max-permission", strconv.FormatInt(int64(maxPermission), 10))
+	ctx.Response().Header().Set("Access-Control-Expose-Headers", "x-max-permission")
 
 	return ctx.JSON(http.StatusOK, currentStruct)
 }

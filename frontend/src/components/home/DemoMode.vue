@@ -18,6 +18,7 @@ const enabled = computed(() => configStore.demoModeEnabled && !hide.value)
 			<strong class="is-uppercase">{{ $t('demo.everythingWillBeDeleted') }}</strong>
 		</p>
 		<BaseButton
+			:aria-label="$t('misc.closeBanner')"
 			class="hide-button"
 			@click="() => hide = true"
 		>

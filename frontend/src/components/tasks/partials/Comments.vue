@@ -478,7 +478,7 @@ async function editComment() {
 	commentEdit.taskId = props.taskId
 	try {
 		const comment = await taskCommentService.update(commentEdit)
-		for (const c in comments.value) {
+		for (let c = 0; c < comments.value.length; c++) {
 			if (comments.value[c].id === commentEdit.id) {
 				comments.value[c] = comment
 			}
@@ -506,12 +506,29 @@ async function deleteComment(commentToDelete: ITaskComment) {
 
 function getCommentUrl(commentId: string) {
 	const baseUrl = frontendUrl.value.endsWith('/') ? frontendUrl.value.slice(0, -1) : frontendUrl.value
-	return `${baseUrl}${location.pathname}${location.search}#comment-${commentId}`
+	const url = new URL(location.pathname + location.search, baseUrl)
+	url.hash = `comment-${commentId}`
+	return url.toString()
 }
 </script>
 
 <style lang="scss" scoped>
+.media {
+	align-items: flex-start;
+	display: flex;
+	text-align: inherit;
+
+	& + .media {
+		border-block-start: 1px solid rgba(var(--border-rgb), 0.5);
+		margin-block-start: 1rem;
+		padding-block-start: 1rem;
+	}
+}
+
 .media-left {
+	flex-basis: auto;
+	flex-grow: 0;
+	flex-shrink: 0;
 	margin: 0 1rem !important;
 }
 
@@ -559,6 +576,10 @@ function getCommentUrl(commentId: string) {
 }
 
 .media-content {
+	flex-basis: auto;
+	flex-grow: 1;
+	flex-shrink: 1;
+	text-align: inherit;
 	inline-size: calc(100% - 48px - 2rem);
 }
 

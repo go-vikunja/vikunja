@@ -448,7 +448,7 @@ function createOrSelectOnEnter() {
 }
 
 function remove(item: T) {
-	for (const ind in internalValue.value) {
+	for (let ind = 0; ind < internalValue.value.length; ind++) {
 		if (internalValue.value[ind] === item) {
 			internalValue.value.splice(ind, 1)
 			break

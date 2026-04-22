@@ -332,12 +332,20 @@ function toggleQuickEntry() {
 
 // ─── System tray ─────────────────────────────────────────────────────
 function setupTray() {
-	if (tray) {
-		tray.destroy()
+	if (!tray) {
+		const iconPath = path.join(__dirname, 'build', 'icon.png')
+		const icon = nativeImage.createFromPath(iconPath).resize({width: 16, height: 16})
+		tray = new Tray(icon)
+		tray.setToolTip('Vikunja')
+		tray.on('click', () => {
+			if (mainWindow) {
+				mainWindow.show()
+				mainWindow.focus()
+			} else {
+				createMainWindow()
+			}
+		})
 	}
-	const iconPath = path.join(__dirname, 'build', 'icon.png')
-	const icon = nativeImage.createFromPath(iconPath).resize({width: 16, height: 16})
-	tray = new Tray(icon)
 
 	const contextMenu = Menu.buildFromTemplate([
 		{
@@ -366,17 +374,7 @@ function setupTray() {
 		},
 	])
 
-	tray.setToolTip('Vikunja')
 	tray.setContextMenu(contextMenu)
-
-	tray.on('click', () => {
-		if (mainWindow) {
-			mainWindow.show()
-			mainWindow.focus()
-		} else {
-			createMainWindow()
-		}
-	})
 }
 
 // ─── IPC handlers ────────────────────────────────────────────────────

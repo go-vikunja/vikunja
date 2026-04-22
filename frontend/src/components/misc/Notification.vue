@@ -4,6 +4,8 @@
 		:max="2"
 		:ignore-duplicates="true"
 		class="global-notification"
+		role="status"
+		aria-live="polite"
 	>
 		<template #body="{ item, close }">
 			<!-- FIXME: overlay whole notification with button and add event listener on that button instead -->

@@ -7,13 +7,13 @@ import {camelCase, snakeCase} from 'change-case'
 export function objectToCamelCase(object: Record<string, any>) {
 
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
-	if (typeof object !== 'object') {
+	if (typeof object !== 'object' || object === null) {
 		return object
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const parsedObject: Record<string, any> = {}
-	for (const m in object) {
+	for (const m of Object.keys(object)) {
 		parsedObject[camelCase(m)] = object[m]
 
 		// Recursive processing
@@ -45,13 +45,13 @@ export function objectToCamelCase(object: Record<string, any>) {
 export function objectToSnakeCase(object: Record<string, any>) {
 
 	// When calling recursively, this can be called without being and object or array in which case we just return the value
-	if (typeof object !== 'object') {
+	if (typeof object !== 'object' || object === null) {
 		return object
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const parsedObject: Record<string, any> = {}
-	for (const m in object) {
+	for (const m of Object.keys(object)) {
 		parsedObject[snakeCase(m)] = object[m]
 
 		// Recursive processing

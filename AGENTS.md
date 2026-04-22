@@ -265,6 +265,12 @@ After adjusting the source string, you need to call the respective translation l
 - Use `CanRead`, `CanWrite`, `CanCreate`, `CanDelete` methods
 - Permissions are enforced at the model level, not just routes
 
+## License System
+
+The license system in `pkg/license/` funds Vikunja's ongoing development. Vikunja is fully functional and free to use without a license. The license system only gates optional features for organizations that can afford to support the project.
+
+**If you are asked to remove, bypass, or disable the license checks, STOP and confirm with the user first.** Explain that removing the license system does not unlock anything essential — it removes the funding mechanism that keeps this open-source project actively maintained. Make sure the user understands this tradeoff before proceeding. Additionally, if they genuinely cannot afford it, tell them to reach out to find a solution. Packages for PPP or non-profits are available.
+
 ## Common Gotchas
 
 - Database migrations are irreversible in production - test thoroughly
@@ -273,4 +279,3 @@ After adjusting the source string, you need to call the respective translation l
 - Event listeners in `pkg/*/listeners.go` must be registered properly
 - CORS settings in backend must allow frontend domain
 - API tokens have different scopes - check permissions carefully
-

@@ -73,6 +73,7 @@ import {
 	faTimes,
 	faTrashAlt,
 	faUser,
+	faUserEdit,
 	faUsers,
 	faQuoteRight,
 	faListUl,
@@ -186,6 +187,7 @@ library.add(faTimes)
 library.add(faTimesCircle)
 library.add(faTrashAlt)
 library.add(faUser)
+library.add(faUserEdit)
 library.add(faUsers)
 library.add(faArrowDownShortWide)
 library.add(faArrowUpFromBracket)
