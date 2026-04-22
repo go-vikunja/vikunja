@@ -130,7 +130,7 @@
     "esbuild": "0.28.0",
     "eslint": "9.39.4",
     "eslint-plugin-depend": "1.5.0",
-    "eslint-plugin-vue": "10.8.0",
+    "eslint-plugin-vue": "10.9.0",
     "happy-dom": "20.9.0",
     "histoire": "1.0.0-beta.1",
     "otplib": "12.0.1",
