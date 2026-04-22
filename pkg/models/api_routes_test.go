@@ -57,14 +57,14 @@ func TestCanDoAPIRoute_BulkLabelTask(t *testing.T) {
 
 func TestIsV2Path(t *testing.T) {
 	cases := map[string]bool{
-		"/api/v2":          true,
-		"/api/v2/":         true,
-		"/api/v2/labels":   true,
-		"/api/v1/labels":   false,
-		"/api/v1/api/v2":   false, // prefix is authoritative
-		"":                 false,
-		"/api/v20/labels":  false, // only exact /api/v2 prefix counts
-		"/api/v2labels":    false,
+		"/api/v2":         true,
+		"/api/v2/":        true,
+		"/api/v2/labels":  true,
+		"/api/v1/labels":  false,
+		"/api/v1/api/v2":  false, // prefix is authoritative
+		"":                false,
+		"/api/v20/labels": false, // only exact /api/v2 prefix counts
+		"/api/v2labels":   false,
 	}
 	for path, want := range cases {
 		t.Run(path, func(t *testing.T) {
@@ -75,13 +75,13 @@ func TestIsV2Path(t *testing.T) {
 
 func TestStripAPIVersion(t *testing.T) {
 	cases := map[string]string{
-		"/api/v1/labels":      "labels",
-		"/api/v2/labels":      "labels",
-		"/api/v2/labels/42":   "labels/42",
-		"/api/v1/tasks/bulk":  "tasks/bulk",
-		"/api/v3/labels":      "/api/v3/labels", // unknown versions pass through
-		"/labels":             "/labels",
-		"":                    "",
+		"/api/v1/labels":     "labels",
+		"/api/v2/labels":     "labels",
+		"/api/v2/labels/42":  "labels/42",
+		"/api/v1/tasks/bulk": "tasks/bulk",
+		"/api/v3/labels":     "/api/v3/labels", // unknown versions pass through
+		"/labels":            "/labels",
+		"":                   "",
 	}
 	for path, want := range cases {
 		t.Run(path, func(t *testing.T) {
