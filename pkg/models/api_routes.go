@@ -143,9 +143,9 @@ func getRouteDetail(route echo.RouteInfo) (method string, detail *RouteDetail) {
 	return "", detail
 }
 
-func ensureAPITokenRoutesGroup(group string) {
-	if _, has := apiTokenRoutes[group]; !has {
-		apiTokenRoutes[group] = make(APITokenRoute)
+func ensureAPITokenRoutesGroup(target map[string]APITokenRoute, group string) {
+	if _, has := target[group]; !has {
+		target[group] = make(APITokenRoute)
 	}
 }
 
@@ -218,34 +218,14 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 	return false
 }
 
-// collectV2Route stores a /api/v2 route in the v2 shadow table under the
-// same (group, permission) keys that its v1 counterpart would use. If no
-// permission can be derived from the method (e.g. OPTIONS), the route is
-// skipped.
-func collectV2Route(route echo.RouteInfo, routeGroupName string) {
-	permission, detail := getRouteDetail(route)
-	if permission == "" {
-		return
-	}
-
-	// bulk endpoints (if any appear in v2 later) get the same treatment as v1.
-	if strings.HasSuffix(routeGroupName, "_bulk") {
-		parent := strings.TrimSuffix(routeGroupName, "_bulk")
-		if _, has := apiTokenRoutesV2[parent]; !has {
-			apiTokenRoutesV2[parent] = make(APITokenRoute)
-		}
-		apiTokenRoutesV2[parent][permission+"_bulk"] = detail
-		return
-	}
-
-	if _, has := apiTokenRoutesV2[routeGroupName]; !has {
-		apiTokenRoutesV2[routeGroupName] = make(APITokenRoute)
-	}
-	apiTokenRoutesV2[routeGroupName][permission] = detail
-}
-
 // CollectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
 // The requiresJWT parameter indicates if this route is protected by JWT authentication.
+//
+// v1 and v2 routes are keyed identically — both write into a map addressed by
+// the same (group, permission) name derived from the path without the
+// /api/vN prefix. v2 routes land in apiTokenRoutesV2 so the frontend token
+// UI (which reads apiTokenRoutes) keeps showing the stable v1-named groups
+// while CanDoAPIRoute consults both tables when authorising a request.
 func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 	if route.Method == "echo_route_not_found" {
@@ -266,13 +246,9 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		return
 	}
 
-	// v2 routes are stored in a shadow table keyed identically to their v1
-	// equivalents. This keeps apiTokenRoutes stable for the frontend token
-	// UI while still allowing CanDoAPIRoute to authorize v2 requests with
-	// tokens that were scoped on v1 permission names.
+	target := apiTokenRoutes
 	if isV2Path(route.Path) {
-		collectV2Route(route, routeGroupName)
-		return
+		target = apiTokenRoutesV2
 	}
 
 	// Check if this is a standard CRUD route using path-based heuristics
@@ -294,67 +270,67 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 		// Otherwise, we add it to the "other" key.
 		if len(routeParts) == 1 {
 			if routeGroupName == "notifications" && route.Method == http.MethodPost {
-				ensureAPITokenRoutesGroup("notifications")
+				ensureAPITokenRoutesGroup(target, "notifications")
 
-				apiTokenRoutes["notifications"]["mark_all_as_read"] = routeDetail
+				target["notifications"]["mark_all_as_read"] = routeDetail
 				return
 			}
 
-			ensureAPITokenRoutesGroup("other")
+			ensureAPITokenRoutesGroup(target, "other")
 
-			_, exists := apiTokenRoutes["other"][routeGroupName]
+			_, exists := target["other"][routeGroupName]
 			if exists {
 				routeGroupName += "_" + strings.ToLower(route.Method)
 			}
-			apiTokenRoutes["other"][routeGroupName] = routeDetail
+			target["other"][routeGroupName] = routeDetail
 			return
 		}
 
 		subkey := strings.Join(routeParts[1:], "_")
 
-		if _, has := apiTokenRoutes[routeParts[0]]; !has {
-			apiTokenRoutes[routeParts[0]] = make(APITokenRoute)
+		if _, has := target[routeParts[0]]; !has {
+			target[routeParts[0]] = make(APITokenRoute)
 		}
 
-		if _, has := apiTokenRoutes[routeParts[0]][subkey]; has {
+		if _, has := target[routeParts[0]][subkey]; has {
 			subkey += "_" + strings.ToLower(route.Method)
 		}
 
-		apiTokenRoutes[routeParts[0]][subkey] = routeDetail
+		target[routeParts[0]][subkey] = routeDetail
 
 		return
 	}
 
 	if strings.HasSuffix(routeGroupName, "_bulk") {
 		parent := strings.TrimSuffix(routeGroupName, "_bulk")
-		ensureAPITokenRoutesGroup(parent)
+		ensureAPITokenRoutesGroup(target, parent)
 
 		method, routeDetail := getRouteDetail(route)
-		apiTokenRoutes[parent][method+"_bulk"] = routeDetail
+		target[parent][method+"_bulk"] = routeDetail
 		return
 	}
 
-	_, has := apiTokenRoutes[routeGroupName]
+	_, has := target[routeGroupName]
 	if !has {
-		apiTokenRoutes[routeGroupName] = make(APITokenRoute)
+		target[routeGroupName] = make(APITokenRoute)
 	}
 
 	method, routeDetail := getRouteDetail(route)
 	if method != "" {
-		apiTokenRoutes[routeGroupName][method] = routeDetail
+		target[routeGroupName][method] = routeDetail
 	}
 
 	// Handle task attachments specially - they use custom handlers not WebHandler
 	if routeGroupName == "tasks_attachments" {
 		// PUT is upload (create), GET with :attachment param is download (read_one)
 		if route.Method == http.MethodPut {
-			apiTokenRoutes[routeGroupName]["create"] = &RouteDetail{
+			target[routeGroupName]["create"] = &RouteDetail{
 				Path:   route.Path,
 				Method: route.Method,
 			}
 		}
 		if route.Method == http.MethodGet && strings.HasSuffix(route.Path, ":attachment") {
-			apiTokenRoutes[routeGroupName]["read_one"] = &RouteDetail{
+			target[routeGroupName]["read_one"] = &RouteDetail{
 				Path:   route.Path,
 				Method: route.Method,
 			}
