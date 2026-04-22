@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
@@ -83,21 +84,8 @@ func newAuthedV2Request(t *testing.T, method, path, body, token string) *http.Re
 }
 
 // tokenForUser issues a JWT for the given test user.
-func tokenForUser(t *testing.T, userID int) string {
+func tokenForUser(t *testing.T, u *user.User) string {
 	t.Helper()
-	var u = &testuser1
-	switch userID {
-	case 1:
-		u = &testuser1
-	case 6:
-		u = &testuser6
-	case 10:
-		u = &testuser10
-	case 15:
-		u = &testuser15
-	default:
-		t.Fatalf("tokenForUser: unsupported userID %d", userID)
-	}
 	tok, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
 	require.NoError(t, err)
 	return tok
@@ -116,7 +104,7 @@ func serve(t *testing.T, e *echo.Echo, req *http.Request) *httptest.ResponseReco
 func TestHumaLabel_Create_Read_Update_Delete(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
-	token := tokenForUser(t, 1)
+	token := tokenForUser(t, &testuser1)
 
 	// Create
 	payload := `{"title":"huma test label","description":"round-trip","hex_color":"00ff00"}`
@@ -170,7 +158,7 @@ func TestHumaLabel_Create_Read_Update_Delete(t *testing.T) {
 func TestHumaLabel_List_ReturnsItems(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
-	token := tokenForUser(t, 1)
+	token := tokenForUser(t, &testuser1)
 
 	rec := serve(t, e, newAuthedV2Request(t, http.MethodGet, "/api/v2/labels", "", token))
 	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
@@ -193,7 +181,7 @@ func TestHumaLabel_ForbiddenErrorShape(t *testing.T) {
 	require.NoError(t, err)
 	// Label #6 belongs to user13 and is only visible to them per fixtures.
 	// user1 must get a 403 on both read and delete.
-	token := tokenForUser(t, 1)
+	token := tokenForUser(t, &testuser1)
 
 	rec := serve(t, e, newAuthedV2Request(t, http.MethodGet, "/api/v2/labels/6", "", token))
 	require.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
@@ -210,7 +198,7 @@ func TestHumaLabel_ForbiddenErrorShape(t *testing.T) {
 func TestHumaLabel_ValidationErrorShape(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
-	token := tokenForUser(t, 1)
+	token := tokenForUser(t, &testuser1)
 
 	// Title is constrained minLength:1 on the Label struct. An empty
 	// title must fail Huma's schema validation with RFC 9457 + detailed
@@ -239,7 +227,7 @@ func TestHumaLabel_ValidationErrorShape(t *testing.T) {
 func TestHumaLabel_ETagReturns304(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
-	token := tokenForUser(t, 1)
+	token := tokenForUser(t, &testuser1)
 
 	// First GET to capture the ETag. Label 1 belongs to user1.
 	rec := serve(t, e, newAuthedV2Request(t, http.MethodGet, "/api/v2/labels/1", "", token))
@@ -257,7 +245,7 @@ func TestHumaLabel_ETagReturns304(t *testing.T) {
 func TestHumaLabel_PATCHMergePatch(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
-	token := tokenForUser(t, 1)
+	token := tokenForUser(t, &testuser1)
 
 	// Create a label we can mutate without stomping fixtures.
 	rec := serve(t, e, newAuthedV2Request(t, http.MethodPost, "/api/v2/labels",
