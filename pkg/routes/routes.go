@@ -355,9 +355,23 @@ func collectRoutesForAPITokens(e *echo.Echo) {
 	}
 }
 
+// noStoreCacheControl returns middleware that sets `Cache-Control: no-store`
+// on all responses. Without this, browsers may heuristically cache JSON
+// responses which causes stale data (e.g. newly team-shared projects not
+// appearing until a hard refresh). Applied to both /api/v1 and /api/v2.
+func noStoreCacheControl() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			c.Response().Header().Set("Cache-Control", "no-store")
+			return next(c)
+		}
+	}
+}
+
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Huma and per-resource
 // route registrations land here in later sub-phases.
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
+	a.Use(noStoreCacheControl())
 	_ = apiv2.NewAPI(e, a)
 	// Resource registrations go here in later sub-phases.
 }
@@ -368,12 +382,7 @@ func registerAPIRoutes(a *echo.Group) {
 	// Cache-Control header browsers may heuristically cache JSON responses
 	// which causes stale data (e.g. newly team-shared projects not appearing
 	// until a hard refresh).
-	a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
-			c.Response().Header().Set("Cache-Control", "no-store")
-			return next(c)
-		}
-	})
+	a.Use(noStoreCacheControl())
 
 	// This is the group with no auth
 	// It is its own group to be able to rate limit this based on different heuristics
