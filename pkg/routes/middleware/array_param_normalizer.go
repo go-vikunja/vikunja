@@ -28,6 +28,10 @@ import (
 // PHP-style `[]` suffix for arrays; echo does not unify those with plain
 // repeated fields. Normalising here lets handlers declare a single
 // `query:"foo"` tag and receive both shapes.
+//
+// The rewrite preserves the original left-to-right appearance order of
+// parameters, which matters for order-sensitive multi-value fields like
+// sort_by and order_by when a client sends a mix of `foo` and `foo[]`.
 func NormalizeArrayParams() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
@@ -47,17 +51,40 @@ func NormalizeArrayParams() echo.MiddlewareFunc {
 				!strings.HasSuffix(rq, "%5b%5d") {
 				return next(c)
 			}
-			values, err := url.ParseQuery(rq)
-			if err != nil {
-				return next(c) // malformed; let downstream handle it
-			}
-			rewritten := url.Values{}
-			for k, vs := range values {
-				key := strings.TrimSuffix(k, "[]")
-				rewritten[key] = append(rewritten[key], vs...)
-			}
-			req.URL.RawQuery = rewritten.Encode()
+			req.URL.RawQuery = stripBracketSuffix(rq)
 			return next(c)
 		}
 	}
+}
+
+// stripBracketSuffix walks a raw query string pair by pair, trimming the
+// `[]` suffix from any keys that have one (whether literal or percent-
+// encoded). Values are left untouched — they are already URL-encoded and
+// don't need re-escaping. Walking the raw query keeps the original
+// parameter order intact, unlike url.ParseQuery which returns a map.
+func stripBracketSuffix(rq string) string {
+	var out strings.Builder
+	out.Grow(len(rq))
+	first := true
+	for _, pair := range strings.Split(rq, "&") {
+		if pair == "" {
+			continue
+		}
+		key, val, hasEq := strings.Cut(pair, "=")
+		decoded, err := url.QueryUnescape(key)
+		if err != nil {
+			decoded = key
+		}
+		decoded = strings.TrimSuffix(decoded, "[]")
+		if !first {
+			out.WriteByte('&')
+		}
+		first = false
+		out.WriteString(url.QueryEscape(decoded))
+		if hasEq {
+			out.WriteByte('=')
+			out.WriteString(val)
+		}
+	}
+	return out.String()
 }
