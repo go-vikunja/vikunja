@@ -166,7 +166,7 @@ const router = createRouter({
 				{
 					path: '/user/settings/bots',
 					name: 'user.settings.bots',
-					component: () => import('@/views/user/settings/Bots.vue'),
+					component: () => import('@/views/user/settings/BotUsers.vue'),
 				},
 				{
 					path: '/user/settings/migrate',
