@@ -249,6 +249,15 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 	target := apiTokenRoutes
 	if isV2Path(route.Path) {
 		target = apiTokenRoutesV2
+		// AutoPatch synthesises a PATCH counterpart for every PUT route in
+		// the /api/v2 surface. Both methods derive the same "update"
+		// permission, so storing the PATCH one would clobber the PUT one
+		// (last-write-wins on the map). Skip PATCH during collection —
+		// PUT is the authoritative update verb for API tokens; JWT clients
+		// still get PATCH because auth isn't gated on this table.
+		if route.Method == http.MethodPatch {
+			return
+		}
 	}
 
 	// Check if this is a standard CRUD route using path-based heuristics
