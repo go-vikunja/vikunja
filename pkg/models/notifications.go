@@ -350,7 +350,7 @@ func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail
 	overdueLine := ""
 	for _, task := range sortedTasks {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
-		overdueLine += `* [` + notifications.EscapeMarkdown(task.Title) + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + notifications.EscapeMarkdown(n.Projects[task.ProjectID].Title) + `), ` + i18n.T("notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
+		overdueLine += `* [` + notifications.EscapeMarkdown(task.Title) + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + notifications.EscapeMarkdown(n.Projects[task.ProjectID].Title) + `), ` + i18n.T(lang, "notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
 	}
 
 	return notifications.NewMail().
