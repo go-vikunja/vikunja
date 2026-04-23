@@ -665,17 +665,6 @@ func (Check) GotSwag(ctx context.Context) error {
 	return nil
 }
 
-// apiDynamicKeyPrefixes lists prefixes that are used dynamically (with a
-// non-literal key argument) in the api. Any translation key starting with
-// one of these prefixes is considered "used" so the dead-key detection doesn't
-// false-positive on them. Add a prefix here only after verifying the dynamic
-// call site actually produces the expected keys.
-var apiDynamicKeyPrefixes = []string{
-	// pkg/utils/humanize_duration.go uses i18n.TP(lang, chunk.key, ...) where
-	// chunk.key comes from a struct containing the time.since_* keys.
-	"time.since_",
-}
-
 // Translations checks that all translation keys used in the code exist in
 // their respective English translation files, and conversely that no unused
 // keys exist in those files. Both the api (Go) and the frontend (Vue/TS) are
@@ -707,14 +696,25 @@ func checkAPITranslations() error {
 
 	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
 
-	keys, err := walkAPIForTranslationKeys(".")
+	keys, literals, err := walkAPIForTranslationKeys(".")
 	if err != nil {
 		return fmt.Errorf("error walking api codebase: %w", err)
 	}
 
 	fmt.Printf("Found %d translation key references in the api codebase\n", len(keys))
 
-	return reportTranslationResults("api", translations, keys, apiDynamicKeyPrefixes)
+	// Some api keys are referenced indirectly – e.g. the time.since_* keys are
+	// stored as string literals in a struct slice in pkg/utils/humanize_duration.go
+	// and looked up via i18n.TP(lang, chunk.key, ...). Any literal that matches a
+	// known translation key is treated as a usage hint, so those keys aren't
+	// flagged as dead.
+	for lit := range literals {
+		if translations[lit] {
+			keys = append(keys, TranslationKey{Key: lit, FilePath: "<api literal hint>", Line: 0})
+		}
+	}
+
+	return reportTranslationResults("api", translations, keys, nil)
 }
 
 func checkFrontendTranslations() error {
@@ -865,11 +865,12 @@ func flattenTranslations(prefix string, src map[string]any, dest map[string]bool
 }
 
 // walkAPIForTranslationKeys walks the Go api code and extracts translation
-// keys referenced via string-literal arguments to i18n.T / i18n.TP. Dynamic
-// (non-literal) references are not detected here – add them to
-// apiDynamicKeyPrefixes instead.
-func walkAPIForTranslationKeys(rootDir string) ([]TranslationKey, error) {
+// keys referenced via string-literal arguments to i18n.T / i18n.TP, plus a
+// set of dotted string literals as "usage hints" for indirect references
+// (e.g. keys stored in a struct slice and passed to i18n.TP via a variable).
+func walkAPIForTranslationKeys(rootDir string) ([]TranslationKey, map[string]bool, error) {
 	var allKeys []TranslationKey
+	allLiterals := make(map[string]bool)
 
 	pkgDir := filepath.Join(rootDir, "pkg")
 
@@ -883,30 +884,40 @@ func walkAPIForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 		}
 
 		if !info.IsDir() && strings.HasSuffix(path, ".go") {
-			keys, err := extractAPITranslationKeysFromFile(path)
+			keys, literals, err := extractAPITranslationKeysFromFile(path)
 			if err != nil {
 				fmt.Printf("Warning: %v\n", err)
 				return nil
 			}
 			allKeys = append(allKeys, keys...)
+			for l := range literals {
+				allLiterals[l] = true
+			}
 		}
 
 		return nil
 	})
 
-	return allKeys, err
+	return allKeys, allLiterals, err
 }
 
+// apiStringLiteralRe matches double-quoted strings in Go source that look like
+// dotted translation keys (e.g. "time.since_years"). Used to surface keys that
+// are referenced indirectly – for example, stored in a struct field and later
+// passed to i18n.TP via a variable.
+var apiStringLiteralRe = regexp.MustCompile(`"([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)+)"`)
+
 // extractAPITranslationKeysFromFile extracts all i18n.T/i18n.TP calls with
-// a string-literal key. Non-literal (dynamic) keys are not flagged; any
-// dynamic-key reference must be allowlisted via apiDynamicKeyPrefixes.
-func extractAPITranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
+// a string-literal key, plus all dotted string literals in the file (returned
+// as the second value) which are used as usage hints for indirect references.
+func extractAPITranslationKeysFromFile(filePath string) ([]TranslationKey, map[string]bool, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading file %s: %w", filePath, err)
+		return nil, nil, fmt.Errorf("error reading file %s: %w", filePath, err)
 	}
 
 	var keys []TranslationKey
+	literals := make(map[string]bool)
 
 	// Match i18n.T(ctx, "key") and i18n.TP(ctx, "key", count)
 	re := regexp.MustCompile(`i18n\.(T|TP)\([^,]+,\s*"([^"]+)"`)
@@ -928,7 +939,13 @@ func extractAPITranslationKeysFromFile(filePath string) ([]TranslationKey, error
 		}
 	}
 
-	return keys, nil
+	for _, match := range apiStringLiteralRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			literals[string(content[match[2]:match[3]])] = true
+		}
+	}
+
+	return keys, literals, nil
 }
 
 // frontendI18nCallReSingle matches translation calls using single-quoted keys:
