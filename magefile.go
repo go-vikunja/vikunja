@@ -665,53 +665,65 @@ func (Check) GotSwag(ctx context.Context) error {
 	return nil
 }
 
-// backendDynamicKeyPrefixes lists prefixes that are used dynamically (with a
-// non-literal key argument) in the backend. Any translation key starting with
+// apiDynamicKeyPrefixes lists prefixes that are used dynamically (with a
+// non-literal key argument) in the api. Any translation key starting with
 // one of these prefixes is considered "used" so the dead-key detection doesn't
 // false-positive on them. Add a prefix here only after verifying the dynamic
 // call site actually produces the expected keys.
-var backendDynamicKeyPrefixes = []string{
+var apiDynamicKeyPrefixes = []string{
 	// pkg/utils/humanize_duration.go uses i18n.TP(lang, chunk.key, ...) where
 	// chunk.key comes from a struct containing the time.since_* keys.
 	"time.since_",
 }
 
-// Translations checks if all translation keys used in the code exist in the
-// English translation file, and conversely that no unused keys exist in the
-// translation file.
+// Translations checks that all translation keys used in the code exist in
+// their respective English translation files, and conversely that no unused
+// keys exist in those files. Both the api (Go) and the frontend (Vue/TS) are
+// checked in one run so a single CI job can gate the whole repository.
 func (Check) Translations() error {
 	mg.Deps(initVars)
-	fmt.Println("Checking backend translation keys...")
+
+	var errs []error
+	if err := checkAPITranslations(); err != nil {
+		errs = append(errs, err)
+	}
+	if err := checkFrontendTranslations(); err != nil {
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+	return nil
+}
+
+func checkAPITranslations() error {
+	fmt.Println("Checking api translation keys...")
 
 	translationFile := "./pkg/i18n/lang/en.json"
 	translations, err := loadTranslations(translationFile)
 	if err != nil {
-		return fmt.Errorf("error loading translations: %w", err)
+		return fmt.Errorf("error loading api translations: %w", err)
 	}
 
 	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
 
-	keys, err := walkBackendForTranslationKeys(".")
+	keys, err := walkAPIForTranslationKeys(".")
 	if err != nil {
-		return fmt.Errorf("error walking codebase: %w", err)
+		return fmt.Errorf("error walking api codebase: %w", err)
 	}
 
-	fmt.Printf("Found %d translation key references in the backend codebase\n", len(keys))
+	fmt.Printf("Found %d translation key references in the api codebase\n", len(keys))
 
-	return reportTranslationResults("backend", translations, keys, backendDynamicKeyPrefixes)
+	return reportTranslationResults("api", translations, keys, apiDynamicKeyPrefixes)
 }
 
-// FrontendTranslations checks that all translation keys used in the frontend
-// exist in the frontend English translation file, and that no unused keys
-// exist in the translation file.
-func (Check) FrontendTranslations() error {
-	mg.Deps(initVars)
+func checkFrontendTranslations() error {
 	fmt.Println("Checking frontend translation keys...")
 
 	translationFile := "./frontend/src/i18n/lang/en.json"
 	translations, err := loadTranslations(translationFile)
 	if err != nil {
-		return fmt.Errorf("error loading translations: %w", err)
+		return fmt.Errorf("error loading frontend translations: %w", err)
 	}
 
 	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
@@ -852,11 +864,11 @@ func flattenTranslations(prefix string, src map[string]any, dest map[string]bool
 	}
 }
 
-// walkBackendForTranslationKeys walks the Go backend and extracts translation
+// walkAPIForTranslationKeys walks the Go api code and extracts translation
 // keys referenced via string-literal arguments to i18n.T / i18n.TP. Dynamic
 // (non-literal) references are not detected here – add them to
-// backendDynamicKeyPrefixes instead.
-func walkBackendForTranslationKeys(rootDir string) ([]TranslationKey, error) {
+// apiDynamicKeyPrefixes instead.
+func walkAPIForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 	var allKeys []TranslationKey
 
 	pkgDir := filepath.Join(rootDir, "pkg")
@@ -871,7 +883,7 @@ func walkBackendForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 		}
 
 		if !info.IsDir() && strings.HasSuffix(path, ".go") {
-			keys, err := extractBackendTranslationKeysFromFile(path)
+			keys, err := extractAPITranslationKeysFromFile(path)
 			if err != nil {
 				fmt.Printf("Warning: %v\n", err)
 				return nil
@@ -885,10 +897,10 @@ func walkBackendForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 	return allKeys, err
 }
 
-// extractBackendTranslationKeysFromFile extracts all i18n.T/i18n.TP calls with
+// extractAPITranslationKeysFromFile extracts all i18n.T/i18n.TP calls with
 // a string-literal key. Non-literal (dynamic) keys are not flagged; any
-// dynamic-key reference must be allowlisted via backendDynamicKeyPrefixes.
-func extractBackendTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
+// dynamic-key reference must be allowlisted via apiDynamicKeyPrefixes.
+func extractAPITranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading file %s: %w", filePath, err)
@@ -1102,7 +1114,6 @@ func (Check) All() {
 		Check.Golangci,
 		Check.GotSwag,
 		Check.Translations,
-		Check.FrontendTranslations,
 	)
 }
 

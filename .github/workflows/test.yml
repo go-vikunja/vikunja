@@ -78,7 +78,7 @@ jobs:
         with:
           version: v2.10.1
 
-  api-check-translations:
+  check-translations:
     runs-on: ubuntu-latest
     needs: mage
     steps:
@@ -91,20 +91,6 @@ jobs:
         run: |
           chmod +x ./mage-static
           ./mage-static check:translations
-
-  frontend-check-translations:
-    runs-on: ubuntu-latest
-    needs: mage
-    steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
-      - name: Download Mage Binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: mage_bin
-      - name: Check
-        run: |
-          chmod +x ./mage-static
-          ./mage-static check:frontendTranslations
 
   test-migration-smoke:
     runs-on: ubuntu-latest
