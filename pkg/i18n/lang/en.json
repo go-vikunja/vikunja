@@ -72,8 +72,7 @@
             },
             "comment": {
                 "subject": "Re: %[1]s (%[2]s)",
-                "mentioned_subject": "%[1]s mentioned you in a comment in \"%[2]s\" (%[3]s)",
-                "mentioned_message": "**%[1]s** mentioned you in a comment:"
+                "mentioned_subject": "%[1]s mentioned you in a comment in \"%[2]s\" (%[3]s)"
             },
             "assigned": {
                 "subject_to_assignee": "You have been assigned to \"%[1]s\" (%[2]s)",
@@ -89,8 +88,7 @@
             },
             "mentioned": {
                 "subject_new": "%[1]s mentioned you in a new task \"%[2]s\" (%[3]s)",
-                "subject": "%[1]s mentioned you in a task \"%[2]s\" (%[3]s)",
-                "message": "**%[1]s** mentioned you in a task:"
+                "subject": "%[1]s mentioned you in a task \"%[2]s\" (%[3]s)"
             },
             "overdue": {
                 "subject": "Task \"%[1]s\" (%[2]s) is overdue",
@@ -164,10 +162,7 @@
                 "left_comment": "%[1]s left a comment",
                 "mentioned_you_comment": "%[1]s mentioned you in a comment",
                 "mentioned_you": "%[1]s mentioned you",
-                "mentioned_you_new_task": "%[1]s mentioned you in a new task",
-                "assigned_you": "%[1]s assigned you",
-                "assigned_themselves": "%[1]s assigned themselves",
-                "assigned_user": "%[1]s assigned %[2]s"
+                "mentioned_you_new_task": "%[1]s mentioned you in a new task"
             }
         }
     },
