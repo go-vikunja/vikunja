@@ -35,6 +35,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -664,12 +665,24 @@ func (Check) GotSwag(ctx context.Context) error {
 	return nil
 }
 
-// Translations checks if all translation keys used in the code exist in the English translation file
+// backendDynamicKeyPrefixes lists prefixes that are used dynamically (with a
+// non-literal key argument) in the backend. Any translation key starting with
+// one of these prefixes is considered "used" so the dead-key detection doesn't
+// false-positive on them. Add a prefix here only after verifying the dynamic
+// call site actually produces the expected keys.
+var backendDynamicKeyPrefixes = []string{
+	// pkg/utils/humanize_duration.go uses i18n.TP(lang, chunk.key, ...) where
+	// chunk.key comes from a struct containing the time.since_* keys.
+	"time.since_",
+}
+
+// Translations checks if all translation keys used in the code exist in the
+// English translation file, and conversely that no unused keys exist in the
+// translation file.
 func (Check) Translations() error {
 	mg.Deps(initVars)
-	fmt.Println("Checking for missing translation keys...")
+	fmt.Println("Checking backend translation keys...")
 
-	// Load translations from the English translation file
 	translationFile := "./pkg/i18n/lang/en.json"
 	translations, err := loadTranslations(translationFile)
 	if err != nil {
@@ -678,36 +691,56 @@ func (Check) Translations() error {
 
 	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
 
-	// Extract keys from codebase
-	keys, err := walkCodebaseForTranslationKeys(".")
+	keys, err := walkBackendForTranslationKeys(".")
 	if err != nil {
 		return fmt.Errorf("error walking codebase: %w", err)
 	}
 
-	fmt.Printf("Found %d translation keys in the codebase\n", len(keys))
+	fmt.Printf("Found %d translation key references in the backend codebase\n", len(keys))
 
-	// Check for missing keys
-	missingKeys := make(map[string][]TranslationKey)
-	for _, key := range keys {
-		if !translations[key.Key] {
-			missingKeys[key.Key] = append(missingKeys[key.Key], key)
+	return reportTranslationResults("backend", translations, keys, backendDynamicKeyPrefixes)
+}
+
+// FrontendTranslations checks that all translation keys used in the frontend
+// exist in the frontend English translation file, and that no unused keys
+// exist in the translation file.
+func (Check) FrontendTranslations() error {
+	mg.Deps(initVars)
+	fmt.Println("Checking frontend translation keys...")
+
+	translationFile := "./frontend/src/i18n/lang/en.json"
+	translations, err := loadTranslations(translationFile)
+	if err != nil {
+		return fmt.Errorf("error loading translations: %w", err)
+	}
+
+	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
+
+	keys, prefixes, literals, err := walkFrontendForTranslationKeys("./frontend/src")
+	if err != nil {
+		return fmt.Errorf("error walking frontend codebase: %w", err)
+	}
+
+	fmt.Printf("Found %d translation key references in the frontend codebase\n", len(keys))
+
+	// Some keys are referenced indirectly – e.g. stored as string literals in
+	// arrays and looked up by index, or assigned to a variable in the form
+	// `const path = ` + "`error.${code}`". Any literal that matches a known
+	// translation key (or is a prefix of one) is treated as a usage hint, so
+	// those keys aren't flagged as dead.
+	for lit := range literals {
+		if translations[lit] {
+			keys = append(keys, TranslationKey{Key: lit, FilePath: "<frontend literal hint>", Line: 0})
+			continue
+		}
+		// Literals that look like a key prefix (end in ".") are kept as
+		// dynamic prefixes. This catches `const path = `error.${code}``.
+		if strings.HasSuffix(lit, ".") {
+			prefixes = append(prefixes, lit)
 		}
 	}
 
-	// Print results
-	if len(missingKeys) > 0 {
-		var errs []error
-		for key, occurrences := range missingKeys {
-			var keyErrs []error
-			for _, occurrence := range occurrences {
-				keyErrs = append(keyErrs, fmt.Errorf("- %s:%d", occurrence.FilePath, occurrence.Line))
-			}
-			errs = append(errs, fmt.Errorf("missing key %s in files:\n%w", key, errors.Join(keyErrs...)))
-		}
-		return fmt.Errorf("found %d missing translation keys:\n%w", len(missingKeys), errors.Join(errs...))
-	}
-	printSuccess("All translation keys are present in the translation file!")
-	return nil
+	return reportTranslationResults("frontend", translations, keys, prefixes)
 }
 
 // TranslationKey represents a translation key found in the code
@@ -717,7 +750,73 @@ type TranslationKey struct {
 	Line     int
 }
 
-// loadTranslations loads the English translation file and returns a flattened map
+// reportTranslationResults checks both missing keys (used in code but not in
+// translation file) and dead keys (in translation file but not referenced
+// anywhere in code). Returns an error if either kind of mismatch is found.
+func reportTranslationResults(label string, translations map[string]bool, keys []TranslationKey, dynamicPrefixes []string) error {
+	missingKeys := make(map[string][]TranslationKey)
+	usedKeys := make(map[string]bool, len(keys))
+	for _, key := range keys {
+		usedKeys[key.Key] = true
+		if !translations[key.Key] {
+			missingKeys[key.Key] = append(missingKeys[key.Key], key)
+		}
+	}
+
+	// A translation is used if referenced directly, or if its full dotted key
+	// starts with any prefix produced by a dynamic call site.
+	isCoveredByPrefix := func(k string) bool {
+		for _, p := range dynamicPrefixes {
+			if strings.HasPrefix(k, p) {
+				return true
+			}
+		}
+		return false
+	}
+
+	var deadKeys []string
+	for k := range translations {
+		if usedKeys[k] {
+			continue
+		}
+		if isCoveredByPrefix(k) {
+			continue
+		}
+		deadKeys = append(deadKeys, k)
+	}
+
+	var errs []error
+
+	if len(missingKeys) > 0 {
+		var missingErrs []error
+		for key, occurrences := range missingKeys {
+			var keyErrs []error
+			for _, occurrence := range occurrences {
+				keyErrs = append(keyErrs, fmt.Errorf("- %s:%d", occurrence.FilePath, occurrence.Line))
+			}
+			missingErrs = append(missingErrs, fmt.Errorf("missing key %s in files:\n%w", key, errors.Join(keyErrs...)))
+		}
+		errs = append(errs, fmt.Errorf("found %d missing %s translation keys (referenced in code but not in translation file):\n%w", len(missingKeys), label, errors.Join(missingErrs...)))
+	}
+
+	if len(deadKeys) > 0 {
+		sort.Strings(deadKeys)
+		var deadErrs []error
+		for _, k := range deadKeys {
+			deadErrs = append(deadErrs, fmt.Errorf("- %s", k))
+		}
+		errs = append(errs, fmt.Errorf("found %d dead %s translation keys (present in translation file but unused in code):\n%w", len(deadKeys), label, errors.Join(deadErrs...)))
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	printSuccess(fmt.Sprintf("All %s translation keys are in sync between code and the translation file!", label))
+	return nil
+}
+
+// loadTranslations loads a translation file and returns a flattened map
 func loadTranslations(filePath string) (map[string]bool, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -753,8 +852,11 @@ func flattenTranslations(prefix string, src map[string]any, dest map[string]bool
 	}
 }
 
-// walkCodebaseForTranslationKeys walks the codebase and extracts all translation keys
-func walkCodebaseForTranslationKeys(rootDir string) ([]TranslationKey, error) {
+// walkBackendForTranslationKeys walks the Go backend and extracts translation
+// keys referenced via string-literal arguments to i18n.T / i18n.TP. Dynamic
+// (non-literal) references are not detected here – add them to
+// backendDynamicKeyPrefixes instead.
+func walkBackendForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 	var allKeys []TranslationKey
 
 	pkgDir := filepath.Join(rootDir, "pkg")
@@ -764,14 +866,12 @@ func walkCodebaseForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 			return err
 		}
 
-		// Skip hidden directories (starting with .)
 		if info.IsDir() && strings.HasPrefix(info.Name(), ".") {
 			return filepath.SkipDir
 		}
 
-		// Only process Go files
 		if !info.IsDir() && strings.HasSuffix(path, ".go") {
-			keys, err := extractTranslationKeysFromFile(path)
+			keys, err := extractBackendTranslationKeysFromFile(path)
 			if err != nil {
 				fmt.Printf("Warning: %v\n", err)
 				return nil
@@ -785,9 +885,10 @@ func walkCodebaseForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 	return allKeys, err
 }
 
-// extractTranslationKeysFromFile extracts all i18n.T calls from a file
-func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
-	// Read the file content
+// extractBackendTranslationKeysFromFile extracts all i18n.T/i18n.TP calls with
+// a string-literal key. Non-literal (dynamic) keys are not flagged; any
+// dynamic-key reference must be allowlisted via backendDynamicKeyPrefixes.
+func extractBackendTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading file %s: %w", filePath, err)
@@ -795,17 +896,15 @@ func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 
 	var keys []TranslationKey
 
-	// Regex to match i18n.T calls
-	re := regexp.MustCompile(`i18n\.(T)\([^,]+,\s*"([^"]+)"`)
+	// Match i18n.T(ctx, "key") and i18n.TP(ctx, "key", count)
+	re := regexp.MustCompile(`i18n\.(T|TP)\([^,]+,\s*"([^"]+)"`)
 	matches := re.FindAllSubmatchIndex(content, -1)
 
 	for _, match := range matches {
-		if len(match) >= 4 {
-			// Extract the key from the match
+		if len(match) >= 6 {
 			keyStart, keyEnd := match[4], match[5]
 			key := string(content[keyStart:keyEnd])
 
-			// Count lines to determine the line number
 			beforeMatch := content[:keyStart]
 			lineCount := bytes.Count(beforeMatch, []byte("\n")) + 1
 
@@ -818,6 +917,160 @@ func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 	}
 
 	return keys, nil
+}
+
+// frontendI18nCallReSingle matches translation calls using single-quoted keys:
+//   - $t('k'), $tc('k')
+//   - t('k'), tc('k') (composable)
+//   - i18n.t('k'), i18n.global.t('k')
+//
+// Go's RE2 doesn't support backreferences, so we have one regex per quote
+// style. Template-literal and bare-variable forms are handled separately.
+var frontendI18nCallReSingle = regexp.MustCompile(`(?:\$t|\$tc|\bt|\btc|\bi18n\.(?:global\.)?t)\(\s*'([^']+)'`)
+
+// frontendI18nCallReDouble is the double-quoted counterpart of
+// frontendI18nCallReSingle.
+var frontendI18nCallReDouble = regexp.MustCompile(`(?:\$t|\$tc|\bt|\btc|\bi18n\.(?:global\.)?t)\(\s*"([^"]+)"`)
+
+// frontendI18nTemplateLiteralRe matches template-literal calls of the form
+//
+//	$t(`prefix.${expr}`)  /  t(`prefix.${...}`)  / tc(`...`) etc.
+//
+// Capturing group 1 is the portion before the first ${ substitution, which we
+// treat as a "dynamic prefix": every translation key starting with it is
+// considered used.
+var frontendI18nTemplateLiteralRe = regexp.MustCompile("(?:\\$t|\\$tc|\\bt|\\btc|\\bi18n\\.(?:global\\.)?t)\\(\\s*`([^`$]*)\\$\\{")
+
+// frontendI18nKeypathRe matches Vue template <i18n-t keypath="key.name"> usage.
+var frontendI18nKeypathRe = regexp.MustCompile(`keypath\s*=\s*"([^"]+)"`)
+
+// walkFrontendForTranslationKeys scans .vue/.ts/.js files under rootDir and
+// extracts translation key references, dynamic-key prefixes, and a set of
+// candidate string-literal usage hints (for indirect references like keys
+// stored in arrays / template literals assigned to variables).
+func walkFrontendForTranslationKeys(rootDir string) ([]TranslationKey, []string, map[string]bool, error) {
+	var allKeys []TranslationKey
+	var allPrefixes []string
+	allLiterals := make(map[string]bool)
+
+	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			name := info.Name()
+			// Skip hidden dirs and build artifacts
+			if strings.HasPrefix(name, ".") || name == "node_modules" || name == "dist" {
+				return filepath.SkipDir
+			}
+			// Don't walk into the language files themselves
+			if path == filepath.Join(rootDir, "i18n", "lang") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		ext := filepath.Ext(path)
+		if ext != ".vue" && ext != ".ts" && ext != ".js" {
+			return nil
+		}
+
+		keys, prefixes, literals, err := extractFrontendTranslationKeysFromFile(path)
+		if err != nil {
+			fmt.Printf("Warning: %v\n", err)
+			return nil
+		}
+		allKeys = append(allKeys, keys...)
+		allPrefixes = append(allPrefixes, prefixes...)
+		for l := range literals {
+			allLiterals[l] = true
+		}
+
+		return nil
+	})
+
+	return allKeys, allPrefixes, allLiterals, err
+}
+
+// frontendStringLiteralRe matches single- or double-quoted strings that look
+// like dotted translation keys (e.g. "home.welcomeNight").
+var frontendStringLiteralRe = regexp.MustCompile(`['"]([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)+)['"]`)
+
+// frontendTemplatePrefixRe matches any template-literal fragment with a ${…}
+// interpolation, whether or not it is inside a $t() call. This catches cases
+// like `const path = ` + "`error.${code}`" where the literal is assigned to
+// a variable before being passed to a translator.
+var frontendTemplatePrefixRe = regexp.MustCompile("`([a-zA-Z][a-zA-Z0-9_.]*\\.)\\$\\{")
+
+// extractFrontendTranslationKeysFromFile extracts static and dynamic
+// translation key references from a single frontend source file.
+func extractFrontendTranslationKeysFromFile(filePath string) ([]TranslationKey, []string, map[string]bool, error) {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("error reading file %s: %w", filePath, err)
+	}
+
+	var keys []TranslationKey
+	var prefixes []string
+	literals := make(map[string]bool)
+
+	appendKey := func(keyStart int, key string) {
+		beforeMatch := content[:keyStart]
+		lineCount := bytes.Count(beforeMatch, []byte("\n")) + 1
+		keys = append(keys, TranslationKey{
+			Key:      key,
+			FilePath: filePath,
+			Line:     lineCount,
+		})
+	}
+
+	// Static string-literal calls (single- and double-quoted)
+	for _, match := range frontendI18nCallReSingle.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			appendKey(match[2], string(content[match[2]:match[3]]))
+		}
+	}
+	for _, match := range frontendI18nCallReDouble.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			appendKey(match[2], string(content[match[2]:match[3]]))
+		}
+	}
+
+	// <i18n-t keypath="..."> (Vue component usage in templates)
+	for _, match := range frontendI18nKeypathRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			appendKey(match[2], string(content[match[2]:match[3]]))
+		}
+	}
+
+	// Template-literal calls with interpolation inside a $t(). We extract the
+	// static prefix before ${ and mark every matching key as used.
+	for _, match := range frontendI18nTemplateLiteralRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			prefix := string(content[match[2]:match[3]])
+			if prefix != "" {
+				prefixes = append(prefixes, prefix)
+			}
+		}
+	}
+
+	// Collect dotted string literals and interpolated template-literal prefixes
+	// as "usage hints". These are only used to suppress dead-key false positives
+	// for indirect references (keys stored in arrays, prefix assigned to a
+	// variable then passed to a translator, etc).
+	for _, match := range frontendStringLiteralRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			literals[string(content[match[2]:match[3]])] = true
+		}
+	}
+	for _, match := range frontendTemplatePrefixRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			literals[string(content[match[2]:match[3]])] = true
+		}
+	}
+
+	return keys, prefixes, literals, nil
 }
 
 func checkGolangCiLintInstalled(ctx context.Context) error {
@@ -849,6 +1102,7 @@ func (Check) All() {
 		Check.Golangci,
 		Check.GotSwag,
 		Check.Translations,
+		Check.FrontendTranslations,
 	)
 }
 
