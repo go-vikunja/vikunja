@@ -114,7 +114,6 @@
         "usernamePlaceholder": "bot-myassistant",
         "create": "Create bot",
         "createSuccess": "Bot user created successfully.",
-        "prefixRequired": "Bot usernames must start with 'bot-'.",
         "delete": "Delete",
         "deleteConfirm": "Permanently delete the bot user '{username}'? This is irreversible.",
         "disable": "Disable",

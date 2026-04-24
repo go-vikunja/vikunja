@@ -44,12 +44,9 @@ async function loadTokens(botId: number) {
 
 async function createBot() {
 	createError.value = null
-	if (!newBotUsername.value.startsWith('bot-')) {
-		createError.value = t('user.settings.bots.prefixRequired')
-		return
-	}
+	const username = newBotUsername.value.startsWith('bot-') ? newBotUsername.value : `bot-${newBotUsername.value}`
 	try {
-		const created = await botService.create(new UserModel({username: newBotUsername.value}))
+		const created = await botService.create(new UserModel({username}))
 		bots.value.push(created as IUser)
 		newBotUsername.value = ''
 	} catch (e: unknown) {
