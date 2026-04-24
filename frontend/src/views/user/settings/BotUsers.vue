@@ -26,6 +26,7 @@ const tokenService = new ApiTokenService()
 const bots = ref<IUser[]>([])
 const newBotUsername = ref('')
 const createError = ref<string | null>(null)
+const showCreateForm = ref(false)
 
 const tokensByBot = ref<Record<number, IApiToken[]>>({})
 const newTokensByBot = ref<Record<number, string>>({})
@@ -49,6 +50,7 @@ async function createBot() {
 		const created = await botService.create(new UserModel({username}))
 		bots.value.push(created as IUser)
 		newBotUsername.value = ''
+		showCreateForm.value = false
 	} catch (e: unknown) {
 		const err = e as {response?: {data?: {message?: string}}}
 		createError.value = err?.response?.data?.message ?? String(e)
@@ -94,7 +96,10 @@ onMounted(loadBots)
 		<h2>{{ $t('user.settings.bots.title') }}</h2>
 		<p>{{ $t('user.settings.bots.description') }}</p>
 
-		<div class="create-form">
+		<div
+			v-if="bots.length === 0 || showCreateForm"
+			class="create-form"
+		>
 			<FormField
 				:label="$t('user.settings.bots.usernameLabel')"
 				:error="createError"
@@ -109,6 +114,14 @@ onMounted(loadBots)
 				{{ $t('user.settings.bots.create') }}
 			</XButton>
 		</div>
+		<XButton
+			v-else
+			icon="plus"
+			class="mbe-4"
+			@click="showCreateForm = true"
+		>
+			{{ $t('user.settings.bots.newBot') }}
+		</XButton>
 
 		<div
 			v-for="bot in bots"

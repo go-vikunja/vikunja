@@ -113,6 +113,7 @@
         "usernameLabel": "Username",
         "usernamePlaceholder": "bot-myassistant",
         "create": "Create bot",
+        "newBot": "New bot",
         "createSuccess": "Bot user created successfully.",
         "delete": "Delete",
         "deleteConfirm": "Permanently delete the bot user '{username}'? This is irreversible.",
