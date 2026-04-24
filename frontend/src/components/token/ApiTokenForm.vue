@@ -151,6 +151,7 @@ function resetPermissions() {
 	Object.entries(availableRoutes.value).forEach(entry => {
 		const [group, routes] = entry
 		newTokenPermissions.value[group] = {}
+		newTokenPermissionsGroup.value[group] = false
 		Object.keys(routes).forEach(r => {
 			newTokenPermissions.value[group][r] = false
 		})
