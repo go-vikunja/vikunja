@@ -26,6 +26,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
 	created: [token: IApiToken]
+	cancel: []
 }>()
 
 const service = new ApiTokenService()
@@ -383,6 +384,13 @@ async function createToken() {
 			type="submit"
 		>
 			{{ $t('user.settings.apiTokens.createToken') }}
+		</XButton>
+		<XButton
+			variant="tertiary"
+			type="button"
+			@click="emit('cancel')"
+		>
+			{{ $t('misc.cancel') }}
 		</XButton>
 	</form>
 </template>

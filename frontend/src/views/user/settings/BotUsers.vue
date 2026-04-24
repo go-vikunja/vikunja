@@ -187,6 +187,7 @@ onMounted(loadBots)
 					v-if="showTokenForm[bot.id]"
 					:owner-id="bot.id"
 					@created="(token: IApiToken) => onTokenCreated(bot, token)"
+					@cancel="showTokenForm[bot.id] = false"
 				/>
 				<XButton
 					v-else

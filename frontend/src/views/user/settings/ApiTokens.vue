@@ -147,6 +147,7 @@ function onTokenCreated(token: IApiToken) {
 			:initial-title="initialTitle"
 			:initial-scopes="initialScopes"
 			@created="onTokenCreated"
+			@cancel="showCreateForm = false"
 		/>
 
 		<XButton
