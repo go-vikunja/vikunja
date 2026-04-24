@@ -164,3 +164,38 @@
   avatar_provider: 'openid'
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# User 21 and user 22 below are a pair of bot owners used by the user-search
+# tests: user 21 has a bot (23), user 22 has a bot (24). Putting the bots on
+# dedicated owners keeps the pre-existing search tests (which mostly use user1)
+# unaffected.
+- id: 21
+  username: 'user_bot_owner_a'
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6'
+  email: 'user_bot_owner_a@example.com'
+  issuer: local
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+- id: 22
+  username: 'user_bot_owner_b'
+  password: '$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6'
+  email: 'user_bot_owner_b@example.com'
+  issuer: local
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+# Bot owned by user 21 — used to assert own bots are always returned
+# regardless of the search string.
+- id: 23
+  username: 'bot-owner-a-assistant'
+  name: 'Owner A Assistant'
+  issuer: local
+  bot_owner_id: 21
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+# Bot owned by user 22 — used to assert other users' bots are never leaked.
+- id: 24
+  username: 'bot-owner-b-assistant'
+  name: 'Owner B Assistant'
+  issuer: local
+  bot_owner_id: 22
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
