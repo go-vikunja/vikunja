@@ -58,7 +58,7 @@ func TestListUsers(t *testing.T) {
 
 		all, err := user.ListAllUsers(s)
 		require.NoError(t, err)
-		assert.Len(t, all, 20)
+		assert.Len(t, all, 24)
 	})
 	t.Run("no search term", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -171,7 +171,10 @@ func TestListUsers(t *testing.T) {
 			MatchFuzzily: true,
 		})
 		require.NoError(t, err)
-		assert.Len(t, all, 20)
+		// 22 non-bot users have "user" in their username; the two bot
+		// fixtures are filtered out because they don't belong to user1
+		// and their usernames/names don't contain "user".
+		assert.Len(t, all, 22)
 	})
 
 	// External team discoverability bypass tests
@@ -238,5 +241,66 @@ func TestListUsers(t *testing.T) {
 		require.Len(t, all, 1)
 		// Email should be masked because the search was by name, not email
 		assert.Empty(t, all[0].Email)
+	})
+
+	// Bot visibility in user search:
+	// - A user's own bots are always returned regardless of the search string
+	//   (needed so assignee pickers etc. can surface them).
+	// - Other users' bots must never leak into the results, even on an exact
+	//   username match.
+	t.Run("own bot always returned regardless of query", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		botOwnerA := &user.User{ID: 21}
+		// Query string deliberately does not match the bot's username or name.
+		all, err := user.ListUsers(s, "user7", botOwnerA, nil)
+		require.NoError(t, err)
+
+		var foundBot bool
+		for _, u := range all {
+			if u.ID == 23 {
+				foundBot = true
+				assert.Equal(t, int64(21), u.BotOwnerID)
+			}
+		}
+		assert.True(t, foundBot, "owner A's bot (id=23) should appear in their own search results even though the query does not match it")
+	})
+	t.Run("other user's bot not returned by exact username match", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		botOwnerA := &user.User{ID: 21}
+		// Searching for owner B's bot by its exact username must not return it.
+		all, err := user.ListUsers(s, "bot-owner-b-assistant", botOwnerA, nil)
+		require.NoError(t, err)
+
+		for _, u := range all {
+			assert.NotEqual(t, int64(24), u.ID, "owner B's bot must not leak into owner A's results")
+		}
+	})
+	t.Run("own bot returned even when query matches another owned bot", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		botOwnerB := &user.User{ID: 22}
+		all, err := user.ListUsers(s, "bot-owner-a-assistant", botOwnerB, nil)
+		require.NoError(t, err)
+
+		// Owner A's bot must not leak; owner B's bot (unrelated to query) must appear.
+		var sawBotA, sawBotB bool
+		for _, u := range all {
+			if u.ID == 23 {
+				sawBotA = true
+			}
+			if u.ID == 24 {
+				sawBotB = true
+			}
+		}
+		assert.False(t, sawBotA, "owner A's bot must not leak to owner B")
+		assert.True(t, sawBotB, "owner B's own bot must always be returned")
 	})
 }

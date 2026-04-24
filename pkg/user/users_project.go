@@ -147,6 +147,28 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		}
 	}
 
+	// Bots owned by other users must never leak into the general search,
+	// and bots owned by the current user must always be returned regardless
+	// of whether the search string matches them (so e.g. assignee pickers
+	// can always surface one's own bots).
+	//
+	// AdditionalCond (e.g. "only users in this project") is already baked
+	// into `cond` above; we also AND it against the own-bots branch so that
+	// in scoped contexts like project-user listing we don't leak bots that
+	// have no business being in the result set.
+	notSomeoneElsesBot := builder.Or(
+		builder.IsNull{"bot_owner_id"},
+		builder.Eq{"bot_owner_id": currentUser.ID},
+	)
+	ownBotsBranch := builder.Cond(builder.Eq{"bot_owner_id": currentUser.ID})
+	if opts.AdditionalCond != nil {
+		ownBotsBranch = builder.And(ownBotsBranch, opts.AdditionalCond)
+	}
+	cond = builder.Or(
+		builder.And(cond, notSomeoneElsesBot),
+		ownBotsBranch,
+	)
+
 	err = s.
 		Where(cond).
 		OrderBy("id").
