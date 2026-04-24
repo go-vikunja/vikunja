@@ -44,7 +44,6 @@
 			"resetPassword": "Obnovit heslo",
 			"resetPasswordAction": "Poslat odkaz na obnovení hesla",
 			"resetPasswordSuccess": "Zkontrolujte doručenou poštu! Měli byste obdržet email s pokyny, jak obnovit své heslo.",
-			"passwordsDontMatch": "Hesla se neshodují",
 			"confirmEmailSuccess": "Úspěšně jste potvrdili svůj e-mail! Nyní se můžete přihlásit.",
 			"totpTitle": "Kód dvoufaktorového ověření",
 			"totpPlaceholder": "např. 123456",
@@ -75,10 +74,8 @@
 			"title": "Nastavení",
 			"newPasswordTitle": "Aktualizujte své heslo",
 			"newPassword": "Nové heslo",
-			"newPasswordConfirm": "Potvrzení nového hesla",
 			"currentPassword": "Stávající heslo",
 			"currentPasswordPlaceholder": "Vaše současné heslo",
-			"passwordsDontMatch": "Nové heslo se neshoduje s potvrzením hesla.",
 			"passwordUpdateSuccess": "Heslo bylo úspěšně změněno.",
 			"updateEmailTitle": "Aktualizujte svou e-mailovou adresu",
 			"updateEmailNew": "Nová emailová adresa",
@@ -170,7 +167,6 @@
 			},
 			"appearance": {
 				"title": "Barevné schéma",
-				"setSuccess": "Změna barevného schématu na {colorScheme} byla uložena",
 				"colorScheme": {
 					"light": "Světlý",
 					"system": "Systém",
@@ -199,7 +195,6 @@
 				"expired": "Platnost tohoto tokenu vypršela {ago}.",
 				"tokenCreatedSuccess": "Zde je tvůj nový api token: {token}",
 				"tokenCreatedNotSeeAgain": "Ulož jej na zabezpečeném místě, už ho znovu neuvidíš!",
-				"selectAll": "Označit vše",
 				"delete": {
 					"header": "Smazat tento token",
 					"text1": "Opravdu chcete smazat token \"{token}\"?",
@@ -494,16 +489,7 @@
 			"titlePlaceholder": "Název uloženého filtru přijde sem…",
 			"description": "Popis",
 			"descriptionPlaceholder": "Přidejte popis pro tento filtr, stiskněte '/' pro více možností…",
-			"includeNulls": "Zahrnout úkoly, které nemají nastavenou hodnotu",
-			"requireAll": "Vyžaduje aby všechny filtry odpovídaly, aby se úkol zobrazil",
-			"showDoneTasks": "Zobrazit dokončené úkoly",
-			"sortAlphabetically": "Řadit podle abecedy",
-			"enablePriority": "Povolit filtrování podle priority",
-			"enablePercentDone": "Povolit filtrování podle průběhu",
-			"dueDateRange": "Rozsah termínu",
-			"startDateRange": "Začátek období",
-			"endDateRange": "Konec období",
-			"reminderRange": "Připomínky - období"
+			"includeNulls": "Zahrnout úkoly, které nemají nastavenou hodnotu"
 		},
 		"create": {
 			"title": "Nový uložený filtr",
@@ -521,7 +507,6 @@
 			"success": "Filtr byl úspěšně uložen."
 		},
 		"query": {
-			"title": "Dotaz",
 			"placeholder": "Zadejte vyhledávací nebo filtrační dotaz…",
 			"help": {
 				"intro": "K filtrování úkolů můžete použít syntaxi dotazů podobnou SQL. Dostupná pole pro filtrování zahrnují:",
@@ -574,7 +559,6 @@
 	"migrate": {
 		"title": "Import z jiných služeb",
 		"titleService": "Importujte svá data z {name} do Vikunja",
-		"import": "Importujte svá data do Vikunja",
 		"description": "Chcete-li začít, klikněte na logo jedné ze služeb třetích stran.",
 		"descriptionDo": "Vikunja importuje všechny seznamy, úkoly, poznámky, připomenutí a soubory, ke kterým máte přístup.",
 		"authorize": "Chcete-li povolit Vikunja přístup k vašemu účtu {name}, klepněte na tlačítko níže.",
@@ -593,7 +577,6 @@
 		"manage": "Spravovat štítky",
 		"description": "Klikněte na štítek pro jeho úpravu. Můžete upravit všechny štítky, které jste vytvořili, můžete použít všechny štítky, které jsou přiřazeny k úkolu z projektu, do kterého máte přístup.",
 		"newCTA": "Momentálně nemáte žádné štítky.",
-		"search": "Zadejte hledaný štítek…",
 		"create": {
 			"header": "Nový štítek",
 			"title": "Vytvořit štítek",
@@ -602,7 +585,6 @@
 		},
 		"edit": {
 			"header": "Upravit štítek",
-			"forbidden": "Nemáte oprávnění upravovat tento popisek, protože ho nevlastníte.",
 			"success": "Štítek byl úspěšně aktualizován."
 		},
 		"deleteSuccess": "Štítek byl úspěšně smazán.",
@@ -610,7 +592,6 @@
 			"title": "Název",
 			"titlePlaceholder": "Název štítku přijde sem…",
 			"description": "Popis",
-			"descriptionPlaceholder": "Popis štítku",
 			"color": "Barva"
 		}
 	},
@@ -637,16 +618,13 @@
 		"delete": "Smazat",
 		"confirm": "Potvrdit",
 		"cancel": "Zrušit",
-		"refresh": "Obnovit",
 		"disable": "Vypnout",
 		"copy": "Kopírovat do schránky",
 		"copyError": "Kopírování do schránky se nezdařilo",
-		"search": "Hledat",
 		"searchPlaceholder": "Zadejte hledaný text…",
 		"previous": "Předchozí",
 		"next": "Příští",
 		"poweredBy": "Běží na Vikunja",
-		"info": "Info",
 		"create": "Vytvořit",
 		"doit": "Udělej to!",
 		"saving": "Ukládám…",
@@ -679,15 +657,12 @@
 		},
 		"editor": {
 			"edit": "Upravit",
-			"done": "Hotovo",
 			"heading1": "Nadpis 1",
 			"heading1Tooltip": "Velké záhlaví.",
 			"heading2": "Nadpis 2",
 			"heading2Tooltip": "Střední záhlaví.",
 			"heading3": "Nadpis 3",
 			"heading3Tooltip": "Menší záhlaví.",
-			"headingSmaller": "Menší nadpis",
-			"headingBigger": "Větší nadpis",
 			"bold": "Tučné",
 			"italic": "Skloněné",
 			"strikethrough": "Přeškrtnuté",
@@ -698,17 +673,13 @@
 			"quoteTooltip": "Zachyťte citaci.",
 			"bulletList": "Seznam s odrážkami",
 			"bulletListTooltip": "Vytvořit jednoduchý seznam odrážek.",
-			"unorderedList": "Nečíslovaný seznam",
 			"orderedList": "Číslovaný seznam",
 			"orderedListTooltip": "Vytvořit seznam s číslováním.",
-			"cleanBlock": "Čistý blok",
 			"link": "Odkaz",
 			"image": "Obrázek",
 			"imageTooltip": "Nahrát obrázek z vašeho počítače.",
 			"horizontalRule": "Vodorovná čára",
 			"horizontalRuleTooltip": "Rozdělit sekci.",
-			"sideBySide": "Vedle sebe",
-			"guide": "Průvodce",
 			"text": "Text",
 			"textTooltip": "Stačí začít psát prostý text.",
 			"taskList": "Seznam úkolů",
@@ -814,21 +785,17 @@
 		}
 	},
 	"task": {
-		"task": "Úkol",
 		"new": "Vytvořit úkol",
-		"delete": "Smazat tento úkol",
 		"createSuccess": "Úkol byl úspěšně vytvořen.",
 		"addReminder": "Přidat připomínku…",
 		"doneSuccess": "Úkol byl úspěšně označen jako dokončený.",
 		"undoneSuccess": "Úkol byl úspěšně znovu otevřen.",
 		"movedToProject": "Úkol byl přesunut do {project}.",
 		"undo": "Vrátit zpět",
-		"openDetail": "Otevřít zobrazení detailu úkolu",
 		"checklistTotal": "{checked} z {total} úkolů",
 		"checklistAllDone": "{total} úkolů",
 		"show": {
 			"titleCurrent": "Aktuální úkoly",
-			"titleDates": "Úkoly od {from} do {to}",
 			"noDates": "Zobrazit úkoly bez datumu",
 			"overdue": "Zobrazit zpožděné úkoly",
 			"fromuntil": "Úkoly od {from} do {until}",
@@ -853,7 +820,6 @@
 			"belongsToProject": "Tento úkol patří do projektu '{project}'",
 			"back": "Zpět k projektu",
 			"due": "Termín {at}",
-			"closePopup": "Zavřít vyskakovací okno",
 			"scrollToBottom": "Přejít na konec",
 			"organization": "Organizace",
 			"management": "Management",
@@ -928,7 +894,6 @@
 			"delete": "Smazat přílohu",
 			"deleteTooltip": "Smazat tuto přílohu",
 			"deleteText1": "Opravdu chcete odstranit přílohu {filename}?",
-			"copyUrl": "Kopírovat URL",
 			"copyUrlTooltip": "Kopírovat URL této přílohy pro použití v textu",
 			"setAsCover": "Použij titulní obrázek",
 			"unsetAsCover": "Odstraň titulní obrázek",
@@ -960,8 +925,7 @@
 			"1week": "1 týden"
 		},
 		"description": {
-			"placeholder": "Zadejte popis, stiskněte '/' pro více možností…",
-			"empty": "Ještě není k dispozici žádný popis."
+			"placeholder": "Zadejte popis, stiskněte '/' pro více možností…"
 		},
 		"assignee": {
 			"placeholder": "Zadejte pro přiřazení uživatele…",
@@ -973,7 +937,6 @@
 			"placeholder": "Pište pro přidání nového štítku…",
 			"createPlaceholder": "Přidat toto jako nový štítek",
 			"addSuccess": "Štítek byl úspěšně přidán.",
-			"createSuccess": "Štítek byl úspěšně vytvořen.",
 			"removeSuccess": "Štítek byl úspěšně odstraněn.",
 			"addCreateSuccess": "Štítek byl úspěšně vytvořen a přidán.",
 			"delete": {
@@ -1038,8 +1001,6 @@
 			"hours": "Hodin",
 			"days": "Dnů",
 			"weeks": "Týdny",
-			"months": "Měsíce",
-			"years": "Roky",
 			"invalidAmount": "Zadejte prosím více než 0."
 		},
 		"quickAddMagic": {
@@ -1192,7 +1153,6 @@
 		"unarchive": "Zrušit archivaci",
 		"setBackground": "Nastavení pozadí",
 		"share": "Sdílet",
-		"newProject": "Nový projekt",
 		"createProject": "Vytvořit projekt",
 		"cantArchiveIsDefault": "Nemůžete archivovat svůj výchozí projekt.",
 		"cantDeleteIsDefault": "Nemůžete smazat svůj výchozí projekt.",
@@ -1350,7 +1310,6 @@
 			"hours": "hodina|hodin",
 			"days": "den|dny",
 			"weeks": "týden|týdny",
-			"months": "měsíc|měsíce",
 			"years": "rok|roky"
 		}
 	}

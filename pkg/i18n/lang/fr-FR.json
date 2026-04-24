@@ -70,9 +70,6 @@
 				"subject": "Rappel pour \"%[1]s\" (%[2]s)",
 				"message": "Ceci est un petit rappel de la tâche \"%[1]s\" (%[2]s)."
 			},
-			"comment": {
-				"mentioned_message": "**%[1]s** vous a mentionné dans un commentaire :"
-			},
 			"assigned": {
 				"subject_to_assignee": "Vous avez été assigné à \"%[1]s\" (%[2]s)",
 				"message_to_assignee": "%[1]s vous a assigné à \"%[2]\".",
@@ -82,9 +79,6 @@
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) a été supprimé",
 				"message": "%[1]s a supprimé la tâche \"%[2]s\" (%[3]s)"
-			},
-			"mentioned": {
-				"message": "**%[1]s** vous a mentionné dans une tâche :"
 			},
 			"overdue": {
 				"subject": "La tâche \"%[1]s\" (%[2]s) est en retard",

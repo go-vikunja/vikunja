@@ -72,8 +72,7 @@
 			},
 			"comment": {
 				"subject": "Re: %[1]s (%[2]s)",
-				"mentioned_subject": "\"%[1]s が「%[2]s」(%[3]s) のコメントであなたにメンションしました",
-				"mentioned_message": "**%[1]s** があなたにメンションしました:"
+				"mentioned_subject": "\"%[1]s が「%[2]s」(%[3]s) のコメントであなたにメンションしました"
 			},
 			"assigned": {
 				"subject_to_assignee": "「%[1]」(%[2]s) の担当者に割り当てられました",
@@ -89,8 +88,7 @@
 			},
 			"mentioned": {
 				"subject_new": "%[1]s が新しいタスク「%[2]s」(%[3]s) であなたにメンションしました",
-				"subject": "%[1]s がタスク「%[2]s」(%[3]s) であなたにメンションしました",
-				"message": "**%[1]s** があなたにメンションしました:"
+				"subject": "%[1]s がタスク「%[2]s」(%[3]s) であなたにメンションしました"
 			},
 			"overdue": {
 				"subject": "タスク「%[1]」(%[2]s) は期限を過ぎました",
@@ -164,10 +162,7 @@
 				"left_comment": "%[1]s がコメントしました",
 				"mentioned_you_comment": "%[1]s がコメントであなたにメンションしました",
 				"mentioned_you": "%[1]s があなたにメンションしました",
-				"mentioned_you_new_task": "%[1]s が新しいタスクであなたにメンションしました",
-				"assigned_you": "%[1]s があなたを担当に割り当てました",
-				"assigned_themselves": "%[1]s が自身を担当に割り当てました",
-				"assigned_user": "%[1]s が %[2]s を担当に割り当てました"
+				"mentioned_you_new_task": "%[1]s が新しいタスクであなたにメンションしました"
 			}
 		}
 	},

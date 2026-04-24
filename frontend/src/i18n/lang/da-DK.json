@@ -32,7 +32,6 @@
 			"forgotPassword": "Har du glemt din adgangskode?",
 			"resetPassword": "Nulstil din adgangskode",
 			"resetPasswordAction": "Send mig et link til nulstilling af adgangskode",
-			"passwordsDontMatch": "Adgangskoderne er ikke ens",
 			"confirmEmailSuccess": "Du har bekræftet din e-mail! Du kan logge ind nu.",
 			"totpTitle": "To Faktor Godkendelseskode",
 			"totpPlaceholder": "f.eks. 123456",
@@ -55,7 +54,6 @@
 			"title": "Indstillinger",
 			"newPasswordTitle": "Opdater din adgangskode",
 			"currentPasswordPlaceholder": "Din nuværende adgangskode",
-			"passwordsDontMatch": "Din nye adgangskode og bekræftelsesadgangskoden er ikke ens.",
 			"passwordUpdateSuccess": "Adgangskoden blev ændret.",
 			"updateEmailTitle": "Opdater din e-mailadresse",
 			"updateEmailSuccess": "Din e-mailadresse blev opdateret. Vi har sendt dig et link til at bekræfte den.",
@@ -104,7 +102,6 @@
 			},
 			"appearance": {
 				"title": "Farvetema",
-				"setSuccess": "Gemt ændring af farvetema til {colorScheme}",
 				"colorScheme": {
 					"light": "Lys",
 					"system": "System",
@@ -140,16 +137,7 @@
 			"title": "Titel",
 			"titlePlaceholder": "Det gemte filters titel skrives her…",
 			"description": "Beskrivelse",
-			"includeNulls": "Inkluder Opgaver som ikke har en værdi indstillet",
-			"requireAll": "Kræv at alle filtre er sande for at en opgave kan vises",
-			"showDoneTasks": "Vis Udførte Opgaver",
-			"sortAlphabetically": "Sorter Alfabetisk",
-			"enablePriority": "Aktiver Filtrer Efter Prioritet",
-			"enablePercentDone": "Aktiver Filter Efter Fremskridt",
-			"dueDateRange": "Udløbsdato Interval",
-			"startDateRange": "Start Dato Interval",
-			"endDateRange": "Slut Dato Interval",
-			"reminderRange": "Påmindeslesdato Interval"
+			"includeNulls": "Inkluder Opgaver som ikke har en værdi indstillet"
 		},
 		"create": {
 			"title": "Nyt Gemt Filter"
@@ -167,7 +155,6 @@
 	"migrate": {
 		"title": "Import fra andre tjenester",
 		"titleService": "Importer dine data fra {name} til Vikunja",
-		"import": "Importer dine data til Vikunja",
 		"description": "Klik på logoet for en af de tredjeparts tjenester nedenfor for at komme i gang.",
 		"descriptionDo": "Vikunja vil importere alle lister, opgaver, noter, påmindelser og filer, du har adgang til.",
 		"authorize": "For at give Vikunja tilladelse til at tilgå din {name} konto, klik på knappen nedenfor.",
@@ -183,7 +170,6 @@
 		"title": "Etiketter",
 		"manage": "Administrer etiketter",
 		"newCTA": "Du har i øjeblikket ingen etiketter.",
-		"search": "Skriv for at søge efter en etiket…",
 		"create": {
 			"header": "Ny etiket",
 			"titleRequired": "Angiv venligst en titel.",
@@ -198,7 +184,6 @@
 			"title": "Titel",
 			"titlePlaceholder": "Titlen på etiketten vises her…",
 			"description": "Beskrivelse",
-			"descriptionPlaceholder": "Beskrivelse af etiket",
 			"color": "Farve"
 		}
 	},
@@ -219,16 +204,13 @@
 		"delete": "Slet",
 		"confirm": "Bekræft",
 		"cancel": "Annuller",
-		"refresh": "Genindlæs",
 		"disable": "Deaktiver",
 		"copy": "Kopier til udklipsholder",
 		"copyError": "Kopiering til udklipsholder mislykkedes",
-		"search": "Søg",
 		"searchPlaceholder": "Skriv for at søge…",
 		"previous": "Forrige",
 		"next": "Næste",
 		"poweredBy": "Drevet af Vikunja",
-		"info": "Info",
 		"create": "Opret",
 		"doit": "Gør det!",
 		"saving": "Gemmer…",
@@ -259,23 +241,17 @@
 		},
 		"editor": {
 			"edit": "Rediger",
-			"done": "Udfør",
 			"heading1": "Overskrift 1",
 			"heading2": "Overskrift 2",
 			"heading3": "Overskrift 3",
-			"headingSmaller": "Overskrift Mindre",
-			"headingBigger": "Overskrift Større",
 			"bold": "Fed",
 			"italic": "Kursiv",
 			"strikethrough": "Gennemstreget",
 			"code": "Kode",
 			"quote": "Citat",
-			"cleanBlock": "Ryd Blok",
 			"link": "Link",
 			"image": "Billede",
-			"horizontalRule": "Horisontal Linje",
-			"sideBySide": "Side Om Side",
-			"guide": "Vejledning"
+			"horizontalRule": "Horisontal Linje"
 		},
 		"multiselect": {
 			"selectPlaceholder": "Klik eller tryk på Enter for at vælge"
@@ -330,17 +306,13 @@
 		}
 	},
 	"task": {
-		"task": "Opgave",
-		"delete": "Slet denne opgave",
 		"createSuccess": "Opgaven blev oprettet.",
 		"doneSuccess": "Opgaven blev markeret som udført.",
 		"undoneSuccess": "Opgaven fik fjernet sin udført-markering.",
-		"openDetail": "Åbn detaljeret opgavevisning",
 		"checklistTotal": "{checked} af {total} opgaver",
 		"checklistAllDone": "{total} opgaver",
 		"show": {
 			"titleCurrent": "Aktuelle Opgaver",
-			"titleDates": "Opgaver fra {from} indtil {to}",
 			"overdue": "Vis forfaldne opgaver",
 			"fromuntil": "Opgaver fra {from} indtil {until}",
 			"select": "Vælg et datointerval",
@@ -358,7 +330,6 @@
 			"updateSuccess": "Opgaven blev gemt.",
 			"deleteSuccess": "Opgaven er blevet slettet.",
 			"due": "Forfalder {at}",
-			"closePopup": "Luk pop-up",
 			"delete": {
 				"header": "Slet denne opgave",
 				"text1": "Er du sikker på, at du vil slette denne opgave?",
@@ -418,7 +389,6 @@
 			"delete": "Slet vedhæftet fil",
 			"deleteTooltip": "Slet denne vedhæftede fil",
 			"deleteText1": "Er du sikker på, at du vil slette den vedhæftede fil {filename}?",
-			"copyUrl": "Kopier URL",
 			"copyUrlTooltip": "Kopier url'en til denne vedhæftede fil til brug i tekst",
 			"setAsCover": "Gør til forsidebillede",
 			"unsetAsCover": "Fjern forsidebillede",
@@ -442,9 +412,6 @@
 			"3days": "3 dage",
 			"1week": "1 uge"
 		},
-		"description": {
-			"empty": "Ingen beskrivelse tilgængelig endnu."
-		},
 		"assignee": {
 			"placeholder": "Skriv for at tilknytte en bruger…",
 			"selectPlaceholder": "Tildel denne bruger",
@@ -454,7 +421,6 @@
 		"label": {
 			"createPlaceholder": "Tilføj dette som ny etiket",
 			"addSuccess": "Etiketten er blevet tilføjet.",
-			"createSuccess": "Etiketten er blevet oprettet.",
 			"removeSuccess": "Etiketten er blevet fjernet.",
 			"addCreateSuccess": "Etiketten er blevet oprettet og tilføjet.",
 			"delete": {
@@ -503,8 +469,6 @@
 			"hours": "Timer",
 			"days": "Dage",
 			"weeks": "Uger",
-			"months": "Måneder",
-			"years": "År",
 			"invalidAmount": "Angiv venligst mere end 0."
 		},
 		"quickAddMagic": {

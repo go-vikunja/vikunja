@@ -44,7 +44,6 @@
 			"resetPassword": "パスワードの再設定",
 			"resetPasswordAction": "パスワード再設定リンクの送信",
 			"resetPasswordSuccess": "受信トレイをご確認ください。パスワードの再設定方法を記載したメールが届くはずです。",
-			"passwordsDontMatch": "パスワードが一致しません",
 			"confirmEmailSuccess": "メールの確認に成功しました！ログインの準備が整いました。",
 			"totpTitle": "2要素認証コード",
 			"totpPlaceholder": "例: 123456",
@@ -75,10 +74,8 @@
 			"title": "設定",
 			"newPasswordTitle": "パスワードの更新",
 			"newPassword": "新しいパスワード",
-			"newPasswordConfirm": "新しいパスワードの確認",
 			"currentPassword": "現在のパスワード",
 			"currentPasswordPlaceholder": "現在のパスワード",
-			"passwordsDontMatch": "新しいパスワードとその確認が一致しません。",
 			"passwordUpdateSuccess": "パスワードは正常に更新されました。",
 			"updateEmailTitle": "メールアドレスの更新",
 			"updateEmailNew": "新しいメールアドレス",
@@ -168,7 +165,6 @@
 			},
 			"appearance": {
 				"title": "カラースキーム",
-				"setSuccess": "カラースキームを{colorScheme}に変更しました。",
 				"colorScheme": {
 					"light": "ライト",
 					"system": "システム既定",
@@ -193,7 +189,6 @@
 				"expired": "このトークンは {ago} に期限切れしています。",
 				"tokenCreatedSuccess": "新しい API トークンはこちらです: {token}",
 				"tokenCreatedNotSeeAgain": "このトークンは二度と表示されません。安全な場所に保管してください。",
-				"selectAll": "すべて選択",
 				"delete": {
 					"header": "トークンの削除",
 					"text1": "トークン \"{token}\" を削除してよろしいですか？",
@@ -488,16 +483,7 @@
 			"titlePlaceholder": "絞り込み条件名を入力…",
 			"description": "説明",
 			"descriptionPlaceholder": "絞り込み条件に関する説明を記入します。/ でオプションを表示…",
-			"includeNulls": "値が設定されていないタスクを含める",
-			"requireAll": "すべての条件に一致するタスクのみ表示",
-			"showDoneTasks": "完了したタスクを表示",
-			"sortAlphabetically": "アルファベット順に並べ替える",
-			"enablePriority": "優先度による絞り込みを有効化",
-			"enablePercentDone": "進捗状況による絞り込みを有効化",
-			"dueDateRange": "期日の範囲",
-			"startDateRange": "開始日の範囲",
-			"endDateRange": "開始日の範囲",
-			"reminderRange": "リマインダーの範囲"
+			"includeNulls": "値が設定されていないタスクを含める"
 		},
 		"create": {
 			"title": "新しい絞り込み条件の作成",
@@ -515,7 +501,6 @@
 			"success": "絞り込み条件は正常に保存されました。"
 		},
 		"query": {
-			"title": "検索条件",
 			"placeholder": "検索条件・絞り込み条件を入力…",
 			"help": {
 				"intro": "SQLのような式を使ってタスクを絞り込むことができます。使用できる項目は以下のとおり:",
@@ -568,7 +553,6 @@
 	"migrate": {
 		"title": "他のサービスからのインポート",
 		"titleService": "{name}からVikunjaへのデータのインポート",
-		"import": "Vikunjaへのデータのインポート",
 		"description": "以下のいずれかのサービスのロゴをクリックして始めましょう。",
 		"descriptionDo": "アクセス可能なリスト、タスク、メモ、リマインダー、ファイルをすべてVikunjaにインポートします。",
 		"authorize": "Vikunjaはあなたの{name}アカウントにアクセスします。よろしければ以下のボタンをクリックして許可してください。",
@@ -587,7 +571,6 @@
 		"manage": "ラベルの管理",
 		"description": "ラベルをクリックして編集します。ラベルはアクセス可能なプロジェクトのタスクで使用できます。",
 		"newCTA": "利用可能なラベルは存在しません。",
-		"search": "ラベルのキーワードを入力…",
 		"create": {
 			"header": "新しいラベルの作成",
 			"title": "ラベルの作成",
@@ -596,7 +579,6 @@
 		},
 		"edit": {
 			"header": "ラベルの編集",
-			"forbidden": "このラベルはあなたのものではないので編集することはできません。",
 			"success": "ラベルは正常に更新されました。"
 		},
 		"deleteSuccess": "ラベルは正常に削除されました。",
@@ -604,7 +586,6 @@
 			"title": "ラベル名",
 			"titlePlaceholder": "ラベル名を入力…",
 			"description": "説明",
-			"descriptionPlaceholder": "ラベルの説明",
 			"color": "色"
 		}
 	},
@@ -631,16 +612,13 @@
 		"delete": "削除",
 		"confirm": "確定",
 		"cancel": "キャンセル",
-		"refresh": "更新",
 		"disable": "無効化",
 		"copy": "コピー",
 		"copyError": "クリップボードへのコピーに失敗",
-		"search": "検索",
 		"searchPlaceholder": "キーワードを入力…",
 		"previous": "前へ",
 		"next": "次へ",
 		"poweredBy": "Powered by Vikunja",
-		"info": "詳細",
 		"create": "作成",
 		"doit": "続行",
 		"saving": "保存中…",
@@ -673,15 +651,12 @@
 		},
 		"editor": {
 			"edit": "編集",
-			"done": "完了",
 			"heading1": "見出し1",
 			"heading1Tooltip": "大きいフォントのセクション見出しです。",
 			"heading2": "見出し2",
 			"heading2Tooltip": "中くらいのフォントのセクション見出しです。",
 			"heading3": "見出し3",
 			"heading3Tooltip": "小さいフォントのセクション見出しです。",
-			"headingSmaller": "見出しを小さくする",
-			"headingBigger": "見出しを大きくする",
 			"bold": "太字",
 			"italic": "斜体",
 			"strikethrough": "打ち消し線",
@@ -692,17 +667,13 @@
 			"quoteTooltip": "引用を貼り付ける",
 			"bulletList": "順序なしリスト",
 			"bulletListTooltip": "シンプルな箇条書きリストを作成",
-			"unorderedList": "順序なしリスト",
 			"orderedList": "順序付きリスト",
 			"orderedListTooltip": "番号付きのリストを作成",
-			"cleanBlock": "ブロックのクリア",
 			"link": "リンク",
 			"image": "画像",
 			"imageTooltip": "コンピュータから画像をアップロード",
 			"horizontalRule": "横罫",
 			"horizontalRuleTooltip": "セクションを分割",
-			"sideBySide": "並べて表示",
-			"guide": "説明書",
 			"text": "テキスト",
 			"textTooltip": "プレーンテキストで入力開始",
 			"taskList": "タスクリスト",
@@ -808,21 +779,17 @@
 		}
 	},
 	"task": {
-		"task": "タスク",
 		"new": "タスクの作成",
-		"delete": "タスクの削除",
 		"createSuccess": "タスクは正常に作成されました。",
 		"addReminder": "リマイダーを作成…",
 		"doneSuccess": "タスクを完了にしました。",
 		"undoneSuccess": "タスクを未完了に戻しました。",
 		"movedToProject": "タスクは {project} に移動しました。",
 		"undo": "元に戻す",
-		"openDetail": "タスクの詳細を表示",
 		"checklistTotal": "{total}件中{checked}件のタスク",
 		"checklistAllDone": "{total}件のタスク",
 		"show": {
 			"titleCurrent": "現在のタスク",
-			"titleDates": "{from} 〜 {to} までのタスク",
 			"noDates": "日付のないタスクを表示",
 			"overdue": "期限切れタスクを表示",
 			"fromuntil": "{from} 〜 {until} までのタスク",
@@ -847,7 +814,6 @@
 			"belongsToProject": "このタスクはプロジェクト「{project}」に含まれています。",
 			"back": "プロジェクトに戻る",
 			"due": "期限: {at}",
-			"closePopup": "閉じる",
 			"scrollToBottom": "一番下まで移動",
 			"organization": "組織",
 			"management": "管理",
@@ -922,7 +888,6 @@
 			"delete": "添付ファイルの削除",
 			"deleteTooltip": "添付ファイルを削除",
 			"deleteText1": "添付ファイル「{filename}」を削除して本当によろしいですか？",
-			"copyUrl": "URLのコピー",
 			"copyUrlTooltip": "添付ファイルのURLをコピー",
 			"setAsCover": "カバー画像にする",
 			"unsetAsCover": "カバー画像から取り外す",
@@ -954,8 +919,7 @@
 			"1week": "1週間後"
 		},
 		"description": {
-			"placeholder": "タスクに関する説明を記入します。/ でオプションを表示…",
-			"empty": "説明文はありません。"
+			"placeholder": "タスクに関する説明を記入します。/ でオプションを表示…"
 		},
 		"assignee": {
 			"placeholder": "担当者を入力…",
@@ -967,7 +931,6 @@
 			"placeholder": "追加するラベルを入力…",
 			"createPlaceholder": "新しいラベルを追加",
 			"addSuccess": "ラベルは正常に追加されました。",
-			"createSuccess": "ラベルは正常に作成されました。",
 			"removeSuccess": "ラベルは正常に削除されました。",
 			"addCreateSuccess": "ラベルは正常に追加・作成されました。",
 			"delete": {
@@ -1031,8 +994,6 @@
 			"hours": "時間ごと",
 			"days": "日ごと",
 			"weeks": "週間ごと",
-			"months": "ヶ月ごと",
-			"years": "年ごと",
 			"invalidAmount": "0以上を入力してください。"
 		},
 		"quickAddMagic": {
@@ -1185,7 +1146,6 @@
 		"unarchive": "アーカイブの取り消し",
 		"setBackground": "背景画像の設定",
 		"share": "共有",
-		"newProject": "新しいプロジェクトの作成",
 		"createProject": "プロジェクトの作成",
 		"cantArchiveIsDefault": "デフォルトのプロジェクトのためアーカイブできません。",
 		"cantDeleteIsDefault": "デフォルトのプロジェクトのため削除できません。",
@@ -1343,7 +1303,6 @@
 			"hours": "時間",
 			"days": "日",
 			"weeks": "週間",
-			"months": "月",
 			"years": "年"
 		}
 	}

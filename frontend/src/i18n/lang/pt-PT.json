@@ -44,7 +44,6 @@
 			"resetPassword": "Redefine a tua palavra-passe",
 			"resetPasswordAction": "Enviem-me um link para redefinição da palavra-passe",
 			"resetPasswordSuccess": "Verifica a tua caixa de correio! Deves ter um e-mail com instruções sobre como redefinir a tua palavra-passe.",
-			"passwordsDontMatch": "As palavras-passe não coincidem",
 			"confirmEmailSuccess": "Confirmaste com sucesso o teu e-mail! Podes agora iniciar sessão.",
 			"totpTitle": "Código de autenticação de dois fatores",
 			"totpPlaceholder": "ex.: 123456",
@@ -74,10 +73,8 @@
 			"title": "Definições",
 			"newPasswordTitle": "Atualizar Palavra-Passe",
 			"newPassword": "Nova palavra-passe",
-			"newPasswordConfirm": "Confirmação da nova palavra-passe",
 			"currentPassword": "Palavra-passe atual",
 			"currentPasswordPlaceholder": "A tua palavra-passe atual",
-			"passwordsDontMatch": "A nova palavra-passe e a sua confirmação não correspondem.",
 			"passwordUpdateSuccess": "A sua palavra-passe foi atualizada com sucesso.",
 			"updateEmailTitle": "Atualiza o Teu Endereço de E-mail",
 			"updateEmailNew": "Novo endereço de e-mail",
@@ -167,7 +164,6 @@
 			},
 			"appearance": {
 				"title": "Esquema de cores",
-				"setSuccess": "Salva a alteração do esquema de cores para {colorScheme}",
 				"colorScheme": {
 					"light": "Claro",
 					"system": "Sistema",
@@ -192,7 +188,6 @@
 				"expired": "Este token expirou {ago}.",
 				"tokenCreatedSuccess": "Aqui está o teu novo token de API: {token}",
 				"tokenCreatedNotSeeAgain": "Guarda-o num local seguro, não o vais poder visualizar novamente!",
-				"selectAll": "Selecionar tudo",
 				"delete": {
 					"header": "Eliminar este token",
 					"text1": "Tens a certeza que pretendes eliminar o token \"{token}\"?",
@@ -465,16 +460,7 @@
 			"titlePlaceholder": "O título do filtro memorizado será aqui…",
 			"description": "Descrição",
 			"descriptionPlaceholder": "Insere aqui uma descrição para este filtro, pressiona '/' para mais opções…",
-			"includeNulls": "Incluir Tarefas que não têm um valor definido",
-			"requireAll": "Requerer que todos os filtros sejam verdadeiros para que uma tarefa apareça",
-			"showDoneTasks": "Mostrar Tarefas Concluídas",
-			"sortAlphabetically": "Ordenar Alfabeticamente",
-			"enablePriority": "Ativar Filtro por Prioridade",
-			"enablePercentDone": "Ativar Filtro por Progresso",
-			"dueDateRange": "Intervalo de Datas de Vencimento",
-			"startDateRange": "Intervalo de Datas de Início",
-			"endDateRange": "Intervalo de Datas de Fim",
-			"reminderRange": "Intervalo de Datas de Lembrete"
+			"includeNulls": "Incluir Tarefas que não têm um valor definido"
 		},
 		"create": {
 			"title": "Novo Filtro Memorizado",
@@ -492,7 +478,6 @@
 			"success": "O filtro foi memorizado com sucesso."
 		},
 		"query": {
-			"title": "Pesquisa",
 			"placeholder": "Introduz uma pesquisa ou filtro…",
 			"help": {
 				"intro": "Para filtrar tarefas, podes utilizar uma sintaxe de pesquisa semelhante à SQL. Os campos disponíveis para filtragem incluem:",
@@ -545,7 +530,6 @@
 	"migrate": {
 		"title": "Importar de outros serviços",
 		"titleService": "Importar os teus dados de {name} para o Vikunja",
-		"import": "Importar os teus dados para o Vikunja",
 		"description": "Clica no logótipo de um dos serviços de terceiros abaixo para começar.",
 		"descriptionDo": "O Vikunja vai importar todas as listas, tarefas, notas, lembretes e ficheiros a que tens acesso.",
 		"authorize": "Para autorizares o Vikunja a aceder à tua conta em {name}, clica no botão abaixo.",
@@ -564,7 +548,6 @@
 		"manage": "Gerir etiquetas",
 		"description": "Clica numa etiqueta para a editares. Podes editar todas as etiquetas que criaste, podes utilizar todas as etiquetas que estão associadas a uma tarefa a cujo projeto tens acesso.",
 		"newCTA": "Atualmente não tens quaisquer etiquetas.",
-		"search": "Escreve para pesquisar uma etiqueta…",
 		"create": {
 			"header": "Nova etiqueta",
 			"title": "Cria uma etiqueta",
@@ -573,7 +556,6 @@
 		},
 		"edit": {
 			"header": "Editar Etiqueta",
-			"forbidden": "Não estás autorizado a editar esta etiqueta porque não és o seu proprietário.",
 			"success": "A etiqueta foi atualizada com sucesso."
 		},
 		"deleteSuccess": "A etiqueta foi eliminada com sucesso.",
@@ -581,7 +563,6 @@
 			"title": "Título",
 			"titlePlaceholder": "O título da etiqueta será aqui…",
 			"description": "Descrição",
-			"descriptionPlaceholder": "Descrição da etiqueta",
 			"color": "Cor"
 		}
 	},
@@ -608,16 +589,13 @@
 		"delete": "Eliminar",
 		"confirm": "Confirmar",
 		"cancel": "Cancelar",
-		"refresh": "Atualizar",
 		"disable": "Desativar",
 		"copy": "Copiar para a área de trabalho",
 		"copyError": "Falha ao copiar para a área de trabalho",
-		"search": "Pesquisar",
 		"searchPlaceholder": "Escreva para pesquisar…",
 		"previous": "Anterior",
 		"next": "Seguinte",
 		"poweredBy": "Fornecido por Vikunja",
-		"info": "Info",
 		"create": "Criar",
 		"doit": "Fá-lo!",
 		"saving": "A salvar…",
@@ -650,15 +628,12 @@
 		},
 		"editor": {
 			"edit": "Editar",
-			"done": "Concluído",
 			"heading1": "Cabeçalho 1",
 			"heading1Tooltip": "Título de secção grande.",
 			"heading2": "Cabeçalho 2",
 			"heading2Tooltip": "Título de secção médio.",
 			"heading3": "Cabeçalho 3",
 			"heading3Tooltip": "Título de secção pequeno.",
-			"headingSmaller": "Título Menor",
-			"headingBigger": "Título Maior",
 			"bold": "Negrito",
 			"italic": "Itálico",
 			"strikethrough": "Rasurado",
@@ -669,17 +644,13 @@
 			"quoteTooltip": "Capture uma citação.",
 			"bulletList": "Lista de tópicos",
 			"bulletListTooltip": "Criar uma lista simples de tópicos.",
-			"unorderedList": "Lista não ordenada",
 			"orderedList": "Lista ordenada",
 			"orderedListTooltip": "Cria uma lista com numeração.",
-			"cleanBlock": "Limpar Formatação",
 			"link": "Link",
 			"image": "Imagem",
 			"imageTooltip": "Carregar uma imagem do teu computador.",
 			"horizontalRule": "Linha Horizontal",
 			"horizontalRuleTooltip": "Dividir uma secção.",
-			"sideBySide": "Lado-a-lado",
-			"guide": "Guia",
 			"text": "Texto",
 			"textTooltip": "É só começares a escrever texto sem formatação.",
 			"taskList": "Lista de tarefas",
@@ -785,21 +756,17 @@
 		}
 	},
 	"task": {
-		"task": "Tarefa",
 		"new": "Cria uma tarefa",
-		"delete": "Eliminar esta tarefa",
 		"createSuccess": "A tarefa for criada com sucesso.",
 		"addReminder": "Adicionar um lembrete…",
 		"doneSuccess": "A tarefa foi marcada como concluída.",
 		"undoneSuccess": "A tarefa foi desmarcada como concluída.",
 		"movedToProject": "A tarefa foi movida para {project}.",
 		"undo": "Desfazer",
-		"openDetail": "Abrir vista detalhada da tarefa",
 		"checklistTotal": "{checked} de {total} tarefas",
 		"checklistAllDone": "{total} tarefas",
 		"show": {
 			"titleCurrent": "Tarefas Atuais",
-			"titleDates": "Tarefas de {from} até {to}",
 			"noDates": "Mostrar tarefas sem data",
 			"overdue": "Mostrar tarefas em atraso",
 			"fromuntil": "Tarefas de {from} a {until}",
@@ -823,7 +790,6 @@
 			"belongsToProject": "Esta tarefa pertence ao projeto '{project}'",
 			"back": "Volta ao projeto",
 			"due": "Vence {at}",
-			"closePopup": "Fechar janela",
 			"scrollToBottom": "Rolar até ao fundo",
 			"organization": "Organização",
 			"management": "Gestão",
@@ -896,7 +862,6 @@
 			"delete": "Eliminar anexo",
 			"deleteTooltip": "Eliminar este anexo",
 			"deleteText1": "Tens a certeza que pretendes eliminar o anexo {filename}?",
-			"copyUrl": "Copiar URL",
 			"copyUrlTooltip": "Copia o url deste anexo para o utilizar no texto",
 			"setAsCover": "Criar capa",
 			"unsetAsCover": "Remover capa",
@@ -926,8 +891,7 @@
 			"1week": "1 semana"
 		},
 		"description": {
-			"placeholder": "Insere uma descrição, pressiona '/' para mais opções…",
-			"empty": "Nenhuma descrição ainda disponível."
+			"placeholder": "Insere uma descrição, pressiona '/' para mais opções…"
 		},
 		"assignee": {
 			"placeholder": "Escreve para atribuir um utilizador…",
@@ -939,7 +903,6 @@
 			"placeholder": "Escreve para adicionar uma etiqueta…",
 			"createPlaceholder": "Adicionar isto como nova etiqueta",
 			"addSuccess": "A etiqueta foi adicionada com sucesso.",
-			"createSuccess": "A etiqueta foi criada com sucesso.",
 			"removeSuccess": "A etiqueta foi eliminada com sucesso.",
 			"addCreateSuccess": "A etiqueta foi criada e adicionada com sucesso.",
 			"delete": {
@@ -1004,8 +967,6 @@
 			"hours": "Horas",
 			"days": "Dias",
 			"weeks": "Semanas",
-			"months": "Meses",
-			"years": "Anos",
 			"invalidAmount": "Por favor, insere mais do que 0."
 		},
 		"quickAddMagic": {
@@ -1158,7 +1119,6 @@
 		"unarchive": "Desarquivar",
 		"setBackground": "Definições do fundo",
 		"share": "Partilhar",
-		"newProject": "Novo projeto",
 		"createProject": "Criar projeto",
 		"cantArchiveIsDefault": "Não podes arquivar isto porque é o teu projeto padrão.",
 		"cantDeleteIsDefault": "Não podes eliminar isto porque é o teu projeto padrão.",
@@ -1316,7 +1276,6 @@
 			"hours": "hora|horas",
 			"days": "dia|dias",
 			"weeks": "semana|semanas",
-			"months": "mês|meses",
 			"years": "ano|anos"
 		}
 	}

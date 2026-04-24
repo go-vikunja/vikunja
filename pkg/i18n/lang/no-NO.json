@@ -70,9 +70,6 @@
 				"subject": "Påminnelse for \"%[1]s\" (%[2]s)",
 				"message": "Dette er en påminnelse om oppgaven «%[1]» (%[2]s)."
 			},
-			"comment": {
-				"mentioned_message": "**%[1]s nevnte deg i en kommentar i \"%[]s:"
-			},
 			"assigned": {
 				"subject_to_assignee": "Du har blitt tildelt \"%[1]\" (%[2]s)",
 				"message_to_assignee": "%[1]s har tildelt deg %[2]s\".",
@@ -82,9 +79,6 @@
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) er slettet",
 				"message": "%[1]s har slettet oppgaven \"%[2]s\" (%[3]s)"
-			},
-			"mentioned": {
-				"message": "**%[1]s** nevnte deg i en oppgave:"
 			},
 			"overdue": {
 				"subject": "Oppgave \"%[1]s\" (%[2]s) er forfalt",
