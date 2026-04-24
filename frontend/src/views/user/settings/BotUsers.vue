@@ -25,12 +25,15 @@ const botService = new BotUserService()
 const tokenService = new ApiTokenService()
 const bots = ref<IUser[]>([])
 const newBotUsername = ref('')
+const newBotName = ref('')
 const createError = ref<string | null>(null)
 const showCreateForm = ref(false)
 
 const tokensByBot = ref<Record<number, IApiToken[]>>({})
 const newTokensByBot = ref<Record<number, string>>({})
 const showTokenForm = ref<Record<number, boolean>>({})
+const editingName = ref<Record<number, boolean>>({})
+const nameDraft = ref<Record<number, string>>({})
 
 async function loadBots() {
 	bots.value = await botService.getAll() as IUser[]
@@ -46,10 +49,16 @@ async function loadTokens(botId: number) {
 async function createBot() {
 	createError.value = null
 	const username = newBotUsername.value.startsWith('bot-') ? newBotUsername.value : `bot-${newBotUsername.value}`
+	const payload: Partial<IUser> = {username}
+	const trimmedName = newBotName.value.trim()
+	if (trimmedName !== '') {
+		payload.name = trimmedName
+	}
 	try {
-		const created = await botService.create(new UserModel({username}))
+		const created = await botService.create(new UserModel(payload))
 		bots.value.push(created as IUser)
 		newBotUsername.value = ''
+		newBotName.value = ''
 		showCreateForm.value = false
 	} catch (e: unknown) {
 		const err = e as {response?: {data?: {message?: string}}}
@@ -67,6 +76,30 @@ async function toggleBotStatus(bot: IUser) {
 	if (idx >= 0) {
 		bots.value[idx] = result
 	}
+}
+
+function startEditName(bot: IUser) {
+	nameDraft.value[bot.id] = bot.name ?? ''
+	editingName.value[bot.id] = true
+}
+
+function cancelEditName(bot: IUser) {
+	editingName.value[bot.id] = false
+	delete nameDraft.value[bot.id]
+}
+
+async function saveBotName(bot: IUser) {
+	const updated = new UserModel({
+		...bot,
+		name: (nameDraft.value[bot.id] ?? '').trim(),
+	})
+	const result = await botService.update(updated) as IUser
+	const idx = bots.value.findIndex(b => b.id === bot.id)
+	if (idx >= 0) {
+		bots.value[idx] = result
+	}
+	editingName.value[bot.id] = false
+	delete nameDraft.value[bot.id]
 }
 
 async function deleteBot(bot: IUser) {
@@ -110,6 +143,13 @@ onMounted(loadBots)
 					:placeholder="$t('user.settings.bots.usernamePlaceholder')"
 				>
 			</FormField>
+			<FormField :label="$t('user.settings.bots.nameLabel')">
+				<input
+					v-model="newBotName"
+					class="input"
+					:placeholder="$t('user.settings.bots.namePlaceholder')"
+				>
+			</FormField>
 			<XButton @click="createBot">
 				{{ $t('user.settings.bots.create') }}
 			</XButton>
@@ -130,7 +170,43 @@ onMounted(loadBots)
 		>
 			<div class="bot-header">
 				<strong>{{ bot.username }}</strong>
-				<span v-if="bot.name">— {{ bot.name }}</span>
+				<template v-if="editingName[bot.id]">
+					<span class="bot-name-edit">—</span>
+					<input
+						v-model="nameDraft[bot.id]"
+						v-focus
+						class="input bot-name-input"
+						:placeholder="$t('user.settings.bots.namePlaceholder')"
+						@keyup.enter="saveBotName(bot)"
+						@keyup.esc="cancelEditName(bot)"
+					>
+					<XButton
+						variant="secondary"
+						@click="saveBotName(bot)"
+					>
+						{{ $t('user.settings.bots.save') }}
+					</XButton>
+					<XButton
+						variant="tertiary"
+						@click="cancelEditName(bot)"
+					>
+						{{ $t('user.settings.bots.cancel') }}
+					</XButton>
+				</template>
+				<template v-else>
+					<span v-if="bot.name">— {{ bot.name }}</span>
+					<span
+						v-else
+						class="no-name"
+					>{{ $t('user.settings.bots.noName') }}</span>
+					<XButton
+						variant="tertiary"
+						icon="pencil-alt"
+						@click="startEditName(bot)"
+					>
+						{{ $t('user.settings.bots.edit') }}
+					</XButton>
+				</template>
 				<span class="status">{{ bot.status === STATUS_ACTIVE ? $t('user.settings.bots.statusActive') : $t('user.settings.bots.statusDisabled') }}</span>
 			</div>
 			<div class="bot-actions">
@@ -225,6 +301,15 @@ onMounted(loadBots)
 	gap: .5rem;
 	align-items: center;
 	margin-block-end: .5rem;
+}
+
+.bot-name-input {
+	max-inline-size: 16rem;
+}
+
+.no-name {
+	font-style: italic;
+	color: var(--grey-500);
 }
 
 .status {
