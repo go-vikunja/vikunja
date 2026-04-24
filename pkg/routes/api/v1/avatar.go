@@ -22,6 +22,7 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
+	"code.vikunja.io/api/pkg/modules/avatar/botmarble"
 	"code.vikunja.io/api/pkg/modules/avatar/empty"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
@@ -66,6 +67,10 @@ func GetAvatar(c *echo.Context) error {
 
 	if !found {
 		avatarProvider = &empty.Provider{}
+	}
+
+	if found && u.IsBot() {
+		avatarProvider = &botmarble.Provider{}
 	}
 
 	size := c.QueryParam("size")

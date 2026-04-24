@@ -34,7 +34,7 @@ func (p *Provider) FlushCache(_ *user.User) error { return nil }
 
 const avatarSize = 80
 
-var colors = []string{
+var defaultColors = []string{
 	"#A3A948",
 	"#EDB92E",
 	"#F85931",
@@ -62,12 +62,12 @@ func getUnit(number int, rang, index int) int {
 	return value
 }
 
-func getPropsForUser(u *user.User) []*props {
+func getPropsForUser(u *user.User, palette []string) []*props {
 	ps := []*props{}
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		f := float64(getUnit(int(u.ID)*(i+1), avatarSize/10, 0))
 		ps = append(ps, &props{
-			Color:      colors[(int(u.ID)+i)%(len(colors)-1)],
+			Color:      palette[(int(u.ID)+i)%(len(palette)-1)],
 			TranslateX: getUnit(int(u.ID)*(i+1), avatarSize/10, 1),
 			TranslateY: getUnit(int(u.ID)*(i+1), avatarSize/10, 2),
 			Scale:      1.2 + f/10,
@@ -78,13 +78,14 @@ func getPropsForUser(u *user.User) []*props {
 	return ps
 }
 
-func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
+// GenerateSVG renders a marble-style SVG avatar for the given user using the provided palette.
+func GenerateSVG(u *user.User, size int64, palette []string) (avatar []byte, mimeType string, err error) {
 
 	s := strconv.FormatInt(size, 10)
 	avatarSizeStr := strconv.Itoa(avatarSize)
 	avatarSizeHalf := strconv.Itoa(avatarSize / 2)
 
-	ps := getPropsForUser(u)
+	ps := getPropsForUser(u, palette)
 
 	return []byte(`<svg
       viewBox="0 0 ` + avatarSizeStr + ` ` + avatarSizeStr + `"
@@ -126,16 +127,24 @@ func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType 
     </svg>`), "image/svg+xml", nil
 }
 
-// AsDataURI returns a data URI for the SVG avatar
-func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
-	avatarData, mimeType, err := p.GetAvatar(u, size)
+// GenerateDataURI returns a base64-encoded data URI for a marble-style SVG avatar using the provided palette.
+func GenerateDataURI(u *user.User, size int64, palette []string) (string, error) {
+	avatarData, mimeType, err := GenerateSVG(u, size, palette)
 	if err != nil {
 		return "", err
 	}
 
-	// Encode the SVG as base64 and create a data URI
 	base64Data := base64.StdEncoding.EncodeToString(avatarData)
 	dataURI := fmt.Sprintf("data:%s;base64,%s", mimeType, base64Data)
 
 	return dataURI, nil
+}
+
+func (p *Provider) GetAvatar(u *user.User, size int64) (avatar []byte, mimeType string, err error) {
+	return GenerateSVG(u, size, defaultColors)
+}
+
+// AsDataURI returns a data URI for the SVG avatar
+func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
+	return GenerateDataURI(u, size, defaultColors)
 }
