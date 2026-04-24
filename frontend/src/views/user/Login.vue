@@ -181,6 +181,15 @@ onBeforeMount(() => {
 	// route before the submit() handler gets a chance to use it.
 	if (authenticated.value) {
 		router.push({name: 'home'})
+		return
+	}
+
+	// When local and LDAP auth are both off and there's exactly one OIDC provider,
+	// skip the login page and redirect straight to the provider.
+	if (!localAuthEnabled.value && !ldapAuthEnabled.value
+		&& hasOpenIdProviders.value
+		&& openidConnect.value.providers?.length === 1) {
+		redirectToProvider(openidConnect.value.providers[0])
 	}
 })
 
