@@ -211,6 +211,7 @@ const router = createRouter({
 				dateTo: parseDateOrString(route.query.to as string, getNextWeekDate()),
 				showNulls: route.query.showNulls === 'true',
 				showOverdue: route.query.showOverdue === 'true',
+				assignedToMe: route.query.assignedToMe === 'true',
 			}),
 		},
 		{

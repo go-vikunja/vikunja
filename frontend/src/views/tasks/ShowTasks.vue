@@ -66,6 +66,12 @@
 			>
 				{{ $t('task.show.overdue') }}
 			</FancyCheckbox>
+			<FancyCheckbox
+				:model-value="assignedToMe"
+				@update:modelValue="setAssignedToMe"
+			>
+				{{ $t('task.show.assignedToMe') }}
+			</FancyCheckbox>
 		</p>
 		<template v-if="!loading && (!tasks || tasks.length === 0) && showNothingToDo">
 			<h3 class="has-text-centered mbs-6">
@@ -132,12 +138,14 @@ const props = withDefaults(defineProps<{
 	showNulls?: boolean,
 	showOverdue?: boolean,
 	labelIds?: string[],
+	assignedToMe?: boolean,
 }>(), {
 	showNulls: false,
 	showOverdue: false,
 	dateFrom: undefined,
 	dateTo: undefined,
 	labelIds: undefined,
+	assignedToMe: false,
 })
 
 const emit = defineEmits<{
@@ -235,6 +243,16 @@ function setShowNulls(show: boolean) {
 	})
 }
 
+function setAssignedToMe(show: boolean) {
+	router.push({
+		name: route.name as string,
+		query: {
+			...route.query,
+			assignedToMe: show ? 'true' : 'false',
+		},
+	})
+}
+
 function clearLabelFilter() {
 	emit('clearLabelFilter')
 }
@@ -273,6 +291,12 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 	if (props.labelIds && props.labelIds.length > 0) {
 		const labelFilter = `labels in ${props.labelIds.join(', ')}`
 		params.filter += params.filter ? ` && ${labelFilter}` : labelFilter
+	}
+
+	// Add assignee filtering (assigned to me)
+	if (props.assignedToMe && authStore.info) {
+		const assigneeFilter = `assignees = ${authStore.info.username}`
+		params.filter += params.filter ? ` && ${assigneeFilter}` : assigneeFilter
 	}
 
 	let projectId = null

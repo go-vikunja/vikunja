@@ -955,6 +955,7 @@
       "titleDates": "Tasks from {from} until {to}",
       "noDates": "Show tasks without date",
       "overdue": "Show overdue tasks",
+      "assignedToMe": "Show tasks assigned to me",
       "fromuntil": "Tasks from {from} until {until}",
       "select": "Select a date range",
       "noTasks": "Nothing to do — Have a nice day!",
