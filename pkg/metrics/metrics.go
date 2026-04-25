@@ -66,7 +66,7 @@ func InitMetrics() {
 	GetRegistry()
 
 	registerPromMetric(ProjectCountKey, "The number of projects on this instance")
-	registerPromMetric(UserCountKey, "The total number of shares on this instance")
+	registerPromMetric(UserCountKey, "The total number of users on this instance")
 	registerPromMetric(TaskCountKey, "The total number of tasks on this instance")
 	registerPromMetric(TeamCountKey, "The total number of teams on this instance")
 	registerPromMetric(FilesCountKey, "The total number of files on this instance")

@@ -17,9 +17,14 @@
 package user
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/metrics"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,10 +42,39 @@ func TestCreateUser(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
+		events.Unfake()
+		t.Cleanup(events.Fake)
+		RegisterListeners()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		ready, err := events.InitEventsForTesting(ctx)
+		require.NoError(t, err)
+		<-ready
+
+		require.NoError(t, keyvalue.Put(metrics.UserCountKey, int64(1)))
+		t.Cleanup(func() {
+			_ = keyvalue.Del(metrics.UserCountKey)
+		})
 
 		createdUser, err := CreateUser(s, dummyuser)
 		require.NoError(t, err)
 		assert.NotZero(t, createdUser.Created)
+
+		err = s.Commit()
+		require.NoError(t, err)
+		events.DispatchPending(s)
+
+		require.Eventually(t, func() bool {
+			value, exists, err := keyvalue.Get(metrics.UserCountKey)
+			if err != nil || !exists {
+				return false
+			}
+
+			count, ok := value.(int64)
+			return ok && count == 2
+		}, time.Second, 10*time.Millisecond)
 	})
 	t.Run("already existing", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
