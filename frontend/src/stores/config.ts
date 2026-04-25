@@ -6,6 +6,7 @@ import {HTTPFactory} from '@/helpers/fetcher'
 import {objectToCamelCase} from '@/helpers/case'
 
 import type {IProvider} from '@/types/IProvider'
+import type {ISAMLProvider} from '@/types/ISAMLProvider'
 import type {MIGRATORS} from '@/views/migrate/migrators'
 import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
@@ -41,6 +42,10 @@ export interface ConfigState {
 			enabled: boolean,
 			redirectUrl: string,
 			providers: IProvider[],
+		},
+		saml: {
+			enabled: boolean,
+			providers: ISAMLProvider[],
 		},
 	},
 	publicTeamsEnabled: boolean,
@@ -80,6 +85,10 @@ export const useConfigStore = defineStore('config', () => {
 			openidConnect: {
 				enabled: false,
 				redirectUrl: '',
+				providers: [],
+			},
+			saml: {
+				enabled: false,
 				providers: [],
 			},
 		},
