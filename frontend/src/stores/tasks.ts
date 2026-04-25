@@ -447,7 +447,13 @@ export const useTaskStore = defineStore('task', () => {
 		projectId,
 		position,
 		index,
-	} : 
+		dueDate: explicitDueDate,
+		startDate: explicitStartDate,
+		endDate: explicitEndDate,
+		priority: explicitPriority,
+		hexColor: explicitHexColor,
+		percentDone: explicitPercentDone,
+	} :
 		Partial<ITask>,
 	) {
 		const cancel = setModuleLoading(setIsLoading)
@@ -463,17 +469,23 @@ export const useTaskStore = defineStore('task', () => {
 					bucketId,
 					position,
 					index,
+					dueDate: explicitDueDate,
+					startDate: explicitStartDate,
+					endDate: explicitEndDate,
+					priority: explicitPriority,
+					hexColor: explicitHexColor,
+					percentDone: explicitPercentDone,
 				}))
 			} finally {
 				cancel()
 			}
 		}
-	
+
 		const foundProjectId = await findProjectId({
 			project: parsedTask.project,
 			projectId: projectId || 0,
 		})
-		
+
 		if(foundProjectId === null || foundProjectId === 0) {
 			cancel()
 			throw new Error('NO_PROJECT')
@@ -491,17 +503,26 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		// I don't know why, but it all goes up in flames when I just pass in the date normally.
-		const dueDate = parsedTask.date !== null ? new Date(parsedTask.date).toISOString() : null
-	
+		const parsedDueDate = parsedTask.date !== null ? new Date(parsedTask.date).toISOString() : null
+		// Explicit values from the caller override QuickAddMagic parsing.
+		const dueDate = explicitDueDate ? new Date(explicitDueDate).toISOString() : parsedDueDate
+		const startDate = explicitStartDate ? new Date(explicitStartDate).toISOString() : null
+		const endDate = explicitEndDate ? new Date(explicitEndDate).toISOString() : null
+		const priority = explicitPriority ?? parsedTask.priority
+
 		const task = new TaskModel({
 			title: cleanedTitle,
 			projectId: foundProjectId,
 			dueDate,
-			priority: parsedTask.priority,
+			startDate,
+			endDate,
+			priority,
 			assignees,
 			bucketId: bucketId || 0,
 			position,
 			index,
+			hexColor: explicitHexColor,
+			percentDone: explicitPercentDone,
 		})
 		task.repeatAfter = parsedTask.repeats
 		task.reminders = buildDefaultRemindersForQuickAdd(
