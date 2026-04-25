@@ -361,7 +361,9 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	var expandSubtasks = false
 	for _, expandable := range opts.expand {
 		if expandable == TaskCollectionExpandSubtasks {
-			expandSubtasks = true
+			if opts.search == "" && len(opts.parsedFilters) == 0 {
+				expandSubtasks = true
+			}
 			break
 		}
 	}
