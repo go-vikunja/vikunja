@@ -58,7 +58,6 @@ function serializeSortBy(sortBy: SortBy, defaultSort: SortBy): string | undefine
 const SORT_BY_DEFAULT: SortBy = {
 	id: 'desc',
 }
-
 // This makes sure an id sort order is always sorted last.
 // When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 // precedence over everything else, making any other sort columns pretty useless.
@@ -89,6 +88,7 @@ export function useTaskList(
 	projectViewIdGetter: ComputedGetter<IProjectView['id']>,
 	sortByDefault: SortBy = SORT_BY_DEFAULT,
 	expandGetter: ComputedGetter<ExpandTaskFilterParam> = () => 'subtasks',
+	includeSubprojectsGetter: ComputedGetter<boolean> = () => false,
 ) {
 	
 	const projectId = computed(() => projectIdGetter())
@@ -99,6 +99,7 @@ export function useTaskList(
 	const page = useRouteQuery('page', '1', { transform: Number })
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
+	const includeSubprojects = computed(() => includeSubprojectsGetter())
 
 	watch(filter, v => { params.value.filter = v ?? '' }, { immediate: true })
 	watch(s, v => { params.value.s = v ?? '' }, { immediate: true })
@@ -126,7 +127,7 @@ export function useTaskList(
 	})
 
 	watch(
-		[params, sortBy, page],
+		[params, sortBy, page, includeSubprojects],
 		([, , newPage], [, , oldPage]) => {
 			if (newPage === oldPage) {
 				page.value = 1
@@ -145,6 +146,7 @@ export function useTaskList(
 			},
 			{
 				...allParams.value,
+				...(includeSubprojects.value ? {include_subprojects: true} : {}),
 				filter_timezone: authStore.settings.timezone,
 				expand: expandGetter(),
 			},
@@ -186,5 +188,6 @@ export function useTaskList(
 		loadTasks,
 		params,
 		sortByParam: sortBy,
+		includeSubprojects,
 	}
 }

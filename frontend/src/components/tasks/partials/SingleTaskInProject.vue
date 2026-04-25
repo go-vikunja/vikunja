@@ -159,7 +159,7 @@
 				class="task-project"
 				@click.stop
 			>
-				{{ project.title }}
+				{{ projectLabel }}
 			</RouterLink>
 
 			<BaseButton
@@ -290,6 +290,14 @@ const currentProject = computed(() => {
 		id: 0,
 		title: '',
 	} : baseStore.currentProject
+})
+
+const projectLabel = computed(() => {
+	if (!project.value) {
+		return ''
+	}
+
+	return project.value.title
 })
 
 const taskDetailRoute = computed(() => ({
