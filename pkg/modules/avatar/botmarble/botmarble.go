@@ -14,41 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package models
+package botmarble
 
 import (
+	"code.vikunja.io/api/pkg/modules/avatar/marble"
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
-	"xorm.io/xorm"
 )
 
-func (t *APIToken) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	token, err := GetAPITokenByID(s, t.ID)
-	if err != nil {
-		return false, err
-	}
-
-	if token.OwnerID == a.GetID() {
-		*t = *token
-		return true, nil
-	}
-
-	// Allow deletion if the token belongs to a bot owned by the caller.
-	botUser, err := user.GetUserByID(s, token.OwnerID)
-	if err != nil {
-		if user.IsErrUserDoesNotExist(err) {
-			return false, nil
-		}
-		return false, err
-	}
-	if botUser.IsBot() && botUser.BotOwnerID == a.GetID() {
-		*t = *token
-		return true, nil
-	}
-
-	return false, nil
+// botColors is a cool-toned palette distinct from the marble default so bot avatars are visually recognizable as bots at a glance.
+var botColors = []string{
+	"#3B82F6",
+	"#06B6D4",
+	"#8B5CF6",
+	"#14B8A6",
+	"#6366F1",
 }
 
-func (t *APIToken) CanCreate(_ *xorm.Session, _ web.Auth) (bool, error) {
-	return true, nil
+// Provider renders marble-style avatars using the bot-specific palette.
+type Provider struct{}
+
+func (p *Provider) GetAvatar(u *user.User, size int64) ([]byte, string, error) {
+	return marble.GenerateSVG(u, size, botColors)
 }
+
+func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
+	return marble.GenerateDataURI(u, size, botColors)
+}
+
+func (p *Provider) FlushCache(_ *user.User) error { return nil }

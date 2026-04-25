@@ -481,6 +481,20 @@ func registerAPIRoutes(a *echo.Group) {
 		u.POST("/deletion/cancel", apiv1.UserCancelDeletion)
 	}
 
+	// Bot users
+	if config.ServiceEnableBotUsers.GetBool() {
+		botHandler := &handler.WebHandler{
+			EmptyStruct: func() handler.CObject {
+				return &models.BotUser{}
+			},
+		}
+		u.PUT("/bots", botHandler.CreateWeb)
+		u.GET("/bots", botHandler.ReadAllWeb)
+		u.GET("/bots/:bot", botHandler.ReadOneWeb)
+		u.POST("/bots/:bot", botHandler.UpdateWeb)
+		u.DELETE("/bots/:bot", botHandler.DeleteWeb)
+	}
+
 	projectHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
 			return &models.Project{}

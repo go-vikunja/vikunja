@@ -14,41 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package models
+package migration
 
 import (
-	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
+	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
 
-func (t *APIToken) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
-	token, err := GetAPITokenByID(s, t.ID)
-	if err != nil {
-		return false, err
-	}
-
-	if token.OwnerID == a.GetID() {
-		*t = *token
-		return true, nil
-	}
-
-	// Allow deletion if the token belongs to a bot owned by the caller.
-	botUser, err := user.GetUserByID(s, token.OwnerID)
-	if err != nil {
-		if user.IsErrUserDoesNotExist(err) {
-			return false, nil
-		}
-		return false, err
-	}
-	if botUser.IsBot() && botUser.BotOwnerID == a.GetID() {
-		*t = *token
-		return true, nil
-	}
-
-	return false, nil
+type users20260405194817 struct {
+	BotOwnerID int64 `xorm:"bigint null index"`
 }
 
-func (t *APIToken) CanCreate(_ *xorm.Session, _ web.Auth) (bool, error) {
-	return true, nil
+func (users20260405194817) TableName() string {
+	return "users"
+}
+
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20260405194817",
+		Description: "Add bot_owner_id column to users",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.Sync(users20260405194817{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }

@@ -147,8 +147,13 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		}
 	}
 
+	notSomeoneElsesBot := builder.Or(
+		builder.IsNull{"bot_owner_id"},
+		builder.Eq{"bot_owner_id": currentUser.ID},
+	)
+
 	err = s.
-		Where(cond).
+		Where(builder.Or(cond, notSomeoneElsesBot)).
 		OrderBy("id").
 		Find(&users)
 
