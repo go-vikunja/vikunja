@@ -42,10 +42,6 @@ watch(
 	() => props.projectId,
 	// loadProject
 	async (projectIdToLoad, oldProjectIdToLoad) => {
-
-		console.debug('Loading project, $route.params =', route.params, `, loadedProjectId = ${loadedProjectId.value}, currentProject = `, currentProject.value)
-
-
 		if (projectIdToLoad !== oldProjectIdToLoad) {
 			loadedProjectId.value = 0
 		}
