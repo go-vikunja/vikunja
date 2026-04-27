@@ -68,6 +68,7 @@ const (
 	ServiceAllowIconChanges               Key = `service.allowiconchanges`
 	ServiceCustomLogoURL                  Key = `service.customlogourl`
 	ServiceCustomLogoURLDark              Key = `service.customlogourldark`
+	ServiceTaskIdentifierDisplay          Key = `service.taskidentifierdisplay`
 	ServiceEnablePublicTeams              Key = `service.enablepublicteams`
 	ServiceBcryptRounds                   Key = `service.bcryptrounds`
 	ServiceEnableOpenIDTeamUserOnlySearch Key = `service.enableopenidteamusersearch`
@@ -363,6 +364,7 @@ func InitDefaultConfig() {
 	ServiceMaxAvatarSize.setDefault(1024)
 	ServiceDemoMode.setDefault(false)
 	ServiceAllowIconChanges.setDefault(true)
+	ServiceTaskIdentifierDisplay.setDefault("{identifier}")
 	ServiceEnablePublicTeams.setDefault(false)
 	ServiceBcryptRounds.setDefault(11)
 	ServiceEnableOpenIDTeamUserOnlySearch.setDefault(false)
@@ -669,6 +671,13 @@ func InitConfig() {
 
 	if loader := PluginsLoader.GetString(); loader != "yaegi" && loader != "native" {
 		log.Fatalf("Invalid value for plugins.loader: %q (must be \"yaegi\" or \"native\")", loader)
+	}
+
+	if tidFormat := ServiceTaskIdentifierDisplay.GetString(); strings.Contains(tidFormat, "{prefix}-{index}") {
+		log.Warningf(
+			"Configured %s contains '{prefix}-{index}'. The {prefix} placeholder is empty for projects without an identifier prefix, which renders as '-N'. Use {identifier} instead -- it handles the empty-prefix case (renders '#N').",
+			ServiceTaskIdentifierDisplay,
+		)
 	}
 
 	if CorsEnable.GetBool() && ServicePublicURL.GetString() == "" {

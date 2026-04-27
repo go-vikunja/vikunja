@@ -56,6 +56,7 @@ type vikunjaInfos struct {
 	WebhooksEnabled            bool              `json:"webhooks_enabled"`
 	PublicTeamsEnabled         bool              `json:"public_teams_enabled"`
 	EnabledProFeatures         []license.Feature `json:"enabled_pro_features"`
+	TaskIdentifierDisplay      string            `json:"task_identifier_display"`
 }
 
 type authInfo struct {
@@ -108,6 +109,7 @@ func Info(c *echo.Context) error {
 		WebhooksEnabled:        config.WebhooksEnabled.GetBool(),
 		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
 		EnabledProFeatures:     license.EnabledProFeatures(),
+		TaskIdentifierDisplay:  config.ServiceTaskIdentifierDisplay.GetString(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),
