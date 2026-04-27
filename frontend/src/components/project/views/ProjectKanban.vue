@@ -445,6 +445,10 @@ const bucketDraggableComponentData = computed(() => ({
 }))
 const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : null)
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
+const requestParams = computed(() => ({
+	...params.value,
+	...(view.value?.includeSubprojects ? {include_subprojects: true} : {}),
+}))
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 
@@ -489,7 +493,7 @@ const taskLoading = computed(() => taskStore.isLoading || taskPositionService.va
 
 watch(
 	() => ({
-		params: params.value,
+		params: requestParams.value,
 		projectId: projectId.value,
 		viewId: props.viewId,
 	}),
@@ -524,7 +528,7 @@ function handleTaskContainerScroll(id: IBucket['id'], el: HTMLElement) {
 	kanbanStore.loadNextTasksForBucket(
 		projectId.value,
 		props.viewId,
-		params.value,
+		requestParams.value,
 		id,
 	)
 }
@@ -723,7 +727,7 @@ async function deleteBucket() {
 				projectId: projectIdWithFallback.value,
 				projectViewId: props.viewId,
 			}),
-			params: params.value,
+			params: requestParams.value,
 		})
 		success({message: t('project.kanban.deleteBucketSuccess')})
 	} finally {
@@ -773,7 +777,7 @@ function handleRecurringTaskCompletion() {
 		
 	if (filterContainsDateFields) {
 		// Reload the kanban board to refresh tasks that now match/don't match the filter
-		kanbanStore.loadBucketsForProject(projectId.value, props.viewId, params.value)
+		kanbanStore.loadBucketsForProject(projectId.value, props.viewId, requestParams.value)
 	}
 }
 
