@@ -265,6 +265,9 @@ importers:
       postcss-easing-gradients:
         specifier: 3.0.1
         version: 3.0.1
+      postcss-html:
+        specifier: 1.8.1
+        version: 1.8.1
       postcss-preset-env:
         specifier: 11.2.1
         version: 11.2.1(postcss@8.5.10)
@@ -285,7 +288,7 @@ importers:
         version: 10.0.0(stylelint@17.9.0(typescript@5.9.3))
       stylelint-config-recommended-vue:
         specifier: 1.6.1
-        version: 1.6.1(postcss-html@1.8.0)(stylelint@17.9.0(typescript@5.9.3))
+        version: 1.6.1(postcss-html@1.8.1)(stylelint@17.9.0(typescript@5.9.3))
       stylelint-config-standard-scss:
         specifier: 17.0.0
         version: 17.0.0(postcss@8.5.10)(stylelint@17.9.0(typescript@5.9.3))
@@ -5407,8 +5410,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  postcss-html@1.8.0:
-    resolution: {integrity: sha512-5mMeb1TgLWoRKxZ0Xh9RZDfwUUIqRrcxO2uXO+Ezl1N5lqpCiSU5Gk6+1kZediBfBHFtPCdopr2UZ2SgUsKcgQ==}
+  postcss-html@1.8.1:
+    resolution: {integrity: sha512-OLF6P7qctfAWayOhLpcVnTGqVeJzu2W3WpIYelfz2+JV5oGxfkcEvweN9U4XpeqE0P98dcD9ssusGwlF0TK0uQ==}
     engines: {node: ^12 || >=14}
 
   postcss-image-set-function@8.0.0:
@@ -12342,7 +12345,7 @@ snapshots:
     dependencies:
       postcss: 8.5.10
 
-  postcss-html@1.8.0:
+  postcss-html@1.8.1:
     dependencies:
       htmlparser2: 8.0.2
       js-tokens: 9.0.1
@@ -13269,9 +13272,9 @@ snapshots:
 
   style-mod@4.1.2: {}
 
-  stylelint-config-html@1.1.0(postcss-html@1.8.0)(stylelint@17.9.0(typescript@5.9.3)):
+  stylelint-config-html@1.1.0(postcss-html@1.8.1)(stylelint@17.9.0(typescript@5.9.3)):
     dependencies:
-      postcss-html: 1.8.0
+      postcss-html: 1.8.1
       stylelint: 17.9.0(typescript@5.9.3)
 
   stylelint-config-property-sort-order-smacss@10.0.0(stylelint@17.9.0(typescript@5.9.3)):
@@ -13289,12 +13292,12 @@ snapshots:
     optionalDependencies:
       postcss: 8.5.10
 
-  stylelint-config-recommended-vue@1.6.1(postcss-html@1.8.0)(stylelint@17.9.0(typescript@5.9.3)):
+  stylelint-config-recommended-vue@1.6.1(postcss-html@1.8.1)(stylelint@17.9.0(typescript@5.9.3)):
     dependencies:
-      postcss-html: 1.8.0
+      postcss-html: 1.8.1
       semver: 7.7.3
       stylelint: 17.9.0(typescript@5.9.3)
-      stylelint-config-html: 1.1.0(postcss-html@1.8.0)(stylelint@17.9.0(typescript@5.9.3))
+      stylelint-config-html: 1.1.0(postcss-html@1.8.1)(stylelint@17.9.0(typescript@5.9.3))
       stylelint-config-recommended: 18.0.0(stylelint@17.9.0(typescript@5.9.3))
 
   stylelint-config-recommended@18.0.0(stylelint@17.9.0(typescript@5.9.3)):
