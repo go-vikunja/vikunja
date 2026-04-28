@@ -1,4 +1,4 @@
-import {REPEAT_TYPES, type IRepeatType} from '@/types/IRepeatAfter'
+import {repeatFromSettings, type RepeatFrequency} from '@/helpers/rrule'
 import type {repeatParsedResult} from './types'
 
 export const getRepeats = (text: string): repeatParsedResult => {
@@ -7,7 +7,7 @@ export const getRepeats = (text: string): repeatParsedResult => {
 	if (results === null) {
 		return {
 			textWithoutMatched: text,
-			repeats: null,
+			repeat: null,
 		}
 	}
 
@@ -46,55 +46,55 @@ export const getRepeats = (text: string): repeatParsedResult => {
 		default:
 			amount = results[5] ? parseInt(results[5]) : 1
 	}
-	let type: IRepeatType = REPEAT_TYPES.Hours
+	let freq: RepeatFrequency = 'hours'
 
 	switch (results[2]) {
 		case 'biennially':
-			type = REPEAT_TYPES.Years
+			freq = 'years'
 			amount = 2
 			break
 		case 'biannually':
 		case 'semiannually':
-			type = REPEAT_TYPES.Months
+			freq = 'months'
 			amount = 6
 			break
 		case 'yearly':
 		case 'annually':
-			type = REPEAT_TYPES.Years
+			freq = 'years'
 			break
 		case 'daily':
-			type = REPEAT_TYPES.Days
+			freq = 'days'
 			break
 		case 'hourly':
-			type = REPEAT_TYPES.Hours
+			freq = 'hours'
 			break
 		case 'monthly':
-			type = REPEAT_TYPES.Months
+			freq = 'months'
 			break
 		case 'weekly':
-			type = REPEAT_TYPES.Weeks
+			freq = 'weeks'
 			break
 		default:
 			switch (results[7]) {
 				case 'hour':
 				case 'hours':
-					type = REPEAT_TYPES.Hours
+					freq = 'hours'
 					break
 				case 'day':
 				case 'days':
-					type = REPEAT_TYPES.Days
+					freq = 'days'
 					break
 				case 'week':
 				case 'weeks':
-					type = REPEAT_TYPES.Weeks
+					freq = 'weeks'
 					break
 				case 'month':
 				case 'months':
-					type = REPEAT_TYPES.Months
+					freq = 'months'
 					break
 				case 'year':
 				case 'years':
-					type = REPEAT_TYPES.Years
+					freq = 'years'
 					break
 			}
 	}
@@ -106,9 +106,6 @@ export const getRepeats = (text: string): repeatParsedResult => {
 
 	return {
 		textWithoutMatched: text.replace(matchedText, ''),
-		repeats: {
-			amount,
-			type,
-		},
+		repeat: repeatFromSettings(amount, freq),
 	}
 }

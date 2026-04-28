@@ -190,6 +190,7 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
+	github.com/teambition/rrule-go v1.8.2 // indirect
 	github.com/tj/assert v0.0.3 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
