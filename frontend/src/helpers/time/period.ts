@@ -25,7 +25,7 @@ export function secondsToPeriod(seconds: number): { unit: PeriodUnit, amount: nu
 			amount: seconds / SECONDS_A_HOUR,
 		}
 	}
-	
+
 	return {
 		unit: 'minutes',
 		amount: seconds / SECONDS_A_MINUTE,
