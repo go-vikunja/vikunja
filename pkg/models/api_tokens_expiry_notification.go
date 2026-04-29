@@ -33,7 +33,7 @@ func (n *APITokenExpiringWeekNotification) ToMail(lang string) *notifications.Ma
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.api_token.expiring.week.subject", n.Token.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.api_token.expiring.week.message", n.Token.Title, n.Token.ExpiresAt.Format("2006-01-02"))).
+		Line(i18n.T(lang, "notifications.api_token.expiring.week.message", notifications.EscapeMarkdown(n.Token.Title), n.Token.ExpiresAt.Format("2006-01-02"))).
 		Action(i18n.T(lang, "notifications.api_token.expiring.action"), config.ServicePublicURL.GetString()+"user/settings/api-tokens").
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
@@ -60,7 +60,7 @@ func (n *APITokenExpiringDayNotification) ToMail(lang string) *notifications.Mai
 	return notifications.NewMail().
 		Subject(i18n.T(lang, "notifications.api_token.expiring.day.subject", n.Token.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.api_token.expiring.day.message", n.Token.Title, n.Token.ExpiresAt.Format("2006-01-02"))).
+		Line(i18n.T(lang, "notifications.api_token.expiring.day.message", notifications.EscapeMarkdown(n.Token.Title), n.Token.ExpiresAt.Format("2006-01-02"))).
 		Action(i18n.T(lang, "notifications.api_token.expiring.action"), config.ServicePublicURL.GetString()+"user/settings/api-tokens").
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }

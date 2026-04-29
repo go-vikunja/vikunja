@@ -20,11 +20,42 @@ import (
 	"net/http"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/models"
 	bgHandler "code.vikunja.io/api/pkg/modules/background/handler"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestRemoveProjectBackgroundPreservesTitle(t *testing.T) {
+	t.Run("Deleting background does not clear project title", func(t *testing.T) {
+		// testuser6 owns project 35, which has:
+		//   title: "Test35 with background"
+		//   background_file_id: 1
+		_, err := newTestRequestWithUser(
+			t,
+			http.MethodDelete,
+			bgHandler.RemoveProjectBackground,
+			&testuser6,
+			"",
+			nil,
+			map[string]string{"project": "35"},
+		)
+		require.NoError(t, err)
+
+		// Verify the title is preserved by querying the DB directly
+		s := db.NewSession()
+		defer s.Close()
+
+		project := models.Project{ID: 35}
+		has, err := s.Get(&project)
+		require.NoError(t, err)
+		assert.True(t, has)
+		assert.Equal(t, "Test35 with background", project.Title)
+		assert.Equal(t, int64(0), project.BackgroundFileID)
+	})
+}
 
 func TestProjectBackgroundDeletePermission(t *testing.T) {
 	t.Run("Read-only user cannot delete project background", func(t *testing.T) {

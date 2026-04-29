@@ -70,9 +70,6 @@
 				"subject": "Promemoria per \"%[1]s\" (%[2]s)",
 				"message": "Questo è un promemoria amichevole dell'attività \"%[1]s\" (%[2]s)."
 			},
-			"comment": {
-				"mentioned_message": "**%[1]s** ti ha menzionato in un commento:"
-			},
 			"assigned": {
 				"subject_to_assignee": "Sei stato assegnato a \"%[1]s\" (%[2]s)",
 				"message_to_assignee": "%[1]s ti ha assegnato a \"%[2]s\".",
@@ -84,9 +81,6 @@
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) è ​​stato eliminato",
 				"message": "%[1]s ha eliminato l'attività \"%[2]s\" (%[3]s)"
-			},
-			"mentioned": {
-				"message": "**%[1]s** ti ha menzionato in un'attività:"
 			},
 			"overdue": {
 				"subject": "L'attività \"%[1]s\" (%[2]s) è ​​in ritardo",

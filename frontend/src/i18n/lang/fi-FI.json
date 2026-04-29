@@ -44,7 +44,6 @@
 			"resetPassword": "Palauta salasanasi",
 			"resetPasswordAction": "Lähetä minulle salasanan palautuslinkki",
 			"resetPasswordSuccess": "Tarkasta sähköpostisi! Sinulla pitäisi olla viesti, joka sisältää ohjeen kuinka palauttaa salasanasi.",
-			"passwordsDontMatch": "Salasanat eivät täsmää",
 			"confirmEmailSuccess": "Vahvistit sähköpostisi onnistuneesti! Voit kirjautua sisään nyt.",
 			"totpTitle": "Kaksivaiheisen Tunnistautumisen Koodi",
 			"totpPlaceholder": "esim. 123456",
@@ -76,10 +75,8 @@
 			"title": "Asetukset",
 			"newPasswordTitle": "Päivitä Salasanasi",
 			"newPassword": "Uusi salasana",
-			"newPasswordConfirm": "Vahvista uusi salasana",
 			"currentPassword": "Nykyinen salasana",
 			"currentPasswordPlaceholder": "Nykyinen salasanasi",
-			"passwordsDontMatch": "Uusi salasana ja sen vahvistus eivät täsmää.",
 			"passwordUpdateSuccess": "Salasana päivitettiin onnistuneesti.",
 			"updateEmailTitle": "Päivitä Sähköpostiosoitteesi",
 			"updateEmailNew": "Uusi sähköpostiosoite",
@@ -163,7 +160,6 @@
 			},
 			"appearance": {
 				"title": "Väriteema",
-				"setSuccess": "Tallennettu väriteeman muutos arvoon {colorScheme}",
 				"colorScheme": {
 					"light": "Vaalea",
 					"system": "Järjestelmä",
@@ -187,7 +183,6 @@
 				"permissionRequired": "Valitse ainakin yksi käyttöoikeus listalta.",
 				"tokenCreatedSuccess": "Tässä on uusi api tokenisi: {token}",
 				"tokenCreatedNotSeeAgain": "Tallenna se turvalliseen paikkaan, et näe sitä uudelleen!",
-				"selectAll": "Valitse kaikki",
 				"delete": {
 					"header": "Poista tämä token",
 					"text1": "Oletko varma, että haluat poistaa tokenin \"{token}\"?",
@@ -419,14 +414,7 @@
 			"titlePlaceholder": "Tallennetun suodattimen otsikko menee tähän…",
 			"description": "Kuvaus",
 			"descriptionPlaceholder": "Anna kuvaus tälle suodattimelle, paina '/' saadaksesi lisää vaihtoehtoja…",
-			"includeNulls": "Sisällytä tehtävät, joille ei ole asetettu arvoa",
-			"requireAll": "Vaadi kaikkia suodattimia olemaan tosi, jotta tehtävä näkyy",
-			"showDoneTasks": "Näytä Valmiit Tehtävät",
-			"sortAlphabetically": "Lajittele Aakkosjärjestykseen",
-			"dueDateRange": "Erääntymispäivämäärä Väli",
-			"startDateRange": "Aloituspäivämäärä Väli",
-			"endDateRange": "Päättymispäivämäärä Väli",
-			"reminderRange": "Muistutuspäivämäärä Väli"
+			"includeNulls": "Sisällytä tehtävät, joille ei ole asetettu arvoa"
 		},
 		"create": {
 			"title": "Uusi Tallennettu Suodatin",
@@ -444,7 +432,6 @@
 			"success": "Suodatin tallennettiin onnistuneesti."
 		},
 		"query": {
-			"title": "Kysely",
 			"placeholder": "Kirjoita haku tai suodatinkysely…",
 			"help": {
 				"intro": "Suodattaaksesi tehtäviä voit käyttää SQL kieltä muistuttavaa syntaksia. Saatavilla olevat kentät suodatukseen ovat: ",
@@ -504,7 +491,6 @@
 		"manage": "Hallitse tunnisteita",
 		"description": "Klikkaa tunnistetta muokataksesi sitä. Voit muokata kaikkia luomiasi tunnisteita ja käyttää käyttää kaikkia tunnisteita jotka on liitetty tehtäviin minkä projekteille sinulla on pääsy.",
 		"newCTA": "Sinulla ei tällä hetkellä ole yhtään tunnistetta.",
-		"search": "Kirjoita hakeaksesi tunnistetta…",
 		"create": {
 			"header": "Uusi tunniste",
 			"title": "Luo tunniste",
@@ -513,7 +499,6 @@
 		},
 		"edit": {
 			"header": "Muokkaa Tunnistetta",
-			"forbidden": "Sinulla ei ole oikeutta muokata tätä tunnistetta, koska et omista sitä.",
 			"success": "Tunniste päivitettiin onnistuneesti."
 		},
 		"deleteSuccess": "Tunniste poistettiin onnistuneesti.",
@@ -521,7 +506,6 @@
 			"title": "Otsikko",
 			"titlePlaceholder": "Tunnisteen otsikko menee tähän…",
 			"description": "Kuvaus",
-			"descriptionPlaceholder": "Tunnisteen kuvaus",
 			"color": "Väri"
 		}
 	},
@@ -543,10 +527,8 @@
 		"delete": "Poista",
 		"confirm": "Vahvista",
 		"cancel": "Peruuta",
-		"refresh": "Päivitä",
 		"copy": "Kopioi leikepöydälle",
 		"copyError": "Leikepöydälle kopiointi epäonnistui",
-		"search": "Hae",
 		"searchPlaceholder": "Kirjoita hakeaksesi…",
 		"previous": "Edellinen",
 		"next": "Seuraava",
@@ -578,15 +560,12 @@
 		},
 		"editor": {
 			"edit": "Muokkaa",
-			"done": "Valmis",
 			"heading1": "Otsikko 1",
 			"heading1Tooltip": "Suuri osio-otsikko.",
 			"heading2": "Otsikko 2",
 			"heading2Tooltip": "Keskikokoinen osio-otsikko.",
 			"heading3": "Otsikko 3",
 			"heading3Tooltip": "Pieni osio-otsikko.",
-			"headingSmaller": "Pienempi Otsikko",
-			"headingBigger": "Suurempi Otsikko",
 			"bold": "Lihavoitu",
 			"italic": "Kursivoitu",
 			"strikethrough": "Yliviivattu",
@@ -601,7 +580,6 @@
 			"imageTooltip": "Lataa kuva tietokoneeltasi.",
 			"horizontalRule": "Vaakaviiva",
 			"horizontalRuleTooltip": "Jaa osio.",
-			"sideBySide": "Rinnakkain",
 			"text": "Teksti",
 			"textTooltip": "Kirjoita vain tekstiä.",
 			"undo": "Kumoa",
@@ -681,9 +659,7 @@
 		}
 	},
 	"task": {
-		"task": "Tehtävä",
 		"new": "Luo tehtävä",
-		"delete": "Poista tämä tehtävä",
 		"createSuccess": "Tehtävä luotiin onnistuneesti.",
 		"addReminder": "Lisää muistutus…",
 		"doneSuccess": "Tehtävä merkittiin onnistuneesti valmiiksi.",
@@ -693,7 +669,6 @@
 		"checklistAllDone": "{total} tehtävää",
 		"show": {
 			"titleCurrent": "Nykyiset Tehtävät",
-			"titleDates": "Tehtävät väliltä {from} - {to}",
 			"overdue": "Näytä erääntyneet tehtävät",
 			"fromuntil": "Tehtävät väliltä {from} - {until}",
 			"select": "Valitse päivämäärä väli",
@@ -712,7 +687,6 @@
 			"deleteSuccess": "Tehtävä poistettiin onnistuneesti.",
 			"belongsToProject": "Tämä tehtävä kuuluu '{project}' projektiin",
 			"due": "Erääntyy {at}",
-			"closePopup": "Sulje ponnahdusikkuna",
 			"organization": "Organisaatio",
 			"management": "Hallinta",
 			"dateAndTime": "Päivä ja Aika",
@@ -802,8 +776,7 @@
 			"1week": "1 viikko"
 		},
 		"description": {
-			"placeholder": "Syötä kuvaus, paina '/' saadaksesi lisää vaihtoehtoja…",
-			"empty": "Kuvausta ei ole vielä saatavilla."
+			"placeholder": "Syötä kuvaus, paina '/' saadaksesi lisää vaihtoehtoja…"
 		},
 		"assignee": {
 			"placeholder": "Kirjoita osoittaaksesi käyttäjälle…",
@@ -815,7 +788,6 @@
 			"placeholder": "Kirjoita lisätäksesi tunnisteen…",
 			"createPlaceholder": "Lisää tämä uutena tunnisteena",
 			"addSuccess": "Tunniste lisättiin onnistuneesti.",
-			"createSuccess": "Tunniste luotiin onnistuneesti.",
 			"removeSuccess": "Tunniste poistettiin onnistuneesti.",
 			"addCreateSuccess": "Tunniste luotiin ja lisättiin onnistuneesti.",
 			"delete": {
@@ -864,8 +836,6 @@
 			"hours": "Tuntia",
 			"days": "Päivää",
 			"weeks": "Viikkoa",
-			"months": "Kuukautta",
-			"years": "Vuotta",
 			"invalidAmount": "Ole hyvä ja syötä suurempi arvo kuin 0."
 		},
 		"quickAddMagic": {
@@ -958,7 +928,6 @@
 		"unarchive": "Poista arkistosta",
 		"setBackground": "Taustakuvan asetukset",
 		"share": "Jaa",
-		"newProject": "Uusi projekti ",
 		"createProject": "Luo projekti",
 		"cantArchiveIsDefault": "Et voi arkistoida tätä, koska se on oletusprojektisi.",
 		"cantDeleteIsDefault": "Et voi poistaa tätä, koska se on oletusprojektisi."
@@ -1045,7 +1014,6 @@
 			"hours": "tunti|tuntia",
 			"days": "päivä|päivää",
 			"weeks": "viikko|viikkoa",
-			"months": "kuukausi|kuukautta",
 			"years": "vuosi|vuotta"
 		}
 	}

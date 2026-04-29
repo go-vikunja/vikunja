@@ -223,6 +223,7 @@ const (
 	OutgoingRequestsAllowNonRoutableIPs Key = `outgoingrequests.allownonroutableips`
 	OutgoingRequestsProxyURL            Key = `outgoingrequests.proxyurl`
 	OutgoingRequestsProxyPassword       Key = `outgoingrequests.proxypassword`
+	OutgoingRequestsTimeoutSeconds      Key = `outgoingrequests.timeoutseconds`
 
 	AutoTLSEnabled     Key = `autotls.enabled`
 	AutoTLSEmail       Key = `autotls.email`
@@ -231,6 +232,10 @@ const (
 	PluginsEnabled Key = `plugins.enabled`
 	PluginsDir     Key = `plugins.dir`
 	PluginsLoader  Key = `plugins.loader`
+
+	// LicenseKey gates optional paid features and funds Vikunja's development.
+	// See the package comment in pkg/license/license.go before removing.
+	LicenseKey Key = `license.key`
 )
 
 var maxFileSizeInBytes uint64
@@ -480,6 +485,7 @@ func InitDefaultConfig() {
 	WebhooksAllowNonRoutableIPs.setDefault(false)
 	// Outgoing Requests
 	OutgoingRequestsAllowNonRoutableIPs.setDefault(false)
+	OutgoingRequestsTimeoutSeconds.setDefault(30)
 	// AutoTLS
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 	// Plugins
@@ -501,6 +507,8 @@ func InitDefaultConfig() {
 		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyPassword, OutgoingRequestsProxyPassword)
 		OutgoingRequestsProxyPassword.Set(proxyPassword)
 	}
+	// License
+	LicenseKey.setDefault("")
 }
 
 // ResolvePath resolves a path relative to service.rootpath.

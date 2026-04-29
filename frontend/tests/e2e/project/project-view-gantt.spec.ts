@@ -3,8 +3,35 @@ import dayjs from 'dayjs'
 import {TaskFactory} from '../../factories/task'
 import {ProjectFactory} from '../../factories/project'
 import {ProjectViewFactory} from '../../factories/project_view'
+import {updateUserSettings} from '../../support/updateUserSettings'
 
 test.describe('Project View Gantt', () => {
+	test('Shows the correct start of the week in the date picker', async ({authenticatedPage: page, apiContext, userToken}) => {
+		await ProjectFactory.create(1)
+		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
+
+		// Set the week start to Monday (1)
+		await updateUserSettings(apiContext, userToken, {week_start: 1})
+
+		await page.goto('/projects/1/2')
+		// Reload to ensure settings are loaded fresh from the API
+		await page.reload()
+		await page.waitForLoadState('networkidle')
+
+		// Open the date range picker
+		const dateInput = page.locator('.project-gantt .gantt-options .field .control input.input.form-control')
+		await expect(dateInput).toBeVisible()
+		await dateInput.click()
+
+		// Wait for the calendar to be visible and open
+		const calendar = page.locator('.flatpickr-calendar.open')
+		await expect(calendar).toBeVisible({timeout: 10000})
+
+		// Verify the first weekday in the calendar is Monday
+		const firstWeekday = calendar.locator('.flatpickr-weekday').first()
+		await expect(firstWeekday).toHaveText(/Mon/i)
+	})
+
 	test('Hides tasks with no dates', async ({authenticatedPage: page}) => {
 		await ProjectFactory.create(1)
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
@@ -123,8 +150,8 @@ test.describe('Project View Gantt', () => {
 		await ProjectViewFactory.create(1, {id: 2, project_id: 1, view_kind: 1})
 		const now = new Date()
 		const tasks = await TaskFactory.create(1, {
-			start_date: dayjs(now).format(),
-			end_date: dayjs(now.setDate(now.getDate() + 4)).format(),
+			start_date: dayjs(now).toISOString(),
+			end_date: dayjs(now.setDate(now.getDate() + 4)).toISOString(),
 		})
 		await page.goto('/projects/1/2')
 

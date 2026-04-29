@@ -175,6 +175,110 @@ func TestUniqueIssuersAllowed(t *testing.T) {
 	assert.Len(t, providers, 2)
 }
 
+func TestGetProviderFromMapStringBooleans(t *testing.T) {
+	// Regression test for #2599. When provider config is sourced from environment
+	// variables or `*.file` Docker secrets, every leaf value arrives as a string.
+	// The boolean fields (emailfallback, usernamefallback, forceuserinfo,
+	// requireavailability) must accept stringified bools, not silently fall back
+	// to zero values or reject the whole provider.
+	defer CleanupSavedOpenIDProviders()
+
+	server := newMockOIDCServer()
+	defer server.Close()
+
+	cases := []struct {
+		name                    string
+		emailFallback           interface{}
+		usernameFallback        interface{}
+		forceUserInfo           interface{}
+		requireAvailability     interface{}
+		wantEmailFallback       bool
+		wantUsernameFallback    bool
+		wantForceUserInfo       bool
+		wantRequireAvailability bool
+	}{
+		{
+			name:                    "native bool true",
+			emailFallback:           true,
+			usernameFallback:        true,
+			forceUserInfo:           true,
+			requireAvailability:     true,
+			wantEmailFallback:       true,
+			wantUsernameFallback:    true,
+			wantForceUserInfo:       true,
+			wantRequireAvailability: true,
+		},
+		{
+			name:                    "native bool false",
+			emailFallback:           false,
+			usernameFallback:        false,
+			forceUserInfo:           false,
+			requireAvailability:     false,
+			wantEmailFallback:       false,
+			wantUsernameFallback:    false,
+			wantForceUserInfo:       false,
+			wantRequireAvailability: false,
+		},
+		{
+			name:                    "string true",
+			emailFallback:           "true",
+			usernameFallback:        "true",
+			forceUserInfo:           "true",
+			requireAvailability:     "true",
+			wantEmailFallback:       true,
+			wantUsernameFallback:    true,
+			wantForceUserInfo:       true,
+			wantRequireAvailability: true,
+		},
+		{
+			name:                    "string false",
+			emailFallback:           "false",
+			usernameFallback:        "false",
+			forceUserInfo:           "false",
+			requireAvailability:     "false",
+			wantEmailFallback:       false,
+			wantUsernameFallback:    false,
+			wantForceUserInfo:       false,
+			wantRequireAvailability: false,
+		},
+		{
+			name:                    "string 1 and 0",
+			emailFallback:           "1",
+			usernameFallback:        "0",
+			forceUserInfo:           "1",
+			requireAvailability:     "0",
+			wantEmailFallback:       true,
+			wantUsernameFallback:    false,
+			wantForceUserInfo:       true,
+			wantRequireAvailability: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			pi := map[string]interface{}{
+				"name":                "Test Provider",
+				"authurl":             server.URL,
+				"clientid":            "client1",
+				"clientsecret":        "secret1",
+				"emailfallback":       tc.emailFallback,
+				"usernamefallback":    tc.usernameFallback,
+				"forceuserinfo":       tc.forceUserInfo,
+				"requireavailability": tc.requireAvailability,
+			}
+
+			provider, err := getProviderFromMap(pi, "test")
+			require.NoError(t, err)
+			require.NotNil(t, provider)
+
+			assert.Equal(t, tc.wantEmailFallback, provider.EmailFallback, "EmailFallback")
+			assert.Equal(t, tc.wantUsernameFallback, provider.UsernameFallback, "UsernameFallback")
+			assert.Equal(t, tc.wantForceUserInfo, provider.ForceUserInfo, "ForceUserInfo")
+			assert.Equal(t, tc.wantRequireAvailability, provider.RequireAvailability, "RequireAvailability")
+		})
+	}
+}
+
 func TestFailedDiscoverySkippedInIssuerCheck(t *testing.T) {
 	defer CleanupSavedOpenIDProviders()
 

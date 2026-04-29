@@ -16,6 +16,7 @@
 				@mousedown.self.prevent.stop="$emit('close')"
 			>
 				<BaseButton
+					:aria-label="$t('misc.closeDialog')"
 					class="close"
 					@click="$emit('close')"
 				>
@@ -61,7 +62,7 @@
 
 <script lang="ts" setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import {ref, useAttrs, watch, onBeforeUnmount, onMounted, nextTick} from 'vue'
+import {ref, useAttrs, watch, onBeforeUnmount} from 'vue'
 
 const props = withDefaults(defineProps<{
 	enabled?: boolean,
@@ -96,14 +97,19 @@ function openDialog() {
 	}
 	previouslyFocused.value = document.activeElement
 	showDialog.value = true
-	nextTick(() => {
-		const dialog = dialogRef.value
-		if (dialog) {
-			delete dialog.dataset.closing
-			dialog.showModal()
-		}
-		document.body.style.overflow = 'hidden'
-	})
+	document.body.style.overflow = 'hidden'
+	// If we're re-opening while the previous close transition is still in
+	// flight the <dialog> is still mounted and [open], so the dialogRef
+	// watcher below won't re-fire. Clear the data-closing flag here so the
+	// dialog doesn't stay stuck at opacity 0.
+	if (dialogRef.value) {
+		delete dialogRef.value.dataset.closing
+	}
+	// The initial `showModal()` call happens in the `watch(dialogRef, …)`
+	// below, which fires the moment Vue mounts the <dialog>. We cannot call
+	// it synchronously here because the element is not in the DOM yet
+	// (v-if="showDialog" only just became true), and we cannot rely on a
+	// single nextTick because the mount can be deferred past it (#2590).
 }
 
 function closeDialog() {
@@ -136,13 +142,20 @@ watch(
 			closeDialog()
 		}
 	},
-	{immediate: false},
+	{immediate: true},
 )
 
-onMounted(() => {
-	if (props.enabled) {
-		openDialog()
-	}
+// Actually call showModal() the moment the <dialog> element is mounted.
+// `dialogRef` is populated by Vue during the render flush after
+// `showDialog.value = true`, so this fires deterministically, no matter
+// how many flushes the renderer needs (see #2590). We re-check
+// `props.enabled` here because the prop can flip back to `false` between
+// `openDialog()` and the mount flush, in which case we must not open.
+watch(dialogRef, (dialog) => {
+	if (!dialog) return
+	if (!props.enabled) return
+	delete dialog.dataset.closing
+	dialog.showModal()
 })
 
 onBeforeUnmount(() => {

@@ -403,10 +403,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				oldID := a.ID
 				a.ID = 0
 				a.TaskID = t.ID
-				err = a.NewAttachment(s, bytes.NewReader(a.File.FileContent), a.File.Name, a.File.Size, user)
+				// Import metadata is attacker-controlled and can forge a
+				// small size to bypass the file size limit (GHSA-qh78-rvg3-cv54).
+				actualSize := uint64(len(a.File.FileContent))
+				a.File.Size = actualSize
+				err = a.NewAttachment(s, bytes.NewReader(a.File.FileContent), a.File.Name, actualSize, user)
 				if err != nil {
 					if models.IsErrTaskAttachmentIsTooLarge(err) {
-						log.Warningf("[creating structure] Attachment %s is too large (%d bytes), skipping: %v", a.File.Name, a.File.Size, err)
+						log.Warningf("[creating structure] Attachment %s is too large (%d bytes), skipping: %v", a.File.Name, actualSize, err)
 						continue
 					}
 					return

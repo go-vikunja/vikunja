@@ -71,7 +71,8 @@
 				"message": "タスク「%[1]」(%[2]s) のリマインダーです。"
 			},
 			"comment": {
-				"mentioned_message": "**%[1]s** があなたにメンションしました:"
+				"subject": "Re: %[1]s (%[2]s)",
+				"mentioned_subject": "\"%[1]s が「%[2]s」(%[3]s) のコメントであなたにメンションしました"
 			},
 			"assigned": {
 				"subject_to_assignee": "「%[1]」(%[2]s) の担当者に割り当てられました",
@@ -86,7 +87,8 @@
 				"message": "%[1]s がタスク「%[2]」(%[3]s) を削除しました"
 			},
 			"mentioned": {
-				"message": "**%[1]s** があなたにメンションしました:"
+				"subject_new": "%[1]s が新しいタスク「%[2]s」(%[3]s) であなたにメンションしました",
+				"subject": "%[1]s がタスク「%[2]s」(%[3]s) であなたにメンションしました"
 			},
 			"overdue": {
 				"subject": "タスク「%[1]」(%[2]s) は期限を過ぎました",
@@ -129,10 +131,24 @@
 				"working_on_it": "エラーメッセージを確認次第、すぐに問題解決できるよう取り組んでいます。"
 			}
 		},
+		"api_token": {
+			"expiring": {
+				"week": {
+					"subject": "APIトークン「%[1]s」の有効期限が近づいています",
+					"message": "APIトークン「%[1]s」は %[2]s に有効期限が切れます。引き続き必要な場合は、有効期限前に新しいトークンを作成してください。"
+				},
+				"day": {
+					"subject": "APIトークン「%[1]s」の有効期限は明日です",
+					"message": "APIトークン「%[1]s」は %[2]s に有効期限が切れます。引き続き必要な場合は、有効期限前に新しいトークンを作成してください。"
+				},
+				"action": "APIトークンを管理"
+			}
+		},
 		"common": {
 			"have_nice_day": "よい一日を！",
 			"copy_url": "上のボタンが機能しない場合は、以下のURLをコピーし、ブラウザのアドレスバーに貼り付けてください:",
 			"actions": {
+				"open_task": "Vikunjaでタスクを開く",
 				"open_vikunja": "Vikunjaを開く",
 				"open_project": "プロジェクトを開く",
 				"open_team": "チームを開く",
@@ -142,7 +158,11 @@
 				"confirm_email": "メールアドレスの確認",
 				"abort_deletion": "削除を中止",
 				"confirm_account_deletion": "アカウント削除を確定",
-				"change_notification_settings_link": "通知設定は [こちら](%[1]s) で変更できます。"
+				"change_notification_settings_link": "通知設定は [こちら](%[1]s) で変更できます。",
+				"left_comment": "%[1]s がコメントしました",
+				"mentioned_you_comment": "%[1]s がコメントであなたにメンションしました",
+				"mentioned_you": "%[1]s があなたにメンションしました",
+				"mentioned_you_new_task": "%[1]s が新しいタスクであなたにメンションしました"
 			}
 		}
 	},

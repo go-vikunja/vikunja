@@ -28,8 +28,9 @@
 				@update:task="Object.assign(task, $event)"
 				@close="$emit('close')"
 			/>
-			<h6
+			<nav
 				v-if="project?.id"
+				aria-label="Breadcrumb"
 				class="subtitle"
 			>
 				<template
@@ -60,7 +61,7 @@
 					:can-write="canWrite"
 					@update:task="Object.assign(task, $event)"
 				/>
-			</h6>
+			</nav>
 
 			<ChecklistSummary :task="task" />
 
@@ -250,7 +251,8 @@
 								</div>
 								<Reminders
 									:ref="e => setFieldRef('reminders', e)"
-									v-model="task"
+									v-model="task.reminders"
+									:default-relative-to="remindersDefaultRelativeTo"
 									:disabled="!canWrite"
 									@update:modelValue="saveTask()"
 								/>
@@ -573,7 +575,7 @@
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
 						<XButton
-							v-shortcut="'Shift+Delete'"
+							v-shortcut="deleteShortcut"
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
@@ -672,6 +674,7 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
 
 import {useTaskStore} from '@/stores/tasks'
@@ -707,6 +710,18 @@ const baseStore = useBaseStore()
 
 const task = ref<ITask>(new TaskModel())
 const hasAttachments = computed(() => (task.value.attachments?.length ?? 0) > 0)
+const remindersDefaultRelativeTo = computed(() => {
+	if (task.value.dueDate) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
+	}
+	if (task.value.startDate) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE
+	}
+	if (task.value.endDate) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE
+	}
+	return null
+})
 const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
@@ -732,6 +747,9 @@ const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.val
 // Use Shift+R on macOS (Alt+R produces special characters depending on keyboard layout)
 // Use Alt+r on other platforms
 const reminderShortcut = computed(() => isAppleDevice() ? 'Shift+KeyR' : 'Alt+KeyR')
+
+// Match native OS conventions for "delete the selected item"
+const deleteShortcut = isAppleDevice() ? 'Backspace' : 'Delete'
 
 onBeforeRouteLeave(async () => {
 	if (taskNotFound.value) {
@@ -1157,9 +1175,12 @@ function setRelatedTasksActive() {
 
 	// If the related tasks are already available, show the form again
 	const el = activeFieldElements['relatedTasks']
-	for (const child in el?.children) {
-		if (el?.children[child]?.id === 'showRelatedTasksFormButton') {
-			el?.children[child]?.click()
+	if (!el) {
+		return
+	}
+	for (const child of Array.from(el.children)) {
+		if ((child as HTMLElement).id === 'showRelatedTasksFormButton') {
+			(child as HTMLElement).click()
 			break
 		}
 	}

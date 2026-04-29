@@ -229,7 +229,7 @@ func cacheKeyForTaskAttachmentPreview(id int64, size PreviewSize) string {
 func (ta *TaskAttachment) GetPreview(previewSize PreviewSize) []byte {
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
 
-	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
+	result, err := keyvalue.RememberValue(cacheKey, func() ([]byte, error) {
 		// Read all bytes up front so we can inspect dimensions without seeking.
 		// The file is an io.ReadCloser (no Seek), so we buffer it once.
 		data, err := io.ReadAll(ta.File.File)
@@ -273,7 +273,7 @@ func (ta *TaskAttachment) GetPreview(previewSize PreviewSize) []byte {
 		return nil
 	}
 
-	return result.([]byte)
+	return result
 }
 
 type PreviewSize string

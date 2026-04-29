@@ -287,6 +287,59 @@ func TestProject_CreateOrUpdate(t *testing.T) {
 				require.Error(t, err)
 				assert.True(t, IsErrProjectCannotBelongToAPseudoParentProject(err))
 			})
+			t.Run("attacker with direct Write on victim project cannot reparent it (GHSA-2vq4-854f-5c72)", func(t *testing.T) {
+				// User 1 has direct Write on project 10 (owner=6) via
+				// users_projects id=4 and owns root project 1. Pre-fix, a
+				// reparent of 10 under 1 passed the CanWrite check and the
+				// CTE then cascaded Admin on 10 via ownership of the new
+				// parent.
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+				project := Project{
+					ID:              10,
+					Title:           "Test10",
+					ParentProjectID: 1, // attacker-owned root
+				}
+				err := project.Update(s, usr)
+				require.Error(t, err)
+				assert.True(t, IsErrGenericForbidden(err))
+			})
+			t.Run("attacker with inherited Write cannot reparent child to attacker root (GHSA-2vq4-854f-5c72)", func(t *testing.T) {
+				// User 1 has Write on project 10 and therefore inherits Write on its
+				// child (project 43, added in the fixture above) via the CTE. User 1
+				// owns project 1. Reparenting 43 under 1 must be rejected.
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+				project := Project{
+					ID:              43,
+					Title:           "Reparent Escalation Test Child",
+					ParentProjectID: 1,
+				}
+				err := project.Update(s, usr)
+				require.Error(t, err)
+				assert.True(t, IsErrGenericForbidden(err))
+			})
+			t.Run("non-reparent update with Write still permitted (regression)", func(t *testing.T) {
+				// User 1 has Write (not Admin) on project 43 via project 10;
+				// a rename with parent unchanged must not trip the Admin gate.
+				//
+				// ParentProjectID is set to the stored value (10), not 0: the
+				// gate only fires on non-zero ParentProjectID because the
+				// generic handler can't distinguish omitted from explicit-zero
+				// (detach-to-root is a follow-up, needs a pointer field).
+				db.LoadAndAssertFixtures(t)
+				s := db.NewSession()
+				defer s.Close()
+				project := Project{
+					ID:              43,
+					Title:           "Reparent Escalation Test Child renamed",
+					ParentProjectID: 10, // unchanged — no reparent intent
+				}
+				err := project.Update(s, usr)
+				require.NoError(t, err)
+			})
 		})
 		t.Run("archive default project of the same user", func(t *testing.T) {
 			db.LoadAndAssertFixtures(t)
@@ -491,7 +544,8 @@ func TestProject_ReadAll(t *testing.T) {
 		defer s.Close()
 		projects, _, err := getAllProjectsForUser(s, 6, &projectOptions{})
 		require.NoError(t, err)
-		assert.Len(t, projects, 27)
+		// +1 for the reparent-escalation fixture child (project 43, owner=6).
+		assert.Len(t, projects, 28)
 	})
 	t.Run("all projects for user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -504,12 +558,14 @@ func TestProject_ReadAll(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, reflect.Slice, reflect.TypeOf(projects3).Kind())
 		ls := projects3.([]*Project)
-		assert.Len(t, ls, 27)
+		// +1 for the reparent-escalation fixture child (project 43) that
+		// user 1 inherits Write on via project 10.
+		assert.Len(t, ls, 28)
 		assert.Equal(t, int64(3), ls[0].ID) // Project 3 has a position of 1 and should be sorted first
 		assert.Equal(t, int64(1), ls[1].ID)
 		assert.Equal(t, int64(6), ls[2].ID)
-		assert.Equal(t, int64(-1), ls[25].ID)
-		assert.Equal(t, int64(-2), ls[26].ID)
+		assert.Equal(t, int64(-1), ls[26].ID)
+		assert.Equal(t, int64(-2), ls[27].ID)
 	})
 	t.Run("projects for nonexistent user", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
@@ -535,17 +591,28 @@ func TestProject_ReadAll(t *testing.T) {
 		if db.ParadeDBAvailable() {
 			// ParadeDB fuzzy(1, prefix=true) on "TEST10" also matches
 			// "test1", "test11", "test19", "test30" (edit distance 1), etc.
-			require.Len(t, ls, 6)
+			// The recursive CTE also pulls in project 43 as a child of the
+			// matched project 10 (reparent-escalation fixture).
+			require.Len(t, ls, 7)
 			projectIDs := make([]int64, len(ls))
 			for i, p := range ls {
 				projectIDs[i] = p.ID
 			}
 			assert.Contains(t, projectIDs, int64(10))
+			assert.Contains(t, projectIDs, int64(43))
 			assert.Contains(t, projectIDs, int64(-1))
 		} else {
-			require.Len(t, ls, 2)
-			assert.Equal(t, int64(10), ls[0].ID)
-			assert.Equal(t, int64(-1), ls[1].ID)
+			// Expect project 10 (the search target), project 43 (its child —
+			// reparent-escalation fixture, pulled in as a descendant so tree
+			// navigation stays intact) and the favorites pseudo project -1.
+			require.Len(t, ls, 3)
+			projectIDs := make([]int64, len(ls))
+			for i, p := range ls {
+				projectIDs[i] = p.ID
+			}
+			assert.Contains(t, projectIDs, int64(10))
+			assert.Contains(t, projectIDs, int64(43))
+			assert.Contains(t, projectIDs, int64(-1))
 		}
 	})
 	t.Run("search returns filters as well", func(t *testing.T) {
@@ -561,6 +628,52 @@ func TestProject_ReadAll(t *testing.T) {
 		require.Len(t, ls, 2)
 		assert.Equal(t, int64(-1), ls[0].ID)
 		assert.Equal(t, int64(-2), ls[1].ID)
+	})
+	t.Run("archived propagation aggregation", func(t *testing.T) {
+		// Regression test for #2589. getAllProjectsForUser must:
+		//   1. Expose inherited is_archived for child projects whose parent is archived
+		//      (exercises the MAX(...) AS is_archived column expression).
+		//   2. Hide those inherited-archived rows when getArchived=false
+		//      (exercises the HAVING MAX(...) = 0 filter).
+		// The CTE must use dialect-agnostic SQL — no CAST(... AS int), which MySQL 8 rejects.
+
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		findByID := func(ps []*Project, id int64) *Project {
+			for _, p := range ps {
+				if p.ID == id {
+					return p
+				}
+			}
+			return nil
+		}
+
+		// getArchived=true: project 21 (child of archived 22) must appear and carry is_archived=true.
+		withArchived, _, err := getAllProjectsForUser(s, 1, &projectOptions{getArchived: true})
+		require.NoError(t, err)
+
+		parent := findByID(withArchived, 22)
+		require.NotNil(t, parent, "archived parent project 22 must be returned when getArchived=true")
+		assert.True(t, parent.IsArchived, "project 22 is archived in fixtures")
+
+		child := findByID(withArchived, 21)
+		require.NotNil(t, child, "child project 21 must be returned when getArchived=true")
+		assert.True(t, child.IsArchived, "project 21 must inherit is_archived from its archived parent (22)")
+
+		// getArchived=false: both rows must be filtered out by the HAVING clause.
+		withoutArchived, _, err := getAllProjectsForUser(s, 1, &projectOptions{getArchived: false})
+		require.NoError(t, err)
+
+		assert.Nil(t, findByID(withoutArchived, 22),
+			"archived project 22 must be filtered when getArchived=false")
+		assert.Nil(t, findByID(withoutArchived, 21),
+			"child of archived project (21) must be filtered when getArchived=false (inherited archived state)")
+
+		// Sanity: a non-archived project owned by user 1 is still present in the filtered list.
+		assert.NotNil(t, findByID(withoutArchived, 1),
+			"non-archived project 1 must still be present when getArchived=false")
 	})
 }
 

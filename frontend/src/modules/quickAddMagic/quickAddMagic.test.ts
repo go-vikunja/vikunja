@@ -165,7 +165,7 @@ describe('Parse Task Text', () => {
 				'at 12:00 am': '0:0',
 			} as const
 			
-			for (const c in cases) {
+			for (const c of Object.keys(cases)) {
 				it(`should recognize today with a time ${c}`, () => {
 					const result = parseTaskText(`Lorem Ipsum today ${c}`)
 
@@ -526,7 +526,7 @@ describe('Parse Task Text', () => {
 			]
 
 			prefix.forEach(p => {
-				for (const d in days) {
+				for (const d of Object.keys(days)) {
 					it(`should recognize ${p}${d}`, () => {
 						const result = parseTaskText(`Lorem Ipsum ${p}${d}`)
 
@@ -556,7 +556,7 @@ describe('Parse Task Text', () => {
 
 			// This tests only standalone days are recognized and not things like "github", "monitor" or "renewed".
 			// We're not using real words here to generate tests for all days on the fly.
-			for (const d in days) {
+			for (const d of Object.keys(days)) {
 				it(`should not recognize ${d} with a space before it but none after it`, () => {
 					const text = `Lorem Ipsum ${d}ipsum`
 					const result = parseTaskText(text)
@@ -660,7 +660,7 @@ describe('Parse Task Text', () => {
 				'01.02.25': '2025-2-1',
 			} as Record<string, string | null>
 
-			for (const c in cases) {
+			for (const c of Object.keys(cases)) {
 				const assertResult = ({date, text}: ParsedTaskText) => {
 					if (date === null && cases[c] === null) {
 						expect(date).toBeNull()
@@ -722,7 +722,7 @@ describe('Parse Task Text', () => {
 				'5th Mar at 3pm': '2021-3-5 15:0',
 			} as Record<string, string>
 
-			for (const c in cases) {
+			for (const c of Object.keys(cases)) {
 				it(`should parse '${c}' as '${cases[c]}'`, () => {
 					const {date} = parseDate(c, now)
 					if (date === null && cases[c] === null) {
@@ -846,7 +846,7 @@ describe('Parse Task Text', () => {
 	})
 
 	describe('Priority', () => {
-		for (const p in PRIORITIES) {
+		for (const p of Object.keys(PRIORITIES) as Array<keyof typeof PRIORITIES>) {
 			it(`should parse priority ${p}`, () => {
 				const result = parseTaskText(`Lorem Ipsum !${PRIORITIES[p]}`)
 
@@ -969,7 +969,7 @@ describe('Parse Task Text', () => {
 			'yearly': {type: 'years', amount: 1},
 		} as Record<string, IRepeatAfter>
 
-		for (const c in cases) {
+		for (const c of Object.keys(cases)) {
 			it(`should parse ${c} as recurring date every ${cases[c].amount} ${cases[c].type}`, () => {
 				const result = parseTaskText(`Lorem Ipsum ${c}`)
 

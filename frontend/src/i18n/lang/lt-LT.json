@@ -44,7 +44,6 @@
 			"resetPassword": "Pakeisti slaptažodį",
 			"resetPasswordAction": "Atsiųskite man slaptažodžio atnaujinimo nuorodą",
 			"resetPasswordSuccess": "Patikrink savo pašto dėžutę! Turėjai gauti laišką, kaip atnaujinti slaptažodį.",
-			"passwordsDontMatch": "Slaptažodžiai nesutampa",
 			"confirmEmailSuccess": "Sėkmingai patvirtinai savo el. paštą. Dabar gali prisijungti.",
 			"totpTitle": "Dviejų faktorių identifikavimo kodas",
 			"totpPlaceholder": "pvz.: 123456",
@@ -73,10 +72,8 @@
 			"title": "Nustatymai",
 			"newPasswordTitle": "Atnaujinti savo slaptažodį",
 			"newPassword": "Naujas slaptažodis",
-			"newPasswordConfirm": "Naujo slaptažodžio patvirtinimas",
 			"currentPassword": "Dabartinis slaptažodis",
 			"currentPasswordPlaceholder": "Tavo dabartinis slaptažodis",
-			"passwordsDontMatch": "Naujo slaptažodis ir patvirtinimas nesutampa.",
 			"passwordUpdateSuccess": "Slaptažodis buvo sėkmingai atnaujintas.",
 			"updateEmailTitle": "Atnaujink savo el. paštą",
 			"updateEmailNew": "Naujas el. pašto adresas",
@@ -138,7 +135,6 @@
 			},
 			"appearance": {
 				"title": "Spalvų paletė",
-				"setSuccess": "Išsaugoti pakeitimai spalvų schemoje {colorScheme}",
 				"colorScheme": {
 					"light": "Šviesus",
 					"system": "Sistemos",
@@ -160,7 +156,6 @@
 				"expired": "Prieigos rakto galiojimas baigėsi {ago}.",
 				"tokenCreatedSuccess": "Čia tavo naujas api prieigos raktas: {token}",
 				"tokenCreatedNotSeeAgain": "Prašome išsaugoti saugioje vietoje, nes daugiau jo nematysite!",
-				"selectAll": "Pažymėti viską",
 				"delete": {
 					"header": "Ištrinti šį prieigos raktą",
 					"text1": "Ar esi tikra -s, kad nori ištrinti šį prieigos raktą \"{token}\"?",
@@ -407,16 +402,7 @@
 			"titlePlaceholder": "Išsaugoto filtro pavadinimas rašomas čia…",
 			"description": "Aprašymas",
 			"descriptionPlaceholder": "Įvesti filtro aprašymą, spausti '/' norint gauti daugiau pasirinkčių…",
-			"includeNulls": "Įtraukti Užduotis, kurioms nenurodytos vertės",
-			"requireAll": "Reikalauti, kad visi filtrai būtų tikri, kad užduotys būtų rodomos",
-			"showDoneTasks": "Rodyti užbaigtas užduotis",
-			"sortAlphabetically": "Rūšiuoti alfabetiškai",
-			"enablePriority": "Įgalinti filtrą pagal prioritetą",
-			"enablePercentDone": "Įgalinti filtrą pagal progresą",
-			"dueDateRange": "Termino datos rėžis",
-			"startDateRange": "Pradžios datos rėžis",
-			"endDateRange": "Pabaigos datos rėžis",
-			"reminderRange": "Priminimo datos rėžis"
+			"includeNulls": "Įtraukti Užduotis, kurioms nenurodytos vertės"
 		},
 		"create": {
 			"title": "Naujas išsaugotas filtras",
@@ -434,7 +420,6 @@
 			"success": "Filtras išsaugotas sėkmingai."
 		},
 		"query": {
-			"title": "Užklausa",
 			"placeholder": "Ieškokite ar filtruokita užklausą…",
 			"help": {
 				"intro": "Norėdami filtruoti užduotis, galite naudoti sintaksę panašią į SQL. Galimi filtravimo laukai įtraukia:",
@@ -485,7 +470,6 @@
 	"migrate": {
 		"title": "Importuoti iš kitų paslaugų tiekėjų",
 		"titleService": "Importuoti duomenis iš {name} į Vikunja",
-		"import": "Importuoti savo duomenis į Vikunja",
 		"description": "Paspauskite ant trečiosios šalies logotipo norint pradėti.",
 		"descriptionDo": "Vikunja importuos visus sąrašus, užduotis, užrašus, priminimus ir dokumentus prie kurių tu turi prieigą.",
 		"authorize": "Autorizuoti Vikunja prieigą prie tavo {name} paskyros, spauskite mygtuką žemiau.",
@@ -504,7 +488,6 @@
 		"manage": "Tvarkyti etiketes",
 		"description": "Paspausk ant etiketės norėdamas ją redaguoti. Tu gali keisti etiketes, kurias pats sukūrei, tu gali naudoti visas etiketes, kurios yra susietos su užduotimis, projektų, prie kurių tu turi prieigą.",
 		"newCTA": "Šiuo metu nėra jokių etikečių.",
-		"search": "Rašykite čia norėdami ieškoti etikečių…",
 		"create": {
 			"header": "Nauja etiketė",
 			"title": "Sukurti etiketę",
@@ -513,7 +496,6 @@
 		},
 		"edit": {
 			"header": "Redaguoti etiketę",
-			"forbidden": "Tau neleidžiama redaguoti šios etiketės, kadangi ji tau nepriklauso.",
 			"success": "Etiketė buvo sėkmingai atnaujinta."
 		},
 		"deleteSuccess": "Etiketė buvo sėkmingai ištrinta.",
@@ -521,7 +503,6 @@
 			"title": "Pavadinimas",
 			"titlePlaceholder": "Etiketės pavadinimas rašomas čia…",
 			"description": "Aprašymas",
-			"descriptionPlaceholder": "Etiketės aprašas",
 			"color": "Spalva"
 		}
 	},
@@ -544,16 +525,13 @@
 		"delete": "Ištrinti",
 		"confirm": "Patvirtinti",
 		"cancel": "Atšaukti",
-		"refresh": "Atnaujinti",
 		"disable": "Išjungti",
 		"copy": "Kopijuoti į iškarpinę",
 		"copyError": "Kopijavimas į iškarpinę nepavyko",
-		"search": "Paieška",
 		"searchPlaceholder": "Rašykite čia norėdami ieškoti…",
 		"previous": "Ankstesnis",
 		"next": "Toliau",
 		"poweredBy": "Sukurta Vikunja",
-		"info": "Informacija",
 		"create": "Sukurti",
 		"doit": "Atlikt!",
 		"saving": "Išsaugoma…",
@@ -586,15 +564,12 @@
 		},
 		"editor": {
 			"edit": "Keisti",
-			"done": "Atlikta",
 			"heading1": "Antraštė 1",
 			"heading1Tooltip": "Didelio skyriaus antraštė.",
 			"heading2": "Antraštė 2",
 			"heading2Tooltip": "Vidutinio dydžio skyriaus antraštė.",
 			"heading3": "Antraštė 3",
 			"heading3Tooltip": "Mažesnio dydžio skyriaus antraštė.",
-			"headingSmaller": "Antraštė mažesnė",
-			"headingBigger": "Antraštė Didesnė",
 			"bold": "Paryškintas",
 			"italic": "Pasviręs",
 			"strikethrough": "Perbrauktas",
@@ -605,17 +580,13 @@
 			"quoteTooltip": "Cituoti.",
 			"bulletList": "Sąrašas",
 			"bulletListTooltip": "Sukurti paprastą sąrašą.",
-			"unorderedList": "Nerikiuojamas sąrašas",
 			"orderedList": "Numeruotas sąrašas",
 			"orderedListTooltip": "Sukurti numeruotą sąrašą.",
-			"cleanBlock": "Išvalyti bloką",
 			"link": "Nuoroda",
 			"image": "Paveikslas",
 			"imageTooltip": "Įkelti paveikslą iš kompiuterio.",
 			"horizontalRule": "Horizontali liniuotė",
 			"horizontalRuleTooltip": "Padalinti sekciją.",
-			"sideBySide": "Vienas šalia kito",
-			"guide": "Vadovas",
 			"text": "Tekstas",
 			"textTooltip": "Pradėkite rašyti paprastą tekstą.",
 			"taskList": "Užduočių sąrašas",
@@ -721,20 +692,16 @@
 		}
 	},
 	"task": {
-		"task": "Užduotis",
 		"new": "Sukurti užduotį",
-		"delete": "Ištrinti šią užduotį",
 		"createSuccess": "Užduotis buvo sėkmingai sukurta.",
 		"addReminder": "Pridėti priminimą…",
 		"doneSuccess": "Užduotis buvo sėkmingai pažymėta kaip baigta.",
 		"undoneSuccess": "Užduotis buvo sėkmingai atžymėta kaip atlikta.",
 		"undo": "Anuliuoti",
-		"openDetail": "Atidaryti užduoties duomenų vaizdą",
 		"checklistTotal": "{checked} iš {total} užduočių",
 		"checklistAllDone": "{total} užduotys",
 		"show": {
 			"titleCurrent": "Dabartinės Užduotys",
-			"titleDates": "Užduotys nuo {from} iki {to}",
 			"overdue": "Rodyti neišpildytas užduotis",
 			"fromuntil": "Užduotys nuo {from} iki {until}",
 			"select": "Pasirinkti datos rėžį",
@@ -754,7 +721,6 @@
 			"deleteSuccess": "Užduotis buvo sėkmingai ištrinta.",
 			"belongsToProject": "Ši užduotis priklauso projektui '{project}'",
 			"due": "Iki {at}",
-			"closePopup": "Uždaryti iššokusį langą",
 			"organization": "Organizacija",
 			"management": "Vadyba",
 			"dateAndTime": "Data ir laikas",
@@ -824,7 +790,6 @@
 			"delete": "Ištrinti prisegtuką",
 			"deleteTooltip": "Pašalinti šį priedą",
 			"deleteText1": "Ar esi tikra -s, kad nori ištrinti šį prisegtuką {filename}?",
-			"copyUrl": "Kopijuoti nuorodą",
 			"copyUrlTooltip": "Nukopijuoti nuorodą šio prisegtuko, kaip paprastą tekstą",
 			"setAsCover": "Sukurti viršelį",
 			"unsetAsCover": "Pašalinti viršelį",
@@ -851,8 +816,7 @@
 			"1week": "1 savaitė"
 		},
 		"description": {
-			"placeholder": "Įvesti aprašą, spausti '/' norint gauti daugiau pasirinkčių…",
-			"empty": "Aprašo kol kas nėra."
+			"placeholder": "Įvesti aprašą, spausti '/' norint gauti daugiau pasirinkčių…"
 		},
 		"assignee": {
 			"placeholder": "Rašykite norėdami priskirti naudotoją…",
@@ -864,7 +828,6 @@
 			"placeholder": "Rašykite noredami pridėti etiketę…",
 			"createPlaceholder": "Pridėti tai, kaip naują etiketę",
 			"addSuccess": "Etiketė buvo sėkmingai pridėta.",
-			"createSuccess": "Etiketė buvo sėkmingai sukurta.",
 			"removeSuccess": "Etiketė buvo sėkmingai anuliuota.",
 			"addCreateSuccess": "Etiketė buvo sėkmingai sukurta ir pridėta.",
 			"delete": {
@@ -929,8 +892,6 @@
 			"hours": "Valandų",
 			"days": "Dienų",
 			"weeks": "Savaičių",
-			"months": "Mėnesių",
-			"years": "Metų",
 			"invalidAmount": "Prašome įvesti daugiau nei 0."
 		},
 		"quickAddMagic": {
@@ -1062,7 +1023,6 @@
 		"unarchive": "Išarchyvuoti",
 		"setBackground": "Fono nustatymai",
 		"share": "Dalintis",
-		"newProject": "Naujas projektas",
 		"createProject": "Sukurti projektą",
 		"cantArchiveIsDefault": "Negalima suarchivuoti, nes tai šabloninis projektas.",
 		"cantDeleteIsDefault": "Negalima ištrinti šabloninio projekto.",
@@ -1198,7 +1158,6 @@
 			"hours": "valanda|valandos",
 			"days": "diena|dienos",
 			"weeks": "savaitė|savaitės",
-			"months": "mėnesis|mėnesiai",
 			"years": "metai|metai"
 		}
 	}

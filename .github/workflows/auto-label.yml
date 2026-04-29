@@ -1,0 +1,202 @@
+name: Auto-label new issues and PRs
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  models: read
+
+concurrency:
+  group: auto-label-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for prompt template)
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          sparse-checkout: |
+            .github/workflows/auto-label.prompt.md
+          sparse-checkout-cone-mode: false
+
+      - name: Render system prompt from live labels
+        id: render
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          PROMPT_TEMPLATE_PATH: .github/workflows/auto-label.prompt.md
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Fetch every label in the repo, keep only the managed namespaces.
+            const managedPrefixes = ['area/', 'integration/', 'db/', 'concern/'];
+            const all = await github.paginate(
+              github.rest.issues.listLabelsForRepo,
+              { owner: context.repo.owner, repo: context.repo.repo, per_page: 100 }
+            );
+            const managed = all
+              .filter(l => managedPrefixes.some(p => l.name.startsWith(p)))
+              .sort((a, b) => a.name.localeCompare(b.name));
+
+            if (managed.length === 0) {
+              core.setFailed('No managed labels found on the repo — cannot build taxonomy.');
+              return;
+            }
+
+            // Warn about labels without descriptions — they confuse the classifier.
+            const undescribed = managed.filter(l => !l.description || !l.description.trim());
+            if (undescribed.length > 0) {
+              core.warning(
+                `Labels without descriptions will be skipped: ${undescribed.map(l => l.name).join(', ')}`
+              );
+            }
+
+            // Group by namespace for readability in the prompt.
+            const groups = {};
+            for (const l of managed) {
+              if (!l.description || !l.description.trim()) continue;
+              const prefix = managedPrefixes.find(p => l.name.startsWith(p));
+              (groups[prefix] ||= []).push(l);
+            }
+
+            const sections = [];
+            for (const prefix of managedPrefixes) {
+              const entries = groups[prefix] || [];
+              if (entries.length === 0) continue;
+              sections.push(`## ${prefix}*\n`);
+              for (const l of entries) {
+                sections.push(`- \`${l.name}\` — ${l.description.trim()}`);
+              }
+              sections.push('');
+            }
+            const taxonomy = sections.join('\n');
+
+            // Expand the template.
+            const templatePath = process.env.PROMPT_TEMPLATE_PATH;
+            const template = fs.readFileSync(templatePath, 'utf8');
+            if (!template.includes('{{TAXONOMY}}')) {
+              core.setFailed(`Template ${templatePath} is missing the {{TAXONOMY}} placeholder.`);
+              return;
+            }
+            const rendered = template.replace('{{TAXONOMY}}', taxonomy);
+
+            const outPath = path.join(process.env.RUNNER_TEMP, 'system-prompt.md');
+            fs.writeFileSync(outPath, rendered);
+            core.setOutput('system_prompt_path', outPath);
+            core.info(`Rendered ${managed.length} labels into ${outPath}`);
+
+      - name: Build user prompt
+        id: prep
+        env:
+          TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
+          BODY: ${{ github.event.issue.body || github.event.pull_request.body }}
+          KIND: ${{ github.event_name == 'issues' && 'issue' || 'pull request' }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/ai"
+          python3 - <<'PY' > "$RUNNER_TEMP/ai/user-prompt.txt"
+          import os
+          title = os.environ.get("TITLE", "").strip()
+          body  = (os.environ.get("BODY", "") or "").strip() or "(no description)"
+          kind  = os.environ.get("KIND", "issue")
+          # Truncate very long bodies to keep token usage predictable
+          if len(body) > 8000:
+              body = body[:8000] + "\n\n[... truncated ...]"
+          print(f"Classify the following {kind}. Return ONLY a JSON array of labels.\n")
+          print("--- TITLE ---")
+          print(title)
+          print()
+          print("--- BODY ---")
+          print(body)
+          print("--- END ---")
+          PY
+          echo "prompt_path=$RUNNER_TEMP/ai/user-prompt.txt" >> "$GITHUB_OUTPUT"
+
+      - name: Classify with AI
+        id: classify
+        uses: actions/ai-inference@e09e65981758de8b2fdab13c2bfb7c7d5493b0b6 # v2.0.7
+        with:
+          model: openai/gpt-4.1-mini
+          # GPT-5 is a reasoning model: output tokens include reasoning, so budget generously.
+          # Temperature is ignored by reasoning models and intentionally omitted.
+          max-completion-tokens: 2000
+          system-prompt-file: ${{ steps.render.outputs.system_prompt_path }}
+          prompt-file: ${{ steps.prep.outputs.prompt_path }}
+
+      - name: Apply labels
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          AI_RESPONSE: ${{ steps.classify.outputs.response }}
+        with:
+          script: |
+            const raw = (process.env.AI_RESPONSE || '').trim();
+            core.info(`Raw AI response:\n${raw}`);
+
+            // Extract the first JSON array from the response (tolerates stray prose or code fences)
+            const match = raw.match(/\[[\s\S]*\]/);
+            if (!match) {
+              core.warning('No JSON array found in AI response — skipping labeling.');
+              return;
+            }
+
+            let parsed;
+            try {
+              parsed = JSON.parse(match[0]);
+            } catch (e) {
+              core.warning(`Failed to parse JSON array: ${e.message}`);
+              return;
+            }
+            if (!Array.isArray(parsed)) {
+              core.warning('AI response JSON is not an array — skipping.');
+              return;
+            }
+
+            // Re-validate against live repo labels. Same source of truth as the prompt renderer,
+            // so drift is impossible — any label the model picks MUST exist in the repo.
+            const managedPrefixes = ['area/', 'integration/', 'db/', 'concern/'];
+            const allRepoLabels = await github.paginate(
+              github.rest.issues.listLabelsForRepo,
+              { owner: context.repo.owner, repo: context.repo.repo, per_page: 100 }
+            );
+            const allowed = new Set(
+              allRepoLabels
+                .map(l => l.name)
+                .filter(n => managedPrefixes.some(p => n.startsWith(p)))
+            );
+
+            const valid = [...new Set(parsed)].filter(
+              l => typeof l === 'string' && allowed.has(l)
+            );
+            const rejected = parsed.filter(l => !valid.includes(l));
+
+            if (rejected.length > 0) {
+              core.warning(`Ignored unknown labels: ${JSON.stringify(rejected)}`);
+            }
+
+            // Cap at 6 labels — our taxonomy rule says 2–4 is typical, 6 is the ceiling.
+            const toApply = valid.slice(0, 6);
+
+            if (toApply.length === 0) {
+              core.info('No valid labels selected — leaving item unlabeled for human triage.');
+              return;
+            }
+
+            const number =
+              context.payload.issue?.number ?? context.payload.pull_request.number;
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: number,
+              labels: toApply,
+            });
+
+            core.info(`Applied labels to #${number}: ${toApply.join(', ')}`);

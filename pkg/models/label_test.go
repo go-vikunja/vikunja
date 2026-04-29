@@ -115,6 +115,26 @@ func TestLabel_ReadAll(t *testing.T) {
 						CreatedBy:   user2,
 					},
 				},
+				{
+					Label: Label{
+						ID:          7,
+						Title:       "Label #7 - created by user 1, no task attachment",
+						CreatedByID: 1,
+						CreatedBy:   user1,
+						Created:     testCreatedTime,
+						Updated:     testUpdatedTime,
+					},
+				},
+				{
+					Label: Label{
+						ID:          8,
+						Title:       "Label #8 - user 1 creator, only attached to inaccessible task",
+						CreatedByID: 1,
+						CreatedBy:   user1,
+						Created:     testCreatedTime,
+						Updated:     testUpdatedTime,
+					},
+				},
 			},
 		},
 		{
@@ -183,13 +203,15 @@ func TestLabel_ReadOne(t *testing.T) {
 		ExportFileID:                 1,
 	}
 	tests := []struct {
-		name          string
-		fields        fields
-		want          *Label
-		wantErr       bool
-		errType       func(error) bool
-		auth          web.Auth
-		wantForbidden bool
+		name                string
+		fields              fields
+		want                *Label
+		wantErr             bool
+		errType             func(error) bool
+		auth                web.Auth
+		wantForbidden       bool
+		assertMaxPermission bool
+		wantMaxPermission   int
 	}{
 		{
 			name: "Get label #1",
@@ -204,7 +226,9 @@ func TestLabel_ReadOne(t *testing.T) {
 				Created:     testCreatedTime,
 				Updated:     testUpdatedTime,
 			},
-			auth: &user.User{ID: 1},
+			auth:                &user.User{ID: 1},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionRead),
 		},
 		{
 			name: "Get nonexistant label",
@@ -225,6 +249,8 @@ func TestLabel_ReadOne(t *testing.T) {
 			auth:          &user.User{ID: 1},
 		},
 		{
+			// Label 4 is attached to tasks in project 1 (user 1 is admin),
+			// so the accessible-tasks iteration must yield PermissionAdmin.
 			name: "Get label #4 - other user",
 			fields: fields{
 				ID: 4,
@@ -248,11 +274,72 @@ func TestLabel_ReadOne(t *testing.T) {
 				Created: testCreatedTime,
 				Updated: testUpdatedTime,
 			},
-			auth: &user.User{ID: 1},
+			auth:                &user.User{ID: 1},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionAdmin),
+		},
+		{
+			// PoC for GHSA-hj5c-mhh2-g7jq: label 6 is reachable only via task
+			// 34 in the private project 20, user 1 must not see it.
+			name: "PoC GHSA-hj5c-mhh2-g7jq: label 6 attached only to unreachable task must be forbidden",
+			fields: fields{
+				ID: 6,
+			},
+			wantForbidden: true,
+			auth:          &user.User{ID: 1},
+		},
+		{
+			// Creator of an unattached label must still be able to read it.
+			name: "creator can read own label with no task attachment",
+			fields: fields{
+				ID: 7,
+			},
+			want: &Label{
+				ID:          7,
+				Title:       "Label #7 - created by user 1, no task attachment",
+				CreatedByID: 1,
+				CreatedBy:   user1,
+				Created:     testCreatedTime,
+				Updated:     testUpdatedTime,
+			},
+			auth:                &user.User{ID: 1},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionRead),
+		},
+		{
+			// Label 8's only label_tasks row points at inaccessible task 34,
+			// so access must come from the creator branch and the
+			// maxPermission fallback to PermissionRead must kick in.
+			name: "creator can read own label only attached to inaccessible task",
+			fields: fields{
+				ID: 8,
+			},
+			want: &Label{
+				ID:          8,
+				Title:       "Label #8 - user 1 creator, only attached to inaccessible task",
+				CreatedByID: 1,
+				CreatedBy:   user1,
+				Created:     testCreatedTime,
+				Updated:     testUpdatedTime,
+			},
+			auth:                &user.User{ID: 1},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionRead),
+		},
+		{
+			// Non-creator must not be able to read an unattached label owned
+			// by someone else — label 3 in fixtures.
+			name: "non-creator cannot read label with no task attachment",
+			fields: fields{
+				ID: 3,
+			},
+			wantForbidden: true,
+			auth:          &user.User{ID: 1},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			db.LoadAndAssertFixtures(t)
 			l := &Label{
 				ID:          tt.fields.ID,
 				Title:       tt.fields.Title,
@@ -269,9 +356,15 @@ func TestLabel_ReadOne(t *testing.T) {
 			s := db.NewSession()
 			defer s.Close()
 
-			allowed, _, _ := l.CanRead(s, tt.auth)
+			allowed, maxPermission, _ := l.CanRead(s, tt.auth)
 			if !allowed && !tt.wantForbidden {
 				t.Errorf("Label.CanRead() forbidden, want %v", tt.wantForbidden)
+			}
+			if allowed && tt.wantForbidden {
+				t.Errorf("Label.CanRead() allowed, want forbidden")
+			}
+			if tt.assertMaxPermission && maxPermission != tt.wantMaxPermission {
+				t.Errorf("Label.CanRead() maxPermission = %d, want %d", maxPermission, tt.wantMaxPermission)
 			}
 			err := l.ReadOne(s, tt.auth)
 			if (err != nil) != tt.wantErr {

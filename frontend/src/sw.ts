@@ -1,9 +1,10 @@
 import {getFullBaseUrl} from './helpers/getFullBaseUrl'
 
 declare let self: ServiceWorkerGlobalScope
+declare const __WORKBOX_VERSION__: string
 
 const fullBaseUrl = getFullBaseUrl()
-const workboxVersion = 'v7.3.0'
+const workboxVersion = __WORKBOX_VERSION__
 
 importScripts(`${fullBaseUrl}workbox-${workboxVersion}/workbox-sw.js`)
 workbox.setConfig({
@@ -20,9 +21,11 @@ workbox.routing.registerRoute(
 	new workbox.strategies.StaleWhileRevalidate(),
 )
 
+// Construct pattern with full base URL
+const apiRoutePattern = new RegExp(`${fullBaseUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}api\\/v1\\/.*$`)
 // Always send api requests through the network and bypass the browser's HTTP cache
 workbox.routing.registerRoute(
-	new RegExp('api\\/v1\\/.*$'),
+	apiRoutePattern,
 	new workbox.strategies.NetworkOnly({
 		fetchOptions: {
 			cache: 'no-store',

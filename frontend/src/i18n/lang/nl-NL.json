@@ -44,7 +44,6 @@
 			"resetPassword": "Je wachtwoord opnieuw instellen",
 			"resetPasswordAction": "Stuur me een wachtwoord reset link",
 			"resetPasswordSuccess": "Controleer je inbox! Als het goed is heb je een e-mail met instructies om je wachtwoord te resetten.",
-			"passwordsDontMatch": "Wachtwoorden komen niet overeen",
 			"confirmEmailSuccess": "Je hebt met succes je e-mailadres bevestigd! Je kunt nu inloggen.",
 			"totpTitle": "Code tweestapsverificatie",
 			"totpPlaceholder": "bv. 123456",
@@ -74,10 +73,8 @@
 			"title": "Instellingen",
 			"newPasswordTitle": "Je wachtwoord bijwerken",
 			"newPassword": "Nieuw wachtwoord",
-			"newPasswordConfirm": "Nieuw wachtwoord bevestigen",
 			"currentPassword": "Huidig wachtwoord",
 			"currentPasswordPlaceholder": "Je huidige wachtwoord",
-			"passwordsDontMatch": "Het nieuwe wachtwoord en de bevestiging ervan komen niet overeen.",
 			"passwordUpdateSuccess": "Het wachtwoord is succesvol bijgewerkt.",
 			"updateEmailTitle": "Je e-mailadres bijwerken",
 			"updateEmailNew": "Nieuw e-mailadres",
@@ -167,7 +164,6 @@
 			},
 			"appearance": {
 				"title": "Kleurenschema",
-				"setSuccess": "Het kleurenschema is aangepast naar {colorScheme}",
 				"colorScheme": {
 					"light": "Licht",
 					"system": "Systeem",
@@ -192,7 +188,6 @@
 				"expired": "Dit token is verlopen {ago}.",
 				"tokenCreatedSuccess": "Hier is je API-token: {token}",
 				"tokenCreatedNotSeeAgain": "Bewaar het op een veilige locatie, het wordt slechts één keer getoond!",
-				"selectAll": "Alles selecteren",
 				"delete": {
 					"header": "Dit token verwijderen",
 					"text1": "Weet je zeker dat je token \"{token}\" wilt verwijderen?",
@@ -470,16 +465,7 @@
 			"titlePlaceholder": "De titel voor het opgeslagen filter komt hier…",
 			"description": "Beschrijving",
 			"descriptionPlaceholder": "Geef een beschrijving voor dit filter, druk op '/' voor meer opties…",
-			"includeNulls": "Inclusief taken die geen waarde ingesteld hebben",
-			"requireAll": "Alle filters moeten waar zijn om een taak weer te geven",
-			"showDoneTasks": "Voltooide taken weergeven",
-			"sortAlphabetically": "Alfabetisch sorteren",
-			"enablePriority": "Filter op prioriteit inschakelen",
-			"enablePercentDone": "Filter op voortgang inschakelen",
-			"dueDateRange": "Deadline bereik",
-			"startDateRange": "Startdatum bereik",
-			"endDateRange": "Einddatum bereik",
-			"reminderRange": "Herinneringsdatum bereik"
+			"includeNulls": "Inclusief taken die geen waarde ingesteld hebben"
 		},
 		"create": {
 			"title": "Nieuw opgeslagen filter",
@@ -497,7 +483,6 @@
 			"success": "Het filter is succesvol opgeslagen."
 		},
 		"query": {
-			"title": "Zoekopdracht",
 			"placeholder": "Typ een zoekopdracht of filter…",
 			"help": {
 				"intro": "Om taken te filteren, kun je een querysyntaxis gebruiken vergelijkbaar met SQL. De beschikbare velden om te filteren zijn:",
@@ -550,7 +535,6 @@
 	"migrate": {
 		"title": "Importeer vanuit een andere dienst",
 		"titleService": "Importeer je gegevens van {name} naar Vikunja",
-		"import": "Importeer je data in Vikunja",
 		"description": "Klik op het logo van een van de externe diensten hieronder om te beginnen.",
 		"descriptionDo": "Vikunja zal alle lijsten, taken, notities, herinneringen en bestanden importeren waar je toegang toe hebt.",
 		"authorize": "Om Vikunja toegang te geven tot je {name} -account, klik op de knop hieronder.",
@@ -569,7 +553,6 @@
 		"manage": "Labels beheren",
 		"description": "Klik op een label om het te bewerken. Je kunt de labels bewerken die je zelf hebt aangemaakt, en je kunt alle labels gebruiken van taken in projecten waar je toegang tot hebt.",
 		"newCTA": "Je hebt momenteel geen labels.",
-		"search": "Typ om te zoeken naar een label…",
 		"create": {
 			"header": "Nieuw label",
 			"title": "Label aanmaken",
@@ -578,7 +561,6 @@
 		},
 		"edit": {
 			"header": "Bewerk label",
-			"forbidden": "Je bent niet bevoegd om dit label te bewerken omdat je niet de eigenaar bent.",
 			"success": "Het label is succesvol bijgewerkt."
 		},
 		"deleteSuccess": "Het label is succesvol verwijderd.",
@@ -586,7 +568,6 @@
 			"title": "Titel",
 			"titlePlaceholder": "De labeltitel komt hier…",
 			"description": "Beschrijving",
-			"descriptionPlaceholder": "Beschrijving label",
 			"color": "Kleur"
 		}
 	},
@@ -613,16 +594,13 @@
 		"delete": "Verwijderen",
 		"confirm": "Bevestigen",
 		"cancel": "Annuleren",
-		"refresh": "Vernieuwen",
 		"disable": "Uitschakelen",
 		"copy": "Kopiëren naar klembord",
 		"copyError": "Kopiëren naar klembord mislukt",
-		"search": "Zoeken",
 		"searchPlaceholder": "Typ om te zoeken…",
 		"previous": "Vorige",
 		"next": "Volgende",
 		"poweredBy": "Mogelijk gemaakt door Vikunja",
-		"info": "Informatie",
 		"create": "Creëren",
 		"doit": "Doe het!",
 		"saving": "Opslaan…",
@@ -655,15 +633,12 @@
 		},
 		"editor": {
 			"edit": "Bewerken",
-			"done": "Voltooid",
 			"heading1": "Kop 1",
 			"heading1Tooltip": "Grote sectiekop.",
 			"heading2": "Kop 2",
 			"heading2Tooltip": "Middelgrote sectiekop.",
 			"heading3": "Kop 3",
 			"heading3Tooltip": "Kleinere sectiekop.",
-			"headingSmaller": "Koptekst kleiner",
-			"headingBigger": "Koptekst groter",
 			"bold": "Dikgedrukt",
 			"italic": "Cursief",
 			"strikethrough": "Doorgestreept",
@@ -674,17 +649,13 @@
 			"quoteTooltip": "Quote vastleggen.",
 			"bulletList": "Opsommingslijst",
 			"bulletListTooltip": "Maak een eenvoudige opsommingslijst aan.",
-			"unorderedList": "Ongeordende lijst",
 			"orderedList": "Geordende lijst",
 			"orderedListTooltip": "Maak een lijst met nummering.",
-			"cleanBlock": "Blok opschonen",
 			"link": "Koppeling",
 			"image": "Afbeelding",
 			"imageTooltip": "Afbeelding vanaf je computer uploaden.",
 			"horizontalRule": "Horizontale lijn",
 			"horizontalRuleTooltip": "Een sectie verdelen.",
-			"sideBySide": "Naast elkaar",
-			"guide": "Handleiding",
 			"text": "Tekst",
 			"textTooltip": "Begin met typen van platte tekst.",
 			"taskList": "Takenlijst",
@@ -790,21 +761,17 @@
 		}
 	},
 	"task": {
-		"task": "Taak",
 		"new": "Taak aanmaken",
-		"delete": "Deze taak verwijderen",
 		"createSuccess": "De taak is succesvol aangemaakt.",
 		"addReminder": "Herinnering toevoegen…",
 		"doneSuccess": "De taak is succesvol aangemerkt als voltooid.",
 		"undoneSuccess": "Het voltooien van de taak is succesvol teruggedraaid.",
 		"movedToProject": "De taak werd verplaatst naar {project}.",
 		"undo": "Ongedaan maken",
-		"openDetail": "Open taak detailweergave",
 		"checklistTotal": "{checked} van {total} taken",
 		"checklistAllDone": "{total} taken",
 		"show": {
 			"titleCurrent": "Huidige taken",
-			"titleDates": "Taken van {from} tot {to}",
 			"noDates": "Toon taken zonder datum",
 			"overdue": "Toon achterstallige taken",
 			"fromuntil": "Taken van {from} tot {until}",
@@ -828,7 +795,6 @@
 			"belongsToProject": "Deze taak hoort bij project '{project}'",
 			"back": "Terug naar project",
 			"due": "Vervalt {at}",
-			"closePopup": "Popup sluiten",
 			"scrollToBottom": "Scroll naar beneden",
 			"organization": "Organisatie",
 			"management": "Beheer",
@@ -902,7 +868,6 @@
 			"delete": "Bijlage verwijderen",
 			"deleteTooltip": "Verwijder deze bijlage",
 			"deleteText1": "Weet je zeker dat je de bijlage {filename} wilt verwijderen?",
-			"copyUrl": "URL kopiëren",
 			"copyUrlTooltip": "Kopieer de URL van deze bijlage voor gebruik in tekst",
 			"setAsCover": "Omslagfoto instellen",
 			"unsetAsCover": "Omslagfoto verwijderen",
@@ -934,8 +899,7 @@
 			"1week": "1 week"
 		},
 		"description": {
-			"placeholder": "Voer een beschrijving in, klik op '/' voor meer opties…",
-			"empty": "Nog geen beschrijving beschikbaar."
+			"placeholder": "Voer een beschrijving in, klik op '/' voor meer opties…"
 		},
 		"assignee": {
 			"placeholder": "Typ om een gebruiker toe te wijzen…",
@@ -947,7 +911,6 @@
 			"placeholder": "Typ om een label toe te voegen…",
 			"createPlaceholder": "Dit toevoegen als nieuw label",
 			"addSuccess": "Het label is succesvol toegevoegd.",
-			"createSuccess": "Het label is succesvol aangemaakt.",
 			"removeSuccess": "Het label is succesvol verwijderd.",
 			"addCreateSuccess": "Het label is succesvol aangemaakt en toegevoegd.",
 			"delete": {
@@ -1012,8 +975,6 @@
 			"hours": "Uren",
 			"days": "dagen",
 			"weeks": "weken",
-			"months": "Maanden",
-			"years": "Jaren",
 			"invalidAmount": "Voer meer dan nul in."
 		},
 		"quickAddMagic": {
@@ -1166,7 +1127,6 @@
 		"unarchive": "Archivering opheffen",
 		"setBackground": "Achtergrondinstellingen",
 		"share": "Delen",
-		"newProject": "Nieuw project",
 		"createProject": "Project aanmaken",
 		"cantArchiveIsDefault": "Je kunt dit niet archiveren omdat het jouw standaardproject is.",
 		"cantDeleteIsDefault": "Je kunt dit niet verwijderen omdat het jouw standaardproject is.",
@@ -1324,7 +1284,6 @@
 			"hours": "uur|uren",
 			"days": "dag|dagen",
 			"weeks": "week|weken",
-			"months": "maand|maanden",
 			"years": "jaar|jaren"
 		}
 	}

@@ -7,7 +7,7 @@
 		<RouterLink
 			:to="{ name: 'home' }"
 			class="logo-link"
-			:aria-label="$t('navigation.overview')"
+			:aria-label="$t('navigation.home')"
 		>
 			<Logo
 				width="164"
@@ -21,9 +21,9 @@
 			v-if="currentProject?.id"
 			class="project-title-wrapper"
 		>
-			<h1 class="project-title">
+			<span class="project-title">
 				{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
-			</h1>
+			</span>
 
 			<BaseButton
 				v-if="!isEditorContentEmpty(currentProject.description)"
@@ -88,6 +88,12 @@
 					{{ $t('user.settings.title') }}
 				</DropdownItem>
 				<DropdownItem
+					v-if="adminPanelEnabled && authStore.info?.isAdmin"
+					:to="{ name: 'admin.overview' }"
+				>
+					{{ $t('admin.title') }}
+				</DropdownItem>
+				<DropdownItem
 					v-if="imprintUrl"
 					:href="imprintUrl"
 				>
@@ -150,6 +156,7 @@ const authStore = useAuthStore()
 const configStore = useConfigStore()
 const imprintUrl = computed(() => configStore.legal.imprintUrl)
 const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
+const adminPanelEnabled = computed(() => configStore.isProFeatureEnabled('admin_panel'))
 </script>
 
 <style lang="scss" scoped>
@@ -164,10 +171,12 @@ $user-dropdown-width-mobile: 5rem;
 	inset-block-start: 0;
 	inset-inline-start: 0;
 	inset-inline-end: 0;
+	z-index: 30;
 
 	display: flex;
 	justify-content: space-between;
 	gap: var(--navbar-gap-width);
+	min-block-size: $navbar-height;
 
 	background: var(--site-background);
 
@@ -257,8 +266,6 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .navbar-end {
-	margin-inline-start: 0; // overrides bulma core styles
-	margin-inline-end: 0; // overrides bulma core styles
 	flex: 0 0 auto;
 	display: flex;
 	align-items: stretch;

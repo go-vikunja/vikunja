@@ -235,7 +235,7 @@ function updateTasks(updatedTask: ITask) {
 		return
 	}
 
-	for (const t in tasks.value) {
+	for (let t = 0; t < tasks.value.length; t++) {
 		if (tasks.value[t].id === updatedTask.id) {
 			tasks.value[t] = updatedTask
 			break

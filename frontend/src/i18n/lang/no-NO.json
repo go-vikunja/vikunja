@@ -44,7 +44,6 @@
 			"resetPassword": "Tilbakestill passordet ditt",
 			"resetPasswordAction": "Send lenke for tilbakestilling av passord",
 			"resetPasswordSuccess": "Sjekk innboksen! Du har mottatt en e-post med instruksjoner om hvordan passordet kan tilbakestilles.",
-			"passwordsDontMatch": "Passordene samsvarer ikke",
 			"confirmEmailSuccess": "Du har bekreftet e-posten din! Du kan logge inn nå.",
 			"totpTitle": "2FA (2-Faktorautentisering)",
 			"totpPlaceholder": "f.eks 123456",
@@ -74,10 +73,8 @@
 			"title": "Innstillinger",
 			"newPasswordTitle": "Oppdater passord",
 			"newPassword": "Nytt passord",
-			"newPasswordConfirm": "Bekreft nytt passord",
 			"currentPassword": "Nåværende passord",
 			"currentPasswordPlaceholder": "Ditt nåværende passord",
-			"passwordsDontMatch": "Det nye passordet og bekreftelse samsvarer ikke.",
 			"passwordUpdateSuccess": "Passordet ble oppdatert.",
 			"updateEmailTitle": "Oppdater e-postadresse",
 			"updateEmailNew": "Ny e-postadresse",
@@ -161,7 +158,6 @@
 			},
 			"appearance": {
 				"title": "Fargevalg",
-				"setSuccess": "Lagret endring av fargevalg til {colorScheme}",
 				"colorScheme": {
 					"light": "Lys",
 					"system": "System",
@@ -183,7 +179,6 @@
 				"expired": "Denne plassholderen har utløpt {ago}.",
 				"tokenCreatedSuccess": "Her er din nye api-plassholder {token}",
 				"tokenCreatedNotSeeAgain": "Lagre på et trygt sted. Du vil ikke se dette flere ganger!",
-				"selectAll": "Velg alle",
 				"delete": {
 					"header": "Slett plassholderen",
 					"text1": "Skal plassholderen {token} slettes?",
@@ -456,16 +451,7 @@
 			"titlePlaceholder": "Tittel på det lagrede filteret angis her…",
 			"description": "Beskrivelse",
 			"descriptionPlaceholder": "Legg til en beskrivelse for dette filteret. Trykk '/' for flere valg…",
-			"includeNulls": "Inkluder oppgaver som ikke har en verdi",
-			"requireAll": "Krev at alle filtre er sanne for at en oppgave skal vises",
-			"showDoneTasks": "Vis ferdige oppgaver",
-			"sortAlphabetically": "Sorter alfabetisk",
-			"enablePriority": "Aktiver filter etter prioritet",
-			"enablePercentDone": "Aktiver filter etter fremdrift",
-			"dueDateRange": "Forfallsområde",
-			"startDateRange": "Start datoområde",
-			"endDateRange": "Slutt datoområde",
-			"reminderRange": "Datoområde for påminnelse"
+			"includeNulls": "Inkluder oppgaver som ikke har en verdi"
 		},
 		"create": {
 			"title": "Nytt lagret filter",
@@ -483,7 +469,6 @@
 			"success": "Filteret ble lagret."
 		},
 		"query": {
-			"title": "Spørring",
 			"placeholder": "Angi et søk eller filter…",
 			"help": {
 				"intro": "For å filtrere oppgaver kan du bruke en spørresyntaks på samme måte som SQL. De tilgjengelige feltene for filtrering omfatter:",
@@ -536,7 +521,6 @@
 	"migrate": {
 		"title": "Importer fra andre tjenester",
 		"titleService": "Importer dine data fra {name} til Vikunja",
-		"import": "Importer dine data til Vikunja",
 		"description": "Klikk på logoen til en av tjenester fra tredjeparter nedenfor for å starte.",
 		"descriptionDo": "Vikunja vil importere alle lister, oppgaver, notater, påminnelser og filer du har tilgang til.",
 		"authorize": "For å autorisere Vikunja til din {name} konto, klikk på knappen nedenfor.",
@@ -555,7 +539,6 @@
 		"manage": "Behandle etiketter",
 		"description": "Klikk på en etikett for å redigere den. Du kan redigere alle etikettene du lagde, og du kan bruke alle etikettene som er tilknyttet en oppgave i et prosjekt du har tilgang til.",
 		"newCTA": "Du har ingen etiketter for øyeblikket.",
-		"search": "Skriv for å søke etter en etikett…",
 		"create": {
 			"header": "Ny etikett",
 			"title": "Opprett en etikett",
@@ -564,7 +547,6 @@
 		},
 		"edit": {
 			"header": "Rediger etikett",
-			"forbidden": "Etiketten kan ikke redigeres fordi du ikke er eier.",
 			"success": "Etiketten ble oppdatert."
 		},
 		"deleteSuccess": "Etiketten ble slettet.",
@@ -572,7 +554,6 @@
 			"title": "Tittel",
 			"titlePlaceholder": "Etikettens tittel angis her…",
 			"description": "Beskrivelse",
-			"descriptionPlaceholder": "Etikettbeskrivelse",
 			"color": "Farge"
 		}
 	},
@@ -599,16 +580,13 @@
 		"delete": "Slett",
 		"confirm": "Bekreft",
 		"cancel": "Avbryt",
-		"refresh": "Oppdater",
 		"disable": "Deaktiver",
 		"copy": "Kopier til utklippstavlen",
 		"copyError": "Kopiering til utklippstavle mislyktes",
-		"search": "Søk",
 		"searchPlaceholder": "Skriv for å søke…",
 		"previous": "Forrige",
 		"next": "Neste",
 		"poweredBy": "Drevet av Vikunja",
-		"info": "Info",
 		"create": "Opprett",
 		"doit": "Gjør det!",
 		"saving": "Lagrer…",
@@ -641,15 +619,12 @@
 		},
 		"editor": {
 			"edit": "Rediger",
-			"done": "Ferdig",
 			"heading1": "Overskrift 1",
 			"heading1Tooltip": "Stor seksjonsoverskrift.",
 			"heading2": "Overskrift 2",
 			"heading2Tooltip": "Medium seksjonsoverskrift.",
 			"heading3": "Overskrift 3",
 			"heading3Tooltip": "Mindre seksjonshode.",
-			"headingSmaller": "Mindre overskrift",
-			"headingBigger": "Større overskrift",
 			"bold": "Fet",
 			"italic": "Kursiv",
 			"strikethrough": "Gjennomstrek",
@@ -660,17 +635,13 @@
 			"quoteTooltip": "Hent et sitat.",
 			"bulletList": "Kulepunkter",
 			"bulletListTooltip": "Lag en enkel liste med kulepunkter.",
-			"unorderedList": "Usortert liste",
 			"orderedList": "Sortert liste",
 			"orderedListTooltip": "Opprett en liste med nummerering.",
-			"cleanBlock": "Tøm blokk",
 			"link": "Lenke",
 			"image": "Bilde",
 			"imageTooltip": "Last opp et bilde fra datamaskinen.",
 			"horizontalRule": "Vannrett linje",
 			"horizontalRuleTooltip": "Del en seksjon.",
-			"sideBySide": "Side ved side",
-			"guide": "Guide",
 			"text": "Tekst",
 			"textTooltip": "Start å skrive tekst.",
 			"taskList": "Oppgaveliste",
@@ -776,20 +747,16 @@
 		}
 	},
 	"task": {
-		"task": "Oppgave",
 		"new": "Opprett en oppgave",
-		"delete": "Slett denne oppgaven",
 		"createSuccess": "Oppgaven ble opprettet.",
 		"addReminder": "Legg til påminnelse…",
 		"doneSuccess": "Oppgaven ble markert som ferdig.",
 		"undoneSuccess": "Oppgaven ble fjernet som ferdig.",
 		"undo": "Angre",
-		"openDetail": "Åpne detaljvisning",
 		"checklistTotal": "{checked} av {total} oppgaver",
 		"checklistAllDone": "{total} oppgaver",
 		"show": {
 			"titleCurrent": "Pågående oppgaver",
-			"titleDates": "Oppgaver fra {from} til {to}",
 			"noDates": "Vis oppgaver uten dato",
 			"overdue": "Vis forfalte oppgaver",
 			"fromuntil": "Oppgaver fra {from} til {until}",
@@ -811,7 +778,6 @@
 			"belongsToProject": "Denne oppgaven tilhører prosjektet '{project}'",
 			"back": "Tilbake til prosjekt",
 			"due": "Forfaller {at}",
-			"closePopup": "Lukk popup",
 			"organization": "Organisering",
 			"management": "Behandling",
 			"dateAndTime": "Dato og tid",
@@ -881,7 +847,6 @@
 			"delete": "Slett vedlegg",
 			"deleteTooltip": "Slett dette vedlegget",
 			"deleteText1": "Er du sikker på at du vil slette den vedlagte filen {filename}?",
-			"copyUrl": "Kopier URL",
 			"copyUrlTooltip": "Kopier url til dette vedlegget til bruk i tekst",
 			"setAsCover": "Gjør til omslag",
 			"unsetAsCover": "Fjern omslag",
@@ -908,8 +873,7 @@
 			"1week": "1 uke"
 		},
 		"description": {
-			"placeholder": "Angi en beskrivelse. Trykk '/' for flere valg…",
-			"empty": "Ingen beskrivelse tilgjengelig."
+			"placeholder": "Angi en beskrivelse. Trykk '/' for flere valg…"
 		},
 		"assignee": {
 			"placeholder": "Skriv for å søke etter en bruker…",
@@ -921,7 +885,6 @@
 			"placeholder": "Skriv for å legge til en etikett…",
 			"createPlaceholder": "Legg til som ny etikett",
 			"addSuccess": "Etiketten er lagt til.",
-			"createSuccess": "Denne etiketten har blitt opprettet.",
 			"removeSuccess": "Oppgaven har blitt slettet.",
 			"addCreateSuccess": "Etiketten er opprettet og lagt til.",
 			"delete": {
@@ -986,8 +949,6 @@
 			"hours": "Timer",
 			"days": "Dager",
 			"weeks": "Uker",
-			"months": "Måneder",
-			"years": "År",
 			"invalidAmount": "Vennligst angi mer enn 0."
 		},
 		"quickAddMagic": {
@@ -1136,7 +1097,6 @@
 		"unarchive": "Av-arkiver",
 		"setBackground": "Innstillinger for bakgrunn",
 		"share": "Del",
-		"newProject": "Nytt prosjekt",
 		"createProject": "Opprett prosjekt",
 		"cantArchiveIsDefault": "Du kan ikke arkivere dette fordi det er ditt standardprosjekt.",
 		"cantDeleteIsDefault": "Du kan ikke slette dette fordi det er ditt standardprosjekt.",
@@ -1294,7 +1254,6 @@
 			"hours": "time|timer",
 			"days": "dag|dager",
 			"weeks": "uke|uker",
-			"months": "måned|måneder",
 			"years": "år|år"
 		}
 	}

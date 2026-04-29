@@ -44,7 +44,6 @@
 			"resetPassword": "Reset mật khẩu của bạn",
 			"resetPasswordAction": "Gửi cho tôi liên kết reset mật khẩu",
 			"resetPasswordSuccess": "Kiểm tra hộp thư của bạn! Bạn sẽ nhận được một email với chỉ dẫn đặt lại mật khẩu của mình.",
-			"passwordsDontMatch": "Mật khẩu không trùng khớp",
 			"confirmEmailSuccess": "Bạn đã xác nhận thành công email của mình! Bạn có thể đăng nhập ngay bây giờ.",
 			"totpTitle": "Mã xác thực hai lớp",
 			"totpPlaceholder": "ví dụ: 123456",
@@ -73,10 +72,8 @@
 			"title": "Cài đặt",
 			"newPasswordTitle": "Thay đổi mật khẩu",
 			"newPassword": "Mật khẩu mới",
-			"newPasswordConfirm": "Xác nhận mật khẩu mới",
 			"currentPassword": "Mật khẩu hiện tại",
 			"currentPasswordPlaceholder": "Nhập mật khẩu hiện tại của bạn",
-			"passwordsDontMatch": "Mật khẩu mới và xác nhận của nó không khớp.",
 			"passwordUpdateSuccess": "Mật khẩu đã được cập nhật thành công.",
 			"updateEmailTitle": "Cập nhật địa chỉ e-mail của bạn",
 			"updateEmailNew": "Địa chỉ email mới",
@@ -138,7 +135,6 @@
 			},
 			"appearance": {
 				"title": "Phối màu",
-				"setSuccess": "Đã lưu phối màu vào {colorScheme}",
 				"colorScheme": {
 					"light": "Sáng",
 					"system": "Hệ thống",
@@ -159,7 +155,6 @@
 				"expired": "Token này đã hết hạn {ago}.",
 				"tokenCreatedSuccess": "Đây là mã api token mới của bạn: {token}",
 				"tokenCreatedNotSeeAgain": "Hãy lưu trữ token tại nơi bảo mật, bạn sẽ không thể xem lại token!",
-				"selectAll": "Chọn tất cả",
 				"delete": {
 					"header": "Xóa token này",
 					"text1": "Bạn có chắc muốn xóa cột token \"{token}\"?",
@@ -405,16 +400,7 @@
 			"titlePlaceholder": "Tiêu đề bộ lọc đã lưu ở đây…",
 			"description": "Mô tả",
 			"descriptionPlaceholder": "Viết mô tả cho bộ lọc này ở đây, gõ '/' để hiển thị các lựa chọn…",
-			"includeNulls": "Bao gồm các Công việc không có bộ giá trị",
-			"requireAll": "Yêu cầu tất cả các bộ lọc phải đúng để một công việc được hiển thị",
-			"showDoneTasks": "Hiển thị các công việc đã hoàn thành",
-			"sortAlphabetically": "Xếp theo bảng chữ cái",
-			"enablePriority": "Bật Bộ lọc theo mức độ ưu tiên",
-			"enablePercentDone": "Bật Bộ lọc theo Tiến độ",
-			"dueDateRange": "Phạm vi ngày đến hạn",
-			"startDateRange": "Phạm vi Ngày bắt đầu",
-			"endDateRange": "Phạm vi Ngày Kết thúc",
-			"reminderRange": "Phạm vi Ngày nhắc nhở"
+			"includeNulls": "Bao gồm các Công việc không có bộ giá trị"
 		},
 		"create": {
 			"title": "Bộ lọc đã lưu mới",
@@ -432,7 +418,6 @@
 			"success": "Bộ lọc đã được lưu thành công."
 		},
 		"query": {
-			"title": "Truy vấn",
 			"placeholder": "Nhập tìm kiếm hoặc truy vấn bộ lọc…",
 			"help": {
 				"intro": "Để lọc tác vụ, bạn có thể sử dụng các cú pháp truy vấn tương tự như SQL. Các trường có sẵn trong bộ lọc bao gồm:",
@@ -483,7 +468,6 @@
 	"migrate": {
 		"title": "Nhập từ các thiết bị khác",
 		"titleService": "Nhập dữ liệu của bạn từ {name} vào Vikunja",
-		"import": "Nhập dữ liệu của bạn vào Vikunja",
 		"description": "Nhấp vào Logo của một trong các dịch vụ bên dưới để bắt đầu.",
 		"descriptionDo": "Vikunja sẽ nhập tất cả danh sách, công việc, ghi chú, lời nhắc và tệp mà bạn có quyền truy cập.",
 		"authorize": "Để cho phép Vikunja truy cập vào Tài khoản {name} của bạn, hãy nhấp vào nút bên dưới.",
@@ -502,7 +486,6 @@
 		"manage": "Quản lý nhãn",
 		"description": "Bấm vào một nhãn để chỉnh sửa. Bạn có thể chỉnh sửa các nhãn do bạn tạo, bạn có thể sử dụng tất cả các nhãn liên kết với tác vụ thuộc về dự án mà bạn có quyền truy cập.",
 		"newCTA": "Bạn không có nhãn nào cả.",
-		"search": "Gõ để tìm kiếm nhãn…",
 		"create": {
 			"header": "Nhãn mới",
 			"title": "Tạo một mới",
@@ -511,7 +494,6 @@
 		},
 		"edit": {
 			"header": "Chỉnh sửa nhãn",
-			"forbidden": "Bạn không có quyền được sửa nhãn này do bạn không sở hữu nó.",
 			"success": "Nhãn được cập nhật thành công."
 		},
 		"deleteSuccess": "Nhãn đã được xóa thành công.",
@@ -519,7 +501,6 @@
 			"title": "Tiêu đề",
 			"titlePlaceholder": "Tên nhãn ở đây…",
 			"description": "Mô tả",
-			"descriptionPlaceholder": "Mô tả nhãn",
 			"color": "Màu sắc"
 		}
 	},
@@ -542,16 +523,13 @@
 		"delete": "Xóa",
 		"confirm": "Xác nhận",
 		"cancel": "Hủy",
-		"refresh": "Làm mới",
 		"disable": "Vô hiệu hóa",
 		"copy": "Sao chép vào khay nhớ tạm",
 		"copyError": "Sao chép vào bảng ghi tạm không thành công",
-		"search": "Tìm Kiếm",
 		"searchPlaceholder": "Gõ để tìm kiếm…",
 		"previous": "Trước đó",
 		"next": "Tiếp theo",
 		"poweredBy": "Được cung cấp bởi Vikunja",
-		"info": "Thông tin",
 		"create": "Tạo",
 		"doit": "Thực hiện!",
 		"saving": "Đang lưu…",
@@ -584,15 +562,12 @@
 		},
 		"editor": {
 			"edit": "Chỉnh sửa",
-			"done": "Hoàn thành",
 			"heading1": "Tiêu đề 1",
 			"heading1Tooltip": "Đề mục lớn.",
 			"heading2": "Tiêu đề 2",
 			"heading2Tooltip": "Đề mục trung.",
 			"heading3": "Tiêu đề 3",
 			"heading3Tooltip": "Đề mục nhỏ.",
-			"headingSmaller": "Tiêu đề nhỏ hơn",
-			"headingBigger": "Tiêu đề lớn hơn",
 			"bold": "In đậm",
 			"italic": "In nghiêng",
 			"strikethrough": "Gạch ngang",
@@ -603,17 +578,13 @@
 			"quoteTooltip": "Chụp lại trích dẫn.",
 			"bulletList": "Danh sách gạch đầu dòng",
 			"bulletListTooltip": "Tạo một danh sách gạch đầu dòng đơn giản.",
-			"unorderedList": "Danh sách không được xắp xếp",
 			"orderedList": "Danh sách được xắp xếp",
 			"orderedListTooltip": "Tạo một danh sách được đánh số.",
-			"cleanBlock": "Làm sạch Khối",
 			"link": "Liên kết",
 			"image": "Ảnh",
 			"imageTooltip": "Tải một hình ảnh từ máy tính của bạn.",
 			"horizontalRule": "Dòng kẻ ngang",
 			"horizontalRuleTooltip": "Chia nhỏ một phần.",
-			"sideBySide": "Chia đôi cửa sổ",
-			"guide": "Hướng dẫn",
 			"text": "Văn bản",
 			"textTooltip": "Bắt đầu nhập với văn bản thuần.",
 			"taskList": "Danh sách tác vụ",
@@ -719,20 +690,16 @@
 		}
 	},
 	"task": {
-		"task": "Công việc",
 		"new": "Tạo một tác vụ",
-		"delete": "Xóa công việc này",
 		"createSuccess": "Công việc đã được tạo thành công.",
 		"addReminder": "Thêm một nhắc nhở…",
 		"doneSuccess": "Công việc đã được đánh dấu Hoàn thành.",
 		"undoneSuccess": "Công việc đã được bỏ đánh dấu Hoàn thành.",
 		"undo": "Hoàn tác",
-		"openDetail": "Xem chi tiết công việc",
 		"checklistTotal": "{checked} trong số {total} công việc",
 		"checklistAllDone": "{total} coogn việc",
 		"show": {
 			"titleCurrent": "Công việc hiện tại",
-			"titleDates": "Công việc từ {from} cho đến {to}",
 			"overdue": "Hiển thị công việc quá hạn",
 			"fromuntil": "Công việc từ {from} cho đến {until}",
 			"select": "Chọn khoảng ngày",
@@ -752,7 +719,6 @@
 			"deleteSuccess": "Công việc đã được xóa.",
 			"belongsToProject": "Tác vụ này thuộc về dự án '{project}'",
 			"due": "Đến hạn {at}",
-			"closePopup": "Đóng cửa sổ",
 			"organization": "Tổ chức",
 			"management": "Quản lý",
 			"dateAndTime": "Ngày và giờ",
@@ -822,7 +788,6 @@
 			"delete": "Xóa tệp đính kèm",
 			"deleteTooltip": "Xóa tệp đính kèm này",
 			"deleteText1": "Bạn có chắc chắn muốn xóa tệp đính kèm {filename} không?",
-			"copyUrl": "Sao chép URL",
 			"copyUrlTooltip": "Sao chép url của tệp đính kèm này để sử dụng trong văn bản",
 			"setAsCover": "Tạo ảnh bìa",
 			"unsetAsCover": "Gỡ ảnh bìa",
@@ -849,8 +814,7 @@
 			"1week": "1 tuần"
 		},
 		"description": {
-			"placeholder": "Viết mô tả, gõ '/' để hiển thị các lựa chọn…",
-			"empty": "Chưa có mô tả."
+			"placeholder": "Viết mô tả, gõ '/' để hiển thị các lựa chọn…"
 		},
 		"assignee": {
 			"placeholder": "Chỉ định một người…",
@@ -862,7 +826,6 @@
 			"placeholder": "Nhập để thêm nhãn mới…",
 			"createPlaceholder": "Thêm nhãn mới này",
 			"addSuccess": "Nhãn đã được thêm thành công.",
-			"createSuccess": "Nhãn đã được thêm thành công.",
 			"removeSuccess": "Nhãn đã được gỡ ra.",
 			"addCreateSuccess": "Nhãn đã được tạo và thêm vào.",
 			"delete": {
@@ -927,8 +890,6 @@
 			"hours": "Giờ",
 			"days": "Ngày",
 			"weeks": "Tuần",
-			"months": "Tháng",
-			"years": "Năm",
 			"invalidAmount": "Vui lòng nhập nhiều hơn 0."
 		},
 		"quickAddMagic": {
@@ -1060,7 +1021,6 @@
 		"unarchive": "Bỏ lưu trữ",
 		"setBackground": "Cài đặt nền",
 		"share": "Chia sẻ",
-		"newProject": "Dự án mới",
 		"createProject": "Tạo dự án",
 		"cantArchiveIsDefault": "Bạn không thể lưu trữ dự án này bởi đây là dự án mặc định.",
 		"cantDeleteIsDefault": "Bạn không thể xóa bởi đây là dự án mặc định.",
@@ -1205,7 +1165,6 @@
 			"hours": "giờ|giờ",
 			"days": "ngày|ngày",
 			"weeks": "tuần|tuần",
-			"months": "tháng|tháng",
 			"years": "năm|năm"
 		}
 	}

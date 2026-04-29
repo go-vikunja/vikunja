@@ -14,10 +14,12 @@
 		>
 			<span
 				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : ''"
+				class="is-inline-flex is-align-items-center"
 			>
 				<FancyCheckbox
 					v-model="task.done"
 					:disabled="isArchived || disabled || !canMarkAsDone"
+					:aria-label="$t('task.detail.markAsDone', {task: task.title})"
 					@update:modelValue="markAsDone"
 					@click.stop
 				/>

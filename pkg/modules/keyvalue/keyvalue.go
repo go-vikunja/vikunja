@@ -18,6 +18,7 @@ package keyvalue
 
 import (
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue/memory"
 	"code.vikunja.io/api/pkg/modules/keyvalue/redis"
 )
@@ -40,6 +41,9 @@ var store Storage
 func InitStorage() {
 	switch config.KeyvalueType.GetString() {
 	case "redis":
+		if !config.RedisEnabled.GetBool() {
+			log.Fatalf("keyvalue.type is set to %q but redis is not enabled. Please set redis.enabled to true in your configuration.", config.KeyvalueType.GetString())
+		}
 		store = redis.NewStorage()
 	case "memory":
 		fallthrough
@@ -106,6 +110,34 @@ func Remember(key string, fn func() (any, error)) (any, error) {
 
 	if err := Put(key, val); err != nil {
 		return nil, err
+	}
+
+	return val, nil
+}
+
+// RememberValue is a type-safe version of Remember that uses GetWithValue
+// for proper deserialization (required for Redis gob-encoded values).
+// T must be a concrete (non-pointer) type.
+func RememberValue[T any](key string, fn func() (T, error)) (T, error) {
+	var cached T
+	exists, err := GetWithValue(key, &cached)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	if exists {
+		return cached, nil
+	}
+
+	val, err := fn()
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	if err := Put(key, val); err != nil {
+		var zero T
+		return zero, err
 	}
 
 	return val, nil

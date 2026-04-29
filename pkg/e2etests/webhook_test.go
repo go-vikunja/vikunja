@@ -54,9 +54,14 @@ func TestTaskUpdateWebhookE2E(t *testing.T) {
 
 	// Reload fixtures to start from a clean state, then insert
 	// a fresh webhook for project 1 listening to "task.updated".
+	// Delete the fixture webhook id=1 first — it targets example.com
+	// which responds with 405, so leaving it in place would produce
+	// noisy retry errors for every task.updated delivery.
 	require.NoError(t, db.LoadFixtures())
 	s := db.NewSession()
 	defer s.Close()
+	_, err = s.Where("id = ?", 1).Delete(&models.Webhook{})
+	require.NoError(t, err)
 	_, err = s.Insert(&models.Webhook{
 		TargetURL:   ts.URL,
 		Events:      []string{"task.updated"},

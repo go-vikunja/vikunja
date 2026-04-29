@@ -44,6 +44,7 @@ export interface ConfigState {
 		},
 	},
 	publicTeamsEnabled: boolean,
+	enabledProFeatures: string[],
 }
 
 export const useConfigStore = defineStore('config', () => {
@@ -83,6 +84,7 @@ export const useConfigStore = defineStore('config', () => {
 			},
 		},
 		publicTeamsEnabled: false,
+		enabledProFeatures: [],
 	})
 
 	const migratorsEnabled = computed(() => state.availableMigrators?.length > 0)
@@ -100,6 +102,10 @@ export const useConfigStore = defineStore('config', () => {
 		Object.assign(state, config)
 	}
 
+	function isProFeatureEnabled(name: string): boolean {
+		return state.enabledProFeatures?.includes(name) ?? false
+	}
+
 	async function update(): Promise<boolean> {
 		const HTTP = HTTPFactory()
 		const {data: config} = await HTTP.get('info')
@@ -108,7 +114,7 @@ export const useConfigStore = defineStore('config', () => {
 			throw new InvalidApiUrlProvidedError()
 		}
 
-		setConfig(objectToCamelCase(config))
+		setConfig(objectToCamelCase(config) as ConfigState)
 		return !!config
 	}
 
@@ -118,6 +124,7 @@ export const useConfigStore = defineStore('config', () => {
 		migratorsEnabled,
 		apiBase,
 		setConfig,
+		isProFeatureEnabled,
 		update,
 	}
 

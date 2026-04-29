@@ -1,5 +1,119 @@
 basePath: /api/v1
 definitions:
+  admin.CreateUserBody:
+    properties:
+      email:
+        description: The user's email address
+        maxLength: 250
+        type: string
+      is_admin:
+        description: Mark the new user as an instance admin.
+        type: boolean
+      language:
+        description: The language of the new user. Must be a valid IETF BCP 47 language
+          code and exist in Vikunja.
+        type: string
+      name:
+        description: The full name of the new user. Optional.
+        type: string
+      password:
+        description: The user's password in clear text. Only used when registering
+          the user. The maximum limi is 72 bytes, which may be less than 72 characters.
+          This is due to the limit in the bcrypt hashing algorithm used to store passwords
+          in Vikunja.
+        maxLength: 72
+        minLength: 8
+        type: string
+      skip_email_confirm:
+        description: Activate the new user immediately without email confirmation.
+        type: boolean
+      username:
+        description: The user's username. Cannot contain anything that looks like
+          an url or whitespaces.
+        maxLength: 250
+        minLength: 3
+        type: string
+    type: object
+  admin.IsAdminPatch:
+    properties:
+      is_admin:
+        description: Pointer to distinguish "omitted" from false; an empty body would
+          silently demote otherwise.
+        type: boolean
+    type: object
+  admin.Overview:
+    properties:
+      license:
+        $ref: '#/definitions/license.Info'
+      projects:
+        type: integer
+      shares:
+        $ref: '#/definitions/admin.ShareCounts'
+      tasks:
+        type: integer
+      teams:
+        type: integer
+      users:
+        type: integer
+    type: object
+  admin.OwnerPatch:
+    properties:
+      owner_id:
+        type: integer
+    type: object
+  admin.ShareCounts:
+    properties:
+      link_shares:
+        type: integer
+      team_shares:
+        type: integer
+      user_shares:
+        type: integer
+    type: object
+  admin.StatusPatch:
+    properties:
+      status:
+        allOf:
+        - $ref: '#/definitions/user.Status'
+        description: Pointer to distinguish "omitted" from StatusActive; an empty
+          body would silently re-enable otherwise.
+    type: object
+  admin.User:
+    properties:
+      auth_provider:
+        type: string
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      email:
+        description: The user's email address.
+        maxLength: 250
+        type: string
+      id:
+        description: The unique, numeric id of this user.
+        type: integer
+      is_admin:
+        type: boolean
+      issuer:
+        type: string
+      name:
+        description: The full name of the user.
+        type: string
+      status:
+        $ref: '#/definitions/user.Status'
+      subject:
+        type: string
+      updated:
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
+        type: string
+      username:
+        description: The username of the user. Is always unique.
+        maxLength: 250
+        minLength: 1
+        type: string
+    type: object
   auth.Token:
     properties:
       token:
@@ -147,6 +261,37 @@ definitions:
   handler.AuthURL:
     properties:
       url:
+        type: string
+    type: object
+  license.Feature:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - FeatureUnknown
+    - FeatureAdminPanel
+    - FeatureTimeTracking
+    - FeatureAuditLogs
+  license.Info:
+    properties:
+      expires_at:
+        type: string
+      features:
+        items:
+          type: string
+        type: array
+      instance_id:
+        type: string
+      last_check_failed:
+        type: boolean
+      licensed:
+        type: boolean
+      max_users:
+        type: integer
+      validated_at:
         type: string
     type: object
   microsofttodo.Migration:
@@ -1270,6 +1415,12 @@ definitions:
         type: string
       scope:
         type: string
+      totp_passcode:
+        description: |-
+          TOTPPasscode is required when the resolved user has TOTP enabled.
+          Clients must restart the OIDC flow and populate this field after
+          receiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.
+        type: string
     type: object
   todoist.Migration:
     properties:
@@ -1329,6 +1480,18 @@ definitions:
         maxLength: 250
         type: string
     type: object
+  user.Status:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - StatusActive
+    - StatusEmailConfirmationRequired
+    - StatusDisabled
+    - StatusAccountLocked
   user.TOTP:
     properties:
       enabled:
@@ -1514,6 +1677,8 @@ definitions:
       id:
         description: The unique, numeric id of this user.
         type: integer
+      is_admin:
+        type: boolean
       is_local_user:
         type: boolean
       name:
@@ -1585,6 +1750,10 @@ definitions:
       enabled_background_providers:
         items:
           type: string
+        type: array
+      enabled_pro_features:
+        items:
+          $ref: '#/definitions/license.Feature'
         type: array
       frontend_url:
         type: string
@@ -1805,6 +1974,272 @@ paths:
       summary: User Avatar
       tags:
       - user
+  /admin/overview:
+    get:
+      description: Returns per-instance counts (users, projects, shares) plus version
+        and license info. Instance-admin only, gated by the admin_panel feature.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/admin.Overview'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Admin overview
+      tags:
+      - admin
+  /admin/projects:
+    get:
+      description: Paginated list of every project on the instance, regardless of
+        ownership.
+      parameters:
+      - description: Page number, defaults to 1.
+        in: query
+        name: page
+        type: integer
+      - description: Items per page, defaults to the service setting.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search projects by title, description or identifier.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Project'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: List projects (admin)
+      tags:
+      - admin
+  /admin/projects/{id}/owner:
+    patch:
+      consumes:
+      - application/json
+      description: Reassign a project's owner. The existing update endpoint doesn't
+        allow owner changes — this is the admin-only escape hatch.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New owner
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.OwnerPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Reassign project owner (admin)
+      tags:
+      - admin
+  /admin/users:
+    get:
+      description: Paginated list of all users on the instance. Supports search by
+        username/email. Exposes fields hidden from the normal user API (is_admin,
+        status).
+      parameters:
+      - description: Search string matched against username and email.
+        in: query
+        name: s
+        type: string
+      - description: Page number, defaults to 1.
+        in: query
+        name: page
+        type: integer
+      - description: Items per page, defaults to the service setting.
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/admin.User'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: List users (admin)
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      description: Create a new local user account. Respects the admin-only fields
+        `is_admin` and `skip_email_confirm`. The public registration toggle is bypassed.
+      parameters:
+      - description: The user to create
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.CreateUserBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/admin.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a user (admin)
+      tags:
+      - admin
+  /admin/users/{id}:
+    delete:
+      description: Delete a user. With mode=now the user is removed immediately. With
+        mode=scheduled (the default, matching the CLI) the user receives a confirmation
+        email and is scheduled for deletion just like a self-initiated account deletion.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 'Deletion mode: ''now'' for immediate deletion, ''scheduled''
+          (default) to trigger the email-confirmation self-deletion flow.'
+        in: query
+        name: mode
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a user (admin)
+      tags:
+      - admin
+  /admin/users/{id}/admin:
+    patch:
+      consumes:
+      - application/json
+      description: Toggle the instance-admin flag on a user. Demoting the last remaining
+        admin is refused with 400.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New admin value
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.IsAdminPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/admin.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Promote or demote a user (admin)
+      tags:
+      - admin
+  /admin/users/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Change a user's status without requiring them to log in.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.StatusPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/admin.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Set a user's status (admin)
+      tags:
+      - admin
   /auth/openid/{provider}/callback:
     post:
       consumes:
@@ -1832,6 +2267,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/auth.Token'
+        "412":
+          description: Invalid totp passcode.
+          schema:
+            $ref: '#/definitions/models.Message'
         "500":
           description: Internal error
           schema:
@@ -2727,8 +3166,8 @@ paths:
     put:
       consumes:
       - application/x-www-form-urlencoded
-      description: Imports all projects, tasks, labels, checklists, and comments from
-        a WeKan board JSON export into Vikunja.
+      description: Imports all projects, tasks, labels, checklists, comments, and
+        attachments from a WeKan board JSON export into Vikunja.
       parameters:
       - description: The WeKan board JSON export file.
         in: formData
@@ -3960,6 +4399,61 @@ paths:
       summary: Get one link shares for a project
       tags:
       - sharing
+  /projects/{project}/tasks/by-index/{index}:
+    get:
+      consumes:
+      - application/json
+      description: Returns a single task identified by its per-project index. Useful
+        when resolving human-readable references like "PROJ-42" to a canonical task
+        object. Note that task indexes are reassigned when a task is moved between
+        projects, so long-lived references should use the returned task id instead.
+      parameters:
+      - description: The project ID
+        in: path
+        name: project
+        required: true
+        type: integer
+      - description: The task's per-project index
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: If set to `subtasks`, Vikunja will fetch only tasks which do
+          not have subtasks and then in a second step, will fetch all of these subtasks.
+          This may result in more tasks than the pagination limit being returned,
+          but all subtasks will be present in the response. You can only set this
+          to `subtasks`.
+        in: query
+        name: expand
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The task
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Invalid project ID or index
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the task
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get one task by its per-project index
+      tags:
+      - task
   /projects/{project}/views:
     get:
       consumes:

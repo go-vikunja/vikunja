@@ -18,7 +18,7 @@ export const saveCollapsedBucketState = (
 ) => {
 	const state = getAllState()
 	state[projectId] = collapsedBuckets
-	for (const bucketId in state[projectId]) {
+	for (const bucketId of Object.keys(state[projectId] ?? {})) {
 		if (!state[projectId][bucketId]) {
 			delete state[projectId][bucketId]
 		}

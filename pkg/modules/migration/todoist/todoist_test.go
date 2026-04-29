@@ -17,6 +17,8 @@
 package todoist
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
@@ -47,6 +49,20 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 	require.NoError(t, err)
 	exampleFile, err := os.ReadFile("../testimage.jpg")
 	require.NoError(t, err)
+
+	// Serve the attachment from a local test server so the test does not depend
+	// on an external host being reachable. The SSRF-safe client used by
+	// migration.DownloadFile rejects non-routable IPs by default, so allow them
+	// for the duration of this test.
+	prevAllowNonRoutable := config.OutgoingRequestsAllowNonRoutableIPs.GetBool()
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+	t.Cleanup(func() {
+		config.OutgoingRequestsAllowNonRoutableIPs.Set(prevAllowNonRoutable)
+	})
+	attachmentServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(exampleFile)
+	}))
+	t.Cleanup(attachmentServer.Close)
 
 	makeTestItem := func(id, projectId string, hasDueDate, hasLabels, done bool) *item {
 		item := &item{
@@ -245,7 +261,7 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 					FileName:    "file.md",
 					FileType:    "text/plain",
 					FileSize:    12345,
-					FileURL:     "https://vikunja.io/testimage.jpg", // Using an image which we are hosting, so it'll still be up
+					FileURL:     attachmentServer.URL,
 					UploadState: "completed",
 				},
 				Posted: time1,
@@ -558,9 +574,10 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 						Attachments: []*models.TaskAttachment{
 							{
 								File: &files.File{
-									Name:        "file.md",
-									Mime:        "text/plain",
-									Size:        12345,
+									Name: "file.md",
+									Mime: "text/plain",
+									// Size from content, not API metadata (GHSA-qh78-rvg3-cv54 defense-in-depth).
+									Size:        uint64(len(exampleFile)),
 									Created:     time1,
 									FileContent: exampleFile,
 								},

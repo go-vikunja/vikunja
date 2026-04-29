@@ -59,6 +59,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
@@ -78,6 +79,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/migration/wekan"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	adminapi "code.vikunja.io/api/pkg/routes/api/v1/admin"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -535,6 +537,7 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/projects/:project/tasks", taskHandler.CreateWeb)
 	a.GET("/tasks/:projecttask", taskHandler.ReadOneWeb)
+	a.GET("/projects/:project/tasks/by-index/:index", taskHandler.ReadOneWeb)
 	a.GET("/tasks", taskCollectionHandler.ReadAllWeb)
 	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:projecttask", taskHandler.UpdateWeb)
@@ -795,6 +798,29 @@ func registerAPIRoutes(a *echo.Group) {
 		},
 	}
 	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
+
+	admin := a.Group("/admin",
+		RequireFeature(license.FeatureAdminPanel),
+		RequireInstanceAdmin(),
+	)
+	adminProjectListHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.AdminProjectList{}
+		},
+	}
+	adminUserListHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &adminapi.UserList{}
+		},
+	}
+	admin.GET("/overview", adminapi.GetOverview)
+	admin.GET("/users", adminUserListHandler.ReadAllWeb)
+	admin.POST("/users", adminapi.CreateUser)
+	admin.PATCH("/users/:id/admin", adminapi.PatchAdmin)
+	admin.PATCH("/users/:id/status", adminapi.PatchStatus)
+	admin.DELETE("/users/:id", adminapi.DeleteUser)
+	admin.GET("/projects", adminProjectListHandler.ReadAllWeb)
+	admin.PATCH("/projects/:id/owner", adminapi.PatchProjectOwner)
 
 	// Plugin routes
 	if config.PluginsEnabled.GetBool() {

@@ -84,19 +84,15 @@ func (share *LinkSharing) GetID() int64 {
 	return share.ID
 }
 
-// GetLinkShareFromClaims builds a link sharing object from jwt claims
-func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error) {
-	projectID, is := claims["project_id"].(float64)
-	if !is {
-		return nil, &ErrLinkShareTokenInvalid{}
-	}
-
-	permissionFloat, is := claims["permission"].(float64)
-	if !is {
-		return nil, &ErrLinkShareTokenInvalid{}
-	}
-
-	id, is := claims["id"].(float64)
+// GetLinkShareFromClaims resolves a link share JWT against the DB on every
+// call so that deletion or permission downgrades take effect immediately
+// instead of persisting for the (up to 72h) JWT TTL. The `permission` and
+// `sharedByID` claims NewLinkShareJWTAuthtoken writes are intentionally
+// ignored: the DB row is authoritative.
+//
+// Fixes GHSA-96q5-xm3p-7m84 / CVE-2026-35594.
+func GetLinkShareFromClaims(s *xorm.Session, claims jwt.MapClaims) (share *LinkSharing, err error) {
+	idFloat, is := claims["id"].(float64)
 	if !is {
 		return nil, &ErrLinkShareTokenInvalid{}
 	}
@@ -104,18 +100,27 @@ func GetLinkShareFromClaims(claims jwt.MapClaims) (share *LinkSharing, err error
 	if !is {
 		return nil, &ErrLinkShareTokenInvalid{}
 	}
-	sharedByID, is := claims["sharedByID"].(float64)
-	if !is {
+
+	share, err = GetLinkShareByID(s, int64(idFloat))
+	if err != nil {
+		// Only a missing row means the token is stale; everything else
+		// (DB down, etc.) must bubble up as 500 instead of 400.
+		if IsErrProjectShareDoesNotExist(err) {
+			return nil, &ErrLinkShareTokenInvalid{}
+		}
+		return nil, err
+	}
+
+	// Defense in depth against a future bug that mints a token with a
+	// mismatched id/hash pair — the JWT signature alone already prevents
+	// tampering at rest.
+	if share.Hash != hash {
 		return nil, &ErrLinkShareTokenInvalid{}
 	}
 
-	share = &LinkSharing{}
-	share.ID = int64(id)
-	share.Hash = hash
-	share.ProjectID = int64(projectID)
-	share.Permission = Permission(permissionFloat)
-	share.SharedByID = int64(sharedByID)
-	return
+	// Never leak the hashed password through the auth object.
+	share.Password = ""
+	return share, nil
 }
 
 func (share *LinkSharing) getUserID() int64 {

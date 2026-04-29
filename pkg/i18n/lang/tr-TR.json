@@ -70,9 +70,6 @@
 				"subject": "\"%[1]s\" (%[2]s) için hatırlatma",
 				"message": "Bu, \"%[1]s\" (%[2]s) görevi için dostça bir hatırlatmadır."
 			},
-			"comment": {
-				"mentioned_message": "**%[1]s**, bir yorumda sizden bahsetti:"
-			},
 			"assigned": {
 				"subject_to_assignee": "\"%[1]s\" (%[2]s) olarak atandınız",
 				"message_to_assignee": "%[1]s sizi \"%[2]s\" olarak atadı",
@@ -84,9 +81,6 @@
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) silindi",
 				"message": "%[1]s, \"%[2]s\" (%[3]s) görevini sildi"
-			},
-			"mentioned": {
-				"message": "**%[1]s**, bir görevde sizden bahsetti:"
 			},
 			"overdue": {
 				"subject": "\"%[1]s\" (%[2]s) görevi zaman aşımına uğradı",

@@ -595,7 +595,7 @@ defineExpose({
 .pdf-preview-iframe {
 	inline-size: 100%;
 	max-inline-size: calc(100% - 4rem);
-	block-size: calc(100vh - var(--modal-content-spacing-tablet));
+	block-size: calc(100vh - 40px);
 	border: none;
 	margin: 0 auto;
 	display: block;

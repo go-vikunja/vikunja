@@ -15,12 +15,16 @@ import LabelTaskModel from '@/models/labelTask'
 import LabelTask from '@/models/labelTask'
 import TaskModel from '@/models/task'
 import LabelModel from '@/models/label'
+import TaskReminderModel from '@/models/taskReminder'
 
 import type {ILabel} from '@/modelTypes/ILabel'
 import type {ITask} from '@/modelTypes/ITask'
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
+
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 import {setModuleLoading} from '@/stores/helper'
 import {useLabelStore} from '@/stores/labels'
@@ -36,6 +40,23 @@ import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 interface MatchedAssignee extends IUser {
 	match: string,
+}
+
+export function buildDefaultRemindersForQuickAdd(
+	defaults: readonly ITaskReminder[] | undefined,
+	dueDate: string | null,
+): ITaskReminder[] {
+	if (!dueDate) {
+		return []
+	}
+	if (!defaults || defaults.length === 0) {
+		return []
+	}
+	return defaults.map(d => new TaskReminderModel({
+		reminder: null,
+		relativePeriod: d.relativePeriod,
+		relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
+	}))
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
@@ -483,6 +504,10 @@ export const useTaskStore = defineStore('task', () => {
 			index,
 		})
 		task.repeatAfter = parsedTask.repeats
+		task.reminders = buildDefaultRemindersForQuickAdd(
+			authStore.settings.frontendSettings.quickAddDefaultReminders,
+			dueDate,
+		)
 
 		if (parsedTask.repeats?.type === REPEAT_TYPES.Months && parsedTask.repeats?.amount === 1) {
 			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH
