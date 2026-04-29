@@ -91,9 +91,12 @@ test.describe('Project History', () => {
 			},
 		})
 
-		// Reload and verify section is hidden
+		// Reload and wait for the user settings to be fetched before asserting
+		const userResponsePromise = page.waitForResponse(resp =>
+			resp.url().includes('/api/v1/user') && resp.request().method() === 'GET' && resp.status() === 200,
+		)
 		await page.reload()
-		await page.waitForLoadState('networkidle')
+		await userResponsePromise
 		await expect(page.locator('body')).not.toContainText('Last viewed')
 	})
 
@@ -124,8 +127,11 @@ test.describe('Project History', () => {
 		await visitProjectsToBuildHistory(page, projects)
 
 		// Verify section is hidden
+		const hiddenResponsePromise = page.waitForResponse(resp =>
+			resp.url().includes('/api/v1/user') && resp.request().method() === 'GET' && resp.status() === 200,
+		)
 		await page.goto('/')
-		await page.waitForLoadState('networkidle')
+		await hiddenResponsePromise
 		await expect(page.locator('body')).not.toContainText('Last viewed')
 
 		// Re-enable the setting
@@ -135,9 +141,12 @@ test.describe('Project History', () => {
 			},
 		})
 
-		// Reload and verify section is visible again
+		// Reload and wait for the user settings to be fetched before asserting
+		const visibleResponsePromise = page.waitForResponse(resp =>
+			resp.url().includes('/api/v1/user') && resp.request().method() === 'GET' && resp.status() === 200,
+		)
 		await page.reload()
-		await page.waitForLoadState('networkidle')
+		await visibleResponsePromise
 		await expect(page.locator('body')).toContainText('Last viewed')
 	})
 })
