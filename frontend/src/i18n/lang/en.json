@@ -71,7 +71,6 @@
       "resetPassword": "Reset your password",
       "resetPasswordAction": "Send me a password reset link",
       "resetPasswordSuccess": "Check your inbox! You should have an email with instructions on how to reset your password.",
-      "passwordsDontMatch": "Passwords don't match",
       "confirmEmailSuccess": "You successfully confirmed your email! You can log in now.",
       "totpTitle": "Two Factor Authentication Code",
       "totpPlaceholder": "e.g. 123456",
@@ -111,10 +110,8 @@
       "title": "Settings",
       "newPasswordTitle": "Update Your Password",
       "newPassword": "New password",
-      "newPasswordConfirm": "New password confirmation",
       "currentPassword": "Current password",
       "currentPasswordPlaceholder": "Your current password",
-      "passwordsDontMatch": "The new password and its confirmation don't match.",
       "passwordUpdateSuccess": "The password was successfully updated.",
       "updateEmailTitle": "Update Your Email Address",
       "updateEmailNew": "New email address",
@@ -135,6 +132,11 @@
         "weekStart": "Week starts on",
         "weekStartSunday": "Sunday",
         "weekStartMonday": "Monday",
+        "weekStartTuesday": "Tuesday",
+        "weekStartWednesday": "Wednesday",
+        "weekStartThursday": "Thursday",
+        "weekStartFriday": "Friday",
+        "weekStartSaturday": "Saturday",
         "language": "Language",
         "defaultProject": "Default project",
         "defaultView": "Default view",
@@ -224,7 +226,6 @@
       },
       "appearance": {
         "title": "Color Scheme",
-        "setSuccess": "Saved change of color scheme to {colorScheme}",
         "colorScheme": {
           "light": "Light",
           "system": "System",
@@ -253,7 +254,6 @@
         "expired": "This token has expired {ago}.",
         "tokenCreatedSuccess": "Here is your new api token: {token}",
         "tokenCreatedNotSeeAgain": "Store it in a secure location, you won't see it again!",
-        "selectAll": "Select all",
         "presets": {
           "title": "Quick presets",
           "readOnly": "Read only",
@@ -557,16 +557,7 @@
       "titlePlaceholder": "The saved filter title goes here…",
       "description": "Description",
       "descriptionPlaceholder": "Add a description for this filter here, hit '/' for more options…",
-      "includeNulls": "Include Tasks which don't have a value set",
-      "requireAll": "Require all filters to be true for a task to show up",
-      "showDoneTasks": "Show Done Tasks",
-      "sortAlphabetically": "Sort Alphabetically",
-      "enablePriority": "Enable Filter By Priority",
-      "enablePercentDone": "Enable Filter By Progress",
-      "dueDateRange": "Due Date Range",
-      "startDateRange": "Start Date Range",
-      "endDateRange": "End Date Range",
-      "reminderRange": "Reminder Date Range"
+      "includeNulls": "Include Tasks which don't have a value set"
     },
     "create": {
       "title": "New Saved Filter",
@@ -584,7 +575,6 @@
       "success": "The filter was saved successfully."
     },
     "query": {
-      "title": "Query",
       "placeholder": "Type a search or filter query…",
       "help": {
         "intro": "To filter tasks, you can use a query syntax similar to SQL. The available fields for filtering include:",
@@ -660,7 +650,6 @@
   "migrate": {
     "title": "Import from other services",
     "titleService": "Import your data from {name} into Vikunja",
-    "import": "Import your data into Vikunja",
     "description": "Click on the logo of one of the third-party services below to get started.",
     "descriptionDo": "Vikunja will import all lists, tasks, notes, reminders and files you have access to.",
     "authorize": "To authorize Vikunja to access your {name} Account, click the button below.",
@@ -677,7 +666,6 @@
       "description": "Import tasks from a CSV file with custom column mapping.",
       "uploadDescription": "Select a CSV file to import. The file should contain task data with headers in the first row.",
       "selectFile": "Select CSV file",
-      "columnMapping": "Column Mapping",
       "columnMappingDescription": "Map each column in your CSV file to a task attribute. Vikunja has auto-detected the most likely mappings. The preview below will update automatically when you change settings.",
       "parsingOptions": "Parsing Options",
       "delimiter": "Delimiter",
@@ -687,10 +675,8 @@
       "example": "e.g.",
       "preview": "Preview",
       "previewDescription": "Showing first 5 of {count} tasks that will be imported.",
-      "previewErrors": "{count} rows had parsing errors and will be skipped.",
       "import": "Import Tasks",
       "untitled": "Untitled Task",
-      "completed": "Completed",
       "ignore": "Ignore",
       "delimiters": {
         "comma": "Comma (,)",
@@ -705,7 +691,6 @@
     "manage": "Manage labels",
     "description": "Click on a label to edit it. You can edit all labels you created, you can use all labels which are associated with a task to whose project you have access.",
     "newCTA": "You currently do not have any labels.",
-    "search": "Type to search for a label…",
     "create": {
       "header": "New label",
       "title": "Create a label",
@@ -714,7 +699,6 @@
     },
     "edit": {
       "header": "Edit Label",
-      "forbidden": "You are not allowed to edit this label because you don't own it.",
       "success": "The label was successfully updated."
     },
     "deleteSuccess": "The label was successfully deleted.",
@@ -722,7 +706,6 @@
       "title": "Title",
       "titlePlaceholder": "The label title goes here…",
       "description": "Description",
-      "descriptionPlaceholder": "Label description",
       "color": "Color"
     }
   },
@@ -751,16 +734,13 @@
     "delete": "Delete",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "refresh": "Refresh",
     "disable": "Disable",
     "copy": "Copy to clipboard",
     "copyError": "Copy to clipboard failed",
-    "search": "Search",
     "searchPlaceholder": "Type to search…",
     "previous": "Previous",
     "next": "Next",
     "poweredBy": "Powered by Vikunja",
-    "info": "Info",
     "create": "Create",
     "doit": "Do it!",
     "saving": "Saving…",
@@ -799,15 +779,12 @@
     },
     "editor": {
       "edit": "Edit",
-      "done": "Done",
       "heading1": "Heading 1",
       "heading1Tooltip": "Big section heading.",
       "heading2": "Heading 2",
       "heading2Tooltip": "Medium section heading.",
       "heading3": "Heading 3",
       "heading3Tooltip": "Smaller section header.",
-      "headingSmaller": "Heading Smaller",
-      "headingBigger": "Heading Bigger",
       "bold": "Bold",
       "italic": "Italic",
       "strikethrough": "Strikethrough",
@@ -818,17 +795,13 @@
       "quoteTooltip": "Capture a quote.",
       "bulletList": "Bullet list",
       "bulletListTooltip": "Create a simple bullet list.",
-      "unorderedList": "Unordered list",
       "orderedList": "Ordered list",
       "orderedListTooltip": "Create a list with numbering.",
-      "cleanBlock": "Clean Block",
       "link": "Link",
       "image": "Image",
       "imageTooltip": "Upload an image from your computer.",
       "horizontalRule": "Horizontal Rule",
       "horizontalRuleTooltip": "Divide a section.",
-      "sideBySide": "Side By Side",
-      "guide": "Guide",
       "text": "Text",
       "textTooltip": "Just start typing with plain text.",
       "taskList": "Task list",
@@ -937,9 +910,7 @@
     }
   },
   "task": {
-    "task": "Task",
     "new": "Create a task",
-    "delete": "Delete this task",
     "createSuccess": "The task was successfully created.",
     "addReminder": "Add a reminder…",
     "doneSuccess": "The task was successfully marked as done.",
@@ -947,12 +918,10 @@
     "readOnlyCheckbox": "You only have read access to this task and cannot mark it as done.",
     "movedToProject": "The task was moved to {project}.",
     "undo": "Undo",
-    "openDetail": "Open task detail view",
     "checklistTotal": "{checked} of {total} tasks",
     "checklistAllDone": "{total} tasks",
     "show": {
       "titleCurrent": "Current Tasks",
-      "titleDates": "Tasks from {from} until {to}",
       "noDates": "Show tasks without date",
       "overdue": "Show overdue tasks",
       "fromuntil": "Tasks from {from} until {until}",
@@ -980,7 +949,6 @@
       "belongsToProject": "This task belongs to project '{project}'",
       "back": "Back to project",
       "due": "Due {at}",
-      "closePopup": "Close popup",
       "closeTaskDetail": "Close task detail",
       "title": "Task detail",
       "markAsDone": "Mark '{task}' as done",
@@ -1058,7 +1026,6 @@
       "delete": "Delete attachment",
       "deleteTooltip": "Delete this attachment",
       "deleteText1": "Are you sure you want to delete the attachment {filename}?",
-      "copyUrl": "Copy URL",
       "copyUrlTooltip": "Copy the url of this attachment for usage in text",
       "setAsCover": "Make cover",
       "unsetAsCover": "Remove cover",
@@ -1090,8 +1057,7 @@
       "1week": "1 week"
     },
     "description": {
-      "placeholder": "Enter a description, hit '/' for more options…",
-      "empty": "No description available yet."
+      "placeholder": "Enter a description, hit '/' for more options…"
     },
     "assignee": {
       "placeholder": "Type to assign a user…",
@@ -1103,7 +1069,6 @@
       "placeholder": "Type to add a label…",
       "createPlaceholder": "Add this as new label",
       "addSuccess": "The label has been added successfully.",
-      "createSuccess": "The label has been created successfully.",
       "removeSuccess": "The label has been removed successfully.",
       "addCreateSuccess": "The label has been created and added successfully.",
       "delete": {
@@ -1168,8 +1133,6 @@
       "hours": "Hours",
       "days": "Days",
       "weeks": "Weeks",
-      "months": "Months",
-      "years": "Years",
       "invalidAmount": "Please enter more than 0."
     },
     "quickAddMagic": {
@@ -1323,7 +1286,6 @@
     "unarchive": "Un-Archive",
     "setBackground": "Background settings",
     "share": "Share",
-    "newProject": "New project",
     "createProject": "Create project",
     "cantArchiveIsDefault": "You cannot archive this because it is your default project.",
     "cantDeleteIsDefault": "You cannot delete this because it is your default project.",
@@ -1482,7 +1444,6 @@
       "hours": "hour|hours",
       "days": "day|days",
       "weeks": "week|weeks",
-      "months": "month|months",
       "years": "year|years"
     }
   },
@@ -1494,9 +1455,6 @@
     },
     "overview": {
       "shares": "Shares",
-      "linkShares": "Link shares",
-      "teamShares": "Team shares",
-      "userShares": "User shares",
       "linkSharesShort": "link",
       "teamSharesShort": "team",
       "userSharesShort": "user",

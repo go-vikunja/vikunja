@@ -66,12 +66,6 @@
 				"subject": "Muistutus \"%[1]s\" (%[2]s)",
 				"message": "Tämä on ystävällinen muistutus tehtävästä \"%[1]s\" (%[2]s)."
 			},
-			"comment": {
-				"mentioned_message": "**%[1]s** mainitsi sinut kommentissa:"
-			},
-			"mentioned": {
-				"message": "**%[1]s** mainitsi sinut tehtävässä:"
-			},
 			"overdue": {
 				"subject": "Tehtävä \"%[1]s\" (%[2]s) on erääntynyt",
 				"multiple_subject": "Myöhässä olevat tehtäväsi",

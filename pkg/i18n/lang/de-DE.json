@@ -72,8 +72,7 @@
 			},
 			"comment": {
 				"subject": "Re: %[1]s (%[2]s)",
-				"mentioned_subject": "%[1]s hat dich in einem Kommentar zu „%[2]s“ (%[3]s) erwähnt",
-				"mentioned_message": "**%[1]s** hat dich in einem Kommentar erwähnt:"
+				"mentioned_subject": "%[1]s hat dich in einem Kommentar zu „%[2]s“ (%[3]s) erwähnt"
 			},
 			"assigned": {
 				"subject_to_assignee": "Du wurdest „%[1]s“ (%[2]s) zugewiesen",
@@ -89,8 +88,7 @@
 			},
 			"mentioned": {
 				"subject_new": "%[1]s hat dich in einer neuen Aufgabe „%[2]s“ (%[3]s) erwähnt",
-				"subject": "%[1]s hat dich in einer Aufgabe „%[2]s“ (%[3]s) erwähnt",
-				"message": "**%[1]s** hat dich in einer Aufgabe erwähnt:"
+				"subject": "%[1]s hat dich in einer Aufgabe „%[2]s“ (%[3]s) erwähnt"
 			},
 			"overdue": {
 				"subject": "Aufgabe „%[1]s“ (%[2]s) ist überfällig",
@@ -164,10 +162,7 @@
 				"left_comment": "%[1]s hat kommentiert",
 				"mentioned_you_comment": "%[1]s hat dich in einem Kommentar erwähnt",
 				"mentioned_you": "%[1]s hat dich erwähnt",
-				"mentioned_you_new_task": "%[1]s hat dich in einer neuen Aufgabe erwähnt",
-				"assigned_you": "%[1]s hat dich zugewiesen",
-				"assigned_themselves": "%[1]s hat sich selbst zugewiesen",
-				"assigned_user": "%[1]s hat %[2]s zugewiesen"
+				"mentioned_you_new_task": "%[1]s hat dich in einer neuen Aufgabe erwähnt"
 			}
 		}
 	},

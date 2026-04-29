@@ -71,7 +71,6 @@
 			"resetPassword": "Setze dein Passwort zurück",
 			"resetPasswordAction": "Sende mir einen Link zum Zurücksetzen des Passworts",
 			"resetPasswordSuccess": "Überprüfe deinen Posteingang! Du solltest eine E-Mail mit Anweisungen zum Zurücksetzen deines Passwortes haben.",
-			"passwordsDontMatch": "Passwörter stimmen nicht überein",
 			"confirmEmailSuccess": "Du hast deine E-Mail-Adresse erfolgreich bestätigt! Du kannst dich jetzt einloggen.",
 			"totpTitle": "Zwei-Faktor-Authentifizierungscode",
 			"totpPlaceholder": "z.B. 123456",
@@ -111,10 +110,8 @@
 			"title": "Einstellungen",
 			"newPasswordTitle": "Aktualisiere dein Passwort",
 			"newPassword": "Neues Passwort",
-			"newPasswordConfirm": "Bestätigung des neuen Passworts",
 			"currentPassword": "Aktuelles Passwort",
 			"currentPasswordPlaceholder": "Dein aktuelles Passwort",
-			"passwordsDontMatch": "Das neue Passwort und seine Bestätigung stimmen nicht überein.",
 			"passwordUpdateSuccess": "Das Passwort wurde erfolgreich aktualisiert.",
 			"updateEmailTitle": "Aktualisiere deine E-Mail-Adresse",
 			"updateEmailNew": "Neue E-Mail-Adresse",
@@ -224,7 +221,6 @@
 			},
 			"appearance": {
 				"title": "Farbschema",
-				"setSuccess": "Änderung des Farbschemas auf {colorScheme} gespeichert",
 				"colorScheme": {
 					"light": "Hell",
 					"system": "System",
@@ -253,7 +249,6 @@
 				"expired": "Dieses Token ist {ago} abgelaufen.",
 				"tokenCreatedSuccess": "Hier ist dein neues API Token: {token}",
 				"tokenCreatedNotSeeAgain": "Speichere es an einem sicheren Ort, du wirst es nicht mehr sehen!",
-				"selectAll": "Alle auswählen",
 				"presets": {
 					"title": "Voreinstellungen",
 					"readOnly": "Nur Leserechte",
@@ -556,16 +551,7 @@
 			"titlePlaceholder": "Einen gespeicherten Filternamen eingeben …",
 			"description": "Beschreibung",
 			"descriptionPlaceholder": "Gib eine Beschreibung für diesen Filter ein, drücke '/' für mehr Optionen…",
-			"includeNulls": "Aufgaben ohne Werte einbeziehen",
-			"requireAll": "Alle Filterkriterien müssen erfüllt sein, damit eine Aufgabe angezeigt wird",
-			"showDoneTasks": "Erledigte Aufgaben anzeigen",
-			"sortAlphabetically": "Alphabetisch sortieren",
-			"enablePriority": "Filter nach Priorität aktivieren",
-			"enablePercentDone": "Filter nach Fortschritt aktivieren",
-			"dueDateRange": "Fälligkeitsbereich",
-			"startDateRange": "Startdatumsbereich",
-			"endDateRange": "Enddatumsbereich",
-			"reminderRange": "Erinnerungs-Datumsbereich"
+			"includeNulls": "Aufgaben ohne Werte einbeziehen"
 		},
 		"create": {
 			"title": "Neuer gespeicherter Filter",
@@ -583,7 +569,6 @@
 			"success": "Filter gespeichert."
 		},
 		"query": {
-			"title": "Abfrage",
 			"placeholder": "Gib eine Suche oder Filterabfrage ein…",
 			"help": {
 				"intro": "Um Aufgaben zu filtern, kannst du eine SQL-ähnliche Abfragesyntax verwenden. Du kannst die folgenden Felder in deinem Filter verwenden:",
@@ -659,7 +644,6 @@
 	"migrate": {
 		"title": "Aus anderen Diensten importieren",
 		"titleService": "Importiere deine Daten von {name} in Vikunja",
-		"import": "Importiere deine Daten in Vikunja",
 		"description": "Klicke auf das Logo eines der unten aufgeführten Drittanbieterdienste, um loszulegen.",
 		"descriptionDo": "Vikunja importiert alle Listen, Aufgaben, Notizen, Erinnerungen und Dateien, auf die du Zugriff hast.",
 		"authorize": "Ermögliche Vikunja den Zugriff auf deinen Account bei {name}, indem du auf die Schaltfläche unten klickst.",
@@ -676,7 +660,6 @@
 			"description": "Importiere Aufgaben aus einer CSV-Datei mit eigener Spaltenzuordnung.",
 			"uploadDescription": "Wähle eine CSV-Datei, um sie zu importieren. Die Datei sollte Aufgabendaten mit Kopfzeilen in der ersten Zeile enthalten.",
 			"selectFile": "CSV-Datei auswählen",
-			"columnMapping": "Spaltenzuordnung",
 			"columnMappingDescription": "Du kannst jede Spalte in der CSV-Datei einem Task-Attribut zu. Vikunja hat die wahrscheinlichsten Zuordnungen automatisch erkannt. Die Vorschau unten wird automatisch aktualisiert, wenn Du die Einstellungen änderst.",
 			"parsingOptions": "Parsing-Optionen",
 			"delimiter": "Trennzeichen",
@@ -686,10 +669,8 @@
 			"example": "z.B.",
 			"preview": "Vorschau",
 			"previewDescription": "Die ersten 5 von {count} Aufgaben werden angezeigt.",
-			"previewErrors": "{count} Zeilen hatten Fehler beim Parsen und werden übersprungen.",
 			"import": "Aufgaben importieren",
 			"untitled": "Unbenannte Aufgabe",
-			"completed": "Abgeschlossen",
 			"ignore": "Ignorieren",
 			"delimiters": {
 				"comma": "Komma (,)",
@@ -704,7 +685,6 @@
 		"manage": "Label verwalten",
 		"description": "Klicke auf ein Label um es zu editieren. Du kannst alle Labels, welche du erstellt hast, editieren. Du kannst alle Labels, welche mit einer Aufgabe verknüpft sind, auf die du Zugriff hast, benutzen.",
 		"newCTA": "Du hast momentan keine Labels.",
-		"search": "Beginne zu schreiben, um nach einem Label zu suchen…",
 		"create": {
 			"header": "Neues Label",
 			"title": "Label erstellen",
@@ -713,7 +693,6 @@
 		},
 		"edit": {
 			"header": "Label bearbeiten",
-			"forbidden": "Du kannst dieses Label nicht bearbeiten, da es nicht dir gehört.",
 			"success": "Das Label wurde erfolgreich aktualisiert."
 		},
 		"deleteSuccess": "Das Label wurde erfolgreich gelöscht.",
@@ -721,7 +700,6 @@
 			"title": "Titel",
 			"titlePlaceholder": "Gib einen Labelnamen an…",
 			"description": "Beschreibung",
-			"descriptionPlaceholder": "Labelbeschreibung",
 			"color": "Farbe"
 		}
 	},
@@ -748,16 +726,13 @@
 		"delete": "Löschen",
 		"confirm": "Bestätigen",
 		"cancel": "Abbrechen",
-		"refresh": "Neu laden",
 		"disable": "Deaktivieren",
 		"copy": "In Zwischenablage kopieren",
 		"copyError": "Kopieren in Zwischenablage fehlgeschlagen",
-		"search": "Suchen",
 		"searchPlaceholder": "Beginne zu schreiben, um zu suchen…",
 		"previous": "Vorherige",
 		"next": "Weiter",
 		"poweredBy": "Powered by Vikunja",
-		"info": "Info",
 		"create": "Erstellen",
 		"doit": "Tu es!",
 		"saving": "Speichern…",
@@ -790,15 +765,12 @@
 		},
 		"editor": {
 			"edit": "Bearbeiten",
-			"done": "Fertig",
 			"heading1": "Überschrift 1",
 			"heading1Tooltip": "Große Überschrift.",
 			"heading2": "Überschrift 2",
 			"heading2Tooltip": "Mittlere Überschrift.",
 			"heading3": "Überschrift 3",
 			"heading3Tooltip": "Kleine Überschrift.",
-			"headingSmaller": "Kleinere Überschrift",
-			"headingBigger": "Grössere Überschrift",
 			"bold": "Fett",
 			"italic": "Kursiv",
 			"strikethrough": "Durchgestrichen",
@@ -809,17 +781,13 @@
 			"quoteTooltip": "Erfasse ein Zitat.",
 			"bulletList": "Stichpunktliste",
 			"bulletListTooltip": "Erstelle eine einfache Stichpunktliste.",
-			"unorderedList": "Ungeordnete Liste",
 			"orderedList": "Geordnete Liste",
 			"orderedListTooltip": "Erstelle eine Liste mit Nummerierung.",
-			"cleanBlock": "Formatierung löschen",
 			"link": "Link",
 			"image": "Bild",
 			"imageTooltip": "Lade ein Bild von deinem PC hoch.",
 			"horizontalRule": "Horizontaler Strich",
 			"horizontalRuleTooltip": "Teile einen Bereich.",
-			"sideBySide": "Nebeneinander",
-			"guide": "Hilfslinie",
 			"text": "Text",
 			"textTooltip": "Einfach einen Text tippen.",
 			"taskList": "Aufgabenliste",
@@ -928,9 +896,7 @@
 		}
 	},
 	"task": {
-		"task": "Aufgabe",
 		"new": "Aufgabe erstellen",
-		"delete": "Diese Aufgabe löschen",
 		"createSuccess": "Die Aufgabe wurde erfolgreich erstellt.",
 		"addReminder": "Eine Erinnerung hinzufügen…",
 		"doneSuccess": "Die Aufgabe wurde erfolgreich als erledigt markiert.",
@@ -938,12 +904,10 @@
 		"readOnlyCheckbox": "Du hast nur Lesezugriff auf diese Aufgabe und kannst sie nicht als erledigt markieren.",
 		"movedToProject": "Die Aufgabe wurde nach {project} verschoben.",
 		"undo": "Rückgängig",
-		"openDetail": "Aufgabe in der Detailansicht anzeigen",
 		"checklistTotal": "{checked} von {total} Aufgaben",
 		"checklistAllDone": "{total} Aufgaben",
 		"show": {
 			"titleCurrent": "Aktuelle Aufgaben",
-			"titleDates": "Aufgaben von {from} bis {to}",
 			"noDates": "Aufgaben ohne Datum anzeigen",
 			"overdue": "Überfällige Aufgaben anzeigen",
 			"fromuntil": "Aufgaben von {from} bis {until}",
@@ -971,7 +935,6 @@
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
 			"due": "Fällig {at}",
-			"closePopup": "Popup schließen",
 			"scrollToBottom": "Nach unten scrollen",
 			"organization": "Organisation",
 			"management": "Verwaltung",
@@ -1046,7 +1009,6 @@
 			"delete": "Anhang löschen",
 			"deleteTooltip": "Diesen Anhang löschen",
 			"deleteText1": "Soll der Anhang {filename} gelöscht werden?",
-			"copyUrl": "URL kopieren",
 			"copyUrlTooltip": "Die URL dieses Anhangs zur Verwendung im Text kopieren",
 			"setAsCover": "Als Titelbild setzen",
 			"unsetAsCover": "Titelbild entfernen",
@@ -1078,8 +1040,7 @@
 			"1week": "1 Woche"
 		},
 		"description": {
-			"placeholder": "Gib eine Beschreibung ein, drücke '/' für mehr Optionen…",
-			"empty": "Noch keine Beschreibung vorhanden."
+			"placeholder": "Gib eine Beschreibung ein, drücke '/' für mehr Optionen…"
 		},
 		"assignee": {
 			"placeholder": "Tippe, um jemanden zuzuweisen …",
@@ -1091,7 +1052,6 @@
 			"placeholder": "Beginne zu schreiben, um ein Label hinzuzufügen…",
 			"createPlaceholder": "Dies als neues Label hinzufügen",
 			"addSuccess": "Das Label wurde erfolgreich hinzugefügt.",
-			"createSuccess": "Das Label wurde erfolgreich erstellt.",
 			"removeSuccess": "Das Label wurde erfolgreich entfernt.",
 			"addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt.",
 			"delete": {
@@ -1156,8 +1116,6 @@
 			"hours": "Stunden",
 			"days": "Tage",
 			"weeks": "Wochen",
-			"months": "Monate",
-			"years": "Jahre",
 			"invalidAmount": "Bitte mehr als 0 eingeben."
 		},
 		"quickAddMagic": {
@@ -1311,7 +1269,6 @@
 		"unarchive": "Archivierung aufheben",
 		"setBackground": "Hintergrundeinstellungen",
 		"share": "Teilen",
-		"newProject": "Neues Projekt",
 		"createProject": "Projekt erstellen",
 		"cantArchiveIsDefault": "Du kannst dieses Projekt nicht archivieren, da es dein Standardprojekt ist.",
 		"cantDeleteIsDefault": "Du kannst dieses Projekt nicht löschen, da es dein Standardprojekt ist.",
@@ -1470,7 +1427,6 @@
 			"hours": "Stunde|Stunden",
 			"days": "Tag|Tage",
 			"weeks": "Woche|Wochen",
-			"months": "Monat|Monate",
 			"years": "Jahr|Jahre"
 		}
 	}

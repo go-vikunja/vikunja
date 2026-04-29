@@ -44,7 +44,6 @@
 			"resetPassword": "Reimposta la tua password",
 			"resetPasswordAction": "Inviami il link per reimpostare la password",
 			"resetPasswordSuccess": "Controlla la tua casella di posta! Dovresti avere un'e-mail con le istruzioni su come reimpostare la password.",
-			"passwordsDontMatch": "Le password non corrispondono",
 			"confirmEmailSuccess": "Hai confermato con successo la tua e-mail! Ora puoi accedere.",
 			"totpTitle": "Codice di autenticazione a due fattori",
 			"totpPlaceholder": "es. 123456",
@@ -74,10 +73,8 @@
 			"title": "Impostazioni",
 			"newPasswordTitle": "Aggiorna la tua Password",
 			"newPassword": "Nuova password",
-			"newPasswordConfirm": "Conferma nuova password",
 			"currentPassword": "Password attuale",
 			"currentPasswordPlaceholder": "La tua password attuale",
-			"passwordsDontMatch": "La nuova password e la conferma non coincidono.",
 			"passwordUpdateSuccess": "Password aggiornata con successo.",
 			"updateEmailTitle": "Aggiorna l'indirizzo e-mail",
 			"updateEmailNew": "Nuovo indirizzo email",
@@ -167,7 +164,6 @@
 			},
 			"appearance": {
 				"title": "Tema",
-				"setSuccess": "Tema cambiato in {colorScheme}",
 				"colorScheme": {
 					"light": "Chiaro",
 					"system": "Sistema",
@@ -192,7 +188,6 @@
 				"expired": "Questo token è scaduto {ago}.",
 				"tokenCreatedSuccess": "Ecco il tuo nuovo token API: {token}",
 				"tokenCreatedNotSeeAgain": "Conservalo in un luogo sicuro, non sarà più visibile!",
-				"selectAll": "Seleziona tutto",
 				"delete": {
 					"header": "Elimina questo token",
 					"text1": "Sei sicuro di voler eliminare questo token \"{token}\"?",
@@ -465,16 +460,7 @@
 			"titlePlaceholder": "Il titolo del filtro salvato va qui…",
 			"description": "Descrizione",
 			"descriptionPlaceholder": "Aggiungi una descrizione per questo filtro, premi '/' per altre opzioni…",
-			"includeNulls": "Includi attività che non hanno un valore impostato",
-			"requireAll": "Tutti i filtri devono essere veri affinché l'attività venga mostrata",
-			"showDoneTasks": "Mostra Attività Fatte",
-			"sortAlphabetically": "Ordine alfabetico",
-			"enablePriority": "Abilita Filtro Per Priorità",
-			"enablePercentDone": "Abilita Filtro Per Progresso",
-			"dueDateRange": "Intervallo Data Di Scadenza",
-			"startDateRange": "Intervallo Data Iniziale",
-			"endDateRange": "Intervallo Data Finale",
-			"reminderRange": "Intervallo date dei promemoria"
+			"includeNulls": "Includi attività che non hanno un valore impostato"
 		},
 		"create": {
 			"title": "Nuovo Filtro Salvato",
@@ -492,7 +478,6 @@
 			"success": "Filtro salvato."
 		},
 		"query": {
-			"title": "Query",
 			"placeholder": "Digitare una ricerca o un filtro query…",
 			"help": {
 				"intro": "Per filtrare le attività, è possibile utilizzare una sintassi di query simile a SQL. I campi disponibili per il filtraggio sono:",
@@ -545,7 +530,6 @@
 	"migrate": {
 		"title": "Importa da altri servizi",
 		"titleService": "Importa i tuoi dati da {name} in Vikunja",
-		"import": "Importa i tuoi dati in Vikunja",
 		"description": "Clicca sul logo di uno dei servizi esterni qui sotto per iniziare.",
 		"descriptionDo": "Vikunja importerà tutti gli elenchi, le attività, le note, i promemoria e i file a cui hai accesso.",
 		"authorize": "Per autorizzare Vikunja ad accedere al tuo account {name}, clicca il pulsante qui sotto.",
@@ -564,7 +548,6 @@
 		"manage": "Gestione etichette",
 		"description": "Clicca su un'etichetta per modificarla. Puoi modificare tutte le etichette che hai creato e utilizzare quelle associate a qualsiasi progetto a cui hai accesso.",
 		"newCTA": "Non hai nessuna etichetta.",
-		"search": "Digita per cercare un'etichetta…",
 		"create": {
 			"header": "Nuova etichetta",
 			"title": "Crea un'etichetta",
@@ -573,7 +556,6 @@
 		},
 		"edit": {
 			"header": "Modifica Etichetta",
-			"forbidden": "Non hai il permesso di modificare questa etichetta perché non è tua.",
 			"success": "L'etichetta è stata aggiornata correttamente."
 		},
 		"deleteSuccess": "L'etichetta è stata eliminata correttamente.",
@@ -581,7 +563,6 @@
 			"title": "Titolo",
 			"titlePlaceholder": "Il titolo dell'etichetta va qui…",
 			"description": "Descrizione",
-			"descriptionPlaceholder": "Descrizione etichetta",
 			"color": "Colore"
 		}
 	},
@@ -608,16 +589,13 @@
 		"delete": "Elimina",
 		"confirm": "Conferma",
 		"cancel": "Annulla",
-		"refresh": "Aggiorna",
 		"disable": "Disabilita",
 		"copy": "Copia negli appunti",
 		"copyError": "Copia negli appunti fallita",
-		"search": "Cerca",
 		"searchPlaceholder": "Digita per cercare…",
 		"previous": "Precedente",
 		"next": "Successivo",
 		"poweredBy": "Creato con Vikunja",
-		"info": "Info",
 		"create": "Crea",
 		"doit": "Esegui!",
 		"saving": "Salvataggio…",
@@ -650,15 +628,12 @@
 		},
 		"editor": {
 			"edit": "Modifica",
-			"done": "Completato",
 			"heading1": "Intestazione 1",
 			"heading1Tooltip": "Titolo di sezione grande.",
 			"heading2": "Intestazione 2",
 			"heading2Tooltip": "Titolo di sezione medio.",
 			"heading3": "Intestazione 3",
 			"heading3Tooltip": "Titolo di sezione piccolo.",
-			"headingSmaller": "Intestazione Più Piccola",
-			"headingBigger": "Intestazione Più Grande",
 			"bold": "Grassetto",
 			"italic": "Corsivo",
 			"strikethrough": "Barrato",
@@ -669,17 +644,13 @@
 			"quoteTooltip": "Cattura una citazione.",
 			"bulletList": "Elenco puntato",
 			"bulletListTooltip": "Crea un semplice elenco puntato.",
-			"unorderedList": "Elenco non ordinato",
 			"orderedList": "Elenco numerato",
 			"orderedListTooltip": "Crea un elenco numerato.",
-			"cleanBlock": "Pulisci Blocco",
 			"link": "Link",
 			"image": "Immagine",
 			"imageTooltip": "Carica un'immagine dal tuo computer.",
 			"horizontalRule": "Divisore Orizzontale",
 			"horizontalRuleTooltip": "Dividi una sezione.",
-			"sideBySide": "Affianca",
-			"guide": "Guida",
 			"text": "Testo",
 			"textTooltip": "Inizia a digitare del testo semplice.",
 			"taskList": "Elenco attività",
@@ -785,21 +756,17 @@
 		}
 	},
 	"task": {
-		"task": "Attività",
 		"new": "Crea un'attività",
-		"delete": "Elimina questa attività",
 		"createSuccess": "Attività creata.",
 		"addReminder": "Aggiungi un promemoria…",
 		"doneSuccess": "Attività segnata come completata.",
 		"undoneSuccess": "Attività segnata come non completata.",
 		"movedToProject": "L'attività è stata spostata in {project}.",
 		"undo": "Annulla",
-		"openDetail": "Apri vista dettagli attività",
 		"checklistTotal": "{checked} di {total} attività",
 		"checklistAllDone": "{total} attività",
 		"show": {
 			"titleCurrent": "Attività correnti",
-			"titleDates": "Attività dal {from} al {to}",
 			"noDates": "Mostra attività senza data",
 			"overdue": "Mostra attività scadute",
 			"fromuntil": "Attività dal {from} al {until}",
@@ -823,7 +790,6 @@
 			"belongsToProject": "Questa attività appartiene al progetto '{project}'",
 			"back": "Torna al progetto",
 			"due": "Scadenza {at}",
-			"closePopup": "Chiudi popup",
 			"scrollToBottom": "Scorri in fondo",
 			"organization": "Organizza",
 			"management": "Gestisci",
@@ -896,7 +862,6 @@
 			"delete": "Elimina allegato",
 			"deleteTooltip": "Elimina questo allegato",
 			"deleteText1": "Sei sicuro di voler eliminare l'allegato {filename}?",
-			"copyUrl": "Copia URL",
 			"copyUrlTooltip": "Copia l'URL di questo allegato per usarlo nel testo",
 			"setAsCover": "Crea copertina",
 			"unsetAsCover": "Rimuovi copertina",
@@ -926,8 +891,7 @@
 			"1week": "1 settimana"
 		},
 		"description": {
-			"placeholder": "Inserisci una descrizione per questo progetto, premi '/' per altre opzioni…",
-			"empty": "Nessuna descrizione."
+			"placeholder": "Inserisci una descrizione per questo progetto, premi '/' per altre opzioni…"
 		},
 		"assignee": {
 			"placeholder": "Digita per assegnare un utente…",
@@ -939,7 +903,6 @@
 			"placeholder": "Digita per aggiungere un'etichetta…",
 			"createPlaceholder": "Aggiungi come nuova etichetta",
 			"addSuccess": "Etichetta aggiunta.",
-			"createSuccess": "Etichetta creata.",
 			"removeSuccess": "Etichetta eliminata.",
 			"addCreateSuccess": "Etichetta creata e aggiunta.",
 			"delete": {
@@ -1004,8 +967,6 @@
 			"hours": "Ore",
 			"days": "Giorni",
 			"weeks": "Settimane",
-			"months": "Mesi",
-			"years": "Anni",
 			"invalidAmount": "Inserisci più di 0."
 		},
 		"quickAddMagic": {
@@ -1158,7 +1119,6 @@
 		"unarchive": "Annulla archiviazione",
 		"setBackground": "Imposta sfondo",
 		"share": "Condividi",
-		"newProject": "Nuovo progetto",
 		"createProject": "Crea progetto",
 		"cantArchiveIsDefault": "Non puoi archiviarlo perché è il tuo progetto predefinito.",
 		"cantDeleteIsDefault": "Non puoi eliminarlo perché è il tuo progetto predefinito.",
@@ -1316,7 +1276,6 @@
 			"hours": "ora|ore",
 			"days": "giorno|giorni",
 			"weeks": "settimana|settimane",
-			"months": "mese|mesi",
 			"years": "anno|anni"
 		}
 	}

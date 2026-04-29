@@ -11,6 +11,13 @@ The project consists of:
 - `desktop/` – Electron wrapper application
 - `docs/` – Documentation website
 
+## Skills
+
+Before writing code in these areas, invoke the matching skill with the `Skill` tool. They are short checklists derived from recurring review feedback — loading them up front avoids rework.
+
+- Adding or modifying a model in `pkg/models/` (new CRUD, new or changed `Can*` methods, anything touching permissions): invoke `crudable`.
+- Creating or editing any file under `pkg/migration/`: invoke `migration`.
+
 ## Plans and Worktrees
 
 When the user asks you to create a plan to fix or implement something:
@@ -254,6 +261,7 @@ After adjusting the source string, you need to call the respective translation l
 - Go: golangci-lint per `.golangci.yml`; use goimports; wrap errors with `fmt.Errorf("...: %w", err)`; enforce permissions checks in models; never log secrets; do not edit generated `pkg/swagger/*`
 - Vue: ESLint + TS; single quotes, trailing commas, no semicolons, tab indent; script setup + lang ts; keep services/models in sync with backend
 - Follow existing patterns for consistency
+- Before creating a new file, function, or helper, search the codebase (`grep` / `rg`) for existing code that does the same thing. Prefer extending an existing helper over duplicating it. If logic overlaps an existing function significantly, reuse it.
 
 **Naming Conventions:**
 - Go: Standard Go conventions (PascalCase for exports, camelCase for private)

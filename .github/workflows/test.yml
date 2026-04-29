@@ -78,7 +78,7 @@ jobs:
         with:
           version: v2.10.1
 
-  api-check-translations:
+  check-translations:
     runs-on: ubuntu-latest
     needs: mage
     steps:
