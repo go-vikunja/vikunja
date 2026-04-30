@@ -219,6 +219,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 			"usernamefallback",
 			"forceuserinfo",
 			"requireavailability",
+			"usegroupsclaim",
 		},
 		requiredKeys...,
 	)
@@ -274,6 +275,10 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 	if err != nil {
 		log.Errorf("requireavailability is not a boolean for provider %s: %s", key, err)
 	}
+	useGroupsClaim, err := parseBoolField(pi, "usegroupsclaim")
+	if err != nil {
+		log.Errorf("usegroupsclaim is not a boolean for provider %s: %s", key, err)
+	}
 
 	provider = &Provider{
 		Name:                name,
@@ -286,6 +291,7 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		EmailFallback:       emailFallback,
 		UsernameFallback:    usernameFallback,
 		ForceUserInfo:       forceUserInfo,
+		UseGroupsClaim:      useGroupsClaim,
 		RequireAvailability: requireAvailability,
 	}
 

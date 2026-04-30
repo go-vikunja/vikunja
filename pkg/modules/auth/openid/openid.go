@@ -66,6 +66,7 @@ type Provider struct {
 	EmailFallback       bool   `json:"email_fallback"`
 	UsernameFallback    bool   `json:"username_fallback"`
 	ForceUserInfo       bool   `json:"force_user_info"`
+	UseGroupsClaim      bool   `json:"use_groups_claim"`
 	RequireAvailability bool   `json:"-"`
 	ClientSecret        string `json:"-"`
 	openIDProvider      *oidc.Provider
@@ -78,6 +79,7 @@ type claims struct {
 	PreferredUsername  string                   `json:"preferred_username"`
 	Nickname           string                   `json:"nickname"`
 	VikunjaGroups      []map[string]interface{} `json:"vikunja_groups"`
+	Groups             []string                 `json:"groups"`
 	Picture            string                   `json:"picture"`
 	ExtraSettingsLinks map[string]any           `json:"extra_settings_links"`
 }
@@ -219,9 +221,16 @@ func HandleCallback(c *echo.Context) error {
 		return err
 	}
 
-	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
+	var teamData []*models.Team
+	teamNameSuffix := provider.Name
+	if provider.UseGroupsClaim {
+		teamData = getTeamDataFromGroupsClaim(cl.Groups)
+		teamNameSuffix = ""
+	} else {
+		teamData = getTeamDataFromToken(cl.VikunjaGroups, provider)
+	}
 
-	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, provider.Name)
+	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, teamNameSuffix)
 	if err != nil {
 		return err
 	}
@@ -289,6 +298,24 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 		})
 	}
 
+	return teamData
+}
+
+// getTeamDataFromGroupsClaim converts a standard OIDC groups claim (plain string
+// slice) into Vikunja team records. The group name is used as both the display
+// name and the external ID, so it must be stable across logins. No description
+// or isPublic flag is available from this claim type.
+func getTeamDataFromGroupsClaim(groups []string) []*models.Team {
+	teamData := make([]*models.Team, 0, len(groups))
+	for _, name := range groups {
+		if name == "" {
+			continue
+		}
+		teamData = append(teamData, &models.Team{
+			Name:       name,
+			ExternalID: name,
+		})
+	}
 	return teamData
 }
 
@@ -459,6 +486,10 @@ func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 
 	if (forceUserInfo && len(cl2.VikunjaGroups) > 0) || len(cl.VikunjaGroups) == 0 {
 		cl.VikunjaGroups = cl2.VikunjaGroups
+	}
+
+	if (forceUserInfo && len(cl2.Groups) > 0) || len(cl.Groups) == 0 {
+		cl.Groups = cl2.Groups
 	}
 
 	if (forceUserInfo && len(cl2.ExtraSettingsLinks) > 0) || len(cl.ExtraSettingsLinks) == 0 {
