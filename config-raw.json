@@ -762,7 +762,7 @@
                                         {
                                             "key": "scope",
                                             "default_value": "openid email profile",
-                                            "comment": "The scope necessary to use oidc.\nIf you want to use the Feature to create and assign to Vikunja teams via oidc, you have to add the custom \"vikunja_scope\" and check [openid.md](https://vikunja.io/docs/openid/).\ne.g. scope: openid email profile vikunja_scope"
+                                            "comment": "The scope necessary to use oidc.\nIf you want to use the feature to create and assign to Vikunja teams via oidc using the custom `vikunja_groups` claim, you have to add the custom \"vikunja_scope\" and check [openid.md](https://vikunja.io/docs/openid/).\nAlternatively, if your provider emits a standard `groups` claim, enable `usegroupsclaim` instead \u2014 no custom scope is needed.\ne.g. scope: openid email profile vikunja_scope"
                                         },
                                         {
                                             "key": "usernamefallback",
@@ -783,6 +783,11 @@
                                             "key": "requireavailability",
                                             "default_value": "false",
                                             "comment": "This option requires the OpenID Connect provider to be available during Vikunja startup. When set to `true`, Vikunja will crash if it cannot connect to the provider during initialization, allowing container orchestrators like Kubernetes to handle the failure by restarting the application. This is useful in environments where you want to ensure all authentication providers are available before the application starts serving requests. Allowed value is either `true` or `false`."
+                                        },
+                                        {
+                                            "key": "usegroupsclaim",
+                                            "default_value": "false",
+                                            "comment": "When enabled, Vikunja will use the standard OIDC `groups` claim (a plain array of strings) for team synchronization instead of the custom `vikunja_groups` claim. The group name is used as both the team name and the unique external identifier, so it must be stable across logins. No provider-name suffix is appended to the team name. This improves compatibility with providers that emit standard groups out of the box (e.g. Dex, Keycloak, Google Workspace via Dex). Allowed value is either `true` or `false`."
                                         }
                                     ]
                                 }

@@ -559,6 +559,103 @@ func TestEnforceTOTPIfRequired(t *testing.T) {
 	})
 }
 
+func TestGetTeamDataFromGroupsClaim(t *testing.T) {
+	t.Run("empty slice returns empty slice", func(t *testing.T) {
+		result := getTeamDataFromGroupsClaim([]string{})
+		assert.Empty(t, result)
+	})
+
+	t.Run("nil slice returns empty slice", func(t *testing.T) {
+		result := getTeamDataFromGroupsClaim(nil)
+		assert.Empty(t, result)
+	})
+
+	t.Run("single group sets name and external ID to group name", func(t *testing.T) {
+		result := getTeamDataFromGroupsClaim([]string{"engineering"})
+		require.Len(t, result, 1)
+		assert.Equal(t, "engineering", result[0].Name)
+		assert.Equal(t, "engineering", result[0].ExternalID)
+		assert.Equal(t, "", result[0].Description)
+		assert.False(t, result[0].IsPublic)
+	})
+
+	t.Run("multiple groups are all converted", func(t *testing.T) {
+		result := getTeamDataFromGroupsClaim([]string{"engineering", "devops", "management"})
+		require.Len(t, result, 3)
+		assert.Equal(t, "engineering", result[0].Name)
+		assert.Equal(t, "engineering", result[0].ExternalID)
+		assert.Equal(t, "devops", result[1].Name)
+		assert.Equal(t, "management", result[2].Name)
+	})
+
+	t.Run("empty string entries are skipped", func(t *testing.T) {
+		result := getTeamDataFromGroupsClaim([]string{"engineering", "", "devops"})
+		require.Len(t, result, 2)
+		assert.Equal(t, "engineering", result[0].Name)
+		assert.Equal(t, "devops", result[1].Name)
+	})
+}
+
+func TestGroupsClaimTeamSync(t *testing.T) {
+	t.Run("groups claim: new team created without provider suffix", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			Email:  "other-email-address@some.service.com",
+			Groups: []string{"engineering"},
+		}
+		provider := &Provider{Name: "Dex", UseGroupsClaim: true}
+		idToken := &oidc.IDToken{Issuer: "https://dex.example.com", Subject: "12345"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+
+		teamData := getTeamDataFromGroupsClaim(cl.Groups)
+		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://dex.example.com", "")
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// Team name must be exactly the group name — no " (Dex)" suffix
+		db.AssertExists(t, "teams", map[string]interface{}{
+			"name":        "engineering",
+			"external_id": "engineering",
+			"is_public":   false,
+		}, false)
+	})
+
+	t.Run("groups claim: user removed from team when group no longer present", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user 10 is a member of external teams 14 and 15
+		u := &user.User{ID: 10}
+
+		teamData := getTeamDataFromGroupsClaim([]string{})
+		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "")
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		db.AssertMissing(t, "team_members", map[string]interface{}{
+			"team_id": 14,
+			"user_id": u.ID,
+		})
+		db.AssertMissing(t, "team_members", map[string]interface{}{
+			"team_id": 15,
+			"user_id": u.ID,
+		})
+		// Non-external team 13 must not be touched
+		db.AssertExists(t, "team_members", map[string]interface{}{
+			"team_id": 13,
+			"user_id": u.ID,
+		}, false)
+	})
+}
+
 func TestSyncUserAvatarFromOpenID(t *testing.T) {
 	t.Run("empty picture URL resets openid provider to default", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
