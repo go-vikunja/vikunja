@@ -43,7 +43,6 @@
 			"forgotPassword": "Elfelejtette a jelszavát?",
 			"resetPassword": "Jelszó visszaállítása",
 			"resetPasswordAction": "Jelszó-visszaállítási linket kérek",
-			"passwordsDontMatch": "Jelszavak nem egyeznek",
 			"confirmEmailSuccess": "Sikeresen megerősítette e-mail címét! Most már bejelentkezhet.",
 			"totpTitle": "Kétlépcsős hitelesítő kód",
 			"totpPlaceholder": "Például: 123456",
@@ -69,7 +68,6 @@
 			"title": "Beállítások",
 			"newPasswordTitle": "Jelszó módosítása",
 			"currentPasswordPlaceholder": "Az Ön aktuális jelszava",
-			"passwordsDontMatch": "Az új jelszó és a megerősítés nem egyezik.\nKérlek próbáld újra! Ügyelj a kis és nagy karakterekre!",
 			"passwordUpdateSuccess": "A jelszó módosítása megtörtént.",
 			"updateEmailTitle": "E-mail cím módosítása",
 			"updateEmailSuccess": "E-mail címe sikeresen frissítve. Küldtünk egy linket a megerősítéshez.",
@@ -100,15 +98,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "A Vikunja a CalDAV kliensekhez csatlakoztatható, hogy megtekinthesse és kezelhesse a különböző kliensektől származó összes feladatot. Írja be ezt az URL-t a kliensébe:",
 				"more": "További információ a CalDAV-ról a Vikunjában",
-				"tokens": "CalDAV Tokenek",
-				"tokensHowTo": "Jelszó helyett CalDAV Token is használható a bejelentkezéshez a fenti végponton.",
-				"createToken": "Token létrehozása",
-				"tokenCreated": "Íme a tokenje: {token}",
-				"wontSeeItAgain": "Kérjük írja le, nem fogja tudni újra megnézni.",
-				"mustUseToken": "Létre kell hoznia egy CalDAV Tokent, ha harmadik féltől származó klienssel szeretné használni. Használja a tokent jelszóként.",
-				"usernameIs": "A felhasználó neve: {0}"
+				"tokens": "CalDAV Tokenek"
 			},
 			"avatar": {
 				"title": "Profilkép",
@@ -128,7 +119,6 @@
 			},
 			"appearance": {
 				"title": "Színséma",
-				"setSuccess": "A színséma módosítása mentve a következőre: {colorScheme}",
 				"colorScheme": {
 					"light": "Világos",
 					"system": "Rendszer",
@@ -149,7 +139,6 @@
 				"expired": "Ez a token lejárt {ago}.",
 				"tokenCreatedSuccess": "Íme az új API tokenje: {token}",
 				"tokenCreatedNotSeeAgain": "Tárolja el biztonságos helyen, többé nem fogja látni!",
-				"selectAll": "Összes kijelölése",
 				"delete": {
 					"header": "Token törlése",
 					"text1": "Biztos benne, hogy törölni akarja ezt a tokent \"{token}\"?",
@@ -376,16 +365,7 @@
 			"titlePlaceholder": "A mentett szűrő címe ide kerül…",
 			"description": "Leírás",
 			"descriptionPlaceholder": "Adjon hozzá leírást ehhez a szűrőhöz, nyomja meg a „/” gombot a további lehetőségekért…",
-			"includeNulls": "Tartalmazza az olyan feladatokat, amelyeknek nincs beállított értéke",
-			"requireAll": "A feladat megjelenítéséhez minden szűrőnek igaznak kell lennie",
-			"showDoneTasks": "Elkészült feladatok megjelenítése",
-			"sortAlphabetically": "Rendezés ABC szerint",
-			"enablePriority": "Prioritás szerinti szűrés engedélyezése",
-			"enablePercentDone": "Folyamat szerinti szűrés engedélyezése",
-			"dueDateRange": "Esedékességi dátumtartomány",
-			"startDateRange": "Kezdő dátumtartomány",
-			"endDateRange": "Határidő dátumtartomány",
-			"reminderRange": "Emlékeztető dátumtartomány"
+			"includeNulls": "Tartalmazza az olyan feladatokat, amelyeknek nincs beállított értéke"
 		},
 		"create": {
 			"title": "Új mentett szűrő",
@@ -402,7 +382,6 @@
 			"success": "A szűrőt sikeresen mentette."
 		},
 		"query": {
-			"title": "Lekérdezés",
 			"placeholder": "Írjon be egy keresési, vagy szűrési lekérdezést…",
 			"help": {
 				"intro": "A feladatok szűréséhez az SQL-hez hasonló lekérdezési szintaxist használhat. A szűréshez rendelkezésre álló mezők a következők:",
@@ -449,7 +428,6 @@
 	"migrate": {
 		"title": "Importálás egy másik szolgáltatásból",
 		"titleService": "Importálja adatait a {name} - ból Vikunjába",
-		"import": "Importálja adatait a Vikunjába",
 		"description": "A kezdéshez kattintson az alábbi, harmadik féltől származó szolgáltatások egyikének logójára.",
 		"descriptionDo": "A Vikunja importálja az összes listát, feladatot, jegyzetet, emlékeztetőt és fájlt, amelyhez Ön hozzáfér.",
 		"authorize": "Ha engedélyezni szeretné Vikunja számára, hogy hozzáférjen {name} fiókjához, kattintson az alábbi gombra.",
@@ -468,7 +446,6 @@
 		"manage": "Címkék kezelése",
 		"description": "Kattintson a címkére a szerkesztéshez. Szerkesztheti az összes létrehozott címkét, használhat minden olyan címkét, amely olyan feladathoz van társítva, amelynek projektjéhez hozzáféréssel rendelkezik.",
 		"newCTA": "Jelenleg nincs egyetlen címkéd sem.",
-		"search": "Címke kereséséhez írja be…",
 		"create": {
 			"header": "Új címke",
 			"titleRequired": "Kérjük, adjon meg egy címet.",
@@ -476,7 +453,6 @@
 		},
 		"edit": {
 			"header": "Címke szerkesztése",
-			"forbidden": "Nem szerkesztheti ezt a címkét, mert nem Ön a tulajdonosa.",
 			"success": "A címke sikeresen frissítve."
 		},
 		"deleteSuccess": "A címke sikeresen eltávolítva.",
@@ -484,7 +460,6 @@
 			"title": "Cím",
 			"titlePlaceholder": "Írja be a címke címét…",
 			"description": "Leírás",
-			"descriptionPlaceholder": "Címke leírása",
 			"color": "Szín"
 		}
 	},
@@ -506,16 +481,13 @@
 		"delete": "Törlés",
 		"confirm": "Megerősítés",
 		"cancel": "Mégse",
-		"refresh": "Frissités",
 		"disable": "Letiltás",
 		"copy": "Másolás a vágólapra",
 		"copyError": "A vágólapra másolás nem sikerült",
-		"search": "Keresés",
 		"searchPlaceholder": "Írja be a kereséshez…",
 		"previous": "Előző",
 		"next": "Következő",
 		"poweredBy": "Vikunja által hajtva",
-		"info": "Információ",
 		"create": "Létrehozás",
 		"doit": "Csináljuk!",
 		"saving": "Mentés…",
@@ -547,15 +519,12 @@
 		},
 		"editor": {
 			"edit": "Szerkesztés",
-			"done": "Befejezve",
 			"heading1": "Címsor 1",
 			"heading1Tooltip": "Nagy szakasz címsora.",
 			"heading2": "Címsor 2",
 			"heading2Tooltip": "Közepes szakasz címsora.",
 			"heading3": "Címsor 3",
 			"heading3Tooltip": "Kisebb szakasz címsora.",
-			"headingSmaller": "Kisebb címsor",
-			"headingBigger": "Nagyobb címsor",
 			"bold": "Félkövér",
 			"italic": "Dőlt",
 			"strikethrough": "Áthúzott",
@@ -566,17 +535,13 @@
 			"quoteTooltip": "Rögzítsen egy idézetet.",
 			"bulletList": "Felsorolásos lista",
 			"bulletListTooltip": "Hozzon létre egy egyszerű felsoroláslistát.",
-			"unorderedList": "Rendezetlen lista",
 			"orderedList": "Rendezett lista",
 			"orderedListTooltip": "Készítsen listát számozással.",
-			"cleanBlock": "Blokk kitisztítása",
 			"link": "Hivatkozás",
 			"image": "Kép",
 			"imageTooltip": "Fájl feltöltése a számítógépről.",
 			"horizontalRule": "Vízszintes vonal",
 			"horizontalRuleTooltip": "Egy szakasz felosztása.",
-			"sideBySide": "Egymás mellett",
-			"guide": "Útmutató",
 			"text": "Szöveg",
 			"textTooltip": "Csak kezdje el a gépelést egyszerű szöveggel.",
 			"taskList": "Feladatlista",
@@ -681,18 +646,14 @@
 		}
 	},
 	"task": {
-		"task": "Feladat",
-		"delete": "Feladat törlése",
 		"createSuccess": "A feladat sikeresen létrehozva.",
 		"doneSuccess": "A feladat sikeresen meg lett jelölve elkészültként.",
 		"undoneSuccess": "A feladat sikeresen meg lett jelölve nem elkészültként.",
 		"undo": "Visszavonás",
-		"openDetail": "A feladat részletes nézetének megnyitása",
 		"checklistTotal": "{checked} / {total} feladatok",
 		"checklistAllDone": "{total} feladatok",
 		"show": {
 			"titleCurrent": "Jelenlegi feladatok",
-			"titleDates": "Feladatok {from} és {to} között",
 			"overdue": "A lejárt feladatok megjelenítése",
 			"fromuntil": "Feladatok {from} és {until} között",
 			"select": "Dátumtartomány kiválasztása",
@@ -712,7 +673,6 @@
 			"deleteSuccess": "A feladat sikeresen törölve.",
 			"belongsToProject": "Ez a feladat a(z) „{project}” projekthez tartozik",
 			"due": "Határidő {at}",
-			"closePopup": "Felugró ablak bezárása",
 			"organization": "Szervezet",
 			"management": "Menedzsment",
 			"dateAndTime": "Dátum és idő",
@@ -782,7 +742,6 @@
 			"delete": "Melléklet törlése",
 			"deleteTooltip": "Melléklet törlése",
 			"deleteText1": "Biztosan törli a {filename} mellékletet?",
-			"copyUrl": "URL másolása",
 			"copyUrlTooltip": "Másolja ki ennek a mellékletnek az URL-jét a szöveges használathoz",
 			"setAsCover": "Beállítás borítóképnek",
 			"unsetAsCover": "Borítókép eltávolítása",
@@ -808,8 +767,7 @@
 			"1week": "1 hét"
 		},
 		"description": {
-			"placeholder": "Írja be a leírást, nyomja meg a '/' gombot a további lehetőségekért…",
-			"empty": "Nem érhető el leírás."
+			"placeholder": "Írja be a leírást, nyomja meg a '/' gombot a további lehetőségekért…"
 		},
 		"assignee": {
 			"placeholder": "Gépelje be a felhasználót a hozzárendeléséhez…",
@@ -820,7 +778,6 @@
 		"label": {
 			"createPlaceholder": "Adja hozzá ezt új címkeként",
 			"addSuccess": "A címke sikeresen hozzáadva.",
-			"createSuccess": "A címke sikeresen létrehozva.",
 			"removeSuccess": "A címke sikeresen eltávolítva.",
 			"addCreateSuccess": "A címke sikeresen létrehozva és hozzáadva.",
 			"delete": {
@@ -882,8 +839,6 @@
 			"hours": "Órák",
 			"days": "Napok",
 			"weeks": "Hetek",
-			"months": "Hónapok",
-			"years": "Évek",
 			"invalidAmount": "Kérjük, adjon meg 0-nál többet."
 		},
 		"quickAddMagic": {
@@ -1013,7 +968,6 @@
 		"delete": "Törlés",
 		"unarchive": "Archiválás visszavonása",
 		"share": "Megosztás",
-		"newProject": "Új projekt",
 		"createProject": "Projekt létrehozása",
 		"cantArchiveIsDefault": "Ezt nem archiválhatja, mert ez az alapértelmezett projektje.",
 		"cantDeleteIsDefault": "Ezt nem törölheti, mert ez az alapértelmezett projektje.",
@@ -1143,7 +1097,6 @@
 			"hours": "óra|órák",
 			"days": "nap|napok",
 			"weeks": "hét|hetek",
-			"months": "hó|hónapok",
 			"years": "év|évek"
 		}
 	}

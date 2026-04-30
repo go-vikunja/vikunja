@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 
 	"github.com/labstack/echo/v5"
@@ -69,6 +70,24 @@ func HandleTesting(c *echo.Context) error {
 
 	truncate := c.QueryParam("truncate")
 	if truncate == "true" || truncate == "" {
+		// When truncating certain tables, also truncate dependent tables
+		// whose rows reference the truncated table by user/entity ID.
+		// Without foreign key cascades, stale rows would persist and
+		// pollute subsequent tests that reuse the same auto-increment IDs.
+		dependentTables := map[string][]string{
+			"users": {"notifications"},
+		}
+		if deps, ok := dependentTables[table]; ok {
+			for _, dep := range deps {
+				if err = db.RestoreAndTruncate(dep, nil); err != nil {
+					log.Errorf("Error truncating dependent table %s: %v", dep, err)
+					return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+						"error":   true,
+						"message": err.Error(),
+					})
+				}
+			}
+		}
 		err = db.RestoreAndTruncate(table, content)
 	} else {
 		err = db.Restore(table, content)
@@ -80,6 +99,17 @@ func HandleTesting(c *echo.Context) error {
 			"error":   true,
 			"message": err.Error(),
 		})
+	}
+
+	// License state is cached at startup; re-apply so tests take effect without a restart.
+	if table == "license_status" {
+		if err := license.ReloadFromCache(); err != nil {
+			log.Errorf("Error reloading license from seeded cache: %v", err)
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"error":   true,
+				"message": err.Error(),
+			})
+		}
 	}
 
 	s := db.NewSession()
@@ -95,4 +125,39 @@ func HandleTesting(c *echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, data)
+}
+
+// HandleTestingTruncateAll truncates all tables in the database
+// @Summary Truncate all tables
+// @Description Removes all data from every Vikunja table. Used by e2e tests to ensure clean state before each test. Requires the testing token.
+// @tags testing
+// @Produce json
+// @Success 200 {object} map[string]string "All tables truncated."
+// @Failure 403 {object} web.HTTPError "Forbidden"
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /test/all [delete]
+func HandleTestingTruncateAll(c *echo.Context) error {
+	token := c.Request().Header.Get("Authorization")
+	if token != config.ServiceTestingtoken.GetString() {
+		return echo.ErrForbidden
+	}
+
+	events.WaitForPendingHandlers()
+
+	if err := db.TruncateAllTables(); err != nil {
+		log.Errorf("Error truncating all tables: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error":   true,
+			"message": err.Error(),
+		})
+	}
+
+	// Reload after truncate; otherwise features enabled by a prior test outlive the now-empty license_status table.
+	if err := license.ReloadFromCache(); err != nil {
+		log.Errorf("Error reloading license after truncate: %v", err)
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "ok",
+	})
 }

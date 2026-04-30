@@ -19,6 +19,9 @@ package notifications
 import (
 	"time"
 
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
+
 	"xorm.io/xorm"
 )
 
@@ -43,6 +46,18 @@ type DatabaseNotification struct {
 	Created time.Time `xorm:"created not null" json:"created"`
 }
 
+// AfterInsert is called by XORM after the row is inserted. For transactional
+// sessions this runs during Commit(), guaranteeing the row is persisted before
+// the event fires.
+func (d *DatabaseNotification) AfterInsert() {
+	if err := events.Dispatch(&NotificationCreatedEvent{
+		NotificationID: d.ID,
+		UserID:         d.NotifiableID,
+	}); err != nil {
+		log.Errorf("Failed to dispatch notification created event for notification %d: %v", d.ID, err)
+	}
+}
+
 // TableName resolves to a better table name for notifications
 func (d *DatabaseNotification) TableName() string {
 	return "notifications"
@@ -65,6 +80,19 @@ func GetNotificationsForUser(s *xorm.Session, notifiableID int64, limit, start i
 		Where("notifiable_id = ?", notifiableID).
 		Count(&DatabaseNotification{})
 	return notifications, len(notifications), total, err
+}
+
+// GetNotificationByID returns a single notification by its ID.
+func GetNotificationByID(s *xorm.Session, id int64) (*DatabaseNotification, error) {
+	n := &DatabaseNotification{}
+	has, err := s.ID(id).Get(n)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, nil
+	}
+	return n, nil
 }
 
 func GetNotificationsForNameAndUser(s *xorm.Session, notifiableID int64, event string, subjectID int64) (notifications []*DatabaseNotification, err error) {

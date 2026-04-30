@@ -19,6 +19,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -47,8 +48,23 @@ type Token struct {
 	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 }
 
-const RefreshTokenCookieName = "vikunja_refresh_token"      //nolint:gosec // not a credential
-const refreshTokenCookiePath = "/api/v1/user/token/refresh" //nolint:gosec // not a credential
+const RefreshTokenCookieName = "vikunja_refresh_token" //nolint:gosec // not a credential
+
+// getRefreshTokenCookiePath returns the cookie path for the refresh token,
+// derived from service.publicurl.
+func getRefreshTokenCookiePath() string {
+	refreshURL := "/api/v1/user/token/refresh"
+
+	publicURL := config.ServicePublicURL.GetString()
+	u, err := url.Parse(publicURL)
+	if err != nil {
+		return refreshURL
+	}
+
+	// Extract the path component and append the refresh endpoint
+	basePath := strings.TrimRight(u.Path, "/")
+	return basePath + refreshURL
+}
 
 // SetRefreshTokenCookie sets an HttpOnly cookie containing the refresh token.
 // The cookie is path-scoped to the refresh endpoint so the browser only sends
@@ -67,7 +83,7 @@ func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 	c.SetCookie(&http.Cookie{
 		Name:     RefreshTokenCookieName,
 		Value:    token,
-		Path:     refreshTokenCookiePath,
+		Path:     getRefreshTokenCookiePath(),
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   secure,
@@ -131,11 +147,12 @@ func NewUserJWTAuthtoken(u *user.User, sessionID string) (token string, err erro
 	claims["type"] = AuthTypeUser
 	claims["id"] = u.ID
 	claims["username"] = u.Username
+	claims["is_admin"] = u.IsAdmin
 	claims["exp"] = exp
 	claims["sid"] = sessionID
 	claims["jti"] = uuid.New().String()
 
-	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))
+	return t.SignedString([]byte(config.ServiceSecret.GetString()))
 }
 
 // NewLinkShareJWTAuthtoken creates a new jwt token from a link share
@@ -156,7 +173,7 @@ func NewLinkShareJWTAuthtoken(share *models.LinkSharing) (token string, err erro
 	claims["exp"] = exp
 
 	// Generate encoded token and send it as response.
-	return t.SignedString([]byte(config.ServiceJWTSecret.GetString()))
+	return t.SignedString([]byte(config.ServiceSecret.GetString()))
 }
 
 // GetAuthFromClaims returns a web.Auth object from jwt claims
@@ -184,12 +201,70 @@ func GetAuthFromClaims(c *echo.Context) (a web.Auth, err error) {
 	}
 	typ := int(typFloat)
 	if typ == AuthTypeLinkShare && config.ServiceEnableLinkSharing.GetBool() {
-		return models.GetLinkShareFromClaims(claims)
+		s := db.NewSession()
+		defer s.Close()
+		return models.GetLinkShareFromClaims(s, claims)
 	}
 	if typ == AuthTypeUser {
 		return user.GetUserFromClaims(claims)
 	}
 	return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid JWT token.")
+}
+
+// ValidateAPITokenString looks up an API token by its raw string, checks expiry,
+// and returns the token and its owner. This is the shared validation logic used
+// by both the HTTP middleware and WebSocket auth.
+func ValidateAPITokenString(tokenString string) (*models.APIToken, *user.User, error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	token, err := models.GetTokenFromTokenString(s, tokenString)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if time.Now().After(token.ExpiresAt) {
+		return nil, nil, fmt.Errorf("API token %d expired on %s", token.ID, token.ExpiresAt.String())
+	}
+
+	u, err := user.GetUserByID(s, token.OwnerID)
+	if err != nil {
+		if user.IsErrUserStatusError(err) {
+			return nil, nil, fmt.Errorf("API token %d owner account is disabled or locked", token.ID)
+		}
+		return nil, nil, err
+	}
+
+	return token, u, nil
+}
+
+// GetUserIDFromToken parses a raw JWT token string and returns the user ID.
+// Only regular user tokens are accepted (not link shares).
+// Returns 0 and an error if the token is invalid.
+func GetUserIDFromToken(tokenString string) (int64, error) {
+	token, err := jwt.Parse(tokenString, func(_ *jwt.Token) (any, error) {
+		return []byte(config.ServiceSecret.GetString()), nil
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return 0, jwt.ErrTokenInvalidClaims
+	}
+
+	typ, ok := claims["type"].(float64)
+	if !ok || int(typ) != AuthTypeUser {
+		return 0, jwt.ErrTokenInvalidClaims
+	}
+
+	userIDFloat, ok := claims["id"].(float64)
+	if !ok {
+		return 0, jwt.ErrTokenInvalidClaims
+	}
+
+	return int64(userIDFloat), nil
 }
 
 func CreateUserWithRandomUsername(s *xorm.Session, uu *user.User) (u *user.User, err error) {
@@ -215,4 +290,96 @@ func CreateUserWithRandomUsername(s *xorm.Session, uu *user.User) (u *user.User,
 	// And create their project
 	err = models.CreateNewProjectForUser(s, u)
 	return
+}
+
+// RefreshResult holds the result of a successful session refresh.
+type RefreshResult struct {
+	AccessToken     string
+	NewRefreshToken string
+	ExpiresIn       int64
+	IsLongSession   bool
+	SessionID       string
+}
+
+// RefreshSession looks up a session by its raw refresh token, validates it,
+// rotates the refresh token, fetches the user, and generates a new JWT.
+// It handles its own DB session (open/commit/rollback).
+//
+// On user status errors (disabled/locked), the session is deleted before
+// returning the error so the caller can handle cleanup (e.g. clearing cookies).
+func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	session, err := models.GetSessionByRefreshToken(s, rawRefreshToken)
+	if err != nil {
+		_ = s.Rollback()
+		if models.IsErrSessionNotFound(err) {
+			return nil, echo.NewHTTPError(http.StatusUnauthorized, "Invalid or expired refresh token.")
+		}
+		return nil, err
+	}
+
+	maxAge := time.Duration(config.ServiceJWTTTL.GetInt64()) * time.Second
+	if session.IsLongSession {
+		maxAge = time.Duration(config.ServiceJWTTTLLong.GetInt64()) * time.Second
+	}
+	if time.Since(session.LastActive) > maxAge {
+		if _, err := s.Where("id = ?", session.ID).Delete(&models.Session{}); err != nil {
+			_ = s.Rollback()
+			return nil, err
+		}
+		if err := s.Commit(); err != nil {
+			return nil, err
+		}
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "Session expired.")
+	}
+
+	if err := models.UpdateSessionLastActive(s, session.ID); err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	newRawToken, err := models.RotateRefreshToken(s, session)
+	if err != nil {
+		_ = s.Rollback()
+		if models.IsErrSessionNotFound(err) {
+			return nil, echo.NewHTTPError(http.StatusUnauthorized, "Refresh token already used.")
+		}
+		return nil, err
+	}
+
+	u, err := user.GetUserByID(s, session.UserID)
+	if err != nil {
+		if user.IsErrUserStatusError(err) {
+			if _, delErr := s.Where("id = ?", session.ID).Delete(&models.Session{}); delErr != nil {
+				_ = s.Rollback()
+				return nil, delErr
+			}
+			if commitErr := s.Commit(); commitErr != nil {
+				return nil, commitErr
+			}
+			return nil, err
+		}
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	accessToken, err := NewUserJWTAuthtoken(u, session.ID)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	if err := s.Commit(); err != nil {
+		return nil, err
+	}
+
+	return &RefreshResult{
+		AccessToken:     accessToken,
+		NewRefreshToken: newRawToken,
+		ExpiresIn:       config.ServiceJWTTTLShort.GetInt64(),
+		IsLongSession:   session.IsLongSession,
+		SessionID:       session.ID,
+	}, nil
 }

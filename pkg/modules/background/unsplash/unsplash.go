@@ -19,6 +19,7 @@ package unsplash
 import (
 	"bytes"
 	"context"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -40,6 +41,10 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 )
+
+func init() {
+	gob.Register(Photo{})
+}
 
 const (
 	unsplashAPIURL = `https://api.unsplash.com/`
@@ -103,7 +108,7 @@ func doGet(url string, result ...interface{}) (err error) {
 	}
 
 	req.Header.Add("Authorization", "Client-ID "+config.BackgroundsUnsplashAccessToken.GetString())
-	hc := http.Client{}
+	hc := http.Client{Timeout: 10 * time.Second}
 	resp, err := hc.Do(req) // #nosec G704 -- URL is constructed from hardcoded Unsplash API base
 	if err != nil {
 		return
@@ -126,7 +131,7 @@ func getImageID(fullURL string) string {
 
 // Gets an unsplash photo either from cache or directly from the unsplash api
 func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
-	result, err := keyvalue.Remember(cachePrefix+photoID, func() (any, error) {
+	p, err := keyvalue.RememberValue(cachePrefix+photoID, func() (Photo, error) {
 		log.Debugf("Image information for unsplash photo %s not cached, requesting from unsplash...", photoID)
 		photo := &Photo{}
 		err := doGet("photos/"+photoID, photo)
@@ -135,8 +140,6 @@ func getUnsplashPhotoInfoByID(photoID string) (photo *Photo, err error) {
 	if err != nil {
 		return nil, err
 	}
-
-	p := result.(Photo)
 
 	return &p, nil
 }

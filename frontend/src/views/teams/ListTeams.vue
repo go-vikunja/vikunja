@@ -12,21 +12,24 @@
 		</XButton>
 
 		<h1>{{ $t('team.title') }}</h1>
-		<ul
+		<Card
 			v-if="teams.length > 0"
-			class="teams box"
+			:padding="false"
+			:has-content="false"
 		>
-			<li
-				v-for="team in teams"
-				:key="team.id"
-			>
-				<RouterLink :to="{name: 'teams.edit', params: {id: team.id}}">
-					<p>
-						{{ team.name }}
-					</p>
-				</RouterLink>
-			</li>
-		</ul>
+			<ul class="teams">
+				<li
+					v-for="team in teams"
+					:key="team.id"
+				>
+					<RouterLink :to="{name: 'teams.edit', params: {id: team.id}}">
+						<p>
+							{{ team.name }}
+						</p>
+					</RouterLink>
+				</li>
+			</ul>
+		</Card>
 		<p
 			v-else-if="!teamService.loading"
 			class="has-text-centered has-text-grey is-italic"
@@ -43,6 +46,7 @@
 import {ref, shallowReactive} from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import Card from '@/components/misc/Card.vue'
 import TeamService from '@/services/team'
 import { useTitle } from '@/composables/useTitle'
 
@@ -59,7 +63,9 @@ teamService.getAll().then((result) => {
 <style lang="scss" scoped>
 ul.teams {
   padding: 0;
+  margin-block-start: 0;
   margin-inline-start: 0;
+  border-radius: $radius;
   overflow: hidden;
 
   li {

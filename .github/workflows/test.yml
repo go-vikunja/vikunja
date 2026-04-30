@@ -78,7 +78,7 @@ jobs:
         with:
           version: v2.10.1
 
-  api-check-translations:
+  check-translations:
     runs-on: ubuntu-latest
     needs: mage
     steps:
@@ -101,10 +101,18 @@ jobs:
         db:
           - sqlite
           - postgres
+          - mariadb
           - mysql
     services:
+      migration-smoke-db-mariadb:
+        image: ${{ matrix.db == 'mariadb' && 'mariadb:12@sha256:f54db0cb3ccfe9431aba6d08c65a1763c499789b116b4cb651dd7fcf325965b3' || '' }}
+        env:
+          MYSQL_ROOT_PASSWORD: vikunjatest
+          MYSQL_DATABASE: vikunjatest
+        ports:
+          - 3306:3306
       migration-smoke-db-mysql:
-        image: mariadb:12@sha256:f54db0cb3ccfe9431aba6d08c65a1763c499789b116b4cb651dd7fcf325965b3
+        image: ${{ matrix.db == 'mysql' && 'mysql:8@sha256:da906917ca4ace3ba55538b7c2ee97a9bc865ef14a4b6920b021f0249d603f3d' || '' }}
         env:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
@@ -128,7 +136,7 @@ jobs:
           name: vikunja_bin
       - name: run migration
         env:
-          VIKUNJA_DATABASE_TYPE: ${{ matrix.db }}
+          VIKUNJA_DATABASE_TYPE: ${{ (matrix.db == 'mariadb' || matrix.db == 'mysql') && 'mysql' || matrix.db }}
           VIKUNJA_DATABASE_PATH: ./vikunja-migration-test.db
           VIKUNJA_DATABASE_USER: ${{ matrix.db == 'postgres' && 'postgres' || 'root' }}
           VIKUNJA_DATABASE_PASSWORD: vikunjatest
@@ -173,24 +181,22 @@ jobs:
           - sqlite-in-memory
           - sqlite
           - postgres
+          - mariadb
           - mysql
           - paradedb
         test:
           - feature
           - web
-          - e2e-api
-        exclude:
-          - db: sqlite
-            test: e2e-api
-          - db: postgres
-            test: e2e-api
-          - db: mysql
-            test: e2e-api
-          - db: paradedb
-            test: e2e-api
     services:
+      db-mariadb:
+        image: ${{ matrix.db == 'mariadb' && 'mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8' || '' }}
+        env:
+          MYSQL_ROOT_PASSWORD: vikunjatest
+          MYSQL_DATABASE: vikunjatest
+        ports:
+          - 3306:3306
       db-mysql:
-        image: ${{ matrix.db == 'mysql' && 'mariadb:12@sha256:5b6a1eac15b85b981a61afb89aea2a22bf76b5f58809d05f0bcc13ab6ec44cb8' || '' }}
+        image: ${{ matrix.db == 'mysql' && 'mysql:8@sha256:da906917ca4ace3ba55538b7c2ee97a9bc865ef14a4b6920b021f0249d603f3d' || '' }}
         env:
           MYSQL_ROOT_PASSWORD: vikunjatest
           MYSQL_DATABASE: vikunjatest
@@ -236,8 +242,8 @@ jobs:
       - name: test
         env:
           VIKUNJA_TESTS_USE_CONFIG: ${{ matrix.db != 'sqlite-in-memory' && 1 || 0 }}
-          VIKUNJA_DATABASE_TYPE: ${{ matrix.db == 'paradedb' && 'postgres' || matrix.db }}
-          VIKUNJA_DATABASE_USER: ${{ matrix.db == 'mysql' && 'root' || 'postgres' }}
+          VIKUNJA_DATABASE_TYPE: ${{ (matrix.db == 'paradedb' && 'postgres') || ((matrix.db == 'mariadb' || matrix.db == 'mysql') && 'mysql') || matrix.db }}
+          VIKUNJA_DATABASE_USER: ${{ (matrix.db == 'mariadb' || matrix.db == 'mysql') && 'root' || 'postgres' }}
           VIKUNJA_DATABASE_PASSWORD: vikunjatest
           VIKUNJA_DATABASE_DATABASE: vikunjatest
           VIKUNJA_DATABASE_SSLMODE: disable
@@ -255,6 +261,48 @@ jobs:
           touch frontend/dist/index.html
           chmod +x mage-static
           ./mage-static test:${{ matrix.test }}
+
+  test-caldav:
+    runs-on: ubuntu-latest
+    needs:
+      - mage
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Download Mage Binary
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: mage_bin
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+      - name: test
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
+          chmod +x mage-static
+          ./mage-static test:caldav
+
+  test-e2e-api:
+    runs-on: ubuntu-latest
+    needs:
+      - mage
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Download Mage Binary
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: mage_bin
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+      - name: test
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
+          chmod +x mage-static
+          ./mage-static test:e2e-api
 
   test-s3-integration:
     runs-on: ubuntu-latest

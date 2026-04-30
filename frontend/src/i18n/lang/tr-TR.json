@@ -44,7 +44,6 @@
 			"resetPassword": "Şifrenizi sıfırlayın",
 			"resetPasswordAction": "Bana şifre sıfırlama bağlantısı gönder",
 			"resetPasswordSuccess": "Gelen kutunuzu kontrol edin! Şifrenizi nasıl sıfırlayacağınıza dair talimatlar içeren bir e-posta almış olmalısınız.",
-			"passwordsDontMatch": "Şifreler eşleşmiyor",
 			"confirmEmailSuccess": "E-postanızı başarıyla doğruladınız! Artık giriş yapabilirsiniz.",
 			"totpTitle": "İki Faktörlü Kimlik Doğrulama Kodu",
 			"totpPlaceholder": "ör. 123456",
@@ -74,10 +73,8 @@
 			"title": "Ayarlar",
 			"newPasswordTitle": "Şifrenizi Güncelleyin",
 			"newPassword": "Yeni şifre",
-			"newPasswordConfirm": "Yeni şifre onayı",
 			"currentPassword": "Mevcut şifre",
 			"currentPasswordPlaceholder": "Mevcut şifreniz",
-			"passwordsDontMatch": "Yeni şifre ve onayı eşleşmiyor.",
 			"passwordUpdateSuccess": "Şifre başarıyla güncellendi.",
 			"updateEmailTitle": "E-posta Adresinizi Güncelleyin",
 			"updateEmailNew": "Yeni e-posta adresi",
@@ -144,15 +141,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Vikunja’yı CalDAV istemcilerine bağlayarak tüm görevleri farklı istemcilerden görüntüleyebilir ve yönetebilirsiniz. İstemcinize bu URL’yi girin:",
 				"more": "Vikunja’da CalDAV hakkında daha fazla bilgi",
-				"tokens": "CalDAV Token’ları",
-				"tokensHowTo": "Yukarıdaki uç noktada oturum açmak için şifre yerine bir CalDAV token’ı kullanabilirsiniz.",
-				"createToken": "Token oluştur",
-				"tokenCreated": "İşte token’ınız: {token}",
-				"wontSeeItAgain": "Bunu not edin, tekrar göremeyeceksiniz.",
-				"mustUseToken": "Üçüncü taraf bir istemciyle CalDAV kullanmak istiyorsanız bir CalDAV token’ı oluşturmanız gerekir. Token’ı şifre olarak kullanın.",
-				"usernameIs": "Kullanıcı adınız: {0}"
+				"tokens": "CalDAV Token’ları"
 			},
 			"avatar": {
 				"title": "Avatar",
@@ -174,7 +164,6 @@
 			},
 			"appearance": {
 				"title": "Renk Şeması",
-				"setSuccess": "Renk şeması {colorScheme} olarak başarıyla değiştirildi",
 				"colorScheme": {
 					"light": "Açık",
 					"system": "Sistem",
@@ -199,7 +188,6 @@
 				"expired": "Bu token {ago} süresi doldu.",
 				"tokenCreatedSuccess": "İşte yeni API token’ınız: {token}",
 				"tokenCreatedNotSeeAgain": "Bunu güvenli bir yere kaydedin, tekrar göremeyeceksiniz!",
-				"selectAll": "Tümünü seç",
 				"delete": {
 					"header": "Bu token’ı sil",
 					"text1": "\"{token}\" token’ını silmek istediğinizden emin misiniz?",
@@ -472,16 +460,7 @@
 			"titlePlaceholder": "Kaydedilmiş filtre başlığı buraya gelir…",
 			"description": "Açıklama",
 			"descriptionPlaceholder": "Bu filtre için bir açıklama ekleyin, daha fazla seçenek için '/' tuşuna basın…",
-			"includeNulls": "Değeri belirlenmemiş görevleri dahil et",
-			"requireAll": "Bir görevin görünmesi için tüm filtrelerin doğru olmasını gerektir",
-			"showDoneTasks": "Tamamlanmış Görevleri Göster",
-			"sortAlphabetically": "Alfabetik Sırala",
-			"enablePriority": "Önceliğe Göre Filtrelemeyi Etkinleştir",
-			"enablePercentDone": "İlerlemeye Göre Filtrelemeyi Etkinleştir",
-			"dueDateRange": "Bitiş Tarihi Aralığı",
-			"startDateRange": "Başlangıç Tarihi Aralığı",
-			"endDateRange": "Bitiş Tarihi Aralığı",
-			"reminderRange": "Hatırlatma Tarihi Aralığı"
+			"includeNulls": "Değeri belirlenmemiş görevleri dahil et"
 		},
 		"create": {
 			"title": "Yeni Kaydedilmiş Filtre",
@@ -499,7 +478,6 @@
 			"success": "Filtre başarıyla kaydedildi."
 		},
 		"query": {
-			"title": "Sorgu",
 			"placeholder": "Bir arama veya filtre sorgusu yazın…",
 			"help": {
 				"intro": "Görevleri filtrelemek için SQL’e benzer bir sorgu sözdizimi kullanabilirsiniz. Filtreleme için kullanılabilir alanlar şunlardır:",
@@ -552,7 +530,6 @@
 	"migrate": {
 		"title": "Diğer hizmetlerden içe aktar",
 		"titleService": "{name}’dan verilerinizi Vikunja’ya aktarın",
-		"import": "Verilerinizi Vikunja’ya aktarın",
 		"description": "Başlamak için aşağıdaki üçüncü taraf hizmetlerden birinin logosuna tıklayın.",
 		"descriptionDo": "Vikunja, erişiminiz olan tüm listeleri, görevleri, notları, hatırlatıcıları ve dosyaları içe aktaracaktır.",
 		"authorize": "Vikunja’nın {name} hesabınıza erişmesine izin vermek için aşağıdaki düğmeye tıklayın.",
@@ -571,7 +548,6 @@
 		"manage": "Etiketleri yönet",
 		"description": "Bir etiketi düzenlemek için üzerine tıklayın. Oluşturduğunuz tüm etiketleri düzenleyebilir, bir göreve erişiminiz olan projeyle ilişkilendirilmiş tüm etiketleri kullanabilirsiniz.",
 		"newCTA": "Şu anda hiç etiketiniz yok.",
-		"search": "Bir etiket aramak için yazın…",
 		"create": {
 			"header": "Yeni etiket",
 			"title": "Etiket oluştur",
@@ -580,7 +556,6 @@
 		},
 		"edit": {
 			"header": "Etiketi Düzenle",
-			"forbidden": "Bu etiketi düzenlemenize izin verilmiyor çünkü sahibi siz değilsiniz.",
 			"success": "Etiket başarıyla güncellendi."
 		},
 		"deleteSuccess": "Etiket başarıyla silindi.",
@@ -588,7 +563,6 @@
 			"title": "Başlık",
 			"titlePlaceholder": "Etiket başlığı buraya gelir…",
 			"description": "Açıklama",
-			"descriptionPlaceholder": "Etiket açıklaması",
 			"color": "Renk"
 		}
 	},
@@ -615,16 +589,13 @@
 		"delete": "Sil",
 		"confirm": "Onayla",
 		"cancel": "İptal",
-		"refresh": "Yenile",
 		"disable": "Devre dışı bırak",
 		"copy": "Panoya kopyala",
 		"copyError": "Panoya kopyalama başarısız",
-		"search": "Ara",
 		"searchPlaceholder": "Aramak için yazın…",
 		"previous": "Önceki",
 		"next": "Sonraki",
 		"poweredBy": "Vikunja tarafından desteklenmektedir",
-		"info": "Bilgi",
 		"create": "Oluştur",
 		"doit": "Yap!",
 		"saving": "Kaydediliyor…",
@@ -657,15 +628,12 @@
 		},
 		"editor": {
 			"edit": "Düzenle",
-			"done": "Tamam",
 			"heading1": "Başlık 1",
 			"heading1Tooltip": "Büyük bölüm başlığı.",
 			"heading2": "Başlık 2",
 			"heading2Tooltip": "Orta bölüm başlığı.",
 			"heading3": "Başlık 3",
 			"heading3Tooltip": "Küçük bölüm başlığı.",
-			"headingSmaller": "Başlığı Küçült",
-			"headingBigger": "Başlığı Büyüt",
 			"bold": "Kalın",
 			"italic": "İtalik",
 			"strikethrough": "Üstü çizili",
@@ -676,17 +644,13 @@
 			"quoteTooltip": "Bir alıntıyı yakala.",
 			"bulletList": "Madde listesi",
 			"bulletListTooltip": "Basit bir madde listesi oluştur.",
-			"unorderedList": "Sırasız liste",
 			"orderedList": "Sıralı liste",
 			"orderedListTooltip": "Numaralı bir liste oluştur.",
-			"cleanBlock": "Bloğu Temizle",
 			"link": "Bağlantı",
 			"image": "Görüntü",
 			"imageTooltip": "Bilgisayarınızdan bir görüntü yükleyin.",
 			"horizontalRule": "Yatay Çizgi",
 			"horizontalRuleTooltip": "Bir bölümü ayır.",
-			"sideBySide": "Yan Yana",
-			"guide": "Kılavuz",
 			"text": "Metin",
 			"textTooltip": "Düz metinle yazmaya başlayın.",
 			"taskList": "Görev listesi",
@@ -792,21 +756,17 @@
 		}
 	},
 	"task": {
-		"task": "Görev",
 		"new": "Görev oluştur",
-		"delete": "Bu görevi sil",
 		"createSuccess": "Görev başarıyla oluşturuldu.",
 		"addReminder": "Bir hatırlatıcı ekle…",
 		"doneSuccess": "Görev başarıyla tamamlandı olarak işaretlendi.",
 		"undoneSuccess": "Görev başarıyla tamamlanmadı olarak işaretlendi.",
 		"movedToProject": "Görev, {project} projesine taşındı.",
 		"undo": "Geri al",
-		"openDetail": "Görev detay görünümünü aç",
 		"checklistTotal": "{checked}/{total} görev",
 		"checklistAllDone": "{total} görev",
 		"show": {
 			"titleCurrent": "Mevcut Görevler",
-			"titleDates": "{from} ile {to} arasındaki görevler",
 			"noDates": "Tarihi olmayan görevleri göster",
 			"overdue": "Gecikmiş görevleri göster",
 			"fromuntil": "{from} ile {until} arasındaki görevler",
@@ -830,7 +790,6 @@
 			"belongsToProject": "Bu görev '{project}' projesine aittir",
 			"back": "Projeye geri dön",
 			"due": "{at} tarihinde bitiyor",
-			"closePopup": "Açılır pencereyi kapat",
 			"organization": "Organizasyon",
 			"management": "Yönetim",
 			"dateAndTime": "Tarih ve saat",
@@ -902,7 +861,6 @@
 			"delete": "Eki sil",
 			"deleteTooltip": "Bu eki sil",
 			"deleteText1": "{filename} ekini silmek istediğinizden emin misiniz?",
-			"copyUrl": "URL’yi Kopyala",
 			"copyUrlTooltip": "Metinde kullanım için bu ekin URL’sini kopyala",
 			"setAsCover": "Kapak yap",
 			"unsetAsCover": "Kapağı kaldır",
@@ -932,8 +890,7 @@
 			"1week": "1 hafta"
 		},
 		"description": {
-			"placeholder": "Bir açıklama girin, daha fazla seçenek için '/' tuşuna basın…",
-			"empty": "Henüz bir açıklama mevcut değil."
+			"placeholder": "Bir açıklama girin, daha fazla seçenek için '/' tuşuna basın…"
 		},
 		"assignee": {
 			"placeholder": "Bir kullanıcı atamak için yazın…",
@@ -945,7 +902,6 @@
 			"placeholder": "Bir etiket eklemek için yazın…",
 			"createPlaceholder": "Bunu yeni etiket olarak ekle",
 			"addSuccess": "Etiket başarıyla eklendi.",
-			"createSuccess": "Etiket başarıyla oluşturuldu.",
 			"removeSuccess": "Etiket başarıyla kaldırıldı.",
 			"addCreateSuccess": "Etiket başarıyla oluşturuldu ve eklendi.",
 			"delete": {
@@ -1010,8 +966,6 @@
 			"hours": "Saat",
 			"days": "Gün",
 			"weeks": "Hafta",
-			"months": "Ay",
-			"years": "Yıl",
 			"invalidAmount": "Lütfen 0’dan büyük bir değer girin."
 		},
 		"quickAddMagic": {
@@ -1160,7 +1114,6 @@
 		"unarchive": "Arşivden Çıkar",
 		"setBackground": "Arka plan ayarları",
 		"share": "Paylaş",
-		"newProject": "Yeni proje",
 		"createProject": "Proje oluştur",
 		"cantArchiveIsDefault": "Bu, varsayılan projeniz olduğu için arşivlenemez.",
 		"cantDeleteIsDefault": "Bu, varsayılan projeniz olduğu için silinemez.",
@@ -1318,7 +1271,6 @@
 			"hours": "saat|saatler",
 			"days": "gün|günler",
 			"weeks": "hafta|haftalar",
-			"months": "ay|aylar",
 			"years": "yıl|yıllar"
 		}
 	}

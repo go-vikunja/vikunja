@@ -44,7 +44,6 @@
 			"resetPassword": "비밀번호 재설정",
 			"resetPasswordAction": "비밀번호 재설정 링크 보내기",
 			"resetPasswordSuccess": "받은 편지함을 확인하세요! 암호를 재설정하는 방법이 포함된 이메일을 발송했습니다.",
-			"passwordsDontMatch": "비밀번호가 일치하지 않습니다",
 			"confirmEmailSuccess": "인증이 완료되었습니다. 해당 이메일로 로그인 할 수 있습니다.",
 			"totpTitle": "2단계 인증 코드",
 			"totpPlaceholder": "otp 6자리를 입력해주세요.",
@@ -73,10 +72,8 @@
 			"title": "환경설정",
 			"newPasswordTitle": "비밀번호 변경",
 			"newPassword": "새로운 비밀번호",
-			"newPasswordConfirm": "새 비밀번호 확인",
 			"currentPassword": "현재 비밀번호",
 			"currentPasswordPlaceholder": "비밀번호를 입력하세요",
-			"passwordsDontMatch": "비밀번호가 일치 하지 않습니다.",
 			"passwordUpdateSuccess": "비밀번호가 성공적으로 변경되었습니다.",
 			"updateEmailTitle": "이메일 주소 변경",
 			"updateEmailNew": "새로운 이메일 주소",
@@ -118,15 +115,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Vikunja를 CalDAV 클라이언트와 연계하여 다양한 클라이언트의 모든 할 일을 표시 및 관리할 수 있습니다. CalDAV 클라이언트에서 연결하려면 다음 엔드포인트를 복사하여 클라이언트에 입력합니다.",
 				"more": "Vikunja의 CalDAV에 대한 자세한 정보",
-				"tokens": "CalDAV Tokens",
-				"tokensHowTo": "위의 엔드포인트에 로그인할 때 비밀번호 대신 CalDAV 토큰을 사용할 수 있습니다.",
-				"createToken": "토큰 생성하기",
-				"tokenCreated": "생성된 토큰 정보: {token}",
-				"wontSeeItAgain": "적어두세요 다시 볼 수 없습니다.",
-				"mustUseToken": "타사 클라이언트에서 CalDAV를 사용하려면 CalDAV 토큰을 만들어야 합니다. 토큰을 비밀번호로 사용합니다.",
-				"usernameIs": "당신의 사용자명은: {0}"
+				"tokens": "CalDAV Tokens"
 			},
 			"avatar": {
 				"title": "아바타",
@@ -147,7 +137,6 @@
 			},
 			"appearance": {
 				"title": "색 구성",
-				"setSuccess": "색 구성표 변경 사항을 {colorScheme}에 저장했습니다.",
 				"colorScheme": {
 					"light": "밝은 테마",
 					"system": "시스템",
@@ -169,7 +158,6 @@
 				"expired": "이 토큰은 {ago} 만료되었습니다.",
 				"tokenCreatedSuccess": "새 Api 토큰은 다음과 같습니다: {token}",
 				"tokenCreatedNotSeeAgain": "안전한 장소에 보관하세요 다시는 볼 수 없습니다!",
-				"selectAll": "모두 선택",
 				"delete": {
 					"header": "이 토큰 삭제",
 					"text1": "{token}을 삭제하시겠습니까\"?",
@@ -417,16 +405,7 @@
 			"titlePlaceholder": "저장된 필터 제목은 여기로 이동합니다...",
 			"description": "상세정보",
 			"descriptionPlaceholder": "여기에 이 필터에 대한 설명을 추가하고, 더 많은 옵션을 보려면 '/'를 누르세요...",
-			"includeNulls": "값이 설정되어 있지 않은 할 일 포함하기",
-			"requireAll": "할 일이 표시되려면 모든 필터가 참이어야 합니다.",
-			"showDoneTasks": "완료한 할 일 표시",
-			"sortAlphabetically": "사전 순으로 정렬",
-			"enablePriority": "우선순위별 필터 사용",
-			"enablePercentDone": "진행 상황별 필터링 활성화",
-			"dueDateRange": "마감일 범위",
-			"startDateRange": "시작일 범위",
-			"endDateRange": "종료일 범위",
-			"reminderRange": "미리알림 날짜 범위"
+			"includeNulls": "값이 설정되어 있지 않은 할 일 포함하기"
 		},
 		"create": {
 			"title": "새로운 저장 필터",
@@ -444,7 +423,6 @@
 			"success": "필터가 성공적으로 저장되었습니다."
 		},
 		"query": {
-			"title": "쿼리",
 			"placeholder": "검색 또는 필터 쿼리 입력...",
 			"help": {
 				"intro": "할 일을 필터링하려면 SQL과 유사한 쿼리 구문을 사용할 수 있습니다. 필터링에 사용할 수 있는 필드는 다음과 같습니다:",
@@ -495,7 +473,6 @@
 	"migrate": {
 		"title": "다른 서비스에서 가져오기",
 		"titleService": "{name}에서 데이터 가져오기",
-		"import": "Vikunja로 데이터 가져오기",
 		"description": "시작하려면 아래 타사 서비스의 로고를 클릭하세요.",
 		"descriptionDo": "Vikunja는 사용자가 액세스할 수 있는 모든 목록, 할 일, 노트, 미리알림 및 파일을 가져옵니다.",
 		"authorize": "Vikunja가 {name} 계정에 액세스할 수 있도록 승인하려면 아래 버튼을 클릭하세요.",
@@ -514,7 +491,6 @@
 		"manage": "레이블 관리",
 		"description": "레이블을 클릭하여 편집합니다. 생성한 모든 레이블을 편집할 수 있으며, 프로젝트 액세스 권한이 있는 할 일과 연결된 모든 레이블을 사용할 수 있습니다.",
 		"newCTA": "현재 레이블이 없습니다.",
-		"search": "레이블을 검색하려면 입력하세요...",
 		"create": {
 			"header": "레이블 추가",
 			"title": "레이블 만들기",
@@ -523,7 +499,6 @@
 		},
 		"edit": {
 			"header": "라벨 편집",
-			"forbidden": "이 레이블 소유하고 있지 않으므로 수정할 수 없습니다.",
 			"success": "레이블이 성공적으로 수정되었습니다."
 		},
 		"deleteSuccess": "레이블 삭제되었습니다.",
@@ -531,7 +506,6 @@
 			"title": "제목",
 			"titlePlaceholder": "레이블 제목은 여기에 표시돼요",
 			"description": "상세정보",
-			"descriptionPlaceholder": "레이블 설명",
 			"color": "색상"
 		}
 	},
@@ -554,16 +528,13 @@
 		"delete": "삭제",
 		"confirm": "확인",
 		"cancel": "취소",
-		"refresh": "새로고침",
 		"disable": "비활성화",
 		"copy": "클립보드에 복사",
 		"copyError": "클립보드에 복사 실패",
-		"search": "검색",
 		"searchPlaceholder": "검색할 내용 입력...",
 		"previous": "이전",
 		"next": "다음",
 		"poweredBy": "Powered by Vikunja",
-		"info": "정보",
 		"create": "생성",
 		"doit": "해보세요!",
 		"saving": "저장중...",
@@ -596,15 +567,12 @@
 		},
 		"editor": {
 			"edit": "편집",
-			"done": "완료",
 			"heading1": "제목 1",
 			"heading1Tooltip": "큰 섹션 제목.",
 			"heading2": "제목 2",
 			"heading2Tooltip": "중간 섹션 제목.",
 			"heading3": "제목 3",
 			"heading3Tooltip": "더 작은 섹션 헤더.",
-			"headingSmaller": "제목 작게 보기",
-			"headingBigger": "더 큰 제목",
 			"bold": "굵게",
 			"italic": "기울임체",
 			"strikethrough": "취소선",
@@ -615,17 +583,13 @@
 			"quoteTooltip": "인용구를 캡처하십시오.",
 			"bulletList": "글머리 기호 목록",
 			"bulletListTooltip": "간단한 글머리 기호 목록을 만듭니다.",
-			"unorderedList": "정렬되지 않은 목록",
 			"orderedList": "정렬된 목록",
 			"orderedListTooltip": "번호가 있는 목록을 만듭니다.",
-			"cleanBlock": "블록 지우기",
 			"link": "링크",
 			"image": "이미지",
 			"imageTooltip": "컴퓨터에서 이미지를 업로드합니다.",
 			"horizontalRule": "수평 규칙",
 			"horizontalRuleTooltip": "섹션을 나눕니다.",
-			"sideBySide": "나란히",
-			"guide": "가이드",
 			"text": "텍스트",
 			"textTooltip": "일반 텍스트로 입력을 시작하세요.",
 			"taskList": "할 일 목록",
@@ -731,20 +695,16 @@
 		}
 	},
 	"task": {
-		"task": "할 일",
 		"new": "할 일 생성",
-		"delete": "할 일 삭제",
 		"createSuccess": "할 일이 성공적으로 생성되었습니다.",
 		"addReminder": "미리알림 추가...",
 		"doneSuccess": "할 일이 완료된 것으로 성공적으로 표시되었습니다.",
 		"undoneSuccess": "할 일이 완료된 것으로 성공적으로 표시 해제되었습니다.",
 		"undo": "되돌리기",
-		"openDetail": "할 일 세부 정보 열기",
 		"checklistTotal": "{total} 의 {checked} 할 일",
 		"checklistAllDone": "{total} 할 일",
 		"show": {
 			"titleCurrent": "현재 할 일",
-			"titleDates": "{from}부터 {to}까지의 할 일",
 			"overdue": "기한이 지난 할 일 표시",
 			"fromuntil": "{from}부터 {until}까지의 할 일",
 			"select": "날짜 범위 선택",
@@ -764,7 +724,6 @@
 			"deleteSuccess": "할 일을 삭제했어요.",
 			"belongsToProject": "이 할 일은 '{project}' 프로젝트에 속해요.",
 			"due": "마감일 {at}",
-			"closePopup": "팝업 닫기",
 			"organization": "조직",
 			"management": "관리",
 			"dateAndTime": "날짜와 시간",
@@ -834,7 +793,6 @@
 			"delete": "첨부 파일 삭제",
 			"deleteTooltip": "이 첨부 파일 삭제",
 			"deleteText1": "{filename}을 삭제하시겠습니까?",
-			"copyUrl": "URL 복사",
 			"copyUrlTooltip": "텍스트에 사용할 수 있도록 이 첨부 파일의 Url을 복사합니다.",
 			"setAsCover": "커버 만들기",
 			"unsetAsCover": "커버 제거",
@@ -861,8 +819,7 @@
 			"1week": "1 주"
 		},
 		"description": {
-			"placeholder": "설명을 입력하고 더 많은 옵션을 보려면 '/'를 누르세요...",
-			"empty": "설명이 없습니다."
+			"placeholder": "설명을 입력하고 더 많은 옵션을 보려면 '/'를 누르세요..."
 		},
 		"assignee": {
 			"placeholder": "사용자를 할당하려면 입력...",
@@ -874,7 +831,6 @@
 			"placeholder": "레이블을 추가하려면 입력...",
 			"createPlaceholder": "새 레이블로 추가",
 			"addSuccess": "레이블이 성공적으로 추가되었습니다.",
-			"createSuccess": "레이블이 성공적으로 생성되었습니다.",
 			"removeSuccess": "레이블이 성공적으로 제거되었습니다.",
 			"addCreateSuccess": "레이블이 성공적으로 생성 및 추가되었습니다.",
 			"delete": {
@@ -939,8 +895,6 @@
 			"hours": "시간",
 			"days": "일",
 			"weeks": "주",
-			"months": "달",
-			"years": "년",
 			"invalidAmount": "0 이상을 입력하세요."
 		},
 		"quickAddMagic": {
@@ -1072,7 +1026,6 @@
 		"unarchive": "보관 해제",
 		"setBackground": "백그라운드 설정",
 		"share": "공유",
-		"newProject": "새 프로젝트",
 		"createProject": "프로젝트 만들기",
 		"cantArchiveIsDefault": "이 프로젝트는 기본 프로젝트이므로 아카이브할 수 없습니다.",
 		"cantDeleteIsDefault": "이 프로젝트는 기본 프로젝트이므로 삭제할 수 없습니다.",
@@ -1227,7 +1180,6 @@
 			"hours": "시간/시간",
 			"days": "일|일",
 			"weeks": "주/주",
-			"months": "개월/개월",
 			"years": "년|년"
 		}
 	}

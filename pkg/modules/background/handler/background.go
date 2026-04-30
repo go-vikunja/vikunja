@@ -443,7 +443,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	project, auth, err := checkProjectBackgroundWritePermissions(s, c)
+	project, _, err := checkProjectBackgroundWritePermissions(s, c)
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -455,10 +455,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 		return err
 	}
 
-	project.BackgroundFileID = 0
-	project.BackgroundInformation = nil
-	project.BackgroundBlurHash = ""
-	err = models.UpdateProject(s, project, auth, true)
+	err = models.ClearProjectBackground(s, project.ID)
 	if err != nil {
 		_ = s.Rollback()
 		return err

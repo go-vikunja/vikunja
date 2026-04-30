@@ -54,7 +54,7 @@ type UserSettings struct {
 	// to tasks made directly in API and from clients.
 	DefaultProjectID int64 `json:"default_project_id"`
 	// The day when the week starts for this user. 0 = sunday, 1 = monday, etc.
-	WeekStart int `json:"week_start" valid:"range(0|7)"`
+	WeekStart int `json:"week_start" valid:"range(0|6)"`
 	// The user's language
 	Language string `json:"language"`
 	// The user's time zone. Used to send task reminders in the time zone of the user.

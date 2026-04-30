@@ -8,6 +8,7 @@ import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} fr
 import AvatarService from '@/services/avatar'
 import UserSettingsService from '@/services/userSettings'
 import {getToken, refreshToken, removeToken, saveToken} from '@/helpers/auth'
+import {useWebSocket} from '@/composables/useWebSocket'
 import {setModuleLoading} from '@/stores/helper'
 import {success, error} from '@/message'
 import {
@@ -139,12 +140,18 @@ export const useAuthStore = defineStore('auth', () => {
 				timeFormat: TIME_FORMAT.HOURS_24,
 				defaultTaskRelationType: RELATION_KIND.RELATED,
 				backgroundBrightness: 100,
+				showLastViewed: true,
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
+				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
 				...newSettings.frontendSettings,
 			},
 		})
-		// console.log('settings from auth store', {...settings.value.frontendSettings})
+
+		// Sync the quick entry shortcut to the desktop app when settings are loaded
+		window.vikunjaDesktop?.updateQuickEntryShortcut(
+			settings.value.frontendSettings.desktopQuickEntryShortcut || '',
+		)
 	}
 
 	function setAuthenticated(newAuthenticated: boolean) {
@@ -231,16 +238,19 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
-	async function openIdAuth({provider, code}) {
+	async function openIdAuth({provider, code, totpPasscode}: {provider: string, code: string, totpPasscode?: string}) {
 		const HTTP = HTTPFactory()
 		setIsLoading(true)
 		setLoggedInVia(null)
 
 		const fullProvider: IProvider = configStore.auth.openidConnect.providers.find((p: IProvider) => p.key === provider)
 
-		const data = {
+		const data: Record<string, string> = {
 			code: code,
 			redirect_url: getRedirectUrlFromCurrentFrontendPath(fullProvider),
+		}
+		if (totpPasscode) {
+			data.totp_passcode = totpPasscode
 		}
 
 		// Delete an eventually preexisting old token
@@ -258,12 +268,27 @@ export const useAuthStore = defineStore('auth', () => {
 		}
 	}
 
+	async function handleDesktopOAuthTokens(tokens: {access_token: string, refresh_token: string, expires_in: number}) {
+		setIsLoading(true)
+		try {
+			removeToken()
+			saveToken(tokens.access_token, true)
+			localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
+			await checkAuth()
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
 	async function linkShareAuth({hash, password}) {
 		const HTTP = HTTPFactory()
 		const response = await HTTP.post('/shares/' + hash + '/auth', {
 			password: password,
 		})
 		saveToken(response.data.token, false)
+		// Reset the debounce so checkAuth() actually parses the new link share
+		// JWT instead of silently returning due to the 1-minute throttle.
+		lastUserInfoRefresh.value = null
 		await checkAuth()
 		return response.data
 	}
@@ -285,6 +310,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 		const jwt = getToken()
 		let isAuthenticated = false
+		let jwtUserType: number | undefined
 		if (jwt) {
 			try {
 				const base64 = jwt
@@ -293,6 +319,7 @@ export const useAuthStore = defineStore('auth', () => {
 					.replace(/_/g, '/')
 				const payload = JSON.parse(atob(base64))
 				const jwtUser = new UserModel(payload)
+				jwtUserType = jwtUser.type
 				const ts = Math.round((new Date()).getTime() / MILLISECONDS_A_SECOND)
 
 				isAuthenticated = jwtUser.exp >= ts
@@ -300,10 +327,21 @@ export const useAuthStore = defineStore('auth', () => {
 
 				if (isAuthenticated) {
 					// Only set user from JWT if we don't already have a fully loaded
-					// user with the same ID. The JWT lacks fields like `name`, so
-					// overwriting a complete user object causes a visible flash
-					// where the display name briefly reverts to the username.
-					if (info.value === null || info.value.id !== jwtUser.id) {
+					// user with the same ID *and* type. The JWT lacks fields like
+					// `name`, so overwriting a complete user object causes a visible
+					// flash where the display name briefly reverts to the username.
+					// Comparing on type as well is essential: regular users and link
+					// shares share the same numeric ID space, so a USER and a
+					// LINK_SHARE can have the same `id`. Without the type check, a
+					// logged-in user opening a link share whose id collides with
+					// their user id would keep the USER `info.value` and never flip
+					// `authLinkShare` to true, causing the router guard to bounce
+					// between /share/:hash/auth and the project view forever.
+					if (
+						info.value === null ||
+						info.value.id !== jwtUser.id ||
+						info.value.type !== jwtUser.type
+					) {
 						setUser(jwtUser, false)
 					} else {
 						// Always keep exp in sync so token renewal checks stay accurate
@@ -336,7 +374,7 @@ export const useAuthStore = defineStore('auth', () => {
 				logout()
 			}
 
-			if (isAuthenticated) {
+			if (isAuthenticated && jwtUserType !== AUTH_TYPES.LINK_SHARE) {
 				const user = await refreshUserInfo()
 				if (!user) {
 					// refreshUserInfo() did not return a user — either the
@@ -490,6 +528,9 @@ export const useAuthStore = defineStore('auth', () => {
 	}
 
 	async function logout() {
+		const {disconnect} = useWebSocket()
+		disconnect()
+
 		// Revoke the server session so the refresh token can't be reused.
 		// Best-effort: if the network call fails, still clean up locally.
 		try {
@@ -547,6 +588,7 @@ export const useAuthStore = defineStore('auth', () => {
 		login,
 		register,
 		openIdAuth,
+		handleDesktopOAuthTokens,
 		linkShareAuth,
 		checkAuth,
 		refreshUserInfo,

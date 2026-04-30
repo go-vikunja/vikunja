@@ -361,3 +361,35 @@
   position: 40
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Parent project for hierarchy permission test (issue #2490)
+-
+  id: 41
+  title: HierarchyParent
+  description: Parent project for subtask permission hierarchy test
+  identifier: hier1
+  owner_id: 6
+  position: 41
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+# Child project — inherits access from parent 41
+-
+  id: 42
+  title: HierarchyChild
+  description: Child project for subtask permission hierarchy test
+  identifier: hier2
+  owner_id: 6
+  parent_project_id: 41
+  position: 42
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12
+# Child of project 10 used by the reparent privilege-escalation regression tests.
+# User 1 has Write on project 10 (users_projects id=4) and therefore inherits
+# Write on this child via the permission CTE. Do not reuse for unrelated tests.
+-
+  id: 43
+  title: Reparent Escalation Test Child
+  owner_id: 6
+  parent_project_id: 10
+  position: 4300
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

@@ -84,6 +84,65 @@ END:VCALENDAR`
 		assert.Contains(t, rec.Body.String(), "ACTION:DISPLAY")
 		assert.Contains(t, rec.Body.String(), "END:VALARM")
 	})
+	t.Run("Cross-user task read by UID is rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		// testuser6 has no access to project 36, where uid-caldav-test lives.
+		rec, err := newCaldavTestRequestWithUser(
+			t, e, http.MethodGet, caldav.TaskHandler, &testuser6, ``, nil,
+			map[string]string{"project": "36", "task": "uid-caldav-test"},
+		)
+		require.NoError(t, err)
+		assert.NotContains(t, rec.Body.String(), "Title Caldav Test")
+		assert.NotContains(t, rec.Body.String(), "Description Caldav Test")
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+	t.Run("Wrong project in URL for existing task is rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		// testuser15 owns both project 36 (where uid-caldav-test lives) and project 38.
+		rec, err := newCaldavTestRequestWithUser(
+			t, e, http.MethodGet, caldav.TaskHandler, &testuser15, ``, nil,
+			map[string]string{"project": "38", "task": "uid-caldav-test"},
+		)
+		require.NoError(t, err)
+		assert.NotContains(t, rec.Body.String(), "Title Caldav Test")
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
+	t.Run("Multiget rejects UIDs from other projects", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		// href claims project 38, but uid-caldav-test lives in project 36.
+		reportBody := `<?xml version="1.0" encoding="utf-8" ?>
+<C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+	<D:prop>
+		<D:getetag/>
+		<C:calendar-data/>
+	</D:prop>
+	<D:href>/dav/projects/38/uid-caldav-test.ics</D:href>
+</C:calendar-multiget>`
+
+		rec, err := newCaldavTestRequestWithUser(t, e, "REPORT", caldav.ProjectHandler, &testuser15, reportBody, nil, map[string]string{"project": "38"})
+		require.NoError(t, err)
+		assert.NotContains(t, rec.Body.String(), "Title Caldav Test")
+		assert.NotContains(t, rec.Body.String(), "Description Caldav Test")
+	})
+	t.Run("Multiget cross-user UID read is rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		reportBody := `<?xml version="1.0" encoding="utf-8" ?>
+<C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+	<D:prop>
+		<D:getetag/>
+		<C:calendar-data/>
+	</D:prop>
+	<D:href>/dav/projects/36/uid-caldav-test.ics</D:href>
+</C:calendar-multiget>`
+
+		// testuser6 cannot access project 36 where uid-caldav-test lives.
+		rec, err := newCaldavTestRequestWithUser(t, e, "REPORT", caldav.ProjectHandler, &testuser6, reportBody, nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.NotContains(t, rec.Body.String(), "Title Caldav Test")
+		assert.NotContains(t, rec.Body.String(), "Description Caldav Test")
+	})
 }
 
 func TestCaldavDiscovery(t *testing.T) {
@@ -563,7 +622,8 @@ END:VTODO`
 		require.NoError(t, err)
 		assert.Equal(t, 204, rec.Result().StatusCode)
 
-		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "36", "task": "uid-caldav-test-child-task-2"})
+		// uid-caldav-test-child-task-2 lives in project 38 (see fixtures/tasks.yml).
+		rec, err = newCaldavTestRequestWithUser(t, e, http.MethodDelete, caldav.TaskHandler, &testuser15, ``, nil, map[string]string{"project": "38", "task": "uid-caldav-test-child-task-2"})
 		require.NoError(t, err)
 		assert.Equal(t, 204, rec.Result().StatusCode)
 
@@ -908,5 +968,43 @@ func TestCaldavDisabledUserRejected(t *testing.T) {
 		result, err := caldav.BasicAuth(c, "user18", "12345678")
 		require.NoError(t, err)
 		assert.False(t, result, "locked user should not be able to authenticate via CalDAV")
+	})
+}
+
+func TestCaldavAPITokenAuth(t *testing.T) {
+	t.Run("API token with caldav permission succeeds", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// API token fixture id 6: owner_id=15, permissions={"caldav":["access"]}
+		result, err := caldav.BasicAuth(c, testuser15.Username, "tk_caldav_api_token_test_00000000aabbccdd")
+		require.NoError(t, err)
+		assert.True(t, result, "API token with caldav permission should authenticate")
+	})
+	t.Run("API token without caldav permission rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// API token fixture id 7: owner_id=15, permissions={"tasks":["read_all"]}
+		result, err := caldav.BasicAuth(c, testuser15.Username, "tk_nocaldav_token_test_000000005678efab")
+		require.NoError(t, err)
+		assert.False(t, result, "API token without caldav permission should be rejected")
+	})
+	t.Run("API token with wrong username rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		// Token belongs to user15 but we provide user1's username
+		result, err := caldav.BasicAuth(c, testuser1.Username, "tk_caldav_api_token_test_00000000aabbccdd")
+		require.NoError(t, err)
+		assert.False(t, result, "API token with mismatched username should be rejected")
+	})
+	t.Run("invalid API token rejected", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		c, _ := createRequest(e, http.MethodGet, "", nil, nil)
+
+		result, err := caldav.BasicAuth(c, testuser15.Username, "tk_this_is_totally_not_a_valid_token_at_all")
+		require.NoError(t, err)
+		assert.False(t, result, "invalid API token should be rejected")
 	})
 }

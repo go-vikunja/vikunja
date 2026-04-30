@@ -72,8 +72,7 @@
             },
             "comment": {
                 "subject": "Re: %[1]s (%[2]s)",
-                "mentioned_subject": "%[1]s mentioned you in a comment in \"%[2]s\" (%[3]s)",
-                "mentioned_message": "**%[1]s** mentioned you in a comment:"
+                "mentioned_subject": "%[1]s mentioned you in a comment in \"%[2]s\" (%[3]s)"
             },
             "assigned": {
                 "subject_to_assignee": "You have been assigned to \"%[1]s\" (%[2]s)",
@@ -89,8 +88,7 @@
             },
             "mentioned": {
                 "subject_new": "%[1]s mentioned you in a new task \"%[2]s\" (%[3]s)",
-                "subject": "%[1]s mentioned you in a task \"%[2]s\" (%[3]s)",
-                "message": "**%[1]s** mentioned you in a task:"
+                "subject": "%[1]s mentioned you in a task \"%[2]s\" (%[3]s)"
             },
             "overdue": {
                 "subject": "Task \"%[1]s\" (%[2]s) is overdue",
@@ -133,6 +131,19 @@
                 "working_on_it": "We've got the error message on our radar and are on it to get it sorted out soon."
             }
         },
+        "api_token": {
+            "expiring": {
+                "week": {
+                    "subject": "Your API token \"%[1]s\" expires soon",
+                    "message": "Your API token \"%[1]s\" will expire on %[2]s. If you still need it, please create a new token before it expires."
+                },
+                "day": {
+                    "subject": "Your API token \"%[1]s\" expires tomorrow",
+                    "message": "Your API token \"%[1]s\" will expire on %[2]s. If you still need it, please create a new token before it expires."
+                },
+                "action": "Manage API Tokens"
+            }
+        },
         "common": {
             "have_nice_day": "Have a nice day!",
             "copy_url": "If the button above doesn't work, copy the url below and paste it in your browser's address bar:",
@@ -151,10 +162,7 @@
                 "left_comment": "%[1]s left a comment",
                 "mentioned_you_comment": "%[1]s mentioned you in a comment",
                 "mentioned_you": "%[1]s mentioned you",
-                "mentioned_you_new_task": "%[1]s mentioned you in a new task",
-                "assigned_you": "%[1]s assigned you",
-                "assigned_themselves": "%[1]s assigned themselves",
-                "assigned_user": "%[1]s assigned %[2]s"
+                "mentioned_you_new_task": "%[1]s mentioned you in a new task"
             }
         }
     },

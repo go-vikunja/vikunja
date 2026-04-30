@@ -59,25 +59,31 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/api/pkg/modules/migration"
+	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
 	"code.vikunja.io/api/pkg/modules/migration/todoist"
 	"code.vikunja.io/api/pkg/modules/migration/trello"
 	vikunja_file "code.vikunja.io/api/pkg/modules/migration/vikunja-file"
+	"code.vikunja.io/api/pkg/modules/migration/wekan"
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
+	adminapi "code.vikunja.io/api/pkg/routes/api/v1/admin"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
+	ws "code.vikunja.io/api/pkg/websocket"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v5"
@@ -305,7 +311,9 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/shares/:share/auth":             true,
 	"/api/v1/docs.json":                      true,
 	"/api/v1/docs":                           true,
+	"/api/v1/docs/redoc.standalone.js":       true,
 	"/api/v1/metrics":                        true,
+	"/api/v1/oauth/token":                    true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
@@ -347,6 +355,10 @@ func registerAPIRoutes(a *echo.Group) {
 	// Docs
 	n.GET("/docs.json", apiv1.DocsJSON)
 	n.GET("/docs", apiv1.RedocUI)
+	n.GET("/docs/redoc.standalone.js", apiv1.RedocJS)
+
+	// WebSocket (auth happens after upgrade via first message)
+	n.GET("/ws", ws.UpgradeHandler)
 
 	// Prometheus endpoint
 	setupMetrics(n)
@@ -379,8 +391,13 @@ func registerAPIRoutes(a *echo.Group) {
 		ur.POST("/auth/openid/:provider/callback", openid.HandleCallback)
 	}
 
+	// OAuth 2.0 token endpoint — unauthenticated because it validates
+	// credentials (authorization code or refresh token) itself.
+	ur.POST("/oauth/token", oauth2server.HandleToken)
+
 	// Testing
 	if config.ServiceTestingtoken.GetString() != "" {
+		n.DELETE("/test/all", apiv1.HandleTestingTruncateAll)
 		n.PATCH("/test/:table", apiv1.HandleTesting)
 	}
 
@@ -404,6 +421,9 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/token/test", apiv1.TestToken)
 	a.POST("/token/test", apiv1.CheckToken)
 	a.GET("/routes", models.GetAvailableAPIRoutesForToken)
+
+	// OAuth 2.0 authorize endpoint — requires authentication.
+	a.POST("/oauth/authorize", oauth2server.HandleAuthorize)
 
 	// Avatar endpoint
 	a.GET("/avatar/:username", apiv1.GetAvatar)
@@ -517,6 +537,7 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/projects/:project/tasks", taskHandler.CreateWeb)
 	a.GET("/tasks/:projecttask", taskHandler.ReadOneWeb)
+	a.GET("/projects/:project/tasks/by-index/:index", taskHandler.ReadOneWeb)
 	a.GET("/tasks", taskCollectionHandler.ReadAllWeb)
 	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:projecttask", taskHandler.UpdateWeb)
@@ -778,6 +799,29 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.POST("/projects/:project/views/:view/buckets/:bucket/tasks", taskBucketProvider.UpdateWeb)
 
+	admin := a.Group("/admin",
+		RequireFeature(license.FeatureAdminPanel),
+		RequireInstanceAdmin(),
+	)
+	adminProjectListHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &models.AdminProjectList{}
+		},
+	}
+	adminUserListHandler := &handler.WebHandler{
+		EmptyStruct: func() handler.CObject {
+			return &adminapi.UserList{}
+		},
+	}
+	admin.GET("/overview", adminapi.GetOverview)
+	admin.GET("/users", adminUserListHandler.ReadAllWeb)
+	admin.POST("/users", adminapi.CreateUser)
+	admin.PATCH("/users/:id/admin", adminapi.PatchAdmin)
+	admin.PATCH("/users/:id/status", adminapi.PatchStatus)
+	admin.DELETE("/users/:id", adminapi.DeleteUser)
+	admin.GET("/projects", adminProjectListHandler.ReadAllWeb)
+	admin.PATCH("/projects/:id/owner", adminapi.PatchProjectOwner)
+
 	// Plugin routes
 	if config.PluginsEnabled.GetBool() {
 		// Authenticated plugin routes
@@ -836,6 +880,18 @@ func registerMigrations(m *echo.Group) {
 		},
 	}
 	tickTickFileMigrator.RegisterRoutes(m)
+
+	// WeKan File Migrator
+	wekanFileMigrator := migrationHandler.FileMigratorWeb{
+		MigrationStruct: func() migration.FileMigrator {
+			return &wekan.Migrator{}
+		},
+	}
+	wekanFileMigrator.RegisterRoutes(m)
+
+	// CSV File Migrator (always enabled - generic import)
+	csvFileMigrator := &csvmigrator.MigratorWeb{}
+	csvFileMigrator.RegisterRoutes(m)
 }
 
 func registerCalDavRoutes(c *echo.Group) {

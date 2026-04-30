@@ -369,6 +369,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	if expandSubtasks {
 		cond = builder.And(cond, builder.Or(
 			builder.IsNull{"task_relations.id"},
+			builder.IsNull{"parent_tasks.id"},
 			builder.Expr("parent_tasks.project_id != tasks.project_id"),
 		))
 	}

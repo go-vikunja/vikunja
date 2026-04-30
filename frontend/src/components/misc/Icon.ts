@@ -37,6 +37,7 @@ import {
 	faEyeSlash,
 	faFile,
 	faFileImage,
+	faFilePdf,
 	faFillDrip,
 	faFilter,
 	faForward,
@@ -72,6 +73,7 @@ import {
 	faTimes,
 	faTrashAlt,
 	faUser,
+	faUserEdit,
 	faUsers,
 	faQuoteRight,
 	faListUl,
@@ -111,6 +113,7 @@ library.add(faSquareCheck)
 library.add(faTable)
 library.add(faFile)
 library.add(faFileImage)
+library.add(faFilePdf)
 library.add(faCheckSquare)
 library.add(faStrikethrough)
 library.add(faCode)
@@ -184,6 +187,7 @@ library.add(faTimes)
 library.add(faTimesCircle)
 library.add(faTrashAlt)
 library.add(faUser)
+library.add(faUserEdit)
 library.add(faUsers)
 library.add(faArrowDownShortWide)
 library.add(faArrowUpFromBracket)

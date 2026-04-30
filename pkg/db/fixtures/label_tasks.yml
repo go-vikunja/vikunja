@@ -18,7 +18,18 @@
   task_id: 40
   label_id: 4
   created: 2018-12-01 15:13:12
-- id: 6 
+- id: 6
   task_id: 35
   label_id: 5
+  created: 2018-12-01 15:13:12
+# GHSA-hj5c-mhh2-g7jq: without this row label #6 cannot reproduce the leak.
+- id: 7
+  task_id: 34
+  label_id: 6
+  created: 2018-12-01 15:13:12
+# Label #8 attached to an inaccessible task, for the creator-branch
+# maxPermission fallback.
+- id: 8
+  task_id: 34
+  label_id: 8
   created: 2018-12-01 15:13:12

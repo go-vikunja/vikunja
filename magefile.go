@@ -35,6 +35,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -66,6 +67,9 @@ var (
 		"release":                     Release.Release,
 		"release:os-package":          Release.OsPackage,
 		"release:prepare-nfpm-config": Release.PrepareNFPMConfig,
+		"release:repo-apt":            Release.RepoApt,
+		"release:repo-rpm":            Release.RepoRpm,
+		"release:repo-pacman":         Release.RepoPacman,
 		"dev:make-migration":          Dev.MakeMigration,
 		"dev:make-event":              Dev.MakeEvent,
 		"dev:make-listener":           Dev.MakeListener,
@@ -447,7 +451,14 @@ func (Test) Filter(ctx context.Context, filter string) error {
 
 func (Test) All() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Feature, Test.Web, Test.E2EApi)
+	mg.Deps(Test.Feature, Test.Web, Test.Caldav, Test.E2EApi)
+}
+
+// Caldav runs the CalDAV protocol compliance tests in pkg/caldavtests.
+// These tests exercise the full HTTP router with WebDAV/CalDAV requests.
+func (Test) Caldav(ctx context.Context) error {
+	mg.Deps(initVars)
+	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/caldavtests")
 }
 
 // E2EApi runs the end-to-end API tests in pkg/e2etests.
@@ -654,50 +665,94 @@ func (Check) GotSwag(ctx context.Context) error {
 	return nil
 }
 
-// Translations checks if all translation keys used in the code exist in the English translation file
+// Translations checks that all translation keys used in the code exist in
+// their respective English translation files, and conversely that no unused
+// keys exist in those files. Both the api (Go) and the frontend (Vue/TS) are
+// checked in one run so a single CI job can gate the whole repository.
 func (Check) Translations() error {
 	mg.Deps(initVars)
-	fmt.Println("Checking for missing translation keys...")
 
-	// Load translations from the English translation file
+	var errs []error
+	if err := checkAPITranslations(); err != nil {
+		errs = append(errs, err)
+	}
+	if err := checkFrontendTranslations(); err != nil {
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+	return nil
+}
+
+func checkAPITranslations() error {
+	fmt.Println("Checking api translation keys...")
+
 	translationFile := "./pkg/i18n/lang/en.json"
 	translations, err := loadTranslations(translationFile)
 	if err != nil {
-		return fmt.Errorf("error loading translations: %w", err)
+		return fmt.Errorf("error loading api translations: %w", err)
 	}
 
 	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
 
-	// Extract keys from codebase
-	keys, err := walkCodebaseForTranslationKeys(".")
+	keys, literals, err := walkAPIForTranslationKeys(".")
 	if err != nil {
-		return fmt.Errorf("error walking codebase: %w", err)
+		return fmt.Errorf("error walking api codebase: %w", err)
 	}
 
-	fmt.Printf("Found %d translation keys in the codebase\n", len(keys))
+	fmt.Printf("Found %d translation key references in the api codebase\n", len(keys))
 
-	// Check for missing keys
-	missingKeys := make(map[string][]TranslationKey)
-	for _, key := range keys {
-		if !translations[key.Key] {
-			missingKeys[key.Key] = append(missingKeys[key.Key], key)
+	// Some api keys are referenced indirectly – e.g. the time.since_* keys are
+	// stored as string literals in a struct slice in pkg/utils/humanize_duration.go
+	// and looked up via i18n.TP(lang, chunk.key, ...). Any literal that matches a
+	// known translation key is treated as a usage hint, so those keys aren't
+	// flagged as dead.
+	for lit := range literals {
+		if translations[lit] {
+			keys = append(keys, TranslationKey{Key: lit, FilePath: "<api literal hint>", Line: 0})
 		}
 	}
 
-	// Print results
-	if len(missingKeys) > 0 {
-		var errs []error
-		for key, occurrences := range missingKeys {
-			var keyErrs []error
-			for _, occurrence := range occurrences {
-				keyErrs = append(keyErrs, fmt.Errorf("- %s:%d", occurrence.FilePath, occurrence.Line))
-			}
-			errs = append(errs, fmt.Errorf("missing key %s in files:\n%w", key, errors.Join(keyErrs...)))
-		}
-		return fmt.Errorf("found %d missing translation keys:\n%w", len(missingKeys), errors.Join(errs...))
+	return reportTranslationResults("api", translations, keys, nil)
+}
+
+func checkFrontendTranslations() error {
+	fmt.Println("Checking frontend translation keys...")
+
+	translationFile := "./frontend/src/i18n/lang/en.json"
+	translations, err := loadTranslations(translationFile)
+	if err != nil {
+		return fmt.Errorf("error loading frontend translations: %w", err)
 	}
-	printSuccess("All translation keys are present in the translation file!")
-	return nil
+
+	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
+
+	keys, prefixes, literals, err := walkFrontendForTranslationKeys("./frontend/src")
+	if err != nil {
+		return fmt.Errorf("error walking frontend codebase: %w", err)
+	}
+
+	fmt.Printf("Found %d translation key references in the frontend codebase\n", len(keys))
+
+	// Some keys are referenced indirectly – e.g. stored as string literals in
+	// arrays and looked up by index, or assigned to a variable in the form
+	// `const path = ` + "`error.${code}`". Any literal that matches a known
+	// translation key (or is a prefix of one) is treated as a usage hint, so
+	// those keys aren't flagged as dead.
+	for lit := range literals {
+		if translations[lit] {
+			keys = append(keys, TranslationKey{Key: lit, FilePath: "<frontend literal hint>", Line: 0})
+			continue
+		}
+		// Literals that look like a key prefix (end in ".") are kept as
+		// dynamic prefixes. This catches `const path = `error.${code}``.
+		if strings.HasSuffix(lit, ".") {
+			prefixes = append(prefixes, lit)
+		}
+	}
+
+	return reportTranslationResults("frontend", translations, keys, prefixes)
 }
 
 // TranslationKey represents a translation key found in the code
@@ -707,7 +762,73 @@ type TranslationKey struct {
 	Line     int
 }
 
-// loadTranslations loads the English translation file and returns a flattened map
+// reportTranslationResults checks both missing keys (used in code but not in
+// translation file) and dead keys (in translation file but not referenced
+// anywhere in code). Returns an error if either kind of mismatch is found.
+func reportTranslationResults(label string, translations map[string]bool, keys []TranslationKey, dynamicPrefixes []string) error {
+	missingKeys := make(map[string][]TranslationKey)
+	usedKeys := make(map[string]bool, len(keys))
+	for _, key := range keys {
+		usedKeys[key.Key] = true
+		if !translations[key.Key] {
+			missingKeys[key.Key] = append(missingKeys[key.Key], key)
+		}
+	}
+
+	// A translation is used if referenced directly, or if its full dotted key
+	// starts with any prefix produced by a dynamic call site.
+	isCoveredByPrefix := func(k string) bool {
+		for _, p := range dynamicPrefixes {
+			if strings.HasPrefix(k, p) {
+				return true
+			}
+		}
+		return false
+	}
+
+	var deadKeys []string
+	for k := range translations {
+		if usedKeys[k] {
+			continue
+		}
+		if isCoveredByPrefix(k) {
+			continue
+		}
+		deadKeys = append(deadKeys, k)
+	}
+
+	var errs []error
+
+	if len(missingKeys) > 0 {
+		var missingErrs []error
+		for key, occurrences := range missingKeys {
+			var keyErrs []error
+			for _, occurrence := range occurrences {
+				keyErrs = append(keyErrs, fmt.Errorf("- %s:%d", occurrence.FilePath, occurrence.Line))
+			}
+			missingErrs = append(missingErrs, fmt.Errorf("missing key %s in files:\n%w", key, errors.Join(keyErrs...)))
+		}
+		errs = append(errs, fmt.Errorf("found %d missing %s translation keys (referenced in code but not in translation file):\n%w", len(missingKeys), label, errors.Join(missingErrs...)))
+	}
+
+	if len(deadKeys) > 0 {
+		sort.Strings(deadKeys)
+		var deadErrs []error
+		for _, k := range deadKeys {
+			deadErrs = append(deadErrs, fmt.Errorf("- %s", k))
+		}
+		errs = append(errs, fmt.Errorf("found %d dead %s translation keys (present in translation file but unused in code):\n%w", len(deadKeys), label, errors.Join(deadErrs...)))
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	printSuccess(fmt.Sprintf("All %s translation keys are in sync between code and the translation file!", label))
+	return nil
+}
+
+// loadTranslations loads a translation file and returns a flattened map
 func loadTranslations(filePath string) (map[string]bool, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -743,9 +864,13 @@ func flattenTranslations(prefix string, src map[string]any, dest map[string]bool
 	}
 }
 
-// walkCodebaseForTranslationKeys walks the codebase and extracts all translation keys
-func walkCodebaseForTranslationKeys(rootDir string) ([]TranslationKey, error) {
+// walkAPIForTranslationKeys walks the Go api code and extracts translation
+// keys referenced via string-literal arguments to i18n.T / i18n.TP, plus a
+// set of dotted string literals as "usage hints" for indirect references
+// (e.g. keys stored in a struct slice and passed to i18n.TP via a variable).
+func walkAPIForTranslationKeys(rootDir string) ([]TranslationKey, map[string]bool, error) {
 	var allKeys []TranslationKey
+	allLiterals := make(map[string]bool)
 
 	pkgDir := filepath.Join(rootDir, "pkg")
 
@@ -754,48 +879,55 @@ func walkCodebaseForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 			return err
 		}
 
-		// Skip hidden directories (starting with .)
 		if info.IsDir() && strings.HasPrefix(info.Name(), ".") {
 			return filepath.SkipDir
 		}
 
-		// Only process Go files
 		if !info.IsDir() && strings.HasSuffix(path, ".go") {
-			keys, err := extractTranslationKeysFromFile(path)
+			keys, literals, err := extractAPITranslationKeysFromFile(path)
 			if err != nil {
 				fmt.Printf("Warning: %v\n", err)
 				return nil
 			}
 			allKeys = append(allKeys, keys...)
+			for l := range literals {
+				allLiterals[l] = true
+			}
 		}
 
 		return nil
 	})
 
-	return allKeys, err
+	return allKeys, allLiterals, err
 }
 
-// extractTranslationKeysFromFile extracts all i18n.T calls from a file
-func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
-	// Read the file content
+// apiStringLiteralRe matches double-quoted strings in Go source that look like
+// dotted translation keys (e.g. "time.since_years"). Used to surface keys that
+// are referenced indirectly – for example, stored in a struct field and later
+// passed to i18n.TP via a variable.
+var apiStringLiteralRe = regexp.MustCompile(`"([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)+)"`)
+
+// extractAPITranslationKeysFromFile extracts all i18n.T/i18n.TP calls with
+// a string-literal key, plus all dotted string literals in the file (returned
+// as the second value) which are used as usage hints for indirect references.
+func extractAPITranslationKeysFromFile(filePath string) ([]TranslationKey, map[string]bool, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading file %s: %w", filePath, err)
+		return nil, nil, fmt.Errorf("error reading file %s: %w", filePath, err)
 	}
 
 	var keys []TranslationKey
+	literals := make(map[string]bool)
 
-	// Regex to match i18n.T calls
-	re := regexp.MustCompile(`i18n\.(T)\([^,]+,\s*"([^"]+)"`)
+	// Match i18n.T(ctx, "key") and i18n.TP(ctx, "key", count)
+	re := regexp.MustCompile(`i18n\.(T|TP)\([^,]+,\s*"([^"]+)"`)
 	matches := re.FindAllSubmatchIndex(content, -1)
 
 	for _, match := range matches {
-		if len(match) >= 4 {
-			// Extract the key from the match
+		if len(match) >= 6 {
 			keyStart, keyEnd := match[4], match[5]
 			key := string(content[keyStart:keyEnd])
 
-			// Count lines to determine the line number
 			beforeMatch := content[:keyStart]
 			lineCount := bytes.Count(beforeMatch, []byte("\n")) + 1
 
@@ -807,7 +939,167 @@ func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 		}
 	}
 
-	return keys, nil
+	for _, match := range apiStringLiteralRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			literals[string(content[match[2]:match[3]])] = true
+		}
+	}
+
+	return keys, literals, nil
+}
+
+// frontendI18nCallReSingle matches translation calls using single-quoted keys:
+//   - $t('k'), $tc('k')
+//   - t('k'), tc('k') (composable)
+//   - i18n.t('k'), i18n.global.t('k')
+//
+// Go's RE2 doesn't support backreferences, so we have one regex per quote
+// style. Template-literal and bare-variable forms are handled separately.
+var frontendI18nCallReSingle = regexp.MustCompile(`(?:\$t|\$tc|\bt|\btc|\bi18n\.(?:global\.)?t)\(\s*'([^']+)'`)
+
+// frontendI18nCallReDouble is the double-quoted counterpart of
+// frontendI18nCallReSingle.
+var frontendI18nCallReDouble = regexp.MustCompile(`(?:\$t|\$tc|\bt|\btc|\bi18n\.(?:global\.)?t)\(\s*"([^"]+)"`)
+
+// frontendI18nTemplateLiteralRe matches template-literal calls of the form
+//
+//	$t(`prefix.${expr}`)  /  t(`prefix.${...}`)  / tc(`...`) etc.
+//
+// Capturing group 1 is the portion before the first ${ substitution, which we
+// treat as a "dynamic prefix": every translation key starting with it is
+// considered used.
+var frontendI18nTemplateLiteralRe = regexp.MustCompile("(?:\\$t|\\$tc|\\bt|\\btc|\\bi18n\\.(?:global\\.)?t)\\(\\s*`([^`$]*)\\$\\{")
+
+// frontendI18nKeypathRe matches Vue template <i18n-t keypath="key.name"> usage.
+var frontendI18nKeypathRe = regexp.MustCompile(`keypath\s*=\s*"([^"]+)"`)
+
+// walkFrontendForTranslationKeys scans .vue/.ts/.js files under rootDir and
+// extracts translation key references, dynamic-key prefixes, and a set of
+// candidate string-literal usage hints (for indirect references like keys
+// stored in arrays / template literals assigned to variables).
+func walkFrontendForTranslationKeys(rootDir string) ([]TranslationKey, []string, map[string]bool, error) {
+	var allKeys []TranslationKey
+	var allPrefixes []string
+	allLiterals := make(map[string]bool)
+
+	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			name := info.Name()
+			// Skip hidden dirs and build artifacts
+			if strings.HasPrefix(name, ".") || name == "node_modules" || name == "dist" {
+				return filepath.SkipDir
+			}
+			// Don't walk into the language files themselves
+			if path == filepath.Join(rootDir, "i18n", "lang") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		ext := filepath.Ext(path)
+		if ext != ".vue" && ext != ".ts" && ext != ".js" {
+			return nil
+		}
+
+		keys, prefixes, literals, err := extractFrontendTranslationKeysFromFile(path)
+		if err != nil {
+			fmt.Printf("Warning: %v\n", err)
+			return nil
+		}
+		allKeys = append(allKeys, keys...)
+		allPrefixes = append(allPrefixes, prefixes...)
+		for l := range literals {
+			allLiterals[l] = true
+		}
+
+		return nil
+	})
+
+	return allKeys, allPrefixes, allLiterals, err
+}
+
+// frontendStringLiteralRe matches single- or double-quoted strings that look
+// like dotted translation keys (e.g. "home.welcomeNight").
+var frontendStringLiteralRe = regexp.MustCompile(`['"]([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)+)['"]`)
+
+// frontendTemplatePrefixRe matches any template-literal fragment with a ${…}
+// interpolation, whether or not it is inside a $t() call. This catches cases
+// like `const path = ` + "`error.${code}`" where the literal is assigned to
+// a variable before being passed to a translator.
+var frontendTemplatePrefixRe = regexp.MustCompile("`([a-zA-Z][a-zA-Z0-9_.]*\\.)\\$\\{")
+
+// extractFrontendTranslationKeysFromFile extracts static and dynamic
+// translation key references from a single frontend source file.
+func extractFrontendTranslationKeysFromFile(filePath string) ([]TranslationKey, []string, map[string]bool, error) {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("error reading file %s: %w", filePath, err)
+	}
+
+	var keys []TranslationKey
+	var prefixes []string
+	literals := make(map[string]bool)
+
+	appendKey := func(keyStart int, key string) {
+		beforeMatch := content[:keyStart]
+		lineCount := bytes.Count(beforeMatch, []byte("\n")) + 1
+		keys = append(keys, TranslationKey{
+			Key:      key,
+			FilePath: filePath,
+			Line:     lineCount,
+		})
+	}
+
+	// Static string-literal calls (single- and double-quoted)
+	for _, match := range frontendI18nCallReSingle.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			appendKey(match[2], string(content[match[2]:match[3]]))
+		}
+	}
+	for _, match := range frontendI18nCallReDouble.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			appendKey(match[2], string(content[match[2]:match[3]]))
+		}
+	}
+
+	// <i18n-t keypath="..."> (Vue component usage in templates)
+	for _, match := range frontendI18nKeypathRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			appendKey(match[2], string(content[match[2]:match[3]]))
+		}
+	}
+
+	// Template-literal calls with interpolation inside a $t(). We extract the
+	// static prefix before ${ and mark every matching key as used.
+	for _, match := range frontendI18nTemplateLiteralRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			prefix := string(content[match[2]:match[3]])
+			if prefix != "" {
+				prefixes = append(prefixes, prefix)
+			}
+		}
+	}
+
+	// Collect dotted string literals and interpolated template-literal prefixes
+	// as "usage hints". These are only used to suppress dead-key false positives
+	// for indirect references (keys stored in arrays, prefix assigned to a
+	// variable then passed to a translator, etc).
+	for _, match := range frontendStringLiteralRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			literals[string(content[match[2]:match[3]])] = true
+		}
+	}
+	for _, match := range frontendTemplatePrefixRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			literals[string(content[match[2]:match[3]])] = true
+		}
+	}
+
+	return keys, prefixes, literals, nil
 }
 
 func checkGolangCiLintInstalled(ctx context.Context) error {
@@ -1190,10 +1482,243 @@ func (Release) Zip(ctx context.Context) error {
 	return nil
 }
 
-// Reprepro creates a debian repo structure
-func (Release) Reprepro(ctx context.Context) error {
-	mg.Deps(setVersion, setBinLocation)
-	return runAndStreamOutput(ctx, "reprepro_expect", "debian", "includedeb", "buster", "./"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
+// repoSuite returns a validated suite name from the REPO_SUITE env var.
+// Only "stable" and "unstable" are allowed to prevent path traversal.
+func repoSuite() string {
+	suite := os.Getenv("REPO_SUITE")
+	switch suite {
+	case "stable", "unstable":
+		return suite
+	default:
+		return "stable"
+	}
+}
+
+// RepoApt generates APT repository metadata using reprepro.
+// It expects .deb files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/apt/.
+// The reprepro config is read from build/reprepro-dist-conf.
+// Signing is done manually after reprepro finishes to avoid gpgme pinentry issues in CI.
+// Environment: REPO_SUITE controls the target suite (default: "stable").
+// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
+func (Release) RepoApt(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	suite := repoSuite()
+
+	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
+	outputBase := filepath.Join(DIST, "repo-output", "apt")
+
+	// Set up reprepro conf directory
+	confDir := filepath.Join(outputBase, "conf")
+	if err := os.MkdirAll(confDir, 0o755); err != nil {
+		return fmt.Errorf("creating reprepro conf dir: %w", err)
+	}
+
+	// Copy distributions config
+	distConf, err := os.ReadFile("build/reprepro-dist-conf")
+	if err != nil {
+		return fmt.Errorf("reading reprepro-dist-conf: %w", err)
+	}
+	if err := os.WriteFile(filepath.Join(confDir, "distributions"), distConf, 0o600); err != nil {
+		return fmt.Errorf("writing distributions config: %w", err)
+	}
+
+	// Include all .deb files into the target suite
+	debs, err := filepath.Glob(filepath.Join(incomingDir, "*.deb"))
+	if err != nil {
+		return err
+	}
+	for _, deb := range debs {
+		abs, _ := filepath.Abs(deb)
+		if err := runAndStreamOutput(ctx, "reprepro",
+			"-b", outputBase,
+			"includedeb", suite,
+			abs,
+		); err != nil {
+			return fmt.Errorf("reprepro includedeb %s: %w", filepath.Base(deb), err)
+		}
+	}
+
+	// Sign Release files manually (reprepro's gpgme signing doesn't work in CI)
+	gpgKey := os.Getenv("RELEASE_GPG_KEY")
+	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
+
+	releaseFile := filepath.Join(outputBase, "dists", suite, "Release")
+	if _, err := os.Stat(releaseFile); err == nil {
+		// Generate Release.gpg (detached signature)
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--detach-sign", "--armor",
+			"-o", releaseFile+".gpg",
+			releaseFile,
+		); err != nil {
+			return fmt.Errorf("signing Release (detached): %w", err)
+		}
+
+		// Generate InRelease (clearsigned)
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--clearsign",
+			"-o", filepath.Join(filepath.Dir(releaseFile), "InRelease"),
+			releaseFile,
+		); err != nil {
+			return fmt.Errorf("signing Release (clearsign): %w", err)
+		}
+	}
+
+	fmt.Println("APT repo metadata generated in", outputBase)
+	return nil
+}
+
+// RepoRpm generates RPM repository metadata for all .rpm files in the work directory.
+// Expects .rpm files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/rpm/<suite>/.
+// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
+// Environment: REPO_SUITE controls the target suite (default: "stable").
+func (Release) RepoRpm(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	suite := repoSuite()
+
+	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
+	outputBase := filepath.Join(DIST, "repo-output", "rpm", suite)
+
+	archMap := map[string]string{
+		"x86_64":  "x86_64",
+		"aarch64": "aarch64",
+		"armv7":   "armv7",
+	}
+
+	gpgKey := os.Getenv("RELEASE_GPG_KEY")
+	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
+
+	for pkgArch, repoArch := range archMap {
+		repoDir := filepath.Join(outputBase, repoArch)
+		if err := os.MkdirAll(repoDir, 0o755); err != nil {
+			return err
+		}
+
+		// Symlink matching RPMs
+		pattern := filepath.Join(incomingDir, "*-"+pkgArch+".rpm")
+		rpms, _ := filepath.Glob(pattern)
+		if len(rpms) == 0 {
+			continue
+		}
+		for _, rpm := range rpms {
+			abs, _ := filepath.Abs(rpm)
+			dst := filepath.Join(repoDir, filepath.Base(rpm))
+			os.Remove(dst)
+			if err := os.Symlink(abs, dst); err != nil {
+				return err
+			}
+		}
+
+		// createrepo_c (--update if repodata already exists)
+		args := []string{repoDir}
+		if _, err := os.Stat(filepath.Join(repoDir, "repodata")); err == nil {
+			args = []string{"--update", repoDir}
+		}
+		if err := runAndStreamOutput(ctx, "createrepo_c", args...); err != nil {
+			return fmt.Errorf("createrepo_c for %s: %w", repoArch, err)
+		}
+
+		// Sign repomd.xml
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--detach-sign", "--armor",
+			"-o", filepath.Join(repoDir, "repodata", "repomd.xml.asc"),
+			filepath.Join(repoDir, "repodata", "repomd.xml"),
+		); err != nil {
+			return fmt.Errorf("signing repomd.xml for %s: %w", repoArch, err)
+		}
+	}
+
+	fmt.Println("RPM repo metadata generated in", outputBase)
+	return nil
+}
+
+// RepoPacman generates Pacman repository database for all .archlinux files in the work directory.
+// Expects .archlinux files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/pacman/<suite>/.
+// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
+// Environment: REPO_SUITE controls the target suite (default: "stable").
+func (Release) RepoPacman(ctx context.Context) error {
+	mg.Deps(initVars)
+
+	suite := repoSuite()
+
+	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
+	outputBase := filepath.Join(DIST, "repo-output", "pacman", suite)
+
+	archMap := map[string]string{
+		"x86_64":  "x86_64",
+		"aarch64": "aarch64",
+		"armv7":   "armv7",
+	}
+
+	gpgKey := os.Getenv("RELEASE_GPG_KEY")
+	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
+
+	for pkgArch, repoArch := range archMap {
+		repoDir := filepath.Join(outputBase, repoArch)
+		if err := os.MkdirAll(repoDir, 0o755); err != nil {
+			return err
+		}
+
+		pattern := filepath.Join(incomingDir, "*-"+pkgArch+".archlinux")
+		pkgs, _ := filepath.Glob(pattern)
+		if len(pkgs) == 0 {
+			continue
+		}
+		for _, pkg := range pkgs {
+			abs, _ := filepath.Abs(pkg)
+			dst := filepath.Join(repoDir, filepath.Base(pkg))
+			os.Remove(dst)
+			if err := os.Symlink(abs, dst); err != nil {
+				return err
+			}
+		}
+
+		// repo-add creates vikunja.db.tar.gz and vikunja.files.tar.gz
+		dbPath := filepath.Join(repoDir, "vikunja.db.tar.gz")
+		repoPkgs, _ := filepath.Glob(filepath.Join(repoDir, "*.archlinux"))
+		repoAddArgs := append([]string{dbPath}, repoPkgs...)
+		if err := runAndStreamOutput(ctx, "repo-add", repoAddArgs...); err != nil {
+			return fmt.Errorf("repo-add for %s: %w", repoArch, err)
+		}
+
+		// Create conventional symlinks (vikunja.db -> vikunja.db.tar.gz)
+		for _, name := range []string{"vikunja.db", "vikunja.files"} {
+			link := filepath.Join(repoDir, name)
+			os.Remove(link)
+			if err := os.Symlink(name+".tar.gz", link); err != nil {
+				return fmt.Errorf("creating symlink %s: %w", name, err)
+			}
+		}
+
+		// Sign the database
+		if err := runAndStreamOutput(ctx, "gpg",
+			"--default-key", gpgKey,
+			"--batch", "--yes",
+			"--passphrase", gpgPassphrase,
+			"--pinentry-mode", "loopback",
+			"--detach-sign",
+			"-o", filepath.Join(repoDir, "vikunja.db.sig"),
+			dbPath,
+		); err != nil {
+			return fmt.Errorf("signing db for %s: %w", repoArch, err)
+		}
+	}
+
+	fmt.Println("Pacman repo metadata generated in", outputBase)
+	return nil
 }
 
 // PrepareNFPMConfig prepares the nfpm config
@@ -1208,8 +1733,21 @@ func (Release) PrepareNFPMConfig() error {
 		return err
 	}
 
+	var nfpmArch string
+	switch os.Getenv("NFPM_ARCH") {
+	case "arm64":
+		nfpmArch = "arm64"
+	case "arm7":
+		nfpmArch = "arm7"
+	case "386":
+		nfpmArch = "386"
+	default:
+		nfpmArch = "amd64"
+	}
+
 	fixedConfig := strings.ReplaceAll(string(nfpmconfig), "<version>", VersionNumber)
 	fixedConfig = strings.ReplaceAll(fixedConfig, "<binlocation>", BinLocation)
+	fixedConfig = strings.ReplaceAll(fixedConfig, "<arch>", nfpmArch)
 	if err := os.WriteFile(nfpmConfigPath, []byte(fixedConfig), 0); err != nil {
 		return err
 	}
@@ -1636,9 +2174,20 @@ func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
 }
 
+func localBranchExists(ctx context.Context, name string) bool {
+	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/heads/"+name).Run() == nil //nolint:gosec // This is a dev-only mage task and the branch name is supplied by the developer running it.
+}
+
+func remoteBranchExists(ctx context.Context, name string) bool {
+	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/remotes/"+name).Run() == nil //nolint:gosec // This is a dev-only mage task and the branch name is supplied by the developer running it.
+}
+
 // PrepareWorktree creates a new git worktree for development.
 // The first argument is the name, which becomes both the folder name and branch name.
-// The second argument is a path to a plan file that will be copied to the new worktree (pass "" to skip).
+// If a local branch with that name exists, it is checked out.
+// If a remote branch origin/<name> exists, a local tracking branch is created.
+// Otherwise a new branch is created.
+// The second argument is a path to a plan file that will be moved to the new worktree (pass "" to skip).
 // The worktree is created in the parent directory (../).
 // It also copies the current config.yml with an updated rootpath, and initializes the frontend.
 func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) error {
@@ -1651,8 +2200,28 @@ func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) er
 
 	fmt.Printf("Creating worktree at %s with branch %s...\n", worktreePath, name)
 
-	// Create the git worktree
-	cmd := exec.CommandContext(ctx, "git", "worktree", "add", worktreePath, "-b", name)
+	// Refresh remote refs so remote-branch detection is reliable.
+	fetchCmd := exec.CommandContext(ctx, "git", "fetch", "origin")
+	fetchCmd.Stdout = os.Stdout
+	fetchCmd.Stderr = os.Stderr
+	if err := fetchCmd.Run(); err != nil {
+		fmt.Printf("Warning: git fetch failed: %v\n", err)
+	}
+
+	var worktreeArgs []string
+	switch {
+	case localBranchExists(ctx, name):
+		fmt.Printf("Local branch %s exists, checking it out.\n", name)
+		worktreeArgs = []string{"worktree", "add", worktreePath, name}
+	case remoteBranchExists(ctx, "origin/"+name):
+		fmt.Printf("Remote branch origin/%s exists, creating tracking branch.\n", name)
+		worktreeArgs = []string{"worktree", "add", "--track", "-b", name, worktreePath, "origin/" + name}
+	default:
+		fmt.Printf("Creating new branch %s.\n", name)
+		worktreeArgs = []string{"worktree", "add", worktreePath, "-b", name}
+	}
+
+	cmd := exec.CommandContext(ctx, "git", worktreeArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -1721,10 +2290,10 @@ func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) er
 			}
 
 			dstPlanPath := filepath.Join(plansDir, filepath.Base(planPath))
-			if err := copyFile(srcPlanPath, dstPlanPath); err != nil {
-				return fmt.Errorf("failed to copy plan file: %w", err)
+			if err := os.Rename(srcPlanPath, dstPlanPath); err != nil {
+				return fmt.Errorf("failed to move plan file: %w", err)
 			}
-			printSuccess("Plan file copied to %s!", dstPlanPath)
+			printSuccess("Plan file moved to %s!", dstPlanPath)
 		}
 	}
 
@@ -1870,10 +2439,16 @@ func (Dev) TagRelease(ctx context.Context, version string) error {
 		return fmt.Errorf("failed to update frontend package.json: %w", err)
 	}
 
+	// Update publiccode.yml version and release date
+	fmt.Println("Updating publiccode.yml...")
+	if err := updatePublicCodeYml(version); err != nil {
+		return fmt.Errorf("failed to update publiccode.yml: %w", err)
+	}
+
 	// Commit the changes
 	fmt.Println("Committing changes...")
 	commitMsg := fmt.Sprintf("chore: %s release preparations", version)
-	cmd := exec.CommandContext(ctx, "git", "add", "README.md", "CHANGELOG.md", "frontend/package.json")
+	cmd := exec.CommandContext(ctx, "git", "add", "README.md", "CHANGELOG.md", "frontend/package.json", "publiccode.yml")
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to stage files: %w", err)
 	}
@@ -2012,6 +2587,27 @@ func updateFrontendPackageJSON(version string) error {
 
 	if err := os.WriteFile(pkgPath, []byte(newContent), 0o600); err != nil {
 		return fmt.Errorf("failed to write %s: %w", pkgPath, err)
+	}
+
+	return nil
+}
+
+// updatePublicCodeYml updates the softwareVersion and releaseDate in publiccode.yml.
+func updatePublicCodeYml(version string) error {
+	filePath := "publiccode.yml"
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read %s: %w", filePath, err)
+	}
+
+	reVersion := regexp.MustCompile(`(softwareVersion:\s*')([^']+)(')`)
+	newContent := reVersion.ReplaceAllString(string(content), "${1}"+version+"${3}")
+
+	reDate := regexp.MustCompile(`(releaseDate:\s*')([^']+)(')`)
+	newContent = reDate.ReplaceAllString(newContent, "${1}"+time.Now().Format("2006-01-02")+"${3}")
+
+	if err := os.WriteFile(filePath, []byte(newContent), 0o600); err != nil {
+		return fmt.Errorf("failed to write %s: %w", filePath, err)
 	}
 
 	return nil

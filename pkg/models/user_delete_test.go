@@ -73,6 +73,19 @@ func TestDeleteUser(t *testing.T) {
 		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
 		db.AssertMissing(t, "projects", map[string]interface{}{"id": 37}) // only user16 had access to this project, and it was their default
 	})
+	t.Run("disabled user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+
+		u := &user.User{ID: 17}
+		err := DeleteUser(s, u)
+
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
+	})
 	t.Run("cleans up task assignments and subscriptions", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()

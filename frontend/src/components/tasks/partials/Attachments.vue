@@ -95,7 +95,7 @@
 								<Icon icon="trash-alt" />
 							</BaseButton>
 							<BaseButton
-								v-if="editEnabled && canPreview(a)"
+								v-if="editEnabled && canPreviewImage(a)"
 								v-tooltip="task.coverImageAttachmentId === a.id
 									? $t('task.attachment.unsetAsCover')
 									: $t('task.attachment.setAsCover')"
@@ -168,6 +168,19 @@
 				alt=""
 			>
 		</Modal>
+
+		<!-- Attachment PDF modal -->
+		<Modal
+			:enabled="attachmentPdfBlobUrl !== null"
+			:wide="true"
+			@close="attachmentPdfBlobUrl = null"
+		>
+			<iframe
+				v-if="attachmentPdfBlobUrl"
+				:src="attachmentPdfBlobUrl"
+				class="pdf-preview-iframe"
+			/>
+		</Modal>
 	</div>
 </template>
 
@@ -180,7 +193,7 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
-import {canPreview} from '@/models/attachment'
+import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
@@ -365,10 +378,13 @@ async function deleteAttachment() {
 }
 
 const attachmentImageBlobUrl = ref<string | null>(null)
+const attachmentPdfBlobUrl = ref<string | null>(null)
 
 async function viewOrDownload(attachment: IAttachment) {
-	if (canPreview(attachment)) {
+	if (canPreviewImage(attachment)) {
 		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
+	} else if (canPreviewPdf(attachment)) {
+		attachmentPdfBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else {
 		downloadAttachment(attachment)
 	}
@@ -574,6 +590,15 @@ defineExpose({
 
 .attachment-preview {
 	block-size: 100%;
+}
+
+.pdf-preview-iframe {
+	inline-size: 100%;
+	max-inline-size: calc(100% - 4rem);
+	block-size: calc(100vh - 40px);
+	border: none;
+	margin: 0 auto;
+	display: block;
 }
 
 .is-task-cover {

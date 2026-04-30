@@ -403,10 +403,14 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 				oldID := a.ID
 				a.ID = 0
 				a.TaskID = t.ID
-				err = a.NewAttachment(s, bytes.NewReader(a.File.FileContent), a.File.Name, a.File.Size, user)
+				// Import metadata is attacker-controlled and can forge a
+				// small size to bypass the file size limit (GHSA-qh78-rvg3-cv54).
+				actualSize := uint64(len(a.File.FileContent))
+				a.File.Size = actualSize
+				err = a.NewAttachment(s, bytes.NewReader(a.File.FileContent), a.File.Name, actualSize, user)
 				if err != nil {
 					if models.IsErrTaskAttachmentIsTooLarge(err) {
-						log.Warningf("[creating structure] Attachment %s is too large (%d bytes), skipping: %v", a.File.Name, a.File.Size, err)
+						log.Warningf("[creating structure] Attachment %s is too large (%d bytes), skipping: %v", a.File.Name, actualSize, err)
 						continue
 					}
 					return
@@ -466,7 +470,8 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 		}
 	}
 
-	// All tasks brought their own bucket with them, therefore the newly created default bucket is just extra space
+	// All tasks brought their own bucket with them, therefore the newly created default buckets are just extra space.
+	// Delete all default-created buckets ("To-Do", "Doing", "Done") that were auto-generated.
 	if !needsDefaultBucket {
 		b := &models.Bucket{ProjectID: project.ID}
 
@@ -482,17 +487,21 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			return err
 		}
 		buckets := bucketsIn.([]*models.Bucket)
-		var newBacklogBucket *models.Bucket
-		for _, b := range buckets {
-			if b.Title == "To-Do" {
-				newBacklogBucket = b
-				newBacklogBucket.ProjectID = project.ID
-				break
-			}
+
+		migrationBucketIDs := make(map[int64]bool)
+		for _, mb := range bucketsByOldID {
+			migrationBucketIDs[mb.ID] = true
 		}
-		err = newBacklogBucket.Delete(s, user)
-		if err != nil && !models.IsErrCannotRemoveLastBucket(err) {
-			return err
+
+		for _, b := range buckets {
+			if migrationBucketIDs[b.ID] {
+				continue
+			}
+			b.ProjectID = project.ID
+			err = b.Delete(s, user)
+			if err != nil && !models.IsErrCannotRemoveLastBucket(err) {
+				return err
+			}
 		}
 	}
 

@@ -44,7 +44,6 @@
 			"resetPassword": "Återställ ditt lösenord",
 			"resetPasswordAction": "Skicka en länk för återställning av lösenord",
 			"resetPasswordSuccess": "Kolla din inkorg! Du bör ha fått ett e-postmeddelande med instruktioner om hur du återställer ditt lösenord.",
-			"passwordsDontMatch": "Lösenorden matchar inte",
 			"confirmEmailSuccess": "Du bekräftade din e-post! Du kan logga in nu.",
 			"totpTitle": "Tvåfaktorsautentiseringskod",
 			"totpPlaceholder": "t.ex. 123456",
@@ -74,10 +73,8 @@
 			"title": "Inställningar",
 			"newPasswordTitle": "Uppdatera ditt lösenord",
 			"newPassword": "Nytt lösenord",
-			"newPasswordConfirm": "Bekräftelse av nytt lösenord",
 			"currentPassword": "Nuvarande lösenord",
 			"currentPasswordPlaceholder": "Ditt nuvarande lösenord",
-			"passwordsDontMatch": "Det nya lösenordet och bekräftelsen överensstämmer inte.",
 			"passwordUpdateSuccess": "Lösenordet har uppdaterats.",
 			"updateEmailTitle": "Uppdatera din e-postadress",
 			"updateEmailNew": "Ny e-postadress",
@@ -144,15 +141,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Du kan ansluta Vikunja till CalDAV-klienter för att visa och hantera alla uppgifter från olika klienter. Ange denna URL i din klient:",
 				"more": "Mer information om CalDAV i Vikunja",
-				"tokens": "CalDAV-token",
-				"tokensHowTo": "Du kan använda en CalDAV-token för att använda istället för ett lösenord för att logga in på ovanstående slutpunkt.",
-				"createToken": "Skapa ny token",
-				"tokenCreated": "Här är din token: {token}",
-				"wontSeeItAgain": "Skriv ner den, du kommer inte att kunna se den igen.",
-				"mustUseToken": "Du måste skapa en CalDAV-token om du vill använda CalDAV med en tredjepartsklient. Använd token som lösenord.",
-				"usernameIs": "Ditt användarnamn är: {0}"
+				"tokens": "CalDAV-token"
 			},
 			"avatar": {
 				"title": "Avatar",
@@ -174,7 +164,6 @@
 			},
 			"appearance": {
 				"title": "Färgschema",
-				"setSuccess": "Sparat ändring av färgschema till {colorScheme}",
 				"colorScheme": {
 					"light": "Ljust",
 					"system": "System",
@@ -199,7 +188,6 @@
 				"expired": "Denna token har gått ut {ago}.",
 				"tokenCreatedSuccess": "Här är din nya API-token: {token}",
 				"tokenCreatedNotSeeAgain": "Förvara den på en säker plats, du kommer aldrig att se den igen!",
-				"selectAll": "Markera allt",
 				"delete": {
 					"header": "Ta bort denna token",
 					"text1": "Är du säker på att du vill radera token \"{token}\"?",
@@ -475,16 +463,7 @@
 			"titlePlaceholder": "Den sparade filtertiteln går här…",
 			"description": "Beskrivning",
 			"descriptionPlaceholder": "Ange en beskrivning för filtret här, tryck '/' för fler alternativ…",
-			"includeNulls": "Inkludera uppgifter som inte har ett värde angett",
-			"requireAll": "Kräv att alla filter är sanna för att en uppgift ska visas",
-			"showDoneTasks": "Visa utförda uppgifter",
-			"sortAlphabetically": "Sortera alfabetiskt",
-			"enablePriority": "Aktivera filter efter prioritet",
-			"enablePercentDone": "Aktivera filter efter framsteg",
-			"dueDateRange": "Förfallodatumets intervall",
-			"startDateRange": "Startdatumintervall",
-			"endDateRange": "Slutdatumintervall",
-			"reminderRange": "Datumintervall för påminnelse"
+			"includeNulls": "Inkludera uppgifter som inte har ett värde angett"
 		},
 		"create": {
 			"title": "Nytt sparat filter",
@@ -502,7 +481,6 @@
 			"success": "Filtret sparades framgångsrikt."
 		},
 		"query": {
-			"title": "Fråga",
 			"placeholder": "Skriv in en sök- eller filterfråga…",
 			"help": {
 				"intro": "För att filtrera uppgifter kan du använda en syntax som liknar SQL. De tillgängliga fälten för filtrering inkluderar:",
@@ -555,7 +533,6 @@
 	"migrate": {
 		"title": "Importera från andra tjänster",
 		"titleService": "Importera din data från {name} till Vikunja",
-		"import": "Importera din data till Vikunja",
 		"description": "Klicka på logotypen för en av nedanstående tredjepartstjänster för att komma igång.",
 		"descriptionDo": "Vikunja kommer att importera alla listor, uppgifter, anteckningar, påminnelser och filer du har tillgång till.",
 		"authorize": "För att tillåta Vikunja att komma åt ditt {name}konto, klicka på knappen nedan.",
@@ -574,7 +551,6 @@
 		"manage": "Hantera etiketter",
 		"description": "Klicka på en etikett för att redigera den. Du kan redigera alla etiketter du skapat, du kan använda alla etiketter som är associerade med en uppgift vars projekt du har tillgång till.",
 		"newCTA": "Du har för närvarande inga etiketter.",
-		"search": "Skriv för att söka efter en etikett…",
 		"create": {
 			"header": "Ny etikett",
 			"title": "Skapa en etikett",
@@ -583,7 +559,6 @@
 		},
 		"edit": {
 			"header": "Redigera etikett",
-			"forbidden": "Du får inte redigera denna etikett eftersom du inte äger den.",
 			"success": "Etiketten skapades framgångsrikt."
 		},
 		"deleteSuccess": "Etiketten raderades framgångsrikt.",
@@ -591,7 +566,6 @@
 			"title": "Titel",
 			"titlePlaceholder": "Etikettiteln här…",
 			"description": "Beskrivning",
-			"descriptionPlaceholder": "Etikettbeskrivning",
 			"color": "Färg"
 		}
 	},
@@ -618,16 +592,13 @@
 		"delete": "Radera",
 		"confirm": "Bekräfta",
 		"cancel": "Avbryt",
-		"refresh": "Uppdatera",
 		"disable": "Inaktivera",
 		"copy": "Kopiera till urklipp",
 		"copyError": "Kopiering till urklipp misslyckades",
-		"search": "Sök",
 		"searchPlaceholder": "Skriv för att söka…",
 		"previous": "Föregående",
 		"next": "Nästa",
 		"poweredBy": "Drivs av Vikunja",
-		"info": "Info",
 		"create": "Skapa",
 		"doit": "Gör det!",
 		"saving": "Sparar…",
@@ -660,15 +631,12 @@
 		},
 		"editor": {
 			"edit": "Redigera",
-			"done": "Klart",
 			"heading1": "Rubrik 1",
 			"heading1Tooltip": "Stor sektionsrubrik.",
 			"heading2": "Rubrik 2",
 			"heading2Tooltip": "Mellanstor sektionsrubrik.",
 			"heading3": "Rubrik 3",
 			"heading3Tooltip": "Mindre sektionsrubrik.",
-			"headingSmaller": "Mindre rubrik",
-			"headingBigger": "Större rubrik",
 			"bold": "Fetstil",
 			"italic": "Kursiv",
 			"strikethrough": "Genomstruken",
@@ -679,17 +647,13 @@
 			"quoteTooltip": "Fånga ett citat.",
 			"bulletList": "Punktlista",
 			"bulletListTooltip": "Skapa en enkel punktlista.",
-			"unorderedList": "Osorterad lista",
 			"orderedList": "Sorterad lista",
 			"orderedListTooltip": "Skapa en lista med numrering.",
-			"cleanBlock": "Rensa block",
 			"link": "Länk",
 			"image": "Bild",
 			"imageTooltip": "Ladda upp en bild från din dator.",
 			"horizontalRule": "Horisontell linje",
 			"horizontalRuleTooltip": "Dela upp en sektion.",
-			"sideBySide": "Sida vid sida",
-			"guide": "Guide",
 			"text": "Text",
 			"textTooltip": "Börja bara skriva med vanlig text.",
 			"taskList": "Uppgiftslista",
@@ -795,21 +759,17 @@
 		}
 	},
 	"task": {
-		"task": "Uppgift",
 		"new": "Skapa en uppgift",
-		"delete": "Radera denna uppgift",
 		"createSuccess": "Uppgiften skapades framgångsrikt.",
 		"addReminder": "Lägg till en påminnelse…",
 		"doneSuccess": "Uppgiften markerades framgångsrikt som klar.",
 		"undoneSuccess": "Uppgiften avmarkerades framgångsrikt som klar.",
 		"movedToProject": "Uppgiften flyttades till {project}.",
 		"undo": "Ångra",
-		"openDetail": "Öppna detaljvyn för uppgift",
 		"checklistTotal": "{checked} av {total} uppgifter",
 		"checklistAllDone": "{total} uppgifter",
 		"show": {
 			"titleCurrent": "Aktuella uppgifter",
-			"titleDates": "Uppgifter från {from} till {to}",
 			"noDates": "Visa uppgifter utan datum",
 			"overdue": "Visa förfallna uppgifter",
 			"fromuntil": "Uppgifter från {from} till {until}",
@@ -833,7 +793,6 @@
 			"belongsToProject": "Denna uppgift tillhör projektet '{project}'",
 			"back": "Tillbaka till projekt",
 			"due": "Förfaller {at}",
-			"closePopup": "Stäng popup",
 			"scrollToBottom": "Skrolla till botten",
 			"organization": "Organisation",
 			"management": "Hantering",
@@ -906,7 +865,6 @@
 			"delete": "Radera bilaga",
 			"deleteTooltip": "Radera denna bilaga",
 			"deleteText1": "Är du säker på att du vill radera bilagan {filename}?",
-			"copyUrl": "Kopiera URL",
 			"copyUrlTooltip": "Kopiera denna bilagas URL för användning i text",
 			"setAsCover": "Gör omslag",
 			"unsetAsCover": "Ta bort omslag",
@@ -936,8 +894,7 @@
 			"1week": "1 vecka"
 		},
 		"description": {
-			"placeholder": "Ange en beskrivning, tryck '/' för fler alternativ…",
-			"empty": "Ingen beskrivning är tillgänglig ännu."
+			"placeholder": "Ange en beskrivning, tryck '/' för fler alternativ…"
 		},
 		"assignee": {
 			"placeholder": "Skriv för att tilldela en användare…",
@@ -949,7 +906,6 @@
 			"placeholder": "Skriv för att lägga till en etikett…",
 			"createPlaceholder": "Lägg till som ny etikett",
 			"addSuccess": "Etiketten las till framgångsrikt.",
-			"createSuccess": "Etiketten skapades framgångsrikt.",
 			"removeSuccess": "Etiketten togs bort framgångsrikt.",
 			"addCreateSuccess": "Etiketten skapades och las till framgångsrikt.",
 			"delete": {
@@ -1014,8 +970,6 @@
 			"hours": "Timmar",
 			"days": "Dagar",
 			"weeks": "Veckor",
-			"months": "Månader",
-			"years": "År",
 			"invalidAmount": "Vänligen ange mer än 0."
 		},
 		"quickAddMagic": {
@@ -1168,7 +1122,6 @@
 		"unarchive": "Avarkivera",
 		"setBackground": "Bakgrundsinställningar",
 		"share": "Dela",
-		"newProject": "Nytt projekt",
 		"createProject": "Skapa projekt",
 		"cantArchiveIsDefault": "Du kan inte arkivera detta eftersom det är ditt förvalda projekt.",
 		"cantDeleteIsDefault": "Du kan inte radera detta eftersom det är ditt förvalda projekt.",
@@ -1326,7 +1279,6 @@
 			"hours": "timme|timmar",
 			"days": "dag|dagar",
 			"weeks": "vecka|veckor",
-			"months": "månad|månader",
 			"years": "år|år"
 		}
 	}

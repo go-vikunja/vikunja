@@ -47,6 +47,18 @@ const (
 	TaskRepeatModeFromCurrentDate
 )
 
+// MaxTaskRepeatAfterSeconds caps repeat_after at ten years. Sized to
+// stay far from int64 overflow when multiplied out in nanoseconds, and
+// ten years is already well past any legitimate recurrence.
+const MaxTaskRepeatAfterSeconds int64 = 10 * 365 * 24 * 3600
+
+func validateRepeatAfter(repeatAfter int64) error {
+	if repeatAfter < 0 || repeatAfter > MaxTaskRepeatAfterSeconds {
+		return ErrInvalidTaskRepeatInterval{RepeatAfter: repeatAfter}
+	}
+	return nil
+}
+
 // Task represents a task in a project
 type Task struct {
 	// The unique, numeric id of this task.
@@ -64,7 +76,7 @@ type Task struct {
 	// An array of reminders that are associated with this task.
 	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// The project this task belongs to.
-	ProjectID int64 `xorm:"bigint INDEX not null" json:"project_id" param:"project"`
+	ProjectID int64 `xorm:"bigint INDEX not null unique(tasks_project_index)" json:"project_id" param:"project"`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
 	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after" valid:"range(0|9223372036854775807)"`
 	// Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.
@@ -87,7 +99,7 @@ type Task struct {
 	// The task identifier, based on the project identifier and the task's index
 	Identifier string `xorm:"-" json:"identifier"`
 	// The task index, calculated per project
-	Index int64 `xorm:"bigint not null default 0" json:"index"`
+	Index int64 `xorm:"bigint not null default 0 unique(tasks_project_index)" json:"index" param:"index"`
 
 	// The UID is currently not used for anything other than CalDAV, which is why we don't expose it over json
 	UID string `xorm:"varchar(250) null" json:"-"`
@@ -341,6 +353,41 @@ func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 	return GetTaskSimple(s, &Task{ID: taskID})
 }
 
+// GetTaskByProjectAndIndex returns a task by its per-project index.
+// Returns ErrTaskDoesNotExist if nothing matches.
+func GetTaskByProjectAndIndex(s *xorm.Session, projectID, index int64) (task Task, err error) {
+	if projectID < 1 || index < 1 {
+		return Task{}, ErrTaskDoesNotExist{}
+	}
+
+	has, err := s.
+		Where("project_id = ? AND `index` = ?", projectID, index).
+		Get(&task)
+	if err != nil {
+		return Task{}, err
+	}
+	if !has {
+		return Task{}, ErrTaskDoesNotExist{}
+	}
+
+	return task, nil
+}
+
+// resolveIDFromProjectAndIndex populates t.ID from (ProjectID, Index) for the
+// by-index route, which binds project+index from the URL but not id. No-op
+// when id is already set.
+func (t *Task) resolveIDFromProjectAndIndex(s *xorm.Session) error {
+	if t.ID != 0 || t.ProjectID < 1 || t.Index < 1 {
+		return nil
+	}
+	resolved, err := GetTaskByProjectAndIndex(s, t.ProjectID, t.Index)
+	if err != nil {
+		return err
+	}
+	t.ID = resolved.ID
+	return nil
+}
+
 // GetTaskSimple returns a raw task without extra data
 func GetTaskSimple(s *xorm.Session, t *Task) (task Task, err error) {
 	task = *t
@@ -372,10 +419,14 @@ func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 	return
 }
 
-// GetTasksByUIDs gets all tasks from a bunch of uids
+// GetTasksByUIDs gets all tasks from a bunch of uids, filtering out any
+// task whose project the provided auth does not have access to.
 func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, err error) {
 	tasks = []*Task{}
-	err = s.In("uid", uids).Find(&tasks)
+	err = s.
+		In("uid", uids).
+		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		Find(&tasks)
 	if err != nil {
 		return
 	}
@@ -869,6 +920,10 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		return ErrTaskCannotBeEmpty{}
 	}
 
+	if err := validateRepeatAfter(t.RepeatAfter); err != nil {
+		return err
+	}
+
 	// Check if the project exists
 	p, err := GetProjectSimpleByID(s, t.ProjectID)
 	if err != nil {
@@ -918,6 +973,11 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 
 	if len(positions) > 0 {
 		_, err = s.Insert(&positions)
+		if err != nil {
+			return
+		}
+
+		err = resolvePositionConflictsAfterInsert(s, positions)
 		if err != nil {
 			return
 		}
@@ -1156,6 +1216,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
+	if err := validateRepeatAfter(t.RepeatAfter); err != nil {
+		return err
+	}
+
 	// If the task is being moved between projects, make sure to move the bucket + index as well
 	if t.ProjectID != 0 && ot.ProjectID != t.ProjectID {
 		t.Index, err = calculateNextTaskIndex(s, t.ProjectID)
@@ -1167,7 +1231,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 
 	views := []*ProjectView{}
-	if (!t.isRepeating() && t.Done != ot.Done) || t.ProjectID != ot.ProjectID {
+	if t.Done != ot.Done || t.ProjectID != ot.ProjectID {
 		err = s.
 			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ?",
 				t.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual).
@@ -1223,6 +1287,16 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// When a task changed its done status, make sure it is in the correct bucket
 	if t.ProjectID == ot.ProjectID && !t.isRepeating() && t.Done != ot.Done {
 		err = t.moveTaskToDoneBuckets(s, a, views)
+		if err != nil {
+			return
+		}
+	}
+
+	// Repeating tasks don't stay in the done bucket — route them back
+	// to the default bucket so the next iteration shows up in the
+	// "To-Do" column. See #2573.
+	if t.ProjectID == ot.ProjectID && t.isRepeating() && !ot.Done && t.Done {
+		err = t.moveTaskToDefaultBuckets(s, a, views)
 		if err != nil {
 			return
 		}
@@ -1449,19 +1523,76 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 	return nil
 }
 
+// moveTaskToDefaultBuckets moves the task to the default bucket of
+// every provided view. It's the counterpart to moveTaskToDoneBuckets
+// and is used when a repeating task is marked done: repeating tasks
+// don't stay in the done bucket, so they should be routed back to
+// the default ("To-Do") bucket so the next iteration is visible there.
+func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
+	for _, view := range views {
+		defaultBucketID, err := getDefaultBucketID(s, view)
+		if err != nil {
+			return err
+		}
+
+		tb := &TaskBucket{
+			BucketID:      defaultBucketID,
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			ProjectID:     t.ProjectID,
+		}
+		err = updateTaskBucket(s, a, tb)
+		if err != nil {
+			return err
+		}
+
+		tp := TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			Position:      calculateDefaultPosition(t.Index, t.Position),
+		}
+		err = updateTaskPosition(s, a, &tp)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func addOneMonthToDate(d time.Time) time.Time {
 	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
 }
 
+// addRepeatIntervalToTime advances t by whole multiples of duration until
+// it is strictly after now. The previous O(n) loop made a one-second
+// interval with an ancient due_date trivial DoS (GHSA-r4fg-73rc-hhh7);
+// this computes the answer in constant time.
 func addRepeatIntervalToTime(now, t time.Time, duration time.Duration) time.Time {
-	for {
-		t = t.Add(duration)
-		if t.After(now) {
-			break
-		}
+	if duration <= 0 {
+		return t
 	}
 
-	return t
+	// Preserve the original contract: always advance t by at least one
+	// interval, even when t is already at or after now.
+	if !t.Before(now) {
+		return t.Add(duration)
+	}
+
+	// time.Time.Sub saturates at math.MaxInt64 nanoseconds (~292 years).
+	// Fall back to "one interval past now" for pathologically old t.
+	diff := now.Sub(t)
+	if diff == math.MaxInt64 {
+		return now.Add(duration)
+	}
+
+	intervals := int64(diff/duration) + 1
+
+	// Guard against int64 overflow when multiplying intervals by duration.
+	if intervals > math.MaxInt64/int64(duration) {
+		return now.Add(duration)
+	}
+
+	return t.Add(time.Duration(intervals) * duration)
 }
 
 func setTaskDatesDefault(oldTask, newTask *Task) {
@@ -1837,6 +1968,9 @@ func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	t.Expand = append(t.Expand, t.ExpandArr...)
 	expand := t.Expand
+	if err = t.resolveIDFromProjectAndIndex(s); err != nil {
+		return
+	}
 	*t, err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return

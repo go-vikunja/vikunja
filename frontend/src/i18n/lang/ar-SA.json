@@ -42,7 +42,6 @@
 			"forgotPassword": "نسيت كلمة المرور؟",
 			"resetPassword": "إعادة تعيين كلمة المرور",
 			"resetPasswordAction": "أرسل لي رابط إعادة تعيين كلمة المرور",
-			"passwordsDontMatch": "كلمتي المرور غير متطابقتين",
 			"confirmEmailSuccess": "تم تأكيد بريدك الإلكتروني بنجاح! يمكنك تسجيل الدخول الآن.",
 			"totpTitle": "رمز المصادقة الثنائية 2FA",
 			"totpPlaceholder": "مثال: 123456",
@@ -65,7 +64,6 @@
 			"title": "الإعدادات",
 			"newPasswordTitle": "تحديث كلمة مرورك",
 			"currentPasswordPlaceholder": "كلمة المرور الحالية الخاصة بك",
-			"passwordsDontMatch": "كلمة المرور الجديدة وتأكيدها غير متطابقة.",
 			"passwordUpdateSuccess": "تم تحديث كلمة المرور بنجاح.",
 			"updateEmailTitle": "تحديث عنوان بريدك الإلكتروني",
 			"updateEmailSuccess": "تم تحديث عنوان بريدك الإلكتروني بنجاح. لقد أرسلنا لك رابط لتأكيده.",
@@ -96,15 +94,8 @@
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "يمكنك توصيل Vikunja إلى خدمة CalDAV لعرض وإدارة جميع المهام. أدخل عنوان Url في المنصة:",
 				"more": "معلومات إضافية عن CalDAV في Vikunja",
-				"tokens": "رموز CalDAV",
-				"tokensHowTo": "يمكنك استخدام رمز CalDAV لاستخدامه بدلاً من كلمة المرور لتسجيل الدخول في عنوان الموقع أعلاه.",
-				"createToken": "إنشاء رمز مميز",
-				"tokenCreated": "إليك الرمز المميز الخاص بك: {token}",
-				"wontSeeItAgain": "قم بكتابته وحفظه في مكان آمن، لن تتمكن من عرضه مرة أخرى.",
-				"mustUseToken": "تحتاج إلى إنشاء رمز CalDAV إذا كنت ترغب باستخدام CalDAV مع منصة طرف ثالث. استخدم الرمز ككلمة المرور.",
-				"usernameIs": "اسم المستخدم الخاص بك هو: {0}"
+				"tokens": "رموز CalDAV"
 			},
 			"avatar": {
 				"title": "الصورة الرمزية",
@@ -124,7 +115,6 @@
 			},
 			"appearance": {
 				"title": "مخطط الألوان",
-				"setSuccess": "تم حفظ التغيير لمخطط الألوان في {colorScheme}",
 				"colorScheme": {
 					"light": "فاتح",
 					"system": "النظام",
@@ -338,16 +328,7 @@
 			"title": "العنوان",
 			"titlePlaceholder": "عنوان الفلتر المحفوظ هنا…",
 			"description": "الوصف",
-			"includeNulls": "تضمين المهام التي لا تحتوي على مجموعة من القيم",
-			"requireAll": "يتطلب أن تكون جميع الفلاتر صحيحة لظهور المهمة",
-			"showDoneTasks": "إظهار المهام المكتملة",
-			"sortAlphabetically": "الترتيب أبجدياً",
-			"enablePriority": "تفعيل الفلتر حسب الأولوية",
-			"enablePercentDone": "تفعيل الفلتر حسب التقدّم",
-			"dueDateRange": "نطاق تاريخ الاستحقاق",
-			"startDateRange": "نطاق تاريخ البدء",
-			"endDateRange": "نطاق تاريخ الانتهاء",
-			"reminderRange": "نطاق تاريخ التذكير"
+			"includeNulls": "تضمين المهام التي لا تحتوي على مجموعة من القيم"
 		},
 		"create": {
 			"title": "فلتر جديد محفوظ",
@@ -367,7 +348,6 @@
 	"migrate": {
 		"title": "الاستيراد من الخدمات الأخرى",
 		"titleService": "استيراد بياناتك من {name} إلى Vikunja",
-		"import": "استيراد بياناتك إلى Vikunja",
 		"description": "انقر على شعار أحد خدمات الطرف الثالث أدناه للبدء.",
 		"descriptionDo": "سيقوم Vikunja باستيراد جميع القوائم والمهام والملاحظات والتذكيرات والملفات التي لديك حق الوصول إليها.",
 		"authorize": "للسماح لـ Vikunja بالوصول إلى حسابك {name} ، انقر على الزر أدناه.",
@@ -384,7 +364,6 @@
 		"manage": "إدارة التسميات",
 		"description": "انقر على أي تسمية لتعديلها. يمكنك تعديل جميع التسميات التي قمت بإنشائها، كما يمكنك استخدام جميع التسميات المرتبطة بالمهمة للمشروع الذي لديك حق الوصول إليه.",
 		"newCTA": "ليس لديك حاليا أي تسميات.",
-		"search": "اكتب للبحث عن تسمية…",
 		"create": {
 			"header": "تسمية جديدة",
 			"titleRequired": "الرجاء تحديد العنوان.",
@@ -392,7 +371,6 @@
 		},
 		"edit": {
 			"header": "تعديل التسمية",
-			"forbidden": "لا يسمح لك بتعديل هذه التسمية لأنك لا تملكها.",
 			"success": "تم تحديث التسمية بنجاح."
 		},
 		"deleteSuccess": "تم حذف التسمية بنجاح.",
@@ -400,7 +378,6 @@
 			"title": "العنوان",
 			"titlePlaceholder": "عنوان التسمية هنا…",
 			"description": "الوصف",
-			"descriptionPlaceholder": "وصف التسمية",
 			"color": "اللون"
 		}
 	},
@@ -422,16 +399,13 @@
 		"delete": "حذف",
 		"confirm": "تأكيد",
 		"cancel": "إلغاء",
-		"refresh": "تحديث",
 		"disable": "تعطيل",
 		"copy": "نسخ إلى الحافظة",
 		"copyError": "عملية النسخ إلى الحافظة لم تنجح",
-		"search": "بحث",
 		"searchPlaceholder": "اكتب للبحث…",
 		"previous": "السابق",
 		"next": "التالي",
 		"poweredBy": "مدعوم من Vikunja",
-		"info": "معلومات",
 		"create": "إنشاء",
 		"doit": "أنجزها!",
 		"saving": "جاري الحفظ…",
@@ -462,23 +436,17 @@
 		},
 		"editor": {
 			"edit": "تعديل",
-			"done": "أكتمل",
 			"heading1": "العنوان 1",
 			"heading2": "العنوان 2",
 			"heading3": "العنوان 3",
-			"headingSmaller": "العنوان أصغر",
-			"headingBigger": "العنوان أكبر",
 			"bold": "عريض",
 			"italic": "مائل",
 			"strikethrough": "يتوسطه خط",
 			"code": "تعليمات برمجية",
 			"quote": "اقتباس",
-			"cleanBlock": "محتوى منظّم",
 			"link": "رابط",
 			"image": "صورة",
-			"horizontalRule": "مسطرة أفقية",
-			"sideBySide": "جنباً إلى جنب",
-			"guide": "دليل الاستخدام"
+			"horizontalRule": "مسطرة أفقية"
 		},
 		"multiselect": {
 			"selectPlaceholder": "انقر أو اضغط على إدخال للاختيار"
@@ -536,18 +504,14 @@
 		}
 	},
 	"task": {
-		"task": "مهمة",
-		"delete": "حذف هذه المهمة",
 		"createSuccess": "تم إنشاء المهمة بنجاح.",
 		"doneSuccess": "تم بنجاح وضع علامة مكتملة على المهمة.",
 		"undoneSuccess": "تم بنجاح إلغاء وضع علامة مكتملة على المهمة.",
 		"undo": "تراجع",
-		"openDetail": "فتح طريقة عرض تفاصيل المهمة",
 		"checklistTotal": "{checked} من {total} مهمة",
 		"checklistAllDone": "{total} مهام",
 		"show": {
 			"titleCurrent": "المهام الحالية",
-			"titleDates": "المهام من {from} حتى {to}",
 			"overdue": "عرض المهام المتأخرة",
 			"fromuntil": "المهام من {from} حتى {until}",
 			"select": "حدد نطاق التاريخ",
@@ -567,7 +531,6 @@
 			"deleteSuccess": "تم حذف المهمة بنجاح.",
 			"belongsToProject": "هذه المهمة تنتمي إلى المشروع '{project}'",
 			"due": "مستحق في {at}",
-			"closePopup": "إغلاق النافذة المنبثقة",
 			"organization": "المؤسسة",
 			"management": "الإدارة",
 			"dateAndTime": "التاريخ والوقت",
@@ -636,7 +599,6 @@
 			"delete": "حذف المرفق",
 			"deleteTooltip": "حذف هذا المرفق",
 			"deleteText1": "هل أنت متأكد من رغبتك في حذف المرفق {filename}؟",
-			"copyUrl": "نسخ الرابط",
 			"copyUrlTooltip": "نسخ رابط المرفق للاستخدام في النص",
 			"setAsCover": "إنشاء غلاف",
 			"unsetAsCover": "حذف الغلاف",
@@ -660,9 +622,6 @@
 			"3days": "3 أيام",
 			"1week": "أسبوع"
 		},
-		"description": {
-			"empty": "لا يوجد وصف متاح بعد."
-		},
 		"assignee": {
 			"placeholder": "اكتب لتعيين مستخدم…",
 			"selectPlaceholder": "تعيين هذا المستخدم",
@@ -672,7 +631,6 @@
 		"label": {
 			"createPlaceholder": "أضف هذا كتسمية جديدة",
 			"addSuccess": "تمت إضافة التسمية بنجاح.",
-			"createSuccess": "تم إنشاء التسمية بنجاح.",
 			"removeSuccess": "تم حذف التسمية بنجاح.",
 			"addCreateSuccess": "تم إنشاء التسمية وإضافتها بنجاح.",
 			"delete": {
@@ -734,8 +692,6 @@
 			"hours": "الساعات",
 			"days": "أيام",
 			"weeks": "أسابيع",
-			"months": "أشهر",
-			"years": "سنوات",
 			"invalidAmount": "يرجى إدخال أكثر من 0."
 		},
 		"quickAddMagic": {
@@ -862,7 +818,6 @@
 		"delete": "حذف",
 		"unarchive": "إلغاء الأرشفة",
 		"share": "مشاركة",
-		"newProject": "مشروع جديد",
 		"createProject": "إنشاء مشروع"
 	},
 	"apiConfig": {
@@ -980,7 +935,6 @@
 			"hours": "ساعة|ساعات",
 			"days": "يوم|أيام",
 			"weeks": "أسبوع/أسابيع",
-			"months": "شهر|أشهر",
 			"years": "سنة|سنوات"
 		}
 	}

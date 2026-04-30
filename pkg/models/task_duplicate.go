@@ -138,7 +138,7 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 		if err != nil {
 			return err
 		}
-		err = attachment.NewAttachment(s, bytes.NewReader(buf), attachment.File.Name, attachment.File.Size, doer)
+		err = attachment.NewAttachment(s, bytes.NewReader(buf), attachment.File.Name, uint64(len(buf)), doer)
 		if err != nil {
 			return err
 		}

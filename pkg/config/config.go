@@ -41,7 +41,8 @@ type Key string
 // These constants hold all config value keys
 const (
 	// #nosec
-	ServiceJWTSecret                      Key = `service.JWTSecret`
+	ServiceSecret                         Key = `service.secret`
+	ServiceJWTSecret                      Key = `service.JWTSecret` // #nosec G101 -- Deprecated config key alias, not a credential
 	ServiceJWTTTL                         Key = `service.jwtttl`
 	ServiceJWTTTLLong                     Key = `service.jwtttllong`
 	ServiceJWTTTLShort                    Key = `service.jwtttlshort`
@@ -222,6 +223,7 @@ const (
 	OutgoingRequestsAllowNonRoutableIPs Key = `outgoingrequests.allownonroutableips`
 	OutgoingRequestsProxyURL            Key = `outgoingrequests.proxyurl`
 	OutgoingRequestsProxyPassword       Key = `outgoingrequests.proxypassword`
+	OutgoingRequestsTimeoutSeconds      Key = `outgoingrequests.timeoutseconds`
 
 	AutoTLSEnabled     Key = `autotls.enabled`
 	AutoTLSEmail       Key = `autotls.email`
@@ -229,6 +231,11 @@ const (
 
 	PluginsEnabled Key = `plugins.enabled`
 	PluginsDir     Key = `plugins.dir`
+	PluginsLoader  Key = `plugins.loader`
+
+	// LicenseKey gates optional paid features and funds Vikunja's development.
+	// See the package comment in pkg/license/license.go before removing.
+	LicenseKey Key = `license.key`
 )
 
 var maxFileSizeInBytes uint64
@@ -333,7 +340,7 @@ func InitDefaultConfig() {
 	}
 
 	// Service
-	ServiceJWTSecret.setDefault(random)
+	ServiceSecret.setDefault(random)
 	ServiceJWTTTL.setDefault(259200)      // 72 hours
 	ServiceJWTTTLLong.setDefault(2592000) // 30 days
 	ServiceJWTTTLShort.setDefault(600)    // 10 minutes
@@ -478,11 +485,13 @@ func InitDefaultConfig() {
 	WebhooksAllowNonRoutableIPs.setDefault(false)
 	// Outgoing Requests
 	OutgoingRequestsAllowNonRoutableIPs.setDefault(false)
+	OutgoingRequestsTimeoutSeconds.setDefault(30)
 	// AutoTLS
 	AutoTLSRenewBefore.setDefault("720h") // 30days in hours
 	// Plugins
 	PluginsEnabled.setDefault(false)
 	PluginsDir.setDefault(ResolvePath("plugins"))
+	PluginsLoader.setDefault("native")
 
 	// Migrate deprecated webhook config keys to outgoingrequests.*
 	// This allows removing the old keys in a single place later.
@@ -498,6 +507,8 @@ func InitDefaultConfig() {
 		log.Warningf("Config key %q is deprecated and will be removed in a future release. Please use %q instead.", WebhooksProxyPassword, OutgoingRequestsProxyPassword)
 		OutgoingRequestsProxyPassword.Set(proxyPassword)
 	}
+	// License
+	LicenseKey.setDefault("")
 }
 
 // ResolvePath resolves a path relative to service.rootpath.
@@ -514,7 +525,7 @@ func GetConfigValueFromFile(configKey string) string {
 	if !strings.HasSuffix(configKey, ".file") {
 		configKey += ".file"
 	}
-	var valuePath = viper.GetString(configKey)
+	var valuePath = os.ExpandEnv(viper.GetString(configKey))
 	if valuePath == "" {
 		return ""
 	}
@@ -635,6 +646,17 @@ func InitConfig() {
 
 	readConfigValuesFromFiles()
 
+	// Deprecation: migrate service.JWTSecret → service.secret only when the
+	// user has not explicitly set service.secret (so the new key takes precedence).
+	if ServiceJWTSecret.GetString() != "" {
+		if viper.IsSet(string(ServiceSecret)) {
+			log.Warning("config: both service.secret and service.jwtsecret are set. Using service.secret. Please remove service.jwtsecret, it is deprecated and will be removed in a future release.")
+		} else {
+			log.Warning("config: service.jwtsecret is deprecated and will be removed in a future release. Please use service.secret instead.")
+			ServiceSecret.Set(ServiceJWTSecret.GetString())
+		}
+	}
+
 	if _, err := url.ParseRequestURI(AvatarGravatarBaseURL.GetString()); err != nil {
 		log.Fatalf("Could not parse gravatarbaseurl: %s", err)
 	}
@@ -643,6 +665,10 @@ func InitConfig() {
 
 	if RateLimitStore.GetString() == "keyvalue" {
 		RateLimitStore.Set(KeyvalueType.GetString())
+	}
+
+	if loader := PluginsLoader.GetString(); loader != "yaegi" && loader != "native" {
+		log.Fatalf("Invalid value for plugins.loader: %q (must be \"yaegi\" or \"native\")", loader)
 	}
 
 	if CorsEnable.GetBool() && ServicePublicURL.GetString() == "" {

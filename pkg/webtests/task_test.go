@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"net/http"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -49,6 +50,49 @@ func TestTask(t *testing.T) {
 		},
 		t: t,
 	}
+	t.Run("ReadOneByIndex", func(t *testing.T) {
+		t.Run("Normal", func(t *testing.T) {
+			rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "1", "index": "1"})
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `"id":1`)
+			assert.Contains(t, rec.Body.String(), `"title":"task #1"`)
+			assert.Contains(t, rec.Body.String(), `"index":1`)
+			assert.Equal(t, "2", rec.Header().Get("x-max-permission")) // admin = 2 for owner
+		})
+
+		t.Run("Nonexistent index", func(t *testing.T) {
+			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "1", "index": "99999"})
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
+		})
+
+		t.Run("Nonexistent project", func(t *testing.T) {
+			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "99999", "index": "1"})
+			require.Error(t, err)
+			assertHandlerErrorCode(t, err, models.ErrCodeTaskDoesNotExist)
+		})
+
+		t.Run("No permission", func(t *testing.T) {
+			// testuser1 has no access to project 2. Must be 403, not 404 —
+			// a 404 here would be an existence oracle.
+			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "2", "index": "1"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+
+		t.Run("Invalid project param", func(t *testing.T) {
+			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "notanumber", "index": "1"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusBadRequest, getHTTPErrorCode(err))
+		})
+
+		t.Run("Invalid index param", func(t *testing.T) {
+			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "1", "index": "notanumber"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusBadRequest, getHTTPErrorCode(err))
+		})
+	})
+
 	// Only run specific nested tests:
 	// ^TestTask$/^Update$/^Update_task_items$/^Removing_Assignees_null$
 	t.Run("Update", func(t *testing.T) {

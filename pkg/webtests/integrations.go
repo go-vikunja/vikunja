@@ -67,6 +67,13 @@ var (
 		Email:    "user15@example.com",
 		Issuer:   "local",
 	}
+	testuser6 = user.User{
+		ID:       6,
+		Username: "user6",
+		Password: "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To.",
+		Email:    "user6@example.com",
+		Issuer:   "local",
+	}
 )
 
 func setupTestEnv() (e *echo.Echo, err error) {
@@ -134,7 +141,7 @@ func addUserTokenToContext(t *testing.T, user *user.User, c *echo.Context) {
 	require.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(_ *jwt.Token) (interface{}, error) {
-		return []byte(config.ServiceJWTSecret.GetString()), nil
+		return []byte(config.ServiceSecret.GetString()), nil
 	})
 	require.NoError(t, err)
 	c.Set("user", tken)
@@ -146,7 +153,7 @@ func addLinkShareTokenToContext(t *testing.T, share *models.LinkSharing, c *echo
 	require.NoError(t, err)
 	// We send the string token through the parsing function to get a valid jwt.Token
 	tken, err := jwt.Parse(token, func(_ *jwt.Token) (interface{}, error) {
-		return []byte(config.ServiceJWTSecret.GetString()), nil
+		return []byte(config.ServiceSecret.GetString()), nil
 	})
 	require.NoError(t, err)
 	c.Set("user", tken)

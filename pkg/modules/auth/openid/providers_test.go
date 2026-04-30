@@ -17,10 +17,16 @@
 package openid
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetAllProvidersTypeSafety(t *testing.T) {
@@ -83,4 +89,224 @@ func TestGetAllProvidersTypeSafety(t *testing.T) {
 			t.Errorf("Expected empty providers list, got: %d", len(providers))
 		}
 	})
+}
+
+// newMockOIDCServer creates a test HTTP server that serves a valid OIDC discovery document.
+// The issuer in the discovery document matches the server's URL.
+func newMockOIDCServer() *httptest.Server {
+	var server *httptest.Server
+	mux := http.NewServeMux()
+	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
+		discovery := map[string]interface{}{
+			"issuer":                 server.URL,
+			"authorization_endpoint": server.URL + "/auth",
+			"token_endpoint":         server.URL + "/token",
+			"jwks_uri":               server.URL + "/jwks",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(discovery)
+	})
+	server = httptest.NewServer(mux)
+	return server
+}
+
+func TestDuplicateIssuersDetected(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	// Create a single mock server — both providers will use the same issuer
+	server := newMockOIDCServer()
+	defer server.Close()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+		"provider2": map[string]interface{}{
+			"name":         "Provider Two",
+			"authurl":      server.URL,
+			"clientid":     "client2",
+			"clientsecret": "secret2",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+
+	providers, err := GetAllProviders()
+	require.Error(t, err)
+	assert.Nil(t, providers)
+	assert.True(t, IsErrDuplicateOIDCIssuer(err))
+
+	var dupErr *ErrDuplicateOIDCIssuer
+	require.ErrorAs(t, err, &dupErr)
+	assert.Equal(t, server.URL, dupErr.Issuer)
+}
+
+func TestUniqueIssuersAllowed(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	// Create two separate mock servers — different issuers
+	server1 := newMockOIDCServer()
+	defer server1.Close()
+	server2 := newMockOIDCServer()
+	defer server2.Close()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server1.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+		"provider2": map[string]interface{}{
+			"name":         "Provider Two",
+			"authurl":      server2.URL,
+			"clientid":     "client2",
+			"clientsecret": "secret2",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+
+	providers, err := GetAllProviders()
+	require.NoError(t, err)
+	assert.Len(t, providers, 2)
+}
+
+func TestGetProviderFromMapStringBooleans(t *testing.T) {
+	// Regression test for #2599. When provider config is sourced from environment
+	// variables or `*.file` Docker secrets, every leaf value arrives as a string.
+	// The boolean fields (emailfallback, usernamefallback, forceuserinfo,
+	// requireavailability) must accept stringified bools, not silently fall back
+	// to zero values or reject the whole provider.
+	defer CleanupSavedOpenIDProviders()
+
+	server := newMockOIDCServer()
+	defer server.Close()
+
+	cases := []struct {
+		name                    string
+		emailFallback           interface{}
+		usernameFallback        interface{}
+		forceUserInfo           interface{}
+		requireAvailability     interface{}
+		wantEmailFallback       bool
+		wantUsernameFallback    bool
+		wantForceUserInfo       bool
+		wantRequireAvailability bool
+	}{
+		{
+			name:                    "native bool true",
+			emailFallback:           true,
+			usernameFallback:        true,
+			forceUserInfo:           true,
+			requireAvailability:     true,
+			wantEmailFallback:       true,
+			wantUsernameFallback:    true,
+			wantForceUserInfo:       true,
+			wantRequireAvailability: true,
+		},
+		{
+			name:                    "native bool false",
+			emailFallback:           false,
+			usernameFallback:        false,
+			forceUserInfo:           false,
+			requireAvailability:     false,
+			wantEmailFallback:       false,
+			wantUsernameFallback:    false,
+			wantForceUserInfo:       false,
+			wantRequireAvailability: false,
+		},
+		{
+			name:                    "string true",
+			emailFallback:           "true",
+			usernameFallback:        "true",
+			forceUserInfo:           "true",
+			requireAvailability:     "true",
+			wantEmailFallback:       true,
+			wantUsernameFallback:    true,
+			wantForceUserInfo:       true,
+			wantRequireAvailability: true,
+		},
+		{
+			name:                    "string false",
+			emailFallback:           "false",
+			usernameFallback:        "false",
+			forceUserInfo:           "false",
+			requireAvailability:     "false",
+			wantEmailFallback:       false,
+			wantUsernameFallback:    false,
+			wantForceUserInfo:       false,
+			wantRequireAvailability: false,
+		},
+		{
+			name:                    "string 1 and 0",
+			emailFallback:           "1",
+			usernameFallback:        "0",
+			forceUserInfo:           "1",
+			requireAvailability:     "0",
+			wantEmailFallback:       true,
+			wantUsernameFallback:    false,
+			wantForceUserInfo:       true,
+			wantRequireAvailability: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			pi := map[string]interface{}{
+				"name":                "Test Provider",
+				"authurl":             server.URL,
+				"clientid":            "client1",
+				"clientsecret":        "secret1",
+				"emailfallback":       tc.emailFallback,
+				"usernamefallback":    tc.usernameFallback,
+				"forceuserinfo":       tc.forceUserInfo,
+				"requireavailability": tc.requireAvailability,
+			}
+
+			provider, err := getProviderFromMap(pi, "test")
+			require.NoError(t, err)
+			require.NotNil(t, provider)
+
+			assert.Equal(t, tc.wantEmailFallback, provider.EmailFallback, "EmailFallback")
+			assert.Equal(t, tc.wantUsernameFallback, provider.UsernameFallback, "UsernameFallback")
+			assert.Equal(t, tc.wantForceUserInfo, provider.ForceUserInfo, "ForceUserInfo")
+			assert.Equal(t, tc.wantRequireAvailability, provider.RequireAvailability, "RequireAvailability")
+		})
+	}
+}
+
+func TestFailedDiscoverySkippedInIssuerCheck(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	// One valid server, one unreachable
+	server := newMockOIDCServer()
+	defer server.Close()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"valid": map[string]interface{}{
+			"name":         "Valid Provider",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+		"broken": map[string]interface{}{
+			"name":         "Broken Provider",
+			"authurl":      "http://127.0.0.1:1",
+			"clientid":     "client2",
+			"clientsecret": "secret2",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+
+	// The broken provider will fail discovery and be skipped.
+	// The valid provider should load successfully.
+	providers, err := GetAllProviders()
+	require.NoError(t, err)
+	assert.Len(t, providers, 1)
+	assert.Equal(t, "Valid Provider", providers[0].Name)
 }

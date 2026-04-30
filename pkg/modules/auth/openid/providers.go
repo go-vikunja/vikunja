@@ -17,6 +17,7 @@
 package openid
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -27,6 +28,44 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 )
+
+// ErrDuplicateOIDCIssuer is returned when two configured providers resolve to the same issuer URL.
+type ErrDuplicateOIDCIssuer struct {
+	Issuer    string
+	Provider1 string
+	Provider2 string
+}
+
+func (e *ErrDuplicateOIDCIssuer) Error() string {
+	return fmt.Sprintf(
+		"duplicate OpenID Connect issuer %q: providers %q and %q resolve to the same issuer, which will cause team sync conflicts",
+		e.Issuer, e.Provider1, e.Provider2,
+	)
+}
+
+// IsErrDuplicateOIDCIssuer checks if an error is a duplicate issuer error.
+func IsErrDuplicateOIDCIssuer(err error) bool {
+	var target *ErrDuplicateOIDCIssuer
+	return errors.As(err, &target)
+}
+
+// FindDuplicateIssuers checks a map of provider key → issuer URL for duplicates.
+// It returns a list of all duplicate pairs found.
+func FindDuplicateIssuers(providerIssuers map[string]string) []ErrDuplicateOIDCIssuer {
+	issuerToKey := make(map[string]string)
+	var duplicates []ErrDuplicateOIDCIssuer
+	for key, issuer := range providerIssuers {
+		if existingKey, exists := issuerToKey[issuer]; exists {
+			duplicates = append(duplicates, ErrDuplicateOIDCIssuer{
+				Issuer:    issuer,
+				Provider1: existingKey,
+				Provider2: key,
+			})
+		}
+		issuerToKey[issuer] = key
+	}
+	return duplicates
+}
 
 // GetAllProviders returns all configured providers
 func GetAllProviders() (providers []*Provider, err error) {
@@ -97,6 +136,21 @@ func GetAllProviders() (providers []*Provider, err error) {
 				return nil, err
 			}
 		}
+
+		// Check for duplicate issuers across providers
+		providerIssuers := make(map[string]string)
+		for _, p := range providers {
+			issuer, issuerErr := p.Issuer()
+			if issuerErr != nil {
+				log.Errorf("Error getting issuer for openid provider %s: %s", p.Key, issuerErr)
+				continue
+			}
+			providerIssuers[p.Key] = issuer
+		}
+		if duplicates := FindDuplicateIssuers(providerIssuers); len(duplicates) > 0 {
+			return nil, &duplicates[0]
+		}
+
 		err = keyvalue.Put("openid_providers", providers)
 	}
 
@@ -124,6 +178,28 @@ func GetProvider(key string) (provider *Provider, err error) {
 
 	err = provider.setOicdProvider()
 	return
+}
+
+// parseBoolField reads a boolean-valued config field from a provider map,
+// tolerating both native bools (from YAML/JSON) and strings (from env vars or
+// the GetConfigValueFromFile path, which always return strings). Missing or
+// empty values default to false with no error.
+func parseBoolField(pi map[string]interface{}, key string) (val bool, err error) {
+	raw, exists := pi[key]
+	if !exists {
+		return false, nil
+	}
+	switch v := raw.(type) {
+	case bool:
+		return v, nil
+	case string:
+		if v == "" {
+			return false, nil
+		}
+		return strconv.ParseBool(v)
+	default:
+		return false, fmt.Errorf("expected bool, got %T", raw)
+	}
 }
 
 func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provider, err error) {
@@ -182,43 +258,21 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 		scope = "openid profile email"
 	}
 
-	var emailFallback = false
-	emailFallbackValue, exists := pi["emailfallback"]
-	if exists {
-		emailFallbackTypedValue, ok := emailFallbackValue.(bool)
-		if ok {
-			emailFallback = emailFallbackTypedValue
-		}
+	emailFallback, err := parseBoolField(pi, "emailfallback")
+	if err != nil {
+		log.Errorf("emailfallback is not a boolean for provider %s: %s", key, err)
 	}
-	var usernameFallback = false
-	usernameFallbackValue, exists := pi["usernamefallback"]
-	if exists {
-		usernameFallbackTypedValue, ok := usernameFallbackValue.(bool)
-		if ok {
-			usernameFallback = usernameFallbackTypedValue
-		}
+	usernameFallback, err := parseBoolField(pi, "usernamefallback")
+	if err != nil {
+		log.Errorf("usernamefallback is not a boolean for provider %s: %s", key, err)
 	}
-
-	var forceUserInfo = false
-	forceUserInfoValue, exists := pi["forceuserinfo"]
-	if exists {
-		forceUserInfoTypedValue, ok := forceUserInfoValue.(bool)
-		if ok {
-			forceUserInfo = forceUserInfoTypedValue
-		} else {
-			log.Errorf("forceuserinfo is not a boolean for provider %s, value: %v", key, forceUserInfoValue)
-		}
+	forceUserInfo, err := parseBoolField(pi, "forceuserinfo")
+	if err != nil {
+		log.Errorf("forceuserinfo is not a boolean for provider %s: %s", key, err)
 	}
-
-	var requireAvailability = false
-	requireAvailabilityValue, exists := pi["requireavailability"]
-	if exists {
-		requireAvailabilityTypedValue, ok := requireAvailabilityValue.(bool)
-		if ok {
-			requireAvailability = requireAvailabilityTypedValue
-		} else {
-			log.Errorf("requireavailability is not a boolean for provider %s, value: %v", key, requireAvailabilityValue)
-		}
+	requireAvailability, err := parseBoolField(pi, "requireavailability")
+	if err != nil {
+		log.Errorf("requireavailability is not a boolean for provider %s: %s", key, err)
 	}
 
 	provider = &Provider{

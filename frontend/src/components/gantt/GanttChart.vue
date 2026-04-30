@@ -751,6 +751,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .gantt-container {
 	overflow-x: auto;
+	min-inline-size: 100%;
 }
 
 .gantt-chart-wrapper {

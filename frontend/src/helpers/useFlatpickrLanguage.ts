@@ -8,14 +8,15 @@ export function useFlatpickrLanguage() {
 	const authStore = useAuthStore()
 
 	return computed(() => {
+		let language = { ...FlatpickrLanguages.en }
 		const userLanguage = authStore.settings.language
-		if (!userLanguage) {
-			return FlatpickrLanguages.en
+		
+		if (userLanguage) {
+			const langPair = userLanguage.split('-')
+			const code = userLanguage === 'vi-VN' ? 'vn' : 'en'
+			language = { ...(FlatpickrLanguages?.[langPair?.[0] as key] || FlatpickrLanguages[code]) }
 		}
-
-		const langPair = userLanguage.split('-')
-		const code = userLanguage === 'vi-VN' ? 'vn' : 'en'
-		const language = FlatpickrLanguages?.[langPair?.[0] as key] || FlatpickrLanguages[code]
+		
 		language.firstDayOfWeek = authStore.settings.weekStart ?? language.firstDayOfWeek
 		return language
 	})

@@ -315,7 +315,7 @@ func linesToSkipBeforeHeader(file io.ReaderAt, size int64) (int, error) {
 // @Param import formData string true "The TickTick backup csv file."
 // @Success 200 {object} models.Message "A message telling you everything was migrated successfully."
 // @Failure 500 {object} models.Message "Internal server error"
-// @Router /migration/ticktick/migrate [post]
+// @Router /migration/ticktick/migrate [put]
 func (m *Migrator) Migrate(user *user.User, file io.ReaderAt, size int64) error {
 	// Check if file is empty
 	if size == 0 {

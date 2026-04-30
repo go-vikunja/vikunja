@@ -87,6 +87,7 @@
 					:key="task.id"
 					:show-project="true"
 					:the-task="task"
+					:can-mark-as-done="(projectStore.projects[task.projectId]?.maxPermission ?? 0) > PERMISSIONS.READ"
 					@taskUpdated="updateTasks"
 				/>
 			</div>
@@ -123,6 +124,7 @@ import {useProjectStore} from '@/stores/projects'
 import {useLabelStore} from '@/stores/labels'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import TaskCollectionService from '@/services/taskCollection'
+import {PERMISSIONS} from '@/constants/permissions'
 
 const props = withDefaults(defineProps<{
 	dateFrom?: Date | string,
@@ -285,7 +287,7 @@ async function loadPendingTasks(from: Date|string, to: Date|string, filterId: nu
 
 // FIXME: this modification should happen in the store
 function updateTasks(updatedTask: ITask) {
-	for (const t in tasks.value) {
+	for (let t = 0; t < tasks.value.length; t++) {
 		if (tasks.value[t].id === updatedTask.id) {
 			tasks.value[t] = updatedTask
 			// Move the task to the end of the done tasks if it is now done

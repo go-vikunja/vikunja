@@ -36,6 +36,7 @@
 							{{ $t('task.reminder.custom') }}
 						</SimpleButton>
 						<SimpleButton
+							v-if="allowAbsolute"
 							class="option-button"
 							:class="{'currently-active': modelValue?.relativeTo === null}"
 							@click="showFormSwitch = 'absolute'"
@@ -47,6 +48,7 @@
 					<ReminderPeriod
 						v-if="activeForm === 'relative'"
 						v-model="reminder"
+						:lock-relative-to="lockedRelativeTo"
 					/>
 
 					<DatepickerInline
@@ -91,10 +93,12 @@ const props = withDefaults(defineProps<{
 	modelValue?: ITaskReminder,
 	clearAfterUpdate?: boolean,
 	defaultRelativeTo?: IReminderPeriodRelativeTo | null,
+	allowAbsolute?: boolean,
 }>(), {
 	modelValue: () => new TaskReminderModel() as ITaskReminder,
 	clearAfterUpdate: false,
 	defaultRelativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
+	allowAbsolute: true,
 })
 
 const emit = defineEmits<{
@@ -118,11 +122,18 @@ const reminderDate = ref<Date | null>(null)
 const showFormSwitch = ref<null | 'relative' | 'absolute'>(null)
 
 const activeForm = computed(() => {
-	if (props.defaultRelativeTo === null) {
+	if (props.defaultRelativeTo === null && props.allowAbsolute) {
 		return 'absolute'
 	}
 
 	return showFormSwitch.value
+})
+
+const lockedRelativeTo = computed(() => {
+	if (props.allowAbsolute) {
+		return null
+	}
+	return props.defaultRelativeTo
 })
 
 const reminderText = computed(() => {

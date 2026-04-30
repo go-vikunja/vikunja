@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
@@ -197,30 +198,53 @@ func GetTOTPQrCodeForUser(s *xorm.Session, user *User) (qrcode image.Image, err 
 	return key.Image(300, 300)
 }
 
-// HandleFailedTOTPAuth handles informing the user of failed TOTP attempts and blocking the account after 10 attempts
-func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
+// HandleFailedTOTPAuth records a failed TOTP attempt and locks the account
+// after 10 consecutive failures.
+//
+// Must not share the caller's session: the login handler rolls its session
+// back on auth failure, which would discard the lockout write
+// (GHSA-fgfv-pv97-6cmj). Opens its own session and commits independently.
+func HandleFailedTOTPAuth(user *User) {
 	log.Errorf("Invalid TOTP credentials provided for user %d", user.ID)
 
 	key := user.GetFailedTOTPAttemptsKey()
-	err := keyvalue.IncrBy(key, 1)
-	if err != nil {
+	if err := keyvalue.IncrBy(key, 1); err != nil {
 		log.Errorf("Could not increase failed TOTP attempts for user %d: %s", user.ID, err)
 		return
 	}
 
 	a, _, err := keyvalue.Get(key)
 	if err != nil {
-		log.Errorf("Could get failed TOTP attempts for user %d: %s", user.ID, err)
+		log.Errorf("Could not get failed TOTP attempts for user %d: %s", user.ID, err)
 		return
 	}
-	attempts := a.(int64)
-
-	if attempts == 3 {
-		err = notifications.Notify(user, &InvalidTOTPNotification{User: user}, s)
-		if err != nil {
-			log.Errorf("Could not send failed TOTP notification to user %d: %s", user.ID, err)
+	// Redis backend returns the counter as a string; in-memory as int64.
+	attempts, ok := a.(int64)
+	if !ok {
+		attemptsStr, ok := a.(string)
+		if !ok {
+			log.Errorf("Unexpected type for failed TOTP attempts for user %d: %T", user.ID, a)
 			return
 		}
+		attempts, err = strconv.ParseInt(attemptsStr, 10, 64)
+		if err != nil {
+			log.Errorf("Could not convert failed TOTP attempts to int64 for user %d: %v, value: %s", user.ID, err, attemptsStr)
+			return
+		}
+	}
+
+	if attempts == 3 {
+		s := db.NewSession()
+		defer s.Close()
+		if err := notifications.Notify(user, &InvalidTOTPNotification{User: user}, s); err != nil {
+			log.Errorf("Could not send failed TOTP notification to user %d: %s", user.ID, err)
+			_ = s.Rollback()
+			return
+		}
+		if err := s.Commit(); err != nil {
+			log.Errorf("Could not commit failed TOTP notification for user %d: %s", user.ID, err)
+		}
+		return
 	}
 
 	if attempts < 10 {
@@ -228,20 +252,25 @@ func HandleFailedTOTPAuth(s *xorm.Session, user *User) {
 	}
 
 	log.Infof("Blocking user account %d after 10 failed TOTP password attempts", user.ID)
-	err = RequestUserPasswordResetToken(s, user)
-	if err != nil {
-		log.Errorf("Could not reset password of user %d after 10 failed TOTP attempts: %s", user.ID, err)
+	s := db.NewSession()
+	defer s.Close()
+
+	if err := RequestUserPasswordResetToken(s, user); err != nil {
+		log.Errorf("Could not issue password reset token for user %d after 10 failed TOTP attempts: %s", user.ID, err)
+		_ = s.Rollback()
 		return
 	}
-	err = notifications.Notify(user, &PasswordAccountLockedAfterInvalidTOTPNotification{
-		User: user,
-	}, s)
-	if err != nil {
-		log.Errorf("Could send password information mail to user %d after 10 failed TOTP attempts: %s", user.ID, err)
+	if err := notifications.Notify(user, &PasswordAccountLockedAfterInvalidTOTPNotification{User: user}, s); err != nil {
+		log.Errorf("Could not send password information mail to user %d after 10 failed TOTP attempts: %s", user.ID, err)
+		_ = s.Rollback()
 		return
 	}
-	err = user.SetStatus(s, StatusAccountLocked)
-	if err != nil {
-		log.Errorf("Could not disable user %d: %s", user.ID, err)
+	if err := user.SetStatus(s, StatusAccountLocked); err != nil {
+		log.Errorf("Could not lock user %d: %s", user.ID, err)
+		_ = s.Rollback()
+		return
+	}
+	if err := s.Commit(); err != nil {
+		log.Errorf("Could not commit lockout for user %d: %s", user.ID, err)
 	}
 }

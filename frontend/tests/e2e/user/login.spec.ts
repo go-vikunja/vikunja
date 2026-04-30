@@ -45,7 +45,7 @@ test.describe('Login', () => {
 	test('Should log in with the right credentials', async ({page}) => {
 		await page.goto('/login')
 		await login(page)
-		await expect(page.locator('main h2')).toContainText(`Hi ${credentials.username}!`)
+		await expect(page.locator('main h1')).toContainText(credentials.username)
 	})
 
 	test('Should fail with a bad password', async ({page}) => {
