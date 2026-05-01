@@ -8995,6 +8995,10 @@ const docTemplate = `{
                 "auth_provider": {
                     "type": "string"
                 },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -9343,6 +9347,10 @@ const docTemplate = `{
                 },
                 "id": {
                     "description": "The unique, numeric id of this api key.",
+                    "type": "integer"
+                },
+                "owner_id": {
+                    "description": "The user ID of the token owner. When creating a token for a bot user, set this\nto the bot's ID. If omitted, defaults to the authenticated user.",
                     "type": "integer"
                 },
                 "permissions": {
@@ -10531,6 +10539,10 @@ const docTemplate = `{
                     "description": "Whether the member is an admin of the team. See the docs for more about what a team admin can do",
                     "type": "boolean"
                 },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -10621,6 +10633,10 @@ const docTemplate = `{
         "models.UserWithPermission": {
             "type": "object",
             "properties": {
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -10889,6 +10905,10 @@ const docTemplate = `{
         "user.User": {
             "type": "object",
             "properties": {
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -11066,6 +11086,10 @@ const docTemplate = `{
                 "auth_provider": {
                     "type": "string"
                 },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -11176,6 +11200,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "bot_users_enabled": {
+                    "type": "boolean"
                 },
                 "caldav_enabled": {
                     "type": "boolean"
