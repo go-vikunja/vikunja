@@ -13,7 +13,7 @@
 		:autocomplete-enabled="false"
 		@search="findUser"
 		@select="addAssignee"
-		@click="preloadUsers"
+		@focus="preloadUsers"
 	>
 		<template #items="{items}">
 			<AssigneeList
@@ -77,7 +77,7 @@ let hasPreloaded = false
 function preloadUsers() {
 	if (hasPreloaded) return
 	hasPreloaded = true
-	findUser('')
+	findUser()
 }
 
 watch(
@@ -118,7 +118,7 @@ async function removeAssignee(user: IUser) {
 	success({message: t('task.assignee.unassignSuccess')})
 }
 
-async function findUser(query: string) {
+async function findUser(query = '') {
 	const response = await projectUserService.getAll({projectId: props.projectId}, {s: query}) as IUser[]
 
 	const currentUserId = authStore.info?.id
@@ -134,7 +134,7 @@ async function findUser(query: string) {
 		.sort((a, b) => {
 			if (a.id === currentUserId) return -1
 			if (b.id === currentUserId) return 1
-			return 0
+			return a.name.localeCompare(b.name)
 		})
 }
 </script>
