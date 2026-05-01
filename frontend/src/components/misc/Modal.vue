@@ -235,6 +235,8 @@ $modal-width: 1024px;
 	inset-block-start: 50%;
 	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
+	inline-size: calc(100% - 2rem);
+	max-inline-size: 640px;
 
 	[dir="rtl"] & {
 		transform: translate(50%, -50%);
@@ -244,6 +246,8 @@ $modal-width: 1024px;
 		margin: 0;
 		position: static;
 		transform: none;
+		inline-size: 100%;
+		max-inline-size: none;
 	}
 
 	.modal-header {
