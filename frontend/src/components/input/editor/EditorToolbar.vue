@@ -395,7 +395,7 @@ function setLink(event: MouseEvent) {
 	border-radius: $radius;
 	display: flex;
 	flex-wrap: wrap;
-	margin-block-end: 2px;
+	margin-block-end: 4px;
 
 	> * + * {
 		border-inline-start: 1px solid var(--grey-200);
