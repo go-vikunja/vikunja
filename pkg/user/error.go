@@ -820,31 +820,6 @@ func (err *ErrAccountIsBot) HTTPError() web.HTTPError {
 	}
 }
 
-// ErrBotUsersDisabled represents an error where the bot users feature is disabled.
-type ErrBotUsersDisabled struct{}
-
-// IsErrBotUsersDisabled checks if an error is a ErrBotUsersDisabled.
-func IsErrBotUsersDisabled(err error) bool {
-	_, ok := err.(*ErrBotUsersDisabled)
-	return ok
-}
-
-func (err *ErrBotUsersDisabled) Error() string {
-	return "Bot users feature is disabled"
-}
-
-// ErrCodeBotUsersDisabled holds the unique world-error code of this error
-const ErrCodeBotUsersDisabled = 1032
-
-// HTTPError holds the http error description
-func (err *ErrBotUsersDisabled) HTTPError() web.HTTPError {
-	return web.HTTPError{
-		HTTPCode: http.StatusForbidden,
-		Code:     ErrCodeBotUsersDisabled,
-		Message:  "Bot users are disabled on this instance.",
-	}
-}
-
 // ErrBotNotOwned represents an error where a user tried to operate on a bot they do not own.
 type ErrBotNotOwned struct {
 	UserID int64

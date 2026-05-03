@@ -44,7 +44,6 @@ export interface ConfigState {
 		},
 	},
 	publicTeamsEnabled: boolean,
-	botUsersEnabled: boolean,
 	enabledProFeatures: string[],
 }
 
@@ -85,7 +84,6 @@ export const useConfigStore = defineStore('config', () => {
 			},
 		},
 		publicTeamsEnabled: false,
-		botUsersEnabled: false,
 		enabledProFeatures: [],
 	})
 

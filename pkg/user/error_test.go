@@ -30,13 +30,6 @@ func TestErrAccountIsBot(t *testing.T) {
 	assert.Equal(t, 1031, err.HTTPError().Code)
 }
 
-func TestErrBotUsersDisabled(t *testing.T) {
-	err := &ErrBotUsersDisabled{}
-	assert.True(t, IsErrBotUsersDisabled(err))
-	assert.Equal(t, http.StatusForbidden, err.HTTPError().HTTPCode)
-	assert.Equal(t, 1032, err.HTTPError().Code)
-}
-
 func TestErrBotNotOwned(t *testing.T) {
 	err := &ErrBotNotOwned{UserID: 7}
 	assert.True(t, IsErrBotNotOwned(err))
