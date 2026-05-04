@@ -142,13 +142,88 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 		return []data.Resource{r}, nil
 	}
 
+	// Bulk-query the latest task update time per project in a single DB call.
+	// This is the key data iOS uses to decide whether to fetch new tasks:
+	// if the ctag/etag for a calendar collection does not change, iOS skips it.
+	// We open a fresh session here because the previous session's internal state
+	// (from the complex CTE in ReadAll) is incompatible with further queries.
+	latestTaskTimes := map[int64]time.Time{}
+	if len(projects) > 0 {
+		// Query the latest task update time per project by selecting the real
+		// `updated` column (not a MAX aggregate). Aggregate functions return
+		// values in DB-driver-specific formats that xorm cannot reliably map to
+		// time.Time across all databases (e.g. PostgreSQL lib/pq returns a
+		// time.Time which xorm then serialises as a Go string in a format not
+		// matched by any known layout). Selecting the actual column lets xorm use
+		// its native time.Time mapping on SQLite, PostgreSQL, and MySQL.
+		// Sorting DESC and taking the first row per project in Go gives the max.
+		type taskProjectUpdate struct {
+			ProjectID int64     `xorm:"project_id"`
+			Updated   time.Time `xorm:"updated"`
+		}
+		projectIDs := make([]int64, len(projects))
+		for i, l := range projects {
+			projectIDs[i] = l.ID
+		}
+		var taskUpdates []taskProjectUpdate
+		s2 := db.NewSession()
+		defer s2.Close()
+		if err := s2.
+			Table("tasks").
+			Select("project_id, updated").
+			In("project_id", projectIDs).
+			Desc("updated").
+			Find(&taskUpdates); err != nil {
+			_ = s2.Rollback()
+			return nil, err
+		}
+		if err := s2.Commit(); err != nil {
+			return nil, err
+		}
+		for _, tu := range taskUpdates {
+			if _, exists := latestTaskTimes[tu.ProjectID]; !exists {
+				latestTaskTimes[tu.ProjectID] = tu.Updated
+			}
+		}
+
+		// Also factor in the latest CalDAV deletion timestamp per project so that
+		// the ctag advances when a task is deleted. Deleted tasks leave no task row
+		// to bump max-updated, so without this iOS never sees the ctag change and
+		// never sends a sync-collection REPORT to learn about the deletion.
+		type deletionProjectTime struct {
+			ProjectID int64     `xorm:"project_id"`
+			DeletedAt time.Time `xorm:"deleted_at"`
+		}
+		var deletionTimes []deletionProjectTime
+		s3 := db.NewSession()
+		defer s3.Close()
+		if err := s3.
+			Table("task_caldav_deletions").
+			Select("project_id, deleted_at").
+			In("project_id", projectIDs).
+			Desc("deleted_at").
+			Find(&deletionTimes); err != nil {
+			_ = s3.Rollback()
+			return nil, err
+		}
+		if err := s3.Commit(); err != nil {
+			return nil, err
+		}
+		for _, dt := range deletionTimes {
+			if dt.DeletedAt.After(latestTaskTimes[dt.ProjectID]) {
+				latestTaskTimes[dt.ProjectID] = dt.DeletedAt
+			}
+		}
+	}
+
 	var resources []data.Resource
 	for _, l := range projects {
 		rr := VikunjaProjectResourceAdapter{
 			project: &models.ProjectWithTasksAndBuckets{
 				Project: *l,
 			},
-			isCollection: true,
+			isCollection:     true,
+			latestTaskUpdate: latestTaskTimes[l.ID],
 		}
 		r := data.NewResource(ProjectBasePath+"/"+strconv.FormatInt(l.ID, 10), &rr)
 		r.Name = l.Title
@@ -677,6 +752,11 @@ type VikunjaProjectResourceAdapter struct {
 	projectTasks []*models.TaskWithComments
 	task         *models.Task
 
+	// latestTaskUpdate is the maximum Updated time across all tasks in the project.
+	// It is populated by a bulk query during home-set PROPFIND to avoid loading
+	// all tasks just to compute the collection ctag.
+	latestTaskUpdate time.Time
+
 	isPrincipal  bool
 	isCollection bool
 }
@@ -702,6 +782,9 @@ func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 	// so that the etag (and derived ctag/sync-token) changes whenever
 	// any task in the project is added, modified, or deleted.
 	latest := vlra.project.Updated
+	if vlra.latestTaskUpdate.After(latest) {
+		latest = vlra.latestTaskUpdate
+	}
 	for _, t := range vlra.projectTasks {
 		if t.Updated.After(latest) {
 			latest = t.Updated
@@ -737,7 +820,16 @@ func (vlra *VikunjaProjectResourceAdapter) GetModTime() time.Time {
 	}
 
 	if vlra.project != nil {
-		return vlra.project.Updated
+		latest := vlra.project.Updated
+		if vlra.latestTaskUpdate.After(latest) {
+			latest = vlra.latestTaskUpdate
+		}
+		for _, t := range vlra.projectTasks {
+			if t.Updated.After(latest) {
+				latest = t.Updated
+			}
+		}
+		return latest
 	}
 
 	return time.Time{}
@@ -788,14 +880,59 @@ func (vcls *VikunjaCaldavProjectStorage) getProjectRessource(isCollection bool) 
 		vcls.project.Tasks = projectTasks
 	}
 
+	// Ensure every task has a UID persisted in the database. Tasks created via
+	// the web UI may have UID == "" if they pre-date UID generation in Create().
+	// ParseTodos computes a fallback UID on-the-fly, but without a stored UID
+	// RecordCaldavTaskDeletion skips the entry and the client never learns about
+	// the deletion. Saving the UID here (on first CalDAV access) makes all
+	// future deletions trackable.
+	for _, t := range projectTasks {
+		if t.UID == "" {
+			t.UID = caldav.FallbackUID(t.Updated, t.Title)
+			if _, err := s.ID(t.ID).Cols("uid").Update(&t.Task); err != nil {
+				_ = s.Rollback()
+				return rr, err
+			}
+		}
+	}
+
 	if err := s.Commit(); err != nil {
 		return rr, err
 	}
 
+	// Query the latest deletion timestamp for this project so that a depth=0
+	// PROPFIND on the project itself advances its ctag/sync-token when tasks
+	// are deleted. Without this the deletion row in task_caldav_deletions is
+	// invisible to this code path and iOS never sees the ctag change.
+	type deletionTime struct {
+		DeletedAt time.Time `xorm:"deleted_at"`
+	}
+	var dt []deletionTime
+	s2 := db.NewSession()
+	defer s2.Close()
+	if err := s2.
+		Table("task_caldav_deletions").
+		Select("deleted_at").
+		Where("project_id = ?", vcls.project.ID).
+		Desc("deleted_at").
+		Limit(1).
+		Find(&dt); err != nil {
+		_ = s2.Rollback()
+		return rr, err
+	}
+	if err := s2.Commit(); err != nil {
+		return rr, err
+	}
+	var latestDeletion time.Time
+	if len(dt) > 0 {
+		latestDeletion = dt[0].DeletedAt
+	}
+
 	rr = VikunjaProjectResourceAdapter{
-		project:      vcls.project,
-		projectTasks: projectTasks,
-		isCollection: isCollection,
+		project:          vcls.project,
+		projectTasks:     projectTasks,
+		isCollection:     isCollection,
+		latestTaskUpdate: latestDeletion,
 	}
 
 	return
