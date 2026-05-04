@@ -37,6 +37,9 @@ const GroupPrefix = "/api/v2"
 // route registration. Configuration lives in this function; per-resource
 // Register* calls happen in sibling files (labels.go, projects.go, ...).
 func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
+	// Second arg is the API version reported in the OpenAPI spec's
+	// info.version — independent of the Vikunja application version.
+	// /api/v2 is the second major version of the public API surface.
 	cfg := huma.DefaultConfig("Vikunja API", "2.0.0")
 	// Serve the spec under the group so it lands at /api/v2/openapi.{json,yaml}.
 	cfg.OpenAPIPath = "/openapi"
