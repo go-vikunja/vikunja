@@ -22,6 +22,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -43,7 +44,7 @@ func TestHuma_ErrorShapeIsRFC9457(t *testing.T) {
 		ct := rec.Header().Get("Content-Type")
 		assert.Contains(t, ct, "application/problem+json", "forbidden response must use RFC 9457 content type; got %q", ct)
 
-		var body humaErrorBody
+		var body huma.ErrorModel
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body), "body: %s", rec.Body.String())
 		assert.Equal(t, http.StatusForbidden, body.Status)
 		assert.NotEmpty(t, body.Title, "title is required by RFC 9457")
@@ -56,7 +57,7 @@ func TestHuma_ErrorShapeIsRFC9457(t *testing.T) {
 		ct := rec.Header().Get("Content-Type")
 		assert.Contains(t, ct, "application/problem+json", "validation response must use RFC 9457 content type; got %q", ct)
 
-		var body humaErrorBody
+		var body huma.ErrorModel
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body), "body: %s", rec.Body.String())
 		assert.Equal(t, http.StatusUnprocessableEntity, body.Status)
 		require.NotEmpty(t, body.Errors, "validation errors must include structured per-field details")

@@ -41,19 +41,6 @@ func labelTokenFor(t *testing.T, u *user.User) string {
 	return tok
 }
 
-// humaErrorBody is the RFC 9457 problem+json shape Huma emits by default.
-// Fields are a subset — we only assert what's load-bearing for the tests.
-type humaErrorBody struct {
-	Type   string `json:"type"`
-	Title  string `json:"title"`
-	Status int    `json:"status"`
-	Detail string `json:"detail"`
-	Errors []struct {
-		Message  string `json:"message"`
-		Location string `json:"location"`
-	} `json:"errors"`
-}
-
 // TestHumaLabel mirrors the v1 webtest shape (see project_test.go's TestProject)
 // so the v2 contract can be read side-by-side with the v1 coverage. The goal
 // is to prove v2 is behaviourally compatible with v1 modulo the documented
