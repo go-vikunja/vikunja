@@ -79,9 +79,7 @@ func RegisterLabelRoutes(api huma.API) {
 
 // --- handlers ---
 
-func labelsList(ctx context.Context, in *struct {
-	ListParams
-}) (*labelListBody, error) {
+func labelsList(ctx context.Context, in *ListParams) (*labelListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
