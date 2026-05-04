@@ -256,6 +256,20 @@ $modal-width: 1024px;
 	}
 }
 
+// Default width for centered modals. Scoped with :not(.is-wide) so the
+// `wide` prop can still expand the modal (the .is-wide rule below would
+// otherwise be outranked by .default .modal-content's specificity).
+.default .modal-content:not(.is-wide),
+.hint-modal .modal-content:not(.is-wide) {
+	inline-size: calc(100% - 2rem);
+	max-inline-size: 640px;
+
+	@media screen and (max-width: $tablet) {
+		inline-size: 100%;
+		max-inline-size: none;
+	}
+}
+
 // scrolling-content
 // used e.g. for <TaskDetailViewModal>
 .scrolling .modal-content {
