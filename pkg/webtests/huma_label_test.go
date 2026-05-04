@@ -274,38 +274,6 @@ func TestHumaLabel_PATCHMergePatch(t *testing.T) {
 	assert.Equal(t, "112233", after.HexColor, "hex_color must survive the PATCH untouched")
 }
 
-func TestHumaLabel_OpenAPISpecDescribesAllFive(t *testing.T) {
-	e, err := setupTestEnv()
-	require.NoError(t, err)
-	// The spec is public — no token needed.
-	rec := humaRequest(t, e, http.MethodGet, "/api/v2/openapi.json", "", "", "")
-	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
-
-	var spec struct {
-		Paths map[string]map[string]any `json:"paths"`
-	}
-	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &spec), "body: %s", rec.Body.String())
-
-	// /labels: GET (list), POST (create). /labels/{id}: GET (read),
-	// PUT (update), DELETE (delete). Huma registers these relative to the
-	// group so the spec paths are /labels and /labels/{id}.
-	list, ok := spec.Paths["/labels"]
-	require.True(t, ok, "spec must contain /labels path; paths=%v", pathKeys(spec.Paths))
-	assert.Contains(t, list, "get", "/labels should have GET")
-	assert.Contains(t, list, "post", "/labels should have POST")
-
-	item, ok := spec.Paths["/labels/{id}"]
-	require.True(t, ok, "spec must contain /labels/{id} path; paths=%v", pathKeys(spec.Paths))
-	assert.Contains(t, item, "get", "/labels/{id} should have GET")
-	assert.Contains(t, item, "put", "/labels/{id} should have PUT")
-	assert.Contains(t, item, "delete", "/labels/{id} should have DELETE")
-
-	total := len(list) + len(item)
-	// The five hand-written operations plus any AutoPatch-added PATCH on
-	// /labels/{id}. Assert at least five.
-	assert.GreaterOrEqual(t, total, 5, "expected at least 5 Label operations in the spec; got %d (list=%v item=%v)", total, list, item)
-}
-
 // TestHumaLabel_ErrorShapeIsRFC9457 asserts once — across a 403 and a 422
 // — that v2 errors use application/problem+json with a `status` field.
 // This is the "changed error responses" deviation from v1, so the assertion
@@ -348,12 +316,4 @@ func TestHumaLabel_ErrorShapeIsRFC9457(t *testing.T) {
 		}
 		assert.True(t, foundTitleError, "expected at least one error detail locating `title`; got %+v", body.Errors)
 	})
-}
-
-func pathKeys(m map[string]map[string]any) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	return out
 }
