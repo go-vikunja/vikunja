@@ -141,7 +141,7 @@
     "rollup": "4.60.2",
     "rollup-plugin-visualizer": "6.0.11",
     "sass-embedded": "1.99.0",
-    "stylelint": "17.9.1",
+    "stylelint": "17.10.0",
     "stylelint-config-property-sort-order-smacss": "10.0.0",
     "stylelint-config-recommended-vue": "1.6.1",
     "stylelint-config-standard-scss": "17.0.0",
@@ -154,7 +154,7 @@
     "vite-plugin-vue-devtools": "8.1.1",
     "vite-svg-loader": "5.1.1",
     "vitest": "4.1.5",
-    "vue-tsc": "3.2.7",
+    "vue-tsc": "3.2.8",
     "wait-on": "9.0.5",
     "workbox-cli": "7.4.0",
     "ws": "8.20.0"
