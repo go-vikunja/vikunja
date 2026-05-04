@@ -1771,8 +1771,6 @@ definitions:
         items:
           type: string
         type: array
-      bot_users_enabled:
-        type: boolean
       caldav_enabled:
         type: boolean
       demo_mode_enabled:

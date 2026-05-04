@@ -11201,9 +11201,6 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "bot_users_enabled": {
-                    "type": "boolean"
-                },
                 "caldav_enabled": {
                     "type": "boolean"
                 },
