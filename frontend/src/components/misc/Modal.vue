@@ -235,8 +235,6 @@ $modal-width: 1024px;
 	inset-block-start: 50%;
 	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
-	inline-size: calc(100% - 2rem);
-	max-inline-size: 640px;
 
 	[dir="rtl"] & {
 		transform: translate(50%, -50%);
@@ -246,8 +244,6 @@ $modal-width: 1024px;
 		margin: 0;
 		position: static;
 		transform: none;
-		inline-size: 100%;
-		max-inline-size: none;
 	}
 
 	.modal-header {
@@ -257,6 +253,20 @@ $modal-width: 1024px;
 
 	.button {
 		margin: 0 0.5rem;
+	}
+}
+
+// Default width for centered modals. Scoped with :not(.is-wide) so the
+// `wide` prop can still expand the modal (the .is-wide rule below would
+// otherwise be outranked by .default .modal-content's specificity).
+.default .modal-content:not(.is-wide),
+.hint-modal .modal-content:not(.is-wide) {
+	inline-size: calc(100% - 2rem);
+	max-inline-size: 640px;
+
+	@media screen and (max-width: $tablet) {
+		inline-size: 100%;
+		max-inline-size: none;
 	}
 }
 
