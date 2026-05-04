@@ -72,6 +72,7 @@ func GetTables() []interface{} {
 		&Session{},
 		&OAuthCode{},
 		&TimeEntry{},
+		&TaskCaldavDeletion{},
 	}
 }
 

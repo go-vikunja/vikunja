@@ -80,6 +80,7 @@ func SetupTests() {
 		"totp",
 		"oauth_codes",
 		"notifications",
+		"task_caldav_deletions",
 	)
 	if err != nil {
 		log.Fatal(err)

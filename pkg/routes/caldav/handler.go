@@ -81,6 +81,14 @@ func ProjectHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Body: %v\n", string(body))
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
+	// RFC 6578: intercept sync-collection REPORT before caldav-go sees it.
+	// caldav-go returns 412 (empty body) for unknown REPORT types, which causes
+	// iOS to silently stop syncing after the initial account add.
+	if c.Request().Method == "REPORT" && strings.Contains(string(body), "sync-collection") {
+		log.Debugf("[CALDAV] sync-collection REPORT for project %d by user %s", storage.project.ID, u.Username)
+		return handleSyncCollectionReport(c, string(body), storage)
+	}
+
 	caldav.SetupStorage(storage)
 	caldav.SetupUser(strings.TrimPrefix(ProjectHomeSetPath, "/"))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
