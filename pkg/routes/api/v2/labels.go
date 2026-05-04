@@ -43,41 +43,39 @@ type labelListBody struct {
 func RegisterLabelRoutes(api huma.API) {
 	tags := []string{"labels"}
 
-	huma.Register(api, huma.Operation{
+	Register(api, huma.Operation{
 		OperationID: "labels-list",
 		Method:      http.MethodGet,
 		Path:        "/labels",
 		Tags:        tags,
 	}, labelsList)
 
-	huma.Register(api, huma.Operation{
+	Register(api, huma.Operation{
 		OperationID: "labels-read",
 		Method:      http.MethodGet,
 		Path:        "/labels/{id}",
 		Tags:        tags,
 	}, labelsRead)
 
-	huma.Register(api, huma.Operation{
-		OperationID:   "labels-create",
-		Method:        http.MethodPost,
-		Path:          "/labels",
-		Tags:          tags,
-		DefaultStatus: http.StatusCreated,
+	Register(api, huma.Operation{
+		OperationID: "labels-create",
+		Method:      http.MethodPost,
+		Path:        "/labels",
+		Tags:        tags,
 	}, labelsCreate)
 
-	huma.Register(api, huma.Operation{
+	Register(api, huma.Operation{
 		OperationID: "labels-update",
 		Method:      http.MethodPut,
 		Path:        "/labels/{id}",
 		Tags:        tags,
 	}, labelsUpdate)
 
-	huma.Register(api, huma.Operation{
-		OperationID:   "labels-delete",
-		Method:        http.MethodDelete,
-		Path:          "/labels/{id}",
-		Tags:          tags,
-		DefaultStatus: http.StatusNoContent,
+	Register(api, huma.Operation{
+		OperationID: "labels-delete",
+		Method:      http.MethodDelete,
+		Path:        "/labels/{id}",
+		Tags:        tags,
 	}, labelsDelete)
 }
 

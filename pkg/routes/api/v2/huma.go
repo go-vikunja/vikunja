@@ -18,6 +18,9 @@
 package apiv2
 
 import (
+	"context"
+	"net/http"
+
 	"code.vikunja.io/api/pkg/modules/humaecho5"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -74,6 +77,22 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 		{"APITokenAuth": {}},
 	}
 	return api
+}
+
+// Register wraps huma.Register with verb-based DefaultStatus defaults so
+// per-operation registrations don't have to spell out the obvious cases:
+// POST → 201 Created, DELETE → 204 No Content. Anything else (including an
+// explicit DefaultStatus on the operation) is left untouched.
+func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Context, *I) (*O, error)) {
+	if op.DefaultStatus == 0 {
+		switch op.Method {
+		case http.MethodPost:
+			op.DefaultStatus = http.StatusCreated
+		case http.MethodDelete:
+			op.DefaultStatus = http.StatusNoContent
+		}
+	}
+	huma.Register(api, op, handler)
 }
 
 // EnableAutoPatch registers a PATCH operation for every resource that has
