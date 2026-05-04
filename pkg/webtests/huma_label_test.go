@@ -24,22 +24,9 @@ import (
 	"strings"
 	"testing"
 
-	"code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/user"
-
-	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// labelTokenFor issues a JWT for a test user via the real auth flow — used
-// only by the v2-only supplementary tests below.
-func labelTokenFor(t *testing.T, u *user.User) string {
-	t.Helper()
-	tok, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
-	require.NoError(t, err)
-	return tok
-}
 
 // TestHumaLabel mirrors the v1 webtest shape (see project_test.go's TestProject)
 // so the v2 contract can be read side-by-side with the v1 coverage. The goal
@@ -180,34 +167,10 @@ func TestHumaLabel(t *testing.T) {
 // separate top-level TestFunc names so they're clearly supplementary to the
 // v1-parity coverage in TestHumaLabel above.
 
-// humaRequest is a one-shot dispatch helper that reuses an already-bootstrapped
-// echo.Echo. Used by the v2-only supplementary tests below to avoid
-// re-loading fixtures between chained calls (create → patch → get).
-func humaRequest(t *testing.T, e *echo.Echo, method, path, body, token, contentType string) *httptest.ResponseRecorder {
-	t.Helper()
-	var reader *strings.Reader
-	if body != "" {
-		reader = strings.NewReader(body)
-	} else {
-		reader = strings.NewReader("")
-	}
-	req := httptest.NewRequest(method, path, reader)
-	if contentType == "" {
-		contentType = "application/json"
-	}
-	req.Header.Set("Content-Type", contentType)
-	if token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
-	rec := httptest.NewRecorder()
-	e.ServeHTTP(rec, req)
-	return rec
-}
-
 func TestHumaLabel_ETagReturns304(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
-	token := labelTokenFor(t, &testuser1)
+	token := humaTokenFor(t, &testuser1)
 
 	// First GET to capture the ETag. Label 1 belongs to user1.
 	rec := humaRequest(t, e, http.MethodGet, "/api/v2/labels/1", "", token, "")
@@ -228,7 +191,7 @@ func TestHumaLabel_ETagReturns304(t *testing.T) {
 func TestHumaLabel_PATCHMergePatch(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
-	token := labelTokenFor(t, &testuser1)
+	token := humaTokenFor(t, &testuser1)
 
 	// Create a label we can mutate without stomping fixtures.
 	rec := humaRequest(t, e, http.MethodPost, "/api/v2/labels",
@@ -259,4 +222,3 @@ func TestHumaLabel_PATCHMergePatch(t *testing.T) {
 	assert.Equal(t, "keep me", after.Description, "description must survive the PATCH untouched")
 	assert.Equal(t, "112233", after.HexColor, "hex_color must survive the PATCH untouched")
 }
-

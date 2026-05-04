@@ -35,7 +35,7 @@ import (
 func TestHuma_ErrorShapeIsRFC9457(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
-	token := labelTokenFor(t, &testuser1)
+	token := humaTokenFor(t, &testuser1)
 
 	t.Run("403 Forbidden", func(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/labels/6", "", token, "")
