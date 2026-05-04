@@ -126,7 +126,7 @@ func TestHumaLabel(t *testing.T) {
 		t.Run("Empty title", func(t *testing.T) {
 			// v2 validation error shape differs from v1 (RFC 9457 with 422,
 			// vs v1's domain ValidationHTTPError at 400). Content checked in
-			// TestHumaLabel_ErrorShapeIsRFC9457 once — here we only assert
+			// TestHuma_ErrorShapeIsRFC9457 once — here we only assert
 			// the request was rejected.
 			_, err := testHandler.testCreateWithUser(nil, nil, `{"title":""}`)
 			require.Error(t, err)
@@ -189,10 +189,9 @@ func TestHumaLabel(t *testing.T) {
 }
 
 // The tests below cover v2-only behaviour with no v1 counterpart: ETag +
-// conditional requests, AutoPatch (merge-patch+json), the OpenAPI spec, and
-// the RFC 9457 error-shape guarantee. They live under separate top-level
-// TestFunc names so they're clearly supplementary to the v1-parity coverage
-// in TestHumaLabel above.
+// conditional requests and AutoPatch (merge-patch+json). They live under
+// separate top-level TestFunc names so they're clearly supplementary to the
+// v1-parity coverage in TestHumaLabel above.
 
 // humaRequest is a one-shot dispatch helper that reuses an already-bootstrapped
 // echo.Echo. Used by the v2-only supplementary tests below to avoid
@@ -274,46 +273,3 @@ func TestHumaLabel_PATCHMergePatch(t *testing.T) {
 	assert.Equal(t, "112233", after.HexColor, "hex_color must survive the PATCH untouched")
 }
 
-// TestHumaLabel_ErrorShapeIsRFC9457 asserts once — across a 403 and a 422
-// — that v2 errors use application/problem+json with a `status` field.
-// This is the "changed error responses" deviation from v1, so the assertion
-// lives in its own test rather than being duplicated at every call site.
-func TestHumaLabel_ErrorShapeIsRFC9457(t *testing.T) {
-	e, err := setupTestEnv()
-	require.NoError(t, err)
-	token := labelTokenFor(t, &testuser1)
-
-	t.Run("403 Forbidden", func(t *testing.T) {
-		rec := humaRequest(t, e, http.MethodGet, "/api/v2/labels/6", "", token, "")
-		require.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
-
-		ct := rec.Header().Get("Content-Type")
-		assert.Contains(t, ct, "application/problem+json", "forbidden response must use RFC 9457 content type; got %q", ct)
-
-		var body humaErrorBody
-		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body), "body: %s", rec.Body.String())
-		assert.Equal(t, http.StatusForbidden, body.Status)
-		assert.NotEmpty(t, body.Title, "title is required by RFC 9457")
-	})
-
-	t.Run("422 Validation", func(t *testing.T) {
-		rec := humaRequest(t, e, http.MethodPost, "/api/v2/labels", `{"title":""}`, token, "")
-		require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
-
-		ct := rec.Header().Get("Content-Type")
-		assert.Contains(t, ct, "application/problem+json", "validation response must use RFC 9457 content type; got %q", ct)
-
-		var body humaErrorBody
-		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body), "body: %s", rec.Body.String())
-		assert.Equal(t, http.StatusUnprocessableEntity, body.Status)
-		require.NotEmpty(t, body.Errors, "validation errors must include structured per-field details")
-		var foundTitleError bool
-		for _, detail := range body.Errors {
-			if strings.Contains(detail.Location, "title") {
-				foundTitleError = true
-				break
-			}
-		}
-		assert.True(t, foundTitleError, "expected at least one error detail locating `title`; got %+v", body.Errors)
-	})
-}
