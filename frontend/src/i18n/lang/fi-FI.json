@@ -6,6 +6,9 @@
 	"home": {
 		"welcomeNight": "Hyvää Yötä {username}!",
 		"welcomeMorning": "Hyvää Huomenta {username}!",
+		"welcomeMorningBack": "Tervetuloa takaisin, {username}",
+		"welcomeTuesday": "Hyvää tiistaita, {username}",
+		"welcomeWednesdayMid": "On jo keskiviikko, {username}",
 		"welcomeDay": "Moi {username}!",
 		"welcomeEvening": "Hyvää Iltaa {username}!",
 		"lastViewed": "Viimeksi katsottu",
