@@ -30,11 +30,9 @@ import (
 
 // --- Label ---
 
-// labelListBody wraps the paginated list response. v1's ReadAll returns
-// the hydrated LabelWithTaskID rows (label fields plus the task_id it's
-// attached to) and we keep that shape here for contract parity.
+// labelListBody wraps the paginated list response.
 type labelListBody struct {
-	Body Paginated[*models.LabelWithTaskID]
+	Body Paginated[*models.Label]
 }
 
 // RegisterLabelRoutes wires Label CRUD operations onto the given Huma API.
@@ -92,12 +90,19 @@ func labelsList(ctx context.Context, in *struct {
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	// Concrete type cast — prevents the generic-any silent-empty trap the
-	// spike hit, where an `interface{}` slice marshalled to an empty JSON
-	// array without a loud failure.
-	items, ok := result.([]*models.LabelWithTaskID)
+	// models.Label.ReadAll reuses the v1 hydration path which returns
+	// []*LabelWithTaskID — the wrapper exists to carry task_id internally
+	// for other v1 callers, but TaskID is json:"-" so the wire shape is
+	// already identical to []*Label. Unwrap here so the v2 surface only
+	// references models.Label. Concrete type cast guards against the
+	// generic-any silent-empty trap the spike hit.
+	hydrated, ok := result.([]*models.LabelWithTaskID)
 	if !ok {
 		return nil, fmt.Errorf("labels.ReadAll returned unexpected type %T (expected []*models.LabelWithTaskID)", result)
+	}
+	items := make([]*models.Label, len(hydrated))
+	for i, h := range hydrated {
+		items[i] = &h.Label
 	}
 	return &labelListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
