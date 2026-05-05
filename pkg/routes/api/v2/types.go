@@ -16,8 +16,7 @@
 
 package apiv2
 
-// Paginated is the standard list-response envelope shared by every /api/v2
-// list operation. The generic parameter T is the concrete item type.
+// Paginated is the standard list-response envelope for every /api/v2 list operation.
 type Paginated[T any] struct {
 	Items      []T   `json:"items"`
 	Total      int64 `json:"total"`
@@ -26,9 +25,8 @@ type Paginated[T any] struct {
 	TotalPages int64 `json:"total_pages"`
 }
 
-// NewPaginated constructs a Paginated envelope, nil-safe (nil items become
-// an empty slice so the JSON response is [] rather than null) and with
-// total_pages derived from the (total, perPage) pair.
+// NewPaginated builds a Paginated envelope. Nil items become an empty
+// slice so the JSON response is [] rather than null.
 func NewPaginated[T any](items []T, total int64, page, perPage int) Paginated[T] {
 	if items == nil {
 		items = []T{}
@@ -46,33 +44,23 @@ func NewPaginated[T any](items []T, total int64, page, perPage int) Paginated[T]
 	}
 }
 
-// ListParams is the inline struct every list operation embeds to pick up
-// the standard (page, per_page, q) query shape. Usage:
-//
-//	func fooList(ctx context.Context, in *struct {
-//	    apiv2.ListParams
-//	    // ... extra filters ...
-//	}) (*fooListBody, error) { ... }
+// ListParams carries the standard (page, per_page, q) query shape for list operations.
 type ListParams struct {
 	Page    int    `query:"page"     default:"1"  minimum:"1"`
 	PerPage int    `query:"per_page" default:"50" minimum:"1" maximum:"1000"`
 	Q       string `query:"q"`
 }
 
-// singleBody is the standard single-resource response envelope for create /
-// update handlers that don't also need ETag headers.
+// singleBody is the create/update response envelope (no ETag).
 type singleBody[T any] struct {
 	Body *T
 }
 
-// singleReadBody is the standard read-operation response envelope. It
-// carries an ETag header so callers can issue If-None-Match on the next
-// read and receive 304 Not Modified when the resource hasn't changed.
+// singleReadBody is the read response envelope; carries ETag for If-None-Match.
 type singleReadBody[T any] struct {
 	ETag string `header:"ETag"`
 	Body *T
 }
 
-// emptyBody marks delete / no-content operations. The status is decided
-// by the operation registration (DefaultStatus: 204).
+// emptyBody marks delete / no-content operations.
 type emptyBody struct{}

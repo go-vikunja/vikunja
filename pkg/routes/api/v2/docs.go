@@ -29,8 +29,7 @@ var scalarHTML string
 //go:embed scalar/scalar.standalone.js
 var scalarJS []byte
 
-// ScalarUI renders the Scalar API reference shell HTML. Assets are
-// fetched from /api/v2/docs/scalar.standalone.js — fully local, no CDN.
+// ScalarUI serves the Scalar API reference HTML; assets ship locally to avoid a CDN dependency.
 func ScalarUI(c *echo.Context) error {
 	return c.HTML(http.StatusOK, scalarHTML)
 }

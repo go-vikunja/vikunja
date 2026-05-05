@@ -23,15 +23,11 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// NormalizeArrayParams rewrites `foo[]=...` query parameters to `foo=...`
-// before the router sees them. The frontend's URLSearchParams emits the
-// PHP-style `[]` suffix for arrays; echo does not unify those with plain
-// repeated fields. Normalising here lets handlers declare a single
-// `query:"foo"` tag and receive both shapes.
-//
-// The rewrite preserves the original left-to-right appearance order of
-// parameters, which matters for order-sensitive multi-value fields like
-// sort_by and order_by when a client sends a mix of `foo` and `foo[]`.
+// NormalizeArrayParams rewrites `foo[]=...` to `foo=...` before routing,
+// so handlers use a single `query:"foo"` tag for both shapes. URLSearchParams
+// emits the `[]` suffix; echo doesn't unify it with repeated fields. Order
+// is preserved for order-sensitive params (sort_by, order_by) when clients
+// mix `foo` and `foo[]`.
 func NormalizeArrayParams() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
@@ -40,9 +36,7 @@ func NormalizeArrayParams() echo.MiddlewareFunc {
 			if rq == "" {
 				return next(c)
 			}
-			// Fast path: skip parsing when the query carries no `[]` suffix in
-			// any of its possible encodings (raw or percent-encoded by browsers
-			// via URLSearchParams).
+			// Fast path: skip when no `[]` suffix in any encoding (raw or browser-percent-encoded).
 			if !strings.Contains(rq, "[]=") &&
 				!strings.Contains(rq, "%5B%5D=") &&
 				!strings.Contains(rq, "%5b%5d=") &&
@@ -57,11 +51,9 @@ func NormalizeArrayParams() echo.MiddlewareFunc {
 	}
 }
 
-// stripBracketSuffix walks a raw query string pair by pair, trimming the
-// `[]` suffix from any keys that have one (whether literal or percent-
-// encoded). Values are left untouched — they are already URL-encoded and
-// don't need re-escaping. Walking the raw query keeps the original
-// parameter order intact, unlike url.ParseQuery which returns a map.
+// stripBracketSuffix walks the raw query pair-by-pair (rather than via
+// url.ParseQuery's map) to preserve parameter order, trimming `[]` from
+// keys. Values are left as-is — already URL-encoded.
 func stripBracketSuffix(rq string) string {
 	var out strings.Builder
 	out.Grow(len(rq))

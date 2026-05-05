@@ -28,19 +28,14 @@ import (
 	"github.com/danielgtaylor/huma/v2/conditional"
 )
 
-// --- Label ---
-
-// labelListBody wraps the paginated list response. The element type is
-// models.LabelWithTaskID because that's what models.Label.ReadAll returns;
-// LabelWithTaskID.TaskID is json:"-", so the wire shape is identical to a
-// plain Label and we don't need a per-element copy to strip the field.
+// Element type is *models.LabelWithTaskID because that's what
+// models.Label.ReadAll returns; TaskID is json:"-", so the wire shape
+// matches plain Label.
 type labelListBody struct {
 	Body Paginated[*models.LabelWithTaskID]
 }
 
-// RegisterLabelRoutes wires Label CRUD operations onto the given Huma API.
-// Auth is supplied globally via huma.Config (see NewAPI), so operations
-// don't declare Security per-call.
+// RegisterLabelRoutes wires Label CRUD onto the Huma API.
 func RegisterLabelRoutes(api huma.API) {
 	tags := []string{"labels"}
 
@@ -80,8 +75,6 @@ func RegisterLabelRoutes(api huma.API) {
 	}, labelsDelete)
 }
 
-// --- handlers ---
-
 func labelsList(ctx context.Context, in *ListParams) (*labelListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -91,8 +84,6 @@ func labelsList(ctx context.Context, in *ListParams) (*labelListBody, error) {
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	// Concrete type assertion guards against the generic-any silent-empty
-	// trap the spike hit; we trust DoReadAll's contract for the rest.
 	items, ok := result.([]*models.LabelWithTaskID)
 	if !ok {
 		return nil, fmt.Errorf("labels.ReadAll returned unexpected type %T (expected []*models.LabelWithTaskID)", result)
@@ -112,14 +103,9 @@ func labelsRead(ctx context.Context, in *struct {
 	if _, err := handler.DoReadOne(ctx, label, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	// ETag derives from the ID + last-updated timestamp so any edit
-	// invalidates downstream caches. conditional.PreconditionFailed
-	// expects the unquoted value; the response header uses the RFC 9110
-	// quoted form.
+	// PreconditionFailed wants the unquoted etag; response header uses RFC 9110 quoted form.
 	etag := fmt.Sprintf("%d-%d", label.ID, label.Updated.UnixNano())
 	if in.HasConditionalParams() {
-		// PreconditionFailed returns a 304 (reads) or 412 (writes) when
-		// conditions aren't met; nil means continue.
 		if err := in.PreconditionFailed(etag, label.Updated); err != nil {
 			return nil, err
 		}

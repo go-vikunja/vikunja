@@ -344,26 +344,19 @@ func (h *webHandlerTest) testDeleteWithLinkShare(queryParams url.Values, urlPara
 	return newTestRequestWithLinkShare(h.t, http.MethodDelete, hndl.DeleteWeb, h.linkShare, "", queryParams, urlParams)
 }
 
-// webHandlerTestV2 mirrors webHandlerTest's signatures but dispatches HTTP
-// requests through the full Echo+Huma stack. It lets v2 tests reuse the same
-// per-resource harness shape the v1 tests use so they can be read side-by-side
-// for contract parity.
-//
-// Callers pass the same urlParams map they'd pass to webHandlerTest (e.g.
-// {"label": "1"}). The harness pulls the ID out with the configured
-// idParam key and builds the final URL as basePath[/{id}].
+// webHandlerTestV2 mirrors webHandlerTest's signatures but dispatches
+// through the full Echo+Huma stack, so v2 tests read side-by-side with v1.
+// urlParams keys match v1 so the same map can be reused.
 type webHandlerTestV2 struct {
 	user     *user.User
-	basePath string // e.g. "/api/v2/labels"
-	idParam  string // url-param key, e.g. "label" — matches v1 urlParams keys so tests can pass the same map
+	basePath string
+	idParam  string // matches v1 urlParams keys, e.g. "label"
 	t        *testing.T
-	e        *echo.Echo // lazily constructed via setupTestEnv()
+	e        *echo.Echo
 }
 
-// v2HTTPError is a synthetic error carrying the HTTP status + message
-// extracted from a Huma problem+json response. It implements
-// web.HTTPErrorProcessor so the existing assertHandlerErrorCode /
-// getHTTPErrorMessage / getHTTPErrorCode helpers still work against v2.
+// v2HTTPError implements web.HTTPErrorProcessor so existing
+// getHTTPErrorCode / assertHandlerErrorCode helpers work against v2.
 type v2HTTPError struct {
 	httpCode int
 	code     int
@@ -382,23 +375,17 @@ func (e *v2HTTPError) HTTPError() web.HTTPError {
 	}
 }
 
-// v2ProblemJSON captures the RFC 9457 shape Huma emits. Only the fields the
-// harness cares about are modelled — everything else is silently ignored.
+// v2ProblemJSON is the subset of the RFC 9457 body the harness reads.
 type v2ProblemJSON struct {
 	Status int    `json:"status"`
 	Title  string `json:"title"`
 	Detail string `json:"detail"`
-	// Vikunja domain errors translated via translateDomainError include a
-	// numeric code on the problem body (when the underlying err implements
-	// web.HTTPErrorProcessor). If absent the field stays 0 — good enough for
-	// tests that only care about HTTP status.
+	// Domain errors with web.HTTPErrorProcessor carry a numeric code; 0 otherwise.
 	Code int `json:"code"`
 }
 
-// newV2Error inspects a >=400 recorder and returns a synthetic error that
-// carries the HTTP status + message so existing v1-style assertions keep
-// working. The body is best-effort JSON — non-JSON or non-problem bodies
-// fall back to the raw body string as the message.
+// newV2Error wraps a >=400 recorder so v1-style assertions keep working.
+// Non-JSON / non-problem bodies fall back to the raw body string.
 func newV2Error(rec *httptest.ResponseRecorder) error {
 	msg := strings.TrimSpace(rec.Body.String())
 	var body v2ProblemJSON
@@ -437,8 +424,7 @@ func (h *webHandlerTestV2) buildURL(queryParams url.Values, urlParams map[string
 			id = urlParams[h.idParam]
 		}
 		if id == "" {
-			// Fall back to any single-entry urlParams value so tests that
-			// pass a differently-named key (or omit idParam) still work.
+			// Fallback for tests that pass a differently-named key or omit idParam.
 			for _, v := range urlParams {
 				id = v
 				break
@@ -481,8 +467,7 @@ func (h *webHandlerTestV2) testReadOneWithUser(queryParams url.Values, urlParams
 	return h.serve(http.MethodGet, h.buildURL(queryParams, urlParams, true), "")
 }
 
-// testCreateWithUser — v2 uses POST for create (one of the "changed verbs"
-// the v2 plan calls out). Otherwise identical to v1's testCreateWithUser.
+// v2 uses POST for create; otherwise identical to v1's testCreateWithUser.
 func (h *webHandlerTestV2) testCreateWithUser(queryParams url.Values, urlParams map[string]string, payload string) (*httptest.ResponseRecorder, error) {
 	return h.serve(http.MethodPost, h.buildURL(queryParams, urlParams, false), payload)
 }

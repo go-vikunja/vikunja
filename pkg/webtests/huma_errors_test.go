@@ -27,11 +27,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestHuma_ErrorShapeIsRFC9457 asserts once — across a 403 and a 422 — that
-// v2 errors use application/problem+json with a `status` field. This is the
-// "changed error responses" deviation from v1 and applies to every v2 resource,
-// so the assertion lives once here rather than being duplicated per resource.
-// Labels are used as the fixture because they are the only v2 resource today.
+// TestHuma_ErrorShapeIsRFC9457 asserts once that v2 errors use
+// application/problem+json. Applies to every v2 resource; labels are the fixture.
 func TestHuma_ErrorShapeIsRFC9457(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)

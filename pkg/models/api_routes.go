@@ -27,11 +27,10 @@ import (
 
 var apiTokenRoutes = map[string]APITokenRoute{}
 
-// apiTokenRoutesV2 is a shadow routing table for /api/v2 routes keyed under the
-// same (group, permission) names as their /api/v1 equivalents. The frontend
-// token UI keeps listing only v1 routes via apiTokenRoutes; CanDoAPIRoute
-// consults this second table so a token granted e.g. `labels.read_one` also
-// authorizes the v2 endpoint.
+// apiTokenRoutesV2 holds /api/v2 routes under the same (group, permission)
+// keys as v1, so a token granted e.g. labels.read_one authorises both
+// versions. The frontend token UI still reads only apiTokenRoutes;
+// CanDoAPIRoute consults both tables.
 var apiTokenRoutesV2 = map[string]APITokenRoute{}
 
 func init() {
@@ -57,8 +56,8 @@ func isV2Path(path string) bool {
 	return strings.HasPrefix(path, "/api/v2/") || path == "/api/v2"
 }
 
-// stripAPIVersion removes the /api/v1/ or /api/v2/ prefix, so both versions
-// are normalized to the same group name for token permission purposes.
+// stripAPIVersion removes the /api/v1/ or /api/v2/ prefix so both
+// versions normalise to the same token-permission group name.
 func stripAPIVersion(path string) string {
 	if stripped := strings.TrimPrefix(path, "/api/v1/"); stripped != path {
 		return stripped
@@ -133,8 +132,7 @@ func getRouteDetail(route echo.RouteInfo) (method string, detail *RouteDetail) {
 		// v1: POST is used for updating resources.
 		return "update", detail
 	case http.MethodPatch:
-		// Both v1 and v2 use PATCH for partial updates; v2 introduces
-		// PATCH via Huma's AutoPatch synthesizer.
+		// Both versions use PATCH for partial updates.
 		return "update", detail
 	case http.MethodDelete:
 		return "delete", detail
@@ -218,14 +216,10 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 	return false
 }
 
-// CollectRoutesForAPITokenUsage gets called for every added APITokenRoute and builds a list of all routes we can use for the api tokens.
-// The requiresJWT parameter indicates if this route is protected by JWT authentication.
-//
-// v1 and v2 routes are keyed identically — both write into a map addressed by
-// the same (group, permission) name derived from the path without the
-// /api/vN prefix. v2 routes land in apiTokenRoutesV2 so the frontend token
-// UI (which reads apiTokenRoutes) keeps showing the stable v1-named groups
-// while CanDoAPIRoute consults both tables when authorising a request.
+// CollectRoutesForAPITokenUsage records a route for token authorisation.
+// v1 and v2 share group/permission keys derived from the prefix-stripped
+// path; v2 entries land in apiTokenRoutesV2 so the v1-only frontend UI is
+// unchanged while CanDoAPIRoute consults both tables.
 func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 	if route.Method == "echo_route_not_found" {
@@ -249,12 +243,9 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 	target := apiTokenRoutes
 	if isV2Path(route.Path) {
 		target = apiTokenRoutesV2
-		// AutoPatch synthesises a PATCH counterpart for every PUT route in
-		// the /api/v2 surface. Both methods derive the same "update"
-		// permission, so storing the PATCH one would clobber the PUT one
-		// (last-write-wins on the map). Skip PATCH during collection —
-		// PUT is the authoritative update verb for API tokens; JWT clients
-		// still get PATCH because auth isn't gated on this table.
+		// AutoPatch's synthesised PATCH and the original PUT both derive
+		// the "update" permission and would clobber each other on the map.
+		// PUT wins for token auth; PATCH still works for JWT clients.
 		if route.Method == http.MethodPatch {
 			return
 		}
@@ -372,11 +363,8 @@ func GetAvailableAPIRoutesForToken(c *echo.Context) error {
 // stored (Path, Method) for that permission matches exactly. This closes
 // GHSA-v479-vf79-mg83 and the wider method/sub-resource confusion it
 // enabled. The one exception is the tasks.read_all quirk handled below.
-//
-// Tokens are granted by (group, permission) name (e.g. labels.read_one),
-// so a single permission can legitimately match both the v1 and v2 routes
-// for the same resource. We consult apiTokenRoutes for v1 and the
-// apiTokenRoutesV2 shadow map for v2.
+// One (group, permission) pair can legitimately match both v1 and v2
+// routes; we walk apiTokenRoutes and apiTokenRoutesV2 in turn.
 func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	path := c.Path()
 	if path == "" {

@@ -28,9 +28,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// humaTokenFor issues a JWT for a test user via the real auth flow — used
-// by the v2-only supplementary tests that drive the full Echo+Huma stack
-// directly (bypassing the webHandlerTestV2 harness).
+// humaTokenFor issues a real JWT for a test user. Used by tests that
+// drive the Echo+Huma stack directly without webHandlerTestV2.
 func humaTokenFor(t *testing.T, u *user.User) string {
 	t.Helper()
 	tok, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
@@ -38,9 +37,8 @@ func humaTokenFor(t *testing.T, u *user.User) string {
 	return tok
 }
 
-// humaRequest is a one-shot dispatch helper that reuses an already-bootstrapped
-// echo.Echo. Used by the v2-only supplementary tests to avoid re-loading
-// fixtures between chained calls (create → patch → get).
+// humaRequest dispatches one request against a pre-built echo.Echo so
+// chained calls (create → patch → get) share one fixture load.
 func humaRequest(t *testing.T, e *echo.Echo, method, path, body, token, contentType string) *httptest.ResponseRecorder {
 	t.Helper()
 	var reader *strings.Reader

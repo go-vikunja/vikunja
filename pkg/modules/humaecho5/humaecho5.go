@@ -14,19 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package humaecho5 is a Huma adapter for labstack/echo/v5.
+// Package humaecho5 is a Huma adapter for labstack/echo/v5, vendored from
+// the unmerged upstream PR https://github.com/danielgtaylor/huma/pull/959
+// until it lands (Huma's own humaecho is echo/v4 only). Delete and switch
+// back to upstream once that PR merges.
 //
-// Huma ships an official echo adapter at
-// github.com/danielgtaylor/huma/v2/adapters/humaecho, but it targets
-// echo/v4. The echo/v5 port lives on an unmerged upstream branch
-// (https://github.com/danielgtaylor/huma/pull/959) so we vendor it
-// locally until that PR lands. Once it does, delete this package and
-// switch imports back to the upstream adapter.
-//
-// We also add one piece of Vikunja-specific glue: every request stashes
-// its underlying *echo.Context on context.Context under EchoContextKey,
-// so Huma-dispatched handlers can reach the echo context via
-// auth.GetAuthFromContext without the adapter needing per-handler wiring.
+// Vikunja-specific glue: every request stashes its *echo.Context on
+// context.Context under EchoContextKey so handlers can reach the echo
+// context via auth.GetAuthFromContext without per-handler wiring.
 package humaecho5
 
 import (
@@ -43,17 +38,13 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// MultipartMaxMemory is the maximum memory to use when parsing multipart
-// form data.
+// MultipartMaxMemory caps in-memory buffering for multipart form parsing.
 var MultipartMaxMemory int64 = 8 * 1024
 
-// echoContextKey is the context key under which the underlying *echo.Context
-// is stashed on the request's context.Context. Handlers that run inside a
-// Huma-dispatched call can retrieve it via ctx.Value(EchoContextKey).
 type echoContextKey struct{}
 
-// EchoContextKey is the exported key for retrieving the underlying echo
-// context from a Huma handler's context.Context.
+// EchoContextKey retrieves the underlying *echo.Context from a Huma
+// handler's context.Context.
 var EchoContextKey = echoContextKey{}
 
 // Unwrap extracts the underlying Echo context from a Huma context. Panics if
@@ -84,8 +75,7 @@ func (c *echoCtx) Unwrap() *echo.Context      { return c.orig }
 func (c *echoCtx) Operation() *huma.Operation { return c.op }
 
 func (c *echoCtx) Context() context.Context {
-	// Stash the underlying echo context so downstream helpers
-	// (e.g. auth.GetAuthFromContext) can retrieve it.
+	// Stash echo context so auth.GetAuthFromContext can retrieve it.
 	return context.WithValue((*c.orig).Request().Context(), EchoContextKey, c.orig)
 }
 
@@ -152,12 +142,9 @@ type router interface {
 type echoAdapter struct {
 	http.Handler
 	router router
-	// groupPrefix is the Echo group's URL prefix (e.g. "/api/v2"). When
-	// set, internal dispatches (ServeHTTP calls from huma machinery such
-	// as autopatch) whose path does not already start with the prefix get
-	// the prefix prepended before routing — this keeps autopatch's
-	// relative path resolution working even when the adapter is mounted
-	// on a sub-group.
+	// groupPrefix (e.g. "/api/v2") gets prepended to internal Huma
+	// dispatches whose path doesn't already start with it — required so
+	// autopatch's relative path resolution works under a sub-group.
 	groupPrefix string
 }
 
@@ -189,12 +176,10 @@ func New(r *echo.Echo, config huma.Config) huma.API {
 	return huma.NewAPI(config, &echoAdapter{Handler: r, router: r})
 }
 
-// NewWithGroup creates a new Huma API using the provided Echo router and
-// group. Handlers registered through the returned API land on `g`, so they
-// inherit the group's middleware stack. `groupPrefix` must equal the
-// prefix `g` was constructed with (e.g. "/api/v2"); the adapter uses it
-// to rewrite internal Huma dispatches (notably autopatch's GET+PUT round
-// trip) back onto the absolute URLs Echo routes on.
+// NewWithGroup mounts a Huma API on a group so handlers inherit its
+// middleware. groupPrefix must equal the prefix g was constructed with;
+// the adapter uses it to rewrite internal Huma dispatches (notably
+// autopatch's GET+PUT round trip) onto absolute URLs.
 func NewWithGroup(r *echo.Echo, g *echo.Group, groupPrefix string, config huma.Config) huma.API {
 	return huma.NewAPI(config, &echoAdapter{Handler: r, router: g, groupPrefix: groupPrefix})
 }

@@ -26,9 +26,8 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-// authFromCtx retrieves the authenticated user from a Huma handler's
-// context.Context. It turns any lookup failure into a Huma 401 so the
-// response matches RFC 9457 instead of falling through to a 500.
+// authFromCtx retrieves the authed user from a Huma handler context,
+// surfacing lookup failures as 401 instead of falling through to 500.
 func authFromCtx(ctx context.Context) (web.Auth, error) {
 	a, err := auth.GetAuthFromContext(ctx)
 	if err != nil {
@@ -37,15 +36,10 @@ func authFromCtx(ctx context.Context) (web.Auth, error) {
 	return a, nil
 }
 
-// translateDomainError turns a Vikunja domain error (any error satisfying
-// web.HTTPErrorProcessor — the model-level errors like ErrLabelDoesNotExist,
-// ErrGenericForbidden, ErrProjectDoesNotExist, …) into a Huma status error
-// so Huma emits the correct status code and an RFC 9457 problem+json body
-// with the domain error's message as the detail.
-//
-// Errors that don't carry HTTP semantics fall through untouched and Huma
-// treats them as 500 Internal Server Error — which is the correct default.
-// A nil input returns nil.
+// translateDomainError maps a Vikunja domain error (web.HTTPErrorProcessor)
+// onto Huma's status-error type so the response carries the right code
+// and an RFC 9457 body. Errors without HTTP semantics fall through, which
+// Huma treats as 500.
 func translateDomainError(err error) error {
 	if err == nil {
 		return nil

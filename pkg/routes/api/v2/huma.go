@@ -30,27 +30,16 @@ import (
 )
 
 // GroupPrefix is the URL prefix the Echo group for /api/v2 is mounted at.
-// Exported for tests and to keep humaecho5's internal dispatch aligned
-// with the real router paths.
 const GroupPrefix = "/api/v2"
 
-// NewAPI mounts Huma on the /api/v2 group and returns the Huma API for
-// route registration. Configuration lives in this function; per-resource
-// Register* calls happen in sibling files (labels.go, projects.go, ...).
+// NewAPI mounts Huma on the /api/v2 group. Per-resource Register* calls
+// live in sibling files.
 func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
-	// Second arg populates info.version in the OpenAPI spec — same source
-	// the v1 swagger doc uses (set by the build to the git tag/commit; "dev"
-	// in unbuilt checkouts).
 	cfg := huma.DefaultConfig("Vikunja API", version.Version)
-	// Serve the spec under the group so it lands at /api/v2/openapi.{json,yaml}.
 	cfg.OpenAPIPath = "/openapi"
-	// Huma's built-in docs would load from unpkg.com — unacceptable for
-	// self-hosted Vikunja. Disable and serve Scalar ourselves (see Task D1).
+	// Huma's built-in docs would load from unpkg.com — we serve Scalar locally instead.
 	cfg.DocsPath = ""
-	// Error shape is RFC 9457 problem+json by default — no override needed.
-	// Partial-update permissive: non-pointer fields do not become required
-	// at the schema layer (legacy /v1 handlers are permissive by convention;
-	// govalidator enforces real field-level rules later).
+	// Match v1's permissive partial-update convention; govalidator enforces real rules.
 	cfg.FieldsOptionalByDefault = true
 
 	api := humaecho5.NewWithGroup(e, g, GroupPrefix, cfg)
@@ -58,11 +47,8 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	if oapi.Components.SecuritySchemes == nil {
 		oapi.Components.SecuritySchemes = map[string]*huma.SecurityScheme{}
 	}
-	// Two security schemes share the Authorization: Bearer header: JWT
-	// (issued via /api/v1/login, refresh tokens rotated via cookie) and
-	// Vikunja API tokens (tk_... prefix, scoped permissions). v1 declared
-	// only JWTKeyAuth and conflated both under it; v2 declares them
-	// separately so generated SDKs and /api/v2/docs distinguish them.
+	// v1 conflated JWTs and tk_-prefixed API tokens under JWTKeyAuth; v2
+	// declares them separately so SDK generators and /api/v2/docs distinguish them.
 	oapi.Components.SecuritySchemes["JWTKeyAuth"] = &huma.SecurityScheme{
 		Type:         "http",
 		Scheme:       "bearer",
@@ -74,8 +60,7 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 		Scheme:      "bearer",
 		Description: "Vikunja API token (tk_ prefix) with scoped permissions. Created via /api/v1/tokens.",
 	}
-	// Applied globally to every registered operation; the handful of public
-	// endpoints (spec, docs) explicitly opt out with Security: []map[...]{}.
+	// Applied globally; public endpoints (spec, docs) opt out with an empty Security list.
 	oapi.Security = []map[string][]string{
 		{"JWTKeyAuth": {}},
 		{"APITokenAuth": {}},
@@ -83,10 +68,8 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	return api
 }
 
-// Register wraps huma.Register with verb-based DefaultStatus defaults so
-// per-operation registrations don't have to spell out the obvious cases:
-// POST → 201 Created, DELETE → 204 No Content. Anything else (including an
-// explicit DefaultStatus on the operation) is left untouched.
+// Register wraps huma.Register with verb-based DefaultStatus: POST → 201,
+// DELETE → 204. Anything else (including an explicit op.DefaultStatus) is untouched.
 func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Context, *I) (*O, error)) {
 	if op.DefaultStatus == 0 {
 		switch op.Method {
@@ -99,10 +82,8 @@ func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Co
 	huma.Register(api, op, handler)
 }
 
-// EnableAutoPatch registers a PATCH operation for every resource that has
-// both a GET and a PUT already registered. Must be called AFTER all
-// per-resource Register* calls — AutoPatch walks the already-registered
-// operations to synthesize its PATCH counterparts.
+// EnableAutoPatch synthesises a PATCH for every resource that already
+// registered GET + PUT. Must be called AFTER all Register* calls.
 func EnableAutoPatch(api huma.API) {
 	autopatch.AutoPatch(api)
 }

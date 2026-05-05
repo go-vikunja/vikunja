@@ -28,16 +28,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestHumaLabel mirrors the v1 webtest shape (see project_test.go's TestProject)
-// so the v2 contract can be read side-by-side with the v1 coverage. The goal
-// is to prove v2 is behaviourally compatible with v1 modulo the documented
-// verb/error-shape changes.
-//
-// Per the PR review: "The tests should mirror *exactly* the existing tests.
-// We want to make sure that the api is fully compatible to v1 (minus the
-// changed verbs and error responses)." Labels has no v1 webtest today, so the
-// coverage below is patterned after pkg/models/label_test.go (the
-// model-level coverage).
+// TestHumaLabel mirrors v1's TestProject shape so v2 contract parity is
+// readable side-by-side. Labels has no v1 webtest, so coverage is patterned
+// after pkg/models/label_test.go.
 func TestHumaLabel(t *testing.T) {
 	testHandler := webHandlerTestV2{
 		user:     &testuser1,
@@ -50,13 +43,10 @@ func TestHumaLabel(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
 			rec, err := testHandler.testReadAllWithUser(nil, nil)
 			require.NoError(t, err)
-			// User 1 owns labels #1 and #2 per fixtures — both must show up.
+			// User 1 owns labels #1 and #2; #3 is user2's, #6 is the GHSA private fixture.
 			assert.Contains(t, rec.Body.String(), `Label #1`)
 			assert.Contains(t, rec.Body.String(), `Label #2`)
-			// Label #3 is owned by user2 with no shared task, user1 must not
-			// see it (direct mirror of the model-level negative case).
 			assert.NotContains(t, rec.Body.String(), `Label #3 - other user`)
-			// Label #6 is the GHSA regression fixture — private to user13.
 			assert.NotContains(t, rec.Body.String(), `Label #6 - private`)
 		})
 	})
@@ -66,21 +56,17 @@ func TestHumaLabel(t *testing.T) {
 			rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"label": "1"})
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Label #1"`)
-			// v2 read carries an ETag header derived from id+updated — part
-			// of the "changed response shape" allowed by the review gate.
 			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			// v1 convention: missing labels return 403 not 404 (refusal to
-			// disclose existence via the CanRead branch). v2 preserves this.
+			// Missing labels return 403, not 404 — the CanRead branch refuses to disclose existence.
 			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"label": "9999"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
-				// Label 6 is owned by user13 and attached only to a private
-				// task — user1 must be rejected.
+				// Label 6: user13's private label.
 				_, err := testHandler.testReadOneWithUser(nil, map[string]string{"label": "6"})
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
@@ -98,10 +84,7 @@ func TestHumaLabel(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"hex_color":"00ff00"`)
 		})
 		t.Run("Empty title", func(t *testing.T) {
-			// v2 validation error shape differs from v1 (RFC 9457 with 422,
-			// vs v1's domain ValidationHTTPError at 400). Content checked in
-			// TestHuma_ErrorShapeIsRFC9457 once — here we only assert
-			// the request was rejected.
+			// v2 returns 422, not v1's 400; full body shape asserted in TestHuma_ErrorShapeIsRFC9457.
 			_, err := testHandler.testCreateWithUser(nil, nil, `{"title":""}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
@@ -115,18 +98,14 @@ func TestHumaLabel(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			// Update: CanUpdate → isLabelOwner → getLabelByIDSimple returns
-			// ErrLabelDoesNotExist (404) for a missing label. v1's label
-			// model behaves identically; only the model_test set
-			// `wantForbidden: true` because it tested the `allowed bool`
-			// separately from the error. The real pipeline surfaces 404.
+			// Update/Delete surface 404 here (isLabelOwner → ErrLabelDoesNotExist),
+			// unlike the read branch which returns 403 to hide existence.
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"label": "9999"}, `{"title":"TestLoremIpsum"}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
-				// Label 6 is owned by user13 — user1 cannot update it.
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"label": "6"}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
@@ -138,22 +117,17 @@ func TestHumaLabel(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
 			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"label": "2"})
 			require.NoError(t, err)
-			// v2 delete returns 204 No Content (changed from v1's 200 +
-			// message body — explicitly part of the response-shape
-			// differences allowed by the review gate).
+			// v2 delete is 204 No Content; v1 returned 200 + a message body.
 			assert.Equal(t, http.StatusNoContent, rec.Code)
 			assert.Empty(t, rec.Body.String())
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
-			// Delete: CanDelete → isLabelOwner → getLabelByIDSimple returns
-			// ErrLabelDoesNotExist (404) — same rationale as Update above.
 			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"label": "9999"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 		})
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
-				// Label 6 is owned by user13 — user1 cannot delete it.
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"label": "6"})
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
@@ -162,23 +136,19 @@ func TestHumaLabel(t *testing.T) {
 	})
 }
 
-// The tests below cover v2-only behaviour with no v1 counterpart: ETag +
-// conditional requests and AutoPatch (merge-patch+json). They live under
-// separate top-level TestFunc names so they're clearly supplementary to the
-// v1-parity coverage in TestHumaLabel above.
+// The two tests below cover v2-only behaviour with no v1 counterpart:
+// ETag + conditional requests, and AutoPatch (merge-patch+json).
 
 func TestHumaLabel_ETagReturns304(t *testing.T) {
 	e, err := setupTestEnv()
 	require.NoError(t, err)
 	token := humaTokenFor(t, &testuser1)
 
-	// First GET to capture the ETag. Label 1 belongs to user1.
 	rec := humaRequest(t, e, http.MethodGet, "/api/v2/labels/1", "", token, "")
 	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 	etag := rec.Header().Get("ETag")
 	require.NotEmpty(t, etag, "GET must return an ETag header")
 
-	// Second GET with If-None-Match must return 304.
 	req := httptest.NewRequest(http.MethodGet, "/api/v2/labels/1", strings.NewReader(""))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -193,7 +163,7 @@ func TestHumaLabel_PATCHMergePatch(t *testing.T) {
 	require.NoError(t, err)
 	token := humaTokenFor(t, &testuser1)
 
-	// Create a label we can mutate without stomping fixtures.
+	// Create a fresh label so we don't stomp fixtures.
 	rec := humaRequest(t, e, http.MethodPost, "/api/v2/labels",
 		`{"title":"before","description":"keep me","hex_color":"112233"}`, token, "")
 	require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
@@ -202,14 +172,12 @@ func TestHumaLabel_PATCHMergePatch(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &created))
 
-	// PATCH only the title. AutoPatch should leave description + hex_color
-	// alone. Reuses the same echo.Echo so the create above isn't wiped by
-	// a fixture reload.
+	// PATCH only title; AutoPatch must leave description + hex_color alone.
+	// Reuses the same echo.Echo so the create above isn't wiped by a fixture reload.
 	rec = humaRequest(t, e, http.MethodPatch, fmt.Sprintf("/api/v2/labels/%d", created.ID),
 		`{"title":"after"}`, token, "application/merge-patch+json")
 	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 
-	// Verify via a direct GET that only title changed.
 	rec = humaRequest(t, e, http.MethodGet, fmt.Sprintf("/api/v2/labels/%d", created.ID), "", token, "")
 	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 	var after struct {
@@ -218,7 +186,7 @@ func TestHumaLabel_PATCHMergePatch(t *testing.T) {
 		HexColor    string `json:"hex_color"`
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &after))
-	assert.Equal(t, "after", after.Title, "title must reflect the PATCH")
-	assert.Equal(t, "keep me", after.Description, "description must survive the PATCH untouched")
-	assert.Equal(t, "112233", after.HexColor, "hex_color must survive the PATCH untouched")
+	assert.Equal(t, "after", after.Title)
+	assert.Equal(t, "keep me", after.Description, "description must survive the PATCH")
+	assert.Equal(t, "112233", after.HexColor, "hex_color must survive the PATCH")
 }
