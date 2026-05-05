@@ -49,6 +49,8 @@ import flatPickr from 'vue-flatpickr-component'
 import TaskService from '@/services/task'
 import type {ITask} from '@/modelTypes/ITask'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
+import {useTimeFormat} from '@/composables/useTimeFormat'
+import {TIME_FORMAT} from '@/constants/timeFormat'
 
 const props = defineProps<{
 	modelValue: ITask,
@@ -59,6 +61,7 @@ const emit = defineEmits<{
 }>()
 
 const {t} = useI18n({useScope: 'global'})
+const {store: timeFormat} = useTimeFormat()
 
 const taskService = shallowReactive(new TaskService())
 const task = ref<ITask>()
@@ -103,7 +106,7 @@ const flatPickerConfig = computed(() => ({
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',
 	enableTime: true,
-	time_24hr: true,
+	time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
 	inline: true,
 	locale: useFlatpickrLanguage().value,
 }))
