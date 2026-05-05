@@ -40,20 +40,6 @@ const emit = defineEmits<{
 	user-select: none;
 	-webkit-tap-highlight-color: transparent;
 	display: inline-flex;
-	position: relative;
-}
-
-// Extend the hit target to >=44x44 without affecting layout (WCAG 2.5.5).
-.base-checkbox__label::before {
-	content: '';
-	position: absolute;
-	inset-block-start: 50%;
-	inset-inline-start: 50%;
-	min-block-size: 44px;
-	min-inline-size: 44px;
-	block-size: 100%;
-	inline-size: 100%;
-	transform: translate(-50%, -50%);
 }
 
 .base-checkbox:has(input:disabled) .base-checkbox__label {
