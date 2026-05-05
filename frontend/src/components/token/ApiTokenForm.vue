@@ -11,6 +11,8 @@ import 'flatpickr/dist/flatpickr.css'
 import {useI18n} from 'vue-i18n'
 import FormField from '@/components/input/FormField.vue'
 import type {IApiToken} from '@/modelTypes/IApiToken'
+import {useTimeFormat} from '@/composables/useTimeFormat'
+import {TIME_FORMAT} from '@/constants/timeFormat'
 
 const props = withDefaults(defineProps<{
 	ownerId?: number,
@@ -31,6 +33,7 @@ const emit = defineEmits<{
 
 const service = new ApiTokenService()
 const {t} = useI18n()
+const {store: timeFormat} = useTimeFormat()
 const now = new Date()
 
 const availableRoutes = ref(null)
@@ -98,7 +101,7 @@ const flatPickerConfig = computed(() => ({
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',
 	enableTime: true,
-	time_24hr: true,
+	time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
 	locale: useFlatpickrLanguage().value,
 	minDate: now,
 }))
