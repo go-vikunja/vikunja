@@ -86,6 +86,46 @@ func TestDeleteUser(t *testing.T) {
 		require.NoError(t, s.Commit())
 		db.AssertMissing(t, "users", map[string]interface{}{"id": u.ID})
 	})
+	t.Run("disabled user with task attachment they created", func(t *testing.T) {
+		// Regression test: the cascade calls TaskAttachment.Delete -> ReadOne,
+		// which loads the attachment's creator via user.GetUserByID. If the
+		// creator is the disabled user being deleted, that lookup must not
+		// surface ErrAccountDisabled out of the cascade.
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		notifications.Fake()
+
+		project := &Project{
+			Title:   "disabled user project",
+			OwnerID: 17,
+		}
+		_, err := s.Insert(project)
+		require.NoError(t, err)
+
+		task := &Task{
+			Title:       "disabled user task",
+			ProjectID:   project.ID,
+			CreatedByID: 17,
+			Index:       1,
+		}
+		_, err = s.Insert(task)
+		require.NoError(t, err)
+
+		_, err = s.Insert(&TaskAttachment{
+			TaskID:      task.ID,
+			FileID:      1,
+			CreatedByID: 17,
+		})
+		require.NoError(t, err)
+
+		err = DeleteUser(s, &user.User{ID: 17})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		db.AssertMissing(t, "users", map[string]interface{}{"id": 17})
+		db.AssertMissing(t, "projects", map[string]interface{}{"id": project.ID})
+		db.AssertMissing(t, "tasks", map[string]interface{}{"id": task.ID})
+	})
 	t.Run("cleans up task assignments and subscriptions", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
