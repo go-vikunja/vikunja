@@ -118,7 +118,7 @@ func serveIndexFile(c *echo.Context, assetFs http.FileSystem) (err error) {
 			publicURL = "/"
 		}
 
-		scriptConfigString = strings.ReplaceAll(scriptConfigString, "'http://localhost:3456/api/v1'", "'"+publicURL+"api/v1'")
+		scriptConfigString = strings.ReplaceAll(scriptConfigString, "'/api/v1'", "'"+publicURL+"api/v1'")
 	}
 
 	reader := strings.NewReader(scriptConfigString)
