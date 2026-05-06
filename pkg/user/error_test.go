@@ -14,21 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package v1
+package user
 
 import (
 	"net/http"
+	"testing"
 
-	"code.vikunja.io/api/pkg/models"
-	"github.com/labstack/echo/v5"
+	"github.com/stretchr/testify/assert"
 )
 
-// CheckToken returns 418 if the bearer token is valid. Used for testing.
-func CheckToken(c *echo.Context) error {
-	return c.JSON(http.StatusTeapot, models.Message{Message: "🍵"})
+func TestErrAccountIsBot(t *testing.T) {
+	err := &ErrAccountIsBot{UserID: 42}
+	assert.True(t, IsErrAccountIsBot(err))
+	assert.Equal(t, http.StatusPreconditionFailed, err.HTTPError().HTTPCode)
+	assert.Equal(t, 1031, err.HTTPError().Code)
 }
 
-// TestToken returns a simple test message. Used for testing purposes.
-func TestToken(c *echo.Context) error {
-	return c.JSON(http.StatusOK, models.Message{Message: "ok"})
+func TestErrBotNotOwned(t *testing.T) {
+	err := &ErrBotNotOwned{UserID: 7}
+	assert.True(t, IsErrBotNotOwned(err))
+	assert.Equal(t, http.StatusForbidden, err.HTTPError().HTTPCode)
+	assert.Equal(t, 1033, err.HTTPError().Code)
+}
+
+func TestErrBotUsernameMustHavePrefix(t *testing.T) {
+	err := &ErrBotUsernameMustHavePrefix{Username: "not-a-bot"}
+	assert.True(t, IsErrBotUsernameMustHavePrefix(err))
+	assert.Equal(t, http.StatusBadRequest, err.HTTPError().HTTPCode)
+	assert.Equal(t, 1034, err.HTTPError().Code)
 }

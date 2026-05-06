@@ -46,11 +46,8 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 
 			for _, s := range authHeader {
 				if strings.HasPrefix(s, "Bearer "+models.APITokenPrefix) {
-					if c.Request().URL.Path == "/api/v1/token/test" {
-						return true
-					}
-
-					err := checkAPITokenAndPutItInContext(s, c)
+					skipRouteCheck := c.Request().URL.Path == "/api/v1/token/test"
+					err := checkAPITokenAndPutItInContext(s, c, skipRouteCheck)
 					return err == nil
 				}
 			}
@@ -71,14 +68,14 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 	})
 }
 
-func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context) error {
+func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context, skipRouteCheck bool) error {
 	token, u, err := auth.ValidateAPITokenString(strings.TrimPrefix(tokenHeaderValue, "Bearer "))
 	if err != nil {
 		log.Debugf("[auth] API token validation failed: %v", err)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
-	if !models.CanDoAPIRoute(c, token) {
+	if !skipRouteCheck && !models.CanDoAPIRoute(c, token) {
 		log.Debugf("[auth] Tried authenticating with token %d but it does not have permission to do this route", token.ID)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}

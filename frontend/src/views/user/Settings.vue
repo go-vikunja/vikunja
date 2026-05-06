@@ -81,6 +81,10 @@ const navigationItems = computed(() => {
 			condition: webhooksEnabled.value,
 		},
 		{
+			title: t('user.settings.bots.title'),
+			routeName: 'user.settings.bots',
+		},
+		{
 			title: t('user.deletion.title'),
 			routeName: 'user.settings.deletion',
 			condition: userDeletionEnabled.value,

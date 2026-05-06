@@ -190,12 +190,17 @@ watchEffect(() => {
 let focusRafId: number | null = null
 
 watchEffect(() => {
-	if (active.value && isQuickAddMode) {
-		selectedCmd.value = commands.value.newTask
+	if (active.value) {
+		if (isQuickAddMode) {
+			selectedCmd.value = commands.value.newTask
+		}
 
 		// The input may not be focusable yet due to:
-		// 1. Modal transition (v-if + <Transition appear>) delaying DOM readiness
-		// 2. Electron window not yet visible (shown after did-finish-load)
+		// 1. Modal mounts the <dialog> via v-if and then calls showModal() in a
+		//    follow-up flush, so v-focus fires while the dialog is still closed
+		//    and the focus() call is dropped.
+		// 2. In quick-add mode the Electron window isn't visible until
+		//    did-finish-load.
 		// Retry with rAF until focus actually lands on the input.
 		const tryFocus = () => {
 			if (!active.value) {

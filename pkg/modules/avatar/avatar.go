@@ -18,6 +18,7 @@ package avatar
 
 import (
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/avatar/botmarble"
 	"code.vikunja.io/api/pkg/modules/avatar/empty"
 	"code.vikunja.io/api/pkg/modules/avatar/gravatar"
 	"code.vikunja.io/api/pkg/modules/avatar/initials"
@@ -47,6 +48,7 @@ func FlushAllCaches(u *user.User) {
 		&ldap.Provider{},
 		&openid.Provider{},
 		&marble.Provider{},
+		&botmarble.Provider{},
 		&empty.Provider{},
 	}
 	for _, p := range providers {

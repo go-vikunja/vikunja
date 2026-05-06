@@ -14,21 +14,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package v1
+package botmarble
 
 import (
-	"net/http"
-
-	"code.vikunja.io/api/pkg/models"
-	"github.com/labstack/echo/v5"
+	"code.vikunja.io/api/pkg/modules/avatar/marble"
+	"code.vikunja.io/api/pkg/user"
 )
 
-// CheckToken returns 418 if the bearer token is valid. Used for testing.
-func CheckToken(c *echo.Context) error {
-	return c.JSON(http.StatusTeapot, models.Message{Message: "🍵"})
+// botColors is a cool-toned palette distinct from the marble default so bot avatars are visually recognizable as bots at a glance.
+var botColors = []string{
+	"#3B82F6",
+	"#06B6D4",
+	"#8B5CF6",
+	"#14B8A6",
+	"#6366F1",
 }
 
-// TestToken returns a simple test message. Used for testing purposes.
-func TestToken(c *echo.Context) error {
-	return c.JSON(http.StatusOK, models.Message{Message: "ok"})
+// Provider renders marble-style avatars using the bot-specific palette.
+type Provider struct{}
+
+func (p *Provider) GetAvatar(u *user.User, size int64) ([]byte, string, error) {
+	return marble.GenerateSVG(u, size, botColors)
 }
+
+func (p *Provider) AsDataURI(u *user.User, size int64) (string, error) {
+	return marble.GenerateDataURI(u, size, botColors)
+}
+
+func (p *Provider) FlushCache(_ *user.User) error { return nil }

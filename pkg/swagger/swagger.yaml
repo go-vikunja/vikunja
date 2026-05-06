@@ -82,6 +82,11 @@ definitions:
     properties:
       auth_provider:
         type: string
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -327,6 +332,11 @@ definitions:
         type: string
       id:
         description: The unique, numeric id of this api key.
+        type: integer
+      owner_id:
+        description: |-
+          The user ID of the token owner. When creating a token for a bot user, set this
+          to the bot's ID. If omitted, defaults to the authenticated user.
         type: integer
       permissions:
         allOf:
@@ -1247,6 +1257,11 @@ definitions:
         description: Whether the member is an admin of the team. See the docs for
           more about what a team admin can do
         type: boolean
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1318,6 +1333,11 @@ definitions:
     type: object
   models.UserWithPermission:
     properties:
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1520,6 +1540,11 @@ definitions:
     type: object
   user.User:
     properties:
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1664,6 +1689,11 @@ definitions:
     properties:
       auth_provider:
         type: string
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.

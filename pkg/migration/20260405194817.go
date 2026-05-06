@@ -14,21 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package v1
+package migration
 
 import (
-	"net/http"
-
-	"code.vikunja.io/api/pkg/models"
-	"github.com/labstack/echo/v5"
+	"src.techknowlogick.com/xormigrate"
+	"xorm.io/xorm"
 )
 
-// CheckToken returns 418 if the bearer token is valid. Used for testing.
-func CheckToken(c *echo.Context) error {
-	return c.JSON(http.StatusTeapot, models.Message{Message: "🍵"})
+type users20260405194817 struct {
+	BotOwnerID int64 `xorm:"bigint null index"`
 }
 
-// TestToken returns a simple test message. Used for testing purposes.
-func TestToken(c *echo.Context) error {
-	return c.JSON(http.StatusOK, models.Message{Message: "ok"})
+func (users20260405194817) TableName() string {
+	return "users"
+}
+
+func init() {
+	migrations = append(migrations, &xormigrate.Migration{
+		ID:          "20260405194817",
+		Description: "Add bot_owner_id column to users",
+		Migrate: func(tx *xorm.Engine) error {
+			return tx.Sync(users20260405194817{})
+		},
+		Rollback: func(tx *xorm.Engine) error {
+			return nil
+		},
+	})
 }

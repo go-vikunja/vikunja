@@ -107,6 +107,19 @@
 			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut."
 		},
 		"settings": {
+			"bots": {
+				"title": "Bot-Accounts",
+				"description": "Bot-Accounts gehören zu dir und können nur die API nutzen. Sie können zu Projekten, zugewiesenen Aufgaben hinzugefügt und mit API-Token authentifiziert werden und sich nicht selbst anmelden.",
+				"namePlaceholder": "Mein Assistent",
+				"create": "Bot Erstellen",
+				"enable": "Aktivieren",
+				"badge": "Bot",
+				"delete": {
+					"header": "Diesen Bot-Account löschen",
+					"text1": "Bist Du sicher, dass Du den Bot-Account \"{username}\" löschen möchtest?",
+					"text2": "Dies ist unwiderruflich. Alle API-Token dieses Bots werden widerrufen."
+				}
+			},
 			"title": "Einstellungen",
 			"newPasswordTitle": "Aktualisiere dein Passwort",
 			"newPassword": "Neues Passwort",
@@ -132,6 +145,11 @@
 				"weekStart": "Woche beginnt am",
 				"weekStartSunday": "Sonntag",
 				"weekStartMonday": "Montag",
+				"weekStartTuesday": "Dienstag",
+				"weekStartWednesday": "Mittwoch",
+				"weekStartThursday": "Donnerstag",
+				"weekStartFriday": "Freitag",
+				"weekStartSaturday": "Samstag",
 				"language": "Sprache",
 				"defaultProject": "Standardprojekt",
 				"defaultView": "Standardansicht",
@@ -495,7 +513,8 @@
 			"bucketTitleSavedSuccess": "Der Spaltenname wurde erfolgreich gespeichert.",
 			"bucketLimitSavedSuccess": "Das Spaltenlimit wurde erfolgreich gespeichert.",
 			"collapse": "Spalte einklappen",
-			"bucketLimitReached": "Du hast das Limit dieses Buckets erreicht. Entferne Aufgaben oder erhöhe das Limit, um neue Aufgaben hinzuzufügen."
+			"bucketLimitReached": "Du hast das Limit dieses Buckets erreicht. Entferne Aufgaben oder erhöhe das Limit, um neue Aufgaben hinzuzufügen.",
+			"bucketOptions": "Bucketoptionen"
 		},
 		"pseudo": {
 			"favorites": {
@@ -718,7 +737,9 @@
 		"upcoming": "Anstehend",
 		"settings": "Einstellungen",
 		"imprint": "Impressum",
-		"privacy": "Datenschutzerklärung"
+		"privacy": "Datenschutzerklärung",
+		"closeSidebar": "Seitenleiste schließen",
+		"home": "Vikunja Startseite"
 	},
 	"misc": {
 		"loading": "Wird geladen…",
@@ -750,9 +771,15 @@
 		"createdBy": "Erstellt von {0}",
 		"actions": "Aktionen",
 		"cannotBeUndone": "Dies kann nicht rückgängig gemacht werden!",
-		"avatarOfUser": "{user}'s Profilbild"
+		"avatarOfUser": "{user}'s Profilbild",
+		"closeBanner": "Banner schließen",
+		"closeDialog": "Dialog schließen",
+		"closeQuickActions": "Schnellaktionen schließen",
+		"skipToContent": "Überspringen und zum Hauptinhalt gehen",
+		"sortBy": "Sortieren nach"
 	},
 	"input": {
+		"projectColor": "Projektfarbe",
 		"resetColor": "Farbe zurücksetzen",
 		"datepicker": {
 			"today": "Heute",
@@ -935,6 +962,9 @@
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
 			"due": "Fällig {at}",
+			"closeTaskDetail": "Aufgabendetails schließen",
+			"title": "Aufgabendetails",
+			"markAsDone": "'{task}' als erledigt markieren",
 			"scrollToBottom": "Nach unten scrollen",
 			"organization": "Organisation",
 			"management": "Verwaltung",
@@ -1428,6 +1458,67 @@
 			"days": "Tag|Tage",
 			"weeks": "Woche|Wochen",
 			"years": "Jahr|Jahre"
+		}
+	},
+	"admin": {
+		"title": "Administration",
+		"labels": {
+			"users": "Accounts",
+			"tasks": "Aufgaben"
+		},
+		"overview": {
+			"shares": "Freigaben",
+			"linkSharesShort": "link",
+			"teamSharesShort": "Team",
+			"userSharesShort": "Benutzer:in",
+			"version": "Version",
+			"license": "Lizenz",
+			"licenseValidUntil": "Gültig bis",
+			"licenseExpiresIn": "in {days} Tagen",
+			"licenseLastVerified": "Zuletzt geprüft",
+			"licenseNever": "nie",
+			"licenseLastCheckFailed": "letzte Prüfung fehlgeschlagen",
+			"licenseFeatures": "Features",
+			"licenseInstance": "Instanz-ID",
+			"licenseManage": "Verwalten"
+		},
+		"searchUsersPlaceholder": "Suche nach Anmeldename oder E-Mail…",
+		"users": {
+			"status": "Status",
+			"details": "Details",
+			"detailsTitle": "Account: {username}",
+			"issuer": "Aussteller",
+			"issuerLocal": "Lokal",
+			"issuerUrl": "Aussteller-URL",
+			"subject": "Betreff",
+			"statusActive": "Aktiv",
+			"statusEmailConfirmation": "E-Mail-Bestätigung erforderlich",
+			"statusDisabled": "Deaktiviert",
+			"statusLocked": "Account gesperrt",
+			"isAdminLabel": "Administrator",
+			"addUser": "Account hinzufügen",
+			"createTitle": "Account erstellen",
+			"nameLabel": "Name",
+			"skipEmailConfirm": "E-Mail-Bestätigung überspringen",
+			"createSubmit": "Account erstellen",
+			"saveButton": "Änderungen speichern",
+			"createdSuccess": "Account {username} erstellt.",
+			"updatedSuccess": "Account {username} aktualisiert.",
+			"deletedSuccess": "Account {username} gelöscht.",
+			"deleteScheduledSuccess": "{username} erhält eine Bestätigungs-E-Mail, um die Löschung zu planen.",
+			"confirmDeleteTitle": "Account löschen?",
+			"confirmDeleteIntro": "Wie soll der Account {username} gelöscht werden?",
+			"deleteModeScheduled": "Löschung planen",
+			"deleteModeScheduledHelp": "\"Löschung planen\" sendet eine Bestätigungs-E-Mail, analog zu einer selbst ausgelösten Kontolöschung.",
+			"deleteModeNow": "Jetzt löschen",
+			"deleteModeNowHelp": "Sofort-Löschen entfernt den Account und seine Daten umgehend. Dies kann nicht rückgängig gemacht werden."
+		},
+		"projects": {
+			"ownerLabel": "Eigentümer:in",
+			"reassignOwner": "Eigentümer:in neu zuweisen",
+			"reassignTitle": "{title} erneut zuweisen",
+			"reassignedSuccess": "Projekteigentümer:in neu zugewiesen.",
+			"newOwnerLabel": "Neu:e Eigentümer:in"
 		}
 	}
 }

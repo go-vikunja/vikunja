@@ -18,7 +18,7 @@ jobs:
           days-before-issue-stale: 30
           days-before-issue-close: 30
           stale-issue-label: 'waiting for reply'
-          remove-stale-when-updated: false
+          remove-stale-when-updated: true
           close-issue-message: >
             Closing this for now since we haven't heard back on the follow-up
             questions. If you're still seeing this on a recent version, just

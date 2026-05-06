@@ -84,7 +84,7 @@ const (
 // User holds information about an user
 type User struct {
 	// The unique, numeric id of this user.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"bot"`
 	// The full name of the user.
 	Name string `xorm:"text null" json:"name"`
 	// The username of the user. Is always unique.
@@ -110,9 +110,12 @@ type User struct {
 	OverdueTasksRemindersEnabled bool   `xorm:"bool default true index" json:"-"`
 	OverdueTasksRemindersTime    string `xorm:"varchar(5) not null default '09:00'" json:"-"`
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
-	WeekStart                    int    `xorm:"null" json:"-"`
-	Language                     string `xorm:"varchar(50) null" json:"-" valid:"language"`
-	Timezone                     string `xorm:"varchar(255) null" json:"-"`
+	// BotOwnerID is the ID of the owning (human) user if this user is a bot.
+	// A non-zero value means this user is a bot and cannot authenticate via password.
+	BotOwnerID int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty"`
+	WeekStart  int    `xorm:"null" json:"-"`
+	Language   string `xorm:"varchar(50) null" json:"-" valid:"language"`
+	Timezone   string `xorm:"varchar(255) null" json:"-"`
 
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
@@ -152,6 +155,9 @@ func (u *User) RouteForDB() int64 {
 }
 
 func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
+	if u.IsBot() {
+		return false, nil
+	}
 	var s *xorm.Session
 	if len(sessions) > 0 && sessions[0] != nil {
 		s = sessions[0]
@@ -176,6 +182,11 @@ func (u *User) Lang() string {
 // GetID implements the Auth interface
 func (u *User) GetID() int64 {
 	return u.ID
+}
+
+// IsBot reports whether this user is a bot (owned by another user).
+func (u *User) IsBot() bool {
+	return u.BotOwnerID > 0
 }
 
 // TableName returns the table name for users
