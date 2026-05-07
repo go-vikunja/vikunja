@@ -39,9 +39,18 @@ without breaking sessions in unrelated repos.
 
 ## What `veans init` does
 
-1. Authenticates as you (`--token`, or interactive username/password — local
-   accounts only; SSO/OIDC users should paste a personal API token via
-   `--token`).
+1. Authenticates as you. Default is OAuth 2.0 Authorization Code + PKCE
+   against Vikunja's built-in authorization server (Vikunja 2.3+ — no
+   client registration needed). veans prints an authorize URL; you open
+   it in your browser, sign in, and paste the resulting
+   `vikunja-veans-cli://callback?code=...` URL back into the CLI. The
+   browser will fail to open the custom scheme — that's expected; the
+   address bar still has what we need.
+
+   Alternative auth modes:
+   - `--token <jwt-or-personal-api-token>` — paste-in, useful for SSO/OIDC
+   - `--use-password` — fall back to `POST /login` (local accounts only)
+   - `--username` + `--password` (non-interactive; implies `--use-password`)
 2. Asks you to pick a project and a Kanban view.
 3. Bootstraps the canonical buckets if missing: `Todo`, `In Progress`,
    `In Review`, `Done`, `Scrapped`.
@@ -161,9 +170,9 @@ PR lands.
 
 ## Out of scope (for now)
 
-- OAuth 2.0 device flow (RFC 8628) — Vikunja's OAuth provider needs a
-  registered client + an existing JWT to authorize, which adds friction
-  v0 doesn't need; we use `POST /login` (or paste-in `--token`).
+- OAuth 2.0 device flow (RFC 8628) — would let SSH'd / headless setups
+  authenticate without a browser-on-the-same-machine; not implemented
+  upstream yet.
 - Project-scoped API tokens — Vikunja doesn't ship them yet. The
   credential schema's `scope` field is forward-compatible for when it does.
 - Auto-installing hook snippets. We print them; you paste them.

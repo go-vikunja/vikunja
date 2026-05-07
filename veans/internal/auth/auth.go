@@ -1,11 +1,15 @@
 // Package auth handles the human's transient authentication during init and
-// login. v0 uses POST /login (username + password) to mint a JWT we hold in
-// memory only — Vikunja's OAuth provider flow requires a registered client
-// and an existing JWT to authorize, which adds friction we don't need yet.
+// login. The default interactive flow is OAuth 2.0 Authorization Code + PKCE
+// against Vikunja's built-in authorization server (no client registration
+// needed; PKCE/S256 mandatory). The user opens the authorize URL in their
+// browser, signs in, and pastes the resulting `vikunja-veans-cli://callback`
+// URL back into the CLI — that side-steps custom-scheme handler registration
+// entirely.
 //
-// Pre-existing JWTs and personal API tokens may be passed via --token, which
-// short-circuits the prompt entirely; this is the path SSO/OIDC users take
-// since they cannot log in with a local password.
+// For non-interactive contexts (CI scripts, paste-in tokens, accounts on
+// instances without OAuth), pass --token, --username + --password, or
+// --use-password. Personal API tokens via --token also let SSO/OIDC users
+// onboard without exercising local password login.
 package auth
 
 import (
@@ -72,21 +76,30 @@ func (p *StdPrompter) ReadPassword(prompt string) (string, error) {
 
 // LoginOptions controls how AcquireHumanToken obtains a JWT.
 type LoginOptions struct {
-	// Token short-circuits the prompt. May be a JWT or a personal API token.
+	// Token short-circuits all flows. May be a JWT or a personal API token.
 	Token string
-	// Username is optional — if empty, the prompter asks. Required for
-	// password-based login.
+	// UsePassword forces the legacy POST /login flow even when no password
+	// is set yet (the prompter will ask for it). Useful on instances where
+	// OAuth is disabled or the user prefers entering a password.
+	UsePassword bool
+	// Username / Password / TOTP feed POST /login. If both Username and
+	// Password are non-empty, AcquireHumanToken uses /login non-interactively
+	// regardless of UsePassword.
 	Username string
-	// Password is optional — if empty, the prompter asks (masked).
 	Password string
-	// TOTP, if set, is sent with the login request.
-	TOTP string
+	TOTP     string
+	// Out is where progress / OAuth instructions are written. Defaults to
+	// os.Stderr in production via NewStdPrompter; tests can pass any writer.
+	Out io.Writer
 }
 
 // AcquireHumanToken returns a bearer token to act as the human during init.
-// Order of resolution:
+// Resolution order:
 //  1. opts.Token (paste-in or --token flag)
-//  2. POST /login with opts.Username/Password (prompts to fill missing parts)
+//  2. POST /login with Username + Password (used non-interactively when both
+//     are set, or when --use-password is passed)
+//  3. OAuth Authorization Code + PKCE flow with manual callback paste-back
+//     (the default for interactive use)
 func AcquireHumanToken(ctx context.Context, c *client.Client, opts LoginOptions, p Prompter) (string, error) {
 	if opts.Token != "" {
 		return opts.Token, nil
@@ -94,6 +107,23 @@ func AcquireHumanToken(ctx context.Context, c *client.Client, opts LoginOptions,
 	if p == nil {
 		p = NewStdPrompter()
 	}
+	w := opts.Out
+	if w == nil {
+		w = os.Stderr
+	}
+
+	usePassword := opts.UsePassword || (opts.Username != "" && opts.Password != "")
+	if usePassword {
+		return loginWithPassword(ctx, c, opts, p)
+	}
+
+	return runOAuthFlow(ctx, c, p, w)
+}
+
+// loginWithPassword runs the legacy POST /login path. Kept for instances
+// that have OAuth disabled or for non-interactive `--username` + `--password`
+// invocations in CI.
+func loginWithPassword(ctx context.Context, c *client.Client, opts LoginOptions, p Prompter) (string, error) {
 	if opts.Username == "" {
 		u, err := p.ReadLine("Vikunja username: ")
 		if err != nil {
@@ -109,12 +139,8 @@ func AcquireHumanToken(ctx context.Context, c *client.Client, opts LoginOptions,
 		opts.Password = pw
 	}
 	if opts.Username == "" || opts.Password == "" {
-		return "", output.New(output.CodeAuth, "username and password are required")
+		return "", output.New(output.CodeAuth, "username and password are required for password login")
 	}
-
-	// Vikunja's local /login takes either a username or an email; we let the
-	// server decide. LongToken=true requests a longer-lived JWT, useful since
-	// init may take a few seconds.
 	resp, err := c.Login(ctx, &client.LoginRequest{
 		Username:     opts.Username,
 		Password:     opts.Password,
