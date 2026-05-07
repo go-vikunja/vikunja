@@ -56,7 +56,7 @@ func newShowCmd() *cobra.Command {
 }
 
 func renderTaskHuman(w fmtWriter, t *client.Task, cfg *config.Config) {
-	s := status.FromBucketID(t.BucketID, cfg.Buckets)
+	s := status.FromBucketID(t.CurrentBucketID(cfg.ViewID), cfg.Buckets)
 	fmt.Fprintf(w, "%s  %s  [%s]\n", cfg.FormatTaskID(t.Index), t.Title, s)
 	if t.Priority > 0 {
 		fmt.Fprintf(w, "Priority: %d\n", t.Priority)

@@ -44,3 +44,20 @@ func (c *Client) CreateBucket(ctx context.Context, projectID, viewID int64, b *B
 	}
 	return &out, nil
 }
+
+// MoveTaskToBucket positions an existing task in `bucketID` on the
+// project's view. Vikunja stores task↔bucket relations in a separate
+// table (`task_buckets`), so POST /tasks/{id} with bucket_id does not
+// reliably move tasks — this dedicated endpoint is the one the Kanban
+// UI's drag-and-drop uses.
+func (c *Client) MoveTaskToBucket(ctx context.Context, projectID, viewID, bucketID, taskID int64) error {
+	path := fmt.Sprintf("/projects/%d/views/%d/buckets/%d/tasks",
+		projectID, viewID, bucketID)
+	body := map[string]int64{
+		"task_id":         taskID,
+		"project_view_id": viewID,
+		"bucket_id":       bucketID,
+		"project_id":      projectID,
+	}
+	return c.Do(ctx, "POST", path, nil, body, nil)
+}

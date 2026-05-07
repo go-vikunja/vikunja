@@ -84,13 +84,38 @@ func (c *Client) ListProjectTasks(ctx context.Context, projectID int64, opts *Ta
 	}
 }
 
-// GetTask fetches a single task by numeric ID.
+// GetTask fetches a single task by numeric ID. expand=buckets is requested
+// because Vikunja's bare GET returns bucket_id=0 — the per-view bucket
+// memberships only surface under the Buckets slice.
 func (c *Client) GetTask(ctx context.Context, id int64) (*Task, error) {
 	var out Task
-	if err := c.Do(ctx, "GET", fmt.Sprintf("/tasks/%d", id), nil, nil, &out); err != nil {
+	q := url.Values{}
+	q.Add("expand", "buckets")
+	if err := c.Do(ctx, "GET", fmt.Sprintf("/tasks/%d", id), q, nil, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
+}
+
+// CurrentBucketID returns the task's bucket id on the given project view,
+// or 0 if no bucket entry is present (which happens when buckets aren't
+// expanded, or the task is in no view-bound bucket yet).
+func (t *Task) CurrentBucketID(viewID int64) int64 {
+	if t.BucketID != 0 {
+		return t.BucketID
+	}
+	for _, b := range t.Buckets {
+		if b == nil {
+			continue
+		}
+		// Buckets returned via expand=buckets are scoped to the requesting
+		// view; without view scoping the slice can include entries from
+		// every view this task belongs to.
+		if viewID == 0 || b.ProjectViewID == viewID || b.ProjectViewID == 0 {
+			return b.ID
+		}
+	}
+	return 0
 }
 
 // CreateTask inserts a task into a project (PUT /projects/{id}/tasks).

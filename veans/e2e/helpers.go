@@ -121,6 +121,10 @@ func (h *Harness) NewWorkspace(t *testing.T) *Workspace {
 		{"git", "init", "-q", "-b", "main"},
 		{"git", "config", "user.email", "veans-e2e@example.com"},
 		{"git", "config", "user.name", "veans-e2e"},
+		// Disable any inherited commit signing; the test commit doesn't
+		// need provenance and signing brokers can fail in dev containers.
+		{"git", "config", "commit.gpgsign", "false"},
+		{"git", "config", "tag.gpgsign", "false"},
 	} {
 		cmd := exec.CommandContext(t.Context(), c[0], c[1:]...)
 		cmd.Dir = dir

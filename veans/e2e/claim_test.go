@@ -52,8 +52,9 @@ func TestClaim_AssignsBotMovesToInProgressTagsBranch(t *testing.T) {
 	// Verify bucket transition by reading the workspace's .veans.yml — the
 	// bot's expected In Progress bucket is stored there.
 	cfg := loadConfig(t, ws)
-	if server.BucketID != cfg.Buckets.InProgress {
-		t.Fatalf("task not in In Progress bucket: got %d, want %d", server.BucketID, cfg.Buckets.InProgress)
+	bucket := server.CurrentBucketID(cfg.ViewID)
+	if bucket != cfg.Buckets.InProgress {
+		t.Fatalf("task not in In Progress bucket: got %d, want %d", bucket, cfg.Buckets.InProgress)
 	}
 
 	// Bot assigned.

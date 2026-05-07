@@ -64,7 +64,12 @@ func (c *Chain) Get(server, account string) (string, error) {
 }
 
 // Set writes to the first backend that accepts a write. Env is read-only.
+// Backends that error out (e.g. keyring on a host with no dbus) are skipped
+// transparently, falling through to the next — the file backend is the
+// reliable last-resort. Only if every writable backend fails do we surface
+// the last error.
 func (c *Chain) Set(server, account, token string) error {
+	var lastErr error
 	for _, b := range c.Backends {
 		if _, ok := b.(*EnvBackend); ok {
 			continue
@@ -72,8 +77,11 @@ func (c *Chain) Set(server, account, token string) error {
 		if err := b.Set(server, account, token); err == nil {
 			return nil
 		} else if !errors.Is(err, errReadOnly) {
-			return fmt.Errorf("%s: %w", b.Name(), err)
+			lastErr = fmt.Errorf("%s: %w", b.Name(), err)
 		}
+	}
+	if lastErr != nil {
+		return lastErr
 	}
 	return errors.New("no writable backend available")
 }

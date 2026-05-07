@@ -94,8 +94,9 @@ func runList(cmd *cobra.Command, rt *runtime, f *listFlags) ([]*client.Task, err
 	// Apply client-side filters AND-style.
 	var out []*client.Task
 	for _, t := range tasks {
+		taskBucket := t.CurrentBucketID(rt.cfg.ViewID)
 		if f.ready {
-			if t.Done || t.BucketID != rt.cfg.Buckets.Todo {
+			if t.Done || taskBucket != rt.cfg.Buckets.Todo {
 				continue
 			}
 		}
@@ -126,7 +127,7 @@ func runList(cmd *cobra.Command, rt *runtime, f *listFlags) ([]*client.Task, err
 					return nil, err
 				}
 				wantBucket, _ := status.BucketID(s, rt.cfg.Buckets)
-				if t.BucketID == wantBucket {
+				if taskBucket == wantBucket {
 					ok = true
 					break
 				}
@@ -164,7 +165,7 @@ func renderTasksHuman(w fmtWriter, tasks []*client.Task, cfg *config.Config) {
 		return
 	}
 	for _, t := range tasks {
-		s := status.FromBucketID(t.BucketID, cfg.Buckets)
+		s := status.FromBucketID(t.CurrentBucketID(cfg.ViewID), cfg.Buckets)
 		stamp := string(s)
 		if stamp == "" {
 			stamp = "-"

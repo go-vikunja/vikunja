@@ -93,18 +93,14 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 		return nil, err
 	}
 
-	// If the initial bucket isn't where Vikunja put it (defaults to first
-	// bucket on the view), nudge it explicitly.
-	if created.BucketID != bucketID {
-		updated, err := rt.client.UpdateTask(ctx, created.ID, &client.Task{
-			ID:       created.ID,
-			BucketID: bucketID,
-			Done:     st.Done(),
-		})
-		if err != nil {
+	// Vikunja places newly-created tasks in the view's default bucket
+	// regardless of bucket_id in the create payload — move it explicitly
+	// when the requested status isn't Todo.
+	if st != status.Todo {
+		if err := rt.client.MoveTaskToBucket(ctx,
+			rt.cfg.ProjectID, rt.cfg.ViewID, bucketID, created.ID); err != nil {
 			return nil, output.Wrap(output.CodeUnknown, err, "set initial bucket: %v", err)
 		}
-		created = updated
 	}
 
 	// Attach labels (lazily creating them under veans: namespace).

@@ -31,7 +31,7 @@ func provisionWorkspace(t *testing.T) (*Workspace, *Harness) {
 	t.Helper()
 	h := New(t)
 	suffix := uniqueSuffix()
-	project := h.CreateProject(t, "veans-e2e-"+suffix, "VE"+strings.ToUpper(suffix[:4]))
+	project := h.CreateProject(t, "veans-e2e-"+suffix, identifier(suffix))
 	view := h.FindKanbanView(t, project.ID)
 
 	ws := h.NewWorkspace(t)

@@ -73,7 +73,7 @@ func newUpdateCmd() *cobra.Command {
 			if globals.JSON {
 				return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 			}
-			s := status.FromBucketID(task.BucketID, rt.cfg.Buckets)
+			s := status.FromBucketID(task.CurrentBucketID(rt.cfg.ViewID), rt.cfg.Buckets)
 			fmt.Fprintf(cmd.OutOrStdout(), "Updated %s  [%s]  %s\n",
 				rt.cfg.FormatTaskID(task.Index), s, task.Title)
 			return nil
@@ -151,12 +151,17 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 		dirty = true
 	}
 
+	// Status transitions: `done` is set on the task body (Update processes
+	// it natively), but the bucket move uses the dedicated TaskBucket
+	// endpoint after the field update so the change is visible on the
+	// Kanban view.
+	var bucketTransitionTarget int64
 	if newStatus != "" {
 		bid, err := status.BucketID(newStatus, rt.cfg.Buckets)
 		if err != nil {
 			return nil, err
 		}
-		body.BucketID = bid
+		bucketTransitionTarget = bid
 		body.Done = newStatus.Done()
 		dirty = true
 	}
@@ -182,6 +187,14 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 			return nil, err
 		}
 		updated = u
+	}
+
+	// Move the task between buckets after the field update.
+	if bucketTransitionTarget != 0 {
+		if err := rt.client.MoveTaskToBucket(ctx,
+			rt.cfg.ProjectID, rt.cfg.ViewID, bucketTransitionTarget, id); err != nil {
+			return nil, err
+		}
 	}
 
 	// Label add/remove run after the field update so a status transition
