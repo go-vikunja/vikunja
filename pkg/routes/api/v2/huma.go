@@ -24,6 +24,9 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// GroupPrefix is the URL prefix the Echo group for /api/v2 is mounted at.
+const GroupPrefix = "/api/v2"
+
 // NewAPI mounts Huma on the /api/v2 group and returns the Huma API for
 // route registration. Configuration lives in this function; per-resource
 // Register* calls happen in sibling files (labels.go, projects.go, ...).
@@ -39,5 +42,5 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	// govalidator enforces real field-level rules later).
 	cfg.FieldsOptionalByDefault = true
 
-	return humaecho5.NewWithGroup(e, g, cfg)
+	return humaecho5.NewWithGroup(e, g, GroupPrefix, cfg)
 }
