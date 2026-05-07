@@ -1,6 +1,23 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package commands
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -14,12 +31,11 @@ import (
 )
 
 type listFlags struct {
-	ready      bool
-	mine       bool
-	branch     string
-	branchAuto bool
-	filter     string
-	statuses   []string
+	ready    bool
+	mine     bool
+	branch   string
+	filter   string
+	statuses []string
 }
 
 func newListCmd() *cobra.Command {
@@ -40,7 +56,7 @@ Filters can be combined; they're AND-ed together:
                    server-side
   --status <s>     filter by status (todo|in-progress|in-review|completed|scrapped),
                    may be repeated`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			rt, err := loadRuntime()
 			if err != nil {
 				return err
@@ -91,7 +107,7 @@ func runList(cmd *cobra.Command, rt *runtime, f *listFlags) ([]*client.Task, err
 		if f.branch != "" {
 			want := f.branch
 			if want == "__auto__" {
-				want = currentGitBranch()
+				want = currentGitBranch(cmd.Context())
 				if want == "" {
 					return nil, output.New(output.CodeValidation,
 						"--branch given without a value but no current git branch detected")
@@ -168,8 +184,8 @@ func branchLabel(branch string) string {
 // currentGitBranch returns the current git branch as reported by
 // `git rev-parse --abbrev-ref HEAD`, or "" if we're not in a git repo or
 // HEAD is detached. Failures are silent so callers can decide.
-func currentGitBranch() string {
-	out, err := runGit("rev-parse", "--abbrev-ref", "HEAD")
+func currentGitBranch(ctx context.Context) string {
+	out, err := runGit(ctx, "rev-parse", "--abbrev-ref", "HEAD")
 	if err != nil {
 		return ""
 	}

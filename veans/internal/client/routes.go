@@ -1,3 +1,19 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package client
 
 import "context"
@@ -31,18 +47,18 @@ func (c *Client) Routes(ctx context.Context) (map[string]RouteGroup, error) {
 // the bot can resolve PROJ-NN and #NN identifiers, but no project mutation.
 func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 	wanted := map[string][]string{
-		"tasks":            {"read_one", "read_all", "create", "update", "delete"},
-		"projects":         {"read_one", "read_all"},
-		"projects_views":   {"read_one", "read_all"},
-		"buckets":          {"read_one", "read_all", "create", "update", "delete"},
-		"labels":           {"read_one", "read_all", "create", "update", "delete"},
-		"comments":         {"read_one", "read_all", "create", "update", "delete"},
-		"tasks_comments":   {"read_one", "read_all", "create", "update", "delete"},
-		"relations":        {"create", "delete"},
-		"tasks_relations":  {"create", "delete"},
-		"assignees":        {"read_all", "create", "delete"},
-		"tasks_assignees":  {"read_all", "create", "delete"},
-		"tasks_labels":     {"create", "delete", "read_all"},
+		"tasks":           {"read_one", "read_all", "create", "update", "delete"},
+		"projects":        {"read_one", "read_all"},
+		"projects_views":  {"read_one", "read_all"},
+		"buckets":         {"read_one", "read_all", "create", "update", "delete"},
+		"labels":          {"read_one", "read_all", "create", "update", "delete"},
+		"comments":        {"read_one", "read_all", "create", "update", "delete"},
+		"tasks_comments":  {"read_one", "read_all", "create", "update", "delete"},
+		"relations":       {"create", "delete"},
+		"tasks_relations": {"create", "delete"},
+		"assignees":       {"read_all", "create", "delete"},
+		"tasks_assignees": {"read_all", "create", "delete"},
+		"tasks_labels":    {"create", "delete", "read_all"},
 	}
 	out := map[string][]string{}
 	for group, actions := range wanted {

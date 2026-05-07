@@ -1,9 +1,26 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // Package output defines stable error codes and the JSON envelope
 // veans uses for non-zero exits.
 package output
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -48,7 +65,8 @@ func AsError(err error) *Error {
 	if err == nil {
 		return nil
 	}
-	if e, ok := err.(*Error); ok {
+	var e *Error
+	if errors.As(err, &e) {
 		return e
 	}
 	return &Error{Code: CodeUnknown, Message: err.Error(), Cause: err}
@@ -62,7 +80,9 @@ func EmitError(jsonMode bool, err error, w io.Writer) {
 	}
 	e := AsError(err)
 	if jsonMode {
-		_ = json.NewEncoder(w).Encode(e)
+		if encErr := json.NewEncoder(w).Encode(e); encErr != nil {
+			fmt.Fprintf(os.Stderr, "veans: failed to encode error envelope: %v\n", encErr)
+		}
 		return
 	}
 	fmt.Fprintf(w, "veans: %s: %s\n", e.Code, e.Message)

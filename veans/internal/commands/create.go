@@ -1,3 +1,19 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package commands
 
 import (
@@ -126,9 +142,12 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 	}
 
 	// Re-fetch so the response reflects the labels and any post-create state.
+	// The refetch is best-effort: if it fails (token expired mid-operation,
+	// transient network blip), we still return the create result so callers
+	// see the new task ID rather than a confusing error.
 	final, err := rt.client.GetTask(ctx, created.ID)
 	if err != nil {
-		return created, nil // partial success — caller still got a usable task
+		return created, nil //nolint:nilerr // intentional best-effort refetch
 	}
 	return final, nil
 }

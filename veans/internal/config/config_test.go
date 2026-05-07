@@ -1,3 +1,19 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package config
 
 import (
@@ -10,11 +26,11 @@ import (
 
 func TestSuggestedBotUsername(t *testing.T) {
 	cases := map[string]string{
-		"/home/user/myrepo":   "bot-myrepo",
-		"/tmp/My Project":     "bot-my-project",
-		"/x/Hello_World":      "bot-hello-world",
-		"/x/CRAZY---Name!!":   "bot-crazy-name",
-		"/x/.dotted":          "bot-dotted",
+		"/home/user/myrepo": "bot-myrepo",
+		"/tmp/My Project":   "bot-my-project",
+		"/x/Hello_World":    "bot-hello-world",
+		"/x/CRAZY---Name!!": "bot-crazy-name",
+		"/x/.dotted":        "bot-dotted",
 	}
 	for in, want := range cases {
 		if got := SuggestedBotUsername(in); got != want {

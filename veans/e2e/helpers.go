@@ -1,3 +1,19 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // Package e2e is the integration suite for veans. It assumes a running
 // Vikunja API at VEANS_E2E_API_URL and admin/seed credentials in
 // VEANS_E2E_ADMIN_TOKEN (or VEANS_E2E_ADMIN_USER + VEANS_E2E_ADMIN_PASS).
@@ -106,7 +122,7 @@ func (h *Harness) NewWorkspace(t *testing.T) *Workspace {
 		{"git", "config", "user.email", "veans-e2e@example.com"},
 		{"git", "config", "user.name", "veans-e2e"},
 	} {
-		cmd := exec.Command(c[0], c[1:]...)
+		cmd := exec.CommandContext(t.Context(), c[0], c[1:]...)
 		cmd.Dir = dir
 		if out, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("%s: %v\n%s", strings.Join(c, " "), err, out)
@@ -119,7 +135,7 @@ func (h *Harness) NewWorkspace(t *testing.T) *Workspace {
 		{"git", "add", "."},
 		{"git", "commit", "-q", "-m", "initial"},
 	} {
-		cmd := exec.Command(c[0], c[1:]...)
+		cmd := exec.CommandContext(t.Context(), c[0], c[1:]...)
 		cmd.Dir = dir
 		if out, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("%s: %v\n%s", strings.Join(c, " "), err, out)
@@ -142,7 +158,7 @@ func (h *Harness) NewWorkspace(t *testing.T) *Workspace {
 // stderr, and exit code.
 func (h *Harness) Run(t *testing.T, ws *Workspace, args ...string) (stdout, stderr string, exitCode int) {
 	t.Helper()
-	cmd := exec.Command(h.binary, args...)
+	cmd := exec.CommandContext(t.Context(), h.binary, args...)
 	cmd.Dir = ws.Dir
 	cmd.Env = append(os.Environ(), envSlice(ws.envOverrides)...)
 	var so, se bytes.Buffer
@@ -226,11 +242,11 @@ func buildOrLocate() (string, error) {
 	if runtime.GOOS == "windows" {
 		bin += ".exe"
 	}
-	cmd := exec.Command("go", "build", "-o", bin, "./cmd/veans")
+	cmd := exec.CommandContext(context.Background(), "go", "build", "-o", bin, "./cmd/veans")
 	cmd.Dir = repoRoot()
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("build veans: %v\n%s", err, out)
+		return "", fmt.Errorf("build veans: %w (output: %s)", err, out)
 	}
 	return bin, nil
 }
