@@ -1,8 +1,12 @@
 name: veans-e2e
 
 # End-to-end tests for the veans CLI. Mirrors the parent repo's frontend
-# e2e harness pattern: build the API binary, start it with sqlite memory
-# + fixtures, point the suite at it, then tear down.
+# e2e harness pattern: build the API binary, start it with sqlite memory,
+# register an admin test user, then run the Go e2e suite against it.
+#
+# All long-running steps live in a single shell so the backgrounded API
+# survives — GH Actions kills child processes when a step's bash exits,
+# which makes split start/run/stop steps unreliable.
 
 on:
   push:
@@ -30,12 +34,21 @@ jobs:
 
       - name: Install mage
         run: |
-          go install github.com/magefile/mage@v1.15.0
+          go install github.com/magefile/mage@v1.17.2
+          mage --version
+
+      - name: Stub frontend/dist
+        # The API binary embeds frontend/dist via go:embed; without the
+        # placeholder, `mage build` fails with "pattern frontend/dist: no
+        # matching files found".
+        run: |
+          mkdir -p frontend/dist
+          touch frontend/dist/index.html
 
       - name: Build API binary
         run: mage build
 
-      - name: Start API server (sqlite memory + fixtures)
+      - name: Run veans e2e against ephemeral Vikunja
         env:
           VIKUNJA_SERVICE_INTERFACE: ":3456"
           VIKUNJA_SERVICE_PUBLICURL: "http://127.0.0.1:3456/"
@@ -47,36 +60,50 @@ jobs:
           VIKUNJA_MAILER_ENABLED: "false"
           VIKUNJA_REDIS_ENABLED: "false"
           VIKUNJA_RATELIMIT_NOAUTHLIMIT: "1000"
+          VEANS_E2E_API_URL: http://127.0.0.1:3456
+          VEANS_E2E_ADMIN_USER: e2eadmin
+          VEANS_E2E_ADMIN_PASS: e2etestpassword
         run: |
-          ./vikunja web &
-          echo $! > /tmp/vikunja.pid
-          # Wait for /info (parent magefile uses 30s; we match)
+          set -e
+          chmod +x ./vikunja
+
+          # Start the API (nohup keeps it alive even if this step's bash
+          # exits abnormally — belt-and-suspenders alongside the trap).
+          nohup ./vikunja web > /tmp/vikunja.log 2>&1 &
+          API_PID=$!
+          trap "kill $API_PID 2>/dev/null || true" EXIT
+          echo "API PID: $API_PID"
+
+          # Wait for /info up to 60s.
           for i in $(seq 1 60); do
             if curl -sf http://127.0.0.1:3456/api/v1/info >/dev/null 2>&1; then
               echo "API ready after ${i}s"
-              exit 0
+              break
             fi
             sleep 1
           done
-          echo "API failed to start"
-          exit 1
 
-      - name: Run veans e2e
-        env:
-          VEANS_E2E_API_URL: http://127.0.0.1:3456
-          # user1 / 12345678 is the canonical fixture user (see
-          # pkg/db/fixtures/users.yml — bcrypt hash is the same for
-          # every fixture user).
-          VEANS_E2E_ADMIN_USER: user1
-          VEANS_E2E_ADMIN_PASS: "12345678"
-        working-directory: veans
-        run: |
-          go install github.com/magefile/mage@v1.15.0
-          mage test:e2e
-
-      - name: Stop API server
-        if: always()
-        run: |
-          if [ -f /tmp/vikunja.pid ]; then
-            kill "$(cat /tmp/vikunja.pid)" 2>/dev/null || true
+          if ! curl -sf http://127.0.0.1:3456/api/v1/info >/dev/null; then
+            echo "::error::API failed to start; log:"
+            cat /tmp/vikunja.log
+            exit 1
           fi
+
+          # Register a fresh admin user. The fresh sqlite-memory DB has no
+          # fixtures loaded, so we provision the user the suite will sign in
+          # as. service.enableregistration defaults to true.
+          curl -sf -X POST http://127.0.0.1:3456/api/v1/register \
+            -H 'Content-Type: application/json' \
+            -d "{\"username\":\"$VEANS_E2E_ADMIN_USER\",\"password\":\"$VEANS_E2E_ADMIN_PASS\",\"email\":\"e2e@example.com\"}" \
+            > /dev/null
+
+          # Run the suite.
+          (cd veans && mage test:e2e)
+
+      - name: Upload API log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vikunja-api-log
+          path: /tmp/vikunja.log
+          retention-days: 7
