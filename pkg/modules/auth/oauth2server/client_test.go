@@ -29,11 +29,32 @@ func TestValidateRedirectURI(t *testing.T) {
 	t.Run("accepts vikunja-desktop scheme", func(t *testing.T) {
 		assert.True(t, ValidateRedirectURI("vikunja-desktop://auth"))
 	})
+	t.Run("accepts http localhost", func(t *testing.T) {
+		assert.True(t, ValidateRedirectURI("http://localhost/callback"))
+	})
+	t.Run("accepts http localhost with port", func(t *testing.T) {
+		assert.True(t, ValidateRedirectURI("http://localhost:8080/callback"))
+	})
+	t.Run("accepts http 127.0.0.1", func(t *testing.T) {
+		assert.True(t, ValidateRedirectURI("http://127.0.0.1:8080/callback"))
+	})
+	t.Run("accepts http ipv6 loopback", func(t *testing.T) {
+		assert.True(t, ValidateRedirectURI("http://[::1]:8080/callback"))
+	})
 	t.Run("rejects https scheme", func(t *testing.T) {
 		assert.False(t, ValidateRedirectURI("https://evil.com/callback"))
 	})
-	t.Run("rejects http scheme", func(t *testing.T) {
-		assert.False(t, ValidateRedirectURI("http://localhost/callback"))
+	t.Run("rejects https localhost", func(t *testing.T) {
+		assert.False(t, ValidateRedirectURI("https://localhost/callback"))
+	})
+	t.Run("rejects non-loopback http", func(t *testing.T) {
+		assert.False(t, ValidateRedirectURI("http://evil.com/callback"))
+	})
+	t.Run("rejects http with localhost in path", func(t *testing.T) {
+		assert.False(t, ValidateRedirectURI("http://evil.com/localhost"))
+	})
+	t.Run("rejects http with localhost subdomain trick", func(t *testing.T) {
+		assert.False(t, ValidateRedirectURI("http://localhost.evil.com/callback"))
 	})
 	t.Run("rejects javascript scheme", func(t *testing.T) {
 		assert.False(t, ValidateRedirectURI("javascript:alert(1)"))
