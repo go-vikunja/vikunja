@@ -16,10 +16,11 @@ import (
 
 func newLoginCmd() *cobra.Command {
 	var (
-		token    string
-		username string
-		password string
-		totp     string
+		token       string
+		username    string
+		password    string
+		totp        string
+		usePassword bool
 	)
 	cmd := &cobra.Command{
 		Use:   "login",
@@ -27,6 +28,11 @@ func newLoginCmd() *cobra.Command {
 		Long: `Re-authenticates as you (the bot's owner) and mints a new API token
 for the bot configured in .veans.yml. The new token replaces the
 existing one in the credential store.
+
+The default flow is OAuth 2.0 Authorization Code + PKCE — open the
+URL veans prints, sign in, and paste the callback URL back. Use
+--token to paste in a personal API token, or --use-password / --username
+to force POST /login instead.
 
 Use this after revoking the bot's token in Vikunja's UI, or any time
 you want to rotate.`,
@@ -46,10 +52,12 @@ you want to rotate.`,
 
 			human := client.New(cfg.Server, "")
 			tok, err := auth.AcquireHumanToken(cmd.Context(), human, auth.LoginOptions{
-				Token:    token,
-				Username: username,
-				Password: password,
-				TOTP:     totp,
+				Token:       token,
+				UsePassword: usePassword,
+				Username:    username,
+				Password:    password,
+				TOTP:        totp,
+				Out:         os.Stderr,
 			}, auth.NewStdPrompter())
 			if err != nil {
 				return err
@@ -86,9 +94,10 @@ you want to rotate.`,
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&token, "token", "", "JWT or personal API token (skips password prompt)")
-	cmd.Flags().StringVar(&username, "username", "", "your Vikunja username")
-	cmd.Flags().StringVar(&password, "password", "", "your Vikunja password (prompted if empty)")
+	cmd.Flags().StringVar(&token, "token", "", "JWT or personal API token (skips OAuth/password)")
+	cmd.Flags().BoolVar(&usePassword, "use-password", false, "use POST /login instead of the default OAuth flow")
+	cmd.Flags().StringVar(&username, "username", "", "your Vikunja username (implies --use-password)")
+	cmd.Flags().StringVar(&password, "password", "", "your Vikunja password (implies --use-password; prompted if empty)")
 	cmd.Flags().StringVar(&totp, "totp", "", "TOTP code if your account requires 2FA")
 	return cmd
 }
