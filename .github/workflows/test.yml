@@ -404,6 +404,70 @@ jobs:
           name: frontend_dist
           path: ./frontend/dist
 
+  test-veans-e2e:
+    runs-on: ubuntu-latest
+    needs:
+      - api-build
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Download Vikunja Binary
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: vikunja_bin
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+      - run: chmod +x ./vikunja
+      - name: Run veans e2e against ephemeral Vikunja
+        env:
+          VIKUNJA_SERVICE_INTERFACE: ":3456"
+          VIKUNJA_SERVICE_PUBLICURL: "http://127.0.0.1:3456/"
+          VIKUNJA_SERVICE_JWTSECRET: "veans-e2e-jwt-secret-do-not-use-in-production"
+          VIKUNJA_DATABASE_TYPE: sqlite
+          VIKUNJA_DATABASE_PATH: memory
+          VIKUNJA_LOG_LEVEL: WARNING
+          VIKUNJA_MAILER_ENABLED: "false"
+          VIKUNJA_REDIS_ENABLED: "false"
+          VIKUNJA_RATELIMIT_NOAUTHLIMIT: "1000"
+          VEANS_E2E_API_URL: http://127.0.0.1:3456
+          VEANS_E2E_ADMIN_USER: e2eadmin
+          VEANS_E2E_ADMIN_PASS: e2etestpassword
+        run: |
+          set -e
+          # Boot the prebuilt API and tests in one shell — backgrounded
+          # processes don't survive step boundaries on GH runners.
+          nohup ./vikunja web > /tmp/vikunja.log 2>&1 &
+          API_PID=$!
+          trap "kill $API_PID 2>/dev/null || true" EXIT
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:3456/api/v1/info >/dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          if ! curl -sf http://127.0.0.1:3456/api/v1/info >/dev/null; then
+            echo "::error::API failed to start; log:"
+            cat /tmp/vikunja.log
+            exit 1
+          fi
+          # The sqlite-memory DB has no fixtures loaded — register the
+          # admin the suite logs in as. service.enableregistration
+          # defaults to true.
+          curl -sf -X POST http://127.0.0.1:3456/api/v1/register \
+            -H 'Content-Type: application/json' \
+            -d "{\"username\":\"$VEANS_E2E_ADMIN_USER\",\"password\":\"$VEANS_E2E_ADMIN_PASS\",\"email\":\"e2e@example.com\"}" \
+            > /dev/null
+          (cd veans && go test -count=1 ./e2e/...)
+      - name: Upload API log on failure
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: veans-e2e-vikunja-log
+          path: /tmp/vikunja.log
+          retention-days: 7
+
   test-frontend-e2e-playwright:
     runs-on: ubuntu-latest
     needs:
