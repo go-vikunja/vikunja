@@ -17,6 +17,7 @@
 package oauth2server
 
 import (
+	"net"
 	"net/url"
 	"strings"
 )
@@ -24,8 +25,10 @@ import (
 // ValidateRedirectURI checks that the redirect_uri is either a Vikunja native
 // app scheme (e.g. vikunja-flutter://callback) or a loopback http URL as
 // recommended by RFC 8252 for native apps that cannot register a custom
-// scheme. Dangerous schemes like javascript:, data:, https://, or non-loopback
-// http:// targets are rejected.
+// scheme. Any address in 127.0.0.0/8, the IPv6 loopback (::1, in any
+// notation), and the literal hostname "localhost" are accepted; dangerous
+// schemes like javascript:, data:, https://, or non-loopback http:// targets
+// are rejected.
 func ValidateRedirectURI(redirectURI string) bool {
 	u, err := url.Parse(redirectURI)
 	if err != nil || u.Scheme == "" {
@@ -38,7 +41,12 @@ func ValidateRedirectURI(redirectURI string) bool {
 
 	if u.Scheme == "http" {
 		host := u.Hostname()
-		return host == "localhost" || host == "127.0.0.1" || host == "::1"
+		if strings.EqualFold(host, "localhost") {
+			return true
+		}
+		if ip := net.ParseIP(host); ip != nil && ip.IsLoopback() {
+			return true
+		}
 	}
 
 	return false

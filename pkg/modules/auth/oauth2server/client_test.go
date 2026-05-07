@@ -38,8 +38,20 @@ func TestValidateRedirectURI(t *testing.T) {
 	t.Run("accepts http 127.0.0.1", func(t *testing.T) {
 		assert.True(t, ValidateRedirectURI("http://127.0.0.1:8080/callback"))
 	})
+	t.Run("accepts other 127.0.0.0/8 loopback addresses", func(t *testing.T) {
+		assert.True(t, ValidateRedirectURI("http://127.0.0.2:1234/callback"))
+	})
 	t.Run("accepts http ipv6 loopback", func(t *testing.T) {
 		assert.True(t, ValidateRedirectURI("http://[::1]:8080/callback"))
+	})
+	t.Run("accepts expanded ipv6 loopback", func(t *testing.T) {
+		assert.True(t, ValidateRedirectURI("http://[0:0:0:0:0:0:0:1]:1234/callback"))
+	})
+	t.Run("accepts localhost case-insensitively", func(t *testing.T) {
+		assert.True(t, ValidateRedirectURI("http://LocalHost:8080/callback"))
+	})
+	t.Run("rejects 0.0.0.0", func(t *testing.T) {
+		assert.False(t, ValidateRedirectURI("http://0.0.0.0:8080/callback"))
 	})
 	t.Run("rejects https scheme", func(t *testing.T) {
 		assert.False(t, ValidateRedirectURI("https://evil.com/callback"))
