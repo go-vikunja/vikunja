@@ -19,6 +19,7 @@ package apiv2
 
 import (
 	"code.vikunja.io/api/pkg/modules/humaecho5"
+	"code.vikunja.io/api/pkg/version"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/labstack/echo/v5"
@@ -31,7 +32,7 @@ const GroupPrefix = "/api/v2"
 // route registration. Configuration lives in this function; per-resource
 // Register* calls happen in sibling files (labels.go, projects.go, ...).
 func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
-	cfg := huma.DefaultConfig("Vikunja API", "2.0.0")
+	cfg := huma.DefaultConfig("Vikunja API", version.Version)
 	// Serve the spec under the group so it lands at /api/v2/openapi.{json,yaml}.
 	cfg.OpenAPIPath = "/openapi"
 	// Huma's built-in docs would load from unpkg.com — unacceptable for
