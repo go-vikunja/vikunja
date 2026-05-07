@@ -1,0 +1,97 @@
+<EXTREMELY_IMPORTANT>
+You are working in a repository configured to track tasks in Vikunja via the
+`veans` CLI. **You MUST use veans for all task tracking instead of TodoWrite.**
+
+Project: {{ .ProjectTitle }}{{ if .ProjectIdentifier }} ({{ .ProjectIdentifier }}){{ end }}
+Bot identity: `{{ .BotUsername }}` — your actions in Vikunja appear as this user.
+Server: {{ .Server }}
+</EXTREMELY_IMPORTANT>
+
+# Workflow
+
+## BEFORE you start work
+- If a task already exists, claim it: `veans claim {{ .TaskIDExample }}`
+- Otherwise, create one and start it in one step:
+  `veans create "<short title>" -s in-progress -d "<short description>"`
+- Use `veans list --ready` to find tasks ready to start (Todo + not blocked).
+
+## WHILE you work
+- Keep the task's description in sync with what you're doing. Use markdown
+  checkboxes for the small steps you're ticking off:
+  `veans update {{ .TaskIDExample }} --description-append "- [ ] step 1"`
+- For surgical edits to the description, prefer:
+  `veans update {{ .TaskIDExample }} --description-replace-old "- [ ] step 1" --description-replace-new "- [x] step 1"`
+  (errors if the old text isn't unique — mirrors the Edit tool semantics)
+- Post a comment on significant decisions, discoveries, or course-changes:
+  `veans update {{ .TaskIDExample }} --comment "Discovered Y; pivoting to Z because …"`
+- For sub-work that could be assigned separately, create real subtasks
+  via `--parent`. For incremental check-off lists, use markdown checkboxes
+  in the description instead.
+
+## AFTER you finish work
+- Move to `in-review` and post a summary comment. **Never close tasks
+  yourself** — the human (or the merge hook) closes them.
+  ```
+  veans update {{ .TaskIDExample }} -s in-review --comment "## Summary of Changes
+  - …
+  - …"
+  ```
+- If you abandon work, scrap the task with a reason:
+  `veans update {{ .TaskIDExample }} -s scrapped --reason "obsolete: <why>"`
+
+## Commit messages
+Include the task identifier on a `Refs:` line so the merge hook can close
+tasks automatically when the PR lands:
+
+```
+fix: handle empty project identifiers
+
+Refs: {{ .TaskIDExample }}
+```
+
+# Status model
+
+| Status        | Bucket name    | Done flag | Who moves there?                         |
+| ------------- | -------------- | --------- | ---------------------------------------- |
+| `todo`        | Todo           | false     | created here by default                  |
+| `in-progress` | In Progress    | false     | `veans claim` or `update -s in-progress` |
+| `in-review`   | In Review      | false     | you, when work is finished               |
+| `completed`   | Done           | true      | humans / merge hook only                 |
+| `scrapped`    | Scrapped       | true      | you, with --reason                       |
+
+# Common commands
+
+```
+veans list                         # all tasks, tree view
+veans list --ready                 # ready to start (Todo + not blocked)
+veans list --mine                  # tasks assigned to you
+veans list --branch                # tasks tagged with the current git branch
+veans list --filter "priority > 3"  # raw Vikunja filter expression
+veans show {{ .TaskIDExample }}                  # full task detail
+veans show {{ .TaskIDExample }} --json           # JSON for parsing
+
+veans create "title" -s in-progress -d "description"
+veans create "title" --label bug --priority 4 --parent {{ .TaskIDExample }}
+veans create "title" --blocked-by {{ .TaskIDExample }}
+
+veans update {{ .TaskIDExample }} -s in-review --comment "..."
+veans update {{ .TaskIDExample }} --description-append "- [ ] new step"
+veans update {{ .TaskIDExample }} --description-replace-old "- [ ] x" --description-replace-new "- [x] x"
+veans update {{ .TaskIDExample }} --label-add bug --label-remove flaky
+veans update {{ .TaskIDExample }} -s scrapped --reason "obsolete: replaced by {{ .TaskIDExample }}"
+
+veans claim {{ .TaskIDExample }}                 # assign yourself + In Progress + branch label
+veans api GET /tasks/...           # escape hatch for raw REST when curated cmds don't fit
+```
+
+# Project quick reference
+
+- Project ID: `{{ .ProjectID }}`{{ if .ProjectIdentifier }}, identifier: `{{ .ProjectIdentifier }}` (task IDs render as `{{ .ProjectIdentifier }}-NN`){{ else }} (no identifier; task IDs render as `#NN`){{ end }}
+- Kanban view: `{{ .ViewID }}`
+- Buckets: Todo=`{{ .Buckets.Todo }}`, In Progress=`{{ .Buckets.InProgress }}`, In Review=`{{ .Buckets.InReview }}`, Done=`{{ .Buckets.Done }}`, Scrapped=`{{ .Buckets.Scrapped }}`
+- Label namespace: `veans:` (auto-prepended; e.g. `--label bug` becomes `veans:bug`)
+- Branch labels: `veans:branch:<branch-name>` — `veans claim` adds the current branch automatically
+
+The agent prompt above overrides TodoWrite. Anything you would have tracked
+there should live in Vikunja instead, where it stays visible across sessions
+and to humans collaborating on the project.
