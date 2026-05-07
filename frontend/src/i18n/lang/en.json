@@ -1323,7 +1323,9 @@
     "none": "You don't have any notifications. Have a nice day!",
     "explainer": "Notifications will appear here when actions, projects or tasks you subscribed to happen.",
     "markAllRead": "Mark all notifications as read",
-    "markAllReadSuccess": "Successfully marked all notifications as read."
+    "markAllReadSuccess": "Successfully marked all notifications as read.",
+    "clearAll": "Clear notifications",
+    "clearAllSuccess": "All notifications have been cleared."
   },
   "quickActions": {
     "notLoggedIn": "Please log in to the main Vikunja window first.",

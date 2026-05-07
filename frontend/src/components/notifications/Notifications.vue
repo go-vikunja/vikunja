@@ -63,10 +63,18 @@
 				<XButton
 					v-if="notifications.length > 0 && unreadNotifications > 0"
 					variant="tertiary"
-					class="mbs-2 is-fullwidth" 
+					class="mbs-2 is-fullwidth"
 					@click="markAllRead"
 				>
 					{{ $t('notification.markAllRead') }}
+				</XButton>
+				<XButton
+					v-if="notifications.length > 0"
+					variant="tertiary"
+					class="mbs-2 is-fullwidth"
+					@click="clearAll"
+				>
+					{{ $t('notification.clearAll') }}
 				</XButton>
 				<p
 					v-if="notifications.length === 0"
@@ -235,8 +243,15 @@ async function markAllRead() {
 	const notificationService = new NotificationService()
 	await notificationService.markAllRead()
 	success({message: t('notification.markAllReadSuccess')})
-	
+
 	notifications.value.forEach(n => n.readAt = new Date())
+}
+
+async function clearAll() {
+	const notificationService = new NotificationService()
+	await notificationService.clearAll()
+	success({message: t('notification.clearAllSuccess')})
+	allNotifications.value = []
 }
 </script>
 

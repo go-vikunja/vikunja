@@ -29,4 +29,9 @@ export default class NotificationService extends AbstractService<INotification> 
 	async markAllRead() {
 		return this.post('/notifications', false)
 	}
+
+	async clearAll() {
+		const {data} = await this.http.delete('/notifications')
+		return data
+	}
 }
