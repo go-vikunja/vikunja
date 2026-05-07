@@ -34,6 +34,7 @@ func Root(version string) *cobra.Command {
 	root.PersistentFlags().BoolVar(&globals.Verbose, "verbose", false, "verbose logging to stderr")
 
 	root.AddCommand(newVersionCmd(version))
+	root.AddCommand(newInitCmd())
 
 	return root
 }
