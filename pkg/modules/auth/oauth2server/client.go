@@ -21,15 +21,25 @@ import (
 	"strings"
 )
 
-// ValidateRedirectURI checks that the redirect_uri uses a scheme starting with
-// "vikunja-". This allowlists only Vikunja native app schemes (e.g.
-// vikunja-flutter://callback) and rejects dangerous schemes like javascript:,
-// data:, http:, https:, etc.
+// ValidateRedirectURI checks that the redirect_uri is either a Vikunja native
+// app scheme (e.g. vikunja-flutter://callback) or a loopback http URL as
+// recommended by RFC 8252 for native apps that cannot register a custom
+// scheme. Dangerous schemes like javascript:, data:, https://, or non-loopback
+// http:// targets are rejected.
 func ValidateRedirectURI(redirectURI string) bool {
 	u, err := url.Parse(redirectURI)
 	if err != nil || u.Scheme == "" {
 		return false
 	}
 
-	return strings.HasPrefix(u.Scheme, "vikunja-")
+	if strings.HasPrefix(u.Scheme, "vikunja-") {
+		return true
+	}
+
+	if u.Scheme == "http" {
+		host := u.Hostname()
+		return host == "localhost" || host == "127.0.0.1" || host == "::1"
+	}
+
+	return false
 }
