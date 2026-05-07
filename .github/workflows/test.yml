@@ -91,6 +91,20 @@ jobs:
           version: v2.10.1
           working-directory: veans
 
+  veans-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+      - name: Run unit tests
+        # The e2e package self-skips when VEANS_E2E_API_URL isn't set, so
+        # this job runs only the (fast) unit tests, independent of the
+        # heavier test-veans-e2e job that needs the API artifact.
+        working-directory: veans
+        run: go test -count=1 ./...
+
   check-translations:
     runs-on: ubuntu-latest
     needs: mage
