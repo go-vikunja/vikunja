@@ -119,6 +119,16 @@ func (Lint) Fix() error {
 	return sh.RunV("golangci-lint", "run", "--fix", "./...")
 }
 
+// Aliases lets `mage test` resolve to `Test.All` (and the others) without
+// having to spell out the namespace. Mirrors the parent magefile's pattern.
+var Aliases = map[string]any{
+	"test":        Test.All,
+	"test:filter": Test.Filter,
+	"test:e2e":    Test.E2E,
+	"lint":        Lint.All,
+	"lint:fix":    Lint.Fix,
+}
+
 // trimLast is a tiny helper for prettier path printing in error messages.
 func trimLast(p string) string {
 	return strings.TrimSuffix(p, "/")
