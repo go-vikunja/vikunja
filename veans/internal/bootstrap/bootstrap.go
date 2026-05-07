@@ -35,9 +35,11 @@ type Options struct {
 	// If empty, the prompter asks.
 	Server string
 
-	// HumanToken short-circuits POST /login when set.
+	// HumanToken short-circuits all auth when set.
 	HumanToken string
-	// HumanUsername / HumanPassword are forwarded to auth.LoginOptions.
+	// HumanUsePassword forces POST /login instead of the default OAuth flow.
+	HumanUsePassword bool
+	// HumanUsername / HumanPassword feed POST /login (used when set).
 	HumanUsername string
 	HumanPassword string
 	HumanTOTP     string
@@ -138,12 +140,15 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	}
 	progress(opts.Out, "Connected to Vikunja %s", info.Version)
 
-	// 4. Acquire human JWT (transient — used until step 11).
+	// 4. Acquire human JWT (transient — used until step 11). Default is the
+	// OAuth flow; --token / --use-password / --username+--password override.
 	tok, err := auth.AcquireHumanToken(ctx, human, auth.LoginOptions{
-		Token:    opts.HumanToken,
-		Username: opts.HumanUsername,
-		Password: opts.HumanPassword,
-		TOTP:     opts.HumanTOTP,
+		Token:       opts.HumanToken,
+		UsePassword: opts.HumanUsePassword,
+		Username:    opts.HumanUsername,
+		Password:    opts.HumanPassword,
+		TOTP:        opts.HumanTOTP,
+		Out:         opts.Out,
 	}, prompter)
 	if err != nil {
 		return nil, err

@@ -21,3 +21,15 @@ func (c *Client) CurrentUser(ctx context.Context) (*User, error) {
 	}
 	return &out, nil
 }
+
+// ExchangeOAuthCode swaps an authorization code (with the matching PKCE
+// verifier) for an access + refresh token pair via POST /oauth/token.
+// Vikunja requires JSON, not form-encoded — the standard OAuth library
+// helpers don't apply.
+func (c *Client) ExchangeOAuthCode(ctx context.Context, req *OAuthTokenRequest) (*OAuthTokenResponse, error) {
+	var out OAuthTokenResponse
+	if err := c.Do(ctx, "POST", "/oauth/token", nil, req, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

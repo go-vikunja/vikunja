@@ -190,3 +190,22 @@ type LoginRequest struct {
 type LoginResponse struct {
 	Token string `json:"token"`
 }
+
+// OAuthTokenRequest is the JSON body for POST /api/v1/oauth/token. Vikunja's
+// OAuth server explicitly rejects form-encoded requests; everything is JSON.
+type OAuthTokenRequest struct {
+	GrantType    string `json:"grant_type"`
+	Code         string `json:"code,omitempty"`
+	ClientID     string `json:"client_id,omitempty"`
+	RedirectURI  string `json:"redirect_uri,omitempty"`
+	CodeVerifier string `json:"code_verifier,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+}
+
+// OAuthTokenResponse mirrors the standard RFC 6749 response.
+type OAuthTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int64  `json:"expires_in"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+}

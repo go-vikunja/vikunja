@@ -12,17 +12,18 @@ import (
 )
 
 type initFlags struct {
-	server        string
-	token         string
-	username      string
-	password      string
-	totp          string
-	botUsername   string
-	projectID     int64
-	viewID        int64
-	yesBuckets    bool
-	skipBuckets   bool
-	configPath    string
+	server      string
+	token       string
+	username    string
+	password    string
+	totp        string
+	usePassword bool
+	botUsername string
+	projectID   int64
+	viewID      int64
+	yesBuckets  bool
+	skipBuckets bool
+	configPath  string
 }
 
 func newInitCmd() *cobra.Command {
@@ -51,18 +52,19 @@ revoke it at any time without affecting your own session.`,
 				path = filepath.Join(root, config.Filename)
 			}
 			res, err := bootstrap.Init(cmd.Context(), &bootstrap.Options{
-				ConfigPath:           path,
-				Server:               f.server,
-				HumanToken:           f.token,
-				HumanUsername:        f.username,
-				HumanPassword:        f.password,
-				HumanTOTP:            f.totp,
-				BotUsername:          f.botUsername,
-				ProjectID:            f.projectID,
-				ViewID:               f.viewID,
-				AutoApproveBuckets:   f.yesBuckets,
-				SkipBucketBootstrap:  f.skipBuckets,
-				Out:                  os.Stderr,
+				ConfigPath:          path,
+				Server:              f.server,
+				HumanToken:          f.token,
+				HumanUsePassword:    f.usePassword,
+				HumanUsername:       f.username,
+				HumanPassword:       f.password,
+				HumanTOTP:           f.totp,
+				BotUsername:         f.botUsername,
+				ProjectID:           f.projectID,
+				ViewID:              f.viewID,
+				AutoApproveBuckets:  f.yesBuckets,
+				SkipBucketBootstrap: f.skipBuckets,
+				Out:                 os.Stderr,
 			})
 			if err != nil {
 				return err
@@ -73,9 +75,10 @@ revoke it at any time without affecting your own session.`,
 	}
 
 	cmd.Flags().StringVar(&f.server, "server", "", "Vikunja server URL")
-	cmd.Flags().StringVar(&f.token, "token", "", "JWT or personal API token (skips password prompt; useful for SSO/OIDC instances)")
-	cmd.Flags().StringVar(&f.username, "username", "", "Vikunja username (prompted if empty)")
-	cmd.Flags().StringVar(&f.password, "password", "", "Vikunja password (prompted if empty; usually safer to omit)")
+	cmd.Flags().StringVar(&f.token, "token", "", "JWT or personal API token (skips OAuth/password; useful for SSO/OIDC instances)")
+	cmd.Flags().BoolVar(&f.usePassword, "use-password", false, "use POST /login (username+password) instead of the default OAuth flow")
+	cmd.Flags().StringVar(&f.username, "username", "", "Vikunja username (implies --use-password)")
+	cmd.Flags().StringVar(&f.password, "password", "", "Vikunja password (implies --use-password; prompted if empty)")
 	cmd.Flags().StringVar(&f.totp, "totp", "", "TOTP code if your account requires 2FA")
 	cmd.Flags().StringVar(&f.botUsername, "bot-username", "", "override the bot-<repo> default")
 	cmd.Flags().Int64Var(&f.projectID, "project", 0, "skip the interactive project picker")
