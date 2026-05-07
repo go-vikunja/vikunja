@@ -46,7 +46,9 @@ jobs:
           touch frontend/dist/index.html
 
       - name: Build API binary
-        run: mage build
+        # Parent magefile uses Build.Build under the `build` namespace —
+        # plain `mage build` resolves to the namespace, not a target.
+        run: mage build:build
 
       - name: Run veans e2e against ephemeral Vikunja
         env:
