@@ -40,6 +40,7 @@ func Root(version string) *cobra.Command {
 	root.AddCommand(newCreateCmd())
 	root.AddCommand(newUpdateCmd())
 	root.AddCommand(newClaimCmd())
+	root.AddCommand(newPrimeCmd())
 
 	return root
 }
