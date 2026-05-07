@@ -418,6 +418,10 @@ jobs:
         uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
         with:
           go-version: stable
+      - name: Install mage
+        # The cached mage-static artifact has the parent magefile compiled
+        # in — we need a generic mage binary to pick up veans/magefile.go.
+        run: go install github.com/magefile/mage@v1.17.2
       - run: chmod +x ./vikunja
       - name: Run veans e2e against ephemeral Vikunja
         env:
@@ -459,7 +463,9 @@ jobs:
             -H 'Content-Type: application/json' \
             -d "{\"username\":\"$VEANS_E2E_ADMIN_USER\",\"password\":\"$VEANS_E2E_ADMIN_PASS\",\"email\":\"e2e@example.com\"}" \
             > /dev/null
-          (cd veans && go test -count=1 ./e2e/...)
+          # `mage test` runs unit + e2e packages; the e2e suite self-skips
+          # when VEANS_E2E_API_URL is unset so the same target works locally.
+          (cd veans && mage test)
       - name: Upload API log on failure
         if: failure()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
