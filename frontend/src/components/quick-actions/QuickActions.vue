@@ -24,6 +24,7 @@
 					ref="searchInput"
 					v-model="query"
 					v-focus
+					autofocus
 					class="input"
 					:class="{'is-loading': loading}"
 					:placeholder="placeholder"
@@ -718,6 +719,11 @@ function reset() {
 		margin: 0;
 		border: none;
 		box-shadow: none;
+	}
+
+	.help {
+		color: var(--grey-500) !important;
+		font-size: 0.875rem;
 	}
 }
 
