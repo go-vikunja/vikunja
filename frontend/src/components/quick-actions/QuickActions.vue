@@ -23,7 +23,6 @@
 				<input
 					ref="searchInput"
 					v-model="query"
-					v-focus
 					autofocus
 					class="input"
 					:class="{'is-loading': loading}"
@@ -194,30 +193,26 @@ watchEffect(() => {
 	if (active.value) {
 		if (isQuickAddMode) {
 			selectedCmd.value = commands.value.newTask
-		}
 
-		// The input may not be focusable yet due to:
-		// 1. Modal mounts the <dialog> via v-if and then calls showModal() in a
-		//    follow-up flush, so v-focus fires while the dialog is still closed
-		//    and the focus() call is dropped.
-		// 2. In quick-add mode the Electron window isn't visible until
-		//    did-finish-load.
-		// Retry with rAF until focus actually lands on the input.
-		const tryFocus = () => {
-			if (!active.value) {
-				focusRafId = null
-				return
-			}
-			if (searchInput.value) {
-				searchInput.value.focus()
-				if (document.activeElement === searchInput.value) {
+			// In Electron quick-add mode the window isn't visible until
+			// did-finish-load, so autofocus may not fire. Retry with rAF
+			// until focus actually lands on the input.
+			const tryFocus = () => {
+				if (!active.value) {
 					focusRafId = null
 					return
 				}
+				if (searchInput.value) {
+					searchInput.value.focus()
+					if (document.activeElement === searchInput.value) {
+						focusRafId = null
+						return
+					}
+				}
+				focusRafId = requestAnimationFrame(tryFocus)
 			}
 			focusRafId = requestAnimationFrame(tryFocus)
 		}
-		focusRafId = requestAnimationFrame(tryFocus)
 	} else if (focusRafId !== null) {
 		cancelAnimationFrame(focusRafId)
 		focusRafId = null
