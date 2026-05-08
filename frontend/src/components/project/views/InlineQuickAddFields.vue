@@ -75,13 +75,13 @@
 			<EditAssignees
 				v-else-if="openPopup === 'assignee'"
 				v-model="fields.assignees"
-				:task-id="0"
+				:task-id="props.task?.id ?? 0"
 				:project-id="projectId"
 			/>
 			<EditLabels
 				v-else-if="openPopup === 'labels'"
 				v-model="fields.labels"
-				:task-id="0"
+				:task-id="props.task?.id ?? 0"
 				:creatable="false"
 			/>
 			<Reminders
@@ -134,21 +134,26 @@ import Reminders from '@/components/tasks/partials/Reminders.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import XButton from '@/components/input/Button.vue'
 
-import {formatDateShort} from '@/helpers/time/formatDate'
+import {formatDateShort, formatDisplayDate} from '@/helpers/time/formatDate'
 import {closeWhenClickedOutside} from '@/helpers/closeWhenClickedOutside'
 import {DEFAULT_INLINE_QUICK_ADD_FIELDS} from '@/modelTypes/IUserSettings'
 import type {IUser} from '@/modelTypes/IUser'
 import type {ILabel} from '@/modelTypes/ILabel'
+import type {ITask} from '@/modelTypes/ITask'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IReminderPeriodRelativeTo} from '@/types/IReminderPeriodRelativeTo'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 import {useAuthStore} from '@/stores/auth'
+import {useTaskStore} from '@/stores/tasks'
 
-defineProps<{
+const props = defineProps<{
 	projectId: number
 	disabled: boolean
+	task?: ITask
 }>()
+
+const isEditMode = computed(() => props.task !== undefined)
 
 defineOptions({name: 'InlineQuickAddFields'})
 
@@ -176,6 +181,80 @@ const fields = ref({
 	color: '',
 	percentDone: 0,
 })
+
+// --- Edit mode: init fields from task ---
+
+const taskStore = useTaskStore()
+let suppressSave = false
+
+function isDateSet(d: Date | null): boolean {
+	return d !== null && d.getTime() > 0
+}
+
+function initFieldsFromTask(task: ITask) {
+	suppressSave = true
+	fields.value = {
+		dueDate: isDateSet(task.dueDate) ? task.dueDate : null,
+		startDate: isDateSet(task.startDate) ? task.startDate : null,
+		endDate: isDateSet(task.endDate) ? task.endDate : null,
+		priority: task.priority,
+		assignees: [...task.assignees],
+		labels: [...task.labels],
+		reminders: [...task.reminders],
+		color: task.hexColor ?? '',
+		percentDone: task.percentDone * 100,
+	}
+	nextTick(() => { suppressSave = false })
+}
+
+if (props.task) {
+	initFieldsFromTask(props.task)
+}
+
+function datesEqual(a: Date | null, b: Date | null): boolean {
+	if (a === b) return true
+	if (a === null || b === null) return false
+	return a.getTime() === b.getTime()
+}
+
+async function saveEditField(popup: Exclude<PopupKind, null>) {
+	if (!isEditMode.value || !props.task || suppressSave) return
+
+	const task = props.task
+	switch (popup) {
+		case 'due':
+			if (datesEqual(fields.value.dueDate, task.dueDate)) return
+			await taskStore.update({...task, dueDate: fields.value.dueDate})
+			break
+		case 'start':
+			if (datesEqual(fields.value.startDate, task.startDate)) return
+			await taskStore.update({...task, startDate: fields.value.startDate})
+			break
+		case 'endDate':
+			if (datesEqual(fields.value.endDate, task.endDate)) return
+			await taskStore.update({...task, endDate: fields.value.endDate})
+			break
+		case 'priority':
+			if (fields.value.priority === task.priority) return
+			await taskStore.update({...task, priority: fields.value.priority})
+			break
+		case 'color':
+			if (fields.value.color === (task.hexColor ?? '')) return
+			await taskStore.update({...task, hexColor: fields.value.color})
+			break
+		case 'percentDone':
+			if (fields.value.percentDone / 100 === task.percentDone) return
+			await taskStore.update({...task, percentDone: fields.value.percentDone / 100})
+			break
+		case 'reminder':
+			if (fields.value.reminders.length === task.reminders.length) return
+			await taskStore.update({...task, reminders: [...fields.value.reminders]})
+			break
+		case 'assignee':
+		case 'labels':
+			break
+	}
+}
 
 // --- Enabled fields ---
 
@@ -255,8 +334,15 @@ function clampPopupToViewport() {
 	}
 	const margin = 8
 	const popupRect = popup.getBoundingClientRect()
-	const top = chipRect.bottom + 4
+	let top = chipRect.bottom + 4
 	let left = chipRect.left
+
+	if (top + popupRect.height + margin > window.innerHeight) {
+		top = chipRect.top - popupRect.height - 4
+	}
+	if (top < margin) {
+		top = margin
+	}
 
 	if (left + popupRect.width + margin > window.innerWidth) {
 		left = Math.max(margin, window.innerWidth - popupRect.width - margin)
@@ -284,11 +370,14 @@ function disconnectPopupResize() {
 	}
 }
 
-watch(openPopup, (value) => {
-	if (value === null) {
+watch(openPopup, (newVal, oldVal) => {
+	if (newVal === null) {
 		disconnectPopupResize()
 		anchorChipRect.value = null
 		isPopupReady.value = false
+	}
+	if (oldVal !== null && newVal === null && isEditMode.value) {
+		saveEditField(oldVal)
 	}
 })
 
@@ -357,11 +446,12 @@ const reminderChipLabel = computed(() => {
 })
 
 const inlineChips = computed<InlineChip[]>(() => {
+	const formatDate = isEditMode.value ? formatDisplayDate : formatDateShort
 	const chipLabel: Record<string, () => string> = {
 		assignee: () => assigneeChipLabel.value,
-		dueDate: () => fields.value.dueDate !== null ? formatDateShort(fields.value.dueDate) : t('task.attributes.dueDate'),
-		startDate: () => fields.value.startDate !== null ? formatDateShort(fields.value.startDate) : t('task.attributes.startDate'),
-		endDate: () => fields.value.endDate !== null ? formatDateShort(fields.value.endDate) : t('task.attributes.endDate'),
+		dueDate: () => fields.value.dueDate !== null ? formatDate(fields.value.dueDate) : t('task.attributes.dueDate'),
+		startDate: () => fields.value.startDate !== null ? formatDate(fields.value.startDate) : t('task.attributes.startDate'),
+		endDate: () => fields.value.endDate !== null ? formatDate(fields.value.endDate) : t('task.attributes.endDate'),
 		priority: () => fields.value.priority !== 0 ? t(`task.priority.${PRIORITY_LABEL_KEYS[fields.value.priority]}`) : t('task.attributes.priority'),
 		labels: () => labelsChipLabel.value,
 		reminder: () => reminderChipLabel.value,
@@ -380,7 +470,7 @@ const inlineChips = computed<InlineChip[]>(() => {
 		percentDone: () => fields.value.percentDone > 0,
 	}
 
-	return enabledFields.value.map(field => {
+	const chips = enabledFields.value.map(field => {
 		const cfg = CHIP_CONFIG[field]
 		return {
 			field,
@@ -392,6 +482,12 @@ const inlineChips = computed<InlineChip[]>(() => {
 			colorValue: field === 'color' && fields.value.color ? fields.value.color : undefined,
 		}
 	})
+
+	if (isEditMode.value) {
+		return chips.filter(c => !c.isSet)
+	}
+
+	return chips
 })
 
 function clearField(field: string) {
@@ -407,6 +503,13 @@ function clearField(field: string) {
 		percentDone: () => { fields.value.percentDone = 0 },
 	}
 	clearMap[field]?.()
+
+	if (isEditMode.value) {
+		const popup = CHIP_CONFIG[field]?.popup
+		if (popup) {
+			saveEditField(popup)
+		}
+	}
 }
 
 // --- Public API ---
@@ -447,6 +550,30 @@ function containsElement(el: Element | null): boolean {
 const isPopupOpen = computed(() => openPopup.value !== null)
 const taskColor = computed(() => fields.value.color)
 
+function openForField(field: string, anchorEl: HTMLElement) {
+	const cfg = CHIP_CONFIG[field]
+	if (!cfg) return
+
+	if (openPopup.value === cfg.popup) {
+		openPopup.value = null
+		return
+	}
+
+	const rect = anchorEl.getBoundingClientRect()
+	anchorChipRect.value = rect
+	popupPosition.value = {
+		top: rect.bottom + 4,
+		left: rect.left,
+	}
+	isPopupReady.value = false
+	openPopup.value = cfg.popup
+	nextTick(() => {
+		clampPopupToViewport()
+		isPopupReady.value = true
+		observePopupResize()
+	})
+}
+
 defineExpose({
 	getFieldValues,
 	reset,
@@ -454,6 +581,7 @@ defineExpose({
 	hasAnyField,
 	isPopupOpen,
 	taskColor,
+	openForField,
 })
 </script>
 
@@ -482,9 +610,9 @@ defineExpose({
 	transition: background-color $transition, color $transition, border-color $transition, box-shadow $transition;
 
 	&:hover:not(:disabled) {
-		background: var(--white);
-		color: var(--grey-900);
-		box-shadow: 0 1px 3px hsla(var(--grey-900-hsl), .12);
+		background: var(--primary-light);
+		color: var(--primary-dark);
+		box-shadow: 0 1px 4px hsla(var(--primary-hsl), .2);
 	}
 
 	&:focus-visible {
