@@ -36,7 +36,7 @@
 				</label>
 				<div
 					key="field-search"
-					class="field"
+					class="field task-relation-search-field"
 				>
 					<Multiselect
 						v-model="newTaskRelation.task"
@@ -77,6 +77,7 @@
 							</span>
 						</template>
 					</Multiselect>
+					<QuickAddMagic class="task-relation-quick-add-magic" />
 				</div>
 				<div
 					key="field-kind"
@@ -200,6 +201,7 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
+import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
 
 import {error, success} from '@/message'
 import {useTaskStore} from '@/stores/tasks'
@@ -362,7 +364,7 @@ async function removeTaskRelation() {
 }
 
 async function createAndRelateTask(title: string) {
-	const newTask = await taskService.create(new TaskModel({title, projectId: props.projectId}))
+	const newTask = await taskStore.createNewTask({title, projectId: props.projectId})
 	newTaskRelation.task = newTask
 	await addTaskRelation()
 }
@@ -457,6 +459,17 @@ async function toggleTaskDone(task: ITask) {
 
 :deep(.multiselect .search-results button) {
 	padding: 0.5rem;
+}
+
+.task-relation-search-field {
+	position: relative;
+}
+
+.task-relation-quick-add-magic {
+	position: absolute;
+	inset-block-start: .5rem;
+	inset-inline-end: .75rem;
+	z-index: 4;
 }
 
 // FIXME: The height of the actual checkbox in the <FancyCheckbox/> component is too much resulting in a 
