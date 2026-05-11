@@ -727,6 +727,7 @@ func registerAPIRoutes(a *echo.Group) {
 	a.GET("/notifications", notificationHandler.ReadAllWeb)
 	a.POST("/notifications/:notificationid", notificationHandler.UpdateWeb)
 	a.POST("/notifications", apiv1.MarkAllNotificationsAsRead)
+	a.DELETE("/notifications", apiv1.DeleteAllNotifications)
 
 	// Migrations
 	m := a.Group("/migration")

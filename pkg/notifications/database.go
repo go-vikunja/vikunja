@@ -133,3 +133,10 @@ func MarkAllNotificationsAsRead(s *xorm.Session, userID int64) (err error) {
 		Update(&DatabaseNotification{ReadAt: time.Now()})
 	return
 }
+
+func DeleteAllNotificationsForUser(s *xorm.Session, userID int64) error {
+	_, err := s.
+		Where("notifiable_id = ?", userID).
+		Delete(&DatabaseNotification{})
+	return err
+}
