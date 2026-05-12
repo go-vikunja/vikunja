@@ -10,6 +10,22 @@ import type {DateDisplay} from '@/constants/dateDisplay'
 import type {TimeFormat} from '@/constants/timeFormat'
 import type {IRelationKind} from '@/types/IRelationKind'
 
+export const INLINE_QUICK_ADD_FIELDS = [
+	'assignee',
+	'dueDate',
+	'startDate',
+	'endDate',
+	'priority',
+	'labels',
+	'reminder',
+	'color',
+	'percentDone',
+] as const
+
+export type InlineQuickAddField = typeof INLINE_QUICK_ADD_FIELDS[number]
+
+export const DEFAULT_INLINE_QUICK_ADD_FIELDS: InlineQuickAddField[] = ['assignee', 'dueDate']
+
 export interface IFrontendSettings {
 	playSoundWhenDone: boolean
 	quickAddMagicMode: PrefixMode
@@ -28,6 +44,7 @@ export interface IFrontendSettings {
 	commentSortOrder: 'asc' | 'desc'
 	desktopQuickEntryShortcut: string
 	quickAddDefaultReminders: ITaskReminder[]
+	inlineQuickAddFields: InlineQuickAddField[]
 }
 
 export interface IExtraSettingsLink {

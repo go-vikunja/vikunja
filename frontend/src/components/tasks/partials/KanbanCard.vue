@@ -46,6 +46,7 @@
 					v-if="task.dueDate > 0"
 					v-tooltip="formatDateLong(task.dueDate)"
 					class="due-date"
+					@click.stop="openFieldPopup('dueDate', $event)"
 				>
 					<span class="icon">
 						<Icon :icon="['far', 'calendar-alt']" />
@@ -71,11 +72,15 @@
 				:value="task.percentDone * 100"
 			/>
 			<div class="footer">
-				<Labels :labels="task.labels" />
+				<Labels
+					:labels="task.labels"
+					@click.stop="openFieldPopup('labels', $event)"
+				/>
 				<PriorityLabel
 					:priority="task.priority"
 					:done="task.done"
 					class="is-inline-flex is-align-items-center"
+					@click.stop="openFieldPopup('priority', $event)"
 				/>
 				<span
 					v-if="task.attachments.length > 0"
@@ -103,18 +108,45 @@
 					v-if="task.assignees.length > 0"
 					:assignees="task.assignees"
 					:avatar-size="24"
+					@click.stop="openFieldPopup('assignee', $event)"
 				/>
 				<ChecklistSummary
 					:task="task"
 					class="checklist"
 				/>
 			</div>
+			<div
+				v-if="!task.done"
+				class="kanban-card__quick-edit"
+				@click.stop
+				@mouseenter="onQuickEditMouseEnter"
+				@mouseleave="onQuickEditMouseLeave"
+			>
+				<div
+					class="kanban-card__inline-fields"
+					:class="{'is-open': isExpanded}"
+				>
+					<InlineQuickAddFields
+						ref="inlineFieldsRef"
+						:task="task"
+						:project-id="projectId"
+						:disabled="false"
+					/>
+				</div>
+				<button
+					type="button"
+					class="kanban-card__toggle"
+					@click="isExpanded = !isExpanded"
+				>
+					<Icon :icon="isExpanded ? 'times' : 'plus'" />
+				</button>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {computed, ref, watch} from 'vue'
+import {computed, onBeforeUnmount, ref, watch, type ComponentInstance} from 'vue'
 import {useRouter} from 'vue-router'
 
 import {useGlobalNow} from '@/composables/useGlobalNow'
@@ -136,6 +168,7 @@ import {formatDateLong, formatDisplayDate, formatISO} from '@/helpers/time/forma
 import {colorIsDark} from '@/helpers/color/colorIsDark'
 import {useTaskStore} from '@/stores/tasks'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
+import InlineQuickAddFields from '@/components/project/views/InlineQuickAddFields.vue'
 import {playPopSound} from '@/helpers/playPop'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import {useProjectStore} from '@/stores/projects'
@@ -156,6 +189,29 @@ const emit = defineEmits<{
 const router = useRouter()
 
 const loadingInternal = ref(false)
+const isExpanded = ref(false)
+const inlineFieldsRef = ref<ComponentInstance<typeof InlineQuickAddFields> | null>(null)
+const hasPopupOpen = computed(() => inlineFieldsRef.value?.isPopupOpen ?? false)
+
+let collapseTimer: ReturnType<typeof setTimeout> | null = null
+
+function scheduleCollapse() {
+	if (collapseTimer) clearTimeout(collapseTimer)
+	collapseTimer = setTimeout(() => {
+		if (!hasPopupOpen.value) {
+			isExpanded.value = false
+		}
+	}, 650)
+}
+
+function cancelCollapse() {
+	if (collapseTimer) {
+		clearTimeout(collapseTimer)
+		collapseTimer = null
+	}
+}
+
+onBeforeUnmount(() => cancelCollapse())
 
 const color = computed(() => getHexColor(props.task.hexColor))
 
@@ -202,6 +258,22 @@ async function toggleTaskDone(task: ITask) {
 	} finally {
 		loadingInternal.value = false
 	}
+}
+
+function onQuickEditMouseEnter() {
+	cancelCollapse()
+}
+
+function onQuickEditMouseLeave() {
+	if (isExpanded.value) {
+		scheduleCollapse()
+	}
+}
+
+function openFieldPopup(field: string, event: MouseEvent) {
+	if (props.task.done) return
+	const el = (event.currentTarget ?? event.target) as HTMLElement
+	inlineFieldsRef.value?.openForField(field, el)
 }
 
 function openTaskDetail() {
@@ -295,6 +367,7 @@ $task-background: var(--white);
 		align-items: center;
 		gap: .25rem;
 		margin-block-start: .25rem;
+		min-block-size: 1.5rem;
 
 		:deep(.checklist-summary) {
 			padding-inline-start: 0;
@@ -402,5 +475,50 @@ $task-background: var(--white);
 	background: var(--grey-100);
 	border-radius: $radius;
 	padding: 0.25rem;
+}
+
+.kanban-card__quick-edit {
+	position: relative;
+}
+
+.kanban-card__toggle {
+	position: absolute;
+	inset-inline-end: -.5rem;
+	inset-block-start: -.65rem;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	border: 0;
+	border-radius: $radius;
+	background: transparent;
+	color: var(--grey-400);
+	font-size: .7rem;
+	cursor: pointer;
+
+	&:hover {
+		color: var(--grey-700);
+		background: var(--grey-100);
+	}
+}
+
+.task:hover .kanban-card__toggle,
+.kanban-card__inline-fields.is-open + .kanban-card__toggle {
+	display: flex;
+}
+
+.kanban-card__inline-fields {
+	display: grid;
+	grid-template-rows: 0fr;
+	transition: grid-template-rows .2s ease;
+
+	> :deep(*) {
+		overflow: hidden;
+	}
+
+	&.is-open {
+		grid-template-rows: 1fr;
+	}
 }
 </style>
