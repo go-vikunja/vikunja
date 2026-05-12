@@ -1,0 +1,185 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// Package humaecho5 is a Huma adapter for labstack/echo/v5, vendored from
+// the unmerged upstream PR https://github.com/danielgtaylor/huma/pull/959
+// until it lands (Huma's own humaecho is echo/v4 only). Delete and switch
+// back to upstream once that PR merges.
+//
+// Vikunja-specific glue: every request stashes its *echo.Context on
+// context.Context under EchoContextKey so handlers can reach the echo
+// context via auth.GetAuthFromContext without per-handler wiring.
+package humaecho5
+
+import (
+	"context"
+	"crypto/tls"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/labstack/echo/v5"
+)
+
+// MultipartMaxMemory caps in-memory buffering for multipart form parsing.
+var MultipartMaxMemory int64 = 8 * 1024
+
+type echoContextKey struct{}
+
+// EchoContextKey retrieves the underlying *echo.Context from a Huma
+// handler's context.Context.
+var EchoContextKey = echoContextKey{}
+
+// Unwrap extracts the underlying Echo context from a Huma context. Panics if
+// called on a context from a different adapter.
+func Unwrap(ctx huma.Context) *echo.Context {
+	for {
+		if c, ok := ctx.(interface{ Unwrap() huma.Context }); ok {
+			ctx = c.Unwrap()
+			continue
+		}
+		break
+	}
+	if c, ok := ctx.(*echoCtx); ok {
+		return c.Unwrap()
+	}
+	panic("not a humaecho5 context")
+}
+
+type echoCtx struct {
+	op     *huma.Operation
+	orig   *echo.Context
+	status int
+}
+
+var _ huma.Context = &echoCtx{}
+
+func (c *echoCtx) Unwrap() *echo.Context      { return c.orig }
+func (c *echoCtx) Operation() *huma.Operation { return c.op }
+
+func (c *echoCtx) Context() context.Context {
+	// Stash echo context so auth.GetAuthFromContext can retrieve it.
+	return context.WithValue((*c.orig).Request().Context(), EchoContextKey, c.orig)
+}
+
+func (c *echoCtx) Method() string     { return (*c.orig).Request().Method }
+func (c *echoCtx) Host() string       { return (*c.orig).Request().Host }
+func (c *echoCtx) RemoteAddr() string { return (*c.orig).Request().RemoteAddr }
+func (c *echoCtx) URL() url.URL       { return *(*c.orig).Request().URL }
+
+func (c *echoCtx) Param(name string) string  { return (*c.orig).Param(name) }
+func (c *echoCtx) Query(name string) string  { return (*c.orig).QueryParam(name) }
+func (c *echoCtx) Header(name string) string { return (*c.orig).Request().Header.Get(name) }
+
+func (c *echoCtx) EachHeader(cb func(name, value string)) {
+	for name, values := range (*c.orig).Request().Header {
+		for _, value := range values {
+			cb(name, value)
+		}
+	}
+}
+
+func (c *echoCtx) BodyReader() io.Reader { return (*c.orig).Request().Body }
+
+func (c *echoCtx) GetMultipartForm() (*multipart.Form, error) {
+	err := (*c.orig).Request().ParseMultipartForm(MultipartMaxMemory)
+	return (*c.orig).Request().MultipartForm, err
+}
+
+func (c *echoCtx) SetReadDeadline(deadline time.Time) error {
+	return huma.SetReadDeadline((*c.orig).Response(), deadline)
+}
+
+func (c *echoCtx) SetStatus(code int) {
+	c.status = code
+	(*c.orig).Response().WriteHeader(code)
+}
+
+func (c *echoCtx) Status() int { return c.status }
+
+func (c *echoCtx) AppendHeader(name, value string) {
+	(*c.orig).Response().Header().Add(name, value)
+}
+
+func (c *echoCtx) SetHeader(name, value string) {
+	(*c.orig).Response().Header().Set(name, value)
+}
+
+func (c *echoCtx) BodyWriter() io.Writer { return (*c.orig).Response() }
+
+func (c *echoCtx) TLS() *tls.ConnectionState { return (*c.orig).Request().TLS }
+
+func (c *echoCtx) Version() huma.ProtoVersion {
+	r := (*c.orig).Request()
+	return huma.ProtoVersion{
+		Proto:      r.Proto,
+		ProtoMajor: r.ProtoMajor,
+		ProtoMinor: r.ProtoMinor,
+	}
+}
+
+type router interface {
+	Add(method, path string, handler echo.HandlerFunc, middlewares ...echo.MiddlewareFunc) echo.RouteInfo
+}
+
+type echoAdapter struct {
+	http.Handler
+	router router
+	// groupPrefix (e.g. "/api/v2") gets prepended to internal Huma
+	// dispatches whose path doesn't already start with it — required so
+	// autopatch's relative path resolution works under a sub-group.
+	groupPrefix string
+}
+
+func (a *echoAdapter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if a.groupPrefix != "" && !strings.HasPrefix(r.URL.Path, a.groupPrefix) {
+		r = r.Clone(r.Context())
+		r.URL.Path = a.groupPrefix + r.URL.Path
+		if r.URL.RawPath != "" {
+			r.URL.RawPath = a.groupPrefix + r.URL.RawPath
+		}
+	}
+	a.Handler.ServeHTTP(w, r)
+}
+
+func (a *echoAdapter) Handle(op *huma.Operation, handler func(huma.Context)) {
+	// Convert {param} to :param for Echo's router.
+	path := op.Path
+	path = strings.ReplaceAll(path, "{", ":")
+	path = strings.ReplaceAll(path, "}", "")
+	a.router.Add(op.Method, path, func(c *echo.Context) error {
+		ctx := &echoCtx{op: op, orig: c}
+		handler(ctx)
+		return nil
+	})
+}
+
+// New creates a new Huma API using the provided Echo router.
+func New(r *echo.Echo, config huma.Config) huma.API {
+	return huma.NewAPI(config, &echoAdapter{Handler: r, router: r})
+}
+
+// NewWithGroup mounts a Huma API on a group so handlers inherit its
+// middleware. groupPrefix must equal the prefix g was constructed with;
+// the adapter uses it to rewrite internal Huma dispatches (notably
+// autopatch's GET+PUT round trip) onto absolute URLs.
+func NewWithGroup(r *echo.Echo, g *echo.Group, groupPrefix string, config huma.Config) huma.API {
+	return huma.NewAPI(config, &echoAdapter{Handler: r, router: g, groupPrefix: groupPrefix})
+}

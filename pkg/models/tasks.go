@@ -141,8 +141,7 @@ type Task struct {
 	CommentCount *int64 `xorm:"-" json:"comment_count,omitempty"`
 
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
-	Expand    []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
-	ExpandArr []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand[]"`
+	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
@@ -1966,7 +1965,6 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Router /tasks/{id} [get]
 func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
-	t.Expand = append(t.Expand, t.ExpandArr...)
 	expand := t.Expand
 	if err = t.resolveIDFromProjectAndIndex(s); err != nil {
 		return
