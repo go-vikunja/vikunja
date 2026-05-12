@@ -76,11 +76,17 @@ test.describe('Project History', () => {
 			}, false)
 		}
 
+		// Navigate to home first so the default-page redirect guard is primed
+		// (sets sessionStorage flag), preventing later page.goto('/') from
+		// redirecting to the last visited project.
+		await page.goto('/')
+		await page.waitForLoadState('networkidle')
+
 		// Visit projects to build up history
 		await visitProjectsToBuildHistory(page, projects)
 
 		// Go to overview and verify section is visible
-		await page.goto('/')
+		await page.locator('nav.menu.top-menu a').filter({hasText: 'Overview'}).click()
 		await expect(page.locator('body')).toContainText('Last viewed')
 
 		// Disable the setting via API

@@ -8,6 +8,7 @@ import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
+import {DEFAULT_PAGE} from '@/constants/defaultPage'
 
 export default class UserSettingsModel extends AbstractModel<IUserSettings> implements IUserSettings {
 	name = ''
@@ -36,6 +37,7 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		showLastViewed: true,
 		sidebarWidth: null,
 		commentSortOrder: 'asc',
+		defaultPage: DEFAULT_PAGE.LAST_VISITED,
 		desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
 		quickAddDefaultReminders: [],
 	}
