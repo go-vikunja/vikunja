@@ -132,7 +132,7 @@ import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import DesktopLogin from '@/views/user/DesktopLogin.vue'
 
 import {getErrorText} from '@/message'
-import {redirectToProvider} from '@/helpers/redirectToProvider'
+import {JUST_LOGGED_OUT_KEY, redirectToProvider} from '@/helpers/redirectToProvider'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 
@@ -181,6 +181,21 @@ onBeforeMount(() => {
 	// route before the submit() handler gets a chance to use it.
 	if (authenticated.value) {
 		router.push({name: 'home'})
+		return
+	}
+
+	// When local and LDAP auth are both off and there's exactly one OIDC provider,
+	// skip the login page and redirect straight to the provider — unless the user
+	// just logged out, in which case we'd immediately re-authenticate them.
+	const justLoggedOut = sessionStorage.getItem(JUST_LOGGED_OUT_KEY) !== null
+	if (justLoggedOut) {
+		sessionStorage.removeItem(JUST_LOGGED_OUT_KEY)
+		return
+	}
+	if (!localAuthEnabled.value && !ldapAuthEnabled.value
+		&& hasOpenIdProviders.value
+		&& openidConnect.value.providers?.length === 1) {
+		redirectToProvider(openidConnect.value.providers[0])
 	}
 })
 
