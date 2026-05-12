@@ -942,7 +942,8 @@
       "noTasks": "Nothing to do — Have a nice day!",
       "filterByLabel": "Filtering by label {label}",
       "clearLabelFilter": "Clear label filter",
-      "savedFilterIgnored": "Your saved homepage filter is not applied while viewing tasks by label."
+      "savedFilterIgnored": "Your saved homepage filter is not applied while viewing tasks by label.",
+      "hierarchical": "Hierarchical view"
     },
     "detail": {
       "chooseDueDate": "Click here to set a due date",
