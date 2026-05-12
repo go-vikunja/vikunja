@@ -7,11 +7,13 @@
 		:placeholder="$t('task.assignee.placeholder')"
 		:multiple="true"
 		:search-results="foundUsers"
+		:show-empty="true"
 		label="name"
 		:select-placeholder="$t('task.assignee.selectPlaceholder')"
 		:autocomplete-enabled="false"
 		@search="findUser"
 		@select="addAssignee"
+		@focus="preloadUsers"
 	>
 		<template #items="{items}">
 			<AssigneeList
@@ -41,6 +43,7 @@ import Multiselect from '@/components/input/Multiselect.vue'
 import {includesById} from '@/helpers/utils'
 import ProjectUserService from '@/services/projectUsers'
 import {success} from '@/message'
+import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
 
 import type {IUser} from '@/modelTypes/IUser'
@@ -60,6 +63,7 @@ const emit = defineEmits<{
 	'update:modelValue': [value: IUser[] | undefined],
 }>()
 
+const authStore = useAuthStore()
 const taskStore = useTaskStore()
 const {t} = useI18n({useScope: 'global'})
 
@@ -67,6 +71,14 @@ const projectUserService = shallowReactive(new ProjectUserService())
 const foundUsers = ref<IUser[]>([])
 const assignees = ref<IUser[]>([])
 let isAdding = false
+
+let hasPreloaded = false
+
+function preloadUsers() {
+	if (hasPreloaded) return
+	hasPreloaded = true
+	findUser()
+}
 
 watch(
 	() => props.modelValue,
@@ -106,8 +118,10 @@ async function removeAssignee(user: IUser) {
 	success({message: t('task.assignee.unassignSuccess')})
 }
 
-async function findUser(query: string) {
+async function findUser(query = '') {
 	const response = await projectUserService.getAll({projectId: props.projectId}, {s: query}) as IUser[]
+
+	const currentUserId = authStore.info?.id
 
 	// Filter the results to not include users who are already assigned
 	foundUsers.value = response
@@ -116,6 +130,11 @@ async function findUser(query: string) {
 			// Users may not have a display name set, so we fall back on the username in that case
 			u.name = getDisplayName(u)
 			return u
+		})
+		.sort((a, b) => {
+			if (a.id === currentUserId) return -1
+			if (b.id === currentUserId) return 1
+			return a.name.localeCompare(b.name)
 		})
 }
 </script>
