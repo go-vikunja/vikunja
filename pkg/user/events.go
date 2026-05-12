@@ -25,3 +25,13 @@ type CreatedEvent struct {
 func (t *CreatedEvent) Name() string {
 	return "user.created"
 }
+
+// DeletedEvent represents a DeletedEvent event
+type DeletedEvent struct {
+	User *User
+}
+
+// Name defines the name for DeletedEvent
+func (t *DeletedEvent) Name() string {
+	return "user.deleted"
+}

@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
@@ -124,6 +125,8 @@ func Login(c *echo.Context) (err error) {
 		_ = s.Rollback()
 		return err
 	}
+
+	events.DispatchPending(s)
 
 	// Create token
 	return auth.NewUserAuthTokenResponse(user, c, u.LongToken)

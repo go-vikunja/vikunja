@@ -25,6 +25,7 @@ import (
 
 func RegisterListeners() {
 	events.RegisterListener((&CreatedEvent{}).Name(), &IncreaseUserCounter{})
+	events.RegisterListener((&DeletedEvent{}).Name(), &DecreaseUserCounter{})
 }
 
 ///////
@@ -42,4 +43,18 @@ func (s *IncreaseUserCounter) Name() string {
 // Handle is executed when the event IncreaseUserCounter listens on is fired
 func (s *IncreaseUserCounter) Handle(_ *message.Message) (err error) {
 	return keyvalue.IncrBy(metrics.UserCountKey, 1)
+}
+
+// DecreaseUserCounter represents a listener
+type DecreaseUserCounter struct {
+}
+
+// Name defines the name for the DecreaseUserCounter listener
+func (s *DecreaseUserCounter) Name() string {
+	return "decrease.user.counter"
+}
+
+// Handle is executed when the event DecreaseUserCounter listens on is fired
+func (s *DecreaseUserCounter) Handle(_ *message.Message) (err error) {
+	return keyvalue.DecrBy(metrics.UserCountKey, 1)
 }

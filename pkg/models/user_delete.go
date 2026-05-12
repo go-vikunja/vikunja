@@ -21,6 +21,7 @@ import (
 
 	"code.vikunja.io/api/pkg/cron"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
@@ -81,7 +82,10 @@ func deleteUsers() {
 			err = us.Commit()
 			if err != nil {
 				log.Errorf("Could not commit transaction: %s", err)
+				return
 			}
+
+			events.DispatchPending(us)
 		}()
 	}
 }
@@ -188,6 +192,11 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 	}
 
 	_, err = s.Where("id = ?", u.ID).Delete(&user.User{})
+	if err != nil {
+		return err
+	}
+
+	events.DispatchOnCommit(s, &user.DeletedEvent{User: u})
 	return err
 }
 
