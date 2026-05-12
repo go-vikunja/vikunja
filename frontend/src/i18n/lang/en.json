@@ -158,6 +158,22 @@
         "quickAddDefaultReminders": "Default reminders for quick add",
         "quickAddDefaultRemindersDescription": "These reminders will be added automatically to every task created via quick add magic that has a due date.",
         "quickAddDefaultRemindersHint": "Add one or more reminders relative to the task's due date. Leave empty to disable.",
+        "inlineQuickAddFields": {
+          "title": "Inline fields when adding a task",
+          "description": "Selected fields appear inline in the add-task form so you can set them without opening the full task editor.",
+          "field": {
+            "assignee": "Assignee",
+            "dueDate": "Due date",
+            "startDate": "Start date",
+            "priority": "Priority",
+            "labels": "Labels",
+            "reminder": "Reminder",
+            "color": "Color",
+            "percentDone": "Progress",
+            "endDate": "End date"
+          },
+          "addField": "Add field"
+        },
         "filterUsedOnOverview": "Saved filter used on the overview page",
         "showLastViewed": "Show last viewed projects on the overview page",
         "minimumPriority": "Minimum visible task priority",
@@ -996,6 +1012,9 @@
     },
     "attributes": {
       "assignees": "Assignees",
+      "assigneesN": "{count} assignee | {count} assignees",
+      "labelsN": "{count} label | {count} labels",
+      "remindersN": "{count} reminder | {count} reminders",
       "color": "Color",
       "created": "Created",
       "createdBy": "Created By",

@@ -1,73 +1,77 @@
 <template>
-	<BaseButton
-		v-if="(new Date()).getHours() < 21"
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('today')"
-	>
-		<span class="icon"><Icon :icon="['far', 'calendar-alt']" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.today') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('today') }}</span>
-		</span>
-	</BaseButton>
-	<BaseButton
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('tomorrow')"
-	>
-		<span class="icon"><Icon :icon="['far', 'sun']" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.tomorrow') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('tomorrow') }}</span>
-		</span>
-	</BaseButton>
-	<BaseButton
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('nextMonday')"
-	>
-		<span class="icon"><Icon icon="coffee" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.nextMonday') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('nextMonday') }}</span>
-		</span>
-	</BaseButton>
-	<BaseButton
-		v-if="!((new Date()).getDay() === 0 && (new Date()).getHours() >= 21)"
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('thisWeekend')"
-	>
-		<span class="icon"><Icon icon="cocktail" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.thisWeekend') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('thisWeekend') }}</span>
-		</span>
-	</BaseButton>
-	<BaseButton
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('laterThisWeek')"
-	>
-		<span class="icon"><Icon icon="chess-knight" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.laterThisWeek') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('laterThisWeek') }}</span>
-		</span>
-	</BaseButton>
-	<BaseButton
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('nextWeek')"
-	>
-		<span class="icon"><Icon icon="forward" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.nextWeek') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('nextWeek') }}</span>
-		</span>
-	</BaseButton>
+	<div class="datepicker-inline">
+		<div class="datepicker-inline__shortcuts">
+			<BaseButton
+				v-if="(new Date()).getHours() < 21"
+				class="datepicker__quick-select-date"
+				@click.stop="setDate('today')"
+			>
+				<span class="icon"><Icon :icon="['far', 'calendar-alt']" /></span>
+				<span class="text">
+					<span>{{ $t('input.datepicker.today') }}</span>
+					<span class="weekday">{{ getWeekdayFromStringInterval('today') }}</span>
+				</span>
+			</BaseButton>
+			<BaseButton
+				class="datepicker__quick-select-date"
+				@click.stop="setDate('tomorrow')"
+			>
+				<span class="icon"><Icon :icon="['far', 'sun']" /></span>
+				<span class="text">
+					<span>{{ $t('input.datepicker.tomorrow') }}</span>
+					<span class="weekday">{{ getWeekdayFromStringInterval('tomorrow') }}</span>
+				</span>
+			</BaseButton>
+			<BaseButton
+				class="datepicker__quick-select-date"
+				@click.stop="setDate('nextMonday')"
+			>
+				<span class="icon"><Icon icon="coffee" /></span>
+				<span class="text">
+					<span>{{ $t('input.datepicker.nextMonday') }}</span>
+					<span class="weekday">{{ getWeekdayFromStringInterval('nextMonday') }}</span>
+				</span>
+			</BaseButton>
+			<BaseButton
+				v-if="!((new Date()).getDay() === 0 && (new Date()).getHours() >= 21)"
+				class="datepicker__quick-select-date"
+				@click.stop="setDate('thisWeekend')"
+			>
+				<span class="icon"><Icon icon="cocktail" /></span>
+				<span class="text">
+					<span>{{ $t('input.datepicker.thisWeekend') }}</span>
+					<span class="weekday">{{ getWeekdayFromStringInterval('thisWeekend') }}</span>
+				</span>
+			</BaseButton>
+			<BaseButton
+				class="datepicker__quick-select-date"
+				@click.stop="setDate('laterThisWeek')"
+			>
+				<span class="icon"><Icon icon="chess-knight" /></span>
+				<span class="text">
+					<span>{{ $t('input.datepicker.laterThisWeek') }}</span>
+					<span class="weekday">{{ getWeekdayFromStringInterval('laterThisWeek') }}</span>
+				</span>
+			</BaseButton>
+			<BaseButton
+				class="datepicker__quick-select-date"
+				@click.stop="setDate('nextWeek')"
+			>
+				<span class="icon"><Icon icon="forward" /></span>
+				<span class="text">
+					<span>{{ $t('input.datepicker.nextWeek') }}</span>
+					<span class="weekday">{{ getWeekdayFromStringInterval('nextWeek') }}</span>
+				</span>
+			</BaseButton>
+		</div>
 
-	<div class="flatpickr-container">
-		<flat-pickr
-			ref="flatPickrRef"
-			v-model="flatPickrDate"
-			:config="flatPickerConfig"
-		/>
+		<div class="flatpickr-container">
+			<flat-pickr
+				ref="flatPickrRef"
+				v-model="flatPickrDate"
+				:config="flatPickerConfig"
+			/>
+		</div>
 	</div>
 </template>
 
@@ -223,6 +227,11 @@ function getWeekdayFromStringInterval(dateString: string) {
 </script>
 
 <style lang="scss" scoped>
+.datepicker-inline {
+	display: flex;
+	flex-direction: column;
+}
+
 .datepicker__quick-select-date {
 	display: flex;
 	align-items: center;
@@ -230,14 +239,17 @@ function getWeekdayFromStringInterval(dateString: string) {
 	inline-size: 100%;
 	block-size: 2.25rem;
 	color: var(--text);
-	transition: all $transition;
+	cursor: pointer;
+	border-radius: $radius;
+	transition: background-color $transition, color $transition;
 
 	&:first-child {
 		border-radius: $radius $radius 0 0;
 	}
 
 	&:hover {
-		background: var(--grey-100);
+		background: var(--primary-light);
+		color: var(--primary-dark);
 	}
 
 	.text {
@@ -245,6 +257,7 @@ function getWeekdayFromStringInterval(dateString: string) {
 		font-size: .85rem;
 		display: flex;
 		justify-content: space-between;
+		gap: .75rem;
 		padding-inline-end: .25rem;
 
 		.weekday {

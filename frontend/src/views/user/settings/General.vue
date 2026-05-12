@@ -195,6 +195,60 @@
 					:allow-absolute="false"
 				/>
 			</div>
+			<div class="field">
+				<label class="label">{{ $t('user.settings.general.inlineQuickAddFields.title') }}</label>
+				<p class="help">
+					{{ $t('user.settings.general.inlineQuickAddFields.description') }}
+				</p>
+				<draggable
+					v-model="enabledInlineFields"
+					item-key="field"
+					handle=".handle"
+					:animation="150"
+					ghost-class="sortable-ghost-hidden"
+					class="inline-quick-add-fields-list"
+					@end="syncInlineFieldsToSettings"
+				>
+					<template #item="{element}">
+						<div class="inline-quick-add-field-row">
+							<span class="icon handle">
+								<Icon icon="grip-lines" />
+							</span>
+							<span class="inline-quick-add-field-row__label">
+								{{ $t(`user.settings.general.inlineQuickAddFields.field.${element.field}`) }}
+							</span>
+							<button
+								type="button"
+								class="inline-quick-add-field-row__remove"
+								@click="removeInlineField(element.field)"
+							>
+								<Icon icon="times" />
+							</button>
+						</div>
+					</template>
+				</draggable>
+				<Dropdown
+					v-if="availableInlineFields.length > 0"
+					class="inline-quick-add-field-adder"
+				>
+					<template #trigger="{toggleOpen}">
+						<BaseButton
+							class="inline-quick-add-field-adder__toggle"
+							@click="toggleOpen"
+						>
+							<Icon icon="plus" />
+							<span>{{ $t('user.settings.general.inlineQuickAddFields.addField') }}</span>
+						</BaseButton>
+					</template>
+					<DropdownItem
+						v-for="field in availableInlineFields"
+						:key="field"
+						@click="addInlineField(field)"
+					>
+						{{ $t(`user.settings.general.inlineQuickAddFields.field.${field}`) }}
+					</DropdownItem>
+				</Dropdown>
+			</div>
 			<FormField
 				:label="$t('user.settings.general.defaultTaskRelationType')"
 				layout="two-col"
@@ -297,6 +351,10 @@ import FormField from '@/components/input/FormField.vue'
 import FormInput from '@/components/input/FormInput.vue'
 import FormSelect from '@/components/input/FormSelect.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
+import draggable from 'zhyswan-vuedraggable'
+import Dropdown from '@/components/misc/Dropdown.vue'
+import DropdownItem from '@/components/misc/DropdownItem.vue'
+import BaseButton from '@/components/base/BaseButton.vue'
 
 import {SUPPORTED_LOCALES} from '@/i18n'
 import {AuthenticatedHTTPFactory} from '@/helpers/fetcher'
@@ -306,7 +364,8 @@ import {useTitle} from '@/composables/useTitle'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
-import type {IUserSettings} from '@/modelTypes/IUserSettings'
+import type {IUserSettings, InlineQuickAddField} from '@/modelTypes/IUserSettings'
+import {INLINE_QUICK_ADD_FIELDS, DEFAULT_INLINE_QUICK_ADD_FIELDS} from '@/modelTypes/IUserSettings'
 import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
@@ -416,6 +475,8 @@ const settings = ref<IUserSettings>({
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
 		// Clone to escape the store's readonly array type.
 		quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
+		// Fallback for users whose settings predate this field.
+		inlineQuickAddFields: [...(authStore.settings.frontendSettings.inlineQuickAddFields ?? DEFAULT_INLINE_QUICK_ADD_FIELDS)],
 	},
 })
 
@@ -545,11 +606,35 @@ watch(
 			frontendSettings: {
 				...authStore.settings.frontendSettings,
 				quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
+				inlineQuickAddFields: [...(authStore.settings.frontendSettings.inlineQuickAddFields ?? DEFAULT_INLINE_QUICK_ADD_FIELDS)],
 			},
 		}
 	},
 	{immediate: true},
 )
+
+const enabledInlineFields = ref<{field: InlineQuickAddField}[]>([])
+onBeforeMount(() => {
+	const fields = settings.value.frontendSettings.inlineQuickAddFields ?? DEFAULT_INLINE_QUICK_ADD_FIELDS
+	enabledInlineFields.value = fields.map(f => ({field: f}))
+})
+const availableInlineFields = computed(() =>
+	INLINE_QUICK_ADD_FIELDS.filter(f => !enabledInlineFields.value.some(e => e.field === f)),
+)
+
+function syncInlineFieldsToSettings() {
+	settings.value.frontendSettings.inlineQuickAddFields = enabledInlineFields.value.map(i => i.field)
+}
+
+function addInlineField(field: InlineQuickAddField) {
+	enabledInlineFields.value.push({field})
+	syncInlineFieldsToSettings()
+}
+
+function removeInlineField(field: InlineQuickAddField) {
+	enabledInlineFields.value = enabledInlineFields.value.filter(i => i.field !== field)
+	syncInlineFieldsToSettings()
+}
 
 const projectStore = useProjectStore()
 const defaultProject = computed({
@@ -593,6 +678,73 @@ async function updateSettings() {
 .field-group {
 	display: grid;
 	grid-template-columns: 1fr;
+}
+
+.inline-quick-add-fields-list {
+	max-inline-size: 24rem;
+
+	:deep(.sortable-ghost-hidden) {
+		opacity: 0;
+	}
+}
+
+.inline-quick-add-field-row {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	padding: .35rem .5rem;
+	border-radius: $radius;
+
+	&:hover {
+		background: var(--grey-100);
+	}
+
+	.handle {
+		cursor: grab;
+		color: var(--grey-400);
+	}
+
+	&__label {
+		flex: 1;
+	}
+
+	&__remove {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		border: none;
+		background: none;
+		color: var(--grey-400);
+		cursor: pointer;
+		inline-size: 1.5rem;
+		block-size: 1.5rem;
+		border-radius: $radius;
+
+		&:hover {
+			color: var(--danger);
+			background: var(--grey-100);
+		}
+	}
+}
+
+.inline-quick-add-field-adder {
+	margin-block-start: .25rem;
+
+	&__toggle {
+		display: flex;
+		align-items: center;
+		gap: .5rem;
+		padding: .35rem .5rem;
+		color: var(--text);
+		opacity: .6;
+		border-radius: $radius;
+
+		&:hover {
+			opacity: 1;
+			background: var(--grey-100);
+		}
+	}
 }
 
 .sticky-save {
