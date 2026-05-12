@@ -992,6 +992,17 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 
 	t.CreatedBy = createdBy
 
+	// Auto-subscribe the creator to the task so they receive
+	// notifications on comments and changes.
+	sub := &Subscription{
+		UserID:     createdBy.ID,
+		EntityType: SubscriptionEntityTask,
+		EntityID:   t.ID,
+	}
+	if err := sub.Create(s, a); err != nil && !IsErrSubscriptionAlreadyExists(err) {
+		return err
+	}
+
 	// Update the assignees
 	if updateAssignees {
 		if err := t.updateTaskAssignees(s, t.Assignees, a); err != nil {
