@@ -55,6 +55,23 @@ func (c *Client) ListBotUsers(ctx context.Context) ([]*BotUser, error) {
 	return out, nil
 }
 
+// FindMyBotByUsername scans the caller's owned bots for one with the given
+// username and returns it, or nil if no match. Useful for distinguishing
+// "name is taken by someone else" from "name is taken by me" before
+// attempting creation.
+func (c *Client) FindMyBotByUsername(ctx context.Context, username string) (*BotUser, error) {
+	bots, err := c.ListBotUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, b := range bots {
+		if b != nil && b.Username == username {
+			return b, nil
+		}
+	}
+	return nil, nil
+}
+
 // statusCheck pulls the HTTP status off an error for callers that need to
 // distinguish 404-on-/bots from other failures. Currently unused outside this
 // file, but kept for symmetry.
