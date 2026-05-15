@@ -71,6 +71,7 @@ func GetTables() []interface{} {
 		&TaskUnreadStatus{},
 		&Session{},
 		&OAuthCode{},
+		&TaskCaldavDeletion{},
 	}
 }
 
