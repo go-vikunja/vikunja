@@ -26,7 +26,7 @@
 			>
 				<div class="head">
 					<span>{{ $t('notification.title') }}</span>
-					<RouterLink
+					<BaseButton
 						v-tooltip="$t('notification.subscribeFeed')"
 						class="feed-link"
 						:to="{name: 'user.settings.feeds'}"
@@ -34,7 +34,7 @@
 					>
 						<span class="is-sr-only">{{ $t('notification.subscribeFeed') }}</span>
 						<Icon icon="rss" />
-					</RouterLink>
+					</BaseButton>
 				</div>
 				<div
 					v-for="(n, index) in notifications"
