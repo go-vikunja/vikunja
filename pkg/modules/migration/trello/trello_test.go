@@ -231,7 +231,6 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 			},
 		},
 	}
-	trelloData[0].Prefs.BackgroundImage = "https://vikunja.io/testimage.jpg" // Overridden in TestConvertTrelloToVikunja to point at a local test server.
 
 	return trelloData, time1
 }
