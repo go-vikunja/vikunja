@@ -61,6 +61,17 @@ func TestBasicAuth(t *testing.T) {
 		assert.False(t, ok)
 	})
 
+	t.Run("rejects token shorter than prefix+8 without panicking", func(t *testing.T) {
+		// Real tokens are far longer; anything shorter is invalid by
+		// construction and would otherwise panic inside GetTokenFromTokenString.
+		for _, short := range []string{"tk_", "tk_abc", "tk_1234567"} {
+			c := newContext()
+			ok, err := BasicAuth(c, "user1", short)
+			require.NoError(t, err)
+			assert.False(t, ok, "short token %q must be rejected", short)
+		}
+	})
+
 	t.Run("rejects token whose owner username does not match", func(t *testing.T) {
 		c := newContext()
 		// feedsTokenUser13Valid belongs to user 13; supply a different username.

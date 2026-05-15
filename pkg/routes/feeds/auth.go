@@ -57,6 +57,13 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 	if !strings.HasPrefix(password, models.APITokenPrefix) {
 		return false, nil
 	}
+	// GetTokenFromTokenString slices password[len-8:] without a length check,
+	// so a stray "tk_" or other short prefix-only string would panic before
+	// the credentials could be rejected. Real tokens are far longer than
+	// prefix+8, so anything shorter is invalid by construction.
+	if len(password) < len(models.APITokenPrefix)+8 {
+		return false, nil
+	}
 
 	s := db.NewSession()
 	defer s.Close()
