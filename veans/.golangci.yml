@@ -1,0 +1,106 @@
+version: "2"
+run:
+  tests: true
+  build-tags:
+    - mage
+linters:
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+    - err113
+    - errchkjson
+    - errorlint
+    - exhaustive
+    - gocheckcompilerdirectives
+    - gochecksumtype
+    - gocritic
+    - gocyclo
+    - goheader
+    - gosec
+    - gosmopolitan
+    - loggercheck
+    - makezero
+    - misspell
+    - nilerr
+    - nilnesserr
+    - noctx
+    - protogetter
+    - reassign
+    - recvcheck
+    - revive
+    - rowserrcheck
+    - testifylint
+    - unparam
+  disable:
+    - durationcheck
+    - goconst
+    - musttag
+  settings:
+    goheader:
+      template-path: code-header-template.txt
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      # Tests compose dynamic error messages and exercise edge cases — let
+      # them. Mirrors the parent repo's _test.go carve-outs.
+      - linters:
+          - err113
+          - errorlint
+          - gocyclo
+        path: _test\.go
+      - linters:
+          - gocritic
+        text: 'commentFormatting: put a space between `//` and comment text'
+      # The veans CLI uses fmt.Errorf and output.New/Wrap intentionally —
+      # err113's "no dynamic errors" rule isn't a fit for user-facing CLI
+      # errors that are routinely templated with parameters.
+      - linters:
+          - err113
+        path: ".*"
+        text: 'do not define dynamic errors, use wrapped static errors instead:'
+      # mage build tooling is internal — gosec subprocess flags don't apply.
+      - linters:
+          - err113
+          - gosec
+        path: magefile.go
+      # term.ReadPassword takes int(*os.File.Fd()) — canonical Go idiom.
+      - linters:
+          - gosec
+        text: 'G115: integer overflow conversion uintptr -> int'
+      # Password / AccessToken / RefreshToken are intentional API model
+      # fields, mirroring the parent repo's exclusion.
+      - linters:
+          - gosec
+        text: 'G117:'
+      # veans is an HTTP CLI: G704 (SSRF) and G705 (XSS via Fprintf to a
+      # terminal) are categorically false positives for this codebase.
+      - linters:
+          - gosec
+        text: 'G70[45]:'
+      # E2E helpers run subprocesses with controlled inputs (git, the
+      # built veans binary). G204 (subprocess) and G703 (path traversal)
+      # don't apply to test infrastructure.
+      - linters:
+          - gosec
+        path: e2e/
+        text: 'G(204|306|703):'
+      # .veans.yml + agent hook config files are committed to the repo
+      # and intentionally world-readable; 0o644 is correct.
+      - linters:
+          - gosec
+        path: internal/(config|bootstrap)/.*\.go
+        text: 'G306:'
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax

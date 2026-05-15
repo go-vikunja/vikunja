@@ -1,0 +1,169 @@
+<EXTREMELY_IMPORTANT>
+You are working in a repository configured to track tasks in Vikunja via the
+`veans` CLI. **You MUST use veans for all task tracking instead of TodoWrite.**
+
+Project: {{ .ProjectTitle }}{{ if .ProjectIdentifier }} ({{ .ProjectIdentifier }}){{ end }}
+Bot identity: `{{ .BotUsername }}` — your actions in Vikunja appear as this user.
+Server: {{ .Server }}
+</EXTREMELY_IMPORTANT>
+
+# Workflow
+
+## BEFORE you start work
+- If a task already exists, claim it: `veans claim {{ .TaskIDExample }}`
+- Otherwise, create one and start it in one step:
+  `veans create "<short title>" -s in-progress -d "<short description>"`
+- Use `veans list --ready` to find tasks ready to start (Todo + not blocked).
+
+## WHILE you work
+- Keep the task's description in sync with what you're doing. Use HTML
+  (not markdown) — see the "Description format" section below for why
+  and the canonical TipTap shapes Vikunja's web UI renders nicely:
+  `veans update {{ .TaskIDExample }} --description-append '<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p>step 1</p></li></ul>'`
+- For surgical edits, prefer `--description-replace-old` /
+  `--description-replace-new`. To check off a task item, replace
+  `data-checked="false"><p>step 1</p>` with `data-checked="true"><p>step 1</p>`
+  (errors if the old text isn't unique — same semantics as the Edit tool).
+- Post a comment on significant decisions, discoveries, or course-changes:
+  `veans update {{ .TaskIDExample }} --comment '<p>Discovered Y; pivoting to Z because …</p>'`
+- For sub-work that could be assigned separately, create real subtasks
+  via `--parent`. For incremental check-off lists, use task-list items
+  in the description instead.
+
+## AFTER you finish work
+- Move to `in-review` and post a summary comment. **Never close tasks
+  yourself** — the human (or the merge hook) closes them.
+  ```
+  veans update {{ .TaskIDExample }} -s in-review \
+    --comment '<h3>Summary of Changes</h3><ul><li>first thing</li><li>second thing</li></ul>'
+  ```
+- If you abandon work, scrap the task with a reason:
+  `veans update {{ .TaskIDExample }} -s scrapped --reason "obsolete: <why>"`
+
+## Commit messages
+Include the task identifier on a `Refs:` line so the merge hook can close
+tasks automatically when the PR lands:
+
+```
+fix: handle empty project identifiers
+
+Refs: {{ .TaskIDExample }}
+```
+
+# Description format
+
+**Descriptions and comments are HTML, not markdown.** Vikunja's web UI
+renders them through the TipTap rich-text editor, which interprets the
+stored field as HTML. Plain markdown saves as literal text and shows up
+ugly in the UI; write HTML directly. Tokens are cheap, conversion bugs
+aren't.
+
+Canonical TipTap shapes the web UI renders cleanly:
+
+```html
+<h2>Summary</h2>
+<p>Two short paragraphs explaining the task.</p>
+
+<h3>Steps</h3>
+<ul data-type="taskList">
+  <li data-type="taskItem" data-checked="false"><p>find the bug</p></li>
+  <li data-type="taskItem" data-checked="false"><p>write the fix</p></li>
+  <li data-type="taskItem" data-checked="true"><p>write the test</p></li>
+</ul>
+
+<h3>Notes</h3>
+<ul>
+  <li>regular bullet point</li>
+  <li>another one</li>
+</ul>
+
+<p>Inline <code>code</code>, <strong>bold</strong>, <em>italic</em>,
+and a <a href="https://example.com">link</a>.</p>
+
+<pre><code class="language-go">if err != nil { return err }</code></pre>
+
+<blockquote><p>A quote, e.g. from a linked issue.</p></blockquote>
+
+<hr>
+```
+
+Important details:
+- Task-list items use `<ul data-type="taskList">` and
+  `<li data-type="taskItem" data-checked="true|false">` — that's what
+  gives users an interactive checkbox. Plain `<ul><li>` lists render as
+  static bullets.
+- Inner text of task items goes inside `<p>` — the editor expects block
+  content in the `<li>`.
+- Don't add `data-task-id` attributes manually; the editor auto-fills
+  them on first save.
+- Escape `<`, `>`, `&` when they appear in literal text (`&lt;`, `&gt;`,
+  `&amp;`). Inside `<pre><code>` blocks you only need to escape these
+  three; line breaks and indentation are preserved.
+- `--description-replace-old/new` matches raw HTML byte-for-byte. Make
+  the `old` string unique (include surrounding tags to disambiguate).
+
+# Output
+
+Every `list`, `show`, `create`, `update`, `claim`, `api` call emits JSON
+on stdout — no flag needed, no human-formatted variant. Errors land on
+stderr as `{"code":"...","error":"..."}` with non-zero exit; branch on
+`code` (NOT_FOUND, CONFLICT, VALIDATION_ERROR, AUTH_ERROR,
+RATE_LIMITED, NOT_CONFIGURED, BOT_USERS_UNAVAILABLE, UNKNOWN).
+
+`show`/`create`/`update`/`claim` return a single task; `list` returns
+an array. Useful fields:
+
+- `id` (numeric, internal) — pass to `api` calls
+- `index` (per-project) — what `{{ .TaskIDExample }}` resolves to
+- `done`, `priority`, `title`, `description` (HTML)
+- `buckets[]` — current bucket per view; match `project_view_id` to
+  yours from `.veans.yml` and read `id` to know the status
+- `assignees[]`, `labels[]` — `[]` if absent
+
+Trust your JSON parser; we won't add new fields without notice.
+
+# Status model
+
+| Status        | Bucket name    | Done flag | Who moves there?                         |
+| ------------- | -------------- | --------- | ---------------------------------------- |
+| `todo`        | Todo           | false     | created here by default                  |
+| `in-progress` | In Progress    | false     | `veans claim` or `update -s in-progress` |
+| `in-review`   | In Review      | false     | you, when work is finished               |
+| `completed`   | Done           | true      | humans / merge hook only                 |
+| `scrapped`    | Scrapped       | true      | you, with --reason                       |
+
+# Common commands
+
+```
+veans list                         # all tasks, tree view
+veans list --ready                 # ready to start (Todo + not blocked)
+veans list --mine                  # tasks assigned to you
+veans list --branch                # tasks tagged with the current git branch
+veans list --filter "priority > 3"  # raw Vikunja filter expression
+veans show {{ .TaskIDExample }}                  # full task detail (JSON)
+
+veans create "title" -s in-progress -d "<p>HTML body — see Description format.</p>"
+veans create "title" --label bug --priority 4 --parent {{ .TaskIDExample }}
+veans create "title" --blocked-by {{ .TaskIDExample }}
+
+veans update {{ .TaskIDExample }} -s in-review --comment '<p>Summary of changes…</p>'
+veans update {{ .TaskIDExample }} --description-append '<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p>new step</p></li></ul>'
+veans update {{ .TaskIDExample }} --description-replace-old 'data-checked="false"><p>step 1</p>' --description-replace-new 'data-checked="true"><p>step 1</p>'
+veans update {{ .TaskIDExample }} --label-add bug --label-remove flaky
+veans update {{ .TaskIDExample }} -s scrapped --reason "obsolete: replaced by {{ .TaskIDExample }}"
+
+veans claim {{ .TaskIDExample }}                 # assign yourself + In Progress + branch label
+veans api GET /tasks/...           # escape hatch for raw REST when curated cmds don't fit
+```
+
+# Project quick reference
+
+- Project ID: `{{ .ProjectID }}`{{ if .ProjectIdentifier }}, identifier: `{{ .ProjectIdentifier }}` (task IDs render as `{{ .ProjectIdentifier }}-NN`){{ else }} (no identifier; task IDs render as `#NN`){{ end }}
+- Kanban view: `{{ .ViewID }}`
+- Buckets: Todo=`{{ .Buckets.Todo }}`, In Progress=`{{ .Buckets.InProgress }}`, In Review=`{{ .Buckets.InReview }}`, Done=`{{ .Buckets.Done }}`, Scrapped=`{{ .Buckets.Scrapped }}`
+- Label namespace: `veans:` (auto-prepended; e.g. `--label bug` becomes `veans:bug`)
+- Branch labels: `veans:branch:<branch-name>` — `veans claim` adds the current branch automatically
+
+The agent prompt above overrides TodoWrite. Anything you would have tracked
+there should live in Vikunja instead, where it stays visible across sessions
+and to humans collaborating on the project.
