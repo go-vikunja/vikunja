@@ -18,10 +18,13 @@ package trello
 
 import (
 	"bytes"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 
@@ -228,7 +231,7 @@ func getTestBoard(t *testing.T) ([]*trello.Board, time.Time) {
 			},
 		},
 	}
-	trelloData[0].Prefs.BackgroundImage = "https://vikunja.io/testimage.jpg" // Using an image which we are hosting, so it'll still be up
+	trelloData[0].Prefs.BackgroundImage = "https://vikunja.io/testimage.jpg" // Overridden in TestConvertTrelloToVikunja to point at a local test server.
 
 	return trelloData, time1
 }
@@ -238,6 +241,23 @@ func TestConvertTrelloToVikunja(t *testing.T) {
 
 	exampleFile, err := os.ReadFile("../testimage.jpg")
 	require.NoError(t, err)
+
+	// Serve the attachment from a local test server so the test does not depend
+	// on an external host being reachable. The SSRF-safe client used by
+	// migration.DownloadFile rejects non-routable IPs by default, so allow them
+	// for the duration of this test.
+	prevAllowNonRoutable := config.OutgoingRequestsAllowNonRoutableIPs.GetBool()
+	config.OutgoingRequestsAllowNonRoutableIPs.Set("true")
+	t.Cleanup(func() {
+		config.OutgoingRequestsAllowNonRoutableIPs.Set(prevAllowNonRoutable)
+	})
+	attachmentServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(exampleFile)
+	}))
+	t.Cleanup(attachmentServer.Close)
+
+	trelloData[0].Prefs.BackgroundImage = attachmentServer.URL + "/testimage.jpg"
+	trelloData[0].Lists[0].Cards[0].Attachments[0].URL = attachmentServer.URL + "/testimage.jpg"
 
 	expectedHierarchyOrg := map[string][]*models.ProjectWithTasksAndBuckets{
 		"orgid": {
