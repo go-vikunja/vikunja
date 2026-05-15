@@ -122,7 +122,7 @@ func (n *titlerRegisteredNotification) Name() string            { return "test.r
 func (n *titlerRegisteredNotification) ToTitle(_ string) string { return n.Title }
 
 func TestRegistry(t *testing.T) {
-	Register("test.registry.titler", func() Notification { return &titlerRegisteredNotification{} })
+	Register(func() Notification { return &titlerRegisteredNotification{} })
 
 	t.Run("known name returns fresh instance", func(t *testing.T) {
 		n, ok := Lookup("test.registry.titler")

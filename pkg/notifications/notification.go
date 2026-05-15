@@ -58,8 +58,10 @@ var registry = map[string]func() Notification{}
 // called from init() in the package that defines the type. Only notifications
 // that persist to the database need to register, since only persisted
 // notifications are re-hydrated from JSON (e.g. by the feed handler).
-func Register(name string, factory func() Notification) {
-	registry[name] = factory
+// The name is derived from the notification's own Name() method, so it stays
+// in one place.
+func Register(factory func() Notification) {
+	registry[factory().Name()] = factory
 }
 
 // Lookup returns a fresh, empty instance of the notification type registered

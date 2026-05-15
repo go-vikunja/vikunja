@@ -38,7 +38,7 @@ func init() {
 	apiTokenRoutes["feeds"] = APITokenRoute{
 		"access": &RouteDetail{
 			Path:   "/feeds/*",
-			Method: "ANY",
+			Method: "GET",
 		},
 	}
 }

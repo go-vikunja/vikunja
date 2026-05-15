@@ -18,9 +18,7 @@ package feeds
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"reflect"
 	"strconv"
 	"time"
 
@@ -36,20 +34,12 @@ import (
 
 const feedItemLimit = 50
 
-func getBasicAuthUserFromContext(c *echo.Context) (*user.User, error) {
-	u, is := c.Get("userBasicAuth").(*user.User)
-	if !is {
-		return nil, fmt.Errorf("user is not user element, is %s", reflect.TypeOf(c.Get("userBasicAuth")))
-	}
-	return u, nil
-}
-
 // NotificationsAtomFeed serves the authenticated user's notifications as an
 // Atom feed. Notifications are not marked as read by being fetched here.
 func NotificationsAtomFeed(c *echo.Context) error {
-	u, err := getBasicAuthUserFromContext(c)
-	if err != nil {
-		return err
+	u, ok := c.Get("userBasicAuth").(*user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 	}
 
 	s := db.NewSession()

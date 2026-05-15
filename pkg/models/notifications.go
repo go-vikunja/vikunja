@@ -33,13 +33,13 @@ import (
 )
 
 func init() {
-	notifications.Register("task.reminder", func() notifications.Notification { return &ReminderDueNotification{} })
-	notifications.Register("task.comment", func() notifications.Notification { return &TaskCommentNotification{} })
-	notifications.Register("task.assigned", func() notifications.Notification { return &TaskAssignedNotification{} })
-	notifications.Register("task.deleted", func() notifications.Notification { return &TaskDeletedNotification{} })
-	notifications.Register("project.created", func() notifications.Notification { return &ProjectCreatedNotification{} })
-	notifications.Register("team.member.added", func() notifications.Notification { return &TeamMemberAddedNotification{} })
-	notifications.Register("task.mentioned", func() notifications.Notification { return &UserMentionedInTaskNotification{} })
+	notifications.Register(func() notifications.Notification { return &ReminderDueNotification{} })
+	notifications.Register(func() notifications.Notification { return &TaskCommentNotification{} })
+	notifications.Register(func() notifications.Notification { return &TaskAssignedNotification{} })
+	notifications.Register(func() notifications.Notification { return &TaskDeletedNotification{} })
+	notifications.Register(func() notifications.Notification { return &ProjectCreatedNotification{} })
+	notifications.Register(func() notifications.Notification { return &TeamMemberAddedNotification{} })
+	notifications.Register(func() notifications.Notification { return &UserMentionedInTaskNotification{} })
 }
 
 // getDoerAvatarDataURI returns the avatar data URI for a user, for use in email headers.

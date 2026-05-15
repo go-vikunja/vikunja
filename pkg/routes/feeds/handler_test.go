@@ -58,7 +58,7 @@ func TestNotificationsAtomFeed(t *testing.T) {
 		assert.Contains(t, doc.Title, "User 1", "feed title should include the user's name")
 	})
 
-	t.Run("returns 500 when context has no authenticated user", func(t *testing.T) {
+	t.Run("returns 401 when context has no authenticated user", func(t *testing.T) {
 		e := echo.New()
 		req := httptest.NewRequest(http.MethodGet, "/feeds/notifications.atom", nil)
 		rec := httptest.NewRecorder()
@@ -66,5 +66,8 @@ func TestNotificationsAtomFeed(t *testing.T) {
 
 		err := NotificationsAtomFeed(c)
 		require.Error(t, err)
+		httpErr, ok := err.(*echo.HTTPError)
+		require.True(t, ok, "expected echo.HTTPError, got %T", err)
+		assert.Equal(t, http.StatusUnauthorized, httpErr.Code)
 	})
 }
