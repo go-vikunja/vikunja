@@ -92,11 +92,11 @@ linters:
           - gosec
         path: e2e/
         text: 'G(204|306|703):'
-      # .veans.yml is committed to the repo and intentionally world-
-      # readable; 0o644 is correct.
+      # .veans.yml + agent hook config files are committed to the repo
+      # and intentionally world-readable; 0o644 is correct.
       - linters:
           - gosec
-        path: internal/config/config\.go
+        path: internal/(config|bootstrap)/.*\.go
         text: 'G306:'
 formatters:
   enable:

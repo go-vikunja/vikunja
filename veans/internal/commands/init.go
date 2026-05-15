@@ -28,18 +28,21 @@ import (
 )
 
 type initFlags struct {
-	server      string
-	token       string
-	username    string
-	password    string
-	totp        string
-	usePassword bool
-	botUsername string
-	projectID   int64
-	viewID      int64
-	yesBuckets  bool
-	skipBuckets bool
-	configPath  string
+	server          string
+	token           string
+	username        string
+	password        string
+	totp            string
+	usePassword     bool
+	botUsername     string
+	projectID       int64
+	viewID          int64
+	yesBuckets      bool
+	skipBuckets     bool
+	configPath      string
+	installClaude   bool
+	installOpenCode bool
+	noHooks         bool
 }
 
 func newInitCmd() *cobra.Command {
@@ -80,6 +83,11 @@ revoke it at any time without affecting your own session.`,
 				ViewID:              f.viewID,
 				AutoApproveBuckets:  f.yesBuckets,
 				SkipBucketBootstrap: f.skipBuckets,
+				InstallClaudeCode:   f.installClaude,
+				InstallOpenCode:     f.installOpenCode,
+				ClaudeCodeFlagSet:   cmd.Flags().Changed("install-claude"),
+				OpenCodeFlagSet:     cmd.Flags().Changed("install-opencode"),
+				NoHooks:             f.noHooks,
 				Out:                 os.Stderr,
 			})
 			if err != nil {
@@ -102,6 +110,9 @@ revoke it at any time without affecting your own session.`,
 	cmd.Flags().BoolVar(&f.yesBuckets, "yes-buckets", false, "auto-approve canonical bucket bootstrap")
 	cmd.Flags().BoolVar(&f.skipBuckets, "skip-buckets", false, "do not prompt or create buckets (assumes they exist)")
 	cmd.Flags().StringVar(&f.configPath, "config", "", "where to write .veans.yml (defaults to the repo root)")
+	cmd.Flags().BoolVar(&f.installClaude, "install-claude", false, "wire `veans prime` into .claude/settings.json (skip prompt)")
+	cmd.Flags().BoolVar(&f.installOpenCode, "install-opencode", false, "wire `veans prime` into .opencode/plugin/veans-prime.ts (skip prompt)")
+	cmd.Flags().BoolVar(&f.noHooks, "no-hooks", false, "don't offer to install agent hooks; just print the snippets")
 
 	return cmd
 }
@@ -111,8 +122,14 @@ func printPostInitSummary(w fmtWriter, res *bootstrap.Result) {
 	fmt.Fprintf(w, "Config:    %s\n", res.Config.Path())
 	fmt.Fprintf(w, "Project:   #%d %s\n", res.Config.ProjectID, identOrFallback(res.Config.ProjectIdentifier))
 
+	// Only fall back to printing the snippets when the user declined or
+	// skipped the install offer. When at least one hook was installed, the
+	// install routine already logged what it did to stderr.
+	if res.AgentChoices.ClaudeCode || res.AgentChoices.OpenCode {
+		return
+	}
 	fmt.Fprintln(w, `
-To wire veans into your coding agent, paste one of these snippets:
+To wire veans into your coding agent later, paste one of these snippets:
 
 Claude Code (.claude/settings.json):
   {

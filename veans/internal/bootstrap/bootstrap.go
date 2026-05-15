@@ -76,6 +76,15 @@ type Options struct {
 	AutoApproveBuckets  bool
 	SkipBucketBootstrap bool
 
+	// Agent hook installation. If neither flag is set, the user is prompted
+	// per-agent at the end of init. NoHooks skips the offering entirely
+	// and falls back to printing the snippets.
+	InstallClaudeCode bool
+	InstallOpenCode   bool
+	ClaudeCodeFlagSet bool
+	OpenCodeFlagSet   bool
+	NoHooks           bool
+
 	// Store and Prompter are dependency-injected for testing.
 	Store    credentials.Store
 	Prompter auth.Prompter
@@ -90,10 +99,12 @@ type Options struct {
 // Result is returned on success. The caller (cobra command) prints
 // hook snippets and the bot username for the user.
 type Result struct {
-	Config  *config.Config
-	Info    *client.Info
-	BotUser *client.BotUser
-	Token   *client.APIToken
+	Config       *config.Config
+	Info         *client.Info
+	BotUser      *client.BotUser
+	Token        *client.APIToken
+	RepoRoot     string
+	AgentChoices AgentHookChoice
 }
 
 // Init runs the full onboarding flow. Steps are deliberately sequential and
@@ -253,7 +264,31 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	}
 	progress(opts.Out, "Wrote %s", opts.ConfigPath)
 
-	return &Result{Config: cfg, Info: info, BotUser: bot, Token: mintedToken}, nil
+	// 13. Offer to install agent hooks. Pre-seeded from flags; the rest
+	// is prompted unless --no-hooks. Failures here are non-fatal — the
+	// repo is already configured; the user can install hooks by hand.
+	choices := AgentHookChoice{
+		ClaudeCode: opts.InstallClaudeCode,
+		OpenCode:   opts.InstallOpenCode,
+	}
+	choices, err = offerAgentHooks(prompter, opts.Out, choices,
+		opts.ClaudeCodeFlagSet, opts.OpenCodeFlagSet, opts.NoHooks)
+	if err != nil {
+		return nil, err
+	}
+	if err := installAgentHooks(repoRoot, choices, opts.Out); err != nil {
+		// Log but don't abort — the repo is configured.
+		fmt.Fprintf(opts.Out, "  ! hook install failed: %v (you can paste the snippets manually)\n", err)
+	}
+
+	return &Result{
+		Config:       cfg,
+		Info:         info,
+		BotUser:      bot,
+		Token:        mintedToken,
+		RepoRoot:     repoRoot,
+		AgentChoices: choices,
+	}, nil
 }
 
 func normalizeBotUsername(override, suggested string) string {
