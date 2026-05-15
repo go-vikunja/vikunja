@@ -26,7 +26,6 @@ package bootstrap
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -76,9 +75,14 @@ type Options struct {
 	AutoApproveBuckets  bool
 	SkipBucketBootstrap bool
 
-	// Store and Prompter are dependency-injected for testing.
-	Store    credentials.Store
-	Prompter auth.Prompter
+	// Agent hook installation. If neither flag is set, the user is prompted
+	// per-agent at the end of init. NoHooks skips the offering entirely
+	// and falls back to printing the snippets.
+	InstallClaudeCode bool
+	InstallOpenCode   bool
+	ClaudeCodeFlagSet bool
+	OpenCodeFlagSet   bool
+	NoHooks           bool
 
 	// Out is where progress is written.
 	Out io.Writer
@@ -87,13 +91,11 @@ type Options struct {
 	RepoRoot string
 }
 
-// Result is returned on success. The caller (cobra command) prints
-// hook snippets and the bot username for the user.
+// Result is returned on success — just the bits printPostInitSummary reads.
 type Result struct {
-	Config  *config.Config
-	Info    *client.Info
-	BotUser *client.BotUser
-	Token   *client.APIToken
+	Config       *config.Config
+	BotUser      *client.BotUser
+	AgentChoices AgentHookChoice
 }
 
 // Init runs the full onboarding flow. Steps are deliberately sequential and
@@ -104,23 +106,14 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 		opts = &Options{}
 	}
 	if opts.Out == nil {
-		opts = &Options{}
-	}
-	if opts.Out == nil {
-		opts = &Options{Out: io.Discard}
+		opts.Out = io.Discard
 	}
 	if opts.ConfigPath == "" {
 		return nil, output.New(output.CodeValidation, "ConfigPath is required")
 	}
 
-	prompter := opts.Prompter
-	if prompter == nil {
-		prompter = auth.NewStdPrompter()
-	}
-	store := opts.Store
-	if store == nil {
-		store = credentials.Default()
-	}
+	prompter := auth.NewStdPrompter()
+	store := credentials.Default()
 
 	// 1. Repo root + suggested bot username.
 	repoRoot := opts.RepoRoot
@@ -253,7 +246,28 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	}
 	progress(opts.Out, "Wrote %s", opts.ConfigPath)
 
-	return &Result{Config: cfg, Info: info, BotUser: bot, Token: mintedToken}, nil
+	// 13. Offer to install agent hooks. Pre-seeded from flags; the rest
+	// is prompted unless --no-hooks. Failures here are non-fatal — the
+	// repo is already configured; the user can install hooks by hand.
+	choices := AgentHookChoice{
+		ClaudeCode: opts.InstallClaudeCode,
+		OpenCode:   opts.InstallOpenCode,
+	}
+	choices, err = offerAgentHooks(prompter, opts.Out, choices,
+		opts.ClaudeCodeFlagSet, opts.OpenCodeFlagSet, opts.NoHooks)
+	if err != nil {
+		return nil, err
+	}
+	if err := installAgentHooks(repoRoot, choices, opts.Out); err != nil {
+		// Log but don't abort — the repo is configured.
+		fmt.Fprintf(opts.Out, "  ! hook install failed: %v (you can paste the snippets manually)\n", err)
+	}
+
+	return &Result{
+		Config:       cfg,
+		BotUser:      bot,
+		AgentChoices: choices,
+	}, nil
 }
 
 func normalizeBotUsername(override, suggested string) string {
@@ -455,4 +469,3 @@ func progress(w io.Writer, format string, args ...any) {
 }
 
 // silence the unused-import linter when errors isn't used elsewhere.
-var _ = errors.New

@@ -34,20 +34,17 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-	"time"
 
 	"code.vikunja.io/veans/internal/client"
 )
 
 // Harness bundles a built veans binary and an authenticated admin client
-// for verifying side effects on the server. It also tracks the base env
-// (HOME / XDG_CONFIG_HOME overrides) every runVeans invocation inherits.
+// for verifying side effects on the server.
 type Harness struct {
-	binary       string
-	apiURL       string
-	adminToken   string
-	adminClient  *client.Client
-	suiteStartTS time.Time
+	Binary      string
+	APIURL      string
+	AdminToken  string
+	AdminClient *client.Client
 }
 
 // SkipIfNotConfigured calls t.Skip if the suite hasn't been pointed at a
@@ -89,11 +86,10 @@ func New(t *testing.T) *Harness {
 	}
 
 	return &Harness{
-		binary:       binary,
-		apiURL:       apiURL,
-		adminToken:   tok,
-		adminClient:  client.New(apiURL, tok),
-		suiteStartTS: time.Now(),
+		Binary:      binary,
+		APIURL:      apiURL,
+		AdminToken:  tok,
+		AdminClient: client.New(apiURL, tok),
 	}
 }
 
@@ -162,7 +158,7 @@ func (h *Harness) NewWorkspace(t *testing.T) *Workspace {
 // stderr, and exit code.
 func (h *Harness) Run(t *testing.T, ws *Workspace, args ...string) (stdout, stderr string, exitCode int) {
 	t.Helper()
-	cmd := exec.CommandContext(t.Context(), h.binary, args...)
+	cmd := exec.CommandContext(t.Context(), h.Binary, args...)
 	cmd.Dir = ws.Dir
 	cmd.Env = append(os.Environ(), envSlice(ws.envOverrides)...)
 	var so, se bytes.Buffer
@@ -179,15 +175,6 @@ func (h *Harness) Run(t *testing.T, ws *Workspace, args ...string) (stdout, stde
 	return so.String(), se.String(), 0
 }
 
-// AdminClient returns the admin-authenticated client for verification.
-func (h *Harness) AdminClient() *client.Client { return h.adminClient }
-
-// AdminToken returns the admin's bearer token (handy for --token flows).
-func (h *Harness) AdminToken() string { return h.adminToken }
-
-// APIURL returns the configured Vikunja base URL.
-func (h *Harness) APIURL() string { return h.apiURL }
-
 // CreateProject creates a fresh project owned by the admin user and returns
 // it. Tests use a unique title to keep results isolated across parallel runs.
 func (h *Harness) CreateProject(t *testing.T, title, identifier string) *client.Project {
@@ -197,7 +184,7 @@ func (h *Harness) CreateProject(t *testing.T, title, identifier string) *client.
 		body["identifier"] = identifier
 	}
 	var out client.Project
-	if err := h.adminClient.Do(context.Background(), "PUT", "/projects", nil, body, &out); err != nil {
+	if err := h.AdminClient.Do(context.Background(), "PUT", "/projects", nil, body, &out); err != nil {
 		t.Fatalf("create project %q: %v", title, err)
 	}
 	return &out
@@ -207,7 +194,7 @@ func (h *Harness) CreateProject(t *testing.T, title, identifier string) *client.
 // auto-creates one).
 func (h *Harness) FindKanbanView(t *testing.T, projectID int64) *client.ProjectView {
 	t.Helper()
-	views, err := h.adminClient.ListProjectViews(context.Background(), projectID)
+	views, err := h.AdminClient.ListProjectViews(context.Background(), projectID)
 	if err != nil {
 		t.Fatalf("list views: %v", err)
 	}
@@ -223,7 +210,7 @@ func (h *Harness) FindKanbanView(t *testing.T, projectID int64) *client.ProjectV
 // GetTask fetches a task by ID for verification.
 func (h *Harness) GetTask(t *testing.T, id int64) *client.Task {
 	t.Helper()
-	task, err := h.adminClient.GetTask(context.Background(), id)
+	task, err := h.AdminClient.GetTask(context.Background(), id)
 	if err != nil {
 		t.Fatalf("get task %d: %v", id, err)
 	}

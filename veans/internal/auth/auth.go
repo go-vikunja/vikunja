@@ -16,16 +16,10 @@
 
 // Package auth handles the human's transient authentication during init and
 // login. The default interactive flow is OAuth 2.0 Authorization Code + PKCE
-// against Vikunja's built-in authorization server (no client registration
-// needed; PKCE/S256 mandatory). The user opens the authorize URL in their
-// browser, signs in, and pastes the resulting `vikunja-veans-cli://callback`
-// URL back into the CLI — that side-steps custom-scheme handler registration
-// entirely.
-//
-// For non-interactive contexts (CI scripts, paste-in tokens, accounts on
-// instances without OAuth), pass --token, --username + --password, or
-// --use-password. Personal API tokens via --token also let SSO/OIDC users
-// onboard without exercising local password login.
+// against Vikunja's built-in authorization server. The OAuth dance opens a
+// browser at the authorize URL; the user signs in and lands on a localhost
+// callback this CLI ran. --token / --use-password / --username + --password
+// are escape hatches for non-interactive contexts.
 package auth
 
 import (
@@ -36,7 +30,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"syscall"
 
 	"golang.org/x/term"
 
@@ -50,22 +43,17 @@ type Prompter interface {
 	ReadPassword(prompt string) (string, error)
 }
 
-// StdPrompter reads from os.Stdin and uses term.ReadPassword for masked
-// input. It's the production default.
-type StdPrompter struct {
-	In  io.Reader
-	Out io.Writer
-}
+// StdPrompter reads from os.Stdin and writes prompts to os.Stderr; uses
+// term.ReadPassword for masked input when on a TTY.
+type StdPrompter struct{}
 
-func NewStdPrompter() *StdPrompter {
-	return &StdPrompter{In: os.Stdin, Out: os.Stderr}
-}
+func NewStdPrompter() *StdPrompter { return &StdPrompter{} }
 
-func (p *StdPrompter) ReadLine(prompt string) (string, error) {
-	if _, err := fmt.Fprint(p.Out, prompt); err != nil {
+func (*StdPrompter) ReadLine(prompt string) (string, error) {
+	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
 		return "", err
 	}
-	r := bufio.NewReader(p.In)
+	r := bufio.NewReader(os.Stdin)
 	line, err := r.ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
 		return "", err
@@ -74,20 +62,19 @@ func (p *StdPrompter) ReadLine(prompt string) (string, error) {
 }
 
 func (p *StdPrompter) ReadPassword(prompt string) (string, error) {
-	if _, err := fmt.Fprint(p.Out, prompt); err != nil {
+	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
 		return "", err
 	}
-	if f, ok := p.In.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
-		buf, err := term.ReadPassword(int(f.Fd()))
-		fmt.Fprintln(p.Out)
+	if term.IsTerminal(int(os.Stdin.Fd())) {
+		buf, err := term.ReadPassword(int(os.Stdin.Fd()))
+		fmt.Fprintln(os.Stderr)
 		if err != nil {
 			return "", err
 		}
 		return string(buf), nil
 	}
 	// Non-TTY (CI, scripted test) — read a plain line.
-	line, err := p.ReadLine("")
-	return line, err
+	return p.ReadLine("")
 }
 
 // LoginOptions controls how AcquireHumanToken obtains a JWT.
@@ -171,8 +158,3 @@ func loginWithPassword(ctx context.Context, c *client.Client, opts LoginOptions,
 	}
 	return resp.Token, nil
 }
-
-// silenceLinter suppresses the unused syscall import on platforms where
-// term.ReadPassword inlines its own platform call. We keep the import to
-// document that masked input is expected to use POSIX-level terminal modes.
-var _ = syscall.Stdin

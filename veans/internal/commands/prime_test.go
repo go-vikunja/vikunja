@@ -61,6 +61,13 @@ func TestPrimeTemplate_RendersAnchors(t *testing.T) {
 		"In Review",
 		"Done",
 		"Scrapped",
+		// HTML format guidance the agent depends on:
+		"Description format",
+		"Titles are plaintext",
+		`data-type="taskList"`,
+		`data-checked="false"`,
+		"<h2>",
+		"<pre><code",
 	}
 	for _, s := range mustContain {
 		if !strings.Contains(out, s) {

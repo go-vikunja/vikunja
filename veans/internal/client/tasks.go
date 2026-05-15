@@ -28,8 +28,6 @@ type TaskListOptions struct {
 	Filter  string
 	Page    int
 	PerPage int
-	SortBy  []string
-	OrderBy []string
 	Expand  []string
 }
 
@@ -46,12 +44,6 @@ func (o *TaskListOptions) values() url.Values {
 	}
 	if o.PerPage > 0 {
 		q.Set("per_page", strconv.Itoa(o.PerPage))
-	}
-	for _, s := range o.SortBy {
-		q.Add("sort_by", s)
-	}
-	for _, s := range o.OrderBy {
-		q.Add("order_by", s)
 	}
 	for _, e := range o.Expand {
 		q.Add("expand", e)

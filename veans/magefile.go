@@ -26,7 +26,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -128,10 +127,3 @@ var Aliases = map[string]any{
 	"lint":        Lint.All,
 	"lint:fix":    Lint.Fix,
 }
-
-// trimLast is a tiny helper for prettier path printing in error messages.
-func trimLast(p string) string {
-	return strings.TrimSuffix(p, "/")
-}
-
-var _ = trimLast

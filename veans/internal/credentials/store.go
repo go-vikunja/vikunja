@@ -31,7 +31,6 @@ var ErrNotFound = errors.New("credential not found")
 type Store interface {
 	Get(server, account string) (string, error)
 	Set(server, account, token string) error
-	Delete(server, account string) error
 	// Name is used in error messages.
 	Name() string
 }
@@ -84,20 +83,6 @@ func (c *Chain) Set(server, account, token string) error {
 		return lastErr
 	}
 	return errors.New("no writable backend available")
-}
-
-// Delete removes from every writable backend (best-effort).
-func (c *Chain) Delete(server, account string) error {
-	var firstErr error
-	for _, b := range c.Backends {
-		if _, ok := b.(*EnvBackend); ok {
-			continue
-		}
-		if err := b.Delete(server, account); err != nil && !errors.Is(err, ErrNotFound) && firstErr == nil {
-			firstErr = err
-		}
-	}
-	return firstErr
 }
 
 // errReadOnly is sentinel for backends that refuse writes (env).

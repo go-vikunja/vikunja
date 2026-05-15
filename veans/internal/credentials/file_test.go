@@ -60,16 +60,6 @@ func TestFileBackend_RoundTrip(t *testing.T) {
 	if tokBar != "tok-789" {
 		t.Fatalf("bar got %q", tokBar)
 	}
-
-	if err := b.Delete("https://example.com", "bot-foo"); err != nil {
-		t.Fatalf("Delete: %v", err)
-	}
-	if _, err := b.Get("https://example.com", "bot-foo"); !errors.Is(err, ErrNotFound) {
-		t.Fatalf("expected ErrNotFound after delete, got %v", err)
-	}
-	if _, err := b.Get("https://example.com", "bot-bar"); err != nil {
-		t.Fatalf("bar should still exist: %v", err)
-	}
 }
 
 func TestChain_FallsThroughOnNotFound(t *testing.T) {
@@ -110,13 +100,5 @@ func (s *stubBackend) Get(server, account string) (string, error) {
 }
 func (s *stubBackend) Set(server, account, token string) error {
 	s.store[server+"::"+account] = token
-	return nil
-}
-func (s *stubBackend) Delete(server, account string) error {
-	k := server + "::" + account
-	if _, ok := s.store[k]; !ok {
-		return ErrNotFound
-	}
-	delete(s.store, k)
 	return nil
 }

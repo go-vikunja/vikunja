@@ -39,8 +39,8 @@ func provisionWorkspace(t *testing.T) (*Workspace, *Harness) {
 
 	_, stderr, code := h.Run(t, ws,
 		"init",
-		"--server", h.APIURL(),
-		"--token", h.AdminToken(),
+		"--server", h.APIURL,
+		"--token", h.AdminToken,
 		"--project", iToS(project.ID),
 		"--view", iToS(view.ID),
 		"--bot-username", ws.BotUsername,
