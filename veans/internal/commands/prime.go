@@ -20,12 +20,10 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"strings"
 	"text/template"
 
 	"github.com/spf13/cobra"
 
-	"code.vikunja.io/veans/internal/client"
 	"code.vikunja.io/veans/internal/config"
 )
 
@@ -99,5 +97,3 @@ silently with status 0 — that makes the hook safe to install globally.`,
 }
 
 // silence linter noise on unused symbols when wiring hooks.
-var _ = client.New
-var _ = strings.TrimSpace

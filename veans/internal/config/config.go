@@ -119,25 +119,17 @@ func Load(path string) (*Config, error) {
 	return &c, nil
 }
 
-// Save writes the config to its path (must be set on the struct).
-func (c *Config) Save() error {
-	if c.path == "" {
-		return errors.New("Save: no path set on Config")
-	}
+// SaveAs writes the config to `path` and remembers it as c.path.
+func (c *Config) SaveAs(path string) error {
+	c.path = path
 	buf, err := yaml.Marshal(c)
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(c.path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(c.path, buf, 0o644)
-}
-
-// SaveAs writes the config to a specific path (and updates c.path).
-func (c *Config) SaveAs(path string) error {
-	c.path = path
-	return c.Save()
+	return os.WriteFile(path, buf, 0o644)
 }
 
 // RepoRoot returns the root of the git repo containing `start` (defaulting

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -29,20 +28,14 @@ import (
 // FileBackend persists credentials to ~/.config/veans/credentials.yml at
 // mode 0600. It's the fallback when no keychain is available (CI, Docker,
 // headless servers) and is the implicit backend e2e tests use.
-//
-// The schema includes a `scope` field that's always empty in v0 but reserved
-// for project-scoped tokens once Vikunja gains them — the same store can
-// hold both kinds without migration.
 type FileBackend struct {
 	path string
 }
 
 type fileEntry struct {
-	Server    string     `yaml:"server"`
-	Account   string     `yaml:"account"`
-	Scope     string     `yaml:"scope,omitempty"`
-	Token     string     `yaml:"token"`
-	ExpiresAt *time.Time `yaml:"expires_at,omitempty"`
+	Server  string `yaml:"server"`
+	Account string `yaml:"account"`
+	Token   string `yaml:"token"`
 }
 
 type fileSchema struct {
@@ -127,26 +120,5 @@ func (b *FileBackend) Set(server, account, token string) error {
 		Account: account,
 		Token:   token,
 	})
-	return b.save(s)
-}
-
-func (b *FileBackend) Delete(server, account string) error {
-	s, err := b.load()
-	if err != nil {
-		return err
-	}
-	out := s.Credentials[:0]
-	removed := false
-	for _, e := range s.Credentials {
-		if e.Server == server && e.Account == account {
-			removed = true
-			continue
-		}
-		out = append(out, e)
-	}
-	if !removed {
-		return ErrNotFound
-	}
-	s.Credentials = out
 	return b.save(s)
 }

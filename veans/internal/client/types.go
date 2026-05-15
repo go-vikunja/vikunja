@@ -102,15 +102,14 @@ type Task struct {
 	// side endpoint (e.g. the bucket-move POST); reads return it as 0.
 	// The current bucket(s) — one per Kanban view — are exposed via
 	// ?expand=buckets in the Buckets slice.
-	BucketID    int64       `json:"bucket_id,omitempty"`
-	Buckets     []*Bucket   `json:"buckets,omitempty"`
-	Assignees   []*User     `json:"assignees,omitempty"`
-	Labels      []*Label    `json:"labels,omitempty"`
-	StartDate   *time.Time  `json:"start_date,omitempty"`
-	DueDate     *time.Time  `json:"due_date,omitempty"`
-	EndDate     *time.Time  `json:"end_date,omitempty"`
-	PercentDone float64     `json:"percent_done,omitempty"`
-	Reactions   interface{} `json:"reactions,omitempty"`
+	BucketID    int64      `json:"bucket_id,omitempty"`
+	Buckets     []*Bucket  `json:"buckets,omitempty"`
+	Assignees   []*User    `json:"assignees,omitempty"`
+	Labels      []*Label   `json:"labels,omitempty"`
+	StartDate   *time.Time `json:"start_date,omitempty"`
+	DueDate     *time.Time `json:"due_date,omitempty"`
+	EndDate     *time.Time `json:"end_date,omitempty"`
+	PercentDone float64    `json:"percent_done,omitempty"`
 }
 
 // TaskComment matches pkg/models/task_comments.TaskComment.

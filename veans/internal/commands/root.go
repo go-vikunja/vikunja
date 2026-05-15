@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // Package commands wires the cobra command tree. Each subcommand lives in a
-// sibling file; root.go owns shared flags, the global error handler, and the
-// JSON output toggle.
+// sibling file. The agent-facing commands (list/show/create/update/claim/api)
+// emit JSON unconditionally; only init and login speak human prose.
 package commands
 
 import (
@@ -28,15 +28,6 @@ import (
 	"code.vikunja.io/veans/internal/output"
 )
 
-// Globals carries flags shared across subcommands. The pointer is bound onto
-// the root command's persistent flags; subcommands read it via PostRun.
-type Globals struct {
-	JSON    bool
-	Verbose bool
-}
-
-var globals Globals
-
 // Root builds the cobra command tree.
 func Root(version string) *cobra.Command {
 	root := &cobra.Command{
@@ -46,8 +37,6 @@ func Root(version string) *cobra.Command {
 		SilenceErrors: true,
 		Version:       version,
 	}
-	root.PersistentFlags().BoolVar(&globals.JSON, "json", false, "emit JSON output")
-	root.PersistentFlags().BoolVar(&globals.Verbose, "verbose", false, "verbose logging to stderr")
 
 	root.AddCommand(newVersionCmd(version))
 	root.AddCommand(newInitCmd())
@@ -64,11 +53,13 @@ func Root(version string) *cobra.Command {
 }
 
 // Execute runs the cobra tree and converts errors into the structured output
-// envelope. It returns the desired exit code.
+// envelope. Errors land on stderr as JSON `{code, error}` and the process
+// exits non-zero — both agent-facing and human-facing commands share this
+// shape so callers can branch on `code` regardless of which command they ran.
 func Execute(version string) int {
 	cmd := Root(version)
 	if err := cmd.Execute(); err != nil {
-		output.EmitError(globals.JSON, err, os.Stderr)
+		output.EmitError(err, os.Stderr)
 		return 1
 	}
 	return 0

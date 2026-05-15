@@ -19,7 +19,6 @@ package client
 import (
 	"context"
 	"errors"
-	"net/http"
 
 	"code.vikunja.io/veans/internal/output"
 )
@@ -71,8 +70,3 @@ func (c *Client) FindMyBotByUsername(ctx context.Context, username string) (*Bot
 	}
 	return nil, nil
 }
-
-// statusCheck pulls the HTTP status off an error for callers that need to
-// distinguish 404-on-/bots from other failures. Currently unused outside this
-// file, but kept for symmetry.
-var _ = http.StatusNotFound

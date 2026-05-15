@@ -29,7 +29,7 @@ import (
 func TestClaim_AssignsBotMovesToInProgressTagsBranch(t *testing.T) {
 	ws, h := provisionWorkspace(t)
 
-	out, _, code := h.Run(t, ws, "--json", "create", "claim me")
+	out, _, code := h.Run(t, ws, "create", "claim me")
 	if code != 0 {
 		t.Fatalf("create exit %d\n%s", code, out)
 	}

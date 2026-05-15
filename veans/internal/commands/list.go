@@ -19,13 +19,11 @@ package commands
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"code.vikunja.io/veans/internal/client"
-	"code.vikunja.io/veans/internal/config"
 	"code.vikunja.io/veans/internal/output"
 	"code.vikunja.io/veans/internal/status"
 )
@@ -65,11 +63,7 @@ Filters can be combined; they're AND-ed together:
 			if err != nil {
 				return err
 			}
-			if globals.JSON {
-				return json.NewEncoder(cmd.OutOrStdout()).Encode(tasks)
-			}
-			renderTasksHuman(cmd.OutOrStdout(), tasks, rt.cfg)
-			return nil
+			return json.NewEncoder(cmd.OutOrStdout()).Encode(tasks)
 		},
 	}
 	cmd.Flags().BoolVar(&f.ready, "ready", false, "only ready-to-start tasks (Todo bucket, not done)")
@@ -157,25 +151,6 @@ func taskHasLabel(t *client.Task, title string) bool {
 		}
 	}
 	return false
-}
-
-func renderTasksHuman(w fmtWriter, tasks []*client.Task, cfg *config.Config) {
-	if len(tasks) == 0 {
-		fmt.Fprintln(w, "(no tasks)")
-		return
-	}
-	for _, t := range tasks {
-		s := status.FromBucketID(t.CurrentBucketID(cfg.ViewID), cfg.Buckets)
-		stamp := string(s)
-		if stamp == "" {
-			stamp = "-"
-		}
-		fmt.Fprintf(w, "%-12s  %-10s  %s\n",
-			cfg.FormatTaskID(t.Index),
-			stamp,
-			t.Title,
-		)
-	}
 }
 
 func branchLabel(branch string) string {

@@ -19,7 +19,6 @@ package commands
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -54,12 +53,7 @@ func newCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if globals.JSON {
-				return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Created %s  %s\n",
-				rt.cfg.FormatTaskID(task.Index), task.Title)
-			return nil
+			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 		},
 	}
 	cmd.Flags().StringVarP(&f.description, "description", "d", "", "task description (markdown)")

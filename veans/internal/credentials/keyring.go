@@ -55,16 +55,6 @@ func (*KeyringBackend) Set(server, account, token string) error {
 	return nil
 }
 
-func (*KeyringBackend) Delete(server, account string) error {
-	if err := keyring.Delete(service, key(server, account)); err != nil {
-		if errors.Is(err, keyring.ErrNotFound) {
-			return ErrNotFound
-		}
-		return err
-	}
-	return nil
-}
-
 func key(server, account string) string {
 	return server + "::" + account
 }
