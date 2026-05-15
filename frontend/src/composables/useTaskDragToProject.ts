@@ -23,10 +23,7 @@ function findProjectIdAtPosition(mouseX: number, mouseY: number): number | null 
 			continue
 		}
 
-		const withProjectId =
-			el.dataset?.projectId != null
-				? el
-				: el.closest('[data-project-id]') as HTMLElement | null
+		const withProjectId = el.closest('.menu-list [data-project-id]') as HTMLElement | null
 
 		const projectId = withProjectId?.dataset.projectId
 		if (projectId) {
