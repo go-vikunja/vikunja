@@ -58,6 +58,7 @@ import {
 	faPlay,
 	faPlus,
 	faPowerOff,
+	faRss,
 	faSearch,
 	faShareAlt,
 	faSignOutAlt,
@@ -168,6 +169,7 @@ library.add(faPercent)
 library.add(faPlay)
 library.add(faPlus)
 library.add(faPowerOff)
+library.add(faRss)
 library.add(faSave)
 library.add(faSearch)
 library.add(faShareAlt)
