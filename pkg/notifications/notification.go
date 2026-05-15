@@ -45,6 +45,36 @@ type ThreadID interface {
 	ThreadID() string
 }
 
+// Titler is an optional capability for notifications that can render a
+// one-line, translated title. Used as the mail subject when ToMail does not
+// set one explicitly, and as the item title in the notifications feed.
+type Titler interface {
+	ToTitle(lang string) string
+}
+
+var registry = map[string]func() Notification{}
+
+// Register makes a notification type discoverable by name. It should be
+// called from init() in the package that defines the type. Only notifications
+// that persist to the database need to register, since only persisted
+// notifications are re-hydrated from JSON (e.g. by the feed handler).
+// The name is derived from the notification's own Name() method, so it stays
+// in one place.
+func Register(factory func() Notification) {
+	registry[factory().Name()] = factory
+}
+
+// Lookup returns a fresh, empty instance of the notification type registered
+// under the given name. The second return value is false if no type is
+// registered with that name.
+func Lookup(name string) (Notification, bool) {
+	f, ok := registry[name]
+	if !ok {
+		return nil, false
+	}
+	return f(), true
+}
+
 // Notifiable is an entity which can be notified. Usually a user.
 type Notifiable interface {
 	// RouteForMail should return the email address this notifiable has.
@@ -89,6 +119,12 @@ func notifyMail(notifiable Notifiable, notification Notification) error {
 	mail := notification.ToMail(notifiable.Lang())
 	if mail == nil {
 		return nil
+	}
+
+	if mail.subject == "" {
+		if t, is := notification.(Titler); is {
+			mail.subject = t.ToTitle(notifiable.Lang())
+		}
 	}
 
 	to, err := notifiable.RouteForMail()

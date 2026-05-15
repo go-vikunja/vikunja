@@ -125,6 +125,36 @@ func TestAPIToken_HasCaldavAccess(t *testing.T) {
 	})
 }
 
+func TestAPIToken_HasFeedsAccess(t *testing.T) {
+	t.Run("has feeds access", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"feeds": {"access"}},
+		}
+		assert.True(t, token.HasFeedsAccess())
+	})
+	t.Run("no feeds group", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"tasks": {"read_all"}},
+		}
+		assert.False(t, token.HasFeedsAccess())
+	})
+	t.Run("feeds group but wrong permission", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{"feeds": {"read_all"}},
+		}
+		assert.False(t, token.HasFeedsAccess())
+	})
+	t.Run("feeds access among other permissions", func(t *testing.T) {
+		token := &APIToken{
+			APIPermissions: APIPermissions{
+				"tasks": {"read_all", "update"},
+				"feeds": {"access"},
+			},
+		}
+		assert.True(t, token.HasFeedsAccess())
+	})
+}
+
 func TestAPIToken_GetTokenFromTokenString(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
 		s := db.NewSession()
