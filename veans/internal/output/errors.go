@@ -72,18 +72,15 @@ func AsError(err error) *Error {
 	return &Error{Code: CodeUnknown, Message: err.Error(), Cause: err}
 }
 
-// EmitError writes the JSON envelope when --json is set, or a plain message
-// otherwise. Always to stderr so stdout stays parseable.
-func EmitError(jsonMode bool, err error, w io.Writer) {
+// EmitError encodes the error as a JSON envelope `{code, error}` to w
+// (default stderr). All veans commands share this shape so callers can
+// branch on `code` without sniffing the output format.
+func EmitError(err error, w io.Writer) {
 	if w == nil {
 		w = os.Stderr
 	}
 	e := AsError(err)
-	if jsonMode {
-		if encErr := json.NewEncoder(w).Encode(e); encErr != nil {
-			fmt.Fprintf(os.Stderr, "veans: failed to encode error envelope: %v\n", encErr)
-		}
-		return
+	if encErr := json.NewEncoder(w).Encode(e); encErr != nil {
+		fmt.Fprintf(os.Stderr, "veans: failed to encode error envelope: %v\n", encErr)
 	}
-	fmt.Fprintf(w, "veans: %s: %s\n", e.Code, e.Message)
 }

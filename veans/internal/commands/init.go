@@ -18,6 +18,7 @@ package commands
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -117,7 +118,7 @@ revoke it at any time without affecting your own session.`,
 	return cmd
 }
 
-func printPostInitSummary(w fmtWriter, res *bootstrap.Result) {
+func printPostInitSummary(w io.Writer, res *bootstrap.Result) {
 	fmt.Fprintf(w, "\nveans is ready. Bot user: %s\n", res.BotUser.Username)
 	fmt.Fprintf(w, "Config:    %s\n", res.Config.Path())
 	fmt.Fprintf(w, "Project:   #%d %s\n", res.Config.ProjectID, identOrFallback(res.Config.ProjectIdentifier))
@@ -147,10 +148,4 @@ func identOrFallback(s string) string {
 		return "(no identifier — task IDs render as #NN)"
 	}
 	return s
-}
-
-// fmtWriter is what cobra.Cmd.OutOrStdout returns — type aliased to keep the
-// import surface minimal.
-type fmtWriter = interface {
-	Write(p []byte) (int, error)
 }

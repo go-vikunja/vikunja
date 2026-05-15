@@ -102,6 +102,26 @@ Important details:
 - `--description-replace-old/new` matches raw HTML byte-for-byte. Make
   the `old` string unique (include surrounding tags to disambiguate).
 
+# Output
+
+Every `list`, `show`, `create`, `update`, `claim`, `api` call emits JSON
+on stdout — no flag needed, no human-formatted variant. Errors land on
+stderr as `{"code":"...","error":"..."}` with non-zero exit; branch on
+`code` (NOT_FOUND, CONFLICT, VALIDATION_ERROR, AUTH_ERROR,
+RATE_LIMITED, NOT_CONFIGURED, BOT_USERS_UNAVAILABLE, UNKNOWN).
+
+`show`/`create`/`update`/`claim` return a single task; `list` returns
+an array. Useful fields:
+
+- `id` (numeric, internal) — pass to `api` calls
+- `index` (per-project) — what `{{ .TaskIDExample }}` resolves to
+- `done`, `priority`, `title`, `description` (HTML)
+- `buckets[]` — current bucket per view; match `project_view_id` to
+  yours from `.veans.yml` and read `id` to know the status
+- `assignees[]`, `labels[]` — `[]` if absent
+
+Trust your JSON parser; we won't add new fields without notice.
+
 # Status model
 
 | Status        | Bucket name    | Done flag | Who moves there?                         |
@@ -120,8 +140,7 @@ veans list --ready                 # ready to start (Todo + not blocked)
 veans list --mine                  # tasks assigned to you
 veans list --branch                # tasks tagged with the current git branch
 veans list --filter "priority > 3"  # raw Vikunja filter expression
-veans show {{ .TaskIDExample }}                  # full task detail
-veans show {{ .TaskIDExample }} --json           # JSON for parsing
+veans show {{ .TaskIDExample }}                  # full task detail (JSON)
 
 veans create "title" -s in-progress -d "<p>HTML body — see Description format.</p>"
 veans create "title" --label bug --priority 4 --parent {{ .TaskIDExample }}

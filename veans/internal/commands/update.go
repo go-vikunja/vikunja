@@ -19,7 +19,6 @@ package commands
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -70,13 +69,7 @@ func newUpdateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if globals.JSON {
-				return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
-			}
-			s := status.FromBucketID(task.CurrentBucketID(rt.cfg.ViewID), rt.cfg.Buckets)
-			fmt.Fprintf(cmd.OutOrStdout(), "Updated %s  [%s]  %s\n",
-				rt.cfg.FormatTaskID(task.Index), s, task.Title)
-			return nil
+			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 		},
 	}
 	cmd.Flags().StringVarP(&f.statusName, "status", "s", "", "transition to a status")

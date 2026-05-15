@@ -73,8 +73,8 @@ without affecting your own session.
 ```
 veans init                     OAuth/login → create bot → mint token → write .veans.yml
 veans prime                    emit system prompt for agents (silent if no .veans.yml)
-veans list                     filtered list (--ready, --mine, --branch, --filter, --status, --json)
-veans show <id>                view a task (--json for raw object)
+veans list                     filtered list (--ready, --mine, --branch, --filter, --status); emits JSON
+veans show <id>                view a task (JSON)
 veans create "title"           --description, --label, --status, --priority, --parent, --blocked-by
 veans update <id>              --status, --title, --priority, --label-add/remove,
                                --description, --description-replace-old/new, --description-append,

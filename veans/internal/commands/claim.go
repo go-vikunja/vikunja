@@ -19,7 +19,6 @@ package commands
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -86,13 +85,7 @@ func newClaimCmd() *cobra.Command {
 			if err == nil {
 				task = fresh
 			}
-
-			if globals.JSON {
-				return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "Claimed %s  %s\n",
-				rt.cfg.FormatTaskID(task.Index), task.Title)
-			return nil
+			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 		},
 	}
 	return cmd

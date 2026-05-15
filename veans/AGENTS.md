@@ -136,18 +136,44 @@ what's bitten me; if a new endpoint behaves oddly, suspect one of these:
   The leading chars barely change between consecutive runs and will
   collide if you take `[:N]`.
 
+## Audience split
+
+The CLI is agent-only at runtime; humans never use it for day-to-day
+work (they use Vikunja's web UI). Two commands serve a human running
+one-off setup:
+
+- **`init`** — bootstrap a repo: pick project + view, create bot,
+  share, mint token, write `.veans.yml`, install hooks.
+- **`login`** — rotate the bot's token.
+
+Everything else (`list`, `show`, `create`, `update`, `claim`, `api`,
+`prime`, `version`) is **agent-only**:
+
+- **Emits JSON on stdout unconditionally.** No `--json` flag, no
+  human-formatted variant. `list` is a raw array; `show` / `create` /
+  `update` / `claim` return a single task object.
+- **Errors are JSON on stderr** with non-zero exit — same envelope
+  everywhere (`{"code": "...", "error": "..."}`), regardless of which
+  command ran. Stable codes in `internal/output/errors.go`:
+  `NOT_FOUND`, `CONFLICT`, `VALIDATION_ERROR`, `AUTH_ERROR`,
+  `RATE_LIMITED`, `BOT_USERS_UNAVAILABLE`, `NOT_CONFIGURED`,
+  `UNKNOWN`. Don't add ad-hoc strings — wrap with `output.New` /
+  `output.Wrap`.
+- **No `globals.JSON`, no dual rendering paths.** If you find yourself
+  reaching for "if interactive, do X" on an agent-facing command,
+  stop — it's not interactive, an agent is on the other end.
+
 ## Cobra surface conventions
 
-- Global `--json` flag flips both successful output (raw object for
-  `show`, raw array for `list`) and the error envelope.
-- Stable error codes in `internal/output/errors.go`. Don't add new
-  ad-hoc strings — wrap with `output.New` / `output.Wrap`.
 - `RunE` handlers that don't use `args []string` should rename it to
   `_` to satisfy revive's `unused-parameter` rule.
 - The bucket-move dance (`MoveTaskToBucket`) runs **after** the field
   update on `update`, so a status transition can't clobber freshly
   attached labels. Comments for `--status scrapped` post **before**
   the bucket move so the audit trail reads in chronological order.
+- Agent-facing commands return the task via `json.NewEncoder(...).Encode(task)`.
+  Adding new top-level keys to `client.Task` is an implicit API
+  change — bump `prime`'s "useful fields" note alongside.
 
 ## Things to *not* do
 

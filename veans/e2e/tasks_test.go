@@ -33,7 +33,7 @@ func TestCreateShowList_RoundTrip(t *testing.T) {
 
 	// Create a task with a description and a label.
 	out, errOut, code := h.Run(t, ws,
-		"--json", "create", "Test bug fix",
+		"create", "Test bug fix",
 		"-d", "## Repro\n- [ ] step 1\n- [ ] step 2",
 		"--label", "bug",
 		"--priority", "3",
@@ -57,7 +57,7 @@ func TestCreateShowList_RoundTrip(t *testing.T) {
 
 	// Show with --json — should be a raw object, not enveloped.
 	id := fmt.Sprintf("%d", created.Index)
-	showOut, _, code := h.Run(t, ws, "--json", "show", id)
+	showOut, _, code := h.Run(t, ws, "show", id)
 	if code != 0 {
 		t.Fatalf("show exit %d", code)
 	}
@@ -70,7 +70,7 @@ func TestCreateShowList_RoundTrip(t *testing.T) {
 	}
 
 	// List with --json — should be a raw array.
-	listOut, _, code := h.Run(t, ws, "--json", "list")
+	listOut, _, code := h.Run(t, ws, "list")
 	if code != 0 {
 		t.Fatalf("list exit %d", code)
 	}
@@ -83,7 +83,7 @@ func TestCreateShowList_RoundTrip(t *testing.T) {
 	}
 
 	// --filter passthrough: only items with priority > 2.
-	filterOut, _, code := h.Run(t, ws, "--json", "list", "--filter", "priority > 2")
+	filterOut, _, code := h.Run(t, ws, "list", "--filter", "priority > 2")
 	if code != 0 {
 		t.Fatalf("list --filter exit %d\n%s", code, filterOut)
 	}
@@ -104,7 +104,7 @@ func TestCreateShowList_RoundTrip(t *testing.T) {
 func TestUpdate_DescriptionReplaceUniqueness(t *testing.T) {
 	ws, h := provisionWorkspace(t)
 
-	out, errOut, code := h.Run(t, ws, "--json", "create", "checkbox task",
+	out, errOut, code := h.Run(t, ws, "create", "checkbox task",
 		"-d", "- [ ] step 1\n- [ ] step 1 (again)",
 	)
 	if code != 0 {
