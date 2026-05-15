@@ -60,6 +60,16 @@ what's bitten me; if a new endpoint behaves oddly, suspect one of these:
   `valid:"required"` upstream; sending it omitted or zero fails
   validation. Use `client.FarFuture` (year 9999) when you mean "no
   expiry" — the frontend does the same.
+- **Task descriptions and comments are HTML, not markdown.** The
+  Vikunja web UI uses TipTap, which calls `getHTML()` on save. The
+  stored field is therefore HTML. The agent prompt template
+  (`internal/commands/prompt.tmpl`) teaches agents the canonical
+  TipTap shapes — most importantly `<ul data-type="taskList">` +
+  `<li data-type="taskItem" data-checked="false"><p>…</p></li>` for
+  interactive checkboxes. We deliberately do **not** convert
+  markdown↔HTML in the CLI; the agent writes HTML directly, which
+  avoids lossy roundtrips on `--description-replace-old/new`. `veans
+  show` displays the raw HTML; humans skim it fine.
 
 ## API token permissions
 

@@ -16,25 +16,26 @@ Server: {{ .Server }}
 - Use `veans list --ready` to find tasks ready to start (Todo + not blocked).
 
 ## WHILE you work
-- Keep the task's description in sync with what you're doing. Use markdown
-  checkboxes for the small steps you're ticking off:
-  `veans update {{ .TaskIDExample }} --description-append "- [ ] step 1"`
-- For surgical edits to the description, prefer:
-  `veans update {{ .TaskIDExample }} --description-replace-old "- [ ] step 1" --description-replace-new "- [x] step 1"`
-  (errors if the old text isn't unique — mirrors the Edit tool semantics)
+- Keep the task's description in sync with what you're doing. Use HTML
+  (not markdown) — see the "Description format" section below for why
+  and the canonical TipTap shapes Vikunja's web UI renders nicely:
+  `veans update {{ .TaskIDExample }} --description-append '<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p>step 1</p></li></ul>'`
+- For surgical edits, prefer `--description-replace-old` /
+  `--description-replace-new`. To check off a task item, replace
+  `data-checked="false"><p>step 1</p>` with `data-checked="true"><p>step 1</p>`
+  (errors if the old text isn't unique — same semantics as the Edit tool).
 - Post a comment on significant decisions, discoveries, or course-changes:
-  `veans update {{ .TaskIDExample }} --comment "Discovered Y; pivoting to Z because …"`
+  `veans update {{ .TaskIDExample }} --comment '<p>Discovered Y; pivoting to Z because …</p>'`
 - For sub-work that could be assigned separately, create real subtasks
-  via `--parent`. For incremental check-off lists, use markdown checkboxes
+  via `--parent`. For incremental check-off lists, use task-list items
   in the description instead.
 
 ## AFTER you finish work
 - Move to `in-review` and post a summary comment. **Never close tasks
   yourself** — the human (or the merge hook) closes them.
   ```
-  veans update {{ .TaskIDExample }} -s in-review --comment "## Summary of Changes
-  - …
-  - …"
+  veans update {{ .TaskIDExample }} -s in-review \
+    --comment '<h3>Summary of Changes</h3><ul><li>first thing</li><li>second thing</li></ul>'
   ```
 - If you abandon work, scrap the task with a reason:
   `veans update {{ .TaskIDExample }} -s scrapped --reason "obsolete: <why>"`
@@ -48,6 +49,58 @@ fix: handle empty project identifiers
 
 Refs: {{ .TaskIDExample }}
 ```
+
+# Description format
+
+**Descriptions and comments are HTML, not markdown.** Vikunja's web UI
+renders them through the TipTap rich-text editor, which interprets the
+stored field as HTML. Plain markdown saves as literal text and shows up
+ugly in the UI; write HTML directly. Tokens are cheap, conversion bugs
+aren't.
+
+Canonical TipTap shapes the web UI renders cleanly:
+
+```html
+<h2>Summary</h2>
+<p>Two short paragraphs explaining the task.</p>
+
+<h3>Steps</h3>
+<ul data-type="taskList">
+  <li data-type="taskItem" data-checked="false"><p>find the bug</p></li>
+  <li data-type="taskItem" data-checked="false"><p>write the fix</p></li>
+  <li data-type="taskItem" data-checked="true"><p>write the test</p></li>
+</ul>
+
+<h3>Notes</h3>
+<ul>
+  <li>regular bullet point</li>
+  <li>another one</li>
+</ul>
+
+<p>Inline <code>code</code>, <strong>bold</strong>, <em>italic</em>,
+and a <a href="https://example.com">link</a>.</p>
+
+<pre><code class="language-go">if err != nil { return err }</code></pre>
+
+<blockquote><p>A quote, e.g. from a linked issue.</p></blockquote>
+
+<hr>
+```
+
+Important details:
+- Task-list items use `<ul data-type="taskList">` and
+  `<li data-type="taskItem" data-checked="true|false">` — that's what
+  gives users an interactive checkbox. Plain `<ul><li>` lists render as
+  static bullets.
+- Inner text of task items goes inside `<p>` — the editor expects block
+  content in the `<li>`.
+- Don't add `data-task-id` attributes manually; the editor auto-fills
+  them on first save.
+- Escape `<`, `>`, `&` when they appear in literal text (`&lt;`, `&gt;`,
+  `&amp;`). Inside `<pre><code>` blocks you only need to escape these
+  three; line breaks and indentation are preserved.
+- `--description-replace-old/new` matches raw HTML byte-for-byte. Make
+  the `old` string unique (include surrounding tags to disambiguate).
 
 # Status model
 
@@ -70,13 +123,13 @@ veans list --filter "priority > 3"  # raw Vikunja filter expression
 veans show {{ .TaskIDExample }}                  # full task detail
 veans show {{ .TaskIDExample }} --json           # JSON for parsing
 
-veans create "title" -s in-progress -d "description"
+veans create "title" -s in-progress -d "<p>HTML body — see Description format.</p>"
 veans create "title" --label bug --priority 4 --parent {{ .TaskIDExample }}
 veans create "title" --blocked-by {{ .TaskIDExample }}
 
-veans update {{ .TaskIDExample }} -s in-review --comment "..."
-veans update {{ .TaskIDExample }} --description-append "- [ ] new step"
-veans update {{ .TaskIDExample }} --description-replace-old "- [ ] x" --description-replace-new "- [x] x"
+veans update {{ .TaskIDExample }} -s in-review --comment '<p>Summary of changes…</p>'
+veans update {{ .TaskIDExample }} --description-append '<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p>new step</p></li></ul>'
+veans update {{ .TaskIDExample }} --description-replace-old 'data-checked="false"><p>step 1</p>' --description-replace-new 'data-checked="true"><p>step 1</p>'
 veans update {{ .TaskIDExample }} --label-add bug --label-remove flaky
 veans update {{ .TaskIDExample }} -s scrapped --reason "obsolete: replaced by {{ .TaskIDExample }}"
 
