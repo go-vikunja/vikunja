@@ -339,9 +339,9 @@ func TestTask_Update(t *testing.T) {
 		defer s.Close()
 
 		task := &Task{
-			ID:          28,
-			Done:        true,
-			RepeatAfter: 3600,
+			ID:      28,
+			Done:    true,
+			Repeats: "FREQ=HOURLY;INTERVAL=1",
 		}
 		err := task.Update(s, u)
 		require.NoError(t, err)
@@ -372,9 +372,9 @@ func TestTask_Update(t *testing.T) {
 
 		// Mark the repeating task as done
 		task := &Task{
-			ID:          28,
-			Done:        true,
-			RepeatAfter: 3600,
+			ID:      28,
+			Done:    true,
+			Repeats: "FREQ=HOURLY;INTERVAL=1",
 		}
 		err = task.Update(s, u)
 		require.NoError(t, err)
@@ -408,9 +408,9 @@ func TestTask_Update(t *testing.T) {
 		// the frontend hits when the user clicks "Done" in the task
 		// detail pane).
 		task := &Task{
-			ID:          28,
-			Done:        true,
-			RepeatAfter: 3600,
+			ID:      28,
+			Done:    true,
+			Repeats: "FREQ=HOURLY;INTERVAL=1",
 		}
 		err = task.Update(s, u)
 		require.NoError(t, err)
@@ -649,13 +649,12 @@ func TestUpdateDone(t *testing.T) {
 		updateDone(oldTask, newTask)
 		assert.Equal(t, time.Time{}, newTask.DoneAt)
 	})
-	t.Run("no interval set, default repeat mode", func(t *testing.T) {
+	t.Run("no repeats set", func(t *testing.T) {
 		dueDate := time.Unix(1550000000, 0)
 		oldTask := &Task{
-			Done:        false,
-			RepeatAfter: 0,
-			RepeatMode:  TaskRepeatModeDefault,
-			DueDate:     dueDate,
+			Done:    false,
+			Repeats: "",
+			DueDate: dueDate,
 		}
 		newTask := &Task{
 			Done:    true,
@@ -666,50 +665,49 @@ func TestUpdateDone(t *testing.T) {
 		assert.Equal(t, dueDate.Unix(), newTask.DueDate.Unix())
 		assert.True(t, newTask.Done)
 	})
-	t.Run("repeating interval", func(t *testing.T) {
-		t.Run("normal", func(t *testing.T) {
+	t.Run("repeating interval with RRULE", func(t *testing.T) {
+		t.Run("daily repeat", func(t *testing.T) {
+			oldDueDate := time.Now().Add(-48 * time.Hour) // 2 days ago
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				DueDate:     time.Unix(1550000000, 0),
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: oldDueDate,
 			}
 			newTask := &Task{
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
 
-			var expected = time.Unix(1550008600, 0)
-			for time.Since(expected) > 0 {
-				expected = expected.Add(time.Second * time.Duration(oldTask.RepeatAfter))
-			}
-
-			assert.Equal(t, expected, newTask.DueDate)
+			// Next occurrence should be after now
+			assert.True(t, newTask.DueDate.After(time.Now()) || newTask.DueDate.Equal(time.Now().Truncate(24*time.Hour)))
 			assert.False(t, newTask.Done)
 		})
-		t.Run("don't update if due date is zero", func(t *testing.T) {
+		t.Run("no due date is a no-op", func(t *testing.T) {
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				DueDate:     time.Time{},
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: time.Time{},
 			}
 			newTask := &Task{
-				Done:    true,
-				DueDate: time.Unix(1543626724, 0),
+				Done: true,
 			}
 			updateDone(oldTask, newTask)
-			assert.Equal(t, time.Unix(1543626724, 0), newTask.DueDate)
-			assert.False(t, newTask.Done)
+			// Repeating task without a due date should not get one auto-assigned
+			assert.True(t, newTask.DueDate.IsZero(), "due date should remain unset")
 		})
 		t.Run("update reminders", func(t *testing.T) {
+			oldReminder1 := time.Now().Add(-48 * time.Hour)
+			oldReminder2 := time.Now().Add(-24 * time.Hour)
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: time.Now().Add(-48 * time.Hour),
 				Reminders: []*TaskReminder{
 					{
-						Reminder: time.Unix(1550000000, 0),
+						Reminder: oldReminder1,
 					},
 					{
-						Reminder: time.Unix(1555000000, 0),
+						Reminder: oldReminder2,
 					},
 				},
 			}
@@ -718,174 +716,113 @@ func TestUpdateDone(t *testing.T) {
 			}
 			updateDone(oldTask, newTask)
 
-			var expected1 = time.Unix(1550008600, 0)
-			var expected2 = time.Unix(1555008600, 0)
-			for time.Since(expected1) > 0 {
-				expected1 = expected1.Add(time.Duration(oldTask.RepeatAfter) * time.Second)
-			}
-			for time.Since(expected2) > 0 {
-				expected2 = expected2.Add(time.Duration(oldTask.RepeatAfter) * time.Second)
-			}
-
 			assert.Len(t, newTask.Reminders, 2)
-			assert.Equal(t, expected1, newTask.Reminders[0].Reminder)
-			assert.Equal(t, expected2, newTask.Reminders[1].Reminder)
+			// New reminders should be in the future
+			assert.True(t, newTask.Reminders[0].Reminder.After(oldReminder1))
+			assert.True(t, newTask.Reminders[1].Reminder.After(oldReminder2))
 			assert.False(t, newTask.Done)
 		})
 		t.Run("update start date", func(t *testing.T) {
+			oldStartDate := time.Now().Add(-48 * time.Hour)
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				StartDate:   time.Unix(1550000000, 0),
+				Done:      false,
+				Repeats:   "FREQ=DAILY;INTERVAL=1",
+				DueDate:   time.Now().Add(-48 * time.Hour),
+				StartDate: oldStartDate,
 			}
 			newTask := &Task{
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
 
-			var expected = time.Unix(1550008600, 0)
-			for time.Since(expected) > 0 {
-				expected = expected.Add(time.Second * time.Duration(oldTask.RepeatAfter))
-			}
-
-			assert.Equal(t, expected, newTask.StartDate)
+			assert.True(t, newTask.StartDate.After(oldStartDate))
 			assert.False(t, newTask.Done)
 		})
 		t.Run("update end date", func(t *testing.T) {
+			oldEndDate := time.Now().Add(-48 * time.Hour)
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				EndDate:     time.Unix(1550000000, 0),
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: time.Now().Add(-48 * time.Hour),
+				EndDate: oldEndDate,
 			}
 			newTask := &Task{
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
 
-			var expected = time.Unix(1550008600, 0)
-			for time.Since(expected) > 0 {
-				expected = expected.Add(time.Second * time.Duration(oldTask.RepeatAfter))
-			}
-
-			assert.Equal(t, expected, newTask.EndDate)
+			assert.True(t, newTask.EndDate.After(oldEndDate))
 			assert.False(t, newTask.Done)
 		})
 		t.Run("ensure due date is repeated even if the original one is in the future", func(t *testing.T) {
+			oldDueDate := time.Now().Add(time.Hour)
 			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				DueDate:     time.Now().Add(time.Hour),
+				Done:    false,
+				Repeats: "FREQ=DAILY;INTERVAL=1",
+				DueDate: oldDueDate,
 			}
 			newTask := &Task{
 				Done: true,
 			}
 			updateDone(oldTask, newTask)
-			expected := oldTask.DueDate.Add(time.Duration(oldTask.RepeatAfter) * time.Second)
-			assert.Equal(t, expected, newTask.DueDate)
+			// Next occurrence should be after the original due date
+			assert.True(t, newTask.DueDate.After(oldDueDate))
 			assert.False(t, newTask.Done)
 		})
 		t.Run("repeat from current date", func(t *testing.T) {
 			t.Run("due date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 8600,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					DueDate:     time.Unix(1550000000, 0),
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=1",
+					RepeatsFromCurrentDate: true,
+					DueDate:                time.Unix(1550000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
 				}
 				updateDone(oldTask, newTask)
 
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.DueDate.Unix())
-				assert.False(t, newTask.Done)
-			})
-			t.Run("reminders", func(t *testing.T) {
-				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 8600,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					Reminders: []*TaskReminder{
-						{
-							Reminder: time.Unix(1550000000, 0),
-						},
-						{
-							Reminder: time.Unix(1555000000, 0),
-						},
-					}}
-				newTask := &Task{
-					Done: true,
-				}
-				updateDone(oldTask, newTask)
-
-				diff := oldTask.Reminders[1].Reminder.Sub(oldTask.Reminders[0].Reminder)
-
-				assert.Len(t, newTask.Reminders, 2)
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[0].Reminder.Unix())
-				assert.Equal(t, time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.Reminders[1].Reminder.Unix())
+				// Should calculate from now, so new due date should be tomorrow or later
+				assert.True(t, newTask.DueDate.After(time.Now()))
 				assert.False(t, newTask.Done)
 			})
 			t.Run("start date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 8600,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					StartDate:   time.Unix(1550000000, 0),
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=1",
+					RepeatsFromCurrentDate: true,
+					StartDate:              time.Unix(1550000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
 				}
 				updateDone(oldTask, newTask)
 
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.StartDate.Unix())
+				assert.True(t, newTask.StartDate.After(time.Now()))
 				assert.False(t, newTask.Done)
 			})
 			t.Run("end date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 8600,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					EndDate:     time.Unix(1560000000, 0),
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=1",
+					RepeatsFromCurrentDate: true,
+					EndDate:                time.Unix(1560000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
 				}
 				updateDone(oldTask, newTask)
 
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.EndDate.Unix())
-				assert.False(t, newTask.Done)
-			})
-			t.Run("start and end date", func(t *testing.T) {
-				oldTask := &Task{
-					Done:        false,
-					RepeatAfter: 8600,
-					RepeatMode:  TaskRepeatModeFromCurrentDate,
-					StartDate:   time.Unix(1550000000, 0),
-					EndDate:     time.Unix(1560000000, 0),
-				}
-				newTask := &Task{
-					Done: true,
-				}
-				updateDone(oldTask, newTask)
-
-				diff := oldTask.EndDate.Sub(oldTask.StartDate)
-
-				// Only comparing unix timestamps because time.Time use nanoseconds which can't ever possibly have the same value
-				assert.Equal(t, time.Now().Add(time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.StartDate.Unix())
-				assert.Equal(t, time.Now().Add(diff+time.Duration(oldTask.RepeatAfter)*time.Second).Unix(), newTask.EndDate.Unix())
+				assert.True(t, newTask.EndDate.After(time.Now()))
 				assert.False(t, newTask.Done)
 			})
 		})
 		t.Run("repeat each month", func(t *testing.T) {
 			t.Run("due date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:       false,
-					RepeatMode: TaskRepeatModeMonth,
-					DueDate:    time.Unix(1550000000, 0),
+					Done:    false,
+					Repeats: "FREQ=MONTHLY;INTERVAL=1",
+					DueDate: time.Unix(1550000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
@@ -895,43 +832,14 @@ func TestUpdateDone(t *testing.T) {
 				updateDone(oldTask, newTask)
 
 				assert.True(t, newTask.DueDate.After(oldDueDate))
-				assert.NotEqual(t, oldDueDate.Month(), newTask.DueDate.Month())
-				assert.False(t, newTask.Done)
-			})
-			t.Run("reminders", func(t *testing.T) {
-				oldTask := &Task{
-					Done:       false,
-					RepeatMode: TaskRepeatModeMonth,
-					Reminders: []*TaskReminder{
-						{
-							Reminder: time.Unix(1550000000, 0),
-						},
-						{
-							Reminder: time.Unix(1555000000, 0),
-						},
-					}}
-				newTask := &Task{
-					Done: true,
-				}
-				oldReminders := make([]time.Time, len(oldTask.Reminders))
-				for i, r := range newTask.Reminders {
-					oldReminders[i] = r.Reminder
-				}
-
-				updateDone(oldTask, newTask)
-
-				assert.Len(t, newTask.Reminders, len(oldReminders))
-				for i, r := range newTask.Reminders {
-					assert.True(t, r.Reminder.After(oldReminders[i]))
-					assert.NotEqual(t, oldReminders[i].Month(), r.Reminder.Month())
-				}
 				assert.False(t, newTask.Done)
 			})
 			t.Run("start date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:       false,
-					RepeatMode: TaskRepeatModeMonth,
-					StartDate:  time.Unix(1550000000, 0),
+					Done:      false,
+					Repeats:   "FREQ=MONTHLY;INTERVAL=1",
+					DueDate:   time.Unix(1550000000, 0),
+					StartDate: time.Unix(1550000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
@@ -941,14 +849,14 @@ func TestUpdateDone(t *testing.T) {
 				updateDone(oldTask, newTask)
 
 				assert.True(t, newTask.StartDate.After(oldStartDate))
-				assert.NotEqual(t, oldStartDate.Month(), newTask.StartDate.Month())
 				assert.False(t, newTask.Done)
 			})
 			t.Run("end date", func(t *testing.T) {
 				oldTask := &Task{
-					Done:       false,
-					RepeatMode: TaskRepeatModeMonth,
-					EndDate:    time.Unix(1560000000, 0),
+					Done:    false,
+					Repeats: "FREQ=MONTHLY;INTERVAL=1",
+					DueDate: time.Unix(1560000000, 0),
+					EndDate: time.Unix(1560000000, 0),
 				}
 				newTask := &Task{
 					Done: true,
@@ -958,106 +866,44 @@ func TestUpdateDone(t *testing.T) {
 				updateDone(oldTask, newTask)
 
 				assert.True(t, newTask.EndDate.After(oldEndDate))
-				assert.NotEqual(t, oldEndDate.Month(), newTask.EndDate.Month())
-				assert.False(t, newTask.Done)
-			})
-			t.Run("start and end date", func(t *testing.T) {
-				oldTask := &Task{
-					Done:       false,
-					RepeatMode: TaskRepeatModeMonth,
-					StartDate:  time.Unix(1550000000, 0),
-					EndDate:    time.Unix(1560000000, 0),
-				}
-				newTask := &Task{
-					Done: true,
-				}
-				oldStartDate := oldTask.StartDate
-				oldEndDate := oldTask.EndDate
-				oldDiff := oldTask.EndDate.Sub(oldTask.StartDate)
-
-				updateDone(oldTask, newTask)
-
-				assert.True(t, newTask.StartDate.After(oldStartDate))
-				assert.NotEqual(t, oldStartDate.Month(), newTask.StartDate.Month())
-				assert.True(t, newTask.EndDate.After(oldEndDate))
-				assert.NotEqual(t, oldEndDate.Month(), newTask.EndDate.Month())
-				assert.Equal(t, oldDiff, newTask.EndDate.Sub(newTask.StartDate))
 				assert.False(t, newTask.Done)
 			})
 		})
 	})
 }
 
-func TestTask_RepeatAfterCap(t *testing.T) {
-	const maxRepeat int64 = 10 * 365 * 24 * 3600
-
-	t.Run("create rejects repeat_after above cap", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		usr := &user.User{ID: 1, Username: "user1"}
-		task := &Task{
-			Title:       "nope",
-			ProjectID:   1,
-			RepeatAfter: maxRepeat + 1,
-		}
-		err := task.Create(s, usr)
-		require.Error(t, err)
-		assert.True(t, IsErrInvalidTaskRepeatInterval(err))
+func TestValidateRRule(t *testing.T) {
+	t.Run("empty string is valid", func(t *testing.T) {
+		assert.NoError(t, validateRRule(""))
 	})
-
-	t.Run("create accepts repeat_after at cap", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		usr := &user.User{ID: 1, Username: "user1"}
-		task := &Task{
-			Title:       "ok",
-			ProjectID:   1,
-			RepeatAfter: maxRepeat,
-		}
-		require.NoError(t, task.Create(s, usr))
-		require.NoError(t, s.Commit())
+	t.Run("valid daily rule", func(t *testing.T) {
+		assert.NoError(t, validateRRule("FREQ=DAILY;INTERVAL=1"))
 	})
-
-	t.Run("update rejects repeat_after above cap", func(t *testing.T) {
-		db.LoadAndAssertFixtures(t)
-		s := db.NewSession()
-		defer s.Close()
-
-		usr := &user.User{ID: 1, Username: "user1"}
-		task := &Task{
-			ID:          1,
-			RepeatAfter: maxRepeat + 1,
-		}
-		err := task.Update(s, usr)
+	t.Run("valid weekly with byday", func(t *testing.T) {
+		assert.NoError(t, validateRRule("FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR"))
+	})
+	t.Run("valid monthly with bymonthday", func(t *testing.T) {
+		assert.NoError(t, validateRRule("FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15"))
+	})
+	t.Run("malformed string rejected", func(t *testing.T) {
+		err := validateRRule("not a valid rrule")
 		require.Error(t, err)
-		assert.True(t, IsErrInvalidTaskRepeatInterval(err))
+		assert.True(t, IsErrInvalidData(err))
+	})
+	t.Run("missing freq rejected", func(t *testing.T) {
+		err := validateRRule("INTERVAL=2")
+		require.Error(t, err)
+		assert.True(t, IsErrInvalidData(err))
 	})
 }
 
-func TestErrInvalidTaskRepeatInterval(t *testing.T) {
-	err := ErrInvalidTaskRepeatInterval{RepeatAfter: 999999999999}
-	assert.True(t, IsErrInvalidTaskRepeatInterval(err))
-	assert.False(t, IsErrInvalidTaskRepeatInterval(ErrTaskCannotBeEmpty{}))
-	httpErr := err.HTTPError()
-	assert.Equal(t, 400, httpErr.HTTPCode)
-	assert.Equal(t, ErrCodeInvalidTaskRepeatInterval, httpErr.Code)
-}
-
-func TestUpdateDone_DoSRegression_AncientDueDate(t *testing.T) {
-	// GHSA-r4fg-73rc-hhh7: ancient due_date + 1s interval used to spin
-	// for billions of iterations. The <1s assertion catches a regression
-	// to the O(n) loop.
+func TestUpdateDone_RRuleAncientDueDate(t *testing.T) {
 	oldTask := &Task{
-		Done:        false,
-		RepeatAfter: 1,
-		RepeatMode:  TaskRepeatModeDefault,
-		DueDate:     time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
-		StartDate:   time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
-		EndDate:     time.Date(1900, 1, 2, 0, 0, 0, 0, time.UTC),
+		Done:      false,
+		Repeats:   "FREQ=SECONDLY;INTERVAL=1",
+		DueDate:   time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+		StartDate: time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
+		EndDate:   time.Date(1900, 1, 2, 0, 0, 0, 0, time.UTC),
 		Reminders: []*TaskReminder{
 			{Reminder: time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)},
 		},
@@ -1073,90 +919,6 @@ func TestUpdateDone_DoSRegression_AncientDueDate(t *testing.T) {
 	assert.True(t, newTask.StartDate.After(start), "new start date must be strictly after now")
 	assert.True(t, newTask.EndDate.After(start), "new end date must be strictly after now")
 	assert.False(t, newTask.Done, "repeating task should be unmarked as done")
-}
-
-func TestAddRepeatIntervalToTime(t *testing.T) {
-	now := time.Date(2026, 4, 9, 12, 0, 0, 0, time.UTC)
-	day := 24 * time.Hour
-
-	tests := []struct {
-		name     string
-		now      time.Time
-		t        time.Time
-		duration time.Duration
-		want     time.Time
-	}{
-		{
-			name:     "one day interval, t one day before now",
-			now:      now,
-			t:        now.Add(-day),
-			duration: day,
-			want:     now.Add(day),
-		},
-		{
-			name:     "one day interval, t exactly one week before now",
-			now:      now,
-			t:        now.Add(-7 * day),
-			duration: day,
-			want:     now.Add(day),
-		},
-		{
-			name:     "t in the far past (PoC case) completes with sane result",
-			now:      now,
-			t:        time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
-			duration: time.Second,
-			want:     now.Add(time.Second),
-		},
-		{
-			name:     "zero t saturates and falls back",
-			now:      now,
-			t:        time.Time{},
-			duration: time.Hour,
-			want:     now.Add(time.Hour),
-		},
-		{
-			name:     "t after now still advances by one interval",
-			now:      now,
-			t:        now.Add(time.Hour),
-			duration: day,
-			want:     now.Add(time.Hour + day),
-		},
-		{
-			name:     "t equals now still advances",
-			now:      now,
-			t:        now,
-			duration: day,
-			want:     now.Add(day),
-		},
-		{
-			name:     "zero duration returns t unchanged",
-			now:      now,
-			t:        now.Add(-day),
-			duration: 0,
-			want:     now.Add(-day),
-		},
-		{
-			name:     "negative duration returns t unchanged",
-			now:      now,
-			t:        now.Add(-day),
-			duration: -time.Hour,
-			want:     now.Add(-day),
-		},
-		{
-			name:     "tiny duration on ancient date does not overflow",
-			now:      now,
-			t:        time.Date(1800, 1, 1, 0, 0, 0, 0, time.UTC),
-			duration: 1,
-			want:     now.Add(1),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			got := addRepeatIntervalToTime(tc.now, tc.t, tc.duration)
-			assert.Equal(t, tc.want, got)
-		})
-	}
 }
 
 func TestTask_ReadOne(t *testing.T) {

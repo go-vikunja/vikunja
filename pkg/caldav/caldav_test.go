@@ -156,7 +156,7 @@ END:VCALENDAR`,
 						Description: "Lorem Ipsum",
 						UID:         "randommduid",
 						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						RepeatMode:  models.TaskRepeatModeMonth,
+						Repeats:     "FREQ=MONTHLY;BYMONTHDAY=01",
 						DueDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
 					},
 				},
@@ -178,7 +178,7 @@ END:VTODO
 END:VCALENDAR`,
 		},
 		{
-			name: "with repeat mode default",
+			name: "with repeat interval",
 			args: args{
 				config: &Config{
 					Name:   "test",
@@ -190,9 +190,8 @@ END:VCALENDAR`,
 						Description: "Lorem Ipsum",
 						UID:         "randommduid",
 						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						RepeatMode:  models.TaskRepeatModeDefault,
 						DueDate:     time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						RepeatAfter: 435,
+						Repeats:     "FREQ=DAILY;INTERVAL=1",
 					},
 				},
 			},
@@ -207,7 +206,7 @@ DTSTAMP:20181201T011204Z
 SUMMARY:Todo #1
 DESCRIPTION:Lorem Ipsum
 DUE:20181201T011204Z
-RRULE:FREQ=SECONDLY;INTERVAL=435
+RRULE:FREQ=DAILY;INTERVAL=1
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
