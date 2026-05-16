@@ -5,7 +5,7 @@
 	>
 		<XButton
 			:to="{name:'teams.create'}"
-			class="is-pulled-right"
+			class="is-pulled-end"
 			icon="plus"
 		>
 			{{ $t('team.create.title') }}
