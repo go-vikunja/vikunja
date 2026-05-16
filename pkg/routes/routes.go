@@ -64,6 +64,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/modules/auth/saml"
 	"code.vikunja.io/api/pkg/modules/background"
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
@@ -314,6 +315,9 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/login":                          true,
 	"/api/v1/user/token/refresh":             true,
 	"/api/v1/auth/openid/:provider/callback": true,
+	"/api/v1/auth/saml/:provider/login":      true,
+	"/api/v1/auth/saml/:provider/acs":        true,
+	"/api/v1/auth/saml/:provider/metadata":   true,
 	"/api/v1/test/:table":                    true,
 	"/api/v1/info":                           true,
 	"/api/v1/shares/:share/auth":             true,
@@ -397,6 +401,12 @@ func registerAPIRoutes(a *echo.Group) {
 
 	if config.AuthOpenIDEnabled.GetBool() {
 		ur.POST("/auth/openid/:provider/callback", openid.HandleCallback)
+	}
+
+	if config.AuthSAMLEnabled.GetBool() {
+		ur.GET("/auth/saml/:provider/login", saml.HandleLogin)
+		ur.POST("/auth/saml/:provider/acs", saml.HandleACS)
+		ur.GET("/auth/saml/:provider/metadata", saml.HandleMetadata)
 	}
 
 	// OAuth 2.0 token endpoint — unauthenticated because it validates
@@ -716,7 +726,6 @@ func registerAPIRoutes(a *echo.Group) {
 	a.PUT("/teams/:team/members", teamMemberHandler.CreateWeb)
 	a.DELETE("/teams/:team/members/:user", teamMemberHandler.DeleteWeb)
 	a.POST("/teams/:team/members/:user/admin", teamMemberHandler.UpdateWeb)
-
 	// Subscriptions
 	subscriptionHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {

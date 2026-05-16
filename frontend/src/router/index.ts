@@ -16,6 +16,7 @@ import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
 import LinkSharingAuth from '@/views/sharing/LinkSharingAuth.vue'
 import OpenIdAuth from '@/views/user/OpenIdAuth.vue'
+import SAMLAuth from '@/views/user/SAMLAuth.vue'
 import UpcomingTasks from '@/views/tasks/ShowTasks.vue'
 
 import NotFoundComponent from '@/views/404.vue'
@@ -422,6 +423,11 @@ const router = createRouter({
 			path: '/auth/openid/:provider',
 			name: 'openid.auth',
 			component: OpenIdAuth,
+		},
+		{
+			path: '/auth/saml/:provider',
+			name: 'saml.auth',
+			component: SAMLAuth,
 		},
 		{
 			path: '/oauth/authorize',
