@@ -5,7 +5,7 @@
 	>
 		<XButton
 			:to="{name:'labels.create'}"
-			class="is-pulled-right"
+			class="is-pulled-end"
 			icon="plus"
 		>
 			{{ $t('label.create.header') }}

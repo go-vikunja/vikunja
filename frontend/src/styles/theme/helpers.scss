@@ -4,6 +4,10 @@
   }
 }
 
-.is-pulled-right {
+.is-pulled-end {
   float: right !important;
+}
+
+[dir="rtl"] .is-pulled-end {
+  float: left !important;
 }
