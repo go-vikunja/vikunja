@@ -233,8 +233,8 @@ importers:
         specifier: 4.28.2
         version: 4.28.2
       caniuse-lite:
-        specifier: 1.0.30001792
-        version: 1.0.30001792
+        specifier: 1.0.30001793
+        version: 1.0.30001793
       csstype:
         specifier: 3.2.3
         version: 3.2.3
@@ -3482,8 +3482,8 @@ packages:
     resolution: {integrity: sha512-8WB3Jcas3swSvjIeA2yvCJ+Miyz5l1ZmB6HFb9R1317dt9LCQoswg/BGrmAmkWVEszSrrg4RwmO46qIm2OEnSA==}
     engines: {node: '>=16'}
 
-  caniuse-lite@1.0.30001792:
-    resolution: {integrity: sha512-hVLMUZFgR4JJ6ACt1uEESvQN1/dBVqPAKY0hgrV70eN3391K6juAfTjKZLKvOMsx8PxA7gsY1/tLMMTcfFLLpw==}
+  caniuse-lite@1.0.30001793:
+    resolution: {integrity: sha512-iwSsYWaCOoh26cV8NwNRViHlrfUvYsHDfRVcbtmw0Kg6PJIZZXwMkj1442FYLBGkeUf1juAsU3DTfxW579mrPA==}
 
   capture-website@4.2.0:
     resolution: {integrity: sha512-EmkSn36CXTC8tUsS6aNmvvsdpfVTYYkuRp7U5bV9gcJwcDbqqA5c0Op/iskYPKtDdOkuVp61mjn/LLywX0h7cw==}
@@ -10192,7 +10192,7 @@ snapshots:
   autoprefixer@10.5.0(postcss@8.5.14):
     dependencies:
       browserslist: 4.28.2
-      caniuse-lite: 1.0.30001792
+      caniuse-lite: 1.0.30001793
       fraction.js: 5.3.4
       picocolors: 1.1.1
       postcss: 8.5.14
@@ -10321,7 +10321,7 @@ snapshots:
   browserslist@4.28.2:
     dependencies:
       baseline-browser-mapping: 2.10.12
-      caniuse-lite: 1.0.30001792
+      caniuse-lite: 1.0.30001793
       electron-to-chromium: 1.5.329
       node-releases: 2.0.36
       update-browserslist-db: 1.2.3(browserslist@4.28.2)
@@ -10380,7 +10380,7 @@ snapshots:
 
   camelcase@8.0.0: {}
 
-  caniuse-lite@1.0.30001792: {}
+  caniuse-lite@1.0.30001793: {}
 
   capture-website@4.2.0(typescript@5.9.3):
     dependencies:
