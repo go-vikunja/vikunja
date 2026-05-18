@@ -75,6 +75,26 @@
       "extends": [
         "schedule:weekly"
       ]
+    },
+    {
+      "groupName": "node",
+      "matchPackageNames": [
+        "node"
+      ],
+      "matchManagers": [
+        "mise",
+        "nvm"
+      ]
+    },
+    {
+      "groupName": "pnpm",
+      "matchPackageNames": [
+        "pnpm"
+      ],
+      "matchManagers": [
+        "mise",
+        "npm"
+      ]
     }
   ]
 }

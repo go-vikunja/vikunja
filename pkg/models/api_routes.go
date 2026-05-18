@@ -35,6 +35,12 @@ func init() {
 			Method: "ANY",
 		},
 	}
+	apiTokenRoutes["feeds"] = APITokenRoute{
+		"access": &RouteDetail{
+			Path:   "/feeds/*",
+			Method: "GET",
+		},
+	}
 }
 
 type APITokenRoute map[string]*RouteDetail

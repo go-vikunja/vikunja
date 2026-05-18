@@ -118,6 +118,11 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/DataExport.vue'),
 				},
 				{
+					path: '/user/settings/feeds',
+					name: 'user.settings.feeds',
+					component: () => import('@/views/user/settings/AtomFeed.vue'),
+				},
+				{
 					path: '/user/settings/deletion',
 					name: 'user.settings.deletion',
 					component: () => import('@/views/user/settings/Deletion.vue'),

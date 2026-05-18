@@ -81,6 +81,7 @@ import (
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	adminapi "code.vikunja.io/api/pkg/routes/api/v1/admin"
 	"code.vikunja.io/api/pkg/routes/caldav"
+	"code.vikunja.io/api/pkg/routes/feeds"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
 	ws "code.vikunja.io/api/pkg/websocket"
@@ -259,6 +260,11 @@ func RegisterRoutes(e *echo.Echo) {
 		registerCalDavRoutes(c)
 	}
 
+	// Feeds routes (Atom feed for user notifications)
+	f := e.Group("/feeds")
+	f.Use(middleware.BasicAuth(feeds.BasicAuth))
+	f.GET("/notifications.atom", feeds.NotificationsAtomFeed)
+
 	// healthcheck
 	e.GET("/health", HealthcheckHandler)
 
@@ -282,8 +288,10 @@ func RegisterRoutes(e *echo.Echo) {
 				// Since it is not possible to register this middleware just for the api group,
 				// we just disable it when for caldav requests.
 				// Caldav requires OPTIONS requests to be answered in a specific manner,
-				// not doing this would break the caldav implementation
-				return strings.HasPrefix(context.Path(), "/dav")
+				// not doing this would break the caldav implementation.
+				// Feed readers are server-side and don't need CORS either.
+				p := context.Path()
+				return strings.HasPrefix(p, "/dav") || strings.HasPrefix(p, "/feeds")
 			},
 		}))
 	}
