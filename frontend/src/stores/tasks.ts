@@ -35,8 +35,6 @@ import ProjectUserService from '@/services/projectUsers'
 import {useAuthStore} from '@/stores/auth'
 import TaskCollectionService, {type TaskFilterParams} from '@/services/taskCollection'
 import {getRandomColorHex} from '@/helpers/color/randomColor'
-import {REPEAT_TYPES} from '@/types/IRepeatAfter'
-import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 interface MatchedAssignee extends IUser {
 	match: string,
@@ -503,14 +501,13 @@ export const useTaskStore = defineStore('task', () => {
 			position,
 			index,
 		})
-		task.repeatAfter = parsedTask.repeats
 		task.reminders = buildDefaultRemindersForQuickAdd(
 			authStore.settings.frontendSettings.quickAddDefaultReminders,
 			dueDate,
 		)
 
-		if (parsedTask.repeats?.type === REPEAT_TYPES.Months && parsedTask.repeats?.amount === 1) {
-			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH
+		if (parsedTask.repeat) {
+			task.repeat = parsedTask.repeat
 		}
 
 		const taskService = new TaskService()

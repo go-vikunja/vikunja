@@ -9,13 +9,28 @@ import type {IProject} from './IProject'
 import type {IBucket} from './IBucket'
 
 import type {IRelationKind} from '@/types/IRelationKind'
-import type {IRepeatAfter} from '@/types/IRepeatAfter'
-import type {IRepeatMode} from '@/types/IRepeatMode'
 
 import type {PartialWithId} from '@/types/PartialWithId'
 import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IReactionPerEntity} from '@/modelTypes/IReaction'
 import type {ITaskComment} from '@/modelTypes/ITaskComment.ts'
+
+export interface ITaskRepeat {
+	freq: string
+	interval: number
+	byDay?: string[]
+	byMonthDay?: number[]
+	byMonth?: number[]
+	byYearDay?: number[]
+	byWeekNo?: number[]
+	bySetPos?: number[]
+	byHour?: number[]
+	byMinute?: number[]
+	bySecond?: number[]
+	count?: number
+	until?: string | null
+	wkst?: string
+}
 
 export interface ITask extends IAbstract {
 	id: number
@@ -30,9 +45,10 @@ export interface ITask extends IAbstract {
 	dueDate: Date | null
 	startDate: Date | null
 	endDate: Date | null
-	repeatAfter: number | IRepeatAfter
-	repeatFromCurrentDate: boolean
-	repeatMode: IRepeatMode
+	// Structured recurrence pattern from the API
+	repeat: ITaskRepeat | null
+	// If true, the next occurrence is calculated from the completion date rather than the original date
+	repeatsFromCurrentDate: boolean
 	reminders: ITaskReminder[]
 	parentTaskId: ITask['id']
 	hexColor: string

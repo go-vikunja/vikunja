@@ -32,6 +32,7 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 
 	"github.com/gocarina/gocsv"
+	"github.com/teambition/rrule-go"
 )
 
 var timeFormats = []string{
@@ -118,6 +119,35 @@ func sortParentsBeforeChildren(tasks []*tickTickTask) []*tickTickTask {
 	return result
 }
 
+// normalizeTickTickRepeat normalizes the TickTick Repeat field to a single RRULE string.
+// TickTick exports repeat rules in RRULE format, but may include multiple rules separated by newlines.
+// Vikunja only supports one RRULE, so we take the first one.
+func normalizeTickTickRepeat(repeat string) string {
+	repeat = strings.TrimSpace(repeat)
+	if repeat == "" {
+		return ""
+	}
+
+	// TickTick may have multiple RRULE lines, take the first one
+	lines := strings.Split(repeat, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			// Remove RRULE: prefix if present (TickTick may or may not include it)
+			if strings.HasPrefix(strings.ToUpper(line), "RRULE:") {
+				line = strings.TrimPrefix(line, "RRULE:")
+				line = strings.TrimPrefix(line, "rrule:")
+			}
+			if _, err := rrule.StrToRRule(line); err != nil {
+				return ""
+			}
+			return line
+		}
+	}
+
+	return ""
+}
+
 func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWithTasksAndBuckets) {
 	// Sort tasks so that parent tasks always come before their children.
 	// Without this, create_from_structure.go would try to create a
@@ -171,6 +201,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 				DoneAt:      t.CompletedTime.Time,
 				Position:    t.Order,
 				Labels:      labels,
+				Repeats:     normalizeTickTickRepeat(t.Repeat),
 			},
 		}
 
