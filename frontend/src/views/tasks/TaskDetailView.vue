@@ -574,7 +574,7 @@
 						>
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
-						<XButton
+						<!-- <XButton
 							v-shortcut="deleteShortcut"
 							icon="trash-alt"
 							:shadow="false"
@@ -582,7 +582,7 @@
 							@click="showDeleteModal = true"
 						>
 							{{ $t('task.detail.actions.delete') }}
-						</XButton>
+						</XButton> -->
 					</template>
 
 					<!-- Created / Updated [by] -->
@@ -1097,9 +1097,10 @@ useTaskDetailShortcuts({
 const showDeleteModal = ref(false)
 
 async function deleteTask() {
-	await taskStore.delete(task.value)
-	success({message: t('task.detail.deleteSuccess')})
-	router.push({name: 'project.index', params: {projectId: task.value.projectId}})
+	alert('This feature has been disabled.')
+	// await taskStore.delete(task.value)
+	// success({message: t('task.detail.deleteSuccess')})
+	// router.push({name: 'project.index', params: {projectId: task.value.projectId}})
 }
 
 async function toggleTaskDone() {
