@@ -4,6 +4,7 @@
 			v-if="isQuickAddMode"
 			v-tooltip="$t('task.quickAddMagic.quickEntryHint')"
 			class="icon is-small show-helper-text"
+			:class="$attrs.class"
 		>
 			<Icon :icon="['far', 'circle-question']" />
 		</span>
@@ -12,7 +13,7 @@
 				v-tooltip="$t('task.quickAddMagic.hint')"
 				class="icon is-small show-helper-text quick-add-magic-trigger-btn"
 				:aria-label="$t('task.quickAddMagic.hint')"
-				:class="{'is-highlighted': highlightHintIcon}"
+				:class="[{'is-highlighted': highlightHintIcon}, $attrs.class]"
 				@click="open"
 			>
 				<Icon :icon="['far', 'circle-question']" />
@@ -124,6 +125,10 @@ const emit = defineEmits<{
 	opened: []
 	closed: []
 }>()
+
+defineOptions({
+	inheritAttrs: false,
+})
 
 const authStore = useAuthStore()
 const {isQuickAddMode} = useQuickAddMode()
