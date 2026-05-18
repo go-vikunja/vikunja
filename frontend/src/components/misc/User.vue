@@ -2,6 +2,7 @@
 	<div
 		class="user"
 		:class="{'is-inline': isInline}"
+		:style="{'--avatar-size': `${avatarSize}px`}"
 	>
 		<span class="avatar-wrapper">
 			<img
@@ -74,6 +75,8 @@ watch(() => [props.user, props.avatarSize], loadAvatar, { immediate: true })
 }
 
 .avatar {
+	inline-size: var(--avatar-size);
+	block-size: var(--avatar-size);
 	border-radius: 100%;
 	vertical-align: middle;
 }
