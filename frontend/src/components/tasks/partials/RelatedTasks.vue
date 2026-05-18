@@ -77,7 +77,7 @@
 							</span>
 						</template>
 					</Multiselect>
-					<QuickAddMagic class="task-relation-quick-add-magic" />
+					<QuickAddMagic />
 				</div>
 				<div
 					key="field-kind"
@@ -463,13 +463,13 @@ async function toggleTaskDone(task: ITask) {
 
 .task-relation-search-field {
 	position: relative;
-}
 
-.task-relation-quick-add-magic {
-	position: absolute;
-	inset-block-start: .5rem;
-	inset-inline-end: .75rem;
-	z-index: 4;
+	:deep(.quick-add-magic-trigger-btn) {
+		position: absolute;
+		inset-block-start: .5rem;
+		inset-inline-end: .75rem;
+		z-index: 4;
+	}
 }
 
 // FIXME: The height of the actual checkbox in the <FancyCheckbox/> component is too much resulting in a 
