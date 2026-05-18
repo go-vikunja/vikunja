@@ -762,7 +762,7 @@
                                         {
                                             "key": "scope",
                                             "default_value": "openid email profile",
-                                            "comment": "The scope necessary to use oidc.\nIf you want to use the feature to create and assign to Vikunja teams via oidc using the custom `vikunja_groups` claim, you have to add the custom \"vikunja_scope\" and check [openid.md](https://vikunja.io/docs/openid/).\nAlternatively, if your provider emits a standard `groups` claim, enable `usegroupsclaim` instead \u2014 no custom scope is needed.\ne.g. scope: openid email profile vikunja_scope"
+                                            "comment": "The scope necessary to use oidc.\nIf you want to use the feature to create and assign to Vikunja teams via oidc using the custom `vikunja_groups` claim, you have to add the custom \"vikunja_scope\" and check [openid.md](https://vikunja.io/docs/openid/).\nAlternatively, if your provider emits a standard `groups` claim, enable `usegroupsclaim` instead.\ne.g. scope: openid email profile vikunja_scope"
                                         },
                                         {
                                             "key": "usernamefallback",
