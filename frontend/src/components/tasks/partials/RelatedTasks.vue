@@ -466,7 +466,7 @@ async function toggleTaskDone(task: ITask) {
 
 	:deep(.quick-add-magic-trigger-btn) {
 		position: absolute;
-		inset-block-start: .5rem;
+		inset-block-start: .75rem;
 		inset-inline-end: .75rem;
 		z-index: 4;
 	}
