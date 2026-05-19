@@ -778,6 +778,24 @@ function setModeAndValue(value: string) {
 	})
 }
 
+// Replace the editor content with a reply draft (prefilled blockquote + empty
+// paragraph) and enter edit mode immediately so the user can start typing.
+// Returns synchronously after the next tick to let DOM updates settle.
+async function setReplyContent(value: string) {
+	if (!editor.value) return
+	editor.value.commands.setContent(value, {
+		...defaultSetContentOptions,
+		emitUpdate: false,
+	})
+	internalMode.value = 'edit'
+	modelValue.value = editor.value.getHTML()
+	contentHasChanged.value = true
+	await nextTick()
+	editor.value.commands.focus('end')
+}
+
+defineExpose({setReplyContent})
+
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660
 function setFocusToEditor(event: KeyboardEvent) {

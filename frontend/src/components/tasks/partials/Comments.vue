@@ -173,6 +173,7 @@
 						<div class="field">
 							<Editor
 								v-if="editorActive"
+								ref="newCommentEditor"
 								v-model="newCommentText"
 								:class="{
 									'is-loading':
@@ -222,7 +223,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, computed, shallowReactive, watch} from 'vue'
+import {ref, reactive, computed, nextTick, provide, shallowReactive, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -246,6 +247,7 @@ import {useConfigStore} from '@/stores/config'
 import {useAuthStore} from '@/stores/auth'
 import Reactions from '@/components/input/Reactions.vue'
 import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
+import {commentReplyContextKey, scrollAndHighlightComment} from '@/components/tasks/partials/commentReplyContext'
 
 const props = withDefaults(defineProps<{
 	taskId: number,
@@ -304,15 +306,19 @@ const actions = computed(() => {
 	if (!props.canWrite) {
 		return {}
 	}
-	return Object.fromEntries(comments.value.map((comment) => ([
-		comment.id,
-		comment.author.id === currentUserId.value
-			? [{
+	return Object.fromEntries(comments.value.map((comment) => {
+		const list: {action: () => void, title: string}[] = [{
+			action: () => startReplyTo(comment),
+			title: t('task.comment.reply'),
+		}]
+		if (comment.author.id === currentUserId.value) {
+			list.push({
 				action: () => toggleDelete(comment.id),
 				title: t('misc.delete'),
-			}]
-			: [],
-	])))
+			})
+		}
+		return [comment.id, list]
+	}))
 })
 
 const frontendUrl = computed(() => configStore.frontendUrl)
@@ -321,6 +327,55 @@ const commentStorageKey = computed(() => `task-comment-${props.taskId}`)
 const currentPage = ref(1)
 
 const commentsRef = ref<HTMLElement | null>(null)
+const newCommentEditor = ref<{setReplyContent: (html: string) => Promise<void>} | null>(null)
+
+provide(commentReplyContextKey, {
+	findComment: (id: number) => comments.value.find(c => c.id === id),
+	scrollToComment: scrollAndHighlightComment,
+})
+
+// Strip <mention-user> elements from a reply quote so reposting the parent
+// body doesn't trigger fresh notifications for users mentioned in the
+// original. The inner text is kept so the quote still reads correctly.
+function stripMentionsForQuote(html: string): string {
+	if (!html) {
+		return ''
+	}
+	const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html')
+	doc.querySelectorAll('mention-user').forEach((el) => {
+		const label = (el.getAttribute('data-label') ?? el.textContent ?? '').trim()
+		el.replaceWith(label ? `@${label.replace(/^@+/, '')}` : '')
+	})
+	return doc.body.firstElementChild?.innerHTML ?? ''
+}
+
+async function startReplyTo(parent: ITaskComment) {
+	const body = stripMentionsForQuote(parent.comment ?? '')
+	const draft = `<blockquote data-comment-id="${parent.id}">${body}</blockquote><p></p>`
+	if (!editorActive.value) {
+		editorActive.value = true
+	}
+	// Editor mounts asynchronously through defineAsyncComponent; wait until
+	// the ref is populated before pushing content in. Bail with a warning
+	// rather than fall back to `newCommentText = draft` — the modelValue
+	// watcher in TipTap.vue would land the editor in preview mode, leaving
+	// the user unable to type without clicking the editor first.
+	const editor = await waitForEditorRef()
+	if (!editor) {
+		console.warn('Reply editor did not mount in time; aborting reply prefill.')
+		return
+	}
+	await editor.setReplyContent(draft)
+}
+
+async function waitForEditorRef() {
+	const start = performance.now()
+	while (!newCommentEditor.value && performance.now() - start < 2000) {
+
+		await nextTick()
+	}
+	return newCommentEditor.value
+}
 
 
 async function attachmentUpload(files: File[] | FileList): (Promise<string[]>) {
@@ -519,9 +574,8 @@ function getCommentUrl(commentId: string) {
 	text-align: inherit;
 
 	& + .media {
-		border-block-start: 1px solid rgba(var(--border-rgb), 0.5);
-		margin-block-start: 1rem;
-		padding-block-start: 1rem;
+		margin-block-start: .5rem;
+		padding-block-start: .5rem;
 	}
 }
 
@@ -529,7 +583,7 @@ function getCommentUrl(commentId: string) {
 	flex-basis: auto;
 	flex-grow: 0;
 	flex-shrink: 0;
-	margin: 0 1rem !important;
+	margin: 0 .5rem !important;
 }
 
 .comment-info {
@@ -604,5 +658,16 @@ function getCommentUrl(commentId: string) {
 
 .comments-container {
 	scroll-margin-block-start: 4rem;
+}
+
+.media.comment {
+	scroll-margin-block-start: 4rem;
+	transition: background-color .3s ease-out;
+	border-radius: $radius;
+}
+
+.media.comment.comment-highlight {
+	background-color: hsla(var(--primary-hsl), 0.18);
+	transition: background-color .15s ease-in;
 }
 </style>

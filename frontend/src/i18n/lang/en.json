@@ -1065,7 +1065,10 @@
       "addedSuccess": "The comment was added successfully.",
       "permalink": "Copy permalink to this comment",
       "sortNewestFirst": "Newest first",
-      "sortOldestFirst": "Oldest first"
+      "sortOldestFirst": "Oldest first",
+      "reply": "Reply",
+      "jumpToOriginal": "Jump to original comment",
+      "deletedComment": "deleted comment"
     },
     "mention": {
       "noUsersFound": "No users found"
