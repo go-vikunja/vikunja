@@ -1,4 +1,6 @@
 import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
+import {useRouter} from 'vue-router'
+import type {LocationQuery, LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
 import TaskCollectionService, {
@@ -10,6 +12,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
 import type {IProject} from '@/modelTypes/IProject'
 import {useAuthStore} from '@/stores/auth'
+import {useViewFiltersStore} from '@/stores/viewFilters'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export type Order = 'asc' | 'desc' | 'none'
@@ -59,6 +62,29 @@ const SORT_BY_DEFAULT: SortBy = {
 	id: 'desc',
 }
 
+interface TaskListQueryState {
+	sort: string | undefined
+	filter: string | undefined
+	s: string | undefined
+	page: number
+}
+
+export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
+	const query: LocationQueryRaw = {}
+	if (state.sort) query.sort = state.sort
+	if (state.filter) query.filter = state.filter
+	if (state.s) query.s = state.s
+	if (state.page > 1) query.page = String(state.page)
+	return query
+}
+
+export function hasAnyTaskListQueryParam(query: LocationQuery): boolean {
+	return query.sort !== undefined ||
+		query.filter !== undefined ||
+		query.s !== undefined ||
+		query.page !== undefined
+}
+
 // This makes sure an id sort order is always sorted last.
 // When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 // precedence over everything else, making any other sort columns pretty useless.
@@ -94,7 +120,21 @@ export function useTaskList(
 	const projectId = computed(() => projectIdGetter())
 	const projectViewId = computed(() => projectViewIdGetter())
 
+	const router = useRouter()
+	const viewFiltersStore = useViewFiltersStore()
+
 	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
+
+	// Restore stored query before the route-driven refs are read by the
+	// load-tasks watcher below, so loadTasks fires once with the restored
+	// values rather than twice (once empty, once restored).
+	const initialQuery = router.currentRoute.value.query
+	if (!hasAnyTaskListQueryParam(initialQuery)) {
+		const storedQuery = viewFiltersStore.getViewQuery(projectViewIdGetter())
+		if (Object.keys(storedQuery).length > 0) {
+			router.replace({query: storedQuery})
+		}
+	}
 
 	const page = useRouteQuery('page', '1', { transform: Number })
 	const filter = useRouteQuery('filter')
@@ -118,6 +158,26 @@ export function useTaskList(
 			sortQuery.value = serializeSortBy(val, sortByDefault) || undefined
 		},
 	})
+
+	// Mirror the URL query bits this composable owns into the store so
+	// in-project tab switches and sidebar re-visits can restore them.
+	watch(
+		[sortQuery, filter, s, page],
+		([sortValue, filterValue, sValue, pageValue]) => {
+			const query = buildStoredQuery({
+				sort: sortValue as string | undefined,
+				filter: filterValue as string | undefined,
+				s: sValue as string | undefined,
+				page: pageValue,
+			})
+			if (Object.keys(query).length > 0) {
+				viewFiltersStore.setViewQuery(projectViewId.value, query)
+			} else {
+				viewFiltersStore.clearViewQuery(projectViewId.value)
+			}
+		},
+		{immediate: true},
+	)
 
 	const allParams = computed(() => {
 		const loadParams = {...params.value}
