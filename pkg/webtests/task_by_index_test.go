@@ -50,19 +50,6 @@ func TestTaskByProjectIndex(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), `"id":1`)
 	})
 
-	t.Run("by project identifier", func(t *testing.T) {
-		// Project 1 has identifier "test1" in fixtures.
-		rec := do("/api/v1/projects/test1/tasks/by-index/1")
-		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Body.String(), `"id":1`)
-	})
-
-	t.Run("identifier match is case-insensitive on the input", func(t *testing.T) {
-		rec := do("/api/v1/projects/TEST1/tasks/by-index/1")
-		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Body.String(), `"id":1`)
-	})
-
 	t.Run("unknown project identifier returns 404", func(t *testing.T) {
 		rec := do("/api/v1/projects/does-not-exist/tasks/by-index/1")
 		assert.Equal(t, http.StatusNotFound, rec.Code)

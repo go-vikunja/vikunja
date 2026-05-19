@@ -45,7 +45,7 @@ func ResolveProjectIdentifier() echo.MiddlewareFunc {
 
 			s := db.NewSession()
 			project := &models.Project{}
-			has, err := s.Where("identifier = ?", strings.ToLower(raw)).Get(project)
+			has, err := s.Where("identifier = ?", strings.ToUpper(raw)).Get(project)
 			_ = s.Close()
 			if err != nil {
 				return err
