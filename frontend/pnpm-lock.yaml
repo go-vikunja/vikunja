@@ -44,6 +44,9 @@ importers:
       '@tiptap/core':
         specifier: 3.17.0
         version: 3.17.0(@tiptap/pm@3.17.0)
+      '@tiptap/extension-blockquote':
+        specifier: 3.17.0
+        version: 3.17.0(@tiptap/core@3.17.0(@tiptap/pm@3.17.0))
       '@tiptap/extension-code-block-lowlight':
         specifier: 3.17.0
         version: 3.17.0(@tiptap/core@3.17.0(@tiptap/pm@3.17.0))(@tiptap/extension-code-block@3.17.1(@tiptap/core@3.17.0(@tiptap/pm@3.17.0))(@tiptap/pm@3.17.0))(@tiptap/pm@3.17.0)(highlight.js@11.11.1)(lowlight@3.3.0)
@@ -2650,10 +2653,10 @@ packages:
     peerDependencies:
       '@tiptap/pm': ^3.17.0
 
-  '@tiptap/extension-blockquote@3.17.1':
-    resolution: {integrity: sha512-X4jU/fllJQ8QbjCHUafU4QIHBobyXP3yGBoOcXxUaKlWbLvUs0SQTREM3n6/86m2YyAxwTPG1cn3Xypf42DMAQ==}
+  '@tiptap/extension-blockquote@3.17.0':
+    resolution: {integrity: sha512-TVslb79JVoZUFO+O4lAHveu38asi1OEqNpLdnQr+SIijIi8WgvJv3VwQwZfkja91WUAHbOHGbnYN0QySOcVCtA==}
     peerDependencies:
-      '@tiptap/core': ^3.17.1
+      '@tiptap/core': ^3.17.0
 
   '@tiptap/extension-bold@3.17.1':
     resolution: {integrity: sha512-PZmrljcVBziJkQDXT/QJv4ESxVVQ0iRH+ruTzPda56Kk4h2310cSXGjI33W7rlCikGPoBAAjY/inujm46YB4bw==}
@@ -9441,7 +9444,7 @@ snapshots:
     dependencies:
       '@tiptap/pm': 3.17.0
 
-  '@tiptap/extension-blockquote@3.17.1(@tiptap/core@3.17.0(@tiptap/pm@3.17.0))':
+  '@tiptap/extension-blockquote@3.17.0(@tiptap/core@3.17.0(@tiptap/pm@3.17.0))':
     dependencies:
       '@tiptap/core': 3.17.0(@tiptap/pm@3.17.0)
 
@@ -9600,7 +9603,7 @@ snapshots:
   '@tiptap/starter-kit@3.17.0':
     dependencies:
       '@tiptap/core': 3.17.0(@tiptap/pm@3.17.0)
-      '@tiptap/extension-blockquote': 3.17.1(@tiptap/core@3.17.0(@tiptap/pm@3.17.0))
+      '@tiptap/extension-blockquote': 3.17.0(@tiptap/core@3.17.0(@tiptap/pm@3.17.0))
       '@tiptap/extension-bold': 3.17.1(@tiptap/core@3.17.0(@tiptap/pm@3.17.0))
       '@tiptap/extension-bullet-list': 3.17.1(@tiptap/extension-list@3.17.0(@tiptap/core@3.17.0(@tiptap/pm@3.17.0))(@tiptap/pm@3.17.0))
       '@tiptap/extension-code': 3.17.1(@tiptap/core@3.17.0(@tiptap/pm@3.17.0))
