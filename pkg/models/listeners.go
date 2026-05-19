@@ -209,6 +209,45 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 		return err
 	}
 
+	// Authors of comments quoted via <blockquote data-comment-id="…"> are
+	// treated as implicit mentions, sharing the same notification, dedup,
+	// permission and subscription logic.
+	quotedAuthors, err := findQuotedCommentAuthors(sess, event.Task.ID, event.Doer.ID, event.Comment.Comment)
+	if err != nil {
+		return err
+	}
+	for _, u := range quotedAuthors {
+		if _, has := mentionedUsers[u.ID]; has {
+			continue
+		}
+
+		can, _, err := event.Task.CanRead(sess, u)
+		if err != nil {
+			return err
+		}
+		if !can {
+			continue
+		}
+
+		dbn, err := notifications.GetNotificationsForNameAndUser(sess, u.ID, n.Name(), n.SubjectID())
+		if err != nil {
+			return err
+		}
+		if len(dbn) > 0 {
+			continue
+		}
+
+		err = notifications.Notify(u, n, sess)
+		if err != nil {
+			return err
+		}
+
+		if mentionedUsers == nil {
+			mentionedUsers = make(map[int64]*user.User)
+		}
+		mentionedUsers[u.ID] = u
+	}
+
 	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
 	if err != nil {
 		return err
