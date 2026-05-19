@@ -219,6 +219,13 @@
 				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}",
 				"apiTokenHint": "Du kannst auch ein API-Token mit CalDAV-Berechtigung verwenden. Erstelle eins unter {link}."
 			},
+			"feeds": {
+				"title": "Atom-Feed",
+				"howTo": "Du kannst deine Vikunja-Benachrichtigungen von jedem Atom-kompatiblen Feed-Reader abonnieren. Benutze die folgende URL:",
+				"usernameIs": "Dein Anmeldename für das Feed lautet: {0}",
+				"apiTokenHint": "Authentifiziere dich mit einem API-Token mit der {scope} Berechtigung. Erstellen eins unter {link}.",
+				"tokenTitle": "Atom-Feed"
+			},
 			"avatar": {
 				"title": "Herr Der Elemente",
 				"initials": "Initialä",
@@ -1323,7 +1330,8 @@
 		"none": "Du hesch kei neui Benachrichtunge. Heb e schös Tägli!",
 		"explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden.",
 		"markAllRead": "Alle Benachrichtigungen als gelesen markieren",
-		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert."
+		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert.",
+		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren"
 	},
 	"quickActions": {
 		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
