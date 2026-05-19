@@ -19,6 +19,7 @@ package routes
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
@@ -44,7 +45,7 @@ func ResolveProjectIdentifier() echo.MiddlewareFunc {
 
 			s := db.NewSession()
 			project := &models.Project{}
-			has, err := s.Where("identifier = ?", raw).Get(project)
+			has, err := s.Where("identifier = ?", strings.ToLower(raw)).Get(project)
 			_ = s.Close()
 			if err != nil {
 				return err
