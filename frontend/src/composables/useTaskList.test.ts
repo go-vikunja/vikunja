@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {buildStoredQuery, hasAnyTaskListQueryParam} from './useTaskList'
+import {buildStoredQuery} from './useTaskList'
 
 describe('buildStoredQuery', () => {
 	it('includes sort when set', () => {
@@ -30,28 +30,5 @@ describe('buildStoredQuery', () => {
 	it('skips empty strings', () => {
 		expect(buildStoredQuery({sort: '', filter: '', s: '', page: 1}))
 			.toEqual({})
-	})
-})
-
-describe('hasAnyTaskListQueryParam', () => {
-	it('returns false when none of the four query params are present', () => {
-		expect(hasAnyTaskListQueryParam({})).toBe(false)
-		expect(hasAnyTaskListQueryParam({otherUnrelated: 'x'})).toBe(false)
-	})
-
-	it('returns true when sort is set', () => {
-		expect(hasAnyTaskListQueryParam({sort: 'id:desc'})).toBe(true)
-	})
-
-	it('returns true when filter is set', () => {
-		expect(hasAnyTaskListQueryParam({filter: 'done = false'})).toBe(true)
-	})
-
-	it('returns true when s is set', () => {
-		expect(hasAnyTaskListQueryParam({s: 'foo'})).toBe(true)
-	})
-
-	it('returns true when page is set', () => {
-		expect(hasAnyTaskListQueryParam({page: '2'})).toBe(true)
 	})
 })

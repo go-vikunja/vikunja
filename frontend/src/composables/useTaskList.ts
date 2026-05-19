@@ -1,6 +1,6 @@
 import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
 import {useRouter} from 'vue-router'
-import type {LocationQuery, LocationQueryRaw} from 'vue-router'
+import type {LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
 import TaskCollectionService, {
@@ -78,13 +78,6 @@ export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
 	return query
 }
 
-export function hasAnyTaskListQueryParam(query: LocationQuery): boolean {
-	return query.sort !== undefined ||
-		query.filter !== undefined ||
-		query.s !== undefined ||
-		query.page !== undefined
-}
-
 // This makes sure an id sort order is always sorted last.
 // When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 // precedence over everything else, making any other sort columns pretty useless.
@@ -125,17 +118,6 @@ export function useTaskList(
 
 	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
 
-	// Restore stored query before the route-driven refs are read by the
-	// load-tasks watcher below, so loadTasks fires once with the restored
-	// values rather than twice (once empty, once restored).
-	const initialQuery = router.currentRoute.value.query
-	if (!hasAnyTaskListQueryParam(initialQuery)) {
-		const storedQuery = viewFiltersStore.getViewQuery(projectViewIdGetter())
-		if (Object.keys(storedQuery).length > 0) {
-			router.replace({query: storedQuery})
-		}
-	}
-
 	const page = useRouteQuery('page', '1', { transform: Number })
 	const filter = useRouteQuery('filter')
 	const s = useRouteQuery('s')
@@ -161,9 +143,29 @@ export function useTaskList(
 
 	// Mirror the URL query bits this composable owns into the store so
 	// in-project tab switches and sidebar re-visits can restore them.
+	//
+	// `ProjectList`/`ProjectTable` are reused across project switches (no
+	// `:key` on them in ProjectView.vue), so setup runs only once. We track
+	// the last viewId we synced — on every viewId transition, if the URL has
+	// none of our params and the store has an entry, restore it via
+	// `router.replace` and skip writing back the empty state we'd otherwise
+	// clobber the saved entry with.
+	let lastSyncedViewId: number | undefined
 	watch(
-		[sortQuery, filter, s, page],
-		([sortValue, filterValue, sValue, pageValue]) => {
+		[projectViewId, sortQuery, filter, s, page],
+		([viewId, sortValue, filterValue, sValue, pageValue]) => {
+			const viewIdChanged = viewId !== lastSyncedViewId
+			lastSyncedViewId = viewId
+
+			const urlIsEmpty = !sortValue && !filterValue && !sValue && pageValue === 1
+			if (viewIdChanged && urlIsEmpty) {
+				const storedQuery = viewFiltersStore.getViewQuery(viewId)
+				if (Object.keys(storedQuery).length > 0) {
+					router.replace({query: storedQuery})
+					return
+				}
+			}
+
 			const query = buildStoredQuery({
 				sort: sortValue as string | undefined,
 				filter: filterValue as string | undefined,
@@ -171,9 +173,9 @@ export function useTaskList(
 				page: pageValue,
 			})
 			if (Object.keys(query).length > 0) {
-				viewFiltersStore.setViewQuery(projectViewId.value, query)
+				viewFiltersStore.setViewQuery(viewId, query)
 			} else {
-				viewFiltersStore.clearViewQuery(projectViewId.value)
+				viewFiltersStore.clearViewQuery(viewId)
 			}
 		},
 		{immediate: true},
