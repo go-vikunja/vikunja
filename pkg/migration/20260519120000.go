@@ -17,6 +17,10 @@
 package migration
 
 import (
+	"fmt"
+
+	"code.vikunja.io/api/pkg/log"
+
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 )
@@ -26,9 +30,76 @@ func init() {
 		ID:          "20260519120000",
 		Description: "uppercase existing project identifiers",
 		Migrate: func(tx *xorm.Engine) error {
+			s := tx.NewSession()
+			defer s.Close()
+
+			if err := s.Begin(); err != nil {
+				return err
+			}
+
+			// Postgres/SQLite default to case-sensitive comparisons, so
+			// projects like "foo" and "FOO" may coexist today. Uppercasing
+			// them blindly would create duplicate identifiers and break the
+			// invariant that task identifiers built from them are unique.
+			// Detect each colliding group, keep the oldest project's
+			// identifier and clear the rest so the operator can re-assign
+			// them after the migration runs.
+			type collidingGroup struct {
+				UpperIdentifier string `xorm:"upper_identifier"`
+			}
+			var groups []collidingGroup
+			err := s.SQL(`
+				SELECT UPPER(identifier) AS upper_identifier FROM projects
+				WHERE identifier IS NOT NULL AND identifier <> ''
+				GROUP BY UPPER(identifier)
+				HAVING COUNT(*) > 1
+			`).Find(&groups)
+			if err != nil {
+				_ = s.Rollback()
+				return fmt.Errorf("failed to scan for colliding project identifiers: %w", err)
+			}
+
+			for _, g := range groups {
+				type projectRow struct {
+					ID         int64
+					Identifier string
+				}
+				var rows []projectRow
+				err := s.SQL(
+					"SELECT id, identifier FROM projects WHERE UPPER(identifier) = ? ORDER BY id ASC",
+					g.UpperIdentifier,
+				).Find(&rows)
+				if err != nil {
+					_ = s.Rollback()
+					return err
+				}
+				if len(rows) < 2 {
+					continue
+				}
+
+				kept := rows[0]
+				for i := 1; i < len(rows); i++ {
+					log.Warningf(
+						"Project identifier collision during uppercase migration: clearing identifier %q on project %d (kept %q on project %d). Re-assign a unique identifier after the migration.",
+						rows[i].Identifier, rows[i].ID, kept.Identifier, kept.ID,
+					)
+					if _, err := s.Exec(
+						"UPDATE projects SET identifier = ? WHERE id = ?",
+						"", rows[i].ID,
+					); err != nil {
+						_ = s.Rollback()
+						return err
+					}
+				}
+			}
+
 			// UPPER() is supported by MySQL, PostgreSQL and SQLite.
-			_, err := tx.Exec("UPDATE projects SET identifier = UPPER(identifier) WHERE identifier IS NOT NULL AND identifier <> UPPER(identifier)")
-			return err
+			if _, err := s.Exec("UPDATE projects SET identifier = UPPER(identifier) WHERE identifier IS NOT NULL AND identifier <> UPPER(identifier)"); err != nil {
+				_ = s.Rollback()
+				return err
+			}
+
+			return s.Commit()
 		},
 		Rollback: func(_ *xorm.Engine) error {
 			return nil
