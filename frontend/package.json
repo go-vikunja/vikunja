@@ -173,7 +173,8 @@
       "basic-ftp": ">=5.2.2",
       "serialize-javascript": "^7.0.5",
       "flatted": "^3.4.1",
-      "ip-address": ">=10.1.1"
+      "ip-address": ">=10.1.1",
+      "postcss": ">=8.5.10"
     }
   }
 }
