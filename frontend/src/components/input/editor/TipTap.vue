@@ -166,6 +166,7 @@ import Mention from '@tiptap/extension-mention'
 
 import {TaskList} from '@tiptap/extension-list'
 import {TaskItemWithId} from './taskItemWithId'
+import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
 import HardBreak from '@tiptap/extension-hard-break'
 
 import Commands from './commands'
@@ -417,7 +418,9 @@ const extensions : Extensions = [
 	StarterKit.configure({
 		codeBlock: false,
 		hardBreak: false,
+		blockquote: false,
 	}),
+	BlockquoteWithCommentId,
 
 	CodeBlockLowlight.configure({
 		lowlight: createLowlight(common),

@@ -60,6 +60,7 @@
     "@kyvg/vue3-notification": "3.4.2",
     "@sentry/vue": "10.36.0",
     "@tiptap/core": "3.17.0",
+    "@tiptap/extension-blockquote": "3.17.0",
     "@tiptap/extension-code-block-lowlight": "3.17.0",
     "@tiptap/extension-hard-break": "3.17.0",
     "@tiptap/extension-image": "3.17.0",
