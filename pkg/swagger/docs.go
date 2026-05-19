@@ -4151,7 +4151,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns a single task identified by its per-project index. Useful when resolving human-readable references like \"PROJ-42\" to a canonical task object. Note that task indexes are reassigned when a task is moved between projects, so long-lived references should use the returned task id instead.",
+                "description": "Returns a single task identified by its per-project index. Useful when resolving human-readable references like \"PROJ-42\" to a canonical task object. The ` + "`" + `project` + "`" + ` path parameter accepts either a numeric project id or the project's identifier (e.g. \"PROJ\"); values consisting solely of digits are always interpreted as ids. Note that task indexes are reassigned when a task is moved between projects, so long-lived references should use the returned task id instead.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4164,8 +4164,8 @@ const docTemplate = `{
                 "summary": "Get one task by its per-project index",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "The project ID",
+                        "type": "string",
+                        "description": "The project id or the project's identifier",
                         "name": "project",
                         "in": "path",
                         "required": true
