@@ -128,7 +128,7 @@
 					/>
 					<Reactions 
 						v-model="c.reactions"
-						class="mbs-2" 
+						class="mbs-2 d-print-none"
 						entity-kind="comments"
 						:entity-id="c.id"
 						:disabled="!canWrite"
