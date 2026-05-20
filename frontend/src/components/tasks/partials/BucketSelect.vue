@@ -11,7 +11,7 @@
 						{{ currentBucketTitle }}
 						<Icon
 							icon="pencil-alt"
-							class="change-indicator"
+							class="change-indicator d-print-none"
 						/>
 					</BaseButton>
 				</template>
