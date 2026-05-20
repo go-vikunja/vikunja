@@ -144,6 +144,7 @@ export const useAuthStore = defineStore('auth', () => {
 				sidebarWidth: null,
 				commentSortOrder: 'asc',
 				desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
+				useMarkdownEditor: false,
 				...newSettings.frontendSettings,
 			},
 		})
