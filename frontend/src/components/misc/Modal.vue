@@ -17,7 +17,7 @@
 			>
 				<BaseButton
 					:aria-label="$t('misc.closeDialog')"
-					class="close"
+					class="close d-print-none"
 					@click="$emit('close')"
 				>
 					<Icon icon="times" />
