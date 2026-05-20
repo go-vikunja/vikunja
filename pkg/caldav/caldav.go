@@ -186,6 +186,9 @@ DESCRIPTION:` + escapeICalText(t.Description)
 			caldavtodos += `
 COMPLETED:` + makeCalDavTimeFromTimeStamp(t.Completed) + `
 STATUS:COMPLETED`
+		} else {
+			caldavtodos += `
+STATUS:NEEDS-ACTION`
 		}
 		if t.Organizer != nil {
 			caldavtodos += `
@@ -311,6 +314,17 @@ RELATED-TO:`
 
 func makeCalDavTimeFromTimeStamp(ts time.Time) (caldavtime string) {
 	return ts.In(time.UTC).Format(DateFormat) + "Z"
+}
+
+// FallbackUID computes the CalDAV UID for a task that has no UID stored in the
+// database. It uses the same formula as ParseTodos so that CalDAV clients that
+// have already downloaded the task continue to see the same UID. The updated
+// time and title must be those that were in effect when the task was last served
+// to the client; if they have changed since then, the returned UID may not match
+// what the client has stored. Prefer saving this value back to the database on
+// first sight so that it stays stable across subsequent modifications.
+func FallbackUID(updated time.Time, title string) string {
+	return makeCalDavTimeFromTimeStamp(updated) + utils.Sha256(title)
 }
 
 func makeCalDavDuration(duration time.Duration) (caldavtime string) {

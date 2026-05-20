@@ -78,6 +78,7 @@ func SetupTests() {
 		"webhooks",
 		"totp",
 		"oauth_codes",
+		"task_caldav_deletions",
 	)
 	if err != nil {
 		log.Fatal(err)

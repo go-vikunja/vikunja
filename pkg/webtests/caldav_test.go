@@ -19,6 +19,7 @@ package webtests
 import (
 	"encoding/xml"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -1006,5 +1007,196 @@ func TestCaldavAPITokenAuth(t *testing.T) {
 		result, err := caldav.BasicAuth(c, testuser15.Username, "tk_this_is_totally_not_a_valid_token_at_all")
 		require.NoError(t, err)
 		assert.False(t, result, "invalid API token should be rejected")
+	})
+}
+
+// TestCaldavSync verifies that a home-set Depth:1 PROPFIND returns an updated ctag
+// after a task is created, so that iOS Reminders detects the change and fetches it.
+func TestCaldavSync(t *testing.T) {
+	t.Run("Home-set ctag changes after a task is created", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		// getCtag returns the getctag value for a project by ID from a Depth:1
+		// PROPFIND on the CalDAV home set.
+		getCtag := func(projectID string) string {
+			propfindBody := `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:" xmlns:CS="http://calendarserver.org/ns/">
+    <D:prop><CS:getctag/></D:prop>
+</D:propfind>`
+			c, rec := createRequest(e, "PROPFIND", propfindBody, nil, nil)
+			c.Request().Header.Set(echo.HeaderContentType, echo.MIMETextXML)
+			c.Request().Header.Set("Depth", "1")
+			c.Request().URL.Path = caldav.ProjectBasePath + "/"
+			c.Request().RequestURI = caldav.ProjectBasePath + "/"
+			result, err := caldav.BasicAuth(c, testuser15.Username, "12345678")
+			require.NoError(t, err)
+			require.True(t, result)
+			require.NoError(t, caldav.ProjectHandler(c))
+			require.Equal(t, 207, rec.Result().StatusCode)
+
+			type Propstat struct {
+				Prop struct {
+					Getctag string `xml:"http://calendarserver.org/ns/ getctag"`
+				} `xml:"prop"`
+				Status string `xml:"status"`
+			}
+			type Response struct {
+				Href      string     `xml:"href"`
+				Propstats []Propstat `xml:"propstat"`
+			}
+			type Multistatus struct {
+				Responses []Response `xml:"response"`
+			}
+			var ms Multistatus
+			require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &ms))
+			for _, resp := range ms.Responses {
+				if strings.Contains(resp.Href, "/"+projectID) {
+					for _, ps := range resp.Propstats {
+						if strings.Contains(ps.Status, "200") && ps.Prop.Getctag != "" {
+							return ps.Prop.Getctag
+						}
+					}
+				}
+			}
+			return ""
+		}
+
+		ctag1 := getCtag("36")
+		require.NotEmpty(t, ctag1, "project 36 should have a ctag before task creation")
+
+		// Create a new task in project 36 via CalDAV PUT.
+		const vtodo = `BEGIN:VCALENDAR
+VERSION:2.0
+X-PUBLISHED-TTL:PT4H
+X-WR-CALNAME:Project 36 for Caldav tests
+PRODID:-//Vikunja Todo App//EN
+BEGIN:VTODO
+UID:uid-ctag-sync-test
+DTSTAMP:20230301T073337Z
+SUMMARY:Ctag sync test task
+CREATED:20230301T073337Z
+LAST-MODIFIED:20230301T073337Z
+STATUS:NEEDS-ACTION
+END:VTODO
+END:VCALENDAR`
+		rec2, err := newCaldavTestRequestWithUser(
+			t, e, http.MethodPut, caldav.TaskHandler, &testuser15, vtodo,
+			nil, map[string]string{"project": "36", "task": "uid-ctag-sync-test"},
+		)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusCreated, rec2.Result().StatusCode)
+
+		ctag2 := getCtag("36")
+		require.NotEmpty(t, ctag2, "project 36 should still have a ctag after task creation")
+		assert.NotEqual(t, ctag1, ctag2, "ctag for project 36 must change after a task is created")
+	})
+}
+
+func TestCaldavSyncCollection(t *testing.T) {
+	// syncReport builds the XML body for a sync-collection REPORT.
+	// If token is "", the request contains an empty <D:sync-token/> (initial sync).
+	syncReport := func(token string) string {
+		var tokenEl string
+		if token == "" {
+			tokenEl = "<D:sync-token/>"
+		} else {
+			tokenEl = "<D:sync-token>" + token + "</D:sync-token>"
+		}
+		return `<?xml version="1.0" encoding="utf-8"?>
+<D:sync-collection xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+  ` + tokenEl + `
+  <D:sync-level>1</D:sync-level>
+  <D:prop>
+    <D:getetag/>
+    <C:calendar-data/>
+  </D:prop>
+</D:sync-collection>`
+	}
+
+	// doSyncReport sends a REPORT sync-collection to project 36 and returns the recorder.
+	doSyncReport := func(t *testing.T, token string) *httptest.ResponseRecorder {
+		t.Helper()
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, "REPORT", caldav.ProjectHandler, &testuser15, syncReport(token), nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		return rec
+	}
+
+	t.Run("Empty sync-token returns all tasks with 207", func(t *testing.T) {
+		rec := doSyncReport(t, "")
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+		body := rec.Body.String()
+		assert.Contains(t, body, "multistatus")
+		assert.Contains(t, body, "sync-token")
+		// Project 36 has 5 tasks in fixtures
+		assert.Contains(t, body, "uid-caldav-test-parent-task")
+	})
+
+	t.Run("Valid token before all tasks returns all tasks", func(t *testing.T) {
+		// Token timestamped well before any fixture task (2018-12-01 01:12:04)
+		oldToken := `data:,"36-1000000000"` // Unix 2001 — before all tasks
+		rec := doSyncReport(t, oldToken)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+		body := rec.Body.String()
+		assert.Contains(t, body, "uid-caldav-test-parent-task")
+		assert.Contains(t, body, "sync-token")
+	})
+
+	t.Run("Valid token after all tasks returns empty delta with new token", func(t *testing.T) {
+		// Token timestamped well after all fixture tasks
+		futureToken := `data:,"36-9999999999"` // Unix far future
+		rec := doSyncReport(t, futureToken)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+		body := rec.Body.String()
+		// No task hrefs in an empty delta — just the sync-token element
+		assert.NotContains(t, body, "uid-caldav-test-parent-task")
+		assert.Contains(t, body, "sync-token")
+	})
+
+	t.Run("Malformed sync-token returns 403 valid-sync-token", func(t *testing.T) {
+		rec := doSyncReport(t, "not-a-valid-token")
+		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
+		assert.Contains(t, rec.Body.String(), "valid-sync-token")
+	})
+
+	t.Run("Token from different project returns 403 valid-sync-token", func(t *testing.T) {
+		// Token for project 99 presented to project 36
+		wrongProjectToken := `data:,"99-1000000000"`
+		rec := doSyncReport(t, wrongProjectToken)
+		assert.Equal(t, http.StatusForbidden, rec.Result().StatusCode)
+		assert.Contains(t, rec.Body.String(), "valid-sync-token")
+	})
+
+	t.Run("Response includes calendar-data when requested", func(t *testing.T) {
+		rec := doSyncReport(t, "")
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+		body := rec.Body.String()
+		assert.Contains(t, body, "calendar-data")
+		assert.Contains(t, body, "BEGIN:VCALENDAR")
+		assert.Contains(t, body, "VTODO")
+	})
+
+	t.Run("Delta sync returns 404 for deleted task", func(t *testing.T) {
+		e, _ := setupTestEnv()
+
+		// Record a manual deletion entry for a known UID in project 36
+		s := db.NewSession()
+		defer s.Close()
+		err := models.RecordCaldavTaskDeletion(s, &models.Task{
+			UID:       "uid-caldav-test-parent-task",
+			ProjectID: 36,
+		})
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+
+		// Use a token before the deletion (well before any fixture timestamp)
+		oldToken := `data:,"36-1000000000"`
+		rec, err := newCaldavTestRequestWithUser(t, e, "REPORT", caldav.ProjectHandler, &testuser15, syncReport(oldToken), nil, map[string]string{"project": "36"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusMultiStatus, rec.Result().StatusCode)
+		body := rec.Body.String()
+		// The deleted UID should appear as a 404 entry
+		assert.Contains(t, body, "uid-caldav-test-parent-task")
+		assert.Contains(t, body, "404 Not Found")
 	})
 }

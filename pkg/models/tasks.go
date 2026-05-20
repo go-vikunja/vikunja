@@ -1941,6 +1941,14 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
+	// Record CalDAV deletion inside the same transaction so CalDAV sync-collection
+	// clients can receive a 404 for this task. We do this here rather than in a
+	// TaskDeletedEvent listener because Task.UID carries json:"-" and is therefore
+	// stripped when the event is serialised onto the message bus.
+	if err = RecordCaldavTaskDeletion(s, fullTask); err != nil {
+		return err
+	}
+
 	doer, _ := user.GetFromAuth(a)
 	events.DispatchOnCommit(s, &TaskDeletedEvent{
 		Task: fullTask,
