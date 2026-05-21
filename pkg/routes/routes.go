@@ -157,12 +157,13 @@ func NewEcho() *echo.Echo {
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
 		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
 		e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-			LogStatus:   true,
-			LogURI:      true,
-			LogMethod:   true,
-			LogLatency:  true,
-			LogRemoteIP: true,
-			HandleError: true,
+			LogStatus:    true,
+			LogURI:       true,
+			LogMethod:    true,
+			LogLatency:   true,
+			LogRemoteIP:  true,
+			LogUserAgent: true,
+			HandleError:  true,
 			LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
 				if v.Error == nil {
 					httpLogger.LogAttrs(context.Background(), slog.LevelInfo, "",
@@ -171,6 +172,7 @@ func NewEcho() *echo.Echo {
 						slog.String("uri", v.URI),
 						slog.Int("status", v.Status),
 						slog.Duration("latency", v.Latency),
+						slog.String("user_agent", v.UserAgent),
 					)
 				} else {
 					httpLogger.LogAttrs(context.Background(), slog.LevelError, "",
@@ -179,6 +181,7 @@ func NewEcho() *echo.Echo {
 						slog.String("uri", v.URI),
 						slog.Int("status", v.Status),
 						slog.Duration("latency", v.Latency),
+						slog.String("user_agent", v.UserAgent),
 						slog.String("err", v.Error.Error()),
 					)
 				}
