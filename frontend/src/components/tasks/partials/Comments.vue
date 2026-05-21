@@ -572,10 +572,10 @@ function getCommentUrl(commentId: string) {
 	align-items: flex-start;
 	display: flex;
 	text-align: inherit;
+	padding-block-start: .5rem;
 
 	& + .media {
 		margin-block-start: .5rem;
-		padding-block-start: .5rem;
 	}
 }
 
