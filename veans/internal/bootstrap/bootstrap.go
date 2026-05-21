@@ -26,6 +26,7 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -136,18 +137,18 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 		}
 		opts.Server = strings.TrimSpace(v)
 	}
-	opts.Server = strings.TrimRight(opts.Server, "/")
-	if opts.Server == "" {
-		return nil, output.New(output.CodeValidation, "server URL is required")
-	}
 
-	// 3. Probe /info.
-	human := client.New(opts.Server, "")
-	info, err := human.Info(ctx)
+	// 3. Discover the actual API URL: the user might have typed bare
+	// "vikunja.example.com", or pasted the URL with /api/v1 already in
+	// it, or be on a default-port localhost install. DiscoverServer
+	// probes the plausible variants and returns the canonical base.
+	canonical, info, err := client.DiscoverServer(ctx, opts.Server)
 	if err != nil {
-		return nil, output.Wrap(output.CodeUnknown, err, "GET /info on %s: %v", opts.Server, err)
+		return nil, err
 	}
-	progress(opts.Out, "Connected to Vikunja %s", info.Version)
+	opts.Server = canonical
+	human := client.New(canonical, "")
+	progress(opts.Out, "Connected to Vikunja %s at %s", info.Version, canonical)
 
 	// 4. Acquire human JWT (transient — used until step 11). Default is the
 	// OAuth flow; --token / --use-password / --username+--password override.
@@ -192,14 +193,21 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 		return nil, err
 	}
 
-	// 9. Share the project with the bot.
-	if _, err := human.ShareProjectWithUser(ctx, project.ID, &client.ProjectUser{
+	// 9. Share the project with the bot. 409 ("user already has access")
+	// is the expected response when reusing a bot that was set up by a
+	// previous init run — treat it as a soft-success.
+	_, shareErr := human.ShareProjectWithUser(ctx, project.ID, &client.ProjectUser{
 		Username:   bot.Username,
 		Permission: client.PermissionReadWrite,
-	}); err != nil {
-		return nil, output.Wrap(output.CodeUnknown, err, "share project with bot: %v", err)
+	})
+	switch {
+	case shareErr == nil:
+		progress(opts.Out, "Shared project with %q (read+write)", bot.Username)
+	case isConflictErr(shareErr):
+		progress(opts.Out, "Project already shared with %q", bot.Username)
+	default:
+		return nil, output.Wrap(output.CodeUnknown, shareErr, "share project with bot: %v", shareErr)
 	}
-	progress(opts.Out, "Shared project with %q (read+write)", bot.Username)
 
 	// 10. Discover available API permission scopes, mint the bot's token.
 	routes, err := human.Routes(ctx)
@@ -468,4 +476,10 @@ func progress(w io.Writer, format string, args ...any) {
 	fmt.Fprintf(w, "  → "+format+"\n", args...)
 }
 
-// silence the unused-import linter when errors isn't used elsewhere.
+// isConflictErr reports whether the wrapped HTTP error is a 409 — used by
+// init's "share project with bot" step, which legitimately gets one when
+// the bot is being reused from an earlier run.
+func isConflictErr(err error) bool {
+	var oe *output.Error
+	return errors.As(err, &oe) && oe.Code == output.CodeConflict
+}

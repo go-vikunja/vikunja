@@ -39,15 +39,19 @@ type Client struct {
 	BaseURL    string
 	Token      string
 	HTTPClient *http.Client
-	UserAgent  string
 }
+
+// UserAgent is the value sent in the User-Agent header on every request.
+// main sets this at startup with the linker-injected version + the
+// runtime os/arch (e.g. "veans/0.3.1 (linux/amd64)"). Tests get the
+// default "veans/dev". Vikunja admins see this in their access logs.
+var UserAgent = "veans/dev"
 
 func New(baseURL, token string) *Client {
 	return &Client{
 		BaseURL:    strings.TrimRight(baseURL, "/"),
 		Token:      token,
 		HTTPClient: &http.Client{Timeout: 30 * time.Second},
-		UserAgent:  "veans/0.1",
 	}
 }
 
@@ -86,9 +90,7 @@ func (c *Client) Do(ctx context.Context, method, path string, query url.Values, 
 	if c.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.Token)
 	}
-	if c.UserAgent != "" {
-		req.Header.Set("User-Agent", c.UserAgent)
-	}
+	req.Header.Set("User-Agent", UserAgent)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
@@ -135,9 +137,7 @@ func (c *Client) DoRaw(ctx context.Context, method, path string, query url.Value
 	if c.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.Token)
 	}
-	if c.UserAgent != "" {
-		req.Header.Set("User-Agent", c.UserAgent)
-	}
+	req.Header.Set("User-Agent", UserAgent)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return 0, nil, err
