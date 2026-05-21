@@ -17,7 +17,6 @@
 package e2e
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -75,7 +74,7 @@ func TestInit_HappyPath(t *testing.T) {
 
 	// Bot token persisted in the file backend (since HOME points at a
 	// fresh tmpdir, the file backend takes over from the missing keyring).
-	store := credentials.NewFileBackend(ws.XDGConfig + "/veans/credentials.yml")
+	store := credentials.NewFileBackend(ws.Home + "/.config/veans/credentials.yml")
 	tok, err := store.Get(h.APIURL, ws.BotUsername)
 	if err != nil {
 		t.Fatalf("token not persisted: %v", err)
@@ -85,7 +84,7 @@ func TestInit_HappyPath(t *testing.T) {
 	}
 
 	// Bot exists on the server with the right username.
-	bots, err := h.AdminClient.ListBotUsers(context.Background())
+	bots, err := h.AdminClient.ListBotUsers(t.Context())
 	if err != nil {
 		t.Fatalf("list bots: %v", err)
 	}
@@ -105,7 +104,7 @@ func TestInit_HappyPath(t *testing.T) {
 
 	// Project shared with the bot at write permission.
 	var shares []map[string]any
-	_ = h.AdminClient.Do(context.Background(), "GET", fmt.Sprintf("/projects/%d/users", project.ID), nil, nil, &shares)
+	_ = h.AdminClient.Do(t.Context(), "GET", fmt.Sprintf("/projects/%d/users", project.ID), nil, nil, &shares)
 	shareFound := false
 	for _, s := range shares {
 		if u, _ := s["username"].(string); u == ws.BotUsername {

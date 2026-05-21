@@ -81,6 +81,6 @@ func EmitError(err error, w io.Writer) {
 	}
 	e := AsError(err)
 	if encErr := json.NewEncoder(w).Encode(e); encErr != nil {
-		fmt.Fprintf(os.Stderr, "veans: failed to encode error envelope: %v\n", encErr)
+		fmt.Fprintf(os.Stderr, "{\"code\":%q,\"error\":%q}\n", string(CodeUnknown), "failed to encode error envelope: "+encErr.Error())
 	}
 }

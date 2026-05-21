@@ -96,6 +96,16 @@ func TestCreateShowList_RoundTrip(t *testing.T) {
 			t.Fatalf("filter leaked priority=%d task into result", ft.Priority)
 		}
 	}
+
+	// Empty result set must encode as `[]`, not `null` — JSON-parsing agents
+	// can't reliably branch on the latter. Use a filter that matches nothing.
+	emptyOut, _, code := h.Run(t, ws, "list", "--filter", "priority > 10")
+	if code != 0 {
+		t.Fatalf("list (empty) exit %d\n%s", code, emptyOut)
+	}
+	if got := strings.TrimSpace(emptyOut); got != "[]" {
+		t.Fatalf("empty list should print []; got %q", got)
+	}
 }
 
 // TestUpdate_DescriptionReplaceUniqueness pins the agent-friendly Edit-tool

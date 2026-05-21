@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/veans/internal/config"
+	"code.vikunja.io/veans/internal/output"
 )
 
 // Status is the agent-facing state name.
@@ -122,7 +123,8 @@ func Parse(raw string) (Status, error) {
 	case "scrapped", "cancelled", "canceled":
 		return Scrapped, nil
 	}
-	return "", fmt.Errorf("unknown status %q (expected one of: %s)",
+	return "", output.New(output.CodeValidation,
+		"unknown status %q (expected one of: %s)",
 		raw, strings.Join(allStrings(), ", "))
 }
 

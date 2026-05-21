@@ -17,10 +17,12 @@
 package commands
 
 import (
+	"context"
 	_ "embed"
 	"errors"
 	"fmt"
 	"text/template"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -69,11 +71,15 @@ silently with status 0 — that makes the hook safe to install globally.`,
 			// Fetch the project title for nicer prompt copy. Best-effort —
 			// if the API call fails (network blip, expired token), we fall
 			// back to "(unknown)" rather than aborting the prompt render.
+			// Cap the lookup at 10s so a wedged server can't hold the
+			// SessionStart hook hostage.
 			projectTitle := "(unknown)"
 			if rt, err := loadRuntime(); err == nil {
-				if p, err := rt.client.GetProject(cmd.Context(), cfg.ProjectID); err == nil {
+				ctx, cancel := context.WithTimeout(cmd.Context(), 10*time.Second)
+				if p, err := rt.client.GetProject(ctx, cfg.ProjectID); err == nil {
 					projectTitle = p.Title
 				}
+				cancel()
 			}
 
 			data := primeContext{
@@ -95,5 +101,3 @@ silently with status 0 — that makes the hook safe to install globally.`,
 		},
 	}
 }
-
-// silence linter noise on unused symbols when wiring hooks.

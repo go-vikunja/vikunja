@@ -27,7 +27,8 @@ import (
 // authenticated user (labels are global per user, not scoped to a project).
 func (c *Client) ListLabels(ctx context.Context, search string) ([]*Label, error) {
 	var all []*Label
-	for page := 1; ; page++ {
+	page := 1
+	for {
 		q := url.Values{}
 		q.Set("page", strconv.Itoa(page))
 		q.Set("per_page", "50")
@@ -35,13 +36,15 @@ func (c *Client) ListLabels(ctx context.Context, search string) ([]*Label, error
 			q.Set("s", search)
 		}
 		var batch []*Label
-		if err := c.Do(ctx, "GET", "/labels", q, nil, &batch); err != nil {
+		total, err := c.DoPaginated(ctx, "GET", "/labels", q, &batch)
+		if err != nil {
 			return nil, err
 		}
 		all = append(all, batch...)
-		if len(batch) < 50 {
+		if paginationDone(page, len(batch), 50, total) {
 			return all, nil
 		}
+		page++
 	}
 }
 

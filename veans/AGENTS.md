@@ -20,20 +20,29 @@ this file is veans-specific.
 - `mage build` → `./veans` binary. The `Aliases` map in `magefile.go`
   routes bare names like `mage test` to `Test.All` — without aliases,
   mage rejects namespace invocations ("Unknown target specified").
-- Unit tests: `mage test` or `go test ./...`.
-- E2e tests: assume an externally-running Vikunja at `VEANS_E2E_API_URL`
-  and admin creds in env (`VEANS_E2E_ADMIN_TOKEN`, or
-  `VEANS_E2E_ADMIN_USER` + `VEANS_E2E_ADMIN_PASS`). The package
-  self-skips when `VEANS_E2E_API_URL` is empty, so plain `go test` is
-  safe locally.
+- Unit tests: `mage test` (passes `-short`) or `go test -short ./...`.
+  The e2e package's `TestMain` gates the suite on `-short`, mirroring
+  the parent monorepo's `pkg/webtests` convention. Without `-short`
+  and without `VEANS_E2E_API_URL` set, the e2e tests fail loudly with
+  a "configure or pass -short" hint.
+- E2e tests: `mage test:e2e` (no `-short`). Assumes an externally-
+  running Vikunja at `VEANS_E2E_API_URL`. The harness seeds its own
+  admin user via `PATCH /api/v1/test/users` — same mechanism the
+  playwright suite uses — so the API must be booted with
+  `VIKUNJA_SERVICE_TESTINGTOKEN=<token>` and the same value passed in
+  via `VEANS_E2E_TESTING_TOKEN`. Alternative path:
+  `VEANS_E2E_ADMIN_TOKEN=<jwt>` skips the seed and uses the given
+  token as-is, for driving a long-lived Vikunja the suite shouldn't
+  mutate user rows on.
 - Local e2e loop: from the parent repo root, build the API
-  (`mage build:build`), run it with sqlite-memory + a known JWT secret,
-  register an admin user via `POST /register`, then
-  `go test ./e2e/...` from `veans/` with the env vars above.
+  (`mage build:build`), run it with sqlite-memory + a known JWT
+  secret + `VIKUNJA_SERVICE_TESTINGTOKEN`, then `mage test:e2e` from
+  `veans/` with `VEANS_E2E_API_URL` + `VEANS_E2E_TESTING_TOKEN`. No
+  manual seeding step — the test harness handles it.
 - CI: the `test-veans-e2e` job in `.github/workflows/test.yml` consumes
   the existing `vikunja_bin` artifact from `api-build`; don't recompile
   the API in a parallel workflow. The `veans-test` job runs unit tests
-  independently and gives fast feedback.
+  with `-short` for fast feedback, independent of `api-build`.
 
 ## Vikunja wire-format gotchas
 
@@ -112,15 +121,23 @@ what's bitten me; if a new endpoint behaves oddly, suspect one of these:
 
 ## Credential store
 
-- Lookup chain: keychain → env (`VEANS_TOKEN`, optionally pinned by
-  `VEANS_SERVER`) → file (`~/.config/veans/credentials.yml`, mode 0600,
-  honors `XDG_CONFIG_HOME`).
+- Lookup chain: keychain → env (`VEANS_TOKEN`) → file
+  (`~/.config/veans/credentials.yml`, mode 0600, atomic-write + flock
+  serialization). `XDG_CONFIG_HOME` is deliberately not honored —
+  agent-only audience runs in a known environment, and the env var
+  was a path-traversal seam for no real benefit.
 - `Chain.Set` falls through to the next backend on error so a missing
   dbus on a CI runner doesn't block writes — the file backend is the
   reliable last-resort.
-- E2e tests override `HOME` and `XDG_CONFIG_HOME` per test to keep the
-  developer's keyring untouched. Don't bypass the credentials package
-  in tests — leaks between tests will surface as the wrong bot token.
+- File writes go through a tmp file + `Rename`, with `Chmod 0o600`
+  re-asserted on the destination inode so a pre-existing wider mode
+  is narrowed. Concurrent writers (e.g. two `veans login` runs) are
+  serialized via `flock` on `<path>.lock` (Unix only; Windows is a
+  no-op stub since the audience is Linux/macOS).
+- E2e tests override `HOME` per test and `filterEnv(..., "VEANS_")`
+  strips any inherited `VEANS_TOKEN` so the developer's keyring
+  stays untouched. Don't bypass the credentials package in tests —
+  leaks between tests will surface as the wrong bot token.
 
 ## Project identifiers and bot usernames
 

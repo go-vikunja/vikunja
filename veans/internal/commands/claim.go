@@ -52,10 +52,6 @@ func newClaimCmd() *cobra.Command {
 				rt.cfg.ProjectID, rt.cfg.ViewID, bid, id); err != nil {
 				return err
 			}
-			task, err := rt.client.GetTask(cmd.Context(), id)
-			if err != nil {
-				return err
-			}
 
 			// Assign the bot. Idempotent on repeat — Vikunja returns 409 if
 			// already assigned, which we map to a soft-skip.
@@ -81,9 +77,9 @@ func newClaimCmd() *cobra.Command {
 				}
 			}
 
-			fresh, err := rt.client.GetTask(cmd.Context(), id)
-			if err == nil {
-				task = fresh
+			task, err := rt.client.GetTask(cmd.Context(), id)
+			if err != nil {
+				return err
 			}
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 		},

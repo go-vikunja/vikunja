@@ -18,6 +18,7 @@ package e2e
 
 import (
 	"os/exec"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -41,8 +42,8 @@ func provisionWorkspace(t *testing.T) (*Workspace, *Harness) {
 		"init",
 		"--server", h.APIURL,
 		"--token", h.AdminToken,
-		"--project", iToS(project.ID),
-		"--view", iToS(view.ID),
+		"--project", strconv.FormatInt(project.ID, 10),
+		"--view", strconv.FormatInt(view.ID, 10),
 		"--bot-username", ws.BotUsername,
 		"--yes-buckets",
 	)
@@ -70,28 +71,4 @@ func gitInWorkspace(t *testing.T, ws *Workspace, args ...string) {
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, out)
 	}
-}
-
-func iToS(n int64) string {
-	const digits = "0123456789"
-	if n == 0 {
-		return "0"
-	}
-	negative := false
-	if n < 0 {
-		negative = true
-		n = -n
-	}
-	var buf [20]byte
-	i := len(buf)
-	for n > 0 {
-		i--
-		buf[i] = digits[n%10]
-		n /= 10
-	}
-	if negative {
-		i--
-		buf[i] = '-'
-	}
-	return string(buf[i:])
 }
