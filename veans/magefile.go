@@ -60,22 +60,27 @@ func Fmt() error {
 // Test namespace.
 type Test mg.Namespace
 
-// All runs unit tests across the module.
+// All runs unit tests across the module. Passes `-short` so the e2e
+// package self-skips via its TestMain — the parent monorepo's
+// pkg/webtests follows the same convention.
 func (Test) All() error {
-	return sh.RunV("go", "test", "./...")
+	return sh.RunV("go", "test", "-short", "./...")
 }
 
-// Filter runs `go test -run <expr> ./...` — pass the expression as an argument.
+// Filter runs `go test -short -run <expr> ./...` — pass the expression as
+// an argument. `-short` is included so e2e doesn't run accidentally; use
+// `mage test:e2e` for those.
 func (Test) Filter(expr string) error {
 	if expr == "" {
 		return fmt.Errorf("test:filter requires a regexp argument")
 	}
-	return sh.RunV("go", "test", "-run", expr, "./...")
+	return sh.RunV("go", "test", "-short", "-run", expr, "./...")
 }
 
-// E2E runs the e2e suite. Requires VEANS_E2E_API_URL to point at a running
-// Vikunja instance and either VEANS_E2E_ADMIN_TOKEN or
-// VEANS_E2E_ADMIN_USER + VEANS_E2E_ADMIN_PASS for the admin/seed identity.
+// E2E runs the e2e suite without `-short` so TestMain lets it through.
+// Requires VEANS_E2E_API_URL to point at a running Vikunja instance and
+// either VEANS_E2E_ADMIN_TOKEN or VEANS_E2E_ADMIN_USER + VEANS_E2E_ADMIN_PASS
+// for the admin/seed identity.
 //
 // Set VEANS_E2E_SKIP_BUILD=true to reuse a previously-built binary.
 func (Test) E2E() error {

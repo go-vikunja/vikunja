@@ -455,6 +455,10 @@ jobs:
           VIKUNJA_SERVICE_INTERFACE: ":3456"
           VIKUNJA_SERVICE_PUBLICURL: "http://127.0.0.1:3456/"
           VIKUNJA_SERVICE_JWTSECRET: "veans-e2e-jwt-secret-do-not-use-in-production"
+          # Enables PATCH /api/v1/test/{table} — the e2e suite seeds its
+          # own admin via this endpoint (see veans/e2e/helpers.go), same
+          # mechanism the playwright suite uses.
+          VIKUNJA_SERVICE_TESTINGTOKEN: averyLongSecretToSe33dtheDB
           VIKUNJA_DATABASE_TYPE: sqlite
           VIKUNJA_DATABASE_PATH: memory
           VIKUNJA_LOG_LEVEL: WARNING
@@ -462,8 +466,9 @@ jobs:
           VIKUNJA_REDIS_ENABLED: "false"
           VIKUNJA_RATELIMIT_NOAUTHLIMIT: "1000"
           VEANS_E2E_API_URL: http://127.0.0.1:3456
-          VEANS_E2E_ADMIN_USER: e2eadmin
-          VEANS_E2E_ADMIN_PASS: e2etestpassword
+          # Same value as VIKUNJA_SERVICE_TESTINGTOKEN above — pass-through
+          # so the test harness can authenticate against /api/v1/test/.
+          VEANS_E2E_TESTING_TOKEN: averyLongSecretToSe33dtheDB
         run: |
           set -e
           # Boot the prebuilt API and tests in one shell — backgrounded
@@ -483,16 +488,11 @@ jobs:
             cat /tmp/vikunja.log
             exit 1
           fi
-          # The sqlite-memory DB has no fixtures loaded — register the
-          # admin the suite logs in as. service.enableregistration
-          # defaults to true.
-          curl -sf -X POST http://127.0.0.1:3456/api/v1/register \
-            -H 'Content-Type: application/json' \
-            -d "{\"username\":\"$VEANS_E2E_ADMIN_USER\",\"password\":\"$VEANS_E2E_ADMIN_PASS\",\"email\":\"e2e@example.com\"}" \
-            > /dev/null
-          # `mage test` runs unit + e2e packages; the e2e suite self-skips
-          # when VEANS_E2E_API_URL is unset so the same target works locally.
-          (cd veans && mage test)
+          # `mage test:e2e` builds the binary once and exports VEANS_BINARY
+          # so each subtest reuses it (plain `mage test` would rebuild per
+          # test via buildOrLocate()). The suite seeds its own admin
+          # internally — no curl seeding here.
+          (cd veans && mage test:e2e)
       - name: Upload API log on failure
         if: failure()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6

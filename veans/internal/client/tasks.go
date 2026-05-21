@@ -51,7 +51,8 @@ func (o *TaskListOptions) values() url.Values {
 	return q
 }
 
-// ListProjectTasks paginates `GET /projects/{id}/tasks` exhaustively.
+// ListProjectTasks paginates `GET /projects/{id}/tasks` exhaustively,
+// terminating against the server's x-pagination-total-pages header.
 func (c *Client) ListProjectTasks(ctx context.Context, projectID int64, opts *TaskListOptions) ([]*Task, error) {
 	if opts == nil {
 		opts = &TaskListOptions{}
@@ -61,18 +62,21 @@ func (c *Client) ListProjectTasks(ctx context.Context, projectID int64, opts *Ta
 		per = 50
 	}
 	var all []*Task
-	for page := 1; ; page++ {
+	page := 1
+	for {
 		o := *opts
 		o.Page = page
 		o.PerPage = per
 		var batch []*Task
-		if err := c.Do(ctx, "GET", fmt.Sprintf("/projects/%d/tasks", projectID), o.values(), nil, &batch); err != nil {
+		total, err := c.DoPaginated(ctx, "GET", fmt.Sprintf("/projects/%d/tasks", projectID), o.values(), &batch)
+		if err != nil {
 			return nil, err
 		}
 		all = append(all, batch...)
-		if len(batch) < per {
+		if paginationDone(page, len(batch), per, total) {
 			return all, nil
 		}
+		page++
 	}
 }
 
@@ -119,8 +123,12 @@ func (c *Client) CreateTask(ctx context.Context, projectID int64, t *Task) (*Tas
 	return &out, nil
 }
 
-// UpdateTask updates a task (POST /tasks/{id}). bucket_id moves the task
-// between buckets in the same view.
+// UpdateTask updates a task (POST /tasks/{id}). This endpoint does NOT
+// move tasks between buckets — the task↔bucket relation is row-shaped in
+// task_buckets, and bucket_id on the request body is ignored. Use
+// MoveTaskToBucket() for that. The server does auto-flip the bucket
+// when `done` toggles, but only between the canonical "todo" and "done"
+// buckets the project view is configured with.
 func (c *Client) UpdateTask(ctx context.Context, id int64, t *Task) (*Task, error) {
 	var out Task
 	if err := c.Do(ctx, "POST", fmt.Sprintf("/tasks/%d", id), nil, t, &out); err != nil {

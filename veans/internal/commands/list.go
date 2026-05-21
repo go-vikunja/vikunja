@@ -45,8 +45,8 @@ func newListCmd() *cobra.Command {
 		Long: `List tasks in the project configured in .veans.yml.
 
 Filters can be combined; they're AND-ed together:
-  --ready          ready to start: in Todo with done=false (incomplete-blocker
-                   detection is best-effort, see veans/README.md)
+  --ready          ready to start: in Todo, not done, and no incomplete
+                   "blocked" relation
   --mine           only tasks assigned to the veans bot
   --branch [name]  only tasks tagged 'veans:branch:<name>' (defaults to the
                    current git branch when used without a value)
@@ -78,21 +78,23 @@ Filters can be combined; they're AND-ed together:
 func runList(cmd *cobra.Command, rt *runtime, f *listFlags) ([]*client.Task, error) {
 	opts := &client.TaskListOptions{
 		Filter: f.filter,
-		Expand: []string{"reactions"},
+		// expand=buckets is required for CurrentBucketID() to resolve;
+		// the default GET returns bucket_id=0 (xorm:"-" on the model).
+		Expand: []string{"buckets"},
 	}
 	tasks, err := rt.client.ListProjectTasks(cmd.Context(), rt.cfg.ProjectID, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	// Apply client-side filters AND-style.
-	var out []*client.Task
+	// Apply client-side filters AND-style. Pre-allocate as an empty
+	// (non-nil) slice so an empty result still encodes as `[]`, not `null` —
+	// the agent contract is "raw array".
+	out := make([]*client.Task, 0, len(tasks))
 	for _, t := range tasks {
 		taskBucket := t.CurrentBucketID(rt.cfg.ViewID)
-		if f.ready {
-			if t.Done || taskBucket != rt.cfg.Buckets.Todo {
-				continue
-			}
+		if f.ready && !isReady(t, rt.cfg.Buckets.Todo, rt.cfg.ViewID) {
+			continue
 		}
 		if f.mine {
 			if !taskAssignedTo(t, rt.cfg.Bot.UserID) {
@@ -133,6 +135,21 @@ func runList(cmd *cobra.Command, rt *runtime, f *listFlags) ([]*client.Task, err
 		out = append(out, t)
 	}
 	return out, nil
+}
+
+// isReady reports whether t is ready to start: in the Todo bucket, not done,
+// and not blocked by any incomplete task. "blocked" is the relation kind on
+// the dependent task — parenttask / subtask have no bearing on readiness.
+func isReady(t *client.Task, todoBucket, viewID int64) bool {
+	if t.Done || t.CurrentBucketID(viewID) != todoBucket {
+		return false
+	}
+	for _, b := range t.RelatedTasks["blocked"] {
+		if b != nil && !b.Done {
+			return false
+		}
+	}
+	return true
 }
 
 func taskAssignedTo(t *client.Task, userID int64) bool {

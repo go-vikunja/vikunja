@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -129,18 +130,35 @@ func printPostInitSummary(w io.Writer, res *bootstrap.Result) {
 	if res.AgentChoices.ClaudeCode || res.AgentChoices.OpenCode {
 		return
 	}
-	fmt.Fprintln(w, `
+	// Snippets are sourced from the bootstrap package so manual installs
+	// stay byte-for-byte equivalent to what `installAgentHooks` would have
+	// written — if a new hook event is added there, it shows up here too.
+	fmt.Fprintf(w, `
 To wire veans into your coding agent later, paste one of these snippets:
 
-Claude Code (.claude/settings.json):
-  {
-    "hooks": {
-      "SessionStart": [{ "hooks": [{ "type": "command", "command": "veans prime" }] }],
-      "PreCompact":   [{ "hooks": [{ "type": "command", "command": "veans prime" }] }]
-    }
-  }
+Claude Code (%s):
+%s
 
-OpenCode (.opencode/plugin/veans-prime.ts): see veans/README.md`)
+OpenCode (%s):
+%s`, bootstrap.ClaudeCodeSettingsRelPath, indent(bootstrap.ClaudeCodeHookSnippet(), "  "),
+		bootstrap.OpenCodePluginRelPath, indent(bootstrap.OpenCodePluginSnippet, "  "))
+}
+
+// indent prefixes every line of s with prefix. Used to inset the embedded
+// snippets under their "Claude Code:" / "OpenCode:" headings without
+// hard-coding the indent inside the bootstrap package's snippet strings.
+func indent(s, prefix string) string {
+	if s == "" {
+		return s
+	}
+	lines := strings.Split(strings.TrimRight(s, "\n"), "\n")
+	for i, line := range lines {
+		if line == "" {
+			continue
+		}
+		lines[i] = prefix + line
+	}
+	return strings.Join(lines, "\n")
 }
 
 func identOrFallback(s string) string {

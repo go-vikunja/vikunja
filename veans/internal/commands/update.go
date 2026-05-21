@@ -169,7 +169,7 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 	// Comment first when transitioning to scrapped — the reason is part of
 	// the audit trail and should appear before the bucket move in the log.
 	if newStatus == status.Scrapped {
-		if _, err := rt.client.AddTaskComment(ctx, id, "**Scrapped:** "+strings.TrimSpace(f.reason)); err != nil {
+		if _, err := rt.client.AddTaskComment(ctx, id, "<strong>Scrapped:</strong> "+strings.TrimSpace(f.reason)); err != nil {
 			return nil, err
 		}
 	}
@@ -218,7 +218,7 @@ func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*cli
 		}
 	}
 
-	if len(f.addLabels) > 0 || len(f.removeLabels) > 0 {
+	if len(f.addLabels) > 0 || len(f.removeLabels) > 0 || bucketTransitionTarget != 0 {
 		fresh, err := rt.client.GetTask(ctx, id)
 		if err == nil {
 			updated = fresh

@@ -29,6 +29,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -90,6 +92,16 @@ type Options struct {
 
 	// RepoRoot, if empty, is detected via git rev-parse from cwd.
 	RepoRoot string
+
+	// Prompter is the seam tests use to script prompt answers. Defaults
+	// to auth.NewStdPrompter() (reads stdin, writes prompts to stderr)
+	// when nil.
+	Prompter auth.Prompter
+
+	// OverwriteExistingConfig, when true, allows Init to clobber an
+	// existing .veans.yml without prompting. Mostly for tests; the
+	// interactive flow asks the user.
+	OverwriteExistingConfig bool
 }
 
 // Result is returned on success — just the bits printPostInitSummary reads.
@@ -113,8 +125,25 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 		return nil, output.New(output.CodeValidation, "ConfigPath is required")
 	}
 
-	prompter := auth.NewStdPrompter()
+	prompter := opts.Prompter
+	if prompter == nil {
+		prompter = auth.NewStdPrompter()
+	}
 	store := credentials.Default()
+
+	if err := confirmOverwriteExistingConfig(opts, prompter); err != nil {
+		return nil, err
+	}
+
+	// Validate the bot-username override (if any) against server-side
+	// rules now, so we fail fast before steps 4–7 do real work that
+	// we'd then have to undo. SuggestedBotUsername's output is
+	// always valid, so we only need to validate user input.
+	if opts.BotUsername != "" {
+		if err := validateBotUsername(normalizeBotUsername(opts.BotUsername, "")); err != nil {
+			return nil, err
+		}
+	}
 
 	// 1. Repo root + suggested bot username.
 	repoRoot := opts.RepoRoot
@@ -278,6 +307,35 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	}, nil
 }
 
+// confirmOverwriteExistingConfig refuses to silently clobber an existing
+// .veans.yml. The bot token in the credentials store is keyed on
+// (server, bot-username); a blind re-init can swap the project under
+// the agent's feet AND stomp the previous token in the keyring.
+func confirmOverwriteExistingConfig(opts *Options, p auth.Prompter) error {
+	if opts.OverwriteExistingConfig {
+		return nil
+	}
+	if _, err := os.Stat(opts.ConfigPath); err != nil {
+		// File doesn't exist (or we can't stat it — let SaveAs surface
+		// that error later). Either way, no overwrite confirmation is
+		// needed.
+		return nil //nolint:nilerr // intentional: any Stat error means "no existing file to overwrite"
+	}
+	ans, err := p.ReadLine(fmt.Sprintf(
+		"%s already exists. Overwrite (token + project + view get replaced)? [y/N]: ",
+		opts.ConfigPath))
+	if err != nil {
+		return output.Wrap(output.CodeUnknown, err, "read overwrite confirmation: %v", err)
+	}
+	switch strings.ToLower(strings.TrimSpace(ans)) {
+	case "y", "yes":
+		return nil
+	}
+	return output.New(output.CodeConflict,
+		"refusing to overwrite %s without confirmation (delete the file to re-init)",
+		opts.ConfigPath)
+}
+
 func normalizeBotUsername(override, suggested string) string {
 	if override == "" {
 		return suggested
@@ -286,6 +344,32 @@ func normalizeBotUsername(override, suggested string) string {
 		return "bot-" + override
 	}
 	return override
+}
+
+// botUsernamePattern mirrors the server's username regex closely enough
+// to catch the rejections that would otherwise blow up steps 4–7 mid-init.
+// The server allows lowercase letters, digits, hyphens, underscores, and
+// dots; we additionally require the `bot-` prefix and forbid the
+// `link-share-N` shape Vikunja reserves for share-links.
+var botUsernamePattern = regexp.MustCompile(`^bot-[a-z0-9][a-z0-9._-]*$`)
+
+var linkShareSuffix = regexp.MustCompile(`^bot-link-share-\d+$`)
+
+// validateBotUsername mirrors the server-side rules so a bad
+// `--bot-username` override (or interactive prompt answer) fails fast
+// instead of dying with a 400 deep in step 8.
+func validateBotUsername(name string) error {
+	if !botUsernamePattern.MatchString(name) {
+		return output.New(output.CodeValidation,
+			"invalid bot username %q: must start with `bot-` and contain only lowercase letters, digits, hyphens, underscores, and dots",
+			name)
+	}
+	if linkShareSuffix.MatchString(name) {
+		return output.New(output.CodeValidation,
+			"invalid bot username %q: `link-share-N` is reserved by Vikunja for share-link users",
+			name)
+	}
+	return nil
 }
 
 func pickProject(ctx context.Context, c *client.Client, id int64, p auth.Prompter, out io.Writer) (*client.Project, error) {
@@ -304,10 +388,16 @@ func pickProject(ctx context.Context, c *client.Client, id int64, p auth.Prompte
 		}
 		active = append(active, pr)
 	}
-	if len(active) == 0 {
-		return nil, output.New(output.CodeNotFound, "no projects visible to this user — create one in the Vikunja UI first")
-	}
 	sort.Slice(active, func(i, j int) bool { return active[i].Title < active[j].Title })
+
+	// The "create a new project" option sits at len(active)+1 in the menu;
+	// when the user has nothing to pick from, it's the only choice.
+	createIdx := len(active) + 1
+
+	if len(active) == 0 {
+		fmt.Fprintln(out, "No projects yet — let's create one.")
+		return createProject(ctx, c, p, out)
+	}
 
 	fmt.Fprintln(out, "Available projects:")
 	for i, pr := range active {
@@ -317,6 +407,8 @@ func pickProject(ctx context.Context, c *client.Client, id int64, p auth.Prompte
 		}
 		fmt.Fprintf(out, "  [%d] #%d %s — %s\n", i+1, pr.ID, pr.Title, ident)
 	}
+	fmt.Fprintf(out, "  [%d] Create a new project\n", createIdx)
+
 	choice, err := p.ReadLine("Pick a project [1]: ")
 	if err != nil {
 		return nil, err
@@ -325,12 +417,42 @@ func pickProject(ctx context.Context, c *client.Client, id int64, p auth.Prompte
 	idx := 1
 	if choice != "" {
 		v, err := strconv.Atoi(choice)
-		if err != nil || v < 1 || v > len(active) {
+		if err != nil || v < 1 || v > createIdx {
 			return nil, output.New(output.CodeValidation, "invalid project choice %q", choice)
 		}
 		idx = v
 	}
+	if idx == createIdx {
+		return createProject(ctx, c, p, out)
+	}
 	return active[idx-1], nil
+}
+
+// createProject prompts for the new project's title and identifier and
+// PUTs it. Title is required; identifier is optional (Vikunja caps it at
+// 10 chars). The fresh project comes with the default views — including
+// the Kanban view pickKanbanView is about to grab.
+func createProject(ctx context.Context, c *client.Client, p auth.Prompter, out io.Writer) (*client.Project, error) {
+	title, err := p.ReadLine("New project title: ")
+	if err != nil {
+		return nil, err
+	}
+	title = strings.TrimSpace(title)
+	if title == "" {
+		return nil, output.New(output.CodeValidation, "project title is required")
+	}
+	ident, err := p.ReadLine("Identifier (optional, ≤10 letters/digits, used for task IDs like PROJ-NN): ")
+	if err != nil {
+		return nil, err
+	}
+	ident = strings.TrimSpace(ident)
+
+	created, err := c.CreateProject(ctx, &client.Project{Title: title, Identifier: ident})
+	if err != nil {
+		return nil, output.Wrap(output.CodeUnknown, err, "create project %q: %v", title, err)
+	}
+	progress(out, "Created project #%d %q", created.ID, created.Title)
+	return created, nil
 }
 
 func pickKanbanView(ctx context.Context, c *client.Client, projectID int64, viewID int64, p auth.Prompter, out io.Writer) (*client.ProjectView, error) {

@@ -15,27 +15,45 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // Package e2e is the integration suite for veans. It assumes a running
-// Vikunja API at VEANS_E2E_API_URL and admin/seed credentials in
-// VEANS_E2E_ADMIN_TOKEN (or VEANS_E2E_ADMIN_USER + VEANS_E2E_ADMIN_PASS).
+// Vikunja API at VEANS_E2E_API_URL with VIKUNJA_SERVICE_TESTINGTOKEN set
+// (passed in via VEANS_E2E_TESTING_TOKEN) so the suite can seed its own
+// admin via PATCH /api/v1/test/users — the same `/test/{table}` endpoint
+// the frontend playwright suite uses.
 //
-// The suite never provisions Vikunja itself — locally, point it at a dev
-// instance; in CI, the workflow spins one up the same way the frontend
-// Playwright suite does.
+// The alternative path — VEANS_E2E_ADMIN_TOKEN — is a JWT against a
+// long-lived Vikunja the user wants to drive without touching its data;
+// in that mode the suite skips the seed.
+//
+// The suite never provisions Vikunja itself.
 package e2e
 
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"code.vikunja.io/veans/internal/client"
+)
+
+// Hard-coded seed credentials. The hash is the bcrypt of "1234" and
+// matches frontend/tests/support/constants.ts so the whole e2e infra
+// shares one well-known password — tests themselves never need to read
+// these from env.
+const (
+	seedAdminUsername = "e2eadmin"
+	seedAdminPassword = "1234"
+	seedAdminBcrypt   = "$2a$14$dcadBoMBL9jQoOcZK8Fju.cy0Ptx2oZECkKLnaa8ekRoTFe1w7To." //nolint:gosec // G101: deterministic test fixture, not a credential
 )
 
 // Harness bundles a built veans binary and an authenticated admin client
@@ -47,23 +65,24 @@ type Harness struct {
 	AdminClient *client.Client
 }
 
-// SkipIfNotConfigured calls t.Skip if the suite hasn't been pointed at a
-// Vikunja instance. Intended for the top of TestMain / TestXxx so plain
-// `go test ./...` doesn't fail on contributors who haven't set up the env.
-func SkipIfNotConfigured(t *testing.T) {
-	t.Helper()
-	if os.Getenv("VEANS_E2E_API_URL") == "" {
-		t.Skip("VEANS_E2E_API_URL not set — skipping e2e")
-	}
-}
-
-// New builds (or reuses) the veans binary, mints/loads an admin token via
-// the env, and returns a Harness ready to drive tests.
+// New builds (or reuses) the veans binary, seeds the admin user via
+// PATCH /api/v1/test/users (using VEANS_E2E_TESTING_TOKEN), logs in as
+// that admin, and returns a Harness ready to drive tests.
+//
+// If VEANS_E2E_ADMIN_TOKEN is set, the seed is skipped and that token
+// is used directly — useful for running against a long-lived Vikunja
+// the caller doesn't want this suite to mutate user rows on.
+//
+// Tests rely on the `-short` skip in TestMain to opt out when a Vikunja
+// instance isn't available; if `-short` is *not* set and env is missing,
+// we fail loudly with a "configure or pass -short" hint.
 func New(t *testing.T) *Harness {
 	t.Helper()
-	SkipIfNotConfigured(t)
 
 	apiURL := strings.TrimRight(os.Getenv("VEANS_E2E_API_URL"), "/")
+	if apiURL == "" {
+		t.Fatal("VEANS_E2E_API_URL is not set — point it at a Vikunja instance, or pass -short to skip the e2e suite")
+	}
 	binary, err := buildOrLocate()
 	if err != nil {
 		t.Fatalf("locate veans binary: %v", err)
@@ -71,13 +90,16 @@ func New(t *testing.T) *Harness {
 
 	tok := os.Getenv("VEANS_E2E_ADMIN_TOKEN")
 	if tok == "" {
-		user, pass := os.Getenv("VEANS_E2E_ADMIN_USER"), os.Getenv("VEANS_E2E_ADMIN_PASS")
-		if user == "" || pass == "" {
-			t.Fatal("set VEANS_E2E_ADMIN_TOKEN or VEANS_E2E_ADMIN_USER + VEANS_E2E_ADMIN_PASS")
+		testingToken := os.Getenv("VEANS_E2E_TESTING_TOKEN")
+		if testingToken == "" {
+			t.Fatal("set VEANS_E2E_ADMIN_TOKEN, or VEANS_E2E_TESTING_TOKEN (matching the API's VIKUNJA_SERVICE_TESTINGTOKEN) so the suite can seed its own admin")
 		}
+		seedAdmin(t, apiURL, testingToken)
 		c := client.New(apiURL, "")
-		resp, err := c.Login(context.Background(), &client.LoginRequest{
-			Username: user, Password: pass, LongToken: true,
+		resp, err := c.Login(t.Context(), &client.LoginRequest{
+			Username:  seedAdminUsername,
+			Password:  seedAdminPassword,
+			LongToken: true,
 		})
 		if err != nil {
 			t.Fatalf("admin login: %v", err)
@@ -93,13 +115,52 @@ func New(t *testing.T) *Harness {
 	}
 }
 
-// Workspace creates a per-test git repo in a TempDir, with HOME and
-// XDG_CONFIG_HOME pointed at TempDirs so the credential store falls back
-// to its file backend rather than touching the developer's keychain.
+// seedAdmin PATCHes a single admin user row into the users table via
+// the testing endpoint. truncate=true wipes any prior users from
+// previous tests so each New(t) starts from a known state.
+func seedAdmin(t *testing.T, apiURL, testingToken string) {
+	t.Helper()
+	now := time.Now().UTC().Format(time.RFC3339)
+	body, err := json.Marshal([]map[string]any{{
+		"id":       1,
+		"username": seedAdminUsername,
+		"password": seedAdminBcrypt,
+		"email":    "e2e@example.com",
+		"status":   0,
+		"issuer":   "local",
+		"language": "en",
+		"created":  now,
+		"updated":  now,
+	}})
+	if err != nil {
+		t.Fatalf("marshal seed payload: %v", err)
+	}
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPatch,
+		apiURL+"/api/v1/test/users?truncate=true", bytes.NewReader(body))
+	if err != nil {
+		t.Fatalf("build seed request: %v", err)
+	}
+	req.Header.Set("Authorization", testingToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("seed admin: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		buf, _ := io.ReadAll(resp.Body)
+		t.Fatalf("seed admin: HTTP %d: %s", resp.StatusCode, string(buf))
+	}
+}
+
+// Workspace creates a per-test git repo in a TempDir with HOME pointed at
+// a TempDir so the credential store writes under the test's own directory
+// rather than touching the developer's keychain.
 type Workspace struct {
 	Dir          string
 	Home         string
-	XDGConfig    string
 	ConfigPath   string
 	BotUsername  string
 	envOverrides map[string]string
@@ -111,7 +172,6 @@ func (h *Harness) NewWorkspace(t *testing.T) *Workspace {
 	t.Helper()
 	dir := t.TempDir()
 	home := t.TempDir()
-	xdg := t.TempDir()
 
 	for _, c := range [][]string{
 		{"git", "init", "-q", "-b", "main"},
@@ -145,11 +205,9 @@ func (h *Harness) NewWorkspace(t *testing.T) *Workspace {
 	return &Workspace{
 		Dir:        dir,
 		Home:       home,
-		XDGConfig:  xdg,
 		ConfigPath: filepath.Join(dir, ".veans.yml"),
 		envOverrides: map[string]string{
-			"HOME":            home,
-			"XDG_CONFIG_HOME": xdg,
+			"HOME": home,
 		},
 	}
 }
@@ -160,7 +218,10 @@ func (h *Harness) Run(t *testing.T, ws *Workspace, args ...string) (stdout, stde
 	t.Helper()
 	cmd := exec.CommandContext(t.Context(), h.Binary, args...)
 	cmd.Dir = ws.Dir
-	cmd.Env = append(os.Environ(), envSlice(ws.envOverrides)...)
+	// Filter VEANS_* out of the inherited env before applying our
+	// overrides — a developer's VEANS_TOKEN would otherwise mask the
+	// per-test bot token via the env backend.
+	cmd.Env = append(filterEnv(os.Environ(), "VEANS_"), envSlice(ws.envOverrides)...)
 	var so, se bytes.Buffer
 	cmd.Stdout = &so
 	cmd.Stderr = &se
@@ -179,22 +240,19 @@ func (h *Harness) Run(t *testing.T, ws *Workspace, args ...string) (stdout, stde
 // it. Tests use a unique title to keep results isolated across parallel runs.
 func (h *Harness) CreateProject(t *testing.T, title, identifier string) *client.Project {
 	t.Helper()
-	body := map[string]any{"title": title}
-	if identifier != "" {
-		body["identifier"] = identifier
-	}
-	var out client.Project
-	if err := h.AdminClient.Do(context.Background(), "PUT", "/projects", nil, body, &out); err != nil {
+	out, err := h.AdminClient.CreateProject(t.Context(),
+		&client.Project{Title: title, Identifier: identifier})
+	if err != nil {
 		t.Fatalf("create project %q: %v", title, err)
 	}
-	return &out
+	return out
 }
 
 // FindKanbanView returns the first Kanban view of the project (Vikunja
 // auto-creates one).
 func (h *Harness) FindKanbanView(t *testing.T, projectID int64) *client.ProjectView {
 	t.Helper()
-	views, err := h.AdminClient.ListProjectViews(context.Background(), projectID)
+	views, err := h.AdminClient.ListProjectViews(t.Context(), projectID)
 	if err != nil {
 		t.Fatalf("list views: %v", err)
 	}
@@ -210,7 +268,7 @@ func (h *Harness) FindKanbanView(t *testing.T, projectID int64) *client.ProjectV
 // GetTask fetches a task by ID for verification.
 func (h *Harness) GetTask(t *testing.T, id int64) *client.Task {
 	t.Helper()
-	task, err := h.AdminClient.GetTask(context.Background(), id)
+	task, err := h.AdminClient.GetTask(t.Context(), id)
 	if err != nil {
 		t.Fatalf("get task %d: %v", id, err)
 	}
@@ -252,6 +310,17 @@ func envSlice(overrides map[string]string) []string {
 	out := make([]string, 0, len(overrides))
 	for k, v := range overrides {
 		out = append(out, k+"="+v)
+	}
+	return out
+}
+
+// filterEnv returns env entries whose keys do NOT start with prefix.
+func filterEnv(env []string, prefix string) []string {
+	out := make([]string, 0, len(env))
+	for _, kv := range env {
+		if !strings.HasPrefix(kv, prefix) {
+			out = append(out, kv)
+		}
 	}
 	return out
 }

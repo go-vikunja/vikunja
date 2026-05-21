@@ -56,7 +56,7 @@ func newCreateCmd() *cobra.Command {
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(task)
 		},
 	}
-	cmd.Flags().StringVarP(&f.description, "description", "d", "", "task description (markdown)")
+	cmd.Flags().StringVarP(&f.description, "description", "d", "", "task description (HTML; see `veans prime` for canonical TipTap shapes)")
 	cmd.Flags().StringVarP(&f.statusName, "status", "s", "todo", "initial status (defaults to todo)")
 	cmd.Flags().Int64Var(&f.priority, "priority", 0, "priority (0=unset, 1=low, 5=DO_NOW)")
 	cmd.Flags().StringSliceVar(&f.labels, "label", nil, "labels to attach (repeatable; veans: prefix added if missing)")

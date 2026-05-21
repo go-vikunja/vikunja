@@ -85,18 +85,28 @@ Examples:
 				body = []byte(dataFlag)
 			}
 
-			status, respBody, err := rt.client.DoRaw(cmd.Context(), method, path, query, body)
+			status, respBody, retryAfter, err := rt.client.DoRaw(cmd.Context(), method, path, query, body)
 			if err != nil {
 				return err
 			}
-			// On non-2xx, write the body to stderr and exit non-zero so
-			// shell pipelines see the failure clearly.
+			// On non-2xx, do NOT write the body to stdout — the agent
+			// contract is "stdout is the success payload". Fold a short
+			// snippet of the upstream error into the envelope message so
+			// the agent gets actionable context without a separate channel
+			// to parse.
 			if status >= 400 {
-				fmt.Fprintf(cmd.ErrOrStderr(), "HTTP %d %s %s\n", status, method, path)
-				if _, werr := cmd.OutOrStdout().Write(respBody); werr != nil {
-					return werr
+				snippet := strings.TrimSpace(string(respBody))
+				if len(snippet) > maxAPIErrorSnippet {
+					snippet = snippet[:maxAPIErrorSnippet] + "…(truncated)"
 				}
-				return output.New(mapStatusToCode(status), "HTTP %d", status)
+				msg := fmt.Sprintf("HTTP %d %s %s", status, method, path)
+				if snippet != "" {
+					msg = fmt.Sprintf("%s: %s", msg, snippet)
+				}
+				if retryAfter > 0 {
+					msg = fmt.Sprintf("%s (retry-after %s)", msg, retryAfter)
+				}
+				return output.New(mapStatusToCode(status), "%s", msg)
 			}
 			if _, werr := cmd.OutOrStdout().Write(respBody); werr != nil {
 				return werr
@@ -109,6 +119,10 @@ Examples:
 	cmd.Flags().StringSliceVar(&queryFlag, "query", nil, "query parameter, key=value (repeatable)")
 	return cmd
 }
+
+// maxAPIErrorSnippet caps how much upstream-error body we fold into the
+// `error` envelope field. Anything longer is almost always an HTML page.
+const maxAPIErrorSnippet = 512
 
 func mapStatusToCode(status int) output.Code {
 	switch {

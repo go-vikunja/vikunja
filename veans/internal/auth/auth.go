@@ -44,17 +44,22 @@ type Prompter interface {
 }
 
 // StdPrompter reads from os.Stdin and writes prompts to os.Stderr; uses
-// term.ReadPassword for masked input when on a TTY.
-type StdPrompter struct{}
+// term.ReadPassword for masked input when on a TTY. The bufio.Reader is
+// reused across ReadLine calls — a new reader on each call would read-
+// ahead a buffer, discard the rest on return, and starve later prompts.
+type StdPrompter struct {
+	stdin *bufio.Reader
+}
 
-func NewStdPrompter() *StdPrompter { return &StdPrompter{} }
+func NewStdPrompter() *StdPrompter {
+	return &StdPrompter{stdin: bufio.NewReader(os.Stdin)}
+}
 
-func (*StdPrompter) ReadLine(prompt string) (string, error) {
+func (p *StdPrompter) ReadLine(prompt string) (string, error) {
 	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
 		return "", err
 	}
-	r := bufio.NewReader(os.Stdin)
-	line, err := r.ReadString('\n')
+	line, err := p.stdin.ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
 		return "", err
 	}
