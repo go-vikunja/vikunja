@@ -18,8 +18,11 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"runtime"
 
+	"code.vikunja.io/veans/internal/client"
 	"code.vikunja.io/veans/internal/commands"
 )
 
@@ -27,5 +30,6 @@ import (
 var version = "dev"
 
 func main() {
+	client.UserAgent = fmt.Sprintf("veans/%s (%s/%s)", version, runtime.GOOS, runtime.GOARCH)
 	os.Exit(commands.Execute(version))
 }
