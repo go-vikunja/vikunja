@@ -862,6 +862,7 @@
 			"date": "Datum",
 			"ranges": {
 				"today": "Heute",
+				"tomorrow": "Morgen",
 				"thisWeek": "Diese Woche",
 				"restOfThisWeek": "Der Rest dieser Woche",
 				"nextWeek": "Nächste Woche",
