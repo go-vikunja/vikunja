@@ -1066,7 +1066,10 @@
 			"addedSuccess": "Der Kommentar wurde erfolgreich hinzugefügt.",
 			"permalink": "Permalink zu diesem Kommentar kopieren",
 			"sortNewestFirst": "Neueste zuerst",
-			"sortOldestFirst": "Älteste zuerst"
+			"sortOldestFirst": "Älteste zuerst",
+			"reply": "Antworten",
+			"jumpToOriginal": "Zum ursprünglichen Kommentar springen",
+			"deletedComment": "gelöschter Kommentar"
 		},
 		"mention": {
 			"noUsersFound": "Keine Nutzer:innen gefunden"
