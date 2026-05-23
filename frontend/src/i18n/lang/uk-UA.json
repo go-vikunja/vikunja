@@ -1066,7 +1066,10 @@
 			"addedSuccess": "Коментар успішно додано.",
 			"permalink": "Одержати посилання",
 			"sortNewestFirst": "Спочатку новіші",
-			"sortOldestFirst": "Спочатку старіші"
+			"sortOldestFirst": "Спочатку старіші",
+			"reply": "Відповідь",
+			"jumpToOriginal": "Перейти до початкового коментаря",
+			"deletedComment": "видалений коментар"
 		},
 		"mention": {
 			"noUsersFound": "Користувачів не знайдено"
