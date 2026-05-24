@@ -534,6 +534,13 @@
 						>
 							{{ $t('task.detail.actions.duplicate') }}
 						</XButton>
+						<XButton
+							variant="secondary"
+							icon="paste"
+							@click="copyTaskAsMarkdown"
+						>
+							{{ $t('task.detail.actions.copyMarkdown') }}
+						</XButton>
 
 						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
 
@@ -685,6 +692,8 @@ import {useBaseStore} from '@/stores/base'
 
 import {useTitle} from '@/composables/useTitle'
 import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
+import {useCopyToClipboard} from '@/composables/useCopyToClipboard'
+import {formatTaskAsMarkdown} from '@/helpers/taskMarkdown'
 
 import {success} from '@/message'
 import type {Action as MessageAction} from '@/message'
@@ -701,6 +710,7 @@ defineEmits<{
 const router = useRouter()
 const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
+const copy = useCopyToClipboard()
 
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
@@ -1143,6 +1153,13 @@ async function duplicateCurrentTask() {
 			name: 'task.detail',
 			params: {id: duplicatedTask.id},
 		})
+	}
+}
+
+async function copyTaskAsMarkdown() {
+	const copied = await copy(formatTaskAsMarkdown(task.value))
+	if (copied) {
+		success({message: t('task.detail.copyMarkdownSuccess')})
 	}
 }
 
