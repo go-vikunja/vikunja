@@ -8,6 +8,7 @@
 		"welcomeMorning": "Goedemorgen {username}!",
 		"welcomeDay": "Hallo {username}!",
 		"welcomeEvening": "Goedenavond {username}!",
+		"welcomeEveningReturns": "{username} keert terug",
 		"lastViewed": "Laatst bekeken",
 		"addToHomeScreen": "Voeg deze app toe aan je startscherm voor snellere toegang en verbeterde ervaring.",
 		"goToOverview": "Ga naar overzicht",
