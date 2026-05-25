@@ -19,8 +19,8 @@ importers:
         version: 5.2.1
     devDependencies:
       electron:
-        specifier: 40.10.0
-        version: 40.10.0
+        specifier: 40.10.1
+        version: 40.10.1
       electron-builder:
         specifier: 26.8.1
         version: 26.8.1(electron-builder-squirrel-windows@24.13.3)
@@ -567,8 +567,8 @@ packages:
   electron-publish@26.8.1:
     resolution: {integrity: sha512-q+jrSTIh/Cv4eGZa7oVR+grEJo/FoLMYBAnSL5GCtqwUpr1T+VgKB/dn1pnzxIxqD8S/jP1yilT9VrwCqINR4w==}
 
-  electron@40.10.0:
-    resolution: {integrity: sha512-e7XVcAfyWoFQGS7ZhgxeNn0AijHaqgRCa6uA6TYOrvBWv8smI6JILvMR/8DYBIn07oqvxDLRC90tu/xa2cJCow==}
+  electron@40.10.1:
+    resolution: {integrity: sha512-F2Iy16vLBV4NodRVf2dGRESUW03AdFlCmOjaF1fhc3FupmTwEGWmKsYXvORkUYLPBSrKP7r08e8PHiImoe8woQ==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -1757,7 +1757,7 @@ snapshots:
 
   '@npmcli/fs@4.0.0':
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.0
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -2386,7 +2386,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@40.10.0:
+  electron@40.10.1:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.10.9
@@ -2621,7 +2621,7 @@ snapshots:
       es6-error: 4.1.1
       matcher: 3.0.0
       roarr: 2.15.4
-      semver: 7.7.4
+      semver: 7.8.0
       serialize-error: 7.0.1
     optional: true
 
@@ -2943,14 +2943,14 @@ snapshots:
 
   node-abi@4.24.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.0
 
   node-addon-api@1.7.2:
     optional: true
 
   node-api-version@0.2.1:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.0
 
   node-gyp@11.5.0:
     dependencies:
@@ -2960,7 +2960,7 @@ snapshots:
       make-fetch-happen: 14.0.3
       nopt: 8.1.0
       proc-log: 5.0.0
-      semver: 7.7.4
+      semver: 7.8.0
       tar: 7.5.11
       tinyglobby: 0.2.15
       which: 5.0.0
