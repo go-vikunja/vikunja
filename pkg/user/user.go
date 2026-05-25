@@ -18,7 +18,6 @@ package user
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/mail"
@@ -632,12 +631,6 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 	if err != nil {
 		return nil, &ErrInvalidTimezone{Name: user.Timezone, LoadError: err}
 	}
-
-	frontendSettingsJSON, err := json.Marshal(user.FrontendSettings)
-	if err != nil {
-		return nil, err
-	}
-	user.FrontendSettings = frontendSettingsJSON
 
 	// Update it
 	_, err = s.
