@@ -46,6 +46,7 @@ require (
 	github.com/go-testfixtures/testfixtures/v3 v3.19.0
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
 	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/google/jsonschema-go v0.4.3
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/hashicorp/go-version v1.8.0
@@ -145,7 +146,6 @@ require (
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/huandu/go-clone v1.7.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
