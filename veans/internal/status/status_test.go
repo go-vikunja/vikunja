@@ -63,6 +63,53 @@ func TestDoneFlag(t *testing.T) {
 	}
 }
 
+func TestMatchBucketTitle(t *testing.T) {
+	cases := []struct {
+		title string
+		want  Status
+	}{
+		// Vikunja defaults
+		{"To-Do", Todo},
+		{"Doing", InProgress},
+		{"Done", Completed},
+		// Canonical titles
+		{"Todo", Todo},
+		{"In Progress", InProgress},
+		{"In Review", InReview},
+		{"Scrapped", Scrapped},
+		// Case-insensitive + whitespace tolerant
+		{"  todo  ", Todo},
+		{"DOING", InProgress},
+		// A few common aliases
+		{"WIP", InProgress},
+		{"Backlog", Todo},
+		{"Cancelled", Scrapped},
+		{"Won't Do", Scrapped},
+	}
+	for _, c := range cases {
+		matched := false
+		for _, s := range All() {
+			if MatchBucketTitle(s, c.title) {
+				if s != c.want {
+					t.Errorf("MatchBucketTitle(%q): matched %q, want %q", c.title, s, c.want)
+				}
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			t.Errorf("MatchBucketTitle(%q): no status matched, want %q", c.title, c.want)
+		}
+	}
+
+	// Negative: a non-canonical name shouldn't match anything.
+	for _, s := range All() {
+		if MatchBucketTitle(s, "random-bucket-name") {
+			t.Errorf("MatchBucketTitle(%q, \"random\") unexpectedly true", s)
+		}
+	}
+}
+
 func TestBucketIDRoundTrip(t *testing.T) {
 	b := config.Buckets{Todo: 11, InProgress: 12, InReview: 13, Done: 14, Scrapped: 15}
 	for _, s := range All() {

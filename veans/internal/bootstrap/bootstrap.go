@@ -361,15 +361,28 @@ func bootstrapBuckets(ctx context.Context, c *client.Client, projectID, viewID i
 	if err != nil {
 		return config.Buckets{}, err
 	}
-	byTitle := map[string]*client.Bucket{}
-	for _, b := range existing {
-		byTitle[b.Title] = b
+
+	// Resolve canonical statuses to existing buckets via the alias table.
+	// Vikunja's default Kanban view ships with "To-Do" / "Doing" / "Done";
+	// matching them as Todo / InProgress / Done avoids creating a parallel
+	// set of buckets every time veans runs against a vanilla project.
+	matched := map[status.Status]*client.Bucket{}
+	for _, s := range status.All() {
+		for _, b := range existing {
+			if b == nil {
+				continue
+			}
+			if status.MatchBucketTitle(s, b.Title) {
+				matched[s] = b
+				break
+			}
+		}
 	}
 
-	missing := []string{}
-	for _, t := range status.CanonicalBucketTitles {
-		if _, ok := byTitle[t]; !ok {
-			missing = append(missing, t)
+	var missing []string
+	for _, s := range status.All() {
+		if _, ok := matched[s]; !ok {
+			missing = append(missing, s.BucketTitle())
 		}
 	}
 
@@ -392,23 +405,33 @@ func bootstrapBuckets(ctx context.Context, c *client.Client, projectID, viewID i
 			}
 		}
 		if approve {
-			for _, title := range missing {
+			for _, s := range status.All() {
+				if _, ok := matched[s]; ok {
+					continue
+				}
+				title := s.BucketTitle()
 				b, err := c.CreateBucket(ctx, projectID, viewID, &client.Bucket{Title: title})
 				if err != nil {
 					return config.Buckets{}, output.Wrap(output.CodeUnknown, err, "create bucket %q: %v", title, err)
 				}
-				byTitle[title] = b
+				matched[s] = b
 				progress(opts.Out, "Created bucket %q (id=%d)", title, b.ID)
 			}
 		}
 	}
 
+	for _, s := range status.All() {
+		if b, ok := matched[s]; ok && b != nil && b.Title != s.BucketTitle() {
+			progress(opts.Out, "Reusing existing bucket %q as %s (id=%d)", b.Title, s.BucketTitle(), b.ID)
+		}
+	}
+
 	out := config.Buckets{
-		Todo:       lookupBucket(byTitle, "Todo"),
-		InProgress: lookupBucket(byTitle, "In Progress"),
-		InReview:   lookupBucket(byTitle, "In Review"),
-		Done:       lookupBucket(byTitle, "Done"),
-		Scrapped:   lookupBucket(byTitle, "Scrapped"),
+		Todo:       bucketID(matched, status.Todo),
+		InProgress: bucketID(matched, status.InProgress),
+		InReview:   bucketID(matched, status.InReview),
+		Done:       bucketID(matched, status.Completed),
+		Scrapped:   bucketID(matched, status.Scrapped),
 	}
 	if out.Todo == 0 || out.InProgress == 0 || out.InReview == 0 || out.Done == 0 || out.Scrapped == 0 {
 		return config.Buckets{}, output.New(output.CodeValidation,
@@ -417,8 +440,8 @@ func bootstrapBuckets(ctx context.Context, c *client.Client, projectID, viewID i
 	return out, nil
 }
 
-func lookupBucket(by map[string]*client.Bucket, title string) int64 {
-	if b, ok := by[title]; ok {
+func bucketID(m map[status.Status]*client.Bucket, s status.Status) int64 {
+	if b, ok := m[s]; ok && b != nil {
 		return b.ID
 	}
 	return 0
