@@ -87,29 +87,28 @@ var defaultCRUD = crudFuncs{
 // via withCRUD and restore it on teardown.
 var crud = defaultCRUD
 
-// Dispatch is the single entry point for every tools/call. It returns
-// either the result the SDK should serialize (a model on read_one/update,
-// the slice from ReadAll on read_all, or the model on create) or an error.
+// Dispatch is the single entry point for every tools/call when the caller
+// only has raw JSON arguments (e.g. unit tests, or future non-SDK call
+// sites). It unmarshals the arguments into the wrapper registered for the
+// tool and delegates to DispatchTyped, which is also the path the
+// AddTool-generated handlers take (they pass an already-typed wrapper to
+// skip the unmarshal round-trip the SDK has already performed against the
+// input schema).
 //
 // Errors fall into two categories:
 //   - ErrToolNotFound / ErrNoUserInContext / JSON-unmarshal errors are
 //     dispatcher-level failures the caller should translate into an
 //     IsError=true tool result. We return them as errors here (rather than
 //     constructing a *mcp.CallToolResult) so the dispatcher stays
-//     SDK-agnostic; the thin AddTool handler in Task 5 does the wrapping.
+//     SDK-agnostic; the thin AddTool handler does the wrapping.
 //   - Errors returned by handler.Do* (model-layer permission denials,
 //     validation failures, etc.) are propagated as-is. The tool handler
-//     in Task 5 wraps them with SetError per the SDK's convention that
-//     domain failures be reported as tool results, not protocol errors.
+//     wraps them with SetError per the SDK's convention that domain
+//     failures be reported as tool results, not protocol errors.
 func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (any, error) {
 	ref, ok := lookupTool(toolName)
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
-	}
-
-	u := UserFromContext(ctx)
-	if u == nil {
-		return nil, ErrNoUserInContext
 	}
 
 	// Allocate a fresh wrapper for this call so concurrent dispatches
@@ -129,10 +128,38 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 		}
 	}
 
+	return dispatchPrepared(ctx, ref, wrapper)
+}
+
+// DispatchTyped is the dispatcher entry point for callers that already have
+// a typed wrapper value (e.g. AddTool handlers, where the SDK has already
+// unmarshalled and validated args against the input schema). It skips the
+// JSON round-trip that Dispatch performs.
+//
+// The wrapper must implement inputAdapter (and optionally readAllInput for
+// pagination). Every wrapper registered in inputs.go meets that contract.
+func DispatchTyped(ctx context.Context, toolName string, wrapper any) (any, error) {
+	ref, ok := lookupTool(toolName)
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
+	}
+	return dispatchPrepared(ctx, ref, wrapper)
+}
+
+// dispatchPrepared runs the shared post-allocation pipeline: pull the user
+// from ctx, copy the wrapper onto a fresh model via inputAdapter, then call
+// the right handler.Do* per op. Both Dispatch (raw JSON path) and
+// DispatchTyped (AddTool path) funnel through here.
+func dispatchPrepared(ctx context.Context, ref toolRef, wrapper any) (any, error) {
+	u := UserFromContext(ctx)
+	if u == nil {
+		return nil, ErrNoUserInContext
+	}
+
 	model := ref.resource.EmptyStruct()
 	if adapter, ok := wrapper.(inputAdapter); ok {
 		if err := adapter.ApplyTo(model); err != nil {
-			return nil, fmt.Errorf("mcp: copy input for %s: %w", toolName, err)
+			return nil, fmt.Errorf("mcp: copy input for %s_%s: %w", ref.resource.Name, ref.op.ToolSuffix(), err)
 		}
 	}
 
@@ -173,7 +200,7 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 		return model, nil
 	}
 
-	return nil, fmt.Errorf("mcp: unsupported op %d for tool %s", ref.op, toolName)
+	return nil, fmt.Errorf("mcp: unsupported op %d for tool %s_%s", ref.op, ref.resource.Name, ref.op.ToolSuffix())
 }
 
 // allocateWrapper returns a fresh pointer of the same concrete type as the

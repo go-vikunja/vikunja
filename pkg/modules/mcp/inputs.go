@@ -48,6 +48,7 @@ import (
 	"reflect"
 	"strings"
 
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 )
 
@@ -276,4 +277,88 @@ func jsonName(f reflect.StructField) (string, bool) {
 		return "", false
 	}
 	return name, true
+}
+
+// ProjectCreateInput is the input wrapper for the `projects_create` tool.
+//
+// Only the fields the caller is allowed to set are exposed; computed and
+// server-managed fields on models.Project (Owner, MaxPermission, Views,
+// background information, IsFavorite, etc.) are intentionally absent so the
+// generated JSON Schema stays narrow.
+//
+// Title is the only required field — every other field has `omitempty` so
+// the SDK's reflected JSON Schema marks them optional.
+type ProjectCreateInput struct {
+	// Title of the project. Required.
+	Title string `json:"title" jsonschema:"the title of the project"`
+	// Optional longer description.
+	Description string `json:"description,omitempty" jsonschema:"longer-form description of the project"`
+	// Optional short identifier (max 10 chars) used as the prefix for task
+	// identifiers within this project.
+	Identifier string `json:"identifier,omitempty" jsonschema:"short identifier used as a prefix for task identifiers, max 10 chars"`
+	// Optional hex color (without the leading #). Six characters, e.g.
+	// "ff0000".
+	HexColor string `json:"hex_color,omitempty" jsonschema:"hex color code for the project without leading hash, e.g. ff0000"`
+	// Optional parent project id. Zero means top-level.
+	ParentProjectID int64 `json:"parent_project_id,omitempty" jsonschema:"id of the parent project, omit or 0 for a top-level project"`
+	// Optional ordering position among siblings.
+	Position float64 `json:"position,omitempty" jsonschema:"ordering position of the project among its siblings"`
+	// Optional archive flag. Defaults to false.
+	IsArchived bool `json:"is_archived,omitempty" jsonschema:"set to true to create the project in an archived state"`
+	// Optional favorite flag for the calling user. Defaults to false.
+	IsFavorite bool `json:"is_favorite,omitempty" jsonschema:"set to true to mark the project as a favorite for the caller"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.Project before
+// handler.DoCreate runs. CreateProject overwrites Owner / OwnerID from the
+// authed user, so the wrapper does not (and must not) expose those fields.
+func (in *ProjectCreateInput) ApplyTo(dst handler.CObject) error {
+	p, ok := dst.(*models.Project)
+	if !ok {
+		return fmt.Errorf("mcp: ProjectCreateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	return copyByJSONTag(in, p)
+}
+
+// ProjectUpdateInput is the input wrapper for the `projects_update` tool.
+//
+// All writable fields use `omitempty` so callers can supply partial updates;
+// copyByJSONTag's "skip zero values" policy leaves omitted fields untouched
+// (matching the REST update handler's PATCH-like behaviour). The one
+// exception is ID, which is always required to identify the target row.
+//
+// Vikunja's Project.Update only persists a fixed list of columns (title,
+// is_archived, identifier, hex_color, parent_project_id, position, and
+// description if non-empty); fields outside that list are silently ignored
+// at the model layer. The wrapper exposes exactly that list.
+type ProjectUpdateInput struct {
+	// ID of the project to update. Required.
+	ID int64 `json:"id" jsonschema:"id of the project to update"`
+	// New title. Omit to leave unchanged.
+	Title string `json:"title,omitempty" jsonschema:"new title for the project; omit to leave unchanged"`
+	// New description. Omit to leave unchanged.
+	Description string `json:"description,omitempty" jsonschema:"new description; omit to leave unchanged"`
+	// New short identifier. Omit to leave unchanged.
+	Identifier string `json:"identifier,omitempty" jsonschema:"new short identifier (max 10 chars); omit to leave unchanged"`
+	// New hex color (without leading #). Omit to leave unchanged.
+	HexColor string `json:"hex_color,omitempty" jsonschema:"new hex color (without leading #); omit to leave unchanged"`
+	// New parent project id. Omit (or zero) to leave unchanged.
+	ParentProjectID int64 `json:"parent_project_id,omitempty" jsonschema:"new parent project id; omit or 0 to leave unchanged"`
+	// New ordering position. Omit (or zero) to leave unchanged.
+	Position float64 `json:"position,omitempty" jsonschema:"new ordering position among siblings; omit or 0 to leave unchanged"`
+	// Archive state. Omit (or false) to leave un-archived.
+	IsArchived bool `json:"is_archived,omitempty" jsonschema:"set to true to archive, omit or false to leave un-archived"`
+	// Favorite state for the caller. Omit (or false) to leave un-favorited.
+	IsFavorite bool `json:"is_favorite,omitempty" jsonschema:"set to true to favorite for the caller, omit or false to un-favorite"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.Project. ID is
+// always copied so the model knows which row to update.
+func (in *ProjectUpdateInput) ApplyTo(dst handler.CObject) error {
+	p, ok := dst.(*models.Project)
+	if !ok {
+		return fmt.Errorf("mcp: ProjectUpdateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	p.ID = in.ID
+	return copyByJSONTag(in, p)
 }
