@@ -191,12 +191,13 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 		return nil, err
 	}
 
-	// 8. Create the bot user.
-	bot, err := human.CreateBotUser(ctx, botUsername, "veans bot for "+project.Title)
+	// 8. Resolve the bot user: reuse one we already own if the name is
+	// taken by us, prompt for a fresh name (with a petname suggestion)
+	// if the name is taken by someone else, otherwise create new.
+	bot, err := resolveBotUser(ctx, human, botUsername, project.Title, prompter, opts.Out)
 	if err != nil {
 		return nil, err
 	}
-	progress(opts.Out, "Created bot user %q (id=%d)", bot.Username, bot.ID)
 
 	// 9. Share the project with the bot.
 	if _, err := human.ShareProjectWithUser(ctx, project.ID, &client.ProjectUser{
