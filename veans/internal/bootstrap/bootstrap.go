@@ -534,18 +534,37 @@ func bootstrapBuckets(ctx context.Context, c *client.Client, projectID, viewID i
 		approve := opts.AutoApproveBuckets
 		if !approve {
 			fmt.Fprintf(opts.Out, "Missing canonical buckets: %s\n", strings.Join(missing, ", "))
-			ans, err := p.ReadLine("Bootstrap missing buckets? [Y/n/abort]: ")
-			if err != nil {
-				return config.Buckets{}, err
-			}
-			ans = strings.ToLower(strings.TrimSpace(ans))
-			switch ans {
-			case "", "y", "yes":
-				approve = true
-			case "n", "no":
-				approve = false
-			case "a", "abort":
-				return config.Buckets{}, output.New(output.CodeValidation, "user aborted bucket bootstrap")
+			const maxUnknownAnswers = 5
+			prompt := "Bootstrap missing buckets? [Y/n/abort]: "
+			unknown := 0
+		promptLoop:
+			for {
+				ans, err := p.ReadLine(prompt)
+				if err != nil {
+					return config.Buckets{}, err
+				}
+				normalized := strings.ToLower(strings.TrimSpace(ans))
+				switch normalized {
+				case "", "y", "yes":
+					approve = true
+					break promptLoop
+				case "n", "no":
+					return config.Buckets{}, output.New(output.CodeValidation,
+						"canonical buckets missing — either re-run `veans init` and answer Y to let veans bootstrap them, "+
+							"or create the missing buckets (%s) manually in Vikunja's UI and re-run `veans init`",
+						strings.Join(missing, ", "))
+				case "a", "abort":
+					return config.Buckets{}, output.New(output.CodeValidation, "user aborted bucket bootstrap")
+				default:
+					unknown++
+					if unknown > maxUnknownAnswers {
+						return config.Buckets{}, output.New(output.CodeValidation,
+							"could not understand bucket bootstrap answer after %d attempts — aborting; "+
+								"re-run `veans init` and answer y, n, or abort",
+							maxUnknownAnswers)
+					}
+					fmt.Fprintf(opts.Out, "didn't understand %q, please answer y or n (or abort)\n", ans)
+				}
 			}
 		}
 		if approve {
@@ -579,7 +598,8 @@ func bootstrapBuckets(ctx context.Context, c *client.Client, projectID, viewID i
 	}
 	if out.Todo == 0 || out.InProgress == 0 || out.InReview == 0 || out.Done == 0 || out.Scrapped == 0 {
 		return config.Buckets{}, output.New(output.CodeValidation,
-			"canonical buckets missing — re-run with bucket bootstrap approved or create them manually")
+			"canonical buckets missing — either re-run `veans init` and let veans bootstrap them, "+
+				"or create the missing canonical buckets (Todo / In Progress / In Review / Done / Scrapped) manually in Vikunja's UI and re-run `veans init`")
 	}
 	return out, nil
 }

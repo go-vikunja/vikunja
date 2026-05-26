@@ -79,18 +79,17 @@ func (Test) Filter(expr string) error {
 
 // E2E runs the e2e suite without `-short` so TestMain lets it through.
 // Requires VEANS_E2E_API_URL to point at a running Vikunja instance and
-// either VEANS_E2E_ADMIN_TOKEN or VEANS_E2E_ADMIN_USER + VEANS_E2E_ADMIN_PASS
-// for the admin/seed identity.
+// either VEANS_E2E_TESTING_TOKEN (matching the API's VIKUNJA_SERVICE_TESTINGTOKEN
+// — the harness will seed its own admin via /api/v1/test/users) or
+// VEANS_E2E_ADMIN_TOKEN (a pre-existing JWT for the admin to use as-is).
 //
 // Set VEANS_E2E_SKIP_BUILD=true to reuse a previously-built binary.
 func (Test) E2E() error {
 	if os.Getenv("VEANS_E2E_API_URL") == "" {
 		return fmt.Errorf("VEANS_E2E_API_URL is not set — start a Vikunja instance and export the URL")
 	}
-	if os.Getenv("VEANS_E2E_ADMIN_TOKEN") == "" {
-		if os.Getenv("VEANS_E2E_ADMIN_USER") == "" || os.Getenv("VEANS_E2E_ADMIN_PASS") == "" {
-			return fmt.Errorf("set either VEANS_E2E_ADMIN_TOKEN or VEANS_E2E_ADMIN_USER + VEANS_E2E_ADMIN_PASS")
-		}
+	if os.Getenv("VEANS_E2E_ADMIN_TOKEN") == "" && os.Getenv("VEANS_E2E_TESTING_TOKEN") == "" {
+		return fmt.Errorf("set VEANS_E2E_ADMIN_TOKEN, or VEANS_E2E_TESTING_TOKEN (matching the API's VIKUNJA_SERVICE_TESTINGTOKEN) so the suite can seed its own admin")
 	}
 	if os.Getenv("VEANS_E2E_SKIP_BUILD") == "" {
 		if err := Build(); err != nil {
