@@ -137,10 +137,10 @@ func TestMCP_InitializeWithMCPToken(t *testing.T) {
 }
 
 func TestMCP_ToolsListReturnsRegisteredResources(t *testing.T) {
-	// Task 5 wires the `projects` resource into the registry, so the live
-	// SDK server should now expose its five tools to any token with
-	// mcp:access. Task 6 will add per-token scope filtering and is when
-	// the mcp-only token starts seeing a narrower list.
+	// Per Task 6, an mcp-only token (no projects scope) sees zero project
+	// tools in tools/list — the per-session tool registration filters by
+	// the requesting token's (group, permission) scopes. Tools/list visibility
+	// for tokens with project scopes is covered in mcp_scopes_test.go.
 	e, err := setupTestEnv()
 	require.NoError(t, err)
 
@@ -174,24 +174,18 @@ func TestMCP_ToolsListReturnsRegisteredResources(t *testing.T) {
 	require.True(t, ok, "response missing result: %s", listRec.Body.String())
 	tools, ok := result["tools"].([]any)
 	require.True(t, ok, "response missing tools array: %s", listRec.Body.String())
-	require.Len(t, tools, 5, "expected exactly the 5 project tools, got: %v", tools)
 
-	names := make(map[string]bool, len(tools))
+	// No project tools because the token has no projects:* scopes.
+	projectToolCount := 0
 	for _, raw := range tools {
 		tool, isMap := raw.(map[string]any)
 		require.True(t, isMap, "tool entry should be an object: %v", raw)
 		name, _ := tool["name"].(string)
-		names[name] = true
+		if strings.HasPrefix(name, "projects_") {
+			projectToolCount++
+		}
 	}
-	for _, want := range []string{
-		"projects_create",
-		"projects_read_one",
-		"projects_read_all",
-		"projects_update",
-		"projects_delete",
-	} {
-		assert.Truef(t, names[want], "tools/list missing %s; got %v", want, names)
-	}
+	assert.Zero(t, projectToolCount, "mcp-only token must see zero project tools, got %v", tools)
 }
 
 func TestMCP_SessionRoundTrip(t *testing.T) {

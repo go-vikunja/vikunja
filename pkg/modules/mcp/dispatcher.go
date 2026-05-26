@@ -95,12 +95,13 @@ var crud = defaultCRUD
 // skip the unmarshal round-trip the SDK has already performed against the
 // input schema).
 //
-// Errors fall into two categories:
-//   - ErrToolNotFound / ErrNoUserInContext / JSON-unmarshal errors are
-//     dispatcher-level failures the caller should translate into an
-//     IsError=true tool result. We return them as errors here (rather than
-//     constructing a *mcp.CallToolResult) so the dispatcher stays
-//     SDK-agnostic; the thin AddTool handler does the wrapping.
+// Errors fall into three categories:
+//   - ErrToolNotFound / ErrNoUserInContext / ErrScopeDenied /
+//     JSON-unmarshal errors are dispatcher-level failures the caller should
+//     translate into an IsError=true tool result. We return them as errors
+//     here (rather than constructing a *mcp.CallToolResult) so the
+//     dispatcher stays SDK-agnostic; the thin AddTool handler does the
+//     wrapping.
 //   - Errors returned by handler.Do* (model-layer permission denials,
 //     validation failures, etc.) are propagated as-is. The tool handler
 //     wraps them with SetError per the SDK's convention that domain
@@ -109,6 +110,16 @@ func Dispatch(ctx context.Context, toolName string, rawArgs json.RawMessage) (an
 	ref, ok := lookupTool(toolName)
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
+	}
+
+	// Scope check first — never allocate a wrapper or touch model state
+	// for a tool the caller isn't authorized to invoke. This guards
+	// against the (rare) case where the per-session tool registration in
+	// newServer registered a tool the current request's token doesn't
+	// have a scope for: the SDK caches the *Server across requests, but
+	// the API token is per-HTTP-request.
+	if !tokenAuthorizes(TokenFromContext(ctx), ref.resource.Name, ref.op) {
+		return nil, fmt.Errorf("%w: %s", ErrScopeDenied, toolName)
 	}
 
 	// Allocate a fresh wrapper for this call so concurrent dispatches
@@ -142,6 +153,11 @@ func DispatchTyped(ctx context.Context, toolName string, wrapper any) (any, erro
 	ref, ok := lookupTool(toolName)
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrToolNotFound, toolName)
+	}
+	// Scope check mirrors Dispatch — see the comment there for why this
+	// is necessary even when newServer already filtered the tool set.
+	if !tokenAuthorizes(TokenFromContext(ctx), ref.resource.Name, ref.op) {
+		return nil, fmt.Errorf("%w: %s", ErrScopeDenied, toolName)
 	}
 	return dispatchPrepared(ctx, ref, wrapper)
 }
