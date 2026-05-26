@@ -98,13 +98,18 @@ jobs:
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
         with:
           go-version: stable
+      - name: Install mage
+        # The cached mage-static artifact has the parent magefile compiled
+        # in — we need a generic mage binary to pick up veans/magefile.go.
+        run: go install github.com/magefile/mage@v1.17.2
       - name: Run unit tests
-        # `-short` skips the e2e package via its TestMain (see
-        # veans/e2e/main_test.go), mirroring the parent monorepo's
-        # pkg/webtests convention. The heavier test-veans-e2e job
-        # runs the full suite against the api-build artifact.
+        # `mage test` is the Aliases entry for Test.All which passes
+        # `-short` — the e2e package's TestMain skips under -short,
+        # mirroring the parent monorepo's pkg/webtests convention. The
+        # heavier test-veans-e2e job runs the full suite against the
+        # api-build artifact.
         working-directory: veans
-        run: go test -count=1 -short ./...
+        run: mage test
 
   check-translations:
     runs-on: ubuntu-latest
