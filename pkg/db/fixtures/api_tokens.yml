@@ -78,3 +78,23 @@
   owner_id: 13
   created: 2024-01-01 00:00:00
   # token in plaintext is tk_feeds_access_token_user_0013_feed0013
+- id: 9
+  title: 'mcp access token for user 1'
+  token_salt: mCpAcCs9R1
+  token_hash: d57d7084733dee8e76c81ed4220bb4f9147e39b7966c7c435ced7437b2e4e09c9d4595d544b9dcd613c179e9866074f64a87
+  token_last_eight: 0mcp0001
+  permissions: '{"mcp":["access"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 1
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_mcp_access_token_test_0000000000mcp0001
+- id: 10
+  title: 'mcp access token with mixed scopes for user 1'
+  token_salt: mCpMxSc8R2
+  token_hash: 8c34b5ca2154ee6515900650600d260c1246b98c28e7d56ab6f247aeea81b0fd65d433a4fd8c162149ebe2ff751e020bd8c8
+  token_last_eight: pmixed02
+  permissions: '{"mcp":["access"],"projects":["read_one","read_all"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 1
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_mcp_mixed_scope_token_test_00mcpmixed02

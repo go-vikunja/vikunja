@@ -48,6 +48,18 @@ func init() {
 			Method: "GET",
 		},
 	}
+	// The MCP endpoint serves the streamable-HTTP transport, which uses
+	// POST, GET and DELETE on the same path. CanDoAPIRoute only matches one
+	// (method, path) pair per RouteDetail, so the actual gate lives behind
+	// skipRouteCheck + an inline HasMCPAccess() call in the MCP handler.
+	// This entry only exists so the scope appears in GET /api/v1/routes
+	// and PermissionsAreValid accepts it.
+	apiTokenRoutes["mcp"] = APITokenRoute{
+		"access": &RouteDetail{
+			Path:   "/api/v1/mcp",
+			Method: "ANY",
+		},
+	}
 }
 
 type APITokenRoute map[string]*RouteDetail
