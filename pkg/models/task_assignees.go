@@ -335,7 +335,10 @@ func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page
 
 	numberOfTotalItems, err = s.Table("task_assignees").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
-		Where("task_id = ? AND users.username LIKE ?", la.TaskID, "%"+search+"%").
+		Where(builder.And(
+			builder.Eq{"task_id": la.TaskID},
+			db.ILIKE("users.username", search),
+		)).
 		Count(&TaskAssginee{})
 	return taskAssignees, len(taskAssignees), numberOfTotalItems, err
 }
