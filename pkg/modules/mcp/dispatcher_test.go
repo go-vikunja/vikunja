@@ -22,6 +22,7 @@ import (
 	"errors"
 	"testing"
 
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -119,10 +120,20 @@ func (i *stubInput) ReadAllParams() (string, int, int) {
 	return i.Search, i.Page, i.PerPage
 }
 
+// newAuthedCtx returns a context with a test user and an API token that
+// authorizes every (resource, op) on the "stubs" resource — sufficient for
+// the dispatcher's wiring tests. Scope-denied scenarios are covered in
+// scope_test.go with explicitly narrower tokens.
 func newAuthedCtx(t *testing.T) context.Context {
 	t.Helper()
 	u := &user.User{ID: 42}
-	return WithUser(context.Background(), u)
+	token := &models.APIToken{
+		APIPermissions: models.APIPermissions{
+			"stubs": []string{"create", "read_one", "read_all", "update", "delete"},
+		},
+	}
+	ctx := WithUser(context.Background(), u)
+	return WithToken(ctx, token)
 }
 
 // installStubCRUD swaps the dispatcher's Do* function set with test doubles
@@ -171,7 +182,18 @@ func TestDispatchNoUser(t *testing.T) {
 		Inputs:      map[Op]any{OpReadOne: &stubInput{}},
 	}))
 
-	_, err := Dispatch(context.Background(), "stubs_read_one", json.RawMessage(`{"id":1}`))
+	// Attach an authorising token but no user — the scope check passes,
+	// the user lookup inside dispatchPrepared fails. Ordering matters: the
+	// scope check runs first so callers without a token never reach the
+	// user check.
+	token := &models.APIToken{
+		APIPermissions: models.APIPermissions{
+			"stubs": []string{"read_one"},
+		},
+	}
+	ctx := WithToken(context.Background(), token)
+
+	_, err := Dispatch(ctx, "stubs_read_one", json.RawMessage(`{"id":1}`))
 	require.Error(t, err)
 	assert.ErrorIs(t, err, ErrNoUserInContext)
 }
