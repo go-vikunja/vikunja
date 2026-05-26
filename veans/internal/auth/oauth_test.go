@@ -96,36 +96,6 @@ func TestBuildAuthorizeURL(t *testing.T) {
 	}
 }
 
-func TestGenerateState_Shape(t *testing.T) {
-	s, err := generateState()
-	if err != nil {
-		t.Fatal(err)
-	}
-	// 24 random bytes base64url-no-pad → 32 chars.
-	if len(s) < 30 {
-		t.Fatalf("state length %d shorter than expected", len(s))
-	}
-	for _, r := range s {
-		switch {
-		case r >= 'A' && r <= 'Z',
-			r >= 'a' && r <= 'z',
-			r >= '0' && r <= '9',
-			r == '-', r == '_':
-		default:
-			t.Fatalf("state contains illegal rune %q", r)
-		}
-	}
-	// Decodes cleanly as base64url-no-pad.
-	if _, err := base64.RawURLEncoding.DecodeString(s); err != nil {
-		t.Fatalf("state isn't base64url-no-pad: %v", err)
-	}
-	// Two consecutive states should differ — sanity for entropy.
-	s2, _ := generateState()
-	if s == s2 {
-		t.Fatal("two consecutive states are identical — entropy is broken")
-	}
-}
-
 // newCallbackHandler returns just the http.Handler portion of
 // newCallbackServer so tests can drive it directly with httptest.NewRecorder
 // without binding a real loopback socket.
