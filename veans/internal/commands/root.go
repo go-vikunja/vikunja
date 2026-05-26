@@ -35,6 +35,7 @@ func Root(version string) *cobra.Command {
 
 	root.AddCommand(newVersionCmd(version))
 	root.AddCommand(newInitCmd())
+	root.AddCommand(newListCmd())
 
 	return root
 }
