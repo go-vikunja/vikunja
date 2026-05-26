@@ -68,6 +68,7 @@ import (
 	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
+	mcpmodule "code.vikunja.io/api/pkg/modules/mcp"
 	"code.vikunja.io/api/pkg/modules/migration"
 	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	migrationHandler "code.vikunja.io/api/pkg/modules/migration/handler"
@@ -500,6 +501,14 @@ func registerAPIRoutes(a *echo.Group) {
 	u.GET("/bots/:bot", botHandler.ReadOneWeb)
 	u.POST("/bots/:bot", botHandler.UpdateWeb)
 	u.DELETE("/bots/:bot", botHandler.DeleteWeb)
+
+	// MCP endpoint. The streamable-HTTP transport uses POST, GET, and
+	// DELETE on the same path; CanDoAPIRoute does an exact (method,
+	// path) match per permission, so the route check is skipped in the
+	// token middleware (see api_tokens.go) and the mcp:access scope is
+	// gated inline inside the handler via APIToken.HasMCPAccess().
+	a.Any("/mcp", mcpmodule.Handler)
+	a.Any("/mcp/*", mcpmodule.Handler)
 
 	projectHandler := &handler.WebHandler{
 		EmptyStruct: func() handler.CObject {
