@@ -42,15 +42,23 @@ import (
 const routePrefix = "/api/v1/mcp"
 
 // newServer constructs a fresh *mcp.Server with Vikunja's implementation
-// metadata. The SDK's NewStreamableHTTPHandler accepts a factory
-// (getServer) that may return the same server across sessions; we return
-// a new one per session for now so future per-session state (e.g.
-// scope-filtered tool sets, see Task 6) has a clean place to live.
+// metadata and the static set of registered tools. The SDK's
+// NewStreamableHTTPHandler accepts a factory (getServer) that may return
+// the same server across sessions; we return a new one per session for now
+// so future per-session state (e.g. scope-filtered tool sets, see Task 6)
+// has a clean place to live.
+//
+// RegisterResources is idempotent and is called here so production startup
+// doesn't need to know about a separate init step — the first incoming MCP
+// request triggers registration on demand.
 func newServer() *mcp.Server {
-	return mcp.NewServer(&mcp.Implementation{
+	RegisterResources()
+	srv := mcp.NewServer(&mcp.Implementation{
 		Name:    "vikunja",
 		Version: version.Version,
 	}, nil)
+	installTools(srv)
+	return srv
 }
 
 // streamableHandler is package-level so the SDK can manage its internal
