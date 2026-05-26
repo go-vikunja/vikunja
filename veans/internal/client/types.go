@@ -140,16 +140,22 @@ const (
 )
 
 // APIToken is the request and response shape for `PUT /tokens`. The plaintext
-// `Token` field is only populated on creation.
+// `Token` field is only populated on creation. Vikunja requires ExpiresAt;
+// callers that want a long-lived token use FarFuture (year 9999).
 type APIToken struct {
 	ID          int64               `json:"id,omitempty"`
 	Title       string              `json:"title"`
 	Token       string              `json:"token,omitempty"`
 	Permissions map[string][]string `json:"permissions"`
-	ExpiresAt   *time.Time          `json:"expires_at,omitempty"`
+	ExpiresAt   time.Time           `json:"expires_at"`
 	OwnerID     int64               `json:"owner_id,omitempty"`
 	Created     time.Time           `json:"created,omitempty"`
 }
+
+// FarFuture is what veans uses for "no expiry" since Vikunja's API token
+// model marks expires_at as required. Year 9999 is well past any reasonable
+// rotation horizon and is what the frontend uses for its "never" option.
+var FarFuture = time.Date(9999, time.December, 31, 0, 0, 0, 0, time.UTC)
 
 // Info is the parsed shape of `GET /info`.
 type Info struct {
