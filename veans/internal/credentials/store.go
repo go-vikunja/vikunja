@@ -22,7 +22,14 @@ package credentials
 import (
 	"errors"
 	"fmt"
+	"io"
+	"os"
 )
+
+// ChainStderr is the writer the Chain uses for operator-visible warnings
+// (currently: backend-fallthrough notices on Set). Tests override it; in
+// production it points at os.Stderr.
+var ChainStderr io.Writer = os.Stderr
 
 // ErrNotFound is returned when no backend has the requested credential.
 var ErrNotFound = errors.New("credential not found")
@@ -67,17 +74,41 @@ func (c *Chain) Get(server, account string) (string, error) {
 // transparently, falling through to the next — the file backend is the
 // reliable last-resort. Only if every writable backend fails do we surface
 // the last error.
+//
+// When a write fails on one writable backend and a later one succeeds, a
+// single-line warning is printed to ChainStderr naming both backends.
+// This is observability for the silent-shadow case: a stale keyring entry
+// from a prior successful write can mask the freshly-written file token if
+// keyring transiently rejects the new Set. The warning gives the operator
+// a breadcrumb; Set itself still returns nil because the write landed
+// somewhere durable.
 func (c *Chain) Set(server, account, token string) error {
-	var lastErr error
+	var (
+		lastErr    error
+		failedName string
+		failedErr  error
+	)
 	for _, b := range c.Backends {
 		if _, ok := b.(*EnvBackend); ok {
 			continue
 		}
-		if err := b.Set(server, account, token); err == nil {
+		err := b.Set(server, account, token)
+		if err == nil {
+			if failedName != "" {
+				fmt.Fprintf(ChainStderr,
+					"veans: credential store: %s rejected write (%v); falling back to %s\n",
+					failedName, failedErr, b.Name())
+			}
 			return nil
-		} else if !errors.Is(err, errReadOnly) {
-			lastErr = fmt.Errorf("%s: %w", b.Name(), err)
 		}
+		if errors.Is(err, errReadOnly) {
+			continue
+		}
+		// Remember the most recent non-readonly failure so a later success
+		// can surface it, or so we can return it if every backend fails.
+		failedName = b.Name()
+		failedErr = err
+		lastErr = fmt.Errorf("%s: %w", b.Name(), err)
 	}
 	if lastErr != nil {
 		return lastErr

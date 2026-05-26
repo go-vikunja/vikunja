@@ -99,11 +99,12 @@ jobs:
         with:
           go-version: stable
       - name: Run unit tests
-        # The e2e package self-skips when VEANS_E2E_API_URL isn't set, so
-        # this job runs only the (fast) unit tests, independent of the
-        # heavier test-veans-e2e job that needs the API artifact.
+        # `-short` skips the e2e package via its TestMain (see
+        # veans/e2e/main_test.go), mirroring the parent monorepo's
+        # pkg/webtests convention. The heavier test-veans-e2e job
+        # runs the full suite against the api-build artifact.
         working-directory: veans
-        run: go test -count=1 ./...
+        run: go test -count=1 -short ./...
 
   check-translations:
     runs-on: ubuntu-latest
