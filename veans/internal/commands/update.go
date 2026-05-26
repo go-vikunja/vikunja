@@ -94,6 +94,13 @@ func newUpdateCmd() *cobra.Command {
 	return cmd
 }
 
+// runUpdate is intentionally a single linear flow — the steps it performs
+// (concurrency check → status → field changes → comments → field POST →
+// bucket move → label add/remove → refetch) all share the same task,
+// flag set, and error-handling shape. Splitting them produces five tiny
+// functions that each take the same five arguments.
+//
+//nolint:gocyclo // single-pass orchestration; each branch is one short stanza
 func runUpdate(ctx context.Context, rt *runtime, id int64, f *updateFlags) (*client.Task, error) {
 	current, err := rt.client.GetTask(ctx, id)
 	if err != nil {
