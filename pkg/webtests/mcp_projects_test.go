@@ -126,13 +126,16 @@ func toolResultText(t *testing.T, result map[string]any) string {
 }
 
 func TestMCP_Projects_ToolsListAll(t *testing.T) {
+	// Token 11 has every project scope plus the scopes added in Task 7
+	// (tasks, labels, teams, tasks_comments, tasks_assignees). The total
+	// tool count therefore exceeds 5; what matters here is that all five
+	// project tools are present.
 	c := newMCPClient(t, mcpFullProjectsToken)
 	resp := c.rpc("tools/list", map[string]any{})
 	result, ok := resp["result"].(map[string]any)
 	require.True(t, ok)
 	tools, ok := result["tools"].([]any)
 	require.True(t, ok)
-	require.Len(t, tools, 5)
 
 	names := make(map[string]bool, len(tools))
 	for _, raw := range tools {

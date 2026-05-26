@@ -47,6 +47,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
@@ -361,4 +362,415 @@ func (in *ProjectUpdateInput) ApplyTo(dst handler.CObject) error {
 	}
 	p.ID = in.ID
 	return copyByJSONTag(in, p)
+}
+
+// TaskCreateInput is the input wrapper for the `tasks_create` tool.
+//
+// Only the fields the caller is allowed to set at creation are exposed.
+// Server-managed/computed fields (Reminders, Assignees, Labels, Attachments,
+// Identifier, Index, Position, IsFavorite, Subscription, Created/Updated,
+// CreatedBy(ID), Reactions, RelatedTasks, etc.) are intentionally absent so
+// the generated input schema stays narrow.
+//
+// Title and ProjectID are the only required fields; everything else has
+// `omitempty` so the SDK marks them optional.
+type TaskCreateInput struct {
+	// Title of the task. Required.
+	Title string `json:"title" jsonschema:"title of the task"`
+	// ID of the project this task belongs to. Required.
+	ProjectID int64 `json:"project_id" jsonschema:"id of the project this task belongs to"`
+	// Longer-form description (optional).
+	Description string `json:"description,omitempty" jsonschema:"longer-form description for the task"`
+	// Whether the task is already done at creation time.
+	Done bool `json:"done,omitempty" jsonschema:"set to true to create the task in a done state"`
+	// When the task is due (RFC 3339 timestamp).
+	DueDate time.Time `json:"due_date,omitempty" jsonschema:"due date as an RFC 3339 timestamp"`
+	// When the task starts (RFC 3339 timestamp).
+	StartDate time.Time `json:"start_date,omitempty" jsonschema:"start date as an RFC 3339 timestamp"`
+	// When the task ends (RFC 3339 timestamp).
+	EndDate time.Time `json:"end_date,omitempty" jsonschema:"end date as an RFC 3339 timestamp"`
+	// Repeat interval in seconds.
+	RepeatAfter int64 `json:"repeat_after,omitempty" jsonschema:"repeat interval in seconds"`
+	// Repeat mode: 0 = repeat after RepeatAfter, 1 = monthly, 3 = from current date.
+	RepeatMode int `json:"repeat_mode,omitempty" jsonschema:"repeat mode: 0 = after interval, 1 = monthly, 3 = from current date"`
+	// Priority (sortable, no fixed range).
+	Priority int64 `json:"priority,omitempty" jsonschema:"priority value (sortable, caller-defined range)"`
+	// PercentDone between 0 and 1.
+	PercentDone float64 `json:"percent_done,omitempty" jsonschema:"completion percentage as a float between 0 and 1"`
+	// Hex color code (without leading #).
+	HexColor string `json:"hex_color,omitempty" jsonschema:"hex color without leading #"`
+	// Bucket id (only meaningful when the task is moved into a kanban view).
+	BucketID int64 `json:"bucket_id,omitempty" jsonschema:"id of the kanban bucket the task should land in"`
+	// ID of the attachment to use as the cover image.
+	CoverImageAttachmentID int64 `json:"cover_image_attachment_id,omitempty" jsonschema:"id of the attachment to display as cover image"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.Task.
+func (in *TaskCreateInput) ApplyTo(dst handler.CObject) error {
+	t, ok := dst.(*models.Task)
+	if !ok {
+		return fmt.Errorf("mcp: TaskCreateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	if err := copyByJSONTag(in, t); err != nil {
+		return err
+	}
+	if in.RepeatMode != 0 {
+		t.RepeatMode = models.TaskRepeatMode(in.RepeatMode)
+	}
+	return nil
+}
+
+// TaskUpdateInput is the input wrapper for the `tasks_update` tool.
+//
+// Mirrors TaskCreateInput's writable surface and adds the required ID. Only
+// the columns Task.updateSingleTask persists (title, description, done,
+// due_date, repeat_after, priority, start_date, end_date, hex_color,
+// percent_done, project_id, bucket_id, repeat_mode, cover_image_attachment_id)
+// are exposed.
+type TaskUpdateInput struct {
+	// ID of the task to update. Required.
+	ID int64 `json:"id" jsonschema:"id of the task to update"`
+	// New title.
+	Title string `json:"title,omitempty" jsonschema:"new title; omit to leave unchanged"`
+	// New project id (move the task to a different project).
+	ProjectID int64 `json:"project_id,omitempty" jsonschema:"move the task to a different project; omit to leave unchanged"`
+	// New description.
+	Description string `json:"description,omitempty" jsonschema:"new description; omit to leave unchanged"`
+	// Mark the task as done (true) or undone (false). Defaults to false.
+	Done bool `json:"done,omitempty" jsonschema:"true marks the task as done"`
+	// New due date.
+	DueDate time.Time `json:"due_date,omitempty" jsonschema:"new due date as an RFC 3339 timestamp"`
+	// New start date.
+	StartDate time.Time `json:"start_date,omitempty" jsonschema:"new start date as an RFC 3339 timestamp"`
+	// New end date.
+	EndDate time.Time `json:"end_date,omitempty" jsonschema:"new end date as an RFC 3339 timestamp"`
+	// New repeat interval (seconds).
+	RepeatAfter int64 `json:"repeat_after,omitempty" jsonschema:"new repeat interval in seconds"`
+	// New repeat mode.
+	RepeatMode int `json:"repeat_mode,omitempty" jsonschema:"new repeat mode: 0 = after interval, 1 = monthly, 3 = from current date"`
+	// New priority.
+	Priority int64 `json:"priority,omitempty" jsonschema:"new priority value"`
+	// New percent done between 0 and 1.
+	PercentDone float64 `json:"percent_done,omitempty" jsonschema:"new completion percentage between 0 and 1"`
+	// New hex color.
+	HexColor string `json:"hex_color,omitempty" jsonschema:"new hex color without leading #"`
+	// New bucket id (move within a kanban view).
+	BucketID int64 `json:"bucket_id,omitempty" jsonschema:"new kanban bucket id"`
+	// New cover image attachment id.
+	CoverImageAttachmentID int64 `json:"cover_image_attachment_id,omitempty" jsonschema:"new cover image attachment id"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.Task. ID is always
+// copied so the model knows which row to update.
+func (in *TaskUpdateInput) ApplyTo(dst handler.CObject) error {
+	t, ok := dst.(*models.Task)
+	if !ok {
+		return fmt.Errorf("mcp: TaskUpdateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	t.ID = in.ID
+	if err := copyByJSONTag(in, t); err != nil {
+		return err
+	}
+	if in.RepeatMode != 0 {
+		t.RepeatMode = models.TaskRepeatMode(in.RepeatMode)
+	}
+	return nil
+}
+
+// LabelCreateInput is the input wrapper for the `labels_create` tool.
+//
+// Label.Create only persists Title, Description, HexColor (plus the
+// auto-assigned CreatedBy/ID derived from the authed user), so the wrapper
+// exposes exactly those.
+type LabelCreateInput struct {
+	// Title of the label. Required.
+	Title string `json:"title" jsonschema:"title of the label"`
+	// Optional longer-form description.
+	Description string `json:"description,omitempty" jsonschema:"longer-form description of the label"`
+	// Optional hex color (without leading #).
+	HexColor string `json:"hex_color,omitempty" jsonschema:"hex color without leading #"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.Label.
+func (in *LabelCreateInput) ApplyTo(dst handler.CObject) error {
+	l, ok := dst.(*models.Label)
+	if !ok {
+		return fmt.Errorf("mcp: LabelCreateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	return copyByJSONTag(in, l)
+}
+
+// LabelUpdateInput is the input wrapper for the `labels_update` tool.
+//
+// Label.Update persists exactly Title, Description, HexColor (see the Cols
+// list in pkg/models/label.go). The wrapper exposes those plus the required
+// ID.
+type LabelUpdateInput struct {
+	// ID of the label to update. Required.
+	ID int64 `json:"id" jsonschema:"id of the label to update"`
+	// New title.
+	Title string `json:"title,omitempty" jsonschema:"new title; omit to leave unchanged"`
+	// New description.
+	Description string `json:"description,omitempty" jsonschema:"new description; omit to leave unchanged"`
+	// New hex color (without leading #).
+	HexColor string `json:"hex_color,omitempty" jsonschema:"new hex color without leading #; omit to leave unchanged"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.Label. ID is always
+// copied so the model knows which row to update.
+func (in *LabelUpdateInput) ApplyTo(dst handler.CObject) error {
+	l, ok := dst.(*models.Label)
+	if !ok {
+		return fmt.Errorf("mcp: LabelUpdateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	l.ID = in.ID
+	return copyByJSONTag(in, l)
+}
+
+// TeamCreateInput is the input wrapper for the `teams_create` tool.
+//
+// Team.Create persists Name, Description, IsPublic (plus an auto-assigned
+// CreatedByID derived from the authed user). ExternalID and Issuer are
+// reserved for SSO/sync flows; we deliberately do not expose them via MCP.
+type TeamCreateInput struct {
+	// Name of the team. Required.
+	Name string `json:"name" jsonschema:"name of the team"`
+	// Optional longer-form description.
+	Description string `json:"description,omitempty" jsonschema:"longer-form description of the team"`
+	// Make the team public (anyone with the URL can see the member list).
+	IsPublic bool `json:"is_public,omitempty" jsonschema:"set to true to make the team publicly listable"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.Team.
+func (in *TeamCreateInput) ApplyTo(dst handler.CObject) error {
+	t, ok := dst.(*models.Team)
+	if !ok {
+		return fmt.Errorf("mcp: TeamCreateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	return copyByJSONTag(in, t)
+}
+
+// TeamUpdateInput is the input wrapper for the `teams_update` tool.
+//
+// Team.Update overwrites every column of the row (via xorm s.ID(id).Update),
+// so Name/Description/IsPublic round-trip cleanly. The wrapper mirrors the
+// same fields plus the required ID.
+type TeamUpdateInput struct {
+	// ID of the team to update. Required.
+	ID int64 `json:"id" jsonschema:"id of the team to update"`
+	// New name.
+	Name string `json:"name,omitempty" jsonschema:"new team name; omit to leave unchanged"`
+	// New description.
+	Description string `json:"description,omitempty" jsonschema:"new description; omit to leave unchanged"`
+	// New public flag.
+	IsPublic bool `json:"is_public,omitempty" jsonschema:"true makes the team publicly listable, false keeps it private"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.Team. ID is always
+// copied so the model knows which row to update.
+func (in *TeamUpdateInput) ApplyTo(dst handler.CObject) error {
+	t, ok := dst.(*models.Team)
+	if !ok {
+		return fmt.Errorf("mcp: TeamUpdateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	t.ID = in.ID
+	return copyByJSONTag(in, t)
+}
+
+// TaskCommentCreateInput is the input wrapper for the
+// `tasks_comments_create` tool.
+//
+// TaskComment.TaskID is `json:"-"` on the model because the REST layer binds
+// it from the URL path (`/tasks/:task/comments`). MCP tools take everything as
+// JSON args, so the wrapper exposes `task_id` as a required field.
+type TaskCommentCreateInput struct {
+	// ID of the task to attach the comment to. Required.
+	TaskID int64 `json:"task_id" jsonschema:"id of the task the comment belongs to"`
+	// The comment text. Required.
+	Comment string `json:"comment" jsonschema:"comment body (markdown is supported by the UI but stored verbatim)"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.TaskComment, lifting
+// TaskID onto the model field that's otherwise unreachable via JSON.
+func (in *TaskCommentCreateInput) ApplyTo(dst handler.CObject) error {
+	tc, ok := dst.(*models.TaskComment)
+	if !ok {
+		return fmt.Errorf("mcp: TaskCommentCreateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	tc.TaskID = in.TaskID
+	tc.Comment = in.Comment
+	return nil
+}
+
+// TaskCommentReadOneInput is the input wrapper for the
+// `tasks_comments_read_one` tool. Both the comment id and the parent task id
+// are required: the parent guard inside getTaskCommentSimple rejects requests
+// where the comment doesn't belong to the supplied task (IDOR defence).
+type TaskCommentReadOneInput struct {
+	// ID of the comment to read. Required.
+	ID int64 `json:"id" jsonschema:"id of the comment to read"`
+	// ID of the parent task. Required.
+	TaskID int64 `json:"task_id" jsonschema:"id of the parent task"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.TaskComment.
+func (in *TaskCommentReadOneInput) ApplyTo(dst handler.CObject) error {
+	tc, ok := dst.(*models.TaskComment)
+	if !ok {
+		return fmt.Errorf("mcp: TaskCommentReadOneInput.ApplyTo: unexpected destination %T", dst)
+	}
+	tc.ID = in.ID
+	tc.TaskID = in.TaskID
+	return nil
+}
+
+// TaskCommentReadAllInput is the input wrapper for the
+// `tasks_comments_read_all` tool. The parent task id is required (comments
+// only make sense scoped to a task); search/page/per_page follow the standard
+// pagination contract.
+type TaskCommentReadAllInput struct {
+	// ID of the parent task. Required.
+	TaskID int64 `json:"task_id" jsonschema:"id of the parent task whose comments to list"`
+	// Filter comments by substring match.
+	Search string `json:"search,omitempty" jsonschema:"filter comments by substring match"`
+	// Page (1-based). 0 means server default.
+	Page int `json:"page,omitempty" jsonschema:"1-based page number; 0 uses the server default"`
+	// Page size. 0 means server default.
+	PerPage int `json:"per_page,omitempty" jsonschema:"page size; 0 uses the server default"`
+}
+
+// ApplyTo copies TaskID onto the model. Pagination/search are returned via
+// ReadAllParams below.
+func (in *TaskCommentReadAllInput) ApplyTo(dst handler.CObject) error {
+	tc, ok := dst.(*models.TaskComment)
+	if !ok {
+		return fmt.Errorf("mcp: TaskCommentReadAllInput.ApplyTo: unexpected destination %T", dst)
+	}
+	tc.TaskID = in.TaskID
+	return nil
+}
+
+// ReadAllParams exposes search/page/per_page to the dispatcher.
+func (in *TaskCommentReadAllInput) ReadAllParams() (search string, page, perPage int) {
+	return in.Search, in.Page, in.PerPage
+}
+
+// TaskCommentUpdateInput is the input wrapper for the
+// `tasks_comments_update` tool. The parent task id is required so the IDOR
+// guard inside getTaskCommentSimple can verify the comment belongs to that
+// task.
+type TaskCommentUpdateInput struct {
+	// ID of the comment to update. Required.
+	ID int64 `json:"id" jsonschema:"id of the comment to update"`
+	// ID of the parent task. Required.
+	TaskID int64 `json:"task_id" jsonschema:"id of the parent task"`
+	// New comment body. Required (Update only persists this column).
+	Comment string `json:"comment" jsonschema:"new comment body"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.TaskComment.
+func (in *TaskCommentUpdateInput) ApplyTo(dst handler.CObject) error {
+	tc, ok := dst.(*models.TaskComment)
+	if !ok {
+		return fmt.Errorf("mcp: TaskCommentUpdateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	tc.ID = in.ID
+	tc.TaskID = in.TaskID
+	tc.Comment = in.Comment
+	return nil
+}
+
+// TaskCommentDeleteInput is the input wrapper for the
+// `tasks_comments_delete` tool. Both the comment id and parent task id are
+// required (the parent guard rejects mismatches).
+type TaskCommentDeleteInput struct {
+	// ID of the comment to delete. Required.
+	ID int64 `json:"id" jsonschema:"id of the comment to delete"`
+	// ID of the parent task. Required.
+	TaskID int64 `json:"task_id" jsonschema:"id of the parent task"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.TaskComment.
+func (in *TaskCommentDeleteInput) ApplyTo(dst handler.CObject) error {
+	tc, ok := dst.(*models.TaskComment)
+	if !ok {
+		return fmt.Errorf("mcp: TaskCommentDeleteInput.ApplyTo: unexpected destination %T", dst)
+	}
+	tc.ID = in.ID
+	tc.TaskID = in.TaskID
+	return nil
+}
+
+// TaskAssigneeCreateInput is the input wrapper for the
+// `tasks_assignees_create` tool. Both task and user IDs are required: TaskID
+// identifies the task (REST binds it from `/tasks/:task/assignees`) and
+// UserID identifies the user to assign.
+type TaskAssigneeCreateInput struct {
+	// ID of the task to assign the user to. Required.
+	TaskID int64 `json:"task_id" jsonschema:"id of the task to assign the user to"`
+	// ID of the user to assign. Required.
+	UserID int64 `json:"user_id" jsonschema:"id of the user to assign"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.TaskAssginee
+// (note the legacy spelling on the model type).
+func (in *TaskAssigneeCreateInput) ApplyTo(dst handler.CObject) error {
+	ta, ok := dst.(*models.TaskAssginee)
+	if !ok {
+		return fmt.Errorf("mcp: TaskAssigneeCreateInput.ApplyTo: unexpected destination %T", dst)
+	}
+	ta.TaskID = in.TaskID
+	ta.UserID = in.UserID
+	return nil
+}
+
+// TaskAssigneeDeleteInput is the input wrapper for the
+// `tasks_assignees_delete` tool. The REST path is
+// `/tasks/:task/assignees/:user` — both ids are required.
+type TaskAssigneeDeleteInput struct {
+	// ID of the task. Required.
+	TaskID int64 `json:"task_id" jsonschema:"id of the task"`
+	// ID of the user to unassign. Required.
+	UserID int64 `json:"user_id" jsonschema:"id of the user to unassign"`
+}
+
+// ApplyTo copies the wrapper fields onto a fresh *models.TaskAssginee.
+func (in *TaskAssigneeDeleteInput) ApplyTo(dst handler.CObject) error {
+	ta, ok := dst.(*models.TaskAssginee)
+	if !ok {
+		return fmt.Errorf("mcp: TaskAssigneeDeleteInput.ApplyTo: unexpected destination %T", dst)
+	}
+	ta.TaskID = in.TaskID
+	ta.UserID = in.UserID
+	return nil
+}
+
+// TaskAssigneeReadAllInput is the input wrapper for the
+// `tasks_assignees_read_all` tool. The parent task id is required;
+// pagination/search follow the standard contract.
+type TaskAssigneeReadAllInput struct {
+	// ID of the parent task. Required.
+	TaskID int64 `json:"task_id" jsonschema:"id of the task whose assignees to list"`
+	// Filter assignees by substring match on their username.
+	Search string `json:"search,omitempty" jsonschema:"filter assignees by username substring"`
+	// Page (1-based). 0 means server default.
+	Page int `json:"page,omitempty" jsonschema:"1-based page number; 0 uses the server default"`
+	// Page size. 0 means server default.
+	PerPage int `json:"per_page,omitempty" jsonschema:"page size; 0 uses the server default"`
+}
+
+// ApplyTo copies TaskID onto the model. Pagination is forwarded via
+// ReadAllParams below.
+func (in *TaskAssigneeReadAllInput) ApplyTo(dst handler.CObject) error {
+	ta, ok := dst.(*models.TaskAssginee)
+	if !ok {
+		return fmt.Errorf("mcp: TaskAssigneeReadAllInput.ApplyTo: unexpected destination %T", dst)
+	}
+	ta.TaskID = in.TaskID
+	return nil
+}
+
+// ReadAllParams exposes search/page/per_page to the dispatcher.
+func (in *TaskAssigneeReadAllInput) ReadAllParams() (search string, page, perPage int) {
+	return in.Search, in.Page, in.PerPage
 }
