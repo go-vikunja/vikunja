@@ -98,3 +98,13 @@
   owner_id: 1
   created: 2024-01-01 00:00:00
   # token in plaintext is tk_mcp_mixed_scope_token_test_00mcpmixed02
+- id: 11
+  title: 'mcp access token with full project scopes for user 1'
+  token_salt: mCpFullSc9R3
+  token_hash: 3b530a9f7564d062a526537f06ea8b570e2ac1ca1d69f59b04cd7abdbb9c5804517a639a88613940fb427c71ee4c6e800fc9
+  token_last_eight: fullp003
+  permissions: '{"mcp":["access"],"projects":["create","read_one","read_all","update","delete"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 1
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_mcp_full_projects_token_test_0fullp003

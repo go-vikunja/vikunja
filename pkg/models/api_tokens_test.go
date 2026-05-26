@@ -39,13 +39,14 @@ func TestAPIToken_ReadAll(t *testing.T) {
 	require.NoError(t, err)
 	tokens, is := result.([]*APIToken)
 	assert.Truef(t, is, "tokens are not of type []*APIToken")
-	assert.Len(t, tokens, 4)
+	assert.Len(t, tokens, 5)
 	assert.Len(t, tokens, count)
-	assert.Equal(t, int64(4), total)
+	assert.Equal(t, int64(5), total)
 	assert.Equal(t, int64(1), tokens[0].ID)
 	assert.Equal(t, int64(2), tokens[1].ID)
 	assert.Equal(t, int64(9), tokens[2].ID)
 	assert.Equal(t, int64(10), tokens[3].ID)
+	assert.Equal(t, int64(11), tokens[4].ID)
 }
 
 func TestAPIToken_CanDelete(t *testing.T) {
