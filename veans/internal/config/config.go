@@ -27,6 +27,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -44,6 +45,12 @@ type Config struct {
 	ViewID            int64   `yaml:"view_id"`
 	Buckets           Buckets `yaml:"buckets"`
 	Bot               Bot     `yaml:"bot"`
+
+	// HTTPTimeout overrides the default 30s HTTP client timeout when
+	// non-zero. Accepts Go duration syntax in YAML ("60s", "5m", "1h30m").
+	// Omitted from a freshly-written .veans.yml via omitempty so init flows
+	// don't surface this knob unless the operator opts in.
+	HTTPTimeout time.Duration `yaml:"http_timeout,omitempty"`
 
 	path string `yaml:"-"`
 }
