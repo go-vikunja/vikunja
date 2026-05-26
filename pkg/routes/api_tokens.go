@@ -82,6 +82,14 @@ func shouldSkipRouteCheck(c *echo.Context) bool {
 		return true
 	}
 
+	// MCP streams POST, GET and DELETE on one path; CanDoAPIRoute's exact
+	// (method, path) match can't express that, so mcp:access is gated in the
+	// handler instead.
+	path := c.Request().URL.Path
+	if path == "/api/v1/mcp" || strings.HasPrefix(path, "/api/v1/mcp/") {
+		return true
+	}
+
 	// Autopatch re-dispatches a bare GET on the authorised route; a query string
 	// or any other method means the client smuggled it in through the path.
 	if c.Request().Method != http.MethodGet || c.Request().URL.RawQuery != "" {
