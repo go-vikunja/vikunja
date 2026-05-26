@@ -201,7 +201,8 @@ Everything else (`list`, `show`, `create`, `update`, `claim`, `api`,
 - **Don't write to stdout from `prime` when no `.veans.yml` is found.**
   The hook contract is silent + exit 0 so the snippet is safe to install
   globally in `~/.claude/settings.json`.
-- **Don't change canonical bucket titles** without updating
-  `internal/status/CanonicalBucketTitles`, the prompt template, and
-  the e2e assertions in lockstep — agents and humans both treat them
-  as fixed strings.
+- **Don't rename canonical bucket titles** without updating
+  `BucketTitleAliases[s][0]` in `internal/status/status.go`, the
+  prompt template (`internal/commands/prompt.tmpl`), and the e2e
+  assertions in lockstep — agents and humans both treat them as
+  fixed strings.

@@ -58,10 +58,14 @@ func loadRuntime() (*runtime, error) {
 			"no token for %s on %s — run `veans login` to mint a fresh one",
 			cfg.Bot.Username, cfg.Server)
 	}
+	c := client.New(cfg.Server, tok)
+	if cfg.HTTPTimeout > 0 {
+		c.HTTPClient.Timeout = cfg.HTTPTimeout
+	}
 	return &runtime{
 		cfg:    cfg,
 		store:  store,
-		client: client.New(cfg.Server, tok),
+		client: c,
 	}, nil
 }
 

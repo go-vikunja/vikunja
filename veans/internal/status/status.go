@@ -43,21 +43,11 @@ func All() []Status {
 	return []Status{Todo, InProgress, InReview, Completed, Scrapped}
 }
 
-// CanonicalBucketTitles is the strict-with-override list seeded by `init`.
-// Order matches the columns we want left-to-right in a Kanban view.
-var CanonicalBucketTitles = []string{
-	"Todo",
-	"In Progress",
-	"In Review",
-	"Done",
-	"Scrapped",
-}
-
 // BucketTitleAliases lists titles that count as the canonical bucket for
 // each status. Vikunja's default Kanban view ships with "To-Do", "Doing"
 // and "Done" buckets — we accept those so a vanilla project doesn't grow
 // parallel buckets when veans init runs against it. The first entry is
-// always the canonical name used by CanonicalBucketTitles.
+// the canonical title returned by BucketTitle().
 var BucketTitleAliases = map[Status][]string{
 	Todo:       {"Todo", "To-Do", "ToDo", "To Do", "To do", "Backlog"},
 	InProgress: {"In Progress", "In-Progress", "Doing", "WIP", "In progress"},
@@ -83,19 +73,11 @@ func normalizeBucketTitle(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
 
-// BucketTitle returns the bucket name that backs each status.
+// BucketTitle returns the bucket name that backs each status. The canonical
+// title is the first entry in BucketTitleAliases — single source of truth.
 func (s Status) BucketTitle() string {
-	switch s {
-	case Todo:
-		return "Todo"
-	case InProgress:
-		return "In Progress"
-	case InReview:
-		return "In Review"
-	case Completed:
-		return "Done"
-	case Scrapped:
-		return "Scrapped"
+	if aliases, ok := BucketTitleAliases[s]; ok && len(aliases) > 0 {
+		return aliases[0]
 	}
 	return ""
 }

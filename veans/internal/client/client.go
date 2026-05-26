@@ -47,11 +47,17 @@ type Client struct {
 // default "veans/dev". Vikunja admins see this in their access logs.
 var UserAgent = "veans/dev"
 
+// defaultHTTPTimeout is the timeout applied to the HTTP client returned by
+// New. Callers that need a different value (e.g. the runtime loader honoring
+// `http_timeout` from .veans.yml) can overwrite HTTPClient.Timeout after
+// construction.
+const defaultHTTPTimeout = 30 * time.Second
+
 func New(baseURL, token string) *Client {
 	return &Client{
 		BaseURL:    strings.TrimRight(baseURL, "/"),
 		Token:      token,
-		HTTPClient: &http.Client{Timeout: 30 * time.Second},
+		HTTPClient: &http.Client{Timeout: defaultHTTPTimeout},
 	}
 }
 
