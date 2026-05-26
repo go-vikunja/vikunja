@@ -58,9 +58,9 @@ type Project struct {
 // "table" / "kanban"), not an int — Vikunja's ProjectViewKind has a
 // custom MarshalJSON.
 type ProjectView struct {
-	ID             int64  `json:"id"`
-	Title          string `json:"title"`
-	ProjectID      int64  `json:"project_id"`
+	ID        int64  `json:"id"`
+	Title     string `json:"title"`
+	ProjectID int64  `json:"project_id"`
 	// view_kind / bucket_configuration_mode are serialized as strings on
 	// the wire (custom MarshalJSON on the parent enums), not ints.
 	ViewKind       string `json:"view_kind"`
@@ -86,18 +86,18 @@ type Bucket struct {
 // Task mirrors the on-the-wire task representation. Many fields are omitted —
 // veans only consumes what its commands print or filter on.
 type Task struct {
-	ID          int64       `json:"id"`
-	Title       string      `json:"title"`
-	Description string      `json:"description,omitempty"`
-	Done        bool        `json:"done"`
-	DoneAt      *time.Time  `json:"done_at,omitempty"`
-	Priority    int64       `json:"priority,omitempty"`
-	ProjectID   int64       `json:"project_id"`
-	Index       int64       `json:"index,omitempty"`
-	Identifier  string      `json:"identifier,omitempty"`
-	Position    float64     `json:"position,omitempty"`
-	Created     time.Time   `json:"created,omitempty"`
-	Updated     time.Time   `json:"updated,omitempty"`
+	ID          int64      `json:"id"`
+	Title       string     `json:"title"`
+	Description string     `json:"description,omitempty"`
+	Done        bool       `json:"done"`
+	DoneAt      *time.Time `json:"done_at,omitempty"`
+	Priority    int64      `json:"priority,omitempty"`
+	ProjectID   int64      `json:"project_id"`
+	Index       int64      `json:"index,omitempty"`
+	Identifier  string     `json:"identifier,omitempty"`
+	Position    float64    `json:"position,omitempty"`
+	Created     time.Time  `json:"created,omitempty"`
+	Updated     time.Time  `json:"updated,omitempty"`
 	// BucketID is only set by Vikunja when sending a task to a server-
 	// side endpoint (e.g. the bucket-move POST); reads return it as 0.
 	// The current bucket(s) — one per Kanban view — are exposed via
