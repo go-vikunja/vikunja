@@ -1,3 +1,19 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // Package bootstrap orchestrates `veans init`. It chains together the steps
 // outlined in the plan: probe /info, acquire the human's transient token,
 // pick or create a project, designate a Kanban view, bootstrap canonical
@@ -57,8 +73,8 @@ type Options struct {
 	// Bucket bootstrap behavior:
 	//   AutoApproveBuckets — skip the prompt, create missing canonical buckets.
 	//   SkipBucketBootstrap — neither prompt nor create.
-	AutoApproveBuckets   bool
-	SkipBucketBootstrap  bool
+	AutoApproveBuckets  bool
+	SkipBucketBootstrap bool
 
 	// Store and Prompter are dependency-injected for testing.
 	Store    credentials.Store
@@ -110,7 +126,7 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 	repoRoot := opts.RepoRoot
 	if repoRoot == "" {
 		var err error
-		repoRoot, err = config.RepoRoot("")
+		repoRoot, err = config.RepoRoot(ctx, "")
 		if err != nil {
 			return nil, output.Wrap(output.CodeUnknown, err, "detect repo root: %v", err)
 		}
