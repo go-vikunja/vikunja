@@ -42,33 +42,40 @@ import (
 const routePrefix = "/api/v1/mcp"
 
 // newServer constructs a fresh *mcp.Server with Vikunja's implementation
-// metadata and the static set of registered tools. The SDK's
-// NewStreamableHTTPHandler accepts a factory (getServer) that may return
-// the same server across sessions; we return a new one per session for now
-// so future per-session state (e.g. scope-filtered tool sets, see Task 6)
-// has a clean place to live.
+// metadata and the per-session set of registered tools. The SDK calls the
+// factory passed to NewStreamableHTTPHandler exactly once per session
+// (when no Mcp-Session-Id matches an existing session, i.e. at the
+// initialize request); the returned *mcp.Server is cached for the
+// lifetime of that session.
 //
-// RegisterResources is idempotent and is called here so production startup
-// doesn't need to know about a separate init step — the first incoming MCP
-// request triggers registration on demand.
-func newServer() *mcp.Server {
+// Per-token tool filtering happens here: we pull the API token from the
+// request context (placed there by the Echo entry handler in Handler) and
+// register only the tools the token's scopes authorise. tools/list then
+// returns the filtered subset naturally; tools/call is additionally
+// re-checked in the dispatcher.
+//
+// RegisterResources is idempotent and called here so production startup
+// doesn't need to know about a separate init step — the first incoming
+// MCP request triggers registration on demand.
+func newServer(req *http.Request) *mcp.Server {
 	RegisterResources()
 	srv := mcp.NewServer(&mcp.Implementation{
 		Name:    "vikunja",
 		Version: version.Version,
 	}, nil)
-	installTools(srv)
+	// The token may legitimately be nil if a future code path forgets to
+	// attach one — installToolsForToken treats that as "no tools allowed".
+	// In the production flow Handler rejects unauthenticated requests
+	// before reaching the SDK, so this is purely defensive.
+	token := TokenFromContext(req.Context())
+	installToolsForToken(srv, token)
 	return srv
 }
 
 // streamableHandler is package-level so the SDK can manage its internal
-// session map across requests. The factory returned to the SDK still
-// builds a fresh *mcp.Server per session so we can attach per-session
-// state later without churning the handler.
-var streamableHandler = mcp.NewStreamableHTTPHandler(
-	func(_ *http.Request) *mcp.Server { return newServer() },
-	nil,
-)
+// session map across requests. The factory returns a fresh *mcp.Server
+// per session, scoped to the requesting token's permissions.
+var streamableHandler = mcp.NewStreamableHTTPHandler(newServer, nil)
 
 // Handler is the Echo entry point for the MCP endpoint. It:
 //

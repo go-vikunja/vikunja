@@ -28,6 +28,17 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+// Approach for scope-filtered tools/list (Task 6): the SDK calls the
+// getServer factory in NewStreamableHTTPHandler exactly once per session
+// (at the initialize request, when no Mcp-Session-Id matches an existing
+// session) and caches the returned *mcp.Server for the lifetime of that
+// session. There is no filter callback in mcp.ServerOptions, so we build a
+// per-session *mcp.Server that only registers the tools the requesting
+// token's APIPermissions allows. tools/list then naturally returns the
+// allowed subset. The dispatcher additionally re-checks scopes on every
+// tools/call as a defence-in-depth measure (the same session could in
+// principle be reused across requests carrying different tokens).
+
 // resources.go owns the central list of MCP-exposed resources. Each entry
 // declares: the resource name (matches the API-token scope group), the
 // model's EmptyStruct, the set of supported ops, and the per-op input
@@ -74,19 +85,22 @@ func registerProjects() error {
 	})
 }
 
-// installTools walks the registry and binds each enabled (resource, op)
-// pair to a tool on the given server. Per-op wrapper types are known at
-// compile time, so a per-resource installer is the cleanest way to keep the
-// SDK's compile-time type parameter happy while the registry stays
-// data-driven elsewhere.
+// installToolsForToken walks the registry and binds each (resource, op)
+// pair to a tool on the given server, but only if the token authorises that
+// (group, permission) combination. Per-op wrapper types are known at compile
+// time, so a per-resource installer is the cleanest way to keep the SDK's
+// compile-time type parameter happy while the registry stays data-driven
+// elsewhere.
 //
-// Called from newServer (mcp.go); every fresh MCP session gets the full
-// tool set. Per-token scope filtering is layered on top in Task 6.
-func installTools(srv *mcp.Server) {
-	installProjectsTools(srv)
+// Called from newServer (mcp.go) at session-init time. A nil token (which
+// should never happen in production because the entry handler rejects
+// unauthenticated requests) yields a server with no tools — defensive, the
+// dispatcher would also reject the call.
+func installToolsForToken(srv *mcp.Server, token *models.APIToken) {
+	installProjectsToolsForToken(srv, token)
 }
 
-func installProjectsTools(srv *mcp.Server) {
+func installProjectsToolsForToken(srv *mcp.Server, token *models.APIToken) {
 	r, ok := lookupResource("projects")
 	if !ok {
 		// Defensive: RegisterResources must run before installTools.
@@ -95,19 +109,19 @@ func installProjectsTools(srv *mcp.Server) {
 		panic("mcp: projects resource not registered")
 	}
 
-	if r.Ops&OpCreate != 0 {
+	if r.Ops&OpCreate != 0 && tokenAuthorizes(token, r.Name, OpCreate) {
 		addTool[*ProjectCreateInput](srv, r, OpCreate, "Create a new project")
 	}
-	if r.Ops&OpReadOne != 0 {
+	if r.Ops&OpReadOne != 0 && tokenAuthorizes(token, r.Name, OpReadOne) {
 		addTool[*ReadOneInput](srv, r, OpReadOne, "Fetch a single project by id")
 	}
-	if r.Ops&OpReadAll != 0 {
+	if r.Ops&OpReadAll != 0 && tokenAuthorizes(token, r.Name, OpReadAll) {
 		addTool[*ReadAllInput](srv, r, OpReadAll, "List the projects the caller has access to")
 	}
-	if r.Ops&OpUpdate != 0 {
+	if r.Ops&OpUpdate != 0 && tokenAuthorizes(token, r.Name, OpUpdate) {
 		addTool[*ProjectUpdateInput](srv, r, OpUpdate, "Update an existing project")
 	}
-	if r.Ops&OpDelete != 0 {
+	if r.Ops&OpDelete != 0 && tokenAuthorizes(token, r.Name, OpDelete) {
 		addTool[*DeleteInput](srv, r, OpDelete, "Delete a project by id")
 	}
 }
