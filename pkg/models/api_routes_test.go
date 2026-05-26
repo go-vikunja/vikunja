@@ -24,6 +24,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAPITokenRoutes_MCPAccessRegistered(t *testing.T) {
+	routes := GetAPITokenRoutes()
+
+	group, has := routes["mcp"]
+	require.True(t, has, "mcp scope group should be registered")
+
+	detail, has := group["access"]
+	require.True(t, has, "mcp.access permission should be registered")
+	require.NotNil(t, detail, "mcp.access RouteDetail should not be nil")
+	assert.NotEmpty(t, detail.Path, "mcp.access path should not be empty")
+	assert.NotEmpty(t, detail.Method, "mcp.access method should not be empty")
+}
+
+func TestPermissionsAreValid_MCPAccess(t *testing.T) {
+	err := PermissionsAreValid(APIPermissions{"mcp": {"access"}})
+	require.NoError(t, err)
+}
+
 func TestCanDoAPIRoute_BulkLabelTask(t *testing.T) {
 	// Reset apiTokenRoutes to isolate this test
 	apiTokenRoutes = make(map[string]APITokenRoute)

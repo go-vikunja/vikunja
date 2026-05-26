@@ -216,6 +216,18 @@ func (t *APIToken) HasFeedsAccess() bool {
 	return slices.Contains(perms, "access")
 }
 
+// HasMCPAccess checks whether the token has the mcp access permission.
+// The MCP endpoint uses POST, GET, and DELETE on the same path (streamable-HTTP
+// transport), so CanDoAPIRoute can't gate it — the MCP entry handler calls
+// this directly after the middleware skips the route check.
+func (t *APIToken) HasMCPAccess() bool {
+	perms, has := t.APIPermissions["mcp"]
+	if !has {
+		return false
+	}
+	return slices.Contains(perms, "access")
+}
+
 // GetTokenFromTokenString returns the full token object from the original token string.
 func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken, err error) {
 	lastEight := token[len(token)-8:]
