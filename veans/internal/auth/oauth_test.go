@@ -61,44 +61,13 @@ func TestGeneratePKCE_Unique(t *testing.T) {
 	}
 }
 
-func TestExtractCodeAndState_FullURL(t *testing.T) {
-	code, state, err := extractCodeAndState("vikunja-veans-cli://callback?code=ABC123&state=XYZ")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if code != "ABC123" || state != "XYZ" {
-		t.Fatalf("got code=%q state=%q", code, state)
-	}
-}
-
-func TestExtractCodeAndState_QueryOnly(t *testing.T) {
-	code, state, err := extractCodeAndState("code=ABC&state=XYZ")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if code != "ABC" || state != "XYZ" {
-		t.Fatalf("got code=%q state=%q", code, state)
-	}
-}
-
-func TestExtractCodeAndState_BareCode(t *testing.T) {
-	code, state, err := extractCodeAndState("plain-code-value")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if code != "plain-code-value" || state != "" {
-		t.Fatalf("got code=%q state=%q", code, state)
-	}
-}
-
-func TestExtractCodeAndState_EmptyError(t *testing.T) {
-	if _, _, err := extractCodeAndState("   "); err == nil {
-		t.Fatal("expected error on empty paste")
-	}
-}
-
 func TestBuildAuthorizeURL(t *testing.T) {
-	u := buildAuthorizeURL("https://vikunja.example.com", PKCEPair{Challenge: "CHL"}, "S")
+	u := buildAuthorizeURL(
+		"https://vikunja.example.com",
+		"http://127.0.0.1:54321/callback",
+		PKCEPair{Challenge: "CHL"},
+		"S",
+	)
 	if !strings.HasPrefix(u, "https://vikunja.example.com/oauth/authorize?") {
 		t.Fatalf("unexpected prefix: %s", u)
 	}
@@ -108,6 +77,8 @@ func TestBuildAuthorizeURL(t *testing.T) {
 		"code_challenge=CHL",
 		"code_challenge_method=S256",
 		"state=S",
+		// redirect_uri carried through (URL-encoded)
+		"redirect_uri=http%3A%2F%2F127.0.0.1%3A54321%2Fcallback",
 	} {
 		if !strings.Contains(u, want) {
 			t.Errorf("authorize URL missing %q: %s", want, u)
@@ -115,7 +86,7 @@ func TestBuildAuthorizeURL(t *testing.T) {
 	}
 	// Server URL with trailing slash should still produce a single slash
 	// before the path.
-	u2 := buildAuthorizeURL("https://vikunja.example.com/", PKCEPair{}, "")
+	u2 := buildAuthorizeURL("https://vikunja.example.com/", "", PKCEPair{}, "")
 	if strings.Contains(u2, "//oauth") {
 		t.Errorf("trailing slash leaked into URL: %s", u2)
 	}
