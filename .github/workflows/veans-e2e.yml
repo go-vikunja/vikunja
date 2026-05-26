@@ -1,0 +1,82 @@
+name: veans-e2e
+
+# End-to-end tests for the veans CLI. Mirrors the parent repo's frontend
+# e2e harness pattern: build the API binary, start it with sqlite memory
+# + fixtures, point the suite at it, then tear down.
+
+on:
+  push:
+    paths:
+      - veans/**
+      - .github/workflows/veans-e2e.yml
+  pull_request:
+    paths:
+      - veans/**
+      - .github/workflows/veans-e2e.yml
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install mage
+        run: |
+          go install github.com/magefile/mage@v1.15.0
+
+      - name: Build API binary
+        run: mage build
+
+      - name: Start API server (sqlite memory + fixtures)
+        env:
+          VIKUNJA_SERVICE_INTERFACE: ":3456"
+          VIKUNJA_SERVICE_PUBLICURL: "http://127.0.0.1:3456/"
+          VIKUNJA_SERVICE_TESTINGTOKEN: "veans-e2e-token"
+          VIKUNJA_SERVICE_JWTSECRET: "veans-e2e-jwt-secret-do-not-use-in-production"
+          VIKUNJA_DATABASE_TYPE: sqlite
+          VIKUNJA_DATABASE_PATH: memory
+          VIKUNJA_LOG_LEVEL: WARNING
+          VIKUNJA_MAILER_ENABLED: "false"
+          VIKUNJA_REDIS_ENABLED: "false"
+          VIKUNJA_RATELIMIT_NOAUTHLIMIT: "1000"
+        run: |
+          ./vikunja web &
+          echo $! > /tmp/vikunja.pid
+          # Wait for /info (parent magefile uses 30s; we match)
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:3456/api/v1/info >/dev/null 2>&1; then
+              echo "API ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API failed to start"
+          exit 1
+
+      - name: Run veans e2e
+        env:
+          VEANS_E2E_API_URL: http://127.0.0.1:3456
+          # user1 / 12345678 is the canonical fixture user (see
+          # pkg/db/fixtures/users.yml — bcrypt hash is the same for
+          # every fixture user).
+          VEANS_E2E_ADMIN_USER: user1
+          VEANS_E2E_ADMIN_PASS: "12345678"
+        working-directory: veans
+        run: |
+          go install github.com/magefile/mage@v1.15.0
+          mage test:e2e
+
+      - name: Stop API server
+        if: always()
+        run: |
+          if [ -f /tmp/vikunja.pid ]; then
+            kill "$(cat /tmp/vikunja.pid)" 2>/dev/null || true
+          fi
