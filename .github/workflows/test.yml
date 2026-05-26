@@ -78,6 +78,19 @@ jobs:
         with:
           version: v2.10.1
 
+  veans-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9
+        with:
+          version: v2.10.1
+          working-directory: veans
+
   check-translations:
     runs-on: ubuntu-latest
     needs: mage
