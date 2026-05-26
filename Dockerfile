@@ -59,3 +59,5 @@ ENV VIKUNJA_DATABASE_PATH=/db/vikunja.db
 
 COPY --from=apibuilder /build/vikunja-* vikunja
 COPY --from=apibuilder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+HEALTHCHECK CMD ["/app/vikunja/vikunja", "healthcheck"]
