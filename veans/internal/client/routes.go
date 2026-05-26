@@ -1,3 +1,19 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package client
 
 import "context"
@@ -26,23 +42,31 @@ func (c *Client) Routes(ctx context.Context) (map[string]RouteGroup, error) {
 // the server are silently dropped, so the resulting permission map is
 // always valid for PUT /tokens regardless of Vikunja version.
 //
-// The set is intentionally tasks-centric — the bot doesn't need to manage
-// users, teams, or webhooks. We grant `read_one`/`read_all` on projects so
-// the bot can resolve PROJ-NN and #NN identifiers, but no project mutation.
+// The action names reflect Vikunja's actual route map (see GET /routes):
+// bucket CRUD and the bucket-task move endpoint live under the `projects`
+// group as `views_buckets*` and `views_buckets_tasks`, not a separate
+// `buckets` group.
 func PermissionsForBot(routes map[string]RouteGroup) map[string][]string {
 	wanted := map[string][]string{
-		"tasks":            {"read_one", "read_all", "create", "update", "delete"},
-		"projects":         {"read_one", "read_all"},
-		"projects_views":   {"read_one", "read_all"},
-		"buckets":          {"read_one", "read_all", "create", "update", "delete"},
-		"labels":           {"read_one", "read_all", "create", "update", "delete"},
-		"comments":         {"read_one", "read_all", "create", "update", "delete"},
-		"tasks_comments":   {"read_one", "read_all", "create", "update", "delete"},
-		"relations":        {"create", "delete"},
-		"tasks_relations":  {"create", "delete"},
-		"assignees":        {"read_all", "create", "delete"},
-		"tasks_assignees":  {"read_all", "create", "delete"},
-		"tasks_labels":     {"create", "delete", "read_all"},
+		// Read + write tasks across the project. The bot creates, updates,
+		// and reads tasks; it doesn't delete (humans/merge hook close).
+		"tasks": {
+			"read_one", "read_all", "create", "update", "position",
+			"read", "update_bulk",
+		},
+		// Project access: read project metadata, manage buckets & move
+		// tasks between them. tasks_by-index resolves #NN / PROJ-NN.
+		"projects": {
+			"read_one", "read_all", "tasks_by-index",
+			"views_buckets", "views_buckets_put", "views_buckets_post",
+			"views_buckets_delete", "views_buckets_tasks",
+		},
+		"projects_views":  {"read_one", "read_all"},
+		"labels":          {"read_one", "read_all", "create", "update", "delete"},
+		"tasks_comments":  {"read_one", "read_all", "create", "update", "delete"},
+		"tasks_relations": {"create", "delete"},
+		"tasks_assignees": {"read_all", "create", "delete", "update_bulk"},
+		"tasks_labels":    {"create", "delete", "read_all", "update_bulk"},
 	}
 	out := map[string][]string{}
 	for group, actions := range wanted {

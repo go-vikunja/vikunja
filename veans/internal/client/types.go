@@ -1,3 +1,19 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // Package client is a hand-rolled JSON client for the Vikunja REST API. It
 // mirrors the wire types as plain Go structs so we don't pull XORM into the
 // CLI binary.
@@ -38,27 +54,32 @@ type Project struct {
 }
 
 // ProjectView is a saved view (Kanban/List/Gantt/Table) on a project.
+// view_kind is serialized as a string on the wire ("list" / "gantt" /
+// "table" / "kanban"), not an int — Vikunja's ProjectViewKind has a
+// custom MarshalJSON.
 type ProjectView struct {
-	ID            int64  `json:"id"`
-	Title         string `json:"title"`
-	ProjectID     int64  `json:"project_id"`
-	ViewKind      int    `json:"view_kind"`
-	BucketConfMode int   `json:"bucket_configuration_mode,omitempty"`
+	ID             int64  `json:"id"`
+	Title          string `json:"title"`
+	ProjectID      int64  `json:"project_id"`
+	// view_kind / bucket_configuration_mode are serialized as strings on
+	// the wire (custom MarshalJSON on the parent enums), not ints.
+	ViewKind       string `json:"view_kind"`
+	BucketConfMode string `json:"bucket_configuration_mode,omitempty"`
 }
 
 const (
-	ViewKindList   = 0
-	ViewKindGantt  = 1
-	ViewKindTable  = 2
-	ViewKindKanban = 3
+	ViewKindList   = "list"
+	ViewKindGantt  = "gantt"
+	ViewKindTable  = "table"
+	ViewKindKanban = "kanban"
 )
 
 // Bucket is a kanban bucket bound to a single project view.
 type Bucket struct {
-	ID            int64  `json:"id"`
-	Title         string `json:"title"`
-	ProjectViewID int64  `json:"project_view_id"`
-	Limit         int64  `json:"limit,omitempty"`
+	ID            int64   `json:"id"`
+	Title         string  `json:"title"`
+	ProjectViewID int64   `json:"project_view_id"`
+	Limit         int64   `json:"limit,omitempty"`
 	Position      float64 `json:"position,omitempty"`
 }
 
@@ -77,7 +98,12 @@ type Task struct {
 	Position    float64     `json:"position,omitempty"`
 	Created     time.Time   `json:"created,omitempty"`
 	Updated     time.Time   `json:"updated,omitempty"`
+	// BucketID is only set by Vikunja when sending a task to a server-
+	// side endpoint (e.g. the bucket-move POST); reads return it as 0.
+	// The current bucket(s) — one per Kanban view — are exposed via
+	// ?expand=buckets in the Buckets slice.
 	BucketID    int64       `json:"bucket_id,omitempty"`
+	Buckets     []*Bucket   `json:"buckets,omitempty"`
 	Assignees   []*User     `json:"assignees,omitempty"`
 	Labels      []*Label    `json:"labels,omitempty"`
 	StartDate   *time.Time  `json:"start_date,omitempty"`

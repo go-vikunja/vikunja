@@ -1,3 +1,19 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package commands
 
 import (
@@ -77,18 +93,14 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 		return nil, err
 	}
 
-	// If the initial bucket isn't where Vikunja put it (defaults to first
-	// bucket on the view), nudge it explicitly.
-	if created.BucketID != bucketID {
-		updated, err := rt.client.UpdateTask(ctx, created.ID, &client.Task{
-			ID:       created.ID,
-			BucketID: bucketID,
-			Done:     st.Done(),
-		})
-		if err != nil {
+	// Vikunja places newly-created tasks in the view's default bucket
+	// regardless of bucket_id in the create payload — move it explicitly
+	// when the requested status isn't Todo.
+	if st != status.Todo {
+		if err := rt.client.MoveTaskToBucket(ctx,
+			rt.cfg.ProjectID, rt.cfg.ViewID, bucketID, created.ID); err != nil {
 			return nil, output.Wrap(output.CodeUnknown, err, "set initial bucket: %v", err)
 		}
-		created = updated
 	}
 
 	// Attach labels (lazily creating them under veans: namespace).
@@ -126,9 +138,12 @@ func runCreate(ctx context.Context, rt *runtime, title string, f *createFlags) (
 	}
 
 	// Re-fetch so the response reflects the labels and any post-create state.
+	// The refetch is best-effort: if it fails (token expired mid-operation,
+	// transient network blip), we still return the create result so callers
+	// see the new task ID rather than a confusing error.
 	final, err := rt.client.GetTask(ctx, created.ID)
 	if err != nil {
-		return created, nil // partial success — caller still got a usable task
+		return created, nil //nolint:nilerr // intentional best-effort refetch
 	}
 	return final, nil
 }

@@ -1,9 +1,26 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // Package config reads and writes the per-repo .veans.yml file. The schema
 // pins the project, view, canonical buckets, and bot identity so subsequent
 // veans calls have everything they need without round-tripping to the server.
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -126,7 +143,7 @@ func (c *Config) SaveAs(path string) error {
 // RepoRoot returns the root of the git repo containing `start` (defaulting
 // to cwd). When `start` is not in a git repo, RepoRoot returns the absolute
 // `start` so callers can still derive a sensible bot username.
-func RepoRoot(start string) (string, error) {
+func RepoRoot(ctx context.Context, start string) (string, error) {
 	if start == "" {
 		var err error
 		start, err = os.Getwd()
@@ -134,7 +151,7 @@ func RepoRoot(start string) (string, error) {
 			return "", err
 		}
 	}
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	cmd := exec.CommandContext(ctx, "git", "rev-parse", "--show-toplevel")
 	cmd.Dir = start
 	out, err := cmd.Output()
 	if err == nil {

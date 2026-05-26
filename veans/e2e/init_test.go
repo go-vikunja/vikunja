@@ -1,9 +1,25 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package e2e
 
 import (
 	"context"
 	"fmt"
-	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -22,7 +38,7 @@ func TestInit_HappyPath(t *testing.T) {
 	// Use a unique title and identifier per run so parallel jobs don't
 	// collide on the bot username.
 	suffix := uniqueSuffix()
-	project := h.CreateProject(t, "veans-e2e-"+suffix, "VE"+strings.ToUpper(suffix[:4]))
+	project := h.CreateProject(t, "veans-e2e-"+suffix, identifier(suffix))
 	view := h.FindKanbanView(t, project.ID)
 
 	ws := h.NewWorkspace(t)
@@ -139,19 +155,21 @@ func TestInit_NoIdentifierFallsBackToHashNN(t *testing.T) {
 	}
 }
 
-// uniqueSuffix returns a short random-ish slug for naming test artifacts.
-// Time-based is fine here — tests don't need cryptographic uniqueness.
+// uniqueSuffix returns a short slug derived from the current nanosecond
+// timestamp, base-36-encoded so every character is alphanumeric. Tests
+// also use this slug as a project identifier, which Vikunja caps at 10
+// chars, so the encoding has to be compact and free of separators.
 func uniqueSuffix() string {
-	hostname, _ := os.Hostname()
-	if hostname == "" {
-		hostname = "host"
-	}
-	return strings.ToLower(fmt.Sprintf("%s-%d", trunc(hostname, 4), time.Now().UnixNano()))[:18]
+	return strconv.FormatInt(time.Now().UnixNano(), 36)
 }
 
-func trunc(s string, n int) string {
-	if len(s) <= n {
-		return s
+// identifier returns a stable 10-char-or-fewer slug for use as a Vikunja
+// project identifier. The base-36 timestamp's most-significant chars
+// barely change across consecutive runs, so we use the trailing chars
+// (which carry the nanosecond entropy) and uppercase them.
+func identifier(suffix string) string {
+	if len(suffix) > 8 {
+		suffix = suffix[len(suffix)-8:]
 	}
-	return s[:n]
+	return strings.ToUpper(suffix)
 }
