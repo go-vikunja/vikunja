@@ -35,8 +35,10 @@
 				autocomplete="username"
 				tabindex="1"
 				:error="usernameValid ? null : $t('user.auth.usernameRequired')"
+				@input="updateUsername"
+				@change="updateUsername"
 				@keyup.enter="submit"
-				@focusout="validateUsernameField()"
+				@focusout="validateUsernameField(); updateUsername()"
 			/>
 			<div class="field">
 				<div class="label-with-link">
@@ -120,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onBeforeMount, ref} from 'vue'
+import {computed, onBeforeMount, onMounted, ref} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useRouter} from 'vue-router'
 import {useDebounceFn} from '@vueuse/core'
@@ -161,6 +163,8 @@ const isDesktop = isDesktopApp()
 
 const confirmedEmailSuccess = ref(false)
 const errorMessage = ref('')
+const usernameCacheKey = 'loginUsername'
+const username = ref(sessionStorage.getItem(usernameCacheKey) ?? '')
 const password = ref('')
 const validatePasswordInitially = ref(false)
 const rememberMe = ref(false)
@@ -186,6 +190,19 @@ onBeforeMount(() => {
 
 const usernameValid = ref(true)
 const usernameRef = ref<HTMLInputElement | null>(null)
+
+onMounted(() => {
+	const usernameInput = document.getElementById('username') as HTMLInputElement | null
+	if (usernameInput !== null && username.value !== '') {
+		usernameInput.value = username.value
+	}
+})
+
+function updateUsername() {
+	username.value = usernameRef.value?.value ?? ''
+	sessionStorage.setItem(usernameCacheKey, username.value)
+}
+
 const validateUsernameField = useDebounceFn(() => {
 	usernameValid.value = usernameRef.value?.value !== ''
 }, 100)
@@ -194,13 +211,20 @@ const validateUsernameField = useDebounceFn(() => {
 const needsTotpPasscode = computed(() => authStore.needsTotpPasscode)
 const totpPasscode = ref<HTMLInputElement | null>(null)
 
+interface LoginCredentials {
+	username: string
+	password: string
+	longToken: boolean
+	totpPasscode?: string
+}
+
 async function submit() {
 	errorMessage.value = ''
 	// Some browsers prevent Vue bindings from working with autofilled values.
 	// To work around this, we're manually getting the values here instead of relying on vue bindings.
 	// For more info, see https://kolaente.dev/vikunja/frontend/issues/78
-	const credentials = {
-		username: usernameRef.value?.value,
+	const credentials: LoginCredentials = {
+		username: usernameRef.value?.value || username.value,
 		password: password.value,
 		longToken: rememberMe.value,
 	}
@@ -218,11 +242,13 @@ async function submit() {
 
 	try {
 		await authStore.login(credentials)
+		sessionStorage.removeItem(usernameCacheKey)
 		authStore.setNeedsTotpPasscode(false)
 
 		redirectIfSaved()
 	} catch (e) {
-		if (e.response?.data.code === 1017 && !credentials.totpPasscode) {
+		const error = e as { response?: { data?: { code?: number } } }
+		if (error.response?.data?.code === 1017 && !credentials.totpPasscode) {
 			return
 		}
 
