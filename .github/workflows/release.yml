@@ -63,37 +63,10 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      # vikunja's release binary embeds frontend/dist — pull it in before the
-      # composite action invokes xgo.
-      - name: Get frontend dist
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: frontend_dist
-          path: frontend/dist
-      # vikunja's release zip bundle includes a config.yml.sample alongside
-      # the binary — generate it via the parent's mage. We pull the cached
-      # mage-static for this single command rather than installing mage twice.
-      - name: Download Mage Binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: mage_bin
-      - name: Generate config.yml.sample
-        run: |
-          chmod +x ./mage-static
-          ./mage-static generate:config-yaml 1
-      - name: Build and publish
-        uses: ./.github/actions/release-binaries
+      - uses: ./.github/actions/release-binaries
         with:
           project: vikunja
           release-version: ${{ steps.ghd.outputs.describe }}
-          xgo-out-name: vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          output-directory: '.'
-          xgo-cache-key: ${{ hashFiles('**/go.sum') }}
-          s3-target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          artifact-binaries-name: vikunja_bins
-          artifact-zips-name: vikunja_bin_packages
-          upload-zips-as-artifact: ${{ github.ref_type == 'tag' }}
-          gpg-key-id: 7D061A4AA61436B40713D42EFF054DACD908493A
           gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
@@ -109,19 +82,10 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - name: Build and publish
-        uses: ./.github/actions/release-binaries
+      - uses: ./.github/actions/release-binaries
         with:
           project: veans
           release-version: ${{ steps.ghd.outputs.describe }}
-          xgo-out-name: veans-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          output-directory: veans
-          xgo-cache-key: veans-${{ hashFiles('veans/go.sum') }}
-          s3-target-path: /veans/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          artifact-binaries-name: veans_bins
-          artifact-zips-name: veans_bin_packages
-          upload-zips-as-artifact: ${{ github.ref_type == 'tag' }}
-          gpg-key-id: 7D061A4AA61436B40713D42EFF054DACD908493A
           gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
@@ -153,24 +117,14 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - name: Build OS package
-        uses: ./.github/actions/release-os-package
+      - uses: ./.github/actions/release-os-package
         with:
           project: vikunja
           release-version: ${{ steps.ghd.outputs.describe }}
           packager: ${{ matrix.package }}
           nfpm-arch: ${{ matrix.arch.nfpm }}
           pkg-arch: ${{ matrix.arch.pkg }}
-          binaries-artifact-name: vikunja_bins
-          binaries-download-path: '.'
-          binary-glob: vikunja-*-${{ matrix.arch.go_name }}
-          staged-binary-path: ./vikunja
-          nfpm-config-path: ./nfpm.yaml
-          package-output-dir: ./dist/os-packages
-          package-filename: vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
-          artifact-name: vikunja_os_package_${{ matrix.package }}_${{ matrix.arch.pkg }}
-          s3-target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          gpg-key-id: 7D061A4AA61436B40713D42EFF054DACD908493A
+          go-name: ${{ matrix.arch.go_name }}
           gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
@@ -202,27 +156,14 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - name: Build OS package
-        uses: ./.github/actions/release-os-package
+      - uses: ./.github/actions/release-os-package
         with:
           project: veans
           release-version: ${{ steps.ghd.outputs.describe }}
           packager: ${{ matrix.package }}
           nfpm-arch: ${{ matrix.arch.nfpm }}
           pkg-arch: ${{ matrix.arch.pkg }}
-          binaries-artifact-name: veans_bins
-          binaries-download-path: ./veans-binaries
-          binary-glob: veans-*-${{ matrix.arch.go_name }}
-          # nfpm action runs from $GITHUB_WORKSPACE; ./veans is the source dir
-          # so stage under a distinct filename to avoid collision.
-          staged-binary-path: ./veans/veans-bin
-          nfpm-bin-path: ./veans/veans-bin
-          nfpm-config-path: ./veans/nfpm.yaml
-          package-output-dir: ./veans/dist/os-packages
-          package-filename: veans-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
-          artifact-name: veans_os_package_${{ matrix.package }}_${{ matrix.arch.pkg }}
-          s3-target-path: /veans/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          gpg-key-id: 7D061A4AA61436B40713D42EFF054DACD908493A
+          go-name: ${{ matrix.arch.go_name }}
           gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
