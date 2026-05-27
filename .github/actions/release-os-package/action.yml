@@ -1,0 +1,189 @@
+name: Release OS package
+description: >
+  Build a single deb/rpm/apk/archlinux package for the given project + arch
+  via nfpm, optionally GPG-sign it (archlinux is signed inline; rpm is signed
+  by nfpm itself), upload it to S3, and store it as a workflow artifact.
+
+  Templating of the project's nfpm.yaml happens via the centralized build/
+  magefile (`mage release:prepare-nfpm-config <project> <arch>`).
+
+inputs:
+  project:
+    description: 'Project name passed to `mage release:prepare-nfpm-config` (e.g., vikunja, veans).'
+    required: true
+  release-version:
+    description: 'RELEASE_VERSION env value — the same version that ended up in the binaries artifact.'
+    required: true
+  nfpm-bin-path:
+    description: 'NFPM_BIN_PATH override for the <binlocation> substitution. Leave empty to use the project default.'
+    required: false
+    default: ''
+  packager:
+    description: 'nfpm packager: rpm | deb | apk | archlinux.'
+    required: true
+  nfpm-arch:
+    description: 'nfpm arch field (amd64 | arm64 | arm7 | 386).'
+    required: true
+  pkg-arch:
+    description: 'Package-format arch used in the output filename (x86_64 | aarch64 | armv7).'
+    required: true
+  binaries-artifact-name:
+    description: 'Name of the binaries artifact to download (e.g., vikunja_bins, veans_bins).'
+    required: true
+  binaries-download-path:
+    description: 'Where to extract the binaries artifact (relative to workspace root).'
+    required: true
+  binary-glob:
+    description: 'Glob (under binaries-download-path) that matches the single binary to package.'
+    required: true
+  staged-binary-path:
+    description: 'Final path of the binary the nfpm config will read (relative to workspace root).'
+    required: true
+  nfpm-config-path:
+    description: 'Path to the project''s nfpm.yaml (relative to workspace root). Passed to nfpm via `--config`.'
+    required: true
+  package-output-dir:
+    description: 'Directory (relative to workspace root) where nfpm writes the resulting package.'
+    required: true
+  package-filename:
+    description: 'Filename of the produced package (e.g., vikunja-v1.2.3-x86_64.deb).'
+    required: true
+  artifact-name:
+    description: 'Name of the upload-artifact entry for the produced package.'
+    required: true
+  s3-target-path:
+    description: 'S3 target path for the package (e.g., /vikunja/v1.2.3 or /veans/unstable).'
+    required: true
+  gpg-key-id:
+    description: 'Long key ID GPG should sign with (used for archlinux signing).'
+    required: true
+  gpg-passphrase:
+    required: true
+  gpg-sign-key:
+    description: 'ASCII-armored GPG private key.'
+    required: true
+  s3-access-key-id:
+    required: true
+  s3-secret-access-key:
+    required: true
+  s3-endpoint:
+    required: true
+  s3-bucket:
+    required: true
+  s3-region:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download project binaries
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      with:
+        name: ${{ inputs.binaries-artifact-name }}
+        path: ${{ inputs.binaries-download-path }}
+
+    - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+      with:
+        go-version: stable
+
+    - name: Install mage
+      shell: bash
+      run: go install github.com/magefile/mage@v1.17.2
+
+    - name: Write GPG key for nfpm
+      if: inputs.packager == 'rpm'
+      shell: bash
+      env:
+        RELEASE_GPG_SIGN_KEY: ${{ inputs.gpg-sign-key }}
+      run: printf '%s' "$RELEASE_GPG_SIGN_KEY" > /tmp/nfpm-signing-key.gpg
+
+    - name: GPG setup for archlinux signing
+      if: inputs.packager == 'archlinux'
+      uses: kolaente/action-gpg@main
+      with:
+        gpg-passphrase: ${{ inputs.gpg-passphrase }}
+        gpg-sign-key: ${{ inputs.gpg-sign-key }}
+
+    - name: Prepare nfpm config and stage binary
+      shell: bash
+      working-directory: build
+      env:
+        RELEASE_VERSION: ${{ inputs.release-version }}
+        NFPM_ARCH: ${{ inputs.nfpm-arch }}
+        NFPM_BIN_PATH: ${{ inputs.nfpm-bin-path }}
+        PROJECT: ${{ inputs.project }}
+      run: |
+        export PATH=$PATH:$GOPATH/bin
+        mage release:prepare-nfpm-config "$PROJECT" "$NFPM_ARCH"
+
+    - name: Stage binary
+      shell: bash
+      env:
+        BINARY_GLOB: ${{ inputs.binary-glob }}
+        DOWNLOAD_DIR: ${{ inputs.binaries-download-path }}
+        STAGED: ${{ inputs.staged-binary-path }}
+      run: |
+        # Resolve the single matching binary and mv it into place. Using
+        # extglob would be tidier, but a tiny shell loop keeps this readable.
+        matched=()
+        for f in $DOWNLOAD_DIR/$BINARY_GLOB; do
+          [ -e "$f" ] || continue
+          matched+=("$f")
+        done
+        if [ ${#matched[@]} -ne 1 ]; then
+          echo "::error::expected exactly 1 binary matching '$DOWNLOAD_DIR/$BINARY_GLOB', found ${#matched[@]}"
+          ls -la "$DOWNLOAD_DIR" || true
+          exit 1
+        fi
+        mkdir -p "$(dirname "$STAGED")"
+        mv "${matched[0]}" "$STAGED"
+        chmod +x "$STAGED"
+
+    - name: Ensure package output dir exists
+      shell: bash
+      env:
+        DIR: ${{ inputs.package-output-dir }}
+      run: mkdir -p "$DIR"
+
+    - name: Create package
+      uses: kolaente/action-gh-nfpm@master
+      with:
+        packager: ${{ inputs.packager }}
+        target: ${{ inputs.package-output-dir }}/${{ inputs.package-filename }}
+        config: ${{ inputs.nfpm-config-path }}
+      env:
+        NFPM_GPG_KEY_FILE: ${{ inputs.packager == 'rpm' && '/tmp/nfpm-signing-key.gpg' || '' }}
+        NFPM_PASSPHRASE: ${{ inputs.packager == 'rpm' && inputs.gpg-passphrase || '' }}
+
+    - name: Sign archlinux package
+      if: inputs.packager == 'archlinux'
+      shell: bash
+      env:
+        GPG_KEY_ID: ${{ inputs.gpg-key-id }}
+        GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
+        PKG: ${{ inputs.package-output-dir }}/${{ inputs.package-filename }}
+      run: |
+        gpg --default-key "$GPG_KEY_ID" \
+          --batch --yes \
+          --passphrase "$GPG_PASSPHRASE" \
+          --pinentry-mode loopback \
+          --detach-sign \
+          "$PKG"
+
+    - name: Upload to S3
+      uses: kolaente/s3-action@main
+      with:
+        s3-access-key-id: ${{ inputs.s3-access-key-id }}
+        s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
+        s3-endpoint: ${{ inputs.s3-endpoint }}
+        s3-bucket: ${{ inputs.s3-bucket }}
+        s3-region: ${{ inputs.s3-region }}
+        target-path: ${{ inputs.s3-target-path }}
+        files: ${{ inputs.package-output-dir }}/*
+        strip-path-prefix: ${{ inputs.package-output-dir }}/
+
+    - name: Store OS package
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.package-output-dir }}/*

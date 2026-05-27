@@ -1,0 +1,144 @@
+name: Release Go binaries
+description: >
+  Cross-compile a Go binary from this monorepo through the centralized build/
+  magefile (xgo + upx + sha256 + zip), GPG-sign the per-target zip bundles,
+  upload them to S3, and store the binaries and zip bundles as workflow
+  artifacts. Any project-specific pre-build steps (downloading frontend dist,
+  generating config.yml.sample) belong in the calling workflow — this action
+  assumes the working tree is ready to compile.
+
+inputs:
+  project:
+    description: 'Project name passed to `mage release:build` (e.g., vikunja, veans).'
+    required: true
+  release-version:
+    description: 'RELEASE_VERSION env value — usually the raw `git describe` output.'
+    required: true
+  xgo-out-name:
+    description: 'XGO_OUT_NAME env value — basename xgo prefixes onto every binary (e.g., vikunja-v1.2.3, veans-unstable).'
+    required: true
+  output-directory:
+    description: 'Where the project writes dist/ (e.g., "." for vikunja, "veans" for veans). Used for signing, S3 upload, and artifact paths.'
+    required: true
+  xgo-cache-key:
+    description: 'Primary cache key for /home/runner/.xgo-cache.'
+    required: true
+  s3-target-path:
+    description: 'S3 target path for the zip bundles (e.g., /vikunja/v1.2.3 or /veans/unstable).'
+    required: true
+  artifact-binaries-name:
+    description: 'Name of the upload-artifact entry for the raw binaries under dist/binaries/.'
+    required: true
+  artifact-zips-name:
+    description: 'Name of the upload-artifact entry for the zip bundles under dist/zip/.'
+    required: true
+  upload-zips-as-artifact:
+    description: '"true" to also upload the zip bundles as a workflow artifact (typically only on tags).'
+    required: false
+    default: 'false'
+  gpg-key-id:
+    description: 'Long key ID GPG should sign with.'
+    required: true
+  gpg-passphrase:
+    required: true
+  gpg-sign-key:
+    description: 'ASCII-armored GPG private key.'
+    required: true
+  s3-access-key-id:
+    required: true
+  s3-secret-access-key:
+    required: true
+  s3-endpoint:
+    required: true
+  s3-bucket:
+    required: true
+  s3-region:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: useblacksmith/setup-go@647ac649bd5b480f2a262e3e3e5f4d150ed452ad # v6
+      with:
+        go-version: stable
+
+    - name: Install mage
+      # build/ is its own module — install a fresh mage so it picks up
+      # build/magefile.go on the fly.
+      shell: bash
+      run: go install github.com/magefile/mage@v1.17.2
+
+    - name: Install upx
+      shell: bash
+      run: |
+        wget https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-amd64_linux.tar.xz
+        echo 'b32abf118d721358a50f1aa60eacdbf3298df379c431c3a86f139173ab8289a1  upx-5.0.0-amd64_linux.tar.xz' > upx-5.0.0-amd64_linux.tar.xz.sha256
+        sha256sum -c upx-5.0.0-amd64_linux.tar.xz.sha256
+        tar xf upx-5.0.0-amd64_linux.tar.xz
+        mv upx-5.0.0-amd64_linux/upx /usr/local/bin
+
+    - name: Setup xgo cache
+      uses: useblacksmith/cache@71c7c918062ba3861252d84b07fe5ab2a6b467a6 # v5
+      with:
+        path: /home/runner/.xgo-cache
+        key: ${{ inputs.xgo-cache-key }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Build and release
+      shell: bash
+      working-directory: build
+      env:
+        RELEASE_VERSION: ${{ inputs.release-version }}
+        XGO_OUT_NAME: ${{ inputs.xgo-out-name }}
+        PROJECT: ${{ inputs.project }}
+      run: |
+        export PATH=$PATH:$GOPATH/bin
+        mage release:build "$PROJECT"
+
+    - name: GPG setup
+      uses: kolaente/action-gpg@main
+      with:
+        gpg-passphrase: ${{ inputs.gpg-passphrase }}
+        gpg-sign-key: ${{ inputs.gpg-sign-key }}
+
+    - name: Sign zip bundles
+      shell: bash
+      working-directory: ${{ inputs.output-directory }}
+      env:
+        GPG_KEY_ID: ${{ inputs.gpg-key-id }}
+        GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
+      run: |
+        echo "=== Signing files ==="
+        ls -hal dist/zip/*
+        for file in dist/zip/*; do
+          gpg -v --default-key "$GPG_KEY_ID" -b --batch --yes \
+            --passphrase "$GPG_PASSPHRASE" \
+            --pinentry-mode loopback \
+            --sign "$file"
+        done
+
+    - name: Upload zips to S3
+      uses: kolaente/s3-action@main
+      with:
+        s3-access-key-id: ${{ inputs.s3-access-key-id }}
+        s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
+        s3-endpoint: ${{ inputs.s3-endpoint }}
+        s3-bucket: ${{ inputs.s3-bucket }}
+        s3-region: ${{ inputs.s3-region }}
+        target-path: ${{ inputs.s3-target-path }}
+        files: ${{ inputs.output-directory }}/dist/zip/*
+        strip-path-prefix: ${{ inputs.output-directory }}/dist/zip/
+
+    - name: Store binaries
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      with:
+        name: ${{ inputs.artifact-binaries-name }}
+        path: ${{ inputs.output-directory }}/dist/binaries/*
+
+    - name: Store zip bundles
+      if: inputs.upload-zips-as-artifact == 'true'
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      with:
+        name: ${{ inputs.artifact-zips-name }}
+        path: ${{ inputs.output-directory }}/dist/zip/*
