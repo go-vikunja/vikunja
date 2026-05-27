@@ -63,83 +63,44 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - uses: useblacksmith/setup-go@647ac649bd5b480f2a262e3e3e5f4d150ed452ad # v6
-        with:
-          go-version: stable
-      - name: Download Mage Binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: mage_bin
-      - name: get frontend
+      # vikunja's release binary embeds frontend/dist — pull it in before the
+      # composite action invokes xgo.
+      - name: Get frontend dist
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: frontend_dist
           path: frontend/dist
-      - run: chmod +x ./mage-static
-      - name: install upx
-        run: |
-          wget https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-amd64_linux.tar.xz
-          echo 'b32abf118d721358a50f1aa60eacdbf3298df379c431c3a86f139173ab8289a1  upx-5.0.0-amd64_linux.tar.xz' > upx-5.0.0-amd64_linux.tar.xz.sha256
-          sha256sum -c upx-5.0.0-amd64_linux.tar.xz.sha256
-          tar xf upx-5.0.0-amd64_linux.tar.xz
-          mv upx-5.0.0-amd64_linux/upx /usr/local/bin
-      - name: setup xgo cache
-        uses: useblacksmith/cache@71c7c918062ba3861252d84b07fe5ab2a6b467a6 # v5
+      # vikunja's release zip bundle includes a config.yml.sample alongside
+      # the binary — generate it via the parent's mage. We pull the cached
+      # mage-static for this single command rather than installing mage twice.
+      - name: Download Mage Binary
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          path: /home/runner/.xgo-cache
-          key: ${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - name: build and release
-        env:
-          RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
-          XGO_OUT_NAME: vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
+          name: mage_bin
+      - name: Generate config.yml.sample
         run: |
-          export PATH=$PATH:$GOPATH/bin
-          ./mage-static release
-      - name: GPG setup
-        uses: kolaente/action-gpg@main
+          chmod +x ./mage-static
+          ./mage-static generate:config-yaml 1
+      - name: Build and publish
+        uses: ./.github/actions/release-binaries
         with:
-          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
-          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
-      - name: sign
-        run: |
-          echo "=== GPG agent status ==="
-          gpg-connect-agent 'keyinfo --list' /bye || true
-          echo "=== GPG secret keys ==="
-          gpg -K --with-keygrip
-          echo "=== GPG public keys ==="
-          gpg --list-keys
-          echo "=== GNUPG directory contents ==="
-          ls -la ~/.gnupg/
-          ls -la ~/.gnupg/private-keys-v1.d/ || true
-          echo "=== Signing files ==="
-          ls -hal dist/zip/*
-          for file in dist/zip/*; do
-            gpg -v --default-key 7D061A4AA61436B40713D42EFF054DACD908493A -b --batch --yes --passphrase "${{ secrets.RELEASE_GPG_PASSPHRASE }}" --pinentry-mode loopback --sign "$file"
-          done
-      - name: Upload
-        uses: kolaente/s3-action@main
-        with:
+          project: vikunja
+          release-version: ${{ steps.ghd.outputs.describe }}
+          xgo-out-name: vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
+          output-directory: '.'
+          xgo-cache-key: ${{ hashFiles('**/go.sum') }}
+          s3-target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
+          artifact-binaries-name: vikunja_bins
+          artifact-zips-name: vikunja_bin_packages
+          upload-zips-as-artifact: ${{ github.ref_type == 'tag' }}
+          gpg-key-id: 7D061A4AA61436B40713D42EFF054DACD908493A
+          gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
           s3-endpoint: ${{ secrets.S3_ENDPOINT }}
           s3-bucket: ${{ secrets.S3_BUCKET }}
           s3-region: ${{ secrets.S3_REGION }}
-          target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          files: "dist/zip/*"
-          strip-path-prefix: dist/zip/
-      - name: Store Binaries
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: vikunja_bins
-          path: ./dist/binaries/*
-      - name: Store Binary Packages
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ github.ref_type == 'tag' }}
-        with:
-          name: vikunja_bin_packages
-          path: ./dist/zip/*
 
   veans-binaries:
     runs-on: blacksmith-8vcpu-ubuntu-2204
@@ -148,69 +109,26 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - uses: useblacksmith/setup-go@647ac649bd5b480f2a262e3e3e5f4d150ed452ad # v6
+      - name: Build and publish
+        uses: ./.github/actions/release-binaries
         with:
-          go-version: stable
-      - name: Install mage
-        # The cached mage-static artifact has the parent magefile compiled
-        # in — we need a generic mage to pick up veans/magefile.go.
-        run: go install github.com/magefile/mage@v1.17.2
-      - name: install upx
-        run: |
-          wget https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-amd64_linux.tar.xz
-          echo 'b32abf118d721358a50f1aa60eacdbf3298df379c431c3a86f139173ab8289a1  upx-5.0.0-amd64_linux.tar.xz' > upx-5.0.0-amd64_linux.tar.xz.sha256
-          sha256sum -c upx-5.0.0-amd64_linux.tar.xz.sha256
-          tar xf upx-5.0.0-amd64_linux.tar.xz
-          mv upx-5.0.0-amd64_linux/upx /usr/local/bin
-      - name: setup xgo cache
-        uses: useblacksmith/cache@71c7c918062ba3861252d84b07fe5ab2a6b467a6 # v5
-        with:
-          path: /home/runner/.xgo-cache
-          key: veans-${{ hashFiles('veans/go.sum') }}
-          restore-keys: |
-            veans-${{ runner.os }}-go-
-      - name: build and release
-        working-directory: veans
-        env:
-          RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
-          XGO_OUT_NAME: veans-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-        run: |
-          export PATH=$PATH:$GOPATH/bin
-          mage release
-      - name: GPG setup
-        uses: kolaente/action-gpg@main
-        with:
-          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
-          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
-      - name: sign
-        working-directory: veans
-        run: |
-          ls -hal dist/zip/*
-          for file in dist/zip/*; do
-            gpg -v --default-key 7D061A4AA61436B40713D42EFF054DACD908493A -b --batch --yes --passphrase "${{ secrets.RELEASE_GPG_PASSPHRASE }}" --pinentry-mode loopback --sign "$file"
-          done
-      - name: Upload
-        uses: kolaente/s3-action@main
-        with:
+          project: veans
+          release-version: ${{ steps.ghd.outputs.describe }}
+          xgo-out-name: veans-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
+          output-directory: veans
+          xgo-cache-key: veans-${{ hashFiles('veans/go.sum') }}
+          s3-target-path: /veans/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
+          artifact-binaries-name: veans_bins
+          artifact-zips-name: veans_bin_packages
+          upload-zips-as-artifact: ${{ github.ref_type == 'tag' }}
+          gpg-key-id: 7D061A4AA61436B40713D42EFF054DACD908493A
+          gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
           s3-endpoint: ${{ secrets.S3_ENDPOINT }}
           s3-bucket: ${{ secrets.S3_BUCKET }}
           s3-region: ${{ secrets.S3_REGION }}
-          target-path: /veans/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          files: "veans/dist/zip/*"
-          strip-path-prefix: veans/dist/zip/
-      - name: Store Binaries
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: veans_bins
-          path: ./veans/dist/binaries/*
-      - name: Store Binary Packages
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ github.ref_type == 'tag' }}
-        with:
-          name: veans_bin_packages
-          path: ./veans/dist/zip/*
 
   os-package:
     runs-on: ubuntu-latest
@@ -218,11 +136,7 @@ jobs:
       - binaries
     strategy:
       matrix:
-        package:
-          - rpm
-          - deb
-          - apk
-          - archlinux
+        package: [rpm, deb, apk, archlinux]
         arch:
           - go_name: linux-amd64
             nfpm: amd64
@@ -236,71 +150,34 @@ jobs:
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
-      - name: Download Vikunja Binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: vikunja_bins
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - name: Download Mage Binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      - name: Build OS package
+        uses: ./.github/actions/release-os-package
         with:
-          name: mage_bin
-      - name: Write GPG key for nfpm
-        if: matrix.package == 'rpm'
-        run: echo -n "${{ secrets.RELEASE_GPG_SIGN_KEY }}" > /tmp/nfpm-signing-key.gpg
-      - name: GPG setup for package signing
-        if: matrix.package == 'archlinux'
-        uses: kolaente/action-gpg@main
-        with:
-          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
-          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
-      - name: Prepare
-        env:
-          RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
-          NFPM_ARCH: ${{ matrix.arch.nfpm }}
-        run: |
-          chmod +x ./mage-static
-          ./mage-static release:prepare-nfpm-config
-          mkdir -p ./dist/os-packages
-          mv ./vikunja-*-${{ matrix.arch.go_name }} ./vikunja
-          chmod +x ./vikunja
-      - name: Create package
-        id: nfpm
-        uses: kolaente/action-gh-nfpm@master
-        with:
+          project: vikunja
+          release-version: ${{ steps.ghd.outputs.describe }}
           packager: ${{ matrix.package }}
-          target: ./dist/os-packages/vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
-          config: ./nfpm.yaml
-        env:
-          NFPM_GPG_KEY_FILE: ${{ (matrix.package == 'rpm') && '/tmp/nfpm-signing-key.gpg' || '' }}
-          NFPM_PASSPHRASE: ${{ (matrix.package == 'rpm') && secrets.RELEASE_GPG_PASSPHRASE || '' }}
-      - name: Sign package
-        if: matrix.package == 'archlinux'
-        run: |
-          gpg --default-key 7D061A4AA61436B40713D42EFF054DACD908493A \
-            --batch --yes \
-            --passphrase "${{ secrets.RELEASE_GPG_PASSPHRASE }}" \
-            --pinentry-mode loopback \
-            --detach-sign \
-            ./dist/os-packages/vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
-      - name: Upload
-        uses: kolaente/s3-action@main
-        with:
+          nfpm-arch: ${{ matrix.arch.nfpm }}
+          pkg-arch: ${{ matrix.arch.pkg }}
+          binaries-artifact-name: vikunja_bins
+          binaries-download-path: '.'
+          binary-glob: vikunja-*-${{ matrix.arch.go_name }}
+          staged-binary-path: ./vikunja
+          nfpm-config-path: ./nfpm.yaml
+          package-output-dir: ./dist/os-packages
+          package-filename: vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
+          artifact-name: vikunja_os_package_${{ matrix.package }}_${{ matrix.arch.pkg }}
+          s3-target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
+          gpg-key-id: 7D061A4AA61436B40713D42EFF054DACD908493A
+          gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
           s3-endpoint: ${{ secrets.S3_ENDPOINT }}
           s3-bucket: ${{ secrets.S3_BUCKET }}
           s3-region: ${{ secrets.S3_REGION }}
-          target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          files: "dist/os-packages/*"
-          strip-path-prefix: dist/os-packages/
-      - name: Store OS Packages
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: vikunja_os_package_${{ matrix.package }}_${{ matrix.arch.pkg }}
-          path: ./dist/os-packages/*
 
   veans-os-package:
     runs-on: ubuntu-latest
@@ -308,11 +185,7 @@ jobs:
       - veans-binaries
     strategy:
       matrix:
-        package:
-          - rpm
-          - deb
-          - apk
-          - archlinux
+        package: [rpm, deb, apk, archlinux]
         arch:
           - go_name: linux-amd64
             nfpm: amd64
@@ -326,80 +199,37 @@ jobs:
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
-      - name: Download Veans Binaries
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: veans_bins
-          path: ./veans-binaries
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+      - name: Build OS package
+        uses: ./.github/actions/release-os-package
         with:
-          go-version: stable
-      - name: Install mage
-        # Generic mage to pick up veans/magefile.go (the cached mage-static
-        # has the parent magefile compiled in).
-        run: go install github.com/magefile/mage@v1.17.2
-      - name: Write GPG key for nfpm
-        if: matrix.package == 'rpm'
-        run: echo -n "${{ secrets.RELEASE_GPG_SIGN_KEY }}" > /tmp/nfpm-signing-key.gpg
-      - name: GPG setup for package signing
-        if: matrix.package == 'archlinux'
-        uses: kolaente/action-gpg@main
-        with:
-          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
-          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
-      - name: Prepare
-        env:
-          RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
-          NFPM_ARCH: ${{ matrix.arch.nfpm }}
-          # The nfpm action runs from $GITHUB_WORKSPACE while the source dir
-          # is also called ./veans — stage the binary under a distinct name
-          # so the two don't collide.
-          NFPM_BIN_PATH: ./veans/veans-bin
-        working-directory: veans
-        run: |
-          export PATH=$PATH:$GOPATH/bin
-          mage release:prepare-nfpm-config
-          mkdir -p ./dist/os-packages
-          mv ../veans-binaries/veans-*-${{ matrix.arch.go_name }} ./veans-bin
-          chmod +x ./veans-bin
-      - name: Create package
-        id: nfpm
-        uses: kolaente/action-gh-nfpm@master
-        with:
+          project: veans
+          release-version: ${{ steps.ghd.outputs.describe }}
           packager: ${{ matrix.package }}
-          target: ./veans/dist/os-packages/veans-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
-          config: ./veans/nfpm.yaml
-        env:
-          NFPM_GPG_KEY_FILE: ${{ (matrix.package == 'rpm') && '/tmp/nfpm-signing-key.gpg' || '' }}
-          NFPM_PASSPHRASE: ${{ (matrix.package == 'rpm') && secrets.RELEASE_GPG_PASSPHRASE || '' }}
-      - name: Sign package
-        if: matrix.package == 'archlinux'
-        run: |
-          gpg --default-key 7D061A4AA61436B40713D42EFF054DACD908493A \
-            --batch --yes \
-            --passphrase "${{ secrets.RELEASE_GPG_PASSPHRASE }}" \
-            --pinentry-mode loopback \
-            --detach-sign \
-            ./veans/dist/os-packages/veans-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
-      - name: Upload
-        uses: kolaente/s3-action@main
-        with:
+          nfpm-arch: ${{ matrix.arch.nfpm }}
+          pkg-arch: ${{ matrix.arch.pkg }}
+          binaries-artifact-name: veans_bins
+          binaries-download-path: ./veans-binaries
+          binary-glob: veans-*-${{ matrix.arch.go_name }}
+          # nfpm action runs from $GITHUB_WORKSPACE; ./veans is the source dir
+          # so stage under a distinct filename to avoid collision.
+          staged-binary-path: ./veans/veans-bin
+          nfpm-bin-path: ./veans/veans-bin
+          nfpm-config-path: ./veans/nfpm.yaml
+          package-output-dir: ./veans/dist/os-packages
+          package-filename: veans-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-${{ matrix.arch.pkg }}.${{ matrix.package }}
+          artifact-name: veans_os_package_${{ matrix.package }}_${{ matrix.arch.pkg }}
+          s3-target-path: /veans/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
+          gpg-key-id: 7D061A4AA61436B40713D42EFF054DACD908493A
+          gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
           s3-endpoint: ${{ secrets.S3_ENDPOINT }}
           s3-bucket: ${{ secrets.S3_BUCKET }}
           s3-region: ${{ secrets.S3_REGION }}
-          target-path: /veans/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          files: "veans/dist/os-packages/*"
-          strip-path-prefix: veans/dist/os-packages/
-      - name: Store OS Packages
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: veans_os_package_${{ matrix.package }}_${{ matrix.arch.pkg }}
-          path: ./veans/dist/os-packages/*
 
   publish-repos:
     runs-on: ubuntu-latest
@@ -431,10 +261,14 @@ jobs:
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
-      - name: Download Mage Binary
+      - name: Download build mage binary
+        # Statically compiled in test.yml's build-mage job so it runs inside
+        # ubuntu/fedora/archlinux containers without a Go toolchain.
+        if: matrix.format != 'apk'
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: mage_bin
+          name: build_mage_bin
+          path: build
 
       - name: Download all server OS packages
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
@@ -519,12 +353,13 @@ jobs:
 
       - name: Generate repo metadata
         if: matrix.format != 'apk'
+        working-directory: build
         env:
           RELEASE_GPG_KEY: 7D061A4AA61436B40713D42EFF054DACD908493A
           RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
         run: |
-          chmod +x ./mage-static
-          ./mage-static ${{ matrix.mage_target }}
+          chmod +x ./build-mage-static
+          ./build-mage-static ${{ matrix.mage_target }}
 
       - name: Generate APK repo metadata
         if: matrix.format == 'apk'
