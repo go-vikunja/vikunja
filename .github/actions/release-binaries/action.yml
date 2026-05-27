@@ -5,7 +5,7 @@ description: |
   Derives every per-project path, cache key, artifact name, and S3 target
   from the `project` input. Callers only need to provide the project name,
   the raw `git describe` value, and pass through the GPG/S3 secrets as
-  inputs (composite actions can't read `${{ secrets.* }}` directly).
+  inputs (composite actions can't read the `secrets` context directly).
 
 inputs:
   project:
@@ -14,8 +14,8 @@ inputs:
   release-version:
     description: 'Raw git describe value (e.g. v1.2.3 or a sha). Use "" or "main" for unstable builds.'
     required: true
-  # Secrets — composite actions can't read `${{ secrets.* }}` directly, so the
-  # caller threads them through as inputs.
+  # Secrets — composite actions can't read the `secrets` context directly, so
+  # the caller threads them through as inputs.
   gpg-passphrase:
     required: true
   gpg-sign-key:
