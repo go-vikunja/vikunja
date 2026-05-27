@@ -104,6 +104,16 @@ runs:
       shell: bash
       run: go install github.com/magefile/mage@v1.17.2
 
+    - name: Generate config.yml.sample (vikunja only)
+      # vikunja's nfpm.yaml ships ./config.yml.sample as /etc/vikunja/config.yml.
+      # release-binaries generates it for the zip bundles, but this job runs on a
+      # fresh runner, so we regenerate it here before nfpm packs it.
+      if: inputs.project == 'vikunja'
+      shell: bash
+      run: |
+        export PATH=$PATH:$GOPATH/bin
+        mage generate:config-yaml 1
+
     - name: Write GPG key for nfpm
       if: inputs.packager == 'rpm'
       shell: bash
