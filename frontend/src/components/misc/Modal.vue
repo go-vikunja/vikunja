@@ -17,7 +17,7 @@
 			>
 				<BaseButton
 					:aria-label="$t('misc.closeDialog')"
-					class="close"
+					class="close d-print-none"
 					@click="$emit('close')"
 				>
 					<Icon icon="times" />
@@ -62,7 +62,7 @@
 
 <script lang="ts" setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import {ref, useAttrs, watch, onBeforeUnmount} from 'vue'
+import {ref, useAttrs, watch, onBeforeUnmount, onMounted} from 'vue'
 
 const props = withDefaults(defineProps<{
 	enabled?: boolean,
@@ -158,6 +158,37 @@ watch(dialogRef, (dialog) => {
 	dialog.showModal()
 })
 
+// A <dialog> opened with showModal() lives in the browser's top layer, which
+// renders only the first page during print (top-layer elements are
+// viewport-anchored and don't paginate). Temporarily swap to a non-modal
+// dialog for the duration of the print so the content flows in normal
+// document order and can break across pages.
+let wasModalBeforePrint = false
+
+function handleBeforePrint() {
+	const dialog = dialogRef.value
+	if (dialog && dialog.matches(':modal')) {
+		wasModalBeforePrint = true
+		dialog.close()
+		dialog.show()
+	}
+}
+
+function handleAfterPrint() {
+	if (!wasModalBeforePrint) return
+	wasModalBeforePrint = false
+	const dialog = dialogRef.value
+	if (dialog && dialog.open) {
+		dialog.close()
+		dialog.showModal()
+	}
+}
+
+onMounted(() => {
+	window.addEventListener('beforeprint', handleBeforePrint)
+	window.addEventListener('afterprint', handleAfterPrint)
+})
+
 onBeforeUnmount(() => {
 	if (closeTimer) {
 		clearTimeout(closeTimer)
@@ -167,6 +198,8 @@ onBeforeUnmount(() => {
 	if (previouslyFocused.value instanceof HTMLElement) {
 		previouslyFocused.value.focus()
 	}
+	window.removeEventListener('beforeprint', handleBeforePrint)
+	window.removeEventListener('afterprint', handleAfterPrint)
 })
 </script>
 
@@ -358,6 +391,31 @@ $modal-width: 1024px;
 		flex-direction: column;
 		justify-content: space-between;
 		margin-block-end: 0 !important;
+	}
+}
+
+// Unconstrain the native <dialog> so the full modal content flows onto the
+// printed page instead of being clipped to the viewport-sized top layer.
+@media print {
+	.modal-dialog {
+		position: static;
+		inline-size: auto;
+		block-size: auto;
+		max-inline-size: none;
+		max-block-size: none;
+
+		&::backdrop {
+			display: none;
+		}
+	}
+
+	.modal-container {
+		overflow: visible;
+		min-block-size: 0;
+	}
+
+	:deep(.card) {
+		min-block-size: 0 !important;
 	}
 }
 

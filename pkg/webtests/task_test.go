@@ -563,3 +563,36 @@ func TestTaskDuplicate(t *testing.T) {
 		assert.Contains(t, getHTTPErrorMessage(err), "Forbidden")
 	})
 }
+
+func TestTaskAssignees(t *testing.T) {
+	testHandler := webHandlerTest{
+		user: &testuser1,
+		strFunc: func() handler.CObject {
+			return &models.TaskAssginee{}
+		},
+		t: t,
+	}
+
+	t.Run("ReadAll", func(t *testing.T) {
+		t.Run("With assignees", func(t *testing.T) {
+			rec, err := testHandler.testReadAllWithUser(nil, map[string]string{"projecttask": "30"})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, rec.Code)
+			assert.Contains(t, rec.Body.String(), `"id":1`)
+			assert.Contains(t, rec.Body.String(), `"id":2`)
+		})
+
+		t.Run("Without assignees", func(t *testing.T) {
+			rec, err := testHandler.testReadAllWithUser(nil, map[string]string{"projecttask": "1"})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, rec.Code)
+			assert.Contains(t, rec.Body.String(), `[]`)
+		})
+
+		t.Run("No permission", func(t *testing.T) {
+			_, err := testHandler.testReadAllWithUser(nil, map[string]string{"projecttask": "14"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+	})
+}

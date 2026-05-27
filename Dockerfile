@@ -28,7 +28,7 @@ ENV RELEASE_VERSION=$RELEASE_VERSION
 
 RUN export PATH=$PATH:$GOPATH/bin && \
 	mage build:clean && \
-    mage release:xgo "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}"
+    (cd build && mage release:xgo vikunja "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}")
 
 RUN mkdir -p /tmp && chmod 1777 /tmp
 

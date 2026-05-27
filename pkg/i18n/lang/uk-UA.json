@@ -173,5 +173,10 @@
 		"since_hours": "одна година|%[1]d години|%[1]d годин",
 		"since_minutes": "одна хвилина|%[1]d хвилини|%[1]d хвилин",
 		"list_last_separator": "і"
+	},
+	"feeds": {
+		"notifications": {
+			"title": "Vikunja сповіщення для %[1]s"
+		}
 	}
 }

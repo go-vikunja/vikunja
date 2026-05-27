@@ -989,6 +989,11 @@ func checkProjectBeforeUpdateOrDelete(s *xorm.Session, project *Project) (err er
 		}
 	}
 
+	// Identifiers are stored uppercase so lookups and the uniqueness check
+	// below behave consistently across DBs (Postgres/SQLite are
+	// case-sensitive by default, MySQL is not).
+	project.Identifier = strings.ToUpper(project.Identifier)
+
 	// Check if the identifier is unique and not empty
 	if project.Identifier != "" {
 		exists, err := s.

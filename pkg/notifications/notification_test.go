@@ -20,7 +20,9 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/mail"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
@@ -74,6 +76,68 @@ func (t *testNotifiable) Lang() string {
 	return t.Language
 }
 
+// titlerNoSubjectNotification implements Titler and intentionally omits a
+// Subject from ToMail so the fallback path is exercised.
+type titlerNoSubjectNotification struct {
+	title string
+}
+
+func (n *titlerNoSubjectNotification) ToMail(_ string) *Mail {
+	return NewMail().Line("body")
+}
+func (n *titlerNoSubjectNotification) ToDB() interface{}       { return nil }
+func (n *titlerNoSubjectNotification) Name() string            { return "test.titler.no.subject" }
+func (n *titlerNoSubjectNotification) ToTitle(_ string) string { return n.title }
+
+// titlerWithExplicitSubjectNotification implements Titler but also sets an
+// explicit subject in ToMail; that explicit subject must win.
+type titlerWithExplicitSubjectNotification struct {
+	title   string
+	subject string
+}
+
+func (n *titlerWithExplicitSubjectNotification) ToMail(_ string) *Mail {
+	return NewMail().Subject(n.subject).Line("body")
+}
+func (n *titlerWithExplicitSubjectNotification) ToDB() interface{}       { return nil }
+func (n *titlerWithExplicitSubjectNotification) Name() string            { return "test.titler.with.subject" }
+func (n *titlerWithExplicitSubjectNotification) ToTitle(_ string) string { return n.title }
+
+// noTitlerNotification is the control: no Titler, no Subject, fallback must
+// leave subject empty without panicking.
+type noTitlerNotification struct{}
+
+func (n *noTitlerNotification) ToMail(_ string) *Mail { return NewMail().Line("body") }
+func (n *noTitlerNotification) ToDB() interface{}     { return nil }
+func (n *noTitlerNotification) Name() string          { return "test.no.titler" }
+
+// titlerRegisteredNotification is used to exercise Register/Lookup.
+type titlerRegisteredNotification struct {
+	Title string `json:"title"`
+}
+
+func (n *titlerRegisteredNotification) ToMail(_ string) *Mail   { return NewMail().Line("body") }
+func (n *titlerRegisteredNotification) ToDB() interface{}       { return n }
+func (n *titlerRegisteredNotification) Name() string            { return "test.registry.titler" }
+func (n *titlerRegisteredNotification) ToTitle(_ string) string { return n.Title }
+
+func TestRegistry(t *testing.T) {
+	Register(func() Notification { return &titlerRegisteredNotification{} })
+
+	t.Run("known name returns fresh instance", func(t *testing.T) {
+		n, ok := Lookup("test.registry.titler")
+		require.True(t, ok)
+		require.NotNil(t, n)
+		_, ok = n.(*titlerRegisteredNotification)
+		assert.True(t, ok)
+	})
+
+	t.Run("unknown name returns false", func(t *testing.T) {
+		_, ok := Lookup("does.not.exist")
+		assert.False(t, ok)
+	})
+}
+
 func TestNotify(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 
@@ -111,6 +175,42 @@ func TestNotify(t *testing.T) {
 
 		db.AssertExists(t, "notifications", vals, true)
 	})
+	t.Run("subject fallback uses ToTitle when ToMail omits Subject", func(t *testing.T) {
+		mail.ResetSent()
+		tnf := &testNotifiable{ShouldSendNotification: true, Language: "en"}
+
+		err := notifyMail(tnf, &titlerNoSubjectNotification{title: "From ToTitle"})
+		require.NoError(t, err)
+
+		sent := mail.LastSent()
+		require.NotNil(t, sent)
+		assert.Equal(t, "From ToTitle", sent.Subject)
+	})
+
+	t.Run("explicit Subject in ToMail wins over ToTitle", func(t *testing.T) {
+		mail.ResetSent()
+		tnf := &testNotifiable{ShouldSendNotification: true, Language: "en"}
+
+		err := notifyMail(tnf, &titlerWithExplicitSubjectNotification{title: "From ToTitle", subject: "Explicit"})
+		require.NoError(t, err)
+
+		sent := mail.LastSent()
+		require.NotNil(t, sent)
+		assert.Equal(t, "Explicit", sent.Subject)
+	})
+
+	t.Run("no fallback when notification does not implement Titler", func(t *testing.T) {
+		mail.ResetSent()
+		tnf := &testNotifiable{ShouldSendNotification: true, Language: "en"}
+
+		err := notifyMail(tnf, &noTitlerNotification{})
+		require.NoError(t, err)
+
+		sent := mail.LastSent()
+		require.NotNil(t, sent)
+		assert.Empty(t, sent.Subject)
+	})
+
 	t.Run("disabled notifiable", func(t *testing.T) {
 
 		s := db.NewSession()

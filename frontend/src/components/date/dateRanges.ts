@@ -3,6 +3,7 @@ export const DATE_RANGES = {
 	// Key is the title, as a translation string, the first entry of the value array 
 	// is the "from" date, the second one is the "to" date.
 	'today': ['now/d', 'now/d+1d'],
+	'tomorrow': ['now/d+1d', 'now/d+2d'],
 
 	'lastWeek': ['now/w-1w', 'now/w'],
 	'thisWeek': ['now/w', 'now/w+1w'],

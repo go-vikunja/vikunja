@@ -219,6 +219,13 @@
         "usernameIs": "Your username for CalDAV is: {0}",
         "apiTokenHint": "You can also use an API token with CalDAV permission. Create one in {link}."
       },
+      "feeds": {
+        "title": "Atom Feed",
+        "howTo": "You can subscribe to your Vikunja notifications from any Atom-compatible feed reader. Use the following URL:",
+        "usernameIs": "Your username for the feed is: {0}",
+        "apiTokenHint": "Authenticate with an API token that has the {scope} permission. Create one in {link}.",
+        "tokenTitle": "Atom feed"
+      },
       "avatar": {
         "title": "Avatar",
         "initials": "Initials",
@@ -855,6 +862,7 @@
       "date": "Date",
       "ranges": {
         "today": "Today",
+        "tomorrow": "Tomorrow",
         "thisWeek": "This Week",
         "restOfThisWeek": "The Rest of This Week",
         "nextWeek": "Next Week",
@@ -1058,7 +1066,10 @@
       "addedSuccess": "The comment was added successfully.",
       "permalink": "Copy permalink to this comment",
       "sortNewestFirst": "Newest first",
-      "sortOldestFirst": "Oldest first"
+      "sortOldestFirst": "Oldest first",
+      "reply": "Reply",
+      "jumpToOriginal": "Jump to original comment",
+      "deletedComment": "deleted comment"
     },
     "mention": {
       "noUsersFound": "No users found"
@@ -1323,7 +1334,8 @@
     "none": "You don't have any notifications. Have a nice day!",
     "explainer": "Notifications will appear here when actions, projects or tasks you subscribed to happen.",
     "markAllRead": "Mark all notifications as read",
-    "markAllReadSuccess": "Successfully marked all notifications as read."
+    "markAllReadSuccess": "Successfully marked all notifications as read.",
+    "subscribeFeed": "Subscribe to notifications via Atom feed"
   },
   "quickActions": {
     "notLoggedIn": "Please log in to the main Vikunja window first.",

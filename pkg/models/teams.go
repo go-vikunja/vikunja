@@ -17,6 +17,7 @@
 package models
 
 import (
+	"sort"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
@@ -178,6 +179,9 @@ func addMoreInfoToTeams(s *xorm.Session, teams []*Team) (err error) {
 		if teamUser, has := users[team.CreatedByID]; has {
 			team.CreatedBy = &teamUser.User
 		}
+		sort.Slice(team.Members, func(i, j int) bool {
+			return team.Members[i].ID < team.Members[j].ID
+		})
 	}
 	return
 }

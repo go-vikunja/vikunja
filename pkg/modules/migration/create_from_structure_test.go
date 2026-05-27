@@ -155,4 +155,59 @@ func TestInsertFromStructure(t *testing.T) {
 		assert.NotEqual(t, 0, testStructure[1].Tasks[0].BucketID) // Should get the default bucket
 		assert.NotEqual(t, 0, testStructure[1].Tasks[6].BucketID) // Should get the default bucket
 	})
+	t.Run("reuses existing labels across imports", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		makeStructure := func() []*models.ProjectWithTasksAndBuckets {
+			return []*models.ProjectWithTasksAndBuckets{
+				{
+					Project: models.Project{Title: "Import project"},
+					Tasks: []*models.TaskWithComments{
+						{
+							Task: models.Task{
+								Title: "Task with label",
+								Labels: []*models.Label{
+									{Title: "Mealie", HexColor: "abcdef"},
+								},
+							},
+						},
+					},
+				},
+			}
+		}
+
+		require.NoError(t, InsertFromStructure(makeStructure(), u))
+		require.NoError(t, InsertFromStructure(makeStructure(), u))
+
+		s := db.NewSession()
+		defer s.Close()
+		count, err := s.Where("created_by_id = ? AND title = ?", u.ID, "Mealie").Count(&models.Label{})
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), count, "second import must reuse the existing 'Mealie' label")
+	})
+	t.Run("does not merge into another user's label", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+
+		// Fixture label #3 'Label #3 - other user' is created_by_id: 2.
+		// Importing the same title for user 1 must create a new, user-owned label.
+		structure := []*models.ProjectWithTasksAndBuckets{
+			{
+				Project: models.Project{Title: "Import project"},
+				Tasks: []*models.TaskWithComments{
+					{
+						Task: models.Task{
+							Title:  "Task",
+							Labels: []*models.Label{{Title: "Label #3 - other user"}},
+						},
+					},
+				},
+			},
+		}
+		require.NoError(t, InsertFromStructure(structure, u))
+
+		db.AssertExists(t, "labels", map[string]interface{}{
+			"title":         "Label #3 - other user",
+			"created_by_id": u.ID,
+		}, false)
+	})
 }

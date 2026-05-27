@@ -68,3 +68,13 @@
   owner_id: 15
   created: 2024-01-01 00:00:00
   # token in plaintext is tk_nocaldav_token_test_000000005678efab
+- id: 8
+  title: 'feeds access token for user 13'
+  token_salt: fEdRTk9sR2
+  token_hash: c1231ac23940702dcbdf20ae4c125a904780788b091f6d6c56f94f3620a634ec00aac5288659e04174a69a60b20ea86cdfa5
+  token_last_eight: feed0013
+  permissions: '{"feeds":["access"]}'
+  expires_at: 2099-01-01 00:00:00
+  owner_id: 13
+  created: 2024-01-01 00:00:00
+  # token in plaintext is tk_feeds_access_token_user_0013_feed0013

@@ -81,6 +81,7 @@ import (
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	adminapi "code.vikunja.io/api/pkg/routes/api/v1/admin"
 	"code.vikunja.io/api/pkg/routes/caldav"
+	"code.vikunja.io/api/pkg/routes/feeds"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
 	ws "code.vikunja.io/api/pkg/websocket"
@@ -156,12 +157,13 @@ func NewEcho() *echo.Echo {
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
 		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
 		e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-			LogStatus:   true,
-			LogURI:      true,
-			LogMethod:   true,
-			LogLatency:  true,
-			LogRemoteIP: true,
-			HandleError: true,
+			LogStatus:    true,
+			LogURI:       true,
+			LogMethod:    true,
+			LogLatency:   true,
+			LogRemoteIP:  true,
+			LogUserAgent: true,
+			HandleError:  true,
 			LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
 				if v.Error == nil {
 					httpLogger.LogAttrs(context.Background(), slog.LevelInfo, "",
@@ -170,6 +172,7 @@ func NewEcho() *echo.Echo {
 						slog.String("uri", v.URI),
 						slog.Int("status", v.Status),
 						slog.Duration("latency", v.Latency),
+						slog.String("user_agent", v.UserAgent),
 					)
 				} else {
 					httpLogger.LogAttrs(context.Background(), slog.LevelError, "",
@@ -178,6 +181,7 @@ func NewEcho() *echo.Echo {
 						slog.String("uri", v.URI),
 						slog.Int("status", v.Status),
 						slog.Duration("latency", v.Latency),
+						slog.String("user_agent", v.UserAgent),
 						slog.String("err", v.Error.Error()),
 					)
 				}
@@ -259,6 +263,11 @@ func RegisterRoutes(e *echo.Echo) {
 		registerCalDavRoutes(c)
 	}
 
+	// Feeds routes (Atom feed for user notifications)
+	f := e.Group("/feeds")
+	f.Use(middleware.BasicAuth(feeds.BasicAuth))
+	f.GET("/notifications.atom", feeds.NotificationsAtomFeed)
+
 	// healthcheck
 	e.GET("/health", HealthcheckHandler)
 
@@ -282,8 +291,10 @@ func RegisterRoutes(e *echo.Echo) {
 				// Since it is not possible to register this middleware just for the api group,
 				// we just disable it when for caldav requests.
 				// Caldav requires OPTIONS requests to be answered in a specific manner,
-				// not doing this would break the caldav implementation
-				return strings.HasPrefix(context.Path(), "/dav")
+				// not doing this would break the caldav implementation.
+				// Feed readers are server-side and don't need CORS either.
+				p := context.Path()
+				return strings.HasPrefix(p, "/dav") || strings.HasPrefix(p, "/feeds")
 			},
 		}))
 	}
@@ -549,7 +560,7 @@ func registerAPIRoutes(a *echo.Group) {
 	}
 	a.PUT("/projects/:project/tasks", taskHandler.CreateWeb)
 	a.GET("/tasks/:projecttask", taskHandler.ReadOneWeb)
-	a.GET("/projects/:project/tasks/by-index/:index", taskHandler.ReadOneWeb)
+	a.GET("/projects/:project/tasks/by-index/:index", taskHandler.ReadOneWeb, ResolveProjectIdentifier())
 	a.GET("/tasks", taskCollectionHandler.ReadAllWeb)
 	a.DELETE("/tasks/:projecttask", taskHandler.DeleteWeb)
 	a.POST("/tasks/:projecttask", taskHandler.UpdateWeb)

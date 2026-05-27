@@ -207,6 +207,15 @@ func (t *APIToken) HasCaldavAccess() bool {
 	return slices.Contains(perms, "access")
 }
 
+// HasFeedsAccess checks whether the token has the feeds access permission.
+func (t *APIToken) HasFeedsAccess() bool {
+	perms, has := t.APIPermissions["feeds"]
+	if !has {
+		return false
+	}
+	return slices.Contains(perms, "access")
+}
+
 // GetTokenFromTokenString returns the full token object from the original token string.
 func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken, err error) {
 	lastEight := token[len(token)-8:]
