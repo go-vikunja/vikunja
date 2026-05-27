@@ -21,8 +21,8 @@ importers:
         version: 5.2.1
     devDependencies:
       electron:
-        specifier: 40.10.1
-        version: 40.10.1
+        specifier: 40.10.2
+        version: 40.10.2
       electron-builder:
         specifier: 26.8.1
         version: 26.8.1(electron-builder-squirrel-windows@24.13.3)
@@ -569,8 +569,8 @@ packages:
   electron-publish@26.8.1:
     resolution: {integrity: sha512-q+jrSTIh/Cv4eGZa7oVR+grEJo/FoLMYBAnSL5GCtqwUpr1T+VgKB/dn1pnzxIxqD8S/jP1yilT9VrwCqINR4w==}
 
-  electron@40.10.1:
-    resolution: {integrity: sha512-F2Iy16vLBV4NodRVf2dGRESUW03AdFlCmOjaF1fhc3FupmTwEGWmKsYXvORkUYLPBSrKP7r08e8PHiImoe8woQ==}
+  electron@40.10.2:
+    resolution: {integrity: sha512-Xj3Hy0Imbu4g0gDIW55w/jJYz94nMO2JRSGYA3LyAn5SwaERCelgZrA21vfH+Bi//SWAWQXddHsMwCqauyMT8g==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -1764,7 +1764,7 @@ snapshots:
 
   '@npmcli/fs@4.0.0':
     dependencies:
-      semver: 7.8.0
+      semver: 7.8.1
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -2393,7 +2393,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@40.10.1:
+  electron@40.10.2:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.10.9
@@ -2950,14 +2950,14 @@ snapshots:
 
   node-abi@4.24.0:
     dependencies:
-      semver: 7.8.0
+      semver: 7.8.1
 
   node-addon-api@1.7.2:
     optional: true
 
   node-api-version@0.2.1:
     dependencies:
-      semver: 7.8.0
+      semver: 7.8.1
 
   node-gyp@11.5.0:
     dependencies:
@@ -2967,7 +2967,7 @@ snapshots:
       make-fetch-happen: 14.0.3
       nopt: 8.1.0
       proc-log: 5.0.0
-      semver: 7.8.0
+      semver: 7.8.1
       tar: 7.5.11
       tinyglobby: 0.2.15
       which: 5.0.0
@@ -3199,7 +3199,8 @@ snapshots:
 
   semver@7.7.4: {}
 
-  semver@7.8.0: {}
+  semver@7.8.0:
+    optional: true
 
   semver@7.8.1: {}
 
