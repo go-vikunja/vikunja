@@ -1972,3 +1972,142 @@ func TestTaskCollection_SubtaskWithMultipleParentsNoDuplicates(t *testing.T) {
 	assert.True(t, foundParent1, "Parent task 41 should be present")
 	assert.True(t, foundParent2, "Parent task 42 should be present")
 }
+
+// TestTaskCollection_IncludeChildTasks tests task retrieval with the IncludeChildTasks flag.
+// Project hierarchy used: 22 (parent) -> 21 (child)
+// Tasks: project 22 has tasks 36, 38; project 21 has task 35
+func TestTaskCollection_IncludeChildTasks(t *testing.T) {
+	t.Run("IncludeChildTasks=false returns only direct tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		tc := &TaskCollection{
+			ProjectID:         22,
+			IncludeChildTasks: false,
+		}
+
+		result, _, _, err := tc.ReadAll(s, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*Task)
+		require.True(t, ok)
+
+		// Only tasks from project 22 (tasks 36, 38) — not task 35 from child project 21
+		for _, task := range tasks {
+			assert.Equal(t, int64(22), task.ProjectID,
+				"With IncludeChildTasks=false, only tasks from project 22 should be returned, got task %d from project %d", task.ID, task.ProjectID)
+		}
+	})
+
+	t.Run("IncludeChildTasks=true returns tasks from parent and child projects", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		tc := &TaskCollection{
+			ProjectID:         22,
+			IncludeChildTasks: true,
+		}
+
+		result, _, _, err := tc.ReadAll(s, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*Task)
+		require.True(t, ok)
+
+		projectIDs := make(map[int64]bool)
+		for _, task := range tasks {
+			projectIDs[task.ProjectID] = true
+		}
+
+		// Should include tasks from both project 22 and its child project 21
+		assert.True(t, projectIDs[22], "Should include tasks from parent project 22")
+		assert.True(t, projectIDs[21], "Should include tasks from child project 21")
+	})
+
+	t.Run("IncludeChildTasks=true with no children returns only direct tasks", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 1}
+		// Project 1 has no child projects
+		tc := &TaskCollection{
+			ProjectID:         1,
+			IncludeChildTasks: true,
+		}
+
+		result, _, _, err := tc.ReadAll(s, u, "", 1, 50)
+		require.NoError(t, err)
+
+		tasks, ok := result.([]*Task)
+		require.True(t, ok)
+
+		for _, task := range tasks {
+			assert.Equal(t, int64(1), task.ProjectID,
+				"With no children, only tasks from project 1 should be returned")
+		}
+	})
+}
+
+// TestExtractParentProjectFilter tests the parentProject filter parsing logic.
+func TestExtractParentProjectFilter(t *testing.T) {
+	t.Run("single project ID with equals operator", func(t *testing.T) {
+		ids, cleaned := extractParentProjectFilter("parentProject = 123")
+		assert.Equal(t, []int64{123}, ids)
+		assert.Equal(t, "", cleaned)
+	})
+
+	t.Run("single project ID with in operator", func(t *testing.T) {
+		ids, cleaned := extractParentProjectFilter("parentProject in 123")
+		assert.Equal(t, []int64{123}, ids)
+		assert.Equal(t, "", cleaned)
+	})
+
+	t.Run("multiple project IDs with in operator", func(t *testing.T) {
+		ids, cleaned := extractParentProjectFilter("parentProject in 1,2,3")
+		assert.ElementsMatch(t, []int64{1, 2, 3}, ids)
+		assert.Equal(t, "", cleaned)
+	})
+
+	t.Run("combined with other filter using AND", func(t *testing.T) {
+		ids, cleaned := extractParentProjectFilter("done = false && parentProject = 5")
+		assert.Equal(t, []int64{5}, ids)
+		assert.Equal(t, "done = false", cleaned)
+	})
+
+	t.Run("parentProject at start with AND", func(t *testing.T) {
+		ids, cleaned := extractParentProjectFilter("parentProject = 5 && done = false")
+		assert.Equal(t, []int64{5}, ids)
+		assert.Equal(t, "done = false", cleaned)
+	})
+
+	t.Run("no parentProject filter returns empty and unchanged string", func(t *testing.T) {
+		ids, cleaned := extractParentProjectFilter("done = false && priority >= 3")
+		assert.Empty(t, ids)
+		assert.Equal(t, "done = false && priority >= 3", cleaned)
+	})
+
+	t.Run("empty filter string", func(t *testing.T) {
+		ids, cleaned := extractParentProjectFilter("")
+		assert.Empty(t, ids)
+		assert.Equal(t, "", cleaned)
+	})
+
+	t.Run("invalid project ID is skipped", func(t *testing.T) {
+		ids, cleaned := extractParentProjectFilter("parentProject = abc")
+		assert.Empty(t, ids)
+
+
+		assert.Equal(t, "abc", cleaned) // regex removes "parentProject = " leaving the non-numeric value
+	})
+
+	t.Run("case insensitive matching", func(t *testing.T) {
+		ids, cleaned := extractParentProjectFilter("PARENTPROJECT = 42")
+		assert.Equal(t, []int64{42}, ids)
+		assert.Equal(t, "", cleaned)
+	})
+}

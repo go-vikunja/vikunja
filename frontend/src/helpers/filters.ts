@@ -31,6 +31,7 @@ export const LABEL_FIELDS = [
 
 export const PROJECT_FIELDS = [
 	'project',
+	'parentProject',
 ]
 
 export const AUTOCOMPLETE_FIELDS = [

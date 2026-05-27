@@ -14,6 +14,13 @@
 					:project-id="projectId"
 					@update:modelValue="updateFilters"
 				/>
+				<FancyCheckbox
+					v-if="!isSavedFilter(project)"
+					v-model="params.include_child_tasks"
+					is-block
+				>
+					{{ $t('project.show_child_project_tasks') }}
+				</FancyCheckbox>
 			</div>
 		</template>
 
@@ -268,7 +275,15 @@
 					</div>
 				</div>
 
-				<Modal
+			<!-- Child project kanban rows, shown when include_child_tasks is enabled -->
+			<ChildProjectKanbanRow
+				v-for="childProject in childProjectsForKanban"
+				:key="childProject.id"
+				:project="childProject"
+				:filter-params="childKanbanFilterParams"
+			/>
+
+			<Modal
 					:enabled="showBucketDeleteModal"
 					@close="showBucketDeleteModal = false"
 					@submit="deleteBucket()"
@@ -309,8 +324,10 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useAuthStore} from '@/stores/auth'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import KanbanCard from '@/components/tasks/partials/KanbanCard.vue'
+import ChildProjectKanbanRow from '@/components/project/ChildProjectKanbanRow.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 
@@ -406,6 +423,7 @@ const params = ref<TaskFilterParams>({
 	filter: '',
 	filter_include_nulls: false,
 	s: '',
+	include_child_tasks: authStore.settings.frontendSettings.showChildProjectTasksByDefault ?? false,
 })
 
 watch([filter, s], ([filterValue, sValue]) => {
@@ -445,6 +463,29 @@ const bucketDraggableComponentData = computed(() => ({
 }))
 const project = computed(() => projectId.value ? projectStore.projects[projectId.value] : null)
 const view = computed(() => project.value?.views.find(v => v.id === props.viewId) as IProjectView || null)
+
+// Recursively collect all descendant projects in hierarchy order for child kanban rows
+function collectDescendants(parentId: number, depth = 0): IProject[] {
+	if (depth > 50) return [] // guard against circular refs
+	const children = projectStore.getChildProjects(parentId)
+	const result: IProject[] = []
+	for (const child of children) {
+		result.push(child)
+		result.push(...collectDescendants(child.id, depth + 1))
+	}
+	return result
+}
+
+const childProjectsForKanban = computed(() => {
+	if (!params.value.include_child_tasks || !projectId.value) return []
+	return collectDescendants(projectId.value)
+})
+
+const childKanbanFilterParams = computed(() => ({
+	filter: params.value.filter,
+	s: params.value.s,
+	filter_include_nulls: params.value.filter_include_nulls,
+}))
 const canWrite = computed(() => baseStore.currentProject?.maxPermission > Permissions.READ && view.value.bucketConfigurationMode === 'manual')
 const canCreateTasks = computed(() => canWrite.value && projectId.value > 0)
 

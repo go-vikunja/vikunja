@@ -306,7 +306,9 @@
         },
         "deleteSuccess": "Session revoked successfully. It may take up to 10 minutes for the session to fully expire.",
         "noOtherSessions": "No other active sessions."
-      }
+      },
+      "show_child_project_tasks_by_default": "Show tasks in child projects by default",
+      "show_child_project_tasks_by_default_description": "Automatically enable child project task visibility when viewing projects"
     },
     "deletion": {
       "title": "Delete your Vikunja Account",
@@ -563,7 +565,10 @@
       "deleteSuccess": "The view was deleted successfully.",
       "onlyAdminsCanEdit": "Only project admins can edit views.",
       "updateSuccess": "The view was updated successfully."
-    }
+    },
+    "show_child_project_tasks": "Show tasks in child projects",
+    "show_child_project_tasks_description": "Include tasks from all descendant child projects",
+    "child_project_tasks_bucket": "Child Project Tasks"
   },
   "filters": {
     "title": "Filters",
@@ -642,7 +647,9 @@
           "priorityOneOrTwoPastDue": "Matches tasks with priority level 1 or 2 and a due date in the past"
         }
       }
-    }
+    },
+    "parentProject": "Parent Project",
+    "parentProject_description": "The project the task belongs to and all tasks from all descendant child projects"
   },
   "sorting": {
     "manually": "Manually",

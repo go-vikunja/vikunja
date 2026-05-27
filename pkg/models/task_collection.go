@@ -17,10 +17,12 @@
 package models
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -48,6 +50,11 @@ type TaskCollection struct {
 
 	// If set to true, the result will also include null values
 	FilterIncludeNulls bool `query:"filter_include_nulls" json:"filter_include_nulls"`
+
+	// If set to true, tasks from all descendant child projects will be included
+	IncludeChildTasks bool `query:"include_child_tasks" json:"include_child_tasks,omitempty"`
+	// Populated from parentProject filter parsing - contains parent project IDs to expand
+	ParentProjectIDs []int64 `json:"-"`
 
 	// If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a
 	// second step, will fetch all of these subtasks. This may result in more tasks than the
@@ -176,6 +183,46 @@ func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, v
 	return getTasksForProjects(s, projects, a, opts, view)
 }
 
+// extractParentProjectFilter extracts parentProject filter expressions from a filter string,
+// returning the project IDs found and the filter string with those expressions removed.
+// This is necessary because parentProject is not a task field - it controls which projects
+// are queried rather than filtering task properties.
+func extractParentProjectFilter(filter string) (parentProjectIDs []int64, cleanedFilter string) {
+	// Match: parentProject = 123  OR  parentProject in 1,2,3
+	re := regexp.MustCompile(`(?i)\bparentProject\s*(?:=|in)\s*([\d,\s]+)`)
+
+	cleanedFilter = re.ReplaceAllStringFunc(filter, func(match string) string {
+		parts := re.FindStringSubmatch(match)
+		if len(parts) < 2 {
+			return match
+		}
+		for _, val := range strings.Split(parts[1], ",") {
+			val = strings.TrimSpace(val)
+			if val == "" {
+				continue
+			}
+			id, err := strconv.ParseInt(val, 10, 64)
+			if err != nil {
+				log.Debugf("parentProject filter value '%s' is not a valid project ID: %s", val, err)
+				continue
+			}
+			parentProjectIDs = append(parentProjectIDs, id)
+		}
+		return ""
+	})
+
+	// Clean up any dangling logical operators left after removal
+	cleanedFilter = regexp.MustCompile(`\s*&&\s*$`).ReplaceAllString(cleanedFilter, "")
+	cleanedFilter = regexp.MustCompile(`^\s*&&\s*`).ReplaceAllString(cleanedFilter, "")
+	cleanedFilter = regexp.MustCompile(`\s*\|\|\s*$`).ReplaceAllString(cleanedFilter, "")
+	cleanedFilter = regexp.MustCompile(`^\s*\|\|\s*`).ReplaceAllString(cleanedFilter, "")
+	cleanedFilter = regexp.MustCompile(`\(\s*&&`).ReplaceAllString(cleanedFilter, "(")
+	cleanedFilter = regexp.MustCompile(`&&\s*\)`).ReplaceAllString(cleanedFilter, ")")
+	cleanedFilter = strings.TrimSpace(cleanedFilter)
+
+	return parentProjectIDs, cleanedFilter
+}
+
 func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskCollection) (projects []*Project, err error) {
 	if tf.ProjectID == 0 || tf.isSavedFilter {
 		projects, _, _, err = getRawProjectsForUser(
@@ -185,7 +232,19 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 				page: -1,
 			},
 		)
-		return projects, err
+		if err != nil {
+			return nil, err
+		}
+
+		// If parentProject filter IDs are set, expand them to include all descendants
+		if len(tf.ParentProjectIDs) > 0 {
+			projects, err = expandProjectsWithChildren(s, a, tf.ParentProjectIDs)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return projects, nil
 	}
 
 	// Check the project exists and the user has access on it
@@ -201,7 +260,56 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 		}
 	}
 
-	return []*Project{{ID: tf.ProjectID}}, nil
+	projects = []*Project{{ID: tf.ProjectID}}
+
+	// When IncludeChildTasks is set, expand the project to include all descendants
+	if tf.IncludeChildTasks {
+		childProjects, err := GetAllChildProjects(s, tf.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("getting child projects: %w", err)
+		}
+		for _, cp := range childProjects {
+			if cp.ID == tf.ProjectID {
+				continue // already included
+			}
+			// Check permission for each child project
+			canRead, _, err := cp.CanRead(s, a)
+			if err != nil {
+				return nil, fmt.Errorf("checking child project permission: %w", err)
+			}
+			if canRead {
+				projects = append(projects, &Project{ID: cp.ID})
+			}
+		}
+	}
+
+	return projects, nil
+}
+
+// expandProjectsWithChildren takes a list of parent project IDs and returns all projects
+// (parents + descendants) the user has permission to read.
+func expandProjectsWithChildren(s *xorm.Session, a web.Auth, parentIDs []int64) (projects []*Project, err error) {
+	seen := make(map[int64]bool)
+	for _, parentID := range parentIDs {
+		childProjects, err := GetAllChildProjects(s, parentID)
+		if err != nil {
+			return nil, fmt.Errorf("getting child projects for %d: %w", parentID, err)
+		}
+		for _, cp := range childProjects {
+			if seen[cp.ID] {
+				continue
+			}
+			seen[cp.ID] = true
+			canRead, _, err := cp.CanRead(s, a)
+			if err != nil {
+				return nil, fmt.Errorf("checking permission for project %d: %w", cp.ID, err)
+			}
+			if canRead {
+				projects = append(projects, &Project{ID: cp.ID})
+			}
+		}
+	}
+	return projects, nil
 }
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
@@ -348,6 +456,12 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 				return nil, 0, 0, err
 			}
 		}
+	}
+
+	// Extract parentProject filter expressions before standard filter parsing,
+	// since parentProject is not a task field but controls project scope.
+	if tf.Filter != "" {
+		tf.ParentProjectIDs, tf.Filter = extractParentProjectFilter(tf.Filter)
 	}
 
 	opts, err := getTaskFilterOptsFromCollection(tf, view)

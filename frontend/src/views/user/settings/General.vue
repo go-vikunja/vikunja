@@ -21,7 +21,7 @@
 				v-if="isExternalUser"
 				class="help"
 			>
-				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info.authProvider}) }}
+				{{ $t('user.settings.general.externalUserNameChange', {provider: authStore.info?.authProvider ?? ''}) }}
 			</p>
 			<FormField
 				:label="$t('user.settings.general.defaultProject')"
@@ -69,6 +69,10 @@
 			<FormCheckbox
 				v-model="settings.frontendSettings.showLastViewed"
 				:label="$t('user.settings.general.showLastViewed')"
+			/>
+			<FormCheckbox
+				v-model="settings.frontendSettings.showChildProjectTasksByDefault"
+				:label="$t('user.settings.show_child_project_tasks_by_default')"
 			/>
 			<FormCheckbox
 				v-model="settings.emailRemindersEnabled"
@@ -416,6 +420,8 @@ const settings = ref<IUserSettings>({
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
 		// Clone to escape the store's readonly array type.
 		quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
+		// Add fallback for old settings that don't have the child project tasks setting
+		showChildProjectTasksByDefault: authStore.settings.frontendSettings.showChildProjectTasksByDefault ?? false,
 	},
 })
 
@@ -531,7 +537,7 @@ const {
 	timezoneObject,
 } = useAvailableTimezones(settings)
 
-const isExternalUser = computed(() => !authStore.info.isLocalUser)
+const isExternalUser = computed(() => !authStore.info?.isLocalUser)
 
 watch(
 	() => authStore.settings,

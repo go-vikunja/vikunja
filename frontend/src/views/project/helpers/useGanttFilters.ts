@@ -2,6 +2,7 @@ import {watch, type Ref} from 'vue'
 import type {RouteLocationNormalized, RouteLocationRaw, LocationQueryRaw} from 'vue-router'
 
 import {useViewFiltersStore} from '@/stores/viewFilters'
+import {useAuthStore} from '@/stores/auth'
 
 import {isoToKebabDate} from '@/helpers/time/isoToKebabDate'
 import {parseDateProp} from '@/helpers/time/parseDateProp'
@@ -23,9 +24,11 @@ export interface GanttFilters {
 	dateFrom: DateISO
 	dateTo: DateISO
 	showTasksWithoutDates: boolean
+	includeChildTasks: boolean
 }
 
 const DEFAULT_SHOW_TASKS_WITHOUT_DATES = false
+const DEFAULT_INCLUDE_CHILD_TASKS = false
 
 const DEFAULT_DATEFROM_DAY_OFFSET = -15
 const DEFAULT_DATETO_DAY_OFFSET = +55
@@ -43,12 +46,17 @@ function getDefaultDateTo() {
 // FIXME: use zod for this
 function ganttRouteToFilters(route: Partial<RouteLocationNormalized>): GanttFilters {
 	const ganttRoute = route
+	const authStore = useAuthStore()
+	const defaultIncludeChildTasks = 'includeChildTasks' in (ganttRoute.query ?? {})
+		? parseBooleanProp(ganttRoute.query?.includeChildTasks as string)
+		: (authStore.settings.frontendSettings.showChildProjectTasksByDefault ?? DEFAULT_INCLUDE_CHILD_TASKS)
 	return {
 		projectId: Number(ganttRoute.params?.projectId),
 		viewId: Number(ganttRoute.params?.viewId),
 		dateFrom: parseDateProp(ganttRoute.query?.dateFrom as DateKebab) || getDefaultDateFrom(),
 		dateTo: parseDateProp(ganttRoute.query?.dateTo as DateKebab) || getDefaultDateTo(),
 		showTasksWithoutDates: parseBooleanProp(ganttRoute.query?.showTasksWithoutDates as string) || DEFAULT_SHOW_TASKS_WITHOUT_DATES,
+		includeChildTasks: defaultIncludeChildTasks,
 	}
 }
 
@@ -76,6 +84,10 @@ function ganttFiltersToRoute(filters: GanttFilters): RouteLocationRaw {
 		query.showTasksWithoutDates = String(filters.showTasksWithoutDates)
 	}
 
+	if (filters.includeChildTasks) {
+		query.includeChildTasks = String(filters.includeChildTasks)
+	}
+
 	return {
 		name: 'project.view',
 		params: {
@@ -100,6 +112,7 @@ function ganttFiltersToApiParams(filters: GanttFilters): TaskFilterParams {
 			'(start_date <= "' + dateFrom + '" && end_date >= "' + dateTo + '")' +
 			')',
 		filter_include_nulls: filters.showTasksWithoutDates,
+		include_child_tasks: filters.includeChildTasks,
 		expand: 'subtasks',
 	}
 }

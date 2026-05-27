@@ -15,6 +15,7 @@ export interface TaskFilterParams {
 	s: string,
 	per_page?: number,
 	expand?: ExpandTaskFilterParam,
+	include_child_tasks?: boolean,
 }
 
 export function getDefaultTaskFilterParams(): TaskFilterParams {
@@ -26,6 +27,7 @@ export function getDefaultTaskFilterParams(): TaskFilterParams {
 		filter_timezone: '',
 		s: '',
 		expand: 'subtasks',
+		include_child_tasks: false,
 	}
 }
 

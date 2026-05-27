@@ -17,6 +17,13 @@
 					:project-id="projectId"
 					@update:modelValue="loadTasks()"
 				/>
+				<FancyCheckbox
+					v-if="!isSavedFilter(project)"
+					v-model="params.include_child_tasks"
+					is-block
+				>
+					{{ $t('project.show_child_project_tasks') }}
+				</FancyCheckbox>
 			</div>
 		</template>
 
@@ -109,6 +116,7 @@ import ButtonLink from '@/components/misc/ButtonLink.vue'
 import AddTask from '@/components/tasks/AddTask.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import SortPopup from '@/components/project/partials/SortPopup.vue'

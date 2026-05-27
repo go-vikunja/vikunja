@@ -94,7 +94,12 @@ export function useTaskList(
 	const projectId = computed(() => projectIdGetter())
 	const projectViewId = computed(() => projectViewIdGetter())
 
-	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
+	const authStore = useAuthStore()
+
+	const params = ref<TaskFilterParams>({
+		...getDefaultTaskFilterParams(),
+		include_child_tasks: authStore.settings.frontendSettings.showChildProjectTasksByDefault ?? false,
+	})
 
 	const page = useRouteQuery('page', '1', { transform: Number })
 	const filter = useRouteQuery('filter')
@@ -134,8 +139,6 @@ export function useTaskList(
 		},
 		{deep: true},
 	)
-	
-	const authStore = useAuthStore()
 	
 	const getAllTasksParams = computed(() => {
 		return [

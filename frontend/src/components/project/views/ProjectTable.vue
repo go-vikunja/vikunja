@@ -81,6 +81,13 @@
 					:project-id="projectId"
 					@update:modelValue="taskList.loadTasks()"
 				/>
+				<FancyCheckbox
+					v-if="!isSavedFilter({id: projectId})"
+					v-model="params.include_child_tasks"
+					is-block
+				>
+					{{ $t('project.show_child_project_tasks') }}
+				</FancyCheckbox>
 			</div>
 		</template>
 

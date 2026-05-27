@@ -38,6 +38,12 @@
 					>
 						{{ $t('task.show.noDates') }}
 					</FancyCheckbox>
+					<FancyCheckbox
+						v-model="filters.includeChildTasks"
+						is-block
+					>
+						{{ $t('project.show_child_project_tasks') }}
+					</FancyCheckbox>
 				</div>
 			</Card>
 

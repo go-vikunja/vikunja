@@ -753,3 +753,88 @@ func TestCheckIsArchived(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+func TestGetAllChildProjects(t *testing.T) {
+	t.Run("no children", func(t *testing.T) {
+		// Project 1 has no children
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		childProjects, err := GetAllChildProjects(s, 1)
+		require.NoError(t, err)
+		assert.Len(t, childProjects, 1, "Should return only the parent project itself")
+		assert.Contains(t, childProjects, int64(1))
+	})
+
+	t.Run("single level children", func(t *testing.T) {
+		// Project 22 has one child: 21
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		childProjects, err := GetAllChildProjects(s, 22)
+		require.NoError(t, err)
+		assert.Len(t, childProjects, 2, "Should return parent and one child")
+		assert.Contains(t, childProjects, int64(22), "Should include parent project")
+		assert.Contains(t, childProjects, int64(21), "Should include child project")
+	})
+
+	t.Run("multi level children", func(t *testing.T) {
+		// Project 27 -> 12 -> 25 -> 26 (4 levels deep)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		childProjects, err := GetAllChildProjects(s, 27)
+		require.NoError(t, err)
+		assert.Len(t, childProjects, 4, "Should return all 4 levels")
+		assert.Contains(t, childProjects, int64(27), "Should include root project")
+		assert.Contains(t, childProjects, int64(12), "Should include level 1 child")
+		assert.Contains(t, childProjects, int64(25), "Should include level 2 child")
+		assert.Contains(t, childProjects, int64(26), "Should include level 3 child")
+	})
+
+	t.Run("returns map with correct structure", func(t *testing.T) {
+		// Verify the returned map contains Project pointers with correct data
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		childProjects, err := GetAllChildProjects(s, 22)
+		require.NoError(t, err)
+
+		project22 := childProjects[22]
+		require.NotNil(t, project22)
+		assert.Equal(t, "Test22 archived individually", project22.Title)
+
+		project21 := childProjects[21]
+		require.NotNil(t, project21)
+		assert.Equal(t, "Test21 archived through parent list", project21.Title)
+	})
+
+	t.Run("nonexistent project", func(t *testing.T) {
+		// Query for a project that doesn't exist
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		childProjects, err := GetAllChildProjects(s, 999999)
+		require.NoError(t, err, "Should not error for nonexistent project")
+		assert.Empty(t, childProjects, "Should return empty map for nonexistent project")
+	})
+
+	t.Run("multiple children at same level", func(t *testing.T) {
+		// Project 29 has two children: 14 and 19
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		childProjects, err := GetAllChildProjects(s, 29)
+		require.NoError(t, err)
+		assert.Len(t, childProjects, 3, "Should return parent and two children")
+		assert.Contains(t, childProjects, int64(29), "Should include parent project")
+		assert.Contains(t, childProjects, int64(14), "Should include first child")
+		assert.Contains(t, childProjects, int64(19), "Should include second child")
+	})
+}

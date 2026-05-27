@@ -10,6 +10,11 @@
 			{{ getProjectTitle(currentProject) }}
 		</h1>
 
+		<ProjectBreadcrumb
+			v-if="currentProject?.id > 0"
+			:project-id="currentProject.id"
+		/>
+
 		<div
 			ref="switchViewContainerRef"
 			class="switch-view-container d-print-none"
@@ -92,6 +97,7 @@ import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Icon from '@/components/misc/Icon'
 import Message from '@/components/misc/Message.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
+import ProjectBreadcrumb from '@/components/project/ProjectBreadcrumb.vue'
 
 import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {useTitle} from '@/composables/useTitle'

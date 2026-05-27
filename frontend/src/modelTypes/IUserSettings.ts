@@ -28,6 +28,7 @@ export interface IFrontendSettings {
 	commentSortOrder: 'asc' | 'desc'
 	desktopQuickEntryShortcut: string
 	quickAddDefaultReminders: ITaskReminder[]
+	showChildProjectTasksByDefault: boolean
 }
 
 export interface IExtraSettingsLink {
