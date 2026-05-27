@@ -840,8 +840,6 @@
 			"relatedTasks": "Verwante Taken",
 			"reminders": "Herinneringen",
 			"repeat": "Herhalen",
-			"comment": "{count} opmerking | {count} opmerkingen",
-			"commentCount": "Aantal opmerkingen",
 			"startDate": "Begindatum",
 			"title": "Titel",
 			"updated": "Bijgewerkt",
@@ -877,7 +875,6 @@
 		},
 		"comment": {
 			"title": "Reacties",
-			"loading": "Bezig met laden van reacties…",
 			"edited": "bewerkt op {date}",
 			"creating": "Opmerking maken…",
 			"placeholder": "Voeg je reactie toe, druk op '/' voor meer opties…",
