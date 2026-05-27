@@ -1,48 +1,24 @@
-name: Release Go binaries
-description: >
-  Cross-compile a Go binary from this monorepo through the centralized build/
-  magefile (xgo + upx + sha256 + zip), GPG-sign the per-target zip bundles,
-  upload them to S3, and store the binaries and zip bundles as workflow
-  artifacts. Any project-specific pre-build steps (downloading frontend dist,
-  generating config.yml.sample) belong in the calling workflow — this action
-  assumes the working tree is ready to compile.
+name: Release binaries
+description: |
+  Build, sign, and publish release binaries for a Vikunja sub-project.
+
+  Derives every per-project path, cache key, artifact name, and S3 target
+  from the `project` input. Callers only need to provide the project name,
+  the raw `git describe` value, and pass through the GPG/S3 secrets as
+  inputs (composite actions can't read `${{ secrets.* }}` directly).
 
 inputs:
   project:
-    description: 'Project name passed to `mage release:build` (e.g., vikunja, veans).'
+    description: 'Which project to build: "vikunja" or "veans".'
     required: true
   release-version:
-    description: 'RELEASE_VERSION env value — usually the raw `git describe` output.'
+    description: 'Raw git describe value (e.g. v1.2.3 or a sha). Use "" or "main" for unstable builds.'
     required: true
-  xgo-out-name:
-    description: 'XGO_OUT_NAME env value — basename xgo prefixes onto every binary (e.g., vikunja-v1.2.3, veans-unstable).'
-    required: true
-  output-directory:
-    description: 'Where the project writes dist/ (e.g., "." for vikunja, "veans" for veans). Used for signing, S3 upload, and artifact paths.'
-    required: true
-  xgo-cache-key:
-    description: 'Primary cache key for /home/runner/.xgo-cache.'
-    required: true
-  s3-target-path:
-    description: 'S3 target path for the zip bundles (e.g., /vikunja/v1.2.3 or /veans/unstable).'
-    required: true
-  artifact-binaries-name:
-    description: 'Name of the upload-artifact entry for the raw binaries under dist/binaries/.'
-    required: true
-  artifact-zips-name:
-    description: 'Name of the upload-artifact entry for the zip bundles under dist/zip/.'
-    required: true
-  upload-zips-as-artifact:
-    description: '"true" to also upload the zip bundles as a workflow artifact (typically only on tags).'
-    required: false
-    default: 'false'
-  gpg-key-id:
-    description: 'Long key ID GPG should sign with.'
-    required: true
+  # Secrets — composite actions can't read `${{ secrets.* }}` directly, so the
+  # caller threads them through as inputs.
   gpg-passphrase:
     required: true
   gpg-sign-key:
-    description: 'ASCII-armored GPG private key.'
     required: true
   s3-access-key-id:
     required: true
@@ -58,43 +34,105 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: useblacksmith/setup-go@647ac649bd5b480f2a262e3e3e5f4d150ed452ad # v6
-      with:
-        go-version: stable
-
-    - name: Install mage
-      # build/ is its own module — install a fresh mage so it picks up
-      # build/magefile.go on the fly.
+    - name: Set project paths
       shell: bash
-      run: go install github.com/magefile/mage@v1.17.2
+      env:
+        PROJECT: ${{ inputs.project }}
+        RELEASE_VERSION_INPUT: ${{ inputs.release-version }}
+      run: |
+        set -euo pipefail
+
+        case "$PROJECT" in
+          vikunja|veans) ;;
+          *)
+            echo "::error::Unknown project '$PROJECT'. Expected 'vikunja' or 'veans'." >&2
+            exit 1
+            ;;
+        esac
+
+        # version-or-unstable: real version unless empty/"main", in which case "unstable".
+        if [ -z "$RELEASE_VERSION_INPUT" ] || [ "$RELEASE_VERSION_INPUT" = "main" ]; then
+          version_or_unstable="unstable"
+        else
+          version_or_unstable="$RELEASE_VERSION_INPUT"
+        fi
+
+        case "$PROJECT" in
+          vikunja)
+            output_dir="."
+            dist_prefix="dist"
+            ;;
+          veans)
+            output_dir="veans"
+            dist_prefix="veans/dist"
+            ;;
+        esac
+
+        {
+          echo "PROJECT=$PROJECT"
+          echo "RELEASE_VERSION=$RELEASE_VERSION_INPUT"
+          echo "VERSION_OR_UNSTABLE=$version_or_unstable"
+          echo "XGO_OUT_NAME=${PROJECT}-${version_or_unstable}"
+          echo "OUTPUT_DIR=$output_dir"
+          echo "DIST_PREFIX=$dist_prefix"
+          echo "S3_TARGET_PATH=/${PROJECT}/${version_or_unstable}"
+          echo "ARTIFACT_BINARIES_NAME=${PROJECT}_bins"
+          echo "ARTIFACT_ZIPS_NAME=${PROJECT}_bin_packages"
+        } >> "$GITHUB_ENV"
+
+    - name: Download Mage binary
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      with:
+        name: mage_bin
+
+    - name: Make mage-static executable
+      shell: bash
+      run: chmod +x ./mage-static
+
+    - name: Download frontend dist (vikunja only)
+      if: inputs.project == 'vikunja'
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      with:
+        name: frontend_dist
+        path: frontend/dist
+
+    - name: Generate config.yml.sample (vikunja only)
+      if: inputs.project == 'vikunja'
+      shell: bash
+      run: ./mage-static generate:config-yaml 1
 
     - name: Install upx
       shell: bash
       run: |
-        wget https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-amd64_linux.tar.xz
+        set -euo pipefail
+        wget -q https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-amd64_linux.tar.xz
         echo 'b32abf118d721358a50f1aa60eacdbf3298df379c431c3a86f139173ab8289a1  upx-5.0.0-amd64_linux.tar.xz' > upx-5.0.0-amd64_linux.tar.xz.sha256
         sha256sum -c upx-5.0.0-amd64_linux.tar.xz.sha256
         tar xf upx-5.0.0-amd64_linux.tar.xz
-        mv upx-5.0.0-amd64_linux/upx /usr/local/bin
+        sudo mv upx-5.0.0-amd64_linux/upx /usr/local/bin
 
     - name: Setup xgo cache
       uses: useblacksmith/cache@71c7c918062ba3861252d84b07fe5ab2a6b467a6 # v5
       with:
         path: /home/runner/.xgo-cache
-        key: ${{ inputs.xgo-cache-key }}
+        key: xgo-${{ inputs.project }}-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go-
+          xgo-${{ inputs.project }}-
 
-    - name: Build and release
+    - name: Install mage for the build module
       shell: bash
-      working-directory: build
+      run: go install github.com/magefile/mage@v1.17.2
+
+    - name: Build release artifacts
+      shell: bash
       env:
-        RELEASE_VERSION: ${{ inputs.release-version }}
-        XGO_OUT_NAME: ${{ inputs.xgo-out-name }}
-        PROJECT: ${{ inputs.project }}
+        RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+        XGO_OUT_NAME: ${{ env.XGO_OUT_NAME }}
+        PROJECT: ${{ env.PROJECT }}
       run: |
-        export PATH=$PATH:$GOPATH/bin
-        mage release:build "$PROJECT"
+        set -euo pipefail
+        export PATH="$PATH:$(go env GOPATH)/bin"
+        cd build && mage release:build "$PROJECT"
 
     - name: GPG setup
       uses: kolaente/action-gpg@main
@@ -102,18 +140,27 @@ runs:
         gpg-passphrase: ${{ inputs.gpg-passphrase }}
         gpg-sign-key: ${{ inputs.gpg-sign-key }}
 
-    - name: Sign zip bundles
+    - name: Sign zips
       shell: bash
-      working-directory: ${{ inputs.output-directory }}
       env:
-        GPG_KEY_ID: ${{ inputs.gpg-key-id }}
-        GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
+        DIST_PREFIX: ${{ env.DIST_PREFIX }}
+        RELEASE_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
       run: |
-        echo "=== Signing files ==="
-        ls -hal dist/zip/*
-        for file in dist/zip/*; do
-          gpg -v --default-key "$GPG_KEY_ID" -b --batch --yes \
-            --passphrase "$GPG_PASSPHRASE" \
+        set -euo pipefail
+        zip_dir="${DIST_PREFIX}/zip"
+        echo "=== GPG agent status ==="
+        gpg-connect-agent 'keyinfo --list' /bye || true
+        echo "=== GPG secret keys ==="
+        gpg -K --with-keygrip
+        echo "=== GPG public keys ==="
+        gpg --list-keys
+        echo "=== Signing files in $zip_dir ==="
+        ls -hal "$zip_dir"/*
+        for file in "$zip_dir"/*; do
+          gpg -v \
+            --default-key 7D061A4AA61436B40713D42EFF054DACD908493A \
+            -b --batch --yes \
+            --passphrase "$RELEASE_GPG_PASSPHRASE" \
             --pinentry-mode loopback \
             --sign "$file"
         done
@@ -126,19 +173,19 @@ runs:
         s3-endpoint: ${{ inputs.s3-endpoint }}
         s3-bucket: ${{ inputs.s3-bucket }}
         s3-region: ${{ inputs.s3-region }}
-        target-path: ${{ inputs.s3-target-path }}
-        files: ${{ inputs.output-directory }}/dist/zip/*
-        strip-path-prefix: ${{ inputs.output-directory }}/dist/zip/
+        target-path: ${{ env.S3_TARGET_PATH }}
+        files: ${{ env.DIST_PREFIX }}/zip/*
+        strip-path-prefix: ${{ env.DIST_PREFIX }}/zip/
 
     - name: Store binaries
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
-        name: ${{ inputs.artifact-binaries-name }}
-        path: ${{ inputs.output-directory }}/dist/binaries/*
+        name: ${{ env.ARTIFACT_BINARIES_NAME }}
+        path: ./${{ env.DIST_PREFIX }}/binaries/*
 
-    - name: Store zip bundles
-      if: inputs.upload-zips-as-artifact == 'true'
+    - name: Store binary packages
+      if: github.ref_type == 'tag'
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
-        name: ${{ inputs.artifact-zips-name }}
-        path: ${{ inputs.output-directory }}/dist/zip/*
+        name: ${{ env.ARTIFACT_ZIPS_NAME }}
+        path: ./${{ env.DIST_PREFIX }}/zip/*
