@@ -12,7 +12,11 @@ inputs:
     description: 'Which project to build: "vikunja" or "veans".'
     required: true
   release-version:
-    description: 'Raw git describe value (e.g. v1.2.3 or a sha). Use "" or "main" for unstable builds.'
+    description: |
+      Raw git describe value (e.g. v1.2.3 or v2.3.0-408-ge053d317). Always
+      passed through to the build so the binary embeds the precise commit.
+      Filenames and the S3 directory use "unstable" instead whenever
+      github.ref_type isn't "tag".
     required: true
   # Secrets — composite actions can't read the `secrets` context directly, so
   # the caller threads them through as inputs.
@@ -39,6 +43,7 @@ runs:
       env:
         PROJECT: ${{ inputs.project }}
         RELEASE_VERSION_INPUT: ${{ inputs.release-version }}
+        VERSION_OR_UNSTABLE: ${{ github.ref_type == 'tag' && inputs.release-version || 'unstable' }}
       run: |
         set -euo pipefail
 
@@ -49,13 +54,6 @@ runs:
             exit 1
             ;;
         esac
-
-        # version-or-unstable: real version unless empty/"main", in which case "unstable".
-        if [ -z "$RELEASE_VERSION_INPUT" ] || [ "$RELEASE_VERSION_INPUT" = "main" ]; then
-          version_or_unstable="unstable"
-        else
-          version_or_unstable="$RELEASE_VERSION_INPUT"
-        fi
 
         case "$PROJECT" in
           vikunja)
@@ -71,11 +69,11 @@ runs:
         {
           echo "PROJECT=$PROJECT"
           echo "RELEASE_VERSION=$RELEASE_VERSION_INPUT"
-          echo "VERSION_OR_UNSTABLE=$version_or_unstable"
-          echo "XGO_OUT_NAME=${PROJECT}-${version_or_unstable}"
+          echo "VERSION_OR_UNSTABLE=$VERSION_OR_UNSTABLE"
+          echo "XGO_OUT_NAME=${PROJECT}-${VERSION_OR_UNSTABLE}"
           echo "OUTPUT_DIR=$output_dir"
           echo "DIST_PREFIX=$dist_prefix"
-          echo "S3_TARGET_PATH=/${PROJECT}/${version_or_unstable}"
+          echo "S3_TARGET_PATH=/${PROJECT}/${VERSION_OR_UNSTABLE}"
           echo "ARTIFACT_BINARIES_NAME=${PROJECT}_bins"
           echo "ARTIFACT_ZIPS_NAME=${PROJECT}_bin_packages"
         } >> "$GITHUB_ENV"

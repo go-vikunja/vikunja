@@ -12,7 +12,11 @@ inputs:
     description: 'Project name (vikunja | veans). Drives all derived paths.'
     required: true
   release-version:
-    description: 'RELEASE_VERSION env value — the same version that ended up in the binaries artifact. Empty or "main" maps to "unstable".'
+    description: |
+      RELEASE_VERSION env value — the same version that ended up in the
+      binaries artifact. Always embedded in the package metadata via
+      nfpm; filenames and the S3 directory use "unstable" instead
+      whenever github.ref_type isn't "tag".
     required: true
   packager:
     description: 'nfpm packager: rpm | deb | apk | archlinux.'
@@ -51,6 +55,7 @@ runs:
       env:
         PROJECT: ${{ inputs.project }}
         RELEASE_VERSION: ${{ inputs.release-version }}
+        VERSION_OR_UNSTABLE: ${{ github.ref_type == 'tag' && inputs.release-version || 'unstable' }}
         PACKAGER: ${{ inputs.packager }}
         PKG_ARCH: ${{ inputs.pkg-arch }}
         GO_NAME: ${{ inputs.go-name }}
@@ -76,17 +81,12 @@ runs:
             ;;
         esac
 
-        if [ -z "$RELEASE_VERSION" ] || [ "$RELEASE_VERSION" = "main" ]; then
-          version_or_unstable="unstable"
-        else
-          version_or_unstable="$RELEASE_VERSION"
-        fi
-        echo "VERSION_OR_UNSTABLE=$version_or_unstable" >> "$GITHUB_ENV"
+        echo "VERSION_OR_UNSTABLE=$VERSION_OR_UNSTABLE" >> "$GITHUB_ENV"
         echo "BINARIES_ARTIFACT_NAME=${PROJECT}_bins" >> "$GITHUB_ENV"
         echo "BINARY_GLOB=${PROJECT}-*-${GO_NAME}" >> "$GITHUB_ENV"
-        echo "PACKAGE_FILENAME=${PROJECT}-${version_or_unstable}-${PKG_ARCH}.${PACKAGER}" >> "$GITHUB_ENV"
+        echo "PACKAGE_FILENAME=${PROJECT}-${VERSION_OR_UNSTABLE}-${PKG_ARCH}.${PACKAGER}" >> "$GITHUB_ENV"
         echo "ARTIFACT_NAME=${PROJECT}_os_package_${PACKAGER}_${PKG_ARCH}" >> "$GITHUB_ENV"
-        echo "S3_TARGET_PATH=/${PROJECT}/${version_or_unstable}" >> "$GITHUB_ENV"
+        echo "S3_TARGET_PATH=/${PROJECT}/${VERSION_OR_UNSTABLE}" >> "$GITHUB_ENV"
 
     - name: Download project binaries
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
