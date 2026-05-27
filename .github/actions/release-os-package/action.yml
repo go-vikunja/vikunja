@@ -66,14 +66,16 @@ runs:
             echo "STAGED_BINARY_PATH=./vikunja" >> "$GITHUB_ENV"
             echo "NFPM_BIN_PATH=" >> "$GITHUB_ENV"
             echo "NFPM_CONFIG_PATH=./nfpm.yaml" >> "$GITHUB_ENV"
-            echo "PACKAGE_OUTPUT_DIR=./dist/os-packages" >> "$GITHUB_ENV"
+            # No leading "./" — the s3-action's strip-path-prefix must
+            # match the glob output exactly, and the glob doesn't emit it.
+            echo "PACKAGE_OUTPUT_DIR=dist/os-packages" >> "$GITHUB_ENV"
             ;;
           veans)
             echo "BINARIES_DOWNLOAD_PATH=./veans-binaries" >> "$GITHUB_ENV"
             echo "STAGED_BINARY_PATH=./veans/veans-bin" >> "$GITHUB_ENV"
             echo "NFPM_BIN_PATH=./veans/veans-bin" >> "$GITHUB_ENV"
             echo "NFPM_CONFIG_PATH=./veans/nfpm.yaml" >> "$GITHUB_ENV"
-            echo "PACKAGE_OUTPUT_DIR=./veans/dist/os-packages" >> "$GITHUB_ENV"
+            echo "PACKAGE_OUTPUT_DIR=veans/dist/os-packages" >> "$GITHUB_ENV"
             ;;
           *)
             echo "::error::unknown project '$PROJECT' (expected vikunja|veans)"
