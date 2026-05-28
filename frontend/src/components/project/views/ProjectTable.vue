@@ -89,6 +89,12 @@
 				:class="{'is-loading': loading}"
 				class="loader-container"
 			>
+				<BulkTaskToolbar
+					:tasks="tasks"
+					:project-id="projectId"
+					@updated="refreshAfterBulkUpdate"
+				/>
+
 				<Card
 					:padding="false"
 					:has-content="false"
@@ -97,6 +103,17 @@
 						<table class="table has-actions is-hoverable is-fullwidth mbe-0">
 							<thead>
 								<tr>
+									<th class="bulk-select-column">
+										<input
+											class="bulk-select-checkbox"
+											type="checkbox"
+											:checked="allVisibleTasksSelected"
+											:indeterminate.prop="someVisibleTasksSelected && !allVisibleTasksSelected"
+											@click.stop
+											@change="toggleAllVisibleTasks"
+										>
+									</th>
+
 									<th v-if="activeColumns.index">
 										#
 										<Sort
@@ -195,7 +212,17 @@
 								<tr
 									v-for="t in tasks"
 									:key="t.id"
+									:class="{'is-bulk-selected': bulkSelection.isSelected(t.id)}"
 								>
+									<td class="bulk-select-column">
+										<input
+											class="bulk-select-checkbox"
+											type="checkbox"
+											:checked="bulkSelection.isSelected(t.id)"
+											@click.stop="bulkSelection.toggleRange(allVisibleTaskIds, t.id, $event.shiftKey)"
+										>
+									</td>
+
 									<td v-if="activeColumns.index">
 										<RouterLink :to="taskDetailRoutes[t.id]">
 											<template v-if="t.identifier === ''">
@@ -316,6 +343,8 @@ import Sort from '@/components/tasks/partials/Sort.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import Pagination from '@/components/misc/Pagination.vue'
 import Popup from '@/components/misc/Popup.vue'
+import BulkTaskToolbar from '@/components/tasks/bulk/BulkTaskToolbar.vue'
+import {useBulkTaskSelection} from '@/stores/bulkTaskSelection'
 
 import type {SortBy} from '@/composables/useTaskList'
 import {useTaskList} from '@/composables/useTaskList'
@@ -323,7 +352,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import type {IProject} from '@/modelTypes/IProject'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
 import type {IProjectView} from '@/modelTypes/IProjectView'
-import { camelCase } from 'change-case'
+import {camelCase} from 'change-case'
 import {isSavedFilter} from '@/services/savedFilter'
 import {useProjectStore} from '@/stores/projects'
 
@@ -334,6 +363,7 @@ const props = defineProps<{
 }>()
 
 const projectStore = useProjectStore()
+const bulkSelection = useBulkTaskSelection()
 
 const ACTIVE_COLUMNS_DEFAULT = {
 	index: true,
@@ -362,8 +392,8 @@ const activeColumns = useStorage('tableViewColumns', {...ACTIVE_COLUMNS_DEFAULT}
 const sortBy = useStorage<SortBy>('tableViewSortBy', {...SORT_BY_DEFAULT})
 
 const taskList = useTaskList(
-	() => props.projectId, 
-	() => props.viewId, 
+	() => props.projectId,
+	() => props.viewId,
 	sortBy.value,
 	() => ['comment_count', 'is_unread'],
 )
@@ -417,6 +447,32 @@ function setActiveColumnsSortParam() {
 		}, {})
 }
 
+const allVisibleTaskIds = computed(() => tasks.value.map(({id}) => id))
+
+const allVisibleTasksSelected = computed(() =>
+	allVisibleTaskIds.value.length > 0 &&
+	allVisibleTaskIds.value.every(id => bulkSelection.isSelected(id)),
+)
+
+const someVisibleTasksSelected = computed(() =>
+	allVisibleTaskIds.value.some(id => bulkSelection.isSelected(id)),
+)
+
+function toggleAllVisibleTasks() {
+	if (allVisibleTasksSelected.value) {
+		bulkSelection.replace(
+			bulkSelection.selectedTaskIds.filter(id => !allVisibleTaskIds.value.includes(id)),
+		)
+		return
+	}
+
+	bulkSelection.selectMany(allVisibleTaskIds.value)
+}
+
+async function refreshAfterBulkUpdate() {
+	await taskList.loadTasks()
+}
+
 // TODO: re-enable opening task detail in modal
 // const router = useRouter()
 const taskDetailRoutes = computed(() => Object.fromEntries(
@@ -444,6 +500,26 @@ const taskDetailRoutes = computed(() => Object.fromEntries(
 	.user {
 		margin: 0;
 	}
+}
+
+.table tbody tr.is-bulk-selected {
+	background-color: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.table tbody tr.is-bulk-selected:hover {
+	background-color: color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+.bulk-select-column {
+	inline-size: 2.75rem;
+	text-align: center;
+}
+
+.bulk-select-checkbox {
+	inline-size: 1.1rem;
+	block-size: 1.1rem;
+	cursor: pointer;
+	accent-color: var(--primary);
 }
 
 .columns-filter {
