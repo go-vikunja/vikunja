@@ -1523,15 +1523,35 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 // and is used when a repeating task is marked done: repeating tasks
 // don't stay in the done bucket, so they should be routed back to
 // the default ("To-Do") bucket so the next iteration is visible there.
+// When no explicit default bucket is configured, the task is restored
+// to its original bucket so it remains in its original workflow column.
 func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
 	for _, view := range views {
-		defaultBucketID, err := getDefaultBucketID(s, view)
-		if err != nil {
-			return err
+		var bucketID int64
+		var err error
+
+		if view.DefaultBucketID != 0 {
+			bucketID = view.DefaultBucketID
+		} else {
+			// No explicit default: preserve the task's current bucket.
+			currentTaskBucket := &TaskBucket{}
+			_, err = s.Where("task_id = ? AND project_view_id = ?", t.ID, view.ID).
+				Get(currentTaskBucket)
+			if err != nil {
+				return err
+			}
+			bucketID = currentTaskBucket.BucketID
+			if bucketID == 0 {
+				// Task not in any bucket yet — fall back to first by position.
+				bucketID, err = getDefaultBucketID(s, view)
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		tb := &TaskBucket{
-			BucketID:      defaultBucketID,
+			BucketID:      bucketID,
 			TaskID:        t.ID,
 			ProjectViewID: view.ID,
 			ProjectID:     t.ProjectID,
