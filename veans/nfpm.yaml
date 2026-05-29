@@ -1,0 +1,16 @@
+name: "veans"
+arch: "<arch>"
+platform: "linux"
+version: "<version>"
+description: "veans is an agent-friendly CLI wrapper for the Vikunja REST API."
+maintainer: "Vikunja Maintainers <maintainers@vikunja.io>"
+homepage: "https://vikunja.io"
+section: "default"
+priority: "extra"
+license: "AGPLv3"
+rpm:
+  signature:
+    key_file: ${NFPM_GPG_KEY_FILE}
+contents:
+  - src: <binlocation>
+    dst: /usr/local/bin/veans

@@ -1,0 +1,6 @@
+self-hosted-runner:
+  # Custom labels from third-party runner providers used in our workflows.
+  # Listed here so actionlint doesn't flag them as unknown.
+  labels:
+    - namespace-profile-default
+    - blacksmith-8vcpu-ubuntu-2204

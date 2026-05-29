@@ -61,7 +61,7 @@
     }
   },
   "devDependencies": {
-    "electron": "40.10.0",
+    "electron": "40.10.2",
     "electron-builder": "26.8.1",
     "unzipper": "0.12.3"
   },
@@ -76,7 +76,9 @@
       "minimatch": "^10.2.3",
       "tar": "^7.5.11",
       "@tootallnate/once": "^3.0.1",
-      "picomatch": ">=4.0.4"
+      "picomatch": ">=4.0.4",
+      "tmp": ">=0.2.6",
+      "ip-address": ">=10.1.1"
     }
   }
 }
