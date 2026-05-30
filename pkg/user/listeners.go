@@ -16,30 +16,7 @@
 
 package user
 
-import (
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/metrics"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
-	"github.com/ThreeDotsLabs/watermill/message"
-)
-
-func RegisterListeners() {
-	events.RegisterListener((&CreatedEvent{}).Name(), &IncreaseUserCounter{})
-}
-
-///////
-// User Events
-
-// IncreaseUserCounter  represents a listener
-type IncreaseUserCounter struct {
-}
-
-// Name defines the name for the IncreaseUserCounter listener
-func (s *IncreaseUserCounter) Name() string {
-	return "increase.user.counter"
-}
-
-// Handle is executed when the event IncreaseUserCounter listens on is fired
-func (s *IncreaseUserCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.UserCountKey, 1)
-}
+// RegisterListeners registers all event listeners for the user package.
+// The user count metric is now counted on demand (see pkg/metrics), so there are
+// currently no listeners to register. This hook is kept for future user events.
+func RegisterListeners() {}
