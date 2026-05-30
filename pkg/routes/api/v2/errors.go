@@ -19,6 +19,7 @@ package apiv2
 import (
 	"context"
 	"errors"
+	"net/http"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -57,7 +58,49 @@ func translateDomainError(err error) error {
 		if msg == "" {
 			msg = err.Error()
 		}
-		return huma.NewError(details.HTTPCode, msg)
+		se := huma.NewError(details.HTTPCode, msg)
+		// Preserve Vikunja's numeric domain error code (the value the
+		// error docs key off) on the problem+json body. v1 exposes it as
+		// `code`; without this v2 clients always read 0.
+		if vm, ok := se.(*vikunjaErrorModel); ok {
+			vm.Code = details.Code
+		}
+		return se
 	}
 	return err
+}
+
+// vikunjaErrorModel extends Huma's RFC 9457 body with Vikunja's numeric
+// domain error code, preserving the v1 error-code contract on v2. Wired in
+// as the global error type via the huma.NewError override in init().
+type vikunjaErrorModel struct {
+	huma.ErrorModel
+	Code int `json:"code,omitempty" doc:"Vikunja numeric error code; see https://vikunja.io/docs/errors/"`
+}
+
+func init() {
+	// Replace Huma's default error constructor so both the generated
+	// OpenAPI schema and runtime responses use vikunjaErrorModel. Huma
+	// derives the error-response schema from NewError(0, "") at register
+	// time and routes runtime errors through the same constructor, so the
+	// `code` field stays consistent between spec and wire.
+	huma.NewError = func(status int, msg string, errs ...error) huma.StatusError {
+		details := make([]*huma.ErrorDetail, 0, len(errs))
+		for _, e := range errs {
+			if e == nil {
+				continue
+			}
+			if d, ok := e.(huma.ErrorDetailer); ok {
+				details = append(details, d.ErrorDetail())
+			} else {
+				details = append(details, &huma.ErrorDetail{Message: e.Error()})
+			}
+		}
+		return &vikunjaErrorModel{ErrorModel: huma.ErrorModel{
+			Status: status,
+			Title:  http.StatusText(status),
+			Detail: msg,
+			Errors: details,
+		}}
+	}
 }
