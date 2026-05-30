@@ -99,7 +99,6 @@ func init() {
 		"ListAllUsers":                         reflect.ValueOf(user.ListAllUsers),
 		"ListUsers":                            reflect.ValueOf(user.ListUsers),
 		"RegisterDeletionNotificationCron":     reflect.ValueOf(user.RegisterDeletionNotificationCron),
-		"RegisterListeners":                    reflect.ValueOf(user.RegisterListeners),
 		"RegisterTokenCleanupCron":             reflect.ValueOf(user.RegisterTokenCleanupCron),
 		"RequestDeletion":                      reflect.ValueOf(user.RequestDeletion),
 		"RequestUserPasswordResetToken":        reflect.ValueOf(user.RequestUserPasswordResetToken),
