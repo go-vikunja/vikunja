@@ -17,6 +17,7 @@
 package models
 
 import (
+	"net/http/httptest"
 	"testing"
 
 	"github.com/labstack/echo/v5"
@@ -57,14 +58,14 @@ func TestCanDoAPIRoute_BulkLabelTask(t *testing.T) {
 
 func TestIsV2Path(t *testing.T) {
 	cases := map[string]bool{
-		"/api/v2":          true,
-		"/api/v2/":         true,
-		"/api/v2/labels":   true,
-		"/api/v1/labels":   false,
-		"/api/v1/api/v2":   false, // prefix is authoritative
-		"":                 false,
-		"/api/v20/labels":  false, // only exact /api/v2 prefix counts
-		"/api/v2labels":    false,
+		"/api/v2":         true,
+		"/api/v2/":        true,
+		"/api/v2/labels":  true,
+		"/api/v1/labels":  false,
+		"/api/v1/api/v2":  false, // prefix is authoritative
+		"":                false,
+		"/api/v20/labels": false, // only exact /api/v2 prefix counts
+		"/api/v2labels":   false,
 	}
 	for path, want := range cases {
 		t.Run(path, func(t *testing.T) {
@@ -75,13 +76,13 @@ func TestIsV2Path(t *testing.T) {
 
 func TestStripAPIVersion(t *testing.T) {
 	cases := map[string]string{
-		"/api/v1/labels":      "labels",
-		"/api/v2/labels":      "labels",
-		"/api/v2/labels/42":   "labels/42",
-		"/api/v1/tasks/bulk":  "tasks/bulk",
-		"/api/v3/labels":      "/api/v3/labels", // unknown versions pass through
-		"/labels":             "/labels",
-		"":                    "",
+		"/api/v1/labels":     "labels",
+		"/api/v2/labels":     "labels",
+		"/api/v2/labels/42":  "labels/42",
+		"/api/v1/tasks/bulk": "tasks/bulk",
+		"/api/v3/labels":     "/api/v3/labels", // unknown versions pass through
+		"/labels":            "/labels",
+		"":                   "",
 	}
 	for path, want := range cases {
 		t.Run(path, func(t *testing.T) {
@@ -140,6 +141,60 @@ func TestGetRouteDetail_V2Verbs(t *testing.T) {
 			assert.Equal(t, c.wantPerm, perm)
 		})
 	}
+}
+
+// TestCanDoAPIRoute_V2PatchAliasesPut verifies that a token granted the
+// "update" permission on a v2 resource can issue PATCH requests against
+// the same path as the stored PUT route. Huma's AutoPatch synthesises
+// PATCH for every PUT — the matcher accepts it as an alias so token
+// holders aren't forced to use PUT exclusively.
+func TestCanDoAPIRoute_V2PatchAliasesPut(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	apiTokenRoutes["caldav"] = APITokenRoute{
+		"access": &RouteDetail{Path: "/dav/*", Method: "ANY"},
+	}
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/labels/:id"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PATCH", Path: "/api/v2/labels/:id"}, true)
+
+	token := &APIToken{
+		APIPermissions: APIPermissions{"labels": []string{"update"}},
+	}
+
+	e := echo.New()
+
+	t.Run("PUT is allowed (stored verb)", func(t *testing.T) {
+		req := httptest.NewRequest("PUT", "/api/v2/labels/:id", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
+
+	t.Run("PATCH is allowed via alias", func(t *testing.T) {
+		req := httptest.NewRequest("PATCH", "/api/v2/labels/:id", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
+
+	t.Run("PATCH on a different path is rejected", func(t *testing.T) {
+		req := httptest.NewRequest("PATCH", "/api/v2/projects/:id", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.False(t, CanDoAPIRoute(c, token))
+	})
+
+	t.Run("v1 PATCH stays rejected", func(t *testing.T) {
+		// The alias must not bleed onto v1 — v1 has no AutoPatch and
+		// never registers PATCH on update routes.
+		apiTokenRoutes["labels"] = APITokenRoute{
+			"update": &RouteDetail{Path: "/api/v1/labels/:id", Method: "POST"},
+		}
+		v1Token := &APIToken{
+			APIPermissions: APIPermissions{"labels": []string{"update"}},
+		}
+		req := httptest.NewRequest("PATCH", "/api/v1/labels/:id", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.False(t, CanDoAPIRoute(c, v1Token))
+	})
 }
 
 // End-to-end CanDoAPIRoute coverage for /api/v2 is provided by the Label
