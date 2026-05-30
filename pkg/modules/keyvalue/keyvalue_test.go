@@ -19,6 +19,7 @@ package keyvalue
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/modules/keyvalue/memory"
 	"github.com/stretchr/testify/assert"
@@ -74,6 +75,56 @@ func TestRememberErrorDoesNotStore(t *testing.T) {
 
 	_, err := Remember("foo", func() (interface{}, error) {
 		return nil, errors.New("fail")
+	})
+
+	require.Error(t, err)
+	_, exists, err2 := Get("foo")
+	require.NoError(t, err2)
+	assert.False(t, exists)
+}
+
+func TestRememberForReturnsCachedWithinTTL(t *testing.T) {
+	store = memory.NewStorage()
+
+	called := 0
+	fn := func() (int64, error) {
+		called++
+		return int64(called), nil
+	}
+
+	val, err := RememberFor("foo", time.Hour, fn)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), val)
+
+	// Still within the TTL, so fn must not be called again.
+	val, err = RememberFor("foo", time.Hour, fn)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), val)
+	assert.Equal(t, 1, called)
+}
+
+func TestRememberForRecomputesAfterExpiry(t *testing.T) {
+	store = memory.NewStorage()
+
+	// Seed an already-expired value.
+	require.NoError(t, Put("foo", expiringValue[int64]{Value: 1, ExpiresAt: time.Now().Add(-time.Minute)}))
+
+	called := 0
+	val, err := RememberFor("foo", time.Hour, func() (int64, error) {
+		called++
+		return 2, nil
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), val)
+	assert.Equal(t, 1, called)
+}
+
+func TestRememberForErrorDoesNotStore(t *testing.T) {
+	store = memory.NewStorage()
+
+	_, err := RememberFor("foo", time.Hour, func() (int64, error) {
+		return 0, errors.New("fail")
 	})
 
 	require.Error(t, err)
