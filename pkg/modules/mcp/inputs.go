@@ -155,14 +155,14 @@ func setInt64Field(dst any, fieldName string, v int64) error {
 //   - Field matching is by the first segment of the `json` tag (i.e.
 //     "title,omitempty" matches "title"). Fields without a json tag (or
 //     tagged `json:"-"`) are skipped on both sides.
-//   - Zero-valued src fields are skipped, so partial updates work
-//     naturally — only fields the caller actually supplied get propagated.
-//     This mirrors the REST update handler's "omitted JSON keys leave the
-//     row untouched" behaviour. Wrappers that need to clear a field must
-//     model it as a pointer (`*string`, `*int`, etc.) so the zero value
-//     is distinguishable from "absent".
-//   - Pointer src fields are dereferenced. A nil pointer is treated as
-//     "absent" and skipped.
+//   - For value-typed src fields, zero values are skipped so partial
+//     updates work naturally — only fields the caller actually supplied
+//     get propagated. This mirrors the REST update handler's "omitted
+//     JSON keys leave the row untouched" behaviour.
+//   - For pointer-typed src fields, a nil pointer is treated as "absent"
+//     and skipped. A non-nil pointer is dereferenced and assigned even
+//     when its pointee is the zero value, so wrappers can explicitly set
+//     `false` / `0` / `""` by modelling the field as a pointer.
 //   - Type compatibility: the helper assigns src's value to dst's field
 //     when the types are directly assignable. time.Time / *time.Time work
 //     out of the box because time.Time is a struct, not a basic type.
@@ -214,17 +214,19 @@ func copyByJSONTag(src, dst any) error {
 			continue
 		}
 		srcVal := sv.Field(i)
-		// Skip nil pointers (caller didn't supply the field) and
-		// dereference non-nil ones.
+		// A non-nil pointer source is treated as "caller explicitly set
+		// this" — even a zero pointee gets propagated so wrappers can
+		// clear booleans / numerics. Value-typed sources fall back to
+		// the IsZero heuristic for partial-update semantics.
+		fromPointer := false
 		if srcVal.Kind() == reflect.Pointer {
 			if srcVal.IsNil() {
 				continue
 			}
 			srcVal = srcVal.Elem()
+			fromPointer = true
 		}
-		if srcVal.IsZero() {
-			// Zero src value → caller didn't populate this field,
-			// leave dst alone.
+		if !fromPointer && srcVal.IsZero() {
 			continue
 		}
 		dstVal := dv.Field(dstIdx)
@@ -343,14 +345,14 @@ type ProjectUpdateInput struct {
 	Identifier string `json:"identifier,omitempty" jsonschema:"new short identifier (max 10 chars); omit to leave unchanged"`
 	// New hex color (without leading #). Omit to leave unchanged.
 	HexColor string `json:"hex_color,omitempty" jsonschema:"new hex color (without leading #); omit to leave unchanged"`
-	// New parent project id. Omit (or zero) to leave unchanged.
-	ParentProjectID int64 `json:"parent_project_id,omitempty" jsonschema:"new parent project id; omit or 0 to leave unchanged"`
-	// New ordering position. Omit (or zero) to leave unchanged.
-	Position float64 `json:"position,omitempty" jsonschema:"new ordering position among siblings; omit or 0 to leave unchanged"`
-	// Archive state. Omit (or false) to leave un-archived.
-	IsArchived bool `json:"is_archived,omitempty" jsonschema:"set to true to archive, omit or false to leave un-archived"`
-	// Favorite state for the caller. Omit (or false) to leave un-favorited.
-	IsFavorite bool `json:"is_favorite,omitempty" jsonschema:"set to true to favorite for the caller, omit or false to un-favorite"`
+	// New parent project id. Omit to leave unchanged; pass 0 to move to root.
+	ParentProjectID *int64 `json:"parent_project_id,omitempty" jsonschema:"new parent project id; 0 moves to root, omit to leave unchanged"`
+	// New ordering position. Omit to leave unchanged; pass 0 to reset.
+	Position *float64 `json:"position,omitempty" jsonschema:"new ordering position among siblings; 0 resets to the start, omit to leave unchanged"`
+	// Archive state. Omit to leave unchanged.
+	IsArchived *bool `json:"is_archived,omitempty" jsonschema:"true to archive, false to un-archive, omit to leave unchanged"`
+	// Favorite state for the caller. Omit to leave unchanged.
+	IsFavorite *bool `json:"is_favorite,omitempty" jsonschema:"true to favorite for the caller, false to un-favorite, omit to leave unchanged"`
 }
 
 // ApplyTo copies the wrapper fields onto a fresh *models.Project. ID is
@@ -427,6 +429,11 @@ func (in *TaskCreateInput) ApplyTo(dst handler.CObject) error {
 // due_date, repeat_after, priority, start_date, end_date, hex_color,
 // percent_done, project_id, bucket_id, repeat_mode, cover_image_attachment_id)
 // are exposed.
+//
+// Booleans and numerics whose zero value carries real meaning ("not done",
+// "no priority", "0% complete", "no bucket") are modelled as pointers so
+// callers can explicitly clear them. A nil pointer means "omit"; a non-nil
+// pointer to the zero value means "set to zero".
 type TaskUpdateInput struct {
 	// ID of the task to update. Required.
 	ID int64 `json:"id" jsonschema:"id of the task to update"`
@@ -436,28 +443,28 @@ type TaskUpdateInput struct {
 	ProjectID int64 `json:"project_id,omitempty" jsonschema:"move the task to a different project; omit to leave unchanged"`
 	// New description.
 	Description string `json:"description,omitempty" jsonschema:"new description; omit to leave unchanged"`
-	// Mark the task as done (true) or undone (false). Defaults to false.
-	Done bool `json:"done,omitempty" jsonschema:"true marks the task as done"`
+	// Mark the task as done (true) or undone (false). Omit to leave unchanged.
+	Done *bool `json:"done,omitempty" jsonschema:"true marks the task as done, false marks it as not done; omit to leave unchanged"`
 	// New due date.
 	DueDate time.Time `json:"due_date,omitempty" jsonschema:"new due date as an RFC 3339 timestamp"`
 	// New start date.
 	StartDate time.Time `json:"start_date,omitempty" jsonschema:"new start date as an RFC 3339 timestamp"`
 	// New end date.
 	EndDate time.Time `json:"end_date,omitempty" jsonschema:"new end date as an RFC 3339 timestamp"`
-	// New repeat interval (seconds).
-	RepeatAfter int64 `json:"repeat_after,omitempty" jsonschema:"new repeat interval in seconds"`
-	// New repeat mode.
-	RepeatMode int `json:"repeat_mode,omitempty" jsonschema:"new repeat mode: 0 = after interval, 1 = monthly, 3 = from current date"`
-	// New priority.
-	Priority int64 `json:"priority,omitempty" jsonschema:"new priority value"`
-	// New percent done between 0 and 1.
-	PercentDone float64 `json:"percent_done,omitempty" jsonschema:"new completion percentage between 0 and 1"`
+	// New repeat interval (seconds). Pass 0 to clear.
+	RepeatAfter *int64 `json:"repeat_after,omitempty" jsonschema:"new repeat interval in seconds; 0 clears the repeat"`
+	// New repeat mode. Pass 0 for the after-interval mode.
+	RepeatMode *int `json:"repeat_mode,omitempty" jsonschema:"new repeat mode: 0 = after interval, 1 = monthly, 3 = from current date"`
+	// New priority. Pass 0 to clear.
+	Priority *int64 `json:"priority,omitempty" jsonschema:"new priority value; 0 clears the priority"`
+	// New percent done between 0 and 1. Pass 0 to reset.
+	PercentDone *float64 `json:"percent_done,omitempty" jsonschema:"new completion percentage between 0 and 1; 0 resets progress"`
 	// New hex color.
 	HexColor string `json:"hex_color,omitempty" jsonschema:"new hex color without leading #"`
-	// New bucket id (move within a kanban view).
-	BucketID int64 `json:"bucket_id,omitempty" jsonschema:"new kanban bucket id"`
-	// New cover image attachment id.
-	CoverImageAttachmentID int64 `json:"cover_image_attachment_id,omitempty" jsonschema:"new cover image attachment id"`
+	// New bucket id (move within a kanban view). Pass 0 to detach.
+	BucketID *int64 `json:"bucket_id,omitempty" jsonschema:"new kanban bucket id; 0 detaches from any bucket"`
+	// New cover image attachment id. Pass 0 to clear.
+	CoverImageAttachmentID *int64 `json:"cover_image_attachment_id,omitempty" jsonschema:"new cover image attachment id; 0 clears the cover"`
 }
 
 // ApplyTo copies the wrapper fields onto a fresh *models.Task. ID is always
@@ -471,8 +478,8 @@ func (in *TaskUpdateInput) ApplyTo(dst handler.CObject) error {
 	if err := copyByJSONTag(in, t); err != nil {
 		return err
 	}
-	if in.RepeatMode != 0 {
-		t.RepeatMode = models.TaskRepeatMode(in.RepeatMode)
+	if in.RepeatMode != nil {
+		t.RepeatMode = models.TaskRepeatMode(*in.RepeatMode)
 	}
 	return nil
 }
