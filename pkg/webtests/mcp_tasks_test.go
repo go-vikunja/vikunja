@@ -106,6 +106,36 @@ func TestMCP_Tasks_Update(t *testing.T) {
 	assert.Equal(t, "Updated description", task["description"])
 }
 
+// TestMCP_Tasks_UpdateClearsDone exercises the pointer-source path of
+// copyByJSONTag: a `done: false` explicitly supplied through the JSON
+// args must flip a task from done back to undone.
+func TestMCP_Tasks_UpdateClearsDone(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+
+	createResult := c.callTool("tasks_create", map[string]any{
+		"title":      "mcp task to undo",
+		"project_id": 1,
+		"done":       true,
+	})
+	require.NotContains(t, createResult, "isError")
+	var created map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, createResult)), &created))
+	tid := int64(created["id"].(float64))
+	require.True(t, created["done"].(bool), "task should have been created in done state")
+
+	updateResult := c.callTool("tasks_update", map[string]any{
+		"id":   tid,
+		"done": false,
+	})
+	require.NotContains(t, updateResult, "isError", "update errored: %v", updateResult)
+
+	readResult := c.callTool("tasks_read_one", map[string]any{"id": tid})
+	require.NotContains(t, readResult, "isError")
+	var task map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, readResult)), &task))
+	assert.False(t, task["done"].(bool), "done must be false after explicit clear")
+}
+
 func TestMCP_Tasks_Delete(t *testing.T) {
 	c := newMCPClient(t, mcpFullProjectsToken)
 
