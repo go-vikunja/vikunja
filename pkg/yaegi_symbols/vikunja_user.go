@@ -159,7 +159,6 @@ func init() {
 		"ErrUsernameReserved":                               reflect.ValueOf((*user.ErrUsernameReserved)(nil)),
 		"ErrWrongUsernameOrPassword":                        reflect.ValueOf((*user.ErrWrongUsernameOrPassword)(nil)),
 		"FailedLoginAttemptNotification":                    reflect.ValueOf((*user.FailedLoginAttemptNotification)(nil)),
-		"IncreaseUserCounter":                               reflect.ValueOf((*user.IncreaseUserCounter)(nil)),
 		"InvalidTOTPNotification":                           reflect.ValueOf((*user.InvalidTOTPNotification)(nil)),
 		"Login":                                             reflect.ValueOf((*user.Login)(nil)),
 		"PasswordAccountLockedAfterInvalidTOTPNotification": reflect.ValueOf((*user.PasswordAccountLockedAfterInvalidTOTPNotification)(nil)),
