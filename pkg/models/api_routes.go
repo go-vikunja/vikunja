@@ -422,15 +422,20 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 func PermissionsAreValid(permissions APIPermissions) (err error) {
 
 	for key, methods := range permissions {
-		routes, has := apiTokenRoutes[key]
-		if !has {
+		// A permission is valid if the group exists in either table. v2-only
+		// resources (no v1 counterpart) live solely in apiTokenRoutesV2, so
+		// validating against the union lets tokens grant them. CanDoAPIRoute
+		// already consults both tables when authorising.
+		v1Routes := apiTokenRoutes[key]
+		v2Routes := apiTokenRoutesV2[key]
+		if v1Routes == nil && v2Routes == nil {
 			return &ErrInvalidAPITokenPermission{
 				Group: key,
 			}
 		}
 
 		for _, method := range methods {
-			if routes[method] == nil {
+			if v1Routes[method] == nil && v2Routes[method] == nil {
 				return &ErrInvalidAPITokenPermission{
 					Group:      key,
 					Permission: method,
