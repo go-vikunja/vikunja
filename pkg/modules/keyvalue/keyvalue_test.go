@@ -132,3 +132,28 @@ func TestRememberForErrorDoesNotStore(t *testing.T) {
 	require.NoError(t, err2)
 	assert.False(t, exists)
 }
+
+// getWithValueErrorStore simulates a backend that cannot deserialize an existing value
+// into the requested type, e.g. a key that held a plain int64 before the cache started
+// storing a struct (the pre-refactor metrics counters in Redis).
+type getWithValueErrorStore struct {
+	*memory.Storage
+}
+
+func (s *getWithValueErrorStore) GetWithValue(string, interface{}) (bool, error) {
+	return false, errors.New("decode error")
+}
+
+func TestRememberForRecomputesWhenStoredValueCannotBeDeserialized(t *testing.T) {
+	store = &getWithValueErrorStore{memory.NewStorage()}
+
+	called := 0
+	val, err := RememberFor("foo", time.Hour, func() (int64, error) {
+		called++
+		return 42, nil
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, int64(42), val)
+	assert.Equal(t, 1, called)
+}

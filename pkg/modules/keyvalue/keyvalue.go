@@ -155,14 +155,14 @@ type expiringValue[T any] struct {
 // older than ttl. On a miss or once expired, it executes fn, caches the result for
 // ttl and returns it. If fn returns an error, nothing is cached.
 // T must be a concrete (non-pointer) type.
+//
+// A value that cannot be deserialized into the expected type is treated as a cache
+// miss and overwritten, so the cache self-heals across upgrades that change what a key
+// stores (e.g. a key that previously held a plain int64 in Redis).
 func RememberFor[T any](key string, ttl time.Duration, fn func() (T, error)) (T, error) {
 	var cached expiringValue[T]
 	exists, err := GetWithValue(key, &cached)
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-	if exists && time.Now().Before(cached.ExpiresAt) {
+	if err == nil && exists && time.Now().Before(cached.ExpiresAt) {
 		return cached.Value, nil
 	}
 
