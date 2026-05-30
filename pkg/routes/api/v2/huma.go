@@ -20,7 +20,9 @@ package apiv2
 import (
 	"context"
 	"net/http"
+	"strings"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/modules/humaecho5"
 	"code.vikunja.io/api/pkg/version"
 
@@ -65,6 +67,20 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 		{"JWTKeyAuth": {}},
 		{"APITokenAuth": {}},
 	}
+	// The relative entry MUST stay at index 0. Huma's SchemaLinkTransformer
+	// reads Servers[0] in three places (getAPIPrefix, addSchemaField, the
+	// runtime Transform fallback). With a path-bearing absolute URL at
+	// index 0, the runtime fallback concatenates that URL onto a ref that
+	// already includes /api/v2, producing a double-prefixed $schema link
+	// like https://host/api/v2/api/v2/schemas/Label.json. A relative URL
+	// at index 0 keeps the prefix in the transformer's bookkeeping while
+	// the absolute URL at index 1 advertises the deployment URL to SDK
+	// generators and docs UIs.
+	servers := []*huma.Server{{URL: GroupPrefix}}
+	if publicURL := strings.TrimRight(config.ServicePublicURL.GetString(), "/"); publicURL != "" {
+		servers = append(servers, &huma.Server{URL: publicURL + GroupPrefix})
+	}
+	oapi.Servers = servers
 	return api
 }
 
