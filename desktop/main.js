@@ -397,7 +397,11 @@ function toggleQuickEntry() {
 // ─── System tray ─────────────────────────────────────────────────────
 function setupTray() {
 	if (!tray) {
-		const iconPath = path.join(__dirname, 'build', 'icon.png')
+		// NOTE: load the icon from the app root, not build/. The build/ directory is
+		// electron-builder's buildResources dir and is NOT packaged into the app, so
+		// referencing build/icon.png here works in dev but yields an empty tray icon
+		// in packaged releases (see issue #2668).
+		const iconPath = path.join(__dirname, 'icon.png')
 		const icon = nativeImage.createFromPath(iconPath).resize({width: 16, height: 16})
 		tray = new Tray(icon)
 		tray.setToolTip('Vikunja')
