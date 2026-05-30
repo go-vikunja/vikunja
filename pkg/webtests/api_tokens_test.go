@@ -52,6 +52,77 @@ func TestAPITokenRoutesIncludesCaldav(t *testing.T) {
 	assert.Contains(t, res.Body.String(), `"access"`)
 }
 
+func TestAPITokenRoutesIncludesMCP(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	s := db.NewSession()
+	defer s.Close()
+	u, err := user.GetUserByID(s, 1)
+	require.NoError(t, err)
+	jwt, err := auth.NewUserJWTAuthtoken(u, "test-session-id")
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/routes", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+jwt)
+	res := httptest.NewRecorder()
+	e.ServeHTTP(res, req)
+
+	assert.Equal(t, http.StatusOK, res.Code)
+	assert.Contains(t, res.Body.String(), `"mcp"`)
+	assert.Contains(t, res.Body.String(), `"access"`)
+}
+
+func TestAPITokenMiddleware_SkipsRouteCheckForMCPPath(t *testing.T) {
+	// The MCP endpoint needs to accept POST, GET, and DELETE on the same path
+	// (streamable-HTTP transport). CanDoAPIRoute is exact (method, path) match,
+	// so we skip the route check for /api/v1/mcp and any sub-path; the
+	// HasMCPAccess() gate is applied inside the MCP handler instead.
+	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodDelete} {
+		t.Run(method, func(t *testing.T) {
+			e, err := setupTestEnv()
+			require.NoError(t, err)
+			req := httptest.NewRequest(method, "/api/v1/mcp", nil)
+			res := httptest.NewRecorder()
+			c := e.NewContext(req, res)
+
+			called := false
+			h := routes.SetupTokenMiddleware()(func(_ *echo.Context) error {
+				called = true
+				return nil
+			})
+
+			// Token 1 only has {tasks: [read_all, update]} — no mcp scope.
+			// With the skipRouteCheck, the middleware must still pass the
+			// request through to the wrapped handler. The MCP-specific
+			// authorization (HasMCPAccess) is enforced inside the handler,
+			// not here.
+			req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
+			require.NoError(t, h(c))
+			assert.True(t, called, "wrapped handler should run because /api/v1/mcp skips route check")
+			assert.NotEqual(t, http.StatusUnauthorized, res.Code)
+		})
+	}
+}
+
+func TestAPITokenMiddleware_SkipsRouteCheckForMCPSubPath(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/mcp/anything", nil)
+	res := httptest.NewRecorder()
+	c := e.NewContext(req, res)
+
+	called := false
+	h := routes.SetupTokenMiddleware()(func(_ *echo.Context) error {
+		called = true
+		return nil
+	})
+
+	req.Header.Set(echo.HeaderAuthorization, "Bearer tk_2eef46f40ebab3304919ab2e7e39993f75f29d2e")
+	require.NoError(t, h(c))
+	assert.True(t, called, "sub-paths under /api/v1/mcp should also skip the route check")
+}
+
 func TestAPIToken(t *testing.T) {
 	t.Run("valid token", func(t *testing.T) {
 		e, err := setupTestEnv()

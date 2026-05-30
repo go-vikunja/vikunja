@@ -45,8 +45,10 @@ require (
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/go-testfixtures/testfixtures/v3 v3.19.0
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
-	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/google/jsonschema-go v0.4.3
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/feeds v1.2.0
 	github.com/hashicorp/go-version v1.8.0
 	github.com/hhsnopek/etag v0.0.0-20171206181245-aea95f647346
 	github.com/huandu/go-clone/generic v1.7.3
@@ -60,6 +62,7 @@ require (
 	github.com/magefile/mage v1.15.0
 	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/microcosm-cc/bluemonday v1.0.27
+	github.com/modelcontextprotocol/go-sdk v1.6.1
 	github.com/olekukonko/tablewriter v1.1.3
 	github.com/pquerna/otp v1.5.0
 	github.com/prometheus/client_golang v1.23.2
@@ -79,7 +82,7 @@ require (
 	golang.org/x/crypto v0.48.0
 	golang.org/x/image v0.38.0
 	golang.org/x/net v0.50.0
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.35.0
 	golang.org/x/sync v0.20.0
 	golang.org/x/sys v0.41.0
 	golang.org/x/term v0.40.0
@@ -144,7 +147,6 @@ require (
 	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
-	github.com/gorilla/feeds v1.2.0 // indirect
 	github.com/huandu/go-clone v1.7.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -177,6 +179,8 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
+	github.com/segmentio/asm v1.1.3 // indirect
+	github.com/segmentio/encoding v0.5.4 // indirect
 	github.com/sony/gobreaker v1.0.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
@@ -186,6 +190,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tj/assert v0.0.3 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
+	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.65.0 // indirect
