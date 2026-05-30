@@ -1528,51 +1528,35 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 // and is used when a repeating task is marked done: repeating tasks
 // don't stay in the done bucket, so they should be routed back to
 // the default ("To-Do") bucket so the next iteration is visible there.
-// When no explicit default bucket is configured, the task is restored
-// to its original bucket so it remains in its original workflow column.
+// When no explicit default bucket is configured, the task stays in its
+// current bucket — no update needed.
 func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
 	for _, view := range views {
-		var bucketID int64
-		var err error
-
 		if view.DefaultBucketID != 0 {
-			bucketID = view.DefaultBucketID
-		} else {
-			// No explicit default: preserve the task's current bucket.
-			currentTaskBucket := &TaskBucket{}
-			_, err = s.Where("task_id = ? AND project_view_id = ?", t.ID, view.ID).
-				Get(currentTaskBucket)
+			defaultBucketID, err := getDefaultBucketID(s, view)
 			if err != nil {
 				return err
 			}
-			bucketID = currentTaskBucket.BucketID
-			if bucketID == 0 {
-				// Task not in any bucket yet — fall back to first by position.
-				bucketID, err = getDefaultBucketID(s, view)
-				if err != nil {
-					return err
-				}
+
+			tb := &TaskBucket{
+				BucketID:      defaultBucketID,
+				TaskID:        t.ID,
+				ProjectViewID: view.ID,
+				ProjectID:     t.ProjectID,
+			}
+			if err = updateTaskBucket(s, a, tb); err != nil {
+				return err
 			}
 		}
-
-		tb := &TaskBucket{
-			BucketID:      bucketID,
-			TaskID:        t.ID,
-			ProjectViewID: view.ID,
-			ProjectID:     t.ProjectID,
-		}
-		err = updateTaskBucket(s, a, tb)
-		if err != nil {
-			return err
-		}
+		// When no default bucket is configured, the task stays in its current
+		// bucket — no bucket update needed.
 
 		tp := TaskPosition{
 			TaskID:        t.ID,
 			ProjectViewID: view.ID,
 			Position:      calculateDefaultPosition(t.Index, t.Position),
 		}
-		err = updateTaskPosition(s, a, &tp)
-		if err != nil {
+		if err := updateTaskPosition(s, a, &tp); err != nil {
 			return err
 		}
 	}
