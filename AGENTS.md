@@ -11,12 +11,24 @@ The project consists of:
 - `desktop/` – Electron wrapper application
 - `docs/` – Documentation website
 
+## API Version Policy — new work goes to /api/v2
+
+**`/api/v1` is effectively deprecated and frozen.** It still runs and is fully supported for existing clients, but it should not grow.
+
+- **Every new route goes on `/api/v2`** (the Huma-backed API in `pkg/routes/api/v2/`). This includes new CRUDable entities, new custom/non-CRUD endpoints, and new actions on existing resources.
+- **Before adding any v2 route, invoke the `api-v2-routes` skill** — it covers both CRUD and non-CRUD shapes.
+- **Touch `/api/v1` only to:** fix a bug, or port an existing resource to v2. Do not add net-new functionality there.
+- Models in `pkg/models/` are shared by both APIs — a new entity still gets its model + `Can*` methods (invoke `crudable`); only the HTTP surface differs (v2, not v1).
+
+If a task says "add an endpoint for X" without naming a version, it means v2.
+
 ## Skills
 
 Before writing code in these areas, invoke the matching skill with the `Skill` tool. They are short checklists derived from recurring review feedback — loading them up front avoids rework.
 
 - Adding or modifying a model in `pkg/models/` (new CRUD, new or changed `Can*` methods, anything touching permissions): invoke `crudable`.
 - Creating or editing any file under `pkg/migration/`: invoke `migration`.
+- Adding **any** new API route (new entity, custom action, or porting from v1) — all new routes go on the Huma-backed `/api/v2`, editing `pkg/routes/api/v2/`: invoke `api-v2-routes`. See the API Version Policy above.
 
 ## Plans and Worktrees
 
@@ -172,11 +184,10 @@ Modern Vue 3 composition API application with TypeScript:
 ### Adding New Features
 
 **Backend Changes:**
-1. Create/modify models in `pkg/models/` with proper CRUD and Permissions interfaces as required
-2. Add database migration if needed: `mage dev:make-migration <StructName>`
+1. Create/modify models in `pkg/models/` with proper CRUD and Permissions interfaces as required (invoke the `crudable` skill)
+2. Add database migration if needed: `mage dev:make-migration <StructName>` (invoke the `migration` skill)
 3. Create/update services in `pkg/services/` for complex business logic
-4. Add API routes in `pkg/routes/api/v1/` following existing patterns
-5. Update Swagger annotations
+4. Add API routes on **`/api/v2`** in `pkg/routes/api/v2/` — invoke the `api-v2-routes` skill. Do **not** add new routes to `/api/v1`; it is frozen (see API Version Policy above)
 
 **Frontend Changes:**
 1. Create TypeScript interfaces in `src/modelTypes/` matching backend models
@@ -192,10 +203,11 @@ Modern Vue 3 composition API application with TypeScript:
 4. Update TypeScript interfaces in frontend `src/modelTypes/`
 
 ### API Development
-- All API endpoints follow RESTful conventions under `/api/v1/`
-- Use generic web handlers in `pkg/web/handler/` for standard CRUD operations
-- Implement proper permissions checking using the Permissions interface
-- Add Swagger annotations for automatic documentation generation
+- **New endpoints go on `/api/v2`** (Huma-backed, `pkg/routes/api/v2/`). `/api/v1` is frozen — see the API Version Policy near the top. Invoke the `api-v2-routes` skill before writing v2 routes.
+- v2 verb conventions differ from v1: POST creates, PUT/PATCH update (v1 used PUT to create, POST to update).
+- Both versions reuse the generic `pkg/web/handler/` `Do*` functions for standard CRUD, which enforce permissions via the model's `Can*` methods.
+- Implement permission checks at the model level via the Permissions interface — never in the route handler (the exception: non-CRUD v2 actions must call `Can*` explicitly; the skill covers this).
+- v2 generates its OpenAPI spec from Go types automatically — no Swagger annotations. v1's swaggo annotations stay as-is but no new ones are needed.
 
 ### Testing
 - Backend: Feature tests alongside source files, web tests in `pkg/webtests/`
