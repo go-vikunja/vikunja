@@ -382,6 +382,10 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
+	// Match the authenticated v1 group: rate limiting and route metrics
+	// apply to v2 resource endpoints too.
+	setupRateLimit(a, config.RateLimitKind.GetString())
+	setupMetricsMiddleware(a)
 
 	api := apiv2.NewAPI(e, a)
 
