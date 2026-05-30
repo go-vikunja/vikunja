@@ -290,6 +290,35 @@ func TestMCP_Projects_Update(t *testing.T) {
 	assert.Equal(t, "Updated description", project["description"])
 }
 
+// TestMCP_Projects_UpdateClearsArchived exercises the pointer-source path
+// of copyByJSONTag: an explicit `is_archived: false` must un-archive a
+// project that was previously archived.
+func TestMCP_Projects_UpdateClearsArchived(t *testing.T) {
+	c := newMCPClient(t, mcpFullProjectsToken)
+
+	createResult := c.callTool("projects_create", map[string]any{
+		"title":       "mcp project to un-archive",
+		"is_archived": true,
+	})
+	require.NotContains(t, createResult, "isError")
+	var created map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, createResult)), &created))
+	pid := int64(created["id"].(float64))
+	require.True(t, created["is_archived"].(bool), "project should have been created archived")
+
+	updateResult := c.callTool("projects_update", map[string]any{
+		"id":          pid,
+		"is_archived": false,
+	})
+	require.NotContains(t, updateResult, "isError", "update errored: %v", updateResult)
+
+	readResult := c.callTool("projects_read_one", map[string]any{"id": pid})
+	require.NotContains(t, readResult, "isError")
+	var project map[string]any
+	require.NoError(t, json.Unmarshal([]byte(toolResultText(t, readResult)), &project))
+	assert.False(t, project["is_archived"].(bool), "is_archived must be false after explicit clear")
+}
+
 func TestMCP_Projects_Delete(t *testing.T) {
 	c := newMCPClient(t, mcpFullProjectsToken)
 

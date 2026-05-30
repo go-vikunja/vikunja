@@ -227,6 +227,66 @@ func TestCopyByJSONTagSkipsZeroValuesForOptional(t *testing.T) {
 	assert.InEpsilon(t, 9.9, dst.Position, 0.0001)
 }
 
+// TestCopyByJSONTagPointerSrcAllowsZero verifies that pointer-typed src
+// fields propagate their pointee even when it's the zero value — this is
+// the escape hatch update wrappers use to let callers explicitly set
+// `done: false` / `priority: 0` / `is_archived: false`.
+func TestCopyByJSONTagPointerSrcAllowsZero(t *testing.T) {
+	type ptrSrc struct {
+		Done     *bool    `json:"done"`
+		Priority *int64   `json:"priority"`
+		Position *float64 `json:"position"`
+		HexColor *string  `json:"hex_color"`
+	}
+	type valDst struct {
+		Done     bool    `json:"done"`
+		Priority int64   `json:"priority"`
+		Position float64 `json:"position"`
+		HexColor string  `json:"hex_color"`
+	}
+
+	falseVal := false
+	zeroInt := int64(0)
+	zeroFloat := 0.0
+	empty := ""
+	src := ptrSrc{
+		Done:     &falseVal,
+		Priority: &zeroInt,
+		Position: &zeroFloat,
+		HexColor: &empty,
+	}
+	dst := valDst{
+		Done:     true,
+		Priority: 5,
+		Position: 1.5,
+		HexColor: "ff0000",
+	}
+	require.NoError(t, copyByJSONTag(src, &dst))
+	assert.False(t, dst.Done, "non-nil pointer with false pointee must overwrite true")
+	assert.Equal(t, int64(0), dst.Priority)
+	assert.InDelta(t, 0.0, dst.Position, 0.0001)
+	assert.Empty(t, dst.HexColor)
+}
+
+// TestCopyByJSONTagNilPointerSrcSkips verifies that nil pointer src fields
+// are treated as "absent" — the dst keeps whatever it had.
+func TestCopyByJSONTagNilPointerSrcSkips(t *testing.T) {
+	type ptrSrc struct {
+		Done     *bool  `json:"done"`
+		Priority *int64 `json:"priority"`
+	}
+	type valDst struct {
+		Done     bool  `json:"done"`
+		Priority int64 `json:"priority"`
+	}
+
+	src := ptrSrc{} // both nil
+	dst := valDst{Done: true, Priority: 7}
+	require.NoError(t, copyByJSONTag(src, &dst))
+	assert.True(t, dst.Done, "nil pointer must not overwrite")
+	assert.Equal(t, int64(7), dst.Priority)
+}
+
 type srcWithPointers struct {
 	Title *string    `json:"title"`
 	Due   *time.Time `json:"due"`
@@ -266,4 +326,42 @@ func TestCopyByJSONTagTimeValue(t *testing.T) {
 	dst := dstWithTime{}
 	require.NoError(t, copyByJSONTag(src, &dst))
 	assert.Equal(t, now, dst.Due)
+}
+
+// TestProjectUpdateInputClearsBooleans verifies that a wrapper carrying
+// `is_archived: false` (via a non-nil *bool) actually clears IsArchived
+// on the destination Project, even when the dst started with IsArchived=true.
+// This guards the regression flagged in PR review: prior to the pointer-source
+// fix, all zero values were silently dropped by copyByJSONTag.
+func TestProjectUpdateInputClearsBooleans(t *testing.T) {
+	falseVal := false
+	in := &ProjectUpdateInput{ID: 1, IsArchived: &falseVal, IsFavorite: &falseVal}
+	p := &models.Project{ID: 1, IsArchived: true, IsFavorite: true}
+	require.NoError(t, in.ApplyTo(p))
+	assert.False(t, p.IsArchived, "IsArchived must clear when explicitly set to false")
+	assert.False(t, p.IsFavorite, "IsFavorite must clear when explicitly set to false")
+}
+
+// TestTaskUpdateInputClearsBoolsAndZeros mirrors the project test for tasks
+// — done can flip to false, priority can drop to 0, percent_done resets.
+func TestTaskUpdateInputClearsBoolsAndZeros(t *testing.T) {
+	falseVal := false
+	zeroPriority := int64(0)
+	zeroPercent := 0.0
+	in := &TaskUpdateInput{
+		ID:          1,
+		Done:        &falseVal,
+		Priority:    &zeroPriority,
+		PercentDone: &zeroPercent,
+	}
+	tk := &models.Task{
+		ID:          1,
+		Done:        true,
+		Priority:    5,
+		PercentDone: 0.75,
+	}
+	require.NoError(t, in.ApplyTo(tk))
+	assert.False(t, tk.Done)
+	assert.Equal(t, int64(0), tk.Priority)
+	assert.InDelta(t, 0.0, tk.PercentDone, 0.0001)
 }
