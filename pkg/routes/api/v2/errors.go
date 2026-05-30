@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/web"
 
@@ -31,7 +32,12 @@ import (
 func authFromCtx(ctx context.Context) (web.Auth, error) {
 	a, err := auth.GetAuthFromContext(ctx)
 	if err != nil {
-		return nil, huma.Error401Unauthorized(err.Error())
+		// The underlying error can carry internal adapter/config detail
+		// (e.g. a missing Echo context — a programming error, since the
+		// token middleware authenticates before the handler runs). Log it
+		// and return a generic 401 so nothing internal leaks to clients.
+		log.Errorf("v2: could not resolve auth from context: %s", err)
+		return nil, huma.Error401Unauthorized("invalid or missing authentication")
 	}
 	return a, nil
 }
