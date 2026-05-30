@@ -28,8 +28,6 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/metrics"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"code.vikunja.io/api/pkg/web"
 	"github.com/c2h5oh/datasize"
@@ -205,7 +203,7 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 		return err
 	}
 
-	return keyvalue.DecrBy(metrics.FilesCountKey, 1)
+	return nil
 }
 
 // Save saves a file to storage
@@ -214,5 +212,5 @@ func (f *File) Save(fcontent io.ReadSeeker) error {
 	if err != nil {
 		return fmt.Errorf("failed to save file: %w", err)
 	}
-	return keyvalue.IncrBy(metrics.FilesCountKey, 1)
+	return nil
 }
