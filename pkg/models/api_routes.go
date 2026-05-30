@@ -249,12 +249,9 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 	target := apiTokenRoutes
 	if isV2Path(route.Path) {
 		target = apiTokenRoutesV2
-		// AutoPatch synthesises a PATCH counterpart for every PUT route in
-		// the /api/v2 surface. Both methods derive the same "update"
-		// permission, so storing the PATCH one would clobber the PUT one
-		// (last-write-wins on the map). Skip PATCH during collection —
-		// PUT is the authoritative update verb for API tokens; JWT clients
-		// still get PATCH because auth isn't gated on this table.
+		// AutoPatch's synthesised PATCH and the original PUT both derive the
+		// "update" permission and would clobber each other on the map. Store
+		// only PUT; CanDoAPIRoute accepts PATCH as its alias on the same path.
 		if route.Method == http.MethodPatch {
 			return
 		}
@@ -372,11 +369,10 @@ func GetAvailableAPIRoutesForToken(c *echo.Context) error {
 // stored (Path, Method) for that permission matches exactly. This closes
 // GHSA-v479-vf79-mg83 and the wider method/sub-resource confusion it
 // enabled. The one exception is the tasks.read_all quirk handled below.
-//
-// Tokens are granted by (group, permission) name (e.g. labels.read_one),
-// so a single permission can legitimately match both the v1 and v2 routes
-// for the same resource. We consult apiTokenRoutes for v1 and the
-// apiTokenRoutesV2 shadow map for v2.
+// One (group, permission) pair can legitimately match both v1 and v2
+// routes; we walk apiTokenRoutes and apiTokenRoutesV2 in turn. On v2,
+// PATCH is accepted as an alias for the stored PUT on the same path
+// (AutoPatch collapses both onto the "update" permission).
 func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	path := c.Path()
 	if path == "" {
@@ -398,6 +394,13 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 					continue
 				}
 				if rd.Method == method && rd.Path == path {
+					return true
+				}
+				// v2: AutoPatch mirrors every PUT as a PATCH on the same
+				// path. PATCH isn't stored (it would clobber PUT under
+				// the same "update" key), so accept it as an alias here.
+				if isV2Path(rd.Path) && rd.Method == http.MethodPut &&
+					method == http.MethodPatch && rd.Path == path {
 					return true
 				}
 				// Two list endpoints share tasks.read_all but only one
