@@ -17,6 +17,8 @@
 package keyvalue
 
 import (
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue/memory"
@@ -136,6 +138,41 @@ func RememberValue[T any](key string, fn func() (T, error)) (T, error) {
 	}
 
 	if err := Put(key, val); err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return val, nil
+}
+
+// expiringValue wraps a cached value with the time it expires.
+type expiringValue[T any] struct {
+	Value     T
+	ExpiresAt time.Time
+}
+
+// RememberFor is like RememberValue but treats the cached value as stale once it is
+// older than ttl. On a miss or once expired, it executes fn, caches the result for
+// ttl and returns it. If fn returns an error, nothing is cached.
+// T must be a concrete (non-pointer) type.
+func RememberFor[T any](key string, ttl time.Duration, fn func() (T, error)) (T, error) {
+	var cached expiringValue[T]
+	exists, err := GetWithValue(key, &cached)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	if exists && time.Now().Before(cached.ExpiresAt) {
+		return cached.Value, nil
+	}
+
+	val, err := fn()
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	if err := Put(key, expiringValue[T]{Value: val, ExpiresAt: time.Now().Add(ttl)}); err != nil {
 		var zero T
 		return zero, err
 	}
