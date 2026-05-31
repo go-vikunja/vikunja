@@ -61,3 +61,40 @@ func TestNormalizeArrayParams(t *testing.T) {
 		})
 	}
 }
+
+// TestNormalizeArrayParamsPreservesOrder locks in the left-to-right
+// ordering the normalizer promises. Sort precedence (sort_by/order_by) is
+// load-bearing, so a client mixing plain and bracketed forms of the same
+// key must see its values in the exact order it sent them — not whatever a
+// map would yield. Asserts the full rewritten query, not just membership.
+func TestNormalizeArrayParamsPreservesOrder(t *testing.T) {
+	cases := []struct {
+		name      string
+		rawQuery  string
+		wantQuery string
+	}{
+		{"plain then bracketed", "foo=a&foo[]=b&foo=c", "foo=a&foo=b&foo=c"},
+		{
+			"interleaved percent-encoded",
+			"sort_by=a&sort_by%5B%5D=b&sort_by=c&sort_by%5B%5D=d",
+			"sort_by=a&sort_by=b&sort_by=c&sort_by=d",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			e := echo.New()
+			e.Use(middleware.NormalizeArrayParams())
+			e.GET("/", func(c *echo.Context) error {
+				return (*c).String(200, (*c).Request().URL.RawQuery)
+			})
+
+			req := httptest.NewRequest("GET", "/?"+tc.rawQuery, nil)
+			rec := httptest.NewRecorder()
+			e.ServeHTTP(rec, req)
+
+			assert.Equal(t, 200, rec.Code)
+			assert.Equal(t, tc.wantQuery, rec.Body.String())
+		})
+	}
+}
