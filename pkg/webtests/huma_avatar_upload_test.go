@@ -19,12 +19,14 @@ package webtests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/textproto"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -54,11 +56,31 @@ func pngBytes(t *testing.T) []byte {
 
 // multipartAvatarBody returns a multipart/form-data body with a single
 // "avatar" file field plus the matching Content-Type header (with boundary).
+// CreateFormFile sets the part's Content-Type to application/octet-stream, which
+// mirrors how many programmatic clients upload.
 func multipartAvatarBody(t *testing.T, fieldName, filename string, content []byte) (*bytes.Buffer, string) {
 	t.Helper()
 	buf := &bytes.Buffer{}
 	w := multipart.NewWriter(buf)
 	fw, err := w.CreateFormFile(fieldName, filename)
+	require.NoError(t, err)
+	_, err = fw.Write(content)
+	require.NoError(t, err)
+	require.NoError(t, w.Close())
+	return buf, w.FormDataContentType()
+}
+
+// multipartAvatarBodyWithPartType is like multipartAvatarBody but lets the
+// caller set the part's Content-Type header, mirroring how a browser declares a
+// real image type (e.g. image/png) on the file part.
+func multipartAvatarBodyWithPartType(t *testing.T, fieldName, filename, partContentType string, content []byte) (*bytes.Buffer, string) {
+	t.Helper()
+	buf := &bytes.Buffer{}
+	w := multipart.NewWriter(buf)
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name=%q; filename=%q`, fieldName, filename))
+	h.Set("Content-Type", partContentType)
+	fw, err := w.CreatePart(h)
 	require.NoError(t, err)
 	_, err = fw.Write(content)
 	require.NoError(t, err)
@@ -91,6 +113,27 @@ func TestAvatarUpload(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "uploaded successfully")
 
 		// The provider must be flipped to "upload" and an avatar file stored.
+		s := db.NewSession()
+		defer s.Close()
+		u, err := user.GetUserByID(s, testuser1.ID)
+		require.NoError(t, err)
+		assert.Equal(t, "upload", u.AvatarProvider)
+		assert.NotZero(t, u.AvatarFileID)
+	})
+
+	t.Run("Real image content-type on the part", func(t *testing.T) {
+		// Browsers declare a real image Content-Type (e.g. image/png) on the
+		// file part. Huma's MimeTypeValidator must accept it so the request
+		// reaches the handler instead of being rejected with a 422.
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		body, contentType := multipartAvatarBodyWithPartType(t, "avatar", "avatar.png", "image/png", pngBytes(t))
+		rec := uploadAvatarRequest(t, e, body, contentType, token)
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), "uploaded successfully")
+
 		s := db.NewSession()
 		defer s.Close()
 		u, err := user.GetUserByID(s, testuser1.ID)

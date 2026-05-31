@@ -37,13 +37,16 @@ import (
 // Huma's MultipartFormFiles renders the "avatar" field as a binary file in the
 // generated OpenAPI spec; the file bytes are read from in.RawBody.Data().Avatar.
 type avatarUploadInput struct {
-	// contentType is intentionally permissive: the real, byte-level image
-	// check is done in the handler via mimetype.DetectReader (the same
-	// allow-list v1 uses), not via the client-declared part Content-Type.
-	// "image/*" here would make Huma reject on the declared header before the
-	// handler runs and trust a value the client controls.
+	// contentType lists the part Content-Types Huma's MimeTypeValidator accepts
+	// before our handler runs. Browsers set a real image Content-Type on the
+	// part (image/png, image/jpeg, ...) while programmatic clients often send
+	// application/octet-stream, so both must be allowed or a legitimate upload
+	// would be rejected with a 422 before reaching the handler. This is NOT the
+	// security gate: the real, byte-level image check is done in the handler via
+	// mimetype.DetectReader (the same allow-list v1 uses); the part Content-Type
+	// is client-controlled and must never be trusted on its own.
 	RawBody huma.MultipartFormFiles[struct {
-		Avatar huma.FormFile `form:"avatar" contentType:"application/octet-stream" required:"true" doc:"The avatar image to upload. Must be an image; it is resized server-side and re-encoded as PNG."`
+		Avatar huma.FormFile `form:"avatar" contentType:"image/png,image/jpeg,image/gif,image/webp,image/svg+xml,application/octet-stream" required:"true" doc:"The avatar image to upload. Must be an image; it is resized server-side and re-encoded as PNG."`
 	}]
 }
 
