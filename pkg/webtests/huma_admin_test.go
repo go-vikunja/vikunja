@@ -54,7 +54,11 @@ func TestHumaAdminProjects(t *testing.T) {
 	t.Run("admin without the feature gets 404", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		license.ResetForTests()
+		// A valid license that lacks the admin panel feature still gates the
+		// route. Match the sibling subtests' set/defer-reset pattern so the
+		// license state never bleeds into other tests.
+		license.SetForTests([]license.Feature{})
+		defer license.ResetForTests()
 
 		admin := promoteToAdmin(t, 1)
 
