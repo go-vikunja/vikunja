@@ -278,7 +278,7 @@ After adjusting the source string, you need to call the respective translation l
 **Naming Conventions:**
 - Go: Standard Go conventions (PascalCase for exports, camelCase for private)
 - Vue: PascalCase for components, camelCase for composables
-- API endpoints: kebab-case in URLs, camelCase in JSON
+- API endpoints: kebab-case in URLs, snake_case in JSON
 
 **Permissions and Permissions:**
 - Always implement Permissions interface for new models
