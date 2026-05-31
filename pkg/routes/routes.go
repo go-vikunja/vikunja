@@ -413,14 +413,17 @@ func gateV2AdminRoutes() echo.MiddlewareFunc {
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
-	// The admin gate must run after the token middleware (it reads the
-	// authenticated user from the JWT claims) and is scoped by path so only
-	// /api/v2/admin/* is gated.
-	a.Use(gateV2AdminRoutes())
 	// Match the authenticated v1 group: rate limiting and route metrics
 	// apply to v2 resource endpoints too.
 	setupRateLimit(a, config.RateLimitKind.GetString())
 	setupMetricsMiddleware(a)
+	// The admin gate must run after the token middleware (it reads the
+	// authenticated user from the JWT claims) and after the rate limit and
+	// metrics middleware so requests rejected by the gate are still rate
+	// limited and measured — RequireInstanceAdmin does a DB read per request,
+	// so an unauthenticated flood to /api/v2/admin/* would otherwise hit the
+	// DB unbounded. It is scoped by path so only /api/v2/admin/* is gated.
+	a.Use(gateV2AdminRoutes())
 
 	api := apiv2.NewAPI(e, a)
 
