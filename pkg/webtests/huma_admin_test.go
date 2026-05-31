@@ -42,10 +42,10 @@ func TestHumaAdminProjects(t *testing.T) {
 		defer license.ResetForTests()
 
 		s := db.NewSession()
+		defer s.Close()
 		u, err := user.GetUserByID(s, 1)
 		require.NoError(t, err)
 		require.False(t, u.IsAdmin, "fixture precondition: user1 is not an admin")
-		s.Close()
 
 		res := adminReq(t, e, http.MethodGet, "/api/v2/admin/projects", u, "")
 		assert.Equal(t, http.StatusNotFound, res.Code)
