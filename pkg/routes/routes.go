@@ -376,12 +376,47 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
+// v2AdminPathPrefix is the URL prefix every gated admin operation lives under.
+const v2AdminPathPrefix = "/api/v2/admin"
+
+// gateV2AdminRoutes applies the existing v1 admin gate (license feature +
+// instance admin, both 404-on-failure) to every /api/v2/admin request and
+// passes everything else through untouched.
+//
+// v2 is a single Huma API mounted on the /api/v2 Echo group, so unlike v1 —
+// which builds a dedicated `/admin` Echo sub-group and attaches the gate as
+// group middleware — we can't simply construct a gated sub-group without
+// splitting the Huma API (which would split the OpenAPI spec, dropping admin
+// operations out of /api/v2/openapi.json). Instead we reuse the exact same
+// RequireFeature/RequireInstanceAdmin functions as a path-scoped middleware on
+// the shared group: the checks run before Huma's handler, in the same order as
+// v1 (feature first, then admin), and return the identical 404. Keeping one
+// Huma API means admin routes stay in the unified v2 spec and docs.
+func gateV2AdminRoutes() echo.MiddlewareFunc {
+	feature := RequireFeature(license.FeatureAdminPanel)
+	admin := RequireInstanceAdmin()
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		// Compose feature → admin → next, evaluated once at setup.
+		gated := feature(admin(next))
+		return func(c *echo.Context) error {
+			if strings.HasPrefix(c.Request().URL.Path, v2AdminPathPrefix) {
+				return gated(c)
+			}
+			return next(c)
+		}
+	}
+}
+
 // registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
 // attached before any route so Huma's spec and Scalar docs share the
 // resource handlers' stack; unauthenticatedAPIPaths keeps them public.
 func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	a.Use(noStoreCacheControl())
 	a.Use(SetupTokenMiddleware())
+	// The admin gate must run after the token middleware (it reads the
+	// authenticated user from the JWT claims) and is scoped by path so only
+	// /api/v2/admin/* is gated.
+	a.Use(gateV2AdminRoutes())
 	// Match the authenticated v1 group: rate limiting and route metrics
 	// apply to v2 resource endpoints too.
 	setupRateLimit(a, config.RateLimitKind.GetString())
@@ -397,6 +432,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	apiv2.RegisterLabelRoutes(api)
 	apiv2.RegisterTaskDuplicateRoutes(api)
 	apiv2.RegisterProjectViewRoutes(api)
+	apiv2.RegisterAdminProjectRoutes(api)
 
 	// AutoPatch must run AFTER all GET/PUT pairs are registered so it can
 	// synthesize their PATCH counterparts.
