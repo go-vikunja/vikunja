@@ -75,7 +75,7 @@ func translateDomainError(err error) error {
 // as the global error type via the huma.NewError override in init().
 type vikunjaErrorModel struct {
 	huma.ErrorModel
-	Code int `json:"code,omitempty" doc:"Vikunja numeric error code; see https://vikunja.io/docs/errors/"`
+	Code int `json:"code,omitempty" readOnly:"true" doc:"Vikunja numeric error code; see https://vikunja.io/docs/errors/"`
 }
 
 func init() {
