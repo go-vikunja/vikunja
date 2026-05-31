@@ -84,7 +84,7 @@ const (
 // User holds information about an user
 type User struct {
 	// The unique, numeric id of this user.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"bot"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"bot" readOnly:"true"`
 	// The full name of the user.
 	Name string `xorm:"text null" json:"name"`
 	// The username of the user. Is always unique.
@@ -112,7 +112,7 @@ type User struct {
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
 	// BotOwnerID is the ID of the owning (human) user if this user is a bot.
 	// A non-zero value means this user is a bot and cannot authenticate via password.
-	BotOwnerID int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty"`
+	BotOwnerID int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty" readOnly:"true"`
 	WeekStart  int    `xorm:"null" json:"-"`
 	Language   string `xorm:"varchar(50) null" json:"-" valid:"language"`
 	Timezone   string `xorm:"varchar(255) null" json:"-"`
@@ -126,9 +126,9 @@ type User struct {
 	ExportFileID int64 `xorm:"bigint null" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true"`
 	// A timestamp when this task was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true"`
 
 	web.Auth `xorm:"-" json:"-"`
 }

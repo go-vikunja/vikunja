@@ -29,7 +29,7 @@ import (
 // Label represents a label
 type Label struct {
 	// The unique, numeric id of this label.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"label" doc:"The unique, numeric id of this label."`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"label" readOnly:"true" doc:"The unique, numeric id of this label."`
 	// The title of the label. You'll see this one on tasks associated with it.
 	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(1|250)" minLength:"1" maxLength:"250" doc:"The title of the label. You'll see this one on tasks associated with it."`
 	// The label description.
@@ -39,12 +39,12 @@ type Label struct {
 
 	CreatedByID int64 `xorm:"bigint not null" json:"-"`
 	// The user who created this label
-	CreatedBy *user.User `xorm:"-" json:"created_by" doc:"The user who created this label."`
+	CreatedBy *user.User `xorm:"-" json:"created_by" readOnly:"true" doc:"The user who created this label."`
 
 	// A timestamp when this label was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created" doc:"A timestamp when this label was created. You cannot change this value."`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this label was created. You cannot change this value."`
 	// A timestamp when this label was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated" doc:"A timestamp when this label was last updated. You cannot change this value."`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this label was last updated. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
