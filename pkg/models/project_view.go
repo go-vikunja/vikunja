@@ -312,6 +312,9 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 
 	if p.BucketConfigurationMode == BucketConfigurationModeFilter {
 		for _, configuration := range p.BucketConfiguration {
+			if configuration == nil {
+				continue
+			}
 			if configuration.Filter != nil && configuration.Filter.Filter != "" {
 				_, err = getTaskFiltersFromFilterString(configuration.Filter.Filter, configuration.Filter.FilterTimezone)
 				if err != nil {
