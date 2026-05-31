@@ -165,7 +165,7 @@ type ProjectView struct {
 	Position float64 `xorm:"double null" json:"position" doc:"The position of this view in the project's list of views. Views are sorted ascending by this value."`
 
 	// The bucket configuration mode. Can be `none`, `manual` or `filter`. `manual` allows to move tasks between buckets as you normally would. `filter` creates buckets based on a filter for each bucket.
-	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode" swaggertype:"string" enums:"none,manual,filter,manual" doc:"The bucket configuration mode. One of none, manual or filter. manual lets you move tasks between buckets; filter creates a bucket per filter."`
+	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode" swaggertype:"string" enums:"none,manual,filter" doc:"The bucket configuration mode. One of none, manual or filter. manual lets you move tasks between buckets; filter creates a bucket per filter."`
 	// When the bucket configuration mode is not `manual`, this field holds the options of that configuration.
 	BucketConfiguration []*ProjectViewBucketConfiguration `xorm:"json" json:"bucket_configuration" doc:"When the bucket configuration mode is filter, holds the title and filter of each bucket."`
 	// The ID of the bucket where new tasks without a bucket are added to. By default, this is the leftmost bucket in a view.
