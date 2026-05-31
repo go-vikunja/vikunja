@@ -396,6 +396,7 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	// Resource registrations.
 	apiv2.RegisterLabelRoutes(api)
 	apiv2.RegisterTaskDuplicateRoutes(api)
+	apiv2.RegisterProjectViewRoutes(api)
 
 	// AutoPatch must run AFTER all GET/PUT pairs are registered so it can
 	// synthesize their PATCH counterparts.

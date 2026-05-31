@@ -32,20 +32,20 @@ type TaskCollection struct {
 	ProjectID     int64 `param:"project" json:"-"`
 	ProjectViewID int64 `param:"view" json:"-"`
 
-	Search string `query:"s" json:"s"`
+	Search string `query:"s" json:"s" doc:"A search term to match tasks by their title."`
 
 	// The query parameter to sort by. This is for ex. done, priority, etc.
-	SortBy []string `query:"sort_by" json:"sort_by"`
+	SortBy []string `query:"sort_by" json:"sort_by" doc:"The fields to sort by, for example done or priority."`
 	// The query parameter to order the items by. This can be either asc or desc, with asc being the default.
-	OrderBy []string `query:"order_by" json:"order_by"`
+	OrderBy []string `query:"order_by" json:"order_by" doc:"The order for each sort_by field, either asc or desc. Defaults to asc."`
 
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
-	Filter string `query:"filter" json:"filter"`
+	Filter string `query:"filter" json:"filter" doc:"The filter query to match tasks by. See https://vikunja.io/docs/filters."`
 	// The time zone which should be used for date match (statements like "now" resolve to different actual times)
 	FilterTimezone string `query:"filter_timezone" json:"-"`
 
 	// If set to true, the result will also include null values
-	FilterIncludeNulls bool `query:"filter_include_nulls" json:"filter_include_nulls"`
+	FilterIncludeNulls bool `query:"filter_include_nulls" json:"filter_include_nulls" doc:"If true, the result also includes tasks whose filtered field is null."`
 
 	// If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a
 	// second step, will fetch all of these subtasks. This may result in more tasks than the
