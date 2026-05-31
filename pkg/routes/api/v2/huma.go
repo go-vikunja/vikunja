@@ -102,4 +102,18 @@ func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Co
 // registered GET + PUT. Must be called AFTER all Register* calls.
 func EnableAutoPatch(api huma.API) {
 	autopatch.AutoPatch(api)
+
+	// AutoPatch names each synthesised PATCH after the GET operation
+	// ("Patch labels-read"), which reads poorly in the docs nav. Rewrite
+	// the summary from the sibling PUT so it reads like "Update a label
+	// (partial)". Only touch summaries AutoPatch generated (the "Patch "
+	// prefix) so a hand-registered PATCH is left alone.
+	for _, item := range api.OpenAPI().Paths {
+		if item == nil || item.Patch == nil || item.Put == nil {
+			continue
+		}
+		if item.Put.Summary != "" && strings.HasPrefix(item.Patch.Summary, "Patch ") {
+			item.Patch.Summary = item.Put.Summary + " (partial)"
+		}
+	}
 }

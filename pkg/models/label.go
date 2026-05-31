@@ -29,22 +29,22 @@ import (
 // Label represents a label
 type Label struct {
 	// The unique, numeric id of this label.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"label"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"label" doc:"The unique, numeric id of this label."`
 	// The title of the label. You'll see this one on tasks associated with it.
-	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(1|250)" minLength:"1" maxLength:"250"`
+	Title string `xorm:"varchar(250) not null" json:"title" valid:"runelength(1|250)" minLength:"1" maxLength:"250" doc:"The title of the label. You'll see this one on tasks associated with it."`
 	// The label description.
-	Description string `xorm:"longtext null" json:"description"`
+	Description string `xorm:"longtext null" json:"description" doc:"The label description."`
 	// The color this label has in hex format.
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7"`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The color this label has in hex format."`
 
 	CreatedByID int64 `xorm:"bigint not null" json:"-"`
 	// The user who created this label
-	CreatedBy *user.User `xorm:"-" json:"created_by"`
+	CreatedBy *user.User `xorm:"-" json:"created_by" doc:"The user who created this label."`
 
 	// A timestamp when this label was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" doc:"A timestamp when this label was created. You cannot change this value."`
 	// A timestamp when this label was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" doc:"A timestamp when this label was last updated. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`

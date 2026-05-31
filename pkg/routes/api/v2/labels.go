@@ -41,6 +41,8 @@ func RegisterLabelRoutes(api huma.API) {
 
 	Register(api, huma.Operation{
 		OperationID: "labels-list",
+		Summary:     "List labels",
+		Description: "Returns the labels visible to the authenticated user — their own plus any used on tasks they can access. Not a global list.",
 		Method:      http.MethodGet,
 		Path:        "/labels",
 		Tags:        tags,
@@ -48,6 +50,8 @@ func RegisterLabelRoutes(api huma.API) {
 
 	Register(api, huma.Operation{
 		OperationID: "labels-read",
+		Summary:     "Get a label",
+		Description: "Returns a single label. Sends an ETag; pass it as If-None-Match on a later read to get a 304 Not Modified.",
 		Method:      http.MethodGet,
 		Path:        "/labels/{id}",
 		Tags:        tags,
@@ -55,6 +59,8 @@ func RegisterLabelRoutes(api huma.API) {
 
 	Register(api, huma.Operation{
 		OperationID: "labels-create",
+		Summary:     "Create a label",
+		Description: "Creates a label; the authenticated user becomes its owner.",
 		Method:      http.MethodPost,
 		Path:        "/labels",
 		Tags:        tags,
@@ -62,6 +68,8 @@ func RegisterLabelRoutes(api huma.API) {
 
 	Register(api, huma.Operation{
 		OperationID: "labels-update",
+		Summary:     "Update a label",
+		Description: "Replaces all of a label's fields — only the owner may update it. Use PATCH for a partial update.",
 		Method:      http.MethodPut,
 		Path:        "/labels/{id}",
 		Tags:        tags,
@@ -69,6 +77,8 @@ func RegisterLabelRoutes(api huma.API) {
 
 	Register(api, huma.Operation{
 		OperationID: "labels-delete",
+		Summary:     "Delete a label",
+		Description: "Deletes a label. Only the owner may delete it.",
 		Method:      http.MethodDelete,
 		Path:        "/labels/{id}",
 		Tags:        tags,
