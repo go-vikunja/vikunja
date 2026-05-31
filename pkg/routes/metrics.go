@@ -20,12 +20,10 @@ import (
 	"crypto/subtle"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
 	auth2 "code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/user"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -38,47 +36,6 @@ func setupMetrics(a *echo.Group) {
 	}
 
 	metrics.InitMetrics()
-
-	type countable struct {
-		Key  string
-		Type interface{}
-	}
-
-	for _, c := range []countable{
-		{
-			metrics.ProjectCountKey,
-			models.Project{},
-		},
-		{
-			metrics.UserCountKey,
-			user.User{},
-		},
-		{
-			metrics.TaskCountKey,
-			models.Task{},
-		},
-		{
-			metrics.TeamCountKey,
-			models.Team{},
-		},
-		{
-			metrics.FilesCountKey,
-			files.File{},
-		},
-		{
-			metrics.AttachmentsCountKey,
-			models.TaskAttachment{},
-		},
-	} {
-		// Set initial totals
-		total, err := models.GetTotalCount(c.Type)
-		if err != nil {
-			log.Fatalf("Could not get initial count for %v, error was %s", c.Type, err)
-		}
-		if err := metrics.SetCount(total, c.Key); err != nil {
-			log.Fatalf("Could not set initial count for %v, error was %s", c.Type, err)
-		}
-	}
 
 	r := a.Group("/metrics")
 

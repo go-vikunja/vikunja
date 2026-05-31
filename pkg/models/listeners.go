@@ -26,8 +26,6 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/metrics"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
@@ -38,16 +36,6 @@ import (
 
 // RegisterListeners registers all event listeners
 func RegisterListeners() {
-	if config.MetricsEnabled.GetBool() {
-		events.RegisterListener((&ProjectCreatedEvent{}).Name(), &IncreaseProjectCounter{})
-		events.RegisterListener((&ProjectDeletedEvent{}).Name(), &DecreaseProjectCounter{})
-		events.RegisterListener((&TaskCreatedEvent{}).Name(), &IncreaseTaskCounter{})
-		events.RegisterListener((&TaskDeletedEvent{}).Name(), &DecreaseTaskCounter{})
-		events.RegisterListener((&TeamDeletedEvent{}).Name(), &DecreaseTeamCounter{})
-		events.RegisterListener((&TeamCreatedEvent{}).Name(), &IncreaseTeamCounter{})
-		events.RegisterListener((&TaskAttachmentCreatedEvent{}).Name(), &IncreaseAttachmentCounter{})
-		events.RegisterListener((&TaskAttachmentDeletedEvent{}).Name(), &DecreaseAttachmentCounter{})
-	}
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
@@ -98,34 +86,6 @@ func RegisterListeners() {
 
 //////
 // Task Events
-
-// IncreaseTaskCounter  represents a listener
-type IncreaseTaskCounter struct {
-}
-
-// Name defines the name for the IncreaseTaskCounter listener
-func (s *IncreaseTaskCounter) Name() string {
-	return "task.counter.increase"
-}
-
-// Handle is executed when the event IncreaseTaskCounter listens on is fired
-func (s *IncreaseTaskCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.TaskCountKey, 1)
-}
-
-// DecreaseTaskCounter  represents a listener
-type DecreaseTaskCounter struct {
-}
-
-// Name defines the name for the DecreaseTaskCounter listener
-func (s *DecreaseTaskCounter) Name() string {
-	return "task.counter.decrease"
-}
-
-// Handle is executed when the event DecreaseTaskCounter listens on is fired
-func (s *DecreaseTaskCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.DecrBy(metrics.TaskCountKey, 1)
-}
 
 func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notifications.NotificationWithSubject) (users map[int64]*user.User, err error) {
 	users, err = FindMentionedUsersInText(sess, text)
@@ -583,34 +543,6 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 	return sess.Commit()
 }
 
-// IncreaseAttachmentCounter  represents a listener
-type IncreaseAttachmentCounter struct {
-}
-
-// Name defines the name for the IncreaseAttachmentCounter listener
-func (s *IncreaseAttachmentCounter) Name() string {
-	return "increase.attachment.counter"
-}
-
-// Handle is executed when the event IncreaseAttachmentCounter listens on is fired
-func (s *IncreaseAttachmentCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.AttachmentsCountKey, 1)
-}
-
-// DecreaseAttachmentCounter  represents a listener
-type DecreaseAttachmentCounter struct {
-}
-
-// Name defines the name for the DecreaseAttachmentCounter listener
-func (s *DecreaseAttachmentCounter) Name() string {
-	return "decrease.attachment.counter"
-}
-
-// Handle is executed when the event DecreaseAttachmentCounter listens on is fired
-func (s *DecreaseAttachmentCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.DecrBy(metrics.AttachmentsCountKey, 1)
-}
-
 // UpdateTaskInSavedFilterViews  represents a listener
 type UpdateTaskInSavedFilterViews struct {
 }
@@ -737,28 +669,6 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 
 ///////
 // Project Event Listeners
-
-type IncreaseProjectCounter struct {
-}
-
-func (s *IncreaseProjectCounter) Name() string {
-	return "project.counter.increase"
-}
-
-func (s *IncreaseProjectCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.ProjectCountKey, 1)
-}
-
-type DecreaseProjectCounter struct {
-}
-
-func (s *DecreaseProjectCounter) Name() string {
-	return "project.counter.decrease"
-}
-
-func (s *DecreaseProjectCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.DecrBy(metrics.ProjectCountKey, 1)
-}
 
 // SendProjectCreatedNotification  represents a listener
 type SendProjectCreatedNotification struct {
@@ -1258,34 +1168,6 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 
 ///////
 // Team Events
-
-// IncreaseTeamCounter  represents a listener
-type IncreaseTeamCounter struct {
-}
-
-// Name defines the name for the IncreaseTeamCounter listener
-func (s *IncreaseTeamCounter) Name() string {
-	return "team.counter.increase"
-}
-
-// Handle is executed when the event IncreaseTeamCounter listens on is fired
-func (s *IncreaseTeamCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.TeamCountKey, 1)
-}
-
-// DecreaseTeamCounter  represents a listener
-type DecreaseTeamCounter struct {
-}
-
-// Name defines the name for the DecreaseTeamCounter listener
-func (s *DecreaseTeamCounter) Name() string {
-	return "team.counter.decrease"
-}
-
-// Handle is executed when the event DecreaseTeamCounter listens on is fired
-func (s *DecreaseTeamCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.DecrBy(metrics.TeamCountKey, 1)
-}
 
 // CleanupTaskAssignmentsAfterTeamRemoval represents a listener
 type CleanupTaskAssignmentsAfterTeamRemoval struct{}
