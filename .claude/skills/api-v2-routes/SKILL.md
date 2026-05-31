@@ -23,6 +23,16 @@ Title string `json:"title" minLength:"1" maxLength:"250" doc:"The title of the l
 
 These model edits are safe for v1 — swaggo, XORM, and govalidator all ignore the `doc` tag. (Huma *does* read validation tags like `minLength`/`maxLength`/`enum`/`format`, so those carry over without a `doc` tag.) As with operations, a `doc` tag earns its place when it says something the field name and type don't: a format hint ("hex, 6 chars"), a read-only note ("set by the server; ignored on write"), units, or allowed values. "The label description." on a `Description` field is filler. See `pkg/models/label.go` for the reference.
 
+**Mark server-controlled fields `readOnly:"true"`.** Because the same model struct is the request body *and* the response, fields the client can never set — `id`, `created`, `updated`, `created_by`, and similar server-derived relations/IDs — should carry `readOnly:"true"`. Huma reflects this into the OpenAPI schema (`readOnly: true`), so docs and client generators present the field as response-only and drop it from request examples:
+
+```go
+ID        int64      `json:"id" readOnly:"true" doc:"The unique, numeric id of this label."`
+CreatedBy *user.User `xorm:"-" json:"created_by" readOnly:"true" doc:"The user who created this label."`
+Created   time.Time  `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this label was created. You cannot change this value."`
+```
+
+The tag is **documentation only** — Huma does *not* reject these fields if a client sends them on create/update. Actual immutability still comes from the model layer (XORM-managed `created`/`updated`, `created_by` being `xorm:"-"` and set server-side). It's also harmless on v1 (swaggo/XORM/govalidator ignore it). Don't bother tagging fields that are already `json:"-"` (absent from the schema entirely), and skip it on response-only structs like the error model — there it's cosmetic since they never appear as a request body. See `pkg/models/label.go` and `pkg/user/user.go`.
+
 ## Steps
 
 ### 1. Create `pkg/routes/api/v2/<resource>.go`
@@ -149,6 +159,7 @@ Otherwise the same rules apply: register with the `Register` wrapper, pull auth 
 - Returning a raw model error instead of routing it through `translateDomainError` → leaks a 500 instead of the right code.
 - Unquoted ETag in the response header.
 - Operations without `Summary`/`Description`, or model fields without `doc:` tags — they ship undocumented because Huma can't read Go comments.
+- Server-controlled fields (`id`, `created`, `updated`, `created_by`) on a shared input/output model left without `readOnly:"true"` — the docs then present them as writable request fields.
 
 ## Tests (mandatory)
 
