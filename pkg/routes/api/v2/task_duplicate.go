@@ -49,21 +49,20 @@ func RegisterTaskDuplicateRoutes(api huma.API) {
 }
 
 // tasksDuplicate duplicates the task identified by the {projecttask} path
-// segment. The request body carries no client-settable fields; TaskDuplicate's
-// only writable input is its TaskID, which comes from the URL. DoCreate runs
-// CanCreate (read source + update project) before Create, so permissions are
-// enforced at the model layer — never re-checked here.
+// segment. The action takes no request body; TaskDuplicate's only writable
+// input is its TaskID, which comes from the URL. DoCreate runs CanCreate (read
+// source + update project) before Create, so permissions are enforced at the
+// model layer — never re-checked here.
 func tasksDuplicate(ctx context.Context, in *struct {
 	TaskID int64 `path:"projecttask" doc:"The numeric id of the task to duplicate."`
-	Body   models.TaskDuplicate
 }) (*singleBody[models.TaskDuplicate], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	in.Body.TaskID = in.TaskID // URL wins; the body has no settable fields
-	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
+	td := &models.TaskDuplicate{TaskID: in.TaskID}
+	if err := handler.DoCreate(ctx, td, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &singleBody[models.TaskDuplicate]{Body: &in.Body}, nil
+	return &singleBody[models.TaskDuplicate]{Body: td}, nil
 }
