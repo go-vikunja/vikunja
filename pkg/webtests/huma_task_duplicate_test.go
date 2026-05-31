@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -35,10 +36,22 @@ func TestTaskDuplicateV2(t *testing.T) {
 		token := humaTokenFor(t, &testuser1)
 
 		// Task 2 lives in project 1, which testuser1 owns.
-		rec := humaRequest(t, e, http.MethodPost, "/api/v2/tasks/2/duplicate", `{}`, token, "")
+		const sourceTaskID int64 = 2
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/tasks/2/duplicate", ``, token, "")
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), `"duplicated_task"`)
 		assert.Contains(t, rec.Body.String(), `"title":"task #2 done"`)
+
+		// Parse the response and assert a genuinely new task was created: the
+		// duplicate must carry an id different from the source task's id.
+		var resp struct {
+			DuplicatedTask struct {
+				ID int64 `json:"id"`
+			} `json:"duplicated_task"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
+		assert.NotZero(t, resp.DuplicatedTask.ID, "duplicated task should have an id")
+		assert.NotEqual(t, sourceTaskID, resp.DuplicatedTask.ID, "duplicated task must have a new id, not the source task's")
 	})
 
 	t.Run("nonexistent source task", func(t *testing.T) {
