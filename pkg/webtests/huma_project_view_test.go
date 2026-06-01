@@ -143,6 +143,15 @@ func TestProjectView(t *testing.T) {
 			assert.Equal(t, http.StatusNoContent, rec.Code)
 			assert.Empty(t, rec.Body.String())
 		})
+		t.Run("View from another project", func(t *testing.T) {
+			// view 5 belongs to project 2. testuser1 admins the path project (1),
+			// so CanDelete passes — but the view isn't under project 1. The Delete
+			// guard must 404 before touching project 2's buckets/positions, which
+			// the old code wiped via a project_view_id-only delete.
+			_, err := owned.testDeleteWithUser(nil, map[string]string{"view": "5"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
+		})
 		t.Run("Forbidden", func(t *testing.T) {
 			_, err := forbidden.testDeleteWithUser(nil, map[string]string{"view": "5"})
 			require.Error(t, err)

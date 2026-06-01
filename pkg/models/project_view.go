@@ -269,6 +269,13 @@ func (pv *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [delete]
 func (pv *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
+	// Resolve the view under the path project first: the buckets/positions below are deleted by
+	// view id alone, so without this guard a delete scoped to the wrong parent project would still
+	// wipe another project's buckets and positions while matching zero project_views rows.
+	if _, err = GetProjectViewByIDAndProject(s, pv.ID, pv.ProjectID); err != nil {
+		return err
+	}
+
 	_, err = s.
 		Where("id = ? AND project_id = ?", pv.ID, pv.ProjectID).
 		Delete(&ProjectView{})
