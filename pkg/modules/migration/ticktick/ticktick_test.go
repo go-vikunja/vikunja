@@ -846,3 +846,26 @@ func TestNonNumericNumberColumns(t *testing.T) {
 	}
 	assert.Equal(t, int64(1), priority)
 }
+
+// TestMultipleTasksWithMalformedIDsAreNotDropped guards against a regression
+// where collapsing several unparseable taskIds to 0 caused all but the first
+// zero-ID task to be silently dropped by sortParentsBeforeChildren.
+func TestMultipleTasksWithMalformedIDsAreNotDropped(t *testing.T) {
+	tasks := []*tickTickTask{
+		{TaskID: 0, ProjectName: "Project 1", Title: "First malformed"},
+		{TaskID: 0, ProjectName: "Project 1", Title: "Second malformed"},
+		{TaskID: 0, ProjectName: "Project 1", Title: "Third malformed"},
+	}
+
+	sorted := sortParentsBeforeChildren(tasks)
+	require.Len(t, sorted, 3, "no task with a zero ID should be dropped")
+
+	vikunjaTasks := convertTickTickToVikunja(tasks)
+	titles := []string{}
+	for _, project := range vikunjaTasks {
+		for _, task := range project.Tasks {
+			titles = append(titles, task.Title)
+		}
+	}
+	assert.ElementsMatch(t, []string{"First malformed", "Second malformed", "Third malformed"}, titles)
+}
