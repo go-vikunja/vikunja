@@ -11192,6 +11192,9 @@ const docTemplate = `{
         "v1.vikunjaInfos": {
             "type": "object",
             "properties": {
+                "allow_icon_changes": {
+                    "type": "boolean"
+                },
                 "auth": {
                     "$ref": "#/definitions/v1.authInfo"
                 },

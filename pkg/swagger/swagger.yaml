@@ -1765,6 +1765,8 @@ definitions:
     type: object
   v1.vikunjaInfos:
     properties:
+      allow_icon_changes:
+        type: boolean
       auth:
         $ref: '#/definitions/v1.authInfo'
       available_migrators:
