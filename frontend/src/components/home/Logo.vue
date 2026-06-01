@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useNow } from '@vueuse/core'
 import { useAuthStore } from '@/stores/auth'
+import { useConfigStore } from '@/stores/config'
 import { useColorScheme } from '@/composables/useColorScheme'
 
 import LogoFull from '@/assets/logo-full.svg?component'
@@ -13,9 +14,10 @@ const now = useNow({
 })
 
 const authStore = useAuthStore()
+const configStore = useConfigStore()
 const { isDark } = useColorScheme()
 
-const Logo = computed(() => window.ALLOW_ICON_CHANGES
+const Logo = computed(() => configStore.allowIconChanges
 	&& authStore.settings.frontendSettings.allowIconChanges
 	&& now.value.getMonth() === 5
 	? LogoFullPride
