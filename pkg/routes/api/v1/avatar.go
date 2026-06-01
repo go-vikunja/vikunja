@@ -17,13 +17,10 @@
 package v1
 
 import (
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
-	"code.vikunja.io/api/pkg/modules/avatar/botmarble"
-	"code.vikunja.io/api/pkg/modules/avatar/empty"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 
@@ -54,42 +51,19 @@ func GetAvatar(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Get the user
-	u, err := user.GetUserWithEmail(s, &user.User{Username: username})
-	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
-		log.Errorf("Error getting user for avatar: %v", err)
-		return err
-	}
-
-	found := err == nil || user.IsErrUserStatusError(err)
-
-	avatarProvider := avatar.GetProvider(u)
-
-	if !found {
-		avatarProvider = &empty.Provider{}
-	}
-
-	if found && u.IsBot() {
-		avatarProvider = &botmarble.Provider{}
-	}
-
 	size := c.QueryParam("size")
 	var sizeInt int64 = 250 // Default size of 250
 	if size != "" {
+		var err error
 		sizeInt, err = strconv.ParseInt(size, 10, 64)
 		if err != nil {
 			log.Errorf("Error parsing size: %v", err)
 			return models.ErrInvalidModel{Message: "Invalid size parameter"}
 		}
 	}
-	if sizeInt > config.ServiceMaxAvatarSize.GetInt64() {
-		sizeInt = config.ServiceMaxAvatarSize.GetInt64()
-	}
 
-	// Get the avatar
-	a, mimeType, err := avatarProvider.GetAvatar(u, sizeInt)
+	a, mimeType, err := avatar.GetAvatarForUsername(s, username, sizeInt)
 	if err != nil {
-		log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
 		return err
 	}
 
