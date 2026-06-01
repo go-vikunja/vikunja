@@ -28,10 +28,10 @@ import (
 
 // TaskDuplicate holds everything needed to duplicate a task
 type TaskDuplicate struct {
-	// The task id of the task to duplicate. Taken from the URL path; not part of the request body.
+	// The task id of the task to duplicate
 	TaskID int64 `json:"-" param:"projecttask"`
 
-	// The duplicated task. Set by the server in the response; ignored on write.
+	// The duplicated task
 	Task *Task `json:"duplicated_task,omitempty" readOnly:"true" doc:"The newly created duplicate task, populated by the server in the response."`
 
 	web.Permissions `json:"-"`

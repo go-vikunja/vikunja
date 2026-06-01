@@ -27,14 +27,9 @@ import (
 )
 
 // RegisterTaskDuplicateRoutes wires the task-duplicate action onto the Huma API.
-//
-// This is the reference "custom action" route: a verb on a sub-path with no
-// {id} of its own. TaskDuplicate is a CRUDable Create (its CanCreate reads the
-// source task and checks update on the project), so the handler reuses the
-// shared handler.DoCreate — the only custom part is binding TaskID from the
-// path instead of the body. Genuinely non-CRUDable actions (no Create/CanCreate)
-// would instead manage their own db.NewSession() and call Can* explicitly; that
-// heavier shape is unnecessary here.
+// TaskDuplicate is a CRUDable Create, so the handler reuses handler.DoCreate
+// (its CanCreate enforces read-source + write-project); the only custom part is
+// taking TaskID from the path rather than a request body.
 func RegisterTaskDuplicateRoutes(api huma.API) {
 	tags := []string{"tasks"}
 
@@ -48,11 +43,6 @@ func RegisterTaskDuplicateRoutes(api huma.API) {
 	}, tasksDuplicate)
 }
 
-// tasksDuplicate duplicates the task identified by the {projecttask} path
-// segment. The action takes no request body; TaskDuplicate's only writable
-// input is its TaskID, which comes from the URL. DoCreate runs CanCreate (read
-// source + update project) before Create, so permissions are enforced at the
-// model layer — never re-checked here.
 func tasksDuplicate(ctx context.Context, in *struct {
 	TaskID int64 `path:"projecttask" doc:"The numeric id of the task to duplicate."`
 }) (*singleBody[models.TaskDuplicate], error) {

@@ -25,10 +25,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestTaskDuplicateV2 mirrors the v1 TestTaskDuplicate webtest against the
-// /api/v2 custom action POST /tasks/{projecttask}/duplicate. The harness
-// (webHandlerTestV2.buildURL) only models base[/{id}] paths, so this action
-// endpoint drives the Echo+Huma stack directly via humaRequest/humaTokenFor.
+// TestTaskDuplicateV2 covers POST /tasks/{projecttask}/duplicate. It drives the
+// Echo+Huma stack directly (humaRequest/humaTokenFor) because webHandlerTestV2's
+// buildURL only models base[/{id}] paths, not action sub-paths.
 func TestTaskDuplicateV2(t *testing.T) {
 	t.Run("duplicates an accessible task", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -42,8 +41,7 @@ func TestTaskDuplicateV2(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), `"duplicated_task"`)
 		assert.Contains(t, rec.Body.String(), `"title":"task #2 done"`)
 
-		// Parse the response and assert a genuinely new task was created: the
-		// duplicate must carry an id different from the source task's id.
+		// A returned original task would also pass the title check above; assert a new id.
 		var resp struct {
 			DuplicatedTask struct {
 				ID int64 `json:"id"`
@@ -60,8 +58,7 @@ func TestTaskDuplicateV2(t *testing.T) {
 		token := humaTokenFor(t, &testuser1)
 
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/tasks/99999/duplicate", `{}`, token, "")
-		// A genuinely missing source task surfaces ErrTaskDoesNotExist (404),
-		// mirroring v1's TestTaskDuplicate "nonexistent task" case.
+		// Missing source task yields ErrTaskDoesNotExist (404), not the 403 of the permission cases below.
 		require.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
 	})
 
