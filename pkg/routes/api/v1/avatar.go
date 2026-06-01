@@ -21,15 +21,12 @@ import (
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
-	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 
-	"io"
+	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 
-	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v5"
 )
 
@@ -111,21 +108,11 @@ func UploadAvatar(c *echo.Context) (err error) {
 	}
 	defer src.Close()
 
-	// Validate we're dealing with an image
-	mime, err := mimetype.DetectReader(src)
-	if err != nil {
+	if err := avatar.StoreUploadedAvatar(s, u, src); err != nil {
 		_ = s.Rollback()
-		return err
-	}
-	if !strings.HasPrefix(mime.String(), "image") {
-		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
-	}
-	_, _ = src.Seek(0, io.SeekStart)
-
-	u.AvatarProvider = "upload"
-	err = upload.StoreAvatarFile(s, u, src)
-	if err != nil {
-		_ = s.Rollback()
+		if errors.Is(err, avatar.ErrNotAnImage) {
+			return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
+		}
 		return err
 	}
 
@@ -133,8 +120,6 @@ func UploadAvatar(c *echo.Context) (err error) {
 		_ = s.Rollback()
 		return err
 	}
-
-	avatar.FlushAllCaches(u)
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Avatar was uploaded successfully."})
 }
