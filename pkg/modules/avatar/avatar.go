@@ -17,6 +17,10 @@
 package avatar
 
 import (
+	"errors"
+	"io"
+	"strings"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/avatar/botmarble"
@@ -29,8 +33,12 @@ import (
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 
+	"github.com/gabriel-vasile/mimetype"
 	"xorm.io/xorm"
 )
+
+// ErrNotAnImage is returned by StoreUploadedAvatar when the uploaded file is not an image.
+var ErrNotAnImage = errors.New("uploaded file is no image")
 
 // Provider defines the avatar provider interface
 type Provider interface {
@@ -121,4 +129,29 @@ func GetProvider(u *user.User) Provider {
 	default:
 		return &empty.Provider{}
 	}
+}
+
+// StoreUploadedAvatar validates that src is an image, switches the user's avatar
+// provider to "upload", stores the image as the user's avatar and flushes all
+// cached avatars for the user. It returns ErrNotAnImage if src is not an image.
+func StoreUploadedAvatar(s *xorm.Session, u *user.User, src io.ReadSeeker) error {
+	mime, err := mimetype.DetectReader(src)
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(mime.String(), "image") {
+		return ErrNotAnImage
+	}
+	if _, err := src.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+
+	u.AvatarProvider = "upload"
+	if err := upload.StoreAvatarFile(s, u, src); err != nil {
+		return err
+	}
+
+	FlushAllCaches(u)
+
+	return nil
 }

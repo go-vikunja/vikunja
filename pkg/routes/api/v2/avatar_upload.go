@@ -18,23 +18,20 @@ package apiv2
 
 import (
 	"context"
-	"io"
+	"errors"
 	"net/http"
-	"strings"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/avatar"
-	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/gabriel-vasile/mimetype"
 )
 
 type avatarUploadInput struct {
-	// Broad allow-list because Huma's MimeTypeValidator rejects the part pre-handler; octet-stream covers programmatic clients. The real gate is mimetype.DetectReader in the handler.
+	// Broad allow-list because Huma's MimeTypeValidator rejects the part pre-handler; octet-stream covers programmatic clients. The real gate is the byte-level image check in avatar.StoreUploadedAvatar.
 	RawBody huma.MultipartFormFiles[struct {
 		Avatar huma.FormFile `form:"avatar" contentType:"image/png,image/jpeg,image/gif,image/webp,image/svg+xml,application/octet-stream" required:"true" doc:"The avatar image to upload. Must be an image; it is resized server-side and re-encoded as PNG."`
 	}]
@@ -86,24 +83,11 @@ func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody
 	src := in.RawBody.Data().Avatar
 	defer func() { _ = src.Close() }()
 
-	// Byte-level image check, same allow-list as v1's UploadAvatar.
-	mime, err := mimetype.DetectReader(src)
-	if err != nil {
+	if err := avatar.StoreUploadedAvatar(s, u, src); err != nil {
 		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-	if !strings.HasPrefix(mime.String(), "image") {
-		_ = s.Rollback()
-		return nil, huma.Error400BadRequest("Uploaded file is no image.")
-	}
-	if _, err := src.Seek(0, io.SeekStart); err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-
-	u.AvatarProvider = "upload"
-	if err := upload.StoreAvatarFile(s, u, src); err != nil {
-		_ = s.Rollback()
+		if errors.Is(err, avatar.ErrNotAnImage) {
+			return nil, huma.Error400BadRequest("Uploaded file is no image.")
+		}
 		return nil, translateDomainError(err)
 	}
 
@@ -111,8 +95,6 @@ func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
-
-	avatar.FlushAllCaches(u)
 
 	return &avatarUploadBody{Body: &models.Message{Message: "Avatar was uploaded successfully."}}, nil
 }
