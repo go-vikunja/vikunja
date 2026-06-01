@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -28,12 +29,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestHumaAdminProjects exercises the v2 admin gate via GET /api/v2/admin/projects.
-// It mirrors v1's TestAdmin_ListProjects but additionally asserts that the same
-// two-stage gate (license feature + instance admin) v1 uses on /admin carries
-// through to the Huma-backed /api/v2/admin group, returning 404 (not 403) on
-// failure. The RFC 9457 error body is asserted once globally in
-// TestHuma_ErrorShapeIsRFC9457, so here we only assert the status codes.
+// The error body shape is covered by TestHuma_ErrorShapeIsRFC9457; this test
+// only asserts gate status codes (404 on failure, matching v1).
 func TestHumaAdminProjects(t *testing.T) {
 	t.Run("non-admin user gets 404", func(t *testing.T) {
 		e, err := setupTestEnv()
@@ -54,9 +51,7 @@ func TestHumaAdminProjects(t *testing.T) {
 	t.Run("admin without the feature gets 404", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
-		// A valid license that lacks the admin panel feature still gates the
-		// route. Match the sibling subtests' set/defer-reset pattern so the
-		// license state never bleeds into other tests.
+		// Empty feature set = licensed instance without the admin feature.
 		license.SetForTests([]license.Feature{})
 		defer license.ResetForTests()
 
@@ -76,15 +71,23 @@ func TestHumaAdminProjects(t *testing.T) {
 
 		res := adminReq(t, e, http.MethodGet, "/api/v2/admin/projects", admin, "")
 		require.Equal(t, http.StatusOK, res.Code, res.Body.String())
-		body := res.Body.String()
-		// v2 wraps lists in the Paginated envelope.
-		assert.Contains(t, body, `"items":`)
-		assert.Contains(t, body, `"total":`)
-		// Project 6 is owned by user6, not shared with user1 — the admin list
-		// surfaces it regardless of ownership.
-		assert.Contains(t, body, `"id":6`)
-		// Project 22 is archived; the admin list includes archived projects.
-		assert.Contains(t, body, `"id":22`)
+
+		var envelope struct {
+			Items []struct {
+				ID int64 `json:"id"`
+			} `json:"items"`
+			Total int64 `json:"total"`
+		}
+		require.NoError(t, json.Unmarshal(res.Body.Bytes(), &envelope))
+
+		ids := make(map[int64]bool, len(envelope.Items))
+		for _, item := range envelope.Items {
+			ids[item.ID] = true
+		}
+		// Project 6 (owned by user6, not shared with user1) proves the list ignores ownership.
+		assert.True(t, ids[6], "expected project 6 in the admin list, got items %v", ids)
+		// Project 22 is archived, proving the list includes archived projects.
+		assert.True(t, ids[22], "expected archived project 22 in the admin list, got items %v", ids)
 	})
 
 	t.Run("unauthenticated caller gets 401", func(t *testing.T) {

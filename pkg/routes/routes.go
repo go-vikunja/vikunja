@@ -376,27 +376,15 @@ func noStoreCacheControl() echo.MiddlewareFunc {
 	}
 }
 
-// v2AdminPathPrefix is the URL prefix every gated admin operation lives under.
 const v2AdminPathPrefix = "/api/v2/admin"
 
-// gateV2AdminRoutes applies the existing v1 admin gate (license feature +
-// instance admin, both 404-on-failure) to every /api/v2/admin request and
-// passes everything else through untouched.
-//
-// v2 is a single Huma API mounted on the /api/v2 Echo group, so unlike v1 —
-// which builds a dedicated `/admin` Echo sub-group and attaches the gate as
-// group middleware — we can't simply construct a gated sub-group without
-// splitting the Huma API (which would split the OpenAPI spec, dropping admin
-// operations out of /api/v2/openapi.json). Instead we reuse the exact same
-// RequireFeature/RequireInstanceAdmin functions as a path-scoped middleware on
-// the shared group: the checks run before Huma's handler, in the same order as
-// v1 (feature first, then admin), and return the identical 404. Keeping one
-// Huma API means admin routes stay in the unified v2 spec and docs.
+// gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate (both
+// 404-on-failure) as path-scoped middleware: splitting v2 into a gated Echo
+// sub-group would split the Huma API and drop admin ops from the OpenAPI spec.
 func gateV2AdminRoutes() echo.MiddlewareFunc {
 	feature := RequireFeature(license.FeatureAdminPanel)
 	admin := RequireInstanceAdmin()
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		// Compose feature → admin → next, evaluated once at setup.
 		gated := feature(admin(next))
 		return func(c *echo.Context) error {
 			if strings.HasPrefix(c.Request().URL.Path, v2AdminPathPrefix) {
@@ -417,12 +405,8 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	// apply to v2 resource endpoints too.
 	setupRateLimit(a, config.RateLimitKind.GetString())
 	setupMetricsMiddleware(a)
-	// The admin gate must run after the token middleware (it reads the
-	// authenticated user from the JWT claims) and after the rate limit and
-	// metrics middleware so requests rejected by the gate are still rate
-	// limited and measured — RequireInstanceAdmin does a DB read per request,
-	// so an unauthenticated flood to /api/v2/admin/* would otherwise hit the
-	// DB unbounded. It is scoped by path so only /api/v2/admin/* is gated.
+	// Must come after rate limiting: the gate does a per-request admin DB read,
+	// so an unauthenticated flood to /api/v2/admin/* would otherwise be unbounded.
 	a.Use(gateV2AdminRoutes())
 
 	api := apiv2.NewAPI(e, a)
