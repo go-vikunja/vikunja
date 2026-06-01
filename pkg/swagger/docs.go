@@ -9790,8 +9790,7 @@ const docTemplate = `{
                     "enum": [
                         "none",
                         "manual",
-                        "filter",
-                        "manual"
+                        "filter"
                     ]
                 },
                 "created": {
@@ -9828,7 +9827,9 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "The title of this view",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this view was updated. You cannot change this value.",
