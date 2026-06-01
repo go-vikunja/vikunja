@@ -33,29 +33,17 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 )
 
-// avatarUploadInput is the multipart/form-data request for the avatar upload.
-// Huma's MultipartFormFiles renders the "avatar" field as a binary file in the
-// generated OpenAPI spec; the file bytes are read from in.RawBody.Data().Avatar.
 type avatarUploadInput struct {
-	// contentType lists the part Content-Types Huma's MimeTypeValidator accepts
-	// before our handler runs. Browsers set a real image Content-Type on the
-	// part (image/png, image/jpeg, ...) while programmatic clients often send
-	// application/octet-stream, so both must be allowed or a legitimate upload
-	// would be rejected with a 422 before reaching the handler. This is NOT the
-	// security gate: the real, byte-level image check is done in the handler via
-	// mimetype.DetectReader (the same allow-list v1 uses); the part Content-Type
-	// is client-controlled and must never be trusted on its own.
+	// Broad allow-list because Huma's MimeTypeValidator rejects the part pre-handler; octet-stream covers programmatic clients. The real gate is mimetype.DetectReader in the handler.
 	RawBody huma.MultipartFormFiles[struct {
 		Avatar huma.FormFile `form:"avatar" contentType:"image/png,image/jpeg,image/gif,image/webp,image/svg+xml,application/octet-stream" required:"true" doc:"The avatar image to upload. Must be an image; it is resized server-side and re-encoded as PNG."`
 	}]
 }
 
-// avatarUploadBody wraps the success message returned after an upload.
 type avatarUploadBody struct {
 	Body *models.Message
 }
 
-// RegisterAvatarRoutes wires the authenticated user's avatar upload onto the Huma API.
 func RegisterAvatarRoutes(api huma.API) {
 	tags := []string{"user"}
 
@@ -66,11 +54,9 @@ func RegisterAvatarRoutes(api huma.API) {
 		Method:      http.MethodPut,
 		Path:        "/user/settings/avatar",
 		Tags:        tags,
-		// Avatars can be larger than Huma's 1 MB default body limit; allow up to
-		// the configured max file size so legitimate uploads aren't rejected before
-		// the handler runs. Echo's global BodyLimit middleware still caps the total.
+		// +2 MB mirrors Echo's global BodyLimit overhead so a max-sized file isn't rejected by multipart boundary/header bytes.
 		// #nosec G115 - configured value won't exceed int64 max in practice.
-		MaxBodyBytes:  int64(config.GetMaxFileSizeInMBytes()) * 1024 * 1024,
+		MaxBodyBytes:  (int64(config.GetMaxFileSizeInMBytes()) + 2) * 1024 * 1024,
 		DefaultStatus: http.StatusOK,
 	}, avatarUpload)
 }
@@ -90,8 +76,7 @@ func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody
 	s := db.NewSession()
 	defer s.Close()
 
-	// Re-fetch the full user so AvatarFileID/Provider are current (the auth
-	// user from the JWT claims is partial).
+	// Re-fetch the full user: the auth user from the JWT claims is partial.
 	u, err := user.GetUserByID(s, authUser.ID)
 	if err != nil {
 		_ = s.Rollback()
@@ -101,7 +86,7 @@ func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody
 	src := in.RawBody.Data().Avatar
 	defer func() { _ = src.Close() }()
 
-	// Validate we're dealing with an image (same allow-list as v1's UploadAvatar).
+	// Byte-level image check, same allow-list as v1's UploadAvatar.
 	mime, err := mimetype.DetectReader(src)
 	if err != nil {
 		_ = s.Rollback()
