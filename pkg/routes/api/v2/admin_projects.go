@@ -27,16 +27,11 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-// AdminProjectList.ReadAll returns []*models.Project, so the wire shape is a
-// plain paginated list of projects.
 type adminProjectListBody struct {
 	Body Paginated[*models.Project]
 }
 
-// RegisterAdminProjectRoutes wires the admin project list onto the Huma API.
-// The instance-admin + admin-panel-license gate is applied by the Echo
-// middleware on the /api/v2/admin path prefix (see gateV2AdminRoutes in
-// pkg/routes/routes.go), not here — there is no per-handler permission check.
+// Permissions are enforced by the gateV2AdminRoutes path middleware, not per-handler.
 func RegisterAdminProjectRoutes(api huma.API) {
 	tags := []string{"admin"}
 
