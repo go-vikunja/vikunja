@@ -37,10 +37,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// avatarUploadPath is the v2 endpoint under test.
 const avatarUploadPath = "/api/v2/user/settings/avatar"
 
-// pngBytes builds a small valid PNG so StoreAvatarFile can decode + resize it.
+// pngBytes builds a small valid PNG so StoreAvatarFile can decode and resize it.
 func pngBytes(t *testing.T) []byte {
 	t.Helper()
 	img := image.NewRGBA(image.Rect(0, 0, 8, 8))
@@ -54,10 +53,7 @@ func pngBytes(t *testing.T) []byte {
 	return buf.Bytes()
 }
 
-// multipartAvatarBody returns a multipart/form-data body with a single
-// "avatar" file field plus the matching Content-Type header (with boundary).
-// CreateFormFile sets the part's Content-Type to application/octet-stream, which
-// mirrors how many programmatic clients upload.
+// multipartAvatarBody uses CreateFormFile, which sets the part Content-Type to application/octet-stream, mirroring how many programmatic clients upload.
 func multipartAvatarBody(t *testing.T, fieldName, filename string, content []byte) (*bytes.Buffer, string) {
 	t.Helper()
 	buf := &bytes.Buffer{}
@@ -70,9 +66,7 @@ func multipartAvatarBody(t *testing.T, fieldName, filename string, content []byt
 	return buf, w.FormDataContentType()
 }
 
-// multipartAvatarBodyWithPartType is like multipartAvatarBody but lets the
-// caller set the part's Content-Type header, mirroring how a browser declares a
-// real image type (e.g. image/png) on the file part.
+// multipartAvatarBodyWithPartType sets a caller-chosen part Content-Type, mirroring how a browser declares a real image type (e.g. image/png).
 func multipartAvatarBodyWithPartType(t *testing.T, fieldName, filename, partContentType string, content []byte) (*bytes.Buffer, string) {
 	t.Helper()
 	buf := &bytes.Buffer{}
@@ -88,7 +82,6 @@ func multipartAvatarBodyWithPartType(t *testing.T, fieldName, filename, partCont
 	return buf, w.FormDataContentType()
 }
 
-// uploadAvatarRequest dispatches a multipart avatar upload against a prepared echo.Echo.
 func uploadAvatarRequest(t *testing.T, e *echo.Echo, body *bytes.Buffer, contentType, token string) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodPut, avatarUploadPath, body)
@@ -112,7 +105,6 @@ func TestAvatarUpload(t *testing.T) {
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), "uploaded successfully")
 
-		// The provider must be flipped to "upload" and an avatar file stored.
 		s := db.NewSession()
 		defer s.Close()
 		u, err := user.GetUserByID(s, testuser1.ID)
@@ -122,9 +114,7 @@ func TestAvatarUpload(t *testing.T) {
 	})
 
 	t.Run("Real image content-type on the part", func(t *testing.T) {
-		// Browsers declare a real image Content-Type (e.g. image/png) on the
-		// file part. Huma's MimeTypeValidator must accept it so the request
-		// reaches the handler instead of being rejected with a 422.
+		// MimeTypeValidator must accept a real image part type or it 422s before the handler.
 		e, err := setupTestEnv()
 		require.NoError(t, err)
 		token := humaTokenFor(t, &testuser1)
@@ -151,7 +141,6 @@ func TestAvatarUpload(t *testing.T) {
 		rec := uploadAvatarRequest(t, e, body, contentType, token)
 		require.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
 
-		// The provider must NOT have been changed.
 		s := db.NewSession()
 		defer s.Close()
 		u, err := user.GetUserByID(s, testuser1.ID)
@@ -177,8 +166,7 @@ func TestAvatarUpload(t *testing.T) {
 		e.ServeHTTP(rec, req)
 		require.Equal(t, http.StatusOK, rec.Code)
 
-		// Navigate the spec loosely: Huma can emit `type` as either a string
-		// or an array, so avoid binding it to a concrete Go type.
+		// Loose decode: Huma can emit `type` as a string or an array.
 		var spec map[string]any
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &spec))
 
