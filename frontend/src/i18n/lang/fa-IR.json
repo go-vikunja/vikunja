@@ -1,1 +1,19 @@
-{}
+{
+	"home": {
+		"welcomeNight": "شب بخیر {username}!",
+		"welcomeNightOwl": "سلام جغد شب‌زنده‌دار {username}",
+		"welcomeNightBurning": "داری تا دیروقت کار می‌کنی، {username}؟",
+		"welcomeNightQuiet": "ساعات بی سروصدا، {username}",
+		"welcomeNightLate": "دیر وقته، {username}",
+		"welcomeNightMoonlit": "برنامه‌ریزی زیر نور ماه، {username}؟",
+		"welcomeMorning": "صبح بخیر {username}!",
+		"welcomeMorningHey": "سلام {username}، آماده‌ای شروع کنیم؟",
+		"welcomeMorningFresh": "شروعی تازه، {username}",
+		"welcomeMorningCoffee": "قهوه و کارها، {username}؟",
+		"welcomeMorningRise": "بلند شو و برنامه‌ریزی کن، {username}"
+	},
+	"ready": {
+		"loading": "Vikunja در حال بارگذاری است…",
+		"checkApiUrl": "لطفاً بررسی کنید که آدرس api صحیح باشد."
+	}
+}
