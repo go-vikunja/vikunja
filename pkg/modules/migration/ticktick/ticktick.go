@@ -146,12 +146,16 @@ func sortParentsBeforeChildren(tasks []*tickTickTask) []*tickTickTask {
 		tasksByID[t.TaskID] = t
 	}
 
-	placed := make(map[tickTickNumber]bool, len(tasks))
+	// placed is keyed by the task itself rather than by TaskID: malformed
+	// exports can collapse several taskIds to 0 (see tickTickNumber), and
+	// keying by ID would treat every zero-ID task after the first as already
+	// placed and silently drop it.
+	placed := make(map[*tickTickTask]bool, len(tasks))
 	result := make([]*tickTickTask, 0, len(tasks))
 
 	var place func(t *tickTickTask)
 	place = func(t *tickTickTask) {
-		if placed[t.TaskID] {
+		if placed[t] {
 			return
 		}
 		// If this task has a parent that we know about, place the parent first.
@@ -160,7 +164,7 @@ func sortParentsBeforeChildren(tasks []*tickTickTask) []*tickTickTask {
 				place(parent)
 			}
 		}
-		placed[t.TaskID] = true
+		placed[t] = true
 		result = append(result, t)
 	}
 
