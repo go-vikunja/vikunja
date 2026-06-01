@@ -17,6 +17,7 @@
 package avatar
 
 import (
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/avatar/botmarble"
 	"code.vikunja.io/api/pkg/modules/avatar/empty"
@@ -27,6 +28,8 @@ import (
 	"code.vikunja.io/api/pkg/modules/avatar/openid"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
+
+	"xorm.io/xorm"
 )
 
 // Provider defines the avatar provider interface
@@ -56,6 +59,43 @@ func FlushAllCaches(u *user.User) {
 			log.Errorf("Error flushing avatar cache: %v", err)
 		}
 	}
+}
+
+// GetAvatarForUsername resolves and renders the avatar for a username. It is the
+// shared core behind both the v1 and v2 avatar endpoints: it looks up the user,
+// tolerates an unknown/disabled user (returning the default placeholder rather
+// than an error, since avatars are loaded via <img> tags), picks the right
+// provider (empty for unknown users, botmarble for bots, otherwise the user's
+// configured provider) and clamps the size to the server's configured maximum.
+func GetAvatarForUsername(s *xorm.Session, username string, size int64) (data []byte, mime string, err error) {
+	u, err := user.GetUserWithEmail(s, &user.User{Username: username})
+	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
+		log.Errorf("Error getting user for avatar: %v", err)
+		return nil, "", err
+	}
+
+	found := err == nil || user.IsErrUserStatusError(err)
+
+	provider := GetProvider(u)
+	if !found {
+		// Unknown user: serve the default placeholder.
+		provider = &empty.Provider{}
+	}
+	if found && u.IsBot() {
+		provider = &botmarble.Provider{}
+	}
+
+	if size > config.ServiceMaxAvatarSize.GetInt64() {
+		size = config.ServiceMaxAvatarSize.GetInt64()
+	}
+
+	data, mime, err = provider.GetAvatar(u, size)
+	if err != nil {
+		log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
+		return nil, "", err
+	}
+
+	return data, mime, nil
 }
 
 // GetProvider returns the appropriate avatar provider for a user

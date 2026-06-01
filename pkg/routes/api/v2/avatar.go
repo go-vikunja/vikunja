@@ -20,13 +20,8 @@ import (
 	"context"
 	"net/http"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/avatar"
-	"code.vikunja.io/api/pkg/modules/avatar/botmarble"
-	"code.vikunja.io/api/pkg/modules/avatar/empty"
-	"code.vikunja.io/api/pkg/user"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -72,10 +67,8 @@ func RegisterAvatarRoutes(api huma.API) {
 }
 
 func avatarGet(ctx context.Context, in *avatarInput) (*avatarResponse, error) {
-	// Pull auth so the endpoint behaves as authenticated even though it reads
-	// no per-user permission (any authenticated caller may view any avatar,
-	// matching v1). The token middleware already rejects anonymous requests;
-	// this surfaces a clean 401 if a handler is somehow reached without auth.
+	// Authenticated but no per-user check — any authenticated caller may view any
+	// avatar (matching v1); authFromCtx just surfaces a clean 401 if auth is missing.
 	if _, err := authFromCtx(ctx); err != nil {
 		return nil, err
 	}
@@ -83,31 +76,10 @@ func avatarGet(ctx context.Context, in *avatarInput) (*avatarResponse, error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	u, err := user.GetUserWithEmail(s, &user.User{Username: in.Username})
-	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
-		log.Errorf("Error getting user for avatar: %v", err)
-		return nil, translateDomainError(err)
-	}
-
-	found := err == nil || user.IsErrUserStatusError(err)
-
-	avatarProvider := avatar.GetProvider(u)
-	if !found {
-		// Unknown user: serve the default placeholder, exactly like v1.
-		avatarProvider = &empty.Provider{}
-	}
-	if found && u.IsBot() {
-		avatarProvider = &botmarble.Provider{}
-	}
-
-	size := in.Size
-	if size > config.ServiceMaxAvatarSize.GetInt64() {
-		size = config.ServiceMaxAvatarSize.GetInt64()
-	}
-
-	a, mimeType, err := avatarProvider.GetAvatar(u, size)
+	// Avatar resolution (user lookup, provider selection, size clamping) is
+	// shared with the v1 handler; only the transport differs.
+	a, mimeType, err := avatar.GetAvatarForUsername(s, in.Username, in.Size)
 	if err != nil {
-		log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
 		return nil, translateDomainError(err)
 	}
 
