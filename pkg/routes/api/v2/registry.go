@@ -23,14 +23,20 @@ var routeRegistrars []func(huma.API)
 // AddRouteRegistrar records a resource's route-registration function. Each
 // resource file calls this from an init() so new resources never touch the
 // central wiring.
+//
+// It mutates the package-level routeRegistrars slice without synchronization, so
+// it is NOT safe for concurrent use. Call it only during package initialization
+// (from an init() func), never at runtime.
 func AddRouteRegistrar(f func(huma.API)) {
 	routeRegistrars = append(routeRegistrars, f)
 }
 
 // RegisterAll runs every registrar collected via AddRouteRegistrar, then
-// enables AutoPatch. Registrars run in init() order (filename order across the
-// package); the order they register routes in is irrelevant. AutoPatch runs
-// last so it can synthesise PATCH counterparts for all GET + PUT pairs.
+// enables AutoPatch. The order in which registrars run is unspecified (Go does
+// not guarantee a stable init order across files) and does not matter: each
+// resource registers a distinct set of routes. AutoPatch runs last — inside
+// RegisterAll, after every registrar — so it can synthesise PATCH counterparts
+// for all GET + PUT pairs.
 func RegisterAll(api huma.API) {
 	for _, r := range routeRegistrars {
 		r(api)

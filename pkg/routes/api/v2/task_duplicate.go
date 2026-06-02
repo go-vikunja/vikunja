@@ -27,8 +27,7 @@ import (
 )
 
 // RegisterTaskDuplicateRoutes wires the task-duplicate action onto the Huma API.
-func init() { AddRouteRegistrar(RegisterTaskDuplicateRoutes) }
-
+//
 // TaskDuplicate is a CRUDable Create, so the handler reuses handler.DoCreate
 // (its CanCreate enforces read-source + write-project); the only custom part is
 // taking TaskID from the path rather than a request body.
@@ -44,6 +43,8 @@ func RegisterTaskDuplicateRoutes(api huma.API) {
 		Tags:        tags,
 	}, tasksDuplicate)
 }
+
+func init() { AddRouteRegistrar(RegisterTaskDuplicateRoutes) }
 
 func tasksDuplicate(ctx context.Context, in *struct {
 	TaskID int64 `path:"projecttask" doc:"The numeric id of the task to duplicate."`

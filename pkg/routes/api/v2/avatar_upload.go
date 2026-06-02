@@ -41,8 +41,6 @@ type avatarUploadBody struct {
 	Body *models.Message
 }
 
-func init() { AddRouteRegistrar(RegisterAvatarUploadRoutes) }
-
 func RegisterAvatarUploadRoutes(api huma.API) {
 	tags := []string{"user"}
 
@@ -59,6 +57,8 @@ func RegisterAvatarUploadRoutes(api huma.API) {
 		DefaultStatus: http.StatusOK,
 	}, avatarUpload)
 }
+
+func init() { AddRouteRegistrar(RegisterAvatarUploadRoutes) }
 
 func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody, error) {
 	a, err := authFromCtx(ctx)
