@@ -850,6 +850,11 @@
                             "comment": "The filter to search for group objects in the ldap directory. Only used when `groupsyncenabled` is set to `true`."
                         },
                         {
+                            "key": "groupsyncuseserviceaccount",
+                            "default_value": "false",
+                            "comment": "If true, Vikunja re-binds as the service account (binddn/bindpassword) before searching for groups during group sync. Enable this when the authenticating user does not have sufficient rights to enumerate group membership in the directory."
+                        },
+                        {
                             "key": "avatarsyncattribute",
                             "default_value": "",
                             "comment": "The LDAP attribute where an image, decoded as raw bytes, can be found. If provided, Vikunja will use the value as avatar."
