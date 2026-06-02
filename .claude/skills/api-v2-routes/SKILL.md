@@ -84,17 +84,23 @@ Every handler: pull auth with `authFromCtx(ctx)`, call the matching `handler.Do*
 - **Create / Update** take a `Body Model` input and return `*singleBody[Model]`. Update sets `in.Body.ID = in.ID` (URL wins over body).
 - **Delete** returns `*emptyBody`.
 
-### 3. Wire it into the group
+### 3. Self-register the resource
 
-In `pkg/routes/routes.go`, `registerAPIRoutesV2`, add the registration **before** `EnableAutoPatch(api)`:
+Resources self-register — **you do not edit `pkg/routes/routes.go`**. In your resource file, add an `init()` that hands your registrar to `AddRouteRegistrar`:
 
 ```go
-apiv2.RegisterFooRoutes(api)
-// ... other resources ...
-apiv2.EnableAutoPatch(api)   // MUST stay last — walks registered GET+PUT pairs
+func init() { AddRouteRegistrar(RegisterFooRoutes) }
+
+func RegisterFooRoutes(api huma.API) { ... }
 ```
 
-That's the only edit outside the v2 package for a standard CRUD resource.
+`registerAPIRoutesV2` in `routes.go` calls `apiv2.RegisterAll(api)`, which runs every registered registrar (in init/filename order — route order is irrelevant) and then `EnableAutoPatch`. New resources touch zero shared lines, so they never conflict on `routes.go`.
+
+Notes:
+
+- **Give each registrar a DISTINCT name.** They share package `apiv2`, so two resources both exporting `RegisterAvatarRoutes` collide and won't compile — that actually happened and the upload one had to be renamed (`RegisterAvatarRoutes` for the binary endpoint vs `RegisterAvatarUploadRoutes` for the upload). Name yours after the specific resource.
+- **Config-gated resources check the flag inside the registrar.** `RegisterAll` runs at request-router-setup time, after config is loaded, so a `RegisterFooRoutes` may early-return (or skip individual `Register` calls) based on `config.FooEnabled.GetBool()`. Don't try to gate at `init()` time — config isn't loaded yet.
+- **AutoPatch is automatic.** `RegisterAll` calls `EnableAutoPatch` after all registrars — don't call it yourself, and don't register a manual PATCH (see "What's automatic").
 
 ## REST verb conventions (v2 inverts v1)
 
@@ -144,7 +150,7 @@ Otherwise the same rules apply: register with the `Register` wrapper, pull auth 
 
 ## What's automatic — do NOT hand-roll
 
-- **PATCH** — `EnableAutoPatch` synthesises a JSON-Merge-Patch PATCH for every GET+PUT pair. Don't register PATCH yourself.
+- **PATCH** — `EnableAutoPatch` synthesises a JSON-Merge-Patch PATCH for every GET+PUT pair. `RegisterAll` invokes it after all registrars, so it's automatic — don't call `EnableAutoPatch` and don't register PATCH yourself.
 - **API token permissions** — `collectRoutesForAPITokens` walks the Echo router after registration, so your new routes land in the v2 token table automatically under the same `(group, permission)` keys as their v1 names. PATCH is intentionally not stored; `CanDoAPIRoute` accepts it as an alias for the stored PUT (see `pkg/models/api_routes.go`).
 - **Security schemes** — `JWTKeyAuth` + `APITokenAuth` are declared globally in `NewAPI`. For a public endpoint, set `Security: []map[string][]string{}` on that operation and add its path to `unauthenticatedAPIPaths` in `routes.go`.
 - **Error shape** — `translateDomainError` maps any `web.HTTPErrorProcessor` (e.g. `ErrFooDoesNotExist`) onto Huma's status error, producing RFC 9457 `application/problem+json`. Errors without HTTP semantics become 500.
@@ -169,7 +175,7 @@ Mirror the v1 webtest shape so v2 parity is readable side-by-side. Use the `webH
 - v2-only behaviour (ETag/304, PATCH merge-patch) goes in separate top-level `Test<Resource>_*` funcs using the `humaRequest`/`humaTokenFor` helpers in `pkg/webtests/huma_helpers_test.go`.
 - The RFC 9457 error-body shape is asserted **once** globally in `TestHuma_ErrorShapeIsRFC9457` — don't re-assert the full problem+json shape per resource, just the status code.
 
-Run with `mage test:filter Test<Resource>` while iterating. Save output to a file per the project test-output rule.
+Run with `mage test:filter Test<Resource>` while iterating. **Caveat:** `mage test:filter` injects `-short`, which makes `pkg/webtests` skip entirely (the suite short-circuits in short mode), so it silently reports success without running your webtest. To actually exercise a single webtest, run it directly: `go test -run '<Name>' ./pkg/webtests/`. Save output to a file per the project test-output rule.
 
 ## Related
 
