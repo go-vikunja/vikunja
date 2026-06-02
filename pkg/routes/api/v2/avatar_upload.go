@@ -41,7 +41,7 @@ type avatarUploadBody struct {
 	Body *models.Message
 }
 
-func RegisterAvatarRoutes(api huma.API) {
+func RegisterAvatarUploadRoutes(api huma.API) {
 	tags := []string{"user"}
 
 	Register(api, huma.Operation{
