@@ -8,7 +8,10 @@
 		<slot />
 	</span>
 
-	<Teleport to="body">
+	<Teleport
+		v-if="canHover"
+		to="body"
+	>
 		<CustomTransition name="fade">
 			<div
 				v-if="showTooltip"
@@ -82,6 +85,7 @@
 <script setup lang="ts">
 import {ref, computed, onUnmounted, nextTick} from 'vue'
 import {computePosition, flip, offset, shift} from '@floating-ui/dom'
+import {useMediaQuery} from '@vueuse/core'
 
 import type {ITask} from '@/modelTypes/ITask'
 import {getTaskIdentifier} from '@/models/task'
@@ -100,6 +104,9 @@ const props = defineProps<{
 
 const HOVER_DELAY = 1000 // 1 second
 const MAX_DESCRIPTION_LENGTH = 150
+
+// Taps on touch devices emulate mouseenter, which would show the tooltip unexpectedly.
+const canHover = useMediaQuery('(hover: hover) and (pointer: fine)')
 
 const triggerRef = ref<HTMLElement | null>(null)
 const tooltipRef = ref<HTMLElement | null>(null)
@@ -152,6 +159,10 @@ async function updatePosition() {
 }
 
 function handleMouseEnter() {
+	if (!canHover.value) {
+		return
+	}
+
 	// Clear any existing timeout
 	if (hoverTimeout) {
 		clearTimeout(hoverTimeout)

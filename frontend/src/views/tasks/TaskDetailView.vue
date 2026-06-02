@@ -344,11 +344,11 @@
 					</div>
 					
 					<!-- Reactions -->
-					<Reactions 
+					<Reactions
 						v-model="task.reactions" 
 						entity-kind="tasks"
 						:entity-id="task.id"
-						class="details"
+						class="details d-print-none"
 						:disabled="!canWrite"
 					/>
 

@@ -71,7 +71,6 @@
 			"resetPassword": "Setz diis Passwort zrugg",
 			"resetPasswordAction": "Schick mir en Passwort zruggsetz Link",
 			"resetPasswordSuccess": "Überprüfe deinen Posteingang! Du solltest eine E-Mail mit Anweisungen zum Zurücksetzen deines Passwortes haben.",
-			"passwordsDontMatch": "Passwörter stimmed nid überiih",
 			"confirmEmailSuccess": "Du hesch dini E-Mail erfolgriich bestätigt! Du chasch dich jetzt iihlogge.",
 			"totpTitle": "Zweifaktor Authentifizierigs Ziffere",
 			"totpPlaceholder": "z.B. 123456",
@@ -108,13 +107,24 @@
 			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut."
 		},
 		"settings": {
+			"bots": {
+				"title": "Bot-Accounts",
+				"description": "Bot-Accounts gehören zu dir und können nur die API nutzen. Sie können zu Projekten, zugewiesenen Aufgaben hinzugefügt und mit API-Token authentifiziert werden und sich nicht selbst anmelden.",
+				"namePlaceholder": "Mein Assistent",
+				"create": "Bot Erstellen",
+				"enable": "Aktivieren",
+				"badge": "Bot",
+				"delete": {
+					"header": "Diesen Bot-Account löschen",
+					"text1": "Bist Du sicher, dass Du den Bot-Account \"{username}\" löschen möchtest?",
+					"text2": "Dies ist unwiderruflich. Alle API-Token dieses Bots werden widerrufen."
+				}
+			},
 			"title": "Iihstellige",
 			"newPasswordTitle": "Diis Passwort aktualisierä",
 			"newPassword": "Neues Passwort",
-			"newPasswordConfirm": "Bestätigung des neuen Passworts",
 			"currentPassword": "Aktuelles Passwort",
 			"currentPasswordPlaceholder": "Diis jetzige Passwort",
-			"passwordsDontMatch": "Dis neue Passwort und siini Bestätigung stimmed nid überiih.",
 			"passwordUpdateSuccess": "Dis Passwort isch erfolgriich aktualisiert wordä.",
 			"updateEmailTitle": "Aktualisiere deine E-Mail-Adresse",
 			"updateEmailNew": "Neue E-Mail-Adresse",
@@ -135,6 +145,11 @@
 				"weekStart": "D'Wuche fangt ah am",
 				"weekStartSunday": "Sunntig",
 				"weekStartMonday": "Määntig",
+				"weekStartTuesday": "Dienstag",
+				"weekStartWednesday": "Mittwoch",
+				"weekStartThursday": "Donnerstag",
+				"weekStartFriday": "Freitag",
+				"weekStartSaturday": "Samstag",
 				"language": "Sproch",
 				"defaultProject": "Standardprojekt",
 				"defaultView": "Standardansicht",
@@ -204,6 +219,13 @@
 				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}",
 				"apiTokenHint": "Du kannst auch ein API-Token mit CalDAV-Berechtigung verwenden. Erstelle eins unter {link}."
 			},
+			"feeds": {
+				"title": "Atom-Feed",
+				"howTo": "Du kannst deine Vikunja-Benachrichtigungen von jedem Atom-kompatiblen Feed-Reader abonnieren. Benutze die folgende URL:",
+				"usernameIs": "Dein Anmeldename für das Feed lautet: {0}",
+				"apiTokenHint": "Authentifiziere dich mit einem API-Token mit der {scope} Berechtigung. Erstellen eins unter {link}.",
+				"tokenTitle": "Atom-Feed"
+			},
 			"avatar": {
 				"title": "Herr Der Elemente",
 				"initials": "Initialä",
@@ -224,7 +246,6 @@
 			},
 			"appearance": {
 				"title": "Farbschema",
-				"setSuccess": "Änderung des Farbschemas auf {colorScheme} gespeichert",
 				"colorScheme": {
 					"light": "Hell",
 					"system": "System",
@@ -253,7 +274,6 @@
 				"expired": "Dieses Token ist {ago} abgelaufen.",
 				"tokenCreatedSuccess": "Hier ist dein neues API Token: {token}",
 				"tokenCreatedNotSeeAgain": "Speichere es an einem sicheren Ort, du wirst es nicht mehr sehen!",
-				"selectAll": "Alle auswählen",
 				"presets": {
 					"title": "Voreinstellungen",
 					"readOnly": "Nur Leserechte",
@@ -500,7 +520,8 @@
 			"bucketTitleSavedSuccess": "Der Spaltenname wurde erfolgreich gespeichert.",
 			"bucketLimitSavedSuccess": "Das Spaltenlimit wurde erfolgreich gespeichert.",
 			"collapse": "Spalte einklappen",
-			"bucketLimitReached": "Du hast das Limit dieses Buckets erreicht. Entferne Aufgaben oder erhöhe das Limit, um neue Aufgaben hinzuzufügen."
+			"bucketLimitReached": "Du hast das Limit dieses Buckets erreicht. Entferne Aufgaben oder erhöhe das Limit, um neue Aufgaben hinzuzufügen.",
+			"bucketOptions": "Bucketoptionen"
 		},
 		"pseudo": {
 			"favorites": {
@@ -556,16 +577,7 @@
 			"titlePlaceholder": "De Name für de g'speicheret Filter chunt da ahne…",
 			"description": "Beschriibig",
 			"descriptionPlaceholder": "Gib eine Beschreibung für diesen Filter ein, drücke '/' für mehr Optionen…",
-			"includeNulls": "Uufgabe ohni Wert iihbezieh",
-			"requireAll": "Alli Filter mend wahr sii, demits die Uufgab ahzeigt",
-			"showDoneTasks": "Zeig die fertige Uufgabe",
-			"sortAlphabetically": "Alphabetisch sortieren",
-			"enablePriority": "Filter nach Priorität aktiviere",
-			"enablePercentDone": "Filter nach Fortschritt aktivieren",
-			"dueDateRange": "Fälligkeitsberiich",
-			"startDateRange": "Startdatumsbreiich",
-			"endDateRange": "Enddatumsberiich",
-			"reminderRange": "Errinnerigs Datumbereich"
+			"includeNulls": "Uufgabe ohni Wert iihbezieh"
 		},
 		"create": {
 			"title": "Neuer gespeicherter Filter",
@@ -583,7 +595,6 @@
 			"success": "De filter isch erfolgriich g'speichered wore."
 		},
 		"query": {
-			"title": "Abfrage",
 			"placeholder": "Gib eine Suche oder Filterabfrage ein…",
 			"help": {
 				"intro": "Um Aufgaben zu filtern, kannst du eine SQL-ähnliche Abfragesyntax verwenden. Du kannst die folgenden Felder in deinem Filter verwenden:",
@@ -659,7 +670,6 @@
 	"migrate": {
 		"title": "Aus anderen Diensten importieren",
 		"titleService": "Dini Date vo {name} in Vikunja importiere",
-		"import": "Dini Date in Vikunja importiere",
 		"description": "Klick ufs Logo une vo eine vo de Drittabüüter um aahzfange.",
 		"descriptionDo": "Vikunja importiert alli Liste, Uufgabe, Notize, Erinnerige und Dateie, wo du Zuegriff druff hesch.",
 		"authorize": "Gib Vikunja zuegriff uf din {name} Account, idem du une uf de Chnopf drucksch.",
@@ -676,7 +686,6 @@
 			"description": "Importiere Aufgaben aus einer CSV-Datei mit eigener Spaltenzuordnung.",
 			"uploadDescription": "Wähle eine CSV-Datei, um sie zu importieren. Die Datei sollte Aufgabendaten mit Kopfzeilen in der ersten Zeile enthalten.",
 			"selectFile": "CSV-Datei auswählen",
-			"columnMapping": "Spaltenzuordnung",
 			"columnMappingDescription": "Du kannst jede Spalte in der CSV-Datei einem Task-Attribut zu. Vikunja hat die wahrscheinlichsten Zuordnungen automatisch erkannt. Die Vorschau unten wird automatisch aktualisiert, wenn Du die Einstellungen änderst.",
 			"parsingOptions": "Parsing-Optionen",
 			"delimiter": "Trennzeichen",
@@ -686,10 +695,8 @@
 			"example": "z.B.",
 			"preview": "Vorschau",
 			"previewDescription": "Die ersten 5 von {count} Aufgaben werden angezeigt.",
-			"previewErrors": "{count} Zeilen hatten Fehler beim Parsen und werden übersprungen.",
 			"import": "Aufgaben importieren",
 			"untitled": "Unbenannte Aufgabe",
-			"completed": "Abgeschlossen",
 			"ignore": "Ignorieren",
 			"delimiters": {
 				"comma": "Komma (,)",
@@ -704,7 +711,6 @@
 		"manage": "Label migriere",
 		"description": "Klicke auf ein Label um es zu editieren. Du kannst alle Labels, welche du erstellt hast, editieren. Du kannst alle Labels, welche mit einer Aufgabe verknüpft sind, auf die du Zugriff hast, benutzen.",
 		"newCTA": "Du hesch momentan kei Labels.",
-		"search": "Schriib, um nachemne Label z'sueche…",
 		"create": {
 			"header": "Neus Label",
 			"title": "Label erstellen",
@@ -713,7 +719,6 @@
 		},
 		"edit": {
 			"header": "Label editiere",
-			"forbidden": "Du kannst dieses Label nicht bearbeiten, da es nicht dir gehört.",
 			"success": "Da Label isch erfolgriich aktualisiert wore."
 		},
 		"deleteSuccess": "Da Label isch erfolgriich g'chüblet wore.",
@@ -721,7 +726,6 @@
 			"title": "Titl",
 			"titlePlaceholder": "Labeltitel da ahgeh…",
 			"description": "Beschriibig",
-			"descriptionPlaceholder": "Label Beschriibig",
 			"color": "Farb"
 		}
 	},
@@ -740,7 +744,9 @@
 		"upcoming": "Ahstehänd",
 		"settings": "Iihstellige",
 		"imprint": "Immpressum",
-		"privacy": "Dateschutzerchlärig"
+		"privacy": "Dateschutzerchlärig",
+		"closeSidebar": "Seitenleiste schließen",
+		"home": "Vikunja Startseite"
 	},
 	"misc": {
 		"loading": "Ladä…",
@@ -748,16 +754,13 @@
 		"delete": "Chüble",
 		"confirm": "Bestätige",
 		"cancel": "Abbreche",
-		"refresh": "Neu lade",
 		"disable": "Deaktiviere",
 		"copy": "I'd Zwüscheablaag kopiere",
 		"copyError": "Kopieren in Zwischenablage fehlgeschlagen",
-		"search": "Sueche",
 		"searchPlaceholder": "Schriib zum sueche…",
 		"previous": "Vorherige",
 		"next": "Wiiter",
 		"poweredBy": "Unterstützt vo Vikunja",
-		"info": "Informationä",
 		"create": "Erstellä",
 		"doit": "Machs!",
 		"saving": "Speichere…",
@@ -775,9 +778,15 @@
 		"createdBy": "Erstellt von {0}",
 		"actions": "Aktionen",
 		"cannotBeUndone": "Dies kann nicht rückgängig gemacht werden!",
-		"avatarOfUser": "{user}'s Profilbild"
+		"avatarOfUser": "{user}'s Profilbild",
+		"closeBanner": "Banner schließen",
+		"closeDialog": "Dialog schließen",
+		"closeQuickActions": "Schnellaktionen schließen",
+		"skipToContent": "Überspringen und zum Hauptinhalt gehen",
+		"sortBy": "Sortieren nach"
 	},
 	"input": {
+		"projectColor": "Projektfarbe",
 		"resetColor": "Farb zruggsetze",
 		"datepicker": {
 			"today": "Hütt",
@@ -790,15 +799,12 @@
 		},
 		"editor": {
 			"edit": "Bearbeitä",
-			"done": "Fertig",
 			"heading1": "Überschrift 1",
 			"heading1Tooltip": "Große Überschrift.",
 			"heading2": "Überschrift 2",
 			"heading2Tooltip": "Mittlere Überschrift.",
 			"heading3": "Überschrift 3",
 			"heading3Tooltip": "Kleine Überschrift.",
-			"headingSmaller": "Chliini Überschrift",
-			"headingBigger": "Grösseri Überschrift",
 			"bold": "Fett",
 			"italic": "Kursiiv",
 			"strikethrough": "Duregstriche",
@@ -809,17 +815,13 @@
 			"quoteTooltip": "Erfasse ein Zitat.",
 			"bulletList": "Stichpunktliste",
 			"bulletListTooltip": "Erstelle eine einfache Stichpunktliste.",
-			"unorderedList": "Ungeordnete Liste",
 			"orderedList": "Geordnete Liste",
 			"orderedListTooltip": "Erstelle eine Liste mit Nummerierung.",
-			"cleanBlock": "Formatierig Lösche",
 			"link": "Link",
 			"image": "Bild",
 			"imageTooltip": "Lade ein Bild von deinem PC hoch.",
 			"horizontalRule": "Horizontalä Strich",
 			"horizontalRuleTooltip": "Teile einen Bereich.",
-			"sideBySide": "Nebedenand",
-			"guide": "Hilfsliniä",
 			"text": "Text",
 			"textTooltip": "Einfach einen Text tippen.",
 			"taskList": "Aufgabenliste",
@@ -860,6 +862,7 @@
 			"date": "Datum",
 			"ranges": {
 				"today": "Heute",
+				"tomorrow": "Morgen",
 				"thisWeek": "Diese Woche",
 				"restOfThisWeek": "Der Rest dieser Woche",
 				"nextWeek": "Nächste Woche",
@@ -928,9 +931,7 @@
 		}
 	},
 	"task": {
-		"task": "Uufgab",
 		"new": "Aufgabe erstellen",
-		"delete": "Die Uufgab chüble",
 		"createSuccess": "Die Uufgab isch erfolgriich erstellt wordä.",
 		"addReminder": "Eine Erinnerung hinzufügen…",
 		"doneSuccess": "Die Uufgab isch erfolgriich als \"Fertig\" markiert wordä.",
@@ -938,12 +939,10 @@
 		"readOnlyCheckbox": "Du hast nur Lesezugriff auf diese Aufgabe und kannst sie nicht als erledigt markieren.",
 		"movedToProject": "Die Aufgabe wurde nach {project} verschoben.",
 		"undo": "Rückgängig",
-		"openDetail": "Uufgab i de Detailaahsicht öffne",
 		"checklistTotal": "{checked} von {total} Aufgaben",
 		"checklistAllDone": "{total} Aufgaben",
 		"show": {
 			"titleCurrent": "Momentani Uufgabe",
-			"titleDates": "Uufgabe vo {from} bis {to}",
 			"noDates": "Aufgaben ohne Datum anzeigen",
 			"overdue": "Überfällige Aufgaben anzeigen",
 			"fromuntil": "Aufgaben von {from} bis {until}",
@@ -971,7 +970,9 @@
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
 			"due": "Fällig bis {at}",
-			"closePopup": "Popup schließen",
+			"closeTaskDetail": "Aufgabendetails schließen",
+			"title": "Aufgabendetails",
+			"markAsDone": "'{task}' als erledigt markieren",
 			"scrollToBottom": "Nach unten scrollen",
 			"organization": "Organisation",
 			"management": "Verwaltung",
@@ -1046,7 +1047,6 @@
 			"delete": "Aahhang lösche",
 			"deleteTooltip": "De Aahhang lösche",
 			"deleteText1": "Bisch du dir sicher, dass du de Aahang {filename} lösche wetsch?",
-			"copyUrl": "URL Kopierä",
 			"copyUrlTooltip": "D'Url vo dem Aahang kopiere, um sie im Text zbruuche",
 			"setAsCover": "Als Titelbild setzen",
 			"unsetAsCover": "Titelbild entfernen",
@@ -1066,7 +1066,10 @@
 			"addedSuccess": "Din Kommentar isch erfolgriich hinzuegfüegt worde.",
 			"permalink": "Permalink zu diesem Kommentar kopieren",
 			"sortNewestFirst": "Neueste zuerst",
-			"sortOldestFirst": "Älteste zuerst"
+			"sortOldestFirst": "Älteste zuerst",
+			"reply": "Antworten",
+			"jumpToOriginal": "Zum ursprünglichen Kommentar springen",
+			"deletedComment": "gelöschter Kommentar"
 		},
 		"mention": {
 			"noUsersFound": "Keine Nutzer:innen gefunden"
@@ -1078,8 +1081,7 @@
 			"1week": "Ei Wuche"
 		},
 		"description": {
-			"placeholder": "Gib eine Beschreibung ein, drücke '/' für mehr Optionen…",
-			"empty": "Momentan hets kei Beschriibig."
+			"placeholder": "Gib eine Beschreibung ein, drücke '/' für mehr Optionen…"
 		},
 		"assignee": {
 			"placeholder": "Schriib, um en User zuezwiise…",
@@ -1091,7 +1093,6 @@
 			"placeholder": "Beginne zu schreiben, um ein Label hinzuzufügen…",
 			"createPlaceholder": "Das als neues Label hinzuefüege",
 			"addSuccess": "Das Label isch erfolgriich hinzuegfüegt worde.",
-			"createSuccess": "Das Label isch erfolgriich erstellt worde.",
 			"removeSuccess": "Das Label isch erfolgriich glöscht.",
 			"addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt.",
 			"delete": {
@@ -1156,8 +1157,6 @@
 			"hours": "Stundä",
 			"days": "Tääg",
 			"weeks": "Wuchä",
-			"months": "Monet",
-			"years": "Jahr",
 			"invalidAmount": "Bitte mehr als 0 eingeben."
 		},
 		"quickAddMagic": {
@@ -1311,7 +1310,6 @@
 		"unarchive": "Ent-archiviere",
 		"setBackground": "Hintergrundeinstellungen",
 		"share": "Teilä",
-		"newProject": "Neues Projekt",
 		"createProject": "Projekt erstellen",
 		"cantArchiveIsDefault": "Du kannst dieses Projekt nicht archivieren, da es dein Standardprojekt ist.",
 		"cantDeleteIsDefault": "Du kannst dieses Projekt nicht löschen, da es dein Standardprojekt ist.",
@@ -1336,7 +1334,8 @@
 		"none": "Du hesch kei neui Benachrichtunge. Heb e schös Tägli!",
 		"explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden.",
 		"markAllRead": "Alle Benachrichtigungen als gelesen markieren",
-		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert."
+		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert.",
+		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren"
 	},
 	"quickActions": {
 		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
@@ -1470,8 +1469,68 @@
 			"hours": "Stunde|Stunden",
 			"days": "Tag|Tage",
 			"weeks": "Woche|Wochen",
-			"months": "Monat|Monate",
 			"years": "Jahr|Jahre"
+		}
+	},
+	"admin": {
+		"title": "Administration",
+		"labels": {
+			"users": "Accounts",
+			"tasks": "Aufgaben"
+		},
+		"overview": {
+			"shares": "Freigaben",
+			"linkSharesShort": "link",
+			"teamSharesShort": "Team",
+			"userSharesShort": "Benutzer:in",
+			"version": "Version",
+			"license": "Lizenz",
+			"licenseValidUntil": "Gültig bis",
+			"licenseExpiresIn": "in {days} Tagen",
+			"licenseLastVerified": "Zuletzt geprüft",
+			"licenseNever": "nie",
+			"licenseLastCheckFailed": "letzte Prüfung fehlgeschlagen",
+			"licenseFeatures": "Features",
+			"licenseInstance": "Instanz-ID",
+			"licenseManage": "Verwalten"
+		},
+		"searchUsersPlaceholder": "Suche nach Anmeldename oder E-Mail…",
+		"users": {
+			"status": "Status",
+			"details": "Details",
+			"detailsTitle": "Account: {username}",
+			"issuer": "Aussteller",
+			"issuerLocal": "Lokal",
+			"issuerUrl": "Aussteller-URL",
+			"subject": "Betreff",
+			"statusActive": "Aktiv",
+			"statusEmailConfirmation": "E-Mail-Bestätigung erforderlich",
+			"statusDisabled": "Deaktiviert",
+			"statusLocked": "Account gesperrt",
+			"isAdminLabel": "Administrator",
+			"addUser": "Account hinzufügen",
+			"createTitle": "Account erstellen",
+			"nameLabel": "Name",
+			"skipEmailConfirm": "E-Mail-Bestätigung überspringen",
+			"createSubmit": "Account erstellen",
+			"saveButton": "Änderungen speichern",
+			"createdSuccess": "Account {username} erstellt.",
+			"updatedSuccess": "Account {username} aktualisiert.",
+			"deletedSuccess": "Account {username} gelöscht.",
+			"deleteScheduledSuccess": "{username} erhält eine Bestätigungs-E-Mail, um die Löschung zu planen.",
+			"confirmDeleteTitle": "Account löschen?",
+			"confirmDeleteIntro": "Wie soll der Account {username} gelöscht werden?",
+			"deleteModeScheduled": "Löschung planen",
+			"deleteModeScheduledHelp": "\"Löschung planen\" sendet eine Bestätigungs-E-Mail, analog zu einer selbst ausgelösten Kontolöschung.",
+			"deleteModeNow": "Jetzt löschen",
+			"deleteModeNowHelp": "Sofort-Löschen entfernt den Account und seine Daten umgehend. Dies kann nicht rückgängig gemacht werden."
+		},
+		"projects": {
+			"ownerLabel": "Eigentümer:in",
+			"reassignOwner": "Eigentümer:in neu zuweisen",
+			"reassignTitle": "{title} erneut zuweisen",
+			"reassignedSuccess": "Projekteigentümer:in neu zugewiesen.",
+			"newOwnerLabel": "Neu:e Eigentümer:in"
 		}
 	}
 }

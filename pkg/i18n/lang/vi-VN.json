@@ -69,14 +69,8 @@
 			"reminder": {
 				"subject": "Nhắc nhở cho \"%[1]s\" (%[2]s)"
 			},
-			"comment": {
-				"mentioned_message": "**%[1]s** đã nhắc đến bạn trong một bình luận:"
-			},
 			"assigned": {
 				"message_to_others": "%[1]s đã giao tác vụ này cho %[2]s."
-			},
-			"mentioned": {
-				"message": "**%[1]s** đã nhắc đến bạn trong một tác vụ:"
 			},
 			"overdue": {
 				"subject": "Tác vụ \"%[1]s\" (%[2]s) bị quá hạn",

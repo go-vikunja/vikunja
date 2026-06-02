@@ -128,6 +128,7 @@
 			>
 				<FormSelect
 					v-model.number="settings.weekStart"
+					v-cy="'weekStartSelect'"
 					:options="weekStartOptions"
 				/>
 			</FormField>
@@ -344,6 +345,11 @@ const minimumPriorityOptions = computed(() => [
 const weekStartOptions = computed(() => [
 	{value: 0, label: t('user.settings.general.weekStartSunday')},
 	{value: 1, label: t('user.settings.general.weekStartMonday')},
+	{value: 2, label: t('user.settings.general.weekStartTuesday')},
+	{value: 3, label: t('user.settings.general.weekStartWednesday')},
+	{value: 4, label: t('user.settings.general.weekStartThursday')},
+	{value: 5, label: t('user.settings.general.weekStartFriday')},
+	{value: 6, label: t('user.settings.general.weekStartSaturday')},
 ])
 
 const dateDisplayOptions = computed(() => [

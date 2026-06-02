@@ -68,6 +68,10 @@ const navigationItems = computed(() => {
 			condition: caldavEnabled.value,
 		},
 		{
+			title: t('user.settings.feeds.title'),
+			routeName: 'user.settings.feeds',
+		},
+		{
 			title: t('user.settings.apiTokens.title'),
 			routeName: 'user.settings.apiTokens',
 		},
@@ -79,6 +83,10 @@ const navigationItems = computed(() => {
 			title: t('user.settings.webhooks.title'),
 			routeName: 'user.settings.webhooks',
 			condition: webhooksEnabled.value,
+		},
+		{
+			title: t('user.settings.bots.title'),
+			routeName: 'user.settings.bots',
 		},
 		{
 			title: t('user.deletion.title'),

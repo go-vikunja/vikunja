@@ -1,5 +1,7 @@
 <template>
-	<div>
+	<div
+		:class="{'d-print-none': isEmpty}"
+	>
 		<h3>
 			<span class="icon is-grey">
 				<Icon icon="align-left" />
@@ -48,6 +50,7 @@ import CustomTransition from '@/components/misc/CustomTransition.vue'
 import Editor from '@/components/input/AsyncEditor'
 
 import { clearEditorDraft } from '@/helpers/editorDraftStorage'
+import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
 import type { ITask } from '@/modelTypes/ITask'
 import { useTaskStore } from '@/stores/tasks'
 
@@ -81,6 +84,8 @@ const loading = computed(() => taskStore.isLoading)
 const changeTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
 const descriptionStorageKey = computed(() => `task-description-${props.modelValue.id}`)
+
+const isEmpty = computed(() => isEditorContentEmpty(description.value))
 
 async function saveWithDelay() {
 	if (description.value === props.modelValue.description) {

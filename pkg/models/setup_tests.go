@@ -78,6 +78,7 @@ func SetupTests() {
 		"webhooks",
 		"totp",
 		"oauth_codes",
+		"notifications",
 	)
 	if err != nil {
 		log.Fatal(err)

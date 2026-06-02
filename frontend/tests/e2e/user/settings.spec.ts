@@ -96,17 +96,42 @@ test.describe('User Settings', () => {
 		const nameInput = page.locator('.general-settings input.input').first()
 		await expect(nameInput).toBeVisible({timeout: 10000})
 		await expect(nameInput).toBeEnabled()
+	})
+	test('Updates the week start day', async ({authenticatedPage: page}) => {
+		await page.goto('/user/settings/general')
+		await page.waitForLoadState('networkidle')
 
-		// Clear and type to ensure Vue's reactivity is triggered
-		await nameInput.clear()
-		await nameInput.pressSequentially('Lorem Ipsum', {delay: 10})
+		// Wait for the settings page to be fully loaded and find the select by its label
+		const weekStartSelect = page.getByLabel('Week starts on')
+		await weekStartSelect.scrollIntoViewIfNeeded()
+		await expect(weekStartSelect).toBeVisible({timeout: 10000})
+
+		// Select Wednesday (value 3)
+		await weekStartSelect.selectOption({value: '3'})
 
 		// The save button only appears when isDirty becomes true (settings changed)
 		const saveButton = page.locator('[data-cy="saveGeneralSettings"]')
 		await expect(saveButton).toBeVisible({timeout: 10000})
+
+		// Intercept the API request to verify it contains the correct setting
+		const settingsUpdatePromise = page.waitForResponse(response =>
+			response.url().includes('user/settings/general') && response.request().method() === 'POST',
+		)
+
 		await saveButton.click()
 
+		const response = await settingsUpdatePromise
+		const requestData = JSON.parse(response.request().postData() || '{}')
+		expect(requestData.week_start).toBe(3)
+		expect(response.ok()).toBe(true)
+
 		await expect(page.locator('.global-notification')).toContainText('Success')
-		await expect(page.locator('.navbar .username-dropdown-trigger .username')).toContainText('Lorem Ipsum')
+
+		// Verify the setting was saved by reloading the page
+		await page.reload()
+		await page.waitForLoadState('networkidle')
+		const weekStartSelectAfterReload = page.getByLabel('Week starts on')
+		await weekStartSelectAfterReload.scrollIntoViewIfNeeded()
+		await expect(weekStartSelectAfterReload).toHaveValue('3')
 	})
 })

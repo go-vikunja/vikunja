@@ -43,7 +43,6 @@
 			"forgotPassword": "Zaboravili ste lozinku?",
 			"resetPassword": "Ponovno postavite lozinku",
 			"resetPasswordAction": "Pošalji mi vezu za ponovno postavljanje lozinke",
-			"passwordsDontMatch": "Lozinke se ne podudaraju",
 			"confirmEmailSuccess": "Uspješno ste potvrdili svoju e-poštu! Sada se možete prijaviti.",
 			"totpTitle": "Dvostruki kod za provjeru autentifikacije",
 			"totpPlaceholder": "primjer 123456",
@@ -69,7 +68,6 @@
 			"title": "Postavke",
 			"newPasswordTitle": "Ažurirajte svoju lozinku",
 			"currentPasswordPlaceholder": "Vaša trenutna lozinka",
-			"passwordsDontMatch": "Nova lozinka i njezina potvrda ne odgovaraju.",
 			"passwordUpdateSuccess": "Lozinka je uspješno ažurirana.",
 			"updateEmailTitle": "Ažurirajte e-mail adresu",
 			"updateEmailSuccess": "Vaša email adresa je uspješno ažurirana. Poslali smo vam poveznicu da ju potvrdite.",
@@ -120,7 +118,6 @@
 			},
 			"appearance": {
 				"title": "Paleta boja",
-				"setSuccess": "Spremljena promjena palete boja u {colorScheme}",
 				"colorScheme": {
 					"light": "Svjetlo",
 					"system": "Sistem",
@@ -141,7 +138,6 @@
 				"expired": "Ovaj je token istekao {ago}.",
 				"tokenCreatedSuccess": "Evo vašeg novog api tokena: {token}",
 				"tokenCreatedNotSeeAgain": "Čuvajte ga na sigurnom mjestu, nećete ga više vidjeti!",
-				"selectAll": "Odaberi sve",
 				"delete": {
 					"header": "Izbriši ovaj token",
 					"text1": "Jeste li sigurni da želite izbrisati token \"{token}\"?",
@@ -342,16 +338,7 @@
 			"titlePlaceholder": "Naslov spremljenog filtra ide ovdje…",
 			"description": "Opis",
 			"descriptionPlaceholder": "Ovdje dodajte opis za ovaj filter, pritisnite '/' za više opcija…",
-			"includeNulls": "Uključi zadatke koji nemaju postavljenu vrijednost",
-			"requireAll": "Zahtijevajte da svi filtri budu uključeni da bi se zadatak prikazao",
-			"showDoneTasks": "Prikaži gotove zadatke",
-			"sortAlphabetically": "Sortiraj Abecedno",
-			"enablePriority": "Omogući filtere po prioritetu",
-			"enablePercentDone": "Omogući filtriranje prema napretku",
-			"dueDateRange": "Raspon vremenskog roka",
-			"startDateRange": "Početni datum",
-			"endDateRange": "Krajnji datum",
-			"reminderRange": "Raspon za podsjetnike"
+			"includeNulls": "Uključi zadatke koji nemaju postavljenu vrijednost"
 		},
 		"create": {
 			"title": "Novi spremljeni filter",
@@ -368,7 +355,6 @@
 			"success": "Filter je uspješno spremljen."
 		},
 		"query": {
-			"title": "Upit",
 			"placeholder": "Unesite upit za pretraživanje ili filtriranje…",
 			"help": {
 				"intro": "Za filtriranje zadataka možete koristiti sintaksu upita sličnu SQL-u. Dostupna polja za filtriranje uključuju:",
@@ -396,7 +382,6 @@
 	"migrate": {
 		"title": "Uvoz iz drugih servisa",
 		"titleService": "Uvezite svoje podatke iz {name} u Vikunju",
-		"import": "Uvezite svoje podatke u Vikunju",
 		"description": "Za početak kliknite na logotip jedne od usluga trećih strana u nastavku.",
 		"descriptionDo": "Vikunja će uvesti sve popise, zadatke, bilješke, podsjetnike i datoteke kojima imate pristup.",
 		"authorize": "Da biste ovlastili Vikunju za pristup vašem {name} računu, kliknite gumb ispod.",
@@ -415,7 +400,6 @@
 		"manage": "Upravljalj oznakama",
 		"description": "Kliknite na oznaku da je uredite. Možete uređivati ​​sve oznake koje ste izradili, možete koristiti sve oznake koje su pridružene zadatku čijem projektu imate pristup.",
 		"newCTA": "Trenutno nemate nijednu oznaku.",
-		"search": "Upišite za traženje oznake…",
 		"create": {
 			"header": "Nova oznaka",
 			"title": "Kreiraj novu oznaku",
@@ -424,7 +408,6 @@
 		},
 		"edit": {
 			"header": "Uredite oznaku",
-			"forbidden": "Nemate dopuštenje za uređivanje ove oznake jer niste njen vlasnik.",
 			"success": "Oznaka je uspješno ažurirana."
 		},
 		"deleteSuccess": "The label was successfully obrisana.",
@@ -432,7 +415,6 @@
 			"title": "Naslov",
 			"titlePlaceholder": "Naslov oznake ide ovdje…",
 			"description": "Opis",
-			"descriptionPlaceholder": "Opis oznake",
 			"color": "Boja"
 		}
 	},
@@ -455,16 +437,13 @@
 		"delete": "Obriši",
 		"confirm": "Potvrdi",
 		"cancel": "Otkaži",
-		"refresh": "Osvježi",
 		"disable": "Onemogući",
 		"copy": "Kopiraj u Međuspremnik",
 		"copyError": "Kopiranje u međuspremnik nije uspjelo",
-		"search": "Traži",
 		"searchPlaceholder": "Unesi za pretraživanje…",
 		"previous": "Prethodna",
 		"next": "Sljedeća",
 		"poweredBy": "Powered by Vikunja",
-		"info": "Informacije",
 		"create": "Kreiraj",
 		"doit": "Pokreni!",
 		"saving": "Spremanje…",
@@ -497,15 +476,12 @@
 		},
 		"editor": {
 			"edit": "Uredi",
-			"done": "Gotovo",
 			"heading1": "Zaglavlje 1",
 			"heading1Tooltip": "Zaglavlje velikog odjeljka.",
 			"heading2": "Zaglavlje 2",
 			"heading2Tooltip": "Zaglavlje srednjeg odjeljka.",
 			"heading3": "Zaglavlje 3",
 			"heading3Tooltip": "Zaglavlje malog odjeljka.",
-			"headingSmaller": "Manje zaglavlje",
-			"headingBigger": "Veće zaglavlje",
 			"bold": "Podebljano",
 			"italic": "Koso",
 			"strikethrough": "Precrtano",
@@ -516,17 +492,13 @@
 			"quoteTooltip": "Uhvatite citat.",
 			"bulletList": "Bullet list",
 			"bulletListTooltip": "Napravite jednostavan bullet list.",
-			"unorderedList": "Neporedana lista",
 			"orderedList": "Poredana lista",
 			"orderedListTooltip": "Napravite popis s numeriranjem.",
-			"cleanBlock": "Prazan blok",
 			"link": "Poveznica",
 			"image": "Slika",
 			"imageTooltip": "Učitajte sliku sa svog računala.",
 			"horizontalRule": "Vodoravno pravilo",
 			"horizontalRuleTooltip": "Podijelite sekciju.",
-			"sideBySide": "Usporedno",
-			"guide": "Vodič",
 			"text": "Tekst",
 			"textTooltip": "Samo počnite tipkati tekst.",
 			"taskList": "Lista zadataka",
@@ -613,18 +585,14 @@
 		}
 	},
 	"task": {
-		"task": "Zadatak",
-		"delete": "Izbriši ovaj zadatak",
 		"createSuccess": "Zadatak je uspješno kreiran.",
 		"doneSuccess": "Zadatak je uspješno označen kao obavljen.",
 		"undoneSuccess": "Zadatak je uspješno uklonjen iz izvršenih.",
 		"undo": "Poništi",
-		"openDetail": "Otvorite prikaz detalja zadatka",
 		"checklistTotal": "{checked} od {total} zadataka",
 		"checklistAllDone": "{total} zadataka",
 		"show": {
 			"titleCurrent": "Trenutni zadaci",
-			"titleDates": "Zadaci od {from} do {to}",
 			"overdue": "Prikaži zakašnjele zadatke",
 			"fromuntil": "Zadaci od {from} do {until}",
 			"select": "Odaberi vremenski raspon",
@@ -644,7 +612,6 @@
 			"deleteSuccess": "Zadatak je uspješno izbrisan.",
 			"belongsToProject": "Ovaj zadatak pripada projektu '{project}'",
 			"due": "Do {at}",
-			"closePopup": "Zatvori",
 			"organization": "Organizacija",
 			"management": "Menadžment",
 			"dateAndTime": "Datum i vrijeme",
@@ -716,8 +683,7 @@
 			"deleteText1": "Jeste li sigurni da želite izbrisati privitak {filename}?"
 		},
 		"description": {
-			"placeholder": "Unesite opis, pritisnite '/' za više opcija…",
-			"empty": "Opis još nije dostupan."
+			"placeholder": "Unesite opis, pritisnite '/' za više opcija…"
 		},
 		"assignee": {
 			"placeholder": "Upišite korisnika kojeg želite označiti…",
@@ -728,7 +694,6 @@
 		"label": {
 			"createPlaceholder": "Dodajte ovo kao novu oznaku",
 			"addSuccess": "Oznaka je uspješno dodana.",
-			"createSuccess": "Oznaka je uspješno kreirana.",
 			"removeSuccess": "Oznaka je uspješno izbrisana.",
 			"addCreateSuccess": "Oznaka je stvorena i uspješno dodana.",
 			"delete": {
@@ -763,8 +728,6 @@
 			"hours": "Sati",
 			"days": "Dana",
 			"weeks": "Tjedana",
-			"months": "Mjeseci",
-			"years": "Godina",
 			"invalidAmount": "Unesite više od 0."
 		},
 		"quickAddMagic": {

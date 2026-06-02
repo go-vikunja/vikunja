@@ -134,9 +134,9 @@ func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 		return
 	}
 
-	// Get the creator (non-fatal if user doesn't exist)
+	// Swallow missing/disabled/locked so the user-delete cascade can complete.
 	ta.CreatedBy, err = user.GetUserByID(s, ta.CreatedByID)
-	if err != nil && !user.IsErrUserDoesNotExist(err) {
+	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
 		return err
 	}
 

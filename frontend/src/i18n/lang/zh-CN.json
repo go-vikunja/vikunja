@@ -44,7 +44,6 @@
 			"resetPassword": "重置密码",
 			"resetPasswordAction": "发送密码重置链接",
 			"resetPasswordSuccess": "请检查收件箱！您应该会收到一封邮件，告知您如何重置密码。",
-			"passwordsDontMatch": "两次输入的密码不一致",
 			"confirmEmailSuccess": "已成功确认您的电子邮件！现在可以登录。",
 			"totpTitle": "两步验证码",
 			"totpPlaceholder": "例如：123456",
@@ -74,10 +73,8 @@
 			"title": "设置",
 			"newPasswordTitle": "更新密码",
 			"newPassword": "新密码",
-			"newPasswordConfirm": "新密码确认",
 			"currentPassword": "当前密码",
 			"currentPasswordPlaceholder": "输入当前密码",
-			"passwordsDontMatch": "两次输入密码不一致",
 			"passwordUpdateSuccess": "已成功更新密码",
 			"updateEmailTitle": "更新电子邮件地址",
 			"updateEmailNew": "新邮箱地址",
@@ -147,7 +144,6 @@
 			},
 			"appearance": {
 				"title": "配色方案",
-				"setSuccess": "已保存颜色方案更改为 {colorScheme}",
 				"colorScheme": {
 					"light": "明亮",
 					"system": "跟随系统",
@@ -169,7 +165,6 @@
 				"expired": "Token {ago} 前到期",
 				"tokenCreatedSuccess": "这是您的令牌: {token}",
 				"tokenCreatedNotSeeAgain": "将其存储在一个安全的位置，你不会再看到它了！",
-				"selectAll": "全选",
 				"delete": {
 					"header": "删除该令牌",
 					"text1": "你确定要删除令牌 {token} 吗？",
@@ -428,16 +423,7 @@
 			"titlePlaceholder": "填写筛选器标题",
 			"description": "描述信息",
 			"descriptionPlaceholder": "在此处添加此过滤器的描述，点击'/'获取更多选项…",
-			"includeNulls": "包含没有设置值的任务",
-			"requireAll": "要求所有筛选器为真才能显示任务",
-			"showDoneTasks": "显示已完成的任务",
-			"sortAlphabetically": "按字母排序",
-			"enablePriority": "按优先级启用筛选器",
-			"enablePercentDone": "根据进度启用筛选器",
-			"dueDateRange": "日期范围",
-			"startDateRange": "起始日期范围",
-			"endDateRange": "结束日期范围",
-			"reminderRange": "提醒日期范围"
+			"includeNulls": "包含没有设置值的任务"
 		},
 		"create": {
 			"title": "新保存的过滤器",
@@ -455,7 +441,6 @@
 			"success": "过滤器保存成功。"
 		},
 		"query": {
-			"title": "查询",
 			"placeholder": "输入搜索或过滤查询…",
 			"help": {
 				"intro": "要过滤任务，您可以使用类似于SQL的查询语法。可用的过滤字段包括：",
@@ -506,7 +491,6 @@
 	"migrate": {
 		"title": "从其他服务导入",
 		"titleService": "从 {name} 导入您的数据到 Vikunja",
-		"import": "导入数据到 Vikunja",
 		"description": "点击下面的第三方服务的徽标开始操作。",
 		"descriptionDo": "Vikunja 将导入所有您有访问权限的列表、任务、笔记、提醒和文件。",
 		"authorize": "要授权 Vikunja 访问您的 {name} 帐户，请点击下面的按钮。",
@@ -525,7 +509,6 @@
 		"manage": "管理标签",
 		"description": "点击标签进行编辑。 您可以编辑您创建的所有标签，您可以使用所有与您有访问权限的任务相关联的标签。",
 		"newCTA": "当前没有标签",
-		"search": "输入以搜索标签…",
 		"create": {
 			"header": "新建标记",
 			"title": "新建标签",
@@ -534,7 +517,6 @@
 		},
 		"edit": {
 			"header": "编辑标签",
-			"forbidden": "您无权编辑这个标签，因为您不拥有它。",
 			"success": "标签已更新"
 		},
 		"deleteSuccess": "标签已删除",
@@ -542,7 +524,6 @@
 			"title": "标题",
 			"titlePlaceholder": "标签名",
 			"description": "描述信息",
-			"descriptionPlaceholder": "标签说明",
 			"color": "标签颜色"
 		}
 	},
@@ -569,16 +550,13 @@
 		"delete": "删除",
 		"confirm": "确认",
 		"cancel": "取消",
-		"refresh": "刷新",
 		"disable": "禁用",
 		"copy": "复制到剪贴板",
 		"copyError": "复制到剪贴板失败",
-		"search": "搜索",
 		"searchPlaceholder": "请输入查找条件…",
 		"previous": "上一个",
 		"next": "下一个",
 		"poweredBy": "由 Vikunja 提供支持",
-		"info": "信息",
 		"create": "创建",
 		"doit": "继续！",
 		"saving": "保存中...",
@@ -610,15 +588,12 @@
 		},
 		"editor": {
 			"edit": "编辑",
-			"done": "完成",
 			"heading1": "一级标题",
 			"heading1Tooltip": "大标题。",
 			"heading2": "二级标题",
 			"heading2Tooltip": "中标题。",
 			"heading3": "三级标题",
 			"heading3Tooltip": "小标题。",
-			"headingSmaller": "下一级标题",
-			"headingBigger": "上一级标题",
 			"bold": "粗体",
 			"italic": "斜体",
 			"strikethrough": "删除线",
@@ -629,17 +604,13 @@
 			"quoteTooltip": "捕获引文。",
 			"bulletList": "符号列表",
 			"bulletListTooltip": "创建一个简单的符号列表。",
-			"unorderedList": "无序列表",
 			"orderedList": "有序列表",
 			"orderedListTooltip": "创建带编号的列表。",
-			"cleanBlock": "清除格式",
 			"link": "链接",
 			"image": "图片",
 			"imageTooltip": "从您的计算机上传图片",
 			"horizontalRule": "水平线",
 			"horizontalRuleTooltip": "分割一节。",
-			"sideBySide": "并排",
-			"guide": "指南",
 			"text": "文本",
 			"textTooltip": "只需开始用纯文本键入。",
 			"taskList": "任务列表",
@@ -745,20 +716,16 @@
 		}
 	},
 	"task": {
-		"task": "任务",
 		"new": "新建任务",
-		"delete": "删除此任务",
 		"createSuccess": "成功创建任务",
 		"addReminder": "添加提醒...",
 		"doneSuccess": "待办事项已标记为完成。",
 		"undoneSuccess": "待办事项已标记为未完成。",
 		"undo": "撤销",
-		"openDetail": "查看任务详细信息",
 		"checklistTotal": "{checked} 项任务，共 {total} 项。",
 		"checklistAllDone": "一共 {total} 项任务",
 		"show": {
 			"titleCurrent": "当前任务",
-			"titleDates": "从 {from} 到 {to} 的任务",
 			"noDates": "显示没有日期的任务",
 			"overdue": "显示过期任务",
 			"fromuntil": "从 {from} 到 {until} 的任务",
@@ -780,7 +747,6 @@
 			"belongsToProject": "该任务属于项目'{project}'",
 			"back": "返回到项目",
 			"due": "截止至 {at}",
-			"closePopup": "关闭弹窗",
 			"organization": "机构",
 			"management": "管理",
 			"dateAndTime": "日期与时间",
@@ -851,7 +817,6 @@
 			"delete": "删除附件",
 			"deleteTooltip": "删除此附件",
 			"deleteText1": "你确定要删除附件 {filename} 吗？",
-			"copyUrl": "复制链接",
 			"copyUrlTooltip": "复制此附件的 url 在文本中使用",
 			"setAsCover": "制作封面",
 			"unsetAsCover": "移除封面",
@@ -881,8 +846,7 @@
 			"1week": "1周"
 		},
 		"description": {
-			"placeholder": "输入描述，点击'/'获取更多选项…",
-			"empty": "尚无描述。"
+			"placeholder": "输入描述，点击'/'获取更多选项…"
 		},
 		"assignee": {
 			"placeholder": "分配给用户...",
@@ -894,7 +858,6 @@
 			"placeholder": "输入以添加标签...",
 			"createPlaceholder": "将此添加为新标签",
 			"addSuccess": "已成功添加标签。",
-			"createSuccess": "已成功创建标签。",
 			"removeSuccess": "已成功移除标签。",
 			"addCreateSuccess": "标签已创建并添加成功。",
 			"delete": {
@@ -959,8 +922,6 @@
 			"hours": "小时",
 			"days": "天",
 			"weeks": "周",
-			"months": "月",
-			"years": "年",
 			"invalidAmount": "请输入大于 0 的数。"
 		},
 		"quickAddMagic": {
@@ -1102,7 +1063,6 @@
 		"unarchive": "取消存档",
 		"setBackground": "背景设置",
 		"share": "共享",
-		"newProject": "新项目",
 		"createProject": "创建项目",
 		"cantArchiveIsDefault": "您不能归档，因为这是您的默认项目。",
 		"cantDeleteIsDefault": "您不能删除这个项目，因为这是您的默认项目。",
@@ -1255,7 +1215,6 @@
 			"hours": "时|小时",
 			"days": "天|天",
 			"weeks": "周|周",
-			"months": "月|月",
 			"years": "年|年"
 		}
 	}

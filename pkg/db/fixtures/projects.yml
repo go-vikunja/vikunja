@@ -2,7 +2,7 @@
   id: 1
   title: Test1
   description: Lorem Ipsum
-  identifier: test1
+  identifier: TEST1
   owner_id: 1
   position: 3
   updated: 2018-12-02 15:13:12
@@ -11,7 +11,7 @@
   id: 2
   title: Test2
   description: Lorem Ipsum
-  identifier: test2
+  identifier: TEST2
   owner_id: 3
   position: 2
   updated: 2018-12-02 15:13:12
@@ -20,7 +20,7 @@
   id: 3
   title: Test3
   description: Lorem Ipsum
-  identifier: test3
+  identifier: TEST3
   owner_id: 3
   position: 1
   updated: 2018-12-02 15:13:12
@@ -29,7 +29,7 @@
   id: 4
   title: Test4
   description: Lorem Ipsum
-  identifier: test4
+  identifier: TEST4
   owner_id: 3
   position: 4
   updated: 2018-12-02 15:13:12
@@ -38,7 +38,7 @@
   id: 5
   title: Test5
   description: Lorem Ipsum
-  identifier: test5
+  identifier: TEST5
   owner_id: 5
   position: 5
   updated: 2018-12-02 15:13:12
@@ -47,7 +47,7 @@
   id: 6
   title: Test6
   description: Lorem Ipsum
-  identifier: test6
+  identifier: TEST6
   owner_id: 6
   position: 6
   updated: 2018-12-02 15:13:12
@@ -56,7 +56,7 @@
   id: 7
   title: Test7
   description: Lorem Ipsum
-  identifier: test7
+  identifier: TEST7
   owner_id: 6
   position: 7
   updated: 2018-12-02 15:13:12
@@ -65,7 +65,7 @@
   id: 8
   title: Test8
   description: Lorem Ipsum
-  identifier: test8
+  identifier: TEST8
   owner_id: 6
   position: 8
   updated: 2018-12-02 15:13:12
@@ -74,7 +74,7 @@
   id: 9
   title: Test9
   description: Lorem Ipsum
-  identifier: test9
+  identifier: TEST9
   owner_id: 6
   position: 9
   updated: 2018-12-02 15:13:12
@@ -83,7 +83,7 @@
   id: 10
   title: Test10
   description: Lorem Ipsum
-  identifier: test10
+  identifier: TEST10
   owner_id: 6
   position: 10
   updated: 2018-12-02 15:13:12
@@ -92,7 +92,7 @@
   id: 11
   title: Test11
   description: Lorem Ipsum
-  identifier: test11
+  identifier: TEST11
   owner_id: 6
   position: 11
   updated: 2018-12-02 15:13:12
@@ -101,7 +101,7 @@
   id: 12
   title: Test12
   description: Lorem Ipsum
-  identifier: test12
+  identifier: TEST12
   owner_id: 6
   position: 12
   parent_project_id: 27
@@ -111,7 +111,7 @@
   id: 13
   title: Test13
   description: Lorem Ipsum
-  identifier: test13
+  identifier: TEST13
   owner_id: 6
   position: 13
   parent_project_id: 28
@@ -121,7 +121,7 @@
   id: 14
   title: Test14
   description: Lorem Ipsum
-  identifier: test14
+  identifier: TEST14
   owner_id: 6
   position: 14
   parent_project_id: 29
@@ -131,7 +131,7 @@
   id: 15
   title: Test15
   description: Lorem Ipsum
-  identifier: test15
+  identifier: TEST15
   owner_id: 6
   position: 15
   parent_project_id: 32
@@ -141,7 +141,7 @@
   id: 16
   title: Test16
   description: Lorem Ipsum
-  identifier: test16
+  identifier: TEST16
   owner_id: 6
   position: 16
   parent_project_id: 33
@@ -151,7 +151,7 @@
   id: 17
   title: Test17
   description: Lorem Ipsum
-  identifier: test17
+  identifier: TEST17
   owner_id: 6
   position: 17
   parent_project_id: 34
@@ -163,7 +163,7 @@
   id: 18
   title: Test18
   description: Lorem Ipsum
-  identifier: test18
+  identifier: TEST18
   owner_id: 7
   position: 18
   updated: 2018-12-02 15:13:12
@@ -172,7 +172,7 @@
   id: 19
   title: Test19
   description: Lorem Ipsum
-  identifier: test19
+  identifier: TEST19
   owner_id: 7
   position: 19
   parent_project_id: 29
@@ -183,7 +183,7 @@
   id: 20
   title: Test20
   description: Lorem Ipsum
-  identifier: test20
+  identifier: TEST20
   owner_id: 13
   position: 20
   updated: 2018-12-02 15:13:12
@@ -192,7 +192,7 @@
   id: 21
   title: Test21 archived through parent list
   description: Lorem Ipsum
-  identifier: test21
+  identifier: TEST21
   owner_id: 1
   position: 21
   parent_project_id: 22
@@ -202,7 +202,7 @@
   id: 22
   title: Test22 archived individually
   description: Lorem Ipsum
-  identifier: test22
+  identifier: TEST22
   owner_id: 1
   is_archived: 1
   position: 22
@@ -212,7 +212,7 @@
   id: 23
   title: Test23
   description: Lorem Ipsum
-  identifier: test23
+  identifier: TEST23
   owner_id: 12
   position: 23
   updated: 2018-12-02 15:13:12
@@ -221,7 +221,7 @@
   id: 24
   title: Test24
   description: Lorem Ipsum
-  identifier: test6
+  identifier: TEST6
   owner_id: 6
   position: 7
   updated: 2018-12-02 15:13:12
@@ -302,7 +302,7 @@
   id: 35
   title: Test35 with background
   description: Lorem Ipsum
-  identifier: test6
+  identifier: TEST6
   owner_id: 6
   background_file_id: 1
   position: 8
@@ -312,7 +312,7 @@
   id: 36
   title: Project 36 for Caldav tests
   description: Lorem Ipsum
-  identifier: test36
+  identifier: TEST36
   owner_id: 15
   position: 1
   updated: 2018-12-02 15:13:12
@@ -321,7 +321,7 @@
   id: 37
   title: Project 37
   description: Lorem Ipsum
-  identifier: test37
+  identifier: TEST37
   owner_id: 16
   position: 1
   updated: 2018-12-02 15:13:12
@@ -330,7 +330,7 @@
   id: 38
   title: Project 38 for Caldav tests
   description: Lorem Ipsum
-  identifier: test38
+  identifier: TEST38
   owner_id: 15
   position: 2
   updated: 2018-12-02 15:13:12
@@ -341,7 +341,7 @@
   id: 39
   title: Orphaned project with deleted parent
   description: This project has a parent_project_id pointing to a non-existent project
-  identifier: orph1
+  identifier: ORPH1
   owner_id: 1
   parent_project_id: 999999
   is_archived: 1
@@ -354,7 +354,7 @@
   id: 40
   title: Test40 child archived individually
   description: Lorem Ipsum
-  identifier: test40
+  identifier: TEST40
   owner_id: 1
   parent_project_id: 3
   is_archived: 1
@@ -366,7 +366,7 @@
   id: 41
   title: HierarchyParent
   description: Parent project for subtask permission hierarchy test
-  identifier: hier1
+  identifier: HIER1
   owner_id: 6
   position: 41
   updated: 2018-12-02 15:13:12
@@ -376,7 +376,7 @@
   id: 42
   title: HierarchyChild
   description: Child project for subtask permission hierarchy test
-  identifier: hier2
+  identifier: HIER2
   owner_id: 6
   parent_project_id: 41
   position: 42

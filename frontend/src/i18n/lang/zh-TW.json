@@ -44,7 +44,6 @@
 			"resetPassword": "重置密碼",
 			"resetPasswordAction": "發送密碼重置鏈接",
 			"resetPasswordSuccess": "請檢查收件箱！您應該會收到一封郵件，告知您如何重置密碼。",
-			"passwordsDontMatch": "兩次輸入的密碼不一致",
 			"confirmEmailSuccess": "已成功確認您的電子郵件！現在可以登錄。",
 			"totpTitle": "兩步驗證碼",
 			"totpPlaceholder": "例如：123456",
@@ -74,10 +73,8 @@
 			"title": "設定",
 			"newPasswordTitle": "更新密碼",
 			"newPassword": "新密碼",
-			"newPasswordConfirm": "新密碼確認",
 			"currentPassword": "當前密碼",
 			"currentPasswordPlaceholder": "輸入當前密碼",
-			"passwordsDontMatch": "兩次輸入密碼不一致",
 			"passwordUpdateSuccess": "已成功更新密碼",
 			"updateEmailTitle": "更新電子郵件地址",
 			"updateEmailNew": "新郵箱地址",
@@ -167,7 +164,6 @@
 			},
 			"appearance": {
 				"title": "配色方案",
-				"setSuccess": "已將配色方案變更儲存為 {colorScheme}",
 				"colorScheme": {
 					"light": "淺色",
 					"system": "跟隨系統",
@@ -192,7 +188,6 @@
 				"expired": "此令牌已於 {ago} 前過期。",
 				"tokenCreatedSuccess": "這是您的新 api 令牌：{token}",
 				"tokenCreatedNotSeeAgain": "請將它妥善保存，之後將無法再次查看！",
-				"selectAll": "全選",
 				"delete": {
 					"header": "刪除該令牌",
 					"text1": "您確定要刪除令牌 {token} 嗎？",
@@ -465,16 +460,7 @@
 			"titlePlaceholder": "填寫篩選器標題",
 			"description": "描述",
 			"descriptionPlaceholder": "在此處添加此過濾器的描述，點擊'/'獲取更多選項…",
-			"includeNulls": "包含沒有設定值的任務",
-			"requireAll": "僅當所有篩選條件皆符合時，任務才會顯示。",
-			"showDoneTasks": "顯示已完成的任務",
-			"sortAlphabetically": "按字母排序",
-			"enablePriority": "按優先級啓用篩選器",
-			"enablePercentDone": "根據進度啓用篩選器",
-			"dueDateRange": "到期日期範圍",
-			"startDateRange": "起始日期範圍",
-			"endDateRange": "結束日期範圍",
-			"reminderRange": "提醒日期範圍"
+			"includeNulls": "包含沒有設定值的任務"
 		},
 		"create": {
 			"title": "新保存的過濾器",
@@ -492,7 +478,6 @@
 			"success": "篩選器已成功儲存。"
 		},
 		"query": {
-			"title": "查詢",
 			"placeholder": "輸入搜索或篩選查詢…",
 			"help": {
 				"intro": "若要篩選任務，您可以使用類似 SQL 的查詢語法。可用於篩選的欄位包括：",
@@ -545,7 +530,6 @@
 	"migrate": {
 		"title": "從其他服務匯入",
 		"titleService": "從 {name} 匯入您的數據到 Vikunja",
-		"import": "匯入數據到 Vikunja",
 		"description": "點擊下方的第三方服務標誌以開始操作。",
 		"descriptionDo": "Vikunja 將導入所有您有訪問權限的清單、任務、筆記、提醒和文件。",
 		"authorize": "要授權 Vikunja 訪問您的 {name} 帳號，請點擊下面的按鈕。",
@@ -564,7 +548,6 @@
 		"manage": "管理標籤",
 		"description": "點擊標籤以編輯。您可以編輯您建立的所有標籤，也可以使用與您有存取權限的專案任務相關聯的所有標籤。",
 		"newCTA": "尚未建立任何標籤。",
-		"search": "輸入以搜索標籤…",
 		"create": {
 			"header": "新增標籤",
 			"title": "新增標籤",
@@ -573,7 +556,6 @@
 		},
 		"edit": {
 			"header": "編輯標籤",
-			"forbidden": "你沒有權限編輯這個標籤，因為你不是擁有者。",
 			"success": "標籤已更新。"
 		},
 		"deleteSuccess": "標籤已刪除。",
@@ -581,7 +563,6 @@
 			"title": "標題",
 			"titlePlaceholder": "請輸入標籤標題…",
 			"description": "描述",
-			"descriptionPlaceholder": "標籤説明",
 			"color": "標籤顏色"
 		}
 	},
@@ -608,16 +589,13 @@
 		"delete": "刪除",
 		"confirm": "確認",
 		"cancel": "取消",
-		"refresh": "刷新",
 		"disable": "停用",
 		"copy": "複製到剪貼簿",
 		"copyError": "複製到剪貼簿失敗",
-		"search": "搜尋",
 		"searchPlaceholder": "輸入以搜尋…",
 		"previous": "上一個",
 		"next": "下一個",
 		"poweredBy": "由 Vikunja 提供支持",
-		"info": "信息",
 		"create": "建立",
 		"doit": "繼續！",
 		"saving": "保存中...",
@@ -650,15 +628,12 @@
 		},
 		"editor": {
 			"edit": "編輯",
-			"done": "完成",
 			"heading1": "一級標題",
 			"heading1Tooltip": "大標題。",
 			"heading2": "二級標題",
 			"heading2Tooltip": "中標題。",
 			"heading3": "三級標題",
 			"heading3Tooltip": "小標題。",
-			"headingSmaller": "下一級標題",
-			"headingBigger": "上一級標題",
 			"bold": "粗體",
 			"italic": "斜體",
 			"strikethrough": "刪除線",
@@ -669,17 +644,13 @@
 			"quoteTooltip": "擷取引用。",
 			"bulletList": "符號清單",
 			"bulletListTooltip": "建立簡單的項目符號清單。",
-			"unorderedList": "無序清單",
 			"orderedList": "有序清單",
 			"orderedListTooltip": "建立帶編號的清單。",
-			"cleanBlock": "清除格式",
 			"link": "連結",
 			"image": "圖片",
 			"imageTooltip": "從電腦上傳圖片。",
 			"horizontalRule": "水平分隔線",
 			"horizontalRuleTooltip": "分隔區段。",
-			"sideBySide": "並排",
-			"guide": "指南",
 			"text": "文字",
 			"textTooltip": "開始輸入純文字。",
 			"taskList": "任務清單",
@@ -785,21 +756,17 @@
 		}
 	},
 	"task": {
-		"task": "任務",
 		"new": "新增任務",
-		"delete": "刪除任務",
 		"createSuccess": "任務已成功建立。",
 		"addReminder": "新增提醒…",
 		"doneSuccess": "待辦事項已標記為完成。",
 		"undoneSuccess": "待辦事項已標記為未完成。",
 		"movedToProject": "任務已移動到「{project}」。",
 		"undo": "還原",
-		"openDetail": "開啟任務詳情檢視",
 		"checklistTotal": "{checked} 項任務，共 {total} 項。",
 		"checklistAllDone": "共 {total} 項任務",
 		"show": {
 			"titleCurrent": "目前任務",
-			"titleDates": "從 {from} 到 {to} 的任務",
 			"noDates": "顯示未設定日期的任務",
 			"overdue": "顯示已過期任務",
 			"fromuntil": "從 {from} 到 {until} 的任務",
@@ -823,7 +790,6 @@
 			"belongsToProject": "此任務屬於專案「{project}」",
 			"back": "返回專案",
 			"due": "截止至 {at}",
-			"closePopup": "關閉彈窗",
 			"organization": "機構",
 			"management": "管理",
 			"dateAndTime": "日期與時間",
@@ -895,7 +861,6 @@
 			"delete": "刪除附件",
 			"deleteTooltip": "刪除附件",
 			"deleteText1": "您確定要刪除附件 {filename} 嗎？",
-			"copyUrl": "複製連結",
 			"copyUrlTooltip": "複製此附件網址，以便在文字中使用",
 			"setAsCover": "製作封面",
 			"unsetAsCover": "移除封面",
@@ -916,7 +881,6 @@
 			"unassignSuccess": "已取消分配給用户。"
 		},
 		"label": {
-			"createSuccess": "標籤已成功建立。",
 			"addCreateSuccess": "標籤已成功建立並新增完成。"
 		},
 		"priority": {
@@ -982,7 +946,6 @@
 	"menu": {
 		"setBackground": "背景設定",
 		"share": "共享",
-		"newProject": "新專案",
 		"createProject": "建立專案",
 		"cantArchiveIsDefault": "您無法封存此專案，因為它是您的預設專案。",
 		"cantDeleteIsDefault": "您無法刪除此專案，因為它是您的預設專案。"

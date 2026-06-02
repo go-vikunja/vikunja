@@ -17,8 +17,9 @@
 package metrics
 
 import (
-	"strconv"
+	"time"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 
@@ -35,6 +36,22 @@ const (
 	FilesCountKey       = `files_count`
 	AttachmentsCountKey = `attachments_count`
 )
+
+// countCacheTTL is how long a cached entity count is served before it is recomputed
+// from the database. The counts are inherently approximate (Prometheus samples them),
+// so a short staleness window is fine and keeps the cache self-healing — a missed
+// InvalidateCount call costs at most this much staleness, never a permanent drift.
+const countCacheTTL = 30 * time.Second
+
+// countTables maps each count metric key to the database table it counts.
+var countTables = map[string]string{
+	ProjectCountKey:     "projects",
+	UserCountKey:        "users",
+	TaskCountKey:        "tasks",
+	TeamCountKey:        "teams",
+	FilesCountKey:       "files",
+	AttachmentsCountKey: "task_attachments",
+}
 
 var registry *prometheus.Registry
 
@@ -53,7 +70,10 @@ func registerPromMetric(key, description string) {
 		Name: "vikunja_" + key,
 		Help: description,
 	}, func() float64 {
-		count, _ := GetCount(key)
+		count, err := GetCount(key)
+		if err != nil {
+			log.Errorf("Could not get count for metric %s: %s", key, err)
+		}
 		return float64(count)
 	}))
 	if err != nil {
@@ -65,8 +85,8 @@ func registerPromMetric(key, description string) {
 func InitMetrics() {
 	GetRegistry()
 
-	registerPromMetric(ProjectCountKey, "The number of projects on this instance")
-	registerPromMetric(UserCountKey, "The total number of shares on this instance")
+	registerPromMetric(ProjectCountKey, "The total number of projects on this instance")
+	registerPromMetric(UserCountKey, "The total number of users on this instance")
 	registerPromMetric(TaskCountKey, "The total number of tasks on this instance")
 	registerPromMetric(TeamCountKey, "The total number of teams on this instance")
 	registerPromMetric(FilesCountKey, "The total number of files on this instance")
@@ -76,26 +96,31 @@ func InitMetrics() {
 	setupActiveLinkSharesMetric()
 }
 
-// GetCount returns the current count from keyvalue
-func GetCount(key string) (count int64, err error) {
-	cnt, exists, err := keyvalue.Get(key)
-	if err != nil {
-		return 0, err
-	}
-	if !exists {
+// GetCount returns the current count for the given metric key. The value is counted
+// directly from the database and cached for countCacheTTL, so repeated scrapes don't
+// hit the database on every request.
+func GetCount(key string) (int64, error) {
+	return keyvalue.RememberFor(key, countCacheTTL, func() (int64, error) {
+		return countFromDatabase(key)
+	})
+}
+
+// countFromDatabase runs a COUNT(*) for the table backing the given metric key.
+func countFromDatabase(key string) (int64, error) {
+	table, has := countTables[key]
+	if !has {
 		return 0, nil
 	}
 
-	if s, is := cnt.(string); is {
-		count, err = strconv.ParseInt(s, 10, 64)
-	} else {
-		count = cnt.(int64)
-	}
+	s := db.NewSession()
+	defer s.Close()
 
-	return
+	return s.Table(table).Count()
 }
 
-// SetCount sets the project count to a given value
-func SetCount(count int64, key string) error {
-	return keyvalue.Put(key, count)
+// InvalidateCount drops the cached count for a key so the next read recomputes it from
+// the database. Use it where instant freshness is worth the extra COUNT(*); everywhere
+// else the countCacheTTL keeps the value reasonably up to date on its own.
+func InvalidateCount(key string) error {
+	return keyvalue.Del(key)
 }

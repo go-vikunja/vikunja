@@ -44,7 +44,6 @@
 			"resetPassword": "Réinitialiser votre mot de passe",
 			"resetPasswordAction": "M’envoyer un lien de réinitialisation du mot de passe",
 			"resetPasswordSuccess": "Vérifiez votre boîte de réception ! Vous devriez y trouver un courriel contenant les instructions pour réinitialiser votre mot de passe.",
-			"passwordsDontMatch": "Les mots de passe ne correspondent pas",
 			"confirmEmailSuccess": "Vous avez bien confirmé votre adresse ! Vous pouvez maintenant vous connecter.",
 			"totpTitle": "Code d’authentification à deux facteurs",
 			"totpPlaceholder": "p. ex. 123456",
@@ -74,10 +73,8 @@
 			"title": "Paramètres",
 			"newPasswordTitle": "Mettre à jour votre mot de passe",
 			"newPassword": "Nouveau mot de passe",
-			"newPasswordConfirm": "Confirmation du nouveau mot de passe",
 			"currentPassword": "Mot de passe actuel",
 			"currentPasswordPlaceholder": "Votre mot de passe actuel",
-			"passwordsDontMatch": "Le nouveau mot de passe et sa confirmation ne correspondent pas.",
 			"passwordUpdateSuccess": "Le mot de passe a bien été mis à jour.",
 			"updateEmailTitle": "Mettre à jour votre adresse électronique",
 			"updateEmailNew": "Nouvelle adresse électronique",
@@ -160,7 +157,6 @@
 			},
 			"appearance": {
 				"title": "Jeu de couleurs",
-				"setSuccess": "Changement du jeu de couleurs enregistré vers {colorScheme}",
 				"colorScheme": {
 					"light": "Clair",
 					"system": "Système",
@@ -182,7 +178,6 @@
 				"expired": "Ce jeton a expiré {ago}.",
 				"tokenCreatedSuccess": "Voici votre nouveau jeton api : {token}",
 				"tokenCreatedNotSeeAgain": "Conservez-le dans un endroit sécurisé, vous ne le reverrez plus !",
-				"selectAll": "Sélectionner tout",
 				"delete": {
 					"header": "Supprimer ce jeton",
 					"text1": "Voulez-vous vraiment effacer le jeton « {token} » ?",
@@ -449,16 +444,7 @@
 			"titlePlaceholder": "Entre un nom de filtre enregistré…",
 			"description": "Description",
 			"descriptionPlaceholder": "Entrez une description pour ce filtre, tapez '/' pour plus d'options…",
-			"includeNulls": "Inclure les tâches sans valeurs",
-			"requireAll": "Exiger tous les filtres pour qu’une tâche s’affiche",
-			"showDoneTasks": "Afficher les tâches terminées",
-			"sortAlphabetically": "Trier par ordre alphabétique",
-			"enablePriority": "Activer le filtre par priorité",
-			"enablePercentDone": "Activer le filtre par progression",
-			"dueDateRange": "Plage de dates d’échéance",
-			"startDateRange": "Plage de dates de début",
-			"endDateRange": "Plage de dates de fin",
-			"reminderRange": "Plage de dates de rappel"
+			"includeNulls": "Inclure les tâches sans valeurs"
 		},
 		"create": {
 			"title": "Nouveau filtre enregistré",
@@ -476,7 +462,6 @@
 			"success": "Filtre enregistré."
 		},
 		"query": {
-			"title": "Requête",
 			"placeholder": "Faites une recherche ou saisissez une requête de filtre…",
 			"help": {
 				"intro": "Pour filtrer les tâches, vous pouvez utiliser une syntaxe de requête similaire à SQL. Les champs disponibles pour le filtrage incluent :",
@@ -529,7 +514,6 @@
 	"migrate": {
 		"title": "Importer depuis d’autres services",
 		"titleService": "Importer vos données depuis {name} dans Vikunja",
-		"import": "Importer vos données dans Vikunja",
 		"description": "Cliquer sur le logo d’un des services tiers ci-dessous pour commencer.",
 		"descriptionDo": "Vikunja importera toutes les listes, tâches, notes, rappels et fichiers auxquels vous avez accès.",
 		"authorize": "Autoriser Vikunja à accéder à votre compte {name} en cliquant sur le bouton ci-dessous.",
@@ -548,7 +532,6 @@
 		"manage": "Gérer les étiquettes",
 		"description": "Cliquez sur une étiquette pour la modifier. Vous pouvez modifier toutes les étiquettes que vous avez créées, vous pouvez utiliser toutes les étiquettes qui sont associées à une tâche dont vous avez accès au projet.",
 		"newCTA": "Vous n’avez actuellement aucune étiquette.",
-		"search": "Taper pour rechercher une étiquette…",
 		"create": {
 			"header": "Nouvelle étiquette",
 			"title": "Créer une étiquette",
@@ -557,7 +540,6 @@
 		},
 		"edit": {
 			"header": "Modifier l’étiquette",
-			"forbidden": "Vous ne pouvez pas modifier cette étiquette, car elle ne vous appartient pas.",
 			"success": "Étiquette mise à jour."
 		},
 		"deleteSuccess": "Étiquette supprimée.",
@@ -565,7 +547,6 @@
 			"title": "Nom",
 			"titlePlaceholder": "Saisir ici le nom de l’étiquette…",
 			"description": "Description",
-			"descriptionPlaceholder": "Description de l’étiquette",
 			"color": "Couleur"
 		}
 	},
@@ -588,16 +569,13 @@
 		"delete": "Supprimer",
 		"confirm": "Confirmer",
 		"cancel": "Annuler",
-		"refresh": "Actualiser",
 		"disable": "Désactiver",
 		"copy": "Copier dans le presse-papier",
 		"copyError": "Échec de la copie dans le presse-papier",
-		"search": "Rechercher",
 		"searchPlaceholder": "Tapez pour rechercher…",
 		"previous": "Précédent",
 		"next": "Suivant",
 		"poweredBy": "Propulsé par Vikunja",
-		"info": "Infos",
 		"create": "Créer",
 		"doit": "Faites-le !",
 		"saving": "Enregistrement en cours…",
@@ -630,15 +608,12 @@
 		},
 		"editor": {
 			"edit": "Modifier",
-			"done": "Terminé",
 			"heading1": "En-tête 1",
 			"heading1Tooltip": "En-tête de grande section.",
 			"heading2": "En-tête 2",
 			"heading2Tooltip": "En-tête de section moyenne.",
 			"heading3": "En-tête 3",
 			"heading3Tooltip": "En-tête de section plus petite.",
-			"headingSmaller": "En-tête plus petit",
-			"headingBigger": "En-tête plus grand",
 			"bold": "Gras",
 			"italic": "Italique",
 			"strikethrough": "Barré",
@@ -649,17 +624,13 @@
 			"quoteTooltip": "Insérer une citation.",
 			"bulletList": "Liste à puces",
 			"bulletListTooltip": "Créer une liste à puces simple.",
-			"unorderedList": "Liste non-ordonnée",
 			"orderedList": "Liste ordonnée",
 			"orderedListTooltip": "Créer une liste numérotée.",
-			"cleanBlock": "Nettoyer le code",
 			"link": "Lien",
 			"image": "Image",
 			"imageTooltip": "Charger une image depuis votre ordinateur.",
 			"horizontalRule": "Ligne horizontale",
 			"horizontalRuleTooltip": "Diviser une section.",
-			"sideBySide": "Côte à côte",
-			"guide": "Guide",
 			"text": "Texte",
 			"textTooltip": "Commencez à taper du texte brut.",
 			"taskList": "Liste de tâches",
@@ -765,20 +736,16 @@
 		}
 	},
 	"task": {
-		"task": "Tâche",
 		"new": "Créer une tâche",
-		"delete": "Supprimer cette tâche",
 		"createSuccess": "Tâche créée.",
 		"addReminder": "Ajouter un rappel…",
 		"doneSuccess": "Tâche marquée comme terminée.",
 		"undoneSuccess": "Tâche marquée comme non terminée.",
 		"undo": "Annuler",
-		"openDetail": "Ouvrir la vue détaillée de la tâche",
 		"checklistTotal": "{checked} sur {total} tâches",
 		"checklistAllDone": "{total} tâches",
 		"show": {
 			"titleCurrent": "Tâches actuelles",
-			"titleDates": "Tâches du {from} au {to}",
 			"overdue": "Montrer les tâches en retard",
 			"fromuntil": "Tâches du {from} au {until}",
 			"select": "Choisissez une période",
@@ -798,7 +765,6 @@
 			"deleteSuccess": "Tâche supprimée.",
 			"belongsToProject": "Cette tâche appartient au projet « {project} »",
 			"due": "Échéance {at}",
-			"closePopup": "Fermer la fenêtre",
 			"organization": "Organisation",
 			"management": "Gestion",
 			"dateAndTime": "Date et heure",
@@ -868,7 +834,6 @@
 			"delete": "Supprimer la pièce jointe",
 			"deleteTooltip": "Supprimer cette pièce jointe",
 			"deleteText1": "Supprimer la pièce jointe {filename} ?",
-			"copyUrl": "Copier l’URL",
 			"copyUrlTooltip": "Copier l’URL de cette pièce jointe pour l’utiliser dans le texte",
 			"setAsCover": "Mettre en couverture",
 			"unsetAsCover": "Retirer la couverture",
@@ -895,8 +860,7 @@
 			"1week": "1 semaine"
 		},
 		"description": {
-			"placeholder": "Entrez une description, appuyez sur \"/\" pour plus d'options…",
-			"empty": "Aucune description n’est encore disponible."
+			"placeholder": "Entrez une description, appuyez sur \"/\" pour plus d'options…"
 		},
 		"assignee": {
 			"placeholder": "Tapez pour assigner à un utilisateur…",
@@ -908,7 +872,6 @@
 			"placeholder": "Taper pour ajouter une étiquette…",
 			"createPlaceholder": "Ajouter ceci comme nouvelle étiquette",
 			"addSuccess": "Étiquette ajoutée.",
-			"createSuccess": "Étiquette créée.",
 			"removeSuccess": "Étiquette retirée.",
 			"addCreateSuccess": "L'étiquette a bien été créée et ajoutée.",
 			"delete": {
@@ -973,8 +936,6 @@
 			"hours": "Heures",
 			"days": "Jours",
 			"weeks": "Semaines",
-			"months": "Mois",
-			"years": "Années",
 			"invalidAmount": "Merci de saisir une valeur supérieure à 0."
 		},
 		"quickAddMagic": {
@@ -1122,7 +1083,6 @@
 		"unarchive": "Désarchiver",
 		"setBackground": "Paramètres d'arrière-plan",
 		"share": "Partager",
-		"newProject": "Nouveau projet",
 		"createProject": "Créer un projet",
 		"cantArchiveIsDefault": "Vous ne pouvez pas archiver ceci car il s'agit de votre projet par défaut.",
 		"cantDeleteIsDefault": "Vous ne pouvez pas supprimer ceci car il s'agit de votre projet par défaut.",
@@ -1279,7 +1239,6 @@
 			"hours": "heure|heures",
 			"days": "jour|jours",
 			"weeks": "semaine|semaines",
-			"months": "mois|mois",
 			"years": "année|années"
 		}
 	}

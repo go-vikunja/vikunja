@@ -145,7 +145,7 @@ function doDelete() {
 					<template #default="{id}">
 						<FormInput
 							:id="id"
-							v-model="newWebhook.basicauthuser"
+							v-model="newWebhook.basicAuthUser"
 						/>
 					</template>
 				</FormField>
@@ -153,7 +153,7 @@ function doDelete() {
 					<template #default="{id}">
 						<FormInput
 							:id="id"
-							v-model="newWebhook.basicauthpassword"
+							v-model="newWebhook.basicAuthPassword"
 						/>
 					</template>
 				</FormField>

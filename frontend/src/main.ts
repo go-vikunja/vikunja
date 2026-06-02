@@ -19,7 +19,6 @@ declare global {
 		API_URL: string;
 		SENTRY_ENABLED?: boolean;
 		SENTRY_DSN?: string;
-		ALLOW_ICON_CHANGES: boolean;
 		CUSTOM_LOGO_URL?: string;
 		CUSTOM_LOGO_URL_DARK?: string;
 	}
@@ -38,7 +37,7 @@ if (window.API_URL.endsWith('/')) {
 
 // directives
 import focus from '@/directives/focus'
-import {vTooltip} from 'floating-vue'
+import tooltip from '@/directives/tooltip'
 import 'floating-vue/dist/style.css'
 import shortcut from '@/directives/shortcut'
 import testid from '@/directives/testid'
@@ -66,7 +65,7 @@ setLanguage(browserLanguage).then(() => {
 	app.use(Notifications)
 
 	app.directive('focus', focus)
-	app.directive('tooltip', vTooltip)
+	app.directive('tooltip', tooltip)
 	app.directive('shortcut', shortcut)
 	app.directive('cy', testid)
 
