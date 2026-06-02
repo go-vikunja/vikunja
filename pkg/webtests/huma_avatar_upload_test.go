@@ -148,6 +148,29 @@ func TestAvatarUpload(t *testing.T) {
 		assert.NotEqual(t, "upload", u.AvatarProvider)
 	})
 
+	t.Run("Undecodable image (SVG) rejected with 400", func(t *testing.T) {
+		// SVG sniffs as image/svg+xml, passing the mimetype prefix check, but
+		// image.Decode/DecodeConfig has no SVG decoder. Sent as octet-stream it
+		// bypasses the part content-type allow-list, so the byte-level decode
+		// validation in StoreUploadedAvatar is what must reject it. This must be
+		// a 400 (ErrNotAnImage), not a 500 from a failed decode deeper in storage.
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		token := humaTokenFor(t, &testuser1)
+
+		svg := []byte(`<?xml version="1.0" encoding="UTF-8"?>` +
+			`<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="#abc"/></svg>`)
+		body, contentType := multipartAvatarBody(t, "avatar", "avatar.svg", svg)
+		rec := uploadAvatarRequest(t, e, body, contentType, token)
+		require.Equal(t, http.StatusBadRequest, rec.Code, "body: %s", rec.Body.String())
+
+		s := db.NewSession()
+		defer s.Close()
+		u, err := user.GetUserByID(s, testuser1.ID)
+		require.NoError(t, err)
+		assert.NotEqual(t, "upload", u.AvatarProvider)
+	})
+
 	t.Run("Unauthenticated", func(t *testing.T) {
 		e, err := setupTestEnv()
 		require.NoError(t, err)
