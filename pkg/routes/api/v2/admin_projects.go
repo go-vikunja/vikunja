@@ -31,6 +31,8 @@ type adminProjectListBody struct {
 	Body Paginated[*models.Project]
 }
 
+func init() { AddRouteRegistrar(RegisterAdminProjectRoutes) }
+
 // Permissions are enforced by the gateV2AdminRoutes path middleware, not per-handler.
 func RegisterAdminProjectRoutes(api huma.API) {
 	tags := []string{"admin"}
