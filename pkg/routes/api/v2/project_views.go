@@ -34,8 +34,6 @@ type projectViewListBody struct {
 	Body Paginated[*models.ProjectView]
 }
 
-func init() { AddRouteRegistrar(RegisterProjectViewRoutes) }
-
 // RegisterProjectViewRoutes wires the nested ProjectView CRUD onto the Huma API.
 // Every operation binds two path params: {project} → ProjectID and {view} → ID.
 // This is the reference shape every nested sub-resource copies.
@@ -87,6 +85,8 @@ func RegisterProjectViewRoutes(api huma.API) {
 		Tags:        tags,
 	}, projectViewsDelete)
 }
+
+func init() { AddRouteRegistrar(RegisterProjectViewRoutes) }
 
 func projectViewsList(ctx context.Context, in *struct {
 	ProjectID int64 `path:"project"`

@@ -39,8 +39,6 @@ type avatarInput struct {
 	Size     int64  `query:"size" default:"250" minimum:"1" doc:"Desired avatar edge length in pixels. Clamped to the server's configured maximum if larger; providers that render fixed-size images may ignore it."`
 }
 
-func init() { AddRouteRegistrar(RegisterAvatarRoutes) }
-
 // RegisterAvatarRoutes wires the avatar binary endpoint onto the Huma API.
 func RegisterAvatarRoutes(api huma.API) {
 	Register(api, huma.Operation{
@@ -67,6 +65,8 @@ func RegisterAvatarRoutes(api huma.API) {
 		},
 	}, avatarGet)
 }
+
+func init() { AddRouteRegistrar(RegisterAvatarRoutes) }
 
 func avatarGet(ctx context.Context, in *avatarInput) (*avatarResponse, error) {
 	// Authenticated but no per-user check — any authenticated caller may view any

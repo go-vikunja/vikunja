@@ -35,8 +35,6 @@ type labelListBody struct {
 	Body Paginated[*models.LabelWithTaskID]
 }
 
-func init() { AddRouteRegistrar(RegisterLabelRoutes) }
-
 // RegisterLabelRoutes wires Label CRUD onto the Huma API.
 func RegisterLabelRoutes(api huma.API) {
 	tags := []string{"labels"}
@@ -86,6 +84,8 @@ func RegisterLabelRoutes(api huma.API) {
 		Tags:        tags,
 	}, labelsDelete)
 }
+
+func init() { AddRouteRegistrar(RegisterLabelRoutes) }
 
 func labelsList(ctx context.Context, in *ListParams) (*labelListBody, error) {
 	a, err := authFromCtx(ctx)
