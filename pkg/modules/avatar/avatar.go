@@ -18,6 +18,7 @@ package avatar
 
 import (
 	"errors"
+	"image"
 	"io"
 	"strings"
 
@@ -140,6 +141,19 @@ func StoreUploadedAvatar(s *xorm.Session, u *user.User, src io.ReadSeeker) error
 		return err
 	}
 	if !strings.HasPrefix(mime.String(), "image") {
+		return ErrNotAnImage
+	}
+	if _, err := src.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+
+	// The mimetype sniff above accepts image types we cannot actually store
+	// (e.g. SVG, WebP) because upload.StoreAvatarFile decodes via image.Decode,
+	// which only has the decoders registered process-wide by the imaging package
+	// (png, jpeg, gif, tiff, bmp). image.DecodeConfig uses those same decoders, so
+	// validating here rejects undecodable images with a 400 instead of failing
+	// deeper in storage with a 500.
+	if _, _, err := image.DecodeConfig(src); err != nil {
 		return ErrNotAnImage
 	}
 	if _, err := src.Seek(0, io.SeekStart); err != nil {
