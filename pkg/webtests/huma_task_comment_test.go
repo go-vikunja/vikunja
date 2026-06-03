@@ -30,36 +30,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestHumaTaskComment is the nested feature-gated reference test for /api/v2.
-// Comments live under /tasks/{task}/comments/{commentid}, so the harness binds
-// two path params: basePath carries the literal {task} and idParam picks
-// {commentid}.
+// TestHumaTaskComment ports the v1 webtest coverage (TestTaskComments +
+// TestTaskCommentIDOR) to /api/v2, plus v2-specific HTTP assertions (status
+// codes, ETag). It re-proves the full permission/sharing matrix independently
+// because the v1 routes and their tests will be removed.
 //
-// The resource is gated behind config.ServiceEnableTaskComments, which
-// InitDefaultConfig (called by setupTestEnv) defaults to true — so the
-// registrar registers the routes and these tests can reach them.
-//
-// This is a 1:1 port of the v1 webtest coverage (TestTaskComments +
-// TestTaskCommentIDOR) plus the HTTP-layer assertions specific to v2 (status
-// codes, ETag). It re-proves the complete permission/sharing matrix
-// independently of v1 because the v1 routes (and their tests) will be removed.
-//
-// Fixtures used by the matrix (all run as testuser1 unless noted):
-//   - task 1 (project 1, owned by testuser1) has comment 1 (author 1).
-//   - task 35 (project 21, owned by testuser1) has comment 15 (author 1) and
-//     comment 17 (author -2, a link share) — used for the link-share read case.
-//   - tasks 15–26 carry comments 3–14, all authored by user 5/6 (never
-//     testuser1), behind the project-share matrix below. testuser1 is granted
-//     access via these shares but is never the comment author, which is what
-//     proves the author-only update/delete rule (vs. plain access denial):
-//     15→team-ro, 16→team-write, 17→team-admin, 18→user-ro, 19→user-write,
-//     20→user-admin, 21→parent-team-ro, 22→parent-team-write,
-//     23→parent-team-admin, 24→parent-user-ro, 25→parent-user-write,
-//     26→parent-user-admin.
-//   - task 13 (project 2) is reachable by link share id 2 (write) — used for
-//     the link-share create case asserting author_id == -2.
-//   - task 34 (project 20, owned by user 13) is inaccessible to testuser1;
-//     comment 18 lives there — used for the IDOR negative.
+// The crux of the author-only rule: across tasks 15–26, testuser1 is granted
+// access through every share kind but never authored the comments (user 5/6
+// did), so a 403 there exercises authorship rather than plain access denial.
 func TestHumaTaskComment(t *testing.T) {
 	// task 1 belongs to project 1, owned by testuser1.
 	onTask1 := webHandlerTestV2{
@@ -69,10 +47,9 @@ func TestHumaTaskComment(t *testing.T) {
 		t:        t,
 	}
 	require.NoError(t, onTask1.ensureEnv())
-	// onTaskAs builds a handler for a different task while sharing the one Echo
-	// instance (so the JWT signing secret and the single fixture load stay
-	// valid across the whole matrix). v2 does not reload fixtures per request,
-	// so subtests below are arranged to avoid clobbering each other's rows.
+	// onTaskAs reuses the one Echo instance (and its single fixture load) for a
+	// different task. v2 does not reload fixtures per request, so the subtests
+	// are ordered to avoid clobbering each other's rows.
 	onTaskAs := func(taskID string, u *user.User) *webHandlerTestV2 {
 		return &webHandlerTestV2{
 			user:     u,
@@ -105,14 +82,12 @@ func TestHumaTaskComment(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `comment 17`)
 		})
 		t.Run("order_by desc", func(t *testing.T) {
-			// order_by is an exposed query param; just assert it is accepted.
 			rec, err := onTask35.testReadAllWithUser(url.Values{"order_by": []string{"desc"}}, nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `comment 15`)
 		})
 		t.Run("Search filter", func(t *testing.T) {
-			// q narrows results to matching comments; mirrors the v1 model
-			// ReadAll search test (search "COMMENT 15" returns only comment 15).
+			// Mirrors the v1 model ReadAll search test: search is case-insensitive.
 			rec, err := onTask35.testReadAllWithUser(url.Values{"q": []string{"COMMENT 15"}}, nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `comment 15`)
