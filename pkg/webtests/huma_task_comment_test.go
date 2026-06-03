@@ -64,10 +64,22 @@ func TestHumaTaskComment(t *testing.T) {
 		e:        onTask1.e,
 	}
 	// user6 has no access to project 1, so it is neither author nor writer on
-	// task 1's comment 1 — used for the non-author forbidden negatives.
+	// task 1's comment 1 — used for the no-access forbidden negatives.
 	asUser6 := webHandlerTestV2{
 		user:     &testuser6,
 		basePath: "/api/v2/tasks/1/comments",
+		idParam:  "commentid",
+		t:        t,
+		e:        onTask1.e,
+	}
+	// task 16 belongs to project 7, which testuser1 can write to via team 3.
+	// Comment 4 on task 16 is authored by user 6, so testuser1 has write access
+	// to the task but is *not* the comment author — this is what genuinely
+	// proves the author-only update/delete restriction (as opposed to plain
+	// access denial, which asUser6 covers).
+	asWriterNonAuthor := webHandlerTestV2{
+		user:     &testuser1,
+		basePath: "/api/v2/tasks/16/comments",
 		idParam:  "commentid",
 		t:        t,
 		e:        onTask1.e,
@@ -155,8 +167,16 @@ func TestHumaTaskComment(t *testing.T) {
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 		})
-		t.Run("Forbidden non-author", func(t *testing.T) {
-			// user6 is not the author of comment 1 (and has no write access).
+		t.Run("Forbidden non-author with write access", func(t *testing.T) {
+			// testuser1 can write to task 16 but did not author comment 4
+			// (user 6 did), so the author-only restriction must still 403 — this
+			// is the case that actually exercises authorship, not access.
+			_, err := asWriterNonAuthor.testUpdateWithUser(nil, map[string]string{"commentid": "4"}, `{"comment":"x"}`)
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+		t.Run("Forbidden no access", func(t *testing.T) {
+			// user6 has no access to task 1 at all.
 			_, err := asUser6.testUpdateWithUser(nil, map[string]string{"commentid": "1"}, `{"comment":"x"}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
@@ -164,7 +184,14 @@ func TestHumaTaskComment(t *testing.T) {
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		t.Run("Forbidden non-author", func(t *testing.T) {
+		t.Run("Forbidden non-author with write access", func(t *testing.T) {
+			// testuser1 can write to task 16 but did not author comment 4,
+			// so deleting another user's comment must 403.
+			_, err := asWriterNonAuthor.testDeleteWithUser(nil, map[string]string{"commentid": "4"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+		})
+		t.Run("Forbidden no access", func(t *testing.T) {
 			_, err := asUser6.testDeleteWithUser(nil, map[string]string{"commentid": "1"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
