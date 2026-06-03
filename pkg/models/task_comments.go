@@ -185,10 +185,8 @@ func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 		return err
 	}
 
-	// The doer must come from the authenticated user, not from the request
-	// body: tc.Author is bound from the payload and could be omitted (nil) or
-	// spoofed. CanUpdate already guarantees the authenticated user is the
-	// comment's author, so resolving the doer from the session is correct.
+	// Resolve the doer from the session, not from tc.Author: the latter is bound
+	// from the request body and could be omitted (nil) or spoofed.
 	doer, err := GetUserOrLinkShareUser(s, a)
 	if err != nil {
 		return err

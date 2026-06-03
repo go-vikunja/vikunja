@@ -29,19 +29,15 @@ import (
 	"github.com/danielgtaylor/huma/v2/conditional"
 )
 
-// taskCommentListBody is the list-response envelope. models.TaskComment.ReadAll
-// returns []*models.TaskComment, so that's the element type.
 type taskCommentListBody struct {
 	Body Paginated[*models.TaskComment]
 }
 
 // RegisterTaskCommentRoutes wires the nested TaskComment CRUD onto the Huma API.
-// Every operation binds two path params: {task} → TaskID and {commentid} → ID.
 //
-// The resource is feature-gated by config.ServiceEnableTaskComments. The flag is
-// checked here rather than in the central wiring: the registrar runs at
-// RegisterAll time, after the config has loaded, so a disabled instance simply
-// registers no comment routes.
+// The feature gate is checked here, not in the central wiring: the registrar
+// runs at RegisterAll time after the config has loaded, so a disabled instance
+// registers no comment routes at all.
 func RegisterTaskCommentRoutes(api huma.API) {
 	if !config.ServiceEnableTaskComments.GetBool() {
 		return
@@ -126,13 +122,13 @@ func taskCommentsRead(ctx context.Context, in *struct {
 	if err != nil {
 		return nil, err
 	}
-	// ReadOne resolves the comment scoped to its parent task — the TaskID guards
-	// against reading a comment of one task through another (IDOR).
+	// TaskID scopes the lookup to the parent task, guarding against reading a
+	// comment of one task through another (IDOR).
 	comment := &models.TaskComment{ID: in.ID, TaskID: in.TaskID}
 	if _, err := handler.DoReadOne(ctx, comment, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	// PreconditionFailed wants the unquoted etag; response header uses RFC 9110 quoted form.
+	// PreconditionFailed wants the unquoted etag; the response header uses the RFC 9110 quoted form.
 	etag := fmt.Sprintf("%d-%d", comment.ID, comment.Updated.UnixNano())
 	if in.HasConditionalParams() {
 		if err := in.PreconditionFailed(etag, comment.Updated); err != nil {
