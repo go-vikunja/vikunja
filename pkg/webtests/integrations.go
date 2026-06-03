@@ -54,6 +54,13 @@ var (
 		Email:    "user1@example.com",
 		Issuer:   "local",
 	}
+	testuser2 = user.User{
+		ID:       2,
+		Username: "user2",
+		Password: "$2a$04$X4aRMEt0ytgPwMIgv36cI..7X9.nhY/.tYwxpqSi0ykRHx2CwQ0S6",
+		Email:    "user2@example.com",
+		Issuer:   "local",
+	}
 	testuser10 = user.User{
 		ID:       10,
 		Username: "user10",
