@@ -25,7 +25,6 @@ import (
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/danielgtaylor/huma/v2/conditional"
 )
 
 // projectListBody is the list-response envelope. models.Project.ReadAll
@@ -50,7 +49,7 @@ func RegisterProjectRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-read",
 		Summary:     "Get a project",
-		Description: "Returns a single project the caller can read, including its views and the caller's favorite/subscription state. Resolves the Favorites pseudo-project and saved-filter-backed projects. Sends an ETag; pass it as If-None-Match on a later read to get a 304 Not Modified.",
+		Description: "Returns a single project the caller can read, including its views and the caller's favorite/subscription state. Resolves the Favorites pseudo-project and saved-filter-backed projects. Pass expand=permissions to include the caller's max_permission; otherwise max_permission is null. Served fresh on every call (no conditional/ETag) because the response carries user-scoped state that changes without bumping the project's updated timestamp.",
 		Method:      http.MethodGet,
 		Path:        "/projects/{id}",
 		Tags:        tags,
@@ -113,8 +112,7 @@ func projectsList(ctx context.Context, in *struct {
 func projectsRead(ctx context.Context, in *struct {
 	ID     int64  `path:"id"`
 	Expand string `query:"expand" enum:"permissions" doc:"If set to \"permissions\", the project includes the max permission the requesting user has on it (max_permission)."`
-	conditional.Params
-}) (*singleReadBody[models.Project], error) {
+}) (*singleBody[models.Project], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -135,14 +133,12 @@ func projectsRead(ctx context.Context, in *struct {
 	} else {
 		project.MaxPermission = models.PermissionUnknown
 	}
-	// PreconditionFailed wants the unquoted etag; response header uses RFC 9110 quoted form.
-	etag := fmt.Sprintf("%d-%d", project.ID, project.Updated.UnixNano())
-	if in.HasConditionalParams() {
-		if err := in.PreconditionFailed(etag, project.Updated); err != nil {
-			return nil, err
-		}
-	}
-	return &singleReadBody[models.Project]{ETag: `"` + etag + `"`, Body: project}, nil
+	// No ETag/conditional read here: a project response carries user-scoped,
+	// derived state (subscription, favorite, views, computed archived state)
+	// that changes without bumping project.Updated. An ETag built from Updated
+	// would hand out stale 304s and hide those changes, so the read is always
+	// served fresh.
+	return &singleBody[models.Project]{Body: project}, nil
 }
 
 func projectsCreate(ctx context.Context, in *struct {
