@@ -72,7 +72,10 @@ func TestHumaProject(t *testing.T) {
 			// Without expand=permissions, max_permission must be null rather than
 			// defaulting to 0 (which would falsely read as PermissionRead).
 			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
-			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
+			// The project read is served fresh on every call; no ETag is sent
+			// because the response carries derived state that changes without
+			// bumping project.Updated.
+			assert.Empty(t, rec.Result().Header.Get("ETag"))
 		})
 		t.Run("Expand permissions", func(t *testing.T) {
 			// User 1 owns Test1 → admin (2); expand surfaces it as max_permission.
