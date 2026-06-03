@@ -30,18 +30,18 @@ import (
 
 // TaskComment represents a task comment
 type TaskComment struct {
-	ID       int64      `xorm:"autoincr pk unique not null" json:"id" param:"commentid"`
-	Comment  string     `xorm:"text not null" json:"comment" valid:"dbtext,required"`
+	ID       int64      `xorm:"autoincr pk unique not null" json:"id" param:"commentid" readOnly:"true" doc:"The unique, numeric id of this comment."`
+	Comment  string     `xorm:"text not null" json:"comment" valid:"dbtext,required" doc:"The comment text. May contain HTML; mentions are parsed and notify the mentioned users."`
 	AuthorID int64      `xorm:"not null" json:"-"`
-	Author   *user.User `xorm:"-" json:"author"`
+	Author   *user.User `xorm:"-" json:"author" readOnly:"true" doc:"The user who wrote the comment. Set from the authenticated user on create; ignored on write."`
 	TaskID   int64      `xorm:"index not null" json:"-" param:"task"`
 
-	Reactions ReactionMap `xorm:"-" json:"reactions"`
+	Reactions ReactionMap `xorm:"-" json:"reactions" readOnly:"true" doc:"The reactions on this comment, keyed by reaction value. Managed through the reactions endpoints, not by writing here."`
 
 	OrderBy string `xorm:"-" json:"-" query:"order_by"`
 
-	Created time.Time `xorm:"created" json:"created"`
-	Updated time.Time `xorm:"updated" json:"updated"`
+	Created time.Time `xorm:"created" json:"created" readOnly:"true" doc:"A timestamp when this comment was created. You cannot change this value."`
+	Updated time.Time `xorm:"updated" json:"updated" readOnly:"true" doc:"A timestamp when this comment was last updated. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
