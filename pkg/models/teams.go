@@ -40,7 +40,7 @@ type Team struct {
 	Description string `xorm:"longtext null" json:"description"`
 	CreatedByID int64  `xorm:"bigint not null INDEX" json:"-"`
 	// The team's external id provided by the openid or ldap provider
-	ExternalID string `xorm:"varchar(250) null" maxLength:"250" json:"external_id" doc:"The team's external id, set by the openid or ldap provider that created it. Read-only for clients."`
+	ExternalID string `xorm:"varchar(250) null" maxLength:"250" json:"external_id" readOnly:"true" doc:"The team's external id, set by the openid or ldap provider that created it. Read-only for clients."`
 	// Contains the issuer extracted from the vikunja_groups claim if this team was created through oidc
 	Issuer string `xorm:"text null" json:"-"`
 
