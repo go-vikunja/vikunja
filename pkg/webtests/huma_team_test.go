@@ -19,8 +19,11 @@ package webtests
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
+
+	"code.vikunja.io/api/pkg/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -49,6 +52,39 @@ func TestHumaTeam(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `testteam1`)
 			// User 1 is not a member of team 9 (only user 2 is).
 			assert.NotContains(t, rec.Body.String(), `testteam9`)
+		})
+		// testteam13 and testteam15 are public (teams.yml) and user1 is not a
+		// member of either (team_members.yml only lists user 10 there).
+		t.Run("Include public, but public teams disabled", func(t *testing.T) {
+			// The config gate is off by default: include_public must be a no-op
+			// so public teams the user is not a member of stay hidden.
+			require.False(t, config.ServiceEnablePublicTeams.GetBool())
+			rec, err := testHandler.testReadAllWithUser(url.Values{"include_public": []string{"true"}}, nil)
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `testteam1`)
+			assert.NotContains(t, rec.Body.String(), `testteam13`)
+			assert.NotContains(t, rec.Body.String(), `testteam15`)
+		})
+		t.Run("Include public when public teams enabled", func(t *testing.T) {
+			prev := config.ServiceEnablePublicTeams.GetBool()
+			config.ServiceEnablePublicTeams.Set(true)
+			defer config.ServiceEnablePublicTeams.Set(prev)
+
+			// Without include_public the public teams stay hidden even with the
+			// instance setting on.
+			rec, err := testHandler.testReadAllWithUser(nil, nil)
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `testteam1`)
+			assert.NotContains(t, rec.Body.String(), `testteam13`)
+			assert.NotContains(t, rec.Body.String(), `testteam15`)
+
+			// With include_public=true the public teams the user is not a member
+			// of are surfaced.
+			rec, err = testHandler.testReadAllWithUser(url.Values{"include_public": []string{"true"}}, nil)
+			require.NoError(t, err)
+			assert.Contains(t, rec.Body.String(), `testteam1`)
+			assert.Contains(t, rec.Body.String(), `testteam13`)
+			assert.Contains(t, rec.Body.String(), `testteam15`)
 		})
 	})
 
