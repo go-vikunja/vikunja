@@ -170,9 +170,11 @@ Otherwise the same rules apply: register with the `Register` wrapper, pull auth 
 
 ## Tests (mandatory)
 
-Mirror the v1 webtest shape so v2 parity is readable side-by-side. Use the `webHandlerTestV2` harness in `pkg/webtests/integrations.go` — it takes the same `urlParams` map as v1's `webHandlerTest`. See `pkg/webtests/huma_label_test.go`:
+**The v2 test is a 1:1 port of the v1 test(s) — not a subset.** v1 routes *and their tests* will eventually be deleted, so the v2 webtest must independently prove everything v1 proved for this resource. Find the v1 coverage first — the v1 webtest in `pkg/webtests/<resource>_test.go` and the model tests in `pkg/models/<resource>_test.go` / `<resource>_permissions_test.go` — and port **every scenario**. Especially: the **complete permission/sharing matrix** (owner; team/user/parent-project shares × read/write/admin; member-but-not-admin; non-member; author-vs-writer-non-author), plus `search`/filter, archived-state blocking, validation/too-long, exact result-set cardinality, and all not-found cases. **No representative-subset shortcuts** — a dropped share-kind×level case is a coverage regression that silently disappears the day v1 is removed. (v2 *adds* HTTP-layer assertions v1 lacked — status codes, ETag/304 — but never *drops* a v1 behavior.)
 
-- One `Test<Resource>` covering list/read/create/update/delete, positive + negative (forbidden, nonexistent), mirroring the v1 model test.
+Mirror the v1 webtest shape so parity is readable side-by-side. Use the `webHandlerTestV2` harness in `pkg/webtests/integrations.go` — it takes the same `urlParams` map as v1's `webHandlerTest`. See `pkg/webtests/huma_label_test.go`:
+
+- One `Test<Resource>` covering list/read/create/update/delete with the **full** positive+negative permission matrix ported from v1 (not 1–2 representative cases).
 - v2-only behaviour (ETag/304, PATCH merge-patch) goes in separate top-level `Test<Resource>_*` funcs using the `humaRequest`/`humaTokenFor` helpers in `pkg/webtests/huma_helpers_test.go`.
 - The RFC 9457 error-body shape is asserted **once** globally in `TestHuma_ErrorShapeIsRFC9457` — don't re-assert the full problem+json shape per resource, just the status code.
 
