@@ -167,7 +167,7 @@ func (tc *TaskComment) Delete(s *xorm.Session, a web.Auth) error {
 // @Failure 404 {object} web.HTTPError "The task comment was not found."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tasks/{taskID}/comments/{commentID} [post]
-func (tc *TaskComment) Update(s *xorm.Session, _ web.Auth) error {
+func (tc *TaskComment) Update(s *xorm.Session, a web.Auth) error {
 	updated, err := s.
 		ID(tc.ID).
 		Cols("comment").
@@ -185,10 +185,19 @@ func (tc *TaskComment) Update(s *xorm.Session, _ web.Auth) error {
 		return err
 	}
 
+	// The doer must come from the authenticated user, not from the request
+	// body: tc.Author is bound from the payload and could be omitted (nil) or
+	// spoofed. CanUpdate already guarantees the authenticated user is the
+	// comment's author, so resolving the doer from the session is correct.
+	doer, err := GetUserOrLinkShareUser(s, a)
+	if err != nil {
+		return err
+	}
+
 	events.DispatchOnCommit(s, &TaskCommentUpdatedEvent{
 		Task:    &task,
 		Comment: tc,
-		Doer:    tc.Author,
+		Doer:    doer,
 	})
 	return nil
 }
