@@ -126,9 +126,14 @@ func projectsRead(ctx context.Context, in *struct {
 	}
 	// ReadOne doesn't act on Expand itself; the caller's max permission comes
 	// from DoReadOne's CanRead result. Surface it on the model only when asked,
-	// matching the list operation's expand=permissions behaviour.
+	// matching the list operation's expand=permissions behaviour. When not
+	// expanded, force PermissionUnknown so max_permission marshals as null
+	// instead of defaulting to the zero value (0 = PermissionRead), which would
+	// be a misleading "read" permission for projects the caller may fully own.
 	if models.ProjectExpandable(in.Expand) == models.ProjectExpandableRights {
 		project.MaxPermission = models.Permission(maxPermission)
+	} else {
+		project.MaxPermission = models.PermissionUnknown
 	}
 	// PreconditionFailed wants the unquoted etag; response header uses RFC 9110 quoted form.
 	etag := fmt.Sprintf("%d-%d", project.ID, project.Updated.UnixNano())

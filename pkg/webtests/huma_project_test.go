@@ -69,6 +69,9 @@ func TestHumaProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"title":"Test1"`)
 			assert.NotContains(t, rec.Body.String(), `"title":"Test2"`)
 			assert.Contains(t, rec.Body.String(), `"username":"user1"`)
+			// Without expand=permissions, max_permission must be null rather than
+			// defaulting to 0 (which would falsely read as PermissionRead).
+			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
 			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
 		})
 		t.Run("Expand permissions", func(t *testing.T) {
