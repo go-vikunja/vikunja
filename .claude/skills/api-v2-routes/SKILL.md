@@ -80,6 +80,7 @@ Every handler: pull auth with `authFromCtx(ctx)`, call the matching `handler.Do*
   }
   return &fooListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
   ```
+- **Extra query params go *directly* on the handler's input struct — not in a shared/embedded helper.** Beyond `ListParams`, if an operation needs its own query params (`expand`, `order_by`, `include_public`, …), declare each as a direct field with its own `query:"…"` tag on that operation's input struct, then bind it onto the model. A shared or embedded struct of query fields silently **fails to bind** under Huma when combined with other query params/embeds — the field arrives empty (hit while implementing Project's `expand`). Flatten them into the input struct.
 - **Read** embeds `conditional.Params` in its input, builds an ETag from `id + Updated.UnixNano()`, calls `in.PreconditionFailed(etag, label.Updated)` when `in.HasConditionalParams()`, and returns `*singleReadBody[Model]` with the **quoted** ETag (`"`+etag+`"`).
 - **Create / Update** take a `Body Model` input and return `*singleBody[Model]`. Update sets `in.Body.ID = in.ID` (URL wins over body).
 - **Delete** returns `*emptyBody`.
