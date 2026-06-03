@@ -88,6 +88,15 @@ func TestHumaAdminProjects(t *testing.T) {
 		assert.True(t, ids[6], "expected project 6 in the admin list, got items %v", ids)
 		// Project 22 is archived, proving the list includes archived projects.
 		assert.True(t, ids[22], "expected archived project 22 in the admin list, got items %v", ids)
+
+		// Ported from v1 TestAdmin_ListProjects (admin_test.go:222-226): the
+		// response body must carry project fields and a hydrated owner.
+		body := res.Body.String()
+		assert.Contains(t, body, `"id":`)
+		assert.Contains(t, body, `"title":`)
+		// Owner is xorm:"-" and must be hydrated explicitly (project 1 is owned by user1).
+		assert.Contains(t, body, `"username":"user1"`)
+		assert.NotContains(t, body, `"owner":null`)
 	})
 
 	t.Run("unauthenticated caller gets 401", func(t *testing.T) {
