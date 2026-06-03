@@ -57,8 +57,11 @@ type Team struct {
 	// Defines wether the team should be publicly discoverable when sharing a project
 	IsPublic bool `xorm:"not null default false" json:"is_public" doc:"Whether the team should be publicly discoverable when sharing a project. Only effective if public teams are enabled on the instance."`
 
-	// Query parameter controlling whether to include public projects or not
-	IncludePublic bool `xorm:"-" query:"include_public" json:"include_public" doc:"When listing teams, also include public teams the user is not a member of. Only honored when public teams are enabled on the instance."`
+	// Query-only flag controlling whether public teams the user is not a member
+	// of are included when listing. It is never part of the request or response
+	// body (json:"-") — v1 binds it from the query string via the query tag, and
+	// the v2 list handler takes it as a dedicated query field and sets it here.
+	IncludePublic bool `xorm:"-" query:"include_public" json:"-"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
