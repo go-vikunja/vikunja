@@ -25,6 +25,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,16 +44,19 @@ const runelength250Title = `Lorem ipsum dolor sit amet, consetetur sadipscing el
 // codes, absent ETag, expand=permissions). Status-code differences from v1 are
 // noted inline. All cases drive testuser1, whose share fixtures (projects 6–17,
 // 20, 32–34, 9–11) exercise every share-kind×level just like the v1 test.
+//
+// Each subtest builds its own handler via handlerFor so it runs against freshly
+// loaded fixtures (setupTestEnv reloads them once per handler). The shared
+// serve() does not reload per request, so mutating and exact-cardinality
+// subtests must not share a handler — mirrors huma_team_test.go's isolation.
 func TestHumaProject(t *testing.T) {
-	testHandler := webHandlerTestV2{
-		user:     &testuser1,
-		basePath: "/api/v2/projects",
-		idParam:  "project",
-		t:        t,
+	handlerFor := func(u *user.User) *webHandlerTestV2 {
+		return &webHandlerTestV2{user: u, basePath: "/api/v2/projects", idParam: "project", t: t}
 	}
 
 	t.Run("ReadAll", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testReadAllWithUser(nil, nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
@@ -64,6 +68,7 @@ func TestHumaProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `Test22`) // Archived directly
 		})
 		t.Run("Search", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testReadAllWithUser(url.Values{"q": []string{"Test1"}}, nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
@@ -94,6 +99,7 @@ func TestHumaProject(t *testing.T) {
 			}
 		})
 		t.Run("Normal with archived projects", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testReadAllWithUser(url.Values{"is_archived": []string{"true"}}, nil)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Test1`)
@@ -119,6 +125,7 @@ func TestHumaProject(t *testing.T) {
 			assert.True(t, found21, "Project 21 should be present when listing archived projects")
 		})
 		t.Run("Expand permissions", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testReadAllWithUser(url.Values{"expand": []string{"permissions"}}, nil)
 			require.NoError(t, err)
 			// User 1 owns Test1 → admin (2). With expand the field carries a real value.
@@ -128,6 +135,7 @@ func TestHumaProject(t *testing.T) {
 
 	t.Run("ReadOne", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "1"})
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Test1"`)
@@ -148,6 +156,7 @@ func TestHumaProject(t *testing.T) {
 		t.Run("Nonexisting", func(t *testing.T) {
 			// Projects return 404 here (CanRead → GetProjectSimpleByID → ErrProjectDoesNotExist),
 			// unlike labels which return 403 from the read branch.
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "9999"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
@@ -156,6 +165,7 @@ func TestHumaProject(t *testing.T) {
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Project 20 exists but is owned by user13: CanRead returns false → 403.
+				testHandler := handlerFor(&testuser1)
 				_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "20"})
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
@@ -165,6 +175,7 @@ func TestHumaProject(t *testing.T) {
 			// granted level via the always-present max_permission field, the v2
 			// equivalent of v1's x-max-permission header assertion.
 			readOneWithMaxPermission := func(t *testing.T, projectID, title string, want models.Permission) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": projectID})
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"`+title+`"`)
@@ -218,6 +229,7 @@ func TestHumaProject(t *testing.T) {
 
 	t.Run("Create", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem"}`)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusCreated, rec.Code)
@@ -232,6 +244,7 @@ func TestHumaProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
 		})
 		t.Run("Normal with description", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","description":"Ipsum"}`)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusCreated, rec.Code)
@@ -241,6 +254,7 @@ func TestHumaProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
 		})
 		t.Run("Nonexisting parent project", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":99999}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
@@ -248,6 +262,7 @@ func TestHumaProject(t *testing.T) {
 		})
 		t.Run("Empty title", func(t *testing.T) {
 			// v2 returns 422, not v1's 400; full body shape asserted in TestHuma_ErrorShapeIsRFC9457.
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testCreateWithUser(nil, nil, `{"title":""}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
@@ -255,6 +270,7 @@ func TestHumaProject(t *testing.T) {
 		t.Run("Title too long", func(t *testing.T) {
 			// v1 hit govalidator runelength(1|250); v2 enforces maxLength:250 at
 			// the schema layer → 422 before the handler.
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"`+runelength250Title+`"}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
@@ -264,17 +280,20 @@ func TestHumaProject(t *testing.T) {
 			// write access to that parent.
 			t.Run("Forbidden", func(t *testing.T) {
 				// Parent 20 is owned by user13; user1 has no access.
+				testHandler := handlerFor(&testuser1)
 				_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":20}`)
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Parent Project Team readonly", func(t *testing.T) {
 				// Read-only on parent 32 is not enough to create a child.
+				testHandler := handlerFor(&testuser1)
 				_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":32}`)
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":33}`)
 				require.NoError(t, err)
 				assert.Equal(t, http.StatusCreated, rec.Code)
@@ -284,6 +303,7 @@ func TestHumaProject(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			})
 			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":34}`)
 				require.NoError(t, err)
 				assert.Equal(t, http.StatusCreated, rec.Code)
@@ -295,11 +315,13 @@ func TestHumaProject(t *testing.T) {
 
 			t.Run("Shared Via Parent Project User readonly", func(t *testing.T) {
 				// Read-only on parent 9 is not enough to create a child.
+				testHandler := handlerFor(&testuser1)
 				_, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":9}`)
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":10}`)
 				require.NoError(t, err)
 				assert.Equal(t, http.StatusCreated, rec.Code)
@@ -309,6 +331,7 @@ func TestHumaProject(t *testing.T) {
 				assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			})
 			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","parent_project_id":11}`)
 				require.NoError(t, err)
 				assert.Equal(t, http.StatusCreated, rec.Code)
@@ -322,6 +345,7 @@ func TestHumaProject(t *testing.T) {
 
 	t.Run("Update", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":"TestLoremIpsum"}`)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
@@ -331,23 +355,27 @@ func TestHumaProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
 		})
 		t.Run("Normal with updating the description", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":"TestLoremIpsum","description":"Lorem Ipsum dolor sit amet"}`)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			assert.Contains(t, rec.Body.String(), `"description":"Lorem Ipsum dolor sit amet`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "9999"}, `{"title":"TestLoremIpsum"}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 			assertHandlerErrorCode(t, err, models.ErrCodeProjectDoesNotExist)
 		})
 		t.Run("Empty title", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":""}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
 		})
 		t.Run("Title too long", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":"`+runelength250Title+`"}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
@@ -355,6 +383,7 @@ func TestHumaProject(t *testing.T) {
 		t.Run("Permissions check", func(t *testing.T) {
 			t.Run("Forbidden", func(t *testing.T) {
 				// Owned by user13.
+				testHandler := handlerFor(&testuser1)
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "20"}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
@@ -362,64 +391,76 @@ func TestHumaProject(t *testing.T) {
 
 			t.Run("Shared Via Team readonly", func(t *testing.T) {
 				// Read access is not enough to update.
+				testHandler := handlerFor(&testuser1)
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "6"}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Team write", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "7"}, `{"title":"TestLoremIpsum"}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via Team admin", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "8"}, `{"title":"TestLoremIpsum"}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 
 			t.Run("Shared Via User readonly", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "9"}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via User write", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "10"}, `{"title":"TestLoremIpsum"}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via User admin", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "11"}, `{"title":"TestLoremIpsum"}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 
 			t.Run("Shared Via Parent Project Team readonly", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "12"}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Parent Project Team write", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "13"}, `{"title":"TestLoremIpsum"}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via Parent Project Team admin", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "14"}, `{"title":"TestLoremIpsum"}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 
 			t.Run("Shared Via Parent Project User readonly", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "15"}, `{"title":"TestLoremIpsum"}`)
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 			t.Run("Shared Via Parent Project User write", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "16"}, `{"title":"TestLoremIpsum"}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			})
 			t.Run("Shared Via Parent Project User admin", func(t *testing.T) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "17"}, `{"title":"TestLoremIpsum"}`)
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
@@ -429,6 +470,7 @@ func TestHumaProject(t *testing.T) {
 
 	t.Run("Delete", func(t *testing.T) {
 		t.Run("Normal", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "1"})
 			require.NoError(t, err)
 			// v2 delete is 204 No Content; v1 returned 200 + a message body.
@@ -436,6 +478,7 @@ func TestHumaProject(t *testing.T) {
 			assert.Empty(t, rec.Body.String())
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": "999"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
@@ -444,11 +487,13 @@ func TestHumaProject(t *testing.T) {
 		t.Run("Permissions check", func(t *testing.T) {
 			// Delete needs admin everywhere: read and write must be refused, admin allowed.
 			deleteForbidden := func(t *testing.T, projectID string) {
+				testHandler := handlerFor(&testuser1)
 				_, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": projectID})
 				require.Error(t, err)
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			}
 			deleteAllowed := func(t *testing.T, projectID string) {
+				testHandler := handlerFor(&testuser1)
 				rec, err := testHandler.testDeleteWithUser(nil, map[string]string{"project": projectID})
 				require.NoError(t, err)
 				assert.Equal(t, http.StatusNoContent, rec.Code)

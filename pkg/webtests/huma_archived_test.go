@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -49,16 +50,17 @@ import (
 // HTTP surface to exercise them through. They remain proven by the v1 webtest
 // and by the model-level TestCheckIsArchived until those resources are ported.
 func TestHumaArchived(t *testing.T) {
-	testHandler := webHandlerTestV2{
-		user:     &testuser1,
-		basePath: "/api/v2/projects",
-		idParam:  "project",
-		t:        t,
+	// Each subtest gets a pristine handler: the shared serve() does not reload
+	// fixtures per request, so the un-archive/archive mutations below must not
+	// leak across subtests (mirrors huma_team_test.go's per-subtest isolation).
+	handlerFor := func(u *user.User) *webHandlerTestV2 {
+		return &webHandlerTestV2{user: u, basePath: "/api/v2/projects", idParam: "project", t: t}
 	}
 
 	// The project belongs to an archived parent project.
 	t.Run("archived parent project", func(t *testing.T) {
 		t.Run("not editable", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"TestIpsum","is_archived":true}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
@@ -67,6 +69,7 @@ func TestHumaArchived(t *testing.T) {
 		t.Run("not unarchivable", func(t *testing.T) {
 			// The un-archive exception only applies to the self-archived
 			// project; here the archived ancestor (22) still blocks it.
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "21"}, `{"title":"LoremIpsum","is_archived":false}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
@@ -77,12 +80,14 @@ func TestHumaArchived(t *testing.T) {
 	// The project itself is archived.
 	t.Run("archived individually", func(t *testing.T) {
 		t.Run("not editable", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			_, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"TestIpsum","is_archived":true}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
 			assertHandlerErrorCode(t, err, models.ErrCodeProjectIsArchived)
 		})
 		t.Run("unarchivable", func(t *testing.T) {
+			testHandler := handlerFor(&testuser1)
 			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "22"}, `{"title":"LoremIpsum","is_archived":false}`)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"is_archived":false`)
@@ -91,6 +96,7 @@ func TestHumaArchived(t *testing.T) {
 
 	// Archiving a non-archived project should work.
 	t.Run("archive non-archived project", func(t *testing.T) {
+		testHandler := handlerFor(&testuser1)
 		rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Test1","is_archived":true}`)
 		require.NoError(t, err)
 		assert.Contains(t, rec.Body.String(), `"is_archived":true`)
