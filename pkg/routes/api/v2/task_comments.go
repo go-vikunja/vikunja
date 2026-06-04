@@ -113,11 +113,18 @@ func taskCommentsList(ctx context.Context, in *struct {
 	return &taskCommentListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
 
+type taskCommentReadBody struct {
+	models.TaskComment
+	// Reports the parent task's permission, not the comment's: TaskComment.CanRead
+	// delegates to Task.CanRead, but edit/delete also require being the author.
+	MaxPermission models.Permission `json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this comment's parent task (0=read, 1=read/write, 2=admin). Editing or deleting a comment also requires being its author, so this can over-state what the user may do to the comment."`
+}
+
 func taskCommentsRead(ctx context.Context, in *struct {
 	TaskID int64 `path:"task"`
 	ID     int64 `path:"commentid"`
 	conditional.Params
-}) (*singleReadBody[models.TaskComment], error) {
+}) (*singleReadBody[taskCommentReadBody], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -125,17 +132,12 @@ func taskCommentsRead(ctx context.Context, in *struct {
 	// TaskID scopes the lookup to the parent task, guarding against reading a
 	// comment of one task through another (IDOR).
 	comment := &models.TaskComment{ID: in.ID, TaskID: in.TaskID}
-	if _, err := handler.DoReadOne(ctx, comment, a); err != nil {
+	maxPermission, err := handler.DoReadOne(ctx, comment, a)
+	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	// PreconditionFailed wants the unquoted etag; the response header uses the RFC 9110 quoted form.
-	etag := fmt.Sprintf("%d-%d", comment.ID, comment.Updated.UnixNano())
-	if in.HasConditionalParams() {
-		if err := in.PreconditionFailed(etag, comment.Updated); err != nil {
-			return nil, err
-		}
-	}
-	return &singleReadBody[models.TaskComment]{ETag: `"` + etag + `"`, Body: comment}, nil
+	body := &taskCommentReadBody{TaskComment: *comment, MaxPermission: models.Permission(maxPermission)}
+	return conditionalReadResponse(&in.Params, body, comment.Updated, maxPermission)
 }
 
 func taskCommentsCreate(ctx context.Context, in *struct {
@@ -153,21 +155,23 @@ func taskCommentsCreate(ctx context.Context, in *struct {
 	return &singleBody[models.TaskComment]{Body: &in.Body}, nil
 }
 
+// Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func taskCommentsUpdate(ctx context.Context, in *struct {
 	TaskID int64 `path:"task"`
 	ID     int64 `path:"commentid"`
-	Body   models.TaskComment
+	Body   taskCommentReadBody
 }) (*singleBody[models.TaskComment], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	in.Body.ID = in.ID         // URL wins over body
-	in.Body.TaskID = in.TaskID // parent from the path scopes the update
-	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
+	comment := &in.Body.TaskComment
+	comment.ID = in.ID         // URL wins over body
+	comment.TaskID = in.TaskID // parent from the path scopes the update
+	if err := handler.DoUpdate(ctx, comment, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &singleBody[models.TaskComment]{Body: &in.Body}, nil
+	return &singleBody[models.TaskComment]{Body: comment}, nil
 }
 
 func taskCommentsDelete(ctx context.Context, in *struct {
