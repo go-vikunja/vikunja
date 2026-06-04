@@ -107,6 +107,7 @@ func TestHumaTaskComment(t *testing.T) {
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `Lorem Ipsum Dolor Sit Amet`)
 			assert.Contains(t, rec.Body.String(), `"id":1`)
+			assert.Contains(t, rec.Body.String(), `"max_permission":`)
 			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
@@ -370,4 +371,22 @@ func TestHumaTaskComment(t *testing.T) {
 			assert.Empty(t, rec.Body.String())
 		})
 	})
+}
+
+func TestHumaTaskComment_ETagReflectsPermission(t *testing.T) {
+	// Comment 6 is on task 18 in project 9: user6 owns the project (admin) while
+	// user1 has only a read share (users_projects #3). max_permission is folded
+	// into the ETag, so the same comment must yield different ETags per caller —
+	// else a 304 would serve a stale permission level.
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	owner := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/18/comments/6", "", humaTokenFor(t, &testuser6), "")
+	require.Equal(t, http.StatusOK, owner.Code, "body: %s", owner.Body.String())
+	reader := humaRequest(t, e, http.MethodGet, "/api/v2/tasks/18/comments/6", "", humaTokenFor(t, &testuser1), "")
+	require.Equal(t, http.StatusOK, reader.Code, "body: %s", reader.Body.String())
+
+	assert.NotEmpty(t, owner.Header().Get("ETag"))
+	assert.NotEqual(t, owner.Header().Get("ETag"), reader.Header().Get("ETag"),
+		"same comment, different caller permission must produce different ETags")
 }
