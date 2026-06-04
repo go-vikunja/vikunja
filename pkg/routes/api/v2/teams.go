@@ -107,26 +107,26 @@ func teamsList(ctx context.Context, in *struct {
 	return &teamListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
 
+type teamReadBody struct {
+	models.Team
+	MaxPermission models.Permission `json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this team (0=read, 2=admin). Teams have no write tier."`
+}
+
 func teamsRead(ctx context.Context, in *struct {
 	ID int64 `path:"id"`
 	conditional.Params
-}) (*singleReadBody[models.Team], error) {
+}) (*singleReadBody[teamReadBody], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	team := &models.Team{ID: in.ID}
-	if _, err := handler.DoReadOne(ctx, team, a); err != nil {
+	maxPermission, err := handler.DoReadOne(ctx, team, a)
+	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	// PreconditionFailed wants the unquoted etag; response header uses RFC 9110 quoted form.
-	etag := fmt.Sprintf("%d-%d", team.ID, team.Updated.UnixNano())
-	if in.HasConditionalParams() {
-		if err := in.PreconditionFailed(etag, team.Updated); err != nil {
-			return nil, err
-		}
-	}
-	return &singleReadBody[models.Team]{ETag: `"` + etag + `"`, Body: team}, nil
+	body := &teamReadBody{Team: *team, MaxPermission: models.Permission(maxPermission)}
+	return conditionalReadResponse(&in.Params, body, team.Updated, maxPermission)
 }
 
 func teamsCreate(ctx context.Context, in *struct {
@@ -142,19 +142,21 @@ func teamsCreate(ctx context.Context, in *struct {
 	return &singleBody[models.Team]{Body: &in.Body}, nil
 }
 
+// Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func teamsUpdate(ctx context.Context, in *struct {
 	ID   int64 `path:"id"`
-	Body models.Team
+	Body teamReadBody
 }) (*singleBody[models.Team], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	in.Body.ID = in.ID // URL wins over body
-	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
+	team := &in.Body.Team
+	team.ID = in.ID // URL wins over body
+	if err := handler.DoUpdate(ctx, team, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &singleBody[models.Team]{Body: &in.Body}, nil
+	return &singleBody[models.Team]{Body: team}, nil
 }
 
 func teamsDelete(ctx context.Context, in *struct {
