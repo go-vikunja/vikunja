@@ -147,6 +147,7 @@ func TestProjectView(t *testing.T) {
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"List"`)
 			assert.Contains(t, rec.Body.String(), `"id":1`)
+			assert.Contains(t, rec.Body.String(), `"max_permission":`)
 			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
 		})
 		t.Run("Read-only share can read", func(t *testing.T) {

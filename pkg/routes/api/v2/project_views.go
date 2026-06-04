@@ -107,11 +107,16 @@ func projectViewsList(ctx context.Context, in *struct {
 	return &projectViewListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
 
+type projectViewReadBody struct {
+	models.ProjectView
+	MaxPermission models.Permission `json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this view (0=read, 1=read/write, 2=admin)."`
+}
+
 func projectViewsRead(ctx context.Context, in *struct {
 	ProjectID int64 `path:"project"`
 	ID        int64 `path:"view"`
 	conditional.Params
-}) (*singleReadBody[models.ProjectView], error) {
+}) (*singleReadBody[projectViewReadBody], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -119,17 +124,12 @@ func projectViewsRead(ctx context.Context, in *struct {
 	// ReadOne resolves the view via GetProjectViewByIDAndProject, which needs
 	// both ids — the parent project scopes the lookup.
 	view := &models.ProjectView{ID: in.ID, ProjectID: in.ProjectID}
-	if _, err := handler.DoReadOne(ctx, view, a); err != nil {
+	maxPermission, err := handler.DoReadOne(ctx, view, a)
+	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	// PreconditionFailed wants the unquoted etag; response header uses RFC 9110 quoted form.
-	etag := fmt.Sprintf("%d-%d", view.ID, view.Updated.UnixNano())
-	if in.HasConditionalParams() {
-		if err := in.PreconditionFailed(etag, view.Updated); err != nil {
-			return nil, err
-		}
-	}
-	return &singleReadBody[models.ProjectView]{ETag: `"` + etag + `"`, Body: view}, nil
+	body := &projectViewReadBody{ProjectView: *view, MaxPermission: models.Permission(maxPermission)}
+	return conditionalReadResponse(&in.Params, body, view.Updated, maxPermission)
 }
 
 func projectViewsCreate(ctx context.Context, in *struct {
@@ -147,21 +147,23 @@ func projectViewsCreate(ctx context.Context, in *struct {
 	return &singleBody[models.ProjectView]{Body: &in.Body}, nil
 }
 
+// Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func projectViewsUpdate(ctx context.Context, in *struct {
 	ProjectID int64 `path:"project"`
 	ID        int64 `path:"view"`
-	Body      models.ProjectView
+	Body      projectViewReadBody
 }) (*singleBody[models.ProjectView], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	in.Body.ID = in.ID               // URL wins over body
-	in.Body.ProjectID = in.ProjectID // parent from the path scopes the update
-	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
+	view := &in.Body.ProjectView
+	view.ID = in.ID               // URL wins over body
+	view.ProjectID = in.ProjectID // parent from the path scopes the update
+	if err := handler.DoUpdate(ctx, view, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &singleBody[models.ProjectView]{Body: &in.Body}, nil
+	return &singleBody[models.ProjectView]{Body: view}, nil
 }
 
 func projectViewsDelete(ctx context.Context, in *struct {

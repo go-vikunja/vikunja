@@ -80,6 +80,7 @@ func TestHumaLabel(t *testing.T) {
 			rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"label": "1"})
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"title":"Label #1"`)
+			assert.Contains(t, rec.Body.String(), `"max_permission":`)
 			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
@@ -264,6 +265,22 @@ func TestHumaLabel_ETagReturns304(t *testing.T) {
 	rec = httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 	require.Equal(t, http.StatusNotModified, rec.Code, "body: %s", rec.Body.String())
+}
+
+func TestHumaLabel_ETagReflectsPermission(t *testing.T) {
+	// Label #4 is owned by user2 (admin) but readable by user1 only at read level;
+	// same label, so the per-caller ETag must differ — else a 304 serves stale perms.
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	reader := humaRequest(t, e, http.MethodGet, "/api/v2/labels/4", "", humaTokenFor(t, &testuser1), "")
+	require.Equal(t, http.StatusOK, reader.Code, "body: %s", reader.Body.String())
+	owner := humaRequest(t, e, http.MethodGet, "/api/v2/labels/4", "", humaTokenFor(t, &testuser2), "")
+	require.Equal(t, http.StatusOK, owner.Code, "body: %s", owner.Body.String())
+
+	assert.NotEmpty(t, reader.Header().Get("ETag"))
+	assert.NotEqual(t, reader.Header().Get("ETag"), owner.Header().Get("ETag"),
+		"same label, different caller permission must produce different ETags")
 }
 
 func TestHumaLabel_PATCHMergePatch(t *testing.T) {
