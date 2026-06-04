@@ -145,9 +145,13 @@ func TestHumaProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"owner":{"id":2,"name":"","username":"user2",`)
 			// Tasks are never embedded on a plain project read.
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
-			// max_permission is always present on a read and reflects the caller's
-			// permission. User1 owns Test1 → admin (2).
-			assert.Contains(t, rec.Body.String(), `"max_permission":2`)
+			// max_permission is always present and carries the caller's real
+			// permission (never a bare 0/null). User1 owns Test1 → admin (2).
+			// Decoded rather than substring-matched so a regression to 0 or null
+			// is caught precisely.
+			var p models.Project
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &p))
+			assert.Equal(t, models.PermissionAdmin, p.MaxPermission)
 			// The project read is served fresh on every call; no ETag is sent
 			// because the response carries derived state that changes without
 			// bumping project.Updated.
@@ -579,4 +583,32 @@ func TestHumaProject_PATCHMergePatch(t *testing.T) {
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &after))
 	assert.Equal(t, "after", after.Title)
 	assert.Equal(t, "keep me", after.Description, "description must survive the PATCH")
+}
+
+// TestHumaProject_NullMaxPermissionRoundTrips guards the create/update response
+// shape: those routes return "max_permission":null (the field is not computed
+// there), and a client that PUTs the response body back verbatim must not be
+// rejected. max_permission is readOnly so Huma ignores it on the write body, and
+// Permission.UnmarshalJSON treats JSON null as a no-op (→ PermissionRead, no
+// error) anyway — so the round-trip succeeds with 200, not 422.
+func TestHumaProject_NullMaxPermissionRoundTrips(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	created := humaRequest(t, e, http.MethodPost, "/api/v2/projects",
+		`{"title":"roundtrip"}`, token, "")
+	require.Equal(t, http.StatusCreated, created.Code, "body: %s", created.Body.String())
+	// The create response carries the null we worried about; assert it's there so
+	// this test actually exercises the round-trip it claims to.
+	require.Contains(t, created.Body.String(), `"max_permission":null`)
+	var createdProject struct {
+		ID int64 `json:"id"`
+	}
+	require.NoError(t, json.Unmarshal(created.Body.Bytes(), &createdProject))
+
+	// PUT the create response body back unchanged (max_permission:null and all).
+	rec := humaRequest(t, e, http.MethodPut, fmt.Sprintf("/api/v2/projects/%d", createdProject.ID),
+		created.Body.String(), token, "")
+	require.Equal(t, http.StatusOK, rec.Code, "PUT of the create body (with max_permission:null) must succeed, got: %s", rec.Body.String())
 }
