@@ -78,7 +78,7 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 	parts := strings.Split(stripAPIVersion(path), "/")
 	filteredParts = []string{}
 	for _, part := range parts {
-		if strings.HasPrefix(part, ":") {
+		if part == "" || strings.HasPrefix(part, ":") {
 			continue
 		}
 

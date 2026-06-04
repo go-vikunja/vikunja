@@ -91,6 +91,37 @@ func TestStripAPIVersion(t *testing.T) {
 	}
 }
 
+func TestGetRouteGroupName(t *testing.T) {
+	cases := []struct {
+		path     string
+		wantName string
+	}{
+		{"/api/v1/tasks/:projecttask/labels", "tasks_labels"},
+		{"/api/v1/tasks/:projecttask/labels/:label", "tasks_labels"},
+		{"/api/v1/tasks/:projecttask/labels/bulk", "tasks_labels_bulk"},
+		{"/api/v1/tasks/:projecttask/assignees", "tasks_assignees"},
+		{"/api/v1/tasks/:projecttask/comments", "tasks_comments"},
+		{"/api/v1/tasks/:projecttask/relations", "tasks_relations"},
+		{"/api/v1/tasks/:projecttask/attachments", "tasks_attachments"},
+		{"/api/v1/projects/:project/views", "projects_views"},
+		{"/api/v1/projects/:project/teams", "projects_teams"},
+		{"/api/v1/projects/:project/users", "projects_users"},
+		{"/api/v1/teams/:team/members", "teams_members"},
+		{"/api/v1/labels", "labels"},
+		{"/api/v1/labels/:label", "labels"},
+		{"/api/v1/projects/:project/tasks", "tasks"},
+		{"/api/v1/tasks/all", "tasks"},
+		{"/api/v2/labels", "labels"},
+		{"/api/v2/tasks/:id/labels", "tasks_labels"},
+	}
+	for _, c := range cases {
+		t.Run(c.path, func(t *testing.T) {
+			name, _ := getRouteGroupName(c.path)
+			assert.Equal(t, c.wantName, name)
+		})
+	}
+}
+
 // TestCollectRoutesV2 verifies that /api/v2 routes are stored in the v2
 // shadow table under the same (group, permission) keys their v1 counterparts
 // would use. This is what lets a token scoped on `labels.read_one` authorise
