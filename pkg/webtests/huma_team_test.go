@@ -401,7 +401,10 @@ func TestHumaTeam_ETagReflectsPermission(t *testing.T) {
 	member := humaRequest(t, e, http.MethodGet, "/api/v2/teams/1", "", humaTokenFor(t, &testuser2), "")
 	require.Equal(t, http.StatusOK, member.Code, "body: %s", member.Body.String())
 
+	// Both must be present; otherwise a missing member ETag would let the
+	// NotEqual below pass while silently dropping the conditional-request header.
 	assert.NotEmpty(t, admin.Header().Get("ETag"))
+	assert.NotEmpty(t, member.Header().Get("ETag"))
 	assert.NotEqual(t, admin.Header().Get("ETag"), member.Header().Get("ETag"),
 		"same team, different caller permission must produce different ETags")
 }
