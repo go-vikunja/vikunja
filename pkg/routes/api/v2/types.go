@@ -16,6 +16,13 @@
 
 package apiv2
 
+import (
+	"fmt"
+	"time"
+
+	"github.com/danielgtaylor/huma/v2/conditional"
+)
+
 // Paginated is the standard list-response envelope for every /api/v2 list operation.
 type Paginated[T any] struct {
 	Items      []T   `json:"items"`
@@ -46,9 +53,9 @@ func NewPaginated[T any](items []T, total int64, page, perPage int) Paginated[T]
 
 // ListParams carries the standard (page, per_page, q) query shape for list operations.
 type ListParams struct {
-	Page    int    `query:"page"     default:"1"  minimum:"1"`
-	PerPage int    `query:"per_page" default:"50" minimum:"1" maximum:"1000"`
-	Q       string `query:"q"`
+	Page    int    `query:"page"     default:"1"  minimum:"1" doc:"1-based page number."`
+	PerPage int    `query:"per_page" default:"50" minimum:"1" maximum:"1000" doc:"Items per page (max 1000)."`
+	Q       string `query:"q" doc:"Search query; filters the list to items matching this string."`
 }
 
 // singleBody is the create/update response envelope (no ETag).
@@ -60,6 +67,17 @@ type singleBody[T any] struct {
 type singleReadBody[T any] struct {
 	ETag string `header:"ETag"`
 	Body *T
+}
+
+// permission is folded into the ETag so a share/role change invalidates the cache.
+func conditionalReadResponse[T any](p *conditional.Params, body *T, modified time.Time, permission int) (*singleReadBody[T], error) {
+	e := fmt.Sprintf("%d-%d", modified.UnixNano(), permission)
+	if p.HasConditionalParams() {
+		if err := p.PreconditionFailed(e, modified); err != nil {
+			return nil, err
+		}
+	}
+	return &singleReadBody[T]{ETag: `"` + e + `"`, Body: body}, nil
 }
 
 // emptyBody marks delete / no-content operations.
