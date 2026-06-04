@@ -18,6 +18,7 @@ package webtests
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -136,20 +137,13 @@ func TestHumaProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"owner":{"id":2,"name":"","username":"user2",`)
 			// Tasks are never embedded on a plain project read.
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
-			// Without expand=permissions, max_permission must be null rather than
-			// defaulting to 0 (which would falsely read as PermissionRead).
-			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
+			// max_permission is always present on a read and reflects the caller's
+			// permission. User1 owns Test1 → admin (2).
+			assert.Contains(t, rec.Body.String(), `"max_permission":2`)
 			// The project read is served fresh on every call; no ETag is sent
 			// because the response carries derived state that changes without
 			// bumping project.Updated.
 			assert.Empty(t, rec.Result().Header.Get("ETag"))
-		})
-		t.Run("Expand permissions", func(t *testing.T) {
-			// User 1 owns Test1 → admin (2); expand surfaces it as max_permission.
-			// v2 replaces v1's x-max-permission response header with this field.
-			rec, err := testHandler.testReadOneWithUser(url.Values{"expand": []string{"permissions"}}, map[string]string{"project": "1"})
-			require.NoError(t, err)
-			assert.Contains(t, rec.Body.String(), `"max_permission":2`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			// Projects return 404 here (CanRead → GetProjectSimpleByID → ErrProjectDoesNotExist),
@@ -168,17 +162,15 @@ func TestHumaProject(t *testing.T) {
 			})
 
 			// readOneWithMaxPermission reads a shared project and asserts the
-			// granted level via expand=permissions, the v2 equivalent of v1's
-			// x-max-permission header assertion.
+			// granted level via the always-present max_permission field, the v2
+			// equivalent of v1's x-max-permission header assertion.
 			readOneWithMaxPermission := func(t *testing.T, projectID, title string, want models.Permission) {
 				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": projectID})
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"`+title+`"`)
 
-				recExpanded, err := testHandler.testReadOneWithUser(url.Values{"expand": []string{"permissions"}}, map[string]string{"project": projectID})
-				require.NoError(t, err)
 				var p models.Project
-				require.NoError(t, json.Unmarshal(recExpanded.Body.Bytes(), &p))
+				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &p))
 				assert.Equal(t, want, p.MaxPermission)
 			}
 
@@ -235,6 +227,9 @@ func TestHumaProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"owner":{"id":1`)
 			// Tasks are not embedded in the create response.
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
+			// Create doesn't compute the caller's permission; null over a
+			// misleading 0 (read) for the owner. Computed on a subsequent read.
+			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
 		})
 		t.Run("Normal with description", func(t *testing.T) {
 			rec, err := testHandler.testCreateWithUser(nil, nil, `{"title":"Lorem","description":"Ipsum"}`)
@@ -332,6 +327,8 @@ func TestHumaProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			// The description should not be wiped but returned as it was.
 			assert.Contains(t, rec.Body.String(), `"description":"Lorem Ipsum`)
+			// Update doesn't recompute the permission; null, like create.
+			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
 		})
 		t.Run("Normal with updating the description", func(t *testing.T) {
 			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":"TestLoremIpsum","description":"Lorem Ipsum dolor sit amet"}`)
@@ -505,4 +502,36 @@ func TestHumaProject(t *testing.T) {
 			})
 		})
 	})
+}
+
+// TestHumaProject_PATCHMergePatch confirms AutoPatch round-trips: it GETs the
+// read body (which carries the read-only max_permission) and re-PUTs it, so the
+// update body sharing the read shape must accept that echo without 422.
+func TestHumaProject_PATCHMergePatch(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	rec := humaRequest(t, e, http.MethodPost, "/api/v2/projects",
+		`{"title":"before","description":"keep me"}`, token, "")
+	require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+	var created struct {
+		ID int64 `json:"id"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &created))
+
+	// PATCH only title; AutoPatch must leave description alone.
+	rec = humaRequest(t, e, http.MethodPatch, fmt.Sprintf("/api/v2/projects/%d", created.ID),
+		`{"title":"after"}`, token, "application/merge-patch+json")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+	rec = humaRequest(t, e, http.MethodGet, fmt.Sprintf("/api/v2/projects/%d", created.ID), "", token, "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+	var after struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &after))
+	assert.Equal(t, "after", after.Title)
+	assert.Equal(t, "keep me", after.Description, "description must survive the PATCH")
 }
