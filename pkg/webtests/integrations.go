@@ -447,12 +447,6 @@ func (h *webHandlerTestV2) buildURL(queryParams url.Values, urlParams map[string
 
 func (h *webHandlerTestV2) serve(method, path, payload string) (*httptest.ResponseRecorder, error) {
 	require.NoError(h.t, h.ensureEnv())
-	// Reload fixtures before every request so each subtest sees a pristine
-	// database, mirroring v1's webHandlerTest (which calls setupTestEnv ->
-	// LoadFixtures per request via bootstrapTestRequest). Without this, mutating
-	// subtests (create/update/delete) would leak state into later ones in the
-	// shared Echo instance and break permission-matrix assertions.
-	require.NoError(h.t, db.LoadFixtures())
 	token, err := auth.NewUserJWTAuthtoken(h.user, "test-session-id")
 	require.NoError(h.t, err)
 	var reader *strings.Reader
