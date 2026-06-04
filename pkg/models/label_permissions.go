@@ -107,38 +107,15 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 		return
 	}
 
-	// maxPermission is derived only from label_tasks rows whose task is
-	// actually accessible. The pre-fix code used Get(ll) against the
-	// unrestricted LEFT JOIN, so it could return an inaccessible row and
-	// yield a wrong (or errored) permission.
-	accessibleTaskIDs := []int64{}
-	err = s.Table("label_tasks").
-		Join("INNER", "tasks", "tasks.id = label_tasks.task_id").
-		Where(builder.And(
-			builder.Eq{"label_tasks.label_id": l.ID},
-			accessibleProjects,
-		)).
-		Cols("label_tasks.task_id").
-		Find(&accessibleTaskIDs)
+	// Writes and deletes are owner-only (CanUpdate/CanDelete), so the caller's
+	// max permission is admin for the owner and read for anyone else who can see it.
+	owner, err := l.isLabelOwner(s, a)
 	if err != nil {
 		return
 	}
-
-	for _, taskID := range accessibleTaskIDs {
-		t := &Task{ID: taskID}
-		_, taskPermission, tErr := t.CanRead(s, a)
-		if tErr != nil {
-			err = tErr
-			return
-		}
-		if taskPermission > maxPermission {
-			maxPermission = taskPermission
-		}
-	}
-
-	// Creator-branch fallback: access came from created_by_id with no
-	// accessible task to derive a permission from.
-	if len(accessibleTaskIDs) == 0 {
+	if owner {
+		maxPermission = int(PermissionAdmin)
+	} else {
 		maxPermission = int(PermissionRead)
 	}
 
