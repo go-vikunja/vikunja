@@ -181,6 +181,7 @@ func TestHumaTeam(t *testing.T) {
 			// v1's TestTeam_ReadOne also asserts the description and created_by.
 			assert.Contains(t, rec.Body.String(), `"description":"Lorem Ipsum"`)
 			assert.Contains(t, rec.Body.String(), `"created_by"`)
+			assert.Contains(t, rec.Body.String(), `"max_permission":`)
 			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
 		})
 		// v1's TestTeam_ReadOne/{invalid id, nonexisting} expects
@@ -387,4 +388,20 @@ func TestHumaTeam_ETagReturns304(t *testing.T) {
 	rec = httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 	require.Equal(t, http.StatusNotModified, rec.Code, "body: %s", rec.Body.String())
+}
+
+func TestHumaTeam_ETagReflectsPermission(t *testing.T) {
+	// Team 1: user1 is an admin (max_permission 2), user2 a non-admin member (0).
+	// Same team, so the per-caller ETag must differ — else a 304 serves stale perms.
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	admin := humaRequest(t, e, http.MethodGet, "/api/v2/teams/1", "", humaTokenFor(t, &testuser1), "")
+	require.Equal(t, http.StatusOK, admin.Code, "body: %s", admin.Body.String())
+	member := humaRequest(t, e, http.MethodGet, "/api/v2/teams/1", "", humaTokenFor(t, &testuser2), "")
+	require.Equal(t, http.StatusOK, member.Code, "body: %s", member.Body.String())
+
+	assert.NotEmpty(t, admin.Header().Get("ETag"))
+	assert.NotEqual(t, admin.Header().Get("ETag"), member.Header().Get("ETag"),
+		"same team, different caller permission must produce different ETags")
 }
