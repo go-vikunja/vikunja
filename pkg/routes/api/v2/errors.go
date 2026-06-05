@@ -43,6 +43,21 @@ func authFromCtx(ctx context.Context) (web.Auth, error) {
 	return a, nil
 }
 
+// httpCodeGetter is satisfied by validation errors that carry an HTTP status
+// without the HTTPErrorProcessor method — notably models.ValidationHTTPError,
+// returned by InvalidFieldError. v1's error handler reads GetHTTPCode() off these;
+// without the same branch here they'd fall through to a 500.
+type httpCodeGetter interface {
+	GetHTTPCode() int
+}
+
+// domainCodeGetter exposes Vikunja's numeric domain error code on errors that
+// are not HTTPErrorProcessors (again, ValidationHTTPError) so v2 can keep the v1
+// `code` body contract.
+type domainCodeGetter interface {
+	GetCode() int
+}
+
 // translateDomainError maps a Vikunja domain error (web.HTTPErrorProcessor)
 // onto Huma's status-error type so the response carries the right code
 // and an RFC 9457 body. Errors without HTTP semantics fall through, which
@@ -64,6 +79,17 @@ func translateDomainError(err error) error {
 		// `code`; without this v2 clients always read 0.
 		if vm, ok := se.(*vikunjaErrorModel); ok {
 			vm.Code = details.Code
+		}
+		return se
+	}
+	var cg httpCodeGetter
+	if errors.As(err, &cg) {
+		se := huma.NewError(cg.GetHTTPCode(), err.Error())
+		if vm, ok := se.(*vikunjaErrorModel); ok {
+			var dc domainCodeGetter
+			if errors.As(err, &dc) {
+				vm.Code = dc.GetCode()
+			}
 		}
 		return se
 	}
