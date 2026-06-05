@@ -47,29 +47,29 @@ var webhookClient *http.Client
 
 type Webhook struct {
 	// The generated ID of this webhook target
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook" readOnly:"true" doc:"The generated ID of this webhook target."`
 	// The target URL where the POST request with the webhook payload will be made
-	TargetURL string `xorm:"not null" valid:"required,url" json:"target_url"`
+	TargetURL string `xorm:"not null" valid:"required,url" json:"target_url" doc:"The target URL where the POST request with the webhook payload will be made."`
 	// The webhook events which should fire this webhook target
-	Events []string `xorm:"JSON not null" valid:"required" json:"events"`
+	Events []string `xorm:"JSON not null" valid:"required" json:"events" doc:"The webhook events which should fire this webhook target. Get the available events from /webhooks/events."`
 	// The project ID of the project this webhook target belongs to
-	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project"`
+	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project" readOnly:"true" doc:"The id of the project this webhook target belongs to. Set from the URL, not the body."`
 	// The user ID if this is a user-level webhook (mutually exclusive with ProjectID)
-	UserID int64 `xorm:"bigint null index" json:"user_id"`
+	UserID int64 `xorm:"bigint null index" json:"user_id" readOnly:"true" doc:"The id of the user if this is a user-level webhook (mutually exclusive with project_id)."`
 	// If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing
-	Secret string `xorm:"null" json:"secret"`
+	Secret string `xorm:"null" json:"secret" writeOnly:"true" doc:"If provided, webhook requests will be signed using HMAC. See https://vikunja.io/docs/webhooks/#signing. Write-only: never returned in responses."`
 	// If provided, webhook requests will be sent with a Basic Auth header.
-	BasicAuthUser     string `xorm:"null" json:"basic_auth_user"`
-	BasicAuthPassword string `xorm:"null" json:"basic_auth_password"`
+	BasicAuthUser     string `xorm:"null" json:"basic_auth_user" writeOnly:"true" doc:"If provided together with basic_auth_password, webhook requests will be sent with a Basic Auth header. Write-only: never returned in responses."`
+	BasicAuthPassword string `xorm:"null" json:"basic_auth_password" writeOnly:"true" doc:"The password for the Basic Auth header. Write-only: never returned in responses."`
 
 	// The user who initially created the webhook target.
-	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
+	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who initially created the webhook target."`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"`
 
 	// A timestamp when this webhook target was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this webhook target was created. You cannot change this value."`
 	// A timestamp when this webhook target was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this webhook target was last updated. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
