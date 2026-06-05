@@ -37,26 +37,26 @@ type APIPermissions map[string][]string
 
 type APIToken struct {
 	// The unique, numeric id of this api key.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"token"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"token" readOnly:"true" doc:"The unique, numeric id of this api key."`
 
 	// A human-readable name for this token
-	Title string `xorm:"not null" json:"title" valid:"required"`
+	Title string `xorm:"not null" json:"title" valid:"required" minLength:"1" doc:"A human-readable name for this token."`
 	// The actual api key. Only visible after creation.
-	Token          string `xorm:"-" json:"token,omitempty"`
+	Token          string `xorm:"-" json:"token,omitempty" readOnly:"true" doc:"The cleartext api key. Returned only once, in the response to creating the token; never readable again."`
 	TokenSalt      string `xorm:"not null" json:"-"`
 	TokenHash      string `xorm:"not null unique" json:"-"`
 	TokenLastEight string `xorm:"not null index varchar(8)" json:"-"`
 	// The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add `{"tasks":["read_all","update"]}`.
-	APIPermissions APIPermissions `xorm:"json not null permissions" json:"permissions" valid:"required"`
+	APIPermissions APIPermissions `xorm:"json not null permissions" json:"permissions" valid:"required" doc:"The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add {\"tasks\":[\"read_all\",\"update\"]}."`
 	// The date when this key expires.
-	ExpiresAt time.Time `xorm:"not null" json:"expires_at" valid:"required"`
+	ExpiresAt time.Time `xorm:"not null" json:"expires_at" valid:"required" doc:"The date when this key expires."`
 
 	// A timestamp when this api key was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this api key was created. You cannot change this value."`
 
 	// The user ID of the token owner. When creating a token for a bot user, set this
 	// to the bot's ID. If omitted, defaults to the authenticated user.
-	OwnerID int64 `xorm:"bigint not null" json:"owner_id,omitempty" query:"owner_id"`
+	OwnerID int64 `xorm:"bigint not null" json:"owner_id,omitempty" query:"owner_id" doc:"The user ID of the token owner. When creating a token for a bot user, set this to the bot's ID; the bot must be owned by the authenticated user. If omitted, defaults to the authenticated user."`
 
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`

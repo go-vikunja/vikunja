@@ -66,6 +66,8 @@ func RegisterAvatarRoutes(api huma.API) {
 	}, avatarGet)
 }
 
+func init() { AddRouteRegistrar(RegisterAvatarRoutes) }
+
 func avatarGet(ctx context.Context, in *avatarInput) (*avatarResponse, error) {
 	// Authenticated but no per-user check — any authenticated caller may view any
 	// avatar (matching v1); authFromCtx just surfaces a clean 401 if auth is missing.

@@ -9363,7 +9363,8 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "A human-readable name for this token",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 },
                 "token": {
                     "description": "The actual api key. Only visible after creation.",
@@ -10454,10 +10455,6 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
-                "include_public": {
-                    "description": "Query parameter controlling whether to include public projects or not",
-                    "type": "boolean"
-                },
                 "is_public": {
                     "description": "Defines wether the team should be publicly discoverable when sharing a project",
                     "type": "boolean"
@@ -10600,10 +10597,6 @@ const docTemplate = `{
                 "id": {
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
-                },
-                "include_public": {
-                    "description": "Query parameter controlling whether to include public projects or not",
-                    "type": "boolean"
                 },
                 "is_public": {
                     "description": "Defines wether the team should be publicly discoverable when sharing a project",

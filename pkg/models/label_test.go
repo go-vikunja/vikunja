@@ -228,7 +228,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			},
 			auth:                &user.User{ID: 1},
 			assertMaxPermission: true,
-			wantMaxPermission:   int(PermissionRead),
+			wantMaxPermission:   int(PermissionAdmin),
 		},
 		{
 			name: "Get nonexistant label",
@@ -249,8 +249,8 @@ func TestLabel_ReadOne(t *testing.T) {
 			auth:          &user.User{ID: 1},
 		},
 		{
-			// Label 4 is attached to tasks in project 1 (user 1 is admin),
-			// so the accessible-tasks iteration must yield PermissionAdmin.
+			// Label 4 is owned by user 2; user 1 can read it via a shared task
+			// but is not the owner, so max permission is read.
 			name: "Get label #4 - other user",
 			fields: fields{
 				ID: 4,
@@ -276,7 +276,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			},
 			auth:                &user.User{ID: 1},
 			assertMaxPermission: true,
-			wantMaxPermission:   int(PermissionAdmin),
+			wantMaxPermission:   int(PermissionRead),
 		},
 		{
 			// PoC for GHSA-hj5c-mhh2-g7jq: label 6 is reachable only via task
@@ -304,12 +304,12 @@ func TestLabel_ReadOne(t *testing.T) {
 			},
 			auth:                &user.User{ID: 1},
 			assertMaxPermission: true,
-			wantMaxPermission:   int(PermissionRead),
+			wantMaxPermission:   int(PermissionAdmin),
 		},
 		{
-			// Label 8's only label_tasks row points at inaccessible task 34,
-			// so access must come from the creator branch and the
-			// maxPermission fallback to PermissionRead must kick in.
+			// Label 8's only label_tasks row points at inaccessible task 34, so
+			// access comes from the creator branch; as the owner, user 1's max
+			// permission is admin.
 			name: "creator can read own label only attached to inaccessible task",
 			fields: fields{
 				ID: 8,
@@ -324,7 +324,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			},
 			auth:                &user.User{ID: 1},
 			assertMaxPermission: true,
-			wantMaxPermission:   int(PermissionRead),
+			wantMaxPermission:   int(PermissionAdmin),
 		},
 		{
 			// Non-creator must not be able to read an unattached label owned

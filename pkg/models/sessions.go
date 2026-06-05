@@ -36,23 +36,23 @@ import (
 // Session represents an active user session with a refresh token.
 type Session struct {
 	// The session UUID. Embedded in JWTs as the `sid` claim.
-	ID string `xorm:"varchar(36) not null unique pk" json:"id" param:"session"`
+	ID string `xorm:"varchar(36) not null unique pk" json:"id" param:"session" readOnly:"true" doc:"The session UUID; embedded in JWTs as the sid claim."`
 	// The owning user.
 	UserID int64 `xorm:"bigint not null index" json:"-"`
 	// SHA-256 hash of the refresh token. Used for lookup on refresh.
 	TokenHash string `xorm:"varchar(64) not null unique index" json:"-"`
 	// The cleartext refresh token. Only populated on session creation, never stored.
-	RefreshToken string `xorm:"-" json:"refresh_token,omitempty"`
+	RefreshToken string `xorm:"-" json:"refresh_token,omitempty" readOnly:"true" doc:"The cleartext refresh token; returned only once by the login flow, never on listing."`
 	// User-Agent string from the login request.
-	DeviceInfo string `xorm:"text" json:"device_info"`
+	DeviceInfo string `xorm:"text" json:"device_info" readOnly:"true" doc:"User-Agent string captured from the login request."`
 	// IP address from the login request.
-	IPAddress string `xorm:"varchar(100)" json:"ip_address"`
+	IPAddress string `xorm:"varchar(100)" json:"ip_address" readOnly:"true" doc:"IP address captured from the login request."`
 	// Whether this is a "remember me" session (controls max refresh lifetime).
 	IsLongSession bool `xorm:"not null default false" json:"-"`
 	// When this session was last refreshed.
-	LastActive time.Time `xorm:"not null" json:"last_active"`
+	LastActive time.Time `xorm:"not null" json:"last_active" readOnly:"true" doc:"When this session was last refreshed."`
 	// When this session was created (login time).
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"When this session was created (login time)."`
 
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`

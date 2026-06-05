@@ -58,6 +58,8 @@ func RegisterAvatarUploadRoutes(api huma.API) {
 	}, avatarUpload)
 }
 
+func init() { AddRouteRegistrar(RegisterAvatarUploadRoutes) }
+
 func avatarUpload(ctx context.Context, in *avatarUploadInput) (*avatarUploadBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {

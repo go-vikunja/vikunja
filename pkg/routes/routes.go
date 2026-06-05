@@ -415,17 +415,8 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	a.GET("/docs", apiv2.ScalarUI)
 	a.GET("/docs/scalar.standalone.js", apiv2.ScalarJS)
 
-	// Resource registrations.
-	apiv2.RegisterLabelRoutes(api)
-	apiv2.RegisterTaskDuplicateRoutes(api)
-	apiv2.RegisterProjectViewRoutes(api)
-	apiv2.RegisterAdminProjectRoutes(api)
-	apiv2.RegisterAvatarRoutes(api)
-	apiv2.RegisterAvatarUploadRoutes(api)
-
-	// AutoPatch must run AFTER all GET/PUT pairs are registered so it can
-	// synthesize their PATCH counterparts.
-	apiv2.EnableAutoPatch(api)
+	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
+	apiv2.RegisterAll(api)
 }
 
 func registerAPIRoutes(a *echo.Group) {

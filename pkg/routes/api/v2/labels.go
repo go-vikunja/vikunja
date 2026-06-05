@@ -85,6 +85,8 @@ func RegisterLabelRoutes(api huma.API) {
 	}, labelsDelete)
 }
 
+func init() { AddRouteRegistrar(RegisterLabelRoutes) }
+
 func labelsList(ctx context.Context, in *ListParams) (*labelListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -101,26 +103,26 @@ func labelsList(ctx context.Context, in *ListParams) (*labelListBody, error) {
 	return &labelListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
 
+type labelReadBody struct {
+	models.Label
+	MaxPermission models.Permission `json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this label (0=read, 1=read/write, 2=admin)."`
+}
+
 func labelsRead(ctx context.Context, in *struct {
 	ID int64 `path:"id"`
 	conditional.Params
-}) (*singleReadBody[models.Label], error) {
+}) (*singleReadBody[labelReadBody], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	label := &models.Label{ID: in.ID}
-	if _, err := handler.DoReadOne(ctx, label, a); err != nil {
+	maxPermission, err := handler.DoReadOne(ctx, label, a)
+	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	// PreconditionFailed wants the unquoted etag; response header uses RFC 9110 quoted form.
-	etag := fmt.Sprintf("%d-%d", label.ID, label.Updated.UnixNano())
-	if in.HasConditionalParams() {
-		if err := in.PreconditionFailed(etag, label.Updated); err != nil {
-			return nil, err
-		}
-	}
-	return &singleReadBody[models.Label]{ETag: `"` + etag + `"`, Body: label}, nil
+	body := &labelReadBody{Label: *label, MaxPermission: models.Permission(maxPermission)}
+	return conditionalReadResponse(&in.Params, body, label.Updated, maxPermission)
 }
 
 func labelsCreate(ctx context.Context, in *struct {
@@ -136,19 +138,21 @@ func labelsCreate(ctx context.Context, in *struct {
 	return &singleBody[models.Label]{Body: &in.Body}, nil
 }
 
+// Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func labelsUpdate(ctx context.Context, in *struct {
 	ID   int64 `path:"id"`
-	Body models.Label
+	Body labelReadBody
 }) (*singleBody[models.Label], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	in.Body.ID = in.ID // URL wins over body
-	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
+	label := &in.Body.Label
+	label.ID = in.ID // URL wins over body
+	if err := handler.DoUpdate(ctx, label, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &singleBody[models.Label]{Body: &in.Body}, nil
+	return &singleBody[models.Label]{Body: label}, nil
 }
 
 func labelsDelete(ctx context.Context, in *struct {

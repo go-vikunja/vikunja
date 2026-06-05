@@ -72,7 +72,7 @@ Use the package's `Register` wrapper, **not** `huma.Register` directly — it se
 
 Every handler: pull auth with `authFromCtx(ctx)`, call the matching `handler.Do*`, wrap returned errors in `translateDomainError`. Use the shared envelopes from `types.go` (`singleBody`, `singleReadBody`, `emptyBody`, `ListParams`, `Paginated`/`NewPaginated`).
 
-- **List** takes `*ListParams` (gives you `page`/`per_page`/`q` for free) and returns `*fooListBody`. **You must type-assert the `DoReadAll` result to the concrete slice** — `result` is `any`, and a blind cast or a generic wrapper silently serialises `[]` (the "generic-any silent-empty trap"). Return a hard error on mismatch:
+- **List** takes `*ListParams` (gives you `page`/`per_page`/`q` for free, already `doc:`-tagged in `types.go` — no need to re-document them) and returns `*fooListBody`. **You must type-assert the `DoReadAll` result to the concrete slice** — `result` is `any`, and a blind cast or a generic wrapper silently serialises `[]` (the "generic-any silent-empty trap"). Return a hard error on mismatch:
   ```go
   items, ok := result.([]*models.Foo)
   if !ok {
@@ -80,21 +80,28 @@ Every handler: pull auth with `authFromCtx(ctx)`, call the matching `handler.Do*
   }
   return &fooListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
   ```
-- **Read** embeds `conditional.Params` in its input, builds an ETag from `id + Updated.UnixNano()`, calls `in.PreconditionFailed(etag, label.Updated)` when `in.HasConditionalParams()`, and returns `*singleReadBody[Model]` with the **quoted** ETag (`"`+etag+`"`).
-- **Create / Update** take a `Body Model` input and return `*singleBody[Model]`. Update sets `in.Body.ID = in.ID` (URL wins over body).
+- **Extra query params go *directly* on the handler's input struct — not in a shared/embedded helper.** Beyond `ListParams`, if an operation needs its own query params (`expand`, `order_by`, `include_public`, …), declare each as a direct field with its own `query:"…"` tag on that operation's input struct, then bind it onto the model. A shared or embedded struct of query fields silently **fails to bind** under Huma when combined with other query params/embeds — the field arrives empty (hit while implementing Project's `expand`). Flatten them into the input struct.
+- **Read** embeds `conditional.Params` in its input. To surface the caller's permission, define a small per-resource response struct that **embeds the model by value** and adds the permission: `type fooReadBody struct { models.Foo; MaxPermission models.Permission \`json:"max_permission" readOnly:"true" doc:"..."\` }`. Go and Huma both promote the embedded model's fields, so the wire shape is flat (model fields + `max_permission`) with no custom marshaler and nothing added to the shared model struct. Capture `DoReadOne`'s returned max permission (it is `0`/`1`/`2` on success — **never discard it as `_`**), build the body, and `return conditionalReadResponse(&in.Params, body, foo.Updated, maxPermission)`. The shared helper (in `types.go`) folds the permission into the ETag (so a share/role change invalidates the cache), applies the conditional precondition (304/412), and returns `*singleReadBody[fooReadBody]`. See `labels.go`/`project_views.go`. (A generic `struct{ T; ... }` is impossible — Go forbids embedding a type parameter — so the per-resource struct is the price of a flat shape without a marshaler.)
+- **Create / Update** return `*singleBody[Model]` and set the model's `ID` from the path (URL wins over body). **Update's request body must be the same `fooReadBody` the read returns, not the bare model** — AutoPatch's GET→PUT round trip echoes the read body (max_permission included) into the PUT, and because `max_permission` is a declared `readOnly` property of `fooReadBody`'s schema, Huma accepts and ignores it on write rather than rejecting it. Take `&in.Body.Foo` (the embedded model — value-embedded, so never nil) and ignore the embedded `MaxPermission`. Create stays a bare `Body Model` (AutoPatch only round-trips into PUT).
 - **Delete** returns `*emptyBody`.
 
-### 3. Wire it into the group
+### 3. Self-register the resource
 
-In `pkg/routes/routes.go`, `registerAPIRoutesV2`, add the registration **before** `EnableAutoPatch(api)`:
+Resources self-register — **you do not edit `pkg/routes/routes.go`**. In your resource file, add an `init()` that hands your registrar to `AddRouteRegistrar`:
 
 ```go
-apiv2.RegisterFooRoutes(api)
-// ... other resources ...
-apiv2.EnableAutoPatch(api)   // MUST stay last — walks registered GET+PUT pairs
+func init() { AddRouteRegistrar(RegisterFooRoutes) }
+
+func RegisterFooRoutes(api huma.API) { ... }
 ```
 
-That's the only edit outside the v2 package for a standard CRUD resource.
+`registerAPIRoutesV2` in `routes.go` calls `apiv2.RegisterAll(api)`, which runs every registered registrar (in init/filename order — route order is irrelevant) and then `EnableAutoPatch`. New resources touch zero shared lines, so they never conflict on `routes.go`.
+
+Notes:
+
+- **Give each registrar a DISTINCT name.** They share package `apiv2`, so two resources both exporting `RegisterAvatarRoutes` collide and won't compile — that actually happened and the upload one had to be renamed (`RegisterAvatarRoutes` for the binary endpoint vs `RegisterAvatarUploadRoutes` for the upload). Name yours after the specific resource.
+- **Config-gated resources check the flag inside the registrar.** `RegisterAll` runs at request-router-setup time, after config is loaded, so a `RegisterFooRoutes` may early-return (or skip individual `Register` calls) based on `config.FooEnabled.GetBool()`. Don't try to gate at `init()` time — config isn't loaded yet.
+- **AutoPatch is automatic.** `RegisterAll` calls `EnableAutoPatch` after all registrars — don't call it yourself, and don't register a manual PATCH (see "What's automatic").
 
 ## REST verb conventions (v2 inverts v1)
 
@@ -144,7 +151,7 @@ Otherwise the same rules apply: register with the `Register` wrapper, pull auth 
 
 ## What's automatic — do NOT hand-roll
 
-- **PATCH** — `EnableAutoPatch` synthesises a JSON-Merge-Patch PATCH for every GET+PUT pair. Don't register PATCH yourself.
+- **PATCH** — `EnableAutoPatch` synthesises a JSON-Merge-Patch PATCH for every GET+PUT pair. `RegisterAll` invokes it after all registrars, so it's automatic — don't call `EnableAutoPatch` and don't register PATCH yourself.
 - **API token permissions** — `collectRoutesForAPITokens` walks the Echo router after registration, so your new routes land in the v2 token table automatically under the same `(group, permission)` keys as their v1 names. PATCH is intentionally not stored; `CanDoAPIRoute` accepts it as an alias for the stored PUT (see `pkg/models/api_routes.go`).
 - **Security schemes** — `JWTKeyAuth` + `APITokenAuth` are declared globally in `NewAPI`. For a public endpoint, set `Security: []map[string][]string{}` on that operation and add its path to `unauthenticatedAPIPaths` in `routes.go`.
 - **Error shape** — `translateDomainError` maps any `web.HTTPErrorProcessor` (e.g. `ErrFooDoesNotExist`) onto Huma's status error, producing RFC 9457 `application/problem+json`. Errors without HTTP semantics become 500.
@@ -169,7 +176,7 @@ Mirror the v1 webtest shape so v2 parity is readable side-by-side. Use the `webH
 - v2-only behaviour (ETag/304, PATCH merge-patch) goes in separate top-level `Test<Resource>_*` funcs using the `humaRequest`/`humaTokenFor` helpers in `pkg/webtests/huma_helpers_test.go`.
 - The RFC 9457 error-body shape is asserted **once** globally in `TestHuma_ErrorShapeIsRFC9457` — don't re-assert the full problem+json shape per resource, just the status code.
 
-Run with `mage test:filter Test<Resource>` while iterating. Save output to a file per the project test-output rule.
+Run with `mage test:filter Test<Resource>` while iterating. **Caveat:** `mage test:filter` injects `-short`, which makes `pkg/webtests` skip entirely (the suite short-circuits in short mode), so it silently reports success without running your webtest. To actually exercise a single webtest, run it directly: `go test -run '<Name>' ./pkg/webtests/`. Save output to a file per the project test-output rule.
 
 ## Related
 

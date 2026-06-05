@@ -347,6 +347,7 @@ definitions:
           existing tasks, you should add `{"tasks":["read_all","update"]}`.
       title:
         description: A human-readable name for this token
+        minLength: 1
         type: string
       token:
         description: The actual api key. Only visible after creation.
@@ -1187,10 +1188,6 @@ definitions:
       id:
         description: The unique, numeric id of this team.
         type: integer
-      include_public:
-        description: Query parameter controlling whether to include public projects
-          or not
-        type: boolean
       is_public:
         description: Defines wether the team should be publicly discoverable when
           sharing a project
@@ -1307,10 +1304,6 @@ definitions:
       id:
         description: The unique, numeric id of this team.
         type: integer
-      include_public:
-        description: Query parameter controlling whether to include public projects
-          or not
-        type: boolean
       is_public:
         description: Defines wether the team should be publicly discoverable when
           sharing a project

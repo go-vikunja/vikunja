@@ -45,6 +45,8 @@ func RegisterAdminProjectRoutes(api huma.API) {
 	}, adminProjectsList)
 }
 
+func init() { AddRouteRegistrar(RegisterAdminProjectRoutes) }
+
 func adminProjectsList(ctx context.Context, in *ListParams) (*adminProjectListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {

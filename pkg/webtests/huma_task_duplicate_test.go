@@ -18,8 +18,11 @@ package webtests
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
+
+	"code.vikunja.io/api/pkg/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -60,6 +63,12 @@ func TestTaskDuplicateV2(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodPost, "/api/v2/tasks/99999/duplicate", `{}`, token, "")
 		// Missing source task yields ErrTaskDoesNotExist (404), not the 403 of the permission cases below.
 		require.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
+
+		// v1's TestTaskDuplicate asserts the specific domain error code
+		// (ErrCodeTaskDoesNotExist) here. v2 carries that code as the numeric
+		// `code` field of the RFC 9457 problem+json body, so assert on it to
+		// keep 1:1 parity with v1 rather than only checking the 404 status.
+		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeTaskDoesNotExist), "body must surface ErrCodeTaskDoesNotExist; body: %s", rec.Body.String())
 	})
 
 	t.Run("no read on source task is forbidden", func(t *testing.T) {
