@@ -9363,7 +9363,8 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "A human-readable name for this token",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 },
                 "token": {
                     "description": "The actual api key. Only visible after creation.",

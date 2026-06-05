@@ -347,6 +347,7 @@ definitions:
           existing tasks, you should add `{"tasks":["read_all","update"]}`.
       title:
         description: A human-readable name for this token
+        minLength: 1
         type: string
       token:
         description: The actual api key. Only visible after creation.
