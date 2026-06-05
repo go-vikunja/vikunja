@@ -44,7 +44,6 @@
 			"resetPassword": "Ponastavite geslo",
 			"resetPasswordAction": "Pošljite mi povezavo za ponastavitev gesla",
 			"resetPasswordSuccess": "Preverite vaš poštni predal! Prejeti bi morali e-pošto z navodili za ponastavitev gesla.",
-			"passwordsDontMatch": "Vneseni gesli se ne ujemata",
 			"confirmEmailSuccess": "Uspešno ste potrdili svoj e-poštni naslov! Sedaj se lahko prijavite.",
 			"totpTitle": "Koda za dvofaktorsko avtentikacijo",
 			"totpPlaceholder": "npr. 123456",
@@ -73,10 +72,8 @@
 			"title": "Nastavitve",
 			"newPasswordTitle": "Posodobite geslo",
 			"newPassword": "Novo geslo",
-			"newPasswordConfirm": "Potrditev novega gesla",
 			"currentPassword": "Trenutno geslo",
 			"currentPasswordPlaceholder": "Vaše trenutno geslo",
-			"passwordsDontMatch": "Novo geslo in njegova potrditev se ne ujemata.",
 			"passwordUpdateSuccess": "Geslo je bilo uspešno posodobljeno.",
 			"updateEmailTitle": "Posodobite e-poštni naslov",
 			"updateEmailNew": "Nov e-poštni naslov",
@@ -137,7 +134,6 @@
 			},
 			"appearance": {
 				"title": "Barvna shema",
-				"setSuccess": "Sprememba barvne sheme shranjena v {colorScheme}",
 				"colorScheme": {
 					"light": "Svetla",
 					"system": "Sistemska",
@@ -159,7 +155,6 @@
 				"expired": "Žeton je potekel pred {ago}.",
 				"tokenCreatedSuccess": "Tu je vaš novi API žeton: {token}",
 				"tokenCreatedNotSeeAgain": "Shranite ga na varno mesto, ker ga ne boste več videli!",
-				"selectAll": "Izberi vse",
 				"delete": {
 					"header": "Izbriši ta žeton",
 					"text1": "Ali ste prepričani, da želite izbrisati žeton \"{token}\"?",
@@ -401,16 +396,7 @@
 			"titlePlaceholder": "Tu je naslov shranjenega filtra…",
 			"description": "Opis",
 			"descriptionPlaceholder": "Dodaj opis za ta filter, pritisni '/' za več možnosti…",
-			"includeNulls": "Vključi naloge, ki nimajo nastavljene vrednosti",
-			"requireAll": "Zahtevajte, da se naloga prikaže, če so uporabljeni vsi filtri",
-			"showDoneTasks": "Pokaži že končane naloge",
-			"sortAlphabetically": "Razvrsti po abecedi",
-			"enablePriority": "Omogoči filter po prioriteti",
-			"enablePercentDone": "Omogoči filter po napredku",
-			"dueDateRange": "Obdobje zapadlosti",
-			"startDateRange": "Začetno časovno obdobje",
-			"endDateRange": "Končno časovno obdobje",
-			"reminderRange": "Datumsko obdobje opomnika"
+			"includeNulls": "Vključi naloge, ki nimajo nastavljene vrednosti"
 		},
 		"create": {
 			"title": "Nov shranjen filter",
@@ -428,7 +414,6 @@
 			"success": "Filter je bil uspešno shranjen."
 		},
 		"query": {
-			"title": "Poizvedba",
 			"placeholder": "Vnesite poizvedbo za iskanje ali filtriranje…",
 			"help": {
 				"intro": "Za filtriranje nalog lahko uporabite sintakso poizvedbe, podobno SQL. Razpoložljiva polja za filtriranje vključujejo:",
@@ -479,7 +464,6 @@
 	"migrate": {
 		"title": "Uvoz iz drugih storitev",
 		"titleService": "Uvozi svoje podatke v Vikunjo iz {name}",
-		"import": "Uvozi svoje podatke v Vikunjo",
 		"description": "Klikni na logotip ene od spodnjih storitev, da začneš.",
 		"descriptionDo": "Vikunja bo uvozil vse sezname, naloge, opombe, opomnike in datoteke, do katerih imate dostop.",
 		"authorize": "Če želite pooblastiti Vikunjo za dostop do vašega računa {name}, kliknite spodnji gumb.",
@@ -498,7 +482,6 @@
 		"manage": "Upravljanje oznak",
 		"description": "Da uredite oznako jo kliknite. Urejate lahko vse oznake, ki ste jih ustvarili. Do projekta katerega imate dostop lahko uporabite vse oznake, ki so povezane z nalogo.",
 		"newCTA": "Trenutno nimate nobene oznake.",
-		"search": "Začni tipkati za iskanje oznake…",
 		"create": {
 			"header": "Nova oznaka",
 			"title": "Ustvari oznako",
@@ -507,7 +490,6 @@
 		},
 		"edit": {
 			"header": "Uredi oznako",
-			"forbidden": "Ker niste njen lastnik, nimate dovoljenja za urejanje te oznake.",
 			"success": "Oznaka je bila uspešno posodobljena."
 		},
 		"deleteSuccess": "Oznaka je bila uspešno izbrisana.",
@@ -515,7 +497,6 @@
 			"title": "Naslov",
 			"titlePlaceholder": "Tu je naslov oznake…",
 			"description": "Opis",
-			"descriptionPlaceholder": "Opis oznake",
 			"color": "Barva"
 		}
 	},
@@ -538,16 +519,13 @@
 		"delete": "Izbriši",
 		"confirm": "Potrdi",
 		"cancel": "Prekliči",
-		"refresh": "Osveži",
 		"disable": "Onemogoči",
 		"copy": "Kopiraj na odložišče",
 		"copyError": "Napaka pri kopiranju na odložišče",
-		"search": "Poišči",
 		"searchPlaceholder": "Začnite tipkati za iskanje…",
 		"previous": "Prejšnji",
 		"next": "Naslednji",
 		"poweredBy": "Poganja jo Vikunja",
-		"info": "Info",
 		"create": "Ustvari",
 		"doit": "Naredi!",
 		"saving": "Shranjujem…",
@@ -579,15 +557,12 @@
 		},
 		"editor": {
 			"edit": "Uredi",
-			"done": "Končano",
 			"heading1": "Naslov 1",
 			"heading1Tooltip": "Naslov velikega razdelka.",
 			"heading2": "Naslov 2",
 			"heading2Tooltip": "Naslov srednjega razdelka.",
 			"heading3": "Naslov 3",
 			"heading3Tooltip": "Naslov majhnega razdelka.",
-			"headingSmaller": "Manjši naslov",
-			"headingBigger": "Večji naslov",
 			"bold": "Krepko",
 			"italic": "Ležeče",
 			"strikethrough": "Prečrtano",
@@ -598,17 +573,13 @@
 			"quoteTooltip": "Zajemite citat.",
 			"bulletList": "Seznam z oznakami",
 			"bulletListTooltip": "Ustvari preprost seznam z oznakami.",
-			"unorderedList": "Neurejen seznam",
 			"orderedList": "Urejen seznam",
 			"orderedListTooltip": "Oštevilčen seznam.",
-			"cleanBlock": "Počisti oblikovanje",
 			"link": "Povezava",
 			"image": "Slika",
 			"imageTooltip": "Naloži sliko iz računalnika.",
 			"horizontalRule": "Horizontalno ravnilo",
 			"horizontalRuleTooltip": "Razdeli sekcijo.",
-			"sideBySide": "Drug ob drugem",
-			"guide": "Vodič",
 			"text": "Besedilo",
 			"textTooltip": "Začnite tipkati z navadnim besedilom.",
 			"taskList": "Seznam nalog",
@@ -714,20 +685,16 @@
 		}
 	},
 	"task": {
-		"task": "Naloga",
 		"new": "Ustvari opravilo",
-		"delete": "Izbriši nalogo",
 		"createSuccess": "Naloga je bila uspešno ustvarjena.",
 		"addReminder": "Dodaj nov opomnik…",
 		"doneSuccess": "Naloga je bila uspešno označena kot opravljena.",
 		"undoneSuccess": "Naloga je bila uspešno odznačena kot opravljena.",
 		"undo": "Razveljavi",
-		"openDetail": "Odpri pogled podrobnosti nalog",
 		"checklistTotal": "{checked} od {total} nalog",
 		"checklistAllDone": "{total} nalog",
 		"show": {
 			"titleCurrent": "Trenutna naloga",
-			"titleDates": "Naloge od {from} do {to}",
 			"overdue": "Prikaži naloge čez rok",
 			"fromuntil": "Naloge od {from} do {until}",
 			"select": "Izberi časovno obdobje",
@@ -747,7 +714,6 @@
 			"deleteSuccess": "Naloga je bila uspešno izbrisana.",
 			"belongsToProject": "Ta naloga pripada projektu '{project}'",
 			"due": "Rok {at}",
-			"closePopup": "Zapri pojavno okno",
 			"organization": "Organizacija",
 			"management": "Poslovanje",
 			"dateAndTime": "Datum in čas",
@@ -817,7 +783,6 @@
 			"delete": "Izbriši prilogo",
 			"deleteTooltip": "Izbriši to prilogo",
 			"deleteText1": "Ali ste prepričani, da želite izbrisati prilogo {filename}?",
-			"copyUrl": "Kopiraj URL",
 			"copyUrlTooltip": "Kopiraj URL priloge za uporabo v besedilu",
 			"setAsCover": "Ustvari naslovnico",
 			"unsetAsCover": "Odstrani naslovnico",
@@ -844,8 +809,7 @@
 			"1week": "1 teden"
 		},
 		"description": {
-			"placeholder": "Vnesi opis, pritisni '/' za več možnosti…",
-			"empty": "Opis še ni na voljo."
+			"placeholder": "Vnesi opis, pritisni '/' za več možnosti…"
 		},
 		"assignee": {
 			"placeholder": "Začni tipkati za dodelitev uporabnika…",
@@ -857,7 +821,6 @@
 			"placeholder": "Začni tipkati, če želiš dodati novo oznako…",
 			"createPlaceholder": "Dodajte kot novo oznako",
 			"addSuccess": "Oznaka je bila uspešno dodana.",
-			"createSuccess": "Oznaka je bila uspešno ustvarjena.",
 			"removeSuccess": "Oznaka je bila uspešno odstranjena.",
 			"addCreateSuccess": "Oznaka je bila ustvarjena in uspešno dodana.",
 			"delete": {
@@ -922,8 +885,6 @@
 			"hours": "Ur",
 			"days": "Dni",
 			"weeks": "Tednov",
-			"months": "Mesecev",
-			"years": "Let",
 			"invalidAmount": "Vnesi več kot 0."
 		},
 		"quickAddMagic": {
@@ -1055,7 +1016,6 @@
 		"unarchive": "Odstrani iz arhiva",
 		"setBackground": "Nastavitve ozadja",
 		"share": "Skupna raba",
-		"newProject": "Nov projekt",
 		"createProject": "Ustvari projekt",
 		"cantArchiveIsDefault": "Tega ne morete arhivirati, ker je to vaš privzeti projekt.",
 		"cantDeleteIsDefault": "Tega ne morete izbrisati, ker je to vaš privzeti projekt.",
@@ -1191,7 +1151,6 @@
 			"hours": "ura|ur",
 			"days": "dan|dni",
 			"weeks": "teden|tednov",
-			"months": "mesec|mesecev",
 			"years": "leto|let"
 		}
 	}

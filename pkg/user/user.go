@@ -37,6 +37,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/builder"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 // IsErrUserStatusError returns true if the error is an ErrAccountDisabled or ErrAccountLocked.
@@ -83,16 +84,18 @@ const (
 // User holds information about an user
 type User struct {
 	// The unique, numeric id of this user.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"bot" readOnly:"true" doc:"The unique, numeric id of this user."`
 	// The full name of the user.
-	Name string `xorm:"text null" json:"name"`
+	Name string `xorm:"text null" json:"name" doc:"The full name of the user."`
 	// The username of the user. Is always unique.
-	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"1" maxLength:"250"`
+	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"1" maxLength:"250" doc:"The username of the user. Is always unique. For bot users it must start with the 'bot-' prefix."`
 	Password string `xorm:"varchar(250) null" json:"-"`
 	// The user's email address.
-	Email string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250"`
+	Email string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250" doc:"The user's email address. Always empty for bot users."`
 
 	Status Status `xorm:"default 0" json:"-"`
+
+	IsAdmin bool `xorm:"not null default false" json:"-"`
 
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
 	AvatarFileID   int64  `xorm:"null" json:"-"`
@@ -107,9 +110,12 @@ type User struct {
 	OverdueTasksRemindersEnabled bool   `xorm:"bool default true index" json:"-"`
 	OverdueTasksRemindersTime    string `xorm:"varchar(5) not null default '09:00'" json:"-"`
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
-	WeekStart                    int    `xorm:"null" json:"-"`
-	Language                     string `xorm:"varchar(50) null" json:"-" valid:"language"`
-	Timezone                     string `xorm:"varchar(255) null" json:"-"`
+	// BotOwnerID is the ID of the owning (human) user if this user is a bot.
+	// A non-zero value means this user is a bot and cannot authenticate via password.
+	BotOwnerID int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty" readOnly:"true" doc:"The id of the owning (human) user. Set by the server on creation; a non-zero value means this user is a bot."`
+	WeekStart  int    `xorm:"null" json:"-"`
+	Language   string `xorm:"varchar(50) null" json:"-" valid:"language"`
+	Timezone   string `xorm:"varchar(255) null" json:"-"`
 
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
@@ -120,9 +126,9 @@ type User struct {
 	ExportFileID int64 `xorm:"bigint null" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this user was created. You cannot change this value."`
 	// A timestamp when this task was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this user was last updated. You cannot change this value."`
 
 	web.Auth `xorm:"-" json:"-"`
 }
@@ -149,6 +155,9 @@ func (u *User) RouteForDB() int64 {
 }
 
 func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
+	if u.IsBot() {
+		return false, nil
+	}
 	var s *xorm.Session
 	if len(sessions) > 0 && sessions[0] != nil {
 		s = sessions[0]
@@ -173,6 +182,11 @@ func (u *User) Lang() string {
 // GetID implements the Auth interface
 func (u *User) GetID() int64 {
 	return u.ID
+}
+
+// IsBot reports whether this user is a bot (owned by another user).
+func (u *User) IsBot() bool {
+	return u.BotOwnerID > 0
 }
 
 // TableName returns the table name for users
@@ -497,9 +511,12 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 		return nil, err
 	}
 
+	isAdmin, _ := claims["is_admin"].(bool)
+
 	return &User{
 		ID:       userID,
 		Username: username,
+		IsAdmin:  isAdmin,
 	}, nil
 }
 
@@ -656,6 +673,35 @@ func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
 		Cols("status").
 		Update(&User{Status: status})
 	return
+}
+
+// GuardLastAdmin refuses demoting or deleting the last reachable admin; only active, non-deletion-scheduled admins count since the rest cannot log in.
+// SELECT ... FOR UPDATE closes the TOCTOU race between concurrent demotions on MySQL (xorm only emits it for MySQL; SQLite serializes writes, postgres relies on serializable isolation).
+func GuardLastAdmin(s *xorm.Session, target *User) error {
+	if !target.IsAdmin {
+		return nil
+	}
+	// target is not in the counted "reachable admin" set — removing them
+	// doesn't change the invariant, so the guard is a no-op.
+	if target.Status != StatusActive || !target.DeletionScheduledAt.IsZero() {
+		return nil
+	}
+
+	session := s.Where("is_admin = ?", true).
+		And("status = ?", StatusActive).
+		And("deletion_scheduled_at IS NULL")
+	if db.Type() == schemas.MYSQL {
+		session = session.ForUpdate()
+	}
+
+	count, err := session.Count(&User{})
+	if err != nil {
+		return err
+	}
+	if count <= 1 {
+		return ErrLastAdmin{}
+	}
+	return nil
 }
 
 // UpdateUserPassword updates the password of a user

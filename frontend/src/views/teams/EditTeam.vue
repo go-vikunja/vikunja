@@ -113,7 +113,7 @@
 				<table class="table has-actions is-striped is-hoverable is-fullwidth">
 					<tbody>
 						<tr
-							v-for="m in team?.members"
+							v-for="m in sortedMembers"
 							:key="m.id"
 						>
 							<td>
@@ -243,6 +243,7 @@ import FormField from '@/components/input/FormField.vue'
 import Multiselect from '@/components/input/Multiselect.vue'
 import User from '@/components/misc/User.vue'
 
+import {getDisplayName} from '@/models/user'
 import TeamService from '@/services/team'
 import TeamMemberService from '@/services/teamMember'
 import UserService from '@/services/user'
@@ -272,6 +273,12 @@ const userIsAdmin = computed(() => {
 	)
 })
 const userInfo = computed(() => authStore.info)
+
+const sortedMembers = computed(() => {
+	return [...(team.value?.members ?? [])].sort((a, b) =>
+		getDisplayName(a).localeCompare(getDisplayName(b), undefined, {sensitivity: 'base'}),
+	)
+})
 
 const teamService = ref<TeamService>(new TeamService())
 const teamMemberService = ref<TeamMemberService>(new TeamMemberService())

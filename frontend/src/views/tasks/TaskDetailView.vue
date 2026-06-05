@@ -28,8 +28,9 @@
 				@update:task="Object.assign(task, $event)"
 				@close="$emit('close')"
 			/>
-			<h6
+			<nav
 				v-if="project?.id"
+				aria-label="Breadcrumb"
 				class="subtitle"
 			>
 				<template
@@ -60,7 +61,7 @@
 					:can-write="canWrite"
 					@update:task="Object.assign(task, $event)"
 				/>
-			</h6>
+			</nav>
 
 			<ChecklistSummary :task="task" />
 
@@ -343,11 +344,11 @@
 					</div>
 					
 					<!-- Reactions -->
-					<Reactions 
+					<Reactions
 						v-model="task.reactions" 
 						entity-kind="tasks"
 						:entity-id="task.id"
-						class="details"
+						class="details d-print-none"
 						:disabled="!canWrite"
 					/>
 

@@ -22,6 +22,8 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 
@@ -69,8 +71,7 @@ func RegisterUser(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Insert the user
-	newUser, err := user.CreateUser(s, &user.User{
+	newUser, err := models.RegisterUser(s, &user.User{
 		Username: userIn.Username,
 		Password: userIn.Password,
 		Email:    userIn.Email,
@@ -81,16 +82,17 @@ func RegisterUser(c *echo.Context) error {
 		return err
 	}
 
-	// Create their initial project
-	err = models.CreateNewProjectForUser(s, newUser)
-	if err != nil {
+	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err
 	}
 
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
-		return err
+	// Bust the cached user count so the new registration shows up in metrics
+	// immediately instead of after the regular cache expiry.
+	if config.MetricsEnabled.GetBool() {
+		if err := metrics.InvalidateCount(metrics.UserCountKey); err != nil {
+			log.Errorf("Could not invalidate user count metric: %s", err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, newUser)

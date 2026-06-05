@@ -128,6 +128,17 @@ func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Pro
 // This action is irrevocable.
 // Public to allow deletion from the CLI.
 func DeleteUser(s *xorm.Session, u *user.User) (err error) {
+	// Delete any bot users owned by this user first (cascades their data too).
+	var ownedBots []*user.User
+	if err = s.Where("bot_owner_id = ?", u.ID).Find(&ownedBots); err != nil {
+		return err
+	}
+	for _, bot := range ownedBots {
+		if err = DeleteUser(s, bot); err != nil {
+			return err
+		}
+	}
+
 	projectsToDelete, err := getProjectsToDelete(s, u)
 	if err != nil {
 		return err

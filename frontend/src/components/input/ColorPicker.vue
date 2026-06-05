@@ -15,6 +15,7 @@
 				type="color"
 				:list="colorListID"
 				:class="{'is-empty': isEmpty}"
+				:aria-label="$t('input.projectColor')"
 			>
 			<svg
 				v-show="isEmpty"

@@ -185,7 +185,8 @@ func getProjectFromParam(c *echo.Context) (project *models.ProjectWithTasksAndBu
 
 	intParam, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		return nil, err
+		// The project ID given is not an integer, it cannot exist
+		return nil, models.ErrProjectDoesNotExist{}
 	}
 
 	if intParam == models.FavoritesPseudoProjectID {

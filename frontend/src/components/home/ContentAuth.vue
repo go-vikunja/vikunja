@@ -2,6 +2,7 @@
 	<div class="content-auth">
 		<BaseButton
 			v-show="menuActive"
+			:aria-label="$t('navigation.closeSidebar')"
 			class="menu-hide-button d-print-none"
 			@click="baseStore.setMenuActive(false)"
 		>
@@ -22,6 +23,7 @@
 			/>
 			<Navigation class="d-print-none" />
 			<main
+				id="main-content"
 				class="app-content"
 				:class="[
 					{ 'is-menu-enabled': menuActive },
@@ -31,6 +33,7 @@
 			>
 				<BaseButton
 					v-show="menuActive"
+					:aria-label="$t('navigation.closeSidebar')"
 					class="mobile-overlay d-print-none"
 					@click="baseStore.setMenuActive(false)"
 				/>
@@ -50,6 +53,7 @@
 					:enabled="typeof currentModal !== 'undefined'"
 					variant="scrolling"
 					class="task-detail-view-modal"
+					:aria-label="$t('task.detail.title')"
 					@close="closeModal()"
 				>
 					<component

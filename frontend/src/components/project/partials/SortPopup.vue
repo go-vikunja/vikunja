@@ -16,7 +16,10 @@
 				</p>
 				<div class="field">
 					<div class="select is-fullwidth">
-						<select v-model="selected">
+						<select
+							v-model="selected"
+							:aria-label="$t('misc.sortBy')"
+						>
 							<option
 								v-for="o in options"
 								:key="o.value"

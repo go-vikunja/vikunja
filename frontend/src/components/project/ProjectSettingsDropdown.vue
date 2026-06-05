@@ -31,6 +31,7 @@
 			>
 				{{ $t('menu.views') }}
 			</DropdownItem>
+			<slot name="before-delete" />
 			<DropdownItem
 				:to="{ name: 'filter.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
@@ -109,8 +110,9 @@
 			>
 				{{ $t('menu.createProject') }}
 			</DropdownItem>
+			<slot name="before-delete" />
 			<DropdownItem
-				v-if="project.maxPermission === PERMISSIONS.ADMIN"
+				v-if="forceAllActions || project.maxPermission === PERMISSIONS.ADMIN"
 				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
@@ -139,9 +141,12 @@ import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {PERMISSIONS} from '@/constants/permissions'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	project: IProject
-}>()
+	forceAllActions?: boolean
+}>(), {
+	forceAllActions: false,
+})
 
 const projectStore = useProjectStore()
 const subscription = ref<ISubscription | null>(null)

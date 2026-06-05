@@ -74,6 +74,7 @@
 										v-if="canWrite && !collapsedBuckets[bucket.id]"
 										class="is-right options"
 										trigger-icon="ellipsis-v"
+										:trigger-label="$t('project.kanban.bucketOptions')"
 										@close="() => showSetLimitInput = false"
 									>
 										<div
@@ -1093,6 +1094,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	.bucket-footer {
 		position: sticky;
 		inset-block-end: 0;
+		z-index: 2;
 		block-size: min-content;
 		padding: .5rem;
 		background-color: var(--grey-100);

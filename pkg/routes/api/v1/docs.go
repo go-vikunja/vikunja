@@ -17,9 +17,13 @@
 package v1
 
 import (
+	"bytes"
 	_ "embed"
+	"html/template"
 	"net/http"
+	"strings"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	_ "code.vikunja.io/api/pkg/swagger" // To make sure the swag files are properly registered
 
@@ -30,12 +34,13 @@ import (
 //go:embed redoc/redoc.html
 var redocHTML string
 
+var redocUITemplate = template.Must(template.New("redoc").Parse(redocHTML))
+
 //go:embed redoc/redoc.standalone.js
 var redocJS []byte
 
 // DocsJSON serves swagger doc json specs
 func DocsJSON(c *echo.Context) error {
-
 	doc, err := swag.ReadDoc()
 	if err != nil {
 		log.Error(err.Error())
@@ -47,7 +52,17 @@ func DocsJSON(c *echo.Context) error {
 
 // RedocUI serves everything needed to provide the redoc ui
 func RedocUI(c *echo.Context) error {
-	return c.HTML(http.StatusOK, redocHTML)
+	publicURL := config.ServicePublicURL.GetString()
+	docsBase := strings.TrimRight(publicURL, "/") + "/"
+
+	var buf bytes.Buffer
+	data := map[string]string{"Base": docsBase}
+
+	if err := redocUITemplate.Execute(&buf, data); err != nil {
+		return err
+	}
+
+	return c.HTML(http.StatusOK, buf.String())
 }
 
 // RedocJS serves the embedded redoc standalone JavaScript bundle

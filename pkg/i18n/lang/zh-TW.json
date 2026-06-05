@@ -70,9 +70,6 @@
 				"subject": "「%[1]s」(%[2]s) 提醒",
 				"message": "任務「%[1]s」(%[2]s) 提醒。"
 			},
-			"comment": {
-				"mentioned_message": "**%[1]s** 在評論中提到您："
-			},
 			"assigned": {
 				"subject_to_assignee": "您已被指派至「%[1]s」(%[2]s)",
 				"message_to_assignee": "%[1]s 已將您指派到「%[2]s」。",
@@ -84,9 +81,6 @@
 			"deleted": {
 				"subject": "「%[1]s」(%[2]s) 已被刪除",
 				"message": "%[1]s 已刪除任務「%[2]s」(%[3]s)"
-			},
-			"mentioned": {
-				"message": "%[1]s 在任務中提到您："
 			},
 			"overdue": {
 				"subject": "任務「%[1]s」(%[2]s) 已逾期",

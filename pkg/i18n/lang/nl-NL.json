@@ -70,9 +70,6 @@
 				"subject": "Herinnering voor \"%[1]s\" (%[2]s)",
 				"message": "Dit is een vriendelijke herinnering voor taak \"%[1]s\" (%[2]s)."
 			},
-			"comment": {
-				"mentioned_message": "**%[1]s** noemde je in een reactie:"
-			},
 			"assigned": {
 				"subject_to_assignee": "Je bent toegewezen aan \"%[1]s\" (%[2]s)",
 				"message_to_assignee": "%[1]s heeft je toegewezen aan \"%[2]s\".",
@@ -84,9 +81,6 @@
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) is verwijderd",
 				"message": "%[1]s verwijderde taak \"%[2]s\" (%[3]s)"
-			},
-			"mentioned": {
-				"message": "**%[1]s** noemde je in een taak:"
 			},
 			"overdue": {
 				"subject": "Taak \"%[1]s\" (%[2]s) is te laat",

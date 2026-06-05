@@ -9,6 +9,8 @@ import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 
 import {useAuthStore} from '@/stores/auth'
+import {useBaseStore} from '@/stores/base'
+import {useConfigStore} from '@/stores/config'
 
 import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
@@ -117,6 +119,11 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/DataExport.vue'),
 				},
 				{
+					path: '/user/settings/feeds',
+					name: 'user.settings.feeds',
+					component: () => import('@/views/user/settings/AtomFeed.vue'),
+				},
+				{
 					path: '/user/settings/deletion',
 					name: 'user.settings.deletion',
 					component: () => import('@/views/user/settings/Deletion.vue'),
@@ -161,6 +168,11 @@ const router = createRouter({
 					path: '/user/settings/webhooks',
 					name: 'user.settings.webhooks',
 					component: () => import('@/views/user/settings/Webhooks.vue'),
+				},
+				{
+					path: '/user/settings/bots',
+					name: 'user.settings.bots',
+					component: () => import('@/views/user/settings/BotUsers.vue'),
 				},
 				{
 					path: '/user/settings/migrate',
@@ -427,6 +439,31 @@ const router = createRouter({
 			name: 'about',
 			component: () => import('@/views/About.vue'),
 		},
+		{
+			path: '/admin',
+			component: () => import('@/views/admin/AdminShell.vue'),
+			meta: {
+				requiresAdminPanel: true,
+				adminMode: true,
+			},
+			children: [
+				{
+					path: '',
+					name: 'admin.overview',
+					component: () => import('@/views/admin/OverviewView.vue'),
+				},
+				{
+					path: 'users',
+					name: 'admin.users',
+					component: () => import('@/views/admin/UsersView.vue'),
+				},
+				{
+					path: 'projects',
+					name: 'admin.projects',
+					component: () => import('@/views/admin/ProjectsView.vue'),
+				},
+			],
+		},
 	],
 })
 
@@ -480,6 +517,24 @@ router.beforeEach(async (to, from) => {
 	const authStore = useAuthStore()
 
 	await authStore.checkAuth()
+
+	if (to.meta?.requiresAdminPanel) {
+		// Await config/auth hydration so the license check doesn't race the empty default
+		// on direct /admin navigation. appReady resolves without waiting on router.isReady(),
+		// so awaiting it here doesn't deadlock the initial navigation.
+		const baseStore = useBaseStore()
+		await baseStore.appReady
+		const configStore = useConfigStore()
+		const featureOn = configStore.isProFeatureEnabled('admin_panel')
+		// isAdmin comes from /user, not the JWT; force-fetch in case checkAuth() was debounced.
+		if (authStore.info?.isAdmin === undefined) {
+			await authStore.refreshUserInfo()
+		}
+		const isAdmin = authStore.info?.isAdmin === true
+		if (!featureOn || !isAdmin) {
+			return {name: 'not-found'}
+		}
+	}
 
 	if(from.hash && from.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
 		to.hash = from.hash

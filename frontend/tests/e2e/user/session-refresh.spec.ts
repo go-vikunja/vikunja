@@ -11,7 +11,7 @@ async function loginViaBrowser(page, username: string) {
 	await page.locator('input[id=password]').fill(TEST_PASSWORD)
 	await page.locator('.button').filter({hasText: 'Login'}).click()
 	await expect(page).toHaveURL('/')
-	await expect(page.locator('main h2')).toContainText(username)
+	await expect(page.locator('main h1')).toContainText(username)
 
 	// Wait for the proactive refresh (from useRenewTokenOnFocus) to complete
 	// so it doesn't race with our test assertions.

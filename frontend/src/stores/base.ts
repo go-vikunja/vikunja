@@ -145,25 +145,22 @@ export const useBaseStore = defineStore('base', () => {
 		}
 	}
 
-	async function loadApp() {
+	async function hydrateConfig() {
 		try {
 			if (isDesktopApp()) {
 				// On desktop, ignore the default window.API_URL (set by index.html)
 				// and only use a previously stored API URL from localStorage.
 				const storedApiUrl = localStorage.getItem('API_URL')
 				if (storedApiUrl) {
-					window.API_URL = storedApiUrl
+					// Hydrate /info before marking ready; otherwise pro-feature gates stay off for returning desktop users.
+					await checkAndSetApiUrl(storedApiUrl)
 					await authStore.checkAuth()
 				}
-				await router.isReady()
-				ready.value = true
 				return
 			}
 
 			await checkAndSetApiUrl(window.API_URL)
 			await authStore.checkAuth()
-			await router.isReady()
-			ready.value = true
 		} catch (e: unknown) {
 			if (e instanceof NoApiUrlProvidedError) {
 				error.value = ERROR_NO_API_URL
@@ -173,17 +170,34 @@ export const useBaseStore = defineStore('base', () => {
 				error.value = t('apiConfig.error')
 				return
 			}
-			error.value = String(e.message)
+			error.value = String(e instanceof Error ? e.message : e)
 		}
 	}
 
-	loadApp()
+	// Exposed so router guards can await config/auth hydration on direct
+	// navigation without deadlocking on router.isReady().
+	const appReady = hydrateConfig()
+
+	async function loadApp() {
+		// Re-hydrates (used when the user selects a new API URL from Ready.vue).
+		await hydrateConfig()
+		await router.isReady()
+		ready.value = true
+	}
+
+	// Initial load: wait on the in-flight hydration, then mark ready once
+	// the router has settled.
+	appReady.then(async () => {
+		await router.isReady()
+		ready.value = true
+	})
 
 	return {
 		error: readonly(error),
 		loading: readonly(loading),
 		ready: readonly(ready),
 		loadApp,
+		appReady,
 
 		currentProject: readonly(currentProject),
 		currentProjectViewId: readonly(currentProjectViewId),

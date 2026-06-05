@@ -26,6 +26,7 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/initialize"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
@@ -48,6 +49,8 @@ var (
 	userFlagDisableUser           bool
 	userFlagDeleteNow             bool
 	userFlagDeleteConfirm         bool
+	userFlagMakeAdmin             bool
+	userFlagRemoveAdmin           bool
 )
 
 func init() {
@@ -81,8 +84,66 @@ func init() {
 	// Bypass confirm prompt
 	userDeleteCmd.Flags().BoolVarP(&userFlagDeleteConfirm, "confirm", "c", false, "Bypasses any prompts confirming the deletion request, use with caution!")
 
-	userCmd.AddCommand(userListCmd, userCreateCmd, userUpdateCmd, userResetPasswordCmd, userChangeStatusCmd, userDeleteCmd)
+	userSetAdminCmd.Flags().BoolVar(&userFlagMakeAdmin, "admin", false, "Promote the user to instance admin.")
+	userSetAdminCmd.Flags().BoolVar(&userFlagRemoveAdmin, "no-admin", false, "Revoke instance admin from the user.")
+	userSetAdminCmd.MarkFlagsMutuallyExclusive("admin", "no-admin")
+	userSetAdminCmd.MarkFlagsOneRequired("admin", "no-admin")
+
+	userCmd.AddCommand(userListCmd, userCreateCmd, userUpdateCmd, userResetPasswordCmd, userChangeStatusCmd, userDeleteCmd, userSetAdminCmd)
 	rootCmd.AddCommand(userCmd)
+}
+
+func setUserAdmin(s *xorm.Session, identifier string, value bool) error {
+	filter := &user.User{}
+	id, err := strconv.ParseInt(identifier, 10, 64)
+	if err != nil {
+		filter.Username = identifier
+	} else {
+		filter.ID = id
+	}
+	u, err := user.GetUserWithEmail(s, filter)
+	if err != nil && !user.IsErrUserStatusError(err) {
+		return err
+	}
+	if !value {
+		if err := user.GuardLastAdmin(s, u); err != nil {
+			return err
+		}
+	}
+	u.IsAdmin = value
+	_, err = s.ID(u.ID).Cols("is_admin").Update(u)
+	return err
+}
+
+var userSetAdminCmd = &cobra.Command{
+	Use:   "set-admin [username-or-id]",
+	Short: "Set or remove the instance-admin flag on a user.",
+	Args:  cobra.ExactArgs(1),
+	PreRun: func(_ *cobra.Command, _ []string) {
+		initialize.FullInit()
+	},
+	Run: func(_ *cobra.Command, args []string) {
+		// Refuse on a free instance; the is_admin bypass is gated by the admin-panel entitlement everywhere else.
+		if !license.IsFeatureEnabled(license.FeatureAdminPanel) {
+			log.Fatalf("The admin-panel license feature is not active; refusing to change the is_admin flag.")
+		}
+
+		s := db.NewSession()
+		defer s.Close()
+		value := userFlagMakeAdmin
+		if err := setUserAdmin(s, args[0], value); err != nil {
+			_ = s.Rollback()
+			log.Fatalf("Could not update admin flag: %s", err)
+		}
+		if err := s.Commit(); err != nil {
+			log.Fatalf("Could not commit: %s", err)
+		}
+		if value {
+			fmt.Printf("User %q is now an instance admin.\n", args[0])
+		} else {
+			fmt.Printf("User %q is no longer an instance admin.\n", args[0])
+		}
+	},
 }
 
 func getPasswordFromFlagOrInput() (pw string) {
@@ -376,12 +437,20 @@ var userDeleteCmd = &cobra.Command{
 		u := getUserFromArg(s, args[0])
 
 		if userFlagDeleteNow {
+			if err := user.GuardLastAdmin(s, u); err != nil {
+				_ = s.Rollback()
+				log.Fatalf("Error removing the user: %s", err)
+			}
 			err := models.DeleteUser(s, u)
 			if err != nil {
 				_ = s.Rollback()
 				log.Fatalf("Error removing the user: %s", err)
 			}
 		} else {
+			if err := user.GuardLastAdmin(s, u); err != nil {
+				_ = s.Rollback()
+				log.Fatalf("Could not request user deletion: %s", err)
+			}
 			err := user.RequestDeletion(s, u)
 			if err != nil {
 				_ = s.Rollback()

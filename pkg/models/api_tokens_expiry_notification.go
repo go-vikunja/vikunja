@@ -23,15 +23,23 @@ import (
 	"code.vikunja.io/api/pkg/user"
 )
 
+func init() {
+	notifications.Register(func() notifications.Notification { return &APITokenExpiringWeekNotification{} })
+	notifications.Register(func() notifications.Notification { return &APITokenExpiringDayNotification{} })
+}
+
 // APITokenExpiringWeekNotification is sent 7 days before an API token expires.
 type APITokenExpiringWeekNotification struct {
 	User  *user.User `json:"user"`
 	Token *APIToken  `json:"api_token"`
 }
 
+func (n *APITokenExpiringWeekNotification) ToTitle(lang string) string {
+	return i18n.T(lang, "notifications.api_token.expiring.week.subject", n.Token.Title)
+}
+
 func (n *APITokenExpiringWeekNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(lang, "notifications.api_token.expiring.week.subject", n.Token.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.api_token.expiring.week.message", notifications.EscapeMarkdown(n.Token.Title), n.Token.ExpiresAt.Format("2006-01-02"))).
 		Action(i18n.T(lang, "notifications.api_token.expiring.action"), config.ServicePublicURL.GetString()+"user/settings/api-tokens").
@@ -56,9 +64,12 @@ type APITokenExpiringDayNotification struct {
 	Token *APIToken  `json:"api_token"`
 }
 
+func (n *APITokenExpiringDayNotification) ToTitle(lang string) string {
+	return i18n.T(lang, "notifications.api_token.expiring.day.subject", n.Token.Title)
+}
+
 func (n *APITokenExpiringDayNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(lang, "notifications.api_token.expiring.day.subject", n.Token.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
 		Line(i18n.T(lang, "notifications.api_token.expiring.day.message", notifications.EscapeMarkdown(n.Token.Title), n.Token.ExpiresAt.Format("2006-01-02"))).
 		Action(i18n.T(lang, "notifications.api_token.expiring.action"), config.ServicePublicURL.GetString()+"user/settings/api-tokens").

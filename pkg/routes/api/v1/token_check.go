@@ -19,20 +19,13 @@ package v1
 import (
 	"net/http"
 
-	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v5"
 )
 
-// CheckToken checks prints a message if the token is valid or not. Currently only used for testing purposes.
+// CheckToken returns 418 if the bearer token is valid. Used for testing.
 func CheckToken(c *echo.Context) error {
-
-	user := c.Get("user").(*jwt.Token)
-
-	log.Debugf("token valid: %t", user.Valid)
-
-	return c.JSON(418, models.Message{Message: "🍵"})
+	return c.JSON(http.StatusTeapot, models.Message{Message: "🍵"})
 }
 
 // TestToken returns a simple test message. Used for testing purposes.

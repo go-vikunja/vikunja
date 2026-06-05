@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/auth/saml"
@@ -36,25 +37,27 @@ import (
 )
 
 type vikunjaInfos struct {
-	Version                    string    `json:"version"`
-	FrontendURL                string    `json:"frontend_url"`
-	Motd                       string    `json:"motd"`
-	LinkSharingEnabled         bool      `json:"link_sharing_enabled"`
-	MaxFileSize                string    `json:"max_file_size"`
-	MaxItemsPerPage            int       `json:"max_items_per_page"`
-	AvailableMigrators         []string  `json:"available_migrators"`
-	TaskAttachmentsEnabled     bool      `json:"task_attachments_enabled"`
-	EnabledBackgroundProviders []string  `json:"enabled_background_providers"`
-	TotpEnabled                bool      `json:"totp_enabled"`
-	Legal                      legalInfo `json:"legal"`
-	CaldavEnabled              bool      `json:"caldav_enabled"`
-	AuthInfo                   authInfo  `json:"auth"`
-	EmailRemindersEnabled      bool      `json:"email_reminders_enabled"`
-	UserDeletionEnabled        bool      `json:"user_deletion_enabled"`
-	TaskCommentsEnabled        bool      `json:"task_comments_enabled"`
-	DemoModeEnabled            bool      `json:"demo_mode_enabled"`
-	WebhooksEnabled            bool      `json:"webhooks_enabled"`
-	PublicTeamsEnabled         bool      `json:"public_teams_enabled"`
+	Version                    string            `json:"version"`
+	FrontendURL                string            `json:"frontend_url"`
+	Motd                       string            `json:"motd"`
+	LinkSharingEnabled         bool              `json:"link_sharing_enabled"`
+	MaxFileSize                string            `json:"max_file_size"`
+	MaxItemsPerPage            int               `json:"max_items_per_page"`
+	AvailableMigrators         []string          `json:"available_migrators"`
+	TaskAttachmentsEnabled     bool              `json:"task_attachments_enabled"`
+	EnabledBackgroundProviders []string          `json:"enabled_background_providers"`
+	TotpEnabled                bool              `json:"totp_enabled"`
+	Legal                      legalInfo         `json:"legal"`
+	CaldavEnabled              bool              `json:"caldav_enabled"`
+	AuthInfo                   authInfo          `json:"auth"`
+	EmailRemindersEnabled      bool              `json:"email_reminders_enabled"`
+	UserDeletionEnabled        bool              `json:"user_deletion_enabled"`
+	TaskCommentsEnabled        bool              `json:"task_comments_enabled"`
+	DemoModeEnabled            bool              `json:"demo_mode_enabled"`
+	WebhooksEnabled            bool              `json:"webhooks_enabled"`
+	PublicTeamsEnabled         bool              `json:"public_teams_enabled"`
+	AllowIconChanges           bool              `json:"allow_icon_changes"`
+	EnabledProFeatures         []license.Feature `json:"enabled_pro_features"`
 }
 
 type authInfo struct {
@@ -112,6 +115,8 @@ func Info(c *echo.Context) error {
 		DemoModeEnabled:        config.ServiceDemoMode.GetBool(),
 		WebhooksEnabled:        config.WebhooksEnabled.GetBool(),
 		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
+		AllowIconChanges:       config.ServiceAllowIconChanges.GetBool(),
+		EnabledProFeatures:     license.EnabledProFeatures(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),

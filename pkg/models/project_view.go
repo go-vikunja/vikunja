@@ -23,6 +23,7 @@ import (
 
 	"code.vikunja.io/api/pkg/web"
 
+	"github.com/danielgtaylor/huma/v2"
 	"xorm.io/xorm"
 )
 
@@ -64,6 +65,17 @@ func (p *ProjectViewKind) UnmarshalJSON(bytes []byte) error {
 	}
 
 	return nil
+}
+
+// Schema lets Huma (/api/v2) reflect this type as a string enum. The custom
+// Marshal/UnmarshalJSON above serialize it as a string, but the underlying Go
+// type is an int — without this, Huma would generate an integer schema and
+// reject the string form clients actually send.
+func (*ProjectViewKind) Schema(_ huma.Registry) *huma.Schema {
+	return &huma.Schema{
+		Type: "string",
+		Enum: []any{"list", "gantt", "table", "kanban"},
+	}
 }
 
 // NOTE: When adding or changing enum values for ProjectViewKind,
@@ -123,39 +135,48 @@ func (p *BucketConfigurationModeKind) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
+// Schema lets Huma (/api/v2) reflect this type as a string enum; see the note
+// on ProjectViewKind.Schema for why this is needed.
+func (*BucketConfigurationModeKind) Schema(_ huma.Registry) *huma.Schema {
+	return &huma.Schema{
+		Type: "string",
+		Enum: []any{"none", "manual", "filter"},
+	}
+}
+
 type ProjectViewBucketConfiguration struct {
-	Title  string          `json:"title"`
-	Filter *TaskCollection `json:"filter"`
+	Title  string          `json:"title" doc:"The title of the bucket this configuration creates."`
+	Filter *TaskCollection `json:"filter" doc:"The filter query that decides which tasks land in this bucket. See https://vikunja.io/docs/filters."`
 }
 
 type ProjectView struct {
 	// The unique numeric id of this view
-	ID int64 `xorm:"autoincr not null unique pk" json:"id" param:"view"`
+	ID int64 `xorm:"autoincr not null unique pk" json:"id" param:"view" readOnly:"true" doc:"The unique, numeric id of this view. Set by the server."`
 	// The title of this view
-	Title string `xorm:"varchar(255) not null" json:"title" valid:"required,runelength(1|250)"`
+	Title string `xorm:"varchar(255) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250" doc:"The title of this view."`
 	// The project this view belongs to
-	ProjectID int64 `xorm:"not null index" json:"project_id" param:"project"`
+	ProjectID int64 `xorm:"not null index" json:"project_id" param:"project" readOnly:"true" doc:"The project this view belongs to. Taken from the URL path; ignored on write."`
 	// The kind of this view. Can be `list`, `gantt`, `table` or `kanban`.
-	ViewKind ProjectViewKind `xorm:"not null" json:"view_kind" swaggertype:"string" enums:"list,gantt,table,kanban"`
+	ViewKind ProjectViewKind `xorm:"not null" json:"view_kind" swaggertype:"string" enums:"list,gantt,table,kanban" doc:"The kind of this view. One of list, gantt, table or kanban."`
 
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
-	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter"`
+	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter" doc:"The filter query used to match tasks shown in this view. See https://vikunja.io/docs/filters."`
 	// The position of this view in the list. The list of all views will be sorted by this parameter.
-	Position float64 `xorm:"double null" json:"position"`
+	Position float64 `xorm:"double null" json:"position" doc:"The position of this view in the project's list of views. Views are sorted ascending by this value."`
 
 	// The bucket configuration mode. Can be `none`, `manual` or `filter`. `manual` allows to move tasks between buckets as you normally would. `filter` creates buckets based on a filter for each bucket.
-	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode" swaggertype:"string" enums:"none,manual,filter,manual"`
+	BucketConfigurationMode BucketConfigurationModeKind `xorm:"default 0" json:"bucket_configuration_mode" swaggertype:"string" enums:"none,manual,filter" doc:"The bucket configuration mode. One of none, manual or filter. manual lets you move tasks between buckets; filter creates a bucket per filter."`
 	// When the bucket configuration mode is not `manual`, this field holds the options of that configuration.
-	BucketConfiguration []*ProjectViewBucketConfiguration `xorm:"json" json:"bucket_configuration"`
+	BucketConfiguration []*ProjectViewBucketConfiguration `xorm:"json" json:"bucket_configuration" doc:"When the bucket configuration mode is filter, holds the title and filter of each bucket."`
 	// The ID of the bucket where new tasks without a bucket are added to. By default, this is the leftmost bucket in a view.
-	DefaultBucketID int64 `xorm:"bigint INDEX null" json:"default_bucket_id"`
+	DefaultBucketID int64 `xorm:"bigint INDEX null" json:"default_bucket_id" doc:"The id of the bucket new tasks without a bucket are added to. Defaults to the leftmost bucket."`
 	// If tasks are moved to the done bucket, they are marked as done. If they are marked as done individually, they are moved into the done bucket.
-	DoneBucketID int64 `xorm:"bigint INDEX null" json:"done_bucket_id"`
+	DoneBucketID int64 `xorm:"bigint INDEX null" json:"done_bucket_id" doc:"The id of the done bucket. Tasks moved here are marked done, and tasks marked done are moved here."`
 
 	// A timestamp when this view was updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this view was last updated. You cannot change this value."`
 	// A timestamp when this reaction was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this view was created. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -248,6 +269,13 @@ func (pv *ProjectView) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /projects/{project}/views/{id} [delete]
 func (pv *ProjectView) Delete(s *xorm.Session, _ web.Auth) (err error) {
+	// Resolve the view under the path project first: the buckets/positions below are deleted by
+	// view id alone, so without this guard a delete scoped to the wrong parent project would still
+	// wipe another project's buckets and positions while matching zero project_views rows.
+	if _, err = GetProjectViewByIDAndProject(s, pv.ID, pv.ProjectID); err != nil {
+		return err
+	}
+
 	_, err = s.
 		Where("id = ? AND project_id = ?", pv.ID, pv.ProjectID).
 		Delete(&ProjectView{})
@@ -291,6 +319,9 @@ func createProjectView(s *xorm.Session, p *ProjectView, a web.Auth, createBacklo
 
 	if p.BucketConfigurationMode == BucketConfigurationModeFilter {
 		for _, configuration := range p.BucketConfiguration {
+			if configuration == nil {
+				continue
+			}
 			if configuration.Filter != nil && configuration.Filter.Filter != "" {
 				_, err = getTaskFiltersFromFilterString(configuration.Filter.Filter, configuration.Filter.FilterTimezone)
 				if err != nil {

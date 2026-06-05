@@ -10,11 +10,6 @@
     min-height: 100vh;
   }
 
-  // FIXME: move to pagination component
-  .pagination-link:not(.is-current) {
-    background: var(--grey-100);
-  }
-
   .box,
   .card,
   .switch-view,

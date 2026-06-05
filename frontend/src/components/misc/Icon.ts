@@ -58,6 +58,7 @@ import {
 	faPlay,
 	faPlus,
 	faPowerOff,
+	faRss,
 	faSearch,
 	faShareAlt,
 	faSignOutAlt,
@@ -73,6 +74,7 @@ import {
 	faTimes,
 	faTrashAlt,
 	faUser,
+	faUserEdit,
 	faUsers,
 	faQuoteRight,
 	faListUl,
@@ -167,6 +169,7 @@ library.add(faPercent)
 library.add(faPlay)
 library.add(faPlus)
 library.add(faPowerOff)
+library.add(faRss)
 library.add(faSave)
 library.add(faSearch)
 library.add(faShareAlt)
@@ -186,6 +189,7 @@ library.add(faTimes)
 library.add(faTimesCircle)
 library.add(faTrashAlt)
 library.add(faUser)
+library.add(faUserEdit)
 library.add(faUsers)
 library.add(faArrowDownShortWide)
 library.add(faArrowUpFromBracket)

@@ -11,4 +11,5 @@ export interface IApiToken extends IAbstract {
 	permissions: IApiPermission
 	expiresAt: Date
 	created: Date
+	ownerId?: number
 }

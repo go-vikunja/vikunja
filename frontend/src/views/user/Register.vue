@@ -47,6 +47,7 @@
 				>{{ $t('user.auth.password') }}</label>
 				<Password
 					:validate-initially="validatePasswordInitially"
+					autocomplete="new-password"
 					@submit="submit"
 					@update:modelValue="v => credentials.password = v"
 				/>

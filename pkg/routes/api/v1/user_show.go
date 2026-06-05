@@ -38,6 +38,7 @@ type UserWithSettings struct {
 	DeletionScheduledAt time.Time     `json:"deletion_scheduled_at"`
 	IsLocalUser         bool          `json:"is_local_user"`
 	AuthProvider        string        `json:"auth_provider"`
+	IsAdmin             bool          `json:"is_admin"`
 }
 
 // UserShow gets all information about the current user
@@ -83,6 +84,7 @@ func UserShow(c *echo.Context) error {
 		},
 		DeletionScheduledAt: u.DeletionScheduledAt,
 		IsLocalUser:         u.Issuer == user.IssuerLocal,
+		IsAdmin:             u.IsAdmin,
 	}
 
 	us.AuthProvider, err = getAuthProviderName(u)

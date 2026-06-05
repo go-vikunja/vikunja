@@ -17,14 +17,17 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/humaecho5"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
@@ -47,8 +50,23 @@ type Token struct {
 	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 }
 
-const RefreshTokenCookieName = "vikunja_refresh_token"      //nolint:gosec // not a credential
-const refreshTokenCookiePath = "/api/v1/user/token/refresh" //nolint:gosec // not a credential
+const RefreshTokenCookieName = "vikunja_refresh_token" //nolint:gosec // not a credential
+
+// getRefreshTokenCookiePath returns the cookie path for the refresh token,
+// derived from service.publicurl.
+func getRefreshTokenCookiePath() string {
+	refreshURL := "/api/v1/user/token/refresh"
+
+	publicURL := config.ServicePublicURL.GetString()
+	u, err := url.Parse(publicURL)
+	if err != nil {
+		return refreshURL
+	}
+
+	// Extract the path component and append the refresh endpoint
+	basePath := strings.TrimRight(u.Path, "/")
+	return basePath + refreshURL
+}
 
 // SetRefreshTokenCookie sets an HttpOnly cookie containing the refresh token.
 // The cookie is path-scoped to the refresh endpoint so the browser only sends
@@ -67,7 +85,7 @@ func SetRefreshTokenCookie(c *echo.Context, token string, maxAge int) {
 	c.SetCookie(&http.Cookie{
 		Name:     RefreshTokenCookieName,
 		Value:    token,
-		Path:     refreshTokenCookiePath,
+		Path:     getRefreshTokenCookiePath(),
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   secure,
@@ -131,6 +149,7 @@ func NewUserJWTAuthtoken(u *user.User, sessionID string) (token string, err erro
 	claims["type"] = AuthTypeUser
 	claims["id"] = u.ID
 	claims["username"] = u.Username
+	claims["is_admin"] = u.IsAdmin
 	claims["exp"] = exp
 	claims["sid"] = sessionID
 	claims["jti"] = uuid.New().String()
@@ -365,4 +384,15 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 		IsLongSession:   session.IsLongSession,
 		SessionID:       session.ID,
 	}, nil
+}
+
+// GetAuthFromContext retrieves the authenticated web.Auth from a plain
+// context.Context, bridging Huma handlers to Vikunja's echo JWT flow. The
+// humaecho5 adapter stashes the *echo.Context under EchoContextKey first.
+func GetAuthFromContext(ctx context.Context) (web.Auth, error) {
+	ec, ok := ctx.Value(humaecho5.EchoContextKey).(*echo.Context)
+	if !ok {
+		return nil, fmt.Errorf("no echo.Context on request context; are you calling GetAuthFromContext from a Huma handler dispatched by humaecho5?")
+	}
+	return GetAuthFromClaims(ec)
 }

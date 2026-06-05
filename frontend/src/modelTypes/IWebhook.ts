@@ -6,8 +6,8 @@ export interface IWebhook extends IAbstract {
 	projectId: number
 	userId: number
 	secret: string
-	basicauthuser: string
-	basicauthpassword: string
+	basicAuthUser: string
+	basicAuthPassword: string
 	targetUrl: string
 	events: string[]
 	createdBy: IUser

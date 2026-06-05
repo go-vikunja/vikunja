@@ -4,6 +4,7 @@ import {TaskFactory} from '../../factories/task'
 import {UserFactory} from '../../factories/user'
 import {createProjects} from '../project/prepareProjects'
 import {login, setupApiUrl} from '../../support/authenticateUser'
+import {TEST_PASSWORD, TEST_PASSWORD_HASH} from '../../support/constants'
 
 async function prepareLinkShare() {
 	await UserFactory.create()
@@ -108,5 +109,117 @@ test.describe('Link shares', () => {
 		await expect(page.locator('h1.title')).toContainText(project.title)
 		await expect(page.locator('.tasks')).toContainText(tasks[0].title)
 		await expect(page).toHaveURL(`/projects/${project.id}/1#share-auth-token=${share.hash}`)
+	})
+})
+
+test.describe('Link share: password protection', () => {
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('password-protected share rejects wrong password', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			sharing_type: 2,
+			password: TEST_PASSWORD_HASH,
+			permission: 0,
+		})
+
+		await page.goto(`/share/${share.hash}/auth`)
+
+		// The auth form renders only once the backend returns code 13001, so wait
+		// for it before trying to type into the password field.
+		const passwordInput = page.locator('input#linkSharePassword')
+		await expect(passwordInput).toBeVisible()
+
+		await passwordInput.fill('wrong-password')
+		// Wait for the auth POST to complete so we can assert the negative
+		// outcome without racing the UI.
+		const authRejected = page.waitForResponse(r =>
+			r.url().includes(`/shares/${share.hash}/auth`) && r.request().method() === 'POST',
+		)
+		await page.locator('.button').filter({hasText: 'Login'}).click()
+		const resp = await authRejected
+		expect(resp.status()).toBeGreaterThanOrEqual(400)
+
+		// The user must not be redirected into the shared project view, and
+		// the route stays on the link-share auth URL.
+		await expect(page).toHaveURL(new RegExp(`/share/${share.hash}/auth`))
+		// No project-title heading renders while we're still on the auth route.
+		await expect(page.locator('h1.title')).toHaveCount(0)
+	})
+
+	test('password-protected share accepts correct password', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		const tasks = await TaskFactory.create(3, {
+			project_id: projects[0].id,
+		})
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			sharing_type: 2,
+			password: TEST_PASSWORD_HASH,
+			permission: 0,
+		})
+
+		await page.goto(`/share/${share.hash}/auth`)
+
+		const passwordInput = page.locator('input#linkSharePassword')
+		await expect(passwordInput).toBeVisible()
+
+		await passwordInput.fill(TEST_PASSWORD)
+		await page.locator('.button').filter({hasText: 'Login'}).click()
+
+		await expect(page.locator('h1.title')).toContainText(projects[0].title)
+		await expect(page.locator('.tasks')).toContainText(tasks[0].title)
+		await expect(page).toHaveURL(`/projects/${projects[0].id}/1#share-auth-token=${share.hash}`)
+	})
+})
+
+test.describe('Link share: permission tiers', () => {
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('READ link share hides add-task', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		await TaskFactory.create(3, {
+			project_id: projects[0].id,
+		})
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			permission: 0,
+		})
+
+		await page.goto(`/share/${share.hash}/auth`)
+
+		// Wait for the project view to actually render so the assertion isn't
+		// vacuously true during the loading shell.
+		await expect(page.locator('h1.title')).toContainText(projects[0].title)
+		await expect(page).toHaveURL(`/projects/${projects[0].id}/1#share-auth-token=${share.hash}`)
+
+		await expect(page.locator('.input[placeholder="Add a task…"]')).toHaveCount(0)
+	})
+
+	test('READ_WRITE link share shows add-task', async ({page}) => {
+		await UserFactory.create(1)
+		const projects = await createProjects()
+		await TaskFactory.create(3, {
+			project_id: projects[0].id,
+		})
+		const [share] = await LinkShareFactory.create(1, {
+			project_id: projects[0].id,
+			permission: 1,
+		})
+
+		await page.goto(`/share/${share.hash}/auth`)
+
+		await expect(page.locator('h1.title')).toContainText(projects[0].title)
+		await expect(page).toHaveURL(`/projects/${projects[0].id}/1#share-auth-token=${share.hash}`)
+
+		await expect(page.locator('.input[placeholder="Add a task…"]')).toBeVisible()
 	})
 })

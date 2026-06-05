@@ -43,7 +43,6 @@
 			"forgotPassword": "Zapomniałeś hasła?",
 			"resetPassword": "Zresetuj swoje hasło",
 			"resetPasswordAction": "Wyślij mi link do resetowania hasła",
-			"passwordsDontMatch": "Hasła nie są takie same",
 			"confirmEmailSuccess": "Pomyślnie zatwierdzono e-mail! Możesz się teraz zalogować.",
 			"totpTitle": "Kod uwierzytelniania dwuskładnikowego",
 			"totpPlaceholder": "np. 123456",
@@ -71,7 +70,6 @@
 			"title": "Ustawienia",
 			"newPasswordTitle": "Zaktualizuj swoje hasło",
 			"currentPasswordPlaceholder": "Twoje aktualne hasło",
-			"passwordsDontMatch": "Nowe hasło i jego potwierdzenie nie są takie same.",
 			"passwordUpdateSuccess": "Hasło zostało pomyślnie zaktualizowane.",
 			"updateEmailTitle": "Zaktualizuj swój adres e-mail",
 			"updateEmailSuccess": "Twój adres e-mail został pomyślnie zaktualizowany. Wysłaliśmy Ci link do potwierdzenia operacji.",
@@ -123,7 +121,6 @@
 			},
 			"appearance": {
 				"title": "Schemat kolorów",
-				"setSuccess": "Zapisano zmianę schematu kolorów na {colorScheme}",
 				"colorScheme": {
 					"light": "Jasny",
 					"system": "Systemowy",
@@ -144,7 +141,6 @@
 				"expired": "Ten token wygasł {ago}.",
 				"tokenCreatedSuccess": "Oto twój nowy token: {token}",
 				"tokenCreatedNotSeeAgain": "Przechowuj go w bezpiecznym miejscu, nie zobaczysz go ponownie!",
-				"selectAll": "Wybierz wszystkie",
 				"delete": {
 					"header": "Usuń ten token",
 					"text1": "Czy na pewno chcesz usunąć token \"{token}\"?",
@@ -381,16 +377,7 @@
 			"titlePlaceholder": "Tu wpisz tytuł filtra stałego…",
 			"description": "Opis",
 			"descriptionPlaceholder": "Dodaj tutaj opis dla tego filtra, naciśnij '/' aby uzyskać więcej opcji…",
-			"includeNulls": "Uwzględnij zadania, które nie mają ustawionej danej wartości",
-			"requireAll": "Wymagaj, aby wszystkie filtry były spełnione, aby zadanie się pojawiło",
-			"showDoneTasks": "Pokaż ukończone zadania",
-			"sortAlphabetically": "Sortuj alfabetycznie",
-			"enablePriority": "Włącz filtrowanie według priorytetu",
-			"enablePercentDone": "Włącz filtrowanie według postępu",
-			"dueDateRange": "Zakres daty terminu",
-			"startDateRange": "Zakres daty rozpoczęcia",
-			"endDateRange": "Zakres daty zakończenia",
-			"reminderRange": "Zakres daty przypomnienia"
+			"includeNulls": "Uwzględnij zadania, które nie mają ustawionej danej wartości"
 		},
 		"create": {
 			"title": "Nowy filtr stały",
@@ -407,7 +394,6 @@
 			"success": "Filtr został pomyślnie zapisany."
 		},
 		"query": {
-			"title": "Zapytanie",
 			"placeholder": "Wpisz zapytanie wyszukiwania lub filtruj…",
 			"help": {
 				"intro": "Aby filtrować zadania, możesz użyć składni zapytań podobnej do SQL. Pola dostępne do filtrowania to:",
@@ -454,7 +440,6 @@
 	"migrate": {
 		"title": "Importuj z innych usług",
 		"titleService": "Zaimportuj swoje dane z {name} do Vikunja",
-		"import": "Zaimportuj swoje dane do Vikunja",
 		"description": "Aby rozpocząć, kliknij logo jednej z usług zewnętrznych.",
 		"descriptionDo": "Vikunja zaimportuje wszystkie listy, zadania, notatki, przypomnienia i pliki, do których masz dostęp.",
 		"authorize": "Aby zezwolić Vikunja na dostęp do Twojego konta {name}, kliknij przycisk poniżej.",
@@ -473,7 +458,6 @@
 		"manage": "Zarządzaj etykietami",
 		"description": "Kliknij etykietę, aby ją edytować. Możesz edytować wszystkie etykiety, które utworzyłeś, oraz używać wszystkich etykiet, które są powiązane z zadaniem w projekcie, do którego masz dostęp.",
 		"newCTA": "Obecnie nie masz żadnych etykiet.",
-		"search": "Wpisz, aby wyszukać etykietę…",
 		"create": {
 			"header": "Nowa etykieta",
 			"title": "Utwórz etykietę",
@@ -482,7 +466,6 @@
 		},
 		"edit": {
 			"header": "Edytuj etykietę",
-			"forbidden": "Nie możesz edytować tej etykiety, ponieważ nie jesteś jej właścicielem.",
 			"success": "Etykieta została pomyślnie zaktualizowana."
 		},
 		"deleteSuccess": "Etykieta została pomyślnie usunięta.",
@@ -490,7 +473,6 @@
 			"title": "Tytuł",
 			"titlePlaceholder": "Tu wpisz tytuł etykiety…",
 			"description": "Opis",
-			"descriptionPlaceholder": "Opis etykiety",
 			"color": "Kolor"
 		}
 	},
@@ -513,16 +495,13 @@
 		"delete": "Usuń",
 		"confirm": "Potwierdź",
 		"cancel": "Anuluj",
-		"refresh": "Odśwież",
 		"disable": "Wyłącz",
 		"copy": "Skopiuj do schowka",
 		"copyError": "Kopiowanie do schowka nie powiodło się",
-		"search": "Szukaj",
 		"searchPlaceholder": "Wpisz, aby wyszukać…",
 		"previous": "Poprzedni",
 		"next": "Następny",
 		"poweredBy": "Wspierane przez Vikunja",
-		"info": "Informacje",
 		"create": "Utwórz",
 		"doit": "Zrób to!",
 		"saving": "Zapisywanie…",
@@ -554,15 +533,12 @@
 		},
 		"editor": {
 			"edit": "Edytuj",
-			"done": "Gotowe",
 			"heading1": "Nagłówek 1",
 			"heading1Tooltip": "Nagłówek H1.",
 			"heading2": "Nagłówek 2",
 			"heading2Tooltip": "Nagłówek H2.",
 			"heading3": "Nagłówek 3",
 			"heading3Tooltip": "Nagłówek H3.",
-			"headingSmaller": "Nagłówek mniejszy",
-			"headingBigger": "Nagłówek większy",
 			"bold": "Pogrubiony",
 			"italic": "Kursywa",
 			"strikethrough": "Przekreślony",
@@ -573,17 +549,13 @@
 			"quoteTooltip": "Dodaj cytat.",
 			"bulletList": "Lista wypunktowana",
 			"bulletListTooltip": "Utwórz prostą listę wypunktowaną.",
-			"unorderedList": "Lista nieuporządkowana",
 			"orderedList": "Lista uporządkowana",
 			"orderedListTooltip": "Stwórz listę numerowaną.",
-			"cleanBlock": "Wyczyść blok",
 			"link": "Link",
 			"image": "Obraz",
 			"imageTooltip": "Prześlij obraz ze swojego komputera.",
 			"horizontalRule": "Linia pozioma",
 			"horizontalRuleTooltip": "Podziel sekcję.",
-			"sideBySide": "Obok siebie",
-			"guide": "Przewodnik",
 			"text": "Tekst",
 			"textTooltip": "Po prostu zacznij pisać.",
 			"taskList": "Lista zadań",
@@ -689,20 +661,16 @@
 		}
 	},
 	"task": {
-		"task": "Zadanie",
 		"new": "Utwórz zadanie",
-		"delete": "Usuń to zadanie",
 		"createSuccess": "Zadanie zostało pomyślnie utworzone.",
 		"addReminder": "Dodaj przypomnienie…",
 		"doneSuccess": "Zadanie zostało pomyślnie oznaczone jako ukończone.",
 		"undoneSuccess": "Zadanie zostało pomyślnie otwarte ponownie.",
 		"undo": "Cofnij",
-		"openDetail": "Otwórz szczegółowy widok zadania",
 		"checklistTotal": "{checked} z {total} zadań",
 		"checklistAllDone": "{total} zadań",
 		"show": {
 			"titleCurrent": "Bieżące zadania",
-			"titleDates": "Zadania od {from} do {to}",
 			"overdue": "Pokaż zaległe zadania",
 			"fromuntil": "Zadania od {from} do {until}",
 			"select": "Wybierz zakres dat",
@@ -722,7 +690,6 @@
 			"deleteSuccess": "Zadanie zostało pomyślnie usunięte.",
 			"belongsToProject": "To zadanie należy do projektu '{project}'",
 			"due": "Termin {at}",
-			"closePopup": "Zamknij okno",
 			"organization": "Organizacja",
 			"management": "Zarządzanie",
 			"dateAndTime": "Data i czas",
@@ -792,7 +759,6 @@
 			"delete": "Usuń załącznik",
 			"deleteTooltip": "Usuń ten załącznik",
 			"deleteText1": "Czy na pewno chcesz usunąć załącznik {filename}?",
-			"copyUrl": "Kopiuj URL",
 			"copyUrlTooltip": "Skopiuj adres URL tego załącznika do użycia w tekście",
 			"setAsCover": "Ustaw jako okładkę",
 			"unsetAsCover": "Usuń okładkę",
@@ -818,8 +784,7 @@
 			"1week": "1 tydzień"
 		},
 		"description": {
-			"placeholder": "Wprowadź opis, naciśnij '/', aby uzyskać więcej opcji…",
-			"empty": "Nie ma jeszcze opisu."
+			"placeholder": "Wprowadź opis, naciśnij '/', aby uzyskać więcej opcji…"
 		},
 		"assignee": {
 			"placeholder": "Wpisz, aby przypisać użytkownika…",
@@ -831,7 +796,6 @@
 			"placeholder": "Wpisz, aby dodać etykietę…",
 			"createPlaceholder": "Dodaj jako nową etykietę",
 			"addSuccess": "Etykieta została pomyślnie dodana.",
-			"createSuccess": "Etykieta została pomyślnie utworzona.",
 			"removeSuccess": "Etykieta została pomyślnie usunięta.",
 			"addCreateSuccess": "Etykieta została pomyślnie utworzona i dodana.",
 			"delete": {
@@ -896,8 +860,6 @@
 			"hours": "Godziny",
 			"days": "Dni",
 			"weeks": "Tygodnie",
-			"months": "Miesiące",
-			"years": "Lata",
 			"invalidAmount": "Wprowadź więcej niż 0."
 		},
 		"quickAddMagic": {
@@ -1029,7 +991,6 @@
 		"unarchive": "Cofnij archiwizację",
 		"setBackground": "Ustawienie tła",
 		"share": "Udostępnij",
-		"newProject": "Nowy projekt",
 		"createProject": "Utwórz projekt",
 		"cantArchiveIsDefault": "Nie możesz tego zarchiwizować, ponieważ jest to twój domyślny projekt.",
 		"cantDeleteIsDefault": "Nie możesz tego usunąć, ponieważ jest to twój domyślny projekt.",
@@ -1160,7 +1121,6 @@
 			"hours": "godzina|godzin",
 			"days": "dzień|dni",
 			"weeks": "tydzień|tygodni",
-			"months": "miesiąc|miesięcy",
 			"years": "rok|lat"
 		}
 	}
