@@ -1,1 +1,898 @@
-{}
+{
+	"404": {
+		"title": "No trobat",
+		"text": "La pàgina sol·licitada no existeix."
+	},
+	"home": {
+		"welcomeNight": "Bona nit, {username}!",
+		"welcomeMorning": "Bon dia, {username}!",
+		"welcomeDay": "Hola, {username}!",
+		"welcomeEvening": "Bona tarda, {username}!",
+		"lastViewed": "Vist per última vegada",
+		"addToHomeScreen": "Afegeix aquesta aplicació a la teva pantalla d'inici para un accés més ràpid i una experiència millorada.",
+		"project": {
+			"importText": "Importa els teus projectes i tasques d'altres serveis a Vikunja:",
+			"import": "Importa les teves dades a Vikunja"
+		}
+	},
+	"ready": {
+		"loading": "Vikunja s'està carregant…",
+		"errorOccured": "S'ha produït un error:",
+		"checkApiUrl": "Si us plau, comprova que l'URL de l'API sigui correcte.",
+		"noApiUrlConfigured": "No s'ha configurat cap URL de l'API. Si us plau, estableix-ne un a sota:"
+	},
+	"offline": {
+		"title": "Estàs desconnectat.",
+		"text": "Si us plau, comprova la teva connexió de xarxa i torna-ho a intentar."
+	},
+	"user": {
+		"auth": {
+			"username": "Nom d'usuari",
+			"usernameEmail": "Nom d'usuari o adreça de correu",
+			"usernamePlaceholder": "ex. Frederic",
+			"email": "Adreça de correu electrònic",
+			"emailPlaceholder": "ex. frederic{'@'}vikunja.io",
+			"password": "Contrasenya",
+			"passwordPlaceholder": "ex. •••••••••••",
+			"forgotPassword": "Has oblidat la teva contrasenya?",
+			"resetPassword": "Restableix la teva contrasenya",
+			"resetPasswordAction": "Envia'm un enllaç per a restablir la contrasenya",
+			"confirmEmailSuccess": "Has confirmat correctament el teu correu electrònic! Ja pots iniciar sessió.",
+			"totpTitle": "Codi d'autenticació de dos factors",
+			"totpPlaceholder": "ex. 123456",
+			"login": "Inicia sessió",
+			"createAccount": "Crea un compte",
+			"loginWith": "Inicia sessió amb {provider}",
+			"authenticating": "S'està autenticant…",
+			"openIdStateError": "L'estat no coincideix, es denega la continuació!",
+			"logout": "Tanca la sessió",
+			"emailInvalid": "Si us plau, introdueix una adreça de correu electrònic vàlida.",
+			"usernameRequired": "Si us plau, proporciona un nom d'usuari.",
+			"passwordRequired": "Si us plau, proporciona una contrasenya.",
+			"showPassword": "Mostra la contrasenya",
+			"hidePassword": "Oculta la contrasenya",
+			"noAccountYet": "Encara no tens cap compte?",
+			"alreadyHaveAnAccount": "Ja tens un compte?",
+			"remember": "Mantén la sessió oberta"
+		},
+		"settings": {
+			"title": "Ajustos",
+			"newPasswordTitle": "Actualitza la teva contrasenya",
+			"currentPasswordPlaceholder": "La teva contrasenya actual",
+			"passwordUpdateSuccess": "La contrasenya s'ha actualitzat amb èxit.",
+			"updateEmailTitle": "Actualitza la teva adreça de correu electrònic",
+			"updateEmailSuccess": "La teva adreça de correu electrònic s'ha actualitzat amb èxit. T'hem enviat un enllaç per confirmar-la.",
+			"general": {
+				"title": "Ajustos generals",
+				"savedSuccess": "Ajustos actualitzats amb èxit.",
+				"overdueReminders": "Envia'm un resum de les meves tasques pendents cada dia",
+				"discoverableByName": "Permet que altres usuaris m'afegeixin com a membre a equips o projectes quan busquin el meu nom",
+				"discoverableByEmail": "Permet que altres usuaris m'afegeixin com a membre a equips o projectes quan busquin el meu correu complet",
+				"playSoundWhenDone": "Reprodueix un so quan marqui tasques com a completades",
+				"weekStart": "La setmana comença en",
+				"weekStartSunday": "Diumenge",
+				"weekStartMonday": "Dilluns",
+				"language": "Idioma",
+				"overdueTasksRemindersTime": "Hora d'enviament del correu electrònic de tasques pendents",
+				"filterUsedOnOverview": "Filtre desat utilitzat a la pàgina de resum"
+			},
+			"totp": {
+				"title": "Autenticació de dos factors",
+				"enroll": "Inscriure's",
+				"finishSetupPart2": "Després, introdueix un codi de la teva aplicació a sota.",
+				"scanQR": "Alternativament, escaneja aquest codi QR:",
+				"passcode": "Codi d'accés",
+				"setupSuccess": "Has configurat amb èxit l'autenticació de dos factors!",
+				"enterPassword": "Si us plau, introdueix la teva contrasenya",
+				"disable": "Desactiva l'autenticació de dos factors",
+				"disableSuccess": "L'autenticació de dos factors s'ha desactivat amb èxit."
+			},
+			"caldav": {
+				"title": "CalDAV",
+				"more": "Més informació sobre CalDAV a Vikunja",
+				"tokens": "Tokens CalDAV"
+			},
+			"avatar": {
+				"title": "Avatar",
+				"initials": "Inicials",
+				"gravatar": "Gravatar",
+				"marble": "Marble",
+				"upload": "Puja",
+				"uploadAvatar": "Puja un avatar",
+				"statusUpdateSuccess": "L'estat de l'avatar s'ha actualitzat amb èxit!",
+				"setSuccess": "L'avatar s'ha establert com a tal amb èxit!"
+			},
+			"quickAddMagic": {
+				"title": "Mode màgic d'addició ràpida",
+				"disabled": "Desactivat",
+				"todoist": "Todoist",
+				"vikunja": "Vikunja"
+			},
+			"appearance": {
+				"title": "Esquema de colors",
+				"colorScheme": {
+					"light": "Clar",
+					"system": "Sistema",
+					"dark": "Fosc"
+				}
+			}
+		},
+		"deletion": {
+			"title": "Elimina el teu compte de Vikunja",
+			"text1": "L'eliminació del teu compte és permanent i no es pot desfer. Eliminarem tots els teus projectes, tasques i tot el que hi estigui associat.",
+			"text2": "Per a continuar, si us plau, introdueix la teva contrasenya. Rebràs un correu electrònic con més instruccions.",
+			"confirm": "Elimina el meu compte",
+			"requestSuccess": "La sol·licitud ha estat un èxit. Rebràs un correu electrònic amb més instruccions.",
+			"passwordRequired": "Si us plau, introdueix la teva contrasenya.",
+			"confirmSuccess": "Has confirmat amb èxit l'eliminació del teu compte. En tres dies eliminarem el teu compte.",
+			"scheduled": "Eliminarem el teu compte de Vikunja el {date} ({dateSince}).",
+			"scheduledCancel": "Per a cancel·lar l'eliminació del teu compte, fes clic aquí.",
+			"scheduledCancelText": "Per a cancel·lar l'eliminació del teu compte, si us plau, introdueix la teva contrasenya a continuació:",
+			"scheduledCancelConfirm": "Cancel·la l'eliminació del meu compte",
+			"scheduledCancelSuccess": "No eliminarem el teu compte."
+		},
+		"export": {
+			"title": "Exporta les teves dades de Vikunja",
+			"description": "Pots sol·licitar una còpia de totes les teves dades de Vikunja. Això inclou projectes, tasques i tot el que hi estigui relacionat. Pots importar aquestes dades a qualsevol instància de Vikunja a través de la funció de migració.",
+			"descriptionPasswordRequired": "Si us plau, introdueix la teva contrasenya per a continuar:",
+			"request": "Sol·licita una còpia de les meves dades de Vikunja",
+			"success": "La teva petició de dades de Vikunja s'ha processat correctament. Et enviarem un correu un cop estigui llista per a descarregar.",
+			"downloadTitle": "Descarrega les teves dades de Vikunja exportades"
+		}
+	},
+	"project": {
+		"archivedMessage": "Aquest projecte està arxivat. Ja no és possible crear-hi o editar-hi tasques.",
+		"archived": "Arxivat",
+		"showArchived": "Mostra els arxivats",
+		"color": "Color",
+		"projects": "Projectes",
+		"parent": "Projecte principal",
+		"search": "Escriu per a buscar un projecte…",
+		"searchSelect": "Fes clic o clica retorn per a seleccionar aquest projecte",
+		"shared": "Projectes compartits",
+		"noDescriptionAvailable": "No hi ha cap descripció del projecte disponible.",
+		"inboxTitle": "Bústia d'entrada",
+		"create": {
+			"header": "Nou projecte",
+			"titlePlaceholder": "El títol del projecte va aquí…",
+			"addTitleRequired": "Si us plau, especifica un títol.",
+			"createdSuccess": "El projecte s'ha creat amb èxit.",
+			"addProjectRequired": "Si us plau, especifica un projecte o tria un projecte per defecte als ajustos."
+		},
+		"archive": {
+			"title": "Arxiva \"{project}\"",
+			"archive": "Arxiva aquest projecte",
+			"unarchive": "Desarxiva aquest projecte",
+			"success": "El projecte s'ha arxivat amb èxit."
+		},
+		"background": {
+			"title": "Estableix el fons del projecte",
+			"remove": "Elimina el fons",
+			"upload": "Tria un fons des del teu ordinador",
+			"searchPlaceholder": "Busca un fons…",
+			"poweredByUnsplash": "Amb la tecnologia d'Unsplash",
+			"loadMore": "Carrega més fotos",
+			"success": "El fons s'ha establert amb èxit!",
+			"removeSuccess": "El fons s'ha eliminat amb èxit!"
+		},
+		"delete": {
+			"title": "Elimina \"{project}\"",
+			"header": "Elimina aquest projecte",
+			"text1": "Estàs segur que vols eliminar aquest projecte i tot el seu contingut?",
+			"text2": "Això inclou totes les tasques i NO ES POT DESFER!",
+			"success": "El projecte s'ha eliminat amb èxit.",
+			"tasksToDelete": "Això eliminarà de forma definitiva aprox. {count} tasques.",
+			"noTasksToDelete": "Aquest projecte no conté tasques. Hauria de ser segur eliminar-lo."
+		},
+		"duplicate": {
+			"title": "Duplica aquest projecte",
+			"label": "Duplica",
+			"text": "Selecciona el projecte principal que hauria de contenir el projecte duplicat:",
+			"success": "El projecte s'ha duplicat correctament."
+		},
+		"edit": {
+			"header": "Editar aquest projecte",
+			"title": "Edita \"{project}\"",
+			"titlePlaceholder": "El títol del projecte va aquí…",
+			"identifierTooltip": "L'identificador de llista es pot usar per a identificar una tasca de forma única a través de les llistes. Pots establir-lo en 'empty' per a desactivar-lo.",
+			"identifier": "Identificador del projecte",
+			"identifierPlaceholder": "L'identificador del projecte va aquí…",
+			"description": "Descripció",
+			"color": "Color",
+			"success": "El projecte s'ha actualitzat amb èxit."
+		},
+		"share": {
+			"header": "Comparteix aquest projecte",
+			"title": "Comparteix \"{project}\"",
+			"share": "Comparteix",
+			"links": {
+				"title": "Comparteix enllaços",
+				"what": "Què és un enllaç compartit?",
+				"explanation": "Els enllaços compartits et permeten compartir fàcilment un projecte amb altres usuaris que no tenen un compte a Vikunja.",
+				"name": "Nom (opcional)",
+				"namePlaceholder": "ex. Lorem Ipsum",
+				"nameExplanation": "Totes les accions realitzades per aquest enllaç compartit es mostraran amb el nom.",
+				"password": "Contrasenya (opcional)",
+				"passwordExplanation": "En iniciar sessió, l'usuari haurà d'introduir aquesta contrasenya.",
+				"noName": "No hi ha cap nom establert",
+				"remove": "Elimina un enllaç compartit",
+				"removeText": "Estàs segur que vols eliminar aquest enllaç compartit? Ja no serà possible accedir a aquesta llista amb aquest enllaç. Això no se pot desfer!",
+				"createSuccess": "L'enllaç compartit s'ha creat correctament.",
+				"deleteSuccess": "L'enllaç compartit s'ha eliminat correctament",
+				"view": "Vista",
+				"sharedBy": "Compartit per {0}"
+			},
+			"userTeam": {
+				"typeUser": "usuari | usuaris",
+				"typeTeam": "equip | equips",
+				"shared": "Compartit amb aquests {type}",
+				"you": "Tu",
+				"notShared": "Encara no s'ha compartit amb cap {type}.",
+				"removeHeader": "Elimina un {type} de la {sharable}",
+				"removeText": "Estàs segur que vols eliminar aquesta {sharable} del {type}? Això no es pot desfer!",
+				"removeSuccess": "La {sharable} s'ha eliminat correctament de {type}.",
+				"addedSuccess": "El {type} s'ha afegit correctament.",
+				"updatedSuccess": "El {type} s'ha afegit correctament."
+			},
+			"attributes": {
+				"link": "Enllaç",
+				"delete": "Elimina"
+			}
+		},
+		"list": {
+			"title": "Llista",
+			"add": "Afegeix",
+			"empty": "Aquest projecte està actualment buit.",
+			"editTask": "Edita la tasca"
+		},
+		"gantt": {
+			"title": "Gantt",
+			"size": "Mida",
+			"default": "Predeterminat",
+			"month": "Mes",
+			"day": "Dia",
+			"hour": "Hora",
+			"range": "Rang de dates"
+		},
+		"table": {
+			"title": "Taula",
+			"columns": "Columnes"
+		},
+		"kanban": {
+			"title": "Kanban",
+			"limit": "Límit: {limit}",
+			"noLimit": "No establert",
+			"doneBucket": "Contenidor completat",
+			"doneBucketHint": "Totes les tasques mogudes a aquest contenidor es marcaran automàticament com a finalitzades.",
+			"doneBucketHintExtended": "Totes les tasques mogudes al contenidor completat es marcaran com a finalitzades automàticament. Totes les tasques marcades com a finalitzades des d'un altre lloc també es mouran aquí.",
+			"doneBucketSavedSuccess": "El contenidor completat s'ha desat correctament.",
+			"deleteLast": "No pots eliminar l'últim contenidor.",
+			"addTaskPlaceholder": "Introdueix el nou títol de la tasca…",
+			"addTask": "Afegeix una tasca",
+			"addAnotherTask": "Afegeix una altra tasca",
+			"addBucketPlaceholder": "Introdueix el nou títol del contenidor…",
+			"deleteHeaderBucket": "Elimina el contenidor",
+			"deleteBucketText1": "Estàs segur que vols eliminar aquest contenidor?",
+			"deleteBucketText2": "Això no eliminarà cap tasca, sinó que les mourà al contenidor per defecte.",
+			"deleteBucketSuccess": "El contenidor s'ha eliminat amb èxit.",
+			"bucketTitleSavedSuccess": "El títol del contenidor s'ha desat amb èxit.",
+			"bucketLimitSavedSuccess": "El límit del contenidor s'ha desat amb èxit.",
+			"collapse": "Contreu aquest contenidor"
+		},
+		"pseudo": {
+			"favorites": {
+				"title": "Favorits"
+			}
+		}
+	},
+	"filters": {
+		"title": "Filtres",
+		"clear": "Neteja els filtres",
+		"attributes": {
+			"title": "Títol",
+			"titlePlaceholder": "El títol del filtre desat va aquí…",
+			"description": "Descripció",
+			"includeNulls": "Inclou tasques que no tenen cap valor establert"
+		},
+		"create": {
+			"title": "Nou filtre desat",
+			"description": "Un filtre desat és un projecte virtual que es calcula a partir d'un conjunt de filtres cada vegada que s'hi accedeix.",
+			"titleRequired": "Si us plau, introdueix un títol per al filtre."
+		},
+		"delete": {
+			"header": "Elimina aquest filtre desat",
+			"text": "Estàs segur que vols eliminar aquest filtre desat?",
+			"success": "El filtre s'ha eliminat amb èxit."
+		},
+		"edit": {
+			"title": "Edita aquest filtre desat",
+			"success": "El filtre s'ha desat amb èxit."
+		}
+	},
+	"migrate": {
+		"title": "Importa des d'altres serveis",
+		"titleService": "Importa les teves dades des de {name} a Vikunja",
+		"description": "Fes clic al logotip d'un dels serveis de tercers de sota per a començar.",
+		"descriptionDo": "Vikunja importarà totes les llistes, tasques, notes, recordatoris i fitxers als quals tens accés.",
+		"authorize": "Per a autoritzar Vikunja a accedir al teu compte de {name}, fes clic al botó de sota.",
+		"getStarted": "Comencem",
+		"inProgress": "Importació en curs...",
+		"alreadyMigrated1": "Sembla que ja has importat les teves coses des de {name} el {date}.",
+		"alreadyMigrated2": "Tornar a importar és possible, però pot crear duplicats. En estàs segur?",
+		"confirm": "N'estic segur, si us plau, comença a migrar ara!",
+		"importUpload": "Per a importar dades de {name} a Vikunja, fes clic al botó de sota per a seleccionar un fitxer.",
+		"upload": "Puja el fitxer"
+	},
+	"label": {
+		"title": "Etiquetes",
+		"manage": "Gestiona les etiquetes",
+		"description": "Fes clic en una etiqueta per a editar-la. Pots editar totes les etiquetes que hagis creat, i pots usar totes les etiquetes que estiguin associades amb una tasca al projecte de la qual tinguis accés.",
+		"newCTA": "Actualment no tens cap etiqueta.",
+		"create": {
+			"header": "Nova etiqueta",
+			"titleRequired": "Si us plau, especifica un títol.",
+			"success": "L'etiqueta s'ha creat correctament."
+		},
+		"edit": {
+			"header": "Edita l'etiqueta",
+			"success": "L'etiqueta s'ha actualitzat correctament."
+		},
+		"deleteSuccess": "L'etiqueta s'ha eliminat correctament.",
+		"attributes": {
+			"title": "Títol",
+			"titlePlaceholder": "El títol de l'etiqueta va aquí…",
+			"description": "Descripció",
+			"color": "Color"
+		}
+	},
+	"sharing": {
+		"authenticating": "S'està autenticant…",
+		"passwordRequired": "Aquest projecte compartit requereix una contrasenya. Si us plau, introdueix-la a sota:",
+		"invalidPassword": "La contrasenya és invàlida."
+	},
+	"navigation": {
+		"overview": "Resum",
+		"upcoming": "Pròximes",
+		"settings": "Ajustos",
+		"imprint": "Avís legal",
+		"privacy": "Política de privacitat"
+	},
+	"misc": {
+		"loading": "S'està carregant…",
+		"save": "Desa",
+		"delete": "Elimina",
+		"confirm": "Confirma",
+		"cancel": "Cancella",
+		"disable": "Desactiva",
+		"copy": "Copia al porta-retalls",
+		"copyError": "Error en copiar al porta-retalls",
+		"searchPlaceholder": "Escriu alguna cosa per a buscar…",
+		"previous": "Anterior",
+		"next": "Següent",
+		"poweredBy": "Amb tecnologia de Vikunja",
+		"create": "Crea",
+		"doit": "Fes-ho!",
+		"saving": "S'està desant…",
+		"saved": "Desat!",
+		"default": "Predeterminat",
+		"close": "Tanca",
+		"download": "Descarrega",
+		"showMenu": "Mostra el menú",
+		"hideMenu": "Oculta el menú",
+		"forExample": "Per exemple:",
+		"welcomeBack": "Benvingut de nou!",
+		"custom": "Personalitzat",
+		"id": "ID",
+		"created": "Creat el",
+		"actions": "Accions",
+		"cannotBeUndone": "Això no es pot desfer!"
+	},
+	"input": {
+		"resetColor": "Restableix el color",
+		"datepicker": {
+			"today": "Avui",
+			"tomorrow": "Demà",
+			"nextMonday": "Dilluns que ve",
+			"thisWeekend": "Aquest cap de setmana",
+			"laterThisWeek": "Més tard aquesta setmana",
+			"nextWeek": "La setmana que ve",
+			"chooseDate": "Tria una data"
+		},
+		"editor": {
+			"edit": "Edita",
+			"heading1": "Encapçalament 1",
+			"heading2": "Encapçalament 2",
+			"heading3": "Encapçalament 3",
+			"bold": "Negreta",
+			"italic": "Cursiva",
+			"strikethrough": "Text ratllat",
+			"code": "Codi",
+			"quote": "Cita",
+			"link": "Enlaça",
+			"image": "Imatge",
+			"horizontalRule": "Línia horitzontal"
+		},
+		"multiselect": {
+			"selectPlaceholder": "Clic o Enter per a seleccionar"
+		},
+		"datepickerRange": {
+			"to": "Fins a",
+			"from": "Des de",
+			"fromto": "Des de {from} fins a {to}",
+			"ranges": {
+				"today": "Avui",
+				"thisWeek": "Aquesta setmana",
+				"restOfThisWeek": "La resta de la setmana",
+				"nextWeek": "La setmana que ve",
+				"next7Days": "Els pròxims 7 dies",
+				"lastWeek": "La setmana passada",
+				"thisMonth": "Aquest mes",
+				"restOfThisMonth": "La resta del mes",
+				"nextMonth": "El mes que ve",
+				"next30Days": "Els pròxims 30 dies",
+				"lastMonth": "El mes passat",
+				"thisYear": "Aquest any",
+				"restOfThisYear": "La resta de l'any"
+			}
+		},
+		"datemathHelp": {
+			"canuse": "Pots usar equacions per a filtrar per dates relacionades.",
+			"learnhow": "Mira com funciona",
+			"title": "Equacions",
+			"intro": "Especifica dates relatives que es resolguin al vol per Vikunja en aplicar el filtre.",
+			"expression": "Cada expressió matemàtica comença amb una data àncora, que pot ser {0}, o una cadena de text que acabi en {1}. Opcionalment, aquesta data pot estar seguida d'una o més expressions.",
+			"similar": "Aquestes expressions són similars a les definides a {0} i {1}.",
+			"add1Day": "Afegeix un dia",
+			"minus1Day": "Resta un dia",
+			"roundDay": "Arrodoneix a la baixa al dia més proper",
+			"supportedUnits": "Unitats de temps admeses",
+			"someExamples": "Exemples d'expressions de temps",
+			"units": {
+				"seconds": "Segons",
+				"minutes": "Minuts",
+				"hours": "Hores",
+				"days": "Dies",
+				"weeks": "Setmanes",
+				"months": "Mesos",
+				"years": "Anys"
+			},
+			"examples": {
+				"now": "Ara mateix",
+				"in24h": "En 24 h",
+				"today": "Avui a les 00:00",
+				"beginningOfThisWeek": "L'inici d'aquesta setmana a les 00:00",
+				"endOfThisWeek": "El final d'aquesta setmana",
+				"in30Days": "En 30 dies",
+				"datePlusMonth": "{0} més un mes a les 00:00 d'aquell dia"
+			}
+		}
+	},
+	"task": {
+		"createSuccess": "La tasca s'ha creat amb èxit.",
+		"doneSuccess": "La tasca s'ha marcat amb èxit com a feta.",
+		"undoneSuccess": "La tasca s'ha marcat correctament com a incompleta.",
+		"undo": "Desfés",
+		"checklistTotal": "{checked} de {total} tasques",
+		"checklistAllDone": "{total} tasques",
+		"show": {
+			"titleCurrent": "Tasques en curs",
+			"overdue": "Mostra les tasques vençudes",
+			"fromuntil": "Tasques des de {from} fins a {until}",
+			"select": "Selecciona un rang de dates",
+			"noTasks": "Res a fer — Que tinguis un bon dia!"
+		},
+		"detail": {
+			"chooseDueDate": "Fes clic aquí per a establir la data de venciment",
+			"chooseStartDate": "Fes clic aquí per a establir la data d'inici",
+			"chooseEndDate": "Fes clic aquí per a establir la data de fi",
+			"move": "Mou la tasca a un projecte diferent",
+			"done": "Marca la tasca com a completada!",
+			"undone": "Marca com a no acabada",
+			"created": "Creat {0} per {1}",
+			"updated": "Actualitzat {0}",
+			"doneAt": "Fet {0}",
+			"updateSuccess": "La tasca s'ha desat amb èxit.",
+			"deleteSuccess": "La tasca s'ha eliminat com èxit.",
+			"belongsToProject": "Aquesta tasca pertany al projecte '{project}'",
+			"due": "Venç {at}",
+			"delete": {
+				"header": "Elimina aquesta tasca",
+				"text1": "Estàs segur que vols eliminar aquesta tasca?",
+				"text2": "També s'eliminaran tots els adjunts, recordatoris i relacions associades a aquesta tasca i no es pot desfer!"
+			},
+			"actions": {
+				"assign": "Assigna a l'usuari",
+				"label": "Afegeix etiquetes",
+				"priority": "Estableix la prioritat",
+				"dueDate": "Estableix la data límit",
+				"startDate": "Estableix la data d'inici",
+				"endDate": "Estableix la data de fi",
+				"reminders": "Defineix recordatoris",
+				"repeatAfter": "Defineix l'interval de repetició",
+				"percentDone": "Defineix el progrés",
+				"attachments": "Afegeix adjunts",
+				"relatedTasks": "Afegeix una relació",
+				"moveProject": "Mou",
+				"color": "Defineix el color",
+				"delete": "Elimina",
+				"favorite": "Afegeix a favorits",
+				"unfavorite": "Treu de favorits"
+			}
+		},
+		"attributes": {
+			"assignees": "Responsables",
+			"color": "Color",
+			"created": "Creat",
+			"createdBy": "Creat per",
+			"description": "Descripció",
+			"done": "Fet",
+			"dueDate": "Data límit",
+			"endDate": "Data de fi",
+			"labels": "Etiquetes",
+			"percentDone": "Progrés",
+			"priority": "Prioritat",
+			"relatedTasks": "Tasques relacionades",
+			"reminders": "Recordatoris",
+			"repeat": "Repeteix",
+			"startDate": "Data d'inici",
+			"title": "Títol",
+			"updated": "Actualitzat"
+		},
+		"subscription": {
+			"subscribedTaskThroughParentProject": "No pots donar-te de baixa aquí perquè estàs subscrit a aquesta tasca a través del seu projecte.",
+			"subscribedProject": "Actualment estàs subscrit a aquest projecte i rebràs notificacions dels canvis.",
+			"notSubscribedProject": "No estàs subscrit a aquest projecte i no rebràs notificacions dels canvis.",
+			"subscribedTask": "Actualment estàs subscrit a aquesta tasca i rebràs notificacions dels canvis.",
+			"notSubscribedTask": "No estàs subscrit a aquesta tasca i no rebràs notificacions dels canvis.",
+			"subscribe": "Subscriu-me",
+			"unsubscribe": "Donar-me de baixa",
+			"subscribeSuccessProject": "Ara estàs subscrit a aquest projecte",
+			"unsubscribeSuccessProject": "Ja no estàs subscrit a aquest projecte",
+			"subscribeSuccessTask": "Now estàs subscrit a aquesta tasca",
+			"unsubscribeSuccessTask": "Ja no estàs subscrit a aquesta tasca"
+		},
+		"attachment": {
+			"title": "Adjunts",
+			"createdBy": "creat {0} per {1}",
+			"downloadTooltip": "Descarrega aquest adjunt",
+			"upload": "Puja un adjunt",
+			"drop": "Deixa anar aquí els fitxers per a pujar-los",
+			"delete": "Elimina l'adjunt",
+			"deleteTooltip": "Elimina aquest adjunt",
+			"deleteText1": "Estàs segur que vols eliminar l'adjunt {filename}?",
+			"copyUrlTooltip": "Copia l'URL d'aquest adjunt per a usar-lo al text",
+			"setAsCover": "Crea una portada",
+			"unsetAsCover": "Treu la portada",
+			"successfullyChangedCoverImage": "La imatge de portada s'ha canviat amb èxit.",
+			"usedAsCover": "Imatge de portada"
+		},
+		"comment": {
+			"title": "Comentaris",
+			"loading": "S'estan carregant els comentaris…",
+			"edited": "editat {date}",
+			"creating": "S'està creant el comentari…",
+			"comment": "Comenta",
+			"delete": "Elimina aquest comentari",
+			"deleteText1": "Estàs segur que vols eliminar aquest comentari?",
+			"deleteSuccess": "El comentari s'ha eliminat amb èxit.",
+			"addedSuccess": "El comentari s'ha afegit amb èxit."
+		},
+		"deferDueDate": {
+			"title": "Aplaça la data de venciment",
+			"1day": "1 dia",
+			"3days": "3 dies",
+			"1week": "1 setmana"
+		},
+		"assignee": {
+			"placeholder": "Escriu per a assignar un usuari…",
+			"selectPlaceholder": "Assigna aquest usuari",
+			"assignSuccess": "L'usuari s'ha assignat amb èxit.",
+			"unassignSuccess": "S'ha desassignat l'usuari amb èxit."
+		},
+		"label": {
+			"createPlaceholder": "Afegeix això com a nova etiqueta",
+			"addSuccess": "L'etiqueta s'ha afegit amb èxit.",
+			"removeSuccess": "L'etiqueta s'ha tret amb èxit.",
+			"addCreateSuccess": "L'etiqueta s'ha creat i afegit amb èxit.",
+			"delete": {
+				"header": "Elimina aquesta etiqueta",
+				"text1": "Estàs segur que vols eliminar aquesta etiqueta?",
+				"text2": "Això l'eliminarà de totes les tasques i no es podrà restaurar."
+			}
+		},
+		"priority": {
+			"unset": "Sense definir",
+			"low": "Baixa",
+			"medium": "Mitjana",
+			"high": "Alta",
+			"urgent": "Urgent",
+			"doNow": "FES-HO ARA"
+		},
+		"relation": {
+			"add": "Afegeix una nova tasca relacionada",
+			"new": "Nova tasca relacionada",
+			"differentProject": "Aquesta tasca pertany a un projecte diferent.",
+			"noneYet": "Encara no hi ha tasques relacionades.",
+			"delete": "Elimina la relació de la tasca",
+			"deleteText1": "Estàs segur que vols eliminar aquesta relació de la tasca?",
+			"select": "Selecciona un tipus de relació",
+			"taskRequired": "Si us plau, selecciona una tasca o introdueix-ne una de nova.",
+			"kinds": {
+				"subtask": "Subtasca | Subtasques",
+				"parenttask": "Tasca pare | Tasques pare",
+				"related": "Tasca relacionada | Tasques relacionades",
+				"duplicateof": "Duplicat de | Duplicats de",
+				"duplicates": "Duplica | Duplica",
+				"blocking": "Bloqueja | Bloqueja",
+				"blocked": "Bloquejat per | Bloquejat per",
+				"precedes": "Precedeix | Precedeix",
+				"follows": "Segueix | Segueix",
+				"copiedfrom": "Copiat des de | Copiat des de",
+				"copiedto": "Copiat a | Copiat a"
+			}
+		},
+		"reminder": {
+			"before": "{amount} {unit} abans de {type}",
+			"after": "{amount} {unit} després de {type}",
+			"beforeShort": "abans del",
+			"afterShort": "després del",
+			"onDueDate": "En la data de venciment",
+			"onStartDate": "En la data d'inici",
+			"onEndDate": "En la data de fi",
+			"custom": "Personalitzat",
+			"dateAndTime": "Data i hora"
+		},
+		"repeat": {
+			"everyDay": "Cada dia",
+			"everyWeek": "Cada setmana",
+			"mode": "Mode de repetició",
+			"monthly": "Mensualment",
+			"each": "Cada",
+			"specifyAmount": "Especifica una quantitat…",
+			"hours": "Hores",
+			"days": "Dies",
+			"weeks": "Setmanes",
+			"invalidAmount": "Si us plau, introdueix més de 0."
+		},
+		"quickAddMagic": {
+			"hint": "Usa prefixos màgics per a definir dates de venciment, assignats i altres propietats de tasques.",
+			"title": "Addició ràpida màgica",
+			"intro": "En crear una tasca, pots utilitzar paraules clau especials per a afegir directament atributs a la tasca acabada de crear. Això permet afegir atributs d'ús comú en tasques molt més ràpid.",
+			"multiple": "Pots usar això diverses vegades.",
+			"label1": "Per a afegir una etiqueta, simplement afegeix el prefix {prefix} abans del nom de l'etiqueta.",
+			"label2": "Vikunja comprovarà primer si l'etiqueta ja existeix i la crearà en cas contrari.",
+			"label3": "Per a utilitzar espais, simplement afegeix unes cometes \" o ' al voltant del nom de l'etiqueta.",
+			"label4": "Per exemple: {prefix}\"Etiqueta amb espais\".",
+			"priority1": "Per a establir la prioritat d'una tasca, afegeix un número de l'1 al 5, precedit per {prefix}.",
+			"priority2": "Com més alt sigui el número, més alta serà la prioritat.",
+			"assignees": "Per a assignar directament la tasca a un usuari, afegeix el seu nom d'usuari amb el prefix {prefix} a la tasca.",
+			"project1": "Per a establir un projecte perquè la tasca hi aparegui, introdueix el seu nom amb el prefix {prefix}.",
+			"project2": "Això retornarà un error si el projecte no existeix.",
+			"project3": "Per a usar espais, simplement afegeix unes cometes \" o ' al voltant del nom del projecte.",
+			"project4": "Per exemple: {prefix}\"Projecte amb espais\".",
+			"dateAndTime": "Data i hora",
+			"date": "Qualsevol data s'utilitzarà com a data de venciment de la nova tasca. Pots utilitzar dates en qualsevol d'aquests formats:",
+			"dateCurrentYear": "s'usarà l'any actual",
+			"dateNth": "s'usarà el {day}è del mes actual",
+			"dateTime": "Combina qualsevol dels formats de data amb \"{time}\" (o {timePM}) per a establir l'hora.",
+			"repeats": "Tasques repetitives",
+			"repeatsDescription": "Per a establir una tasca repetitiva en un interval, simplement afegeix '{suffix}' al text de la tasca. La quantitat ha de ser un número i es pot ometre per a utilitzar només el tipus (veure exemples)."
+		}
+	},
+	"team": {
+		"title": "Equips",
+		"noTeams": "Actualment no formes part de cap equip.",
+		"create": {
+			"success": "L'equip s'ha creat amb èxit."
+		},
+		"edit": {
+			"title": "Edita l'equip \"{team}\"",
+			"members": "Membres de l'equip",
+			"search": "Escriu per a buscar un usuari…",
+			"addUser": "Afegeix a l'equip",
+			"makeMember": "Converteix en membre",
+			"makeAdmin": "Converteix en administrador",
+			"success": "L'equip s'ha actualitzat amb èxit.",
+			"userAddedSuccess": "El membre de l'equip s'ha afegit amb èxit.",
+			"madeMember": "El membre de l'equip s'ha convertit en membre amb èxit.",
+			"madeAdmin": "El membre de l'equip s'ha convertit en administrador amb èxit.",
+			"mustSelectUser": "Si us plau, selecciona un usuari.",
+			"delete": {
+				"header": "Elimina l'equip",
+				"text1": "Estàs segur que vols eliminar aquest equip i tots els seus membres?",
+				"text2": "Tots els membres de l'equip perdran l'accés als projectes compartits amb aquest equip. AIXÒ NO ES POT DESFER!",
+				"success": "L'equip s'ha eliminat amb èxit."
+			},
+			"deleteUser": {
+				"header": "Treu un usuari de l'equip",
+				"text1": "Estàs segur que vols treure aquest usuari de l'equip?",
+				"text2": "Perdrà l'accés a tots els projectes als quals aquest equip té accés. AIXÒ NO ES POT DESFER!",
+				"success": "L'usuari s'ha tret de l'equip amb èxit."
+			},
+			"leave": {
+				"title": "Abandona l'equip",
+				"text1": "Estàs segur que vols abandonar aquest equip?",
+				"text2": "Perdràs l'accés a tots els projectes als quals aquest equip té accés. Si cambies d'opinió, necessitaràs que un administrador de l'equip t'hi torni a afegir.",
+				"success": "Has abandonat l'equip amb èxit."
+			}
+		},
+		"attributes": {
+			"name": "Nom de l'equip",
+			"namePlaceholder": "El nom de l'equip va aquí…",
+			"nameRequired": "Si us plau, especifica un nom.",
+			"description": "Descripció",
+			"admin": "Admin",
+			"member": "Membre"
+		}
+	},
+	"keyboardShortcuts": {
+		"title": "Dreceres de teclat",
+		"general": "General",
+		"allPages": "Aquestes dreceres funcionen a totes les pàgines.",
+		"currentPageOnly": "Aquestes dreceres funcionen només a la pàgina actual.",
+		"somePagesOnly": "Aquestes dreceres funcionen només en algunes pàgines.",
+		"toggleMenu": "Commuta el menú",
+		"quickSearch": "Obre la barra de cerca / acció ràpida",
+		"then": "després",
+		"task": {
+			"title": "Pàgina de la tasca",
+			"done": "Marca la tasca com a feta / no feta",
+			"assign": "Assigna aquesta tasca a un usuari",
+			"labels": "Afegeix etiquetes a aquesta tasca",
+			"dueDate": "Canvia la data límit d'aquesta tasca",
+			"attachment": "Afegeix un adjunt a aquesta tasca",
+			"related": "Modifica les tasques relacionades d'aquesta tasca",
+			"color": "Canvia el color d'aquesta tasca",
+			"move": "Mou aquesta tasca a un altre projecte",
+			"reminder": "Gestiona els recordatoris d'aquesta tasca",
+			"description": "Edita la descripció de la tasca",
+			"delete": "Elimina aquesta tasca",
+			"priority": "Canvia la prioritat d'aquesta tasca",
+			"favorite": "Marca aquesta tasca com a favorita / no favorita"
+		},
+		"project": {
+			"title": "Vistes de projecte",
+			"switchToListView": "Canvia a la vista de llista",
+			"switchToGanttView": "Canvia a la vista de Gantt",
+			"switchToKanbanView": "Canvia a la vista de Kanban",
+			"switchToTableView": "Canvia a la vista de taula"
+		},
+		"navigation": {
+			"title": "Seccions",
+			"overview": "Vés al resum",
+			"upcoming": "Vés a les tasques pròximes",
+			"labels": "Vés a les etiquetes",
+			"teams": "Vés als equips",
+			"projects": "Navega als projectes"
+		}
+	},
+	"update": {
+		"available": "Hi ha una actualització disponible!",
+		"do": "Actualitza ara"
+	},
+	"menu": {
+		"edit": "Edita",
+		"archive": "Arxiva",
+		"duplicate": "Duplica",
+		"delete": "Elimina",
+		"unarchive": "Desarxiva",
+		"share": "Comparteix",
+		"createProject": "Crea un projecte"
+	},
+	"apiConfig": {
+		"url": "URL de Vikunja",
+		"urlPlaceholder": "ex. https://localhost:3456",
+		"change": "canvia",
+		"use": "S'està utilitzant la instal·lació de Vikunja a {0}",
+		"success": "S'està usant la instal·lació de Vikunja a \"{domain}\".",
+		"urlRequired": "Es requereix un URL."
+	},
+	"loadingError": {
+		"failed": "Error en carregar, si us plau {0}. Si l'error persisteix, si us plau {1}.",
+		"tryAgain": "torna-ho a provar",
+		"contact": "contacta amb nosaltres"
+	},
+	"notification": {
+		"title": "Notificacions",
+		"none": "No tens cap notificació. Que tinguis un bon dia!"
+	},
+	"quickActions": {
+		"commands": "Ordres",
+		"placeholder": "Escriu una ordre o cerca…",
+		"hint": "Pots usar {project} per a limitar la cerca a un projecte. Combina {project} o {label} (etiquetes) amb una consulta de cerca per a buscar una tasca amb aquestes etiquetes o en aquell projecte. Usa {assignee} per a buscar només equips.",
+		"tasks": "Tasques",
+		"projects": "Projectes",
+		"teams": "Equips",
+		"newProject": "Introdueix el títol del nou projecte…",
+		"newTask": "Introdueix el títol de la nova tasca…",
+		"newTeam": "Introdueix el nom del nou equip…",
+		"createTask": "Crea una tasca al projecte actual ({title})",
+		"createProject": "Crea un projecte",
+		"cmds": {
+			"newTask": "Nova tasca",
+			"newProject": "Nou projecte",
+			"newTeam": "Nou equip"
+		}
+	},
+	"date": {
+		"altFormatShort": "j M Y"
+	},
+	"error": {
+		"1001": "Ja existeix un usuari amb aquest nom d'usuari.",
+		"1002": "Ja existeix un usuari amb aquesta adreça de correu electrònic.",
+		"1004": "No s'ha especificat el nom d'usuari ni la contrasenya.",
+		"1005": "L'usuari no existeix.",
+		"1006": "No s'ha pogut obtenir l'ID de l'usuari.",
+		"1008": "No s'ha proporcionat cap token per a restablir la contrasenya.",
+		"1009": "Token de restabliment de contrasenya invàlid.",
+		"1010": "Token de confirmació de correu invàlid.",
+		"1011": "Nom d'usuari o contrasenya incorrectes.",
+		"1012": "L'adreça de correu electrònic de l'usuari no està confirmada.",
+		"1013": "La nova contrasenya està buida.",
+		"1014": "La contrasenya antiga està buida.",
+		"1018": "La configuració del tipus d'avatar de l'usuari és invàlida.",
+		"2001": "L'ID no pot estar buit o ser 0.",
+		"2002": "Algunes dades de la sol·licitud són invàlides.",
+		"3001": "El projecte no existeix.",
+		"3004": "Necessites tenir permisos de lectura en aquest projecte per a fer aquesta acció.",
+		"3005": "El nom del projecte no pot estar buit.",
+		"3006": "La compartició del projecte no existeix.",
+		"3007": "Ja existeix un projecte amb aquest identificador.",
+		"3008": "El projecte està arxivat i, per tant, només es pot accedir-hi en mode lectura. Això també s'aplica a les tasques associades amb aquest projecte.",
+		"4003": "Totes les tasques d'edició en massa han de pertànyer al mateix projecte.",
+		"4004": "Es necessita almenys una tasca quan s'editen tasques massivament.",
+		"4005": "No tens permís per a veure aquesta tasca.",
+		"4006": "No es pot establir com a tasca pare la mateixa tasca.",
+		"4007": "No se pot crear una tasca relacionada amb un tipus de relació invàlid.",
+		"4008": "No pots crear una relació de tasques que ja existeix.",
+		"4009": "La tasca relacionada no existeix.",
+		"4010": "No es pot relacionar una tasca amb si mateixa.",
+		"4011": "L'adjunt de la tasca no existeix.",
+		"4012": "L'adjunt de la tasca és massa gran.",
+		"4013": "El paràmetre d'ordenació de la tasca és invàlid.",
+		"4014": "L'ordre d'ordenació de la tasca és invàlid.",
+		"4015": "El comentari de la tasca no existeix.",
+		"4016": "Camp de tasca invàlid.",
+		"4017": "Comparador de filtre de tasca invàlid.",
+		"4018": "Concatenador de filtre de tasca invàlid.",
+		"4019": "Valor de filtre de tasca invàlid.",
+		"6001": "El nom del equip no pot estar buit.",
+		"6002": "Aquest equip no existeix.",
+		"6004": "L'equip ja té accés a aquest projecte.",
+		"6005": "L'usuari ja és membre d'aquest equip.",
+		"6006": "No es pot treure l'últim membre de l'equip.",
+		"6007": "L'equip no té accés al projecte per a fer aquesta acció.",
+		"7002": "L'usuari ja té accés a aquest projecte.",
+		"7003": "No tens accés a aquest projecte.",
+		"8001": "Aquesta etiqueta ja existeix en aquesta tasca.",
+		"8002": "L'etiqueta no existeix.",
+		"8003": "No tens accés a aquesta etiqueta.",
+		"9001": "El permís és invàlid.",
+		"10001": "El contenidor no existeix.",
+		"10002": "El contenidor no pertany a aquesta llista.",
+		"10003": "No pots eliminar l'últim contenidor d'un projecte.",
+		"10004": "No es pot afegir la tasca a aquest contenidor, ja que ja s'ha superat el límit de tasques establert.",
+		"10005": "Només hi pot haver un contenidor completat per projecte.",
+		"11001": "El filtre desat no existeix.",
+		"11002": "Els filtres desats no estan disponibles per a enllaços compartits.",
+		"12001": "El tipus d'entitat de subscripció és invàlid.",
+		"12002": "Ja estàs subscrit a l'entitat en si mateixa o a una entitat pare.",
+		"13001": "Aquest enllaç compartit requereix una contrasenya per a l'autenticació, però no se n'ha proporcionat cap.",
+		"error": "Error",
+		"success": "Èxit",
+		"0001": "No tens permís per a fer això."
+	},
+	"about": {
+		"title": "Quant a"
+	},
+	"time": {
+		"units": {
+			"seconds": "segon|segons",
+			"minutes": "minut|minuts",
+			"hours": "hora|hores",
+			"days": "dia|dies",
+			"weeks": "setmana|setmanes",
+			"years": "any|anys"
+		}
+	}
+}
