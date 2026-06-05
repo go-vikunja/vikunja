@@ -156,26 +156,50 @@ func TestHumaLinkSharing(t *testing.T) {
 		})
 	})
 
-	// ReadOne is a faithful port of the v1 by-id read, including its latent
-	// quirk: LinkSharing.CanRead resolves the parent project from the share's
-	// hash, but the /projects/{project}/shares/{share} route only carries the
-	// numeric id, so the hash is always empty and the project lookup always
-	// 404s — even for the share's owner. These cases pin that behavior so a
-	// future fix is a deliberate, reviewed change rather than an accident.
 	t.Run("ReadOne", func(t *testing.T) {
+		t.Run("Normal", func(t *testing.T) {
+			// share 1 belongs to project 1, owned by testuser1. CanRead resolves
+			// the parent project from the path's {project}, so the by-id read
+			// succeeds and surfaces the caller's max_permission.
+			rec, err := onProjectAs("1").testReadOneWithUser(nil, map[string]string{"share": "1"})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, rec.Code)
+			assert.Contains(t, rec.Body.String(), `"hash":"test"`)
+			assert.Contains(t, rec.Body.String(), `"max_permission":2`)
+			assert.NotEmpty(t, rec.Result().Header.Get("ETag"))
+		})
+		t.Run("Password is never serialized", func(t *testing.T) {
+			// share 4 is a password-protected share on project 1; the bcrypt hash
+			// must never appear in the response (password is write-only).
+			rec, err := onProjectAs("1").testReadOneWithUser(nil, map[string]string{"share": "4"})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, rec.Code)
+			assert.Contains(t, rec.Body.String(), `"sharing_type":2`)
+			assert.NotContains(t, rec.Body.String(), `$2a$`)
+		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := onProjectAs("1").testReadOneWithUser(nil, map[string]string{"share": "9999999"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 			assertHandlerErrorCode(t, err, models.ErrCodeProjectShareDoesNotExist)
 		})
-		t.Run("Owner read by id 404s (v1 quirk)", func(t *testing.T) {
-			// testuser1 owns project 1 and its share 1, yet the by-id read still
-			// 404s because CanRead cannot resolve the project without the hash.
-			_, err := onProjectAs("1").testReadOneWithUser(nil, map[string]string{"share": "1"})
+		t.Run("Share from another project (no IDOR)", func(t *testing.T) {
+			// share 2 belongs to project 2. Reading it under project 1 — which
+			// testuser1 can read — must 404: ReadOne scopes by id AND project_id,
+			// so the share from the other project is never leaked even though the
+			// caller has access to the project in the path.
+			_, err := onProjectAs("1").testReadOneWithUser(nil, map[string]string{"share": "2"})
 			require.Error(t, err)
 			assert.Equal(t, http.StatusNotFound, getHTTPErrorCode(err))
 			assertHandlerErrorCode(t, err, models.ErrCodeProjectShareDoesNotExist)
+		})
+		t.Run("Forbidden non-member", func(t *testing.T) {
+			// user2 is not a member of project 1, so reading its share 1 is denied.
+			h := onProjectAs("1")
+			h.user = &testuser2
+			_, err := h.testReadOneWithUser(nil, map[string]string{"share": "1"})
+			require.Error(t, err)
+			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 	})
 
