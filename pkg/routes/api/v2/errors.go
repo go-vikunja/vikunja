@@ -20,8 +20,10 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/web"
 
@@ -41,21 +43,6 @@ func authFromCtx(ctx context.Context) (web.Auth, error) {
 		return nil, huma.Error401Unauthorized("invalid or missing authentication")
 	}
 	return a, nil
-}
-
-// httpCodeGetter is satisfied by validation errors that carry an HTTP status
-// without the HTTPErrorProcessor method — notably models.ValidationHTTPError,
-// returned by InvalidFieldError. v1's error handler reads GetHTTPCode() off these;
-// without the same branch here they'd fall through to a 500.
-type httpCodeGetter interface {
-	GetHTTPCode() int
-}
-
-// domainCodeGetter exposes Vikunja's numeric domain error code on errors that
-// are not HTTPErrorProcessors (again, ValidationHTTPError) so v2 can keep the v1
-// `code` body contract.
-type domainCodeGetter interface {
-	GetCode() int
 }
 
 // translateDomainError maps a Vikunja domain error (web.HTTPErrorProcessor)
@@ -82,18 +69,33 @@ func translateDomainError(err error) error {
 		}
 		return se
 	}
-	var cg httpCodeGetter
-	if errors.As(err, &cg) {
-		se := huma.NewError(cg.GetHTTPCode(), err.Error())
+	// v2 maps validation failures to 422 (not v1's 412) so a govalidator failure
+	// looks identical to Huma's own schema validation. ValidationHTTPError isn't an
+	// HTTPErrorProcessor (the embedded field shadows the method), so it lands here.
+	var ve models.ValidationHTTPError
+	if errors.As(err, &ve) {
+		se := huma.NewError(http.StatusUnprocessableEntity, ve.Error(), invalidFieldDetails(ve.InvalidFields)...)
 		if vm, ok := se.(*vikunjaErrorModel); ok {
-			var dc domainCodeGetter
-			if errors.As(err, &dc) {
-				vm.Code = dc.GetCode()
-			}
+			vm.Code = ve.GetCode()
 		}
 		return se
 	}
 	return err
+}
+
+// invalidFieldDetails turns ValidationHTTPError's invalid_fields into RFC 9457
+// error details. Entries come in two shapes — govalidator's "field: message" and
+// model call sites' bare field names — and both must yield a Location.
+func invalidFieldDetails(fields []string) []error {
+	details := make([]error, 0, len(fields))
+	for _, f := range fields {
+		name, msg, ok := strings.Cut(f, ": ")
+		if !ok {
+			msg = "Invalid data"
+		}
+		details = append(details, &huma.ErrorDetail{Location: "body." + name, Message: msg})
+	}
+	return details
 }
 
 // vikunjaErrorModel extends Huma's RFC 9457 body with Vikunja's numeric
