@@ -79,6 +79,17 @@ func (w *Webhook) TableName() string {
 	return "webhooks"
 }
 
+// maskCredentials clears the write-only secret and basic-auth fields so they are
+// never echoed back in a response. The client already submitted these values and
+// the DB row keeps them (outgoing deliveries reload and sign from the DB copy);
+// only the in-memory struct returned to the caller is cleared. Always call this
+// after the DB write, never before.
+func (w *Webhook) maskCredentials() {
+	w.Secret = ""
+	w.BasicAuthUser = ""
+	w.BasicAuthPassword = ""
+}
+
 var availableWebhookEvents map[string]bool
 var availableWebhookEventsLock *sync.Mutex
 var userDirectedWebhookEvents map[string]bool
@@ -183,6 +194,11 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	w.CreatedBy, err = user.GetUserByID(s, a.GetID())
+	if err != nil {
+		return err
+	}
+
+	w.maskCredentials()
 	return
 }
 
@@ -234,9 +250,7 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 	}
 
 	for _, webhook := range ws {
-		webhook.Secret = ""
-		webhook.BasicAuthUser = ""
-		webhook.BasicAuthPassword = ""
+		webhook.maskCredentials()
 		if createdBy, has := users[webhook.CreatedByID]; has {
 			webhook.CreatedBy = createdBy
 		}
@@ -268,6 +282,11 @@ func (w *Webhook) Update(s *xorm.Session, _ web.Auth) (err error) {
 	_, err = s.Where("id = ?", w.ID).
 		Cols("events").
 		Update(w)
+	if err != nil {
+		return err
+	}
+
+	w.maskCredentials()
 	return
 }
 
