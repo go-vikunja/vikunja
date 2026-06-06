@@ -26,21 +26,14 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-// subscriptionPathParams binds the {entity}/{entityID} discriminator onto the
-// Subscription model. {entity} stays a string — Subscription.CanCreate /
-// CanDelete derive the numeric EntityType from it and reject unknown kinds with
-// ErrUnknownSubscriptionEntityType (412). The enum tag documents the valid
-// values and lets Huma reject anything else with a 422 before the handler runs.
+// {entity} stays a string: Can{Create,Delete} derive the numeric EntityType
+// from it and reject unknown kinds (412). The enum tag makes Huma reject
+// anything else with a 422 before the handler runs.
 type subscriptionPathParams struct {
 	Entity   string `path:"entity" enum:"project,task" doc:"The kind of entity to (un)subscribe from. Either project or task."`
 	EntityID int64  `path:"entityID" doc:"The numeric id of the entity to (un)subscribe from."`
 }
 
-// RegisterSubscriptionRoutes wires subscribe/unsubscribe onto the Huma API.
-//
-// Subscription is a CRUDable whose Create/Delete only ever touch the current
-// user's own subscription, so the routes reuse handler.DoCreate/DoDelete; the
-// only custom part is binding the entity discriminator from the path.
 func RegisterSubscriptionRoutes(api huma.API) {
 	tags := []string{"subscriptions"}
 
