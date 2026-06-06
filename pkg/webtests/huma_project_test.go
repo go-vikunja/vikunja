@@ -583,6 +583,13 @@ func TestHumaProject_PATCHMergePatch(t *testing.T) {
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &after))
 	assert.Equal(t, "after", after.Title)
 	assert.Equal(t, "keep me", after.Description, "description must survive the PATCH")
+
+	// A PATCH omitting the required title still validates: AutoPatch merges over
+	// the GET body, so the existing title is present in the synthesised PUT.
+	// (A direct partial PUT would 422.)
+	rec = humaRequest(t, e, http.MethodPatch, fmt.Sprintf("/api/v2/projects/%d", created.ID),
+		`{"description":"changed again"}`, token, "application/merge-patch+json")
+	require.Equal(t, http.StatusOK, rec.Code, "PATCH omitting required title must not 422; body: %s", rec.Body.String())
 }
 
 // TestHumaProject_NullMaxPermissionRoundTrips guards the create/update response

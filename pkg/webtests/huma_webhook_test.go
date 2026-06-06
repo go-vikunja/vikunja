@@ -19,6 +19,8 @@ package webtests
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"code.vikunja.io/api/pkg/config"
@@ -148,24 +150,23 @@ func TestHumaWebhook(t *testing.T) {
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Invalid event", func(t *testing.T) {
-			// An unregistered event name → InvalidFieldError, which v1 surfaces as
-			// 412 Precondition Failed (ValidationHTTPError.HTTPCode); v2 mirrors it.
+			// An unregistered event name → InvalidFieldError, which v2 surfaces as
+			// 422 Unprocessable Entity (v1 returns 412; v2 standardises on 422).
 			_, err := owned.testCreateWithUser(nil, nil, `{"target_url":"https://example.com/x","events":["not.a.real.event"]}`)
 			require.Error(t, err)
-			assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
+			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
 		})
 		t.Run("Missing target url", func(t *testing.T) {
-			// Create rejects a non-http target_url via InvalidFieldError → 412.
+			// Omitted required target_url is rejected before the handler → 422.
 			_, err := owned.testCreateWithUser(nil, nil, `{"events":["task.updated"]}`)
 			require.Error(t, err)
-			assert.Equal(t, http.StatusPreconditionFailed, getHTTPErrorCode(err))
+			assert.Equal(t, http.StatusUnprocessableEntity, getHTTPErrorCode(err))
 		})
 	})
 
 	t.Run("Update", func(t *testing.T) {
 		t.Run("Normal - only events change", func(t *testing.T) {
 			// Update persists only the events list (model writes Cols("events")).
-			// Send a different target_url and confirm the stored value is untouched.
 			rec, err := owned.testUpdateWithUser(nil, map[string]string{"webhook": "1"},
 				`{"events":["task.updated"],"target_url":"https://example.com/ignored"}`)
 			require.NoError(t, err)
@@ -179,18 +180,24 @@ func TestHumaWebhook(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `https://example.com/ignored`)
 		})
 		t.Run("Write share can update", func(t *testing.T) {
-			rec, err := writeShared.testUpdateWithUser(nil, map[string]string{"webhook": "3"}, `{"events":["task.updated"]}`)
+			// Send a full body: target_url is validated before the permission
+			// check, even though the update only persists events.
+			rec, err := writeShared.testUpdateWithUser(nil, map[string]string{"webhook": "3"},
+				`{"target_url":"https://example.com/wh","events":["task.updated"]}`)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, rec.Code)
 		})
 		t.Run("Admin share can update", func(t *testing.T) {
-			rec, err := adminShared.testUpdateWithUser(nil, map[string]string{"webhook": "4"}, `{"events":["task.updated"]}`)
+			rec, err := adminShared.testUpdateWithUser(nil, map[string]string{"webhook": "4"},
+				`{"target_url":"https://example.com/wh","events":["task.updated"]}`)
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, rec.Code)
 		})
 		t.Run("Read share cannot update", func(t *testing.T) {
 			// webhook #2 lives in project 9 (read share); CanUpdate needs write.
-			_, err := readShared.testUpdateWithUser(nil, map[string]string{"webhook": "2"}, `{"events":["task.updated"]}`)
+			// Full valid body so the 403 comes from the permission check, not validation.
+			_, err := readShared.testUpdateWithUser(nil, map[string]string{"webhook": "2"},
+				`{"target_url":"https://example.com/wh","events":["task.updated"]}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
@@ -198,13 +205,15 @@ func TestHumaWebhook(t *testing.T) {
 			// webhook #5 lives in project 2, which user1 cannot access at all.
 			// canDoWebhook resolves the parent from the webhook row, so the URL
 			// project is irrelevant — the real project (2) gates the check.
-			_, err := forbidden.testUpdateWithUser(nil, map[string]string{"webhook": "5"}, `{"events":["task.updated"]}`)
+			_, err := forbidden.testUpdateWithUser(nil, map[string]string{"webhook": "5"},
+				`{"target_url":"https://example.com/wh","events":["task.updated"]}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			// canDoWebhook returns false for a missing webhook → 403, not 404.
-			_, err := owned.testUpdateWithUser(nil, map[string]string{"webhook": "9999"}, `{"events":["task.updated"]}`)
+			_, err := owned.testUpdateWithUser(nil, map[string]string{"webhook": "9999"},
+				`{"target_url":"https://example.com/wh","events":["task.updated"]}`)
 			require.Error(t, err)
 			assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 		})
@@ -267,6 +276,60 @@ func TestHumaWebhook_DisabledByConfig(t *testing.T) {
 	token := humaTokenFor(t, &testuser1)
 	rec := humaRequest(t, e, http.MethodGet, "/api/v2/projects/1/webhooks", "", token, "")
 	assert.Equal(t, http.StatusNotFound, rec.Code, "route must be absent when webhooks are disabled; body: %s", rec.Body.String())
+}
+
+// TestHumaWebhook_FieldValidation checks that a webhook's required fields are
+// enforced on v2: omitting target_url (`valid:"required,url"`) or sending an
+// empty events slice (`valid:"required"`) is rejected with 422 and the failing
+// field in the RFC 9457 errors[], before the handler runs (and thus before the
+// permission check).
+func TestHumaWebhook_FieldValidation(t *testing.T) {
+	models.RegisterEventForWebhook(&models.TaskUpdatedEvent{})
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	assert422WithField := func(t *testing.T, rec *httptest.ResponseRecorder, field string) {
+		t.Helper()
+		require.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
+		var body struct {
+			Code   int `json:"code"`
+			Errors []struct {
+				Location string `json:"location"`
+			} `json:"errors"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body), "body: %s", rec.Body.String())
+		assert.Equal(t, 2002, body.Code, "validation failures keep domain code 2002")
+		require.NotEmpty(t, body.Errors, "validation errors must list the failing field")
+		var found bool
+		for _, d := range body.Errors {
+			if strings.Contains(d.Location, field) {
+				found = true
+				break
+			}
+		}
+		assert.True(t, found, "expected an error locating %q in errors[]; got %s", field, rec.Body.String())
+	}
+
+	t.Run("Create with omitted required url", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/projects/1/webhooks",
+			`{"events":["task.updated"]}`, token, "")
+		assert422WithField(t, rec, "target_url")
+	})
+	t.Run("Create with empty required events slice", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodPost, "/api/v2/projects/1/webhooks",
+			`{"target_url":"https://example.com/x","events":[]}`, token, "")
+		assert422WithField(t, rec, "events")
+	})
+	t.Run("Direct partial PUT omitting required url is rejected", func(t *testing.T) {
+		// A direct PUT with a partial body is validated as a full object,
+		// matching v1; clients wanting partial semantics must use PATCH.
+		// (Webhooks have no read-one, so AutoPatch synthesises no PATCH for
+		// them — the PATCH-passes-validation case lives in the project test.)
+		rec := humaRequest(t, e, http.MethodPut, "/api/v2/projects/1/webhooks/1",
+			`{"events":["task.updated"]}`, token, "")
+		assert422WithField(t, rec, "target_url")
+	})
 }
 
 // webhookIDsFromReadAll pulls the webhook IDs out of a v2 paginated list body so
