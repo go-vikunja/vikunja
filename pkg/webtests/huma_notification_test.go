@@ -28,13 +28,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestHumaNotification mirrors v1's notification routes (notifications.yml has
-// no v1 webtest, so this is ported 1:1 from the v1 handler/model behaviour).
-// Link-share guards and mark-all live in separate top-level funcs below because
-// they need a dedicated echo.Echo — interleaving setupTestEnv() inside the
-// webHandlerTestV2 matrix rotates the JWT key out from under its cached env.
+// TestHumaNotification ports the v1 notification behaviour (no v1 webtest exists).
+// Link-share guards and mark-all live in separate top-level funcs below: an
+// interleaved setupTestEnv() rotates the JWT key out from under webHandlerTestV2's
+// cached echo, 401-ing later requests.
 //
-// Fixture topology (see pkg/db/fixtures/notifications.yml):
+// Fixture topology (pkg/db/fixtures/notifications.yml):
 //   - #1, #2: belong to user1, both unread.
 //   - #3: belongs to user2, unread — must stay invisible/untouched for user1.
 func TestHumaNotification(t *testing.T) {
@@ -51,7 +50,6 @@ func TestHumaNotification(t *testing.T) {
 			require.NoError(t, err)
 
 			ids := notificationIDsFromReadAll(t, rec.Body.Bytes())
-			// Exact set: user1 sees only their own notifications, not user2's #3.
 			assert.ElementsMatch(t, []int64{1, 2}, ids,
 				"ReadAll must return exactly {1,2}; body: %s", rec.Body.String())
 			assert.NotContains(t, ids, int64(3), "user2's notification #3 must be hidden")
@@ -63,7 +61,7 @@ func TestHumaNotification(t *testing.T) {
 			rec, err := testHandler.testUpdateWithUser(nil, map[string]string{"notificationid": "1"}, `{"read":true}`)
 			require.NoError(t, err)
 			assert.Contains(t, rec.Body.String(), `"id":1`)
-			// A read notification carries a non-zero read_at timestamp.
+			// 0001-01-01T00:00:00Z is read_at's Go zero value, i.e. still unread.
 			assert.NotContains(t, rec.Body.String(), `"read_at":"0001-01-01T00:00:00Z"`,
 				"read_at must be set after marking read; body: %s", rec.Body.String())
 		})
@@ -98,13 +96,11 @@ func TestHumaNotification_MarkAllAsRead(t *testing.T) {
 	require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 	assert.Contains(t, rec.Body.String(), `"message":"success"`)
 
-	// Re-list and confirm all of user1's notifications are now read.
 	list := humaRequest(t, e, http.MethodGet, "/api/v2/notifications", "", token, "")
 	require.Equal(t, http.StatusOK, list.Code, "body: %s", list.Body.String())
 	assert.NotContains(t, list.Body.String(), `"read_at":"0001-01-01T00:00:00Z"`,
 		"every notification must be read after mark-all; body: %s", list.Body.String())
 
-	// user2's notification #3 must remain untouched (unread).
 	otherList := humaRequest(t, e, http.MethodGet, "/api/v2/notifications", "", humaTokenFor(t, &testuser2), "")
 	require.Equal(t, http.StatusOK, otherList.Code, "body: %s", otherList.Body.String())
 	assert.Contains(t, otherList.Body.String(), `"read_at":"0001-01-01T00:00:00Z"`,
