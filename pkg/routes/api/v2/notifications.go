@@ -29,15 +29,14 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-// Element type is the foreign notifications.DatabaseNotification because that's
-// what models.DatabaseNotifications.ReadAll returns directly, not a models wrapper.
+// Element type is the foreign notifications.DatabaseNotification — that's what
+// models.DatabaseNotifications.ReadAll returns directly, not a models wrapper.
 type notificationListBody struct {
 	Body Paginated[*notifications.DatabaseNotification]
 }
 
-// markAllReadBody is the mark-all-as-read confirmation. The action has no
-// resource to return, so it carries a short status message rather than reusing
-// emptyBody (204) — mirrors v1's {"message":"success"} response.
+// markAllReadBody mirrors v1's {"message":"success"}: the action has no
+// resource to return, so it confirms with a status body, not emptyBody.
 type markAllReadBody struct {
 	Body struct {
 		Message string `json:"message" readOnly:"true" doc:"A confirmation message."`
@@ -110,9 +109,8 @@ func notificationsMarkRead(ctx context.Context, in *struct {
 	return &singleBody[models.DatabaseNotifications]{Body: n}, nil
 }
 
-// notificationsMarkAllRead is a custom action: there is no CRUDable Do* for a
-// bulk mark, so the handler owns the link-share guard, the session and the
-// commit. Mirrors apiv1.MarkAllNotificationsAsRead.
+// notificationsMarkAllRead is a custom action: no CRUDable Do* exists for a bulk
+// mark, so the handler owns the link-share guard, session and commit itself.
 func notificationsMarkAllRead(ctx context.Context, _ *struct{}) (*markAllReadBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
