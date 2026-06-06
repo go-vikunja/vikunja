@@ -41,7 +41,8 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 	cfg.OpenAPIPath = "/openapi"
 	// Huma's built-in docs would load from unpkg.com — we serve Scalar locally instead.
 	cfg.DocsPath = ""
-	// Match v1's permissive partial-update convention; govalidator enforces real rules.
+	// Real presence/format rules live in `valid:` tags, enforced by govalidator in
+	// the Register wrapper; leave the schema permissive so partial updates match v1.
 	cfg.FieldsOptionalByDefault = true
 
 	api := humaecho5.NewWithGroup(e, g, GroupPrefix, cfg)
@@ -86,6 +87,9 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 
 // Register wraps huma.Register with verb-based DefaultStatus: POST → 201,
 // DELETE → 204. Anything else (including an explicit op.DefaultStatus) is untouched.
+//
+// It also runs govalidator before the handler — i.e. before handler.Do*'s
+// permission check — so v2 validates-then-authorizes like v1.
 func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Context, *I) (*O, error)) {
 	if op.DefaultStatus == 0 {
 		switch op.Method {
@@ -95,7 +99,13 @@ func Register[I, O any](api huma.API, op huma.Operation, handler func(context.Co
 			op.DefaultStatus = http.StatusNoContent
 		}
 	}
-	huma.Register(api, op, handler)
+	wrapped := func(ctx context.Context, in *I) (*O, error) {
+		if err := validateInputBody(in); err != nil {
+			return nil, translateDomainError(err)
+		}
+		return handler(ctx, in)
+	}
+	huma.Register(api, op, wrapped)
 }
 
 // EnableAutoPatch synthesises a PATCH for every resource that already
