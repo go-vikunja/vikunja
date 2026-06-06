@@ -18,5 +18,6 @@ package frontend
 
 import "embed"
 
+// Files contains the embedded frontend static files.
 //go:embed dist
 var Files embed.FS
