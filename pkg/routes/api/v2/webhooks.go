@@ -116,7 +116,6 @@ func webhooksCreate(ctx context.Context, in *struct {
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	maskWebhookCredentials(&in.Body)
 	return &singleBody[models.Webhook]{Body: &in.Body}, nil
 }
 
@@ -137,7 +136,6 @@ func webhooksUpdate(ctx context.Context, in *struct {
 	if err := handler.DoUpdate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
-	maskWebhookCredentials(&in.Body)
 	return &singleBody[models.Webhook]{Body: &in.Body}, nil
 }
 
@@ -153,14 +151,4 @@ func webhooksDelete(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	return &emptyBody{}, nil
-}
-
-// maskWebhookCredentials clears the write-only secret and auth fields so a
-// create/update response never echoes them back, mirroring how ReadAll masks
-// them. The fields are tagged writeOnly in the schema, but that is docs-only —
-// Huma does not strip them at runtime, so we clear them here.
-func maskWebhookCredentials(w *models.Webhook) {
-	w.Secret = ""
-	w.BasicAuthUser = ""
-	w.BasicAuthPassword = ""
 }
