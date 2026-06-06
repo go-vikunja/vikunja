@@ -93,7 +93,8 @@ func TestHumaNotification_MarkAllAsRead(t *testing.T) {
 	token := humaTokenFor(t, &testuser1)
 
 	rec := humaRequest(t, e, http.MethodPost, "/api/v2/notifications", "", token, "")
-	require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
+	// 200, not the wrapper's POST default 201: mark-all creates nothing.
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 	assert.Contains(t, rec.Body.String(), `"message":"success"`)
 
 	list := humaRequest(t, e, http.MethodGet, "/api/v2/notifications", "", token, "")
