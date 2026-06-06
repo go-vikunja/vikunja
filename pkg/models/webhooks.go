@@ -51,7 +51,7 @@ type Webhook struct {
 	// The target URL where the POST request with the webhook payload will be made
 	TargetURL string `xorm:"not null" valid:"required,url" json:"target_url" doc:"The target URL where the POST request with the webhook payload will be made."`
 	// The webhook events which should fire this webhook target
-	Events []string `xorm:"JSON not null" valid:"required" json:"events" doc:"The webhook events which should fire this webhook target. Get the available events from /webhooks/events."`
+	Events []string `xorm:"JSON not null" valid:"required" json:"events" doc:"The webhook events which should fire this webhook target. Get the available events from /api/v1/webhooks/events."`
 	// The project ID of the project this webhook target belongs to
 	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project" readOnly:"true" doc:"The id of the project this webhook target belongs to. Set from the URL, not the body."`
 	// The user ID if this is a user-level webhook (mutually exclusive with ProjectID)
