@@ -71,7 +71,9 @@ func RegisterNotificationRoutes(api huma.API) {
 		Description: "Marks every notification of the authenticated user as read. Link shares have no notifications and are refused.",
 		Method:      http.MethodPost,
 		Path:        "/notifications",
-		Tags:        tags,
+		// Override the wrapper's POST→201 create default: this action creates nothing.
+		DefaultStatus: http.StatusOK,
+		Tags:          tags,
 	}, notificationsMarkAllRead)
 }
 
