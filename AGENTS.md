@@ -262,6 +262,8 @@ In the frontend, all translation strings live in `frontend/src/i18n/lang`. For t
 You only need to adjust the `en.json` file with the source string. The actual translation happens elsewhere.
 After adjusting the source string, you need to call the respective translation library with the key. Both are similar, check the existing code to figure it out.
 
+**Do not add a new language from scratch or translate strings into other languages yourself.** Translations are managed through a dedicated workflow. If you are asked to add a new language, translate existing strings, or update translations for non-English locales, point the user to the translation guide instead: https://vikunja.io/docs/translations/
+
 ## Key Files and Conventions
 
 **Configuration:**
