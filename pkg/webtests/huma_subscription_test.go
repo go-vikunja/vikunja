@@ -24,12 +24,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestHumaSubscription ports the model-level matrix in
-// pkg/models/subscription_test.go to the v2 HTTP surface: subscribing requires
-// access to the target entity, an invalid entity kind is rejected, and
-// inaccessible entities are forbidden. Subscriptions has no v1 webtest, so this
-// proves the contract independently.
-//
 // Fixture facts the matrix relies on (see pkg/db/fixtures):
 //   - user1 has read access to task 1 and project 1.
 //   - user1 is already subscribed to task 2 (subscriptions.yml id 1).
@@ -56,14 +50,13 @@ func TestHumaSubscription(t *testing.T) {
 		t.Run("already exists", func(t *testing.T) {
 			e, err := setupTestEnv()
 			require.NoError(t, err)
-			// user1 is already subscribed to task 2.
 			rec := humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/task/2", "", token(t), "")
 			assert.Equal(t, http.StatusPreconditionFailed, rec.Code, "body: %s", rec.Body.String())
 		})
 		t.Run("invalid entity kind", func(t *testing.T) {
 			e, err := setupTestEnv()
 			require.NoError(t, err)
-			// The enum on the path param makes Huma reject unknown kinds before the handler.
+			// enum on the path param: Huma rejects unknown kinds with 422, not the model's 412.
 			rec := humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/bogus/1", "", token(t), "")
 			assert.Equal(t, http.StatusUnprocessableEntity, rec.Code, "body: %s", rec.Body.String())
 		})
@@ -82,14 +75,12 @@ func TestHumaSubscription(t *testing.T) {
 		t.Run("forbidden - no access to task", func(t *testing.T) {
 			e, err := setupTestEnv()
 			require.NoError(t, err)
-			// task 14 is not accessible to user1.
 			rec := humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/task/14", "", token(t), "")
 			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 		})
 		t.Run("forbidden - no access to project", func(t *testing.T) {
 			e, err := setupTestEnv()
 			require.NoError(t, err)
-			// project 20 is not accessible to user1.
 			rec := humaRequest(t, e, http.MethodPost, "/api/v2/subscriptions/project/20", "", token(t), "")
 			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 		})
@@ -99,7 +90,6 @@ func TestHumaSubscription(t *testing.T) {
 		t.Run("normal", func(t *testing.T) {
 			e, err := setupTestEnv()
 			require.NoError(t, err)
-			// user1 is subscribed to task 2.
 			rec := humaRequest(t, e, http.MethodDelete, "/api/v2/subscriptions/task/2", "", token(t), "")
 			assert.Equal(t, http.StatusNoContent, rec.Code, "body: %s", rec.Body.String())
 			assert.Empty(t, rec.Body.String())
@@ -107,8 +97,7 @@ func TestHumaSubscription(t *testing.T) {
 		t.Run("not subscribed - forbidden", func(t *testing.T) {
 			e, err := setupTestEnv()
 			require.NoError(t, err)
-			// CanDelete returns false when no subscription exists, so the generic
-			// handler refuses with 403 (mirrors v1's DeleteWeb).
+			// no subscription → CanDelete false → 403, not 404 (mirrors v1's DeleteWeb).
 			rec := humaRequest(t, e, http.MethodDelete, "/api/v2/subscriptions/task/1", "", token(t), "")
 			assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 		})
