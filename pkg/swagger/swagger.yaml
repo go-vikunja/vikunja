@@ -1223,6 +1223,7 @@ definitions:
       username:
         description: The username of the member. We use this to prevent automated
           user id entering.
+        minLength: 1
         type: string
     type: object
   models.TeamProject:

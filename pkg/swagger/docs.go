@@ -10495,7 +10495,8 @@ const docTemplate = `{
                 },
                 "username": {
                     "description": "The username of the member. We use this to prevent automated user id entering.",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 }
             }
         },
