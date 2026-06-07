@@ -75,18 +75,18 @@ func (*Team) TableName() string {
 // TeamMember defines the relationship between a user and a team
 type TeamMember struct {
 	// The unique, numeric id of this team member relation.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" readOnly:"true" doc:"The unique, numeric id of this team member relation. Set by the server."`
 	// The team id.
 	TeamID int64 `xorm:"bigint not null INDEX" json:"-" param:"team"`
 	// The username of the member. We use this to prevent automated user id entering.
-	Username string `xorm:"-" json:"username" param:"user"`
+	Username string `xorm:"-" json:"username" param:"user" valid:"required" minLength:"1" doc:"The username of the member."`
 	// Used under the hood to manage team members
 	UserID int64 `xorm:"bigint not null INDEX" json:"-"`
 	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
-	Admin bool `xorm:"null" json:"admin"`
+	Admin bool `xorm:"null" json:"admin" doc:"Whether the member is an admin of the team. Team admins can add and remove members and toggle other members' admin status."`
 
 	// A timestamp when this relation was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this member was added to the team. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
