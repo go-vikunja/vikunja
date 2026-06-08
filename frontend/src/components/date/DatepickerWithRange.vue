@@ -114,16 +114,17 @@ import DatemathHelp from '@/components/date/DatemathHelp.vue'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
 
 const props = defineProps<{
+	// null for a side that's been cleared (the Custom option) — emitted, so accepted too.
 	modelValue: {
-		dateFrom: Date | string,
-		dateTo: Date | string,
+		dateFrom: Date | string | null,
+		dateTo: Date | string | null,
 	},
 }>()
 
 const emit = defineEmits<{
 	'update:modelValue': [value: {
-		dateFrom: Date | string,
-		dateTo: Date | string
+		dateFrom: Date | string | null,
+		dateTo: Date | string | null
 	}]
 }>()
 
@@ -149,8 +150,8 @@ const to = ref('')
 watch(
 	() => props.modelValue,
 	newValue => {
-		from.value = typeof newValue.dateFrom === 'string' ? newValue.dateFrom : newValue.dateFrom.toISOString()
-		to.value = typeof newValue.dateTo === 'string' ? newValue.dateTo : newValue.dateTo.toISOString()
+		from.value = typeof newValue.dateFrom === 'string' ? newValue.dateFrom : (newValue.dateFrom?.toISOString() ?? '')
+		to.value = typeof newValue.dateTo === 'string' ? newValue.dateTo : (newValue.dateTo?.toISOString() ?? '')
 		// Only set the date back to flatpickr when it's an actual date.
 		// Otherwise flatpickr runs in an endless loop and slows down the browser.
 		const dateFrom = parseDateOrString(from.value, false)
