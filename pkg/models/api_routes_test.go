@@ -147,6 +147,29 @@ func TestCollectRoutes_TimeEntriesV2(t *testing.T) {
 	assert.Equal(t, "DELETE", te["delete"].Method)
 }
 
+// TestGetAPITokenRoutes_ExposesV2Only verifies the /routes payload merges
+// v2-only groups (time-entries has no v1 counterpart) so token clients can
+// discover and grant them, without mutating the v1 table itself.
+func TestGetAPITokenRoutes_ExposesV2Only(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/labels"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
+
+	routes := GetAPITokenRoutes()
+
+	_, hasLabels := routes["labels"]
+	assert.True(t, hasLabels, "v1 groups stay exposed")
+
+	te, hasTE := routes["time-entries"]
+	require.True(t, hasTE, "v2-only time-entries must be exposed via /routes")
+	assert.Equal(t, "GET", te["read_all"].Method)
+
+	_, v1HasTE := apiTokenRoutes["time-entries"]
+	assert.False(t, v1HasTE, "the merge must not mutate the v1 table")
+}
+
 // TestGetRouteDetail_V2Verbs verifies the v2 verb mapping: POST→create,
 // PUT/PATCH→update. v1 inverts POST and PUT so we need a separate mapping
 // path.
