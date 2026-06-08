@@ -173,5 +173,10 @@
 		"since_hours": "einer Stunde|%[1]d Stunden",
 		"since_minutes": "einer Minute|%[1]d Minuten",
 		"list_last_separator": "und"
+	},
+	"feeds": {
+		"notifications": {
+			"title": "Vikunja Benachrichtigungen für %[1]s"
+		}
 	}
 }

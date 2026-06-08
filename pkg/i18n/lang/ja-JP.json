@@ -173,5 +173,10 @@
 		"since_hours": "%[1]d 時間",
 		"since_minutes": "%[1]d 分",
 		"list_last_separator": ", "
+	},
+	"feeds": {
+		"notifications": {
+			"title": "%[1]s の Vikunja 通知"
+		}
 	}
 }

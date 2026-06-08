@@ -1,0 +1,204 @@
+name: Release OS package
+description: >
+  Build a single deb/rpm/apk/archlinux package for the given project + arch
+  via nfpm, optionally GPG-sign it (archlinux is signed inline; rpm is signed
+  by nfpm itself), upload it to S3, and store it as a workflow artifact.
+
+  Most paths and names are derived from `project`; the matrix only needs to
+  supply the per-arch and per-format inputs.
+
+inputs:
+  project:
+    description: 'Project name (vikunja | veans). Drives all derived paths.'
+    required: true
+  release-version:
+    description: |
+      RELEASE_VERSION env value — the same version that ended up in the
+      binaries artifact. Always embedded in the package metadata via
+      nfpm; filenames and the S3 directory use "unstable" instead
+      whenever github.ref_type isn't "tag".
+    required: true
+  packager:
+    description: 'nfpm packager: rpm | deb | apk | archlinux.'
+    required: true
+  nfpm-arch:
+    description: 'nfpm arch field (amd64 | arm64 | arm7).'
+    required: true
+  pkg-arch:
+    description: 'Package-format arch used in the output filename (x86_64 | aarch64 | armv7).'
+    required: true
+  go-name:
+    description: 'Go-style arch token used in the binary filename (linux-amd64 | linux-arm64 | linux-arm-7).'
+    required: true
+  # Secrets — composite actions can't read `${{ secrets.* }}` directly, so the
+  # caller threads them through as inputs.
+  gpg-passphrase:
+    required: true
+  gpg-sign-key:
+    required: true
+  s3-access-key-id:
+    required: true
+  s3-secret-access-key:
+    required: true
+  s3-endpoint:
+    required: true
+  s3-bucket:
+    required: true
+  s3-region:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set project paths
+      shell: bash
+      env:
+        PROJECT: ${{ inputs.project }}
+        RELEASE_VERSION: ${{ inputs.release-version }}
+        VERSION_OR_UNSTABLE: ${{ github.ref_type == 'tag' && inputs.release-version || 'unstable' }}
+        PACKAGER: ${{ inputs.packager }}
+        PKG_ARCH: ${{ inputs.pkg-arch }}
+        GO_NAME: ${{ inputs.go-name }}
+      run: |
+        case "$PROJECT" in
+          vikunja)
+            echo "BINARIES_DOWNLOAD_PATH=." >> "$GITHUB_ENV"
+            echo "STAGED_BINARY_PATH=./vikunja" >> "$GITHUB_ENV"
+            echo "NFPM_BIN_PATH=" >> "$GITHUB_ENV"
+            echo "NFPM_CONFIG_PATH=./nfpm.yaml" >> "$GITHUB_ENV"
+            # No leading "./" — the s3-action's strip-path-prefix must
+            # match the glob output exactly, and the glob doesn't emit it.
+            echo "PACKAGE_OUTPUT_DIR=dist/os-packages" >> "$GITHUB_ENV"
+            ;;
+          veans)
+            echo "BINARIES_DOWNLOAD_PATH=./veans-binaries" >> "$GITHUB_ENV"
+            echo "STAGED_BINARY_PATH=./veans/veans-bin" >> "$GITHUB_ENV"
+            echo "NFPM_BIN_PATH=./veans/veans-bin" >> "$GITHUB_ENV"
+            echo "NFPM_CONFIG_PATH=./veans/nfpm.yaml" >> "$GITHUB_ENV"
+            echo "PACKAGE_OUTPUT_DIR=veans/dist/os-packages" >> "$GITHUB_ENV"
+            ;;
+          *)
+            echo "::error::unknown project '$PROJECT' (expected vikunja|veans)"
+            exit 1
+            ;;
+        esac
+
+        echo "VERSION_OR_UNSTABLE=$VERSION_OR_UNSTABLE" >> "$GITHUB_ENV"
+        echo "BINARIES_ARTIFACT_NAME=${PROJECT}_bins" >> "$GITHUB_ENV"
+        echo "BINARY_GLOB=${PROJECT}-*-${GO_NAME}" >> "$GITHUB_ENV"
+        echo "PACKAGE_FILENAME=${PROJECT}-${VERSION_OR_UNSTABLE}-${PKG_ARCH}.${PACKAGER}" >> "$GITHUB_ENV"
+        echo "ARTIFACT_NAME=${PROJECT}_os_package_${PACKAGER}_${PKG_ARCH}" >> "$GITHUB_ENV"
+        echo "S3_TARGET_PATH=/${PROJECT}/${VERSION_OR_UNSTABLE}" >> "$GITHUB_ENV"
+
+    - name: Download project binaries
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      with:
+        name: ${{ env.BINARIES_ARTIFACT_NAME }}
+        path: ${{ env.BINARIES_DOWNLOAD_PATH }}
+
+    - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+      with:
+        go-version: stable
+
+    - name: Install mage
+      shell: bash
+      run: go install github.com/magefile/mage@v1.17.2
+
+    - name: Generate config.yml.sample (vikunja only)
+      # vikunja's nfpm.yaml ships ./config.yml.sample as /etc/vikunja/config.yml.
+      # release-binaries generates it for the zip bundles, but this job runs on a
+      # fresh runner, so we regenerate it here before nfpm packs it.
+      if: inputs.project == 'vikunja'
+      shell: bash
+      run: |
+        export PATH=$PATH:$GOPATH/bin
+        mage generate:config-yaml 1
+
+    - name: Write GPG key for nfpm
+      if: inputs.packager == 'rpm'
+      shell: bash
+      env:
+        RELEASE_GPG_SIGN_KEY: ${{ inputs.gpg-sign-key }}
+      run: printf '%s' "$RELEASE_GPG_SIGN_KEY" > /tmp/nfpm-signing-key.gpg
+
+    - name: GPG setup for archlinux signing
+      if: inputs.packager == 'archlinux'
+      uses: kolaente/action-gpg@main
+      with:
+        gpg-passphrase: ${{ inputs.gpg-passphrase }}
+        gpg-sign-key: ${{ inputs.gpg-sign-key }}
+
+    - name: Prepare nfpm config
+      shell: bash
+      working-directory: build
+      env:
+        RELEASE_VERSION: ${{ inputs.release-version }}
+        NFPM_ARCH: ${{ inputs.nfpm-arch }}
+        NFPM_BIN_PATH: ${{ env.NFPM_BIN_PATH }}
+        PROJECT: ${{ inputs.project }}
+      run: |
+        export PATH=$PATH:$GOPATH/bin
+        mage release:prepare-nfpm-config "$PROJECT" "$NFPM_ARCH"
+
+    - name: Stage binary
+      shell: bash
+      run: |
+        # Resolve the single matching binary and mv it into place.
+        matched=()
+        for f in $BINARIES_DOWNLOAD_PATH/$BINARY_GLOB; do
+          [ -e "$f" ] || continue
+          matched+=("$f")
+        done
+        if [ ${#matched[@]} -ne 1 ]; then
+          echo "::error::expected exactly 1 binary matching '$BINARIES_DOWNLOAD_PATH/$BINARY_GLOB', found ${#matched[@]}"
+          ls -la "$BINARIES_DOWNLOAD_PATH" || true
+          exit 1
+        fi
+        mkdir -p "$(dirname "$STAGED_BINARY_PATH")"
+        mv "${matched[0]}" "$STAGED_BINARY_PATH"
+        chmod +x "$STAGED_BINARY_PATH"
+
+    - name: Ensure package output dir exists
+      shell: bash
+      run: mkdir -p "$PACKAGE_OUTPUT_DIR"
+
+    - name: Create package
+      uses: kolaente/action-gh-nfpm@master
+      with:
+        packager: ${{ inputs.packager }}
+        target: ${{ env.PACKAGE_OUTPUT_DIR }}/${{ env.PACKAGE_FILENAME }}
+        config: ${{ env.NFPM_CONFIG_PATH }}
+      env:
+        NFPM_GPG_KEY_FILE: ${{ inputs.packager == 'rpm' && '/tmp/nfpm-signing-key.gpg' || '' }}
+        NFPM_PASSPHRASE: ${{ inputs.packager == 'rpm' && inputs.gpg-passphrase || '' }}
+
+    - name: Sign archlinux package
+      if: inputs.packager == 'archlinux'
+      shell: bash
+      env:
+        GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
+      run: |
+        gpg --default-key 7D061A4AA61436B40713D42EFF054DACD908493A \
+          --batch --yes \
+          --passphrase "$GPG_PASSPHRASE" \
+          --pinentry-mode loopback \
+          --detach-sign \
+          "$PACKAGE_OUTPUT_DIR/$PACKAGE_FILENAME"
+
+    - name: Upload to S3
+      uses: kolaente/s3-action@main
+      with:
+        s3-access-key-id: ${{ inputs.s3-access-key-id }}
+        s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
+        s3-endpoint: ${{ inputs.s3-endpoint }}
+        s3-bucket: ${{ inputs.s3-bucket }}
+        s3-region: ${{ inputs.s3-region }}
+        target-path: ${{ env.S3_TARGET_PATH }}
+        files: ${{ env.PACKAGE_OUTPUT_DIR }}/*
+        strip-path-prefix: ${{ env.PACKAGE_OUTPUT_DIR }}/
+
+    - name: Store OS package
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: ${{ env.PACKAGE_OUTPUT_DIR }}/*

@@ -47,29 +47,29 @@ var webhookClient *http.Client
 
 type Webhook struct {
 	// The generated ID of this webhook target
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"webhook" readOnly:"true" doc:"The generated ID of this webhook target."`
 	// The target URL where the POST request with the webhook payload will be made
-	TargetURL string `xorm:"not null" valid:"required,url" json:"target_url"`
+	TargetURL string `xorm:"not null" valid:"required,url" json:"target_url" doc:"The target URL where the POST request with the webhook payload will be made."`
 	// The webhook events which should fire this webhook target
-	Events []string `xorm:"JSON not null" valid:"required" json:"events"`
+	Events []string `xorm:"JSON not null" valid:"required" json:"events" doc:"The webhook events which should fire this webhook target. Get the available events from /api/v1/webhooks/events."`
 	// The project ID of the project this webhook target belongs to
-	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project"`
+	ProjectID int64 `xorm:"bigint null index" json:"project_id" param:"project" readOnly:"true" doc:"The id of the project this webhook target belongs to. Set from the URL, not the body."`
 	// The user ID if this is a user-level webhook (mutually exclusive with ProjectID)
-	UserID int64 `xorm:"bigint null index" json:"user_id"`
+	UserID int64 `xorm:"bigint null index" json:"user_id" readOnly:"true" doc:"The id of the user if this is a user-level webhook (mutually exclusive with project_id)."`
 	// If provided, webhook requests will be signed using HMAC. Check out the docs about how to use this: https://vikunja.io/docs/webhooks/#signing
-	Secret string `xorm:"null" json:"secret"`
+	Secret string `xorm:"null" json:"secret" writeOnly:"true" doc:"If provided, webhook requests will be signed using HMAC. See https://vikunja.io/docs/webhooks/#signing. Write-only: never returned in responses."`
 	// If provided, webhook requests will be sent with a Basic Auth header.
-	BasicAuthUser     string `xorm:"null" json:"basic_auth_user"`
-	BasicAuthPassword string `xorm:"null" json:"basic_auth_password"`
+	BasicAuthUser     string `xorm:"null" json:"basic_auth_user" writeOnly:"true" doc:"If provided together with basic_auth_password, webhook requests will be sent with a Basic Auth header. Write-only: never returned in responses."`
+	BasicAuthPassword string `xorm:"null" json:"basic_auth_password" writeOnly:"true" doc:"The password for the Basic Auth header. Write-only: never returned in responses."`
 
 	// The user who initially created the webhook target.
-	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
+	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who initially created the webhook target."`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"`
 
 	// A timestamp when this webhook target was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this webhook target was created. You cannot change this value."`
 	// A timestamp when this webhook target was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this webhook target was last updated. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -77,6 +77,17 @@ type Webhook struct {
 
 func (w *Webhook) TableName() string {
 	return "webhooks"
+}
+
+// maskCredentials clears the write-only secret and basic-auth fields so they are
+// never echoed back in a response. The client already submitted these values and
+// the DB row keeps them (outgoing deliveries reload and sign from the DB copy);
+// only the in-memory struct returned to the caller is cleared. Always call this
+// after the DB write, never before.
+func (w *Webhook) maskCredentials() {
+	w.Secret = ""
+	w.BasicAuthUser = ""
+	w.BasicAuthPassword = ""
 }
 
 var availableWebhookEvents map[string]bool
@@ -183,6 +194,11 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	w.CreatedBy, err = user.GetUserByID(s, a.GetID())
+	if err != nil {
+		return err
+	}
+
+	w.maskCredentials()
 	return
 }
 
@@ -234,9 +250,7 @@ func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPa
 	}
 
 	for _, webhook := range ws {
-		webhook.Secret = ""
-		webhook.BasicAuthUser = ""
-		webhook.BasicAuthPassword = ""
+		webhook.maskCredentials()
 		if createdBy, has := users[webhook.CreatedByID]; has {
 			webhook.CreatedBy = createdBy
 		}
@@ -268,6 +282,11 @@ func (w *Webhook) Update(s *xorm.Session, _ web.Auth) (err error) {
 	_, err = s.Where("id = ?", w.ID).
 		Cols("events").
 		Update(w)
+	if err != nil {
+		return err
+	}
+
+	w.maskCredentials()
 	return
 }
 

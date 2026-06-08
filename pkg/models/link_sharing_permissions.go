@@ -28,11 +28,24 @@ func (share *LinkSharing) CanRead(s *xorm.Session, a web.Auth) (bool, int, error
 		return false, 0, nil
 	}
 
-	l, err := GetProjectByShareHash(s, share.Hash)
-	if err != nil {
-		return false, 0, err
+	// A by-id read carries the parent project but no hash, so resolve the
+	// project from ProjectID; only fall back to the hash lookup when ProjectID
+	// is absent (e.g. resolving a share purely by its public hash).
+	var project *Project
+	if share.ProjectID != 0 {
+		var err error
+		project, err = GetProjectSimpleByID(s, share.ProjectID)
+		if err != nil {
+			return false, 0, err
+		}
+	} else {
+		var err error
+		project, err = GetProjectByShareHash(s, share.Hash)
+		if err != nil {
+			return false, 0, err
+		}
 	}
-	return l.CanRead(s, a)
+	return project.CanRead(s, a)
 }
 
 // CanDelete implements the delete permission check for a link share

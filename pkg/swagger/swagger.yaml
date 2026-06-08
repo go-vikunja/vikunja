@@ -82,6 +82,11 @@ definitions:
     properties:
       auth_provider:
         type: string
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -328,6 +333,11 @@ definitions:
       id:
         description: The unique, numeric id of this api key.
         type: integer
+      owner_id:
+        description: |-
+          The user ID of the token owner. When creating a token for a bot user, set this
+          to the bot's ID. If omitted, defaults to the authenticated user.
+        type: integer
       permissions:
         allOf:
         - $ref: '#/definitions/models.APIPermissions'
@@ -337,6 +347,7 @@ definitions:
           existing tasks, you should add `{"tasks":["read_all","update"]}`.
       title:
         description: A human-readable name for this token
+        minLength: 1
         type: string
       token:
         description: The actual api key. Only visible after creation.
@@ -664,7 +675,6 @@ definitions:
         - none
         - manual
         - filter
-        - manual
         type: string
       created:
         description: A timestamp when this reaction was created. You cannot change
@@ -695,6 +705,8 @@ definitions:
         type: integer
       title:
         description: The title of this view
+        maxLength: 250
+        minLength: 1
         type: string
       updated:
         description: A timestamp when this view was updated. You cannot change this
@@ -1176,10 +1188,6 @@ definitions:
       id:
         description: The unique, numeric id of this team.
         type: integer
-      include_public:
-        description: Query parameter controlling whether to include public projects
-          or not
-        type: boolean
       is_public:
         description: Defines wether the team should be publicly discoverable when
           sharing a project
@@ -1215,6 +1223,7 @@ definitions:
       username:
         description: The username of the member. We use this to prevent automated
           user id entering.
+        minLength: 1
         type: string
     type: object
   models.TeamProject:
@@ -1247,6 +1256,11 @@ definitions:
         description: Whether the member is an admin of the team. See the docs for
           more about what a team admin can do
         type: boolean
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1291,10 +1305,6 @@ definitions:
       id:
         description: The unique, numeric id of this team.
         type: integer
-      include_public:
-        description: Query parameter controlling whether to include public projects
-          or not
-        type: boolean
       is_public:
         description: Defines wether the team should be publicly discoverable when
           sharing a project
@@ -1318,6 +1328,11 @@ definitions:
     type: object
   models.UserWithPermission:
     properties:
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1520,6 +1535,11 @@ definitions:
     type: object
   user.User:
     properties:
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1664,6 +1684,11 @@ definitions:
     properties:
       auth_provider:
         type: string
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1735,6 +1760,8 @@ definitions:
     type: object
   v1.vikunjaInfos:
     properties:
+      allow_icon_changes:
+        type: boolean
       auth:
         $ref: '#/definitions/v1.authInfo'
       available_migrators:
@@ -4405,14 +4432,17 @@ paths:
       - application/json
       description: Returns a single task identified by its per-project index. Useful
         when resolving human-readable references like "PROJ-42" to a canonical task
-        object. Note that task indexes are reassigned when a task is moved between
-        projects, so long-lived references should use the returned task id instead.
+        object. The `project` path parameter accepts either a numeric project id or
+        the project's identifier (e.g. "PROJ"); values consisting solely of digits
+        are always interpreted as ids. Note that task indexes are reassigned when
+        a task is moved between projects, so long-lived references should use the
+        returned task id instead.
       parameters:
-      - description: The project ID
+      - description: The project id or the project's identifier
         in: path
         name: project
         required: true
-        type: integer
+        type: string
       - description: The task's per-project index
         in: path
         name: index

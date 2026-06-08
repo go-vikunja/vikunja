@@ -407,9 +407,12 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 		HTMLMessage: htmlContent.String(),
 		Boundary:    boundary,
 		ThreadID:    m.threadID,
-		EmbedFS: map[string]*embed.FS{
+	}
+
+	if !m.conversational {
+		mailOpts.EmbedFS = map[string]*embed.FS{
 			"logo.png": &logo,
-		},
+		}
 	}
 
 	return mailOpts, nil

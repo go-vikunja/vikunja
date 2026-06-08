@@ -1,0 +1,169 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+package apiv2
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+
+	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/web/handler"
+
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/conditional"
+)
+
+// Element type is *models.LabelWithTaskID because that's what
+// models.Label.ReadAll returns; TaskID is json:"-", so the wire shape
+// matches plain Label.
+type labelListBody struct {
+	Body Paginated[*models.LabelWithTaskID]
+}
+
+// RegisterLabelRoutes wires Label CRUD onto the Huma API.
+func RegisterLabelRoutes(api huma.API) {
+	tags := []string{"labels"}
+
+	Register(api, huma.Operation{
+		OperationID: "labels-list",
+		Summary:     "List labels",
+		Description: "Returns the labels visible to the authenticated user — their own plus any used on tasks they can access. Not a global list.",
+		Method:      http.MethodGet,
+		Path:        "/labels",
+		Tags:        tags,
+	}, labelsList)
+
+	Register(api, huma.Operation{
+		OperationID: "labels-read",
+		Summary:     "Get a label",
+		Description: "Returns a single label. Sends an ETag; pass it as If-None-Match on a later read to get a 304 Not Modified.",
+		Method:      http.MethodGet,
+		Path:        "/labels/{id}",
+		Tags:        tags,
+	}, labelsRead)
+
+	Register(api, huma.Operation{
+		OperationID: "labels-create",
+		Summary:     "Create a label",
+		Description: "Creates a label; the authenticated user becomes its owner.",
+		Method:      http.MethodPost,
+		Path:        "/labels",
+		Tags:        tags,
+	}, labelsCreate)
+
+	Register(api, huma.Operation{
+		OperationID: "labels-update",
+		Summary:     "Update a label",
+		Description: "Replaces all of a label's fields — only the owner may update it. Use PATCH for a partial update.",
+		Method:      http.MethodPut,
+		Path:        "/labels/{id}",
+		Tags:        tags,
+	}, labelsUpdate)
+
+	Register(api, huma.Operation{
+		OperationID: "labels-delete",
+		Summary:     "Delete a label",
+		Description: "Deletes a label. Only the owner may delete it.",
+		Method:      http.MethodDelete,
+		Path:        "/labels/{id}",
+		Tags:        tags,
+	}, labelsDelete)
+}
+
+func init() { AddRouteRegistrar(RegisterLabelRoutes) }
+
+func labelsList(ctx context.Context, in *ListParams) (*labelListBody, error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result, _, total, err := handler.DoReadAll(ctx, &models.Label{}, a, in.Q, in.Page, in.PerPage)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	items, ok := result.([]*models.LabelWithTaskID)
+	if !ok {
+		return nil, fmt.Errorf("labels.ReadAll returned unexpected type %T (expected []*models.LabelWithTaskID)", result)
+	}
+	return &labelListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
+}
+
+type labelReadBody struct {
+	models.Label
+	MaxPermission models.Permission `json:"max_permission" readOnly:"true" doc:"The maximum permission the requesting user has on this label (0=read, 1=read/write, 2=admin)."`
+}
+
+func labelsRead(ctx context.Context, in *struct {
+	ID int64 `path:"id"`
+	conditional.Params
+}) (*singleReadBody[labelReadBody], error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	label := &models.Label{ID: in.ID}
+	maxPermission, err := handler.DoReadOne(ctx, label, a)
+	if err != nil {
+		return nil, translateDomainError(err)
+	}
+	body := &labelReadBody{Label: *label, MaxPermission: models.Permission(maxPermission)}
+	return conditionalReadResponse(&in.Params, body, label.Updated, maxPermission)
+}
+
+func labelsCreate(ctx context.Context, in *struct {
+	Body models.Label
+}) (*singleBody[models.Label], error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &singleBody[models.Label]{Body: &in.Body}, nil
+}
+
+// Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
+func labelsUpdate(ctx context.Context, in *struct {
+	ID   int64 `path:"id"`
+	Body labelReadBody
+}) (*singleBody[models.Label], error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	label := &in.Body.Label
+	label.ID = in.ID // URL wins over body
+	if err := handler.DoUpdate(ctx, label, a); err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &singleBody[models.Label]{Body: label}, nil
+}
+
+func labelsDelete(ctx context.Context, in *struct {
+	ID int64 `path:"id"`
+}) (*emptyBody, error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := handler.DoDelete(ctx, &models.Label{ID: in.ID}, a); err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &emptyBody{}, nil
+}

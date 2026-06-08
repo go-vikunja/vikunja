@@ -28,7 +28,7 @@ type DatabaseNotifications struct {
 
 	// Whether or not to mark this notification as read or unread.
 	// True is read, false is unread.
-	Read bool `xorm:"-" json:"read"`
+	Read bool `xorm:"-" json:"read" doc:"Set true to mark the notification read, false to mark it unread."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`

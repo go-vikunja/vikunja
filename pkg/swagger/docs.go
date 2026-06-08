@@ -4151,7 +4151,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns a single task identified by its per-project index. Useful when resolving human-readable references like \"PROJ-42\" to a canonical task object. Note that task indexes are reassigned when a task is moved between projects, so long-lived references should use the returned task id instead.",
+                "description": "Returns a single task identified by its per-project index. Useful when resolving human-readable references like \"PROJ-42\" to a canonical task object. The ` + "`" + `project` + "`" + ` path parameter accepts either a numeric project id or the project's identifier (e.g. \"PROJ\"); values consisting solely of digits are always interpreted as ids. Note that task indexes are reassigned when a task is moved between projects, so long-lived references should use the returned task id instead.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4164,8 +4164,8 @@ const docTemplate = `{
                 "summary": "Get one task by its per-project index",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "The project ID",
+                        "type": "string",
+                        "description": "The project id or the project's identifier",
                         "name": "project",
                         "in": "path",
                         "required": true
@@ -8995,6 +8995,10 @@ const docTemplate = `{
                 "auth_provider": {
                     "type": "string"
                 },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -9345,6 +9349,10 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this api key.",
                     "type": "integer"
                 },
+                "owner_id": {
+                    "description": "The user ID of the token owner. When creating a token for a bot user, set this\nto the bot's ID. If omitted, defaults to the authenticated user.",
+                    "type": "integer"
+                },
                 "permissions": {
                     "description": "The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add ` + "`" + `{\"tasks\":[\"read_all\",\"update\"]}` + "`" + `.",
                     "allOf": [
@@ -9355,7 +9363,8 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "A human-readable name for this token",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 },
                 "token": {
                     "description": "The actual api key. Only visible after creation.",
@@ -9782,8 +9791,7 @@ const docTemplate = `{
                     "enum": [
                         "none",
                         "manual",
-                        "filter",
-                        "manual"
+                        "filter"
                     ]
                 },
                 "created": {
@@ -9820,7 +9828,9 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "The title of this view",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this view was updated. You cannot change this value.",
@@ -10445,10 +10455,6 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
-                "include_public": {
-                    "description": "Query parameter controlling whether to include public projects or not",
-                    "type": "boolean"
-                },
                 "is_public": {
                     "description": "Defines wether the team should be publicly discoverable when sharing a project",
                     "type": "boolean"
@@ -10489,7 +10495,8 @@ const docTemplate = `{
                 },
                 "username": {
                     "description": "The username of the member. We use this to prevent automated user id entering.",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 }
             }
         },
@@ -10530,6 +10537,10 @@ const docTemplate = `{
                 "admin": {
                     "description": "Whether the member is an admin of the team. See the docs for more about what a team admin can do",
                     "type": "boolean"
+                },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
                 },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
@@ -10588,10 +10599,6 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
-                "include_public": {
-                    "description": "Query parameter controlling whether to include public projects or not",
-                    "type": "boolean"
-                },
                 "is_public": {
                     "description": "Defines wether the team should be publicly discoverable when sharing a project",
                     "type": "boolean"
@@ -10621,6 +10628,10 @@ const docTemplate = `{
         "models.UserWithPermission": {
             "type": "object",
             "properties": {
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -10889,6 +10900,10 @@ const docTemplate = `{
         "user.User": {
             "type": "object",
             "properties": {
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -11066,6 +11081,10 @@ const docTemplate = `{
                 "auth_provider": {
                     "type": "string"
                 },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -11168,6 +11187,9 @@ const docTemplate = `{
         "v1.vikunjaInfos": {
             "type": "object",
             "properties": {
+                "allow_icon_changes": {
+                    "type": "boolean"
+                },
                 "auth": {
                     "$ref": "#/definitions/v1.authInfo"
                 },
