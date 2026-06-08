@@ -118,6 +118,11 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/DataExport.vue'),
 				},
 				{
+					path: '/user/settings/feeds',
+					name: 'user.settings.feeds',
+					component: () => import('@/views/user/settings/AtomFeed.vue'),
+				},
+				{
 					path: '/user/settings/deletion',
 					name: 'user.settings.deletion',
 					component: () => import('@/views/user/settings/Deletion.vue'),
@@ -162,6 +167,11 @@ const router = createRouter({
 					path: '/user/settings/webhooks',
 					name: 'user.settings.webhooks',
 					component: () => import('@/views/user/settings/Webhooks.vue'),
+				},
+				{
+					path: '/user/settings/bots',
+					name: 'user.settings.bots',
+					component: () => import('@/views/user/settings/BotUsers.vue'),
 				},
 				{
 					path: '/user/settings/migrate',

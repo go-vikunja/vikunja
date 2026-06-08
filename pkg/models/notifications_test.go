@@ -142,6 +142,90 @@ func TestUndoneTasksOverdueNotification_TitleIsMarkdownEscaped(t *testing.T) {
 		"malicious title must render as literal text")
 }
 
+func TestTaskCommentNotification_ToTitle(t *testing.T) {
+	doer := &user.User{ID: 1, Name: "alice", Username: "alice"}
+	task := &Task{ID: 42, Title: "Take out trash", Index: 7}
+
+	t.Run("regular comment", func(t *testing.T) {
+		n := &TaskCommentNotification{Doer: doer, Task: task, Mentioned: false}
+		title := n.ToTitle("en")
+		assert.Contains(t, title, "Take out trash")
+		assert.NotContains(t, title, "alice", "regular comment title should not mention the doer")
+	})
+
+	t.Run("mention switches title", func(t *testing.T) {
+		n := &TaskCommentNotification{Doer: doer, Task: task, Mentioned: true}
+		title := n.ToTitle("en")
+		assert.Contains(t, title, "alice", "mentioned title should mention the doer")
+		assert.Contains(t, title, "Take out trash")
+	})
+
+	t.Run("regular and mentioned produce different titles", func(t *testing.T) {
+		regular := (&TaskCommentNotification{Doer: doer, Task: task, Mentioned: false}).ToTitle("en")
+		mentioned := (&TaskCommentNotification{Doer: doer, Task: task, Mentioned: true}).ToTitle("en")
+		assert.NotEqual(t, regular, mentioned)
+	})
+}
+
+func TestTaskAssignedNotification_ToTitle(t *testing.T) {
+	doer := &user.User{ID: 1, Name: "alice", Username: "alice"}
+	assignee := &user.User{ID: 2, Name: "bob", Username: "bob"}
+	third := &user.User{ID: 3, Name: "carol", Username: "carol"}
+	task := &Task{ID: 42, Title: "Take out trash", Index: 7}
+
+	t.Run("to assignee themself", func(t *testing.T) {
+		n := &TaskAssignedNotification{Doer: doer, Task: task, Assignee: assignee, Target: assignee}
+		title := n.ToTitle("en")
+		assert.Contains(t, title, "Take out trash")
+	})
+
+	t.Run("doer assigned to themself", func(t *testing.T) {
+		n := &TaskAssignedNotification{Doer: doer, Task: task, Assignee: doer, Target: third}
+		title := n.ToTitle("en")
+		assert.Contains(t, title, "alice")
+	})
+
+	t.Run("doer assigned someone else, target is third party", func(t *testing.T) {
+		n := &TaskAssignedNotification{Doer: doer, Task: task, Assignee: assignee, Target: third}
+		title := n.ToTitle("en")
+		assert.Contains(t, title, "bob")
+	})
+
+	t.Run("three branches produce three distinct titles", func(t *testing.T) {
+		a := (&TaskAssignedNotification{Doer: doer, Task: task, Assignee: assignee, Target: assignee}).ToTitle("en")
+		b := (&TaskAssignedNotification{Doer: doer, Task: task, Assignee: doer, Target: third}).ToTitle("en")
+		c := (&TaskAssignedNotification{Doer: doer, Task: task, Assignee: assignee, Target: third}).ToTitle("en")
+		assert.NotEqual(t, a, b)
+		assert.NotEqual(t, a, c)
+		assert.NotEqual(t, b, c)
+	})
+}
+
+func TestUserMentionedInTaskNotification_ToTitle(t *testing.T) {
+	doer := &user.User{ID: 1, Name: "alice", Username: "alice"}
+	task := &Task{ID: 42, Title: "Take out trash", Index: 7}
+
+	t.Run("existing task", func(t *testing.T) {
+		n := &UserMentionedInTaskNotification{Doer: doer, Task: task, IsNew: false}
+		title := n.ToTitle("en")
+		assert.Contains(t, title, "alice")
+		assert.Contains(t, title, "Take out trash")
+	})
+
+	t.Run("new task", func(t *testing.T) {
+		n := &UserMentionedInTaskNotification{Doer: doer, Task: task, IsNew: true}
+		title := n.ToTitle("en")
+		assert.Contains(t, title, "alice")
+		assert.Contains(t, title, "Take out trash")
+	})
+
+	t.Run("new task and existing task produce different titles", func(t *testing.T) {
+		existing := (&UserMentionedInTaskNotification{Doer: doer, Task: task, IsNew: false}).ToTitle("en")
+		newOne := (&UserMentionedInTaskNotification{Doer: doer, Task: task, IsNew: true}).ToTitle("en")
+		assert.NotEqual(t, existing, newOne)
+	})
+}
+
 func TestReminderDueNotification_TitleIsMarkdownEscaped(t *testing.T) {
 	originalPublicURL := config.ServicePublicURL.GetString()
 	t.Cleanup(func() { config.ServicePublicURL.Set(originalPublicURL) })

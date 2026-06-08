@@ -96,18 +96,18 @@ const (
 // Subscription represents a subscription for an entity
 type Subscription struct {
 	// The numeric ID of the subscription
-	ID int64 `xorm:"autoincr not null unique pk" json:"id"`
+	ID int64 `xorm:"autoincr not null unique pk" json:"id" readOnly:"true" doc:"The numeric id of the subscription."`
 
-	EntityType SubscriptionEntityType `xorm:"index not null" json:"entity"`
+	EntityType SubscriptionEntityType `xorm:"index not null" json:"entity" readOnly:"true" doc:"The kind of entity this subscription is for. Either project or task; derived server-side from the request path."`
 	Entity     string                 `xorm:"-" json:"-" param:"entity"`
 	// The id of the entity to subscribe to.
-	EntityID int64 `xorm:"bigint index not null" json:"entity_id" param:"entityID"`
+	EntityID int64 `xorm:"bigint index not null" json:"entity_id" param:"entityID" readOnly:"true" doc:"The numeric id of the subscribed entity; taken from the request path."`
 
 	// The user who made this subscription
 	UserID int64 `xorm:"bigint index not null" json:"-"`
 
 	// A timestamp when this subscription was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this subscription was created. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`

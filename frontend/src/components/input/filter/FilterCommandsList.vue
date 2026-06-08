@@ -135,6 +135,7 @@ defineExpose({
 	inline-size: 100%;
 	text-align: start;
 	background: transparent;
+	color: inherit;
 	border-radius: $radius;
 	border: 0;
 	padding: 0.375rem 0.5rem;

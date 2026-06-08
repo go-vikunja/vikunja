@@ -145,7 +145,6 @@ func FullInit() {
 	// Start processing events
 	go func() {
 		models.RegisterListeners()
-		user.RegisterListeners()
 		migrationHandler.RegisterListeners()
 		ws.RegisterListeners()
 		err := events.InitEvents()

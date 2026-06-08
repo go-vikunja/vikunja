@@ -23,6 +23,7 @@ import (
 	"errors"
 	"io"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,30 +45,82 @@ type Migrator struct {
 }
 
 type tickTickTask struct {
-	FolderName        string        `csv:"Folder Name"`
-	ProjectName       string        `csv:"List Name"`
-	Title             string        `csv:"Title"`
-	TagsList          string        `csv:"Tags"`
-	Tags              []string      `csv:"-"`
-	Content           string        `csv:"Content"`
-	IsChecklistString string        `csv:"Is Check list"`
-	IsChecklist       bool          `csv:"-"`
-	StartDate         tickTickTime  `csv:"Start Date"`
-	DueDate           tickTickTime  `csv:"Due Date"`
-	ReminderDuration  string        `csv:"Reminder"`
-	Reminder          time.Duration `csv:"-"`
-	Repeat            string        `csv:"Repeat"`
-	Priority          int           `csv:"Priority"`
-	Status            string        `csv:"Status"`
-	CreatedTime       tickTickTime  `csv:"Created Time"`
-	CompletedTime     tickTickTime  `csv:"Completed Time"`
-	Order             float64       `csv:"Order"`
-	TaskID            int64         `csv:"taskId"`
-	ParentID          int64         `csv:"parentId"`
+	FolderName        string           `csv:"Folder Name"`
+	ProjectName       string           `csv:"List Name"`
+	Title             string           `csv:"Title"`
+	TagsList          string           `csv:"Tags"`
+	Tags              []string         `csv:"-"`
+	Content           string           `csv:"Content"`
+	IsChecklistString string           `csv:"Is Check list"`
+	IsChecklist       bool             `csv:"-"`
+	StartDate         tickTickTime     `csv:"Start Date"`
+	DueDate           tickTickTime     `csv:"Due Date"`
+	ReminderDuration  string           `csv:"Reminder"`
+	Reminder          time.Duration    `csv:"-"`
+	Repeat            string           `csv:"Repeat"`
+	Priority          tickTickPriority `csv:"Priority"`
+	Status            string           `csv:"Status"`
+	CreatedTime       tickTickTime     `csv:"Created Time"`
+	CompletedTime     tickTickTime     `csv:"Completed Time"`
+	Order             float64          `csv:"Order"`
+	TaskID            tickTickNumber   `csv:"taskId"`
+	ParentID          tickTickNumber   `csv:"parentId"`
 }
 
 type tickTickTime struct {
 	time.Time
+}
+
+// tickTickNumber is an int64 that tolerates non-numeric or malformed values in
+// the numeric ID columns (taskId, parentId) of TickTick exports. Such values can
+// occur through column misalignment caused by unescaped delimiters, which would
+// otherwise make gocsv fail the entire import with an internal server error
+// (go-vikunja/vikunja#2822). Rather than aborting the import, we fall back to 0
+// for any value we cannot parse.
+type tickTickNumber int64
+
+func (n *tickTickNumber) UnmarshalCSV(csv string) error {
+	csv = strings.TrimSpace(csv)
+	if csv == "" {
+		*n = 0
+		return nil
+	}
+	parsed, err := strconv.ParseInt(csv, 10, 64)
+	if err != nil {
+		// Deliberately ignore the parse error and fall back to 0 so a single
+		// malformed value does not abort the whole import.
+		*n = 0
+		return nil //nolint:nilerr
+	}
+	*n = tickTickNumber(parsed)
+	return nil
+}
+
+// tickTickPriority parses the TickTick "Priority" column. TickTick exports the
+// priority either as a plain number (0, 1, 3, 5) or, in some exports, prefixed
+// with "p" (p1, p2, p3). We accept both forms and fall back to 0 (no priority)
+// for anything we cannot parse, so a stray value never fails the whole import
+// (go-vikunja/vikunja#2822). Vikunja's task priority is a free-form sortable
+// integer, so the parsed value is carried over as-is.
+type tickTickPriority int64
+
+func (p *tickTickPriority) UnmarshalCSV(csv string) error {
+	csv = strings.TrimSpace(csv)
+	csv = strings.TrimPrefix(csv, "p")
+	csv = strings.TrimPrefix(csv, "P")
+	if csv == "" {
+		*p = 0
+		return nil
+	}
+	parsed, err := strconv.ParseInt(csv, 10, 64)
+	if err != nil {
+		// Deliberately ignore the parse error and fall back to 0 so a single
+		// malformed value does not abort the whole import.
+		*p = 0
+		return nil //nolint:nilerr
+	}
+	*p = tickTickPriority(parsed)
+	return nil
 }
 
 func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
@@ -88,17 +141,21 @@ func (date *tickTickTime) UnmarshalCSV(csv string) (err error) {
 // appears before any of its children. Tasks without a parent come first.
 // The relative order of siblings / unrelated tasks is preserved.
 func sortParentsBeforeChildren(tasks []*tickTickTask) []*tickTickTask {
-	tasksByID := make(map[int64]*tickTickTask, len(tasks))
+	tasksByID := make(map[tickTickNumber]*tickTickTask, len(tasks))
 	for _, t := range tasks {
 		tasksByID[t.TaskID] = t
 	}
 
-	placed := make(map[int64]bool, len(tasks))
+	// placed is keyed by the task itself rather than by TaskID: malformed
+	// exports can collapse several taskIds to 0 (see tickTickNumber), and
+	// keying by ID would treat every zero-ID task after the first as already
+	// placed and silently drop it.
+	placed := make(map[*tickTickTask]bool, len(tasks))
 	result := make([]*tickTickTask, 0, len(tasks))
 
 	var place func(t *tickTickTask)
 	place = func(t *tickTickTask) {
-		if placed[t.TaskID] {
+		if placed[t] {
 			return
 		}
 		// If this task has a parent that we know about, place the parent first.
@@ -107,7 +164,7 @@ func sortParentsBeforeChildren(tasks []*tickTickTask) []*tickTickTask {
 				place(parent)
 			}
 		}
-		placed[t.TaskID] = true
+		placed[t] = true
 		result = append(result, t)
 	}
 
@@ -161,7 +218,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 
 		task := &models.TaskWithComments{
 			Task: models.Task{
-				ID:          t.TaskID,
+				ID:          int64(t.TaskID),
 				Title:       t.Title,
 				Description: t.Content,
 				StartDate:   t.StartDate.Time,
@@ -170,6 +227,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 				Done:        t.Status == "1" || t.Status == "2",
 				DoneAt:      t.CompletedTime.Time,
 				Position:    t.Order,
+				Priority:    int64(t.Priority),
 				Labels:      labels,
 			},
 		}
@@ -185,7 +243,7 @@ func convertTickTickToVikunja(tasks []*tickTickTask) (result []*models.ProjectWi
 
 		if t.ParentID != 0 {
 			task.RelatedTasks = map[models.RelationKind][]*models.Task{
-				models.RelationKindParenttask: {{ID: t.ParentID}},
+				models.RelationKindParenttask: {{ID: int64(t.ParentID)}},
 			}
 		}
 

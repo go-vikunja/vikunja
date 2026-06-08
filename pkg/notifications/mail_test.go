@@ -533,6 +533,7 @@ func TestConversationalMail(t *testing.T) {
 		// Should NOT have logo (completely removed)
 		assert.NotContains(t, mailopts.HTMLMessage, "logo.png")
 		assert.NotContains(t, mailopts.HTMLMessage, "Vikunja")
+		assert.NotContains(t, mailopts.EmbedFS, "logo.png")
 
 		// Should have inline action link with arrow
 		assert.Contains(t, mailopts.HTMLMessage, "View Task →")
@@ -571,6 +572,7 @@ func TestConversationalMail(t *testing.T) {
 		// Should HAVE logo in formal emails
 		assert.Contains(t, mailopts.HTMLMessage, "logo.png")
 		assert.Contains(t, mailopts.HTMLMessage, "Vikunja")
+		assert.Contains(t, mailopts.EmbedFS, "logo.png")
 
 		// Should have formal button styling
 		assert.Contains(t, mailopts.HTMLMessage, "background-color: #1973ff")

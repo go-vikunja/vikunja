@@ -121,10 +121,79 @@ func CreateUser(s *xorm.Session, user *User) (newUser *User, err error) {
 	return newUserOut, err
 }
 
+// CreateBotUser creates a bot user owned by the given owner.
+// Bots have no email or password and cannot authenticate interactively.
+// It intentionally bypasses checkIfUserIsValid / checkIfUserExists because
+// those enforce email+password and would flag duplicate empty emails.
+func CreateBotUser(s *xorm.Session, bot *User, owner *User) (*User, error) {
+	if owner == nil || owner.ID == 0 {
+		return nil, ErrNoUsernamePassword{}
+	}
+	if owner.IsBot() {
+		return nil, &ErrBotNotOwned{UserID: owner.ID}
+	}
+
+	// Reuse the same username format rules as regular user creation
+	if err := checkUsernameFormat(bot.Username); err != nil {
+		return nil, err
+	}
+	if !strings.HasPrefix(bot.Username, "bot-") {
+		return nil, &ErrBotUsernameMustHavePrefix{Username: bot.Username}
+	}
+
+	if _, err := GetUserByUsername(s, bot.Username); err == nil {
+		return nil, ErrUsernameExists{Username: bot.Username}
+	} else if !IsErrUserDoesNotExist(err) {
+		return nil, err
+	}
+
+	bot.ID = 0
+	bot.BotOwnerID = owner.ID
+	bot.Status = StatusActive
+	bot.Issuer = IssuerLocal
+	bot.Password = ""
+	bot.Email = ""
+
+	if _, err := s.Insert(bot); err != nil {
+		return nil, err
+	}
+
+	newBot, err := GetUserByID(s, bot.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	events.DispatchOnCommit(s, &CreatedEvent{User: newBot})
+	return newBot, nil
+}
+
 // HashPassword hashes a password
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), config.ServiceBcryptRounds.GetInt())
 	return string(bytes), err
+}
+
+// checkUsernameFormat validates username format rules shared by regular and bot users.
+func checkUsernameFormat(username string) error {
+	if username == "" {
+		return ErrNoUsernamePassword{}
+	}
+
+	if strings.Contains(username, " ") {
+		return &ErrUsernameMustNotContainSpaces{
+			Username: username,
+		}
+	}
+
+	// Check if username matches the reserved link-share pattern
+	linkSharePattern := regexp.MustCompile(`^link-share-\d+$`)
+	if linkSharePattern.MatchString(username) {
+		return ErrUsernameReserved{
+			Username: username,
+		}
+	}
+
+	return nil
 }
 
 func checkIfUserIsValid(user *User) error {
@@ -135,15 +204,12 @@ func checkIfUserIsValid(user *User) error {
 		return ErrNoUsernamePassword{}
 	}
 
-	if strings.Contains(user.Username, " ") {
-		return &ErrUsernameMustNotContainSpaces{
-			Username: user.Username,
-		}
+	if err := checkUsernameFormat(user.Username); err != nil {
+		return err
 	}
 
-	// Check if username matches the reserved link-share pattern
-	linkSharePattern := regexp.MustCompile(`^link-share-\d+$`)
-	if linkSharePattern.MatchString(user.Username) {
+	// Reserve the bot- prefix for bot users (created via CreateBotUser)
+	if strings.HasPrefix(user.Username, "bot-") {
 		return ErrUsernameReserved{
 			Username: user.Username,
 		}

@@ -24,7 +24,18 @@
 				ref="popup"
 				class="notifications-list"
 			>
-				<span class="head">{{ $t('notification.title') }}</span>
+				<div class="head">
+					<span>{{ $t('notification.title') }}</span>
+					<BaseButton
+						v-tooltip="$t('notification.subscribeFeed')"
+						class="feed-link"
+						:to="{name: 'user.settings.feeds'}"
+						@click="showNotifications = false"
+					>
+						<span class="is-sr-only">{{ $t('notification.subscribeFeed') }}</span>
+						<Icon icon="rss" />
+					</BaseButton>
+				</div>
 				<div
 					v-for="(n, index) in notifications"
 					:key="n.id"
@@ -284,6 +295,19 @@ async function markAllRead() {
 			font-family: $vikunja-font;
 			font-size: 1rem;
 			padding: .5rem;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+
+			.feed-link {
+				color: var(--grey-500);
+				transition: color $transition;
+
+				&:hover,
+				&:focus {
+					color: var(--primary);
+				}
+			}
 		}
 
 		.single-notification {

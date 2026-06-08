@@ -36,9 +36,9 @@ type LabelTask struct {
 	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"-"`
 	TaskID int64 `xorm:"bigint INDEX not null" json:"-" param:"projecttask"`
 	// The label id you want to associate with a task.
-	LabelID int64 `xorm:"bigint INDEX not null" json:"label_id" param:"label"`
+	LabelID int64 `xorm:"bigint INDEX not null" json:"label_id" param:"label" doc:"The id of the label to associate with the task."`
 	// A timestamp when this task was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this label was added to the task. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`

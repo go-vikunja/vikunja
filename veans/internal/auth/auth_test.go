@@ -14,32 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package user
+package auth
 
 import (
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/metrics"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
-	"github.com/ThreeDotsLabs/watermill/message"
+	"context"
+	"testing"
+
+	"code.vikunja.io/veans/internal/client"
 )
 
-func RegisterListeners() {
-	events.RegisterListener((&CreatedEvent{}).Name(), &IncreaseUserCounter{})
+func TestAcquireHumanToken_TokenShortCircuit(t *testing.T) {
+	// When opts.Token is set, no prompts and no HTTP calls happen — the
+	// nil client confirms that nothing tries to dial out.
+	tok, err := AcquireHumanToken(context.Background(), (*client.Client)(nil), LoginOptions{Token: "abc"}, &recordingPrompter{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if tok != "abc" {
+		t.Fatalf("got %q, want abc", tok)
+	}
 }
 
-///////
-// User Events
-
-// IncreaseUserCounter  represents a listener
-type IncreaseUserCounter struct {
+type recordingPrompter struct {
+	calls []string
 }
 
-// Name defines the name for the IncreaseUserCounter listener
-func (s *IncreaseUserCounter) Name() string {
-	return "increase.user.counter"
+func (r *recordingPrompter) ReadLine(p string) (string, error) {
+	r.calls = append(r.calls, "line:"+p)
+	return "", nil
 }
 
-// Handle is executed when the event IncreaseUserCounter listens on is fired
-func (s *IncreaseUserCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.UserCountKey, 1)
+func (r *recordingPrompter) ReadPassword(p string) (string, error) {
+	r.calls = append(r.calls, "pw:"+p)
+	return "", nil
 }

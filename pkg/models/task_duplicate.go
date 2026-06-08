@@ -32,7 +32,7 @@ type TaskDuplicate struct {
 	TaskID int64 `json:"-" param:"projecttask"`
 
 	// The duplicated task
-	Task *Task `json:"duplicated_task,omitempty"`
+	Task *Task `json:"duplicated_task,omitempty" readOnly:"true" doc:"The newly created duplicate task, populated by the server in the response."`
 
 	web.Permissions `json:"-"`
 	web.CRUDable    `json:"-"`

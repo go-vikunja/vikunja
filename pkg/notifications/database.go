@@ -28,22 +28,22 @@ import (
 // DatabaseNotification represents a notification that was saved to the database
 type DatabaseNotification struct {
 	// The unique, numeric id of this notification.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"notificationid"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"notificationid" readOnly:"true" doc:"The unique, numeric id of this notification."`
 
 	// The ID of the notifiable this notification is associated with.
 	NotifiableID int64 `xorm:"bigint not null" json:"-"`
 	// The actual content of the notification.
-	Notification interface{} `xorm:"json not null" json:"notification"`
+	Notification interface{} `xorm:"json not null" json:"notification" readOnly:"true" doc:"The notification payload. Shape depends on the notification's name."`
 	// The name of the notification
-	Name string `xorm:"varchar(250) index not null" json:"name"`
+	Name string `xorm:"varchar(250) index not null" json:"name" readOnly:"true" doc:"The name identifying the kind of notification."`
 	// The thing the notification is about. Used to check if a notification for this thing already happened or not.
 	SubjectID int64 `xorm:"bigint null" json:"-"`
 
 	// When this notification is marked as read, this will be updated with the current timestamp.
-	ReadAt time.Time `xorm:"datetime null" json:"read_at"`
+	ReadAt time.Time `xorm:"datetime null" json:"read_at" readOnly:"true" doc:"When the notification was marked read; zero value while unread. Set via the read flag, not written directly."`
 
 	// A timestamp when this notification was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this notification was created. You cannot change this value."`
 }
 
 // AfterInsert is called by XORM after the row is inserted. For transactional
