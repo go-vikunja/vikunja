@@ -140,6 +140,9 @@ type Task struct {
 	// Comment count of this task. Only present when fetching tasks with the `expand` parameter set to `comment_count`.
 	CommentCount *int64 `xorm:"-" json:"comment_count,omitempty"`
 
+	// Time entry count of this task. Only present when fetching tasks with the `expand` parameter set to `time_entries_count`.
+	TimeEntriesCount *int64 `xorm:"-" json:"time_entries_count,omitempty"`
+
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
 	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
 
@@ -764,6 +767,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				}
 			case TaskCollectionExpandCommentCount:
 				err = addCommentCountToTasks(s, taskIDs, taskMap)
+				if err != nil {
+					return err
+				}
+			case TaskCollectionExpandTimeEntriesCount:
+				err = addTimeEntriesCountToTasks(s, a, taskIDs, taskMap)
 				if err != nil {
 					return err
 				}
