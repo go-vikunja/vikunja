@@ -484,6 +484,57 @@ func TestTimeEntry_UpdateReopenGuard(t *testing.T) {
 	})
 }
 
+func TestTimeEntry_RejectsInvertedInterval(t *testing.T) {
+	a := &user.User{ID: 1}
+	start := time.Date(2020, 1, 1, 10, 0, 0, 0, time.UTC)
+	before := time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
+
+	t.Run("create rejects an end before the start", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		te := &TimeEntry{TaskID: 1, StartTime: start, EndTime: timePtr(before)}
+		err := te.Create(s, a)
+		require.Error(t, err)
+		assert.True(t, IsErrTimeEntryEndBeforeStart(err), "unexpected error type: %v", err)
+	})
+
+	t.Run("create allows an end equal to the start", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		te := &TimeEntry{TaskID: 1, StartTime: start, EndTime: timePtr(start)}
+		require.NoError(t, te.Create(s, a))
+	})
+
+	t.Run("create allows a running timer with no end", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		te := &TimeEntry{TaskID: 1, StartTime: start} // EndTime nil
+		require.NoError(t, te.Create(s, a))
+	})
+
+	t.Run("update rejects an end before the start", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Entry 1 is user1's completed entry.
+		te := &TimeEntry{ID: 1, TaskID: 1, StartTime: start, EndTime: timePtr(before)}
+		can, err := te.CanUpdate(s, a)
+		require.NoError(t, err)
+		require.True(t, can)
+
+		err = te.Update(s, a)
+		require.Error(t, err)
+		assert.True(t, IsErrTimeEntryEndBeforeStart(err), "unexpected error type: %v", err)
+	})
+}
+
 func TestTimeEntry_StopRunningTimer(t *testing.T) {
 	t.Run("stops the caller's running timer and returns it", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)

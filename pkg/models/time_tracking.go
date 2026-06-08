@@ -80,6 +80,10 @@ func (te *TimeEntry) Create(s *xorm.Session, a web.Auth) (err error) {
 		te.StartTime = time.Now()
 	}
 
+	if err = te.validateTimes(); err != nil {
+		return err
+	}
+
 	if _, err = s.Insert(te); err != nil {
 		return err
 	}
@@ -198,6 +202,10 @@ func (te *TimeEntry) Update(s *xorm.Session, a web.Auth) (err error) {
 		return ErrTimeEntryAlreadyEnded{TimeEntryID: te.ID}
 	}
 
+	if err = te.validateTimes(); err != nil {
+		return err
+	}
+
 	// task_id / project_id are listed so a reassignment (and the zero value of
 	// the side being cleared) is written; the XOR was validated in CanUpdate.
 	_, err = s.
@@ -309,6 +317,16 @@ func (te *TimeEntry) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
 func (te *TimeEntry) validateContainer() error {
 	if (te.TaskID == 0) == (te.ProjectID == 0) {
 		return ErrTimeEntryInvalidContainer{TaskID: te.TaskID, ProjectID: te.ProjectID}
+	}
+	return nil
+}
+
+// validateTimes rejects a completed entry whose end precedes its start (a
+// negative interval). A null end is a running timer and is always valid; an end
+// equal to the start is allowed (a zero-length entry).
+func (te *TimeEntry) validateTimes() error {
+	if te.EndTime != nil && te.EndTime.Before(te.StartTime) {
+		return ErrTimeEntryEndBeforeStart{TimeEntryID: te.ID}
 	}
 	return nil
 }
