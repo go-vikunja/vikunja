@@ -208,14 +208,22 @@ const customRangeActive = computed<boolean>(() => {
 })
 
 const buttonText = computed<string>(() => {
-	if (from.value !== '' && to.value !== '') {
-		return t('input.datepickerRange.fromto', {
-			from: from.value,
-			to: to.value,
-		})
+	if (from.value === '' || to.value === '') {
+		return t('task.show.select')
 	}
 
-	return t('task.show.select')
+	// Show the preset's name when the range matches one, rather than the raw datemath.
+	const preset = Object.entries(DATE_RANGES).find(
+		([, range]) => from.value === range[0] && to.value === range[1],
+	)
+	if (preset) {
+		return t(`input.datepickerRange.ranges.${preset[0]}`)
+	}
+
+	return t('input.datepickerRange.fromto', {
+		from: from.value,
+		to: to.value,
+	})
 })
 </script>
 
