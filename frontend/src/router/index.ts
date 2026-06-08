@@ -7,6 +7,7 @@ import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
+import {PRO_FEATURE} from '@/constants/proFeatures'
 
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
@@ -434,6 +435,15 @@ const router = createRouter({
 			component: () => import('@/views/About.vue'),
 		},
 		{
+			path: '/time-tracking',
+			name: 'time-tracking',
+			component: () => import('@/views/time-tracking/TimeTracking.vue'),
+			meta: {
+				requiresTimeTracking: true,
+				title: 'timeTracking.title',
+			},
+		},
+		{
 			path: '/admin',
 			component: () => import('@/views/admin/AdminShell.vue'),
 			meta: {
@@ -519,13 +529,22 @@ router.beforeEach(async (to, from) => {
 		const baseStore = useBaseStore()
 		await baseStore.appReady
 		const configStore = useConfigStore()
-		const featureOn = configStore.isProFeatureEnabled('admin_panel')
+		const featureOn = configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL)
 		// isAdmin comes from /user, not the JWT; force-fetch in case checkAuth() was debounced.
 		if (authStore.info?.isAdmin === undefined) {
 			await authStore.refreshUserInfo()
 		}
 		const isAdmin = authStore.info?.isAdmin === true
 		if (!featureOn || !isAdmin) {
+			return {name: 'not-found'}
+		}
+	}
+
+	if (to.meta?.requiresTimeTracking) {
+		const baseStore = useBaseStore()
+		await baseStore.appReady
+		const configStore = useConfigStore()
+		if (!configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING)) {
 			return {name: 'not-found'}
 		}
 	}

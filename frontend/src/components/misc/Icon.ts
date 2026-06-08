@@ -1,6 +1,7 @@
 import {library} from '@fortawesome/fontawesome-svg-core'
 import {
 	faAlignLeft,
+	faAngleLeft,
 	faAngleRight,
 	faAnglesUp,
 	faArchive,
@@ -121,6 +122,7 @@ library.add(faCode)
 library.add(faQuoteRight)
 library.add(faListUl)
 library.add(faAlignLeft)
+library.add(faAngleLeft)
 library.add(faAngleRight)
 library.add(faArchive)
 library.add(faArrowLeft)
