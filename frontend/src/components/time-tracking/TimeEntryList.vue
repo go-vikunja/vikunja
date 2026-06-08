@@ -182,7 +182,7 @@ watch(() => props.entries, entries => {
 
 function entrySeconds(entry: ITimeEntry): number {
 	const end = entry.endTime ?? new Date()
-	return Math.max(0, Math.floor((end.getTime() - entry.startTime.getTime()) / 1000))
+	return Math.floor((end.getTime() - entry.startTime.getTime()) / 1000)
 }
 
 const rows = computed(() => props.entries.map(entry => {
