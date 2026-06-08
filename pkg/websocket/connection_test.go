@@ -80,6 +80,20 @@ func TestConnectionRejectsInvalidEvent(t *testing.T) {
 	assert.False(t, conn.IsSubscribed("notifications"))
 }
 
+func TestConnectionAllowsTimerEvents(t *testing.T) {
+	conn := &Connection{
+		userID:        1,
+		authenticated: true,
+		subscriptions: make(map[string]bool),
+		send:          make(chan OutgoingMessage, 16),
+	}
+
+	for _, event := range []string{"timer.created", "timer.updated"} {
+		conn.handleMessage(context.Background(), IncomingMessage{Action: ActionSubscribe, Event: event})
+		assert.True(t, conn.IsSubscribed(event), "client must be able to subscribe to %s", event)
+	}
+}
+
 func TestConnectionRejectsActionsBeforeAuth(t *testing.T) {
 	conn := &Connection{
 		userID:        0, // not authenticated
