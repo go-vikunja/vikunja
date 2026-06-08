@@ -1,0 +1,36 @@
+- id: 1
+  user_id: 1
+  task_id: 1
+  project_id: 0
+  start_time: 2018-12-01 10:00:00
+  end_time: 2018-12-01 11:00:00
+  comment: Time entry on task 1
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
+- id: 2
+  user_id: 1
+  task_id: 0
+  project_id: 1
+  start_time: 2018-12-01 12:00:00
+  end_time: 2018-12-01 13:00:00
+  comment: Standalone entry on project 1
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
+- id: 3
+  user_id: 3
+  task_id: 0
+  project_id: 3
+  start_time: 2018-12-01 12:00:00
+  end_time: 2018-12-01 13:00:00
+  comment: Standalone entry on project 3 by user3
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
+# Running timer (no end_time) on task 1 by user1
+- id: 4
+  user_id: 1
+  task_id: 1
+  project_id: 0
+  start_time: 2018-12-01 14:00:00
+  comment: Running timer
+  created: 2018-12-01 15:13:12
+  updated: 2018-12-02 15:13:12
