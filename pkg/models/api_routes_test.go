@@ -121,6 +121,32 @@ func TestCollectRoutesV2(t *testing.T) {
 	assert.Equal(t, "DELETE", labels["delete"].Method)
 }
 
+// TestCollectRoutes_TimeEntriesV2 verifies the v2-only time-entries resource
+// lands under a clean "time-entries" group rather than the "other" catch-all,
+// so its scopes read sensibly for token clients.
+func TestCollectRoutes_TimeEntriesV2(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries/:id"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "POST", Path: "/api/v2/time-entries"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/time-entries/:id"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "DELETE", Path: "/api/v2/time-entries/:id"}, true)
+
+	_, isOther := apiTokenRoutesV2["other"]
+	assert.False(t, isOther, "time-entries CRUD must not fall into the 'other' bucket")
+
+	te, has := apiTokenRoutesV2["time-entries"]
+	require.True(t, has, "time-entries group should exist in the v2 table")
+	assert.Equal(t, "GET", te["read_all"].Method)
+	assert.Equal(t, "/api/v2/time-entries", te["read_all"].Path)
+	assert.Equal(t, "GET", te["read_one"].Method)
+	assert.Equal(t, "POST", te["create"].Method)
+	assert.Equal(t, "PUT", te["update"].Method)
+	assert.Equal(t, "DELETE", te["delete"].Method)
+}
+
 // TestGetRouteDetail_V2Verbs verifies the v2 verb mapping: POST→create,
 // PUT/PATCH→update. v1 inverts POST and PUT so we need a separate mapping
 // path.
