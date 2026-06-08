@@ -28,6 +28,7 @@ export interface IFrontendSettings {
 	commentSortOrder: 'asc' | 'desc'
 	desktopQuickEntryShortcut: string
 	quickAddDefaultReminders: ITaskReminder[]
+	timeTrackingDefaultStart?: string
 }
 
 export interface IExtraSettingsLink {
