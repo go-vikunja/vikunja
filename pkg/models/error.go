@@ -2568,3 +2568,31 @@ func (err ErrTimeEntryAlreadyEnded) HTTPError() web.HTTPError {
 		Message:  "A time entry that has already ended cannot be reopened into a running timer. Start a new timer instead.",
 	}
 }
+
+// ErrTimeEntryEndBeforeStart represents an error where a time entry's end time
+// precedes its start time, which would persist a negative interval.
+type ErrTimeEntryEndBeforeStart struct {
+	TimeEntryID int64
+}
+
+// IsErrTimeEntryEndBeforeStart checks if an error is ErrTimeEntryEndBeforeStart.
+func IsErrTimeEntryEndBeforeStart(err error) bool {
+	_, ok := err.(ErrTimeEntryEndBeforeStart)
+	return ok
+}
+
+func (err ErrTimeEntryEndBeforeStart) Error() string {
+	return fmt.Sprintf("Time entry end time is before its start time [TimeEntryID: %v]", err.TimeEntryID)
+}
+
+// ErrCodeTimeEntryEndBeforeStart holds the unique world-error code of this error
+const ErrCodeTimeEntryEndBeforeStart = 18007
+
+// HTTPError holds the http error description
+func (err ErrTimeEntryEndBeforeStart) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTimeEntryEndBeforeStart,
+		Message:  "A time entry's end time cannot be before its start time.",
+	}
+}
