@@ -1000,6 +1000,10 @@ definitions:
         description: |-
           The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
           Will only returned when retrieving one task.
+      time_entries_count:
+        description: Time entry count of this task. Only present when fetching tasks
+          with the `expand` parameter set to `time_entries_count`.
+        type: integer
       title:
         description: The task text. This is what you'll see in the project.
         minLength: 1

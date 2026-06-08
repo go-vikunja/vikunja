@@ -10202,6 +10202,10 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "time_entries_count": {
+                    "description": "Time entry count of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `time_entries_count` + "`" + `.",
+                    "type": "integer"
+                },
                 "title": {
                     "description": "The task text. This is what you'll see in the project.",
                     "type": "string",
