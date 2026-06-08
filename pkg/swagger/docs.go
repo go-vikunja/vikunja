@@ -9363,7 +9363,8 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "A human-readable name for this token",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 },
                 "token": {
                     "description": "The actual api key. Only visible after creation.",
@@ -9790,8 +9791,7 @@ const docTemplate = `{
                     "enum": [
                         "none",
                         "manual",
-                        "filter",
-                        "manual"
+                        "filter"
                     ]
                 },
                 "created": {
@@ -9828,7 +9828,9 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "The title of this view",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this view was updated. You cannot change this value.",
@@ -10200,6 +10202,10 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "time_entries_count": {
+                    "description": "Time entry count of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `time_entries_count` + "`" + `.",
+                    "type": "integer"
+                },
                 "title": {
                     "description": "The task text. This is what you'll see in the project.",
                     "type": "string",
@@ -10453,10 +10459,6 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
-                "include_public": {
-                    "description": "Query parameter controlling whether to include public projects or not",
-                    "type": "boolean"
-                },
                 "is_public": {
                     "description": "Defines wether the team should be publicly discoverable when sharing a project",
                     "type": "boolean"
@@ -10497,7 +10499,8 @@ const docTemplate = `{
                 },
                 "username": {
                     "description": "The username of the member. We use this to prevent automated user id entering.",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 }
             }
         },
@@ -10599,10 +10602,6 @@ const docTemplate = `{
                 "id": {
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
-                },
-                "include_public": {
-                    "description": "Query parameter controlling whether to include public projects or not",
-                    "type": "boolean"
                 },
                 "is_public": {
                     "description": "Defines wether the team should be publicly discoverable when sharing a project",
@@ -11192,6 +11191,9 @@ const docTemplate = `{
         "v1.vikunjaInfos": {
             "type": "object",
             "properties": {
+                "allow_icon_changes": {
+                    "type": "boolean"
+                },
                 "auth": {
                     "$ref": "#/definitions/v1.authInfo"
                 },

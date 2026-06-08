@@ -32,8 +32,8 @@ import (
 type TaskAssginee struct {
 	ID      int64     `xorm:"bigint autoincr not null unique pk" json:"-"`
 	TaskID  int64     `xorm:"bigint INDEX not null" json:"-" param:"projecttask"`
-	UserID  int64     `xorm:"bigint INDEX not null" json:"user_id" param:"user"`
-	Created time.Time `xorm:"created not null"`
+	UserID  int64     `xorm:"bigint INDEX not null" json:"user_id" param:"user" doc:"The id of the user to assign to the task. The user must have access to the task's project."`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this assignment was created. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`

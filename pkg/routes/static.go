@@ -48,7 +48,6 @@ const (
 <script>
 	window.SENTRY_ENABLED = {{ .SENTRY_ENABLED }}
 	window.SENTRY_DSN = '{{ .SENTRY_DSN }}'
-	window.ALLOW_ICON_CHANGES = {{ .ALLOW_ICON_CHANGES }}
 	window.CUSTOM_LOGO_URL = '{{ .CUSTOM_LOGO_URL }}'
 	window.CUSTOM_LOGO_URL_DARK = '{{ .CUSTOM_LOGO_URL_DARK }}'
 </script>`
@@ -92,10 +91,6 @@ func serveIndexFile(c *echo.Context, assetFs http.FileSystem) (err error) {
 			data["SENTRY_ENABLED"] = "true"
 		}
 		data["SENTRY_DSN"] = config.SentryFrontendDsn.GetString()
-		data["ALLOW_ICON_CHANGES"] = "false"
-		if config.ServiceAllowIconChanges.GetBool() {
-			data["ALLOW_ICON_CHANGES"] = "true"
-		}
 		data["CUSTOM_LOGO_URL"] = config.ServiceCustomLogoURL.GetString()
 		data["CUSTOM_LOGO_URL_DARK"] = config.ServiceCustomLogoURLDark.GetString()
 

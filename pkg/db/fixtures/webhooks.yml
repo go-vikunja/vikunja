@@ -8,3 +8,36 @@
   created_by_id: 1
   created: 2024-01-01 00:00:00
   updated: 2024-01-01 00:00:00
+# Webhooks 2-4 back the v2 permission matrix: project 9 is shared to user1
+# read-only, 10 write, 11 admin. Update/Delete gate on Project.CanWrite, so the
+# read-share webhook (#2) must be forbidden while the write/admin ones pass.
+- id: 2
+  target_url: "https://example.com/webhook-read-share"
+  events: '["task.updated"]'
+  project_id: 9
+  created_by_id: 6
+  created: 2024-01-01 00:00:00
+  updated: 2024-01-01 00:00:00
+- id: 3
+  target_url: "https://example.com/webhook-write-share"
+  events: '["task.updated"]'
+  project_id: 10
+  created_by_id: 6
+  created: 2024-01-01 00:00:00
+  updated: 2024-01-01 00:00:00
+- id: 4
+  target_url: "https://example.com/webhook-admin-share"
+  events: '["task.updated"]'
+  project_id: 11
+  created_by_id: 6
+  created: 2024-01-01 00:00:00
+  updated: 2024-01-01 00:00:00
+# Webhook #5 lives in project 2 (owned by user3, not shared to user1) so the
+# fully-forbidden update/delete path can be exercised under its real parent.
+- id: 5
+  target_url: "https://example.com/webhook-forbidden"
+  events: '["task.updated"]'
+  project_id: 2
+  created_by_id: 3
+  created: 2024-01-01 00:00:00
+  updated: 2024-01-01 00:00:00

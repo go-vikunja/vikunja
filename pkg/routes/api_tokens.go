@@ -39,6 +39,12 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(config.ServiceSecret.GetString()),
 		Skipper: func(c *echo.Context) bool {
+			// Public routes (docs, spec, info, etc.) never need JWT even
+			// when their parent group has the middleware applied.
+			if unauthenticatedAPIPaths[c.Path()] {
+				return true
+			}
+
 			authHeader := c.Request().Header.Values("Authorization")
 			if len(authHeader) == 0 {
 				return false // let the jwt middleware handle invalid headers

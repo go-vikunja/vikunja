@@ -36,4 +36,18 @@ describe('DatepickerWithRange predefined ranges', () => {
         const last = wrapper.emitted('update:modelValue')?.pop()?.[0]
         expect(last).toEqual({dateFrom: 'now/M-1M', dateTo: 'now/M'})
     })
+
+    // A cleared range (the Custom option) comes back as null via v-model; the
+    // modelValue watcher must coerce it, not call null.toISOString().
+    it('accepts a null modelValue without crashing', async () => {
+        const wrapper = mountPicker()
+        await wrapper.setProps({modelValue: {dateFrom: 'now/w', dateTo: 'now/w+1w'}})
+        await wrapper.vm.$nextTick()
+        expect((wrapper.vm as any).from).toBe('now/w')
+
+        await wrapper.setProps({modelValue: {dateFrom: null, dateTo: null}})
+        await wrapper.vm.$nextTick()
+        expect((wrapper.vm as any).from).toBe('')
+        expect((wrapper.vm as any).to).toBe('')
+    })
 })

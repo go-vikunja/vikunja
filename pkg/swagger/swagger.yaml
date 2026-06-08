@@ -347,6 +347,7 @@ definitions:
           existing tasks, you should add `{"tasks":["read_all","update"]}`.
       title:
         description: A human-readable name for this token
+        minLength: 1
         type: string
       token:
         description: The actual api key. Only visible after creation.
@@ -674,7 +675,6 @@ definitions:
         - none
         - manual
         - filter
-        - manual
         type: string
       created:
         description: A timestamp when this reaction was created. You cannot change
@@ -705,6 +705,8 @@ definitions:
         type: integer
       title:
         description: The title of this view
+        maxLength: 250
+        minLength: 1
         type: string
       updated:
         description: A timestamp when this view was updated. You cannot change this
@@ -998,6 +1000,10 @@ definitions:
         description: |-
           The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
           Will only returned when retrieving one task.
+      time_entries_count:
+        description: Time entry count of this task. Only present when fetching tasks
+          with the `expand` parameter set to `time_entries_count`.
+        type: integer
       title:
         description: The task text. This is what you'll see in the project.
         minLength: 1
@@ -1186,10 +1192,6 @@ definitions:
       id:
         description: The unique, numeric id of this team.
         type: integer
-      include_public:
-        description: Query parameter controlling whether to include public projects
-          or not
-        type: boolean
       is_public:
         description: Defines wether the team should be publicly discoverable when
           sharing a project
@@ -1225,6 +1227,7 @@ definitions:
       username:
         description: The username of the member. We use this to prevent automated
           user id entering.
+        minLength: 1
         type: string
     type: object
   models.TeamProject:
@@ -1306,10 +1309,6 @@ definitions:
       id:
         description: The unique, numeric id of this team.
         type: integer
-      include_public:
-        description: Query parameter controlling whether to include public projects
-          or not
-        type: boolean
       is_public:
         description: Defines wether the team should be publicly discoverable when
           sharing a project
@@ -1765,6 +1764,8 @@ definitions:
     type: object
   v1.vikunjaInfos:
     properties:
+      allow_icon_changes:
+        type: boolean
       auth:
         $ref: '#/definitions/v1.authInfo'
       available_migrators:

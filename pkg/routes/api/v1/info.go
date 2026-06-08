@@ -55,6 +55,7 @@ type vikunjaInfos struct {
 	DemoModeEnabled            bool              `json:"demo_mode_enabled"`
 	WebhooksEnabled            bool              `json:"webhooks_enabled"`
 	PublicTeamsEnabled         bool              `json:"public_teams_enabled"`
+	AllowIconChanges           bool              `json:"allow_icon_changes"`
 	EnabledProFeatures         []license.Feature `json:"enabled_pro_features"`
 }
 
@@ -107,6 +108,7 @@ func Info(c *echo.Context) error {
 		DemoModeEnabled:        config.ServiceDemoMode.GetBool(),
 		WebhooksEnabled:        config.WebhooksEnabled.GetBool(),
 		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
+		AllowIconChanges:       config.ServiceAllowIconChanges.GetBool(),
 		EnabledProFeatures:     license.EnabledProFeatures(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),

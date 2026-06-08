@@ -80,8 +80,10 @@ import (
 	"code.vikunja.io/api/pkg/plugins"
 	apiv1 "code.vikunja.io/api/pkg/routes/api/v1"
 	adminapi "code.vikunja.io/api/pkg/routes/api/v1/admin"
+	apiv2 "code.vikunja.io/api/pkg/routes/api/v2"
 	"code.vikunja.io/api/pkg/routes/caldav"
 	"code.vikunja.io/api/pkg/routes/feeds"
+	vmiddleware "code.vikunja.io/api/pkg/routes/middleware"
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web/handler"
 	ws "code.vikunja.io/api/pkg/websocket"
@@ -193,6 +195,10 @@ func NewEcho() *echo.Echo {
 	// panic recover
 	e.Use(middleware.Recover())
 
+	// Normalize PHP-style `foo[]=...` query params to `foo=...` before any
+	// handler binds them. Runs globally so both /api/v1 and /api/v2 benefit.
+	e.Use(vmiddleware.NormalizeArrayParams())
+
 	setupSentry(e)
 
 	// Validation
@@ -303,6 +309,10 @@ func RegisterRoutes(e *echo.Echo) {
 	a := e.Group("/api/v1")
 	registerAPIRoutes(a)
 
+	// /api/v2 — Huma-backed API, scaffolded alongside /api/v1.
+	a2 := e.Group("/api/v2")
+	registerAPIRoutesV2(e, a2)
+
 	// Collect routes for API token permissions
 	// In Echo v5, we collect routes after registration using e.Router().Routes()
 	collectRoutesForAPITokens(e)
@@ -325,6 +335,14 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v1/docs/redoc.standalone.js":       true,
 	"/api/v1/metrics":                        true,
 	"/api/v1/oauth/token":                    true,
+
+	"/api/v2/openapi.json":              true,
+	"/api/v2/openapi.yaml":              true,
+	"/api/v2/openapi-3.0.json":          true,
+	"/api/v2/openapi-3.0.yaml":          true,
+	"/api/v2/docs":                      true,
+	"/api/v2/docs/scalar.standalone.js": true,
+	"/api/v2/schemas/:schema":           true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
@@ -334,7 +352,7 @@ func collectRoutesForAPITokens(e *echo.Echo) {
 	log.Debugf("Collecting %d routes for API token usage", len(routeList))
 	for _, route := range routeList {
 		// Only process API routes
-		if !strings.HasPrefix(route.Path, "/api/v1") {
+		if !strings.HasPrefix(route.Path, "/api/v1") && !strings.HasPrefix(route.Path, "/api/v2") {
 			continue
 		}
 
@@ -345,18 +363,69 @@ func collectRoutesForAPITokens(e *echo.Echo) {
 	}
 }
 
+// noStoreCacheControl returns middleware that sets `Cache-Control: no-store`
+// on all responses. Without this, browsers may heuristically cache JSON
+// responses which causes stale data (e.g. newly team-shared projects not
+// appearing until a hard refresh). Applied to both /api/v1 and /api/v2.
+func noStoreCacheControl() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			c.Response().Header().Set("Cache-Control", "no-store")
+			return next(c)
+		}
+	}
+}
+
+const v2AdminPathPrefix = "/api/v2/admin"
+
+// gateV2AdminRoutes reuses v1's RequireFeature/RequireInstanceAdmin gate (both
+// 404-on-failure) as path-scoped middleware: splitting v2 into a gated Echo
+// sub-group would split the Huma API and drop admin ops from the OpenAPI spec.
+func gateV2AdminRoutes() echo.MiddlewareFunc {
+	feature := RequireFeature(license.FeatureAdminPanel)
+	admin := RequireInstanceAdmin()
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		gated := feature(admin(next))
+		return func(c *echo.Context) error {
+			if strings.HasPrefix(c.Request().URL.Path, v2AdminPathPrefix) {
+				return gated(c)
+			}
+			return next(c)
+		}
+	}
+}
+
+// registerAPIRoutesV2 wires the /api/v2 Echo group. Token middleware is
+// attached before any route so Huma's spec and Scalar docs share the
+// resource handlers' stack; unauthenticatedAPIPaths keeps them public.
+func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
+	a.Use(noStoreCacheControl())
+	a.Use(SetupTokenMiddleware())
+	// Match the authenticated v1 group: rate limiting and route metrics
+	// apply to v2 resource endpoints too.
+	setupRateLimit(a, config.RateLimitKind.GetString())
+	setupMetricsMiddleware(a)
+	// Must come after rate limiting: the gate does a per-request admin DB read,
+	// so an unauthenticated flood to /api/v2/admin/* would otherwise be unbounded.
+	a.Use(gateV2AdminRoutes())
+
+	api := apiv2.NewAPI(e, a)
+
+	// Scalar docs UI — embedded, no CDN. See pkg/routes/api/v2/docs.go.
+	a.GET("/docs", apiv2.ScalarUI)
+	a.GET("/docs/scalar.standalone.js", apiv2.ScalarJS)
+
+	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
+	apiv2.RegisterAll(api)
+}
+
 func registerAPIRoutes(a *echo.Group) {
 
 	// Prevent browsers from caching API responses. Without an explicit
 	// Cache-Control header browsers may heuristically cache JSON responses
 	// which causes stale data (e.g. newly team-shared projects not appearing
 	// until a hard refresh).
-	a.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
-			c.Response().Header().Set("Cache-Control", "no-store")
-			return next(c)
-		}
-	})
+	a.Use(noStoreCacheControl())
 
 	// This is the group with no auth
 	// It is its own group to be able to rate limit this based on different heuristics

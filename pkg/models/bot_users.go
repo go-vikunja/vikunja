@@ -31,7 +31,7 @@ import (
 type BotUser struct {
 	// Status shadows user.User.Status so it is included in JSON responses
 	// (the original has json:"-").
-	Status user.Status `xorm:"-" json:"status"`
+	Status user.Status `xorm:"-" json:"status" doc:"The bot's status: 0=active, 2=disabled. Set to 2 to disable the bot, 0 to re-enable it."`
 
 	user.User `xorm:"extends"`
 

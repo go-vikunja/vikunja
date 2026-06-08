@@ -17,6 +17,12 @@
 package avatar
 
 import (
+	"errors"
+	"image"
+	"io"
+	"strings"
+
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/avatar/botmarble"
 	"code.vikunja.io/api/pkg/modules/avatar/empty"
@@ -27,7 +33,13 @@ import (
 	"code.vikunja.io/api/pkg/modules/avatar/openid"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
 	"code.vikunja.io/api/pkg/user"
+
+	"github.com/gabriel-vasile/mimetype"
+	"xorm.io/xorm"
 )
+
+// ErrNotAnImage is returned by StoreUploadedAvatar when the uploaded file is not an image.
+var ErrNotAnImage = errors.New("uploaded file is no image")
 
 // Provider defines the avatar provider interface
 type Provider interface {
@@ -58,6 +70,43 @@ func FlushAllCaches(u *user.User) {
 	}
 }
 
+// GetAvatarForUsername resolves and renders the avatar for a username. It is the
+// shared core behind both the v1 and v2 avatar endpoints: it looks up the user,
+// tolerates an unknown/disabled user (returning the default placeholder rather
+// than an error, since avatars are loaded via <img> tags), picks the right
+// provider (empty for unknown users, botmarble for bots, otherwise the user's
+// configured provider) and clamps the size to the server's configured maximum.
+func GetAvatarForUsername(s *xorm.Session, username string, size int64) (data []byte, mime string, err error) {
+	u, err := user.GetUserWithEmail(s, &user.User{Username: username})
+	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
+		log.Errorf("Error getting user for avatar: %v", err)
+		return nil, "", err
+	}
+
+	found := err == nil || user.IsErrUserStatusError(err)
+
+	provider := GetProvider(u)
+	if !found {
+		// Unknown user: serve the default placeholder.
+		provider = &empty.Provider{}
+	}
+	if found && u.IsBot() {
+		provider = &botmarble.Provider{}
+	}
+
+	if size > config.ServiceMaxAvatarSize.GetInt64() {
+		size = config.ServiceMaxAvatarSize.GetInt64()
+	}
+
+	data, mime, err = provider.GetAvatar(u, size)
+	if err != nil {
+		log.Errorf("Error getting avatar for user %d: %v", u.ID, err)
+		return nil, "", err
+	}
+
+	return data, mime, nil
+}
+
 // GetProvider returns the appropriate avatar provider for a user
 func GetProvider(u *user.User) Provider {
 	provider := u.AvatarProvider
@@ -81,4 +130,42 @@ func GetProvider(u *user.User) Provider {
 	default:
 		return &empty.Provider{}
 	}
+}
+
+// StoreUploadedAvatar validates that src is an image, switches the user's avatar
+// provider to "upload", stores the image as the user's avatar and flushes all
+// cached avatars for the user. It returns ErrNotAnImage if src is not an image.
+func StoreUploadedAvatar(s *xorm.Session, u *user.User, src io.ReadSeeker) error {
+	mime, err := mimetype.DetectReader(src)
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(mime.String(), "image") {
+		return ErrNotAnImage
+	}
+	if _, err := src.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+
+	// The mimetype sniff above accepts image types we cannot actually store
+	// (e.g. SVG, WebP) because upload.StoreAvatarFile decodes via image.Decode,
+	// which only has the decoders registered process-wide by the imaging package
+	// (png, jpeg, gif, tiff, bmp). image.DecodeConfig uses those same decoders, so
+	// validating here rejects undecodable images with a 400 instead of failing
+	// deeper in storage with a 500.
+	if _, _, err := image.DecodeConfig(src); err != nil {
+		return ErrNotAnImage
+	}
+	if _, err := src.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+
+	u.AvatarProvider = "upload"
+	if err := upload.StoreAvatarFile(s, u, src); err != nil {
+		return err
+	}
+
+	FlushAllCaches(u)
+
+	return nil
 }

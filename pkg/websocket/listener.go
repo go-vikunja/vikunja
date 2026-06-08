@@ -21,7 +21,9 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/notifications"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -67,10 +69,50 @@ func (n *NotificationListener) Handle(msg *message.Message) error {
 	return nil
 }
 
+// TimeEntryListener pushes a user's own timer changes to their WebSocket
+// connections. wsEvent is "timer.created", "timer.updated" or "timer.deleted";
+// the payload is the full entry, so the running-elsewhere badge reads end_time
+// to know whether a timer is active (and the id to drop a deleted one). Not
+// emitted on unlicensed instances.
+type TimeEntryListener struct {
+	wsEvent string
+}
+
+func (l *TimeEntryListener) Name() string { return "websocket.push." + l.wsEvent }
+
+func (l *TimeEntryListener) Handle(msg *message.Message) error {
+	if !license.IsFeatureEnabled(license.FeatureTimeTracking) {
+		return nil
+	}
+
+	// All TimeEntry events share the {time_entry, doer} shape; only the entry is needed.
+	var event struct {
+		TimeEntry *models.TimeEntry `json:"time_entry"`
+	}
+	if err := json.Unmarshal(msg.Payload, &event); err != nil {
+		return err
+	}
+	if event.TimeEntry == nil {
+		return nil
+	}
+
+	hub := GetHub()
+	if hub == nil {
+		log.Warningf("WebSocket: hub not initialized, skipping timer push")
+		return nil
+	}
+
+	hub.PublishForUser(event.TimeEntry.UserID, l.wsEvent, event.TimeEntry)
+	return nil
+}
+
 // RegisterListeners registers WebSocket event listeners.
 func RegisterListeners() {
 	events.RegisterListener(
 		(&notifications.NotificationCreatedEvent{}).Name(),
 		&NotificationListener{},
 	)
+	events.RegisterListener((&models.TimeEntryCreatedEvent{}).Name(), &TimeEntryListener{wsEvent: "timer.created"})
+	events.RegisterListener((&models.TimeEntryUpdatedEvent{}).Name(), &TimeEntryListener{wsEvent: "timer.updated"})
+	events.RegisterListener((&models.TimeEntryDeletedEvent{}).Name(), &TimeEntryListener{wsEvent: "timer.deleted"})
 }

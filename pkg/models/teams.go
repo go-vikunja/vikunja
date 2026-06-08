@@ -33,32 +33,35 @@ import (
 // Team holds a team object
 type Team struct {
 	// The unique, numeric id of this team.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"team"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"team" readOnly:"true" doc:"The unique, numeric id of this team."`
 	// The name of this team.
-	Name string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
+	Name string `xorm:"varchar(250) not null" json:"name" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250" doc:"The name of this team."`
 	// The team's description.
 	Description string `xorm:"longtext null" json:"description"`
 	CreatedByID int64  `xorm:"bigint not null INDEX" json:"-"`
 	// The team's external id provided by the openid or ldap provider
-	ExternalID string `xorm:"varchar(250) null" maxLength:"250" json:"external_id"`
+	ExternalID string `xorm:"varchar(250) null" maxLength:"250" json:"external_id" readOnly:"true" doc:"The team's external id, set by the openid or ldap provider that created it. Read-only for clients."`
 	// Contains the issuer extracted from the vikunja_groups claim if this team was created through oidc
 	Issuer string `xorm:"text null" json:"-"`
 
 	// The user who created this team.
-	CreatedBy *user.User `xorm:"-" json:"created_by"`
+	CreatedBy *user.User `xorm:"-" json:"created_by" readOnly:"true" doc:"The user who created this team. Set by the server."`
 	// An array of all members in this team.
-	Members []*TeamUser `xorm:"-" json:"members"`
+	Members []*TeamUser `xorm:"-" json:"members" readOnly:"true" doc:"All members of this team. Managed through the team members endpoints, not by writing to this field."`
 
 	// A timestamp when this relation was created. You cannot change this value.
-	Created time.Time `xorm:"created" json:"created"`
+	Created time.Time `xorm:"created" json:"created" readOnly:"true" doc:"A timestamp when this team was created. You cannot change this value."`
 	// A timestamp when this relation was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated" json:"updated"`
+	Updated time.Time `xorm:"updated" json:"updated" readOnly:"true" doc:"A timestamp when this team was last updated. You cannot change this value."`
 
 	// Defines wether the team should be publicly discoverable when sharing a project
-	IsPublic bool `xorm:"not null default false" json:"is_public"`
+	IsPublic bool `xorm:"not null default false" json:"is_public" doc:"Whether the team should be publicly discoverable when sharing a project. Only effective if public teams are enabled on the instance."`
 
-	// Query parameter controlling whether to include public projects or not
-	IncludePublic bool `xorm:"-" query:"include_public" json:"include_public"`
+	// Query-only flag controlling whether public teams the user is not a member
+	// of are included when listing. It is never part of the request or response
+	// body (json:"-") — v1 binds it from the query string via the query tag, and
+	// the v2 list handler takes it as a dedicated query field and sets it here.
+	IncludePublic bool `xorm:"-" query:"include_public" json:"-"`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -72,18 +75,18 @@ func (*Team) TableName() string {
 // TeamMember defines the relationship between a user and a team
 type TeamMember struct {
 	// The unique, numeric id of this team member relation.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" readOnly:"true" doc:"The unique, numeric id of this team member relation. Set by the server."`
 	// The team id.
 	TeamID int64 `xorm:"bigint not null INDEX" json:"-" param:"team"`
 	// The username of the member. We use this to prevent automated user id entering.
-	Username string `xorm:"-" json:"username" param:"user"`
+	Username string `xorm:"-" json:"username" param:"user" valid:"required" minLength:"1" doc:"The username of the member."`
 	// Used under the hood to manage team members
 	UserID int64 `xorm:"bigint not null INDEX" json:"-"`
 	// Whether or not the member is an admin of the team. See the docs for more about what a team admin can do
-	Admin bool `xorm:"null" json:"admin"`
+	Admin bool `xorm:"null" json:"admin" doc:"Whether the member is an admin of the team. Team admins can add and remove members and toggle other members' admin status."`
 
 	// A timestamp when this relation was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this member was added to the team. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
