@@ -8,14 +8,14 @@
 		<template #default>
 			<Card :has-content="false">
 				<div class="gantt-options">
-					<FormField :label="$t('project.gantt.range')">
+					<FormField :label="$t('misc.dateRange')">
 						<Foo
 							id="range"
 							ref="flatPickerEl"
 							v-model="flatPickerDateRange"
 							:config="flatPickerConfig"
 							class="input"
-							:placeholder="$t('project.gantt.range')"
+							:placeholder="$t('misc.dateRange')"
 						/>
 					</FormField>
 					<div
