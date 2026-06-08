@@ -39,6 +39,15 @@
 	>
 		<div class="field-group">
 			<FormField
+				:label="$t('user.settings.general.defaultPage')"
+				layout="two-col"
+			>
+				<FormSelect
+					v-model="settings.frontendSettings.defaultPage"
+					:options="defaultPageOptions"
+				/>
+			</FormField>
+			<FormField
 				:label="$t('user.settings.general.defaultView')"
 				layout="two-col"
 			>
@@ -313,6 +322,7 @@ import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KINDS} from '@/types/IRelationKind'
+import {DEFAULT_PAGE} from '@/constants/defaultPage'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 import ShortcutRecorder from '@/components/misc/ShortcutRecorder.vue'
 import Reminders from '@/components/tasks/partials/Reminders.vue'
@@ -326,6 +336,13 @@ const {t} = useI18n({useScope: 'global'})
 useTitle(() => `${t('user.settings.general.title')} - ${t('user.settings.title')}`)
 
 const DEFAULT_PROJECT_ID = 0
+
+const defaultPageOptions = computed(() => [
+	{value: DEFAULT_PAGE.OVERVIEW, label: t('user.settings.general.defaultPageOptions.overview')},
+	{value: DEFAULT_PAGE.UPCOMING, label: t('user.settings.general.defaultPageOptions.upcoming')},
+	{value: DEFAULT_PAGE.DEFAULT_PROJECT, label: t('user.settings.general.defaultPageOptions.defaultProject')},
+	{value: DEFAULT_PAGE.LAST_VISITED, label: t('user.settings.general.defaultPageOptions.lastVisited')},
+])
 
 const defaultViewOptions = computed(() =>
 	Object.values(DEFAULT_PROJECT_VIEW_SETTINGS).map(view => ({
@@ -414,7 +431,7 @@ const settings = ref<IUserSettings>({
 		timeFormat: authStore.settings.frontendSettings.timeFormat ?? TIME_FORMAT.HOURS_12,
 		// Add fallback for old settings that don't have the default task relation type set
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
-		// Clone to escape the store's readonly array type.
+		defaultPage: authStore.settings.frontendSettings.defaultPage ?? DEFAULT_PAGE.LAST_VISITED,
 		quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
 	},
 })
