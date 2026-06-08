@@ -362,3 +362,36 @@ type WebhookDeliveryEvent struct {
 func (w *WebhookDeliveryEvent) Name() string {
 	return "webhook.delivery"
 }
+
+// TimeEntryCreatedEvent represents a time entry being created
+type TimeEntryCreatedEvent struct {
+	TimeEntry *TimeEntry `json:"time_entry"`
+	Doer      *user.User `json:"doer"`
+}
+
+// Name defines the name for TimeEntryCreatedEvent
+func (e *TimeEntryCreatedEvent) Name() string {
+	return "time-entry.created"
+}
+
+// TimeEntryUpdatedEvent represents a time entry being updated (including a timer being stopped)
+type TimeEntryUpdatedEvent struct {
+	TimeEntry *TimeEntry `json:"time_entry"`
+	Doer      *user.User `json:"doer"`
+}
+
+// Name defines the name for TimeEntryUpdatedEvent
+func (e *TimeEntryUpdatedEvent) Name() string {
+	return "time-entry.updated"
+}
+
+// TimeEntryDeletedEvent represents a time entry being deleted
+type TimeEntryDeletedEvent struct {
+	TimeEntry *TimeEntry `json:"time_entry"`
+	Doer      *user.User `json:"doer"`
+}
+
+// Name defines the name for TimeEntryDeletedEvent
+func (e *TimeEntryDeletedEvent) Name() string {
+	return "time-entry.deleted"
+}
