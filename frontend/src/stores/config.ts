@@ -7,6 +7,7 @@ import {objectToCamelCase} from '@/helpers/case'
 
 import type {IProvider} from '@/types/IProvider'
 import type {MIGRATORS} from '@/views/migrate/migrators'
+import type {ProFeature} from '@/constants/proFeatures'
 import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
 
 export interface ConfigState {
@@ -104,7 +105,7 @@ export const useConfigStore = defineStore('config', () => {
 		Object.assign(state, config)
 	}
 
-	function isProFeatureEnabled(name: string): boolean {
+	function isProFeatureEnabled(name: ProFeature): boolean {
 		return state.enabledProFeatures?.includes(name) ?? false
 	}
 
