@@ -2398,3 +2398,173 @@ func (err *ErrOAuthInvalidGrantType) HTTPError() web.HTTPError {
 		Message:  "The grant_type is not supported. Use 'authorization_code' or 'refresh_token'.",
 	}
 }
+
+// ====================
+// Time Tracking Errors
+// ====================
+
+// ErrTimeEntryDoesNotExist represents an error where a time entry does not exist
+type ErrTimeEntryDoesNotExist struct {
+	TimeEntryID int64
+}
+
+// IsErrTimeEntryDoesNotExist checks if an error is ErrTimeEntryDoesNotExist.
+func IsErrTimeEntryDoesNotExist(err error) bool {
+	_, ok := err.(ErrTimeEntryDoesNotExist)
+	return ok
+}
+
+func (err ErrTimeEntryDoesNotExist) Error() string {
+	return fmt.Sprintf("Time entry does not exist [TimeEntryID: %v]", err.TimeEntryID)
+}
+
+// ErrCodeTimeEntryDoesNotExist holds the unique world-error code of this error
+const ErrCodeTimeEntryDoesNotExist = 18001
+
+// HTTPError holds the http error description
+func (err ErrTimeEntryDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeTimeEntryDoesNotExist,
+		Message:  "This time entry does not exist.",
+	}
+}
+
+// ErrTimeEntryInvalidContainer represents an error where a time entry is attached
+// to both a task and a project, or to neither (violating the XOR invariant).
+type ErrTimeEntryInvalidContainer struct {
+	TaskID    int64
+	ProjectID int64
+}
+
+// IsErrTimeEntryInvalidContainer checks if an error is ErrTimeEntryInvalidContainer.
+func IsErrTimeEntryInvalidContainer(err error) bool {
+	_, ok := err.(ErrTimeEntryInvalidContainer)
+	return ok
+}
+
+func (err ErrTimeEntryInvalidContainer) Error() string {
+	return fmt.Sprintf("Time entry must be attached to exactly one of task or project [TaskID: %v, ProjectID: %v]", err.TaskID, err.ProjectID)
+}
+
+// ErrCodeTimeEntryInvalidContainer holds the unique world-error code of this error
+const ErrCodeTimeEntryInvalidContainer = 18002
+
+// HTTPError holds the http error description
+func (err ErrTimeEntryInvalidContainer) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTimeEntryInvalidContainer,
+		Message:  "A time entry must be attached to exactly one of a task or a project.",
+	}
+}
+
+// ErrInvalidTimeEntryFilterField represents an error where a time entry filter references a non-filterable field
+type ErrInvalidTimeEntryFilterField struct {
+	Field string
+}
+
+// IsErrInvalidTimeEntryFilterField checks if an error is ErrInvalidTimeEntryFilterField.
+func IsErrInvalidTimeEntryFilterField(err error) bool {
+	_, ok := err.(ErrInvalidTimeEntryFilterField)
+	return ok
+}
+
+func (err ErrInvalidTimeEntryFilterField) Error() string {
+	return fmt.Sprintf("Time entry filter field is invalid [Field: %s]", err.Field)
+}
+
+// ErrCodeInvalidTimeEntryFilterField holds the unique world-error code of this error
+const ErrCodeInvalidTimeEntryFilterField = 18003
+
+// HTTPError holds the http error description
+func (err ErrInvalidTimeEntryFilterField) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTimeEntryFilterField,
+		Message:  fmt.Sprintf("The time entry filter field '%s' is invalid. Filterable fields are user_id, task_id, project_id, start_time and end_time.", err.Field),
+	}
+}
+
+// ErrInvalidTimeEntryFilterValue represents an error where a time entry filter value cannot be parsed for its field
+type ErrInvalidTimeEntryFilterValue struct {
+	Field string
+	Value string
+}
+
+// IsErrInvalidTimeEntryFilterValue checks if an error is ErrInvalidTimeEntryFilterValue.
+func IsErrInvalidTimeEntryFilterValue(err error) bool {
+	_, ok := err.(ErrInvalidTimeEntryFilterValue)
+	return ok
+}
+
+func (err ErrInvalidTimeEntryFilterValue) Error() string {
+	return fmt.Sprintf("Time entry filter value is invalid [Field: %s, Value: %s]", err.Field, err.Value)
+}
+
+// ErrCodeInvalidTimeEntryFilterValue holds the unique world-error code of this error
+const ErrCodeInvalidTimeEntryFilterValue = 18004
+
+// HTTPError holds the http error description
+func (err ErrInvalidTimeEntryFilterValue) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTimeEntryFilterValue,
+		Message:  fmt.Sprintf("The value '%s' is not valid for the time entry filter field '%s'.", err.Value, err.Field),
+	}
+}
+
+// ErrNoRunningTimer represents an error where a user has no running timer to act on
+type ErrNoRunningTimer struct {
+	UserID int64
+}
+
+// IsErrNoRunningTimer checks if an error is ErrNoRunningTimer.
+func IsErrNoRunningTimer(err error) bool {
+	_, ok := err.(ErrNoRunningTimer)
+	return ok
+}
+
+func (err ErrNoRunningTimer) Error() string {
+	return fmt.Sprintf("No running timer [UserID: %d]", err.UserID)
+}
+
+// ErrCodeNoRunningTimer holds the unique world-error code of this error
+const ErrCodeNoRunningTimer = 18005
+
+// HTTPError holds the http error description
+func (err ErrNoRunningTimer) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeNoRunningTimer,
+		Message:  "You do not have a running timer.",
+	}
+}
+
+// ErrTimeEntryAlreadyEnded represents an error where an update tries to clear the
+// end time of an entry that has already ended (reopening it as a running timer).
+type ErrTimeEntryAlreadyEnded struct {
+	TimeEntryID int64
+}
+
+// IsErrTimeEntryAlreadyEnded checks if an error is ErrTimeEntryAlreadyEnded.
+func IsErrTimeEntryAlreadyEnded(err error) bool {
+	_, ok := err.(ErrTimeEntryAlreadyEnded)
+	return ok
+}
+
+func (err ErrTimeEntryAlreadyEnded) Error() string {
+	return fmt.Sprintf("Time entry has already ended and cannot be reopened [TimeEntryID: %v]", err.TimeEntryID)
+}
+
+// ErrCodeTimeEntryAlreadyEnded holds the unique world-error code of this error
+const ErrCodeTimeEntryAlreadyEnded = 18006
+
+// HTTPError holds the http error description
+func (err ErrTimeEntryAlreadyEnded) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTimeEntryAlreadyEnded,
+		Message:  "A time entry that has already ended cannot be reopened into a running timer. Start a new timer instead.",
+	}
+}
