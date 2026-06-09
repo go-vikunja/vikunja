@@ -33,10 +33,10 @@ type ProjectDuplicate struct {
 	// The project id of the project to duplicate
 	ProjectID int64 `json:"-" param:"projectid"`
 	// The target parent project
-	ParentProjectID int64 `json:"parent_project_id,omitempty"`
+	ParentProjectID int64 `json:"parent_project_id,omitempty" doc:"The id of the project under which the duplicate should be created. Omit or 0 to place the copy at the top level; you need write access to the parent."`
 
 	// The copied project
-	Project *Project `json:"duplicated_project,omitempty"`
+	Project *Project `json:"duplicated_project,omitempty" readOnly:"true" doc:"The newly created duplicate project, populated by the server in the response."`
 
 	web.Permissions `json:"-"`
 	web.CRUDable    `json:"-"`
