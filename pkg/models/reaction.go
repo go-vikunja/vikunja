@@ -38,7 +38,7 @@ type Reaction struct {
 	ID int64 `xorm:"autoincr not null unique pk" json:"-" param:"reaction"`
 
 	// The user who reacted
-	User   *user.User `xorm:"-" json:"user" valid:"-"`
+	User   *user.User `xorm:"-" json:"user" valid:"-" readOnly:"true" doc:"The user who reacted. Set by the server from the authenticated user; ignored on write."`
 	UserID int64      `xorm:"bigint not null INDEX" json:"-"`
 
 	// The id of the entity you're reacting to
@@ -48,10 +48,10 @@ type Reaction struct {
 	EntityKindString string       `xorm:"-" json:"-" param:"entitykind"`
 
 	// The actual reaction. This can be any valid utf character or text, up to a length of 20.
-	Value string `xorm:"varchar(20) not null INDEX" json:"value" valid:"required"`
+	Value string `xorm:"varchar(20) not null INDEX" json:"value" valid:"required" maxLength:"20" doc:"The reaction itself: any UTF text up to 20 characters, e.g. an emoji."`
 
 	// A timestamp when this reaction was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this reaction was created. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
