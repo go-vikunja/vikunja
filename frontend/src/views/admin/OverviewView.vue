@@ -115,6 +115,35 @@
 						</a>
 					</p>
 				</div>
+				<div
+					v-if="toggleableFeatures.length"
+					class="admin-overview__card admin-overview__card--wide"
+				>
+					<h2 class="admin-overview__card-title">
+						{{ $t('admin.proFeatures.title') }}
+					</h2>
+					<FormField
+						v-for="st in toggleableFeatures"
+						:key="st.feature"
+						:label="$t('admin.proFeatures.defaultLabel', {feature: featureLabel(st.feature)})"
+					>
+						<template #default="{id}">
+							<FormSelect
+								:id="id"
+								:model-value="st.defaultEnabled ? 'on' : 'off'"
+								:options="defaultOptions"
+								:disabled="!st.licensed || savingFeature !== null"
+								@update:modelValue="setFeatureDefault(st.feature, $event === 'on')"
+							/>
+							<span
+								v-if="!st.licensed"
+								class="admin-overview__hint"
+							>
+								({{ $t('admin.proFeatures.notLicensed') }})
+							</span>
+						</template>
+					</FormField>
+				</div>
 			</div>
 		</div>
 	</Card>
@@ -122,20 +151,54 @@
 
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
+import {useI18n} from 'vue-i18n'
 import dayjs from 'dayjs'
 import Card from '@/components/misc/Card.vue'
 import Icon from '@/components/misc/Icon'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
+import FormField from '@/components/input/FormField.vue'
+import FormSelect from '@/components/input/FormSelect.vue'
 import AdminOverviewService from '@/services/admin/overviewService'
+import {useAdminProFeatureService, type ProFeatureState} from '@/services/admin/proFeatureService'
 import type {IAdminOverview} from '@/modelTypes/IAdminOverview'
+import type {ProFeature} from '@/constants/proFeatures'
 import {useConfigStore} from '@/stores/config'
-import {error} from '@/message'
+import {error, success} from '@/message'
 
+const {t, te} = useI18n({useScope: 'global'})
 const adminOverviewService = new AdminOverviewService()
+const proFeatureService = useAdminProFeatureService()
 const configStore = useConfigStore()
 
 const data = ref<IAdminOverview | null>(null)
 const loading = ref(false)
+
+const featureStates = ref<ProFeatureState[]>([])
+const savingFeature = ref<ProFeature | null>(null)
+
+const toggleableFeatures = computed(() => featureStates.value.filter(st => st.perUserToggleable))
+
+const defaultOptions = computed(() => [
+	{value: 'on', label: t('admin.proFeatures.defaultEnabled')},
+	{value: 'off', label: t('admin.proFeatures.defaultDisabled')},
+])
+
+function featureLabel(feature: ProFeature): string {
+	const key = `admin.proFeatures.features.${feature}`
+	return te(key) ? t(key) : feature
+}
+
+async function setFeatureDefault(feature: ProFeature, enabled: boolean) {
+	savingFeature.value = feature
+	try {
+		featureStates.value = await proFeatureService.setInstanceDefault(feature, enabled)
+		success({message: t('admin.proFeatures.defaultUpdatedSuccess', {feature: featureLabel(feature)})})
+	} catch (e) {
+		error(e)
+	} finally {
+		savingFeature.value = null
+	}
+}
 
 const expiresInDays = computed<number | null>(() => {
 	const expiresAt = data.value?.license?.expiresAt
@@ -153,6 +216,7 @@ onMounted(async () => {
 	loading.value = true
 	try {
 		data.value = await adminOverviewService.getOverview()
+		featureStates.value = await proFeatureService.getAll()
 	} catch (e) {
 		error(e)
 	} finally {

@@ -3,6 +3,8 @@ import {setActivePinia, createPinia} from 'pinia'
 import {computed} from 'vue'
 
 import {useConfigStore} from './config'
+import {useAuthStore} from './auth'
+import UserModel from '@/models/user'
 
 describe('config store', () => {
 	beforeEach(() => {
@@ -35,6 +37,28 @@ describe('config store', () => {
 			expect(enabled.value).toBe(false)
 			store.enabledProFeatures = ['admin_panel']
 			expect(enabled.value).toBe(true)
+		})
+
+		it('prefers the per-user effective list once the user is loaded', () => {
+			const store = useConfigStore()
+			const authStore = useAuthStore()
+			store.enabledProFeatures = ['time_tracking']
+
+			authStore.setUser(new UserModel({id: 1, effectiveProFeatures: []}), false)
+			expect(store.isProFeatureEnabled('time_tracking')).toBe(false)
+
+			authStore.setUser(new UserModel({id: 1, effectiveProFeatures: ['time_tracking']}), false)
+			expect(store.isProFeatureEnabled('time_tracking')).toBe(true)
+		})
+
+		it('falls back to the instance list while the per-user list is unknown', () => {
+			const store = useConfigStore()
+			const authStore = useAuthStore()
+			store.enabledProFeatures = ['time_tracking']
+
+			// A JWT-derived user has no effectiveProFeatures yet.
+			authStore.setUser(new UserModel({id: 1}), false)
+			expect(store.isProFeatureEnabled('time_tracking')).toBe(true)
 		})
 	})
 })

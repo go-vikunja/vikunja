@@ -39,6 +39,9 @@ func timePtr(t time.Time) *time.Time { return &t }
 // Entries: 1 = user1 on task 1, 2 = user1 on project 1, 3 = user3 on project 3.
 
 func TestTimeEntry_CanRead(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	tests := []struct {
 		name    string
 		entryID int64
@@ -73,6 +76,9 @@ func TestTimeEntry_CanRead(t *testing.T) {
 }
 
 func TestTimeEntry_CanCreate(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	tests := []struct {
 		name    string
 		entry   *TimeEntry
@@ -109,6 +115,9 @@ func TestTimeEntry_CanCreate(t *testing.T) {
 // Entry 3 is authored by user3; user1 can read project 3 but is not the author,
 // so it can read but not modify.
 func TestTimeEntry_CanModify(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	tests := []struct {
 		name    string
 		entryID int64
@@ -360,6 +369,8 @@ func TestTimeEntry_RunningTimerEndTimeIsNull(t *testing.T) {
 
 // Regression guard: the permission check must not clobber the update payload.
 func TestTimeEntry_Update(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
 	db.LoadAndAssertFixtures(t)
 	s := db.NewSession()
 	defer s.Close()
@@ -387,6 +398,9 @@ func TestTimeEntry_Update(t *testing.T) {
 }
 
 func TestTimeEntry_UpdateReassignsContainer(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	validTimes := func(te *TimeEntry) {
 		te.StartTime = time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
 		te.EndTime = timePtr(time.Date(2020, 1, 1, 10, 0, 0, 0, time.UTC))
@@ -451,6 +465,9 @@ func TestTimeEntry_UpdateReassignsContainer(t *testing.T) {
 }
 
 func TestTimeEntry_UpdateReopenGuard(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	a := &user.User{ID: 1}
 	someStart := time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
 
@@ -485,6 +502,9 @@ func TestTimeEntry_UpdateReopenGuard(t *testing.T) {
 }
 
 func TestTimeEntry_RejectsInvertedInterval(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	a := &user.User{ID: 1}
 	start := time.Date(2020, 1, 1, 10, 0, 0, 0, time.UTC)
 	before := time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
@@ -583,6 +603,9 @@ func TestTimeEntry_StopRunningTimer(t *testing.T) {
 }
 
 func TestTimeEntry_Events(t *testing.T) {
+	license.SetForTests([]license.Feature{license.FeatureTimeTracking})
+	defer license.ResetForTests()
+
 	u := &user.User{ID: 1}
 	someStart := time.Date(2020, 1, 1, 9, 0, 0, 0, time.UTC)
 	someEnd := timePtr(time.Date(2020, 1, 1, 10, 0, 0, 0, time.UTC))

@@ -24,18 +24,44 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/web/handler"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/conditional"
 )
 
-// timeTrackingGate is Huma operation middleware that 404s a time-tracking op when the license
-// feature is off. It's a middleware because license state can change while the instance is running.
+// timeTrackingGate is Huma operation middleware that 404s a time-tracking op when time
+// tracking is off for the requesting user — via the license or a per-user toggle. It's a
+// middleware because license state and toggles can change while the instance is running.
 func timeTrackingGate(api huma.API) func(huma.Context, func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		if !license.IsFeatureEnabled(license.FeatureTimeTracking) {
+			_ = huma.WriteErr(api, ctx, http.StatusNotFound, "Not Found")
+			return
+		}
+
+		// The token middleware authenticates before the gate, so missing auth
+		// here is a programming error, not a client one.
+		a, err := auth.GetAuthFromContext(ctx.Context())
+		if err != nil {
+			log.Errorf("v2: could not resolve auth in time tracking gate: %s", err)
+			_ = huma.WriteErr(api, ctx, http.StatusNotFound, "Not Found")
+			return
+		}
+
+		s := db.NewSession()
+		defer s.Close()
+
+		enabled, err := models.IsProFeatureEnabledForAuth(s, a, license.FeatureTimeTracking)
+		if err != nil {
+			log.Errorf("v2: could not check time tracking toggle: %s", err)
+			_ = huma.WriteErr(api, ctx, http.StatusInternalServerError, "Internal Server Error")
+			return
+		}
+		if !enabled {
 			_ = huma.WriteErr(api, ctx, http.StatusNotFound, "Not Found")
 			return
 		}

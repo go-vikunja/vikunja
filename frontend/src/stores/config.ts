@@ -9,6 +9,7 @@ import type {IProvider} from '@/types/IProvider'
 import type {MIGRATORS} from '@/views/migrate/migrators'
 import type {ProFeature} from '@/constants/proFeatures'
 import {InvalidApiUrlProvidedError} from '@/helpers/checkAndSetApiUrl'
+import {useAuthStore} from '@/stores/auth'
 
 export interface ConfigState {
 	version: string,
@@ -106,6 +107,13 @@ export const useConfigStore = defineStore('config', () => {
 	}
 
 	function isProFeatureEnabled(name: ProFeature): boolean {
+		// The per-user list from /user is authoritative once loaded; the
+		// instance list from /info covers the time before login (or before
+		// the full user object arrives).
+		const effective = useAuthStore().info?.effectiveProFeatures
+		if (effective) {
+			return effective.includes(name)
+		}
 		return state.enabledProFeatures?.includes(name) ?? false
 	}
 

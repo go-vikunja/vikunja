@@ -1552,7 +1552,13 @@
       "deleteModeScheduled": "Schedule deletion",
       "deleteModeScheduledHelp": "Schedule deletion sends the user a confirmation email, mirroring a self-initiated account deletion.",
       "deleteModeNow": "Delete now",
-      "deleteModeNowHelp": "Delete now removes the user and all their data immediately. This cannot be undone."
+      "deleteModeNowHelp": "Delete now removes the user and all their data immediately. This cannot be undone.",
+      "proFeaturesTitle": "Pro features",
+      "featureDefault": "Default ({state})",
+      "featureEnabled": "Enabled",
+      "featureDisabled": "Disabled",
+      "featureStateOn": "on",
+      "featureStateOff": "off"
     },
     "projects": {
       "ownerLabel": "Owner",
@@ -1560,6 +1566,19 @@
       "reassignTitle": "Reassign {title}",
       "reassignedSuccess": "Project owner reassigned.",
       "newOwnerLabel": "New owner"
+    },
+    "proFeatures": {
+      "title": "Pro features",
+      "features": {
+        "time_tracking": "Time tracking",
+        "admin_panel": "Admin panel",
+        "audit_logs": "Audit logs"
+      },
+      "defaultLabel": "{feature} for users without an override",
+      "defaultEnabled": "Enabled by default",
+      "defaultDisabled": "Disabled by default",
+      "defaultUpdatedSuccess": "Default for {feature} updated.",
+      "notLicensed": "not licensed"
     }
   }
 }

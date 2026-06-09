@@ -11,6 +11,15 @@ export function getApiBaseUrl(): string {
 	return url?.endsWith('/') ? url : url + '/'
 }
 
+// The shared AuthenticatedHTTPFactory pins baseURL to /api/v1; /api/v2
+// endpoints hand axios absolute URLs to bypass that. Bespoke and intentionally
+// a bit dirty — to be folded into the proper service layer once the frontend
+// moves fully onto v2.
+export function getApiV2Url(path: string): string {
+	const v2Base = getApiBaseUrl().replace(/\/api\/v1\/$/, '/api/v2/')
+	return new URL(v2Base + path, window.location.origin).toString()
+}
+
 export function HTTPFactory() {
 	const instance = axios.create({
 		baseURL: getApiBaseUrl(),

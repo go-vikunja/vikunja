@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"time"
 
+	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
 
 	"code.vikunja.io/api/pkg/user"
@@ -39,6 +40,11 @@ type UserWithSettings struct {
 	IsLocalUser         bool          `json:"is_local_user"`
 	AuthProvider        string        `json:"auth_provider"`
 	IsAdmin             bool          `json:"is_admin"`
+	// The pro features effectively enabled for this user — the instance
+	// license combined with per-user toggles. Unlike /info's
+	// enabled_pro_features, this is the per-user truth clients should gate
+	// UI on.
+	EffectiveProFeatures []license.Feature `json:"effective_pro_features"`
 }
 
 // UserShow gets all information about the current user
@@ -88,6 +94,11 @@ func UserShow(c *echo.Context) error {
 	}
 
 	us.AuthProvider, err = getAuthProviderName(u)
+	if err != nil {
+		return err
+	}
+
+	us.EffectiveProFeatures, err = models.EffectiveProFeaturesForUser(s, u)
 	if err != nil {
 		return err
 	}

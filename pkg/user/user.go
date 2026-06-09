@@ -123,6 +123,11 @@ type User struct {
 	FrontendSettings   interface{}    `xorm:"json null" json:"-"`
 	ExtraSettingsLinks map[string]any `xorm:"json null" json:"-"`
 
+	// ProFeatureOverrides holds per-user admin-set overrides for per-user
+	// toggleable pro features, keyed by feature string ("time_tracking").
+	// A missing key means the instance default applies.
+	ProFeatureOverrides map[string]bool `xorm:"json null" json:"-"`
+
 	ExportFileID int64 `xorm:"bigint null" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.

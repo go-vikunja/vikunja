@@ -1,16 +1,7 @@
-import {AuthenticatedHTTPFactory, getApiBaseUrl} from '@/helpers/fetcher'
+import {AuthenticatedHTTPFactory, getApiV2Url as v2Url} from '@/helpers/fetcher'
 import {objectToCamelCase, objectToSnakeCase} from '@/helpers/case'
 
 import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
-
-// Time tracking is the first frontend feature on /api/v2, while the shared
-// AuthenticatedHTTPFactory pins baseURL to /api/v1. We hand axios absolute v2
-// URLs to bypass that. Bespoke and intentionally a bit dirty — to be folded
-// into the proper service layer once the frontend moves fully onto v2.
-function v2Url(path: string): string {
-	const v2Base = getApiBaseUrl().replace(/\/api\/v1\/$/, '/api/v2/')
-	return new URL(v2Base + path, window.location.origin).toString()
-}
 
 export function parseTimeEntry(raw: Record<string, unknown>): ITimeEntry {
 	const e = objectToCamelCase(raw)

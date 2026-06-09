@@ -83,6 +83,7 @@ export default class UserModel extends AbstractModel<IUser> implements IUser {
 	deletionScheduledAt: null
 	isAdmin?: boolean
 	botOwnerId = 0
+	effectiveProFeatures?: string[]
 
 	constructor(data: Partial<IUser> = {}) {
 		super()

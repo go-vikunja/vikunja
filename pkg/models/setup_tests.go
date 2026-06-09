@@ -80,6 +80,7 @@ func SetupTests() {
 		"totp",
 		"oauth_codes",
 		"notifications",
+		"pro_feature_instance_defaults",
 	)
 	if err != nil {
 		log.Fatal(err)

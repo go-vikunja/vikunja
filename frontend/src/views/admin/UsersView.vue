@@ -119,6 +119,25 @@
 						</template>
 					</FormField>
 
+					<template v-if="featureStates.length">
+						<h3 class="admin-users__features-title">
+							{{ $t('admin.users.proFeaturesTitle') }}
+						</h3>
+						<FormField
+							v-for="st in featureStates"
+							:key="st.feature"
+							:label="featureLabel(st.feature)"
+						>
+							<template #default="{id}">
+								<FormSelect
+									:id="id"
+									v-model="featureChoices[st.feature]"
+									:options="featureOptions(st.feature)"
+								/>
+							</template>
+						</FormField>
+					</template>
+
 					<template #footer>
 						<XButton
 							variant="tertiary"
@@ -282,8 +301,10 @@ import {useDebounceFn} from '@vueuse/core'
 import {useI18n} from 'vue-i18n'
 import {useAuthStore} from '@/stores/auth'
 import AdminUserService, {type CreateAdminUserBody, type DeleteUserMode} from '@/services/admin/userService'
+import {useAdminProFeatureService, type UserProFeatureState} from '@/services/admin/proFeatureService'
 import AdminUserModel from '@/models/adminUser'
 import type {IAdminUser} from '@/modelTypes/IAdminUser'
+import type {ProFeature} from '@/constants/proFeatures'
 import {error, success} from '@/message'
 import Card from '@/components/misc/Card.vue'
 import Modal from '@/components/misc/Modal.vue'
@@ -295,11 +316,12 @@ import FormSelect from '@/components/input/FormSelect.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import TimeDisplay from '@/components/misc/TimeDisplay.vue'
 
-const {t} = useI18n({useScope: 'global'})
+const {t, te} = useI18n({useScope: 'global'})
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.info?.id)
 
 const adminUserService = new AdminUserService()
+const proFeatureService = useAdminProFeatureService()
 
 const users = ref<IAdminUser[]>([])
 const loading = ref(false)
@@ -315,6 +337,12 @@ const createOpen = ref(false)
 const creating = ref(false)
 const editable = reactive({isAdmin: false, status: 0})
 
+type FeatureChoice = 'default' | 'on' | 'off'
+const featureStates = ref<UserProFeatureState[]>([])
+const featureChoices = reactive<Record<string, FeatureChoice>>({})
+// Instance defaults, so the "Default" option can say what it resolves to.
+const instanceFeatureDefaults = reactive<Record<string, boolean>>({})
+
 function emptyCreateForm(): Required<Pick<CreateAdminUserBody, 'username' | 'email'>> & CreateAdminUserBody {
 	return {
 		username: '',
@@ -329,17 +357,55 @@ function emptyCreateForm(): Required<Pick<CreateAdminUserBody, 'username' | 'ema
 
 const createForm = reactive(emptyCreateForm())
 
+function choiceFromOverride(override: boolean | null): FeatureChoice {
+	if (override === null) return 'default'
+	return override ? 'on' : 'off'
+}
+
+const featureChanges = computed(() => featureStates.value.filter(st =>
+	featureChoices[st.feature] !== undefined
+	&& featureChoices[st.feature] !== choiceFromOverride(st.override),
+))
+
 const hasChanges = computed(() => {
 	if (!detailTarget.value) return false
 	return editable.isAdmin !== !!detailTarget.value.isAdmin
 		|| editable.status !== detailTarget.value.status
+		|| featureChanges.value.length > 0
 })
 
-watch(detailTarget, (u) => {
+watch(detailTarget, async (u) => {
 	if (!u) return
 	editable.isAdmin = !!u.isAdmin
 	editable.status = u.status
+
+	featureStates.value = []
+	Object.keys(featureChoices).forEach(k => delete featureChoices[k])
+	try {
+		featureStates.value = await proFeatureService.getForUser(u.id)
+		featureStates.value.forEach(st => {
+			featureChoices[st.feature] = choiceFromOverride(st.override)
+		})
+	} catch (e) {
+		error(e)
+	}
 })
+
+function featureLabel(feature: ProFeature): string {
+	const key = `admin.proFeatures.features.${feature}`
+	return te(key) ? t(key) : feature
+}
+
+function featureOptions(feature: ProFeature) {
+	const defaultState = instanceFeatureDefaults[feature]
+		? t('admin.users.featureStateOn')
+		: t('admin.users.featureStateOff')
+	return [
+		{value: 'default', label: t('admin.users.featureDefault', {state: defaultState})},
+		{value: 'on', label: t('admin.users.featureEnabled')},
+		{value: 'off', label: t('admin.users.featureDisabled')},
+	]
+}
 
 function statusLabel(status: number): string {
 	switch (status) {
@@ -439,6 +505,14 @@ async function saveChanges() {
 		if (editable.status !== target.status) {
 			latest = await adminUserService.setStatus(target.id, editable.status)
 		}
+		for (const st of featureChanges.value) {
+			const choice = featureChoices[st.feature]
+			if (choice === 'default') {
+				await proFeatureService.clearUserOverride(target.id, st.feature)
+			} else {
+				await proFeatureService.setUserOverride(target.id, st.feature, choice === 'on')
+			}
+		}
 		replaceUser(latest)
 		success({message: t('admin.users.updatedSuccess', {username: latest.username})})
 		detailTarget.value = null
@@ -478,7 +552,21 @@ async function doDelete(mode: DeleteUserMode) {
 	}
 }
 
-onMounted(load)
+async function loadInstanceFeatureDefaults() {
+	try {
+		const states = await proFeatureService.getAll()
+		states.filter(st => st.perUserToggleable).forEach(st => {
+			instanceFeatureDefaults[st.feature] = st.defaultEnabled
+		})
+	} catch (e) {
+		error(e)
+	}
+}
+
+onMounted(() => {
+	load()
+	loadInstanceFeatureDefaults()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -486,6 +574,14 @@ onMounted(load)
 	display: flex;
 	gap: 0.5rem;
 	margin-block-end: 1rem;
+}
+
+.admin-users__features-title {
+	font-size: 0.85rem;
+	color: var(--grey-600);
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	margin-block: 1rem 0.5rem;
 }
 
 .admin-users__meta {

@@ -80,6 +80,18 @@ var (
 		"time_tracking": FeatureTimeTracking,
 		"audit_logs":    FeatureAuditLogs,
 	}
+	// perUserToggleable marks features admins can grant or revoke per user.
+	// Features not listed here are always instance-wide (admin_panel gates the
+	// admin surface itself, audit_logs is an instance property).
+	perUserToggleable = map[Feature]bool{
+		FeatureTimeTracking: true,
+	}
+	// perUserDefault is the code-level default for toggleable features when
+	// neither an instance default nor a user override is set. time_tracking
+	// defaults to enabled so licensed instances keep their behavior on upgrade.
+	perUserDefault = map[Feature]bool{
+		FeatureTimeTracking: true,
+	}
 )
 
 func (f *Feature) String() string {
@@ -289,6 +301,35 @@ func IsFeatureEnabled(feature Feature) bool {
 		return false
 	}
 	return st.Features[feature]
+}
+
+// FeatureFromString resolves a feature key like "time_tracking" to its constant.
+func FeatureFromString(s string) (Feature, bool) {
+	f, ok := stringToFeature[s]
+	return f, ok
+}
+
+// IsPerUserToggleable returns whether admins can grant or revoke the feature per user.
+func IsPerUserToggleable(feature Feature) bool {
+	return perUserToggleable[feature]
+}
+
+// PerUserDefault returns the code-level per-user default for a toggleable feature,
+// used when neither an instance default nor a user override is set.
+func PerUserDefault(feature Feature) bool {
+	return perUserDefault[feature]
+}
+
+// AllFeatures returns every known feature, sorted by their string key.
+func AllFeatures() []Feature {
+	out := make([]Feature, 0, len(featureToString))
+	for f := range featureToString {
+		out = append(out, f)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].String() < out[j].String()
+	})
+	return out
 }
 
 // MaxUsersReached returns whether the licensed user limit has been reached.

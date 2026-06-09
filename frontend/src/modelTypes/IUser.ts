@@ -25,4 +25,8 @@ export interface IUser extends IAbstract {
 	deletionScheduledAt: string | Date | null
 	isAdmin?: boolean
 	botOwnerId?: number
+	// The pro features effectively enabled for this user (license + per-user
+	// toggles). Undefined until the full user object is loaded from /user —
+	// the JWT payload doesn't carry it.
+	effectiveProFeatures?: string[]
 }
