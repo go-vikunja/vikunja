@@ -314,8 +314,7 @@
 			"default": "Privzeto",
 			"month": "Mesec",
 			"day": "Dan",
-			"hour": "Ura",
-			"range": "Datumski obseg"
+			"hour": "Ura"
 		},
 		"table": {
 			"title": "Tabela",
@@ -324,7 +323,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Omejitev: {limit}",
-			"noLimit": "Ni nastavljeno",
 			"doneBucket": "Vedro končanih nalog",
 			"doneBucketHint": "Vse naloge, premaknjene v to vedro, bodo samodejno označene kot opravljene.",
 			"doneBucketHintExtended": "Vse naloge, premaknjene v vedro končanih nalog, bodo samodejno označene kot opravljene. Premaknjene bodo tudi vse naloge, ki so od drugje označena kot opravljene.",

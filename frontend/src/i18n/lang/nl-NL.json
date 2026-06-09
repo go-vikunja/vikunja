@@ -470,7 +470,6 @@
 			"month": "Maand",
 			"day": "Dag",
 			"hour": "Uur",
-			"range": "Datumbereik",
 			"chartLabel": "Project Gantt-diagram",
 			"taskBarsForRow": "Taakbalken voor rij {rowId}",
 			"taskBarLabel": "Taak: {task}. Van {startDate} tot {endDate}. {dateType}. Klik om te bewerken, sleep om te verplaatsen.",
@@ -499,7 +498,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limiet: {limit}",
-			"noLimit": "Niet ingesteld",
 			"doneBucket": "Categorie 'voltooid'",
 			"doneBucketHint": "Alle taken die je naar deze categorie verplaatst worden automatisch als 'voltooid' gemarkeerd.",
 			"doneBucketHintExtended": "Taken die je verplaatst naar de categorie 'voltooid' worden automatisch gemarkeerd als voltooid. Ook taken die je elders als voltooid aanmerkt, worden hierheen verplaatst.",

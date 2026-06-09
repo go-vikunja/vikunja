@@ -300,8 +300,7 @@
 			"default": "Domyślnie",
 			"month": "Miesiąc",
 			"day": "Dzień",
-			"hour": "Godzina",
-			"range": "Zakres dat"
+			"hour": "Godzina"
 		},
 		"table": {
 			"title": "Tabela",
@@ -310,7 +309,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limit: {limit}",
-			"noLimit": "Nie ustawiony",
 			"doneBucket": "Zakończone zadania",
 			"doneBucketHint": "Wszystkie zadania przeniesione do tej kolumny zostaną automatycznie oznaczone jako zakończone.",
 			"doneBucketHintExtended": "Wszystkie zadania przeniesione do kolumny zakończonych zostaną automatycznie oznaczone jako zakończone. Wszystkie zadania oznaczone jako zakończone z innych miejsc zostaną przeniesione.",

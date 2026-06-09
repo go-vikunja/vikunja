@@ -470,7 +470,6 @@
 			"month": "Monat",
 			"day": "Tag",
 			"hour": "Stunde",
-			"range": "Zeitraum",
 			"chartLabel": "Projekt Gantt-Diagramm",
 			"taskBarsForRow": "Aufgabenleisten für Zeile {rowId}",
 			"taskBarLabel": "Aufgabe: {task}. Von {startDate} bis {endDate}. {dateType}. Klicke zum Bearbeiten, ziehe zum Verschieben.",
@@ -499,7 +498,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limit: {limit}",
-			"noLimit": "Nicht gesetzt",
 			"doneBucket": "Erledigt Spalte",
 			"doneBucketHint": "Alle Aufgaben, die in diese Spalte verschoben werden, werden automatisch als erledigt markiert.",
 			"doneBucketHintExtended": "Alle Aufgaben, die in die Erledigt Spalte verschoben wurden, werden automatisch als erledigt markiert. Aufgaben, die in einer anderen Spalte als Erledigt markiert wurden, werden auch in diese Spalte verschoben.",

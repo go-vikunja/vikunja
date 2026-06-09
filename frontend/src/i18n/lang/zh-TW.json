@@ -362,7 +362,6 @@
 			"month": "月",
 			"day": "日",
 			"hour": "時",
-			"range": "日期範圍",
 			"chartLabel": "專案甘特圖",
 			"taskBarsForRow": "第 {rowId} 列的任務列",
 			"taskBarLabel": "任務：{task}。從 {startDate} 到 {endDate}。{dateType}。點擊編輯，拖曳移動。",
@@ -386,7 +385,6 @@
 		"kanban": {
 			"title": "看板",
 			"limit": "限制: {limit}",
-			"noLimit": "未設定",
 			"doneBucket": "已完成類別",
 			"doneBucketHint": "移入此類別的任務將自動標記為已完成。",
 			"doneBucketHintExtended": "所有移入已完成類別的任務將自動標記為已完成。 其他位置標記為已完成的任務也將被移動。",

@@ -289,16 +289,14 @@
 			"default": "Zadano",
 			"month": "Mjesec",
 			"day": "Dan",
-			"hour": "Sat",
-			"range": "Raspon datuma"
+			"hour": "Sat"
 		},
 		"table": {
 			"title": "Tablica",
 			"columns": "Stupci"
 		},
 		"kanban": {
-			"title": "Kanban",
-			"noLimit": "Nije postavljeno"
+			"title": "Kanban"
 		},
 		"pseudo": {
 			"favorites": {

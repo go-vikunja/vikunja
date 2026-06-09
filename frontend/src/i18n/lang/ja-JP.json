@@ -470,7 +470,6 @@
 			"month": "月",
 			"day": "日",
 			"hour": "時間",
-			"range": "期間",
 			"chartLabel": "プロジェクトガントチャート",
 			"taskBarsForRow": "行 {rowId} のタスクバー",
 			"taskBarLabel": "タスク: {task}。{startDate} から {endDate} まで。{dateType}。クリックして編集、ドラッグして移動。",
@@ -499,7 +498,6 @@
 		"kanban": {
 			"title": "カンバン",
 			"limit": "上限: {limit}",
-			"noLimit": "未設定",
 			"doneBucket": "バケットを完了",
 			"doneBucketHint": "このバケットに移動されたすべてのタスクは自動的に完了としてマークされます。",
 			"doneBucketHintExtended": "完了バケットに移動されたすべてのタスクは自動的に完了としてマークされます。他の場所にあるタスクも完了としてマークされるとこのバケットに移動されます。",
