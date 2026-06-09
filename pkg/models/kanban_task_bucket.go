@@ -30,16 +30,16 @@ import (
 // A task can only appear once per project view which is ensured by a
 // unique index on the combination of task_id and project_view_id.
 type TaskBucket struct {
-	BucketID int64   `xorm:"bigint not null index" json:"bucket_id" param:"bucket"`
-	Bucket   *Bucket `xorm:"-" json:"bucket"`
+	BucketID int64   `xorm:"bigint not null index" json:"bucket_id" param:"bucket" doc:"The bucket to move the task into. On /api/v2 this is taken from the URL; a value in the body is ignored."`
+	Bucket   *Bucket `xorm:"-" json:"bucket" readOnly:"true" doc:"The resolved target bucket, including its updated task count."`
 	// The task which belongs to the bucket. Together with ProjectViewID
 	// this field is part of a unique index to prevent duplicates.
-	TaskID int64 `xorm:"bigint not null index unique(task_view)" json:"task_id"`
+	TaskID int64 `xorm:"bigint not null index unique(task_view)" json:"task_id" doc:"The id of the task to place in the bucket."`
 	// The view this bucket belongs to. Combined with TaskID this forms a
 	// unique index.
-	ProjectViewID int64 `xorm:"bigint not null index unique(task_view)" json:"project_view_id" param:"view"`
+	ProjectViewID int64 `xorm:"bigint not null index unique(task_view)" json:"project_view_id" param:"view" doc:"The view the bucket belongs to. On /api/v2 this is taken from the URL; a value in the body is ignored."`
 	ProjectID     int64 `xorm:"-" json:"-" param:"project"`
-	Task          *Task `xorm:"-" json:"task"`
+	Task          *Task `xorm:"-" json:"task" readOnly:"true" doc:"The task as it stands after the move, reflecting any done-state change."`
 
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`
