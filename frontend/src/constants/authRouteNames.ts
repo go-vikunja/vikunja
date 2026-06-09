@@ -10,4 +10,5 @@ export const AUTH_ROUTE_NAMES = new Set([
 	'user.password-reset.reset',
 	'link-share.auth',
 	'openid.auth',
+	'saml.auth',
 ])

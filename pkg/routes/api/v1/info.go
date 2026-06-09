@@ -23,6 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/modules/auth/saml"
 	csvmigrator "code.vikunja.io/api/pkg/modules/migration/csv"
 	microsofttodo "code.vikunja.io/api/pkg/modules/migration/microsoft-todo"
 	"code.vikunja.io/api/pkg/modules/migration/ticktick"
@@ -63,6 +64,7 @@ type authInfo struct {
 	Local         localAuthInfo  `json:"local"`
 	Ldap          ldapAuthInfo   `json:"ldap"`
 	OpenIDConnect openIDAuthInfo `json:"openid_connect"`
+	SAML          samlAuthInfo   `json:"saml"`
 }
 
 type localAuthInfo struct {
@@ -77,6 +79,11 @@ type ldapAuthInfo struct {
 type openIDAuthInfo struct {
 	Enabled   bool               `json:"enabled"`
 	Providers []*openid.Provider `json:"providers"`
+}
+
+type samlAuthInfo struct {
+	Enabled   bool             `json:"enabled"`
+	Providers []*saml.Provider `json:"providers"`
 }
 
 type legalInfo struct {
@@ -131,6 +138,9 @@ func Info(c *echo.Context) error {
 			OpenIDConnect: openIDAuthInfo{
 				Enabled: config.AuthOpenIDEnabled.GetBool(),
 			},
+			SAML: samlAuthInfo{
+				Enabled: config.AuthSAMLEnabled.GetBool(),
+			},
 		},
 	}
 
@@ -141,6 +151,14 @@ func Info(c *echo.Context) error {
 	}
 
 	info.AuthInfo.OpenIDConnect.Providers = providers
+
+	samlProviders, err := saml.GetAllProviders()
+	if err != nil {
+		log.Errorf("Error while getting saml providers for /info: %s", err)
+		// No return here to not break /info
+	}
+
+	info.AuthInfo.SAML.Providers = samlProviders
 
 	// Migrators
 	if config.MigrationTodoistEnable.GetBool() {
