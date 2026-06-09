@@ -62,25 +62,25 @@ func validateRepeatAfter(repeatAfter int64) error {
 // Task represents a task in a project
 type Task struct {
 	// The unique, numeric id of this task.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"projecttask"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"projecttask" readOnly:"true" doc:"The unique, numeric id of this task."`
 	// The task text. This is what you'll see in the project.
-	Title string `xorm:"TEXT not null" json:"title" valid:"minstringlength(1)" minLength:"1"`
+	Title string `xorm:"TEXT not null" json:"title" valid:"minstringlength(1)" minLength:"1" doc:"The task title. This is what you'll see in the project."`
 	// The task description.
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
 	Done bool `xorm:"INDEX null" json:"done"`
 	// The time when a task was marked as done. This field is system-controlled and cannot be set via API.
-	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at"`
+	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at" readOnly:"true" doc:"When the task was marked as done. Set by the server; ignored on write."`
 	// The time when the task is due.
 	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
 	// An array of reminders that are associated with this task.
 	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// The project this task belongs to.
-	ProjectID int64 `xorm:"bigint INDEX not null unique(tasks_project_index)" json:"project_id" param:"project"`
+	ProjectID int64 `xorm:"bigint INDEX not null unique(tasks_project_index)" json:"project_id" param:"project" doc:"The id of the project this task belongs to. On create it is taken from the URL; on update, setting it to a different project moves the task (requires write access to the target project)."`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
-	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after" valid:"range(0|9223372036854775807)"`
+	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after" valid:"range(0|9223372036854775807)" doc:"The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount."`
 	// Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.
-	RepeatMode TaskRepeatMode `xorm:"not null default 0" json:"repeat_mode"`
+	RepeatMode TaskRepeatMode `xorm:"not null default 0" json:"repeat_mode" doc:"How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date."`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"bigint null" json:"priority"`
 	// When this task starts.
@@ -88,60 +88,60 @@ type Task struct {
 	// When this task ends.
 	EndDate time.Time `xorm:"DATETIME INDEX null 'end_date'" json:"end_date" query:"-"`
 	// An array of users who are assigned to this task
-	Assignees []*user.User `xorm:"-" json:"assignees"`
+	Assignees []*user.User `xorm:"-" json:"assignees" readOnly:"true" doc:"The users assigned to this task. Read-only here; use the task-assignee endpoints to change assignments."`
 	// An array of labels which are associated with this task. This property is read-only, you must use the separate endpoint to add labels to a task.
-	Labels []*Label `xorm:"-" json:"labels"`
+	Labels []*Label `xorm:"-" json:"labels" readOnly:"true" doc:"The labels on this task. Read-only here; use the label-task endpoints to add or remove labels."`
 	// The task color in hex
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7"`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The task color as a hex string without the leading '#'."`
 	// Determines how far a task is left from being done
-	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done"`
+	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done" doc:"How far the task is from done, between 0 and 1."`
 
 	// The task identifier, based on the project identifier and the task's index
-	Identifier string `xorm:"-" json:"identifier"`
+	Identifier string `xorm:"-" json:"identifier" readOnly:"true" doc:"The textual task identifier, derived from the project identifier and the task index (e.g. \"PROJ-12\")."`
 	// The task index, calculated per project
-	Index int64 `xorm:"bigint not null default 0 unique(tasks_project_index)" json:"index" param:"index"`
+	Index int64 `xorm:"bigint not null default 0 unique(tasks_project_index)" json:"index" param:"index" readOnly:"true" doc:"The per-project task index, assigned by the server."`
 
 	// The UID is currently not used for anything other than CalDAV, which is why we don't expose it over json
 	UID string `xorm:"varchar(250) null" json:"-"`
 
 	// All related tasks, grouped by their relation kind
-	RelatedTasks RelatedTaskMap `xorm:"-" json:"related_tasks"`
+	RelatedTasks RelatedTaskMap `xorm:"-" json:"related_tasks" readOnly:"true" doc:"Related tasks grouped by relation kind. Read-only here; use the task-relation endpoints to change relations."`
 
 	// All attachments this task has. This property is read-onlym, you must use the separate endpoint to add attachments to a task.
-	Attachments []*TaskAttachment `xorm:"-" json:"attachments"`
+	Attachments []*TaskAttachment `xorm:"-" json:"attachments" readOnly:"true" doc:"The task's attachments. Read-only here; use the attachment endpoints to add or remove them."`
 
 	// If this task has a cover image, the field will return the id of the attachment that is the cover image.
-	CoverImageAttachmentID int64 `xorm:"bigint default 0" json:"cover_image_attachment_id"`
+	CoverImageAttachmentID int64 `xorm:"bigint default 0" json:"cover_image_attachment_id" doc:"The id of the attachment used as this task's cover image, or 0 for none."`
 
 	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" project. This value depends on the user making the call to the api.
-	IsFavorite bool `xorm:"-" json:"is_favorite"`
+	IsFavorite bool `xorm:"-" json:"is_favorite" doc:"Whether the requesting user has favorited this task. Per-user, so it differs between callers."`
 
-	IsUnread *bool `xorm:"-" json:"is_unread,omitempty"`
+	IsUnread *bool `xorm:"-" json:"is_unread,omitempty" readOnly:"true" doc:"Whether the task is unread for the requesting user. Only present when requested via the is_unread expand option."`
 
 	// The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
 	// Will only returned when retrieving one task.
-	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
+	Subscription *Subscription `xorm:"-" json:"subscription,omitempty" readOnly:"true" doc:"The requesting user's subscription to this task. Read-only here; use the subscription endpoints to change it. Only present when reading a single task."`
 
 	// A timestamp when this task was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"When this task was created. Set by the server; ignored on write."`
 	// A timestamp when this task was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"When this task was last updated. Set by the server; ignored on write."`
 
 	// The bucket id. Will only be populated when the task is accessed via a view with buckets.
 	// Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
-	BucketID int64 `xorm:"-" json:"bucket_id"`
+	BucketID int64 `xorm:"-" json:"bucket_id" doc:"The bucket the task is in. Only populated when the task is accessed via a view with buckets. To move a task between buckets, the new bucket must be in the same view as the old one."`
 
 	// All buckets across all views this task is part of. Only present when fetching tasks with the `expand` parameter set to `buckets`.
-	Buckets []*Bucket `xorm:"-" json:"buckets,omitempty"`
+	Buckets []*Bucket `xorm:"-" json:"buckets,omitempty" readOnly:"true" doc:"The task's buckets across all views. Only present when requested via the buckets expand option."`
 
 	// All comments of this task. Only present when fetching tasks with the `expand` parameter set to `comments`.
-	Comments []*TaskComment `xorm:"-" json:"comments,omitempty"`
+	Comments []*TaskComment `xorm:"-" json:"comments,omitempty" readOnly:"true" doc:"The task's first 50 comments. Only present when requested via the comments expand option."`
 
 	// Comment count of this task. Only present when fetching tasks with the `expand` parameter set to `comment_count`.
-	CommentCount *int64 `xorm:"-" json:"comment_count,omitempty"`
+	CommentCount *int64 `xorm:"-" json:"comment_count,omitempty" readOnly:"true" doc:"The number of comments on this task. Only present when requested via the comment_count expand option."`
 
 	// Time entry count of this task. Only present when fetching tasks with the `expand` parameter set to `time_entries_count`.
-	TimeEntriesCount *int64 `xorm:"-" json:"time_entries_count,omitempty"`
+	TimeEntriesCount *int64 `xorm:"-" json:"time_entries_count,omitempty" readOnly:"true" doc:"The number of time entries on this task. Only present when requested via the time_entries_count expand option."`
 
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
 	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
@@ -150,13 +150,13 @@ type Task struct {
 	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
 	// Positions are always saved per view. They will automatically be set if you request the tasks through a view
 	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
-	Position float64 `xorm:"-" json:"position"`
+	Position float64 `xorm:"-" json:"position" readOnly:"true" doc:"The task's position, saved per view. Only non-zero when the task is fetched through a view endpoint; use the task-position endpoint to change it."`
 
 	// Reactions on that task.
-	Reactions ReactionMap `xorm:"-" json:"reactions"`
+	Reactions ReactionMap `xorm:"-" json:"reactions" readOnly:"true" doc:"Reactions on this task. Only present when requested via the reactions expand option."`
 
 	// The user who initially created the task.
-	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
+	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who created this task. Set by the server."`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the project
 
 	web.CRUDable    `xorm:"-" json:"-"`
