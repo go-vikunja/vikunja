@@ -33,9 +33,9 @@ const MinPositionSpacing = 0.01
 
 type TaskPosition struct {
 	// The ID of the task this position is for
-	TaskID int64 `xorm:"bigint not null index" json:"task_id" param:"task"`
+	TaskID int64 `xorm:"bigint not null index" json:"task_id" param:"task" readOnly:"true" doc:"The numeric id of the task this position belongs to. Taken from the URL; ignored in the request body."`
 	// The project view this task is related to
-	ProjectViewID int64 `xorm:"bigint not null index" json:"project_view_id"`
+	ProjectViewID int64 `xorm:"bigint not null index" json:"project_view_id" doc:"The id of the project view this position applies to. Positions are stored per view, so the same task has an independent position in each of its project's views."`
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
 	// We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
@@ -44,7 +44,7 @@ type TaskPosition struct {
 	// which also leaves a lot of room for rearranging and sorting later.
 	// Positions are always saved per view. They will automatically be set if you request the tasks through a view
 	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
-	Position float64 `xorm:"double not null" json:"position"`
+	Position float64 `xorm:"double not null" json:"position" doc:"The task's sort position within the view, as a float so a task can be placed between any two others. To drop a task between two neighbours, set this to their midpoint. Values below the minimum spacing trigger a server-side recalculation of all positions in the view, so the stored value may differ from what you sent."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
