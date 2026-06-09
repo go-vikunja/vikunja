@@ -741,6 +741,7 @@ definitions:
       value:
         description: The actual reaction. This can be any valid utf character or text,
           up to a length of 20.
+        maxLength: 20
         type: string
     type: object
   models.ReactionMap:
@@ -1134,7 +1135,9 @@ definitions:
       relation_kind:
         allOf:
         - $ref: '#/definitions/models.RelationKind'
-        description: The kind of the relation.
+        description: |-
+          The kind of the relation.
+          The enum list must stay in sync with RelationKind.isValid() (RelationKindUnknown excluded); the v2 delete route param repeats it.
       task_id:
         description: The ID of the "base" task, the task which has a relation to another.
         type: integer

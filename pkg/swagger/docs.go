@@ -9876,7 +9876,8 @@ const docTemplate = `{
                 },
                 "value": {
                     "description": "The actual reaction. This can be any valid utf character or text, up to a length of 20.",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 }
             }
         },
@@ -10373,7 +10374,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "relation_kind": {
-                    "description": "The kind of the relation.",
+                    "description": "The kind of the relation.\nThe enum list must stay in sync with RelationKind.isValid() (RelationKindUnknown excluded); the v2 delete route param repeats it.",
                     "allOf": [
                         {
                             "$ref": "#/definitions/models.RelationKind"
