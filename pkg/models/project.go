@@ -448,6 +448,20 @@ func GetProjectSimpleByID(s *xorm.Session, projectID int64) (project *Project, e
 	return
 }
 
+// GetProjectSimpleByIdentifier gets a project by its textual identifier (e.g. "PROJ").
+// Identifiers are stored uppercase, so the lookup normalizes the input.
+func GetProjectSimpleByIdentifier(s *xorm.Session, identifier string) (project *Project, err error) {
+	project, exists, err := getProjectSimple(s, builder.Eq{"identifier": strings.ToUpper(identifier)})
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, ErrProjectDoesNotExist{}
+	}
+
+	return
+}
+
 func getProjectSimple(s *xorm.Session, cond builder.Cond) (project *Project, exists bool, err error) {
 	project = &Project{}
 	exists, err = s.

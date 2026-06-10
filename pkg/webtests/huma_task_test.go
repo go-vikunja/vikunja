@@ -204,9 +204,10 @@ func TestHumaTask_ReadByIndex(t *testing.T) {
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 		assert.Contains(t, rec.Body.String(), `"id":1`)
 	})
-	t.Run("Unknown identifier returns 404", func(t *testing.T) {
+	t.Run("Unknown identifier returns ErrProjectDoesNotExist", func(t *testing.T) {
 		rec := get("does-not-exist", "1")
 		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), fmt.Sprintf(`"code":%d`, models.ErrCodeProjectDoesNotExist))
 	})
 	t.Run("Nonexistent index returns 404", func(t *testing.T) {
 		rec := get("1", "99999")
