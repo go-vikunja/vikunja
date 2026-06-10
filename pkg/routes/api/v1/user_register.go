@@ -22,6 +22,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
@@ -79,13 +80,17 @@ func RegisterUser(c *echo.Context) error {
 	})
 	if err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
+		events.CleanupPending(s)
 		return err
 	}
+
+	events.DispatchPending(c.Request().Context(), s)
 
 	// Bust the cached user count so the new registration shows up in metrics
 	// immediately instead of after the regular cache expiry.
