@@ -21,6 +21,8 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
@@ -231,10 +233,14 @@ func Logout(c *echo.Context) (err error) {
 	auth.ClearRefreshTokenCookie(c)
 
 	var sid string
+	var userID int64
 	if raw := c.Get("user"); raw != nil {
 		if jwtinf, ok := raw.(*jwt.Token); ok {
 			if claims, ok := jwtinf.Claims.(jwt.MapClaims); ok {
 				sid, _ = claims["sid"].(string)
+				if id, ok := claims["id"].(float64); ok {
+					userID = int64(id)
+				}
 			}
 		}
 	}
@@ -255,6 +261,12 @@ func Logout(c *echo.Context) (err error) {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err
+	}
+
+	if userID != 0 {
+		if err := events.DispatchWithContext(c.Request().Context(), &user2.LogoutEvent{UserID: userID}); err != nil {
+			log.Errorf("Could not dispatch logout event: %s", err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully logged out."})
