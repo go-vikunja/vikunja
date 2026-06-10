@@ -17,8 +17,11 @@
 package shared
 
 import (
+	"context"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
@@ -39,9 +42,12 @@ type UserRegister struct {
 // busts the cached user-count metric so the registration shows up immediately.
 // The caller is responsible for the registration-enabled gate and input
 // validation; both v1 and v2 share this body.
-func RegisterUser(in *UserRegister) (*user.User, error) {
+func RegisterUser(ctx context.Context, in *UserRegister) (*user.User, error) {
 	s := db.NewSession()
 	defer s.Close()
+	// Discards events queued during a rolled-back transaction; a no-op once
+	// DispatchPending has run.
+	defer events.CleanupPending(s)
 
 	newUser, err := models.RegisterUser(s, &user.User{
 		Username: in.Username,
@@ -58,6 +64,8 @@ func RegisterUser(in *UserRegister) (*user.User, error) {
 		_ = s.Rollback()
 		return nil, err
 	}
+
+	events.DispatchPending(ctx, s)
 
 	// Bust the cached user count so the new registration shows up in metrics
 	// immediately instead of after the regular cache expiry.

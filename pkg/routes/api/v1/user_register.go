@@ -63,7 +63,7 @@ func RegisterUser(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "No or invalid user model provided."})
 	}
 
-	newUser, err := shared.RegisterUser(userIn)
+	newUser, err := shared.RegisterUser(c.Request().Context(), userIn)
 	if err != nil {
 		return err
 	}

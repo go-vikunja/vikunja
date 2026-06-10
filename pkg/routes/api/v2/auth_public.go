@@ -127,8 +127,8 @@ func registerLocalAuthRoutes(api huma.API) {
 	}, authConfirmEmail)
 }
 
-func authRegister(_ context.Context, in *struct{ Body shared.UserRegister }) (*registerUserBody, error) {
-	newUser, err := shared.RegisterUser(&in.Body)
+func authRegister(ctx context.Context, in *struct{ Body shared.UserRegister }) (*registerUserBody, error) {
+	newUser, err := shared.RegisterUser(ctx, &in.Body)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
