@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"time"
 
-	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 
 	"code.vikunja.io/api/pkg/user"
 
@@ -34,11 +34,11 @@ import (
 
 type UserWithSettings struct {
 	user.User
-	Settings            *UserSettings `json:"settings"`
-	DeletionScheduledAt time.Time     `json:"deletion_scheduled_at"`
-	IsLocalUser         bool          `json:"is_local_user"`
-	AuthProvider        string        `json:"auth_provider"`
-	IsAdmin             bool          `json:"is_admin"`
+	Settings            *models.UserGeneralSettings `json:"settings"`
+	DeletionScheduledAt time.Time                   `json:"deletion_scheduled_at"`
+	IsLocalUser         bool                        `json:"is_local_user"`
+	AuthProvider        string                      `json:"auth_provider"`
+	IsAdmin             bool                        `json:"is_admin"`
 }
 
 // UserShow gets all information about the current user
@@ -67,57 +67,17 @@ func UserShow(c *echo.Context) error {
 	}
 
 	us := &UserWithSettings{
-		User: *u,
-		Settings: &UserSettings{
-			Name:                         u.Name,
-			EmailRemindersEnabled:        u.EmailRemindersEnabled,
-			DiscoverableByName:           u.DiscoverableByName,
-			DiscoverableByEmail:          u.DiscoverableByEmail,
-			OverdueTasksRemindersEnabled: u.OverdueTasksRemindersEnabled,
-			DefaultProjectID:             u.DefaultProjectID,
-			WeekStart:                    u.WeekStart,
-			Language:                     u.Language,
-			Timezone:                     u.Timezone,
-			OverdueTasksRemindersTime:    u.OverdueTasksRemindersTime,
-			FrontendSettings:             u.FrontendSettings,
-			ExtraSettingsLinks:           u.ExtraSettingsLinks,
-		},
+		User:                *u,
+		Settings:            models.NewUserGeneralSettings(u),
 		DeletionScheduledAt: u.DeletionScheduledAt,
 		IsLocalUser:         u.Issuer == user.IssuerLocal,
 		IsAdmin:             u.IsAdmin,
 	}
 
-	us.AuthProvider, err = getAuthProviderName(u)
+	us.AuthProvider, err = shared.GetAuthProviderName(u)
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusOK, us)
-}
-
-func getAuthProviderName(u *user.User) (name string, err error) {
-	if u.Issuer == user.IssuerLocal {
-		return "local", nil
-	}
-
-	if u.Issuer == user.IssuerLDAP {
-		return "ldap", nil
-	}
-
-	providers, err := openid.GetAllProviders()
-	if err != nil {
-		return "", err
-	}
-
-	for _, provider := range providers {
-		issuerURL, err := provider.Issuer()
-		if err != nil {
-			return "", err
-		}
-		if issuerURL == u.Issuer {
-			return provider.Name, nil
-		}
-	}
-
-	return
 }
