@@ -998,6 +998,37 @@
             ]
         },
         {
+            "key": "audit",
+            "comment": "Audit logging writes structured JSONL records of authentication, authorization and data lifecycle events. Requires the licensed `audit_logs` feature — with `audit.enabled: true` but no active license, listeners are registered but nothing is written until a license with the feature becomes active.",
+            "children": [
+                {
+                    "key": "enabled",
+                    "default_value": "false",
+                    "comment": "Whether to enable audit logging."
+                },
+                {
+                    "key": "logfile",
+                    "default_value": "",
+                    "comment": "The file audit log entries are written to, one JSON object per line. If empty, defaults to `audit.log` in the configured log path."
+                },
+                {
+                    "key": "rotation",
+                    "children": [
+                        {
+                            "key": "maxsizemb",
+                            "default_value": "100",
+                            "comment": "Rotate the audit log file once it exceeds this size in megabytes. Set to 0 to disable size-based rotation."
+                        },
+                        {
+                            "key": "maxage",
+                            "default_value": "30",
+                            "comment": "Delete rotated audit log files older than this many days. This only applies to the local rotated files, it is not a retention policy. Set to 0 to keep rotated files forever."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "key": "outgoingrequests",
             "children": [
                 {
