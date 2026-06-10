@@ -17,6 +17,7 @@
 package caldav
 
 import (
+	"context"
 	"slices"
 	"strconv"
 	"strings"
@@ -396,7 +397,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 		return nil, err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(context.Background(), s)
 
 	// Build up the proper response
 	rr := VikunjaProjectResourceAdapter{
@@ -473,7 +474,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 		return nil, err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(context.Background(), s)
 
 	// Build up the proper response
 	rr := VikunjaProjectResourceAdapter{
@@ -516,7 +517,7 @@ func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
 			return err
 		}
 
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 	}
 
 	return nil
