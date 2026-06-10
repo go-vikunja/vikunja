@@ -201,6 +201,13 @@ func InitEventsForTesting(ctx context.Context) (<-chan struct{}, error) {
 
 // Dispatch dispatches an event
 func Dispatch(event Event) error {
+	return DispatchWithContext(context.Background(), event)
+}
+
+// DispatchWithContext dispatches an event and copies request metadata from the
+// context (see WithRequestMeta) onto the message metadata, so listeners can
+// attribute the event to the originating HTTP request.
+func DispatchWithContext(ctx context.Context, event Event) error {
 	if isUnderTest {
 		dispatchedTestEvents = append(dispatchedTestEvents, event)
 		return nil
@@ -216,16 +223,40 @@ func Dispatch(event Event) error {
 	}
 
 	msg := message.NewMessage(watermill.NewUUID(), content)
+	if meta := RequestMetaFromContext(ctx); meta != nil {
+		if meta.IP != "" {
+			msg.Metadata.Set(MetadataKeyIP, meta.IP)
+		}
+		if meta.UserAgent != "" {
+			msg.Metadata.Set(MetadataKeyUserAgent, meta.UserAgent)
+		}
+		if meta.RequestID != "" {
+			msg.Metadata.Set(MetadataKeyRequestID, meta.RequestID)
+		}
+	}
 	return pubsub.Publish(event.Name(), msg)
 }
 
 // pendingEventQueue holds the pending events and a mutex for thread-safe access
 type pendingEventQueue struct {
 	mu     sync.Mutex
+	ctx    context.Context
 	events []Event
 }
 
 var pendingEvents sync.Map // map[any]*pendingEventQueue
+
+// SetContextForKey associates a request context with a transaction key so that
+// events queued via DispatchOnCommit for the same key are dispatched with the
+// request metadata from that context. The entry is removed by DispatchPending
+// or CleanupPending — callers must guarantee one of them runs for the key.
+func SetContextForKey(key any, ctx context.Context) {
+	val, _ := pendingEvents.LoadOrStore(key, &pendingEventQueue{})
+	queue := val.(*pendingEventQueue)
+	queue.mu.Lock()
+	queue.ctx = ctx
+	queue.mu.Unlock()
+}
 
 // DispatchOnCommit stores an event to be dispatched later, after a transaction commits.
 // The key should be the *xorm.Session pointer associated with the transaction.
@@ -250,8 +281,12 @@ func DispatchPending(key any) {
 	queue := val.(*pendingEventQueue)
 	// No need to lock here since we've already removed it from the map
 	// and this key won't receive new events
+	ctx := queue.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	for _, event := range queue.events {
-		if err := Dispatch(event); err != nil {
+		if err := DispatchWithContext(ctx, event); err != nil {
 			log.Errorf("Failed to dispatch event %s: %v", event.Name(), err)
 		}
 	}

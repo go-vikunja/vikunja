@@ -28,8 +28,9 @@ import (
 // DoCreate runs the permission check + model Create + commit pipeline for a
 // CObject. Framework-agnostic: callable from both Echo (CreateWeb) and Huma.
 // Caller is responsible for body/path binding and validation before calling.
-func DoCreate(_ context.Context, obj CObject, a web.Auth) error {
+func DoCreate(ctx context.Context, obj CObject, a web.Auth) error {
 	s := db.NewSession()
+	events.SetContextForKey(s, ctx)
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("Could not close session: %s", err)
@@ -68,8 +69,9 @@ func DoCreate(_ context.Context, obj CObject, a web.Auth) error {
 // CObject. obj should have its identifying fields set before call. On success,
 // obj is fully populated. maxPermission is exposed via the x-max-permission
 // header in the Echo wrapper; Huma wrapper may ignore it.
-func DoReadOne(_ context.Context, obj CObject, a web.Auth) (maxPermission int, err error) {
+func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int, err error) {
 	s := db.NewSession()
+	events.SetContextForKey(s, ctx)
 	defer func() {
 		if cerr := s.Close(); cerr != nil {
 			log.Errorf("Could not close session: %s", cerr)
@@ -108,8 +110,9 @@ func DoReadOne(_ context.Context, obj CObject, a web.Auth) (maxPermission int, e
 // scoping context (e.g., TaskID on LabelTask). Returns the result slice/
 // interface, the result count, and total count. Pagination header math and
 // nil-slice normalization remain the caller's responsibility.
-func DoReadAll(_ context.Context, obj CObject, a web.Auth, search string, page, perPage int) (result any, resultCount int, total int64, err error) {
+func DoReadAll(ctx context.Context, obj CObject, a web.Auth, search string, page, perPage int) (result any, resultCount int, total int64, err error) {
 	s := db.NewSession()
+	events.SetContextForKey(s, ctx)
 	defer func() {
 		if cerr := s.Close(); cerr != nil {
 			log.Errorf("Could not close session: %s", cerr)
@@ -135,8 +138,9 @@ func DoReadAll(_ context.Context, obj CObject, a web.Auth, search string, page, 
 // DoUpdate runs the permission check + model Update + commit pipeline for a
 // CObject. Framework-agnostic. Caller is responsible for body/path binding
 // and validation before calling.
-func DoUpdate(_ context.Context, obj CObject, a web.Auth) error {
+func DoUpdate(ctx context.Context, obj CObject, a web.Auth) error {
 	s := db.NewSession()
+	events.SetContextForKey(s, ctx)
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("Could not close session: %s", err)
@@ -174,8 +178,9 @@ func DoUpdate(_ context.Context, obj CObject, a web.Auth) error {
 // DoDelete runs the permission check + model Delete + commit pipeline for a
 // CObject. Framework-agnostic. Caller is responsible for path binding before
 // calling.
-func DoDelete(_ context.Context, obj CObject, a web.Auth) error {
+func DoDelete(ctx context.Context, obj CObject, a web.Auth) error {
 	s := db.NewSession()
+	events.SetContextForKey(s, ctx)
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("Could not close session: %s", err)
