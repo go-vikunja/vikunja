@@ -26,6 +26,8 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/humaecho5"
 	"code.vikunja.io/api/pkg/user"
@@ -121,6 +123,10 @@ func NewUserAuthTokenResponse(u *user.User, c *echo.Context, long bool) error {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err
+	}
+
+	if err := events.DispatchWithContext(c.Request().Context(), &user.LoginSucceededEvent{User: u}); err != nil {
+		log.Errorf("Could not dispatch login succeeded event: %s", err)
 	}
 
 	// Set the refresh token as an HttpOnly cookie. The cookie is path-scoped

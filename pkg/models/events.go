@@ -395,3 +395,44 @@ type TimeEntryDeletedEvent struct {
 func (e *TimeEntryDeletedEvent) Name() string {
 	return "time-entry.deleted"
 }
+
+////////////////////
+// API Token Events
+
+// API token events carry IDs only: the freshly created token struct holds the
+// raw token string, which must never end up in a message payload (the poison
+// queue logs payloads on handler failure).
+
+// APITokenIssuedEvent represents an API token being created
+type APITokenIssuedEvent struct {
+	TokenID int64 `json:"token_id"`
+	DoerID  int64 `json:"doer_id"`
+	OwnerID int64 `json:"owner_id"`
+}
+
+// Name defines the name for APITokenIssuedEvent
+func (e *APITokenIssuedEvent) Name() string {
+	return "api-token.issued"
+}
+
+// APITokenRevokedEvent represents an API token being deleted
+type APITokenRevokedEvent struct {
+	TokenID int64 `json:"token_id"`
+	DoerID  int64 `json:"doer_id"`
+}
+
+// Name defines the name for APITokenRevokedEvent
+func (e *APITokenRevokedEvent) Name() string {
+	return "api-token.revoked"
+}
+
+// APITokenUsedEvent represents an API token authenticating a request
+type APITokenUsedEvent struct {
+	TokenID int64 `json:"token_id"`
+	OwnerID int64 `json:"owner_id"`
+}
+
+// Name defines the name for APITokenUsedEvent
+func (e *APITokenUsedEvent) Name() string {
+	return "api-token.used"
+}
