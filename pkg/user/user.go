@@ -27,6 +27,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
@@ -411,6 +412,10 @@ func (u *User) IsLocalUser() bool {
 }
 
 func handleFailedPassword(user *User) {
+	if err := events.Dispatch(&LoginFailedEvent{User: user}); err != nil {
+		log.Errorf("Could not dispatch login failed event: %s", err)
+	}
+
 	key := user.GetFailedPasswordAttemptsKey()
 	err := keyvalue.IncrBy(key, 1)
 	if err != nil {
