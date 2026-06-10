@@ -44,4 +44,14 @@ describe('smartFillStart', () => {
 	it('falls back to 09:00 when no default is configured', () => {
 		expect(smartFillStart([], '', now)).toEqual(new Date('2026-06-07T09:00:00'))
 	})
+
+	it('caps the default start at now when it would be in the future (before 09:00)', () => {
+		const beforeNine = new Date('2026-06-07T07:30:00')
+		expect(smartFillStart([], '09:00', beforeNine)).toEqual(beforeNine)
+	})
+
+	it('caps a future last-entry end at now', () => {
+		const entries = [entry(new Date('2026-06-07T16:00:00'), new Date('2026-06-07T17:00:00'))]
+		expect(smartFillStart(entries, '09:00', now)).toEqual(now)
+	})
 })
