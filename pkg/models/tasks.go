@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"math"
 	"regexp"
 	"sort"
@@ -1255,6 +1256,29 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
+	// Check if task is being marked as complete (Done: false -> true)
+	// If so, verify there are no active blocking relations
+	if !ot.Done && t.Done {
+		blockingTasks, err := getActiveBlockingRelations(s, t.ID)
+		if err != nil {
+			return err
+		}
+		if len(blockingTasks) > 0 {
+			// Build informative error message with blocker details
+			blockingInfo := make([]string, 0, len(blockingTasks))
+			blockingIDs := make([]int64, 0, len(blockingTasks))
+			for _, blocker := range blockingTasks {
+				blockingInfo = append(blockingInfo, fmt.Sprintf("%s (ID: %d)", blocker.Title, blocker.ID))
+				blockingIDs = append(blockingIDs, blocker.ID)
+			}
+			return ErrTaskIsBlocked{
+				TaskID:           t.ID,
+				BlockingTaskIDs:  blockingIDs,
+				BlockingTaskInfo: blockingInfo,
+			}
+		}
+	}
+
 	// When a task was moved between projects, ensure it is in the correct bucket
 	if t.ProjectID != ot.ProjectID {
 		_, err = s.Where("task_id = ?", t.ID).Delete(&TaskBucket{})
@@ -2115,4 +2139,35 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 		Doer: doerFromAuth(s, auth),
 	})
 	return nil
+}
+
+// getActiveBlockingRelations returns all tasks that are blocking the given task and are not yet complete.
+// A task is actively blocking if it has a 'blocked' relation to an incomplete task.
+func getActiveBlockingRelations(s *xorm.Session, taskID int64) ([]*Task, error) {
+	// Find all 'blocked' relations where this task is the blocked one
+	// i.e., this task -> other_task with relation_kind = 'blocked'
+	relations := []*TaskRelation{}
+	err := s.Where("task_id = ? AND relation_kind = ?", taskID, RelationKindBlocked).Find(&relations)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(relations) == 0 {
+		return nil, nil
+	}
+
+	// Extract IDs of blocking tasks
+	blockingTaskIDs := make([]int64, 0, len(relations))
+	for _, rel := range relations {
+		blockingTaskIDs = append(blockingTaskIDs, rel.OtherTaskID)
+	}
+
+	// Get all blocking tasks that are NOT complete
+	blockingTasks := []*Task{}
+	err = s.In("id", blockingTaskIDs).Where("done = ?", false).Find(&blockingTasks)
+	if err != nil {
+		return nil, err
+	}
+
+	return blockingTasks, nil
 }
