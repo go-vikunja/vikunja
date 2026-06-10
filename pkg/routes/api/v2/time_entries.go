@@ -155,7 +155,7 @@ func timeEntriesTimerStop(ctx context.Context, _ *struct{}) (*singleBody[models.
 		events.CleanupPending(s)
 		return nil, translateDomainError(err)
 	}
-	events.DispatchPending(s)
+	events.DispatchPending(ctx, s)
 	return &singleBody[models.TimeEntry]{Body: entry}, nil
 }
 

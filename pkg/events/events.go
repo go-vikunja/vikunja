@@ -240,23 +240,10 @@ func DispatchWithContext(ctx context.Context, event Event) error {
 // pendingEventQueue holds the pending events and a mutex for thread-safe access
 type pendingEventQueue struct {
 	mu     sync.Mutex
-	ctx    context.Context
 	events []Event
 }
 
 var pendingEvents sync.Map // map[any]*pendingEventQueue
-
-// SetContextForKey associates a request context with a transaction key so that
-// events queued via DispatchOnCommit for the same key are dispatched with the
-// request metadata from that context. The entry is removed by DispatchPending
-// or CleanupPending — callers must guarantee one of them runs for the key.
-func SetContextForKey(key any, ctx context.Context) {
-	val, _ := pendingEvents.LoadOrStore(key, &pendingEventQueue{})
-	queue := val.(*pendingEventQueue)
-	queue.mu.Lock()
-	queue.ctx = ctx
-	queue.mu.Unlock()
-}
 
 // DispatchOnCommit stores an event to be dispatched later, after a transaction commits.
 // The key should be the *xorm.Session pointer associated with the transaction.
@@ -272,8 +259,9 @@ func DispatchOnCommit(key any, event Event) {
 
 // DispatchPending dispatches all events accumulated for the given key and removes them.
 // Call this after s.Commit(). Safe to call even if no events were registered.
+// Request metadata on the context (see WithRequestMeta) is copied onto each message.
 // If any event fails to dispatch, the error is logged but remaining events are still dispatched.
-func DispatchPending(key any) {
+func DispatchPending(ctx context.Context, key any) {
 	val, ok := pendingEvents.LoadAndDelete(key)
 	if !ok {
 		return
@@ -281,10 +269,6 @@ func DispatchPending(key any) {
 	queue := val.(*pendingEventQueue)
 	// No need to lock here since we've already removed it from the map
 	// and this key won't receive new events
-	ctx := queue.ctx
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	for _, event := range queue.events {
 		if err := DispatchWithContext(ctx, event); err != nil {
 			log.Errorf("Failed to dispatch event %s: %v", event.Name(), err)

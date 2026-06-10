@@ -97,7 +97,7 @@ func RequestUserDataExport(c *echo.Context) error {
 		return err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(c.Request().Context(), s)
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully requested data export. We will send you an email when it's ready."})
 }

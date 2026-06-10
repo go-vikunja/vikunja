@@ -30,7 +30,6 @@ import (
 // Caller is responsible for body/path binding and validation before calling.
 func DoCreate(ctx context.Context, obj CObject, a web.Auth) error {
 	s := db.NewSession()
-	events.SetContextForKey(s, ctx)
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("Could not close session: %s", err)
@@ -61,7 +60,7 @@ func DoCreate(ctx context.Context, obj CObject, a web.Auth) error {
 		return err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(ctx, s)
 	return nil
 }
 
@@ -71,7 +70,6 @@ func DoCreate(ctx context.Context, obj CObject, a web.Auth) error {
 // header in the Echo wrapper; Huma wrapper may ignore it.
 func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int, err error) {
 	s := db.NewSession()
-	events.SetContextForKey(s, ctx)
 	defer func() {
 		if cerr := s.Close(); cerr != nil {
 			log.Errorf("Could not close session: %s", cerr)
@@ -102,7 +100,7 @@ func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int,
 		return 0, err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(ctx, s)
 	return maxPermission, nil
 }
 
@@ -112,7 +110,6 @@ func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int,
 // nil-slice normalization remain the caller's responsibility.
 func DoReadAll(ctx context.Context, obj CObject, a web.Auth, search string, page, perPage int) (result any, resultCount int, total int64, err error) {
 	s := db.NewSession()
-	events.SetContextForKey(s, ctx)
 	defer func() {
 		if cerr := s.Close(); cerr != nil {
 			log.Errorf("Could not close session: %s", cerr)
@@ -131,7 +128,7 @@ func DoReadAll(ctx context.Context, obj CObject, a web.Auth, search string, page
 		return nil, 0, 0, err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(ctx, s)
 	return result, resultCount, total, nil
 }
 
@@ -140,7 +137,6 @@ func DoReadAll(ctx context.Context, obj CObject, a web.Auth, search string, page
 // and validation before calling.
 func DoUpdate(ctx context.Context, obj CObject, a web.Auth) error {
 	s := db.NewSession()
-	events.SetContextForKey(s, ctx)
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("Could not close session: %s", err)
@@ -171,7 +167,7 @@ func DoUpdate(ctx context.Context, obj CObject, a web.Auth) error {
 		return err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(ctx, s)
 	return nil
 }
 
@@ -180,7 +176,6 @@ func DoUpdate(ctx context.Context, obj CObject, a web.Auth) error {
 // calling.
 func DoDelete(ctx context.Context, obj CObject, a web.Auth) error {
 	s := db.NewSession()
-	events.SetContextForKey(s, ctx)
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("Could not close session: %s", err)
@@ -211,6 +206,6 @@ func DoDelete(ctx context.Context, obj CObject, a web.Auth) error {
 		return err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(ctx, s)
 	return nil
 }
