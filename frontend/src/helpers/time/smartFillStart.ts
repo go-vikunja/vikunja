@@ -5,16 +5,20 @@ import type {ITimeEntry} from '@/modelTypes/ITimeEntry'
 // continue from, fall back to the user's configured default start (HH:MM) on
 // the given day.
 export function smartFillStart(recentEntries: ITimeEntry[], defaultStart: string, now: Date): Date {
+	// The filled range ends at now, so a start after now would be inverted (and
+	// rejected on save). Cap at now — e.g. the 09:00 fallback before 9am.
+	const cap = (start: Date) => (start.getTime() > now.getTime() ? new Date(now) : start)
+
 	const lastEnd = recentEntries
 		.map(entry => entry.endTime)
 		.filter((end): end is Date => end !== null)
 		.sort((a, b) => b.getTime() - a.getTime())[0]
 	if (lastEnd !== undefined) {
-		return new Date(lastEnd)
+		return cap(new Date(lastEnd))
 	}
 
 	const [hours, minutes] = (defaultStart || '09:00').split(':').map(Number)
 	const start = new Date(now)
 	start.setHours(hours || 0, minutes || 0, 0, 0)
-	return start
+	return cap(start)
 }
