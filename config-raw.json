@@ -1025,6 +1025,10 @@
                             "comment": "Delete rotated audit log files older than this many days. This only applies to the local rotated files, it is not a retention policy. Set to 0 to keep rotated files forever."
                         }
                     ]
+                },
+                {
+                    "key": "forwarders",
+                    "comment": "A list of sinks to forward each audit entry to, in addition to the local logfile. Each entry needs a `type` of `stdout`, `syslog` or `webhook`. `syslog` requires `address` (e.g. `udp://logs.example.com:514`) and accepts an optional `facility` (default `local0`). `webhook` requires `url` and accepts an optional `headers` map sent with each request.\nExample:\n\n```yaml\nforwarders:\n- type: stdout\n- type: syslog\n  address: udp://logs.example.com:514\n  facility: local0\n- type: webhook\n  url: https://siem.example.com/ingest\n  headers:\n    Authorization: Bearer something\n```"
                 }
             ]
         },

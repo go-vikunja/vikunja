@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	"code.vikunja.io/api/pkg/audit/sinks"
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
 
@@ -40,9 +41,10 @@ var (
 	maxSizeBytes int64
 	maxAge       time.Duration
 	lastSync     time.Time
+	forwarders   []sinks.Sink
 )
 
-// Init opens the audit log file.
+// Init opens the audit log file and sets up the configured forwarders.
 // Safe to call again to re-read the config (used by tests).
 func Init() error {
 	mu.Lock()
@@ -64,6 +66,13 @@ func Init() error {
 		return err
 	}
 
+	var err error
+	forwarders, err = buildForwarders(config.AuditForwarders.Get())
+	if err != nil {
+		closeLocked()
+		return err
+	}
+
 	initialized = true
 	return nil
 }
@@ -81,6 +90,7 @@ func closeLocked() {
 		_ = logFile.Close()
 		logFile = nil
 	}
+	forwarders = nil
 	initialized = false
 }
 
@@ -99,8 +109,74 @@ func openLogFileLocked() error {
 	return nil
 }
 
-// WriteAuditEvent writes one entry to the local audit log. A failed write is
-// returned so the event router retries it.
+func buildForwarders(raw any) (built []sinks.Sink, err error) {
+	if raw == nil {
+		return nil, nil
+	}
+	rawList, ok := raw.([]any)
+	if !ok {
+		return nil, fmt.Errorf("audit.forwarders must be a list, got %T", raw)
+	}
+
+	for i, rawEntry := range rawList {
+		entry, ok := toStringMap(rawEntry)
+		if !ok {
+			return nil, fmt.Errorf("audit.forwarders[%d] must be a map", i)
+		}
+
+		var sink sinks.Sink
+		typ, _ := entry["type"].(string)
+		switch typ {
+		case "stdout":
+			sink = sinks.NewStdout()
+		case "syslog":
+			address, _ := entry["address"].(string)
+			facility, _ := entry["facility"].(string)
+			sink, err = sinks.NewSyslog(address, facility)
+		case "webhook":
+			targetURL, _ := entry["url"].(string)
+			headers := map[string]string{}
+			if rawHeaders, ok := toStringMap(entry["headers"]); ok {
+				for key, value := range rawHeaders {
+					headers[key], _ = value.(string)
+				}
+			}
+			sink, err = sinks.NewWebhook(targetURL, headers)
+		default:
+			return nil, fmt.Errorf("audit.forwarders[%d] has unknown type %q", i, typ)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("audit.forwarders[%d]: %w", i, err)
+		}
+		built = append(built, sink)
+	}
+	return built, nil
+}
+
+// toStringMap normalizes the two map shapes viper produces depending on the
+// config source (file vs. programmatic Set).
+func toStringMap(raw any) (map[string]any, bool) {
+	switch m := raw.(type) {
+	case map[string]any:
+		return m, true
+	case map[any]any:
+		out := make(map[string]any, len(m))
+		for key, value := range m {
+			keyStr, ok := key.(string)
+			if !ok {
+				return nil, false
+			}
+			out[keyStr] = value
+		}
+		return out, true
+	}
+	return nil, false
+}
+
+// WriteAuditEvent writes one entry to the local audit log and forwards it to
+// all configured sinks. The local write is the source of truth — its failure
+// is returned so the event router retries; forwarder failures are only
+// logged, since a dead sink must not poison-queue every event.
 func WriteAuditEvent(entry *Entry) error {
 	if entry.EventID == "" {
 		id, err := uuid.NewV7()
@@ -138,12 +214,18 @@ func WriteAuditEvent(entry *Entry) error {
 		err = logFile.Sync()
 		lastSync = time.Now()
 	}
+	currentForwarders := forwarders
 	mu.Unlock()
 
 	if err != nil {
 		return fmt.Errorf("could not write audit entry: %w", err)
 	}
 
+	for _, forwarder := range currentForwarders {
+		if ferr := forwarder.Write(line); ferr != nil {
+			log.Errorf("Could not forward audit entry %s: %s", entry.EventID, ferr)
+		}
+	}
 	return nil
 }
 

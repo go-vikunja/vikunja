@@ -224,6 +224,7 @@ const (
 	AuditLogfile           Key = `audit.logfile`
 	AuditRotationMaxSizeMB Key = `audit.rotation.maxsizemb`
 	AuditRotationMaxAge    Key = `audit.rotation.maxage`
+	AuditForwarders        Key = `audit.forwarders`
 
 	OutgoingRequestsAllowNonRoutableIPs Key = `outgoingrequests.allownonroutableips`
 	OutgoingRequestsProxyURL            Key = `outgoingrequests.proxyurl`

@@ -15,7 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // Package audit persists an audit trail of authentication, authorization and
-// data lifecycle events as JSONL.
+// data lifecycle events as JSONL, with optional forwarding to stdout, syslog
+// or webhook sinks.
 //
 // Events opt in via RegisterEventForAudit, which subscribes one audit
 // listener per event on the existing watermill bus; the event→Entry mapping
@@ -36,9 +37,10 @@
 // pkg/events.RequestMeta. Events dispatched outside a request get
 // source type "system" instead.
 //
-// A failed file write is returned to the router for retry. Tamper evidence
-// comes from filesystem permissions (the file is created 0600) plus shipping
-// the file to an external system, not from hash chains or signatures.
-// Rotation is size-based with age-based cleanup of rotated files; retention
-// is the operator's concern.
+// The local file is the source of truth: a failed file write is returned to
+// the router for retry, while forwarder failures are only logged so a dead
+// sink cannot poison-queue every event. Tamper evidence comes from filesystem
+// permissions (the file is created 0600) plus shipping entries to an external
+// sink, not from hash chains or signatures. Rotation is size-based with
+// age-based cleanup of rotated files; retention is the operator's concern.
 package audit
