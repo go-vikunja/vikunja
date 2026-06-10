@@ -53,6 +53,9 @@ func Login(c *echo.Context) (err error) {
 
 	s := db.NewSession()
 	defer s.Close()
+	// Discards events queued during a rolled-back transaction (e.g. LDAP user
+	// creation); a no-op once DispatchPending has run.
+	defer events.CleanupPending(s)
 
 	var user *user2.User
 	if config.AuthLdapEnabled.GetBool() {
@@ -126,6 +129,8 @@ func Login(c *echo.Context) (err error) {
 		_ = s.Rollback()
 		return err
 	}
+
+	events.DispatchPending(c.Request().Context(), s)
 
 	// Create token
 	return auth.NewUserAuthTokenResponse(user, c, u.LongToken)
