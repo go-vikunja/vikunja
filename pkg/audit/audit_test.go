@@ -136,10 +136,10 @@ func startEventRouter(t *testing.T) {
 	<-ready
 }
 
-func waitForLines(t *testing.T, logfile string, count int) []string {
+func waitForLines(t *testing.T, logfile string) []string {
 	t.Helper()
 	var lines []string
-	require.Eventuallyf(t, func() bool {
+	require.Eventually(t, func() bool {
 		content, err := os.ReadFile(logfile)
 		if err != nil {
 			return false
@@ -148,8 +148,8 @@ func waitForLines(t *testing.T, logfile string, count int) []string {
 		if len(lines) == 1 && lines[0] == "" {
 			lines = nil
 		}
-		return len(lines) >= count
-	}, 5*time.Second, 10*time.Millisecond, "expected %d audit log lines", count)
+		return len(lines) >= 1
+	}, 5*time.Second, 10*time.Millisecond, "expected at least one audit log line")
 	return lines
 }
 
@@ -168,7 +168,7 @@ func TestAuditPipeline(t *testing.T) {
 	})
 	require.NoError(t, events.DispatchWithContext(ctx, &pipelineEvent{TaskID: 99, DoerID: 7}))
 
-	lines := waitForLines(t, logfile, 1)
+	waitForLines(t, logfile)
 	select {
 	case <-other.called:
 	case <-time.After(5 * time.Second):
@@ -176,7 +176,7 @@ func TestAuditPipeline(t *testing.T) {
 	}
 	// A topic with multiple listeners must produce exactly one audit entry.
 	events.WaitForPendingHandlers()
-	lines = waitForLines(t, logfile, 1)
+	lines := waitForLines(t, logfile)
 	require.Len(t, lines, 1)
 
 	var entry audit.Entry
@@ -214,7 +214,7 @@ func TestAuditLicenseGating(t *testing.T) {
 	t.Cleanup(license.ResetForTests)
 	require.NoError(t, events.Dispatch(&licenseGateEvent{Marker: "licensed"}))
 
-	lines := waitForLines(t, logfile, 1)
+	lines := waitForLines(t, logfile)
 	require.Len(t, lines, 1)
 	assert.Contains(t, lines[0], `"marker":"licensed"`)
 	assert.NotContains(t, lines[0], "unlicensed")
@@ -237,9 +237,9 @@ func TestAuditRotation(t *testing.T) {
 
 	filler := strings.Repeat("x", 600*1024)
 	require.NoError(t, events.Dispatch(&rotationEvent{Filler: filler}))
-	waitForLines(t, logfile, 1)
+	waitForLines(t, logfile)
 	require.NoError(t, events.Dispatch(&rotationEvent{Filler: filler}))
-	waitForLines(t, logfile, 1)
+	waitForLines(t, logfile)
 
 	require.Eventually(t, func() bool {
 		rotated, err := filepath.Glob(strings.TrimSuffix(logfile, ".log") + "-*.log")

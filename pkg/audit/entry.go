@@ -73,9 +73,9 @@ const (
 	ActionLoginSucceeded  = "auth.login.succeeded"
 	ActionLoginFailed     = "auth.login.failed"
 	ActionLogout          = "auth.logout"
-	ActionAPITokenIssued  = "auth.api_token.issued"
-	ActionAPITokenRevoked = "auth.api_token.revoked"
-	ActionAPITokenUsed    = "auth.api_token.used"
+	ActionAPITokenIssued  = "auth.api_token.issued"  // #nosec G101 -- action identifier, not a credential
+	ActionAPITokenRevoked = "auth.api_token.revoked" // #nosec G101
+	ActionAPITokenUsed    = "auth.api_token.used"    // #nosec G101
 
 	ActionUserCreated = "user.created"
 

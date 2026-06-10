@@ -18,6 +18,7 @@ package migration
 
 import (
 	"bytes"
+	"context"
 
 	"xorm.io/xorm"
 
@@ -50,7 +51,7 @@ func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.Us
 		return err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(context.Background(), s)
 	return nil
 }
 
