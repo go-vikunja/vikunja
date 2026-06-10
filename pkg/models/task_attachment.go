@@ -23,6 +23,7 @@ import (
 	"image/png"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
@@ -104,6 +105,74 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realna
 		Doer:       ta.CreatedBy,
 	})
 	return nil
+}
+
+// AttachmentToUpload is a transport-neutral file to attach, so the upload logic
+// can be shared by the multipart v1 handler and the Huma v2 handler.
+type AttachmentToUpload struct {
+	Reader   io.ReadSeeker
+	Filename string
+	Size     uint64
+}
+
+// UploadTaskAttachments checks create access to the task, then stores each file,
+// collecting per-file failures rather than aborting. The caller owns the session
+// and the commit. A returned err means the request as a whole failed (e.g.
+// forbidden); per-file failures come back in failures instead.
+func UploadTaskAttachments(s *xorm.Session, a web.Auth, taskID int64, uploads []*AttachmentToUpload) (success []*TaskAttachment, failures []error, err error) {
+	ta := &TaskAttachment{TaskID: taskID}
+	can, err := ta.CanCreate(s, a)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !can {
+		return nil, nil, ErrGenericForbidden{}
+	}
+
+	for _, upload := range uploads {
+		attachment := &TaskAttachment{TaskID: taskID}
+		if err := attachment.NewAttachment(s, upload.Reader, upload.Filename, upload.Size, a); err != nil {
+			failures = append(failures, err)
+			continue
+		}
+		success = append(success, attachment)
+	}
+	return success, failures, nil
+}
+
+// LoadTaskAttachmentForDownload checks read access, loads the attachment with its
+// open file, and resolves a preview if previewSize is set and the file is an image.
+// It returns the loaded attachment and, when applicable, the preview bytes (the
+// caller serves those instead of the file). The caller owns the session, the
+// commit, and writing the response. Returns ErrGenericForbidden on denied access.
+func LoadTaskAttachmentForDownload(s *xorm.Session, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
+	ta = &TaskAttachment{ID: attachmentID, TaskID: taskID}
+	can, _, err := ta.CanRead(s, a)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !can {
+		return nil, nil, ErrGenericForbidden{}
+	}
+
+	if err := ta.ReadOne(s, a); err != nil {
+		return nil, nil, err
+	}
+	if err := ta.File.LoadFileByID(); err != nil {
+		return nil, nil, err
+	}
+
+	if previewSize != PreviewSizeUnknown && strings.HasPrefix(ta.File.Mime, "image") {
+		preview = ta.GetPreview(previewSize)
+		// GetPreview consumes the file reader; re-open it for the non-preview fallback.
+		if preview == nil {
+			if err := ta.File.LoadFileByID(); err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	return ta, preview, nil
 }
 
 // ReadOne returns a task attachment
