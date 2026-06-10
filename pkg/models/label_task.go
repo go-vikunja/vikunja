@@ -415,7 +415,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 // LabelTaskBulk is a helper struct to update a bunch of labels at once
 type LabelTaskBulk struct {
 	// All labels you want to update at once.
-	Labels []*Label `json:"labels"`
+	Labels []*Label `json:"labels" doc:"The complete set of labels the task should have after the call. Any label currently on the task that is not in this list is removed; any label in the list that is not yet on the task is added. You must be able to see every label you attach."`
 	TaskID int64    `json:"-" param:"projecttask"`
 
 	web.CRUDable    `json:"-"`
