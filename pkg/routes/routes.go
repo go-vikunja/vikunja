@@ -199,6 +199,10 @@ func NewEcho() *echo.Echo {
 	// handler binds them. Runs globally so both /api/v1 and /api/v2 benefit.
 	e.Use(vmiddleware.NormalizeArrayParams())
 
+	if config.AuditEnabled.GetBool() {
+		e.Use(vmiddleware.RequestMeta())
+	}
+
 	setupSentry(e)
 
 	// Validation
