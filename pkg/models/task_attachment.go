@@ -39,16 +39,16 @@ import (
 
 // TaskAttachment is the definition of a task attachment
 type TaskAttachment struct {
-	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"attachment"`
-	TaskID int64 `xorm:"bigint not null" json:"task_id" param:"task"`
+	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"attachment" readOnly:"true" doc:"The unique, numeric id of this attachment."`
+	TaskID int64 `xorm:"bigint not null" json:"task_id" param:"task" readOnly:"true" doc:"The id of the task this attachment belongs to. Taken from the URL, not the body."`
 	FileID int64 `xorm:"bigint not null" json:"-"`
 
 	CreatedByID int64      `xorm:"bigint not null" json:"-"`
-	CreatedBy   *user.User `xorm:"-" json:"created_by"`
+	CreatedBy   *user.User `xorm:"-" json:"created_by" readOnly:"true" doc:"The user who uploaded this attachment."`
 
-	File *files.File `xorm:"-" json:"file"`
+	File *files.File `xorm:"-" json:"file" readOnly:"true" doc:"Metadata of the uploaded file (name, mime type, size). The bytes are fetched from the download endpoint, not this field."`
 
-	Created time.Time `xorm:"created" json:"created"`
+	Created time.Time `xorm:"created" json:"created" readOnly:"true" doc:"A timestamp when this attachment was uploaded. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
