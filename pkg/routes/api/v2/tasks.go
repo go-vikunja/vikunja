@@ -19,7 +19,6 @@ package apiv2
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
@@ -218,13 +217,9 @@ func resolveProjectIdentifier(raw string) (int64, error) {
 	}
 	s := db.NewSession()
 	defer s.Close()
-	project := &models.Project{}
-	has, err := s.Where("identifier = ?", strings.ToUpper(raw)).Get(project)
+	project, err := models.GetProjectSimpleByIdentifier(s, raw)
 	if err != nil {
 		return 0, translateDomainError(err)
-	}
-	if !has {
-		return 0, huma.Error404NotFound("Project not found")
 	}
 	return project.ID, nil
 }
