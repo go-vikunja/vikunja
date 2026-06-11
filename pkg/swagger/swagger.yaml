@@ -1,39 +1,5 @@
 basePath: /api/v1
 definitions:
-  admin.CreateUserBody:
-    properties:
-      email:
-        description: The user's email address
-        maxLength: 250
-        type: string
-      is_admin:
-        description: Mark the new user as an instance admin.
-        type: boolean
-      language:
-        description: The language of the new user. Must be a valid IETF BCP 47 language
-          code and exist in Vikunja.
-        type: string
-      name:
-        description: The full name of the new user. Optional.
-        type: string
-      password:
-        description: The user's password in clear text. Only used when registering
-          the user. The maximum limi is 72 bytes, which may be less than 72 characters.
-          This is due to the limit in the bcrypt hashing algorithm used to store passwords
-          in Vikunja.
-        maxLength: 72
-        minLength: 8
-        type: string
-      skip_email_confirm:
-        description: Activate the new user immediately without email confirmation.
-        type: boolean
-      username:
-        description: The user's username. Cannot contain anything that looks like
-          an url or whitespaces.
-        maxLength: 250
-        minLength: 3
-        type: string
-    type: object
   admin.IsAdminPatch:
     properties:
       is_admin:
@@ -41,33 +7,9 @@ definitions:
           silently demote otherwise.
         type: boolean
     type: object
-  admin.Overview:
-    properties:
-      license:
-        $ref: '#/definitions/license.Info'
-      projects:
-        type: integer
-      shares:
-        $ref: '#/definitions/admin.ShareCounts'
-      tasks:
-        type: integer
-      teams:
-        type: integer
-      users:
-        type: integer
-    type: object
   admin.OwnerPatch:
     properties:
       owner_id:
-        type: integer
-    type: object
-  admin.ShareCounts:
-    properties:
-      link_shares:
-        type: integer
-      team_shares:
-        type: integer
-      user_shares:
         type: integer
     type: object
   admin.StatusPatch:
@@ -77,47 +19,6 @@ definitions:
         - $ref: '#/definitions/user.Status'
         description: Pointer to distinguish "omitted" from StatusActive; an empty
           body would silently re-enable otherwise.
-    type: object
-  admin.User:
-    properties:
-      auth_provider:
-        type: string
-      bot_owner_id:
-        description: |-
-          BotOwnerID is the ID of the owning (human) user if this user is a bot.
-          A non-zero value means this user is a bot and cannot authenticate via password.
-        type: integer
-      created:
-        description: A timestamp when this task was created. You cannot change this
-          value.
-        type: string
-      email:
-        description: The user's email address.
-        maxLength: 250
-        type: string
-      id:
-        description: The unique, numeric id of this user.
-        type: integer
-      is_admin:
-        type: boolean
-      issuer:
-        type: string
-      name:
-        description: The full name of the user.
-        type: string
-      status:
-        $ref: '#/definitions/user.Status'
-      subject:
-        type: string
-      updated:
-        description: A timestamp when this task was last updated. You cannot change
-          this value.
-        type: string
-      username:
-        description: The username of the user. Is always unique.
-        maxLength: 250
-        minLength: 1
-        type: string
     type: object
   auth.Token:
     properties:
@@ -423,6 +324,40 @@ definitions:
       values:
         $ref: '#/definitions/models.Task'
     type: object
+  models.CreateUserBody:
+    properties:
+      email:
+        description: The user's email address
+        maxLength: 250
+        type: string
+      is_admin:
+        description: Mark the new user as an instance admin.
+        type: boolean
+      language:
+        description: The language of the new user. Must be a valid IETF BCP 47 language
+          code and exist in Vikunja.
+        type: string
+      name:
+        description: The full name of the new user. Optional.
+        type: string
+      password:
+        description: The user's password in clear text. Only used when registering
+          the user. The maximum limi is 72 bytes, which may be less than 72 characters.
+          This is due to the limit in the bcrypt hashing algorithm used to store passwords
+          in Vikunja.
+        maxLength: 72
+        minLength: 8
+        type: string
+      skip_email_confirm:
+        description: Activate the new user immediately without email confirmation.
+        type: boolean
+      username:
+        description: The user's username. Cannot contain anything that looks like
+          an url or whitespaces.
+        maxLength: 250
+        minLength: 3
+        type: string
+    type: object
   models.DatabaseNotifications:
     properties:
       created:
@@ -544,6 +479,21 @@ definitions:
       message:
         description: A standard message.
         type: string
+    type: object
+  models.Overview:
+    properties:
+      license:
+        $ref: '#/definitions/license.Info'
+      projects:
+        type: integer
+      shares:
+        $ref: '#/definitions/models.ShareCounts'
+      tasks:
+        type: integer
+      teams:
+        type: integer
+      users:
+        type: integer
     type: object
   models.Permission:
     enum:
@@ -834,6 +784,15 @@ definitions:
         description: A timestamp when this filter was last updated. You cannot change
           this value.
         type: string
+    type: object
+  models.ShareCounts:
+    properties:
+      link_shares:
+        type: integer
+      team_shares:
+        type: integer
+      user_shares:
+        type: integer
     type: object
   models.SharingType:
     enum:
@@ -1474,6 +1433,47 @@ definitions:
           receiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.
         type: string
     type: object
+  shared.AdminUser:
+    properties:
+      auth_provider:
+        type: string
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      email:
+        description: The user's email address.
+        maxLength: 250
+        type: string
+      id:
+        description: The unique, numeric id of this user.
+        type: integer
+      is_admin:
+        type: boolean
+      issuer:
+        type: string
+      name:
+        description: The full name of the user.
+        type: string
+      status:
+        $ref: '#/definitions/user.Status'
+      subject:
+        type: string
+      updated:
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
+        type: string
+      username:
+        description: The username of the user. Is always unique.
+        maxLength: 250
+        minLength: 1
+        type: string
+    type: object
   todoist.Migration:
     properties:
       code:
@@ -2001,7 +2001,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/admin.Overview'
+            $ref: '#/definitions/models.Overview'
         "404":
           description: Not Found
           schema:
@@ -2109,7 +2109,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/admin.User'
+              $ref: '#/definitions/shared.AdminUser'
             type: array
         "404":
           description: Not Found
@@ -2131,14 +2131,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/admin.CreateUserBody'
+          $ref: '#/definitions/models.CreateUserBody'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/admin.User'
+            $ref: '#/definitions/shared.AdminUser'
         "400":
           description: Bad Request
           schema:
@@ -2206,7 +2206,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/admin.User'
+            $ref: '#/definitions/shared.AdminUser'
         "400":
           description: Bad Request
           schema:
@@ -2243,7 +2243,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/admin.User'
+            $ref: '#/definitions/shared.AdminUser'
         "400":
           description: Bad Request
           schema:
