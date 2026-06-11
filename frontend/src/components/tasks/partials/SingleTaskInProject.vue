@@ -179,7 +179,7 @@
 			</BaseButton>
 			<slot />
 			<button
-				v-if="hasSubtasks"
+				v-if="task.relatedTasks?.subtask?.length"
 				class="collapse-toggle"
 				:class="{ 'is-collapsed': isCollapsed }"
 				@click.stop="toggleCollapse"
@@ -188,7 +188,7 @@
 				<Icon icon="chevron-down" />
 			</button>
 		</div>
-		<template v-if="hasSubtasks && !isCollapsed">
+		<template v-if="task.relatedTasks?.subtask?.length && !isCollapsed">
 			<template v-for="subtask in task.relatedTasks.subtask">
 				<template v-if="getTaskById(subtask.id)">
 					<single-task-in-project
@@ -265,8 +265,8 @@ watch(collapseAll, (newVal) => {
 })
 
 const hasSubtasks = computed(() => {
-	return typeof props.theTask.relatedTasks?.subtask !== 'undefined' && 
-		props.theTask.relatedTasks.subtask.length > 0
+	return typeof task.value.relatedTasks?.subtask !== 'undefined' && 
+		task.value.relatedTasks.subtask.length > 0
 })
 
 function toggleCollapse() {
