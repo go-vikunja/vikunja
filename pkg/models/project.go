@@ -1217,9 +1217,13 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 		return err
 	}
 
+	doer, err := GetUserOrLinkShareUser(s, auth)
+	if err != nil {
+		return err
+	}
 	events.DispatchOnCommit(s, &ProjectUpdatedEvent{
 		Project: project,
-		Doer:    auth,
+		Doer:    doer,
 	})
 
 	l, err := GetProjectSimpleByID(s, project.ID)
@@ -1448,9 +1452,13 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	doer, err := GetUserOrLinkShareUser(s, a)
+	if err != nil {
+		return err
+	}
 	events.DispatchOnCommit(s, &ProjectDeletedEvent{
 		Project: fullProject,
-		Doer:    a,
+		Doer:    doer,
 	})
 
 	childProjects := []*Project{}

@@ -18,7 +18,6 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/user"
-	"code.vikunja.io/api/pkg/web"
 )
 
 /////////////////
@@ -230,8 +229,8 @@ func (l *ProjectCreatedEvent) Name() string {
 
 // ProjectUpdatedEvent represents an event where a project has been updated
 type ProjectUpdatedEvent struct {
-	Project *Project `json:"project"`
-	Doer    web.Auth `json:"doer"`
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
 }
 
 // Name defines the name for ProjectUpdatedEvent
@@ -241,8 +240,8 @@ func (p *ProjectUpdatedEvent) Name() string {
 
 // ProjectDeletedEvent represents an event where a project has been deleted
 type ProjectDeletedEvent struct {
-	Project *Project `json:"project"`
-	Doer    web.Auth `json:"doer"`
+	Project *Project   `json:"project"`
+	Doer    *user.User `json:"doer"`
 }
 
 // Name defines the name for ProjectDeletedEvent
@@ -258,7 +257,7 @@ func (p *ProjectDeletedEvent) Name() string {
 type ProjectSharedWithUserEvent struct {
 	Project *Project   `json:"project"`
 	User    *user.User `json:"user"`
-	Doer    web.Auth   `json:"doer"`
+	Doer    *user.User `json:"doer"`
 }
 
 // Name defines the name for ProjectSharedWithUserEvent
@@ -268,9 +267,9 @@ func (p *ProjectSharedWithUserEvent) Name() string {
 
 // ProjectSharedWithTeamEvent represents an event where a project has been shared with a team
 type ProjectSharedWithTeamEvent struct {
-	Project *Project `json:"project"`
-	Team    *Team    `json:"team"`
-	Doer    web.Auth `json:"doer"`
+	Project *Project   `json:"project"`
+	Team    *Team      `json:"team"`
+	Doer    *user.User `json:"doer"`
 }
 
 // Name defines the name for ProjectSharedWithTeamEvent
@@ -308,8 +307,8 @@ func (t *TeamMemberRemovedEvent) Name() string {
 
 // TeamCreatedEvent represents a TeamCreatedEvent event
 type TeamCreatedEvent struct {
-	Team *Team    `json:"team"`
-	Doer web.Auth `json:"doer"`
+	Team *Team      `json:"team"`
+	Doer *user.User `json:"doer"`
 }
 
 // Name defines the name for TeamCreatedEvent
@@ -319,8 +318,8 @@ func (t *TeamCreatedEvent) Name() string {
 
 // TeamDeletedEvent represents a TeamDeletedEvent event
 type TeamDeletedEvent struct {
-	Team *Team    `json:"team"`
-	Doer web.Auth `json:"doer"`
+	Team *Team      `json:"team"`
+	Doer *user.User `json:"doer"`
 }
 
 // Name defines the name for TeamDeletedEvent

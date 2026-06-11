@@ -45,27 +45,15 @@ func RegisterEventForAudit[T any, PT interface {
 	events.Event
 }](toEntry func(PT) *Entry) {
 	name := PT(new(T)).Name()
-	RegisterEventNameForAudit(name, func(payload []byte) (*Entry, error) {
-		e := PT(new(T)) // fresh instance per message — handlers run concurrently
-		if err := json.Unmarshal(payload, e); err != nil {
-			return nil, err
-		}
-		return toEntry(e), nil
-	})
-}
-
-// RegisterEventNameForAudit is the untyped variant for events which cannot be
-// unmarshaled into their Go struct directly (e.g. interface-typed Doer
-// fields); the mapping decodes the raw payload itself.
-func RegisterEventNameForAudit(name string, toEntry func(payload []byte) (*Entry, error)) {
 	events.RegisterListener(name, &auditListener{handle: func(msg *message.Message) error {
 		if !license.IsFeatureEnabled(license.FeatureAuditLogs) {
 			return nil // license is runtime-mutable — checked per event, not at registration
 		}
-		entry, err := toEntry(msg.Payload)
-		if err != nil {
+		e := PT(new(T)) // fresh instance per message — handlers run concurrently
+		if err := json.Unmarshal(msg.Payload, e); err != nil {
 			return err
 		}
+		entry := toEntry(e)
 		if entry == nil {
 			return nil
 		}
