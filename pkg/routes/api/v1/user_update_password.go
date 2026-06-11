@@ -66,7 +66,7 @@ func UserChangePassword(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	if err := models.ChangeUserPassword(s, doer, newPW.OldPassword, newPW.NewPassword); err != nil {
+	if err := models.ChangeUserPassword(c.Request().Context(), s, doer, newPW.OldPassword, newPW.NewPassword); err != nil {
 		_ = s.Rollback()
 		return err
 	}
