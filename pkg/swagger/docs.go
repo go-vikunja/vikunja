@@ -836,7 +836,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.vikunjaInfos"
+                            "$ref": "#/definitions/shared.VikunjaInfos"
                         }
                     }
                 }
@@ -10809,6 +10809,141 @@ const docTemplate = `{
                 }
             }
         },
+        "shared.AuthInfo": {
+            "type": "object",
+            "properties": {
+                "ldap": {
+                    "$ref": "#/definitions/shared.LdapAuthInfo"
+                },
+                "local": {
+                    "$ref": "#/definitions/shared.LocalAuthInfo"
+                },
+                "openid_connect": {
+                    "$ref": "#/definitions/shared.OpenIDAuthInfo"
+                }
+            }
+        },
+        "shared.LdapAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "shared.LegalInfo": {
+            "type": "object",
+            "properties": {
+                "imprint_url": {
+                    "type": "string"
+                },
+                "privacy_policy_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "shared.LocalAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "registration_enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "shared.OpenIDAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider"
+                    }
+                }
+            }
+        },
+        "shared.VikunjaInfos": {
+            "type": "object",
+            "properties": {
+                "allow_icon_changes": {
+                    "type": "boolean"
+                },
+                "auth": {
+                    "$ref": "#/definitions/shared.AuthInfo"
+                },
+                "available_migrators": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "caldav_enabled": {
+                    "type": "boolean"
+                },
+                "demo_mode_enabled": {
+                    "type": "boolean"
+                },
+                "email_reminders_enabled": {
+                    "type": "boolean"
+                },
+                "enabled_background_providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "enabled_pro_features": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/license.Feature"
+                    }
+                },
+                "frontend_url": {
+                    "type": "string"
+                },
+                "legal": {
+                    "$ref": "#/definitions/shared.LegalInfo"
+                },
+                "link_sharing_enabled": {
+                    "type": "boolean"
+                },
+                "max_file_size": {
+                    "type": "string"
+                },
+                "max_items_per_page": {
+                    "type": "integer"
+                },
+                "motd": {
+                    "type": "string"
+                },
+                "public_teams_enabled": {
+                    "type": "boolean"
+                },
+                "task_attachments_enabled": {
+                    "type": "boolean"
+                },
+                "task_comments_enabled": {
+                    "type": "boolean"
+                },
+                "totp_enabled": {
+                    "type": "boolean"
+                },
+                "user_deletion_enabled": {
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "webhooks_enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
         "todoist.Migration": {
             "type": "object",
             "properties": {
@@ -11118,141 +11253,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
-                }
-            }
-        },
-        "v1.authInfo": {
-            "type": "object",
-            "properties": {
-                "ldap": {
-                    "$ref": "#/definitions/v1.ldapAuthInfo"
-                },
-                "local": {
-                    "$ref": "#/definitions/v1.localAuthInfo"
-                },
-                "openid_connect": {
-                    "$ref": "#/definitions/v1.openIDAuthInfo"
-                }
-            }
-        },
-        "v1.ldapAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "v1.legalInfo": {
-            "type": "object",
-            "properties": {
-                "imprint_url": {
-                    "type": "string"
-                },
-                "privacy_policy_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1.localAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "registration_enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "v1.openIDAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider"
-                    }
-                }
-            }
-        },
-        "v1.vikunjaInfos": {
-            "type": "object",
-            "properties": {
-                "allow_icon_changes": {
-                    "type": "boolean"
-                },
-                "auth": {
-                    "$ref": "#/definitions/v1.authInfo"
-                },
-                "available_migrators": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "caldav_enabled": {
-                    "type": "boolean"
-                },
-                "demo_mode_enabled": {
-                    "type": "boolean"
-                },
-                "email_reminders_enabled": {
-                    "type": "boolean"
-                },
-                "enabled_background_providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "enabled_pro_features": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/license.Feature"
-                    }
-                },
-                "frontend_url": {
-                    "type": "string"
-                },
-                "legal": {
-                    "$ref": "#/definitions/v1.legalInfo"
-                },
-                "link_sharing_enabled": {
-                    "type": "boolean"
-                },
-                "max_file_size": {
-                    "type": "string"
-                },
-                "max_items_per_page": {
-                    "type": "integer"
-                },
-                "motd": {
-                    "type": "string"
-                },
-                "public_teams_enabled": {
-                    "type": "boolean"
-                },
-                "task_attachments_enabled": {
-                    "type": "boolean"
-                },
-                "task_comments_enabled": {
-                    "type": "boolean"
-                },
-                "totp_enabled": {
-                    "type": "boolean"
-                },
-                "user_deletion_enabled": {
-                    "type": "boolean"
-                },
-                "version": {
-                    "type": "string"
-                },
-                "webhooks_enabled": {
-                    "type": "boolean"
                 }
             }
         },
