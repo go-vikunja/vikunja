@@ -66,6 +66,53 @@ func TestHumaWebhookEvents(t *testing.T) {
 	})
 }
 
+// TestHumaUserSearch covers the global user search. Emails must never leak.
+func TestHumaUserSearch(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	t.Run("Search by username", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/users?q=user2", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		usernames, emails := usersFromSearch(t, rec.Body.Bytes())
+		assert.Contains(t, usernames, "user2")
+		for _, em := range emails {
+			assert.Empty(t, em, "user search must never return email addresses")
+		}
+	})
+	t.Run("Unauthenticated", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/users?q=user2", "", "", "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
+	})
+}
+
+// TestHumaProjectUserSearch covers the per-project user search used for share
+// autocomplete. It requires read access to the project.
+func TestHumaProjectUserSearch(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+	token := humaTokenFor(t, &testuser1)
+
+	t.Run("Owned project", func(t *testing.T) {
+		// testuser1 owns project 1.
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/projects/1/users/search", "", token, "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"items"`)
+	})
+	t.Run("Forbidden - no access", func(t *testing.T) {
+		// project 2 is owned by user3; testuser1 has no access.
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/projects/2/users/search", "", token, "")
+		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
+	})
+	t.Run("Nonexistent project", func(t *testing.T) {
+		// CanRead surfaces ErrProjectDoesNotExist (404), not a bare forbidden.
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/projects/99999/users/search", "", token, "")
+		assert.Equal(t, http.StatusNotFound, rec.Code, "body: %s", rec.Body.String())
+	})
+}
+
 // TestHumaProjectBackgroundDelete covers removing a project background. It
 // mirrors the v1 background_test.go matrix: the owner clears the background
 // (and keeps the title), a read-only user is refused.
@@ -146,4 +193,20 @@ func TestHumaUnsplashBackground(t *testing.T) {
 		rec := humaRequest(t, e, http.MethodPut, "/api/v2/projects/35/backgrounds/unsplash", `{"id":"abc"}`, humaTokenFor(t, &testuser15), "")
 		assert.Equal(t, http.StatusForbidden, rec.Code, "body: %s", rec.Body.String())
 	})
+}
+
+func usersFromSearch(t *testing.T, body []byte) (usernames, emails []string) {
+	t.Helper()
+	var resp struct {
+		Items []struct {
+			Username string `json:"username"`
+			Email    string `json:"email"`
+		} `json:"items"`
+	}
+	require.NoError(t, json.Unmarshal(body, &resp), "search body must be a paginated envelope: %s", string(body))
+	for _, it := range resp.Items {
+		usernames = append(usernames, it.Username)
+		emails = append(emails, it.Email)
+	}
+	return usernames, emails
 }
