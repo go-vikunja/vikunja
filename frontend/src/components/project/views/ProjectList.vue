@@ -23,7 +23,7 @@
 					@click="toggleCollapseAll"
 					:title="collapseAll ? 'Expand all subtasks' : 'Collapse all subtasks'"
 				>
-					<Icon :icon="collapseAll ? 'chevron-right' : 'chevron-down'" />
+					<Icon icon="chevron-down" />
 				</button>
 			</div>
 		</template>
@@ -406,6 +406,7 @@ onBeforeUnmount(() => {
 	&.is-collapsed {
 		color: var(--primary);
 		border-color: var(--primary);
+		transform: rotate(-90deg);
 	}
 }
 
