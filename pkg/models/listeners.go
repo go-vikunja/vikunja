@@ -88,23 +88,6 @@ func RegisterListeners() {
 	}
 }
 
-// auditDoerRef decodes the doer of events whose Doer field is an interface
-// and thus can't be unmarshaled into the event struct directly.
-type auditDoerRef struct {
-	ID   int64  `json:"id"`
-	Hash string `json:"hash"` // only set when the doer is a link share
-}
-
-func auditActorFromDoerRef(d *auditDoerRef) audit.Actor {
-	if d == nil {
-		return audit.SystemActor()
-	}
-	if d.Hash != "" {
-		return audit.LinkShareActor(d.ID)
-	}
-	return audit.ActorFromDoerID(d.ID)
-}
-
 func auditActorFromUser(u *user.User) audit.Actor {
 	if u == nil {
 		return audit.SystemActor()
@@ -281,95 +264,51 @@ func registerEventsForAuditLogging() {
 			Target: audit.ProjectTarget(e.Project.ID),
 		}
 	})
-	audit.RegisterEventNameForAudit((&ProjectUpdatedEvent{}).Name(), func(payload []byte) (*audit.Entry, error) {
-		e := &struct {
-			Project *Project      `json:"project"`
-			Doer    *auditDoerRef `json:"doer"`
-		}{}
-		if err := json.Unmarshal(payload, e); err != nil {
-			return nil, err
-		}
+	audit.RegisterEventForAudit(func(e *ProjectUpdatedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionProjectUpdated,
-			Actor:  auditActorFromDoerRef(e.Doer),
+			Actor:  auditActorFromUser(e.Doer),
 			Target: audit.ProjectTarget(e.Project.ID),
-		}, nil
-	})
-	audit.RegisterEventNameForAudit((&ProjectDeletedEvent{}).Name(), func(payload []byte) (*audit.Entry, error) {
-		e := &struct {
-			Project *Project      `json:"project"`
-			Doer    *auditDoerRef `json:"doer"`
-		}{}
-		if err := json.Unmarshal(payload, e); err != nil {
-			return nil, err
 		}
+	})
+	audit.RegisterEventForAudit(func(e *ProjectDeletedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionProjectDeleted,
-			Actor:  auditActorFromDoerRef(e.Doer),
+			Actor:  auditActorFromUser(e.Doer),
 			Target: audit.ProjectTarget(e.Project.ID),
-		}, nil
-	})
-	audit.RegisterEventNameForAudit((&ProjectSharedWithUserEvent{}).Name(), func(payload []byte) (*audit.Entry, error) {
-		e := &struct {
-			Project *Project      `json:"project"`
-			User    *user.User    `json:"user"`
-			Doer    *auditDoerRef `json:"doer"`
-		}{}
-		if err := json.Unmarshal(payload, e); err != nil {
-			return nil, err
 		}
+	})
+	audit.RegisterEventForAudit(func(e *ProjectSharedWithUserEvent) *audit.Entry {
 		return &audit.Entry{
 			Action:   audit.ActionProjectSharedWithUser,
-			Actor:    auditActorFromDoerRef(e.Doer),
+			Actor:    auditActorFromUser(e.Doer),
 			Target:   audit.ProjectTarget(e.Project.ID),
 			Metadata: map[string]any{"user_id": e.User.ID},
-		}, nil
-	})
-	audit.RegisterEventNameForAudit((&ProjectSharedWithTeamEvent{}).Name(), func(payload []byte) (*audit.Entry, error) {
-		e := &struct {
-			Project *Project      `json:"project"`
-			Team    *Team         `json:"team"`
-			Doer    *auditDoerRef `json:"doer"`
-		}{}
-		if err := json.Unmarshal(payload, e); err != nil {
-			return nil, err
 		}
+	})
+	audit.RegisterEventForAudit(func(e *ProjectSharedWithTeamEvent) *audit.Entry {
 		return &audit.Entry{
 			Action:   audit.ActionProjectSharedWithTeam,
-			Actor:    auditActorFromDoerRef(e.Doer),
+			Actor:    auditActorFromUser(e.Doer),
 			Target:   audit.ProjectTarget(e.Project.ID),
 			Metadata: map[string]any{"team_id": e.Team.ID},
-		}, nil
+		}
 	})
 
 	// Teams
-	audit.RegisterEventNameForAudit((&TeamCreatedEvent{}).Name(), func(payload []byte) (*audit.Entry, error) {
-		e := &struct {
-			Team *Team         `json:"team"`
-			Doer *auditDoerRef `json:"doer"`
-		}{}
-		if err := json.Unmarshal(payload, e); err != nil {
-			return nil, err
-		}
+	audit.RegisterEventForAudit(func(e *TeamCreatedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionTeamCreated,
-			Actor:  auditActorFromDoerRef(e.Doer),
+			Actor:  auditActorFromUser(e.Doer),
 			Target: audit.TeamTarget(e.Team.ID),
-		}, nil
-	})
-	audit.RegisterEventNameForAudit((&TeamDeletedEvent{}).Name(), func(payload []byte) (*audit.Entry, error) {
-		e := &struct {
-			Team *Team         `json:"team"`
-			Doer *auditDoerRef `json:"doer"`
-		}{}
-		if err := json.Unmarshal(payload, e); err != nil {
-			return nil, err
 		}
+	})
+	audit.RegisterEventForAudit(func(e *TeamDeletedEvent) *audit.Entry {
 		return &audit.Entry{
 			Action: audit.ActionTeamDeleted,
-			Actor:  auditActorFromDoerRef(e.Doer),
+			Actor:  auditActorFromUser(e.Doer),
 			Target: audit.TeamTarget(e.Team.ID),
-		}, nil
+		}
 	})
 	audit.RegisterEventForAudit(func(e *TeamMemberAddedEvent) *audit.Entry {
 		return &audit.Entry{

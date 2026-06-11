@@ -222,7 +222,7 @@ func (t *Team) CreateNewTeam(s *xorm.Session, a web.Auth, firstUserShouldBeAdmin
 
 	events.DispatchOnCommit(s, &TeamCreatedEvent{
 		Team: t,
-		Doer: a,
+		Doer: doer,
 	})
 	return nil
 }
@@ -360,9 +360,13 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
+	doer, err := GetUserOrLinkShareUser(s, a)
+	if err != nil {
+		return err
+	}
 	events.DispatchOnCommit(s, &TeamDeletedEvent{
 		Team: t,
-		Doer: a,
+		Doer: doer,
 	})
 	return nil
 }
