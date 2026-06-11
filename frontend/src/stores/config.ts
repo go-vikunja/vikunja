@@ -47,6 +47,7 @@ export interface ConfigState {
 	publicTeamsEnabled: boolean,
 	allowIconChanges: boolean,
 	enabledProFeatures: string[],
+	taskIdentifierDisplay: string,
 }
 
 export const useConfigStore = defineStore('config', () => {
@@ -88,6 +89,7 @@ export const useConfigStore = defineStore('config', () => {
 		publicTeamsEnabled: false,
 		allowIconChanges: true,
 		enabledProFeatures: [],
+		taskIdentifierDisplay: '{identifier}',
 	})
 
 	const migratorsEnabled = computed(() => state.availableMigrators?.length > 0)
@@ -118,6 +120,13 @@ export const useConfigStore = defineStore('config', () => {
 		}
 
 		setConfig(objectToCamelCase(config) as ConfigState)
+
+		if (state.taskIdentifierDisplay?.includes('{prefix}-{index}')) {
+			console.warn(
+				'Configured service.taskidentifierdisplay contains \'{prefix}-{index}\'. The {prefix} placeholder is empty for projects without an identifier prefix, which renders as \'-N\'. Use {identifier} instead -- it handles the empty-prefix case (renders \'#N\').',
+			)
+		}
+
 		return !!config
 	}
 

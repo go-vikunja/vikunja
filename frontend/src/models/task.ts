@@ -14,6 +14,7 @@ import {TASK_REPEAT_MODES, type IRepeatMode} from '@/types/IRepeatMode'
 
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {secondsToPeriod} from '@/helpers/time/period'
+import {useConfigStore} from '@/stores/config'
 
 import AbstractModel from './abstractModel'
 import LabelModel from './label'
@@ -45,16 +46,48 @@ export function parseRepeatAfter(repeatAfterSeconds: number): IRepeatAfter {
 	}
 }
 
-export function getTaskIdentifier(task: ITask | null | undefined): string {
+/**
+ * Format a task identifier for display.
+ *
+ * The format string supports four placeholders:
+ *   {identifier} - per-project value (e.g. 'TAL-5' if the project has an
+ *                  identifier prefix, otherwise '#5'). Recommended.
+ *   {id}         - global database id (stable, never changes).
+ *   {index}      - per-project numeric index.
+ *   {prefix}     - project identifier prefix (e.g. 'TAL'); empty if not set.
+ *
+ * Example: '{identifier} (ID #{id})' renders as 'TAL-5 (ID #42)' or '#5 (ID #42)'.
+ * The 'ID' label disambiguates the database id from the project index when no prefix is set.
+ *
+ * If `format` is omitted, the configured `service.taskidentifierdisplay`
+ * value is used (default '{identifier}').
+ */
+export function getTaskIdentifier(task: ITask | null | undefined, format?: string): string {
 	if (task === null || typeof task === 'undefined') {
 		return ''
 	}
-	
-	if (task.identifier === '') {
-		return `#${task.index}`
+
+	let fmt = format
+	if (typeof fmt === 'undefined') {
+		try {
+			fmt = useConfigStore().taskIdentifierDisplay
+		} catch {
+			// store may not be initialised in some test contexts
+			fmt = undefined
+		}
+	}
+	if (!fmt) {
+		fmt = '{identifier}'
 	}
 
-	return task.identifier
+	const identifierValue = task.identifier === '' ? `#${task.index}` : task.identifier
+	const prefixValue = task.identifier ? task.identifier.replace(/-\d+$/, '') : ''
+
+	return fmt
+		.replace(/\{identifier\}/g, identifierValue)
+		.replace(/\{id\}/g, String(task.id))
+		.replace(/\{index\}/g, String(task.index))
+		.replace(/\{prefix\}/g, prefixValue)
 }
 
 export default class TaskModel extends AbstractModel<ITask> implements ITask {

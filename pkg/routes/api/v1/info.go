@@ -57,6 +57,7 @@ type vikunjaInfos struct {
 	PublicTeamsEnabled         bool              `json:"public_teams_enabled"`
 	AllowIconChanges           bool              `json:"allow_icon_changes"`
 	EnabledProFeatures         []license.Feature `json:"enabled_pro_features"`
+	TaskIdentifierDisplay      string            `json:"task_identifier_display"`
 }
 
 type authInfo struct {
@@ -110,6 +111,7 @@ func Info(c *echo.Context) error {
 		PublicTeamsEnabled:     config.ServiceEnablePublicTeams.GetBool(),
 		AllowIconChanges:       config.ServiceAllowIconChanges.GetBool(),
 		EnabledProFeatures:     license.EnabledProFeatures(),
+		TaskIdentifierDisplay:  config.ServiceTaskIdentifierDisplay.GetString(),
 		AvailableMigrators: []string{
 			(&vikunja_file.FileMigrator{}).Name(),
 			(&ticktick.Migrator{}).Name(),

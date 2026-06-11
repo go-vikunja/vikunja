@@ -139,6 +139,11 @@
                     "comment": "Allow using a custom logo for dark mode via external URL. If not set, the regular logo will be used for both light and dark modes."
                 },
                 {
+                    "key": "taskidentifierdisplay",
+                    "default_value": "{identifier}",
+                    "comment": "Format string controlling how task identifiers render in the UI.\nSupported placeholders:\n  {identifier} - the per-project value (e.g. 'TAL-5' if the project has an identifier prefix, otherwise '#5'). This is the recommended placeholder for the empty-prefix case.\n  {id}         - the global database id (stable, never changes; used by the API).\n  {index}      - the per-project numeric index.\n  {prefix}     - the project identifier prefix (e.g. 'TAL'); empty string if not set.\nExamples:\n  '{identifier}'             - default; shows 'TAL-5' or '#5'.\n  '#{id}'                    - shows the global database id (e.g. '#42').\n  '{identifier} (ID #{id})'  - shows both; renders as 'TAL-5 (ID #42)' or '#5 (ID #42)'. The 'ID' label disambiguates the database id from the project index when no prefix is set.\nNote: '{prefix}-{index}' renders as '-5' for projects without an identifier prefix; prefer {identifier} unless you control all projects."
+                },
+                {
                     "key": "enablepublicteams",
                     "default_value": "false",
                     "comment": "Enables the public team feature. If enabled, it is possible to configure teams to be public, which makes them\ndiscoverable when sharing a project, therefore not only showing teams the user is member of."
