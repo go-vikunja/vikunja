@@ -65,24 +65,8 @@ func PatchAdmin(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	target := &user.User{ID: id}
-	has, err := s.Get(target)
+	target, err := models.SetUserAdminFlag(s, id, *body.IsAdmin)
 	if err != nil {
-		return err
-	}
-	if !has {
-		return user.ErrUserDoesNotExist{UserID: id}
-	}
-
-	if !*body.IsAdmin {
-		if err := user.GuardLastAdmin(s, target); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-	}
-
-	target.IsAdmin = *body.IsAdmin
-	if _, err := s.ID(target.ID).Cols("is_admin").Update(target); err != nil {
 		_ = s.Rollback()
 		return err
 	}

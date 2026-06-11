@@ -67,24 +67,8 @@ func PatchStatus(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	target := &user.User{ID: id}
-	has, err := s.Get(target)
+	target, err := models.SetUserStatusAsAdmin(s, id, newStatus)
 	if err != nil {
-		return err
-	}
-	if !has {
-		return user.ErrUserDoesNotExist{UserID: id}
-	}
-
-	// Any non-Active status blocks login, so moving an admin out of Active is equivalent to demotion.
-	if target.IsAdmin && newStatus != user.StatusActive {
-		if err := user.GuardLastAdmin(s, target); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-	}
-
-	if err := user.SetUserStatus(s, target, newStatus); err != nil {
 		_ = s.Rollback()
 		return err
 	}
@@ -92,8 +76,6 @@ func PatchStatus(c *echo.Context) error {
 		return err
 	}
 
-	// Refresh locally since GetUserByID refuses disabled accounts.
-	target.Status = newStatus
 	providers, err := openid.GetAllProviders()
 	if err != nil {
 		return err
@@ -130,32 +112,10 @@ func DeleteUser(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	target := &user.User{ID: id}
-	has, err := s.Get(target)
-	if err != nil {
-		return err
-	}
-	if !has {
-		return user.ErrUserDoesNotExist{UserID: id}
-	}
-
-	if err := user.GuardLastAdmin(s, target); err != nil {
+	if err := models.DeleteUserAsAdmin(s, id, mode); err != nil {
 		_ = s.Rollback()
 		return err
 	}
-
-	if mode == "now" {
-		if err := models.DeleteUser(s, target); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-	} else {
-		if err := user.RequestDeletion(s, target); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-	}
-
 	if err := s.Commit(); err != nil {
 		return err
 	}
