@@ -137,22 +137,9 @@ func adminUsersPatchAdmin(_ context.Context, in *struct {
 	if in.Body.IsAdmin == nil {
 		return nil, translateDomainError(models.ErrInvalidData{Message: "is_admin is required"})
 	}
-
-	target, err := adminMutateUser(in.ID, func(s *xorm.Session, target *user.User) error {
-		if !*in.Body.IsAdmin {
-			if err := user.GuardLastAdmin(s, target); err != nil {
-				return err
-			}
-		}
-		target.IsAdmin = *in.Body.IsAdmin
-		_, err := s.ID(target.ID).Cols("is_admin").Update(target)
-		return err
+	return adminCommitUser(func(s *xorm.Session) (*user.User, error) { //nolint:contextcheck // see adminCommitUser.
+		return models.SetUserAdminFlag(s, in.ID, *in.Body.IsAdmin)
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	return adminUserResponse(target) //nolint:contextcheck // see adminUserResponse.
 }
 
 func adminUsersPatchStatus(_ context.Context, in *struct {
@@ -166,23 +153,9 @@ func adminUsersPatchStatus(_ context.Context, in *struct {
 	if newStatus < user.StatusActive || newStatus > user.StatusAccountLocked {
 		return nil, translateDomainError(models.ErrInvalidData{Message: "invalid status"})
 	}
-
-	target, err := adminMutateUser(in.ID, func(s *xorm.Session, target *user.User) error {
-		// Any non-Active status blocks login, so moving an admin out of Active is equivalent to demotion.
-		if target.IsAdmin && newStatus != user.StatusActive {
-			if err := user.GuardLastAdmin(s, target); err != nil {
-				return err
-			}
-		}
-		return user.SetUserStatus(s, target, newStatus)
+	return adminCommitUser(func(s *xorm.Session) (*user.User, error) { //nolint:contextcheck // see adminCommitUser.
+		return models.SetUserStatusAsAdmin(s, in.ID, newStatus)
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	// Refresh locally since GetUserByID refuses disabled accounts.
-	target.Status = newStatus
-	return adminUserResponse(target) //nolint:contextcheck // see adminUserResponse.
 }
 
 func adminUsersDelete(_ context.Context, in *struct {
@@ -197,62 +170,34 @@ func adminUsersDelete(_ context.Context, in *struct {
 		return nil, translateDomainError(models.ErrInvalidData{Message: "invalid mode, expected 'now' or 'scheduled'"})
 	}
 
-	_, err := adminMutateUser(in.ID, func(s *xorm.Session, target *user.User) error {
-		if err := user.GuardLastAdmin(s, target); err != nil {
-			return err
-		}
-		if mode == "now" {
-			return models.DeleteUser(s, target)
-		}
-		return user.RequestDeletion(s, target)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &emptyBody{}, nil
-}
-
-// adminMutateUser opens a session, loads the user by ID, runs mutate against it,
-// then commits — owning the transaction so each handler only supplies its
-// distinct guard-and-write step. mutate must not commit or rollback. Errors
-// (load, mutate, commit) are translated to RFC 9457 responses.
-func adminMutateUser(id int64, mutate func(s *xorm.Session, target *user.User) error) (*user.User, error) {
 	s := db.NewSession()
 	defer s.Close()
-
-	target, err := adminLoadUser(s, id)
-	if err != nil {
-		return nil, translateDomainError(err)
-	}
-	if err := mutate(s, target); err != nil {
+	if err := models.DeleteUserAsAdmin(s, in.ID, mode); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return target, nil
+	return &emptyBody{}, nil
 }
 
-// adminLoadUser fetches a user by ID, returning ErrUserDoesNotExist for an
-// invalid ID or a missing row (matching v1's 404).
-func adminLoadUser(s *xorm.Session, id int64) (*user.User, error) {
-	if id < 1 {
-		return nil, user.ErrUserDoesNotExist{UserID: id}
-	}
-	target := &user.User{ID: id}
-	has, err := s.Get(target)
+// adminCommitUser runs a user-returning admin action in its own transaction and
+// renders the admin user view. The action does the load/guard/mutate against the
+// session (shared with v1 via the models layer); this owns the commit and response.
+func adminCommitUser(action func(s *xorm.Session) (*user.User, error)) (*adminUserBody, error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	target, err := action(s)
 	if err != nil {
-		return nil, err
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
 	}
-	if !has {
-		return nil, user.ErrUserDoesNotExist{UserID: id}
+	if err := s.Commit(); err != nil {
+		return nil, translateDomainError(err)
 	}
-	return target, nil
-}
 
-// adminUserResponse builds the admin user view from an already-mutated user.
-func adminUserResponse(target *user.User) (*adminUserBody, error) {
 	providers, err := openid.GetAllProviders() //nolint:contextcheck // GetAllProviders reads a cached map; it takes no context, like the v1 admin handlers.
 	if err != nil {
 		return nil, translateDomainError(err)
