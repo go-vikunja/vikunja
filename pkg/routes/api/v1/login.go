@@ -243,8 +243,12 @@ func Logout(c *echo.Context) (err error) {
 		if jwtinf, ok := raw.(*jwt.Token); ok {
 			if claims, ok := jwtinf.Claims.(jwt.MapClaims); ok {
 				sid, _ = claims["sid"].(string)
-				if id, ok := claims["id"].(float64); ok {
-					userID = int64(id)
+				// Only user tokens carry a sid, but check the type explicitly
+				// so a link share id can never be logged as a user id.
+				if typ, ok := claims["type"].(float64); ok && int(typ) == auth.AuthTypeUser {
+					if id, ok := claims["id"].(float64); ok {
+						userID = int64(id)
+					}
 				}
 			}
 		}
