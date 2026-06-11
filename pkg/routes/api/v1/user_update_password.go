@@ -63,26 +63,10 @@ func UserChangePassword(c *echo.Context) error {
 		return err
 	}
 
-	if newPW.OldPassword == "" {
-		return user.ErrEmptyOldPassword{}
-	}
-
 	s := db.NewSession()
 	defer s.Close()
 
-	// Check the current password
-	if _, err = user.CheckUserCredentials(s, &user.Login{Username: doer.Username, Password: newPW.OldPassword}); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	// Update the password
-	if err = user.UpdateUserPassword(s, doer, newPW.NewPassword); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if err := models.DeleteAllUserSessions(s, doer.ID); err != nil {
+	if err := models.ChangeUserPassword(s, doer, newPW.OldPassword, newPW.NewPassword); err != nil {
 		_ = s.Rollback()
 		return err
 	}

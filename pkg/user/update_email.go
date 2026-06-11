@@ -31,6 +31,17 @@ type EmailUpdate struct {
 	Password string `json:"password"`
 }
 
+// ChangeUserEmail verifies the user's password, then sets a new email address
+// (kicking off confirmation when the mailer is enabled). Shared by the v1 and
+// v2 email-update handlers; only HTTP input binding stays in the handlers.
+func ChangeUserEmail(s *xorm.Session, u *User, password, newEmail string) error {
+	verified, err := CheckUserCredentials(s, &Login{Username: u.Username, Password: password})
+	if err != nil {
+		return err
+	}
+	return UpdateEmail(s, &EmailUpdate{User: verified, NewEmail: newEmail})
+}
+
 // UpdateEmail lets a user update their email address
 func UpdateEmail(s *xorm.Session, update *EmailUpdate) (err error) {
 

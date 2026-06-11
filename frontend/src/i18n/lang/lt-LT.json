@@ -320,8 +320,7 @@
 			"default": "Numatytasis",
 			"month": "Mėnuo",
 			"day": "Diena",
-			"hour": "Valanda",
-			"range": "Datos intervalas"
+			"hour": "Valanda"
 		},
 		"table": {
 			"title": "Lentelė",
@@ -330,7 +329,6 @@
 		"kanban": {
 			"title": "Kanbanas",
 			"limit": "Limitas: {limit}",
-			"noLimit": "Nenustatytas",
 			"doneBucket": "Atliktųjų telkinys",
 			"doneBucketHint": "Visos užduotys nukreiptos į šį telkinį bus automatiškai pažymėtos kaip atliktos.",
 			"doneBucketHintExtended": "Visos užduotys perkeltos į atliktą telkiny bus automatiškai pažymėtos kaip atliktos. Visos užduotys pažymėtos kaip atliktos iš kitur bus perkeltos taip pat.",

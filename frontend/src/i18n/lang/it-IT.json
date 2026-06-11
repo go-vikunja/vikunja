@@ -362,7 +362,6 @@
 			"month": "Mese",
 			"day": "Giorno",
 			"hour": "Ora",
-			"range": "Intervallo di date",
 			"chartLabel": "Progetto diagramma di Gantt",
 			"taskBarsForRow": "Barre delle attività per riga {rowId}",
 			"taskBarLabel": "Attività: {task}. Da {startDate} a {endDate}. {dateType}. Clicca per modificare, trascina per spostare.",
@@ -386,7 +385,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limite: {limit}",
-			"noLimit": "Non Impostato",
 			"doneBucket": "Colonna attività completate",
 			"doneBucketHint": "Tutte le attività spostate in questa colonna verranno automaticamente contrassegnate come completate.",
 			"doneBucketHintExtended": "Tutte le attività spostate nella colonna attività completate saranno contrassegnate automaticamente come completate. Anche tutte le attività contrassegnate come completate altrove verranno spostate.",

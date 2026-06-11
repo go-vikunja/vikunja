@@ -43,3 +43,11 @@
   created_by_id: 1
   updated: 2018-12-02 15:13:12
   created: 2018-12-01 15:13:12
+# Covers the bot-owner branch: created by bot 23, whose owner is user 21.
+# User 21 should be able to read/update/delete it; user 22 (who owns bot 24)
+# should not.
+- id: 9
+  title: 'Label #9 - created by bot 23 owned by user 21'
+  created_by_id: 23
+  updated: 2018-12-02 15:13:12
+  created: 2018-12-01 15:13:12

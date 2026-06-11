@@ -172,6 +172,7 @@
 					"yyyy/mm/dd": "JJJJ/MM/TT"
 				},
 				"timeFormat": "Zeitformat",
+				"timeTrackingDefaultStart": "Startzeit für die Zeiterfassung",
 				"timeFormatOptions": {
 					"12h": "12 Stunden (AM/PM)",
 					"24h": "24 Stunden (HH:mm)"
@@ -470,7 +471,6 @@
 			"month": "Monat",
 			"day": "Tag",
 			"hour": "Stunde",
-			"range": "Zeitraum",
 			"chartLabel": "Projekt Gantt-Diagramm",
 			"taskBarsForRow": "Aufgabenleisten für Zeile {rowId}",
 			"taskBarLabel": "Aufgabe: {task}. Von {startDate} bis {endDate}. {dateType}. Klicke zum Bearbeiten, ziehe zum Verschieben.",
@@ -499,7 +499,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limit: {limit}",
-			"noLimit": "Nicht gesetzt",
 			"doneBucket": "Erledigt Spalte",
 			"doneBucketHint": "Alle Aufgaben, die in diese Spalte verschoben werden, werden automatisch als erledigt markiert.",
 			"doneBucketHintExtended": "Alle Aufgaben, die in die Erledigt Spalte verschoben wurden, werden automatisch als erledigt markiert. Aufgaben, die in einer anderen Spalte als Erledigt markiert wurden, werden auch in diese Spalte verschoben.",
@@ -783,7 +782,10 @@
 		"closeDialog": "Dialog schließen",
 		"closeQuickActions": "Schnellaktionen schließen",
 		"skipToContent": "Überspringen und zum Hauptinhalt gehen",
-		"sortBy": "Sortieren nach"
+		"sortBy": "Sortieren nach",
+		"dateRange": "Zeitraum",
+		"notSet": "Nicht festgelegt",
+		"user": "Benutzer:in"
 	},
 	"input": {
 		"projectColor": "Projektfarbe",
@@ -993,6 +995,7 @@
 				"repeatAfter": "Wiederholung setzen",
 				"percentDone": "Fortschritt einstellen",
 				"attachments": "Anhänge hinzufügen",
+				"timeTracking": "Zeit erfassen",
 				"relatedTasks": "Beziehung hinzufügen",
 				"moveProject": "Verschieben",
 				"duplicate": "Duplizieren",
@@ -1461,6 +1464,32 @@
 		"version": "Version: {version}",
 		"frontendVersion": "Frontend-Version: {version}",
 		"apiVersion": "API-Version: {version}"
+	},
+	"timeTracking": {
+		"title": "Zeiterfassung",
+		"stop": "Timer stoppen",
+		"logTime": "Zeit buchen",
+		"editEntry": "Eintrag bearbeiten",
+		"form": {
+			"task": "Aufgabe",
+			"taskSearch": "Nach einer Aufgabe suchen…",
+			"commentPlaceholder": "Woran hast du gearbeitet?",
+			"save": "Speichern",
+			"startTimer": "Timer starten",
+			"update": "Eintrag aktualisieren",
+			"smartFill": "Vom letzten Eintrag ausfüllen"
+		},
+		"list": {
+			"emptyTask": "Noch keine Zeit für diese Aufgabe getrackt.",
+			"emptyFiltered": "Keine Zeiterfassung innerhalb der ausgewählten Filter.",
+			"total": "Gesamt",
+			"time": "Uhrzeit",
+			"duration": "Dauer"
+		},
+		"browse": {
+			"selectRange": "Bereich wählen",
+			"userSearch": "Nach einer:m Benutzer:in suchen…"
+		}
 	},
 	"time": {
 		"units": {

@@ -741,6 +741,7 @@ definitions:
       value:
         description: The actual reaction. This can be any valid utf character or text,
           up to a length of 20.
+        maxLength: 20
         type: string
     type: object
   models.ReactionMap:
@@ -1134,7 +1135,9 @@ definitions:
       relation_kind:
         allOf:
         - $ref: '#/definitions/models.RelationKind'
-        description: The kind of the relation.
+        description: |-
+          The kind of the relation.
+          The enum list must stay in sync with RelationKind.isValid() (RelationKindUnknown excluded); the v2 delete route param repeats it.
       task_id:
         description: The ID of the "base" task, the task which has a relation to another.
         type: integer
@@ -1329,6 +1332,36 @@ definitions:
         description: A timestamp when this relation was last updated. You cannot change
           this value.
         type: string
+    type: object
+  models.UserGeneralSettings:
+    properties:
+      default_project_id:
+        type: integer
+      discoverable_by_email:
+        type: boolean
+      discoverable_by_name:
+        type: boolean
+      email_reminders_enabled:
+        type: boolean
+      extra_settings_links:
+        additionalProperties: {}
+        description: Server/OpenID-provided; populated on read, ignored on write.
+        type: object
+      frontend_settings: {}
+      language:
+        type: string
+      name:
+        type: string
+      overdue_tasks_reminders_enabled:
+        type: boolean
+      overdue_tasks_reminders_time:
+        type: string
+      timezone:
+        type: string
+      week_start:
+        maximum: 6
+        minimum: 0
+        type: integer
     type: object
   models.UserWithPermission:
     properties:
@@ -1637,53 +1670,6 @@ definitions:
         minLength: 3
         type: string
     type: object
-  v1.UserSettings:
-    properties:
-      default_project_id:
-        description: |-
-          If a task is created without a specified project this value should be used. Applies
-          to tasks made directly in API and from clients.
-        type: integer
-      discoverable_by_email:
-        description: If true, the user can be found when searching for their exact
-          email.
-        type: boolean
-      discoverable_by_name:
-        description: If true, this user can be found by their name or parts of it
-          when searching for it.
-        type: boolean
-      email_reminders_enabled:
-        description: If enabled, sends email reminders of tasks to the user.
-        type: boolean
-      extra_settings_links:
-        additionalProperties: {}
-        description: Additional settings links as provided by openid
-        type: object
-      frontend_settings:
-        description: Additional settings only used by the frontend
-      language:
-        description: The user's language
-        type: string
-      name:
-        description: The new name of the current user.
-        type: string
-      overdue_tasks_reminders_enabled:
-        description: If enabled, the user will get an email for their overdue tasks
-          each morning.
-        type: boolean
-      overdue_tasks_reminders_time:
-        description: The time when the daily summary of overdue tasks will be sent
-          via email.
-        type: string
-      timezone:
-        description: The user's time zone. Used to send task reminders in the time
-          zone of the user.
-        type: string
-      week_start:
-        description: The day when the week starts for this user. 0 = sunday, 1 = monday,
-          etc.
-        type: integer
-    type: object
   v1.UserWithSettings:
     properties:
       auth_provider:
@@ -1714,7 +1700,7 @@ definitions:
         description: The full name of the user.
         type: string
       settings:
-        $ref: '#/definitions/v1.UserSettings'
+        $ref: '#/definitions/models.UserGeneralSettings'
       updated:
         description: A timestamp when this task was last updated. You cannot change
           this value.
@@ -7196,7 +7182,7 @@ paths:
         name: avatar
         required: true
         schema:
-          $ref: '#/definitions/v1.UserSettings'
+          $ref: '#/definitions/models.UserGeneralSettings'
       produces:
       - application/json
       responses:

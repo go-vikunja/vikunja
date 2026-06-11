@@ -362,7 +362,6 @@
 			"month": "Mês",
 			"day": "Dia",
 			"hour": "Hora",
-			"range": "Intervalo de Datas",
 			"chartLabel": "Gráfico de Gantt do projeto",
 			"taskBarsForRow": "Barras de tarefas para a linha {rowId}",
 			"taskBarLabel": "Tarefa: {task}. De {startDate} a {endDate}. {dateType}. Clica para editar, arrasta para mover.",
@@ -386,7 +385,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limite: {limit}",
-			"noLimit": "Não Definido",
 			"doneBucket": "Conjunto concluído",
 			"doneBucketHint": "Todas as tarefas movidas para este conjunto serão automaticamente marcadas como concluídas.",
 			"doneBucketHintExtended": "Todas as tarefas movidas para o conjunto concluído serão marcadas automaticamente como concluídas. Todas as tarefas marcadas como concluídas em outro lugar também serão movidas.",
