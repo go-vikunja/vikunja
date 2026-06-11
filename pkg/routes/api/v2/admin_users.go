@@ -138,28 +138,18 @@ func adminUsersPatchAdmin(_ context.Context, in *struct {
 		return nil, translateDomainError(models.ErrInvalidData{Message: "is_admin is required"})
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	target, err := adminLoadUser(s, in.ID)
-	if err != nil {
-		return nil, translateDomainError(err)
-	}
-
-	if !*in.Body.IsAdmin {
-		if err := user.GuardLastAdmin(s, target); err != nil {
-			_ = s.Rollback()
-			return nil, translateDomainError(err)
+	target, err := adminMutateUser(in.ID, func(s *xorm.Session, target *user.User) error {
+		if !*in.Body.IsAdmin {
+			if err := user.GuardLastAdmin(s, target); err != nil {
+				return err
+			}
 		}
-	}
-
-	target.IsAdmin = *in.Body.IsAdmin
-	if _, err := s.ID(target.ID).Cols("is_admin").Update(target); err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-	if err := s.Commit(); err != nil {
-		return nil, translateDomainError(err)
+		target.IsAdmin = *in.Body.IsAdmin
+		_, err := s.ID(target.ID).Cols("is_admin").Update(target)
+		return err
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return adminUserResponse(target) //nolint:contextcheck // see adminUserResponse.
@@ -177,28 +167,17 @@ func adminUsersPatchStatus(_ context.Context, in *struct {
 		return nil, translateDomainError(models.ErrInvalidData{Message: "invalid status"})
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	target, err := adminLoadUser(s, in.ID)
-	if err != nil {
-		return nil, translateDomainError(err)
-	}
-
-	// Any non-Active status blocks login, so moving an admin out of Active is equivalent to demotion.
-	if target.IsAdmin && newStatus != user.StatusActive {
-		if err := user.GuardLastAdmin(s, target); err != nil {
-			_ = s.Rollback()
-			return nil, translateDomainError(err)
+	target, err := adminMutateUser(in.ID, func(s *xorm.Session, target *user.User) error {
+		// Any non-Active status blocks login, so moving an admin out of Active is equivalent to demotion.
+		if target.IsAdmin && newStatus != user.StatusActive {
+			if err := user.GuardLastAdmin(s, target); err != nil {
+				return err
+			}
 		}
-	}
-
-	if err := user.SetUserStatus(s, target, newStatus); err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-	if err := s.Commit(); err != nil {
-		return nil, translateDomainError(err)
+		return user.SetUserStatus(s, target, newStatus)
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	// Refresh locally since GetUserByID refuses disabled accounts.
@@ -218,33 +197,41 @@ func adminUsersDelete(_ context.Context, in *struct {
 		return nil, translateDomainError(models.ErrInvalidData{Message: "invalid mode, expected 'now' or 'scheduled'"})
 	}
 
+	_, err := adminMutateUser(in.ID, func(s *xorm.Session, target *user.User) error {
+		if err := user.GuardLastAdmin(s, target); err != nil {
+			return err
+		}
+		if mode == "now" {
+			return models.DeleteUser(s, target)
+		}
+		return user.RequestDeletion(s, target)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &emptyBody{}, nil
+}
+
+// adminMutateUser opens a session, loads the user by ID, runs mutate against it,
+// then commits — owning the transaction so each handler only supplies its
+// distinct guard-and-write step. mutate must not commit or rollback. Errors
+// (load, mutate, commit) are translated to RFC 9457 responses.
+func adminMutateUser(id int64, mutate func(s *xorm.Session, target *user.User) error) (*user.User, error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	target, err := adminLoadUser(s, in.ID)
+	target, err := adminLoadUser(s, id)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-
-	if err := user.GuardLastAdmin(s, target); err != nil {
+	if err := mutate(s, target); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
-
-	if mode == "now" {
-		err = models.DeleteUser(s, target)
-	} else {
-		err = user.RequestDeletion(s, target)
-	}
-	if err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &emptyBody{}, nil
+	return target, nil
 }
 
 // adminLoadUser fetches a user by ID, returning ErrUserDoesNotExist for an
