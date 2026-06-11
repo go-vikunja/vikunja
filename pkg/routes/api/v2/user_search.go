@@ -72,17 +72,13 @@ func usersSearch(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 
-	users, err := user.ListUsers(s, in.Q, currentUser, nil)
+	users, err := user.SearchUsers(s, in.Q, currentUser)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
-	}
-
-	for i := range users {
-		users[i].Email = ""
 	}
 
 	return &userListBody{Body: NewPaginated(users, int64(len(users)), 1, len(users))}, nil
@@ -100,8 +96,14 @@ func projectUsersSearch(ctx context.Context, in *struct {
 	s := db.NewSession()
 	defer s.Close()
 
+	currentUser, err := models.GetUserOrLinkShareUser(s, a)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
+
 	project := &models.Project{ID: in.ProjectID}
-	canRead, _, err := project.CanRead(s, a)
+	users, canRead, err := models.SearchUsersForProject(s, project, a, currentUser, in.Q)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
@@ -109,18 +111,6 @@ func projectUsersSearch(ctx context.Context, in *struct {
 	if !canRead {
 		_ = s.Rollback()
 		return nil, huma.Error403Forbidden("forbidden")
-	}
-
-	currentUser, err := models.GetUserOrLinkShareUser(s, a)
-	if err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
-	}
-
-	users, err := models.ListUsersFromProject(s, project, currentUser, in.Q)
-	if err != nil {
-		_ = s.Rollback()
-		return nil, translateDomainError(err)
 	}
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)

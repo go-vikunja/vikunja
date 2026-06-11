@@ -34,6 +34,20 @@ type ProjectUserOpts struct {
 	MatchFuzzily                bool
 }
 
+// SearchUsers performs the global user search shared by both API versions:
+// it lists users matching the search string and obfuscates their email
+// addresses before returning.
+func SearchUsers(s *xorm.Session, search string, currentUser *User) (users []*User, err error) {
+	users, err = ListUsers(s, search, currentUser, nil)
+	if err != nil {
+		return nil, err
+	}
+	for i := range users {
+		users[i].Email = ""
+	}
+	return users, nil
+}
+
 // ListUsers returns a list with all users, filtered by an optional search string
 func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectUserOpts) (users []*User, err error) {
 	if opts == nil {
