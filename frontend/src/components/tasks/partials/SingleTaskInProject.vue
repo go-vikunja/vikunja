@@ -12,6 +12,15 @@
 			@click="openTaskDetail"
 			@keyup.enter="openTaskDetail"
 		>
+			<button
+				v-if="task.relatedTasks?.subtask?.length"
+				class="collapse-toggle collapse-toggle-left"
+				:class="{ 'is-collapsed': isCollapsed }"
+				@click.stop="toggleCollapse"
+				:aria-label="isCollapsed ? 'Expand subtasks' : 'Collapse subtasks'"
+			>
+				<Icon icon="chevron-down" />
+			</button>
 			<span
 				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : ''"
 				class="is-inline-flex is-align-items-center"
@@ -645,6 +654,17 @@ defineExpose({
 
 	&.is-collapsed {
 		transform: rotate(-90deg);
+	}
+}
+
+.collapse-toggle-left {
+	margin-inline-start: 0;
+	margin-inline-end: 0.5rem;
+	order: -1;
+
+	// 窄屏隐藏左侧按钮，只保留右侧
+	@media (max-width: 768px) {
+		display: none;
 	}
 }
 
