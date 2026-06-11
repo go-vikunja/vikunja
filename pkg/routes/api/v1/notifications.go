@@ -26,6 +26,40 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// DeleteAllNotifications deletes all notifications for the current user
+// @Summary Delete all notifications of the current user
+// @tags sharing
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Message "All notifications deleted."
+// @Failure 500 {object} models.Message "Internal error"
+// @Router /notifications [delete]
+func DeleteAllNotifications(c *echo.Context) error {
+	s := db.NewSession()
+	defer s.Close()
+
+	a, err := auth.GetAuthFromClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if _, is := a.(*models.LinkSharing); is {
+		return echo.ErrForbidden
+	}
+
+	err = notifications.DeleteAllNotificationsForUser(s, a.GetID())
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	if err := s.Commit(); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, models.Message{Message: "success"})
+}
+
 // MarkAllNotificationsAsRead marks all notifications of a user as read
 // @Summary Mark all notifications of a user as read
 // @tags sharing
