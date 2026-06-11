@@ -1,0 +1,4 @@
+FROM vikunja/vikunja:latest
+
+# 替换前端文件
+COPY frontend/dist/ /app/vikunja/frontend/
