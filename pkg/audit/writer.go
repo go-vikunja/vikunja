@@ -18,6 +18,7 @@ package audit
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -132,6 +133,15 @@ func WriteAuditEvent(entry *Entry) error {
 		return err
 	}
 
+	// A failed rotation can leave us without an open file — retry the open
+	// here so writes self-heal via the router's retries instead of panicking.
+	if logFile == nil {
+		if err := openLogFileLocked(); err != nil {
+			mu.Unlock()
+			return err
+		}
+	}
+
 	written, err := logFile.Write(append(line, '\n'))
 	currentSize += int64(written)
 	if err == nil && time.Since(lastSync) > time.Second {
@@ -159,7 +169,9 @@ func rotateIfNeededLocked(addition int64) error {
 	rotatedPath := rotatedFileName(logfilePath, time.Now().UTC())
 	if err := os.Rename(logfilePath, rotatedPath); err != nil {
 		// Reopen the original so logging continues even if rotation failed.
-		_ = openLogFileLocked()
+		if openErr := openLogFileLocked(); openErr != nil {
+			return errors.Join(fmt.Errorf("could not rotate audit log: %w", err), openErr)
+		}
 		return fmt.Errorf("could not rotate audit log: %w", err)
 	}
 
