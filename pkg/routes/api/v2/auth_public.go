@@ -163,11 +163,18 @@ func authConfirmEmail(_ context.Context, in *struct{ Body user.EmailConfirm }) (
 
 func authLinkShare(_ context.Context, in *struct {
 	Share string `path:"share" doc:"The public hash of the link share."`
-	Body  struct {
+	// Pointer so the body is optional: shares without a password are
+	// authenticated with no body at all.
+	Body *struct {
 		Password string `json:"password" doc:"The password for password-protected link shares. Ignored for shares without a password."`
 	}
 }) (*linkShareTokenBody, error) {
-	token, err := shared.AuthenticateLinkShare(in.Share, in.Body.Password)
+	var password string
+	if in.Body != nil {
+		password = in.Body.Password
+	}
+
+	token, err := shared.AuthenticateLinkShare(in.Share, password)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
