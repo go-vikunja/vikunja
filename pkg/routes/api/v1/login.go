@@ -77,7 +77,7 @@ func Login(c *echo.Context) (err error) {
 		}
 
 		// This allows us to still have local users while ldap is enabled
-		user, err = user2.CheckUserCredentials(s, &u)
+		user, err = user2.CheckUserCredentials(c.Request().Context(), s, &u)
 		if err != nil {
 			_ = s.Rollback()
 			return err

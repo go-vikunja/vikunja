@@ -17,6 +17,7 @@
 package user
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -363,8 +364,9 @@ func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User,
 	return
 }
 
-// CheckUserCredentials checks user credentials
-func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
+// CheckUserCredentials checks user credentials. The context carries request
+// metadata for the audit trail of failed attempts.
+func CheckUserCredentials(ctx context.Context, s *xorm.Session, u *Login) (*User, error) {
 	// Check if we have any credentials
 	if u.Password == "" || u.Username == "" {
 		return nil, ErrNoUsernamePassword{}
@@ -391,7 +393,7 @@ func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 	err = CheckUserPassword(user, u.Password)
 	if err != nil {
 		if IsErrWrongUsernameOrPassword(err) {
-			handleFailedPassword(user)
+			handleFailedPassword(ctx, user)
 		}
 		return user, err
 	}
@@ -411,8 +413,8 @@ func (u *User) IsLocalUser() bool {
 	return u.Issuer == IssuerLocal
 }
 
-func handleFailedPassword(user *User) {
-	if err := events.Dispatch(&LoginFailedEvent{User: user}); err != nil {
+func handleFailedPassword(ctx context.Context, user *User) {
+	if err := events.DispatchWithContext(ctx, &LoginFailedEvent{User: user}); err != nil {
 		log.Errorf("Could not dispatch login failed event: %s", err)
 	}
 
