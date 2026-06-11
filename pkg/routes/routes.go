@@ -155,6 +155,11 @@ func NewEcho() *echo.Echo {
 
 	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
 
+	// First middleware in the chain so every request has an ID — reuses the
+	// X-Request-Id header from a proxy or generates one — and everything
+	// downstream (logging, audit) sees the same value.
+	e.Use(middleware.RequestID())
+
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
 		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
