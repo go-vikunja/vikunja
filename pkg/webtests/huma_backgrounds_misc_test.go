@@ -17,6 +17,7 @@
 package webtests
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -28,6 +29,22 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// TestHumaInfo covers the public instance-info endpoint. It needs no auth and
+// always reports the running version.
+func TestHumaInfo(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	rec := humaRequest(t, e, http.MethodGet, "/api/v2/info", "", "", "")
+	require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+	assert.Contains(t, body, "version")
+	assert.Contains(t, body, "auth")
+	assert.Contains(t, body, "available_migrators")
+}
 
 // TestHumaProjectBackgroundDelete covers removing a project background. It
 // mirrors the v1 background_test.go matrix: the owner clears the background
