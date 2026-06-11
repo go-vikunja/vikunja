@@ -43,17 +43,17 @@ type bucketsWithTasksBody struct {
 	}
 }
 
-// The three task-list input structs below each repeat ListParams + the six
-// query fields INLINE. They can't share that set through an embed: in this Huma
-// version a second/nested anonymous embed alongside ListParams is silently
-// dropped from request binding and the OpenAPI spec (verified against the
-// generated spec). A single shared input struct doesn't work either — Huma
-// lists every path:"" field regardless of the route template, so a shared
-// project/view field leaks onto a narrower route as a phantom path param. The
-// structs differ only in their path params; taskListViewInput is shared by both
-// view-scoped endpoints.
-
-type taskListAllInput struct {
+// TaskListQueryParams is the shared filter/sort/search/expand query block for
+// every task-list variant. It must stay EXPORTED: Huma promotes an anonymous
+// embed's params only when the embed field is itself exported, and an embed
+// field is exported iff its type name is (a lowercase type name silently drops
+// all of its params from binding and the spec).
+//
+// The three input structs below embed it but keep their path params inline:
+// Huma lists every path:"" field regardless of the route template, so a shared
+// project/view field would leak onto a narrower route as a phantom path param.
+// taskListViewInput is shared by both view-scoped endpoints.
+type TaskListQueryParams struct {
 	ListParams
 	Filter             string   `query:"filter" doc:"Filter query to match tasks by. See https://vikunja.io/docs/filters."`
 	FilterTimezone     string   `query:"filter_timezone" doc:"Timezone used to resolve relative date filters like \"now\"."`
@@ -63,27 +63,19 @@ type taskListAllInput struct {
 	Expand             []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra, more expensive data per task. Repeatable."`
 }
 
+type taskListAllInput struct {
+	TaskListQueryParams
+}
+
 type taskListProjectInput struct {
 	ProjectID int64 `path:"project" doc:"The numeric id of the project."`
-	ListParams
-	Filter             string   `query:"filter" doc:"Filter query to match tasks by. See https://vikunja.io/docs/filters."`
-	FilterTimezone     string   `query:"filter_timezone" doc:"Timezone used to resolve relative date filters like \"now\"."`
-	FilterIncludeNulls bool     `query:"filter_include_nulls" doc:"If true, also include tasks whose filtered field is null."`
-	SortBy             []string `query:"sort_by,explode" doc:"Fields to sort by (e.g. done, priority). Repeatable; pair positionally with order_by."`
-	OrderBy            []string `query:"order_by,explode" doc:"Sort order per sort_by field, asc or desc. Repeatable; defaults to asc."`
-	Expand             []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra, more expensive data per task. Repeatable."`
+	TaskListQueryParams
 }
 
 type taskListViewInput struct {
 	ProjectID int64 `path:"project" doc:"The numeric id of the project."`
 	ViewID    int64 `path:"view" doc:"The numeric id of the project view."`
-	ListParams
-	Filter             string   `query:"filter" doc:"Filter query to match tasks by. See https://vikunja.io/docs/filters."`
-	FilterTimezone     string   `query:"filter_timezone" doc:"Timezone used to resolve relative date filters like \"now\"."`
-	FilterIncludeNulls bool     `query:"filter_include_nulls" doc:"If true, also include tasks whose filtered field is null."`
-	SortBy             []string `query:"sort_by,explode" doc:"Fields to sort by (e.g. done, priority). Repeatable; pair positionally with order_by."`
-	OrderBy            []string `query:"order_by,explode" doc:"Sort order per sort_by field, asc or desc. Repeatable; defaults to asc."`
-	Expand             []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra, more expensive data per task. Repeatable."`
+	TaskListQueryParams
 }
 
 // taskListFilters is the bound query carried into the shared collection builder.
