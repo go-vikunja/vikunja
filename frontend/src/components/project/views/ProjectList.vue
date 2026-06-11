@@ -17,6 +17,14 @@
 					:project-id="projectId"
 					@update:modelValue="loadTasks()"
 				/>
+				<button
+					class="collapse-all-btn"
+					:class="{ 'is-collapsed': collapseAll }"
+					@click="toggleCollapseAll"
+					:title="collapseAll ? 'Expand all subtasks' : 'Collapse all subtasks'"
+				>
+					<Icon :icon="collapseAll ? 'chevron-right' : 'chevron-down'" />
+				</button>
 			</div>
 		</template>
 
@@ -101,7 +109,7 @@
 
 
 <script setup lang="ts">
-import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef} from 'vue'
+import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef, provide} from 'vue'
 import draggable from 'zhyswan-vuedraggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
@@ -142,6 +150,14 @@ defineOptions({name: 'List'})
 const ctaVisible = ref(false)
 
 const drag = ref(false)
+
+// Collapse all subtasks
+const collapseAll = ref(false)
+provide('collapseAll', collapseAll)
+
+function toggleCollapseAll() {
+	collapseAll.value = !collapseAll.value
+}
 
 const {
 	tasks: allTasks,
@@ -365,6 +381,31 @@ onBeforeUnmount(() => {
 		inset-block-start: 3rem;
 		inset-inline-end: 0;
 		max-inline-size: 300px;
+	}
+}
+
+.collapse-all-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 32px;
+	block-size: 32px;
+	border: 1px solid var(--grey-300);
+	background: var(--white);
+	color: var(--grey-500);
+	cursor: pointer;
+	border-radius: $radius;
+	transition: all 0.2s ease;
+
+	&:hover {
+		color: var(--grey-700);
+		background: var(--grey-100);
+		border-color: var(--grey-400);
+	}
+
+	&.is-collapsed {
+		color: var(--primary);
+		border-color: var(--primary);
 	}
 }
 
