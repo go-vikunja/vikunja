@@ -46,6 +46,26 @@ func TestHumaInfo(t *testing.T) {
 	assert.Contains(t, body, "available_migrators")
 }
 
+// TestHumaWebhookEvents covers the available-webhook-events listing. The route
+// is only registered when webhooks are enabled (the test config default).
+func TestHumaWebhookEvents(t *testing.T) {
+	e, err := setupTestEnv()
+	require.NoError(t, err)
+
+	t.Run("Returns the events", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/webhooks/events", "", humaTokenFor(t, &testuser1), "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+
+		var events []string
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &events))
+		assert.ElementsMatch(t, models.GetAvailableWebhookEvents(), events)
+	})
+	t.Run("Unauthenticated", func(t *testing.T) {
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/webhooks/events", "", "", "")
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, "body: %s", rec.Body.String())
+	})
+}
+
 // TestHumaProjectBackgroundDelete covers removing a project background. It
 // mirrors the v1 background_test.go matrix: the owner clears the background
 // (and keeps the title), a read-only user is refused.
