@@ -343,6 +343,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v2/docs":                      true,
 	"/api/v2/docs/scalar.standalone.js": true,
 	"/api/v2/schemas/:schema":           true,
+	"/api/v2/info":                      true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
