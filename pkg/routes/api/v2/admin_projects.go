@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -29,6 +30,16 @@ import (
 
 type adminProjectListBody struct {
 	Body Paginated[*models.Project]
+}
+
+type adminProjectBody struct {
+	Body *models.Project
+}
+
+// adminOwnerPatchBody reassigns a project's owner. owner_id is the only field;
+// the regular project-update endpoint refuses owner changes.
+type adminOwnerPatchBody struct {
+	OwnerID int64 `json:"owner_id" minimum:"1" doc:"The numeric ID of the user who should become the project's owner."`
 }
 
 // Permissions are enforced by the gateV2AdminRoutes path middleware, not per-handler.
@@ -43,6 +54,15 @@ func RegisterAdminProjectRoutes(api huma.API) {
 		Path:        "/admin/projects",
 		Tags:        tags,
 	}, adminProjectsList)
+
+	Register(api, huma.Operation{
+		OperationID: "admin-projects-patch-owner",
+		Summary:     "Reassign a project's owner (admin)",
+		Description: "Reassigns a project to a new owner — the admin-only escape hatch the regular update endpoint does not allow. The new owner must be an active account that is not scheduled for deletion. Restricted to instance admins on a licensed instance.",
+		Method:      http.MethodPatch,
+		Path:        "/admin/projects/{id}/owner",
+		Tags:        tags,
+	}, adminProjectsPatchOwner)
 }
 
 func init() { AddRouteRegistrar(RegisterAdminProjectRoutes) }
@@ -61,4 +81,29 @@ func adminProjectsList(ctx context.Context, in *ListParams) (*adminProjectListBo
 		return nil, fmt.Errorf("AdminProjectList.ReadAll returned unexpected type %T (expected []*models.Project)", result)
 	}
 	return &adminProjectListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
+}
+
+func adminProjectsPatchOwner(_ context.Context, in *struct {
+	ID   int64 `path:"id" doc:"The numeric ID of the project."`
+	Body adminOwnerPatchBody
+}) (*adminProjectBody, error) {
+	if in.ID < 1 {
+		return nil, translateDomainError(models.ErrProjectDoesNotExist{ID: in.ID})
+	}
+	if in.Body.OwnerID < 1 {
+		return nil, translateDomainError(models.ErrInvalidData{Message: "invalid body"})
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	p, err := models.ReassignProjectOwner(s, in.ID, in.Body.OwnerID)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
+	if err := s.Commit(); err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &adminProjectBody{Body: p}, nil
 }
