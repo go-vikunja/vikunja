@@ -22,21 +22,18 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// RequestMeta stashes IP, User-Agent and X-Request-ID on the request context
-// so events dispatched while handling the request carry them as message
-// metadata (consumed by the audit listeners).
+// RequestMeta stashes IP, User-Agent and the request ID on the request
+// context so events dispatched while handling the request carry them as
+// message metadata (consumed by the audit listeners). Must run after the
+// RequestID middleware, which guarantees the response header is populated.
 func RequestMeta() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
 			req := c.Request()
-			requestID := req.Header.Get(echo.HeaderXRequestID)
-			if requestID == "" {
-				requestID = c.Response().Header().Get(echo.HeaderXRequestID)
-			}
 			ctx := events.WithRequestMeta(req.Context(), &events.RequestMeta{
 				IP:        c.RealIP(),
 				UserAgent: req.UserAgent(),
-				RequestID: requestID,
+				RequestID: c.Response().Header().Get(echo.HeaderXRequestID),
 			})
 			c.SetRequest(req.WithContext(ctx))
 			return next(c)
