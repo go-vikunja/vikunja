@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package shared holds route helpers used by both /api/v1 and /api/v2 so the two
-// versions render identical responses without one importing the other.
 package shared
 
 import (
