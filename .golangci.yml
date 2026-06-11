@@ -150,6 +150,9 @@ linters:
         path: pkg/routes/api/shared/*
         text: 'var-naming: avoid meaningless package names'
       - linters:
+          - contextcheck
+        path: pkg/routes/api/v2/backgrounds.go # the unsplash provider intentionally uses context.Background(); its interface is shared with v1 and can't take a context
+      - linters:
           - revive
         text: 'var-naming: avoid package names that conflict with Go standard library package names'
       - linters:
