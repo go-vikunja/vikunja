@@ -69,6 +69,12 @@ func TestTask_Create(t *testing.T) {
 			"task_id":   task.ID,
 			"bucket_id": 1,
 		}, false)
+		// Assert the creator is auto-subscribed to the task
+		db.AssertExists(t, "subscriptions", map[string]interface{}{
+			"user_id":     usr.ID,
+			"entity_type": SubscriptionEntityTask,
+			"entity_id":   task.ID,
+		}, false)
 
 		events.DispatchPending(s)
 		events.AssertDispatched(t, &TaskCreatedEvent{})
