@@ -7848,7 +7848,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.UserSettings"
+                            "$ref": "#/definitions/models.UserGeneralSettings"
                         }
                     }
                 ],
@@ -10630,6 +10630,49 @@ const docTemplate = `{
                 }
             }
         },
+        "models.UserGeneralSettings": {
+            "type": "object",
+            "properties": {
+                "default_project_id": {
+                    "type": "integer"
+                },
+                "discoverable_by_email": {
+                    "type": "boolean"
+                },
+                "discoverable_by_name": {
+                    "type": "boolean"
+                },
+                "email_reminders_enabled": {
+                    "type": "boolean"
+                },
+                "extra_settings_links": {
+                    "description": "Server/OpenID-provided; populated on read, ignored on write.",
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "frontend_settings": {},
+                "language": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "overdue_tasks_reminders_enabled": {
+                    "type": "boolean"
+                },
+                "overdue_tasks_reminders_time": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "week_start": {
+                    "type": "integer",
+                    "maximum": 6,
+                    "minimum": 0
+                }
+            }
+        },
         "models.UserWithPermission": {
             "type": "object",
             "properties": {
@@ -11027,59 +11070,6 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.UserSettings": {
-            "type": "object",
-            "properties": {
-                "default_project_id": {
-                    "description": "If a task is created without a specified project this value should be used. Applies\nto tasks made directly in API and from clients.",
-                    "type": "integer"
-                },
-                "discoverable_by_email": {
-                    "description": "If true, the user can be found when searching for their exact email.",
-                    "type": "boolean"
-                },
-                "discoverable_by_name": {
-                    "description": "If true, this user can be found by their name or parts of it when searching for it.",
-                    "type": "boolean"
-                },
-                "email_reminders_enabled": {
-                    "description": "If enabled, sends email reminders of tasks to the user.",
-                    "type": "boolean"
-                },
-                "extra_settings_links": {
-                    "description": "Additional settings links as provided by openid",
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "frontend_settings": {
-                    "description": "Additional settings only used by the frontend"
-                },
-                "language": {
-                    "description": "The user's language",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "The new name of the current user.",
-                    "type": "string"
-                },
-                "overdue_tasks_reminders_enabled": {
-                    "description": "If enabled, the user will get an email for their overdue tasks each morning.",
-                    "type": "boolean"
-                },
-                "overdue_tasks_reminders_time": {
-                    "description": "The time when the daily summary of overdue tasks will be sent via email.",
-                    "type": "string"
-                },
-                "timezone": {
-                    "description": "The user's time zone. Used to send task reminders in the time zone of the user.",
-                    "type": "string"
-                },
-                "week_start": {
-                    "description": "The day when the week starts for this user. 0 = sunday, 1 = monday, etc.",
-                    "type": "integer"
-                }
-            }
-        },
         "v1.UserWithSettings": {
             "type": "object",
             "properties": {
@@ -11117,7 +11107,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "settings": {
-                    "$ref": "#/definitions/v1.UserSettings"
+                    "$ref": "#/definitions/models.UserGeneralSettings"
                 },
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
