@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/models"
@@ -34,6 +35,22 @@ func (fw *FileMigratorWeb) RegisterRoutes(g *echo.Group) {
 	ms := fw.MigrationStruct()
 	g.GET("/"+ms.Name()+"/status", fw.Status)
 	g.PUT("/"+ms.Name()+"/migrate", fw.Migrate)
+}
+
+// RunFileMigration records the migration's start, runs the file migrator and
+// records its finish. Shared by the v1 and v2 HTTP layers so the orchestration
+// lives in one place; the caller supplies the already-opened upload.
+func RunFileMigration(ms migration.FileMigrator, u *user2.User, file io.ReaderAt, size int64) error {
+	m, err := migration.StartMigration(ms, u)
+	if err != nil {
+		return err
+	}
+
+	if err := ms.Migrate(u, file, size); err != nil {
+		return err
+	}
+
+	return migration.FinishMigration(m)
 }
 
 // Migrate calls the migration method
@@ -56,19 +73,7 @@ func (fw *FileMigratorWeb) Migrate(c *echo.Context) error {
 	}
 	defer src.Close()
 
-	m, err := migration.StartMigration(ms, user)
-	if err != nil {
-		return err
-	}
-
-	// Do the migration
-	err = ms.Migrate(user, src, file.Size)
-	if err != nil {
-		return err
-	}
-
-	err = migration.FinishMigration(m)
-	if err != nil {
+	if err := RunFileMigration(ms, user, src, file.Size); err != nil {
 		return err
 	}
 
