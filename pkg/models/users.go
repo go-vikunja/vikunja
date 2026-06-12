@@ -27,6 +27,9 @@ import (
 // flows acting on behalf of disabled accounts (e.g. user deletion), and the
 // event only needs the principal as it authenticated.
 func doerFromAuth(a web.Auth) *user.User {
+	if a == nil {
+		return nil
+	}
 	if u, is := a.(*user.User); is {
 		return u
 	}
