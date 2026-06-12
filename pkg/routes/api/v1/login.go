@@ -23,8 +23,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/modules/auth/ldap"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 	user2 "code.vikunja.io/api/pkg/user"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -49,79 +48,8 @@ func Login(c *echo.Context) (err error) {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Please provide a username and password."})
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	var user *user2.User
-	if config.AuthLdapEnabled.GetBool() {
-		user, err = ldap.AuthenticateUserInLDAP(s, u.Username, u.Password, config.AuthLdapGroupSyncEnabled.GetBool(), config.AuthLdapAvatarSyncAttribute.GetString())
-		if err != nil && !user2.IsErrWrongUsernameOrPassword(err) {
-			_ = s.Rollback()
-			return err
-		}
-	}
-
-	if user == nil {
-		// Check if the user is a bot before attempting password verification,
-		// because bots have no password hash and bcrypt would fail with a
-		// misleading error.
-		existingUser, lookupErr := user2.GetUserByUsername(s, u.Username)
-		if lookupErr == nil && existingUser.IsBot() {
-			_ = s.Rollback()
-			return &user2.ErrAccountIsBot{UserID: existingUser.ID}
-		}
-
-		// This allows us to still have local users while ldap is enabled
-		user, err = user2.CheckUserCredentials(s, &u)
-		if err != nil {
-			_ = s.Rollback()
-			return err
-		}
-	}
-
-	if user.Status == user2.StatusDisabled || user.Status == user2.StatusAccountLocked {
-		_ = s.Rollback()
-		return &user2.ErrAccountDisabled{UserID: user.ID}
-	}
-
-	totpEnabled, err := user2.TOTPEnabledForUser(s, user)
+	user, err := shared.AuthenticateUserCredentials(&u)
 	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if totpEnabled {
-		if u.TOTPPasscode == "" {
-			_ = s.Rollback()
-			return user2.ErrInvalidTOTPPasscode{}
-		}
-
-		_, err = user2.ValidateTOTPPasscode(s, &user2.TOTPPasscode{
-			User:     user,
-			Passcode: u.TOTPPasscode,
-		})
-		if err != nil {
-			// Rollback before HandleFailedTOTPAuth so its dedicated session
-			// can acquire a write lock on SQLite shared-cache. The lockout
-			// write is decoupled from this handler's transaction — see
-			// GHSA-fgfv-pv97-6cmj.
-			_ = s.Rollback()
-			if user2.IsErrInvalidTOTPPasscode(err) {
-				user2.HandleFailedTOTPAuth(user)
-			}
-			return err
-		}
-	}
-
-	if err := keyvalue.Del(user.GetFailedTOTPAttemptsKey()); err != nil {
-		return err
-	}
-	if err := keyvalue.Del(user.GetFailedPasswordAttemptsKey()); err != nil {
-		return err
-	}
-
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
 		return err
 	}
 
@@ -230,30 +158,7 @@ func RefreshToken(c *echo.Context) (err error) {
 func Logout(c *echo.Context) (err error) {
 	auth.ClearRefreshTokenCookie(c)
 
-	var sid string
-	if raw := c.Get("user"); raw != nil {
-		if jwtinf, ok := raw.(*jwt.Token); ok {
-			if claims, ok := jwtinf.Claims.(jwt.MapClaims); ok {
-				sid, _ = claims["sid"].(string)
-			}
-		}
-	}
-
-	if sid == "" {
-		return c.JSON(http.StatusOK, models.Message{Message: "Successfully logged out."})
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	_, err = s.Where("id = ?", sid).Delete(&models.Session{})
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
+	if err := shared.DeleteSession(auth.SessionIDFromContext(c)); err != nil {
 		return err
 	}
 
