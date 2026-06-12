@@ -187,7 +187,12 @@ func DeleteSession(sid string) error {
 		return err
 	}
 
-	return s.Commit()
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	return nil
 }
 
 // ResetPassword resets a user's password from a previously issued reset token
