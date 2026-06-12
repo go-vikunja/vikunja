@@ -1,8 +1,9 @@
 import type {RouteLocation} from 'vue-router'
 
+import {SHORTCUTS} from '@/constants/shortcuts'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 
-const ctrl = isAppleDevice() ? '⌘' : 'ctrl'
+const ctrl = SHORTCUTS.toggleMenu.keys[0]
 const reminderModifier = isAppleDevice() ? 'shift' : 'alt'
 const deleteKey = isAppleDevice() ? 'backspace' : 'delete'
 
@@ -24,11 +25,11 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.toggleMenu',
-				keys: [ctrl, 'e'],
+				keys: SHORTCUTS.toggleMenu.keys,
 			},
 			{
 				title: 'keyboardShortcuts.quickSearch',
-				keys: [ctrl, 'k'],
+				keys: [SHORTCUTS.toggleMenu.keys[0], 'k'],
 			},
 		],
 	},
@@ -37,28 +38,28 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 		shortcuts: [
 			{
 				title: 'keyboardShortcuts.navigation.overview',
-				keys: ['g', 'o'],
-				combination: 'then',
+				keys: SHORTCUTS.navigation.overview.keys,
+				combination: SHORTCUTS.navigation.overview.combination,
 			},
 			{
 				title: 'keyboardShortcuts.navigation.upcoming',
-				keys: ['g', 'u'],
-				combination: 'then',
+				keys: SHORTCUTS.navigation.upcoming.keys,
+				combination: SHORTCUTS.navigation.upcoming.combination,
 			},
 			{
 				title: 'keyboardShortcuts.navigation.projects',
-				keys: ['g', 'p'],
-				combination: 'then',
+				keys: SHORTCUTS.navigation.projects.keys,
+				combination: SHORTCUTS.navigation.projects.combination,
 			},
 			{
 				title: 'keyboardShortcuts.navigation.labels',
-				keys: ['g', 'a'],
-				combination: 'then',
+				keys: SHORTCUTS.navigation.labels.keys,
+				combination: SHORTCUTS.navigation.labels.combination,
 			},
 			{
 				title: 'keyboardShortcuts.navigation.teams',
-				keys: ['g', 'm'],
-				combination: 'then',
+				keys: SHORTCUTS.navigation.teams.keys,
+				combination: SHORTCUTS.navigation.teams.combination,
 			},
 		],
 	},
@@ -208,7 +209,7 @@ export const KEYBOARD_SHORTCUTS: ShortcutGroup[] = [
 			},
 			{
 				title: 'keyboardShortcuts.task.save',
-				keys: [ctrl, 's'],
+				keys: [SHORTCUTS.toggleMenu.keys[0], 's'],
 			},
 			{
 				title: 'keyboardShortcuts.task.copyIdentifier',
