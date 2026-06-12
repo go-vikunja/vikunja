@@ -23,7 +23,11 @@ import (
 	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
+	"code.vikunja.io/api/pkg/modules/auth/ldap"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
+
+	"xorm.io/xorm"
 )
 
 // UserRegister carries the fields accepted by the public registration endpoint:
@@ -68,6 +72,131 @@ func RegisterUser(in *UserRegister) (*user.User, error) {
 	}
 
 	return newUser, nil
+}
+
+// AuthenticateUserCredentials verifies a login against local (and, if configured,
+// LDAP) credentials and enforces the account-status and TOTP gates, returning the
+// authenticated user on success. It is the transport-agnostic core of the login
+// flow shared by v1 and v2; the caller issues the token and sets the cookie. The
+// returned errors carry their own HTTP semantics (wrong credentials, disabled
+// account, missing/invalid TOTP) so both APIs surface them identically.
+func AuthenticateUserCredentials(login *user.Login) (*user.User, error) {
+	s := db.NewSession()
+	defer s.Close()
+
+	u, err := resolveLoginUser(s, login)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	if u.Status == user.StatusDisabled {
+		_ = s.Rollback()
+		return nil, &user.ErrAccountDisabled{UserID: u.ID}
+	}
+	if u.Status == user.StatusAccountLocked {
+		_ = s.Rollback()
+		return nil, &user.ErrAccountLocked{UserID: u.ID}
+	}
+
+	if err := enforceLoginTOTP(s, u, login.TOTPPasscode); err != nil {
+		return nil, err
+	}
+
+	if err := keyvalue.Del(u.GetFailedTOTPAttemptsKey()); err != nil {
+		return nil, err
+	}
+	if err := keyvalue.Del(u.GetFailedPasswordAttemptsKey()); err != nil {
+		return nil, err
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
+		return nil, err
+	}
+
+	return u, nil
+}
+
+// resolveLoginUser authenticates the credentials against LDAP (when enabled) and
+// then against local accounts, mirroring v1's order so local users keep working
+// alongside LDAP. Bots are rejected before bcrypt runs because they have no
+// password hash.
+func resolveLoginUser(s *xorm.Session, login *user.Login) (*user.User, error) {
+	if config.AuthLdapEnabled.GetBool() {
+		u, err := ldap.AuthenticateUserInLDAP(s, login.Username, login.Password, config.AuthLdapGroupSyncEnabled.GetBool(), config.AuthLdapAvatarSyncAttribute.GetString())
+		if err != nil && !user.IsErrWrongUsernameOrPassword(err) {
+			return nil, err
+		}
+		if u != nil {
+			return u, nil
+		}
+	}
+
+	existingUser, lookupErr := user.GetUserByUsername(s, login.Username)
+	if lookupErr == nil && existingUser.IsBot() {
+		return nil, &user.ErrAccountIsBot{UserID: existingUser.ID}
+	}
+
+	return user.CheckUserCredentials(s, login)
+}
+
+// enforceLoginTOTP runs the TOTP gate for users who have it enabled, mirroring
+// v1: a missing passcode is rejected, and a wrong one trips the failed-attempt
+// lockout via HandleFailedTOTPAuth. The session is rolled back before
+// HandleFailedTOTPAuth so its dedicated session can acquire a write lock on
+// SQLite shared-cache (the lockout write is decoupled from this transaction —
+// see GHSA-fgfv-pv97-6cmj).
+func enforceLoginTOTP(s *xorm.Session, u *user.User, passcode string) error {
+	totpEnabled, err := user.TOTPEnabledForUser(s, u)
+	if err != nil {
+		_ = s.Rollback()
+		return err
+	}
+	if !totpEnabled {
+		return nil
+	}
+
+	if passcode == "" {
+		_ = s.Rollback()
+		return user.ErrInvalidTOTPPasscode{}
+	}
+
+	_, err = user.ValidateTOTPPasscode(s, &user.TOTPPasscode{User: u, Passcode: passcode})
+	if err != nil {
+		_ = s.Rollback()
+		if user.IsErrInvalidTOTPPasscode(err) {
+			user.HandleFailedTOTPAuth(u)
+		}
+		return err
+	}
+
+	return nil
+}
+
+// DeleteSession removes the session with the given id, logging the user out
+// server-side. An empty sid is a no-op (the token carried no session, e.g. an
+// API token or a link share), matching v1. Shared by v1 and v2; the caller is
+// responsible for clearing the refresh cookie.
+func DeleteSession(sid string) error {
+	if sid == "" {
+		return nil
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	if _, err := s.Where("id = ?", sid).Delete(&models.Session{}); err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	if err := s.Commit(); err != nil {
+		_ = s.Rollback()
+		return err
+	}
+
+	return nil
 }
 
 // ResetPassword resets a user's password from a previously issued reset token

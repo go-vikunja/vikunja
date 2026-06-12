@@ -167,8 +167,12 @@ func enforceTOTPIfRequired(s *xorm.Session, u *user.User, totpPasscode string) e
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /auth/openid/{provider}/callback [post]
 func HandleCallback(c *echo.Context) error {
+	cb := &Callback{}
+	if err := c.Bind(cb); err != nil {
+		return &models.ErrOpenIDBadRequest{Message: "Bad data"}
+	}
 
-	provider, cb, oauthToken, idToken, err := getProviderAndOidcTokens(c)
+	u, err := AuthenticateCallback(cb, c.Param("provider"))
 	if err != nil {
 		var detailedErr *models.ErrOpenIDBadRequestWithDetails
 		if errors.As(err, &detailedErr) {
@@ -180,9 +184,26 @@ func HandleCallback(c *echo.Context) error {
 		return err
 	}
 
+	// Create token
+	return auth.NewUserAuthTokenResponse(u, c, false)
+}
+
+// AuthenticateCallback resolves an OpenID Connect callback to an authenticated
+// user: it exchanges the auth code, verifies the ID token, creates or updates the
+// matching local user, enforces the account-status and TOTP gates, and syncs the
+// user's external teams. It is the transport-agnostic core shared by the v1 echo
+// handler and the v2 Huma handler; the caller issues the auth token. The
+// ErrOpenIDBadRequestWithDetails error keeps its provider detail so v1 can render
+// its bespoke body and v2 can map it to RFC 9457.
+func AuthenticateCallback(cb *Callback, providerKey string) (*user.User, error) {
+	provider, oauthToken, idToken, err := exchangeOidcTokens(cb, providerKey)
+	if err != nil {
+		return nil, err
+	}
+
 	cl, err := getClaims(provider, oauthToken, idToken)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	s := db.NewSession()
@@ -193,16 +214,16 @@ func HandleCallback(c *echo.Context) error {
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
-		return err
+		return nil, err
 	}
 
 	if u.Status == user.StatusDisabled {
 		_ = s.Rollback()
-		return &user.ErrAccountDisabled{UserID: u.ID}
+		return nil, &user.ErrAccountDisabled{UserID: u.ID}
 	}
 	if u.Status == user.StatusAccountLocked {
 		_ = s.Rollback()
-		return &user.ErrAccountLocked{UserID: u.ID}
+		return nil, &user.ErrAccountLocked{UserID: u.ID}
 	}
 
 	// Must run before team sync so a failed 2FA attempt cannot mutate team
@@ -216,25 +237,24 @@ func HandleCallback(c *echo.Context) error {
 		if user.IsErrInvalidTOTPPasscode(err) {
 			user.HandleFailedTOTPAuth(u)
 		}
-		return err
+		return nil, err
 	}
 
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
 
 	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, provider.Name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new team for provider %s: %v", provider.Name, err)
-		return err
+		return nil, err
 	}
 
-	// Create token
-	return auth.NewUserAuthTokenResponse(u, c, false)
+	return u, nil
 }
 
 func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (teamData []*models.Team) {
@@ -507,21 +527,17 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 	return cl, nil
 }
 
-func getProviderAndOidcTokens(c *echo.Context) (*Provider, *Callback, *oauth2.Token, *oidc.IDToken, error) {
-
-	cb := &Callback{}
-	if err := c.Bind(cb); err != nil {
-		return nil, nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Bad data"}
-	}
-
-	// Check if the provider exists
-	providerKey := c.Param("provider")
+// exchangeOidcTokens resolves the provider, exchanges the callback's auth code,
+// and verifies the returned ID token. It takes an already-bound Callback so it
+// can be shared by the v1 echo handler (which binds from the request) and the v2
+// Huma handler (which binds via its typed body).
+func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.Token, *oidc.IDToken, error) {
 	provider, err := GetProvider(providerKey)
 	if err != nil {
-		return nil, cb, nil, nil, err
+		return nil, nil, nil, err
 	}
 	if provider == nil {
-		return nil, cb, nil, nil, &models.ErrOpenIDBadRequest{Message: "Provider does not exist"}
+		return nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Provider does not exist"}
 	}
 
 	log.Debugf("Trying to authenticate user using provider: %s", provider.Key)
@@ -537,25 +553,25 @@ func getProviderAndOidcTokens(c *echo.Context) (*Provider, *Callback, *oauth2.To
 			if err := json.Unmarshal(rerr.Body, &details); err != nil {
 				log.Errorf("Error unmarshalling token for provider %s: %v", provider.Name, err)
 				log.Debugf("Raw token value is %s", rerr.Body)
-				return nil, cb, nil, nil, err
+				return nil, nil, nil, err
 			}
 
 			log.Errorf("Error retrieving token: %s", err)
 			log.Debugf("Raw token value is %s", rerr.Body)
-			return nil, cb, nil, nil, &models.ErrOpenIDBadRequestWithDetails{
+			return nil, nil, nil, &models.ErrOpenIDBadRequestWithDetails{
 				Message: "Could not authenticate against third party.",
 				Details: details,
 			}
 		}
 
-		return nil, cb, nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
 		log.Debugf("Could not get id_token, raw token is %v", oauth2Token)
-		return nil, cb, nil, nil, &models.ErrOpenIDBadRequest{Message: "Missing token"}
+		return nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Missing token"}
 	}
 
 	verifier := provider.openIDProvider.Verifier(&oidc.Config{ClientID: provider.ClientID})
@@ -564,8 +580,8 @@ func getProviderAndOidcTokens(c *echo.Context) (*Provider, *Callback, *oauth2.To
 	idToken, err := verifier.Verify(context.Background(), rawIDToken)
 	if err != nil {
 		log.Errorf("Error verifying token for provider %s: %v", provider.Name, err)
-		return nil, cb, nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return provider, cb, oauth2Token, idToken, nil
+	return provider, oauth2Token, idToken, nil
 }

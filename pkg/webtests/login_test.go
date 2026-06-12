@@ -68,6 +68,22 @@ func TestLogin(t *testing.T) {
 		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeEmailNotConfirmed)
 	})
+	t.Run("disabled account", func(t *testing.T) {
+		_, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{
+  "username": "user17",
+  "password": "12345678"
+}`, nil, nil)
+		require.Error(t, err)
+		assertHandlerErrorCode(t, err, user.ErrCodeAccountDisabled)
+	})
+	t.Run("locked account", func(t *testing.T) {
+		_, err := newTestRequest(t, http.MethodPost, apiv1.Login, `{
+  "username": "user18",
+  "password": "12345678"
+}`, nil, nil)
+		require.Error(t, err)
+		assertHandlerErrorCode(t, err, user.ErrCodeAccountLocked)
+	})
 }
 
 func TestLoginTOTPLockout(t *testing.T) {

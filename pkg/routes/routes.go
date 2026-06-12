@@ -345,12 +345,14 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v2/schemas/:schema":           true,
 	"/api/v2/info":                      true,
 
-	"/api/v2/register":            true,
-	"/api/v2/user/password/token": true,
-	"/api/v2/user/password/reset": true,
-	"/api/v2/user/confirm":        true,
-	"/api/v2/shares/:share/auth":  true,
-	"/api/v2/oauth/token":         true,
+	"/api/v2/register":                       true,
+	"/api/v2/user/password/token":            true,
+	"/api/v2/user/password/reset":            true,
+	"/api/v2/user/confirm":                   true,
+	"/api/v2/shares/:share/auth":             true,
+	"/api/v2/oauth/token":                    true,
+	"/api/v2/login":                          true,
+	"/api/v2/auth/openid/:provider/callback": true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
