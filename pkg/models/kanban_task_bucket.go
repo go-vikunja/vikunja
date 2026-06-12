@@ -148,14 +148,20 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 				// A repeating task doesn't stay in the done bucket; route
 				// it back to the view's default bucket so the user sees
 				// the next iteration waiting in the "To-Do" column.
-				b.BucketID, err = getDefaultBucketID(s, view)
-				if err != nil {
-					return err
+				// When no default bucket is configured, leave the task in
+				// its current bucket — no update needed.
+				if view.DefaultBucketID != 0 {
+					b.BucketID, err = getDefaultBucketID(s, view)
+					if err != nil {
+						return err
+					}
+				} else {
+					b.BucketID = oldTaskBucket.BucketID
 				}
-				// If the task is already in the default bucket, skip the
-				// upsert — MySQL's UPDATE returns 0 affected rows when
-				// the value is unchanged, which would make upsert fall
-				// through to INSERT and hit the unique constraint.
+				// If the bucket is unchanged, skip the upsert — MySQL's
+				// UPDATE returns 0 affected rows when the value is unchanged,
+				// which would make upsert fall through to INSERT and hit the
+				// unique constraint.
 				if b.BucketID == oldTaskBucket.BucketID {
 					updateBucket = false
 				}
