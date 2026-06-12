@@ -204,44 +204,17 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 	}
 	defer srcf.Close()
 
-	// Validate we're dealing with an image
-	mime, err := mimetype.DetectReader(srcf)
-	if err != nil {
+	if err := ValidateAndSaveBackgroundUpload(s, auth, project, srcf, file.Filename, uint64(file.Size)); err != nil {
 		_ = s.Rollback()
-		return err
-	}
-	if !strings.HasPrefix(mime.String(), "image") {
-		_ = s.Rollback()
-		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
-	}
-	supported := false
-	for _, m := range allowedImageMimes {
-		if mime.Is(m) {
-			supported = true
-			break
+		if IsErrFileIsNoImage(err) {
+			return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
 		}
-	}
-	if !supported {
-		_ = s.Rollback()
-		return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
-	}
-
-	err = SaveBackgroundFile(s, auth, project, srcf, file.Filename, uint64(file.Size))
-	if err != nil {
-		_ = s.Rollback()
 		if files.IsErrFileIsTooLarge(err) {
 			return echo.ErrBadRequest
 		}
 		if IsErrFileUnsupportedImageFormat(err) {
 			return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
 		}
-
-		return err
-	}
-
-	err = project.ReadOne(s, auth)
-	if err != nil {
-		_ = s.Rollback()
 		return err
 	}
 
@@ -251,6 +224,41 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, project)
+}
+
+// ValidateAndSaveBackgroundUpload validates that srcf is a decodable image of an
+// allowed type, stores it as the project's background and reloads the project so
+// callers get the updated background metadata. It is the shared body of the v1 and
+// v2 upload handlers; the multipart parsing and error-to-HTTP mapping stay in each
+// handler. project must already be loaded and the caller must have verified write
+// permission. On a non-image it returns ErrFileIsNoImage; on a recognized but
+// undecodable format ErrFileUnsupportedImageFormat.
+func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) error {
+	mime, err := mimetype.DetectReader(srcf)
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(mime.String(), "image") {
+		return ErrFileIsNoImage{Mime: mime.String()}
+	}
+	supported := false
+	for _, m := range allowedImageMimes {
+		if mime.Is(m) {
+			supported = true
+			break
+		}
+	}
+	if !supported {
+		return ErrFileUnsupportedImageFormat{Mime: mime.String()}
+	}
+
+	// DetectReader consumed the head of the reader; SaveBackgroundFile seeks back to
+	// the start itself, so no rewind is needed here.
+	if err := SaveBackgroundFile(s, auth, project, srcf, filename, filesize); err != nil {
+		return err
+	}
+
+	return project.ReadOne(s, auth)
 }
 
 func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
