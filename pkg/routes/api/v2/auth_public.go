@@ -78,15 +78,20 @@ func RegisterPublicAuthRoutes(api huma.API) {
 func registerLocalAuthRoutes(api huma.API) {
 	authTags := []string{"auth"}
 
-	Register(api, huma.Operation{
-		OperationID: "auth-register",
-		Summary:     "Register",
-		Description: "Creates a new local user account. Returns 404 when registration is disabled on this instance.",
-		Method:      http.MethodPost,
-		Path:        "/register",
-		Tags:        authTags,
-		Security:    publicSecurity,
-	}, authRegister)
+	// Registration is its own static-config gate on top of local auth: when it
+	// is disabled the route simply isn't registered (a request then 404s as an
+	// unknown route), rather than registering it and rejecting per request.
+	if config.ServiceEnableRegistration.GetBool() {
+		Register(api, huma.Operation{
+			OperationID: "auth-register",
+			Summary:     "Register",
+			Description: "Creates a new local user account.",
+			Method:      http.MethodPost,
+			Path:        "/register",
+			Tags:        authTags,
+			Security:    publicSecurity,
+		}, authRegister)
+	}
 
 	Register(api, huma.Operation{
 		OperationID:   "auth-password-token",
@@ -123,10 +128,6 @@ func registerLocalAuthRoutes(api huma.API) {
 }
 
 func authRegister(_ context.Context, in *struct{ Body shared.UserRegister }) (*registerUserBody, error) {
-	if !config.ServiceEnableRegistration.GetBool() {
-		return nil, huma.Error404NotFound("registration is disabled")
-	}
-
 	newUser, err := shared.RegisterUser(&in.Body)
 	if err != nil {
 		return nil, translateDomainError(err)
