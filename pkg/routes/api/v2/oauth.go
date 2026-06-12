@@ -76,7 +76,7 @@ func oauthToken(ctx context.Context, in *struct {
 	Body oauth2server.TokenRequest `contentType:"application/x-www-form-urlencoded"`
 }) (*oauthTokenBody, error) {
 	deviceInfo, ipAddress := requestClientInfo(ctx)
-	resp, err := oauth2server.ExchangeToken(&in.Body, deviceInfo, ipAddress)
+	resp, err := oauth2server.ExchangeToken(ctx, &in.Body, deviceInfo, ipAddress)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
