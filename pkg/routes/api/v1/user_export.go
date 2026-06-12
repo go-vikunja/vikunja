@@ -19,14 +19,11 @@ package v1
 import (
 	"io"
 	"net/http"
-	"os"
 	"strconv"
-	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
@@ -127,25 +124,10 @@ func DownloadUserDataExport(c *echo.Context) error {
 		return err
 	}
 
-	// Check if user has an export file
-	exportNotFoundError := echo.NewHTTPError(http.StatusNotFound, "No user data export found.")
-	if u.ExportFileID == 0 {
-		return exportNotFoundError
-	}
-
-	// Download
-	exportFile := &files.File{ID: u.ExportFileID}
-	err = exportFile.LoadFileMetaByID()
+	exportFile, err := models.GetUserDataExportFile(u)
 	if err != nil {
-		if files.IsErrFileDoesNotExist(err) {
-			return exportNotFoundError
-		}
-		return err
-	}
-	err = exportFile.LoadFileByID()
-	if err != nil {
-		if os.IsNotExist(err) {
-			return exportNotFoundError
+		if models.IsErrUserDataExportDoesNotExist(err) {
+			return echo.NewHTTPError(http.StatusNotFound, "No user data export found.")
 		}
 		return err
 	}
@@ -163,19 +145,12 @@ func DownloadUserDataExport(c *echo.Context) error {
 	return nil
 }
 
-type UserExportStatus struct {
-	ID      int64     `json:"id"`
-	Size    uint64    `json:"size"`
-	Created time.Time `json:"created"`
-	Expires time.Time `json:"expires"`
-}
-
 // GetUserExportStatus returns metadata about the current user export if it exists
 // @Summary Get current user data export
 // @tags user
 // @Produce json
 // @Security JWTKeyAuth
-// @Success 200 {object} v1.UserExportStatus
+// @Success 200 {object} models.UserExportStatus
 // @Router /user/export [get]
 func GetUserExportStatus(c *echo.Context) error {
 	s := db.NewSession()
@@ -186,20 +161,12 @@ func GetUserExportStatus(c *echo.Context) error {
 		return err
 	}
 
-	if u.ExportFileID == 0 {
-		return c.JSON(http.StatusOK, struct{}{})
-	}
-
-	exportFile := &files.File{ID: u.ExportFileID}
-	if err := exportFile.LoadFileMetaByID(); err != nil {
+	status, err := models.GetUserDataExportStatus(u)
+	if err != nil {
 		return err
 	}
-
-	status := UserExportStatus{
-		ID:      exportFile.ID,
-		Size:    exportFile.Size,
-		Created: exportFile.Created,
-		Expires: exportFile.Created.Add(7 * 24 * time.Hour),
+	if status == nil {
+		return c.JSON(http.StatusOK, struct{}{})
 	}
 
 	return c.JSON(http.StatusOK, status)
