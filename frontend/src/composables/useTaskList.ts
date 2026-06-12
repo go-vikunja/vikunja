@@ -1,4 +1,6 @@
 import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
+import {useRouter} from 'vue-router'
+import type {LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
 import TaskCollectionService, {
@@ -10,6 +12,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {error} from '@/message'
 import type {IProject} from '@/modelTypes/IProject'
 import {useAuthStore} from '@/stores/auth'
+import {useViewFiltersStore} from '@/stores/viewFilters'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 
 export type Order = 'asc' | 'desc' | 'none'
@@ -59,6 +62,22 @@ const SORT_BY_DEFAULT: SortBy = {
 	id: 'desc',
 }
 
+interface TaskListQueryState {
+	sort: string | undefined
+	filter: string | undefined
+	s: string | undefined
+	page: number
+}
+
+export function buildStoredQuery(state: TaskListQueryState): LocationQueryRaw {
+	const query: LocationQueryRaw = {}
+	if (state.sort) query.sort = state.sort
+	if (state.filter) query.filter = state.filter
+	if (state.s) query.s = state.s
+	if (state.page > 1) query.page = String(state.page)
+	return query
+}
+
 // This makes sure an id sort order is always sorted last.
 // When tasks would be sorted first by id and then by whatever else was specified, the id sort takes
 // precedence over everything else, making any other sort columns pretty useless.
@@ -94,6 +113,9 @@ export function useTaskList(
 	const projectId = computed(() => projectIdGetter())
 	const projectViewId = computed(() => projectViewIdGetter())
 
+	const router = useRouter()
+	const viewFiltersStore = useViewFiltersStore()
+
 	const params = ref<TaskFilterParams>({...getDefaultTaskFilterParams()})
 
 	const page = useRouteQuery('page', '1', { transform: Number })
@@ -118,6 +140,46 @@ export function useTaskList(
 			sortQuery.value = serializeSortBy(val, sortByDefault) || undefined
 		},
 	})
+
+	// Mirror the URL query bits this composable owns into the store so
+	// in-project tab switches and sidebar re-visits can restore them.
+	//
+	// `ProjectList`/`ProjectTable` are reused across project switches (no
+	// `:key` on them in ProjectView.vue), so setup runs only once. We track
+	// the last viewId we synced — on every viewId transition, if the URL has
+	// none of our params and the store has an entry, restore it via
+	// `router.replace` and skip writing back the empty state we'd otherwise
+	// clobber the saved entry with.
+	let lastSyncedViewId: number | undefined
+	watch(
+		[projectViewId, sortQuery, filter, s, page],
+		([viewId, sortValue, filterValue, sValue, pageValue]) => {
+			const viewIdChanged = viewId !== lastSyncedViewId
+			lastSyncedViewId = viewId
+
+			const urlIsEmpty = !sortValue && !filterValue && !sValue && pageValue === 1
+			if (viewIdChanged && urlIsEmpty) {
+				const storedQuery = viewFiltersStore.getViewQuery(viewId)
+				if (Object.keys(storedQuery).length > 0) {
+					router.replace({query: storedQuery})
+					return
+				}
+			}
+
+			const query = buildStoredQuery({
+				sort: sortValue as string | undefined,
+				filter: filterValue as string | undefined,
+				s: sValue as string | undefined,
+				page: pageValue,
+			})
+			if (Object.keys(query).length > 0) {
+				viewFiltersStore.setViewQuery(viewId, query)
+			} else {
+				viewFiltersStore.clearViewQuery(viewId)
+			}
+		},
+		{immediate: true},
+	)
 
 	const allParams = computed(() => {
 		const loadParams = {...params.value}
