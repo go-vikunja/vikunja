@@ -17,10 +17,14 @@
 package oauth2server
 
 import (
+	"context"
+
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
@@ -56,7 +60,7 @@ func HandleToken(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
 
-	resp, err := ExchangeToken(&req, c.Request().UserAgent(), c.RealIP())
+	resp, err := ExchangeToken(c.Request().Context(), &req, c.Request().UserAgent(), c.RealIP())
 	if err != nil {
 		return err
 	}
@@ -69,10 +73,10 @@ func HandleToken(c *echo.Context) error {
 // token endpoint, independent of the HTTP layer. Callers own request binding and
 // the Cache-Control: no-store response header. deviceInfo/ipAddress are recorded
 // on the session created for the authorization_code grant.
-func ExchangeToken(req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+func ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
 	switch req.GrantType {
 	case "authorization_code":
-		return exchangeAuthorizationCode(req, deviceInfo, ipAddress)
+		return exchangeAuthorizationCode(ctx, req, deviceInfo, ipAddress)
 	case "refresh_token":
 		return exchangeRefreshToken(req)
 	default:
@@ -80,7 +84,7 @@ func ExchangeToken(req *TokenRequest, deviceInfo, ipAddress string) (*TokenRespo
 	}
 }
 
-func exchangeAuthorizationCode(req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
+func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -131,6 +135,12 @@ func exchangeAuthorizationCode(req *TokenRequest, deviceInfo, ipAddress string) 
 
 	if err := s.Commit(); err != nil {
 		return nil, err
+	}
+
+	// The code exchange mints a fresh session, so it is a login for the
+	// audit trail, same as NewUserAuthTokenResponse.
+	if err := events.DispatchWithContext(ctx, &user.LoginSucceededEvent{User: u}); err != nil {
+		log.Errorf("Could not dispatch login succeeded event: %s", err)
 	}
 
 	return &TokenResponse{
