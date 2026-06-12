@@ -13,12 +13,12 @@
 			@keyup.enter="openTaskDetail"
 		>
 			<span
-				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : ''"
+				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : isBlockedByIncomplete ? $t('task.blockedCheckbox') : ''"
 				class="is-inline-flex is-align-items-center"
 			>
 				<FancyCheckbox
 					v-model="task.done"
-					:disabled="isArchived || disabled || !canMarkAsDone"
+					:disabled="isArchived || disabled || !canMarkAsDone || isBlockedByIncomplete"
 					:aria-label="$t('task.detail.markAsDone', {task: task.title})"
 					@update:modelValue="markAsDone"
 					@click.stop
@@ -219,7 +219,8 @@ import Popup from '@/components/misc/Popup.vue'
 import TaskService from '@/services/task'
 
 import {formatDisplayDate, formatISO, formatDateLong} from '@/helpers/time/formatDate'
-import {success} from '@/message'
+import {success, error} from '@/message'
+import {RELATION_KIND} from '@/types/IRelationKind'
 
 import {useProjectStore} from '@/stores/projects'
 import {useBaseStore} from '@/stores/base'
@@ -323,13 +324,23 @@ const isOverdue = computed(() => (
 	task.value.dueDate.getTime() <= now.value.getTime()
 ))
 
+const isBlockedByIncomplete = computed(() =>
+	task.value.relatedTasks?.[RELATION_KIND.BLOCKED]?.some(t => !t.done) ?? false
+)
+
 let oldTask
 
 async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 	const updateFunc = async () => {
 		oldTask = {...task.value}
-		const newTask = await taskStore.update(task.value)
-		task.value = newTask
+		try {
+			const newTask = await taskStore.update(task.value)
+			task.value = newTask
+		} catch (e) {
+			task.value.done = !checked
+			error(e)
+			return
+		}
 
 		updateDueDate()
 
@@ -340,7 +351,7 @@ async function markAsDone(checked: boolean, wasReverted: boolean = false) {
 		if (checked) {
 			playPopSound()
 		}
-		emit('taskUpdated', newTask)
+		emit('taskUpdated', task.value)
 
 		let message = t('task.doneSuccess')
 		if (!task.value.done && !isRepeating.value) {
