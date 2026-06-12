@@ -360,6 +360,11 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v2/user/confirm":        true,
 	"/api/v2/shares/:share/auth":  true,
 	"/api/v2/oauth/token":         true,
+
+	// Testing endpoints authenticate with the testing token via a custom
+	// Authorization header, not a JWT; mounted only when that token is set.
+	"/api/v2/test/all":    true,
+	"/api/v2/test/:table": true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
