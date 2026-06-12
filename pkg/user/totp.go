@@ -17,8 +17,10 @@
 package user
 
 import (
+	"bytes"
 	"fmt"
 	"image"
+	"image/jpeg"
 	"strconv"
 	"time"
 
@@ -196,6 +198,21 @@ func GetTOTPQrCodeForUser(s *xorm.Session, user *User) (qrcode image.Image, err 
 		return
 	}
 	return key.Image(300, 300)
+}
+
+// GetTOTPQrCodeAsJpegForUser renders the user's totp qr code to jpeg bytes, the
+// wire format both API versions serve.
+func GetTOTPQrCodeAsJpegForUser(s *xorm.Session, user *User) ([]byte, error) {
+	qrcode, err := GetTOTPQrCodeForUser(s, user)
+	if err != nil {
+		return nil, err
+	}
+
+	buff := &bytes.Buffer{}
+	if err := jpeg.Encode(buff, qrcode, nil); err != nil {
+		return nil, err
+	}
+	return buff.Bytes(), nil
 }
 
 // HandleFailedTOTPAuth records a failed TOTP attempt and locks the account

@@ -34,8 +34,7 @@ import (
 var testuser14 = user.User{ID: 14, Username: "user14", Issuer: "https://some.service.com"}
 
 // TestHumaTOTP mirrors v1's TestUserTOTPLocalUser and adds the enable/disable
-// flows plus the local-account-only guard. The QR-code endpoint is not ported
-// to v2 (binary streaming, later wave), so there is no test for it here.
+// flows, the qr-code blob endpoint, and the local-account-only guard.
 //
 // Fixture topology (pkg/db/fixtures/totp.yml + users.yml):
 //   - user1:  totp enrolled, not enabled (secret HXDMVJEC…).
@@ -57,6 +56,15 @@ func TestHumaTOTP(t *testing.T) {
 		require.NoError(t, err)
 		rec := humaRequest(t, e, http.MethodGet, "/api/v2/user/settings/totp", "", humaTokenFor(t, &testuser15), "")
 		require.Equal(t, http.StatusPreconditionFailed, rec.Code, "body: %s", rec.Body.String())
+	})
+
+	t.Run("Get qr code for enrolled user", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+		rec := humaRequest(t, e, http.MethodGet, "/api/v2/user/settings/totp/qrcode", "", humaTokenFor(t, &testuser1), "")
+		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
+		assert.Equal(t, "image/jpeg", rec.Header().Get("Content-Type"))
+		assert.NotEmpty(t, rec.Body.Bytes(), "the qr code jpeg must have bytes")
 	})
 
 	t.Run("Enroll a fresh user", func(t *testing.T) {
@@ -123,6 +131,7 @@ func TestHumaTOTP(t *testing.T) {
 			method, path, body string
 		}{
 			{http.MethodGet, "/api/v2/user/settings/totp", ""},
+			{http.MethodGet, "/api/v2/user/settings/totp/qrcode", ""},
 			{http.MethodPost, "/api/v2/user/settings/totp/enroll", ""},
 			{http.MethodPost, "/api/v2/user/settings/totp/enable", `{"passcode":"000000"}`},
 			{http.MethodPost, "/api/v2/user/settings/totp/disable", `{"password":"12345678"}`},
