@@ -2596,3 +2596,32 @@ func (err ErrTimeEntryEndBeforeStart) HTTPError() web.HTTPError {
 		Message:  "A time entry's end time cannot be before its start time.",
 	}
 }
+
+// =================
+// User export errors
+// =================
+
+// ErrUserDataExportDoesNotExist represents an error where a user has no ready data export to download.
+type ErrUserDataExportDoesNotExist struct{}
+
+// IsErrUserDataExportDoesNotExist checks if an error is ErrUserDataExportDoesNotExist.
+func IsErrUserDataExportDoesNotExist(err error) bool {
+	_, ok := err.(ErrUserDataExportDoesNotExist)
+	return ok
+}
+
+func (err ErrUserDataExportDoesNotExist) Error() string {
+	return "No user data export found"
+}
+
+// ErrCodeUserDataExportDoesNotExist holds the unique world-error code of this error
+const ErrCodeUserDataExportDoesNotExist = 19001
+
+// HTTPError holds the http error description
+func (err ErrUserDataExportDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeUserDataExportDoesNotExist,
+		Message:  "No user data export found.",
+	}
+}
