@@ -21,11 +21,9 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/modules/auth/oauth2server"
-	"code.vikunja.io/api/pkg/modules/humaecho5"
 	"code.vikunja.io/api/pkg/user"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/labstack/echo/v5"
 )
 
 // oauthTokenBody wraps the OAuth 2.0 token response.
@@ -101,11 +99,12 @@ func oauthAuthorize(ctx context.Context, in *struct{ Body oauth2server.Authorize
 }
 
 // requestClientInfo pulls the user agent and client IP off the underlying Echo
-// request so the authorization_code grant can record them on the session it
-// creates, mirroring v1. Both fall back to "" when the context is unavailable.
+// request so the authorization_code grant (and login) can record them on the
+// session they create, mirroring v1. Both fall back to "" when the context is
+// unavailable.
 func requestClientInfo(ctx context.Context) (deviceInfo, ipAddress string) {
-	ec, ok := ctx.Value(humaecho5.EchoContextKey).(*echo.Context)
-	if !ok || ec == nil {
+	ec := echoContextFromCtx(ctx)
+	if ec == nil {
 		return "", ""
 	}
 	return (*ec).Request().UserAgent(), (*ec).RealIP()
