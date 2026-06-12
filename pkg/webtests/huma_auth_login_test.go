@@ -87,6 +87,18 @@ func TestHumaLogin(t *testing.T) {
 		assert.Equal(t, user.ErrCodeEmailNotConfirmed, problemCode(t, rec))
 	})
 
+	t.Run("disabled account", func(t *testing.T) {
+		rec := login(`{"username":"user17","password":"12345678"}`)
+		assert.Equal(t, http.StatusPreconditionFailed, rec.Code)
+		assert.Equal(t, user.ErrCodeAccountDisabled, problemCode(t, rec))
+	})
+
+	t.Run("locked account", func(t *testing.T) {
+		rec := login(`{"username":"user18","password":"12345678"}`)
+		assert.Equal(t, http.StatusPreconditionFailed, rec.Code)
+		assert.Equal(t, user.ErrCodeAccountLocked, problemCode(t, rec))
+	})
+
 	t.Run("TOTP required but missing", func(t *testing.T) {
 		rec := login(`{"username":"user10","password":"12345678"}`)
 		assert.Equal(t, http.StatusPreconditionFailed, rec.Code)

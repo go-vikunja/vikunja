@@ -90,9 +90,13 @@ func AuthenticateUserCredentials(login *user.Login) (*user.User, error) {
 		return nil, err
 	}
 
-	if u.Status == user.StatusDisabled || u.Status == user.StatusAccountLocked {
+	if u.Status == user.StatusDisabled {
 		_ = s.Rollback()
 		return nil, &user.ErrAccountDisabled{UserID: u.ID}
+	}
+	if u.Status == user.StatusAccountLocked {
+		_ = s.Rollback()
+		return nil, &user.ErrAccountLocked{UserID: u.ID}
 	}
 
 	if err := enforceLoginTOTP(s, u, login.TOTPPasscode); err != nil {
