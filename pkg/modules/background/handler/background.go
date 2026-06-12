@@ -31,6 +31,7 @@ import (
 	"image"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -43,6 +44,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/api/pkg/web"
+	webfiles "code.vikunja.io/api/pkg/web/files"
 
 	"github.com/bbrks/go-blurhash"
 	"github.com/gabriel-vasile/mimetype"
@@ -385,54 +387,47 @@ func GetProjectBackground(c *echo.Context) error {
 		return err
 	}
 
-	if project.BackgroundFileID == 0 {
-		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusNotFound, "Project background not found")
-	}
-
-	// Get the file
-	bgFile := &files.File{
-		ID: project.BackgroundFileID,
-	}
-	if err := bgFile.LoadFileByID(); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	stat, err := files.FileStat(bgFile)
+	bgFile, stat, err := LoadProjectBackgroundForDownload(s, project)
 	if err != nil {
 		_ = s.Rollback()
+		if models.IsErrProjectHasNoBackground(err) {
+			return echo.NewHTTPError(http.StatusNotFound, "Project background not found")
+		}
 		return err
 	}
-
-	// Unsplash requires pingbacks as per their api usage guidelines.
-	// To do this in a privacy-preserving manner, we do the ping from inside of Vikunja to not expose any user details.
-	// FIXME: This should use an event once we have events
-	unsplash.Pingback(s, bgFile)
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err
 	}
 
-	// Override the global no-store directive so browsers can cache background images.
-	// no-cache allows caching but requires revalidation via If-Modified-Since.
-	c.Response().Header().Set("Cache-Control", "no-cache")
+	webfiles.WriteProjectBackground(c.Response(), c.Request(), bgFile, stat)
+	return nil
+}
 
-	// Set Last-Modified header if we have the file stat, so clients can decide whether to use cached files
-	if stat != nil {
-		modTime := stat.ModTime().UTC()
-		c.Response().Header().Set(echo.HeaderLastModified, modTime.Format(http.TimeFormat))
-
-		// Check If-Modified-Since and return 304 if the file hasn't changed
-		if ifModSince := c.Request().Header.Get("If-Modified-Since"); ifModSince != "" {
-			if t, err := http.ParseTime(ifModSince); err == nil && !modTime.After(t) {
-				return c.NoContent(http.StatusNotModified)
-			}
-		}
+// LoadProjectBackgroundForDownload opens the project's background file (bytes ready to
+// read) and stats it for the modtime the download uses for caching. It also fires the
+// Unsplash pingback side effect, required by Unsplash's API guidelines and done
+// server-side so no user details are exposed. Returns ErrProjectHasNoBackground when the
+// project has none; the caller owns committing the session and closing bgFile.File.
+func LoadProjectBackgroundForDownload(s *xorm.Session, project *models.Project) (bgFile *files.File, stat os.FileInfo, err error) {
+	if project.BackgroundFileID == 0 {
+		return nil, nil, &models.ErrProjectHasNoBackground{ProjectID: project.ID}
 	}
 
-	// Serve the file
-	return c.Stream(http.StatusOK, "image/jpg", bgFile.File)
+	bgFile = &files.File{ID: project.BackgroundFileID}
+	if err := bgFile.LoadFileByID(); err != nil {
+		return nil, nil, err
+	}
+	stat, err = files.FileStat(bgFile)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// FIXME: This should use an event once we have events
+	unsplash.Pingback(s, bgFile)
+
+	return bgFile, stat, nil
 }
 
 // RemoveProjectBackground removes a project background, no matter the background provider
