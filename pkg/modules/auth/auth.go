@@ -100,46 +100,75 @@ func ClearRefreshTokenCookie(c *echo.Context) {
 	SetRefreshTokenCookie(c, "", -1)
 }
 
-// NewUserAuthTokenResponse creates a new user auth token response from a user object.
-func NewUserAuthTokenResponse(u *user.User, c *echo.Context, long bool) error {
+// IssuedUserToken bundles a freshly minted access token with the matching
+// refresh token and the cookie max-age both v1 and v2 use to set the
+// HttpOnly refresh cookie.
+type IssuedUserToken struct {
+	AccessToken  string
+	RefreshToken string
+	CookieMaxAge int
+}
+
+// IssueUserToken creates a session for the user and mints a JWT access token plus
+// a refresh token for it. It is the transport-agnostic core both v1 (which writes
+// the echo response) and v2 (Huma) call; callers set the refresh cookie and the
+// Cache-Control header themselves via WriteUserAuthCookies.
+func IssueUserToken(ctx context.Context, u *user.User, deviceInfo, ipAddress string, long bool) (*IssuedUserToken, error) {
 	s := db.NewSession()
 	defer s.Close()
-
-	deviceInfo := c.Request().UserAgent()
-	ipAddress := c.RealIP()
 
 	session, err := models.CreateSession(s, u.ID, deviceInfo, ipAddress, long)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		return nil, err
 	}
 
 	t, err := NewUserJWTAuthtoken(u, session.ID)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		return nil, err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return err
+		return nil, err
 	}
 
-	if err := events.DispatchWithContext(c.Request().Context(), &user.LoginSucceededEvent{User: u}); err != nil {
+	if err := events.DispatchWithContext(ctx, &user.LoginSucceededEvent{User: u}); err != nil {
 		log.Errorf("Could not dispatch login succeeded event: %s", err)
 	}
 
-	// Set the refresh token as an HttpOnly cookie. The cookie is path-scoped
-	// to the refresh endpoint, so the browser only sends it there. JavaScript
-	// never sees the refresh token — this protects it from XSS.
 	cookieMaxAge := int(config.ServiceJWTTTL.GetInt64())
 	if long {
 		cookieMaxAge = int(config.ServiceJWTTTLLong.GetInt64())
 	}
-	SetRefreshTokenCookie(c, session.RefreshToken, cookieMaxAge)
 
+	return &IssuedUserToken{
+		AccessToken:  t,
+		RefreshToken: session.RefreshToken,
+		CookieMaxAge: cookieMaxAge,
+	}, nil
+}
+
+// WriteUserAuthCookies sets the HttpOnly refresh-token cookie and the
+// Cache-Control: no-store header on a response. The cookie is path-scoped to the
+// refresh endpoint, so the browser only sends it there; JavaScript never sees the
+// refresh token, which protects it from XSS. Shared by the v1 echo handlers and
+// the v2 Huma handlers (which reach the echo context via humaecho5.Unwrap).
+func WriteUserAuthCookies(c *echo.Context, token *IssuedUserToken) {
+	SetRefreshTokenCookie(c, token.RefreshToken, token.CookieMaxAge)
 	c.Response().Header().Set("Cache-Control", "no-store")
-	return c.JSON(http.StatusOK, Token{Token: t})
+}
+
+// NewUserAuthTokenResponse creates a new user auth token response from a user object.
+func NewUserAuthTokenResponse(u *user.User, c *echo.Context, long bool) error {
+	token, err := IssueUserToken(c.Request().Context(), u, c.Request().UserAgent(), c.RealIP(), long)
+	if err != nil {
+		return err
+	}
+
+	WriteUserAuthCookies(c, token)
+	return c.JSON(http.StatusOK, Token{Token: token.AccessToken})
 }
 
 // NewUserJWTAuthtoken generates and signs a new short-lived jwt token for a user.
@@ -390,6 +419,26 @@ func RefreshSession(rawRefreshToken string) (*RefreshResult, error) {
 		IsLongSession:   session.IsLongSession,
 		SessionID:       session.ID,
 	}, nil
+}
+
+// SessionIDFromContext reads the session id (the `sid` claim) off the user JWT
+// in the echo context. It returns "" when there is no user JWT or no sid claim
+// (API tokens and link shares carry no session), which callers treat as a no-op.
+func SessionIDFromContext(c *echo.Context) string {
+	raw := c.Get("user")
+	if raw == nil {
+		return ""
+	}
+	jwtinf, ok := raw.(*jwt.Token)
+	if !ok {
+		return ""
+	}
+	claims, ok := jwtinf.Claims.(jwt.MapClaims)
+	if !ok {
+		return ""
+	}
+	sid, _ := claims["sid"].(string)
+	return sid
 }
 
 // GetAuthFromContext retrieves the authenticated web.Auth from a plain
