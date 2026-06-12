@@ -49,10 +49,16 @@ type totpMessageBody struct {
 	Body models.Message
 }
 
+// totpQrCodeResponse carries the qr code jpeg bytes plus a fixed Content-Type.
+// Huma writes the []byte Body straight to the wire; the header field overrides
+// content negotiation so image/jpeg reaches the client (matching v1).
+type totpQrCodeResponse struct {
+	ContentType string `header:"Content-Type"`
+	Body        []byte
+}
+
 // RegisterTOTPRoutes wires the current-user totp (2FA) operations onto the Huma
 // API. Totp is a local-account feature; every handler rejects OIDC/LDAP users.
-// The QR-code blob endpoint is intentionally not ported here (binary streaming,
-// handled in a later wave).
 func RegisterTOTPRoutes(api huma.API) {
 	if !config.ServiceEnableTotp.GetBool() {
 		return
@@ -100,6 +106,27 @@ func RegisterTOTPRoutes(api huma.API) {
 		DefaultStatus: http.StatusOK,
 		Tags:          tags,
 	}, totpDisable)
+
+	Register(api, huma.Operation{
+		OperationID: "totp-qrcode",
+		Summary:     "Get the totp enrollment qr code",
+		Description: "Returns the qr code for the authenticated user's enrolled totp setting as a jpeg image, for scanning into an authenticator app. Requires a prior enrollment. Local accounts only.",
+		Method:      http.MethodGet,
+		Path:        "/user/settings/totp/qrcode",
+		Tags:        tags,
+		// Spell out the binary response; a bare []byte Body would otherwise be
+		// modeled as a base64 JSON string instead of binary image data.
+		Responses: map[string]*huma.Response{
+			"200": {
+				Description: "The qr code as a jpeg image.",
+				Content: map[string]*huma.MediaType{
+					"image/jpeg": {
+						Schema: &huma.Schema{Type: huma.TypeString, Format: "binary"},
+					},
+				},
+			},
+		},
+	}, totpQrCode)
 }
 
 func init() { AddRouteRegistrar(RegisterTOTPRoutes) }
@@ -207,4 +234,22 @@ func totpDisable(ctx context.Context, in *totpDisableBody) (*totpMessageBody, er
 		return nil, translateDomainError(err)
 	}
 	return &totpMessageBody{Body: models.Message{Message: "TOTP was disabled successfully."}}, nil
+}
+
+func totpQrCode(ctx context.Context, _ *struct{}) (*totpQrCodeResponse, error) {
+	u, s, err := localUserFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer s.Close()
+
+	qrcode, err := user.GetTOTPQrCodeAsJpegForUser(s, u)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
+	if err := s.Commit(); err != nil {
+		return nil, translateDomainError(err)
+	}
+	return &totpQrCodeResponse{ContentType: "image/jpeg", Body: qrcode}, nil
 }
