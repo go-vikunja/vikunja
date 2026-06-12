@@ -535,6 +535,34 @@ func (err *ErrProjectViewDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectHasNoBackground represents an error where a project has no background set.
+type ErrProjectHasNoBackground struct {
+	ProjectID int64
+}
+
+// IsErrProjectHasNoBackground checks if an error is ErrProjectHasNoBackground.
+func IsErrProjectHasNoBackground(err error) bool {
+	_, ok := err.(*ErrProjectHasNoBackground)
+	return ok
+}
+
+func (err *ErrProjectHasNoBackground) Error() string {
+	return fmt.Sprintf("Project has no background [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeProjectHasNoBackground holds the unique world-error code of this error
+const ErrCodeProjectHasNoBackground = 3015
+
+// HTTPError holds the http error description
+func (err *ErrProjectHasNoBackground) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectHasNoBackground,
+		// Message kept verbatim from v1's inline handler error so the wire body is unchanged.
+		Message: "Project background not found",
+	}
+}
+
 // ==============
 // Task errors
 // ==============
