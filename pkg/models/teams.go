@@ -360,13 +360,9 @@ func (t *Team) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return
 	}
 
-	doer, err := GetUserOrLinkShareUser(s, a)
-	if err != nil {
-		return err
-	}
 	events.DispatchOnCommit(s, &TeamDeletedEvent{
 		Team: t,
-		Doer: doer,
+		Doer: doerFromAuth(a),
 	})
 	return nil
 }
