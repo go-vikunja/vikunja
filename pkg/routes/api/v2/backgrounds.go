@@ -24,6 +24,7 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background"
+	backgroundHandler "code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -53,6 +54,22 @@ func RegisterBackgroundRoutes(api huma.API) {
 		DefaultStatus: http.StatusOK,
 		Tags:          tags,
 	}, backgroundRemove)
+
+	if config.BackgroundsUploadEnabled.GetBool() {
+		Register(api, huma.Operation{
+			OperationID: "projects-background-upload",
+			Summary:     "Upload a project background",
+			Description: "Uploads an image via multipart/form-data under the \"background\" field and sets it as the project's background. Requires write access to the project. The image is resized server-side and stored as JPEG; it replaces any previous background (idempotent replace, hence PUT). Returns the updated project.",
+			Method:      http.MethodPut,
+			Path:        "/projects/{project}/backgrounds/upload",
+			// Return the updated project with 200, the natural code for an idempotent PUT.
+			DefaultStatus: http.StatusOK,
+			Tags:          tags,
+			// +2 MB mirrors Echo's global BodyLimit overhead so a max-sized file isn't rejected by multipart boundary/header bytes.
+			// #nosec G115 - configured value won't exceed int64 max in practice.
+			MaxBodyBytes: (int64(config.GetMaxFileSizeInMBytes()) + 2) * 1024 * 1024,
+		}, backgroundUpload)
+	}
 
 	if config.BackgroundsUnsplashEnabled.GetBool() {
 		Register(api, huma.Operation{
@@ -145,6 +162,64 @@ func backgroundUnsplashSet(ctx context.Context, in *struct {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
+	if err := s.Commit(); err != nil {
+		return nil, translateDomainError(err)
+	}
+
+	return &singleBody[models.Project]{Body: project}, nil
+}
+
+type backgroundUploadInput struct {
+	ProjectID int64 `path:"project" doc:"The id of the project to set the background on."`
+	// Allow-list mirrors the formats background uploads can actually be decoded as
+	// (handler.ValidateAndSaveBackgroundUpload's allowedImageMimes); octet-stream covers
+	// programmatic clients. Huma's MimeTypeValidator rejects the part pre-handler, so the
+	// byte-level image check in the shared function is the real gate.
+	RawBody huma.MultipartFormFiles[struct {
+		Background huma.FormFile `form:"background" contentType:"image/jpeg,image/png,image/gif,image/bmp,image/tiff,image/webp,application/octet-stream" required:"true" doc:"The background image to upload. Must be a decodable raster image (JPEG, PNG, GIF, BMP, TIFF or WebP); it is resized server-side and re-encoded as JPEG."`
+	}]
+}
+
+// backgroundUpload owns auth, the session and the permission check because there is
+// no handler.Do* for multipart uploads (see the api-v2-routes skill's "Non-CRUDable
+// / custom routes" section). It shares its body with v1 via
+// handler.ValidateAndSaveBackgroundUpload.
+func backgroundUpload(ctx context.Context, in *backgroundUploadInput) (*singleBody[models.Project], error) {
+	a, err := authFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	s := db.NewSession()
+	defer s.Close()
+
+	project := &models.Project{ID: in.ProjectID}
+	can, err := project.CanUpdate(s, a)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
+	if !can {
+		_ = s.Rollback()
+		return nil, huma.Error403Forbidden("forbidden")
+	}
+	project, err = models.GetProjectSimpleByID(s, in.ProjectID)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, translateDomainError(err)
+	}
+
+	file := in.RawBody.Data().Background
+	defer func() { _ = file.Close() }()
+
+	if err := backgroundHandler.ValidateAndSaveBackgroundUpload(s, a, project, file, file.Filename, uint64(file.Size)); err != nil {
+		_ = s.Rollback()
+		if backgroundHandler.IsErrFileIsNoImage(err) || backgroundHandler.IsErrFileUnsupportedImageFormat(err) {
+			return nil, huma.Error400BadRequest(err.Error())
+		}
+		return nil, translateDomainError(err)
+	}
+
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
 	}
