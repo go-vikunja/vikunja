@@ -48,46 +48,25 @@
 						</ButtonLink>
 					</Nothing>
 
-					<draggable
+					<TaskTreeDraggable
 						v-if="tasks && tasks.length > 0"
-						v-model="tasks"
-						:group="{name: 'tasks', put: false}"
-						:disabled="!canDragTasks || !isPositionSorting"
-						item-key="id"
-						tag="ul"
-						:component-data="{
-							class: {
-								tasks: true,
-								'dragging-disabled': !canDragTasks || !isPositionSorting
-							},
-							type: 'transition-group'
-						}"
-						:animation="100"
+						:tasks="tasks"
+						:all-tasks="allTasksWithSubtasks"
+						:hierarchical="true"
+						:disabled="!canDragTasks"
+						:can-mark-task-as-done="canMarkTaskAsDone"
+						:show-drag-handle="canDragTasks"
+						:dragging="drag"
+						:task-ref-setter="setTaskTreeRef"
 						:handle="dragHandle"
 						:delay-on-touch-only="!isTouchDevice"
 						:delay="isTouchDevice ? 0 : 1000"
-						ghost-class="task-ghost"
-						@start="handleDragStart"
-						@end="saveTaskPosition"
-					>
-						<template #item="{element: t, index}">
-							<SingleTaskInProject
-								:ref="(el) => setTaskRef(el, index)"
-								:show-list-color="false"
-								:can-mark-as-done="canWrite || isPseudoProject"
-								:the-task="t"
-								:all-tasks="allTasks"
-								@taskUpdated="updateTasks"
-							>
-								<span
-									v-if="canDragTasks && isPositionSorting"
-									class="icon handle"
-								>
-									<Icon icon="grip-lines" />
-								</span>
-							</SingleTaskInProject>
-						</template>
-					</draggable>
+						:transition-group="true"
+						@dragStart="handleDragStart"
+						@drop="saveTaskTreeDrop"
+						@updateList="updateTaskTreeList"
+						@taskUpdated="updateTasks"
+					/>
 
 					<Pagination
 						:total-pages="totalPages"
@@ -102,12 +81,15 @@
 
 <script setup lang="ts">
 import {ref, computed, nextTick, onMounted, onBeforeUnmount, watch, toRef} from 'vue'
-import draggable from 'zhyswan-vuedraggable'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 import ButtonLink from '@/components/misc/ButtonLink.vue'
 import AddTask from '@/components/tasks/AddTask.vue'
 import SingleTaskInProject from '@/components/tasks/partials/SingleTaskInProject.vue'
+import TaskTreeDraggable, {
+	type TaskTreeDropEvent,
+	type TaskTreeListUpdateEvent,
+} from '@/components/tasks/partials/TaskTreeDraggable.vue'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import Nothing from '@/components/misc/Nothing.vue'
 import Pagination from '@/components/misc/Pagination.vue'
@@ -128,6 +110,10 @@ import type {IProject} from '@/modelTypes/IProject'
 import type {IProjectView} from '@/modelTypes/IProjectView'
 import TaskPositionService from '@/services/taskPosition'
 import TaskPositionModel from '@/models/taskPosition'
+import TaskRelationService from '@/services/taskRelation'
+import TaskRelationModel from '@/models/taskRelation'
+import {RELATION_KIND} from '@/types/IRelationKind'
+import {error} from '@/message'
 
 const props = defineProps<{
         isLoadingProject: boolean,
@@ -161,6 +147,7 @@ const {
 )
 
 const taskPositionService = ref(new TaskPositionService())
+const taskRelationService = ref(new TaskRelationService())
 
 // Saved filter composable for accessing filter data
 const _savedFilter = useSavedFilter(() => isSavedFilter({id: projectId.value}) ? projectId.value : undefined).filter
@@ -175,6 +162,24 @@ watch(
 )
 
 const isPositionSorting = computed(() => 'position' in sortByParam.value)
+
+const allTasksWithSubtasks = computed((): ITask[] => {
+	const map = new Map<number, ITask>()
+	allTasks.value.forEach(t => addEmbeddedSubtasks(t, map))
+	allTasks.value.forEach(t => map.set(t.id, t))
+	return [...map.values()]
+})
+
+function addEmbeddedSubtasks(task: ITask, map: Map<number, ITask>) {
+	(task.relatedTasks?.subtask ?? []).forEach(subtask => {
+		if (map.has(subtask.id)) {
+			return
+		}
+
+		map.set(subtask.id, subtask)
+		addEmbeddedSubtasks(subtask, map)
+	})
+}
 
 const firstNewPosition = computed(() => {
 	if (tasks.value.length === 0) {
@@ -194,6 +199,10 @@ const canWrite = computed(() => {
 })
 
 const isPseudoProject = computed(() => (project.value && isSavedFilter(project.value)) || project.value?.id === -1)
+
+function canMarkTaskAsDone() {
+	return canWrite.value || Boolean(isPseudoProject.value)
+}
 
 onMounted(async () => {
 	await nextTick()
@@ -246,44 +255,120 @@ function updateTasks(updatedTask: ITask) {
 function handleDragStart(e: { item: HTMLElement }) {
 	drag.value = true
 	const taskId = parseInt(e.item.dataset.taskId ?? '', 10)
-	const task = tasks.value.find(t => t.id === taskId)
+	const task = findTaskById(taskId)
 
 	if (task) {
 		taskStore.setDraggedTask(task)
+	} else {
+		taskStore.setDraggedTask(null)
 	}
 }
 
-async function saveTaskPosition(e: { originalEvent?: MouseEvent, to: HTMLElement, from: HTMLElement, newIndex: number }) {
-	drag.value = false
+function findTaskById(taskId: ITask['id'], taskList: ITask[] = allTasksWithSubtasks.value): ITask | undefined {
+	for (const task of taskList) {
+		if (task.id === taskId) {
+			return task
+		}
 
-	// Check if dropped on a sidebar project
-	const {moved} = await handleTaskDropToProject(e, (task) => {
-		tasks.value = tasks.value.filter(t => t.id !== task.id)
+		const found = findTaskById(taskId, task.relatedTasks?.subtask ?? [])
+		if (found) {
+			return found
+		}
+	}
+}
+
+function updateTaskTreeList({parentTaskId, tasks: updatedTasks}: TaskTreeListUpdateEvent) {
+	if (parentTaskId === null) {
+		tasks.value = updatedTasks
+		return
+	}
+
+	const parent = findTaskById(parentTaskId)
+	if (parent) {
+		parent.relatedTasks.subtask = updatedTasks
+	}
+}
+
+function getTaskTreeSiblings(parentTaskId: ITask['id'] | null): ITask[] {
+	if (parentTaskId === null) {
+		return tasks.value
+	}
+
+	return findTaskById(parentTaskId)?.relatedTasks?.subtask ?? []
+}
+
+function removeTaskFromTree(task: ITask) {
+	tasks.value = tasks.value.filter(t => t.id !== task.id)
+	allTasksWithSubtasks.value.forEach(t => {
+		if (typeof t.relatedTasks?.subtask !== 'undefined') {
+			t.relatedTasks.subtask = t.relatedTasks.subtask.filter(subtask => subtask.id !== task.id)
+		}
 	})
+}
 
-	if (moved) {
+async function updateTaskParent(task: ITask, oldParentTaskId: ITask['id'] | null, newParentTaskId: ITask['id'] | null) {
+	if (oldParentTaskId === newParentTaskId) {
 		return
 	}
 
-	// If dropped outside this list
-	if (e.to !== e.from) {
-		return
+	if (oldParentTaskId !== null) {
+		await taskRelationService.value.delete(new TaskRelationModel({
+			taskId: oldParentTaskId,
+			otherTaskId: task.id,
+			relationKind: RELATION_KIND.SUBTASK,
+		}))
 	}
 
-	const task = tasks.value[e.newIndex]
-	const taskBefore = tasks.value[e.newIndex - 1] ?? null
-	const taskAfter = tasks.value[e.newIndex + 1] ?? null
+	if (newParentTaskId !== null) {
+		await taskRelationService.value.create(new TaskRelationModel({
+			taskId: newParentTaskId,
+			otherTaskId: task.id,
+			relationKind: RELATION_KIND.SUBTASK,
+		}))
+		task.relatedTasks.parenttask = [findTaskById(newParentTaskId)].filter((task): task is ITask => Boolean(task))
+	} else {
+		task.relatedTasks.parenttask = []
+	}
+}
 
-	const position = calculateItemPosition(taskBefore !== null ? taskBefore.position : null, taskAfter !== null ? taskAfter.position : null)
+async function updateTaskPosition(task: ITask, siblings: ITask[], index: number) {
+	const taskBefore = siblings[index - 1] ?? null
+	const taskAfter = siblings[index + 1] ?? null
+	const position = calculateItemPosition(taskBefore?.position ?? null, taskAfter?.position ?? null)
 
 	await taskPositionService.value.update(new TaskPositionModel({
 		position,
 		projectViewId: props.viewId,
 		taskId: task.id,
 	}))
-	tasks.value[e.newIndex] = {
-		...task,
-		position,
+	task.position = position
+}
+
+async function saveTaskTreeDrop(e: TaskTreeDropEvent) {
+	drag.value = false
+
+	// Check if dropped on a sidebar project
+	const {moved} = await handleTaskDropToProject(e, removeTaskFromTree)
+
+	if (moved) {
+		return
+	}
+
+	const task = findTaskById(e.taskId)
+	if (!task) {
+		return
+	}
+
+	try {
+		await updateTaskParent(task, e.oldParentTaskId, e.newParentTaskId)
+		await updateTaskPosition(task, getTaskTreeSiblings(e.newParentTaskId), e.newIndex)
+
+		if (!isPositionSorting.value) {
+			sortByParam.value = {position: 'asc'}
+		}
+	} catch (e) {
+		error(e)
+		await loadTasks(false)
 	}
 }
 
@@ -296,6 +381,17 @@ function setTaskRef(el: InstanceType<typeof SingleTaskInProject> | null, index: 
 	} else {
 		taskRefs.value[index] = el
 	}
+}
+
+function isSingleTaskComponent(el: unknown): el is InstanceType<typeof SingleTaskInProject> {
+	return el !== null &&
+		typeof el === 'object' &&
+		'focus' in el &&
+		'click' in el
+}
+
+function setTaskTreeRef(el: unknown, index: number) {
+	setTaskRef(isSingleTaskComponent(el) ? el : null, index)
 }
 
 function focusTask(index: number) {
