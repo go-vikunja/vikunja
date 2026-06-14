@@ -165,8 +165,8 @@ test.describe('Project View Kanban', () => {
 			id: 100,
 			project_id: projects[0].id,
 			title: 'Recurring Task',
-			repeat_after: 604800,
-			repeat_mode: 2,
+			repeats: 'FREQ=WEEKLY;INTERVAL=1',
+			repeats_from_current_date: true,
 			due_date: tomorrow.toISOString(),
 		})
 		await TaskBucketFactory.create(1, {

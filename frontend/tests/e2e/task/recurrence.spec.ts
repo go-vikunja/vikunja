@@ -16,7 +16,7 @@ test.describe('Task recurrence', () => {
 		await page.goto(`/tasks/${task.id}`)
 
 		// Reveal the RepeatAfter component (hidden until the user activates it)
-		await page.getByRole('button', {name: 'Set Repeating Interval'}).click()
+		await page.getByRole('button', {name: 'Set Repeat'}).click()
 
 		const save = page.waitForResponse(r =>
 			r.url().includes(`/tasks/${task.id}`) && r.request().method() === 'POST',
@@ -24,7 +24,7 @@ test.describe('Task recurrence', () => {
 		await page.getByRole('button', {name: 'Every Day'}).click()
 		const r = await save
 		const body = r.request().postDataJSON()
-		expect(body.repeat_after).toBe(86400)
+		expect(body.repeat).toEqual({freq: 'daily', interval: 1})
 	})
 
 	test('completing a recurring task reopens with advanced due date', async ({
@@ -35,7 +35,7 @@ test.describe('Task recurrence', () => {
 			id: 1,
 			project_id: 1,
 			due_date: originalDue.toISOString(),
-			repeat_after: 86400,
+			repeats: 'FREQ=DAILY;INTERVAL=1',
 		}, false)
 
 		await page.goto(`/tasks/${task.id}`)
@@ -61,19 +61,18 @@ test.describe('Task recurrence', () => {
 		expect(newDue - originalDue.getTime()).toBeCloseTo(86_400_000, -4)
 	})
 
-	test('monthly repeat mode hides the amount field', async ({authenticatedPage: page}) => {
+	test('selecting months frequency reveals the day-of-month selector', async ({authenticatedPage: page}) => {
 		const [task] = await TaskFactory.create(1, {id: 1, project_id: 1}, false)
 		await page.goto(`/tasks/${task.id}`)
 
 		// Reveal the RepeatAfter component (hidden until the user activates it)
-		await page.getByRole('button', {name: 'Set Repeating Interval'}).click()
+		await page.getByRole('button', {name: 'Set Repeat'}).click()
 
-		await expect(page.locator('#repeatMode')).toBeVisible()
-		// Amount input is visible in the default repeat mode
-		await expect(page.locator('input[placeholder*="amount" i]')).toHaveCount(1)
+		// The day-of-month picker is only rendered when the frequency unit is "months".
+		await expect(page.locator('#repeatDay')).toHaveCount(0)
 
-		await page.locator('#repeatMode').selectOption({label: 'Monthly'})
+		await page.locator('.repeat-interval-unit select').selectOption('months')
 
-		await expect(page.locator('input[placeholder*="amount" i]')).toHaveCount(0)
+		await expect(page.locator('#repeatDay')).toBeVisible()
 	})
 })
