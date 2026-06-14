@@ -1625,7 +1625,9 @@ func fixedDurationForRRule(opt *rrule.ROption) (time.Duration, bool) {
 		base = 24 * time.Hour
 	case rrule.WEEKLY:
 		base = 7 * 24 * time.Hour
-	default:
+	case rrule.MONTHLY, rrule.YEARLY:
+		// Months and years aren't a fixed number of seconds, so they can't be
+		// expressed as a time.Duration; the caller falls back to rrule.After.
 		return 0, false
 	}
 
