@@ -27,6 +27,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/teambition/rrule-go"
 	"xorm.io/builder"
 )
 
@@ -933,6 +934,32 @@ func TestValidateRRule(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrInvalidData(err))
 	})
+}
+
+func TestFixedDurationForRRule(t *testing.T) {
+	cases := []struct {
+		name         string
+		freq         rrule.Frequency
+		interval     int
+		wantDuration time.Duration
+		wantOK       bool
+	}{
+		// Frequencies with a fixed second-count map to a Duration.
+		{"hourly interval 1", rrule.HOURLY, 1, time.Hour, true},
+		{"daily interval 1", rrule.DAILY, 1, 24 * time.Hour, true},
+		{"weekly interval 2", rrule.WEEKLY, 2, 14 * 24 * time.Hour, true},
+		// Months and years have variable length, so the caller falls back to
+		// rrule.After instead of using a Duration.
+		{"monthly is not fixed", rrule.MONTHLY, 1, 0, false},
+		{"yearly is not fixed", rrule.YEARLY, 1, 0, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d, ok := fixedDurationForRRule(&rrule.ROption{Freq: c.freq, Interval: c.interval})
+			assert.Equal(t, c.wantOK, ok)
+			assert.Equal(t, c.wantDuration, d)
+		})
+	}
 }
 
 func TestUpdateDone_RRuleAncientDueDate(t *testing.T) {
