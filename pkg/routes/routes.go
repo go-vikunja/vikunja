@@ -155,6 +155,11 @@ func NewEcho() *echo.Echo {
 
 	e.Logger = log.NewEchoLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
 
+	// First middleware in the chain so every request has an ID — reuses the
+	// X-Request-Id header from a proxy or generates one — and everything
+	// downstream (logging, audit) sees the same value.
+	e.Use(middleware.RequestID())
+
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
 		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())
@@ -198,6 +203,10 @@ func NewEcho() *echo.Echo {
 	// Normalize PHP-style `foo[]=...` query params to `foo=...` before any
 	// handler binds them. Runs globally so both /api/v1 and /api/v2 benefit.
 	e.Use(vmiddleware.NormalizeArrayParams())
+
+	if config.AuditEnabled.GetBool() {
+		e.Use(vmiddleware.RequestMeta())
+	}
 
 	setupSentry(e)
 
@@ -343,6 +352,14 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v2/docs":                      true,
 	"/api/v2/docs/scalar.standalone.js": true,
 	"/api/v2/schemas/:schema":           true,
+	"/api/v2/info":                      true,
+
+	"/api/v2/register":            true,
+	"/api/v2/user/password/token": true,
+	"/api/v2/user/password/reset": true,
+	"/api/v2/user/confirm":        true,
+	"/api/v2/shares/:share/auth":  true,
+	"/api/v2/oauth/token":         true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.

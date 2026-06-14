@@ -23,7 +23,9 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
+
 	"github.com/labstack/echo/v5"
 )
 
@@ -41,7 +43,7 @@ type IsAdminPatch struct {
 // @Security JWTKeyAuth
 // @Param id path int true "User ID"
 // @Param body body admin.IsAdminPatch true "New admin value"
-// @Success 200 {object} admin.User
+// @Success 200 {object} shared.AdminUser
 // @Failure 400 {object} web.HTTPError
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/users/{id}/admin [patch]
@@ -63,24 +65,8 @@ func PatchAdmin(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	target := &user.User{ID: id}
-	has, err := s.Get(target)
+	target, err := models.SetUserAdminFlag(s, id, *body.IsAdmin)
 	if err != nil {
-		return err
-	}
-	if !has {
-		return user.ErrUserDoesNotExist{UserID: id}
-	}
-
-	if !*body.IsAdmin {
-		if err := user.GuardLastAdmin(s, target); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-	}
-
-	target.IsAdmin = *body.IsAdmin
-	if _, err := s.ID(target.ID).Cols("is_admin").Update(target); err != nil {
 		_ = s.Rollback()
 		return err
 	}
@@ -92,5 +78,5 @@ func PatchAdmin(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, newAdminUser(target, providers))
+	return c.JSON(http.StatusOK, shared.NewAdminUser(target, providers))
 }

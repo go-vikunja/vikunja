@@ -46,11 +46,13 @@ type BotUserCreate struct {
 
 // Project mirrors pkg/models/project.Project.
 type Project struct {
-	ID          int64  `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description,omitempty"`
-	Identifier  string `json:"identifier,omitempty"`
-	IsArchived  bool   `json:"is_archived,omitempty"`
+	ID              int64   `json:"id"`
+	Title           string  `json:"title"`
+	Description     string  `json:"description,omitempty"`
+	Identifier      string  `json:"identifier,omitempty"`
+	IsArchived      bool    `json:"is_archived,omitempty"`
+	ParentProjectID int64   `json:"parent_project_id,omitempty"`
+	Position        float64 `json:"position,omitempty"`
 }
 
 // ProjectView is a saved view (Kanban/List/Gantt/Table) on a project.

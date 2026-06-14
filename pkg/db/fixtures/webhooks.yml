@@ -41,3 +41,41 @@
   created_by_id: 3
   created: 2024-01-01 00:00:00
   updated: 2024-01-01 00:00:00
+# Webhooks 6-8 are user-level (project_id null, user_id set) and back the v2
+# user-webhook tests. #6/#7 belong to user6; #6 carries credentials so masking
+# can be asserted. #8 belongs to user1 so the owner-isolation check (user6 must
+# not see or mutate another user's webhook) has a target.
+#
+# Event choice matters because the pkg/e2etests user-webhook suite shares these
+# fixtures and dispatches real events. The WebhookListener fans a fired event out
+# to ALL of the event-user's webhooks, asynchronously; a user-level fixture
+# subscribed to a user-directed event the suite dispatches for its owner fires a
+# real (failing) delivery to example.com, and that in-flight write then races the
+# next test's fixture reload ("database table is locked: webhooks"). The suite
+# dispatches user-directed events only for user1, so #6/#7 are owned by user6, and
+# #8 (owned by user1) subscribes to task.updated — a project-only event the
+# listener never matches for user webhooks. None of the three can fire there.
+- id: 6
+  target_url: "https://example.com/user-webhook-fixture"
+  events: '["task.reminder.fired"]'
+  user_id: 6
+  secret: "uwh-secret-fixture"
+  basic_auth_user: "uwh-basicauth-user"
+  basic_auth_password: "uwh-basicauth-pass"
+  created_by_id: 6
+  created: 2024-01-01 00:00:00
+  updated: 2024-01-01 00:00:00
+- id: 7
+  target_url: "https://example.com/user-webhook-second"
+  events: '["task.reminder.fired"]'
+  user_id: 6
+  created_by_id: 6
+  created: 2024-01-01 00:00:00
+  updated: 2024-01-01 00:00:00
+- id: 8
+  target_url: "https://example.com/user-webhook-other"
+  events: '["task.updated"]'
+  user_id: 1
+  created_by_id: 1
+  created: 2024-01-01 00:00:00
+  updated: 2024-01-01 00:00:00

@@ -31,7 +31,6 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -40,6 +39,7 @@ import (
 	"code.vikunja.io/veans/internal/config"
 	"code.vikunja.io/veans/internal/credentials"
 	"code.vikunja.io/veans/internal/output"
+	"code.vikunja.io/veans/internal/picker"
 	"code.vikunja.io/veans/internal/status"
 )
 
@@ -388,44 +388,29 @@ func pickProject(ctx context.Context, c *client.Client, id int64, p auth.Prompte
 		}
 		active = append(active, pr)
 	}
-	sort.Slice(active, func(i, j int) bool { return active[i].Title < active[j].Title })
-
-	// The "create a new project" option sits at len(active)+1 in the menu;
-	// when the user has nothing to pick from, it's the only choice.
-	createIdx := len(active) + 1
 
 	if len(active) == 0 {
 		fmt.Fprintln(out, "No projects yet — let's create one.")
 		return createProject(ctx, c, p, out)
 	}
 
-	fmt.Fprintln(out, "Available projects:")
-	for i, pr := range active {
-		ident := pr.Identifier
-		if ident == "" {
-			ident = "(no identifier)"
-		}
-		fmt.Fprintf(out, "  [%d] #%d %s — %s\n", i+1, pr.ID, pr.Title, ident)
-	}
-	fmt.Fprintf(out, "  [%d] Create a new project\n", createIdx)
-
-	choice, err := p.ReadLine("Pick a project [1]: ")
-	if err != nil {
+	// picker.Pick reads os.Stdin directly via bubbletea. The prompter's
+	// buffered reader is idle here (all earlier prompts blocked at a
+	// newline in canonical mode), so there's no buffered input to lose;
+	// the terminal is restored to canonical mode when Pick returns.
+	res, err := picker.Pick(active)
+	switch {
+	case errors.Is(err, picker.ErrCanceled):
+		return nil, output.New(output.CodeValidation, "project selection canceled")
+	case errors.Is(err, picker.ErrNotATerminal):
+		return nil, output.New(output.CodeValidation, "not a terminal — pass --project <id>")
+	case err != nil:
 		return nil, err
 	}
-	choice = strings.TrimSpace(choice)
-	idx := 1
-	if choice != "" {
-		v, err := strconv.Atoi(choice)
-		if err != nil || v < 1 || v > createIdx {
-			return nil, output.New(output.CodeValidation, "invalid project choice %q", choice)
-		}
-		idx = v
-	}
-	if idx == createIdx {
+	if res.CreateNew {
 		return createProject(ctx, c, p, out)
 	}
-	return active[idx-1], nil
+	return res.Project, nil
 }
 
 // createProject prompts for the new project's title and identifier and

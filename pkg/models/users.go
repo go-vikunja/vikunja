@@ -22,6 +22,23 @@ import (
 	"xorm.io/xorm"
 )
 
+// doerFromAuth converts the authenticated principal into a user for event
+// payloads without re-fetching it. A re-fetch would fail its status check in
+// flows acting on behalf of disabled accounts (e.g. user deletion), and the
+// event only needs the principal as it authenticated.
+func doerFromAuth(a web.Auth) *user.User {
+	if a == nil {
+		return nil
+	}
+	if u, is := a.(*user.User); is {
+		return u
+	}
+	if share, is := a.(*LinkSharing); is {
+		return share.toUser()
+	}
+	return &user.User{ID: a.GetID()}
+}
+
 // GetUserOrLinkShareUser returns either a user or a link share disguised as a user.
 func GetUserOrLinkShareUser(s *xorm.Session, a web.Auth) (uu *user.User, err error) {
 	if u, is := a.(*user.User); is {

@@ -41,12 +41,12 @@ const (
 
 // Token is a token a user can use to do things like verify their email or resetting their password
 type Token struct {
-	ID             int64     `xorm:"bigint autoincr not null unique pk" json:"id"`
+	ID             int64     `xorm:"bigint autoincr not null unique pk" json:"id" readOnly:"true" doc:"The unique, numeric id of this token."`
 	UserID         int64     `xorm:"not null" json:"-"`
 	Token          string    `xorm:"varchar(450) not null index" json:"-"`
-	ClearTextToken string    `xorm:"-" json:"token"`
+	ClearTextToken string    `xorm:"-" json:"token" readOnly:"true" doc:"The token in clear text. Only returned once when the token is created; never on subsequent reads."`
 	Kind           TokenKind `xorm:"not null" json:"-"`
-	Created        time.Time `xorm:"created not null" json:"created"`
+	Created        time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this token was created. You cannot change this value."`
 }
 
 // TableName returns the real table name for user tokens

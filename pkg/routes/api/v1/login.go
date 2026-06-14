@@ -21,6 +21,8 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
@@ -51,6 +53,9 @@ func Login(c *echo.Context) (err error) {
 
 	s := db.NewSession()
 	defer s.Close()
+	// Discards events queued during a rolled-back transaction (e.g. LDAP user
+	// creation); a no-op once DispatchPending has run.
+	defer events.CleanupPending(s)
 
 	var user *user2.User
 	if config.AuthLdapEnabled.GetBool() {
@@ -72,7 +77,7 @@ func Login(c *echo.Context) (err error) {
 		}
 
 		// This allows us to still have local users while ldap is enabled
-		user, err = user2.CheckUserCredentials(s, &u)
+		user, err = user2.CheckUserCredentials(c.Request().Context(), s, &u)
 		if err != nil {
 			_ = s.Rollback()
 			return err
@@ -124,6 +129,8 @@ func Login(c *echo.Context) (err error) {
 		_ = s.Rollback()
 		return err
 	}
+
+	events.DispatchPending(c.Request().Context(), s)
 
 	// Create token
 	return auth.NewUserAuthTokenResponse(user, c, u.LongToken)
@@ -231,10 +238,18 @@ func Logout(c *echo.Context) (err error) {
 	auth.ClearRefreshTokenCookie(c)
 
 	var sid string
+	var userID int64
 	if raw := c.Get("user"); raw != nil {
 		if jwtinf, ok := raw.(*jwt.Token); ok {
 			if claims, ok := jwtinf.Claims.(jwt.MapClaims); ok {
 				sid, _ = claims["sid"].(string)
+				// Only user tokens carry a sid, but check the type explicitly
+				// so a link share id can never be logged as a user id.
+				if typ, ok := claims["type"].(float64); ok && int(typ) == auth.AuthTypeUser {
+					if id, ok := claims["id"].(float64); ok {
+						userID = int64(id)
+					}
+				}
 			}
 		}
 	}
@@ -255,6 +270,12 @@ func Logout(c *echo.Context) (err error) {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err
+	}
+
+	if userID != 0 {
+		if err := events.DispatchWithContext(c.Request().Context(), &user2.LogoutEvent{UserID: userID}); err != nil {
+			log.Errorf("Could not dispatch logout event: %s", err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully logged out."})

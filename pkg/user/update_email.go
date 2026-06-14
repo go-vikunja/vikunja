@@ -17,6 +17,8 @@
 package user
 
 import (
+	"context"
+
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/notifications"
 	"xorm.io/xorm"
@@ -29,6 +31,17 @@ type EmailUpdate struct {
 	NewEmail string `json:"new_email" valid:"email,length(0|250),required"`
 	// The password of the user for confirmation.
 	Password string `json:"password"`
+}
+
+// ChangeUserEmail verifies the user's password, then sets a new email address
+// (kicking off confirmation when the mailer is enabled). Shared by the v1 and
+// v2 email-update handlers; only HTTP input binding stays in the handlers.
+func ChangeUserEmail(ctx context.Context, s *xorm.Session, u *User, password, newEmail string) error {
+	verified, err := CheckUserCredentials(ctx, s, &Login{Username: u.Username, Password: password})
+	if err != nil {
+		return err
+	}
+	return UpdateEmail(s, &EmailUpdate{User: verified, NewEmail: newEmail})
 }
 
 // UpdateEmail lets a user update their email address

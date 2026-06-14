@@ -62,17 +62,7 @@ func UpdateUserEmail(c *echo.Context) (err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	emailUpdate.User, err = user.CheckUserCredentials(s, &user.Login{
-		Username: emailUpdate.User.Username,
-		Password: emailUpdate.Password,
-	})
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	err = user.UpdateEmail(s, emailUpdate)
-	if err != nil {
+	if err := user.ChangeUserEmail(c.Request().Context(), s, emailUpdate.User, emailUpdate.Password, emailUpdate.NewEmail); err != nil {
 		_ = s.Rollback()
 		return err
 	}

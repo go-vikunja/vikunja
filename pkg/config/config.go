@@ -220,6 +220,11 @@ const (
 	WebhooksProxyPassword       Key = `webhooks.proxypassword`
 	WebhooksAllowNonRoutableIPs Key = `webhooks.allownonroutableips`
 
+	AuditEnabled           Key = `audit.enabled`
+	AuditLogfile           Key = `audit.logfile`
+	AuditRotationMaxSizeMB Key = `audit.rotation.maxsizemb`
+	AuditRotationMaxAge    Key = `audit.rotation.maxage`
+
 	OutgoingRequestsAllowNonRoutableIPs Key = `outgoingrequests.allownonroutableips`
 	OutgoingRequestsProxyURL            Key = `outgoingrequests.proxyurl`
 	OutgoingRequestsProxyPassword       Key = `outgoingrequests.proxypassword`
@@ -483,6 +488,11 @@ func InitDefaultConfig() {
 	WebhooksEnabled.setDefault(true)
 	WebhooksTimeoutSeconds.setDefault(30)
 	WebhooksAllowNonRoutableIPs.setDefault(false)
+	// Audit
+	AuditEnabled.setDefault(false)
+	AuditLogfile.setDefault("") // empty means <log.path>/audit.log, resolved at init
+	AuditRotationMaxSizeMB.setDefault(100)
+	AuditRotationMaxAge.setDefault(30)
 	// Outgoing Requests
 	OutgoingRequestsAllowNonRoutableIPs.setDefault(false)
 	OutgoingRequestsTimeoutSeconds.setDefault(30)

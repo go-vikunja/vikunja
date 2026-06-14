@@ -24,12 +24,12 @@ import (
 
 // Image represents an image which can be used as a project background
 type Image struct {
-	ID       string `json:"id"`
-	URL      string `json:"url"`
-	Thumb    string `json:"thumb,omitempty"`
-	BlurHash string `json:"blur_hash"`
+	ID       string `json:"id" doc:"The provider-specific id of the image; pass this back to set it as a background."`
+	URL      string `json:"url" doc:"The full-size URL of the image."`
+	Thumb    string `json:"thumb,omitempty" doc:"A thumbnail URL of the image, if the provider supplies one."`
+	BlurHash string `json:"blur_hash" doc:"A BlurHash placeholder for the image."`
 	// This can be used to supply extra information from an image provider to clients
-	Info interface{} `json:"info,omitempty"`
+	Info interface{} `json:"info,omitempty" doc:"Provider-specific extra information about the image (e.g. the Unsplash author for attribution)."`
 }
 
 const MaxBackgroundImageHeight = 3840
