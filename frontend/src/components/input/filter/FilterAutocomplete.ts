@@ -8,6 +8,7 @@ import FilterCommandsList from './FilterCommandsList.vue'
 import {
 	ASSIGNEE_FIELDS,
 	AUTOCOMPLETE_FIELDS,
+	CREATOR_FIELDS,
 	FILTER_OPERATORS_REGEX,
 	isMultiValueOperator,
 	LABEL_FIELDS,
@@ -338,7 +339,7 @@ export default Extension.create<FilterAutocompleteOptions>({
 
 					if (LABEL_FIELDS.includes(field)) {
 						fieldType = 'labels'
-					} else if (ASSIGNEE_FIELDS.includes(field)) {
+					} else if (ASSIGNEE_FIELDS.includes(field) || CREATOR_FIELDS.includes(field)) {
 						fieldType = 'assignees'
 					} else if (PROJECT_FIELDS.includes(field)) {
 						fieldType = 'projects'

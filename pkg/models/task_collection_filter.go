@@ -360,7 +360,7 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 
 	realFieldName := strings.ReplaceAll(strcase.ToCamel(fieldName), "Id", "ID")
 
-	if realFieldName == "Assignees" {
+	if realFieldName == "Assignees" || realFieldName == "Creator" {
 		vals := strings.Split(value, ",")
 		valueSlice := append([]string{}, vals...)
 		return nil, valueSlice, nil
