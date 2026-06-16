@@ -74,7 +74,7 @@
     ],
     "overrides": {
       "minimatch": "^10.2.3",
-      "tar": "^7.5.11",
+      "tar": ">=7.5.16",
       "@tootallnate/once": "^3.0.1",
       "picomatch": ">=4.0.4",
       "tmp": ">=0.2.7",
