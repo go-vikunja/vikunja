@@ -353,24 +353,41 @@ type taskPositionKey struct {
 // the queued positions unconditionally would violate the unique index on
 // (task_id, project_view_id).
 func filterNewTaskPositions(s *xorm.Session, positions []*TaskPosition) ([]*TaskPosition, error) {
+	if len(positions) == 0 {
+		return positions, nil
+	}
+
+	taskIDs := make([]int64, 0, len(positions))
+	seenTask := make(map[int64]bool, len(positions))
+	for _, p := range positions {
+		if seenTask[p.TaskID] {
+			continue
+		}
+		seenTask[p.TaskID] = true
+		taskIDs = append(taskIDs, p.TaskID)
+	}
+
+	// Fetch all existing rows for the involved tasks in one query so this stays
+	// cheap when createTask runs in a loop (bulk import, project duplication).
+	existing := []*TaskPosition{}
+	err := s.In("task_id", taskIDs).Find(&existing)
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[taskPositionKey]bool, len(positions)+len(existing))
+	for _, e := range existing {
+		seen[taskPositionKey{taskID: e.TaskID, viewID: e.ProjectViewID}] = true
+	}
+
 	filtered := make([]*TaskPosition, 0, len(positions))
-	seen := make(map[taskPositionKey]bool, len(positions))
 	for _, p := range positions {
 		key := taskPositionKey{taskID: p.TaskID, viewID: p.ProjectViewID}
 		if seen[key] {
 			continue
 		}
 		seen[key] = true
-
-		exists, err := s.
-			Where("task_id = ? AND project_view_id = ?", p.TaskID, p.ProjectViewID).
-			Exist(&TaskPosition{})
-		if err != nil {
-			return nil, err
-		}
-		if !exists {
-			filtered = append(filtered, p)
-		}
+		filtered = append(filtered, p)
 	}
 	return filtered, nil
 }
