@@ -17,6 +17,8 @@
 package migration
 
 import (
+	"fmt"
+
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
 	"xorm.io/xorm/schemas"
@@ -74,7 +76,12 @@ func init() {
 					return err
 				}
 				if !has {
-					continue
+					// The pair was just reported as duplicated by the GroupBy above,
+					// so a row must exist. If it doesn't, fail instead of continuing —
+					// the delete loop below would otherwise drop every row for the pair
+					// without re-inserting one.
+					_ = s.Rollback()
+					return fmt.Errorf("no task_positions row found for task %d and project view %d while deduplicating positions", dup.TaskID, dup.ProjectViewID)
 				}
 				kept = append(kept, row)
 			}
