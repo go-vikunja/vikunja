@@ -72,6 +72,7 @@ func TestHumaUserExport(t *testing.T) {
 		require.Equal(t, http.StatusOK, rec.Code, "body: %s", rec.Body.String())
 		assert.Equal(t, content, rec.Body.Bytes(), "the streamed export bytes must match")
 		assert.Contains(t, rec.Header().Get("Content-Disposition"), "test")
+		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"), "downloads must never be cached")
 	})
 
 	t.Run("Download with a wrong password is refused", func(t *testing.T) {
