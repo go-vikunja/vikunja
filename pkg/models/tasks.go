@@ -288,11 +288,11 @@ func getTaskIndexFromSearchString(s string) (index int64) {
 	return
 }
 
-func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, totalItems int64, err error) {
+func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions) (tasks []*Task, resultCount int, totalItems int64, err error) {
 
 	// If the user does not have any projects, don't try to get any tasks
 	if len(projects) == 0 {
-		return nil, 0, nil
+		return nil, 0, 0, nil
 	}
 
 	// Get all project IDs and get the tasks
@@ -324,18 +324,17 @@ func getRawTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, op
 	}
 	tasks, totalItems, err = dbSearcher.Search(opts)
 
-	return tasks, totalItems, err
+	return tasks, len(tasks), totalItems, err
 }
 
 func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts *taskSearchOptions, view *ProjectView) (tasks []*Task, resultCount int, totalItems int64, err error) {
-	tasks, totalItems, err = getRawTasksForProjects(s, projects, a, opts)
+	tasks, resultCount, totalItems, err = getRawTasksForProjects(s, projects, a, opts)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	rawTasks := tasks
-	taskMap := make(map[int64]*Task, len(rawTasks))
-	for _, t := range rawTasks {
+	taskMap := make(map[int64]*Task, len(tasks))
+	for _, t := range tasks {
 		taskMap[t.ID] = t
 	}
 
@@ -344,22 +343,7 @@ func getTasksForProjects(s *xorm.Session, projects []*Project, a web.Auth, opts 
 		return nil, 0, 0, err
 	}
 
-	// A task can appear more than once in the raw result when it has duplicate
-	// task_positions rows for the view (the LEFT JOIN multiplies it). Return one
-	// entry per task, in the original sort order, referencing the enriched map
-	// value so its identifier and other data are set. totalItems already counts
-	// distinct tasks, so this also aligns the page size with it.
-	tasks = make([]*Task, 0, len(taskMap))
-	seen := make(map[int64]bool, len(taskMap))
-	for _, t := range rawTasks {
-		if seen[t.ID] {
-			continue
-		}
-		seen[t.ID] = true
-		tasks = append(tasks, taskMap[t.ID])
-	}
-
-	return tasks, len(tasks), totalItems, err
+	return tasks, resultCount, totalItems, err
 }
 
 // GetTaskByIDSimple returns a raw task without extra data by the task ID

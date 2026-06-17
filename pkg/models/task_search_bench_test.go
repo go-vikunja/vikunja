@@ -139,7 +139,7 @@ func BenchmarkTaskSearch(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		s := db.NewSession()
-		resultSlice, _, err := getRawTasksForProjects(s, projects, auth, opts)
+		resultSlice, _, _, err := getRawTasksForProjects(s, projects, auth, opts)
 		if len(resultSlice) == 0 {
 			b.Fatalf("no results found for needle %q", needle)
 		}
