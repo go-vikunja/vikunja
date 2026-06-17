@@ -30,6 +30,10 @@ import (
 // (Range + If-Modified-Since for free), a manual 304 + io.Copy otherwise. It does
 // not close the reader; the caller owns it.
 func WriteFileDownload(w http.ResponseWriter, r *http.Request, f *files.File) {
+	// Downloads must never be cached. no-cache overrides the global no-store
+	// directive so revalidation (If-Modified-Since) still works.
+	w.Header().Set("Cache-Control", "no-cache")
+
 	mimeToReturn := f.Mime
 	if mimeToReturn == "" {
 		mimeToReturn = "application/octet-stream"

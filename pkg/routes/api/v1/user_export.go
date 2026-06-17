@@ -132,6 +132,10 @@ func DownloadUserDataExport(c *echo.Context) error {
 		return err
 	}
 
+	// Downloads must never be cached; no-cache overrides the global no-store
+	// directive while still allowing revalidation.
+	c.Response().Header().Set("Cache-Control", "no-cache")
+
 	if config.FilesType.GetString() == "s3" {
 		c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+exportFile.Name+"\"")
 		c.Response().Header().Set("Content-Type", exportFile.Mime)

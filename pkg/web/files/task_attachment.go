@@ -62,18 +62,18 @@ func toAttachmentUploadError(err error) AttachmentUploadError {
 
 // WriteAttachmentDownload streams the attachment (or its inline image preview) to
 // the response and closes the file reader. The non-preview path delegates to
-// WriteFileDownload, adding the cache override that lets browsers cache attachments.
+// WriteFileDownload, which sets Cache-Control: no-cache; the preview branch returns
+// early, so it sets the same header itself.
 func WriteAttachmentDownload(w http.ResponseWriter, r *http.Request, ta *models.TaskAttachment, preview []byte) {
 	defer func() { _ = ta.File.File.Close() }()
 
 	if preview != nil {
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Content-Type", "image/png")
 		w.Header().Set("Content-Length", strconv.Itoa(len(preview)))
 		_, _ = w.Write(preview)
 		return
 	}
 
-	// Override the global no-store directive so browsers can cache attachments.
-	w.Header().Set("Cache-Control", "no-cache")
 	WriteFileDownload(w, r, ta.File)
 }
