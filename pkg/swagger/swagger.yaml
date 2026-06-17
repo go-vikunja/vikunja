@@ -1292,6 +1292,17 @@ definitions:
           this value.
         type: string
     type: object
+  models.UserExportStatus:
+    properties:
+      created:
+        type: string
+      expires:
+        type: string
+      id:
+        type: integer
+      size:
+        type: integer
+    type: object
   models.UserGeneralSettings:
     properties:
       default_project_id:
@@ -1707,17 +1718,6 @@ definitions:
     properties:
       token:
         type: string
-    type: object
-  v1.UserExportStatus:
-    properties:
-      created:
-        type: string
-      expires:
-        type: string
-      id:
-        type: integer
-      size:
-        type: integer
     type: object
   v1.UserPassword:
     properties:
@@ -6860,7 +6860,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.UserExportStatus'
+            $ref: '#/definitions/models.UserExportStatus'
       security:
       - JWTKeyAuth: []
       summary: Get current user data export

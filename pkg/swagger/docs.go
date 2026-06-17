@@ -7342,7 +7342,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.UserExportStatus"
+                            "$ref": "#/definitions/models.UserExportStatus"
                         }
                     }
                 }
@@ -10579,6 +10579,23 @@ const docTemplate = `{
                 }
             }
         },
+        "models.UserExportStatus": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.UserGeneralSettings": {
             "type": "object",
             "properties": {
@@ -11138,23 +11155,6 @@ const docTemplate = `{
             "properties": {
                 "token": {
                     "type": "string"
-                }
-            }
-        },
-        "v1.UserExportStatus": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "type": "string"
-                },
-                "expires": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
                 }
             }
         },
