@@ -365,6 +365,9 @@ var unauthenticatedAPIPaths = map[string]bool{
 	// Authorization header, not a JWT; mounted only when that token is set.
 	"/api/v2/test/all":    true,
 	"/api/v2/test/:table": true,
+
+	// Public infra healthcheck (a Huma op that opts out of the global auth).
+	"/api/v2/health": true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
