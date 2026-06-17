@@ -371,6 +371,10 @@ var unauthenticatedAPIPaths = map[string]bool{
 
 	// Public infra healthcheck (a Huma op that opts out of the global auth).
 	"/api/v2/health": true,
+
+	// Atom feed (a Huma op) authenticates itself with HTTP Basic auth (a
+	// feeds-scoped API token), like its /feeds counterpart, not a JWT.
+	"/api/v2/notifications.atom": true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.

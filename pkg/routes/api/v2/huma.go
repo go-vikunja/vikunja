@@ -104,6 +104,14 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 		Scheme:      "bearer",
 		Description: "Vikunja API token (tk_ prefix) with scoped permissions. Created via /api/v1/tokens.",
 	}
+	// HTTP Basic, used only by the notifications Atom feed: feed readers can't
+	// carry a bearer header, so the feed accepts the API token as the Basic
+	// password (username = token owner). See notifications_feed.go.
+	oapi.Components.SecuritySchemes["BasicAuth"] = &huma.SecurityScheme{
+		Type:        "http",
+		Scheme:      "basic",
+		Description: "HTTP Basic auth used by the notifications Atom feed: the username is the token owner and the password is a feeds-scoped Vikunja API token (tk_ prefix).",
+	}
 	// Applied globally; public endpoints (spec, docs) opt out with an empty Security list.
 	oapi.Security = []map[string][]string{
 		{"JWTKeyAuth": {}},
