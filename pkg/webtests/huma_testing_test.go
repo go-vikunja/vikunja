@@ -104,7 +104,7 @@ func TestTesting(t *testing.T) {
 		e := setupTestingEnv(t, testingToken)
 		t.Cleanup(func() { _ = db.LoadFixtures() })
 
-		body := `[{"id":1,"title":"only label","created_by_id":1,"created":"2020-01-01T00:00:00Z","updated":"2020-01-01T00:00:00Z"}]`
+		body := `[{"id":1,"title":"only label","created_by_id":1,"created":"2020-01-01 00:00:00","updated":"2020-01-01 00:00:00"}]`
 		rec := testingRequest(e, http.MethodPut, "/api/v2/test/labels", body, testingToken)
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 
@@ -122,7 +122,7 @@ func TestTesting(t *testing.T) {
 		before := countRows(t, "labels")
 		require.Positive(t, before, "fixtures should seed some labels")
 
-		body := `[{"id":9999,"title":"added label","created_by_id":1,"created":"2020-01-01T00:00:00Z","updated":"2020-01-01T00:00:00Z"}]`
+		body := `[{"id":9999,"title":"added label","created_by_id":1,"created":"2020-01-01 00:00:00","updated":"2020-01-01 00:00:00"}]`
 		rec := testingRequest(e, http.MethodPut, "/api/v2/test/labels?truncate=false", body, testingToken)
 		require.Equal(t, http.StatusCreated, rec.Code, "body: %s", rec.Body.String())
 
