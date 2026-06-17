@@ -375,6 +375,10 @@ var unauthenticatedAPIPaths = map[string]bool{
 	// Atom feed (a Huma op) authenticates itself with HTTP Basic auth (a
 	// feeds-scoped API token), like its /feeds counterpart, not a JWT.
 	"/api/v2/notifications.atom": true,
+
+	// WebSocket upgrade (a raw echo route — OpenAPI can't model WebSockets);
+	// it authenticates via its first message, so the upgrade needs no JWT.
+	"/api/v2/ws": true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
@@ -446,6 +450,13 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	// Scalar docs UI — embedded, no CDN. See pkg/routes/api/v2/docs.go.
 	a.GET("/docs", apiv2.ScalarUI)
 	a.GET("/docs/scalar.standalone.js", apiv2.ScalarJS)
+
+	// WebSockets can't be modeled in OpenAPI and Huma has no WS support, so the
+	// upgrade endpoint stays a raw echo route (outside the Huma spec). It
+	// authenticates via its first message, so unauthenticatedAPIPaths exempts it
+	// from the group's JWT middleware. Health and the Atom feed are Huma ops and
+	// self-register via init()/RegisterAll.
+	a.GET("/ws", ws.UpgradeHandler)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
