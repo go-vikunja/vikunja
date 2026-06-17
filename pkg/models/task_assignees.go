@@ -181,7 +181,7 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
+	doer := doerFromAuth(s, a)
 	task, err := GetTaskByIDSimple(s, la.TaskID)
 	if err != nil {
 		return err
@@ -270,7 +270,7 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(auth)
+	doer := doerFromAuth(s, auth)
 	task, err := GetTaskSimple(s, &Task{ID: t.ID})
 	if err != nil {
 		return err

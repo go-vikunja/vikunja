@@ -1449,10 +1449,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 	t.Updated = nt.Updated
 
-	doer, _ := user.GetFromAuth(a)
 	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: t,
-		Doer: doer,
+		Doer: doerFromAuth(s, a),
 	})
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
@@ -1948,10 +1947,9 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
 	events.DispatchOnCommit(s, &TaskDeletedEvent{
 		Task: fullTask,
-		Doer: doer,
+		Doer: doerFromAuth(s, a),
 	})
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
@@ -2019,10 +2017,9 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(auth)
 	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: &t,
-		Doer: doer,
+		Doer: doerFromAuth(s, auth),
 	})
 	return nil
 }
