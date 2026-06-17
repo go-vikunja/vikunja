@@ -830,9 +830,15 @@ func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (tas
 	}
 
 	if view.ProjectID < 0 || (view.Filter != nil && view.Filter.Filter != "") {
+		// For saved filters or views with a filter, the count must be scoped to
+		// this bucket *and* the filter: raw task_buckets rows can include tasks
+		// that no longer match the filter (#355), while the unscoped filter total
+		// counts tasks across all buckets, not just this one (#2672). ReadAll
+		// combines the bucket_id condition with the saved-filter / view filter.
 		tc := &TaskCollection{
 			ProjectID:     view.ProjectID,
 			ProjectViewID: bucket.ProjectViewID,
+			Filter:        "bucket_id = " + strconv.FormatInt(bucket.ID, 10),
 		}
 
 		_, _, taskCount, err = tc.ReadAll(s, a, "", 1, 1)
