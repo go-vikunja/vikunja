@@ -438,6 +438,11 @@ func GetUserDataExportStatus(u *user.User) (*UserExportStatus, error) {
 
 	exportFile := &files.File{ID: u.ExportFileID}
 	if err := exportFile.LoadFileMetaByID(); err != nil {
+		// A missing meta row means there is no export — mirror the download path
+		// (404 there) instead of surfacing a 500.
+		if files.IsErrFileDoesNotExist(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
