@@ -1898,7 +1898,7 @@ func TestTaskSearchWithExpandSubtasks(t *testing.T) {
 		expand: []TaskCollectionExpandable{TaskCollectionExpandSubtasks},
 	}
 
-	tasks, _, _, err := getRawTasksForProjects(s, []*Project{project}, &user.User{ID: 15}, opts)
+	tasks, _, err := getRawTasksForProjects(s, []*Project{project}, &user.User{ID: 15}, opts)
 	require.NoError(t, err)
 	require.NotEmpty(t, tasks)
 }

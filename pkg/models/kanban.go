@@ -257,7 +257,7 @@ func GetTasksInBucketsForView(s *xorm.Session, view *ProjectView, projects []*Pr
 			}
 		}
 
-		ts, _, total, err := getRawTasksForProjects(s, projects, auth, opts)
+		ts, total, err := getRawTasksForProjects(s, projects, auth, opts)
 		if err != nil {
 			return nil, err
 		}
