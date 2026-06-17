@@ -94,6 +94,9 @@ func refreshUser(s *xorm.Session, u *user.User, cache map[int64]*user.User) {
 	if !cached {
 		loaded, err := user.GetUserByID(s, u.ID)
 		if err != nil && !user.IsErrUserStatusError(err) {
+			if !user.IsErrUserDoesNotExist(err) {
+				log.Errorf("Could not refresh user %d for a notification: %v", u.ID, err)
+			}
 			cache[u.ID] = nil
 			return
 		}
