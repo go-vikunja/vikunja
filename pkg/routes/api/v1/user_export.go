@@ -131,6 +131,7 @@ func DownloadUserDataExport(c *echo.Context) error {
 		}
 		return err
 	}
+	defer func() { _ = exportFile.File.Close() }()
 
 	// Downloads must never be cached; no-cache overrides the global no-store
 	// directive while still allowing revalidation.
