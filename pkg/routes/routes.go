@@ -361,6 +361,7 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v2/shares/:share/auth":             true,
 	"/api/v2/oauth/token":                    true,
 	"/api/v2/login":                          true,
+	"/api/v2/user/token/refresh":             true,
 	"/api/v2/auth/openid/:provider/callback": true,
 
 	// Testing endpoints authenticate with the testing token via a custom
