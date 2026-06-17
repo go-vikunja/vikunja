@@ -81,9 +81,6 @@ linters:
           - exhaustive
         path: pkg/models/task_collection_filter\.go
       - linters:
-          - exhaustive
-        path: pkg/models/notifications_refresh\.go
-      - linters:
           - gosec
         path: pkg/utils/random_string\.go
         text: 'G404:' # We don't care about cryptographically secure randomness when we're using that utility function.

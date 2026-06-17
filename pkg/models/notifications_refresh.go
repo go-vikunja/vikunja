@@ -18,7 +18,6 @@ package models
 
 import (
 	"encoding/json"
-	"reflect"
 
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/notifications"
@@ -27,16 +26,12 @@ import (
 	"xorm.io/xorm"
 )
 
-// maxNotificationUserRefreshDepth bounds the reflection walk so an unexpectedly
-// deep payload cannot recurse without end.
-const maxNotificationUserRefreshDepth = 8
-
-// refreshNotificationsUsers reloads every embedded user of each notification
-// from the database. Notifications serialized before the acting user was
-// resolved with its full profile (#2720) stored only id+username, so without
-// this they keep rendering the auto-generated username instead of the display
-// name. It runs at read time and is not persisted; one cache is shared across
-// the batch so a user recurring across notifications is fetched only once.
+// refreshNotificationsUsers reloads each notification's embedded users from the
+// database. Notifications serialized before the acting user was resolved with
+// its full profile (#2720) stored only id+username, so without this they keep
+// rendering the auto-generated username instead of the display name. It runs at
+// read time and is not persisted; one cache is shared across the batch so a
+// user recurring across notifications is fetched only once.
 func refreshNotificationsUsers(s *xorm.Session, dbNotifications []*notifications.DatabaseNotification) {
 	cache := make(map[int64]*user.User)
 	for _, dbn := range dbNotifications {
@@ -60,40 +55,30 @@ func refreshNotificationUsers(s *xorm.Session, dbn *notifications.DatabaseNotifi
 		return
 	}
 
-	refreshUsersInValue(s, reflect.ValueOf(typed), cache, 0)
+	for _, u := range notificationUsers(typed) {
+		refreshUser(s, u, cache)
+	}
 	dbn.Notification = typed
 }
 
-func refreshUsersInValue(s *xorm.Session, v reflect.Value, cache map[int64]*user.User, depth int) {
-	if depth > maxNotificationUserRefreshDepth || !v.IsValid() {
-		return
-	}
-
-	switch v.Kind() {
-	case reflect.Ptr:
-		if v.IsNil() {
-			return
-		}
-		if u, is := v.Interface().(*user.User); is {
-			refreshUser(s, u, cache)
-			return
-		}
-		refreshUsersInValue(s, v.Elem(), cache, depth+1)
-	case reflect.Struct:
-		for i := 0; i < v.NumField(); i++ {
-			if !v.Type().Field(i).IsExported() {
-				continue
-			}
-			refreshUsersInValue(s, v.Field(i), cache, depth+1)
-		}
-	case reflect.Slice, reflect.Array:
-		for i := 0; i < v.Len(); i++ {
-			refreshUsersInValue(s, v.Index(i), cache, depth+1)
-		}
-	case reflect.Map:
-		for _, key := range v.MapKeys() {
-			refreshUsersInValue(s, v.MapIndex(key), cache, depth+1)
-		}
+// notificationUsers returns the user fields a stored notification renders, so
+// they can be reloaded. New notification types carrying a user belong here.
+func notificationUsers(n notifications.Notification) []*user.User {
+	switch n := n.(type) {
+	case *TaskCommentNotification:
+		return []*user.User{n.Doer}
+	case *TaskAssignedNotification:
+		return []*user.User{n.Doer, n.Assignee}
+	case *TaskDeletedNotification:
+		return []*user.User{n.Doer}
+	case *ProjectCreatedNotification:
+		return []*user.User{n.Doer}
+	case *TeamMemberAddedNotification:
+		return []*user.User{n.Doer, n.Member}
+	case *UserMentionedInTaskNotification:
+		return []*user.User{n.Doer}
+	default:
+		return nil
 	}
 }
 
