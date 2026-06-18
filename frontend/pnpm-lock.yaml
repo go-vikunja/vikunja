@@ -263,8 +263,8 @@ importers:
         specifier: 10.9.2
         version: 10.9.2(@typescript-eslint/parser@8.61.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(vue-eslint-parser@10.4.0(eslint@9.39.4(jiti@2.6.1)))
       happy-dom:
-        specifier: 20.10.5
-        version: 20.10.5
+        specifier: 20.10.6
+        version: 20.10.6
       histoire:
         specifier: 1.0.0-beta.1
         version: 1.0.0-beta.1(@types/node@24.13.2)(lightningcss@1.32.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.31.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.6.1)(lightningcss@1.32.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.31.6)(yaml@2.8.3))(yaml@2.8.3)
@@ -330,7 +330,7 @@ importers:
         version: 5.1.1(vue@3.5.27(typescript@5.9.3))
       vitest:
         specifier: 4.1.9
-        version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.5)(jsdom@27.4.0)(vite@7.3.5(@types/node@24.13.2)(jiti@2.6.1)(lightningcss@1.32.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.31.6)(yaml@2.8.3))
+        version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(jsdom@27.4.0)(vite@7.3.5(@types/node@24.13.2)(jiti@2.6.1)(lightningcss@1.32.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.31.6)(yaml@2.8.3))
       vue-tsc:
         specifier: 3.3.5
         version: 3.3.5(typescript@5.9.3)
@@ -4098,8 +4098,8 @@ packages:
     resolution: {integrity: sha512-5v6yZd4JK3eMI3FqqCouswVqwugaA9r4dNZB1wwcmrD02QkV5H0y7XBQW8QwQqEaZY1pM9aqORSORhJRdNK44Q==}
     engines: {node: '>=6.0'}
 
-  happy-dom@20.10.5:
-    resolution: {integrity: sha512-0aA6BQoMnpcRE/c1E8ZyF2jXnET7MJskereWOXher4CJuYjrI5esN0Az/1NPMD4KeWUbampBGw2MGqabMPFIbg==}
+  happy-dom@20.10.6:
+    resolution: {integrity: sha512-6QD0ilzDDt93tX44y8tbmZdAcdTRYDhUP+Asgi6pC8Pp5IA3cvaZGyoVN/EGtlq9ziT65iPuBBn3ASLr6hCgVw==}
     engines: {node: '>=20.0.0'}
 
   hard-rejection@2.1.0:
@@ -10943,7 +10943,7 @@ snapshots:
       section-matter: 1.0.0
       strip-bom-string: 1.0.0
 
-  happy-dom@20.10.5:
+  happy-dom@20.10.6:
     dependencies:
       '@types/node': 24.13.2
       '@types/whatwg-mimetype': 3.0.2
@@ -13592,7 +13592,7 @@ snapshots:
       terser: 5.31.6
       yaml: 2.8.3
 
-  vitest@4.1.9(@types/node@24.13.2)(happy-dom@20.10.5)(jsdom@27.4.0)(vite@7.3.5(@types/node@24.13.2)(jiti@2.6.1)(lightningcss@1.32.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.31.6)(yaml@2.8.3)):
+  vitest@4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(jsdom@27.4.0)(vite@7.3.5(@types/node@24.13.2)(jiti@2.6.1)(lightningcss@1.32.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.31.6)(yaml@2.8.3)):
     dependencies:
       '@vitest/expect': 4.1.9
       '@vitest/mocker': 4.1.9(vite@7.3.5(@types/node@24.13.2)(jiti@2.6.1)(lightningcss@1.32.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.31.6)(yaml@2.8.3))
@@ -13616,7 +13616,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.13.2
-      happy-dom: 20.10.5
+      happy-dom: 20.10.6
       jsdom: 27.4.0
     transitivePeerDependencies:
       - msw
