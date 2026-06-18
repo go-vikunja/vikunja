@@ -362,7 +362,14 @@ func getNativeValueForTaskField(fieldName string, comparator taskFilterComparato
 
 	if realFieldName == "Assignees" || realFieldName == "Creator" {
 		vals := strings.Split(value, ",")
-		valueSlice := append([]string{}, vals...)
+		valueSlice := make([]string, 0, len(vals))
+		for _, val := range vals {
+			val = strings.TrimSpace(val)
+			if val == "" {
+				continue
+			}
+			valueSlice = append(valueSlice, val)
+		}
 		return nil, valueSlice, nil
 	}
 

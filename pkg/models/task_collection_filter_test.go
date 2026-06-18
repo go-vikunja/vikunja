@@ -238,6 +238,24 @@ func TestParseFilter(t *testing.T) {
 		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
 		assert.Equal(t, []string{"user1", "user6"}, result[0].value)
 	})
+	t.Run("creator usernames are trimmed of surrounding whitespace", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("creator in 'user1, user6'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "creator", result[0].field)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		assert.Equal(t, []string{"user1", "user6"}, result[0].value)
+	})
+	t.Run("creator usernames drop empty entries from stray commas", func(t *testing.T) {
+		result, err := getTaskFiltersFromFilterString("creator in 'user1, , user6,'", "UTC")
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "creator", result[0].field)
+		assert.Equal(t, taskFilterComparatorIn, result[0].comparator)
+		assert.Equal(t, []string{"user1", "user6"}, result[0].value)
+	})
 	t.Run("less than or equal comparator", func(t *testing.T) {
 		result, err := getTaskFiltersFromFilterString("percent_done <= 50", "UTC")
 
