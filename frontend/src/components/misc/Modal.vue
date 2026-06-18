@@ -272,6 +272,12 @@ $modal-width: 1024px;
 	inset-block-start: 50%;
 	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
+	// Cap centered content to the viewport and scroll inside it. Without this a
+	// taller-than-viewport modal centres its top edge above the viewport, where
+	// the container's overflow can't scroll to it (the .top variant overrides
+	// both values below).
+	max-block-size: calc(100dvh - 2rem);
+	overflow: auto;
 
 	[dir="rtl"] & {
 		transform: translate(50%, -50%);
@@ -281,6 +287,9 @@ $modal-width: 1024px;
 		margin: 0;
 		position: static;
 		transform: none;
+		// the fullscreen mobile layout flows and scrolls in .modal-container
+		max-block-size: none;
+		overflow: visible;
 	}
 
 	.modal-header {
