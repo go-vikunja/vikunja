@@ -60,17 +60,15 @@ func (b *TaskBucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
-	// A single native upsert keyed on the unique(task_id, project_view_id)
-	// index: it moves the task to the new bucket if the row exists and inserts
-	// it otherwise, atomically and without depending on the affected-row count
-	// (MySQL/MariaDB report 0 affected rows for an unchanged value).
-	query := "INSERT INTO task_buckets (task_id, project_view_id, bucket_id) VALUES (?, ?, ?) " +
-		"ON CONFLICT (task_id, project_view_id) DO UPDATE SET bucket_id = excluded.bucket_id"
+	// A native upsert moves the task in one atomic statement, without
+	// depending on the affected-row count (MySQL/MariaDB report 0 affected
+	// rows for an unchanged value).
+	onConflict := "ON CONFLICT (task_id, project_view_id) DO UPDATE SET bucket_id = excluded.bucket_id"
 	if db.Type() == schemas.MYSQL {
-		query = "INSERT INTO task_buckets (task_id, project_view_id, bucket_id) VALUES (?, ?, ?) " +
-			"ON DUPLICATE KEY UPDATE bucket_id = VALUES(bucket_id)"
+		onConflict = "ON DUPLICATE KEY UPDATE bucket_id = VALUES(bucket_id)"
 	}
 
+	query := "INSERT INTO task_buckets (task_id, project_view_id, bucket_id) VALUES (?, ?, ?) " + onConflict
 	_, err = s.Exec(query, b.TaskID, b.ProjectViewID, b.BucketID)
 	return
 }
