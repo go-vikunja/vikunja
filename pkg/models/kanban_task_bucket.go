@@ -58,25 +58,33 @@ func (b *TaskBucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
-	count, err := s.Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).
-		Cols("bucket_id").
-		Update(b)
+	// Decide update vs. insert based on whether the row exists, not on the
+	// number of rows the UPDATE affects: MySQL/MariaDB report 0 affected rows
+	// when an UPDATE sets a column to the value it already holds, which would
+	// make us fall through to an INSERT and hit the unique index.
+	exists, err := s.Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).
+		Exist(&TaskBucket{})
 	if err != nil {
 		return
 	}
 
-	if count == 0 {
-		_, err = s.Insert(b)
-		if err != nil {
-			// Check if this is a unique constraint violation for the task_buckets table
-			if db.IsUniqueConstraintError(err, "UQE_task_buckets_task_project_view") {
-				return ErrTaskAlreadyExistsInBucket{
-					TaskID:        b.TaskID,
-					ProjectViewID: b.ProjectViewID,
-				}
+	if exists {
+		_, err = s.Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).
+			Cols("bucket_id").
+			Update(b)
+		return
+	}
+
+	_, err = s.Insert(b)
+	if err != nil {
+		// Check if this is a unique constraint violation for the task_buckets table
+		if db.IsUniqueConstraintError(err, "UQE_task_buckets_task_project_view") {
+			return ErrTaskAlreadyExistsInBucket{
+				TaskID:        b.TaskID,
+				ProjectViewID: b.ProjectViewID,
 			}
-			return
 		}
+		return
 	}
 
 	return
@@ -151,10 +159,8 @@ func updateTaskBucket(s *xorm.Session, a web.Auth, b *TaskBucket) (err error) {
 				if err != nil {
 					return err
 				}
-				// If the task is already in the default bucket, skip the
-				// upsert — MySQL's UPDATE returns 0 affected rows when
-				// the value is unchanged, which would make upsert fall
-				// through to INSERT and hit the unique constraint.
+				// The task is already in the default bucket, so there is
+				// nothing to move and no count to bump.
 				if b.BucketID == oldTaskBucket.BucketID {
 					updateBucket = false
 				}

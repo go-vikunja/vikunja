@@ -226,6 +226,63 @@ func TestTaskBucket_Update(t *testing.T) {
 		})
 	})
 
+	t.Run("done task already in another view's done bucket", func(t *testing.T) {
+		// Regression test: marking a task done syncs it into the done bucket
+		// of every kanban view in the project. When the task already sits in
+		// such a view's done bucket the sync is a no-op update, but on
+		// MySQL/MariaDB an UPDATE that doesn't change the value reports 0
+		// affected rows. The upsert then mistook that for "row missing" and
+		// inserted, hitting the unique index with ErrTaskAlreadyExistsInBucket.
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// A second manual kanban view on project 1. Creating it auto-generates
+		// the To-Do/Doing/Done buckets and sets its done bucket.
+		secondView := &ProjectView{
+			Title:                   "Second Kanban",
+			ProjectID:               1,
+			ViewKind:                ProjectViewKindKanban,
+			BucketConfigurationMode: BucketConfigurationModeManual,
+		}
+		err := secondView.Create(s, u)
+		require.NoError(t, err)
+		require.NotZero(t, secondView.DoneBucketID)
+
+		// Pre-place task 1 in the second view's done bucket without going
+		// through the done-sync, so the task itself is still open and view 4
+		// still has it in its default bucket.
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 1, secondView.ID).
+			Cols("bucket_id").
+			Update(&TaskBucket{BucketID: secondView.DoneBucketID})
+		require.NoError(t, err)
+
+		// Moving task 1 into view 4's done bucket marks it done and triggers
+		// the cross-view sync into the second view's done bucket, where it
+		// already lives. This must succeed rather than error.
+		tb := &TaskBucket{
+			TaskID:        1,
+			BucketID:      3, // done bucket on view 4
+			ProjectViewID: 4,
+			ProjectID:     1,
+		}
+		err = tb.Update(s, u)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+		assert.True(t, tb.Task.Done)
+
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":   1,
+			"bucket_id": 3,
+		}, false)
+		db.AssertExists(t, "task_buckets", map[string]interface{}{
+			"task_id":         1,
+			"project_view_id": secondView.ID,
+			"bucket_id":       secondView.DoneBucketID,
+		}, false)
+	})
+
 	t.Run("saved filter: first task into empty limited bucket is allowed", func(t *testing.T) {
 		// Regression test for #2672: on a saved-filter kanban view the bucket
 		// limit was checked against the total number of tasks matching the
