@@ -25,6 +25,7 @@
 					rows="1"
 					@keydown="resetEmptyTitleError"
 					@keydown.enter="handleEnter"
+					@keydown.esc="blurTaskInput"
 				/>
 				<QuickAddMagic
 					:highlight-hint-icon="taskAddHovered"
@@ -280,6 +281,10 @@ function handleEnter(e: KeyboardEvent) {
 
 function focusTaskInput() {
 	newTaskInput.value?.focus()
+}
+
+function blurTaskInput() {
+	newTaskInput.value?.blur()
 }
 
 defineExpose({
