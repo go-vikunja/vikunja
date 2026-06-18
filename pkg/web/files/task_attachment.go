@@ -21,8 +21,6 @@
 package files
 
 import (
-	"io"
-	"mime"
 	"net/http"
 	"strconv"
 
@@ -62,43 +60,20 @@ func toAttachmentUploadError(err error) AttachmentUploadError {
 	return AttachmentUploadError{Message: err.Error()}
 }
 
-// WriteAttachmentDownload streams the attachment (or its preview) to the response:
-// http.ServeContent for seekable local files (Range + If-Modified-Since for free),
-// a manual 304 + io.Copy otherwise. It closes the file reader.
+// WriteAttachmentDownload streams the attachment (or its inline image preview) to
+// the response and closes the file reader. The non-preview path delegates to
+// WriteFileDownload, which sets Cache-Control: no-cache; the preview branch returns
+// early, so it sets the same header itself.
 func WriteAttachmentDownload(w http.ResponseWriter, r *http.Request, ta *models.TaskAttachment, preview []byte) {
 	defer func() { _ = ta.File.File.Close() }()
 
 	if preview != nil {
+		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Content-Type", "image/png")
 		w.Header().Set("Content-Length", strconv.Itoa(len(preview)))
 		_, _ = w.Write(preview)
 		return
 	}
 
-	mimeToReturn := ta.File.Mime
-	if mimeToReturn == "" {
-		mimeToReturn = "application/octet-stream"
-	}
-	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": ta.File.Name}))
-	w.Header().Set("Content-Type", mimeToReturn)
-	w.Header().Set("Content-Length", strconv.FormatUint(ta.File.Size, 10))
-	w.Header().Set("Last-Modified", ta.File.Created.UTC().Format(http.TimeFormat))
-	// Override the global no-store directive so browsers can cache attachments.
-	w.Header().Set("Cache-Control", "no-cache")
-
-	// Local files are *os.File (seekable), so ServeContent gives Range +
-	// If-Modified-Since for free; s3 (and the in-memory test storage) return a
-	// non-seekable reader, so check If-Modified-Since manually and io.Copy.
-	if seeker, ok := ta.File.File.(io.ReadSeeker); ok {
-		http.ServeContent(w, r, ta.File.Name, ta.File.Created, seeker)
-		return
-	}
-
-	if ifModSince := r.Header.Get("If-Modified-Since"); ifModSince != "" {
-		if t, parseErr := http.ParseTime(ifModSince); parseErr == nil && !ta.File.Created.UTC().After(t) {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-	}
-	_, _ = io.Copy(w, ta.File.File)
+	WriteFileDownload(w, r, ta.File)
 }

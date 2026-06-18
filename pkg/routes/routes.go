@@ -354,12 +354,31 @@ var unauthenticatedAPIPaths = map[string]bool{
 	"/api/v2/schemas/:schema":           true,
 	"/api/v2/info":                      true,
 
-	"/api/v2/register":            true,
-	"/api/v2/user/password/token": true,
-	"/api/v2/user/password/reset": true,
-	"/api/v2/user/confirm":        true,
-	"/api/v2/shares/:share/auth":  true,
-	"/api/v2/oauth/token":         true,
+	"/api/v2/register":                       true,
+	"/api/v2/user/password/token":            true,
+	"/api/v2/user/password/reset":            true,
+	"/api/v2/user/confirm":                   true,
+	"/api/v2/shares/:share/auth":             true,
+	"/api/v2/oauth/token":                    true,
+	"/api/v2/login":                          true,
+	"/api/v2/user/token/refresh":             true,
+	"/api/v2/auth/openid/:provider/callback": true,
+
+	// Testing endpoints authenticate with the testing token via a custom
+	// Authorization header, not a JWT; mounted only when that token is set.
+	"/api/v2/test/all":    true,
+	"/api/v2/test/:table": true,
+
+	// Public infra healthcheck (a Huma op that opts out of the global auth).
+	"/api/v2/health": true,
+
+	// Atom feed (a Huma op) authenticates itself with HTTP Basic auth (a
+	// feeds-scoped API token), like its /feeds counterpart, not a JWT.
+	"/api/v2/notifications.atom": true,
+
+	// WebSocket upgrade (a raw echo route — OpenAPI can't model WebSockets);
+	// it authenticates via its first message, so the upgrade needs no JWT.
+	"/api/v2/ws": true,
 }
 
 // collectRoutesForAPITokens collects all routes for API token permission checking.
@@ -431,6 +450,13 @@ func registerAPIRoutesV2(e *echo.Echo, a *echo.Group) {
 	// Scalar docs UI — embedded, no CDN. See pkg/routes/api/v2/docs.go.
 	a.GET("/docs", apiv2.ScalarUI)
 	a.GET("/docs/scalar.standalone.js", apiv2.ScalarJS)
+
+	// WebSockets can't be modeled in OpenAPI and Huma has no WS support, so the
+	// upgrade endpoint stays a raw echo route (outside the Huma spec). It
+	// authenticates via its first message, so unauthenticatedAPIPaths exempts it
+	// from the group's JWT middleware. Health and the Atom feed are Huma ops and
+	// self-register via init()/RegisterAll.
+	a.GET("/ws", ws.UpgradeHandler)
 
 	// Resources self-register via init(); RegisterAll runs them all + AutoPatch.
 	apiv2.RegisterAll(api)
