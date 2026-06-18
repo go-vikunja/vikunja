@@ -68,7 +68,10 @@ func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
 		onConflict = "ON DUPLICATE KEY UPDATE bucket_id = VALUES(bucket_id)"
 	}
 
-	query := "INSERT INTO task_buckets (task_id, project_view_id, bucket_id) VALUES (?, ?, ?) " + onConflict
+	// Raw SQL bypasses xorm's bean-based table-name handling, so qualify the
+	// table ourselves to honor a configured postgres schema (database.schema).
+	table := s.Engine().TableName(b, true)
+	query := "INSERT INTO " + table + " (task_id, project_view_id, bucket_id) VALUES (?, ?, ?) " + onConflict
 	_, err = s.Exec(query, b.TaskID, b.ProjectViewID, b.BucketID)
 	return
 }
