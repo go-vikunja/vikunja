@@ -22,7 +22,9 @@ import (
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/web"
+
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 // TaskBucket represents the relation between a task and a kanban bucket.
@@ -58,35 +60,18 @@ func (b *TaskBucket) CanUpdate(s *xorm.Session, a web.Auth) (bool, error) {
 }
 
 func (b *TaskBucket) upsert(s *xorm.Session) (err error) {
-	// Decide update vs. insert based on whether the row exists, not on the
-	// number of rows the UPDATE affects: MySQL/MariaDB report 0 affected rows
-	// when an UPDATE sets a column to the value it already holds, which would
-	// make us fall through to an INSERT and hit the unique index.
-	exists, err := s.Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).
-		Exist(&TaskBucket{})
-	if err != nil {
-		return
+	// A single native upsert keyed on the unique(task_id, project_view_id)
+	// index: it moves the task to the new bucket if the row exists and inserts
+	// it otherwise, atomically and without depending on the affected-row count
+	// (MySQL/MariaDB report 0 affected rows for an unchanged value).
+	query := "INSERT INTO task_buckets (task_id, project_view_id, bucket_id) VALUES (?, ?, ?) " +
+		"ON CONFLICT (task_id, project_view_id) DO UPDATE SET bucket_id = excluded.bucket_id"
+	if db.Type() == schemas.MYSQL {
+		query = "INSERT INTO task_buckets (task_id, project_view_id, bucket_id) VALUES (?, ?, ?) " +
+			"ON DUPLICATE KEY UPDATE bucket_id = VALUES(bucket_id)"
 	}
 
-	if exists {
-		_, err = s.Where("task_id = ? AND project_view_id = ?", b.TaskID, b.ProjectViewID).
-			Cols("bucket_id").
-			Update(b)
-		return
-	}
-
-	_, err = s.Insert(b)
-	if err != nil {
-		// Check if this is a unique constraint violation for the task_buckets table
-		if db.IsUniqueConstraintError(err, "UQE_task_buckets_task_project_view") {
-			return ErrTaskAlreadyExistsInBucket{
-				TaskID:        b.TaskID,
-				ProjectViewID: b.ProjectViewID,
-			}
-		}
-		return
-	}
-
+	_, err = s.Exec(query, b.TaskID, b.ProjectViewID, b.BucketID)
 	return
 }
 
