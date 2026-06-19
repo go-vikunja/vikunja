@@ -2,10 +2,17 @@ import {createRandomID} from '@/helpers/randomId'
 import {computePosition, flip, shift, offset} from '@floating-ui/dom'
 import {nextTick} from 'vue'
 import {eventToShortcutString} from '@/helpers/shortcut'
+import type {Editor} from '@tiptap/core'
+import {getPopupContainer} from '@/components/input/editor/popupContainer'
 
-export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Promise<string> {
+export default function inputPrompt(pos: ClientRect, oldValue: string = '', editor?: Editor): Promise<string> {
 	return new Promise((resolve) => {
 		const id = 'link-input-' + createRandomID()
+		// Append inside the open task <dialog> (top-layer) when present, otherwise
+		// document.body. A body-level popup is painted behind a showModal() dialog
+		// and unfocusable through its focus trap, breaking the link prompt in the
+		// Kanban task popup (#2940).
+		const container = getPopupContainer(editor)
 
 		// Create popup element
 		const popupElement = document.createElement('div')
@@ -26,7 +33,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 		inputElement.value = oldValue
 		wrapperDiv.appendChild(inputElement)
 		popupElement.appendChild(wrapperDiv)
-		document.body.appendChild(popupElement)
+		container.appendChild(popupElement)
 
 		// Create a local mutable copy of the position for scroll tracking
 		let currentRect = new DOMRect(pos.left, pos.top, pos.width, pos.height)
@@ -84,8 +91,8 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 
 		const cleanup = () => {
 			window.removeEventListener('scroll', handleScroll, true)
-			if (document.body.contains(popupElement)) {
-				document.body.removeChild(popupElement)
+			if (container.contains(popupElement)) {
+				container.removeChild(popupElement)
 			}
 		}
 

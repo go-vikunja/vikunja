@@ -3,7 +3,7 @@ import inputPrompt from '@/helpers/inputPrompt'
 
 export async function setLinkInEditor(pos: DOMRect, editor: Editor | null | undefined) {
 	const previousUrl = editor?.getAttributes('link').href || ''
-	const url = await inputPrompt(pos, previousUrl)
+	const url = await inputPrompt(pos, previousUrl, editor ?? undefined)
 
 	// empty
 	if (url === '') {
