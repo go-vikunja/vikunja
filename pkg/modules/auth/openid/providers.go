@@ -180,10 +180,8 @@ func GetProvider(key string) (provider *Provider, err error) {
 	return
 }
 
-// getCachedProvider returns the provider from keyvalue WITHOUT re-establishing the
-// live OIDC connection (setOicdProvider). The logout path only needs the cached
-// static fields (EndSessionURL/LogoutURL/ClientID) and must not block on an
-// unreachable OP. The cache is populated at init / first GetAllProviders.
+// getCachedProvider returns the provider from keyvalue without re-establishing
+// the live OIDC connection, so the logout path never blocks on an unreachable OP.
 func getCachedProvider(key string) (provider *Provider, err error) {
 	provider = &Provider{}
 	exists, err := keyvalue.GetWithValue("openid_provider_"+key, provider)

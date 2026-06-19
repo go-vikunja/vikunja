@@ -69,10 +69,9 @@ type Provider struct {
 	ForceUserInfo       bool   `json:"force_user_info"`
 	RequireAvailability bool   `json:"-"`
 	ClientSecret        string `json:"-"`
-	// EndSessionURL is the provider's RP-Initiated Logout endpoint, read once
-	// from the discovery document at init time so logout never triggers a fetch.
-	// Exported so it survives the gob-encoded redis keyvalue round-trip (gob
-	// skips unexported fields, like openIDProvider).
+	// RP-Initiated Logout endpoint, cached at init so logout never fetches.
+	// Exported so it survives the gob keyvalue round-trip (gob skips unexported
+	// fields like openIDProvider); json:"-" keeps it out of /info.
 	EndSessionURL  string `json:"-"`
 	openIDProvider *oidc.Provider
 	Oauth2Config   *oauth2.Config `json:"-"`
@@ -210,8 +209,7 @@ func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string)
 		return nil, nil, err
 	}
 
-	// Stored so logout can replay it as id_token_hint in an RP-Initiated Logout
-	// request. See pkg/modules/auth/openid/logout.go.
+	// Stored so logout can replay it as id_token_hint in an RP-Initiated Logout.
 	oidcData := &models.SessionOIDCData{
 		IDToken:     rawIDToken,
 		ProviderKey: providerKey,

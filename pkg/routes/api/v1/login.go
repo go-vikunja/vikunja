@@ -150,14 +150,9 @@ func RefreshToken(c *echo.Context) (err error) {
 	return c.JSON(http.StatusOK, auth.Token{Token: result.AccessToken})
 }
 
-// LogoutResponse confirms a successful logout and, for sessions created via
-// OpenID Connect, carries the provider's RP-Initiated Logout URL the frontend
-// should redirect the user agent to so the OP session is ended too.
 type LogoutResponse struct {
 	Message string `json:"message"`
-	// OIDCLogoutURL is the fully-built end_session_endpoint URL (with
-	// id_token_hint, post_logout_redirect_uri and client_id). Empty for non-OIDC
-	// sessions.
+	// RP-Initiated Logout URL the frontend redirects to. Empty for non-OIDC sessions.
 	OIDCLogoutURL string `json:"oidc_logout_url,omitempty"`
 }
 

@@ -45,11 +45,7 @@ type authTokenBody struct {
 // logoutBody confirms a successful logout.
 type logoutBody struct {
 	Body struct {
-		Message string `json:"message" readOnly:"true" doc:"A human-readable confirmation message."`
-		// OIDCLogoutURL is the provider's RP-Initiated Logout URL (with
-		// id_token_hint, post_logout_redirect_uri and client_id) for sessions
-		// created via OpenID Connect. The client should redirect the user agent
-		// to it to end the provider session too. Empty for non-OIDC sessions.
+		Message       string `json:"message" readOnly:"true" doc:"A human-readable confirmation message."`
 		OIDCLogoutURL string `json:"oidc_logout_url,omitempty" readOnly:"true" doc:"RP-Initiated Logout URL to redirect to for OpenID Connect sessions; empty otherwise."`
 	}
 }

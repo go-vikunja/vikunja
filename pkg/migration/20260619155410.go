@@ -23,9 +23,7 @@ import (
 	"xorm.io/xorm"
 )
 
-// Mirrors models.Session; the two new columns store what is needed to build an
-// RP-Initiated Logout request (id_token_hint + which provider to log out from)
-// when the session was created via OpenID Connect.
+// Mirrors models.Session; adds the two columns RP-Initiated Logout needs.
 type sessionOIDCLogout20260619155410 struct {
 	ID              string    `xorm:"varchar(36) not null unique pk"`
 	UserID          int64     `xorm:"bigint not null index"`

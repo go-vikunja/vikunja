@@ -197,13 +197,10 @@ func DeleteSession(sid string) error {
 	return err
 }
 
-// LogoutSession reads the session, builds an OpenID Connect RP-Initiated Logout
-// URL when the session was created via OIDC, then deletes the session. It
-// returns the end-session URL (empty for non-OIDC sessions or when no logout
-// endpoint is configured) so the frontend can redirect the user agent to the
-// identity provider's end_session_endpoint with id_token_hint and
-// post_logout_redirect_uri. An empty sid is a no-op. The caller clears the
-// refresh cookie.
+// LogoutSession deletes the session and returns its OIDC RP-Initiated Logout URL
+// for the frontend to redirect to (empty for non-OIDC sessions or when no logout
+// endpoint is configured). An empty sid is a no-op. The caller clears the refresh
+// cookie.
 func LogoutSession(sid string) (endSessionURL string, err error) {
 	if sid == "" {
 		return "", nil
@@ -212,8 +209,8 @@ func LogoutSession(sid string) (endSessionURL string, err error) {
 	s := db.NewSession()
 	defer s.Close()
 
-	// Read the session before deleting so the stored id_token can be replayed as
-	// id_token_hint. A missing session just means there is nothing to log out.
+	// Read before deleting so the stored id_token survives for the logout URL.
+	// A missing session just means there is nothing to log out.
 	session, err := models.GetSessionByID(s, sid)
 	if err != nil && !models.IsErrSessionNotFound(err) {
 		_ = s.Rollback()
@@ -225,8 +222,7 @@ func LogoutSession(sid string) (endSessionURL string, err error) {
 			ProviderKey: session.OIDCProviderKey,
 		})
 		if buildErr != nil {
-			// Don't fail logout just because the logout URL could not be built;
-			// the session is still destroyed server-side below.
+			// A failed URL build must not block logout; the session is still deleted below.
 			log.Errorf("Could not build OIDC end-session URL for session %s: %v", sid, buildErr)
 		} else {
 			endSessionURL = url

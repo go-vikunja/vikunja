@@ -112,9 +112,8 @@ type IssuedUserToken struct {
 // IssueUserToken creates a session for the user and mints a JWT access token plus
 // a refresh token for it. It is the transport-agnostic core both v1 (which writes
 // the echo response) and v2 (Huma) call; callers set the refresh cookie and the
-// Cache-Control header themselves via WriteUserAuthCookies. oidc is optional:
-// pass it for OpenID Connect logins so the id_token is stored for RP-Initiated
-// Logout, nil otherwise.
+// Cache-Control header themselves via WriteUserAuthCookies. Pass oidc for
+// OpenID Connect logins to store the logout data; nil otherwise.
 func IssueUserToken(ctx context.Context, u *user.User, deviceInfo, ipAddress string, long bool, oidc *models.SessionOIDCData) (*IssuedUserToken, error) {
 	s := db.NewSession()
 	defer s.Close()
@@ -163,7 +162,7 @@ func WriteUserAuthCookies(c *echo.Context, token *IssuedUserToken) {
 }
 
 // NewUserAuthTokenResponse creates a new user auth token response from a user object.
-// oidc is optional OpenID Connect session metadata for RP-Initiated Logout; pass nil for local/LDAP logins.
+// Pass oidc for OpenID Connect logins to store the logout data; nil otherwise.
 func NewUserAuthTokenResponse(u *user.User, c *echo.Context, long bool, oidc *models.SessionOIDCData) error {
 	token, err := IssueUserToken(c.Request().Context(), u, c.Request().UserAgent(), c.RealIP(), long, oidc)
 	if err != nil {

@@ -24,15 +24,10 @@ import (
 	"code.vikunja.io/api/pkg/models"
 )
 
-// EndSessionEndpoint returns the provider's RP-Initiated Logout endpoint, read
-// from the discovery document once at init time (EndSessionURL, the REQUIRED
-// `end_session_endpoint` metadata, RP-Initiated Logout 1.0 §2.1). When the
-// provider does not publish one, it falls back to the statically configured
-// `logouturl` so existing setups keep working.
-//
-// It deliberately never triggers discovery: logout must stay responsive even
-// when the OP is unreachable (e.g. right after an API restart, before the
-// provider has been re-discovered).
+// EndSessionEndpoint returns the provider's RP-Initiated Logout endpoint
+// (discovery's end_session_endpoint, cached at init), falling back to the static
+// logouturl. Never triggers discovery so logout stays responsive when the OP is
+// unreachable.
 func (p *Provider) EndSessionEndpoint() string {
 	if p.EndSessionURL != "" {
 		return p.EndSessionURL
@@ -40,9 +35,9 @@ func (p *Provider) EndSessionEndpoint() string {
 	return p.LogoutURL
 }
 
-// discoveredEndSessionEndpoint reads the `end_session_endpoint` from the already
-// fetched discovery document. The discovery JSON is cached on the *oidc.Provider
-// by oidc.NewProvider, so Claims only unmarshals in memory and makes no request.
+// discoveredEndSessionEndpoint reads end_session_endpoint from the discovery
+// document already cached on the *oidc.Provider, so Claims unmarshals in memory
+// without a request.
 func (p *Provider) discoveredEndSessionEndpoint() string {
 	if p.openIDProvider == nil {
 		return ""
@@ -58,25 +53,14 @@ func (p *Provider) discoveredEndSessionEndpoint() string {
 	return meta.EndSessionEndpoint
 }
 
-// BuildEndSessionURL constructs an OpenID Connect RP-Initiated Logout 1.0 request
-// URL for the given provider key and stored session OIDC data.
-//
-// Per RP-Initiated Logout 1.0 §2 it appends:
-//   - id_token_hint: the ID token previously issued to this session. RECOMMENDED;
-//     it lets the OP skip the logout-confirmation prompt and is what makes the OP
-//     honor post_logout_redirect_uri (the OP MAY require it, §3).
-//   - post_logout_redirect_uri: where the OP redirects the user agent after
-//     logout. MUST be pre-registered with the OP. Defaults to service.publicurl
-//     (the Vikunja frontend) so the user lands back on Vikunja's login page.
-//   - client_id: the RP's client identifier (§2). Always sent; the OP verifies it
-//     matches the one in id_token_hint.
-//
-// It returns "" (and the caller skips the redirect) when neither an
+// BuildEndSessionURL builds an OpenID Connect RP-Initiated Logout 1.0 request URL
+// (id_token_hint + post_logout_redirect_uri + client_id; see RP-Initiated Logout
+// 1.0 §2). post_logout_redirect_uri defaults to service.publicurl, and the OP
+// only honors it when id_token_hint is present. Returns "" when neither an
 // end_session_endpoint nor a static logouturl is configured.
 func BuildEndSessionURL(providerKey string, oidc *models.SessionOIDCData) (string, error) {
-	// Read the cached provider rather than GetProvider: logout must never trigger
-	// OIDC discovery (a live HTTP GET that retries/blocks when the OP is down), and
-	// the static EndSessionURL/LogoutURL/ClientID needed here are already cached.
+	// GetProvider would trigger OIDC discovery (a live HTTP GET that blocks when
+	// the OP is down); the cached static fields are all logout needs.
 	provider, err := getCachedProvider(providerKey)
 	if err != nil {
 		return "", err
@@ -98,9 +82,8 @@ func BuildEndSessionURL(providerKey string, oidc *models.SessionOIDCData) (strin
 	)
 }
 
-// buildEndSessionURL assembles the RP-Initiated Logout query string onto the
-// given end-session endpoint. Empty optional params are omitted. Returns "" when
-// no endpoint is configured.
+// buildEndSessionURL appends the logout query params onto endpoint, omitting
+// empty ones, and returns "" for an empty endpoint.
 func buildEndSessionURL(endpoint, clientID, idToken, postLogoutRedirectURI string) (string, error) {
 	if endpoint == "" {
 		return "", nil

@@ -31,8 +31,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// newMockOIDCServerWithEndSession serves a discovery document that includes an
-// end_session_endpoint, exercising the RP-Initiated Logout discovery path.
+// newMockOIDCServerWithEndSession publishes a discovery document with an
+// end_session_endpoint.
 func newMockOIDCServerWithEndSession() *httptest.Server {
 	var server *httptest.Server
 	mux := http.NewServeMux()
@@ -137,9 +137,8 @@ func TestBuildEndSessionURLFromCachedProviderWithoutLiveObject(t *testing.T) {
 	config.AuthOpenIDEnabled.Set(true)
 	config.ServicePublicURL.Set("https://vikunja.example.com/")
 
-	// Seed only the cached static fields, mimicking a provider restored from
-	// keyvalue whose OP is unreachable (no live openIDProvider). BuildEndSessionURL
-	// must build the logout URL from the cache without triggering discovery.
+	// Seed only the cached static fields (no live openIDProvider), mimicking a
+	// provider restored from keyvalue whose OP is unreachable.
 	_ = keyvalue.Del("openid_providers")
 	require.NoError(t, keyvalue.Put("openid_provider_provider1", &Provider{
 		Key:           "provider1",
@@ -163,10 +162,8 @@ func TestBuildEndSessionURLFromCachedProviderWithoutLiveObject(t *testing.T) {
 }
 
 func TestEndSessionEndpointUsesCachedURLWithoutDiscovery(t *testing.T) {
-	// A nil openIDProvider models a provider restored from the keyvalue cache
-	// (or one whose OP is currently unreachable). EndSessionEndpoint must answer
-	// from the cached EndSessionURL and never attempt discovery, so logout stays
-	// responsive.
+	// A nil openIDProvider models a provider restored from cache (or an
+	// unreachable OP): EndSessionEndpoint must answer from the cached URL.
 	p := &Provider{
 		Key:           "provider1",
 		LogoutURL:     "https://op.example.com/static-logout",
@@ -212,8 +209,7 @@ func TestEndSessionEndpointCachedFromDiscoveryOnInit(t *testing.T) {
 func TestEndSessionEndpointFallsBackToStaticLogoutURL(t *testing.T) {
 	defer CleanupSavedOpenIDProviders()
 
-	// This mock server publishes no end_session_endpoint, so the provider must
-	// fall back to the statically configured logouturl.
+	// newMockOIDCServer publishes no end_session_endpoint, forcing the logouturl fallback.
 	server := newMockOIDCServer()
 	defer server.Close()
 

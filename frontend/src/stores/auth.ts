@@ -533,8 +533,6 @@ export const useAuthStore = defineStore('auth', () => {
 
 		// Revoke the server session so the refresh token can't be reused.
 		// Best-effort: if the network call fails, still clean up locally.
-		// The server builds the OIDC RP-Initiated Logout URL (with id_token_hint,
-		// post_logout_redirect_uri and client_id) and returns it here.
 		let oidcLogoutUrl = ''
 		try {
 			const HTTP = AuthenticatedHTTPFactory()
@@ -551,10 +549,8 @@ export const useAuthStore = defineStore('auth', () => {
 		await router.push({name: 'user.login'})
 		await checkAuth()
 
-		// Redirect to the OIDC provider's end-session endpoint so the provider
-		// session is ended too. Prefer the server-built URL (RP-Initiated Logout
-		// with id_token_hint), falling back to the static logout url if the
-		// server did not return one.
+		// Redirect to the OIDC provider to end its session too. Prefer the
+		// server-built RP-Initiated Logout URL, falling back to the static one.
 		if (oidcLogoutUrl) {
 			window.location.href = oidcLogoutUrl
 			return
