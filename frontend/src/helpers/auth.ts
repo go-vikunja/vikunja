@@ -35,11 +35,10 @@ export const removeToken = () => {
 	localStorage.removeItem('desktopOAuthRefreshToken')
 }
 
-// Coalesces concurrent refresh calls in the same tab into a single underlying
-// refresh. The Web Locks API below only exists in secure contexts, so on
-// insecure HTTP it falls back to an uncoordinated refresh — without this guard,
-// triggers that fire close together (focus, proactive timer, 401 interceptor)
-// each POST with the same single-use refresh cookie and all but one get a 401.
+// Coalesces concurrent same-tab refreshes into one POST. Web Locks (below) is
+// secure-context-only, so on insecure HTTP there's no cross-tab coordination —
+// without this guard, refreshes firing close together each spend the single-use
+// cookie and all but one get a 401.
 let inFlightRefresh: Promise<void> | null = null
 
 /**
@@ -47,10 +46,8 @@ let inFlightRefresh: Promise<void> | null = null
  * The refresh token is sent automatically as an HttpOnly cookie.
  * The server rotates the cookie on every call.
  *
- * Concurrent calls in the same tab share one in-flight refresh. This is the
- * always-on primary dedup and works in every context (HTTP included). The Web
- * Locks API used inside is the secondary, cross-tab coordination layer that
- * only exists in secure contexts.
+ * Same-tab concurrent calls share one in-flight refresh (always-on dedup); the
+ * Web Locks API inside adds cross-tab coordination only in secure contexts.
  */
 export async function refreshToken(persist: boolean): Promise<void> {
 	if (inFlightRefresh) {

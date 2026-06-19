@@ -55,12 +55,9 @@ function redirectToSpecifiedProvider() {
 	}
 }
 
-// Refreshes the token, retrying exactly once if the first attempt fails.
-// After a lost refresh race (common on insecure HTTP without Web Locks, or
-// behind a proxy that delays the rotated Set-Cookie), the browser's cookie is
-// already the rotated, valid one — a second attempt then succeeds. Only when
-// both attempts fail is the session genuinely dead. Exactly one retry, so a
-// truly dead session still logs out without looping.
+// A race-loser's refresh fails but the rotated cookie is already valid, so a
+// second attempt succeeds — recovering what would otherwise be a spurious
+// logout. Exactly one retry: a genuinely dead session still logs out, no loop.
 async function refreshTokenWithRetry(persist: boolean): Promise<void> {
 	try {
 		await refreshToken(persist)
@@ -525,8 +522,7 @@ export const useAuthStore = defineStore('auth', () => {
 				const response = await HTTP.post('user/token')
 				saveToken(response.data.token, false)
 			} else {
-				// User sessions renew via the refresh-token cookie. Retry once so
-				// a lost refresh race doesn't spuriously log the user out.
+				// User sessions renew via the refresh-token cookie.
 				await refreshTokenWithRetry(true)
 			}
 			await checkAuth()
