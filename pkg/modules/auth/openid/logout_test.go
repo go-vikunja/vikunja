@@ -131,6 +131,53 @@ func TestBuildEndSessionURLFromDiscovery(t *testing.T) {
 	assert.Equal(t, "client1", q.Get("client_id"))
 }
 
+func TestEndSessionEndpointUsesCachedURLWithoutDiscovery(t *testing.T) {
+	// A nil openIDProvider models a provider restored from the keyvalue cache
+	// (or one whose OP is currently unreachable). EndSessionEndpoint must answer
+	// from the cached EndSessionURL and never attempt discovery, so logout stays
+	// responsive.
+	p := &Provider{
+		Key:           "provider1",
+		LogoutURL:     "https://op.example.com/static-logout",
+		EndSessionURL: "https://op.example.com/end-session",
+	}
+	assert.Equal(t, "https://op.example.com/end-session", p.EndSessionEndpoint())
+}
+
+func TestEndSessionEndpointFallsBackToLogoutURLWhenNotCached(t *testing.T) {
+	p := &Provider{
+		Key:       "provider1",
+		LogoutURL: "https://op.example.com/static-logout",
+	}
+	assert.Equal(t, "https://op.example.com/static-logout", p.EndSessionEndpoint())
+}
+
+func TestEndSessionEndpointCachedFromDiscoveryOnInit(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	server := newMockOIDCServerWithEndSession()
+	defer server.Close()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.AuthOpenIDProviders.Set(map[string]interface{}{
+		"provider1": map[string]interface{}{
+			"name":         "Provider One",
+			"authurl":      server.URL,
+			"clientid":     "client1",
+			"clientsecret": "secret1",
+		},
+	})
+	_ = keyvalue.Del("openid_providers")
+	_ = keyvalue.Del("openid_provider_provider1")
+
+	provider, err := GetProvider("provider1")
+	require.NoError(t, err)
+	require.NotNil(t, provider)
+
+	assert.Equal(t, server.URL+"/logout", provider.EndSessionURL)
+	assert.Equal(t, server.URL+"/logout", provider.EndSessionEndpoint())
+}
+
 func TestEndSessionEndpointFallsBackToStaticLogoutURL(t *testing.T) {
 	defer CleanupSavedOpenIDProviders()
 

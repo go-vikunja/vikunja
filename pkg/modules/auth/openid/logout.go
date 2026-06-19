@@ -24,16 +24,28 @@ import (
 	"code.vikunja.io/api/pkg/models"
 )
 
-// EndSessionEndpoint returns the provider's RP-Initiated Logout endpoint as
-// published in its OpenID Connect discovery document (the REQUIRED
+// EndSessionEndpoint returns the provider's RP-Initiated Logout endpoint, read
+// from the discovery document once at init time (EndSessionURL, the REQUIRED
 // `end_session_endpoint` metadata, RP-Initiated Logout 1.0 §2.1). When the
 // provider does not publish one, it falls back to the statically configured
 // `logouturl` so existing setups keep working.
+//
+// It deliberately never triggers discovery: logout must stay responsive even
+// when the OP is unreachable (e.g. right after an API restart, before the
+// provider has been re-discovered).
 func (p *Provider) EndSessionEndpoint() string {
+	if p.EndSessionURL != "" {
+		return p.EndSessionURL
+	}
+	return p.LogoutURL
+}
+
+// discoveredEndSessionEndpoint reads the `end_session_endpoint` from the already
+// fetched discovery document. The discovery JSON is cached on the *oidc.Provider
+// by oidc.NewProvider, so Claims only unmarshals in memory and makes no request.
+func (p *Provider) discoveredEndSessionEndpoint() string {
 	if p.openIDProvider == nil {
-		if err := p.setOicdProvider(); err != nil {
-			return p.LogoutURL
-		}
+		return ""
 	}
 
 	var meta struct {
@@ -41,10 +53,7 @@ func (p *Provider) EndSessionEndpoint() string {
 	}
 	if err := p.openIDProvider.Claims(&meta); err != nil {
 		log.Debugf("Could not read end_session_endpoint for provider %s: %v", p.Key, err)
-		return p.LogoutURL
-	}
-	if meta.EndSessionEndpoint == "" {
-		return p.LogoutURL
+		return ""
 	}
 	return meta.EndSessionEndpoint
 }

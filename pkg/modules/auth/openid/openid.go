@@ -69,8 +69,13 @@ type Provider struct {
 	ForceUserInfo       bool   `json:"force_user_info"`
 	RequireAvailability bool   `json:"-"`
 	ClientSecret        string `json:"-"`
-	openIDProvider      *oidc.Provider
-	Oauth2Config        *oauth2.Config `json:"-"`
+	// EndSessionURL is the provider's RP-Initiated Logout endpoint, read once
+	// from the discovery document at init time so logout never triggers a fetch.
+	// Exported so it survives the gob-encoded redis keyvalue round-trip (gob
+	// skips unexported fields, like openIDProvider).
+	EndSessionURL  string `json:"-"`
+	openIDProvider *oidc.Provider
+	Oauth2Config   *oauth2.Config `json:"-"`
 }
 
 type claims struct {

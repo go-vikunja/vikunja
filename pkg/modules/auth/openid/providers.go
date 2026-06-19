@@ -313,6 +313,8 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 
 	provider.AuthURL = provider.Oauth2Config.Endpoint.AuthURL
 
+	provider.EndSessionURL = provider.discoveredEndSessionEndpoint()
+
 	return
 }
 
