@@ -55,14 +55,14 @@ func authOpenIDCallback(ctx context.Context, in *struct {
 	Provider string          `path:"provider" doc:"The OpenID Connect provider key as returned by the /info endpoint."`
 	Body     openid.Callback `doc:"The provider callback, carrying the authorization code."`
 }) (*authTokenBody, error) {
-	u, err := openid.AuthenticateCallback(ctx, &in.Body, in.Provider) //nolint:contextcheck // resolves providers from a cached, context-less map and runs OIDC discovery on its own background context, like the v1 callback.
+	u, oidcData, err := openid.AuthenticateCallback(ctx, &in.Body, in.Provider) //nolint:contextcheck // resolves providers from a cached, context-less map and runs OIDC discovery on its own background context, like the v1 callback.
 	if err != nil {
 		return nil, translateOpenIDError(err)
 	}
 
 	deviceInfo, ipAddress := requestClientInfo(ctx)
 	// OIDC logins are not "remember me" sessions; v1 always issues a short one.
-	token, err := auth.IssueUserToken(ctx, u, deviceInfo, ipAddress, false)
+	token, err := auth.IssueUserToken(ctx, u, deviceInfo, ipAddress, false, oidcData)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}

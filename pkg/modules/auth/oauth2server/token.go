@@ -114,7 +114,7 @@ func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInf
 	}
 
 	// Create a session (reuses existing session infrastructure)
-	session, err := models.CreateSession(s, oauthCode.UserID, deviceInfo, ipAddress, false)
+	session, err := models.CreateSession(s, oauthCode.UserID, deviceInfo, ipAddress, false, nil)
 	if err != nil {
 		_ = s.Rollback()
 		return nil, err

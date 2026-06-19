@@ -45,7 +45,8 @@ type authTokenBody struct {
 // logoutBody confirms a successful logout.
 type logoutBody struct {
 	Body struct {
-		Message string `json:"message" readOnly:"true" doc:"A human-readable confirmation message."`
+		Message       string `json:"message" readOnly:"true" doc:"A human-readable confirmation message."`
+		OIDCLogoutURL string `json:"oidc_logout_url,omitempty" readOnly:"true" doc:"RP-Initiated Logout URL to redirect to for OpenID Connect sessions; empty otherwise."`
 	}
 }
 
@@ -86,7 +87,7 @@ func authLogin(ctx context.Context, in *struct{ Body user.Login }) (*authTokenBo
 	}
 
 	deviceInfo, ipAddress := requestClientInfo(ctx)
-	token, err := auth.IssueUserToken(ctx, u, deviceInfo, ipAddress, in.Body.LongToken)
+	token, err := auth.IssueUserToken(ctx, u, deviceInfo, ipAddress, in.Body.LongToken, nil)
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
@@ -107,12 +108,14 @@ func authLogout(ctx context.Context, _ *struct{}) (*logoutBody, error) {
 		sid = auth.SessionIDFromContext(ec)
 	}
 
-	if err := shared.DeleteSession(sid); err != nil {
+	oidcLogoutURL, err := shared.LogoutSession(sid) //nolint:contextcheck // OIDC provider discovery resolves from a cached, context-less map and runs on its own background context, like the OIDC callback.
+	if err != nil {
 		return nil, translateDomainError(err)
 	}
 
 	out := &logoutBody{}
 	out.Body.Message = "Successfully logged out."
+	out.Body.OIDCLogoutURL = oidcLogoutURL
 	return out, nil
 }
 

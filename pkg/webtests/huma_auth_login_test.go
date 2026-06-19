@@ -130,7 +130,7 @@ func TestHumaLogout(t *testing.T) {
 	// Create a session so logout has something to delete, then mint a JWT whose
 	// sid claim points at it.
 	s := db.NewSession()
-	session, err := models.CreateSession(s, testuser1.ID, "test", "127.0.0.1", false)
+	session, err := models.CreateSession(s, testuser1.ID, "test", "127.0.0.1", false, nil)
 	require.NoError(t, err)
 	require.NoError(t, s.Commit())
 	require.NoError(t, s.Close())
