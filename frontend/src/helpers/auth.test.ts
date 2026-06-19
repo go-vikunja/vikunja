@@ -106,4 +106,18 @@ describe('refreshToken in-flight dedup', () => {
 		settlePost()
 		await p2
 	})
+
+	it('does not re-persist the token when logout happens during an in-flight refresh', async () => {
+		const p1 = refreshToken(true)
+		expect(postCallCount).toBe(1)
+
+		// User logs out while the refresh POST is still in flight.
+		removeToken()
+
+		// The in-flight POST resolves afterwards — it must not undo the logout.
+		settlePost()
+		await p1
+
+		expect(localStorage.getItem('token')).toBeNull()
+	})
 })

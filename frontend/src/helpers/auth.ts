@@ -33,6 +33,11 @@ export const removeToken = () => {
 	savedToken = null
 	localStorage.removeItem('token')
 	localStorage.removeItem('desktopOAuthRefreshToken')
+
+	// Bump the epoch and drop the in-flight refresh so a refresh that started
+	// before this logout can't re-persist a token after we cleared it.
+	authEpoch++
+	inFlightRefresh = null
 }
 
 // Coalesces concurrent same-tab refreshes into one POST. Web Locks (below) is
@@ -40,6 +45,11 @@ export const removeToken = () => {
 // without this guard, refreshes firing close together each spend the single-use
 // cookie and all but one get a 401.
 let inFlightRefresh: Promise<void> | null = null
+
+// Incremented on every removeToken()/logout. A refresh captures the epoch when
+// it starts and only persists its result if the epoch is unchanged, so a
+// refresh that resolves after a logout can't undo it.
+let authEpoch = 0
 
 /**
  * Refreshes an auth token while ensuring it is updated everywhere.
@@ -60,6 +70,10 @@ export async function refreshToken(persist: boolean): Promise<void> {
 }
 
 async function doRefresh(persist: boolean): Promise<void> {
+	// Snapshot the epoch so we can tell if a logout happened while we awaited.
+	const epochAtStart = authEpoch
+	const loggedOutSinceStart = () => authEpoch !== epochAtStart
+
 	// In desktop mode, refresh via IPC to the Electron main process
 	if (isDesktopApp()) {
 		const storedRefreshToken = localStorage.getItem('desktopOAuthRefreshToken')
@@ -68,6 +82,9 @@ async function doRefresh(persist: boolean): Promise<void> {
 		}
 		try {
 			const tokens = await refreshDesktopToken(window.API_URL, storedRefreshToken)
+			if (loggedOutSinceStart()) {
+				return
+			}
 			saveToken(tokens.access_token, persist)
 			localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
 		} catch (e) {
@@ -81,6 +98,12 @@ async function doRefresh(persist: boolean): Promise<void> {
 	const tokenBeforeLock = localStorage.getItem('token')
 
 	const refreshUnderLock = async () => {
+		// A logout may have happened while we waited for the lock — don't
+		// re-adopt or re-fetch a token after the user signed out.
+		if (loggedOutSinceStart()) {
+			return
+		}
+
 		// If the token in localStorage changed while waiting for the lock,
 		// another tab already refreshed. Just adopt the new token.
 		const currentToken = localStorage.getItem('token')
@@ -93,6 +116,9 @@ async function doRefresh(persist: boolean): Promise<void> {
 		const HTTP = HTTPFactory()
 		try {
 			const response = await HTTP.post('user/token/refresh')
+			if (loggedOutSinceStart()) {
+				return
+			}
 			saveToken(response.data.token, persist)
 		} catch (e) {
 			throw new Error('Error renewing token: ', {cause: e})
