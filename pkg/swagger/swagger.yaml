@@ -1714,6 +1714,15 @@ definitions:
       password:
         type: string
     type: object
+  v1.LogoutResponse:
+    properties:
+      message:
+        type: string
+      oidc_logout_url:
+        description: RP-Initiated Logout URL the frontend redirects to. Empty for
+          non-OIDC sessions.
+        type: string
+    type: object
   v1.UserAvatarProvider:
     properties:
       avatar_provider:
@@ -6945,13 +6954,15 @@ paths:
   /user/logout:
     post:
       description: Destroys the current session and clears the refresh token cookie.
+        For OpenID Connect sessions the response includes an `oidc_logout_url` the
+        client should redirect to so the provider session is ended too.
       produces:
       - application/json
       responses:
         "200":
           description: Successfully logged out.
           schema:
-            $ref: '#/definitions/models.Message'
+            $ref: '#/definitions/v1.LogoutResponse'
       summary: Logout
       tags:
       - auth

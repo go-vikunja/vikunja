@@ -7456,7 +7456,7 @@ const docTemplate = `{
         },
         "/user/logout": {
             "post": {
-                "description": "Destroys the current session and clears the refresh token cookie.",
+                "description": "Destroys the current session and clears the refresh token cookie. For OpenID Connect sessions the response includes an ` + "`" + `oidc_logout_url` + "`" + ` the client should redirect to so the provider session is ended too.",
                 "produces": [
                     "application/json"
                 ],
@@ -7468,7 +7468,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successfully logged out.",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "$ref": "#/definitions/v1.LogoutResponse"
                         }
                     }
                 }
@@ -11145,6 +11145,18 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "oidc_logout_url": {
+                    "description": "RP-Initiated Logout URL the frontend redirects to. Empty for non-OIDC sessions.",
                     "type": "string"
                 }
             }
