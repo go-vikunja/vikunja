@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
@@ -192,24 +193,57 @@ func enforceLoginTOTP(s *xorm.Session, u *user.User, passcode string) error {
 // API token or a link share), matching v1. Shared by v1 and v2; the caller is
 // responsible for clearing the refresh cookie.
 func DeleteSession(sid string) error {
+	_, err := LogoutSession(sid)
+	return err
+}
+
+// LogoutSession reads the session, builds an OpenID Connect RP-Initiated Logout
+// URL when the session was created via OIDC, then deletes the session. It
+// returns the end-session URL (empty for non-OIDC sessions or when no logout
+// endpoint is configured) so the frontend can redirect the user agent to the
+// identity provider's end_session_endpoint with id_token_hint and
+// post_logout_redirect_uri. An empty sid is a no-op. The caller clears the
+// refresh cookie.
+func LogoutSession(sid string) (endSessionURL string, err error) {
 	if sid == "" {
-		return nil
+		return "", nil
 	}
 
 	s := db.NewSession()
 	defer s.Close()
 
+	// Read the session before deleting so the stored id_token can be replayed as
+	// id_token_hint. A missing session just means there is nothing to log out.
+	session, err := models.GetSessionByID(s, sid)
+	if err != nil && !models.IsErrSessionNotFound(err) {
+		_ = s.Rollback()
+		return "", err
+	}
+	if session != nil && session.OIDCProviderKey != "" {
+		url, buildErr := openid.BuildEndSessionURL(session.OIDCProviderKey, &models.SessionOIDCData{
+			IDToken:     session.OIDCIDToken,
+			ProviderKey: session.OIDCProviderKey,
+		})
+		if buildErr != nil {
+			// Don't fail logout just because the logout URL could not be built;
+			// the session is still destroyed server-side below.
+			log.Errorf("Could not build OIDC end-session URL for session %s: %s", sid, buildErr)
+		} else {
+			endSessionURL = url
+		}
+	}
+
 	if _, err := s.Where("id = ?", sid).Delete(&models.Session{}); err != nil {
 		_ = s.Rollback()
-		return err
+		return "", err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return err
+		return "", err
 	}
 
-	return nil
+	return endSessionURL, nil
 }
 
 // ResetPassword resets a user's password from a previously issued reset token

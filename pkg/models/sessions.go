@@ -49,6 +49,13 @@ type Session struct {
 	IPAddress string `xorm:"varchar(100)" json:"ip_address" readOnly:"true" doc:"IP address captured from the login request."`
 	// Whether this is a "remember me" session (controls max refresh lifetime).
 	IsLongSession bool `xorm:"not null default false" json:"-"`
+	// The raw OpenID Connect ID token, kept only for sessions created via OIDC so
+	// it can be replayed as the id_token_hint in an RP-Initiated Logout request.
+	// Never exposed over the API. Empty for non-OIDC sessions.
+	OIDCIDToken string `xorm:"text" json:"-"`
+	// The key of the OIDC provider that created this session, used to look up its
+	// end-session endpoint at logout. Empty for non-OIDC sessions.
+	OIDCProviderKey string `xorm:"varchar(250)" json:"-"`
 	// When this session was last refreshed.
 	LastActive time.Time `xorm:"not null" json:"last_active" readOnly:"true" doc:"When this session was last refreshed."`
 	// When this session was created (login time).
@@ -81,9 +88,19 @@ func generateHashedToken() (rawToken, hash string, err error) {
 	return rawToken, HashSessionToken(rawToken), nil
 }
 
+// SessionOIDCData carries the OpenID Connect metadata persisted on a session so
+// an RP-Initiated Logout request can be built later. It is nil for non-OIDC
+// logins.
+type SessionOIDCData struct {
+	IDToken     string
+	ProviderKey string
+}
+
 // CreateSession creates a new session record and generates a refresh token.
 // Returns the session with RefreshToken populated (cleartext, shown only once).
-func CreateSession(s *xorm.Session, userID int64, deviceInfo, ipAddress string, isLongSession bool) (*Session, error) {
+// oidc is optional: pass it for OpenID Connect logins so the raw id_token and
+// provider key are stored for RP-Initiated Logout; pass nil otherwise.
+func CreateSession(s *xorm.Session, userID int64, deviceInfo, ipAddress string, isLongSession bool, oidc *SessionOIDCData) (*Session, error) {
 	rawToken, hash, err := generateHashedToken()
 	if err != nil {
 		return nil, err
@@ -97,6 +114,10 @@ func CreateSession(s *xorm.Session, userID int64, deviceInfo, ipAddress string, 
 		IPAddress:     ipAddress,
 		IsLongSession: isLongSession,
 		LastActive:    time.Now(),
+	}
+	if oidc != nil {
+		session.OIDCIDToken = oidc.IDToken
+		session.OIDCProviderKey = oidc.ProviderKey
 	}
 
 	_, err = s.Insert(session)
