@@ -332,7 +332,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 		searchIndex = getTaskIndexFromSearchString(opts.search)
 		if searchIndex > 0 {
-			where = builder.Or(where, builder.Eq{"`index`": searchIndex})
+			where = builder.Or(where, builder.Eq{"tasks.`index`": searchIndex})
 		}
 	}
 
@@ -469,7 +469,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		// can only score a pure-ParadeDB query, so a `||| ... OR index = N` group is
 		// an unsupported query shape on ParadeDB. Run two supported arms instead and
 		// rank exact index matches first, then text matches by relevance.
-		indexTasks, err := fetchTasks(rankCondWith(builder.Eq{"`index`": searchIndex}), distinct, orderby, false)
+		indexTasks, err := fetchTasks(rankCondWith(builder.Eq{"tasks.`index`": searchIndex}), distinct, orderby, false)
 		if err != nil {
 			return nil, 0, err
 		}
