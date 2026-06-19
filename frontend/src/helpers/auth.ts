@@ -35,16 +35,34 @@ export const removeToken = () => {
 	localStorage.removeItem('desktopOAuthRefreshToken')
 }
 
+// Coalesces concurrent refresh calls in the same tab into a single underlying
+// refresh. The Web Locks API below only exists in secure contexts, so on
+// insecure HTTP it falls back to an uncoordinated refresh — without this guard,
+// triggers that fire close together (focus, proactive timer, 401 interceptor)
+// each POST with the same single-use refresh cookie and all but one get a 401.
+let inFlightRefresh: Promise<void> | null = null
+
 /**
  * Refreshes an auth token while ensuring it is updated everywhere.
  * The refresh token is sent automatically as an HttpOnly cookie.
  * The server rotates the cookie on every call.
  *
- * Uses the Web Locks API to coordinate across browser tabs. Only one tab
- * performs the actual refresh; other tabs waiting for the lock detect that
- * the token in localStorage was already updated and adopt it directly.
+ * Concurrent calls in the same tab share one in-flight refresh. This is the
+ * always-on primary dedup and works in every context (HTTP included). The Web
+ * Locks API used inside is the secondary, cross-tab coordination layer that
+ * only exists in secure contexts.
  */
 export async function refreshToken(persist: boolean): Promise<void> {
+	if (inFlightRefresh) {
+		return inFlightRefresh
+	}
+	inFlightRefresh = doRefresh(persist).finally(() => {
+		inFlightRefresh = null
+	})
+	return inFlightRefresh
+}
+
+async function doRefresh(persist: boolean): Promise<void> {
 	// In desktop mode, refresh via IPC to the Electron main process
 	if (isDesktopApp()) {
 		const storedRefreshToken = localStorage.getItem('desktopOAuthRefreshToken')
@@ -65,7 +83,7 @@ export async function refreshToken(persist: boolean): Promise<void> {
 	// if another tab refreshed while we were queued.
 	const tokenBeforeLock = localStorage.getItem('token')
 
-	const doRefresh = async () => {
+	const refreshUnderLock = async () => {
 		// If the token in localStorage changed while waiting for the lock,
 		// another tab already refreshed. Just adopt the new token.
 		const currentToken = localStorage.getItem('token')
@@ -85,10 +103,10 @@ export async function refreshToken(persist: boolean): Promise<void> {
 	}
 
 	if (navigator.locks) {
-		await navigator.locks.request('vikunja-token-refresh', doRefresh)
+		await navigator.locks.request('vikunja-token-refresh', refreshUnderLock)
 	} else {
 		// Fallback for environments without Web Locks (e.g. insecure HTTP)
-		await doRefresh()
+		await refreshUnderLock()
 	}
 }
 
