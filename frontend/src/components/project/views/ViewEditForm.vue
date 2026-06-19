@@ -199,19 +199,20 @@ function handleBubbleSave() {
 
 		<div class="field mbe-3">
 			<FancyCheckbox
+				v-model="view.includeSubprojects"
+				v-tooltip="$t('project.views.includeSubprojectsHint')"
+			>
+				{{ $t('project.views.includeSubprojects') }}
+			</FancyCheckbox>
+		</div>
+
+		<div class="field mbe-3">
+			<FancyCheckbox
 				v-model="view.filter.filter_include_nulls"
 			>
 				{{ $t('filters.attributes.includeNulls') }}
 			</FancyCheckbox>
 		</div>
-
-		<FancyCheckbox
-			v-model="view.includeSubprojects"
-			v-tooltip="$t('project.views.includeSubprojectsHint')"
-			class="mbe-3"
-		>
-			{{ $t('project.views.includeSubprojects') }}
-		</FancyCheckbox>
 
 		<div
 			v-if="view.viewKind === 'kanban'"
