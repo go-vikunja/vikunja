@@ -502,18 +502,20 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 
 	// Keep the destination in the address bar (not just per-browser localStorage) so a native
 	// client's /oauth/authorize URL stays copyable into another browser. Hash, not query, so the
-	// embedded OAuth params never reach access logs (#2654).
+	// embedded OAuth params never reach access logs (#2654). Pass fullPath raw: vue-router encodes
+	// the hash itself, so an extra encodeURIComponent here would be double-encoded in the URL.
 	if (to.name === 'oauth.authorize') {
 		return {
 			name: 'user.login',
-			hash: REDIRECT_HASH_PREFIX + encodeURIComponent(to.fullPath),
+			hash: REDIRECT_HASH_PREFIX + to.fullPath,
 		}
 	}
 
 	// Fold the hash destination into localStorage: it's the only bridge that survives the
 	// external OIDC round-trip out of the SPA, so redirectIfSaved() works after any auth method.
+	// vue-router already decoded to.hash once, so it equals the fullPath we wrote above as-is.
 	if (to.hash.startsWith(REDIRECT_HASH_PREFIX)) {
-		const destination = decodeURIComponent(to.hash.slice(REDIRECT_HASH_PREFIX.length))
+		const destination = to.hash.slice(REDIRECT_HASH_PREFIX.length)
 		const resolved = router.resolve(destination)
 		saveLastVisited(resolved.name as string, resolved.params, resolved.query)
 	}
@@ -589,7 +591,14 @@ router.beforeEach(async (to, from) => {
 			...newRoute,
 		}
 	}
-	
+
+	// to.fullPath keeps the redirect hash url-encoded while to.hash is decoded, so the endsWith
+	// check below never matches and would re-append the hash forever. The hash is already on the
+	// URL here, so skip the re-attach (#2654).
+	if (to.hash.startsWith(REDIRECT_HASH_PREFIX)) {
+		return
+	}
+
 	if(!to.fullPath.endsWith(to.hash)) {
 		return to.fullPath + to.hash
 	}
