@@ -1747,6 +1747,22 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 	newTask.Done = false
 }
 
+var (
+	checklistTiptapCheckedRegex   = regexp.MustCompile(`(data-checked=")true(")`)
+	checklistInputCheckedRegex    = regexp.MustCompile(`(<input[^>]*type=["']checkbox["'][^>]*?)\s+checked(?:=["'][^"']*["'])?`)
+	checklistMarkdownCheckedRegex = regexp.MustCompile(`(?m)^(\s*[-*]\s+\[)[xX](\])`)
+)
+
+// resetDescriptionChecklist unchecks every checklist item in a description without
+// touching any other content. A recurring task carries its description verbatim into
+// the next occurrence, so checked checklist items would otherwise stay checked.
+func resetDescriptionChecklist(description string) string {
+	description = checklistTiptapCheckedRegex.ReplaceAllString(description, "${1}false${2}")
+	description = checklistInputCheckedRegex.ReplaceAllString(description, "$1")
+	description = checklistMarkdownCheckedRegex.ReplaceAllString(description, "$1 $2")
+	return description
+}
+
 // This helper function updates the reminders, doneAt, start, end and due dates of the *old* task
 // and saves the new values in the newTask object.
 // We make a few assumptions here:
@@ -1764,6 +1780,11 @@ func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
 			setTaskDatesFromCurrentDateRepeat(oldTask, newTask)
 		case TaskRepeatModeDefault:
 			setTaskDatesDefault(oldTask, newTask)
+		}
+
+		// A recurring task reopens for its next occurrence, so its checklist starts fresh.
+		if oldTask.isRepeating() && !newTask.Done {
+			newTask.Description = resetDescriptionChecklist(newTask.Description)
 		}
 
 		newTask.DoneAt = time.Now()
