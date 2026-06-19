@@ -473,10 +473,22 @@ const router = createRouter({
 })
 
 export async function getAuthForRoute(to: RouteLocation, authStore) {
+	// vue-router already decoded to.hash once, so slicing off the prefix yields the original
+	// fullPath (e.g. /oauth/authorize?...) losslessly — no extra decodeURIComponent needed.
+	const redirectDest = to.name === 'user.login' && to.hash.startsWith(REDIRECT_HASH_PREFIX)
+		? to.hash.slice(REDIRECT_HASH_PREFIX.length)
+		: ''
+
 	if (authStore.authUser || authStore.authLinkShare) {
+		// An already-signed-in browser that opens a copied /login#redirect=<oauth.authorize> URL
+		// must run the OAuth flow with its existing session instead of short-circuiting to home.
+		// The destination has no redirect hash, so the second guard pass just early-returns (#2654).
+		if (redirectDest) {
+			return redirectDest
+		}
 		return
 	}
-	
+
 	// Check if password reset token is in query params
 	const resetToken = to.query.userPasswordReset as string | undefined
 	
@@ -586,6 +598,12 @@ router.beforeEach(async (to, from) => {
 
 	const newRoute = await getAuthForRoute(to, authStore)
 	if(newRoute) {
+		// A string target (the decoded redirect destination for an authed browser) already
+		// carries its own query/path and no redirect hash, so navigate to it verbatim — don't
+		// re-attach to.hash or it would re-enter the redirect loop.
+		if (typeof newRoute === 'string') {
+			return newRoute
+		}
 		return {
 			hash: to.hash,
 			...newRoute,
