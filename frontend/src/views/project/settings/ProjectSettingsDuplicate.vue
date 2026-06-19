@@ -10,7 +10,7 @@
 		<ProjectSearch v-model="parentProject" />
 		<FancyCheckbox
 			v-model="duplicateShares"
-			class="mt-2"
+			class="mbs-2"
 		>
 			{{ $t('project.duplicate.shares') }}
 		</FancyCheckbox>
