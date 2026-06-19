@@ -369,16 +369,33 @@ func stripBucketIDFilters(filters []*taskFilter) []*taskFilter {
 // A task is excluded from roots only when ALL of the following hold:
 //   - it has a parenttask relation, AND
 //   - the parent task exists, AND
-//   - the parent is within the queried project scope, AND
+//   - the parent is within the queried result scope, AND
 //   - the parent satisfies the active filter.
 //
-// Note the filter (and project scope) is applied here, but not the text-search
+// Note the filter (and result scope) is applied here, but not the text-search
 // predicate: search uses ParadeDB operators that don't compose against the
 // parent_tasks alias, and #2646 is purely about filters.
-func buildSubtaskRootCondition(opts *taskSearchOptions) (builder.Cond, error) {
-	parentInScope := builder.Cond(builder.Expr("1 = 1"))
+func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (builder.Cond, error) {
+	// The base result set is (projectIDCond OR favoritesCond); mirror both so the
+	// parent is considered "in scope" exactly when it could appear as a result row.
+	scopes := make([]builder.Cond, 0, 2)
 	if len(opts.projectIDs) > 0 {
-		parentInScope = builder.In("parent_tasks.project_id", opts.projectIDs)
+		scopes = append(scopes, builder.In("parent_tasks.project_id", opts.projectIDs))
+	}
+	if d.hasFavoritesProject {
+		favCond := builder.
+			Select("entity_id").
+			From("favorites").
+			Where(builder.And(
+				builder.Eq{"user_id": d.a.GetID()},
+				builder.Eq{"kind": FavoriteKindTask},
+			))
+		scopes = append(scopes, builder.In("parent_tasks.id", favCond))
+	}
+
+	parentInScope := builder.Cond(builder.Expr("1 = 1"))
+	if len(scopes) > 0 {
+		parentInScope = builder.Or(scopes...)
 	}
 
 	parentMatchesFilter := builder.Cond(builder.Expr("1 = 1"))
@@ -426,7 +443,7 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	// before convertFiltersToDBFilterCond mutates the shared filter field names.
 	var subtaskRootCond builder.Cond
 	if expandSubtasks {
-		subtaskRootCond, err = buildSubtaskRootCondition(opts)
+		subtaskRootCond, err = d.buildSubtaskRootCondition(opts)
 		if err != nil {
 			return nil, 0, err
 		}
