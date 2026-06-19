@@ -1,5 +1,5 @@
 import {ref, shallowReactive, watch, computed, type ComputedGetter} from 'vue'
-import {useRouter} from 'vue-router'
+import {useRouter, isNavigationFailure} from 'vue-router'
 import type {LocationQueryRaw} from 'vue-router'
 import {useRouteQuery} from '@vueuse/router'
 
@@ -162,7 +162,12 @@ export function useTaskList(
 				const storedQuery = viewFiltersStore.getViewQuery(viewId)
 				if (Object.keys(storedQuery).length > 0) {
 					// Merge so unrelated query params on the route survive the restore.
+					// Swallow navigation failures (e.g. aborted/duplicated) so the
+					// ignored promise can't surface as an unhandled rejection.
 					router.replace({query: {...router.currentRoute.value.query, ...storedQuery}})
+						.catch(failure => {
+							if (!isNavigationFailure(failure)) throw failure
+						})
 					return
 				}
 			}
