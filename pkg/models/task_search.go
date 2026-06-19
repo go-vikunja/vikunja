@@ -353,9 +353,21 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
 	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
 
+	// ParadeDB exposes the BM25 relevance score via pdb.score(<key_field>) for any
+	// query containing a ParadeDB operator (the ||| from MultiFieldSearch qualifies).
+	// When searching without an explicit user sort, order by relevance so tasks
+	// matching all query words rank above tasks matching only some. This is
+	// ParadeDB-only: pdb.score is invalid SQL on sqlite/mysql/plain postgres.
+	rankByRelevance := db.ParadeDBAvailable() && opts.search != "" && !opts.userProvidedSort
+
 	var distinct = "tasks.*"
 	if strings.Contains(orderby, "task_positions.") {
 		distinct += ", task_positions.position"
+	}
+	if rankByRelevance {
+		// DISTINCT requires every ORDER BY expression to appear in the SELECT list.
+		distinct += ", pdb.score(tasks.id)"
+		orderby = "pdb.score(tasks.id) DESC, " + orderby
 	}
 
 	var expandSubtasks = false
@@ -374,9 +386,15 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		))
 	}
 
-	query := d.s.
-		Distinct(distinct).
-		Where(cond)
+	query := d.s.Where(cond)
+	if rankByRelevance {
+		// xorm's Distinct() quotes each column, which corrupts the pdb.score(tasks.id)
+		// function call. Select() passes the raw column list through untouched, and
+		// Distinct() (no args) still emits the DISTINCT keyword.
+		query = query.Select(distinct).Distinct()
+	} else {
+		query = query.Distinct(distinct)
+	}
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}

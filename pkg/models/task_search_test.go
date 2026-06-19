@@ -54,3 +54,54 @@ func TestKanbanViewBucketFiltering(t *testing.T) {
 		assert.NotContains(t, taskBuckets, id)
 	}
 }
+
+// TestTaskSearchRelevanceRanking verifies that a multi-word search ranks the task
+// matching all words above tasks matching only some. The ranking is BM25-based and
+// therefore only enforced on ParadeDB; on other databases we only assert that the
+// matching tasks are returned (no order guarantee), keeping the test green across
+// the whole CI database matrix.
+func TestTaskSearchRelevanceRanking(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	usr := &user.User{ID: 1}
+
+	allWords := &Task{Title: "Backup server migration", ProjectID: 1}
+	require.NoError(t, allWords.Create(s, usr))
+	oneWordA := &Task{Title: "Backup of old files", ProjectID: 1}
+	require.NoError(t, oneWordA.Create(s, usr))
+	oneWordB := &Task{Title: "server room booking", ProjectID: 1}
+	require.NoError(t, oneWordB.Create(s, usr))
+
+	assertRelevanceRanked := func(t *testing.T, tc *TaskCollection) {
+		got, _, _, err := tc.ReadAll(s, usr, "backup server", 0, 50)
+		require.NoError(t, err)
+
+		gotTasks, is := got.([]*Task)
+		require.True(t, is)
+
+		gotIDs := make([]int64, len(gotTasks))
+		for i, tsk := range gotTasks {
+			gotIDs[i] = tsk.ID
+		}
+
+		require.Contains(t, gotIDs, allWords.ID, "the task matching all words should be returned")
+
+		if db.ParadeDBAvailable() {
+			require.NotEmpty(t, gotTasks)
+			assert.Equal(t, allWords.ID, gotTasks[0].ID, "task matching all query words should rank first by BM25 relevance")
+		}
+	}
+
+	// Without a view: plain "tasks.*, pdb.score(tasks.id)" select.
+	t.Run("no view", func(t *testing.T) {
+		assertRelevanceRanked(t, &TaskCollection{ProjectID: 1})
+	})
+
+	// With a view: exercises the task_positions LEFT JOIN, which adds
+	// task_positions.position to the DISTINCT select alongside pdb.score(tasks.id).
+	t.Run("list view", func(t *testing.T) {
+		assertRelevanceRanked(t, &TaskCollection{ProjectID: 1, ProjectViewID: 1})
+	})
+}
