@@ -3438,7 +3438,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team permissions and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
+                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations and backgrounds from one project to a new one. User/team permissions and link shares are only copied when duplicate_shares is set to true. The user needs read access in the project and write access in the parent of the new project.",
                 "consumes": [
                     "application/json"
                 ],
@@ -9665,6 +9665,10 @@ const docTemplate = `{
         "models.ProjectDuplicate": {
             "type": "object",
             "properties": {
+                "duplicate_shares": {
+                    "description": "Whether to copy the project's shares to the duplicate",
+                    "type": "boolean"
+                },
                 "duplicated_project": {
                     "description": "The copied project",
                     "allOf": [
