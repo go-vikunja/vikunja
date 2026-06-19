@@ -204,8 +204,7 @@ onMounted(async () => {
 	ctaVisible.value = true
 })
 
-const canDragTasks = computed(() => (canWrite.value || isSavedFilter(project.value)) && !includeSubprojects.value)
-
+const canDragTasks = computed(() => canWrite.value || isSavedFilter(project.value))
 const isTouchDevice = ref(false)
 if (typeof window !== 'undefined') {
 	isTouchDevice.value = !window.matchMedia('(hover: hover) and (pointer: fine)').matches

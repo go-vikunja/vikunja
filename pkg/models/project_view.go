@@ -162,7 +162,6 @@ type ProjectView struct {
 	// The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation.
 	Filter *TaskCollection `xorm:"json null default null" query:"filter" json:"filter" doc:"The filter query used to match tasks shown in this view. See https://vikunja.io/docs/filters."`
 	// The position of this view in the list. The list of all views will be sorted by this position.
-// The position of this view in the list. The list of all views will be sorted by this position.
 	Position float64 `xorm:"double null" json:"position" doc:"The position of this view in the list. The list of all views will be sorted by this position."`
 	// If enabled, this view also includes tasks from all descendant subprojects.
 	IncludeSubprojects bool `xorm:"default false not null" json:"include_subprojects"`

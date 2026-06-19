@@ -153,15 +153,14 @@
 			/>
 
 			<RouterLink
-				v-if="showProjectSeparately"
-				v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
-				:to="{ name: 'project.index', params: { projectId: task.projectId } }"
-				class="task-project"
-				@click.stop
+			v-if="showProjectSeparately && project"
+			v-tooltip="$t('task.detail.belongsToProject', {project: project.title})"
+			:to="{ name: 'project.index', params: { projectId: task.projectId } }"
+			class="task-project"
+			@click.stop
 			>
-				{{ projectLabel }}
+			{{ project.title }}
 			</RouterLink>
-
 			<BaseButton
 				:class="{'is-favorite': task.isFavorite}"
 				class="favorite"
@@ -292,13 +291,7 @@ const currentProject = computed(() => {
 	} : baseStore.currentProject
 })
 
-const projectLabel = computed(() => {
-	if (!project.value) {
-		return ''
-	}
 
-	return project.value.title
-})
 
 const taskDetailRoute = computed(() => ({
 	name: 'task.detail',
