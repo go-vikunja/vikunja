@@ -161,7 +161,8 @@ export function useTaskList(
 			if (viewIdChanged && urlIsEmpty) {
 				const storedQuery = viewFiltersStore.getViewQuery(viewId)
 				if (Object.keys(storedQuery).length > 0) {
-					router.replace({query: storedQuery})
+					// Merge so unrelated query params on the route survive the restore.
+					router.replace({query: {...router.currentRoute.value.query, ...storedQuery}})
 					return
 				}
 			}
