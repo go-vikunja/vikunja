@@ -157,7 +157,10 @@ export function useTaskList(
 			const viewIdChanged = viewId !== lastSyncedViewId
 			lastSyncedViewId = viewId
 
-			const urlIsEmpty = !sortValue && !filterValue && !sValue && pageValue === 1
+			// An invalid `?page=` becomes NaN via `transform: Number`; treat it as
+			// the default so it neither blocks restoration nor wipes stored state.
+			const currentPage = Number.isInteger(pageValue) ? pageValue : 1
+			const urlIsEmpty = !sortValue && !filterValue && !sValue && currentPage === 1
 			if (viewIdChanged && urlIsEmpty) {
 				const storedQuery = viewFiltersStore.getViewQuery(viewId)
 				if (Object.keys(storedQuery).length > 0) {
@@ -176,7 +179,7 @@ export function useTaskList(
 				sort: sortValue as string | undefined,
 				filter: filterValue as string | undefined,
 				s: sValue as string | undefined,
-				page: pageValue,
+				page: currentPage,
 			})
 			if (Object.keys(query).length > 0) {
 				viewFiltersStore.setViewQuery(viewId, query)
