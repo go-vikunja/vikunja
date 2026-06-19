@@ -330,6 +330,34 @@ func cloneTaskFilters(filters []*taskFilter) []*taskFilter {
 	return cloned
 }
 
+// stripBucketIDFilters returns a copy of filters with every bucket_id condition
+// removed (recursing into nested groups and dropping groups left empty). The
+// parent-scoped root condition cannot evaluate a bucket_id filter against the
+// parent: convertFiltersToDBFilterCondWithAlias hard-codes the task_buckets.bucket_id
+// column, and the only task_buckets join is keyed on the child (task_buckets.task_id
+// = tasks.id). Keeping it would bind the parent filter to the child's bucket and
+// misclassify roots, so a bucket_id filter simply does not constrain the parent.
+func stripBucketIDFilters(filters []*taskFilter) []*taskFilter {
+	stripped := make([]*taskFilter, 0, len(filters))
+	for _, f := range filters {
+		if nested, is := f.value.([]*taskFilter); is {
+			child := stripBucketIDFilters(nested)
+			if len(child) == 0 {
+				continue
+			}
+			c := *f
+			c.value = child
+			stripped = append(stripped, &c)
+			continue
+		}
+		if f.field == taskPropertyBucketID {
+			continue
+		}
+		stripped = append(stripped, f)
+	}
+	return stripped
+}
+
 // buildSubtaskRootCondition decides which tasks count as "roots" when expanding
 // subtasks: a task is a root unless its parent is itself part of this result set.
 //
@@ -355,7 +383,7 @@ func buildSubtaskRootCondition(opts *taskSearchOptions) (builder.Cond, error) {
 
 	parentMatchesFilter := builder.Cond(builder.Expr("1 = 1"))
 	if len(opts.parsedFilters) > 0 {
-		parentFilters := cloneTaskFilters(opts.parsedFilters)
+		parentFilters := stripBucketIDFilters(cloneTaskFilters(opts.parsedFilters))
 		filterCond, err := convertFiltersToDBFilterCondWithAlias(parentFilters, opts.filterIncludeNulls, "parent_tasks")
 		if err != nil {
 			return nil, err
