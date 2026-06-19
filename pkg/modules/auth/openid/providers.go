@@ -180,6 +180,31 @@ func GetProvider(key string) (provider *Provider, err error) {
 	return
 }
 
+// getCachedProvider returns the provider from keyvalue WITHOUT re-establishing the
+// live OIDC connection (setOicdProvider). The logout path only needs the cached
+// static fields (EndSessionURL/LogoutURL/ClientID) and must not block on an
+// unreachable OP. The cache is populated at init / first GetAllProviders.
+func getCachedProvider(key string) (provider *Provider, err error) {
+	provider = &Provider{}
+	exists, err := keyvalue.GetWithValue("openid_provider_"+key, provider)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		_, err = GetAllProviders() // This will put all providers in cache
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = keyvalue.GetWithValue("openid_provider_"+key, provider)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return provider, nil
+}
+
 // parseBoolField reads a boolean-valued config field from a provider map,
 // tolerating both native bools (from YAML/JSON) and strings (from env vars or
 // the GetConfigValueFromFile path, which always return strings). Missing or

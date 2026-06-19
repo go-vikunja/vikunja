@@ -131,6 +131,37 @@ func TestBuildEndSessionURLFromDiscovery(t *testing.T) {
 	assert.Equal(t, "client1", q.Get("client_id"))
 }
 
+func TestBuildEndSessionURLFromCachedProviderWithoutLiveObject(t *testing.T) {
+	defer CleanupSavedOpenIDProviders()
+
+	config.AuthOpenIDEnabled.Set(true)
+	config.ServicePublicURL.Set("https://vikunja.example.com/")
+
+	// Seed only the cached static fields, mimicking a provider restored from
+	// keyvalue whose OP is unreachable (no live openIDProvider). BuildEndSessionURL
+	// must build the logout URL from the cache without triggering discovery.
+	_ = keyvalue.Del("openid_providers")
+	require.NoError(t, keyvalue.Put("openid_provider_provider1", &Provider{
+		Key:           "provider1",
+		ClientID:      "client1",
+		EndSessionURL: "https://op.example.com/end-session",
+	}))
+
+	got, err := BuildEndSessionURL("provider1", &models.SessionOIDCData{
+		IDToken:     "raw-id-token",
+		ProviderKey: "provider1",
+	})
+	require.NoError(t, err)
+
+	u, err := url.Parse(got)
+	require.NoError(t, err)
+	q := u.Query()
+	assert.Equal(t, "https://op.example.com/end-session", u.Scheme+"://"+u.Host+u.Path)
+	assert.Equal(t, "raw-id-token", q.Get("id_token_hint"))
+	assert.Equal(t, "https://vikunja.example.com/", q.Get("post_logout_redirect_uri"))
+	assert.Equal(t, "client1", q.Get("client_id"))
+}
+
 func TestEndSessionEndpointUsesCachedURLWithoutDiscovery(t *testing.T) {
 	// A nil openIDProvider models a provider restored from the keyvalue cache
 	// (or one whose OP is currently unreachable). EndSessionEndpoint must answer

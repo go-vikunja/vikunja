@@ -74,7 +74,10 @@ func (p *Provider) discoveredEndSessionEndpoint() string {
 // It returns "" (and the caller skips the redirect) when neither an
 // end_session_endpoint nor a static logouturl is configured.
 func BuildEndSessionURL(providerKey string, oidc *models.SessionOIDCData) (string, error) {
-	provider, err := GetProvider(providerKey)
+	// Read the cached provider rather than GetProvider: logout must never trigger
+	// OIDC discovery (a live HTTP GET that retries/blocks when the OP is down), and
+	// the static EndSessionURL/LogoutURL/ClientID needed here are already cached.
+	provider, err := getCachedProvider(providerKey)
 	if err != nil {
 		return "", err
 	}
