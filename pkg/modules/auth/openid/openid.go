@@ -367,6 +367,39 @@ func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) 
 	return nil
 }
 
+// fallbackSearchUsers builds the ordered list of local-user lookups used to link an OIDC
+// login to an existing account when the provider has email and/or username fallback enabled.
+// GetUserWithEmail ANDs all non-zero fields, so the email (when set) is combined with each
+// username candidate.
+func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) []*user.User {
+	fallbackEmail := ""
+	if provider.EmailFallback {
+		// Used alone, allow for someone to connect from various provider to the same account.
+		// Discouraged for untrusted providers where someone can set email without verification.
+		// Note: mapping on email prevents auto-updating the user email.
+		fallbackEmail = cl.Email
+	}
+
+	// Try the subject first (keeps working for IdPs where sub == username), then the
+	// preferred_username. The latter lets providers with an opaque sub (e.g. a random
+	// UUID, like PocketID) still link to an existing local account.
+	var searches []*user.User
+	if provider.UsernameFallback {
+		searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: idToken.Subject, Email: fallbackEmail})
+		preferred := strings.ReplaceAll(cl.PreferredUsername, " ", "-")
+		if preferred != "" && preferred != idToken.Subject {
+			searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: preferred, Email: fallbackEmail})
+		}
+	}
+	// EmailFallback without UsernameFallback: a single email-only lookup (the caller only
+	// runs this when at least one fallback is enabled, so EmailFallback is guaranteed here).
+	if len(searches) == 0 {
+		searches = append(searches, &user.User{Issuer: user.IssuerLocal, Email: cl.Email})
+	}
+
+	return searches
+}
+
 func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *oidc.IDToken) (u *user.User, err error) {
 
 	// set defaults
@@ -393,38 +426,7 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 	if !alreadyCreatedFromIssuer && (provider.EmailFallback || provider.UsernameFallback) {
 
 		// try finding the user on fallback mapping properties
-
-		// GetUserWithEmail ANDs all non-zero fields, so email is combined with each
-		// username candidate when EmailFallback is also enabled.
-		fallbackEmail := ""
-		if provider.EmailFallback {
-			// Used alone, allow for someone to connect from various provider to the same account
-			// Discouraged for untrusted provider where someone can set email without verification
-			// Note : mapping on email prevent from auto-updating user email
-			fallbackEmail = cl.Email
-		}
-
-		// Try the subject first (keeps working for IdPs where sub == username), then the
-		// preferred_username. The latter lets providers with an opaque sub (e.g. a random
-		// UUID, like PocketID) still link to an existing local account.
-		var usernameCandidates []string
-		if provider.UsernameFallback {
-			usernameCandidates = append(usernameCandidates, idToken.Subject)
-			preferred := strings.ReplaceAll(cl.PreferredUsername, " ", "-")
-			if preferred != "" && preferred != idToken.Subject {
-				usernameCandidates = append(usernameCandidates, preferred)
-			}
-		} else {
-			usernameCandidates = append(usernameCandidates, "")
-		}
-
-		for _, username := range usernameCandidates {
-			searchUser := &user.User{
-				Issuer:   user.IssuerLocal,
-				Username: username,
-				Email:    fallbackEmail,
-			}
-
+		for _, searchUser := range fallbackSearchUsers(cl, provider, idToken) {
 			u, err = user.GetUserWithEmail(s, searchUser)
 			if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
 				return nil, err

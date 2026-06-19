@@ -306,6 +306,9 @@ func TestGetOrCreateUser(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
+		usersBefore, err := s.Count(&user.User{})
+		require.NoError(t, err)
+
 		cl := &claims{
 			Email: "user11@example.com",
 		}
@@ -319,6 +322,11 @@ func TestGetOrCreateUser(t *testing.T) {
 		assert.Equal(t, cl.Email, u.Email, "email should match")
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
+
+		// The email-only fallback must link the existing user, not create a duplicate.
+		usersAfter, err := s.Count(&user.User{})
+		require.NoError(t, err)
+		assert.Equal(t, usersBefore, usersAfter, "no new user should have been created")
 	})
 	t.Run("ProviderFallback: Match to existing local user  on username and email", func(t *testing.T) {
 
