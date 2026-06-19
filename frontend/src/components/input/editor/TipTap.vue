@@ -722,7 +722,7 @@ async function addImage(event: Event) {
 		return
 	}
 
-	const url = await inputPrompt(event.target.getBoundingClientRect())
+	const url = await inputPrompt(event.target.getBoundingClientRect(), '', editor.value)
 
 	if (url) {
 		editor.value?.chain().focus().setImage({src: url}).run()
