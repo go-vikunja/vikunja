@@ -123,7 +123,7 @@
 		</XButton>
 
 		<!-- Dropzone -->
-		<Teleport to="body">
+		<Teleport :to="dropzoneTeleportTarget">
 			<div
 				v-if="editEnabled"
 				:class="{hidden: !showDropzone}"
@@ -185,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, computed, watch} from 'vue'
+import {ref, shallowReactive, computed, watch, onMounted, onBeforeUnmount} from 'vue'
 import {useDropZone} from '@vueuse/core'
 
 import User from '@/components/misc/User.vue'
@@ -321,6 +321,34 @@ const {isOverDropZone} = useDropZone(document, {
 const showDropzone = computed(() =>
 	props.editEnabled && isDraggingFiles.value && !isDragOverEditor.value,
 )
+
+// A <dialog> opened with showModal() (e.g. the Kanban task detail) renders in
+// the browser's top layer, so the full-screen dropzone overlay teleported to
+// <body> would paint behind it regardless of z-index. Teleport it into the
+// topmost open dialog instead, mirroring Notification.vue.
+const dropzoneTeleportTarget = ref<string | HTMLElement>('body')
+let dialogObserver: MutationObserver | null = null
+
+function syncDropzoneTeleportTarget() {
+	const dialogs = document.querySelectorAll<HTMLDialogElement>('dialog.modal-dialog[open]')
+	dropzoneTeleportTarget.value = dialogs.item(dialogs.length - 1) ?? 'body'
+}
+
+onMounted(() => {
+	syncDropzoneTeleportTarget()
+	dialogObserver = new MutationObserver(syncDropzoneTeleportTarget)
+	dialogObserver.observe(document.body, {
+		attributes: true,
+		attributeFilter: ['open'],
+		childList: true,
+		subtree: true,
+	})
+})
+
+onBeforeUnmount(() => {
+	dialogObserver?.disconnect()
+	dialogObserver = null
+})
 
 watch(() => props.editEnabled, enabled => {
 	if (!enabled) {
@@ -478,7 +506,7 @@ defineExpose({
 	inset-inline-start: 0;
 	inset-block-end: 0;
 	inset-inline-end: 0;
-	z-index: 4001; // modal z-index is 4000
+	z-index: 4001; // above app chrome when teleported to body (no modal open)
 	text-align: center;
 
 	&.hidden {
