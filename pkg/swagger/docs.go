@@ -10906,6 +10906,10 @@ const docTemplate = `{
                 "caldav_enabled": {
                     "type": "boolean"
                 },
+                "concurrent_writes": {
+                    "description": "ConcurrentWrites reports whether the configured database can handle concurrent writes. It is false on SQLite, where overlapping write transactions deadlock, so clients should serialize batched writes instead of firing them in parallel.",
+                    "type": "boolean"
+                },
                 "demo_mode_enabled": {
                     "type": "boolean"
                 },
