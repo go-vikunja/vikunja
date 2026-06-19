@@ -6,6 +6,7 @@ import {getProjectViewId} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
+import {REDIRECT_HASH_PREFIX} from '@/constants/redirectHash'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 import {PRO_FEATURE} from '@/constants/proFeatures'
 
@@ -30,7 +31,7 @@ const router = createRouter({
 		}
 
 		// Scroll to anchor should still work
-		if (to.hash && !to.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
+		if (to.hash && !to.hash.startsWith(LINK_SHARE_HASH_PREFIX) && !to.hash.startsWith(REDIRECT_HASH_PREFIX)) {
 			return {el: to.hash}
 		}
 
@@ -499,15 +500,33 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 		}
 	}
 
+	// Keep the destination in the address bar (not just per-browser localStorage) so a native
+	// client's /oauth/authorize URL stays copyable into another browser. Hash, not query, so the
+	// embedded OAuth params never reach access logs (#2654).
+	if (to.name === 'oauth.authorize') {
+		return {
+			name: 'user.login',
+			hash: REDIRECT_HASH_PREFIX + encodeURIComponent(to.fullPath),
+		}
+	}
+
+	// Fold the hash destination into localStorage: it's the only bridge that survives the
+	// external OIDC round-trip out of the SPA, so redirectIfSaved() works after any auth method.
+	if (to.hash.startsWith(REDIRECT_HASH_PREFIX)) {
+		const destination = decodeURIComponent(to.hash.slice(REDIRECT_HASH_PREFIX.length))
+		const resolved = router.resolve(destination)
+		saveLastVisited(resolved.name as string, resolved.params, resolved.query)
+	}
+
 	// Check if the route the user wants to go to is a route which needs authentication. We use this to
 	// redirect the user after successful login.
 	const isValidUserAppRoute = !AUTH_ROUTE_NAMES.has(to.name as string) &&
 		localStorage.getItem('emailConfirmToken') === null
-	
+
 	if (isValidUserAppRoute) {
 		saveLastVisited(to.name as string, to.params, to.query)
 	}
-	
+
 	if (isValidUserAppRoute) {
 		return {name: 'user.login'}
 	}
@@ -566,8 +585,8 @@ router.beforeEach(async (to, from) => {
 	const newRoute = await getAuthForRoute(to, authStore)
 	if(newRoute) {
 		return {
-			...newRoute,
 			hash: to.hash,
+			...newRoute,
 		}
 	}
 	

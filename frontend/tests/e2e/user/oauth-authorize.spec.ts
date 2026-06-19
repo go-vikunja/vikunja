@@ -32,10 +32,12 @@ test.describe('OAuth 2.0 Authorization Flow', () => {
 		})
 
 		// Navigate to the OAuth authorize frontend route.
-		// The user is not logged in, so the router guard saves the route
-		// and redirects to /login.
+		// The user is not logged in, so the router guard redirects to /login while
+		// carrying the authorize destination in a copyable #redirect= hash (not a
+		// query param, to keep the OAuth params out of access logs).
 		await page.goto(`/oauth/authorize?${authorizeParams}`)
-		await expect(page).toHaveURL(/\/login/)
+		await expect(page).toHaveURL(/\/login#redirect=/)
+		expect(decodeURIComponent(new URL(page.url()).hash)).toContain('/oauth/authorize')
 
 		// Register the response listener BEFORE clicking Login, because after
 		// login redirectIfSaved() navigates back to /oauth/authorize and the
