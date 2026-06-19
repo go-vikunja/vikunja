@@ -320,11 +320,17 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 
 	// Then return all tasks for that projects
 	var where builder.Cond
+	// textSearchCond holds only the ParadeDB/ILIKE title+description match, kept
+	// separate from the index-equality match so the relevance ranking path can
+	// score a pure-ParadeDB query (see rankByRelevance below).
+	var textSearchCond builder.Cond
+	var searchIndex int64
 
 	if opts.search != "" {
-		where = db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, opts.search, "tasks")
+		textSearchCond = db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, opts.search, "tasks")
+		where = textSearchCond
 
-		searchIndex := getTaskIndexFromSearchString(opts.search)
+		searchIndex = getTaskIndexFromSearchString(opts.search)
 		if searchIndex > 0 {
 			where = builder.Or(where, builder.Eq{"`index`": searchIndex})
 		}
@@ -350,8 +356,10 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		favoritesCond = builder.In("tasks.id", favCond)
 	}
 
+	scopeCond := builder.Or(projectIDCond, favoritesCond)
+
 	limit, start := getLimitFromPageIndex(opts.page, opts.perPage)
-	cond := builder.And(builder.Or(projectIDCond, favoritesCond), where, filterCond)
+	cond := builder.And(scopeCond, where, filterCond)
 
 	// ParadeDB exposes the BM25 relevance score via pdb.score(<key_field>) for any
 	// query containing a ParadeDB operator (the ||| from MultiFieldSearch qualifies).
@@ -360,14 +368,19 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	// ParadeDB-only: pdb.score is invalid SQL on sqlite/mysql/plain postgres.
 	rankByRelevance := db.ParadeDBAvailable() && opts.search != "" && !opts.userProvidedSort
 
+	// ParadeDB's pdb.score() rejects an `id IN (<subquery>)` favorites scope (whether
+	// expressed as OR or UNION) as an unsupported query shape, so the relevance arms
+	// reach favorites through a LEFT JOIN and scope on the joined column instead,
+	// which it can score. Only relevant when favorites are part of the scope.
+	rankFavoritesJoin := rankByRelevance && d.hasFavoritesProject
+	rankScopeCond := scopeCond
+	if rankFavoritesJoin {
+		rankScopeCond = builder.Or(projectIDCond, builder.Expr("rank_favorites.entity_id IS NOT NULL"))
+	}
+
 	var distinct = "tasks.*"
 	if strings.Contains(orderby, "task_positions.") {
 		distinct += ", task_positions.position"
-	}
-	if rankByRelevance {
-		// DISTINCT requires every ORDER BY expression to appear in the SELECT list.
-		distinct += ", pdb.score(tasks.id)"
-		orderby = "pdb.score(tasks.id) DESC, " + orderby
 	}
 
 	var expandSubtasks = false
@@ -378,56 +391,124 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		}
 	}
 
-	if expandSubtasks {
-		cond = builder.And(cond, builder.Or(
-			builder.IsNull{"task_relations.id"},
-			builder.IsNull{"parent_tasks.id"},
-			builder.Expr("parent_tasks.project_id != tasks.project_id"),
-		))
-	}
-
-	query := d.s.Where(cond)
-	if rankByRelevance {
-		// xorm's Distinct() quotes each column, which corrupts the pdb.score(tasks.id)
-		// function call. Select() passes the raw column list through untouched, and
-		// Distinct() (no args) still emits the DISTINCT keyword.
-		query = query.Select(distinct).Distinct()
-	} else {
-		query = query.Distinct(distinct)
-	}
-	if limit > 0 {
-		query = query.Limit(limit, start)
-	}
-
-	for _, param := range opts.sortby {
-		if param.sortBy == taskPropertyPosition {
-			query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
-			break
+	// addJoins applies the same LEFT JOINs the count query and every fetch arm
+	// rely on (position sort, bucket filter, subtask expansion).
+	addJoins := func(query *xorm.Session) *xorm.Session {
+		for _, param := range opts.sortby {
+			if param.sortBy == taskPropertyPosition {
+				query = query.Join("LEFT", "task_positions", "task_positions.task_id = tasks.id AND task_positions.project_view_id = ?", param.projectViewID)
+				break
+			}
 		}
+		if joinTaskBuckets {
+			joinCond := "task_buckets.task_id = tasks.id"
+			if opts.projectViewID > 0 {
+				joinCond += " AND task_buckets.project_view_id = ?"
+				query = query.Join("LEFT", "task_buckets", joinCond, opts.projectViewID)
+			} else {
+				query = query.Join("LEFT", "task_buckets", joinCond)
+			}
+		}
+		if expandSubtasks {
+			query = query.
+				Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'").
+				Join("LEFT", "tasks parent_tasks", "task_relations.other_task_id = parent_tasks.id")
+		}
+		return query
 	}
 
-	if joinTaskBuckets {
-		joinCond := "task_buckets.task_id = tasks.id"
-		if opts.projectViewID > 0 {
-			joinCond += " AND task_buckets.project_view_id = ?"
-			query = query.Join("LEFT", "task_buckets", joinCond, opts.projectViewID)
+	subtaskParentCond := builder.Or(
+		builder.IsNull{"task_relations.id"},
+		builder.IsNull{"parent_tasks.id"},
+		builder.Expr("parent_tasks.project_id != tasks.project_id"),
+	)
+	if expandSubtasks {
+		cond = builder.And(cond, subtaskParentCond)
+	}
+
+	// fetchTasks runs a single fetch arm: it builds the DISTINCT select (raw, so
+	// xorm doesn't quote-corrupt the pdb.score function call), applies the joins
+	// and the given order. paginate=false fetches every matching row so the caller
+	// can merge multiple arms and slice the combined result in Go.
+	fetchTasks := func(armCond builder.Cond, selectCols, armOrderby string, paginate bool) ([]*Task, error) {
+		query := d.s.Where(armCond)
+		if selectCols == distinct {
+			query = query.Distinct(selectCols)
 		} else {
-			query = query.Join("LEFT", "task_buckets", joinCond)
+			// Select() passes the raw column list through untouched while Distinct()
+			// (no args) still emits the DISTINCT keyword.
+			query = query.Select(selectCols).Distinct()
 		}
-	}
-	if expandSubtasks {
-		query = query.
-			Join("LEFT", "task_relations", "tasks.id = task_relations.task_id and task_relations.relation_kind = 'parenttask'").
-			Join("LEFT", "tasks parent_tasks", "task_relations.other_task_id = parent_tasks.id")
+		if paginate && limit > 0 {
+			query = query.Limit(limit, start)
+		}
+		if rankFavoritesJoin {
+			query = query.Join("LEFT", "favorites rank_favorites", "rank_favorites.entity_id = tasks.id AND rank_favorites.user_id = ? AND rank_favorites.kind = ?", d.a.GetID(), FavoriteKindTask)
+		}
+		query = addJoins(query)
+
+		armTasks := []*Task{}
+		if err := query.OrderBy(armOrderby).Find(&armTasks); err != nil {
+			sql, vals := query.LastSQL()
+			return nil, fmt.Errorf("could not fetch tasks, error was '%w', sql: '%v', values: %v", err, sql, vals)
+		}
+		return armTasks, nil
 	}
 
-	tasks = []*Task{}
-	err = query.
-		OrderBy(orderby).
-		Find(&tasks)
-	if err != nil {
-		sql, vals := query.LastSQL()
-		return nil, 0, fmt.Errorf("could not fetch tasks, error was '%w', sql: '%v', values: %v", err, sql, vals)
+	rankCondWith := func(searchCond builder.Cond) builder.Cond {
+		c := builder.And(rankScopeCond, searchCond, filterCond)
+		if expandSubtasks {
+			c = builder.And(c, subtaskParentCond)
+		}
+		return c
+	}
+
+	switch {
+	case rankByRelevance && searchIndex > 0:
+		// A numeric search matches both the task index and the fuzzy text. pdb.score
+		// can only score a pure-ParadeDB query, so a `||| ... OR index = N` group is
+		// an unsupported query shape on ParadeDB. Run two supported arms instead and
+		// rank exact index matches first, then text matches by relevance.
+		indexTasks, err := fetchTasks(rankCondWith(builder.Eq{"`index`": searchIndex}), distinct, orderby, false)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		textTasks, err := fetchTasks(rankCondWith(textSearchCond), distinct+", pdb.score(tasks.id)", "pdb.score(tasks.id) DESC, "+orderby, false)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		// Exact index matches rank first; dedup a task matching both arms in favour
+		// of its index-match position.
+		seen := make(map[int64]bool, len(indexTasks)+len(textTasks))
+		merged := make([]*Task, 0, len(indexTasks)+len(textTasks))
+		for _, t := range indexTasks {
+			if !seen[t.ID] {
+				seen[t.ID] = true
+				merged = append(merged, t)
+			}
+		}
+		for _, t := range textTasks {
+			if !seen[t.ID] {
+				seen[t.ID] = true
+				merged = append(merged, t)
+			}
+		}
+
+		tasks = paginateInMemory(merged, limit, start)
+	case rankByRelevance:
+		// Pure text search: a single pdb.score-ordered query over the score-able
+		// scope is a supported shape.
+		tasks, err = fetchTasks(rankCondWith(textSearchCond), distinct+", pdb.score(tasks.id)", "pdb.score(tasks.id) DESC, "+orderby, true)
+		if err != nil {
+			return nil, 0, err
+		}
+	default:
+		tasks, err = fetchTasks(cond, distinct, orderby, true)
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	// fetch subtasks when expanding
@@ -502,4 +583,17 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		return nil, 0, fmt.Errorf("could not fetch task count, error was '%w', sql: '%v', values: %v", err, sql, vals)
 	}
 	return
+}
+
+// paginateInMemory slices an already-ordered result set. limit == 0 means "no
+// limit" (return everything from start onwards), matching getLimitFromPageIndex.
+func paginateInMemory(tasks []*Task, limit, start int) []*Task {
+	if start >= len(tasks) {
+		return []*Task{}
+	}
+	tasks = tasks[start:]
+	if limit > 0 && limit < len(tasks) {
+		tasks = tasks[:limit]
+	}
+	return tasks
 }

@@ -17,6 +17,7 @@
 package models
 
 import (
+	"strconv"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -103,5 +104,64 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 	// task_positions.position to the DISTINCT select alongside pdb.score(tasks.id).
 	t.Run("list view", func(t *testing.T) {
 		assertRelevanceRanked(t, &TaskCollection{ProjectID: 1, ProjectViewID: 1})
+	})
+}
+
+// TestTaskSearchRelevanceRankingNumericIndex covers a numeric search (e.g. "#42"):
+// it matches both a task by its per-project index and tasks whose title/description
+// contain that number via fuzzy text search. On ParadeDB the exact-index task must
+// rank first, then the text matches by relevance. This is the case that combines an
+// `index = N` equality with the ParadeDB ||| operators; scoring such a mixed boolean
+// group is an unsupported query shape, so it is run as two arms (index, then text).
+func TestTaskSearchRelevanceRankingNumericIndex(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	usr := &user.User{ID: 1}
+
+	// The exact-index task: its index is what we search for. Its title deliberately
+	// does not contain the number, so it can only be found by the index match.
+	exactIndex := &Task{Title: "Quarterly planning offsite", ProjectID: 1}
+	require.NoError(t, exactIndex.Create(s, usr))
+	require.NotZero(t, exactIndex.Index)
+
+	indexStr := strconv.FormatInt(exactIndex.Index, 10)
+	search := "#" + indexStr
+
+	// Text matches: their titles contain the searched number so the fuzzy text arm
+	// returns them, but they are not the exact-index task.
+	textA := &Task{Title: "Review ticket " + search + " backlog", ProjectID: 1}
+	require.NoError(t, textA.Create(s, usr))
+	textB := &Task{Title: "Notes about " + search, ProjectID: 1}
+	require.NoError(t, textB.Create(s, usr))
+
+	assertIndexFirst := func(t *testing.T, tc *TaskCollection) {
+		got, _, _, err := tc.ReadAll(s, usr, search, 0, 50)
+		require.NoError(t, err)
+
+		gotTasks, is := got.([]*Task)
+		require.True(t, is)
+
+		gotIDs := make([]int64, len(gotTasks))
+		for i, tsk := range gotTasks {
+			gotIDs[i] = tsk.ID
+		}
+
+		require.Contains(t, gotIDs, exactIndex.ID, "the exact-index task should be returned")
+
+		if db.ParadeDBAvailable() {
+			require.NotEmpty(t, gotTasks)
+			assert.Equal(t, exactIndex.ID, gotTasks[0].ID, "the exact-index match should rank first")
+			assert.Contains(t, gotIDs, textA.ID, "text matches should also be returned, ranked after the index match")
+		}
+	}
+
+	t.Run("no view", func(t *testing.T) {
+		assertIndexFirst(t, &TaskCollection{ProjectID: 1})
+	})
+
+	t.Run("list view", func(t *testing.T) {
+		assertIndexFirst(t, &TaskCollection{ProjectID: 1, ProjectViewID: 1})
 	})
 }
