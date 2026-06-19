@@ -49,6 +49,16 @@ describe('refreshToken in-flight dedup', () => {
 	})
 
 	it('coalesces concurrent calls into a single POST when Web Locks is available', async () => {
+		// Stub a minimal Web Locks API: happy-dom leaves navigator.locks
+		// undefined, so without this the test would silently fall through to
+		// the insecure-HTTP branch and never exercise navigator.locks.request.
+		const requestSpy = vi.fn((_name: string, cb: () => unknown) => cb())
+		Object.defineProperty(navigator, 'locks', {
+			value: {request: requestSpy},
+			configurable: true,
+			writable: true,
+		})
+
 		const p1 = refreshToken(true)
 		const p2 = refreshToken(true)
 
@@ -58,6 +68,9 @@ describe('refreshToken in-flight dedup', () => {
 		settlePost()
 		await Promise.all([p1, p2])
 
+		// The Web Locks branch actually ran...
+		expect(requestSpy).toHaveBeenCalledWith('vikunja-token-refresh', expect.any(Function))
+		// ...and the in-flight dedup still collapsed both calls into one POST.
 		expect(postCallCount).toBe(1)
 	})
 

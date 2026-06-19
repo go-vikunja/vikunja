@@ -57,6 +57,18 @@ function refreshError() {
 	})
 }
 
+// A JWT carrying a not-yet-expired user session, so the checkAuth() call that
+// renewToken() runs after a successful refresh treats the session as live.
+function freshUserJwt() {
+	const payload = {
+		id: 1,
+		type: AUTH_TYPES.USER,
+		exp: Math.floor(Date.now() / 1000) + 3600,
+	}
+	const encoded = btoa(JSON.stringify(payload))
+	return `header.${encoded}.signature`
+}
+
 describe('auth store renewToken retry (issue #2863)', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
@@ -79,15 +91,23 @@ describe('auth store renewToken retry (issue #2863)', () => {
 		const store = useAuthStore()
 		setupExpiredUserSession(store)
 
+		// The retry "succeeds" only if it actually leaves a usable token behind:
+		// renewToken() runs checkAuth() afterwards, which reads getToken(). Start
+		// with no token, then hand back a fresh JWT once the refresh resolves.
+		getTokenMock.mockReturnValue(null)
 		refreshTokenMock
 			.mockRejectedValueOnce(refreshError())
-			.mockResolvedValueOnce(undefined)
+			.mockImplementationOnce(async () => {
+				getTokenMock.mockReturnValue(freshUserJwt())
+			})
 
 		await store.renewToken()
 
 		// Two refresh attempts: the initial one and the single retry.
 		expect(refreshTokenMock).toHaveBeenCalledTimes(2)
-		// The retry succeeded, so the user is not bounced to login.
+		// The retry recovered the session: the user is still authenticated...
+		expect(store.authenticated).toBe(true)
+		// ...and was not bounced to login.
 		expect(routerPushMock).not.toHaveBeenCalledWith({name: 'user.login'})
 	})
 
