@@ -1748,18 +1748,16 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 }
 
 var (
-	checklistTiptapCheckedRegex   = regexp.MustCompile(`(data-checked=")true(")`)
-	checklistInputCheckedRegex    = regexp.MustCompile(`(<input[^>]*type=["']checkbox["'][^>]*?)\s+checked(?:=["'][^"']*["'])?`)
-	checklistMarkdownCheckedRegex = regexp.MustCompile(`(?m)^(\s*[-*]\s+\[)[xX](\])`)
+	checklistTiptapCheckedRegex = regexp.MustCompile(`(data-checked=")true(")`)
+	checklistInputCheckedRegex  = regexp.MustCompile(`(<input[^>]*type=["']checkbox["'][^>]*?)\s+checked(?:=["'][^"']*["'])?`)
 )
 
-// resetDescriptionChecklist unchecks every checklist item in a description without
-// touching any other content. A recurring task carries its description verbatim into
-// the next occurrence, so checked checklist items would otherwise stay checked.
+// resetDescriptionChecklist unchecks every checklist item in a TipTap HTML description
+// (descriptions are always stored as HTML, never markdown) without touching other content,
+// so a recurring task's next occurrence does not inherit checked items.
 func resetDescriptionChecklist(description string) string {
 	description = checklistTiptapCheckedRegex.ReplaceAllString(description, "${1}false${2}")
 	description = checklistInputCheckedRegex.ReplaceAllString(description, "$1")
-	description = checklistMarkdownCheckedRegex.ReplaceAllString(description, "$1 $2")
 	return description
 }
 

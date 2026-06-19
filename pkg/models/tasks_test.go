@@ -1006,21 +1006,6 @@ func TestUpdateDone(t *testing.T) {
 			assert.True(t, newTask.DueDate.After(oldTask.DueDate))
 			assert.Equal(t, unchecked, newTask.Description)
 		})
-		t.Run("reset markdown checklist on recurrence", func(t *testing.T) {
-			oldTask := &Task{
-				Done:        false,
-				RepeatAfter: 8600,
-				DueDate:     time.Unix(1550000000, 0),
-			}
-			newTask := &Task{
-				Done:        true,
-				Description: "- [x] one\n- [X] two\n- [ ] three\nnot a [x] checklist",
-			}
-
-			updateDone(oldTask, newTask)
-
-			assert.Equal(t, "- [ ] one\n- [ ] two\n- [ ] three\nnot a [x] checklist", newTask.Description)
-		})
 		t.Run("non-recurring description untouched", func(t *testing.T) {
 			const checked = `before<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>Item</p></li></ul>after`
 
