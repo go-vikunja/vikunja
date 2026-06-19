@@ -27,6 +27,11 @@ import (
 // logInstance is the instance of the logger which is used under the hood to log
 var logInstance *slog.Logger
 
+// IsInitialized returns true if the logger has been initialized.
+func IsInitialized() bool {
+	return logInstance != nil
+}
+
 // logpath is the path in which log files will be written.
 // This value is a mere fallback for other modules that could but shouldn't be used before calling ConfigureLogger
 var logPath = "."

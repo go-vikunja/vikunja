@@ -1,11 +1,13 @@
 import {test, expect} from '../../support/fixtures'
 import {TeamFactory} from '../../factories/team'
 import {TeamMemberFactory} from '../../factories/team_member'
+import {TeamProjectFactory} from '../../factories/team_project'
 import {UserFactory} from '../../factories/user'
+import {createProjects} from '../project/prepareProjects'
+import {login, setupApiUrl} from '../../support/authenticateUser'
 
 test.describe('Team', () => {
 	test('Creates a new team', async ({authenticatedPage: page}) => {
-		await TeamFactory.truncate()
 		await page.goto('/teams')
 
 		const newTeamName = 'New Team'
@@ -30,9 +32,9 @@ test.describe('Team', () => {
 
 		await page.goto('/teams')
 
-		await expect(page.locator('.teams.box')).not.toBeEmpty()
+		await expect(page.locator('ul.teams')).not.toBeEmpty()
 		for (const t of teams) {
-			await expect(page.locator('.teams.box')).toContainText(t.name)
+			await expect(page.locator('ul.teams')).toContainText(t.name)
 		}
 	})
 
@@ -99,5 +101,82 @@ test.describe('Team', () => {
 		await expect(newMemberRow).toBeVisible()
 		await expect(newMemberRow).toContainText('Member')
 		await expect(page.locator('.global-notification')).toContainText('Success')
+	})
+})
+
+test.describe('Team permission tiers on shared projects', () => {
+	// These tests log in as the second user (the team member), so we can't use
+	// the `authenticatedPage` fixture which auto-logs in as user 1.
+	test.beforeEach(async ({page}) => {
+		await setupApiUrl(page)
+	})
+
+	test('READ: team member cannot add tasks on a shared project', async ({page, apiContext}) => {
+		const [, member] = await UserFactory.create(2)
+		await createProjects(1)
+		await TeamFactory.create(1, {id: 1, created_by_id: 1}, false)
+		await TeamMemberFactory.create(1, {team_id: 1, user_id: member.id, admin: false}, false)
+		await TeamProjectFactory.create(1, {team_id: 1, project_id: 1, permission: 0}, false)
+
+		await login(page, apiContext, member)
+		await page.goto('/projects/1/1')
+
+		await expect(page.locator('.project-title')).toContainText('First Project')
+		await expect(page.locator('input.input[placeholder="Add a task…"]')).not.toBeVisible()
+	})
+
+	test('READ_WRITE: team member can add tasks on a shared project', async ({page, apiContext}) => {
+		const [, member] = await UserFactory.create(2)
+		await createProjects(1)
+		await TeamFactory.create(1, {id: 1, created_by_id: 1}, false)
+		await TeamMemberFactory.create(1, {team_id: 1, user_id: member.id, admin: false}, false)
+		await TeamProjectFactory.create(1, {team_id: 1, project_id: 1, permission: 1}, false)
+
+		await login(page, apiContext, member)
+		await page.goto('/projects/1/1')
+
+		await expect(page.locator('.project-title')).toContainText('First Project')
+		await expect(page.locator('.task-add textarea')).toBeVisible()
+	})
+
+	test('owner can revoke team share and member loses access', async ({page, apiContext}) => {
+		const [owner, member] = await UserFactory.create(2)
+		await createProjects(1)
+		const [team] = await TeamFactory.create(1, {id: 1, name: 'Shared Team', created_by_id: owner.id}, false)
+		await TeamMemberFactory.create(1, {team_id: team.id, user_id: member.id, admin: false}, false)
+		await TeamProjectFactory.create(1, {team_id: team.id, project_id: 1, permission: 1}, false)
+
+		// Sanity check: member can see the project before revocation.
+		await login(page, apiContext, member)
+		await page.goto('/projects/1/1')
+		await expect(page.locator('.project-title')).toContainText('First Project')
+
+		// Owner opens the share settings and removes the team.
+		await login(page, apiContext, owner)
+		await page.goto('/projects/1/settings/share')
+
+		const teamRow = page.locator('table.table tbody tr').filter({hasText: team.name})
+		await expect(teamRow).toBeVisible()
+		await teamRow.locator('.button.is-danger, button.is-danger').first().click()
+
+		const deleteRequest = page.waitForResponse(r =>
+			r.url().includes('/projects/1/teams/') && r.request().method() === 'DELETE',
+		)
+		await page.locator('dialog[open] .modal-content .actions .button')
+			.filter({hasText: 'Do it!'}).click()
+		await deleteRequest
+
+		await expect(teamRow).toHaveCount(0)
+
+		// Member can no longer open the project: the API returns a permission
+		// error and the frontend never renders the project title.
+		await login(page, apiContext, member)
+		const projectResponse = page.waitForResponse(r =>
+			r.url().endsWith('/projects/1') && r.request().method() === 'GET',
+		)
+		await page.goto('/projects/1/1')
+		const resp = await projectResponse
+		expect(resp.status()).toBeGreaterThanOrEqual(400)
+		await expect(page.locator('.project-title').filter({hasText: 'First Project'})).toHaveCount(0)
 	})
 })

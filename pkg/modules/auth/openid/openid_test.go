@@ -18,12 +18,14 @@ package openid
 
 import (
 	"testing"
+	"time"
 
 	"code.vikunja.io/api/pkg/models"
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -124,14 +126,14 @@ func TestGetOrCreateUser(t *testing.T) {
 			},
 		}
 
-		provider := &Provider{}
+		provider := &Provider{Name: "Vikunja Login"}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
 		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
 		require.NoError(t, err)
-		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
+		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", provider.Name)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -141,7 +143,7 @@ func TestGetOrCreateUser(t *testing.T) {
 			"email": cl.Email,
 		}, false)
 		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        team + " (OIDC)",
+			"name":        team + " (" + provider.Name + ")",
 			"external_id": oidcID,
 			"is_public":   false,
 		}, false)
@@ -161,19 +163,19 @@ func TestGetOrCreateUser(t *testing.T) {
 			},
 		}
 
-		provider := &Provider{}
+		provider := &Provider{Name: "Vikunja Login"}
 		idToken := &oidc.IDToken{Issuer: "https://some.service.com", Subject: "12345"}
 
 		u, err := getOrCreateUser(s, cl, provider, idToken)
 		require.NoError(t, err)
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
+		err = models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", provider.Name)
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
 
 		db.AssertExists(t, "teams", map[string]interface{}{
-			"name":        team + " (OIDC)",
+			"name":        team + " (" + provider.Name + ")",
 			"external_id": oidcID,
 			"is_public":   true,
 		}, false)
@@ -195,7 +197,7 @@ func TestGetOrCreateUser(t *testing.T) {
 
 		u := &user.User{ID: 10}
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
+		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "Vikunja Login")
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -216,7 +218,7 @@ func TestGetOrCreateUser(t *testing.T) {
 
 		u := &user.User{ID: 10}
 		teamData := getTeamDataFromToken(cl.VikunjaGroups, nil)
-		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "OIDC")
+		err := models.SyncExternalTeamsForUser(s, u, teamData, "https://some.issuer", "Vikunja Login")
 		require.NoError(t, err)
 		err = s.Commit()
 		require.NoError(t, err)
@@ -417,5 +419,102 @@ func TestMergeClaims(t *testing.T) {
 		require.Error(t, err)
 		var expectedErr *user.ErrNoOpenIDEmailProvided
 		assert.ErrorAs(t, err, &expectedErr)
+	})
+}
+
+func TestEnforceTOTPIfRequired(t *testing.T) {
+	// user 10 has TOTP enabled in pkg/db/fixtures/totp.yml with this secret.
+	const user10Secret = "JBSWY3DPEHPK3PXP"
+
+	t.Run("user without TOTP - no passcode required", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user 1 has a totp row but with enabled=false.
+		u := &user.User{ID: 1}
+		err := enforceTOTPIfRequired(s, u, "")
+		require.NoError(t, err)
+	})
+
+	t.Run("TOTP enabled - missing passcode returns ErrInvalidTOTPPasscode", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 10}
+		err := enforceTOTPIfRequired(s, u, "")
+		require.Error(t, err)
+		assert.True(t, user.IsErrInvalidTOTPPasscode(err))
+	})
+
+	t.Run("TOTP enabled - invalid passcode returns ErrInvalidTOTPPasscode", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		u := &user.User{ID: 10}
+		err := enforceTOTPIfRequired(s, u, "000000")
+		require.Error(t, err)
+		assert.True(t, user.IsErrInvalidTOTPPasscode(err))
+	})
+
+	t.Run("TOTP enabled - valid passcode succeeds", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		passcode, err := totp.GenerateCode(user10Secret, time.Now())
+		require.NoError(t, err)
+
+		u := &user.User{ID: 10}
+		err = enforceTOTPIfRequired(s, u, passcode)
+		require.NoError(t, err)
+	})
+}
+
+func TestSyncUserAvatarFromOpenID(t *testing.T) {
+	t.Run("empty picture URL resets openid provider to default", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Use the fixture user that has avatar_provider = "openid"
+		u, err := user.GetUserByID(s, 19)
+		require.NoError(t, err)
+		assert.Equal(t, "openid", u.AvatarProvider, "precondition: user should have openid avatar provider")
+
+		err = syncUserAvatarFromOpenID(s, u, "")
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// Verify the avatar provider was reset to default in the database
+		db.AssertExists(t, "users", map[string]interface{}{
+			"id":              19,
+			"avatar_provider": "default",
+		}, false)
+	})
+
+	t.Run("empty picture URL does not reset non-openid provider", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Use a regular user (avatar_provider is empty/"default")
+		u, err := user.GetUserByID(s, 1)
+		require.NoError(t, err)
+
+		err = syncUserAvatarFromOpenID(s, u, "")
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		// Verify the avatar provider was NOT changed to "default" or anything else
+		s2 := db.NewSession()
+		defer s2.Close()
+		updatedUser, err := user.GetUserByID(s2, 1)
+		require.NoError(t, err)
+		assert.Empty(t, updatedUser.AvatarProvider, "avatar provider should remain empty for non-openid user")
 	})
 }

@@ -51,6 +51,7 @@ export interface ITask extends IAbstract {
 	reactions: IReactionPerEntity
 	comments: ITaskComment[]
 	commentCount?: number
+	timeEntriesCount?: number
 
 	createdBy: IUser
 	created: Date
@@ -58,6 +59,7 @@ export interface ITask extends IAbstract {
 
 	projectId: IProject['id'] // Meta, only used when creating a new task
 	bucketId: IBucket['id']
+	buckets: IBucket[]
 }
 
 export type ITaskPartialWithId = PartialWithId<ITask>

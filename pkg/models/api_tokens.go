@@ -20,9 +20,12 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"slices"
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
 
@@ -35,24 +38,26 @@ type APIPermissions map[string][]string
 
 type APIToken struct {
 	// The unique, numeric id of this api key.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"token"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"token" readOnly:"true" doc:"The unique, numeric id of this api key."`
 
 	// A human-readable name for this token
-	Title string `xorm:"not null" json:"title" valid:"required"`
+	Title string `xorm:"not null" json:"title" valid:"required" minLength:"1" doc:"A human-readable name for this token."`
 	// The actual api key. Only visible after creation.
-	Token          string `xorm:"-" json:"token,omitempty"`
+	Token          string `xorm:"-" json:"token,omitempty" readOnly:"true" doc:"The cleartext api key. Returned only once, in the response to creating the token; never readable again."`
 	TokenSalt      string `xorm:"not null" json:"-"`
 	TokenHash      string `xorm:"not null unique" json:"-"`
 	TokenLastEight string `xorm:"not null index varchar(8)" json:"-"`
 	// The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add `{"tasks":["read_all","update"]}`.
-	APIPermissions APIPermissions `xorm:"json not null permissions" json:"permissions" valid:"required"`
+	APIPermissions APIPermissions `xorm:"json not null permissions" json:"permissions" valid:"required" doc:"The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add {\"tasks\":[\"read_all\",\"update\"]}."`
 	// The date when this key expires.
-	ExpiresAt time.Time `xorm:"not null" json:"expires_at" valid:"required"`
+	ExpiresAt time.Time `xorm:"not null" json:"expires_at" valid:"required" doc:"The date when this key expires."`
 
 	// A timestamp when this api key was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this api key was created. You cannot change this value."`
 
-	OwnerID int64 `xorm:"bigint not null" json:"-"`
+	// The user ID of the token owner. When creating a token for a bot user, set this
+	// to the bot's ID. If omitted, defaults to the authenticated user.
+	OwnerID int64 `xorm:"bigint not null" json:"owner_id,omitempty" query:"owner_id" doc:"The user ID of the token owner. When creating a token for a bot user, set this to the bot's ID; the bot must be owned by the authenticated user. If omitted, defaults to the authenticated user."`
 
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`
@@ -99,14 +104,35 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 	t.TokenHash = HashToken(t.Token, t.TokenSalt)
 	t.TokenLastEight = t.Token[len(t.Token)-8:]
 
-	t.OwnerID = a.GetID()
+	if t.OwnerID == 0 {
+		t.OwnerID = a.GetID()
+	} else if t.OwnerID != a.GetID() {
+		// If OwnerID is set to someone else, verify it's a bot owned by the caller.
+		botUser, err := user.GetUserByID(s, t.OwnerID)
+		if err != nil {
+			return err
+		}
+		if !botUser.IsBot() || botUser.BotOwnerID != a.GetID() {
+			return &user.ErrBotNotOwned{UserID: t.OwnerID}
+		}
+	}
 
 	if err := PermissionsAreValid(t.APIPermissions); err != nil {
 		return err
 	}
 
 	_, err = s.Insert(t)
-	return err
+	if err != nil {
+		return err
+	}
+
+	events.DispatchOnCommit(s, &APITokenIssuedEvent{
+		TokenID: t.ID,
+		DoerID:  a.GetID(),
+		OwnerID: t.OwnerID,
+	})
+
+	return nil
 }
 
 func HashToken(token, salt string) string {
@@ -131,7 +157,20 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 
 	tokens := []*APIToken{}
 
-	var where builder.Cond = builder.Eq{"owner_id": a.GetID()}
+	ownerID := a.GetID()
+	if t.OwnerID != 0 && t.OwnerID != a.GetID() {
+		// If filtering by a different owner, verify it's a bot owned by the caller.
+		botUser, lookupErr := user.GetUserByID(s, t.OwnerID)
+		if lookupErr != nil {
+			return nil, 0, 0, lookupErr
+		}
+		if !botUser.IsBot() || botUser.BotOwnerID != a.GetID() {
+			return nil, 0, 0, &user.ErrBotNotOwned{UserID: t.OwnerID}
+		}
+		ownerID = t.OwnerID
+	}
+
+	var where builder.Cond = builder.Eq{"owner_id": ownerID}
 
 	if search != "" {
 		where = builder.And(
@@ -165,8 +204,36 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tokens/{tokenID} [delete]
 func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
-	_, err = s.Where("id = ? AND owner_id = ?", t.ID, a.GetID()).Delete(&APIToken{})
-	return err
+	// Ownership is verified in CanDelete; delete by ID only.
+	_, err = s.Where("id = ?", t.ID).Delete(&APIToken{})
+	if err != nil {
+		return err
+	}
+
+	events.DispatchOnCommit(s, &APITokenRevokedEvent{
+		TokenID: t.ID,
+		DoerID:  a.GetID(),
+	})
+
+	return nil
+}
+
+// HasCaldavAccess checks whether the token has the caldav access permission.
+func (t *APIToken) HasCaldavAccess() bool {
+	perms, has := t.APIPermissions["caldav"]
+	if !has {
+		return false
+	}
+	return slices.Contains(perms, "access")
+}
+
+// HasFeedsAccess checks whether the token has the feeds access permission.
+func (t *APIToken) HasFeedsAccess() bool {
+	perms, has := t.APIPermissions["feeds"]
+	if !has {
+		return false
+	}
+	return slices.Contains(perms, "access")
 }
 
 // GetTokenFromTokenString returns the full token object from the original token string.
@@ -187,4 +254,33 @@ func GetTokenFromTokenString(s *xorm.Session, token string) (apiToken *APIToken,
 	}
 
 	return nil, &ErrAPITokenInvalid{}
+}
+
+// ValidateTokenAndGetOwner looks up a raw token string, checks it is not expired,
+// and returns both the APIToken and its owner. Callers are responsible for checking
+// permissions on the returned token (e.g. CanDoAPIRoute or HasCaldavAccess).
+// Returns (nil, nil, nil) if the token is invalid or expired, or if the owner
+// account is disabled/locked.
+func ValidateTokenAndGetOwner(s *xorm.Session, rawToken string) (*APIToken, *user.User, error) {
+	apiToken, err := GetTokenFromTokenString(s, rawToken)
+	if err != nil {
+		if IsErrAPITokenInvalid(err) {
+			return nil, nil, nil
+		}
+		return nil, nil, err
+	}
+
+	if time.Now().After(apiToken.ExpiresAt) {
+		return nil, nil, nil
+	}
+
+	u, err := user.GetUserByID(s, apiToken.OwnerID)
+	if err != nil {
+		if user.IsErrUserStatusError(err) {
+			return nil, nil, nil
+		}
+		return nil, nil, err
+	}
+
+	return apiToken, u, nil
 }

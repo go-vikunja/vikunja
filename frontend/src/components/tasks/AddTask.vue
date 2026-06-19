@@ -25,6 +25,7 @@
 					rows="1"
 					@keydown="resetEmptyTitleError"
 					@keydown.enter="handleEnter"
+					@keydown.esc="blurTaskInput"
 				/>
 				<QuickAddMagic
 					:highlight-hint-icon="taskAddHovered"
@@ -70,7 +71,7 @@ import QuickAddMagic from '@/components/tasks/partials/QuickAddMagic.vue'
 import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
 import TaskRelationService from '@/services/taskRelation'
 import TaskRelationModel from '@/models/taskRelation'
-import {getLabelsFromPrefix} from '@/modules/parseTaskText'
+import {getLabelsFromPrefix} from '@/modules/quickAddMagic'
 
 import {useAuthStore} from '@/stores/auth'
 import {useTaskStore} from '@/stores/tasks'
@@ -280,6 +281,10 @@ function handleEnter(e: KeyboardEvent) {
 
 function focusTaskInput() {
 	newTaskInput.value?.focus()
+}
+
+function blurTaskInput() {
+	newTaskInput.value?.blur()
 }
 
 defineExpose({

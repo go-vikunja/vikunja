@@ -69,7 +69,7 @@ function createPagination(totalPages: number, currentPage: number): PaginationPa
 			}
 			continue
 		}
-		
+
 		pages.push({
 			number: i + 1,
 			isEllipsis: false,
@@ -82,22 +82,92 @@ const pages = computed(() => createPagination(props.totalPages, props.currentPag
 </script>
 
 <style lang="scss" scoped>
-.pagination {
-	padding-block-end: 1rem;
-}
+// Layout/scaffold rules ported from bulma-css-variables/sass/components/pagination.sass.
+// BasePagination only owns .pagination / .pagination-list / .pagination-ellipsis —
+// the actual pagination items (.pagination-previous / -next / -link) and their
+// styles live in PaginationItem.vue.
 
-.pagination-previous,
-.pagination-next {
-	&:not(:disabled):hover {
-		background: $scheme-main;
-		cursor: pointer;
-	}
+.pagination {
+	align-items: center;
+	display: flex;
+	font-size: $size-normal;
+	justify-content: center;
+	margin: -0.25rem;
+	padding-block-end: 1rem;
+	text-align: center;
 }
 
 .pagination-list {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	text-align: center;
+
 	&, & li {
 		margin-block-start: 0;
 	}
+
+	li {
+		list-style: none;
+	}
+}
+
+.pagination-ellipsis {
+	appearance: none;
+	align-items: center;
+	border: 1px solid transparent;
+	border-radius: $radius;
+	box-shadow: none;
+	display: inline-flex;
+	font-size: 1em;
+	block-size: 2.5em;
+	justify-content: center;
+	line-height: 1.5;
+	margin: 0.25rem;
+	padding: calc(0.5em - 1px) 0.5em;
+	position: relative;
+	text-align: center;
+	vertical-align: top;
+
+	-webkit-touch-callout: none;
+	user-select: none;
+
+	color: var(--grey-light);
+	pointer-events: none;
+}
+
+@media screen and (max-width: $tablet - 1px) {
+	.pagination {
+		flex-wrap: wrap;
+	}
+
+	.pagination-list li {
+		flex-grow: 1;
+		flex-shrink: 1;
+	}
+}
+
+@media screen and (min-width: $tablet), print {
+	.pagination-list {
+		flex-grow: 1;
+		flex-shrink: 1;
+	}
+
+	.pagination-ellipsis {
+		margin-block: 0;
+	}
+
+	.pagination {
+		justify-content: space-between;
+		margin-block: 0;
+
+		&.is-centered {
+			.pagination-list {
+				justify-content: center;
+				order: 2;
+			}
+		}
+	}
 }
 </style>
-  

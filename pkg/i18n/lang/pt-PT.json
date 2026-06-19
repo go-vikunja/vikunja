@@ -70,9 +70,6 @@
 				"subject": "Lembrete para \"%[1]s\" (%[2]s)",
 				"message": "Este é um lembrete cordial da tarefa “%[1]s” (%[2]s)."
 			},
-			"comment": {
-				"mentioned_message": "**%[1]s** mencionou-te num comentário:"
-			},
 			"assigned": {
 				"subject_to_assignee": "Foste atribuído a \"%[1]s\" (%[2]s)",
 				"message_to_assignee": "%[1]s atribuiu-te a \"%[2]s\".",
@@ -84,9 +81,6 @@
 			"deleted": {
 				"subject": "\"%[1]s\" (%[2]s) foi eliminada",
 				"message": "%[1]s eliminou a tarefa \"%[2]s\" (%[3]s)"
-			},
-			"mentioned": {
-				"message": "**%[1]s** mencionou-te numa tarefa:"
 			},
 			"overdue": {
 				"subject": "A tarefa \"%[1]s\" (%[2]s) está em atraso",

@@ -373,6 +373,32 @@ func (err ErrInvalidTOTPPasscode) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrTOTPPasscodeUsed represents a "TOTPPasscodeUsed" kind of error.
+// This is returned when a TOTP passcode has already been used within its validity window.
+type ErrTOTPPasscodeUsed struct{}
+
+// IsErrTOTPPasscodeUsed checks if an error is a ErrTOTPPasscodeUsed.
+func IsErrTOTPPasscodeUsed(err error) bool {
+	_, ok := err.(ErrTOTPPasscodeUsed)
+	return ok
+}
+
+func (err ErrTOTPPasscodeUsed) Error() string {
+	return "This totp passcode has already been used"
+}
+
+// ErrCodeTOTPPasscodeUsed holds the unique world-error code of this error
+const ErrCodeTOTPPasscodeUsed = 1025
+
+// HTTPError holds the http error description
+func (err ErrTOTPPasscodeUsed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeTOTPPasscodeUsed,
+		Message:  "This totp passcode has already been used.",
+	}
+}
+
 // ErrInvalidAvatarProvider represents a "InvalidAvatarProvider" kind of error.
 type ErrInvalidAvatarProvider struct {
 	AvatarProvider string
@@ -476,6 +502,33 @@ func (err *ErrAccountDisabled) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusPreconditionFailed,
 		Code:     ErrCodeAccountDisabled,
 		Message:  "This account is disabled. Check your emails or ask your administrator.",
+	}
+}
+
+// ErrAccountLocked represents an "AccountLocked" kind of error.
+type ErrAccountLocked struct {
+	UserID int64
+}
+
+// IsErrAccountLocked checks if an error is a ErrAccountLocked.
+func IsErrAccountLocked(err error) bool {
+	_, ok := err.(*ErrAccountLocked)
+	return ok
+}
+
+func (err *ErrAccountLocked) Error() string {
+	return "Account is locked"
+}
+
+// ErrCodeAccountLocked holds the unique world-error code of this error
+const ErrCodeAccountLocked = 1026
+
+// HTTPError holds the http error description
+func (err *ErrAccountLocked) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeAccountLocked,
+		Message:  "This account is locked due to too many failed login attempts. You can reset your password to unlock it.",
 	}
 }
 
@@ -712,5 +765,111 @@ func (err ErrTokenUserMismatch) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusForbidden,
 		Code:     ErrorCodeTokenUserMismatch,
 		Message:  "This deletion token does not belong to your account.",
+	}
+}
+
+// ErrLastAdmin represents a "LastAdmin" kind of error.
+type ErrLastAdmin struct{}
+
+// IsErrLastAdmin checks if an error is a ErrLastAdmin.
+func IsErrLastAdmin(err error) bool {
+	_, ok := err.(ErrLastAdmin)
+	return ok
+}
+
+func (err ErrLastAdmin) Error() string {
+	return "Cannot remove the last remaining instance admin"
+}
+
+// ErrCodeLastAdmin holds the unique world-error code of this error
+const ErrCodeLastAdmin = 1030
+
+// HTTPError holds the http error description
+func (err ErrLastAdmin) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeLastAdmin,
+		Message:  "Cannot remove the last remaining instance admin.",
+	}
+}
+
+// ErrAccountIsBot represents an error where a bot user tried to authenticate interactively.
+type ErrAccountIsBot struct {
+	UserID int64
+}
+
+// IsErrAccountIsBot checks if an error is a ErrAccountIsBot.
+func IsErrAccountIsBot(err error) bool {
+	_, ok := err.(*ErrAccountIsBot)
+	return ok
+}
+
+func (err *ErrAccountIsBot) Error() string {
+	return fmt.Sprintf("Account is a bot [UserID: %d]", err.UserID)
+}
+
+// ErrCodeAccountIsBot holds the unique world-error code of this error
+const ErrCodeAccountIsBot = 1031
+
+// HTTPError holds the http error description
+func (err *ErrAccountIsBot) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeAccountIsBot,
+		Message:  "This account is a bot and cannot log in interactively.",
+	}
+}
+
+// ErrBotNotOwned represents an error where a user tried to operate on a bot they do not own.
+type ErrBotNotOwned struct {
+	UserID int64
+}
+
+// IsErrBotNotOwned checks if an error is a ErrBotNotOwned.
+func IsErrBotNotOwned(err error) bool {
+	_, ok := err.(*ErrBotNotOwned)
+	return ok
+}
+
+func (err *ErrBotNotOwned) Error() string {
+	return fmt.Sprintf("Bot not owned by caller [UserID: %d]", err.UserID)
+}
+
+// ErrCodeBotNotOwned holds the unique world-error code of this error
+const ErrCodeBotNotOwned = 1033
+
+// HTTPError holds the http error description
+func (err *ErrBotNotOwned) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusForbidden,
+		Code:     ErrCodeBotNotOwned,
+		Message:  "You do not own this bot user.",
+	}
+}
+
+// ErrBotUsernameMustHavePrefix represents an error where a bot username is missing the bot- prefix.
+type ErrBotUsernameMustHavePrefix struct {
+	Username string
+}
+
+// IsErrBotUsernameMustHavePrefix checks if an error is a ErrBotUsernameMustHavePrefix.
+func IsErrBotUsernameMustHavePrefix(err error) bool {
+	_, ok := err.(*ErrBotUsernameMustHavePrefix)
+	return ok
+}
+
+func (err *ErrBotUsernameMustHavePrefix) Error() string {
+	return fmt.Sprintf("Bot username must start with 'bot-' [Username: %s]", err.Username)
+}
+
+// ErrCodeBotUsernameMustHavePrefix holds the unique world-error code of this error
+const ErrCodeBotUsernameMustHavePrefix = 1034
+
+// HTTPError holds the http error description
+func (err *ErrBotUsernameMustHavePrefix) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeBotUsernameMustHavePrefix,
+		Message:  "Bot usernames must start with the 'bot-' prefix.",
 	}
 }

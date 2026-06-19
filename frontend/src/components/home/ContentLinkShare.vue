@@ -44,10 +44,10 @@
 			>
 				{{ $t('misc.loading') }}
 			</h1>
-			<div class="box has-text-start view">
+			<Card class="has-text-start view">
 				<RouterView />
 				<PoweredByLink utm-medium="link_share" />
-			</div>
+			</Card>
 		</div>
 	</div>
 </template>
@@ -64,6 +64,7 @@ import {useAuthStore} from '@/stores/auth'
 import Logo from '@/components/home/Logo.vue'
 import PoweredByLink from './PoweredByLink.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import Card from '@/components/misc/Card.vue'
 import Message from '@/components/misc/Message.vue'
 import {PROJECT_VIEW_KINDS} from '@/modelTypes/IProjectView'
 

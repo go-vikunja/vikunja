@@ -2,9 +2,8 @@ import AttachmentModel from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 
 import AttachmentService from '@/services/attachment'
-import {useTaskStore} from '@/stores/tasks'
 
-export async function uploadFile(taskId: number, file: File, onSuccess?: (url: string) => void) {
+export async function uploadFile(taskId: number, file: File, onSuccess?: (url: string) => void): Promise<IAttachment[]> {
 	const attachmentService = new AttachmentService()
 	const files = [file]
 
@@ -16,16 +15,14 @@ export async function uploadFiles(
 	taskId: number,
 	files: File[] | FileList,
 	onSuccess?: (attachmentUrl: string) => void,
-) {
+): Promise<IAttachment[]> {
 	const attachmentModel = new AttachmentModel({taskId})
 	const response = await attachmentService.create(attachmentModel, files)
 	console.debug(`Uploaded attachments for task ${taskId}, response was`, response)
 
+	const uploaded: IAttachment[] = []
 	response.success?.map((attachment: IAttachment) => {
-		useTaskStore().addTaskAttachment({
-			taskId,
-			attachment,
-		})
+		uploaded.push(attachment)
 		onSuccess?.(generateAttachmentUrl(taskId, attachment.id))
 	})
 
@@ -33,6 +30,8 @@ export async function uploadFiles(
 		const messages = response.errors.map((e: {message: string}) => e.message)
 		throw new Error(messages.join('\n'))
 	}
+
+	return uploaded
 }
 
 export function generateAttachmentUrl(taskId: number, attachmentId: number) {

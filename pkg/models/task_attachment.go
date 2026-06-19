@@ -18,10 +18,12 @@ package models
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/png"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.vikunja.io/api/pkg/events"
@@ -37,16 +39,16 @@ import (
 
 // TaskAttachment is the definition of a task attachment
 type TaskAttachment struct {
-	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"attachment"`
-	TaskID int64 `xorm:"bigint not null" json:"task_id" param:"task"`
+	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"attachment" readOnly:"true" doc:"The unique, numeric id of this attachment."`
+	TaskID int64 `xorm:"bigint not null" json:"task_id" param:"task" readOnly:"true" doc:"The id of the task this attachment belongs to. Taken from the URL, not the body."`
 	FileID int64 `xorm:"bigint not null" json:"-"`
 
 	CreatedByID int64      `xorm:"bigint not null" json:"-"`
-	CreatedBy   *user.User `xorm:"-" json:"created_by"`
+	CreatedBy   *user.User `xorm:"-" json:"created_by" readOnly:"true" doc:"The user who uploaded this attachment."`
 
-	File *files.File `xorm:"-" json:"file"`
+	File *files.File `xorm:"-" json:"file" readOnly:"true" doc:"Metadata of the uploaded file (name, mime type, size). The bytes are fetched from the download endpoint, not this field."`
 
-	Created time.Time `xorm:"created" json:"created"`
+	Created time.Time `xorm:"created" json:"created" readOnly:"true" doc:"A timestamp when this attachment was uploaded. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -105,9 +107,85 @@ func (ta *TaskAttachment) NewAttachment(s *xorm.Session, f io.ReadSeeker, realna
 	return nil
 }
 
+// AttachmentToUpload is a transport-neutral file to attach, so the upload logic
+// can be shared by the multipart v1 handler and the Huma v2 handler.
+type AttachmentToUpload struct {
+	Reader   io.ReadSeeker
+	Filename string
+	Size     uint64
+}
+
+// UploadTaskAttachments checks create access to the task, then stores each file,
+// collecting per-file failures rather than aborting. The caller owns the session
+// and the commit. A returned err means the request as a whole failed (e.g.
+// forbidden); per-file failures come back in failures instead.
+func UploadTaskAttachments(s *xorm.Session, a web.Auth, taskID int64, uploads []*AttachmentToUpload) (success []*TaskAttachment, failures []error, err error) {
+	ta := &TaskAttachment{TaskID: taskID}
+	can, err := ta.CanCreate(s, a)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !can {
+		return nil, nil, ErrGenericForbidden{}
+	}
+
+	for _, upload := range uploads {
+		attachment := &TaskAttachment{TaskID: taskID}
+		if err := attachment.NewAttachment(s, upload.Reader, upload.Filename, upload.Size, a); err != nil {
+			failures = append(failures, err)
+			continue
+		}
+		success = append(success, attachment)
+	}
+	return success, failures, nil
+}
+
+// LoadTaskAttachmentForDownload checks read access, loads the attachment with its
+// open file, and resolves a preview if previewSize is set and the file is an image.
+// It returns the loaded attachment and, when applicable, the preview bytes (the
+// caller serves those instead of the file). The caller owns the session, the
+// commit, and writing the response. Returns ErrGenericForbidden on denied access.
+func LoadTaskAttachmentForDownload(s *xorm.Session, a web.Auth, taskID, attachmentID int64, previewSize PreviewSize) (ta *TaskAttachment, preview []byte, err error) {
+	ta = &TaskAttachment{ID: attachmentID, TaskID: taskID}
+	can, _, err := ta.CanRead(s, a)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !can {
+		return nil, nil, ErrGenericForbidden{}
+	}
+
+	if err := ta.ReadOne(s, a); err != nil {
+		return nil, nil, err
+	}
+	if err := ta.File.LoadFileByID(); err != nil {
+		return nil, nil, err
+	}
+
+	if previewSize != PreviewSizeUnknown && strings.HasPrefix(ta.File.Mime, "image") {
+		preview = ta.GetPreview(previewSize)
+		// GetPreview consumes the file reader; re-open it for the non-preview fallback.
+		if preview == nil {
+			if err := ta.File.LoadFileByID(); err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
+	return ta, preview, nil
+}
+
 // ReadOne returns a task attachment
 func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
-	exists, err := s.Where("id = ?", ta.ID).Get(ta)
+	query := s.Where("id = ?", ta.ID).NoAutoCondition()
+
+	// When TaskID is provided (e.g. from URL parameters), verify the attachment
+	// belongs to that task to prevent IDOR attacks.
+	if ta.TaskID != 0 {
+		query = query.And("task_id = ?", ta.TaskID)
+	}
+
+	exists, err := query.Get(ta)
 	if err != nil {
 		return
 	}
@@ -125,9 +203,9 @@ func (ta *TaskAttachment) ReadOne(s *xorm.Session, _ web.Auth) (err error) {
 		return
 	}
 
-	// Get the creator (non-fatal if user doesn't exist)
+	// Swallow missing/disabled/locked so the user-delete cascade can complete.
 	ta.CreatedBy, err = user.GetUserByID(s, ta.CreatedByID)
-	if err != nil && !user.IsErrUserDoesNotExist(err) {
+	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
 		return err
 	}
 
@@ -220,8 +298,26 @@ func cacheKeyForTaskAttachmentPreview(id int64, size PreviewSize) string {
 func (ta *TaskAttachment) GetPreview(previewSize PreviewSize) []byte {
 	cacheKey := cacheKeyForTaskAttachmentPreview(ta.ID, previewSize)
 
-	result, err := keyvalue.Remember(cacheKey, func() (any, error) {
-		img, _, err := image.Decode(ta.File.File)
+	result, err := keyvalue.RememberValue(cacheKey, func() ([]byte, error) {
+		// Read all bytes up front so we can inspect dimensions without seeking.
+		// The file is an io.ReadCloser (no Seek), so we buffer it once.
+		data, err := io.ReadAll(ta.File.File)
+		if err != nil {
+			return nil, err
+		}
+
+		// Check image dimensions before full decode to prevent DoS
+		// from decompression bombs (small file, huge pixel dimensions)
+		const maxPixels = 50_000_000 // 50 megapixels
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+		if err != nil {
+			return nil, err
+		}
+		if cfg.Width*cfg.Height > maxPixels {
+			return nil, fmt.Errorf("image dimensions %dx%d exceed maximum of %d pixels", cfg.Width, cfg.Height, maxPixels)
+		}
+
+		img, _, err := image.Decode(bytes.NewReader(data))
 		if err != nil {
 			return nil, err
 		}
@@ -246,7 +342,7 @@ func (ta *TaskAttachment) GetPreview(previewSize PreviewSize) []byte {
 		return nil
 	}
 
-	return result.([]byte)
+	return result
 }
 
 type PreviewSize string

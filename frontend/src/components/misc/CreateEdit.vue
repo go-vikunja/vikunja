@@ -2,6 +2,7 @@
 	<Modal
 		:overflow="true"
 		:wide="wide"
+		:aria-label="title"
 		@close="$router.back()"
 	>
 		<Card

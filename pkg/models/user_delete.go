@@ -88,17 +88,15 @@ func deleteUsers() {
 
 func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Project, err error) {
 	projectsToDelete = []*Project{}
-	lm := &Project{IsArchived: true}
-	res, _, _, err := lm.ReadAll(s, u, "", 0, -1)
+	projects, _, err := getAllProjectsForUser(s, u.ID, &projectOptions{
+		page:        0,
+		perPage:     -1,
+		getArchived: true,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	if res == nil {
-		return nil, nil
-	}
-
-	projects := res.([]*Project)
 	for _, l := range projects {
 		if l.ID < 0 {
 			continue
@@ -130,6 +128,17 @@ func getProjectsToDelete(s *xorm.Session, u *user.User) (projectsToDelete []*Pro
 // This action is irrevocable.
 // Public to allow deletion from the CLI.
 func DeleteUser(s *xorm.Session, u *user.User) (err error) {
+	// Delete any bot users owned by this user first (cascades their data too).
+	var ownedBots []*user.User
+	if err = s.Where("bot_owner_id = ?", u.ID).Find(&ownedBots); err != nil {
+		return err
+	}
+	for _, bot := range ownedBots {
+		if err = DeleteUser(s, bot); err != nil {
+			return err
+		}
+	}
+
 	projectsToDelete, err := getProjectsToDelete(s, u)
 	if err != nil {
 		return err
@@ -169,14 +178,17 @@ func DeleteUser(s *xorm.Session, u *user.User) (err error) {
 		}
 	}
 
-	_, err = s.Where("id = ?", u.ID).Delete(&user.User{})
+	// Notify before deleting the user row, because ShouldNotify will try to
+	// look up the user and fail if the row is already gone.
+	err = notifications.Notify(u, &user.AccountDeletedNotification{
+		User: u,
+	}, s)
 	if err != nil {
 		return err
 	}
 
-	return notifications.Notify(u, &user.AccountDeletedNotification{
-		User: u,
-	}, s)
+	_, err = s.Where("id = ?", u.ID).Delete(&user.User{})
+	return err
 }
 
 func ensureProjectAdminUser(s *xorm.Session, l *Project) (hadUsers bool, err error) {

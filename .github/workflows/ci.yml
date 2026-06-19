@@ -5,6 +5,7 @@ env:
 
 on:
   pull_request:
+  merge_group:
   push:
     tags:
       - v*

@@ -3,6 +3,19 @@ import {UserFactory} from '../factories/user'
 import {TEST_PASSWORD} from './constants'
 
 /**
+ * Sets up the API URL in the page's localStorage and window so the frontend
+ * knows where to send requests. Call this before navigating to any page.
+ */
+export async function setupApiUrl(page: Page) {
+	// Use 127.0.0.1 instead of localhost to match the frontend's origin for CORS
+	const apiUrl = process.env.API_URL || 'http://127.0.0.1:3456/api/v1'
+	await page.addInitScript(({apiUrl}) => {
+		window.localStorage.setItem('API_URL', apiUrl)
+		window.API_URL = apiUrl
+	}, {apiUrl})
+}
+
+/**
  * This authenticates a user and puts the token in local storage which allows us to perform authenticated requests.
  * Returns the user and token for use in tests that need to make authenticated API calls.
  */
@@ -28,15 +41,10 @@ export async function login(page: Page | null, apiContext: APIRequestContext, us
 
 	// Set token and API_URL before navigating (only if page is provided)
 	if (page) {
-		// Use 127.0.0.1 instead of localhost to match the frontend's origin for CORS
-		const apiUrl = process.env.API_URL || 'http://127.0.0.1:3456/api/v1'
-		await page.addInitScript(({token, apiUrl}) => {
-			// Set both localStorage AND window.API_URL
-			// The app uses window.API_URL for initialization (in base.ts loadApp)
+		await setupApiUrl(page)
+		await page.addInitScript(({token}) => {
 			window.localStorage.setItem('token', token)
-			window.localStorage.setItem('API_URL', apiUrl)
-			window.API_URL = apiUrl
-		}, {token, apiUrl})
+		}, {token})
 	}
 
 	return {user, token}

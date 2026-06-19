@@ -17,6 +17,7 @@
 package user
 
 import (
+	"context"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -24,6 +25,100 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestCreateBotUser(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+
+		bot, err := CreateBotUser(s, &User{Username: "bot-reviewer"}, owner)
+		require.NoError(t, err)
+		assert.True(t, bot.IsBot())
+		assert.Equal(t, owner.ID, bot.BotOwnerID)
+		assert.Equal(t, StatusActive, bot.Status)
+		assert.Empty(t, bot.Email)
+		assert.Empty(t, bot.Password)
+	})
+	t.Run("empty username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: ""}, owner)
+		require.Error(t, err)
+	})
+	t.Run("username with spaces", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: "bot- name"}, owner)
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameMustNotContainSpaces(err))
+	})
+	t.Run("missing bot- prefix", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: "reviewer"}, owner)
+		require.Error(t, err)
+		assert.True(t, IsErrBotUsernameMustHavePrefix(err))
+	})
+	t.Run("duplicate username", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		owner, err := GetUserByID(s, 1)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: "bot-dup"}, owner)
+		require.NoError(t, err)
+		_, err = CreateBotUser(s, &User{Username: "bot-dup"}, owner)
+		require.Error(t, err)
+		assert.True(t, IsErrUsernameExists(err))
+	})
+	t.Run("bot cannot create bot", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+		botOwner := &User{ID: 999, BotOwnerID: 1}
+		_, err := CreateBotUser(s, &User{Username: "bot-child"}, botOwner)
+		require.Error(t, err)
+		assert.True(t, IsErrBotNotOwned(err))
+	})
+}
+
+func TestCreateUser_RejectsBotPrefix(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	_, err := CreateUser(s, &User{
+		Username: "bot-evil",
+		Password: "12345678",
+		Email:    "x@example.com",
+	})
+	require.Error(t, err)
+	assert.True(t, IsErrUsernameReserved(err))
+}
+
+func TestUser_IsBot(t *testing.T) {
+	t.Run("regular user", func(t *testing.T) {
+		u := &User{ID: 1}
+		assert.False(t, u.IsBot())
+	})
+	t.Run("bot user", func(t *testing.T) {
+		u := &User{ID: 2, BotOwnerID: 1}
+		assert.True(t, u.IsBot())
+	})
+}
 
 func TestCreateUser(t *testing.T) {
 	// Our dummy user for testing
@@ -263,7 +358,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user1", Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1", Password: "12345678"})
 		require.NoError(t, err)
 	})
 	t.Run("unverified email", func(t *testing.T) {
@@ -271,7 +366,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user5", Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user5", Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrEmailNotConfirmed(err))
 	})
@@ -280,7 +375,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user1", Password: "12345"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1", Password: "12345"})
 		require.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
@@ -289,7 +384,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "dfstestuu", Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "dfstestuu", Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
@@ -298,7 +393,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user1"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1"})
 		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
@@ -307,7 +402,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
@@ -316,8 +411,28 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user1@example.com", Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1@example.com", Password: "12345678"})
 		require.NoError(t, err)
+	})
+	t.Run("disabled user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user17 is disabled (status=2), password is "12345678"
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user17", Password: "12345678"})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountDisabled(err))
+	})
+	t.Run("locked user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// user18 is locked (status=3), password is "12345678"
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user18", Password: "12345678"})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountLocked(err))
 	})
 }
 
@@ -470,6 +585,33 @@ func TestUserPasswordReset(t *testing.T) {
 		require.Error(t, err)
 		assert.True(t, IsErrInvalidPasswordResetToken(err))
 	})
+	t.Run("disabled user cannot reset password", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		reset := &PasswordReset{
+			Token:       "disableduserpasswordresettoken",
+			NewPassword: "12345678",
+		}
+		_, err := ResetPassword(s, reset)
+		require.Error(t, err)
+		assert.True(t, IsErrAccountDisabled(err))
+	})
+}
+
+func TestRequestPasswordResetTokenDisabledUser(t *testing.T) {
+	t.Run("disabled user cannot request password reset token", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		err := RequestUserPasswordResetTokenByEmail(s, &PasswordTokenRequest{
+			Email: "user17@example.com",
+		})
+		require.Error(t, err)
+		assert.True(t, IsErrAccountDisabled(err))
+	})
 }
 
 func TestCleanupOldTokens(t *testing.T) {
@@ -490,9 +632,10 @@ func TestCleanupOldTokens(t *testing.T) {
 		deleted, err := CleanupOldTokens(s)
 		require.NoError(t, err)
 
-		// Fixtures have two old tokens that should be cleaned up:
-		// id=1 (kind=1, TokenPasswordReset, created 2021) and id=4 (kind=3, TokenAccountDeletion, created 2021)
-		assert.Equal(t, int64(2), deleted)
+		// Fixtures have three old tokens that should be cleaned up:
+		// id=1 (kind=1, TokenPasswordReset, created 2021), id=4 (kind=3, TokenAccountDeletion, created 2021),
+		// and id=5 (kind=1, TokenPasswordReset for disabled user, created 2024)
+		assert.Equal(t, int64(3), deleted)
 
 		err = s.Commit()
 		require.NoError(t, err)
@@ -594,4 +737,29 @@ func TestConfirmDeletion(t *testing.T) {
 			"kind":  TokenAccountDeletion,
 		})
 	})
+}
+
+func TestGetUserByID_DisabledUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// user17 is disabled (status=2)
+	u, err := GetUserByID(s, 17)
+	require.Error(t, err)
+	assert.True(t, IsErrAccountDisabled(err), "GetUserByID should return ErrAccountDisabled, got: %v", err)
+	// User should still be returned alongside the error
+	assert.NotNil(t, u)
+	assert.Equal(t, int64(17), u.ID)
+}
+
+func TestGetUserByID_ActiveUser(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// user1 is active
+	u, err := GetUserByID(s, 1)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), u.ID)
 }

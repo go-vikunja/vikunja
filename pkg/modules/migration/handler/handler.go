@@ -39,7 +39,7 @@ type MigrationWeb struct {
 
 // AuthURL is returned to the user when requesting the auth url
 type AuthURL struct {
-	URL string `json:"url"`
+	URL string `json:"url" readOnly:"true" doc:"The OAuth authorization url the client should redirect the user to. After authorizing, the obtained code is passed back to the migrate endpoint."`
 }
 
 // RegisterMigrator registers all routes for migration
@@ -55,6 +55,28 @@ func (mw *MigrationWeb) RegisterMigrator(g *echo.Group) {
 func (mw *MigrationWeb) AuthURL(c *echo.Context) error {
 	ms := mw.MigrationStruct()
 	return c.JSON(http.StatusOK, &AuthURL{URL: ms.AuthURL()})
+}
+
+// StartMigration kicks off a migration for the given user: it refuses with
+// migration.ErrMigrationAlreadyRunning if one is already in progress, then
+// dispatches the MigrationRequestedEvent that runs the migration asynchronously.
+// The migrator must already carry its request payload (e.g. the OAuth code).
+// Shared by the v1 and v2 HTTP layers so the orchestration lives in one place.
+func StartMigration(ms migration.Migrator, u *user2.User) error {
+	stats, err := migration.GetMigrationStatus(ms, u)
+	if err != nil {
+		return err
+	}
+
+	if !stats.StartedAt.IsZero() && stats.FinishedAt.IsZero() {
+		return &migration.ErrMigrationAlreadyRunning{StartedAt: stats.StartedAt}
+	}
+
+	return events.Dispatch(&MigrationRequestedEvent{
+		Migrator:     ms,
+		MigratorKind: ms.Name(),
+		User:         u,
+	})
 }
 
 // Migrate calls the migration method
@@ -85,12 +107,7 @@ func (mw *MigrationWeb) Migrate(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "No or invalid model provided: "+err.Error()).Wrap(err)
 	}
 
-	err = events.Dispatch(&MigrationRequestedEvent{
-		Migrator:     ms,
-		MigratorKind: ms.Name(),
-		User:         user,
-	})
-	if err != nil {
+	if err := StartMigration(ms, user); err != nil {
 		return err
 	}
 

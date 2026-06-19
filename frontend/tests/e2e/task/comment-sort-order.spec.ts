@@ -39,7 +39,6 @@ test.describe('Comment sort order', () => {
 		await ProjectFactory.create(1)
 		await createDefaultViews(1)
 		await TaskFactory.create(1, {id: 1})
-		await TaskCommentFactory.truncate()
 	})
 
 	test('defaults to oldest first', async ({authenticatedPage: page}) => {
@@ -199,7 +198,6 @@ test.describe('Comment sort order', () => {
 			frontend_settings: JSON.stringify({commentSortOrder: 'desc'}),
 		}))[0]
 		const project = (await ProjectFactory.create(1, {owner_id: user.id}))[0]
-		await TaskFactory.truncate()
 		await TaskFactory.create(1, {id: 1, project_id: project.id, created_by_id: user.id})
 		await createCommentsWithTimestamps(3)
 

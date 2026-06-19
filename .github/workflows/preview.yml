@@ -67,18 +67,25 @@ jobs:
             RELEASE_VERSION=${{ steps.ghd.outputs.describe }}
       - name: Comment on PR
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          DOCKER_META_TAGS: ${{ steps.meta.outputs.tags }}
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
-            const fullSha = context.payload.pull_request.head.sha;
-            const shortSha = fullSha.substring(0, 7);
             const base = 'preview.vikunja.dev';
             const image = `ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}`;
             const marker = '<!-- vikunja-preview-comment -->';
 
+            // Extract the SHA tag from docker meta output (the actual tag pushed to GHCR)
+            const metaTags = process.env.DOCKER_META_TAGS.split('\n').map(t => t.trim()).filter(Boolean);
+            const shaImageRef = metaTags.find(t => t.includes(':sha-'));
+            const shaTag = shaImageRef ? shaImageRef.split(':').pop() : null;
+            const shortSha = shaTag ? shaTag.replace('sha-', '').substring(0, 7) : context.payload.pull_request.head.sha.substring(0, 7);
+
             const prTag = `pr-${prNumber}`;
-            const shaTag = `sha-${fullSha}`;
-            const newShaRow = `| https://${shaTag}.${base} | \`${image}:${shaTag}\` | \`${shortSha}\` |`;
+            const newShaRow = shaTag
+              ? `| https://${shaTag}.${base} | \`${image}:${shaTag}\` | \`${shortSha}\` |`
+              : '';
 
             // Collect previous SHA rows from existing comment
             let previousShaRows = [];
@@ -96,9 +103,11 @@ jobs:
             }
 
             // Remove duplicate if this SHA was already recorded
-            previousShaRows = previousShaRows.filter(r => !r.includes(shaTag));
+            if (shaTag) {
+              previousShaRows = previousShaRows.filter(r => !r.includes(shaTag));
+            }
 
-            const allShaRows = [newShaRow, ...previousShaRows].join('\n');
+            const allShaRows = [newShaRow, ...previousShaRows].filter(Boolean).join('\n');
 
             const body = [
               marker,

@@ -18,15 +18,6 @@
 					:class="{ 'project-is-collapsed': !childProjectsOpen }"
 				/>
 			</BaseButton>
-			<span
-				v-if="canEditOrder && project.id > 0 && project.maxPermission !== null && project.maxPermission > PERMISSIONS.READ"
-				class="icon menu-item-icon handle drag-handle-standalone"
-				@mousedown.stop
-				@click.stop.prevent
-				@touchstart.stop
-			>
-				<Icon icon="grip-lines" />
-			</span>
 			<BaseButton
 				:to="{ name: 'project.index', params: { projectId: project.id} }"
 				class="list-menu-link"
@@ -48,6 +39,15 @@
 					>
 						<Icon icon="filter" />
 					</span>
+					<span
+						v-if="canEditOrder && project.id > 0 && project.maxPermission !== null && project.maxPermission > PERMISSIONS.READ"
+						class="icon menu-item-icon handle drag-handle"
+						@mousedown.stop
+						@click.stop.prevent
+						@touchstart.stop
+					>
+						<Icon icon="grip-lines" />
+					</span>
 				</div>
 				<span class="project-menu-title">{{ getProjectTitle(project) }}</span>
 			</BaseButton>
@@ -64,7 +64,6 @@
 				v-if="project.maxPermission !== null && project.maxPermission > PERMISSIONS.READ"
 				class="menu-list-dropdown"
 				:project="project"
-				:simple="true"
 			>
 				<template #trigger="{toggleOpen}">
 					<BaseButton
@@ -222,7 +221,7 @@ const canToggleFavorite = computed(() => {
 	opacity: 1;
 }
 
-.list-menu:hover > div > .drag-handle-standalone {
+.list-menu:hover .color-bubble-wrapper > .drag-handle {
 	opacity: 1;
 }
 
@@ -253,16 +252,15 @@ const canToggleFavorite = computed(() => {
 	}
 }
 
-.drag-handle-standalone {
-	inline-size: 1rem;
-	block-size: 1rem;
+.drag-handle {
 	opacity: 0;
 	cursor: grab;
 	transition: opacity $transition;
-	z-index: 2;
-
 	position: absolute;
-	inset-inline-start: 2.15rem;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 
 	&:active {
 		cursor: grabbing;
@@ -280,7 +278,7 @@ const canToggleFavorite = computed(() => {
 }
 
 @media (pointer: coarse) {
-	.drag-handle-standalone {
+	.drag-handle {
 		display: none !important;
 	}
 }

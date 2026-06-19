@@ -27,11 +27,13 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/modules/avatar/upload"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 
@@ -47,6 +49,10 @@ type Callback struct {
 	Code        string `query:"code" json:"code"`
 	Scope       string `query:"scope" json:"scope"`
 	RedirectURL string `json:"redirect_url"`
+	// TOTPPasscode is required when the resolved user has TOTP enabled.
+	// Clients must restart the OIDC flow and populate this field after
+	// receiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.
+	TOTPPasscode string `json:"totp_passcode"`
 }
 
 // Provider is the structure of an OpenID Connect provider
@@ -115,6 +121,38 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 	return iss.Issuer, nil
 }
 
+// enforceTOTPIfRequired mirrors the TOTP gate from pkg/routes/api/v1/login.go
+// for the OIDC flow. Returns nil when the user does not have TOTP enabled.
+// See GHSA-8jvc-mcx6-r4cg.
+func enforceTOTPIfRequired(s *xorm.Session, u *user.User, totpPasscode string) error {
+	totpEnabled, err := user.TOTPEnabledForUser(s, u)
+	if err != nil {
+		return err
+	}
+	if !totpEnabled {
+		return nil
+	}
+
+	if totpPasscode == "" {
+		return user.ErrInvalidTOTPPasscode{}
+	}
+
+	_, err = user.ValidateTOTPPasscode(s, &user.TOTPPasscode{
+		User:     u,
+		Passcode: totpPasscode,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Reset the counter so old failed attempts don't trip a later lockout.
+	if err := keyvalue.Del(u.GetFailedTOTPAttemptsKey()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // HandleCallback handles the auth request callback after redirecting from the provider with an auth code
 // @Summary Authenticate a user with OpenID Connect
 // @Description After a redirect from the OpenID Connect provider to the frontend has been made with the authentication `code`, this endpoint can be used to obtain a jwt token for that user and thus log them in.
@@ -126,11 +164,16 @@ func (p *Provider) Issuer() (issuerURL string, err error) {
 // @Param callback body openid.Callback true "The openid callback"
 // @Param provider path int true "The OpenID Connect provider key as returned by the /info endpoint"
 // @Success 200 {object} auth.Token
+// @Failure 412 {object} models.Message "Invalid totp passcode."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /auth/openid/{provider}/callback [post]
 func HandleCallback(c *echo.Context) error {
+	cb := &Callback{}
+	if err := c.Bind(cb); err != nil {
+		return &models.ErrOpenIDBadRequest{Message: "Bad data"}
+	}
 
-	provider, oauthToken, idToken, err := getProviderAndOidcTokens(c)
+	u, err := AuthenticateCallback(c.Request().Context(), cb, c.Param("provider"))
 	if err != nil {
 		var detailedErr *models.ErrOpenIDBadRequestWithDetails
 		if errors.As(err, &detailedErr) {
@@ -142,38 +185,88 @@ func HandleCallback(c *echo.Context) error {
 		return err
 	}
 
-	cl, err := getClaims(provider, oauthToken, idToken)
+	// Create token
+	return auth.NewUserAuthTokenResponse(u, c, false)
+}
+
+// AuthenticateCallback resolves an OpenID Connect callback to an authenticated
+// user: it exchanges the auth code, verifies the ID token, creates or updates the
+// matching local user, enforces the account-status and TOTP gates, and syncs the
+// user's external teams. It is the transport-agnostic core shared by the v1 echo
+// handler and the v2 Huma handler; the caller issues the auth token. The
+// ErrOpenIDBadRequestWithDetails error keeps its provider detail so v1 can render
+// its bespoke body and v2 can map it to RFC 9457.
+func AuthenticateCallback(ctx context.Context, cb *Callback, providerKey string) (*user.User, error) {
+	// ctx is threaded through only to dispatch the login event; the OIDC token
+	// exchange, claim verification and user/avatar sync run on their own
+	// background contexts, exactly as the v1 callback always did.
+	provider, oauthToken, idToken, err := exchangeOidcTokens(cb, providerKey) //nolint:contextcheck
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	cl, err := getClaims(provider, oauthToken, idToken) //nolint:contextcheck
+	if err != nil {
+		return nil, err
 	}
 
 	s := db.NewSession()
 	defer s.Close()
+	// Discards events queued during a rolled-back transaction (e.g. user
+	// creation); a no-op once DispatchPending has run.
+	defer events.CleanupPending(s)
 
 	// Check if we have seen this user before
-	u, err := getOrCreateUser(s, cl, provider, idToken)
+	u, err := getOrCreateUser(s, cl, provider, idToken) //nolint:contextcheck
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new user for provider %s: %v", provider.Name, err)
-		return err
+		return nil, err
+	}
+
+	if u.Status == user.StatusDisabled {
+		_ = s.Rollback()
+		return nil, &user.ErrAccountDisabled{UserID: u.ID}
+	}
+	if u.Status == user.StatusAccountLocked {
+		_ = s.Rollback()
+		return nil, &user.ErrAccountLocked{UserID: u.ID}
+	}
+
+	// Must run before team sync so a failed 2FA attempt cannot mutate team
+	// membership. Commit before HandleFailedTOTPAuth so the getOrCreateUser
+	// writes persist and the SQLite write lock is released — its dedicated
+	// session needs to acquire its own. See GHSA-fgfv-pv97-6cmj.
+	if err := enforceTOTPIfRequired(s, u, cb.TOTPPasscode); err != nil {
+		if commitErr := s.Commit(); commitErr != nil {
+			log.Errorf("Error committing session after failed OIDC TOTP attempt for user %d: %v", u.ID, commitErr)
+		} else {
+			// The user creation above was committed, so its events are real.
+			events.DispatchPending(ctx, s)
+		}
+		if user.IsErrInvalidTOTPPasscode(err) {
+			user.HandleFailedTOTPAuth(u)
+		}
+		return nil, err
 	}
 
 	teamData := getTeamDataFromToken(cl.VikunjaGroups, provider)
 
-	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, "OIDC")
+	err = models.SyncExternalTeamsForUser(s, u, teamData, idToken.Issuer, provider.Name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = s.Commit()
 	if err != nil {
 		_ = s.Rollback()
 		log.Errorf("Error creating new team for provider %s: %v", provider.Name, err)
-		return err
+		return nil, err
 	}
 
-	// Create token
-	return auth.NewUserAuthTokenResponse(u, c, false)
+	events.DispatchPending(ctx, s)
+
+	return u, nil
 }
 
 func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (teamData []*models.Team) {
@@ -233,9 +326,17 @@ func getTeamDataFromToken(groups []map[string]interface{}, provider *Provider) (
 
 // Download and store a user's avatar from an OpenID provider
 func syncUserAvatarFromOpenID(s *xorm.Session, u *user.User, pictureURL string) (err error) {
-	// Don't sync avatar if no picture URL is provided
+	// If no picture URL is provided, reset the avatar provider if it was set to openid
 	if pictureURL == "" {
-		return fmt.Errorf("no picture URL provided")
+		if u.AvatarProvider == "openid" {
+			u.AvatarProvider = "default"
+			_, err = s.Where("id = ?", u.ID).Cols("avatar_provider").Update(&user.User{AvatarProvider: "default"})
+			if err != nil {
+				return fmt.Errorf("error resetting avatar provider: %w", err)
+			}
+			avatar.FlushAllCaches(u)
+		}
+		return nil
 	}
 
 	log.Debugf("Found avatar URL for user %s: %s", u.Username, pictureURL)
@@ -278,10 +379,16 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 		Issuer:  idToken.Issuer,
 		Subject: idToken.Subject,
 	})
-	if err != nil && !user.IsErrUserDoesNotExist(err) {
+	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
 		return nil, err
 	}
-	alreadyCreatedFromIssuer = err == nil // found if no error, not found if we reach it here despite an error
+	alreadyCreatedFromIssuer = err == nil || user.IsErrUserStatusError(err)
+
+	// If the user exists but is disabled/locked, return early — don't update their profile or sync avatar.
+	// HandleCallback will reject the auth attempt.
+	if alreadyCreatedFromIssuer && user.IsErrUserStatusError(err) {
+		return u, nil
+	}
 
 	if !alreadyCreatedFromIssuer && (provider.EmailFallback || provider.UsernameFallback) {
 
@@ -304,10 +411,15 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 		// Check if the user exists for the given fallback matching options
 		u, err = user.GetUserWithEmail(s, searchUser)
-		if err != nil && !user.IsErrUserDoesNotExist(err) {
+		if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
 			return nil, err
 		}
-		fallbackMatchFound = err == nil // found if no error, not found if we reach it here despite an error
+		fallbackMatchFound = err == nil || user.IsErrUserStatusError(err)
+
+		// Same as above: disabled/locked user found via fallback — return early.
+		if fallbackMatchFound && user.IsErrUserStatusError(err) {
+			return u, nil
+		}
 	}
 
 	if !alreadyCreatedFromIssuer && !fallbackMatchFound {
@@ -377,6 +489,14 @@ func mergeClaims(cl *claims, cl2 *claims, forceUserInfo bool) error {
 		cl.Picture = cl2.Picture
 	}
 
+	if (forceUserInfo && len(cl2.VikunjaGroups) > 0) || len(cl.VikunjaGroups) == 0 {
+		cl.VikunjaGroups = cl2.VikunjaGroups
+	}
+
+	if (forceUserInfo && len(cl2.ExtraSettingsLinks) > 0) || len(cl.ExtraSettingsLinks) == 0 {
+		cl.ExtraSettingsLinks = cl2.ExtraSettingsLinks
+	}
+
 	if cl.Email == "" {
 		return &user.ErrNoOpenIDEmailProvided{}
 	}
@@ -419,15 +539,11 @@ func getClaims(provider *Provider, oauth2Token *oauth2.Token, idToken *oidc.IDTo
 	return cl, nil
 }
 
-func getProviderAndOidcTokens(c *echo.Context) (*Provider, *oauth2.Token, *oidc.IDToken, error) {
-
-	cb := &Callback{}
-	if err := c.Bind(cb); err != nil {
-		return nil, nil, nil, &models.ErrOpenIDBadRequest{Message: "Bad data"}
-	}
-
-	// Check if the provider exists
-	providerKey := c.Param("provider")
+// exchangeOidcTokens resolves the provider, exchanges the callback's auth code,
+// and verifies the returned ID token. It takes an already-bound Callback so it
+// can be shared by the v1 echo handler (which binds from the request) and the v2
+// Huma handler (which binds via its typed body).
+func exchangeOidcTokens(cb *Callback, providerKey string) (*Provider, *oauth2.Token, *oidc.IDToken, error) {
 	provider, err := GetProvider(providerKey)
 	if err != nil {
 		return nil, nil, nil, err

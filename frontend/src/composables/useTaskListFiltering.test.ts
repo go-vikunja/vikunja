@@ -177,4 +177,52 @@ describe('shouldShowTaskInListView', () => {
 
 		expect(shouldShowTaskInListView(subtask as ITask, allTasks)).toBe(false)
 	})
+
+	it('should show subtasks in filtered views even when parent is in the same view', () => {
+		const parentTask: Partial<ITask> = {
+			id: 1,
+			title: 'Parent Task',
+			projectId: 100,
+			relatedTasks: {},
+		}
+
+		const subtask: Partial<ITask> = {
+			id: 2,
+			title: 'Subtask',
+			projectId: 100,
+			relatedTasks: {
+				parenttask: [{
+					id: 1,
+					title: 'Parent Task',
+					projectId: 100,
+				} as ITask],
+			},
+		}
+
+		const allTasks = [parentTask, subtask] as ITask[]
+
+		// In a filtered view, both parent and subtask should be visible
+		expect(shouldShowTaskInListView(parentTask as ITask, allTasks, true)).toBe(true)
+		expect(shouldShowTaskInListView(subtask as ITask, allTasks, true)).toBe(true)
+	})
+
+	it('should show subtasks in filtered views even when only subtask matches filter', () => {
+		const subtask: Partial<ITask> = {
+			id: 2,
+			title: 'Subtask matching filter',
+			projectId: 100,
+			relatedTasks: {
+				parenttask: [{
+					id: 1,
+					title: 'Parent Task',
+					projectId: 100,
+				} as ITask],
+			},
+		}
+
+		// Only the subtask is in the results (parent didn't match filter)
+		const allTasks = [subtask] as ITask[]
+
+		expect(shouldShowTaskInListView(subtask as ITask, allTasks, true)).toBe(true)
+	})
 })

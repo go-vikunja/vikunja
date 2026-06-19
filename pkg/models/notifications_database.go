@@ -28,7 +28,7 @@ type DatabaseNotifications struct {
 
 	// Whether or not to mark this notification as read or unread.
 	// True is read, false is unread.
-	Read bool `xorm:"-" json:"read"`
+	Read bool `xorm:"-" json:"read" doc:"Set true to mark the notification read, false to mark it unread."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -53,7 +53,13 @@ func (d *DatabaseNotifications) ReadAll(s *xorm.Session, a web.Auth, _ string, p
 	}
 
 	limit, start := getLimitFromPageIndex(page, perPage)
-	return notifications.GetNotificationsForUser(s, a.GetID(), limit, start)
+	ns, resultCount, total, err := notifications.GetNotificationsForUser(s, a.GetID(), limit, start)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+
+	refreshNotificationsUsers(s, ns)
+	return ns, resultCount, total, nil
 }
 
 // CanUpdate checks if a user can mark a notification as read.

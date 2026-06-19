@@ -1,6 +1,5 @@
 <template>
 	<Modal
-		transition-name="fade"
 		variant="hint-modal"
 		@close="$router.back()"
 	>

@@ -78,7 +78,7 @@ func checkPublicURL() CheckResult {
 func checkJWTSecret() CheckResult {
 	// We can't check the actual value, but we can check if it's the default length
 	// which would indicate it was auto-generated
-	secret := config.ServiceJWTSecret.GetString()
+	secret := config.ServiceSecret.GetString()
 
 	// Auto-generated secrets are 64 hex characters (32 bytes)
 	if len(secret) == 64 {

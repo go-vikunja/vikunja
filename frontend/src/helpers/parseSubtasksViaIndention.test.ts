@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest'
 import {parseSubtasksViaIndention} from '@/helpers/parseSubtasksViaIndention'
-import {PrefixMode} from '@/modules/parseTaskText'
+import {PrefixMode} from '@/modules/quickAddMagic'
 
 describe('Parse Subtasks via Relation', () => {
 	it('Should not return a parent for a single task', () => {

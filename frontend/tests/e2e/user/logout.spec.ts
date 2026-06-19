@@ -31,7 +31,6 @@ test.describe('Log out', () => {
 
 	test('Should clear the project history after logging the user out', async ({authenticatedPage: page}) => {
 		const projects = await ProjectFactory.create(1)
-		await ProjectViewFactory.truncate()
 		await ProjectViewFactory.create(1, {
 			id: projects[0].id,
 			project_id: projects[0].id,

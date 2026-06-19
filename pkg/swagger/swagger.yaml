@@ -1,5 +1,25 @@
 basePath: /api/v1
 definitions:
+  admin.IsAdminPatch:
+    properties:
+      is_admin:
+        description: Pointer to distinguish "omitted" from false; an empty body would
+          silently demote otherwise.
+        type: boolean
+    type: object
+  admin.OwnerPatch:
+    properties:
+      owner_id:
+        type: integer
+    type: object
+  admin.StatusPatch:
+    properties:
+      status:
+        allOf:
+        - $ref: '#/definitions/user.Status'
+        description: Pointer to distinguish "omitted" from StatusActive; an empty
+          body would silently re-enable otherwise.
+    type: object
   auth.Token:
     properties:
       token:
@@ -41,6 +61,96 @@ definitions:
       username_fallback:
         type: boolean
     type: object
+  csv.ColumnMapping:
+    properties:
+      attribute:
+        $ref: '#/definitions/csv.TaskAttribute'
+      column_index:
+        type: integer
+      column_name:
+        type: string
+    type: object
+  csv.DetectionResult:
+    properties:
+      columns:
+        items:
+          type: string
+        type: array
+      date_format:
+        type: string
+      delimiter:
+        type: string
+      preview_rows:
+        items:
+          items:
+            type: string
+          type: array
+        type: array
+      quote_char:
+        type: string
+      suggested_mapping:
+        items:
+          $ref: '#/definitions/csv.ColumnMapping'
+        type: array
+    type: object
+  csv.PreviewResult:
+    properties:
+      tasks:
+        items:
+          $ref: '#/definitions/csv.PreviewTask'
+        type: array
+      total_rows:
+        type: integer
+    type: object
+  csv.PreviewTask:
+    properties:
+      description:
+        type: string
+      done:
+        type: boolean
+      due_date:
+        type: string
+      end_date:
+        type: string
+      labels:
+        items:
+          type: string
+        type: array
+      priority:
+        type: integer
+      project:
+        type: string
+      start_date:
+        type: string
+      title:
+        type: string
+    type: object
+  csv.TaskAttribute:
+    enum:
+    - title
+    - description
+    - due_date
+    - start_date
+    - end_date
+    - done
+    - priority
+    - labels
+    - project
+    - reminder
+    - ignore
+    type: string
+    x-enum-varnames:
+    - AttrTitle
+    - AttrDescription
+    - AttrDueDate
+    - AttrStartDate
+    - AttrEndDate
+    - AttrDone
+    - AttrPriority
+    - AttrLabels
+    - AttrProject
+    - AttrReminder
+    - AttrIgnore
   files.File:
     properties:
       created:
@@ -57,6 +167,37 @@ definitions:
   handler.AuthURL:
     properties:
       url:
+        type: string
+    type: object
+  license.Feature:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - FeatureUnknown
+    - FeatureAdminPanel
+    - FeatureTimeTracking
+    - FeatureAuditLogs
+  license.Info:
+    properties:
+      expires_at:
+        type: string
+      features:
+        items:
+          type: string
+        type: array
+      instance_id:
+        type: string
+      last_check_failed:
+        type: boolean
+      licensed:
+        type: boolean
+      max_users:
+        type: integer
+      validated_at:
         type: string
     type: object
   microsofttodo.Migration:
@@ -93,6 +234,11 @@ definitions:
       id:
         description: The unique, numeric id of this api key.
         type: integer
+      owner_id:
+        description: |-
+          The user ID of the token owner. When creating a token for a bot user, set this
+          to the bot's ID. If omitted, defaults to the authenticated user.
+        type: integer
       permissions:
         allOf:
         - $ref: '#/definitions/models.APIPermissions'
@@ -102,6 +248,7 @@ definitions:
           existing tasks, you should add `{"tasks":["read_all","update"]}`.
       title:
         description: A human-readable name for this token
+        minLength: 1
         type: string
       token:
         description: The actual api key. Only visible after creation.
@@ -176,6 +323,40 @@ definitions:
         type: array
       values:
         $ref: '#/definitions/models.Task'
+    type: object
+  models.CreateUserBody:
+    properties:
+      email:
+        description: The user's email address
+        maxLength: 250
+        type: string
+      is_admin:
+        description: Mark the new user as an instance admin.
+        type: boolean
+      language:
+        description: The language of the new user. Must be a valid IETF BCP 47 language
+          code and exist in Vikunja.
+        type: string
+      name:
+        description: The full name of the new user. Optional.
+        type: string
+      password:
+        description: The user's password in clear text. Only used when registering
+          the user. The maximum limi is 72 bytes, which may be less than 72 characters.
+          This is due to the limit in the bcrypt hashing algorithm used to store passwords
+          in Vikunja.
+        maxLength: 72
+        minLength: 8
+        type: string
+      skip_email_confirm:
+        description: Activate the new user immediately without email confirmation.
+        type: boolean
+      username:
+        description: The user's username. Cannot contain anything that looks like
+          an url or whitespaces.
+        maxLength: 250
+        minLength: 3
+        type: string
     type: object
   models.DatabaseNotifications:
     properties:
@@ -298,6 +479,21 @@ definitions:
       message:
         description: A standard message.
         type: string
+    type: object
+  models.Overview:
+    properties:
+      license:
+        $ref: '#/definitions/license.Info'
+      projects:
+        type: integer
+      shares:
+        $ref: '#/definitions/models.ShareCounts'
+      tasks:
+        type: integer
+      teams:
+        type: integer
+      users:
+        type: integer
     type: object
   models.Permission:
     enum:
@@ -429,7 +625,6 @@ definitions:
         - none
         - manual
         - filter
-        - manual
         type: string
       created:
         description: A timestamp when this reaction was created. You cannot change
@@ -460,6 +655,8 @@ definitions:
         type: integer
       title:
         description: The title of this view
+        maxLength: 250
+        minLength: 1
         type: string
       updated:
         description: A timestamp when this view was updated. You cannot change this
@@ -494,6 +691,7 @@ definitions:
       value:
         description: The actual reaction. This can be any valid utf character or text,
           up to a length of 20.
+        maxLength: 20
         type: string
     type: object
   models.ReactionMap:
@@ -586,6 +784,15 @@ definitions:
         description: A timestamp when this filter was last updated. You cannot change
           this value.
         type: string
+    type: object
+  models.ShareCounts:
+    properties:
+      link_shares:
+        type: integer
+      team_shares:
+        type: integer
+      user_shares:
+        type: integer
     type: object
   models.SharingType:
     enum:
@@ -753,6 +960,10 @@ definitions:
         description: |-
           The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
           Will only returned when retrieving one task.
+      time_entries_count:
+        description: Time entry count of this task. Only present when fetching tasks
+          with the `expand` parameter set to `time_entries_count`.
+        type: integer
       title:
         description: The task text. This is what you'll see in the project.
         minLength: 1
@@ -883,7 +1094,9 @@ definitions:
       relation_kind:
         allOf:
         - $ref: '#/definitions/models.RelationKind'
-        description: The kind of the relation.
+        description: |-
+          The kind of the relation.
+          The enum list must stay in sync with RelationKind.isValid() (RelationKindUnknown excluded); the v2 delete route param repeats it.
       task_id:
         description: The ID of the "base" task, the task which has a relation to another.
         type: integer
@@ -941,10 +1154,6 @@ definitions:
       id:
         description: The unique, numeric id of this team.
         type: integer
-      include_public:
-        description: Query parameter controlling whether to include public projects
-          or not
-        type: boolean
       is_public:
         description: Defines wether the team should be publicly discoverable when
           sharing a project
@@ -980,6 +1189,7 @@ definitions:
       username:
         description: The username of the member. We use this to prevent automated
           user id entering.
+        minLength: 1
         type: string
     type: object
   models.TeamProject:
@@ -1012,6 +1222,11 @@ definitions:
         description: Whether the member is an admin of the team. See the docs for
           more about what a team admin can do
         type: boolean
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1056,10 +1271,6 @@ definitions:
       id:
         description: The unique, numeric id of this team.
         type: integer
-      include_public:
-        description: Query parameter controlling whether to include public projects
-          or not
-        type: boolean
       is_public:
         description: Defines wether the team should be publicly discoverable when
           sharing a project
@@ -1081,8 +1292,54 @@ definitions:
           this value.
         type: string
     type: object
+  models.UserExportStatus:
+    properties:
+      created:
+        type: string
+      expires:
+        type: string
+      id:
+        type: integer
+      size:
+        type: integer
+    type: object
+  models.UserGeneralSettings:
+    properties:
+      default_project_id:
+        type: integer
+      discoverable_by_email:
+        type: boolean
+      discoverable_by_name:
+        type: boolean
+      email_reminders_enabled:
+        type: boolean
+      extra_settings_links:
+        additionalProperties: {}
+        description: Server/OpenID-provided; populated on read, ignored on write.
+        type: object
+      frontend_settings: {}
+      language:
+        type: string
+      name:
+        type: string
+      overdue_tasks_reminders_enabled:
+        type: boolean
+      overdue_tasks_reminders_time:
+        type: string
+      timezone:
+        type: string
+      week_start:
+        maximum: 6
+        minimum: 0
+        type: integer
+    type: object
   models.UserWithPermission:
     properties:
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1180,6 +1437,141 @@ definitions:
         type: string
       scope:
         type: string
+      totp_passcode:
+        description: |-
+          TOTPPasscode is required when the resolved user has TOTP enabled.
+          Clients must restart the OIDC flow and populate this field after
+          receiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.
+        type: string
+    type: object
+  shared.AdminUser:
+    properties:
+      auth_provider:
+        type: string
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      email:
+        description: The user's email address.
+        maxLength: 250
+        type: string
+      id:
+        description: The unique, numeric id of this user.
+        type: integer
+      is_admin:
+        type: boolean
+      issuer:
+        type: string
+      name:
+        description: The full name of the user.
+        type: string
+      status:
+        $ref: '#/definitions/user.Status'
+      subject:
+        type: string
+      updated:
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
+        type: string
+      username:
+        description: The username of the user. Is always unique.
+        maxLength: 250
+        minLength: 1
+        type: string
+    type: object
+  shared.AuthInfo:
+    properties:
+      ldap:
+        $ref: '#/definitions/shared.LdapAuthInfo'
+      local:
+        $ref: '#/definitions/shared.LocalAuthInfo'
+      openid_connect:
+        $ref: '#/definitions/shared.OpenIDAuthInfo'
+    type: object
+  shared.LdapAuthInfo:
+    properties:
+      enabled:
+        type: boolean
+    type: object
+  shared.LegalInfo:
+    properties:
+      imprint_url:
+        type: string
+      privacy_policy_url:
+        type: string
+    type: object
+  shared.LocalAuthInfo:
+    properties:
+      enabled:
+        type: boolean
+      registration_enabled:
+        type: boolean
+    type: object
+  shared.OpenIDAuthInfo:
+    properties:
+      enabled:
+        type: boolean
+      providers:
+        items:
+          $ref: '#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider'
+        type: array
+    type: object
+  shared.VikunjaInfos:
+    properties:
+      allow_icon_changes:
+        type: boolean
+      auth:
+        $ref: '#/definitions/shared.AuthInfo'
+      available_migrators:
+        items:
+          type: string
+        type: array
+      caldav_enabled:
+        type: boolean
+      demo_mode_enabled:
+        type: boolean
+      email_reminders_enabled:
+        type: boolean
+      enabled_background_providers:
+        items:
+          type: string
+        type: array
+      enabled_pro_features:
+        items:
+          $ref: '#/definitions/license.Feature'
+        type: array
+      frontend_url:
+        type: string
+      legal:
+        $ref: '#/definitions/shared.LegalInfo'
+      link_sharing_enabled:
+        type: boolean
+      max_file_size:
+        type: string
+      max_items_per_page:
+        type: integer
+      motd:
+        type: string
+      public_teams_enabled:
+        type: boolean
+      task_attachments_enabled:
+        type: boolean
+      task_comments_enabled:
+        type: boolean
+      totp_enabled:
+        type: boolean
+      user_deletion_enabled:
+        type: boolean
+      version:
+        type: string
+      webhooks_enabled:
+        type: boolean
     type: object
   todoist.Migration:
     properties:
@@ -1239,6 +1631,18 @@ definitions:
         maxLength: 250
         type: string
     type: object
+  user.Status:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - StatusActive
+    - StatusEmailConfirmationRequired
+    - StatusDisabled
+    - StatusAccountLocked
   user.TOTP:
     properties:
       enabled:
@@ -1267,6 +1671,11 @@ definitions:
     type: object
   user.User:
     properties:
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1310,17 +1719,6 @@ definitions:
       token:
         type: string
     type: object
-  v1.UserExportStatus:
-    properties:
-      created:
-        type: string
-      expires:
-        type: string
-      id:
-        type: integer
-      size:
-        type: integer
-    type: object
   v1.UserPassword:
     properties:
       new_password:
@@ -1360,57 +1758,15 @@ definitions:
         minLength: 3
         type: string
     type: object
-  v1.UserSettings:
-    properties:
-      default_project_id:
-        description: |-
-          If a task is created without a specified project this value should be used. Applies
-          to tasks made directly in API and from clients.
-        type: integer
-      discoverable_by_email:
-        description: If true, the user can be found when searching for their exact
-          email.
-        type: boolean
-      discoverable_by_name:
-        description: If true, this user can be found by their name or parts of it
-          when searching for it.
-        type: boolean
-      email_reminders_enabled:
-        description: If enabled, sends email reminders of tasks to the user.
-        type: boolean
-      extra_settings_links:
-        additionalProperties: {}
-        description: Additional settings links as provided by openid
-        type: object
-      frontend_settings:
-        description: Additional settings only used by the frontend
-      language:
-        description: The user's language
-        type: string
-      name:
-        description: The new name of the current user.
-        type: string
-      overdue_tasks_reminders_enabled:
-        description: If enabled, the user will get an email for their overdue tasks
-          each morning.
-        type: boolean
-      overdue_tasks_reminders_time:
-        description: The time when the daily summary of overdue tasks will be sent
-          via email.
-        type: string
-      timezone:
-        description: The user's time zone. Used to send task reminders in the time
-          zone of the user.
-        type: string
-      week_start:
-        description: The day when the week starts for this user. 0 = sunday, 1 = monday,
-          etc.
-        type: integer
-    type: object
   v1.UserWithSettings:
     properties:
       auth_provider:
         type: string
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
       created:
         description: A timestamp when this task was created. You cannot change this
           value.
@@ -1424,13 +1780,15 @@ definitions:
       id:
         description: The unique, numeric id of this user.
         type: integer
+      is_admin:
+        type: boolean
       is_local_user:
         type: boolean
       name:
         description: The full name of the user.
         type: string
       settings:
-        $ref: '#/definitions/v1.UserSettings'
+        $ref: '#/definitions/models.UserGeneralSettings'
       updated:
         description: A timestamp when this task was last updated. You cannot change
           this value.
@@ -1440,88 +1798,6 @@ definitions:
         maxLength: 250
         minLength: 1
         type: string
-    type: object
-  v1.authInfo:
-    properties:
-      ldap:
-        $ref: '#/definitions/v1.ldapAuthInfo'
-      local:
-        $ref: '#/definitions/v1.localAuthInfo'
-      openid_connect:
-        $ref: '#/definitions/v1.openIDAuthInfo'
-    type: object
-  v1.ldapAuthInfo:
-    properties:
-      enabled:
-        type: boolean
-    type: object
-  v1.legalInfo:
-    properties:
-      imprint_url:
-        type: string
-      privacy_policy_url:
-        type: string
-    type: object
-  v1.localAuthInfo:
-    properties:
-      enabled:
-        type: boolean
-      registration_enabled:
-        type: boolean
-    type: object
-  v1.openIDAuthInfo:
-    properties:
-      enabled:
-        type: boolean
-      providers:
-        items:
-          $ref: '#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider'
-        type: array
-    type: object
-  v1.vikunjaInfos:
-    properties:
-      auth:
-        $ref: '#/definitions/v1.authInfo'
-      available_migrators:
-        items:
-          type: string
-        type: array
-      caldav_enabled:
-        type: boolean
-      demo_mode_enabled:
-        type: boolean
-      email_reminders_enabled:
-        type: boolean
-      enabled_background_providers:
-        items:
-          type: string
-        type: array
-      frontend_url:
-        type: string
-      legal:
-        $ref: '#/definitions/v1.legalInfo'
-      link_sharing_enabled:
-        type: boolean
-      max_file_size:
-        type: string
-      max_items_per_page:
-        type: integer
-      motd:
-        type: string
-      public_teams_enabled:
-        type: boolean
-      task_attachments_enabled:
-        type: boolean
-      task_comments_enabled:
-        type: boolean
-      totp_enabled:
-        type: boolean
-      user_deletion_enabled:
-        type: boolean
-      version:
-        type: string
-      webhooks_enabled:
-        type: boolean
     type: object
   web.HTTPError:
     properties:
@@ -1715,6 +1991,272 @@ paths:
       summary: User Avatar
       tags:
       - user
+  /admin/overview:
+    get:
+      description: Returns per-instance counts (users, projects, shares) plus version
+        and license info. Instance-admin only, gated by the admin_panel feature.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Overview'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Admin overview
+      tags:
+      - admin
+  /admin/projects:
+    get:
+      description: Paginated list of every project on the instance, regardless of
+        ownership.
+      parameters:
+      - description: Page number, defaults to 1.
+        in: query
+        name: page
+        type: integer
+      - description: Items per page, defaults to the service setting.
+        in: query
+        name: per_page
+        type: integer
+      - description: Search projects by title, description or identifier.
+        in: query
+        name: s
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Project'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: List projects (admin)
+      tags:
+      - admin
+  /admin/projects/{id}/owner:
+    patch:
+      consumes:
+      - application/json
+      description: Reassign a project's owner. The existing update endpoint doesn't
+        allow owner changes — this is the admin-only escape hatch.
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New owner
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.OwnerPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Reassign project owner (admin)
+      tags:
+      - admin
+  /admin/users:
+    get:
+      description: Paginated list of all users on the instance. Supports search by
+        username/email. Exposes fields hidden from the normal user API (is_admin,
+        status).
+      parameters:
+      - description: Search string matched against username and email.
+        in: query
+        name: s
+        type: string
+      - description: Page number, defaults to 1.
+        in: query
+        name: page
+        type: integer
+      - description: Items per page, defaults to the service setting.
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/shared.AdminUser'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: List users (admin)
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      description: Create a new local user account. Respects the admin-only fields
+        `is_admin` and `skip_email_confirm`. The public registration toggle is bypassed.
+      parameters:
+      - description: The user to create
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateUserBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/shared.AdminUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Create a user (admin)
+      tags:
+      - admin
+  /admin/users/{id}:
+    delete:
+      description: Delete a user. With mode=now the user is removed immediately. With
+        mode=scheduled (the default, matching the CLI) the user receives a confirmation
+        email and is scheduled for deletion just like a self-initiated account deletion.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 'Deletion mode: ''now'' for immediate deletion, ''scheduled''
+          (default) to trigger the email-confirmation self-deletion flow.'
+        in: query
+        name: mode
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Delete a user (admin)
+      tags:
+      - admin
+  /admin/users/{id}/admin:
+    patch:
+      consumes:
+      - application/json
+      description: Toggle the instance-admin flag on a user. Demoting the last remaining
+        admin is refused with 400.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New admin value
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.IsAdminPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/shared.AdminUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Promote or demote a user (admin)
+      tags:
+      - admin
+  /admin/users/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Change a user's status without requiring them to log in.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.StatusPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/shared.AdminUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+      security:
+      - JWTKeyAuth: []
+      summary: Set a user's status (admin)
+      tags:
+      - admin
   /auth/openid/{provider}/callback:
     post:
       consumes:
@@ -1742,6 +2284,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/auth.Token'
+        "412":
+          description: Invalid totp passcode.
+          schema:
+            $ref: '#/definitions/models.Message'
         "500":
           description: Internal error
           schema:
@@ -1975,7 +2521,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.vikunjaInfos'
+            $ref: '#/definitions/shared.VikunjaInfos'
       summary: Info
       tags:
       - service
@@ -2198,6 +2744,130 @@ paths:
       summary: Login
       tags:
       - auth
+  /migration/csv/detect:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Analyzes a CSV file and returns auto-detected columns, delimiter,
+        quote character, and date format with suggested column mappings.
+      parameters:
+      - description: The CSV file to analyze
+        in: formData
+        name: import
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Detection results with suggested mappings
+          schema:
+            $ref: '#/definitions/csv.DetectionResult'
+        "400":
+          description: Invalid CSV file
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Detect CSV structure
+      tags:
+      - migration
+  /migration/csv/migrate:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Imports tasks from a CSV file into Vikunja with the provided configuration.
+      parameters:
+      - description: The CSV file to import
+        in: formData
+        name: import
+        required: true
+        type: file
+      - description: The import configuration JSON
+        in: formData
+        name: config
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid CSV file or configuration
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Import CSV file
+      tags:
+      - migration
+  /migration/csv/preview:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Generates a preview of the first 5 tasks that would be imported
+        with the given configuration.
+      parameters:
+      - description: The CSV file to preview
+        in: formData
+        name: import
+        required: true
+        type: file
+      - description: The import configuration JSON
+        in: formData
+        name: config
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Preview of tasks to import
+          schema:
+            $ref: '#/definitions/csv.PreviewResult'
+        "400":
+          description: Invalid CSV file or configuration
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Preview CSV import
+      tags:
+      - migration
+  /migration/csv/status:
+    get:
+      description: Returns if the current user already did the CSV migration or not.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get CSV migration status
+      tags:
+      - migration
   /migration/microsoft-todo/auth:
     get:
       description: Returns the auth url where the user needs to get its auth code.
@@ -2270,7 +2940,7 @@ paths:
       tags:
       - migration
   /migration/ticktick/migrate:
-    post:
+    put:
       consumes:
       - application/x-www-form-urlencoded
       description: Imports all projects, tasks, notes, reminders, subtasks and files
@@ -2491,6 +3161,55 @@ paths:
   /migration/vikunja-file/status:
     get:
       description: Returns if the current user already did the migation or not. This
+        is useful to show a confirmation message in the frontend if the user is trying
+        to do the same migration again.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The migration status
+          schema:
+            $ref: '#/definitions/migration.Status'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get migration status
+      tags:
+      - migration
+  /migration/wekan/migrate:
+    put:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Imports all projects, tasks, labels, checklists, comments, and
+        attachments from a WeKan board JSON export into Vikunja.
+      parameters:
+      - description: The WeKan board JSON export file.
+        in: formData
+        name: import
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A message telling you everything was migrated successfully.
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Import all projects, tasks etc. from a WeKan board export
+      tags:
+      - migration
+  /migration/wekan/status:
+    get:
+      description: Returns if the current user already did the migration or not. This
         is useful to show a confirmation message in the frontend if the user is trying
         to do the same migration again.
       produces:
@@ -3362,7 +4081,7 @@ paths:
           can set this multiple times with different values.
         in: query
         name: expand
-        type: array
+        type: string
       produces:
       - application/json
       responses:
@@ -3697,6 +4416,64 @@ paths:
       summary: Get one link shares for a project
       tags:
       - sharing
+  /projects/{project}/tasks/by-index/{index}:
+    get:
+      consumes:
+      - application/json
+      description: Returns a single task identified by its per-project index. Useful
+        when resolving human-readable references like "PROJ-42" to a canonical task
+        object. The `project` path parameter accepts either a numeric project id or
+        the project's identifier (e.g. "PROJ"); values consisting solely of digits
+        are always interpreted as ids. Note that task indexes are reassigned when
+        a task is moved between projects, so long-lived references should use the
+        returned task id instead.
+      parameters:
+      - description: The project id or the project's identifier
+        in: path
+        name: project
+        required: true
+        type: string
+      - description: The task's per-project index
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: If set to `subtasks`, Vikunja will fetch only tasks which do
+          not have subtasks and then in a second step, will fetch all of these subtasks.
+          This may result in more tasks than the pagination limit being returned,
+          but all subtasks will be present in the response. You can only set this
+          to `subtasks`.
+        in: query
+        name: expand
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The task
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Invalid project ID or index
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "403":
+          description: The user does not have access to the task
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.Message'
+      security:
+      - JWTKeyAuth: []
+      summary: Get one task by its per-project index
+      tags:
+      - task
   /projects/{project}/views:
     get:
       consumes:
@@ -4442,8 +5219,7 @@ paths:
         in: query
         name: filter_include_nulls
         type: string
-      - collectionFormat: csv
-        description: If set to `subtasks`, Vikunja will fetch only tasks which do
+      - description: If set to `subtasks`, Vikunja will fetch only tasks which do
           not have subtasks and then in a second step, will fetch all of these subtasks.
           This may result in more tasks than the pagination limit being returned,
           but all subtasks will be present in the response. If set to `buckets`, the
@@ -4452,10 +5228,8 @@ paths:
           the first 50 comments of each task will be present in the response. You
           can set this multiple times with different values.
         in: query
-        items:
-          type: string
         name: expand
-        type: array
+        type: string
       produces:
       - application/json
       responses:
@@ -4517,8 +5291,7 @@ paths:
         name: id
         required: true
         type: integer
-      - collectionFormat: csv
-        description: If set to `subtasks`, Vikunja will fetch only tasks which do
+      - description: If set to `subtasks`, Vikunja will fetch only tasks which do
           not have subtasks and then in a second step, will fetch all of these subtasks.
           This may result in more tasks than the pagination limit being returned,
           but all subtasks will be present in the response. If set to `buckets`, the
@@ -4527,10 +5300,8 @@ paths:
           the first 50 comments of each task will be present in the response. You
           can set this multiple times with different values.
         in: query
-        items:
-          type: string
         name: expand
-        type: array
+        type: string
       produces:
       - application/json
       responses:
@@ -5233,8 +6004,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Remove a task comment. The user doing this need to have at least
-        read access to the task this comment belongs to.
+      description: Get a task comment. The user doing this need to have at least read
+        access to the task this comment belongs to.
       parameters:
       - description: Task ID
         in: path
@@ -5267,7 +6038,7 @@ paths:
             $ref: '#/definitions/models.Message'
       security:
       - JWTKeyAuth: []
-      summary: Remove a task comment
+      summary: Get a task comment
       tags:
       - task
     post:
@@ -5811,6 +6582,30 @@ paths:
       summary: Reset the db to a defined state
       tags:
       - testing
+  /test/all:
+    delete:
+      description: Removes all data from every Vikunja table. Used by e2e tests to
+        ensure clean state before each test. Requires the testing token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All tables truncated.
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/web.HTTPError'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/models.Message'
+      summary: Truncate all tables
+      tags:
+      - testing
   /tokens:
     get:
       consumes:
@@ -6065,7 +6860,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.UserExportStatus'
+            $ref: '#/definitions/models.UserExportStatus'
       security:
       - JWTKeyAuth: []
       summary: Get current user data export
@@ -6387,7 +7182,7 @@ paths:
         name: avatar
         required: true
         schema:
-          $ref: '#/definitions/v1.UserSettings'
+          $ref: '#/definitions/models.UserGeneralSettings'
       produces:
       - application/json
       responses:

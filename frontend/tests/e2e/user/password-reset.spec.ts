@@ -6,8 +6,6 @@ test.describe('Password Reset', () => {
 	let user: UserAttributes
 
 	test.beforeEach(async ({page, apiContext}) => {
-		await UserFactory.truncate()
-		await TokenFactory.truncate()
 		const users = await UserFactory.create(1)
 		user = users[0] as UserAttributes
 	})

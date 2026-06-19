@@ -8,24 +8,27 @@ import LabelTaskService from '@/services/labelTask'
 import TaskDuplicateService from '@/services/taskDuplicateService'
 import TaskDuplicateModel from '@/models/taskDuplicateModel'
 
-import {cleanupItemText, parseTaskText, PREFIXES} from '@/modules/parseTaskText'
+import {cleanupItemText, parseTaskText, PREFIXES} from '@/modules/quickAddMagic'
 
 import TaskAssigneeModel from '@/models/taskAssignee'
 import LabelTaskModel from '@/models/labelTask'
 import LabelTask from '@/models/labelTask'
 import TaskModel from '@/models/task'
 import LabelModel from '@/models/label'
+import TaskReminderModel from '@/models/taskReminder'
 
 import type {ILabel} from '@/modelTypes/ILabel'
 import type {ITask} from '@/modelTypes/ITask'
+import type {ITaskReminder} from '@/modelTypes/ITaskReminder'
 import type {IUser} from '@/modelTypes/IUser'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
 
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
+
 import {setModuleLoading} from '@/stores/helper'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
-import {useAttachmentStore} from '@/stores/attachments'
 import {useKanbanStore} from '@/stores/kanban'
 import {useBaseStore} from '@/stores/base'
 import ProjectUserService from '@/services/projectUsers'
@@ -37,6 +40,23 @@ import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
 
 interface MatchedAssignee extends IUser {
 	match: string,
+}
+
+export function buildDefaultRemindersForQuickAdd(
+	defaults: readonly ITaskReminder[] | undefined,
+	dueDate: string | null,
+): ITaskReminder[] {
+	if (!dueDate) {
+		return []
+	}
+	if (!defaults || defaults.length === 0) {
+		return []
+	}
+	return defaults.map(d => new TaskReminderModel({
+		reminder: null,
+		relativePeriod: d.relativePeriod,
+		relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
+	}))
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
@@ -108,7 +128,6 @@ async function findAssignees(parsedTaskAssignees: string[], projectId: number): 
 export const useTaskStore = defineStore('task', () => {
 	const baseStore = useBaseStore()
 	const kanbanStore = useKanbanStore()
-	const attachmentStore = useAttachmentStore()
 	const labelStore = useLabelStore()
 	const projectStore = useProjectStore()
 	const authStore = useAuthStore()
@@ -205,7 +224,6 @@ export const useTaskStore = defineStore('task', () => {
 			}
 			kanbanStore.setTaskInBucketByIndex(newTask)
 		}
-		attachmentStore.add(attachment)
 	}
 
 	async function addAssignee({
@@ -486,6 +504,10 @@ export const useTaskStore = defineStore('task', () => {
 			index,
 		})
 		task.repeatAfter = parsedTask.repeats
+		task.reminders = buildDefaultRemindersForQuickAdd(
+			authStore.settings.frontendSettings.quickAddDefaultReminders,
+			dueDate,
+		)
 
 		if (parsedTask.repeats?.type === REPEAT_TYPES.Months && parsedTask.repeats?.amount === 1) {
 			task.repeatMode = TASK_REPEAT_MODES.REPEAT_MODE_MONTH

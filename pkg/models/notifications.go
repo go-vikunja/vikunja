@@ -18,7 +18,6 @@ package models
 
 import (
 	"fmt"
-	"net/url"
 	"sort"
 	"strconv"
 	"time"
@@ -26,11 +25,22 @@ import (
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/i18n"
+	"code.vikunja.io/api/pkg/mail"
 	"code.vikunja.io/api/pkg/modules/avatar"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 )
+
+func init() {
+	notifications.Register(func() notifications.Notification { return &ReminderDueNotification{} })
+	notifications.Register(func() notifications.Notification { return &TaskCommentNotification{} })
+	notifications.Register(func() notifications.Notification { return &TaskAssignedNotification{} })
+	notifications.Register(func() notifications.Notification { return &TaskDeletedNotification{} })
+	notifications.Register(func() notifications.Notification { return &ProjectCreatedNotification{} })
+	notifications.Register(func() notifications.Notification { return &TeamMemberAddedNotification{} })
+	notifications.Register(func() notifications.Notification { return &UserMentionedInTaskNotification{} })
+}
 
 // getDoerAvatarDataURI returns the avatar data URI for a user, for use in email headers.
 func getDoerAvatarDataURI(doer *user.User) string {
@@ -44,14 +54,7 @@ func getDoerAvatarDataURI(doer *user.User) string {
 
 // getThreadID generates a Message-ID format thread ID for a task
 func getThreadID(taskID int64) string {
-	domain := "vikunja"
-	publicURL := config.ServicePublicURL.GetString()
-	if publicURL != "" {
-		if parsedURL, err := url.Parse(publicURL); err == nil && parsedURL.Hostname() != "" {
-			domain = parsedURL.Hostname()
-		}
-	}
-	return fmt.Sprintf("<task-%d@%s>", taskID, domain)
+	return fmt.Sprintf("<task-%d@%s>", taskID, mail.GetMailDomain())
 }
 
 // ReminderDueNotification represents a ReminderDueNotification notification
@@ -62,14 +65,18 @@ type ReminderDueNotification struct {
 	TaskReminder *TaskReminder `json:"reminder"`
 }
 
+// ToTitle returns the translated one-line title for ReminderDueNotification
+func (n *ReminderDueNotification) ToTitle(lang string) string {
+	return i18n.T(lang, "notifications.task.reminder.subject", n.Task.Title, n.Project.Title)
+}
+
 // ToMail returns the mail notification for ReminderDueNotification
 func (n *ReminderDueNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
 		IncludeLinkToSettings(lang).
 		To(n.User.Email).
-		Subject(i18n.T(lang, "notifications.task.reminder.subject", n.Task.Title, n.Project.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.task.reminder.message", n.Task.Title, n.Project.Title)).
+		Line(i18n.T(lang, "notifications.task.reminder.message", notifications.EscapeMarkdown(n.Task.Title), notifications.EscapeMarkdown(n.Project.Title))).
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
@@ -105,6 +112,14 @@ func (n *TaskCommentNotification) SubjectID() int64 {
 	return n.Comment.ID
 }
 
+// ToTitle returns the translated one-line title for TaskCommentNotification
+func (n *TaskCommentNotification) ToTitle(lang string) string {
+	if n.Mentioned {
+		return i18n.T(lang, "notifications.task.comment.mentioned_subject", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier())
+	}
+	return i18n.T(lang, "notifications.task.comment.subject", n.Task.Title, n.Task.GetFullIdentifier())
+}
+
 // ToMail returns the mail notification for TaskCommentNotification
 func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
 	s := db.NewSession()
@@ -113,14 +128,12 @@ func (n *TaskCommentNotification) ToMail(lang string) *notifications.Mail {
 
 	mail := notifications.NewMail().
 		Conversational().
-		From(n.Doer.GetNameAndFromEmail()).
-		Subject(i18n.T(lang, "notifications.task.comment.subject", n.Task.Title, n.Task.GetFullIdentifier()))
+		From(n.Doer.GetNameAndFromEmail())
 
 	// Add header line
 	action := i18n.T(lang, "notifications.common.actions.left_comment", n.Doer.GetName())
 	if n.Mentioned {
 		action = i18n.T(lang, "notifications.common.actions.mentioned_you_comment", n.Doer.GetName())
-		mail.Subject(i18n.T(lang, "notifications.task.comment.mentioned_subject", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier()))
 	}
 
 	headerLine := notifications.CreateConversationalHeader(
@@ -165,15 +178,25 @@ type TaskAssignedNotification struct {
 	Project  *Project   `json:"project"`
 }
 
+// ToTitle returns the translated one-line title for TaskAssignedNotification
+func (n *TaskAssignedNotification) ToTitle(lang string) string {
+	if n.Target.ID == n.Assignee.ID {
+		return i18n.T(lang, "notifications.task.assigned.subject_to_assignee", n.Task.Title, n.Task.GetFullIdentifier())
+	}
+	if n.Doer.ID == n.Assignee.ID {
+		return i18n.T(lang, "notifications.task.assigned.subject_to_others_self", n.Task.Title, n.Task.GetFullIdentifier(), n.Doer.GetName())
+	}
+	return i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())
+}
+
 // ToMail returns the mail notification for TaskAssignedNotification
 func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 	if n.Target.ID == n.Assignee.ID {
 		// Notification to the assignee
 		return notifications.NewMail().
 			From(n.Doer.GetNameAndFromEmail()).
-			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_assignee", n.Task.Title, n.Task.GetFullIdentifier())).
 			Greeting(i18n.T(lang, "notifications.greeting", n.Target.GetName())).
-			Line(i18n.T(lang, "notifications.task.assigned.message_to_assignee", n.Doer.GetName(), n.Task.Title)).
+			Line(i18n.T(lang, "notifications.task.assigned.message_to_assignee", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Task.Title))).
 			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
 			IncludeLinkToSettings(lang)
 	}
@@ -182,9 +205,8 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 	if n.Doer.ID == n.Assignee.ID {
 		return notifications.NewMail().
 			From(n.Doer.GetNameAndFromEmail()).
-			Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others_self", n.Task.Title, n.Task.GetFullIdentifier(), n.Doer.GetName())).
 			Greeting(i18n.T(lang, "notifications.greeting", n.Target.GetName())).
-			Line(i18n.T(lang, "notifications.task.assigned.message_to_others_self", n.Doer.GetName())).
+			Line(i18n.T(lang, "notifications.task.assigned.message_to_others_self", notifications.EscapeMarkdown(n.Doer.GetName()))).
 			Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
 			IncludeLinkToSettings(lang)
 	}
@@ -192,9 +214,8 @@ func (n *TaskAssignedNotification) ToMail(lang string) *notifications.Mail {
 	// Notification to others about assignment
 	return notifications.NewMail().
 		From(n.Doer.GetNameAndFromEmail()).
-		Subject(i18n.T(lang, "notifications.task.assigned.subject_to_others", n.Task.Title, n.Task.GetFullIdentifier(), n.Assignee.GetName())).
 		Greeting(i18n.T(lang, "notifications.greeting", n.Target.GetName())).
-		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", n.Doer.GetName(), n.Assignee.GetName())).
+		Line(i18n.T(lang, "notifications.task.assigned.message_to_others", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Assignee.GetName()))).
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), n.Task.GetFrontendURL()).
 		IncludeLinkToSettings(lang)
 }
@@ -220,11 +241,15 @@ type TaskDeletedNotification struct {
 	Task *Task      `json:"task"`
 }
 
+// ToTitle returns the translated one-line title for TaskDeletedNotification
+func (n *TaskDeletedNotification) ToTitle(lang string) string {
+	return i18n.T(lang, "notifications.task.deleted.subject", n.Task.Title, n.Task.GetFullIdentifier())
+}
+
 // ToMail returns the mail notification for TaskDeletedNotification
 func (n *TaskDeletedNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(lang, "notifications.task.deleted.subject", n.Task.Title, n.Task.GetFullIdentifier())).
-		Line(i18n.T(lang, "notifications.task.deleted.message", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier()))
+		Line(i18n.T(lang, "notifications.task.deleted.message", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Task.Title), notifications.EscapeMarkdown(n.Task.GetFullIdentifier())))
 }
 
 // ToDB returns the TaskDeletedNotification notification in a format which can be saved in the db
@@ -248,11 +273,15 @@ type ProjectCreatedNotification struct {
 	Project *Project   `json:"project"`
 }
 
+// ToTitle returns the translated one-line title for ProjectCreatedNotification
+func (n *ProjectCreatedNotification) ToTitle(lang string) string {
+	return i18n.T(lang, "notifications.project.created", n.Doer.GetName(), n.Project.Title)
+}
+
 // ToMail returns the mail notification for ProjectCreatedNotification
 func (n *ProjectCreatedNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(lang, "notifications.project.created", n.Doer.GetName(), n.Project.Title)).
-		Line(i18n.T(lang, "notifications.project.created", n.Doer.GetName(), n.Project.Title)).
+		Line(i18n.T(lang, "notifications.project.created", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Project.Title))).
 		Action(i18n.T(lang, "notifications.common.actions.open_project"), config.ServicePublicURL.GetString()+"projects/")
 }
 
@@ -273,13 +302,17 @@ type TeamMemberAddedNotification struct {
 	Team   *Team      `json:"team"`
 }
 
+// ToTitle returns the translated one-line title for TeamMemberAddedNotification
+func (n *TeamMemberAddedNotification) ToTitle(lang string) string {
+	return i18n.T(lang, "notifications.team.member_added.subject", n.Doer.GetName(), n.Team.Name)
+}
+
 // ToMail returns the mail notification for TeamMemberAddedNotification
 func (n *TeamMemberAddedNotification) ToMail(lang string) *notifications.Mail {
 	return notifications.NewMail().
-		Subject(i18n.T(lang, "notifications.team.member_added.subject", n.Doer.GetName(), n.Team.Name)).
 		From(n.Doer.GetNameAndFromEmail()).
 		Greeting(i18n.T(lang, "notifications.greeting", n.Member.GetName())).
-		Line(i18n.T(lang, "notifications.team.member_added.message", n.Doer.GetName(), n.Team.Name)).
+		Line(i18n.T(lang, "notifications.team.member_added.message", notifications.EscapeMarkdown(n.Doer.GetName()), notifications.EscapeMarkdown(n.Team.Name))).
 		Action(i18n.T(lang, "notifications.common.actions.open_team"), config.ServicePublicURL.GetString()+"teams/"+strconv.FormatInt(n.Team.ID, 10)+"/edit")
 }
 
@@ -315,7 +348,7 @@ func (n *UndoneTaskOverdueNotification) ToMail(lang string) *notifications.Mail 
 		IncludeLinkToSettings(lang).
 		Subject(i18n.T(lang, "notifications.task.overdue.subject", n.Task.Title, n.Project.Title)).
 		Greeting(i18n.T(lang, "notifications.greeting", n.User.GetName())).
-		Line(i18n.T(lang, "notifications.task.overdue.message", n.Task.Title, n.Project.Title, getOverdueSinceString(until, n.User.Language))).
+		Line(i18n.T(lang, "notifications.task.overdue.message", notifications.EscapeMarkdown(n.Task.Title), notifications.EscapeMarkdown(n.Project.Title), getOverdueSinceString(until, n.User.Language))).
 		Action(i18n.T(lang, "notifications.common.actions.open_task"), config.ServicePublicURL.GetString()+"tasks/"+strconv.FormatInt(n.Task.ID, 10)).
 		Line(i18n.T(lang, "notifications.common.have_nice_day"))
 }
@@ -357,7 +390,7 @@ func (n *UndoneTasksOverdueNotification) ToMail(lang string) *notifications.Mail
 	overdueLine := ""
 	for _, task := range sortedTasks {
 		until := time.Until(task.DueDate).Round(1*time.Hour) * -1
-		overdueLine += `* [` + task.Title + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + n.Projects[task.ProjectID].Title + `), ` + i18n.T("notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
+		overdueLine += `* [` + notifications.EscapeMarkdown(task.Title) + `](` + config.ServicePublicURL.GetString() + "tasks/" + strconv.FormatInt(task.ID, 10) + `) (` + notifications.EscapeMarkdown(n.Projects[task.ProjectID].Title) + `), ` + i18n.T(lang, "notifications.task.overdue.overdue", getOverdueSinceString(until, n.User.Language)) + "\n"
 	}
 
 	return notifications.NewMail().
@@ -392,23 +425,23 @@ func (n *UserMentionedInTaskNotification) SubjectID() int64 {
 	return n.Task.ID
 }
 
+// ToTitle returns the translated one-line title for UserMentionedInTaskNotification
+func (n *UserMentionedInTaskNotification) ToTitle(lang string) string {
+	if n.IsNew {
+		return i18n.T(lang, "notifications.task.mentioned.subject_new", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier())
+	}
+	return i18n.T(lang, "notifications.task.mentioned.subject", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier())
+}
+
 // ToMail returns the mail notification for UserMentionedInTaskNotification
 func (n *UserMentionedInTaskNotification) ToMail(lang string) *notifications.Mail {
 	s := db.NewSession()
 	defer s.Close()
 	formattedDescription := formatMentionsForEmail(s, n.Task.Description)
 
-	var subject string
-	if n.IsNew {
-		subject = i18n.T(lang, "notifications.task.mentioned.subject_new", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier())
-	} else {
-		subject = i18n.T(lang, "notifications.task.mentioned.subject", n.Doer.GetName(), n.Task.Title, n.Task.GetFullIdentifier())
-	}
-
 	mail := notifications.NewMail().
 		Conversational().
-		From(n.Doer.GetNameAndFromEmail()).
-		Subject(subject)
+		From(n.Doer.GetNameAndFromEmail())
 
 	// Add header line
 	action := i18n.T(lang, "notifications.common.actions.mentioned_you", n.Doer.GetName())

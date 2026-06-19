@@ -32,8 +32,8 @@ import (
 type TaskAssginee struct {
 	ID      int64     `xorm:"bigint autoincr not null unique pk" json:"-"`
 	TaskID  int64     `xorm:"bigint INDEX not null" json:"-" param:"projecttask"`
-	UserID  int64     `xorm:"bigint INDEX not null" json:"user_id" param:"user"`
-	Created time.Time `xorm:"created not null"`
+	UserID  int64     `xorm:"bigint INDEX not null" json:"user_id" param:"user" doc:"The id of the user to assign to the task. The user must have access to the task's project."`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this assignment was created. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -181,7 +181,7 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
+	doer := doerFromAuth(s, a)
 	task, err := GetTaskByIDSimple(s, la.TaskID)
 	if err != nil {
 		return err
@@ -270,7 +270,7 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(auth)
+	doer := doerFromAuth(s, auth)
 	task, err := GetTaskSimple(s, &Task{ID: t.ID})
 	if err != nil {
 		return err
@@ -334,17 +334,19 @@ func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page
 	}
 
 	numberOfTotalItems, err = s.Table("task_assignees").
-		Select("users.*").
 		Join("INNER", "users", "task_assignees.user_id = users.id").
-		Where("task_id = ? AND users.username LIKE ?", la.TaskID, "%"+search+"%").
-		Count(&user.User{})
+		Where(builder.And(
+			builder.Eq{"task_id": la.TaskID},
+			db.ILIKE("users.username", search),
+		)).
+		Count(&TaskAssginee{})
 	return taskAssignees, len(taskAssignees), numberOfTotalItems, err
 }
 
 // BulkAssignees is a helper struct used to update multiple assignees at once.
 type BulkAssignees struct {
 	// A project with all assignees
-	Assignees []*user.User `json:"assignees"`
+	Assignees []*user.User `json:"assignees" doc:"The full set of users to assign to the task. This replaces the task's current assignees: users not in this list are unassigned. Pass an empty array to unassign everyone. Each user must have access to the task's project."`
 	TaskID    int64        `json:"-" param:"projecttask"`
 
 	web.CRUDable    `json:"-"`

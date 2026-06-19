@@ -5,9 +5,36 @@
 	},
 	"home": {
 		"welcomeNight": "Gute Nacht, {username}!",
+		"welcomeNightOwl": "Hallo, Nacht-Eule {username}",
+		"welcomeNightBurning": "Machst du mal wieder die Nacht zum Tag, {username}?",
+		"welcomeNightQuiet": "Ruhezeit, {username}",
+		"welcomeNightLate": "Es ist spät, {username}",
+		"welcomeNightMoonlit": "Mondlicht-Planung, {username}?",
 		"welcomeMorning": "Guten Morgen, {username}!",
+		"welcomeMorningHey": "Hey {username}, los geht's?",
+		"welcomeMorningFresh": "Frisch in den Tag, {username}",
+		"welcomeMorningCoffee": "Kaffee und Aufgaben, {username}?",
+		"welcomeMorningRise": "Morgenplan hat Gold im Mund, {username}",
+		"welcomeMorningBack": "Willkommen zurück, {username}",
+		"welcomeMondayFresh": "Frische Woche, {username}",
+		"welcomeTuesday": "Fröhlichen Dienstag, {username}",
+		"welcomeWednesdayMid": "Bergfest, {username}",
+		"welcomeThursday": "Fast geschafft, {username}",
+		"welcomeFridayPush": "Endspurt ins Wochenende, {username}?",
+		"welcomeSaturday": "Wochenendmodus, {username}",
+		"welcomeSundaySession": "Sonntagsschicht, {username}?",
 		"welcomeDay": "Hallo {username}!",
+		"welcomeDayBack": "Wieder zurück, {username}",
+		"welcomeDayFocus": "Fokus, {username}",
+		"welcomeDayKeepGoing": "Weiter geht's, {username}",
+		"welcomeDayWhatsNext": "Was kommt als Nächstes, {username}?",
+		"welcomeDayGood": "Guten Nachmittag, {username}",
 		"welcomeEvening": "Guten Abend, {username}!",
+		"welcomeEveningWind": "Feierabend, {username}?",
+		"welcomeEveningReturns": "{username} kehrt zurück",
+		"welcomeEveningWrap": "Feierabend in Sicht, {username}?",
+		"welcomeEveningOneMore": "Noch eine Sache, {username}?",
+		"welcomeEveningStill": "Immer noch da, {username}?",
 		"lastViewed": "Zuletzt angesehen",
 		"addToHomeScreen": "Füge diese App deinem Startbildschirm hinzu, um schneller darauf zuzugreifen und das Erlebnis zu verbessern.",
 		"goToOverview": "Zur Übersicht",
@@ -44,7 +71,6 @@
 			"resetPassword": "Setze dein Passwort zurück",
 			"resetPasswordAction": "Sende mir einen Link zum Zurücksetzen des Passworts",
 			"resetPasswordSuccess": "Überprüfe deinen Posteingang! Du solltest eine E-Mail mit Anweisungen zum Zurücksetzen deines Passwortes haben.",
-			"passwordsDontMatch": "Passwörter stimmen nicht überein",
 			"confirmEmailSuccess": "Du hast deine E-Mail-Adresse erfolgreich bestätigt! Du kannst dich jetzt einloggen.",
 			"totpTitle": "Zwei-Faktor-Authentifizierungscode",
 			"totpPlaceholder": "z.B. 123456",
@@ -54,6 +80,15 @@
 			"authenticating": "Authentifizierung…",
 			"openIdStateError": "Zustand stimmt nicht überein, fahre nicht fort!",
 			"openIdGeneralError": "Es ist ein Fehler bei der externen Authentifizierung aufgetreten.",
+			"openIdTotpRequired": "Dein Account erfordert eine Zwei-Faktor-Authentifizierung. Bitte gib deinen TOTP-Code ein und probiere dann erneut, dich anzumelden.",
+			"openIdTotpSubmit": "Weiter",
+			"oauthMissingParams": "Erforderliche OAuth-Parameter fehlen: {params}",
+			"oauthRedirectedToApp": "Du wurdest zur App weitergeleitet. Du kannst diesen Tab jetzt schließen.",
+			"desktopTryDemo": "Demo ausprobieren",
+			"desktopCustomServer": "Eigene Server-URL",
+			"desktopCustomServerDescription": "Gib die URL deines Vikunja Servers ein, um loszulegen.",
+			"desktopWaitingForAuth": "Warte auf Authentifizierung…",
+			"desktopOAuthError": "Authentifizierung fehlgeschlagen: {error}",
 			"logout": "Abmelden",
 			"emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
 			"usernameRequired": "Bitte gib einen Anmeldenamen ein.",
@@ -72,13 +107,24 @@
 			"registrationFailed": "Bei der Registrierung ist ein Fehler aufgetreten. Bitte prüfe deine Eingabe und versuche es erneut."
 		},
 		"settings": {
+			"bots": {
+				"title": "Bot-Accounts",
+				"description": "Bot-Accounts gehören zu dir und können nur die API nutzen. Sie können zu Projekten, zugewiesenen Aufgaben hinzugefügt und mit API-Token authentifiziert werden und sich nicht selbst anmelden.",
+				"namePlaceholder": "Mein Assistent",
+				"create": "Bot Erstellen",
+				"enable": "Aktivieren",
+				"badge": "Bot",
+				"delete": {
+					"header": "Diesen Bot-Account löschen",
+					"text1": "Bist Du sicher, dass Du den Bot-Account \"{username}\" löschen möchtest?",
+					"text2": "Dies ist unwiderruflich. Alle API-Token dieses Bots werden widerrufen."
+				}
+			},
 			"title": "Einstellungen",
 			"newPasswordTitle": "Aktualisiere dein Passwort",
 			"newPassword": "Neues Passwort",
-			"newPasswordConfirm": "Bestätigung des neuen Passworts",
 			"currentPassword": "Aktuelles Passwort",
 			"currentPasswordPlaceholder": "Dein aktuelles Passwort",
-			"passwordsDontMatch": "Das neue Passwort und seine Bestätigung stimmen nicht überein.",
 			"passwordUpdateSuccess": "Das Passwort wurde erfolgreich aktualisiert.",
 			"updateEmailTitle": "Aktualisiere deine E-Mail-Adresse",
 			"updateEmailNew": "Neue E-Mail-Adresse",
@@ -99,12 +145,21 @@
 				"weekStart": "Woche beginnt am",
 				"weekStartSunday": "Sonntag",
 				"weekStartMonday": "Montag",
+				"weekStartTuesday": "Dienstag",
+				"weekStartWednesday": "Mittwoch",
+				"weekStartThursday": "Donnerstag",
+				"weekStartFriday": "Freitag",
+				"weekStartSaturday": "Samstag",
 				"language": "Sprache",
 				"defaultProject": "Standardprojekt",
 				"defaultView": "Standardansicht",
 				"timezone": "Zeitzone",
 				"overdueTasksRemindersTime": "Zeit der E-Mail-Zusammenfassung der überfälligen Aufgaben",
+				"quickAddDefaultReminders": "Standard Erinnerungen für Quick Add",
+				"quickAddDefaultRemindersDescription": "Diese Erinnerungen werden automatisch zu jeder Aufgabe hinzugefügt, die mit Quick Add Magic mit einem Fälligkeitsdatum erstellt wurde.",
+				"quickAddDefaultRemindersHint": "Füge eine oder mehrere Erinnerungen relativ zum Fälligkeitsdatum der Aufgabe hinzu. Zum Deaktivieren leer lassen.",
 				"filterUsedOnOverview": "Gespeicherter Filter, der für die Startseite verwendet wird",
+				"showLastViewed": "Zuletzt angesehene Projekte auf der Übersichtsseite anzeigen",
 				"minimumPriority": "Minimal sichtbare Aufgaben-Priorität",
 				"dateDisplay": "Datumsformat",
 				"dateDisplayOptions": {
@@ -117,6 +172,7 @@
 					"yyyy/mm/dd": "JJJJ/MM/TT"
 				},
 				"timeFormat": "Zeitformat",
+				"timeTrackingDefaultStart": "Startzeit für die Zeiterfassung",
 				"timeFormatOptions": {
 					"12h": "12 Stunden (AM/PM)",
 					"24h": "24 Stunden (HH:mm)"
@@ -128,7 +184,13 @@
 				"taskAndNotifications": "Projekte & Aufgaben",
 				"privacy": "Privatsphäre",
 				"localization": "Sprachauswahl",
-				"appearance": "Aussehen & Verhalten"
+				"appearance": "Aussehen & Verhalten",
+				"desktop": "Desktop-App"
+			},
+			"desktop": {
+				"quickEntryShortcut": "Quick Entry Tastenkombination",
+				"shortcutRecorderPlaceholder": "Klicken, um Tastenkombination zu setzen",
+				"shortcutRecorderRecording": "Tastenkombination eingeben…"
 			},
 			"totp": {
 				"title": "Zwei-Faktor-Authentifizierung",
@@ -138,23 +200,32 @@
 				"scanQR": "Alternativ kannst du auch diesen QR-Code scannen:",
 				"passcode": "Code",
 				"passcodePlaceholder": "Ein von deiner TOTP-App generierter Code",
+				"confirmNotice": "Nach der Aktivierung der Zwei-Faktor-Authentifizierung wirst du überall abgemeldet und musst dich erneut anmelden.",
 				"setupSuccess": "Du hast die Zwei-Faktor-Authentifizierung erfolgreich eingerichtet!",
 				"enterPassword": "Bitte gib dein Passwort ein",
 				"disable": "Zwei-Faktor-Authentifizierung deaktivieren",
-				"confirmSuccess": "TOTP wurde verifiziert und ist nun verwendbar!",
+				"confirmSuccess": "Du hast die Zwei-Faktor-Authentifizierung erfolgreich eingerichtet!",
 				"disableSuccess": "Die Zwei-Faktor-Authentifizierung wurde erfolgreich deaktiviert."
 			},
 			"caldav": {
 				"title": "CalDAV",
-				"howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese Url in deine Client ein:",
+				"howTo": "Du kannst Vikunja mit CalDAV-Clients verbinden, um alle Aufgaben mit verschiedenen Clients anzuzeigen und zu verwalten. Gebe dazu diese URL in deinen Client ein:",
 				"more": "Weitere Informationen über CalDAV in Vikunja",
 				"tokens": "CalDAV-Token",
-				"tokensHowTo": "Du kannst für den obigen Endpunkt einen CalDAV Token anstelle deines Passwortes verwenden.",
-				"createToken": "Token erstellen",
-				"tokenCreated": "Hier ist dein Token: {token}",
-				"wontSeeItAgain": "Notiere dir den Token, er kann nicht wieder angezeigt werden.",
-				"mustUseToken": "Du musst einen CalDAV Token erstellen um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
-				"usernameIs": "Dein Benutzername lautet: {0}"
+				"tokensHowTo": "Für die CalDAV-Authentifizierung kannst du entweder dein normales Passwort oder einen CalDAV-Token verwenden.",
+				"createToken": "CalDAV-Token erstellen",
+				"tokenCreated": "Hier ist dein neues Token: {token}",
+				"wontSeeItAgain": "Schreib es auf oder speicher es sicher — du wirst es nicht nochmal sehen können.",
+				"mustUseToken": "Du musst einen CalDAV Token erstellen, um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
+				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}",
+				"apiTokenHint": "Du kannst auch ein API-Token mit CalDAV-Berechtigung verwenden. Erstelle eins unter {link}."
+			},
+			"feeds": {
+				"title": "Atom-Feed",
+				"howTo": "Du kannst deine Vikunja-Benachrichtigungen von jedem Atom-kompatiblen Feed-Reader abonnieren. Benutze die folgende URL:",
+				"usernameIs": "Dein Anmeldename für das Feed lautet: {0}",
+				"apiTokenHint": "Authentifiziere dich mit einem API-Token mit der {scope} Berechtigung. Erstellen eins unter {link}.",
+				"tokenTitle": "Atom-Feed"
 			},
 			"avatar": {
 				"title": "Avatar",
@@ -176,7 +247,6 @@
 			},
 			"appearance": {
 				"title": "Farbschema",
-				"setSuccess": "Änderung des Farbschemas auf {colorScheme} gespeichert",
 				"colorScheme": {
 					"light": "Hell",
 					"system": "System",
@@ -185,6 +255,10 @@
 			},
 			"backgroundBrightness": {
 				"title": "Hintergrundhelligkeit"
+			},
+			"webhooks": {
+				"title": "Webhook-Benachrichtigungen",
+				"description": "Konfiguriere Webhook-URLs, um POST-Anfragen zu erhalten, wenn Erinnerungs- oder Fälligkeitsereignisse ausgelöst werden. Diese Webhooks empfangen Ereignisse aus allen deinen Projekten."
 			},
 			"apiTokens": {
 				"title": "API-Tokens",
@@ -201,7 +275,13 @@
 				"expired": "Dieses Token ist {ago} abgelaufen.",
 				"tokenCreatedSuccess": "Hier ist dein neues API Token: {token}",
 				"tokenCreatedNotSeeAgain": "Speichere es an einem sicheren Ort, du wirst es nicht mehr sehen!",
-				"selectAll": "Alle auswählen",
+				"presets": {
+					"title": "Voreinstellungen",
+					"readOnly": "Nur Leserechte",
+					"tasks": "Aufgabenverwaltung",
+					"projects": "Projektverwaltung",
+					"fullAccess": "Voller Zugriff"
+				},
 				"delete": {
 					"header": "Dieses Token löschen",
 					"text1": "Bist Du sicher, dass Du das Token \"{token}\" löschen möchtest?",
@@ -381,7 +461,8 @@
 			"addPlaceholder": "Aufgabe hinzufügen…",
 			"empty": "Dieses Projekt ist derzeit leer.",
 			"newTaskCta": "Aufgabe erstellen.",
-			"editTask": "Aufgabe bearbeiten"
+			"editTask": "Aufgabe bearbeiten",
+			"sort": "Sortieren"
 		},
 		"gantt": {
 			"title": "Gantt",
@@ -390,7 +471,6 @@
 			"month": "Monat",
 			"day": "Tag",
 			"hour": "Stunde",
-			"range": "Zeitraum",
 			"chartLabel": "Projekt Gantt-Diagramm",
 			"taskBarsForRow": "Aufgabenleisten für Zeile {rowId}",
 			"taskBarLabel": "Aufgabe: {task}. Von {startDate} bis {endDate}. {dateType}. Klicke zum Bearbeiten, ziehe zum Verschieben.",
@@ -419,7 +499,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limit: {limit}",
-			"noLimit": "Nicht gesetzt",
 			"doneBucket": "Erledigt Spalte",
 			"doneBucketHint": "Alle Aufgaben, die in diese Spalte verschoben werden, werden automatisch als erledigt markiert.",
 			"doneBucketHintExtended": "Alle Aufgaben, die in die Erledigt Spalte verschoben wurden, werden automatisch als erledigt markiert. Aufgaben, die in einer anderen Spalte als Erledigt markiert wurden, werden auch in diese Spalte verschoben.",
@@ -440,7 +519,8 @@
 			"bucketTitleSavedSuccess": "Der Spaltenname wurde erfolgreich gespeichert.",
 			"bucketLimitSavedSuccess": "Das Spaltenlimit wurde erfolgreich gespeichert.",
 			"collapse": "Spalte einklappen",
-			"bucketLimitReached": "Du hast das Limit dieses Buckets erreicht. Entferne Aufgaben oder erhöhe das Limit, um neue Aufgaben hinzuzufügen."
+			"bucketLimitReached": "Du hast das Limit dieses Buckets erreicht. Entferne Aufgaben oder erhöhe das Limit, um neue Aufgaben hinzuzufügen.",
+			"bucketOptions": "Bucketoptionen"
 		},
 		"pseudo": {
 			"favorites": {
@@ -496,16 +576,7 @@
 			"titlePlaceholder": "Einen gespeicherten Filternamen eingeben …",
 			"description": "Beschreibung",
 			"descriptionPlaceholder": "Gib eine Beschreibung für diesen Filter ein, drücke '/' für mehr Optionen…",
-			"includeNulls": "Aufgaben ohne Werte einbeziehen",
-			"requireAll": "Alle Filterkriterien müssen erfüllt sein, damit eine Aufgabe angezeigt wird",
-			"showDoneTasks": "Erledigte Aufgaben anzeigen",
-			"sortAlphabetically": "Alphabetisch sortieren",
-			"enablePriority": "Filter nach Priorität aktivieren",
-			"enablePercentDone": "Filter nach Fortschritt aktivieren",
-			"dueDateRange": "Fälligkeitsbereich",
-			"startDateRange": "Startdatumsbereich",
-			"endDateRange": "Enddatumsbereich",
-			"reminderRange": "Erinnerungs-Datumsbereich"
+			"includeNulls": "Aufgaben ohne Werte einbeziehen"
 		},
 		"create": {
 			"title": "Neuer gespeicherter Filter",
@@ -523,7 +594,6 @@
 			"success": "Filter gespeichert."
 		},
 		"query": {
-			"title": "Abfrage",
 			"placeholder": "Gib eine Suche oder Filterabfrage ein…",
 			"help": {
 				"intro": "Um Aufgaben zu filtern, kannst du eine SQL-ähnliche Abfragesyntax verwenden. Du kannst die folgenden Felder in deinem Filter verwenden:",
@@ -573,10 +643,32 @@
 			}
 		}
 	},
+	"sorting": {
+		"manually": "Manuell",
+		"apply": "Sortieren",
+		"description": "Wähle, wie Aufgaben in dieser Liste sortiert werden. Beim manuellen Sortieren kannst du Aufgaben per Drag and Drop verschieben, um sie neu zu ordnen.",
+		"options": {
+			"titleAsc": "Titel (A–Z)",
+			"titleDesc": "Titel (Z–A)",
+			"priorityDesc": "Priorität (höchste zuerst)",
+			"priorityAsc": "Priorität (niedrigste zuerst)",
+			"dueDateAsc": "Fälligkeitsdatum (frühestes zuerst)",
+			"dueDateDesc": "Fälligkeitsdatum (spätestes zuerst)",
+			"startDateAsc": "Startdatum (frühestes zuerst)",
+			"startDateDesc": "Enddatum (frühestes zuerst)",
+			"endDateAsc": "Enddatum (frühestes zuerst)",
+			"endDateDesc": "Endkeitsdatum (spätestes zuerst)",
+			"percentDoneDesc": "% erledigt (am meisten erledigt zuerst)",
+			"percentDoneAsc": "% erledigt (am wenigsten erledigt zuerst)",
+			"createdDesc": "Erstellt (neueste zuerst)",
+			"createdAsc": "Erstellt (älteste zuerst)",
+			"updatedDesc": "Aktualisiert (neueste zuerst)",
+			"updatedAsc": "Aktualisiert (älteste zuerst)"
+		}
+	},
 	"migrate": {
 		"title": "Aus anderen Diensten importieren",
 		"titleService": "Importiere deine Daten von {name} in Vikunja",
-		"import": "Importiere deine Daten in Vikunja",
 		"description": "Klicke auf das Logo eines der unten aufgeführten Drittanbieterdienste, um loszulegen.",
 		"descriptionDo": "Vikunja importiert alle Listen, Aufgaben, Notizen, Erinnerungen und Dateien, auf die du Zugriff hast.",
 		"authorize": "Ermögliche Vikunja den Zugriff auf deinen Account bei {name}, indem du auf die Schaltfläche unten klickst.",
@@ -588,14 +680,36 @@
 		"importUpload": "Um Daten von {name} in Vikunja zu importieren, klicke auf die Schaltfläche unten, um eine Datei auszuwählen.",
 		"upload": "Datei hochladen",
 		"migrationStartedWillReciveEmail": "Vikunja wird nun deine Listen/Projekte, Aufgaben, Notizen, Erinnerungen und Dateien von {service} importieren. Da dies eine Weile dauern wird, senden wir dir eine E-Mail, sobald der Import abgeschlossen ist. Du kannst dieses Fenster jetzt schließen.",
-		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist."
+		"migrationInProgress": "Ein Import wird gerade durchgeführt. Bitte warte, bis dieser abgeschlossen ist.",
+		"csv": {
+			"description": "Importiere Aufgaben aus einer CSV-Datei mit eigener Spaltenzuordnung.",
+			"uploadDescription": "Wähle eine CSV-Datei, um sie zu importieren. Die Datei sollte Aufgabendaten mit Kopfzeilen in der ersten Zeile enthalten.",
+			"selectFile": "CSV-Datei auswählen",
+			"columnMappingDescription": "Du kannst jede Spalte in der CSV-Datei einem Task-Attribut zu. Vikunja hat die wahrscheinlichsten Zuordnungen automatisch erkannt. Die Vorschau unten wird automatisch aktualisiert, wenn Du die Einstellungen änderst.",
+			"parsingOptions": "Parsing-Optionen",
+			"delimiter": "Trennzeichen",
+			"dateFormat": "Datumsformat",
+			"skipRows": "Zeilen überspringen",
+			"mapColumns": "Spalten zuordnen",
+			"example": "z.B.",
+			"preview": "Vorschau",
+			"previewDescription": "Die ersten 5 von {count} Aufgaben werden angezeigt.",
+			"import": "Aufgaben importieren",
+			"untitled": "Unbenannte Aufgabe",
+			"ignore": "Ignorieren",
+			"delimiters": {
+				"comma": "Komma (,)",
+				"semicolon": "Semikolon (;)",
+				"tab": "Tab",
+				"pipe": "Pipe (|)"
+			}
+		}
 	},
 	"label": {
 		"title": "Labels",
 		"manage": "Label verwalten",
 		"description": "Klicke auf ein Label um es zu editieren. Du kannst alle Labels, welche du erstellt hast, editieren. Du kannst alle Labels, welche mit einer Aufgabe verknüpft sind, auf die du Zugriff hast, benutzen.",
 		"newCTA": "Du hast momentan keine Labels.",
-		"search": "Beginne zu schreiben, um nach einem Label zu suchen…",
 		"create": {
 			"header": "Neues Label",
 			"title": "Label erstellen",
@@ -604,7 +718,6 @@
 		},
 		"edit": {
 			"header": "Label bearbeiten",
-			"forbidden": "Du kannst dieses Label nicht bearbeiten, da es nicht dir gehört.",
 			"success": "Das Label wurde erfolgreich aktualisiert."
 		},
 		"deleteSuccess": "Das Label wurde erfolgreich gelöscht.",
@@ -612,7 +725,6 @@
 			"title": "Titel",
 			"titlePlaceholder": "Gib einen Labelnamen an…",
 			"description": "Beschreibung",
-			"descriptionPlaceholder": "Labelbeschreibung",
 			"color": "Farbe"
 		}
 	},
@@ -631,7 +743,9 @@
 		"upcoming": "Anstehend",
 		"settings": "Einstellungen",
 		"imprint": "Impressum",
-		"privacy": "Datenschutzerklärung"
+		"privacy": "Datenschutzerklärung",
+		"closeSidebar": "Seitenleiste schließen",
+		"home": "Vikunja Startseite"
 	},
 	"misc": {
 		"loading": "Wird geladen…",
@@ -639,16 +753,13 @@
 		"delete": "Löschen",
 		"confirm": "Bestätigen",
 		"cancel": "Abbrechen",
-		"refresh": "Neu laden",
 		"disable": "Deaktivieren",
 		"copy": "In Zwischenablage kopieren",
 		"copyError": "Kopieren in Zwischenablage fehlgeschlagen",
-		"search": "Suchen",
 		"searchPlaceholder": "Beginne zu schreiben, um zu suchen…",
 		"previous": "Vorherige",
 		"next": "Weiter",
 		"poweredBy": "Powered by Vikunja",
-		"info": "Info",
 		"create": "Erstellen",
 		"doit": "Tu es!",
 		"saving": "Speichern…",
@@ -666,9 +777,18 @@
 		"createdBy": "Erstellt von {0}",
 		"actions": "Aktionen",
 		"cannotBeUndone": "Dies kann nicht rückgängig gemacht werden!",
-		"avatarOfUser": "{user}'s Profilbild"
+		"avatarOfUser": "{user}'s Profilbild",
+		"closeBanner": "Banner schließen",
+		"closeDialog": "Dialog schließen",
+		"closeQuickActions": "Schnellaktionen schließen",
+		"skipToContent": "Überspringen und zum Hauptinhalt gehen",
+		"sortBy": "Sortieren nach",
+		"dateRange": "Zeitraum",
+		"notSet": "Nicht festgelegt",
+		"user": "Benutzer:in"
 	},
 	"input": {
+		"projectColor": "Projektfarbe",
 		"resetColor": "Farbe zurücksetzen",
 		"datepicker": {
 			"today": "Heute",
@@ -681,15 +801,12 @@
 		},
 		"editor": {
 			"edit": "Bearbeiten",
-			"done": "Fertig",
 			"heading1": "Überschrift 1",
 			"heading1Tooltip": "Große Überschrift.",
 			"heading2": "Überschrift 2",
 			"heading2Tooltip": "Mittlere Überschrift.",
 			"heading3": "Überschrift 3",
 			"heading3Tooltip": "Kleine Überschrift.",
-			"headingSmaller": "Kleinere Überschrift",
-			"headingBigger": "Grössere Überschrift",
 			"bold": "Fett",
 			"italic": "Kursiv",
 			"strikethrough": "Durchgestrichen",
@@ -700,17 +817,13 @@
 			"quoteTooltip": "Erfasse ein Zitat.",
 			"bulletList": "Stichpunktliste",
 			"bulletListTooltip": "Erstelle eine einfache Stichpunktliste.",
-			"unorderedList": "Ungeordnete Liste",
 			"orderedList": "Geordnete Liste",
 			"orderedListTooltip": "Erstelle eine Liste mit Nummerierung.",
-			"cleanBlock": "Formatierung löschen",
 			"link": "Link",
 			"image": "Bild",
 			"imageTooltip": "Lade ein Bild von deinem PC hoch.",
 			"horizontalRule": "Horizontaler Strich",
 			"horizontalRuleTooltip": "Teile einen Bereich.",
-			"sideBySide": "Nebeneinander",
-			"guide": "Hilfslinie",
 			"text": "Text",
 			"textTooltip": "Einfach einen Text tippen.",
 			"taskList": "Aufgabenliste",
@@ -735,6 +848,9 @@
 				"toggleHeaderCell": "Headerzelle ein/aus",
 				"mergeOrSplit": "Verbinden oder teilen",
 				"fixTables": "Tabellen reparieren"
+			},
+			"emoji": {
+				"empty": "Kein Emojis gefunden"
 			}
 		},
 		"multiselect": {
@@ -748,6 +864,7 @@
 			"date": "Datum",
 			"ranges": {
 				"today": "Heute",
+				"tomorrow": "Morgen",
 				"thisWeek": "Diese Woche",
 				"restOfThisWeek": "Der Rest dieser Woche",
 				"nextWeek": "Nächste Woche",
@@ -816,28 +933,26 @@
 		}
 	},
 	"task": {
-		"task": "Aufgabe",
 		"new": "Aufgabe erstellen",
-		"delete": "Diese Aufgabe löschen",
 		"createSuccess": "Die Aufgabe wurde erfolgreich erstellt.",
 		"addReminder": "Eine Erinnerung hinzufügen…",
 		"doneSuccess": "Die Aufgabe wurde erfolgreich als erledigt markiert.",
 		"undoneSuccess": "Die Aufgabe wurde erfolgreich als nicht-erledigt markiert.",
+		"readOnlyCheckbox": "Du hast nur Lesezugriff auf diese Aufgabe und kannst sie nicht als erledigt markieren.",
 		"movedToProject": "Die Aufgabe wurde nach {project} verschoben.",
 		"undo": "Rückgängig",
-		"openDetail": "Aufgabe in der Detailansicht anzeigen",
 		"checklistTotal": "{checked} von {total} Aufgaben",
 		"checklistAllDone": "{total} Aufgaben",
 		"show": {
 			"titleCurrent": "Aktuelle Aufgaben",
-			"titleDates": "Aufgaben von {from} bis {to}",
 			"noDates": "Aufgaben ohne Datum anzeigen",
 			"overdue": "Überfällige Aufgaben anzeigen",
 			"fromuntil": "Aufgaben von {from} bis {until}",
 			"select": "Datumsbereich wählen",
 			"noTasks": "Nichts zu tun – Einen schönen Tag noch!",
 			"filterByLabel": "Filtern nach Label {label}",
-			"clearLabelFilter": "Label-Filter leeren"
+			"clearLabelFilter": "Label-Filter leeren",
+			"savedFilterIgnored": "Dein gespeicherter Homepage-Filter wird während der Anzeige von Aufgaben per Label nicht angewendet."
 		},
 		"detail": {
 			"chooseDueDate": "Klicke hier, um ein Fälligkeitsdatum zu setzen",
@@ -852,10 +967,14 @@
 			"updateSuccess": "Die Aufgabe wurde erfolgreich gespeichert.",
 			"deleteSuccess": "Die Aufgabe wurde erfolgreich gelöscht.",
 			"duplicateSuccess": "Die Aufgabe wurde erfolgreich dupliziert.",
+			"noBucket": "Keine Spalte",
+			"bucketChangedSuccess": "Die Spalte der Aufgabe wurde erfolgreich geändert.",
 			"belongsToProject": "Diese Aufgabe gehört zum Projekt „{project}“",
 			"back": "Zurück zum Projekt",
 			"due": "Fällig {at}",
-			"closePopup": "Popup schließen",
+			"closeTaskDetail": "Aufgabendetails schließen",
+			"title": "Aufgabendetails",
+			"markAsDone": "'{task}' als erledigt markieren",
 			"scrollToBottom": "Nach unten scrollen",
 			"organization": "Organisation",
 			"management": "Verwaltung",
@@ -876,6 +995,7 @@
 				"repeatAfter": "Wiederholung setzen",
 				"percentDone": "Fortschritt einstellen",
 				"attachments": "Anhänge hinzufügen",
+				"timeTracking": "Zeit erfassen",
 				"relatedTasks": "Beziehung hinzufügen",
 				"moveProject": "Verschieben",
 				"duplicate": "Duplizieren",
@@ -930,7 +1050,6 @@
 			"delete": "Anhang löschen",
 			"deleteTooltip": "Diesen Anhang löschen",
 			"deleteText1": "Soll der Anhang {filename} gelöscht werden?",
-			"copyUrl": "URL kopieren",
 			"copyUrlTooltip": "Die URL dieses Anhangs zur Verwendung im Text kopieren",
 			"setAsCover": "Als Titelbild setzen",
 			"unsetAsCover": "Titelbild entfernen",
@@ -950,7 +1069,10 @@
 			"addedSuccess": "Der Kommentar wurde erfolgreich hinzugefügt.",
 			"permalink": "Permalink zu diesem Kommentar kopieren",
 			"sortNewestFirst": "Neueste zuerst",
-			"sortOldestFirst": "Älteste zuerst"
+			"sortOldestFirst": "Älteste zuerst",
+			"reply": "Antworten",
+			"jumpToOriginal": "Zum ursprünglichen Kommentar springen",
+			"deletedComment": "gelöschter Kommentar"
 		},
 		"mention": {
 			"noUsersFound": "Keine Nutzer:innen gefunden"
@@ -962,8 +1084,7 @@
 			"1week": "1 Woche"
 		},
 		"description": {
-			"placeholder": "Gib eine Beschreibung ein, drücke '/' für mehr Optionen…",
-			"empty": "Noch keine Beschreibung vorhanden."
+			"placeholder": "Gib eine Beschreibung ein, drücke '/' für mehr Optionen…"
 		},
 		"assignee": {
 			"placeholder": "Tippe, um jemanden zuzuweisen …",
@@ -975,7 +1096,6 @@
 			"placeholder": "Beginne zu schreiben, um ein Label hinzuzufügen…",
 			"createPlaceholder": "Dies als neues Label hinzufügen",
 			"addSuccess": "Das Label wurde erfolgreich hinzugefügt.",
-			"createSuccess": "Das Label wurde erfolgreich erstellt.",
 			"removeSuccess": "Das Label wurde erfolgreich entfernt.",
 			"addCreateSuccess": "Das Label wurde erfolgreich erstellt und hinzugefügt.",
 			"delete": {
@@ -1040,12 +1160,11 @@
 			"hours": "Stunden",
 			"days": "Tage",
 			"weeks": "Wochen",
-			"months": "Monate",
-			"years": "Jahre",
 			"invalidAmount": "Bitte mehr als 0 eingeben."
 		},
 		"quickAddMagic": {
 			"hint": "Verwende magische Präfixe, um Fälligkeitsdaten, Zuweisungen und andere Aufgabeneigenschaften zu definieren.",
+			"quickEntryHint": "Verwende magische Präfixe für Datum, Labels & mehr. Öffne die Hauptanwendung von Vikunja und überprüfe den Tooltip bei der Aufgabeneingabe für weitere Details.",
 			"title": "Quick Add Magic",
 			"intro": "Beim Erstellen einer Aufgabe kannst du spezielle Schlüsselwörter verwenden, um Attribute direkt zu der neu erstellten Aufgabe hinzuzufügen. Dadurch können häufig verwendete Attribute schneller zu Aufgaben hinzugefügt werden.",
 			"multiple": "Du kannst das mehrmals benutzen.",
@@ -1194,7 +1313,6 @@
 		"unarchive": "Archivierung aufheben",
 		"setBackground": "Hintergrundeinstellungen",
 		"share": "Teilen",
-		"newProject": "Neues Projekt",
 		"createProject": "Projekt erstellen",
 		"cantArchiveIsDefault": "Du kannst dieses Projekt nicht archivieren, da es dein Standardprojekt ist.",
 		"cantDeleteIsDefault": "Du kannst dieses Projekt nicht löschen, da es dein Standardprojekt ist.",
@@ -1219,9 +1337,11 @@
 		"none": "Du hast keine Benachrichtigungen. Einen schönen Tag noch!",
 		"explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden.",
 		"markAllRead": "Alle Benachrichtigungen als gelesen markieren",
-		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert."
+		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert.",
+		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren"
 	},
 	"quickActions": {
+		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
 		"commands": "Befehle",
 		"placeholder": "Gib einen Befehl oder eine Suche ein …",
 		"hint": "Du kannst {project} verwenden, um die Suche auf ein Projekt zu beschränken. Kombiniere {project} oder {label} (Labels) mit einer Suchabfrage, um eine Aufgabe mit diesen Labels oder auf diesem Projekt zu suchen. Verwende {assignee}, um nur nach Teams zu suchen.",
@@ -1345,6 +1465,32 @@
 		"frontendVersion": "Frontend-Version: {version}",
 		"apiVersion": "API-Version: {version}"
 	},
+	"timeTracking": {
+		"title": "Zeiterfassung",
+		"stop": "Timer stoppen",
+		"logTime": "Zeit buchen",
+		"editEntry": "Eintrag bearbeiten",
+		"form": {
+			"task": "Aufgabe",
+			"taskSearch": "Nach einer Aufgabe suchen…",
+			"commentPlaceholder": "Woran hast du gearbeitet?",
+			"save": "Speichern",
+			"startTimer": "Timer starten",
+			"update": "Eintrag aktualisieren",
+			"smartFill": "Vom letzten Eintrag ausfüllen"
+		},
+		"list": {
+			"emptyTask": "Noch keine Zeit für diese Aufgabe getrackt.",
+			"emptyFiltered": "Keine Zeiterfassung innerhalb der ausgewählten Filter.",
+			"total": "Gesamt",
+			"time": "Uhrzeit",
+			"duration": "Dauer"
+		},
+		"browse": {
+			"selectRange": "Bereich wählen",
+			"userSearch": "Nach einer:m Benutzer:in suchen…"
+		}
+	},
 	"time": {
 		"units": {
 			"seconds": "Sekunde|Sekunden",
@@ -1352,8 +1498,68 @@
 			"hours": "Stunde|Stunden",
 			"days": "Tag|Tage",
 			"weeks": "Woche|Wochen",
-			"months": "Monat|Monate",
 			"years": "Jahr|Jahre"
+		}
+	},
+	"admin": {
+		"title": "Administration",
+		"labels": {
+			"users": "Accounts",
+			"tasks": "Aufgaben"
+		},
+		"overview": {
+			"shares": "Freigaben",
+			"linkSharesShort": "link",
+			"teamSharesShort": "Team",
+			"userSharesShort": "Benutzer:in",
+			"version": "Version",
+			"license": "Lizenz",
+			"licenseValidUntil": "Gültig bis",
+			"licenseExpiresIn": "in {days} Tagen",
+			"licenseLastVerified": "Zuletzt geprüft",
+			"licenseNever": "nie",
+			"licenseLastCheckFailed": "letzte Prüfung fehlgeschlagen",
+			"licenseFeatures": "Features",
+			"licenseInstance": "Instanz-ID",
+			"licenseManage": "Verwalten"
+		},
+		"searchUsersPlaceholder": "Suche nach Anmeldename oder E-Mail…",
+		"users": {
+			"status": "Status",
+			"details": "Details",
+			"detailsTitle": "Account: {username}",
+			"issuer": "Aussteller",
+			"issuerLocal": "Lokal",
+			"issuerUrl": "Aussteller-URL",
+			"subject": "Betreff",
+			"statusActive": "Aktiv",
+			"statusEmailConfirmation": "E-Mail-Bestätigung erforderlich",
+			"statusDisabled": "Deaktiviert",
+			"statusLocked": "Account gesperrt",
+			"isAdminLabel": "Administrator",
+			"addUser": "Account hinzufügen",
+			"createTitle": "Account erstellen",
+			"nameLabel": "Name",
+			"skipEmailConfirm": "E-Mail-Bestätigung überspringen",
+			"createSubmit": "Account erstellen",
+			"saveButton": "Änderungen speichern",
+			"createdSuccess": "Account {username} erstellt.",
+			"updatedSuccess": "Account {username} aktualisiert.",
+			"deletedSuccess": "Account {username} gelöscht.",
+			"deleteScheduledSuccess": "{username} erhält eine Bestätigungs-E-Mail, um die Löschung zu planen.",
+			"confirmDeleteTitle": "Account löschen?",
+			"confirmDeleteIntro": "Wie soll der Account {username} gelöscht werden?",
+			"deleteModeScheduled": "Löschung planen",
+			"deleteModeScheduledHelp": "\"Löschung planen\" sendet eine Bestätigungs-E-Mail, analog zu einer selbst ausgelösten Kontolöschung.",
+			"deleteModeNow": "Jetzt löschen",
+			"deleteModeNowHelp": "Sofort-Löschen entfernt den Account und seine Daten umgehend. Dies kann nicht rückgängig gemacht werden."
+		},
+		"projects": {
+			"ownerLabel": "Eigentümer:in",
+			"reassignOwner": "Eigentümer:in neu zuweisen",
+			"reassignTitle": "{title} erneut zuweisen",
+			"reassignedSuccess": "Projekteigentümer:in neu zugewiesen.",
+			"newOwnerLabel": "Neu:e Eigentümer:in"
 		}
 	}
 }

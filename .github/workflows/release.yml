@@ -4,6 +4,40 @@ on:
   workflow_call:
 
 jobs:
+  build-mage:
+    runs-on: ubuntu-latest
+    name: prepare-build-mage
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+        with:
+          go-version: stable
+      - name: Cache build mage
+        id: cache-build-mage
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5
+        with:
+          key: ${{ runner.os }}-build-mage-build-${{ hashFiles('build/magefile.go') }}
+          path: |
+            ./build/build-mage-static
+      # Statically compile build/magefile.go so publish-repos can run repo
+      # metadata targets inside ubuntu/fedora/archlinux containers without
+      # needing a Go toolchain available there.
+      - name: Install mage
+        if: ${{ steps.cache-build-mage.outputs.cache-hit != 'true' }}
+        run: go install github.com/magefile/mage@v1.17.2
+      - name: Compile build mage
+        if: ${{ steps.cache-build-mage.outputs.cache-hit != 'true' }}
+        working-directory: build
+        run: |
+          export PATH=$PATH:$GOPATH/bin
+          mage -compile ./build-mage-static
+      - name: Store build mage binary
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: build_mage_bin
+          path: ./build/build-mage-static
+
   docker:
     runs-on: namespace-profile-default
     steps:
@@ -63,83 +97,36 @@ jobs:
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - uses: useblacksmith/setup-go@647ac649bd5b480f2a262e3e3e5f4d150ed452ad # v6
+      - uses: ./.github/actions/release-binaries
         with:
-          go-version: stable
-      - name: Download Mage Binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: mage_bin
-      - name: get frontend
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: frontend_dist
-          path: frontend/dist
-      - run: chmod +x ./mage-static
-      - name: install upx
-        run: |
-          wget https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-amd64_linux.tar.xz
-          echo 'b32abf118d721358a50f1aa60eacdbf3298df379c431c3a86f139173ab8289a1  upx-5.0.0-amd64_linux.tar.xz' > upx-5.0.0-amd64_linux.tar.xz.sha256
-          sha256sum -c upx-5.0.0-amd64_linux.tar.xz.sha256
-          tar xf upx-5.0.0-amd64_linux.tar.xz
-          mv upx-5.0.0-amd64_linux/upx /usr/local/bin
-      - name: setup xgo cache
-        uses: useblacksmith/cache@71c7c918062ba3861252d84b07fe5ab2a6b467a6 # v5
-        with:
-          path: /home/runner/.xgo-cache
-          key: ${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - name: build and release
-        env:
-          RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
-          XGO_OUT_NAME: vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-        run: |
-          export PATH=$PATH:$GOPATH/bin
-          ./mage-static release
-      - name: GPG setup
-        uses: kolaente/action-gpg@main
-        with:
-          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
-          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
-      - name: sign
-        run: |
-          echo "=== GPG agent status ==="
-          gpg-connect-agent 'keyinfo --list' /bye || true
-          echo "=== GPG secret keys ==="
-          gpg -K --with-keygrip
-          echo "=== GPG public keys ==="
-          gpg --list-keys
-          echo "=== GNUPG directory contents ==="
-          ls -la ~/.gnupg/
-          ls -la ~/.gnupg/private-keys-v1.d/ || true
-          echo "=== Signing files ==="
-          ls -hal dist/zip/*
-          for file in dist/zip/*; do
-            gpg -v --default-key 7D061A4AA61436B40713D42EFF054DACD908493A -b --batch --yes --passphrase "${{ secrets.RELEASE_GPG_PASSPHRASE }}" --pinentry-mode loopback --sign "$file"
-          done
-      - name: Upload
-        uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
-        with:
+          project: vikunja
+          release-version: ${{ steps.ghd.outputs.describe }}
+          gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
           s3-endpoint: ${{ secrets.S3_ENDPOINT }}
           s3-bucket: ${{ secrets.S3_BUCKET }}
           s3-region: ${{ secrets.S3_REGION }}
-          target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          files: "dist/zip/*"
-          strip-path-prefix: dist/zip/
-      - name: Store Binaries
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+
+  veans-binaries:
+    runs-on: blacksmith-8vcpu-ubuntu-2204
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
+      - uses: ./.github/actions/release-binaries
         with:
-          name: vikunja_bins
-          path: ./dist/binaries/*
-      - name: Store Binary Packages
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ github.ref_type == 'tag' }}
-        with:
-          name: vikunja_bin_packages
-          path: ./dist/zip/*
+          project: veans
+          release-version: ${{ steps.ghd.outputs.describe }}
+          gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
+          s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
+          s3-endpoint: ${{ secrets.S3_ENDPOINT }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}
+          s3-region: ${{ secrets.S3_REGION }}
 
   os-package:
     runs-on: ubuntu-latest
@@ -147,59 +134,266 @@ jobs:
       - binaries
     strategy:
       matrix:
-        package:
-          - rpm
-          - deb
-          - apk
-          - archlinux
+        package: [rpm, deb, apk, archlinux]
+        arch:
+          - go_name: linux-amd64
+            nfpm: amd64
+            pkg: x86_64
+          - go_name: linux-arm64
+            nfpm: arm64
+            pkg: aarch64
+          - go_name: linux-arm-7
+            nfpm: arm7
+            pkg: armv7
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
-      - name: Download Vikunja Binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: vikunja_bins
-          pattern: vikunja-*-linux-amd64
       - name: Git describe
         id: ghd
         uses: proudust/gh-describe@v2
-      - name: Download Mage Binary
+      - uses: ./.github/actions/release-os-package
+        with:
+          project: vikunja
+          release-version: ${{ steps.ghd.outputs.describe }}
+          packager: ${{ matrix.package }}
+          nfpm-arch: ${{ matrix.arch.nfpm }}
+          pkg-arch: ${{ matrix.arch.pkg }}
+          go-name: ${{ matrix.arch.go_name }}
+          gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
+          s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
+          s3-endpoint: ${{ secrets.S3_ENDPOINT }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}
+          s3-region: ${{ secrets.S3_REGION }}
+
+  veans-os-package:
+    runs-on: ubuntu-latest
+    needs:
+      - veans-binaries
+    strategy:
+      matrix:
+        package: [rpm, deb, apk, archlinux]
+        arch:
+          - go_name: linux-amd64
+            nfpm: amd64
+            pkg: x86_64
+          - go_name: linux-arm64
+            nfpm: arm64
+            pkg: aarch64
+          - go_name: linux-arm-7
+            nfpm: arm7
+            pkg: armv7
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
+      - uses: ./.github/actions/release-os-package
+        with:
+          project: veans
+          release-version: ${{ steps.ghd.outputs.describe }}
+          packager: ${{ matrix.package }}
+          nfpm-arch: ${{ matrix.arch.nfpm }}
+          pkg-arch: ${{ matrix.arch.pkg }}
+          go-name: ${{ matrix.arch.go_name }}
+          gpg-passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          gpg-sign-key: ${{ secrets.RELEASE_GPG_SIGN_KEY }}
+          s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
+          s3-endpoint: ${{ secrets.S3_ENDPOINT }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}
+          s3-region: ${{ secrets.S3_REGION }}
+
+  publish-repos:
+    runs-on: ubuntu-latest
+    needs:
+      - build-mage
+      - os-package
+      - veans-os-package
+      - desktop
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - format: apt
+            image: ubuntu:noble
+            mage_target: release:repo-apt
+          - format: rpm
+            image: fedora:latest
+            mage_target: release:repo-rpm
+          - format: pacman
+            image: archlinux:latest
+            mage_target: release:repo-pacman
+          - format: apk
+            image: alpine:latest
+            mage_target: release:repo-apk
+    container:
+      image: ${{ matrix.image }}
+    env:
+      REPO_SUITE: ${{ github.ref_type == 'tag' && 'stable' || 'unstable' }}
+      RELEASE_VERSION: unstable
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Download build mage binary
+        # Statically compiled in test.yml's build-mage job so it runs inside
+        # ubuntu/fedora/archlinux containers without a Go toolchain.
+        if: matrix.format != 'apk'
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: mage_bin
-      - name: Prepare
-        env:
-          RELEASE_VERSION: ${{ steps.ghd.outputs.describe }}
-        run: |
-          chmod +x ./mage-static
-          ./mage-static release:prepare-nfpm-config
-          mkdir -p ./dist/os-packages
-          mv ./vikunja-*-linux-amd64 ./vikunja
-          chmod +x ./vikunja
-      - name: Create package
-        id: nfpm
-        uses: kolaente/action-gh-nfpm@master
+          name: build_mage_bin
+          path: build
+
+      - name: Download all server OS packages
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          packager: ${{ matrix.package }}
-          target: ./dist/os-packages/vikunja-${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}-x86_64.${{ matrix.package }}
-          config: ./nfpm.yaml
-      - name: Upload
-        uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
+          pattern: vikunja_os_package_*
+          merge-multiple: true
+          path: dist/repo-work/incoming
+
+      - name: Download all veans OS packages
+        # Merged into the same incoming dir so reprepro / createrepo_c /
+        # repo-add / the apk loop pick them up alongside vikunja's packages
+        # — same suite, same arch fan-out, no extra source entry for users.
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: veans_os_package_*
+          merge-multiple: true
+          path: dist/repo-work/incoming
+
+      - name: Download desktop packages (Linux)
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: vikunja_desktop_packages_ubuntu-latest
+          path: dist/repo-work/incoming-desktop
+
+      - name: Copy desktop packages to incoming
+        run: |
+          cd dist/repo-work/incoming-desktop
+          case "${{ matrix.format }}" in
+            apt)
+              cp *.deb ../incoming/ 2>/dev/null || true
+              ;;
+            rpm)
+              # Add arch suffix so the mage target's *-x86_64.rpm glob matches
+              for f in *.rpm; do
+                [ -f "$f" ] && cp "$f" "../incoming/${f%.rpm}-x86_64.rpm"
+              done
+              ;;
+            pacman)
+              # Rename .pacman to .archlinux with arch suffix
+              for f in *.pacman; do
+                [ -f "$f" ] && cp "$f" "../incoming/${f%.pacman}-x86_64.archlinux"
+              done
+              ;;
+            apk)
+              # Desktop .apk is not an Alpine package, skip
+              ;;
+          esac
+
+      - name: Install tools (apt)
+        if: matrix.format == 'apt'
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends reprepro
+
+      - name: Install tools (rpm)
+        if: matrix.format == 'rpm'
+        run: dnf install -y createrepo_c
+
+      - name: Install tools (apk)
+        if: matrix.format == 'apk'
+        run: apk add --no-cache abuild libc6-compat
+
+      - name: GPG setup
+        if: matrix.format != 'apk'
+        uses: kolaente/action-gpg@main
+        with:
+          gpg-passphrase: "${{ secrets.RELEASE_GPG_PASSPHRASE }}"
+          gpg-sign-key: "${{ secrets.RELEASE_GPG_SIGN_KEY }}"
+
+      - name: Export GPG public key
+        if: matrix.format == 'apt'
+        run: |
+          mkdir -p dist/repo-output
+          gpg --export --armor 7D061A4AA61436B40713D42EFF054DACD908493A > dist/repo-output/gpg.key
+
+      - name: Setup APK signing key
+        if: matrix.format == 'apk'
+        run: |
+          mkdir -p ~/.abuild
+          echo "${{ secrets.APK_SIGNING_KEY }}" > ~/.abuild/vikunja-apk.rsa
+          echo "PACKAGER_PRIVKEY=$HOME/.abuild/vikunja-apk.rsa" > ~/.abuild/abuild.conf
+
+      - name: Generate repo metadata
+        if: matrix.format != 'apk'
+        working-directory: build
+        env:
+          RELEASE_GPG_KEY: 7D061A4AA61436B40713D42EFF054DACD908493A
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+        run: |
+          chmod +x ./build-mage-static
+          ./build-mage-static ${{ matrix.mage_target }}
+
+      - name: Generate APK repo metadata
+        if: matrix.format == 'apk'
+        run: |
+          incoming=dist/repo-work/incoming
+          output_base=dist/repo-output/apk/$REPO_SUITE/main
+          signing_key=~/.abuild/vikunja-apk.rsa
+          for arch in x86_64 aarch64 armv7; do
+            repo_dir="$output_base/$arch"
+            mkdir -p "$repo_dir"
+            # Symlink matching packages
+            found=false
+            for pkg in "$incoming"/*-"$arch".apk; do
+              [ -f "$pkg" ] || continue
+              found=true
+              ln -sf "$(realpath "$pkg")" "$repo_dir/$(basename "$pkg")"
+            done
+            $found || continue
+            # Create index and sign
+            apk index --allow-untrusted -o "$repo_dir/APKINDEX.tar.gz" "$repo_dir"/*.apk
+            abuild-sign -k "$signing_key" "$repo_dir/APKINDEX.tar.gz"
+          done
+          echo "APK repo metadata generated in $output_base"
+
+      - name: Debug - repo output structure
+        run: find dist/repo-output -type f 2>/dev/null || ls -laR dist/repo-output/ || true
+
+      - name: Remove packages and internal state from repo output
+        run: |
+          # Remove reprepro internal state (not needed for serving)
+          rm -rf dist/repo-output/apt/db dist/repo-output/apt/conf 2>/dev/null || true
+          # Resolve symlinks into real files (S3 can't store symlinks)
+          find dist/repo-output -type l | while IFS= read -r link; do
+            target=$(readlink -f "$link")
+            if [ -f "$target" ]; then
+              rm "$link"
+              cp "$target" "$link"
+            else
+              rm "$link"
+            fi
+          done
+          # Remove actual package files — the worker redirects these to the
+          # existing artifacts so we don't need to store them twice.
+          find dist/repo-output -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.apk' -o -name '*.archlinux' -o -name '*.pacman' -o -name '*.pkg.tar.zst' \) -delete 2>/dev/null || true
+          # Remove now-empty directories
+          find dist/repo-output -type d -empty -delete 2>/dev/null || true
+
+      - name: Upload to R2
+        uses: kolaente/s3-action@main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
           s3-endpoint: ${{ secrets.S3_ENDPOINT }}
           s3-bucket: ${{ secrets.S3_BUCKET }}
           s3-region: ${{ secrets.S3_REGION }}
-          target-path: /vikunja/${{ github.ref_type == 'tag' && steps.ghd.outputs.describe || 'unstable' }}
-          files: "dist/os-packages/*"
-          strip-path-prefix: dist/os-packages/
-      - name: Store OS Packages
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ github.ref_type == 'tag' }}
-        with:
-          name: vikunja_os_package_${{ matrix.package }}
-          path: ./dist/os-packages/*
+          target-path: /repos
+          files: "dist/repo-output/**/*"
+          strip-path-prefix: dist/repo-output/
 
   config-yaml:
     runs-on: ubuntu-latest
@@ -217,7 +411,7 @@ jobs:
           chmod +x ./mage-static
           ./mage-static generate:config-yaml 1
       - name: Upload to S3
-        uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
+        uses: kolaente/s3-action@main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
@@ -267,7 +461,7 @@ jobs:
           pnpm install  --frozen-lockfile --prefer-offline --fetch-timeout 100000
           node build.js "${{ steps.ghd.outputs.describe }}" ${{ github.ref_type == 'tag' }}
       - name: Upload to S3
-        uses: kolaente/s3-action@41963184b524ccac734ea4d8c964ac74b5b1af89 # v1.2.1
+        uses: kolaente/s3-action@main
         with:
           s3-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
           s3-secret-access-key: ${{ secrets.S3_SECRET_KEY }}
@@ -280,7 +474,6 @@ jobs:
           exclude: "desktop/dist/*.blockmap"
       - name: Store Desktop Package
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        if: ${{ github.ref_type == 'tag' }}
         with:
           name: vikunja_desktop_packages_${{ matrix.os }}
           path: |
@@ -337,7 +530,10 @@ jobs:
     needs:
       - binaries
       - os-package
+      - veans-binaries
+      - veans-os-package
       - desktop
+      - publish-repos
     if: ${{ github.ref_type == 'tag' }}
     permissions:
       contents: write
@@ -347,25 +543,22 @@ jobs:
         with:
           name: vikunja_bin_packages
 
-      - name: Download OS Package rpm
+      - name: Download OS Packages
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: vikunja_os_package_rpm
+          pattern: vikunja_os_package_*
+          merge-multiple: true
 
-      - name: Download OS Package deb
+      - name: Download Veans Binaries
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: vikunja_os_package_deb
+          name: veans_bin_packages
 
-      - name: Download OS Package apk
+      - name: Download Veans OS Packages
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: vikunja_os_package_apk
-
-      - name: Download OS Package archlinux
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: vikunja_os_package_archlinux
+          pattern: veans_os_package_*
+          merge-multiple: true
 
       - name: Download Desktop Package Linux
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
@@ -393,4 +586,9 @@ jobs:
             vikunja*.deb
             vikunja*.apk
             vikunja*.archlinux
+            veans*.zip
+            veans*.rpm
+            veans*.deb
+            veans*.apk
+            veans*.archlinux
             Vikunja Desktop*

@@ -22,9 +22,8 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 
 	"github.com/labstack/echo/v5"
 )
@@ -62,18 +61,8 @@ func HandleTesting(c *echo.Context) error {
 		})
 	}
 
-	// Wait for all async event handlers from the previous test to complete
-	// before modifying the database. Without this, handlers hold SQLite
-	// connections and starve this request's truncate/insert operations.
-	events.WaitForPendingHandlers()
-
 	truncate := c.QueryParam("truncate")
-	if truncate == "true" || truncate == "" {
-		err = db.RestoreAndTruncate(table, content)
-	} else {
-		err = db.Restore(table, content)
-	}
-
+	data, err := shared.ReplaceTableContents(table, content, truncate == "true" || truncate == "")
 	if err != nil {
 		log.Errorf("Error replacing table data: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -82,17 +71,33 @@ func HandleTesting(c *echo.Context) error {
 		})
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-	data := []map[string]interface{}{}
-	err = s.Table(table).Find(&data)
-	if err != nil {
-		log.Errorf("Error fetching table data: %v", err)
+	return c.JSON(http.StatusCreated, data)
+}
+
+// HandleTestingTruncateAll truncates all tables in the database
+// @Summary Truncate all tables
+// @Description Removes all data from every Vikunja table. Used by e2e tests to ensure clean state before each test. Requires the testing token.
+// @tags testing
+// @Produce json
+// @Success 200 {object} map[string]string "All tables truncated."
+// @Failure 403 {object} web.HTTPError "Forbidden"
+// @Failure 500 {object} models.Message "Internal server error."
+// @Router /test/all [delete]
+func HandleTestingTruncateAll(c *echo.Context) error {
+	token := c.Request().Header.Get("Authorization")
+	if token != config.ServiceTestingtoken.GetString() {
+		return echo.ErrForbidden
+	}
+
+	if err := shared.TruncateAllTestingTables(); err != nil {
+		log.Errorf("Error truncating all tables: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error":   true,
 			"message": err.Error(),
 		})
 	}
 
-	return c.JSON(http.StatusCreated, data)
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "ok",
+	})
 }

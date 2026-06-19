@@ -81,7 +81,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	dumpWriter.Close()
 	dumpFile.Close()
 
-	exported, err := os.Open(tmpFilename)
+	exported, err := os.Open(tmpFilename) // #nosec G703 -- tmpFilename is generated internally, not from user input
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func ExportUserData(s *xorm.Session, u *user.User) (err error) {
 	}
 
 	// Remove the old file
-	err = os.Remove(exported.Name())
+	err = os.Remove(exported.Name()) // #nosec G703 -- path from internally created temp file
 	if err != nil {
 		return err
 	}
@@ -402,6 +402,64 @@ func exportProjectBackgrounds(s *xorm.Session, u *user.User, wr *zip.Writer) (er
 	}
 
 	return utils.WriteFilesToZip(backgroundFiles, wr)
+}
+
+// GetUserDataExportFile loads the user's ready data export with its bytes open for
+// reading. It returns ErrUserDataExportDoesNotExist when the user never requested an
+// export or the underlying file is gone. The caller must close the returned reader.
+func GetUserDataExportFile(u *user.User) (*files.File, error) {
+	if u.ExportFileID == 0 {
+		return nil, ErrUserDataExportDoesNotExist{}
+	}
+
+	exportFile := &files.File{ID: u.ExportFileID}
+	if err := exportFile.LoadFileMetaByID(); err != nil {
+		if files.IsErrFileDoesNotExist(err) {
+			return nil, ErrUserDataExportDoesNotExist{}
+		}
+		return nil, err
+	}
+	if err := exportFile.LoadFileByID(); err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrUserDataExportDoesNotExist{}
+		}
+		return nil, err
+	}
+
+	return exportFile, nil
+}
+
+// GetUserDataExportStatus returns metadata about the user's current data export, or
+// nil when none exists. The expiry mirrors the cleanup cron's 7-day retention.
+func GetUserDataExportStatus(u *user.User) (*UserExportStatus, error) {
+	if u.ExportFileID == 0 {
+		return nil, nil
+	}
+
+	exportFile := &files.File{ID: u.ExportFileID}
+	if err := exportFile.LoadFileMetaByID(); err != nil {
+		// A missing meta row means there is no export — mirror the download path
+		// (404 there) instead of surfacing a 500.
+		if files.IsErrFileDoesNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &UserExportStatus{
+		ID:      exportFile.ID,
+		Size:    exportFile.Size,
+		Created: exportFile.Created,
+		Expires: exportFile.Created.Add(7 * 24 * time.Hour),
+	}, nil
+}
+
+// UserExportStatus is the metadata returned for a user's current data export.
+type UserExportStatus struct {
+	ID      int64     `json:"id" readOnly:"true" doc:"The id of the export file."`
+	Size    uint64    `json:"size" readOnly:"true" doc:"The size of the export file in bytes."`
+	Created time.Time `json:"created" readOnly:"true" doc:"When the export was created."`
+	Expires time.Time `json:"expires" readOnly:"true" doc:"When the export will be automatically deleted (7 days after creation)."`
 }
 
 func RegisterOldExportCleanupCron() {

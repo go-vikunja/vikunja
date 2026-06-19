@@ -1,6 +1,7 @@
 import {library} from '@fortawesome/fontawesome-svg-core'
 import {
 	faAlignLeft,
+	faAngleLeft,
 	faAngleRight,
 	faAnglesUp,
 	faArchive,
@@ -37,6 +38,7 @@ import {
 	faEyeSlash,
 	faFile,
 	faFileImage,
+	faFilePdf,
 	faFillDrip,
 	faFilter,
 	faForward,
@@ -57,6 +59,7 @@ import {
 	faPlay,
 	faPlus,
 	faPowerOff,
+	faRss,
 	faSearch,
 	faShareAlt,
 	faSignOutAlt,
@@ -72,6 +75,7 @@ import {
 	faTimes,
 	faTrashAlt,
 	faUser,
+	faUserEdit,
 	faUsers,
 	faQuoteRight,
 	faListUl,
@@ -111,12 +115,14 @@ library.add(faSquareCheck)
 library.add(faTable)
 library.add(faFile)
 library.add(faFileImage)
+library.add(faFilePdf)
 library.add(faCheckSquare)
 library.add(faStrikethrough)
 library.add(faCode)
 library.add(faQuoteRight)
 library.add(faListUl)
 library.add(faAlignLeft)
+library.add(faAngleLeft)
 library.add(faAngleRight)
 library.add(faArchive)
 library.add(faArrowLeft)
@@ -165,6 +171,7 @@ library.add(faPercent)
 library.add(faPlay)
 library.add(faPlus)
 library.add(faPowerOff)
+library.add(faRss)
 library.add(faSave)
 library.add(faSearch)
 library.add(faShareAlt)
@@ -184,6 +191,7 @@ library.add(faTimes)
 library.add(faTimesCircle)
 library.add(faTrashAlt)
 library.add(faUser)
+library.add(faUserEdit)
 library.add(faUsers)
 library.add(faArrowDownShortWide)
 library.add(faArrowUpFromBracket)

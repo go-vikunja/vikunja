@@ -131,6 +131,13 @@ func (err ValidationHTTPError) GetHTTPCode() int {
 	return err.HTTPCode
 }
 
+// GetCode returns Vikunja's numeric domain error code. v2's translateDomainError
+// reads it to keep the v1 `code` body contract, since this type does not
+// implement web.HTTPErrorProcessor (the embedded field shadows the method name).
+func (err ValidationHTTPError) GetCode() int {
+	return err.Code
+}
+
 func InvalidFieldError(fields []string) error {
 	return InvalidFieldErrorWithMessage(fields, "Invalid Data")
 }
@@ -528,6 +535,34 @@ func (err *ErrProjectViewDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectHasNoBackground represents an error where a project has no background set.
+type ErrProjectHasNoBackground struct {
+	ProjectID int64
+}
+
+// IsErrProjectHasNoBackground checks if an error is ErrProjectHasNoBackground.
+func IsErrProjectHasNoBackground(err error) bool {
+	_, ok := err.(*ErrProjectHasNoBackground)
+	return ok
+}
+
+func (err *ErrProjectHasNoBackground) Error() string {
+	return fmt.Sprintf("Project has no background [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeProjectHasNoBackground holds the unique world-error code of this error
+const ErrCodeProjectHasNoBackground = 3015
+
+// HTTPError holds the http error description
+func (err *ErrProjectHasNoBackground) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectHasNoBackground,
+		// Message kept verbatim from v1's inline handler error so the wire body is unchanged.
+		Message: "Project background not found",
+	}
+}
+
 // ==============
 // Task errors
 // ==============
@@ -551,6 +586,34 @@ const ErrCodeTaskCannotBeEmpty = 4001
 // HTTPError holds the http error description
 func (err ErrTaskCannotBeEmpty) HTTPError() web.HTTPError {
 	return web.HTTPError{HTTPCode: http.StatusBadRequest, Code: ErrCodeTaskCannotBeEmpty, Message: "You must provide at least a task title."}
+}
+
+// ErrInvalidTaskRepeatInterval represents an error where the provided
+// task repeat interval is outside the allowed range.
+type ErrInvalidTaskRepeatInterval struct {
+	RepeatAfter int64
+}
+
+// IsErrInvalidTaskRepeatInterval checks if an error is ErrInvalidTaskRepeatInterval.
+func IsErrInvalidTaskRepeatInterval(err error) bool {
+	_, ok := err.(ErrInvalidTaskRepeatInterval)
+	return ok
+}
+
+func (err ErrInvalidTaskRepeatInterval) Error() string {
+	return fmt.Sprintf("Invalid task repeat interval. [RepeatAfter: %d]", err.RepeatAfter)
+}
+
+// ErrCodeInvalidTaskRepeatInterval holds the unique world-error code of this error.
+const ErrCodeInvalidTaskRepeatInterval = 4029
+
+// HTTPError holds the http error description.
+func (err ErrInvalidTaskRepeatInterval) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTaskRepeatInterval,
+		Message:  fmt.Sprintf("The task repeat interval must be between 0 and %d seconds (10 years).", MaxTaskRepeatAfterSeconds),
+	}
 }
 
 // ErrTaskDoesNotExist represents a "ErrProjectDoesNotExist" kind of error. Used if the project does not exist.
@@ -2182,5 +2245,411 @@ func (err *ErrSessionNotFound) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusNotFound,
 		Code:     ErrCodeSessionNotFound,
 		Message:  "The session does not exist.",
+	}
+}
+
+// ====================
+// OAuth Server Errors
+// ====================
+
+// ErrOAuthClientNotFound represents an error where the OAuth client ID is not recognized.
+type ErrOAuthClientNotFound struct{}
+
+// IsErrOAuthClientNotFound checks if an error is ErrOAuthClientNotFound.
+func IsErrOAuthClientNotFound(err error) bool {
+	_, ok := err.(*ErrOAuthClientNotFound)
+	return ok
+}
+
+func (err *ErrOAuthClientNotFound) Error() string {
+	return "OAuth client not found"
+}
+
+// ErrCodeOAuthClientNotFound holds the unique world-error code of this error
+const ErrCodeOAuthClientNotFound = 17001
+
+// HTTPError holds the http error description
+func (err *ErrOAuthClientNotFound) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthClientNotFound,
+		Message:  "The OAuth client ID is not recognized.",
+	}
+}
+
+// ErrOAuthInvalidRedirectURI represents an error where the redirect URI is not allowed.
+type ErrOAuthInvalidRedirectURI struct{}
+
+// IsErrOAuthInvalidRedirectURI checks if an error is ErrOAuthInvalidRedirectURI.
+func IsErrOAuthInvalidRedirectURI(err error) bool {
+	_, ok := err.(*ErrOAuthInvalidRedirectURI)
+	return ok
+}
+
+func (err *ErrOAuthInvalidRedirectURI) Error() string {
+	return "Invalid redirect URI"
+}
+
+// ErrCodeOAuthInvalidRedirectURI holds the unique world-error code of this error
+const ErrCodeOAuthInvalidRedirectURI = 17002
+
+// HTTPError holds the http error description
+func (err *ErrOAuthInvalidRedirectURI) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthInvalidRedirectURI,
+		Message:  "The redirect URI is not allowed for this client.",
+	}
+}
+
+// ErrOAuthMissingPKCE represents an error where PKCE parameters are missing or invalid.
+type ErrOAuthMissingPKCE struct{}
+
+// IsErrOAuthMissingPKCE checks if an error is ErrOAuthMissingPKCE.
+func IsErrOAuthMissingPKCE(err error) bool {
+	_, ok := err.(*ErrOAuthMissingPKCE)
+	return ok
+}
+
+func (err *ErrOAuthMissingPKCE) Error() string {
+	return "PKCE is required"
+}
+
+// ErrCodeOAuthMissingPKCE holds the unique world-error code of this error
+const ErrCodeOAuthMissingPKCE = 17003
+
+// HTTPError holds the http error description
+func (err *ErrOAuthMissingPKCE) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthMissingPKCE,
+		Message:  "PKCE (code_challenge with S256 method) is required.",
+	}
+}
+
+// ErrOAuthCodeInvalid represents an error where the authorization code is invalid or already used.
+type ErrOAuthCodeInvalid struct{}
+
+// IsErrOAuthCodeInvalid checks if an error is ErrOAuthCodeInvalid.
+func IsErrOAuthCodeInvalid(err error) bool {
+	_, ok := err.(*ErrOAuthCodeInvalid)
+	return ok
+}
+
+func (err *ErrOAuthCodeInvalid) Error() string {
+	return "Invalid authorization code"
+}
+
+// ErrCodeOAuthCodeInvalid holds the unique world-error code of this error
+const ErrCodeOAuthCodeInvalid = 17004
+
+// HTTPError holds the http error description
+func (err *ErrOAuthCodeInvalid) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthCodeInvalid,
+		Message:  "The authorization code is invalid or has already been used.",
+	}
+}
+
+// ErrOAuthCodeExpired represents an error where the authorization code has expired.
+type ErrOAuthCodeExpired struct{}
+
+// IsErrOAuthCodeExpired checks if an error is ErrOAuthCodeExpired.
+func IsErrOAuthCodeExpired(err error) bool {
+	_, ok := err.(*ErrOAuthCodeExpired)
+	return ok
+}
+
+func (err *ErrOAuthCodeExpired) Error() string {
+	return "Authorization code expired"
+}
+
+// ErrCodeOAuthCodeExpired holds the unique world-error code of this error
+const ErrCodeOAuthCodeExpired = 17005
+
+// HTTPError holds the http error description
+func (err *ErrOAuthCodeExpired) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthCodeExpired,
+		Message:  "The authorization code has expired.",
+	}
+}
+
+// ErrOAuthPKCEVerifyFailed represents an error where the PKCE code_verifier does not match.
+type ErrOAuthPKCEVerifyFailed struct{}
+
+// IsErrOAuthPKCEVerifyFailed checks if an error is ErrOAuthPKCEVerifyFailed.
+func IsErrOAuthPKCEVerifyFailed(err error) bool {
+	_, ok := err.(*ErrOAuthPKCEVerifyFailed)
+	return ok
+}
+
+func (err *ErrOAuthPKCEVerifyFailed) Error() string {
+	return "PKCE verification failed"
+}
+
+// ErrCodeOAuthPKCEVerifyFailed holds the unique world-error code of this error
+const ErrCodeOAuthPKCEVerifyFailed = 17006
+
+// HTTPError holds the http error description
+func (err *ErrOAuthPKCEVerifyFailed) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthPKCEVerifyFailed,
+		Message:  "The code_verifier does not match the code_challenge.",
+	}
+}
+
+// ErrOAuthInvalidGrantType represents an error where the grant_type is not supported.
+type ErrOAuthInvalidGrantType struct{}
+
+// IsErrOAuthInvalidGrantType checks if an error is ErrOAuthInvalidGrantType.
+func IsErrOAuthInvalidGrantType(err error) bool {
+	_, ok := err.(*ErrOAuthInvalidGrantType)
+	return ok
+}
+
+func (err *ErrOAuthInvalidGrantType) Error() string {
+	return "Invalid grant type"
+}
+
+// ErrCodeOAuthInvalidGrantType holds the unique world-error code of this error
+const ErrCodeOAuthInvalidGrantType = 17007
+
+// HTTPError holds the http error description
+func (err *ErrOAuthInvalidGrantType) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeOAuthInvalidGrantType,
+		Message:  "The grant_type is not supported. Use 'authorization_code' or 'refresh_token'.",
+	}
+}
+
+// ====================
+// Time Tracking Errors
+// ====================
+
+// ErrTimeEntryDoesNotExist represents an error where a time entry does not exist
+type ErrTimeEntryDoesNotExist struct {
+	TimeEntryID int64
+}
+
+// IsErrTimeEntryDoesNotExist checks if an error is ErrTimeEntryDoesNotExist.
+func IsErrTimeEntryDoesNotExist(err error) bool {
+	_, ok := err.(ErrTimeEntryDoesNotExist)
+	return ok
+}
+
+func (err ErrTimeEntryDoesNotExist) Error() string {
+	return fmt.Sprintf("Time entry does not exist [TimeEntryID: %v]", err.TimeEntryID)
+}
+
+// ErrCodeTimeEntryDoesNotExist holds the unique world-error code of this error
+const ErrCodeTimeEntryDoesNotExist = 18001
+
+// HTTPError holds the http error description
+func (err ErrTimeEntryDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeTimeEntryDoesNotExist,
+		Message:  "This time entry does not exist.",
+	}
+}
+
+// ErrTimeEntryInvalidContainer represents an error where a time entry is attached
+// to both a task and a project, or to neither (violating the XOR invariant).
+type ErrTimeEntryInvalidContainer struct {
+	TaskID    int64
+	ProjectID int64
+}
+
+// IsErrTimeEntryInvalidContainer checks if an error is ErrTimeEntryInvalidContainer.
+func IsErrTimeEntryInvalidContainer(err error) bool {
+	_, ok := err.(ErrTimeEntryInvalidContainer)
+	return ok
+}
+
+func (err ErrTimeEntryInvalidContainer) Error() string {
+	return fmt.Sprintf("Time entry must be attached to exactly one of task or project [TaskID: %v, ProjectID: %v]", err.TaskID, err.ProjectID)
+}
+
+// ErrCodeTimeEntryInvalidContainer holds the unique world-error code of this error
+const ErrCodeTimeEntryInvalidContainer = 18002
+
+// HTTPError holds the http error description
+func (err ErrTimeEntryInvalidContainer) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTimeEntryInvalidContainer,
+		Message:  "A time entry must be attached to exactly one of a task or a project.",
+	}
+}
+
+// ErrInvalidTimeEntryFilterField represents an error where a time entry filter references a non-filterable field
+type ErrInvalidTimeEntryFilterField struct {
+	Field string
+}
+
+// IsErrInvalidTimeEntryFilterField checks if an error is ErrInvalidTimeEntryFilterField.
+func IsErrInvalidTimeEntryFilterField(err error) bool {
+	_, ok := err.(ErrInvalidTimeEntryFilterField)
+	return ok
+}
+
+func (err ErrInvalidTimeEntryFilterField) Error() string {
+	return fmt.Sprintf("Time entry filter field is invalid [Field: %s]", err.Field)
+}
+
+// ErrCodeInvalidTimeEntryFilterField holds the unique world-error code of this error
+const ErrCodeInvalidTimeEntryFilterField = 18003
+
+// HTTPError holds the http error description
+func (err ErrInvalidTimeEntryFilterField) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTimeEntryFilterField,
+		Message:  fmt.Sprintf("The time entry filter field '%s' is invalid. Filterable fields are user_id, task_id, project_id, start_time and end_time.", err.Field),
+	}
+}
+
+// ErrInvalidTimeEntryFilterValue represents an error where a time entry filter value cannot be parsed for its field
+type ErrInvalidTimeEntryFilterValue struct {
+	Field string
+	Value string
+}
+
+// IsErrInvalidTimeEntryFilterValue checks if an error is ErrInvalidTimeEntryFilterValue.
+func IsErrInvalidTimeEntryFilterValue(err error) bool {
+	_, ok := err.(ErrInvalidTimeEntryFilterValue)
+	return ok
+}
+
+func (err ErrInvalidTimeEntryFilterValue) Error() string {
+	return fmt.Sprintf("Time entry filter value is invalid [Field: %s, Value: %s]", err.Field, err.Value)
+}
+
+// ErrCodeInvalidTimeEntryFilterValue holds the unique world-error code of this error
+const ErrCodeInvalidTimeEntryFilterValue = 18004
+
+// HTTPError holds the http error description
+func (err ErrInvalidTimeEntryFilterValue) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeInvalidTimeEntryFilterValue,
+		Message:  fmt.Sprintf("The value '%s' is not valid for the time entry filter field '%s'.", err.Value, err.Field),
+	}
+}
+
+// ErrNoRunningTimer represents an error where a user has no running timer to act on
+type ErrNoRunningTimer struct {
+	UserID int64
+}
+
+// IsErrNoRunningTimer checks if an error is ErrNoRunningTimer.
+func IsErrNoRunningTimer(err error) bool {
+	_, ok := err.(ErrNoRunningTimer)
+	return ok
+}
+
+func (err ErrNoRunningTimer) Error() string {
+	return fmt.Sprintf("No running timer [UserID: %d]", err.UserID)
+}
+
+// ErrCodeNoRunningTimer holds the unique world-error code of this error
+const ErrCodeNoRunningTimer = 18005
+
+// HTTPError holds the http error description
+func (err ErrNoRunningTimer) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeNoRunningTimer,
+		Message:  "You do not have a running timer.",
+	}
+}
+
+// ErrTimeEntryAlreadyEnded represents an error where an update tries to clear the
+// end time of an entry that has already ended (reopening it as a running timer).
+type ErrTimeEntryAlreadyEnded struct {
+	TimeEntryID int64
+}
+
+// IsErrTimeEntryAlreadyEnded checks if an error is ErrTimeEntryAlreadyEnded.
+func IsErrTimeEntryAlreadyEnded(err error) bool {
+	_, ok := err.(ErrTimeEntryAlreadyEnded)
+	return ok
+}
+
+func (err ErrTimeEntryAlreadyEnded) Error() string {
+	return fmt.Sprintf("Time entry has already ended and cannot be reopened [TimeEntryID: %v]", err.TimeEntryID)
+}
+
+// ErrCodeTimeEntryAlreadyEnded holds the unique world-error code of this error
+const ErrCodeTimeEntryAlreadyEnded = 18006
+
+// HTTPError holds the http error description
+func (err ErrTimeEntryAlreadyEnded) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTimeEntryAlreadyEnded,
+		Message:  "A time entry that has already ended cannot be reopened into a running timer. Start a new timer instead.",
+	}
+}
+
+// ErrTimeEntryEndBeforeStart represents an error where a time entry's end time
+// precedes its start time, which would persist a negative interval.
+type ErrTimeEntryEndBeforeStart struct {
+	TimeEntryID int64
+}
+
+// IsErrTimeEntryEndBeforeStart checks if an error is ErrTimeEntryEndBeforeStart.
+func IsErrTimeEntryEndBeforeStart(err error) bool {
+	_, ok := err.(ErrTimeEntryEndBeforeStart)
+	return ok
+}
+
+func (err ErrTimeEntryEndBeforeStart) Error() string {
+	return fmt.Sprintf("Time entry end time is before its start time [TimeEntryID: %v]", err.TimeEntryID)
+}
+
+// ErrCodeTimeEntryEndBeforeStart holds the unique world-error code of this error
+const ErrCodeTimeEntryEndBeforeStart = 18007
+
+// HTTPError holds the http error description
+func (err ErrTimeEntryEndBeforeStart) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeTimeEntryEndBeforeStart,
+		Message:  "A time entry's end time cannot be before its start time.",
+	}
+}
+
+// =================
+// User export errors
+// =================
+
+// ErrUserDataExportDoesNotExist represents an error where a user has no ready data export to download.
+type ErrUserDataExportDoesNotExist struct{}
+
+// IsErrUserDataExportDoesNotExist checks if an error is ErrUserDataExportDoesNotExist.
+func IsErrUserDataExportDoesNotExist(err error) bool {
+	_, ok := err.(ErrUserDataExportDoesNotExist)
+	return ok
+}
+
+func (err ErrUserDataExportDoesNotExist) Error() string {
+	return "No user data export found"
+}
+
+// ErrCodeUserDataExportDoesNotExist holds the unique world-error code of this error
+const ErrCodeUserDataExportDoesNotExist = 19001
+
+// HTTPError holds the http error description
+func (err ErrUserDataExportDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeUserDataExportDoesNotExist,
+		Message:  "No user data export found.",
 	}
 }

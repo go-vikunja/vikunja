@@ -17,10 +17,14 @@
 package migration
 
 import (
+	"strings"
+
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/db"
 
 	"src.techknowlogick.com/xormigrate"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
 
 func init() {
@@ -38,8 +42,18 @@ func init() {
 				}
 			}
 
-			if _, err = tx.Exec("CREATE INDEX IF NOT EXISTS IDX_webhooks_user_id ON webhooks (user_id)"); err != nil {
-				return err
+			var indexQuery string
+			switch db.Type() {
+			case schemas.POSTGRES, schemas.SQLITE:
+				indexQuery = "CREATE INDEX IF NOT EXISTS IDX_webhooks_user_id ON webhooks (user_id)"
+			case schemas.MYSQL:
+				indexQuery = "CREATE INDEX IDX_webhooks_user_id ON webhooks (user_id)"
+			}
+			if _, err = tx.Exec(indexQuery); err != nil {
+				// For MySQL, ignore duplicate key name error (Error 1061)
+				if !strings.Contains(err.Error(), "Error 1061") && !strings.Contains(err.Error(), "Duplicate key name") {
+					return err
+				}
 			}
 
 			// Make project_id nullable so user-level webhooks can have NULL project_id.

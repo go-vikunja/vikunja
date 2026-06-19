@@ -90,7 +90,7 @@ func (g *Provider) GetAvatar(user *user.User, size int64) ([]byte, string, error
 		if err != nil {
 			return nil, err
 		}
-		resp, err := (&http.Client{}).Do(req)
+		resp, err := (&http.Client{Timeout: 5 * time.Second}).Do(req) // #nosec G704 -- URL is from config (AvatarGravatarBaseURL)
 		if err != nil {
 			return nil, err
 		}

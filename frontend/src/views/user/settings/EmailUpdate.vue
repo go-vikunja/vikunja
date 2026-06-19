@@ -10,6 +10,7 @@
 				:label="$t('user.settings.updateEmailNew')"
 				:placeholder="$t('user.auth.emailPlaceholder')"
 				type="email"
+				name="email"
 				autocomplete="email"
 				@keyup.enter="updateEmail"
 			/>
@@ -19,7 +20,8 @@
 				:label="$t('user.settings.currentPassword')"
 				:placeholder="$t('user.settings.currentPasswordPlaceholder')"
 				type="password"
-				autocomplete="password"
+				name="current-password"
+				autocomplete="current-password"
 				@keyup.enter="updateEmail"
 			/>
 		</form>

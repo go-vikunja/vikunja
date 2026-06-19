@@ -18,14 +18,14 @@ package v1
 
 import (
 	"net/http"
-	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
-	"code.vikunja.io/api/pkg/modules/auth/ldap"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 	user2 "code.vikunja.io/api/pkg/user"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -50,66 +50,8 @@ func Login(c *echo.Context) (err error) {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "Please provide a username and password."})
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	var user *user2.User
-	if config.AuthLdapEnabled.GetBool() {
-		user, err = ldap.AuthenticateUserInLDAP(s, u.Username, u.Password, config.AuthLdapGroupSyncEnabled.GetBool(), config.AuthLdapAvatarSyncAttribute.GetString())
-		if err != nil && !user2.IsErrWrongUsernameOrPassword(err) {
-			_ = s.Rollback()
-			return err
-		}
-	}
-
-	if user == nil {
-		// This allows us to still have local users while ldap is enabled
-		user, err = user2.CheckUserCredentials(s, &u)
-		if err != nil {
-			_ = s.Rollback()
-			return err
-		}
-	}
-
-	if user.Status == user2.StatusDisabled {
-		_ = s.Rollback()
-		return &user2.ErrAccountDisabled{UserID: user.ID}
-	}
-
-	totpEnabled, err := user2.TOTPEnabledForUser(s, user)
+	user, err := shared.AuthenticateUserCredentials(c.Request().Context(), &u)
 	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if totpEnabled {
-		if u.TOTPPasscode == "" {
-			_ = s.Rollback()
-			return user2.ErrInvalidTOTPPasscode{}
-		}
-
-		_, err = user2.ValidateTOTPPasscode(s, &user2.TOTPPasscode{
-			User:     user,
-			Passcode: u.TOTPPasscode,
-		})
-		if err != nil {
-			if user2.IsErrInvalidTOTPPasscode(err) {
-				user2.HandleFailedTOTPAuth(s, user)
-			}
-			_ = s.Rollback()
-			return err
-		}
-	}
-
-	if err := keyvalue.Del(user.GetFailedTOTPAttemptsKey()); err != nil {
-		return err
-	}
-	if err := keyvalue.Del(user.GetFailedPasswordAttemptsKey()); err != nil {
-		return err
-	}
-
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
 		return err
 	}
 
@@ -189,91 +131,23 @@ func RefreshToken(c *echo.Context) (err error) {
 	if err != nil || cookie.Value == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, "No refresh token provided.")
 	}
-	rawToken := cookie.Value
 
-	s := db.NewSession()
-	defer s.Close()
-
-	session, err := models.GetSessionByRefreshToken(s, rawToken)
+	result, err := auth.RefreshSession(cookie.Value)
 	if err != nil {
-		_ = s.Rollback()
-		if models.IsErrSessionNotFound(err) {
-			// Don't clear the cookie here — another tab may have already
-			// rotated the token, and clearing would overwrite the new cookie.
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid or expired refresh token.")
+		if user2.IsErrUserStatusError(err) {
+			auth.ClearRefreshTokenCookie(c)
 		}
-		return err
-	}
-
-	// Check if the session has expired based on its type
-	maxAge := time.Duration(config.ServiceJWTTTL.GetInt64()) * time.Second
-	if session.IsLongSession {
-		maxAge = time.Duration(config.ServiceJWTTTLLong.GetInt64()) * time.Second
-	}
-	if time.Since(session.LastActive) > maxAge {
-		if _, err := s.Where("id = ?", session.ID).Delete(&models.Session{}); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-		if err := s.Commit(); err != nil {
-			return err
-		}
-		auth.ClearRefreshTokenCookie(c)
-		return echo.NewHTTPError(http.StatusUnauthorized, "Session expired.")
-	}
-
-	if err := models.UpdateSessionLastActive(s, session.ID); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	newRawToken, err := models.RotateRefreshToken(s, session)
-	if err != nil {
-		_ = s.Rollback()
-		if models.IsErrSessionNotFound(err) {
-			// Don't clear the cookie — a concurrent request in another tab
-			// may have already rotated the token successfully.
-			return echo.NewHTTPError(http.StatusUnauthorized, "Refresh token already used.")
-		}
-		return err
-	}
-
-	u, err := user2.GetUserWithEmail(s, &user2.User{ID: session.UserID})
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	if u.Status == user2.StatusDisabled {
-		if _, err := s.Where("id = ?", session.ID).Delete(&models.Session{}); err != nil {
-			_ = s.Rollback()
-			return err
-		}
-		if err := s.Commit(); err != nil {
-			return err
-		}
-		auth.ClearRefreshTokenCookie(c)
-		return &user2.ErrAccountDisabled{UserID: u.ID}
-	}
-
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	t, err := auth.NewUserJWTAuthtoken(u, session.ID)
-	if err != nil {
 		return err
 	}
 
 	cookieMaxAge := int(config.ServiceJWTTTL.GetInt64())
-	if session.IsLongSession {
+	if result.IsLongSession {
 		cookieMaxAge = int(config.ServiceJWTTTLLong.GetInt64())
 	}
-	auth.SetRefreshTokenCookie(c, newRawToken, cookieMaxAge)
+	auth.SetRefreshTokenCookie(c, result.NewRefreshToken, cookieMaxAge)
 
 	c.Response().Header().Set("Cache-Control", "no-store")
-	return c.JSON(http.StatusOK, auth.Token{Token: t})
+	return c.JSON(http.StatusOK, auth.Token{Token: result.AccessToken})
 }
 
 // Logout deletes the current session from the server.
@@ -287,30 +161,30 @@ func Logout(c *echo.Context) (err error) {
 	auth.ClearRefreshTokenCookie(c)
 
 	var sid string
+	var userID int64
 	if raw := c.Get("user"); raw != nil {
 		if jwtinf, ok := raw.(*jwt.Token); ok {
 			if claims, ok := jwtinf.Claims.(jwt.MapClaims); ok {
 				sid, _ = claims["sid"].(string)
+				// Only user tokens carry a sid, but check the type explicitly
+				// so a link share id can never be logged as a user id.
+				if typ, ok := claims["type"].(float64); ok && int(typ) == auth.AuthTypeUser {
+					if id, ok := claims["id"].(float64); ok {
+						userID = int64(id)
+					}
+				}
 			}
 		}
 	}
 
-	if sid == "" {
-		return c.JSON(http.StatusOK, models.Message{Message: "Successfully logged out."})
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-
-	_, err = s.Where("id = ?", sid).Delete(&models.Session{})
-	if err != nil {
-		_ = s.Rollback()
+	if err := shared.DeleteSession(sid); err != nil {
 		return err
 	}
 
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
-		return err
+	if userID != 0 {
+		if err := events.DispatchWithContext(c.Request().Context(), &user2.LogoutEvent{UserID: userID}); err != nil {
+			log.Errorf("Could not dispatch logout event: %s", err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully logged out."})

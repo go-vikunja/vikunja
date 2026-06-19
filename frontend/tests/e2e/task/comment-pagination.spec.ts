@@ -9,7 +9,6 @@ test.describe('Task comment pagination', () => {
 		await ProjectFactory.create(1)
 		await createDefaultViews(1)
 		await TaskFactory.create(1, {id: 1})
-		await TaskCommentFactory.truncate()
 	})
 
 	test('shows pagination when more comments than configured page size', async ({authenticatedPage: page, apiContext}) => {

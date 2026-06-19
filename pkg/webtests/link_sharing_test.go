@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"testing"
 
+	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/web/handler"
 
@@ -31,7 +32,7 @@ func TestLinkSharing(t *testing.T) {
 
 	linkshareRead := &models.LinkSharing{
 		ID:          1,
-		Hash:        "test1",
+		Hash:        "test", // must match pkg/db/fixtures/link_shares.yml id=1
 		ProjectID:   1,
 		Permission:  models.PermissionRead,
 		SharingType: models.SharingTypeWithoutPassword,
@@ -739,19 +740,19 @@ func TestLinkSharing(t *testing.T) {
 		}
 		t.Run("ReadAll", func(t *testing.T) {
 			t.Run("Shared readonly", func(t *testing.T) {
-				rec, err := testHandlerLinkShareReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"hash":"test"`)
+				_, err := testHandlerLinkShareReadOnly.testReadAllWithLinkShare(nil, map[string]string{"project": "1"})
+				require.Error(t, err)
+				assert.Contains(t, getHTTPErrorMessage(err), `not allowed`)
 			})
 			t.Run("Shared write", func(t *testing.T) {
-				rec, err := testHandlerLinkShareWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"hash":"test2"`)
+				_, err := testHandlerLinkShareWrite.testReadAllWithLinkShare(nil, map[string]string{"project": "2"})
+				require.Error(t, err)
+				assert.Contains(t, getHTTPErrorMessage(err), `not allowed`)
 			})
 			t.Run("Shared admin", func(t *testing.T) {
-				rec, err := testHandlerLinkShareAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"hash":"test3"`)
+				_, err := testHandlerLinkShareAdmin.testReadAllWithLinkShare(nil, map[string]string{"project": "3"})
+				require.Error(t, err)
+				assert.Contains(t, getHTTPErrorMessage(err), `not allowed`)
 			})
 		})
 		t.Run("Create", func(t *testing.T) {
@@ -806,5 +807,31 @@ func TestLinkSharing(t *testing.T) {
 				assert.Contains(t, getHTTPErrorMessage(err), `Forbidden`)
 			})
 		})
+	})
+
+	// Regression test for GHSA-96q5-xm3p-7m84 / CVE-2026-35594: a still-valid
+	// link share JWT must be rejected once its DB row is gone.
+	//
+	// bootstrapTestRequest reloads fixtures, so the row must be deleted
+	// AFTER bootstrapping, otherwise the reload restores it.
+	t.Run("Deleted share rejects its still-valid JWT", func(t *testing.T) {
+		projectReadAllHandler := handler.WebHandler{
+			EmptyStruct: func() handler.CObject {
+				return &models.Project{}
+			},
+		}
+
+		c, _ := bootstrapTestRequest(t, "GET", "", nil, nil)
+		addLinkShareTokenToContext(t, linkshareRead, c)
+
+		sess := db.NewSession()
+		defer sess.Close()
+		_, err := sess.Where("id = ?", 1).Delete(&models.LinkSharing{})
+		require.NoError(t, err)
+		require.NoError(t, sess.Commit())
+
+		err = projectReadAllHandler.ReadAllWeb(c)
+		require.Error(t, err)
+		assertHandlerErrorCode(t, err, models.ErrCodeLinkShareTokenInvalid)
 	})
 }

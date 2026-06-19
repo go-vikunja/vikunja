@@ -109,7 +109,6 @@ test.describe('Project View List', () => {
 		}, false)
 
 		// Make task 2 a subtask of task 1
-		await TaskRelationFactory.truncate()
 		await TaskRelationFactory.create(1, {
 			id: 1,
 			task_id: 2,
@@ -143,7 +142,6 @@ test.describe('Project View List', () => {
 		}, false)
 
 		// Make task 2 a subtask of task 1
-		await TaskRelationFactory.truncate()
 		await TaskRelationFactory.create(1, {
 			id: 1,
 			task_id: 2,

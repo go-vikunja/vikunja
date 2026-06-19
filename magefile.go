@@ -27,7 +27,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"math"
 	"net"
 	"net/http"
@@ -36,6 +35,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -43,7 +43,6 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/magefile/mage/mg"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -62,24 +61,21 @@ var (
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]any{
-		"build":                       Build.Build,
-		"check:got-swag":              Check.GotSwag,
-		"release":                     Release.Release,
-		"release:os-package":          Release.OsPackage,
-		"release:prepare-nfpm-config": Release.PrepareNFPMConfig,
-		"dev:make-migration":          Dev.MakeMigration,
-		"dev:make-event":              Dev.MakeEvent,
-		"dev:make-listener":           Dev.MakeListener,
-		"dev:make-notification":       Dev.MakeNotification,
-		"dev:prepare-worktree":        Dev.PrepareWorktree,
-		"dev:tag-release":             Dev.TagRelease,
-		"test:e2e":                    Test.E2E,
-		"test:e2e-api":                Test.E2EApi,
-		"plugins:build":               Plugins.Build,
-		"lint":                        Check.Golangci,
-		"lint:fix":                    Check.GolangciFix,
-		"generate:config-yaml":        Generate.ConfigYAML,
-		"generate:swagger-docs":       Generate.SwaggerDocs,
+		"build":                 Build.Build,
+		"check:got-swag":        Check.GotSwag,
+		"dev:make-migration":    Dev.MakeMigration,
+		"dev:make-event":        Dev.MakeEvent,
+		"dev:make-listener":     Dev.MakeListener,
+		"dev:make-notification": Dev.MakeNotification,
+		"dev:prepare-worktree":  Dev.PrepareWorktree,
+		"dev:tag-release":       Dev.TagRelease,
+		"test:e2e":              Test.E2E,
+		"test:e2e-api":          Test.E2EApi,
+		"plugins:build":         Plugins.Build,
+		"lint":                  Check.Golangci,
+		"lint:fix":              Check.GolangciFix,
+		"generate:config-yaml":  Generate.ConfigYAML,
+		"generate:swagger-docs": Generate.SwaggerDocs,
 	}
 )
 
@@ -265,45 +261,6 @@ func copyFile(src, dst string) error {
 	return out.Close()
 }
 
-// os.Rename has issues with moving files between docker volumes.
-// Because of this limitation, it fails in drone.
-// Source: https://gist.github.com/var23rav/23ae5d0d4d830aff886c3c970b8f6c6b
-func moveFile(src, dst string) error {
-	inputFile, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("couldn't open source file: %w", err)
-	}
-	defer inputFile.Close()
-
-	outputFile, err := os.Create(dst)
-	if err != nil {
-		return fmt.Errorf("couldn't open dest file: %w", err)
-	}
-	defer outputFile.Close()
-
-	_, err = io.Copy(outputFile, inputFile)
-	if err != nil {
-		return fmt.Errorf("writing to output file failed: %w", err)
-	}
-
-	// Make sure to copy copy the permissions of the original file as well
-	si, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-
-	if err := os.Chmod(dst, si.Mode()); err != nil {
-		return err
-	}
-
-	// The copy was successful, so now delete the original file
-	err = os.Remove(src)
-	if err != nil {
-		return fmt.Errorf("failed removing original file: %w", err)
-	}
-	return nil
-}
-
 func appendToFile(filename, content string) error {
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
@@ -382,21 +339,35 @@ func waitForHTTP(ctx context.Context, url string, timeout time.Duration) error {
 	return fmt.Errorf("timed out waiting for %s after %s", url, timeout)
 }
 
+func ensureFrontendDistExists() error {
+	distPath := filepath.Join("frontend", "dist")
+	if _, err := os.Stat(distPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(distPath, 0o755); err != nil {
+			return fmt.Errorf("error creating %s: %w", distPath, err)
+		}
+	}
+
+	indexFile := filepath.Join(distPath, "index.html")
+	if _, err := os.Stat(indexFile); os.IsNotExist(err) {
+		f, err := os.Create(indexFile)
+		if err != nil {
+			return fmt.Errorf("error creating %s: %w", indexFile, err)
+		}
+		f.Close()
+	}
+	return nil
+}
+
 // Fmt formats the code using go fmt
 func Fmt(ctx context.Context) error {
-	mg.Deps(initVars)
-	var goFiles []string
-	err := filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() && filepath.Ext(path) == ".go" {
-			goFiles = append(goFiles, path)
-		}
-		return nil
-	})
+	mg.Deps(initVars, ensureFrontendDistExists)
+	out, err := exec.CommandContext(ctx, "git", "ls-files", "--cached", "--others", "--exclude-standard", "*.go").Output()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list go files from git: %w", err)
+	}
+	goFiles := strings.Split(strings.TrimSpace(string(out)), "\n")
+	if len(goFiles) == 0 || (len(goFiles) == 1 && goFiles[0] == "") {
+		return nil
 	}
 	args := append([]string{"-s", "-w"}, goFiles...)
 	return runAndStreamOutput(ctx, "gofmt", args...)
@@ -434,7 +405,14 @@ func (Test) Filter(ctx context.Context, filter string) error {
 
 func (Test) All() {
 	mg.Deps(initVars)
-	mg.Deps(Test.Feature, Test.Web, Test.E2EApi)
+	mg.Deps(Test.Feature, Test.Web, Test.Caldav, Test.E2EApi)
+}
+
+// Caldav runs the CalDAV protocol compliance tests in pkg/caldavtests.
+// These tests exercise the full HTTP router with WebDAV/CalDAV requests.
+func (Test) Caldav(ctx context.Context) error {
+	mg.Deps(initVars)
+	return runAndStreamOutput(ctx, "go", "test", goDetectVerboseFlag(), "-p", "1", "-timeout", "45m", "./pkg/caldavtests")
 }
 
 // E2EApi runs the end-to-end API tests in pkg/e2etests.
@@ -641,50 +619,94 @@ func (Check) GotSwag(ctx context.Context) error {
 	return nil
 }
 
-// Translations checks if all translation keys used in the code exist in the English translation file
+// Translations checks that all translation keys used in the code exist in
+// their respective English translation files, and conversely that no unused
+// keys exist in those files. Both the api (Go) and the frontend (Vue/TS) are
+// checked in one run so a single CI job can gate the whole repository.
 func (Check) Translations() error {
 	mg.Deps(initVars)
-	fmt.Println("Checking for missing translation keys...")
 
-	// Load translations from the English translation file
+	var errs []error
+	if err := checkAPITranslations(); err != nil {
+		errs = append(errs, err)
+	}
+	if err := checkFrontendTranslations(); err != nil {
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+	return nil
+}
+
+func checkAPITranslations() error {
+	fmt.Println("Checking api translation keys...")
+
 	translationFile := "./pkg/i18n/lang/en.json"
 	translations, err := loadTranslations(translationFile)
 	if err != nil {
-		return fmt.Errorf("error loading translations: %w", err)
+		return fmt.Errorf("error loading api translations: %w", err)
 	}
 
 	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
 
-	// Extract keys from codebase
-	keys, err := walkCodebaseForTranslationKeys(".")
+	keys, literals, err := walkAPIForTranslationKeys(".")
 	if err != nil {
-		return fmt.Errorf("error walking codebase: %w", err)
+		return fmt.Errorf("error walking api codebase: %w", err)
 	}
 
-	fmt.Printf("Found %d translation keys in the codebase\n", len(keys))
+	fmt.Printf("Found %d translation key references in the api codebase\n", len(keys))
 
-	// Check for missing keys
-	missingKeys := make(map[string][]TranslationKey)
-	for _, key := range keys {
-		if !translations[key.Key] {
-			missingKeys[key.Key] = append(missingKeys[key.Key], key)
+	// Some api keys are referenced indirectly – e.g. the time.since_* keys are
+	// stored as string literals in a struct slice in pkg/utils/humanize_duration.go
+	// and looked up via i18n.TP(lang, chunk.key, ...). Any literal that matches a
+	// known translation key is treated as a usage hint, so those keys aren't
+	// flagged as dead.
+	for lit := range literals {
+		if translations[lit] {
+			keys = append(keys, TranslationKey{Key: lit, FilePath: "<api literal hint>", Line: 0})
 		}
 	}
 
-	// Print results
-	if len(missingKeys) > 0 {
-		var errs []error
-		for key, occurrences := range missingKeys {
-			var keyErrs []error
-			for _, occurrence := range occurrences {
-				keyErrs = append(keyErrs, fmt.Errorf("- %s:%d", occurrence.FilePath, occurrence.Line))
-			}
-			errs = append(errs, fmt.Errorf("missing key %s in files:\n%w", key, errors.Join(keyErrs...)))
-		}
-		return fmt.Errorf("found %d missing translation keys:\n%w", len(missingKeys), errors.Join(errs...))
+	return reportTranslationResults("api", translations, keys, nil)
+}
+
+func checkFrontendTranslations() error {
+	fmt.Println("Checking frontend translation keys...")
+
+	translationFile := "./frontend/src/i18n/lang/en.json"
+	translations, err := loadTranslations(translationFile)
+	if err != nil {
+		return fmt.Errorf("error loading frontend translations: %w", err)
 	}
-	printSuccess("All translation keys are present in the translation file!")
-	return nil
+
+	fmt.Printf("Loaded %d translation keys from %s\n", len(translations), translationFile)
+
+	keys, prefixes, literals, err := walkFrontendForTranslationKeys("./frontend/src")
+	if err != nil {
+		return fmt.Errorf("error walking frontend codebase: %w", err)
+	}
+
+	fmt.Printf("Found %d translation key references in the frontend codebase\n", len(keys))
+
+	// Some keys are referenced indirectly – e.g. stored as string literals in
+	// arrays and looked up by index, or assigned to a variable in the form
+	// `const path = ` + "`error.${code}`". Any literal that matches a known
+	// translation key (or is a prefix of one) is treated as a usage hint, so
+	// those keys aren't flagged as dead.
+	for lit := range literals {
+		if translations[lit] {
+			keys = append(keys, TranslationKey{Key: lit, FilePath: "<frontend literal hint>", Line: 0})
+			continue
+		}
+		// Literals that look like a key prefix (end in ".") are kept as
+		// dynamic prefixes. This catches `const path = `error.${code}``.
+		if strings.HasSuffix(lit, ".") {
+			prefixes = append(prefixes, lit)
+		}
+	}
+
+	return reportTranslationResults("frontend", translations, keys, prefixes)
 }
 
 // TranslationKey represents a translation key found in the code
@@ -694,7 +716,73 @@ type TranslationKey struct {
 	Line     int
 }
 
-// loadTranslations loads the English translation file and returns a flattened map
+// reportTranslationResults checks both missing keys (used in code but not in
+// translation file) and dead keys (in translation file but not referenced
+// anywhere in code). Returns an error if either kind of mismatch is found.
+func reportTranslationResults(label string, translations map[string]bool, keys []TranslationKey, dynamicPrefixes []string) error {
+	missingKeys := make(map[string][]TranslationKey)
+	usedKeys := make(map[string]bool, len(keys))
+	for _, key := range keys {
+		usedKeys[key.Key] = true
+		if !translations[key.Key] {
+			missingKeys[key.Key] = append(missingKeys[key.Key], key)
+		}
+	}
+
+	// A translation is used if referenced directly, or if its full dotted key
+	// starts with any prefix produced by a dynamic call site.
+	isCoveredByPrefix := func(k string) bool {
+		for _, p := range dynamicPrefixes {
+			if strings.HasPrefix(k, p) {
+				return true
+			}
+		}
+		return false
+	}
+
+	var deadKeys []string
+	for k := range translations {
+		if usedKeys[k] {
+			continue
+		}
+		if isCoveredByPrefix(k) {
+			continue
+		}
+		deadKeys = append(deadKeys, k)
+	}
+
+	var errs []error
+
+	if len(missingKeys) > 0 {
+		var missingErrs []error
+		for key, occurrences := range missingKeys {
+			var keyErrs []error
+			for _, occurrence := range occurrences {
+				keyErrs = append(keyErrs, fmt.Errorf("- %s:%d", occurrence.FilePath, occurrence.Line))
+			}
+			missingErrs = append(missingErrs, fmt.Errorf("missing key %s in files:\n%w", key, errors.Join(keyErrs...)))
+		}
+		errs = append(errs, fmt.Errorf("found %d missing %s translation keys (referenced in code but not in translation file):\n%w", len(missingKeys), label, errors.Join(missingErrs...)))
+	}
+
+	if len(deadKeys) > 0 {
+		sort.Strings(deadKeys)
+		var deadErrs []error
+		for _, k := range deadKeys {
+			deadErrs = append(deadErrs, fmt.Errorf("- %s", k))
+		}
+		errs = append(errs, fmt.Errorf("found %d dead %s translation keys (present in translation file but unused in code):\n%w", len(deadKeys), label, errors.Join(deadErrs...)))
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	printSuccess(fmt.Sprintf("All %s translation keys are in sync between code and the translation file!", label))
+	return nil
+}
+
+// loadTranslations loads a translation file and returns a flattened map
 func loadTranslations(filePath string) (map[string]bool, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -730,9 +818,13 @@ func flattenTranslations(prefix string, src map[string]any, dest map[string]bool
 	}
 }
 
-// walkCodebaseForTranslationKeys walks the codebase and extracts all translation keys
-func walkCodebaseForTranslationKeys(rootDir string) ([]TranslationKey, error) {
+// walkAPIForTranslationKeys walks the Go api code and extracts translation
+// keys referenced via string-literal arguments to i18n.T / i18n.TP, plus a
+// set of dotted string literals as "usage hints" for indirect references
+// (e.g. keys stored in a struct slice and passed to i18n.TP via a variable).
+func walkAPIForTranslationKeys(rootDir string) ([]TranslationKey, map[string]bool, error) {
 	var allKeys []TranslationKey
+	allLiterals := make(map[string]bool)
 
 	pkgDir := filepath.Join(rootDir, "pkg")
 
@@ -741,48 +833,55 @@ func walkCodebaseForTranslationKeys(rootDir string) ([]TranslationKey, error) {
 			return err
 		}
 
-		// Skip hidden directories (starting with .)
 		if info.IsDir() && strings.HasPrefix(info.Name(), ".") {
 			return filepath.SkipDir
 		}
 
-		// Only process Go files
 		if !info.IsDir() && strings.HasSuffix(path, ".go") {
-			keys, err := extractTranslationKeysFromFile(path)
+			keys, literals, err := extractAPITranslationKeysFromFile(path)
 			if err != nil {
 				fmt.Printf("Warning: %v\n", err)
 				return nil
 			}
 			allKeys = append(allKeys, keys...)
+			for l := range literals {
+				allLiterals[l] = true
+			}
 		}
 
 		return nil
 	})
 
-	return allKeys, err
+	return allKeys, allLiterals, err
 }
 
-// extractTranslationKeysFromFile extracts all i18n.T calls from a file
-func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
-	// Read the file content
+// apiStringLiteralRe matches double-quoted strings in Go source that look like
+// dotted translation keys (e.g. "time.since_years"). Used to surface keys that
+// are referenced indirectly – for example, stored in a struct field and later
+// passed to i18n.TP via a variable.
+var apiStringLiteralRe = regexp.MustCompile(`"([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)+)"`)
+
+// extractAPITranslationKeysFromFile extracts all i18n.T/i18n.TP calls with
+// a string-literal key, plus all dotted string literals in the file (returned
+// as the second value) which are used as usage hints for indirect references.
+func extractAPITranslationKeysFromFile(filePath string) ([]TranslationKey, map[string]bool, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading file %s: %w", filePath, err)
+		return nil, nil, fmt.Errorf("error reading file %s: %w", filePath, err)
 	}
 
 	var keys []TranslationKey
+	literals := make(map[string]bool)
 
-	// Regex to match i18n.T calls
-	re := regexp.MustCompile(`i18n\.(T)\([^,]+,\s*"([^"]+)"`)
+	// Match i18n.T(ctx, "key") and i18n.TP(ctx, "key", count)
+	re := regexp.MustCompile(`i18n\.(T|TP)\([^,]+,\s*"([^"]+)"`)
 	matches := re.FindAllSubmatchIndex(content, -1)
 
 	for _, match := range matches {
-		if len(match) >= 4 {
-			// Extract the key from the match
+		if len(match) >= 6 {
 			keyStart, keyEnd := match[4], match[5]
 			key := string(content[keyStart:keyEnd])
 
-			// Count lines to determine the line number
 			beforeMatch := content[:keyStart]
 			lineCount := bytes.Count(beforeMatch, []byte("\n")) + 1
 
@@ -794,11 +893,171 @@ func extractTranslationKeysFromFile(filePath string) ([]TranslationKey, error) {
 		}
 	}
 
-	return keys, nil
+	for _, match := range apiStringLiteralRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			literals[string(content[match[2]:match[3]])] = true
+		}
+	}
+
+	return keys, literals, nil
+}
+
+// frontendI18nCallReSingle matches translation calls using single-quoted keys:
+//   - $t('k'), $tc('k')
+//   - t('k'), tc('k') (composable)
+//   - i18n.t('k'), i18n.global.t('k')
+//
+// Go's RE2 doesn't support backreferences, so we have one regex per quote
+// style. Template-literal and bare-variable forms are handled separately.
+var frontendI18nCallReSingle = regexp.MustCompile(`(?:\$t|\$tc|\bt|\btc|\bi18n\.(?:global\.)?t)\(\s*'([^']+)'`)
+
+// frontendI18nCallReDouble is the double-quoted counterpart of
+// frontendI18nCallReSingle.
+var frontendI18nCallReDouble = regexp.MustCompile(`(?:\$t|\$tc|\bt|\btc|\bi18n\.(?:global\.)?t)\(\s*"([^"]+)"`)
+
+// frontendI18nTemplateLiteralRe matches template-literal calls of the form
+//
+//	$t(`prefix.${expr}`)  /  t(`prefix.${...}`)  / tc(`...`) etc.
+//
+// Capturing group 1 is the portion before the first ${ substitution, which we
+// treat as a "dynamic prefix": every translation key starting with it is
+// considered used.
+var frontendI18nTemplateLiteralRe = regexp.MustCompile("(?:\\$t|\\$tc|\\bt|\\btc|\\bi18n\\.(?:global\\.)?t)\\(\\s*`([^`$]*)\\$\\{")
+
+// frontendI18nKeypathRe matches Vue template <i18n-t keypath="key.name"> usage.
+var frontendI18nKeypathRe = regexp.MustCompile(`keypath\s*=\s*"([^"]+)"`)
+
+// walkFrontendForTranslationKeys scans .vue/.ts/.js files under rootDir and
+// extracts translation key references, dynamic-key prefixes, and a set of
+// candidate string-literal usage hints (for indirect references like keys
+// stored in arrays / template literals assigned to variables).
+func walkFrontendForTranslationKeys(rootDir string) ([]TranslationKey, []string, map[string]bool, error) {
+	var allKeys []TranslationKey
+	var allPrefixes []string
+	allLiterals := make(map[string]bool)
+
+	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			name := info.Name()
+			// Skip hidden dirs and build artifacts
+			if strings.HasPrefix(name, ".") || name == "node_modules" || name == "dist" {
+				return filepath.SkipDir
+			}
+			// Don't walk into the language files themselves
+			if path == filepath.Join(rootDir, "i18n", "lang") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		ext := filepath.Ext(path)
+		if ext != ".vue" && ext != ".ts" && ext != ".js" {
+			return nil
+		}
+
+		keys, prefixes, literals, err := extractFrontendTranslationKeysFromFile(path)
+		if err != nil {
+			fmt.Printf("Warning: %v\n", err)
+			return nil
+		}
+		allKeys = append(allKeys, keys...)
+		allPrefixes = append(allPrefixes, prefixes...)
+		for l := range literals {
+			allLiterals[l] = true
+		}
+
+		return nil
+	})
+
+	return allKeys, allPrefixes, allLiterals, err
+}
+
+// frontendStringLiteralRe matches single- or double-quoted strings that look
+// like dotted translation keys (e.g. "home.welcomeNight").
+var frontendStringLiteralRe = regexp.MustCompile(`['"]([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)+)['"]`)
+
+// frontendTemplatePrefixRe matches any template-literal fragment with a ${…}
+// interpolation, whether or not it is inside a $t() call. This catches cases
+// like `const path = ` + "`error.${code}`" where the literal is assigned to
+// a variable before being passed to a translator.
+var frontendTemplatePrefixRe = regexp.MustCompile("`([a-zA-Z][a-zA-Z0-9_.]*\\.)\\$\\{")
+
+// extractFrontendTranslationKeysFromFile extracts static and dynamic
+// translation key references from a single frontend source file.
+func extractFrontendTranslationKeysFromFile(filePath string) ([]TranslationKey, []string, map[string]bool, error) {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("error reading file %s: %w", filePath, err)
+	}
+
+	var keys []TranslationKey
+	var prefixes []string
+	literals := make(map[string]bool)
+
+	appendKey := func(keyStart int, key string) {
+		beforeMatch := content[:keyStart]
+		lineCount := bytes.Count(beforeMatch, []byte("\n")) + 1
+		keys = append(keys, TranslationKey{
+			Key:      key,
+			FilePath: filePath,
+			Line:     lineCount,
+		})
+	}
+
+	// Static string-literal calls (single- and double-quoted)
+	for _, match := range frontendI18nCallReSingle.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			appendKey(match[2], string(content[match[2]:match[3]]))
+		}
+	}
+	for _, match := range frontendI18nCallReDouble.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			appendKey(match[2], string(content[match[2]:match[3]]))
+		}
+	}
+
+	// <i18n-t keypath="..."> (Vue component usage in templates)
+	for _, match := range frontendI18nKeypathRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			appendKey(match[2], string(content[match[2]:match[3]]))
+		}
+	}
+
+	// Template-literal calls with interpolation inside a $t(). We extract the
+	// static prefix before ${ and mark every matching key as used.
+	for _, match := range frontendI18nTemplateLiteralRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			prefix := string(content[match[2]:match[3]])
+			if prefix != "" {
+				prefixes = append(prefixes, prefix)
+			}
+		}
+	}
+
+	// Collect dotted string literals and interpolated template-literal prefixes
+	// as "usage hints". These are only used to suppress dead-key false positives
+	// for indirect references (keys stored in arrays, prefix assigned to a
+	// variable then passed to a translator, etc).
+	for _, match := range frontendStringLiteralRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			literals[string(content[match[2]:match[3]])] = true
+		}
+	}
+	for _, match := range frontendTemplatePrefixRe.FindAllSubmatchIndex(content, -1) {
+		if len(match) >= 4 {
+			literals[string(content[match[2]:match[3]])] = true
+		}
+	}
+
+	return keys, prefixes, literals, nil
 }
 
 func checkGolangCiLintInstalled(ctx context.Context) error {
-	mg.Deps(initVars)
+	mg.Deps(initVars, ensureFrontendDistExists)
 	if err := exec.CommandContext(ctx, "golangci-lint").Run(); err != nil && strings.Contains(err.Error(), "executable file not found") {
 		return fmt.Errorf("golangci-lint executable failed to run, please manually install golangci-lint by running the command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0")
 	}
@@ -851,25 +1110,7 @@ func (Build) Clean(ctx context.Context) error {
 
 // Build builds a vikunja binary, ready to run
 func (Build) Build(ctx context.Context) error {
-	mg.Deps(initVars)
-	// Check if the frontend dist folder exists
-	distPath := filepath.Join("frontend", "dist")
-	if _, err := os.Stat(distPath); os.IsNotExist(err) {
-		if err := os.MkdirAll(distPath, 0o755); err != nil {
-			return fmt.Errorf("error creating %s: %w", distPath, err)
-		}
-	}
-
-	indexFile := filepath.Join(distPath, "index.html")
-	if _, err := os.Stat(indexFile); os.IsNotExist(err) {
-		f, err := os.Create(indexFile)
-		if err != nil {
-			return fmt.Errorf("error creating %s: %w", indexFile, err)
-		}
-		f.Close()
-		fmt.Printf("Warning: %s not found, created empty file\n", indexFile)
-	}
-
+	mg.Deps(initVars, ensureFrontendDistExists)
 	return runAndStreamOutput(ctx, "go", "build", goDetectVerboseFlag(), "-tags", Tags, "-ldflags", "-s -w "+Ldflags, "-o", Executable)
 }
 
@@ -889,378 +1130,6 @@ func (Build) SaveVersionToFile() error {
 	}
 
 	fmt.Println("Version number saved successfully to VERSION file")
-
-	return nil
-}
-
-type Release mg.Namespace
-
-// Release runs all steps in the right order to create release packages for various platforms
-func (Release) Release(ctx context.Context) error {
-	mg.Deps(initVars)
-	mg.Deps(Release.Dirs, prepareXgo)
-
-	// Run compiling in parallel to speed it up
-	errs, _ := errgroup.WithContext(ctx)
-	errgroupGoWithContext(ctx, errs, (Release{}).Windows)
-	errgroupGoWithContext(ctx, errs, (Release{}).Linux)
-	errgroupGoWithContext(ctx, errs, (Release{}).Darwin)
-	if err := errs.Wait(); err != nil {
-		return err
-	}
-
-	if err := (Release{}).Compress(ctx); err != nil {
-		return err
-	}
-	if err := (Release{}).Copy(); err != nil {
-		return err
-	}
-	if err := (Release{}).Check(); err != nil {
-		return err
-	}
-	if err := (Release{}).OsPackage(); err != nil {
-		return err
-	}
-	if err := (Release{}).Zip(ctx); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func errgroupGoWithContext(ctx context.Context, errs *errgroup.Group, do func(context.Context) error) {
-	errs.Go(func() error {
-		return do(ctx)
-	})
-}
-
-// Dirs creates all directories needed to release vikunja
-func (Release) Dirs() error {
-	for _, d := range []string{"binaries", "release", "zip"} {
-		if err := os.MkdirAll("./"+DIST+"/"+d, 0o755); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func prepareXgo(ctx context.Context) error {
-	mg.Deps(initVars)
-	if err := checkAndInstallGoTool(ctx, "xgo", "src.techknowlogick.com/xgo"); err != nil {
-		return err
-	}
-
-	fmt.Println("Pulling latest xgo docker image...")
-	return runAndStreamOutput(ctx, "docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
-}
-
-func runXgo(ctx context.Context, targets string) error {
-	mg.Deps(initVars)
-	if err := checkAndInstallGoTool(ctx, "xgo", "src.techknowlogick.com/xgo"); err != nil {
-		return err
-	}
-
-	extraLdflags := `-linkmode external -extldflags "-static" `
-
-	// See https://github.com/techknowlogick/xgo/issues/79
-	if strings.HasPrefix(targets, "darwin") {
-		extraLdflags = ""
-	}
-	outName := os.Getenv("XGO_OUT_NAME")
-	if outName == "" {
-		outName = Executable + "-" + Version
-	}
-
-	if err := runAndStreamOutput(ctx, "xgo",
-		"-dest", "./"+DIST+"/binaries",
-		"-tags", "netgo "+Tags,
-		"-ldflags", extraLdflags+Ldflags,
-		"-targets", targets,
-		"-out", outName,
-		"."); err != nil {
-		return err
-	}
-	if os.Getenv("DRONE_WORKSPACE") != "" {
-		return filepath.Walk("/build/", func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			// Skip directories
-			if info.IsDir() {
-				return nil
-			}
-
-			return moveFile(path, "./"+DIST+"/binaries/"+info.Name())
-		})
-	}
-	return nil
-}
-
-// Windows builds binaries for windows
-func (Release) Windows(ctx context.Context) error {
-	return runXgo(ctx, "windows/*")
-}
-
-// Linux builds binaries for linux
-func (Release) Linux(ctx context.Context) error {
-	targets := []string{
-		"linux/amd64",
-		"linux/arm-5",
-		"linux/arm-6",
-		"linux/arm-7",
-		"linux/arm64",
-		"linux/mips",
-		"linux/mipsle",
-		"linux/mips64",
-		"linux/mips64le",
-		"linux/riscv64",
-	}
-	return runXgo(ctx, strings.Join(targets, ","))
-}
-
-// Darwin builds binaries for darwin
-func (Release) Darwin(ctx context.Context) error {
-	return runXgo(ctx, "darwin-10.15/*")
-}
-
-func (Release) Xgo(ctx context.Context, target string) error {
-	parts := strings.Split(target, "/")
-	if len(parts) < 2 {
-		return fmt.Errorf("invalid target")
-	}
-
-	variant := ""
-	if len(parts) > 2 && parts[2] != "" {
-		variant = "-" + strings.ReplaceAll(parts[2], "v", "")
-	}
-
-	return runXgo(ctx, parts[0]+"/"+parts[1]+variant)
-}
-
-// Compress compresses the built binaries in dist/binaries/ to reduce their filesize
-func (Release) Compress(ctx context.Context) error {
-	// $(foreach file,$(filter-out $(wildcard $(wildcard $(DIST)/binaries/$(EXECUTABLE)-*mips*)),$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*)), upx -9 $(file);)
-
-	errs, _ := errgroup.WithContext(ctx)
-
-	walkErr := filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// Only executable files
-		if !strings.Contains(info.Name(), Executable) {
-			return nil
-		}
-		if strings.Contains(info.Name(), "mips") ||
-			strings.Contains(info.Name(), "s390x") ||
-			strings.Contains(info.Name(), "riscv64") ||
-			strings.Contains(info.Name(), "darwin") ||
-			(strings.Contains(info.Name(), "windows") && strings.Contains(info.Name(), "arm64")) {
-			// not supported by upx
-			return nil
-		}
-
-		// Runs compressing in parallel since upx is single-threaded
-		errs.Go(func() error {
-			if err := runAndStreamOutput(ctx, "chmod", "+x", path); err != nil { // Make sure all binaries are executable. Sometimes the CI does weird things and they're not.
-				return err
-			}
-			return runAndStreamOutput(ctx, "upx", "-9", path)
-		})
-
-		return nil
-	})
-	if walkErr != nil {
-		return walkErr
-	}
-	return errs.Wait()
-}
-
-// Copy copies all built binaries to dist/release/ in preparation for creating the os packages
-func (Release) Copy() error {
-	return filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// Only executable files
-		if !strings.Contains(info.Name(), Executable) {
-			return nil
-		}
-
-		return copyFile(path, "./"+DIST+"/release/"+info.Name())
-	})
-}
-
-// Check creates sha256 checksum files for each binary in dist/release/
-func (Release) Check() error {
-	p := "./" + DIST + "/release/"
-	return filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-
-		f, err := os.Create(p + info.Name() + ".sha256")
-		if err != nil {
-			return err
-		}
-
-		hash, err := calculateSha256FileHash(path)
-		if err != nil {
-			return err
-		}
-
-		_, err = f.WriteString(hash + "  " + info.Name())
-		if err != nil {
-			return err
-		}
-
-		return f.Close()
-	})
-}
-
-// OsPackage creates a folder for each
-func (Release) OsPackage() error {
-	p := "./" + DIST + "/release/"
-
-	// We first put all files in a map to then iterate over it since the walk function would otherwise also iterate
-	// over the newly created files, creating some kind of endless loop.
-	bins := make(map[string]os.FileInfo)
-	if err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if strings.Contains(info.Name(), ".sha256") || info.IsDir() {
-			return nil
-		}
-		bins[path] = info
-		return nil
-	}); err != nil {
-		return err
-	}
-
-	generateConfigYAMLFromJSON("./"+DefaultConfigYAMLSamplePath, true)
-
-	for path, info := range bins {
-		folder := p + info.Name() + "-full/"
-		if err := os.Mkdir(folder, 0o755); err != nil {
-			return err
-		}
-		if err := moveFile(p+info.Name()+".sha256", folder+info.Name()+".sha256"); err != nil {
-			return err
-		}
-		if err := moveFile(path, folder+info.Name()); err != nil {
-			return err
-		}
-		if err := copyFile("./"+DefaultConfigYAMLSamplePath, folder+DefaultConfigYAMLSamplePath); err != nil {
-			return err
-		}
-		if err := copyFile("./LICENSE", folder+"LICENSE"); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Zip creates a zip file from all os-package folders in dist/release
-func (Release) Zip(ctx context.Context) error {
-	rootDir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("could not get working directory: %w", err)
-	}
-
-	p := "./" + DIST + "/release/"
-	if err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() || info.Name() == "release" {
-			return nil
-		}
-
-		fmt.Printf("Zipping %s...\n", info.Name())
-
-		zipFile := filepath.Join(rootDir, DIST, "zip", info.Name()+".zip")
-		c := exec.CommandContext(ctx, "zip", "-r", zipFile, ".", "-i", "*") //nolint:gosec // This mage task creates zips of every directory recursively, it must use the directory name in the resulting file path to distinguish output files.
-		c.Dir = path
-		out, err := c.Output()
-		fmt.Print(string(out))
-		return err
-	}); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Reprepro creates a debian repo structure
-func (Release) Reprepro(ctx context.Context) error {
-	mg.Deps(setVersion, setBinLocation)
-	return runAndStreamOutput(ctx, "reprepro_expect", "debian", "includedeb", "buster", "./"+DIST+"/os-packages/"+Executable+"_"+strings.ReplaceAll(VersionNumber, "v0", "0")+"_amd64.deb")
-}
-
-// PrepareNFPMConfig prepares the nfpm config
-func (Release) PrepareNFPMConfig() error {
-	mg.Deps(initVars)
-	var err error
-
-	// Because nfpm does not support templating, we replace the values in the config file and restore it after running
-	nfpmConfigPath := "./nfpm.yaml"
-	nfpmconfig, err := os.ReadFile(nfpmConfigPath)
-	if err != nil {
-		return err
-	}
-
-	fixedConfig := strings.ReplaceAll(string(nfpmconfig), "<version>", VersionNumber)
-	fixedConfig = strings.ReplaceAll(fixedConfig, "<binlocation>", BinLocation)
-	if err := os.WriteFile(nfpmConfigPath, []byte(fixedConfig), 0); err != nil {
-		return err
-	}
-
-	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, true)
-
-	return nil
-}
-
-// Packages creates deb, rpm and apk packages
-func (Release) Packages(ctx context.Context) error {
-	mg.Deps(initVars)
-
-	var err error
-	binpath := os.Getenv("NFPM_BIN_PATH")
-	if binpath == "" {
-		binpath = "nfpm"
-	}
-	err = exec.CommandContext(ctx, binpath).Run()
-	if err != nil && strings.Contains(err.Error(), "executable file not found") {
-		binpath = "/usr/bin/nfpm"
-		err = exec.CommandContext(ctx, binpath).Run()
-	}
-	if err != nil && strings.Contains(err.Error(), "executable file not found") {
-		return fmt.Errorf("executable %s not found: please manually install nfpm by running the command: curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh -s -- -b $(go env GOPATH)/bin", binpath)
-	}
-
-	err = (Release{}).PrepareNFPMConfig()
-	if err != nil {
-		return err
-	}
-
-	releasePath := "./" + DIST + "/os-packages/"
-	if err := os.MkdirAll(releasePath, 0o755); err != nil {
-		return err
-	}
-
-	if err := runAndStreamOutput(ctx, binpath, "pkg", "--packager", "deb", "--target", releasePath); err != nil {
-		return err
-	}
-	if err := runAndStreamOutput(ctx, binpath, "pkg", "--packager", "rpm", "--target", releasePath); err != nil {
-		return err
-	}
-	if err := runAndStreamOutput(ctx, binpath, "pkg", "--packager", "apk", "--target", releasePath); err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -1641,9 +1510,60 @@ func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
 }
 
+// ScalarBundle downloads the Scalar API reference standalone JS bundle into
+// pkg/routes/api/v2/scalar/. Version is pinned to match the Scalar version
+// used in Huma's internal docs at the time of last update.
+func (Generate) ScalarBundle() error {
+	const (
+		version = "1.44.20"
+		dest    = "pkg/routes/api/v2/scalar/scalar.standalone.js"
+	)
+	url := fmt.Sprintf("https://unpkg.com/@scalar/api-reference@%s/dist/browser/standalone.js", version)
+
+	fmt.Printf("Downloading Scalar bundle %s from %s\n", version, url)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil) //nolint:gosec // This is a dev-only mage task and the URL is hard-coded above.
+	if err != nil {
+		return fmt.Errorf("build scalar bundle request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("download scalar bundle: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("download scalar bundle: unexpected status %s", resp.Status)
+	}
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, resp.Body); err != nil {
+		return fmt.Errorf("read scalar bundle body: %w", err)
+	}
+
+	if err := os.WriteFile(dest, buf.Bytes(), 0o600); err != nil {
+		return fmt.Errorf("write %s: %w", dest, err)
+	}
+
+	fmt.Printf("Wrote %d bytes to %s\n", buf.Len(), dest)
+	return nil
+}
+
+func localBranchExists(ctx context.Context, name string) bool {
+	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/heads/"+name).Run() == nil //nolint:gosec // This is a dev-only mage task and the branch name is supplied by the developer running it.
+}
+
+func remoteBranchExists(ctx context.Context, name string) bool {
+	return exec.CommandContext(ctx, "git", "show-ref", "--verify", "--quiet", "refs/remotes/"+name).Run() == nil //nolint:gosec // This is a dev-only mage task and the branch name is supplied by the developer running it.
+}
+
 // PrepareWorktree creates a new git worktree for development.
 // The first argument is the name, which becomes both the folder name and branch name.
-// The second argument is a path to a plan file that will be copied to the new worktree (pass "" to skip).
+// If a local branch with that name exists, it is checked out.
+// If a remote branch origin/<name> exists, a local tracking branch is created.
+// Otherwise a new branch is created.
+// The second argument is a path to a plan file that will be moved to the new worktree (pass "" to skip).
 // The worktree is created in the parent directory (../).
 // It also copies the current config.yml with an updated rootpath, and initializes the frontend.
 func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) error {
@@ -1656,8 +1576,28 @@ func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) er
 
 	fmt.Printf("Creating worktree at %s with branch %s...\n", worktreePath, name)
 
-	// Create the git worktree
-	cmd := exec.CommandContext(ctx, "git", "worktree", "add", worktreePath, "-b", name)
+	// Refresh remote refs so remote-branch detection is reliable.
+	fetchCmd := exec.CommandContext(ctx, "git", "fetch", "origin")
+	fetchCmd.Stdout = os.Stdout
+	fetchCmd.Stderr = os.Stderr
+	if err := fetchCmd.Run(); err != nil {
+		fmt.Printf("Warning: git fetch failed: %v\n", err)
+	}
+
+	var worktreeArgs []string
+	switch {
+	case localBranchExists(ctx, name):
+		fmt.Printf("Local branch %s exists, checking it out.\n", name)
+		worktreeArgs = []string{"worktree", "add", worktreePath, name}
+	case remoteBranchExists(ctx, "origin/"+name):
+		fmt.Printf("Remote branch origin/%s exists, creating tracking branch.\n", name)
+		worktreeArgs = []string{"worktree", "add", "--track", "-b", name, worktreePath, "origin/" + name}
+	default:
+		fmt.Printf("Creating new branch %s.\n", name)
+		worktreeArgs = []string{"worktree", "add", worktreePath, "-b", name}
+	}
+
+	cmd := exec.CommandContext(ctx, "git", worktreeArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -1726,10 +1666,10 @@ func (Dev) PrepareWorktree(ctx context.Context, name string, planPath string) er
 			}
 
 			dstPlanPath := filepath.Join(plansDir, filepath.Base(planPath))
-			if err := copyFile(srcPlanPath, dstPlanPath); err != nil {
-				return fmt.Errorf("failed to copy plan file: %w", err)
+			if err := os.Rename(srcPlanPath, dstPlanPath); err != nil {
+				return fmt.Errorf("failed to move plan file: %w", err)
 			}
-			printSuccess("Plan file copied to %s!", dstPlanPath)
+			printSuccess("Plan file moved to %s!", dstPlanPath)
 		}
 	}
 
@@ -1875,10 +1815,16 @@ func (Dev) TagRelease(ctx context.Context, version string) error {
 		return fmt.Errorf("failed to update frontend package.json: %w", err)
 	}
 
+	// Update publiccode.yml version and release date
+	fmt.Println("Updating publiccode.yml...")
+	if err := updatePublicCodeYml(version); err != nil {
+		return fmt.Errorf("failed to update publiccode.yml: %w", err)
+	}
+
 	// Commit the changes
 	fmt.Println("Committing changes...")
 	commitMsg := fmt.Sprintf("chore: %s release preparations", version)
-	cmd := exec.CommandContext(ctx, "git", "add", "README.md", "CHANGELOG.md", "frontend/package.json")
+	cmd := exec.CommandContext(ctx, "git", "add", "README.md", "CHANGELOG.md", "frontend/package.json", "publiccode.yml")
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to stage files: %w", err)
 	}
@@ -2017,6 +1963,27 @@ func updateFrontendPackageJSON(version string) error {
 
 	if err := os.WriteFile(pkgPath, []byte(newContent), 0o600); err != nil {
 		return fmt.Errorf("failed to write %s: %w", pkgPath, err)
+	}
+
+	return nil
+}
+
+// updatePublicCodeYml updates the softwareVersion and releaseDate in publiccode.yml.
+func updatePublicCodeYml(version string) error {
+	filePath := "publiccode.yml"
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read %s: %w", filePath, err)
+	}
+
+	reVersion := regexp.MustCompile(`(softwareVersion:\s*')([^']+)(')`)
+	newContent := reVersion.ReplaceAllString(string(content), "${1}"+version+"${3}")
+
+	reDate := regexp.MustCompile(`(releaseDate:\s*')([^']+)(')`)
+	newContent = reDate.ReplaceAllString(newContent, "${1}"+time.Now().Format("2006-01-02")+"${3}")
+
+	if err := os.WriteFile(filePath, []byte(newContent), 0o600); err != nil {
+		return fmt.Errorf("failed to write %s: %w", filePath, err)
 	}
 
 	return nil

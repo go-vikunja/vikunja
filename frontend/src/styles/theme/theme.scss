@@ -1,3 +1,7 @@
+// Global base theme rules: resets focus outlines, wires up focus-visible styling
+// using the --primary token, sets body background, and defines a handful of
+// generic utility classes (.box, .is-fullwidth, .color-bubble, etc.).
+
 *,
 *:hover,
 *:active,

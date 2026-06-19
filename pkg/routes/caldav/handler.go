@@ -82,7 +82,7 @@ func ProjectHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser("dav/projects")
+	caldav.SetupUser(strings.TrimPrefix(ProjectHomeSetPath, "/"))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 	response := caldav.HandleRequest(c.Request())
 	response.Write(c.Response())
@@ -137,7 +137,7 @@ func PrincipalHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser("dav/principals/" + u.Username)
+	caldav.SetupUser(strings.TrimPrefix(principalPathForUser(u.Username), "/"))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 
 	response := caldav.HandleRequest(c.Request())
@@ -166,7 +166,7 @@ func EntryHandler(c *echo.Context) error {
 	log.Debugf("[CALDAV] Request Headers: %v\n", c.Request().Header)
 
 	caldav.SetupStorage(storage)
-	caldav.SetupUser("dav/principals/" + u.Username)
+	caldav.SetupUser(strings.TrimPrefix(principalPathForUser(u.Username), "/"))
 	caldav.SetupSupportedComponents([]string{lib.VCALENDAR, lib.VTODO})
 
 	response := caldav.HandleRequest(c.Request())
@@ -185,7 +185,8 @@ func getProjectFromParam(c *echo.Context) (project *models.ProjectWithTasksAndBu
 
 	intParam, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		return nil, err
+		// The project ID given is not an integer, it cannot exist
+		return nil, models.ErrProjectDoesNotExist{}
 	}
 
 	if intParam == models.FavoritesPseudoProjectID {

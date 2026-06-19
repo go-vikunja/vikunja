@@ -374,7 +374,7 @@ func TestRepairTaskPositions(t *testing.T) {
 		assert.NotEqual(t, pos1.Position, pos2.Position)
 	})
 
-	t.Run("dry run reports without changes", func(t *testing.T) {
+	t.Run("dry run reports without changes - view 92", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
 		defer s.Close()
@@ -432,4 +432,164 @@ func TestRepairTaskPositions(t *testing.T) {
 		assert.GreaterOrEqual(t, result.TasksAffected, 4)
 		assert.Empty(t, result.Errors)
 	})
+}
+
+func TestCreateTaskPositionConflictResolution(t *testing.T) {
+	t.Run("resolves conflicts after position insert", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Insert two positions with the same value for the same view
+		pos1 := &TaskPosition{TaskID: 600, ProjectViewID: 1, Position: 12345}
+		pos2 := &TaskPosition{TaskID: 601, ProjectViewID: 1, Position: 12345}
+
+		_, err := s.Insert(pos1)
+		require.NoError(t, err)
+		_, err = s.Insert(pos2)
+		require.NoError(t, err)
+
+		// Call the new function that should detect and resolve conflicts
+		err = resolvePositionConflictsAfterInsert(s, []*TaskPosition{pos1, pos2})
+		require.NoError(t, err)
+
+		// Verify positions are now unique
+		var updated1, updated2 TaskPosition
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 600, 1).Get(&updated1)
+		require.NoError(t, err)
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 601, 1).Get(&updated2)
+		require.NoError(t, err)
+
+		assert.NotEqual(t, updated1.Position, updated2.Position)
+	})
+
+	t.Run("no-op when no conflicts", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		pos1 := &TaskPosition{TaskID: 700, ProjectViewID: 1, Position: 11111}
+		pos2 := &TaskPosition{TaskID: 701, ProjectViewID: 1, Position: 22222}
+
+		_, err := s.Insert(pos1)
+		require.NoError(t, err)
+		_, err = s.Insert(pos2)
+		require.NoError(t, err)
+
+		err = resolvePositionConflictsAfterInsert(s, []*TaskPosition{pos1, pos2})
+		require.NoError(t, err)
+
+		// Positions should remain unchanged
+		var updated1, updated2 TaskPosition
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 700, 1).Get(&updated1)
+		require.NoError(t, err)
+		_, err = s.Where("task_id = ? AND project_view_id = ?", 701, 1).Get(&updated2)
+		require.NoError(t, err)
+
+		assert.InDelta(t, 11111.0, updated1.Position, 0)
+		assert.InDelta(t, 22222.0, updated2.Position, 0)
+	})
+}
+
+func TestSetTaskInBucketInViewsResolvesConflicts(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	// Pre-insert a position that will conflict with the one calculateNewPositionForTask produces.
+	views, err := getViewsForProject(s, 1)
+	require.NoError(t, err)
+	require.NotEmpty(t, views)
+
+	// Pick the first view
+	view := views[0]
+
+	// Get the current lowest position to predict the new task's position
+	lowestPosition := &TaskPosition{}
+	exists, err := s.Where("project_view_id = ?", view.ID).
+		OrderBy("position asc").
+		Get(lowestPosition)
+	require.NoError(t, err)
+
+	require.True(t, exists)
+	require.GreaterOrEqual(t, lowestPosition.Position, MinPositionSpacing)
+
+	predictedPosition := lowestPosition.Position / 2
+
+	// Insert a conflicting position at the predicted value
+	_, err = s.Insert(&TaskPosition{
+		TaskID:        999,
+		ProjectViewID: view.ID,
+		Position:      predictedPosition,
+	})
+	require.NoError(t, err)
+
+	// Now create positions as task creation would
+	newPos := &TaskPosition{
+		TaskID:        998,
+		ProjectViewID: view.ID,
+		Position:      predictedPosition,
+	}
+	_, err = s.Insert(newPos)
+	require.NoError(t, err)
+
+	// Resolve conflicts
+	err = resolvePositionConflictsAfterInsert(s, []*TaskPosition{newPos})
+	require.NoError(t, err)
+
+	// Verify they have different positions
+	var p1, p2 TaskPosition
+	_, err = s.Where("task_id = ? AND project_view_id = ?", 999, view.ID).Get(&p1)
+	require.NoError(t, err)
+	_, err = s.Where("task_id = ? AND project_view_id = ?", 998, view.ID).Get(&p2)
+	require.NoError(t, err)
+
+	assert.NotEqual(t, p1.Position, p2.Position,
+		"Positions should be unique after conflict resolution")
+}
+
+func TestResolvePositionConflictsAfterInsertFallsBackToRecalculation(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	viewID := int64(1)
+
+	// Clear existing positions for this view
+	_, err := s.Where("project_view_id = ?", viewID).Delete(&TaskPosition{})
+	require.NoError(t, err)
+
+	// Set up extremely tight spacing that forces ErrNeedsFullRecalculation:
+	// Two existing positions with a gap smaller than MinPositionSpacing * (conflicts+1)
+	basePos := 100.0
+	tinyGap := MinPositionSpacing * 0.1 // Much smaller than needed
+	_, err = s.Insert(&TaskPosition{TaskID: 800, ProjectViewID: viewID, Position: basePos})
+	require.NoError(t, err)
+	_, err = s.Insert(&TaskPosition{TaskID: 801, ProjectViewID: viewID, Position: basePos + tinyGap})
+	require.NoError(t, err)
+	_, err = s.Insert(&TaskPosition{TaskID: 802, ProjectViewID: viewID, Position: basePos + tinyGap})
+	require.NoError(t, err)
+	_, err = s.Insert(&TaskPosition{TaskID: 803, ProjectViewID: viewID, Position: basePos + 2*tinyGap})
+	require.NoError(t, err)
+
+	// The conflicting positions that would trigger ErrNeedsFullRecalculation
+	conflictPositions := []*TaskPosition{
+		{TaskID: 801, ProjectViewID: viewID, Position: basePos + tinyGap},
+		{TaskID: 802, ProjectViewID: viewID, Position: basePos + tinyGap},
+	}
+
+	// This should NOT return an error -- it should fall back to full recalculation
+	err = resolvePositionConflictsAfterInsert(s, conflictPositions)
+	require.NoError(t, err)
+
+	// Verify all positions are now unique
+	var positions []*TaskPosition
+	err = s.Where("project_view_id = ?", viewID).OrderBy("position ASC").Find(&positions)
+	require.NoError(t, err)
+
+	seen := make(map[float64]bool)
+	for _, p := range positions {
+		assert.False(t, seen[p.Position], "duplicate position found: %f for task %d", p.Position, p.TaskID)
+		seen[p.Position] = true
+	}
 }

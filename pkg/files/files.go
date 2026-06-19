@@ -17,42 +17,35 @@
 package files
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
 	"math"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/metrics"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 
 	"code.vikunja.io/api/pkg/web"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/c2h5oh/datasize"
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/spf13/afero"
 	"xorm.io/xorm"
 )
 
 // File holds all information about a file
 type File struct {
-	ID   int64  `xorm:"bigint autoincr not null unique pk" json:"id"`
-	Name string `xorm:"text not null" json:"name"`
-	Mime string `xorm:"text null" json:"mime"`
-	Size uint64 `xorm:"bigint not null" json:"size"`
+	ID   int64  `xorm:"bigint autoincr not null unique pk" json:"id" readOnly:"true" doc:"The unique, numeric id of this file."`
+	Name string `xorm:"text not null" json:"name" readOnly:"true" doc:"The original name of the uploaded file."`
+	Mime string `xorm:"text null" json:"mime" readOnly:"true" doc:"The detected mime type of the file."`
+	Size uint64 `xorm:"bigint not null" json:"size" readOnly:"true" doc:"The size of the file in bytes."`
 
-	Created     time.Time `xorm:"created" json:"created"`
+	Created     time.Time `xorm:"created" json:"created" readOnly:"true" doc:"A timestamp when this file was uploaded."`
 	CreatedByID int64     `xorm:"bigint not null" json:"-"`
 
-	File afero.File `xorm:"-" json:"-"`
+	File io.ReadCloser `xorm:"-" json:"-"`
 	// This ReadCloser is only used for migration purposes. Use with care!
 	// There is currentlc no better way of doing this.
 	FileContent []byte `xorm:"-" json:"-"`
@@ -63,16 +56,13 @@ func (*File) TableName() string {
 	return "files"
 }
 
-func (f *File) getAbsoluteFilePath() string {
-	return filepath.Join(
-		config.FilesBasePath.GetString(),
-		strconv.FormatInt(f.ID, 10),
-	)
+func (f *File) fileID() string {
+	return strconv.FormatInt(f.ID, 10)
 }
 
 // LoadFileByID returns a file by its ID
 func (f *File) LoadFileByID() (err error) {
-	f.File, err = afs.Open(f.getAbsoluteFilePath())
+	f.File, err = storage.Open(f.fileID())
 	return
 }
 
@@ -123,15 +113,59 @@ func CreateWithMime(f io.ReadSeeker, realname string, realsize uint64, a web.Aut
 	return file, s.Commit()
 }
 
+// measureReaderSize returns the byte length of r and leaves r seeked to
+// 0, so the size we check matches what storage backends will write
+// (they also Seek(0, io.SeekStart) before reading).
+func measureReaderSize(r io.ReadSeeker) (uint64, error) {
+	if _, err := r.Seek(0, io.SeekStart); err != nil {
+		return 0, err
+	}
+	end, err := r.Seek(0, io.SeekEnd)
+	if err != nil {
+		return 0, err
+	}
+	if _, err := r.Seek(0, io.SeekStart); err != nil {
+		return 0, err
+	}
+	if end < 0 {
+		return 0, fmt.Errorf("reader end %d is negative", end)
+	}
+	return uint64(end), nil
+}
+
 func CreateWithMimeAndSession(s *xorm.Session, f io.ReadSeeker, realname string, realsize uint64, a web.Auth, mime string, checkFileSizeLimit bool) (file *File, err error) {
-	if realsize > config.GetMaxFileSizeInMBytes()*uint64(datasize.MB) && checkFileSizeLimit {
-		return nil, ErrFileIsTooLarge{Size: realsize}
+	// Authoritative size comes from the reader, not the caller: the
+	// migration import path accepts attacker-controlled metadata
+	// (GHSA-qh78-rvg3-cv54) and several other callers pass stale values.
+	measured, mErr := measureReaderSize(f)
+	if mErr != nil {
+		return nil, fmt.Errorf("failed to measure file size: %w", mErr)
+	}
+
+	if checkFileSizeLimit {
+		// Overflow-safe: exabyte-range configs would wrap uint64.
+		maxMB := config.GetMaxFileSizeInMBytes()
+		var maxBytes uint64
+		if maxMB > math.MaxUint64/uint64(datasize.MB) {
+			maxBytes = math.MaxUint64
+		} else {
+			maxBytes = maxMB * uint64(datasize.MB)
+		}
+		if measured > maxBytes {
+			return nil, ErrFileIsTooLarge{Size: measured}
+		}
+	}
+
+	// Surface buggy callers that lie about size.
+	if realsize != 0 && realsize != measured {
+		log.Debugf("files.Create: caller-supplied size %d does not match measured size %d for %q",
+			realsize, measured, realname)
 	}
 
 	// We first insert the file into the db to get it's ID
 	file = &File{
 		Name:        realname,
-		Size:        realsize,
+		Size:        measured,
 		CreatedByID: a.GetID(),
 		Mime:        mime,
 	}
@@ -157,7 +191,7 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 		return ErrFileDoesNotExist{FileID: f.ID}
 	}
 
-	err = afs.Remove(f.getAbsoluteFilePath())
+	err = storage.Remove(f.fileID())
 	if err != nil {
 		var perr *os.PathError
 		if errors.As(err, &perr) {
@@ -169,58 +203,14 @@ func (f *File) Delete(s *xorm.Session) (err error) {
 		return err
 	}
 
-	return keyvalue.DecrBy(metrics.FilesCountKey, 1)
-}
-
-// writeToStorage writes content to the given path, handling both local and S3 backends.
-func writeToStorage(path string, content io.ReadSeeker, size uint64) error {
-	if s3Client == nil {
-		if _, err := content.Seek(0, io.SeekStart); err != nil {
-			return fmt.Errorf("failed to seek to start of content: %w", err)
-		}
-		return afs.WriteReader(path, content)
-	}
-
-	contentLength, err := contentLengthFromReadSeeker(content, size)
-	if err != nil {
-		return fmt.Errorf("failed to determine S3 upload content length: %w", err)
-	}
-
-	if _, err = content.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("failed to seek to start before S3 upload: %w", err)
-	}
-
-	_, err = s3Client.PutObject(context.Background(), &s3.PutObjectInput{
-		Bucket:        aws.String(s3Bucket),
-		Key:           aws.String(path),
-		Body:          content,
-		ContentLength: aws.Int64(contentLength),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to upload file to S3: %w", err)
-	}
 	return nil
 }
 
 // Save saves a file to storage
 func (f *File) Save(fcontent io.ReadSeeker) error {
-	err := writeToStorage(f.getAbsoluteFilePath(), fcontent, f.Size)
+	err := storage.Write(f.fileID(), fcontent, f.Size)
 	if err != nil {
 		return fmt.Errorf("failed to save file: %w", err)
 	}
-	return keyvalue.IncrBy(metrics.FilesCountKey, 1)
-}
-
-// contentLengthFromReadSeeker determines the content length by seeking to the end.
-func contentLengthFromReadSeeker(seeker io.ReadSeeker, expectedSize uint64) (int64, error) {
-	endOffset, err := seeker.Seek(0, io.SeekEnd)
-	if err != nil {
-		return 0, err
-	}
-
-	if expectedSize > 0 && expectedSize <= uint64(math.MaxInt64) && endOffset != int64(expectedSize) {
-		log.Warningf("File size mismatch for S3 upload: expected %d bytes but reader reports %d bytes", expectedSize, endOffset)
-	}
-
-	return endOffset, nil
+	return nil
 }

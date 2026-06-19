@@ -2,7 +2,7 @@ import AbstractModel from './abstractModel'
 
 import type {IFrontendSettings, IUserSettings} from '@/modelTypes/IUserSettings'
 import {getBrowserLanguage} from '@/i18n'
-import {PrefixMode} from '@/modules/parseTaskText'
+import {PrefixMode} from '@/modules/quickAddMagic'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
@@ -33,8 +33,11 @@ export default class UserSettingsModel extends AbstractModel<IUserSettings> impl
 		defaultTaskRelationType: RELATION_KIND.RELATED,
 		backgroundBrightness: null,
 		alwaysShowBucketTaskCount: false,
+		showLastViewed: true,
 		sidebarWidth: null,
 		commentSortOrder: 'asc',
+		desktopQuickEntryShortcut: 'CmdOrCtrl+Shift+A',
+		quickAddDefaultReminders: [],
 	}
 	extraSettingsLinks = {}
 

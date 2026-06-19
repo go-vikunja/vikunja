@@ -193,4 +193,10 @@ func TestArchived(t *testing.T) {
 
 		taskTests("36", models.ErrCodeProjectIsArchived, t)
 	})
+	// Archiving a non-archived project should work
+	t.Run("archive non-archived project", func(t *testing.T) {
+		rec, err := testProjectHandler.testUpdateWithUser(nil, map[string]string{"project": "1"}, `{"title":"Test1","is_archived":true}`)
+		require.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `"is_archived":true`)
+	})
 }

@@ -34,6 +34,10 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 		return false, nil
 	}
 
+	if isInstanceAdmin(s, a) {
+		return true, nil
+	}
+
 	// Get the project and check the permission
 	originalProject, err := GetProjectSimpleByID(s, p.ID)
 	if err != nil {
@@ -73,6 +77,15 @@ func (p *Project) CanWrite(s *xorm.Session, a web.Auth) (bool, error) {
 
 // CanRead checks if a user has read access to a project
 func (p *Project) CanRead(s *xorm.Session, a web.Auth) (bool, int, error) {
+
+	if isInstanceAdmin(s, a) {
+		originalProject, err := GetProjectSimpleByID(s, p.ID)
+		if err != nil {
+			return false, 0, err
+		}
+		*p = *originalProject
+		return true, int(PermissionAdmin), nil
+	}
 
 	// The favorite project needs a special treatment
 	if p.ID == FavoritesPseudoProject.ID {
@@ -118,6 +131,10 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 		return false, nil
 	}
 
+	if isInstanceAdmin(s, a) {
+		return true, nil
+	}
+
 	fid := GetSavedFilterIDFromProjectID(p.ID)
 	if fid > 0 {
 		sf, err := GetSavedFilterSimpleByID(s, fid)
@@ -136,6 +153,12 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 
 	// Check if we're moving the project to a different parent project.
 	// If that is the case, we need to verify permissions to do so.
+	//
+	// The reparent Admin gate for GHSA-2vq4-854f-5c72 / CVE-2026-35595
+	// lives in UpdateProject, not here: CanUpdate is reused by
+	// permission-check-only callers (buckets, webhooks, task ops) that
+	// pass stub &Project{ID: ...} values with ParentProjectID=0 and never
+	// commit a reparent, which would spuriously trip the gate.
 	if p.ParentProjectID != 0 && p.ParentProjectID != ol.ParentProjectID {
 		newProject := &Project{ID: p.ParentProjectID}
 		can, err := newProject.CanWrite(s, a)
@@ -159,11 +182,17 @@ func (p *Project) CanUpdate(s *xorm.Session, a web.Auth) (canUpdate bool, err er
 
 // CanDelete checks if the user can delete a project
 func (p *Project) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
+	if isInstanceAdmin(s, a) {
+		return true, nil
+	}
 	return p.IsAdmin(s, a)
 }
 
 // CanCreate checks if the user can create a project
 func (p *Project) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
+	if isInstanceAdmin(s, a) {
+		return true, nil
+	}
 	if p.ParentProjectID != 0 {
 		parent := &Project{ID: p.ParentProjectID}
 		return parent.CanWrite(s, a)
@@ -181,6 +210,10 @@ func (p *Project) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	// The favorite project can't be edited
 	if p.ID == FavoritesPseudoProject.ID {
 		return false, nil
+	}
+
+	if isInstanceAdmin(s, a) {
+		return true, nil
 	}
 
 	originalProject, err := GetProjectSimpleByID(s, p.ID)

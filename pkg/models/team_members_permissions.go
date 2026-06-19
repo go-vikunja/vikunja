@@ -30,7 +30,7 @@ func (tm *TeamMember) CanCreate(s *xorm.Session, a web.Auth) (bool, error) {
 // CanDelete checks if the user can delete a new team member
 func (tm *TeamMember) CanDelete(s *xorm.Session, a web.Auth) (bool, error) {
 	u, err := user.GetUserByUsername(s, tm.Username)
-	if err != nil {
+	if err != nil && !user.IsErrUserStatusError(err) {
 		return false, err
 	}
 	if u.ID == a.GetID() {
@@ -49,6 +49,10 @@ func (tm *TeamMember) IsAdmin(s *xorm.Session, a web.Auth) (bool, error) {
 	// Don't allow anything if we're dealing with a project share here
 	if _, is := a.(*LinkSharing); is {
 		return false, nil
+	}
+
+	if isInstanceAdmin(s, a) {
+		return true, nil
 	}
 
 	// A user can add a member to a team if he is admin of that team

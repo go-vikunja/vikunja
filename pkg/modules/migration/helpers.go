@@ -47,8 +47,8 @@ func DownloadFileWithHeaders(url string, headers http.Header) (buf *bytes.Buffer
 		}
 	}
 
-	hc := http.Client{}
-	resp, err := hc.Do(req)
+	hc := utils.NewSSRFSafeHTTPClient()
+	resp, err := hc.Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func DoPost(url string, form url.Values) (resp *http.Response, err error) {
 
 // DoGetWithHeaders makes an HTTP GET request with custom headers
 func DoGetWithHeaders(urlStr string, headers map[string]string) (resp *http.Response, err error) {
-	hc := http.Client{}
+	hc := utils.NewSSRFSafeHTTPClient()
 
 	err = utils.RetryWithBackoff("HTTP GET "+urlStr, func() error {
 		req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodGet, urlStr, nil)
@@ -78,7 +78,7 @@ func DoGetWithHeaders(urlStr string, headers map[string]string) (resp *http.Resp
 			req.Header.Add(key, value)
 		}
 
-		resp, err = hc.Do(req) //nolint:bodyclose // Caller is responsible for closing on success
+		resp, err = hc.Do(req) //nolint:bodyclose,gosec // Caller is responsible for closing on success, URL is from migration provider API
 		if err != nil {
 			return err
 		}
@@ -108,7 +108,7 @@ func DoGetWithHeaders(urlStr string, headers map[string]string) (resp *http.Resp
 
 // DoPostWithHeaders does an api request and allows to pass in arbitrary headers
 func DoPostWithHeaders(urlStr string, form url.Values, headers map[string]string) (resp *http.Response, err error) {
-	hc := http.Client{}
+	hc := utils.NewSSRFSafeHTTPClient()
 
 	err = utils.RetryWithBackoff("HTTP POST "+urlStr, func() error {
 		req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodPost, urlStr, strings.NewReader(form.Encode()))
@@ -122,7 +122,7 @@ func DoPostWithHeaders(urlStr string, form url.Values, headers map[string]string
 			req.Header.Add(key, value)
 		}
 
-		resp, err = hc.Do(req) //nolint:bodyclose // Caller is responsible for closing on success
+		resp, err = hc.Do(req) //nolint:bodyclose,gosec // Caller is responsible for closing on success, URL is from migration provider API
 		if err != nil {
 			return err
 		}

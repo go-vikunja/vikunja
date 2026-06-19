@@ -54,7 +54,7 @@ func RepairFileMimeTypes(s *xorm.Session, dryRun bool) (*RepairMimeTypesResult, 
 	bar := progressbar.Default(int64(len(files)), "Detecting MIME types")
 
 	for _, f := range files {
-		file, err := afs.Open(f.getAbsoluteFilePath())
+		file, err := storage.Open(f.fileID())
 		if err != nil {
 			msg := fmt.Sprintf("file %d: failed to open: %s", f.ID, err)
 			log.Errorf("file %d: failed to open: %s", f.ID, err)

@@ -42,3 +42,6 @@
   issuer: "https://some.issuer"
   is_public: true
   description: "This is a public team"
+- id: 16
+  name: testteam16_hierarchy_test
+  created_by_id: 6

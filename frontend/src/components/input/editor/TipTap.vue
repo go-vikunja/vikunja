@@ -166,10 +166,12 @@ import Mention from '@tiptap/extension-mention'
 
 import {TaskList} from '@tiptap/extension-list'
 import {TaskItemWithId} from './taskItemWithId'
+import {BlockquoteWithCommentId} from './blockquoteWithCommentId'
 import HardBreak from '@tiptap/extension-hard-break'
 
 import Commands from './commands'
 import suggestionSetup from './suggestion'
+import {EmojiExtension} from './emoji/emojiExtension'
 import mentionSuggestionSetup from './mention/mentionSuggestion'
 import MentionUser from './mention/MentionUser.vue'
 
@@ -416,7 +418,9 @@ const extensions : Extensions = [
 	StarterKit.configure({
 		codeBlock: false,
 		hardBreak: false,
+		blockquote: false,
 	}),
+	BlockquoteWithCommentId,
 
 	CodeBlockLowlight.configure({
 		lowlight: createLowlight(common),
@@ -514,6 +518,8 @@ const extensions : Extensions = [
 	Commands.configure({
 		suggestion: suggestionSetup(t),
 	}),
+
+	EmojiExtension,
 
 	PasteHandler,
 ]
@@ -771,6 +777,24 @@ function setModeAndValue(value: string) {
 		emitUpdate: false,
 	})
 }
+
+// Replace the editor content with a reply draft (prefilled blockquote + empty
+// paragraph) and enter edit mode immediately so the user can start typing.
+// Returns synchronously after the next tick to let DOM updates settle.
+async function setReplyContent(value: string) {
+	if (!editor.value) return
+	editor.value.commands.setContent(value, {
+		...defaultSetContentOptions,
+		emitUpdate: false,
+	})
+	internalMode.value = 'edit'
+	modelValue.value = editor.value.getHTML()
+	contentHasChanged.value = true
+	await nextTick()
+	editor.value.commands.focus('end')
+}
+
+defineExpose({setReplyContent})
 
 
 // See https://github.com/github/hotkey/discussions/85#discussioncomment-5214660

@@ -21,7 +21,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -59,14 +58,17 @@ func RegisterTables(tables []interface{}) {
 
 // RegisteredTableNames returns the table names of all registered Vikunja tables.
 func RegisteredTableNames() []string {
-	mapper := x.GetTableMapper()
-	names := make([]string, 0, len(registeredTables)+1)
+	tableNames := make([]string, 0, len(registeredTables)+1)
 	for _, bean := range registeredTables {
-		names = append(names, mapper.Obj2Table(reflect.Indirect(reflect.ValueOf(bean)).Type().Name()))
+		tableInfo, err := x.TableInfo(bean)
+		if err != nil {
+			log.Fatalf("Could not get table info for bean: %v", err)
+		}
+		tableNames = append(tableNames, tableInfo.Name)
 	}
 	// The xormigrate migration tracking table is not registered via GetTables()
-	names = append(names, "migration")
-	return names
+	tableNames = append(tableNames, "migration")
+	return tableNames
 }
 
 // CreateDBEngine initializes a db engine from the config
@@ -360,7 +362,7 @@ func getUserDataDir() (string, error) {
 	}
 
 	// Ensure the directory exists
-	if err := os.MkdirAll(dataDir, 0o700); err != nil {
+	if err := os.MkdirAll(dataDir, 0o700); err != nil { // #nosec G703 -- dataDir is from config or XDG standard paths
 		return "", fmt.Errorf("could not create data directory %s: %w", dataDir, err)
 	}
 
@@ -521,6 +523,18 @@ func CreateParadeDBIndexes() error {
 	)`
 	if _, err := x.Exec(projectIndexSQL); err != nil {
 		return fmt.Errorf("could not ensure paradedb project index: %w", err)
+	}
+
+	// Create ParadeDB index for time_entries (comment search via MultiFieldSearch)
+	timeEntriesIndexSQL := `CREATE INDEX IF NOT EXISTS idx_time_entries_paradedb ON time_entries USING bm25 (id, comment)
+	WITH (
+		key_field='id',
+		text_fields='{
+			"comment": {"fast": true, "record": "freq"}
+		}'
+	)`
+	if _, err := x.Exec(timeEntriesIndexSQL); err != nil {
+		return fmt.Errorf("could not ensure paradedb time entry index: %w", err)
 	}
 
 	return nil

@@ -15,8 +15,6 @@ async function createProjectsWithTasks() {
 	})
 
 	// Create views for both projects
-	await ProjectViewFactory.truncate()
-
 	// List view for source project
 	const sourceListView = await ProjectViewFactory.create(1, {
 		id: 1,
@@ -45,7 +43,6 @@ async function createProjectsWithTasks() {
 	})
 
 	// Create tasks in source project
-	await TaskFactory.truncate()
 	const tasks = await TaskFactory.create(3, {
 		id: '{increment}',
 		title: i => `Task ${i + 1}`,
@@ -53,7 +50,6 @@ async function createProjectsWithTasks() {
 	})
 
 	// Assign tasks to bucket for kanban view
-	await TaskBucketFactory.truncate()
 	for (const task of tasks) {
 		await TaskBucketFactory.create(1, {
 			task_id: task.id,
@@ -180,7 +176,6 @@ test.describe('Drag Task to Project in Sidebar', () => {
 				title: 'Source Project',
 			})
 
-			await ProjectViewFactory.truncate()
 			const sourceListView = await ProjectViewFactory.create(1, {
 				id: 1,
 				project_id: projects[0].id,
@@ -194,7 +189,6 @@ test.describe('Drag Task to Project in Sidebar', () => {
 				owner_id: 1,
 			})
 
-			await TaskFactory.truncate()
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				title: 'Test Task',
@@ -249,7 +243,6 @@ test.describe('Drag Task to Project in Sidebar', () => {
 				permission: 0,
 			})
 
-			await ProjectViewFactory.truncate()
 			const sourceListView = await ProjectViewFactory.create(1, {
 				id: 1,
 				project_id: sourceProject[0].id,
@@ -263,7 +256,6 @@ test.describe('Drag Task to Project in Sidebar', () => {
 				view_kind: 0,
 			}, false)
 
-			await TaskFactory.truncate()
 			const tasks = await TaskFactory.create(1, {
 				id: 1,
 				title: 'Test Task',

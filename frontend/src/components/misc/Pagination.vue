@@ -4,38 +4,39 @@
 		:current-page="currentPage"
 	>
 		<template #previous="{ disabled }">
-			<RouterLink
-				:disabled="disabled || undefined"
+			<PaginationItem
+				variant="previous"
 				:to="getRouteForPagination(currentPage - 1)"
-				class="pagination-previous"
+				:disabled="disabled"
 			>
 				{{ $t('misc.previous') }}
-			</RouterLink>
+			</PaginationItem>
 		</template>
 		<template #next="{ disabled }">
-			<RouterLink
-				:disabled="disabled || undefined"
+			<PaginationItem
+				variant="next"
 				:to="getRouteForPagination(currentPage + 1)"
-				class="pagination-next"
+				:disabled="disabled"
 			>
 				{{ $t('misc.next') }}
-			</RouterLink>
+			</PaginationItem>
 		</template>
 		<template #page-link="{ page, isCurrent }">
-			<RouterLink
-				class="pagination-link"
-				:aria-label="'Goto page ' + page.number"
-				:class="{ 'is-current': isCurrent }"
+			<PaginationItem
+				variant="link"
 				:to="getRouteForPagination(page.number)"
+				:is-current="isCurrent"
+				:aria-label="'Goto page ' + page.number"
 			>
 				{{ page.number }}
-			</RouterLink>
+			</PaginationItem>
 		</template>
 	</BasePagination>
 </template>
 
 <script lang="ts" setup>
 import BasePagination from '@/components/base/BasePagination.vue'
+import PaginationItem from '@/components/misc/PaginationItem.vue'
 import { useRoute } from 'vue-router'
 
 withDefaults(defineProps<{

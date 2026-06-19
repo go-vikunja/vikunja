@@ -19,11 +19,11 @@ describe('Filter Transformation', () => {
 	}
 
 	describe('For API', () => {
-		for (const c in fieldCases) {
+		for (const [c, snakeCase] of Object.entries(fieldCases)) {
 			it('should transform all filter params for ' + c + ' to snake_case', () => {
 				const transformed = transformFilterStringForApi(c + ' = ipsum', nullTitleToIdResolver, nullTitleToIdResolver)
 
-				expect(transformed).toBe(fieldCases[c] + ' = ipsum')
+				expect(transformed).toBe(snakeCase + ' = ipsum')
 			})
 		}
 
@@ -416,9 +416,9 @@ describe('Filter Transformation', () => {
 	})
 
 	describe('To API', () => {
-		for (const c in fieldCases) {
+		for (const [c, snakeCase] of Object.entries(fieldCases)) {
 			it('should transform all filter params for ' + c + ' to snake_case', () => {
-				const transformed = transformFilterStringFromApi(fieldCases[c] + ' = ipsum', nullTitleToIdResolver, nullTitleToIdResolver)
+				const transformed = transformFilterStringFromApi(snakeCase + ' = ipsum', nullTitleToIdResolver, nullTitleToIdResolver)
 
 				expect(transformed).toBe(c + ' = ipsum')
 			})

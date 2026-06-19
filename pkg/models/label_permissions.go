@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -57,49 +58,83 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return lorig.CreatedByID == a.GetID(), nil
+	if lorig.CreatedByID == a.GetID() {
+		return true, nil
+	}
+
+	// A bot owner inherits write/delete access to labels their bots created.
+	creator, err := user.GetUserByID(s, lorig.CreatedByID)
+	if err != nil {
+		if user.IsErrUserDoesNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return creator.IsBot() && creator.BotOwnerID == a.GetID(), nil
 }
 
-// Helper method to check if a user can see a specific label
+// hasAccessToLabel reports whether the caller can read a label and, if so,
+// the caller's maximum permission on it.
+//
+// The access cond is assembled with explicit builder.And / builder.Or.
+// Chaining xorm's session .Where/.Or/.And instead flattens the SQL to
+// `A OR B OR C AND D`, which leaked any label with any label_tasks row
+// to any authenticated user (GHSA-hj5c-mhh2-g7jq).
 func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPermission int, err error) {
 
 	linkShare, isLinkShare := a.(*LinkSharing)
 
-	var where builder.Cond
-	var createdByID int64
+	var accessibleProjects builder.Cond
 	if isLinkShare {
-		where = builder.Eq{"project_id": linkShare.ProjectID}
+		accessibleProjects = builder.Eq{"project_id": linkShare.ProjectID}
 	} else {
-		where = builder.In("project_id", getUserProjectsStatement(a.GetID(), "", false).Select("l.id"))
-		createdByID = a.GetID()
+		accessibleProjects = builder.In(
+			"project_id",
+			getUserProjectsStatement(a.GetID(), "").Select("l.id"),
+		)
 	}
 
-	cond := builder.In("label_tasks.task_id",
+	labelAttachedToAccessibleTask := builder.In(
+		"label_tasks.task_id",
 		builder.
 			Select("id").
 			From("tasks").
-			Where(where),
+			Where(accessibleProjects),
 	)
 
-	ll := &LabelTask{}
+	accessBranches := []builder.Cond{labelAttachedToAccessibleTask}
+	if !isLinkShare {
+		accessBranches = append(accessBranches,
+			builder.Eq{"labels.created_by_id": a.GetID()},
+			builder.In("labels.created_by_id",
+				builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": a.GetID()}),
+			),
+		)
+	}
+
+	cond := builder.And(
+		builder.Eq{"labels.id": l.ID},
+		builder.Or(accessBranches...),
+	)
+
 	has, err = s.Table("labels").
-		Select("label_tasks.*").
 		Join("LEFT", "label_tasks", "label_tasks.label_id = labels.id").
-		Where("label_tasks.label_id is not null OR labels.created_by_id = ?", createdByID).
-		Or(cond).
-		And("labels.id = ?", l.ID).
-		Exist(ll)
-	if err != nil {
+		Where(cond).
+		Exist(&Label{})
+	if err != nil || !has {
 		return
 	}
 
-	// Since the permission depends on the task the label is associated with, we need to check that too.
-	if ll.TaskID > 0 {
-		t := &Task{ID: ll.TaskID}
-		_, maxPermission, err = t.CanRead(s, a)
-		if err != nil {
-			return
-		}
+	// Writes and deletes are owner-only (CanUpdate/CanDelete), so the caller's
+	// max permission is admin for the owner and read for anyone else who can see it.
+	owner, err := l.isLabelOwner(s, a)
+	if err != nil {
+		return
+	}
+	if owner {
+		maxPermission = int(PermissionAdmin)
+	} else {
+		maxPermission = int(PermissionRead)
 	}
 
 	return

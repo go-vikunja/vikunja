@@ -79,12 +79,15 @@ export function useRouteWithModal() {
 
 			// Only navigate if we have a valid project and view
 			if (baseStore.currentProject.id && viewId) {
+				// Preserve query parameters (e.g., date range) from the backdrop view
+				const backdropRoute = historyState.value?.backdropView && router.resolve(historyState.value.backdropView)
 				const newRoute = {
 					name: 'project.view',
 					params: {
 						projectId: baseStore.currentProject.id,
 						viewId,
 					},
+					query: backdropRoute?.query || {},
 				}
 
 				router.push(newRoute)

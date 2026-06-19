@@ -7,9 +7,9 @@
 					:color="getHexColor(task.hexColor)"
 				/>
 				<BaseButton @click="copyUrl">
-					<h1 class="title task-id">
+					<span class="title task-id">
 						{{ textIdentifier }}
-					</h1>
+					</span>
 				</BaseButton>
 			</div>
 			<Done
@@ -17,7 +17,8 @@
 			/>
 			<BaseButton
 				v-if="hasClose"
-				class="close"
+				:aria-label="$t('task.detail.closeTaskDetail')"
+				class="close d-print-none"
 				@click="$emit('close')"
 			>
 				<Icon icon="times" />
@@ -37,7 +38,8 @@
 		</h1>
 		<BaseButton
 			v-if="hasClose"
-			class="close"
+			:aria-label="$t('task.detail.closeTaskDetail')"
+			class="close d-print-none"
 			@click="$emit('close')"
 		>
 			<Icon icon="times" />

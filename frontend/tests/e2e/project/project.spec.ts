@@ -103,7 +103,7 @@ test.describe('Projects', () => {
 
 		await page.locator('.project-title-dropdown .project-title-button').click()
 		await page.getByRole('link', {name: /^archive$/i}).click()
-		await expect(page.locator('.modal-content')).toContainText('Archive this project')
+		await expect(page.locator('dialog[open] .modal-content')).toContainText('Archive this project')
 		await page.getByRole('button', {name: /do it/i}).click()
 
 		await expect(page.locator('.global-notification')).toContainText('Success')

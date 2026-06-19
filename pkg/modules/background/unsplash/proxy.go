@@ -18,30 +18,95 @@ package unsplash
 
 import (
 	"context"
+	"errors"
+	"io"
 	"net/http"
 	"strings"
+
+	"code.vikunja.io/api/pkg/utils"
+	"code.vikunja.io/api/pkg/web"
 
 	"github.com/labstack/echo/v5"
 )
 
-func unsplashImage(url string, c *echo.Context) error {
+// ErrUnsplashImageDoesNotExist is returned when Unsplash answers an image proxy fetch
+// with a non-success status, mirroring v1's echo.ErrNotFound. It satisfies
+// web.HTTPErrorProcessor so the v2 error bridge maps it to a 404.
+type ErrUnsplashImageDoesNotExist struct{}
+
+// IsErrUnsplashImageDoesNotExist checks if an error is ErrUnsplashImageDoesNotExist.
+func IsErrUnsplashImageDoesNotExist(err error) bool {
+	var target *ErrUnsplashImageDoesNotExist
+	return errors.As(err, &target)
+}
+
+func (err *ErrUnsplashImageDoesNotExist) Error() string {
+	return "Unsplash image does not exist"
+}
+
+// HTTPError holds the http error description.
+func (err *ErrUnsplashImageDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{HTTPCode: http.StatusNotFound, Message: "Not Found"}
+}
+
+// fetchUnsplashImage fetches an image from Unsplash through the SSRF-safe client and
+// returns its still-open response body for the caller to stream and close. The url is
+// rebased onto the hardcoded images.unsplash.com host (stripping any client-supplied
+// host) so the proxy can only ever reach Unsplash. It returns
+// ErrUnsplashImageDoesNotExist on a non-success upstream status.
+func fetchUnsplashImage(url string) (io.ReadCloser, error) {
 	// Replacing and appending the url for security reasons
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://images.unsplash.com/"+strings.Replace(url, "https://images.unsplash.com/", "", 1), nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resp, err := (&http.Client{}).Do(req)
+	resp, err := utils.NewSSRFSafeHTTPClient().Do(req) //nolint:gosec // SSRF protection is handled by the SSRF-safe client
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer resp.Body.Close()
 	if resp.StatusCode > 399 {
-		return echo.ErrNotFound
+		_ = resp.Body.Close()
+		return nil, &ErrUnsplashImageDoesNotExist{}
 	}
-	return c.Stream(http.StatusOK, "image/jpg", resp.Body)
+	return resp.Body, nil
 }
 
-// ProxyUnsplashImage proxies a thumbnail from unsplash for privacy reasons.
+// FetchUnsplashImageByID resolves an Unsplash image by id, fires the required pingback,
+// and returns the full-resolution image body for the caller to stream and close.
+func FetchUnsplashImageByID(imageID string) (io.ReadCloser, error) {
+	photo, err := getUnsplashPhotoInfoByID(imageID)
+	if err != nil {
+		return nil, err
+	}
+	pingbackByPhotoID(photo.ID)
+	return fetchUnsplashImage(photo.Urls.Raw)
+}
+
+// FetchUnsplashThumbByID resolves an Unsplash image by id, fires the required pingback,
+// and returns a thumbnail (max width 200px) body for the caller to stream and close.
+func FetchUnsplashThumbByID(imageID string) (io.ReadCloser, error) {
+	photo, err := getUnsplashPhotoInfoByID(imageID)
+	if err != nil {
+		return nil, err
+	}
+	pingbackByPhotoID(photo.ID)
+	return fetchUnsplashImage("https://images.unsplash.com/" + getImageID(photo.Urls.Raw) + "?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjcyODAwfQ")
+}
+
+// streamUnsplashImage streams a fetched image body to the v1 echo response, mapping the
+// not-found sentinel back to echo.ErrNotFound so v1's wire response is unchanged.
+func streamUnsplashImage(body io.ReadCloser, err error, c *echo.Context) error {
+	if err != nil {
+		if IsErrUnsplashImageDoesNotExist(err) {
+			return echo.ErrNotFound
+		}
+		return err
+	}
+	defer body.Close()
+	return c.Stream(http.StatusOK, "image/jpg", body)
+}
+
+// ProxyUnsplashImage proxies an image from unsplash for privacy reasons.
 // @Summary Get an unsplash image
 // @Description Get an unsplash image. **Returns json on error.**
 // @tags project
@@ -53,12 +118,8 @@ func unsplashImage(url string, c *echo.Context) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/image/{image} [get]
 func ProxyUnsplashImage(c *echo.Context) error {
-	photo, err := getUnsplashPhotoInfoByID(c.Param("image"))
-	if err != nil {
-		return err
-	}
-	pingbackByPhotoID(photo.ID)
-	return unsplashImage(photo.Urls.Raw, c)
+	body, err := FetchUnsplashImageByID(c.Param("image"))
+	return streamUnsplashImage(body, err, c)
 }
 
 // ProxyUnsplashThumb proxies a thumbnail from unsplash for privacy reasons.
@@ -73,10 +134,6 @@ func ProxyUnsplashImage(c *echo.Context) error {
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /backgrounds/unsplash/image/{image}/thumb [get]
 func ProxyUnsplashThumb(c *echo.Context) error {
-	photo, err := getUnsplashPhotoInfoByID(c.Param("image"))
-	if err != nil {
-		return err
-	}
-	pingbackByPhotoID(photo.ID)
-	return unsplashImage("https://images.unsplash.com/"+getImageID(photo.Urls.Raw)+"?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=200&fit=max&ixid=eyJhcHBfaWQiOjcyODAwfQ", c)
+	body, err := FetchUnsplashThumbByID(c.Param("image"))
+	return streamUnsplashImage(body, err, c)
 }

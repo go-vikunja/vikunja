@@ -22,9 +22,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
@@ -33,26 +35,52 @@ import (
 	"code.vikunja.io/api/pkg/utils"
 	vversion "code.vikunja.io/api/pkg/version"
 
+	"github.com/c2h5oh/datasize"
 	"github.com/hashicorp/go-version"
 )
 
 const logPrefix = "[Vikunja File Import] "
-const maxZipEntrySize = 500 * 1024 * 1024 // 500 MB
 
-// ErrFileTooLarge is returned when a file in the zip archive exceeds maxZipEntrySize
-var ErrFileTooLarge = fmt.Errorf("file exceeds maximum allowed size of %d bytes", maxZipEntrySize)
+// minZipEntryCap ensures data.json / filters.json / VERSION entries can
+// still be read when files.maxsize is tiny.
+const minZipEntryCap = 4 * 1024 * 1024 // 4 MB
 
-// readZipEntry reads from r into a buffer, returning ErrFileTooLarge if the content exceeds maxZipEntrySize.
-// Unlike io.LimitReader which silently truncates, this function explicitly detects overflow.
+// maxZipEntrySize returns max(files.maxsize, minZipEntryCap).
+func maxZipEntrySize() int64 {
+	mb := config.GetMaxFileSizeInMBytes()
+	// Clamp before multiply: absurd configs would overflow int64.
+	const maxInt64MB = uint64(math.MaxInt64 / datasize.MB)
+	if mb > maxInt64MB {
+		return math.MaxInt64
+	}
+	fromConfig := int64(mb) * int64(datasize.MB)
+	if fromConfig < minZipEntryCap {
+		return minZipEntryCap
+	}
+	return fromConfig
+}
+
+// ErrFileTooLarge is returned when a file in the zip archive exceeds the effective cap.
+var ErrFileTooLarge = fmt.Errorf("zip entry exceeds the configured maximum file size")
+
+// readZipEntry reads from r into a buffer, returning ErrFileTooLarge if
+// the content exceeds the effective cap. Unlike io.LimitReader it
+// explicitly detects overflow rather than silently truncating.
 func readZipEntry(r io.Reader) (*bytes.Buffer, error) {
-	// Read one extra byte to detect overflow
-	limitedReader := io.LimitReader(r, maxZipEntrySize+1)
+	limit := maxZipEntrySize()
+	// Avoid limit+1 overflowing to MinInt64 when limit == MaxInt64,
+	// which io.LimitReader would treat as EOF (every entry reads empty).
+	readCap := limit
+	if readCap != math.MaxInt64 {
+		readCap++
+	}
+	limitedReader := io.LimitReader(r, readCap)
 	var buf bytes.Buffer
 	n, err := buf.ReadFrom(limitedReader)
 	if err != nil {
 		return nil, err
 	}
-	if n > maxZipEntrySize {
+	if n > limit {
 		return nil, ErrFileTooLarge
 	}
 	return &buf, nil

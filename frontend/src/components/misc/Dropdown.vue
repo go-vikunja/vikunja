@@ -13,6 +13,7 @@
 		>
 			<BaseButton
 				class="dropdown-trigger is-flex"
+				:aria-label="triggerLabel"
 				@click="toggleOpen"
 			>
 				<Icon
@@ -49,8 +50,10 @@ import BaseButton from '@/components/base/BaseButton.vue'
 
 withDefaults(defineProps<{
 	triggerIcon?: IconProp
+	triggerLabel?: string
 }>(), {
 	triggerIcon: 'ellipsis-h',
+	triggerLabel: undefined,
 })
 
 const emit = defineEmits<{

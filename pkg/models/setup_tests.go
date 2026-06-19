@@ -59,6 +59,7 @@ func SetupTests() {
 		"task_relations",
 		"task_reminders",
 		"tasks",
+		"time_entries",
 		"team_projects",
 		"team_members",
 		"teams",
@@ -76,6 +77,9 @@ func SetupTests() {
 		"task_buckets",
 		"sessions",
 		"webhooks",
+		"totp",
+		"oauth_codes",
+		"notifications",
 	)
 	if err != nil {
 		log.Fatal(err)

@@ -7,7 +7,7 @@
 		<RouterLink
 			:to="{ name: 'home' }"
 			class="logo-link"
-			:aria-label="$t('navigation.overview')"
+			:aria-label="$t('navigation.home')"
 		>
 			<Logo
 				width="164"
@@ -21,9 +21,9 @@
 			v-if="currentProject?.id"
 			class="project-title-wrapper"
 		>
-			<h1 class="project-title">
+			<span class="project-title">
 				{{ currentProject.title === '' ? $t('misc.loading') : getProjectTitle(currentProject) }}
-			</h1>
+			</span>
 
 			<BaseButton
 				v-if="!isEditorContentEmpty(currentProject.description)"
@@ -54,7 +54,15 @@
 			</ProjectSettingsDropdown>
 		</div>
 
+		<div
+			v-else-if="pageTitle"
+			class="project-title-wrapper"
+		>
+			<span class="project-title">{{ pageTitle }}</span>
+		</div>
+
 		<div class="navbar-end">
+			<TimerBadge />
 			<OpenQuickActions />
 			<Notifications />
 			<Dropdown>
@@ -88,6 +96,12 @@
 					{{ $t('user.settings.title') }}
 				</DropdownItem>
 				<DropdownItem
+					v-if="adminPanelEnabled && authStore.info?.isAdmin"
+					:to="{ name: 'admin.overview' }"
+				>
+					{{ $t('admin.title') }}
+				</DropdownItem>
+				<DropdownItem
 					v-if="imprintUrl"
 					:href="imprintUrl"
 				>
@@ -115,13 +129,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import { PERMISSIONS as Permissions } from '@/constants/permissions'
+import { PRO_FEATURE } from '@/constants/proFeatures'
 
 import ProjectSettingsDropdown from '@/components/project/ProjectSettingsDropdown.vue'
 import Dropdown from '@/components/misc/Dropdown.vue'
 import DropdownItem from '@/components/misc/DropdownItem.vue'
 import Notifications from '@/components/notifications/Notifications.vue'
+import TimerBadge from '@/components/time-tracking/TimerBadge.vue'
 import Logo from '@/components/home/Logo.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
@@ -145,11 +163,20 @@ const background = computed(() => baseStore.background)
 const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission !== null && baseStore.currentProject?.maxPermission !== undefined && baseStore.currentProject.maxPermission > Permissions.READ)
 const menuActive = computed(() => baseStore.menuActive)
 
+// Standalone pages (no project) surface their route's title in the header.
+const route = useRoute()
+const { t } = useI18n()
+const pageTitle = computed(() => {
+	const title = route.meta.title as string | undefined
+	return title ? t(title) : ''
+})
+
 const authStore = useAuthStore()
 
 const configStore = useConfigStore()
 const imprintUrl = computed(() => configStore.legal.imprintUrl)
 const privacyPolicyUrl = computed(() => configStore.legal.privacyPolicyUrl)
+const adminPanelEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL))
 </script>
 
 <style lang="scss" scoped>
@@ -164,10 +191,12 @@ $user-dropdown-width-mobile: 5rem;
 	inset-block-start: 0;
 	inset-inline-start: 0;
 	inset-inline-end: 0;
+	z-index: 30;
 
 	display: flex;
 	justify-content: space-between;
 	gap: var(--navbar-gap-width);
+	min-block-size: $navbar-height;
 
 	background: var(--site-background);
 
@@ -257,8 +286,6 @@ $user-dropdown-width-mobile: 5rem;
 }
 
 .navbar-end {
-	margin-inline-start: 0; // overrides bulma core styles
-	margin-inline-end: 0; // overrides bulma core styles
 	flex: 0 0 auto;
 	display: flex;
 	align-items: stretch;

@@ -451,7 +451,10 @@ export default Extension.create<FilterAutocompleteOptions>({
 				popupElement.style.zIndex = '20000'
 				popupElement.id = 'filter-autocomplete-popup'
 				popupElement.appendChild(component.element!)
-				document.body.appendChild(popupElement)
+				// Append to the closest dialog (if inside a modal) so the popup
+				// is not blocked by <dialog> inertness, otherwise fall back to body.
+				const parentDialog = view.dom.closest('dialog')
+				;(parentDialog || document.body).appendChild(popupElement)
 
 				cleanupFloating = autoUpdate(virtualReference, popupElement, updatePosition)
 			}

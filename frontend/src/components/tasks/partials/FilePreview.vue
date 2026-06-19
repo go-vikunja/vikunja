@@ -6,6 +6,17 @@
 		alt="Attachment preview"
 	>
 
+	<!-- PDF icon -->
+	<div
+		v-else-if="isPdf"
+		class="icon-wrapper"
+	>
+		<Icon
+			size="6x"
+			icon="file-pdf"
+		/>
+	</div>
+
 	<!-- Fallback -->
 	<div
 		v-else
@@ -19,10 +30,10 @@
 </template>
 
 <script setup lang="ts">
-import {ref, shallowReactive, watchEffect} from 'vue'
+import {computed, ref, shallowReactive, watchEffect} from 'vue'
 import AttachmentService, {PREVIEW_SIZE} from '@/services/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
-import {canPreview} from '@/models/attachment'
+import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
 
 const props = defineProps<{
 	modelValue?: IAttachment
@@ -30,9 +41,10 @@ const props = defineProps<{
 
 const attachmentService = shallowReactive(new AttachmentService())
 const blobUrl = ref<string | undefined>(undefined)
+const isPdf = computed(() => props.modelValue && canPreviewPdf(props.modelValue))
 
 watchEffect(async () => {
-	if (props.modelValue && canPreview(props.modelValue)) {
+	if (props.modelValue && canPreviewImage(props.modelValue)) {
 		blobUrl.value = await attachmentService.getBlobUrl(props.modelValue, PREVIEW_SIZE.MD)
 	}
 })

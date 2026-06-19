@@ -1,0 +1,21 @@
+- id: 1
+  notifiable_id: 1
+  notification: '{"test":"notification one"}'
+  name: test.notification
+  subject_id: 1
+  read_at: null
+  created: 2022-01-01 00:00:00
+- id: 2
+  notifiable_id: 1
+  notification: '{"test":"notification two"}'
+  name: test.notification
+  subject_id: 2
+  read_at: null
+  created: 2022-01-02 00:00:00
+- id: 3
+  notifiable_id: 2
+  notification: '{"test":"other user"}'
+  name: test.notification
+  subject_id: 3
+  read_at: null
+  created: 2022-01-03 00:00:00

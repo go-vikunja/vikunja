@@ -30,15 +30,6 @@ vi.mock('@/stores/base', () => ({
 	}),
 }))
 
-vi.mock('@/indexes', () => ({
-	createNewIndexer: () => ({
-		add: vi.fn(),
-		remove: vi.fn(),
-		search: vi.fn(),
-		update: vi.fn(),
-	}),
-}))
-
 function createMockProject(overrides: Partial<IProject>): IProject {
 	return {
 		id: 1,

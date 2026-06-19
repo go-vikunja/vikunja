@@ -1,0 +1,165 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// Package auth handles the human's transient authentication during init and
+// login. The default interactive flow is OAuth 2.0 Authorization Code + PKCE
+// against Vikunja's built-in authorization server. The OAuth dance opens a
+// browser at the authorize URL; the user signs in and lands on a localhost
+// callback this CLI ran. --token / --use-password / --username + --password
+// are escape hatches for non-interactive contexts.
+package auth
+
+import (
+	"bufio"
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"strings"
+
+	"golang.org/x/term"
+
+	"code.vikunja.io/veans/internal/client"
+	"code.vikunja.io/veans/internal/output"
+)
+
+// Prompter abstracts stdin / TTY reads so tests can inject scripted answers.
+type Prompter interface {
+	ReadLine(prompt string) (string, error)
+	ReadPassword(prompt string) (string, error)
+}
+
+// StdPrompter reads from os.Stdin and writes prompts to os.Stderr; uses
+// term.ReadPassword for masked input when on a TTY. The bufio.Reader is
+// reused across ReadLine calls — a new reader on each call would read-
+// ahead a buffer, discard the rest on return, and starve later prompts.
+type StdPrompter struct {
+	stdin *bufio.Reader
+}
+
+func NewStdPrompter() *StdPrompter {
+	return &StdPrompter{stdin: bufio.NewReader(os.Stdin)}
+}
+
+func (p *StdPrompter) ReadLine(prompt string) (string, error) {
+	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
+		return "", err
+	}
+	line, err := p.stdin.ReadString('\n')
+	if err != nil && !errors.Is(err, io.EOF) {
+		return "", err
+	}
+	return strings.TrimRight(line, "\r\n"), nil
+}
+
+func (p *StdPrompter) ReadPassword(prompt string) (string, error) {
+	if _, err := fmt.Fprint(os.Stderr, prompt); err != nil {
+		return "", err
+	}
+	if term.IsTerminal(int(os.Stdin.Fd())) {
+		buf, err := term.ReadPassword(int(os.Stdin.Fd()))
+		fmt.Fprintln(os.Stderr)
+		if err != nil {
+			return "", err
+		}
+		return string(buf), nil
+	}
+	// Non-TTY (CI, scripted test) — read a plain line.
+	return p.ReadLine("")
+}
+
+// LoginOptions controls how AcquireHumanToken obtains a JWT.
+type LoginOptions struct {
+	// Token short-circuits all flows. May be a JWT or a personal API token.
+	Token string
+	// UsePassword forces the legacy POST /login flow even when no password
+	// is set yet (the prompter will ask for it). Useful on instances where
+	// OAuth is disabled or the user prefers entering a password.
+	UsePassword bool
+	// Username / Password / TOTP feed POST /login. If both Username and
+	// Password are non-empty, AcquireHumanToken uses /login non-interactively
+	// regardless of UsePassword.
+	Username string
+	Password string
+	TOTP     string
+	// Out is where progress / OAuth instructions are written. Defaults to
+	// os.Stderr in production via NewStdPrompter; tests can pass any writer.
+	Out io.Writer
+}
+
+// AcquireHumanToken returns a bearer token to act as the human during init.
+// Resolution order:
+//  1. opts.Token (paste-in or --token flag)
+//  2. POST /login with Username + Password (used non-interactively when both
+//     are set, or when --use-password is passed)
+//  3. OAuth Authorization Code + PKCE flow with manual callback paste-back
+//     (the default for interactive use)
+func AcquireHumanToken(ctx context.Context, c *client.Client, opts LoginOptions, p Prompter) (string, error) {
+	if opts.Token != "" {
+		return opts.Token, nil
+	}
+	if p == nil {
+		p = NewStdPrompter()
+	}
+	w := opts.Out
+	if w == nil {
+		w = os.Stderr
+	}
+
+	usePassword := opts.UsePassword || (opts.Username != "" && opts.Password != "")
+	if usePassword {
+		return loginWithPassword(ctx, c, opts, p)
+	}
+
+	return runOAuthFlow(ctx, c, p, w)
+}
+
+// loginWithPassword runs the legacy POST /login path. Kept for instances
+// that have OAuth disabled or for non-interactive `--username` + `--password`
+// invocations in CI.
+func loginWithPassword(ctx context.Context, c *client.Client, opts LoginOptions, p Prompter) (string, error) {
+	if opts.Username == "" {
+		u, err := p.ReadLine("Vikunja username: ")
+		if err != nil {
+			return "", output.Wrap(output.CodeAuth, err, "read username: %v", err)
+		}
+		opts.Username = strings.TrimSpace(u)
+	}
+	if opts.Password == "" {
+		pw, err := p.ReadPassword("Vikunja password: ")
+		if err != nil {
+			return "", output.Wrap(output.CodeAuth, err, "read password: %v", err)
+		}
+		opts.Password = pw
+	}
+	if opts.Username == "" || opts.Password == "" {
+		return "", output.New(output.CodeAuth, "username and password are required for password login")
+	}
+	resp, err := c.Login(ctx, &client.LoginRequest{
+		Username:     opts.Username,
+		Password:     opts.Password,
+		TOTPPasscode: opts.TOTP,
+		LongToken:    true,
+	})
+	if err != nil {
+		return "", err
+	}
+	if resp.Token == "" {
+		return "", output.New(output.CodeAuth, "login returned empty token")
+	}
+	return resp.Token, nil
+}

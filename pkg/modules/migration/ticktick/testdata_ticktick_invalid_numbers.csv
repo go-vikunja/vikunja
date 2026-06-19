@@ -1,0 +1,9 @@
+"Date: 2026-02-27+0000"
+"Version: 7.1"
+"Status:
+0 Normal
+1 Completed
+2 Archived"
+"Folder Name","List Name","Title","Kind","Tags","Content","Is Check list","Start Date","Due Date","Reminder","Repeat","Priority","Status","Created Time","Completed Time","Order","Timezone","Is All Day","Is Floating","Column Name","Column Order","View Mode","taskId","parentId"
+"Work","Project Beta","Task with non-numeric priority","TEXT","","A task whose priority column is p1","N","","","","","p1","0","2026-02-15 09:30:00","","-1099511627776","Europe/Berlin",,"false",,,"list","1",""
+"Work","Project Beta","Task with non-numeric ids","TEXT","","A task with garbage in the id columns","N","","","","","0","0","2026-02-10 08:00:00","","0","Europe/Berlin","false","false",,,"list","abc","xyz"

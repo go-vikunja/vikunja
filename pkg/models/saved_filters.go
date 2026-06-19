@@ -32,25 +32,25 @@ import (
 // SavedFilter represents a saved bunch of filters
 type SavedFilter struct {
 	// The unique numeric id of this saved filter
-	ID int64 `xorm:"autoincr not null unique pk" json:"id" param:"filter"`
+	ID int64 `xorm:"autoincr not null unique pk" json:"id" param:"filter" readOnly:"true" doc:"The unique, numeric id of this saved filter."`
 	// The actual filters this filter contains
-	Filters *TaskCollection `xorm:"JSON not null" json:"filters" valid:"required"`
+	Filters *TaskCollection `xorm:"JSON not null" json:"filters" valid:"required" doc:"The task filter query and collection options this saved filter wraps."`
 	// The title of the filter.
-	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250"`
+	Title string `xorm:"varchar(250) not null" json:"title" valid:"required,runelength(1|250)" minLength:"1" maxLength:"250" doc:"The title of the filter."`
 	// The description of the filter
-	Description string `xorm:"longtext null" json:"description"`
+	Description string `xorm:"longtext null" json:"description" doc:"The description of the filter."`
 	OwnerID     int64  `xorm:"bigint not null INDEX" json:"-"`
 
 	// The user who owns this filter
-	Owner *user.User `xorm:"-" json:"owner" valid:"-"`
+	Owner *user.User `xorm:"-" json:"owner" valid:"-" readOnly:"true" doc:"The user who owns this filter; set by the server."`
 
 	// True if the filter is a favorite. Favorite filters show up in a separate parent project together with favorite projects.
-	IsFavorite bool `xorm:"default false" json:"is_favorite"`
+	IsFavorite bool `xorm:"default false" json:"is_favorite" doc:"If true, the filter shows up in the Favorites pseudo-project alongside favorite projects."`
 
 	// A timestamp when this filter was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this filter was created. You cannot change this value."`
 	// A timestamp when this filter was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this filter was last updated. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -429,7 +429,7 @@ func RegisterAddTaskToFilterViewCron() {
 		filterTasksCache := make(map[int64][]*Task)
 		newTaskBuckets := []*TaskBucket{}
 		newTaskPositions := []*TaskPosition{}
-		deleteCond := []builder.Cond{}
+
 		viewsToRecalc := map[int64]struct {
 			view    *ProjectView
 			ownerID int64
@@ -507,24 +507,10 @@ func RegisterAddTaskToFilterViewCron() {
 			}
 
 			// Remove tasks that should not be there
-			for taskID := range savedTaskBucketMap {
-				found := false
-				for _, task := range tasks {
-					if task.ID == taskID {
-						found = true
-						break
-					}
-				}
-				if !found {
-					deleteCond = append(deleteCond, builder.And(
-						builder.Eq{"task_id": taskID},
-						builder.Eq{"project_view_id": view.ID},
-					))
-				}
-			}
+			deleteStaleFilterTasks(s, logPrefix, savedTaskBucketMap, tasks, view.ID)
 		}
 
-		upsertRelatedTaskProperties(s, logPrefix, newTaskBuckets, newTaskPositions, deleteCond)
+		upsertRelatedTaskProperties(s, logPrefix, newTaskBuckets, newTaskPositions)
 
 		for _, data := range viewsToRecalc {
 			if err := RecalculateTaskPositions(s, data.view, &user.User{ID: data.ownerID}); err != nil {
@@ -541,7 +527,7 @@ func RegisterAddTaskToFilterViewCron() {
 	}
 }
 
-func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBuckets []*TaskBucket, newTaskPositions []*TaskPosition, deleteCond []builder.Cond) {
+func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBuckets []*TaskBucket, newTaskPositions []*TaskPosition) {
 	var err error
 	if len(newTaskBuckets) > 0 {
 		_, err = s.Insert(newTaskBuckets)
@@ -555,12 +541,32 @@ func upsertRelatedTaskProperties(s *xorm.Session, logPrefix string, newTaskBucke
 			log.Errorf("%sError inserting task positions: %s", logPrefix, err)
 		}
 	}
-	if len(deleteCond) > 0 {
-		_, err = s.Where(builder.Or(deleteCond...)).Delete(&TaskBucket{})
+}
+
+func deleteStaleFilterTasks(s *xorm.Session, logPrefix string, savedTaskBucketMap map[int64]*TaskBucket, tasks []*Task, viewID int64) {
+	var taskIDsToDelete []int64
+	for taskID := range savedTaskBucketMap {
+		found := false
+		for _, task := range tasks {
+			if task.ID == taskID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			taskIDsToDelete = append(taskIDsToDelete, taskID)
+		}
+	}
+	if len(taskIDsToDelete) > 0 {
+		_, err := s.Where(builder.Eq{"project_view_id": viewID}).
+			And(builder.In("task_id", taskIDsToDelete)).
+			Delete(&TaskBucket{})
 		if err != nil {
 			log.Errorf("%sError deleting task buckets: %s", logPrefix, err)
 		}
-		_, err = s.Where(builder.Or(deleteCond...)).Delete(&TaskPosition{})
+		_, err = s.Where(builder.Eq{"project_view_id": viewID}).
+			And(builder.In("task_id", taskIDsToDelete)).
+			Delete(&TaskPosition{})
 		if err != nil {
 			log.Errorf("%sError deleting task positions: %s", logPrefix, err)
 		}

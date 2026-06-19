@@ -4,39 +4,39 @@
 		:current-page="currentPage"
 	>
 		<template #previous="{ disabled }">
-			<BaseButton
+			<PaginationItem
+				variant="previous"
 				:disabled="disabled"
-				class="pagination-previous"
 				@click="changePage(currentPage - 1)"
 			>
 				{{ $t('misc.previous') }}
-			</BaseButton>
+			</PaginationItem>
 		</template>
 		<template #next="{ disabled }">
-			<BaseButton
+			<PaginationItem
+				variant="next"
 				:disabled="disabled"
-				class="pagination-next"
 				@click="changePage(currentPage + 1)"
 			>
 				{{ $t('misc.next') }}
-			</BaseButton>
+			</PaginationItem>
 		</template>
 		<template #page-link="{ page, isCurrent }">
-			<BaseButton
-				class="pagination-link"
+			<PaginationItem
+				variant="link"
+				:is-current="isCurrent"
 				:aria-label="'Goto page ' + page.number"
-				:class="{ 'is-current': isCurrent }"
 				@click="changePage(page.number)"
 			>
 				{{ page.number }}
-			</BaseButton>
+			</PaginationItem>
 		</template>
 	</BasePagination>
 </template>
 
 <script lang="ts" setup>
 import BasePagination from '@/components/base/BasePagination.vue'
-import BaseButton from '@/components/base/BaseButton.vue'
+import PaginationItem from '@/components/misc/PaginationItem.vue'
 
 const props = withDefaults(defineProps<{
 	totalPages: number,

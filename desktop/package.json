@@ -12,15 +12,24 @@
   },
   "homepage": "https://vikunja.io",
   "scripts": {
+    "build:frontend": "cd ../frontend && pnpm run build && cd ../desktop && rm -rf frontend && cp -r ../frontend/dist frontend",
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --publish never"
   },
   "build": {
     "appId": "io.vikunja.desktop",
+    "files": [
+      "**/*",
+      "preload-quick-entry.js"
+    ],
     "productName": "Vikunja Desktop",
     "artifactName": "${productName}-${version}.${ext}",
     "icon": "build/icon.icns",
+    "protocols": {
+      "name": "Vikunja Desktop",
+      "schemes": ["vikunja-desktop"]
+    },
     "linux": {
       "target": [
         "deb",
@@ -52,8 +61,8 @@
     }
   },
   "devDependencies": {
-    "electron": "40.8.0",
-    "electron-builder": "26.8.1",
+    "electron": "40.10.4",
+    "electron-builder": "26.15.3",
     "unzipper": "0.12.3"
   },
   "dependencies": {
@@ -65,8 +74,13 @@
     ],
     "overrides": {
       "minimatch": "^10.2.3",
-      "tar": "^7.5.10",
-      "@tootallnate/once": "^3.0.1"
+      "tar": ">=7.5.16",
+      "@tootallnate/once": "^3.0.1",
+      "picomatch": ">=4.0.4",
+      "tmp": ">=0.2.7",
+      "ip-address": ">=10.1.1",
+      "form-data": ">=4.0.6",
+      "js-yaml": ">=4.2.0"
     }
   }
 }

@@ -12,6 +12,7 @@
 			{{ $t('home.addToHomeScreen') }}
 		</p>
 		<BaseButton
+			:aria-label="$t('misc.closeBanner')"
 			class="hide-button"
 			@click="() => hideMessage = true"
 		>

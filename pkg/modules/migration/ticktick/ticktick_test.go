@@ -131,7 +131,7 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 	assert.Equal(t, models.RelatedTaskMap{
 		models.RelationKindParenttask: []*models.Task{
 			{
-				ID: tickTickTasks[1].ParentID,
+				ID: int64(tickTickTasks[1].ParentID),
 			},
 		},
 	}, vikunjaTasks[1].Tasks[1].RelatedTasks)
@@ -161,6 +161,97 @@ func TestConvertTicktickTasksToVikunja(t *testing.T) {
 
 	assert.Equal(t, vikunjaTasks[2].Tasks[0].Title, tickTickTasks[4].Title)
 	assert.Equal(t, vikunjaTasks[2].Tasks[0].Position, tickTickTasks[4].Order)
+}
+
+func TestConvertTicktickTasksChildBeforeParent(t *testing.T) {
+	// Child appears BEFORE parent in the input — this is the order that
+	// causes the import to fail in create_from_structure.go because the
+	// placeholder for the not-yet-created parent has no title.
+	tickTickTasks := []*tickTickTask{
+		{
+			TaskID:      2,
+			ParentID:    1,
+			ProjectName: "Project 1",
+			Title:       "Child task",
+			Status:      "0",
+			Order:       -1099511626,
+		},
+		{
+			TaskID:      1,
+			ParentID:    0,
+			ProjectName: "Project 1",
+			Title:       "Parent task",
+			Status:      "0",
+			Order:       -1099511627776,
+		},
+	}
+
+	vikunjaTasks := convertTickTickToVikunja(tickTickTasks)
+
+	// Find the project with tasks
+	var projectTasks []*models.TaskWithComments
+	for _, p := range vikunjaTasks {
+		if len(p.Tasks) > 0 {
+			projectTasks = p.Tasks
+			break
+		}
+	}
+
+	require.Len(t, projectTasks, 2)
+
+	// The parent (TaskID=1) must come before the child (TaskID=2) in the
+	// output so that create_from_structure.go processes it first.
+	assert.Equal(t, "Parent task", projectTasks[0].Title)
+	assert.Equal(t, "Child task", projectTasks[1].Title)
+
+	// The child still has the correct parent relation
+	assert.Equal(t, models.RelatedTaskMap{
+		models.RelationKindParenttask: []*models.Task{
+			{ID: 1},
+		},
+	}, projectTasks[1].RelatedTasks)
+}
+
+func TestConvertTicktickTasksDeeplyNested(t *testing.T) {
+	// Grandchild -> child -> parent, all in reverse order
+	tickTickTasks := []*tickTickTask{
+		{
+			TaskID:      3,
+			ParentID:    2,
+			ProjectName: "Project 1",
+			Title:       "Grandchild",
+			Status:      "0",
+		},
+		{
+			TaskID:      2,
+			ParentID:    1,
+			ProjectName: "Project 1",
+			Title:       "Child",
+			Status:      "0",
+		},
+		{
+			TaskID:      1,
+			ParentID:    0,
+			ProjectName: "Project 1",
+			Title:       "Root",
+			Status:      "0",
+		},
+	}
+
+	vikunjaTasks := convertTickTickToVikunja(tickTickTasks)
+
+	var projectTasks []*models.TaskWithComments
+	for _, p := range vikunjaTasks {
+		if len(p.Tasks) > 0 {
+			projectTasks = p.Tasks
+			break
+		}
+	}
+
+	require.Len(t, projectTasks, 3)
+	assert.Equal(t, "Root", projectTasks[0].Title)
+	assert.Equal(t, "Child", projectTasks[1].Title)
+	assert.Equal(t, "Grandchild", projectTasks[2].Title)
 }
 
 func TestLinesToSkipBeforeHeader(t *testing.T) {
@@ -678,4 +769,103 @@ func TestEmptyLabelHandlingWithRealCSV(t *testing.T) {
 
 		t.Logf("Successfully processed %d tasks with %d total labels, no empty labels created", len(tasks), totalLabels)
 	})
+}
+
+func TestTickTickPriorityParsing(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected int64
+	}{
+		{"", 0},
+		{"0", 0},
+		{"1", 1},
+		{"3", 3},
+		{"5", 5},
+		{"p1", 1},
+		{"P2", 2},
+		{"p3", 3},
+		{" p5 ", 5},
+		{"garbage", 0},
+	}
+	for _, c := range cases {
+		t.Run(c.input, func(t *testing.T) {
+			var p tickTickPriority
+			require.NoError(t, p.UnmarshalCSV(c.input))
+			assert.Equal(t, tickTickPriority(c.expected), p)
+		})
+	}
+}
+
+// TestNonNumericNumberColumns ensures that exports containing non-numeric values
+// in columns Vikunja parses as integers (Priority, taskId, parentId) do not fail
+// the whole import. See go-vikunja/vikunja#2822.
+func TestNonNumericNumberColumns(t *testing.T) {
+	file, err := os.Open("testdata_ticktick_invalid_numbers.csv")
+	require.NoError(t, err)
+	defer file.Close()
+
+	stat, err := file.Stat()
+	require.NoError(t, err)
+
+	lines, err := linesToSkipBeforeHeader(file, stat.Size())
+	require.NoError(t, err)
+
+	_, err = file.Seek(0, io.SeekStart)
+	require.NoError(t, err)
+
+	dec, err := newLineSkipDecoder(file, lines)
+	require.NoError(t, err)
+	tasks := []*tickTickTask{}
+	err = gocsv.UnmarshalDecoder(dec, &tasks)
+	require.NoError(t, err, "non-numeric values in numeric columns should not fail the import")
+	require.Len(t, tasks, 2)
+
+	// "p1" in the Priority column is parsed as priority 1 instead of crashing.
+	assert.Equal(t, tickTickPriority(1), tasks[0].Priority)
+	assert.Equal(t, tickTickNumber(1), tasks[0].TaskID)
+
+	// Non-numeric taskId/parentId fall back to 0 as well.
+	assert.Equal(t, tickTickNumber(0), tasks[1].TaskID)
+	assert.Equal(t, tickTickNumber(0), tasks[1].ParentID)
+
+	// And the tasks still convert to the Vikunja structure, carrying the parsed
+	// priority over to the resulting task.
+	for _, task := range tasks {
+		task.Tags = strings.Split(task.TagsList, ", ")
+	}
+	vikunjaTasks := convertTickTickToVikunja(tasks)
+	require.Greater(t, len(vikunjaTasks), 0)
+
+	var priority int64
+	for _, project := range vikunjaTasks {
+		for _, task := range project.Tasks {
+			if task.Title == "Task with non-numeric priority" {
+				priority = task.Priority
+			}
+		}
+	}
+	assert.Equal(t, int64(1), priority)
+}
+
+// TestMultipleTasksWithMalformedIDsAreNotDropped guards against a regression
+// where collapsing several unparseable taskIds to 0 caused all but the first
+// zero-ID task to be silently dropped by sortParentsBeforeChildren.
+func TestMultipleTasksWithMalformedIDsAreNotDropped(t *testing.T) {
+	tasks := []*tickTickTask{
+		{TaskID: 0, ProjectName: "Project 1", Title: "First malformed"},
+		{TaskID: 0, ProjectName: "Project 1", Title: "Second malformed"},
+		{TaskID: 0, ProjectName: "Project 1", Title: "Third malformed"},
+	}
+
+	sorted := sortParentsBeforeChildren(tasks)
+	require.Len(t, sorted, 3, "no task with a zero ID should be dropped")
+
+	vikunjaTasks := convertTickTickToVikunja(tasks)
+	titles := []string{}
+	for _, project := range vikunjaTasks {
+		for _, task := range project.Tasks {
+			titles = append(titles, task.Title)
+		}
+	}
+	assert.ElementsMatch(t, []string{"First malformed", "Second malformed", "Third malformed"}, titles)
 }

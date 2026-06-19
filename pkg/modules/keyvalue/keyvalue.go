@@ -17,7 +17,10 @@
 package keyvalue
 
 import (
+	"time"
+
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue/memory"
 	"code.vikunja.io/api/pkg/modules/keyvalue/redis"
 )
@@ -40,6 +43,9 @@ var store Storage
 func InitStorage() {
 	switch config.KeyvalueType.GetString() {
 	case "redis":
+		if !config.RedisEnabled.GetBool() {
+			log.Fatalf("keyvalue.type is set to %q but redis is not enabled. Please set redis.enabled to true in your configuration.", config.KeyvalueType.GetString())
+		}
 		store = redis.NewStorage()
 	case "memory":
 		fallthrough
@@ -106,6 +112,69 @@ func Remember(key string, fn func() (any, error)) (any, error) {
 
 	if err := Put(key, val); err != nil {
 		return nil, err
+	}
+
+	return val, nil
+}
+
+// RememberValue is a type-safe version of Remember that uses GetWithValue
+// for proper deserialization (required for Redis gob-encoded values).
+// T must be a concrete (non-pointer) type.
+func RememberValue[T any](key string, fn func() (T, error)) (T, error) {
+	var cached T
+	exists, err := GetWithValue(key, &cached)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	if exists {
+		return cached, nil
+	}
+
+	val, err := fn()
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	if err := Put(key, val); err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return val, nil
+}
+
+// expiringValue wraps a cached value with the time it expires.
+type expiringValue[T any] struct {
+	Value     T
+	ExpiresAt time.Time
+}
+
+// RememberFor is like RememberValue but treats the cached value as stale once it is
+// older than ttl. On a miss or once expired, it executes fn, caches the result for
+// ttl and returns it. If fn returns an error, nothing is cached.
+// T must be a concrete (non-pointer) type.
+//
+// A value that cannot be deserialized into the expected type is treated as a cache
+// miss and overwritten, so the cache self-heals across upgrades that change what a key
+// stores (e.g. a key that previously held a plain int64 in Redis).
+func RememberFor[T any](key string, ttl time.Duration, fn func() (T, error)) (T, error) {
+	var cached expiringValue[T]
+	exists, err := GetWithValue(key, &cached)
+	if err == nil && exists && time.Now().Before(cached.ExpiresAt) {
+		return cached.Value, nil
+	}
+
+	val, err := fn()
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	if err := Put(key, expiringValue[T]{Value: val, ExpiresAt: time.Now().Add(ttl)}); err != nil {
+		var zero T
+		return zero, err
 	}
 
 	return val, nil

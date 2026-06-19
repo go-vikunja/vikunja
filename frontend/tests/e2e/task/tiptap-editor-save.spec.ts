@@ -5,7 +5,6 @@ import {ProjectFactory} from '../../factories/project'
 test.describe('TipTap Editor Save', () => {
 	test.beforeEach(async ({authenticatedPage: page}) => {
 		await ProjectFactory.create(1)
-		await TaskFactory.truncate()
 	})
 
 	/**

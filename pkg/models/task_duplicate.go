@@ -17,6 +17,9 @@
 package models
 
 import (
+	"bytes"
+	"io"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/web"
 
@@ -29,7 +32,7 @@ type TaskDuplicate struct {
 	TaskID int64 `json:"-" param:"projecttask"`
 
 	// The duplicated task
-	Task *Task `json:"duplicated_task,omitempty"`
+	Task *Task `json:"duplicated_task,omitempty" readOnly:"true" doc:"The newly created duplicate task, populated by the server in the response."`
 
 	web.Permissions `json:"-"`
 	web.CRUDable    `json:"-"`
@@ -131,7 +134,11 @@ func (td *TaskDuplicate) Create(s *xorm.Session, doer web.Auth) (err error) {
 
 		sourceFile := attachment.File.File
 		defer sourceFile.Close()
-		err := attachment.NewAttachment(s, sourceFile, attachment.File.Name, attachment.File.Size, doer)
+		buf, err := io.ReadAll(sourceFile)
+		if err != nil {
+			return err
+		}
+		err = attachment.NewAttachment(s, bytes.NewReader(buf), attachment.File.Name, uint64(len(buf)), doer)
 		if err != nil {
 			return err
 		}

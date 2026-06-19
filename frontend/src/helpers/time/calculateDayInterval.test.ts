@@ -12,13 +12,13 @@ const days = {
     sunday:    0,
 } as Record<string, number>
 
-for (const n in days) {
+for (const n of Object.keys(days)) {
     test(`today on a ${n}`, () => {
         expect(calculateDayInterval('today', days[n])).toBe(0)
     })
 }
 
-for (const n in days) {
+for (const n of Object.keys(days)) {
     test(`tomorrow on a ${n}`, () => {
         expect(calculateDayInterval('tomorrow', days[n])).toBe(1)
     })
@@ -34,7 +34,7 @@ const nextMonday = {
     sunday:    1,
 } as Record<string, number>
 
-for (const n in nextMonday) {
+for (const n of Object.keys(nextMonday)) {
     test(`next monday on a ${n}`, () => {
         expect(calculateDayInterval('nextMonday', days[n])).toBe(nextMonday[n])
     })
@@ -50,7 +50,7 @@ const thisWeekend = {
     sunday:    0,
 } as Record<string, number>
 
-for (const n in thisWeekend) {
+for (const n of Object.keys(thisWeekend)) {
     test(`this weekend on a ${n}`, () => {
         expect(calculateDayInterval('thisWeekend', days[n])).toBe(thisWeekend[n])
     })
@@ -66,7 +66,7 @@ const laterThisWeek = {
     sunday:    0,
 } as Record<string, number>
 
-for (const n in laterThisWeek) {
+for (const n of Object.keys(laterThisWeek)) {
     test(`later this week on a ${n}`, () => {
         expect(calculateDayInterval('laterThisWeek', days[n])).toBe(laterThisWeek[n])
     })
@@ -82,13 +82,13 @@ const laterNextWeek = {
     sunday:    7 + 0,
 } as Record<string, number>
 
-for (const n in laterNextWeek) {
+for (const n of Object.keys(laterNextWeek)) {
     test(`later next week on a ${n} (this week)`, () => {
         expect(calculateDayInterval('laterNextWeek', days[n])).toBe(laterNextWeek[n])
     })
 }
 
-for (const n in days) {
+for (const n of Object.keys(days)) {
     test(`next week on a ${n}`, () => {
         expect(calculateDayInterval('nextWeek', days[n])).toBe(7)
     })

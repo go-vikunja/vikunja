@@ -95,7 +95,7 @@
 								<Icon icon="trash-alt" />
 							</BaseButton>
 							<BaseButton
-								v-if="editEnabled && canPreview(a)"
+								v-if="editEnabled && canPreviewImage(a)"
 								v-tooltip="task.coverImageAttachmentId === a.id
 									? $t('task.attachment.unsetAsCover')
 									: $t('task.attachment.setAsCover')"
@@ -168,6 +168,19 @@
 				alt=""
 			>
 		</Modal>
+
+		<!-- Attachment PDF modal -->
+		<Modal
+			:enabled="attachmentPdfBlobUrl !== null"
+			:wide="true"
+			@close="attachmentPdfBlobUrl = null"
+		>
+			<iframe
+				v-if="attachmentPdfBlobUrl"
+				:src="attachmentPdfBlobUrl"
+				class="pdf-preview-iframe"
+			/>
+		</Modal>
 	</div>
 </template>
 
@@ -180,11 +193,10 @@ import ProgressBar from '@/components/misc/ProgressBar.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
 import AttachmentService from '@/services/attachment'
-import {canPreview} from '@/models/attachment'
+import {canPreviewImage, canPreviewPdf} from '@/models/attachment'
 import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {ITask} from '@/modelTypes/ITask'
 
-import {useAttachmentStore} from '@/stores/attachments'
 import {formatDisplayDate, formatDateLong} from '@/helpers/time/formatDate'
 import {uploadFiles, generateAttachmentUrl} from '@/helpers/attachments'
 import {getHumanSize} from '@/helpers/getHumanSize'
@@ -201,9 +213,9 @@ const props = withDefaults(defineProps<{
 	editEnabled: true,
 })
 
-// FIXME: this should go through the store
 const emit = defineEmits<{
 	'taskChanged': [ITask],
+	'update:attachments': [IAttachment[]],
 }>()
 
 const EDITOR_SELECTOR = '.tiptap, .tiptap__editor, [contenteditable]'
@@ -232,8 +244,7 @@ const {t} = useI18n({useScope: 'global'})
 
 const attachmentService = shallowReactive(new AttachmentService())
 
-const attachmentStore = useAttachmentStore()
-const attachments = computed(() => attachmentStore.attachments)
+const attachments = computed(() => props.task.attachments ?? [])
 
 const loading = computed(() => attachmentService.loading || taskStore.isLoading)
 
@@ -335,7 +346,10 @@ function uploadNewAttachment() {
 
 async function uploadFilesToTask(files: File[] | FileList) {
 	try {
-		await uploadFiles(attachmentService, props.task.id, files)
+		const uploaded = await uploadFiles(attachmentService, props.task.id, files)
+		if (uploaded.length > 0) {
+			emit('update:attachments', [...attachments.value, ...uploaded])
+		}
 	} catch (e) {
 		error(e)
 	}
@@ -354,7 +368,8 @@ async function deleteAttachment() {
 
 	try {
 		const r = await attachmentService.delete(attachmentToDelete.value)
-		attachmentStore.removeById(attachmentToDelete.value.id)
+		const updated = attachments.value.filter(a => a.id !== attachmentToDelete.value!.id)
+		emit('update:attachments', updated)
 		success(r)
 		setAttachmentToDelete(null)
 	} catch (e) {
@@ -363,10 +378,13 @@ async function deleteAttachment() {
 }
 
 const attachmentImageBlobUrl = ref<string | null>(null)
+const attachmentPdfBlobUrl = ref<string | null>(null)
 
 async function viewOrDownload(attachment: IAttachment) {
-	if (canPreview(attachment)) {
+	if (canPreviewImage(attachment)) {
 		attachmentImageBlobUrl.value = await attachmentService.getBlobUrl(attachment)
+	} else if (canPreviewPdf(attachment)) {
+		attachmentPdfBlobUrl.value = await attachmentService.getBlobUrl(attachment)
 	} else {
 		downloadAttachment(attachment)
 	}
@@ -572,6 +590,15 @@ defineExpose({
 
 .attachment-preview {
 	block-size: 100%;
+}
+
+.pdf-preview-iframe {
+	inline-size: 100%;
+	max-inline-size: calc(100% - 4rem);
+	block-size: calc(100vh - 40px);
+	border: none;
+	margin: 0 auto;
+	display: block;
 }
 
 .is-task-cover {

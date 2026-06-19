@@ -27,15 +27,26 @@
 
 		<p>
 			{{ isLocalUser ? $t('user.settings.caldav.tokensHowTo') : $t('user.settings.caldav.mustUseToken') }}
-			<template v-if="!isLocalUser">
-				<br>
-				<i18n-t
-					keypath="user.settings.caldav.usernameIs"
-					scope="global"
-				>
-					<strong>{{ username }}</strong>
-				</i18n-t>
-			</template>
+			<br>
+			<i18n-t
+				keypath="user.settings.caldav.usernameIs"
+				scope="global"
+			>
+				<strong>{{ username }}</strong>
+			</i18n-t>
+		</p>
+
+		<p class="mbs-2">
+			<i18n-t
+				keypath="user.settings.caldav.apiTokenHint"
+				scope="global"
+			>
+				<template #link>
+					<RouterLink :to="{name: 'user.settings.apiTokens'}">
+						{{ $t('user.settings.apiTokens.title') }}
+					</RouterLink>
+				</template>
+			</i18n-t>
 		</p>
 
 		<table

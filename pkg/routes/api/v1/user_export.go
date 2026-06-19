@@ -17,13 +17,13 @@
 package v1
 
 import (
+	"io"
 	"net/http"
-	"os"
-	"time"
+	"strconv"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/user"
 	"github.com/labstack/echo/v5"
@@ -94,7 +94,7 @@ func RequestUserDataExport(c *echo.Context) error {
 		return err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(c.Request().Context(), s)
 
 	return c.JSON(http.StatusOK, models.Message{Message: "Successfully requested data export. We will send you an email when it's ready."})
 }
@@ -124,38 +124,30 @@ func DownloadUserDataExport(c *echo.Context) error {
 		return err
 	}
 
-	// Check if user has an export file
-	exportNotFoundError := echo.NewHTTPError(http.StatusNotFound, "No user data export found.")
-	if u.ExportFileID == 0 {
-		return exportNotFoundError
-	}
-
-	// Download
-	exportFile := &files.File{ID: u.ExportFileID}
-	err = exportFile.LoadFileMetaByID()
+	exportFile, err := models.GetUserDataExportFile(u)
 	if err != nil {
-		if files.IsErrFileDoesNotExist(err) {
-			return exportNotFoundError
+		if models.IsErrUserDataExportDoesNotExist(err) {
+			return echo.NewHTTPError(http.StatusNotFound, "No user data export found.")
 		}
 		return err
 	}
-	err = exportFile.LoadFileByID()
-	if err != nil {
-		if os.IsNotExist(err) {
-			return exportNotFoundError
-		}
+	defer func() { _ = exportFile.File.Close() }()
+
+	// Downloads must never be cached; no-cache overrides the global no-store
+	// directive while still allowing revalidation.
+	c.Response().Header().Set("Cache-Control", "no-cache")
+
+	if config.FilesType.GetString() == "s3" {
+		c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+exportFile.Name+"\"")
+		c.Response().Header().Set("Content-Type", exportFile.Mime)
+		c.Response().Header().Set("Content-Length", strconv.FormatUint(exportFile.Size, 10))
+		c.Response().Header().Set("Last-Modified", exportFile.Created.UTC().Format(http.TimeFormat))
+		_, err = io.Copy(c.Response(), exportFile.File)
 		return err
 	}
 
-	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File)
+	http.ServeContent(c.Response(), c.Request(), exportFile.Name, exportFile.Created, exportFile.File.(io.ReadSeeker))
 	return nil
-}
-
-type UserExportStatus struct {
-	ID      int64     `json:"id"`
-	Size    uint64    `json:"size"`
-	Created time.Time `json:"created"`
-	Expires time.Time `json:"expires"`
 }
 
 // GetUserExportStatus returns metadata about the current user export if it exists
@@ -163,7 +155,7 @@ type UserExportStatus struct {
 // @tags user
 // @Produce json
 // @Security JWTKeyAuth
-// @Success 200 {object} v1.UserExportStatus
+// @Success 200 {object} models.UserExportStatus
 // @Router /user/export [get]
 func GetUserExportStatus(c *echo.Context) error {
 	s := db.NewSession()
@@ -174,20 +166,12 @@ func GetUserExportStatus(c *echo.Context) error {
 		return err
 	}
 
-	if u.ExportFileID == 0 {
-		return c.JSON(http.StatusOK, struct{}{})
-	}
-
-	exportFile := &files.File{ID: u.ExportFileID}
-	if err := exportFile.LoadFileMetaByID(); err != nil {
+	status, err := models.GetUserDataExportStatus(u)
+	if err != nil {
 		return err
 	}
-
-	status := UserExportStatus{
-		ID:      exportFile.ID,
-		Size:    exportFile.Size,
-		Created: exportFile.Created,
-		Expires: exportFile.Created.Add(7 * 24 * time.Hour),
+	if status == nil {
+		return c.JSON(http.StatusOK, struct{}{})
 	}
 
 	return c.JSON(http.StatusOK, status)

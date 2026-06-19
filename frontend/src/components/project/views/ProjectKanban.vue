@@ -74,6 +74,7 @@
 										v-if="canWrite && !collapsedBuckets[bucket.id]"
 										class="is-right options"
 										trigger-icon="ellipsis-v"
+										:trigger-label="$t('project.kanban.bucketOptions')"
 										@close="() => showSetLimitInput = false"
 									>
 										<div
@@ -108,7 +109,7 @@
 											@click.stop="showSetLimitInput = true"
 										>
 											{{
-												$t('project.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('project.kanban.noLimit')})
+												$t('project.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('misc.notSet')})
 											}}
 										</DropdownItem>
 										<DropdownItem
@@ -628,10 +629,10 @@ async function updateTaskPosition(e) {
 				projectId: projectIdWithFallback.value,
 			}))
 			Object.assign(newTask, updatedTaskBucket.task)
-			newTask.bucketId = updatedTaskBucket.bucketId
 			if (updatedTaskBucket.bucketId !== newTask.bucketId) {
 				kanbanStore.moveTaskToBucket(newTask, updatedTaskBucket.bucketId)
 			}
+			newTask.bucketId = updatedTaskBucket.bucketId
 			if (updatedTaskBucket.bucket) {
 				kanbanStore.setBucketById(updatedTaskBucket.bucket, false)
 			}
@@ -1097,6 +1098,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	.bucket-footer {
 		position: sticky;
 		inset-block-end: 0;
+		z-index: 2;
 		block-size: min-content;
 		padding: .5rem;
 		background-color: var(--grey-100);

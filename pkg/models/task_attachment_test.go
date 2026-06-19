@@ -18,11 +18,12 @@ package models
 
 import (
 	"bytes"
+	"image"
+	"image/png"
+	"io"
 	"os"
-	"path/filepath"
 	"testing"
 
-	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/user"
@@ -51,7 +52,12 @@ func TestTaskAttachment_ReadOne(t *testing.T) {
 		// Load the actual attachment file and check its content
 		err = ta.File.LoadFileByID()
 		require.NoError(t, err)
-		assert.Equal(t, filepath.Join(config.ServiceRootpath.GetString(), "files", "1"), ta.File.File.Name())
+
+		// Validate the file exists at the expected storage path
+		stat, err := files.FileStat(ta.File)
+		require.NoError(t, err)
+		assert.NotNil(t, stat)
+
 		content := make([]byte, 9)
 		read, err := ta.File.File.Read(content)
 		require.NoError(t, err)
@@ -98,7 +104,8 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	}
 	testuser := &user.User{ID: 1}
 
-	err := ta.NewAttachment(s, bytes.NewReader([]byte("testingstuff")), "testfile", 100, testuser)
+	content := []byte("testingstuff")
+	err := ta.NewAttachment(s, bytes.NewReader(content), "testfile", uint64(len(content)), testuser)
 	require.NoError(t, err)
 	assert.NotEqual(t, 0, ta.FileID)
 	_, err = files.FileStat(ta.File)
@@ -116,7 +123,7 @@ func TestTaskAttachment_NewAttachment(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, testuser.ID, ta.File.CreatedByID)
 	assert.Equal(t, "testfile", ta.File.Name)
-	assert.Equal(t, uint64(100), ta.File.Size)
+	assert.Equal(t, uint64(len(content)), ta.File.Size)
 	assert.NotEmpty(t, ta.File.Mime, "mime type should be detected and stored")
 
 	// Extra test for max size test
@@ -179,6 +186,25 @@ func TestTaskAttachment_Delete(t *testing.T) {
 		err := ta.Delete(s, u)
 		require.NoError(t, err)
 	})
+}
+
+func TestAttachmentPreviewRejectsLargeImages(t *testing.T) {
+	// Create a 10000x10000 pixel image (100M pixels, well above the 50M limit)
+	// As a PNG this is small on disk but huge when decoded into memory
+	img := image.NewNRGBA(image.Rect(0, 0, 10000, 10000))
+	var buf bytes.Buffer
+	err := png.Encode(&buf, img)
+	require.NoError(t, err)
+
+	attachment := &TaskAttachment{
+		ID: 999999,
+		File: &files.File{
+			File: io.NopCloser(bytes.NewReader(buf.Bytes())),
+		},
+	}
+
+	result := attachment.GetPreview(PreviewMedium)
+	assert.Nil(t, result, "Preview should be nil for images exceeding max pixel count")
 }
 
 func TestTaskAttachment_Permissions(t *testing.T) {

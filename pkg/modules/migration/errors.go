@@ -18,9 +18,32 @@ package migration
 
 import (
 	"net/http"
+	"time"
 
 	"code.vikunja.io/api/pkg/web"
 )
+
+// ErrMigrationAlreadyRunning is returned when a migration is started for a user
+// who already has one in progress (started but not yet finished).
+type ErrMigrationAlreadyRunning struct {
+	StartedAt time.Time
+}
+
+func (err *ErrMigrationAlreadyRunning) Error() string {
+	return "Migration already running"
+}
+
+// ErrCodeMigrationAlreadyRunning holds the unique world-error code of this error
+const ErrCodeMigrationAlreadyRunning = 14005
+
+// HTTPError holds the http error description
+func (err *ErrMigrationAlreadyRunning) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeMigrationAlreadyRunning,
+		Message:  "Migration already running",
+	}
+}
 
 // ErrNotAZipFile represents a "ErrNotAZipFile" kind of error.
 type ErrNotAZipFile struct{}
@@ -57,6 +80,28 @@ func (err *ErrFileIsEmpty) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeFileIsEmpty,
 		Message:  "The provided file does not contain any data.",
+	}
+}
+
+// ErrCSVConfigRequired represents an error when the CSV migration endpoint
+// is called without the required configuration. The CSV migrator requires
+// a mapping configuration and must be used via /migration/csv/migrate with
+// a config form field.
+type ErrCSVConfigRequired struct{}
+
+func (err *ErrCSVConfigRequired) Error() string {
+	return "CSV import requires a configuration with column mappings. Use the /migration/csv/detect endpoint to get suggested mappings, then call /migration/csv/migrate with a config form field."
+}
+
+// ErrCodeCSVConfigRequired holds the unique world-error code of this error
+const ErrCodeCSVConfigRequired = 14004
+
+// HTTPError holds the http error description
+func (err *ErrCSVConfigRequired) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusBadRequest,
+		Code:     ErrCodeCSVConfigRequired,
+		Message:  "CSV import requires a configuration with column mappings. Use the /migration/csv/detect endpoint to get suggested mappings, then call /migration/csv/migrate with a config form field.",
 	}
 }
 

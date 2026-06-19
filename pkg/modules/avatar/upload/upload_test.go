@@ -81,31 +81,6 @@ func TestGetAvatar(t *testing.T) {
 	// Initialize storage for testing
 	keyvalue.InitStorage()
 
-	t.Run("handles invalid cached type", func(t *testing.T) {
-		provider := &Provider{}
-
-		// Create a test user
-		testUser := &user.User{
-			ID:           999999, // Use a high ID to avoid conflicts
-			AvatarFileID: 0,      // No avatar file ID to avoid actual file operations
-		}
-
-		// Simulate corrupted cached data by storing a string instead of CachedAvatar
-		cacheKey := CacheKeyPrefix + "999999_64"
-		err := keyvalue.Put(cacheKey, "corrupted_string_data")
-		require.NoError(t, err)
-
-		// This should not panic but should handle the type assertion gracefully
-		// and return an error (since there's no actual avatar file)
-		avatar, mimeType, err := provider.GetAvatar(testUser, 64)
-
-		// The function should handle the type assertion failure gracefully
-		// and attempt to regenerate the avatar (which will fail due to no file)
-		require.Error(t, err)
-		assert.Nil(t, avatar)
-		assert.Empty(t, mimeType)
-	})
-
 	t.Run("handles valid cached type", func(t *testing.T) {
 		provider := &Provider{}
 

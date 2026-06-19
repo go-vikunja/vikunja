@@ -264,8 +264,13 @@ func getOrCreateLdapUser(s *xorm.Session, entry *ldap.Entry) (u *user.User, err 
 		Issuer:  user.IssuerLDAP,
 		Subject: username,
 	})
-	if err != nil && !user.IsErrUserDoesNotExist(err) {
+	if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
 		return nil, err
+	}
+
+	// If the user exists but is disabled/locked, return early without updating profile
+	if user.IsErrUserStatusError(err) {
+		return u, nil
 	}
 
 	// If no user exists, create one with the preferred username if it is not already taken

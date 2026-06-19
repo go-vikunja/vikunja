@@ -34,6 +34,20 @@ type ProjectUserOpts struct {
 	MatchFuzzily                bool
 }
 
+// SearchUsers performs the global user search shared by both API versions:
+// it lists users matching the search string and obfuscates their email
+// addresses before returning.
+func SearchUsers(s *xorm.Session, search string, currentUser *User) (users []*User, err error) {
+	users, err = ListUsers(s, search, currentUser, nil)
+	if err != nil {
+		return nil, err
+	}
+	for i := range users {
+		users[i].Email = ""
+	}
+	return users, nil
+}
+
 // ListUsers returns a list with all users, filtered by an optional search string
 func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectUserOpts) (users []*User, err error) {
 	if opts == nil {
@@ -147,8 +161,45 @@ func ListUsers(s *xorm.Session, search string, currentUser *User, opts *ProjectU
 		}
 	}
 
+	notSomeoneElsesBot := builder.Or(
+		builder.IsNull{"bot_owner_id"},
+		builder.Eq{"bot_owner_id": 0},
+		builder.Eq{"bot_owner_id": currentUser.ID},
+	)
+
+	// Own bots: filtered by the search string when one is provided (matched
+	// against username and name), but bypass the discoverable_by_name flag
+	// regular users have. Without a search, ListUsers only returns rows when
+	// ReturnAllIfNoSearchProvided is set, so we surface own bots there too.
+	var ownBotCond builder.Cond = builder.Eq{"bot_owner_id": currentUser.ID}
+	if search != "" {
+		botSearchConds := []builder.Cond{}
+		for _, queryPart := range queryParts {
+			if opts.MatchFuzzily {
+				botSearchConds = append(botSearchConds,
+					db.ILIKE("name", queryPart),
+					db.ILIKE("username", queryPart),
+				)
+				continue
+			}
+
+			botSearchConds = append(botSearchConds,
+				db.ILIKE("username", queryPart),
+				db.ILIKE("name", queryPart),
+			)
+		}
+		ownBotCond = builder.And(
+			builder.Eq{"bot_owner_id": currentUser.ID},
+			builder.Or(botSearchConds...),
+		)
+	}
+
 	err = s.
-		Where(cond).
+		Where(builder.Or(
+			builder.And(cond, notSomeoneElsesBot),
+			ownBotCond,
+		)).
+		OrderBy("id").
 		Find(&users)
 
 outer:

@@ -4,11 +4,8 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import LabelService from '@/services/label'
 import {success} from '@/message'
 import {i18n} from '@/i18n'
-import {createNewIndexer} from '@/indexes'
 import {setModuleLoading} from '@/stores/helper'
 import type {ILabel} from '@/modelTypes/ILabel'
-
-const {add, remove, update, search} = createNewIndexer('labels', ['title', 'description'])
 
 async function getAllLabels(page = 1): Promise<ILabel[]> {
 	const labelService = new LabelService()
@@ -48,12 +45,12 @@ export const useLabelStore = defineStore('label', () => {
 	// **
 	const filterLabelsByQuery = computed(() => {
 		return (labelsToHide: ILabel[], query: string) => {
+			if (query === '') return []
 			const labelIdsToHide: number[] = labelsToHide.map(({id}) => id)
-
-			return search(query)
-				?.filter(value => !labelIdsToHide.includes(value))
-				.map(id => labels.value[id])
-				|| []
+			const q = query.toLowerCase()
+			return labelsArray.value
+				.filter(l => !labelIdsToHide.includes(l.id))
+				.filter(l => l.title.toLowerCase().includes(q) || (l.description ?? '').toLowerCase().includes(q))
 		}
 	})
 
@@ -75,17 +72,14 @@ export const useLabelStore = defineStore('label', () => {
 	function setLabels(newLabels: ILabel[]) {
 		newLabels.forEach(l => {
 			labels.value[l.id] = l
-			add(l)
 		})
 	}
 
 	function setLabel(label: ILabel) {
 		labels.value[label.id] = {...label}
-		update(label)
 	}
 
 	function removeLabelById(label: ILabel) {
-		remove(label)
 		delete labels.value[label.id]
 	}
 

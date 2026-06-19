@@ -31,6 +31,7 @@ import (
 	"image"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -43,6 +44,7 @@ import (
 	"code.vikunja.io/api/pkg/modules/background/unsplash"
 	"code.vikunja.io/api/pkg/modules/background/upload"
 	"code.vikunja.io/api/pkg/web"
+	webfiles "code.vikunja.io/api/pkg/web/files"
 
 	"github.com/bbrks/go-blurhash"
 	"github.com/gabriel-vasile/mimetype"
@@ -204,44 +206,17 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 	}
 	defer srcf.Close()
 
-	// Validate we're dealing with an image
-	mime, err := mimetype.DetectReader(srcf)
-	if err != nil {
+	if err := ValidateAndSaveBackgroundUpload(s, auth, project, srcf, file.Filename, uint64(file.Size)); err != nil {
 		_ = s.Rollback()
-		return err
-	}
-	if !strings.HasPrefix(mime.String(), "image") {
-		_ = s.Rollback()
-		return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
-	}
-	supported := false
-	for _, m := range allowedImageMimes {
-		if mime.Is(m) {
-			supported = true
-			break
+		if IsErrFileIsNoImage(err) {
+			return c.JSON(http.StatusBadRequest, models.Message{Message: "Uploaded file is no image."})
 		}
-	}
-	if !supported {
-		_ = s.Rollback()
-		return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
-	}
-
-	err = SaveBackgroundFile(s, auth, project, srcf, file.Filename, uint64(file.Size))
-	if err != nil {
-		_ = s.Rollback()
 		if files.IsErrFileIsTooLarge(err) {
 			return echo.ErrBadRequest
 		}
 		if IsErrFileUnsupportedImageFormat(err) {
 			return c.JSON(http.StatusBadRequest, models.Message{Message: "Unsupported image format. Allowed: " + strings.Join(allowedImageMimes, ",")})
 		}
-
-		return err
-	}
-
-	err = project.ReadOne(s, auth)
-	if err != nil {
-		_ = s.Rollback()
 		return err
 	}
 
@@ -251,6 +226,41 @@ func (bp *BackgroundProvider) UploadBackground(c *echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, project)
+}
+
+// ValidateAndSaveBackgroundUpload validates that srcf is a decodable image of an
+// allowed type, stores it as the project's background and reloads the project so
+// callers get the updated background metadata. It is the shared body of the v1 and
+// v2 upload handlers; the multipart parsing and error-to-HTTP mapping stay in each
+// handler. project must already be loaded and the caller must have verified write
+// permission. On a non-image it returns ErrFileIsNoImage; on a recognized but
+// undecodable format ErrFileUnsupportedImageFormat.
+func ValidateAndSaveBackgroundUpload(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) error {
+	mime, err := mimetype.DetectReader(srcf)
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(mime.String(), "image") {
+		return ErrFileIsNoImage{Mime: mime.String()}
+	}
+	supported := false
+	for _, m := range allowedImageMimes {
+		if mime.Is(m) {
+			supported = true
+			break
+		}
+	}
+	if !supported {
+		return ErrFileUnsupportedImageFormat{Mime: mime.String()}
+	}
+
+	// DetectReader consumed the head of the reader; SaveBackgroundFile seeks back to
+	// the start itself, so no rewind is needed here.
+	if err := SaveBackgroundFile(s, auth, project, srcf, filename, filesize); err != nil {
+		return err
+	}
+
+	return project.ReadOne(s, auth)
 }
 
 func SaveBackgroundFile(s *xorm.Session, auth web.Auth, project *models.Project, srcf io.ReadSeeker, filename string, filesize uint64) (err error) {
@@ -328,6 +338,32 @@ func checkProjectBackgroundRights(s *xorm.Session, c *echo.Context) (project *mo
 	return
 }
 
+func checkProjectBackgroundWritePermissions(s *xorm.Session, c *echo.Context) (project *models.Project, auth web.Auth, err error) {
+	auth, err = auth2.GetAuthFromClaims(c)
+	if err != nil {
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid auth token: "+err.Error()).Wrap(err)
+	}
+
+	projectID, err := strconv.ParseInt(c.Param("project"), 10, 64)
+	if err != nil {
+		return nil, auth, echo.NewHTTPError(http.StatusBadRequest, "Invalid project ID: "+err.Error()).Wrap(err)
+	}
+
+	project = &models.Project{ID: projectID}
+	can, err := project.CanUpdate(s, auth)
+	if err != nil {
+		_ = s.Rollback()
+		return nil, auth, err
+	}
+	if !can {
+		_ = s.Rollback()
+		log.Infof("Tried to modify project background of project %d while not having the permissions for it (User: %v)", projectID, auth)
+		return nil, auth, echo.NewHTTPError(http.StatusForbidden, "Forbidden")
+	}
+
+	return
+}
+
 // GetProjectBackground serves a previously set background from a project
 // It has no knowledge of the provider that was responsible for setting the background.
 // @Summary Get the project background
@@ -351,54 +387,47 @@ func GetProjectBackground(c *echo.Context) error {
 		return err
 	}
 
-	if project.BackgroundFileID == 0 {
-		_ = s.Rollback()
-		return echo.NewHTTPError(http.StatusNotFound, "Project background not found")
-	}
-
-	// Get the file
-	bgFile := &files.File{
-		ID: project.BackgroundFileID,
-	}
-	if err := bgFile.LoadFileByID(); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	stat, err := bgFile.File.Stat()
+	bgFile, stat, err := LoadProjectBackgroundForDownload(s, project)
 	if err != nil {
 		_ = s.Rollback()
+		if models.IsErrProjectHasNoBackground(err) {
+			return echo.NewHTTPError(http.StatusNotFound, "Project background not found")
+		}
 		return err
 	}
-
-	// Unsplash requires pingbacks as per their api usage guidelines.
-	// To do this in a privacy-preserving manner, we do the ping from inside of Vikunja to not expose any user details.
-	// FIXME: This should use an event once we have events
-	unsplash.Pingback(s, bgFile)
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err
 	}
 
-	// Override the global no-store directive so browsers can cache background images.
-	// no-cache allows caching but requires revalidation via If-Modified-Since.
-	c.Response().Header().Set("Cache-Control", "no-cache")
+	webfiles.WriteProjectBackground(c.Response(), c.Request(), bgFile, stat)
+	return nil
+}
 
-	// Set Last-Modified header if we have the file stat, so clients can decide whether to use cached files
-	if stat != nil {
-		modTime := stat.ModTime().UTC()
-		c.Response().Header().Set(echo.HeaderLastModified, modTime.Format(http.TimeFormat))
-
-		// Check If-Modified-Since and return 304 if the file hasn't changed
-		if ifModSince := c.Request().Header.Get("If-Modified-Since"); ifModSince != "" {
-			if t, err := http.ParseTime(ifModSince); err == nil && !modTime.After(t) {
-				return c.NoContent(http.StatusNotModified)
-			}
-		}
+// LoadProjectBackgroundForDownload opens the project's background file (bytes ready to
+// read) and stats it for the modtime the download uses for caching. It also fires the
+// Unsplash pingback side effect, required by Unsplash's API guidelines and done
+// server-side so no user details are exposed. Returns ErrProjectHasNoBackground when the
+// project has none; the caller owns committing the session and closing bgFile.File.
+func LoadProjectBackgroundForDownload(s *xorm.Session, project *models.Project) (bgFile *files.File, stat os.FileInfo, err error) {
+	if project.BackgroundFileID == 0 {
+		return nil, nil, &models.ErrProjectHasNoBackground{ProjectID: project.ID}
 	}
 
-	// Serve the file
-	return c.Stream(http.StatusOK, "image/jpg", bgFile.File)
+	bgFile = &files.File{ID: project.BackgroundFileID}
+	if err := bgFile.LoadFileByID(); err != nil {
+		return nil, nil, err
+	}
+	stat, err = files.FileStat(bgFile)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// FIXME: This should use an event once we have events
+	unsplash.Pingback(s, bgFile)
+
+	return bgFile, stat, nil
 }
 
 // RemoveProjectBackground removes a project background, no matter the background provider
@@ -417,7 +446,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	project, auth, err := checkProjectBackgroundRights(s, c)
+	project, _, err := checkProjectBackgroundWritePermissions(s, c)
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -429,10 +458,7 @@ func RemoveProjectBackground(c *echo.Context) error {
 		return err
 	}
 
-	project.BackgroundFileID = 0
-	project.BackgroundInformation = nil
-	project.BackgroundBlurHash = ""
-	err = models.UpdateProject(s, project, auth, true)
+	err = models.ClearProjectBackground(s, project.ID)
 	if err != nil {
 		_ = s.Rollback()
 		return err

@@ -28,8 +28,9 @@
 				@update:task="Object.assign(task, $event)"
 				@close="$emit('close')"
 			/>
-			<h6
+			<nav
 				v-if="project?.id"
+				aria-label="Breadcrumb"
 				class="subtitle"
 			>
 				<template
@@ -55,7 +56,12 @@
 						class="has-text-grey-light"
 					> &gt; </span>
 				</template>
-			</h6>
+				<BucketSelect
+					:task="task"
+					:can-write="canWrite"
+					@update:task="Object.assign(task, $event)"
+				/>
+			</nav>
 
 			<ChecklistSummary :task="task" />
 
@@ -245,7 +251,8 @@
 								</div>
 								<Reminders
 									:ref="e => setFieldRef('reminders', e)"
-									v-model="task"
+									v-model="task.reminders"
+									:default-relative-to="remindersDefaultRelativeTo"
 									:disabled="!canWrite"
 									@update:modelValue="saveTask()"
 								/>
@@ -337,11 +344,11 @@
 					</div>
 					
 					<!-- Reactions -->
-					<Reactions 
+					<Reactions
 						v-model="task.reactions" 
 						entity-kind="tasks"
 						:entity-id="task.id"
-						class="details"
+						class="details d-print-none"
 						:disabled="!canWrite"
 					/>
 
@@ -355,7 +362,17 @@
 							:edit-enabled="canWrite"
 							:task="task"
 							@taskChanged="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
+							@update:attachments="onAttachmentsUpdated"
 						/>
+					</div>
+
+					<!-- Time Tracking -->
+					<div
+						v-if="timeTrackingEnabled && activeFields.timeTracking"
+						:ref="e => setFieldRef('timeTracking', e)"
+						class="content time-tracking"
+					>
+						<TaskTimeTracking :task-id="task.id" />
 					</div>
 
 					<!-- Related Tasks -->
@@ -530,6 +547,16 @@
 						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
 
 						<XButton
+							v-if="timeTrackingEnabled"
+							v-cy="'taskTrackTimeAction'"
+							variant="secondary"
+							:icon="['far', 'clock']"
+							@click="setFieldActive('timeTracking')"
+						>
+							{{ $t('task.detail.actions.timeTracking') }}
+						</XButton>
+
+						<XButton
 							v-shortcut="'KeyD'"
 							variant="secondary"
 							icon="calendar"
@@ -567,7 +594,7 @@
 							{{ $t('task.detail.actions.repeatAfter') }}
 						</XButton>
 						<XButton
-							v-shortcut="'Shift+Delete'"
+							v-shortcut="deleteShortcut"
 							icon="trash-alt"
 							:shadow="false"
 							class="is-danger is-outlined has-no-border"
@@ -622,7 +649,6 @@
 <script lang="ts" setup>
 import {ref, reactive, shallowReactive, computed, watch, nextTick, onMounted} from 'vue'
 import {useRouter, useRoute, type RouteLocation, onBeforeRouteLeave} from 'vue-router'
-import {storeToRefs} from 'pinia'
 import {useI18n} from 'vue-i18n'
 import {unrefElement, useDebounceFn, useElementSize, useIntersectionObserver, useMutationObserver} from '@vueuse/core'
 import {klona} from 'klona/lite'
@@ -631,15 +657,18 @@ import TaskService from '@/services/task'
 import TaskModel from '@/models/task'
 
 import type {ITask} from '@/modelTypes/ITask'
+import type {IAttachment} from '@/modelTypes/IAttachment'
 import type {IProject} from '@/modelTypes/IProject'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {PERMISSIONS} from '@/constants/permissions'
+import {PRO_FEATURE} from '@/constants/proFeatures'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
 // partials
 import Attachments from '@/components/tasks/partials/Attachments.vue'
+import TaskTimeTracking from '@/components/time-tracking/TaskTimeTracking.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import Comments from '@/components/tasks/partials/Comments.vue'
@@ -658,6 +687,7 @@ import RepeatAfter from '@/components/tasks/partials/RepeatAfter.vue'
 import TaskSubscription from '@/components/misc/Subscription.vue'
 import CustomTransition from '@/components/misc/CustomTransition.vue'
 import AssigneeList from '@/components/tasks/partials/AssigneeList.vue'
+import BucketSelect from '@/components/tasks/partials/BucketSelect.vue'
 import Reactions from '@/components/input/Reactions.vue'
 
 import {uploadFile} from '@/helpers/attachments'
@@ -665,14 +695,15 @@ import {getProjectTitle} from '@/helpers/getProjectTitle'
 import {isAppleDevice} from '@/helpers/isAppleDevice'
 import {scrollIntoView} from '@/helpers/scrollIntoView'
 import {TASK_REPEAT_MODES} from '@/types/IRepeatMode'
+import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 import {playPopSound} from '@/helpers/playPop'
 
-import {useAttachmentStore} from '@/stores/attachments'
 import {useTaskStore} from '@/stores/tasks'
 import {useKanbanStore} from '@/stores/kanban'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
+import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
@@ -694,14 +725,27 @@ const route = useRoute()
 const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
-const attachmentStore = useAttachmentStore()
-const {hasAttachments} = storeToRefs(attachmentStore)
 const taskStore = useTaskStore()
+const configStore = useConfigStore()
+const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const task = ref<ITask>(new TaskModel())
+const hasAttachments = computed(() => (task.value.attachments?.length ?? 0) > 0)
+const remindersDefaultRelativeTo = computed(() => {
+	if (task.value.dueDate) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE
+	}
+	if (task.value.startDate) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.STARTDATE
+	}
+	if (task.value.endDate) {
+		return REMINDER_PERIOD_RELATIVE_TO_TYPES.ENDDATE
+	}
+	return null
+})
 const taskNotFound = ref(false)
 const taskTitle = computed(() => task.value.title)
 useTitle(taskTitle)
@@ -727,6 +771,9 @@ const lastProjectOrTaskProject = computed(() => lastProject.value ?? project.val
 // Use Shift+R on macOS (Alt+R produces special characters depending on keyboard layout)
 // Use Alt+r on other platforms
 const reminderShortcut = computed(() => isAppleDevice() ? 'Shift+KeyR' : 'Alt+KeyR')
+
+// Match native OS conventions for "delete the selected item"
+const deleteShortcut = isAppleDevice() ? 'Backspace' : 'Delete'
 
 onBeforeRouteLeave(async () => {
 	if (taskNotFound.value) {
@@ -789,8 +836,20 @@ const color = computed(() => {
 
 const isModal = computed(() => Boolean(props.backdropView))
 
-function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
-	return uploadFile(props.taskId, file, onSuccess)
+async function attachmentUpload(file: File, onSuccess?: (url: string) => void) {
+	const uploaded = await uploadFile(props.taskId, file, onSuccess)
+	if (uploaded.length > 0) {
+		onAttachmentsUpdated([...task.value.attachments, ...uploaded])
+	}
+	return uploaded
+}
+
+function onAttachmentsUpdated(attachments: IAttachment[]) {
+	task.value.attachments = attachments
+	kanbanStore.setTaskInBucket({
+		...task.value,
+		attachments,
+	})
 }
 
 const heading = ref<HTMLElement | null>(null)
@@ -888,9 +947,13 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments', 'is_unread']})
+			const expand = ['reactions', 'comments', 'is_unread', 'buckets']
+			if (timeTrackingEnabled.value) {
+				// Only request the (server-computed) count when the feature is on.
+				expand.push('time_entries_count')
+			}
+			const loaded = await taskService.get({id}, {expand})
 			Object.assign(task.value, loaded)
-			attachmentStore.set(task.value.attachments)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
 
@@ -933,6 +996,7 @@ type FieldType =
 	| 'reminders'
 	| 'repeatAfter'
 	| 'startDate'
+	| 'timeTracking'
 
 const activeFields: { [type in FieldType]: boolean } = reactive({
 	assignees: false,
@@ -948,6 +1012,7 @@ const activeFields: { [type in FieldType]: boolean } = reactive({
 	reminders: false,
 	repeatAfter: false,
 	startDate: false,
+	timeTracking: false,
 })
 
 function setActiveFields() {
@@ -958,6 +1023,7 @@ function setActiveFields() {
 	// Set all active fields based on values in the model
 	activeFields.assignees = task.value.assignees.length > 0
 	activeFields.attachments = task.value.attachments.length > 0
+	activeFields.timeTracking = (task.value.timeEntriesCount ?? 0) > 0
 	activeFields.dueDate = task.value.dueDate !== null
 	activeFields.endDate = task.value.endDate !== null
 	activeFields.labels = task.value.labels.length > 0
@@ -1141,9 +1207,12 @@ function setRelatedTasksActive() {
 
 	// If the related tasks are already available, show the form again
 	const el = activeFieldElements['relatedTasks']
-	for (const child in el?.children) {
-		if (el?.children[child]?.id === 'showRelatedTasksFormButton') {
-			el?.children[child]?.click()
+	if (!el) {
+		return
+	}
+	for (const child of Array.from(el.children)) {
+		if ((child as HTMLElement).id === 'showRelatedTasksFormButton') {
+			(child as HTMLElement).click()
 			break
 		}
 	}

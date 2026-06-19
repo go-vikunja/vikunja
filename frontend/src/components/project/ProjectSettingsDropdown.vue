@@ -31,6 +31,7 @@
 			>
 				{{ $t('menu.views') }}
 			</DropdownItem>
+			<slot name="before-delete" />
 			<DropdownItem
 				:to="{ name: 'filter.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
@@ -56,14 +57,13 @@
 				{{ $t('menu.edit') }}
 			</DropdownItem>
 			<DropdownItem
-				v-if="!simple"
 				:to="{ name: 'project.settings.views', params: { projectId: project.id } }"
 				icon="eye"
 			>
 				{{ $t('menu.views') }}
 			</DropdownItem>
 			<DropdownItem
-				v-if="backgroundsEnabled && !simple"
+				v-if="backgroundsEnabled"
 				:to="{ name: 'project.settings.background', params: { projectId: project.id } }"
 				icon="image"
 			>
@@ -82,7 +82,6 @@
 				{{ $t('menu.duplicate') }}
 			</DropdownItem>
 			<DropdownItem
-				v-if="!simple"
 				v-tooltip="isDefaultProject ? $t('menu.cantArchiveIsDefault') : ''"
 				:to="{ name: 'project.settings.archive', params: { projectId: project.id } }"
 				icon="archive"
@@ -111,8 +110,9 @@
 			>
 				{{ $t('menu.createProject') }}
 			</DropdownItem>
+			<slot name="before-delete" />
 			<DropdownItem
-				v-if="project.maxPermission === PERMISSIONS.ADMIN"
+				v-if="forceAllActions || project.maxPermission === PERMISSIONS.ADMIN"
 				v-tooltip="isDefaultProject ? $t('menu.cantDeleteIsDefault') : ''"
 				:to="{ name: 'project.settings.delete', params: { projectId: project.id } }"
 				icon="trash-alt"
@@ -143,9 +143,9 @@ import {PERMISSIONS} from '@/constants/permissions'
 
 const props = withDefaults(defineProps<{
 	project: IProject
-	simple?: boolean
+	forceAllActions?: boolean
 }>(), {
-	simple: false,
+	forceAllActions: false,
 })
 
 const projectStore = useProjectStore()

@@ -221,7 +221,7 @@
   done: false
   created_by_id: 1
   project_id: 1
-  index: 12
+  index: 18
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04
   start_date: 2018-11-30 22:25:24
@@ -427,5 +427,23 @@
   created_by_id: 1
   project_id: 1
   index: 33
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+# Task in parent project 41 (hierarchy permission test)
+- id: 49
+  title: 'task #49 in hierarchy parent'
+  done: false
+  created_by_id: 6
+  project_id: 41
+  index: 1
+  created: 2018-12-01 01:12:04
+  updated: 2018-12-01 01:12:04
+# Task in child project 42 (hierarchy permission test)
+- id: 50
+  title: 'task #50 in hierarchy child'
+  done: false
+  created_by_id: 6
+  project_id: 42
+  index: 1
   created: 2018-12-01 01:12:04
   updated: 2018-12-01 01:12:04

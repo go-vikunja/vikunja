@@ -7,6 +7,7 @@
 		}"
 		:disabled="disabled"
 		:model-value="modelValue"
+		:aria-label="ariaLabel"
 		@update:modelValue="value => emit('update:modelValue', value)"
 	>
 		<CheckboxIcon class="fancy-checkbox__icon" />
@@ -26,10 +27,12 @@ import BaseCheckbox from '@/components/base/BaseCheckbox.vue'
 withDefaults(defineProps<{
 	modelValue: boolean,
 	disabled?: boolean,
-	isBlock?: boolean
+	isBlock?: boolean,
+	ariaLabel?: string,
 }>(), {
 	disabled: false,
 	isBlock: false,
+	ariaLabel: undefined,
 })
 
 const emit = defineEmits<{

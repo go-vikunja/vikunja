@@ -36,9 +36,9 @@ type LabelTask struct {
 	ID     int64 `xorm:"bigint autoincr not null unique pk" json:"-"`
 	TaskID int64 `xorm:"bigint INDEX not null" json:"-" param:"projecttask"`
 	// The label id you want to associate with a task.
-	LabelID int64 `xorm:"bigint INDEX not null" json:"label_id" param:"label"`
+	LabelID int64 `xorm:"bigint INDEX not null" json:"label_id" param:"label" doc:"The id of the label to associate with the task."`
 	// A timestamp when this task was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this label was added to the task. You cannot change this value."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -212,7 +212,12 @@ func GetLabelsByTaskIDs(s *xorm.Session, opts *LabelByTaskIDsOptions) (ls []*Lab
 		), cond)
 	}
 	if opts.GetUnusedLabels && !isLinkShareAuth {
-		cond = builder.Or(cond, builder.Eq{"labels.created_by_id": opts.User.GetID()})
+		cond = builder.Or(cond,
+			builder.Eq{"labels.created_by_id": opts.User.GetID()},
+			builder.In("labels.created_by_id",
+				builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": opts.User.GetID()}),
+			),
+		)
 	}
 
 	ids := []int64{}
@@ -410,7 +415,7 @@ func (t *Task) UpdateTaskLabels(s *xorm.Session, creator web.Auth, labels []*Lab
 // LabelTaskBulk is a helper struct to update a bunch of labels at once
 type LabelTaskBulk struct {
 	// All labels you want to update at once.
-	Labels []*Label `json:"labels"`
+	Labels []*Label `json:"labels" doc:"The complete set of labels the task should have after the call. Any label currently on the task that is not in this list is removed; any label in the list that is not yet on the task is added. You must be able to see every label you attach."`
 	TaskID int64    `json:"-" param:"projecttask"`
 
 	web.CRUDable    `json:"-"`

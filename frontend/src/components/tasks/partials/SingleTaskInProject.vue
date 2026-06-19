@@ -12,12 +12,18 @@
 			@click="openTaskDetail"
 			@keyup.enter="openTaskDetail"
 		>
-			<FancyCheckbox
-				v-model="task.done"
-				:disabled="(isArchived || disabled) && !canMarkAsDone"
-				@update:modelValue="markAsDone"
-				@click.stop
-			/>
+			<span
+				v-tooltip="!canMarkAsDone ? $t('task.readOnlyCheckbox') : ''"
+				class="is-inline-flex is-align-items-center"
+			>
+				<FancyCheckbox
+					v-model="task.done"
+					:disabled="isArchived || disabled || !canMarkAsDone"
+					:aria-label="$t('task.detail.markAsDone', {task: task.title})"
+					@update:modelValue="markAsDone"
+					@click.stop
+				/>
+			</span>
 
 			<ColorBubble
 				v-if="!showProjectSeparately && projectColor !== '' && currentProject?.id !== task.projectId"
@@ -385,7 +391,7 @@ function hasTextSelected() {
 
 function openTaskDetail(event: MouseEvent | KeyboardEvent) {
 	if (event.target instanceof HTMLElement) {
-		const isInteractiveElement = event.target.closest('a, button, .favorite, [role="button"]')
+		const isInteractiveElement = event.target.closest('a, button, label, input[type="checkbox"], .favorite, [role="button"]')
 		if (isInteractiveElement || hasTextSelected()) {
 			return
 		}
@@ -537,6 +543,23 @@ defineExpose({
 
 		span {
 			display: none;
+		}
+
+		// Extend the hit target to >=44x44 without affecting layout (WCAG 2.5.5).
+		.base-checkbox__label {
+			position: relative;
+
+			&::before {
+				content: '';
+				position: absolute;
+				inset-block-start: 50%;
+				inset-inline-start: 50%;
+				min-block-size: 44px;
+				min-inline-size: 44px;
+				block-size: 100%;
+				inline-size: 100%;
+				transform: translate(-50%, -50%);
+			}
 		}
 	}
 

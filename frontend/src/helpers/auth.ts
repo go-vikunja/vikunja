@@ -1,4 +1,5 @@
 import {HTTPFactory} from '@/helpers/fetcher'
+import {isDesktopApp, refreshDesktopToken} from '@/helpers/desktopAuth'
 
 let savedToken: string | null = null
 
@@ -31,6 +32,7 @@ export const getToken = (): string | null => {
 export const removeToken = () => {
 	savedToken = null
 	localStorage.removeItem('token')
+	localStorage.removeItem('desktopOAuthRefreshToken')
 }
 
 /**
@@ -43,6 +45,22 @@ export const removeToken = () => {
  * the token in localStorage was already updated and adopt it directly.
  */
 export async function refreshToken(persist: boolean): Promise<void> {
+	// In desktop mode, refresh via IPC to the Electron main process
+	if (isDesktopApp()) {
+		const storedRefreshToken = localStorage.getItem('desktopOAuthRefreshToken')
+		if (!storedRefreshToken) {
+			throw new Error('No desktop OAuth refresh token available')
+		}
+		try {
+			const tokens = await refreshDesktopToken(window.API_URL, storedRefreshToken)
+			saveToken(tokens.access_token, persist)
+			localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
+		} catch (e) {
+			throw new Error('Error renewing token: ', {cause: e})
+		}
+		return
+	}
+
 	// Capture the token before waiting for the lock so we can detect
 	// if another tab refreshed while we were queued.
 	const tokenBeforeLock = localStorage.getItem('token')

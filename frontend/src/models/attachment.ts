@@ -6,9 +6,18 @@ import type { IFile } from '@/modelTypes/IFile'
 import type { IAttachment } from '@/modelTypes/IAttachment'
 
 export const SUPPORTED_IMAGE_SUFFIX = ['.jpeg', '.jpg', '.png', '.bmp', '.gif']
+export const SUPPORTED_PDF_SUFFIX = ['.pdf']
+
+export function canPreviewImage(attachment: IAttachment): boolean {
+	return SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
+}
+
+export function canPreviewPdf(attachment: IAttachment): boolean {
+	return SUPPORTED_PDF_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
+}
 
 export function canPreview(attachment: IAttachment): boolean {
-	return SUPPORTED_IMAGE_SUFFIX.some((suffix) => attachment.file.name.toLowerCase().endsWith(suffix))
+	return canPreviewImage(attachment) || canPreviewPdf(attachment)
 }
 
 export default class AttachmentModel extends AbstractModel<IAttachment> implements IAttachment {

@@ -17,6 +17,7 @@
 package user
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
@@ -37,7 +39,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"xorm.io/builder"
 	"xorm.io/xorm"
+	"xorm.io/xorm/schemas"
 )
+
+// IsErrUserStatusError returns true if the error is an ErrAccountDisabled or ErrAccountLocked.
+func IsErrUserStatusError(err error) bool {
+	return IsErrAccountDisabled(err) || IsErrAccountLocked(err)
+}
 
 // Login Object to recive user credentials in JSON format
 type Login struct {
@@ -61,6 +69,8 @@ func (s Status) String() string {
 		return "Email Confirmation required"
 	case StatusDisabled:
 		return "Disabled"
+	case StatusAccountLocked:
+		return "Locked"
 	}
 
 	return "Unknown"
@@ -70,21 +80,24 @@ const (
 	StatusActive Status = iota
 	StatusEmailConfirmationRequired
 	StatusDisabled
+	StatusAccountLocked
 )
 
 // User holds information about an user
 type User struct {
 	// The unique, numeric id of this user.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"bot" readOnly:"true" doc:"The unique, numeric id of this user."`
 	// The full name of the user.
-	Name string `xorm:"text null" json:"name"`
+	Name string `xorm:"text null" json:"name" doc:"The full name of the user."`
 	// The username of the user. Is always unique.
-	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"1" maxLength:"250"`
+	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"1" maxLength:"250" doc:"The username of the user. Is always unique. For bot users it must start with the 'bot-' prefix."`
 	Password string `xorm:"varchar(250) null" json:"-"`
 	// The user's email address.
-	Email string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250"`
+	Email string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250" doc:"The user's email address. Always empty for bot users."`
 
 	Status Status `xorm:"default 0" json:"-"`
+
+	IsAdmin bool `xorm:"not null default false" json:"-"`
 
 	AvatarProvider string `xorm:"varchar(255) null" json:"-"`
 	AvatarFileID   int64  `xorm:"null" json:"-"`
@@ -99,9 +112,12 @@ type User struct {
 	OverdueTasksRemindersEnabled bool   `xorm:"bool default true index" json:"-"`
 	OverdueTasksRemindersTime    string `xorm:"varchar(5) not null default '09:00'" json:"-"`
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
-	WeekStart                    int    `xorm:"null" json:"-"`
-	Language                     string `xorm:"varchar(50) null" json:"-" valid:"language"`
-	Timezone                     string `xorm:"varchar(255) null" json:"-"`
+	// BotOwnerID is the ID of the owning (human) user if this user is a bot.
+	// A non-zero value means this user is a bot and cannot authenticate via password.
+	BotOwnerID int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty" readOnly:"true" doc:"The id of the owning (human) user. Set by the server on creation; a non-zero value means this user is a bot."`
+	WeekStart  int    `xorm:"null" json:"-"`
+	Language   string `xorm:"varchar(50) null" json:"-" valid:"language"`
+	Timezone   string `xorm:"varchar(255) null" json:"-"`
 
 	DeletionScheduledAt      time.Time `xorm:"datetime null" json:"-"`
 	DeletionLastReminderSent time.Time `xorm:"datetime null" json:"-"`
@@ -112,9 +128,9 @@ type User struct {
 	ExportFileID int64 `xorm:"bigint null" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this user was created. You cannot change this value."`
 	// A timestamp when this task was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this user was last updated. You cannot change this value."`
 
 	web.Auth `xorm:"-" json:"-"`
 }
@@ -126,7 +142,7 @@ func (u *User) RouteForMail() (string, error) {
 		s := db.NewSession()
 		defer s.Close()
 		user, err := getUser(s, &User{ID: u.ID}, true)
-		if err != nil {
+		if err != nil && !IsErrUserStatusError(err) {
 			return "", err
 		}
 		return user.Email, nil
@@ -141,6 +157,9 @@ func (u *User) RouteForDB() int64 {
 }
 
 func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
+	if u.IsBot() {
+		return false, nil
+	}
 	var s *xorm.Session
 	if len(sessions) > 0 && sessions[0] != nil {
 		s = sessions[0]
@@ -148,12 +167,14 @@ func (u *User) ShouldNotify(sessions ...*xorm.Session) (bool, error) {
 		s = db.NewSession()
 		defer s.Close()
 	}
-	user, err := getUser(s, &User{ID: u.ID}, true)
+	_, err := getUser(s, &User{ID: u.ID}, true)
+	if IsErrUserStatusError(err) {
+		return false, nil
+	}
 	if err != nil {
 		return false, err
 	}
-
-	return user.Status != StatusDisabled, err
+	return true, nil
 }
 
 func (u *User) Lang() string {
@@ -163,6 +184,11 @@ func (u *User) Lang() string {
 // GetID implements the Auth interface
 func (u *User) GetID() int64 {
 	return u.ID
+}
+
+// IsBot reports whether this user is a bot (owned by another user).
+func (u *User) IsBot() bool {
+	return u.BotOwnerID > 0
 }
 
 // TableName returns the table name for users
@@ -311,7 +337,15 @@ func getUser(s *xorm.Session, user *User, withEmail bool) (userOut *User, err er
 		userOut.OverdueTasksRemindersTime = "9:00"
 	}
 
-	return userOut, err
+	if userOut.Status == StatusDisabled {
+		return userOut, &ErrAccountDisabled{UserID: userOut.ID}
+	}
+
+	if userOut.Status == StatusAccountLocked {
+		return userOut, &ErrAccountLocked{UserID: userOut.ID}
+	}
+
+	return userOut, nil
 }
 
 func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User, err error) {
@@ -330,8 +364,9 @@ func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User,
 	return
 }
 
-// CheckUserCredentials checks user credentials
-func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
+// CheckUserCredentials checks user credentials. The context carries request
+// metadata for the audit trail of failed attempts.
+func CheckUserCredentials(ctx context.Context, s *xorm.Session, u *Login) (*User, error) {
 	// Check if we have any credentials
 	if u.Password == "" || u.Username == "" {
 		return nil, ErrNoUsernamePassword{}
@@ -358,9 +393,17 @@ func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 	err = CheckUserPassword(user, u.Password)
 	if err != nil {
 		if IsErrWrongUsernameOrPassword(err) {
-			handleFailedPassword(user)
+			handleFailedPassword(ctx, user)
 		}
 		return user, err
+	}
+
+	// After successful password verification, check if the account is disabled or locked
+	if user.Status == StatusDisabled {
+		return nil, &ErrAccountDisabled{UserID: user.ID}
+	}
+	if user.Status == StatusAccountLocked {
+		return nil, &ErrAccountLocked{UserID: user.ID}
 	}
 
 	return user, nil
@@ -370,7 +413,11 @@ func (u *User) IsLocalUser() bool {
 	return u.Issuer == IssuerLocal
 }
 
-func handleFailedPassword(user *User) {
+func handleFailedPassword(ctx context.Context, user *User) {
+	if err := events.DispatchWithContext(ctx, &LoginFailedEvent{User: user}); err != nil {
+		log.Errorf("Could not dispatch login failed event: %s", err)
+	}
+
 	key := user.GetFailedPasswordAttemptsKey()
 	err := keyvalue.IncrBy(key, 1)
 	if err != nil {
@@ -471,9 +518,12 @@ func GetUserFromClaims(claims jwt.MapClaims) (user *User, err error) {
 		return nil, err
 	}
 
+	isAdmin, _ := claims["is_admin"].(bool)
+
 	return &User{
 		ID:       userID,
 		Username: username,
+		IsAdmin:  isAdmin,
 	}, nil
 }
 
@@ -520,7 +570,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 
 	// Check if it exists
 	theUser, err := GetUserWithEmail(s, &User{ID: user.ID})
-	if err != nil {
+	if err != nil && !IsErrUserStatusError(err) {
 		return &User{}, err
 	}
 
@@ -529,7 +579,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 		user.Username = theUser.Username // Dont change the username if we dont have one
 	} else {
 		// Check if the new username already exists
-		uu, err := GetUserByUsername(s, user.Username)
+		uu, err := getUser(s, &User{Username: user.Username}, false)
 		if err != nil && !IsErrUserDoesNotExist(err) {
 			return nil, err
 		}
@@ -618,7 +668,7 @@ func UpdateUser(s *xorm.Session, user *User, forceOverride bool) (updatedUser *U
 
 	// Get the newly updated user
 	updatedUser, err = GetUserByID(s, user.ID)
-	if err != nil {
+	if err != nil && !IsErrUserStatusError(err) {
 		return &User{}, err
 	}
 
@@ -632,6 +682,35 @@ func SetUserStatus(s *xorm.Session, user *User, status Status) (err error) {
 	return
 }
 
+// GuardLastAdmin refuses demoting or deleting the last reachable admin; only active, non-deletion-scheduled admins count since the rest cannot log in.
+// SELECT ... FOR UPDATE closes the TOCTOU race between concurrent demotions on MySQL (xorm only emits it for MySQL; SQLite serializes writes, postgres relies on serializable isolation).
+func GuardLastAdmin(s *xorm.Session, target *User) error {
+	if !target.IsAdmin {
+		return nil
+	}
+	// target is not in the counted "reachable admin" set — removing them
+	// doesn't change the invariant, so the guard is a no-op.
+	if target.Status != StatusActive || !target.DeletionScheduledAt.IsZero() {
+		return nil
+	}
+
+	session := s.Where("is_admin = ?", true).
+		And("status = ?", StatusActive).
+		And("deletion_scheduled_at IS NULL")
+	if db.Type() == schemas.MYSQL {
+		session = session.ForUpdate()
+	}
+
+	count, err := session.Count(&User{})
+	if err != nil {
+		return err
+	}
+	if count <= 1 {
+		return ErrLastAdmin{}
+	}
+	return nil
+}
+
 // UpdateUserPassword updates the password of a user
 func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err error) {
 
@@ -641,7 +720,7 @@ func UpdateUserPassword(s *xorm.Session, user *User, newPassword string) (err er
 
 	// Get all user details
 	theUser, err := GetUserByID(s, user.ID)
-	if err != nil {
+	if err != nil && !IsErrUserStatusError(err) {
 		return err
 	}
 

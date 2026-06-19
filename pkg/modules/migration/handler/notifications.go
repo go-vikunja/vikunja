@@ -91,7 +91,7 @@ func (n *MigrationFailedNotification) ToMail(lang string) *notifications.Mail {
 		Subject(i18n.T(lang, "notifications.migration.failed.subject", kind)).
 		Line(i18n.T(lang, "notifications.migration.failed.message", kind)).
 		Line(i18n.T(lang, "notifications.migration.failed.retry", kind)).
-		Line(i18n.T(lang, "notifications.migration.failed.error", n.Error.Error())).
+		Line(i18n.T(lang, "notifications.migration.failed.error", notifications.EscapeMarkdown(n.Error.Error()))).
 		Line(i18n.T(lang, "notifications.migration.failed.report"))
 }
 

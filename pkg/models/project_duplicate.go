@@ -17,6 +17,9 @@
 package models
 
 import (
+	"bytes"
+	"io"
+
 	"code.vikunja.io/api/pkg/files"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/utils"
@@ -30,10 +33,10 @@ type ProjectDuplicate struct {
 	// The project id of the project to duplicate
 	ProjectID int64 `json:"-" param:"projectid"`
 	// The target parent project
-	ParentProjectID int64 `json:"parent_project_id,omitempty"`
+	ParentProjectID int64 `json:"parent_project_id,omitempty" doc:"The id of the project under which the duplicate should be created. Omit or 0 to place the copy at the top level; you need write access to the parent."`
 
 	// The copied project
-	Project *Project `json:"duplicated_project,omitempty"`
+	Project *Project `json:"duplicated_project,omitempty" readOnly:"true" doc:"The newly created duplicate project, populated by the server in the response."`
 
 	web.Permissions `json:"-"`
 	web.CRUDable    `json:"-"`
@@ -301,7 +304,12 @@ func duplicateProjectBackground(s *xorm.Session, pd *ProjectDuplicate, doer web.
 	}
 	defer f.File.Close()
 
-	file, err := files.CreateWithSession(s, f.File, f.Name, f.Size, doer)
+	buf, err := io.ReadAll(f.File)
+	if err != nil {
+		return err
+	}
+
+	file, err := files.CreateWithSession(s, bytes.NewReader(buf), f.Name, f.Size, doer)
 	if err != nil {
 		return err
 	}
@@ -388,13 +396,17 @@ func duplicateTasks(s *xorm.Session, doer web.Auth, ld *ProjectDuplicate) (newTa
 			return nil, err
 		}
 
-		err := attachment.NewAttachment(s, attachment.File.File, attachment.File.Name, attachment.File.Size, doer)
+		buf, err := io.ReadAll(attachment.File.File)
 		if err != nil {
 			return nil, err
 		}
-
 		if attachment.File.File != nil {
 			_ = attachment.File.File.Close()
+		}
+
+		err = attachment.NewAttachment(s, bytes.NewReader(buf), attachment.File.Name, uint64(len(buf)), doer)
+		if err != nil {
+			return nil, err
 		}
 
 		log.Debugf("Duplicated attachment %d into %d from project %d into %d", oldAttachmentID, attachment.ID, ld.ProjectID, ld.Project.ID)

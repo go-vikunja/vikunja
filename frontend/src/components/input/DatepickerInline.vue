@@ -1,66 +1,68 @@
 <template>
-	<BaseButton
-		v-if="(new Date()).getHours() < 21"
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('today')"
-	>
-		<span class="icon"><Icon :icon="['far', 'calendar-alt']" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.today') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('today') }}</span>
-		</span>
-	</BaseButton>
-	<BaseButton
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('tomorrow')"
-	>
-		<span class="icon"><Icon :icon="['far', 'sun']" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.tomorrow') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('tomorrow') }}</span>
-		</span>
-	</BaseButton>
-	<BaseButton
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('nextMonday')"
-	>
-		<span class="icon"><Icon icon="coffee" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.nextMonday') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('nextMonday') }}</span>
-		</span>
-	</BaseButton>
-	<BaseButton
-		v-if="!((new Date()).getDay() === 0 && (new Date()).getHours() >= 21)"
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('thisWeekend')"
-	>
-		<span class="icon"><Icon icon="cocktail" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.thisWeekend') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('thisWeekend') }}</span>
-		</span>
-	</BaseButton>
-	<BaseButton
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('laterThisWeek')"
-	>
-		<span class="icon"><Icon icon="chess-knight" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.laterThisWeek') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('laterThisWeek') }}</span>
-		</span>
-	</BaseButton>
-	<BaseButton
-		class="datepicker__quick-select-date"
-		@click.stop="setDate('nextWeek')"
-	>
-		<span class="icon"><Icon icon="forward" /></span>
-		<span class="text">
-			<span>{{ $t('input.datepicker.nextWeek') }}</span>
-			<span class="weekday">{{ getWeekdayFromStringInterval('nextWeek') }}</span>
-		</span>
-	</BaseButton>
+	<template v-if="showShortcuts">
+		<BaseButton
+			v-if="(new Date()).getHours() < 21"
+			class="datepicker__quick-select-date"
+			@click.stop="setDate('today')"
+		>
+			<span class="icon"><Icon :icon="['far', 'calendar-alt']" /></span>
+			<span class="text">
+				<span>{{ $t('input.datepicker.today') }}</span>
+				<span class="weekday">{{ getWeekdayFromStringInterval('today') }}</span>
+			</span>
+		</BaseButton>
+		<BaseButton
+			class="datepicker__quick-select-date"
+			@click.stop="setDate('tomorrow')"
+		>
+			<span class="icon"><Icon :icon="['far', 'sun']" /></span>
+			<span class="text">
+				<span>{{ $t('input.datepicker.tomorrow') }}</span>
+				<span class="weekday">{{ getWeekdayFromStringInterval('tomorrow') }}</span>
+			</span>
+		</BaseButton>
+		<BaseButton
+			class="datepicker__quick-select-date"
+			@click.stop="setDate('nextMonday')"
+		>
+			<span class="icon"><Icon icon="coffee" /></span>
+			<span class="text">
+				<span>{{ $t('input.datepicker.nextMonday') }}</span>
+				<span class="weekday">{{ getWeekdayFromStringInterval('nextMonday') }}</span>
+			</span>
+		</BaseButton>
+		<BaseButton
+			v-if="!((new Date()).getDay() === 0 && (new Date()).getHours() >= 21)"
+			class="datepicker__quick-select-date"
+			@click.stop="setDate('thisWeekend')"
+		>
+			<span class="icon"><Icon icon="cocktail" /></span>
+			<span class="text">
+				<span>{{ $t('input.datepicker.thisWeekend') }}</span>
+				<span class="weekday">{{ getWeekdayFromStringInterval('thisWeekend') }}</span>
+			</span>
+		</BaseButton>
+		<BaseButton
+			class="datepicker__quick-select-date"
+			@click.stop="setDate('laterThisWeek')"
+		>
+			<span class="icon"><Icon icon="chess-knight" /></span>
+			<span class="text">
+				<span>{{ $t('input.datepicker.laterThisWeek') }}</span>
+				<span class="weekday">{{ getWeekdayFromStringInterval('laterThisWeek') }}</span>
+			</span>
+		</BaseButton>
+		<BaseButton
+			class="datepicker__quick-select-date"
+			@click.stop="setDate('nextWeek')"
+		>
+			<span class="icon"><Icon icon="forward" /></span>
+			<span class="text">
+				<span>{{ $t('input.datepicker.nextWeek') }}</span>
+				<span class="weekday">{{ getWeekdayFromStringInterval('nextWeek') }}</span>
+			</span>
+		</BaseButton>
+	</template>
 
 	<div class="flatpickr-container">
 		<flat-pickr
@@ -84,16 +86,22 @@ import {calculateNearestHours} from '@/helpers/time/calculateNearestHours'
 import {createDateFromString} from '@/helpers/time/createDateFromString'
 import {useI18n} from 'vue-i18n'
 import {useFlatpickrLanguage} from '@/helpers/useFlatpickrLanguage'
+import {useTimeFormat} from '@/composables/useTimeFormat'
+import {TIME_FORMAT} from '@/constants/timeFormat'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	modelValue: Date | null | string
-}>()
+	showShortcuts?: boolean
+}>(), {
+	showShortcuts: true,
+})
 
 const emit = defineEmits<{
 	'update:modelValue': [Date | null],
 }>()
 
 const {t} = useI18n({useScope: 'global'})
+const {store: timeFormat} = useTimeFormat()
 
 const date = ref<Date | null>(null)
 const changed = ref(false)
@@ -111,7 +119,7 @@ const flatPickerConfig = computed(() => ({
 	altInput: true,
 	dateFormat: 'Y-m-d H:i',
 	enableTime: true,
-	time_24hr: true,
+	time_24hr: timeFormat.value === TIME_FORMAT.HOURS_24,
 	inline: true,
 	locale: useFlatpickrLanguage().value,
 }))

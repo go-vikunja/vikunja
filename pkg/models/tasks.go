@@ -47,28 +47,40 @@ const (
 	TaskRepeatModeFromCurrentDate
 )
 
+// MaxTaskRepeatAfterSeconds caps repeat_after at ten years. Sized to
+// stay far from int64 overflow when multiplied out in nanoseconds, and
+// ten years is already well past any legitimate recurrence.
+const MaxTaskRepeatAfterSeconds int64 = 10 * 365 * 24 * 3600
+
+func validateRepeatAfter(repeatAfter int64) error {
+	if repeatAfter < 0 || repeatAfter > MaxTaskRepeatAfterSeconds {
+		return ErrInvalidTaskRepeatInterval{RepeatAfter: repeatAfter}
+	}
+	return nil
+}
+
 // Task represents a task in a project
 type Task struct {
 	// The unique, numeric id of this task.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"projecttask"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"projecttask" readOnly:"true" doc:"The unique, numeric id of this task."`
 	// The task text. This is what you'll see in the project.
-	Title string `xorm:"TEXT not null" json:"title" valid:"minstringlength(1)" minLength:"1"`
+	Title string `xorm:"TEXT not null" json:"title" valid:"minstringlength(1)" minLength:"1" doc:"The task title. This is what you'll see in the project."`
 	// The task description.
 	Description string `xorm:"longtext null" json:"description"`
 	// Whether a task is done or not.
 	Done bool `xorm:"INDEX null" json:"done"`
 	// The time when a task was marked as done. This field is system-controlled and cannot be set via API.
-	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at"`
+	DoneAt time.Time `xorm:"INDEX null 'done_at'" json:"done_at" readOnly:"true" doc:"When the task was marked as done. Set by the server; ignored on write."`
 	// The time when the task is due.
 	DueDate time.Time `xorm:"DATETIME INDEX null 'due_date'" json:"due_date"`
 	// An array of reminders that are associated with this task.
 	Reminders []*TaskReminder `xorm:"-" json:"reminders"`
 	// The project this task belongs to.
-	ProjectID int64 `xorm:"bigint INDEX not null" json:"project_id" param:"project"`
+	ProjectID int64 `xorm:"bigint INDEX not null unique(tasks_project_index)" json:"project_id" param:"project" doc:"The id of the project this task belongs to. On create it is taken from the URL; on update, setting it to a different project moves the task (requires write access to the target project)."`
 	// An amount in seconds this task repeats itself. If this is set, when marking the task as done, it will mark itself as "undone" and then increase all remindes and the due date by its amount.
-	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after" valid:"range(0|9223372036854775807)"`
+	RepeatAfter int64 `xorm:"bigint INDEX null" json:"repeat_after" valid:"range(0|9223372036854775807)" doc:"The interval in seconds this task repeats. When set, marking the task done re-opens it and bumps its reminders and due date by this amount."`
 	// Can have three possible values which will trigger when the task is marked as done: 0 = repeats after the amount specified in repeat_after, 1 = repeats all dates each months (ignoring repeat_after), 3 = repeats from the current date rather than the last set date.
-	RepeatMode TaskRepeatMode `xorm:"not null default 0" json:"repeat_mode"`
+	RepeatMode TaskRepeatMode `xorm:"not null default 0" json:"repeat_mode" doc:"How the task repeats when marked done: 0 = after repeat_after seconds, 1 = monthly (ignores repeat_after), 2 = from the current date rather than the last set date."`
 	// The task priority. Can be anything you want, it is possible to sort by this later.
 	Priority int64 `xorm:"bigint null" json:"priority"`
 	// When this task starts.
@@ -76,72 +88,75 @@ type Task struct {
 	// When this task ends.
 	EndDate time.Time `xorm:"DATETIME INDEX null 'end_date'" json:"end_date" query:"-"`
 	// An array of users who are assigned to this task
-	Assignees []*user.User `xorm:"-" json:"assignees"`
+	Assignees []*user.User `xorm:"-" json:"assignees" readOnly:"true" doc:"The users assigned to this task. Read-only here; use the task-assignee endpoints to change assignments."`
 	// An array of labels which are associated with this task. This property is read-only, you must use the separate endpoint to add labels to a task.
-	Labels []*Label `xorm:"-" json:"labels"`
+	Labels []*Label `xorm:"-" json:"labels" readOnly:"true" doc:"The labels on this task. Read-only here; use the label-task endpoints to add or remove labels."`
 	// The task color in hex
-	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7"`
+	HexColor string `xorm:"varchar(6) null" json:"hex_color" valid:"runelength(0|7)" maxLength:"7" doc:"The task color as a hex string without the leading '#'."`
 	// Determines how far a task is left from being done
-	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done"`
+	PercentDone float64 `xorm:"DOUBLE null" json:"percent_done" doc:"How far the task is from done, between 0 and 1."`
 
 	// The task identifier, based on the project identifier and the task's index
-	Identifier string `xorm:"-" json:"identifier"`
+	Identifier string `xorm:"-" json:"identifier" readOnly:"true" doc:"The textual task identifier, derived from the project identifier and the task index (e.g. \"PROJ-12\")."`
 	// The task index, calculated per project
-	Index int64 `xorm:"bigint not null default 0" json:"index"`
+	Index int64 `xorm:"bigint not null default 0 unique(tasks_project_index)" json:"index" param:"index" readOnly:"true" doc:"The per-project task index, assigned by the server."`
 
 	// The UID is currently not used for anything other than CalDAV, which is why we don't expose it over json
 	UID string `xorm:"varchar(250) null" json:"-"`
 
 	// All related tasks, grouped by their relation kind
-	RelatedTasks RelatedTaskMap `xorm:"-" json:"related_tasks"`
+	RelatedTasks RelatedTaskMap `xorm:"-" json:"related_tasks" readOnly:"true" doc:"Related tasks grouped by relation kind. Read-only here; use the task-relation endpoints to change relations."`
 
 	// All attachments this task has. This property is read-onlym, you must use the separate endpoint to add attachments to a task.
-	Attachments []*TaskAttachment `xorm:"-" json:"attachments"`
+	Attachments []*TaskAttachment `xorm:"-" json:"attachments" readOnly:"true" doc:"The task's attachments. Read-only here; use the attachment endpoints to add or remove them."`
 
 	// If this task has a cover image, the field will return the id of the attachment that is the cover image.
-	CoverImageAttachmentID int64 `xorm:"bigint default 0" json:"cover_image_attachment_id"`
+	CoverImageAttachmentID int64 `xorm:"bigint default 0" json:"cover_image_attachment_id" doc:"The id of the attachment used as this task's cover image, or 0 for none."`
 
 	// True if a task is a favorite task. Favorite tasks show up in a separate "Important" project. This value depends on the user making the call to the api.
-	IsFavorite bool `xorm:"-" json:"is_favorite"`
+	IsFavorite bool `xorm:"-" json:"is_favorite" doc:"Whether the requesting user has favorited this task. Per-user, so it differs between callers."`
 
-	IsUnread *bool `xorm:"-" json:"is_unread,omitempty"`
+	IsUnread *bool `xorm:"-" json:"is_unread,omitempty" readOnly:"true" doc:"Whether the task is unread for the requesting user. Only present when requested via the is_unread expand option."`
 
 	// The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
 	// Will only returned when retrieving one task.
-	Subscription *Subscription `xorm:"-" json:"subscription,omitempty"`
+	Subscription *Subscription `xorm:"-" json:"subscription,omitempty" readOnly:"true" doc:"The requesting user's subscription to this task. Read-only here; use the subscription endpoints to change it. Only present when reading a single task."`
 
 	// A timestamp when this task was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"When this task was created. Set by the server; ignored on write."`
 	// A timestamp when this task was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"When this task was last updated. Set by the server; ignored on write."`
 
 	// The bucket id. Will only be populated when the task is accessed via a view with buckets.
 	// Can be used to move a task between buckets. In that case, the new bucket must be in the same view as the old one.
-	BucketID int64 `xorm:"-" json:"bucket_id"`
+	BucketID int64 `xorm:"-" json:"bucket_id" doc:"The bucket the task is in. Only populated when the task is accessed via a view with buckets. To move a task between buckets, the new bucket must be in the same view as the old one."`
 
 	// All buckets across all views this task is part of. Only present when fetching tasks with the `expand` parameter set to `buckets`.
-	Buckets []*Bucket `xorm:"-" json:"buckets,omitempty"`
+	Buckets []*Bucket `xorm:"-" json:"buckets,omitempty" readOnly:"true" doc:"The task's buckets across all views. Only present when requested via the buckets expand option."`
 
 	// All comments of this task. Only present when fetching tasks with the `expand` parameter set to `comments`.
-	Comments []*TaskComment `xorm:"-" json:"comments,omitempty"`
+	Comments []*TaskComment `xorm:"-" json:"comments,omitempty" readOnly:"true" doc:"The task's first 50 comments. Only present when requested via the comments expand option."`
 
 	// Comment count of this task. Only present when fetching tasks with the `expand` parameter set to `comment_count`.
-	CommentCount *int64 `xorm:"-" json:"comment_count,omitempty"`
+	CommentCount *int64 `xorm:"-" json:"comment_count,omitempty" readOnly:"true" doc:"The number of comments on this task. Only present when requested via the comment_count expand option."`
+
+	// Time entry count of this task. Only present when fetching tasks with the `expand` parameter set to `time_entries_count`.
+	TimeEntriesCount *int64 `xorm:"-" json:"time_entries_count,omitempty" readOnly:"true" doc:"The number of time entries on this task. Only present when requested via the time_entries_count expand option."`
 
 	// Behaves exactly the same as with the TaskCollection.Expand parameter
-	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand[]"`
+	Expand []TaskCollectionExpandable `xorm:"-" json:"-" query:"expand"`
 
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via views with buckets, this is primarily used to sort them based on a range.
 	// Positions are always saved per view. They will automatically be set if you request the tasks through a view
 	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
-	Position float64 `xorm:"-" json:"position"`
+	Position float64 `xorm:"-" json:"position" readOnly:"true" doc:"The task's position, saved per view. Only non-zero when the task is fetched through a view endpoint; use the task-position endpoint to change it."`
 
 	// Reactions on that task.
-	Reactions ReactionMap `xorm:"-" json:"reactions"`
+	Reactions ReactionMap `xorm:"-" json:"reactions" readOnly:"true" doc:"Reactions on this task. Only present when requested via the reactions expand option."`
 
 	// The user who initially created the task.
-	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-"`
+	CreatedBy   *user.User `xorm:"-" json:"created_by" valid:"-" readOnly:"true" doc:"The user who created this task. Set by the server."`
 	CreatedByID int64      `xorm:"bigint not null" json:"-"` // ID of the user who put that task on the project
 
 	web.CRUDable    `xorm:"-" json:"-"`
@@ -215,7 +230,7 @@ type taskSearchOptions struct {
 // @Param filter query string false "The filter query to match tasks by. Check out https://vikunja.io/docs/filters for a full explanation of the feature."
 // @Param filter_timezone query string false "The time zone which should be used for date match (statements like "now" resolve to different actual times)"
 // @Param filter_include_nulls query string false "If set to true the result will include filtered fields whose value is set to `null`. Available values are `true` or `false`. Defaults to `false`."
-// @Param expand query []string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values."
+// @Param expand query string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values."
 // @Security JWTKeyAuth
 // @Success 200 {array} models.Task "The tasks"
 // @Failure 500 {object} models.Message "Internal error"
@@ -340,6 +355,41 @@ func GetTaskByIDSimple(s *xorm.Session, taskID int64) (task Task, err error) {
 	return GetTaskSimple(s, &Task{ID: taskID})
 }
 
+// GetTaskByProjectAndIndex returns a task by its per-project index.
+// Returns ErrTaskDoesNotExist if nothing matches.
+func GetTaskByProjectAndIndex(s *xorm.Session, projectID, index int64) (task Task, err error) {
+	if projectID < 1 || index < 1 {
+		return Task{}, ErrTaskDoesNotExist{}
+	}
+
+	has, err := s.
+		Where("project_id = ? AND `index` = ?", projectID, index).
+		Get(&task)
+	if err != nil {
+		return Task{}, err
+	}
+	if !has {
+		return Task{}, ErrTaskDoesNotExist{}
+	}
+
+	return task, nil
+}
+
+// resolveIDFromProjectAndIndex populates t.ID from (ProjectID, Index) for the
+// by-index route, which binds project+index from the URL but not id. No-op
+// when id is already set.
+func (t *Task) resolveIDFromProjectAndIndex(s *xorm.Session) error {
+	if t.ID != 0 || t.ProjectID < 1 || t.Index < 1 {
+		return nil
+	}
+	resolved, err := GetTaskByProjectAndIndex(s, t.ProjectID, t.Index)
+	if err != nil {
+		return err
+	}
+	t.ID = resolved.ID
+	return nil
+}
+
 // GetTaskSimple returns a raw task without extra data
 func GetTaskSimple(s *xorm.Session, t *Task) (task Task, err error) {
 	task = *t
@@ -371,10 +421,14 @@ func GetTaskSimpleByUUID(s *xorm.Session, uid string) (task *Task, err error) {
 	return
 }
 
-// GetTasksByUIDs gets all tasks from a bunch of uids
+// GetTasksByUIDs gets all tasks from a bunch of uids, filtering out any
+// task whose project the provided auth does not have access to.
 func GetTasksByUIDs(s *xorm.Session, uids []string, a web.Auth) (tasks []*Task, err error) {
 	tasks = []*Task{}
-	err = s.In("uid", uids).Find(&tasks)
+	err = s.
+		In("uid", uids).
+		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		Find(&tasks)
 	if err != nil {
 		return
 	}
@@ -510,7 +564,9 @@ func addRelatedTasksToTasks(s *xorm.Session, taskIDs []int64, taskMap map[int64]
 	}
 
 	fullRelatedTasks := make(map[int64]*Task)
-	err = s.In("id", relatedTaskIDs).Find(&fullRelatedTasks)
+	err = s.In("id", relatedTaskIDs).
+		And(accessibleProjectIDsSubquery(a, "`tasks`.`project_id`")).
+		Find(&fullRelatedTasks)
 	if err != nil {
 		return
 	}
@@ -559,18 +615,6 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 		return err
 	}
 
-	// We need to fetch all projects for that user to make sure they only
-	// get to see buckets that they have permission to see.
-	projectIDs := []int64{}
-	allProjects, _, _, err := getAllRawProjects(s, a, "", 0, -1, false)
-	if err != nil {
-		return err
-	}
-
-	for _, project := range allProjects {
-		projectIDs = append(projectIDs, project.ID)
-	}
-
 	buckets := make(map[int64]*Bucket)
 	err = s.
 		Where(builder.In("id", builder.Select("bucket_id").
@@ -578,7 +622,7 @@ func addBucketsToTasks(s *xorm.Session, a web.Auth, taskIDs []int64, taskMap map
 			Where(builder.In("task_id", taskIDs)))).
 		And(builder.In("project_view_id", builder.Select("id").
 			From("project_views").
-			Where(builder.In("project_id", projectIDs)))).
+			Where(accessibleProjectIDsSubquery(a, "project_views.project_id")))).
 		Find(&buckets)
 	if err != nil {
 		return err
@@ -726,6 +770,11 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				if err != nil {
 					return err
 				}
+			case TaskCollectionExpandTimeEntriesCount:
+				err = addTimeEntriesCountToTasks(s, a, taskIDs, taskMap)
+				if err != nil {
+					return err
+				}
 			case TaskCollectionExpandIsUnread:
 				err = addIsUnreadToTasks(s, taskIDs, taskMap, a)
 				if err != nil {
@@ -781,9 +830,15 @@ func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (tas
 	}
 
 	if view.ProjectID < 0 || (view.Filter != nil && view.Filter.Filter != "") {
+		// For saved filters or views with a filter, the count must be scoped to
+		// this bucket *and* the filter: raw task_buckets rows can include tasks
+		// that no longer match the filter (#355), while the unscoped filter total
+		// counts tasks across all buckets, not just this one (#2672). ReadAll
+		// combines the bucket_id condition with the saved-filter / view filter.
 		tc := &TaskCollection{
 			ProjectID:     view.ProjectID,
 			ProjectViewID: bucket.ProjectViewID,
+			Filter:        "bucket_id = " + strconv.FormatInt(bucket.ID, 10),
 		}
 
 		_, _, taskCount, err = tc.ReadAll(s, a, "", 1, 1)
@@ -878,6 +933,10 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 		return ErrTaskCannotBeEmpty{}
 	}
 
+	if err := validateRepeatAfter(t.RepeatAfter); err != nil {
+		return err
+	}
+
 	// Check if the project exists
 	p, err := GetProjectSimpleByID(s, t.ProjectID)
 	if err != nil {
@@ -926,7 +985,19 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	}
 
 	if len(positions) > 0 {
+		positions, err = filterNewTaskPositions(s, positions)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(positions) > 0 {
 		_, err = s.Insert(&positions)
+		if err != nil {
+			return
+		}
+
+		err = resolvePositionConflictsAfterInsert(s, positions)
 		if err != nil {
 			return
 		}
@@ -1165,6 +1236,10 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 		}
 	}
 
+	if err := validateRepeatAfter(t.RepeatAfter); err != nil {
+		return err
+	}
+
 	// If the task is being moved between projects, make sure to move the bucket + index as well
 	if t.ProjectID != 0 && ot.ProjectID != t.ProjectID {
 		t.Index, err = calculateNextTaskIndex(s, t.ProjectID)
@@ -1176,7 +1251,7 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 
 	views := []*ProjectView{}
-	if (!t.isRepeating() && t.Done != ot.Done) || t.ProjectID != ot.ProjectID {
+	if t.Done != ot.Done || t.ProjectID != ot.ProjectID {
 		err = s.
 			Where("project_id = ? AND view_kind = ? AND bucket_configuration_mode = ?",
 				t.ProjectID, ProjectViewKindKanban, BucketConfigurationModeManual).
@@ -1232,6 +1307,16 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	// When a task changed its done status, make sure it is in the correct bucket
 	if t.ProjectID == ot.ProjectID && !t.isRepeating() && t.Done != ot.Done {
 		err = t.moveTaskToDoneBuckets(s, a, views)
+		if err != nil {
+			return
+		}
+	}
+
+	// Repeating tasks don't stay in the done bucket — route them back
+	// to the default bucket so the next iteration shows up in the
+	// "To-Do" column. See #2573.
+	if t.ProjectID == ot.ProjectID && t.isRepeating() && !ot.Done && t.Done {
+		err = t.moveTaskToDefaultBuckets(s, a, views)
 		if err != nil {
 			return
 		}
@@ -1377,10 +1462,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 	t.Updated = nt.Updated
 
-	doer, _ := user.GetFromAuth(a)
 	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: t,
-		Doer: doer,
+		Doer: doerFromAuth(s, a),
 	})
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
@@ -1458,19 +1542,76 @@ func (t *Task) moveTaskToDoneBuckets(s *xorm.Session, a web.Auth, views []*Proje
 	return nil
 }
 
+// moveTaskToDefaultBuckets moves the task to the default bucket of
+// every provided view. It's the counterpart to moveTaskToDoneBuckets
+// and is used when a repeating task is marked done: repeating tasks
+// don't stay in the done bucket, so they should be routed back to
+// the default ("To-Do") bucket so the next iteration is visible there.
+func (t *Task) moveTaskToDefaultBuckets(s *xorm.Session, a web.Auth, views []*ProjectView) error {
+	for _, view := range views {
+		defaultBucketID, err := getDefaultBucketID(s, view)
+		if err != nil {
+			return err
+		}
+
+		tb := &TaskBucket{
+			BucketID:      defaultBucketID,
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			ProjectID:     t.ProjectID,
+		}
+		err = updateTaskBucket(s, a, tb)
+		if err != nil {
+			return err
+		}
+
+		tp := TaskPosition{
+			TaskID:        t.ID,
+			ProjectViewID: view.ID,
+			Position:      calculateDefaultPosition(t.Index, t.Position),
+		}
+		err = updateTaskPosition(s, a, &tp)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func addOneMonthToDate(d time.Time) time.Time {
 	return time.Date(d.Year(), d.Month()+1, d.Day(), d.Hour(), d.Minute(), d.Second(), d.Nanosecond(), config.GetTimeZone())
 }
 
+// addRepeatIntervalToTime advances t by whole multiples of duration until
+// it is strictly after now. The previous O(n) loop made a one-second
+// interval with an ancient due_date trivial DoS (GHSA-r4fg-73rc-hhh7);
+// this computes the answer in constant time.
 func addRepeatIntervalToTime(now, t time.Time, duration time.Duration) time.Time {
-	for {
-		t = t.Add(duration)
-		if t.After(now) {
-			break
-		}
+	if duration <= 0 {
+		return t
 	}
 
-	return t
+	// Preserve the original contract: always advance t by at least one
+	// interval, even when t is already at or after now.
+	if !t.Before(now) {
+		return t.Add(duration)
+	}
+
+	// time.Time.Sub saturates at math.MaxInt64 nanoseconds (~292 years).
+	// Fall back to "one interval past now" for pathologically old t.
+	diff := now.Sub(t)
+	if diff == math.MaxInt64 {
+		return now.Add(duration)
+	}
+
+	intervals := int64(diff/duration) + 1
+
+	// Guard against int64 overflow when multiplying intervals by duration.
+	if intervals > math.MaxInt64/int64(duration) {
+		return now.Add(duration)
+	}
+
+	return t.Add(time.Duration(intervals) * duration)
 }
 
 func setTaskDatesDefault(oldTask, newTask *Task) {
@@ -1819,10 +1960,9 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
 	events.DispatchOnCommit(s, &TaskDeletedEvent{
 		Task: fullTask,
-		Doer: doer,
+		Doer: doerFromAuth(s, a),
 	})
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
@@ -1836,7 +1976,7 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 // @Accept json
 // @Produce json
 // @Param id path int true "The task ID"
-// @Param expand query []string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values."
+// @Param expand query string false "If set to `subtasks`, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to `buckets`, the buckets of each task will be present in the response. If set to `reactions`, the reactions of each task will be present in the response. If set to `comments`, the first 50 comments of each task will be present in the response. You can set this multiple times with different values."
 // @Security JWTKeyAuth
 // @Success 200 {object} models.Task "The task"
 // @Failure 404 {object} models.Message "Task not found"
@@ -1845,6 +1985,9 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 func (t *Task) ReadOne(s *xorm.Session, a web.Auth) (err error) {
 
 	expand := t.Expand
+	if err = t.resolveIDFromProjectAndIndex(s); err != nil {
+		return
+	}
 	*t, err = GetTaskByIDSimple(s, t.ID)
 	if err != nil {
 		return
@@ -1887,10 +2030,9 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(auth)
 	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: &t,
-		Doer: doer,
+		Doer: doerFromAuth(s, auth),
 	})
 	return nil
 }

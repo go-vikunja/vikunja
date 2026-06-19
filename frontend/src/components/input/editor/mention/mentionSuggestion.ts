@@ -3,6 +3,7 @@ import { computePosition, flip, shift, offset, autoUpdate } from '@floating-ui/d
 import type { Editor } from '@tiptap/core'
 
 import MentionList from './MentionList.vue'
+import { getPopupContainer } from '../popupContainer'
 import ProjectUserService from '@/services/projectUsers'
 import { fetchAvatarBlobUrl, getDisplayName } from '@/models/user'
 import type { IUser } from '@/modelTypes/IUser'
@@ -113,7 +114,8 @@ export default function mentionSuggestionSetup(projectId: number) {
 					popupElement.style.left = '0'
 					popupElement.style.zIndex = '4700'
 					popupElement.appendChild(component.element!)
-					document.body.appendChild(popupElement)					// Update virtual reference
+					getPopupContainer(props.editor).appendChild(popupElement)
+					// Update virtual reference
 					const rect = props.clientRect()
 					if (rect) {
 						virtualReference.getBoundingClientRect = () => rect
@@ -179,7 +181,7 @@ export default function mentionSuggestionSetup(projectId: number) {
 						cleanupFloating()
 					}
 					if (popupElement) {
-						document.body.removeChild(popupElement)
+						popupElement.remove()
 						popupElement = null
 					}
 					component.destroy()

@@ -23,6 +23,411 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/overview": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns per-instance counts (users, projects, shares) plus version and license info. Instance-admin only, gated by the admin_panel feature.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Admin overview",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Overview"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/projects": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Paginated list of every project on the instance, regardless of ownership.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List projects (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number, defaults to 1.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page, defaults to the service setting.",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search projects by title, description or identifier.",
+                        "name": "s",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Project"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/projects/{id}/owner": {
+            "patch": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Reassign a project's owner. The existing update endpoint doesn't allow owner changes — this is the admin-only escape hatch.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Reassign project owner (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New owner",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.OwnerPatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Project"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Paginated list of all users on the instance. Supports search by username/email. Exposes fields hidden from the normal user API (is_admin, status).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List users (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search string matched against username and email.",
+                        "name": "s",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number, defaults to 1.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page, defaults to the service setting.",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/shared.AdminUser"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Create a new local user account. Respects the admin-only fields ` + "`" + `is_admin` + "`" + ` and ` + "`" + `skip_email_confirm` + "`" + `. The public registration toggle is bypassed.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Create a user (admin)",
+                "parameters": [
+                    {
+                        "description": "The user to create",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateUserBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/shared.AdminUser"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Delete a user. With mode=now the user is removed immediately. With mode=scheduled (the default, matching the CLI) the user receives a confirmation email and is scheduled for deletion just like a self-initiated account deletion.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete a user (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Deletion mode: 'now' for immediate deletion, 'scheduled' (default) to trigger the email-confirmation self-deletion flow.",
+                        "name": "mode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}/admin": {
+            "patch": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Toggle the instance-admin flag on a user. Demoting the last remaining admin is refused with 400.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Promote or demote a user (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New admin value",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.IsAdminPatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/shared.AdminUser"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Change a user's status without requiring them to log in.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Set a user's status (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.StatusPatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/shared.AdminUser"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/openid/{provider}/callback": {
             "post": {
                 "security": [
@@ -65,6 +470,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/auth.Token"
+                        }
+                    },
+                    "412": {
+                        "description": "Invalid totp passcode.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
                         }
                     },
                     "500": {
@@ -425,7 +836,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.vikunjaInfos"
+                            "$ref": "#/definitions/shared.VikunjaInfos"
                         }
                     }
                 }
@@ -765,6 +1176,198 @@ const docTemplate = `{
                 }
             }
         },
+        "/migration/csv/detect": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Analyzes a CSV file and returns auto-detected columns, delimiter, quote character, and date format with suggested column mappings.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Detect CSV structure",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "The CSV file to analyze",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detection results with suggested mappings",
+                        "schema": {
+                            "$ref": "#/definitions/csv.DetectionResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid CSV file",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/csv/migrate": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Imports tasks from a CSV file into Vikunja with the provided configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Import CSV file",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "The CSV file to import",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The import configuration JSON",
+                        "name": "config",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A message telling you everything was migrated successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid CSV file or configuration",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/csv/preview": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Generates a preview of the first 5 tasks that would be imported with the given configuration.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Preview CSV import",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "The CSV file to preview",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The import configuration JSON",
+                        "name": "config",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Preview of tasks to import",
+                        "schema": {
+                            "$ref": "#/definitions/csv.PreviewResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid CSV file or configuration",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/csv/status": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns if the current user already did the CSV migration or not.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get CSV migration status",
+                "responses": {
+                    "200": {
+                        "description": "The migration status",
+                        "schema": {
+                            "$ref": "#/definitions/migration.Status"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/migration/microsoft-todo/auth": {
             "get": {
                 "security": [
@@ -873,7 +1476,7 @@ const docTemplate = `{
             }
         },
         "/migration/ticktick/migrate": {
-            "post": {
+            "put": {
                 "security": [
                     {
                         "JWTKeyAuth": []
@@ -1211,6 +1814,80 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Returns if the current user already did the migation or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Get migration status",
+                "responses": {
+                    "200": {
+                        "description": "The migration status",
+                        "schema": {
+                            "$ref": "#/definitions/migration.Status"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/wekan/migrate": {
+            "put": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Imports all projects, tasks, labels, checklists, comments, and attachments from a WeKan board JSON export into Vikunja.",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "migration"
+                ],
+                "summary": "Import all projects, tasks etc. from a WeKan board export",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The WeKan board JSON export file.",
+                        "name": "import",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A message telling you everything was migrated successfully.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/migration/wekan/status": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns if the current user already did the migration or not. This is useful to show a confirmation message in the frontend if the user is trying to do the same migration again.",
                 "produces": [
                     "application/json"
                 ],
@@ -2505,7 +3182,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "array",
+                        "type": "string",
                         "description": "If set to ` + "`" + `subtasks` + "`" + `, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to ` + "`" + `buckets` + "`" + `, the buckets of each task will be present in the response. If set to ` + "`" + `reactions` + "`" + `, the reactions of each task will be present in the response. If set to ` + "`" + `comments` + "`" + `, the first 50 comments of each task will be present in the response. You can set this multiple times with different values.",
                         "name": "expand",
                         "in": "query"
@@ -3467,6 +4144,80 @@ const docTemplate = `{
                 }
             }
         },
+        "/projects/{project}/tasks/by-index/{index}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTKeyAuth": []
+                    }
+                ],
+                "description": "Returns a single task identified by its per-project index. Useful when resolving human-readable references like \"PROJ-42\" to a canonical task object. The ` + "`" + `project` + "`" + ` path parameter accepts either a numeric project id or the project's identifier (e.g. \"PROJ\"); values consisting solely of digits are always interpreted as ids. Note that task indexes are reassigned when a task is moved between projects, so long-lived references should use the returned task id instead.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "Get one task by its per-project index",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The project id or the project's identifier",
+                        "name": "project",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The task's per-project index",
+                        "name": "index",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "If set to ` + "`" + `subtasks` + "`" + `, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. You can only set this to ` + "`" + `subtasks` + "`" + `.",
+                        "name": "expand",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The task",
+                        "schema": {
+                            "$ref": "#/definitions/models.Task"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid project ID or index",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "The user does not have access to the task",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Task not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/projects/{project}/views": {
             "get": {
                 "security": [
@@ -4131,11 +4882,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
+                        "type": "string",
                         "description": "If set to ` + "`" + `subtasks` + "`" + `, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to ` + "`" + `buckets` + "`" + `, the buckets of each task will be present in the response. If set to ` + "`" + `reactions` + "`" + `, the reactions of each task will be present in the response. If set to ` + "`" + `comments` + "`" + `, the first 50 comments of each task will be present in the response. You can set this multiple times with different values.",
                         "name": "expand",
                         "in": "query"
@@ -4247,11 +4994,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
+                        "type": "string",
                         "description": "If set to ` + "`" + `subtasks` + "`" + `, Vikunja will fetch only tasks which do not have subtasks and then in a second step, will fetch all of these subtasks. This may result in more tasks than the pagination limit being returned, but all subtasks will be present in the response. If set to ` + "`" + `buckets` + "`" + `, the buckets of each task will be present in the response. If set to ` + "`" + `reactions` + "`" + `, the reactions of each task will be present in the response. If set to ` + "`" + `comments` + "`" + `, the first 50 comments of each task will be present in the response. You can set this multiple times with different values.",
                         "name": "expand",
                         "in": "query"
@@ -5102,7 +5845,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Remove a task comment. The user doing this need to have at least read access to the task this comment belongs to.",
+                "description": "Get a task comment. The user doing this need to have at least read access to the task this comment belongs to.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5112,7 +5855,7 @@ const docTemplate = `{
                 "tags": [
                     "task"
                 ],
-                "summary": "Remove a task comment",
+                "summary": "Get a task comment",
                 "parameters": [
                     {
                         "type": "integer",
@@ -6126,6 +6869,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/test/all": {
+            "delete": {
+                "description": "Removes all data from every Vikunja table. Used by e2e tests to ensure clean state before each test. Requires the testing token.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Truncate all tables",
+                "responses": {
+                    "200": {
+                        "description": "All tables truncated.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/web.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/test/{table}": {
             "patch": {
                 "description": "Fills the specified table with the content provided in the payload. You need to enable the testing endpoint before doing this and provide the ` + "`" + `Authorization: \u003ctoken\u003e` + "`" + ` secret when making requests to this endpoint. See docs for more details.",
@@ -6564,7 +7342,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.UserExportStatus"
+                            "$ref": "#/definitions/models.UserExportStatus"
                         }
                     }
                 }
@@ -7070,7 +7848,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.UserSettings"
+                            "$ref": "#/definitions/models.UserGeneralSettings"
                         }
                     }
                 ],
@@ -8106,6 +8884,36 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "admin.IsAdminPatch": {
+            "type": "object",
+            "properties": {
+                "is_admin": {
+                    "description": "Pointer to distinguish \"omitted\" from false; an empty body would silently demote otherwise.",
+                    "type": "boolean"
+                }
+            }
+        },
+        "admin.OwnerPatch": {
+            "type": "object",
+            "properties": {
+                "owner_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.StatusPatch": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "Pointer to distinguish \"omitted\" from StatusActive; an empty body would silently re-enable otherwise.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/user.Status"
+                        }
+                    ]
+                }
+            }
+        },
         "auth.Token": {
             "type": "object",
             "properties": {
@@ -8167,6 +8975,133 @@ const docTemplate = `{
                 }
             }
         },
+        "csv.ColumnMapping": {
+            "type": "object",
+            "properties": {
+                "attribute": {
+                    "$ref": "#/definitions/csv.TaskAttribute"
+                },
+                "column_index": {
+                    "type": "integer"
+                },
+                "column_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "csv.DetectionResult": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "date_format": {
+                    "type": "string"
+                },
+                "delimiter": {
+                    "type": "string"
+                },
+                "preview_rows": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "quote_char": {
+                    "type": "string"
+                },
+                "suggested_mapping": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/csv.ColumnMapping"
+                    }
+                }
+            }
+        },
+        "csv.PreviewResult": {
+            "type": "object",
+            "properties": {
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/csv.PreviewTask"
+                    }
+                },
+                "total_rows": {
+                    "type": "integer"
+                }
+            }
+        },
+        "csv.PreviewTask": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "done": {
+                    "type": "boolean"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "project": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "csv.TaskAttribute": {
+            "type": "string",
+            "enum": [
+                "title",
+                "description",
+                "due_date",
+                "start_date",
+                "end_date",
+                "done",
+                "priority",
+                "labels",
+                "project",
+                "reminder",
+                "ignore"
+            ],
+            "x-enum-varnames": [
+                "AttrTitle",
+                "AttrDescription",
+                "AttrDueDate",
+                "AttrStartDate",
+                "AttrEndDate",
+                "AttrDone",
+                "AttrPriority",
+                "AttrLabels",
+                "AttrProject",
+                "AttrReminder",
+                "AttrIgnore"
+            ]
+        },
         "files.File": {
             "type": "object",
             "properties": {
@@ -8191,6 +9126,50 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "license.Feature": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3
+            ],
+            "x-enum-varnames": [
+                "FeatureUnknown",
+                "FeatureAdminPanel",
+                "FeatureTimeTracking",
+                "FeatureAuditLogs"
+            ]
+        },
+        "license.Info": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "instance_id": {
+                    "type": "string"
+                },
+                "last_check_failed": {
+                    "type": "boolean"
+                },
+                "licensed": {
+                    "type": "boolean"
+                },
+                "max_users": {
+                    "type": "integer"
+                },
+                "validated_at": {
                     "type": "string"
                 }
             }
@@ -8244,6 +9223,10 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this api key.",
                     "type": "integer"
                 },
+                "owner_id": {
+                    "description": "The user ID of the token owner. When creating a token for a bot user, set this\nto the bot's ID. If omitted, defaults to the authenticated user.",
+                    "type": "integer"
+                },
                 "permissions": {
                     "description": "The permissions this token has. Possible values are available via the /routes endpoint and consist of the keys of the list from that endpoint. For example, if the token should be able to read all tasks as well as update existing tasks, you should add ` + "`" + `{\"tasks\":[\"read_all\",\"update\"]}` + "`" + `.",
                     "allOf": [
@@ -8254,7 +9237,8 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "A human-readable name for this token",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 },
                 "token": {
                     "description": "The actual api key. Only visible after creation.",
@@ -8357,6 +9341,44 @@ const docTemplate = `{
                 },
                 "values": {
                     "$ref": "#/definitions/models.Task"
+                }
+            }
+        },
+        "models.CreateUserBody": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "The user's email address",
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "is_admin": {
+                    "description": "Mark the new user as an instance admin.",
+                    "type": "boolean"
+                },
+                "language": {
+                    "description": "The language of the new user. Must be a valid IETF BCP 47 language code and exist in Vikunja.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The full name of the new user. Optional.",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "The user's password in clear text. Only used when registering the user. The maximum limi is 72 bytes, which may be less than 72 characters. This is due to the limit in the bcrypt hashing algorithm used to store passwords in Vikunja.",
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 8
+                },
+                "skip_email_confirm": {
+                    "description": "Activate the new user immediately without email confirmation.",
+                    "type": "boolean"
+                },
+                "username": {
+                    "description": "The user's username. Cannot contain anything that looks like an url or whitespaces.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 }
             }
         },
@@ -8516,6 +9538,29 @@ const docTemplate = `{
                 "message": {
                     "description": "A standard message.",
                     "type": "string"
+                }
+            }
+        },
+        "models.Overview": {
+            "type": "object",
+            "properties": {
+                "license": {
+                    "$ref": "#/definitions/license.Info"
+                },
+                "projects": {
+                    "type": "integer"
+                },
+                "shares": {
+                    "$ref": "#/definitions/models.ShareCounts"
+                },
+                "tasks": {
+                    "type": "integer"
+                },
+                "teams": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "integer"
                 }
             }
         },
@@ -8681,8 +9726,7 @@ const docTemplate = `{
                     "enum": [
                         "none",
                         "manual",
-                        "filter",
-                        "manual"
+                        "filter"
                     ]
                 },
                 "created": {
@@ -8719,7 +9763,9 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "The title of this view",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this view was updated. You cannot change this value.",
@@ -8765,7 +9811,8 @@ const docTemplate = `{
                 },
                 "value": {
                     "description": "The actual reaction. This can be any valid utf character or text, up to a length of 20.",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 }
             }
         },
@@ -8886,6 +9933,20 @@ const docTemplate = `{
                 "updated": {
                     "description": "A timestamp when this filter was last updated. You cannot change this value.",
                     "type": "string"
+                }
+            }
+        },
+        "models.ShareCounts": {
+            "type": "object",
+            "properties": {
+                "link_shares": {
+                    "type": "integer"
+                },
+                "team_shares": {
+                    "type": "integer"
+                },
+                "user_shares": {
+                    "type": "integer"
                 }
             }
         },
@@ -9091,6 +10152,10 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "time_entries_count": {
+                    "description": "Time entry count of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `time_entries_count` + "`" + `.",
+                    "type": "integer"
+                },
                 "title": {
                     "description": "The task text. This is what you'll see in the project.",
                     "type": "string",
@@ -9258,7 +10323,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "relation_kind": {
-                    "description": "The kind of the relation.",
+                    "description": "The kind of the relation.\nThe enum list must stay in sync with RelationKind.isValid() (RelationKindUnknown excluded); the v2 delete route param repeats it.",
                     "allOf": [
                         {
                             "$ref": "#/definitions/models.RelationKind"
@@ -9344,10 +10409,6 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
-                "include_public": {
-                    "description": "Query parameter controlling whether to include public projects or not",
-                    "type": "boolean"
-                },
                 "is_public": {
                     "description": "Defines wether the team should be publicly discoverable when sharing a project",
                     "type": "boolean"
@@ -9388,7 +10449,8 @@ const docTemplate = `{
                 },
                 "username": {
                     "description": "The username of the member. We use this to prevent automated user id entering.",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 }
             }
         },
@@ -9429,6 +10491,10 @@ const docTemplate = `{
                 "admin": {
                     "description": "Whether the member is an admin of the team. See the docs for more about what a team admin can do",
                     "type": "boolean"
+                },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
                 },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
@@ -9487,10 +10553,6 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
-                "include_public": {
-                    "description": "Query parameter controlling whether to include public projects or not",
-                    "type": "boolean"
-                },
                 "is_public": {
                     "description": "Defines wether the team should be publicly discoverable when sharing a project",
                     "type": "boolean"
@@ -9517,9 +10579,73 @@ const docTemplate = `{
                 }
             }
         },
+        "models.UserExportStatus": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.UserGeneralSettings": {
+            "type": "object",
+            "properties": {
+                "default_project_id": {
+                    "type": "integer"
+                },
+                "discoverable_by_email": {
+                    "type": "boolean"
+                },
+                "discoverable_by_name": {
+                    "type": "boolean"
+                },
+                "email_reminders_enabled": {
+                    "type": "boolean"
+                },
+                "extra_settings_links": {
+                    "description": "Server/OpenID-provided; populated on read, ignored on write.",
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "frontend_settings": {},
+                "language": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "overdue_tasks_reminders_enabled": {
+                    "type": "boolean"
+                },
+                "overdue_tasks_reminders_time": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "week_start": {
+                    "type": "integer",
+                    "maximum": 6,
+                    "minimum": 0
+                }
+            }
+        },
         "models.UserWithPermission": {
             "type": "object",
             "properties": {
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -9642,6 +10768,196 @@ const docTemplate = `{
                 },
                 "scope": {
                     "type": "string"
+                },
+                "totp_passcode": {
+                    "description": "TOTPPasscode is required when the resolved user has TOTP enabled.\nClients must restart the OIDC flow and populate this field after\nreceiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.",
+                    "type": "string"
+                }
+            }
+        },
+        "shared.AdminUser": {
+            "type": "object",
+            "properties": {
+                "auth_provider": {
+                    "type": "string"
+                },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
+                "created": {
+                    "description": "A timestamp when this task was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "The user's email address.",
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "id": {
+                    "description": "The unique, numeric id of this user.",
+                    "type": "integer"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "issuer": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The full name of the user.",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/user.Status"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "updated": {
+                    "description": "A timestamp when this task was last updated. You cannot change this value.",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "The username of the user. Is always unique.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
+                }
+            }
+        },
+        "shared.AuthInfo": {
+            "type": "object",
+            "properties": {
+                "ldap": {
+                    "$ref": "#/definitions/shared.LdapAuthInfo"
+                },
+                "local": {
+                    "$ref": "#/definitions/shared.LocalAuthInfo"
+                },
+                "openid_connect": {
+                    "$ref": "#/definitions/shared.OpenIDAuthInfo"
+                }
+            }
+        },
+        "shared.LdapAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "shared.LegalInfo": {
+            "type": "object",
+            "properties": {
+                "imprint_url": {
+                    "type": "string"
+                },
+                "privacy_policy_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "shared.LocalAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "registration_enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "shared.OpenIDAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider"
+                    }
+                }
+            }
+        },
+        "shared.VikunjaInfos": {
+            "type": "object",
+            "properties": {
+                "allow_icon_changes": {
+                    "type": "boolean"
+                },
+                "auth": {
+                    "$ref": "#/definitions/shared.AuthInfo"
+                },
+                "available_migrators": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "caldav_enabled": {
+                    "type": "boolean"
+                },
+                "demo_mode_enabled": {
+                    "type": "boolean"
+                },
+                "email_reminders_enabled": {
+                    "type": "boolean"
+                },
+                "enabled_background_providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "enabled_pro_features": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/license.Feature"
+                    }
+                },
+                "frontend_url": {
+                    "type": "string"
+                },
+                "legal": {
+                    "$ref": "#/definitions/shared.LegalInfo"
+                },
+                "link_sharing_enabled": {
+                    "type": "boolean"
+                },
+                "max_file_size": {
+                    "type": "string"
+                },
+                "max_items_per_page": {
+                    "type": "integer"
+                },
+                "motd": {
+                    "type": "string"
+                },
+                "public_teams_enabled": {
+                    "type": "boolean"
+                },
+                "task_attachments_enabled": {
+                    "type": "boolean"
+                },
+                "task_comments_enabled": {
+                    "type": "boolean"
+                },
+                "totp_enabled": {
+                    "type": "boolean"
+                },
+                "user_deletion_enabled": {
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "webhooks_enabled": {
+                    "type": "boolean"
                 }
             }
         },
@@ -9728,6 +11044,21 @@ const docTemplate = `{
                 }
             }
         },
+        "user.Status": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3
+            ],
+            "x-enum-varnames": [
+                "StatusActive",
+                "StatusEmailConfirmationRequired",
+                "StatusDisabled",
+                "StatusAccountLocked"
+            ]
+        },
         "user.TOTP": {
             "type": "object",
             "properties": {
@@ -9769,6 +11100,10 @@ const docTemplate = `{
         "user.User": {
             "type": "object",
             "properties": {
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
                     "type": "string"
@@ -9823,23 +11158,6 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.UserExportStatus": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "type": "string"
-                },
-                "expires": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
-                }
-            }
-        },
         "v1.UserPassword": {
             "type": "object",
             "properties": {
@@ -9887,64 +11205,15 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.UserSettings": {
-            "type": "object",
-            "properties": {
-                "default_project_id": {
-                    "description": "If a task is created without a specified project this value should be used. Applies\nto tasks made directly in API and from clients.",
-                    "type": "integer"
-                },
-                "discoverable_by_email": {
-                    "description": "If true, the user can be found when searching for their exact email.",
-                    "type": "boolean"
-                },
-                "discoverable_by_name": {
-                    "description": "If true, this user can be found by their name or parts of it when searching for it.",
-                    "type": "boolean"
-                },
-                "email_reminders_enabled": {
-                    "description": "If enabled, sends email reminders of tasks to the user.",
-                    "type": "boolean"
-                },
-                "extra_settings_links": {
-                    "description": "Additional settings links as provided by openid",
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "frontend_settings": {
-                    "description": "Additional settings only used by the frontend"
-                },
-                "language": {
-                    "description": "The user's language",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "The new name of the current user.",
-                    "type": "string"
-                },
-                "overdue_tasks_reminders_enabled": {
-                    "description": "If enabled, the user will get an email for their overdue tasks each morning.",
-                    "type": "boolean"
-                },
-                "overdue_tasks_reminders_time": {
-                    "description": "The time when the daily summary of overdue tasks will be sent via email.",
-                    "type": "string"
-                },
-                "timezone": {
-                    "description": "The user's time zone. Used to send task reminders in the time zone of the user.",
-                    "type": "string"
-                },
-                "week_start": {
-                    "description": "The day when the week starts for this user. 0 = sunday, 1 = monday, etc.",
-                    "type": "integer"
-                }
-            }
-        },
         "v1.UserWithSettings": {
             "type": "object",
             "properties": {
                 "auth_provider": {
                     "type": "string"
+                },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
                 },
                 "created": {
                     "description": "A timestamp when this task was created. You cannot change this value.",
@@ -9962,6 +11231,9 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this user.",
                     "type": "integer"
                 },
+                "is_admin": {
+                    "type": "boolean"
+                },
                 "is_local_user": {
                     "type": "boolean"
                 },
@@ -9970,7 +11242,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "settings": {
-                    "$ref": "#/definitions/v1.UserSettings"
+                    "$ref": "#/definitions/models.UserGeneralSettings"
                 },
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
@@ -9981,132 +11253,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
-                }
-            }
-        },
-        "v1.authInfo": {
-            "type": "object",
-            "properties": {
-                "ldap": {
-                    "$ref": "#/definitions/v1.ldapAuthInfo"
-                },
-                "local": {
-                    "$ref": "#/definitions/v1.localAuthInfo"
-                },
-                "openid_connect": {
-                    "$ref": "#/definitions/v1.openIDAuthInfo"
-                }
-            }
-        },
-        "v1.ldapAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "v1.legalInfo": {
-            "type": "object",
-            "properties": {
-                "imprint_url": {
-                    "type": "string"
-                },
-                "privacy_policy_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1.localAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "registration_enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "v1.openIDAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider"
-                    }
-                }
-            }
-        },
-        "v1.vikunjaInfos": {
-            "type": "object",
-            "properties": {
-                "auth": {
-                    "$ref": "#/definitions/v1.authInfo"
-                },
-                "available_migrators": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "caldav_enabled": {
-                    "type": "boolean"
-                },
-                "demo_mode_enabled": {
-                    "type": "boolean"
-                },
-                "email_reminders_enabled": {
-                    "type": "boolean"
-                },
-                "enabled_background_providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "frontend_url": {
-                    "type": "string"
-                },
-                "legal": {
-                    "$ref": "#/definitions/v1.legalInfo"
-                },
-                "link_sharing_enabled": {
-                    "type": "boolean"
-                },
-                "max_file_size": {
-                    "type": "string"
-                },
-                "max_items_per_page": {
-                    "type": "integer"
-                },
-                "motd": {
-                    "type": "string"
-                },
-                "public_teams_enabled": {
-                    "type": "boolean"
-                },
-                "task_attachments_enabled": {
-                    "type": "boolean"
-                },
-                "task_comments_enabled": {
-                    "type": "boolean"
-                },
-                "totp_enabled": {
-                    "type": "boolean"
-                },
-                "user_deletion_enabled": {
-                    "type": "boolean"
-                },
-                "version": {
-                    "type": "string"
-                },
-                "webhooks_enabled": {
-                    "type": "boolean"
                 }
             }
         },

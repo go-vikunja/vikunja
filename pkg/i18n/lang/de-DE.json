@@ -71,7 +71,8 @@
 				"message": "Dies ist eine freundliche Erinnerung an die Aufgabe „%[1]s“ (%[2]s)."
 			},
 			"comment": {
-				"mentioned_message": "**%[1]s** hat dich in einem Kommentar erwähnt:"
+				"subject": "Re: %[1]s (%[2]s)",
+				"mentioned_subject": "%[1]s hat dich in einem Kommentar zu „%[2]s“ (%[3]s) erwähnt"
 			},
 			"assigned": {
 				"subject_to_assignee": "Du wurdest „%[1]s“ (%[2]s) zugewiesen",
@@ -86,7 +87,8 @@
 				"message": "%[1]s hat die Aufgabe „%[2]s“ (%[3]s) gelöscht"
 			},
 			"mentioned": {
-				"message": "**%[1]s** hat dich in einer Aufgabe erwähnt:"
+				"subject_new": "%[1]s hat dich in einer neuen Aufgabe „%[2]s“ (%[3]s) erwähnt",
+				"subject": "%[1]s hat dich in einer Aufgabe „%[2]s“ (%[3]s) erwähnt"
 			},
 			"overdue": {
 				"subject": "Aufgabe „%[1]s“ (%[2]s) ist überfällig",
@@ -129,10 +131,24 @@
 				"working_on_it": "Wir haben die Fehlermeldung auf dem Schirm und arbeiten daran, das Problem bald zu beheben."
 			}
 		},
+		"api_token": {
+			"expiring": {
+				"week": {
+					"subject": "Dein API-Token „%[1]s“ läuft bald ab",
+					"message": "Dein API-Token „%[1]s“ läuft am %[2]s ab. Wenn du es noch brauchst, erstelle bitte ein neues bevor es abläuft."
+				},
+				"day": {
+					"subject": "Dein API-Token „%[1]s“ läuft morgen ab",
+					"message": "Dein API-Token „%[1]s“ läuft am %[2]s ab. Wenn du es noch brauchst, erstelle bitte ein neues bevor es abläuft."
+				},
+				"action": "API-Token verwalten"
+			}
+		},
 		"common": {
 			"have_nice_day": "Hab einen schönen Tag!",
 			"copy_url": "Falls der Button oben nicht funktioniert, kopiere die untenstehende URL und füge sie in die Adressleiste deines Browsers ein:",
 			"actions": {
+				"open_task": "Aufgabe in Vikunja öffnen",
 				"open_vikunja": "Vikunja öffnen",
 				"open_project": "Projekt öffnen",
 				"open_team": "Team öffnen",
@@ -142,7 +158,11 @@
 				"confirm_email": "E-Mail-Adresse bestätigen",
 				"abort_deletion": "Löschen abbrechen",
 				"confirm_account_deletion": "Löschung meines Accounts bestätigen",
-				"change_notification_settings_link": "Du kannst deine Benachrichtigungseinstellungen [hier](%[1]s) ändern."
+				"change_notification_settings_link": "Du kannst deine Benachrichtigungseinstellungen [hier](%[1]s) ändern.",
+				"left_comment": "%[1]s hat kommentiert",
+				"mentioned_you_comment": "%[1]s hat dich in einem Kommentar erwähnt",
+				"mentioned_you": "%[1]s hat dich erwähnt",
+				"mentioned_you_new_task": "%[1]s hat dich in einer neuen Aufgabe erwähnt"
 			}
 		}
 	},
@@ -153,5 +173,10 @@
 		"since_hours": "einer Stunde|%[1]d Stunden",
 		"since_minutes": "einer Minute|%[1]d Minuten",
 		"list_last_separator": "und"
+	},
+	"feeds": {
+		"notifications": {
+			"title": "Vikunja Benachrichtigungen für %[1]s"
+		}
 	}
 }

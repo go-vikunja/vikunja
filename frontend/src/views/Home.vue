@@ -1,8 +1,8 @@
 <template>
 	<div class="content has-text-centered">
-		<h2 v-if="salutation">
+		<h1 v-if="salutation">
 			{{ salutation }}
-		</h2>
+		</h1>
 
 		<Message
 			v-if="deletionScheduledAt !== null"
@@ -25,7 +25,7 @@
 		/>
 		<ImportHint v-if="tasksLoaded" />
 		<div
-			v-if="projectHistory.length > 0"
+			v-if="authStore.settings.frontendSettings.showLastViewed !== false && projectHistory.length > 0"
 			class="is-max-width-desktop has-text-start mbs-4"
 		>
 			<h3>{{ $t('home.lastViewed') }}</h3>

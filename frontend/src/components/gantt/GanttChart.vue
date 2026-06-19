@@ -751,7 +751,7 @@ function focusTaskBar(rowId: string) {
 	setTimeout(() => {
 		const taskBarElement = document.querySelector(`[data-row-id="${rowId}"] [role="slider"]`) as HTMLElement
 		if (taskBarElement) {
-			taskBarElement.focus()
+			taskBarElement.focus({preventScroll: true})
 		}
 	}, 0)
 }
@@ -772,6 +772,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .gantt-container {
 	overflow-x: auto;
+	min-inline-size: 100%;
 }
 
 .gantt-chart-wrapper {

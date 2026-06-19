@@ -1,0 +1,76 @@
+{
+  "_format": "wekan-board-1.0.0",
+  "_id": "testboard123",
+  "title": "Sample Project Board",
+  "labels": [
+    {"_id": "lbl-bug", "name": "Bug", "color": "red"},
+    {"_id": "lbl-feat", "name": "Feature", "color": "green"},
+    {"_id": "lbl-urgent", "name": "Urgent", "color": "orange"}
+  ],
+  "lists": [
+    {"_id": "list-backlog", "title": "Backlog", "sort": 0, "archived": false},
+    {"_id": "list-progress", "title": "In Progress", "sort": 1, "archived": false},
+    {"_id": "list-done", "title": "Done", "sort": 2, "archived": false}
+  ],
+  "cards": [
+    {
+      "_id": "card-1",
+      "title": "Fix authentication flow",
+      "description": "Users are getting logged out unexpectedly.",
+      "listId": "list-backlog",
+      "labelIds": ["lbl-bug", "lbl-urgent"],
+      "sort": 0,
+      "archived": false,
+      "startAt": "2024-03-01T09:00:00.000Z",
+      "dueAt": "2024-03-15T17:00:00.000Z",
+      "createdAt": "2024-02-20T10:00:00.000Z"
+    },
+    {
+      "_id": "card-2",
+      "title": "Add dark mode",
+      "description": "Implement dark mode toggle in settings.",
+      "listId": "list-progress",
+      "labelIds": ["lbl-feat"],
+      "sort": 0,
+      "archived": false,
+      "createdAt": "2024-02-25T08:00:00.000Z"
+    },
+    {
+      "_id": "card-3",
+      "title": "Update README",
+      "description": "",
+      "listId": "list-done",
+      "labelIds": [],
+      "sort": 0,
+      "archived": true,
+      "createdAt": "2024-01-10T12:00:00.000Z"
+    }
+  ],
+  "checklists": [
+    {"_id": "cl-1", "cardId": "card-1", "title": "Steps", "sort": 0}
+  ],
+  "checklistItems": [
+    {"_id": "cli-1", "checklistId": "cl-1", "cardId": "card-1", "title": "Reproduce the issue", "sort": 0, "isFinished": true},
+    {"_id": "cli-2", "checklistId": "cl-1", "cardId": "card-1", "title": "Write failing test", "sort": 1, "isFinished": false},
+    {"_id": "cli-3", "checklistId": "cl-1", "cardId": "card-1", "title": "Fix the code", "sort": 2, "isFinished": false}
+  ],
+  "comments": [
+    {"_id": "com-1", "text": "I can reproduce this on Firefox too.", "createdAt": "2024-03-02T11:30:00.000Z", "cardId": "card-1"},
+    {"_id": "com-2", "text": "Should we support system theme detection?", "createdAt": "2024-02-26T09:00:00.000Z", "cardId": "card-2"}
+  ],
+  "swimlanes": [],
+  "activities": [],
+  "rules": [],
+  "triggers": [],
+  "actions": [],
+  "customFields": [],
+  "attachments": [
+    {
+      "_id": "att-1",
+      "cardId": "card-1",
+      "file": "aGVsbG8gd2VrYW4=",
+      "name": "note.txt",
+      "type": "text/plain"
+    }
+  ]
+}

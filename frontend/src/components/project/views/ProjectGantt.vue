@@ -8,14 +8,14 @@
 		<template #default>
 			<Card :has-content="false">
 				<div class="gantt-options">
-					<FormField :label="$t('project.gantt.range')">
+					<FormField :label="$t('misc.dateRange')">
 						<Foo
 							id="range"
 							ref="flatPickerEl"
 							v-model="flatPickerDateRange"
 							:config="flatPickerConfig"
 							class="input"
-							:placeholder="$t('project.gantt.range')"
+							:placeholder="$t('misc.dateRange')"
 						/>
 					</FormField>
 					<div
@@ -195,13 +195,11 @@ const flatPickerDateRange = computed<Date[]>({
 	},
 })
 
-const initialDateRange = [filters.value.dateFrom, filters.value.dateTo]
-
 const {t} = useI18n({useScope: 'global'})
 const flatPickerConfig = computed(() => ({
 	altFormat: t('date.altFormatShort'),
 	altInput: true,
-	defaultDate: initialDateRange,
+	defaultDate: [filters.value.dateFrom, filters.value.dateTo],
 	enableTime: false,
 	mode: 'range',
 	locale: useFlatpickrLanguage().value,
@@ -211,6 +209,8 @@ const flatPickerConfig = computed(() => ({
 <style lang="scss" scoped>
 .gantt-chart-container {
 	padding-block-end: 1rem;
+	position: relative;
+	z-index: 0;
 }
 
 .gantt-options {

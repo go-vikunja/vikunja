@@ -9,7 +9,6 @@ test.describe('Mention in task comment', () => {
 		await ProjectFactory.create(1)
 		await createDefaultViews(1)
 		await TaskFactory.create(1, {id: 1})
-		await TaskCommentFactory.truncate()
 	})
 
 	test('typing @ in comment editor does not throw TypeError', async ({authenticatedPage: page}) => {

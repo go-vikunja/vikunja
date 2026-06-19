@@ -17,6 +17,7 @@
 package caldav
 
 import (
+	"context"
 	"slices"
 	"strconv"
 	"strings"
@@ -35,10 +36,16 @@ import (
 )
 
 // DavBasePath is the base url path
-const DavBasePath = `/dav/`
+const DavBasePath = `/dav`
 
 // ProjectBasePath is the base path for all projects resources
-const ProjectBasePath = DavBasePath + `projects`
+const ProjectBasePath = DavBasePath + `/projects`
+
+// PrincipalBasePath is the base path for all principal resources
+const PrincipalBasePath = DavBasePath + `/principals`
+
+// ProjectHomeSetPath is the CalDAV home-set path Apple clients use after discovery.
+const ProjectHomeSetPath = ProjectBasePath + `/`
 
 // VikunjaCaldavProjectStorage represents a project storage
 type VikunjaCaldavProjectStorage struct {
@@ -68,7 +75,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	// and not /dav/projects. I'm not sure if thats a bug in the client or in caldav-go.
 
 	if vcls.isEntry {
-		r := data.NewResource(rpath, &VikunjaProjectResourceAdapter{
+		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
 			isPrincipal:  true,
 			isCollection: true,
 		})
@@ -77,7 +84,7 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 
 	// If the request wants the principal url, we'll return that and nothing else
 	if vcls.isPrincipal {
-		r := data.NewResource(DavBasePath+`/projects/`, &VikunjaProjectResourceAdapter{
+		r := data.NewResource(ProjectHomeSetPath, &VikunjaProjectResourceAdapter{
 			isPrincipal:  true,
 			isCollection: true,
 		})
@@ -128,6 +135,14 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	}
 	projects := theprojects.([]*models.Project)
 
+	if !withChildren {
+		r := data.NewResource(withTrailingSlash(rpath), &VikunjaProjectResourceAdapter{
+			isPrincipal:  true,
+			isCollection: true,
+		})
+		return []data.Resource{r}, nil
+	}
+
 	var resources []data.Resource
 	for _, l := range projects {
 		rr := VikunjaProjectResourceAdapter{
@@ -144,19 +159,49 @@ func (vcls *VikunjaCaldavProjectStorage) GetResources(rpath string, withChildren
 	return resources, nil
 }
 
+func withTrailingSlash(path string) string {
+	if path == "" {
+		return ProjectHomeSetPath
+	}
+	if strings.HasSuffix(path, "/") {
+		return path
+	}
+	return path + "/"
+}
+
+func principalPathForUser(username string) string {
+	return withTrailingSlash(PrincipalBasePath + `/` + username)
+}
+
 // GetResourcesByList fetches a list of resources from a slice of paths
 func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (resources []data.Resource, err error) {
 
-	// Parse the set of resourcepaths into usable uids
-	// A path looks like this: /dav/projects/10/a6eb526d5748a5c499da202fe74f36ed1aea2aef.ics
-	// So we split the url in parts, take the last one and strip the ".ics" at the end
+	// Path format: /dav/projects/{projectID}/{uid}.ics.
+	// Remember the href's project ID per uid so the consistency check below
+	// can drop tasks requested via the wrong project (GHSA-48ch-p4gq-x46x).
 	var uids []string
+	uidURLProjects := map[string]int64{}
 	for _, path := range rpaths {
 		parts := strings.Split(path, "/")
 		if len(parts) < 5 {
 			continue
 		}
-		uids = append(uids, strings.TrimSuffix(parts[4], ".ics"))
+		// Skip malformed hrefs: without these guards an empty/non-numeric
+		// project would bypass the consistency check, and an empty UID
+		// would query for tasks with empty/NULL uids.
+		if !strings.HasSuffix(parts[4], ".ics") {
+			continue
+		}
+		uid := strings.TrimSuffix(parts[4], ".ics")
+		if uid == "" {
+			continue
+		}
+		urlProjectID, perr := strconv.ParseInt(parts[3], 10, 64)
+		if perr != nil {
+			continue
+		}
+		uids = append(uids, uid)
+		uidURLProjects[uid] = urlProjectID
 	}
 
 	if len(uids) == 0 {
@@ -179,6 +224,11 @@ func (vcls *VikunjaCaldavProjectStorage) GetResourcesByList(rpaths []string) (re
 	}
 
 	for _, t := range tasks {
+		// Closes the URL-path leak for calendar-multiget REPORTs
+		// (GHSA-48ch-p4gq-x46x).
+		if urlProjectID, ok := uidURLProjects[t.UID]; ok && urlProjectID != t.ProjectID {
+			continue
+		}
 		rr := VikunjaProjectResourceAdapter{
 			task: t,
 		}
@@ -251,6 +301,13 @@ func (vcls *VikunjaCaldavProjectStorage) GetResource(rpath string) (*data.Resour
 			return nil, false, errs.ResourceNotFoundError
 		}
 		vcls.task = tasks[0]
+
+		// Reject reads where the URL project (set by TaskHandler in handler.go
+		// from the :project param) doesn't match the task's real project
+		// (GHSA-48ch-p4gq-x46x).
+		if vcls.project != nil && vcls.project.ID != 0 && vcls.task.ProjectID != vcls.project.ID {
+			return nil, false, errs.ResourceNotFoundError
+		}
 
 		if updated.Unix() > 0 {
 			vcls.task.Updated = updated
@@ -340,7 +397,7 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 		return nil, err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(context.Background(), s)
 
 	// Build up the proper response
 	rr := VikunjaProjectResourceAdapter{
@@ -417,7 +474,7 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 		return nil, err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(context.Background(), s)
 
 	// Build up the proper response
 	rr := VikunjaProjectResourceAdapter{
@@ -460,7 +517,7 @@ func (vcls *VikunjaCaldavProjectStorage) DeleteResource(_ string) error {
 			return err
 		}
 
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 	}
 
 	return nil
@@ -522,6 +579,25 @@ func removeStaleRelations(s *xorm.Session, a web.Auth, task *models.Task, newRel
 	}
 
 	for relationKind, relatedTasks := range existingTask.RelatedTasks {
+
+		// Only process CalDAV-compatible relation kinds (parenttask, subtask).
+		// Other kinds (related, blocking, etc.) are never set via CalDAV and
+		// should not be removed here.
+		if relationKind != models.RelationKindParenttask && relationKind != models.RelationKindSubtask {
+			continue
+		}
+
+		// For subtask relations: only consider removal if the VTODO explicitly
+		// declares RELATED-TO;RELTYPE=CHILD (i.e., subtask kind is a key in
+		// newRelations). Subtask relations are often auto-created as inverses
+		// when child tasks declare RELATED-TO;RELTYPE=PARENT pointing to this
+		// task. Removing them just because this task's VTODO doesn't mention
+		// RELATED-TO;RELTYPE=CHILD would break those child-declared links.
+		if relationKind == models.RelationKindSubtask {
+			if _, hasSubtaskKind := newRelations[models.RelationKindSubtask]; !hasSubtaskKind {
+				continue
+			}
+		}
 
 		for _, relatedTask := range relatedTasks {
 			relationInNewList := slices.ContainsFunc(newRelations[relationKind], func(newRelation *models.Task) bool { return newRelation.UID == relatedTask.UID })
@@ -615,15 +691,6 @@ func (vlra *VikunjaProjectResourceAdapter) IsCollection() bool {
 // CalculateEtag returns the etag of a resource
 func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 
-	// If we're updating a task, the client sends the etag of the project instead of the one from the task.
-	// And therefore, updating the task fails since these etags don't match.
-	// To fix that, we use this extra field to determine if we're currently updating a task and return the
-	// etag of the project instead.
-	// if vlra.project != nil {
-	//	 return `"` + strconv.FormatInt(vlra.project.ID, 10) + `-` + strconv.FormatInt(vlra.project.Updated, 10) + `"`
-	// }
-
-	// Return the etag of a task if we have one
 	if vlra.task != nil {
 		return `"` + strconv.FormatInt(vlra.task.ID, 10) + `-` + strconv.FormatInt(vlra.task.Updated.Unix(), 10) + `"`
 	}
@@ -632,10 +699,17 @@ func (vlra *VikunjaProjectResourceAdapter) CalculateEtag() string {
 		return ""
 	}
 
-	// This also returns the etag of the project, and not of the task,
-	// which becomes problematic because the client uses this etag (= the one from the project) to make
-	// Requests to update a task. These do not match and thus updating a task fails.
-	return `"` + strconv.FormatInt(vlra.project.ID, 10) + `-` + strconv.FormatInt(vlra.project.Updated.Unix(), 10) + `"`
+	// For collections, use the latest modification time across all tasks
+	// so that the etag (and derived ctag/sync-token) changes whenever
+	// any task in the project is added, modified, or deleted.
+	latest := vlra.project.Updated
+	for _, t := range vlra.projectTasks {
+		if t.Updated.After(latest) {
+			latest = t.Updated
+		}
+	}
+
+	return `"` + strconv.FormatInt(vlra.project.ID, 10) + `-` + strconv.FormatInt(latest.Unix(), 10) + `"`
 }
 
 // GetContent returns the content string of a resource (a task in our case)

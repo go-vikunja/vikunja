@@ -73,6 +73,9 @@ defineEmits<{
 	margin-block-end: 1rem;
 	border: 1px solid var(--card-border-color);
 	box-shadow: var(--shadow-sm);
+	color: var(--text);
+	max-inline-size: 100%;
+	position: relative;
 
 	@media print {
 		box-shadow: none;
@@ -81,15 +84,61 @@ defineEmits<{
 }
 
 .card-header {
+	background-color: transparent;
+	align-items: stretch;
+	display: flex;
 	box-shadow: none;
 	border-inline-end: 1px solid var(--card-border-color);
 	border-radius: $radius $radius 0 0;
 }
 
+.card-header-title {
+	align-items: center;
+	color: var(--text-strong);
+	display: flex;
+	flex-grow: 1;
+	font-weight: 700;
+	padding: 0.75rem 1rem;
+
+	&.is-centered {
+		justify-content: center;
+	}
+}
+
+.card-header-icon {
+	align-items: center;
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	padding: 0.75rem 1rem;
+}
+
+.card-content {
+	background-color: transparent;
+	padding: 1.5rem;
+
+	&:first-child {
+		border-start-start-radius: $radius;
+		border-start-end-radius: $radius;
+	}
+
+	&:last-child {
+		border-end-start-radius: $radius;
+		border-end-end-radius: $radius;
+	}
+
+	// Utility classes like .p-0 are defined globally with lower specificity
+	// than Vue-scoped selectors; restore precedence explicitly.
+	&.p-0 {
+		padding: 0;
+	}
+}
+
 .card-footer {
+	align-items: stretch;
 	background-color: var(--grey-50);
 	border-block-start: 0;
-	padding: var(--modal-card-head-padding);
+	padding: 20px;
 	display: flex;
 	justify-content: flex-end;
 }

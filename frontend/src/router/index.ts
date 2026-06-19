@@ -7,8 +7,11 @@ import {parseDateOrString} from '@/helpers/time/parseDateOrString'
 import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
+import {PRO_FEATURE} from '@/constants/proFeatures'
 
 import {useAuthStore} from '@/stores/auth'
+import {useBaseStore} from '@/stores/base'
+import {useConfigStore} from '@/stores/config'
 
 import Login from '@/views/user/Login.vue'
 import Register from '@/views/user/Register.vue'
@@ -103,11 +106,22 @@ const router = createRouter({
 					path: '/user/settings/caldav',
 					name: 'user.settings.caldav',
 					component: () => import('@/views/user/settings/Caldav.vue'),
+					beforeEnter: async () => {
+						const {useConfigStore} = await import('@/stores/config')
+						if (!useConfigStore().caldavEnabled) {
+							return {name: 'user.settings.general'}
+						}
+					},
 				},
 				{
 					path: '/user/settings/data-export',
 					name: 'user.settings.data-export',
 					component: () => import('@/views/user/settings/DataExport.vue'),
+				},
+				{
+					path: '/user/settings/feeds',
+					name: 'user.settings.feeds',
+					component: () => import('@/views/user/settings/AtomFeed.vue'),
 				},
 				{
 					path: '/user/settings/deletion',
@@ -133,6 +147,12 @@ const router = createRouter({
 					path: '/user/settings/totp',
 					name: 'user.settings.totp',
 					component: () => import('@/views/user/settings/TOTP.vue'),
+					beforeEnter: async () => {
+						const {useConfigStore} = await import('@/stores/config')
+						if (!useConfigStore().totpEnabled || !useAuthStore().info?.isLocalUser) {
+							return {name: 'user.settings.general'}
+						}
+					},
 				},
 				{
 					path: '/user/settings/api-tokens',
@@ -150,9 +170,19 @@ const router = createRouter({
 					component: () => import('@/views/user/settings/Webhooks.vue'),
 				},
 				{
+					path: '/user/settings/bots',
+					name: 'user.settings.bots',
+					component: () => import('@/views/user/settings/BotUsers.vue'),
+				},
+				{
 					path: '/user/settings/migrate',
 					name: 'migrate.start',
 					component: () => import('@/views/migrate/Migration.vue'),
+				},
+				{
+					path: '/migrate/csv',
+					name: 'migrate.csv',
+					component: () => import('@/views/migrate/MigrationCSV.vue'),
 				},
 				{
 					path: '/migrate/:service',
@@ -395,9 +425,48 @@ const router = createRouter({
 			component: OpenIdAuth,
 		},
 		{
+			path: '/oauth/authorize',
+			name: 'oauth.authorize',
+			component: () => import('@/views/user/OAuthAuthorize.vue'),
+		},
+		{
 			path: '/about',
 			name: 'about',
 			component: () => import('@/views/About.vue'),
+		},
+		{
+			path: '/time-tracking',
+			name: 'time-tracking',
+			component: () => import('@/views/time-tracking/TimeTracking.vue'),
+			meta: {
+				requiresTimeTracking: true,
+				title: 'timeTracking.title',
+			},
+		},
+		{
+			path: '/admin',
+			component: () => import('@/views/admin/AdminShell.vue'),
+			meta: {
+				requiresAdminPanel: true,
+				adminMode: true,
+			},
+			children: [
+				{
+					path: '',
+					name: 'admin.overview',
+					component: () => import('@/views/admin/OverviewView.vue'),
+				},
+				{
+					path: 'users',
+					name: 'admin.users',
+					component: () => import('@/views/admin/UsersView.vue'),
+				},
+				{
+					path: 'projects',
+					name: 'admin.projects',
+					component: () => import('@/views/admin/ProjectsView.vue'),
+				},
+			],
 		},
 	],
 })
@@ -452,6 +521,33 @@ router.beforeEach(async (to, from) => {
 	const authStore = useAuthStore()
 
 	await authStore.checkAuth()
+
+	if (to.meta?.requiresAdminPanel) {
+		// Await config/auth hydration so the license check doesn't race the empty default
+		// on direct /admin navigation. appReady resolves without waiting on router.isReady(),
+		// so awaiting it here doesn't deadlock the initial navigation.
+		const baseStore = useBaseStore()
+		await baseStore.appReady
+		const configStore = useConfigStore()
+		const featureOn = configStore.isProFeatureEnabled(PRO_FEATURE.ADMIN_PANEL)
+		// isAdmin comes from /user, not the JWT; force-fetch in case checkAuth() was debounced.
+		if (authStore.info?.isAdmin === undefined) {
+			await authStore.refreshUserInfo()
+		}
+		const isAdmin = authStore.info?.isAdmin === true
+		if (!featureOn || !isAdmin) {
+			return {name: 'not-found'}
+		}
+	}
+
+	if (to.meta?.requiresTimeTracking) {
+		const baseStore = useBaseStore()
+		await baseStore.appReady
+		const configStore = useConfigStore()
+		if (!configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING)) {
+			return {name: 'not-found'}
+		}
+	}
 
 	if(from.hash && from.hash.startsWith(LINK_SHARE_HASH_PREFIX)) {
 		to.hash = from.hash
