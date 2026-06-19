@@ -120,4 +120,34 @@ describe('refreshToken in-flight dedup', () => {
 
 		expect(localStorage.getItem('token')).toBeNull()
 	})
+
+	it('an older refresh settling does not clobber a newer in-flight one', async () => {
+		// Refresh A starts and stays in flight.
+		const pA = refreshToken(true)
+		expect(postCallCount).toBe(1)
+		const resolveA = resolvePost
+
+		// User logs out, which drops the in-flight reference to A.
+		removeToken()
+
+		// Refresh B starts; it must claim the in-flight slot.
+		const pB = refreshToken(true)
+		expect(postCallCount).toBe(2)
+		const resolveB = resolvePost
+
+		// A settles after B started. Its cleanup must NOT null the in-flight
+		// slot, since that slot now belongs to B. Without the `=== p` guard,
+		// A's .finally would clobber B and let a concurrent caller fire a
+		// second parallel POST.
+		resolveA?.({data: {token: FAKE_TOKEN}})
+		await pA
+
+		// A concurrent caller while B is still in flight must dedup to B —
+		// no third POST.
+		const pB2 = refreshToken(true)
+		expect(postCallCount).toBe(2)
+
+		resolveB?.({data: {token: FAKE_TOKEN}})
+		await Promise.all([pB, pB2])
+	})
 })

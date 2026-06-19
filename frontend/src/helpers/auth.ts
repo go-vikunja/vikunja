@@ -63,10 +63,16 @@ export async function refreshToken(persist: boolean): Promise<void> {
 	if (inFlightRefresh) {
 		return inFlightRefresh
 	}
-	inFlightRefresh = doRefresh(persist).finally(() => {
-		inFlightRefresh = null
+	const p = doRefresh(persist)
+	inFlightRefresh = p
+	// Only clear if it still points to this promise — a logout (or a newer
+	// refresh started after it) may have replaced inFlightRefresh meanwhile.
+	p.finally(() => {
+		if (inFlightRefresh === p) {
+			inFlightRefresh = null
+		}
 	})
-	return inFlightRefresh
+	return p
 }
 
 async function doRefresh(persist: boolean): Promise<void> {
