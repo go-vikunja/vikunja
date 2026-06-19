@@ -328,6 +328,37 @@ func TestGetOrCreateUser(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, usersBefore, usersAfter, "no new user should have been created")
 	})
+	t.Run("ProviderFallback: empty email claim does not link to an arbitrary local user", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		usersBefore, err := s.Count(&user.User{})
+		require.NoError(t, err)
+
+		// EmailFallback on, no username fallback, and the IdP sent no email claim. The
+		// email-only search must not degenerate to an issuer-only lookup matching an
+		// arbitrary local user. With no email there is nothing safe to match on, so the
+		// flow falls through to user creation (which then errors because an email is
+		// required) rather than silently linking an existing local account.
+		cl := &claims{
+			Email:             "",
+			PreferredUsername: "brandNewOidcUser",
+		}
+		provider := &Provider{
+			EmailFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "opaque-subject-no-email"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		// Must not have linked an existing local user.
+		require.Error(t, err, "an empty email must not silently link an existing local user")
+		assert.Nil(t, u, "no existing local user should be returned for an empty email claim")
+
+		usersAfter, err := s.Count(&user.User{})
+		require.NoError(t, err)
+		assert.Equal(t, usersBefore, usersAfter, "no user should have been linked or created from an empty email claim")
+	})
 	t.Run("ProviderFallback: Match to existing local user  on username and email", func(t *testing.T) {
 
 		db.LoadAndAssertFixtures(t)

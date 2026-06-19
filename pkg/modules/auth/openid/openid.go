@@ -385,7 +385,12 @@ func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) 
 	// UUID, like PocketID) still link to an existing local account.
 	var searches []*user.User
 	if provider.UsernameFallback {
-		searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: idToken.Subject, Email: fallbackEmail})
+		// Skip empty username candidates: GetUserWithEmail ANDs only non-zero fields, so a
+		// {Issuer, Username:"", Email:""} would degenerate to an issuer-only lookup and link
+		// an arbitrary local user. idToken.Subject is non-empty per OIDC, but guard anyway.
+		if idToken.Subject != "" {
+			searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: idToken.Subject, Email: fallbackEmail})
+		}
 		preferred := strings.ReplaceAll(cl.PreferredUsername, " ", "-")
 		if preferred != "" && preferred != idToken.Subject {
 			searches = append(searches, &user.User{Issuer: user.IssuerLocal, Username: preferred, Email: fallbackEmail})
@@ -393,7 +398,9 @@ func fallbackSearchUsers(cl *claims, provider *Provider, idToken *oidc.IDToken) 
 	}
 	// EmailFallback without UsernameFallback: a single email-only lookup (the caller only
 	// runs this when at least one fallback is enabled, so EmailFallback is guaranteed here).
-	if len(searches) == 0 {
+	// Only add it when there is a real email — an empty email would degenerate to an
+	// issuer-only lookup and link an arbitrary local user.
+	if len(searches) == 0 && cl.Email != "" {
 		searches = append(searches, &user.User{Issuer: user.IssuerLocal, Email: cl.Email})
 	}
 
