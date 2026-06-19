@@ -227,7 +227,7 @@ func LogoutSession(sid string) (endSessionURL string, err error) {
 		if buildErr != nil {
 			// Don't fail logout just because the logout URL could not be built;
 			// the session is still destroyed server-side below.
-			log.Errorf("Could not build OIDC end-session URL for session %s: %s", sid, buildErr)
+			log.Errorf("Could not build OIDC end-session URL for session %s: %v", sid, buildErr)
 		} else {
 			endSessionURL = url
 		}
