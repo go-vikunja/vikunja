@@ -392,33 +392,52 @@ func getOrCreateUser(s *xorm.Session, cl *claims, provider *Provider, idToken *o
 
 	if !alreadyCreatedFromIssuer && (provider.EmailFallback || provider.UsernameFallback) {
 
-		// try finding the user on fallback mappingproperties
+		// try finding the user on fallback mapping properties
 
-		searchUser := &user.User{
-			Issuer: user.IssuerLocal,
-		}
-		if provider.UsernameFallback {
-			// Match oidc subject on username as each is unique identifier in its own referential
-			// Discouraged if multiple account providers are used.
-			searchUser.Username = idToken.Subject
-		}
+		// GetUserWithEmail ANDs all non-zero fields, so email is combined with each
+		// username candidate when EmailFallback is also enabled.
+		fallbackEmail := ""
 		if provider.EmailFallback {
 			// Used alone, allow for someone to connect from various provider to the same account
 			// Discouraged for untrusted provider where someone can set email without verification
 			// Note : mapping on email prevent from auto-updating user email
-			searchUser.Email = cl.Email
+			fallbackEmail = cl.Email
 		}
 
-		// Check if the user exists for the given fallback matching options
-		u, err = user.GetUserWithEmail(s, searchUser)
-		if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
-			return nil, err
+		// Try the subject first (keeps working for IdPs where sub == username), then the
+		// preferred_username. The latter lets providers with an opaque sub (e.g. a random
+		// UUID, like PocketID) still link to an existing local account.
+		var usernameCandidates []string
+		if provider.UsernameFallback {
+			usernameCandidates = append(usernameCandidates, idToken.Subject)
+			preferred := strings.ReplaceAll(cl.PreferredUsername, " ", "-")
+			if preferred != "" && preferred != idToken.Subject {
+				usernameCandidates = append(usernameCandidates, preferred)
+			}
+		} else {
+			usernameCandidates = append(usernameCandidates, "")
 		}
-		fallbackMatchFound = err == nil || user.IsErrUserStatusError(err)
 
-		// Same as above: disabled/locked user found via fallback — return early.
-		if fallbackMatchFound && user.IsErrUserStatusError(err) {
-			return u, nil
+		for _, username := range usernameCandidates {
+			searchUser := &user.User{
+				Issuer:   user.IssuerLocal,
+				Username: username,
+				Email:    fallbackEmail,
+			}
+
+			u, err = user.GetUserWithEmail(s, searchUser)
+			if err != nil && !user.IsErrUserDoesNotExist(err) && !user.IsErrUserStatusError(err) {
+				return nil, err
+			}
+			fallbackMatchFound = err == nil || user.IsErrUserStatusError(err)
+
+			// Same as above: disabled/locked user found via fallback — return early.
+			if fallbackMatchFound && user.IsErrUserStatusError(err) {
+				return u, nil
+			}
+			if fallbackMatchFound {
+				break
+			}
 		}
 	}
 

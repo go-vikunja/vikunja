@@ -254,6 +254,53 @@ func TestGetOrCreateUser(t *testing.T) {
 		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
 		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
 	})
+	t.Run("ProviderFallback: Match to existing local user on preferred_username when sub differs", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			PreferredUsername: "user11",
+		}
+		provider := &Provider{
+			UsernameFallback: true,
+		}
+		// PocketID-style: the subject is an opaque UUID that does not match any local username.
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "c0ffee00-dead-beef-cafe-000000000011"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		err = s.Commit()
+		require.NoError(t, err)
+
+		assert.Equal(t, "user11", u.Username, "should link to the local user matching preferred_username")
+		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
+		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
+
+		// No duplicate user must be created for the opaque subject.
+		db.AssertMissing(t, "users", map[string]interface{}{
+			"subject": idToken.Subject,
+		})
+	})
+	t.Run("ProviderFallback: Falls back to sub when preferred_username is empty", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		cl := &claims{
+			PreferredUsername: "",
+		}
+		provider := &Provider{
+			UsernameFallback: true,
+		}
+		idToken := &oidc.IDToken{Issuer: "https://some.issuer", Subject: "user11"}
+
+		u, err := getOrCreateUser(s, cl, provider, idToken)
+		require.NoError(t, err)
+		assert.Equal(t, idToken.Subject, u.Username, "subject should match username")
+		assert.Equal(t, user.IssuerLocal, u.Issuer, "User should be a local one")
+		assert.Equal(t, 11, int(u.ID), "user id 11 expected")
+	})
 	t.Run("ProviderFallback: Match to existing local user on email", func(t *testing.T) {
 		db.LoadAndAssertFixtures(t)
 		s := db.NewSession()
