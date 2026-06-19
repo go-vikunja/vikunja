@@ -27,6 +27,7 @@ import type {IProject} from '@/modelTypes/IProject'
 import {REMINDER_PERIOD_RELATIVE_TO_TYPES} from '@/types/IReminderPeriodRelativeTo'
 
 import {setModuleLoading} from '@/stores/helper'
+import {useConfigStore} from '@/stores/config'
 import {useLabelStore} from '@/stores/labels'
 import {useProjectStore} from '@/stores/projects'
 import {useKanbanStore} from '@/stores/kanban'
@@ -57,6 +58,22 @@ export function buildDefaultRemindersForQuickAdd(
 		relativePeriod: d.relativePeriod,
 		relativeTo: REMINDER_PERIOD_RELATIVE_TO_TYPES.DUEDATE,
 	}))
+}
+
+// runWrites applies a write to each item. SQLite deadlocks on concurrent writes
+// (read-then-write upgrade conflict), so callers pass concurrent=false to serialize.
+export async function runWrites<T>(
+	items: readonly T[],
+	write: (item: T) => Promise<unknown>,
+	concurrent: boolean,
+): Promise<void> {
+	if (concurrent) {
+		await Promise.all(items.map(item => write(item)))
+		return
+	}
+	for (const item of items) {
+		await write(item)
+	}
 }
 
 // IDEA: maybe use a small fuzzy search here to prevent errors
@@ -131,6 +148,7 @@ export const useTaskStore = defineStore('task', () => {
 	const labelStore = useLabelStore()
 	const projectStore = useProjectStore()
 	const authStore = useAuthStore()
+	const configStore = useConfigStore()
 
 	const tasks = ref<{ [id: ITask['id']]: ITask }>({}) // TODO: or is this ITask[]
 	const isLoading = ref(false)
@@ -395,10 +413,7 @@ export const useTaskStore = defineStore('task', () => {
 		}
 
 		const labels = await ensureLabelsExist(parsedLabels)
-		const labelAddsToWaitFor = labels.map(async l => addLabelToTask(task, l))
-
-		// This waits until all labels are created and added to the task
-		await Promise.all(labelAddsToWaitFor)
+		await runWrites(labels, l => addLabelToTask(task, l), configStore.concurrentWrites)
 		return task
 	}
 
