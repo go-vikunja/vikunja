@@ -37,7 +37,7 @@ func RegisterProjectDuplicateRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-duplicate",
 		Summary:     "Duplicate a project",
-		Description: "Deep-copies a project — its tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds and user/team/link shares — into a new project owned by the authenticated user. The user needs read access to the source project, plus write access to the parent project when one is given. The copy is placed under parent_project_id (top level if omitted). Returns the duplicate in duplicated_project.",
+		Description: "Deep-copies a project — its tasks, files, kanban data, assignees, comments, attachments, labels, relations and backgrounds — into a new project owned by the authenticated user. User/team/link shares are only copied when duplicate_shares is set to true. The user needs read access to the source project, plus write access to the parent project when one is given. The copy is placed under parent_project_id (top level if omitted). Returns the duplicate in duplicated_project.",
 		Method:      http.MethodPost,
 		Path:        "/projects/{projectid}/duplicate",
 		Tags:        tags,

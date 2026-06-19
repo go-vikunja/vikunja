@@ -393,6 +393,7 @@
       "title": "Duplicate this project",
       "label": "Duplicate",
       "text": "Select a parent project which should hold the duplicated project:",
+      "shares": "Copy shares (users, teams and link shares) to the duplicate",
       "success": "The project was successfully duplicated."
     },
     "edit": {

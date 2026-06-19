@@ -8,6 +8,12 @@
 	>
 		<p>{{ $t('project.duplicate.text') }}</p>
 		<ProjectSearch v-model="parentProject" />
+		<FancyCheckbox
+			v-model="duplicateShares"
+			class="mbs-2"
+		>
+			{{ $t('project.duplicate.shares') }}
+		</FancyCheckbox>
 	</CreateEdit>
 </template>
 
@@ -18,6 +24,7 @@ import {useI18n} from 'vue-i18n'
 
 import CreateEdit from '@/components/misc/CreateEdit.vue'
 import ProjectSearch from '@/components/tasks/partials/ProjectSearch.vue'
+import FancyCheckbox from '@/components/input/FancyCheckbox.vue'
 
 import {success} from '@/message'
 import {useTitle} from '@/composables/useTitle'
@@ -33,6 +40,7 @@ const projectStore = useProjectStore()
 const {project, isLoading, duplicateProject} = useProject(route.params.projectId)
 
 const parentProject = ref<IProject | null>(null)
+const duplicateShares = ref(true)
 const isDuplicating = ref(false)
 
 const loadingModel = computed({
@@ -53,7 +61,7 @@ async function duplicate() {
 	isDuplicating.value = true
 
 	try {
-		await duplicateProject(parentProject.value?.id ?? 0)
+		await duplicateProject(parentProject.value?.id ?? 0, duplicateShares.value)
 		success({message: t('project.duplicate.success')})
 	} finally {
 		isDuplicating.value = false
