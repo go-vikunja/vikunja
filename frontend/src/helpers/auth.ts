@@ -33,18 +33,53 @@ export const removeToken = () => {
 	savedToken = null
 	localStorage.removeItem('token')
 	localStorage.removeItem('desktopOAuthRefreshToken')
+
+	// Bump the epoch and drop the in-flight refresh so a refresh that started
+	// before this logout can't re-persist a token after we cleared it.
+	authEpoch++
+	inFlightRefresh = null
 }
+
+// Coalesces concurrent same-tab refreshes into one POST. Web Locks (below) is
+// secure-context-only, so on insecure HTTP there's no cross-tab coordination —
+// without this guard, refreshes firing close together each spend the single-use
+// cookie and all but one get a 401.
+let inFlightRefresh: Promise<void> | null = null
+
+// Incremented on every removeToken()/logout. A refresh captures the epoch when
+// it starts and only persists its result if the epoch is unchanged, so a
+// refresh that resolves after a logout can't undo it.
+let authEpoch = 0
 
 /**
  * Refreshes an auth token while ensuring it is updated everywhere.
  * The refresh token is sent automatically as an HttpOnly cookie.
  * The server rotates the cookie on every call.
  *
- * Uses the Web Locks API to coordinate across browser tabs. Only one tab
- * performs the actual refresh; other tabs waiting for the lock detect that
- * the token in localStorage was already updated and adopt it directly.
+ * Same-tab concurrent calls share one in-flight refresh (always-on dedup); the
+ * Web Locks API inside adds cross-tab coordination only in secure contexts.
  */
 export async function refreshToken(persist: boolean): Promise<void> {
+	if (inFlightRefresh) {
+		return inFlightRefresh
+	}
+	const p = doRefresh(persist)
+	inFlightRefresh = p
+	// Only clear if it still points to this promise — a logout (or a newer
+	// refresh started after it) may have replaced inFlightRefresh meanwhile.
+	p.finally(() => {
+		if (inFlightRefresh === p) {
+			inFlightRefresh = null
+		}
+	})
+	return p
+}
+
+async function doRefresh(persist: boolean): Promise<void> {
+	// Snapshot the epoch so we can tell if a logout happened while we awaited.
+	const epochAtStart = authEpoch
+	const loggedOutSinceStart = () => authEpoch !== epochAtStart
+
 	// In desktop mode, refresh via IPC to the Electron main process
 	if (isDesktopApp()) {
 		const storedRefreshToken = localStorage.getItem('desktopOAuthRefreshToken')
@@ -53,6 +88,9 @@ export async function refreshToken(persist: boolean): Promise<void> {
 		}
 		try {
 			const tokens = await refreshDesktopToken(window.API_URL, storedRefreshToken)
+			if (loggedOutSinceStart()) {
+				return
+			}
 			saveToken(tokens.access_token, persist)
 			localStorage.setItem('desktopOAuthRefreshToken', tokens.refresh_token)
 		} catch (e) {
@@ -65,7 +103,13 @@ export async function refreshToken(persist: boolean): Promise<void> {
 	// if another tab refreshed while we were queued.
 	const tokenBeforeLock = localStorage.getItem('token')
 
-	const doRefresh = async () => {
+	const refreshUnderLock = async () => {
+		// A logout may have happened while we waited for the lock — don't
+		// re-adopt or re-fetch a token after the user signed out.
+		if (loggedOutSinceStart()) {
+			return
+		}
+
 		// If the token in localStorage changed while waiting for the lock,
 		// another tab already refreshed. Just adopt the new token.
 		const currentToken = localStorage.getItem('token')
@@ -78,6 +122,9 @@ export async function refreshToken(persist: boolean): Promise<void> {
 		const HTTP = HTTPFactory()
 		try {
 			const response = await HTTP.post('user/token/refresh')
+			if (loggedOutSinceStart()) {
+				return
+			}
 			saveToken(response.data.token, persist)
 		} catch (e) {
 			throw new Error('Error renewing token: ', {cause: e})
@@ -85,10 +132,10 @@ export async function refreshToken(persist: boolean): Promise<void> {
 	}
 
 	if (navigator.locks) {
-		await navigator.locks.request('vikunja-token-refresh', doRefresh)
+		await navigator.locks.request('vikunja-token-refresh', refreshUnderLock)
 	} else {
 		// Fallback for environments without Web Locks (e.g. insecure HTTP)
-		await doRefresh()
+		await refreshUnderLock()
 	}
 }
 

@@ -55,6 +55,17 @@ function redirectToSpecifiedProvider() {
 	}
 }
 
+// A race-loser's refresh fails but the rotated cookie is already valid, so a
+// second attempt succeeds — recovering what would otherwise be a spurious
+// logout. Exactly one retry: a genuinely dead session still logs out, no loop.
+async function refreshTokenWithRetry(persist: boolean): Promise<void> {
+	try {
+		await refreshToken(persist)
+	} catch {
+		await refreshToken(persist)
+	}
+}
+
 function getLoggedInVia(): string | null {
 	return localStorage.getItem('loggedInViaProvider')
 }
@@ -352,7 +363,7 @@ export const useAuthStore = defineStore('auth', () => {
 					// refresh before giving up. This lets users who reopen the app
 					// after the short JWT TTL seamlessly resume their session.
 					try {
-						await refreshToken(true)
+						await refreshTokenWithRetry(true)
 						const freshJwt = getToken()
 						if (freshJwt) {
 							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
@@ -512,7 +523,7 @@ export const useAuthStore = defineStore('auth', () => {
 				saveToken(response.data.token, false)
 			} else {
 				// User sessions renew via the refresh-token cookie.
-				await refreshToken(true)
+				await refreshTokenWithRetry(true)
 			}
 			await checkAuth()
 		} catch (e) {
