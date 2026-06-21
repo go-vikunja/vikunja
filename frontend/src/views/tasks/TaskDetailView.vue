@@ -344,11 +344,11 @@
 					</div>
 					
 					<!-- Reactions -->
-					<Reactions 
+					<Reactions
 						v-model="task.reactions" 
 						entity-kind="tasks"
 						:entity-id="task.id"
-						class="details"
+						class="details d-print-none"
 						:disabled="!canWrite"
 					/>
 
@@ -364,6 +364,15 @@
 							@taskChanged="({coverImageAttachmentId}) => task.coverImageAttachmentId = coverImageAttachmentId"
 							@update:attachments="onAttachmentsUpdated"
 						/>
+					</div>
+
+					<!-- Time Tracking -->
+					<div
+						v-if="timeTrackingEnabled && activeFields.timeTracking"
+						:ref="e => setFieldRef('timeTracking', e)"
+						class="content time-tracking"
+					>
+						<TaskTimeTracking :task-id="task.id" />
 					</div>
 
 					<!-- Related Tasks -->
@@ -538,6 +547,16 @@
 						<span class="action-heading">{{ $t('task.detail.dateAndTime') }}</span>
 
 						<XButton
+							v-if="timeTrackingEnabled"
+							v-cy="'taskTrackTimeAction'"
+							variant="secondary"
+							:icon="['far', 'clock']"
+							@click="setFieldActive('timeTracking')"
+						>
+							{{ $t('task.detail.actions.timeTracking') }}
+						</XButton>
+
+						<XButton
 							v-shortcut="'KeyD'"
 							variant="secondary"
 							icon="calendar"
@@ -643,11 +662,13 @@ import type {IProject} from '@/modelTypes/IProject'
 
 import {PRIORITIES, type Priority} from '@/constants/priorities'
 import {PERMISSIONS} from '@/constants/permissions'
+import {PRO_FEATURE} from '@/constants/proFeatures'
 
 import BaseButton from '@/components/base/BaseButton.vue'
 
 // partials
 import Attachments from '@/components/tasks/partials/Attachments.vue'
+import TaskTimeTracking from '@/components/time-tracking/TaskTimeTracking.vue'
 import ChecklistSummary from '@/components/tasks/partials/ChecklistSummary.vue'
 import ColorPicker from '@/components/input/ColorPicker.vue'
 import Comments from '@/components/tasks/partials/Comments.vue'
@@ -682,6 +703,7 @@ import {useKanbanStore} from '@/stores/kanban'
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
+import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
 import {useTaskDetailShortcuts} from '@/composables/useTaskDetailShortcuts'
@@ -704,6 +726,8 @@ const {t} = useI18n({useScope: 'global'})
 
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
+const configStore = useConfigStore()
+const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 const kanbanStore = useKanbanStore()
 const authStore = useAuthStore()
 const baseStore = useBaseStore()
@@ -923,7 +947,12 @@ watch(
 		}
 
 		try {
-			const loaded = await taskService.get({id}, {expand: ['reactions', 'comments', 'is_unread', 'buckets']})
+			const expand = ['reactions', 'comments', 'is_unread', 'buckets']
+			if (timeTrackingEnabled.value) {
+				// Only request the (server-computed) count when the feature is on.
+				expand.push('time_entries_count')
+			}
+			const loaded = await taskService.get({id}, {expand})
 			Object.assign(task.value, loaded)
 			taskColor.value = task.value.hexColor
 			setActiveFields()
@@ -967,6 +996,7 @@ type FieldType =
 	| 'reminders'
 	| 'repeatAfter'
 	| 'startDate'
+	| 'timeTracking'
 
 const activeFields: { [type in FieldType]: boolean } = reactive({
 	assignees: false,
@@ -982,6 +1012,7 @@ const activeFields: { [type in FieldType]: boolean } = reactive({
 	reminders: false,
 	repeatAfter: false,
 	startDate: false,
+	timeTracking: false,
 })
 
 function setActiveFields() {
@@ -992,6 +1023,7 @@ function setActiveFields() {
 	// Set all active fields based on values in the model
 	activeFields.assignees = task.value.assignees.length > 0
 	activeFields.attachments = task.value.attachments.length > 0
+	activeFields.timeTracking = (task.value.timeEntriesCount ?? 0) > 0
 	activeFields.dueDate = task.value.dueDate !== null
 	activeFields.endDate = task.value.endDate !== null
 	activeFields.labels = task.value.labels.length > 0

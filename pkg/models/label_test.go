@@ -228,7 +228,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			},
 			auth:                &user.User{ID: 1},
 			assertMaxPermission: true,
-			wantMaxPermission:   int(PermissionRead),
+			wantMaxPermission:   int(PermissionAdmin),
 		},
 		{
 			name: "Get nonexistant label",
@@ -249,8 +249,8 @@ func TestLabel_ReadOne(t *testing.T) {
 			auth:          &user.User{ID: 1},
 		},
 		{
-			// Label 4 is attached to tasks in project 1 (user 1 is admin),
-			// so the accessible-tasks iteration must yield PermissionAdmin.
+			// Label 4 is owned by user 2; user 1 can read it via a shared task
+			// but is not the owner, so max permission is read.
 			name: "Get label #4 - other user",
 			fields: fields{
 				ID: 4,
@@ -276,7 +276,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			},
 			auth:                &user.User{ID: 1},
 			assertMaxPermission: true,
-			wantMaxPermission:   int(PermissionAdmin),
+			wantMaxPermission:   int(PermissionRead),
 		},
 		{
 			// PoC for GHSA-hj5c-mhh2-g7jq: label 6 is reachable only via task
@@ -304,12 +304,12 @@ func TestLabel_ReadOne(t *testing.T) {
 			},
 			auth:                &user.User{ID: 1},
 			assertMaxPermission: true,
-			wantMaxPermission:   int(PermissionRead),
+			wantMaxPermission:   int(PermissionAdmin),
 		},
 		{
-			// Label 8's only label_tasks row points at inaccessible task 34,
-			// so access must come from the creator branch and the
-			// maxPermission fallback to PermissionRead must kick in.
+			// Label 8's only label_tasks row points at inaccessible task 34, so
+			// access comes from the creator branch; as the owner, user 1's max
+			// permission is admin.
 			name: "creator can read own label only attached to inaccessible task",
 			fields: fields{
 				ID: 8,
@@ -324,7 +324,7 @@ func TestLabel_ReadOne(t *testing.T) {
 			},
 			auth:                &user.User{ID: 1},
 			assertMaxPermission: true,
-			wantMaxPermission:   int(PermissionRead),
+			wantMaxPermission:   int(PermissionAdmin),
 		},
 		{
 			// Non-creator must not be able to read an unattached label owned
@@ -335,6 +335,46 @@ func TestLabel_ReadOne(t *testing.T) {
 			},
 			wantForbidden: true,
 			auth:          &user.User{ID: 1},
+		},
+		{
+			// Label 9 was created by bot 23, whose owner is user 21. The
+			// bot owner inherits admin-level access.
+			name: "bot owner can read label created by their bot",
+			fields: fields{
+				ID: 9,
+			},
+			want: &Label{
+				ID:          9,
+				Title:       "Label #9 - created by bot 23 owned by user 21",
+				CreatedByID: 23,
+				CreatedBy: &user.User{
+					ID:                           23,
+					Name:                         "Owner A Assistant",
+					Username:                     "bot-owner-a-assistant",
+					Issuer:                       "local",
+					BotOwnerID:                   21,
+					EmailRemindersEnabled:        true,
+					OverdueTasksRemindersEnabled: true,
+					OverdueTasksRemindersTime:    "09:00",
+					Created:                      testCreatedTime,
+					Updated:                      testUpdatedTime,
+				},
+				Created: testCreatedTime,
+				Updated: testUpdatedTime,
+			},
+			auth:                &user.User{ID: 21},
+			assertMaxPermission: true,
+			wantMaxPermission:   int(PermissionAdmin),
+		},
+		{
+			// User 22 owns a different bot and must not see another owner's
+			// bot's label.
+			name: "non-owner cannot read label created by someone else's bot",
+			fields: fields{
+				ID: 9,
+			},
+			wantForbidden: true,
+			auth:          &user.User{ID: 22},
 		},
 	}
 	for _, tt := range tests {
@@ -507,6 +547,27 @@ func TestLabel_Update(t *testing.T) {
 			auth:          &user.User{ID: 1},
 			wantForbidden: true,
 		},
+		{
+			// Label 9 was created by bot 23 (owned by user 21). The bot's
+			// owner inherits update permission.
+			name: "bot owner can update label created by their bot",
+			fields: fields{
+				ID:    9,
+				Title: "new and better",
+			},
+			auth: &user.User{ID: 21},
+		},
+		{
+			// User 22 owns a different bot and must not be able to update
+			// another owner's bot's label.
+			name: "non-owner cannot update label created by someone else's bot",
+			fields: fields{
+				ID:    9,
+				Title: "new and better",
+			},
+			auth:          &user.User{ID: 22},
+			wantForbidden: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -592,6 +653,25 @@ func TestLabel_Delete(t *testing.T) {
 				ID: 4,
 			},
 			auth:          &user.User{ID: 1},
+			wantForbidden: true,
+		},
+		{
+			// Label 9 was created by bot 23 (owned by user 21). The bot's
+			// owner inherits delete permission.
+			name: "bot owner can delete label created by their bot",
+			fields: fields{
+				ID: 9,
+			},
+			auth: &user.User{ID: 21},
+		},
+		{
+			// User 22 owns a different bot and must not be able to delete
+			// another owner's bot's label.
+			name: "non-owner cannot delete label created by someone else's bot",
+			fields: fields{
+				ID: 9,
+			},
+			auth:          &user.User{ID: 22},
 			wantForbidden: true,
 		},
 	}

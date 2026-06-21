@@ -5,6 +5,7 @@ import {i18n} from '@/i18n'
 import {createSharedComposable} from '@vueuse/core'
 import {computed, toValue, type MaybeRefOrGetter} from 'vue'
 import {useDateDisplay} from '@/composables/useDateDisplay'
+import {useGlobalNow} from '@/composables/useGlobalNow'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {DATE_DISPLAY, type DateDisplay} from '@/constants/dateDisplay'
 import {TIME_FORMAT, type TimeFormat} from '@/constants/timeFormat'
@@ -49,8 +50,13 @@ export const formatDateSince = (date: Date | string | null) => {
 
 	const locale = DAYJS_LOCALE_MAPPING[i18n.global.locale.value.toLowerCase()] ?? 'en'
 
+	// Computing the relative string against the shared, ticking `now` (instead of fromNow's
+	// internal Date.now()) makes every reactive caller re-render on the 60s tick, so open views
+	// don't keep showing a stale "x minutes ago".
+	const {now} = useGlobalNow()
+
 	return date
-		? dayjs(date).locale(locale).fromNow()
+		? dayjs(date).locale(locale).from(now.value)
 		: ''
 }
 

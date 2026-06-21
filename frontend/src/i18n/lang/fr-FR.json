@@ -346,7 +346,6 @@
 			"month": "Mois",
 			"day": "Jour",
 			"hour": "Heure",
-			"range": "Intervalle",
 			"chartLabel": "Diagramme de Gantt du projet",
 			"taskBarsForRow": "Barres de tâches pour la ligne {rowId}",
 			"taskBarLabel": "Tâche : {task}. De {startDate} à {endDate}. {dateType}. Cliquez pour modifier, faites glisser pour déplacer.",
@@ -370,7 +369,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limite : {limit}",
-			"noLimit": "Non défini",
 			"doneBucket": "Colonne des tâches terminées",
 			"doneBucketHint": "Toute tâche déplacée dans cette colonne sera automatiquement marquée comme terminée.",
 			"doneBucketHintExtended": "Toute tâche déplacée dans cette colonne sera automatiquement marquée comme terminée. Toute tâche marquée comme terminée ailleurs sera également déplacée.",

@@ -18,9 +18,29 @@ package models
 
 import (
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
+
+// SearchUsersForProject performs the per-project user search shared by both API
+// versions: it checks the caller can read the project, then lists the users
+// with access to it. canRead is false (with no error) when the caller lacks
+// read access, so each handler can map that to its own forbidden response.
+func SearchUsersForProject(s *xorm.Session, project *Project, a web.Auth, currentUser *user.User, search string) (users []*user.User, canRead bool, err error) {
+	canRead, _, err = project.CanRead(s, a)
+	if err != nil {
+		return nil, false, err
+	}
+	if !canRead {
+		return nil, false, nil
+	}
+	users, err = ListUsersFromProject(s, project, currentUser, search)
+	if err != nil {
+		return nil, true, err
+	}
+	return users, true, nil
+}
 
 // ProjectUIDs hold all kinds of user IDs from accounts who have access to a project
 type ProjectUIDs struct {

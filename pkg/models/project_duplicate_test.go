@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
 )
 
 func TestProjectDuplicate(t *testing.T) {
@@ -38,6 +39,54 @@ func TestProjectDuplicate(t *testing.T) {
 		// (non-Unsplash) background would fail with an internal server error
 		testProjectDuplicate(t, 35, 6)
 	})
+
+	t.Run("shares are not copied by default", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 3 has user, team and link shares
+		u := &user.User{ID: 3}
+		l := &ProjectDuplicate{ProjectID: 3}
+		can, err := l.CanCreate(s, u)
+		require.NoError(t, err)
+		assert.True(t, can)
+		require.NoError(t, l.Create(s, u))
+
+		assertShareCount(t, s, l.Project.ID, 0, 0, 0)
+	})
+
+	t.Run("shares are copied when duplicate_shares is set", func(t *testing.T) {
+		files.InitTestFileFixtures(t)
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		// Project 3 has 2 user shares, 1 team share and 1 link share
+		u := &user.User{ID: 3}
+		l := &ProjectDuplicate{ProjectID: 3, DuplicateShares: true}
+		can, err := l.CanCreate(s, u)
+		require.NoError(t, err)
+		assert.True(t, can)
+		require.NoError(t, l.Create(s, u))
+
+		assertShareCount(t, s, l.Project.ID, 2, 1, 1)
+	})
+}
+
+func assertShareCount(t *testing.T, s *xorm.Session, projectID, users, teams, links int64) {
+	userCount, err := s.Where("project_id = ?", projectID).Count(&ProjectUser{})
+	require.NoError(t, err)
+	assert.Equal(t, users, userCount, "unexpected number of user shares")
+
+	teamCount, err := s.Where("project_id = ?", projectID).Count(&TeamProject{})
+	require.NoError(t, err)
+	assert.Equal(t, teams, teamCount, "unexpected number of team shares")
+
+	linkCount, err := s.Where("project_id = ?", projectID).Count(&LinkSharing{})
+	require.NoError(t, err)
+	assert.Equal(t, links, linkCount, "unexpected number of link shares")
 }
 
 func testProjectDuplicate(t *testing.T, projectID int64, userID int64) {
@@ -51,7 +100,8 @@ func testProjectDuplicate(t *testing.T, projectID int64, userID int64) {
 	}
 
 	l := &ProjectDuplicate{
-		ProjectID: projectID,
+		ProjectID:       projectID,
+		DuplicateShares: true,
 	}
 	can, err := l.CanCreate(s, u)
 	require.NoError(t, err)

@@ -22,6 +22,7 @@ export const DAYJS_LOCALE_MAPPING = {
 	'ja-jp': 'ja',
 	'hu-hu': 'hu',
 	'ar-sa': 'ar-sa',
+	'fa-ir': 'fa',
 	'sl-si': 'sl',
 	'pt-br': 'pt',
 	'hr-hr': 'hr',
@@ -33,6 +34,7 @@ export const DAYJS_LOCALE_MAPPING = {
 	'fi-fi': 'fi',
 	'he-il': 'he',
 	'sv-se': 'sv',
+	'el-gr': 'el',
 } as Record<SupportedLocale, ISOLanguage>
 
 export const DAYJS_LANGUAGE_IMPORTS = {
@@ -54,6 +56,7 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'ja-jp': () => import('dayjs/locale/ja'),
 	'hu-hu': () => import('dayjs/locale/hu'),
 	'ar-sa': () => import('dayjs/locale/ar-sa'),
+	'fa-ir': () => import('dayjs/locale/fa'),
 	'sl-si': () => import('dayjs/locale/sl'),
 	'pt-br': () => import('dayjs/locale/pt-br'),
 	'hr-hr': () => import('dayjs/locale/hr'),
@@ -65,6 +68,7 @@ export const DAYJS_LANGUAGE_IMPORTS = {
 	'fi-fi': () => import('dayjs/locale/fi'),
 	'he-il': () => import('dayjs/locale/he'),
 	'sv-se': () => import('dayjs/locale/sv'),
+	'el-gr': () => import('dayjs/locale/el'),
 } as Record<SupportedLocale, () => Promise<ILocale>>
 
 export async function loadDayJsLocale(language: SupportedLocale) {

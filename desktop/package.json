@@ -61,8 +61,8 @@
     }
   },
   "devDependencies": {
-    "electron": "40.9.3",
-    "electron-builder": "26.8.1",
+    "electron": "40.10.4",
+    "electron-builder": "26.15.3",
     "unzipper": "0.12.3"
   },
   "dependencies": {
@@ -74,9 +74,13 @@
     ],
     "overrides": {
       "minimatch": "^10.2.3",
-      "tar": "^7.5.11",
+      "tar": ">=7.5.16",
       "@tootallnate/once": "^3.0.1",
-      "picomatch": ">=4.0.4"
+      "picomatch": ">=4.0.4",
+      "tmp": ">=0.2.7",
+      "ip-address": ">=10.1.1",
+      "form-data": ">=4.0.6",
+      "js-yaml": ">=4.2.0"
     }
   }
 }

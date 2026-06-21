@@ -42,7 +42,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/admin.Overview"
+                            "$ref": "#/definitions/models.Overview"
                         }
                     },
                     "404": {
@@ -207,7 +207,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/admin.User"
+                                "$ref": "#/definitions/shared.AdminUser"
                             }
                         }
                     },
@@ -243,7 +243,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.CreateUserBody"
+                            "$ref": "#/definitions/models.CreateUserBody"
                         }
                     }
                 ],
@@ -251,7 +251,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/admin.User"
+                            "$ref": "#/definitions/shared.AdminUser"
                         }
                     },
                     "400": {
@@ -352,7 +352,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/admin.User"
+                            "$ref": "#/definitions/shared.AdminUser"
                         }
                     },
                     "400": {
@@ -410,7 +410,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/admin.User"
+                            "$ref": "#/definitions/shared.AdminUser"
                         }
                     },
                     "400": {
@@ -836,7 +836,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.vikunjaInfos"
+                            "$ref": "#/definitions/shared.VikunjaInfos"
                         }
                     }
                 }
@@ -3438,7 +3438,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team permissions and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
+                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations and backgrounds from one project to a new one. User/team permissions and link shares are only copied when duplicate_shares is set to true. The user needs read access in the project and write access in the parent of the new project.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4151,7 +4151,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Returns a single task identified by its per-project index. Useful when resolving human-readable references like \"PROJ-42\" to a canonical task object. Note that task indexes are reassigned when a task is moved between projects, so long-lived references should use the returned task id instead.",
+                "description": "Returns a single task identified by its per-project index. Useful when resolving human-readable references like \"PROJ-42\" to a canonical task object. The ` + "`" + `project` + "`" + ` path parameter accepts either a numeric project id or the project's identifier (e.g. \"PROJ\"); values consisting solely of digits are always interpreted as ids. Note that task indexes are reassigned when a task is moved between projects, so long-lived references should use the returned task id instead.",
                 "consumes": [
                     "application/json"
                 ],
@@ -4164,8 +4164,8 @@ const docTemplate = `{
                 "summary": "Get one task by its per-project index",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "The project ID",
+                        "type": "string",
+                        "description": "The project id or the project's identifier",
                         "name": "project",
                         "in": "path",
                         "required": true
@@ -7342,7 +7342,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.UserExportStatus"
+                            "$ref": "#/definitions/models.UserExportStatus"
                         }
                     }
                 }
@@ -7456,7 +7456,7 @@ const docTemplate = `{
         },
         "/user/logout": {
             "post": {
-                "description": "Destroys the current session and clears the refresh token cookie.",
+                "description": "Destroys the current session and clears the refresh token cookie. For OpenID Connect sessions the response includes an ` + "`" + `oidc_logout_url` + "`" + ` the client should redirect to so the provider session is ended too.",
                 "produces": [
                     "application/json"
                 ],
@@ -7468,7 +7468,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successfully logged out.",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "$ref": "#/definitions/v1.LogoutResponse"
                         }
                     }
                 }
@@ -7848,7 +7848,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.UserSettings"
+                            "$ref": "#/definitions/models.UserGeneralSettings"
                         }
                     }
                 ],
@@ -8884,44 +8884,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "admin.CreateUserBody": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "description": "The user's email address",
-                    "type": "string",
-                    "maxLength": 250
-                },
-                "is_admin": {
-                    "description": "Mark the new user as an instance admin.",
-                    "type": "boolean"
-                },
-                "language": {
-                    "description": "The language of the new user. Must be a valid IETF BCP 47 language code and exist in Vikunja.",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "The full name of the new user. Optional.",
-                    "type": "string"
-                },
-                "password": {
-                    "description": "The user's password in clear text. Only used when registering the user. The maximum limi is 72 bytes, which may be less than 72 characters. This is due to the limit in the bcrypt hashing algorithm used to store passwords in Vikunja.",
-                    "type": "string",
-                    "maxLength": 72,
-                    "minLength": 8
-                },
-                "skip_email_confirm": {
-                    "description": "Activate the new user immediately without email confirmation.",
-                    "type": "boolean"
-                },
-                "username": {
-                    "description": "The user's username. Cannot contain anything that looks like an url or whitespaces.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 3
-                }
-            }
-        },
         "admin.IsAdminPatch": {
             "type": "object",
             "properties": {
@@ -8931,47 +8893,10 @@ const docTemplate = `{
                 }
             }
         },
-        "admin.Overview": {
-            "type": "object",
-            "properties": {
-                "license": {
-                    "$ref": "#/definitions/license.Info"
-                },
-                "projects": {
-                    "type": "integer"
-                },
-                "shares": {
-                    "$ref": "#/definitions/admin.ShareCounts"
-                },
-                "tasks": {
-                    "type": "integer"
-                },
-                "teams": {
-                    "type": "integer"
-                },
-                "users": {
-                    "type": "integer"
-                }
-            }
-        },
         "admin.OwnerPatch": {
             "type": "object",
             "properties": {
                 "owner_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "admin.ShareCounts": {
-            "type": "object",
-            "properties": {
-                "link_shares": {
-                    "type": "integer"
-                },
-                "team_shares": {
-                    "type": "integer"
-                },
-                "user_shares": {
                     "type": "integer"
                 }
             }
@@ -8986,57 +8911,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/user.Status"
                         }
                     ]
-                }
-            }
-        },
-        "admin.User": {
-            "type": "object",
-            "properties": {
-                "auth_provider": {
-                    "type": "string"
-                },
-                "bot_owner_id": {
-                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
-                    "type": "integer"
-                },
-                "created": {
-                    "description": "A timestamp when this task was created. You cannot change this value.",
-                    "type": "string"
-                },
-                "email": {
-                    "description": "The user's email address.",
-                    "type": "string",
-                    "maxLength": 250
-                },
-                "id": {
-                    "description": "The unique, numeric id of this user.",
-                    "type": "integer"
-                },
-                "is_admin": {
-                    "type": "boolean"
-                },
-                "issuer": {
-                    "type": "string"
-                },
-                "name": {
-                    "description": "The full name of the user.",
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/user.Status"
-                },
-                "subject": {
-                    "type": "string"
-                },
-                "updated": {
-                    "description": "A timestamp when this task was last updated. You cannot change this value.",
-                    "type": "string"
-                },
-                "username": {
-                    "description": "The username of the user. Is always unique.",
-                    "type": "string",
-                    "maxLength": 250,
-                    "minLength": 1
                 }
             }
         },
@@ -9363,7 +9237,8 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "A human-readable name for this token",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 },
                 "token": {
                     "description": "The actual api key. Only visible after creation.",
@@ -9466,6 +9341,44 @@ const docTemplate = `{
                 },
                 "values": {
                     "$ref": "#/definitions/models.Task"
+                }
+            }
+        },
+        "models.CreateUserBody": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "The user's email address",
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "is_admin": {
+                    "description": "Mark the new user as an instance admin.",
+                    "type": "boolean"
+                },
+                "language": {
+                    "description": "The language of the new user. Must be a valid IETF BCP 47 language code and exist in Vikunja.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The full name of the new user. Optional.",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "The user's password in clear text. Only used when registering the user. The maximum limi is 72 bytes, which may be less than 72 characters. This is due to the limit in the bcrypt hashing algorithm used to store passwords in Vikunja.",
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 8
+                },
+                "skip_email_confirm": {
+                    "description": "Activate the new user immediately without email confirmation.",
+                    "type": "boolean"
+                },
+                "username": {
+                    "description": "The user's username. Cannot contain anything that looks like an url or whitespaces.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 }
             }
         },
@@ -9628,6 +9541,29 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Overview": {
+            "type": "object",
+            "properties": {
+                "license": {
+                    "$ref": "#/definitions/license.Info"
+                },
+                "projects": {
+                    "type": "integer"
+                },
+                "shares": {
+                    "$ref": "#/definitions/models.ShareCounts"
+                },
+                "tasks": {
+                    "type": "integer"
+                },
+                "teams": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Permission": {
             "type": "integer",
             "enum": [
@@ -9729,6 +9665,10 @@ const docTemplate = `{
         "models.ProjectDuplicate": {
             "type": "object",
             "properties": {
+                "duplicate_shares": {
+                    "description": "Whether to copy the project's shares to the duplicate",
+                    "type": "boolean"
+                },
                 "duplicated_project": {
                     "description": "The copied project",
                     "allOf": [
@@ -9790,8 +9730,7 @@ const docTemplate = `{
                     "enum": [
                         "none",
                         "manual",
-                        "filter",
-                        "manual"
+                        "filter"
                     ]
                 },
                 "created": {
@@ -9828,7 +9767,9 @@ const docTemplate = `{
                 },
                 "title": {
                     "description": "The title of this view",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
                 },
                 "updated": {
                     "description": "A timestamp when this view was updated. You cannot change this value.",
@@ -9874,7 +9815,8 @@ const docTemplate = `{
                 },
                 "value": {
                     "description": "The actual reaction. This can be any valid utf character or text, up to a length of 20.",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 }
             }
         },
@@ -9995,6 +9937,20 @@ const docTemplate = `{
                 "updated": {
                     "description": "A timestamp when this filter was last updated. You cannot change this value.",
                     "type": "string"
+                }
+            }
+        },
+        "models.ShareCounts": {
+            "type": "object",
+            "properties": {
+                "link_shares": {
+                    "type": "integer"
+                },
+                "team_shares": {
+                    "type": "integer"
+                },
+                "user_shares": {
+                    "type": "integer"
                 }
             }
         },
@@ -10200,6 +10156,10 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "time_entries_count": {
+                    "description": "Time entry count of this task. Only present when fetching tasks with the ` + "`" + `expand` + "`" + ` parameter set to ` + "`" + `time_entries_count` + "`" + `.",
+                    "type": "integer"
+                },
                 "title": {
                     "description": "The task text. This is what you'll see in the project.",
                     "type": "string",
@@ -10367,7 +10327,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "relation_kind": {
-                    "description": "The kind of the relation.",
+                    "description": "The kind of the relation.\nThe enum list must stay in sync with RelationKind.isValid() (RelationKindUnknown excluded); the v2 delete route param repeats it.",
                     "allOf": [
                         {
                             "$ref": "#/definitions/models.RelationKind"
@@ -10453,10 +10413,6 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
-                "include_public": {
-                    "description": "Query parameter controlling whether to include public projects or not",
-                    "type": "boolean"
-                },
                 "is_public": {
                     "description": "Defines wether the team should be publicly discoverable when sharing a project",
                     "type": "boolean"
@@ -10497,7 +10453,8 @@ const docTemplate = `{
                 },
                 "username": {
                     "description": "The username of the member. We use this to prevent automated user id entering.",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 }
             }
         },
@@ -10600,10 +10557,6 @@ const docTemplate = `{
                     "description": "The unique, numeric id of this team.",
                     "type": "integer"
                 },
-                "include_public": {
-                    "description": "Query parameter controlling whether to include public projects or not",
-                    "type": "boolean"
-                },
                 "is_public": {
                     "description": "Defines wether the team should be publicly discoverable when sharing a project",
                     "type": "boolean"
@@ -10627,6 +10580,66 @@ const docTemplate = `{
                 "updated": {
                     "description": "A timestamp when this relation was last updated. You cannot change this value.",
                     "type": "string"
+                }
+            }
+        },
+        "models.UserExportStatus": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.UserGeneralSettings": {
+            "type": "object",
+            "properties": {
+                "default_project_id": {
+                    "type": "integer"
+                },
+                "discoverable_by_email": {
+                    "type": "boolean"
+                },
+                "discoverable_by_name": {
+                    "type": "boolean"
+                },
+                "email_reminders_enabled": {
+                    "type": "boolean"
+                },
+                "extra_settings_links": {
+                    "description": "Server/OpenID-provided; populated on read, ignored on write.",
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "frontend_settings": {},
+                "language": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "overdue_tasks_reminders_enabled": {
+                    "type": "boolean"
+                },
+                "overdue_tasks_reminders_time": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "week_start": {
+                    "type": "integer",
+                    "maximum": 6,
+                    "minimum": 0
                 }
             }
         },
@@ -10763,6 +10776,196 @@ const docTemplate = `{
                 "totp_passcode": {
                     "description": "TOTPPasscode is required when the resolved user has TOTP enabled.\nClients must restart the OIDC flow and populate this field after\nreceiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.",
                     "type": "string"
+                }
+            }
+        },
+        "shared.AdminUser": {
+            "type": "object",
+            "properties": {
+                "auth_provider": {
+                    "type": "string"
+                },
+                "bot_owner_id": {
+                    "description": "BotOwnerID is the ID of the owning (human) user if this user is a bot.\nA non-zero value means this user is a bot and cannot authenticate via password.",
+                    "type": "integer"
+                },
+                "created": {
+                    "description": "A timestamp when this task was created. You cannot change this value.",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "The user's email address.",
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "id": {
+                    "description": "The unique, numeric id of this user.",
+                    "type": "integer"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "issuer": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The full name of the user.",
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/user.Status"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "updated": {
+                    "description": "A timestamp when this task was last updated. You cannot change this value.",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "The username of the user. Is always unique.",
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 1
+                }
+            }
+        },
+        "shared.AuthInfo": {
+            "type": "object",
+            "properties": {
+                "ldap": {
+                    "$ref": "#/definitions/shared.LdapAuthInfo"
+                },
+                "local": {
+                    "$ref": "#/definitions/shared.LocalAuthInfo"
+                },
+                "openid_connect": {
+                    "$ref": "#/definitions/shared.OpenIDAuthInfo"
+                }
+            }
+        },
+        "shared.LdapAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "shared.LegalInfo": {
+            "type": "object",
+            "properties": {
+                "imprint_url": {
+                    "type": "string"
+                },
+                "privacy_policy_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "shared.LocalAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "registration_enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "shared.OpenIDAuthInfo": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider"
+                    }
+                }
+            }
+        },
+        "shared.VikunjaInfos": {
+            "type": "object",
+            "properties": {
+                "allow_icon_changes": {
+                    "type": "boolean"
+                },
+                "auth": {
+                    "$ref": "#/definitions/shared.AuthInfo"
+                },
+                "available_migrators": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "caldav_enabled": {
+                    "type": "boolean"
+                },
+                "concurrent_writes": {
+                    "description": "ConcurrentWrites reports whether the configured database can handle concurrent writes. It is false on SQLite, where overlapping write transactions deadlock, so clients should serialize batched writes instead of firing them in parallel.",
+                    "type": "boolean"
+                },
+                "demo_mode_enabled": {
+                    "type": "boolean"
+                },
+                "email_reminders_enabled": {
+                    "type": "boolean"
+                },
+                "enabled_background_providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "enabled_pro_features": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/license.Feature"
+                    }
+                },
+                "frontend_url": {
+                    "type": "string"
+                },
+                "legal": {
+                    "$ref": "#/definitions/shared.LegalInfo"
+                },
+                "link_sharing_enabled": {
+                    "type": "boolean"
+                },
+                "max_file_size": {
+                    "type": "string"
+                },
+                "max_items_per_page": {
+                    "type": "integer"
+                },
+                "motd": {
+                    "type": "string"
+                },
+                "public_teams_enabled": {
+                    "type": "boolean"
+                },
+                "task_attachments_enabled": {
+                    "type": "boolean"
+                },
+                "task_comments_enabled": {
+                    "type": "boolean"
+                },
+                "totp_enabled": {
+                    "type": "boolean"
+                },
+                "user_deletion_enabled": {
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "webhooks_enabled": {
+                    "type": "boolean"
                 }
             }
         },
@@ -10946,6 +11149,18 @@ const docTemplate = `{
                 }
             }
         },
+        "v1.LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "oidc_logout_url": {
+                    "description": "RP-Initiated Logout URL the frontend redirects to. Empty for non-OIDC sessions.",
+                    "type": "string"
+                }
+            }
+        },
         "v1.UserAvatarProvider": {
             "type": "object",
             "properties": {
@@ -10960,23 +11175,6 @@ const docTemplate = `{
             "properties": {
                 "token": {
                     "type": "string"
-                }
-            }
-        },
-        "v1.UserExportStatus": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "type": "string"
-                },
-                "expires": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
                 }
             }
         },
@@ -11027,59 +11225,6 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.UserSettings": {
-            "type": "object",
-            "properties": {
-                "default_project_id": {
-                    "description": "If a task is created without a specified project this value should be used. Applies\nto tasks made directly in API and from clients.",
-                    "type": "integer"
-                },
-                "discoverable_by_email": {
-                    "description": "If true, the user can be found when searching for their exact email.",
-                    "type": "boolean"
-                },
-                "discoverable_by_name": {
-                    "description": "If true, this user can be found by their name or parts of it when searching for it.",
-                    "type": "boolean"
-                },
-                "email_reminders_enabled": {
-                    "description": "If enabled, sends email reminders of tasks to the user.",
-                    "type": "boolean"
-                },
-                "extra_settings_links": {
-                    "description": "Additional settings links as provided by openid",
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "frontend_settings": {
-                    "description": "Additional settings only used by the frontend"
-                },
-                "language": {
-                    "description": "The user's language",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "The new name of the current user.",
-                    "type": "string"
-                },
-                "overdue_tasks_reminders_enabled": {
-                    "description": "If enabled, the user will get an email for their overdue tasks each morning.",
-                    "type": "boolean"
-                },
-                "overdue_tasks_reminders_time": {
-                    "description": "The time when the daily summary of overdue tasks will be sent via email.",
-                    "type": "string"
-                },
-                "timezone": {
-                    "description": "The user's time zone. Used to send task reminders in the time zone of the user.",
-                    "type": "string"
-                },
-                "week_start": {
-                    "description": "The day when the week starts for this user. 0 = sunday, 1 = monday, etc.",
-                    "type": "integer"
-                }
-            }
-        },
         "v1.UserWithSettings": {
             "type": "object",
             "properties": {
@@ -11117,7 +11262,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "settings": {
-                    "$ref": "#/definitions/v1.UserSettings"
+                    "$ref": "#/definitions/models.UserGeneralSettings"
                 },
                 "updated": {
                     "description": "A timestamp when this task was last updated. You cannot change this value.",
@@ -11128,138 +11273,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 250,
                     "minLength": 1
-                }
-            }
-        },
-        "v1.authInfo": {
-            "type": "object",
-            "properties": {
-                "ldap": {
-                    "$ref": "#/definitions/v1.ldapAuthInfo"
-                },
-                "local": {
-                    "$ref": "#/definitions/v1.localAuthInfo"
-                },
-                "openid_connect": {
-                    "$ref": "#/definitions/v1.openIDAuthInfo"
-                }
-            }
-        },
-        "v1.ldapAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "v1.legalInfo": {
-            "type": "object",
-            "properties": {
-                "imprint_url": {
-                    "type": "string"
-                },
-                "privacy_policy_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1.localAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "registration_enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "v1.openIDAuthInfo": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider"
-                    }
-                }
-            }
-        },
-        "v1.vikunjaInfos": {
-            "type": "object",
-            "properties": {
-                "auth": {
-                    "$ref": "#/definitions/v1.authInfo"
-                },
-                "available_migrators": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "caldav_enabled": {
-                    "type": "boolean"
-                },
-                "demo_mode_enabled": {
-                    "type": "boolean"
-                },
-                "email_reminders_enabled": {
-                    "type": "boolean"
-                },
-                "enabled_background_providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "enabled_pro_features": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/license.Feature"
-                    }
-                },
-                "frontend_url": {
-                    "type": "string"
-                },
-                "legal": {
-                    "$ref": "#/definitions/v1.legalInfo"
-                },
-                "link_sharing_enabled": {
-                    "type": "boolean"
-                },
-                "max_file_size": {
-                    "type": "string"
-                },
-                "max_items_per_page": {
-                    "type": "integer"
-                },
-                "motd": {
-                    "type": "string"
-                },
-                "public_teams_enabled": {
-                    "type": "boolean"
-                },
-                "task_attachments_enabled": {
-                    "type": "boolean"
-                },
-                "task_comments_enabled": {
-                    "type": "boolean"
-                },
-                "totp_enabled": {
-                    "type": "boolean"
-                },
-                "user_deletion_enabled": {
-                    "type": "boolean"
-                },
-                "version": {
-                    "type": "string"
-                },
-                "webhooks_enabled": {
-                    "type": "boolean"
                 }
             }
         },

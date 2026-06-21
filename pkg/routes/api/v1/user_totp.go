@@ -17,10 +17,8 @@
 package v1
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"image/jpeg"
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
@@ -202,14 +200,7 @@ func UserTOTPQrCode(c *echo.Context) error {
 	}
 	defer s.Close()
 
-	qrcode, err := user.GetTOTPQrCodeForUser(s, u)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	buff := &bytes.Buffer{}
-	err = jpeg.Encode(buff, qrcode, nil)
+	qrcode, err := user.GetTOTPQrCodeAsJpegForUser(s, u)
 	if err != nil {
 		_ = s.Rollback()
 		return err
@@ -220,7 +211,7 @@ func UserTOTPQrCode(c *echo.Context) error {
 		return err
 	}
 
-	return c.Blob(http.StatusOK, "image/jpeg", buff.Bytes())
+	return c.Blob(http.StatusOK, "image/jpeg", qrcode)
 }
 
 // UserTOTP returns the current totp implementation if any is enabled.

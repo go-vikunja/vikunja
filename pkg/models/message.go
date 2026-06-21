@@ -19,5 +19,5 @@ package models
 // Message is a standard message
 type Message struct {
 	// A standard message.
-	Message string `json:"message"`
+	Message string `json:"message" readOnly:"true" doc:"A human-readable status message returned by the server."`
 }

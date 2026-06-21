@@ -17,6 +17,7 @@
 package user
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ import (
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
@@ -84,14 +86,14 @@ const (
 // User holds information about an user
 type User struct {
 	// The unique, numeric id of this user.
-	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"bot"`
+	ID int64 `xorm:"bigint autoincr not null unique pk" json:"id" param:"bot" readOnly:"true" doc:"The unique, numeric id of this user."`
 	// The full name of the user.
-	Name string `xorm:"text null" json:"name"`
+	Name string `xorm:"text null" json:"name" doc:"The full name of the user."`
 	// The username of the user. Is always unique.
-	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"1" maxLength:"250"`
+	Username string `xorm:"varchar(250) not null unique" json:"username" valid:"length(1|250)" minLength:"1" maxLength:"250" doc:"The username of the user. Is always unique. For bot users it must start with the 'bot-' prefix."`
 	Password string `xorm:"varchar(250) null" json:"-"`
 	// The user's email address.
-	Email string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250"`
+	Email string `xorm:"varchar(250) null" json:"email,omitempty" valid:"email,length(0|250)" maxLength:"250" doc:"The user's email address. Always empty for bot users."`
 
 	Status Status `xorm:"default 0" json:"-"`
 
@@ -112,7 +114,7 @@ type User struct {
 	DefaultProjectID             int64  `xorm:"bigint null index" json:"-"`
 	// BotOwnerID is the ID of the owning (human) user if this user is a bot.
 	// A non-zero value means this user is a bot and cannot authenticate via password.
-	BotOwnerID int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty"`
+	BotOwnerID int64  `xorm:"bigint null index" json:"bot_owner_id,omitempty" readOnly:"true" doc:"The id of the owning (human) user. Set by the server on creation; a non-zero value means this user is a bot."`
 	WeekStart  int    `xorm:"null" json:"-"`
 	Language   string `xorm:"varchar(50) null" json:"-" valid:"language"`
 	Timezone   string `xorm:"varchar(255) null" json:"-"`
@@ -126,9 +128,9 @@ type User struct {
 	ExportFileID int64 `xorm:"bigint null" json:"-"`
 
 	// A timestamp when this task was created. You cannot change this value.
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"A timestamp when this user was created. You cannot change this value."`
 	// A timestamp when this task was last updated. You cannot change this value.
-	Updated time.Time `xorm:"updated not null" json:"updated"`
+	Updated time.Time `xorm:"updated not null" json:"updated" readOnly:"true" doc:"A timestamp when this user was last updated. You cannot change this value."`
 
 	web.Auth `xorm:"-" json:"-"`
 }
@@ -362,8 +364,9 @@ func getUserByUsernameOrEmail(s *xorm.Session, usernameOrEmail string) (u *User,
 	return
 }
 
-// CheckUserCredentials checks user credentials
-func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
+// CheckUserCredentials checks user credentials. The context carries request
+// metadata for the audit trail of failed attempts.
+func CheckUserCredentials(ctx context.Context, s *xorm.Session, u *Login) (*User, error) {
 	// Check if we have any credentials
 	if u.Password == "" || u.Username == "" {
 		return nil, ErrNoUsernamePassword{}
@@ -390,7 +393,7 @@ func CheckUserCredentials(s *xorm.Session, u *Login) (*User, error) {
 	err = CheckUserPassword(user, u.Password)
 	if err != nil {
 		if IsErrWrongUsernameOrPassword(err) {
-			handleFailedPassword(user)
+			handleFailedPassword(ctx, user)
 		}
 		return user, err
 	}
@@ -410,7 +413,11 @@ func (u *User) IsLocalUser() bool {
 	return u.Issuer == IssuerLocal
 }
 
-func handleFailedPassword(user *User) {
+func handleFailedPassword(ctx context.Context, user *User) {
+	if err := events.DispatchWithContext(ctx, &LoginFailedEvent{User: user}); err != nil {
+		log.Errorf("Could not dispatch login failed event: %s", err)
+	}
+
 	key := user.GetFailedPasswordAttemptsKey()
 	err := keyvalue.IncrBy(key, 1)
 	if err != nil {

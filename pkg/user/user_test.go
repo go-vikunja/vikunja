@@ -17,6 +17,7 @@
 package user
 
 import (
+	"context"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -357,7 +358,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user1", Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1", Password: "12345678"})
 		require.NoError(t, err)
 	})
 	t.Run("unverified email", func(t *testing.T) {
@@ -365,7 +366,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user5", Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user5", Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrEmailNotConfirmed(err))
 	})
@@ -374,7 +375,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user1", Password: "12345"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1", Password: "12345"})
 		require.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
@@ -383,7 +384,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "dfstestuu", Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "dfstestuu", Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrWrongUsernameOrPassword(err))
 	})
@@ -392,7 +393,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user1"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1"})
 		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
@@ -401,7 +402,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrNoUsernamePassword(err))
 	})
@@ -410,7 +411,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		s := db.NewSession()
 		defer s.Close()
 
-		_, err := CheckUserCredentials(s, &Login{Username: "user1@example.com", Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user1@example.com", Password: "12345678"})
 		require.NoError(t, err)
 	})
 	t.Run("disabled user", func(t *testing.T) {
@@ -419,7 +420,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		defer s.Close()
 
 		// user17 is disabled (status=2), password is "12345678"
-		_, err := CheckUserCredentials(s, &Login{Username: "user17", Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user17", Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrAccountDisabled(err))
 	})
@@ -429,7 +430,7 @@ func TestCheckUserCredentials(t *testing.T) {
 		defer s.Close()
 
 		// user18 is locked (status=3), password is "12345678"
-		_, err := CheckUserCredentials(s, &Login{Username: "user18", Password: "12345678"})
+		_, err := CheckUserCredentials(context.Background(), s, &Login{Username: "user18", Password: "12345678"})
 		require.Error(t, err)
 		assert.True(t, IsErrAccountLocked(err))
 	})

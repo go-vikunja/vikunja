@@ -383,7 +383,6 @@
 			"month": "Měsíc",
 			"day": "Den",
 			"hour": "Hodina",
-			"range": "Časové období",
 			"chartLabel": "Projektový Ganttův diagram",
 			"taskBarsForRow": "Chlívky pro řádek {rowId}",
 			"taskBarLabel": "Úkol: {task}. Od {startDate} do {endDate}. {dateType}. Klikněte pro úpravu, přetáhněte pro přesun.",
@@ -412,7 +411,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limit: {limit}",
-			"noLimit": "Nenastaveno",
 			"doneBucket": "Sloupec \"Hotovo\"",
 			"doneBucketHint": "Všechny úkoly přesunuté do tohoto sloupce budou automaticky označeny jako dokončené.",
 			"doneBucketHintExtended": "Všechny úkoly přesunuté do sloupce \"Hotovo\" budou označeny jako dokončené automaticky. Všechny úkoly označené jako dokončené jinde sem budou přesunuty také.",

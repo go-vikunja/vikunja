@@ -52,15 +52,10 @@ func UserList(c *echo.Context) error {
 		return err
 	}
 
-	users, err := user.ListUsers(s, search, currentUser, nil)
+	users, err := user.SearchUsers(s, search, currentUser)
 	if err != nil {
 		_ = s.Rollback()
 		return err
-	}
-
-	// Obfuscate the mailadresses
-	for in := range users {
-		users[in].Email = ""
 	}
 
 	return c.JSON(http.StatusOK, users)
@@ -98,15 +93,6 @@ func ListUsersForProject(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	canRead, _, err := project.CanRead(s, auth)
-	if err != nil {
-		_ = s.Rollback()
-		return err
-	}
-	if !canRead {
-		return echo.ErrForbidden
-	}
-
 	currentUser, err := user.GetCurrentUser(c)
 	if err != nil {
 		_ = s.Rollback()
@@ -114,10 +100,13 @@ func ListUsersForProject(c *echo.Context) error {
 	}
 
 	search := c.QueryParam("s")
-	users, err := models.ListUsersFromProject(s, &project, currentUser, search)
+	users, canRead, err := models.SearchUsersForProject(s, &project, auth, currentUser, search)
 	if err != nil {
 		_ = s.Rollback()
 		return err
+	}
+	if !canRead {
+		return echo.ErrForbidden
 	}
 
 	if err := s.Commit(); err != nil {

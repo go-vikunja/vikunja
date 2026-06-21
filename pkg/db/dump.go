@@ -127,7 +127,7 @@ func RestoreAndTruncate(table string, contents []map[string]interface{}) (err er
 			return err
 		}
 	} else {
-		if _, err := x.Query("TRUNCATE TABLE ?", table); err != nil {
+		if _, err := x.Query("TRUNCATE TABLE " + x.Quote(table)); err != nil {
 			return err
 		}
 	}
@@ -148,7 +148,7 @@ func TruncateAllTables() error {
 				return err
 			}
 		} else {
-			if _, err := x.Query("TRUNCATE TABLE ?", name); err != nil {
+			if _, err := x.Query("TRUNCATE TABLE " + x.Quote(name)); err != nil {
 				return err
 			}
 		}

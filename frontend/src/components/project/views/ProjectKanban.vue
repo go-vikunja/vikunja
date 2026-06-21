@@ -109,7 +109,7 @@
 											@click.stop="showSetLimitInput = true"
 										>
 											{{
-												$t('project.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('project.kanban.noLimit')})
+												$t('project.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('misc.notSet')})
 											}}
 										</DropdownItem>
 										<DropdownItem
@@ -1094,6 +1094,7 @@ $filter-container-height: '1rem - #{$switch-view-height}';
 	.bucket-footer {
 		position: sticky;
 		inset-block-end: 0;
+		z-index: 2;
 		block-size: min-content;
 		padding: .5rem;
 		background-color: var(--grey-100);

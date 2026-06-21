@@ -36,23 +36,27 @@ import (
 // Session represents an active user session with a refresh token.
 type Session struct {
 	// The session UUID. Embedded in JWTs as the `sid` claim.
-	ID string `xorm:"varchar(36) not null unique pk" json:"id" param:"session"`
+	ID string `xorm:"varchar(36) not null unique pk" json:"id" param:"session" readOnly:"true" doc:"The session UUID; embedded in JWTs as the sid claim."`
 	// The owning user.
 	UserID int64 `xorm:"bigint not null index" json:"-"`
 	// SHA-256 hash of the refresh token. Used for lookup on refresh.
 	TokenHash string `xorm:"varchar(64) not null unique index" json:"-"`
 	// The cleartext refresh token. Only populated on session creation, never stored.
-	RefreshToken string `xorm:"-" json:"refresh_token,omitempty"`
+	RefreshToken string `xorm:"-" json:"refresh_token,omitempty" readOnly:"true" doc:"The cleartext refresh token; returned only once by the login flow, never on listing."`
 	// User-Agent string from the login request.
-	DeviceInfo string `xorm:"text" json:"device_info"`
+	DeviceInfo string `xorm:"text" json:"device_info" readOnly:"true" doc:"User-Agent string captured from the login request."`
 	// IP address from the login request.
-	IPAddress string `xorm:"varchar(100)" json:"ip_address"`
+	IPAddress string `xorm:"varchar(100)" json:"ip_address" readOnly:"true" doc:"IP address captured from the login request."`
 	// Whether this is a "remember me" session (controls max refresh lifetime).
 	IsLongSession bool `xorm:"not null default false" json:"-"`
+	// Raw OIDC ID token, kept so logout can replay it as id_token_hint. Empty for non-OIDC sessions.
+	OIDCIDToken string `xorm:"text" json:"-"`
+	// OIDC provider that created this session, used to find its end-session endpoint at logout.
+	OIDCProviderKey string `xorm:"varchar(250)" json:"-"`
 	// When this session was last refreshed.
-	LastActive time.Time `xorm:"not null" json:"last_active"`
+	LastActive time.Time `xorm:"not null" json:"last_active" readOnly:"true" doc:"When this session was last refreshed."`
 	// When this session was created (login time).
-	Created time.Time `xorm:"created not null" json:"created"`
+	Created time.Time `xorm:"created not null" json:"created" readOnly:"true" doc:"When this session was created (login time)."`
 
 	web.Permissions `xorm:"-" json:"-"`
 	web.CRUDable    `xorm:"-" json:"-"`
@@ -81,9 +85,17 @@ func generateHashedToken() (rawToken, hash string, err error) {
 	return rawToken, HashSessionToken(rawToken), nil
 }
 
+// SessionOIDCData carries the OIDC metadata persisted on a session so an
+// RP-Initiated Logout request can be built later. Nil for non-OIDC logins.
+type SessionOIDCData struct {
+	IDToken     string
+	ProviderKey string
+}
+
 // CreateSession creates a new session record and generates a refresh token.
 // Returns the session with RefreshToken populated (cleartext, shown only once).
-func CreateSession(s *xorm.Session, userID int64, deviceInfo, ipAddress string, isLongSession bool) (*Session, error) {
+// Pass oidc for OpenID Connect logins to persist the logout data; nil otherwise.
+func CreateSession(s *xorm.Session, userID int64, deviceInfo, ipAddress string, isLongSession bool, oidc *SessionOIDCData) (*Session, error) {
 	rawToken, hash, err := generateHashedToken()
 	if err != nil {
 		return nil, err
@@ -97,6 +109,10 @@ func CreateSession(s *xorm.Session, userID int64, deviceInfo, ipAddress string, 
 		IPAddress:     ipAddress,
 		IsLongSession: isLongSession,
 		LastActive:    time.Now(),
+	}
+	if oidc != nil {
+		session.OIDCIDToken = oidc.IDToken
+		session.OIDCProviderKey = oidc.ProviderKey
 	}
 
 	_, err = s.Insert(session)

@@ -24,10 +24,10 @@ import (
 
 // BulkTask represents a bulk task update payload.
 type BulkTask struct {
-	TaskIDs []int64  `json:"task_ids"`
-	Fields  []string `json:"fields"`
-	Values  *Task    `json:"values"`
-	Tasks   []*Task  `json:"tasks,omitempty"`
+	TaskIDs []int64  `json:"task_ids" doc:"The ids of the tasks to update. The user needs write access to every project these tasks belong to, or the whole request is rejected."`
+	Fields  []string `json:"fields" doc:"The names of the task fields to apply from values; only these fields are written, the rest of each task is left untouched."`
+	Values  *Task    `json:"values" doc:"The task carrying the values to set. Only the fields named in fields are read from it and applied to every task."`
+	Tasks   []*Task  `json:"tasks,omitempty" readOnly:"true" doc:"The updated tasks, returned in the response."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`

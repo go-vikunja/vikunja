@@ -1,0 +1,135 @@
+// Vikunja is a to-do list application to facilitate your life.
+// Copyright 2018-present Vikunja and contributors. All rights reserved.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+//go:build mage
+
+// Mage targets for the veans CLI: dev build, tests, lint.
+//
+// Release tooling (xgo cross-compile, packaging, nfpm templating) lives in
+// the centralized build/ module — run "mage release:build veans" from there.
+package main
+
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+
+	"github.com/magefile/mage/mg"
+	"github.com/magefile/mage/sh"
+)
+
+// Build compiles the veans binary into ./veans (or ./veans.exe on Windows).
+func Build() error {
+	out := "./veans"
+	if runtime.GOOS == "windows" {
+		out = "./veans.exe"
+	}
+	return sh.RunV("go", "build", "-o", out, "./cmd/veans")
+}
+
+// Clean removes built artifacts.
+func Clean() error {
+	for _, p := range []string{"./veans", "./veans.exe"} {
+		if _, err := os.Stat(p); err == nil {
+			if err := os.Remove(p); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// Fmt runs goimports across the module.
+func Fmt() error {
+	return sh.RunV("go", "fmt", "./...")
+}
+
+// Test namespace.
+type Test mg.Namespace
+
+// All runs unit tests across the module. Passes `-short` so the e2e
+// package self-skips via its TestMain — the parent monorepo's
+// pkg/webtests follows the same convention.
+func (Test) All() error {
+	return sh.RunV("go", "test", "-short", "./...")
+}
+
+// Filter runs `go test -short -run <expr> ./...` — pass the expression as
+// an argument. `-short` is included so e2e doesn't run accidentally; use
+// `mage test:e2e` for those.
+func (Test) Filter(expr string) error {
+	if expr == "" {
+		return fmt.Errorf("test:filter requires a regexp argument")
+	}
+	return sh.RunV("go", "test", "-short", "-run", expr, "./...")
+}
+
+// E2E runs the e2e suite without `-short` so TestMain lets it through.
+// Requires VEANS_E2E_API_URL to point at a running Vikunja instance and
+// either VEANS_E2E_TESTING_TOKEN (matching the API's VIKUNJA_SERVICE_TESTINGTOKEN
+// — the harness will seed its own admin via /api/v1/test/users) or
+// VEANS_E2E_ADMIN_TOKEN (a pre-existing JWT for the admin to use as-is).
+//
+// Set VEANS_E2E_SKIP_BUILD=true to reuse a previously-built binary.
+func (Test) E2E() error {
+	if os.Getenv("VEANS_E2E_API_URL") == "" {
+		return fmt.Errorf("VEANS_E2E_API_URL is not set — start a Vikunja instance and export the URL")
+	}
+	if os.Getenv("VEANS_E2E_ADMIN_TOKEN") == "" && os.Getenv("VEANS_E2E_TESTING_TOKEN") == "" {
+		return fmt.Errorf("set VEANS_E2E_ADMIN_TOKEN, or VEANS_E2E_TESTING_TOKEN (matching the API's VIKUNJA_SERVICE_TESTINGTOKEN) so the suite can seed its own admin")
+	}
+	if os.Getenv("VEANS_E2E_SKIP_BUILD") == "" {
+		if err := Build(); err != nil {
+			return err
+		}
+	}
+	abs, err := filepath.Abs("./veans")
+	if err != nil {
+		return err
+	}
+	return sh.RunWithV(map[string]string{"VEANS_BINARY": abs}, "go", "test", "-count=1", "./e2e/...")
+}
+
+// Lint namespace.
+type Lint mg.Namespace
+
+// All runs golangci-lint over the module.
+func (Lint) All() error {
+	if _, err := exec.LookPath("golangci-lint"); err != nil {
+		return fmt.Errorf("golangci-lint not installed: %w", err)
+	}
+	return sh.RunV("golangci-lint", "run", "./...")
+}
+
+// Fix runs golangci-lint with --fix.
+func (Lint) Fix() error {
+	if _, err := exec.LookPath("golangci-lint"); err != nil {
+		return fmt.Errorf("golangci-lint not installed: %w", err)
+	}
+	return sh.RunV("golangci-lint", "run", "--fix", "./...")
+}
+
+// Aliases lets `mage test` resolve to `Test.All` (and the others) without
+// having to spell out the namespace. Mirrors the parent magefile's pattern.
+var Aliases = map[string]any{
+	"test":        Test.All,
+	"test:filter": Test.Filter,
+	"test:e2e":    Test.E2E,
+	"lint":        Lint.All,
+	"lint:fix":    Lint.Fix,
+}

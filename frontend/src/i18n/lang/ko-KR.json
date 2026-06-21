@@ -323,8 +323,7 @@
 			"default": "기본값",
 			"month": "월",
 			"day": "일",
-			"hour": "시",
-			"range": "날짜 범위"
+			"hour": "시"
 		},
 		"table": {
 			"title": "테이블",
@@ -333,7 +332,6 @@
 		"kanban": {
 			"title": "칸반",
 			"limit": "제한: {limit}",
-			"noLimit": "설정 안함",
 			"doneBucket": "완료 버킷",
 			"doneBucketHint": "이 버킷으로 이동한 모든 할 일은 자동으로 완료로 표시됩니다.",
 			"doneBucketHintExtended": "완료 버킷으로 이동된 모든 할 일은 자동으로 완료로 표시됩니다. 다른 곳에서 완료로 표시된 모든 할 일도 함께 이동됩니다.",

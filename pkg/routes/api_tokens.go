@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -39,6 +40,12 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(config.ServiceSecret.GetString()),
 		Skipper: func(c *echo.Context) bool {
+			// Public routes (docs, spec, info, etc.) never need JWT even
+			// when their parent group has the middleware applied.
+			if unauthenticatedAPIPaths[c.Path()] {
+				return true
+			}
+
 			authHeader := c.Request().Header.Values("Authorization")
 			if len(authHeader) == 0 {
 				return false // let the jwt middleware handle invalid headers
@@ -82,6 +89,18 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context, sk
 
 	c.Set("api_token", token)
 	c.Set("api_user", u)
+
+	// Guarded by config: this fires on every token-authenticated request and
+	// only the audit listener consumes it.
+	if config.AuditEnabled.GetBool() {
+		err = events.DispatchWithContext(c.Request().Context(), &models.APITokenUsedEvent{
+			TokenID: token.ID,
+			OwnerID: token.OwnerID,
+		})
+		if err != nil {
+			log.Errorf("Could not dispatch api token used event: %s", err)
+		}
+	}
 
 	return nil
 }

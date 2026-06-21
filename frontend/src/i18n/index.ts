@@ -30,6 +30,7 @@ export const SUPPORTED_LOCALES = {
 	'ja-JP': '日本語',
 	'hu-HU': 'Magyar',
 	'ar-SA': 'اَلْعَرَبِيَّةُ',
+	'fa-IR': 'فارسی',
 	'sl-SI': 'Slovenščina',
 	'pt-BR': 'Português Brasileiro',
 	'hr-HR': 'Hrvatski',
@@ -41,6 +42,7 @@ export const SUPPORTED_LOCALES = {
 	'fi-FI': 'Suomi',
 	'he-IL': 'עִבְרִית',
 	'sv-SE': 'Svenska',
+	'el-GR': 'Ελληνικά',
 	// IMPORTANT: Also add new languages to useDayjsLanguageSync
 	// IMPORTANT: Also add new languages to pkg/i18n/i18n.go
 } as const
@@ -51,7 +53,7 @@ export const DEFAULT_LANGUAGE: SupportedLocale= 'en'
 
 export type ISOLanguage = string
 
-const RTL_LANGUAGES = ['ar-SA', 'he-IL'] as const
+const RTL_LANGUAGES = ['ar-SA', 'he-IL', 'fa-IR'] as const
 
 export function isRTLLanguage(locale: SupportedLocale): boolean {
 	return RTL_LANGUAGES.includes(locale as typeof RTL_LANGUAGES[number])

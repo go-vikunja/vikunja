@@ -25,11 +25,11 @@ import (
 
 // Status represents this migration status
 type Status struct {
-	ID           int64     `xorm:"bigint autoincr not null unique pk" json:"id"`
+	ID           int64     `xorm:"bigint autoincr not null unique pk" json:"id" readOnly:"true" doc:"The unique, numeric id of this migration status."`
 	UserID       int64     `xorm:"bigint not null" json:"-"`
-	MigratorName string    `xorm:"varchar(255)" json:"migrator_name"`
-	StartedAt    time.Time `xorm:"not null" json:"started_at"`
-	FinishedAt   time.Time `xorm:"null" json:"finished_at"`
+	MigratorName string    `xorm:"varchar(255)" json:"migrator_name" readOnly:"true" doc:"The name of the migrator this status belongs to, e.g. \"todoist\"."`
+	StartedAt    time.Time `xorm:"not null" json:"started_at" readOnly:"true" doc:"When the last migration started. Zero value if the user never migrated from this service."`
+	FinishedAt   time.Time `xorm:"null" json:"finished_at" readOnly:"true" doc:"When the last migration finished. Zero value while a migration is still running or was never run."`
 }
 
 // TableName holds the table name for the migration status table

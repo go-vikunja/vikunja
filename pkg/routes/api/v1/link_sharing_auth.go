@@ -19,19 +19,10 @@ package v1
 import (
 	"net/http"
 
-	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 
-	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/auth"
 	"github.com/labstack/echo/v5"
 )
-
-// LinkShareToken represents a link share auth token with extra infos about the actual link share
-type LinkShareToken struct {
-	auth.Token
-	*models.LinkSharing
-	ProjectID int64 `json:"project_id"`
-}
 
 // LinkShareAuth represents everything required to authenticate a link share
 type LinkShareAuth struct {
@@ -53,36 +44,14 @@ type LinkShareAuth struct {
 // @Router /shares/{share}/auth [post]
 func AuthenticateLinkShare(c *echo.Context) error {
 	sh := &LinkShareAuth{}
-	err := c.Bind(sh)
+	if err := c.Bind(sh); err != nil {
+		return err
+	}
+
+	token, err := shared.AuthenticateLinkShare(sh.Hash, sh.Password)
 	if err != nil {
 		return err
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	share, err := models.GetLinkShareByHash(s, sh.Hash)
-	if err != nil {
-		return err
-	}
-
-	if share.SharingType == models.SharingTypeWithPassword {
-		err := models.VerifyLinkSharePassword(share, sh.Password)
-		if err != nil {
-			return err
-		}
-	}
-
-	t, err := auth.NewLinkShareJWTAuthtoken(share)
-	if err != nil {
-		return err
-	}
-
-	share.Password = ""
-
-	return c.JSON(http.StatusOK, LinkShareToken{
-		Token:       auth.Token{Token: t},
-		LinkSharing: share,
-		ProjectID:   share.ProjectID,
-	})
+	return c.JSON(http.StatusOK, token)
 }

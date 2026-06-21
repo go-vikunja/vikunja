@@ -290,8 +290,7 @@
 			"default": "Alapértelmezett",
 			"month": "Hónap",
 			"day": "Nap",
-			"hour": "Óra",
-			"range": "Időintervallum"
+			"hour": "Óra"
 		},
 		"table": {
 			"title": "Táblázat",
@@ -300,7 +299,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Korlát: {limit}",
-			"noLimit": "Nincs beállítva",
 			"doneBucket": "Kész vödör",
 			"doneBucketHint": "Az ebbe a csoportba helyezett összes feladat automatikusan készként lesz megjelölve.",
 			"doneBucketHintExtended": "A kész csoportba áthelyezett összes feladat automatikusan készként lesz megjelölve. A máshonnan elvégzettként megjelölt összes feladat is átkerül.",

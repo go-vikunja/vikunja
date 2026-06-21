@@ -172,6 +172,7 @@
 					"yyyy/mm/dd": "JJJJ/MM/TT"
 				},
 				"timeFormat": "Zeitformat",
+				"timeTrackingDefaultStart": "Startzeit für die Zeiterfassung",
 				"timeFormatOptions": {
 					"12h": "12 Stunden (AM/PM)",
 					"24h": "24 Stunden (HH:mm)"
@@ -218,6 +219,13 @@
 				"mustUseToken": "Du musst einen CalDAV Token erstellen, um CalDAV mit einem Drittanbieter-Client zu nutzen. Verwende diesen Token anstelle deines Passworts.",
 				"usernameIs": "Dein Anmeldename für CalDAV lautet: {0}",
 				"apiTokenHint": "Du kannst auch ein API-Token mit CalDAV-Berechtigung verwenden. Erstelle eins unter {link}."
+			},
+			"feeds": {
+				"title": "Atom-Feed",
+				"howTo": "Du kannst deine Vikunja-Benachrichtigungen von jedem Atom-kompatiblen Feed-Reader abonnieren. Benutze die folgende URL:",
+				"usernameIs": "Dein Anmeldename für das Feed lautet: {0}",
+				"apiTokenHint": "Authentifiziere dich mit einem API-Token mit der {scope} Berechtigung. Erstellen eins unter {link}.",
+				"tokenTitle": "Atom-Feed"
 			},
 			"avatar": {
 				"title": "Herr Der Elemente",
@@ -385,6 +393,7 @@
 			"title": "Dupliziere dieses Projekt",
 			"label": "Duplizieren",
 			"text": "Wähle ein übergeordnetes Projekt aus, welches das duplizierte Projekt enthalten soll:",
+			"shares": "Freigaben kopieren (Benutzer:innen, Teams und Linkfreigaben)",
 			"success": "Das Projekt wurde erfolgreich dupliziert."
 		},
 		"edit": {
@@ -463,7 +472,6 @@
 			"month": "Monat",
 			"day": "Tag",
 			"hour": "Stunde",
-			"range": "Zeitraum",
 			"chartLabel": "Projekt Gantt-Diagramm",
 			"taskBarsForRow": "Aufgabenleisten für Zeile {rowId}",
 			"taskBarLabel": "Aufgabe: {task}. Von {startDate} bis {endDate}. {dateType}. Klicke zum Bearbeiten, ziehe zum Verschieben.",
@@ -492,7 +500,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limit: {limit}",
-			"noLimit": "Nicht gesetzt",
 			"doneBucket": "Erledigt Spalte",
 			"doneBucketHint": "Alle Aufgaben, die in diese Spalte verschoben werden, werden automatisch als erledigt markiert.",
 			"doneBucketHintExtended": "Alle Aufgaben, die in die Erledigt Spalte verschoben wurden, werden automatisch als erledigt markiert. Aufgaben, die in einer anderen Spalte als Erledigt markiert wurden, werden auch in diese Spalte verschoben.",
@@ -776,7 +783,10 @@
 		"closeDialog": "Dialog schließen",
 		"closeQuickActions": "Schnellaktionen schließen",
 		"skipToContent": "Überspringen und zum Hauptinhalt gehen",
-		"sortBy": "Sortieren nach"
+		"sortBy": "Sortieren nach",
+		"dateRange": "Zeitraum",
+		"notSet": "Nicht festgelegt",
+		"user": "Benutzer:in"
 	},
 	"input": {
 		"projectColor": "Projektfarbe",
@@ -855,6 +865,7 @@
 			"date": "Datum",
 			"ranges": {
 				"today": "Heute",
+				"tomorrow": "Morgen",
 				"thisWeek": "Diese Woche",
 				"restOfThisWeek": "Der Rest dieser Woche",
 				"nextWeek": "Nächste Woche",
@@ -985,6 +996,7 @@
 				"repeatAfter": "Wiederholung setzen",
 				"percentDone": "Fortschritt einstellen",
 				"attachments": "Anhänge hinzufügen",
+				"timeTracking": "Zeit erfassen",
 				"relatedTasks": "Beziehung hinzufügen",
 				"moveProject": "Verschieben",
 				"duplicate": "Duplizieren",
@@ -1058,7 +1070,10 @@
 			"addedSuccess": "Din Kommentar isch erfolgriich hinzuegfüegt worde.",
 			"permalink": "Permalink zu diesem Kommentar kopieren",
 			"sortNewestFirst": "Neueste zuerst",
-			"sortOldestFirst": "Älteste zuerst"
+			"sortOldestFirst": "Älteste zuerst",
+			"reply": "Antworten",
+			"jumpToOriginal": "Zum ursprünglichen Kommentar springen",
+			"deletedComment": "gelöschter Kommentar"
 		},
 		"mention": {
 			"noUsersFound": "Keine Nutzer:innen gefunden"
@@ -1323,7 +1338,8 @@
 		"none": "Du hesch kei neui Benachrichtunge. Heb e schös Tägli!",
 		"explainer": "Benachrichtigungen werden hier angezeigt, wenn Aktionen für Projekte oder Aufgaben, die du abonniert hast, ausgeführt werden.",
 		"markAllRead": "Alle Benachrichtigungen als gelesen markieren",
-		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert."
+		"markAllReadSuccess": "Alle Benachrichtigungen erfolgreich als gelesen markiert.",
+		"subscribeFeed": "Benachrichtigungen über Atom-Feed abonnieren"
 	},
 	"quickActions": {
 		"notLoggedIn": "Bitte melde dich zuerst im Hauptfenster von Vikunja an.",
@@ -1449,6 +1465,32 @@
 		"version": "Version: {version}",
 		"frontendVersion": "Frontend-Version: {version}",
 		"apiVersion": "API-Version: {version}"
+	},
+	"timeTracking": {
+		"title": "Zeiterfassung",
+		"stop": "Timer stoppen",
+		"logTime": "Zeit buchen",
+		"editEntry": "Eintrag bearbeiten",
+		"form": {
+			"task": "Aufgabe",
+			"taskSearch": "Nach einer Aufgabe suchen…",
+			"commentPlaceholder": "Woran hast du gearbeitet?",
+			"save": "Speichern",
+			"startTimer": "Timer starten",
+			"update": "Eintrag aktualisieren",
+			"smartFill": "Vom letzten Eintrag ausfüllen"
+		},
+		"list": {
+			"emptyTask": "Noch keine Zeit für diese Aufgabe getrackt.",
+			"emptyFiltered": "Keine Zeiterfassung innerhalb der ausgewählten Filter.",
+			"total": "Gesamt",
+			"time": "Uhrzeit",
+			"duration": "Dauer"
+		},
+		"browse": {
+			"selectRange": "Bereich wählen",
+			"userSearch": "Nach einer:m Benutzer:in suchen…"
+		}
 	},
 	"time": {
 		"units": {

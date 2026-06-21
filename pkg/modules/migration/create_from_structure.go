@@ -18,6 +18,7 @@ package migration
 
 import (
 	"bytes"
+	"context"
 
 	"xorm.io/xorm"
 
@@ -27,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/background/handler"
 	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/utils"
 )
 
 // InsertFromStructure takes a fully nested Vikunja data structure and a user and then creates everything for this user
@@ -49,7 +51,7 @@ func InsertFromStructure(str []*models.ProjectWithTasksAndBuckets, user *user.Us
 		return err
 	}
 
-	events.DispatchPending(s)
+	events.DispatchPending(context.Background(), s)
 	return nil
 }
 
@@ -57,7 +59,17 @@ func insertFromStructure(s *xorm.Session, str []*models.ProjectWithTasksAndBucke
 
 	log.Debugf("[creating structure] Creating %d projects", len(str))
 
+	// Seed the dedup map with the user's existing labels so re-imports
+	// reuse them instead of creating duplicates (see issue #2742).
 	labels := make(map[string]*models.Label)
+	existingLabels := []*models.Label{}
+	if err = s.Where("created_by_id = ?", user.ID).Find(&existingLabels); err != nil {
+		return err
+	}
+	for _, l := range existingLabels {
+		labels[l.Title+utils.NormalizeHex(l.HexColor)] = l
+	}
+
 	archivedProjects := []int64{}
 
 	childRelations := make(map[int64][]int64)          // old id is the key, slice of old children ids
@@ -436,14 +448,15 @@ func createProjectWithEverything(s *xorm.Session, project *models.ProjectWithTas
 			if label == nil {
 				continue
 			}
-			lb, exists = labels[label.Title+label.HexColor]
+			key := label.Title + utils.NormalizeHex(label.HexColor)
+			lb, exists = labels[key]
 			if !exists {
 				err = label.Create(s, user)
 				if err != nil {
 					return err
 				}
 				log.Debugf("[creating structure] Created new label %d", label.ID)
-				labels[label.Title+label.HexColor] = label
+				labels[key] = label
 				lb = label
 			}
 

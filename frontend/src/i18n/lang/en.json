@@ -172,6 +172,7 @@
           "yyyy\/mm\/dd": "YYYY\/MM\/DD"
         },
         "timeFormat": "Time format",
+        "timeTrackingDefaultStart": "Time tracking smart-fill start time",
         "timeFormatOptions": {
           "12h": "12-hour (AM/PM)",
           "24h": "24-hour (HH:mm)"
@@ -218,6 +219,13 @@
         "mustUseToken": "You need to create a CalDAV token to use CalDAV with any third-party client. Enter the token in the password field of your client.",
         "usernameIs": "Your username for CalDAV is: {0}",
         "apiTokenHint": "You can also use an API token with CalDAV permission. Create one in {link}."
+      },
+      "feeds": {
+        "title": "Atom Feed",
+        "howTo": "You can subscribe to your Vikunja notifications from any Atom-compatible feed reader. Use the following URL:",
+        "usernameIs": "Your username for the feed is: {0}",
+        "apiTokenHint": "Authenticate with an API token that has the {scope} permission. Create one in {link}.",
+        "tokenTitle": "Atom feed"
       },
       "avatar": {
         "title": "Avatar",
@@ -385,6 +393,7 @@
       "title": "Duplicate this project",
       "label": "Duplicate",
       "text": "Select a parent project which should hold the duplicated project:",
+      "shares": "Copy shares (users, teams and link shares) to the duplicate",
       "success": "The project was successfully duplicated."
     },
     "edit": {
@@ -463,7 +472,6 @@
       "month": "Month",
       "day": "Day",
       "hour": "Hour",
-      "range": "Date Range",
       "chartLabel": "Project Gantt Chart",
       "taskBarsForRow": "Task bars for row {rowId}",
       "taskBarLabel": "Task: {task}. From {startDate} to {endDate}. {dateType}. Click to edit, drag to move.",
@@ -492,7 +500,6 @@
     "kanban": {
       "title": "Kanban",
       "limit": "Limit: {limit}",
-      "noLimit": "Not Set",
       "doneBucket": "Done bucket",
       "doneBucketHint": "All tasks moved into this bucket will automatically marked as done.",
       "doneBucketHintExtended": "All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.",
@@ -776,7 +783,10 @@
     "closeDialog": "Close dialog",
     "closeQuickActions": "Close quick actions",
     "skipToContent": "Skip to main content",
-    "sortBy": "Sort by"
+    "sortBy": "Sort by",
+    "dateRange": "Date range",
+    "notSet": "Not set",
+    "user": "User"
   },
   "input": {
     "projectColor": "Project color",
@@ -855,6 +865,7 @@
       "date": "Date",
       "ranges": {
         "today": "Today",
+        "tomorrow": "Tomorrow",
         "thisWeek": "This Week",
         "restOfThisWeek": "The Rest of This Week",
         "nextWeek": "Next Week",
@@ -986,6 +997,7 @@
         "repeatAfter": "Set Repeating Interval",
         "percentDone": "Set Progress",
         "attachments": "Add Attachments",
+        "timeTracking": "Track time",
         "relatedTasks": "Add Relation",
         "moveProject": "Move",
         "duplicate": "Duplicate",
@@ -1059,7 +1071,10 @@
       "addedSuccess": "The comment was added successfully.",
       "permalink": "Copy permalink to this comment",
       "sortNewestFirst": "Newest first",
-      "sortOldestFirst": "Oldest first"
+      "sortOldestFirst": "Oldest first",
+      "reply": "Reply",
+      "jumpToOriginal": "Jump to original comment",
+      "deletedComment": "deleted comment"
     },
     "mention": {
       "noUsersFound": "No users found"
@@ -1324,7 +1339,8 @@
     "none": "You don't have any notifications. Have a nice day!",
     "explainer": "Notifications will appear here when actions, projects or tasks you subscribed to happen.",
     "markAllRead": "Mark all notifications as read",
-    "markAllReadSuccess": "Successfully marked all notifications as read."
+    "markAllReadSuccess": "Successfully marked all notifications as read.",
+    "subscribeFeed": "Subscribe to notifications via Atom feed"
   },
   "quickActions": {
     "notLoggedIn": "Please log in to the main Vikunja window first.",
@@ -1450,6 +1466,32 @@
     "version": "Version: {version}",
     "frontendVersion": "Frontend version: {version}",
     "apiVersion": "API version: {version}"
+  },
+  "timeTracking": {
+    "title": "Time tracking",
+    "stop": "Stop timer",
+    "logTime": "Log time",
+    "editEntry": "Edit entry",
+    "form": {
+      "task": "Task",
+      "taskSearch": "Search for a task…",
+      "commentPlaceholder": "What did you work on?",
+      "save": "Save entry",
+      "startTimer": "Start timer",
+      "update": "Update entry",
+      "smartFill": "Fill from last entry"
+    },
+    "list": {
+      "emptyTask": "No time tracked for this task yet.",
+      "emptyFiltered": "No time tracked for the selected filters.",
+      "total": "Total",
+      "time": "Time",
+      "duration": "Duration"
+    },
+    "browse": {
+      "selectRange": "Select a range",
+      "userSearch": "Search for a user…"
+    }
   },
   "time": {
     "units": {

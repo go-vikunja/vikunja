@@ -43,7 +43,6 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/magefile/mage/mg"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -62,27 +61,21 @@ var (
 
 	// Aliases are mage aliases of targets
 	Aliases = map[string]any{
-		"build":                       Build.Build,
-		"check:got-swag":              Check.GotSwag,
-		"release":                     Release.Release,
-		"release:os-package":          Release.OsPackage,
-		"release:prepare-nfpm-config": Release.PrepareNFPMConfig,
-		"release:repo-apt":            Release.RepoApt,
-		"release:repo-rpm":            Release.RepoRpm,
-		"release:repo-pacman":         Release.RepoPacman,
-		"dev:make-migration":          Dev.MakeMigration,
-		"dev:make-event":              Dev.MakeEvent,
-		"dev:make-listener":           Dev.MakeListener,
-		"dev:make-notification":       Dev.MakeNotification,
-		"dev:prepare-worktree":        Dev.PrepareWorktree,
-		"dev:tag-release":             Dev.TagRelease,
-		"test:e2e":                    Test.E2E,
-		"test:e2e-api":                Test.E2EApi,
-		"plugins:build":               Plugins.Build,
-		"lint":                        Check.Golangci,
-		"lint:fix":                    Check.GolangciFix,
-		"generate:config-yaml":        Generate.ConfigYAML,
-		"generate:swagger-docs":       Generate.SwaggerDocs,
+		"build":                 Build.Build,
+		"check:got-swag":        Check.GotSwag,
+		"dev:make-migration":    Dev.MakeMigration,
+		"dev:make-event":        Dev.MakeEvent,
+		"dev:make-listener":     Dev.MakeListener,
+		"dev:make-notification": Dev.MakeNotification,
+		"dev:prepare-worktree":  Dev.PrepareWorktree,
+		"dev:tag-release":       Dev.TagRelease,
+		"test:e2e":              Test.E2E,
+		"test:e2e-api":          Test.E2EApi,
+		"plugins:build":         Plugins.Build,
+		"lint":                  Check.Golangci,
+		"lint:fix":              Check.GolangciFix,
+		"generate:config-yaml":  Generate.ConfigYAML,
+		"generate:swagger-docs": Generate.SwaggerDocs,
 	}
 )
 
@@ -266,45 +259,6 @@ func copyFile(src, dst string) error {
 	}
 
 	return out.Close()
-}
-
-// os.Rename has issues with moving files between docker volumes.
-// Because of this limitation, it fails in drone.
-// Source: https://gist.github.com/var23rav/23ae5d0d4d830aff886c3c970b8f6c6b
-func moveFile(src, dst string) error {
-	inputFile, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("couldn't open source file: %w", err)
-	}
-	defer inputFile.Close()
-
-	outputFile, err := os.Create(dst)
-	if err != nil {
-		return fmt.Errorf("couldn't open dest file: %w", err)
-	}
-	defer outputFile.Close()
-
-	_, err = io.Copy(outputFile, inputFile)
-	if err != nil {
-		return fmt.Errorf("writing to output file failed: %w", err)
-	}
-
-	// Make sure to copy copy the permissions of the original file as well
-	si, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-
-	if err := os.Chmod(dst, si.Mode()); err != nil {
-		return err
-	}
-
-	// The copy was successful, so now delete the original file
-	err = os.Remove(src)
-	if err != nil {
-		return fmt.Errorf("failed removing original file: %w", err)
-	}
-	return nil
 }
 
 func appendToFile(filename, content string) error {
@@ -1180,624 +1134,6 @@ func (Build) SaveVersionToFile() error {
 	return nil
 }
 
-type Release mg.Namespace
-
-// Release runs all steps in the right order to create release packages for various platforms
-func (Release) Release(ctx context.Context) error {
-	mg.Deps(initVars)
-	mg.Deps(Release.Dirs, prepareXgo)
-
-	// Run compiling in parallel to speed it up
-	errs, _ := errgroup.WithContext(ctx)
-	errgroupGoWithContext(ctx, errs, (Release{}).Windows)
-	errgroupGoWithContext(ctx, errs, (Release{}).Linux)
-	errgroupGoWithContext(ctx, errs, (Release{}).Darwin)
-	if err := errs.Wait(); err != nil {
-		return err
-	}
-
-	if err := (Release{}).Compress(ctx); err != nil {
-		return err
-	}
-	if err := (Release{}).Copy(); err != nil {
-		return err
-	}
-	if err := (Release{}).Check(); err != nil {
-		return err
-	}
-	if err := (Release{}).OsPackage(); err != nil {
-		return err
-	}
-	if err := (Release{}).Zip(ctx); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func errgroupGoWithContext(ctx context.Context, errs *errgroup.Group, do func(context.Context) error) {
-	errs.Go(func() error {
-		return do(ctx)
-	})
-}
-
-// Dirs creates all directories needed to release vikunja
-func (Release) Dirs() error {
-	for _, d := range []string{"binaries", "release", "zip"} {
-		if err := os.MkdirAll("./"+DIST+"/"+d, 0o755); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func prepareXgo(ctx context.Context) error {
-	mg.Deps(initVars)
-	if err := checkAndInstallGoTool(ctx, "xgo", "src.techknowlogick.com/xgo"); err != nil {
-		return err
-	}
-
-	fmt.Println("Pulling latest xgo docker image...")
-	return runAndStreamOutput(ctx, "docker", "pull", "ghcr.io/techknowlogick/xgo:latest")
-}
-
-func runXgo(ctx context.Context, targets string) error {
-	mg.Deps(initVars)
-	if err := checkAndInstallGoTool(ctx, "xgo", "src.techknowlogick.com/xgo"); err != nil {
-		return err
-	}
-
-	extraLdflags := `-linkmode external -extldflags "-static" `
-
-	// See https://github.com/techknowlogick/xgo/issues/79
-	if strings.HasPrefix(targets, "darwin") {
-		extraLdflags = ""
-	}
-	outName := os.Getenv("XGO_OUT_NAME")
-	if outName == "" {
-		outName = Executable + "-" + Version
-	}
-
-	if err := runAndStreamOutput(ctx, "xgo",
-		"-dest", "./"+DIST+"/binaries",
-		"-tags", "netgo "+Tags,
-		"-ldflags", extraLdflags+Ldflags,
-		"-targets", targets,
-		"-out", outName,
-		"."); err != nil {
-		return err
-	}
-	if os.Getenv("DRONE_WORKSPACE") != "" {
-		return filepath.Walk("/build/", func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			// Skip directories
-			if info.IsDir() {
-				return nil
-			}
-
-			return moveFile(path, "./"+DIST+"/binaries/"+info.Name())
-		})
-	}
-	return nil
-}
-
-// Windows builds binaries for windows
-func (Release) Windows(ctx context.Context) error {
-	return runXgo(ctx, "windows/*")
-}
-
-// Linux builds binaries for linux
-func (Release) Linux(ctx context.Context) error {
-	targets := []string{
-		"linux/amd64",
-		"linux/arm-5",
-		"linux/arm-6",
-		"linux/arm-7",
-		"linux/arm64",
-		"linux/mips",
-		"linux/mipsle",
-		"linux/mips64",
-		"linux/mips64le",
-		"linux/riscv64",
-	}
-	return runXgo(ctx, strings.Join(targets, ","))
-}
-
-// Darwin builds binaries for darwin
-func (Release) Darwin(ctx context.Context) error {
-	return runXgo(ctx, "darwin-10.15/*")
-}
-
-func (Release) Xgo(ctx context.Context, target string) error {
-	parts := strings.Split(target, "/")
-	if len(parts) < 2 {
-		return fmt.Errorf("invalid target")
-	}
-
-	variant := ""
-	if len(parts) > 2 && parts[2] != "" {
-		variant = "-" + strings.ReplaceAll(parts[2], "v", "")
-	}
-
-	return runXgo(ctx, parts[0]+"/"+parts[1]+variant)
-}
-
-// Compress compresses the built binaries in dist/binaries/ to reduce their filesize
-func (Release) Compress(ctx context.Context) error {
-	// $(foreach file,$(filter-out $(wildcard $(wildcard $(DIST)/binaries/$(EXECUTABLE)-*mips*)),$(wildcard $(DIST)/binaries/$(EXECUTABLE)-*)), upx -9 $(file);)
-
-	errs, _ := errgroup.WithContext(ctx)
-
-	walkErr := filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// Only executable files
-		if !strings.Contains(info.Name(), Executable) {
-			return nil
-		}
-		if strings.Contains(info.Name(), "mips") ||
-			strings.Contains(info.Name(), "s390x") ||
-			strings.Contains(info.Name(), "riscv64") ||
-			strings.Contains(info.Name(), "darwin") ||
-			(strings.Contains(info.Name(), "windows") && strings.Contains(info.Name(), "arm64")) {
-			// not supported by upx
-			return nil
-		}
-
-		// Runs compressing in parallel since upx is single-threaded
-		errs.Go(func() error {
-			if err := runAndStreamOutput(ctx, "chmod", "+x", path); err != nil { // Make sure all binaries are executable. Sometimes the CI does weird things and they're not.
-				return err
-			}
-			return runAndStreamOutput(ctx, "upx", "-9", path)
-		})
-
-		return nil
-	})
-	if walkErr != nil {
-		return walkErr
-	}
-	return errs.Wait()
-}
-
-// Copy copies all built binaries to dist/release/ in preparation for creating the os packages
-func (Release) Copy() error {
-	return filepath.Walk("./"+DIST+"/binaries/", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// Only executable files
-		if !strings.Contains(info.Name(), Executable) {
-			return nil
-		}
-
-		return copyFile(path, "./"+DIST+"/release/"+info.Name())
-	})
-}
-
-// Check creates sha256 checksum files for each binary in dist/release/
-func (Release) Check() error {
-	p := "./" + DIST + "/release/"
-	return filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-
-		f, err := os.Create(p + info.Name() + ".sha256")
-		if err != nil {
-			return err
-		}
-
-		hash, err := calculateSha256FileHash(path)
-		if err != nil {
-			return err
-		}
-
-		_, err = f.WriteString(hash + "  " + info.Name())
-		if err != nil {
-			return err
-		}
-
-		return f.Close()
-	})
-}
-
-// OsPackage creates a folder for each
-func (Release) OsPackage() error {
-	p := "./" + DIST + "/release/"
-
-	// We first put all files in a map to then iterate over it since the walk function would otherwise also iterate
-	// over the newly created files, creating some kind of endless loop.
-	bins := make(map[string]os.FileInfo)
-	if err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if strings.Contains(info.Name(), ".sha256") || info.IsDir() {
-			return nil
-		}
-		bins[path] = info
-		return nil
-	}); err != nil {
-		return err
-	}
-
-	generateConfigYAMLFromJSON("./"+DefaultConfigYAMLSamplePath, true)
-
-	for path, info := range bins {
-		folder := p + info.Name() + "-full/"
-		if err := os.Mkdir(folder, 0o755); err != nil {
-			return err
-		}
-		if err := moveFile(p+info.Name()+".sha256", folder+info.Name()+".sha256"); err != nil {
-			return err
-		}
-		if err := moveFile(path, folder+info.Name()); err != nil {
-			return err
-		}
-		if err := copyFile("./"+DefaultConfigYAMLSamplePath, folder+DefaultConfigYAMLSamplePath); err != nil {
-			return err
-		}
-		if err := copyFile("./LICENSE", folder+"LICENSE"); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Zip creates a zip file from all os-package folders in dist/release
-func (Release) Zip(ctx context.Context) error {
-	rootDir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("could not get working directory: %w", err)
-	}
-
-	p := "./" + DIST + "/release/"
-	if err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() || info.Name() == "release" {
-			return nil
-		}
-
-		fmt.Printf("Zipping %s...\n", info.Name())
-
-		zipFile := filepath.Join(rootDir, DIST, "zip", info.Name()+".zip")
-		c := exec.CommandContext(ctx, "zip", "-r", zipFile, ".", "-i", "*") //nolint:gosec // This mage task creates zips of every directory recursively, it must use the directory name in the resulting file path to distinguish output files.
-		c.Dir = path
-		out, err := c.Output()
-		fmt.Print(string(out))
-		return err
-	}); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// repoSuite returns a validated suite name from the REPO_SUITE env var.
-// Only "stable" and "unstable" are allowed to prevent path traversal.
-func repoSuite() string {
-	suite := os.Getenv("REPO_SUITE")
-	switch suite {
-	case "stable", "unstable":
-		return suite
-	default:
-		return "stable"
-	}
-}
-
-// RepoApt generates APT repository metadata using reprepro.
-// It expects .deb files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/apt/.
-// The reprepro config is read from build/reprepro-dist-conf.
-// Signing is done manually after reprepro finishes to avoid gpgme pinentry issues in CI.
-// Environment: REPO_SUITE controls the target suite (default: "stable").
-// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
-func (Release) RepoApt(ctx context.Context) error {
-	mg.Deps(initVars)
-
-	suite := repoSuite()
-
-	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
-	outputBase := filepath.Join(DIST, "repo-output", "apt")
-
-	// Set up reprepro conf directory
-	confDir := filepath.Join(outputBase, "conf")
-	if err := os.MkdirAll(confDir, 0o755); err != nil {
-		return fmt.Errorf("creating reprepro conf dir: %w", err)
-	}
-
-	// Copy distributions config
-	distConf, err := os.ReadFile("build/reprepro-dist-conf")
-	if err != nil {
-		return fmt.Errorf("reading reprepro-dist-conf: %w", err)
-	}
-	if err := os.WriteFile(filepath.Join(confDir, "distributions"), distConf, 0o600); err != nil {
-		return fmt.Errorf("writing distributions config: %w", err)
-	}
-
-	// Include all .deb files into the target suite
-	debs, err := filepath.Glob(filepath.Join(incomingDir, "*.deb"))
-	if err != nil {
-		return err
-	}
-	for _, deb := range debs {
-		abs, _ := filepath.Abs(deb)
-		if err := runAndStreamOutput(ctx, "reprepro",
-			"-b", outputBase,
-			"includedeb", suite,
-			abs,
-		); err != nil {
-			return fmt.Errorf("reprepro includedeb %s: %w", filepath.Base(deb), err)
-		}
-	}
-
-	// Sign Release files manually (reprepro's gpgme signing doesn't work in CI)
-	gpgKey := os.Getenv("RELEASE_GPG_KEY")
-	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
-
-	releaseFile := filepath.Join(outputBase, "dists", suite, "Release")
-	if _, err := os.Stat(releaseFile); err == nil {
-		// Generate Release.gpg (detached signature)
-		if err := runAndStreamOutput(ctx, "gpg",
-			"--default-key", gpgKey,
-			"--batch", "--yes",
-			"--passphrase", gpgPassphrase,
-			"--pinentry-mode", "loopback",
-			"--detach-sign", "--armor",
-			"-o", releaseFile+".gpg",
-			releaseFile,
-		); err != nil {
-			return fmt.Errorf("signing Release (detached): %w", err)
-		}
-
-		// Generate InRelease (clearsigned)
-		if err := runAndStreamOutput(ctx, "gpg",
-			"--default-key", gpgKey,
-			"--batch", "--yes",
-			"--passphrase", gpgPassphrase,
-			"--pinentry-mode", "loopback",
-			"--clearsign",
-			"-o", filepath.Join(filepath.Dir(releaseFile), "InRelease"),
-			releaseFile,
-		); err != nil {
-			return fmt.Errorf("signing Release (clearsign): %w", err)
-		}
-	}
-
-	fmt.Println("APT repo metadata generated in", outputBase)
-	return nil
-}
-
-// RepoRpm generates RPM repository metadata for all .rpm files in the work directory.
-// Expects .rpm files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/rpm/<suite>/.
-// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
-// Environment: REPO_SUITE controls the target suite (default: "stable").
-func (Release) RepoRpm(ctx context.Context) error {
-	mg.Deps(initVars)
-
-	suite := repoSuite()
-
-	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
-	outputBase := filepath.Join(DIST, "repo-output", "rpm", suite)
-
-	archMap := map[string]string{
-		"x86_64":  "x86_64",
-		"aarch64": "aarch64",
-		"armv7":   "armv7",
-	}
-
-	gpgKey := os.Getenv("RELEASE_GPG_KEY")
-	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
-
-	for pkgArch, repoArch := range archMap {
-		repoDir := filepath.Join(outputBase, repoArch)
-		if err := os.MkdirAll(repoDir, 0o755); err != nil {
-			return err
-		}
-
-		// Symlink matching RPMs
-		pattern := filepath.Join(incomingDir, "*-"+pkgArch+".rpm")
-		rpms, _ := filepath.Glob(pattern)
-		if len(rpms) == 0 {
-			continue
-		}
-		for _, rpm := range rpms {
-			abs, _ := filepath.Abs(rpm)
-			dst := filepath.Join(repoDir, filepath.Base(rpm))
-			os.Remove(dst)
-			if err := os.Symlink(abs, dst); err != nil {
-				return err
-			}
-		}
-
-		// createrepo_c (--update if repodata already exists)
-		args := []string{repoDir}
-		if _, err := os.Stat(filepath.Join(repoDir, "repodata")); err == nil {
-			args = []string{"--update", repoDir}
-		}
-		if err := runAndStreamOutput(ctx, "createrepo_c", args...); err != nil {
-			return fmt.Errorf("createrepo_c for %s: %w", repoArch, err)
-		}
-
-		// Sign repomd.xml
-		if err := runAndStreamOutput(ctx, "gpg",
-			"--default-key", gpgKey,
-			"--batch", "--yes",
-			"--passphrase", gpgPassphrase,
-			"--pinentry-mode", "loopback",
-			"--detach-sign", "--armor",
-			"-o", filepath.Join(repoDir, "repodata", "repomd.xml.asc"),
-			filepath.Join(repoDir, "repodata", "repomd.xml"),
-		); err != nil {
-			return fmt.Errorf("signing repomd.xml for %s: %w", repoArch, err)
-		}
-	}
-
-	fmt.Println("RPM repo metadata generated in", outputBase)
-	return nil
-}
-
-// RepoPacman generates Pacman repository database for all .archlinux files in the work directory.
-// Expects .archlinux files in <DIST>/repo-work/incoming/ and outputs to <DIST>/repo-output/pacman/<suite>/.
-// Environment: RELEASE_GPG_KEY, RELEASE_GPG_PASSPHRASE must be set for signing.
-// Environment: REPO_SUITE controls the target suite (default: "stable").
-func (Release) RepoPacman(ctx context.Context) error {
-	mg.Deps(initVars)
-
-	suite := repoSuite()
-
-	incomingDir := filepath.Join(DIST, "repo-work", "incoming")
-	outputBase := filepath.Join(DIST, "repo-output", "pacman", suite)
-
-	archMap := map[string]string{
-		"x86_64":  "x86_64",
-		"aarch64": "aarch64",
-		"armv7":   "armv7",
-	}
-
-	gpgKey := os.Getenv("RELEASE_GPG_KEY")
-	gpgPassphrase := os.Getenv("RELEASE_GPG_PASSPHRASE")
-
-	for pkgArch, repoArch := range archMap {
-		repoDir := filepath.Join(outputBase, repoArch)
-		if err := os.MkdirAll(repoDir, 0o755); err != nil {
-			return err
-		}
-
-		pattern := filepath.Join(incomingDir, "*-"+pkgArch+".archlinux")
-		pkgs, _ := filepath.Glob(pattern)
-		if len(pkgs) == 0 {
-			continue
-		}
-		for _, pkg := range pkgs {
-			abs, _ := filepath.Abs(pkg)
-			dst := filepath.Join(repoDir, filepath.Base(pkg))
-			os.Remove(dst)
-			if err := os.Symlink(abs, dst); err != nil {
-				return err
-			}
-		}
-
-		// repo-add creates vikunja.db.tar.gz and vikunja.files.tar.gz
-		dbPath := filepath.Join(repoDir, "vikunja.db.tar.gz")
-		repoPkgs, _ := filepath.Glob(filepath.Join(repoDir, "*.archlinux"))
-		repoAddArgs := append([]string{dbPath}, repoPkgs...)
-		if err := runAndStreamOutput(ctx, "repo-add", repoAddArgs...); err != nil {
-			return fmt.Errorf("repo-add for %s: %w", repoArch, err)
-		}
-
-		// Create conventional symlinks (vikunja.db -> vikunja.db.tar.gz)
-		for _, name := range []string{"vikunja.db", "vikunja.files"} {
-			link := filepath.Join(repoDir, name)
-			os.Remove(link)
-			if err := os.Symlink(name+".tar.gz", link); err != nil {
-				return fmt.Errorf("creating symlink %s: %w", name, err)
-			}
-		}
-
-		// Sign the database
-		if err := runAndStreamOutput(ctx, "gpg",
-			"--default-key", gpgKey,
-			"--batch", "--yes",
-			"--passphrase", gpgPassphrase,
-			"--pinentry-mode", "loopback",
-			"--detach-sign",
-			"-o", filepath.Join(repoDir, "vikunja.db.sig"),
-			dbPath,
-		); err != nil {
-			return fmt.Errorf("signing db for %s: %w", repoArch, err)
-		}
-	}
-
-	fmt.Println("Pacman repo metadata generated in", outputBase)
-	return nil
-}
-
-// PrepareNFPMConfig prepares the nfpm config
-func (Release) PrepareNFPMConfig() error {
-	mg.Deps(initVars)
-	var err error
-
-	// Because nfpm does not support templating, we replace the values in the config file and restore it after running
-	nfpmConfigPath := "./nfpm.yaml"
-	nfpmconfig, err := os.ReadFile(nfpmConfigPath)
-	if err != nil {
-		return err
-	}
-
-	var nfpmArch string
-	switch os.Getenv("NFPM_ARCH") {
-	case "arm64":
-		nfpmArch = "arm64"
-	case "arm7":
-		nfpmArch = "arm7"
-	case "386":
-		nfpmArch = "386"
-	default:
-		nfpmArch = "amd64"
-	}
-
-	fixedConfig := strings.ReplaceAll(string(nfpmconfig), "<version>", VersionNumber)
-	fixedConfig = strings.ReplaceAll(fixedConfig, "<binlocation>", BinLocation)
-	fixedConfig = strings.ReplaceAll(fixedConfig, "<arch>", nfpmArch)
-	if err := os.WriteFile(nfpmConfigPath, []byte(fixedConfig), 0); err != nil {
-		return err
-	}
-
-	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, true)
-
-	return nil
-}
-
-// Packages creates deb, rpm and apk packages
-func (Release) Packages(ctx context.Context) error {
-	mg.Deps(initVars)
-
-	var err error
-	binpath := os.Getenv("NFPM_BIN_PATH")
-	if binpath == "" {
-		binpath = "nfpm"
-	}
-	err = exec.CommandContext(ctx, binpath).Run()
-	if err != nil && strings.Contains(err.Error(), "executable file not found") {
-		binpath = "/usr/bin/nfpm"
-		err = exec.CommandContext(ctx, binpath).Run()
-	}
-	if err != nil && strings.Contains(err.Error(), "executable file not found") {
-		return fmt.Errorf("executable %s not found: please manually install nfpm by running the command: curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh -s -- -b $(go env GOPATH)/bin", binpath)
-	}
-
-	err = (Release{}).PrepareNFPMConfig()
-	if err != nil {
-		return err
-	}
-
-	releasePath := "./" + DIST + "/os-packages/"
-	if err := os.MkdirAll(releasePath, 0o755); err != nil {
-		return err
-	}
-
-	if err := runAndStreamOutput(ctx, binpath, "pkg", "--packager", "deb", "--target", releasePath); err != nil {
-		return err
-	}
-	if err := runAndStreamOutput(ctx, binpath, "pkg", "--packager", "rpm", "--target", releasePath); err != nil {
-		return err
-	}
-	if err := runAndStreamOutput(ctx, binpath, "pkg", "--packager", "apk", "--target", releasePath); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 type Dev mg.Namespace
 
 // MakeMigration creates a new bare db migration skeleton in pkg/migration.
@@ -2172,6 +1508,46 @@ func generateConfigYAMLFromJSON(yamlPath string, commented bool) {
 // ConfigYAML create a yaml config file from the config-raw.json definition
 func (Generate) ConfigYAML(commented bool) {
 	generateConfigYAMLFromJSON(DefaultConfigYAMLSamplePath, commented)
+}
+
+// ScalarBundle downloads the Scalar API reference standalone JS bundle into
+// pkg/routes/api/v2/scalar/. Version is pinned to match the Scalar version
+// used in Huma's internal docs at the time of last update.
+func (Generate) ScalarBundle() error {
+	const (
+		version = "1.44.20"
+		dest    = "pkg/routes/api/v2/scalar/scalar.standalone.js"
+	)
+	url := fmt.Sprintf("https://unpkg.com/@scalar/api-reference@%s/dist/browser/standalone.js", version)
+
+	fmt.Printf("Downloading Scalar bundle %s from %s\n", version, url)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil) //nolint:gosec // This is a dev-only mage task and the URL is hard-coded above.
+	if err != nil {
+		return fmt.Errorf("build scalar bundle request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("download scalar bundle: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("download scalar bundle: unexpected status %s", resp.Status)
+	}
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, resp.Body); err != nil {
+		return fmt.Errorf("read scalar bundle body: %w", err)
+	}
+
+	if err := os.WriteFile(dest, buf.Bytes(), 0o600); err != nil {
+		return fmt.Errorf("write %s: %w", dest, err)
+	}
+
+	fmt.Printf("Wrote %d bytes to %s\n", buf.Len(), dest)
+	return nil
 }
 
 func localBranchExists(ctx context.Context, name string) bool {

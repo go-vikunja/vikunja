@@ -44,6 +44,12 @@ func TestCaldav(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "END:VTODO")
 		assert.Contains(t, rec.Body.String(), "END:VCALENDAR")
 	})
+	t.Run("Returns 404 for non-integer project param", func(t *testing.T) {
+		e, _ := setupTestEnv()
+		rec, err := newCaldavTestRequestWithUser(t, e, http.MethodGet, caldav.ProjectHandler, &testuser15, ``, nil, map[string]string{"project": "E6948AA3-86CC-40A1-874D-3B0A02FAA781"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, rec.Result().StatusCode)
+	})
 	t.Run("Import VTODO", func(t *testing.T) {
 		const vtodo = `BEGIN:VCALENDAR
 VERSION:2.0

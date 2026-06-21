@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"embed"
 	templatehtml "html/template"
+	"net/url"
 	"regexp"
 	"strings"
 	templatetext "text/template"
@@ -187,16 +188,26 @@ const mailTemplateConversationalHTML = `
 //go:embed logo.png
 var logo embed.FS
 
-func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err error) {
+// newNotificationSanitizer builds the bluemonday policy for all HTML in notification
+// emails. Only inline data-URI images (avatars) are allowed: RewriteSrc blanks any
+// remote image src so a user-controlled task title, comment or description can't
+// smuggle a tracking pixel into a recipient's inbox.
+func newNotificationSanitizer() *bluemonday.Policy {
 	p := bluemonday.UGCPolicy()
-	// Allow data URI images for inline avatars in mentions
 	p.AllowDataURIImages()
-	// Allow style attribute on img and div elements for avatar and layout styling
 	p.AllowAttrs("style").OnElements("img", "div")
-	// Allow specific CSS properties for avatar styling
 	p.AllowStyles("border-radius", "vertical-align", "margin-right").OnElements("img")
-	// Allow padding styles on div elements for content spacing
 	p.AllowStyles("padding-top", "margin-bottom").OnElements("div")
+	p.RewriteSrc(func(u *url.URL) {
+		if u.Scheme != "data" {
+			*u = url.URL{}
+		}
+	})
+	return p
+}
+
+func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err error) {
+	p := newNotificationSanitizer()
 
 	for _, line := range lines {
 		if line.isHTML {
@@ -225,11 +236,7 @@ func convertLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err e
 // sanitizeLinesToHTML sanitizes lines without wrapping in <p> tags or adding margins.
 // Used for footer lines and other content that should not have paragraph styling.
 func sanitizeLinesToHTML(lines []*mailLine) (linesHTML []templatehtml.HTML, err error) {
-	p := bluemonday.UGCPolicy()
-	p.AllowDataURIImages()
-	p.AllowAttrs("style").OnElements("img", "div")
-	p.AllowStyles("border-radius", "vertical-align", "margin-right").OnElements("img")
-	p.AllowStyles("padding-top", "margin-bottom").OnElements("div")
+	p := newNotificationSanitizer()
 
 	for _, line := range lines {
 		if line.isHTML {
@@ -366,12 +373,8 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 	data["CopyURLText"] = i18n.T(lang, "notifications.common.copy_url")
 
 	if m.headerLine != nil {
-		p := bluemonday.UGCPolicy()
-		p.AllowDataURIImages()
-		p.AllowAttrs("style").OnElements("img", "div")
-		p.AllowStyles("border-radius", "vertical-align", "margin-right").OnElements("img")
 		// #nosec G203 -- the html is sanitized
-		data["HeaderLineHTML"] = templatehtml.HTML(p.Sanitize(m.headerLine.Text))
+		data["HeaderLineHTML"] = templatehtml.HTML(newNotificationSanitizer().Sanitize(m.headerLine.Text))
 	}
 
 	data["IntroLinesHTML"], err = convertLinesToHTML(m.introLines)
@@ -407,9 +410,12 @@ func RenderMail(m *Mail, lang string) (mailOpts *mail.Opts, err error) {
 		HTMLMessage: htmlContent.String(),
 		Boundary:    boundary,
 		ThreadID:    m.threadID,
-		EmbedFS: map[string]*embed.FS{
+	}
+
+	if !m.conversational {
+		mailOpts.EmbedFS = map[string]*embed.FS{
 			"logo.png": &logo,
-		},
+		}
 	}
 
 	return mailOpts, nil

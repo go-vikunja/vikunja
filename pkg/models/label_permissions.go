@@ -17,6 +17,7 @@
 package models
 
 import (
+	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"xorm.io/builder"
 	"xorm.io/xorm"
@@ -57,7 +58,19 @@ func (l *Label) isLabelOwner(s *xorm.Session, a web.Auth) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return lorig.CreatedByID == a.GetID(), nil
+	if lorig.CreatedByID == a.GetID() {
+		return true, nil
+	}
+
+	// A bot owner inherits write/delete access to labels their bots created.
+	creator, err := user.GetUserByID(s, lorig.CreatedByID)
+	if err != nil {
+		if user.IsErrUserDoesNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return creator.IsBot() && creator.BotOwnerID == a.GetID(), nil
 }
 
 // hasAccessToLabel reports whether the caller can read a label and, if so,
@@ -91,7 +104,12 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 
 	accessBranches := []builder.Cond{labelAttachedToAccessibleTask}
 	if !isLinkShare {
-		accessBranches = append(accessBranches, builder.Eq{"labels.created_by_id": a.GetID()})
+		accessBranches = append(accessBranches,
+			builder.Eq{"labels.created_by_id": a.GetID()},
+			builder.In("labels.created_by_id",
+				builder.Select("id").From("users").Where(builder.Eq{"bot_owner_id": a.GetID()}),
+			),
+		)
 	}
 
 	cond := builder.And(
@@ -107,38 +125,15 @@ func (l *Label) hasAccessToLabel(s *xorm.Session, a web.Auth) (has bool, maxPerm
 		return
 	}
 
-	// maxPermission is derived only from label_tasks rows whose task is
-	// actually accessible. The pre-fix code used Get(ll) against the
-	// unrestricted LEFT JOIN, so it could return an inaccessible row and
-	// yield a wrong (or errored) permission.
-	accessibleTaskIDs := []int64{}
-	err = s.Table("label_tasks").
-		Join("INNER", "tasks", "tasks.id = label_tasks.task_id").
-		Where(builder.And(
-			builder.Eq{"label_tasks.label_id": l.ID},
-			accessibleProjects,
-		)).
-		Cols("label_tasks.task_id").
-		Find(&accessibleTaskIDs)
+	// Writes and deletes are owner-only (CanUpdate/CanDelete), so the caller's
+	// max permission is admin for the owner and read for anyone else who can see it.
+	owner, err := l.isLabelOwner(s, a)
 	if err != nil {
 		return
 	}
-
-	for _, taskID := range accessibleTaskIDs {
-		t := &Task{ID: taskID}
-		_, taskPermission, tErr := t.CanRead(s, a)
-		if tErr != nil {
-			err = tErr
-			return
-		}
-		if taskPermission > maxPermission {
-			maxPermission = taskPermission
-		}
-	}
-
-	// Creator-branch fallback: access came from created_by_id with no
-	// accessible task to derive a permission from.
-	if len(accessibleTaskIDs) == 0 {
+	if owner {
+		maxPermission = int(PermissionAdmin)
+	} else {
 		maxPermission = int(PermissionRead)
 	}
 

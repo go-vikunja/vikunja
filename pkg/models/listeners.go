@@ -22,12 +22,11 @@ import (
 	"strconv"
 	"time"
 
+	"code.vikunja.io/api/pkg/audit"
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/metrics"
-	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/notifications"
 	"code.vikunja.io/api/pkg/user"
 
@@ -38,16 +37,6 @@ import (
 
 // RegisterListeners registers all event listeners
 func RegisterListeners() {
-	if config.MetricsEnabled.GetBool() {
-		events.RegisterListener((&ProjectCreatedEvent{}).Name(), &IncreaseProjectCounter{})
-		events.RegisterListener((&ProjectDeletedEvent{}).Name(), &DecreaseProjectCounter{})
-		events.RegisterListener((&TaskCreatedEvent{}).Name(), &IncreaseTaskCounter{})
-		events.RegisterListener((&TaskDeletedEvent{}).Name(), &DecreaseTaskCounter{})
-		events.RegisterListener((&TeamDeletedEvent{}).Name(), &DecreaseTeamCounter{})
-		events.RegisterListener((&TeamCreatedEvent{}).Name(), &IncreaseTeamCounter{})
-		events.RegisterListener((&TaskAttachmentCreatedEvent{}).Name(), &IncreaseAttachmentCounter{})
-		events.RegisterListener((&TaskAttachmentDeletedEvent{}).Name(), &DecreaseAttachmentCounter{})
-	}
 	events.RegisterListener((&TaskCommentCreatedEvent{}).Name(), &SendTaskCommentNotification{})
 	events.RegisterListener((&TaskAssigneeCreatedEvent{}).Name(), &SendTaskAssignedNotification{})
 	events.RegisterListener((&TaskDeletedEvent{}).Name(), &SendTaskDeletedNotification{})
@@ -94,38 +83,253 @@ func RegisterListeners() {
 		// Internal delivery listener — one message per webhook with its own retry lifecycle
 		events.RegisterListener((&WebhookDeliveryEvent{}).Name(), &WebhookDeliveryListener{})
 	}
+	if config.AuditEnabled.GetBool() {
+		registerEventsForAuditLogging()
+	}
+}
+
+func auditActorFromUser(u *user.User) audit.Actor {
+	if u == nil {
+		return audit.SystemActor()
+	}
+	return audit.ActorFromDoerID(u.ID)
+}
+
+// registerEventsForAuditLogging opts events into audit logging. This block is
+// the catalog of the entire audited surface — an event without a registration
+// here is not audited.
+func registerEventsForAuditLogging() {
+	// Auth boundary
+	audit.RegisterEventForAudit(func(e *user.LoginSucceededEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionLoginSucceeded,
+			Actor:  audit.UserActor(e.User.ID),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *user.LoginFailedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:  audit.ActionLoginFailed,
+			Actor:   audit.UserActor(e.User.ID),
+			Target:  audit.UserTarget(e.User.ID),
+			Outcome: audit.OutcomeFailure,
+			Reason:  "wrong password",
+		}
+	})
+	audit.RegisterEventForAudit(func(e *user.LogoutEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionLogout,
+			Actor:  audit.UserActor(e.UserID),
+			Target: audit.UserTarget(e.UserID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *APITokenIssuedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionAPITokenIssued,
+			Actor:    audit.UserActor(e.DoerID),
+			Target:   audit.APITokenTarget(e.TokenID),
+			Metadata: map[string]any{"owner_id": e.OwnerID},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *APITokenRevokedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAPITokenRevoked,
+			Actor:  audit.UserActor(e.DoerID),
+			Target: audit.APITokenTarget(e.TokenID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *APITokenUsedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionAPITokenUsed,
+			Actor:  audit.UserActor(e.OwnerID),
+			Target: audit.APITokenTarget(e.TokenID),
+		}
+	})
+
+	// Users
+	audit.RegisterEventForAudit(func(e *user.CreatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionUserCreated,
+			Actor:  audit.UserActor(e.User.ID),
+			Target: audit.UserTarget(e.User.ID),
+		}
+	})
+
+	// Tasks
+	audit.RegisterEventForAudit(func(e *TaskCreatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionTaskCreated,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.TaskTarget(e.Task.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskUpdatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionTaskUpdated,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.TaskTarget(e.Task.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskDeletedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionTaskDeleted,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.TaskTarget(e.Task.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskAssigneeCreatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTaskAssigneeAdded,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{"assignee_id": e.Assignee.ID},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskAssigneeDeletedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTaskAssigneeRemoved,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{"assignee_id": e.Assignee.ID},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskCommentCreatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTaskCommentCreated,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{"comment_id": e.Comment.ID},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskCommentUpdatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTaskCommentUpdated,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{"comment_id": e.Comment.ID},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskCommentDeletedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTaskCommentDeleted,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{"comment_id": e.Comment.ID},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskAttachmentCreatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTaskAttachmentCreated,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{"attachment_id": e.Attachment.ID},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskAttachmentDeletedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTaskAttachmentDeleted,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{"attachment_id": e.Attachment.ID},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskRelationCreatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionTaskRelationCreated,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{
+				"other_task_id": e.Relation.OtherTaskID,
+				"relation_kind": e.Relation.RelationKind,
+			},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TaskRelationDeletedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionTaskRelationDeleted,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.TaskTarget(e.Task.ID),
+			Metadata: map[string]any{
+				"other_task_id": e.Relation.OtherTaskID,
+				"relation_kind": e.Relation.RelationKind,
+			},
+		}
+	})
+
+	// Projects
+	audit.RegisterEventForAudit(func(e *ProjectCreatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionProjectCreated,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.ProjectTarget(e.Project.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *ProjectUpdatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionProjectUpdated,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.ProjectTarget(e.Project.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *ProjectDeletedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionProjectDeleted,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.ProjectTarget(e.Project.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *ProjectSharedWithUserEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionProjectSharedWithUser,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.ProjectTarget(e.Project.ID),
+			Metadata: map[string]any{"user_id": e.User.ID},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *ProjectSharedWithTeamEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionProjectSharedWithTeam,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.ProjectTarget(e.Project.ID),
+			Metadata: map[string]any{"team_id": e.Team.ID},
+		}
+	})
+
+	// Teams
+	audit.RegisterEventForAudit(func(e *TeamCreatedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionTeamCreated,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.TeamTarget(e.Team.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TeamDeletedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action: audit.ActionTeamDeleted,
+			Actor:  auditActorFromUser(e.Doer),
+			Target: audit.TeamTarget(e.Team.ID),
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TeamMemberAddedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTeamMemberAdded,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TeamTarget(e.Team.ID),
+			Metadata: map[string]any{"member_id": e.Member.ID},
+		}
+	})
+	audit.RegisterEventForAudit(func(e *TeamMemberRemovedEvent) *audit.Entry {
+		return &audit.Entry{
+			Action:   audit.ActionTeamMemberRemoved,
+			Actor:    auditActorFromUser(e.Doer),
+			Target:   audit.TeamTarget(e.Team.ID),
+			Metadata: map[string]any{"member_id": e.Member.ID},
+		}
+	})
 }
 
 //////
 // Task Events
-
-// IncreaseTaskCounter  represents a listener
-type IncreaseTaskCounter struct {
-}
-
-// Name defines the name for the IncreaseTaskCounter listener
-func (s *IncreaseTaskCounter) Name() string {
-	return "task.counter.increase"
-}
-
-// Handle is executed when the event IncreaseTaskCounter listens on is fired
-func (s *IncreaseTaskCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.TaskCountKey, 1)
-}
-
-// DecreaseTaskCounter  represents a listener
-type DecreaseTaskCounter struct {
-}
-
-// Name defines the name for the DecreaseTaskCounter listener
-func (s *DecreaseTaskCounter) Name() string {
-	return "task.counter.decrease"
-}
-
-// Handle is executed when the event DecreaseTaskCounter listens on is fired
-func (s *DecreaseTaskCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.DecrBy(metrics.TaskCountKey, 1)
-}
 
 func notifyMentionedUsers(sess *xorm.Session, task *Task, text string, n notifications.NotificationWithSubject) (users map[int64]*user.User, err error) {
 	users, err = FindMentionedUsersInText(sess, text)
@@ -207,6 +411,45 @@ func (s *SendTaskCommentNotification) Handle(msg *message.Message) (err error) {
 	mentionedUsers, err := notifyMentionedUsers(sess, event.Task, event.Comment.Comment, n)
 	if err != nil {
 		return err
+	}
+
+	// Authors of comments quoted via <blockquote data-comment-id="…"> are
+	// treated as implicit mentions, sharing the same notification, dedup,
+	// permission and subscription logic.
+	quotedAuthors, err := findQuotedCommentAuthors(sess, event.Task.ID, event.Doer.ID, event.Comment.Comment)
+	if err != nil {
+		return err
+	}
+	for _, u := range quotedAuthors {
+		if _, has := mentionedUsers[u.ID]; has {
+			continue
+		}
+
+		can, _, err := event.Task.CanRead(sess, u)
+		if err != nil {
+			return err
+		}
+		if !can {
+			continue
+		}
+
+		dbn, err := notifications.GetNotificationsForNameAndUser(sess, u.ID, n.Name(), n.SubjectID())
+		if err != nil {
+			return err
+		}
+		if len(dbn) > 0 {
+			continue
+		}
+
+		err = notifications.Notify(u, n, sess)
+		if err != nil {
+			return err
+		}
+
+		if mentionedUsers == nil {
+			mentionedUsers = make(map[int64]*user.User)
+		}
+		mentionedUsers[u.ID] = u
 	}
 
 	subscribers, err := GetSubscriptionsForEntity(sess, SubscriptionEntityTask, event.Task.ID)
@@ -544,34 +787,6 @@ func (s *HandleTaskUpdateLastUpdated) Handle(msg *message.Message) (err error) {
 	return sess.Commit()
 }
 
-// IncreaseAttachmentCounter  represents a listener
-type IncreaseAttachmentCounter struct {
-}
-
-// Name defines the name for the IncreaseAttachmentCounter listener
-func (s *IncreaseAttachmentCounter) Name() string {
-	return "increase.attachment.counter"
-}
-
-// Handle is executed when the event IncreaseAttachmentCounter listens on is fired
-func (s *IncreaseAttachmentCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.AttachmentsCountKey, 1)
-}
-
-// DecreaseAttachmentCounter  represents a listener
-type DecreaseAttachmentCounter struct {
-}
-
-// Name defines the name for the DecreaseAttachmentCounter listener
-func (s *DecreaseAttachmentCounter) Name() string {
-	return "decrease.attachment.counter"
-}
-
-// Handle is executed when the event DecreaseAttachmentCounter listens on is fired
-func (s *DecreaseAttachmentCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.DecrBy(metrics.AttachmentsCountKey, 1)
-}
-
 // UpdateTaskInSavedFilterViews  represents a listener
 type UpdateTaskInSavedFilterViews struct {
 }
@@ -698,28 +913,6 @@ func (l *UpdateTaskInSavedFilterViews) Handle(msg *message.Message) (err error) 
 
 ///////
 // Project Event Listeners
-
-type IncreaseProjectCounter struct {
-}
-
-func (s *IncreaseProjectCounter) Name() string {
-	return "project.counter.increase"
-}
-
-func (s *IncreaseProjectCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.ProjectCountKey, 1)
-}
-
-type DecreaseProjectCounter struct {
-}
-
-func (s *DecreaseProjectCounter) Name() string {
-	return "project.counter.decrease"
-}
-
-func (s *DecreaseProjectCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.DecrBy(metrics.ProjectCountKey, 1)
-}
 
 // SendProjectCreatedNotification  represents a listener
 type SendProjectCreatedNotification struct {
@@ -1219,34 +1412,6 @@ func (wl *WebhookListener) Handle(msg *message.Message) (err error) {
 
 ///////
 // Team Events
-
-// IncreaseTeamCounter  represents a listener
-type IncreaseTeamCounter struct {
-}
-
-// Name defines the name for the IncreaseTeamCounter listener
-func (s *IncreaseTeamCounter) Name() string {
-	return "team.counter.increase"
-}
-
-// Handle is executed when the event IncreaseTeamCounter listens on is fired
-func (s *IncreaseTeamCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.IncrBy(metrics.TeamCountKey, 1)
-}
-
-// DecreaseTeamCounter  represents a listener
-type DecreaseTeamCounter struct {
-}
-
-// Name defines the name for the DecreaseTeamCounter listener
-func (s *DecreaseTeamCounter) Name() string {
-	return "team.counter.decrease"
-}
-
-// Handle is executed when the event DecreaseTeamCounter listens on is fired
-func (s *DecreaseTeamCounter) Handle(_ *message.Message) (err error) {
-	return keyvalue.DecrBy(metrics.TeamCountKey, 1)
-}
 
 // CleanupTaskAssignmentsAfterTeamRemoval represents a listener
 type CleanupTaskAssignmentsAfterTeamRemoval struct{}
