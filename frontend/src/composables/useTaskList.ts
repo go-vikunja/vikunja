@@ -122,6 +122,14 @@ export function useTaskList(
 	const allParams = computed(() => {
 		const loadParams = {...params.value}
 
+		// Relevance ranking only engages when no sort is sent, so omit the default
+		// sort while searching and let an explicit user sort still take precedence.
+		if (loadParams.s && !sortQuery.value) {
+			loadParams.sort_by = []
+			loadParams.order_by = []
+			return loadParams
+		}
+
 		return formatSortOrder(sortBy.value, loadParams)
 	})
 
