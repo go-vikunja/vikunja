@@ -142,7 +142,7 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 
 	opts = &taskSearchOptions{
 		sortby:             sort,
-		userProvidedSort:   len(sort) > 0,
+		userProvidedSort:   len(tf.SortBy) > 0,
 		filterIncludeNulls: tf.FilterIncludeNulls,
 		filter:             tf.Filter,
 		filterTimezone:     tf.FilterTimezone,
