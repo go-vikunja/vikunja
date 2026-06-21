@@ -104,4 +104,41 @@ func TestTaskSearchRelevanceRanking(t *testing.T) {
 	t.Run("list view", func(t *testing.T) {
 		assertRelevanceRanked(t, &TaskCollection{ProjectID: 1, ProjectViewID: 1})
 	})
+
+	// An explicit sort_by must win over relevance: with `id desc` the lowest-id
+	// task (allWords) ranks last, the opposite of what BM25 relevance would do.
+	// This locks the contract that user-provided sorting disables relevance
+	// ranking even on ParadeDB. Only ParadeDB's per-token search matches all
+	// three tasks, so the ordering contract is only asserted there (other
+	// databases ILIKE the whole phrase and match a different subset).
+	t.Run("explicit sort disables relevance ranking", func(t *testing.T) {
+		if !db.ParadeDBAvailable() {
+			t.Skip("relevance ranking only applies on ParadeDB")
+		}
+
+		tc := &TaskCollection{
+			ProjectID: 1,
+			SortBy:    []string{"id"},
+			OrderBy:   []string{"desc"},
+		}
+		got, _, _, err := tc.ReadAll(s, usr, "backup server", 0, 50)
+		require.NoError(t, err)
+
+		gotTasks, is := got.([]*Task)
+		require.True(t, is)
+
+		created := map[int64]bool{allWords.ID: true, oneWordA.ID: true, oneWordB.ID: true}
+		var orderedIDs []int64
+		for _, tsk := range gotTasks {
+			if created[tsk.ID] {
+				orderedIDs = append(orderedIDs, tsk.ID)
+			}
+		}
+
+		require.Len(t, orderedIDs, len(created), "all created tasks should match the search")
+		for i := 1; i < len(orderedIDs); i++ {
+			assert.Greater(t, orderedIDs[i-1], orderedIDs[i], "tasks must follow the explicit id-desc sort, not relevance")
+		}
+		assert.Equal(t, allWords.ID, orderedIDs[len(orderedIDs)-1], "the all-words match (lowest id) ranks last under id-desc, proving relevance was not applied")
+	})
 }
