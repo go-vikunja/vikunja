@@ -321,12 +321,12 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	// Then return all tasks for that projects
 	var where builder.Cond
 
+	searchIndex := getTaskIndexFromSearchString(opts.search)
 	if opts.search != "" {
 		where = db.MultiFieldSearchWithTableAlias([]string{"title", "description"}, opts.search, "tasks")
 
-		searchIndex := getTaskIndexFromSearchString(opts.search)
 		if searchIndex > 0 {
-			where = builder.Or(where, builder.Eq{"`index`": searchIndex})
+			where = builder.Or(where, builder.Eq{"tasks.`index`": searchIndex})
 		}
 	}
 
@@ -374,9 +374,32 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		))
 	}
 
-	query := d.s.
-		Distinct(distinct).
-		Where(cond)
+	// ParadeDB exposes the BM25 relevance score via pdb.score(tasks.id) for a query
+	// containing a ParadeDB operator (the ||| from MultiFieldSearch qualifies). When
+	// searching without an explicit user sort, order by relevance so tasks matching
+	// all query words rank above tasks matching only some.
+	//
+	// This is limited to pure-text searches over a plain project scope: numeric
+	// searches add an `OR index = N` branch and the Favorites view scopes on an
+	// `id IN (<subquery>)`, both of which pdb.score rejects as unsupported query
+	// shapes. Those keep the default ordering (unranked). pdb.score is also invalid
+	// SQL on sqlite/mysql/plain postgres, hence the ParadeDBAvailable() gate.
+	rankByRelevance := db.ParadeDBAvailable() &&
+		opts.search != "" &&
+		!opts.userProvidedSort &&
+		searchIndex == 0 &&
+		!d.hasFavoritesProject
+
+	query := d.s.Where(cond)
+	if rankByRelevance {
+		// Select() passes the raw column list through untouched while Distinct()
+		// (no args) still emits DISTINCT. Distinct("tasks.*, pdb.score(tasks.id)")
+		// would quote-corrupt the function call into "pdb"."score(tasks"."id)".
+		query = query.Select(distinct + ", pdb.score(tasks.id)").Distinct()
+		orderby = "pdb.score(tasks.id) DESC, " + orderby
+	} else {
+		query = query.Distinct(distinct)
+	}
 	if limit > 0 {
 		query = query.Limit(limit, start)
 	}
