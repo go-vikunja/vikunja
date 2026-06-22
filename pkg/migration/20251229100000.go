@@ -49,6 +49,19 @@ func (taskNew20251229100000) TableName() string {
 	return "tasks"
 }
 
+// taskRepeatBackup20251229100000 preserves the legacy repeat columns before they
+// are dropped, so a mis-conversion can be recovered. It can be dropped by a later
+// migration once the RRULE conversion has been verified in production.
+type taskRepeatBackup20251229100000 struct {
+	ID          int64 `xorm:"bigint not null pk"`
+	RepeatAfter int64 `xorm:"bigint null"`
+	RepeatMode  int   `xorm:"not null default 0"`
+}
+
+func (taskRepeatBackup20251229100000) TableName() string {
+	return "task_repeat_legacy_backup"
+}
+
 // convertLegacyRepeatToRRule converts legacy repeat_after/repeat_mode to an RRULE string.
 func convertLegacyRepeatToRRule(repeatAfter int64, repeatMode int) string {
 	const (
@@ -109,38 +122,79 @@ func init() {
 				return err
 			}
 
-			// Step 2: Migrate existing legacy repeat data to RRULE format
-			var tasks []taskOld20251229100000
-			err = tx.Where("repeat_after > 0 OR repeat_mode > 0").Find(&tasks)
-			if err != nil {
+			// Step 2: Back up the legacy repeat columns, then convert them to RRULE.
+			// Page by id so we never load the whole table into memory, and copy each
+			// row's legacy values into a backup table before they are dropped below,
+			// so a mis-conversion can be recovered.
+			if err := tx.Sync2(taskRepeatBackup20251229100000{}); err != nil {
 				return err
 			}
 
-			log.Infof("Migrating %d tasks with legacy repeat settings to RRULE", len(tasks))
-
-			for _, task := range tasks {
-				// Skip if already has RRULE (shouldn't happen, but defensive)
-				if task.Repeats != "" {
-					continue
-				}
-
-				rrule := convertLegacyRepeatToRRule(task.RepeatAfter, task.RepeatMode)
-				if rrule == "" {
-					continue
-				}
-
-				repeatsFromCurrentDate := task.RepeatMode == TaskRepeatModeFromCurrentDate
-
-				_, err := tx.ID(task.ID).
-					Cols("repeats", "repeats_from_current_date").
-					Update(&taskNew20251229100000{
-						Repeats:                rrule,
-						RepeatsFromCurrentDate: repeatsFromCurrentDate,
-					})
+			const batchSize = 500
+			var (
+				lastID                                   int64
+				total, converted, skipped, unconvertible int
+			)
+			for {
+				var tasks []taskOld20251229100000
+				err = tx.Where("(repeat_after > 0 OR repeat_mode > 0) AND id > ?", lastID).
+					OrderBy("id ASC").
+					Limit(batchSize).
+					Find(&tasks)
 				if err != nil {
 					return err
 				}
+				if len(tasks) == 0 {
+					break
+				}
+
+				// Back up this page's legacy values before any mutation or drop.
+				backup := make([]taskRepeatBackup20251229100000, 0, len(tasks))
+				for _, task := range tasks {
+					backup = append(backup, taskRepeatBackup20251229100000{
+						ID:          task.ID,
+						RepeatAfter: task.RepeatAfter,
+						RepeatMode:  task.RepeatMode,
+					})
+				}
+				if _, err := tx.Insert(&backup); err != nil {
+					return err
+				}
+
+				for _, task := range tasks {
+					lastID = task.ID
+					total++
+
+					// Defensive: don't overwrite a row that already has an RRULE.
+					if task.Repeats != "" {
+						skipped++
+						continue
+					}
+
+					rr := convertLegacyRepeatToRRule(task.RepeatAfter, task.RepeatMode)
+					if rr == "" {
+						// Unexpected mode / non-convertible value. Leave repeats empty;
+						// the original is preserved in the backup table for recovery.
+						unconvertible++
+						log.Warningf("RRULE migration: task %d has legacy repeat (after=%d, mode=%d) that did not convert; left empty (original preserved in task_repeat_legacy_backup)", task.ID, task.RepeatAfter, task.RepeatMode)
+						continue
+					}
+
+					repeatsFromCurrentDate := task.RepeatMode == TaskRepeatModeFromCurrentDate
+
+					if _, err := tx.ID(task.ID).
+						Cols("repeats", "repeats_from_current_date").
+						Update(&taskNew20251229100000{
+							Repeats:                rr,
+							RepeatsFromCurrentDate: repeatsFromCurrentDate,
+						}); err != nil {
+						return err
+					}
+					converted++
+				}
 			}
+
+			log.Infof("RRULE migration: %d legacy-repeat task(s) processed — %d converted, %d already had an RRULE, %d unconvertible (originals backed up to task_repeat_legacy_backup)", total, converted, skipped, unconvertible)
 
 			// Step 3: Drop legacy columns (database-specific)
 			if config.DatabaseType.GetString() == "sqlite" {
