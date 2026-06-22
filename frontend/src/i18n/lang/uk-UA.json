@@ -172,6 +172,7 @@
 					"yyyy/mm/dd": "YYYY/MM/DD"
 				},
 				"timeFormat": "Формат часу",
+				"timeTrackingDefaultStart": "Початковий час для автоматичного заповнення обліку часу",
 				"timeFormatOptions": {
 					"12h": "12-годинний (AM/PM)",
 					"24h": "24-годинний (HH:mm)"
@@ -781,7 +782,10 @@
 		"closeDialog": "Закрити діалог",
 		"closeQuickActions": "Закрити швидкі дії",
 		"skipToContent": "Перейти до основного вмісту",
-		"sortBy": "Сортувати за"
+		"sortBy": "Сортувати за",
+		"dateRange": "Діапазон дат",
+		"notSet": "Не встановлено",
+		"user": "Користувач"
 	},
 	"input": {
 		"projectColor": "Колір проєкту",
@@ -991,6 +995,7 @@
 				"repeatAfter": "Повторювати",
 				"percentDone": "Встановити прогрес",
 				"attachments": "Вкласти",
+				"timeTracking": "Відстежити час",
 				"relatedTasks": "Пов'язати",
 				"moveProject": "Перемістити",
 				"duplicate": "Дублювати",
@@ -1146,6 +1151,7 @@
 		"repeat": {
 			"everyDay": "Щодня",
 			"everyWeek": "Щотижня",
+			"every30d": "Кожні 30 днів",
 			"mode": "Спосіб",
 			"monthly": "Щомісяця",
 			"fromCurrentDate": "З дня закінчення",
@@ -1458,6 +1464,32 @@
 		"version": "Версія: {version}",
 		"frontendVersion": "Версія інтерфейсу: {version}",
 		"apiVersion": "API версія: {version}"
+	},
+	"timeTracking": {
+		"title": "Відстеження часу",
+		"stop": "Зупинити таймер",
+		"logTime": "Записати час",
+		"editEntry": "Редагувати запис",
+		"form": {
+			"task": "Завдання",
+			"taskSearch": "Знайти завдання…",
+			"commentPlaceholder": "Над чим ви працювали?",
+			"save": "Зберегти запис",
+			"startTimer": "Запустити таймер",
+			"update": "Оновити запис",
+			"smartFill": "Заповнити з останнього запису"
+		},
+		"list": {
+			"emptyTask": "Для цього завдання ще немає записів обліку часу.",
+			"emptyFiltered": "Немає записів обліку часу для вибраних фільтрів.",
+			"total": "Загалом",
+			"time": "Час",
+			"duration": "Тривалість"
+		},
+		"browse": {
+			"selectRange": "Обрати діапазон",
+			"userSearch": "Знайти користувача…"
+		}
 	},
 	"time": {
 		"units": {

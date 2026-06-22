@@ -127,7 +127,7 @@ func adminUsersCreate(_ context.Context, in *struct{ Body models.CreateUserBody 
 	if err != nil {
 		return nil, translateDomainError(err)
 	}
-	return &adminUserBody{Body: shared.NewAdminUser(newUser, providers)}, nil
+	return &adminUserBody{Body: shared.NewAdminUser(newUser, providers)}, nil //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
 }
 
 func adminUsersPatchAdmin(_ context.Context, in *struct {

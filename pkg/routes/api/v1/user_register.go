@@ -21,20 +21,15 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/log"
-	"code.vikunja.io/api/pkg/metrics"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/user"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 
 	"github.com/labstack/echo/v5"
 )
 
-type UserRegister struct {
-	// The language of the new user. Must be a valid IETF BCP 47 language code and exist in Vikunja.
-	Language string `json:"language" valid:"language"`
-	user.APIUserPassword
-}
+// UserRegister is an alias for the shared registration input, kept so the v1
+// swagger annotation and any existing imports still resolve.
+type UserRegister = shared.UserRegister
 
 // RegisterUser is the register handler
 // @Summary Register
@@ -68,31 +63,9 @@ func RegisterUser(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, models.Message{Message: "No or invalid user model provided."})
 	}
 
-	s := db.NewSession()
-	defer s.Close()
-
-	newUser, err := models.RegisterUser(s, &user.User{
-		Username: userIn.Username,
-		Password: userIn.Password,
-		Email:    userIn.Email,
-		Language: userIn.Language,
-	})
+	newUser, err := shared.RegisterUser(c.Request().Context(), userIn)
 	if err != nil {
-		_ = s.Rollback()
 		return err
-	}
-
-	if err := s.Commit(); err != nil {
-		_ = s.Rollback()
-		return err
-	}
-
-	// Bust the cached user count so the new registration shows up in metrics
-	// immediately instead of after the regular cache expiry.
-	if config.MetricsEnabled.GetBool() {
-		if err := metrics.InvalidateCount(metrics.UserCountKey); err != nil {
-			log.Errorf("Could not invalidate user count metric: %s", err)
-		}
 	}
 
 	return c.JSON(http.StatusOK, newUser)

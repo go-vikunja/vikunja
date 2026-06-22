@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 	"code.vikunja.io/api/pkg/web"
@@ -121,7 +122,17 @@ func (t *APIToken) Create(s *xorm.Session, a web.Auth) (err error) {
 	}
 
 	_, err = s.Insert(t)
-	return err
+	if err != nil {
+		return err
+	}
+
+	events.DispatchOnCommit(s, &APITokenIssuedEvent{
+		TokenID: t.ID,
+		DoerID:  a.GetID(),
+		OwnerID: t.OwnerID,
+	})
+
+	return nil
 }
 
 func HashToken(token, salt string) string {
@@ -192,10 +203,19 @@ func (t *APIToken) ReadAll(s *xorm.Session, a web.Auth, search string, page int,
 // @Failure 404 {object} web.HTTPError "The token does not exist."
 // @Failure 500 {object} models.Message "Internal error"
 // @Router /tokens/{tokenID} [delete]
-func (t *APIToken) Delete(s *xorm.Session, _ web.Auth) (err error) {
+func (t *APIToken) Delete(s *xorm.Session, a web.Auth) (err error) {
 	// Ownership is verified in CanDelete; delete by ID only.
 	_, err = s.Where("id = ?", t.ID).Delete(&APIToken{})
-	return err
+	if err != nil {
+		return err
+	}
+
+	events.DispatchOnCommit(s, &APITokenRevokedEvent{
+		TokenID: t.ID,
+		DoerID:  a.GetID(),
+	})
+
+	return nil
 }
 
 // HasCaldavAccess checks whether the token has the caldav access permission.

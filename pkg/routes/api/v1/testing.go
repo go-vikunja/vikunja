@@ -22,10 +22,8 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
-	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/events"
-	"code.vikunja.io/api/pkg/license"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 
 	"github.com/labstack/echo/v5"
 )
@@ -63,61 +61,10 @@ func HandleTesting(c *echo.Context) error {
 		})
 	}
 
-	// Wait for all async event handlers from the previous test to complete
-	// before modifying the database. Without this, handlers hold SQLite
-	// connections and starve this request's truncate/insert operations.
-	events.WaitForPendingHandlers()
-
 	truncate := c.QueryParam("truncate")
-	if truncate == "true" || truncate == "" {
-		// When truncating certain tables, also truncate dependent tables
-		// whose rows reference the truncated table by user/entity ID.
-		// Without foreign key cascades, stale rows would persist and
-		// pollute subsequent tests that reuse the same auto-increment IDs.
-		dependentTables := map[string][]string{
-			"users": {"notifications"},
-		}
-		if deps, ok := dependentTables[table]; ok {
-			for _, dep := range deps {
-				if err = db.RestoreAndTruncate(dep, nil); err != nil {
-					log.Errorf("Error truncating dependent table %s: %v", dep, err)
-					return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-						"error":   true,
-						"message": err.Error(),
-					})
-				}
-			}
-		}
-		err = db.RestoreAndTruncate(table, content)
-	} else {
-		err = db.Restore(table, content)
-	}
-
+	data, err := shared.ReplaceTableContents(table, content, truncate == "true" || truncate == "")
 	if err != nil {
 		log.Errorf("Error replacing table data: %v", err)
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error":   true,
-			"message": err.Error(),
-		})
-	}
-
-	// License state is cached at startup; re-apply so tests take effect without a restart.
-	if table == "license_status" {
-		if err := license.ReloadFromCache(); err != nil {
-			log.Errorf("Error reloading license from seeded cache: %v", err)
-			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-				"error":   true,
-				"message": err.Error(),
-			})
-		}
-	}
-
-	s := db.NewSession()
-	defer s.Close()
-	data := []map[string]interface{}{}
-	err = s.Table(table).Find(&data)
-	if err != nil {
-		log.Errorf("Error fetching table data: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error":   true,
 			"message": err.Error(),
@@ -142,19 +89,12 @@ func HandleTestingTruncateAll(c *echo.Context) error {
 		return echo.ErrForbidden
 	}
 
-	events.WaitForPendingHandlers()
-
-	if err := db.TruncateAllTables(); err != nil {
+	if err := shared.TruncateAllTestingTables(); err != nil {
 		log.Errorf("Error truncating all tables: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error":   true,
 			"message": err.Error(),
 		})
-	}
-
-	// Reload after truncate; otherwise features enabled by a prior test outlive the now-empty license_status table.
-	if err := license.ReloadFromCache(); err != nil {
-		log.Errorf("Error reloading license after truncate: %v", err)
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{

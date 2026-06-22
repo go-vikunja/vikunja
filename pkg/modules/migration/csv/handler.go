@@ -186,19 +186,7 @@ func (c *MigratorWeb) Migrate(ctx *echo.Context) error {
 	}
 	defer src.Close()
 
-	m := &Migrator{}
-	status, err := migration.StartMigration(m, u)
-	if err != nil {
-		return err
-	}
-
-	err = MigrateWithConfig(u, src, file.Size, &config)
-	if err != nil {
-		return err
-	}
-
-	err = migration.FinishMigration(status)
-	if err != nil {
+	if err := RunMigration(u, src, file.Size, &config); err != nil {
 		return err
 	}
 

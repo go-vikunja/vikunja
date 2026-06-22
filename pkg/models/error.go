@@ -535,6 +535,34 @@ func (err *ErrProjectViewDoesNotExist) HTTPError() web.HTTPError {
 	}
 }
 
+// ErrProjectHasNoBackground represents an error where a project has no background set.
+type ErrProjectHasNoBackground struct {
+	ProjectID int64
+}
+
+// IsErrProjectHasNoBackground checks if an error is ErrProjectHasNoBackground.
+func IsErrProjectHasNoBackground(err error) bool {
+	_, ok := err.(*ErrProjectHasNoBackground)
+	return ok
+}
+
+func (err *ErrProjectHasNoBackground) Error() string {
+	return fmt.Sprintf("Project has no background [ProjectID: %d]", err.ProjectID)
+}
+
+// ErrCodeProjectHasNoBackground holds the unique world-error code of this error
+const ErrCodeProjectHasNoBackground = 3015
+
+// HTTPError holds the http error description
+func (err *ErrProjectHasNoBackground) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeProjectHasNoBackground,
+		// Message kept verbatim from v1's inline handler error so the wire body is unchanged.
+		Message: "Project background not found",
+	}
+}
+
 // ==============
 // Task errors
 // ==============
@@ -2594,5 +2622,34 @@ func (err ErrTimeEntryEndBeforeStart) HTTPError() web.HTTPError {
 		HTTPCode: http.StatusBadRequest,
 		Code:     ErrCodeTimeEntryEndBeforeStart,
 		Message:  "A time entry's end time cannot be before its start time.",
+	}
+}
+
+// =================
+// User export errors
+// =================
+
+// ErrUserDataExportDoesNotExist represents an error where a user has no ready data export to download.
+type ErrUserDataExportDoesNotExist struct{}
+
+// IsErrUserDataExportDoesNotExist checks if an error is ErrUserDataExportDoesNotExist.
+func IsErrUserDataExportDoesNotExist(err error) bool {
+	_, ok := err.(ErrUserDataExportDoesNotExist)
+	return ok
+}
+
+func (err ErrUserDataExportDoesNotExist) Error() string {
+	return "No user data export found"
+}
+
+// ErrCodeUserDataExportDoesNotExist holds the unique world-error code of this error
+const ErrCodeUserDataExportDoesNotExist = 19001
+
+// HTTPError holds the http error description
+func (err ErrUserDataExportDoesNotExist) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusNotFound,
+		Code:     ErrCodeUserDataExportDoesNotExist,
+		Message:  "No user data export found.",
 	}
 }

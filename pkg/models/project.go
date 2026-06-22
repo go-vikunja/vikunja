@@ -1072,7 +1072,7 @@ func CreateProject(s *xorm.Session, project *Project, auth web.Auth, createBackl
 
 	events.DispatchOnCommit(s, &ProjectCreatedEvent{
 		Project: project,
-		Doer:    doer,
+		Doer:    doerFromAuth(s, auth),
 	})
 	return nil
 }
@@ -1219,7 +1219,7 @@ func UpdateProject(s *xorm.Session, project *Project, auth web.Auth, updateProje
 
 	events.DispatchOnCommit(s, &ProjectUpdatedEvent{
 		Project: project,
-		Doer:    auth,
+		Doer:    doerFromAuth(s, auth),
 	})
 
 	l, err := GetProjectSimpleByID(s, project.ID)
@@ -1450,7 +1450,7 @@ func (p *Project) Delete(s *xorm.Session, a web.Auth) (err error) {
 
 	events.DispatchOnCommit(s, &ProjectDeletedEvent{
 		Project: fullProject,
-		Doer:    a,
+		Doer:    doerFromAuth(s, a),
 	})
 
 	childProjects := []*Project{}

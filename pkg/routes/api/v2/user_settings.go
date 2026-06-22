@@ -176,7 +176,7 @@ func userChangePassword(ctx context.Context, in *struct {
 	s := db.NewSession()
 	defer s.Close()
 
-	if err := models.ChangeUserPassword(s, doer, in.Body.OldPassword, in.Body.NewPassword); err != nil {
+	if err := models.ChangeUserPassword(ctx, s, doer, in.Body.OldPassword, in.Body.NewPassword); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}
@@ -206,7 +206,7 @@ func userUpdateEmail(ctx context.Context, in *struct {
 	s := db.NewSession()
 	defer s.Close()
 
-	if err := user.ChangeUserEmail(s, doer, in.Body.Password, in.Body.NewEmail); err != nil {
+	if err := user.ChangeUserEmail(ctx, s, doer, in.Body.Password, in.Body.NewEmail); err != nil {
 		_ = s.Rollback()
 		return nil, translateDomainError(err)
 	}

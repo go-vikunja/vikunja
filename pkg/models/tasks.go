@@ -830,9 +830,15 @@ func checkBucketLimit(s *xorm.Session, a web.Auth, t *Task, bucket *Bucket) (tas
 	}
 
 	if view.ProjectID < 0 || (view.Filter != nil && view.Filter.Filter != "") {
+		// For saved filters or views with a filter, the count must be scoped to
+		// this bucket *and* the filter: raw task_buckets rows can include tasks
+		// that no longer match the filter (#355), while the unscoped filter total
+		// counts tasks across all buckets, not just this one (#2672). ReadAll
+		// combines the bucket_id condition with the saved-filter / view filter.
 		tc := &TaskCollection{
 			ProjectID:     view.ProjectID,
 			ProjectViewID: bucket.ProjectViewID,
+			Filter:        "bucket_id = " + strconv.FormatInt(bucket.ID, 10),
 		}
 
 		_, _, taskCount, err = tc.ReadAll(s, a, "", 1, 1)
@@ -976,6 +982,13 @@ func createTask(s *xorm.Session, t *Task, a web.Auth, updateAssignees bool, setB
 	positions, taskBuckets, err := setTaskInBucketInViews(s, t, a, setBucket, providedBucket)
 	if err != nil {
 		return err
+	}
+
+	if len(positions) > 0 {
+		positions, err = filterNewTaskPositions(s, positions)
+		if err != nil {
+			return err
+		}
 	}
 
 	if len(positions) > 0 {
@@ -1449,10 +1462,9 @@ func (t *Task) updateSingleTask(s *xorm.Session, a web.Auth, fields []string) (e
 	}
 	t.Updated = nt.Updated
 
-	doer, _ := user.GetFromAuth(a)
 	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: t,
-		Doer: doer,
+		Doer: doerFromAuth(s, a),
 	})
 
 	return updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
@@ -1735,6 +1747,20 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 	newTask.Done = false
 }
 
+var (
+	checklistTiptapCheckedRegex = regexp.MustCompile(`(data-checked=")true(")`)
+	checklistInputCheckedRegex  = regexp.MustCompile(`(<input[^>]*type=["']checkbox["'][^>]*?)\s+checked(?:=["'][^"']*["'])?`)
+)
+
+// resetDescriptionChecklist unchecks every checklist item in a TipTap HTML description
+// (descriptions are always stored as HTML, never markdown) without touching other content,
+// so a recurring task's next occurrence does not inherit checked items.
+func resetDescriptionChecklist(description string) string {
+	description = checklistTiptapCheckedRegex.ReplaceAllString(description, "${1}false${2}")
+	description = checklistInputCheckedRegex.ReplaceAllString(description, "$1")
+	return description
+}
+
 // This helper function updates the reminders, doneAt, start, end and due dates of the *old* task
 // and saves the new values in the newTask object.
 // We make a few assumptions here:
@@ -1752,6 +1778,11 @@ func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
 			setTaskDatesFromCurrentDateRepeat(oldTask, newTask)
 		case TaskRepeatModeDefault:
 			setTaskDatesDefault(oldTask, newTask)
+		}
+
+		// A recurring task reopens for its next occurrence, so its checklist starts fresh.
+		if oldTask.isRepeating() && !newTask.Done {
+			newTask.Description = resetDescriptionChecklist(newTask.Description)
 		}
 
 		newTask.DoneAt = time.Now()
@@ -1948,10 +1979,9 @@ func (t *Task) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
 	events.DispatchOnCommit(s, &TaskDeletedEvent{
 		Task: fullTask,
-		Doer: doer,
+		Doer: doerFromAuth(s, a),
 	})
 
 	err = updateProjectLastUpdated(s, &Project{ID: t.ProjectID})
@@ -2019,10 +2049,9 @@ func triggerTaskUpdatedEventForTaskID(s *xorm.Session, auth web.Auth, taskID int
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(auth)
 	events.DispatchOnCommit(s, &TaskUpdatedEvent{
 		Task: &t,
-		Doer: doer,
+		Doer: doerFromAuth(s, auth),
 	})
 	return nil
 }

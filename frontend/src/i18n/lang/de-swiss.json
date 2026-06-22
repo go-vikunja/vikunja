@@ -393,6 +393,7 @@
 			"title": "Dupliziere dieses Projekt",
 			"label": "Duplizieren",
 			"text": "Wähle ein übergeordnetes Projekt aus, welches das duplizierte Projekt enthalten soll:",
+			"shares": "Freigaben kopieren (Benutzer:innen, Teams und Linkfreigaben)",
 			"success": "Das Projekt wurde erfolgreich dupliziert."
 		},
 		"edit": {

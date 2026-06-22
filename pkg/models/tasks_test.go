@@ -17,6 +17,7 @@
 package models
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -70,7 +71,7 @@ func TestTask_Create(t *testing.T) {
 			"bucket_id": 1,
 		}, false)
 
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 		events.AssertDispatched(t, &TaskCreatedEvent{})
 	})
 	t.Run("with reminders", func(t *testing.T) {
@@ -280,7 +281,7 @@ func TestTask_Update(t *testing.T) {
 		err = s.Commit()
 		require.NoError(t, err)
 
-		events.DispatchPending(s)
+		events.DispatchPending(context.Background(), s)
 		// Verify exactly ONE task.updated event was dispatched
 		count := events.CountDispatchedEvents("task.updated")
 		assert.Equal(t, 1, count, "Expected exactly 1 task.updated event, got %d", count)
@@ -984,6 +985,45 @@ func TestUpdateDone(t *testing.T) {
 				assert.Equal(t, oldDiff, newTask.EndDate.Sub(newTask.StartDate))
 				assert.False(t, newTask.Done)
 			})
+		})
+		t.Run("reset checklist on recurrence", func(t *testing.T) {
+			const checked = `before<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>Item</p></li></ul>after`
+			const unchecked = `before<ul data-type="taskList"><li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Item</p></li></ul>after`
+
+			oldTask := &Task{
+				Done:        false,
+				RepeatAfter: 8600,
+				DueDate:     time.Unix(1550000000, 0),
+			}
+			newTask := &Task{
+				Done:        true,
+				Description: checked,
+			}
+
+			updateDone(oldTask, newTask)
+
+			assert.False(t, newTask.Done)
+			assert.True(t, newTask.DueDate.After(oldTask.DueDate))
+			assert.Equal(t, unchecked, newTask.Description)
+		})
+		t.Run("non-recurring description untouched", func(t *testing.T) {
+			const checked = `before<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>Item</p></li></ul>after`
+
+			oldTask := &Task{
+				Done:        false,
+				RepeatAfter: 0,
+				RepeatMode:  TaskRepeatModeDefault,
+				DueDate:     time.Unix(1550000000, 0),
+			}
+			newTask := &Task{
+				Done:        true,
+				Description: checked,
+			}
+
+			updateDone(oldTask, newTask)
+
+			assert.True(t, newTask.Done)
+			assert.Equal(t, checked, newTask.Description)
 		})
 	})
 }

@@ -2,6 +2,7 @@
 	<Modal
 		:enabled="active"
 		:overflow="isNewTaskCommand"
+		variant="top"
 		@close="closeQuickActions"
 	>
 		<div
@@ -704,14 +705,15 @@ function reset() {
 
 <style lang="scss" scoped>
 .quick-actions {
+	// global Bulma .card styles are gone (ported into Card.vue, scoped),
+	// so this bare .card div needs its own card visuals
+	background-color: var(--white);
+	border-radius: $radius;
+	border: 1px solid var(--card-border-color);
+	box-shadow: var(--shadow-sm);
+	color: var(--text);
 	overflow: hidden;
 	justify-content: flex-start !important;
-
-	// FIXME: changed position should be an option of the modal
-	:deep(.modal-content) {
-		inset-block-start: 3rem;
-		transform: translate(-50%, 0);
-	}
 
 	&.is-quick-add-mode {
 		padding: 0;

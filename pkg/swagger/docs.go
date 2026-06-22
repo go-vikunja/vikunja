@@ -3438,7 +3438,7 @@ const docTemplate = `{
                         "JWTKeyAuth": []
                     }
                 ],
-                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations, backgrounds, user/team permissions and link shares from one project to a new one. The user needs read access in the project and write access in the parent of the new project.",
+                "description": "Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations and backgrounds from one project to a new one. User/team permissions and link shares are only copied when duplicate_shares is set to true. The user needs read access in the project and write access in the parent of the new project.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7342,7 +7342,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.UserExportStatus"
+                            "$ref": "#/definitions/models.UserExportStatus"
                         }
                     }
                 }
@@ -7456,7 +7456,7 @@ const docTemplate = `{
         },
         "/user/logout": {
             "post": {
-                "description": "Destroys the current session and clears the refresh token cookie.",
+                "description": "Destroys the current session and clears the refresh token cookie. For OpenID Connect sessions the response includes an ` + "`" + `oidc_logout_url` + "`" + ` the client should redirect to so the provider session is ended too.",
                 "produces": [
                     "application/json"
                 ],
@@ -7468,7 +7468,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successfully logged out.",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "$ref": "#/definitions/v1.LogoutResponse"
                         }
                     }
                 }
@@ -9665,6 +9665,10 @@ const docTemplate = `{
         "models.ProjectDuplicate": {
             "type": "object",
             "properties": {
+                "duplicate_shares": {
+                    "description": "Whether to copy the project's shares to the duplicate",
+                    "type": "boolean"
+                },
                 "duplicated_project": {
                     "description": "The copied project",
                     "allOf": [
@@ -10579,6 +10583,23 @@ const docTemplate = `{
                 }
             }
         },
+        "models.UserExportStatus": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.UserGeneralSettings": {
             "type": "object",
             "properties": {
@@ -10885,6 +10906,10 @@ const docTemplate = `{
                 "caldav_enabled": {
                     "type": "boolean"
                 },
+                "concurrent_writes": {
+                    "description": "ConcurrentWrites reports whether the configured database can handle concurrent writes. It is false on SQLite, where overlapping write transactions deadlock, so clients should serialize batched writes instead of firing them in parallel.",
+                    "type": "boolean"
+                },
                 "demo_mode_enabled": {
                     "type": "boolean"
                 },
@@ -11124,6 +11149,18 @@ const docTemplate = `{
                 }
             }
         },
+        "v1.LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "oidc_logout_url": {
+                    "description": "RP-Initiated Logout URL the frontend redirects to. Empty for non-OIDC sessions.",
+                    "type": "string"
+                }
+            }
+        },
         "v1.UserAvatarProvider": {
             "type": "object",
             "properties": {
@@ -11138,23 +11175,6 @@ const docTemplate = `{
             "properties": {
                 "token": {
                     "type": "string"
-                }
-            }
-        },
-        "v1.UserExportStatus": {
-            "type": "object",
-            "properties": {
-                "created": {
-                    "type": "string"
-                },
-                "expires": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "integer"
                 }
             }
         },

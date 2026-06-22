@@ -47,5 +47,5 @@ func RegisterInfoRoutes(api huma.API) {
 func init() { AddRouteRegistrar(RegisterInfoRoutes) }
 
 func info(_ context.Context, _ *struct{}) (*infoBody, error) {
-	return &infoBody{Body: shared.BuildInfo()}, nil
+	return &infoBody{Body: shared.BuildInfo()}, nil //nolint:contextcheck // OIDC provider init deliberately uses a background context — provider lifetime exceeds the request
 }

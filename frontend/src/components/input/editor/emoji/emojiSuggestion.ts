@@ -5,6 +5,7 @@ import {PluginKey, type EditorState} from '@tiptap/pm/state'
 
 import EmojiList from './EmojiList.vue'
 import {loadEmojis, filterEmojis, type EmojiEntry} from './emojiData'
+import {getPopupContainer} from '../popupContainer'
 
 export const EmojiSuggestionPluginKey = new PluginKey('emojiSuggestion')
 
@@ -78,7 +79,7 @@ export default function emojiSuggestionSetup() {
 				popupElement.style.left = '0'
 				popupElement.style.zIndex = '4700'
 				popupElement.appendChild(component.element!)
-				document.body.appendChild(popupElement)
+				getPopupContainer(props.editor).appendChild(popupElement)
 
 				const rect = props.clientRect()
 				if (!rect) {
@@ -108,7 +109,7 @@ export default function emojiSuggestionSetup() {
 					cleanupFloating = null
 				}
 				if (popupElement) {
-					document.body.removeChild(popupElement)
+					popupElement.remove()
 					popupElement = null
 				}
 				component?.destroy()

@@ -17,10 +17,14 @@
 package oauth2server
 
 import (
+	"context"
+
 	"net/http"
 
 	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/db"
+	"code.vikunja.io/api/pkg/events"
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/user"
@@ -36,35 +40,51 @@ type TokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// tokenRequest holds the JSON body of a POST /oauth/token request.
-type tokenRequest struct {
-	GrantType    string `json:"grant_type"`
-	Code         string `json:"code"`
-	ClientID     string `json:"client_id"`
-	RedirectURI  string `json:"redirect_uri"`
-	CodeVerifier string `json:"code_verifier"`
-	RefreshToken string `json:"refresh_token"`
+// TokenRequest holds the parameters of a POST /oauth/token request. v1 binds it
+// from JSON; v2 accepts spec-compliant application/x-www-form-urlencoded as well
+// (form tags mirror the json names).
+type TokenRequest struct {
+	GrantType    string `json:"grant_type" form:"grant_type"`
+	Code         string `json:"code" form:"code"`
+	ClientID     string `json:"client_id" form:"client_id"`
+	RedirectURI  string `json:"redirect_uri" form:"redirect_uri"`
+	CodeVerifier string `json:"code_verifier" form:"code_verifier"`
+	RefreshToken string `json:"refresh_token" form:"refresh_token"`
 }
 
 // HandleToken handles POST /oauth/token.
 // Supports grant_type=authorization_code and grant_type=refresh_token.
 func HandleToken(c *echo.Context) error {
-	var req tokenRequest
+	var req TokenRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
 
+	resp, err := ExchangeToken(c.Request().Context(), &req, c.Request().UserAgent(), c.RealIP())
+	if err != nil {
+		return err
+	}
+
+	c.Response().Header().Set("Cache-Control", "no-store")
+	return c.JSON(http.StatusOK, resp)
+}
+
+// ExchangeToken runs the grant-type dispatch and token issuance for the OAuth
+// token endpoint, independent of the HTTP layer. Callers own request binding and
+// the Cache-Control: no-store response header. deviceInfo/ipAddress are recorded
+// on the session created for the authorization_code grant.
+func ExchangeToken(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
 	switch req.GrantType {
 	case "authorization_code":
-		return handleAuthorizationCodeGrant(c, &req)
+		return exchangeAuthorizationCode(ctx, req, deviceInfo, ipAddress)
 	case "refresh_token":
-		return handleRefreshTokenGrant(c, &req)
+		return exchangeRefreshToken(req)
 	default:
-		return &models.ErrOAuthInvalidGrantType{}
+		return nil, &models.ErrOAuthInvalidGrantType{}
 	}
 }
 
-func handleAuthorizationCodeGrant(c *echo.Context, req *tokenRequest) error {
+func exchangeAuthorizationCode(ctx context.Context, req *TokenRequest, deviceInfo, ipAddress string) (*TokenResponse, error) {
 	s := db.NewSession()
 	defer s.Close()
 
@@ -72,73 +92,75 @@ func handleAuthorizationCodeGrant(c *echo.Context, req *tokenRequest) error {
 	oauthCode, err := models.GetAndDeleteOAuthCode(s, req.Code)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		return nil, err
 	}
 
 	// Validate client_id matches
 	if oauthCode.ClientID != req.ClientID {
 		_ = s.Rollback()
-		return &models.ErrOAuthClientNotFound{}
+		return nil, &models.ErrOAuthClientNotFound{}
 	}
 
 	// Validate redirect_uri matches
 	if oauthCode.RedirectURI != req.RedirectURI {
 		_ = s.Rollback()
-		return &models.ErrOAuthInvalidRedirectURI{}
+		return nil, &models.ErrOAuthInvalidRedirectURI{}
 	}
 
 	// Verify PKCE
 	if !VerifyPKCE(req.CodeVerifier, oauthCode.CodeChallenge, oauthCode.CodeChallengeMethod) {
 		_ = s.Rollback()
-		return &models.ErrOAuthPKCEVerifyFailed{}
+		return nil, &models.ErrOAuthPKCEVerifyFailed{}
 	}
 
 	// Create a session (reuses existing session infrastructure)
-	deviceInfo := c.Request().UserAgent()
-	ipAddress := c.RealIP()
-	session, err := models.CreateSession(s, oauthCode.UserID, deviceInfo, ipAddress, false)
+	session, err := models.CreateSession(s, oauthCode.UserID, deviceInfo, ipAddress, false, nil)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		return nil, err
 	}
 
 	u, err := user.GetUserByID(s, oauthCode.UserID)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		return nil, err
 	}
 
 	// Generate JWT
 	accessToken, err := auth.NewUserJWTAuthtoken(u, session.ID)
 	if err != nil {
 		_ = s.Rollback()
-		return err
+		return nil, err
 	}
 
 	if err := s.Commit(); err != nil {
-		return err
+		return nil, err
 	}
 
-	c.Response().Header().Set("Cache-Control", "no-store")
-	return c.JSON(http.StatusOK, TokenResponse{
+	// The code exchange mints a fresh session, so it is a login for the
+	// audit trail, same as NewUserAuthTokenResponse.
+	if err := events.DispatchWithContext(ctx, &user.LoginSucceededEvent{User: u}); err != nil {
+		log.Errorf("Could not dispatch login succeeded event: %s", err)
+	}
+
+	return &TokenResponse{
 		AccessToken:  accessToken,
 		TokenType:    "bearer",
 		ExpiresIn:    config.ServiceJWTTTLShort.GetInt64(),
 		RefreshToken: session.RefreshToken,
-	})
+	}, nil
 }
 
-func handleRefreshTokenGrant(c *echo.Context, req *tokenRequest) error {
+func exchangeRefreshToken(req *TokenRequest) (*TokenResponse, error) {
 	result, err := auth.RefreshSession(req.RefreshToken)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	c.Response().Header().Set("Cache-Control", "no-store")
-	return c.JSON(http.StatusOK, TokenResponse{
+	return &TokenResponse{
 		AccessToken:  result.AccessToken,
 		TokenType:    "bearer",
 		ExpiresIn:    result.ExpiresIn,
 		RefreshToken: result.NewRefreshToken,
-	})
+	}, nil
 }

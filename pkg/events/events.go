@@ -201,6 +201,13 @@ func InitEventsForTesting(ctx context.Context) (<-chan struct{}, error) {
 
 // Dispatch dispatches an event
 func Dispatch(event Event) error {
+	return DispatchWithContext(context.Background(), event)
+}
+
+// DispatchWithContext dispatches an event and copies request metadata from the
+// context (see WithRequestMeta) onto the message metadata, so listeners can
+// attribute the event to the originating HTTP request.
+func DispatchWithContext(ctx context.Context, event Event) error {
 	if isUnderTest {
 		dispatchedTestEvents = append(dispatchedTestEvents, event)
 		return nil
@@ -216,6 +223,17 @@ func Dispatch(event Event) error {
 	}
 
 	msg := message.NewMessage(watermill.NewUUID(), content)
+	if meta := RequestMetaFromContext(ctx); meta != nil {
+		if meta.IP != "" {
+			msg.Metadata.Set(MetadataKeyIP, meta.IP)
+		}
+		if meta.UserAgent != "" {
+			msg.Metadata.Set(MetadataKeyUserAgent, meta.UserAgent)
+		}
+		if meta.RequestID != "" {
+			msg.Metadata.Set(MetadataKeyRequestID, meta.RequestID)
+		}
+	}
 	return pubsub.Publish(event.Name(), msg)
 }
 
@@ -241,8 +259,9 @@ func DispatchOnCommit(key any, event Event) {
 
 // DispatchPending dispatches all events accumulated for the given key and removes them.
 // Call this after s.Commit(). Safe to call even if no events were registered.
+// Request metadata on the context (see WithRequestMeta) is copied onto each message.
 // If any event fails to dispatch, the error is logged but remaining events are still dispatched.
-func DispatchPending(key any) {
+func DispatchPending(ctx context.Context, key any) {
 	val, ok := pendingEvents.LoadAndDelete(key)
 	if !ok {
 		return
@@ -251,7 +270,7 @@ func DispatchPending(key any) {
 	// No need to lock here since we've already removed it from the map
 	// and this key won't receive new events
 	for _, event := range queue.events {
-		if err := Dispatch(event); err != nil {
+		if err := DispatchWithContext(ctx, event); err != nil {
 			log.Errorf("Failed to dispatch event %s: %v", event.Name(), err)
 		}
 	}
