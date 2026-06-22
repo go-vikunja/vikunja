@@ -134,7 +134,9 @@ func (migTestBackup) TableName() string { return "task_repeat_legacy_backup" }
 // column drop. mage test:feature only syncs current models, so this is the only
 // coverage of the migration's batch/backup/drop logic.
 func TestRRuleMigrationSQLite(t *testing.T) {
+	prevDBType := config.DatabaseType.GetString()
 	config.DatabaseType.Set("sqlite")
+	t.Cleanup(func() { config.DatabaseType.Set(prevDBType) })
 	log.InitLogger() // the migration logs an audit summary; without this it panics on a nil logger
 
 	engine, err := xorm.NewEngine("sqlite3", filepath.Join(t.TempDir(), "migtest.db"))
@@ -155,6 +157,26 @@ func TestRRuleMigrationSQLite(t *testing.T) {
 		_, err = engine.Insert(&seed[i])
 		require.NoError(t, err)
 	}
+
+	// Seed more than one page (batchSize = 500) of legacy rows so the migration's
+	// id-paged conversion loop is actually exercised across batches.
+	const bulkCount = 505
+	bulk := make([]migTestLegacyTask, 0, bulkCount)
+	for i := range bulkCount {
+		bulk = append(bulk, migTestLegacyTask{
+			ID:          int64(1001 + i),
+			Title:       "bulk",
+			ProjectID:   1,
+			Index:       int64(1001 + i),
+			RepeatAfter: 86400,
+			RepeatMode:  0,
+			Created:     now,
+			Updated:     now,
+			CreatedByID: 1,
+		})
+	}
+	_, err = engine.Insert(&bulk)
+	require.NoError(t, err)
 
 	// Run the migration under test.
 	ran := false
@@ -181,12 +203,14 @@ func TestRRuleMigrationSQLite(t *testing.T) {
 	assert.Equal(t, "FREQ=WEEKLY;INTERVAL=1", t3.Repeats)
 	assert.True(t, t3.RepeatsFromCurrentDate, "mode 2 should set repeats_from_current_date")
 	assert.Empty(t, get(4).Repeats, "a task without legacy repeat should stay empty")
+	// A row beyond the first batch (id 1505 is on page 2) is also converted.
+	assert.Equal(t, "FREQ=DAILY;INTERVAL=1", get(1505).Repeats, "rows past the first batch should be converted")
 
-	// Backup: every row that had legacy repeat data is preserved (1, 2, 3); the
-	// no-repeat task (4) is not.
+	// Backup: every row that had legacy repeat data is preserved (1, 2, 3 plus the
+	// bulk rows); the no-repeat task (4) is not.
 	var backups []migTestBackup
 	require.NoError(t, engine.OrderBy("id ASC").Find(&backups))
-	require.Len(t, backups, 3)
+	require.Len(t, backups, 3+bulkCount)
 	assert.Equal(t, int64(86400), backups[0].RepeatAfter)
 	assert.Equal(t, 1, backups[1].RepeatMode)
 	assert.Equal(t, int64(604800), backups[2].RepeatAfter)
