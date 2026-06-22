@@ -121,3 +121,31 @@ export function describeRepeat(repeat: ITaskRepeat | null, t: (key: string, para
 export function isRepeating(repeat: ITaskRepeat | null | undefined): boolean {
 	return repeat != null && !!repeat.freq
 }
+
+/**
+ * Returns true if the repeat rule uses options the simple editor cannot
+ * represent (anything beyond freq, interval and a single byMonthDay). Such rules
+ * must be treated as read-only here so the simple controls don't silently drop
+ * the advanced parts (byDay, bySetPos, count, until, ...).
+ */
+export function isComplexRepeat(repeat: ITaskRepeat | null | undefined): boolean {
+	if (!repeat) {
+		return false
+	}
+	if ((repeat.byMonthDay?.length ?? 0) > 1) {
+		return true
+	}
+	return (
+		(repeat.byDay?.length ?? 0) > 0 ||
+		(repeat.byMonth?.length ?? 0) > 0 ||
+		(repeat.byYearDay?.length ?? 0) > 0 ||
+		(repeat.byWeekNo?.length ?? 0) > 0 ||
+		(repeat.bySetPos?.length ?? 0) > 0 ||
+		(repeat.byHour?.length ?? 0) > 0 ||
+		(repeat.byMinute?.length ?? 0) > 0 ||
+		(repeat.bySecond?.length ?? 0) > 0 ||
+		repeat.count != null ||
+		(repeat.until != null && repeat.until !== '') ||
+		(repeat.wkst != null && repeat.wkst !== '')
+	)
+}

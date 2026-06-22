@@ -1174,7 +1174,8 @@
       "weeks": "Weeks",
       "months": "Months",
       "years": "Years",
-      "invalidAmount": "Please enter more than 0."
+      "invalidAmount": "Please enter more than 0.",
+      "advancedReadonly": "This task uses an advanced recurrence rule that can't be edited here. Remove the repeat to set a simpler one."
     },
     "quickAddMagic": {
       "hint": "Use magic prefixes to define due dates, assignees and other task properties.",

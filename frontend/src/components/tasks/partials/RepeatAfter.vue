@@ -1,9 +1,16 @@
 <template>
 	<div class="control repeat-after-input">
+		<p
+			v-if="isComplex"
+			class="repeat-advanced-note"
+		>
+			{{ $t('task.repeat.advancedReadonly') }}
+		</p>
 		<div class="button-group">
 			<XButton
 				variant="secondary"
 				class="is-small"
+				:disabled="disabled || isComplex"
 				@click="() => setQuickRepeat('daily', 1)"
 			>
 				{{ $t('task.repeat.everyDay') }}
@@ -11,6 +18,7 @@
 			<XButton
 				variant="secondary"
 				class="is-small"
+				:disabled="disabled || isComplex"
 				@click="() => setQuickRepeat('weekly', 1)"
 			>
 				{{ $t('task.repeat.everyWeek') }}
@@ -18,6 +26,7 @@
 			<XButton
 				variant="secondary"
 				class="is-small"
+				:disabled="disabled || isComplex"
 				@click="() => setQuickRepeat('monthly', 1)"
 			>
 				{{ $t('task.repeat.everyMonth') }}
@@ -25,6 +34,7 @@
 			<XButton
 				variant="secondary"
 				class="is-small"
+				:disabled="disabled || isComplex"
 				@click="() => setQuickRepeat('yearly', 1)"
 			>
 				{{ $t('task.repeat.everyYear') }}
@@ -47,7 +57,7 @@
 				<div class="control repeat-interval-amount">
 					<input
 						v-model.number="repeatInterval"
-						:disabled="disabled || undefined"
+						:disabled="disabled || isComplex || undefined"
 						class="input"
 						:placeholder="$t('task.repeat.specifyAmount')"
 						type="number"
@@ -59,7 +69,7 @@
 					<div class="select">
 						<select
 							v-model="repeatFrequency"
-							:disabled="disabled || undefined"
+							:disabled="disabled || isComplex || undefined"
 							@change="updateData"
 						>
 							<option value="hours">
@@ -97,6 +107,7 @@
 					<select
 						id="repeatDay"
 						v-model.number="repeatByMonthDay"
+						:disabled="disabled || isComplex || undefined"
 						@change="updateData"
 					>
 						<option :value="0">
@@ -117,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 
 import {error} from '@/message'
@@ -126,6 +137,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import TaskModel from '@/models/task'
 import {
 	freqToUiFreq,
+	isComplexRepeat,
 	repeatFromSettings,
 	type RepeatFrequency,
 } from '@/helpers/rrule'
@@ -150,6 +162,11 @@ const repeatFrequency = ref<RepeatFrequency>('days')
 const repeatByMonthDay = ref(0)
 const repeatsFromCurrentDate = ref(false)
 
+// A rule with options the simple editor can't represent (byDay, count, until, …)
+// is shown read-only so editing the simple controls can't drop the advanced parts.
+// It can still be removed via the parent's "remove repeat" action.
+const isComplex = computed(() => isComplexRepeat(task.value?.repeat))
+
 watch(
 	() => props.modelValue,
 	(value: ITask | undefined) => {
@@ -173,7 +190,7 @@ watch(
 )
 
 function updateData() {
-	if (!task.value) {
+	if (!task.value || isComplex.value) {
 		return
 	}
 
@@ -193,7 +210,7 @@ function updateData() {
 }
 
 function setQuickRepeat(freq: string, interval: number) {
-	if (!task.value) {
+	if (!task.value || isComplex.value) {
 		return
 	}
 
@@ -222,6 +239,12 @@ function setQuickRepeat(freq: string, interval: number) {
 	display: flex;
 	flex-wrap: wrap;
 	gap: .25rem;
+}
+
+.repeat-advanced-note {
+	margin: 0;
+	font-size: .85rem;
+	color: var(--grey-500);
 }
 
 .repeat-from-current-date {
