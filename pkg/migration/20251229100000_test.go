@@ -17,9 +17,17 @@
 package migration
 
 import (
+	"path/filepath"
 	"testing"
+	"time"
+
+	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/log"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"xorm.io/xorm"
+	"xorm.io/xorm/names"
 )
 
 func TestConvertLegacyRepeatToRRule(t *testing.T) {
@@ -75,4 +83,117 @@ func TestSecondsToRRule(t *testing.T) {
 			assert.Equal(t, c.want, secondsToRRule(c.seconds))
 		})
 	}
+}
+
+// migTestLegacyTask mirrors the pre-migration tasks schema (legacy repeat
+// columns present; repeats/repeats_from_current_date added by the migration).
+type migTestLegacyTask struct {
+	ID                     int64     `xorm:"bigint not null pk"`
+	Title                  string    `xorm:"text not null"`
+	Description            string    `xorm:"text null"`
+	Done                   bool      `xorm:"null"`
+	DoneAt                 time.Time `xorm:"datetime null"`
+	DueDate                time.Time `xorm:"datetime null"`
+	ProjectID              int64     `xorm:"bigint not null"`
+	RepeatAfter            int64     `xorm:"bigint null"`
+	RepeatMode             int       `xorm:"not null default 0"`
+	Priority               int64     `xorm:"bigint null"`
+	StartDate              time.Time `xorm:"datetime null"`
+	EndDate                time.Time `xorm:"datetime null"`
+	HexColor               string    `xorm:"varchar(7) null"`
+	PercentDone            float64   `xorm:"double null"`
+	Index                  int64     `xorm:"'index' not null default 0"`
+	UID                    string    `xorm:"'uid' text null"`
+	CoverImageAttachmentID int64     `xorm:"bigint null default 0"`
+	Created                time.Time `xorm:"datetime not null"`
+	Updated                time.Time `xorm:"datetime not null"`
+	CreatedByID            int64     `xorm:"bigint not null"`
+}
+
+func (migTestLegacyTask) TableName() string { return "tasks" }
+
+type migTestNewTask struct {
+	ID                     int64  `xorm:"bigint not null pk"`
+	Repeats                string `xorm:"varchar(500) null"`
+	RepeatsFromCurrentDate bool   `xorm:"null"`
+}
+
+func (migTestNewTask) TableName() string { return "tasks" }
+
+type migTestBackup struct {
+	ID          int64 `xorm:"bigint not null pk"`
+	RepeatAfter int64 `xorm:"bigint null"`
+	RepeatMode  int   `xorm:"not null default 0"`
+}
+
+func (migTestBackup) TableName() string { return "task_repeat_legacy_backup" }
+
+// TestRRuleMigrationSQLite exercises the migration's runtime on the SQLite path:
+// it builds the legacy schema, seeds rows across every repeat_mode, runs the real
+// Migrate function, and asserts the conversion, the legacy-data backup, and the
+// column drop. mage test:feature only syncs current models, so this is the only
+// coverage of the migration's batch/backup/drop logic.
+func TestRRuleMigrationSQLite(t *testing.T) {
+	config.DatabaseType.Set("sqlite")
+	log.InitLogger() // the migration logs an audit summary; without this it panics on a nil logger
+
+	engine, err := xorm.NewEngine("sqlite3", filepath.Join(t.TempDir(), "migtest.db"))
+	require.NoError(t, err)
+	defer engine.Close()
+	engine.SetMapper(names.GonicMapper{})
+
+	// Build the pre-migration schema and seed legacy repeat data.
+	require.NoError(t, engine.Sync2(migTestLegacyTask{}))
+	now := time.Now()
+	seed := []migTestLegacyTask{
+		{ID: 1, Title: "daily", ProjectID: 1, Index: 1, RepeatAfter: 86400, RepeatMode: 0, Created: now, Updated: now, CreatedByID: 1},
+		{ID: 2, Title: "monthly", ProjectID: 1, Index: 2, RepeatAfter: 0, RepeatMode: 1, Created: now, Updated: now, CreatedByID: 1},
+		{ID: 3, Title: "weekly from current", ProjectID: 1, Index: 3, RepeatAfter: 604800, RepeatMode: 2, Created: now, Updated: now, CreatedByID: 1},
+		{ID: 4, Title: "no repeat", ProjectID: 1, Index: 4, RepeatAfter: 0, RepeatMode: 0, Created: now, Updated: now, CreatedByID: 1},
+	}
+	for i := range seed {
+		_, err = engine.Insert(&seed[i])
+		require.NoError(t, err)
+	}
+
+	// Run the migration under test.
+	ran := false
+	for _, m := range migrations {
+		if m.ID == "20251229100000" {
+			require.NoError(t, m.Migrate(engine))
+			ran = true
+			break
+		}
+	}
+	require.True(t, ran, "migration 20251229100000 was not found in the list")
+
+	// Conversion: legacy modes map to the expected RRULE; mode 2 sets the flag.
+	get := func(id int64) migTestNewTask {
+		nt := migTestNewTask{}
+		found, gerr := engine.ID(id).Get(&nt)
+		require.NoError(t, gerr)
+		require.True(t, found, "task %d should exist after migration", id)
+		return nt
+	}
+	assert.Equal(t, "FREQ=DAILY;INTERVAL=1", get(1).Repeats)
+	assert.Equal(t, "FREQ=MONTHLY;INTERVAL=1", get(2).Repeats)
+	t3 := get(3)
+	assert.Equal(t, "FREQ=WEEKLY;INTERVAL=1", t3.Repeats)
+	assert.True(t, t3.RepeatsFromCurrentDate, "mode 2 should set repeats_from_current_date")
+	assert.Empty(t, get(4).Repeats, "a task without legacy repeat should stay empty")
+
+	// Backup: every row that had legacy repeat data is preserved (1, 2, 3); the
+	// no-repeat task (4) is not.
+	var backups []migTestBackup
+	require.NoError(t, engine.OrderBy("id ASC").Find(&backups))
+	require.Len(t, backups, 3)
+	assert.Equal(t, int64(86400), backups[0].RepeatAfter)
+	assert.Equal(t, 1, backups[1].RepeatMode)
+	assert.Equal(t, int64(604800), backups[2].RepeatAfter)
+
+	// Drop: the legacy columns are gone.
+	_, err = engine.QueryString("SELECT repeat_after FROM tasks LIMIT 1")
+	assert.Error(t, err, "repeat_after column should have been dropped")
+	_, err = engine.QueryString("SELECT repeat_mode FROM tasks LIMIT 1")
+	assert.Error(t, err, "repeat_mode column should have been dropped")
 }
