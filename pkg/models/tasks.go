@@ -1696,12 +1696,18 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 	}
 
 	// Determine where to search for the next occurrence:
-	// - If due date is in the future, advance from there (to get the next interval)
-	// - Otherwise, get the next occurrence after now (to skip past dates)
+	// - If repeating from the current date, always advance from now — the
+	//   (possibly future) due date is irrelevant when the user wants the next
+	//   occurrence measured from completion.
+	// - Otherwise, if the due date is in the future, advance from there (to get
+	//   the next interval); if it's in the past, advance from now to skip overdue dates.
 	var searchFrom time.Time
-	if !oldTask.DueDate.IsZero() && oldTask.DueDate.After(now) {
+	switch {
+	case oldTask.RepeatsFromCurrentDate:
+		searchFrom = now
+	case !oldTask.DueDate.IsZero() && oldTask.DueDate.After(now):
 		searchFrom = oldTask.DueDate
-	} else {
+	default:
 		searchFrom = now
 	}
 

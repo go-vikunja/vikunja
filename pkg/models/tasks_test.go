@@ -788,6 +788,27 @@ func TestUpdateDone(t *testing.T) {
 				assert.True(t, newTask.DueDate.After(time.Now()))
 				assert.False(t, newTask.Done)
 			})
+			t.Run("future due date searches from now (regression)", func(t *testing.T) {
+				// Repeat-from-current-date with a due date in the FUTURE must advance
+				// from now, not from the future due date. See plan §4.4.
+				futureDue := time.Now().Add(30 * 24 * time.Hour)
+				oldTask := &Task{
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=1",
+					RepeatsFromCurrentDate: true,
+					DueDate:                futureDue,
+				}
+				newTask := &Task{
+					Done: true,
+				}
+				updateDone(oldTask, newTask)
+
+				// Next occurrence is ~tomorrow (measured from now), well before the
+				// original future due date — not futureDue+1day.
+				assert.True(t, newTask.DueDate.After(time.Now()))
+				assert.True(t, newTask.DueDate.Before(futureDue))
+				assert.False(t, newTask.Done)
+			})
 			t.Run("start date", func(t *testing.T) {
 				oldTask := &Task{
 					Done:                   false,
