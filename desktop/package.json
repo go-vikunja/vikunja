@@ -63,7 +63,7 @@
   "devDependencies": {
     "electron": "40.10.4",
     "electron-builder": "26.15.3",
-    "unzipper": "0.12.3"
+    "unzipper": "0.12.5"
   },
   "dependencies": {
     "express": "5.2.1"
