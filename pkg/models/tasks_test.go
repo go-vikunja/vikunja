@@ -864,6 +864,37 @@ func TestUpdateDone(t *testing.T) {
 				assert.Equal(t, oldDue.Sub(oldStart), newTask.DueDate.Sub(newTask.StartDate))
 			})
 		})
+		t.Run("finite recurrence (COUNT) decrements and terminates", func(t *testing.T) {
+			// COUNT=3 yields exactly 3 completable occurrences: the stored rule is
+			// decremented on each completion and the task stays done once exhausted,
+			// instead of repeating forever. RepeatsFromCurrentDate keeps the rule's
+			// count window anchored at now so each completion reschedules. See §4.5.
+			now := time.Now()
+
+			// Completion 1: COUNT 3 -> 2, reschedules (task reopens).
+			t1 := &Task{Repeats: "FREQ=DAILY;COUNT=3", RepeatsFromCurrentDate: true, DueDate: now}
+			n1 := &Task{Done: true}
+			updateDone(t1, n1)
+			require.False(t, n1.Done, "should reopen after completing occurrence 1 of 3")
+			o1, err := rrule.StrToROption(n1.Repeats)
+			require.NoError(t, err)
+			assert.Equal(t, 2, o1.Count)
+
+			// Completion 2: COUNT 2 -> 1, reschedules.
+			t2 := &Task{Repeats: n1.Repeats, RepeatsFromCurrentDate: true, DueDate: n1.DueDate}
+			n2 := &Task{Done: true}
+			updateDone(t2, n2)
+			require.False(t, n2.Done, "should reopen after completing occurrence 2 of 3")
+			o2, err := rrule.StrToROption(n2.Repeats)
+			require.NoError(t, err)
+			assert.Equal(t, 1, o2.Count)
+
+			// Completion 3: COUNT == 1, exhausted -> stays done, no reschedule.
+			t3 := &Task{Repeats: n2.Repeats, RepeatsFromCurrentDate: true, DueDate: n2.DueDate}
+			n3 := &Task{Done: true}
+			updateDone(t3, n3)
+			assert.True(t, n3.Done, "should stay done once the finite recurrence is exhausted")
+		})
 		t.Run("repeat each month", func(t *testing.T) {
 			t.Run("due date", func(t *testing.T) {
 				oldTask := &Task{

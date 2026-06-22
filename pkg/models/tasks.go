@@ -1684,6 +1684,14 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 		return
 	}
 
+	// Finite recurrence (COUNT): we treat the stored COUNT as the number of
+	// occurrences remaining, including the one just completed. If only one
+	// remains, the recurrence is exhausted — leave the task done and don't
+	// reschedule. (COUNT==0 in the rrule lib means "no limit".)
+	if opt.Count == 1 {
+		return
+	}
+
 	// Determine the base date for calculating the next occurrence
 	var baseDate time.Time
 	switch {
@@ -1728,6 +1736,16 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 		// No more occurrences according to the rule (e.g., COUNT limit reached)
 		// Don't reschedule, just mark as done
 		return
+	}
+
+	// Decrement the remaining COUNT so finite (COUNT) recurrences actually
+	// terminate. The DTSTART reset above re-bases the rule's count window to the
+	// current date on every completion, so without persisting a decremented
+	// COUNT the task would repeat forever. opt.RRuleString() matches the format
+	// produced by TaskRepeat.toRRule(), so the stored value stays consistent.
+	if opt.Count > 1 {
+		opt.Count--
+		newTask.Repeats = opt.RRuleString()
 	}
 
 	// Calculate the time difference for adjusting related dates
