@@ -839,6 +839,30 @@ func TestUpdateDone(t *testing.T) {
 				assert.True(t, newTask.EndDate.After(time.Now()))
 				assert.False(t, newTask.Done)
 			})
+			t.Run("preserves start-to-due gap (regression)", func(t *testing.T) {
+				// With both start and due dates, repeat-from-current-date must keep
+				// the start->due offset; it previously collapsed start onto the due
+				// date. See plan §4.6.
+				oldStart := time.Unix(1550000000, 0)
+				oldDue := oldStart.Add(72 * time.Hour) // 3-day gap
+				oldTask := &Task{
+					Done:                   false,
+					Repeats:                "FREQ=DAILY;INTERVAL=1",
+					RepeatsFromCurrentDate: true,
+					StartDate:              oldStart,
+					DueDate:                oldDue,
+				}
+				newTask := &Task{
+					Done: true,
+				}
+				updateDone(oldTask, newTask)
+
+				assert.False(t, newTask.Done)
+				// Due date moves to ~now+1day (measured from completion).
+				assert.True(t, newTask.DueDate.After(time.Now()))
+				// The 3-day start->due gap is preserved, not collapsed to zero.
+				assert.Equal(t, oldDue.Sub(oldStart), newTask.DueDate.Sub(newTask.StartDate))
+			})
 		})
 		t.Run("repeat each month", func(t *testing.T) {
 			t.Run("due date", func(t *testing.T) {

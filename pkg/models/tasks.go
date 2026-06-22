@@ -1747,29 +1747,36 @@ func setTaskDatesRRule(oldTask, newTask *Task) {
 		}
 	}
 
-	// Update start/end dates preserving their relationship to due date
-	// When RepeatsFromCurrentDate is true, dates are set to the next occurrence (future date)
-	if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
-		diff := oldTask.EndDate.Sub(oldTask.StartDate)
-		if oldTask.RepeatsFromCurrentDate {
-			newTask.StartDate = nextOccurrence
-		} else if timeDiff != 0 {
+	// Update start/end dates, preserving their offsets.
+	//
+	// When a due date exists it is the reference point: shift start and end by
+	// the same timeDiff the due date moved, which keeps each one's offset from
+	// the due date (and the start->end gap) intact. This holds whether or not
+	// we repeat from the current date — for RepeatsFromCurrentDate the due date
+	// has already been re-based to the next occurrence, so the offsets follow.
+	// Setting start directly to nextOccurrence (the previous behaviour) collapsed
+	// start onto the due date and lost the gap.
+	//
+	// When there is no due date (only possible with RepeatsFromCurrentDate), the
+	// next occurrence is the anchor and the start->end gap is preserved.
+	if !oldTask.DueDate.IsZero() {
+		if !oldTask.StartDate.IsZero() && timeDiff != 0 {
 			newTask.StartDate = oldTask.StartDate.Add(timeDiff)
 		}
-		newTask.EndDate = newTask.StartDate.Add(diff)
-	} else {
-		if !oldTask.StartDate.IsZero() {
-			if oldTask.RepeatsFromCurrentDate {
-				newTask.StartDate = nextOccurrence
-			} else if timeDiff != 0 {
-				newTask.StartDate = oldTask.StartDate.Add(timeDiff)
-			}
+		if !oldTask.EndDate.IsZero() && timeDiff != 0 {
+			newTask.EndDate = oldTask.EndDate.Add(timeDiff)
 		}
-		if !oldTask.EndDate.IsZero() {
-			if oldTask.RepeatsFromCurrentDate {
+	} else {
+		if !oldTask.StartDate.IsZero() && !oldTask.EndDate.IsZero() {
+			diff := oldTask.EndDate.Sub(oldTask.StartDate)
+			newTask.StartDate = nextOccurrence
+			newTask.EndDate = newTask.StartDate.Add(diff)
+		} else {
+			if !oldTask.StartDate.IsZero() {
+				newTask.StartDate = nextOccurrence
+			}
+			if !oldTask.EndDate.IsZero() {
 				newTask.EndDate = nextOccurrence
-			} else if timeDiff != 0 {
-				newTask.EndDate = oldTask.EndDate.Add(timeDiff)
 			}
 		}
 	}
