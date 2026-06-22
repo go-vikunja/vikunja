@@ -198,8 +198,12 @@ PRIORITY:` + strconv.Itoa(mapPriorityToCaldav(t.Priority))
 		}
 
 		if t.Repeats != "" {
-			caldavtodos += `
-RRULE:` + t.Repeats
+			// Normalize before emitting so we never write a malformed RRULE line
+			// into the calendar output (e.g. from imported or legacy-migrated data).
+			if normalized, ok := normalizeRRule(t.Repeats); ok {
+				caldavtodos += `
+RRULE:` + normalized
+			}
 		}
 
 		if len(t.Categories) > 0 {
