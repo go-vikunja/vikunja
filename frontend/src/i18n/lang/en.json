@@ -742,11 +742,36 @@
   "navigation": {
     "overview": "Overview",
     "upcoming": "Upcoming",
+    "planner": "Planner",
     "settings": "Settings",
     "imprint": "Imprint",
     "privacy": "Privacy Policy",
     "closeSidebar": "Close sidebar",
     "home": "Vikunja home"
+  },
+  "planner": {
+    "title": "Planner",
+    "today": "Today",
+    "week": "Week",
+    "day": "Day",
+    "previous": "Previous",
+    "next": "Next",
+    "zoomIn": "Increase resolution",
+    "zoomOut": "Decrease resolution",
+    "unscheduled": "Unscheduled tasks",
+    "noUnscheduled": "No unscheduled tasks. Everything has a time slot!",
+    "allDay": "All day",
+    "saved": "Saved",
+    "saveError": "Something went wrong saving the task",
+    "settings": {
+      "title": "View settings",
+      "dayStart": "Day starts at",
+      "dayEnd": "Day ends at",
+      "defaultDuration": "Default duration (minutes)",
+      "slotDuration": "Slot size (minutes)",
+      "fullWeek": "Show full week (off: next 7 days)",
+      "showDone": "Show done tasks"
+    }
   },
   "misc": {
     "loading": "Loading…",

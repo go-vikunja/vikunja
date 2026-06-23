@@ -226,6 +226,11 @@ const router = createRouter({
 			}),
 		},
 		{
+			path: '/planner',
+			name: 'planner.index',
+			component: () => import('@/views/planner/PlannerView.vue'),
+		},
+		{
 			// Redirect old list routes to the respective project routes
 			// see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#catch-all-404-not-found-route
 			path: '/lists:pathMatch(.*)*',
