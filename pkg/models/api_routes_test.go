@@ -246,6 +246,40 @@ func TestCanDoAPIRoute_V2PatchAliasesPut(t *testing.T) {
 	})
 }
 
+// TestCanDoAPIRoute_V2TasksReadAll verifies that tasks.read_all authorises
+// both the global /api/v2/tasks and project-scoped /api/v2/projects/:project/tasks
+// endpoints. Both normalise to tasks.read_all via getRouteGroupName, but only
+// one RouteDetail survives in the map — the special case in CanDoAPIRoute must
+// accept either path.
+func TestCanDoAPIRoute_V2TasksReadAll(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	apiTokenRoutes["caldav"] = APITokenRoute{
+		"access": &RouteDetail{Path: "/dav/*", Method: "ANY"},
+	}
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/projects/:project/tasks"}, true)
+
+	token := &APIToken{
+		APIPermissions: APIPermissions{"tasks": []string{"read_all"}},
+	}
+
+	e := echo.New()
+
+	t.Run("global /api/v2/tasks", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v2/tasks", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
+
+	t.Run("project-scoped /api/v2/projects/:project/tasks", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v2/projects/:project/tasks", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
+}
+
 // End-to-end CanDoAPIRoute coverage for /api/v2 is provided by the Label
 // integration test in pkg/webtests/huma_label_test.go (see the token-auth
 // scenarios in that file) which exercises the full auth pipeline.
