@@ -427,7 +427,8 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 				// Two list endpoints share tasks.read_all but only one
 				// survives collection, so allow either explicitly.
 				if group == "tasks" && p == "read_all" && method == http.MethodGet &&
-					(path == "/api/v1/tasks" || path == "/api/v1/projects/:project/tasks") {
+					(path == "/api/v1/tasks" || path == "/api/v1/projects/:project/tasks" ||
+						path == "/api/v2/tasks" || path == "/api/v2/projects/:project/tasks") {
 					return true
 				}
 			}
