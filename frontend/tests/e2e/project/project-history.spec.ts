@@ -4,7 +4,16 @@ import {ProjectViewFactory} from '../../factories/project_view'
 import {updateUserSettings} from '../../support/updateUserSettings'
 import type {Page} from '@playwright/test'
 
-async function visitProjectsToBuildHistory(page: Page, projects: any[]) {
+interface ProjectHistoryEntry {
+	id: number
+}
+
+interface ProjectSeed {
+	id: number
+	title: string
+}
+
+async function visitProjectsToBuildHistory(page: Page, projects: ProjectSeed[]) {
 	for (const project of projects) {
 		const loadProjectPromise = page.waitForResponse(response =>
 			response.url().includes(`/projects/${project.id}`) && response.request().method() === 'GET',
@@ -14,7 +23,7 @@ async function visitProjectsToBuildHistory(page: Page, projects: any[]) {
 		await page.waitForFunction(
 			(projectId) => {
 				const history = JSON.parse(localStorage.getItem('projectHistory') || '[]')
-				return history.some((h: any) => h.id === projectId)
+				return history.some((h: ProjectHistoryEntry) => h.id === projectId)
 			},
 			project.id,
 		)
@@ -47,7 +56,7 @@ test.describe('Project History', () => {
 			await page.waitForFunction(
 				(projectId) => {
 					const history = JSON.parse(localStorage.getItem('projectHistory') || '[]')
-					return history.some((h: any) => h.id === projectId)
+					return history.some((h: ProjectHistoryEntry) => h.id === projectId)
 				},
 				projects[i].id,
 			)
@@ -76,11 +85,16 @@ test.describe('Project History', () => {
 			}, false)
 		}
 
-		// Navigate to home first so the default-page redirect guard is primed
-		// (sets sessionStorage flag), preventing later page.goto('/') from
-		// redirecting to the last visited project.
+		// Keep reloads on the overview page while this test focuses on the
+		// last-viewed section visibility.
 		await page.goto('/')
 		await page.waitForLoadState('networkidle')
+		const token = await page.evaluate(() => localStorage.getItem('token'))
+		await updateUserSettings(apiContext, token!, {
+			frontendSettings: {
+				defaultPage: 'overview',
+			},
+		})
 
 		// Visit projects to build up history
 		await visitProjectsToBuildHistory(page, projects)
@@ -90,7 +104,6 @@ test.describe('Project History', () => {
 		await expect(page.locator('body')).toContainText('Last viewed')
 
 		// Disable the setting via API
-		const token = await page.evaluate(() => localStorage.getItem('token'))
 		await updateUserSettings(apiContext, token!, {
 			frontendSettings: {
 				showLastViewed: false,
@@ -122,6 +135,7 @@ test.describe('Project History', () => {
 		const token = await page.evaluate(() => localStorage.getItem('token'))
 		await updateUserSettings(apiContext, token!, {
 			frontendSettings: {
+				defaultPage: 'overview',
 				showLastViewed: false,
 			},
 		})

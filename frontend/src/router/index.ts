@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocation } from 'vue-router'
-import {saveLastVisited, saveLastVisitedPage, getLastVisitedPage} from '@/helpers/saveLastVisited'
+import {saveLastVisited, saveLastVisitedPage} from '@/helpers/saveLastVisited'
+import {getDefaultPageRoute} from '@/helpers/getDefaultPageRoute'
 
 import {getProjectViewId} from '@/helpers/projectView'
 import {parseDateOrString} from '@/helpers/time/parseDateOrString'
@@ -8,11 +9,9 @@ import {getNextWeekDate} from '@/helpers/time/getNextWeekDate'
 import {LINK_SHARE_HASH_PREFIX} from '@/constants/linkShareHash'
 import {REDIRECT_HASH_PREFIX} from '@/constants/redirectHash'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
-import {DEFAULT_PAGE} from '@/constants/defaultPage'
 import {PRO_FEATURE} from '@/constants/proFeatures'
 
 import {useAuthStore} from '@/stores/auth'
-import {useProjectStore} from '@/stores/projects'
 import {useBaseStore} from '@/stores/base'
 import {useConfigStore} from '@/stores/config'
 
@@ -53,39 +52,7 @@ const router = createRouter({
 					return
 				}
 
-				const redirectKey = 'defaultPageRedirectDone'
-				if (sessionStorage.getItem(redirectKey)) {
-					return
-				}
-				sessionStorage.setItem(redirectKey, 'true')
-
-				const authStore = useAuthStore()
-				const projectStore = useProjectStore()
-				const defaultPage = authStore.settings?.frontendSettings?.defaultPage
-
-				switch (defaultPage) {
-					case DEFAULT_PAGE.UPCOMING:
-						return {name: 'tasks.range'}
-					case DEFAULT_PAGE.DEFAULT_PROJECT: {
-						const projectId = authStore.settings?.defaultProjectId
-						if (projectId) {
-							try {
-								await projectStore.loadProject(projectId)
-								return {name: 'project.index', params: {projectId}}
-							} catch {
-								break
-							}
-						}
-						break
-					}
-					case DEFAULT_PAGE.LAST_VISITED: {
-						const last = getLastVisitedPage()
-						if (last) {
-							return {name: last.name, params: last.params, query: last.query}
-						}
-						break
-					}
-				}
+				return getDefaultPageRoute()
 			},
 		},
 		{
@@ -578,7 +545,7 @@ export async function getAuthForRoute(to: RouteLocation, authStore) {
 	const isValidUserAppRoute = !AUTH_ROUTE_NAMES.has(to.name as string) &&
 		localStorage.getItem('emailConfirmToken') === null
 
-	if (isValidUserAppRoute) {
+	if (isValidUserAppRoute && to.name !== 'home') {
 		saveLastVisited(to.name as string, to.params, to.query)
 	}
 
