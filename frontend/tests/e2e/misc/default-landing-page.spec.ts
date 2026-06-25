@@ -70,6 +70,9 @@ test.describe('Default Landing Page', () => {
 		await page.locator('nav.menu.top-menu a').filter({hasText: 'Overview'}).click()
 		await page.waitForLoadState('networkidle')
 		await expect(page).toHaveURL('/')
+
+		await page.locator('.logo-link').click()
+		await page.waitForURL(`**/projects/${project.id}/**`)
 	})
 
 	test('falls back to overview when default project does not exist', async ({page, apiContext}) => {
@@ -107,7 +110,7 @@ test.describe('Default Landing Page', () => {
 		await page.waitForURL(`**/projects/${project.id}/${views[0].id}`)
 	})
 
-	test('does not redirect on in-app navigation to home', async ({page, apiContext}) => {
+	test('redirects to default page when clicking the logo', async ({page, apiContext}) => {
 		const user = (await UserFactory.create(1, {
 			frontend_settings: JSON.stringify({defaultPage: 'upcoming'}),
 		}))[0]
@@ -121,7 +124,6 @@ test.describe('Default Landing Page', () => {
 		await page.waitForLoadState('networkidle')
 
 		await page.locator('.logo-link').click()
-		await page.waitForLoadState('networkidle')
-		await expect(page).toHaveURL('/')
+		await page.waitForURL('**/tasks/by/upcoming**')
 	})
 })
