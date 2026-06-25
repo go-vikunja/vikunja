@@ -88,3 +88,44 @@ export function expandOccurrences(task: ITask, from: Date, to: Date): PlannedOcc
 
 	return occurrences
 }
+
+/**
+ * Whether an all-day task covers `day`, following its recurrence. All-day
+ * occurrences sit at midnight with zero duration, which expandOccurrences'
+ * range test excludes, so they get their own day-granular check here.
+ * Returns isGhost = true when only a projected occurrence (not the stored
+ * span) lands on the day, so the caller can render it read-only.
+ */
+export function allDayOccurrenceForDay(task: ITask, day: Date): {covered: boolean, isGhost: boolean} {
+	if (!task.startDate || !task.endDate) {
+		return {covered: false, isGhost: false}
+	}
+
+	const target = dayjs(day).startOf('day')
+	const realStart = dayjs(task.startDate).startOf('day')
+	const realEnd = dayjs(task.endDate).startOf('day')
+	const spanDays = Math.max(realEnd.diff(realStart, 'day'), 0)
+	const covers = (start: dayjs.Dayjs) => !target.isBefore(start) && !target.isAfter(start.add(spanDays, 'day'))
+
+	if (covers(realStart)) {
+		return {covered: true, isGhost: false}
+	}
+
+	const step = getRepeatStep(task)
+	if (step === null) {
+		return {covered: false, isGhost: false}
+	}
+
+	let cursor = realStart
+	for (let i = 1; i <= MAX_OCCURRENCES; i++) {
+		cursor = cursor.add(step.amount, step.unit)
+		if (cursor.isAfter(target)) {
+			break
+		}
+		if (covers(cursor)) {
+			return {covered: true, isGhost: true}
+		}
+	}
+
+	return {covered: false, isGhost: false}
+}

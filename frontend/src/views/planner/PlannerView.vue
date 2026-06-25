@@ -68,6 +68,7 @@
 		<div class="planner-body">
 			<PlannerSidebar
 				v-model:filter="sidebarFilter"
+				v-model:sort="sidebarSort"
 				:tasks="sidebarTasks"
 				@openTask="openTask"
 				@unschedule="taskId => updateTask({id: taskId, startDate: null, endDate: null})"
@@ -84,40 +85,64 @@
 				@updateBlock="onUpdateBlock"
 				@dropTask="onDropTask"
 				@dropAllDay="onDropAllDay"
+				@navigate="slideDays"
+				@createTask="onCreateTask"
+				@createAllDay="onCreateAllDay"
 				@update:pxPerHour="value => pxPerHour = value"
 			/>
 		</div>
+
+		<PlannerCreateTaskModal
+			v-if="createCtx"
+			:context="createCtx.label"
+			@created="onCreated"
+			@close="createCtx = null"
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watchEffect} from 'vue'
+import {computed, onMounted, ref, watchEffect} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
+import {useStorage} from '@vueuse/core'
 import dayjs from 'dayjs'
 
+import type {ITask} from '@/modelTypes/ITask'
 import BaseButton from '@/components/base/BaseButton.vue'
 import PlannerSidebar from './PlannerSidebar.vue'
 import PlannerSettings from './PlannerSettings.vue'
+import PlannerCreateTaskModal from './PlannerCreateTaskModal.vue'
 import CalendarGrid from './grid/CalendarGrid.vue'
 
 import {setTitle} from '@/helpers/setTitle'
 import {useAuthStore} from '@/stores/auth'
+import {useBaseStore} from '@/stores/base'
+import {useTimeFormat} from '@/composables/useTimeFormat'
+import {TIME_FORMAT} from '@/constants/timeFormat'
 import type {TaskFilterParams} from '@/services/taskCollection'
 import {useCalendarSettings} from './helpers/useCalendarSettings'
-import {usePlannerTasks, type PlannerRange} from './helpers/usePlannerTasks'
+import {usePlannerTasks, type PlannerRange, type PlannerSidebarSort, PLANNER_SIDEBAR_SORTS, DEFAULT_PLANNER_SIDEBAR_SORT} from './helpers/usePlannerTasks'
 
 const router = useRouter()
 const {t} = useI18n({useScope: 'global'})
 const {settings} = useCalendarSettings()
 const authStore = useAuthStore()
+const baseStore = useBaseStore()
 
-const viewMode = ref<'week' | 'day'>('week')
+const viewMode = useStorage<'week' | 'day'>('planner-view-mode', 'week')
 const anchor = ref(new Date())
-const sidebarFilter = ref<TaskFilterParams>({filter: '', s: ''} as TaskFilterParams)
+// filter_include_nulls must be defined: Filters.vue binds it to a Boolean
+// FancyCheckbox, which warns on undefined.
+const sidebarFilter = ref<TaskFilterParams>({filter: '', s: '', filter_include_nulls: false} as TaskFilterParams)
+const sidebarSort = useStorage<PlannerSidebarSort>('planner-sidebar-sort', DEFAULT_PLANNER_SIDEBAR_SORT)
+// An earlier build stored this as an object; reset any value that isn't a known option.
+if (!PLANNER_SIDEBAR_SORTS.includes(sidebarSort.value)) {
+	sidebarSort.value = DEFAULT_PLANNER_SIDEBAR_SORT
+}
 
-const pxPerHour = ref(48)
-const userZoomed = ref(false)
+const pxPerHour = useStorage('planner-px-per-hour', 48)
+const userZoomed = useStorage('planner-user-zoomed', false)
 
 // "HH:MM" working-hour strings → fractional hours for the grid's zoom/scroll.
 function hoursFromTime(time: string): number {
@@ -139,8 +164,13 @@ const days = computed<Date[]>(() => {
 	if (viewMode.value === 'day') {
 		return [dayjs(anchor.value).startOf('day').toDate()]
 	}
-	const start = settings.value.fullWeek ? startOfWeek(anchor.value) : dayjs(anchor.value).startOf('day')
-	return Array.from({length: 7}, (_, i) => start.add(i, 'day').toDate())
+	if (settings.value.fullWeek) {
+		const start = startOfWeek(anchor.value)
+		return Array.from({length: 7}, (_, i) => start.add(i, 'day').toDate())
+	}
+	const count = Math.min(Math.max(settings.value.daysToShow || 7, 1), 31)
+	const start = dayjs(anchor.value).startOf('day')
+	return Array.from({length: count}, (_, i) => start.add(i, 'day').toDate())
 })
 
 const range = computed<PlannerRange>(() => ({
@@ -157,22 +187,31 @@ const rangeLabel = computed(() => {
 	return `${first.format('ll')} – ${last.format('ll')}`
 })
 
-const {sidebarTasks, gridTasks, updateTask} = usePlannerTasks(range, sidebarFilter)
+const {sidebarTasks, gridTasks, updateTask, scheduleTask} = usePlannerTasks(range, sidebarFilter, sidebarSort)
 
 const visibleGridTasks = computed(() =>
 	[...gridTasks.value.values()].filter(task => settings.value.showDone || !task.done),
 )
 
+// Page by the visible window (day=1, full week=7, rolling=daysToShow).
 function goPrev() {
-	anchor.value = dayjs(anchor.value).subtract(1, viewMode.value).toDate()
+	anchor.value = dayjs(anchor.value).subtract(days.value.length, 'day').toDate()
 }
 
 function goNext() {
-	anchor.value = dayjs(anchor.value).add(1, viewMode.value).toDate()
+	anchor.value = dayjs(anchor.value).add(days.value.length, 'day').toDate()
 }
 
 function goToday() {
 	anchor.value = new Date()
+}
+
+// Horizontal swipe/scroll slides the window. In a date-aligned full week a
+// one-day shift is invisible (the week snaps back), so page by a whole week
+// there; rolling and day views slide a day at a time.
+function slideDays(delta: number) {
+	const unit = viewMode.value === 'week' && settings.value.fullWeek ? 'week' : 'day'
+	anchor.value = dayjs(anchor.value).add(delta, unit).toDate()
 }
 
 function zoomIn() {
@@ -201,6 +240,46 @@ function onDropAllDay({taskId, day}: {taskId: number, day: Date}) {
 	updateTask({id: taskId, startDate: midnight, endDate: midnight})
 }
 
+const {store: timeFormat} = useTimeFormat()
+
+function formatTime(date: dayjs.Dayjs): string {
+	return date.format(timeFormat.value === TIME_FORMAT.HOURS_24 ? 'HH:mm' : 'h:mm A')
+}
+
+// The pending create gesture: target dates plus a label shown in the modal.
+// null while no create is in flight (and drives whether the modal is mounted).
+const createCtx = ref<{startDate: Date, endDate: Date, label: string} | null>(null)
+
+function onCreateTask({day, startMinutes, endMinutes}: {day: Date, startMinutes: number, endMinutes: number | null}) {
+	const base = dayjs(day).startOf('day')
+	const start = base.add(startMinutes, 'minute')
+	const end = endMinutes !== null
+		? base.add(endMinutes, 'minute')
+		: start.add(settings.value.defaultDurationMinutes, 'minute')
+	createCtx.value = {
+		startDate: start.toDate(),
+		endDate: end.toDate(),
+		label: `${start.format('ll')} · ${formatTime(start)} – ${formatTime(end)}`,
+	}
+}
+
+function onCreateAllDay({day}: {day: Date}) {
+	const midnight = dayjs(day).startOf('day').toDate()
+	createCtx.value = {
+		startDate: midnight,
+		endDate: midnight,
+		label: t('planner.createAllDay', {date: dayjs(day).format('ll')}),
+	}
+}
+
+function onCreated(task: ITask) {
+	if (!createCtx.value) {
+		return
+	}
+	scheduleTask(task, {startDate: createCtx.value.startDate, endDate: createCtx.value.endDate})
+	createCtx.value = null
+}
+
 function openTask(taskId: number) {
 	router.push({
 		name: 'task.detail',
@@ -208,6 +287,10 @@ function openTask(taskId: number) {
 		state: {backdropView: router.currentRoute.value.fullPath},
 	})
 }
+
+// Standalone page: drop any stale project so the app header shows the planner
+// title instead of the last visited project.
+onMounted(() => baseStore.handleSetCurrentProject({project: null}))
 
 watchEffect(() => setTitle(t('planner.title')))
 </script>

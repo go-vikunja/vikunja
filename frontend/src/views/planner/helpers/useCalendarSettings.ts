@@ -8,8 +8,10 @@ export interface CalendarSettings {
 	defaultDurationMinutes: number
 	slotMinutes: number
 	showDone: boolean
-	// true: week aligned to the user's first weekday; false: 7 days from today.
+	// true: week aligned to the user's first weekday; false: `daysToShow` days from the anchor.
 	fullWeek: boolean
+	// Number of days shown when fullWeek is off (rolling window, 1–31).
+	daysToShow: number
 }
 
 const DEFAULTS: CalendarSettings = {
@@ -19,6 +21,7 @@ const DEFAULTS: CalendarSettings = {
 	slotMinutes: 30,
 	showDone: false,
 	fullWeek: true,
+	daysToShow: 7,
 }
 
 // Module-level so every caller shares the same reactive ref within the tab.

@@ -7,12 +7,23 @@
 		@dragover.prevent="isDropTarget = true"
 		@dragleave="isDropTarget = false"
 		@drop="onDrop"
+		@dblclick="onDblClick"
+		@pointerdown="onCreatePointerDown"
 	>
 		<div
 			v-for="hour in 24"
 			:key="hour"
 			class="hour-slot"
 			:style="{height: `${pxPerMinute * 60}px`}"
+		/>
+
+		<div
+			v-if="selStart !== null && selEnd !== null"
+			class="paint-selection"
+			:style="{
+				top: `${selStart * pxPerMinute}px`,
+				height: `${Math.max(selEnd - selStart, slotMinutes) * pxPerMinute}px`,
+			}"
 		/>
 
 		<div
@@ -59,11 +70,14 @@ const emit = defineEmits<{
 	openTask: [taskId: number]
 	updateBlock: [payload: {taskId: number, start: Date | null, end: Date | null}]
 	dropTask: [payload: {taskId: number, minutes: number}]
+	createTask: [payload: {startMinutes: number, endMinutes: number | null}]
 }>()
 
 const columnEl = ref<HTMLElement | null>(null)
 const isDropTarget = ref(false)
 const now = ref(new Date())
+const selStart = ref<number | null>(null)
+const selEnd = ref<number | null>(null)
 
 const dayKey = computed(() => dayjs(props.day).format('YYYY-MM-DD'))
 const blocks = computed(() => timedBlocksForDay(props.tasks, props.day))
@@ -86,13 +100,89 @@ function onDrop(event: DragEvent) {
 		return
 	}
 
-	const rect = columnEl.value.getBoundingClientRect()
-	const offsetY = event.clientY - rect.top
-	const rawMinutes = offsetY / props.pxPerMinute
-	const snapped = Math.round(rawMinutes / props.slotMinutes) * props.slotMinutes
-	const minutes = Math.min(Math.max(snapped, 0), 24 * 60 - props.slotMinutes)
+	emit('dropTask', {taskId, minutes: minutesAt(event.clientY)})
+}
 
-	emit('dropTask', {taskId, minutes})
+// Pixel position within the column → minute-of-day, snapped to the slot grid.
+function minutesAt(clientY: number): number {
+	if (!columnEl.value) {
+		return 0
+	}
+	const raw = (clientY - columnEl.value.getBoundingClientRect().top) / props.pxPerMinute
+	const snapped = Math.round(raw / props.slotMinutes) * props.slotMinutes
+	return Math.min(Math.max(snapped, 0), 24 * 60 - props.slotMinutes)
+}
+
+function onEmptyArea(target: EventTarget | null): boolean {
+	return !(target as HTMLElement)?.closest?.('.calendar-block')
+}
+
+// Desktop: double-click an empty slot to create with the default duration.
+function onDblClick(event: MouseEvent) {
+	if (!onEmptyArea(event.target)) {
+		return
+	}
+	emit('createTask', {startMinutes: minutesAt(event.clientY), endMinutes: null})
+}
+
+let longPressTimer: ReturnType<typeof setTimeout> | undefined
+function onCreatePointerDown(event: PointerEvent) {
+	if (!onEmptyArea(event.target) || (event.pointerType === 'mouse' && event.button !== 0)) {
+		return
+	}
+	const startY = event.clientY
+	const startMinutes = minutesAt(startY)
+
+	if (event.pointerType === 'mouse') {
+		// Click-drag paints a range; a plain click does nothing (dblclick handles it).
+		let painting = false
+		const onMove = (e: PointerEvent) => {
+			if (!painting && Math.abs(e.clientY - startY) > 4) {
+				painting = true
+			}
+			if (painting) {
+				const m = minutesAt(e.clientY)
+				selStart.value = Math.min(startMinutes, m)
+				selEnd.value = Math.max(startMinutes, m)
+			}
+		}
+		const onUp = () => {
+			document.removeEventListener('pointermove', onMove)
+			document.removeEventListener('pointerup', onUp)
+			if (painting && selStart.value !== null && selEnd.value !== null) {
+				const end = Math.max(selEnd.value, selStart.value + props.slotMinutes)
+				emit('createTask', {startMinutes: selStart.value, endMinutes: end})
+			}
+			selStart.value = null
+			selEnd.value = null
+		}
+		document.addEventListener('pointermove', onMove)
+		document.addEventListener('pointerup', onUp)
+		return
+	}
+
+	// Touch/pen: long-press creates at the slot. Bail out if the finger moves
+	// first, so the gesture doesn't hijack vertical scrolling of the grid.
+	let moved = false
+	const onMove = (e: PointerEvent) => {
+		if (Math.abs(e.clientY - startY) > 10) {
+			moved = true
+			cleanup()
+		}
+	}
+	const cleanup = () => {
+		clearTimeout(longPressTimer)
+		document.removeEventListener('pointermove', onMove)
+		document.removeEventListener('pointerup', cleanup)
+	}
+	document.addEventListener('pointermove', onMove)
+	document.addEventListener('pointerup', cleanup)
+	longPressTimer = setTimeout(() => {
+		cleanup()
+		if (!moved) {
+			emit('createTask', {startMinutes, endMinutes: null})
+		}
+	}, 500)
 }
 </script>
 
@@ -111,6 +201,16 @@ function onDrop(event: DragEvent) {
 .hour-slot {
 	border-block-end: 1px solid var(--grey-200);
 	box-sizing: border-box;
+}
+
+.paint-selection {
+	position: absolute;
+	inset-inline: 2px;
+	z-index: 14;
+	border-radius: 4px;
+	background-color: var(--primary);
+	opacity: .25;
+	pointer-events: none;
 }
 
 .now-line {

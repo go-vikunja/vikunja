@@ -10,10 +10,23 @@
 			{{ $t('planner.unscheduled') }}
 		</h3>
 
-		<FilterPopup
-			v-model="filter"
-			class="sidebar-filter"
-		/>
+		<div class="sidebar-controls">
+			<FilterPopup v-model="filter" />
+			<div class="select is-small sort-select">
+				<select
+					v-model="sort"
+					:aria-label="$t('misc.sortBy')"
+				>
+					<option
+						v-for="o in sortOptions"
+						:key="o.value"
+						:value="o.value"
+					>
+						{{ o.label }}
+					</option>
+				</select>
+			</div>
+		</div>
 
 		<p
 			v-if="!tasks.length"
@@ -33,12 +46,21 @@
 				@click="emit('openTask', task.id)"
 			>
 				<span class="task-title">{{ task.title }}</span>
-				<span
-					v-if="task.dueDate"
-					class="task-due"
-				>
-					<Icon :icon="['far', 'calendar-alt']" />
-					{{ formatDueDate(task.dueDate) }}
+				<span class="task-meta">
+					<span
+						v-if="projectName(task)"
+						class="task-project"
+					>
+						{{ projectName(task) }}
+					</span>
+					<PriorityLabel
+						:priority="task.priority"
+						:done="task.done"
+					/>
+					<span
+						v-if="task.percentDone > 0"
+						class="task-percent"
+					>{{ Math.round(task.percentDone * 100) }}%</span>
 				</span>
 			</li>
 		</ul>
@@ -46,12 +68,15 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
-import dayjs from 'dayjs'
+import {computed, ref} from 'vue'
+
+import {useI18n} from 'vue-i18n'
 
 import type {ITask} from '@/modelTypes/ITask'
 import type {TaskFilterParams} from '@/services/taskCollection'
+import type {PlannerSidebarSort} from './helpers/usePlannerTasks'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
+import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import {useProjectStore} from '@/stores/projects'
 
 defineProps<{
@@ -64,6 +89,24 @@ const emit = defineEmits<{
 }>()
 
 const filter = defineModel<TaskFilterParams>('filter', {required: true})
+const sort = defineModel<PlannerSidebarSort>('sort', {required: true})
+
+const {t} = useI18n({useScope: 'global'})
+
+// Curated for unscheduled tasks: no date sorts (those tasks live in the grid),
+// no manual/position (errors cross-project), plus a client-side random shuffle.
+const sortOptions = computed<{value: PlannerSidebarSort, label: string}[]>(() => [
+	{value: 'none', label: t('planner.sortDefault')},
+	{value: 'priority:desc', label: t('sorting.options.priorityDesc')},
+	{value: 'priority:asc', label: t('sorting.options.priorityAsc')},
+	{value: 'title:asc', label: t('sorting.options.titleAsc')},
+	{value: 'title:desc', label: t('sorting.options.titleDesc')},
+	{value: 'created:desc', label: t('sorting.options.createdDesc')},
+	{value: 'created:asc', label: t('sorting.options.createdAsc')},
+	{value: 'percent_done:desc', label: t('sorting.options.percentDoneDesc')},
+	{value: 'percent_done:asc', label: t('sorting.options.percentDoneAsc')},
+	{value: 'random', label: t('planner.sortRandom')},
+])
 
 const isDropTarget = ref(false)
 
@@ -85,15 +128,15 @@ function taskColor(task: ITask): string {
 	return hex.startsWith('#') ? hex : `#${hex}`
 }
 
+function projectName(task: ITask): string {
+	return projectStore.projects[task.projectId]?.title ?? ''
+}
+
 function onDragStart(event: DragEvent, task: ITask) {
 	event.dataTransfer?.setData('text/plain', String(task.id))
 	if (event.dataTransfer) {
 		event.dataTransfer.effectAllowed = 'move'
 	}
-}
-
-function formatDueDate(date: Date): string {
-	return dayjs(date).format('ll')
 }
 </script>
 
@@ -121,8 +164,20 @@ function formatDueDate(date: Date): string {
 	margin-block-end: .5rem;
 }
 
-.sidebar-filter {
+.sidebar-controls {
+	display: flex;
+	align-items: center;
+	gap: .35rem;
 	margin-block-end: .75rem;
+}
+
+.sort-select {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+
+	select {
+		inline-size: 100%;
+	}
 }
 
 .no-tasks {
@@ -145,7 +200,7 @@ function formatDueDate(date: Date): string {
 	border-radius: 4px;
 	padding: .4rem .5rem;
 	background: var(--white);
-	font-size: .8rem;
+	font-size: .95rem;
 
 	&:active {
 		cursor: grabbing;
@@ -160,10 +215,45 @@ function formatDueDate(date: Date): string {
 	display: block;
 }
 
-.task-due {
-	display: block;
+.task-meta {
+	display: flex;
+	align-items: center;
+	gap: .4rem;
 	margin-block-start: .15rem;
-	font-size: .7rem;
+
+	// Tame PriorityLabel's oversized Bulma .icon box and centre it inline.
+	:deep(.priority-label) {
+		display: inline-flex;
+		align-items: center;
+		font-size: .8rem;
+		line-height: 1.4;
+
+		.icon {
+			block-size: auto;
+			margin: 0;
+			padding: 0 .15rem 0 0;
+		}
+
+		svg {
+			block-size: .85em;
+			inline-size: auto;
+			vertical-align: middle;
+		}
+	}
+}
+
+.task-project {
+	font-size: .8rem;
 	color: var(--grey-500);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.task-percent {
+	flex: 0 0 auto;
+	font-size: .8rem;
+	color: var(--grey-500);
+	font-variant-numeric: tabular-nums;
 }
 </style>

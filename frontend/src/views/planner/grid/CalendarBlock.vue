@@ -9,10 +9,26 @@
 			'is-moving': isMoving,
 		}"
 		:style="blockStyle"
+		:title="tooltip"
 		@pointerdown="onMovePointerDown"
 	>
 		<span class="block-time">{{ timeLabel }}</span>
 		<span class="block-title">{{ occurrence.task.title }}</span>
+		<span class="block-meta">
+			<span
+				v-if="projectName"
+				class="block-project"
+			>{{ projectName }}</span>
+			<PriorityLabel
+				class="block-priority"
+				:priority="occurrence.task.priority"
+				:done="occurrence.task.done"
+			/>
+			<span
+				v-if="occurrence.task.percentDone > 0"
+				class="block-percent"
+			>{{ Math.round(occurrence.task.percentDone * 100) }}%</span>
+		</span>
 		<div
 			v-if="!occurrence.isGhost"
 			class="resize-handle"
@@ -43,6 +59,9 @@ import dayjs from 'dayjs'
 import {useProjectStore} from '@/stores/projects'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
+import {getTextColor} from '@/helpers/color/getTextColor'
+import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
+import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import type {PlannedOccurrence} from '../helpers/types'
 
 const props = withDefaults(defineProps<{
@@ -83,6 +102,24 @@ const color = computed(() => {
 	return hex.startsWith('#') ? hex : `#${hex}`
 })
 
+const projectName = computed(() => projectStore.projects[props.occurrence.task.projectId]?.title ?? '')
+const textColor = computed(() => getTextColor(color.value))
+
+// Hover tooltip: title plus a plain-text excerpt of the (rich-text) description,
+// since blocks are too small to show the description inline.
+const tooltip = computed(() => {
+	const task = props.occurrence.task
+	if (isEditorContentEmpty(task.description)) {
+		return task.title
+	}
+	const text = new DOMParser().parseFromString(task.description, 'text/html').body.textContent?.trim() ?? ''
+	if (!text) {
+		return task.title
+	}
+	const excerpt = text.length > 280 ? `${text.slice(0, 280)}…` : text
+	return `${task.title}\n\n${excerpt}`
+})
+
 const effectiveTop = computed(() => (props.topMinutes - props.originMinutes) * props.pxPerMinute)
 const effectiveHeight = computed(() => Math.max(
 	(props.durationMinutes + resizeDeltaMinutes.value) * props.pxPerMinute,
@@ -95,6 +132,7 @@ const blockStyle = computed(() => ({
 	insetInlineStart: `${(props.col / props.cols) * 100}%`,
 	inlineSize: `${(1 / props.cols) * 100}%`,
 	'--block-color': color.value,
+	'--block-text': textColor.value,
 }))
 
 // A floating clone teleported to <body> follows the cursor, so it isn't clipped
@@ -105,6 +143,7 @@ const previewStyle = computed(() => ({
 	inlineSize: `${previewSize.value.w}px`,
 	blockSize: `${previewSize.value.h}px`,
 	'--block-color': color.value,
+	'--block-text': textColor.value,
 }))
 
 const timeLabel = computed(() => dayjs(props.occurrence.start)
@@ -226,11 +265,11 @@ function onResizePointerDown(event: PointerEvent) {
 	border-radius: 4px;
 	border-inline-start: 3px solid var(--block-color);
 	background-color: var(--block-color);
-	color: var(--white);
+	color: var(--block-text);
 	cursor: grab;
 	user-select: none;
-	font-size: .75rem;
-	line-height: 1.1;
+	font-size: .85rem;
+	line-height: 1.15;
 	box-shadow: 0 1px 2px hsla(0, 0%, 0%, .15);
 
 	&.is-dragging {
@@ -285,6 +324,52 @@ function onResizePointerDown(event: PointerEvent) {
 	overflow-wrap: anywhere;
 }
 
+.block-meta {
+	display: flex;
+	align-items: center;
+	gap: .35rem;
+	font-size: .75rem;
+	line-height: 1.4;
+	min-inline-size: 0;
+}
+
+.block-project {
+	opacity: .8;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+// block-priority is the PriorityLabel root itself (the class merges onto it), so
+// style it directly — a descendant `.priority-label` selector would match nothing.
+.block-priority {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	font-size: .72rem;
+	line-height: 1;
+
+	// Tame Bulma's ~1.5rem .icon box and shrink the glyph to the block text size.
+	:deep(.icon) {
+		block-size: auto;
+		inline-size: auto;
+		margin: 0;
+		padding: 0 .12rem 0 0;
+	}
+
+	:deep(svg) {
+		block-size: .8em;
+		inline-size: auto;
+		display: block;
+	}
+}
+
+.block-percent {
+	flex: 0 0 auto;
+	opacity: .8;
+	font-variant-numeric: tabular-nums;
+}
+
 .resize-handle {
 	position: absolute;
 	inset-block-end: 0;
@@ -301,6 +386,7 @@ function onResizePointerDown(event: PointerEvent) {
 	inline-size: 3px;
 	block-size: 3px;
 	border-radius: 50%;
-	background-color: hsla(0, 0%, 100%, .8);
+	background-color: var(--block-text);
+	opacity: .8;
 }
 </style>

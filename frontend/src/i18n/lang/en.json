@@ -763,13 +763,18 @@
     "allDay": "All day",
     "saved": "Saved",
     "saveError": "Something went wrong saving the task",
+    "createTitle": "New task",
+    "createAllDay": "All day · {date}",
+    "sortDefault": "Default order",
+    "sortRandom": "Random",
     "settings": {
       "title": "View settings",
       "dayStart": "Day starts at",
       "dayEnd": "Day ends at",
       "defaultDuration": "Default duration (minutes)",
       "slotDuration": "Slot size (minutes)",
-      "fullWeek": "Show full week (off: next 7 days)",
+      "fullWeek": "Show full week (off: rolling days)",
+      "daysToShow": "Days to show",
       "showDone": "Show done tasks"
     }
   },

@@ -75,4 +75,61 @@ test.describe('Planner', () => {
 		await page.getByRole('button', {name: 'Day', exact: true}).click()
 		await expect(page.locator('.day-head')).toHaveCount(1)
 	})
+
+	test('offers a sort control for the unscheduled sidebar', async ({authenticatedPage: page}) => {
+		await page.goto('/planner')
+
+		const sortSelect = page.locator('.planner-sidebar .sort-select select')
+		await expect(sortSelect).toBeVisible()
+		// Includes the client-side random shuffle and excludes nonsensical date sorts.
+		await expect(sortSelect.locator('option', {hasText: 'Random'})).toHaveCount(1)
+	})
+
+	test('double-clicking an empty slot opens the create-task modal', async ({authenticatedPage: page}) => {
+		await page.goto('/planner')
+
+		await page.locator('.day-column').first().dblclick({position: {x: 20, y: 200}})
+
+		const dialog = page.locator('.modal-dialog')
+		await expect(dialog).toContainText('New task')
+		await expect(dialog.locator('textarea')).toBeVisible()
+	})
+
+	test('double-clicking the all-day row opens the create-task modal', async ({authenticatedPage: page}) => {
+		await page.goto('/planner')
+
+		await page.locator('.all-day-cell').first().dblclick()
+
+		const dialog = page.locator('.modal-dialog')
+		await expect(dialog).toContainText('All day')
+		await expect(dialog.locator('textarea')).toBeVisible()
+	})
+
+	test('renders the configured number of days in rolling mode', async ({authenticatedPage: page}) => {
+		// Seed planner settings before the app reads them (mergeDefaults fills the rest).
+		await page.addInitScript(() => {
+			localStorage.setItem('planner-settings', JSON.stringify({fullWeek: false, daysToShow: 10}))
+		})
+
+		await page.goto('/planner')
+
+		await expect(page.locator('.day-head')).toHaveCount(10)
+	})
+
+	test('projects a daily recurring task into the next week', async ({authenticatedPage: page}) => {
+		await TaskFactory.create(1, {
+			id: 904,
+			title: 'Daily standup',
+			project_id: projects[0].id,
+			start_date: todayAt(10),
+			end_date: todayAt(11),
+			repeat_after: 86400, // one day, in seconds
+		}, false)
+
+		await page.goto('/planner')
+		// Next week contains no stored instance — only projected occurrences.
+		await page.getByRole('button', {name: 'Next', exact: true}).click()
+
+		await expect(page.locator('.calendar-block', {hasText: 'Daily standup'}).first()).toBeVisible()
+	})
 })

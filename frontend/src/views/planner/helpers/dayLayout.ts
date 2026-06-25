@@ -1,9 +1,14 @@
 import dayjs from 'dayjs'
 
 import type {ITask} from '@/modelTypes/ITask'
-import {expandOccurrences} from './expandOccurrences'
+import {expandOccurrences, allDayOccurrenceForDay} from './expandOccurrences'
 import {packColumns} from './packColumns'
 import type {PlannedOccurrence} from './types'
+
+export interface AllDayItem {
+	task: ITask
+	isGhost: boolean
+}
 
 export interface TimedBlock {
 	occurrence: PlannedOccurrence
@@ -55,13 +60,19 @@ export function timedBlocksForDay(tasks: ITask[], day: Date): TimedBlock[] {
 	).map(packed => ({...packed.item, col: packed.col, cols: packed.cols}))
 }
 
-export function allDayTasksForDay(tasks: ITask[], day: Date): ITask[] {
+export function allDayTasksForDay(tasks: ITask[], day: Date): AllDayItem[] {
 	const target = dayjs(day)
-	return tasks.filter(task => {
+	const items: AllDayItem[] = []
+	for (const task of tasks) {
 		if (isAllDayTask(task)) {
-			return !target.isBefore(dayjs(task.startDate), 'day') && !target.isAfter(dayjs(task.endDate), 'day')
+			const {covered, isGhost} = allDayOccurrenceForDay(task, day)
+			if (covered) {
+				items.push({task, isGhost})
+			}
+		} else if (!task.startDate && !task.endDate && task.dueDate && target.isSame(dayjs(task.dueDate), 'day')) {
+			// due-only tasks (no time block) show on their due day
+			items.push({task, isGhost: false})
 		}
-		// due-only tasks (no time block) show on their due day
-		return !task.startDate && !task.endDate && task.dueDate && target.isSame(dayjs(task.dueDate), 'day')
-	})
+	}
+	return items
 }

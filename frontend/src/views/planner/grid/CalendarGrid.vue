@@ -1,8 +1,13 @@
 <template>
-	<div class="calendar-grid">
+	<div
+		class="calendar-grid"
+		@wheel="onWheel"
+	>
 		<div
 			class="grid-head"
 			:style="headerStyle"
+			@touchstart.passive="onTouchStart"
+			@touchend.passive="onTouchEnd"
 		>
 			<div class="axis-gutter" />
 			<div
@@ -32,18 +37,21 @@
 				@dragover.prevent="allDayDropDay = formatDayKey(day)"
 				@dragleave="allDayDropDay = null"
 				@drop="onAllDayDrop($event, day)"
+				@dblclick="onAllDayDblClick($event, day)"
+				@pointerdown="onAllDayPointerDown($event, day)"
 			>
 				<button
-					v-for="task in allDayTasksForDay(tasks, day)"
-					:key="task.id"
+					v-for="item in allDayTasksForDay(tasks, day)"
+					:key="item.task.id"
 					class="all-day-chip"
-					:class="{'is-done': task.done}"
-					:style="{'--chip-color': taskColor(task)}"
-					draggable="true"
-					@dragstart="onChipDragStart($event, task)"
-					@click="emit('openTask', task.id)"
+					:class="{'is-done': item.task.done, 'is-ghost': item.isGhost}"
+					:style="{'--chip-color': taskColor(item.task), '--chip-text': getTextColor(taskColor(item.task))}"
+					:title="chipTitle(item.task)"
+					:draggable="!item.isGhost"
+					@dragstart="onChipDragStart($event, item.task)"
+					@click="emit('openTask', item.task.id)"
 				>
-					{{ task.title }}
+					{{ item.task.title }}
 				</button>
 			</div>
 		</div>
@@ -77,6 +85,7 @@
 						@openTask="taskId => emit('openTask', taskId)"
 						@updateBlock="payload => emit('updateBlock', payload)"
 						@dropTask="payload => emit('dropTask', {...payload, day})"
+						@createTask="payload => emit('createTask', {...payload, day})"
 					/>
 				</div>
 			</div>
@@ -92,6 +101,7 @@ import type {ITask} from '@/modelTypes/ITask'
 import {useProjectStore} from '@/stores/projects'
 import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
+import {getTextColor} from '@/helpers/color/getTextColor'
 import CalendarDayColumn from './CalendarDayColumn.vue'
 import {allDayTasksForDay} from '../helpers/dayLayout'
 
@@ -110,6 +120,9 @@ const emit = defineEmits<{
 	updateBlock: [payload: {taskId: number, start: Date | null, end: Date | null}]
 	dropTask: [payload: {taskId: number, minutes: number, day: Date}]
 	dropAllDay: [payload: {taskId: number, day: Date}]
+	createTask: [payload: {day: Date, startMinutes: number, endMinutes: number | null}]
+	createAllDay: [payload: {day: Date}]
+	navigate: [delta: number]
 	'update:pxPerHour': [value: number]
 }>()
 
@@ -134,6 +147,84 @@ function onChipDragStart(event: DragEvent, task: ITask) {
 	}
 }
 
+function onAllDayCell(target: EventTarget | null): boolean {
+	return !(target as HTMLElement)?.closest?.('.all-day-chip')
+}
+
+// Desktop: double-click an empty all-day cell to create an all-day task.
+function onAllDayDblClick(event: MouseEvent, day: Date) {
+	if (onAllDayCell(event.target)) {
+		emit('createAllDay', {day})
+	}
+}
+
+// Touch/pen: long-press an empty all-day cell to create.
+let allDayTimer: ReturnType<typeof setTimeout> | undefined
+function onAllDayPointerDown(event: PointerEvent, day: Date) {
+	if (event.pointerType === 'mouse' || !onAllDayCell(event.target)) {
+		return
+	}
+	const startX = event.clientX
+	const startY = event.clientY
+	let moved = false
+	const onMove = (e: PointerEvent) => {
+		if (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10) {
+			moved = true
+			cleanup()
+		}
+	}
+	const cleanup = () => {
+		clearTimeout(allDayTimer)
+		document.removeEventListener('pointermove', onMove)
+		document.removeEventListener('pointerup', cleanup)
+	}
+	document.addEventListener('pointermove', onMove)
+	document.addEventListener('pointerup', cleanup)
+	allDayTimer = setTimeout(() => {
+		cleanup()
+		if (!moved) {
+			emit('createAllDay', {day})
+		}
+	}, 500)
+}
+
+// Horizontal wheel/trackpad scroll slides the window a day at a time, with a
+// short cooldown so one flick doesn't skip several days.
+let navCooldown = false
+function navigate(delta: number) {
+	if (navCooldown) {
+		return
+	}
+	emit('navigate', delta)
+	navCooldown = true
+	setTimeout(() => navCooldown = false, 250)
+}
+
+function onWheel(event: WheelEvent) {
+	if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) || Math.abs(event.deltaX) < 30) {
+		return
+	}
+	event.preventDefault()
+	navigate(event.deltaX > 0 ? 1 : -1)
+}
+
+// Touch swipe on the day header navigates without colliding with the grid's
+// create/paint gestures, which live in the columns below.
+let touchStartX = 0
+let touchStartY = 0
+function onTouchStart(event: TouchEvent) {
+	touchStartX = event.touches[0].clientX
+	touchStartY = event.touches[0].clientY
+}
+
+function onTouchEnd(event: TouchEvent) {
+	const dx = event.changedTouches[0].clientX - touchStartX
+	const dy = event.changedTouches[0].clientY - touchStartY
+	if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+		emit('navigate', dx < 0 ? 1 : -1)
+	}
+}
+
 const pxPerMinute = computed(() => props.pxPerHour / 60)
 
 // The body has a vertical scrollbar but the header/all-day rows don't; reserve
@@ -152,6 +243,12 @@ function taskColor(task: ITask): string {
 		return 'var(--primary)'
 	}
 	return hex.startsWith('#') ? hex : `#${hex}`
+}
+
+// All-day chips are single-line; surface the project name via the tooltip.
+function chipTitle(task: ITask): string {
+	const project = projectStore.projects[task.projectId]?.title
+	return project ? `${task.title} · ${project}` : task.title
 }
 
 // Choose a zoom level so the working-hours window fills the visible grid, then
@@ -295,8 +392,8 @@ $gutter-width: 3.5rem;
 	cursor: grab;
 	border-radius: 3px;
 	padding: 1px 5px;
-	font-size: .72rem;
-	color: var(--white);
+	font-size: .82rem;
+	color: var(--chip-text);
 	background-color: var(--chip-color);
 	white-space: nowrap;
 	overflow: hidden;
@@ -305,6 +402,19 @@ $gutter-width: 3.5rem;
 	&.is-done {
 		opacity: .6;
 		text-decoration: line-through;
+	}
+
+	// Projected recurrence: read-only, visually dimmed like timed ghosts.
+	&.is-ghost {
+		cursor: pointer;
+		opacity: .55;
+		background-image: repeating-linear-gradient(
+			45deg,
+			hsla(0, 0%, 100%, .15),
+			hsla(0, 0%, 100%, .15) 4px,
+			transparent 4px,
+			transparent 8px
+		);
 	}
 }
 

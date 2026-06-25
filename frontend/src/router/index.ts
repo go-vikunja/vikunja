@@ -229,6 +229,9 @@ const router = createRouter({
 			path: '/planner',
 			name: 'planner.index',
 			component: () => import('@/views/planner/PlannerView.vue'),
+			meta: {
+				title: 'planner.title',
+			},
 		},
 		{
 			// Redirect old list routes to the respective project routes

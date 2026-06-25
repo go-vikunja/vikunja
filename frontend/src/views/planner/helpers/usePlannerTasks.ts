@@ -1,5 +1,6 @@
 import {computed, ref, shallowReactive, watch, type Ref} from 'vue'
 import {klona} from 'klona/lite'
+import dayjs from 'dayjs'
 
 import TaskService from '@/services/task'
 import type {TaskFilterParams} from '@/services/taskCollection'
@@ -16,7 +17,39 @@ export interface PlannerRange {
 	to: Date
 }
 
-export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<TaskFilterParams>) {
+// Sidebar sort is a "<field>:<order>" string, or 'random' (no backend equivalent,
+// so we shuffle client-side). Date fields are intentionally excluded: dated tasks
+// live in the grid, not the unscheduled sidebar.
+export type PlannerSidebarSort =
+	| 'none'
+	| 'priority:desc' | 'priority:asc'
+	| 'title:asc' | 'title:desc'
+	| 'created:desc' | 'created:asc'
+	| 'percent_done:desc' | 'percent_done:asc'
+	| 'random'
+
+export const PLANNER_SIDEBAR_SORTS: PlannerSidebarSort[] = [
+	'none',
+	'priority:desc', 'priority:asc',
+	'title:asc', 'title:desc',
+	'created:desc', 'created:asc',
+	'percent_done:desc', 'percent_done:asc',
+	'random',
+]
+
+// Default: no explicit sort — show the order the server returns.
+export const DEFAULT_PLANNER_SIDEBAR_SORT: PlannerSidebarSort = 'none'
+
+function shuffle<T>(input: T[]): T[] {
+	const arr = [...input]
+	for (let i = arr.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1))
+		;[arr[i], arr[j]] = [arr[j], arr[i]]
+	}
+	return arr
+}
+
+export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<TaskFilterParams>, sidebarSort: Ref<PlannerSidebarSort>) {
 	const authStore = useAuthStore()
 	const taskStore = useTaskStore()
 
@@ -38,16 +71,25 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 
 	async function loadGrid() {
 		const from = isoToKebabDate(range.value.from.toISOString())
-		const to = isoToKebabDate(range.value.to.toISOString())
+		// The backend parses a date-only filter value as start-of-day, so a `<= to`
+		// bound on the last day's date would drop tasks later that same day. Use the
+		// day after the last visible day to keep the whole last day inclusive.
+		const to = isoToKebabDate(dayjs(range.value.to).add(1, 'day').toISOString())
 
 		const params: TaskFilterParams = {
 			sort_by: ['start_date', 'id'],
 			order_by: ['asc', 'desc'],
+			// Last clause: recurring tasks whose stored start is before the window
+			// still project occurrences into it (expandOccurrences walks forward),
+			// so fetch any repeater that started on/before the range end. Only
+			// repeat_after is filterable (repeat_mode is not), so month-mode tasks
+			// with repeat_after = 0 aren't caught here.
 			filter: '(' +
 				`(start_date >= "${from}" && start_date <= "${to}") || ` +
 				`(end_date >= "${from}" && end_date <= "${to}") || ` +
 				`(due_date >= "${from}" && due_date <= "${to}") || ` +
-				`(start_date <= "${from}" && end_date >= "${to}")` +
+				`(start_date <= "${from}" && end_date >= "${to}") || ` +
+				`(start_date <= "${to}" && repeat_after > 0)` +
 				')',
 			filter_include_nulls: false,
 			filter_timezone: authStore.settings.timezone,
@@ -68,20 +110,31 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 		const userFilter = sidebarFilter.value.filter?.trim()
 		const filter = userFilter ? `(${userFilter}) && done = false` : 'done = false'
 
+		// Guard against a stale/garbage stored value reaching the API as a bad sort.
+		const sort = PLANNER_SIDEBAR_SORTS.includes(sidebarSort.value) ? sidebarSort.value : DEFAULT_PLANNER_SIDEBAR_SORT
+		// 'random' has no backend sort, so fetch in server order and shuffle below.
+		const random = sort === 'random'
+
 		const params: TaskFilterParams = {
-			sort_by: ['due_date', 'id'],
-			order_by: ['asc', 'desc'],
 			filter,
 			filter_include_nulls: true,
 			filter_timezone: authStore.settings.timezone,
 			s: sidebarFilter.value.s ?? '',
 			expand: 'subtasks',
+		} as TaskFilterParams
+
+		// 'none'/'random' send no sort_by, so the server returns its own order.
+		if (sort !== 'none' && !random) {
+			const [field, order] = sort.split(':')
+			params.sort_by = (field === 'id' ? ['id'] : [field, 'id']) as TaskFilterParams['sort_by']
+			params.order_by = (field === 'id' ? ['desc'] : [order, 'desc']) as TaskFilterParams['order_by']
 		}
 
 		// Truly unscheduled = no start, end or due date. Due-only tasks already
 		// render in the all-day row, so keep them out of the sidebar.
 		const loaded = await fetchAll(sidebarService, params)
-		sidebarTasks.value = loaded.filter(task => !task.startDate && !task.endDate && !task.dueDate)
+		const unscheduled = loaded.filter(task => !task.startDate && !task.endDate && !task.dueDate)
+		sidebarTasks.value = random ? shuffle(unscheduled) : unscheduled
 	}
 
 	function load() {
@@ -89,7 +142,7 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 	}
 
 	watch(range, () => loadGrid(), {immediate: true, deep: true})
-	watch(sidebarFilter, () => loadSidebar(), {immediate: true, deep: true})
+	watch([sidebarFilter, sidebarSort], () => loadSidebar(), {immediate: true, deep: true})
 
 	// Keep both lists in sync with edits made elsewhere (e.g. the task detail
 	// modal): re-file the task into the grid or sidebar, or drop it if it's now
@@ -143,11 +196,27 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 		}
 	}
 
+	// Place a freshly created task (not yet tracked) onto the grid with the given
+	// dates and persist them. Used by the create-by-gesture flow, where AddTask
+	// creates a dateless task that we then schedule into the painted slot.
+	async function scheduleTask(task: ITask, dates: {startDate: Date | null, endDate: Date | null}) {
+		const newTask: ITask = {...task, ...dates}
+		placeTask(newTask)
+		try {
+			const updated = await taskStore.update(newTask)
+			placeTask(updated)
+			success(i18n.global.t('planner.saved'))
+		} catch (_) {
+			error(i18n.global.t('planner.saveError'))
+		}
+	}
+
 	return {
 		gridTasks,
 		sidebarTasks,
 		isLoading,
 		load,
 		updateTask,
+		scheduleTask,
 	}
 }
