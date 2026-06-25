@@ -37,12 +37,12 @@ import (
 
 // File holds all information about a file
 type File struct {
-	ID   int64  `xorm:"bigint autoincr not null unique pk" json:"id"`
-	Name string `xorm:"text not null" json:"name"`
-	Mime string `xorm:"text null" json:"mime"`
-	Size uint64 `xorm:"bigint not null" json:"size"`
+	ID   int64  `xorm:"bigint autoincr not null unique pk" json:"id" readOnly:"true" doc:"The unique, numeric id of this file."`
+	Name string `xorm:"text not null" json:"name" readOnly:"true" doc:"The original name of the uploaded file."`
+	Mime string `xorm:"text null" json:"mime" readOnly:"true" doc:"The detected mime type of the file."`
+	Size uint64 `xorm:"bigint not null" json:"size" readOnly:"true" doc:"The size of the file in bytes."`
 
-	Created     time.Time `xorm:"created" json:"created"`
+	Created     time.Time `xorm:"created" json:"created" readOnly:"true" doc:"A timestamp when this file was uploaded."`
 	CreatedByID int64     `xorm:"bigint not null" json:"-"`
 
 	File io.ReadCloser `xorm:"-" json:"-"`

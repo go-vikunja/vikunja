@@ -20,24 +20,10 @@ import (
 	"net/http"
 
 	"code.vikunja.io/api/pkg/db"
-	"code.vikunja.io/api/pkg/license"
+	"code.vikunja.io/api/pkg/models"
+
 	"github.com/labstack/echo/v5"
 )
-
-type ShareCounts struct {
-	LinkShares int64 `json:"link_shares"`
-	TeamShares int64 `json:"team_shares"`
-	UserShares int64 `json:"user_shares"`
-}
-
-type Overview struct {
-	Users    int64        `json:"users"`
-	Projects int64        `json:"projects"`
-	Tasks    int64        `json:"tasks"`
-	Teams    int64        `json:"teams"`
-	Shares   ShareCounts  `json:"shares"`
-	License  license.Info `json:"license"`
-}
 
 // GetOverview returns aggregate instance counts and metadata.
 // @Summary Admin overview
@@ -45,52 +31,16 @@ type Overview struct {
 // @tags admin
 // @Produce json
 // @Security JWTKeyAuth
-// @Success 200 {object} admin.Overview
+// @Success 200 {object} models.Overview
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/overview [get]
 func GetOverview(c *echo.Context) error {
 	s := db.NewSession()
 	defer s.Close()
 
-	users, err := s.Table("users").Count()
+	overview, err := models.BuildOverview(s)
 	if err != nil {
 		return err
 	}
-	projects, err := s.Table("projects").Count()
-	if err != nil {
-		return err
-	}
-	tasks, err := s.Table("tasks").Count()
-	if err != nil {
-		return err
-	}
-	teams, err := s.Table("teams").Count()
-	if err != nil {
-		return err
-	}
-	linkShares, err := s.Table("link_shares").Count()
-	if err != nil {
-		return err
-	}
-	teamShares, err := s.Table("team_projects").Count()
-	if err != nil {
-		return err
-	}
-	userShares, err := s.Table("users_projects").Count()
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, Overview{
-		Users:    users,
-		Projects: projects,
-		Tasks:    tasks,
-		Teams:    teams,
-		Shares: ShareCounts{
-			LinkShares: linkShares,
-			TeamShares: teamShares,
-			UserShares: userShares,
-		},
-		License: license.CurrentInfo(),
-	})
+	return c.JSON(http.StatusOK, overview)
 }

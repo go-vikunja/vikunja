@@ -79,8 +79,17 @@ func TestCronInsertsNonZeroPosition(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 
+	// Force the task to a zero position in this view to simulate the unhealed
+	// state. A task only ever has one position row per view, so update it if it
+	// already exists (e.g. created with the filter) instead of inserting a duplicate.
 	tp := &TaskPosition{TaskID: task.ID, ProjectViewID: view.ID, Position: 0}
-	_, err = s.Insert(tp)
+	hasPosition, err := s.Where("task_id = ? AND project_view_id = ?", task.ID, view.ID).Exist(&TaskPosition{})
+	require.NoError(t, err)
+	if hasPosition {
+		_, err = s.Where("task_id = ? AND project_view_id = ?", task.ID, view.ID).Cols("position").Update(tp)
+	} else {
+		_, err = s.Insert(tp)
+	}
 	require.NoError(t, err)
 
 	_, err = calculateNewPositionForTask(s, u, task, view)

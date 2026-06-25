@@ -88,7 +88,7 @@ func BasicAuth(c *echo.Context, username, password string) (bool, error) {
 		return false, nil
 	}
 	if u == nil {
-		u, err = user.CheckUserCredentials(s, credentials)
+		u, err = user.CheckUserCredentials(c.Request().Context(), s, credentials)
 		if err != nil {
 			log.Errorf("Error during basic auth for caldav: %v", err)
 			return false, nil

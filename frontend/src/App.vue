@@ -61,6 +61,7 @@ import {useAuthStore} from '@/stores/auth'
 import {useBaseStore} from '@/stores/base'
 
 import {useColorScheme} from '@/composables/useColorScheme'
+import {useTimeTrackingFavicon} from '@/composables/useTimeTrackingFavicon'
 import {useBodyClass} from '@/composables/useBodyClass'
 import QuickAddOverlay from '@/components/quick-actions/QuickAddOverlay.vue'
 import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
@@ -107,6 +108,7 @@ watch(accountDeletionConfirm, async (accountDeletionConfirm) => {
 
 setLanguage(authStore.settings.language ?? DEFAULT_LANGUAGE)
 useColorScheme()
+useTimeTrackingFavicon()
 </script>
 
 <style src="@/styles/tailwind.css" />

@@ -71,6 +71,14 @@
 						{{ $t('team.title') }}
 					</RouterLink>
 				</li>
+				<li v-if="timeTrackingEnabled">
+					<RouterLink :to="{ name: 'time-tracking'}">
+						<span class="menu-item-icon icon">
+							<Icon :icon="['far', 'clock']" />
+						</span>
+						{{ $t('timeTracking.title') }}
+					</RouterLink>
+				</li>
 			</menu>
 		</nav>
 
@@ -133,12 +141,17 @@ import Loading from '@/components/misc/Loading.vue'
 
 import {useBaseStore} from '@/stores/base'
 import {useProjectStore} from '@/stores/projects'
+import {useConfigStore} from '@/stores/config'
+import {PRO_FEATURE} from '@/constants/proFeatures'
 import ProjectsNavigation from '@/components/home/ProjectsNavigation.vue'
 import type {IProject} from '@/modelTypes/IProject'
 import {useSidebarResize} from '@/composables/useSidebarResize'
 
 const baseStore = useBaseStore()
 const projectStore = useProjectStore()
+const configStore = useConfigStore()
+
+const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
 const {sidebarWidth, isResizing, startResize, isMobile} = useSidebarResize()
 

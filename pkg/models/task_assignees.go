@@ -181,7 +181,7 @@ func (la *TaskAssginee) Delete(s *xorm.Session, a web.Auth) (err error) {
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(a)
+	doer := doerFromAuth(s, a)
 	task, err := GetTaskByIDSimple(s, la.TaskID)
 	if err != nil {
 		return err
@@ -270,7 +270,7 @@ func (t *Task) addNewAssigneeByID(s *xorm.Session, newAssigneeID int64, project 
 		return err
 	}
 
-	doer, _ := user.GetFromAuth(auth)
+	doer := doerFromAuth(s, auth)
 	task, err := GetTaskSimple(s, &Task{ID: t.ID})
 	if err != nil {
 		return err
@@ -346,7 +346,7 @@ func (la *TaskAssginee) ReadAll(s *xorm.Session, a web.Auth, search string, page
 // BulkAssignees is a helper struct used to update multiple assignees at once.
 type BulkAssignees struct {
 	// A project with all assignees
-	Assignees []*user.User `json:"assignees"`
+	Assignees []*user.User `json:"assignees" doc:"The full set of users to assign to the task. This replaces the task's current assignees: users not in this list are unassigned. Pass an empty array to unassign everyone. Each user must have access to the task's project."`
 	TaskID    int64        `json:"-" param:"projecttask"`
 
 	web.CRUDable    `json:"-"`

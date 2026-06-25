@@ -319,8 +319,7 @@
 			"default": "Mặc định",
 			"month": "Tháng",
 			"day": "Ngày",
-			"hour": "Giờ",
-			"range": "Khoảng thời gian"
+			"hour": "Giờ"
 		},
 		"table": {
 			"title": "Bảng",
@@ -329,7 +328,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Giới hạn: {limit}",
-			"noLimit": "Không giới hạn",
 			"doneBucket": "Cột hoàn thành",
 			"doneBucketHint": "Tất cả các tác vụ được chuyển đến cột này sẽ được tự động đánh dấu là hoàn thành.",
 			"doneBucketHintExtended": "Tất cả các tác vụ được đưa đến cột hoàn thành sẽ được tự động đánh dấu là hoàn thành. Tất cả các tác vụ hoàn thành từ các phần khác cũng sẽ được chuyển tới đây.",

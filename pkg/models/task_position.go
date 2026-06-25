@@ -33,9 +33,9 @@ const MinPositionSpacing = 0.01
 
 type TaskPosition struct {
 	// The ID of the task this position is for
-	TaskID int64 `xorm:"bigint not null index" json:"task_id" param:"task"`
+	TaskID int64 `xorm:"bigint not null index unique(task_view)" json:"task_id" param:"task" readOnly:"true" doc:"The numeric id of the task this position belongs to. Taken from the URL; ignored in the request body."`
 	// The project view this task is related to
-	ProjectViewID int64 `xorm:"bigint not null index" json:"project_view_id"`
+	ProjectViewID int64 `xorm:"bigint not null index unique(task_view)" json:"project_view_id" doc:"The id of the project view this position applies to. Positions are stored per view, so the same task has an independent position in each of its project's views."`
 	// The position of the task - any task project can be sorted as usual by this parameter.
 	// When accessing tasks via kanban buckets, this is primarily used to sort them based on a range
 	// We're using a float64 here to make it possible to put any task within any two other tasks (by changing the number).
@@ -44,7 +44,7 @@ type TaskPosition struct {
 	// which also leaves a lot of room for rearranging and sorting later.
 	// Positions are always saved per view. They will automatically be set if you request the tasks through a view
 	// endpoint, otherwise they will always be 0. To update them, take a look at the Task Position endpoint.
-	Position float64 `xorm:"double not null" json:"position"`
+	Position float64 `xorm:"double not null" json:"position" doc:"The task's sort position within the view, as a float so a task can be placed between any two others. To drop a task between two neighbours, set this to their midpoint. Values below the minimum spacing trigger a server-side recalculation of all positions in the view, so the stored value may differ from what you sent."`
 
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
@@ -339,6 +339,57 @@ func calculateNewPositionForTask(s *xorm.Session, a web.Auth, t *Task, view *Pro
 		ProjectViewID: view.ID,
 		Position:      calculateDefaultPosition(t.Index, position),
 	}, nil
+}
+
+type taskPositionKey struct {
+	taskID int64
+	viewID int64
+}
+
+// filterNewTaskPositions returns the positions whose (task_id, project_view_id)
+// row does not exist yet, also deduplicating within the slice. Position creation
+// during task creation can trigger a full recalculation (calculateNewPositionForTask
+// or moveTaskToDoneBuckets) that already persists rows for the new task, so inserting
+// the queued positions unconditionally would violate the unique index on
+// (task_id, project_view_id).
+func filterNewTaskPositions(s *xorm.Session, positions []*TaskPosition) ([]*TaskPosition, error) {
+	if len(positions) == 0 {
+		return positions, nil
+	}
+
+	taskIDs := make([]int64, 0, len(positions))
+	seenTask := make(map[int64]bool, len(positions))
+	for _, p := range positions {
+		if seenTask[p.TaskID] {
+			continue
+		}
+		seenTask[p.TaskID] = true
+		taskIDs = append(taskIDs, p.TaskID)
+	}
+
+	// Fetch all existing rows for the involved tasks in one query so this stays
+	// cheap when createTask runs in a loop (bulk import, project duplication).
+	existing := []*TaskPosition{}
+	err := s.In("task_id", taskIDs).Find(&existing)
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[taskPositionKey]bool, len(positions)+len(existing))
+	for _, e := range existing {
+		seen[taskPositionKey{taskID: e.TaskID, viewID: e.ProjectViewID}] = true
+	}
+
+	filtered := make([]*TaskPosition, 0, len(positions))
+	for _, p := range positions {
+		key := taskPositionKey{taskID: p.TaskID, viewID: p.ProjectViewID}
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		filtered = append(filtered, p)
+	}
+	return filtered, nil
 }
 
 // DeleteOrphanedTaskPositions removes task position records that reference

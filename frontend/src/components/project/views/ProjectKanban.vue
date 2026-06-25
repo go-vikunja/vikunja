@@ -109,7 +109,7 @@
 											@click.stop="showSetLimitInput = true"
 										>
 											{{
-												$t('project.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('project.kanban.noLimit')})
+												$t('project.kanban.limit', {limit: bucket.limit > 0 ? bucket.limit : $t('misc.notSet')})
 											}}
 										</DropdownItem>
 										<DropdownItem

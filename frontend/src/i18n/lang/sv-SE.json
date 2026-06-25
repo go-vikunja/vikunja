@@ -362,7 +362,6 @@
 			"month": "Månad",
 			"day": "Dag",
 			"hour": "Timme",
-			"range": "Datumintervall",
 			"chartLabel": "Projektets Gantt-schema",
 			"taskBarsForRow": "Uppgiftsstaplar för rad {rowId}",
 			"taskBarLabel": "Uppgift: {task}. Från {startDate} till {endDate}. {dateType}. Klicka för att redigera, dra för att flytta.",
@@ -386,7 +385,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Gräns: {limit}",
-			"noLimit": "Ej inställt",
 			"doneBucket": "Färdigkolumn",
 			"doneBucketHint": "Alla uppgifter som flyttas till den här kolumnen markeras automatiskt som klara.",
 			"doneBucketHintExtended": "Alla uppgifter som flyttas till färdigkolumnen markeras som färdiga automatiskt. Alla uppgifter som markerats som färdiga från andra håll kommer också att flyttas.",

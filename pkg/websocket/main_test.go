@@ -20,10 +20,14 @@ import (
 	"os"
 	"testing"
 
+	"code.vikunja.io/api/pkg/config"
 	"code.vikunja.io/api/pkg/log"
+	"code.vikunja.io/api/pkg/modules/keyvalue"
 )
 
 func TestMain(m *testing.M) {
 	log.InitLogger()
+	config.InitDefaultConfig()
+	keyvalue.InitStorage() // license.SetForTests persists state through keyvalue
 	os.Exit(m.Run())
 }

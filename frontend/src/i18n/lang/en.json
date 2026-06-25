@@ -172,6 +172,7 @@
           "yyyy\/mm\/dd": "YYYY\/MM\/DD"
         },
         "timeFormat": "Time format",
+        "timeTrackingDefaultStart": "Time tracking smart-fill start time",
         "timeFormatOptions": {
           "12h": "12-hour (AM/PM)",
           "24h": "24-hour (HH:mm)"
@@ -399,6 +400,7 @@
       "title": "Duplicate this project",
       "label": "Duplicate",
       "text": "Select a parent project which should hold the duplicated project:",
+      "shares": "Copy shares (users, teams and link shares) to the duplicate",
       "success": "The project was successfully duplicated."
     },
     "edit": {
@@ -477,7 +479,6 @@
       "month": "Month",
       "day": "Day",
       "hour": "Hour",
-      "range": "Date Range",
       "chartLabel": "Project Gantt Chart",
       "taskBarsForRow": "Task bars for row {rowId}",
       "taskBarLabel": "Task: {task}. From {startDate} to {endDate}. {dateType}. Click to edit, drag to move.",
@@ -506,7 +507,6 @@
     "kanban": {
       "title": "Kanban",
       "limit": "Limit: {limit}",
-      "noLimit": "Not Set",
       "doneBucket": "Done bucket",
       "doneBucketHint": "All tasks moved into this bucket will automatically marked as done.",
       "doneBucketHintExtended": "All tasks moved into the done bucket will be marked as done automatically. All tasks marked as done from elsewhere will be moved as well.",
@@ -790,7 +790,10 @@
     "closeDialog": "Close dialog",
     "closeQuickActions": "Close quick actions",
     "skipToContent": "Skip to main content",
-    "sortBy": "Sort by"
+    "sortBy": "Sort by",
+    "dateRange": "Date range",
+    "notSet": "Not set",
+    "user": "User"
   },
   "input": {
     "projectColor": "Project color",
@@ -1000,6 +1003,7 @@
         "repeatAfter": "Set Repeating Interval",
         "percentDone": "Set Progress",
         "attachments": "Add Attachments",
+        "timeTracking": "Track time",
         "relatedTasks": "Add Relation",
         "moveProject": "Move",
         "duplicate": "Duplicate",
@@ -1468,6 +1472,32 @@
     "version": "Version: {version}",
     "frontendVersion": "Frontend version: {version}",
     "apiVersion": "API version: {version}"
+  },
+  "timeTracking": {
+    "title": "Time tracking",
+    "stop": "Stop timer",
+    "logTime": "Log time",
+    "editEntry": "Edit entry",
+    "form": {
+      "task": "Task",
+      "taskSearch": "Search for a task…",
+      "commentPlaceholder": "What did you work on?",
+      "save": "Save entry",
+      "startTimer": "Start timer",
+      "update": "Update entry",
+      "smartFill": "Fill from last entry"
+    },
+    "list": {
+      "emptyTask": "No time tracked for this task yet.",
+      "emptyFiltered": "No time tracked for the selected filters.",
+      "total": "Total",
+      "time": "Time",
+      "duration": "Duration"
+    },
+    "browse": {
+      "selectRange": "Select a range",
+      "userSearch": "Search for a user…"
+    }
   },
   "time": {
     "units": {

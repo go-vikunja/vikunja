@@ -26,7 +26,6 @@ import (
 
 	"code.vikunja.io/api/pkg/db"
 	"code.vikunja.io/api/pkg/models"
-	"code.vikunja.io/api/pkg/modules/avatar"
 	user2 "code.vikunja.io/api/pkg/user"
 )
 
@@ -34,35 +33,6 @@ import (
 type UserAvatarProvider struct {
 	// The avatar provider. Valid types are `gravatar` (uses the user email), `upload`, `initials`, `marble` (generates a random avatar for each user), `ldap` (synced from LDAP server), `openid` (synced from OpenID provider), `default`.
 	AvatarProvider string `json:"avatar_provider"`
-}
-
-// UserSettings holds all user settings
-type UserSettings struct {
-	// The new name of the current user.
-	Name string `json:"name"`
-	// If enabled, sends email reminders of tasks to the user.
-	EmailRemindersEnabled bool `json:"email_reminders_enabled"`
-	// If true, this user can be found by their name or parts of it when searching for it.
-	DiscoverableByName bool `json:"discoverable_by_name"`
-	// If true, the user can be found when searching for their exact email.
-	DiscoverableByEmail bool `json:"discoverable_by_email"`
-	// If enabled, the user will get an email for their overdue tasks each morning.
-	OverdueTasksRemindersEnabled bool `json:"overdue_tasks_reminders_enabled"`
-	// The time when the daily summary of overdue tasks will be sent via email.
-	OverdueTasksRemindersTime string `json:"overdue_tasks_reminders_time" valid:"time,required"`
-	// If a task is created without a specified project this value should be used. Applies
-	// to tasks made directly in API and from clients.
-	DefaultProjectID int64 `json:"default_project_id"`
-	// The day when the week starts for this user. 0 = sunday, 1 = monday, etc.
-	WeekStart int `json:"week_start" valid:"range(0|6)"`
-	// The user's language
-	Language string `json:"language"`
-	// The user's time zone. Used to send task reminders in the time zone of the user.
-	Timezone string `json:"timezone"`
-	// Additional settings only used by the frontend
-	FrontendSettings interface{} `json:"frontend_settings"`
-	// Additional settings links as provided by openid
-	ExtraSettingsLinks map[string]any `json:"extra_settings_links"`
 }
 
 // GetUserAvatarProvider returns the currently set user avatar
@@ -135,27 +105,14 @@ func ChangeUserAvatarProvider(c *echo.Context) error {
 		return err
 	}
 
-	oldProvider := user.AvatarProvider
-
-	user.AvatarProvider = uap.AvatarProvider
-
-	_, err = user2.UpdateUser(s, user, false)
-	if err != nil {
+	if err := models.UpdateUserAvatarProvider(s, user, uap.AvatarProvider); err != nil {
 		_ = s.Rollback()
 		return err
-	}
-
-	if user.AvatarProvider == "initials" {
-		avatar.FlushAllCaches(user)
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err
-	}
-
-	if oldProvider != user.AvatarProvider {
-		avatar.FlushAllCaches(user)
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "Avatar was changed successfully."})
@@ -167,13 +124,13 @@ func ChangeUserAvatarProvider(c *echo.Context) error {
 // @Accept json
 // @Produce json
 // @Security JWTKeyAuth
-// @Param avatar body UserSettings true "The updated user settings"
+// @Param avatar body models.UserGeneralSettings true "The updated user settings"
 // @Success 200 {object} models.Message
 // @Failure 400 {object} web.HTTPError "Something's invalid."
 // @Failure 500 {object} models.Message "Internal server error."
 // @Router /user/settings/general [post]
 func UpdateGeneralUserSettings(c *echo.Context) error {
-	us := &UserSettings{}
+	us := &models.UserGeneralSettings{}
 	err := c.Bind(us)
 	if err != nil {
 		var he *echo.HTTPError
@@ -202,22 +159,7 @@ func UpdateGeneralUserSettings(c *echo.Context) error {
 		return err
 	}
 
-	invalidateAvatar := user.AvatarProvider == "initials" && user.Name != us.Name
-
-	user.Name = us.Name
-	user.EmailRemindersEnabled = us.EmailRemindersEnabled
-	user.DiscoverableByEmail = us.DiscoverableByEmail
-	user.DiscoverableByName = us.DiscoverableByName
-	user.OverdueTasksRemindersEnabled = us.OverdueTasksRemindersEnabled
-	user.DefaultProjectID = us.DefaultProjectID
-	user.WeekStart = us.WeekStart
-	user.Language = us.Language
-	user.Timezone = us.Timezone
-	user.OverdueTasksRemindersTime = us.OverdueTasksRemindersTime
-	user.FrontendSettings = us.FrontendSettings
-
-	_, err = user2.UpdateUser(s, user, true)
-	if err != nil {
+	if err := models.UpdateUserGeneralSettings(s, user, us); err != nil {
 		_ = s.Rollback()
 		return err
 	}
@@ -225,10 +167,6 @@ func UpdateGeneralUserSettings(c *echo.Context) error {
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
 		return err
-	}
-
-	if invalidateAvatar {
-		avatar.FlushAllCaches(user)
 	}
 
 	return c.JSON(http.StatusOK, &models.Message{Message: "The settings were updated successfully."})

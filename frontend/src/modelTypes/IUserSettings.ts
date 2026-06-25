@@ -30,6 +30,7 @@ export interface IFrontendSettings {
 	defaultPage: DefaultPage
 	desktopQuickEntryShortcut: string
 	quickAddDefaultReminders: ITaskReminder[]
+	timeTrackingDefaultStart?: string
 }
 
 export interface IExtraSettingsLink {

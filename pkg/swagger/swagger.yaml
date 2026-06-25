@@ -1,39 +1,5 @@
 basePath: /api/v1
 definitions:
-  admin.CreateUserBody:
-    properties:
-      email:
-        description: The user's email address
-        maxLength: 250
-        type: string
-      is_admin:
-        description: Mark the new user as an instance admin.
-        type: boolean
-      language:
-        description: The language of the new user. Must be a valid IETF BCP 47 language
-          code and exist in Vikunja.
-        type: string
-      name:
-        description: The full name of the new user. Optional.
-        type: string
-      password:
-        description: The user's password in clear text. Only used when registering
-          the user. The maximum limi is 72 bytes, which may be less than 72 characters.
-          This is due to the limit in the bcrypt hashing algorithm used to store passwords
-          in Vikunja.
-        maxLength: 72
-        minLength: 8
-        type: string
-      skip_email_confirm:
-        description: Activate the new user immediately without email confirmation.
-        type: boolean
-      username:
-        description: The user's username. Cannot contain anything that looks like
-          an url or whitespaces.
-        maxLength: 250
-        minLength: 3
-        type: string
-    type: object
   admin.IsAdminPatch:
     properties:
       is_admin:
@@ -41,33 +7,9 @@ definitions:
           silently demote otherwise.
         type: boolean
     type: object
-  admin.Overview:
-    properties:
-      license:
-        $ref: '#/definitions/license.Info'
-      projects:
-        type: integer
-      shares:
-        $ref: '#/definitions/admin.ShareCounts'
-      tasks:
-        type: integer
-      teams:
-        type: integer
-      users:
-        type: integer
-    type: object
   admin.OwnerPatch:
     properties:
       owner_id:
-        type: integer
-    type: object
-  admin.ShareCounts:
-    properties:
-      link_shares:
-        type: integer
-      team_shares:
-        type: integer
-      user_shares:
         type: integer
     type: object
   admin.StatusPatch:
@@ -77,47 +19,6 @@ definitions:
         - $ref: '#/definitions/user.Status'
         description: Pointer to distinguish "omitted" from StatusActive; an empty
           body would silently re-enable otherwise.
-    type: object
-  admin.User:
-    properties:
-      auth_provider:
-        type: string
-      bot_owner_id:
-        description: |-
-          BotOwnerID is the ID of the owning (human) user if this user is a bot.
-          A non-zero value means this user is a bot and cannot authenticate via password.
-        type: integer
-      created:
-        description: A timestamp when this task was created. You cannot change this
-          value.
-        type: string
-      email:
-        description: The user's email address.
-        maxLength: 250
-        type: string
-      id:
-        description: The unique, numeric id of this user.
-        type: integer
-      is_admin:
-        type: boolean
-      issuer:
-        type: string
-      name:
-        description: The full name of the user.
-        type: string
-      status:
-        $ref: '#/definitions/user.Status'
-      subject:
-        type: string
-      updated:
-        description: A timestamp when this task was last updated. You cannot change
-          this value.
-        type: string
-      username:
-        description: The username of the user. Is always unique.
-        maxLength: 250
-        minLength: 1
-        type: string
     type: object
   auth.Token:
     properties:
@@ -423,6 +324,40 @@ definitions:
       values:
         $ref: '#/definitions/models.Task'
     type: object
+  models.CreateUserBody:
+    properties:
+      email:
+        description: The user's email address
+        maxLength: 250
+        type: string
+      is_admin:
+        description: Mark the new user as an instance admin.
+        type: boolean
+      language:
+        description: The language of the new user. Must be a valid IETF BCP 47 language
+          code and exist in Vikunja.
+        type: string
+      name:
+        description: The full name of the new user. Optional.
+        type: string
+      password:
+        description: The user's password in clear text. Only used when registering
+          the user. The maximum limi is 72 bytes, which may be less than 72 characters.
+          This is due to the limit in the bcrypt hashing algorithm used to store passwords
+          in Vikunja.
+        maxLength: 72
+        minLength: 8
+        type: string
+      skip_email_confirm:
+        description: Activate the new user immediately without email confirmation.
+        type: boolean
+      username:
+        description: The user's username. Cannot contain anything that looks like
+          an url or whitespaces.
+        maxLength: 250
+        minLength: 3
+        type: string
+    type: object
   models.DatabaseNotifications:
     properties:
       created:
@@ -545,6 +480,21 @@ definitions:
         description: A standard message.
         type: string
     type: object
+  models.Overview:
+    properties:
+      license:
+        $ref: '#/definitions/license.Info'
+      projects:
+        type: integer
+      shares:
+        $ref: '#/definitions/models.ShareCounts'
+      tasks:
+        type: integer
+      teams:
+        type: integer
+      users:
+        type: integer
+    type: object
   models.Permission:
     enum:
     - 0
@@ -627,6 +577,9 @@ definitions:
     type: object
   models.ProjectDuplicate:
     properties:
+      duplicate_shares:
+        description: Whether to copy the project's shares to the duplicate
+        type: boolean
       duplicated_project:
         allOf:
         - $ref: '#/definitions/models.Project'
@@ -741,6 +694,7 @@ definitions:
       value:
         description: The actual reaction. This can be any valid utf character or text,
           up to a length of 20.
+        maxLength: 20
         type: string
     type: object
   models.ReactionMap:
@@ -833,6 +787,15 @@ definitions:
         description: A timestamp when this filter was last updated. You cannot change
           this value.
         type: string
+    type: object
+  models.ShareCounts:
+    properties:
+      link_shares:
+        type: integer
+      team_shares:
+        type: integer
+      user_shares:
+        type: integer
     type: object
   models.SharingType:
     enum:
@@ -1000,6 +963,10 @@ definitions:
         description: |-
           The subscription status for the user reading this task. You can only read this property, use the subscription endpoints to modify it.
           Will only returned when retrieving one task.
+      time_entries_count:
+        description: Time entry count of this task. Only present when fetching tasks
+          with the `expand` parameter set to `time_entries_count`.
+        type: integer
       title:
         description: The task text. This is what you'll see in the project.
         minLength: 1
@@ -1130,7 +1097,9 @@ definitions:
       relation_kind:
         allOf:
         - $ref: '#/definitions/models.RelationKind'
-        description: The kind of the relation.
+        description: |-
+          The kind of the relation.
+          The enum list must stay in sync with RelationKind.isValid() (RelationKindUnknown excluded); the v2 delete route param repeats it.
       task_id:
         description: The ID of the "base" task, the task which has a relation to another.
         type: integer
@@ -1326,6 +1295,47 @@ definitions:
           this value.
         type: string
     type: object
+  models.UserExportStatus:
+    properties:
+      created:
+        type: string
+      expires:
+        type: string
+      id:
+        type: integer
+      size:
+        type: integer
+    type: object
+  models.UserGeneralSettings:
+    properties:
+      default_project_id:
+        type: integer
+      discoverable_by_email:
+        type: boolean
+      discoverable_by_name:
+        type: boolean
+      email_reminders_enabled:
+        type: boolean
+      extra_settings_links:
+        additionalProperties: {}
+        description: Server/OpenID-provided; populated on read, ignored on write.
+        type: object
+      frontend_settings: {}
+      language:
+        type: string
+      name:
+        type: string
+      overdue_tasks_reminders_enabled:
+        type: boolean
+      overdue_tasks_reminders_time:
+        type: string
+      timezone:
+        type: string
+      week_start:
+        maximum: 6
+        minimum: 0
+        type: integer
+    type: object
   models.UserWithPermission:
     properties:
       bot_owner_id:
@@ -1436,6 +1446,141 @@ definitions:
           Clients must restart the OIDC flow and populate this field after
           receiving a 412 with error code 1017. See GHSA-8jvc-mcx6-r4cg.
         type: string
+    type: object
+  shared.AdminUser:
+    properties:
+      auth_provider:
+        type: string
+      bot_owner_id:
+        description: |-
+          BotOwnerID is the ID of the owning (human) user if this user is a bot.
+          A non-zero value means this user is a bot and cannot authenticate via password.
+        type: integer
+      created:
+        description: A timestamp when this task was created. You cannot change this
+          value.
+        type: string
+      email:
+        description: The user's email address.
+        maxLength: 250
+        type: string
+      id:
+        description: The unique, numeric id of this user.
+        type: integer
+      is_admin:
+        type: boolean
+      issuer:
+        type: string
+      name:
+        description: The full name of the user.
+        type: string
+      status:
+        $ref: '#/definitions/user.Status'
+      subject:
+        type: string
+      updated:
+        description: A timestamp when this task was last updated. You cannot change
+          this value.
+        type: string
+      username:
+        description: The username of the user. Is always unique.
+        maxLength: 250
+        minLength: 1
+        type: string
+    type: object
+  shared.AuthInfo:
+    properties:
+      ldap:
+        $ref: '#/definitions/shared.LdapAuthInfo'
+      local:
+        $ref: '#/definitions/shared.LocalAuthInfo'
+      openid_connect:
+        $ref: '#/definitions/shared.OpenIDAuthInfo'
+    type: object
+  shared.LdapAuthInfo:
+    properties:
+      enabled:
+        type: boolean
+    type: object
+  shared.LegalInfo:
+    properties:
+      imprint_url:
+        type: string
+      privacy_policy_url:
+        type: string
+    type: object
+  shared.LocalAuthInfo:
+    properties:
+      enabled:
+        type: boolean
+      registration_enabled:
+        type: boolean
+    type: object
+  shared.OpenIDAuthInfo:
+    properties:
+      enabled:
+        type: boolean
+      providers:
+        items:
+          $ref: '#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider'
+        type: array
+    type: object
+  shared.VikunjaInfos:
+    properties:
+      allow_icon_changes:
+        type: boolean
+      auth:
+        $ref: '#/definitions/shared.AuthInfo'
+      available_migrators:
+        items:
+          type: string
+        type: array
+      caldav_enabled:
+        type: boolean
+      concurrent_writes:
+        description: ConcurrentWrites reports whether the configured database can
+          handle concurrent writes. It is false on SQLite, where overlapping write
+          transactions deadlock, so clients should serialize batched writes instead
+          of firing them in parallel.
+        type: boolean
+      demo_mode_enabled:
+        type: boolean
+      email_reminders_enabled:
+        type: boolean
+      enabled_background_providers:
+        items:
+          type: string
+        type: array
+      enabled_pro_features:
+        items:
+          $ref: '#/definitions/license.Feature'
+        type: array
+      frontend_url:
+        type: string
+      legal:
+        $ref: '#/definitions/shared.LegalInfo'
+      link_sharing_enabled:
+        type: boolean
+      max_file_size:
+        type: string
+      max_items_per_page:
+        type: integer
+      motd:
+        type: string
+      public_teams_enabled:
+        type: boolean
+      task_attachments_enabled:
+        type: boolean
+      task_comments_enabled:
+        type: boolean
+      totp_enabled:
+        type: boolean
+      user_deletion_enabled:
+        type: boolean
+      version:
+        type: string
+      webhooks_enabled:
+        type: boolean
     type: object
   todoist.Migration:
     properties:
@@ -1569,6 +1714,15 @@ definitions:
       password:
         type: string
     type: object
+  v1.LogoutResponse:
+    properties:
+      message:
+        type: string
+      oidc_logout_url:
+        description: RP-Initiated Logout URL the frontend redirects to. Empty for
+          non-OIDC sessions.
+        type: string
+    type: object
   v1.UserAvatarProvider:
     properties:
       avatar_provider:
@@ -1582,17 +1736,6 @@ definitions:
     properties:
       token:
         type: string
-    type: object
-  v1.UserExportStatus:
-    properties:
-      created:
-        type: string
-      expires:
-        type: string
-      id:
-        type: integer
-      size:
-        type: integer
     type: object
   v1.UserPassword:
     properties:
@@ -1633,53 +1776,6 @@ definitions:
         minLength: 3
         type: string
     type: object
-  v1.UserSettings:
-    properties:
-      default_project_id:
-        description: |-
-          If a task is created without a specified project this value should be used. Applies
-          to tasks made directly in API and from clients.
-        type: integer
-      discoverable_by_email:
-        description: If true, the user can be found when searching for their exact
-          email.
-        type: boolean
-      discoverable_by_name:
-        description: If true, this user can be found by their name or parts of it
-          when searching for it.
-        type: boolean
-      email_reminders_enabled:
-        description: If enabled, sends email reminders of tasks to the user.
-        type: boolean
-      extra_settings_links:
-        additionalProperties: {}
-        description: Additional settings links as provided by openid
-        type: object
-      frontend_settings:
-        description: Additional settings only used by the frontend
-      language:
-        description: The user's language
-        type: string
-      name:
-        description: The new name of the current user.
-        type: string
-      overdue_tasks_reminders_enabled:
-        description: If enabled, the user will get an email for their overdue tasks
-          each morning.
-        type: boolean
-      overdue_tasks_reminders_time:
-        description: The time when the daily summary of overdue tasks will be sent
-          via email.
-        type: string
-      timezone:
-        description: The user's time zone. Used to send task reminders in the time
-          zone of the user.
-        type: string
-      week_start:
-        description: The day when the week starts for this user. 0 = sunday, 1 = monday,
-          etc.
-        type: integer
-    type: object
   v1.UserWithSettings:
     properties:
       auth_provider:
@@ -1710,7 +1806,7 @@ definitions:
         description: The full name of the user.
         type: string
       settings:
-        $ref: '#/definitions/v1.UserSettings'
+        $ref: '#/definitions/models.UserGeneralSettings'
       updated:
         description: A timestamp when this task was last updated. You cannot change
           this value.
@@ -1720,94 +1816,6 @@ definitions:
         maxLength: 250
         minLength: 1
         type: string
-    type: object
-  v1.authInfo:
-    properties:
-      ldap:
-        $ref: '#/definitions/v1.ldapAuthInfo'
-      local:
-        $ref: '#/definitions/v1.localAuthInfo'
-      openid_connect:
-        $ref: '#/definitions/v1.openIDAuthInfo'
-    type: object
-  v1.ldapAuthInfo:
-    properties:
-      enabled:
-        type: boolean
-    type: object
-  v1.legalInfo:
-    properties:
-      imprint_url:
-        type: string
-      privacy_policy_url:
-        type: string
-    type: object
-  v1.localAuthInfo:
-    properties:
-      enabled:
-        type: boolean
-      registration_enabled:
-        type: boolean
-    type: object
-  v1.openIDAuthInfo:
-    properties:
-      enabled:
-        type: boolean
-      providers:
-        items:
-          $ref: '#/definitions/code_vikunja_io_api_pkg_modules_auth_openid.Provider'
-        type: array
-    type: object
-  v1.vikunjaInfos:
-    properties:
-      allow_icon_changes:
-        type: boolean
-      auth:
-        $ref: '#/definitions/v1.authInfo'
-      available_migrators:
-        items:
-          type: string
-        type: array
-      caldav_enabled:
-        type: boolean
-      demo_mode_enabled:
-        type: boolean
-      email_reminders_enabled:
-        type: boolean
-      enabled_background_providers:
-        items:
-          type: string
-        type: array
-      enabled_pro_features:
-        items:
-          $ref: '#/definitions/license.Feature'
-        type: array
-      frontend_url:
-        type: string
-      legal:
-        $ref: '#/definitions/v1.legalInfo'
-      link_sharing_enabled:
-        type: boolean
-      max_file_size:
-        type: string
-      max_items_per_page:
-        type: integer
-      motd:
-        type: string
-      public_teams_enabled:
-        type: boolean
-      task_attachments_enabled:
-        type: boolean
-      task_comments_enabled:
-        type: boolean
-      totp_enabled:
-        type: boolean
-      user_deletion_enabled:
-        type: boolean
-      version:
-        type: string
-      webhooks_enabled:
-        type: boolean
     type: object
   web.HTTPError:
     properties:
@@ -2011,7 +2019,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/admin.Overview'
+            $ref: '#/definitions/models.Overview'
         "404":
           description: Not Found
           schema:
@@ -2119,7 +2127,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/admin.User'
+              $ref: '#/definitions/shared.AdminUser'
             type: array
         "404":
           description: Not Found
@@ -2141,14 +2149,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/admin.CreateUserBody'
+          $ref: '#/definitions/models.CreateUserBody'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/admin.User'
+            $ref: '#/definitions/shared.AdminUser'
         "400":
           description: Bad Request
           schema:
@@ -2216,7 +2224,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/admin.User'
+            $ref: '#/definitions/shared.AdminUser'
         "400":
           description: Bad Request
           schema:
@@ -2253,7 +2261,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/admin.User'
+            $ref: '#/definitions/shared.AdminUser'
         "400":
           description: Bad Request
           schema:
@@ -2531,7 +2539,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.vikunjaInfos'
+            $ref: '#/definitions/shared.VikunjaInfos'
       summary: Info
       tags:
       - service
@@ -4713,9 +4721,10 @@ paths:
       consumes:
       - application/json
       description: Copies the project, tasks, files, kanban data, assignees, comments,
-        attachments, labels, relations, backgrounds, user/team permissions and link
-        shares from one project to a new one. The user needs read access in the project
-        and write access in the parent of the new project.
+        attachments, labels, relations and backgrounds from one project to a new one.
+        User/team permissions and link shares are only copied when duplicate_shares
+        is set to true. The user needs read access in the project and write access
+        in the parent of the new project.
       parameters:
       - description: The project ID to duplicate
         in: path
@@ -6870,7 +6879,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.UserExportStatus'
+            $ref: '#/definitions/models.UserExportStatus'
       security:
       - JWTKeyAuth: []
       summary: Get current user data export
@@ -6945,13 +6954,15 @@ paths:
   /user/logout:
     post:
       description: Destroys the current session and clears the refresh token cookie.
+        For OpenID Connect sessions the response includes an `oidc_logout_url` the
+        client should redirect to so the provider session is ended too.
       produces:
       - application/json
       responses:
         "200":
           description: Successfully logged out.
           schema:
-            $ref: '#/definitions/models.Message'
+            $ref: '#/definitions/v1.LogoutResponse'
       summary: Logout
       tags:
       - auth
@@ -7192,7 +7203,7 @@ paths:
         name: avatar
         required: true
         schema:
-          $ref: '#/definitions/v1.UserSettings'
+          $ref: '#/definitions/models.UserGeneralSettings'
       produces:
       - application/json
       responses:

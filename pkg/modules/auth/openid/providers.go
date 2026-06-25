@@ -180,6 +180,29 @@ func GetProvider(key string) (provider *Provider, err error) {
 	return
 }
 
+// getCachedProvider returns the provider from keyvalue without re-establishing
+// the live OIDC connection, so the logout path never blocks on an unreachable OP.
+func getCachedProvider(key string) (provider *Provider, err error) {
+	provider = &Provider{}
+	exists, err := keyvalue.GetWithValue("openid_provider_"+key, provider)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		_, err = GetAllProviders() // This will put all providers in cache
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = keyvalue.GetWithValue("openid_provider_"+key, provider)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return provider, nil
+}
+
 // parseBoolField reads a boolean-valued config field from a provider map,
 // tolerating both native bools (from YAML/JSON) and strings (from env vars or
 // the GetConfigValueFromFile path, which always return strings). Missing or
@@ -312,6 +335,8 @@ func getProviderFromMap(pi map[string]interface{}, key string) (provider *Provid
 	}
 
 	provider.AuthURL = provider.Oauth2Config.Endpoint.AuthURL
+
+	provider.EndSessionURL = provider.discoveredEndSessionEndpoint()
 
 	return
 }

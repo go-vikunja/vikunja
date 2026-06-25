@@ -24,9 +24,16 @@ import (
 	"strings"
 	"testing"
 
+	"code.vikunja.io/api/pkg/user"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// testuser22 is the second bot owner from pkg/db/fixtures/users.yml; user22
+// owns bot 24. Paired with testuser21 to assert bot-owner isolation: each
+// owner sees and acts on their own bots' resources, never the other's.
+var testuser22 = user.User{ID: 22, Username: "user_bot_owner_b", Issuer: "local"}
 
 // TestHumaLabel mirrors v1's TestProject shape so v2 contract parity is
 // readable side-by-side. Labels has no v1 webtest; coverage is ported 1:1
@@ -225,6 +232,65 @@ func TestHumaLabel(t *testing.T) {
 				assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
 			})
 		})
+	})
+}
+
+// TestHumaLabel_BotOwner asserts that bot owners can read, update, and delete
+// labels that were created by bots they own. Fixture label #9 is owned by
+// bot 23, whose owner is user 21 (testuser21); user 22 owns a different bot
+// and must not see or touch it.
+func TestHumaLabel_BotOwner(t *testing.T) {
+	botOwner := webHandlerTestV2{
+		user:     &testuser21,
+		basePath: "/api/v2/labels",
+		idParam:  "label",
+		t:        t,
+	}
+	require.NoError(t, botOwner.ensureEnv())
+	otherOwner := webHandlerTestV2{
+		user:     &testuser22,
+		basePath: "/api/v2/labels",
+		idParam:  "label",
+		t:        t,
+		e:        botOwner.e,
+	}
+
+	t.Run("ReadOne - bot owner can read label created by their bot", func(t *testing.T) {
+		rec, err := botOwner.testReadOneWithUser(nil, map[string]string{"label": "9"})
+		require.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `"title":"Label #9 - created by bot 23 owned by user 21"`)
+	})
+	t.Run("ReadOne - non-owner cannot read another owner's bot's label", func(t *testing.T) {
+		_, err := otherOwner.testReadOneWithUser(nil, map[string]string{"label": "9"})
+		require.Error(t, err)
+		assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+	})
+	t.Run("ReadAll - bot owner's listing surfaces their bot's labels", func(t *testing.T) {
+		rec, err := botOwner.testReadAllWithUser(nil, nil)
+		require.NoError(t, err)
+		ids := labelIDsFromReadAll(t, rec.Body.Bytes())
+		assert.Contains(t, ids, int64(9), "label #9 (created by user 21's bot) must be listed")
+	})
+	t.Run("Update - bot owner can update label created by their bot", func(t *testing.T) {
+		rec, err := botOwner.testUpdateWithUser(nil, map[string]string{"label": "9"}, `{"title":"renamed by owner"}`)
+		require.NoError(t, err)
+		assert.Contains(t, rec.Body.String(), `"title":"renamed by owner"`)
+	})
+	t.Run("Update - non-owner cannot update another owner's bot's label", func(t *testing.T) {
+		_, err := otherOwner.testUpdateWithUser(nil, map[string]string{"label": "9"}, `{"title":"hijack"}`)
+		require.Error(t, err)
+		assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+	})
+	t.Run("Delete - non-owner cannot delete another owner's bot's label", func(t *testing.T) {
+		_, err := otherOwner.testDeleteWithUser(nil, map[string]string{"label": "9"})
+		require.Error(t, err)
+		assert.Equal(t, http.StatusForbidden, getHTTPErrorCode(err))
+	})
+	t.Run("Delete - bot owner can delete label created by their bot", func(t *testing.T) {
+		// Run last so the earlier subtests still have label #9 to operate on.
+		rec, err := botOwner.testDeleteWithUser(nil, map[string]string{"label": "9"})
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNoContent, rec.Code)
 	})
 }
 

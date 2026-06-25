@@ -2,10 +2,17 @@ import {createRandomID} from '@/helpers/randomId'
 import {computePosition, flip, shift, offset} from '@floating-ui/dom'
 import {nextTick} from 'vue'
 import {eventToShortcutString} from '@/helpers/shortcut'
+import type {Editor} from '@tiptap/core'
+import {getPopupContainer} from '@/components/input/editor/popupContainer'
 
-export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Promise<string> {
+export default function inputPrompt(pos: ClientRect, oldValue: string = '', editor?: Editor): Promise<string> {
 	return new Promise((resolve) => {
 		const id = 'link-input-' + createRandomID()
+		// Append inside the open task <dialog> (top-layer) when present, otherwise
+		// document.body. A body-level popup is painted behind a showModal() dialog
+		// and unfocusable through its focus trap, breaking the link prompt in the
+		// Kanban task popup (#2940).
+		const container = getPopupContainer(editor)
 
 		// Create popup element
 		const popupElement = document.createElement('div')
@@ -26,7 +33,7 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 		inputElement.value = oldValue
 		wrapperDiv.appendChild(inputElement)
 		popupElement.appendChild(wrapperDiv)
-		document.body.appendChild(popupElement)
+		container.appendChild(popupElement)
 
 		// Create a local mutable copy of the position for scroll tracking
 		let currentRect = new DOMRect(pos.left, pos.top, pos.width, pos.height)
@@ -82,15 +89,41 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 
 		nextTick(() => document.getElementById(id)?.focus())
 
+		// The prompt is a sub-modal of the enclosing task <dialog>. Native modal
+		// dialogs close themselves on Escape ("cancel"); swallow that while the
+		// prompt is open so Escape only dismisses the prompt, not the task dialog.
+		const dialog = container.closest('dialog') as HTMLDialogElement | null
+		const handleDialogCancel = (event: Event) => event.preventDefault()
+		dialog?.addEventListener('cancel', handleDialogCancel)
+
+		const handleClickOutside = (event: MouseEvent) => {
+			if (!popupElement.contains(event.target as Node)) {
+				resolve('')
+				cleanup()
+			}
+		}
+
 		const cleanup = () => {
 			window.removeEventListener('scroll', handleScroll, true)
-			if (document.body.contains(popupElement)) {
-				document.body.removeChild(popupElement)
+			document.removeEventListener('click', handleClickOutside)
+			dialog?.removeEventListener('cancel', handleDialogCancel)
+			if (container.contains(popupElement)) {
+				container.removeChild(popupElement)
 			}
 		}
 
 		document.getElementById(id)?.addEventListener('keydown', event => {
 			const shortcutString = eventToShortcutString(event)
+
+			if (shortcutString === 'Escape') {
+				// Stop the native <dialog> from closing on Escape; cancel the prompt only.
+				event.preventDefault()
+				event.stopPropagation()
+				resolve('')
+				cleanup()
+				return
+			}
+
 			if (shortcutString !== 'Enter') {
 				return
 			}
@@ -104,15 +137,6 @@ export default function inputPrompt(pos: ClientRect, oldValue: string = ''): Pro
 			resolve(url)
 			cleanup()
 		})
-
-		// Close on click outside
-		const handleClickOutside = (event: MouseEvent) => {
-			if (!popupElement.contains(event.target as Node)) {
-				resolve('')
-				cleanup()
-				document.removeEventListener('click', handleClickOutside)
-			}
-		}
 
 		// Add slight delay to prevent immediate closing
 		setTimeout(() => {

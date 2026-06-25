@@ -121,6 +121,55 @@ func TestCollectRoutesV2(t *testing.T) {
 	assert.Equal(t, "DELETE", labels["delete"].Method)
 }
 
+// TestCollectRoutes_TimeEntriesV2 verifies the v2-only time-entries resource
+// lands under a clean "time-entries" group rather than the "other" catch-all,
+// so its scopes read sensibly for token clients.
+func TestCollectRoutes_TimeEntriesV2(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries/:id"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "POST", Path: "/api/v2/time-entries"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "PUT", Path: "/api/v2/time-entries/:id"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "DELETE", Path: "/api/v2/time-entries/:id"}, true)
+
+	_, isOther := apiTokenRoutesV2["other"]
+	assert.False(t, isOther, "time-entries CRUD must not fall into the 'other' bucket")
+
+	te, has := apiTokenRoutesV2["time-entries"]
+	require.True(t, has, "time-entries group should exist in the v2 table")
+	assert.Equal(t, "GET", te["read_all"].Method)
+	assert.Equal(t, "/api/v2/time-entries", te["read_all"].Path)
+	assert.Equal(t, "GET", te["read_one"].Method)
+	assert.Equal(t, "POST", te["create"].Method)
+	assert.Equal(t, "PUT", te["update"].Method)
+	assert.Equal(t, "DELETE", te["delete"].Method)
+}
+
+// TestGetAPITokenRoutes_ExposesV2Only verifies the /routes payload merges
+// v2-only groups (time-entries has no v1 counterpart) so token clients can
+// discover and grant them, without mutating the v1 table itself.
+func TestGetAPITokenRoutes_ExposesV2Only(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v1/labels"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
+
+	routes := GetAPITokenRoutes()
+
+	_, hasLabels := routes["labels"]
+	assert.True(t, hasLabels, "v1 groups stay exposed")
+
+	te, hasTE := routes["time-entries"]
+	require.True(t, hasTE, "v2-only time-entries must be exposed via /routes")
+	assert.Equal(t, "GET", te["read_all"].Method)
+
+	_, v1HasTE := apiTokenRoutes["time-entries"]
+	assert.False(t, v1HasTE, "the merge must not mutate the v1 table")
+}
+
 // TestGetRouteDetail_V2Verbs verifies the v2 verb mapping: POST→create,
 // PUT/PATCH→update. v1 inverts POST and PUT so we need a separate mapping
 // path.
@@ -194,6 +243,40 @@ func TestCanDoAPIRoute_V2PatchAliasesPut(t *testing.T) {
 		req := httptest.NewRequest("PATCH", "/api/v1/labels/:id", nil)
 		c := e.NewContext(req, httptest.NewRecorder())
 		assert.False(t, CanDoAPIRoute(c, v1Token))
+	})
+}
+
+// TestCanDoAPIRoute_V2TasksReadAll verifies that tasks.read_all authorises
+// both the global /api/v2/tasks and project-scoped /api/v2/projects/:project/tasks
+// endpoints. Both normalise to tasks.read_all via getRouteGroupName, but only
+// one RouteDetail survives in the map — the special case in CanDoAPIRoute must
+// accept either path.
+func TestCanDoAPIRoute_V2TasksReadAll(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+	apiTokenRoutes["caldav"] = APITokenRoute{
+		"access": &RouteDetail{Path: "/dav/*", Method: "ANY"},
+	}
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/tasks"}, true)
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/projects/:project/tasks"}, true)
+
+	token := &APIToken{
+		APIPermissions: APIPermissions{"tasks": []string{"read_all"}},
+	}
+
+	e := echo.New()
+
+	t.Run("global /api/v2/tasks", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v2/tasks", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
+	})
+
+	t.Run("project-scoped /api/v2/projects/:project/tasks", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v2/projects/:project/tasks", nil)
+		c := e.NewContext(req, httptest.NewRecorder())
+		assert.True(t, CanDoAPIRoute(c, token))
 	})
 }
 
