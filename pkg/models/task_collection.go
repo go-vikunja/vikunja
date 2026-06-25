@@ -58,6 +58,12 @@ type TaskCollection struct {
 
 	isSavedFilter bool
 
+	// forceFlatTasks makes ReadAll always return []*Task, never []*Bucket, even
+	// for a kanban view. v1's single tasks endpoint is polymorphic; v2 splits it
+	// into a flat-tasks endpoint and a separate buckets-with-tasks one, and the
+	// former sets this so a kanban view path still yields tasks.
+	forceFlatTasks bool
+
 	web.CRUDable    `xorm:"-" json:"-"`
 	web.Permissions `xorm:"-" json:"-"`
 }
@@ -69,6 +75,7 @@ const TaskCollectionExpandBuckets TaskCollectionExpandable = `buckets`
 const TaskCollectionExpandReactions TaskCollectionExpandable = `reactions`
 const TaskCollectionExpandComments TaskCollectionExpandable = `comments`
 const TaskCollectionExpandCommentCount TaskCollectionExpandable = `comment_count`
+const TaskCollectionExpandTimeEntriesCount TaskCollectionExpandable = `time_entries_count`
 const TaskCollectionExpandIsUnread TaskCollectionExpandable = `is_unread`
 
 // Validate validates if the TaskCollectionExpandable value is valid.
@@ -84,11 +91,13 @@ func (t TaskCollectionExpandable) Validate() error {
 		return nil
 	case TaskCollectionExpandCommentCount:
 		return nil
+	case TaskCollectionExpandTimeEntriesCount:
+		return nil
 	case TaskCollectionExpandIsUnread:
 		return nil
 	}
 
-	return InvalidFieldErrorWithMessage([]string{"expand"}, "Expand must be one of the following values: subtasks, buckets, reactions, comments, comment_count, is_unread")
+	return InvalidFieldErrorWithMessage([]string{"expand"}, "Expand must be one of the following values: subtasks, buckets, reactions, comments, comment_count, time_entries_count, is_unread")
 }
 
 func validateTaskField(fieldName string) error {
@@ -146,8 +155,14 @@ func getTaskFilterOptsFromCollection(tf *TaskCollection, projectView *ProjectVie
 	return opts, err
 }
 
-func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
-	if filteringForBucket {
+// SetForceFlatTasks makes ReadAll return a flat []*Task even for a kanban view.
+// The v2 tasks endpoint uses it; v1 leaves it unset for the polymorphic shape.
+func (tf *TaskCollection) SetForceFlatTasks() {
+	tf.forceFlatTasks = true
+}
+
+func getTaskOrTasksInBuckets(s *xorm.Session, a web.Auth, projects []*Project, view *ProjectView, opts *taskSearchOptions, filteringForBucket, forceFlatTasks bool) (tasks interface{}, resultCount int, totalItems int64, err error) {
+	if filteringForBucket || forceFlatTasks {
 		return getTasksForProjects(s, projects, a, opts, view)
 	}
 
@@ -277,6 +292,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		tc.ProjectID = tf.ProjectID
 		tc.isSavedFilter = true
 		tc.Expand = tf.Expand
+		tc.forceFlatTasks = tf.forceFlatTasks
 
 		if tf.Filter != "" {
 			if tc.Filter != "" {
@@ -369,7 +385,7 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		return getTaskOrTasksInBuckets(s, a, []*Project{project}, view, opts, filteringForBucket)
+		return getTaskOrTasksInBuckets(s, a, []*Project{project}, view, opts, filteringForBucket, tf.forceFlatTasks)
 	}
 
 	projects, err := getRelevantProjectsFromCollection(s, a, tf)
@@ -377,5 +393,5 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 		return nil, 0, 0, err
 	}
 
-	return getTaskOrTasksInBuckets(s, a, projects, view, opts, filteringForBucket)
+	return getTaskOrTasksInBuckets(s, a, projects, view, opts, filteringForBucket, tf.forceFlatTasks)
 }

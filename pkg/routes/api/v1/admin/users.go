@@ -18,51 +18,12 @@ package admin
 
 import (
 	"code.vikunja.io/api/pkg/modules/auth/openid"
+	"code.vikunja.io/api/pkg/routes/api/shared"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 
 	"xorm.io/xorm"
 )
-
-// User re-exposes fields hidden by the default user.User JSON view.
-type User struct {
-	*user.User
-	IsAdmin      bool        `json:"is_admin"`
-	Status       user.Status `json:"status"`
-	Issuer       string      `json:"issuer"`
-	Subject      string      `json:"subject,omitempty"`
-	AuthProvider string      `json:"auth_provider,omitempty"`
-}
-
-func newAdminUser(u *user.User, providers []*openid.Provider) *User {
-	return &User{
-		User:         u,
-		IsAdmin:      u.IsAdmin,
-		Status:       u.Status,
-		Issuer:       u.Issuer,
-		Subject:      u.Subject,
-		AuthProvider: resolveAuthProvider(u, providers),
-	}
-}
-
-func resolveAuthProvider(u *user.User, providers []*openid.Provider) string {
-	switch u.Issuer {
-	case "", user.IssuerLocal:
-		return ""
-	case user.IssuerLDAP:
-		return "LDAP"
-	}
-	for _, provider := range providers {
-		issuerURL, err := provider.Issuer()
-		if err != nil {
-			continue
-		}
-		if issuerURL == u.Issuer {
-			return provider.Name
-		}
-	}
-	return u.Issuer
-}
 
 // UserList backs the admin list-users route via handler.ReadAllWeb; only ReadAll is used.
 type UserList struct {
@@ -79,7 +40,7 @@ type UserList struct {
 // @Param s query string false "Search string matched against username and email."
 // @Param page query int false "Page number, defaults to 1."
 // @Param per_page query int false "Items per page, defaults to the service setting."
-// @Success 200 {array} admin.User
+// @Success 200 {array} shared.AdminUser
 // @Failure 404 {object} web.HTTPError
 // @Router /admin/users [get]
 func (*UserList) ReadAll(s *xorm.Session, _ web.Auth, search string, page, perPage int) (interface{}, int, int64, error) {
@@ -106,9 +67,9 @@ func (*UserList) ReadAll(s *xorm.Session, _ web.Auth, search string, page, perPa
 		return nil, 0, 0, err
 	}
 
-	out := make([]*User, 0, len(users))
+	out := make([]*shared.AdminUser, 0, len(users))
 	for _, u := range users {
-		out = append(out, newAdminUser(u, providers))
+		out = append(out, shared.NewAdminUser(u, providers))
 	}
 	return out, len(out), totalCount, nil
 }

@@ -5,7 +5,10 @@
 			:disabled="disabled || undefined"
 			@click.stop="toggleDatePopup"
 		>
-			{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
+			<i v-if="date === null && emptyLabel !== ''">{{ emptyLabel }}</i>
+			<template v-else>
+				{{ date === null ? chooseDateLabel : formatDisplayDate(date) }}
+			</template>
 		</SimpleButton>
 
 		<CustomTransition name="fade">
@@ -16,6 +19,7 @@
 			>
 				<DatepickerInline
 					v-model="date"
+					:show-shortcuts="showShortcuts"
 					@update:modelValue="updateData"
 				/>
 
@@ -48,12 +52,17 @@ const props = withDefaults(defineProps<{
 	modelValue: Date | null | string,
 	chooseDateLabel?: string,
 	disabled?: boolean,
+	showShortcuts?: boolean,
+	// When the value is null, show this (italic) instead of chooseDateLabel.
+	emptyLabel?: string,
 }>(), {
 	chooseDateLabel: () => {
 		const {t} = useI18n({useScope: 'global'})
 		return t('input.datepicker.chooseDate')
 	},
 	disabled: false,
+	showShortcuts: true,
+	emptyLabel: '',
 })
 
 const emit = defineEmits<{

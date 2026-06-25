@@ -51,6 +51,7 @@ export interface ITask extends IAbstract {
 	reactions: IReactionPerEntity
 	comments: ITaskComment[]
 	commentCount?: number
+	timeEntriesCount?: number
 
 	createdBy: IUser
 	created: Date

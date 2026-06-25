@@ -29,8 +29,8 @@ var apiTokenRoutes = map[string]APITokenRoute{}
 
 // apiTokenRoutesV2 holds /api/v2 routes under the same (group, permission)
 // keys as v1, so a token granted e.g. labels.read_one authorises both
-// versions. The frontend token UI still reads only apiTokenRoutes;
-// CanDoAPIRoute consults both tables.
+// versions. CanDoAPIRoute consults both tables; GetAPITokenRoutes (the /routes
+// exposure the frontend reads) merges v2-only groups so they're discoverable.
 var apiTokenRoutesV2 = map[string]APITokenRoute{}
 
 func init() {
@@ -183,6 +183,7 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 		"comments":             true,
 		"relations":            true,
 		"attachments":          true,
+		"time-entries":         true,
 		"projects_views":       true,
 		"projects_teams":       true,
 		"projects_users":       true,
@@ -345,10 +346,30 @@ func CollectRoutesForAPITokenUsage(route echo.RouteInfo, requiresJWT bool) {
 
 }
 
-// GetAPITokenRoutes exposes the registered scoped-token routes so tests
-// and the /api/v1/routes handler share a single source of truth.
+// GetAPITokenRoutes exposes the registered scoped-token routes for the /routes
+// handler and tests. v1 is the base; v2-only groups and permissions (a v2-only
+// resource like time-entries has no v1 counterpart) are merged in so tokens can
+// discover and grant them. Shared (group, permission) keys keep their v1 entry —
+// CanDoAPIRoute authorises both versions off the same key regardless.
 func GetAPITokenRoutes() map[string]APITokenRoute {
-	return apiTokenRoutes
+	merged := make(map[string]APITokenRoute, len(apiTokenRoutes))
+	for group, perms := range apiTokenRoutes {
+		merged[group] = make(APITokenRoute, len(perms))
+		for perm, rd := range perms {
+			merged[group][perm] = rd
+		}
+	}
+	for group, perms := range apiTokenRoutesV2 {
+		if merged[group] == nil {
+			merged[group] = make(APITokenRoute)
+		}
+		for perm, rd := range perms {
+			if merged[group][perm] == nil {
+				merged[group][perm] = rd
+			}
+		}
+	}
+	return merged
 }
 
 // GetAvailableAPIRoutesForToken returns a list of all API routes which are available for token usage.
@@ -406,7 +427,8 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 				// Two list endpoints share tasks.read_all but only one
 				// survives collection, so allow either explicitly.
 				if group == "tasks" && p == "read_all" && method == http.MethodGet &&
-					(path == "/api/v1/tasks" || path == "/api/v1/projects/:project/tasks") {
+					(path == "/api/v1/tasks" || path == "/api/v1/projects/:project/tasks" ||
+						path == "/api/v2/tasks" || path == "/api/v2/projects/:project/tasks") {
 					return true
 				}
 			}

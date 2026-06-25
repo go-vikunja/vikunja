@@ -26,6 +26,7 @@ docs/resources/
 pkg/static/templates_vfsdata.go
 files/
 !pkg/files/
+!pkg/web/files/
 vikunja-dump*
 vendor/
 os-packages/

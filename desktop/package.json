@@ -61,9 +61,9 @@
     }
   },
   "devDependencies": {
-    "electron": "40.10.2",
-    "electron-builder": "26.15.0",
-    "unzipper": "0.12.3"
+    "electron": "40.10.5",
+    "electron-builder": "26.15.3",
+    "unzipper": "0.12.5"
   },
   "dependencies": {
     "express": "5.2.1"
@@ -74,11 +74,13 @@
     ],
     "overrides": {
       "minimatch": "^10.2.3",
-      "tar": "^7.5.11",
+      "tar": ">=7.5.16",
       "@tootallnate/once": "^3.0.1",
       "picomatch": ">=4.0.4",
-      "tmp": ">=0.2.6",
-      "ip-address": ">=10.1.1"
+      "tmp": ">=0.2.7",
+      "ip-address": ">=10.1.1",
+      "form-data": ">=4.0.6",
+      "js-yaml": ">=4.2.0"
     }
   }
 }

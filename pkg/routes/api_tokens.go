@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"code.vikunja.io/api/pkg/config"
+	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
@@ -88,6 +89,18 @@ func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context, sk
 
 	c.Set("api_token", token)
 	c.Set("api_user", u)
+
+	// Guarded by config: this fires on every token-authenticated request and
+	// only the audit listener consumes it.
+	if config.AuditEnabled.GetBool() {
+		err = events.DispatchWithContext(c.Request().Context(), &models.APITokenUsedEvent{
+			TokenID: token.ID,
+			OwnerID: token.OwnerID,
+		})
+		if err != nil {
+			log.Errorf("Could not dispatch api token used event: %s", err)
+		}
+	}
 
 	return nil
 }

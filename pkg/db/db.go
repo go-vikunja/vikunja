@@ -525,5 +525,17 @@ func CreateParadeDBIndexes() error {
 		return fmt.Errorf("could not ensure paradedb project index: %w", err)
 	}
 
+	// Create ParadeDB index for time_entries (comment search via MultiFieldSearch)
+	timeEntriesIndexSQL := `CREATE INDEX IF NOT EXISTS idx_time_entries_paradedb ON time_entries USING bm25 (id, comment)
+	WITH (
+		key_field='id',
+		text_fields='{
+			"comment": {"fast": true, "record": "freq"}
+		}'
+	)`
+	if _, err := x.Exec(timeEntriesIndexSQL); err != nil {
+		return fmt.Errorf("could not ensure paradedb time entry index: %w", err)
+	}
+
 	return nil
 }

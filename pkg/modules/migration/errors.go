@@ -18,9 +18,32 @@ package migration
 
 import (
 	"net/http"
+	"time"
 
 	"code.vikunja.io/api/pkg/web"
 )
+
+// ErrMigrationAlreadyRunning is returned when a migration is started for a user
+// who already has one in progress (started but not yet finished).
+type ErrMigrationAlreadyRunning struct {
+	StartedAt time.Time
+}
+
+func (err *ErrMigrationAlreadyRunning) Error() string {
+	return "Migration already running"
+}
+
+// ErrCodeMigrationAlreadyRunning holds the unique world-error code of this error
+const ErrCodeMigrationAlreadyRunning = 14005
+
+// HTTPError holds the http error description
+func (err *ErrMigrationAlreadyRunning) HTTPError() web.HTTPError {
+	return web.HTTPError{
+		HTTPCode: http.StatusPreconditionFailed,
+		Code:     ErrCodeMigrationAlreadyRunning,
+		Message:  "Migration already running",
+	}
+}
 
 // ErrNotAZipFile represents a "ErrNotAZipFile" kind of error.
 type ErrNotAZipFile struct{}

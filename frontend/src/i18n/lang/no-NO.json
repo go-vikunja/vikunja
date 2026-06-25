@@ -353,7 +353,6 @@
 			"month": "Måned",
 			"day": "Dag",
 			"hour": "Time",
-			"range": "Datointervall",
 			"chartLabel": "Gantt-kart for prosjekt",
 			"taskBarsForRow": "Oppgavelinjer for rad {rowId}",
 			"taskBarLabel": "Oppgave: {task}. Fra {startDate} til {endDate}. {dateType}. Klikk for å redigere, dra for å flytte.",
@@ -377,7 +376,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Begrens: {limit}",
-			"noLimit": "Ikke angitt",
 			"doneBucket": "Ferdigkurv",
 			"doneBucketHint": "Alle oppgaver som flyttes til denne kurven vil automatisk bli markert som ferdige.",
 			"doneBucketHintExtended": "Alle oppgaver som er flyttet til ferdigkurven, vil automatisk bli markert som ferdige. Alle oppgaver markert som ferdige fra andre steder vil også bli flyttet.",

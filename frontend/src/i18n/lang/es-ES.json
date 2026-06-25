@@ -251,8 +251,7 @@
 			"default": "Predeterminado",
 			"month": "Mes",
 			"day": "Día",
-			"hour": "Hora",
-			"range": "Rango de fechas"
+			"hour": "Hora"
 		},
 		"table": {
 			"title": "Tabla",
@@ -261,7 +260,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Límite: {limit}",
-			"noLimit": "No Establecido",
 			"doneBucket": "Contenedor completado",
 			"doneBucketHint": "Todas las tareas movidas a este contenedor se marcarán automáticamente como finalizadas.",
 			"doneBucketHintExtended": "Todas las tareas movidas al contenedor completado se marcarán como finalizadas automáticamente. Todas las tareas marcadas como finalizadas desde otro lugar también se moverán.",

@@ -151,6 +151,16 @@
 					:options="timeFormatOptions"
 				/>
 			</FormField>
+			<FormField
+				v-if="timeTrackingEnabled"
+				:label="$t('user.settings.general.timeTrackingDefaultStart')"
+				layout="two-col"
+			>
+				<FormInput
+					v-model="settings.frontendSettings.timeTrackingDefaultStart"
+					type="time"
+				/>
+			</FormField>
 		</div>
 	</Card>
 
@@ -306,12 +316,14 @@ import {useTitle} from '@/composables/useTitle'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
+import {useConfigStore} from '@/stores/config'
 import type {IUserSettings} from '@/modelTypes/IUserSettings'
 import {isSavedFilter} from '@/services/savedFilter'
 import {DEFAULT_PROJECT_VIEW_SETTINGS} from '@/modelTypes/IProjectView'
 import {PRIORITIES} from '@/constants/priorities'
 import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
+import {PRO_FEATURE} from '@/constants/proFeatures'
 import {RELATION_KINDS} from '@/types/IRelationKind'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 import ShortcutRecorder from '@/components/misc/ShortcutRecorder.vue'
@@ -396,6 +408,8 @@ const languageOptions = computed(() =>
 )
 
 const authStore = useAuthStore()
+const configStore = useConfigStore()
+const timeTrackingEnabled = computed(() => configStore.isProFeatureEnabled(PRO_FEATURE.TIME_TRACKING))
 
 const settings = ref<IUserSettings>({
 	...authStore.settings,
@@ -416,6 +430,7 @@ const settings = ref<IUserSettings>({
 		defaultTaskRelationType: authStore.settings.frontendSettings.defaultTaskRelationType ?? 'related',
 		// Clone to escape the store's readonly array type.
 		quickAddDefaultReminders: [...(authStore.settings.frontendSettings.quickAddDefaultReminders ?? [])],
+		timeTrackingDefaultStart: authStore.settings.frontendSettings.timeTrackingDefaultStart ?? '09:00',
 	},
 })
 

@@ -730,7 +730,7 @@ function focusTaskBar(rowId: string) {
 	setTimeout(() => {
 		const taskBarElement = document.querySelector(`[data-row-id="${rowId}"] [role="slider"]`) as HTMLElement
 		if (taskBarElement) {
-			taskBarElement.focus()
+			taskBarElement.focus({preventScroll: true})
 		}
 	}, 0)
 }

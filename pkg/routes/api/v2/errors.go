@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/web"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/labstack/echo/v5"
 )
 
 // authFromCtx retrieves the authed user from a Huma handler context,
@@ -79,6 +80,17 @@ func translateDomainError(err error) error {
 			vm.Code = ve.GetCode()
 		}
 		return se
+	}
+	// Shared transport-agnostic cores (e.g. auth.RefreshSession) signal HTTP
+	// semantics with *echo.HTTPError. v1 lets echo's error handler render it;
+	// without this it would fall through as a 500 on v2.
+	var he *echo.HTTPError
+	if errors.As(err, &he) {
+		msg := he.Message
+		if msg == "" {
+			msg = http.StatusText(he.Code)
+		}
+		return huma.NewError(he.Code, msg)
 	}
 	return err
 }

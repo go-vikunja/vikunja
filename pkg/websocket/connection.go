@@ -264,6 +264,9 @@ func (c *Connection) WriteLoop(ctx context.Context, cancel context.CancelFunc) {
 // validEvents is the set of event names clients are allowed to subscribe to.
 var validEvents = map[string]bool{
 	"notification.created": true,
+	"timer.created":        true,
+	"timer.updated":        true,
+	"timer.deleted":        true,
 }
 
 func isValidEvent(event string) bool {

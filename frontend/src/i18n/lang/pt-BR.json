@@ -286,8 +286,7 @@
 			"default": "Padrão",
 			"month": "Mês",
 			"day": "Dia",
-			"hour": "Hora",
-			"range": "Período"
+			"hour": "Hora"
 		},
 		"table": {
 			"title": "Tabela",
@@ -296,7 +295,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Limite: {limit}",
-			"noLimit": "Não definido",
 			"doneBucket": "Bucket concluído",
 			"doneBucketHint": "Todas as tarefas movidas para este bucket serão marcadas automaticamente como concluídas.",
 			"doneBucketHintExtended": "Todas as tarefas movidas para o bucket concluído serão automaticamente concluídas também. Todas as tarefas concluídas de outro lugar serão movidas também.",

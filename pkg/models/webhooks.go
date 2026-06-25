@@ -40,6 +40,7 @@ import (
 	"code.vikunja.io/api/pkg/version"
 	"code.vikunja.io/api/pkg/web"
 
+	"xorm.io/builder"
 	"xorm.io/xorm"
 )
 
@@ -216,24 +217,36 @@ func (w *Webhook) Create(s *xorm.Session, a web.Auth) (err error) {
 // @Failure 500 {object} models.Message "Internal server error"
 // @Router /projects/{id}/webhooks [get]
 func (w *Webhook) ReadAll(s *xorm.Session, a web.Auth, _ string, page int, perPage int) (result interface{}, resultCount int, numberOfTotalItems int64, err error) {
-	p := &Project{ID: w.ProjectID}
-	can, _, err := p.CanRead(s, a)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-	if !can {
-		return nil, 0, 0, ErrGenericForbidden{}
+	// w.UserID set selects the user-level list: a user may only see their own
+	// webhooks. The project list (w.UserID == 0) delegates to the project's read
+	// permission instead.
+	var listCond builder.Cond
+	if w.UserID > 0 {
+		if _, isShareAuth := a.(*LinkSharing); isShareAuth || w.UserID != a.GetID() {
+			return nil, 0, 0, ErrGenericForbidden{}
+		}
+		listCond = builder.Eq{"user_id": w.UserID}
+	} else {
+		p := &Project{ID: w.ProjectID}
+		can, _, cerr := p.CanRead(s, a)
+		if cerr != nil {
+			return nil, 0, 0, cerr
+		}
+		if !can {
+			return nil, 0, 0, ErrGenericForbidden{}
+		}
+		listCond = builder.Eq{"project_id": w.ProjectID}
 	}
 
 	ws := []*Webhook{}
-	err = s.Where("project_id = ?", w.ProjectID).
+	err = s.Where(listCond).
 		Limit(getLimitFromPageIndex(page, perPage)).
 		Find(&ws)
 	if err != nil {
 		return
 	}
 
-	total, err := s.Where("project_id = ?", w.ProjectID).
+	total, err := s.Where(listCond).
 		Count(&Webhook{})
 	if err != nil {
 		return

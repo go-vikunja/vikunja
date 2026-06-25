@@ -362,7 +362,6 @@
 			"month": "Ay",
 			"day": "Gün",
 			"hour": "Saat",
-			"range": "Tarih Aralığı",
 			"chartLabel": "Proje Gantt Şeması",
 			"taskBarsForRow": "{rowId} satırı için görev çubukları",
 			"taskBarLabel": "Görev: {task}. {startDate} tarihinden {endDate} tarihine. {dateType}. Düzenlemek için tıklayın, taşımak için sürükleyin.",
@@ -386,7 +385,6 @@
 		"kanban": {
 			"title": "Kanban",
 			"limit": "Sınır: {limit}",
-			"noLimit": "Belirlenmedi",
 			"doneBucket": "Tamamlananlar kutusu",
 			"doneBucketHint": "Bu kutuya taşınan tüm görevler otomatik olarak tamamlandı olarak işaretlenir.",
 			"doneBucketHintExtended": "Tamamlananlar kutusuna taşınan tüm görevler otomatik olarak tamamlandı olarak işaretlenir. Başka bir yerden tamamlandı olarak işaretlenen görevler de buraya taşınır.",
