@@ -211,8 +211,9 @@ func TestConfirmOverwriteExistingConfig(t *testing.T) {
 }
 
 // bucketServer is a minimal httptest server modelling
-// GET/PUT /api/v1/projects/{p}/views/{v}/buckets. The caller pre-seeds
-// existing buckets; PUT requests append to that list with a synthetic ID.
+// GET/POST /api/v2/projects/{p}/views/{v}/buckets. The caller pre-seeds
+// existing buckets; POST requests append to that list with a synthetic ID.
+// GET returns the standard v2 list envelope; POST returns the bare bucket.
 type bucketServer struct {
 	mu       sync.Mutex
 	existing []*client.Bucket
@@ -232,7 +233,7 @@ func newBucketServer(seed []*client.Bucket) *bucketServer {
 
 func (s *bucketServer) handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Path is /api/v1/projects/{p}/views/{v}/buckets.
+		// Path is /api/v2/projects/{p}/views/{v}/buckets.
 		if !strings.HasSuffix(r.URL.Path, "/buckets") || !strings.Contains(r.URL.Path, "/views/") {
 			http.Error(w, "unexpected path: "+r.URL.Path, http.StatusInternalServerError)
 			return
@@ -242,8 +243,15 @@ func (s *bucketServer) handler() http.Handler {
 		switch r.Method {
 		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(s.existing)
-		case http.MethodPut:
+			// v2 list envelope; the buckets list isn't server-paginated.
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"items":       s.existing,
+				"total":       len(s.existing),
+				"page":        1,
+				"per_page":    50,
+				"total_pages": 1,
+			})
+		case http.MethodPost:
 			var b client.Bucket
 			if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)

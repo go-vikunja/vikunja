@@ -21,25 +21,28 @@ import (
 	"fmt"
 )
 
-// ListBuckets returns the buckets configured on a Kanban view.
+// ListBuckets returns the buckets configured on a Kanban view. Bucket.ReadAll
+// ignores page/per_page and returns every bucket in a single page (the envelope
+// total reflects the full set), so one GET gets them all — paging would
+// re-fetch the same buckets and duplicate them. Unwrap .items.
 func (c *Client) ListBuckets(ctx context.Context, projectID, viewID int64) ([]*Bucket, error) {
-	var out []*Bucket
 	path := fmt.Sprintf("/projects/%d/views/%d/buckets", projectID, viewID)
-	if err := c.Do(ctx, "GET", path, nil, nil, &out); err != nil {
+	items, _, err := doList[*Bucket](ctx, c, path, nil)
+	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	return items, nil
 }
 
-// CreateBucket inserts a new bucket into a Kanban view.
+// CreateBucket inserts a new bucket into a Kanban view. The project and view
+// come from the URL; the v2 handler ignores project_view_id in the body.
 func (c *Client) CreateBucket(ctx context.Context, projectID, viewID int64, b *Bucket) (*Bucket, error) {
 	var out Bucket
 	path := fmt.Sprintf("/projects/%d/views/%d/buckets", projectID, viewID)
 	if b == nil {
 		b = &Bucket{}
 	}
-	b.ProjectViewID = viewID
-	if err := c.Do(ctx, "PUT", path, nil, b, &out); err != nil {
+	if err := c.Do(ctx, "POST", path, nil, b, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -47,17 +50,13 @@ func (c *Client) CreateBucket(ctx context.Context, projectID, viewID int64, b *B
 
 // MoveTaskToBucket positions an existing task in `bucketID` on the
 // project's view. Vikunja stores task↔bucket relations in a separate
-// table (`task_buckets`), so POST /tasks/{id} with bucket_id does not
-// reliably move tasks — this dedicated endpoint is the one the Kanban
-// UI's drag-and-drop uses.
+// table (`task_buckets`); a task update with bucket_id does not reliably
+// move tasks — this dedicated endpoint is the one the Kanban UI's
+// drag-and-drop uses. On v2 it's a PUT, and project/view/bucket all come
+// from the URL, so the body only carries the task id.
 func (c *Client) MoveTaskToBucket(ctx context.Context, projectID, viewID, bucketID, taskID int64) error {
 	path := fmt.Sprintf("/projects/%d/views/%d/buckets/%d/tasks",
 		projectID, viewID, bucketID)
-	body := map[string]int64{
-		"task_id":         taskID,
-		"project_view_id": viewID,
-		"bucket_id":       bucketID,
-		"project_id":      projectID,
-	}
-	return c.Do(ctx, "POST", path, nil, body, nil)
+	body := map[string]int64{"task_id": taskID}
+	return c.Do(ctx, "PUT", path, nil, body, nil)
 }

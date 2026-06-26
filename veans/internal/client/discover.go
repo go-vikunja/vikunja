@@ -31,11 +31,15 @@ import (
 const defaultAPIPort = "3456"
 
 // DiscoverServer normalizes `input` and probes a small set of plausible
-// URLs for /api/v1/info, returning the canonical base URL (without the
-// /api/v1 suffix — that's what client.New expects) and the parsed Info.
+// URLs for /api/v2/info, returning the canonical base URL (without the
+// /api/v2 suffix — that's what client.New expects) and the parsed Info.
+//
+// Probing /api/v2/info doubles as the "is this server new enough" check: a
+// Vikunja without /api/v2 fails discovery cleanly rather than limping along
+// against endpoints veans needs.
 //
 // Mirrors the discovery the Vikunja web frontend does in
-// helpers/checkAndSetApiUrl.ts: try the URL as-given, with /api/v1
+// helpers/checkAndSetApiUrl.ts: try the URL as-given, with the API path
 // appended, and with the default :3456 port — across http / https. The
 // first response that parses as Info wins.
 func DiscoverServer(ctx context.Context, input string) (string, *Info, error) {
@@ -53,7 +57,7 @@ func DiscoverServer(ctx context.Context, input string) (string, *Info, error) {
 	var attempts []string
 	var lastErr error
 	for _, base := range candidates {
-		attempts = append(attempts, base+"/api/v1/info")
+		attempts = append(attempts, base+"/api/v2/info")
 		info, err := New(base, "").Info(ctx)
 		if err == nil && info != nil {
 			return base, info, nil
@@ -67,15 +71,16 @@ func DiscoverServer(ctx context.Context, input string) (string, *Info, error) {
 }
 
 // serverCandidates expands `input` into the ordered list of base URLs
-// to probe for /api/v1/info. A "base URL" here is what client.New wants:
-// the origin + the path that should sit BEFORE /api/v1 (typically empty
-// or a reverse-proxy prefix). The probe itself adds /api/v1/info.
+// to probe for /api/v2/info. A "base URL" here is what client.New wants:
+// the origin + the path that should sit BEFORE /api/v2 (typically empty
+// or a reverse-proxy prefix). The probe itself adds /api/v2/info.
 func serverCandidates(input string) ([]string, error) {
-	// Strip a trailing /api/v1[/] the user might have copied from a
-	// curl example. We add it back in the probe, and otherwise we'd
-	// end up calling /api/v1/api/v1/info.
+	// Strip a trailing /api/v1 or /api/v2[/] the user might have copied
+	// from a curl example. We add the API path back in the probe, and
+	// otherwise we'd end up calling /api/v2/api/v2/info.
 	trimmed := strings.TrimRight(input, "/")
 	trimmed = strings.TrimSuffix(trimmed, "/api/v1")
+	trimmed = strings.TrimSuffix(trimmed, "/api/v2")
 	trimmed = strings.TrimRight(trimmed, "/")
 
 	withScheme := trimmed

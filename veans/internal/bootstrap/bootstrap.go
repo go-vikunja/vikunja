@@ -257,7 +257,7 @@ func Init(ctx context.Context, opts *Options) (*Result, error) {
 		return nil, output.Wrap(output.CodeUnknown, err, "mint bot token: %v", err)
 	}
 	if mintedToken.Token == "" {
-		return nil, output.New(output.CodeUnknown, "PUT /tokens did not return a token plaintext — cannot continue")
+		return nil, output.New(output.CodeUnknown, "POST /tokens did not return a token plaintext — cannot continue")
 	}
 
 	// 11. Persist credentials. Discard human JWT immediately after.

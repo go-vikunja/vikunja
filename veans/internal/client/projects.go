@@ -23,8 +23,8 @@ import (
 	"strconv"
 )
 
-// ListProjects pages through GET /projects, accumulating until the server's
-// x-pagination-total-pages header says we're done.
+// ListProjects pages through GET /projects, accumulating until the list
+// envelope's total_pages says we're done.
 func (c *Client) ListProjects(ctx context.Context) ([]*Project, error) {
 	var all []*Project
 	page := 1
@@ -32,13 +32,12 @@ func (c *Client) ListProjects(ctx context.Context) ([]*Project, error) {
 		q := url.Values{}
 		q.Set("page", strconv.Itoa(page))
 		q.Set("per_page", "50")
-		var batch []*Project
-		total, err := c.DoPaginated(ctx, "GET", "/projects", q, &batch)
+		batch, totalPages, err := doList[*Project](ctx, c, "/projects", q)
 		if err != nil {
 			return nil, err
 		}
 		all = append(all, batch...)
-		if paginationDone(page, len(batch), 50, total) {
+		if page >= totalPages {
 			return all, nil
 		}
 		page++
@@ -58,7 +57,7 @@ func (c *Client) GetProject(ctx context.Context, id int64) (*Project, error) {
 // auto-creates the default views (List, Gantt, Table, Kanban) on insert.
 func (c *Client) CreateProject(ctx context.Context, p *Project) (*Project, error) {
 	var out Project
-	if err := c.Do(ctx, "PUT", "/projects", nil, p, &out); err != nil {
+	if err := c.Do(ctx, "POST", "/projects", nil, p, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -67,17 +66,20 @@ func (c *Client) CreateProject(ctx context.Context, p *Project) (*Project, error
 // ShareProjectWithUser grants `username` `permission` on project `id`.
 func (c *Client) ShareProjectWithUser(ctx context.Context, projectID int64, share *ProjectUser) (*ProjectUser, error) {
 	var out ProjectUser
-	if err := c.Do(ctx, "PUT", fmt.Sprintf("/projects/%d/users", projectID), nil, share, &out); err != nil {
+	if err := c.Do(ctx, "POST", fmt.Sprintf("/projects/%d/users", projectID), nil, share, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
 // ListProjectViews returns saved views (Kanban, List, …) on a project.
+// ProjectView.ReadAll ignores page/per_page and returns every view in a single
+// page, so one GET gets them all — paging would re-fetch the same views and
+// duplicate them. Unwrap .items.
 func (c *Client) ListProjectViews(ctx context.Context, projectID int64) ([]*ProjectView, error) {
-	var out []*ProjectView
-	if err := c.Do(ctx, "GET", fmt.Sprintf("/projects/%d/views", projectID), nil, nil, &out); err != nil {
+	items, _, err := doList[*ProjectView](ctx, c, fmt.Sprintf("/projects/%d/views", projectID), nil)
+	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	return items, nil
 }

@@ -155,28 +155,29 @@ func startRecordingServer(t *testing.T) (*httptest.Server, *[]recordedCall) {
 
 		w.Header().Set("Content-Type", "application/json")
 		switch {
-		case r.Method == http.MethodGet && r.URL.Path == "/api/v1/tasks/42":
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v2/tasks/42":
 			// Initial fetch + the final refetch both land here. Return a
 			// fixed task with an empty label set — labels.go's
 			// findLabelOnTask only iterates t.Labels.
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"id": 42, "title": "t", "updated": "2026-01-01T00:00:00Z",
 			})
-		case r.Method == http.MethodPut && r.URL.Path == "/api/v1/tasks/42/comments":
+		case r.Method == http.MethodPost && r.URL.Path == "/api/v2/tasks/42/comments":
 			_ = json.NewEncoder(w).Encode(map[string]any{"id": 1, "comment": ""})
-		case r.Method == http.MethodPost && r.URL.Path == "/api/v1/tasks/42":
-			// UpdateTask. Echo back the id so the encoder downstream is
-			// happy with a non-nil Task.
+		case r.Method == http.MethodPatch && r.URL.Path == "/api/v2/tasks/42":
+			// UpdateTask (merge-patch). Echo back the id so the encoder
+			// downstream is happy with a non-nil Task.
 			_ = json.NewEncoder(w).Encode(map[string]any{"id": 42})
-		case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/v1/projects/") && strings.HasSuffix(r.URL.Path, "/tasks"):
+		case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, "/api/v2/projects/") && strings.HasSuffix(r.URL.Path, "/tasks"):
+			// Bucket-task move (PUT .../buckets/{b}/tasks).
 			_ = json.NewEncoder(w).Encode(map[string]any{"id": 42})
-		case r.Method == http.MethodGet && r.URL.Path == "/api/v1/labels":
-			// getOrCreateLabelByTitle's lookup. Empty array → falls through
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v2/labels":
+			// getOrCreateLabelByTitle's lookup. Empty envelope → falls through
 			// to label creation.
-			_ = json.NewEncoder(w).Encode([]any{})
-		case r.Method == http.MethodPut && r.URL.Path == "/api/v1/labels":
+			_ = json.NewEncoder(w).Encode(map[string]any{"items": []any{}, "total_pages": 1})
+		case r.Method == http.MethodPost && r.URL.Path == "/api/v2/labels":
 			_ = json.NewEncoder(w).Encode(map[string]any{"id": 99, "title": "veans:bug"})
-		case r.Method == http.MethodPut && r.URL.Path == "/api/v1/tasks/42/labels":
+		case r.Method == http.MethodPost && r.URL.Path == "/api/v2/tasks/42/labels":
 			_ = json.NewEncoder(w).Encode(map[string]any{"id": 99})
 		default:
 			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
@@ -222,11 +223,11 @@ func TestRunUpdate_ScrappedOrdersCommentUpdateMove(t *testing.T) {
 	}
 
 	want := []recordedCall{
-		{http.MethodGet, "/api/v1/tasks/42"},                             // current task fetch
-		{http.MethodPut, "/api/v1/tasks/42/comments"},                    // "Scrapped: obsolete"
-		{http.MethodPost, "/api/v1/tasks/42"},                            // field update (done=true)
-		{http.MethodPost, "/api/v1/projects/7/views/1/buckets/14/tasks"}, // bucket move to Scrapped
-		{http.MethodGet, "/api/v1/tasks/42"},                             // refetch with new bucket
+		{http.MethodGet, "/api/v2/tasks/42"},                            // current task fetch
+		{http.MethodPost, "/api/v2/tasks/42/comments"},                  // "Scrapped: obsolete"
+		{http.MethodPatch, "/api/v2/tasks/42"},                          // field update (done=true)
+		{http.MethodPut, "/api/v2/projects/7/views/1/buckets/14/tasks"}, // bucket move to Scrapped
+		{http.MethodGet, "/api/v2/tasks/42"},                            // refetch with new bucket
 	}
 	if !reflect.DeepEqual(*calls, want) {
 		t.Fatalf("call order mismatch:\nwant: %#v\ngot:  %#v", want, *calls)
@@ -253,13 +254,13 @@ func TestRunUpdate_BucketMoveBeforeLabelAdd(t *testing.T) {
 	}
 
 	want := []recordedCall{
-		{http.MethodGet, "/api/v1/tasks/42"},                             // current task fetch
-		{http.MethodPost, "/api/v1/tasks/42"},                            // field update (done=false)
-		{http.MethodPost, "/api/v1/projects/7/views/1/buckets/11/tasks"}, // bucket move to In Progress
-		{http.MethodGet, "/api/v1/labels"},                               // getOrCreateLabelByTitle lookup
-		{http.MethodPut, "/api/v1/labels"},                               // create veans:bug
-		{http.MethodPut, "/api/v1/tasks/42/labels"},                      // attach label
-		{http.MethodGet, "/api/v1/tasks/42"},                             // refetch
+		{http.MethodGet, "/api/v2/tasks/42"},                            // current task fetch
+		{http.MethodPatch, "/api/v2/tasks/42"},                          // field update (done=false)
+		{http.MethodPut, "/api/v2/projects/7/views/1/buckets/11/tasks"}, // bucket move to In Progress
+		{http.MethodGet, "/api/v2/labels"},                              // getOrCreateLabelByTitle lookup
+		{http.MethodPost, "/api/v2/labels"},                             // create veans:bug
+		{http.MethodPost, "/api/v2/tasks/42/labels"},                    // attach label
+		{http.MethodGet, "/api/v2/tasks/42"},                            // refetch
 	}
 	if !reflect.DeepEqual(*calls, want) {
 		t.Fatalf("call order mismatch:\nwant: %#v\ngot:  %#v", want, *calls)
