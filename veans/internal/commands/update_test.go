@@ -19,6 +19,7 @@ package commands
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -265,4 +266,97 @@ func TestRunUpdate_BucketMoveBeforeLabelAdd(t *testing.T) {
 	if !reflect.DeepEqual(*calls, want) {
 		t.Fatalf("call order mismatch:\nwant: %#v\ngot:  %#v", want, *calls)
 	}
+}
+
+// startPatchCapturingServer answers the endpoints a field-only runUpdate
+// touches (no labels) and records the raw JSON body of the merge-patch
+// PATCH /tasks/{id} request so a test can assert exactly which fields were
+// sent. The seeded task carries a description and priority that a partial
+// update must leave untouched (issue #2962).
+func startPatchCapturingServer(t *testing.T) (*httptest.Server, *[]byte) {
+	t.Helper()
+	var (
+		mu        sync.Mutex
+		patchBody []byte
+	)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v2/tasks/42":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"id": 42, "title": "t", "description": "keep me",
+				"priority": 4, "updated": "2026-01-01T00:00:00Z",
+			})
+		case r.Method == http.MethodPatch && r.URL.Path == "/api/v2/tasks/42":
+			b, _ := io.ReadAll(r.Body)
+			mu.Lock()
+			patchBody = b
+			mu.Unlock()
+			_ = json.NewEncoder(w).Encode(map[string]any{"id": 42})
+		case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, "/api/v2/projects/") && strings.HasSuffix(r.URL.Path, "/tasks"):
+			_ = json.NewEncoder(w).Encode(map[string]any{"id": 42})
+		default:
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+			http.Error(w, "unexpected", http.StatusInternalServerError)
+		}
+	}))
+	t.Cleanup(srv.Close)
+	return srv, &patchBody
+}
+
+// TestRunUpdate_TitleOnlyPatchOmitsOtherFields is the #2962 acceptance test for
+// a title-only update: the merge-patch body must contain ONLY title, so the
+// stored description/priority/done are left intact server-side.
+func TestRunUpdate_TitleOnlyPatchOmitsOtherFields(t *testing.T) {
+	srv, patchBody := startPatchCapturingServer(t)
+	rt := newTestRuntime(srv.URL)
+
+	if _, err := runUpdate(context.Background(), rt, 42, &updateFlags{title: "new title"}); err != nil {
+		t.Fatalf("runUpdate: %v", err)
+	}
+
+	body := decodePatchBody(t, *patchBody)
+	if body["title"] != "new title" {
+		t.Errorf("patch should set title; got %v", body["title"])
+	}
+	for _, k := range []string{"description", "priority", "done"} {
+		if _, present := body[k]; present {
+			t.Errorf("title-only update must not send %q (merge-patch would clobber it); body=%s", k, *patchBody)
+		}
+	}
+}
+
+// TestRunUpdate_StatusOnlyPatchPreservesDescriptionAndPriority is the #2962
+// acceptance test for a status-only update: the merge-patch body carries the
+// done flag (and nothing else), so description and priority survive — the
+// regression the whole-object POST caused.
+func TestRunUpdate_StatusOnlyPatchPreservesDescriptionAndPriority(t *testing.T) {
+	srv, patchBody := startPatchCapturingServer(t)
+	rt := newTestRuntime(srv.URL)
+
+	if _, err := runUpdate(context.Background(), rt, 42, &updateFlags{statusName: "in-progress"}); err != nil {
+		t.Fatalf("runUpdate: %v", err)
+	}
+
+	body := decodePatchBody(t, *patchBody)
+	if d, ok := body["done"].(bool); !ok || d {
+		t.Errorf("in-progress status should send done=false; got %v", body["done"])
+	}
+	for _, k := range []string{"description", "priority", "title"} {
+		if _, present := body[k]; present {
+			t.Errorf("status-only update must not send %q (#2962: it would clobber the stored value); body=%s", k, *patchBody)
+		}
+	}
+}
+
+func decodePatchBody(t *testing.T, raw []byte) map[string]any {
+	t.Helper()
+	if len(raw) == 0 {
+		t.Fatal("no PATCH body was captured")
+	}
+	var body map[string]any
+	if err := json.Unmarshal(raw, &body); err != nil {
+		t.Fatalf("decode patch body %q: %v", string(raw), err)
+	}
+	return body
 }
