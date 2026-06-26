@@ -41,7 +41,7 @@
 				@pointerdown="onAllDayPointerDown($event, day)"
 			>
 				<button
-					v-for="item in allDayTasksForDay(tasks, day)"
+					v-for="item in allDayItemsByDay.get(formatDayKey(day)) ?? []"
 					:key="item.task.id"
 					class="all-day-chip"
 					:class="{'is-done': item.task.done, 'is-ghost': item.isGhost}"
@@ -103,7 +103,8 @@ import {useTimeFormat} from '@/composables/useTimeFormat'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {getTextColor} from '@/helpers/color/getTextColor'
 import CalendarDayColumn from './CalendarDayColumn.vue'
-import {allDayTasksForDay} from '../helpers/dayLayout'
+import {allDayTasksForDay, type AllDayItem} from '../helpers/dayLayout'
+import {plannerTaskColor} from '../helpers/taskColor'
 
 const props = defineProps<{
 	days: Date[]
@@ -160,6 +161,19 @@ function onAllDayDblClick(event: MouseEvent, day: Date) {
 
 // Touch/pen: long-press an empty all-day cell to create.
 let allDayTimer: ReturnType<typeof setTimeout> | undefined
+let allDayMove: ((e: PointerEvent) => void) | null = null
+let allDayEnd: ((e: PointerEvent) => void) | null = null
+function detachAllDay() {
+	clearTimeout(allDayTimer)
+	if (allDayMove) {
+		document.removeEventListener('pointermove', allDayMove)
+	}
+	if (allDayEnd) {
+		document.removeEventListener('pointerup', allDayEnd)
+	}
+	allDayMove = null
+	allDayEnd = null
+}
 function onAllDayPointerDown(event: PointerEvent, day: Date) {
 	if (event.pointerType === 'mouse' || !onAllDayCell(event.target)) {
 		return
@@ -170,18 +184,15 @@ function onAllDayPointerDown(event: PointerEvent, day: Date) {
 	const onMove = (e: PointerEvent) => {
 		if (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10) {
 			moved = true
-			cleanup()
+			detachAllDay()
 		}
 	}
-	const cleanup = () => {
-		clearTimeout(allDayTimer)
-		document.removeEventListener('pointermove', onMove)
-		document.removeEventListener('pointerup', cleanup)
-	}
+	allDayMove = onMove
+	allDayEnd = detachAllDay
 	document.addEventListener('pointermove', onMove)
-	document.addEventListener('pointerup', cleanup)
+	document.addEventListener('pointerup', detachAllDay)
 	allDayTimer = setTimeout(() => {
-		cleanup()
+		detachAllDay()
 		if (!moved) {
 			emit('createAllDay', {day})
 		}
@@ -227,6 +238,16 @@ function onTouchEnd(event: TouchEvent) {
 
 const pxPerMinute = computed(() => props.pxPerHour / 60)
 
+// Resolve the all-day items per day once per render instead of re-filtering all
+// tasks inside the template v-for (each lookup walks recurrences).
+const allDayItemsByDay = computed(() => {
+	const map = new Map<string, AllDayItem[]>()
+	for (const day of props.days) {
+		map.set(formatDayKey(day), allDayTasksForDay(props.tasks, day))
+	}
+	return map
+})
+
 // The body has a vertical scrollbar but the header/all-day rows don't; reserve
 // the same width on them so the day-column verticals line up.
 const headerStyle = computed(() => ({paddingInlineEnd: `${scrollbarWidth.value}px`}))
@@ -238,11 +259,7 @@ function measureScrollbar() {
 }
 
 function taskColor(task: ITask): string {
-	const hex = projectStore.projects[task.projectId]?.hexColor || task.hexColor
-	if (!hex) {
-		return 'var(--primary)'
-	}
-	return hex.startsWith('#') ? hex : `#${hex}`
+	return plannerTaskColor(task.hexColor, projectStore.projects[task.projectId]?.hexColor)
 }
 
 // All-day chips are single-line; surface the project name via the tooltip.
@@ -279,7 +296,10 @@ onMounted(() => {
 	window.addEventListener('resize', measureScrollbar)
 })
 
-onBeforeUnmount(() => window.removeEventListener('resize', measureScrollbar))
+onBeforeUnmount(() => {
+	window.removeEventListener('resize', measureScrollbar)
+	detachAllDay()
+})
 
 watch(() => [props.dayStartHour, props.dayEndHour, props.days, props.autoFit], () => {
 	fitToWorkingHours()

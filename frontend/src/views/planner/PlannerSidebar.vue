@@ -78,6 +78,7 @@ import type {PlannerSidebarSort} from './helpers/usePlannerTasks'
 import FilterPopup from '@/components/project/partials/FilterPopup.vue'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import {useProjectStore} from '@/stores/projects'
+import {plannerTaskColor} from './helpers/taskColor'
 
 defineProps<{
 	tasks: ITask[]
@@ -121,11 +122,7 @@ function onDrop(event: DragEvent) {
 const projectStore = useProjectStore()
 
 function taskColor(task: ITask): string {
-	const hex = projectStore.projects[task.projectId]?.hexColor || task.hexColor
-	if (!hex) {
-		return 'var(--primary)'
-	}
-	return hex.startsWith('#') ? hex : `#${hex}`
+	return plannerTaskColor(task.hexColor, projectStore.projects[task.projectId]?.hexColor)
 }
 
 function projectName(task: ITask): string {

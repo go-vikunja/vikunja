@@ -763,6 +763,7 @@
     "allDay": "All day",
     "saved": "Saved",
     "saveError": "Something went wrong saving the task",
+    "loadError": "Something went wrong loading your tasks",
     "createTitle": "New task",
     "createAllDay": "All day · {date}",
     "sortDefault": "Default order",

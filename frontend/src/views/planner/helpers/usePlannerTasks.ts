@@ -60,6 +60,12 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 	const sidebarTasks = ref<ITask[]>([])
 
 	const isLoading = computed(() => gridService.loading || sidebarService.loading)
+	const loadError = ref(false)
+
+	// Monotonic tokens so a slow earlier load can't overwrite a newer one when the
+	// user navigates faster than requests resolve.
+	let gridLoadId = 0
+	let sidebarLoadId = 0
 
 	async function fetchAll(service: TaskService, params: TaskFilterParams, page = 1): Promise<ITask[]> {
 		const tasks = await service.getAll({} as ITask, params, page) as ITask[]
@@ -97,10 +103,22 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 			expand: 'subtasks',
 		}
 
-		const loaded = await fetchAll(gridService, params)
-		const map = new Map<ITask['id'], ITask>()
-		loaded.forEach(t => map.set(t.id, t))
-		gridTasks.value = map
+		const id = ++gridLoadId
+		try {
+			const loaded = await fetchAll(gridService, params)
+			if (id !== gridLoadId) {
+				return
+			}
+			const map = new Map<ITask['id'], ITask>()
+			loaded.forEach(t => map.set(t.id, t))
+			gridTasks.value = map
+			loadError.value = false
+		} catch (_) {
+			if (id === gridLoadId) {
+				loadError.value = true
+				error(i18n.global.t('planner.loadError'))
+			}
+		}
 	}
 
 	async function loadSidebar() {
@@ -126,15 +144,28 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 		// 'none'/'random' send no sort_by, so the server returns its own order.
 		if (sort !== 'none' && !random) {
 			const [field, order] = sort.split(':')
-			params.sort_by = (field === 'id' ? ['id'] : [field, 'id']) as TaskFilterParams['sort_by']
-			params.order_by = (field === 'id' ? ['desc'] : [order, 'desc']) as TaskFilterParams['order_by']
+			// Keep id as the final tiebreaker so the chosen column drives the order.
+			params.sort_by = [field, 'id'] as TaskFilterParams['sort_by']
+			params.order_by = [order, 'desc'] as TaskFilterParams['order_by']
 		}
 
 		// Truly unscheduled = no start, end or due date. Due-only tasks already
 		// render in the all-day row, so keep them out of the sidebar.
-		const loaded = await fetchAll(sidebarService, params)
-		const unscheduled = loaded.filter(task => !task.startDate && !task.endDate && !task.dueDate)
-		sidebarTasks.value = random ? shuffle(unscheduled) : unscheduled
+		const id = ++sidebarLoadId
+		try {
+			const loaded = await fetchAll(sidebarService, params)
+			if (id !== sidebarLoadId) {
+				return
+			}
+			const unscheduled = loaded.filter(task => !task.startDate && !task.endDate && !task.dueDate)
+			sidebarTasks.value = random ? shuffle(unscheduled) : unscheduled
+			loadError.value = false
+		} catch (_) {
+			if (id === sidebarLoadId) {
+				loadError.value = true
+				error(i18n.global.t('planner.loadError'))
+			}
+		}
 	}
 
 	function load() {
@@ -157,6 +188,22 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 				|| sidebarTasks.value.some(t => t.id === updatedTask.id)
 			if (known) {
 				placeTask(updatedTask)
+			}
+		},
+	)
+
+	// Drop a task deleted elsewhere (e.g. the task detail modal opened over the
+	// planner) from both lists, since the planner stays mounted underneath.
+	watch(
+		() => taskStore.lastDeletedTask,
+		deletedTask => {
+			if (!deletedTask) {
+				return
+			}
+			gridTasks.value.delete(deletedTask.id)
+			const index = sidebarTasks.value.findIndex(t => t.id === deletedTask.id)
+			if (index >= 0) {
+				sidebarTasks.value.splice(index, 1)
 			}
 		},
 	)
@@ -215,6 +262,7 @@ export function usePlannerTasks(range: Ref<PlannerRange>, sidebarFilter: Ref<Tas
 		gridTasks,
 		sidebarTasks,
 		isLoading,
+		loadError,
 		load,
 		updateTask,
 		scheduleTask,

@@ -91,7 +91,27 @@ onMounted(() => {
 		timer = setInterval(() => now.value = new Date(), 60_000)
 	}
 })
-onBeforeUnmount(() => clearInterval(timer))
+
+// Listeners for an in-flight create gesture, torn down on unmount so a mid-drag
+// re-render can't leak them onto document.
+let longPressTimer: ReturnType<typeof setTimeout> | undefined
+let activeMove: ((e: PointerEvent) => void) | null = null
+let activeEnd: ((e: PointerEvent) => void) | null = null
+function detachCreate() {
+	clearTimeout(longPressTimer)
+	if (activeMove) {
+		document.removeEventListener('pointermove', activeMove)
+	}
+	if (activeEnd) {
+		document.removeEventListener('pointerup', activeEnd)
+	}
+	activeMove = null
+	activeEnd = null
+}
+onBeforeUnmount(() => {
+	clearInterval(timer)
+	detachCreate()
+})
 
 function onDrop(event: DragEvent) {
 	isDropTarget.value = false
@@ -125,7 +145,6 @@ function onDblClick(event: MouseEvent) {
 	emit('createTask', {startMinutes: minutesAt(event.clientY), endMinutes: null})
 }
 
-let longPressTimer: ReturnType<typeof setTimeout> | undefined
 function onCreatePointerDown(event: PointerEvent) {
 	if (!onEmptyArea(event.target) || (event.pointerType === 'mouse' && event.button !== 0)) {
 		return
@@ -147,8 +166,7 @@ function onCreatePointerDown(event: PointerEvent) {
 			}
 		}
 		const onUp = () => {
-			document.removeEventListener('pointermove', onMove)
-			document.removeEventListener('pointerup', onUp)
+			detachCreate()
 			if (painting && selStart.value !== null && selEnd.value !== null) {
 				const end = Math.max(selEnd.value, selStart.value + props.slotMinutes)
 				emit('createTask', {startMinutes: selStart.value, endMinutes: end})
@@ -156,6 +174,8 @@ function onCreatePointerDown(event: PointerEvent) {
 			selStart.value = null
 			selEnd.value = null
 		}
+		activeMove = onMove
+		activeEnd = onUp
 		document.addEventListener('pointermove', onMove)
 		document.addEventListener('pointerup', onUp)
 		return
@@ -167,18 +187,15 @@ function onCreatePointerDown(event: PointerEvent) {
 	const onMove = (e: PointerEvent) => {
 		if (Math.abs(e.clientY - startY) > 10) {
 			moved = true
-			cleanup()
+			detachCreate()
 		}
 	}
-	const cleanup = () => {
-		clearTimeout(longPressTimer)
-		document.removeEventListener('pointermove', onMove)
-		document.removeEventListener('pointerup', cleanup)
-	}
+	activeMove = onMove
+	activeEnd = detachCreate
 	document.addEventListener('pointermove', onMove)
-	document.addEventListener('pointerup', cleanup)
+	document.addEventListener('pointerup', detachCreate)
 	longPressTimer = setTimeout(() => {
-		cleanup()
+		detachCreate()
 		if (!moved) {
 			emit('createTask', {startMinutes, endMinutes: null})
 		}

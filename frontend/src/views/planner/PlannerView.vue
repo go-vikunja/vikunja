@@ -62,8 +62,21 @@
 				</div>
 
 				<PlannerSettings />
+
+				<Loading
+					v-if="isLoading"
+					class="planner-loading is-loading-small"
+				/>
 			</div>
 		</header>
+
+		<Message
+			v-if="loadError"
+			variant="danger"
+			class="planner-error"
+		>
+			{{ $t('planner.loadError') }}
+		</Message>
 
 		<div class="planner-body">
 			<PlannerSidebar
@@ -76,7 +89,7 @@
 			<CalendarGrid
 				:days="days"
 				:tasks="visibleGridTasks"
-				:slot-minutes="settings.slotMinutes"
+				:slot-minutes="slotMinutes"
 				:day-start-hour="dayStartHour"
 				:day-end-hour="dayEndHour"
 				:px-per-hour="pxPerHour"
@@ -102,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref, watchEffect} from 'vue'
+import {computed, nextTick, onMounted, ref, watchEffect} from 'vue'
 import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 import {useStorage} from '@vueuse/core'
@@ -110,6 +123,8 @@ import dayjs from 'dayjs'
 
 import type {ITask} from '@/modelTypes/ITask'
 import BaseButton from '@/components/base/BaseButton.vue'
+import Loading from '@/components/misc/Loading.vue'
+import Message from '@/components/misc/Message.vue'
 import PlannerSidebar from './PlannerSidebar.vue'
 import PlannerSettings from './PlannerSettings.vue'
 import PlannerCreateTaskModal from './PlannerCreateTaskModal.vue'
@@ -187,11 +202,16 @@ const rangeLabel = computed(() => {
 	return `${first.format('ll')} – ${last.format('ll')}`
 })
 
-const {sidebarTasks, gridTasks, updateTask, scheduleTask} = usePlannerTasks(range, sidebarFilter, sidebarSort)
+const {sidebarTasks, gridTasks, isLoading, loadError, updateTask, scheduleTask} = usePlannerTasks(range, sidebarFilter, sidebarSort)
 
 const visibleGridTasks = computed(() =>
 	[...gridTasks.value.values()].filter(task => settings.value.showDone || !task.done),
 )
+
+// Guard the duration/slot inputs: a stray 0 or blank would yield NaN positions
+// and invalid dates downstream.
+const slotMinutes = computed(() => Math.max(Math.round(settings.value.slotMinutes) || 0, 5))
+const defaultDurationMinutes = computed(() => Math.max(Math.round(settings.value.defaultDurationMinutes) || 0, 5))
 
 // Page by the visible window (day=1, full week=7, rolling=daysToShow).
 function goPrev() {
@@ -226,7 +246,7 @@ function zoomOut() {
 
 function onDropTask({taskId, minutes, day}: {taskId: number, minutes: number, day: Date}) {
 	const start = dayjs(day).startOf('day').add(minutes, 'minute')
-	const end = start.add(settings.value.defaultDurationMinutes, 'minute')
+	const end = start.add(defaultDurationMinutes.value, 'minute')
 	updateTask({id: taskId, startDate: start.toDate(), endDate: end.toDate()})
 }
 
@@ -255,7 +275,7 @@ function onCreateTask({day, startMinutes, endMinutes}: {day: Date, startMinutes:
 	const start = base.add(startMinutes, 'minute')
 	const end = endMinutes !== null
 		? base.add(endMinutes, 'minute')
-		: start.add(settings.value.defaultDurationMinutes, 'minute')
+		: start.add(defaultDurationMinutes.value, 'minute')
 	createCtx.value = {
 		startDate: start.toDate(),
 		endDate: end.toDate(),
@@ -272,12 +292,16 @@ function onCreateAllDay({day}: {day: Date}) {
 	}
 }
 
+// AddTask emits one `taskAdded` per line synchronously, so schedule each into
+// the same painted slot and close once after the batch (nulling createCtx here
+// would drop every task after the first).
 function onCreated(task: ITask) {
-	if (!createCtx.value) {
+	const ctx = createCtx.value
+	if (!ctx) {
 		return
 	}
-	scheduleTask(task, {startDate: createCtx.value.startDate, endDate: createCtx.value.endDate})
-	createCtx.value = null
+	scheduleTask(task, {startDate: ctx.startDate, endDate: ctx.endDate})
+	nextTick(() => createCtx.value = null)
 }
 
 function openTask(taskId: number) {
@@ -332,6 +356,19 @@ watchEffect(() => setTitle(t('planner.title')))
 	font-weight: 600;
 	min-inline-size: 11rem;
 	text-align: center;
+}
+
+// A small inline refresh indicator in the toolbar; override the component's
+// large default min sizes (meant for full-page use).
+.planner-loading {
+	min-block-size: 0 !important;
+	min-inline-size: 0 !important;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+}
+
+.planner-error {
+	margin-block-end: .75rem;
 }
 
 .mode-toggle {

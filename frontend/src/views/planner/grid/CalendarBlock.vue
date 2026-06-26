@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {computed, onBeforeUnmount, ref} from 'vue'
 import dayjs from 'dayjs'
 
 import {useProjectStore} from '@/stores/projects'
@@ -63,6 +63,7 @@ import {getTextColor} from '@/helpers/color/getTextColor'
 import {isEditorContentEmpty} from '@/helpers/editorContentEmpty'
 import PriorityLabel from '@/components/tasks/partials/PriorityLabel.vue'
 import type {PlannedOccurrence} from '../helpers/types'
+import {plannerTaskColor} from '../helpers/taskColor'
 
 const props = withDefaults(defineProps<{
 	occurrence: PlannedOccurrence
@@ -93,14 +94,10 @@ const grabOffset = ref({x: 0, y: 0})
 const previewPos = ref({x: 0, y: 0})
 const previewSize = ref({w: 0, h: 0})
 
-const color = computed(() => {
-	const project = projectStore.projects[props.occurrence.task.projectId]
-	const hex = project?.hexColor || props.occurrence.task.hexColor
-	if (!hex) {
-		return 'var(--primary)'
-	}
-	return hex.startsWith('#') ? hex : `#${hex}`
-})
+const color = computed(() => plannerTaskColor(
+	props.occurrence.task.hexColor,
+	projectStore.projects[props.occurrence.task.projectId]?.hexColor,
+))
 
 const projectName = computed(() => projectStore.projects[props.occurrence.task.projectId]?.title ?? '')
 const textColor = computed(() => getTextColor(color.value))
@@ -154,6 +151,22 @@ function snap(deltaPx: number): number {
 	return Math.round(minutes / props.slotMinutes) * props.slotMinutes
 }
 
+// Track the listeners for the active move/resize gesture so an unmount mid-drag
+// (e.g. a data reload re-keys the columns) can't leave them attached to document.
+let activeMove: ((e: PointerEvent) => void) | null = null
+let activeUp: ((e: PointerEvent) => void) | null = null
+function detachInteraction() {
+	if (activeMove) {
+		document.removeEventListener('pointermove', activeMove)
+	}
+	if (activeUp) {
+		document.removeEventListener('pointerup', activeUp)
+	}
+	activeMove = null
+	activeUp = null
+}
+onBeforeUnmount(detachInteraction)
+
 function onMovePointerDown(event: PointerEvent) {
 	if (props.occurrence.isGhost) {
 		// Ghosts are read-only, but still let the user open the underlying task.
@@ -179,8 +192,7 @@ function onMovePointerDown(event: PointerEvent) {
 	}
 
 	const onUp = (e: PointerEvent) => {
-		document.removeEventListener('pointermove', onMove)
-		document.removeEventListener('pointerup', onUp)
+		detachInteraction()
 
 		const taskId = props.occurrence.task.id
 		// Hit-test from the preview block's top-centre (what the user visually
@@ -224,6 +236,8 @@ function onMovePointerDown(event: PointerEvent) {
 		isMoving.value = false
 	}
 
+	activeMove = onMove
+	activeUp = onUp
 	document.addEventListener('pointermove', onMove)
 	document.addEventListener('pointerup', onUp)
 }
@@ -237,8 +251,7 @@ function onResizePointerDown(event: PointerEvent) {
 	}
 
 	const onUp = () => {
-		document.removeEventListener('pointermove', onMove)
-		document.removeEventListener('pointerup', onUp)
+		detachInteraction()
 
 		const newDuration = Math.max(props.durationMinutes + resizeDeltaMinutes.value, props.slotMinutes)
 		if (newDuration !== props.durationMinutes) {
@@ -252,6 +265,8 @@ function onResizePointerDown(event: PointerEvent) {
 		isInteracting.value = false
 	}
 
+	activeMove = onMove
+	activeUp = onUp
 	document.addEventListener('pointermove', onMove)
 	document.addEventListener('pointerup', onUp)
 }

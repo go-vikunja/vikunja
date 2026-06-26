@@ -62,6 +62,19 @@ describe('expandOccurrences', () => {
 		out.forEach(o => expect(o.end.getTime() - o.start.getTime()).toBe(90 * 60 * 1000))
 	})
 
+	it('projects into a window far past the cap from a long-untouched daily task', () => {
+		// Stored start is well over a year before the window; stepping naively from
+		// the start would exhaust the iteration cap before reaching it.
+		const task = makeTask({
+			startDate: new Date('2024-01-01T09:00:00'),
+			endDate: new Date('2024-01-01T10:00:00'),
+			repeatAfter: {type: 'days', amount: 1},
+		})
+		const out = expandOccurrences(task, new Date('2026-06-22T00:00:00'), new Date('2026-06-24T00:00:00'))
+		expect(out.map(o => o.start.getDate())).toEqual([22, 23])
+		expect(out.every(o => o.isGhost)).toBe(true)
+	})
+
 	it('honours monthly repeat mode regardless of repeatAfter', () => {
 		const task = makeTask({
 			startDate: new Date('2026-01-15T09:00:00'),

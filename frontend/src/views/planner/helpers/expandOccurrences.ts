@@ -36,6 +36,26 @@ function getRepeatStep(task: ITask): {amount: number, unit: ManipulateType} | nu
 	return {amount: repeat.amount, unit: TYPE_TO_DAYJS[repeat.type]}
 }
 
+// Skip ahead to shortly before `towards` so a task whose stored start is far in
+// the past (e.g. a daily repeater untouched for years) doesn't exhaust the
+// iteration cap before reaching the visible range. `minBackoffMs` keeps enough
+// margin that an occurrence starting before the window but still overlapping it
+// isn't skipped. The caller's fine-stepping loop covers the small remainder.
+function coarseJump(
+	realStart: dayjs.Dayjs,
+	step: {amount: number, unit: ManipulateType},
+	towards: dayjs.Dayjs,
+	minBackoffMs: number,
+): {cursor: dayjs.Dayjs, index: number} {
+	const stepMs = realStart.add(step.amount, step.unit).diff(realStart)
+	if (stepMs <= 0 || !realStart.isBefore(towards)) {
+		return {cursor: realStart, index: 0}
+	}
+	const backoffSteps = Math.ceil(minBackoffMs / stepMs) + 1
+	const jumps = Math.max(Math.floor(towards.diff(realStart) / stepMs) - backoffSteps, 0)
+	return {cursor: realStart.add(step.amount * jumps, step.unit), index: jumps}
+}
+
 /**
  * Projects a timed task's occurrences across [from, to].
  *
@@ -77,13 +97,14 @@ export function expandOccurrences(task: ITask, from: Date, to: Date): PlannedOcc
 		return occurrences
 	}
 
-	let cursor = realStart
-	for (let i = 1; i <= MAX_OCCURRENCES; i++) {
+	let {cursor, index} = coarseJump(realStart, step, rangeStart, durationMs)
+	for (let i = 0; i < MAX_OCCURRENCES; i++) {
 		cursor = cursor.add(step.amount, step.unit)
+		index++
 		if (cursor.isAfter(rangeEnd)) {
 			break
 		}
-		pushIfVisible(cursor, true, i)
+		pushIfVisible(cursor, true, index)
 	}
 
 	return occurrences
@@ -116,8 +137,10 @@ export function allDayOccurrenceForDay(task: ITask, day: Date): {covered: boolea
 		return {covered: false, isGhost: false}
 	}
 
-	let cursor = realStart
-	for (let i = 1; i <= MAX_OCCURRENCES; i++) {
+	// Back off by the task's span so a long all-day occurrence starting before
+	// the target day but still covering it isn't jumped over.
+	let {cursor} = coarseJump(realStart, step, target, spanDays * 24 * 60 * 60 * 1000)
+	for (let i = 0; i < MAX_OCCURRENCES; i++) {
 		cursor = cursor.add(step.amount, step.unit)
 		if (cursor.isAfter(target)) {
 			break
