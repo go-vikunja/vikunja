@@ -23,17 +23,17 @@ import (
 	"code.vikunja.io/veans/internal/output"
 )
 
-// CreateBotUser provisions a bot user via PUT /user/bots. The username must
+// CreateBotUser provisions a bot user via POST /user/bots. The username must
 // be prefixed `bot-` (Vikunja enforces this). The caller becomes the bot's
 // owner, which is what allows them to mint API tokens for the bot via
-// PUT /tokens with owner_id.
+// POST /tokens with owner_id.
 //
 // On Vikunja versions that predate the /user/bots endpoint, the server
 // returns 404, which we surface as BOT_USERS_UNAVAILABLE so init can fail
 // fast with a clear message.
 func (c *Client) CreateBotUser(ctx context.Context, username, name string) (*BotUser, error) {
 	var out BotUser
-	err := c.Do(ctx, "PUT", "/user/bots", nil, &BotUserCreate{Username: username, Name: name}, &out)
+	err := c.Do(ctx, "POST", "/user/bots", nil, &BotUserCreate{Username: username, Name: name}, &out)
 	if err != nil {
 		var oe *output.Error
 		if errors.As(err, &oe) && oe.Code == output.CodeNotFound {
@@ -45,13 +45,11 @@ func (c *Client) CreateBotUser(ctx context.Context, username, name string) (*Bot
 	return &out, nil
 }
 
-// ListBotUsers returns all bot users owned by the authenticated user.
+// ListBotUsers returns all bot users owned by the authenticated user. The v2
+// endpoint is server-paginated (BotUser.ReadAll applies a 50-item page limit),
+// so page through to the end instead of returning only the first page.
 func (c *Client) ListBotUsers(ctx context.Context) ([]*BotUser, error) {
-	var out []*BotUser
-	if err := c.Do(ctx, "GET", "/user/bots", nil, nil, &out); err != nil {
-		return nil, err
-	}
-	return out, nil
+	return doListAll[*BotUser](ctx, c, "/user/bots")
 }
 
 // FindMyBotByUsername scans the caller's owned bots for one with the given

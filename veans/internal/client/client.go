@@ -33,13 +33,26 @@ import (
 
 // Client is a thin JSON wrapper around the Vikunja REST API. It holds the
 // server base URL and a bearer token (either a JWT from POST /login or an
-// API token minted via PUT /tokens). Every method in this package is a thin
+// API token minted via POST /tokens). Every method in this package is a thin
 // shim over Do.
 type Client struct {
 	BaseURL    string
 	Token      string
 	HTTPClient *http.Client
 }
+
+// apiBasePath is the version prefix every request is mounted under. veans
+// targets the Huma-backed /api/v2 exclusively — v1 is frozen and the bucket
+// CRUD endpoints veans needs only exist on v2.
+const apiBasePath = "/api/v2"
+
+// contentTypeJSON / contentTypeMergePatch are the request body content types
+// Do and DoMerge send. Merge-patch (RFC 7396) is how v2 does partial updates:
+// only the fields present in the body are written, the rest are left intact.
+const (
+	contentTypeJSON       = "application/json"
+	contentTypeMergePatch = "application/merge-patch+json"
+)
 
 // UserAgent is the value sent in the User-Agent header on every request.
 // main sets this at startup with the linker-injected version + the
@@ -61,17 +74,36 @@ func New(baseURL, token string) *Client {
 	}
 }
 
-// vikunjaError matches `web.HTTPError` on the wire.
+// vikunjaError matches the RFC 9457 problem+json body /api/v2 returns
+// (huma.ErrorModel augmented with Vikunja's numeric domain `code`). The
+// human-readable message lives in `detail`; `title` is the status text
+// fallback. `message` is v1's legacy field, kept only as a fallback so a
+// stray legacy/proxy error body still yields a readable message instead of
+// raw JSON. The HTTP status used for output.Code mapping comes from the
+// response status line, not this body.
 type vikunjaError struct {
-	Code    int    `json:"code"`
+	Title   string `json:"title"`
+	Detail  string `json:"detail"`
 	Message string `json:"message"`
+	Code    int    `json:"code"`
 }
 
-// Do performs a single JSON request against /api/v1<path>. body, if non-nil,
+// Do performs a single JSON request against /api/v2<path>. body, if non-nil,
 // is JSON-marshalled. out, if non-nil, is JSON-unmarshalled. query is appended
 // as URL-encoded params.
 func (c *Client) Do(ctx context.Context, method, path string, query url.Values, body, out any) error {
-	full := c.BaseURL + "/api/v1" + path
+	return c.do(ctx, method, path, query, body, out, contentTypeJSON)
+}
+
+// DoMerge is like Do but sends the body as a JSON Merge Patch
+// (application/merge-patch+json). Used for PATCH updates so only the fields
+// present in `body` are written server-side — see UpdateTask.
+func (c *Client) DoMerge(ctx context.Context, method, path string, query url.Values, body, out any) error {
+	return c.do(ctx, method, path, query, body, out, contentTypeMergePatch)
+}
+
+func (c *Client) do(ctx context.Context, method, path string, query url.Values, body, out any, contentType string) error {
+	full := c.BaseURL + apiBasePath + path
 	if len(query) > 0 {
 		full += "?" + query.Encode()
 	}
@@ -91,7 +123,7 @@ func (c *Client) Do(ctx context.Context, method, path string, query url.Values, 
 	}
 	req.Header.Set("Accept", "application/json")
 	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Content-Type", contentType)
 	}
 	if c.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.Token)
@@ -122,51 +154,55 @@ func (c *Client) Do(ctx context.Context, method, path string, query url.Values, 
 	return nil
 }
 
-// DoPaginated is like Do but also returns the total page count parsed from
-// the `x-pagination-total-pages` response header (0 if the header is
-// missing or unparseable). Used by the list endpoints so paging terminates
-// against the authoritative server count, not a `len(batch) < per_page`
-// heuristic that loops one extra time on exact-multiple totals.
-func (c *Client) DoPaginated(ctx context.Context, method, path string, query url.Values, out any) (totalPages int, err error) {
-	full := c.BaseURL + "/api/v1" + path
-	if len(query) > 0 {
-		full += "?" + query.Encode()
-	}
-	req, err := http.NewRequestWithContext(ctx, method, full, nil)
-	if err != nil {
-		return 0, fmt.Errorf("build request: %w", err)
-	}
-	req.Header.Set("Accept", "application/json")
-	if c.Token != "" {
-		req.Header.Set("Authorization", "Bearer "+c.Token)
-	}
-	req.Header.Set("User-Agent", UserAgent)
+// Paginated mirrors the standard /api/v2 list envelope. Every v2 list
+// operation returns this shape (v1 returned a bare array plus an
+// x-pagination-total-pages header, which is gone). Single-object responses
+// stay unwrapped.
+type Paginated[T any] struct {
+	Items      []T   `json:"items"`
+	Total      int64 `json:"total"`
+	Page       int   `json:"page"`
+	PerPage    int   `json:"per_page"`
+	TotalPages int   `json:"total_pages"`
+}
 
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return 0, output.Wrap(output.CodeUnknown, err, "%s %s: %v", method, path, err)
+// doList GETs `path` and decodes the standard v2 list envelope, returning the
+// items plus the server's total page count so a caller can page until
+// page >= totalPages. Generic so each list endpoint reuses it without a
+// per-type wrapper struct.
+func doList[T any](ctx context.Context, c *Client, path string, query url.Values) (items []T, totalPages int, err error) {
+	var env Paginated[T]
+	if err := c.Do(ctx, "GET", path, query, nil, &env); err != nil {
+		return nil, 0, err
 	}
-	defer resp.Body.Close()
+	return env.Items, env.TotalPages, nil
+}
 
-	respBody, err := io.ReadAll(io.LimitReader(resp.Body, maxBodyBytes))
-	if err != nil {
-		return 0, fmt.Errorf("read response: %w", err)
-	}
-	if resp.StatusCode >= 400 {
-		return 0, mapHTTPError(method, path, resp.StatusCode, respBody,
-			parseRetryAfter(resp.Header.Get("Retry-After")))
-	}
-	if out != nil && len(respBody) > 0 {
-		if err := json.Unmarshal(respBody, out); err != nil {
-			return 0, fmt.Errorf("decode %s %s: %w", method, path, err)
+// doListAll pages through a v2 list endpoint, accumulating every item until
+// page >= total_pages.
+//
+// Use it ONLY for endpoints whose model honours page/per_page — the
+// server-paginated lists (tasks, projects, labels, comments, bots). For the
+// endpoints whose ReadAll ignores pagination and returns every row in a single
+// page (buckets, views), call doList instead: looping those re-fetches the full
+// set on every page and duplicates it.
+func doListAll[T any](ctx context.Context, c *Client, path string) ([]T, error) {
+	var all []T
+	page := 1
+	for {
+		q := url.Values{}
+		q.Set("page", strconv.Itoa(page))
+		q.Set("per_page", "50")
+		batch, totalPages, err := doList[T](ctx, c, path, q)
+		if err != nil {
+			return nil, err
 		}
-	}
-	if v := resp.Header.Get("x-pagination-total-pages"); v != "" {
-		if n, perr := strconv.Atoi(v); perr == nil {
-			totalPages = n
+		all = append(all, batch...)
+		if page >= totalPages {
+			return all, nil
 		}
+		page++
 	}
-	return totalPages, nil
 }
 
 // DoRaw is the escape hatch used by `veans api`. It returns the raw response
@@ -176,7 +212,7 @@ func (c *Client) DoPaginated(ctx context.Context, method, path string, query url
 // "stdout is for the success payload; errors go through the envelope on
 // stderr"); see commands/api.go for the canonical handling.
 func (c *Client) DoRaw(ctx context.Context, method, path string, query url.Values, body []byte) (status int, respBody []byte, retryAfter time.Duration, err error) {
-	full := c.BaseURL + "/api/v1" + path
+	full := c.BaseURL + apiBasePath + path
 	if len(query) > 0 {
 		full += "?" + query.Encode()
 	}
@@ -203,18 +239,6 @@ func (c *Client) DoRaw(ctx context.Context, method, path string, query url.Value
 	defer resp.Body.Close()
 	respBody, err = io.ReadAll(io.LimitReader(resp.Body, maxBodyBytes))
 	return resp.StatusCode, respBody, parseRetryAfter(resp.Header.Get("Retry-After")), err
-}
-
-// paginationDone reports whether a paged GET has consumed every page,
-// preferring the server's x-pagination-total-pages count when present and
-// falling back to the len(batch) < per_page heuristic when the header is
-// missing (older server / proxy stripped). Centralized so all list
-// endpoints terminate identically.
-func paginationDone(page, batchLen, perPage, totalPages int) bool {
-	if totalPages > 0 {
-		return page >= totalPages
-	}
-	return batchLen < perPage
 }
 
 // maxBodyBytes caps the size of any response body we'll read into memory.
@@ -244,7 +268,16 @@ func parseRetryAfter(v string) time.Duration {
 func mapHTTPError(method, path string, status int, body []byte, retryAfter time.Duration) error {
 	var ve vikunjaError
 	_ = json.Unmarshal(body, &ve)
-	msg := strings.TrimSpace(ve.Message)
+	// v2's problem+json carries the human-readable text in `detail`; fall back
+	// to `title`, then v1's legacy `message`, then the raw body, then the
+	// status text.
+	msg := strings.TrimSpace(ve.Detail)
+	if msg == "" {
+		msg = strings.TrimSpace(ve.Title)
+	}
+	if msg == "" {
+		msg = strings.TrimSpace(ve.Message)
+	}
 	if msg == "" {
 		msg = strings.TrimSpace(string(body))
 		if msg == "" {
