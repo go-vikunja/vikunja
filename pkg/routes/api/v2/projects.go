@@ -89,6 +89,7 @@ func projectsList(ctx context.Context, in *struct {
 	ListParams
 	Expand     string `query:"expand" enum:"permissions" doc:"If set to \"permissions\", each returned project includes the max permission the requesting user has on it (max_permission). Currently only \"permissions\" is supported."`
 	IsArchived bool   `query:"is_archived" doc:"If true, also returns archived projects."`
+	Format     string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 }) (*projectListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -106,6 +107,9 @@ func projectsList(ctx context.Context, in *struct {
 	if !ok {
 		return nil, fmt.Errorf("projects.ReadAll returned unexpected type %T (expected []*models.Project)", result)
 	}
+	for _, p := range items {
+		convertToMarkdown(ctx, &p.Description)
+	}
 	return &projectListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
 
@@ -117,7 +121,8 @@ type projectReadBody struct {
 }
 
 func projectsRead(ctx context.Context, in *struct {
-	ID int64 `path:"id"`
+	ID     int64  `path:"id"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 }) (*singleBody[projectReadBody], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -132,22 +137,29 @@ func projectsRead(ctx context.Context, in *struct {
 	// the Favorites pseudo-project and saved-filter-backed ones), so the field
 	// is always meaningful here — surfaced unconditionally like labels/views.
 	project.MaxPermission = models.Permission(maxPermission)
+	body := &projectReadBody{Project: *project}
+	convertToMarkdown(ctx, &body.Description)
 	// No ETag/conditional read: a project response carries user-scoped, derived
 	// state (subscription, favorite, views, computed archived state) that
 	// changes without bumping project.Updated, so it's always served fresh.
-	return &singleBody[projectReadBody]{Body: &projectReadBody{Project: *project}}, nil
+	return &singleBody[projectReadBody]{Body: body}, nil
 }
 
 func projectsCreate(ctx context.Context, in *struct {
-	Body models.Project
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   models.Project
 }) (*singleBody[models.Project], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
+	if err := convertToHTML(ctx, &in.Body.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertToMarkdown(ctx, &in.Body.Description)
 	// Create/Update don't compute the caller's permission; null says "read it"
 	// rather than echoing the zero value (0 = read), misleading for the owner.
 	in.Body.MaxPermission = models.PermissionUnknown
@@ -156,8 +168,9 @@ func projectsCreate(ctx context.Context, in *struct {
 
 // Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func projectsUpdate(ctx context.Context, in *struct {
-	ID   int64 `path:"id"`
-	Body projectReadBody
+	ID     int64  `path:"id"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   projectReadBody
 }) (*singleBody[models.Project], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -165,9 +178,13 @@ func projectsUpdate(ctx context.Context, in *struct {
 	}
 	project := &in.Body.Project
 	project.ID = in.ID // URL wins over body
+	if err := convertToHTML(ctx, &project.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoUpdate(ctx, project, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertToMarkdown(ctx, &project.Description)
 	project.MaxPermission = models.PermissionUnknown // see projectsCreate
 	return &singleBody[models.Project]{Body: project}, nil
 }
