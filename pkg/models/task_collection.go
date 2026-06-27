@@ -211,50 +211,40 @@ func getRelevantProjectsFromCollection(s *xorm.Session, a web.Auth, tf *TaskColl
 		return []*Project{{ID: tf.ProjectID}}, nil
 	}
 
-	projectIDs, err := getProjectAndDescendantIDs(s, tf.ProjectID)
+	allProjects, _, _, err := getRawProjectsForUser(s, &projectOptions{
+		user: &user.User{ID: a.GetID()},
+		page: -1,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	u, err := user.GetUserByID(s, a.GetID())
-	if err != nil {
-		return nil, err
+	relevantProjects := make([]*Project, 0)
+	childrenMap := make(map[int64][]int64)
+	projectMap := make(map[int64]*Project)
+	for _, p := range allProjects {
+		projectMap[p.ID] = p
+		childrenMap[p.ParentProjectID] = append(childrenMap[p.ParentProjectID], p.ID)
 	}
 
-	projectPermissions, err := checkPermissionsForProjects(s, u, projectIDs)
-	if err != nil {
-		return nil, err
-	}
+	queue := []int64{tf.ProjectID}
+	for len(queue) > 0 {
+		currentID := queue[0]
+		queue = queue[1:]
 
-	relevantProjects := make([]*Project, 0, len(projectIDs))
-	for _, projectID := range projectIDs {
-		permission, has := projectPermissions[projectID]
-		if !has || permission.MaxPermission < PermissionRead {
-			continue
+		if p, exists := projectMap[currentID]; exists {
+			relevantProjects = append(relevantProjects, p)
 		}
 
-		relevantProjects = append(relevantProjects, &Project{ID: projectID})
+		if children, exists := childrenMap[currentID]; exists {
+			queue = append(queue, children...)
+		}
 	}
 
 	return relevantProjects, nil
 }
 
-func getProjectAndDescendantIDs(s *xorm.Session, rootProjectID int64) (projectIDs []int64, err error) {
-	err = s.SQL(`
-WITH RECURSIVE descendant_projects (id) AS (
-    SELECT id
-    FROM projects
-    WHERE id = ?
-    UNION ALL
-    SELECT p.id
-    FROM projects p
-    INNER JOIN descendant_projects dp ON p.parent_project_id = dp.id
-)
-SELECT DISTINCT id
-FROM descendant_projects`, rootProjectID).
-		Find(&projectIDs)
-	return
-}
+
 
 func getFilterValueForBucketFilter(filter string, view *ProjectView) (newFilter string, err error) {
 	if view.BucketConfigurationMode != BucketConfigurationModeFilter {
@@ -404,10 +394,6 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 	effectiveIncludeSubprojects := tf.IncludeSubprojects &&
 		tf.ProjectID > 0 &&
 		!tf.isSavedFilter
-
-	if view != nil && view.ViewKind == ProjectViewKindKanban {
-		effectiveIncludeSubprojects = false
-	}
 
 	if _, is := a.(*LinkSharing); is {
 		effectiveIncludeSubprojects = false
