@@ -88,6 +88,9 @@ func NewAPI(e *echo.Echo, g *echo.Group) huma.API {
 
 	api := humaecho5.NewWithGroup(e, g, GroupPrefix, cfg)
 	oapi := api.OpenAPI()
+	if oapi.Info != nil {
+		oapi.Info.Description = richTextFormatAPIDescription
+	}
 	if oapi.Components.SecuritySchemes == nil {
 		oapi.Components.SecuritySchemes = map[string]*huma.SecurityScheme{}
 	}

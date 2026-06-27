@@ -42,4 +42,5 @@ func RegisterAll(api huma.API) {
 		r(api)
 	}
 	EnableAutoPatch(api)
+	stripPatchFormatQuery(api)
 }
