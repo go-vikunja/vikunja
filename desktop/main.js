@@ -100,10 +100,15 @@ app.on('second-instance', (_event, argv) => {
 		return
 	}
 
-	// Focus the main window
+	// Reveal the main window. It may be hidden in the tray (not just minimized),
+	// so show() is required — focus() alone won't surface a hidden window, which
+	// made the app look dead when relaunched while running in the tray.
 	if (mainWindow) {
 		if (mainWindow.isMinimized()) mainWindow.restore()
+		mainWindow.show()
 		mainWindow.focus()
+	} else if (serverPort) {
+		createMainWindow()
 	}
 
 	// Find the deep link URL in argv
