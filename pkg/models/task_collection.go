@@ -386,6 +386,10 @@ func (tf *TaskCollection) ReadAll(s *xorm.Session, a web.Auth, search string, pa
 			if view.Filter.FilterIncludeNulls {
 				tf.FilterIncludeNulls = true
 			}
+
+			if view.Filter.IncludeSubprojects {
+				tf.IncludeSubprojects = true
+			}
 		}
 
 		if strings.Contains(tf.Filter, taskPropertyBucketID) {
