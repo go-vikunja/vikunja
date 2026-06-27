@@ -668,7 +668,6 @@ func (pv *ProjectView) Update(s *xorm.Session, a web.Auth) (err error) {
 		"view_kind",
 		"filter",
 		"position",
-		"include_subprojects",
 		"bucket_configuration_mode",
 		"bucket_configuration",
 	}
