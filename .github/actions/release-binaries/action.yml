@@ -79,7 +79,7 @@ runs:
         } >> "$GITHUB_ENV"
 
     - name: Download Mage binary
-      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: mage_bin
 
@@ -89,7 +89,7 @@ runs:
 
     - name: Download frontend dist (vikunja only)
       if: inputs.project == 'vikunja'
-      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: frontend_dist
         path: frontend/dist
@@ -110,7 +110,7 @@ runs:
         sudo mv upx-5.0.0-amd64_linux/upx /usr/local/bin
 
     - name: Setup xgo cache
-      uses: useblacksmith/cache@71c7c918062ba3861252d84b07fe5ab2a6b467a6 # v5
+      uses: useblacksmith/cache@c5fe29eb0efdf1cf4186b9f7fcbbcbc0cf025662 # v5.1.0
       with:
         path: /home/runner/.xgo-cache
         key: xgo-${{ inputs.project }}-${{ hashFiles('**/go.sum') }}
@@ -133,7 +133,7 @@ runs:
         cd build && mage release:build "$PROJECT"
 
     - name: GPG setup
-      uses: kolaente/action-gpg@main
+      uses: kolaente/action-gpg@eb0fd8f16fe9b499f060f659092c470cb9f76eb7 # main
       with:
         gpg-passphrase: ${{ inputs.gpg-passphrase }}
         gpg-sign-key: ${{ inputs.gpg-sign-key }}
@@ -164,7 +164,7 @@ runs:
         done
 
     - name: Upload zips to S3
-      uses: kolaente/s3-action@main
+      uses: kolaente/s3-action@7f58dddd682b2f93a6c6799c9f68e7a38f2da558 # main
       with:
         s3-access-key-id: ${{ inputs.s3-access-key-id }}
         s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
@@ -176,14 +176,14 @@ runs:
         strip-path-prefix: ${{ env.DIST_PREFIX }}/zip/
 
     - name: Store binaries
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: ${{ env.ARTIFACT_BINARIES_NAME }}
         path: ./${{ env.DIST_PREFIX }}/binaries/*
 
     - name: Store binary packages
       if: github.ref_type == 'tag'
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: ${{ env.ARTIFACT_ZIPS_NAME }}
         path: ./${{ env.DIST_PREFIX }}/zip/*

@@ -5,16 +5,16 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  minimatch: ^10.2.3
-  tar: '>=7.5.16'
-  '@tootallnate/once': ^3.0.1
-  picomatch: '>=4.0.4'
-  tmp: '>=0.2.7'
-  ip-address: '>=10.1.1'
-  form-data: '>=4.0.6'
-  js-yaml: '>=4.2.0'
-  undici@6: ^6.27.0
-  undici@7: ^7.28.0
+  minimatch: 10.2.5
+  tar: 7.5.17
+  '@tootallnate/once': 3.0.1
+  picomatch: 4.0.4
+  tmp: 0.2.7
+  ip-address: 10.2.0
+  form-data: 4.0.6
+  js-yaml: 5.2.0
+  undici@6: 6.27.0
+  undici@7: 7.28.0
 
 importers:
 
@@ -620,7 +620,7 @@ packages:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
-      picomatch: '>=4.0.4'
+      picomatch: 4.0.4
     peerDependenciesMeta:
       picomatch:
         optional: true
@@ -834,8 +834,8 @@ packages:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
 
-  js-yaml@4.2.0:
-    resolution: {integrity: sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==}
+  js-yaml@5.2.0:
+    resolution: {integrity: sha512-YeLUMlvR4Ou1B119LIaM0r65JvbOBooJDc9yEu0dClb/uSC5P4FrLU8OCCz/HXWvtPoIrR0dRzABTjo1sTN9Bw==}
     hasBin: true
 
   json-buffer@3.0.1:
@@ -1299,8 +1299,8 @@ packages:
     resolution: {integrity: sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ==}
     engines: {node: '>=6'}
 
-  tar@7.5.16:
-    resolution: {integrity: sha512-56adEpPMouktRlBLXiaYFFzZ/3+JXa8P9n7WbR+ibIjtviN55mEaOkiysCnPnWm+7kkui1Dn8J9l+g6zV8731w==}
+  tar@7.5.17:
+    resolution: {integrity: sha512-wPEBwzapC+2PaTYPH6e2L+cNOEE227S47wUYFqlegcs8zlLLmeb9Fcff1HVZY4Fwku/1Eyv38n7GYwB2aaS71g==}
     engines: {node: '>=18'}
 
   temp-file@3.4.0:
@@ -1735,13 +1735,13 @@ snapshots:
       hosted-git-info: 4.1.0
       is-ci: 3.0.1
       isbinaryfile: 5.0.7
-      js-yaml: 4.2.0
+      js-yaml: 5.2.0
       lazy-val: 1.0.5
       minimatch: 10.2.5
       read-config-file: 6.3.2
       sanitize-filename: 1.6.4
       semver: 7.8.1
-      tar: 7.5.16
+      tar: 7.5.17
       temp-file: 3.4.0
     transitivePeerDependencies:
       - supports-color
@@ -1777,7 +1777,7 @@ snapshots:
       hosted-git-info: 4.1.0
       isbinaryfile: 5.0.7
       jiti: 2.6.1
-      js-yaml: 4.2.0
+      js-yaml: 5.2.0
       json5: 2.2.3
       lazy-val: 1.0.5
       minimatch: 10.2.5
@@ -1786,7 +1786,7 @@ snapshots:
       proper-lockfile: 4.1.2
       resedit: 1.7.2
       semver: 7.7.4
-      tar: 7.5.16
+      tar: 7.5.17
       temp-file: 3.4.0
       tiny-async-pool: 1.3.0
       unzipper: 0.12.5
@@ -1924,7 +1924,7 @@ snapshots:
       http-proxy-agent: 5.0.0
       https-proxy-agent: 5.0.1
       is-ci: 3.0.1
-      js-yaml: 4.2.0
+      js-yaml: 5.2.0
       source-map-support: 0.5.21
       stat-mode: 1.0.0
       temp-file: 3.4.0
@@ -1941,7 +1941,7 @@ snapshots:
       fs-extra: 10.1.0
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.5
-      js-yaml: 4.2.0
+      js-yaml: 5.2.0
       sanitize-filename: 1.6.4
       source-map-support: 0.5.21
       stat-mode: 1.0.0
@@ -2094,7 +2094,7 @@ snapshots:
       app-builder-lib: 26.15.3(dmg-builder@26.15.3)(electron-builder-squirrel-windows@24.13.3)
       builder-util: 26.15.3
       fs-extra: 10.1.0
-      js-yaml: 4.2.0
+      js-yaml: 5.2.0
     transitivePeerDependencies:
       - electron-builder-squirrel-windows
       - supports-color
@@ -2533,7 +2533,7 @@ snapshots:
 
   jiti@2.6.1: {}
 
-  js-yaml@4.2.0:
+  js-yaml@5.2.0:
     dependencies:
       argparse: 2.0.1
 
@@ -2649,7 +2649,7 @@ snapshots:
       nopt: 9.0.0
       proc-log: 6.1.0
       semver: 7.8.1
-      tar: 7.5.16
+      tar: 7.5.17
       tinyglobby: 0.2.15
       undici: 6.27.0
       which: 6.0.1
@@ -2784,7 +2784,7 @@ snapshots:
       config-file-ts: 0.2.6
       dotenv: 9.0.2
       dotenv-expand: 5.1.0
-      js-yaml: 4.2.0
+      js-yaml: 5.2.0
       json5: 2.2.3
       lazy-val: 1.0.5
 
@@ -3001,7 +3001,7 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
 
-  tar@7.5.16:
+  tar@7.5.17:
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0

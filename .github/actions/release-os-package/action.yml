@@ -91,12 +91,12 @@ runs:
         echo "S3_TARGET_PATH=/${PROJECT}/${VERSION_OR_UNSTABLE}" >> "$GITHUB_ENV"
 
     - name: Download project binaries
-      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: ${{ env.BINARIES_ARTIFACT_NAME }}
         path: ${{ env.BINARIES_DOWNLOAD_PATH }}
 
-    - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+    - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
       with:
         go-version: stable
 
@@ -123,7 +123,7 @@ runs:
 
     - name: GPG setup for archlinux signing
       if: inputs.packager == 'archlinux'
-      uses: kolaente/action-gpg@main
+      uses: kolaente/action-gpg@eb0fd8f16fe9b499f060f659092c470cb9f76eb7 # main
       with:
         gpg-passphrase: ${{ inputs.gpg-passphrase }}
         gpg-sign-key: ${{ inputs.gpg-sign-key }}
@@ -163,7 +163,7 @@ runs:
       run: mkdir -p "$PACKAGE_OUTPUT_DIR"
 
     - name: Create package
-      uses: kolaente/action-gh-nfpm@master
+      uses: kolaente/action-gh-nfpm@08460c16ce3baaa48eaf94d51eea0e653b15d955 # master
       with:
         packager: ${{ inputs.packager }}
         target: ${{ env.PACKAGE_OUTPUT_DIR }}/${{ env.PACKAGE_FILENAME }}
@@ -186,7 +186,7 @@ runs:
           "$PACKAGE_OUTPUT_DIR/$PACKAGE_FILENAME"
 
     - name: Upload to S3
-      uses: kolaente/s3-action@main
+      uses: kolaente/s3-action@7f58dddd682b2f93a6c6799c9f68e7a38f2da558 # main
       with:
         s3-access-key-id: ${{ inputs.s3-access-key-id }}
         s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
@@ -198,7 +198,7 @@ runs:
         strip-path-prefix: ${{ env.PACKAGE_OUTPUT_DIR }}/
 
     - name: Store OS package
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: ${{ env.ARTIFACT_NAME }}
         path: ${{ env.PACKAGE_OUTPUT_DIR }}/*
