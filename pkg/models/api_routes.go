@@ -74,6 +74,13 @@ func stripAPIVersion(path string) string {
 	return path
 }
 
+// canonicalAPITokenGroup snake_cases a permission group name. The frontend
+// snake_cases request payloads, so a hyphenated group slug (e.g. from
+// /api/v2/time-entries) can't round-trip and fails validation on save.
+func canonicalAPITokenGroup(group string) string {
+	return strings.ReplaceAll(group, "-", "_")
+}
+
 func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 	parts := strings.Split(stripAPIVersion(path), "/")
 	filteredParts = []string{}
@@ -82,7 +89,7 @@ func getRouteGroupName(path string) (finalName string, filteredParts []string) {
 			continue
 		}
 
-		filteredParts = append(filteredParts, part)
+		filteredParts = append(filteredParts, canonicalAPITokenGroup(part))
 	}
 
 	finalName = strings.Join(filteredParts, "_")
@@ -183,7 +190,7 @@ func isStandardCRUDRoute(routeGroupName string, routeParts []string, _ string) b
 		"comments":             true,
 		"relations":            true,
 		"attachments":          true,
-		"time-entries":         true,
+		"time_entries":         true,
 		"projects_views":       true,
 		"projects_teams":       true,
 		"projects_users":       true,
@@ -403,7 +410,8 @@ func CanDoAPIRoute(c *echo.Context, token *APIToken) (can bool) {
 	}
 	method := c.Request().Method
 
-	for group, perms := range token.APIPermissions {
+	for rawGroup, perms := range token.APIPermissions {
+		group := canonicalAPITokenGroup(rawGroup)
 		tables := []APITokenRoute{apiTokenRoutes[group], apiTokenRoutesV2[group]}
 		for _, routes := range tables {
 			if routes == nil {
@@ -448,8 +456,9 @@ func PermissionsAreValid(permissions APIPermissions) (err error) {
 		// resources (no v1 counterpart) live solely in apiTokenRoutesV2, so
 		// validating against the union lets tokens grant them. CanDoAPIRoute
 		// already consults both tables when authorising.
-		v1Routes := apiTokenRoutes[key]
-		v2Routes := apiTokenRoutesV2[key]
+		group := canonicalAPITokenGroup(key)
+		v1Routes := apiTokenRoutes[group]
+		v2Routes := apiTokenRoutesV2[group]
 		if v1Routes == nil && v2Routes == nil {
 			return &ErrInvalidAPITokenPermission{
 				Group: key,
