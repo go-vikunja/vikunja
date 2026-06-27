@@ -96,6 +96,7 @@ func init() { AddRouteRegistrar(RegisterTaskCommentRoutes) }
 func taskCommentsList(ctx context.Context, in *struct {
 	TaskID  int64  `path:"task"`
 	OrderBy string `query:"order_by" enum:"asc,desc" default:"asc" doc:"Sort order by creation time: 'asc' (oldest first, default) or 'desc' (newest first)."`
+	Format  string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	ListParams
 }) (*taskCommentListBody, error) {
 	a, err := authFromCtx(ctx)
@@ -110,6 +111,9 @@ func taskCommentsList(ctx context.Context, in *struct {
 	if !ok {
 		return nil, fmt.Errorf("taskComments.ReadAll returned unexpected type %T (expected []*models.TaskComment)", result)
 	}
+	for _, c := range items {
+		convertToMarkdown(ctx, &c.Comment)
+	}
 	return &taskCommentListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
 
@@ -121,8 +125,9 @@ type taskCommentReadBody struct {
 }
 
 func taskCommentsRead(ctx context.Context, in *struct {
-	TaskID int64 `path:"task"`
-	ID     int64 `path:"commentid"`
+	TaskID int64  `path:"task"`
+	ID     int64  `path:"commentid"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
 }) (*singleReadBody[taskCommentReadBody], error) {
 	a, err := authFromCtx(ctx)
@@ -137,11 +142,13 @@ func taskCommentsRead(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	body := &taskCommentReadBody{TaskComment: *comment, MaxPermission: models.Permission(maxPermission)}
+	convertToMarkdown(ctx, &body.Comment)
 	return conditionalReadResponse(&in.Params, body, comment.Updated, maxPermission)
 }
 
 func taskCommentsCreate(ctx context.Context, in *struct {
-	TaskID int64 `path:"task"`
+	TaskID int64  `path:"task"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	Body   models.TaskComment
 }) (*singleBody[models.TaskComment], error) {
 	a, err := authFromCtx(ctx)
@@ -149,16 +156,21 @@ func taskCommentsCreate(ctx context.Context, in *struct {
 		return nil, err
 	}
 	in.Body.TaskID = in.TaskID // URL wins over body
+	if err := convertToHTML(ctx, &in.Body.Comment); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertToMarkdown(ctx, &in.Body.Comment)
 	return &singleBody[models.TaskComment]{Body: &in.Body}, nil
 }
 
 // Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func taskCommentsUpdate(ctx context.Context, in *struct {
-	TaskID int64 `path:"task"`
-	ID     int64 `path:"commentid"`
+	TaskID int64  `path:"task"`
+	ID     int64  `path:"commentid"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	Body   taskCommentReadBody
 }) (*singleBody[models.TaskComment], error) {
 	a, err := authFromCtx(ctx)
@@ -168,9 +180,13 @@ func taskCommentsUpdate(ctx context.Context, in *struct {
 	comment := &in.Body.TaskComment
 	comment.ID = in.ID         // URL wins over body
 	comment.TaskID = in.TaskID // parent from the path scopes the update
+	if err := convertToHTML(ctx, &comment.Comment); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoUpdate(ctx, comment, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertToMarkdown(ctx, &comment.Comment)
 	return &singleBody[models.TaskComment]{Body: comment}, nil
 }
 

@@ -112,6 +112,7 @@ type taskReadOneBody struct {
 func tasksRead(ctx context.Context, in *struct {
 	ID     int64    `path:"projecttask" doc:"The numeric id of the task."`
 	Expand []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra data per task. Repeatable."`
+	Format string   `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
 }) (*singleReadBody[taskReadOneBody], error) {
 	a, err := authFromCtx(ctx)
@@ -128,6 +129,7 @@ func tasksRead(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission)}
+	convertTasksToMarkdown(ctx, &body.Task)
 	return conditionalReadResponse(&in.Params, body, task.Updated, maxPermission)
 }
 
@@ -135,6 +137,7 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 	Project string   `path:"project" doc:"A numeric project id or a textual project identifier (e.g. \"PROJ\")."`
 	Index   int64    `path:"index" doc:"The per-project task index."`
 	Expand  []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra data per task. Repeatable."`
+	Format  string   `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
 }) (*singleReadBody[taskReadOneBody], error) {
 	a, err := authFromCtx(ctx)
@@ -158,11 +161,13 @@ func tasksReadByIndex(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	body := &taskReadOneBody{Task: *task, MaxPermission: models.Permission(maxPermission)}
+	convertTasksToMarkdown(ctx, &body.Task)
 	return conditionalReadResponse(&in.Params, body, task.Updated, maxPermission)
 }
 
 func tasksCreate(ctx context.Context, in *struct {
-	Project int64 `path:"project" doc:"The numeric id of the project to create the task in."`
+	Project int64  `path:"project" doc:"The numeric id of the project to create the task in."`
+	Format  string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	Body    models.Task
 }) (*singleBody[models.Task], error) {
 	a, err := authFromCtx(ctx)
@@ -171,16 +176,21 @@ func tasksCreate(ctx context.Context, in *struct {
 	}
 	task := &in.Body
 	task.ProjectID = in.Project // URL wins over body
+	if err := convertToHTML(ctx, &task.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoCreate(ctx, task, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertTasksToMarkdown(ctx, task)
 	return &singleBody[models.Task]{Body: task}, nil
 }
 
 // Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func tasksUpdate(ctx context.Context, in *struct {
-	ID   int64 `path:"projecttask"`
-	Body taskReadOneBody
+	ID     int64  `path:"projecttask"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   taskReadOneBody
 }) (*singleBody[models.Task], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -188,9 +198,13 @@ func tasksUpdate(ctx context.Context, in *struct {
 	}
 	task := &in.Body.Task
 	task.ID = in.ID // URL wins over body
+	if err := convertToHTML(ctx, &task.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoUpdate(ctx, task, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertTasksToMarkdown(ctx, task)
 	return &singleBody[models.Task]{Body: task}, nil
 }
 

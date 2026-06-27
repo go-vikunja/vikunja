@@ -61,6 +61,7 @@ type TaskListQueryParams struct {
 	SortBy             []string `query:"sort_by,explode" doc:"Fields to sort by (e.g. done, priority). Repeatable; pair positionally with order_by."`
 	OrderBy            []string `query:"order_by,explode" doc:"Sort order per sort_by field, asc or desc. Repeatable; defaults to asc."`
 	Expand             []string `query:"expand,explode" enum:"subtasks,buckets,reactions,comments,comment_count,time_entries_count,is_unread" doc:"Embed extra, more expensive data per task. Repeatable."`
+	Format             string   `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 }
 
 type taskListAllInput struct {
@@ -201,6 +202,7 @@ func readFlatTasks(ctx context.Context, f taskListFilters, page, perPage int, pr
 	if !ok {
 		return nil, fmt.Errorf("taskCollection.ReadAll returned unexpected type %T (expected []*models.Task)", result)
 	}
+	convertTasksToMarkdown(ctx, tasks...)
 	return &taskListBody{Body: NewPaginated(tasks, total, page, perPage)}, nil
 }
 
@@ -228,6 +230,11 @@ func projectViewBucketsTasksList(ctx context.Context, in *taskListViewInput) (*b
 		}
 		return nil, fmt.Errorf("taskCollection.ReadAll returned unexpected type %T (expected []*models.Bucket)", result)
 	}
+	var bucketTasks []*models.Task
+	for _, bucket := range buckets {
+		bucketTasks = append(bucketTasks, bucket.Tasks...)
+	}
+	convertTasksToMarkdown(ctx, bucketTasks...)
 	out := &bucketsWithTasksBody{}
 	out.Body.Items = buckets
 	out.Body.Total = total

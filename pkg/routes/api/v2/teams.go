@@ -90,7 +90,8 @@ func teamsList(ctx context.Context, in *struct {
 	// IncludePublic mirrors the model's include_public query param; bound
 	// onto the model below so ReadAll can honor it (gated by the instance
 	// public-teams setting).
-	IncludePublic bool `query:"include_public" doc:"Also include public teams the user is not a member of. Only honored when public teams are enabled on the instance."`
+	IncludePublic bool   `query:"include_public" doc:"Also include public teams the user is not a member of. Only honored when public teams are enabled on the instance."`
+	Format        string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 }) (*teamListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -104,6 +105,9 @@ func teamsList(ctx context.Context, in *struct {
 	if !ok {
 		return nil, fmt.Errorf("teams.ReadAll returned unexpected type %T (expected []*models.Team)", result)
 	}
+	for _, team := range items {
+		convertToMarkdown(ctx, &team.Description)
+	}
 	return &teamListBody{Body: NewPaginated(items, total, in.Page, in.PerPage)}, nil
 }
 
@@ -113,7 +117,8 @@ type teamReadBody struct {
 }
 
 func teamsRead(ctx context.Context, in *struct {
-	ID int64 `path:"id"`
+	ID     int64  `path:"id"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
 	conditional.Params
 }) (*singleReadBody[teamReadBody], error) {
 	a, err := authFromCtx(ctx)
@@ -126,26 +131,33 @@ func teamsRead(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	body := &teamReadBody{Team: *team, MaxPermission: models.Permission(maxPermission)}
+	convertToMarkdown(ctx, &body.Description)
 	return conditionalReadResponse(&in.Params, body, team.Updated, maxPermission)
 }
 
 func teamsCreate(ctx context.Context, in *struct {
-	Body models.Team
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   models.Team
 }) (*singleBody[models.Team], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
+	if err := convertToHTML(ctx, &in.Body.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoCreate(ctx, &in.Body, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertToMarkdown(ctx, &in.Body.Description)
 	return &singleBody[models.Team]{Body: &in.Body}, nil
 }
 
 // Body matches the read shape so AutoPatch's GET→PUT echo of max_permission validates.
 func teamsUpdate(ctx context.Context, in *struct {
-	ID   int64 `path:"id"`
-	Body teamReadBody
+	ID     int64  `path:"id"`
+	Format string `query:"format" enum:"html,markdown" doc:"How rich-text fields are exchanged. See the API description."`
+	Body   teamReadBody
 }) (*singleBody[models.Team], error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -153,9 +165,13 @@ func teamsUpdate(ctx context.Context, in *struct {
 	}
 	team := &in.Body.Team
 	team.ID = in.ID // URL wins over body
+	if err := convertToHTML(ctx, &team.Description); err != nil {
+		return nil, translateDomainError(err)
+	}
 	if err := handler.DoUpdate(ctx, team, a); err != nil {
 		return nil, translateDomainError(err)
 	}
+	convertToMarkdown(ctx, &team.Description)
 	return &singleBody[models.Team]{Body: team}, nil
 }
 
