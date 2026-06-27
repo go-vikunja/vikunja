@@ -121,9 +121,9 @@ func TestCollectRoutesV2(t *testing.T) {
 	assert.Equal(t, "DELETE", labels["delete"].Method)
 }
 
-// TestCollectRoutes_TimeEntriesV2 verifies the v2-only time-entries resource
-// lands under a clean "time-entries" group rather than the "other" catch-all,
-// so its scopes read sensibly for token clients.
+// TestCollectRoutes_TimeEntriesV2 pins the v2-only time-entries resource to a
+// snake_case "time_entries" group (not the "other" catch-all, not a hyphenated
+// key the frontend's snake_case transform would mangle on save).
 func TestCollectRoutes_TimeEntriesV2(t *testing.T) {
 	apiTokenRoutes = make(map[string]APITokenRoute)
 	apiTokenRoutesV2 = make(map[string]APITokenRoute)
@@ -137,8 +137,11 @@ func TestCollectRoutes_TimeEntriesV2(t *testing.T) {
 	_, isOther := apiTokenRoutesV2["other"]
 	assert.False(t, isOther, "time-entries CRUD must not fall into the 'other' bucket")
 
-	te, has := apiTokenRoutesV2["time-entries"]
-	require.True(t, has, "time-entries group should exist in the v2 table")
+	_, hyphenated := apiTokenRoutesV2["time-entries"]
+	assert.False(t, hyphenated, "group key must be canonicalised to snake_case")
+
+	te, has := apiTokenRoutesV2["time_entries"]
+	require.True(t, has, "time_entries group should exist in the v2 table")
 	assert.Equal(t, "GET", te["read_all"].Method)
 	assert.Equal(t, "/api/v2/time-entries", te["read_all"].Path)
 	assert.Equal(t, "GET", te["read_one"].Method)
@@ -148,7 +151,7 @@ func TestCollectRoutes_TimeEntriesV2(t *testing.T) {
 }
 
 // TestGetAPITokenRoutes_ExposesV2Only verifies the /routes payload merges
-// v2-only groups (time-entries has no v1 counterpart) so token clients can
+// v2-only groups (time_entries has no v1 counterpart) so token clients can
 // discover and grant them, without mutating the v1 table itself.
 func TestGetAPITokenRoutes_ExposesV2Only(t *testing.T) {
 	apiTokenRoutes = make(map[string]APITokenRoute)
@@ -162,12 +165,33 @@ func TestGetAPITokenRoutes_ExposesV2Only(t *testing.T) {
 	_, hasLabels := routes["labels"]
 	assert.True(t, hasLabels, "v1 groups stay exposed")
 
-	te, hasTE := routes["time-entries"]
-	require.True(t, hasTE, "v2-only time-entries must be exposed via /routes")
+	te, hasTE := routes["time_entries"]
+	require.True(t, hasTE, "v2-only time_entries must be exposed via /routes")
 	assert.Equal(t, "GET", te["read_all"].Method)
 
-	_, v1HasTE := apiTokenRoutes["time-entries"]
+	_, v1HasTE := apiTokenRoutes["time_entries"]
 	assert.False(t, v1HasTE, "the merge must not mutate the v1 table")
+}
+
+// TestCanDoAPIRoute_TimeEntriesHyphenLegacy proves a token stored under the old
+// hyphenated "time-entries" key still validates and authorises — no migration.
+func TestCanDoAPIRoute_TimeEntriesHyphenLegacy(t *testing.T) {
+	apiTokenRoutes = make(map[string]APITokenRoute)
+	apiTokenRoutesV2 = make(map[string]APITokenRoute)
+
+	CollectRoutesForAPITokenUsage(echo.RouteInfo{Method: "GET", Path: "/api/v2/time-entries"}, true)
+
+	for _, key := range []string{"time_entries", "time-entries"} {
+		t.Run(key, func(t *testing.T) {
+			perms := APIPermissions{key: []string{"read_all"}}
+			require.NoError(t, PermissionsAreValid(perms), "%s must validate", key)
+
+			token := &APIToken{APIPermissions: perms}
+			req := httptest.NewRequest("GET", "/api/v2/time-entries", nil)
+			c := echo.New().NewContext(req, httptest.NewRecorder())
+			assert.True(t, CanDoAPIRoute(c, token), "%s must authorise", key)
+		})
+	}
 }
 
 // TestGetRouteDetail_V2Verbs verifies the v2 verb mapping: POST→create,
