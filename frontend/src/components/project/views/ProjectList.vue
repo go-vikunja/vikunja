@@ -154,7 +154,6 @@ const {
 	loadTasks,
 	params,
 	sortByParam,
-	includeSubprojects,
 } = useTaskList(
 	() => projectId.value,
 	() => props.viewId,
