@@ -18,6 +18,8 @@ package user
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"testing"
 
 	"code.vikunja.io/api/pkg/db"
@@ -474,6 +476,103 @@ func TestUpdateUser(t *testing.T) {
 		}, false)
 		require.Error(t, err)
 		assert.True(t, IsErrUserDoesNotExist(err))
+	})
+	t.Run("frontend settings survive profile-only update", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		originalSettings := map[string]any{
+			"color_schema": "dark",
+		}
+		settingsJSON, err := json.Marshal(originalSettings)
+		require.NoError(t, err)
+		_, err = s.Table("users").
+			Where("id = ?", 1).
+			Cols("frontend_settings").
+			Update(&struct {
+				FrontendSettings string `xorm:"frontend_settings"`
+			}{
+				FrontendSettings: string(settingsJSON),
+			})
+		require.NoError(t, err)
+
+		updated, err := UpdateUser(s, &User{
+			ID:    1,
+			Email: "testing@example.com",
+		}, false)
+		require.NoError(t, err)
+		require.Equal(t, map[string]interface{}(originalSettings), updated.FrontendSettings)
+
+		var stored sql.NullString
+		has, err := s.Table("users").
+			Where("id = ?", 1).
+			Cols("frontend_settings").
+			Get(&stored)
+		require.NoError(t, err)
+		require.True(t, has)
+		require.True(t, stored.Valid)
+		assert.JSONEq(t, string(settingsJSON), stored.String)
+	})
+	t.Run("frontend settings can be saved from request map", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		frontendSettings := map[string]any{
+			"color_schema": "dark",
+			"nested": map[string]any{
+				"a": float64(1),
+			},
+		}
+
+		updated, err := UpdateUser(s, &User{
+			ID:               1,
+			FrontendSettings: frontendSettings,
+		}, true)
+		require.NoError(t, err)
+		require.Equal(t, frontendSettings, updated.FrontendSettings)
+
+		var stored sql.NullString
+		has, err := s.Table("users").
+			Where("id = ?", 1).
+			Cols("frontend_settings").
+			Get(&stored)
+		require.NoError(t, err)
+		require.True(t, has)
+		require.True(t, stored.Valid)
+		assert.JSONEq(t, `{"color_schema":"dark","nested":{"a":1}}`, stored.String)
+	})
+	t.Run("frontend settings can be cleared", func(t *testing.T) {
+		db.LoadAndAssertFixtures(t)
+		s := db.NewSession()
+		defer s.Close()
+
+		_, err := s.Table("users").
+			Where("id = ?", 1).
+			Cols("frontend_settings").
+			Update(&struct {
+				FrontendSettings string `xorm:"frontend_settings"`
+			}{
+				FrontendSettings: `{"color_schema":"dark"}`,
+			})
+		require.NoError(t, err)
+
+		updated, err := UpdateUser(s, &User{
+			ID:               1,
+			FrontendSettings: nil,
+		}, true)
+		require.NoError(t, err)
+		require.Nil(t, updated.FrontendSettings)
+
+		var stored sql.NullString
+		has, err := s.Table("users").
+			Where("id = ?", 1).
+			Cols("frontend_settings").
+			Get(&stored)
+		require.NoError(t, err)
+		require.True(t, has)
+		assert.False(t, stored.Valid)
 	})
 }
 
