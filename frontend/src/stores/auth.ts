@@ -28,6 +28,11 @@ import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
 
+// Set on explicit logout so the login page won't immediately bounce the user
+// back to the OIDC provider. Lives in sessionStorage so it survives the
+// round-trip to the IdP within the tab and isn't wiped by localStorage.clear().
+export const JUST_LOGGED_OUT_KEY = 'justLoggedOut'
+
 function redirectToSpecifiedProvider() {
 
 	const {auth} = useConfigStore()
@@ -559,6 +564,8 @@ export const useAuthStore = defineStore('auth', () => {
 		lastUserInfoRefresh.value = null
 		await router.push({name: 'user.login'})
 		await checkAuth()
+
+		sessionStorage.setItem(JUST_LOGGED_OUT_KEY, 'true')
 
 		// Redirect to the OIDC provider to end its session too. Prefer the
 		// server-built RP-Initiated Logout URL, falling back to the static one.
