@@ -136,7 +136,7 @@ import {redirectToProvider} from '@/helpers/redirectToProvider'
 import {useRedirectToLastVisited} from '@/composables/useRedirectToLastVisited'
 import {isDesktopApp} from '@/helpers/desktopAuth'
 
-import {useAuthStore} from '@/stores/auth'
+import {useAuthStore, JUST_LOGGED_OUT_KEY} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
@@ -181,6 +181,25 @@ onBeforeMount(() => {
 	// route before the submit() handler gets a chance to use it.
 	if (authenticated.value) {
 		router.push({name: 'home'})
+		return
+	}
+
+	// Don't auto-redirect right after an explicit logout, otherwise we'd
+	// immediately re-authenticate the user we just logged out.
+	if (sessionStorage.getItem(JUST_LOGGED_OUT_KEY)) {
+		sessionStorage.removeItem(JUST_LOGGED_OUT_KEY)
+		return
+	}
+
+	// When the login page offers nothing but a single OIDC provider, skip it
+	// and send the user straight there.
+	if (
+		!localAuthEnabled.value &&
+		!ldapAuthEnabled.value &&
+		hasOpenIdProviders.value &&
+		openidConnect.value.providers.length === 1
+	) {
+		redirectToProvider(openidConnect.value.providers[0])
 	}
 })
 

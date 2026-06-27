@@ -61,9 +61,9 @@
     }
   },
   "devDependencies": {
-    "electron": "40.10.4",
+    "electron": "40.10.5",
     "electron-builder": "26.15.3",
-    "unzipper": "0.12.3"
+    "unzipper": "0.12.5"
   },
   "dependencies": {
     "express": "5.2.1"
@@ -80,7 +80,9 @@
       "tmp": ">=0.2.7",
       "ip-address": ">=10.1.1",
       "form-data": ">=4.0.6",
-      "js-yaml": ">=4.2.0"
+      "js-yaml": ">=4.2.0",
+      "undici@6": "^6.27.0",
+      "undici@7": "^7.28.0"
     }
   }
 }

@@ -1747,6 +1747,20 @@ func setTaskDatesFromCurrentDateRepeat(oldTask, newTask *Task) {
 	newTask.Done = false
 }
 
+var (
+	checklistTiptapCheckedRegex = regexp.MustCompile(`(data-checked=")true(")`)
+	checklistInputCheckedRegex  = regexp.MustCompile(`(<input[^>]*type=["']checkbox["'][^>]*?)\s+checked(?:=["'][^"']*["'])?`)
+)
+
+// resetDescriptionChecklist unchecks every checklist item in a TipTap HTML description
+// (descriptions are always stored as HTML, never markdown) without touching other content,
+// so a recurring task's next occurrence does not inherit checked items.
+func resetDescriptionChecklist(description string) string {
+	description = checklistTiptapCheckedRegex.ReplaceAllString(description, "${1}false${2}")
+	description = checklistInputCheckedRegex.ReplaceAllString(description, "$1")
+	return description
+}
+
 // This helper function updates the reminders, doneAt, start, end and due dates of the *old* task
 // and saves the new values in the newTask object.
 // We make a few assumptions here:
@@ -1764,6 +1778,11 @@ func updateDone(oldTask *Task, newTask *Task) (updateDoneAt bool) {
 			setTaskDatesFromCurrentDateRepeat(oldTask, newTask)
 		case TaskRepeatModeDefault:
 			setTaskDatesDefault(oldTask, newTask)
+		}
+
+		// A recurring task reopens for its next occurrence, so its checklist starts fresh.
+		if oldTask.isRepeating() && !newTask.Done {
+			newTask.Description = resetDescriptionChecklist(newTask.Description)
 		}
 
 		newTask.DoneAt = time.Now()

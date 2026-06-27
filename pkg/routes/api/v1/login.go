@@ -56,7 +56,7 @@ func Login(c *echo.Context) (err error) {
 	}
 
 	// Create token
-	return auth.NewUserAuthTokenResponse(user, c, u.LongToken)
+	return auth.NewUserAuthTokenResponse(user, c, u.LongToken, nil)
 }
 
 // RenewToken renews a link share token only. User tokens must use
@@ -150,12 +150,18 @@ func RefreshToken(c *echo.Context) (err error) {
 	return c.JSON(http.StatusOK, auth.Token{Token: result.AccessToken})
 }
 
+type LogoutResponse struct {
+	Message string `json:"message"`
+	// RP-Initiated Logout URL the frontend redirects to. Empty for non-OIDC sessions.
+	OIDCLogoutURL string `json:"oidc_logout_url,omitempty"`
+}
+
 // Logout deletes the current session from the server.
 // @Summary Logout
-// @Description Destroys the current session and clears the refresh token cookie.
+// @Description Destroys the current session and clears the refresh token cookie. For OpenID Connect sessions the response includes an `oidc_logout_url` the client should redirect to so the provider session is ended too.
 // @tags auth
 // @Produce json
-// @Success 200 {object} models.Message "Successfully logged out."
+// @Success 200 {object} v1.LogoutResponse "Successfully logged out."
 // @Router /user/logout [post]
 func Logout(c *echo.Context) (err error) {
 	auth.ClearRefreshTokenCookie(c)
@@ -177,7 +183,8 @@ func Logout(c *echo.Context) (err error) {
 		}
 	}
 
-	if err := shared.DeleteSession(sid); err != nil {
+	oidcLogoutURL, err := shared.LogoutSession(sid)
+	if err != nil {
 		return err
 	}
 
@@ -187,5 +194,8 @@ func Logout(c *echo.Context) (err error) {
 		}
 	}
 
-	return c.JSON(http.StatusOK, models.Message{Message: "Successfully logged out."})
+	return c.JSON(http.StatusOK, LogoutResponse{
+		Message:       "Successfully logged out.",
+		OIDCLogoutURL: oidcLogoutURL,
+	})
 }

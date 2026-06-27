@@ -49,6 +49,10 @@ type Session struct {
 	IPAddress string `xorm:"varchar(100)" json:"ip_address" readOnly:"true" doc:"IP address captured from the login request."`
 	// Whether this is a "remember me" session (controls max refresh lifetime).
 	IsLongSession bool `xorm:"not null default false" json:"-"`
+	// Raw OIDC ID token, kept so logout can replay it as id_token_hint. Empty for non-OIDC sessions.
+	OIDCIDToken string `xorm:"text" json:"-"`
+	// OIDC provider that created this session, used to find its end-session endpoint at logout.
+	OIDCProviderKey string `xorm:"varchar(250)" json:"-"`
 	// When this session was last refreshed.
 	LastActive time.Time `xorm:"not null" json:"last_active" readOnly:"true" doc:"When this session was last refreshed."`
 	// When this session was created (login time).
@@ -81,9 +85,17 @@ func generateHashedToken() (rawToken, hash string, err error) {
 	return rawToken, HashSessionToken(rawToken), nil
 }
 
+// SessionOIDCData carries the OIDC metadata persisted on a session so an
+// RP-Initiated Logout request can be built later. Nil for non-OIDC logins.
+type SessionOIDCData struct {
+	IDToken     string
+	ProviderKey string
+}
+
 // CreateSession creates a new session record and generates a refresh token.
 // Returns the session with RefreshToken populated (cleartext, shown only once).
-func CreateSession(s *xorm.Session, userID int64, deviceInfo, ipAddress string, isLongSession bool) (*Session, error) {
+// Pass oidc for OpenID Connect logins to persist the logout data; nil otherwise.
+func CreateSession(s *xorm.Session, userID int64, deviceInfo, ipAddress string, isLongSession bool, oidc *SessionOIDCData) (*Session, error) {
 	rawToken, hash, err := generateHashedToken()
 	if err != nil {
 		return nil, err
@@ -97,6 +109,10 @@ func CreateSession(s *xorm.Session, userID int64, deviceInfo, ipAddress string, 
 		IPAddress:     ipAddress,
 		IsLongSession: isLongSession,
 		LastActive:    time.Now(),
+	}
+	if oidc != nil {
+		session.OIDCIDToken = oidc.IDToken
+		session.OIDCProviderKey = oidc.ProviderKey
 	}
 
 	_, err = s.Insert(session)

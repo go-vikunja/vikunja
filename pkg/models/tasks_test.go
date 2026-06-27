@@ -986,6 +986,45 @@ func TestUpdateDone(t *testing.T) {
 				assert.False(t, newTask.Done)
 			})
 		})
+		t.Run("reset checklist on recurrence", func(t *testing.T) {
+			const checked = `before<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>Item</p></li></ul>after`
+			const unchecked = `before<ul data-type="taskList"><li data-checked="false" data-type="taskItem"><label><input type="checkbox"><span></span></label><div><p>Item</p></li></ul>after`
+
+			oldTask := &Task{
+				Done:        false,
+				RepeatAfter: 8600,
+				DueDate:     time.Unix(1550000000, 0),
+			}
+			newTask := &Task{
+				Done:        true,
+				Description: checked,
+			}
+
+			updateDone(oldTask, newTask)
+
+			assert.False(t, newTask.Done)
+			assert.True(t, newTask.DueDate.After(oldTask.DueDate))
+			assert.Equal(t, unchecked, newTask.Description)
+		})
+		t.Run("non-recurring description untouched", func(t *testing.T) {
+			const checked = `before<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>Item</p></li></ul>after`
+
+			oldTask := &Task{
+				Done:        false,
+				RepeatAfter: 0,
+				RepeatMode:  TaskRepeatModeDefault,
+				DueDate:     time.Unix(1550000000, 0),
+			}
+			newTask := &Task{
+				Done:        true,
+				Description: checked,
+			}
+
+			updateDone(oldTask, newTask)
+
+			assert.True(t, newTask.Done)
+			assert.Equal(t, checked, newTask.Description)
+		})
 	})
 }
 

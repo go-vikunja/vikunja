@@ -651,3 +651,47 @@ func TestConvertTodoistToVikunja(t *testing.T) {
 		t.Errorf("converted todoist data = %v, want %v, diff: %v", hierachie, expectedHierachie, diff)
 	}
 }
+
+func TestParseTodoistRepeat(t *testing.T) {
+	tests := []struct {
+		name string
+		due  *dueDate
+		want int64
+	}{
+		{name: "nil due", due: nil, want: 0},
+		{name: "not recurring", due: &dueDate{String: "every day", IsRecurring: false}, want: 0},
+
+		{name: "every day", due: &dueDate{String: "every day", IsRecurring: true}, want: secondsPerDay},
+		{name: "daily", due: &dueDate{String: "daily", IsRecurring: true}, want: secondsPerDay},
+		{name: "every other day", due: &dueDate{String: "every other day", IsRecurring: true}, want: 2 * secondsPerDay},
+		{name: "every 3 days", due: &dueDate{String: "every 3 days", IsRecurring: true}, want: 3 * secondsPerDay},
+
+		{name: "every week", due: &dueDate{String: "every week", IsRecurring: true}, want: secondsPerWeek},
+		{name: "weekly", due: &dueDate{String: "weekly", IsRecurring: true}, want: secondsPerWeek},
+		{name: "every other week", due: &dueDate{String: "every other week", IsRecurring: true}, want: 2 * secondsPerWeek},
+		{name: "every 2 weeks", due: &dueDate{String: "every 2 weeks", IsRecurring: true}, want: 2 * secondsPerWeek},
+
+		{name: "every month", due: &dueDate{String: "every month", IsRecurring: true}, want: secondsPerMonth},
+		{name: "monthly", due: &dueDate{String: "monthly", IsRecurring: true}, want: secondsPerMonth},
+		{name: "every 3 months", due: &dueDate{String: "every 3 months", IsRecurring: true}, want: 3 * secondsPerMonth},
+
+		{name: "every year", due: &dueDate{String: "every year", IsRecurring: true}, want: secondsPerYear},
+		{name: "yearly", due: &dueDate{String: "yearly", IsRecurring: true}, want: secondsPerYear},
+		{name: "annually", due: &dueDate{String: "annually", IsRecurring: true}, want: secondsPerYear},
+
+		{name: "case insensitive", due: &dueDate{String: "Every Day", IsRecurring: true}, want: secondsPerDay},
+		{name: "time of day stripped", due: &dueDate{String: "every day at 9am", IsRecurring: true}, want: secondsPerDay},
+
+		// Tier 1 doesn't understand these, so the task stays non-repeating.
+		{name: "specific weekday", due: &dueDate{String: "every monday", IsRecurring: true}, want: 0},
+		{name: "day of month", due: &dueDate{String: "every 27th", IsRecurring: true}, want: 0},
+		{name: "non-english", due: &dueDate{String: "cada día", IsRecurring: true}, want: 0},
+		{name: "gibberish", due: &dueDate{String: "whenever", IsRecurring: true}, want: 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, parseTodoistRepeat(tt.due))
+		})
+	}
+}

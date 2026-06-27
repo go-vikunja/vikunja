@@ -13,14 +13,14 @@
 		<div class="gantt-chart-wrapper">
 			<GanttTimelineHeader
 				:timeline-data="timelineData"
-				:day-width-pixels="DAY_WIDTH_PIXELS"
+				:day-width-pixels="dayWidthPixels"
 			/>
 
 			<GanttVerticalGridLines
 				:timeline-data="timelineData"
 				:total-width="totalWidth"
 				:height="ganttRows.length * 40"
-				:day-width-pixels="DAY_WIDTH_PIXELS"
+				:day-width-pixels="dayWidthPixels"
 			/>
 
 			<GanttChartBody
@@ -57,7 +57,7 @@
 										:total-width="totalWidth"
 										:date-from-date="dateFromDate"
 										:date-to-date="dateToDate"
-										:day-width-pixels="DAY_WIDTH_PIXELS"
+										:day-width-pixels="dayWidthPixels"
 										:is-dragging="isDragging"
 										:is-resizing="isResizing"
 										:drag-state="dragState"
@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, toRefs, onUnmounted} from 'vue'
+import {computed, ref, watch, toRefs, nextTick, onMounted, onBeforeUnmount, onUnmounted} from 'vue'
 import {useRouter} from 'vue-router'
 import dayjs from 'dayjs'
 import {useDayjsLanguageSync} from '@/i18n/useDayjsLanguageSync'
@@ -128,7 +128,9 @@ const emit = defineEmits<{
   (e: 'update:task', task: ITaskPartialWithId): void
 }>()
 
-const DAY_WIDTH_PIXELS = 30
+const DAY_WIDTH_PIXELS_MIN = 30
+const dayWidthPixels = ref(0)
+let resizeObserver: ResizeObserver
 
 const {tasks, filters} = toRefs(props)
 const projectStore = useProjectStore()
@@ -161,7 +163,7 @@ const dateToDate = computed(() => dayjs(filters.value.dateTo).endOf('day').toDat
 
 const totalWidth = computed(() => {
 	const dateDiff = Math.ceil((dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY)
-	return dateDiff * DAY_WIDTH_PIXELS
+	return dateDiff * dayWidthPixels.value
 })
 
 const timelineData = computed(() => {
@@ -318,6 +320,55 @@ function transformTaskToGanttBar(node: GanttTaskTreeNode): GanttBarModel {
 	}
 }
 
+function updateDayWidthPixels() {
+	const node = ganttContainer.value
+	if (!node) return
+
+	const rect = node.getBoundingClientRect()
+	const styles = window.getComputedStyle(node)
+
+	const marginLeft = parseFloat(styles.marginLeft) || 0
+	const marginRight = parseFloat(styles.marginRight) || 0
+
+	// max width without overflow
+	const maxWidth = rect.width - marginLeft - marginRight
+
+	const dayCount = Math.ceil(
+		(dateToDate.value.valueOf() - dateFromDate.value.valueOf()) / MILLISECONDS_A_DAY,
+	)
+
+	dayWidthPixels.value = Math.max(
+		maxWidth / dayCount,
+		DAY_WIDTH_PIXELS_MIN,
+	)
+}
+
+onMounted(async () => {
+	await nextTick()
+	updateDayWidthPixels()
+
+	if (ganttContainer.value) {
+		resizeObserver = new ResizeObserver(updateDayWidthPixels)
+		resizeObserver.observe(ganttContainer.value)
+	}
+
+	window.addEventListener('resize', updateDayWidthPixels)
+})
+
+onBeforeUnmount(() => {
+	resizeObserver?.disconnect()
+	window.removeEventListener('resize', updateDayWidthPixels)
+})
+
+watch(
+	[dateFromDate, dateToDate],
+	async () => {
+		await nextTick()
+		updateDayWidthPixels()
+	},
+	{flush: 'post'},
+)
+
 // Build the task tree when tasks change
 watch(
 	[tasks, filters],
@@ -372,7 +423,7 @@ const ROW_HEIGHT = 40
 const barPositions = computed(() => {
 	const positions = new Map<number, GanttBarPosition>()
 	const ds = dragState.value
-	const dragPixelOffset = ds ? ds.currentDays * DAY_WIDTH_PIXELS : 0
+	const dragPixelOffset = ds ? ds.currentDays * dayWidthPixels.value : 0
 
 	ganttBars.value.forEach((rowBars, rowIndex) => {
 		for (const bar of rowBars) {
@@ -407,7 +458,7 @@ function computeBarX(date: Date): number {
 		(roundToNaturalDayBoundary(date, true).getTime() - dateFromDate.value.getTime()) /
 		MILLISECONDS_A_DAY,
 	)
-	return diff * DAY_WIDTH_PIXELS
+	return diff * dayWidthPixels.value
 }
 
 function computeBarWidth(bar: GanttBarModel): number {
@@ -415,7 +466,7 @@ function computeBarWidth(bar: GanttBarModel): number {
 		(roundToNaturalDayBoundary(bar.end).getTime() - roundToNaturalDayBoundary(bar.start, true).getTime()) /
 		MILLISECONDS_A_DAY,
 	)
-	return diff * DAY_WIDTH_PIXELS
+	return diff * dayWidthPixels.value
 }
 
 // Compute relation arrows
@@ -611,7 +662,7 @@ function startDrag(bar: GanttBarModel, event: PointerEvent) {
 		if (!dragState.value || !isDragging.value) return
 		
 		const diff = e.clientX - dragState.value.startX
-		const days = Math.round(diff / DAY_WIDTH_PIXELS)
+		const days = Math.round(diff / dayWidthPixels.value)
 		
 		if (days !== dragState.value.currentDays) {
 			dragState.value.currentDays = days
@@ -673,7 +724,7 @@ function startResize(bar: GanttBarModel, edge: 'start' | 'end', event: PointerEv
 		if (!dragState.value || !isResizing.value) return
 		
 		const diff = e.clientX - dragState.value.startX
-		const days = Math.round(diff / DAY_WIDTH_PIXELS)
+		const days = Math.round(diff / dayWidthPixels.value)
 		
 		if (edge === 'start') {
 			const newStart = new Date(dragState.value.originalStart)

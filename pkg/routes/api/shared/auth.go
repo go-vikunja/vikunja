@@ -27,6 +27,7 @@ import (
 	"code.vikunja.io/api/pkg/models"
 	"code.vikunja.io/api/pkg/modules/auth"
 	"code.vikunja.io/api/pkg/modules/auth/ldap"
+	"code.vikunja.io/api/pkg/modules/auth/openid"
 	"code.vikunja.io/api/pkg/modules/keyvalue"
 	"code.vikunja.io/api/pkg/user"
 
@@ -192,24 +193,53 @@ func enforceLoginTOTP(s *xorm.Session, u *user.User, passcode string) error {
 // API token or a link share), matching v1. Shared by v1 and v2; the caller is
 // responsible for clearing the refresh cookie.
 func DeleteSession(sid string) error {
+	_, err := LogoutSession(sid)
+	return err
+}
+
+// LogoutSession deletes the session and returns its OIDC RP-Initiated Logout URL
+// for the frontend to redirect to (empty for non-OIDC sessions or when no logout
+// endpoint is configured). An empty sid is a no-op. The caller clears the refresh
+// cookie.
+func LogoutSession(sid string) (endSessionURL string, err error) {
 	if sid == "" {
-		return nil
+		return "", nil
 	}
 
 	s := db.NewSession()
 	defer s.Close()
 
+	// Read before deleting so the stored id_token survives for the logout URL.
+	// A missing session just means there is nothing to log out.
+	session, err := models.GetSessionByID(s, sid)
+	if err != nil && !models.IsErrSessionNotFound(err) {
+		_ = s.Rollback()
+		return "", err
+	}
+	if session != nil && session.OIDCProviderKey != "" {
+		url, buildErr := openid.BuildEndSessionURL(session.OIDCProviderKey, &models.SessionOIDCData{
+			IDToken:     session.OIDCIDToken,
+			ProviderKey: session.OIDCProviderKey,
+		})
+		if buildErr != nil {
+			// A failed URL build must not block logout; the session is still deleted below.
+			log.Errorf("Could not build OIDC end-session URL for session %s: %v", sid, buildErr)
+		} else {
+			endSessionURL = url
+		}
+	}
+
 	if _, err := s.Where("id = ?", sid).Delete(&models.Session{}); err != nil {
 		_ = s.Rollback()
-		return err
+		return "", err
 	}
 
 	if err := s.Commit(); err != nil {
 		_ = s.Rollback()
-		return err
+		return "", err
 	}
 
-	return nil
+	return endSessionURL, nil
 }
 
 // ResetPassword resets a user's password from a previously issued reset token

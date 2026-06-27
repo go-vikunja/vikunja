@@ -28,6 +28,11 @@ import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
 
+// Set on explicit logout so the login page won't immediately bounce the user
+// back to the OIDC provider. Lives in sessionStorage so it survives the
+// round-trip to the IdP within the tab and isn't wiped by localStorage.clear().
+export const JUST_LOGGED_OUT_KEY = 'justLoggedOut'
+
 function redirectToSpecifiedProvider() {
 
 	const {auth} = useConfigStore()
@@ -52,6 +57,17 @@ function redirectToSpecifiedProvider() {
 			redirectToProvider(wantedProvider)
 		}
 		console.warn(`Could not find provider to redirect to.\nWanted: ${wantedProvider}\nAvailable: ${auth.openidConnect.providers?.map(p => p.key)}`)
+	}
+}
+
+// A race-loser's refresh fails but the rotated cookie is already valid, so a
+// second attempt succeeds — recovering what would otherwise be a spurious
+// logout. Exactly one retry: a genuinely dead session still logs out, no loop.
+async function refreshTokenWithRetry(persist: boolean): Promise<void> {
+	try {
+		await refreshToken(persist)
+	} catch {
+		await refreshToken(persist)
 	}
 }
 
@@ -352,7 +368,7 @@ export const useAuthStore = defineStore('auth', () => {
 					// refresh before giving up. This lets users who reopen the app
 					// after the short JWT TTL seamlessly resume their session.
 					try {
-						await refreshToken(true)
+						await refreshTokenWithRetry(true)
 						const freshJwt = getToken()
 						if (freshJwt) {
 							const b64 = freshJwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
@@ -512,7 +528,7 @@ export const useAuthStore = defineStore('auth', () => {
 				saveToken(response.data.token, false)
 			} else {
 				// User sessions renew via the refresh-token cookie.
-				await refreshToken(true)
+				await refreshTokenWithRetry(true)
 			}
 			await checkAuth()
 		} catch (e) {
@@ -533,9 +549,11 @@ export const useAuthStore = defineStore('auth', () => {
 
 		// Revoke the server session so the refresh token can't be reused.
 		// Best-effort: if the network call fails, still clean up locally.
+		let oidcLogoutUrl = ''
 		try {
 			const HTTP = AuthenticatedHTTPFactory()
-			await HTTP.post('user/logout')
+			const {data} = await HTTP.post('user/logout')
+			oidcLogoutUrl = data?.oidc_logout_url ?? ''
 		} catch (_e) {
 			// Ignore — session will expire naturally
 		}
@@ -544,14 +562,25 @@ export const useAuthStore = defineStore('auth', () => {
 		const loggedInVia = getLoggedInVia()
 		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 		lastUserInfoRefresh.value = null
+
+		sessionStorage.setItem(JUST_LOGGED_OUT_KEY, 'true')
+
+		// Redirect to the OIDC provider to end its session too. Prefer the
+		// server-built RP-Initiated Logout URL, falling back to the static one.
+		// These full-page redirects return the user to the login page, so we
+		// must not router.push there first — that would consume
+		// JUST_LOGGED_OUT_KEY before the round-trip lands.
+		if (oidcLogoutUrl) {
+			window.location.href = oidcLogoutUrl
+			return
+		}
+		const fullProvider: IProvider|undefined = configStore.auth.openidConnect.providers?.find((p: IProvider) => p.key === loggedInVia)
+		if (fullProvider && redirectToProviderOnLogout(fullProvider)) {
+			return
+		}
+
 		await router.push({name: 'user.login'})
 		await checkAuth()
-
-		// if configured, redirect to OIDC Provider on logout
-		const fullProvider: IProvider|undefined = configStore.auth.openidConnect.providers?.find((p: IProvider) => p.key === loggedInVia)
-		if (fullProvider) {
-			redirectToProviderOnLogout(fullProvider)
-		}
 	}
 
 	return {
