@@ -241,6 +241,11 @@ function createMainWindow() {
 	mainWindow = new BrowserWindow({
 		width: 1680,
 		height: 960,
+		// Without an explicit window icon, X11/XWayland compositors (e.g. KDE
+		// Plasma) fall back to a generic placeholder when WM_CLASS doesn't match
+		// an installed .desktop file. icon.png lives at the app root because
+		// build/ is electron-builder's buildResources dir and isn't packaged.
+		icon: path.join(__dirname, 'icon.png'),
 		webPreferences: {
 			...BASE_WEB_PREFERENCES,
 			preload: path.join(__dirname, 'preload.js'),
