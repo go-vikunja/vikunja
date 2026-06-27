@@ -21,7 +21,9 @@ import (
 	"strings"
 	"time"
 
+	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/richtext"
 	"code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/utils"
 )
@@ -179,8 +181,18 @@ DURATION:PT` + formatDuration(t.Duration)
 DTEND:` + makeCalDavTimeFromTimeStamp(t.End)
 		}
 		if t.Description != "" {
-			caldavtodos += `
-DESCRIPTION:` + escapeICalText(t.Description)
+			// CalDAV clients show plain text, so emit markdown. On the near-impossible
+			// conversion error, log it and keep the stored value (GetContent can't
+			// return an error) rather than drop the description.
+			description, err := richtext.HTMLToMarkdown(t.Description)
+			if err != nil {
+				log.Errorf("[CALDAV] Failed to convert description to markdown for task %q: %v", t.UID, err)
+				description = t.Description
+			}
+			if description != "" {
+				caldavtodos += `
+DESCRIPTION:` + escapeICalText(description)
+			}
 		}
 		if t.Completed.Unix() > 0 {
 			caldavtodos += `

@@ -47,12 +47,11 @@ func TestParseTodos(t *testing.T) {
 				},
 				todos: []*Todo{
 					{
-						Summary: "Todo #1",
-						Description: `Lorem Ipsum
-Dolor sit amet`,
-						UID:       "randommduid",
-						Timestamp: time.Unix(1543626724, 0).In(config.GetTimeZone()),
-						Color:     "affffe",
+						Summary:     "Todo #1",
+						Description: `<p>Lorem Ipsum</p><p>Dolor sit amet</p>`,
+						UID:         "randommduid",
+						Timestamp:   time.Unix(1543626724, 0).In(config.GetTimeZone()),
+						Color:       "affffe",
 					},
 				},
 			},
@@ -73,7 +72,7 @@ X-APPLE-CALENDAR-COLOR:#affffeFF
 X-OUTLOOK-COLOR:#affffeFF
 X-FUNAMBOL-COLOR:#affffeFF
 COLOR:#affffeFF
-DESCRIPTION:Lorem Ipsum\nDolor sit amet
+DESCRIPTION:Lorem Ipsum\n\nDolor sit amet
 LAST-MODIFIED:00010101T000000Z
 END:VTODO
 END:VCALENDAR`,
@@ -436,6 +435,33 @@ END:VCALENDAR`,
 			assert.NotContains(t, gotCaldavtasks, "METHOD:")
 		})
 	}
+}
+
+func TestParseTodosRichTextDescription(t *testing.T) {
+	cfg := &Config{Name: "test", ProdID: "Vikunja"}
+	ts := time.Unix(1543626724, 0).In(config.GetTimeZone())
+
+	t.Run("rich html serializes as markdown", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{
+			Summary:   "Todo",
+			UID:       "uid",
+			Timestamp: ts,
+			Description: `<p>Hello <strong>bold</strong> and <mention-user data-id="user1" data-label="User One">@User One</mention-user></p>` +
+				`<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><label><input type="checkbox" checked="checked"><span></span></label><div><p>done</p></div></li></ul>`,
+		}})
+		// iCal escapes the markdown's newlines as "\n".
+		assert.Contains(t, out, `DESCRIPTION:Hello **bold** and @user1\n\n- [x] done`)
+	})
+
+	t.Run("empty html omits the description line", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{Summary: "Todo", UID: "uid", Timestamp: ts, Description: "<p></p>"}})
+		assert.NotContains(t, out, "DESCRIPTION:")
+	})
+
+	t.Run("plain text description is unaffected", func(t *testing.T) {
+		out := ParseTodos(cfg, []*Todo{{Summary: "Todo", UID: "uid", Timestamp: ts, Description: "just plain text"}})
+		assert.Contains(t, out, "DESCRIPTION:just plain text")
+	})
 }
 
 func TestGetCaldavColor(t *testing.T) {
