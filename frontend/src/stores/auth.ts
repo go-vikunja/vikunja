@@ -562,21 +562,25 @@ export const useAuthStore = defineStore('auth', () => {
 		const loggedInVia = getLoggedInVia()
 		window.localStorage.clear() // Clear all settings and history we might have saved in local storage.
 		lastUserInfoRefresh.value = null
-		await router.push({name: 'user.login'})
-		await checkAuth()
 
 		sessionStorage.setItem(JUST_LOGGED_OUT_KEY, 'true')
 
 		// Redirect to the OIDC provider to end its session too. Prefer the
 		// server-built RP-Initiated Logout URL, falling back to the static one.
+		// These full-page redirects return the user to the login page, so we
+		// must not router.push there first — that would consume
+		// JUST_LOGGED_OUT_KEY before the round-trip lands.
 		if (oidcLogoutUrl) {
 			window.location.href = oidcLogoutUrl
 			return
 		}
 		const fullProvider: IProvider|undefined = configStore.auth.openidConnect.providers?.find((p: IProvider) => p.key === loggedInVia)
-		if (fullProvider) {
-			redirectToProviderOnLogout(fullProvider)
+		if (fullProvider && redirectToProviderOnLogout(fullProvider)) {
+			return
 		}
+
+		await router.push({name: 'user.login'})
+		await checkAuth()
 	}
 
 	return {
