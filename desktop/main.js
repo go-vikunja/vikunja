@@ -543,3 +543,14 @@ app.on('window-all-closed', () => {
 		app.quit()
 	}
 })
+
+// Quit on termination signals (DE/systemd shutdown, `kill`). Without an explicit
+// handler the app ignores SIGTERM because the tray and express server keep the
+// event loop alive — leaving users to `kill -9`. isQuitting must be set first so
+// the hide-to-tray close handler doesn't swallow the quit.
+for (const signal of ['SIGINT', 'SIGTERM']) {
+	process.on(signal, () => {
+		isQuitting = true
+		app.quit()
+	})
+}
