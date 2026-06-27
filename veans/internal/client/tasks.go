@@ -52,7 +52,7 @@ func (o *TaskListOptions) values() url.Values {
 }
 
 // ListProjectTasks paginates `GET /projects/{id}/tasks` exhaustively,
-// terminating against the server's x-pagination-total-pages header.
+// terminating against the list envelope's total_pages.
 func (c *Client) ListProjectTasks(ctx context.Context, projectID int64, opts *TaskListOptions) ([]*Task, error) {
 	if opts == nil {
 		opts = &TaskListOptions{}
@@ -61,19 +61,19 @@ func (c *Client) ListProjectTasks(ctx context.Context, projectID int64, opts *Ta
 	if per <= 0 {
 		per = 50
 	}
+	path := fmt.Sprintf("/projects/%d/tasks", projectID)
 	var all []*Task
 	page := 1
 	for {
 		o := *opts
 		o.Page = page
 		o.PerPage = per
-		var batch []*Task
-		total, err := c.DoPaginated(ctx, "GET", fmt.Sprintf("/projects/%d/tasks", projectID), o.values(), &batch)
+		batch, totalPages, err := doList[*Task](ctx, c, path, o.values())
 		if err != nil {
 			return nil, err
 		}
 		all = append(all, batch...)
-		if paginationDone(page, len(batch), per, total) {
+		if page >= totalPages {
 			return all, nil
 		}
 		page++
@@ -114,24 +114,26 @@ func (t *Task) CurrentBucketID(viewID int64) int64 {
 	return 0
 }
 
-// CreateTask inserts a task into a project (PUT /projects/{id}/tasks).
+// CreateTask inserts a task into a project (POST /projects/{id}/tasks).
 func (c *Client) CreateTask(ctx context.Context, projectID int64, t *Task) (*Task, error) {
 	var out Task
-	if err := c.Do(ctx, "PUT", fmt.Sprintf("/projects/%d/tasks", projectID), nil, t, &out); err != nil {
+	if err := c.Do(ctx, "POST", fmt.Sprintf("/projects/%d/tasks", projectID), nil, t, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-// UpdateTask updates a task (POST /tasks/{id}). This endpoint does NOT
-// move tasks between buckets — the task↔bucket relation is row-shaped in
-// task_buckets, and bucket_id on the request body is ignored. Use
-// MoveTaskToBucket() for that. The server does auto-flip the bucket
-// when `done` toggles, but only between the canonical "todo" and "done"
-// buckets the project view is configured with.
-func (c *Client) UpdateTask(ctx context.Context, id int64, t *Task) (*Task, error) {
+// UpdateTask partially updates a task via PATCH /tasks/{id} with a JSON Merge
+// Patch body: only the fields set on `patch` are written, the rest are left
+// intact (the fix for issue #2962, where a status-only update used to zero
+// description and priority). This endpoint does NOT move tasks between
+// buckets — the task↔bucket relation is row-shaped in task_buckets, and
+// bucket_id on the request body is ignored. Use MoveTaskToBucket() for that.
+// The server still auto-flips the bucket when `done` toggles, between the
+// canonical "todo" and "done" buckets the project view is configured with.
+func (c *Client) UpdateTask(ctx context.Context, id int64, patch *TaskPatch) (*Task, error) {
 	var out Task
-	if err := c.Do(ctx, "POST", fmt.Sprintf("/tasks/%d", id), nil, t, &out); err != nil {
+	if err := c.DoMerge(ctx, "PATCH", fmt.Sprintf("/tasks/%d", id), nil, patch, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
