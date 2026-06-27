@@ -28,6 +28,7 @@ import (
 	"code.vikunja.io/api/pkg/events"
 	"code.vikunja.io/api/pkg/log"
 	"code.vikunja.io/api/pkg/models"
+	"code.vikunja.io/api/pkg/richtext"
 	user2 "code.vikunja.io/api/pkg/user"
 	"code.vikunja.io/api/pkg/web"
 	"github.com/samedi/caldav-go/data"
@@ -364,6 +365,14 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 		return nil, errs.ForbiddenError
 	}
 
+	// Inbound CalDAV descriptions are markdown; store them as canonical HTML.
+	if err := applyDescriptionFromMarkdown(s, vTask, ""); err != nil {
+		log.Errorf("[CALDAV] Failed to convert description in CreateResource: %v", err)
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return nil, err
+	}
+
 	// Create the task
 	err = vTask.Create(s, vcls.user)
 	if err != nil {
@@ -408,6 +417,23 @@ func (vcls *VikunjaCaldavProjectStorage) CreateResource(rpath, content string) (
 	return &r, nil
 }
 
+// applyDescriptionFromMarkdown converts a task's inbound CalDAV description
+// (markdown) to canonical HTML, rebuilding @mentions. Unchanged markdown keeps the
+// stored HTML verbatim, so a no-op read-modify-write doesn't churn it or move Updated.
+func applyDescriptionFromMarkdown(s *xorm.Session, vTask *models.Task, storedHTML string) error {
+	if !richtext.Changed(storedHTML, vTask.Description) {
+		vTask.Description = storedHTML
+		return nil
+	}
+
+	htmlDesc, err := richtext.MarkdownToHTMLWithMentions(s, vTask.Description)
+	if err != nil {
+		return err
+	}
+	vTask.Description = htmlDesc
+	return nil
+}
+
 // UpdateResource updates a resource
 func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (*data.Resource, error) {
 
@@ -441,6 +467,14 @@ func (vcls *VikunjaCaldavProjectStorage) UpdateResource(rpath, content string) (
 		_ = s.Rollback()
 		events.CleanupPending(s)
 		return nil, errs.ForbiddenError
+	}
+
+	// Inbound markdown → canonical HTML, kept verbatim when unchanged.
+	if err := applyDescriptionFromMarkdown(s, vTask, vcls.task.Description); err != nil {
+		log.Errorf("[CALDAV] Failed to convert description in UpdateResource: %v", err)
+		_ = s.Rollback()
+		events.CleanupPending(s)
+		return nil, err
 	}
 
 	// Update the task
