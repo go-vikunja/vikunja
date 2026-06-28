@@ -23,7 +23,7 @@ require (
 	dario.cat/mergo v1.0.2
 	github.com/ThreeDotsLabs/watermill v1.5.1
 	github.com/adlio/trello v1.12.0
-	github.com/arran4/golang-ical v0.3.2
+	github.com/arran4/golang-ical v0.3.5
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/aws/aws-sdk-go-v2 v1.41.5
 	github.com/aws/aws-sdk-go-v2/config v1.32.10

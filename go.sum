@@ -30,6 +30,8 @@ github.com/alexbrainman/sspi v0.0.0-20250919150558-7d374ff0d59e h1:4dAU9FXIyQktp
 github.com/alexbrainman/sspi v0.0.0-20250919150558-7d374ff0d59e/go.mod h1:cEWa1LVoE5KvSD9ONXsZrj0z6KqySlCCNKHlLzbqAt4=
 github.com/arran4/golang-ical v0.3.2 h1:MGNjcXJFSuCXmYX/RpZhR2HDCYoFuK8vTPFLEdFC3JY=
 github.com/arran4/golang-ical v0.3.2/go.mod h1:xblDGxxIUMWwFZk9dlECUlc1iXNV65LJZOTHLVwu8bo=
+github.com/arran4/golang-ical v0.3.5 h1:bbz6ld4dC+MmCKiFfOd6SkmIGnhNMBACZ485ULh7p9A=
+github.com/arran4/golang-ical v0.3.5/go.mod h1:OnguFgjN0Hmx8jzpmWcC+AkHio94ujmLHKoaef7xQh8=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
 github.com/aws/aws-sdk-go-v2 v1.41.5 h1:dj5kopbwUsVUVFgO4Fi5BIT3t4WyqIDjGKCangnV/yY=
