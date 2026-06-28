@@ -5,9 +5,32 @@
 	},
 	"home": {
 		"welcomeNight": "Доброй ночи, {username}!",
+		"welcomeNightOwl": "Привет, ночная сова {username}",
+		"welcomeNightBurning": "Работаешь допоздна, {username}?",
+		"welcomeNightQuiet": "Тихие часы, {username}",
+		"welcomeNightLate": "Поздно, {username}",
 		"welcomeMorning": "Доброе утро, {username}!",
+		"welcomeMorningHey": "Привет, {username}, готов?",
+		"welcomeMorningFresh": "Свежий старт, {username}",
+		"welcomeMorningCoffee": "Кофе и задачи, {username}?",
+		"welcomeMorningRise": "Проснись и планируй, {username}",
+		"welcomeMorningBack": "С возвращением, {username}",
+		"welcomeMondayFresh": "Свежая неделя, {username}",
+		"welcomeTuesday": "Счастливого вторника, {username}",
+		"welcomeWednesdayMid": "Уже середина недели, {username}",
+		"welcomeThursday": "Почти готово, {username}",
+		"welcomeFridayPush": "Пятница, {username}?",
+		"welcomeSaturday": "Режим выходных, {username}",
+		"welcomeSundaySession": "Воскресный сеанс, {username}?",
 		"welcomeDay": "Привет, {username}!",
+		"welcomeDayFocus": "Давайте сосредоточимся, {username}",
+		"welcomeDayKeepGoing": "Так держать, {username}",
+		"welcomeDayWhatsNext": "Что дальше, {username}?",
+		"welcomeDayGood": "Добрый день, {username}",
 		"welcomeEvening": "Добрый вечер, {username}!",
+		"welcomeEveningWind": "Заканчиваешь, {username}?",
+		"welcomeEveningReturns": "{username} возвращается",
+		"welcomeEveningOneMore": "Еще одна вещь, {username}?",
 		"lastViewed": "Последние просмотренные",
 		"addToHomeScreen": "Добавьте это приложение на домашний экран для быстрого доступа и удобной работы.",
 		"goToOverview": "Перейти к обзору",
@@ -57,6 +80,11 @@
 			"openIdTotpSubmit": "Продолжить",
 			"oauthMissingParams": "Отсутствуют необходимые параметры OAuth: {params}",
 			"oauthRedirectedToApp": "Вы были перенаправлены в приложение. Теперь вы можете закрыть эту вкладку.",
+			"desktopTryDemo": "Попробовать демо-версию",
+			"desktopCustomServer": "Пользовательский URL сервера",
+			"desktopCustomServerDescription": "Введите URL сервера Vikunja, чтобы начать.",
+			"desktopWaitingForAuth": "Ожидание аутентификации…",
+			"desktopOAuthError": "Ошибка аутентификации: {error}",
 			"logout": "Выйти",
 			"emailInvalid": "Введите корректный email адрес.",
 			"usernameRequired": "Введите имя пользователя.",
@@ -75,6 +103,19 @@
 			"registrationFailed": "Произошла ошибка при регистрации. Проверьте введённые данные и повторите попытку."
 		},
 		"settings": {
+			"bots": {
+				"title": "Боты",
+				"description": "Боты — это пользователи, которые принадлежат вам и которые имеют доступ только к API. Их можно добавить в проекты, назначить задачи, и аутентификация выполняется с помощью токенов API. Боты не могут использовать обычный интерфейс.",
+				"namePlaceholder": "Мой помощник",
+				"create": "Создать бота",
+				"enable": "Включить",
+				"badge": "Бот",
+				"delete": {
+					"header": "Удалить бота",
+					"text1": "Удалить бота «{username}»?",
+					"text2": "Это необратимо. Любые токены API, принадлежащие этому боту, будут аннулированы."
+				}
+			},
 			"title": "Настройки",
 			"newPasswordTitle": "Изменить пароль",
 			"newPassword": "Новый пароль",
@@ -100,6 +141,11 @@
 				"weekStart": "Первый день недели",
 				"weekStartSunday": "Воскресенье",
 				"weekStartMonday": "Понедельник",
+				"weekStartTuesday": "Вторник",
+				"weekStartWednesday": "Среда",
+				"weekStartThursday": "Четверг",
+				"weekStartFriday": "Пятница",
+				"weekStartSaturday": "Суббота",
 				"language": "Язык",
 				"defaultProject": "Проект по умолчанию",
 				"defaultView": "Представление по умолчанию",
@@ -133,7 +179,13 @@
 				"taskAndNotifications": "Проекты и задачи",
 				"privacy": "Конфиденциальность",
 				"localization": "Локализация",
-				"appearance": "Внешний вид и поведение"
+				"appearance": "Внешний вид и поведение",
+				"desktop": "Настольное приложение"
+			},
+			"desktop": {
+				"quickEntryShortcut": "Ярлык быстрого входа",
+				"shortcutRecorderPlaceholder": "Нажмите, чтобы задать ярлык",
+				"shortcutRecorderRecording": "Нажмите комбинацию клавиш…"
 			},
 			"totp": {
 				"title": "Двухфакторная аутентификация",
@@ -162,6 +214,13 @@
 				"mustUseToken": "Вам необходимо создать токен CalDAV, если вы хотите использовать его со сторонним клиентом. Используйте его в качестве пароля.",
 				"usernameIs": "Имя пользователя для CalDAV: {0}",
 				"apiTokenHint": "Вы также можете использовать токен API с разрешением CalDAV. Создайте его в {link}."
+			},
+			"feeds": {
+				"title": "Atom-лента",
+				"howTo": "Вы можете подписаться на уведомления Vikunja в любом приложении для чтения новостей, поддерживающем Atom-ленты. Используйте следующий URL:",
+				"usernameIs": "Имя пользователя для доступа к ленте: {0}",
+				"apiTokenHint": "Для аутентификации используйте токен API с разрешением {scope}. Создайте его на странице {link}.",
+				"tokenTitle": "Atom-лента"
 			},
 			"avatar": {
 				"title": "Аватар",
@@ -329,6 +388,7 @@
 			"title": "Создание копии проекта",
 			"label": "Создать копию",
 			"text": "Выберите родительский проект, в который поместить копию проекта:",
+			"shares": "Скопировать настройки доступа (пользователей, групп и ссылок для обмена)",
 			"success": "Копия проекта создана."
 		},
 		"edit": {
@@ -425,7 +485,8 @@
 			"partialDatesStart": "Только дата начала (без окончания)",
 			"partialDatesEnd": "Только дата окончания (без начала)",
 			"expandGroup": "Развернуть группу: {task}",
-			"collapseGroup": "Свернуть группу: {task}"
+			"collapseGroup": "Свернуть группу: {task}",
+			"toggleRelationArrows": "Переключить стрелки связи"
 		},
 		"table": {
 			"title": "Таблица",
@@ -454,7 +515,8 @@
 			"bucketTitleSavedSuccess": "Название колонки сохранено.",
 			"bucketLimitSavedSuccess": "Лимит колонки сохранён.",
 			"collapse": "Свернуть эту колонку",
-			"bucketLimitReached": "Вы достигли лимита колонки. Удалите какие-нибудь задачи или увеличьте лимит, чтобы добавить новые задачи."
+			"bucketLimitReached": "Вы достигли лимита колонки. Удалите какие-нибудь задачи или увеличьте лимит, чтобы добавить новые задачи.",
+			"bucketOptions": "Настройки колонки"
 		},
 		"pseudo": {
 			"favorites": {
@@ -677,7 +739,9 @@
 		"upcoming": "Предстоящие задачи",
 		"settings": "Настройки",
 		"imprint": "Отпечаток",
-		"privacy": "Политика конфиденциальности"
+		"privacy": "Политика конфиденциальности",
+		"closeSidebar": "Закрыть боковую панель",
+		"home": "Главная страница Vikunja"
 	},
 	"misc": {
 		"loading": "Загрузка…",
@@ -709,9 +773,17 @@
 		"createdBy": "Создатель {0}",
 		"actions": "Действия",
 		"cannotBeUndone": "Это действие отменить нельзя!",
-		"avatarOfUser": "Изображение профиля {user}"
+		"avatarOfUser": "Изображение профиля {user}",
+		"closeBanner": "Закрыть баннер",
+		"closeDialog": "Закрыть диалог",
+		"closeQuickActions": "Закрыть быстрые действия",
+		"skipToContent": "Перейти к основному содержимому",
+		"dateRange": "Диапазон",
+		"notSet": "Не задано",
+		"user": "Пользователь"
 	},
 	"input": {
+		"projectColor": "Цвет проекта",
 		"resetColor": "Сбросить цвет",
 		"datepicker": {
 			"today": "Сегодня",
@@ -784,6 +856,7 @@
 			"date": "Дата",
 			"ranges": {
 				"today": "Сегодня",
+				"tomorrow": "Завтра",
 				"thisWeek": "Эта неделя",
 				"restOfThisWeek": "Остаток этой недели",
 				"nextWeek": "Следующая неделя",
@@ -891,6 +964,8 @@
 			"belongsToProject": "Задача принадлежит проекту «{project}»",
 			"back": "Вернуться к проекту",
 			"due": "Истекает {at}",
+			"closeTaskDetail": "Закрыть детали задачи",
+			"title": "Детали задачи",
 			"scrollToBottom": "Прокрутить до конца страницы",
 			"organization": "Организация",
 			"management": "Управление",
@@ -984,7 +1059,10 @@
 			"addedSuccess": "Комментарий добавлен.",
 			"permalink": "Скопировать постоянную ссылку на комментарий",
 			"sortNewestFirst": "Сначала новые",
-			"sortOldestFirst": "Сначала старые"
+			"sortOldestFirst": "Сначала старые",
+			"reply": "Ответить",
+			"jumpToOriginal": "Перейти к исходному комментарию",
+			"deletedComment": "удалённый комментарий"
 		},
 		"mention": {
 			"noUsersFound": "Пользователи не найдены"
@@ -1248,9 +1326,11 @@
 		"none": "Уведомлений нет. Хорошего дня!",
 		"explainer": "Здесь появятся уведомления, когда что-нибудь произойдёт с проектами или задачами, на которые вы подписаны.",
 		"markAllRead": "Отметить всё как прочитанное",
-		"markAllReadSuccess": "Все уведомления отмечены как прочитанные."
+		"markAllReadSuccess": "Все уведомления отмечены как прочитанные.",
+		"subscribeFeed": "Подписаться на уведомления через Atom-ленту"
 	},
 	"quickActions": {
+		"notLoggedIn": "Сначала войдите в главное окно Vikunja.",
 		"commands": "Команды",
 		"placeholder": "Введите команду или поисковый запрос…",
 		"hint": "Используйте {project}, чтобы ограничить поиск проектом. Комбинируйте {project} и {label} (метки) с поисковым запросом для поиска задачи с этими метками или на этом проекте. Используйте {assignee} для поиска команд.",
@@ -1376,6 +1456,67 @@
 			"days": "день|дня|дней",
 			"weeks": "неделя|недели|недель",
 			"years": "год|года|лет"
+		}
+	},
+	"admin": {
+		"title": "Администрирование",
+		"labels": {
+			"users": "Пользователи",
+			"tasks": "Задачи"
+		},
+		"overview": {
+			"shares": "Общий доступ",
+			"linkSharesShort": "ссылка",
+			"teamSharesShort": "группа",
+			"userSharesShort": "пользователь",
+			"version": "Версия",
+			"license": "Лицензия",
+			"licenseValidUntil": "Истекает",
+			"licenseExpiresIn": "через {days} дней",
+			"licenseLastVerified": "Последняя проверка",
+			"licenseNever": "никогда",
+			"licenseLastCheckFailed": "последняя проверка не удалась",
+			"licenseFeatures": "Возможности",
+			"licenseInstance": "ID экземпляра",
+			"licenseManage": "Управление"
+		},
+		"searchUsersPlaceholder": "Поиск по имени пользователя или электронной почте…",
+		"users": {
+			"status": "Статус",
+			"details": "Детали",
+			"detailsTitle": "Пользователь: {username}",
+			"issuer": "Издатель",
+			"issuerLocal": "Локальный",
+			"issuerUrl": "URL издателя",
+			"subject": "Тема",
+			"statusActive": "Активен",
+			"statusEmailConfirmation": "Нужно подтвердить почту",
+			"statusDisabled": "Отключен",
+			"statusLocked": "Заблокирован",
+			"isAdminLabel": "Администратор",
+			"addUser": "Добавить пользователя",
+			"createTitle": "Создать пользователя",
+			"nameLabel": "Имя",
+			"skipEmailConfirm": "Пропустить подтверждение по электронной почте",
+			"createSubmit": "Создать пользователя",
+			"saveButton": "Сохранить изменения",
+			"createdSuccess": "Пользователь {username} создан.",
+			"updatedSuccess": "Пользователь {username} обновлён.",
+			"deletedSuccess": "Пользователь {username} удалён.",
+			"deleteScheduledSuccess": "Пользователь {username} получит подтверждение по электронной почте для запланированного удаления.",
+			"confirmDeleteTitle": "Удалить пользователя?",
+			"confirmDeleteIntro": "Как следует удалить пользователя {username}?",
+			"deleteModeScheduled": "Запланировать удаление",
+			"deleteModeScheduledHelp": "Запланированное удаление отправляет пользователю письмо с подтверждением, как если бы пользователь сам запросил удаление аккаунта.",
+			"deleteModeNow": "Удалить сейчас",
+			"deleteModeNowHelp": "Удаление сейчас удаляет пользователя и все его данные сразу. Это не может быть отменено."
+		},
+		"projects": {
+			"ownerLabel": "Владелец",
+			"reassignOwner": "Переназначить владельца",
+			"reassignTitle": "Переназначить {title}",
+			"reassignedSuccess": "Владелец проекта переназначен.",
+			"newOwnerLabel": "Новый владелец"
 		}
 	}
 }
