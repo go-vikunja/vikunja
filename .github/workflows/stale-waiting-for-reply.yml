@@ -24,6 +24,7 @@ jobs:
             questions. If you're still seeing this on a recent version, just
             drop a comment with the requested info and we'll reopen. Thanks
             for the report!
-          days-before-pr-stale: -1
+          stale-pr-label: 'waiting for reply'
+          days-before-pr-stale: 30
           days-before-pr-close: -1
           operations-per-run: 100
