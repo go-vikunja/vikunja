@@ -664,14 +664,6 @@ function getCommentUrl(commentId: string) {
 
 .new-comment-top {
 	order: -1;
-	// Override the top separator inherited from .media + .media (DOM order places this last)
-	border-block-start: none;
-	margin-block-start: 0;
-	padding-block-start: 0;
-	// Provide the separator on the bottom side instead, toward the first existing comment
-	border-block-end: 1px solid rgba(var(--border-rgb), 0.5);
-	margin-block-end: 1rem;
-	padding-block-end: 1rem;
 }
 
 .comments-container {
