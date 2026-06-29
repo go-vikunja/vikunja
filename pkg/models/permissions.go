@@ -69,7 +69,7 @@ func (r *Permission) UnmarshalJSON(data []byte) error {
 	case 2:
 		*r = PermissionAdmin
 	default:
-		return fmt.Errorf("invalid Permission %q", s)
+		return fmt.Errorf("invalid Permission %d", s)
 	}
 	return nil
 }
