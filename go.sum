@@ -120,6 +120,8 @@ github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuP
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/bbrks/go-blurhash v1.1.1 h1:uoXOxRPDca9zHYabUTwvS4KnY++KKUbwFo+Yxb8ME4M=
 github.com/bbrks/go-blurhash v1.1.1/go.mod h1:lkAsdyXp+EhARcUo85yS2G1o+Sh43I2ebF5togC4bAY=
+github.com/bbrks/go-blurhash v1.2.0 h1:99w0YT50b/B7uoZyM79Nqy+UemMOh8fO/ONyyxmr9MU=
+github.com/bbrks/go-blurhash v1.2.0/go.mod h1:r4N4/ViVMa2h6Ex6e1aoCWMTkykYWS/VXvYMCrbkRpw=
 github.com/beevik/etree v1.1.0 h1:T0xke/WvNtMoCqgzPhkX2r4rjY3GDZFi+FjpRZY2Jbs=
 github.com/beevik/etree v1.1.0/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
