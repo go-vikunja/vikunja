@@ -1,6 +1,6 @@
 module code.vikunja.io/veans
 
-go 1.25.0
+go 1.26.4
 
 require (
 	github.com/charmbracelet/bubbletea v1.3.10

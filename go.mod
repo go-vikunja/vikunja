@@ -16,7 +16,7 @@
 
 module code.vikunja.io/api
 
-go 1.25.7
+go 1.26.4
 
 require (
 	code.dny.dev/ssrf v0.2.0
