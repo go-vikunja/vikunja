@@ -40,7 +40,7 @@ require (
 	github.com/danielgtaylor/huma/v2 v2.37.3
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
-	github.com/fatih/color v1.18.0
+	github.com/fatih/color v1.19.0
 	github.com/gabriel-vasile/mimetype v1.4.13
 	github.com/ganigeorgiev/fexpr v0.5.0
 	github.com/getsentry/sentry-go v0.41.0
