@@ -60,7 +60,7 @@ require (
 	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6
 	github.com/labstack/echo-jwt/v5 v5.0.1
 	github.com/labstack/echo/v5 v5.0.4
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.12.3
 	github.com/magefile/mage v1.15.0
 	github.com/mattn/go-sqlite3 v1.14.47
 	github.com/microcosm-cc/bluemonday v1.0.27
