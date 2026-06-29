@@ -43,7 +43,7 @@ require (
 	github.com/fatih/color v1.19.0
 	github.com/gabriel-vasile/mimetype v1.4.13
 	github.com/ganigeorgiev/fexpr v0.5.0
-	github.com/getsentry/sentry-go v0.41.0
+	github.com/getsentry/sentry-go v0.47.0
 	github.com/go-ldap/ldap/v3 v3.4.13
 	github.com/go-sql-driver/mysql v1.10.0
 	github.com/go-testfixtures/testfixtures/v3 v3.19.0
