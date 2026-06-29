@@ -720,6 +720,10 @@ func addMoreInfoToTasks(s *xorm.Session, taskMap map[int64]*Task, a web.Auth, vi
 				}
 			}
 
+			sort.Slice(tasksNeedingPositions, func(i, j int) bool {
+				return tasksNeedingPositions[i].ID < tasksNeedingPositions[j].ID
+			})
+
 			if len(tasksNeedingPositions) > 0 {
 				// Create positions for tasks that don't have them
 				if err = createPositionsForTasksInView(s, tasksNeedingPositions, view, a); err != nil {

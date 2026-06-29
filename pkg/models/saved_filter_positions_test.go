@@ -313,3 +313,61 @@ func TestIssue724_SortingOnFilteredViews(t *testing.T) {
 	assert.Zero(t, zeroCount,
 		"No position=0 records should exist in database for view %d", view.ID)
 }
+
+// A task that starts matching a saved filter has no position row in that filter's
+// view yet. The fetch-time safety net creates one at the top, but it runs after the
+// query has already ordered the page. With NULLS LAST this made the new task appear
+// last on the first load and jump to the top only after a refresh. It must instead
+// stay at the top on the very first fetch and not move on subsequent fetches.
+func TestSavedFilterNewTaskStaysAtTopAcrossFetches(t *testing.T) {
+	db.LoadAndAssertFixtures(t)
+	s := db.NewSession()
+	defer s.Close()
+
+	u := &user.User{ID: 1}
+
+	sf := &SavedFilter{
+		Title:   "open-tasks-position",
+		Filters: &TaskCollection{Filter: "done = false"},
+	}
+	require.NoError(t, sf.Create(s, u))
+
+	listView := &ProjectView{}
+	exists, err := s.Where("project_id = ? AND view_kind = ?",
+		getProjectIDFromSavedFilterID(sf.ID), ProjectViewKindList).Get(listView)
+	require.NoError(t, err)
+	require.True(t, exists)
+
+	// Give every currently-matching task a position so the new task below is the
+	// only one without one (this is the state after the cron / a previous fetch).
+	require.NoError(t, RecalculateTaskPositions(s, listView, u))
+
+	newTask := &Task{Title: "freshly created open task", ProjectID: 1}
+	require.NoError(t, newTask.Create(s, u))
+
+	indexOfNewTask := func() int {
+		tc := &TaskCollection{
+			ProjectID:     getProjectIDFromSavedFilterID(sf.ID),
+			ProjectViewID: listView.ID,
+			SortBy:        []string{"position"},
+			OrderBy:       []string{"asc"},
+		}
+		result, _, _, err := tc.ReadAll(s, u, "", 1, 1000)
+		require.NoError(t, err)
+		tasks, ok := result.([]*Task)
+		require.True(t, ok)
+		for i, task := range tasks {
+			if task.ID == newTask.ID {
+				return i
+			}
+		}
+		t.Fatalf("new task %d not found in filter results", newTask.ID)
+		return -1
+	}
+
+	first := indexOfNewTask()
+	second := indexOfNewTask()
+
+	assert.Equal(t, 0, first, "newly matching task must appear at the top on the first fetch, not only after a refresh")
+	assert.Equal(t, first, second, "task order must be stable across fetches")
+}

@@ -137,11 +137,17 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 			prefix = "tasks."
 		}
 
+		nullsFirst := opts.isSavedFilter && param.sortBy == taskPropertyPosition
+
 		// Mysql sorts columns with null values before ones without null value.
 		// Because it does not have support for NULLS FIRST or NULLS LAST we work around this by
 		// first sorting for null (or not null) values and then the order we actually want to.
 		if db.Type() == schemas.MYSQL {
-			orderby += prefix + "`" + param.sortBy + "` IS NULL, "
+			nullSort := ""
+			if nullsFirst {
+				nullSort = " DESC"
+			}
+			orderby += prefix + "`" + param.sortBy + "` IS NULL" + nullSort + ", "
 		}
 
 		orderby += prefix + "`" + param.sortBy + "` " + param.orderBy.String()
@@ -149,7 +155,11 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 		// Postgres and sqlite allow us to control how columns with null values are sorted.
 		// To make that consistent with the sort order we have and other dbms, we're adding a separate clause here.
 		if db.Type() == schemas.POSTGRES || db.Type() == schemas.SQLITE {
-			orderby += " NULLS LAST"
+			if nullsFirst {
+				orderby += " NULLS FIRST"
+			} else {
+				orderby += " NULLS LAST"
+			}
 		}
 
 		if (i + 1) < len(opts.sortby) {
