@@ -103,11 +103,16 @@ type dbTaskSearcher struct {
 	hasFavoritesProject bool
 }
 
-func (sf *SubTableFilter) ToBaseSubQuery() *builder.Builder {
+func (sf *SubTableFilter) ToBaseSubQuery(taskAlias string) *builder.Builder {
+	baseFilter := sf.BaseFilter
+	if taskAlias != "tasks" {
+		baseFilter = strings.ReplaceAll(baseFilter, "tasks.", taskAlias+".")
+	}
+
 	var cond = builder.
 		Select("1").
 		From(sf.Table).
-		Where(builder.Expr(sf.BaseFilter))
+		Where(builder.Expr(baseFilter))
 
 	// little hack to add users table for assignees filter
 	if sf.Table == "task_assignees" {
@@ -161,6 +166,13 @@ func getOrderByDBStatement(opts *taskSearchOptions) (orderby string, err error) 
 }
 
 func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (filterCond builder.Cond, err error) {
+	return convertFiltersToDBFilterCondWithAlias(rawFilters, includeNulls, "tasks")
+}
+
+// convertFiltersToDBFilterCondWithAlias builds the filter condition against the
+// given task table alias. Passing "parent_tasks" lets the subtask-expansion root
+// condition ask "does the parent satisfy the filter" (see #2646).
+func convertFiltersToDBFilterCondWithAlias(rawFilters []*taskFilter, includeNulls bool, taskAlias string) (filterCond builder.Cond, err error) {
 
 	var dbFilters = make([]builder.Cond, 0, len(rawFilters))
 	// Track join types separately because after merging consecutive sub-table
@@ -171,7 +183,7 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 		f := rawFilters[i]
 
 		if nested, is := f.value.([]*taskFilter); is {
-			nestedDBFilters, err := convertFiltersToDBFilterCond(nested, includeNulls)
+			nestedDBFilters, err := convertFiltersToDBFilterCondWithAlias(nested, includeNulls, taskAlias)
 			if err != nil {
 				return nil, err
 			}
@@ -234,7 +246,7 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 				}
 			}
 
-			filterSubQuery := subTableFilterParams.ToBaseSubQuery().And(combinedInnerCond)
+			filterSubQuery := subTableFilterParams.ToBaseSubQuery(taskAlias).And(combinedInnerCond)
 
 			var filter builder.Cond
 			if f.comparator == taskFilterComparatorNotEquals || f.comparator == taskFilterComparatorNotIn {
@@ -244,7 +256,7 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 			}
 
 			if includeNulls && subTableFilterParams.AllowNullCheck {
-				filter = builder.Or(filter, builder.NotExists(subTableFilterParams.ToBaseSubQuery()))
+				filter = builder.Or(filter, builder.NotExists(subTableFilterParams.ToBaseSubQuery(taskAlias)))
 			}
 
 			dbFilters = append(dbFilters, filter)
@@ -258,7 +270,7 @@ func convertFiltersToDBFilterCond(rawFilters []*taskFilter, includeNulls bool) (
 		if f.field == taskPropertyBucketID {
 			f.field = "task_buckets.`bucket_id`"
 		} else {
-			f.field = "tasks.`" + f.field + "`"
+			f.field = taskAlias + ".`" + f.field + "`"
 		}
 		filter, err := getFilterCond(f, includeNulls)
 		if err != nil {
@@ -303,6 +315,111 @@ func hasBucketIDInParsedFilter(filters []*taskFilter) bool {
 	return false
 }
 
+// cloneTaskFilters deep-copies the parsed filters so the parent-scoped filter
+// build does not mutate the shared field names (convertFiltersToDBFilterCond
+// rewrites f.field in place, which must not leak back into the main query).
+func cloneTaskFilters(filters []*taskFilter) []*taskFilter {
+	cloned := make([]*taskFilter, len(filters))
+	for i, f := range filters {
+		c := *f
+		if nested, is := f.value.([]*taskFilter); is {
+			c.value = cloneTaskFilters(nested)
+		}
+		cloned[i] = &c
+	}
+	return cloned
+}
+
+// stripBucketIDFilters returns a copy of filters with every bucket_id condition
+// removed (recursing into nested groups and dropping groups left empty). The
+// parent-scoped root condition cannot evaluate a bucket_id filter against the
+// parent: convertFiltersToDBFilterCondWithAlias hard-codes the task_buckets.bucket_id
+// column, and the only task_buckets join is keyed on the child (task_buckets.task_id
+// = tasks.id). Keeping it would bind the parent filter to the child's bucket and
+// misclassify roots, so a bucket_id filter simply does not constrain the parent.
+func stripBucketIDFilters(filters []*taskFilter) []*taskFilter {
+	stripped := make([]*taskFilter, 0, len(filters))
+	for _, f := range filters {
+		if nested, is := f.value.([]*taskFilter); is {
+			child := stripBucketIDFilters(nested)
+			if len(child) == 0 {
+				continue
+			}
+			c := *f
+			c.value = child
+			stripped = append(stripped, &c)
+			continue
+		}
+		if f.field == taskPropertyBucketID {
+			continue
+		}
+		stripped = append(stripped, f)
+	}
+	return stripped
+}
+
+// buildSubtaskRootCondition decides which tasks count as "roots" when expanding
+// subtasks: a task is a root unless its parent is itself part of this result set.
+//
+// The previous implementation used parent_tasks.project_id != tasks.project_id as
+// a proxy for "parent is not in this list". That proxy is the recurring source of
+// root-placement bugs - it was wrong for cross-project parents (#1000), deleted
+// parents (#2494) and now for same-project parents that are filtered out (#2646).
+//
+// A task is excluded from roots only when ALL of the following hold:
+//   - it has a parenttask relation, AND
+//   - the parent task exists, AND
+//   - the parent is within the queried result scope, AND
+//   - the parent satisfies the active filter.
+//
+// Note the filter (and result scope) is applied here, but not the text-search
+// predicate: search uses ParadeDB operators that don't compose against the
+// parent_tasks alias, and #2646 is purely about filters.
+func (d *dbTaskSearcher) buildSubtaskRootCondition(opts *taskSearchOptions) (builder.Cond, error) {
+	// The base result set is (projectIDCond OR favoritesCond); mirror both so the
+	// parent is considered "in scope" exactly when it could appear as a result row.
+	scopes := make([]builder.Cond, 0, 2)
+	if len(opts.projectIDs) > 0 {
+		scopes = append(scopes, builder.In("parent_tasks.project_id", opts.projectIDs))
+	}
+	if d.hasFavoritesProject {
+		favCond := builder.
+			Select("entity_id").
+			From("favorites").
+			Where(builder.And(
+				builder.Eq{"user_id": d.a.GetID()},
+				builder.Eq{"kind": FavoriteKindTask},
+			))
+		scopes = append(scopes, builder.In("parent_tasks.id", favCond))
+	}
+
+	parentInScope := builder.Cond(builder.Expr("1 = 1"))
+	if len(scopes) > 0 {
+		parentInScope = builder.Or(scopes...)
+	}
+
+	parentMatchesFilter := builder.Cond(builder.Expr("1 = 1"))
+	if len(opts.parsedFilters) > 0 {
+		parentFilters := stripBucketIDFilters(cloneTaskFilters(opts.parsedFilters))
+		filterCond, err := convertFiltersToDBFilterCondWithAlias(parentFilters, opts.filterIncludeNulls, "parent_tasks")
+		if err != nil {
+			return nil, err
+		}
+		if filterCond != nil {
+			parentMatchesFilter = filterCond
+		}
+	}
+
+	parentIsRoot := builder.And(
+		builder.NotNull{"task_relations.id"},
+		builder.NotNull{"parent_tasks.id"},
+		parentInScope,
+		parentMatchesFilter,
+	)
+
+	return builder.Not{parentIsRoot}, nil
+}
+
 //nolint:gocyclo
 func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCount int64, err error) {
 
@@ -312,6 +429,25 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 	}
 
 	joinTaskBuckets := hasBucketIDInParsedFilter(opts.parsedFilters)
+
+	var expandSubtasks = false
+	for _, expandable := range opts.expand {
+		if expandable == TaskCollectionExpandSubtasks {
+			expandSubtasks = true
+			break
+		}
+	}
+
+	// The root condition asks whether a task's parent is part of this result set,
+	// which means re-building the filter against the parent_tasks alias. Compute it
+	// before convertFiltersToDBFilterCond mutates the shared filter field names.
+	var subtaskRootCond builder.Cond
+	if expandSubtasks {
+		subtaskRootCond, err = d.buildSubtaskRootCondition(opts)
+		if err != nil {
+			return nil, 0, err
+		}
+	}
 
 	filterCond, err := convertFiltersToDBFilterCond(opts.parsedFilters, opts.filterIncludeNulls)
 	if err != nil {
@@ -358,20 +494,8 @@ func (d *dbTaskSearcher) Search(opts *taskSearchOptions) (tasks []*Task, totalCo
 		distinct += ", task_positions.position"
 	}
 
-	var expandSubtasks = false
-	for _, expandable := range opts.expand {
-		if expandable == TaskCollectionExpandSubtasks {
-			expandSubtasks = true
-			break
-		}
-	}
-
 	if expandSubtasks {
-		cond = builder.And(cond, builder.Or(
-			builder.IsNull{"task_relations.id"},
-			builder.IsNull{"parent_tasks.id"},
-			builder.Expr("parent_tasks.project_id != tasks.project_id"),
-		))
+		cond = builder.And(cond, subtaskRootCond)
 	}
 
 	query := d.s.
