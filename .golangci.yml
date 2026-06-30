@@ -168,11 +168,20 @@ linters:
         path: (pkg/webtests/|pkg/e2etests/|_test\.go) # Test fixtures with bcrypt hashes, not real credentials
       - linters:
           - gosec
-        text: 'G70[24]:'
+        text: 'G70[234]:'
         path: magefile.go # Build tooling, not user-facing code
       - linters:
           - goheader
         path: plugins/
+      # gosec G124 flags synthetic request cookies in tests; they carry no security relevance.
+      - linters:
+          - gosec
+        text: 'G124:'
+        path: _test\.go
+      # noctx flags httptest.NewRequest, which builds inbound requests for handler tests where a cancellation context adds nothing.
+      - linters:
+          - noctx
+        text: 'httptest.NewRequest must not be called'
     paths:
       - third_party$
       - builtin$
